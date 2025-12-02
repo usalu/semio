@@ -113,3 +113,8 @@ line-length = 250
 
 [tool.pyright]
 disable = ["reportMissingImports"]
+
+[tool.pytest.ini_options]
+python_files = ["test_*.py", "*_test.py", "*.test.py"]
+testpaths = ["."]
+addopts = "--import-mode=importlib"

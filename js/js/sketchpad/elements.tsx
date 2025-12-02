@@ -1322,11 +1322,13 @@ function ButtonGroupItem({
   children,
   id,
   icon,
+  text,
   asChild = false,
   ...props
 }: React.ComponentProps<"button"> & {
   id?: string;
   icon?: React.ReactNode;
+  text?: string;
   asChild?: boolean;
 }) {
   const context = React.useContext(ButtonGroupContext);
@@ -1343,11 +1345,13 @@ function ButtonGroupItem({
           level: context.level || level,
         }),
         "min-w-0 flex-1 shrink-0 focus:z-panel focus-visible:z-panel",
+        text && "flex items-center gap-0 p-single",
         className,
       )}
       {...(props as any)}
     >
       {icon || children}
+      {text && <span className="ml-single text-xs">{text}</span>}
     </Comp>
   );
 
@@ -1373,12 +1377,14 @@ type ButtonProps = React.ComponentProps<"button"> &
     asChild?: boolean;
     id?: string;
     icon?: React.ReactNode;
+    text?: string;
     children?: React.ReactNode;
   };
 
 interface ButtonCycleItem<T extends string> {
   value: T;
   label: React.ReactNode;
+  text?: string;
   id?: string;
 }
 
@@ -1389,11 +1395,11 @@ interface ButtonCycleProps<T extends string> extends Omit<React.ComponentProps<"
   showLabel?: boolean;
 }
 
-function Button({ className, level: propLevel, asChild = false, id, icon, children, ...props }: ButtonProps) {
+function Button({ className, level: propLevel, asChild = false, id, icon, text, children, ...props }: ButtonProps) {
   const level = useElementLevel(propLevel);
   return (
     <ButtonGroup level={level} className={className}>
-      <ButtonGroupItem id={id} asChild={asChild} {...props}>
+      <ButtonGroupItem id={id} asChild={asChild} text={text} {...props}>
         {icon || children}
       </ButtonGroupItem>
     </ButtonGroup>
@@ -1412,7 +1418,7 @@ function ButtonCycle<T extends string = string>({ className, level: propLevel, i
 
   return (
     <ButtonGroup showLabel={showLabel} level={level} className={className}>
-      <ButtonGroupItem id={id} onClick={handleCycle} icon={currentItem.label} {...props} />
+      <ButtonGroupItem id={id} onClick={handleCycle} icon={currentItem.label} text={currentItem.text} {...props} />
     </ButtonGroup>
   );
 }
@@ -2360,6 +2366,7 @@ const toggleVariants = cva(
 export interface ToggleItem<T extends string> {
   value: T;
   label: React.ReactNode;
+  text?: string;
   id?: string;
 }
 
@@ -2368,6 +2375,7 @@ interface ToggleStandardProps extends Omit<React.ComponentProps<typeof TogglePri
   i18nPressed?: string;
   showLabel?: boolean;
   icon: React.ReactNode;
+  text?: string;
 }
 
 interface ToggleWithActionProps extends Omit<React.ComponentProps<typeof TogglePrimitive.Root>, "type" | "id">, ElementProps {
@@ -2377,6 +2385,7 @@ interface ToggleWithActionProps extends Omit<React.ComponentProps<typeof ToggleP
   showLabel?: boolean;
   actionId?: string;
   icon: React.ReactNode;
+  text?: string;
 }
 
 interface ToggleDropdownProps<T extends string> extends Omit<React.ComponentProps<typeof TogglePrimitive.Root>, "type" | "id">, ElementProps {
@@ -2405,6 +2414,7 @@ const ToggleGroupContext = React.createContext<{ level: Level }>({
 type ToggleGroupItemProps = Omit<React.ComponentProps<typeof ToggleGroupPrimitive.Item>, "children"> & {
   id?: string;
   icon: React.ReactNode;
+  text?: string;
   action?: React.ReactNode;
   value: string;
 };
@@ -2440,7 +2450,7 @@ function ToggleGroup({ className, id, showLabel, level: propLevel, items, kind =
   return toggleGroupElement;
 }
 
-function ToggleGroupItem({ className, id, icon, action, ...props }: ToggleGroupItemProps) {
+function ToggleGroupItem({ className, id, icon, text, action, ...props }: ToggleGroupItemProps) {
   const context = React.useContext(ToggleGroupContext);
   const level = context.level ?? "base";
 
@@ -2453,15 +2463,16 @@ function ToggleGroupItem({ className, id, icon, action, ...props }: ToggleGroupI
           level,
         }),
         "min-w-0 flex-1 shrink-0 focus:z-panel focus-visible:z-panel data-[state=on]:bg-active-base data-[state=on]:hover:bg-active-base/90",
-        action && "flex items-center gap-0 p-single w-mega aspect-auto",
+        (text || action) && "flex items-center gap-0 p-single w-mega aspect-auto",
         className,
       )}
       {...props}
     >
       {icon as React.ReactNode}
+      {text && <span className="ml-single text-xs">{text}</span>}
       {action && (
         <div
-          className={cn("flex items-center justify-center w-small h-small bg-base", level === "panel" && "bg-panel", level === "temporary" && "bg-temporary")}
+          className={cn("flex items-center justify-center w-small h-small bg-base", text && "ml-single", level === "panel" && "bg-panel", level === "temporary" && "bg-temporary")}
           onClick={(e) => e.stopPropagation()}
           onMouseDown={(e) => e.stopPropagation()}
           onPointerDown={(e) => e.stopPropagation()}
@@ -2505,7 +2516,7 @@ const addIconSize = (element: React.ReactNode): React.ReactNode => {
 
 function Toggle<T extends string = string>(props: ToggleProps<T>) {
   if ("kind" in props && props.kind === "withAction") {
-    const { actionIcon, onActionClick, icon, pressed, defaultPressed, onPressedChange, id, showLabel, level, className, actionId } = props as ToggleWithActionProps;
+    const { actionIcon, onActionClick, icon, text, pressed, defaultPressed, onPressedChange, id, showLabel, level, className, actionId } = props as ToggleWithActionProps;
     const value = pressed !== undefined ? (pressed ? "on" : "") : undefined;
     return (
       <ToggleGroup
@@ -2521,6 +2532,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
           {
             value: "on",
             icon: addIconSize(icon),
+            text: text,
             action: <Action as="div" id={actionId} icon={addIconSize(actionIcon)} onClick={onActionClick} level={level} />,
             id: id,
           },
@@ -2603,6 +2615,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
         {
           value: selectedItem.value,
           icon: addIconSize(selectedItem.label),
+          text: selectedItem.text,
           action: dropdownAction,
           id: selectedItem.id ?? id,
         },
@@ -2619,7 +2632,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     return <ToggleGroup {...toggleGroupProps} />;
   }
 
-  const { id, showLabel, level, className, icon, pressed, defaultPressed, onPressedChange } = props as ToggleStandardProps;
+  const { id, showLabel, level, className, icon, text, pressed, defaultPressed, onPressedChange } = props as ToggleStandardProps;
   const value = pressed !== undefined ? (pressed ? "on" : "") : undefined;
   return (
     <ToggleGroup
@@ -2635,6 +2648,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
         {
           value: "on",
           icon: addIconSize(icon),
+          text: text,
           id: id,
         },
       ]}

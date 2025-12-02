@@ -52,7 +52,7 @@ describe("Diffs", () => {
   const kitDiffInverted = MetabolismKitDiffInverted as any;
   const kitDiffed = MetabolismKitDiffed as any;
 
-  it(" Kit + Diff = DiffedKit & DiffedKit + InverseDiff = Kit", () => {
+  it("Kit + Diff = DiffedKit & DiffedKit + InverseDiff = Kit", () => {
     const computedDiff = getKitDiff(kitOriginal, kitDiffed);
     expect(areKitDiffsEqual(computedDiff, kitDiff)).toBe(true);
     const computedInverseDiff = inverseKitDiff(kitOriginal, kitDiff);
@@ -64,7 +64,7 @@ describe("Diffs", () => {
   });
 });
 
-describe("flattenDesign", () => {
+describe("Flattening Designs", () => {
   const kit = MetabolismKit as Kit;
   describe("Nakagin Capsule Tower", () => {
     it("Normal", () => {

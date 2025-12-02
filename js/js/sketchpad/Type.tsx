@@ -52,6 +52,7 @@ import {
   useIsInTypeScope,
   useKit,
   useKitCommands,
+  useKitFiles,
   useKitScope,
   useKitStore,
   useRemoveFooterItem,
@@ -619,10 +620,11 @@ export function useTypeApp<T>(selector?: (state: TypeAppState) => T, id?: TypeAp
   return useSyncDeep<TypeAppState, T>(store as TypeAppStore, selector || ((state: TypeAppState) => state as T));
 }
 
+const EMPTY_TYPE_SELECTION: TypeAppSelection = {};
 export function useTypeAppSelection(id?: TypeAppId): TypeAppSelection {
   const store = useTypeAppStore(identitySelector, id);
-  if (!store) return {};
-  return useSyncField<TypeAppState, TypeAppSelection>(store as TypeAppStore, "selection", (s) => s.selection ?? {});
+  if (!store) return EMPTY_TYPE_SELECTION;
+  return useSyncField<TypeAppState, TypeAppSelection>(store as TypeAppStore, "selection", (s) => s.selection ?? EMPTY_TYPE_SELECTION);
 }
 
 export function useTypeAppPanelVisibility(id?: TypeAppId): PanelVisibility {
@@ -852,10 +854,11 @@ export function useTypeAppSelectedModelGuid(id?: TypeAppId): Guid | undefined {
   return useSyncField<TypeAppState, Guid | undefined>(store as TypeAppStore, "selectedModelGuid", (s) => s.selectedModelGuid, false);
 }
 
+const EMPTY_MODEL_TAG_ARRAY: string[] = [];
 export function useTypeAppSelectedModelTags(id?: TypeAppId): string[] {
   const store = useTypeAppStore(identitySelector, id);
-  if (!store) return [];
-  return useSyncField<TypeAppState, string[]>(store as TypeAppStore, "selectedModelTags", (s) => s.selectedModelTags ?? []);
+  if (!store) return EMPTY_MODEL_TAG_ARRAY;
+  return useSyncField<TypeAppState, string[]>(store as TypeAppStore, "selectedModelTags", (s) => s.selectedModelTags ?? EMPTY_MODEL_TAG_ARRAY);
 }
 
 const TypeAppScopeContext = createContext<{ id: string } | undefined>(undefined);
@@ -1205,7 +1208,8 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
   onClearPreview,
 }) => {
   const type = useType(undefined, undefined, true) as Type | undefined;
-  const kit = useKit(undefined, undefined, true) as Kit | undefined;
+  // Use targeted hook instead of deep kit subscription - we only need files
+  const files = useKitFiles();
   const kitStore = useKitStore() as KitStore;
   const selectedModelGuid = useTypeAppSelectedModelGuid();
   const selectedModelTags = useTypeAppSelectedModelTags();
@@ -1252,23 +1256,25 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
       return { modelUrl: null, fileExtension: "", fileGuid: null };
     }
 
-    const file = kit?.files?.find((f) => f.guid === model.file);
+    const fileId = typeof model.file === "string" ? model.file : model.file?.guid;
+    const file = files.find((f) => f.guid === fileId);
     if (!file) {
-      console.warn("[TypeMesh] File not found in kit for model:", model.guid, "file guid:", model.file);
+      console.warn("[TypeMesh] File not found in kit for model:", model.guid, "file guid:", fileId);
       return { modelUrl: null, fileExtension: "", fileGuid: null };
     }
 
     const ext = file.name?.split(".").pop() || "";
 
+    // Try to get URL (for remote files or file provider)
     const url = kitStore.getFileUrl(file.guid);
-    if (!url) {
-      console.warn("[TypeMesh] File URL not available:", file.guid, file.name);
-      return { modelUrl: null, fileExtension: ext, fileGuid: file.guid };
+    if (url) {
+      console.log("[TypeMesh] Model ready to load:", model.guid, "file:", file.name);
+      return { modelUrl: url, fileExtension: ext, fileGuid: file.guid };
     }
 
-    console.log("[TypeMesh] Model ready to load:", model.guid, "file:", file.name);
-    return { modelUrl: url, fileExtension: ext, fileGuid: file.guid };
-  }, [type, kit, kitStore, selectedModelGuid, selectedModelTags]);
+    // No direct URL - will try blob URL in useEffect
+    return { modelUrl: null, fileExtension: ext, fileGuid: file.guid };
+  }, [type, files, kitStore, selectedModelGuid, selectedModelTags]);
 
   // Convert file provider URLs to blob URLs that Three.js can load
   useEffect(() => {
@@ -1286,6 +1292,9 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
         if (!cancelled && url) {
           currentBlobUrl = url;
           setBlobUrl(url);
+        } else if (!cancelled && !url) {
+          // Only warn if blob URL also fails
+          console.warn("[TypeMesh] No URL available for file:", fileGuid);
         }
       } catch (error) {
         console.error("[TypeMesh] Failed to get blob URL:", error);
@@ -3107,15 +3116,15 @@ const App: FC = () => {
           guid: newFileGuid,
           name: file.name,
           size: file.size,
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         };
 
         // Create Model that references the file
         const newModelGuid = guid();
         const newModel: Model = {
           guid: newModelGuid,
-          file: newFileGuid,
+          file: { guid: newFileGuid },
           description: file.name,
         };
 

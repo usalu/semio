@@ -11,7 +11,7 @@
     "grepInvert": null,
     "maxFailures": 0,
     "metadata": {
-      "actualWorkers": 5
+      "actualWorkers": 1
     },
     "preserveOutput": "always",
     "reporter": [
@@ -37,7 +37,7 @@
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
-          "actualWorkers": 5
+          "actualWorkers": 1
         },
         "id": "chromium",
         "name": "chromium",
@@ -46,12 +46,12 @@
         "testMatch": [
           "**/sketchpad.test.ts"
         ],
-        "timeout": 30000
+        "timeout": 180000
       }
     ],
     "shard": null,
     "updateSnapshots": "missing",
-    "updateSourceMethod": "3way",
+    "updateSourceMethod": "patch",
     "version": "1.56.1",
     "workers": 8,
     "webServer": {
@@ -73,16 +73,16 @@
         {
           "title": "sketchpad",
           "file": "sketchpad.test.ts",
-          "line": 154,
+          "line": 214,
           "column": 6,
           "specs": [
             {
-              "title": "Home",
-              "ok": true,
+              "title": "Design",
+              "ok": false,
               "tags": [],
               "tests": [
                 {
-                  "timeout": 30000,
+                  "timeout": 120000,
                   "annotations": [],
                   "expectedStatus": "passed",
                   "projectId": "chromium",
@@ -91,163 +91,78 @@
                     {
                       "workerIndex": 0,
                       "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 4817,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-12-02T00:37:50.209Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "1f96767271edc4239dfa-b740b36bc6e82e50ca6e",
-              "file": "sketchpad.test.ts",
-              "line": 155,
-              "column": 3
-            },
-            {
-              "title": "Kit",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 120000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium",
-                  "projectName": "chromium",
-                  "results": [
-                    {
-                      "workerIndex": 1,
-                      "parallelIndex": 1,
-                      "status": "passed",
-                      "duration": 54831,
-                      "errors": [],
+                      "status": "failed",
+                      "duration": 77290,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m100\u001b[39m\nReceived:   \u001b[31m3376\u001b[39m",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m100\u001b[39m\nReceived:   \u001b[31m3376\u001b[39m\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:472:30",
+                        "location": {
+                          "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                          "column": 30,
+                          "line": 472
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 470 |\u001b[39m         console\u001b[33m.\u001b[39mlog(\u001b[32m`[Design Test] Pan 2 took ${pan2Duration}ms`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 471 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 472 |\u001b[39m         expect(pan1Duration)\u001b[33m.\u001b[39mtoBeLessThan(\u001b[35m100\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 473 |\u001b[39m         expect(pan2Duration)\u001b[33m.\u001b[39mtoBeLessThan(\u001b[35m100\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 474 |\u001b[39m         \u001b[90m// Verify no cascade: second pan shouldn't be dramatically slower\u001b[39m\n \u001b[90m 475 |\u001b[39m         expect(\u001b[33mMath\u001b[39m\u001b[33m.\u001b[39mabs(pan1Duration \u001b[33m-\u001b[39m pan2Duration))\u001b[33m.\u001b[39mtoBeLessThan(\u001b[35m100\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                            "column": 30,
+                            "line": 472
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m100\u001b[39m\nReceived:   \u001b[31m3376\u001b[39m\n\n\u001b[0m \u001b[90m 470 |\u001b[39m         console\u001b[33m.\u001b[39mlog(\u001b[32m`[Design Test] Pan 2 took ${pan2Duration}ms`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 471 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 472 |\u001b[39m         expect(pan1Duration)\u001b[33m.\u001b[39mtoBeLessThan(\u001b[35m100\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 473 |\u001b[39m         expect(pan2Duration)\u001b[33m.\u001b[39mtoBeLessThan(\u001b[35m100\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 474 |\u001b[39m         \u001b[90m// Verify no cascade: second pan shouldn't be dramatically slower\u001b[39m\n \u001b[90m 475 |\u001b[39m         expect(\u001b[33mMath\u001b[39m\u001b[33m.\u001b[39mabs(pan1Duration \u001b[33m-\u001b[39m pan2Duration))\u001b[33m.\u001b[39mtoBeLessThan(\u001b[35m100\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:472:30\u001b[22m"
+                        }
+                      ],
                       "stdout": [
                         {
-                          "text": "Warning: Right panel not visible after 15s, returning empty sections\n"
+                          "text": "[TEST] Setting input files: C:\\git\\semio.tech\\semio\\assets\\semio\\metabolism.zip\n"
+                        },
+                        {
+                          "text": "[TEST] File set via file chooser\n"
+                        },
+                        {
+                          "text": "[TEST] Current URL after file set: http://localhost:5173/\n"
+                        },
+                        {
+                          "text": "[Design Test] Current URL: http://localhost:5173/kits/f042c2a4-3ba5-44b0-b22c-0ae8f568aacc/designs/9a890dd4-0a9c-48ac-920a-9e62666465ef\n"
+                        },
+                        {
+                          "text": "[Design Test] ReactFlow elements count: \u001b[33m0\u001b[39m\n"
+                        },
+                        {
+                          "text": "[Design Test] Window/Panel elements count: \u001b[33m0\u001b[39m\n"
+                        },
+                        {
+                          "text": "[Design Test] hasDiagram: \u001b[33mtrue\u001b[39m hasScene: \u001b[33mtrue\u001b[39m\n"
+                        },
+                        {
+                          "text": "[Design Test] Piece count: \u001b[33m180\u001b[39m\n"
+                        },
+                        {
+                          "text": "[Design Test] Pan 1 took 3376ms\n"
+                        },
+                        {
+                          "text": "[Design Test] Pan 2 took 1798ms\n"
                         }
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-02T00:37:50.208Z",
+                      "startTime": "2025-12-02T23:15:44.033Z",
                       "annotations": [],
-                      "attachments": []
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                        "column": 30,
+                        "line": 472
+                      }
                     }
                   ],
-                  "status": "expected"
-                }
-              ],
-              "id": "1f96767271edc4239dfa-8ea0390a28d2fa06fd58",
-              "file": "sketchpad.test.ts",
-              "line": 169,
-              "column": 3
-            },
-            {
-              "title": "Design",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 120000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium",
-                  "projectName": "chromium",
-                  "results": [
-                    {
-                      "workerIndex": 2,
-                      "parallelIndex": 2,
-                      "status": "passed",
-                      "duration": 54462,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-12-02T00:37:50.198Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "status": "unexpected"
                 }
               ],
               "id": "1f96767271edc4239dfa-04d6a37c53e07d4a2f57",
               "file": "sketchpad.test.ts",
-              "line": 253,
-              "column": 3
-            },
-            {
-              "title": "Type",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 120000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium",
-                  "projectName": "chromium",
-                  "results": [
-                    {
-                      "workerIndex": 3,
-                      "parallelIndex": 3,
-                      "status": "passed",
-                      "duration": 31041,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-12-02T00:37:50.219Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "1f96767271edc4239dfa-99d988a262cf65a431a0",
-              "file": "sketchpad.test.ts",
-              "line": 293,
-              "column": 3
-            },
-            {
-              "title": "Docs",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium",
-                  "projectName": "chromium",
-                  "results": [
-                    {
-                      "workerIndex": 4,
-                      "parallelIndex": 4,
-                      "status": "passed",
-                      "duration": 7678,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-12-02T00:37:50.251Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "1f96767271edc4239dfa-5a4f50354005f7ed4484",
-              "file": "sketchpad.test.ts",
-              "line": 317,
+              "line": 387,
               "column": 3
             }
           ]
@@ -257,11 +172,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2025-12-02T00:37:48.439Z",
-    "duration": 56951.21999999974,
-    "expected": 5,
+    "startTime": "2025-12-02T23:15:43.177Z",
+    "duration": 78469.202,
+    "expected": 0,
     "skipped": 0,
-    "unexpected": 0,
+    "unexpected": 1,
     "flaky": 0
   }
 }

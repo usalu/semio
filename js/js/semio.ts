@@ -92,7 +92,9 @@ export const jaccard = (a: string[] | undefined, b: string[] | undefined): numbe
 
 export const deepEqual = (a: any, b: any): boolean => {
   if (a === b) return true;
-  if (a == null || b == null) return a === b;
+  // Treat null and undefined as equal (important for JSON round-trips)
+  if (a == null && b == null) return true;
+  if (a == null || b == null) return false;
   if (typeof a !== typeof b) return false;
 
   if (Array.isArray(a)) {
@@ -1279,13 +1281,15 @@ export const InterfaceDiffSchema = InterfaceSchema.partial()
   .extend({
     compatibleInterfaces: z.array(InterfaceIdSchema).optional(),
     attributes: AttributesDiffSchema.optional(),
+    description: z.string().nullable().optional(),
+    icon: z.string().nullable().optional(),
   });
 export type InterfaceDiff = z.infer<typeof InterfaceDiffSchema>;
 export const getInterfaceDiff = (before: Interface, after: Interface): InterfaceDiff => {
   const diff: InterfaceDiff = {};
   if (before.name !== after.name) diff.name = after.name;
-  if (before.description !== after.description) diff.description = after.description;
-  if (before.icon !== after.icon) diff.icon = after.icon;
+  if (before.description !== after.description) diff.description = after.description ?? null;
+  if (before.icon !== after.icon) diff.icon = after.icon ?? null;
   if (JSON.stringify(before.compatibleInterfaces) !== JSON.stringify(after.compatibleInterfaces)) diff.compatibleInterfaces = after.compatibleInterfaces;
   if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   return diff;
@@ -1293,8 +1297,8 @@ export const getInterfaceDiff = (before: Interface, after: Interface): Interface
 export const inverseInterfaceDiff = (original: Interface, appliedDiff: InterfaceDiff): InterfaceDiff => {
   const inverse: InterfaceDiff = {};
   if (appliedDiff.name !== undefined) inverse.name = original.name;
-  if (appliedDiff.description !== undefined) inverse.description = original.description;
-  if (appliedDiff.icon !== undefined) inverse.icon = original.icon;
+  if (appliedDiff.description !== undefined) inverse.description = original.description ?? null;
+  if (appliedDiff.icon !== undefined) inverse.icon = original.icon ?? null;
   if (appliedDiff.compatibleInterfaces !== undefined) inverse.compatibleInterfaces = original.compatibleInterfaces;
   if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
   return inverse;
@@ -1314,8 +1318,17 @@ export const applyInterfaceDiff = (base: Interface, diff: InterfaceDiff): Interf
     name: diff.name ?? base.name,
   };
 
-  if (diff.description !== undefined || base.description !== undefined) result.description = diff.description ?? base.description;
-  if (diff.icon !== undefined || base.icon !== undefined) result.icon = diff.icon ?? base.icon;
+  // Handle nullable optional fields: null means "clear", undefined means "no change"
+  if ("description" in diff) {
+    if (diff.description !== null) result.description = diff.description;
+  } else if (base.description !== undefined) {
+    result.description = base.description;
+  }
+  if ("icon" in diff) {
+    if (diff.icon !== null) result.icon = diff.icon;
+  } else if (base.icon !== undefined) {
+    result.icon = base.icon;
+  }
   if (diff.compatibleInterfaces !== undefined || base.compatibleInterfaces !== undefined) result.compatibleInterfaces = diff.compatibleInterfaces ?? base.compatibleInterfaces;
   if (attributes && attributes.length > 0) result.attributes = attributes;
 
@@ -5008,7 +5021,10 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
       if (!modelB) return false;
       if (normalizeValue(modelA.name) !== normalizeValue(modelB.name)) return false;
       if (modelA.file.guid !== modelB.file.guid) return false;
-      if (!arraysEqual(normalizeArray(modelA.tags), normalizeArray(modelB.tags))) return false;
+      // Tags are order-independent (set-like)
+      const tagsA = normalizeArray(modelA.tags).map((t) => (typeof t === "object" ? t.guid : t));
+      const tagsB = normalizeArray(modelB.tags).map((t) => (typeof t === "object" ? t.guid : t));
+      if (tagsA.length !== tagsB.length || !tagsA.every((g) => tagsB.includes(g))) return false;
       if (!areAttributesEqual(modelA.attributes, modelB.attributes)) return false;
     }
     return true;
@@ -5217,6 +5233,34 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
     return true;
   };
 
+  const areConceptsEqual = (a?: Concept[], b?: Concept[]): boolean => {
+    const arrA = normalizeArray(a);
+    const arrB = normalizeArray(b);
+    if (arrA.length !== arrB.length) return false;
+    for (const conceptA of arrA) {
+      const conceptB = arrB.find((x) => x.guid === conceptA.guid);
+      if (!conceptB) return false;
+      if (conceptA.name !== conceptB.name) return false;
+      if (normalizeValue(conceptA.description) !== normalizeValue(conceptB.description)) return false;
+      if (normalizeValue(conceptA.icon) !== normalizeValue(conceptB.icon)) return false;
+    }
+    return true;
+  };
+
+  const areTagsEqual = (a?: Tag[], b?: Tag[]): boolean => {
+    const arrA = normalizeArray(a);
+    const arrB = normalizeArray(b);
+    if (arrA.length !== arrB.length) return false;
+    for (const tagA of arrA) {
+      const tagB = arrB.find((x) => x.guid === tagA.guid);
+      if (!tagB) return false;
+      if (tagA.name !== tagB.name) return false;
+      if (normalizeValue(tagA.description) !== normalizeValue(tagB.description)) return false;
+      if (normalizeValue(tagA.icon) !== normalizeValue(tagB.icon)) return false;
+    }
+    return true;
+  };
+
   // Top-level kit properties
   if (a.guid !== b.guid) return false;
   if (a.name !== b.name) return false;
@@ -5229,7 +5273,8 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
   if (normalizeValue(a.homepage) !== normalizeValue(b.homepage)) return false;
   if (normalizeValue(a.license) !== normalizeValue(b.license)) return false;
 
-  if (!arraysEqual(normalizeArray(a.concepts), normalizeArray(b.concepts))) return false;
+  if (!areConceptsEqual(a.concepts, b.concepts)) return false;
+  if (!areTagsEqual(a.tags, b.tags)) return false;
   if (!areTypesEqual(a.types, b.types)) return false;
   if (!areDesignsEqual(a.designs, b.designs)) return false;
   if (!areInterfacesEqual(a.interfaces, b.interfaces)) return false;
@@ -5803,6 +5848,14 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
  * Convert SQLite database to Kit JSON structure
  */
 const sqliteToKit = async (db: any): Promise<Kit> => {
+  // Get list of existing tables to avoid querying non-existent tables
+  const existingTables = new Set<string>();
+  const tableStmt = db.prepare("SELECT name FROM sqlite_master WHERE type='table'");
+  while (tableStmt.step()) {
+    existingTables.add(tableStmt.getAsObject().name as string);
+  }
+  tableStmt.free();
+
   const execResult = (query: string, params?: any[]): any[] => {
     const stmt = db.prepare(query);
     if (params) {
@@ -5815,6 +5868,14 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
     }
     stmt.free();
     return result;
+  };
+
+  // Safe query that returns empty array if table doesn't exist
+  const safeExecResult = (tableName: string, query: string, params?: any[]): any[] => {
+    if (!existingTables.has(tableName)) {
+      return [];
+    }
+    return execResult(query, params);
   };
 
   const kitRows = execResult("SELECT * FROM kit LIMIT 1");
@@ -6108,6 +6169,15 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
     };
   });
 
+  // Load tags
+  const tags = safeExecResult("tag", "SELECT * FROM tag WHERE kit_guid = ?", [kit.guid]);
+  kit.tags = mapOrUndefined(tags, (row: any) => ({
+    guid: row.guid,
+    name: row.name,
+    description: toUndefined(row.description),
+    icon: toUndefined(row.icon),
+  }));
+
   // Load qualities
   const qualities = execResult("SELECT * FROM quality WHERE kit_guid = ?", [kit.guid]);
   kit.qualities =
@@ -6188,7 +6258,12 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
 
   // Load concepts
   const concepts = execResult("SELECT * FROM concept WHERE kit_guid = ?", [kit.guid]);
-  kit.concepts = concepts.length > 0 ? concepts.map((row: any) => row.value) : undefined;
+  kit.concepts = mapOrUndefined(concepts, (row: any) => ({
+    guid: row.guid,
+    name: row.name,
+    description: toUndefined(row.description),
+    icon: toUndefined(row.icon),
+  }));
 
   // Load kit attributes
   const kitAttributes = execResult("SELECT * FROM attribute WHERE kit_guid = ?", [kit.guid]);
@@ -6566,9 +6641,12 @@ CREATE TABLE stat (
 );
 
 CREATE TABLE concept (
+	guid VARCHAR(36) NOT NULL,
+	name VARCHAR(256) NOT NULL,
+	description TEXT,
+	icon TEXT,
 	kit_guid VARCHAR(36) NOT NULL,
-	value VARCHAR(256) NOT NULL,
-	PRIMARY KEY (kit_guid, value),
+	PRIMARY KEY (guid),
 	FOREIGN KEY(kit_guid) REFERENCES kit (guid)
 );
 
@@ -6664,9 +6742,18 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
   ]);
 
   toArray(kit.concepts).forEach((concept) => {
-    // Handle both string concepts (legacy) and Concept objects
-    const conceptValue = typeof concept === "object" ? concept.name : concept;
-    db.run("INSERT INTO concept (kit_guid, value) VALUES (?, ?)", [kit.guid, conceptValue]);
+    if (typeof concept === "object") {
+      db.run("INSERT INTO concept (guid, name, description, icon, kit_guid) VALUES (?, ?, ?, ?, ?)", [
+        concept.guid,
+        concept.name,
+        concept.description || null,
+        concept.icon || null,
+        kit.guid,
+      ]);
+    } else {
+      // Legacy string concept - generate a guid
+      db.run("INSERT INTO concept (guid, name, kit_guid) VALUES (?, ?, ?)", [guid(), concept, kit.guid]);
+    }
   });
 
   toArray(kit.attributes).forEach((attr) => {

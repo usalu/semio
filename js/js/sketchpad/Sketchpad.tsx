@@ -63,6 +63,8 @@ import {
   Camera,
   CameraDiff,
   colorPortsForTypes,
+  Concept,
+  ConceptDiff,
   Connection,
   ConnectionDiff,
   Coord,
@@ -73,6 +75,7 @@ import {
   DiffStatus,
   exportKit,
   FileDiff,
+  FileId,
   findDesignInKit,
   findPieceInDesign,
   findReplacableDesignsForDesignPiece,
@@ -92,10 +95,6 @@ import {
   importKit,
   Interface,
   InterfaceDiff,
-  Tag,
-  TagDiff,
-  Concept,
-  ConceptDiff,
   inverseKitDiff,
   Kit,
   KitDiff,
@@ -125,6 +124,9 @@ import {
   SideDiff,
   Stat,
   StatDiff,
+  Tag,
+  TagDiff,
+  TagId,
   Type,
   TypeDiff,
   TypeShallow,
@@ -235,9 +237,21 @@ const getDesignAppHooks = () => {
       }
       return undefined;
     },
+    useDesignAppIsPieceHovered: (id?: DesignAppId, pieceId?: string) => {
+      if (designAppModuleCache) {
+        return designAppModuleCache.useDesignAppIsPieceHovered(id, pieceId);
+      }
+      return false;
+    },
     useDesignAppIsPieceTransitiveHovered: (id?: DesignAppId, pieceId?: string) => {
       if (designAppModuleCache) {
         return designAppModuleCache.useDesignAppIsPieceTransitiveHovered(id, pieceId);
+      }
+      return false;
+    },
+    useDesignAppIsConnectionHovered: (id?: DesignAppId, connectionId?: string) => {
+      if (designAppModuleCache) {
+        return designAppModuleCache.useDesignAppIsConnectionHovered(id, connectionId);
       }
       return false;
     },
@@ -246,6 +260,18 @@ const getDesignAppHooks = () => {
         return designAppModuleCache.useDesignAppSelection();
       }
       return {};
+    },
+    useDesignAppIsPieceSelected: (id?: DesignAppId, pieceId?: string) => {
+      if (designAppModuleCache) {
+        return designAppModuleCache.useDesignAppIsPieceSelected(id, pieceId);
+      }
+      return false;
+    },
+    useDesignAppIsConnectionSelected: (id?: DesignAppId, connectionId?: string) => {
+      if (designAppModuleCache) {
+        return designAppModuleCache.useDesignAppIsConnectionSelected(id, connectionId);
+      }
+      return false;
     },
     useDesignAppStore: <T,>(selector?: (store: any) => T, id?: DesignAppId) => {
       if (designAppModuleCache) {
@@ -337,6 +363,9 @@ export abstract class Store<TState> {
   protected cacheHash?: string;
   protected status: StoreStatus = StoreStatus.IDLE;
   protected error?: Error;
+  // PERF: Track whether Y.js data has changed to avoid unnecessary snapshot rebuilds
+  protected dirty: boolean = true;
+  private internalObserverDisposer?: Disposable;
 
   constructor(parent: SketchpadStore, yMap: Y.Map<any>, transact: Transact) {
     this.guid = guid();
@@ -351,10 +380,24 @@ export abstract class Store<TState> {
       this.status = StoreStatus.LOADING;
       this.buildSnapshot();
       this.status = StoreStatus.READY;
+      // Set up internal observer to mark cache as dirty when Y.js data changes
+      this.setupDirtyTracking();
     } catch (error) {
       this.status = StoreStatus.ERROR;
       this.error = error instanceof Error ? error : new Error(String(error));
     }
+  }
+
+  // PERF: Set up observer to invalidate cache when Y.js data changes
+  protected setupDirtyTracking(): void {
+    if (this.internalObserverDisposer) {
+      this.internalObserverDisposer();
+    }
+    const callback = () => {
+      this.dirty = true;
+    };
+    this.yMap.observeDeep(callback);
+    this.internalObserverDisposer = () => this.yMap.unobserveDeep(callback);
   }
 
   protected abstract hash(state: TState): string;
@@ -364,12 +407,13 @@ export abstract class Store<TState> {
     if (this.status === StoreStatus.ERROR) {
       throw this.error || new Error("Store is in error state");
     }
-    const currentData = this.buildSnapshot();
-    const currentHash = this.hash(currentData);
-    if (!this.cache || this.cacheHash !== currentHash) {
-      this.cache = currentData;
-      this.cacheHash = currentHash;
+    // PERF: Return cached snapshot if Y.js data hasn't changed
+    if (!this.dirty && this.cache) {
+      return this.cache;
     }
+    const currentData = this.buildSnapshot();
+    this.cache = currentData;
+    this.dirty = false;
     return this.cache;
   }
 
@@ -2467,12 +2511,14 @@ class ModelStore {
   constructor(yModel: YModel, model: Model) {
     this.yModel = yModel;
     this.guid = model.guid;
-    this.file = model.file;
+    // Store the file guid string (file is FileId: { guid: string })
+    this.yModel.set("file", typeof model.file === "string" ? model.file : model.file.guid);
     this.description = model.description;
     const yTags = new Y.Array<string>();
     this.yModel.set("tags", yTags);
     this.yTags = yTags;
-    if (model.tags) this.yTags.push(model.tags);
+    // Store tag guids as strings (tags is TagId[]: { guid: string }[])
+    if (model.tags) this.yTags.push(model.tags.map((t) => (typeof t === "string" ? t : t.guid)));
     this.attributes = new Map();
     const yAttributes = new Y.Array<YAttribute>();
     this.yModel.set("attributes", yAttributes);
@@ -2499,11 +2545,12 @@ class ModelStore {
     this.yModel.set("guid", guid);
   }
 
-  get file(): string {
-    return this.yModel.get("file") as string;
+  get file(): FileId {
+    const fileGuid = this.yModel.get("file") as string;
+    return { guid: fileGuid };
   }
-  set file(file: string) {
-    this.yModel.set("file", file);
+  set file(file: FileId | string) {
+    this.yModel.set("file", typeof file === "string" ? file : file.guid);
   }
 
   get description(): string | undefined {
@@ -2518,7 +2565,8 @@ class ModelStore {
   };
 
   snapshot(): Model {
-    const tags = this.yTags.toArray();
+    // Convert stored tag guids back to TagId objects
+    const tags: TagId[] = this.yTags.toArray().map((guid) => ({ guid }));
     const currentHash = this.hash({
       guid: this.guid,
       file: this.file,
@@ -2548,7 +2596,8 @@ class ModelStore {
     if (diff.tags !== undefined) {
       this.yTags.delete(0, this.yTags.length);
       if (diff.tags.length > 0) {
-        this.yTags.push(diff.tags);
+        // Store tag guids as strings
+        this.yTags.push(diff.tags.map((t) => (typeof t === "string" ? t : t.guid)));
       }
     }
   }
@@ -4983,20 +5032,28 @@ export function usePieces(): Piece[] {
 
 export function useFlattenDiff(): DesignDiff {
   const designScope = useDesignScope();
-  const kit = useKit() as Kit;
+  // PERF: Use targeted hooks instead of full kit to avoid overfetching
+  const types = useKitTypes();
+  const designs = useKitDesigns();
   if (!designScope) throw new Error("useFlattenDiff must be called within a DesignScopeProvider");
-  return flattenDesign(kit, designScope.guid);
+  // Build minimal kit object with only what flattenDesign needs
+  return useMemo(() => {
+    const minimalKit = { types, designs } as Kit;
+    return flattenDesign(minimalKit, designScope.guid);
+  }, [types, designs, designScope.guid]);
 }
 
 export function useFlatDesign(): Design {
   const design = useDesign() as Design;
   const diff = useFlattenDiff();
-  return applyDesignDiff(design, diff);
+  // PERF: Memoize the result to prevent unnecessary re-renders
+  return useMemo(() => applyDesignDiff(design, diff), [design, diff]);
 }
 
 export function useFlatPieces(): Piece[] {
   const design = useFlatDesign();
-  return design.pieces ?? [];
+  // PERF: Memoize to prevent unnecessary re-renders
+  return useMemo(() => design.pieces ?? [], [design.pieces]);
 }
 
 export function usePiecesMetadata(): Map<
@@ -5009,10 +5066,16 @@ export function usePiecesMetadata(): Map<
     depth: number;
   }
 > {
-  const kit = useKit(undefined, undefined, true) as Kit;
+  // PERF: Use targeted hooks instead of full kit with deep subscription
+  const types = useKitTypes();
+  const designs = useKitDesigns();
   const designScope = useDesignScope();
   if (!designScope) throw new Error("usePiecesMetadata must be called within a DesignScopeProvider");
-  return piecesMetadata(kit, designScope.guid);
+  // Build minimal kit object with only what piecesMetadata needs
+  return useMemo(() => {
+    const minimalKit = { types, designs } as Kit;
+    return piecesMetadata(minimalKit, designScope.guid);
+  }, [types, designs, designScope.guid]);
 }
 
 export function usePieceCenter(pieceId?: Guid): Coord | undefined {
@@ -5048,12 +5111,10 @@ export function usePiecePlanes(): Plane[] {
 
 export function usePieceModelUrls(): Map<string, string> {
   const flatDesign = useFlatDesign();
-  // TODO: Re-enable once circular dependency is fully resolved
-  // const types = usePortColoredTypes();
-  const types = useKit((k) => k?.types || []) as Type[];
-  const kit = useKit((k) => k as Kit) as Kit | null;
+  // PERF: Use targeted hooks instead of full kit subscription
+  const types = useKitTypes();
+  const files = useKitFiles();
   const kitStore = useKitStore((s) => s) as KitStore;
-  const files = kit?.files ?? [];
   const getFileUrl = React.useCallback(
     (fileGuid: string) => {
       return kitStore.getFileUrl(fileGuid);
@@ -5544,6 +5605,49 @@ export class KitStore {
     return "";
   }
 
+  /**
+   * Build a map from storage path to file GUID for all files in the kit.
+   * Used for matching imported file blobs to existing kit file definitions.
+   */
+  buildFilePathMap(): Map<string, string> {
+    const pathMap = new Map<string, string>();
+    for (const [fileGuid, fileStore] of this.files) {
+      const file = fileStore.snapshot();
+      const storagePath = this.getFileStoragePath(file);
+      pathMap.set(storagePath, fileGuid);
+    }
+    return pathMap;
+  }
+
+  /**
+   * Store file blobs for existing kit files by matching their storage paths.
+   * This is used during import to associate extracted blobs with existing file definitions.
+   */
+  async storeFileBlobs(blobs: Map<string, Blob>): Promise<void> {
+    const pathMap = this.buildFilePathMap();
+
+    for (const [path, blob] of blobs) {
+      const fileGuid = pathMap.get(path);
+      if (fileGuid) {
+        const objectUrl = URL.createObjectURL(blob);
+        this.regularFiles.set(path, objectUrl);
+
+        // Also upload to file provider if available
+        if (this.fileProvider) {
+          try {
+            const remoteUrl = await this.fileProvider.upload(this.guid, fileGuid, path, blob);
+            const fileStore = this.files.get(fileGuid);
+            if (fileStore) {
+              fileStore.change({ remote: remoteUrl });
+            }
+          } catch (error) {
+            console.error(`[KIT ${this.name}] Failed to upload file ${path}:`, error);
+          }
+        }
+      }
+    }
+  }
+
   hasQuality(guid: string): boolean {
     return this.qualities.has(guid);
   }
@@ -5850,6 +5954,72 @@ export class KitStore {
     return createObserver(this.yKit, subscribe, true);
   };
 
+  // Field-level observers for targeted subscriptions (avoids overfetching)
+  onTypesChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
+    const notifySubscriber = () => subscribe(() => {});
+    if (deep) {
+      this.yTypes.observeDeep(notifySubscriber);
+      return () => this.yTypes.unobserveDeep(notifySubscriber);
+    }
+    this.yTypes.observe(notifySubscriber);
+    return () => this.yTypes.unobserve(notifySubscriber);
+  };
+
+  onFilesChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
+    const notifySubscriber = () => subscribe(() => {});
+    if (deep) {
+      this.yFiles.observeDeep(notifySubscriber);
+      return () => this.yFiles.unobserveDeep(notifySubscriber);
+    }
+    this.yFiles.observe(notifySubscriber);
+    return () => this.yFiles.unobserve(notifySubscriber);
+  };
+
+  onDesignsChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
+    const notifySubscriber = () => subscribe(() => {});
+    if (deep) {
+      this.yDesigns.observeDeep(notifySubscriber);
+      return () => this.yDesigns.unobserveDeep(notifySubscriber);
+    }
+    this.yDesigns.observe(notifySubscriber);
+    return () => this.yDesigns.unobserve(notifySubscriber);
+  };
+
+  onQualitiesChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
+    const notifySubscriber = () => subscribe(() => {});
+    if (deep) {
+      this.yQualities.observeDeep(notifySubscriber);
+      return () => this.yQualities.unobserveDeep(notifySubscriber);
+    }
+    this.yQualities.observe(notifySubscriber);
+    return () => this.yQualities.unobserve(notifySubscriber);
+  };
+
+  onAuthorsChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
+    const notifySubscriber = () => subscribe(() => {});
+    if (deep) {
+      this.yAuthors.observeDeep(notifySubscriber);
+      return () => this.yAuthors.unobserveDeep(notifySubscriber);
+    }
+    this.yAuthors.observe(notifySubscriber);
+    return () => this.yAuthors.unobserve(notifySubscriber);
+  };
+
+  onFoldersChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
+    const notifySubscriber = () => subscribe(() => {});
+    if (deep) {
+      this.yFolders.observeDeep(notifySubscriber);
+      return () => this.yFolders.unobserveDeep(notifySubscriber);
+    }
+    this.yFolders.observe(notifySubscriber);
+    return () => this.yFolders.unobserve(notifySubscriber);
+  };
+
+  // Scalar field observer (for name, description, etc.)
+  onScalarFieldChanged = (key: string, subscribe: Subscribe): Disposable => {
+    return createFieldObserver(this.yKit, key, subscribe, false);
+  };
+
   async executeCommand<T>(command: string, ...args: any[]): Promise<T> {
     let origin: string | undefined;
     let rest: any[];
@@ -6005,9 +6175,143 @@ export function useKit<T>(selector?: (kit: KitShallow | Kit) => T, guid?: Guid, 
 
 // useDiffedKit - moved to designAppIntegration.ts
 
-export function useDesigns(): Design[] {
-  return useKit((k) => k.designs ?? []) as Design[];
+// #region Targeted Kit Hooks
+// These hooks use selectors with useKit for targeted data access.
+// IMPORTANT: Selectors must be stable references to avoid infinite loops with useSyncExternalStore.
+
+// Stable empty array fallbacks - MUST use stable references to avoid infinite loop in useSyncExternalStore
+const EMPTY_TYPES: Type[] = [];
+const EMPTY_AUTHORS: Author[] = [];
+const EMPTY_FILES: SemioFile[] = [];
+const EMPTY_QUALITIES: Quality[] = [];
+const EMPTY_DESIGNS: Design[] = [];
+const EMPTY_FOLDERS: Folder[] = [];
+const EMPTY_INTERFACES: Interface[] = [];
+const EMPTY_TAGS: Tag[] = [];
+const EMPTY_CONCEPTS: Concept[] = [];
+
+// Stable selector functions - inline functions are recreated each render causing infinite loops
+const selectTypes = (k: KitShallow | Kit) => k.types ?? EMPTY_TYPES;
+const selectName = (k: KitShallow | Kit) => k.name;
+const selectDescription = (k: KitShallow | Kit) => k.description;
+const selectAuthors = (k: KitShallow | Kit) => k.authors ?? EMPTY_AUTHORS;
+const selectFiles = (k: KitShallow | Kit) => k.files ?? EMPTY_FILES;
+const selectQualities = (k: KitShallow | Kit) => k.qualities ?? EMPTY_QUALITIES;
+const selectDesigns = (k: KitShallow | Kit) => k.designs ?? EMPTY_DESIGNS;
+const selectFolders = (k: KitShallow | Kit) => k.folders ?? EMPTY_FOLDERS;
+const selectInterfaces = (k: KitShallow | Kit) => k.interfaces ?? EMPTY_INTERFACES;
+const selectTags = (k: KitShallow | Kit) => k.tags ?? EMPTY_TAGS;
+const selectConcepts = (k: KitShallow | Kit) => k.concepts ?? EMPTY_CONCEPTS;
+
+/**
+ * Returns only the types array from the kit.
+ */
+export function useKitTypes(guid?: Guid): Type[] {
+  return useKit(selectTypes, guid) as Type[];
 }
+
+/**
+ * Returns only the kit name.
+ */
+export function useKitName(guid?: Guid): string {
+  return useKit(selectName, guid) as string;
+}
+
+/**
+ * Returns only the kit description.
+ */
+export function useKitDescription(guid?: Guid): string | undefined {
+  return useKit(selectDescription, guid) as string | undefined;
+}
+
+/**
+ * Returns only the authors array from the kit.
+ */
+export function useKitAuthors(guid?: Guid): Author[] {
+  return useKit(selectAuthors, guid) as Author[];
+}
+
+/**
+ * Returns only the files array from the kit.
+ */
+export function useKitFiles(guid?: Guid): SemioFile[] {
+  return useKit(selectFiles, guid) as SemioFile[];
+}
+
+/**
+ * Returns only the qualities array from the kit.
+ */
+export function useKitQualities(guid?: Guid): Quality[] {
+  return useKit(selectQualities, guid) as Quality[];
+}
+
+/**
+ * Returns only the designs array from the kit.
+ */
+export function useKitDesigns(guid?: Guid): Design[] {
+  return useKit(selectDesigns, guid) as Design[];
+}
+
+// Legacy alias
+export function useDesigns(): Design[] {
+  return useKit(selectDesigns) as Design[];
+}
+
+/**
+ * Returns only the folders array from the kit.
+ */
+export function useKitFolders(guid?: Guid): Folder[] {
+  return useKit(selectFolders, guid) as Folder[];
+}
+
+/**
+ * Returns only the interfaces array from the kit.
+ */
+export function useKitInterfaces(guid?: Guid): Interface[] {
+  return useKit(selectInterfaces, guid) as Interface[];
+}
+
+/**
+ * Returns only the tags array from the kit.
+ */
+export function useKitTags(guid?: Guid): Tag[] {
+  return useKit(selectTags, guid) as Tag[];
+}
+
+/**
+ * Returns only the concepts array from the kit.
+ */
+export function useKitConcepts(guid?: Guid): Concept[] {
+  return useKit(selectConcepts, guid) as Concept[];
+}
+
+/**
+ * Returns a specific type by guid from the kit.
+ */
+export function useTypeFromKit(typeGuid: Guid, kitGuid?: Guid): Type | undefined {
+  // Use useCallback to memoize the selector since it depends on typeGuid
+  const selector = useCallback((k: KitShallow | Kit) => k.types?.find((t) => t.guid === typeGuid), [typeGuid]);
+  return useKit(selector, kitGuid, true) as Type | undefined;
+}
+
+/**
+ * Returns a specific design by guid from the kit.
+ */
+export function useDesignFromKit(designGuid: Guid, kitGuid?: Guid): Design | undefined {
+  // Use useCallback to memoize the selector since it depends on designGuid
+  const selector = useCallback((k: KitShallow | Kit) => k.designs?.find((d) => d.guid === designGuid), [designGuid]);
+  return useKit(selector, kitGuid, true) as Design | undefined;
+}
+
+/**
+ * Returns port compatibility information for types in the kit.
+ */
+export function useKitPortCompatibility(kitGuid?: Guid): { interfaces: Interface[] } {
+  const interfaces = useKitInterfaces(kitGuid);
+  return useMemo(() => ({ interfaces }), [interfaces]);
+}
+
+// #endregion Targeted Kit Hooks
 
 export function useFileUrls(): Map<Url, Url> {
   const kitStore = useKitStore() as KitStore | null;
@@ -6549,17 +6853,16 @@ export const kitCommands = {
 
 export function useIsPieceSelected(): boolean {
   const piece = usePieceScope();
-  const { useDesignAppSelection } = getDesignAppHooks();
-  const selection = useDesignAppSelection();
-  return selection.pieces?.includes(piece?.guid ?? "") ?? false;
+  const { useDesignAppIsPieceSelected } = getDesignAppHooks();
+  // Use granular hook that only re-renders when this specific piece's selection state changes
+  return useDesignAppIsPieceSelected(undefined, piece?.guid ?? "");
 }
 
 export function useIsPieceHovered(): boolean {
-  const { useDesignAppHover } = getDesignAppHooks();
-  const hover = useDesignAppHover();
   const pieceScope = usePieceScope();
-  if (!pieceScope || !hover) return false;
-  return hover.pieces?.includes(pieceScope.guid) ?? false;
+  const { useDesignAppIsPieceHovered } = getDesignAppHooks();
+  // Use granular hook that only re-renders when this specific piece's hover state changes
+  return useDesignAppIsPieceHovered(undefined, pieceScope?.guid ?? "");
 }
 
 export function useIsPieceTransitiveHovered(): boolean {
@@ -6650,18 +6953,16 @@ export function useDiffedPiece<T>(selector?: (piece: Piece) => T, id?: string, d
 
 export function useIsConnectionSelected(): boolean {
   const connectionScope = useConnectionScope();
-  const { useDesignAppSelection } = getDesignAppHooks();
-  const selection = useDesignAppSelection();
-  if (!connectionScope) return false;
-  return selection.connections?.some((guid: string) => guid === connectionScope.guid) ?? false;
+  const { useDesignAppIsConnectionSelected } = getDesignAppHooks();
+  // Use granular hook that only re-renders when this specific connection's selection state changes
+  return useDesignAppIsConnectionSelected(undefined, connectionScope?.guid ?? "");
 }
 
 export function useIsConnectionHovered(): boolean {
-  const { useDesignAppHover } = getDesignAppHooks();
-  const hover = useDesignAppHover();
   const connectionScope = useConnectionScope();
-  if (!connectionScope || !hover) return false;
-  return hover.connections?.includes(connectionScope.guid) ?? false;
+  const { useDesignAppIsConnectionHovered } = getDesignAppHooks();
+  // Use granular hook that only re-renders when this specific connection's hover state changes
+  return useDesignAppIsConnectionHovered(undefined, connectionScope?.guid ?? "");
 }
 
 export function useConnectionStatus(): DiffStatus {
@@ -6891,6 +7192,32 @@ export function createFieldsObserver<T>(yMap: Y.Map<T>, keys: string[], subscrib
   };
 }
 
+// Performance logging for state management debugging
+let performanceLoggingEnabled = false;
+const performanceLogCounts = new Map<string, number>();
+const performanceLogTimestamps = new Map<string, number>();
+
+export function enablePerformanceLogging(enabled: boolean = true) {
+  performanceLoggingEnabled = enabled;
+  if (!enabled) {
+    performanceLogCounts.clear();
+    performanceLogTimestamps.clear();
+  }
+}
+
+function logStateAccess(hookName: string, storeType: string, selectorInfo?: string) {
+  if (!performanceLoggingEnabled) return;
+  const key = `${hookName}:${storeType}${selectorInfo ? `:${selectorInfo}` : ""}`;
+  const count = (performanceLogCounts.get(key) || 0) + 1;
+  performanceLogCounts.set(key, count);
+  const now = Date.now();
+  const lastTime = performanceLogTimestamps.get(key) || 0;
+  performanceLogTimestamps.set(key, now);
+  if (now - lastTime < 100) {
+    console.warn(`[PERF] Rapid re-render: ${key} (${count}x, ${now - lastTime}ms apart)`);
+  }
+}
+
 export function useSync<T, TSelected = T>(store: { onChanged: (subscribe: Subscribe) => Disposable; snapshot: () => T }, selector: (value: T) => TSelected = identitySelector as any, deep?: boolean): TSelected {
   const subscribe = useCallback(
     (callback: () => void) => {
@@ -6903,6 +7230,7 @@ export function useSync<T, TSelected = T>(store: { onChanged: (subscribe: Subscr
     [store],
   );
   const getSnapshot = useCallback(() => {
+    logStateAccess("useSync", (store as any).constructor?.name || "unknown", selector === identitySelector ? "FULL_STATE" : "selector");
     return selector(store.snapshot());
   }, [store, selector]);
   return useSyncExternalStore(subscribe, getSnapshot);
@@ -6920,6 +7248,7 @@ export function useSyncDeep<T, TSelected = T>(store: { onChangedDeep: (subscribe
     [store],
   );
   const getSnapshot = useCallback(() => {
+    logStateAccess("useSyncDeep", (store as any).constructor?.name || "unknown", selector === identitySelector ? "FULL_STATE_DEEP" : "selector");
     return selector(store.snapshot());
   }, [store, selector]);
   return useSyncExternalStore(subscribe, getSnapshot);
@@ -9154,7 +9483,9 @@ export const PanelSectionProvider: FC<{ children: ReactNode }> = ({ children }) 
     setSections((prev) => ({ ...prev, [panelKey]: prev[panelKey].filter((s) => s.id !== sectionId) }));
   }, []);
 
-  return <PanelSectionContext.Provider value={{ sections, addSection, removeSection }}>{children}</PanelSectionContext.Provider>;
+  const contextValue = useMemo(() => ({ sections, addSection, removeSection }), [sections, addSection, removeSection]);
+
+  return <PanelSectionContext.Provider value={contextValue}>{children}</PanelSectionContext.Provider>;
 };
 
 export const usePanelSections = (panelKey: PanelKey): PanelSection[] => {
@@ -9202,7 +9533,9 @@ export const FooterItemProvider: FC<{ children: ReactNode }> = ({ children }) =>
     setItems((prev) => prev.filter((i) => i.id !== itemId));
   }, []);
 
-  return <FooterItemContext.Provider value={{ items, addItem, removeItem }}>{children}</FooterItemContext.Provider>;
+  const contextValue = useMemo(() => ({ items, addItem, removeItem }), [items, addItem, removeItem]);
+
+  return <FooterItemContext.Provider value={contextValue}>{children}</FooterItemContext.Provider>;
 };
 
 export const useFooterItems = (): FooterItem[] => {
@@ -9265,7 +9598,7 @@ export const ConceptFilter: FC<{ allConcepts: string[]; paramName?: string }> = 
   return (
     <div className="flex flex-wrap items-center gap-single p-single border-b">
       {allConcepts.map((concept) => (
-        <Toggle key={concept} pressed={selectedConcepts.includes(concept)} onPressedChange={() => toggleConcept(concept)} id={`semio.sketchpad.filter.concept.${concept}`} icon={concept} />
+        <Toggle key={concept} pressed={selectedConcepts.includes(concept)} onPressedChange={() => toggleConcept(concept)} id={`semio.sketchpad.filter.concept.${concept}`} icon={<span className="size-small">#</span>} text={concept} />
       ))}
     </div>
   );
@@ -11906,9 +12239,9 @@ const LayoutWrapper: FC = () => {
     if (currentPath !== fullPath) {
       store.execute("semio.sketchpad.addNavigation", "semio.sketchpad.sync", fullPath);
     } else {
-      sketchpadCommands.syncNavigation("semio.sketchpad.sync", fullPath);
+      store.execute("semio.sketchpad.syncNavigation", "semio.sketchpad.sync", fullPath);
     }
-  }, [location.pathname, location.search, sketchpadCommands, store]);
+  }, [location.pathname, location.search, store]);
 
   useEffect(() => {
     if (typeof document === "undefined") return;

@@ -30,7 +30,6 @@
     "ms-dotnettools.csdevkit",
     "ms-dotnettools.dotnet-interactive-vscode",
     // python
-    "njpwerner.autodocstring",
     "ms-python.python",
     "ms-python.vscode-pylance",
     "charliermarsh.ruff",

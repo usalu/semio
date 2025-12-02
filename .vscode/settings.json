@@ -21,6 +21,7 @@
   "python.testing.pytestArgs": [
     "."
   ],
+  "python.testing.cwd": "${workspaceFolder}/py/engine",
   "python.analysis.languageServerMode": "full",
   // "python.testing.pytestArgs": [
   //     "--cov",

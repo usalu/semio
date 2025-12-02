@@ -265,7 +265,7 @@ Stats provide computed or measured performance data for entire designs using the
 
 - `DIAGNOSE`: Think about the problem and possible causes. ALWAYS add console logs to the codebase to help understand the problem. NEVER assume to know the solution and ALWAYS use logs to verify your hypothesis. ALWAYS add a `[SLUG] ` (replace SLUG with a unique slug for this diagnosis) after `[DEBUG] ` to the console log in order to identify the logs related to the diagnosis. E.g. `[DEBUG] [PIECE-DRAG-AND-DROP-ISSUE] Mounting Dropzone: …`. Then you will receive the logs from the user and if the logs are enough to verify your hypothesis, ALWAYs directly implement the solution. When the `DIAGNOSE` is not enough, update the document with the new information, add new logs and continue the process.
 
-- `FIX`: Anaylze and fix the problem imediatley in one step (without any approval). When you are not sure about the root cause, pick the most likely one and try to implement the solution directly.
+- `FIX`: Anaylze and fix the problem imediatley in one step (without any approval). When you are not sure about the root cause, pick the most likely one and try to implement the solution directly. ALWAYS extend, change and refactor everything (even if it is an intermediate step) to fix the problem.
 
 - `CLEAN`: Clean up everything intermediate such as diagnostic console logs, comments, and temporary code.
 
@@ -274,6 +274,8 @@ Stats provide computed or measured performance data for entire designs using the
 - `AUTOMATE`: Create a script to automate a task. `*.ts` for all automation tasks (use `scripts/utils.ts` for reusable code). `*.py` for python related tasks (use `@semio/engine` for reusable code).
 
 - `FINISH`: Finish a task that was started but not completed. ALWAYS first search for recent logs using `npx tsx scripts/log.ts search [query] --limit=10` and analyze with git staged and unstaged changes that are related to the task.
+
+- `SCHEMA`: Cahgne from specs to implementation everything.
 
 ## CI/CD
 
@@ -557,11 +559,11 @@ const logs = listLogs({ year: 2025, month: 11 });
 
 // Search with query and filters
 const results = searchLogs({
-  query: "drag drop",        // Search term (optional)
-  year: 2025,                // Filter by year (optional)
-  month: 12,                 // Filter by month (optional)
-  day: 1,                    // Filter by day (optional)
-  limit: 10,                 // Limit results (optional)
+  query: "drag drop", // Search term (optional)
+  year: 2025, // Filter by year (optional)
+  month: 12, // Filter by month (optional)
+  day: 1, // Filter by day (optional)
+  limit: 10, // Limit results (optional)
 });
 
 // Delete
@@ -1338,6 +1340,26 @@ Shared react components. The main component is Sketchpad. Sketchpad is used in t
 
 - Domain logic is ALWAYS in semio.ts and whenever an operation is not ui bound, it should be implemented there.
 - State managment ALWAYS is in the corresponding store.tsx. State is ALWAYS accessed over hooks. There are internal hooks (e.g. store accessors) that are NEVER used directly in components. Mutation ALWAYS are executed via commands. NEVER use useState or other local state in components.
+- **Targeted Hooks**: Components MUST use targeted hooks for kit data access. Use the following hooks from `Sketchpad.tsx`:
+  - `useKitTypes(guid?)` - returns types array
+  - `useKitFiles(guid?)` - returns files array
+  - `useKitDesigns(guid?)` - returns designs array
+  - `useKitQualities(guid?)` - returns qualities array
+  - `useKitAuthors(guid?)` - returns authors array
+  - `useKitFolders(guid?)` - returns folders array
+  - `useKitInterfaces(guid?)` - returns interfaces array
+  - `useKitTags(guid?)` - returns tags array
+  - `useKitConcepts(guid?)` - returns concepts array
+  - `useKitName(guid?)` - returns kit name
+  - `useKitDescription(guid?)` - returns kit description
+  - `useTypeFromKit(typeGuid, kitGuid?)` - returns specific type
+  - `useDesignFromKit(designGuid, kitGuid?)` - returns specific design
+- **Stable Selectors**: When using `useSyncExternalStore` (via `useKit`, `useSyncField`, etc.), selectors MUST be stable references. Inline functions like `(k) => k.types ?? []` are recreated each render, causing the `getSnapshot` callback to be recreated and triggering infinite re-render loops. Use one of:
+  - Module-level constant functions: `const selectTypes = (k) => k.types ?? EMPTY_TYPES;`
+  - `useCallback` with proper dependencies for dynamic selectors
+  - Stable fallback constants: `const EMPTY_TYPES: Type[] = [];` instead of inline `[]`
+- **Deep vs Shallow Subscriptions**: AVOID `deep=true` unless you need to react to nested property changes within array items. Use `deep=false` (default) for add/remove/replace operations.
+- **Performance Logging**: Use `enablePerformanceLogging(true)` to enable performance logging that tracks overfetching. Check console for `[PERF] Rapid re-render` warnings indicating components re-rendering too frequently.
 - Commands ALWAYS have an origin. ALWAYS add the id of the ui element as origin when calling commands.
 - There is a transaction mechanism for kits. Every app transaction is an extended kit transaction. The undo redo manager is on app level and stores the diff of the transaction along with the app state. This way undo redo works even when the kit changes because only the diff is stored. The inverted diff is stored along with the diff to enable relative undo redo.
 - NEVER use direct strings or `useTranslation` for displaying text. ALWAYS assign an `id` the ui element and use i18n keys which match the id.

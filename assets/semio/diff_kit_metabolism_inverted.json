@@ -6,7 +6,6 @@
   "image": "images/metabolism.png",
   "homepage": "https://github.com/usalu/metabolism/tree/r25.07-1",
   "license": "",
-  "concepts": null,
   "types": {
     "added": [
       {
@@ -18,7 +17,7 @@
       }
     ],
     "removed": [
-      "019ab86d-925c-77db-88d6-a051a5506e8c"
+      "019ae10d-1ad3-7135-9871-1be65f80d676"
     ],
     "updated": [
       {
@@ -28,7 +27,7 @@
           "description": null,
           "ports": {
             "removed": [
-              "019ab86d-925c-77db-88d6-9f366c102b99"
+              "019ae10d-1ad2-71a2-8669-5a7a36904116"
             ]
           }
         }
@@ -6977,7 +6976,7 @@
       }
     ],
     "removed": [
-      "019ab86d-925d-7628-b247-4464eb248bad"
+      "019ae10d-1ad3-7135-9871-24fbecbef60f"
     ],
     "updated": [
       {
@@ -6987,33 +6986,114 @@
           "description": "A wild dream of capsule towers.",
           "pieces": {
             "removed": [
-              "019ab86d-925d-7628-b247-432c49243c6b"
+              "019ae10d-1ad3-7135-9871-20678ba06fd8"
             ]
           }
         }
       }
     ]
   },
-  "interfaces": {
-    "removed": [
-      "019ab86d-925d-7628-b247-4e822fa39ea7"
-    ]
-  },
-  "folders": {
-    "removed": [
-      "019ab86d-925d-7628-b247-50bafa320219"
-    ]
-  },
-  "authors": {
+  "tags": {
     "added": [
       {
-        "email": "ueli@semio-tech.org",
-        "name": "Ueli Saluz",
-        "guid": "e3d5369e-b103-42a8-960a-7960c75f0f88"
+        "guid": "212dec6a-b3ba-42e9-a624-b097176dbaa6",
+        "name": "model/gltf-binary"
       }
     ],
     "removed": [
-      "019ab86d-925d-7628-b247-5661f9a5149b"
+      "019ae10d-1ad3-7135-9871-2e1d985e5acc"
+    ],
+    "updated": [
+      {
+        "id": "348efbfa-e275-4dda-9f66-229917c6b4ab",
+        "diff": {
+          "name": "model/vnd.3dm",
+          "description": null
+        }
+      }
+    ]
+  },
+  "concepts": {
+    "added": [
+      {
+        "guid": "019adc5e-40ee-789d-a877-5baef7bc79fa",
+        "name": "living-architecture"
+      }
+    ],
+    "removed": [
+      "019ae10d-1ad3-7135-9871-33bce1d49a16"
+    ],
+    "updated": [
+      {
+        "id": "019adc5e-9205-7364-a213-66fda12e5120",
+        "diff": {
+          "name": "organic-city",
+          "description": null
+        }
+      }
+    ]
+  },
+  "interfaces": {
+    "added": [
+      {
+        "guid": "019ab243-21f3-7380-93c6-994a9a023448",
+        "name": "core circular bottom",
+        "compatibleInterfaces": [
+          {
+            "guid": "019ab243-21f3-7380-93c6-9e678ad2f321"
+          }
+        ]
+      }
+    ],
+    "removed": [
+      "019ae10d-1ad3-7135-9871-3708d218329e"
+    ],
+    "updated": [
+      {
+        "id": "019ab243-21f3-7380-93c6-9e678ad2f321",
+        "diff": {
+          "name": "core circular top",
+          "description": null
+        }
+      }
+    ]
+  },
+  "files": {
+    "added": [
+      {
+        "guid": "457d2061-ac4b-4317-8563-ba41afffd149",
+        "name": "base.glb",
+        "createdAt": "2025-12-01T17:27:45.705Z",
+        "updatedAt": "2025-12-01T17:27:45.705Z",
+        "folder": {
+          "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        },
+        "mime": "model/gltf-binary"
+      }
+    ],
+    "removed": [
+      "019ae10d-1ad3-7135-9871-3a2de2f04b46"
+    ],
+    "updated": [
+      {
+        "id": "77e02ef4-e37e-41dd-80f6-00889cfcabb4",
+        "diff": {
+          "name": "base_1to500.3dm"
+        }
+      }
+    ]
+  },
+  "folders": {
+    "added": [
+      {
+        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f",
+        "name": "representations",
+        "createdAt": "2025-12-02T00:42:44.370Z",
+        "updatedAt": "2025-12-02T00:42:44.370Z"
+      }
+    ],
+    "removed": [
+      "019ae10d-1ad3-7135-9871-3f0733e4516d"
     ]
   },
   "attributes": {

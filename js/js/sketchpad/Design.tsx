@@ -44,7 +44,7 @@ import * as Y from "yjs";
 import { Guid, KitDiff, PieceDiff } from "../semio";
 import type { AppConfig, AppWindowConfig, DesignAppId, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolDefinition, ToolRenderContext, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
 import { createPanelDefinition, PanelKind, ToolKind } from "./shared";
-import { DesignStore, identitySelector, KitDiffAppStore, KitStore, registerDesignAppStoreFactory, SketchpadStore, useDesignScope, useKitScope, usePieceScope, useSketchpadStore, useSync, useSyncDeep, useSyncField } from "./Sketchpad"; // TODO: Get rid of this import
+import { DesignStore, identitySelector, KitDiffAppStore, KitStore, registerDesignAppStoreFactory, SketchpadStore, useDesignScope, useKitScope, usePieceScope, useSketchpadStore, useSyncDeep, useSyncField } from "./Sketchpad"; // TODO: Get rid of this import
 
 // #endregion Store
 
@@ -125,7 +125,11 @@ import {
   useIsPieceTransitiveHovered,
   useKit,
   useKitCommands,
+  useKitDesigns,
+  useKitFiles,
   useKitStore,
+  useKitTags,
+  useKitTypes,
   usePiece,
   usePiecesFromIds,
   usePiecesMetadata,
@@ -1480,10 +1484,11 @@ export function useDesignApp<T>(selector?: (state: DesignAppState) => T, id?: De
   return useSyncDeep<DesignAppState, T>(store as DesignAppStore, selector || ((s: DesignAppState) => s as T));
 }
 
+const EMPTY_SELECTION: DesignAppSelection = {};
 export function useDesignAppSelection(id?: DesignAppId): DesignAppSelection {
   const store = useDesignAppStore(identitySelector, id);
-  if (!store) return {};
-  return useSyncField<DesignAppState, DesignAppSelection>(store as DesignAppStore, "selection", (s) => s.selection ?? {});
+  if (!store) return EMPTY_SELECTION;
+  return useSyncField<DesignAppState, DesignAppSelection>(store as DesignAppStore, "selection", (s) => s.selection ?? EMPTY_SELECTION);
 }
 
 export function useDesignAppFullscreen(id?: DesignAppId): DesignAppFullscreenWindow {
@@ -1492,14 +1497,22 @@ export function useDesignAppFullscreen(id?: DesignAppId): DesignAppFullscreenWin
   return useSyncField<DesignAppState, DesignAppFullscreenWindow>(store as DesignAppStore, "fullscreenWindow", (s) => s.fullscreenWindow, false);
 }
 
+// PERF: Granular hook for activeTool - only re-renders when activeTool changes
+export function useDesignAppActiveTool(id?: DesignAppId): ToolKind {
+  const store = useDesignAppStore(identitySelector, id);
+  if (!store) return ToolKind.SELECTION_NORMAL;
+  return useSyncField<DesignAppState, ToolKind>(store as DesignAppStore, "activeTool", (s) => s.activeTool ?? ToolKind.SELECTION_NORMAL, false);
+}
+
 export function useDesignAppDiff(): KitDiff | undefined {
   return undefined;
 }
 
+// PERF: Use useSyncField for granular subscription to 'others' field
 export function useDesignAppOthers(id?: DesignAppId): DesignAppPresenceOther[] {
   const store = useDesignAppStore(identitySelector, id);
   if (!store) return [];
-  return useSyncDeep<DesignAppState, DesignAppPresenceOther[]>(store as DesignAppStore, (s) => s.others);
+  return useSyncField<DesignAppState, DesignAppPresenceOther[]>(store as DesignAppStore, "others", (s) => s.others);
 }
 
 export function useDesignAppCamera(id?: DesignAppId): Camera | undefined {
@@ -1526,10 +1539,11 @@ export function useDesignAppFocusedPieceGuid(id?: DesignAppId): Guid | undefined
   return useSyncField<DesignAppState, Guid | undefined>(store as DesignAppStore, "focusedPieceGuid", (s) => s.focusedPieceGuid, false);
 }
 
+const EMPTY_MODEL_TAGS: Record<Guid, string[]> = {};
 export function useDesignAppSelectedModelTags(id?: DesignAppId): Record<Guid, string[]> {
   const store = useDesignAppStore(identitySelector, id);
-  if (!store) return {};
-  return useSyncField<DesignAppState, Record<Guid, string[]>>(store as DesignAppStore, "selectedModelTags", (s) => s.selectedModelTags ?? {});
+  if (!store) return EMPTY_MODEL_TAGS;
+  return useSyncField<DesignAppState, Record<Guid, string[]>>(store as DesignAppStore, "selectedModelTags", (s) => s.selectedModelTags ?? EMPTY_MODEL_TAGS);
 }
 
 export function useDesignAppHover(id?: DesignAppId): DesignAppHover | undefined {
@@ -1646,47 +1660,41 @@ export function useDesignAppCommands(id?: DesignAppId) {
   };
 }
 
-export function useIsDesignPieceChangedInTransaction(id: DesignAppId | undefined, pieceId: string) {
-  const store = useDesignAppStore(identitySelector, id) as DesignAppStore;
-  return useSync<DesignAppState, boolean>(
-    store,
-    (state) => {
-      const currentStack = store?.currentTransactionStack;
-      if (!currentStack || currentStack.length === 0) {
-        return false;
-      }
+// PERF: Helper to check if piece is in transaction stack - used by useSyncField selector
+function isPieceInTransactionStack(store: DesignAppStore | null, pieceId: string): boolean {
+  if (!store) return false;
+  const currentStack = store.currentTransactionStack;
+  if (!currentStack || currentStack.length === 0) return false;
 
-      for (const edit of currentStack) {
-        if (edit.do?.kitDiff?.designs) {
-          for (const designUpdate of edit.do.kitDiff.designs.updated || []) {
-            if (designUpdate.diff.pieces?.updated) {
-              for (const pieceUpdate of designUpdate.diff.pieces.updated) {
-                if (pieceUpdate.id === pieceId) {
-                  return true;
-                }
-              }
-            }
-            if (designUpdate.diff.pieces?.added) {
-              for (const piece of designUpdate.diff.pieces.added) {
-                if (piece.guid === pieceId) {
-                  return true;
-                }
-              }
-            }
-            if (designUpdate.diff.pieces?.removed) {
-              for (const removedPieceId of designUpdate.diff.pieces.removed) {
-                if (removedPieceId === pieceId) {
-                  return true;
-                }
-              }
-            }
+  for (const edit of currentStack) {
+    if (edit.do?.kitDiff?.designs) {
+      for (const designUpdate of edit.do.kitDiff.designs.updated || []) {
+        if (designUpdate.diff.pieces?.updated) {
+          for (const pieceUpdate of designUpdate.diff.pieces.updated) {
+            if (pieceUpdate.id === pieceId) return true;
+          }
+        }
+        if (designUpdate.diff.pieces?.added) {
+          for (const piece of designUpdate.diff.pieces.added) {
+            if (piece.guid === pieceId) return true;
+          }
+        }
+        if (designUpdate.diff.pieces?.removed) {
+          for (const removedPieceId of designUpdate.diff.pieces.removed) {
+            if (removedPieceId === pieceId) return true;
           }
         }
       }
-      return false;
-    },
-    true,
-  );
+    }
+  }
+  return false;
+}
+
+// PERF: Use useSyncField for granular subscription to transaction stack changes only
+export function useIsDesignPieceChangedInTransaction(id: DesignAppId | undefined, pieceId: string) {
+  const store = useDesignAppStore(identitySelector, id) as DesignAppStore;
+  // Subscribe only to currentTransactionStack field changes
+  return useSyncField<DesignAppState, boolean>(store, "currentTransactionStack", () => isPieceInTransactionStack(store, pieceId));
 }
 
 export function useDesignAppIsPieceHovered(id: DesignAppId | undefined, pieceId: string): boolean {
@@ -1697,93 +1705,84 @@ export function useDesignAppIsPieceHovered(id: DesignAppId | undefined, pieceId:
 
 export function useDesignAppIsPieceTransitiveHovered(id: DesignAppId | undefined, pieceId: string): boolean {
   const store = useDesignAppStore(identitySelector, id) as DesignAppStore;
+  if (!store) return false;
 
-  return useSync<DesignAppState, boolean>(
-    store,
-    (state) => {
-      const hover = state.hover;
+  // Use useSyncField with "hover" key for granular subscription - only re-renders when hover field changes
+  return useSyncField<DesignAppState, boolean>(store, "hover", (state) => {
+    const hover = state.hover;
+    if (!hover) return false;
 
-      if (hover?.pieces?.includes(pieceId)) return true;
+    if (hover.pieces?.includes(pieceId)) return true;
 
-      const design = store.design().snapshot();
-      const piece = design?.pieces?.find((p) => p.guid === pieceId);
-      if (!piece) return false;
+    // Cache design lookup to avoid repeated snapshot calls
+    const design = store.design().snapshot();
+    const piece = design?.pieces?.find((p) => p.guid === pieceId);
+    if (!piece) return false;
 
-      if (piece.type && hover?.types?.includes(piece.type.guid)) return true;
+    if (piece.type && hover.types?.includes(piece.type.guid)) return true;
+    if (piece.design && hover.designs?.includes(piece.design.guid)) return true;
 
-      if (piece.design && hover?.designs?.includes(piece.design.guid)) return true;
-
-      return false;
-    },
-    true,
-  ) as boolean;
+    return false;
+  });
 }
 
 export function useDesignAppIsTypeTransitiveHovered(id: DesignAppId | undefined, typeId: string): boolean {
   const store = useDesignAppStore(identitySelector, id) as DesignAppStore;
+  if (!store) return false;
 
-  return useSync<DesignAppState, boolean>(
-    store,
-    (state) => {
-      const hover = state.hover;
+  // Use useSyncField with "hover" key for granular subscription
+  return useSyncField<DesignAppState, boolean>(store, "hover", (state) => {
+    const hover = state.hover;
+    if (!hover) return false;
 
-      if (hover?.types?.includes(typeId)) return true;
+    if (hover.types?.includes(typeId)) return true;
 
-      if (hover?.pieces && hover.pieces.length > 0) {
-        const design = store.design().snapshot();
-        return hover.pieces.some((pieceId) => {
-          const piece = design?.pieces?.find((p) => p.guid === pieceId);
-          return piece?.type?.guid === typeId;
-        });
-      }
+    if (hover.pieces && hover.pieces.length > 0) {
+      const design = store.design().snapshot();
+      return hover.pieces.some((pieceId) => {
+        const piece = design?.pieces?.find((p) => p.guid === pieceId);
+        return piece?.type?.guid === typeId;
+      });
+    }
 
-      return false;
-    },
-    true,
-  ) as boolean;
+    return false;
+  });
 }
 
-export function useDesignAppPieceStatus(id: DesignAppId | undefined, pieceId: string): DiffStatus {
-  const store = useDesignAppStore(identitySelector, id) as DesignAppStore;
-  return useSync<DesignAppState, DiffStatus>(
-    store,
-    (state) => {
-      const currentStack = store?.currentTransactionStack;
+// PERF: Helper to get piece status from transaction stack
+function getPieceStatusFromTransactionStack(store: DesignAppStore | null, pieceId: string): DiffStatus {
+  if (!store) return DiffStatus.Unchanged;
+  const currentStack = store.currentTransactionStack;
+  if (!currentStack || currentStack.length === 0) return DiffStatus.Unchanged;
 
-      if (currentStack && currentStack.length > 0) {
-        for (const edit of currentStack) {
-          if (edit.do?.kitDiff?.designs) {
-            for (const designUpdate of edit.do.kitDiff.designs.updated || []) {
-              if (designUpdate.diff.pieces?.added) {
-                for (const piece of designUpdate.diff.pieces.added) {
-                  if (piece.guid === pieceId) {
-                    return DiffStatus.Added;
-                  }
-                }
-              }
-              if (designUpdate.diff.pieces?.removed) {
-                for (const removedId of designUpdate.diff.pieces.removed) {
-                  if (removedId === pieceId) {
-                    return DiffStatus.Removed;
-                  }
-                }
-              }
-              if (designUpdate.diff.pieces?.updated) {
-                for (const pieceUpdate of designUpdate.diff.pieces.updated) {
-                  if (pieceUpdate.id === pieceId) {
-                    return DiffStatus.Modified;
-                  }
-                }
-              }
-            }
+  for (const edit of currentStack) {
+    if (edit.do?.kitDiff?.designs) {
+      for (const designUpdate of edit.do.kitDiff.designs.updated || []) {
+        if (designUpdate.diff.pieces?.added) {
+          for (const piece of designUpdate.diff.pieces.added) {
+            if (piece.guid === pieceId) return DiffStatus.Added;
+          }
+        }
+        if (designUpdate.diff.pieces?.removed) {
+          for (const removedId of designUpdate.diff.pieces.removed) {
+            if (removedId === pieceId) return DiffStatus.Removed;
+          }
+        }
+        if (designUpdate.diff.pieces?.updated) {
+          for (const pieceUpdate of designUpdate.diff.pieces.updated) {
+            if (pieceUpdate.id === pieceId) return DiffStatus.Modified;
           }
         }
       }
+    }
+  }
+  return DiffStatus.Unchanged;
+}
 
-      return DiffStatus.Unchanged;
-    },
-    true,
-  ) as DiffStatus;
+// PERF: Use useSyncField for granular subscription to transaction stack changes only
+export function useDesignAppPieceStatus(id: DesignAppId | undefined, pieceId: string): DiffStatus {
+  const store = useDesignAppStore(identitySelector, id) as DesignAppStore;
+  return useSyncField<DesignAppState, DiffStatus>(store, "currentTransactionStack", () => getPieceStatusFromTransactionStack(store, pieceId));
 }
 
 export function useDesignAppIsPieceSelected(id: DesignAppId | undefined, pieceId: string): boolean {
@@ -1861,51 +1860,52 @@ export function useDesignAppIsConnectionSelected(id: DesignAppId | undefined, co
   return useSyncField<DesignAppState, boolean>(store, "selection", (state) => state.selection?.connections?.includes(connectionId) ?? false);
 }
 
-export function useDesignAppConnectionStatus(id: DesignAppId | undefined, connectionId: string): DiffStatus {
+export function useDesignAppIsPortHovered(id: DesignAppId | undefined, pieceId: string, portId: string): boolean {
   const store = useDesignAppStore(identitySelector, id) as DesignAppStore;
-  return useSync<DesignAppState, DiffStatus>(
-    store,
-    (state) => {
-      const currentStack = store?.currentTransactionStack;
+  if (!store) return false;
+  return useSyncField<DesignAppState, boolean>(store, "hover", (state) => state.hover?.ports?.some((p) => p.piece === pieceId && p.port === portId) ?? false);
+}
 
-      if (currentStack && currentStack.length > 0) {
-        for (const edit of currentStack) {
-          if (edit.do?.kitDiff?.designs) {
-            for (const designUpdate of edit.do.kitDiff.designs.updated || []) {
-              if (designUpdate.diff.connections?.added) {
-                for (const conn of designUpdate.diff.connections.added) {
-                  if (conn.guid === connectionId) {
-                    return DiffStatus.Added;
-                  }
-                }
-              }
-              if (designUpdate.diff.connections?.removed) {
-                for (const removedConn of designUpdate.diff.connections.removed) {
-                  if (typeof removedConn === "string" && removedConn === connectionId) {
-                    return DiffStatus.Removed;
-                  } else if (typeof removedConn === "object" && removedConn.connected && removedConn.connecting) {
-                    continue;
-                  }
-                }
-              }
-              if (designUpdate.diff.connections?.updated) {
-                for (const connUpdate of designUpdate.diff.connections.updated) {
-                  if (typeof connUpdate.id === "string" && connUpdate.id === connectionId) {
-                    return DiffStatus.Modified;
-                  } else if (typeof connUpdate.id === "object" && connUpdate.id.connected && connUpdate.id.connecting) {
-                    continue;
-                  }
-                }
-              }
-            }
+export function useDesignAppSelectedPort(id?: DesignAppId): DesignAppSelection["port"] | undefined {
+  const store = useDesignAppStore(identitySelector, id) as DesignAppStore;
+  if (!store) return undefined;
+  return useSyncField<DesignAppState, DesignAppSelection["port"] | undefined>(store, "selection", (state) => state.selection?.port);
+}
+
+// PERF: Helper to get connection status from transaction stack
+function getConnectionStatusFromTransactionStack(store: DesignAppStore | null, connectionId: string): DiffStatus {
+  if (!store) return DiffStatus.Unchanged;
+  const currentStack = store.currentTransactionStack;
+  if (!currentStack || currentStack.length === 0) return DiffStatus.Unchanged;
+
+  for (const edit of currentStack) {
+    if (edit.do?.kitDiff?.designs) {
+      for (const designUpdate of edit.do.kitDiff.designs.updated || []) {
+        if (designUpdate.diff.connections?.added) {
+          for (const conn of designUpdate.diff.connections.added) {
+            if (conn.guid === connectionId) return DiffStatus.Added;
+          }
+        }
+        if (designUpdate.diff.connections?.removed) {
+          for (const removedConn of designUpdate.diff.connections.removed) {
+            if (typeof removedConn === "string" && removedConn === connectionId) return DiffStatus.Removed;
+          }
+        }
+        if (designUpdate.diff.connections?.updated) {
+          for (const connUpdate of designUpdate.diff.connections.updated) {
+            if (typeof connUpdate.id === "string" && connUpdate.id === connectionId) return DiffStatus.Modified;
           }
         }
       }
+    }
+  }
+  return DiffStatus.Unchanged;
+}
 
-      return DiffStatus.Unchanged;
-    },
-    true,
-  ) as DiffStatus;
+// PERF: Use useSyncField for granular subscription to transaction stack changes only
+export function useDesignAppConnectionStatus(id: DesignAppId | undefined, connectionId: string): DiffStatus {
+  const store = useDesignAppStore(identitySelector, id) as DesignAppStore;
+  return useSyncField<DesignAppState, DiffStatus>(store, "currentTransactionStack", () => getConnectionStatusFromTransactionStack(store, connectionId));
 }
 
 export function useDesignAppConnectionColor(id: DesignAppId | undefined, connectionId: string): { fill: string; stroke: string; opacity: number } {
@@ -1982,7 +1982,9 @@ export const DesignAppFooter: FC = () => {
   const removeFooterItem = useRemoveFooterItem();
   const appType = useAppType();
   const design = useDesign() as Design | undefined;
-  const kit = useKit() as Kit | undefined;
+  // Use targeted hooks instead of full kit to avoid unnecessary re-renders
+  const types = useKitTypes();
+  const tags = useKitTags();
   const selectedModelTags = useDesignAppSelectedModelTags();
   const { addModelTagForAllTypes, removeModelTagForAllTypes } = useDesignAppCommands();
 
@@ -2000,51 +2002,56 @@ export const DesignAppFooter: FC = () => {
 
   // Get all unique tag guids from all types in the design
   const allModelTagGuids = useMemo(() => {
-    if (!kit?.types || designTypeGuids.length === 0) return [];
+    if (!types || designTypeGuids.length === 0) return [];
     const tagGuids = new Set<string>();
     designTypeGuids.forEach((typeGuid) => {
-      const type = kit.types?.find((t) => t.guid === typeGuid);
+      const type = types.find((t) => t.guid === typeGuid);
       type?.models?.forEach((model) => {
         model.tags?.forEach((tag) => tagGuids.add(tag.guid));
       });
     });
     return Array.from(tagGuids);
-  }, [kit?.types, designTypeGuids]);
+  }, [types, designTypeGuids]);
 
   // Get tag names from kit
   const tagNameMap = useMemo(() => {
     const map = new Map<string, string>();
-    kit?.tags?.forEach((tag) => {
+    tags.forEach((tag) => {
       map.set(tag.guid, tag.name);
     });
     return map;
-  }, [kit?.tags]);
+  }, [tags]);
 
-  // Check if a tag is selected for any type
-  const isTagSelected = useCallback(
-    (tagGuid: string): boolean => {
-      return designTypeGuids.some((typeGuid) => {
-        const tags = selectedModelTags[typeGuid] ?? [];
-        return tags.includes(tagGuid);
-      });
-    },
-    [selectedModelTags, designTypeGuids],
-  );
+  // Store refs for callbacks to avoid recreating them in useEffect
+  const typesRef = useRef(types);
+  const designTypeGuidsRef = useRef(designTypeGuids);
+  const selectedModelTagsRef = useRef(selectedModelTags);
 
-  // Get types that have this tag in their models
-  const getTypesWithTag = useCallback(
-    (tagGuid: string): Guid[] => {
-      if (!kit?.types) return [];
-      return designTypeGuids.filter((typeGuid) => {
-        const type = kit.types?.find((t) => t.guid === typeGuid);
-        return type?.models?.some((model) => model.tags?.some((tag) => tag.guid === tagGuid));
-      });
-    },
-    [kit?.types, designTypeGuids],
-  );
+  useEffect(() => {
+    typesRef.current = types;
+    designTypeGuidsRef.current = designTypeGuids;
+    selectedModelTagsRef.current = selectedModelTags;
+  }, [types, designTypeGuids, selectedModelTags]);
 
   useEffect(() => {
     if (appType !== "design") return;
+
+    // Helper functions using refs to avoid dependency issues
+    const isTagSelected = (tagGuid: string): boolean => {
+      return designTypeGuidsRef.current.some((typeGuid) => {
+        const tags = selectedModelTagsRef.current[typeGuid] ?? [];
+        return tags.includes(tagGuid);
+      });
+    };
+
+    const getTypesWithTag = (tagGuid: string): Guid[] => {
+      const currentTypes = typesRef.current;
+      if (!currentTypes || currentTypes.length === 0) return [];
+      return designTypeGuidsRef.current.filter((typeGuid) => {
+        const type = currentTypes.find((t) => t.guid === typeGuid);
+        return type?.models?.some((model) => model.tags?.some((tag) => tag.guid === tagGuid));
+      });
+    };
 
     // Remove previous tag items
     allModelTagGuids.forEach((tagGuid) => {
@@ -2061,10 +2068,13 @@ export const DesignAppFooter: FC = () => {
         id: `semio.sketchpad.app.design.footer.tag.${tagGuid}`,
         content: <span className={`cursor-pointer transition-colors ${selected ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`}>{tagName}</span>,
         onClick: () => {
-          if (selected) {
-            removeModelTagForAllTypes("semio.sketchpad.app.design.footer.tag.remove", tagGuid, typesWithTag);
+          // Use refs in onClick to get current values at click time
+          const currentSelected = isTagSelected(tagGuid);
+          const currentTypesWithTag = getTypesWithTag(tagGuid);
+          if (currentSelected) {
+            removeModelTagForAllTypes("semio.sketchpad.app.design.footer.tag.remove", tagGuid, currentTypesWithTag);
           } else {
-            addModelTagForAllTypes("semio.sketchpad.app.design.footer.tag.add", tagGuid, typesWithTag);
+            addModelTagForAllTypes("semio.sketchpad.app.design.footer.tag.add", tagGuid, currentTypesWithTag);
           }
         },
         order: index,
@@ -2076,7 +2086,7 @@ export const DesignAppFooter: FC = () => {
         removeFooterItem(`semio.sketchpad.app.design.footer.tag.${tagGuid}`);
       });
     };
-  }, [appType, addFooterItem, removeFooterItem, allModelTagGuids, tagNameMap, selectedModelTags, addModelTagForAllTypes, removeModelTagForAllTypes, isTagSelected, getTypesWithTag]);
+  }, [appType, addFooterItem, removeFooterItem, allModelTagGuids, tagNameMap, selectedModelTags, addModelTagForAllTypes, removeModelTagForAllTypes]);
 
   return null;
 };
@@ -2296,7 +2306,7 @@ const DesignSectionForm: FC = () => {
   const { t } = useTranslation();
   const tooltip = useTooltip();
   const { startTransaction, finalizeTransaction, abortTransaction } = useDesignAppCommands();
-  const kit = useKit();
+  // Removed unused useKit() call that was causing unnecessary re-renders
   const kitCommands = useKitCommands();
   const design = useDesign() as Design;
 
@@ -3941,9 +3951,9 @@ const getPortPositionStyle = (port: Port): { x: number; y: number } => {
 const PortHandle: React.FC<PortHandleProps> = ({ port, pieceId, selected = false, onPortClick }) => {
   const { x, y } = getPortPositionStyle(port);
   const portColor = findAttributeValue(port, "semio.color", "var(--foreground)")!;
-  const hover = useDesignAppHover();
   const { hoverPort } = useDesignAppCommands();
-  const isHovered = hover?.ports?.some((p) => p.piece === pieceId && p.port === port.guid) ?? false;
+  // Use granular hook that only re-renders when this specific port's hover state changes
+  const isHovered = useDesignAppIsPortHovered(undefined, pieceId, port.guid ?? "");
 
   const onClick = (event: React.MouseEvent) => {
     event.stopPropagation();
@@ -3983,8 +3993,10 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
   } = data as PieceNodeProps & { diffStatus: DiffStatus };
   const ports = type.ports;
   const commands = useDesignAppCommands();
-  const selection = useDesignAppSelection();
-  const isSelected = selection?.pieces?.includes(guid) ?? false;
+  // Use granular hook that only re-renders when this specific piece's selection state changes
+  const isSelected = useDesignAppIsPieceSelected(undefined, guid);
+  // Use granular hook for port selection to avoid re-renders when piece/connection selection changes
+  const selectedPort = useDesignAppSelectedPort();
   const diff = (attributes?.find((q) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
   const isDesignPiece = !!piece.design;
 
@@ -4062,7 +4074,7 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
         isSelected={isSelected}
         diff={diff}
         isDesignPiece={isDesignPiece}
-        selection={selection}
+        selectedPort={selectedPort}
         selectPiecePort={selectPiecePort}
         deselectPiecePort={deselectPiecePort}
         addConnection={addConnection}
@@ -4081,7 +4093,7 @@ type PieceNodeInnerProps = {
   isSelected: boolean;
   diff: DiffStatus;
   isDesignPiece: boolean;
-  selection: DesignAppSelection | undefined;
+  selectedPort: DesignAppSelection["port"] | undefined;
   selectPiecePort: (piece: Guid, port: Guid) => void;
   deselectPiecePort: () => void;
   addConnection: (SemioConnection: any) => void;
@@ -4089,7 +4101,7 @@ type PieceNodeInnerProps = {
   onMouseLeave: () => void;
 };
 
-const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, type, ports, isSelected, diff, isDesignPiece, selection, selectPiecePort, deselectPiecePort, addConnection, onMouseEnter, onMouseLeave }) => {
+const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, type, ports, isSelected, diff, isDesignPiece, selectedPort, selectPiecePort, deselectPiecePort, addConnection, onMouseEnter, onMouseLeave }) => {
   const { fill, stroke, opacity: colorOpacity } = useDesignAppPieceColor(undefined, piece.guid);
   const isHovered = useIsPieceHovered();
 
@@ -4110,7 +4122,7 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, type, ports,
   const fallbackStyle = backgroundColor ? { backgroundColor, color: textColor } : { color: textColor };
 
   const onPortClick = (port: Port) => {
-    const currentSelectedPort = selection?.port;
+    const currentSelectedPort = selectedPort;
 
     if (!port.guid || !piece.guid) {
       console.error("[ORIGIN] Port or piece guid is undefined", { portGuid: port.guid, pieceGuid: piece.guid });
@@ -4197,7 +4209,7 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, type, ports,
         </svg>
       )}
       {ports?.map((port: Port, portIndex: number) => (
-        <PortHandle key={`${id}-port-${portIndex}-${port.guid}`} port={port} pieceId={piece.guid} selected={selection?.port?.piece === piece.guid && selection?.port?.port === port.guid} onPortClick={onPortClick} />
+        <PortHandle key={`${id}-port-${portIndex}-${port.guid}`} port={port} pieceId={piece.guid} selected={selectedPort?.piece === piece.guid && selectedPort?.port === port.guid} onPortClick={onPortClick} />
       ))}
     </div>
   );
@@ -4210,8 +4222,10 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
     externalConnections,
   } = data as DesignNodeProps & { diffStatus: DiffStatus };
   const commands = useDesignAppCommands();
-  const selection = useDesignAppSelection();
-  const isSelected = selection?.pieces?.includes(guid) ?? false;
+  // Use granular hook that only re-renders when this specific piece's selection state changes
+  const isSelected = useDesignAppIsPieceSelected(undefined, guid);
+  // Use granular hook for port selection to avoid re-renders when piece/connection selection changes
+  const selectedPort = useDesignAppSelectedPort();
   const diff = (attributes?.find((q) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
 
   const design = useDesign() as Design | undefined;
@@ -4340,7 +4354,7 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
         ports={ports}
         isSelected={isSelected}
         diff={diff}
-        selection={selection}
+        selectedPort={selectedPort}
         selectPiecePort={selectPiecePort}
         deselectPiecePort={deselectPiecePort}
         addConnection={addConnection}
@@ -4357,7 +4371,7 @@ type DesignNodeInnerProps = {
   ports: Port[] | undefined;
   isSelected: boolean;
   diff: DiffStatus;
-  selection: DesignAppSelection | undefined;
+  selectedPort: DesignAppSelection["port"] | undefined;
   selectPiecePort: (piece: Guid, port: Guid) => void;
   deselectPiecePort: () => void;
   addConnection: (SemioConnection: any) => void;
@@ -4365,11 +4379,11 @@ type DesignNodeInnerProps = {
   onMouseLeave: () => void;
 };
 
-const DesignNodeInner: React.FC<DesignNodeInnerProps> = ({ id, piece, ports, isSelected, diff, selection, selectPiecePort, deselectPiecePort, addConnection, onMouseEnter, onMouseLeave }) => {
+const DesignNodeInner: React.FC<DesignNodeInnerProps> = ({ id, piece, ports, isSelected, diff, selectedPort, selectPiecePort, deselectPiecePort, addConnection, onMouseEnter, onMouseLeave }) => {
   const isHovered = useIsPieceHovered();
 
   const onPortClick = (port: Port) => {
-    const currentSelectedPort = selection?.port;
+    const currentSelectedPort = selectedPort;
 
     if (!port.guid || !piece.guid) {
       console.error("[ORIGIN] Port or piece guid is undefined in DesignNode", { portGuid: port.guid, pieceGuid: piece.guid });
@@ -4450,7 +4464,7 @@ const DesignNodeInner: React.FC<DesignNodeInnerProps> = ({ id, piece, ports, isS
         </text>
       </svg>
       {ports?.map((port: Port, portIndex: number) => (
-        <PortHandle key={`${id}-port-${portIndex}-${port.guid}`} port={port} pieceId={piece.guid} selected={selection?.port?.piece === piece.guid && selection?.port?.port === port.guid} onPortClick={onPortClick} />
+        <PortHandle key={`${id}-port-${portIndex}-${port.guid}`} port={port} pieceId={piece.guid} selected={selectedPort?.piece === piece.guid && selectedPort?.port === port.guid} onPortClick={onPortClick} />
       ))}
     </div>
   );
@@ -4935,8 +4949,11 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
   const kitCommands = useKitCommands();
   const sketchpadCommands = useSketchpadCommands();
-  const kit = useKit() as Kit;
-  const activeTool = (useDesignApp((s) => s.activeTool) as ToolKind | undefined) ?? ToolKind.SELECTION_NORMAL;
+  // PERF: Use targeted hooks instead of full kit subscription to avoid re-renders during pan
+  const kitTypes = useKitTypes();
+  const kitDesigns = useKitDesigns();
+  // PERF: Use granular hook instead of useDesignApp to avoid re-renders on any state change
+  const activeTool = useDesignAppActiveTool();
 
   const selection = useDesignAppSelection();
   const fullscreenWindow = useDesignAppFullscreen();
@@ -4951,8 +4968,10 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
   const { nodes, edges } = useMemo(() => {
     if (!design || !flattenedDesign) return { nodes: [], edges: [] };
-    return designToNodesAndEdges(design, flattenedDesign, metadata, kit, selection) ?? { nodes: [], edges: [] };
-  }, [design, flattenedDesign, metadata, kit, selection]);
+    // Build minimal kit object with only what designToNodesAndEdges needs
+    const minimalKit = { types: kitTypes, designs: kitDesigns } as Kit;
+    return designToNodesAndEdges(design, flattenedDesign, metadata, minimalKit, selection) ?? { nodes: [], edges: [] };
+  }, [design, flattenedDesign, metadata, kitTypes, kitDesigns, selection]);
 
   const focusContext = useFocusSafe();
   const [focusedItemId, setFocusedItemId] = useState<string | undefined>();
@@ -5041,7 +5060,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       const centerU = (flowX - ICON_WIDTH / 2) / ICON_WIDTH;
       const centerV = -(flowY - ICON_WIDTH / 2) / ICON_WIDTH;
       if (dragData.type === "type" && dragData.typeGuid) {
-        const droppedType = kit.types?.find((t) => t.guid === dragData.typeGuid);
+        const droppedType = kitTypes?.find((t) => t.guid === dragData.typeGuid);
         if (!droppedType) return;
         startTransaction("semio.sketchpad.app.design.dragEnd.type");
         const pieceGuid = guid();
@@ -5049,7 +5068,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         addPiece("semio.sketchpad.app.design.dragEnd.type", piece);
         finalizeTransaction("semio.sketchpad.app.design.dragEnd.type");
       } else if (dragData.type === "design" && dragData.designGuid) {
-        const droppedDesign = kit.designs?.find((d) => d.guid === dragData.designGuid);
+        const droppedDesign = kitDesigns?.find((d) => d.guid === dragData.designGuid);
         if (!droppedDesign) return;
         startTransaction("semio.sketchpad.app.design.dragEnd.design");
         const pieceGuid = guid();
@@ -5065,7 +5084,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       setActiveDraggedType(null);
       setActiveDraggedDesign(null);
     },
-    [reactFlowInstanceRef, kit, startTransaction, addPiece, finalizeTransaction, setActiveDraggedType, setActiveDraggedDesign, diagramId],
+    [reactFlowInstanceRef, kitTypes, kitDesigns, startTransaction, addPiece, finalizeTransaction, setActiveDraggedType, setActiveDraggedDesign, diagramId],
   );
 
   useEffect(() => {
@@ -5108,10 +5127,22 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
     }
   }, [savedDiagramCenter, savedDiagramScale, reactFlowInstanceRef]);
 
+  // PERF: Debounce viewport state updates to avoid re-renders during continuous panning
+  // Use a longer delay (1000ms) to ensure panning feels responsive
+  const pendingMoveEndRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onMoveEnd = useCallback(() => {
     if (isUpdatingViewportRef.current || !reactFlowInstanceRef.current) return;
-    const viewport = reactFlowInstanceRef.current.getViewport();
-    setDiagramCenter("semio.sketchpad.app.design.canvas.diagram.onMoveEnd", { u: viewport.x / ICON_WIDTH, v: -viewport.y / ICON_WIDTH });
+    // Clear any pending update
+    if (pendingMoveEndRef.current) {
+      clearTimeout(pendingMoveEndRef.current);
+    }
+    // Debounce the state update with a longer delay to avoid re-renders during panning
+    pendingMoveEndRef.current = setTimeout(() => {
+      if (!reactFlowInstanceRef.current) return;
+      const viewport = reactFlowInstanceRef.current.getViewport();
+      setDiagramCenter("semio.sketchpad.app.design.canvas.diagram.onMoveEnd", { u: viewport.x / ICON_WIDTH, v: -viewport.y / ICON_WIDTH });
+      pendingMoveEndRef.current = null;
+    }, 1000);
   }, [reactFlowInstanceRef, setDiagramCenter]);
 
   const centerViewport = useCallback(() => {
@@ -6049,7 +6080,8 @@ const LoadedPieceMesh: FC<{ url: string; fileExtension: string }> = ({ url, file
 const PieceMesh: FC = () => {
   const piece = usePiece() as Piece;
   const type = useType(undefined, typeof piece.type === "string" ? piece.type : piece.type?.guid) as Type | undefined;
-  const kit = useKit(undefined, undefined, true) as Kit | undefined;
+  // Use targeted hook instead of deep kit subscription to avoid re-renders on unrelated kit changes
+  const files = useKitFiles();
   const kitStore = useKitStore() as KitStore;
   const selectedModelTags = useDesignAppSelectedModelTags();
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
@@ -6084,9 +6116,10 @@ const PieceMesh: FC = () => {
       console.warn("[PieceMesh] No model found for type:", type.guid);
       return { modelUrl: null, fileExtension: "", fileGuid: null };
     }
-    const file = kit?.files?.find((f) => f.guid === model.file);
+    const fileId = typeof model.file === "string" ? model.file : model.file?.guid;
+    const file = files.find((f) => f.guid === fileId);
     if (!file) {
-      console.warn("[PieceMesh] File not found in kit for model:", model.guid, "file guid:", model.file);
+      console.warn("[PieceMesh] File not found in kit for model:", model.guid, "file guid:", fileId);
       return { modelUrl: null, fileExtension: "", fileGuid: null };
     }
     const ext = file.name?.split(".").pop() || "";
@@ -6097,7 +6130,7 @@ const PieceMesh: FC = () => {
     }
     console.log("[PieceMesh] Model ready to load:", model.guid, "file:", file.name);
     return { modelUrl: url, fileExtension: ext, fileGuid: file.guid };
-  }, [type, kit, kitStore, selectedModelTags]);
+  }, [type, files, kitStore, selectedModelTags]);
 
   useEffect(() => {
     if (!fileGuid) {
@@ -6376,7 +6409,9 @@ const DesignAppScene: FC = () => {
   const focusedPieceGuid = useDesignAppFocusedPieceGuid();
   const panelVisibility = useAppPanelVisibility();
   const [projection, setProjection] = React.useState<"camera" | "orthographic">("orthographic");
-  const kit = useKit() as Kit;
+  // PERF: Use targeted hooks to avoid re-renders during scene interactions
+  const sceneTypes = useKitTypes();
+  const sceneDesigns = useKitDesigns();
   const { setActiveDraggedType, setActiveDraggedDesign } = useDragDrop();
   const sceneDropZoneRef = useRef<HTMLDivElement | null>(null);
   const sceneId = useRef(guid()).current;
@@ -6426,7 +6461,7 @@ const DesignAppScene: FC = () => {
       const plane: Plane = { origin: { x: worldX, y: 0, z: worldZ }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } };
       const center = { u: worldX * 0.3 + 6, v: worldZ * 0.3 - 7 };
       if (dragData.type === "type" && dragData.typeGuid) {
-        const droppedType = kit.types?.find((t) => t.guid === dragData.typeGuid);
+        const droppedType = sceneTypes?.find((t) => t.guid === dragData.typeGuid);
         if (!droppedType) return;
         startTransaction("semio.sketchpad.app.design.scene.dragEnd.type");
         const pieceGuid = guid();
@@ -6434,7 +6469,7 @@ const DesignAppScene: FC = () => {
         addPiece("semio.sketchpad.app.design.scene.dragEnd.type", piece);
         finalizeTransaction("semio.sketchpad.app.design.scene.dragEnd.type");
       } else if (dragData.type === "design" && dragData.designGuid) {
-        const droppedDesign = kit.designs?.find((d) => d.guid === dragData.designGuid);
+        const droppedDesign = sceneDesigns?.find((d) => d.guid === dragData.designGuid);
         if (!droppedDesign) return;
         startTransaction("semio.sketchpad.app.design.scene.dragEnd.design");
         const pieceGuid = guid();
@@ -6445,7 +6480,7 @@ const DesignAppScene: FC = () => {
       setActiveDraggedType(null);
       setActiveDraggedDesign(null);
     },
-    [kit, camera, startTransaction, addPiece, finalizeTransaction, setActiveDraggedType, setActiveDraggedDesign],
+    [sceneTypes, sceneDesigns, camera, startTransaction, addPiece, finalizeTransaction, setActiveDraggedType, setActiveDraggedDesign],
   );
 
   useEffect(() => {
@@ -6529,7 +6564,10 @@ const App: FC<AppProps> = () => {
 
   const selection = useDesignAppSelection();
   const design = useDesign() as Design | undefined;
-  const kit = useKit() as Kit;
+  // PERF: Use targeted hooks - only get what we need to avoid re-renders
+  const kitGuid = useKitScope()?.guid;
+  const workbenchTypes = useKitTypes();
+  const workbenchDesigns = useKitDesigns();
   const appSettings = useSketchpad((s) => s.settings?.apps) as any;
   const panelVisibility = useAppPanelVisibility();
   const { activeDraggedType, activeDraggedDesign, setActiveDraggedType, setActiveDraggedDesign } = useDragDrop();
@@ -6799,9 +6837,9 @@ const App: FC<AppProps> = () => {
       specificity: 10,
       order: 100,
       content: () =>
-        kit ? (
+        kitGuid ? (
           <React.Suspense fallback={null}>
-            <KitScopeProvider guid={kit.guid}>
+            <KitScopeProvider guid={kitGuid}>
               <KitSectionLazy />
             </KitScopeProvider>
           </React.Suspense>
@@ -6822,7 +6860,7 @@ const App: FC<AppProps> = () => {
 
   const PiecesWorkbenchContent: FC = () => {
     const handleCreateTypeChild = (parentType: Type) => {
-      const existingChildren = kit.types?.filter((type) => type.parent === parentType.guid) || [];
+      const existingChildren = workbenchTypes?.filter((type) => type.parent === parentType.guid) || [];
       const uniqueName = generateUniqueName(
         parentType.name,
         existingChildren.map((type) => type.name),
@@ -6835,11 +6873,11 @@ const App: FC<AppProps> = () => {
         updatedAt: new Date(),
       };
       kitAppCommands.addType("semio.sketchpad.app.design.panel.workbench.types.createChild", newType);
-      navigateToType(kit.guid, newType.guid);
+      if (kitGuid) navigateToType(kitGuid, newType.guid);
     };
 
     const handleCreateDesignChild = (parentDesign: Design) => {
-      const existingChildren = kit.designs?.filter((design) => design.parent === parentDesign.guid) || [];
+      const existingChildren = workbenchDesigns?.filter((design) => design.parent === parentDesign.guid) || [];
       const uniqueName = generateUniqueName(
         parentDesign.name,
         existingChildren.map((design) => design.name),
@@ -6852,12 +6890,12 @@ const App: FC<AppProps> = () => {
         updatedAt: new Date(),
       };
       kitAppCommands.addDesign("semio.sketchpad.app.design.panel.workbench.designs.createChild", newDesign);
-      if (kit?.guid) navigateToDesign(kit.guid, newDesign.guid);
+      if (kitGuid) navigateToDesign(kitGuid, newDesign.guid);
     };
 
     const renderTypeTree = (types: Type[]): ReactNode[] => {
       return types.map((type) => {
-        const children = kit.types?.filter((item) => (typeof item.parent === "object" ? item.parent?.guid === type.guid : item.parent === type.guid)) || [];
+        const children = workbenchTypes?.filter((item) => (typeof item.parent === "object" ? item.parent?.guid === type.guid : item.parent === type.guid)) || [];
         return (
           <div key={type.guid} onPointerEnter={() => hoverTypes("semio.sketchpad.app.design.panel.workbench.types.hover", [type.guid])} onPointerLeave={() => clearHover("semio.sketchpad.app.design.panel.workbench.types.leave")}>
             <TypeTreeItem type={type} onCreateChild={handleCreateTypeChild}>
@@ -6870,7 +6908,7 @@ const App: FC<AppProps> = () => {
 
     const renderDesignTree = (designs: Design[]): ReactNode[] => {
       return designs.map((design) => {
-        const children = kit.designs?.filter((child) => (typeof child.parent === "object" ? child.parent?.guid === design.guid : child.parent === design.guid)) || [];
+        const children = workbenchDesigns?.filter((child) => (typeof child.parent === "object" ? child.parent?.guid === design.guid : child.parent === design.guid)) || [];
         return (
           <div key={design.guid} onPointerEnter={() => hoverDesigns("semio.sketchpad.app.design.panel.workbench.designs.hover", [design.guid])} onPointerLeave={() => clearHover("semio.sketchpad.app.design.panel.workbench.designs.leave")}>
             <DesignTreeItem design={design} onCreateChild={handleCreateDesignChild}>
@@ -6881,11 +6919,11 @@ const App: FC<AppProps> = () => {
       });
     };
 
-    const rootTypes = kit.types?.filter((type) => !type.parent) || [];
-    const rootDesigns = kit.designs?.filter((design) => !design.parent) || [];
+    const rootTypes = workbenchTypes?.filter((type) => !type.parent) || [];
+    const rootDesigns = workbenchDesigns?.filter((design) => !design.parent) || [];
 
     const handleCreateType = () => {
-      const existingTypes = kit.types || [];
+      const existingTypes = workbenchTypes || [];
       const typeNumber = existingTypes.length + 1;
       const newType: Type = {
         guid: guid(),
@@ -6894,11 +6932,11 @@ const App: FC<AppProps> = () => {
         updatedAt: new Date(),
       };
       kitAppCommands.addType("semio.sketchpad.app.design.panel.workbench.types.create", newType);
-      if (kit?.guid) navigateToType(kit.guid, newType.guid);
+      if (kitGuid) navigateToType(kitGuid, newType.guid);
     };
 
     const handleCreateDesign = () => {
-      const existingDesigns = kit.designs || [];
+      const existingDesigns = workbenchDesigns || [];
       const designNumber = existingDesigns.length + 1;
       const newDesign: Design = {
         guid: guid(),
@@ -6907,17 +6945,17 @@ const App: FC<AppProps> = () => {
         updatedAt: new Date(),
       };
       kitAppCommands.addDesign("semio.sketchpad.app.design.panel.workbench.designs.create", newDesign);
-      if (kit?.guid) navigateToDesign(kit.guid, newDesign.guid);
+      if (kitGuid) navigateToDesign(kitGuid, newDesign.guid);
     };
 
     return (
       <>
         <div
           onPointerEnter={() => {
-            if (!kit.types || kit.types.length === 0) return;
+            if (!workbenchTypes || workbenchTypes.length === 0) return;
             hoverTypes(
               "semio.sketchpad.app.design.panel.workbench.typesSection.hover",
-              kit.types.map((type) => type.guid),
+              workbenchTypes.map((type) => type.guid),
             );
           }}
           onPointerLeave={() => clearHover("semio.sketchpad.app.design.panel.workbench.typesSection.leave")}
@@ -6932,8 +6970,8 @@ const App: FC<AppProps> = () => {
               },
             ]}
             onDoubleClick={() => {
-              if (!kit?.guid) return;
-              navigateToKit(kit.guid, "kind=types");
+              if (!kitGuid) return;
+              navigateToKit(kitGuid, "kind=types");
             }}
           >
             {renderTypeTree(rootTypes)}
@@ -6941,10 +6979,10 @@ const App: FC<AppProps> = () => {
         </div>
         <div
           onPointerEnter={() => {
-            if (!kit.designs || kit.designs.length === 0) return;
+            if (!workbenchDesigns || workbenchDesigns.length === 0) return;
             hoverDesigns(
               "semio.sketchpad.app.design.panel.workbench.designsSection.hover",
-              kit.designs.map((design) => design.guid),
+              workbenchDesigns.map((design) => design.guid),
             );
           }}
           onPointerLeave={() => clearHover("semio.sketchpad.app.design.panel.workbench.designsSection.leave")}
@@ -6959,8 +6997,8 @@ const App: FC<AppProps> = () => {
               },
             ]}
             onDoubleClick={() => {
-              if (!kit?.guid) return;
-              navigateToKit(kit.guid, "kind=designs");
+              if (!kitGuid) return;
+              navigateToKit(kitGuid, "kind=designs");
             }}
           >
             {renderDesignTree(rootDesigns)}
@@ -7010,7 +7048,7 @@ const App: FC<AppProps> = () => {
           }
           event.preventDefault();
           event.stopPropagation();
-          navigateToType(kit.guid, type.guid);
+          if (kitGuid) navigateToType(kitGuid, type.guid);
         }}
         actions={[
           {
@@ -7065,7 +7103,7 @@ const App: FC<AppProps> = () => {
           }
           event.preventDefault();
           event.stopPropagation();
-          navigateToDesign(kit.guid, design.guid);
+          if (kitGuid) navigateToDesign(kitGuid, design.guid);
         }}
         actions={[
           {
@@ -7104,7 +7142,7 @@ const App: FC<AppProps> = () => {
       removeSection("workbench", "semio.sketchpad.app.design.windows");
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appType, kit.guid, kit.types?.length, kit.designs?.length]);
+  }, [appType, kitGuid, workbenchTypes?.length, workbenchDesigns?.length]);
 
   // Add settings sections
   useEffect(() => {

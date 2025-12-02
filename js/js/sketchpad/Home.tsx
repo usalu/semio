@@ -48,7 +48,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router";
 import * as Y from "yjs";
 import i18n, { useLabel } from "../i18n";
-import { Folder, generateUniqueName, guid, Guid, importKit, Kit, KitShallow } from "../semio";
+import { generateUniqueName, guid, Guid, importKit, Kit, KitShallow } from "../semio";
 import { docsRegistry } from "./Docs";
 import { Action, Input, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Spinner, Strip, Table, TableAvatar, TableColumn, Textarea, Toggle, ToggleGroup, TreeContent, TreeItem } from "./elements";
 import type { AppConfig, AppEdit, PanelDefinition, PanelVisibility } from "./shared";
@@ -771,33 +771,12 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
         await createKit("semio.sketchpad.app.home.dropzone", kit, false, false);
         const kitStore = store.kit(kit.guid);
         homeStore.removeLoadingKit(tempGuid);
+        // Store blobs for existing kit files BEFORE navigating (kit already has file definitions from SQLite)
+        await kitStore.storeFileBlobs(importedFiles);
         await new Promise((resolve) => setTimeout(resolve, 0));
         navigateToKit(kit.guid);
-        const folderPathMap = new Map<string, string>();
-        const foldersToAdd: Folder[] = [];
-        const ensureFolder = (parts: string[]): string => {
-          let parentGuid: string | undefined = undefined;
-          let currentPath = "";
-          for (const part of parts) {
-            currentPath = currentPath ? `${currentPath}/${part}` : part;
-            let folderGuid = folderPathMap.get(currentPath);
-            if (!folderGuid) {
-              folderGuid = guid();
-              folderPathMap.set(currentPath, folderGuid);
-              foldersToAdd.push({ guid: folderGuid, name: part, parent: parentGuid ? { guid: parentGuid } : undefined, createdAt: new Date(), updatedAt: new Date() });
-            }
-            parentGuid = folderGuid;
-          }
-          return parentGuid!;
-        };
-        const filesToAdd = Array.from(importedFiles.entries()).map(([filePath, blob]) => {
-          const parts = filePath.split("/").filter((p) => p.length > 0);
-          const directories = parts.slice(0, -1);
-          const parentFolderGuid = directories.length > 0 ? ensureFolder(directories) : undefined;
-          return { file: { guid: guid(), name: parts[parts.length - 1] || filePath, folder: parentFolderGuid ? { guid: parentFolderGuid } : undefined, size: blob.size, createdAt: new Date(), updatedAt: new Date() }, blob };
-        });
-        if (foldersToAdd.length > 0 || filesToAdd.length > 0) kitStore.execute("semio.kit.addFiles", "semio.sketchpad.app.home.dropzone", foldersToAdd, filesToAdd);
       } catch (error) {
+        console.error("[Home] Failed to import kit:", error);
         homeStore.removeLoadingKit(tempGuid);
       }
     }
@@ -815,33 +794,12 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
         await createKit("semio.sketchpad.app.home.fileInput", kit, false, false);
         const kitStore = store.kit(kit.guid);
         homeStore.removeLoadingKit(tempGuid);
+        // Store blobs for existing kit files BEFORE navigating (kit already has file definitions from SQLite)
+        await kitStore.storeFileBlobs(importedFiles);
         await new Promise((resolve) => setTimeout(resolve, 100));
         navigateToKit(kit.guid);
-        const folderPathMap = new Map<string, string>();
-        const foldersToAdd: Folder[] = [];
-        const ensureFolder = (parts: string[]): string => {
-          let parentGuid: string | undefined = undefined;
-          let currentPath = "";
-          for (const part of parts) {
-            currentPath = currentPath ? `${currentPath}/${part}` : part;
-            let folderGuid = folderPathMap.get(currentPath);
-            if (!folderGuid) {
-              folderGuid = guid();
-              folderPathMap.set(currentPath, folderGuid);
-              foldersToAdd.push({ guid: folderGuid, name: part, parent: parentGuid ? { guid: parentGuid } : undefined, createdAt: new Date(), updatedAt: new Date() });
-            }
-            parentGuid = folderGuid;
-          }
-          return parentGuid!;
-        };
-        const filesToAdd = Array.from(importedFiles.entries()).map(([filePath, blob]) => {
-          const parts = filePath.split("/").filter((p) => p.length > 0);
-          const directories = parts.slice(0, -1);
-          const parentFolderGuid = directories.length > 0 ? ensureFolder(directories) : undefined;
-          return { file: { guid: guid(), name: parts[parts.length - 1] || filePath, folder: parentFolderGuid ? { guid: parentFolderGuid } : undefined, size: blob.size, createdAt: new Date(), updatedAt: new Date() }, blob };
-        });
-        if (foldersToAdd.length > 0 || filesToAdd.length > 0) kitStore.execute("semio.kit.addFiles", "semio.sketchpad.app.home.fileInput", foldersToAdd, filesToAdd);
       } catch (error) {
+        console.error("[Home] Failed to import kit:", error);
         homeStore.removeLoadingKit(tempGuid);
       }
     }
@@ -1031,7 +989,7 @@ const Home: FC = ({}) => {
   const allConcepts = useMemo(() => {
     const conceptSet = new Set<string>();
     kits.forEach((kit) => {
-      kit.concepts?.forEach((concept) => conceptSet.add(concept));
+      kit.concepts?.forEach((concept) => conceptSet.add(concept.guid));
     });
     return Array.from(conceptSet).sort();
   }, [kits]);
@@ -1467,10 +1425,10 @@ const Home: FC = ({}) => {
                       icon={<RemoteKitIcon />}
                     />,
                   ]),
-              ...(selectedName ? [<Toggle pressed={true} onPressedChange={() => toggleName(selectedName)} id="semio.sketchpad.app.home.filter.name" icon={selectedName} />] : []),
+              ...(selectedName ? [<Toggle pressed={true} onPressedChange={() => toggleName(selectedName)} id="semio.sketchpad.app.home.filter.name" icon={<span className="size-small">N</span>} text={selectedName} />] : []),
               ...(selectedVersion !== null ? [<Toggle pressed={true} onPressedChange={() => toggleVersion(selectedVersion)} id="semio.sketchpad.app.home.filter.version" icon={selectedVersion || defaultVersionLabel} />] : []),
               ...(selectedKind && !selectedName && uniqueNames.length > 0
-                ? uniqueNames.map((name) => <Toggle key={name} id={`semio.sketchpad.app.home.filter.name.${name}`} pressed={false} onPressedChange={() => toggleName(name)} icon={name} />)
+                ? uniqueNames.map((name) => <Toggle key={name} id={`semio.sketchpad.app.home.filter.name.${name}`} pressed={false} onPressedChange={() => toggleName(name)} icon={<span className="size-small">N</span>} text={name} />)
                 : []),
               ...(selectedKind && selectedName && selectedVersion === null && uniqueVersions.length > 0
                 ? uniqueVersions.map((version) => (
@@ -1635,10 +1593,10 @@ const Home: FC = ({}) => {
                           icon={<RemoteKitIcon />}
                         />,
                       ]),
-                  ...(selectedName ? [<Toggle id={`semio.sketchpad.app.home.filter.name.${selectedName}`} pressed={true} onPressedChange={() => toggleName(selectedName)} icon={selectedName} />] : []),
+                  ...(selectedName ? [<Toggle id={`semio.sketchpad.app.home.filter.name.${selectedName}`} pressed={true} onPressedChange={() => toggleName(selectedName)} icon={<span className="size-small">N</span>} text={selectedName} />] : []),
                   ...(selectedVersion !== null ? [<Toggle id={`semio.sketchpad.app.home.filter.version.${selectedVersion}`} pressed={true} onPressedChange={() => toggleVersion(selectedVersion)} icon={selectedVersion || defaultVersionLabel} />] : []),
                   ...(selectedKind && !selectedName && uniqueNames.length > 0
-                    ? uniqueNames.map((name) => <Toggle key={name} id={`semio.sketchpad.app.home.filter.name.${name}`} pressed={false} onPressedChange={() => toggleName(name)} icon={name} />)
+                    ? uniqueNames.map((name) => <Toggle key={name} id={`semio.sketchpad.app.home.filter.name.${name}`} pressed={false} onPressedChange={() => toggleName(name)} icon={<span className="size-small">N</span>} text={name} />)
                     : []),
                   ...(selectedKind && selectedName && selectedVersion === null && uniqueVersions.length > 0
                     ? uniqueVersions.map((version) => <Toggle key={version} id={`semio.sketchpad.app.home.filter.version.${version}`} pressed={false} onPressedChange={() => toggleVersion(version)} icon={version || defaultVersionLabel} />)

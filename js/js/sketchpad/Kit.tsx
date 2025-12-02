@@ -2153,7 +2153,9 @@ const AppContent: FC = () => {
   const kitScope = useKitScope();
   const hasKit = useHasKit(kitScope?.guid || "");
 
-  const kit = useKit(undefined, kitScope?.guid, true) as Kit;
+  // Use shallow subscription (deep=false) since this component primarily cares about
+  // array-level changes (adding/removing items), not deep property changes within items
+  const kit = useKit(undefined, kitScope?.guid, false) as Kit;
   const kitCommands = useKitCommands();
   const sketchpadCommands = useSketchpadCommands();
   const kitAppCommands = useKitAppCommands();
@@ -2176,22 +2178,16 @@ const AppContent: FC = () => {
   const defaultTypeName = useLabel("semio.sketchpad.app.type.defaultName");
   const defaultQualityName = useLabel("semio.sketchpad.app.quality.defaultName");
   const defaultFolderName = useLabel("semio.sketchpad.app.folder.defaultName");
+  const kitLoadingLabel = useLabel("semio.sketchpad.app.kit.loading");
 
-  // Early return if no kit is loaded
-  if (!hasKit || !kit) {
-    return <NotFound title={t("semio.sketchpad.app.kit.notFound.label.normal")} description={t("semio.sketchpad.app.kit.notFound.description.normal")} parentPath="/" parentLabel={t("semio.sketchpad.app.home.title")} />;
-  }
+  // Pre-call all useLabel hooks used in JSX to avoid conditional hook calls
+  const labelSearch = useLabel("semio.sketchpad.common.search");
+  const labelArtifact = useLabel("semio.sketchpad.app.kit.canvas.table.header.artifact");
+  const labelKind = useLabel("semio.sketchpad.app.kit.canvas.table.header.kind");
+  const labelUpdatedAt = useLabel("semio.sketchpad.app.kit.canvas.table.header.updatedAt");
+  const labelCreatedAt = useLabel("semio.sketchpad.app.kit.canvas.table.header.createdAt");
 
-  // Early return if kit app is not initialized yet
-  if (!kitApp) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.kit.loading")}</p>
-      </div>
-    );
-  }
-
-  // Get filters from search params (?kind=&name=)
+  // Get filters from search params (?kind=&name=) - MOVED BEFORE EARLY RETURNS
   const selectedKind = searchParams.get("kind") as ArtifactKind | null;
   const selectedName = searchParams.get("name");
 
@@ -2252,7 +2248,7 @@ const AppContent: FC = () => {
 
   const allConcepts = useMemo(() => {
     const conceptSet = new Set<string>();
-    kitDesigns?.forEach((d: Design) => d.concepts?.forEach((c: string) => conceptSet.add(c)));
+    kitDesigns?.forEach((d: Design) => d.concepts?.forEach((c) => conceptSet.add(c.guid)));
     return Array.from(conceptSet).sort();
   }, [kitDesignsKey]);
 
@@ -3940,6 +3936,19 @@ const AppContent: FC = () => {
     }
   };
 
+  // Early return checks after all hooks have been called
+  if (!hasKit || !kit) {
+    return <NotFound title={t("semio.sketchpad.app.kit.notFound.label.normal")} description={t("semio.sketchpad.app.kit.notFound.description.normal")} parentPath="/" parentLabel={t("semio.sketchpad.app.home.title")} />;
+  }
+
+  if (!kitApp) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-sm text-muted-foreground">{kitLoadingLabel}</p>
+      </div>
+    );
+  }
+
   if (isMobile) {
     return (
       <div
@@ -4071,13 +4080,13 @@ const AppContent: FC = () => {
                     icon={<UserIcon />}
                   />,
                 ]),
-            ...(selectedName ? [<Toggle id="semio.sketchpad.app.kit.filter.name.hide" pressed={true} onPressedChange={() => toggleName(selectedName)} icon={selectedName} />] : []),
-            ...(selectedKind && !selectedName && uniqueNames.length > 0 ? uniqueNames.map((name) => <Toggle key={name} pressed={false} onPressedChange={() => toggleName(name)} id="semio.sketchpad.app.kit.filter.name" icon={name} />) : []),
+            ...(selectedName ? [<Toggle id="semio.sketchpad.app.kit.filter.name.hide" pressed={true} onPressedChange={() => toggleName(selectedName)} icon={<span className="size-small">N</span>} text={selectedName} />] : []),
+            ...(selectedKind && !selectedName && uniqueNames.length > 0 ? uniqueNames.map((name) => <Toggle key={name} pressed={false} onPressedChange={() => toggleName(name)} id="semio.sketchpad.app.kit.filter.name" icon={<span className="size-small">N</span>} text={name} />) : []),
             <Input
               key="search"
               id="semio.sketchpad.app.kit.filter.search"
               className="flex-1 min-w-[160px]"
-              placeholder={useLabel("semio.sketchpad.common.search")}
+              placeholder={labelSearch}
               value={searchQuery}
               onChange={(e) => kitAppCommands.setFilterSearch("semio.sketchpad.app.kit.filter.search", e.target.value)}
             />,
@@ -4093,7 +4102,7 @@ const AppContent: FC = () => {
               id: "artifact",
               header: (
                 <div className="flex items-center justify-between w-full">
-                  <span>{useLabel("semio.sketchpad.app.kit.canvas.table.header.artifact")}</span>
+                  <span>{labelArtifact}</span>
                   <Toggle
                     kind="dropdown"
                     pressed={sortColumn === "artifact"}
@@ -4302,8 +4311,8 @@ const AppContent: FC = () => {
                   icon={<UserIcon />}
                 />,
               ]),
-          ...(selectedName ? [<Toggle id="semio.sketchpad.app.kit.filter.name.hide" pressed={true} onPressedChange={() => toggleName(selectedName)} icon={selectedName} />] : []),
-          ...(selectedKind && !selectedName && uniqueNames.length > 0 ? uniqueNames.map((name) => <Toggle key={name} pressed={false} onPressedChange={() => toggleName(name)} id="semio.sketchpad.app.kit.filter.name" icon={name} />) : []),
+          ...(selectedName ? [<Toggle id="semio.sketchpad.app.kit.filter.name.hide" pressed={true} onPressedChange={() => toggleName(selectedName)} icon={<span className="size-small">N</span>} text={selectedName} />] : []),
+          ...(selectedKind && !selectedName && uniqueNames.length > 0 ? uniqueNames.map((name) => <Toggle key={name} pressed={false} onPressedChange={() => toggleName(name)} id="semio.sketchpad.app.kit.filter.name" icon={<span className="size-small">N</span>} text={name} />) : []),
           <Input
             key="search"
             id="semio.sketchpad.app.kit.canvas.table.search"
@@ -4329,7 +4338,7 @@ const AppContent: FC = () => {
                     id: "kind",
                     header: (
                       <div className="inline-flex items-center gap-single">
-                        <span>{useLabel("semio.sketchpad.app.kit.canvas.table.header.kind")}</span>
+                        <span>{labelKind}</span>
                         <Toggle
                           kind="dropdown"
                           pressed={sortColumn === "kind"}
@@ -4368,7 +4377,7 @@ const AppContent: FC = () => {
               id: "artifact",
               header: (
                 <div className="flex items-center justify-between w-full">
-                  <span>{useLabel("semio.sketchpad.app.kit.canvas.table.header.artifact")}</span>
+                  <span>{labelArtifact}</span>
                   <Toggle
                     kind="dropdown"
                     pressed={sortColumn === "artifact"}
@@ -4423,7 +4432,7 @@ const AppContent: FC = () => {
               id: "updatedAt",
               header: (
                 <div className="flex items-center justify-between w-full">
-                  <span>{useLabel("semio.sketchpad.app.kit.canvas.table.header.updatedAt")}</span>
+                  <span>{labelUpdatedAt}</span>
                   <Toggle
                     kind="dropdown"
                     pressed={sortColumn === "updatedAt"}
@@ -4447,7 +4456,7 @@ const AppContent: FC = () => {
               id: "createdAt",
               header: (
                 <div className="flex items-center justify-between w-full">
-                  <span>{useLabel("semio.sketchpad.app.kit.canvas.table.header.createdAt")}</span>
+                  <span>{labelCreatedAt}</span>
                   <Toggle
                     kind="dropdown"
                     pressed={sortColumn === "createdAt"}

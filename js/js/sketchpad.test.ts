@@ -89,6 +89,25 @@ async function getDetailsSections(page: Page): Promise<string[]> {
 }
 
 async function initHome(page: Page) {
+  const consoleMessages: string[] = [];
+  const consoleErrors: string[] = [];
+  const networkRequests: string[] = [];
+  page.on("console", (msg) => {
+    const text = msg.text();
+    consoleMessages.push(`[${msg.type()}] ${text}`);
+    if (msg.type() === "error") consoleErrors.push(text);
+  });
+  page.on("pageerror", (err) => consoleErrors.push(`PAGE_ERROR: ${err.message}`));
+  page.on("request", (req) => {
+    networkRequests.push(`[REQ] ${req.method()} ${req.url()}`);
+  });
+  page.on("response", (res) => {
+    networkRequests.push(`[RES] ${res.status()} ${res.url()}`);
+  });
+  page.on("requestfailed", (req) => {
+    networkRequests.push(`[FAIL] ${req.url()} - ${req.failure()?.errorText}`);
+  });
+
   await page.goto("/");
   await page.waitForLoadState("networkidle");
   await page.waitForTimeout(2000);
@@ -96,10 +115,47 @@ async function initHome(page: Page) {
   const zipPath = path.resolve(__dirname, "../../assets/semio/metabolism.zip");
   const fileInput = page.locator('[id="semio.sketchpad.app.home.importKit"]');
   await expect(fileInput).toBeAttached({ timeout: 10000 });
-  await fileInput.setInputFiles(zipPath);
 
-  await page.waitForURL(/.*kits\/.+/, { timeout: 30000 });
-  expect(page.url()).toMatch(/kits\/.+/);
+  console.log("[TEST] Setting input files:", zipPath);
+
+  // Use file chooser approach - wait for file chooser to open
+  const [fileChooser] = await Promise.all([
+    page.waitForEvent("filechooser", { timeout: 5000 }).catch(() => null),
+    // Trigger file input by clicking a button or dispatching click event
+    fileInput.dispatchEvent("click"),
+  ]);
+
+  if (fileChooser) {
+    await fileChooser.setFiles(zipPath);
+    console.log("[TEST] File set via file chooser");
+  } else {
+    // Fallback to direct setInputFiles
+    await fileInput.setInputFiles(zipPath);
+    console.log("[TEST] File set via setInputFiles");
+
+    // Manually dispatch change event
+    await fileInput.evaluate((el) => {
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+  }
+
+  // Wait a bit for the handler to process
+  await page.waitForTimeout(5000);
+
+  // Check current URL
+  console.log("[TEST] Current URL after file set:", page.url());
+
+  // Wait for the import to trigger navigation
+  try {
+    await page.waitForURL(/.*kits\/.+/, { timeout: 60000 });
+    expect(page.url()).toMatch(/kits\/.+/);
+  } catch (error) {
+    console.log("[TEST] Navigation failed. Console errors:", consoleErrors);
+    console.log("[TEST] All console messages:", consoleMessages);
+    console.log("[TEST] Network requests after import:", networkRequests.filter(r => r.includes("wasm") || r.includes("sql") || r.includes("FAIL")));
+    throw error;
+  }
+
   await page.waitForLoadState("networkidle");
   await page.waitForTimeout(5000);
 }
@@ -134,16 +190,20 @@ async function initDesign(page: Page) {
 
 async function initType(page: Page) {
   await initKit(page);
-  // Switch to types view - use button role to avoid matching the group element
-  const typesToggle = page.locator('button[id="semio.sketchpad.app.kit.kitApp.showTypes"]');
-  await typesToggle.click({ timeout: 5000 });
-  await page.waitForTimeout(1000);
+  console.log("[initType] Current URL:", page.url());
 
-  // Open the existing "Capsule" type
-  const capsuleType = page.getByRole("button", { name: "Capsule" });
-  await expect(capsuleType).toBeVisible({ timeout: 10000 });
-  await capsuleType.dblclick();
-  await page.waitForTimeout(1000);
+  // Switch to types view using the toggle (without page reload to preserve kit state)
+  const typesToggle = page.locator('button[id="semio.sketchpad.app.kit.kitApp.showTypes"]');
+  await expect(typesToggle).toBeVisible({ timeout: 30000 });
+  await typesToggle.click();
+  await page.waitForTimeout(2000);
+
+  // Find and double-click on Tambour type
+  const tambourType = page.getByRole("button", { name: "Tambour" }).first();
+  await expect(tambourType).toBeVisible({ timeout: 3000 });
+  await tambourType.dblclick();
+  await page.waitForLoadState("networkidle");
+  await page.waitForTimeout(60000);
 }
 
 async function initDocs(page: Page) {
@@ -198,19 +258,14 @@ test.describe("sketchpad", () => {
       await page.waitForTimeout(1000);
     }
 
-    // Verify types table is visible
     const tableBody = page.locator("tbody").first();
     const hasTable = await tableBody.isVisible({ timeout: 10000 }).catch(() => false);
     expect(hasTable).toBe(true);
 
-    // Click on Capsule type to select it
-    const capsuleType = page.getByRole("button", { name: "Capsule" }).first();
-    await expect(capsuleType).toBeVisible({ timeout: 10000 });
-    await capsuleType.click();
+    const tambourType = page.getByRole("button", { name: "Tambour" }).first();
+    await expect(tambourType).toBeVisible({ timeout: 10000 });
+    await tambourType.click();
     await page.waitForTimeout(500);
-
-    // Verify Capsule type is visible in the table
-    // The selection state is managed by the app, just verify the type exists
 
     // Test settings panel
     await openSettingsPanel(page);
@@ -248,72 +303,232 @@ test.describe("sketchpad", () => {
       // At least verify we can access these toggles (they may be scrolled)
       console.log(`Toggle visibility - concepts: ${hasConceptsToggle}, interfaces: ${hasInterfacesToggle}, tags: ${hasTagsToggle}`);
     }
-  });
 
+    // Test interfaces view - check for "core circular bottom" interface
+    // First clear any kind filter by clicking the hideKind button if it exists
+    const hideKindBtn = page.locator('[id="semio.sketchpad.app.kit.kitApp.hideKind"]');
+    if (await hideKindBtn.isVisible().catch(() => false)) {
+      await hideKindBtn.click();
+      await page.waitForTimeout(500);
+    }
+
+    const interfacesToggle = page.locator('button[id="semio.sketchpad.app.kit.kitApp.showInterfaces"]');
+    // Scroll into view if needed
+    await interfacesToggle.scrollIntoViewIfNeeded().catch(() => { });
+    const hasInterfacesToggle = await interfacesToggle.isVisible({ timeout: 5000 }).catch(() => false);
+    console.log("[Kit Test] Interfaces toggle visible:", hasInterfacesToggle);
+    if (hasInterfacesToggle) {
+      await interfacesToggle.click();
+      await page.waitForTimeout(1000);
+
+      // Verify the table shows interfaces
+      const tableBody = page.locator("tbody").first();
+      await expect(tableBody).toBeVisible({ timeout: 5000 });
+
+      // Check for specific interface from kit_metabolism.json
+      const coreCircularBottomInterface = page.getByRole("button", { name: "core circular bottom" });
+      await expect(coreCircularBottomInterface).toBeVisible({ timeout: 5000 });
+      console.log("[Kit Test] Found interface: core circular bottom");
+    }
+
+    // Test tags view - check for "collider" tag
+    const tagsToggle = page.locator('button[id="semio.sketchpad.app.kit.kitApp.showTags"]');
+    const hasTagsToggle = await tagsToggle.isVisible({ timeout: 5000 }).catch(() => false);
+    console.log("[Kit Test] Tags toggle visible:", hasTagsToggle);
+    if (hasTagsToggle) {
+      await tagsToggle.click();
+      await page.waitForTimeout(1000);
+
+      // Verify the table shows tags
+      const tableBody = page.locator("tbody").first();
+      await expect(tableBody).toBeVisible({ timeout: 5000 });
+
+      // Check for specific tag from kit_metabolism.json
+      const colliderTag = page.getByRole("button", { name: "collider" });
+      await expect(colliderTag).toBeVisible({ timeout: 5000 });
+      console.log("[Kit Test] Found tag: collider");
+    }
+
+    // Test concepts view - check for "living-architecture" concept
+    const conceptsToggle = page.locator('button[id="semio.sketchpad.app.kit.kitApp.showConcepts"]');
+    const hasConceptsToggle = await conceptsToggle.isVisible({ timeout: 5000 }).catch(() => false);
+    console.log("[Kit Test] Concepts toggle visible:", hasConceptsToggle);
+    if (hasConceptsToggle) {
+      await conceptsToggle.click();
+      await page.waitForTimeout(1000);
+
+      // Verify the table shows concepts
+      const tableBody = page.locator("tbody").first();
+      await expect(tableBody).toBeVisible({ timeout: 5000 });
+
+      // Check for specific concept from kit_metabolism.json
+      const livingArchitectureConcept = page.getByRole("button", { name: "living-architecture" });
+      await expect(livingArchitectureConcept).toBeVisible({ timeout: 5000 });
+      console.log("[Kit Test] Found concept: living-architecture");
+    }
+  });
+  test("Type", async ({ page }) => {
+    test.setTimeout(120000);
+    const consoleWarnings: string[] = [];
+    page.on("console", (msg) => {
+      if (msg.type() === "warning" && msg.text().includes("[TypeMesh]")) {
+        consoleWarnings.push(msg.text());
+      }
+    });
+    await initType(page);
+    const canvas = page.locator("canvas").first();
+    await expect(canvas).toBeVisible({ timeout: 15000 });
+    expect(page.url()).toContain("/types/");
+    await page.waitForTimeout(5000);
+    const modelWarnings = consoleWarnings.filter(w => w.includes("Mesh"));
+    console.log("[Type Test] TypeMesh warnings:", consoleWarnings);
+    expect(modelWarnings).toHaveLength(0);
+  });
   test("Design", async ({ page }) => {
     test.setTimeout(120000);
+
+    const consoleMessages: string[] = [];
+    page.on("console", (msg) => {
+      consoleMessages.push(`[${msg.type()}] ${msg.text()}`);
+    });
 
     await initDesign(page);
 
     // Wait for the design app to fully load and stabilize
     await page.waitForLoadState("networkidle");
-    await page.waitForTimeout(5000);
+    await page.waitForTimeout(3000);
+
+    console.log("[Design Test] Current URL:", page.url());
 
     // Check for diagram and scene windows
-    const diagramDropZone = page.locator('[data-drop-zone="diagram"]').first();
-    const sceneDropZone = page.locator('[data-drop-zone="scene"]').first();
-    const hasDiagram = await diagramDropZone.isVisible({ timeout: 20000 }).catch(() => false);
-    const hasScene = await sceneDropZone.isVisible({ timeout: 10000 }).catch(() => false);
+    const diagramContainer = page.locator('.react-flow').first();
+    const sceneCanvas = page.locator('canvas').first();
 
-    // At least one drop zone should be visible
+    // Wait longer for windows to load
+    await page.waitForTimeout(3000);
+
+    // Debug: Count all react-flow elements
+    const reactFlowCount = await page.locator('.react-flow').count();
+    console.log("[Design Test] ReactFlow elements count:", reactFlowCount);
+
+    // Debug: Check for any visible windows
+    const windowElements = await page.locator('[class*="window"], [class*="panel"]').count();
+    console.log("[Design Test] Window/Panel elements count:", windowElements);
+
+    const hasDiagram = await diagramContainer.isVisible({ timeout: 30000 }).catch(() => false);
+    const hasScene = await sceneCanvas.isVisible({ timeout: 10000 }).catch(() => false);
+
+    console.log("[Design Test] hasDiagram:", hasDiagram, "hasScene:", hasScene);
+
+    // At least one window should be visible
+    if (!hasDiagram && !hasScene) {
+      console.log("[Design Test] Console messages:", consoleMessages.filter(m => m.includes("error") || m.includes("Error")).slice(-10));
+      console.log("[Design Test] Page HTML:", await page.content().then(c => c.slice(0, 2000)));
+    }
     expect(hasDiagram || hasScene).toBe(true);
 
-    // Verify existing pieces are visible in the design
+    // Verify existing pieces are visible in the design (Nakagin Capsule Tower has 180 pieces)
     if (hasDiagram) {
-      const existingPieces = diagramDropZone.locator(".react-flow__node");
+      const existingPieces = diagramContainer.locator(".react-flow__node");
       const pieceCount = await existingPieces.count();
+      console.log("[Design Test] Piece count:", pieceCount);
       expect(pieceCount).toBeGreaterThan(0);
 
-      // Hover over a piece to verify it's interactive
-      if (pieceCount > 0) {
-        const firstPiece = existingPieces.first();
-        const pieceBox = await firstPiece.boundingBox();
-        if (pieceBox) {
-          await page.mouse.move(pieceBox.x + pieceBox.width / 2, pieceBox.y + pieceBox.height / 2);
-          await page.waitForTimeout(500);
+      // PANNING PERFORMANCE TEST
+      // Measure actual pan operation time (should be under 100ms each)
+      const viewport = diagramContainer.locator(".react-flow__viewport").first();
+      const viewportBox = await viewport.boundingBox();
+
+      if (viewportBox) {
+        const centerX = viewportBox.x + viewportBox.width / 2;
+        const centerY = viewportBox.y + viewportBox.height / 2;
+
+        // Warm up - first pan to initialize any lazy components
+        await page.mouse.move(centerX, centerY);
+        await page.mouse.down();
+        await page.mouse.move(centerX + 50, centerY + 25);
+        await page.mouse.up();
+        // Brief pause - debounce is 1000ms, so state update won't happen yet
+        await page.waitForTimeout(100);
+
+        // First timed pan operation
+        await page.mouse.move(centerX + 50, centerY + 25);
+        await page.mouse.down();
+        const pan1Start = Date.now();
+        await page.mouse.move(centerX + 150, centerY + 75);
+        await page.mouse.up();
+        const pan1Duration = Date.now() - pan1Start;
+        console.log(`[Design Test] Pan 1 took ${pan1Duration}ms`);
+
+        // Second timed pan operation
+        await page.mouse.move(centerX + 150, centerY + 75);
+        await page.mouse.down();
+        const pan2Start = Date.now();
+        await page.mouse.move(centerX + 50, centerY + 25);
+        await page.mouse.up();
+        const pan2Duration = Date.now() - pan2Start;
+        console.log(`[Design Test] Pan 2 took ${pan2Duration}ms`);
+
+        expect(pan1Duration).toBeLessThan(100);
+        expect(pan2Duration).toBeLessThan(100);
+        // Verify no cascade: second pan shouldn't be dramatically slower
+        expect(Math.abs(pan1Duration - pan2Duration)).toBeLessThan(100);
+      }
+
+      // HOVER PERFORMANCE TEST
+      // Hovering and unhovering over a piece should happen within 100ms
+      const firstPiece = existingPieces.first();
+      const pieceBox = await firstPiece.boundingBox();
+
+      if (pieceBox) {
+        const pieceCenterX = pieceBox.x + pieceBox.width / 2;
+        const pieceCenterY = pieceBox.y + pieceBox.height / 2;
+
+        // Warm up - move away from piece first
+        await page.mouse.move(pieceBox.x - 100, pieceBox.y - 100);
+        await page.waitForTimeout(100);
+
+        // Timed hover operation (mouse enter)
+        const hoverStart = Date.now();
+        await page.mouse.move(pieceCenterX, pieceCenterY);
+        const hoverDuration = Date.now() - hoverStart;
+        console.log(`[Design Test] Hover (mouse enter) took ${hoverDuration}ms`);
+
+        // Brief pause to allow hover state to settle
+        await page.waitForTimeout(50);
+
+        // Timed unhover operation (mouse leave)
+        const unhoverStart = Date.now();
+        await page.mouse.move(pieceBox.x - 100, pieceBox.y - 100);
+        const unhoverDuration = Date.now() - unhoverStart;
+        console.log(`[Design Test] Unhover (mouse leave) took ${unhoverDuration}ms`);
+
+        // Both hover operations should complete within 100ms
+        // This verifies granular subscriptions prevent cascade re-renders
+        expect(hoverDuration).toBeLessThan(100);
+        expect(unhoverDuration).toBeLessThan(100);
+
+        // Multiple hover/unhover cycles should be consistent
+        const hoverTimes: number[] = [];
+        for (let i = 0; i < 3; i++) {
+          await page.mouse.move(pieceBox.x - 100, pieceBox.y - 100);
+          await page.waitForTimeout(20);
+          const start = Date.now();
+          await page.mouse.move(pieceCenterX, pieceCenterY);
+          hoverTimes.push(Date.now() - start);
+          await page.waitForTimeout(20);
         }
+        console.log(`[Design Test] Hover cycle times: ${hoverTimes.join(", ")}ms`);
+        // All hover operations should be under 100ms and consistent
+        hoverTimes.forEach((time, i) => {
+          expect(time).toBeLessThan(100);
+        });
       }
     }
 
     // Verify canvas is rendering (for 3D scene)
-    const canvas = page.locator("canvas").first();
-    await expect(canvas).toBeVisible({ timeout: 10000 });
+    await expect(sceneCanvas).toBeVisible({ timeout: 10000 });
   });
-
-  test("Type", async ({ page }) => {
-    test.setTimeout(120000);
-
-    // Use initType which opens Capsule
-    await initType(page);
-    await page.waitForLoadState("networkidle");
-    await page.waitForTimeout(5000);
-
-    // Verify the type app is loaded by checking for the canvas/scene
-    const canvas = page.locator("canvas").first();
-    await expect(canvas).toBeVisible({ timeout: 15000 });
-
-    // Verify the breadcrumb shows the type name
-    const capsuleBreadcrumb = page.getByRole("button", { name: "Capsule" });
-    await expect(capsuleBreadcrumb).toBeVisible({ timeout: 10000 });
-
-    // The Type app should be showing the 3D scene
-    // Verify the scene window is present
-    const sceneWindow = page.locator('[ref*="scene"], .scene, [class*="scene"]').first();
-    const hasSceneWindow = await sceneWindow.isVisible({ timeout: 5000 }).catch(() => false);
-    // Canvas should be visible (3D rendering)
-    expect(await canvas.isVisible()).toBe(true);
-  });
-
   test("Docs", async ({ page }) => {
     await initDocs(page);
 
