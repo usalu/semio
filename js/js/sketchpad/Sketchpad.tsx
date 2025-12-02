@@ -92,6 +92,10 @@ import {
   importKit,
   Interface,
   InterfaceDiff,
+  Tag,
+  TagDiff,
+  Concept,
+  ConceptDiff,
   inverseKitDiff,
   Kit,
   KitDiff,
@@ -6065,6 +6069,12 @@ export function useKitCommands() {
     createInterface: (origin: string, iface: Interface) => kitStore.execute("semio.kit.createInterface", origin, iface),
     updateInterface: (origin: string, guid: Guid, diff: InterfaceDiff) => kitStore.execute("semio.kit.updateInterface", origin, guid, diff),
     deleteInterface: (origin: string, guid: Guid) => kitStore.execute("semio.kit.deleteInterface", origin, guid),
+    createTag: (origin: string, tag: Tag) => kitStore.execute("semio.kit.createTag", origin, tag),
+    updateTag: (origin: string, guid: Guid, diff: TagDiff) => kitStore.execute("semio.kit.updateTag", origin, guid, diff),
+    deleteTag: (origin: string, guid: Guid) => kitStore.execute("semio.kit.deleteTag", origin, guid),
+    createConcept: (origin: string, concept: Concept) => kitStore.execute("semio.kit.createConcept", origin, concept),
+    updateConcept: (origin: string, guid: Guid, diff: ConceptDiff) => kitStore.execute("semio.kit.updateConcept", origin, guid, diff),
+    deleteConcept: (origin: string, guid: Guid) => kitStore.execute("semio.kit.deleteConcept", origin, guid),
     addFile: (origin: string, file: SemioFile, blob?: Blob) => kitStore.execute("semio.kit.addFile", origin, file, blob),
     updateFile: (origin: string, url: Url, fileDiff: FileDiff, blob?: Blob) => kitStore.execute("semio.kit.updateFile", origin, url, fileDiff, blob),
     removeFile: (origin: string, url: Url) => kitStore.execute("semio.kit.removeFile", origin, url),
@@ -6164,6 +6174,36 @@ export const kitCommands = {
   "semio.kit.deleteInterface": (context: KitCommandContext, guid: Guid): KitCommandResult => {
     return {
       diff: { interfaces: { removed: [guid] } },
+    };
+  },
+  "semio.kit.createTag": (context: KitCommandContext, tag: Tag): KitCommandResult => {
+    return {
+      diff: { tags: { added: [tag] } },
+    };
+  },
+  "semio.kit.updateTag": (context: KitCommandContext, guid: Guid, diff: TagDiff): KitCommandResult => {
+    return {
+      diff: { tags: { updated: [{ id: guid, diff: diff }] } },
+    };
+  },
+  "semio.kit.deleteTag": (context: KitCommandContext, guid: Guid): KitCommandResult => {
+    return {
+      diff: { tags: { removed: [guid] } },
+    };
+  },
+  "semio.kit.createConcept": (context: KitCommandContext, concept: Concept): KitCommandResult => {
+    return {
+      diff: { concepts: { added: [concept] } },
+    };
+  },
+  "semio.kit.updateConcept": (context: KitCommandContext, guid: Guid, diff: ConceptDiff): KitCommandResult => {
+    return {
+      diff: { concepts: { updated: [{ id: guid, diff: diff }] } },
+    };
+  },
+  "semio.kit.deleteConcept": (context: KitCommandContext, guid: Guid): KitCommandResult => {
+    return {
+      diff: { concepts: { removed: [guid] } },
     };
   },
   "semio.kit.addFile": (context: KitCommandContext, file: SemioFile, blob?: Blob): KitCommandResult => {

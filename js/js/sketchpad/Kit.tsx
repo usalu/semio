@@ -35,8 +35,10 @@ import {
   FileTypeIcon,
   FileVideoIcon,
   FolderIcon,
+  HashIcon,
   InterfaceIcon,
   LayoutIcon,
+  LightbulbIcon,
   SortAscendingIcon,
   SortDescendingIcon,
   TypeIcon,
@@ -51,7 +53,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router";
 import { Camera } from "three";
 import * as Y from "yjs";
 import i18n, { useLabel } from "../i18n";
-import { Author, buildFileTree, Coord, Design, DesignDiff, DiffStatus, flattenFileTree, Folder, generateUniqueName, guid, Guid, Kit, KitDiff, Quality, File as SemioFile, Type, TypeDiff } from "../semio";
+import { Author, buildFileTree, Concept, Coord, Design, DesignDiff, DiffStatus, flattenFileTree, Folder, generateUniqueName, guid, Guid, Interface, Kit, KitDiff, Quality, File as SemioFile, Tag, Type, TypeDiff } from "../semio";
 import type { KitStore, SketchpadStore } from "./Sketchpad";
 import {
   Canvas,
@@ -102,6 +104,8 @@ export interface KitAppSelection {
   designs?: Guid[];
   qualities?: string[];
   interfaces?: Guid[];
+  tags?: Guid[];
+  concepts?: Guid[];
   files?: string[];
   folders?: Guid[];
   authors?: string[];
@@ -123,6 +127,14 @@ export interface KitAppSelectionInterfacesDiff {
   added?: Guid[];
   removed?: Guid[];
 }
+export interface KitAppSelectionTagsDiff {
+  added?: Guid[];
+  removed?: Guid[];
+}
+export interface KitAppSelectionConceptsDiff {
+  added?: Guid[];
+  removed?: Guid[];
+}
 export interface KitAppSelectionFilesDiff {
   added?: string[];
   removed?: string[];
@@ -140,6 +152,8 @@ export interface KitAppSelectionDiff {
   designs?: KitAppSelectionDesignsDiff;
   qualities?: KitAppSelectionQualitiesDiff;
   interfaces?: KitAppSelectionInterfacesDiff;
+  tags?: KitAppSelectionTagsDiff;
+  concepts?: KitAppSelectionConceptsDiff;
   files?: KitAppSelectionFilesDiff;
   folders?: KitAppSelectionFoldersDiff;
   authors?: KitAppSelectionAuthorsDiff;
@@ -836,6 +850,14 @@ export function useKitAppCommands(id?: KitAppId) {
       selectInterfaces: noOp,
       addInterfaceToSelection: noOp,
       removeInterfaceFromSelection: noOp,
+      selectTag: noOp,
+      selectTags: noOp,
+      addTagToSelection: noOp,
+      removeTagFromSelection: noOp,
+      selectConcept: noOp,
+      selectConcepts: noOp,
+      addConceptToSelection: noOp,
+      removeConceptFromSelection: noOp,
       selectFile: noOp,
       selectFiles: noOp,
       addFileToSelection: noOp,
@@ -894,6 +916,14 @@ export function useKitAppCommands(id?: KitAppId) {
     selectInterfaces: (origin: string, guids: Guid[]) => store.execute("semio.kitApp.selectInterfaces", origin, guids),
     addInterfaceToSelection: (origin: string, guid: Guid) => store.execute("semio.kitApp.addInterfaceToSelection", origin, guid),
     removeInterfaceFromSelection: (origin: string, guid: Guid) => store.execute("semio.kitApp.removeInterfaceFromSelection", origin, guid),
+    selectTag: (origin: string, guid: Guid) => store.execute("semio.kitApp.selectTag", origin, guid),
+    selectTags: (origin: string, guids: Guid[]) => store.execute("semio.kitApp.selectTags", origin, guids),
+    addTagToSelection: (origin: string, guid: Guid) => store.execute("semio.kitApp.addTagToSelection", origin, guid),
+    removeTagFromSelection: (origin: string, guid: Guid) => store.execute("semio.kitApp.removeTagFromSelection", origin, guid),
+    selectConcept: (origin: string, guid: Guid) => store.execute("semio.kitApp.selectConcept", origin, guid),
+    selectConcepts: (origin: string, guids: Guid[]) => store.execute("semio.kitApp.selectConcepts", origin, guids),
+    addConceptToSelection: (origin: string, guid: Guid) => store.execute("semio.kitApp.addConceptToSelection", origin, guid),
+    removeConceptFromSelection: (origin: string, guid: Guid) => store.execute("semio.kitApp.removeConceptFromSelection", origin, guid),
     selectFile: (origin: string, path: string) => store.execute("semio.kitApp.selectFile", origin, path),
     selectFiles: (origin: string, paths: string[]) => store.execute("semio.kitApp.selectFiles", origin, paths),
     addFileToSelection: (origin: string, path: string) => store.execute("semio.kitApp.addFileToSelection", origin, path),
@@ -1215,6 +1245,13 @@ export const commands = {
         selection: {
           types: { removed: currentSelection?.types ?? [] },
           designs: { removed: currentSelection?.designs ?? [] },
+          qualities: { removed: currentSelection?.qualities ?? [] },
+          interfaces: { removed: currentSelection?.interfaces ?? [] },
+          tags: { removed: currentSelection?.tags ?? [] },
+          concepts: { removed: currentSelection?.concepts ?? [] },
+          files: { removed: currentSelection?.files ?? [] },
+          folders: { removed: currentSelection?.folders ?? [] },
+          authors: { removed: currentSelection?.authors ?? [] },
         },
       },
     };
@@ -1439,6 +1476,126 @@ export const commands = {
       diff: {
         selection: {
           interfaces: { removed: [guid] },
+        },
+      },
+    };
+  },
+  "semio.kitApp.selectTag": (context: KitAppCommandContext, guid: Guid): KitAppCommandResult => {
+    const currentSelection = context.kitApp.selection;
+    return {
+      diff: {
+        selection: {
+          types: { removed: currentSelection?.types ?? [] },
+          designs: { removed: currentSelection?.designs ?? [] },
+          qualities: { removed: currentSelection?.qualities ?? [] },
+          interfaces: { removed: currentSelection?.interfaces ?? [] },
+          tags: {
+            removed: currentSelection?.tags ?? [],
+            added: [guid],
+          },
+          concepts: { removed: currentSelection?.concepts ?? [] },
+          files: { removed: currentSelection?.files ?? [] },
+          folders: { removed: currentSelection?.folders ?? [] },
+          authors: { removed: currentSelection?.authors ?? [] },
+        },
+      },
+    };
+  },
+  "semio.kitApp.selectTags": (context: KitAppCommandContext, guids: Guid[]): KitAppCommandResult => {
+    const currentSelection = context.kitApp.selection;
+    return {
+      diff: {
+        selection: {
+          types: { removed: currentSelection?.types ?? [] },
+          designs: { removed: currentSelection?.designs ?? [] },
+          qualities: { removed: currentSelection?.qualities ?? [] },
+          interfaces: { removed: currentSelection?.interfaces ?? [] },
+          tags: {
+            removed: currentSelection?.tags ?? [],
+            added: guids,
+          },
+          concepts: { removed: currentSelection?.concepts ?? [] },
+          files: { removed: currentSelection?.files ?? [] },
+          folders: { removed: currentSelection?.folders ?? [] },
+          authors: { removed: currentSelection?.authors ?? [] },
+        },
+      },
+    };
+  },
+  "semio.kitApp.addTagToSelection": (context: KitAppCommandContext, guid: Guid): KitAppCommandResult => {
+    return {
+      diff: {
+        selection: {
+          tags: { added: [guid] },
+        },
+      },
+    };
+  },
+  "semio.kitApp.removeTagFromSelection": (context: KitAppCommandContext, guid: Guid): KitAppCommandResult => {
+    return {
+      diff: {
+        selection: {
+          tags: { removed: [guid] },
+        },
+      },
+    };
+  },
+  "semio.kitApp.selectConcept": (context: KitAppCommandContext, guid: Guid): KitAppCommandResult => {
+    const currentSelection = context.kitApp.selection;
+    return {
+      diff: {
+        selection: {
+          types: { removed: currentSelection?.types ?? [] },
+          designs: { removed: currentSelection?.designs ?? [] },
+          qualities: { removed: currentSelection?.qualities ?? [] },
+          interfaces: { removed: currentSelection?.interfaces ?? [] },
+          tags: { removed: currentSelection?.tags ?? [] },
+          concepts: {
+            removed: currentSelection?.concepts ?? [],
+            added: [guid],
+          },
+          files: { removed: currentSelection?.files ?? [] },
+          folders: { removed: currentSelection?.folders ?? [] },
+          authors: { removed: currentSelection?.authors ?? [] },
+        },
+      },
+    };
+  },
+  "semio.kitApp.selectConcepts": (context: KitAppCommandContext, guids: Guid[]): KitAppCommandResult => {
+    const currentSelection = context.kitApp.selection;
+    return {
+      diff: {
+        selection: {
+          types: { removed: currentSelection?.types ?? [] },
+          designs: { removed: currentSelection?.designs ?? [] },
+          qualities: { removed: currentSelection?.qualities ?? [] },
+          interfaces: { removed: currentSelection?.interfaces ?? [] },
+          tags: { removed: currentSelection?.tags ?? [] },
+          concepts: {
+            removed: currentSelection?.concepts ?? [],
+            added: guids,
+          },
+          files: { removed: currentSelection?.files ?? [] },
+          folders: { removed: currentSelection?.folders ?? [] },
+          authors: { removed: currentSelection?.authors ?? [] },
+        },
+      },
+    };
+  },
+  "semio.kitApp.addConceptToSelection": (context: KitAppCommandContext, guid: Guid): KitAppCommandResult => {
+    return {
+      diff: {
+        selection: {
+          concepts: { added: [guid] },
+        },
+      },
+    };
+  },
+  "semio.kitApp.removeConceptFromSelection": (context: KitAppCommandContext, guid: Guid): KitAppCommandResult => {
+    return {
+      diff: {
+        selection: {
+          concepts: { removed: [guid] },
         },
       },
     };
@@ -1789,7 +1946,7 @@ export const commands = {
 
 // #region Table
 
-type ArtifactKind = "designs" | "types" | "qualities" | "interfaces" | "files" | "folders" | "authors";
+type ArtifactKind = "designs" | "types" | "qualities" | "interfaces" | "tags" | "concepts" | "files" | "folders" | "authors";
 
 type TableRow = {
   id: string;
@@ -1802,7 +1959,7 @@ type TableRow = {
   parentId?: string;
   hasChildren: boolean;
   isExpanded: boolean;
-  data: Design | Type | Quality | Interface | SemioFile | Author | Folder;
+  data: Design | Type | Quality | Interface | Tag | Concept | SemioFile | Author | Folder;
   folderId?: string;
 };
 
@@ -2078,6 +2235,8 @@ const AppContent: FC = () => {
   const kitTypes = kit?.types;
   const kitQualities = kit?.qualities;
   const kitInterfaces = kit?.interfaces;
+  const kitTags = kit?.tags;
+  const kitConcepts = kit?.concepts;
   const kitFiles = kit?.files;
   const kitFolders = kit?.folders;
   const kitAuthors = kit?.authors;
@@ -2085,6 +2244,8 @@ const AppContent: FC = () => {
   const kitTypesKey = useMemo(() => kitTypes?.map((t) => `${t.guid}:${t.name}:${t.parent?.guid || ""}:${t.folder || ""}:${t.updatedAt || ""}`).join("|") || "", [kitTypes]);
   const kitQualitiesKey = useMemo(() => kitQualities?.map((q) => `${q.guid}:${q.name}:${q.folder || ""}`).join("|") || "", [kitQualities]);
   const kitInterfacesKey = useMemo(() => kitInterfaces?.map((i) => `${i.guid}:${i.name}`).join("|") || "", [kitInterfaces]);
+  const kitTagsKey = useMemo(() => kitTags?.map((tag) => `${tag.guid}:${tag.name}`).join("|") || "", [kitTags]);
+  const kitConceptsKey = useMemo(() => kitConcepts?.map((c) => `${c.guid}:${c.name}`).join("|") || "", [kitConcepts]);
   const kitFilesKey = useMemo(() => kitFiles?.map((f) => `${f.guid}:${f.name}:${f.folder?.guid || ""}:${f.updatedAt || ""}`).join("|") || "", [kitFiles]);
   const kitFoldersKey = useMemo(() => kitFolders?.map((f) => `${f.guid}:${f.name}:${f.parent?.guid || ""}:${f.updatedAt || ""}`).join("|") || "", [kitFolders]);
   const kitAuthorsKey = useMemo(() => kitAuthors?.map((a) => `${a.guid}:${a.name}`).join("|") || "", [kitAuthors]);
@@ -2147,10 +2308,12 @@ const AppContent: FC = () => {
     const designsCount = selection?.designs?.length || 0;
     const qualitiesCount = selection?.qualities?.length || 0;
     const interfacesCount = selection?.interfaces?.length || 0;
+    const tagsCount = selection?.tags?.length || 0;
+    const conceptsCount = selection?.concepts?.length || 0;
     const filesCount = selection?.files?.length || 0;
     const foldersCount = selection?.folders?.length || 0;
     const authorsCount = selection?.authors?.length || 0;
-    const totalSelectedKinds = [typesCount > 0, designsCount > 0, qualitiesCount > 0, interfacesCount > 0, filesCount > 0, foldersCount > 0, authorsCount > 0].filter(Boolean).length;
+    const totalSelectedKinds = [typesCount > 0, designsCount > 0, qualitiesCount > 0, interfacesCount > 0, tagsCount > 0, conceptsCount > 0, filesCount > 0, foldersCount > 0, authorsCount > 0].filter(Boolean).length;
 
     const artifactsMultipleId = "semio.sketchpad.app.kit.artifacts.multiple";
 
@@ -2210,6 +2373,26 @@ const AppContent: FC = () => {
         specificity: 30,
         order: 25,
         content: () => <InterfaceSection />,
+      });
+    }
+
+    if (tagsCount > 0 && totalSelectedKinds === 1) {
+      const tagSectionId = tagsCount === 1 ? "semio.sketchpad.app.kit.tag.title" : "semio.sketchpad.app.kit.tags.multipleTitle";
+      addSection("details", {
+        id: tagSectionId,
+        specificity: 30,
+        order: 26,
+        content: () => <TagSection />,
+      });
+    }
+
+    if (conceptsCount > 0 && totalSelectedKinds === 1) {
+      const conceptSectionId = conceptsCount === 1 ? "semio.sketchpad.app.kit.concept.title" : "semio.sketchpad.app.kit.concepts.multipleTitle";
+      addSection("details", {
+        id: conceptSectionId,
+        specificity: 30,
+        order: 27,
+        content: () => <ConceptSection />,
       });
     }
 
@@ -2642,6 +2825,42 @@ const AppContent: FC = () => {
       });
     }
 
+    if (!selectedKind || selectedKind === "tags") {
+      kitTags?.forEach((tag: Tag) => {
+        if (searchQuery && !tag.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
+        result.push({
+          id: `tag-${tag.guid}`,
+          kind: "tags",
+          artifact: tag.name,
+          authors: tag.description || "",
+          updatedAt: "",
+          createdAt: "",
+          level: 0,
+          hasChildren: false,
+          isExpanded: false,
+          data: tag,
+        });
+      });
+    }
+
+    if (!selectedKind || selectedKind === "concepts") {
+      kitConcepts?.forEach((concept: Concept) => {
+        if (searchQuery && !concept.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
+        result.push({
+          id: `concept-${concept.guid}`,
+          kind: "concepts",
+          artifact: concept.name,
+          authors: concept.description || "",
+          updatedAt: "",
+          createdAt: "",
+          level: 0,
+          hasChildren: false,
+          isExpanded: false,
+          data: concept,
+        });
+      });
+    }
+
     if (selectedKind === "files") {
       // Build file tree from files - only when specifically viewing files kind
       const fileTree = buildFileTree(kitFolders || [], kitFiles || []);
@@ -2963,6 +3182,8 @@ const AppContent: FC = () => {
     kitTypes,
     kitQualities,
     kitInterfaces,
+    kitTags,
+    kitConcepts,
     kitFiles,
     kitFolders,
     kitAuthors,
@@ -2970,6 +3191,8 @@ const AppContent: FC = () => {
     kitTypesKey,
     kitQualitiesKey,
     kitInterfacesKey,
+    kitTagsKey,
+    kitConceptsKey,
     kitFilesKey,
     kitFoldersKey,
     kitAuthorsKey,
@@ -3036,6 +3259,9 @@ const AppContent: FC = () => {
       if (row.kind === "designs") isSelected = selection.designs.includes((row.data as Design).guid);
       else if (row.kind === "types") isSelected = selection.types.includes((row.data as Type).guid);
       else if (row.kind === "qualities") isSelected = selection.qualities.includes((row.data as Quality).key);
+      else if (row.kind === "interfaces") isSelected = selection.interfaces?.includes((row.data as Interface).guid);
+      else if (row.kind === "tags") isSelected = selection.tags?.includes((row.data as Tag).guid);
+      else if (row.kind === "concepts") isSelected = selection.concepts?.includes((row.data as Concept).guid);
       else if (row.kind === "files") isSelected = selection.files.includes((row.data as SemioFile).guid);
       else if (row.kind === "folders") isSelected = selection.folders?.includes((row.data as Folder).guid);
       else if (row.kind === "authors") isSelected = selection.authors.includes((row.data as Author).name);
@@ -3315,6 +3541,26 @@ const AppContent: FC = () => {
         if (kitCommands) kitCommands.createInterface("semio.sketchpad.app.kit.canvas.table.createInterface", newInterface);
         break;
       }
+      case "tags": {
+        const existingNames = (kit.tags || []).map((t: Tag) => t.name);
+        const uniqueName = generateUniqueName("New Tag", existingNames);
+        const newTag: Tag = {
+          guid: guid(),
+          name: uniqueName,
+        };
+        if (kitCommands) kitCommands.createTag("semio.sketchpad.app.kit.canvas.table.createTag", newTag);
+        break;
+      }
+      case "concepts": {
+        const existingNames = (kit.concepts || []).map((c: Concept) => c.name);
+        const uniqueName = generateUniqueName("New Concept", existingNames);
+        const newConcept: Concept = {
+          guid: guid(),
+          name: uniqueName,
+        };
+        if (kitCommands) kitCommands.createConcept("semio.sketchpad.app.kit.canvas.table.createConcept", newConcept);
+        break;
+      }
       case "files": {
         // TODO: Implement file creation
         break;
@@ -3428,6 +3674,8 @@ const AppContent: FC = () => {
         designs: [] as Guid[],
         qualities: [] as string[],
         interfaces: [] as Guid[],
+        tags: [] as Guid[],
+        concepts: [] as Guid[],
         files: [] as string[],
         folders: [] as Guid[],
         authors: [] as string[],
@@ -3438,6 +3686,8 @@ const AppContent: FC = () => {
         else if (r.kind === "designs") selectedByKind.designs.push((r.data as Design).guid);
         else if (r.kind === "qualities") selectedByKind.qualities.push((r.data as Quality).key);
         else if (r.kind === "interfaces") selectedByKind.interfaces.push((r.data as Interface).guid);
+        else if (r.kind === "tags") selectedByKind.tags.push((r.data as Tag).guid);
+        else if (r.kind === "concepts") selectedByKind.concepts.push((r.data as Concept).guid);
         else if (r.kind === "files") selectedByKind.files.push((r.data as SemioFile).guid);
         else if (r.kind === "folders") selectedByKind.folders.push((r.data as Folder).guid);
         else if (r.kind === "authors") selectedByKind.authors.push((r.data as Author).name);
@@ -3448,6 +3698,8 @@ const AppContent: FC = () => {
       if (selectedByKind.designs.length > 0) kitAppCommands.selectDesigns("semio.sketchpad.app.kit.canvas.table.selectDesignsRange", selectedByKind.designs);
       if (selectedByKind.qualities.length > 0) kitAppCommands.selectQualities("semio.sketchpad.app.kit.canvas.table.selectQualitiesRange", selectedByKind.qualities);
       if (selectedByKind.interfaces.length > 0) kitAppCommands.selectInterfaces("semio.sketchpad.app.kit.canvas.table.selectInterfacesRange", selectedByKind.interfaces);
+      if (selectedByKind.tags.length > 0) kitAppCommands.selectTags("semio.sketchpad.app.kit.canvas.table.selectTagsRange", selectedByKind.tags);
+      if (selectedByKind.concepts.length > 0) kitAppCommands.selectConcepts("semio.sketchpad.app.kit.canvas.table.selectConceptsRange", selectedByKind.concepts);
       if (selectedByKind.files.length > 0) kitAppCommands.selectFiles("semio.sketchpad.app.kit.canvas.table.selectFilesRange", selectedByKind.files);
       if (selectedByKind.folders.length > 0) kitAppCommands.selectFolders("semio.sketchpad.app.kit.canvas.table.selectFoldersRange", selectedByKind.folders);
       if (selectedByKind.authors.length > 0) kitAppCommands.selectAuthors("semio.sketchpad.app.kit.canvas.table.selectAuthorsRange", selectedByKind.authors);
@@ -3486,6 +3738,20 @@ const AppContent: FC = () => {
         } else {
           kitAppCommands.addInterfaceToSelection("semio.sketchpad.app.kit.canvas.table.addInterfaceCtrl", interfaceId);
         }
+      } else if (row.kind === "tags") {
+        const tagId = (row.data as Tag).guid;
+        if (selection.tags && selection.tags.includes(tagId)) {
+          kitAppCommands.removeTagFromSelection("semio.sketchpad.app.kit.canvas.table.removeTagCtrl", tagId);
+        } else {
+          kitAppCommands.addTagToSelection("semio.sketchpad.app.kit.canvas.table.addTagCtrl", tagId);
+        }
+      } else if (row.kind === "concepts") {
+        const conceptId = (row.data as Concept).guid;
+        if (selection.concepts && selection.concepts.includes(conceptId)) {
+          kitAppCommands.removeConceptFromSelection("semio.sketchpad.app.kit.canvas.table.removeConceptCtrl", conceptId);
+        } else {
+          kitAppCommands.addConceptToSelection("semio.sketchpad.app.kit.canvas.table.addConceptCtrl", conceptId);
+        }
       } else if (row.kind === "files") {
         const fileGuid = (row.data as SemioFile).guid;
         if (selection.files.includes(fileGuid)) {
@@ -3522,6 +3788,10 @@ const AppContent: FC = () => {
         kitAppCommands.selectQuality("semio.sketchpad.app.kit.canvas.table.selectQuality", (row.data as Quality).key);
       } else if (row.kind === "interfaces") {
         kitAppCommands.selectInterface("semio.sketchpad.app.kit.canvas.table.selectInterface", (row.data as Interface).guid);
+      } else if (row.kind === "tags") {
+        kitAppCommands.selectTag("semio.sketchpad.app.kit.canvas.table.selectTag", (row.data as Tag).guid);
+      } else if (row.kind === "concepts") {
+        kitAppCommands.selectConcept("semio.sketchpad.app.kit.canvas.table.selectConcept", (row.data as Concept).guid);
       } else if (row.kind === "files") {
         kitAppCommands.selectFile("semio.sketchpad.app.kit.canvas.table.selectFile", (row.data as SemioFile).guid);
       } else if (row.kind === "folders") {
@@ -3699,6 +3969,9 @@ const AppContent: FC = () => {
                         {selectedKind === "designs" && <LayoutIcon />}
                         {selectedKind === "types" && <TypeIcon />}
                         {selectedKind === "qualities" && <AwardIcon />}
+                        {selectedKind === "interfaces" && <InterfaceIcon />}
+                        {selectedKind === "tags" && <HashIcon />}
+                        {selectedKind === "concepts" && <LightbulbIcon />}
                         {selectedKind === "files" && <DocumentIcon />}
                         {selectedKind === "folders" && <FolderIcon />}
                         {selectedKind === "authors" && <UserIcon />}
@@ -3746,6 +4019,26 @@ const AppContent: FC = () => {
                     id="semio.sketchpad.app.kit.kitApp.showInterfaces"
                     actionId="semio.sketchpad.app.kit.kitApp.createInterface"
                     icon={<InterfaceIcon />}
+                  />,
+                  <Toggle
+                    kind="withAction"
+                    pressed={false}
+                    onPressedChange={() => toggleKind("tags")}
+                    actionIcon={<AddIcon />}
+                    onActionClick={() => handleCreateArtifact("tags")}
+                    id="semio.sketchpad.app.kit.kitApp.showTags"
+                    actionId="semio.sketchpad.app.kit.kitApp.createTag"
+                    icon={<HashIcon />}
+                  />,
+                  <Toggle
+                    kind="withAction"
+                    pressed={false}
+                    onPressedChange={() => toggleKind("concepts")}
+                    actionIcon={<AddIcon />}
+                    onActionClick={() => handleCreateArtifact("concepts")}
+                    id="semio.sketchpad.app.kit.kitApp.showConcepts"
+                    actionId="semio.sketchpad.app.kit.kitApp.createConcept"
+                    icon={<LightbulbIcon />}
                   />,
                   <Toggle
                     kind="withAction"
@@ -3951,6 +4244,36 @@ const AppContent: FC = () => {
                 <Toggle
                   kind="withAction"
                   pressed={false}
+                  onPressedChange={() => toggleKind("interfaces")}
+                  actionIcon={<AddIcon />}
+                  onActionClick={() => handleCreateArtifact("interfaces")}
+                  id="semio.sketchpad.app.kit.kitApp.showInterfaces"
+                  actionId="semio.sketchpad.app.kit.kitApp.createInterface"
+                  icon={<InterfaceIcon />}
+                />,
+                <Toggle
+                  kind="withAction"
+                  pressed={false}
+                  onPressedChange={() => toggleKind("tags")}
+                  actionIcon={<AddIcon />}
+                  onActionClick={() => handleCreateArtifact("tags")}
+                  id="semio.sketchpad.app.kit.kitApp.showTags"
+                  actionId="semio.sketchpad.app.kit.kitApp.createTag"
+                  icon={<HashIcon />}
+                />,
+                <Toggle
+                  kind="withAction"
+                  pressed={false}
+                  onPressedChange={() => toggleKind("concepts")}
+                  actionIcon={<AddIcon />}
+                  onActionClick={() => handleCreateArtifact("concepts")}
+                  id="semio.sketchpad.app.kit.kitApp.showConcepts"
+                  actionId="semio.sketchpad.app.kit.kitApp.createConcept"
+                  icon={<LightbulbIcon />}
+                />,
+                <Toggle
+                  kind="withAction"
+                  pressed={false}
                   onPressedChange={() => toggleKind("files")}
                   actionIcon={<AddIcon />}
                   onActionClick={() => handleCreateArtifact("files")}
@@ -4028,6 +4351,9 @@ const AppContent: FC = () => {
                         {row.kind === "designs" && <LayoutIcon />}
                         {row.kind === "types" && <TypeIcon />}
                         {row.kind === "qualities" && <AwardIcon />}
+                        {row.kind === "interfaces" && <InterfaceIcon />}
+                        {row.kind === "tags" && <HashIcon />}
+                        {row.kind === "concepts" && <LightbulbIcon />}
                         {row.kind === "files" && <DocumentIcon />}
                         {row.kind === "folders" && <FolderIcon />}
                         {row.kind === "authors" && <UserIcon />}
@@ -4478,6 +4804,112 @@ const MultipleInterfacesSection: FC<{ interfaceGuids: string[] }> = ({ interface
   );
 };
 
+export const TagSection: FC = () => {
+  const { t } = useTranslation();
+  const kitApp = useKitApp() as KitAppState;
+  const selection = kitApp?.selection;
+  const selectedTags = selection?.tags || [];
+  if (selectedTags.length === 0) return null;
+  if (selectedTags.length === 1) return <SingleTagSection tagGuid={selectedTags[0]} />;
+  return <MultipleTagsSection tagGuids={selectedTags} />;
+};
+
+const SingleTagSection: FC<{ tagGuid: string }> = ({ tagGuid }) => {
+  const { t } = useTranslation();
+  const kit = useKit() as Kit;
+  const tag = kit?.tags?.find((t) => t.guid === tagGuid);
+  if (!tag) return null;
+  return (
+    <>
+      <TreeItem>
+        <TreeContent>
+          <Input id="semio.sketchpad.app.kit.panel.details.section.tag.name" value={tag.name} readOnly showLabel />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Textarea id="semio.sketchpad.app.kit.panel.details.section.tag.description" value={tag.description || ""} placeholder={t("semio.sketchpad.app.kit.tag.descriptionPlaceholder.label")} readOnly showLabel />
+        </TreeContent>
+      </TreeItem>
+    </>
+  );
+};
+
+const MultipleTagsSection: FC<{ tagGuids: string[] }> = ({ tagGuids }) => {
+  const { t } = useTranslation();
+  const kit = useKit() as Kit;
+  const tags = tagGuids.map((guid) => kit?.tags?.find((t) => t.guid === guid)).filter((t) => t !== undefined) as Tag[];
+  return (
+    <>
+      <TreeItem>
+        <TreeContent>
+          <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.kit.tags.multipleSelected")}</p>
+        </TreeContent>
+      </TreeItem>
+      {tags.map((tag) => (
+        <TreeItem key={tag.guid}>
+          <TreeContent>
+            <p className="text-sm font-medium">{tag.name}</p>
+          </TreeContent>
+        </TreeItem>
+      ))}
+    </>
+  );
+};
+
+export const ConceptSection: FC = () => {
+  const { t } = useTranslation();
+  const kitApp = useKitApp() as KitAppState;
+  const selection = kitApp?.selection;
+  const selectedConcepts = selection?.concepts || [];
+  if (selectedConcepts.length === 0) return null;
+  if (selectedConcepts.length === 1) return <SingleConceptSection conceptGuid={selectedConcepts[0]} />;
+  return <MultipleConceptsSection conceptGuids={selectedConcepts} />;
+};
+
+const SingleConceptSection: FC<{ conceptGuid: string }> = ({ conceptGuid }) => {
+  const { t } = useTranslation();
+  const kit = useKit() as Kit;
+  const concept = kit?.concepts?.find((c) => c.guid === conceptGuid);
+  if (!concept) return null;
+  return (
+    <>
+      <TreeItem>
+        <TreeContent>
+          <Input id="semio.sketchpad.app.kit.panel.details.section.concept.name" value={concept.name} readOnly showLabel />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Textarea id="semio.sketchpad.app.kit.panel.details.section.concept.description" value={concept.description || ""} placeholder={t("semio.sketchpad.app.kit.concept.descriptionPlaceholder.label")} readOnly showLabel />
+        </TreeContent>
+      </TreeItem>
+    </>
+  );
+};
+
+const MultipleConceptsSection: FC<{ conceptGuids: string[] }> = ({ conceptGuids }) => {
+  const { t } = useTranslation();
+  const kit = useKit() as Kit;
+  const concepts = conceptGuids.map((guid) => kit?.concepts?.find((c) => c.guid === guid)).filter((c) => c !== undefined) as Concept[];
+  return (
+    <>
+      <TreeItem>
+        <TreeContent>
+          <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.kit.concepts.multipleSelected")}</p>
+        </TreeContent>
+      </TreeItem>
+      {concepts.map((concept) => (
+        <TreeItem key={concept.guid}>
+          <TreeContent>
+            <p className="text-sm font-medium">{concept.name}</p>
+          </TreeContent>
+        </TreeItem>
+      ))}
+    </>
+  );
+};
+
 export const DesignSection: FC = () => {
   const { t } = useTranslation();
   const kitApp = useKitApp() as KitAppState;
@@ -4698,12 +5130,18 @@ export const MultipleArtifactsSection: FC = () => {
   const typesCount = selection?.types?.length || 0;
   const designsCount = selection?.designs?.length || 0;
   const qualitiesCount = selection?.qualities?.length || 0;
+  const interfacesCount = selection?.interfaces?.length || 0;
+  const tagsCount = selection?.tags?.length || 0;
+  const conceptsCount = selection?.concepts?.length || 0;
   const filesCount = selection?.files?.length || 0;
   const authorsCount = selection?.authors?.length || 0;
   const kinds: string[] = [];
   if (typesCount > 0) kinds.push(t("semio.sketchpad.app.kit.types.multipleTitle", { count: typesCount }));
   if (designsCount > 0) kinds.push(t("semio.sketchpad.app.kit.designs.multipleTitle", { count: designsCount }));
   if (qualitiesCount > 0) kinds.push(t("semio.sketchpad.app.kit.qualities.multipleTitle", { count: qualitiesCount }));
+  if (interfacesCount > 0) kinds.push(t("semio.sketchpad.app.kit.interfaces.multipleTitle", { count: interfacesCount }));
+  if (tagsCount > 0) kinds.push(t("semio.sketchpad.app.kit.tags.multipleTitle", { count: tagsCount }));
+  if (conceptsCount > 0) kinds.push(t("semio.sketchpad.app.kit.concepts.multipleTitle", { count: conceptsCount }));
   if (filesCount > 0) kinds.push(t("semio.sketchpad.app.kit.files.multipleTitle", { count: filesCount }));
   if (authorsCount > 0) kinds.push(t("semio.sketchpad.app.kit.authors.multipleTitle", { count: authorsCount }));
   if (kinds.length <= 1) return null;

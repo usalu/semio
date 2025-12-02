@@ -9,12 +9,16 @@
                 {
                     "guid": "019ab664-1111-1111-1111-111111110001",
                     "name": "Duplicate Model Name",
-                    "file": "model1.glb"
+                    "file": {
+                        "guid": "019ab664-BBBB-BBBB-BBBB-BBBBBBBB0000"
+                    }
                 },
                 {
                     "guid": "019ab664-1111-1111-1111-111111110002",
                     "name": "Duplicate Model Name",
-                    "file": "model2.glb"
+                    "file": {
+                        "guid": "019ab664-CCCC-CCCC-CCCC-CCCCCCCC0000"
+                    }
                 }
             ],
             "ports": [
