@@ -1344,14 +1344,14 @@ function ButtonGroupItem({
         buttonGroupItemVariants({
           level: context.level || level,
         }),
-        "min-w-0 flex-1 shrink-0 focus:z-panel focus-visible:z-panel",
-        text && "flex items-center gap-0 p-single",
+        text ? "w-auto shrink-0 focus:z-panel focus-visible:z-panel" : "min-w-0 flex-1 shrink-0 focus:z-panel focus-visible:z-panel",
+        text && "flex items-center gap-0 p-single w-auto",
         className,
       )}
       {...(props as any)}
     >
       {icon || children}
-      {text && <span className="ml-single text-xs">{text}</span>}
+      {text && <span className="ml-single text-xs whitespace-nowrap">{text}</span>}
     </Comp>
   );
 
@@ -2462,14 +2462,15 @@ function ToggleGroupItem({ className, id, icon, text, action, ...props }: Toggle
         toggleVariants({
           level,
         }),
-        "min-w-0 flex-1 shrink-0 focus:z-panel focus-visible:z-panel data-[state=on]:bg-active-base data-[state=on]:hover:bg-active-base/90",
-        (text || action) && "flex items-center gap-0 p-single w-mega aspect-auto",
+        text ? "w-auto shrink-0 focus:z-panel focus-visible:z-panel data-[state=on]:bg-active-base data-[state=on]:hover:bg-active-base/90" : "min-w-0 flex-1 shrink-0 focus:z-panel focus-visible:z-panel data-[state=on]:bg-active-base data-[state=on]:hover:bg-active-base/90",
+        (text || action) && "flex items-center gap-0 p-single aspect-auto",
+        text && "w-auto",
         className,
       )}
       {...props}
     >
       {icon as React.ReactNode}
-      {text && <span className="ml-single text-xs">{text}</span>}
+      {text && <span className="ml-single text-xs whitespace-nowrap">{text}</span>}
       {action && (
         <div
           className={cn("flex items-center justify-center w-small h-small bg-base", text && "ml-single", level === "panel" && "bg-panel", level === "temporary" && "bg-temporary")}

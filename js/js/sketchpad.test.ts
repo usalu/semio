@@ -203,7 +203,7 @@ async function initType(page: Page) {
   await expect(tambourType).toBeVisible({ timeout: 3000 });
   await tambourType.dblclick();
   await page.waitForLoadState("networkidle");
-  await page.waitForTimeout(60000);
+  await page.waitForTimeout(5000);
 }
 
 async function initDocs(page: Page) {
@@ -369,10 +369,18 @@ test.describe("sketchpad", () => {
   });
   test("Type", async ({ page }) => {
     test.setTimeout(120000);
+    const consoleMessages: string[] = [];
     const consoleWarnings: string[] = [];
+    const consoleErrors: string[] = [];
     page.on("console", (msg) => {
-      if (msg.type() === "warning" && msg.text().includes("[TypeMesh]")) {
+      if (msg.type() === "warning") {
         consoleWarnings.push(msg.text());
+      }
+      else if (msg.type() === "error") {
+        consoleErrors.push(msg.text());
+      }
+      else {
+        consoleMessages.push(msg.text());
       }
     });
     await initType(page);
@@ -380,9 +388,85 @@ test.describe("sketchpad", () => {
     await expect(canvas).toBeVisible({ timeout: 15000 });
     expect(page.url()).toContain("/types/");
     await page.waitForTimeout(5000);
-    const modelWarnings = consoleWarnings.filter(w => w.includes("Mesh"));
-    console.log("[Type Test] TypeMesh warnings:", consoleWarnings);
-    expect(modelWarnings).toHaveLength(0);
+
+    const navbar = page.locator('[id="semio.sketchpad.navbar.panelToggle.settings.show"]');
+    await expect(navbar).toBeVisible({ timeout: 10000 });
+    console.log("[Type Test] Navbar is visible");
+
+    const footer = page.locator('footer').first();
+    await expect(footer).toBeVisible({ timeout: 10000 });
+    console.log("[Type Test] Footer is visible");
+
+    expect(consoleWarnings.filter(w => w.includes("Mesh"))).toHaveLength(0);
+    expect(consoleErrors.filter(e => e.includes("Maximum update depth exceeded"))).toHaveLength(0);
+    expect(consoleMessages.filter(e => e.includes("[TypeMesh] Selected"))).toHaveLength(1);
+
+    // PANNING PERFORMANCE TEST for three.js scene
+    // Test pan operations on the canvas to verify smooth camera movement
+    const canvasBox = await canvas.boundingBox();
+    if (canvasBox) {
+      const centerX = canvasBox.x + canvasBox.width / 2;
+      const centerY = canvasBox.y + canvasBox.height / 2;
+
+      console.log("[Type Test] Starting pan operations on three.js canvas");
+
+      // Warm up - first pan to initialize any lazy components
+      await page.mouse.move(centerX, centerY);
+      await page.mouse.down();
+      await page.mouse.move(centerX + 100, centerY + 50);
+      await page.mouse.up();
+      await page.waitForTimeout(200);
+
+      // First timed pan operation
+      await page.mouse.move(centerX, centerY);
+      await page.mouse.down();
+      const pan1Start = Date.now();
+      await page.mouse.move(centerX + 150, centerY + 100);
+      await page.mouse.up();
+      const pan1Duration = Date.now() - pan1Start;
+      console.log(`[Type Test] Pan 1 took ${pan1Duration}ms`);
+
+      await page.waitForTimeout(100);
+
+      // Second timed pan operation
+      await page.mouse.move(centerX + 150, centerY + 100);
+      await page.mouse.down();
+      const pan2Start = Date.now();
+      await page.mouse.move(centerX - 100, centerY - 50);
+      await page.mouse.up();
+      const pan2Duration = Date.now() - pan2Start;
+      console.log(`[Type Test] Pan 2 took ${pan2Duration}ms`);
+
+      await page.waitForTimeout(100);
+
+      // Third pan operation to test consistency
+      await page.mouse.move(centerX - 100, centerY - 50);
+      await page.mouse.down();
+      const pan3Start = Date.now();
+      await page.mouse.move(centerX, centerY);
+      await page.mouse.up();
+      const pan3Duration = Date.now() - pan3Start;
+      console.log(`[Type Test] Pan 3 took ${pan3Duration}ms`);
+
+      // Verify pan performance
+      expect(pan1Duration).toBeLessThan(150);
+      expect(pan2Duration).toBeLessThan(150);
+      expect(pan3Duration).toBeLessThan(150);
+
+      // Verify consistency - no dramatic slowdowns indicating cascading renders
+      const avgPanTime = (pan1Duration + pan2Duration + pan3Duration) / 3;
+      console.log(`[Type Test] Average pan time: ${avgPanTime}ms`);
+      expect(Math.abs(pan1Duration - avgPanTime)).toBeLessThan(100);
+      expect(Math.abs(pan2Duration - avgPanTime)).toBeLessThan(100);
+      expect(Math.abs(pan3Duration - avgPanTime)).toBeLessThan(100);
+    }
+
+    // Wait a moment for any debounced updates
+    await page.waitForTimeout(500);
+
+    expect(consoleWarnings.filter(w => w.includes("Mesh"))).toHaveLength(0);
+    expect(consoleMessages.filter(e => e.includes("[TypeMesh] Selected"))).toHaveLength(1);
+
   });
   test("Design", async ({ page }) => {
     test.setTimeout(120000);
@@ -426,6 +510,22 @@ test.describe("sketchpad", () => {
       console.log("[Design Test] Page HTML:", await page.content().then(c => c.slice(0, 2000)));
     }
     expect(hasDiagram || hasScene).toBe(true);
+
+    // Check for infinite loop errors (critical - must be early in test)
+    const consoleErrors = consoleMessages.filter(m => m.startsWith("[error]"));
+    const infiniteLoopErrors = consoleErrors.filter(e => e.includes("Maximum update depth exceeded"));
+    console.log("[Design Test] Console errors:", consoleErrors);
+    expect(infiniteLoopErrors).toHaveLength(0);
+
+    // Check for navbar visibility (critical - must be early in test)
+    const navbar = page.locator('[id="semio.sketchpad.navbar.panelToggle.settings.show"]');
+    await expect(navbar).toBeVisible({ timeout: 10000 });
+    console.log("[Design Test] Navbar is visible");
+
+    // Check for footer visibility (footer should be visible when not fullscreen)
+    const footer = page.locator('footer').first();
+    await expect(footer).toBeVisible({ timeout: 10000 });
+    console.log("[Design Test] Footer is visible");
 
     // Verify existing pieces are visible in the design (Nakagin Capsule Tower has 180 pieces)
     if (hasDiagram) {

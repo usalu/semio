@@ -3902,6 +3902,16 @@ class ValidationIssue:
     entityKind: str
     entityGuid: str
 
+    def toPortableDict(self) -> dict:
+        """Convert to portable dict format for cross-platform serialization."""
+        return {
+            "ruleId": self.ruleId,
+            "severity": self.severity.value,
+            "message": self.message,
+            "entityKind": self.entityKind,
+            "entityGuid": self.entityGuid,
+        }
+
 
 @dataclasses.dataclass
 class ValidationResult:
@@ -3910,6 +3920,31 @@ class ValidationResult:
     def hasErrors(self) -> bool:
         return any(i.severity == ValidationSeverity.ERROR for i in self.issues)
 
+    def toPortableDict(self) -> dict:
+        """Convert to portable dict format for cross-platform serialization."""
+        sortedIssues = sorted(self.issues, key=lambda i: (i.ruleId, i.entityGuid))
+        return {"issues": [i.toPortableDict() for i in sortedIssues]}
+
+    def serialize(self) -> str:
+        """Serialize to JSON for cross-platform comparison."""
+        return json.dumps(self.toPortableDict(), indent=2)
+
+
+def areValidationResultsEqual(a: ValidationResult, b: ValidationResult) -> bool:
+    """Compare two validation results for equality."""
+    if len(a.issues) != len(b.issues):
+        return False
+    sortedA = sorted(a.issues, key=lambda i: (i.ruleId, i.entityGuid))
+    sortedB = sorted(b.issues, key=lambda i: (i.ruleId, i.entityGuid))
+    return all(ia.ruleId == ib.ruleId and ia.severity == ib.severity and ia.message == ib.message and ia.entityKind == ib.entityKind and ia.entityGuid == ib.entityGuid for ia, ib in zip(sortedA, sortedB))
+
+
+def parseValidationResult(jsonStr: str) -> ValidationResult:
+    """Parse a portable validation result from JSON."""
+    data = json.loads(jsonStr)
+    issues = [ValidationIssue(ruleId=i["ruleId"], severity=ValidationSeverity(i["severity"]), message=i["message"], entityKind=i["entityKind"], entityGuid=i["entityGuid"]) for i in data["issues"]]
+    return ValidationResult(issues=issues)
+
 
 def validateGuidUniqueness(kit: Kit) -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
@@ -3917,7 +3952,7 @@ def validateGuidUniqueness(kit: Kit) -> list[ValidationIssue]:
 
     def check(entityKind: str, entityGuid: str) -> None:
         if entityGuid in seen:
-            issues.append(ValidationIssue(ruleId="guid-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate GUID "{entityGuid}".', entityKind=entityKind, entityGuid=entityGuid))
+            issues.append(ValidationIssue(ruleId="guid-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate GUID "{entityGuid}". First occurrence kept.', entityKind=entityKind, entityGuid=entityGuid))
         else:
             seen[entityGuid] = entityKind
 
@@ -4119,7 +4154,7 @@ def validateKitDict(kit: dict) -> ValidationResult:
 
     def checkGuid(entityKind: str, entityGuid: str) -> None:
         if entityGuid in seen:
-            issues.append(ValidationIssue(ruleId="guid-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate GUID "{entityGuid}".', entityKind=entityKind, entityGuid=entityGuid))
+            issues.append(ValidationIssue(ruleId="guid-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate GUID "{entityGuid}". First occurrence kept.', entityKind=entityKind, entityGuid=entityGuid))
         else:
             seen[entityGuid] = entityKind
 
@@ -4181,6 +4216,7 @@ def validateKitDict(kit: dict) -> ValidationResult:
                 for d in group[1:]:
                     issues.append(ValidationIssue(ruleId="design-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate design name "{name}" among siblings.', entityKind="Design", entityGuid=d.get("guid", "")))
     for design in kit.get("designs", []):
+        designName = design.get("name", "")
         names = {}
         for p in design.get("pieces", []):
             name = p.get("name", "")
@@ -4191,8 +4227,9 @@ def validateKitDict(kit: dict) -> ValidationResult:
         for name, group in names.items():
             if len(group) > 1:
                 for p in group[1:]:
-                    issues.append(ValidationIssue(ruleId="piece-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate piece name "{name}" in design.', entityKind="Piece", entityGuid=p.get("guid", "")))
+                    issues.append(ValidationIssue(ruleId="piece-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate piece name "{name}" inside design "{designName}".', entityKind="Piece", entityGuid=p.get("guid", "")))
     for t in kit.get("types", []):
+        typeName = t.get("name", "")
         names = {}
         for port in t.get("ports", []):
             name = port.get("name", "")
@@ -4203,8 +4240,9 @@ def validateKitDict(kit: dict) -> ValidationResult:
         for name, group in names.items():
             if len(group) > 1:
                 for port in group[1:]:
-                    issues.append(ValidationIssue(ruleId="port-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate port name "{name}" in type.', entityKind="Port", entityGuid=port.get("guid", "")))
+                    issues.append(ValidationIssue(ruleId="port-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate port name "{name}" inside type "{typeName}".', entityKind="Port", entityGuid=port.get("guid", "")))
     for t in kit.get("types", []):
+        typeName = t.get("name", "")
         names = {}
         for model in t.get("models", []):
             name = model.get("name", "")
@@ -4215,7 +4253,7 @@ def validateKitDict(kit: dict) -> ValidationResult:
         for name, group in names.items():
             if len(group) > 1:
                 for model in group[1:]:
-                    issues.append(ValidationIssue(ruleId="model-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate model name "{name}" in type.', entityKind="Model", entityGuid=model.get("guid", "")))
+                    issues.append(ValidationIssue(ruleId="model-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate model name "{name}" inside type "{typeName}".', entityKind="Model", entityGuid=model.get("guid", "")))
     names = {}
     for q in kit.get("qualities", []):
         name = q.get("name", "")
@@ -4264,6 +4302,7 @@ def validateKitDict(kit: dict) -> ValidationResult:
                 for fo in group[1:]:
                     issues.append(ValidationIssue(ruleId="folder-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate folder name "{name}" among siblings.', entityKind="Folder", entityGuid=fo.get("guid", "")))
     for design in kit.get("designs", []):
+        designName = design.get("name", "")
         paths: dict[str, list[dict]] = {}
         for layer in design.get("layers", []):
             path = layer.get("path", "")
@@ -4273,7 +4312,7 @@ def validateKitDict(kit: dict) -> ValidationResult:
         for path, group in paths.items():
             if len(group) > 1:
                 for layer in group[1:]:
-                    issues.append(ValidationIssue(ruleId="layer-path-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate layer path "{path}" in design.', entityKind="Layer", entityGuid=layer.get("guid", "")))
+                    issues.append(ValidationIssue(ruleId="layer-path-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate layer path "{path}" inside design "{designName}".', entityKind="Layer", entityGuid=layer.get("guid", "")))
     return ValidationResult(issues=issues)
 
 

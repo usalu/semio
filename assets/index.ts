@@ -4,4 +4,5 @@ export { default as MetabolismKitDiffInverted } from "./semio/diff_kit_metabolis
 export { default as InvalidKit } from "./semio/kit_invalid.json";
 export { default as MetabolismKit } from "./semio/kit_metabolism.json";
 export { default as MetabolismKitDiffed } from "./semio/kit_metabolism_diffed.json";
+export { default as InvalidKitValidation } from "./semio/validation.json";
 

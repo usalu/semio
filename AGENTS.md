@@ -1323,6 +1323,47 @@ Javascript code with shared core (@semio/js) that uses storybook and exports a h
 
 - The ui consists of a three horizontal strips: navbar, canvas and footer. A canvas consists of windows. On top of the canvas are panels which can toggled on and off.
 
+## net
+
+C# code with the core library (`Semio.cs`) and Grasshopper plugin (`Semio.Grasshopper.cs`).
+
+### Semio.cs
+
+Core library containing all model definitions, validation, serialization, and the Meta class for reflection-based metadata.
+
+### Semio.Grasshopper.cs
+
+Grasshopper plugin providing components for constructing, deconstructing, and modifying Semio models.
+
+#### Architecture
+
+The plugin uses a component hierarchy with base classes that provide default behavior:
+
+- **`ModelComponent<TParam, TGoo, TModel>`**: Base class for model components with virtual methods for customization
+- **`IdComponent`**, **`DiffComponent`**: Specialized base classes for Id and Diff model types
+- **`SerializeComponent`**, **`DeserializeComponent`**: Base classes for serialization components
+
+#### Component Structure
+
+Each model type has a set of classes:
+
+- **`*Goo`**: Grasshopper wrapper for the model type with cast methods
+- **`*Param`**: Grasshopper parameter definition
+- **`*Component`**: Main model component for construct/deconstruct/modify
+- **`Serialize*Component`**: JSON serialization component
+- **`Deserialize*Component`**: JSON deserialization component
+
+#### Hardcoded Parameters
+
+Components use virtual methods to define their inputs/outputs:
+
+- `RegisterModelInputParams(pManager)`: Define input parameters
+- `RegisterModelOutputParams(pManager)`: Define output parameters
+- `GetModelData(DA, model)`: Read input data into model
+- `SetModelData(DA, model)`: Write model data to outputs
+
+Components can override these to hardcode their parameter structure, ensuring stable input/output definitions across schema changes.
+
 # Packages
 
 ## @semio/js
@@ -1359,6 +1400,24 @@ Shared react components. The main component is Sketchpad. Sketchpad is used in t
   - `useCallback` with proper dependencies for dynamic selectors
   - Stable fallback constants: `const EMPTY_TYPES: Type[] = [];` instead of inline `[]`
 - **Deep vs Shallow Subscriptions**: AVOID `deep=true` unless you need to react to nested property changes within array items. Use `deep=false` (default) for add/remove/replace operations.
+- **Stabilizing useMemo Dependencies**: When hooks return object/array references that change on each render, extract primitive values before passing to `useMemo`. Use refs to track previous values and `useEffect` for side effects that should only run when data actually changes:
+
+  ```typescript
+  const type = useType();
+  const typeGuid = type?.guid;  // Extract primitive
+  const typeModels = type?.models;  // Reference will change but content is stable
+  const prevModelGuidRef = useRef<string | null>(null);
+
+  const { modelGuid } = useMemo(() => { /* compute */ }, [typeModels, ...]);
+
+  useEffect(() => {
+    if (modelGuid !== prevModelGuidRef.current) {
+      prevModelGuidRef.current = modelGuid;
+      console.log("Model changed:", modelGuid);
+    }
+  }, [modelGuid]);
+  ```
+
 - **Performance Logging**: Use `enablePerformanceLogging(true)` to enable performance logging that tracks overfetching. Check console for `[PERF] Rapid re-render` warnings indicating components re-rendering too frequently.
 - Commands ALWAYS have an origin. ALWAYS add the id of the ui element as origin when calling commands.
 - There is a transaction mechanism for kits. Every app transaction is an extended kit transaction. The undo redo manager is on app level and stores the diff of the transaction along with the app state. This way undo redo works even when the kit changes because only the diff is stored. The inverted diff is stored along with the diff to enable relative undo redo.
@@ -2325,6 +2384,59 @@ export const semioCustomRule: SemioValidationRule = (ctx) => {
   return issues;
 };
 ```
+
+#### Cross-Platform Portable Validation
+
+All implementations (TypeScript, Python, C#) produce **identical** validation output for cross-platform compatibility. The portable format strips implementation-specific details like fixes.
+
+##### Portable Format
+
+```json
+{
+  "issues": [
+    {
+      "ruleId": "guid-unique",
+      "severity": "error",
+      "message": "Duplicate GUID \"...\". First occurrence kept.",
+      "entityKind": "Type",
+      "entityGuid": "..."
+    }
+  ]
+}
+```
+
+##### Implementation Functions
+
+- **TypeScript**: `toPortableValidationResult()`, `serializeValidationResult()`, `areValidationResultsEqual()`
+- **Python**: `ValidationResult.toPortableDict()`, `ValidationResult.serialize()`, `areValidationResultsEqual()`
+- **C#**: `SemioValidator.ValidateKit()`, `SemioValidationResult.Serialize()`, `SemioValidationResult.AreEqual()`
+
+##### Test Data
+
+- `assets/semio/kit_invalid.json` - Invalid kit with all validation rule violations
+- `assets/semio/validation.json` - Expected validation output (sorted by ruleId, then entityGuid)
+
+##### Generating validation.json
+
+```bash
+npx tsx scripts/generate-validation.ts
+```
+
+##### Validation Rules (all platforms)
+
+| Rule ID                 | Description                                |
+| ----------------------- | ------------------------------------------ |
+| `guid-unique`           | All GUIDs must be unique across the kit    |
+| `type-name-unique`      | Type names must be unique among siblings   |
+| `design-name-unique`    | Design names must be unique among siblings |
+| `piece-name-unique`     | Piece names must be unique within a design |
+| `port-name-unique`      | Port names must be unique within a type    |
+| `model-name-unique`     | Model names must be unique within a type   |
+| `quality-name-unique`   | Quality names must be unique               |
+| `interface-name-unique` | Interface names must be unique             |
+| `file-name-unique`      | File names must be unique                  |
+| `folder-name-unique`    | Folder names must be unique among siblings |
+| `layer-path-unique`     | Layer paths must be unique within a design |
 
 # Hierarchies
 

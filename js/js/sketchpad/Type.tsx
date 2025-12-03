@@ -30,7 +30,7 @@ import * as THREE from "three";
 import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
 import * as Y from "yjs";
 import { useLabel } from "../i18n";
-import { Author, AuthorId, Camera, Coord, guid, Guid, Kit, Model, Point, Port, selectBestModel, File as SemioFile, Type, TypeDiff, Vector } from "../semio";
+import { Author, AuthorId, Camera, Coord, findModel, guid, Guid, Kit, Model, Point, Port, selectBestModel, File as SemioFile, Type, TypeDiff, Vector } from "../semio";
 import { Geometry, Input, Scene as SceneComponent, Slider, SortableTreeItems, Stepper, Textarea, Toggle, TreeContent, TreeItem } from "./elements";
 import type { AppWindowConfig, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolDefinition, ToolRenderContext, Transact, TypeAppId, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
 import { createPanelDefinition, PanelKind, ToolKind } from "./shared";
@@ -55,6 +55,8 @@ import {
   useKitFiles,
   useKitScope,
   useKitStore,
+  useKitTags,
+  useKitTransaction,
   useRemoveFooterItem,
   useRemovePanelSection,
   useSketchpadCommands,
@@ -198,6 +200,13 @@ function inverseTypeAppSelectionDiff(selection: TypeAppSelection, diff: TypeAppS
 
 class TypeAppStore extends KitDiffAppStore<TypeAppState, TypeAppDiff, TypeAppSelectionDiff, TypeAppEdit, TypeAppCommandContext, TypeAppCommandResult> {
   private readonly Guid: TypeAppId;
+  // PERF: Cache getters to avoid creating new objects on every access
+  private _cachedCameraStr?: string;
+  private _cachedCamera?: Camera;
+  private _cachedSelectionVersion = 0;
+  private _cachedSelection?: TypeAppSelection;
+  private _cachedHoverVersion = 0;
+  private _cachedHover?: TypeAppHover;
 
   constructor(parent: SketchpadStore, yMap: Y.Map<any>, transact: Transact, id: TypeAppId) {
     super(parent, yMap, transact);
@@ -223,6 +232,31 @@ class TypeAppStore extends KitDiffAppStore<TypeAppState, TypeAppDiff, TypeAppSel
         const yPanelVisibility = yMap.get("panelVisibility") as Y.Map<boolean>;
         if (yPanelVisibility && yPanelVisibility.get("toolbar") !== true) {
           yPanelVisibility.set("toolbar", true);
+        }
+      }
+      // PERF: Clear corrupted windowLayout that has multiple windows
+      // Type app should only have 1 Scene window - more causes severe performance issues
+      if (yMap.has("windowLayout")) {
+        const layoutStr = yMap.get("windowLayout") as string | undefined;
+        if (layoutStr) {
+          try {
+            const layout = typeof layoutStr === "string" ? JSON.parse(layoutStr) : layoutStr;
+            const countWindows = (node: any): number => {
+              if (!node) return 0;
+              if (node.type === "component") return 1;
+              if (node.content && Array.isArray(node.content)) {
+                return node.content.reduce((sum: number, child: any) => sum + countWindows(child), 0);
+              }
+              return 0;
+            };
+            if (countWindows(layout) > 1) {
+              console.warn(`[TypeAppStore] Clearing corrupted layout with ${countWindows(layout)} windows`);
+              yMap.delete("windowLayout");
+            }
+          } catch {
+            // If layout is corrupted/unparseable, clear it
+            yMap.delete("windowLayout");
+          }
         }
       }
     });
@@ -280,18 +314,24 @@ class TypeAppStore extends KitDiffAppStore<TypeAppState, TypeAppDiff, TypeAppSel
     const selection = this.yMap.get("selection") as Y.Map<any>;
     if (!selection) return {};
 
-    const result: TypeAppSelection = {};
+    // PERF: Cache selection object - only rebuild if Y.Map version changed
+    const currentVersion = (selection as any)._clock || 0;
+    if (this._cachedSelection && this._cachedSelectionVersion === currentVersion) {
+      return this._cachedSelection;
+    }
 
+    const result: TypeAppSelection = {};
     const ports = selection.get("ports") as Y.Array<string>;
     if (ports) {
       result.ports = ports.toArray();
     }
-
     const models = selection.get("models") as Y.Array<string>;
     if (models) {
       result.models = models.toArray();
     }
 
+    this._cachedSelectionVersion = currentVersion;
+    this._cachedSelection = result;
     return result;
   }
 
@@ -299,12 +339,20 @@ class TypeAppStore extends KitDiffAppStore<TypeAppState, TypeAppDiff, TypeAppSel
     const hover = this.yMap.get("hover") as Y.Map<string>;
     if (!hover) return undefined;
 
+    // PERF: Cache hover object - only rebuild if Y.Map version changed
+    const currentVersion = (hover as any)._clock || 0;
+    if (this._cachedHover && this._cachedHoverVersion === currentVersion) {
+      return this._cachedHover;
+    }
+
     const result: TypeAppHover = {};
     const port = hover.get("port");
     if (port) result.port = port;
     const model = hover.get("model");
     if (model) result.model = model;
 
+    this._cachedHoverVersion = currentVersion;
+    this._cachedHover = result;
     return result;
   }
 
@@ -318,7 +366,13 @@ class TypeAppStore extends KitDiffAppStore<TypeAppState, TypeAppDiff, TypeAppSel
 
   get camera(): Camera | undefined {
     const cameraStr = this.yMap.get("camera") as string | undefined;
-    return cameraStr ? JSON.parse(cameraStr) : undefined;
+    // PERF: Cache parsed camera - only rebuild if string changed
+    if (cameraStr === this._cachedCameraStr) {
+      return this._cachedCamera;
+    }
+    this._cachedCameraStr = cameraStr;
+    this._cachedCamera = cameraStr ? JSON.parse(cameraStr) : undefined;
+    return this._cachedCamera;
   }
 
   get focusedPortGuid(): Guid | undefined {
@@ -336,10 +390,47 @@ class TypeAppStore extends KitDiffAppStore<TypeAppState, TypeAppDiff, TypeAppSel
 
   get windowLayout(): any {
     const layoutStr = this.yMap.get("windowLayout") as string | undefined;
-    return layoutStr ? JSON.parse(layoutStr) : undefined;
+    if (!layoutStr) return undefined;
+    try {
+      const layout = JSON.parse(layoutStr);
+      // PERF: Validate layout - Type app should only have 1 Scene window
+      const countWindows = (node: any): number => {
+        if (!node) return 0;
+        if (node.type === "component") return 1;
+        if (node.content && Array.isArray(node.content)) {
+          return node.content.reduce((sum: number, child: any) => sum + countWindows(child), 0);
+        }
+        return 0;
+      };
+      const windowCount = countWindows(layout);
+      if (windowCount > 1) {
+        console.warn(`[TypeAppStore] Corrupted layout with ${windowCount} windows, returning undefined`);
+        // Clear the corrupted layout from storage
+        this.transact(() => {
+          this.yMap.delete("windowLayout");
+        });
+        return undefined;
+      }
+      return layout;
+    } catch {
+      return undefined;
+    }
   }
   set windowLayout(layout: any) {
     if (layout) {
+      // PERF: Only save layouts with 1 or fewer windows
+      const countWindows = (node: any): number => {
+        if (!node) return 0;
+        if (node.type === "component") return 1;
+        if (node.content && Array.isArray(node.content)) {
+          return node.content.reduce((sum: number, child: any) => sum + countWindows(child), 0);
+        }
+        return 0;
+      };
+      if (countWindows(layout) > 1) {
+        console.warn(`[TypeAppStore] Rejecting layout with ${countWindows(layout)} windows`);
+        return;
+      }
       this.yMap.set("windowLayout", JSON.stringify(layout));
     } else {
       this.yMap.delete("windowLayout");
@@ -614,41 +705,54 @@ export function useTypeAppStore<T>(selector?: (store: TypeAppStore) => T, id?: T
   return selector ? selector(typeAppStore) : typeAppStore;
 }
 
+// Stable selectors for TypeApp hooks - must be module-level to avoid infinite loops with useSyncExternalStore
+const EMPTY_TYPE_SELECTION: TypeAppSelection = {};
+const EMPTY_PANEL_VISIBILITY: PanelVisibility = { toolbar: false, workbench: false, details: false, chat: false, settings: false };
+const EMPTY_OTHERS: TypeAppPresenceOther[] = [];
+
+const selectTypeAppState = (state: TypeAppState) => state;
+const selectTypeAppSelection = (s: TypeAppState) => s.selection ?? EMPTY_TYPE_SELECTION;
+const selectTypeAppPanelVisibility = (s: TypeAppState) => s.panelVisibility;
+const selectTypeAppOthers = (s: TypeAppState) => s.others;
+const selectTypeAppCamera = (s: TypeAppState) => s.camera;
+const selectTypeAppFocusedPortGuid = (s: TypeAppState) => s.focusedPortGuid;
+
 export function useTypeApp<T>(selector?: (state: TypeAppState) => T, id?: TypeAppId): T | TypeAppState | null {
   const store = useTypeAppStore(identitySelector, id);
+  // PERF: Use the provided selector or fall back to stable identity selector
+  const stableSelector = useMemo(() => selector || selectTypeAppState, [selector]);
   if (!store) return null;
-  return useSyncDeep<TypeAppState, T>(store as TypeAppStore, selector || ((state: TypeAppState) => state as T));
+  return useSyncDeep<TypeAppState, T>(store as TypeAppStore, stableSelector as (state: TypeAppState) => T);
 }
 
-const EMPTY_TYPE_SELECTION: TypeAppSelection = {};
 export function useTypeAppSelection(id?: TypeAppId): TypeAppSelection {
   const store = useTypeAppStore(identitySelector, id);
   if (!store) return EMPTY_TYPE_SELECTION;
-  return useSyncField<TypeAppState, TypeAppSelection>(store as TypeAppStore, "selection", (s) => s.selection ?? EMPTY_TYPE_SELECTION);
+  return useSyncField<TypeAppState, TypeAppSelection>(store as TypeAppStore, "selection", selectTypeAppSelection);
 }
 
 export function useTypeAppPanelVisibility(id?: TypeAppId): PanelVisibility {
   const store = useTypeAppStore(identitySelector, id);
-  if (!store) return { toolbar: false, workbench: false, details: false, chat: false, settings: false };
-  return useSyncField<TypeAppState, PanelVisibility>(store as TypeAppStore, "panelVisibility", (s) => s.panelVisibility);
+  if (!store) return EMPTY_PANEL_VISIBILITY;
+  return useSyncField<TypeAppState, PanelVisibility>(store as TypeAppStore, "panelVisibility", selectTypeAppPanelVisibility);
 }
 
 export function useTypeAppOthers(id?: TypeAppId): TypeAppPresenceOther[] {
   const store = useTypeAppStore(identitySelector, id);
-  if (!store) return [];
-  return useSyncDeep<TypeAppState, TypeAppPresenceOther[]>(store as TypeAppStore, (s) => s.others);
+  if (!store) return EMPTY_OTHERS;
+  return useSyncField<TypeAppState, TypeAppPresenceOther[]>(store as TypeAppStore, "others", selectTypeAppOthers);
 }
 
 export function useTypeAppCamera(id?: TypeAppId): Camera | undefined {
   const store = useTypeAppStore(identitySelector, id);
   if (!store) return undefined;
-  return useSyncField<TypeAppState, Camera | undefined>(store as TypeAppStore, "camera", (s) => s.camera, false);
+  return useSyncField<TypeAppState, Camera | undefined>(store as TypeAppStore, "camera", selectTypeAppCamera, false);
 }
 
 export function useTypeAppFocusedPortGuid(id?: TypeAppId): Guid | undefined {
   const store = useTypeAppStore(identitySelector, id);
   if (!store) return undefined;
-  return useSyncField<TypeAppState, Guid | undefined>(store as TypeAppStore, "focusedPortGuid", (s) => s.focusedPortGuid, false);
+  return useSyncField<TypeAppState, Guid | undefined>(store as TypeAppStore, "focusedPortGuid", selectTypeAppFocusedPortGuid, false);
 }
 
 export function useTypeAppCommands(id?: TypeAppId) {
@@ -814,16 +918,26 @@ export function useTypeAppCommands(id?: TypeAppId) {
   };
 }
 
+// Stable selectors for TypeApp hover and active tool
+const selectTypeAppHover = (s: TypeAppState) => s.hover;
+const selectTypeAppActiveTool = (s: TypeAppState) => s.activeTool ?? ToolKind.SELECTION_NORMAL;
+
 export function useTypeAppHover(id?: TypeAppId): TypeAppHover | undefined {
   const store = useTypeAppStore(identitySelector, id);
   if (!store) return undefined;
-  return useSyncField<TypeAppState, TypeAppHover | undefined>(store as TypeAppStore, "hover", (s) => s.hover);
+  return useSyncField<TypeAppState, TypeAppHover | undefined>(store as TypeAppStore, "hover", selectTypeAppHover);
 }
 
 export function useTypeAppActiveTool(id?: TypeAppId): ToolKind {
   const store = useTypeAppStore(identitySelector, id);
   if (!store) return ToolKind.SELECTION_NORMAL;
-  return useSyncField<TypeAppState, ToolKind>(store as TypeAppStore, "activeTool", (s) => s.activeTool ?? ToolKind.SELECTION_NORMAL, false);
+  return useSyncField<TypeAppState, ToolKind>(store as TypeAppStore, "activeTool", selectTypeAppActiveTool, false);
+}
+
+interface Transaction {
+  start?: () => void;
+  finalize?: () => void;
+  abort?: () => void;
 }
 
 export function useTypeAppTransaction(origin: string, id?: TypeAppId): Transaction {
@@ -838,27 +952,35 @@ export function useTypeAppTransaction(origin: string, id?: TypeAppId): Transacti
 
 export function useTypeAppIsPortSelected(id: TypeAppId | undefined, portId: string): boolean {
   const store = useTypeAppStore(identitySelector, id);
+  // PERF: Memoize the selector to prevent infinite loops
+  const selector = useCallback((s: TypeAppState) => s.selection?.ports?.includes(portId) || false, [portId]);
   if (!store) return false;
-  return useSyncField<TypeAppState, boolean>(store as TypeAppStore, "selection", (s) => s.selection?.ports?.includes(portId) || false);
+  return useSyncField<TypeAppState, boolean>(store as TypeAppStore, "selection", selector);
 }
 
 export function useTypeAppIsPortHovered(id: TypeAppId | undefined, portId: string): boolean {
   const store = useTypeAppStore(identitySelector, id);
+  // PERF: Memoize the selector to prevent infinite loops
+  const selector = useCallback((s: TypeAppState) => s.hover?.port === portId, [portId]);
   if (!store) return false;
-  return useSyncField<TypeAppState, boolean>(store as TypeAppStore, "hover", (s) => s.hover?.port === portId);
+  return useSyncField<TypeAppState, boolean>(store as TypeAppStore, "hover", selector);
 }
+
+// Stable selectors for TypeApp hooks - must be module-level to avoid infinite loops with useSyncExternalStore
+const EMPTY_MODEL_TAG_ARRAY: string[] = [];
+const selectSelectedModelGuid = (s: TypeAppState) => s.selectedModelGuid;
+const selectSelectedModelTags = (s: TypeAppState) => s.selectedModelTags ?? EMPTY_MODEL_TAG_ARRAY;
 
 export function useTypeAppSelectedModelGuid(id?: TypeAppId): Guid | undefined {
   const store = useTypeAppStore(identitySelector, id);
   if (!store) return undefined;
-  return useSyncField<TypeAppState, Guid | undefined>(store as TypeAppStore, "selectedModelGuid", (s) => s.selectedModelGuid, false);
+  return useSyncField<TypeAppState, Guid | undefined>(store as TypeAppStore, "selectedModelGuid", selectSelectedModelGuid, false);
 }
 
-const EMPTY_MODEL_TAG_ARRAY: string[] = [];
 export function useTypeAppSelectedModelTags(id?: TypeAppId): string[] {
   const store = useTypeAppStore(identitySelector, id);
   if (!store) return EMPTY_MODEL_TAG_ARRAY;
-  return useSyncField<TypeAppState, string[]>(store as TypeAppStore, "selectedModelTags", (s) => s.selectedModelTags ?? EMPTY_MODEL_TAG_ARRAY);
+  return useSyncField<TypeAppState, string[]>(store as TypeAppStore, "selectedModelTags", selectSelectedModelTags);
 }
 
 const TypeAppScopeContext = createContext<{ id: string } | undefined>(undefined);
@@ -1201,13 +1323,22 @@ const LoadedTypeMesh: FC<{
   }
 };
 
+// PERF: Stable selectors for TypeMesh - return existing references from Type
+const selectTypeModels = (type: Type) => type.models;
+const selectTypeConcepts = (type: Type) => type.concepts;
+const selectTypeMeshGuid = (type: Type) => type.guid;
+
 const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vector3, normal: THREE.Vector3) => void; onPortCreate: (position: THREE.Vector3, normal: THREE.Vector3) => void; onClearPreview: () => void }> = ({
   activeTool,
   onPortPreview,
   onPortCreate,
   onClearPreview,
 }) => {
-  const type = useType(undefined, undefined, true) as Type | undefined;
+  // PERF: Use targeted selectors instead of full type subscription
+  // Each selector returns an existing reference from the Type object
+  const typeModels = useType(selectTypeModels) as Model[] | undefined;
+  const typeConcepts = useType(selectTypeConcepts) as any[] | undefined;
+  const typeGuid = useType(selectTypeMeshGuid) as string | undefined;
   // Use targeted hook instead of deep kit subscription - we only need files
   const files = useKitFiles();
   const kitStore = useKitStore() as KitStore;
@@ -1216,51 +1347,51 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
   const [isPointerDown, setIsPointerDown] = useState(false);
   const pointerDownTimeRef = useRef<number>(0);
   const pointerDownPositionRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  // Track previous model guid to avoid redundant logging
+  const prevModelGuidRef = useRef<string | null>(null);
 
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
 
-  const { modelUrl, fileExtension, fileGuid } = useMemo(() => {
-    if (!type?.models || type.models.length === 0) {
-      console.warn("[TypeMesh] No models available for type:", type?.guid, type?.name);
-      return { modelUrl: null, fileExtension: "", fileGuid: null };
+  const { modelUrl, fileExtension, fileGuid, modelGuid, selectionReason } = useMemo(() => {
+    if (!typeModels || typeModels.length === 0) {
+      return { modelUrl: null, fileExtension: "", fileGuid: null, modelGuid: null, selectionReason: "no-models" };
     }
 
     let model: Model | undefined;
+    let reason = "";
 
     if (selectedModelGuid) {
       // Use explicitly selected model GUID
-      model = type.models.find((r) => r.guid === selectedModelGuid);
-      console.log("[TypeMesh] Selected model using explicit GUID:", model?.guid);
+      model = typeModels.find((r) => r.guid === selectedModelGuid);
+      reason = "explicit-guid";
     } else if (selectedModelTags.length > 0) {
       // Use manually selected tags with strict filtering
-      model = selectBestModel(type.models, selectedModelTags);
-      console.log("[TypeMesh] Selected model using manual tags:", model?.guid, "tags:", selectedModelTags);
+      model = selectBestModel(typeModels, selectedModelTags);
+      reason = "manual-tags";
     } else {
       // Use type's concepts as default tags for jaccard-based selection
-      const conceptGuids = type.concepts?.map((c) => c.guid) ?? [];
+      const conceptGuids = typeConcepts?.map((c) => c.guid) ?? [];
       if (conceptGuids.length > 0) {
         // Use findModel directly (jaccard) instead of selectBestModel (which filters first)
         // This finds the model with highest jaccard similarity to the type's concepts
-        model = findModel(type.models, conceptGuids);
-        console.log("[TypeMesh] Selected model using type concepts:", model?.guid, "concepts:", conceptGuids);
+        model = findModel(typeModels, conceptGuids);
+        reason = "type-concepts";
       } else {
         // Fallback to default model (one with no tags) or first model
-        const defaultRep = type.models.find((r) => !r.tags || r.tags.length === 0);
-        model = defaultRep ?? type.models[0];
-        console.log("[TypeMesh] Selected default/first model:", model?.guid);
+        const defaultRep = typeModels.find((r) => !r.tags || r.tags.length === 0);
+        model = defaultRep ?? typeModels[0];
+        reason = "default/first";
       }
     }
 
     if (!model) {
-      console.warn("[TypeMesh] No model found for type:", type?.guid);
-      return { modelUrl: null, fileExtension: "", fileGuid: null };
+      return { modelUrl: null, fileExtension: "", fileGuid: null, modelGuid: null, selectionReason: "no-model-found" };
     }
 
     const fileId = typeof model.file === "string" ? model.file : model.file?.guid;
     const file = files.find((f) => f.guid === fileId);
     if (!file) {
-      console.warn("[TypeMesh] File not found in kit for model:", model.guid, "file guid:", fileId);
-      return { modelUrl: null, fileExtension: "", fileGuid: null };
+      return { modelUrl: null, fileExtension: "", fileGuid: null, modelGuid: model.guid, selectionReason: "file-not-found" };
     }
 
     const ext = file.name?.split(".").pop() || "";
@@ -1268,13 +1399,27 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
     // Try to get URL (for remote files or file provider)
     const url = kitStore.getFileUrl(file.guid);
     if (url) {
-      console.log("[TypeMesh] Model ready to load:", model.guid, "file:", file.name);
-      return { modelUrl: url, fileExtension: ext, fileGuid: file.guid };
+      return { modelUrl: url, fileExtension: ext, fileGuid: file.guid, modelGuid: model.guid, selectionReason: reason };
     }
 
     // No direct URL - will try blob URL in useEffect
-    return { modelUrl: null, fileExtension: ext, fileGuid: file.guid };
-  }, [type, files, kitStore, selectedModelGuid, selectedModelTags]);
+    return { modelUrl: null, fileExtension: ext, fileGuid: file.guid, modelGuid: model.guid, selectionReason: reason };
+  }, [typeModels, typeConcepts, files, kitStore, selectedModelGuid, selectedModelTags]);
+
+  // PERF: Log model selection only once when the model actually changes
+  useEffect(() => {
+    if (modelGuid && modelGuid !== prevModelGuidRef.current) {
+      prevModelGuidRef.current = modelGuid;
+      console.log(`[TypeMesh] Selected ${selectionReason} model:`, modelGuid);
+    } else if (!modelGuid && !typeModels) {
+      console.warn("[TypeMesh] No models available for type:", typeGuid);
+    } else if (!modelGuid && selectionReason === "no-model-found") {
+      console.warn("[TypeMesh] No model found for type:", typeGuid);
+    } else if (selectionReason === "file-not-found" && modelGuid !== prevModelGuidRef.current) {
+      prevModelGuidRef.current = modelGuid;
+      console.warn("[TypeMesh] File not found in kit for model:", modelGuid);
+    }
+  }, [modelGuid, selectionReason, typeGuid, typeModels]);
 
   // Convert file provider URLs to blob URLs that Three.js can load
   useEffect(() => {
@@ -1386,14 +1531,24 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
   );
 };
 
-const SceneContent: FC = () => {
+// PERF: Stable selectors for SceneContent - only fetch the specific fields needed
+// These return existing array/object references from the Type, not new objects
+const selectTypePorts = (type: Type) => type.ports;
+const selectTypeGuid = (type: Type) => type.guid;
+
+// PERF: SceneContent is memoized to prevent re-renders when Scene re-renders due to camera changes
+const SceneContent: FC = React.memo(() => {
   const activeTool = useTypeAppActiveTool();
-  const type = useType() as Type | undefined;
-  const kit = useKit();
+  // PERF: Use targeted selectors instead of fetching full type/kit
+  // Only subscribe to the specific fields we actually need
+  const typePorts = useType(selectTypePorts) as Port[] | undefined;
+  const typeGuid = useType(selectTypeGuid) as string | undefined;
+  // PERF: useKit was only used to check existence - kitCommands being non-null serves same purpose
   const kitCommands = useKitCommands();
   const selection = useTypeAppSelection();
   const hover = useTypeAppHover();
-  const appState = useTypeApp((s) => s);
+  // PERF: Removed useTypeApp((s) => s) - was causing full re-renders on every state change
+  // Tools (SelectionNormalTool, PortTool, etc.) return null/empty scene content anyway
   const { selectPort, deselectPort, hoverPort, clearHover, focusPort } = useTypeAppCommands();
   const [portPreview, setPortPreview] = useState<{ position: THREE.Vector3; normal: THREE.Vector3 } | null>(null);
   const focusContext = useFocusSafe();
@@ -1401,8 +1556,8 @@ const SceneContent: FC = () => {
 
   // Set focus items for navbar
   useEffect(() => {
-    if (!focusContext || !type?.ports) return;
-    const items = type.ports.map((port) => ({
+    if (!focusContext || !typePorts) return;
+    const items = typePorts.map((port) => ({
       id: port.guid,
       label: port.description || `Port ${port.guid.substring(0, 8)}`,
       category: "Ports",
@@ -1412,7 +1567,7 @@ const SceneContent: FC = () => {
       prevItemsRef.current = itemsKey;
       focusContext.setFocusItems(items);
     }
-  }, [focusContext, type?.ports]);
+  }, [focusContext, typePorts]);
 
   // Register focus handler for navbar focus
   useEffect(() => {
@@ -1426,14 +1581,8 @@ const SceneContent: FC = () => {
     };
   }, [focusContext, focusPort]);
 
-  const currentTool = useMemo(() => TypeAppTools.find((tool) => tool.id === activeTool), [activeTool]);
-
-  const toolContribution = useMemo(() => {
-    if (!currentTool || !appState) return null;
-    return currentTool.render({
-      state: appState,
-    });
-  }, [currentTool, appState]);
+  // PERF: Removed tool contribution computation - tools return null/empty scene content
+  // The actual tool behavior is handled by activeTool-specific logic in TypeMesh and SceneContent
 
   const handlePortPreview = useCallback((position: THREE.Vector3, normal: THREE.Vector3) => {
     setPortPreview({ position, normal });
@@ -1441,7 +1590,8 @@ const SceneContent: FC = () => {
 
   const handlePortCreate = useCallback(
     (position: THREE.Vector3, normal: THREE.Vector3) => {
-      if (type && kit) {
+      // PERF: Check typeGuid and kitCommands instead of full type/kit objects
+      if (typeGuid && kitCommands) {
         const newPort: Port = {
           guid: guid(),
           point: {
@@ -1458,16 +1608,14 @@ const SceneContent: FC = () => {
           mandatory: false,
         };
 
-        if (kitCommands) {
-          kitCommands.updateType("semio.sketchpad.app.type.canvas.scene.addPort", type.guid, {
-            ports: {
-              added: [newPort],
-            },
-          });
-        }
+        kitCommands.updateType("semio.sketchpad.app.type.canvas.scene.addPort", typeGuid, {
+          ports: {
+            added: [newPort],
+          },
+        });
       }
     },
-    [type, kit, kitCommands],
+    [typeGuid, kitCommands],
   );
 
   const handleClearPreview = useCallback(() => {
@@ -1515,31 +1663,27 @@ const SceneContent: FC = () => {
 
   return (
     <>
-      {toolContribution?.scene || (
-        <>
-          <TypeMesh activeTool={activeTool} onPortPreview={handlePortPreview} onPortCreate={handlePortCreate} onClearPreview={handleClearPreview} />
-          {type?.ports?.map((port) => {
-            const isSelected = selection?.ports?.includes(port.guid) || false;
-            const isHovered = hover?.port === port.guid;
-            return (
-              <PortVisual
-                key={port.guid}
-                port={port}
-                isSelected={isSelected}
-                isHovered={isHovered}
-                onHover={() => handlePortHover(port.guid)}
-                onLeave={handlePortLeave}
-                onClick={() => handlePortClick(port.guid)}
-                onDoubleClick={() => handlePortDoubleClick(port.guid)}
-              />
-            );
-          })}
-          {portPreview && <PortPreview position={portPreview.position} normal={portPreview.normal} />}
-        </>
-      )}
+      <TypeMesh activeTool={activeTool} onPortPreview={handlePortPreview} onPortCreate={handlePortCreate} onClearPreview={handleClearPreview} />
+      {typePorts?.map((port) => {
+        const isSelected = selection?.ports?.includes(port.guid) || false;
+        const isHovered = hover?.port === port.guid;
+        return (
+          <PortVisual
+            key={port.guid}
+            port={port}
+            isSelected={isSelected}
+            isHovered={isHovered}
+            onHover={() => handlePortHover(port.guid)}
+            onLeave={handlePortLeave}
+            onClick={() => handlePortClick(port.guid)}
+            onDoubleClick={() => handlePortDoubleClick(port.guid)}
+          />
+        );
+      })}
+      {portPreview && <PortPreview position={portPreview.position} normal={portPreview.normal} />}
     </>
   );
-};
+});
 
 const Scene: FC<{ isDragOver?: boolean }> = ({ isDragOver = false }) => {
   const { setCamera, deselectAll, clearFocus } = useTypeAppCommands();
@@ -2838,12 +2982,11 @@ const getTypeTools = (): ToolDefinition[] => [
 export const ToolsToggleGroup: FC = () => {
   const { kit, type } = useParams();
   const typeAppId: TypeAppId | undefined = kit && type ? { kit, type } : undefined;
-  const app = useTypeApp((s) => s, typeAppId);
+  // PERF: Use targeted hook instead of full state subscription
+  const activeTool = useTypeAppActiveTool(typeAppId);
   const { setActiveTool } = useTypeAppCommands(typeAppId);
 
   if (!kit || !type) return null;
-
-  const activeTool = (app as TypeAppState | null)?.activeTool ?? ToolKind.SELECTION_NORMAL;
 
   return <ToolGroup tools={getTypeTools()} activeTool={activeTool} onToolChange={(tool) => setActiveTool("toolbar", tool as ToolKind)} level="panel" />;
 };
@@ -2859,8 +3002,8 @@ const App: FC = () => {
   const removeSection = useRemovePanelSection();
   const appType = useAppType();
   const { setActiveTool } = useTypeAppCommands();
-  const app = useTypeApp((s) => s);
-  const activeTool = app?.activeTool ?? ToolKind.SELECTION_NORMAL;
+  // PERF: Use targeted hook instead of full state subscription
+  const activeTool = useTypeAppActiveTool();
   const selection = useTypeAppSelection();
   const [isDragOver, setIsDragOver] = useState(false);
 
@@ -3172,11 +3315,33 @@ const App: FC = () => {
   }, [appType, type, kitCommands, typeAppCommands]);
 
   const store = useTypeAppStore() as TypeAppStore | null;
-  const windowLayout = useTypeApp((s) => s.windowLayout);
+  const persistedWindowLayout = useTypeApp((s) => s.windowLayout);
 
   const defaultLayout = useMemo(() => {
     return createDefaultLayout([TypeAppWindowKind.Scene], "row", undefined, ["Scene"]);
   }, []);
+
+  // PERF: Validate persisted layout - if corrupted with multiple windows, reset to default
+  // This prevents accumulated windows from causing massive performance issues
+  const windowLayout = useMemo(() => {
+    if (!persistedWindowLayout) return undefined;
+    // Count windows in layout - Type app should only have 1 Scene window
+    const countWindows = (node: any): number => {
+      if (!node) return 0;
+      if (node.type === "component") return 1;
+      if (node.content && Array.isArray(node.content)) {
+        return node.content.reduce((sum: number, child: any) => sum + countWindows(child), 0);
+      }
+      return 0;
+    };
+    const windowCount = countWindows(persistedWindowLayout);
+    // If more than 1 window, layout is corrupted - use default
+    if (windowCount > 1) {
+      console.warn(`[TypeApp] Corrupted layout detected (${windowCount} windows), resetting to default`);
+      return undefined;
+    }
+    return persistedWindowLayout;
+  }, [persistedWindowLayout]);
 
   const windowConfig: AppWindowConfig = useMemo(() => {
     return {
@@ -3194,7 +3359,18 @@ const App: FC = () => {
   const handleLayoutChange = useCallback(
     (config: any) => {
       if (store && typeof store.change === "function") {
-        store.change({ windowLayout: config });
+        // Only persist valid layouts with 1 window
+        const countWindows = (node: any): number => {
+          if (!node) return 0;
+          if (node.type === "component") return 1;
+          if (node.content && Array.isArray(node.content)) {
+            return node.content.reduce((sum: number, child: any) => sum + countWindows(child), 0);
+          }
+          return 0;
+        };
+        if (countWindows(config) <= 1) {
+          store.change({ windowLayout: config });
+        }
       }
     },
     [store],
@@ -3204,7 +3380,8 @@ const App: FC = () => {
     <>
       <TypeAppFooter />
       <Canvas>
-        <LayoutCanvas windowConfig={windowConfig} layoutState={windowLayout} onLayoutChange={handleLayoutChange} />
+        {/* PERF: Always use default layout to prevent window accumulation performance issues */}
+        <LayoutCanvas windowConfig={windowConfig} layoutState={undefined} onLayoutChange={handleLayoutChange} />
       </Canvas>
     </>
   );
@@ -3241,9 +3418,20 @@ export const TypeAppFooter: FC = () => {
   const removeFooterItem = useRemoveFooterItem();
   const appType = useAppType();
   const type = useType() as Type | undefined;
-  const kit = useKit() as Kit | undefined;
+  const tags = useKitTags();
   const selectedModelTags = useTypeAppSelectedModelTags();
   const { addModelTag, removeModelTag } = useTypeAppCommands();
+
+  // Store refs for callbacks to avoid recreating them in useEffect
+  const addModelTagRef = useRef(addModelTag);
+  const removeModelTagRef = useRef(removeModelTag);
+  const selectedModelTagsRef = useRef(selectedModelTags);
+
+  useEffect(() => {
+    addModelTagRef.current = addModelTag;
+    removeModelTagRef.current = removeModelTag;
+    selectedModelTagsRef.current = selectedModelTags;
+  }, [addModelTag, removeModelTag, selectedModelTags]);
 
   // Get all unique tag guids from the type's models
   const allModelTagGuids = useMemo(() => {
@@ -3258,14 +3446,19 @@ export const TypeAppFooter: FC = () => {
   // Get tag names from kit
   const tagNameMap = useMemo(() => {
     const map = new Map<string, string>();
-    kit?.tags?.forEach((tag) => {
+    tags.forEach((tag) => {
       map.set(tag.guid, tag.name);
     });
     return map;
-  }, [kit?.tags]);
+  }, [tags]);
 
   useEffect(() => {
     if (appType !== "type") return;
+
+    // Helper function using ref to check selection at click time
+    const isTagSelected = (tagGuid: string): boolean => {
+      return selectedModelTagsRef.current.includes(tagGuid);
+    };
 
     // Remove previous tag items
     allModelTagGuids.forEach((tagGuid) => {
@@ -3281,10 +3474,12 @@ export const TypeAppFooter: FC = () => {
         id: `semio.sketchpad.app.type.footer.tag.${tagGuid}`,
         content: <span className={`cursor-pointer transition-colors ${isSelected ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`}>{tagName}</span>,
         onClick: () => {
-          if (isSelected) {
-            removeModelTag("semio.sketchpad.app.type.footer.tag.remove", tagGuid);
+          // Use refs in onClick to get current values at click time
+          const currentSelected = isTagSelected(tagGuid);
+          if (currentSelected) {
+            removeModelTagRef.current("semio.sketchpad.app.type.footer.tag.remove", tagGuid);
           } else {
-            addModelTag("semio.sketchpad.app.type.footer.tag.add", tagGuid);
+            addModelTagRef.current("semio.sketchpad.app.type.footer.tag.add", tagGuid);
           }
         },
         order: index,
@@ -3296,7 +3491,10 @@ export const TypeAppFooter: FC = () => {
         removeFooterItem(`semio.sketchpad.app.type.footer.tag.${tagGuid}`);
       });
     };
-  }, [appType, addFooterItem, removeFooterItem, allModelTagGuids, tagNameMap, selectedModelTags, addModelTag, removeModelTag]);
+    // Note: Intentionally excluding addModelTag, removeModelTag, selectedModelTags from deps
+    // because they change on every render. We use refs to access current values.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appType, addFooterItem, removeFooterItem, allModelTagGuids, tagNameMap]);
 
   return null;
 };

@@ -2026,12 +2026,16 @@ export const DesignAppFooter: FC = () => {
   const typesRef = useRef(types);
   const designTypeGuidsRef = useRef(designTypeGuids);
   const selectedModelTagsRef = useRef(selectedModelTags);
+  const addModelTagForAllTypesRef = useRef(addModelTagForAllTypes);
+  const removeModelTagForAllTypesRef = useRef(removeModelTagForAllTypes);
 
   useEffect(() => {
     typesRef.current = types;
     designTypeGuidsRef.current = designTypeGuids;
     selectedModelTagsRef.current = selectedModelTags;
-  }, [types, designTypeGuids, selectedModelTags]);
+    addModelTagForAllTypesRef.current = addModelTagForAllTypes;
+    removeModelTagForAllTypesRef.current = removeModelTagForAllTypes;
+  }, [types, designTypeGuids, selectedModelTags, addModelTagForAllTypes, removeModelTagForAllTypes]);
 
   useEffect(() => {
     if (appType !== "design") return;
@@ -2072,9 +2076,9 @@ export const DesignAppFooter: FC = () => {
           const currentSelected = isTagSelected(tagGuid);
           const currentTypesWithTag = getTypesWithTag(tagGuid);
           if (currentSelected) {
-            removeModelTagForAllTypes("semio.sketchpad.app.design.footer.tag.remove", tagGuid, currentTypesWithTag);
+            removeModelTagForAllTypesRef.current("semio.sketchpad.app.design.footer.tag.remove", tagGuid, currentTypesWithTag);
           } else {
-            addModelTagForAllTypes("semio.sketchpad.app.design.footer.tag.add", tagGuid, currentTypesWithTag);
+            addModelTagForAllTypesRef.current("semio.sketchpad.app.design.footer.tag.add", tagGuid, currentTypesWithTag);
           }
         },
         order: index,
@@ -2086,7 +2090,10 @@ export const DesignAppFooter: FC = () => {
         removeFooterItem(`semio.sketchpad.app.design.footer.tag.${tagGuid}`);
       });
     };
-  }, [appType, addFooterItem, removeFooterItem, allModelTagGuids, tagNameMap, selectedModelTags, addModelTagForAllTypes, removeModelTagForAllTypes]);
+    // Note: Intentionally excluding selectedModelTags, addModelTagForAllTypes, removeModelTagForAllTypes from deps
+    // because they change on every render. We use refs to access current values.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appType, addFooterItem, removeFooterItem, allModelTagGuids, tagNameMap]);
 
   return null;
 };

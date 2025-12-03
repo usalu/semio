@@ -19,9 +19,9 @@
 
 // #endregion
 
-import { InvalidKit, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted } from "@semio/assets";
+import { InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted } from "@semio/assets";
 import { describe, expect, it } from "vitest";
-import { applyDesignDiff, applyKitDiff, areKitDiffsEqual, areKitsEqual, deserializeKit, exportKit, flattenDesign, getKitDiff, hasSemioErrors, importKit, inverseKitDiff, Kit, Plane, serializeKit, validateSemioKit } from "./semio";
+import { applyDesignDiff, applyKitDiff, areKitDiffsEqual, areKitsEqual, areValidationResultsEqual, deserializeKit, exportKit, flattenDesign, getKitDiff, hasSemioErrors, importKit, inverseKitDiff, Kit, Plane, PortableValidationResult, serializeKit, toPortableValidationResult, validateSemioKit } from "./semio";
 
 const TOLERANCE = 0.001;
 
@@ -52,7 +52,7 @@ describe("Diffs", () => {
   const kitDiffInverted = MetabolismKitDiffInverted as any;
   const kitDiffed = MetabolismKitDiffed as any;
 
-  it("Kit + Diff = DiffedKit & DiffedKit + InverseDiff = Kit", () => {
+  it("Kit + Diff → DiffedKit & DiffedKit + InverseDiff → Kit", () => {
     const computedDiff = getKitDiff(kitOriginal, kitDiffed);
     expect(areKitDiffsEqual(computedDiff, kitDiff)).toBe(true);
     const computedInverseDiff = inverseKitDiff(kitOriginal, kitDiff);
@@ -217,5 +217,13 @@ describe("Validation", () => {
     const fixedKit = applyKitDiff(kit, fix.diff);
     const revalidated = validateSemioKit(fixedKit);
     expect(revalidated.issues.some((i) => i.ruleId === issue.ruleId && i.location.entityGuid === issue.location.entityGuid)).toBe(false);
+  });
+
+  it("Portable validation result matches expected output (cross-platform)", () => {
+    const kit = InvalidKit as unknown as Kit;
+    const result = validateSemioKit(kit);
+    const portableResult = toPortableValidationResult(result);
+    const expectedResult = InvalidKitValidation as PortableValidationResult;
+    expect(areValidationResultsEqual(portableResult, expectedResult)).toBe(true);
   });
 });

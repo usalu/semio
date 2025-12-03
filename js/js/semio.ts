@@ -7648,7 +7648,7 @@ export const semioLayerPathUniquenessRule: SemioValidationRule = (ctx) => {
           ruleId: "layer-path-unique",
           severity: "error",
           message: `Duplicate layer path "${path}" inside design "${design.name}".`,
-          location: { entityKind: "Layer", field: "path" },
+          location: { entityKind: "Layer", entityGuid: layer.guid, field: "path" },
           fixes: [fix],
         });
       });
@@ -7676,6 +7676,82 @@ defaultSemioValidationRules = [
 ];
 
 // #endregion Rule registration
+
+// #region Portable validation format
+
+/**
+ * Portable validation issue format for cross-platform serialization.
+ * This format is used to produce identical JSON output across TypeScript, Python, and C#.
+ */
+export interface PortableValidationIssue {
+  ruleId: string;
+  severity: "error" | "warning";
+  message: string;
+  entityKind: string;
+  entityGuid: string;
+}
+
+/**
+ * Portable validation result format for cross-platform serialization.
+ * This format is used to produce identical JSON output across TypeScript, Python, and C#.
+ */
+export interface PortableValidationResult {
+  issues: PortableValidationIssue[];
+}
+
+/**
+ * Convert a SemioValidationResult to a PortableValidationResult.
+ * Strips out fixes and other implementation-specific details.
+ */
+export const toPortableValidationResult = (result: SemioValidationResult): PortableValidationResult => ({
+  issues: result.issues.map((issue) => ({
+    ruleId: issue.ruleId,
+    severity: issue.severity,
+    message: issue.message,
+    entityKind: issue.location.entityKind,
+    entityGuid: issue.location.entityGuid ?? "",
+  })),
+});
+
+/**
+ * Serialize a validation result to JSON for cross-platform comparison.
+ * Issues are sorted by ruleId, then entityGuid for deterministic output.
+ */
+export const serializeValidationResult = (result: SemioValidationResult): string => {
+  const portable = toPortableValidationResult(result);
+  portable.issues.sort((a, b) => {
+    const ruleCompare = a.ruleId.localeCompare(b.ruleId);
+    if (ruleCompare !== 0) return ruleCompare;
+    return a.entityGuid.localeCompare(b.entityGuid);
+  });
+  return JSON.stringify(portable, null, 2);
+};
+
+/**
+ * Parse a portable validation result from JSON.
+ */
+export const parseValidationResult = (json: string): PortableValidationResult => JSON.parse(json);
+
+/**
+ * Compare two portable validation results for equality.
+ */
+export const areValidationResultsEqual = (a: PortableValidationResult, b: PortableValidationResult): boolean => {
+  if (a.issues.length !== b.issues.length) return false;
+  const sortIssues = (issues: PortableValidationIssue[]) =>
+    [...issues].sort((x, y) => {
+      const ruleCompare = x.ruleId.localeCompare(y.ruleId);
+      if (ruleCompare !== 0) return ruleCompare;
+      return x.entityGuid.localeCompare(y.entityGuid);
+    });
+  const sortedA = sortIssues(a.issues);
+  const sortedB = sortIssues(b.issues);
+  return sortedA.every((issueA, i) => {
+    const issueB = sortedB[i];
+    return issueA.ruleId === issueB.ruleId && issueA.severity === issueB.severity && issueA.message === issueB.message && issueA.entityKind === issueB.entityKind && issueA.entityGuid === issueB.entityGuid;
+  });
+};
+
+// #endregion Portable validation format
 
 // #endregion Validation
 

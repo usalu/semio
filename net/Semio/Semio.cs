@@ -1825,6 +1825,284 @@ public class ModelValidator<T> : AbstractValidator<T> where T : Model<T>
     }
 }
 
+#region SemioValidation
+
+/// <summary>
+/// Portable validation issue format for cross-platform serialization.
+/// This format produces identical JSON output across TypeScript, Python, and C#.
+/// </summary>
+public class SemioValidationIssue
+{
+    public string RuleId { get; set; } = "";
+    public string Severity { get; set; } = "error";
+    public string Message { get; set; } = "";
+    public string EntityKind { get; set; } = "";
+    public string EntityGuid { get; set; } = "";
+}
+
+/// <summary>
+/// Portable validation result format for cross-platform serialization.
+/// This format produces identical JSON output across TypeScript, Python, and C#.
+/// </summary>
+public class SemioValidationResult
+{
+    public List<SemioValidationIssue> Issues { get; set; } = new();
+
+    public bool HasErrors() => Issues.Any(i => i.Severity == "error");
+
+    public string Serialize()
+    {
+        var sorted = Issues.OrderBy(i => i.RuleId).ThenBy(i => i.EntityGuid).ToList();
+        var result = new { issues = sorted.Select(i => new { ruleId = i.RuleId, severity = i.Severity, message = i.Message, entityKind = i.EntityKind, entityGuid = i.EntityGuid }) };
+        return JsonConvert.SerializeObject(result, Formatting.Indented, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
+    }
+
+    public static SemioValidationResult Parse(string json)
+    {
+        var data = JsonConvert.DeserializeObject<dynamic>(json);
+        var result = new SemioValidationResult();
+        foreach (var issue in data!.issues)
+        {
+            result.Issues.Add(new SemioValidationIssue
+            {
+                RuleId = (string)issue.ruleId,
+                Severity = (string)issue.severity,
+                Message = (string)issue.message,
+                EntityKind = (string)issue.entityKind,
+                EntityGuid = (string)issue.entityGuid
+            });
+        }
+        return result;
+    }
+
+    public static bool AreEqual(SemioValidationResult a, SemioValidationResult b)
+    {
+        if (a.Issues.Count != b.Issues.Count) return false;
+        var sortedA = a.Issues.OrderBy(i => i.RuleId).ThenBy(i => i.EntityGuid).ToList();
+        var sortedB = b.Issues.OrderBy(i => i.RuleId).ThenBy(i => i.EntityGuid).ToList();
+        for (var i = 0; i < sortedA.Count; i++)
+        {
+            var ia = sortedA[i];
+            var ib = sortedB[i];
+            if (ia.RuleId != ib.RuleId || ia.Severity != ib.Severity || ia.Message != ib.Message || ia.EntityKind != ib.EntityKind || ia.EntityGuid != ib.EntityGuid)
+                return false;
+        }
+        return true;
+    }
+}
+
+/// <summary>
+/// Validate a Kit and return a SemioValidationResult with all issues.
+/// This produces identical output to TypeScript and Python implementations.
+/// </summary>
+public static class SemioValidator
+{
+    public static SemioValidationResult ValidateKit(Kit kit)
+    {
+        var issues = new List<SemioValidationIssue>();
+        var seen = new Dictionary<string, string>();
+
+        void CheckGuid(string entityKind, string entityGuid)
+        {
+            if (seen.ContainsKey(entityGuid))
+            {
+                issues.Add(new SemioValidationIssue { RuleId = "guid-unique", Severity = "error", Message = $"Duplicate GUID \"{entityGuid}\". First occurrence kept.", EntityKind = entityKind, EntityGuid = entityGuid });
+            }
+            else
+            {
+                seen[entityGuid] = entityKind;
+            }
+        }
+
+        CheckGuid("Kit", kit.Guid);
+        foreach (var t in kit.Types)
+        {
+            CheckGuid("Type", t.Guid);
+            foreach (var port in t.Ports) CheckGuid("Port", port.Guid);
+            foreach (var model in t.Models) CheckGuid("Model", model.Guid);
+        }
+        foreach (var d in kit.Designs)
+        {
+            CheckGuid("Design", d.Guid);
+            foreach (var p in d.Pieces) CheckGuid("Piece", p.Guid);
+            foreach (var c in d.Connections) CheckGuid("Connection", c.Guid);
+            // Note: Stats don't have GUIDs in C#, they use Key
+        }
+        foreach (var q in kit.Qualities) CheckGuid("Quality", q.Guid);
+        foreach (var i in kit.Interfaces) CheckGuid("Interface", i.Guid);
+        foreach (var f in kit.Files) CheckGuid("File", f.Guid);
+        foreach (var fo in kit.Folders) CheckGuid("Folder", fo.Guid);
+
+        // Type name uniqueness
+        var typesByParent = kit.Types.GroupBy(t => t.Parent?.Guid);
+        foreach (var group in typesByParent)
+        {
+            var nameGroups = group.GroupBy(t => t.Name ?? "");
+            foreach (var nameGroup in nameGroups)
+            {
+                var list = nameGroup.ToList();
+                if (list.Count > 1)
+                {
+                    foreach (var t in list.Skip(1))
+                    {
+                        issues.Add(new SemioValidationIssue { RuleId = "type-name-unique", Severity = "error", Message = $"Duplicate type name \"{nameGroup.Key}\" among siblings.", EntityKind = "Type", EntityGuid = t.Guid });
+                    }
+                }
+            }
+        }
+
+        // Design name uniqueness
+        var designsByParent = kit.Designs.GroupBy(d => d.Parent?.Guid);
+        foreach (var group in designsByParent)
+        {
+            var nameGroups = group.GroupBy(d => d.Name ?? "");
+            foreach (var nameGroup in nameGroups)
+            {
+                var list = nameGroup.ToList();
+                if (list.Count > 1)
+                {
+                    foreach (var d in list.Skip(1))
+                    {
+                        issues.Add(new SemioValidationIssue { RuleId = "design-name-unique", Severity = "error", Message = $"Duplicate design name \"{nameGroup.Key}\" among siblings.", EntityKind = "Design", EntityGuid = d.Guid });
+                    }
+                }
+            }
+        }
+
+        // Piece name uniqueness within design
+        foreach (var design in kit.Designs)
+        {
+            var nameGroups = design.Pieces.Where(p => !string.IsNullOrEmpty(p.Name)).GroupBy(p => p.Name);
+            foreach (var nameGroup in nameGroups)
+            {
+                var list = nameGroup.ToList();
+                if (list.Count > 1)
+                {
+                    foreach (var p in list.Skip(1))
+                    {
+                        issues.Add(new SemioValidationIssue { RuleId = "piece-name-unique", Severity = "error", Message = $"Duplicate piece name \"{nameGroup.Key}\" inside design \"{design.Name}\".", EntityKind = "Piece", EntityGuid = p.Guid });
+                    }
+                }
+            }
+        }
+
+        // Port name uniqueness within type
+        foreach (var t in kit.Types)
+        {
+            var nameGroups = t.Ports.Where(p => !string.IsNullOrEmpty(p.Name)).GroupBy(p => p.Name);
+            foreach (var nameGroup in nameGroups)
+            {
+                var list = nameGroup.ToList();
+                if (list.Count > 1)
+                {
+                    foreach (var port in list.Skip(1))
+                    {
+                        issues.Add(new SemioValidationIssue { RuleId = "port-name-unique", Severity = "error", Message = $"Duplicate port name \"{nameGroup.Key}\" inside type \"{t.Name}\".", EntityKind = "Port", EntityGuid = port.Guid });
+                    }
+                }
+            }
+        }
+
+        // Model name uniqueness within type
+        foreach (var t in kit.Types)
+        {
+            var nameGroups = t.Models.Where(m => !string.IsNullOrEmpty(m.Name)).GroupBy(m => m.Name);
+            foreach (var nameGroup in nameGroups)
+            {
+                var list = nameGroup.ToList();
+                if (list.Count > 1)
+                {
+                    foreach (var model in list.Skip(1))
+                    {
+                        issues.Add(new SemioValidationIssue { RuleId = "model-name-unique", Severity = "error", Message = $"Duplicate model name \"{nameGroup.Key}\" inside type \"{t.Name}\".", EntityKind = "Model", EntityGuid = model.Guid });
+                    }
+                }
+            }
+        }
+
+        // Quality name uniqueness
+        var qualityNameGroups = kit.Qualities.GroupBy(q => q.Name ?? "");
+        foreach (var nameGroup in qualityNameGroups)
+        {
+            var list = nameGroup.ToList();
+            if (list.Count > 1)
+            {
+                foreach (var q in list.Skip(1))
+                {
+                    issues.Add(new SemioValidationIssue { RuleId = "quality-name-unique", Severity = "error", Message = $"Duplicate quality name \"{nameGroup.Key}\".", EntityKind = "Quality", EntityGuid = q.Guid });
+                }
+            }
+        }
+
+        // Interface name uniqueness
+        var interfaceNameGroups = kit.Interfaces.GroupBy(i => i.Name ?? "");
+        foreach (var nameGroup in interfaceNameGroups)
+        {
+            var list = nameGroup.ToList();
+            if (list.Count > 1)
+            {
+                foreach (var iface in list.Skip(1))
+                {
+                    issues.Add(new SemioValidationIssue { RuleId = "interface-name-unique", Severity = "error", Message = $"Duplicate interface name \"{nameGroup.Key}\".", EntityKind = "Interface", EntityGuid = iface.Guid });
+                }
+            }
+        }
+
+        // File name uniqueness
+        var fileNameGroups = kit.Files.GroupBy(f => f.Name ?? "");
+        foreach (var nameGroup in fileNameGroups)
+        {
+            var list = nameGroup.ToList();
+            if (list.Count > 1)
+            {
+                foreach (var f in list.Skip(1))
+                {
+                    issues.Add(new SemioValidationIssue { RuleId = "file-name-unique", Severity = "error", Message = $"Duplicate file name \"{nameGroup.Key}\".", EntityKind = "File", EntityGuid = f.Guid });
+                }
+            }
+        }
+
+        // Folder name uniqueness
+        var foldersByParent = kit.Folders.GroupBy(f => f.Parent);
+        foreach (var group in foldersByParent)
+        {
+            var nameGroups = group.GroupBy(f => f.Name ?? "");
+            foreach (var nameGroup in nameGroups)
+            {
+                var list = nameGroup.ToList();
+                if (list.Count > 1)
+                {
+                    foreach (var fo in list.Skip(1))
+                    {
+                        issues.Add(new SemioValidationIssue { RuleId = "folder-name-unique", Severity = "error", Message = $"Duplicate folder name \"{nameGroup.Key}\" among siblings.", EntityKind = "Folder", EntityGuid = fo.Guid });
+                    }
+                }
+            }
+        }
+
+        // Layer path uniqueness within design
+        foreach (var design in kit.Designs)
+        {
+            var pathGroups = design.Layers.GroupBy(l => l.Path ?? "");
+            foreach (var pathGroup in pathGroups)
+            {
+                var list = pathGroup.ToList();
+                if (list.Count > 1)
+                {
+                    foreach (var layer in list.Skip(1))
+                    {
+                        issues.Add(new SemioValidationIssue { RuleId = "layer-path-unique", Severity = "error", Message = $"Duplicate layer path \"{pathGroup.Key}\" inside design \"{design.Name}\".", EntityKind = "Layer", EntityGuid = layer.Guid });
+                    }
+                }
+            }
+        }
+
+        return new SemioValidationResult { Issues = issues };
+    }
+}
+
+#endregion SemioValidation
+
 public class DiffUpdate<T>
 {
     public string Id { get; set; } = "";
@@ -1846,7 +2124,7 @@ public class AttributeId : Model<AttributeId>
 [Model("🔐", "AD", "ADf", "A diff for attributes.")]
 public class AttributeDiff : Model<AttributeDiff>
 {
-    [Id("🆔", "Gd?", "Gui?", "The optional guid of the attribute.")]
+    [Id("🆔", "Gd?", "Gid", "The optional guid of the attribute.")]
     public string? Guid { get; set; }
     [Name("🔑", "Ke?", "Key?", "The optional key of the attribute.")]
     public string Key { get; set; } = "";
@@ -2140,7 +2418,7 @@ public class ArtifactAuthor : Model<ArtifactAuthor>
 [Model("👤", "AuD", "AuDf", "A diff for an author.")]
 public class AuthorDiff : Model<AuthorDiff>
 {
-    [Id("🆔", "Gd?", "Gui?", "The optional guid of the author.")]
+    [Id("🆔", "Gd?", "Gid", "The optional guid of the author.")]
     public string? Guid { get; set; }
     [Name("📛", "Na?", "Nam?", "The optional name of the author.")]
     public string? Name { get; set; }
@@ -2239,14 +2517,14 @@ public class FileId : Model<FileId>
 [Model("📄", "FD", "FDf", "A diff for files.")]
 public class FileDiff : Model<FileDiff>
 {
-    [Id("🆔", "Gd?", "Gui?", "The optional guid of the file.")]
+    [Id("🆔", "Gd?", "Gid", "The optional guid of the file.")]
     public string? Guid { get; set; }
     [Name("📛", "Nm?", "Nam?", "The optional name of the file.")]
     public string? Name { get; set; }
-    [Url("�", "Rm?", "Rem?", "The optional remote url of the file.")]
+    [Url("🔗", "Rm?", "Rem?", "The optional remote url of the file.")]
     public string? Remote { get; set; }
-    [Name("📁", "Fo?", "Fol?", "The optional folder path of the file.")]
-    public string? Folder { get; set; }
+    [ModelProp("📁", "Fo?", "Fol?", "The optional folder reference of the file.")]
+    public FolderId? Folder { get; set; }
     [NumberProp("📏", "Sz?", "Siz?", "The optional size of the file in bytes.")]
     public int? Size { get; set; }
     [Name("🔐", "Hs?", "Has?", "The optional hash of the file.")]
@@ -2296,12 +2574,12 @@ public class File : Model<File>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the file.", PropImportance.ID)]
     public string Guid { get; set; } = "";
-    [Name("�", "Nm", "Nam", "The name of the file.", PropImportance.REQUIRED)]
+    [Name("📛", "Nm", "Nam", "The name of the file.", PropImportance.REQUIRED)]
     public string Name { get; set; } = "";
     [Url("🔗", "Rm?", "Rem?", "The optional remote url of the file.")]
     public string? Remote { get; set; }
-    [Name("📁", "Fo?", "Fol?", "The optional folder path of the file.")]
-    public string? Folder { get; set; }
+    [ModelProp("📁", "Fo?", "Fol?", "The optional folder reference of the file.")]
+    public FolderId? Folder { get; set; }
     [NumberProp("📏", "Sz?", "Siz?", "The optional size of the file in bytes.")]
     public int? Size { get; set; }
     [Name("🔐", "Hs?", "Has?", "The optional hash of the file.")]
@@ -2344,7 +2622,7 @@ public class FolderId : Model<FolderId>
 [Model("📁", "FD", "FolDf", "A diff for folders.")]
 public class FolderDiff : Model<FolderDiff>
 {
-    [Id("🆔", "Gd?", "Gui?", "The optional guid of the folder.")]
+    [Id("🆔", "Gd?", "Gid", "The optional guid of the folder.")]
     public string? Guid { get; set; }
     [Name("📛", "Na?", "Nam?", "The optional name of the folder.")]
     public string? Name { get; set; }
@@ -2489,19 +2767,21 @@ public enum QualityKind
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-quality-"/>
 /// </summary>
-[Model("🔑", "Ql", "Qal", "A quality id is a key for a quality.")]
+[Model("🔑", "Ql", "Qal", "A quality id is a guid for a quality.")]
 public class QualityId : Model<QualityId>
 {
-    [Id("🔑", "Ke", "Key", "The key of the quality.")]
-    public string Key { get; set; } = "";
+    [Id("🆔", "Gd", "Gui", "The guid of the quality.")]
+    public string Guid { get; set; } = "";
 
-    public static implicit operator QualityId(Quality quality) => new() { Key = quality.Key };
-    public static implicit operator QualityId(QualityDiff diff) => new() { Key = diff.Key };
+    public static implicit operator QualityId(Quality quality) => new() { Guid = quality.Guid };
+    public static implicit operator QualityId(QualityDiff diff) => new() { Guid = diff.Guid ?? "" };
 }
 
 [Model("📊", "QD", "QDf", "A diff for qualities.")]
 public class QualityDiff : Model<QualityDiff>
 {
+    [Id("🆔", "Gd?", "Gid", "The optional guid of the quality.")]
+    public string? Guid { get; set; }
     [Id("🔑", "Ke", "Key", "The key of the quality.")]
     public string Key { get; set; } = "";
     [Name("📛", "Nm", "Name", "The name of the quality.", PropImportance.REQUIRED)]
@@ -2535,9 +2815,9 @@ public class QualityDiff : Model<QualityDiff>
     [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the quality.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
-    public static implicit operator QualityDiff(QualityId quality) => new() { Key = quality.Key };
+    public static implicit operator QualityDiff(QualityId id) => new() { Guid = id.Guid };
 
-    public static implicit operator QualityDiff(Quality quality) => new() { Key = quality.Key, Name = quality.Name, Description = quality.Description, Uri = quality.Uri, Scalable = quality.Scalable, Kind = quality.Kind, SI = quality.SI, Imperial = quality.Imperial, Min = quality.Min, MinExcluded = quality.MinExcluded, Max = quality.Max, MaxExcluded = quality.MaxExcluded, Default = quality.Default, Formula = quality.Formula, Benchmarks = quality.Benchmarks, Attributes = quality.Attributes };
+    public static implicit operator QualityDiff(Quality quality) => new() { Guid = quality.Guid, Key = quality.Key, Name = quality.Name, Description = quality.Description, Uri = quality.Uri, Scalable = quality.Scalable, Kind = quality.Kind, SI = quality.SI, Imperial = quality.Imperial, Min = quality.Min, MinExcluded = quality.MinExcluded, Max = quality.Max, MaxExcluded = quality.MaxExcluded, Default = quality.Default, Formula = quality.Formula, Benchmarks = quality.Benchmarks, Attributes = quality.Attributes };
 }
 
 /// <summary>
@@ -2546,6 +2826,8 @@ public class QualityDiff : Model<QualityDiff>
 [Model("📃", "Ql", "Qal", "A quality is numeric metadata used for stats and benchmarks.")]
 public class Quality : Model<Quality>
 {
+    [Id("🆔", "Gd", "Gui", "The guid of the quality.", PropImportance.ID)]
+    public string Guid { get; set; } = "";
     [Id("🔑", "Ke", "Key", "The key of the quality.")]
     public string Key { get; set; } = "";
     [Name("📛", "Nm", "Name", "The name of the quality.", PropImportance.REQUIRED)]
@@ -2579,9 +2861,10 @@ public class Quality : Model<Quality>
     [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the quality.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
-    public static implicit operator Quality(QualityId id) => new() { Key = id.Key };
+    public static implicit operator Quality(QualityId id) => new() { Guid = id.Guid };
     public static implicit operator Quality(QualityDiff diff) => new()
     {
+        Guid = diff.Guid ?? "",
         Key = diff.Key,
         Name = diff.Name,
         Description = diff.Description,
@@ -2603,6 +2886,114 @@ public class Quality : Model<Quality>
 }
 
 #endregion Quality
+
+#region Tag
+
+/// <summary>
+/// <see href="https://github.com/usalu/semio#-tag-"/>
+/// </summary>
+[Model("🏷️", "Tg", "Tag", "A tag id is a guid for a tag.")]
+public class TagId : Model<TagId>
+{
+    [Id("🆔", "Gd", "Gui", "The guid of the tag.")]
+    public string Guid { get; set; } = "";
+
+    public static implicit operator TagId(Tag tag) => new() { Guid = tag.Guid };
+}
+
+/// <summary>
+/// <see href="https://github.com/usalu/semio#-tag-"/>
+/// </summary>
+[Model("🏷️", "Tg", "Tag", "A tag is a label for categorizing models.")]
+public class Tag : Model<Tag>
+{
+    [Id("🆔", "Gd", "Gui", "The guid of the tag.", PropImportance.ID)]
+    public string Guid { get; set; } = "";
+    [Name("📛", "Na", "Nam", "The name of the tag.", PropImportance.REQUIRED)]
+    public string Name { get; set; } = "";
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the tag.")]
+    public string Description { get; set; } = "";
+    [Url("🪙", "Ic?", "Ico?", "The optional icon [ emoji | logogram | url ] of the tag.")]
+    public string Icon { get; set; } = "";
+    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the tag.", PropImportance.OPTIONAL)]
+    public List<Attribute> Attributes { get; set; } = new();
+
+    public static implicit operator Tag(TagId id) => new() { Guid = id.Guid };
+}
+
+#endregion Tag
+
+#region Concept
+
+/// <summary>
+/// <see href="https://github.com/usalu/semio#-concept-"/>
+/// </summary>
+[Model("💡", "Cp", "Con", "A concept id is a guid for a concept.")]
+public class ConceptId : Model<ConceptId>
+{
+    [Id("🆔", "Gd", "Gui", "The guid of the concept.")]
+    public string Guid { get; set; } = "";
+
+    public static implicit operator ConceptId(Concept concept) => new() { Guid = concept.Guid };
+}
+
+/// <summary>
+/// <see href="https://github.com/usalu/semio#-concept-"/>
+/// </summary>
+[Model("💡", "Cp", "Con", "A concept is a semantic grouping for types or designs.")]
+public class Concept : Model<Concept>
+{
+    [Id("🆔", "Gd", "Gui", "The guid of the concept.", PropImportance.ID)]
+    public string Guid { get; set; } = "";
+    [Name("📛", "Na", "Nam", "The name of the concept.", PropImportance.REQUIRED)]
+    public string Name { get; set; } = "";
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the concept.")]
+    public string Description { get; set; } = "";
+    [Url("🪙", "Ic?", "Ico?", "The optional icon [ emoji | logogram | url ] of the concept.")]
+    public string Icon { get; set; } = "";
+    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the concept.", PropImportance.OPTIONAL)]
+    public List<Attribute> Attributes { get; set; } = new();
+
+    public static implicit operator Concept(ConceptId id) => new() { Guid = id.Guid };
+}
+
+[Model("💡", "CpD", "CoDf", "A diff for a concept.")]
+public class ConceptDiff : Model<ConceptDiff>
+{
+    [Id("🆔", "Gd?", "Gid", "The optional guid of the concept.")]
+    public string? Guid { get; set; }
+    [Name("📛", "Na?", "Nam?", "The optional name of the concept.")]
+    public string? Name { get; set; }
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the concept.")]
+    public string? Description { get; set; }
+    [Url("🪙", "Ic?", "Ico?", "The optional icon [ emoji | logogram | url ] of the concept.")]
+    public string? Icon { get; set; }
+    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the concept.", PropImportance.OPTIONAL)]
+    public AttributesDiff? Attributes { get; set; }
+}
+
+[Model("💡", "CsD", "CsDf", "A diff for multiple concepts.")]
+public class ConceptsDiff : Model<ConceptsDiff>
+{
+    [ModelProp("➖", "Rm*", "Rem*", "The optional removed concepts.", PropImportance.OPTIONAL)]
+    public List<string> Removed { get; set; } = new();
+    [ModelProp("➕", "Ad*", "Add*", "The optional added concepts.", PropImportance.OPTIONAL)]
+    public List<Concept> Added { get; set; } = new();
+    [ModelProp("✏️", "Up*", "Upd*", "The optional updated concepts.", PropImportance.OPTIONAL)]
+    public List<DiffUpdate<ConceptDiff>> Updated { get; set; } = new();
+
+    public ConceptsDiff MergeDiff(ConceptsDiff other)
+    {
+        return new ConceptsDiff
+        {
+            Removed = Removed.Concat(other.Removed).Distinct().ToList(),
+            Added = Added.Concat(other.Added).ToList(),
+            Updated = Updated.Concat(other.Updated).ToList()
+        };
+    }
+}
+
+#endregion Concept
 
 #region Interface
 
@@ -2732,8 +3123,10 @@ public class Interface : Model<Interface>
 [Model("🏷️", "Pp", "Prp", "A property is a value with an optional unit for a quality.")]
 public class Prop : Model<Prop>
 {
-    [Id("🔑", "Ke", "Key", "The key of the quality of the property.")]
-    public string Key { get; set; } = "";
+    [Id("🆔", "Gd", "Gui", "The guid of the property.", PropImportance.ID)]
+    public string Guid { get; set; } = "";
+    [ModelProp("🔑", "Ql", "Qal", "The quality of the property.", PropImportance.REQUIRED)]
+    public QualityId Quality { get; set; } = new();
     [Value("🔢", "Vl", "Val", "The value [ number | text ] of the property.")]
     public string Value { get; set; } = "";
     [Name("Ⓜ️", "Ut?", "Unt?", "The optional unit of the property.")]
@@ -2749,38 +3142,41 @@ public class Prop : Model<Prop>
 [Model("💾", "Rp", "Rep", "The identifier of a model.")]
 public class ModelId : Model<ModelId>
 {
-    [Name("🏷️", "Tg*", "Tags*", "The optional tags to group models. No tags means default.", PropImportance.ID, skipValidation: true)]
-    public List<string> Tags { get; set; } = new();
-    public static implicit operator ModelId(Model model) => new() { Tags = model.Tags };
-    public static implicit operator ModelId(ModelDiff diff) => new() { Tags = diff.Tags };
-    public string ToIdString() => $"{string.Join(",", Tags.Select(t => Utility.Encode(t)))}";
-    public string ToHumanIdString() => string.Join(", ", Tags);
+    [Id("🆔", "Gd", "Gui", "The guid of the model.", PropImportance.ID)]
+    public string Guid { get; set; } = "";
+    public static implicit operator ModelId(Model model) => new() { Guid = model.Guid };
+    public static implicit operator ModelId(ModelDiff diff) => new() { Guid = diff.Guid ?? "" };
+    public string ToIdString() => $"{Guid}";
+    public string ToHumanIdString() => $"{Guid}";
     public override string ToString() => $"Rep({ToHumanIdString()})";
 }
 
 [Model("📊", "RD", "RDf", "A diff for models.")]
 public class ModelDiff : Model<ModelDiff>
 {
+    [Id("🆔", "Gd?", "Gid", "The optional guid of the model.")]
+    public string? Guid { get; set; }
     [Name("📛", "Nm?", "Name?", "The optional name of the model.")]
     public string? Name { get; set; }
-    [Name("📄", "Fl?", "Fil?", "The optional file path to the resource of the model.")]
-    public string File { get; set; } = "";
+    [ModelProp("📄", "Fl?", "Fil?", "The optional file reference of the model.")]
+    public FileId? File { get; set; }
     [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the model.")]
     public string Description { get; set; } = "";
-    [Name("🏷️", "Tg*", "Tags*", "The optional tags to group models.", PropImportance.OPTIONAL)]
-    public List<string> Tags { get; set; } = new();
+    [ModelProp("🏷️", "Tg*", "Tags*", "The optional tags to group models.", PropImportance.OPTIONAL)]
+    public List<TagId> Tags { get; set; } = new();
     [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the model.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
-    public static implicit operator ModelDiff(ModelId id) => new() { Tags = id.Tags };
-    public static implicit operator ModelDiff(Model model) => new() { Name = model.Name, File = model.File, Description = model.Description, Tags = model.Tags, Attributes = model.Attributes };
+    public static implicit operator ModelDiff(ModelId id) => new() { Guid = id.Guid };
+    public static implicit operator ModelDiff(Model model) => new() { Guid = model.Guid, Name = model.Name, File = model.File, Description = model.Description, Tags = model.Tags, Attributes = model.Attributes };
 
     public ModelDiff MergeDiff(ModelDiff other)
     {
         return new ModelDiff
         {
+            Guid = other.Guid ?? Guid,
             Name = string.IsNullOrEmpty(other.Name) ? Name : other.Name,
-            File = string.IsNullOrEmpty(other.File) ? File : other.File,
+            File = other.File ?? File,
             Description = string.IsNullOrEmpty(other.Description) ? Description : other.Description,
             Tags = other.Tags.Any() ? other.Tags : Tags,
             Attributes = other.Attributes.Any() ? other.Attributes : Attributes
@@ -2822,27 +3218,28 @@ public class Model : Model<Model>
     public string Guid { get; set; } = "";
     [Name("📛", "Nm?", "Name?", "The optional name of the model.")]
     public string Name { get; set; } = "";
-    [Name("📄", "Fl", "Fil", "The file path to the resource of the model.", PropImportance.REQUIRED)]
-    public string File { get; set; } = "";
+    [ModelProp("📄", "Fl", "Fil", "The file reference of the model.", PropImportance.REQUIRED)]
+    public FileId File { get; set; } = new();
 
     [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the model.")]
     public string Description { get; set; } = "";
 
-    [Name("🏷️", "Tg*", "Tags*", "The optional tags to group models. No tags means default.", PropImportance.ID, skipValidation: true)]
-    public List<string> Tags { get; set; } = new();
+    [ModelProp("🏷️", "Tg*", "Tags*", "The optional tags to group models. No tags means default.", PropImportance.OPTIONAL, skipValidation: true)]
+    public List<TagId> Tags { get; set; } = new();
 
     [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the model.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
-    public static implicit operator Model(ModelId id) => new() { Tags = id.Tags };
-    public static implicit operator Model(ModelDiff diff) => new() { Name = diff.Name ?? "", File = diff.File, Description = diff.Description, Tags = diff.Tags, Attributes = diff.Attributes };
+    public static implicit operator Model(ModelId id) => new() { Guid = id.Guid };
+    public static implicit operator Model(ModelDiff diff) => new() { Guid = diff.Guid ?? "", Name = diff.Name ?? "", File = diff.File ?? new(), Description = diff.Description, Tags = diff.Tags, Attributes = diff.Attributes };
 
     public Model ApplyDiff(ModelDiff diff)
     {
         return new Model
         {
+            Guid = Guid,
             Name = string.IsNullOrEmpty(diff.Name) ? Name : diff.Name,
-            File = string.IsNullOrEmpty(diff.File) ? File : diff.File,
+            File = diff.File ?? File,
             Description = string.IsNullOrEmpty(diff.Description) ? Description : diff.Description,
             Tags = diff.Tags?.Any() == true ? diff.Tags : Tags,
             Attributes = diff.Attributes?.Any() == true ? diff.Attributes : Attributes
@@ -2853,6 +3250,7 @@ public class Model : Model<Model>
     {
         return new ModelDiff
         {
+            Guid = Guid,
             Name = Name,
             File = File,
             Description = Description,
@@ -2865,10 +3263,11 @@ public class Model : Model<Model>
     {
         return new ModelDiff
         {
+            Guid = Guid,
             Name = !string.IsNullOrEmpty(appliedDiff.Name) ? Name : null,
-            File = !string.IsNullOrEmpty(appliedDiff.File) ? File : "",
+            File = appliedDiff.File != null ? File : null,
             Description = !string.IsNullOrEmpty(appliedDiff.Description) ? Description : "",
-            Tags = appliedDiff.Tags.Any() ? Tags : new List<string>(),
+            Tags = appliedDiff.Tags.Any() ? Tags : new List<TagId>(),
             Attributes = appliedDiff.Attributes.Any() ? Attributes : new List<Attribute>()
         };
     }
@@ -2876,36 +3275,19 @@ public class Model : Model<Model>
     public override (bool, List<string>) Validate()
     {
         var (isValid, errors) = base.Validate();
-        foreach (var tag in Tags)
+        foreach (var attribute in Attributes)
         {
-            if (tag.Length == 0)
-            {
-                isValid = false;
-                errors.Add("The tag must not be empty.");
-            }
-
-            if (tag.Length > Constants.NameLengthLimit)
-            {
-                isValid = false;
-                var preview = tag.Length > 10 ? tag.Substring(0, 10) + "..." : tag;
-                errors.Add(
-                    $"A tag must be at most {Constants.NameLengthLimit} characters long. The provided tag ({preview}) has {tag.Length} characters.");
-            }
-
-            foreach (var attribute in Attributes)
-            {
-                var (isValidAttribute, errorsAttribute) = attribute.Validate();
-                isValid = isValid && isValidAttribute;
-                errors.AddRange(errorsAttribute.Select(e => $"A attribute({attribute.ToHumanIdString()}) is invalid: " + e));
-            }
+            var (isValidAttribute, errorsAttribute) = attribute.Validate();
+            isValid = isValid && isValidAttribute;
+            errors.AddRange(errorsAttribute.Select(e => $"A attribute({attribute.ToHumanIdString()}) is invalid: " + e));
         }
 
         return (isValid, errors);
     }
 
-    public string ToIdString() => $"{string.Join(",", Tags.Select(t => Utility.Encode(t)))}";
+    public string ToIdString() => $"{Guid}";
 
-    public string ToHumanIdString() => string.Join(", ", Tags);
+    public string ToHumanIdString() => $"{Name}";
 
     public string ToId() => ToIdString();
     public string ToHumanId() => ToHumanIdString();
@@ -2934,7 +3316,7 @@ public class PortId : Model<PortId>
 [Model("📊", "PD", "PDf", "A diff for ports.")]
 public class PortDiff : Model<PortDiff>
 {
-    [Id("🆔", "Gd?", "Gui?", "The optional guid of the port.")]
+    [Id("🆔", "Gd?", "Gid", "The optional guid of the port.")]
     public string? Guid { get; set; }
     [Name("📛", "Nm?", "Name?", "The optional name of the port.")]
     public string? Name { get; set; }
@@ -3200,7 +3582,7 @@ public class TypeId : Model<TypeId>
 [Model("🧩", "TD", "TDf", "A diff for types.")]
 public class TypeDiff : Model<TypeDiff>
 {
-    [Id("🆔", "Gd?", "Gui?", "The optional guid of the type.")]
+    [Id("🆔", "Gd?", "Gid", "The optional guid of the type.")]
     public string? Guid { get; set; }
     [Name("📛", "Na?", "Nam?", "The optional name of the type.")]
     public string? Name { get; set; }
@@ -3235,7 +3617,7 @@ public class TypeDiff : Model<TypeDiff>
     [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the type.", PropImportance.OPTIONAL)]
     public List<Attribute>? Attributes { get; set; }
     [ModelProp("💡", "Co*", "Con*", "The optional concepts of the type.", PropImportance.OPTIONAL)]
-    public List<string>? Concepts { get; set; }
+    public List<ConceptId>? Concepts { get; set; }
     [Name("📅", "CA?", "CrA?", "The optional created at timestamp of the type.")]
     public DateTime? CreatedAt { get; set; }
     [Name("📅", "UA?", "UpA?", "The optional updated at timestamp of the type.")]
@@ -3322,7 +3704,7 @@ public class Type : Model<Type>
     [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the type.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
     [ModelProp("💡", "Co*", "Con*", "The optional concepts of the type.", PropImportance.OPTIONAL)]
-    public List<string> Concepts { get; set; } = new();
+    public List<ConceptId> Concepts { get; set; } = new();
     [Name("📅", "CA", "CrA", "The created at timestamp of the type.", PropImportance.REQUIRED)]
     public DateTime CreatedAt { get; set; }
     [Name("📅", "UA", "UpA", "The updated at timestamp of the type.", PropImportance.REQUIRED)]
@@ -3504,7 +3886,7 @@ public class Type : Model<Type>
         if (Models == null || Models.Count == 0)
             throw new ArgumentException($"No models available in type {Name}");
 
-        var indices = Models.Select(r => Utility.Jaccard(r.Tags, tags)).ToList();
+        var indices = Models.Select(r => Utility.Jaccard(r.Tags.Select(t => t.Guid), tags)).ToList();
         var maxIndex = indices.Max();
         var maxIndexIndex = indices.IndexOf(maxIndex);
         return Models[maxIndexIndex];
@@ -3557,15 +3939,23 @@ public class Type : Model<Type>
 [Model("📄", "Ly", "Lyr", "A layer for organizing design elements.")]
 public class Layer : Model<Layer>
 {
-    [Name("📛", "Nm", "Nam", "The name of the layer.", PropImportance.REQUIRED)]
-    public string Name { get; set; } = "";
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the layer.")]
-    public string Description { get; set; } = "";
+    [Id("🆔", "Gd", "Gui", "The guid of the layer.", PropImportance.ID)]
+    public string Guid { get; set; } = "";
+    [Name("📛", "Pa", "Pth", "The path of the layer.", PropImportance.REQUIRED)]
+    public string Path { get; set; } = "";
+    [FalseOrTrue("👁️", "Hd?", "Hid?", "Whether the layer is hidden.")]
+    public bool IsHidden { get; set; } = false;
+    [FalseOrTrue("🔒", "Lk?", "Lck?", "Whether the layer is locked.")]
+    public bool IsLocked { get; set; } = false;
     [Color("🎨", "Cl?", "Col?", "The hex color of the layer.")]
     public string Color { get; set; } = "";
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the layer.")]
+    public string Description { get; set; } = "";
+    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the layer.", PropImportance.OPTIONAL)]
+    public List<Attribute> Attributes { get; set; } = new();
 
-    public string ToIdString() => $"{Name}";
-    public string ToHumanIdString() => $"{Name}";
+    public string ToIdString() => $"{Guid}";
+    public string ToHumanIdString() => $"{Path}";
     public override string ToString() => $"Lyr({ToHumanIdString()})";
 }
 
@@ -3638,7 +4028,7 @@ public class PiecesDiff : Model<PiecesDiff>
 [Model("📊", "PcD", "PcDf", "A diff for a piece.")]
 public class PieceDiff : Model<PieceDiff>
 {
-    [Id("🆔", "Gd?", "Gui?", "The optional guid of the piece.")]
+    [Id("🆔", "Gd?", "Gid", "The optional guid of the piece.")]
     public string? Guid { get; set; }
     [Name("📛", "Nm?", "Name?", "The optional name of the piece.")]
     public string? Name { get; set; }
@@ -4086,7 +4476,7 @@ public class DesignsDiff : Model<DesignsDiff>
 [Model("🏙️", "Dn", "Dsn", "The local identifier of the design within the kit.")]
 public class DesignDiff : Model<DesignDiff>
 {
-    [Id("🆔", "Gd?", "Gui?", "The optional guid of the design.")]
+    [Id("🆔", "Gd?", "Gid", "The optional guid of the design.")]
     public string? Guid { get; set; }
     [Name("📛", "Na?", "Nam?", "The optional name of the design.")]
     public string? Name { get; set; }
@@ -4127,7 +4517,7 @@ public class DesignDiff : Model<DesignDiff>
     [ModelProp("👥", "Au*", "Aut*", "The optional authors of the design.", PropImportance.OPTIONAL)]
     public List<AuthorId>? Authors { get; set; }
     [ModelProp("💡", "Co*", "Con*", "The optional concepts of the design.", PropImportance.OPTIONAL)]
-    public List<string>? Concepts { get; set; }
+    public List<ConceptId>? Concepts { get; set; }
     [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the design.", PropImportance.OPTIONAL)]
     public List<Attribute>? Attributes { get; set; }
     [Name("📅", "CA?", "CrA?", "The optional created at timestamp of the design.")]
@@ -4208,7 +4598,7 @@ public class Design : Model<Design>
     [Url("🖼️", "Im?", "Img?", "The optional url to the image of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.")]
     public string Image { get; set; } = "";
     [ModelProp("💡", "Co*", "Con*", "The optional concepts of the design.", PropImportance.OPTIONAL)]
-    public List<string> Concepts { get; set; } = new();
+    public List<ConceptId> Concepts { get; set; } = new();
     [ModelProp("👥", "Au*", "Aut*", "The optional authors of the design.", PropImportance.OPTIONAL)]
     public List<AuthorId> Authors { get; set; } = new();
     [ModelProp("📍", "Lo?", "Loc?", "The optional location of the design.", PropImportance.OPTIONAL)]
@@ -5054,7 +5444,7 @@ text {
 [Model("🗃️", "KD", "KDf", "A diff for kits.")]
 public class KitDiff : Model<KitDiff>
 {
-    [Id("🆔", "Gd?", "Gui?", "The optional guid of the kit.")]
+    [Id("🆔", "Gd?", "Gid", "The optional guid of the kit.")]
     public string? Guid { get; set; }
     [Name("📛", "Na?", "Nam?", "The optional name of the kit.")]
     public string? Name { get; set; }
@@ -5088,8 +5478,8 @@ public class KitDiff : Model<KitDiff>
     public AuthorsDiff? Authors { get; set; }
     [ModelProp("🔐", "At*", "Atr*", "The optional attributes diff for the kit.", PropImportance.OPTIONAL)]
     public AttributesDiff? Attributes { get; set; }
-    [ModelProp("💡", "Co*", "Con*", "The optional concepts for the kit.", PropImportance.OPTIONAL)]
-    public List<string>? Concepts { get; set; }
+    [ModelProp("💡", "Co*", "Con*", "The optional concepts diff for the kit.", PropImportance.OPTIONAL)]
+    public ConceptsDiff? Concepts { get; set; }
     [Name("📅", "CA?", "CrA?", "The optional creation date.")]
     public string? CreatedAt { get; set; }
     [Name("📝", "UA?", "UpA?", "The optional last update date.")]
@@ -5134,7 +5524,7 @@ public class KitDiff : Model<KitDiff>
         Remote = kit.Remote,
         Homepage = kit.Homepage,
         License = kit.License,
-        Concepts = kit.Concepts,
+        Concepts = new ConceptsDiff { Added = kit.Concepts, Removed = new List<string>(), Updated = new List<DiffUpdate<ConceptDiff>>() },
         CreatedAt = kit.CreatedAt,
         UpdatedAt = kit.UpdatedAt
     };
@@ -5184,8 +5574,8 @@ public class Kit : Model<Kit>
     public string Icon { get; set; } = "";
     [Url("🖼️", "Im?", "Img?", "The optional url to the image of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.")]
     public string Image { get; set; } = "";
-    [ModelProp("🏷️", "Cp*", "Cnp*", "The optional concepts of the kit.", PropImportance.OPTIONAL)]
-    public List<string> Concepts { get; set; } = new();
+    [ModelProp("💡", "Cp*", "Cnp*", "The optional concepts of the kit.", PropImportance.OPTIONAL)]
+    public List<Concept> Concepts { get; set; } = new();
     [Url("☁️", "Rm?", "Rmt?", "The optional Unique Resource Locator (URL) where to fetch the kit remotely.")]
     public string Remote { get; set; } = "";
     [Url("🏠", "Hp?", "Hmp?", "The optional Unique Resource Locator (URL) of the homepage of the kit.")]

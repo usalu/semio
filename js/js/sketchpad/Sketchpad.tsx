@@ -5253,6 +5253,11 @@ export class KitStore {
   private cache?: Kit;
   private cacheHash?: string;
   private dirty: boolean = true;
+  // PERF: Field-specific caching to avoid rebuilding entire kit on every access
+  private _filesCache?: SemioFile[];
+  private _filesVersion = 0;
+  private _typesCache?: Type[];
+  private _typesVersion = 0;
 
   constructor(parent: SketchpadStore, kit: Kit, local?: boolean, remote?: boolean, remoteProviders?: RemoteProviders) {
     this.parent = parent;
@@ -5954,9 +5959,34 @@ export class KitStore {
     return createObserver(this.yKit, subscribe, true);
   };
 
+  // PERF: Field-specific snapshot methods with caching
+  // These avoid rebuilding the entire kit when only one field is needed
+  snapshotFiles = (): SemioFile[] => {
+    const currentVersion = (this.yFiles as any)._clock || this.files.size;
+    if (this._filesCache && this._filesVersion === currentVersion) {
+      return this._filesCache;
+    }
+    this._filesCache = Array.from(this.files.values()).map((file) => file.snapshot());
+    this._filesVersion = currentVersion;
+    return this._filesCache;
+  };
+
+  snapshotTypes = (): Type[] => {
+    const currentVersion = (this.yTypes as any)._clock || this.types.size;
+    if (this._typesCache && this._typesVersion === currentVersion) {
+      return this._typesCache;
+    }
+    this._typesCache = Array.from(this.types.values()).map((type) => type.snapshot());
+    this._typesVersion = currentVersion;
+    return this._typesCache;
+  };
+
   // Field-level observers for targeted subscriptions (avoids overfetching)
   onTypesChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
-    const notifySubscriber = () => subscribe(() => {});
+    const notifySubscriber = () => {
+      this._typesCache = undefined; // Invalidate cache
+      subscribe(() => {});
+    };
     if (deep) {
       this.yTypes.observeDeep(notifySubscriber);
       return () => this.yTypes.unobserveDeep(notifySubscriber);
@@ -5966,7 +5996,10 @@ export class KitStore {
   };
 
   onFilesChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
-    const notifySubscriber = () => subscribe(() => {});
+    const notifySubscriber = () => {
+      this._filesCache = undefined; // Invalidate cache
+      subscribe(() => {});
+    };
     if (deep) {
       this.yFiles.observeDeep(notifySubscriber);
       return () => this.yFiles.unobserveDeep(notifySubscriber);
@@ -6205,9 +6238,31 @@ const selectConcepts = (k: KitShallow | Kit) => k.concepts ?? EMPTY_CONCEPTS;
 
 /**
  * Returns only the types array from the kit.
+ * PERF: Uses field-specific observer and snapshot to avoid rebuilding entire kit.
  */
 export function useKitTypes(guid?: Guid): Type[] {
-  return useKit(selectTypes, guid) as Type[];
+  const kitScope = useKitScope();
+  const resolvedGuid = guid ?? kitScope?.guid;
+  const kitStore = useKitStore(identitySelector, resolvedGuid) as KitStore | null;
+
+  const subscribe = useCallback(
+    (callback: () => void) => {
+      if (!kitStore) return () => {};
+      return kitStore.onTypesChanged((cb: () => void) => {
+        cb();
+        callback();
+        return () => {};
+      }, true);
+    },
+    [kitStore],
+  );
+
+  const getSnapshot = useCallback(() => {
+    if (!kitStore) return EMPTY_TYPES;
+    return kitStore.snapshotTypes();
+  }, [kitStore]);
+
+  return useSyncExternalStore(subscribe, getSnapshot);
 }
 
 /**
@@ -6233,9 +6288,31 @@ export function useKitAuthors(guid?: Guid): Author[] {
 
 /**
  * Returns only the files array from the kit.
+ * PERF: Uses field-specific observer and snapshot to avoid rebuilding entire kit.
  */
 export function useKitFiles(guid?: Guid): SemioFile[] {
-  return useKit(selectFiles, guid) as SemioFile[];
+  const kitScope = useKitScope();
+  const resolvedGuid = guid ?? kitScope?.guid;
+  const kitStore = useKitStore(identitySelector, resolvedGuid) as KitStore | null;
+
+  const subscribe = useCallback(
+    (callback: () => void) => {
+      if (!kitStore) return () => {};
+      return kitStore.onFilesChanged((cb: () => void) => {
+        cb();
+        callback();
+        return () => {};
+      }, true);
+    },
+    [kitStore],
+  );
+
+  const getSnapshot = useCallback(() => {
+    if (!kitStore) return EMPTY_FILES;
+    return kitStore.snapshotFiles();
+  }, [kitStore]);
+
+  return useSyncExternalStore(subscribe, getSnapshot);
 }
 
 /**

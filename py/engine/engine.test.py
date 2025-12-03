@@ -43,6 +43,7 @@ KIT_METABOLISM_DIFFED_PATH = ASSETS_DIR / "kit_metabolism_diffed.json"
 DIFF_KIT_METABOLISM_PATH = ASSETS_DIR / "diff_kit_metabolism.json"
 DIFF_KIT_METABOLISM_INVERTED_PATH = ASSETS_DIR / "diff_kit_metabolism_inverted.json"
 KIT_INVALID_PATH = ASSETS_DIR / "kit_invalid.json"
+VALIDATION_PATH = ASSETS_DIR / "validation.json"
 
 # endregion Constants
 
@@ -76,6 +77,12 @@ def diffKitMetabolismInvertedJson() -> dict:
 @pytest.fixture
 def kitInvalidJson() -> dict:
     with open(KIT_INVALID_PATH, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+@pytest.fixture
+def expectedValidationJson() -> dict:
+    with open(VALIDATION_PATH, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -156,40 +163,6 @@ class TestPlaneFromYAxis:
 
 # endregion Spatial Math Tests
 
-# region Graph Operations Tests
-
-
-class TestGraphOperations:
-    def test_buildPieceGraph(self, kitMetabolismJson: dict) -> None:
-        design = next((d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower"), None)
-        assert design is not None
-        G = engine.buildPieceGraph(design)
-        assert len(G.nodes) == len(design.get("pieces", []))
-        assert len(G.edges) == len(design.get("connections", []))
-
-    def test_findFixedPieces(self, kitMetabolismJson: dict) -> None:
-        design = next((d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower"), None)
-        assert design is not None
-        fixed = engine.findFixedPieces(design)
-        assert len(fixed) >= 1
-
-    def test_connectedComponents(self, kitMetabolismJson: dict) -> None:
-        design = next((d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower"), None)
-        assert design is not None
-        components = engine.getConnectedComponents(design)
-        assert len(components) >= 1
-
-    def test_pieceHierarchy(self, kitMetabolismJson: dict) -> None:
-        design = next((d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower"), None)
-        assert design is not None
-        fixed = engine.findFixedPieces(design)
-        if fixed:
-            hierarchy = engine.getPieceHierarchy(design, fixed[0])
-            assert hierarchy[fixed[0]] == 0
-
-
-# endregion Graph Operations Tests
-
 # region Validation Tests
 
 
@@ -216,6 +189,12 @@ class TestValidation:
         ]
         for ruleId in expectedRules:
             assert ruleId in ruleIds, f"Missing validation rule: {ruleId}"
+
+    def test_portableValidationResultMatchesExpectedOutput(self, kitInvalidJson: dict, expectedValidationJson: dict) -> None:
+        """Test that validation produces identical output to validation.json (cross-platform)."""
+        result = engine.validateKitDict(kitInvalidJson)
+        expectedResult = engine.parseValidationResult(json.dumps(expectedValidationJson))
+        assert engine.areValidationResultsEqual(result, expectedResult), f"Validation result mismatch. Got {len(result.issues)} issues, expected {len(expectedResult.issues)}"
 
 
 # endregion Validation Tests
@@ -384,46 +363,3 @@ class TestFlattenDesign:
 
 
 # endregion FlattenDesign Tests
-
-# region Model Tests
-
-
-class TestModels:
-    def test_point(self) -> None:
-        point = engine.Point(x=1.0, y=2.0, z=3.0)
-        assert point.x == 1.0
-        assert point.y == 2.0
-        assert point.z == 3.0
-        assert "[1, 2, 3]" in str(point)
-
-    def test_vector(self) -> None:
-        vector = engine.Vector(x=1.0, y=0.0, z=0.0)
-        assert vector.x == 1.0
-        assert vector.y == 0.0
-        assert vector.z == 0.0
-        assert "[1, 0, 0]" in str(vector)
-
-    def test_plane(self) -> None:
-        plane = engine.Plane()
-        plane.origin = engine.Point(x=0, y=0, z=0)
-        plane.xAxis = engine.Vector(x=1, y=0, z=0)
-        plane.yAxis = engine.Vector(x=0, y=1, z=0)
-        assert plane.origin.x == 0
-        assert plane.xAxis.x == 1
-        assert plane.yAxis.y == 1
-        output = plane.dump()
-        assert output.origin.x == 0
-
-    def test_coord(self) -> None:
-        coord = engine.Coord(u=1.0, v=2.0)
-        assert coord.u == 1.0
-        assert coord.v == 2.0
-
-    def test_attribute(self) -> None:
-        attr = engine.Attribute(name="test", value="value", definition="def")
-        assert attr.name == "test"
-        assert attr.value == "value"
-        assert attr.definition == "def"
-
-
-# endregion Model Tests

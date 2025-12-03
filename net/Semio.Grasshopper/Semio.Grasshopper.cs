@@ -38,12 +38,10 @@
 
 #endregion
 
-using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
-using System.Security.Cryptography;
 using System.Text;
 using System.Net.Http;
 using GH_IO.Serialization;
@@ -358,184 +356,71 @@ public abstract class Component : GH_Component
 }
 
 public abstract class ModelComponent<TParam, TGoo, TModel> : Component
-    where TParam : ModelParam<TGoo, TModel> where TGoo : ModelGoo<TModel> where TModel : Model<TModel>, new()
+    where TParam : ModelParam<TGoo, TModel>, new() where TGoo : ModelGoo<TModel>, new() where TModel : Model<TModel>, new()
 {
-    public static readonly string NameM;
-    public static readonly System.Type TypeM;
-    public static readonly System.Type GooM;
-    public static readonly System.Type ParamM;
-    public static readonly ModelAttribute ModelM;
-    public static readonly ImmutableArray<PropertyInfo> PropertyM;
-    public static readonly ImmutableArray<PropAttribute> PropM;
-    public static readonly ImmutableArray<bool> IsPropertyList;
-    public static readonly ImmutableArray<bool> IsPropertyMapped;
-    public static readonly ImmutableArray<System.Type> PropertyItemType;
-    public static readonly ImmutableArray<bool> IsPropertyModel;
-    public static readonly ImmutableArray<System.Type> PropertyGooM;
-    public static readonly ImmutableArray<System.Type> PropertyParamM;
-    public static readonly ImmutableArray<System.Type> PropertyItemGoo;
+    protected virtual string ModelName => typeof(TModel).Name;
+    protected virtual string ModelNickname => typeof(TModel).Name.Substring(0, 3);
+    protected virtual string ModelDescription => $"Construct, deconstruct or modify a {typeof(TModel).Name.ToLower()}.";
 
-    static ModelComponent()
-    {
-        // force compiler to run static constructor of the the meta classes first.
-        var dummyMetaGrasshopper = Meta.Goo;
+    protected ModelComponent() : base("", "", "", "Modeling") { }
 
-        NameM = typeof(TModel).Name;
-        TypeM = Semio.Meta.Type[NameM];
-        GooM = Meta.Goo[NameM];
-        ParamM = Meta.Param[NameM];
-        ModelM = Semio.Meta.Model[NameM];
-        PropertyM = Semio.Meta.Property[NameM];
-        PropM = Semio.Meta.Prop[NameM];
-        IsPropertyList = Semio.Meta.IsPropertyList[NameM];
-        IsPropertyMapped = Meta.IsPropertyMapped[NameM];
-        PropertyItemType = Semio.Meta.PropertyItemType[NameM];
-        PropertyItemGoo = Meta.PropertyItemGoo[NameM];
-        IsPropertyModel = Semio.Meta.IsPropertyModel[NameM];
-        PropertyGooM = Meta.PropertyGoo[NameM];
-        PropertyParamM = Meta.PropertyParam[NameM];
-    }
-
-    protected ModelComponent() : base($"Model {NameM}", $"~{ModelM.Abbreviation}",
-        $"Construct, deconstruct or modify {Semio.Utility.Grammar.GetArticle(NameM)} {NameM.ToLower()}", "Modeling")
-    { }
+    public override string Name => $"Model {ModelName}";
+    public override string NickName => $"~{ModelNickname}";
+    public override string Description => ModelDescription;
 
     protected override Bitmap Icon =>
         (Bitmap)Resources.ResourceManager.GetObject($"{typeof(TModel).Name.ToLower()}_modify_24x24");
 
     public override GH_Exposure Exposure => GH_Exposure.primary;
 
-    protected virtual void AddModelProps(dynamic pManager)
-    {
-        for (var i = 0; i < PropertyM.Length; i++)
-        {
-            var property = PropertyM[i];
-            var propAttribute = PropM[i];
-            var param = (IGH_Param)(Activator.CreateInstance(PropertyParamM[i]) ?? throw new InvalidOperationException($"Could not create instance of {PropertyParamM[i]}"));
-            pManager.AddParameter(param, property.Name, propAttribute.Code, propAttribute.Description,
-                IsPropertyList[i] ? GH_ParamAccess.list : GH_ParamAccess.item);
-        }
-    }
-
-    protected void AddModelParameters(dynamic pManager, bool isOutput = false)
-    {
-        var modelParam = (IGH_Param)(Activator.CreateInstance(ParamM) ?? throw new InvalidOperationException($"Could not create instance of {ParamM}"));
-        var description = isOutput
-            ? $"The constructed or modified {NameM.ToLower()}."
-            : $"The optional {NameM.ToLower()} to deconstruct or modify.";
-        pManager.AddParameter(modelParam, NameM, isOutput ? ModelM.Code : ModelM.Code + "?",
-            description, GH_ParamAccess.item);
-        pManager.AddBooleanParameter(isOutput ? "Valid" : "Validate", "Vd?",
-            isOutput
-                ? $"True if the {NameM.ToLower()} is valid. Null if no validation was performed."
-                : $"Whether the {NameM.ToLower()} should be validated.", GH_ParamAccess.item);
-
-        AddModelProps(pManager);
-
-        if (!isOutput)
-            for (var i = 0; i < pManager.ParamCount; i++)
-                ((GH_InputParamManager)pManager)[i].Optional = true;
-    }
+    protected virtual void RegisterModelInputParams(GH_InputParamManager pManager) { }
+    protected virtual void RegisterModelOutputParams(GH_OutputParamManager pManager) { }
+    protected virtual void GetModelData(IGH_DataAccess DA, TModel model) { }
+    protected virtual void SetModelData(IGH_DataAccess DA, TModel model) { }
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
-        AddModelParameters(pManager);
+        pManager.AddParameter(new TParam(), ModelName, ModelNickname + "?",
+            $"The optional {ModelName.ToLower()} to deconstruct or modify.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Validate", "Vd?",
+            $"Whether the {ModelName.ToLower()} should be validated.", GH_ParamAccess.item);
+        RegisterModelInputParams(pManager);
+        for (var i = 0; i < pManager.ParamCount; i++)
+            pManager[i].Optional = true;
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
-        AddModelParameters(pManager, true);
+        pManager.AddParameter(new TParam(), ModelName, ModelNickname,
+            $"The constructed or modified {ModelName.ToLower()}.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Valid", "Vd?",
+            $"True if the {ModelName.ToLower()} is valid. Null if no validation was performed.", GH_ParamAccess.item);
+        RegisterModelOutputParams(pManager);
     }
 
     protected override void SolveInstance(IGH_DataAccess DA)
     {
-        dynamic modelGoo = Activator.CreateInstance(GooM) ?? throw new InvalidOperationException($"Could not create instance of {GooM}");
+        var modelGoo = new TGoo();
         var validate = false;
         if (DA.GetData(0, ref modelGoo))
-            modelGoo = modelGoo.Duplicate();
+            modelGoo = (TGoo)modelGoo.Duplicate();
         DA.GetData(1, ref validate);
-        GetProps(DA, modelGoo);
-
+        
+        GetModelData(DA, modelGoo.Value);
         modelGoo.Value = ProcessModel(modelGoo.Value);
 
         if (validate)
         {
-            var (isValid, errors) = ((bool, List<string>))modelGoo.Value.Validate();
+            var (isValid, errors) = modelGoo.Value.Validate();
             foreach (var error in errors)
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, error);
             DA.SetData(1, isValid);
         }
 
         DA.SetData(0, modelGoo.Duplicate());
-        SetData(DA, modelGoo);
+        SetModelData(DA, modelGoo.Value);
     }
 
-    protected virtual void GetProps(IGH_DataAccess DA, dynamic modelGoo)
-    {
-        for (var i = 0; i < PropertyM.Length; i++)
-        {
-            var property = PropertyM[i];
-            var isList = IsPropertyList[i];
-            var itemType = PropertyItemType[i];
-            dynamic gooValue = Activator.CreateInstance(PropertyGooM[i]) ?? throw new InvalidOperationException($"Could not create instance of {PropertyGooM[i]}");
-            var value = gooValue;
-            bool hasInput = isList ? DA.GetDataList(i + 2, value) : DA.GetData(i + 2, ref value);
-            if (hasInput)
-            {
-                if (isList)
-                {
-                    var listType = typeof(List<>).MakeGenericType(itemType);
-                    dynamic list = Activator.CreateInstance(listType) ?? throw new InvalidOperationException($"Could not create instance of {listType}");
-                    foreach (var item in gooValue)
-                        list.Add(itemType == typeof(string) || itemType == typeof(int) || itemType == typeof(float)
-                            ? item.Value
-                            : item.Value.DeepClone());
-
-                    value = list;
-                    property.SetValue(modelGoo.Value, value);
-                }
-                else property.SetValue(modelGoo.Value, RhinoConverter.Convert(value.Value));
-            }
-        }
-    }
-
-    protected virtual void SetData(IGH_DataAccess DA, dynamic modelGoo) // TODO: Check if dynamic is necessary
-    {
-        for (var i = 0; i < PropertyM.Length; i++)
-        {
-            var property = PropertyM[i];
-            var isList = IsPropertyList[i];
-            var isPropertyModel = IsPropertyModel[i];
-            var isPropertyMapped = IsPropertyMapped[i];
-            var value = property.GetValue(modelGoo.Value);
-            if (value is null) continue;
-            if (isList)
-            {
-                if (isPropertyModel)
-                {
-                    dynamic list = Activator.CreateInstance(PropertyGooM[i]) ?? throw new InvalidOperationException($"Could not create instance of {PropertyGooM[i]}");
-                    foreach (var item in value)
-                    {
-                        var itemGoo = Activator.CreateInstance(PropertyItemGoo[i], item.DeepClone()) ?? throw new InvalidOperationException($"Could not create instance of {PropertyItemGoo[i]}");
-                        list.Add(itemGoo);
-                    }
-                    value = list;
-                }
-            }
-            else if (isPropertyModel)
-            {
-                if (isPropertyMapped)
-                {
-                    var convertMethod = typeof(RhinoConverter).GetMethod("Convert", new System.Type[] { value.GetType() });
-                    if (convertMethod is null) throw new InvalidOperationException($"Could not find Convert method for {value.GetType()}");
-                    value = convertMethod.Invoke(null, new[] { value });
-                }
-                else value = Activator.CreateInstance(PropertyItemGoo[i], value.DeepClone()) ?? throw new InvalidOperationException($"Could not create instance of {PropertyItemGoo[i]}");
-            }
-            if (isList) DA.SetDataList(i + 2, value);
-            else DA.SetData(i + 2, value);
-        }
-    }
     protected virtual TModel ProcessModel(TModel model) => model;
 }
 
@@ -553,7 +438,7 @@ public abstract class IdParam<TGoo, TModel> : ModelParam<TGoo, TModel> where TGo
 }
 
 public abstract class IdComponent<TParam, TGoo, TModel> : ModelComponent<TParam, TGoo, TModel>
-    where TParam : IdParam<TGoo, TModel> where TGoo : IdGoo<TModel> where TModel : Model<TModel>, new()
+    where TParam : IdParam<TGoo, TModel>, new() where TGoo : IdGoo<TModel>, new() where TModel : Model<TModel>, new()
 {
     protected IdComponent() : base() { }
     public override GH_Exposure Exposure => GH_Exposure.secondary;
@@ -573,39 +458,35 @@ public abstract class DiffParam<TGoo, TModel> : ModelParam<TGoo, TModel> where T
 }
 
 public abstract class DiffComponent<TParam, TGoo, TModel> : ModelComponent<TParam, TGoo, TModel>
-    where TParam : DiffParam<TGoo, TModel> where TGoo : DiffGoo<TModel> where TModel : Model<TModel>, new()
+    where TParam : DiffParam<TGoo, TModel>, new() where TGoo : DiffGoo<TModel>, new() where TModel : Model<TModel>, new()
 {
     protected DiffComponent() : base() { }
     public override GH_Exposure Exposure => GH_Exposure.tertiary;
 }
 public abstract class SerializeComponent<TParam, TGoo, TModel> : ScriptingComponent
     where TParam : ModelParam<TGoo, TModel>, new() where TGoo : ModelGoo<TModel>, new() where TModel : Model<TModel>, new()
-
 {
-    public static readonly string NameM;
-    public static readonly ModelAttribute ModelM;
-    static SerializeComponent()
-    {
-        // force compiler to run static constructor of the the meta classes first.
-        var dummyMetaGrasshopper = Meta.Goo;
-        NameM = typeof(TModel).Name;
-        ModelM = Semio.Meta.Model[NameM];
-    }
+    protected virtual string ModelName => typeof(TModel).Name;
+    protected virtual string ModelNickname => typeof(TModel).Name.Substring(0, 3);
 
-    protected SerializeComponent() : base($"Serialize {NameM}", $">{ModelM.Abbreviation}", $"Serialize a {NameM.ToLower()}.") { }
+    protected SerializeComponent() : base("", "", "") { }
 
-    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{NameM.ToLower()}_serialize_24x24");
+    public override string Name => $"Serialize {ModelName}";
+    public override string NickName => $">{ModelNickname}";
+    public override string Description => $"Serialize a {ModelName.ToLower()}.";
+    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{typeof(TModel).Name.ToLower()}_serialize_24x24");
     public override GH_Exposure Exposure => GH_Exposure.secondary;
+
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddParameter(new TParam(), NameM, ModelM.Code, $"The {NameM.ToLower()} to serialize.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Indent", "In?", $"The optional indent unit for the serialized {NameM.ToLower()}. Empty text for no indent or spaces or tabs", GH_ParamAccess.item, "");
+        pManager.AddParameter(new TParam(), ModelName, ModelNickname, $"The {ModelName.ToLower()} to serialize.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Indent", "In?", $"The optional indent unit for the serialized {ModelName.ToLower()}. Empty text for no indent or spaces or tabs", GH_ParamAccess.item, "");
         pManager[1].Optional = true;
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Text", "Tx", "Text of serialized " + NameM + ".", GH_ParamAccess.item);
+        pManager.AddTextParameter("Text", "Tx", $"Text of serialized {ModelName}.", GH_ParamAccess.item);
     }
 
     protected override void SolveInstance(IGH_DataAccess DA)
@@ -621,39 +502,26 @@ public abstract class SerializeComponent<TParam, TGoo, TModel> : ScriptingCompon
 
 public abstract class DeserializeComponent<TParam, TGoo, TModel> : ScriptingComponent
     where TParam : ModelParam<TGoo, TModel>, new() where TGoo : ModelGoo<TModel>, new() where TModel : Model<TModel>, new()
-
 {
-    public static readonly string NameM;
-    public static readonly ModelAttribute ModelM;
+    protected virtual string ModelName => typeof(TModel).Name;
+    protected virtual string ModelNickname => typeof(TModel).Name.Substring(0, 3);
 
-    static DeserializeComponent()
-    {
-        // force compiler to run static constructor of the the meta classes first.
-        var dummyMetaGrasshopper = Meta.Goo;
+    protected DeserializeComponent() : base("", "", "") { }
 
-        NameM = typeof(TModel).Name;
-        ModelM = Semio.Meta.Model[NameM];
-    }
-
-    protected DeserializeComponent() : base($"Deserialize {NameM}", $"<{ModelM.Abbreviation}",
-        $"Deserialize a {NameM.ToLower()}.")
-    {
-    }
-
-    protected override Bitmap Icon =>
-        (Bitmap)Resources.ResourceManager.GetObject($"{NameM.ToLower()}_deserialize_24x24");
-
+    public override string Name => $"Deserialize {ModelName}";
+    public override string NickName => $"<{ModelNickname}";
+    public override string Description => $"Deserialize a {ModelName.ToLower()}.";
+    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{typeof(TModel).Name.ToLower()}_deserialize_24x24");
     public override GH_Exposure Exposure => GH_Exposure.tertiary;
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Text", "Tx", $"Text of serialized {NameM}.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Text", "Tx", $"Text of serialized {ModelName}.", GH_ParamAccess.item);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddParameter(new TParam(), NameM, ModelM.Code,
-            $"Deserialized {NameM}.", GH_ParamAccess.item);
+        pManager.AddParameter(new TParam(), ModelName, ModelNickname, $"Deserialized {ModelName}.", GH_ParamAccess.item);
     }
 
     protected override void SolveInstance(IGH_DataAccess DA)
@@ -744,8 +612,8 @@ public abstract class EntityParam<TGoo, TEntity, TEntityDiff, TEntityId> : Model
 }
 
 public abstract class EntityComponent<TParam, TGoo, TEntity, TEntityDiff, TEntityId> : ModelComponent<TParam, TGoo, TEntity>
-    where TParam : EntityParam<TGoo, TEntity, TEntityDiff, TEntityId>
-    where TGoo : EntityGoo<TEntity, TEntityDiff, TEntityId>
+    where TParam : EntityParam<TGoo, TEntity, TEntityDiff, TEntityId>, new()
+    where TGoo : EntityGoo<TEntity, TEntityDiff, TEntityId>, new()
     where TEntity : Model<TEntity>, new()
     where TEntityDiff : Model<TEntityDiff>, new()
     where TEntityId : Model<TEntityId>, new()
@@ -772,8 +640,8 @@ public abstract class EntityIdParam<TIdGoo, TEntity, TEntityDiff, TEntityId> : I
 }
 
 public abstract class EntityIdComponent<TIdParam, TIdGoo, TEntity, TEntityDiff, TEntityId> : IdComponent<TIdParam, TIdGoo, TEntityId>
-    where TIdParam : EntityIdParam<TIdGoo, TEntity, TEntityDiff, TEntityId>
-    where TIdGoo : EntityIdGoo<TEntity, TEntityDiff, TEntityId>
+    where TIdParam : EntityIdParam<TIdGoo, TEntity, TEntityDiff, TEntityId>, new()
+    where TIdGoo : EntityIdGoo<TEntity, TEntityDiff, TEntityId>, new()
     where TEntity : Model<TEntity>, new()
     where TEntityDiff : Model<TEntityDiff>, new()
     where TEntityId : Model<TEntityId>, new()
@@ -800,8 +668,8 @@ public abstract class EntityDiffParam<TDiffGoo, TEntity, TEntityDiff, TEntityId>
 }
 
 public abstract class EntityDiffComponent<TDiffParam, TDiffGoo, TEntity, TEntityDiff, TEntityId> : DiffComponent<TDiffParam, TDiffGoo, TEntityDiff>
-    where TDiffParam : EntityDiffParam<TDiffGoo, TEntity, TEntityDiff, TEntityId>
-    where TDiffGoo : EntityDiffGoo<TEntity, TEntityDiff, TEntityId>
+    where TDiffParam : EntityDiffParam<TDiffGoo, TEntity, TEntityDiff, TEntityId>, new()
+    where TDiffGoo : EntityDiffGoo<TEntity, TEntityDiff, TEntityId>, new()
     where TEntity : Model<TEntity>, new()
     where TEntityDiff : Model<TEntityDiff>, new()
     where TEntityId : Model<TEntityId>, new()
@@ -868,16 +736,56 @@ public class AttributeParam : ModelParam<AttributeGoo, Attribute>
 public class AttributeComponent : ModelComponent<AttributeParam, AttributeGoo, Attribute>
 {
     public override Guid ComponentGuid => new("51146B05-ACEB-4810-AD75-10AC3E029D39");
+    protected override string ModelName => "Attribute";
+    protected override string ModelNickname => "Atr";
+    protected override string ModelDescription => "Construct, deconstruct or modify an attribute.";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gd", "The guid of the attribute.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Key", "Ke", "The key of the attribute.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Value", "Vl?", "The optional value of the attribute.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Definition", "Df?", "The optional definition of the attribute.", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gd", "The guid of the attribute.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Key", "Ke", "The key of the attribute.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Value", "Vl?", "The optional value of the attribute.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Definition", "Df?", "The optional definition of the attribute.", GH_ParamAccess.item);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, Attribute model)
+    {
+        var guid = ""; var key = ""; var value = ""; var definition = "";
+        if (DA.GetData(2, ref guid)) model.Guid = guid;
+        if (DA.GetData(3, ref key)) model.Key = key;
+        if (DA.GetData(4, ref value)) model.Value = value;
+        if (DA.GetData(5, ref definition)) model.Definition = definition;
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, Attribute model)
+    {
+        DA.SetData(2, model.Guid);
+        DA.SetData(3, model.Key);
+        DA.SetData(4, model.Value);
+        DA.SetData(5, model.Definition);
+    }
 }
 
 public class SerializeAttributeComponent : SerializeComponent<AttributeParam, AttributeGoo, Attribute>
 {
     public override Guid ComponentGuid => new("C651F24C-BFF8-4821-8974-8588BCA75250");
+    protected override string ModelName => "Attribute";
+    protected override string ModelNickname => "Atr";
 }
 
 public class DeserializeAttributeComponent : DeserializeComponent<AttributeParam, AttributeGoo, Attribute>
 {
     public override Guid ComponentGuid => new("C651F24C-BFF8-4821-8975-8588BCA75250");
+    protected override string ModelName => "Attribute";
+    protected override string ModelNickname => "Atr";
 }
 
 public class AttributeIdGoo : IdGoo<AttributeId>
@@ -935,6 +843,30 @@ public class AttributeIdParam : IdParam<AttributeIdGoo, AttributeId>
 public class AttributeIdComponent : IdComponent<AttributeIdParam, AttributeIdGoo, AttributeId>
 {
     public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B92");
+    protected override string ModelName => "AttributeId";
+    protected override string ModelNickname => "AtI";
+    protected override string ModelDescription => "Construct, deconstruct or modify an attribute id.";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Key", "Ke?", "The optional key of the attribute.", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Key", "Ke?", "The optional key of the attribute.", GH_ParamAccess.item);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, AttributeId model)
+    {
+        var key = "";
+        if (DA.GetData(2, ref key)) model.Key = key;
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, AttributeId model)
+    {
+        DA.SetData(2, model.Key);
+    }
 }
 
 public class AttributeDiffGoo : DiffGoo<AttributeDiff>
@@ -998,6 +930,42 @@ public class AttributeDiffParam : DiffParam<AttributeDiffGoo, AttributeDiff>
 public class AttributeDiffComponent : DiffComponent<AttributeDiffParam, AttributeDiffGoo, AttributeDiff>
 {
     public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B96");
+    protected override string ModelName => "AttributeDiff";
+    protected override string ModelNickname => "ADf";
+    protected override string ModelDescription => "Construct, deconstruct or modify an attribute diff.";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gd?", "The optional guid of the attribute.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Key", "Ke?", "The optional key of the attribute.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Value", "Vl?", "The optional value of the attribute.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Definition", "Df?", "The optional definition of the attribute.", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gd?", "The optional guid of the attribute.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Key", "Ke?", "The optional key of the attribute.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Value", "Vl?", "The optional value of the attribute.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Definition", "Df?", "The optional definition of the attribute.", GH_ParamAccess.item);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, AttributeDiff model)
+    {
+        string guid = null, key = "", value = "", definition = "";
+        if (DA.GetData(2, ref guid)) model.Guid = guid;
+        if (DA.GetData(3, ref key)) model.Key = key;
+        if (DA.GetData(4, ref value)) model.Value = value;
+        if (DA.GetData(5, ref definition)) model.Definition = definition;
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, AttributeDiff model)
+    {
+        DA.SetData(2, model.Guid);
+        DA.SetData(3, model.Key);
+        DA.SetData(4, model.Value);
+        DA.SetData(5, model.Definition);
+    }
 }
 
 public class SerializeAttributeDiffComponent : SerializeComponent<AttributeDiffParam, AttributeDiffGoo, AttributeDiff>
@@ -1052,6 +1020,34 @@ public class CoordParam : ModelParam<CoordGoo, Coord>
 public class CoordComponent : ModelComponent<CoordParam, CoordGoo, Coord>
 {
     public override Guid ComponentGuid => new("61FB9BBE-64DE-42B2-B7EF-69CD97FDD9E3");
+    protected override string ModelName => "Coord";
+    protected override string ModelNickname => "DPt";
+    protected override string ModelDescription => "Construct, deconstruct or modify a 2d coordinate.";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddNumberParameter("U", "U", "The u-coordinate.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("V", "V", "The v-coordinate.", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddNumberParameter("U", "U", "The u-coordinate.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("V", "V", "The v-coordinate.", GH_ParamAccess.item);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, Coord model)
+    {
+        double u = 0, v = 0;
+        if (DA.GetData(2, ref u)) model.U = (float)u;
+        if (DA.GetData(3, ref v)) model.V = (float)v;
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, Coord model)
+    {
+        DA.SetData(2, model.U);
+        DA.SetData(3, model.V);
+    }
 }
 
 public class SerializeCoordComponent : SerializeComponent<CoordParam, CoordGoo, Coord>
@@ -1104,6 +1100,39 @@ public class LocationParam : ModelParam<LocationGoo, Location>
 public class LocationComponent : ModelComponent<LocationParam, LocationGoo, Location>
 {
     public override Guid ComponentGuid => new("6F2EDF42-6E10-4944-8B05-4D41F4876ED0");
+    protected override string ModelName => "Location";
+    protected override string ModelNickname => "Loc";
+    protected override string ModelDescription => "Construct, deconstruct or modify a location.";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddNumberParameter("Longitude", "Lo", "The longitude in degrees.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Latitude", "La", "The latitude in degrees.", GH_ParamAccess.item);
+        pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddNumberParameter("Longitude", "Lo", "The longitude in degrees.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Latitude", "La", "The latitude in degrees.", GH_ParamAccess.item);
+        pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, Location model)
+    {
+        double lon = 0, lat = 0;
+        var attributes = new List<AttributeGoo>();
+        if (DA.GetData(2, ref lon)) model.Longitude = (float)lon;
+        if (DA.GetData(3, ref lat)) model.Latitude = (float)lat;
+        if (DA.GetDataList(4, attributes)) model.Attributes = attributes.Select(a => a.Value.DeepClone()).ToList();
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, Location model)
+    {
+        DA.SetData(2, model.Longitude);
+        DA.SetData(3, model.Latitude);
+        DA.SetDataList(4, model.Attributes?.Select(a => new AttributeGoo(a.DeepClone())).ToList());
+    }
 }
 
 public class SerializeLocationComponent : SerializeComponent<LocationParam, LocationGoo, Location>
@@ -1155,6 +1184,43 @@ public class AuthorParam : ModelParam<AuthorGoo, Author>
 public class AuthorComponent : ModelComponent<AuthorParam, AuthorGoo, Author>
 {
     public override Guid ComponentGuid => new("5143ED92-0A2C-4D0C-84ED-F90CC8450894");
+    protected override string ModelName => "Author";
+    protected override string ModelNickname => "Aut";
+    protected override string ModelDescription => "Construct, deconstruct or modify an author.";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gd", "The guid of the author.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Na", "The name of the author.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Email", "Em", "The email of the author.", GH_ParamAccess.item);
+        pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gd", "The guid of the author.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Na", "The name of the author.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Email", "Em", "The email of the author.", GH_ParamAccess.item);
+        pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, Author model)
+    {
+        string guid = "", name = "", email = "";
+        var attributes = new List<AttributeGoo>();
+        if (DA.GetData(2, ref guid)) model.Guid = guid;
+        if (DA.GetData(3, ref name)) model.Name = name;
+        if (DA.GetData(4, ref email)) model.Email = email;
+        if (DA.GetDataList(5, attributes)) model.Attributes = attributes.Select(a => a.Value.DeepClone()).ToList();
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, Author model)
+    {
+        DA.SetData(2, model.Guid);
+        DA.SetData(3, model.Name);
+        DA.SetData(4, model.Email);
+        DA.SetDataList(5, model.Attributes?.Select(a => new AttributeGoo(a.DeepClone())).ToList());
+    }
 }
 
 public class SerializeAuthorComponent : SerializeComponent<AuthorParam, AuthorGoo, Author>
@@ -1204,6 +1270,30 @@ public class AuthorIdParam : IdParam<AuthorIdGoo, AuthorId>
 public class AuthorIdComponent : IdComponent<AuthorIdParam, AuthorIdGoo, AuthorId>
 {
     public override Guid ComponentGuid => new("96775DC9-9079-4A22-8376-6AB8F58C8B1D");
+    protected override string ModelName => "AuthorId";
+    protected override string ModelNickname => "AuI";
+    protected override string ModelDescription => "Construct, deconstruct or modify an author id.";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Email", "Em", "The email of the author.", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Email", "Em", "The email of the author.", GH_ParamAccess.item);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, AuthorId model)
+    {
+        string email = "";
+        if (DA.GetData(2, ref email)) model.Email = email;
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, AuthorId model)
+    {
+        DA.SetData(2, model.Email);
+    }
 }
 
 #endregion Author
@@ -1245,6 +1335,42 @@ public class FileParam : ModelParam<FileGoo, File>
 public class FileComponent : ModelComponent<FileParam, FileGoo, File>
 {
     public override Guid ComponentGuid => new("60D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7F9");
+    protected override string ModelName => "File";
+    protected override string ModelNickname => "Fil";
+    protected override string ModelDescription => "Construct, deconstruct or modify a file.";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gd", "The guid of the file.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Nm", "The name of the file.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Remote", "Rm?", "The optional remote url.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Folder", "Fo?", "The optional folder path.", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gd", "The guid of the file.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Nm", "The name of the file.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Remote", "Rm?", "The optional remote url.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Folder", "Fo?", "The optional folder path.", GH_ParamAccess.item);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, File model)
+    {
+        string guid = "", name = "", remote = "", folderGuid = "";
+        if (DA.GetData(2, ref guid)) model.Guid = guid;
+        if (DA.GetData(3, ref name)) model.Name = name;
+        if (DA.GetData(4, ref remote)) model.Remote = remote;
+        if (DA.GetData(5, ref folderGuid)) model.Folder = new FolderId { Guid = folderGuid };
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, File model)
+    {
+        DA.SetData(2, model.Guid);
+        DA.SetData(3, model.Name);
+        DA.SetData(4, model.Remote);
+        DA.SetData(5, model.Folder?.Guid ?? "");
+    }
 }
 
 public class SerializeFileComponent : SerializeComponent<FileParam, FileGoo, File>
@@ -1575,7 +1701,7 @@ public class QualityIdGoo : IdGoo<QualityId>
         }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Key);
+            target = (Q)(object)new GH_String(Value.Guid);
             return true;
         }
         return false;
@@ -1727,7 +1853,7 @@ public class PropGoo : ModelGoo<Prop>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Key);
+            target = (Q)(object)new GH_String(Value.Quality.Guid);
             return true;
         }
         return false;
@@ -1795,7 +1921,7 @@ public class ModelGoo : ModelGoo<Model>
         if (source is null) return false;
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new Model { Tags = new List<string> { str } };
+            Value = new Model { Guid = str };
             return true;
         }
         return false;
@@ -1810,14 +1936,56 @@ public class ModelParam : ModelParam<ModelGoo, Model>
 public class ModelComponent : ModelComponent<ModelParam, ModelGoo, Model>
 {
     public override Guid ComponentGuid => new("37228B2F-70DF-44B7-A3B6-781D5AFCE122");
+    protected override string ModelName => "Model";
+    protected override string ModelNickname => "Rep";
+    protected override string ModelDescription => "Construct, deconstruct or modify a model.";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gd", "The guid of the model.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Nm?", "The optional name of the model.", GH_ParamAccess.item);
+        pManager.AddTextParameter("FileGuid", "Fl", "The file guid of the model.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+        pManager.AddTextParameter("TagGuids", "Tg*", "The optional tag guids.", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gd", "The guid of the model.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Nm?", "The optional name of the model.", GH_ParamAccess.item);
+        pManager.AddTextParameter("FileGuid", "Fl", "The file guid of the model.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+        pManager.AddTextParameter("TagGuids", "Tg*", "The optional tag guids.", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, Model model)
+    {
+        string guid = "", name = "", fileGuid = "", description = "";
+        var tagGuids = new List<string>();
+        var attributes = new List<AttributeGoo>();
+
+        if (DA.GetData(2, ref guid)) model.Guid = guid;
+        if (DA.GetData(3, ref name)) model.Name = name;
+        if (DA.GetData(4, ref fileGuid)) model.File = new FileId { Guid = fileGuid };
+        if (DA.GetData(5, ref description)) model.Description = description;
+        if (DA.GetDataList(6, tagGuids)) model.Tags = tagGuids.Select(t => new TagId { Guid = t }).ToList();
+        if (DA.GetDataList(7, attributes)) model.Attributes = attributes.Select(a => a.Value.DeepClone()).ToList();
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, Model model)
+    {
+        DA.SetData(2, model.Guid);
+        DA.SetData(3, model.Name);
+        DA.SetData(4, model.File.Guid);
+        DA.SetData(5, model.Description);
+        DA.SetDataList(6, model.Tags.Select(t => t.Guid).ToList());
+        DA.SetDataList(7, model.Attributes?.Select(a => new AttributeGoo(a.DeepClone())).ToList());
+    }
 
     protected override Model ProcessModel(Model model)
     {
-        var mime = Semio.Utility.ParseMimeFromUrl(model.File);
-        var firstTag = model.Tags.FirstOrDefault();
-        if (firstTag is null || (mime != "" && !Semio.Utility.IsValidMime(firstTag))) model.Tags.Insert(0, mime);
-        model.File = model.File.Replace('\\', '/');
-        if (firstTag is not null && Semio.Utility.IsValidMime(firstTag)) model.Tags[0] = firstTag;
         return model;
     }
 }
@@ -1874,7 +2042,7 @@ public class ModelIdGoo : IdGoo<ModelId>
         }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new ModelId { Tags = new List<string> { str } };
+            Value = new ModelId { Guid = str };
             return true;
         }
         return false;
@@ -2075,6 +2243,64 @@ public class PortParam : ModelParam<PortGoo, Port>
 public class PortComponent : ModelComponent<PortParam, PortGoo, Port>
 {
     public override Guid ComponentGuid => new("E505C90C-71F4-413F-82FE-65559D9FFAB5");
+    protected override string ModelName => "Port";
+    protected override string ModelNickname => "Por";
+    protected override string ModelDescription => "Construct, deconstruct or modify a port.";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gd", "The guid of the port.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Nm?", "The optional name of the port.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Mandatory", "Ma?", "Whether the port is mandatory.", GH_ParamAccess.item);
+        pManager.AddPointParameter("Point", "Pt", "The connection point.", GH_ParamAccess.item);
+        pManager.AddVectorParameter("Direction", "Dr", "The direction of the port.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("T", "T", "The t parameter [0,1[.", GH_ParamAccess.item);
+        pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gd", "The guid of the port.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Nm?", "The optional name of the port.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Mandatory", "Ma?", "Whether the port is mandatory.", GH_ParamAccess.item);
+        pManager.AddPointParameter("Point", "Pt", "The connection point.", GH_ParamAccess.item);
+        pManager.AddVectorParameter("Direction", "Dr", "The direction of the port.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("T", "T", "The t parameter [0,1[.", GH_ParamAccess.item);
+        pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, Port model)
+    {
+        string guid = "", name = "", description = "";
+        bool mandatory = false;
+        Point3d point = Point3d.Origin;
+        Vector3d direction = Vector3d.YAxis;
+        double t = 0;
+        var attributes = new List<AttributeGoo>();
+        
+        if (DA.GetData(2, ref guid)) model.Guid = guid;
+        if (DA.GetData(3, ref name)) model.Name = name;
+        if (DA.GetData(4, ref description)) model.Description = description;
+        if (DA.GetData(5, ref mandatory)) model.Mandatory = mandatory;
+        if (DA.GetData(6, ref point)) model.Point = RhinoConverter.Convert(point);
+        if (DA.GetData(7, ref direction)) model.Direction = RhinoConverter.Convert(direction);
+        if (DA.GetData(8, ref t)) model.T = (float)t;
+        if (DA.GetDataList(9, attributes)) model.Attributes = attributes.Select(a => a.Value.DeepClone()).ToList();
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, Port model)
+    {
+        DA.SetData(2, model.Guid);
+        DA.SetData(3, model.Name);
+        DA.SetData(4, model.Description);
+        DA.SetData(5, model.Mandatory);
+        DA.SetData(6, model.Point is not null ? RhinoConverter.Convert(model.Point) : Point3d.Origin);
+        DA.SetData(7, model.Direction is not null ? RhinoConverter.Convert(model.Direction) : Vector3d.YAxis);
+        DA.SetData(8, model.T);
+        DA.SetDataList(9, model.Attributes?.Select(a => new AttributeGoo(a.DeepClone())).ToList());
+    }
 }
 
 public class SerializePortComponent : SerializeComponent<PortParam, PortGoo, Port>
@@ -2350,6 +2576,81 @@ public class TypeParam : ModelParam<TypeGoo, Type>
 public class TypeComponent : ModelComponent<TypeParam, TypeGoo, Type>
 {
     public override Guid ComponentGuid => new("7E250257-FA4B-4B0D-B519-B0AD778A66A7");
+    protected override string ModelName => "Type";
+    protected override string ModelNickname => "Typ";
+    protected override string ModelDescription => "Construct, deconstruct or modify a type.";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gd", "The guid of the type.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Na", "The name of the type.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Icon", "Ic?", "The optional icon.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Image", "Im?", "The optional image url.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Unit", "Ut", "The length unit.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Virtual", "Vi?", "Whether the type is virtual.", GH_ParamAccess.item);
+        pManager.AddIntegerParameter("Stock", "St?", "The stock quantity.", GH_ParamAccess.item);
+        pManager.AddParameter(new ModelParam(), "Models", "Rp*", "The optional models.", GH_ParamAccess.list);
+        pManager.AddParameter(new PortParam(), "Ports", "Po*", "The optional ports.", GH_ParamAccess.list);
+        pManager.AddParameter(new AuthorIdParam(), "Authors", "Au*", "The optional authors.", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gd", "The guid of the type.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Na", "The name of the type.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Icon", "Ic?", "The optional icon.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Image", "Im?", "The optional image url.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Unit", "Ut", "The length unit.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Virtual", "Vi?", "Whether the type is virtual.", GH_ParamAccess.item);
+        pManager.AddIntegerParameter("Stock", "St?", "The stock quantity.", GH_ParamAccess.item);
+        pManager.AddParameter(new ModelParam(), "Models", "Rp*", "The optional models.", GH_ParamAccess.list);
+        pManager.AddParameter(new PortParam(), "Ports", "Po*", "The optional ports.", GH_ParamAccess.list);
+        pManager.AddParameter(new AuthorIdParam(), "Authors", "Au*", "The optional authors.", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, Type model)
+    {
+        string guid = "", name = "", description = "", icon = "", image = "", unit = "";
+        bool virtual_ = false;
+        int stock = 0;
+        var models = new List<ModelGoo>();
+        var ports = new List<PortGoo>();
+        var authors = new List<AuthorIdGoo>();
+        var attributes = new List<AttributeGoo>();
+
+        if (DA.GetData(2, ref guid)) model.Guid = guid;
+        if (DA.GetData(3, ref name)) model.Name = name;
+        if (DA.GetData(4, ref description)) model.Description = description;
+        if (DA.GetData(5, ref icon)) model.Icon = icon;
+        if (DA.GetData(6, ref image)) model.Image = image;
+        if (DA.GetData(7, ref unit)) model.Unit = unit;
+        if (DA.GetData(8, ref virtual_)) model.Virtual = virtual_;
+        if (DA.GetData(9, ref stock)) model.Stock = stock;
+        if (DA.GetDataList(10, models)) model.Models = models.Select(m => m.Value.DeepClone()).ToList();
+        if (DA.GetDataList(11, ports)) model.Ports = ports.Select(p => p.Value.DeepClone()).ToList();
+        if (DA.GetDataList(12, authors)) model.Authors = authors.Select(a => a.Value.DeepClone()).ToList();
+        if (DA.GetDataList(13, attributes)) model.Attributes = attributes.Select(a => a.Value.DeepClone()).ToList();
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, Type model)
+    {
+        DA.SetData(2, model.Guid);
+        DA.SetData(3, model.Name);
+        DA.SetData(4, model.Description);
+        DA.SetData(5, model.Icon);
+        DA.SetData(6, model.Image);
+        DA.SetData(7, model.Unit);
+        DA.SetData(8, model.Virtual);
+        DA.SetData(9, model.Stock);
+        DA.SetDataList(10, model.Models?.Select(m => new ModelGoo(m.DeepClone())).ToList());
+        DA.SetDataList(11, model.Ports?.Select(p => new PortGoo(p.DeepClone())).ToList());
+        DA.SetDataList(12, model.Authors?.Select(a => new AuthorIdGoo(a.DeepClone())).ToList());
+        DA.SetDataList(13, model.Attributes?.Select(a => new AttributeGoo(a.DeepClone())).ToList());
+    }
 
     protected override Type ProcessModel(Type type)
     {
@@ -2607,6 +2908,38 @@ public class LayerParam : ModelParam<LayerGoo, Layer>
 public class LayerComponent : ModelComponent<LayerParam, LayerGoo, Layer>
 {
     public override Guid ComponentGuid => new("90A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
+    protected override string ModelName => "Layer";
+    protected override string ModelNickname => "Lyr";
+    protected override string ModelDescription => "Construct, deconstruct or modify a layer.";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Name", "Na", "The name of the layer.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Color", "Cl?", "The optional hex color.", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Name", "Na", "The name of the layer.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Color", "Cl?", "The optional hex color.", GH_ParamAccess.item);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, Layer model)
+    {
+        string name = "", description = "", color = "";
+        if (DA.GetData(2, ref name)) model.Name = name;
+        if (DA.GetData(3, ref description)) model.Description = description;
+        if (DA.GetData(4, ref color)) model.Color = color;
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, Layer model)
+    {
+        DA.SetData(2, model.Name);
+        DA.SetData(3, model.Description);
+        DA.SetData(4, model.Color);
+    }
 }
 
 public class SerializeLayerComponent : SerializeComponent<LayerParam, LayerGoo, Layer>
@@ -2666,6 +2999,49 @@ public class GroupParam : ModelParam<GroupGoo, Group>
 public class GroupComponent : ModelComponent<GroupParam, GroupGoo, Group>
 {
     public override Guid ComponentGuid => new("A0A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
+    protected override string ModelName => "Group";
+    protected override string ModelNickname => "Grp";
+    protected override string ModelDescription => "Construct, deconstruct or modify a group.";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Name", "Na?", "The optional name of the group.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+        pManager.AddParameter(new PieceIdParam(), "Pieces", "Pc*", "The pieces in the group.", GH_ParamAccess.list);
+        pManager.AddTextParameter("Color", "Cl?", "The optional hex color.", GH_ParamAccess.item);
+        pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Name", "Na?", "The optional name of the group.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+        pManager.AddParameter(new PieceIdParam(), "Pieces", "Pc*", "The pieces in the group.", GH_ParamAccess.list);
+        pManager.AddTextParameter("Color", "Cl?", "The optional hex color.", GH_ParamAccess.item);
+        pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, Group model)
+    {
+        string name = "", description = "", color = "";
+        var pieces = new List<PieceIdGoo>();
+        var attributes = new List<AttributeGoo>();
+
+        if (DA.GetData(2, ref name)) model.Name = name;
+        if (DA.GetData(3, ref description)) model.Description = description;
+        if (DA.GetDataList(4, pieces)) model.Pieces = pieces.Select(p => p.Value.DeepClone()).ToList();
+        if (DA.GetData(5, ref color)) model.Color = color;
+        if (DA.GetDataList(6, attributes)) model.Attributes = attributes.Select(a => a.Value.DeepClone()).ToList();
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, Group model)
+    {
+        DA.SetData(2, model.Name);
+        DA.SetData(3, model.Description);
+        DA.SetDataList(4, model.Pieces?.Select(p => new PieceIdGoo(p.DeepClone())).ToList());
+        DA.SetData(5, model.Color);
+        DA.SetDataList(6, model.Attributes?.Select(a => new AttributeGoo(a.DeepClone())).ToList());
+    }
 }
 
 public class SerializeGroupComponent : SerializeComponent<GroupParam, GroupGoo, Group>
@@ -2754,6 +3130,59 @@ public class PieceParam : ModelParam<PieceGoo, Piece>
 public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
 {
     public override Guid ComponentGuid => new("49CD29FC-F6EB-43D2-8C7D-E88F8520BA48");
+    protected override string ModelName => "Piece";
+    protected override string ModelNickname => "Pce";
+    protected override string ModelDescription => "Construct, deconstruct or modify a piece.";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gd", "The guid of the piece.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Nm?", "The optional name of the piece.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+        pManager.AddParameter(new TypeIdParam(), "Type", "Ty?", "The optional type of the piece.", GH_ParamAccess.item);
+        pManager.AddPlaneParameter("Plane", "Pl?", "The optional plane of the piece.", GH_ParamAccess.item);
+        pManager.AddParameter(new CoordParam(), "Center", "Ce?", "The optional center in the diagram.", GH_ParamAccess.item);
+        pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gd", "The guid of the piece.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Nm?", "The optional name of the piece.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+        pManager.AddParameter(new TypeIdParam(), "Type", "Ty?", "The optional type of the piece.", GH_ParamAccess.item);
+        pManager.AddPlaneParameter("Plane", "Pl?", "The optional plane of the piece.", GH_ParamAccess.item);
+        pManager.AddParameter(new CoordParam(), "Center", "Ce?", "The optional center in the diagram.", GH_ParamAccess.item);
+        pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, Piece model)
+    {
+        string guid = "", name = "", description = "";
+        var type = new TypeIdGoo();
+        Rhino.Geometry.Plane plane = Rhino.Geometry.Plane.WorldXY;
+        var center = new CoordGoo();
+        var attributes = new List<AttributeGoo>();
+
+        if (DA.GetData(2, ref guid)) model.Guid = guid;
+        if (DA.GetData(3, ref name)) model.Name = name;
+        if (DA.GetData(4, ref description)) model.Description = description;
+        if (DA.GetData(5, ref type)) model.Type = type.Value.DeepClone();
+        if (DA.GetData(6, ref plane)) model.Plane = RhinoConverter.Convert(plane);
+        if (DA.GetData(7, ref center)) model.Center = center.Value.DeepClone();
+        if (DA.GetDataList(8, attributes)) model.Attributes = attributes.Select(a => a.Value.DeepClone()).ToList();
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, Piece model)
+    {
+        DA.SetData(2, model.Guid);
+        DA.SetData(3, model.Name);
+        DA.SetData(4, model.Description);
+        DA.SetData(5, model.Type is not null ? new TypeIdGoo(model.Type.DeepClone()) : null);
+        DA.SetData(6, model.Plane is not null ? RhinoConverter.Convert(model.Plane) : Rhino.Geometry.Plane.WorldXY);
+        DA.SetData(7, model.Center is not null ? new CoordGoo(model.Center.DeepClone()) : null);
+        DA.SetDataList(8, model.Attributes?.Select(a => new AttributeGoo(a.DeepClone())).ToList());
+    }
 }
 
 public class SerializePieceComponent : SerializeComponent<PieceParam, PieceGoo, Piece>
@@ -2994,6 +3423,41 @@ public class SideParam : ModelParam<SideGoo, Side>
 public class SideComponent : ModelComponent<SideParam, SideGoo, Side>
 {
     public override Guid ComponentGuid => new("B0C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E7");
+    protected override string ModelName => "Side";
+    protected override string ModelNickname => "Sde";
+    protected override string ModelDescription => "Construct, deconstruct or modify a side.";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new PieceIdParam(), "Piece", "Pc", "The piece of the side.", GH_ParamAccess.item);
+        pManager.AddParameter(new PieceIdParam(), "DesignPiece", "DP?", "The optional design piece.", GH_ParamAccess.item);
+        pManager.AddParameter(new PortIdParam(), "Port", "Po", "The port of the side.", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new PieceIdParam(), "Piece", "Pc", "The piece of the side.", GH_ParamAccess.item);
+        pManager.AddParameter(new PieceIdParam(), "DesignPiece", "DP?", "The optional design piece.", GH_ParamAccess.item);
+        pManager.AddParameter(new PortIdParam(), "Port", "Po", "The port of the side.", GH_ParamAccess.item);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, Side model)
+    {
+        var piece = new PieceIdGoo();
+        var designPiece = new PieceIdGoo();
+        var port = new PortIdGoo();
+
+        if (DA.GetData(2, ref piece)) model.Piece = piece.Value.DeepClone();
+        if (DA.GetData(3, ref designPiece)) model.DesignPiece = designPiece.Value.DeepClone();
+        if (DA.GetData(4, ref port)) model.Port = port.Value.DeepClone();
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, Side model)
+    {
+        DA.SetData(2, new PieceIdGoo(model.Piece.DeepClone()));
+        DA.SetData(3, model.DesignPiece is not null ? new PieceIdGoo(model.DesignPiece.DeepClone()) : null);
+        DA.SetData(4, new PortIdGoo(model.Port.DeepClone()));
+    }
 }
 
 public class SerializeSideComponent : SerializeComponent<SideParam, SideGoo, Side>
@@ -3133,6 +3597,75 @@ public class ConnectionParam : ModelParam<ConnectionGoo, Connection>
 public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo, Connection>
 {
     public override Guid ComponentGuid => new("AB212F90-124C-4985-B3EE-1C13D7827560");
+    protected override string ModelName => "Connection";
+    protected override string ModelNickname => "Con";
+    protected override string ModelDescription => "Construct, deconstruct or modify a connection.";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gd", "The guid of the connection.", GH_ParamAccess.item);
+        pManager.AddParameter(new SideParam(), "Connected", "Cd", "The connected side.", GH_ParamAccess.item);
+        pManager.AddParameter(new SideParam(), "Connecting", "Cg", "The connecting side.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Gap", "Gp", "The longitudinal gap.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Shift", "Sf", "The lateral shift.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Rise", "Rs", "The vertical rise.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Rotation", "Rt", "The rotation around y-axis.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Turn", "Tn", "The turn around z-axis.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Tilt", "Tl", "The tilt around x-axis.", GH_ParamAccess.item);
+        pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gd", "The guid of the connection.", GH_ParamAccess.item);
+        pManager.AddParameter(new SideParam(), "Connected", "Cd", "The connected side.", GH_ParamAccess.item);
+        pManager.AddParameter(new SideParam(), "Connecting", "Cg", "The connecting side.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Gap", "Gp", "The longitudinal gap.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Shift", "Sf", "The lateral shift.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Rise", "Rs", "The vertical rise.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Rotation", "Rt", "The rotation around y-axis.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Turn", "Tn", "The turn around z-axis.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Tilt", "Tl", "The tilt around x-axis.", GH_ParamAccess.item);
+        pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, Connection model)
+    {
+        string guid = "", description = "";
+        var connected = new SideGoo();
+        var connecting = new SideGoo();
+        double gap = 0, shift = 0, rise = 0, rotation = 0, turn = 0, tilt = 0;
+        var attributes = new List<AttributeGoo>();
+
+        if (DA.GetData(2, ref guid)) model.Guid = guid;
+        if (DA.GetData(3, ref connected)) model.Connected = connected.Value.DeepClone();
+        if (DA.GetData(4, ref connecting)) model.Connecting = connecting.Value.DeepClone();
+        if (DA.GetData(5, ref description)) model.Description = description;
+        if (DA.GetData(6, ref gap)) model.Gap = (float)gap;
+        if (DA.GetData(7, ref shift)) model.Shift = (float)shift;
+        if (DA.GetData(8, ref rise)) model.Rise = (float)rise;
+        if (DA.GetData(9, ref rotation)) model.Rotation = (float)rotation;
+        if (DA.GetData(10, ref turn)) model.Turn = (float)turn;
+        if (DA.GetData(11, ref tilt)) model.Tilt = (float)tilt;
+        if (DA.GetDataList(12, attributes)) model.Attributes = attributes.Select(a => a.Value.DeepClone()).ToList();
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, Connection model)
+    {
+        DA.SetData(2, model.Guid);
+        DA.SetData(3, new SideGoo(model.Connected.DeepClone()));
+        DA.SetData(4, new SideGoo(model.Connecting.DeepClone()));
+        DA.SetData(5, model.Description);
+        DA.SetData(6, model.Gap);
+        DA.SetData(7, model.Shift);
+        DA.SetData(8, model.Rise);
+        DA.SetData(9, model.Rotation);
+        DA.SetData(10, model.Turn);
+        DA.SetData(11, model.Tilt);
+        DA.SetDataList(12, model.Attributes?.Select(a => new AttributeGoo(a.DeepClone())).ToList());
+    }
 }
 
 public class SerializeConnectionComponent : SerializeComponent<ConnectionParam, ConnectionGoo, Connection>
@@ -3390,6 +3923,53 @@ public class StatParam : ModelParam<StatGoo, Stat>
 public class StatComponent : ModelComponent<StatParam, StatGoo, Stat>
 {
     public override Guid ComponentGuid => new("80A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
+    protected override string ModelName => "Stat";
+    protected override string ModelNickname => "Stt";
+    protected override string ModelDescription => "Construct, deconstruct or modify a stat.";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Key", "Ke", "The key of the quality.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Unit", "Ut?", "The optional unit.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Min", "Mi?", "The optional minimum value.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("MinExcluded", "MiE?", "Whether min is excluded.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Max", "Mx?", "The optional maximum value.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("MaxExcluded", "MxE?", "Whether max is excluded.", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Key", "Ke", "The key of the quality.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Unit", "Ut?", "The optional unit.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Min", "Mi?", "The optional minimum value.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("MinExcluded", "MiE?", "Whether min is excluded.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Max", "Mx?", "The optional maximum value.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("MaxExcluded", "MxE?", "Whether max is excluded.", GH_ParamAccess.item);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, Stat model)
+    {
+        string key = "", unit = "";
+        double min = 0, max = 0;
+        bool minExcluded = false, maxExcluded = false;
+
+        if (DA.GetData(2, ref key)) model.Key = key;
+        if (DA.GetData(3, ref unit)) model.Unit = unit;
+        if (DA.GetData(4, ref min)) model.Min = (float)min;
+        if (DA.GetData(5, ref minExcluded)) model.MinExcluded = minExcluded;
+        if (DA.GetData(6, ref max)) model.Max = (float)max;
+        if (DA.GetData(7, ref maxExcluded)) model.MaxExcluded = maxExcluded;
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, Stat model)
+    {
+        DA.SetData(2, model.Key);
+        DA.SetData(3, model.Unit);
+        DA.SetData(4, model.Min);
+        DA.SetData(5, model.MinExcluded);
+        DA.SetData(6, model.Max);
+        DA.SetData(7, model.MaxExcluded);
+    }
 }
 
 public class SerializeStatComponent : SerializeComponent<StatParam, StatGoo, Stat>
@@ -3463,6 +4043,72 @@ public class DesignParam : ModelParam<DesignGoo, Design>
 public class DesignComponent : ModelComponent<DesignParam, DesignGoo, Design>
 {
     public override Guid ComponentGuid => new("AAD8D144-2EEE-48F1-A8A9-52977E86CB54");
+    protected override string ModelName => "Design";
+    protected override string ModelNickname => "Dsn";
+    protected override string ModelDescription => "Construct, deconstruct or modify a design.";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gd", "The guid of the design.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Na", "The name of the design.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Icon", "Ic?", "The optional icon.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Image", "Im?", "The optional image url.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Unit", "Ut", "The length unit.", GH_ParamAccess.item);
+        pManager.AddParameter(new PieceParam(), "Pieces", "Pc*", "The optional pieces.", GH_ParamAccess.list);
+        pManager.AddParameter(new ConnectionParam(), "Connections", "Co*", "The optional connections.", GH_ParamAccess.list);
+        pManager.AddParameter(new AuthorIdParam(), "Authors", "Au*", "The optional authors.", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gd", "The guid of the design.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Na", "The name of the design.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Icon", "Ic?", "The optional icon.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Image", "Im?", "The optional image url.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Unit", "Ut", "The length unit.", GH_ParamAccess.item);
+        pManager.AddParameter(new PieceParam(), "Pieces", "Pc*", "The optional pieces.", GH_ParamAccess.list);
+        pManager.AddParameter(new ConnectionParam(), "Connections", "Co*", "The optional connections.", GH_ParamAccess.list);
+        pManager.AddParameter(new AuthorIdParam(), "Authors", "Au*", "The optional authors.", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, Design model)
+    {
+        string guid = "", name = "", description = "", icon = "", image = "", unit = "";
+        var pieces = new List<PieceGoo>();
+        var connections = new List<ConnectionGoo>();
+        var authors = new List<AuthorIdGoo>();
+        var attributes = new List<AttributeGoo>();
+
+        if (DA.GetData(2, ref guid)) model.Guid = guid;
+        if (DA.GetData(3, ref name)) model.Name = name;
+        if (DA.GetData(4, ref description)) model.Description = description;
+        if (DA.GetData(5, ref icon)) model.Icon = icon;
+        if (DA.GetData(6, ref image)) model.Image = image;
+        if (DA.GetData(7, ref unit)) model.Unit = unit;
+        if (DA.GetDataList(8, pieces)) model.Pieces = pieces.Select(p => p.Value.DeepClone()).ToList();
+        if (DA.GetDataList(9, connections)) model.Connections = connections.Select(c => c.Value.DeepClone()).ToList();
+        if (DA.GetDataList(10, authors)) model.Authors = authors.Select(a => a.Value.DeepClone()).ToList();
+        if (DA.GetDataList(11, attributes)) model.Attributes = attributes.Select(a => a.Value.DeepClone()).ToList();
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, Design model)
+    {
+        DA.SetData(2, model.Guid);
+        DA.SetData(3, model.Name);
+        DA.SetData(4, model.Description);
+        DA.SetData(5, model.Icon);
+        DA.SetData(6, model.Image);
+        DA.SetData(7, model.Unit);
+        DA.SetDataList(8, model.Pieces?.Select(p => new PieceGoo(p.DeepClone())).ToList());
+        DA.SetDataList(9, model.Connections?.Select(c => new ConnectionGoo(c.DeepClone())).ToList());
+        DA.SetDataList(10, model.Authors?.Select(a => new AuthorIdGoo(a.DeepClone())).ToList());
+        DA.SetDataList(11, model.Attributes?.Select(a => new AttributeGoo(a.DeepClone())).ToList());
+    }
+
     protected override Design ProcessModel(Design design)
     {
         if (design.Unit == "")
@@ -3722,6 +4368,84 @@ public class KitParam : ModelParam<KitGoo, Kit>
 public class KitComponent : ModelComponent<KitParam, KitGoo, Kit>
 {
     public override Guid ComponentGuid => new("987560A8-10D4-43F6-BEBE-D71DC2FD86AF");
+    protected override string ModelName => "Kit";
+    protected override string ModelNickname => "Kit";
+    protected override string ModelDescription => "Construct, deconstruct or modify a kit.";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gd", "The guid of the kit.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Na", "The name of the kit.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Version", "Vr?", "The optional version.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Icon", "Ic?", "The optional icon.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Image", "Im?", "The optional image url.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Remote", "Rm?", "The optional remote url.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Homepage", "Hp?", "The optional homepage url.", GH_ParamAccess.item);
+        pManager.AddTextParameter("License", "Li?", "The optional license.", GH_ParamAccess.item);
+        pManager.AddParameter(new TypeParam(), "Types", "Ty*", "The optional types.", GH_ParamAccess.list);
+        pManager.AddParameter(new DesignParam(), "Designs", "Dn*", "The optional designs.", GH_ParamAccess.list);
+        pManager.AddParameter(new AuthorParam(), "Authors", "Au*", "The optional authors.", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gd", "The guid of the kit.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Na", "The name of the kit.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Version", "Vr?", "The optional version.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Icon", "Ic?", "The optional icon.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Image", "Im?", "The optional image url.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Remote", "Rm?", "The optional remote url.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Homepage", "Hp?", "The optional homepage url.", GH_ParamAccess.item);
+        pManager.AddTextParameter("License", "Li?", "The optional license.", GH_ParamAccess.item);
+        pManager.AddParameter(new TypeParam(), "Types", "Ty*", "The optional types.", GH_ParamAccess.list);
+        pManager.AddParameter(new DesignParam(), "Designs", "Dn*", "The optional designs.", GH_ParamAccess.list);
+        pManager.AddParameter(new AuthorParam(), "Authors", "Au*", "The optional authors.", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, Kit model)
+    {
+        string guid = "", name = "", version = "", description = "", icon = "", image = "", remote = "", homepage = "", license = "";
+        var types = new List<TypeGoo>();
+        var designs = new List<DesignGoo>();
+        var authors = new List<AuthorGoo>();
+        var attributes = new List<AttributeGoo>();
+
+        if (DA.GetData(2, ref guid)) model.Guid = guid;
+        if (DA.GetData(3, ref name)) model.Name = name;
+        if (DA.GetData(4, ref version)) model.Version = version;
+        if (DA.GetData(5, ref description)) model.Description = description;
+        if (DA.GetData(6, ref icon)) model.Icon = icon;
+        if (DA.GetData(7, ref image)) model.Image = image;
+        if (DA.GetData(8, ref remote)) model.Remote = remote;
+        if (DA.GetData(9, ref homepage)) model.Homepage = homepage;
+        if (DA.GetData(10, ref license)) model.License = license;
+        if (DA.GetDataList(11, types)) model.Types = types.Select(t => t.Value.DeepClone()).ToList();
+        if (DA.GetDataList(12, designs)) model.Designs = designs.Select(d => d.Value.DeepClone()).ToList();
+        if (DA.GetDataList(13, authors)) model.Authors = authors.Select(a => a.Value.DeepClone()).ToList();
+        if (DA.GetDataList(14, attributes)) model.Attributes = attributes.Select(a => a.Value.DeepClone()).ToList();
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, Kit model)
+    {
+        DA.SetData(2, model.Guid);
+        DA.SetData(3, model.Name);
+        DA.SetData(4, model.Version);
+        DA.SetData(5, model.Description);
+        DA.SetData(6, model.Icon);
+        DA.SetData(7, model.Image);
+        DA.SetData(8, model.Remote);
+        DA.SetData(9, model.Homepage);
+        DA.SetData(10, model.License);
+        DA.SetDataList(11, model.Types?.Select(t => new TypeGoo(t.DeepClone())).ToList());
+        DA.SetDataList(12, model.Designs?.Select(d => new DesignGoo(d.DeepClone())).ToList());
+        DA.SetDataList(13, model.Authors?.Select(a => new AuthorGoo(a.DeepClone())).ToList());
+        DA.SetDataList(14, model.Attributes?.Select(a => new AttributeGoo(a.DeepClone())).ToList());
+    }
+
     protected override Kit ProcessModel(Kit kit)
     {
         kit.Icon = kit.Icon.Replace('\\', '/');
@@ -4262,132 +4986,3 @@ public class LoadKitComponent : PersistenceComponent
 #endregion
 
 #endregion Engine
-
-#region Meta
-
-public static class Meta
-{
-    /// <summary>
-    ///     Name of the model : Type
-    /// </summary>
-    public static readonly ImmutableDictionary<string, System.Type> Goo;
-
-    /// <summary>
-    ///     Name of the model : Index of the property : Type
-    /// </summary>
-    public static readonly ImmutableDictionary<string, ImmutableArray<System.Type>> PropertyGoo;
-
-    /// <summary>
-    ///     Name of the model : Index of the property : Type
-    /// </summary>
-    public static readonly ImmutableDictionary<string, ImmutableArray<System.Type>> PropertyItemGoo;
-
-    /// <summary>
-    ///     Name of the model : Param
-    /// </summary>
-    public static readonly ImmutableDictionary<string, System.Type> Param;
-
-    /// <summary>
-    ///     Name of the model : Index of the property : Param
-    /// </summary>
-    public static readonly ImmutableDictionary<string, ImmutableArray<System.Type>> PropertyParam;
-
-    /// <summary>
-    ///     Name of the model : Index of the property : IsMapped
-    /// </summary>
-    public static readonly ImmutableDictionary<string, ImmutableArray<bool>> IsPropertyMapped;
-
-    static Meta()
-    {
-        var dummyMeta = Semio.Meta.Model;
-        var goo = new Dictionary<string, System.Type>();
-        var propertyGoo = new Dictionary<string, List<System.Type>>();
-        var propertyItemGoo = new Dictionary<string, List<System.Type>>();
-        var param = new Dictionary<string, System.Type>();
-        var propertyParam = new Dictionary<string, List<System.Type>>();
-        var manualMappedTypes = new Dictionary<System.Type, (System.Type, System.Type)>
-        {
-            { typeof(string), (typeof(GH_String), typeof(Param_String)) },
-            { typeof(bool), (typeof(GH_Boolean), typeof(Param_Boolean)) },
-            { typeof(int), (typeof(GH_Integer), typeof(Param_Integer)) },
-            { typeof(float), (typeof(GH_Number), typeof(Param_Number)) },
-            { typeof(Point), (typeof(GH_Point), typeof(Param_Point)) },
-            { typeof(Vector), (typeof(GH_Vector), typeof(Param_Vector)) },
-            { typeof(Plane), (typeof(GH_Plane), typeof(Param_Plane)) },
-        };
-        var assemblyTypes = Assembly.GetExecutingAssembly().GetTypes();
-        var enumGooTypes = assemblyTypes.Where(t =>
-            t.BaseType?.IsGenericType == true &&
-            t.BaseType.GetGenericTypeDefinition() == typeof(EnumGoo<>)).ToList();
-        var enumParamTypes = assemblyTypes.Where(t =>
-            t.BaseType?.IsGenericType == true &&
-            t.BaseType.GetGenericTypeDefinition() == typeof(EnumParam<,>)).ToList();
-        foreach (var gooType in enumGooTypes)
-        {
-            var enumType = gooType.BaseType!.GetGenericArguments()[0];
-            if (!enumType.IsDefined(typeof(EnumAttribute), false)) continue;
-            var paramType = enumParamTypes.FirstOrDefault(p =>
-                p.BaseType!.GetGenericArguments()[1] == enumType);
-            if (paramType is not null)
-                manualMappedTypes[enumType] = (gooType, paramType);
-        }
-        var isPropertyMapped = new Dictionary<string, List<bool>>();
-        foreach (var manualMappedTypeKvp in manualMappedTypes)
-        {
-            var name = manualMappedTypeKvp.Key.Name;
-            goo[name] = manualMappedTypeKvp.Value.Item1;
-            goo[name + "List"] = typeof(List<>).MakeGenericType(goo[name]);
-            param[name] = manualMappedTypeKvp.Value.Item2;
-        }
-        foreach (var kvp in Semio.Meta.Type)
-        {
-            var baseName = typeof(Meta).Namespace + "." + kvp.Key;
-            if (!goo.ContainsKey(kvp.Key))
-            {
-                var equivalentGooType = Assembly.GetExecutingAssembly().GetType(baseName + "Goo");
-                if (equivalentGooType is not null)
-                {
-                    goo[kvp.Key] = equivalentGooType;
-                    goo[kvp.Key + "List"] = typeof(List<>).MakeGenericType(goo[kvp.Key]);
-                }
-                var equivalentParamType = Assembly.GetExecutingAssembly().GetType(baseName + "Param");
-                if (equivalentParamType is not null)
-                    param[kvp.Key] = equivalentParamType;
-            }
-            propertyGoo[kvp.Key] = new List<System.Type>();
-            propertyItemGoo[kvp.Key] = new List<System.Type>();
-            propertyParam[kvp.Key] = new List<System.Type>();
-            isPropertyMapped[kvp.Key] = new List<bool>();
-        }
-        foreach (var modelKvp in Semio.Meta.Property)
-            for (var i = 0; i < modelKvp.Value.Length; i++)
-            {
-                var property = modelKvp.Value[i];
-                var isPropertyList = Semio.Meta.IsPropertyList[modelKvp.Key][i];
-                var propertyTypeName = isPropertyList
-                    ? property.PropertyType.GetGenericArguments()[0].Name
-                    : property.PropertyType.Name;
-                bool isPropertyMappedValue;
-                isPropertyMappedValue = manualMappedTypes.ContainsKey(Semio.Meta.Type[propertyTypeName]);
-                isPropertyMapped[modelKvp.Key].Add(isPropertyMappedValue);
-                propertyGoo[modelKvp.Key].Add(goo[isPropertyList ? propertyTypeName + "List" : propertyTypeName]);
-                propertyItemGoo[modelKvp.Key].Add(goo[propertyTypeName]);
-                propertyParam[modelKvp.Key].Add(param[propertyTypeName]);
-                System.IO.File.WriteAllText("C:\\git\\semio.tech\\semio\\temp\\properties\\" + propertyTypeName + ".txt", propertyTypeName + " " + isPropertyMapped[modelKvp.Key] + " " + propertyGoo[modelKvp.Key] + " " + propertyItemGoo[modelKvp.Key] + " " + propertyParam[modelKvp.Key]);
-
-            }
-        Goo = goo.ToImmutableDictionary();
-        PropertyGoo = propertyGoo.ToImmutableDictionary(
-            kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
-        PropertyItemGoo = propertyItemGoo.ToImmutableDictionary(
-            kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
-        Param = param.ToImmutableDictionary();
-        PropertyParam = propertyParam.ToImmutableDictionary(
-            kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
-        IsPropertyMapped = isPropertyMapped.ToImmutableDictionary(
-            kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
-    }
-
-}
-
-#endregion Meta

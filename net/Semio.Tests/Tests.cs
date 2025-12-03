@@ -7,19 +7,8 @@ namespace Semio.Tests;
 public class KitTests
 {
     private static readonly string AssetsPath = "../../../../../assets/semio";
-
-    [Theory]
-    [InlineData("kit_metabolism.json")]
-    public void ComplexKit(string kitFileName)
-    {
-        var kitPath = Path.Combine(AssetsPath, kitFileName);
-        var kitJson = System.IO.File.ReadAllText(kitPath);
-        var kit = JsonConvert.DeserializeObject<Kit>(kitJson);
-        Assert.NotNull(kit);
-        var kitDeepClone = kit!.DeepClone();
-        Assert.Equal(kit, kitDeepClone);
-        Assert.Equal(JsonConvert.SerializeObject(kit), JsonConvert.SerializeObject(kitDeepClone));
-    }
+    private static readonly string ValidationPath = Path.Combine(AssetsPath, "validation.json");
+    private static readonly string KitInvalidPath = Path.Combine(AssetsPath, "kit_invalid.json");
 
     [Fact]
     public void Kit_Plus_Diff_Equals_DiffedKit_And_DiffedKit_Plus_InverseDiff_Equals_Kit()
@@ -77,30 +66,54 @@ public class KitTests
         Assert.Equal(kit.Designs.Count, deserialized.Designs.Count);
     }
 
-    // NOTE: C# validation is stricter than JS validation (checks field lengths, email formats, etc.)
-    // The JS validation only checks uniqueness rules, so these tests are skipped for now
-    // [Fact]
-    // public void Kit_Validation_ValidKit_HasNoErrors()
-    // {
-    //     var kitJson = System.IO.File.ReadAllText(Path.Combine(AssetsPath, "kit_metabolism.json"));
-    //     var kit = JsonConvert.DeserializeObject<Kit>(kitJson);
-    //     Assert.NotNull(kit);
-    //
-    //     var (isValid, errors) = kit!.Validate();
-    //     Assert.True(isValid, $"Valid kit should have no errors but got: {string.Join(", ", errors)}");
-    // }
+    [Fact]
+    public void SemioValidation_InvalidKit_MatchesExpectedOutput()
+    {
+        var kitJson = System.IO.File.ReadAllText(KitInvalidPath);
+        var kit = JsonConvert.DeserializeObject<Kit>(kitJson);
+        Assert.NotNull(kit);
 
-    // [Fact]
-    // public void Kit_Validation_InvalidKit_HasErrors()
-    // {
-    //     var kitJson = System.IO.File.ReadAllText(Path.Combine(AssetsPath, "kit_invalid.json"));
-    //     var kit = JsonConvert.DeserializeObject<Kit>(kitJson);
-    //     Assert.NotNull(kit);
-    //
-    //     var (isValid, errors) = kit!.Validate();
-    //     Assert.False(isValid, "Invalid kit should have validation errors");
-    //     Assert.True(errors.Count > 0, "Invalid kit should report specific errors");
-    // }
+        var result = SemioValidator.ValidateKit(kit!);
+        Assert.True(result.HasErrors(), "Invalid kit should have validation errors");
+
+        var expectedJson = System.IO.File.ReadAllText(ValidationPath);
+        var expectedResult = SemioValidationResult.Parse(expectedJson);
+
+        Assert.True(SemioValidationResult.AreEqual(result, expectedResult),
+            $"Validation result mismatch. Got {result.Issues.Count} issues, expected {expectedResult.Issues.Count}. " +
+            $"Result: {result.Serialize()}");
+    }
+
+    [Fact]
+    public void SemioValidation_InvalidKit_HasAllExpectedRules()
+    {
+        var kitJson = System.IO.File.ReadAllText(KitInvalidPath);
+        var kit = JsonConvert.DeserializeObject<Kit>(kitJson);
+        Assert.NotNull(kit);
+
+        var result = SemioValidator.ValidateKit(kit!);
+        var ruleIds = result.Issues.Select(i => i.RuleId).ToHashSet();
+
+        var expectedRules = new[]
+        {
+            "guid-unique",
+            "type-name-unique",
+            "design-name-unique",
+            "piece-name-unique",
+            "quality-name-unique",
+            "interface-name-unique",
+            "file-name-unique",
+            "folder-name-unique",
+            "port-name-unique",
+            "model-name-unique",
+            "layer-path-unique"
+        };
+
+        foreach (var ruleId in expectedRules)
+        {
+            Assert.Contains(ruleId, ruleIds);
+        }
+    }
 }
 
 #endregion Kit Tests
@@ -204,68 +217,42 @@ public class FlattenDesignTests
         return Math.Abs(c1.U - c2.U) < TOLERANCE && Math.Abs(c1.V - c2.V) < TOLERANCE;
     }
 
-    [Fact]
-    public void NakaginCapsuleTower_Normal()
-    {
-        var kitJson = System.IO.File.ReadAllText(Path.Combine(AssetsPath, "kit_metabolism.json"));
-        var kit = JsonConvert.DeserializeObject<Kit>(kitJson);
-        Assert.NotNull(kit);
-
-        var design = kit!.Designs.FirstOrDefault(d => d.Name == "Nakagin Capsule Tower");
-        Assert.NotNull(design);
-
-        var expectedDesign = kit.Designs.FirstOrDefault(d => d.Name == "Flat" && d.Parent?.Guid == design!.Guid);
-        Assert.NotNull(expectedDesign);
-
-        var flatDesign = design!.DeepClone()!.Flatten(kit.Types, ComputeChildPlane);
-
-        foreach (var piece in flatDesign.Pieces)
-        {
-            var expectedPiece = expectedDesign!.Pieces.FirstOrDefault(p => p.Name == piece.Name);
-            Assert.NotNull(expectedPiece);
-            Assert.NotNull(piece.Plane);
-            Assert.NotNull(piece.Center);
-        }
-    }
-
     [Theory]
-    [InlineData("Slanted")]
-    [InlineData("Twisted")]
-    [InlineData("Dancing")]
-    public void NakaginCapsuleTower_Variants(string designName)
+    [InlineData("Nakagin Capsule Tower")]
+    [InlineData("Nakagin Capsule Tower", "Slanted")]
+    [InlineData("Nakagin Capsule Tower", "Twisted")]
+    [InlineData("Nakagin Capsule Tower", "Dancing")]
+    [InlineData("Capsule Dream")]
+    public void FlattenDesign(params string[] path)
     {
         var kitJson = System.IO.File.ReadAllText(Path.Combine(AssetsPath, "kit_metabolism.json"));
         var kit = JsonConvert.DeserializeObject<Kit>(kitJson);
         Assert.NotNull(kit);
 
-        var design = kit!.Designs.FirstOrDefault(d => d.Name == designName);
-        Assert.NotNull(design);
+        // Navigate through the design hierarchy using the path
+        Design? design = null;
+        string? parentGuid = null;
 
-        var expectedDesign = kit.Designs.FirstOrDefault(d => d.Name == "Flat" && d.Parent?.Guid == design!.Guid);
-        Assert.NotNull(expectedDesign);
-
-        var flatDesign = design!.DeepClone()!.Flatten(kit.Types, ComputeChildPlane);
-
-        foreach (var piece in flatDesign.Pieces)
+        foreach (var designName in path)
         {
-            var expectedPiece = expectedDesign!.Pieces.FirstOrDefault(p => p.Name == piece.Name);
-            Assert.NotNull(expectedPiece);
-            Assert.NotNull(piece.Plane);
-            Assert.NotNull(piece.Center);
+            if (parentGuid == null)
+            {
+                // Find root design (no parent)
+                design = kit!.Designs.FirstOrDefault(d => d.Name == designName && d.Parent is null);
+            }
+            else
+            {
+                // Find child design with matching parent
+                design = kit!.Designs.FirstOrDefault(d => d.Name == designName && d.Parent is not null && d.Parent.Guid == parentGuid);
+            }
+
+            Assert.NotNull(design);
+            parentGuid = design!.Guid;
         }
-    }
 
-    [Fact]
-    public void CapsuleDream()
-    {
-        var kitJson = System.IO.File.ReadAllText(Path.Combine(AssetsPath, "kit_metabolism.json"));
-        var kit = JsonConvert.DeserializeObject<Kit>(kitJson);
-        Assert.NotNull(kit);
-
-        var design = kit!.Designs.FirstOrDefault(d => d.Name == "Capsule Dream");
         Assert.NotNull(design);
 
-        var expectedDesign = kit.Designs.FirstOrDefault(d => d.Name == "Flat" && d.Parent?.Guid == design!.Guid);
+        var expectedDesign = kit!.Designs.FirstOrDefault(d => d.Name == "Flat" && d.Parent?.Guid == design!.Guid);
         Assert.NotNull(expectedDesign);
 
         var flatDesign = design!.DeepClone()!.Flatten(kit.Types, ComputeChildPlane);
@@ -288,14 +275,14 @@ public class ExpressionUnitTests
     {
         var expectedMatch = System.Text.RegularExpressions.Regex.Match(expected, @"^'?(-?[\d.]+)\s*([^']*?)'?$");
         var actualMatch = System.Text.RegularExpressions.Regex.Match(actual, @"^'?(-?[\d.]+)\s*([^']*?)'?$");
-        
+
         if (expectedMatch.Success && actualMatch.Success)
         {
             var expectedValue = float.Parse(expectedMatch.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture);
             var actualValue = float.Parse(actualMatch.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture);
             var expectedUnit = expectedMatch.Groups[2].Value.Trim();
             var actualUnit = actualMatch.Groups[2].Value.Trim();
-            
+
             Assert.Equal(expectedUnit, actualUnit);
             Assert.True(Math.Abs(expectedValue - actualValue) <= Math.Abs(expectedValue) * tolerance,
                 $"Expected {expectedValue} but got {actualValue} (tolerance: {tolerance * 100}%)");

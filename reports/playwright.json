@@ -46,12 +46,12 @@
         "testMatch": [
           "**/sketchpad.test.ts"
         ],
-        "timeout": 180000
+        "timeout": 30000
       }
     ],
     "shard": null,
     "updateSnapshots": "missing",
-    "updateSourceMethod": "patch",
+    "updateSourceMethod": "3way",
     "version": "1.56.1",
     "workers": 8,
     "webServer": {
@@ -92,25 +92,25 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 77290,
+                      "duration": 50924,
                       "error": {
-                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m100\u001b[39m\nReceived:   \u001b[31m3376\u001b[39m",
-                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m100\u001b[39m\nReceived:   \u001b[31m3376\u001b[39m\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:472:30",
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m100\u001b[39m\nReceived:   \u001b[31m3391\u001b[39m",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m100\u001b[39m\nReceived:   \u001b[31m3391\u001b[39m\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:572:30",
                         "location": {
                           "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
                           "column": 30,
-                          "line": 472
+                          "line": 572
                         },
-                        "snippet": "\u001b[0m \u001b[90m 470 |\u001b[39m         console\u001b[33m.\u001b[39mlog(\u001b[32m`[Design Test] Pan 2 took ${pan2Duration}ms`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 471 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 472 |\u001b[39m         expect(pan1Duration)\u001b[33m.\u001b[39mtoBeLessThan(\u001b[35m100\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 473 |\u001b[39m         expect(pan2Duration)\u001b[33m.\u001b[39mtoBeLessThan(\u001b[35m100\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 474 |\u001b[39m         \u001b[90m// Verify no cascade: second pan shouldn't be dramatically slower\u001b[39m\n \u001b[90m 475 |\u001b[39m         expect(\u001b[33mMath\u001b[39m\u001b[33m.\u001b[39mabs(pan1Duration \u001b[33m-\u001b[39m pan2Duration))\u001b[33m.\u001b[39mtoBeLessThan(\u001b[35m100\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
+                        "snippet": "\u001b[0m \u001b[90m 570 |\u001b[39m         console\u001b[33m.\u001b[39mlog(\u001b[32m`[Design Test] Pan 2 took ${pan2Duration}ms`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 571 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 572 |\u001b[39m         expect(pan1Duration)\u001b[33m.\u001b[39mtoBeLessThan(\u001b[35m100\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 573 |\u001b[39m         expect(pan2Duration)\u001b[33m.\u001b[39mtoBeLessThan(\u001b[35m100\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 574 |\u001b[39m         \u001b[90m// Verify no cascade: second pan shouldn't be dramatically slower\u001b[39m\n \u001b[90m 575 |\u001b[39m         expect(\u001b[33mMath\u001b[39m\u001b[33m.\u001b[39mabs(pan1Duration \u001b[33m-\u001b[39m pan2Duration))\u001b[33m.\u001b[39mtoBeLessThan(\u001b[35m100\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
                       },
                       "errors": [
                         {
                           "location": {
                             "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
                             "column": 30,
-                            "line": 472
+                            "line": 572
                           },
-                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m100\u001b[39m\nReceived:   \u001b[31m3376\u001b[39m\n\n\u001b[0m \u001b[90m 470 |\u001b[39m         console\u001b[33m.\u001b[39mlog(\u001b[32m`[Design Test] Pan 2 took ${pan2Duration}ms`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 471 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 472 |\u001b[39m         expect(pan1Duration)\u001b[33m.\u001b[39mtoBeLessThan(\u001b[35m100\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 473 |\u001b[39m         expect(pan2Duration)\u001b[33m.\u001b[39mtoBeLessThan(\u001b[35m100\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 474 |\u001b[39m         \u001b[90m// Verify no cascade: second pan shouldn't be dramatically slower\u001b[39m\n \u001b[90m 475 |\u001b[39m         expect(\u001b[33mMath\u001b[39m\u001b[33m.\u001b[39mabs(pan1Duration \u001b[33m-\u001b[39m pan2Duration))\u001b[33m.\u001b[39mtoBeLessThan(\u001b[35m100\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:472:30\u001b[22m"
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m100\u001b[39m\nReceived:   \u001b[31m3391\u001b[39m\n\n\u001b[0m \u001b[90m 570 |\u001b[39m         console\u001b[33m.\u001b[39mlog(\u001b[32m`[Design Test] Pan 2 took ${pan2Duration}ms`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 571 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 572 |\u001b[39m         expect(pan1Duration)\u001b[33m.\u001b[39mtoBeLessThan(\u001b[35m100\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 573 |\u001b[39m         expect(pan2Duration)\u001b[33m.\u001b[39mtoBeLessThan(\u001b[35m100\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 574 |\u001b[39m         \u001b[90m// Verify no cascade: second pan shouldn't be dramatically slower\u001b[39m\n \u001b[90m 575 |\u001b[39m         expect(\u001b[33mMath\u001b[39m\u001b[33m.\u001b[39mabs(pan1Duration \u001b[33m-\u001b[39m pan2Duration))\u001b[33m.\u001b[39mtoBeLessThan(\u001b[35m100\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:572:30\u001b[22m"
                         }
                       ],
                       "stdout": [
@@ -127,33 +127,48 @@
                           "text": "[Design Test] Current URL: http://localhost:5173/kits/f042c2a4-3ba5-44b0-b22c-0ae8f568aacc/designs/9a890dd4-0a9c-48ac-920a-9e62666465ef\n"
                         },
                         {
-                          "text": "[Design Test] ReactFlow elements count: \u001b[33m0\u001b[39m\n"
+                          "text": "[Design Test] ReactFlow elements count: \u001b[33m1\u001b[39m\n"
                         },
                         {
-                          "text": "[Design Test] Window/Panel elements count: \u001b[33m0\u001b[39m\n"
+                          "text": "[Design Test] Window/Panel elements count: \u001b[33m25\u001b[39m\n"
                         },
                         {
                           "text": "[Design Test] hasDiagram: \u001b[33mtrue\u001b[39m hasScene: \u001b[33mtrue\u001b[39m\n"
                         },
                         {
+                          "text": "[Design Test] Console errors: []\n"
+                        },
+                        {
+                          "text": "[Design Test] Navbar is visible\n"
+                        },
+                        {
+                          "text": "[Design Test] Footer is visible\n"
+                        },
+                        {
                           "text": "[Design Test] Piece count: \u001b[33m180\u001b[39m\n"
                         },
                         {
-                          "text": "[Design Test] Pan 1 took 3376ms\n"
+                          "text": "[Design Test] Pan 1 took 3391ms\n"
                         },
                         {
-                          "text": "[Design Test] Pan 2 took 1798ms\n"
+                          "text": "[Design Test] Pan 2 took 2223ms\n"
                         }
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-02T23:15:44.033Z",
+                      "startTime": "2025-12-03T11:03:26.799Z",
                       "annotations": [],
-                      "attachments": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\git\\semio.tech\\semio\\js\\js\\test-results\\sketchpad-sketchpad-Design-chromium\\error-context.md"
+                        }
+                      ],
                       "errorLocation": {
                         "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
                         "column": 30,
-                        "line": 472
+                        "line": 572
                       }
                     }
                   ],
@@ -162,7 +177,7 @@
               ],
               "id": "1f96767271edc4239dfa-04d6a37c53e07d4a2f57",
               "file": "sketchpad.test.ts",
-              "line": 387,
+              "line": 471,
               "column": 3
             }
           ]
@@ -172,8 +187,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2025-12-02T23:15:43.177Z",
-    "duration": 78469.202,
+    "startTime": "2025-12-03T11:03:25.072Z",
+    "duration": 52877.67499999993,
     "expected": 0,
     "skipped": 0,
     "unexpected": 1,
