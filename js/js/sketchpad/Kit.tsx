@@ -24,6 +24,7 @@
 import { DragEndEvent, useDroppable } from "@dnd-kit/core";
 import {
   AddIcon,
+  AlertCircleIcon,
   AwardIcon,
   ChevronDownIcon,
   ChevronRightIcon,
@@ -2069,12 +2070,7 @@ const KitDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
-      const hasZip = Array.from(e.dataTransfer.items).some((item) => item.kind === "file" && item.type === "application/zip");
-      if (hasZip) {
-        setIsDragging(true);
-      }
-    }
+    // Zip files are now treated as regular files
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
@@ -2089,42 +2085,7 @@ const KitDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
-
-    const files = Array.from(e.dataTransfer.files);
-    const zipFile = files.find((f) => f.name.endsWith(".zip"));
-
-    if (zipFile && kitCommands) {
-      try {
-        const arrayBuffer = await zipFile.arrayBuffer();
-        const zip = await JSZip.loadAsync(arrayBuffer);
-        const hasKitDb = zip.file(".semio/kit.db") !== null;
-
-        if (hasKitDb) {
-          const tempBlob = new Blob([arrayBuffer], { type: "application/zip" });
-          const tempUrl = URL.createObjectURL(tempBlob);
-          await kitCommands.importKit("semio.sketchpad.app.kit.dropzone", tempUrl);
-          URL.revokeObjectURL(tempUrl);
-        } else {
-          const filesToAdd: { path: string; blob: Blob }[] = [];
-          for (const [path, zipEntry] of Object.entries(zip.files)) {
-            if (!zipEntry.dir && !path.startsWith(".semio/")) {
-              const blob = await zipEntry.async("blob");
-              filesToAdd.push({ path, blob });
-            }
-          }
-          for (const file of filesToAdd) {
-            const fileToAdd: SemioFile = {
-              guid: guid(),
-              path: file.path,
-              remoteUrl: "",
-              description: "",
-              attributes: [],
-            };
-            await kitCommands.addFile("semio.sketchpad.app.kit.dropzone", fileToAdd, file.blob);
-          }
-        }
-      } catch (error) {}
-    }
+    // Zip files are now treated as regular files - no special handling
   };
 
   return (
@@ -2164,6 +2125,7 @@ const AppContent: FC = () => {
   const store = useSketchpadStore();
 
   const [isDragOver, setIsDragOver] = React.useState(false);
+  const [showZipWarning, setShowZipWarning] = React.useState(false);
   const [activeId, setActiveId] = React.useState<string | null>(null);
   const [overId, setOverId] = React.useState<string | null>(null);
   const lastClickedIndexRef = React.useRef<number>(-1);
@@ -2248,7 +2210,7 @@ const AppContent: FC = () => {
 
   const allConcepts = useMemo(() => {
     const conceptSet = new Set<string>();
-    kitDesigns?.forEach((d: Design) => d.concepts?.forEach((c) => conceptSet.add(c.guid)));
+    kitDesigns?.forEach((d: Design) => d.concepts?.forEach((c) => conceptSet.add(c.name)));
     return Array.from(conceptSet).sort();
   }, [kitDesignsKey]);
 
@@ -3844,94 +3806,29 @@ const AppContent: FC = () => {
     const files = Array.from(e.dataTransfer.files);
     if (files.length === 0) return;
 
+    // Check if any file is a zip file
+    const hasZipFile = files.some((file) => file.name.toLowerCase().endsWith(".zip"));
+    if (hasZipFile) {
+      setShowZipWarning(true);
+      // Auto-dismiss warning after 8 seconds
+      setTimeout(() => setShowZipWarning(false), 8000);
+    }
+
     for (const file of files) {
-      // Check if file is a zip file
-      if (file.name.toLowerCase().endsWith(".zip")) {
-        try {
-          // Import JSZip dynamically
-          const JSZip = (await import("jszip")).default;
-          const zip = await JSZip.loadAsync(file);
+      // Treat all files (including zip files) as regular files
+      const newFile: SemioFile = {
+        guid: guid(),
+        name: file.name,
+        size: file.size,
+        hash: undefined,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
 
-          // Extract all files from zip
-          const folderByGuid = new Map<string, Folder>();
-          (kit.folders || []).forEach((existingFolder) => folderByGuid.set(existingFolder.guid, existingFolder));
-          const folderPathCache = new Map<string, string>();
-          const folderPathMap = new Map<string, string>();
-          const resolvePath = (folder: Folder): string => {
-            const cached = folderPathCache.get(folder.guid);
-            if (cached) return cached;
-            const parentFolder = folder.parent ? folderByGuid.get(folder.parent.guid) : undefined;
-            const path = parentFolder ? `${resolvePath(parentFolder)}/${folder.name}` : folder.name;
-            folderPathCache.set(folder.guid, path);
-            return path;
-          };
-          folderByGuid.forEach((folder) => {
-            const path = resolvePath(folder);
-            folderPathMap.set(path, folder.guid);
-          });
-          const ensureFolder = async (parts: string[]): Promise<string | undefined> => {
-            let parentGuid: string | undefined = undefined;
-            let currentPath = "";
-            for (const part of parts) {
-              currentPath = currentPath ? `${currentPath}/${part}` : part;
-              let folderGuid = folderPathMap.get(currentPath);
-              if (!folderGuid) {
-                const newFolder: Folder = {
-                  guid: guid(),
-                  name: part,
-                  parent: parentGuid ? { guid: parentGuid } : undefined,
-                  createdAt: new Date(),
-                  updatedAt: new Date(),
-                };
-                folderGuid = newFolder.guid;
-                folderPathMap.set(currentPath, folderGuid);
-                folderByGuid.set(folderGuid, newFolder);
-                if (kitCommands) await kitCommands.createFolder("semio.sketchpad.app.kit.dropZip.createFolder", newFolder);
-              }
-              parentGuid = folderGuid;
-            }
-            return parentGuid;
-          };
-          let processedFiles = 0;
-          for (const zipEntry of Object.values(zip.files)) {
-            if (!zipEntry.dir) {
-              const relativePath = zipEntry.name;
-              const parts = relativePath.split("/").filter((part) => part.length > 0);
-              const directories = parts.slice(0, -1);
-              const parentFolderGuid = directories.length > 0 ? await ensureFolder(directories) : undefined;
-              const fileBlob = await zipEntry.async("blob");
-              const extractedFile: SemioFile = {
-                guid: guid(),
-                name: parts[parts.length - 1] || relativePath,
-                folder: parentFolderGuid ? { guid: parentFolderGuid } : undefined,
-                size: fileBlob.size,
-                hash: undefined,
-                createdAt: new Date(),
-                updatedAt: new Date(),
-              };
-              await kitCommands?.addFile("semio.sketchpad.app.kit.dropZip", extractedFile, fileBlob);
-              processedFiles += 1;
-            }
-          }
-        } catch (error) {
-          console.error(`Failed to extract zip file ${file.name}:`, error);
-        }
-      } else {
-        // Handle regular file
-        const newFile: SemioFile = {
-          guid: guid(),
-          name: file.name,
-          size: file.size,
-          hash: undefined,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
-
-        try {
-          await kitCommands?.addFile("semio.sketchpad.app.kit.dropFile", newFile, file);
-        } catch (error) {
-          console.error(`Failed to add file ${file.name}:`, error);
-        }
+      try {
+        await kitCommands?.addFile("semio.sketchpad.app.kit.dropFile", newFile, file);
+      } catch (error) {
+        console.error(`Failed to add file ${file.name}:`, error);
       }
     }
   };
@@ -4328,6 +4225,22 @@ const AppContent: FC = () => {
         {isDragOver && (
           <div className="absolute inset-0 bg-active-base/50 border-2 border-dashed border-active-foreground flex items-center justify-center z-panel">
             <div className="text-active-foreground text-lg font-medium">Drop files to add to kit</div>
+          </div>
+        )}
+        {showZipWarning && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[60] max-w-md">
+            <div className="bg-warning/90 backdrop-blur-sm border border-warning-foreground/20 rounded-lg shadow-lg p-4 flex items-start gap-3">
+              <AlertCircleIcon className="h-5 w-5 text-warning-foreground flex-shrink-0 mt-0.5" />
+              <div className="flex-1 text-sm">
+                <p className="font-medium text-warning-foreground mb-1">Zip file detected</p>
+                <p className="text-warning-foreground/90">
+                  If this zip file contains a kit, please navigate to the home screen to import it properly. Zip files dropped here are added as regular files.
+                </p>
+              </div>
+              <button onClick={() => setShowZipWarning(false)} className="text-warning-foreground/70 hover:text-warning-foreground transition-colors">
+                ×
+              </button>
+            </div>
           </div>
         )}
         <Table

@@ -1,0 +1,1816 @@
+{
+  "timestamp": "2025-12-03T15:38:17.500Z",
+  "entities": [
+    {
+      "name": "semio",
+      "fields": [
+        {
+          "name": "release",
+          "type": "string",
+          "constraints": [
+            "NOT NULL",
+            "PK"
+          ]
+        },
+        {
+          "name": "created_by_app",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "app_version",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "constraints": [
+            "NOT NULL"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "attributes",
+      "fields": [
+        {
+          "name": "id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "PK",
+            "generated"
+          ]
+        },
+        {
+          "name": "key",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "definition",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "model_id",
+          "type": "int",
+          "constraints": [
+            "FK"
+          ]
+        },
+        {
+          "name": "port_id",
+          "type": "int",
+          "constraints": [
+            "FK"
+          ]
+        },
+        {
+          "name": "type_id",
+          "type": "int",
+          "constraints": [
+            "FK"
+          ]
+        },
+        {
+          "name": "piece_id",
+          "type": "int",
+          "constraints": [
+            "FK"
+          ]
+        },
+        {
+          "name": "connection_id",
+          "type": "int",
+          "constraints": [
+            "FK"
+          ]
+        },
+        {
+          "name": "design_id",
+          "type": "int",
+          "constraints": [
+            "FK"
+          ]
+        },
+        {
+          "name": "kit_id",
+          "type": "int",
+          "constraints": [
+            "FK"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "files",
+      "fields": [
+        {
+          "name": "id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "PK",
+            "generated"
+          ]
+        },
+        {
+          "name": "path",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "remote_url",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "kit_id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "FK"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "qualities",
+      "fields": [
+        {
+          "name": "id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "PK",
+            "generated"
+          ]
+        },
+        {
+          "name": "key",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "uri",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "kind",
+          "type": "int",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "can_scale",
+          "type": "boolean",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "default_si_unit",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "default_imperial_unit",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "min",
+          "type": "float",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "is_min_excluded",
+          "type": "boolean",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "max",
+          "type": "float",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "is_max_excluded",
+          "type": "boolean",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "default_value",
+          "type": "float",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "formula",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "kit_id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "FK"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "benchmarks",
+      "fields": [
+        {
+          "name": "id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "PK",
+            "generated"
+          ]
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "icon",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "min",
+          "type": "float",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "is_min_excluded",
+          "type": "boolean",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "max",
+          "type": "float",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "is_max_excluded",
+          "type": "boolean",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "quality_id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "FK"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "props",
+      "fields": [
+        {
+          "name": "id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "PK",
+            "generated"
+          ]
+        },
+        {
+          "name": "key",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "unit",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "model_id",
+          "type": "int",
+          "constraints": [
+            "FK"
+          ]
+        },
+        {
+          "name": "port_id",
+          "type": "int",
+          "constraints": [
+            "FK"
+          ]
+        },
+        {
+          "name": "type_id",
+          "type": "int",
+          "constraints": [
+            "FK"
+          ]
+        },
+        {
+          "name": "piece_id",
+          "type": "int",
+          "constraints": [
+            "FK"
+          ]
+        },
+        {
+          "name": "connection_id",
+          "type": "int",
+          "constraints": [
+            "FK"
+          ]
+        },
+        {
+          "name": "design_id",
+          "type": "int",
+          "constraints": [
+            "FK"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "stats",
+      "fields": [
+        {
+          "name": "id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "PK",
+            "generated"
+          ]
+        },
+        {
+          "name": "key",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "unit",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "min",
+          "type": "float",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "is_min_excluded",
+          "type": "boolean",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "max",
+          "type": "float",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "is_max_excluded",
+          "type": "boolean",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "design_id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "FK"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "tags",
+      "fields": [
+        {
+          "name": "id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "PK",
+            "generated"
+          ]
+        },
+        {
+          "name": "guid",
+          "type": "string",
+          "constraints": [
+            "NOT NULL",
+            "UNIQUE"
+          ]
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "icon",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "kit_id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "FK"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "concepts",
+      "fields": [
+        {
+          "name": "id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "PK",
+            "generated"
+          ]
+        },
+        {
+          "name": "guid",
+          "type": "string",
+          "constraints": [
+            "NOT NULL",
+            "UNIQUE"
+          ]
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "icon",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "kit_id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "FK"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "models",
+      "fields": [
+        {
+          "name": "id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "PK",
+            "generated"
+          ]
+        },
+        {
+          "name": "guid",
+          "type": "string",
+          "constraints": [
+            "NOT NULL",
+            "UNIQUE"
+          ]
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "file_id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "FK"
+          ]
+        },
+        {
+          "name": "type_id",
+          "type": "int",
+          "constraints": [
+            "FK"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "planes",
+      "fields": [
+        {
+          "name": "id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "PK",
+            "generated"
+          ]
+        },
+        {
+          "name": "origin_x",
+          "type": "float",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "origin_y",
+          "type": "float",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "origin_z",
+          "type": "float",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "x_axis_x",
+          "type": "float",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "x_axis_y",
+          "type": "float",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "x_axis_z",
+          "type": "float",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "y_axis_x",
+          "type": "float",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "y_axis_y",
+          "type": "float",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "y_axis_z",
+          "type": "float",
+          "constraints": [
+            "NOT NULL"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "compatible_interfaces",
+      "fields": [
+        {
+          "name": "id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "PK",
+            "generated"
+          ]
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "order",
+          "type": "int",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "port_id",
+          "type": "int",
+          "constraints": [
+            "FK"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ports",
+      "fields": [
+        {
+          "name": "id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "PK",
+            "generated"
+          ]
+        },
+        {
+          "name": "port_id",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "interface",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "is_mandatory",
+          "type": "boolean",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "point_x",
+          "type": "float",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "point_y",
+          "type": "float",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "point_z",
+          "type": "float",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "direction_x",
+          "type": "float",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "direction_y",
+          "type": "float",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "direction_z",
+          "type": "float",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "t",
+          "type": "float",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "type_id",
+          "type": "int",
+          "constraints": [
+            "FK"
+          ]
+        },
+        {
+          "name": "design_id",
+          "type": "int",
+          "constraints": [
+            "FK"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "authors",
+      "fields": [
+        {
+          "name": "id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "PK",
+            "generated"
+          ]
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "email",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "kit_id",
+          "type": "int",
+          "constraints": [
+            "FK"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "author_artifact",
+      "fields": [
+        {
+          "name": "author_id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "PK",
+            "FK"
+          ]
+        },
+        {
+          "name": "rank",
+          "type": "int",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "type_id",
+          "type": "int",
+          "constraints": [
+            "PK",
+            "FK"
+          ]
+        },
+        {
+          "name": "design_id",
+          "type": "int",
+          "constraints": [
+            "PK",
+            "FK"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "types",
+      "fields": [
+        {
+          "name": "id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "PK",
+            "generated"
+          ]
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "variant",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "is_virtual",
+          "type": "boolean",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "can_scale",
+          "type": "boolean",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "can_mirror",
+          "type": "boolean",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "unit",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "available_count",
+          "type": "float",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "location_id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "FK"
+          ]
+        },
+        {
+          "name": "icon",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "image_url",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "kit_id",
+          "type": "int",
+          "constraints": [
+            "FK"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "pieces",
+      "fields": [
+        {
+          "name": "id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "PK",
+            "generated"
+          ]
+        },
+        {
+          "name": "piece_id",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "type_id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "FK"
+          ]
+        },
+        {
+          "name": "design_id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "FK"
+          ]
+        },
+        {
+          "name": "plane_id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "FK"
+          ]
+        },
+        {
+          "name": "center_id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "FK"
+          ]
+        },
+        {
+          "name": "scale",
+          "type": "float",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "mirror_plane_id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "FK"
+          ]
+        },
+        {
+          "name": "is_hidden",
+          "type": "boolean",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "is_locked",
+          "type": "boolean",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "color",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "parent_piece_id",
+          "type": "int",
+          "constraints": [
+            "FK"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "connections",
+      "fields": [
+        {
+          "name": "id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "PK",
+            "generated"
+          ]
+        },
+        {
+          "name": "connected_piece_id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "FK"
+          ]
+        },
+        {
+          "name": "connected_design_piece_id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "FK"
+          ]
+        },
+        {
+          "name": "connected_port_id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "FK"
+          ]
+        },
+        {
+          "name": "connecting_piece_id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "FK"
+          ]
+        },
+        {
+          "name": "connecting_design_piece_id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "FK"
+          ]
+        },
+        {
+          "name": "connecting_port_id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "FK"
+          ]
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "gap",
+          "type": "float",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "shift",
+          "type": "float",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "rise",
+          "type": "float",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "rotation",
+          "type": "float",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "turn",
+          "type": "float",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "tilt",
+          "type": "float",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "u",
+          "type": "float",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "v",
+          "type": "float",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "design_id",
+          "type": "int",
+          "constraints": [
+            "FK"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "layers",
+      "fields": [
+        {
+          "name": "id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "PK",
+            "generated"
+          ]
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "color",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "design_id",
+          "type": "int",
+          "constraints": [
+            "FK"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "groups",
+      "fields": [
+        {
+          "name": "id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "PK",
+            "generated"
+          ]
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraints": []
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraints": []
+        },
+        {
+          "name": "color",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "design_id",
+          "type": "int",
+          "constraints": [
+            "FK"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "group_pieces",
+      "fields": [
+        {
+          "name": "group_id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "PK",
+            "FK"
+          ]
+        },
+        {
+          "name": "piece_id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "PK",
+            "FK"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "designs",
+      "fields": [
+        {
+          "name": "id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "PK",
+            "generated"
+          ]
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "variant",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "view",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "can_scale",
+          "type": "boolean",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "can_mirror",
+          "type": "boolean",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "unit",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "location_id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "FK"
+          ]
+        },
+        {
+          "name": "icon",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "image_url",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "kit_id",
+          "type": "int",
+          "constraints": [
+            "FK"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "kits",
+      "fields": [
+        {
+          "name": "id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "PK",
+            "generated"
+          ]
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "version",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "remote_url",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "homepage_url",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "license",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "icon",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "image_url",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "constraints": [
+            "NOT NULL"
+          ]
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime",
+          "constraints": [
+            "NOT NULL"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "model_tags",
+      "fields": [
+        {
+          "name": "model_id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "PK",
+            "FK"
+          ]
+        },
+        {
+          "name": "tag_id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "PK",
+            "FK"
+          ]
+        },
+        {
+          "name": "order",
+          "type": "int",
+          "constraints": [
+            "NOT NULL"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "type_concepts",
+      "fields": [
+        {
+          "name": "type_id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "PK",
+            "FK"
+          ]
+        },
+        {
+          "name": "concept_id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "PK",
+            "FK"
+          ]
+        },
+        {
+          "name": "order",
+          "type": "int",
+          "constraints": [
+            "NOT NULL"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "design_concepts",
+      "fields": [
+        {
+          "name": "design_id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "PK",
+            "FK"
+          ]
+        },
+        {
+          "name": "concept_id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "PK",
+            "FK"
+          ]
+        },
+        {
+          "name": "order",
+          "type": "int",
+          "constraints": [
+            "NOT NULL"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "kit_concepts",
+      "fields": [
+        {
+          "name": "kit_id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "PK",
+            "FK"
+          ]
+        },
+        {
+          "name": "concept_id",
+          "type": "int",
+          "constraints": [
+            "NOT NULL",
+            "PK",
+            "FK"
+          ]
+        },
+        {
+          "name": "order",
+          "type": "int",
+          "constraints": [
+            "NOT NULL"
+          ]
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "from": "models",
+      "to": "attributes",
+      "cardinality": "||--o{",
+      "label": "has"
+    },
+    {
+      "from": "ports",
+      "to": "compatible_interfaces",
+      "cardinality": "||--o{",
+      "label": "has"
+    },
+    {
+      "from": "ports",
+      "to": "attributes",
+      "cardinality": "||--o{",
+      "label": "has"
+    },
+    {
+      "from": "ports",
+      "to": "props",
+      "cardinality": "||--o{",
+      "label": "has"
+    },
+    {
+      "from": "types",
+      "to": "locations",
+      "cardinality": "||--o{",
+      "label": "has"
+    },
+    {
+      "from": "types",
+      "to": "models",
+      "cardinality": "||--o{",
+      "label": "has"
+    },
+    {
+      "from": "types",
+      "to": "ports",
+      "cardinality": "||--o{",
+      "label": "has"
+    },
+    {
+      "from": "types",
+      "to": "authors",
+      "cardinality": "||--o{",
+      "label": "has"
+    },
+    {
+      "from": "types",
+      "to": "attributes",
+      "cardinality": "||--o{",
+      "label": "has"
+    },
+    {
+      "from": "types",
+      "to": "concepts",
+      "cardinality": "||--o{",
+      "label": "has"
+    },
+    {
+      "from": "pieces",
+      "to": "planes",
+      "cardinality": "||--o{",
+      "label": "has"
+    },
+    {
+      "from": "pieces",
+      "to": "attributes",
+      "cardinality": "||--o{",
+      "label": "has"
+    },
+    {
+      "from": "connections",
+      "to": "attributes",
+      "cardinality": "||--o{",
+      "label": "has"
+    }
+  ]
+}

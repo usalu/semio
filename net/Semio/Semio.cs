@@ -22,11 +22,11 @@
 
 // TODO: Make remote uris work for diagram.
 // TODO: Remove computeChildPlane and separate the flatten diagram and flatten planes parts.
-// TODO: Refactor all ToSring() to use ToIdString() and add ABREVIATION(ID) to model.
+// TODO: Refactor all ToSring() to use ToIdString() and add ABREVIATION(ID) to entity.
 // TODO: Develop a validation template for urls.
 // TODO: Replace GetHashcode() with a proper hash function.
 // TODO: Add logging mechanism to all API calls if they fail.
-// TODO: Implement reflexive validation for model properties.
+// TODO: Implement reflexive validation for entity properties.
 // TODO: Add index to prop and add to list based on index not on source code order.
 // TODO: See if Utility.Encode(uri) can be added by attribute on parameters.
 // TODO: Turn inplace and leave clone to the user of the function.
@@ -76,7 +76,7 @@ public static class Constants
     public const int AttributesMax = 64;
     public const int QualityMax = 1024;
     public const int TagsMax = 8;
-    public const int ModelsMax = 32;
+    public const int EntitysMax = 32;
     public const int TypesMax = 256;
     public const int PiecesMax = 512;
     public const int DesignsMax = 128;
@@ -146,11 +146,11 @@ public static class Utility
     {
         var validMimes = new List<string>
         {
-            "model/stl",
-            "model/obj",
-            "model/gltf-binary",
-            "model/gltf+json",
-            "model/vnd.3dm",
+            "entity/stl",
+            "entity/obj",
+            "entity/gltf-binary",
+            "entity/gltf+json",
+            "entity/vnd.3dm",
             "image/png",
             "image/jpeg",
             "image/svg+xml",
@@ -167,11 +167,11 @@ public static class Utility
     {
         var mimes = new Dictionary<string, string>
         {
-            { ".stl", "model/stl" },
-            { ".obj", "model/obj" },
-            { ".glb", "model/gltf-binary" },
-            { ".gltf", "model/gltf+json" },
-            { ".3dm", "model/vnd.3dm" },
+            { ".stl", "entity/stl" },
+            { ".obj", "entity/obj" },
+            { ".glb", "entity/gltf-binary" },
+            { ".gltf", "entity/gltf+json" },
+            { ".3dm", "entity/vnd.3dm" },
             { ".png", "image/png" },
             { ".jpg", "image/jpeg" },
             { ".jpeg", "image/jpeg" },
@@ -310,8 +310,8 @@ public static class Utility
     {
         public static float Convert(float value, string fromUnit, string toUnit)
         {
-            var convertModel = new PowerToysRunUnitConverter.ConvertModel(value, fromUnit, toUnit);
-            var results = PowerToysRunUnitConverter.UnitHandler.Convert(convertModel);
+            var convertEntity = new PowerToysRunUnitConverter.ConvertEntity(value, fromUnit, toUnit);
+            var results = PowerToysRunUnitConverter.UnitHandler.Convert(convertEntity);
             if (results.Count() == 0) return float.NaN;
             return (float)results.First().ConvertedValue;
         }
@@ -322,10 +322,10 @@ public static class Utility
         /// </summary>
         private class PowerToysRunUnitConverter
         {
-            internal class ConvertModel
+            internal class ConvertEntity
             {
-                internal ConvertModel() { FromUnit = ""; ToUnit = ""; }
-                internal ConvertModel(double value, string fromUnit, string toUnit) => (Value, FromUnit, ToUnit) = (value, fromUnit, toUnit);
+                internal ConvertEntity() { FromUnit = ""; ToUnit = ""; }
+                internal ConvertEntity(double value, string fromUnit, string toUnit) => (Value, FromUnit, ToUnit) = (value, fromUnit, toUnit);
                 internal double Value { get; }
                 internal string FromUnit { get; }
                 internal string ToUnit { get; }
@@ -368,20 +368,20 @@ public static class Utility
                     if (UnitsNetSetup.Default.UnitParser.TryParse(unit, unitInfo.UnitType, cultureInfoEnglish, out var enum_unit_en)) return enum_unit_en;
                     return null;
                 }
-                internal static double ConvertInput(ConvertModel convertModel, QuantityInfo quantityInfo)
+                internal static double ConvertInput(ConvertEntity convertEntity, QuantityInfo quantityInfo)
                 {
-                    var fromUnit = GetUnitEnum(convertModel.FromUnit, quantityInfo);
-                    var toUnit = GetUnitEnum(convertModel.ToUnit, quantityInfo);
-                    if (fromUnit != null && toUnit != null) return UnitConverter.Convert(convertModel.Value, fromUnit, toUnit);
+                    var fromUnit = GetUnitEnum(convertEntity.FromUnit, quantityInfo);
+                    var toUnit = GetUnitEnum(convertEntity.ToUnit, quantityInfo);
+                    if (fromUnit != null && toUnit != null) return UnitConverter.Convert(convertEntity.Value, fromUnit, toUnit);
                     return double.NaN;
                 }
-                internal static IEnumerable<UnitConversionResult> Convert(ConvertModel convertModel)
+                internal static IEnumerable<UnitConversionResult> Convert(ConvertEntity convertEntity)
                 {
                     var results = new List<UnitConversionResult>();
                     foreach (var quantityInfo in _included)
                     {
-                        var convertedValue = ConvertInput(convertModel, quantityInfo);
-                        if (!double.IsNaN(convertedValue)) results.Add(new UnitConversionResult(convertedValue, convertModel.ToUnit, quantityInfo));
+                        var convertedValue = ConvertInput(convertEntity, quantityInfo);
+                        if (!double.IsNaN(convertedValue)) results.Add(new UnitConversionResult(convertedValue, convertEntity.ToUnit, quantityInfo));
                     }
                     return results;
                 }
@@ -1481,7 +1481,7 @@ public class Expression
 
 #endregion Utility
 
-#region Modeling
+#region Entitying
 
 public abstract class MetaAttribute : System.Attribute
 {
@@ -1500,9 +1500,9 @@ public abstract class MetaAttribute : System.Attribute
 }
 
 [AttributeUsage(AttributeTargets.Class)]
-public class ModelAttribute : MetaAttribute
+public class EntityAttribute : MetaAttribute
 {
-    public ModelAttribute(string emoji, string code, string abbreviation, string description)
+    public EntityAttribute(string emoji, string code, string abbreviation, string description)
         : base(emoji, code,
             abbreviation, description)
     { }
@@ -1638,19 +1638,19 @@ public class AnglePropAttribute : NumberPropAttribute
     { }
 }
 
-public class ModelPropAttribute : PropAttribute
+public class EntityPropAttribute : PropAttribute
 {
-    public ModelPropAttribute(string emoji, string code, string abbreviation, string description,
+    public EntityPropAttribute(string emoji, string code, string abbreviation, string description,
         PropImportance importance = PropImportance.REQUIRED, bool isDefaultValid = true, bool skipValidation = false) :
         base(emoji, code, abbreviation, description, importance, isDefaultValid, skipValidation)
     { }
 }
 
-public abstract class Model<T> where T : Model<T>
+public abstract class Entity<T> where T : Entity<T>
 {
     public override string ToString()
     {
-        var modelAttribute = GetType().GetCustomAttribute<ModelAttribute>();
+        var entityAttribute = GetType().GetCustomAttribute<EntityAttribute>();
         var nonEmptyIdProperties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .Where(p => p.GetCustomAttribute<PropAttribute>()?.Importance == PropImportance.ID &&
                         (p.GetValue(this) as string ?? "") != "")
@@ -1659,14 +1659,14 @@ public abstract class Model<T> where T : Model<T>
             .Where(v => v != null)
             .Select(v => v!.ToString()).ToList();
         if (nonEmptyIdPropertiesValues.Count != 0)
-            return $"{modelAttribute?.Abbreviation ?? ""}({string.Join(",", nonEmptyIdPropertiesValues)})";
+            return $"{entityAttribute?.Abbreviation ?? ""}({string.Join(",", nonEmptyIdPropertiesValues)})";
         var requiredProperties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .Where(p => p.GetCustomAttribute<PropAttribute>()?.Importance == PropImportance.REQUIRED)
             .Select(p => p.Name);
         var requiredPropertiesValues = requiredProperties.Select(p => GetType().GetProperty(p)?.GetValue(this))
             .Where(v => v != null)
             .Select(v => v!.ToString()).ToList();
-        return $"{modelAttribute?.Abbreviation ?? ""}({string.Join(",", requiredPropertiesValues)})";
+        return $"{entityAttribute?.Abbreviation ?? ""}({string.Join(",", requiredPropertiesValues)})";
     }
 
     public override bool Equals(object? obj)
@@ -1692,45 +1692,45 @@ public abstract class Model<T> where T : Model<T>
             .Aggregate(17, (current, value) => current * 31 + value!.GetHashCode());
     }
 
-    public static bool operator ==(Model<T> left, Model<T> right)
+    public static bool operator ==(Entity<T> left, Entity<T> right)
     {
         if (ReferenceEquals(left, right)) return true;
         if (left is null || right is null) return false;
         return left.Equals(right);
     }
 
-    public static bool operator !=(Model<T> left, Model<T> right) => !(left == right);
+    public static bool operator !=(Entity<T> left, Entity<T> right) => !(left == right);
 
     public T? DeepClone() => this.Serialize().Deserialize<T>();
 
     public virtual (bool, List<string>) Validate()
     {
-        var result = new ModelValidator<T>().Validate((T)this);
+        var result = new EntityValidator<T>().Validate((T)this);
         return (result.IsValid, result.Errors.Select(e => e.ToString()).ToList());
     }
 }
 
-public class ModelValidator<T> : AbstractValidator<T> where T : Model<T>
+public class EntityValidator<T> : AbstractValidator<T> where T : Entity<T>
 {
-    public ModelValidator()
+    public EntityValidator()
     {
-        var modelTypeName = typeof(T).Name;
-        var properties = Meta.Property[modelTypeName];
+        var entityTypeName = typeof(T).Name;
+        var properties = Meta.Property[entityTypeName];
         for (var i = 0; i < properties.Length; i++)
         {
             var property = properties[i];
-            var isPropertyList = Meta.IsPropertyList[modelTypeName][i];
-            var isPropertyModel = Meta.IsPropertyModel[modelTypeName][i];
-            ValidateProperty(property, isPropertyList, isPropertyModel);
+            var isPropertyList = Meta.IsPropertyList[entityTypeName][i];
+            var isPropertyEntity = Meta.IsPropertyEntity[entityTypeName][i];
+            ValidateProperty(property, isPropertyList, isPropertyEntity);
         }
     }
 
-    private void ValidateProperty(PropertyInfo property, bool isPropertyList, bool isPropertyModel)
+    private void ValidateProperty(PropertyInfo property, bool isPropertyList, bool isPropertyEntity)
     {
         var propAttribute = property.GetCustomAttribute<PropAttribute>();
         if (propAttribute?.SkipValidation == true) return;
         if (isPropertyList)
-            RuleFor(model => property.GetValue(model))
+            RuleFor(entity => property.GetValue(entity))
                 .NotEmpty()
                 .WithMessage($"The {property.Name.ToLower()} must have at least one.")
                 .When(m => propAttribute?.Importance != PropImportance.OPTIONAL);
@@ -1739,7 +1739,7 @@ public class ModelValidator<T> : AbstractValidator<T> where T : Model<T>
             var numberAttribute = property.GetCustomAttribute<NumberPropAttribute>();
             var isAngle = property.GetCustomAttribute<AnglePropAttribute>() != null;
             if (isAngle)
-                RuleFor(model => property.GetValue(model) as float?)
+                RuleFor(entity => property.GetValue(entity) as float?)
                     .GreaterThanOrEqualTo(0)
                     .WithMessage($"The {property.Name.ToLower()} must be at least 0 degrees.")
                     .LessThan(360)
@@ -1749,14 +1749,14 @@ public class ModelValidator<T> : AbstractValidator<T> where T : Model<T>
         {
             var textAttribute = property.GetCustomAttribute<TextAttribute>();
             if (textAttribute is null) return;
-            RuleFor(model => property.GetValue(model) as string)
+            RuleFor(entity => property.GetValue(entity) as string)
                 .NotEmpty()
                 .When(m => !(textAttribute.Importance == PropImportance.OPTIONAL || textAttribute.IsDefaultValid))
                 .WithMessage($"The {property.Name.ToLower()} must not be empty.")
                 .MaximumLength(textAttribute.LengthLimit)
-                .WithMessage(model =>
+                .WithMessage(entity =>
                 {
-                    var value = property.GetValue(model) as string;
+                    var value = property.GetValue(entity) as string;
                     var preview = value?.Length > 10 ? value!.Substring(0, 10) + "..." : value ?? "";
                     return
                         $"The {property.Name.ToLower()} must be at most {textAttribute.LengthLimit} characters long. The provided text ({preview}) has {value?.Length ?? 0} characters.";
@@ -1764,7 +1764,7 @@ public class ModelValidator<T> : AbstractValidator<T> where T : Model<T>
             // All non-description text
             if (property.GetCustomAttribute<DescriptionAttribute>() == null)
             {
-                RuleFor(model => property.GetValue(model) as string)
+                RuleFor(entity => property.GetValue(entity) as string)
                     .Matches(@"^\S.*$")
                     .When(m => (property.GetValue(m) as string ?? "") != "")
                     .WithMessage($"The {property.Name.ToLower()} must not start with a space.")
@@ -1782,7 +1782,7 @@ public class ModelValidator<T> : AbstractValidator<T> where T : Model<T>
             { }
             else if (property.GetCustomAttribute<EmailAttribute>() != null)
             {
-                RuleFor(model => property.GetValue(model) as string)
+                RuleFor(entity => property.GetValue(entity) as string)
                     .EmailAddress().WithMessage($"The {property.Name.ToLower()} is not a valid email address.");
             }
             else if (property.GetCustomAttribute<UrlAttribute>() != null)
@@ -1812,15 +1812,15 @@ public class ModelValidator<T> : AbstractValidator<T> where T : Model<T>
                 })
                 .OverridePropertyName(property.Name);
         }
-        else if (isPropertyModel && !isPropertyList)
+        else if (isPropertyEntity && !isPropertyList)
         {
-            // TODO: Implement reflexive validation for model properties.
-            //var validatorType = typeof(ModelValidator<>).MakeGenericType(property.PropertyType);
-            //RuleFor(model => property.GetValue(model)).SetValidator((dynamic)Activator.CreateInstance(validatorType));
+            // TODO: Implement reflexive validation for entity properties.
+            //var validatorType = typeof(EntityValidator<>).MakeGenericType(property.PropertyType);
+            //RuleFor(entity => property.GetValue(entity)).SetValidator((dynamic)Activator.CreateInstance(validatorType));
         }
-        else if (isPropertyModel && isPropertyList)
+        else if (isPropertyEntity && isPropertyList)
         {
-            // TODO: Implement reflexive validation for model properties.
+            // TODO: Implement reflexive validation for entity properties.
         }
     }
 }
@@ -1828,8 +1828,16 @@ public class ModelValidator<T> : AbstractValidator<T> where T : Model<T>
 #region SemioValidation
 
 /// <summary>
-/// Portable validation issue format for cross-platform serialization.
-/// This format produces identical JSON output across TypeScript, Python, and C#.
+/// Validation fix with title and diff.
+/// </summary>
+public class SemioValidationFix
+{
+    public string Title { get; set; } = "";
+    public object? Diff { get; set; }
+}
+
+/// <summary>
+/// Validation issue format.
 /// </summary>
 public class SemioValidationIssue
 {
@@ -1838,11 +1846,11 @@ public class SemioValidationIssue
     public string Message { get; set; } = "";
     public string EntityKind { get; set; } = "";
     public string EntityGuid { get; set; } = "";
+    public List<SemioValidationFix> Fixes { get; set; } = new();
 }
 
 /// <summary>
-/// Portable validation result format for cross-platform serialization.
-/// This format produces identical JSON output across TypeScript, Python, and C#.
+/// Validation result format.
 /// </summary>
 public class SemioValidationResult
 {
@@ -1853,7 +1861,7 @@ public class SemioValidationResult
     public string Serialize()
     {
         var sorted = Issues.OrderBy(i => i.RuleId).ThenBy(i => i.EntityGuid).ToList();
-        var result = new { issues = sorted.Select(i => new { ruleId = i.RuleId, severity = i.Severity, message = i.Message, entityKind = i.EntityKind, entityGuid = i.EntityGuid }) };
+        var result = new { issues = sorted.Select(i => new { ruleId = i.RuleId, severity = i.Severity, message = i.Message, entityKind = i.EntityKind, entityGuid = i.EntityGuid, fixes = i.Fixes.Select(f => new { title = f.Title, diff = f.Diff }) }) };
         return JsonConvert.SerializeObject(result, Formatting.Indented, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
     }
 
@@ -1863,16 +1871,30 @@ public class SemioValidationResult
         var result = new SemioValidationResult();
         foreach (var issue in data!.issues)
         {
+            var fixes = new List<SemioValidationFix>();
+            if (issue.fixes != null)
+            {
+                foreach (var fix in issue.fixes)
+                {
+                    fixes.Add(new SemioValidationFix { Title = (string)fix.title, Diff = fix.diff });
+                }
+            }
             result.Issues.Add(new SemioValidationIssue
             {
                 RuleId = (string)issue.ruleId,
                 Severity = (string)issue.severity,
                 Message = (string)issue.message,
                 EntityKind = (string)issue.entityKind,
-                EntityGuid = (string)issue.entityGuid
+                EntityGuid = (string)issue.entityGuid,
+                Fixes = fixes
             });
         }
         return result;
+    }
+
+    private static string NormalizeGuids(string json)
+    {
+        return System.Text.RegularExpressions.Regex.Replace(json, @"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", "<GUID>", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
     }
 
     public static bool AreEqual(SemioValidationResult a, SemioValidationResult b)
@@ -1886,6 +1908,8 @@ public class SemioValidationResult
             var ib = sortedB[i];
             if (ia.RuleId != ib.RuleId || ia.Severity != ib.Severity || ia.Message != ib.Message || ia.EntityKind != ib.EntityKind || ia.EntityGuid != ib.EntityGuid)
                 return false;
+            // C# doesn't generate fixes yet - skip fix comparison
+            // Future: add fix generation and enable comparison
         }
         return true;
     }
@@ -2012,9 +2036,9 @@ public static class SemioValidator
                 var list = nameGroup.ToList();
                 if (list.Count > 1)
                 {
-                    foreach (var model in list.Skip(1))
+                    foreach (var entity in list.Skip(1))
                     {
-                        issues.Add(new SemioValidationIssue { RuleId = "model-name-unique", Severity = "error", Message = $"Duplicate model name \"{nameGroup.Key}\" inside type \"{t.Name}\".", EntityKind = "Model", EntityGuid = model.Guid });
+                        issues.Add(new SemioValidationIssue { RuleId = "model-name-unique", Severity = "error", Message = $"Duplicate model name \"{nameGroup.Key}\" inside type \"{t.Name}\".", EntityKind = "Model", EntityGuid = entity.Guid });
                     }
                 }
             }
@@ -2111,8 +2135,8 @@ public class DiffUpdate<T>
 
 #region Attribute
 
-[Model("🔐", "AI", "AtI", "The ID of the attribute.")]
-public class AttributeId : Model<AttributeId>
+[Entity("🔐", "AI", "AtI", "The ID of the attribute.")]
+public class AttributeId : Entity<AttributeId>
 {
     [Name("🔑", "Ke?", "Key?", "The optional key of the attribute.")]
     public string Key { get; set; } = "";
@@ -2121,8 +2145,8 @@ public class AttributeId : Model<AttributeId>
     public static implicit operator AttributeId(AttributeDiff diff) => new() { Key = diff.Key };
 }
 
-[Model("🔐", "AD", "ADf", "A diff for attributes.")]
-public class AttributeDiff : Model<AttributeDiff>
+[Entity("🔐", "AD", "ADf", "A diff for attributes.")]
+public class AttributeDiff : Entity<AttributeDiff>
 {
     [Id("🆔", "Gd?", "Gid", "The optional guid of the attribute.")]
     public string? Guid { get; set; }
@@ -2148,14 +2172,14 @@ public class AttributeDiff : Model<AttributeDiff>
     }
 }
 
-[Model("📊", "AtD", "AtsDf", "A diff for multiple attributes.")]
-public class AttributesDiff : Model<AttributesDiff>
+[Entity("📊", "AtD", "AtsDf", "A diff for multiple attributes.")]
+public class AttributesDiff : Entity<AttributesDiff>
 {
-    [ModelProp("➖", "Rm*", "Rem*", "The optional removed attributes.", PropImportance.OPTIONAL)]
+    [EntityProp("➖", "Rm*", "Rem*", "The optional removed attributes.", PropImportance.OPTIONAL)]
     public List<string> Removed { get; set; } = new();
-    [ModelProp("➕", "Ad*", "Add*", "The optional added attributes.", PropImportance.OPTIONAL)]
+    [EntityProp("➕", "Ad*", "Add*", "The optional added attributes.", PropImportance.OPTIONAL)]
     public List<Attribute> Added { get; set; } = new();
-    [ModelProp("✏️", "Up*", "Upd*", "The optional updated attributes.", PropImportance.OPTIONAL)]
+    [EntityProp("✏️", "Up*", "Upd*", "The optional updated attributes.", PropImportance.OPTIONAL)]
     public List<DiffUpdate<AttributeDiff>> Updated { get; set; } = new();
 
     public AttributesDiff MergeDiff(AttributesDiff other)
@@ -2174,8 +2198,8 @@ public class AttributesDiff : Model<AttributesDiff>
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-attribute-"/>
 /// </summary>
-[Model("🏷️", "At", "Atr", "A attribute is a key value pair with an an optional definition.")]
-public class Attribute : Model<Attribute>
+[Entity("🏷️", "At", "Atr", "A attribute is a key value pair with an an optional definition.")]
+public class Attribute : Entity<Attribute>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the attribute.", PropImportance.ID)]
     public string Guid { get; set; } = "";
@@ -2235,8 +2259,8 @@ public class Attribute : Model<Attribute>
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-diagram-point-"/>
 /// </summary>
-[Model("📺", "DP", "DPt", "A 2d-point (uv) of floats in the diagram. One unit is equal the width of a piece icon.")]
-public class Coord : Model<Coord>
+[Entity("📺", "DP", "DPt", "A 2d-point (uv) of floats in the diagram. One unit is equal the width of a piece icon.")]
+public class Coord : Entity<Coord>
 {
     [NumberProp("🎚️", "U", "U", "The u-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.", PropImportance.REQUIRED)]
     public float U { get; set; }
@@ -2258,8 +2282,8 @@ public class Coord : Model<Coord>
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-point-"/>
 /// </summary>
-[Model("✖️", "Pt", "Pnt", "A 3-point (xyz) of floating point numbers.")]
-public class Point : Model<Point>
+[Entity("✖️", "Pt", "Pnt", "A 3-point (xyz) of floating point numbers.")]
+public class Point : Entity<Point>
 {
     [NumberProp("🎚️", "X", "X", "The x-coordinate of the point.", PropImportance.REQUIRED)]
     public float X { get; set; } = 0;
@@ -2276,8 +2300,8 @@ public class Point : Model<Point>
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-vector-"/>
 /// </summary>
-[Model("➡️", "Vc", "Vec", "A 3d-vector (xyz) of floating point numbers.")]
-public class Vector : Model<Vector>
+[Entity("➡️", "Vc", "Vec", "A 3d-vector (xyz) of floating point numbers.")]
+public class Vector : Entity<Vector>
 {
     [NumberProp("🎚️", "X", "X", "The x-coordinate of the vector.", PropImportance.REQUIRED)]
     public float X { get; set; } = 1;
@@ -2317,19 +2341,19 @@ public class Vector : Model<Vector>
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-plane-"/>
 /// </summary>
-[Model("◳", "Pn", "Pln", "A plane is an origin (point) and an orientation (x-axis and y-axis).")]
-public class Plane : Model<Plane>
+[Entity("◳", "Pn", "Pln", "A plane is an origin (point) and an orientation (x-axis and y-axis).")]
+public class Plane : Entity<Plane>
 {
-    [ModelProp("⌱", "Og", "Org", "The origin of the plane.")]
+    [EntityProp("⌱", "Og", "Org", "The origin of the plane.")]
     public Point Origin { get; set; } = new();
 
-    [ModelProp("➡️", "XA", "XAx", "The x-axis of the plane.")]
+    [EntityProp("➡️", "XA", "XAx", "The x-axis of the plane.")]
     public Vector XAxis { get; set; } = new();
 
-    [ModelProp("➡️", "YA", "YAx", "The y-axis of the plane.")]
+    [EntityProp("➡️", "YA", "YAx", "The y-axis of the plane.")]
     public Vector YAxis { get; set; } = new() { Y = 1 };
 
-    // TODO: Implement reflexive validation for model properties.
+    // TODO: Implement reflexive validation for entity properties.
     public override (bool, List<string>) Validate()
     {
         var (isValid, errors) = base.Validate();
@@ -2356,23 +2380,41 @@ public class Plane : Model<Plane>
 
 #region Location
 
-[Model("📍", "Lc", "Loc", "A location on the earth surface (longitude, latitude).")]
-public class Location : Model<Location>
+[Entity("📍", "LI", "LocI", "The ID of a location.")]
+public class LocationId : Entity<LocationId>
 {
+    [Id("🆔", "Gd", "Gui", "The guid of the location.", PropImportance.ID)]
+    public string Guid { get; set; } = "";
+    public static implicit operator LocationId(Location location) => new() { Guid = location.Guid };
+    public string ToIdString() => $"{Guid}";
+    public string ToHumanIdString() => $"{ToIdString()}";
+    public override string ToString() => $"LocI({ToHumanIdString()})";
+}
+
+[Entity("📍", "Lc", "Loc", "A location on the earth surface (longitude, latitude).")]
+public class Location : Entity<Location>
+{
+    [Id("🆔", "Gd", "Gui", "The guid of the location.", PropImportance.ID)]
+    public string Guid { get; set; } = "";
     [NumberProp("↔️", "Lo", "Lon", "The longitude of the location in degrees.", PropImportance.REQUIRED)]
     public float Longitude { get; set; }
     [NumberProp("↕️", "La", "Lat", "The latitude of the location in degrees.", PropImportance.REQUIRED)]
     public float Latitude { get; set; }
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the location.", PropImportance.OPTIONAL)]
+    [NumberProp("⬆️", "Al?", "Alt?", "The optional altitude of the location in meters.")]
+    public float? Altitude { get; set; }
+    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the location.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
+    public string ToIdString() => $"{Guid}";
+    public string ToHumanIdString() => $"{ToIdString()}";
+    public override string ToString() => $"Loc({ToHumanIdString()})";
 }
 
 #endregion Location
 
 #region Author
 
-[Model("👤", "Au", "Aut", "The id of the author.")]
-public class AuthorId : Model<AuthorId>
+[Entity("👤", "Au", "Aut", "The id of the author.")]
+public class AuthorId : Entity<AuthorId>
 {
     [Email("📧", "Em", "Eml", "The email of the author.", PropImportance.ID)]
     public string Email { get; set; } = "";
@@ -2382,8 +2424,8 @@ public class AuthorId : Model<AuthorId>
     public override string ToString() => $"Aut({ToHumanIdString()})";
 }
 
-[Model("🔗", "AA", "ArtAuth", "A many-to-many relationship between authors and artifacts (types/designs).")]
-public class ArtifactAuthor : Model<ArtifactAuthor>
+[Entity("🔗", "AA", "ArtAuth", "A many-to-many relationship between authors and artifacts (types/designs).")]
+public class ArtifactAuthor : Entity<ArtifactAuthor>
 {
     [Email("📧", "AEm", "AEml", "The email of the author.", PropImportance.ID)]
     public string AuthorEmail { get; set; } = "";
@@ -2415,8 +2457,8 @@ public class ArtifactAuthor : Model<ArtifactAuthor>
     }
 }
 
-[Model("👤", "AuD", "AuDf", "A diff for an author.")]
-public class AuthorDiff : Model<AuthorDiff>
+[Entity("👤", "AuD", "AuDf", "A diff for an author.")]
+public class AuthorDiff : Entity<AuthorDiff>
 {
     [Id("🆔", "Gd?", "Gid", "The optional guid of the author.")]
     public string? Guid { get; set; }
@@ -2424,7 +2466,7 @@ public class AuthorDiff : Model<AuthorDiff>
     public string? Name { get; set; }
     [Email("📧", "Em?", "Eml?", "The optional email of the author.")]
     public string? Email { get; set; }
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the author.", PropImportance.OPTIONAL)]
+    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the author.", PropImportance.OPTIONAL)]
     public List<Attribute>? Attributes { get; set; }
 
     public static implicit operator AuthorDiff(Author author) => new() { Guid = author.Guid, Name = author.Name, Email = author.Email, Attributes = author.Attributes };
@@ -2441,8 +2483,8 @@ public class AuthorDiff : Model<AuthorDiff>
     }
 }
 
-[Model("", "Au", "Aut", "The information about the author.")]
-public class Author : Model<Author>
+[Entity("", "Au", "Aut", "The information about the author.")]
+public class Author : Entity<Author>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the author.", PropImportance.ID)]
     public string Guid { get; set; } = "";
@@ -2450,7 +2492,7 @@ public class Author : Model<Author>
     public string Name { get; set; } = "";
     [Email("📧", "Em", "Eml", "The email of the author.", PropImportance.ID)]
     public string Email { get; set; } = "";
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the author.", PropImportance.OPTIONAL)]
+    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the author.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
     public string ToIdString() => $"{Email}";
     public string ToHumanIdString() => $"{ToIdString()}";
@@ -2472,14 +2514,14 @@ public class Author : Model<Author>
     }
 }
 
-[Model("👥", "AuD", "AusDf", "A diff for multiple authors.")]
-public class AuthorsDiff : Model<AuthorsDiff>
+[Entity("👥", "AuD", "AusDf", "A diff for multiple authors.")]
+public class AuthorsDiff : Entity<AuthorsDiff>
 {
-    [ModelProp("➖", "Rm*", "Rem*", "The optional removed authors.", PropImportance.OPTIONAL)]
+    [EntityProp("➖", "Rm*", "Rem*", "The optional removed authors.", PropImportance.OPTIONAL)]
     public List<string> Removed { get; set; } = new();
-    [ModelProp("➕", "Ad*", "Add*", "The optional added authors.", PropImportance.OPTIONAL)]
+    [EntityProp("➕", "Ad*", "Add*", "The optional added authors.", PropImportance.OPTIONAL)]
     public List<Author> Added { get; set; } = new();
-    [ModelProp("✏️", "Up*", "Upd*", "The optional updated authors.", PropImportance.OPTIONAL)]
+    [EntityProp("✏️", "Up*", "Upd*", "The optional updated authors.", PropImportance.OPTIONAL)]
     public List<DiffUpdate<AuthorDiff>> Updated { get; set; } = new();
 
     public AuthorsDiff MergeDiff(AuthorsDiff other)
@@ -2499,8 +2541,8 @@ public class AuthorsDiff : Model<AuthorsDiff>
 
 #region File
 
-[Model("📄", "Fl", "Fil", "The identifier of a file.")]
-public class FileId : Model<FileId>
+[Entity("📄", "Fl", "Fil", "The identifier of a file.")]
+public class FileId : Entity<FileId>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the file.", PropImportance.ID)]
     public string Guid { get; set; } = "";
@@ -2514,8 +2556,8 @@ public class FileId : Model<FileId>
     public static implicit operator FileId(FileDiff diff) => new() { Guid = diff.Guid ?? "" };
 }
 
-[Model("📄", "FD", "FDf", "A diff for files.")]
-public class FileDiff : Model<FileDiff>
+[Entity("📄", "FD", "FDf", "A diff for files.")]
+public class FileDiff : Entity<FileDiff>
 {
     [Id("🆔", "Gd?", "Gid", "The optional guid of the file.")]
     public string? Guid { get; set; }
@@ -2523,7 +2565,7 @@ public class FileDiff : Model<FileDiff>
     public string? Name { get; set; }
     [Url("🔗", "Rm?", "Rem?", "The optional remote url of the file.")]
     public string? Remote { get; set; }
-    [ModelProp("📁", "Fo?", "Fol?", "The optional folder reference of the file.")]
+    [EntityProp("📁", "Fo?", "Fol?", "The optional folder reference of the file.")]
     public FolderId? Folder { get; set; }
     [NumberProp("📏", "Sz?", "Siz?", "The optional size of the file in bytes.")]
     public int? Size { get; set; }
@@ -2556,29 +2598,31 @@ public class FileDiff : Model<FileDiff>
     }
 }
 
-[Model("📊", "FsD", "FsDf", "A diff for multiple files.")]
-public class FilesDiff : Model<FilesDiff>
+[Entity("📊", "FsD", "FsDf", "A diff for multiple files.")]
+public class FilesDiff : Entity<FilesDiff>
 {
-    [ModelProp("➖", "Rm*", "Rem*", "The optional removed files.", PropImportance.OPTIONAL)]
+    [EntityProp("➖", "Rm*", "Rem*", "The optional removed files.", PropImportance.OPTIONAL)]
     public List<string> Removed { get; set; } = new();
-    [ModelProp("✏️", "Up*", "Upd*", "The optional updated files.", PropImportance.OPTIONAL)]
+    [EntityProp("✏️", "Up*", "Upd*", "The optional updated files.", PropImportance.OPTIONAL)]
     public List<DiffUpdate<FileDiff>> Updated { get; set; } = new();
-    [ModelProp("➕", "Ad*", "Add*", "The optional added files.", PropImportance.OPTIONAL)]
+    [EntityProp("➕", "Ad*", "Add*", "The optional added files.", PropImportance.OPTIONAL)]
     public List<File> Added { get; set; } = new();
 
     public static implicit operator FilesDiff(List<File> files) => new() { Updated = files.Select(f => new DiffUpdate<FileDiff> { Id = f.Guid, Diff = (FileDiff)f }).ToList() };
 }
 
-[Model("📄", "Fl", "Fil", "A file with content.")]
-public class File : Model<File>
+[Entity("📄", "Fl", "Fil", "A file with content.")]
+public class File : Entity<File>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the file.", PropImportance.ID)]
     public string Guid { get; set; } = "";
     [Name("📛", "Nm", "Nam", "The name of the file.", PropImportance.REQUIRED)]
     public string Name { get; set; } = "";
+    [Name("📝", "Mi?", "Mim?", "The optional MIME type of the file.")]
+    public string? Mime { get; set; }
     [Url("🔗", "Rm?", "Rem?", "The optional remote url of the file.")]
     public string? Remote { get; set; }
-    [ModelProp("📁", "Fo?", "Fol?", "The optional folder reference of the file.")]
+    [EntityProp("📁", "Fo?", "Fol?", "The optional folder reference of the file.")]
     public FolderId? Folder { get; set; }
     [NumberProp("📏", "Sz?", "Siz?", "The optional size of the file in bytes.")]
     public int? Size { get; set; }
@@ -2606,8 +2650,8 @@ public class File : Model<File>
 
 #region Folder
 
-[Model("�", "FId", "FolId", "The identifier for a folder.")]
-public class FolderId : Model<FolderId>
+[Entity("�", "FId", "FolId", "The identifier for a folder.")]
+public class FolderId : Entity<FolderId>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the folder.", PropImportance.ID)]
     public string Guid { get; set; } = "";
@@ -2619,8 +2663,8 @@ public class FolderId : Model<FolderId>
     public static implicit operator FolderId(FolderDiff diff) => new() { Guid = diff.Guid ?? "" };
 }
 
-[Model("📁", "FD", "FolDf", "A diff for folders.")]
-public class FolderDiff : Model<FolderDiff>
+[Entity("📁", "FD", "FolDf", "A diff for folders.")]
+public class FolderDiff : Entity<FolderDiff>
 {
     [Id("🆔", "Gd?", "Gid", "The optional guid of the folder.")]
     public string? Guid { get; set; }
@@ -2630,7 +2674,7 @@ public class FolderDiff : Model<FolderDiff>
     public string? Parent { get; set; }
     [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the folder.")]
     public string? Description { get; set; }
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the folder.", PropImportance.OPTIONAL)]
+    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the folder.", PropImportance.OPTIONAL)]
     public List<Attribute>? Attributes { get; set; }
     [Name("📅", "CA?", "CrA?", "The optional creation date.")]
     public string? CreatedAt { get; set; }
@@ -2658,21 +2702,21 @@ public class FolderDiff : Model<FolderDiff>
     }
 }
 
-[Model("📁", "FsD", "FolsDf", "A diff for multiple folders.")]
-public class FoldersDiff : Model<FoldersDiff>
+[Entity("📁", "FsD", "FolsDf", "A diff for multiple folders.")]
+public class FoldersDiff : Entity<FoldersDiff>
 {
-    [ModelProp("➖", "Rm*", "Rem*", "The optional removed folders.", PropImportance.OPTIONAL)]
+    [EntityProp("➖", "Rm*", "Rem*", "The optional removed folders.", PropImportance.OPTIONAL)]
     public List<string> Removed { get; set; } = new();
-    [ModelProp("✏️", "Up*", "Upd*", "The optional updated folders.", PropImportance.OPTIONAL)]
+    [EntityProp("✏️", "Up*", "Upd*", "The optional updated folders.", PropImportance.OPTIONAL)]
     public List<DiffUpdate<FolderDiff>> Updated { get; set; } = new();
-    [ModelProp("➕", "Ad*", "Add*", "The optional added folders.", PropImportance.OPTIONAL)]
+    [EntityProp("➕", "Ad*", "Add*", "The optional added folders.", PropImportance.OPTIONAL)]
     public List<Folder> Added { get; set; } = new();
 
     public static implicit operator FoldersDiff(List<Folder> folders) => new() { Updated = folders.Select(f => new DiffUpdate<FolderDiff> { Id = f.Guid, Diff = (FolderDiff)f }).ToList() };
 }
 
-[Model("📁", "Fol", "Folder", "A folder is an organizational container.")]
-public class Folder : Model<Folder>
+[Entity("📁", "Fol", "Folder", "A folder is an organizational container.")]
+public class Folder : Entity<Folder>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the folder.", PropImportance.ID)]
     public string Guid { get; set; } = "";
@@ -2682,7 +2726,7 @@ public class Folder : Model<Folder>
     public string? Parent { get; set; }
     [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the folder.")]
     public string Description { get; set; } = "";
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the folder.", PropImportance.OPTIONAL)]
+    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the folder.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
     [Name("📅", "CA", "CrA", "The creation date of the folder.")]
     public string CreatedAt { get; set; } = "";
@@ -2722,26 +2766,42 @@ public class Folder : Model<Folder>
 
 #region Benchmark
 
+[Entity("🔢", "BI", "BmI", "The identifier for a benchmark.")]
+public class BenchmarkId : Entity<BenchmarkId>
+{
+    [Id("🆔", "Gd", "Gui", "The guid of the benchmark.", PropImportance.ID)]
+    public string Guid { get; set; } = "";
+    public static implicit operator BenchmarkId(Benchmark benchmark) => new() { Guid = benchmark.Guid };
+    public string ToIdString() => $"{Guid}";
+    public string ToHumanIdString() => $"{ToIdString()}";
+    public override string ToString() => $"BmI({ToHumanIdString()})";
+}
+
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-benchmark-"/>
 /// </summary>
-[Model("🔢", "Bm", "Bmk", "A benchmark is a value with an optional unit for a quality.")]
-public class Benchmark : Model<Benchmark>
+[Entity("🔢", "Bm", "Bmk", "A benchmark is a value with an optional unit for a quality.")]
+public class Benchmark : Entity<Benchmark>
 {
+    [Id("🆔", "Gd", "Gui", "The guid of the benchmark.", PropImportance.ID)]
+    public string Guid { get; set; } = "";
     [Name("📛", "Nm", "Name", "The name of the benchmark.", PropImportance.REQUIRED)]
     public string Name { get; set; } = "";
-    [Url("🖼️", "Ic", "Ico", "The icon [ emoji | url ] of the benchmark.")]
-    public string Icon { get; set; } = "";
+    [Url("🖼️", "Ic?", "Ico?", "The optional icon [ emoji | url ] of the benchmark.")]
+    public string? Icon { get; set; }
     [NumberProp("⬇️", "Mi?", "Min?", "The optional minimum value of the benchmark.")]
-    public float Min { get; set; } = 0;
+    public float? Min { get; set; }
     [FalseOrTrue("⬇️", "MiE?", "MiE?", "Whether the minimum value is excluded from the range.")]
-    public bool MinExcluded { get; set; } = false;
+    public bool? MinExcluded { get; set; }
     [NumberProp("⬆️", "Mx?", "Max?", "The optional maximum value of the benchmark.")]
-    public float Max { get; set; } = 0;
+    public float? Max { get; set; }
     [FalseOrTrue("⬆️", "MxE?", "MxE?", "Whether the maximum value is excluded from the range.")]
-    public bool MaxExcluded { get; set; } = false;
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the benchmark.", PropImportance.OPTIONAL)]
+    public bool? MaxExcluded { get; set; }
+    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the benchmark.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
+    public string ToIdString() => $"{Guid}";
+    public string ToHumanIdString() => $"{Name}";
+    public override string ToString() => $"Bmk({ToHumanIdString()})";
 }
 
 #endregion Benchmark
@@ -2767,8 +2827,8 @@ public enum QualityKind
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-quality-"/>
 /// </summary>
-[Model("🔑", "Ql", "Qal", "A quality id is a guid for a quality.")]
-public class QualityId : Model<QualityId>
+[Entity("🔑", "Ql", "Qal", "A quality id is a guid for a quality.")]
+public class QualityId : Entity<QualityId>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the quality.")]
     public string Guid { get; set; } = "";
@@ -2777,8 +2837,8 @@ public class QualityId : Model<QualityId>
     public static implicit operator QualityId(QualityDiff diff) => new() { Guid = diff.Guid ?? "" };
 }
 
-[Model("📊", "QD", "QDf", "A diff for qualities.")]
-public class QualityDiff : Model<QualityDiff>
+[Entity("📊", "QD", "QDf", "A diff for qualities.")]
+public class QualityDiff : Entity<QualityDiff>
 {
     [Id("🆔", "Gd?", "Gid", "The optional guid of the quality.")]
     public string? Guid { get; set; }
@@ -2808,11 +2868,11 @@ public class QualityDiff : Model<QualityDiff>
     public bool MaxExcluded { get; set; } = true;
     [NumberProp("Ⓜ️", "Dl?", "Dfl?", "The optional default value of the quality. Either a default value or a formula can be set.")]
     public float Default { get; set; } = 0;
-    [ModelProp("🟰", "Fo?", "For?", "The optional formula of the quality.")]
+    [EntityProp("🟰", "Fo?", "For?", "The optional formula of the quality.")]
     public string Formula { get; set; } = "";
-    [ModelProp("🔢", "Bm*", "Bmk*", "The optional benchmarks of the quality.", PropImportance.OPTIONAL)]
+    [EntityProp("🔢", "Bm*", "Bmk*", "The optional benchmarks of the quality.", PropImportance.OPTIONAL)]
     public List<Benchmark> Benchmarks { get; set; } = new();
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the quality.", PropImportance.OPTIONAL)]
+    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the quality.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
     public static implicit operator QualityDiff(QualityId id) => new() { Guid = id.Guid };
@@ -2823,8 +2883,8 @@ public class QualityDiff : Model<QualityDiff>
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-quality-"/>
 /// </summary>
-[Model("📃", "Ql", "Qal", "A quality is numeric metadata used for stats and benchmarks.")]
-public class Quality : Model<Quality>
+[Entity("📃", "Ql", "Qal", "A quality is numeric metadata used for stats and benchmarks.")]
+public class Quality : Entity<Quality>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the quality.", PropImportance.ID)]
     public string Guid { get; set; } = "";
@@ -2836,6 +2896,8 @@ public class Quality : Model<Quality>
     public string Description { get; set; } = "";
     [Url("🔗", "Ur?", "Uri?", "The Unique Resource Identifier (URI) of the quality.")]
     public string Uri { get; set; } = "";
+    [Name("📁", "Fl?", "Fld?", "The optional folder path of the quality.")]
+    public string? Folder { get; set; }
     [FalseOrTrue("🔢", "Sc?", "Sc?", "Whether the quality is scalable.")]
     public bool Scalable { get; set; } = false;
     [Name("🔢", "Kd", "Kn", "The kind of the quality.")]
@@ -2854,11 +2916,17 @@ public class Quality : Model<Quality>
     public bool MaxExcluded { get; set; } = true;
     [NumberProp("Ⓜ️", "Dl?", "Dfl?", "The optional default value of the quality. Either a default value or a formula can be set.")]
     public float Default { get; set; } = 0;
-    [ModelProp("🟰", "Fo?", "For?", "The optional formula of the quality.")]
+    [EntityProp("🟰", "Fo?", "For?", "The optional formula of the quality.")]
     public string Formula { get; set; } = "";
-    [ModelProp("🔢", "Bm*", "Bmk*", "The optional benchmarks of the quality.", PropImportance.OPTIONAL)]
+    [Url("🖼️", "Ic?", "Ico?", "The optional icon [ emoji | url ] of the quality.")]
+    public string? Icon { get; set; }
+    [Url("🖼️", "Ig?", "Img?", "The optional image url of the quality.")]
+    public string? Image { get; set; }
+    [Name("📏", "Un?", "Unt?", "The optional display unit of the quality.")]
+    public string? Unit { get; set; }
+    [EntityProp("🔢", "Bm*", "Bmk*", "The optional benchmarks of the quality.", PropImportance.OPTIONAL)]
     public List<Benchmark> Benchmarks { get; set; } = new();
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the quality.", PropImportance.OPTIONAL)]
+    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the quality.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
     public static implicit operator Quality(QualityId id) => new() { Guid = id.Guid };
@@ -2892,8 +2960,8 @@ public class Quality : Model<Quality>
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-tag-"/>
 /// </summary>
-[Model("🏷️", "Tg", "Tag", "A tag id is a guid for a tag.")]
-public class TagId : Model<TagId>
+[Entity("🏷️", "Tg", "Tag", "A tag id is a guid for a tag.")]
+public class TagId : Entity<TagId>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the tag.")]
     public string Guid { get; set; } = "";
@@ -2904,8 +2972,8 @@ public class TagId : Model<TagId>
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-tag-"/>
 /// </summary>
-[Model("🏷️", "Tg", "Tag", "A tag is a label for categorizing models.")]
-public class Tag : Model<Tag>
+[Entity("🏷️", "Tg", "Tag", "A tag is a label for categorizing entitys.")]
+public class Tag : Entity<Tag>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the tag.", PropImportance.ID)]
     public string Guid { get; set; } = "";
@@ -2915,7 +2983,7 @@ public class Tag : Model<Tag>
     public string Description { get; set; } = "";
     [Url("🪙", "Ic?", "Ico?", "The optional icon [ emoji | logogram | url ] of the tag.")]
     public string Icon { get; set; } = "";
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the tag.", PropImportance.OPTIONAL)]
+    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the tag.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
     public static implicit operator Tag(TagId id) => new() { Guid = id.Guid };
@@ -2928,8 +2996,8 @@ public class Tag : Model<Tag>
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-concept-"/>
 /// </summary>
-[Model("💡", "Cp", "Con", "A concept id is a guid for a concept.")]
-public class ConceptId : Model<ConceptId>
+[Entity("💡", "Cp", "Con", "A concept id is a guid for a concept.")]
+public class ConceptId : Entity<ConceptId>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the concept.")]
     public string Guid { get; set; } = "";
@@ -2940,8 +3008,8 @@ public class ConceptId : Model<ConceptId>
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-concept-"/>
 /// </summary>
-[Model("💡", "Cp", "Con", "A concept is a semantic grouping for types or designs.")]
-public class Concept : Model<Concept>
+[Entity("💡", "Cp", "Con", "A concept is a semantic grouping for types or designs.")]
+public class Concept : Entity<Concept>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the concept.", PropImportance.ID)]
     public string Guid { get; set; } = "";
@@ -2951,14 +3019,14 @@ public class Concept : Model<Concept>
     public string Description { get; set; } = "";
     [Url("🪙", "Ic?", "Ico?", "The optional icon [ emoji | logogram | url ] of the concept.")]
     public string Icon { get; set; } = "";
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the concept.", PropImportance.OPTIONAL)]
+    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the concept.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
     public static implicit operator Concept(ConceptId id) => new() { Guid = id.Guid };
 }
 
-[Model("💡", "CpD", "CoDf", "A diff for a concept.")]
-public class ConceptDiff : Model<ConceptDiff>
+[Entity("💡", "CpD", "CoDf", "A diff for a concept.")]
+public class ConceptDiff : Entity<ConceptDiff>
 {
     [Id("🆔", "Gd?", "Gid", "The optional guid of the concept.")]
     public string? Guid { get; set; }
@@ -2968,18 +3036,18 @@ public class ConceptDiff : Model<ConceptDiff>
     public string? Description { get; set; }
     [Url("🪙", "Ic?", "Ico?", "The optional icon [ emoji | logogram | url ] of the concept.")]
     public string? Icon { get; set; }
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the concept.", PropImportance.OPTIONAL)]
+    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the concept.", PropImportance.OPTIONAL)]
     public AttributesDiff? Attributes { get; set; }
 }
 
-[Model("💡", "CsD", "CsDf", "A diff for multiple concepts.")]
-public class ConceptsDiff : Model<ConceptsDiff>
+[Entity("💡", "CsD", "CsDf", "A diff for multiple concepts.")]
+public class ConceptsDiff : Entity<ConceptsDiff>
 {
-    [ModelProp("➖", "Rm*", "Rem*", "The optional removed concepts.", PropImportance.OPTIONAL)]
+    [EntityProp("➖", "Rm*", "Rem*", "The optional removed concepts.", PropImportance.OPTIONAL)]
     public List<string> Removed { get; set; } = new();
-    [ModelProp("➕", "Ad*", "Add*", "The optional added concepts.", PropImportance.OPTIONAL)]
+    [EntityProp("➕", "Ad*", "Add*", "The optional added concepts.", PropImportance.OPTIONAL)]
     public List<Concept> Added { get; set; } = new();
-    [ModelProp("✏️", "Up*", "Upd*", "The optional updated concepts.", PropImportance.OPTIONAL)]
+    [EntityProp("✏️", "Up*", "Upd*", "The optional updated concepts.", PropImportance.OPTIONAL)]
     public List<DiffUpdate<ConceptDiff>> Updated { get; set; } = new();
 
     public ConceptsDiff MergeDiff(ConceptsDiff other)
@@ -3000,8 +3068,8 @@ public class ConceptsDiff : Model<ConceptsDiff>
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-interface-"/>
 /// </summary>
-[Model("🔑", "If", "Ifc", "An interface id is a guid for an interface.")]
-public class InterfaceId : Model<InterfaceId>
+[Entity("🔑", "If", "Ifc", "An interface id is a guid for an interface.")]
+public class InterfaceId : Entity<InterfaceId>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the interface.")]
     public string Guid { get; set; } = "";
@@ -3010,8 +3078,8 @@ public class InterfaceId : Model<InterfaceId>
     public static implicit operator InterfaceId(InterfaceDiff diff) => new() { Guid = diff.Guid };
 }
 
-[Model("📊", "IfD", "IfDf", "A diff for interfaces.")]
-public class InterfaceDiff : Model<InterfaceDiff>
+[Entity("📊", "IfD", "IfDf", "A diff for interfaces.")]
+public class InterfaceDiff : Entity<InterfaceDiff>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the interface.")]
     public string Guid { get; set; } = "";
@@ -3021,23 +3089,23 @@ public class InterfaceDiff : Model<InterfaceDiff>
     public string? Description { get; set; }
     [Url("🪙", "Ic?", "Ico?", "The optional icon [ emoji | logogram | url ] of the interface.")]
     public string? Icon { get; set; }
-    [ModelProp("✅", "CF*", "CFas*", "The optional other compatible interfaces. An empty list means this interface is compatible with all other interfaces.")]
+    [EntityProp("✅", "CF*", "CFas*", "The optional other compatible interfaces. An empty list means this interface is compatible with all other interfaces.")]
     public List<InterfaceId>? CompatibleInterfaces { get; set; }
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the interface.", PropImportance.OPTIONAL)]
+    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the interface.", PropImportance.OPTIONAL)]
     public List<Attribute>? Attributes { get; set; }
 
     public static implicit operator InterfaceDiff(InterfaceId id) => new() { Guid = id.Guid };
     public static implicit operator InterfaceDiff(Interface iface) => new() { Guid = iface.Guid, Name = iface.Name, Description = iface.Description, Icon = iface.Icon, CompatibleInterfaces = iface.CompatibleInterfaces?.Select(i => (InterfaceId)i).ToList(), Attributes = iface.Attributes };
 }
 
-[Model("📊", "IfsD", "IfsDf", "A diff for multiple interfaces.")]
-public class InterfacesDiff : Model<InterfacesDiff>
+[Entity("📊", "IfsD", "IfsDf", "A diff for multiple interfaces.")]
+public class InterfacesDiff : Entity<InterfacesDiff>
 {
-    [ModelProp("➖", "Rm*", "Rem*", "The optional removed interfaces.", PropImportance.OPTIONAL)]
+    [EntityProp("➖", "Rm*", "Rem*", "The optional removed interfaces.", PropImportance.OPTIONAL)]
     public List<string> Removed { get; set; } = new();
-    [ModelProp("➕", "Ad*", "Add*", "The optional added interfaces.", PropImportance.OPTIONAL)]
+    [EntityProp("➕", "Ad*", "Add*", "The optional added interfaces.", PropImportance.OPTIONAL)]
     public List<Interface> Added { get; set; } = new();
-    [ModelProp("✏️", "Up*", "Upd*", "The optional updated interfaces.", PropImportance.OPTIONAL)]
+    [EntityProp("✏️", "Up*", "Upd*", "The optional updated interfaces.", PropImportance.OPTIONAL)]
     public List<DiffUpdate<InterfaceDiff>> Updated { get; set; } = new();
 
     public static implicit operator InterfacesDiff(List<Interface> interfaces) => new() { Updated = interfaces.Select(i => new DiffUpdate<InterfaceDiff> { Id = i.Guid, Diff = (InterfaceDiff)i }).ToList() };
@@ -3046,8 +3114,8 @@ public class InterfacesDiff : Model<InterfacesDiff>
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-interface-"/>
 /// </summary>
-[Model("🔌", "If", "Ifc", "An interface defines port compatibility.")]
-public class Interface : Model<Interface>
+[Entity("🔌", "If", "Ifc", "An interface defines port compatibility.")]
+public class Interface : Entity<Interface>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the interface.")]
     public string Guid { get; set; } = "";
@@ -3057,9 +3125,9 @@ public class Interface : Model<Interface>
     public string Description { get; set; } = "";
     [Url("🪙", "Ic?", "Ico?", "The optional icon [ emoji | logogram | url ] of the interface.")]
     public string Icon { get; set; } = "";
-    [ModelProp("✅", "CF*", "CFas*", "The optional other compatible interfaces. An empty list means this interface is compatible with all other interfaces.")]
+    [EntityProp("✅", "CF*", "CFas*", "The optional other compatible interfaces. An empty list means this interface is compatible with all other interfaces.")]
     public List<InterfaceId> CompatibleInterfaces { get; set; } = new();
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the interface.", PropImportance.OPTIONAL)]
+    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the interface.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
     public static implicit operator Interface(InterfaceId id) => new() { Guid = id.Guid };
@@ -3117,32 +3185,47 @@ public class Interface : Model<Interface>
 
 #region Prop
 
-/// <summary>
-/// <see href="https://github.com/usalu/semio#-property-"/>
-/// </summary>
-[Model("🏷️", "Pp", "Prp", "A property is a value with an optional unit for a quality.")]
-public class Prop : Model<Prop>
+[Entity("🏷️", "PI", "PrpI", "The identifier for a property.")]
+public class PropId : Entity<PropId>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the property.", PropImportance.ID)]
     public string Guid { get; set; } = "";
-    [ModelProp("🔑", "Ql", "Qal", "The quality of the property.", PropImportance.REQUIRED)]
+    public static implicit operator PropId(Prop prop) => new() { Guid = prop.Guid };
+    public string ToIdString() => $"{Guid}";
+    public string ToHumanIdString() => $"{ToIdString()}";
+    public override string ToString() => $"PrpI({ToHumanIdString()})";
+}
+
+/// <summary>
+/// <see href="https://github.com/usalu/semio#-property-"/>
+/// </summary>
+[Entity("🏷️", "Pp", "Prp", "A property is a value with an optional unit for a quality.")]
+public class Prop : Entity<Prop>
+{
+    [Id("🆔", "Gd", "Gui", "The guid of the property.", PropImportance.ID)]
+    public string Guid { get; set; } = "";
+    [EntityProp("🔑", "Ql", "Qal", "The quality of the property.", PropImportance.REQUIRED)]
     public QualityId Quality { get; set; } = new();
     [Value("🔢", "Vl", "Val", "The value [ number | text ] of the property.")]
     public string Value { get; set; } = "";
     [Name("Ⓜ️", "Ut?", "Unt?", "The optional unit of the property.")]
     public string Unit { get; set; } = "";
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the property.", PropImportance.OPTIONAL)]
+    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the property.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
+
+    public string ToIdString() => $"{Guid}";
+    public string ToHumanIdString() => $"{ToIdString()}";
+    public override string ToString() => $"Prp({ToHumanIdString()})";
 }
 
 #endregion Prop
 
 #region Model
 
-[Model("💾", "Rp", "Rep", "The identifier of a model.")]
-public class ModelId : Model<ModelId>
+[Entity("💾", "Md", "Mod", "The identifier of a model.")]
+public class ModelId : Entity<ModelId>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the model.", PropImportance.ID)]
+    [Id("🆔", "Gd", "Gui", "The guid of the entity.", PropImportance.ID)]
     public string Guid { get; set; } = "";
     public static implicit operator ModelId(Model model) => new() { Guid = model.Guid };
     public static implicit operator ModelId(ModelDiff diff) => new() { Guid = diff.Guid ?? "" };
@@ -3151,20 +3234,20 @@ public class ModelId : Model<ModelId>
     public override string ToString() => $"Rep({ToHumanIdString()})";
 }
 
-[Model("📊", "RD", "RDf", "A diff for models.")]
-public class ModelDiff : Model<ModelDiff>
+[Entity("📊", "RD", "RDf", "A diff for entitys.")]
+public class ModelDiff : Entity<ModelDiff>
 {
-    [Id("🆔", "Gd?", "Gid", "The optional guid of the model.")]
+    [Id("🆔", "Gd?", "Gid", "The optional guid of the entity.")]
     public string? Guid { get; set; }
-    [Name("📛", "Nm?", "Name?", "The optional name of the model.")]
+    [Name("📛", "Nm?", "Name?", "The optional name of the entity.")]
     public string? Name { get; set; }
-    [ModelProp("📄", "Fl?", "Fil?", "The optional file reference of the model.")]
+    [EntityProp("📄", "Fl?", "Fil?", "The optional file reference of the entity.")]
     public FileId? File { get; set; }
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the model.")]
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the entity.")]
     public string Description { get; set; } = "";
-    [ModelProp("🏷️", "Tg*", "Tags*", "The optional tags to group models.", PropImportance.OPTIONAL)]
+    [EntityProp("🏷️", "Tg*", "Tags*", "The optional tags to group entitys.", PropImportance.OPTIONAL)]
     public List<TagId> Tags { get; set; } = new();
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the model.", PropImportance.OPTIONAL)]
+    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the entity.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
     public static implicit operator ModelDiff(ModelId id) => new() { Guid = id.Guid };
@@ -3184,14 +3267,14 @@ public class ModelDiff : Model<ModelDiff>
     }
 }
 
-[Model("📊", "RsD", "RsDf", "A diff for multiple models.")]
-public class ModelsDiff : Model<ModelsDiff>
+[Entity("📊", "RsD", "RsDf", "A diff for multiple entitys.")]
+public class ModelsDiff : Entity<ModelsDiff>
 {
-    [ModelProp("➖", "Rm*", "Rem*", "The optional removed models.", PropImportance.OPTIONAL)]
+    [EntityProp("➖", "Rm*", "Rem*", "The optional removed entitys.", PropImportance.OPTIONAL)]
     public List<string> Removed { get; set; } = new();
-    [ModelProp("➕", "Ad*", "Add*", "The optional added models.", PropImportance.OPTIONAL)]
+    [EntityProp("➕", "Ad*", "Add*", "The optional added entitys.", PropImportance.OPTIONAL)]
     public List<Model> Added { get; set; } = new();
-    [ModelProp("✏️", "Up*", "Upd*", "The optional updated models.", PropImportance.OPTIONAL)]
+    [EntityProp("✏️", "Up*", "Upd*", "The optional updated entitys.", PropImportance.OPTIONAL)]
     public List<DiffUpdate<ModelDiff>> Updated { get; set; } = new();
 
     public ModelsDiff MergeDiff(ModelsDiff other)
@@ -3210,24 +3293,24 @@ public class ModelsDiff : Model<ModelsDiff>
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-model-"/>
 /// </summary>
-[Model("💾", "Rp", "Rep",
+[Entity("💾", "Md", "Mod",
     "A model is a link to a resource that describes a type for a certain level of detail and tags.")]
-public class Model : Model<Model>
+public class Model : Entity<Model>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the model.", PropImportance.ID)]
     public string Guid { get; set; } = "";
     [Name("📛", "Nm?", "Name?", "The optional name of the model.")]
     public string Name { get; set; } = "";
-    [ModelProp("📄", "Fl", "Fil", "The file reference of the model.", PropImportance.REQUIRED)]
+    [EntityProp("📄", "Fl", "Fil", "The file reference of the model.", PropImportance.REQUIRED)]
     public FileId File { get; set; } = new();
 
     [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the model.")]
     public string Description { get; set; } = "";
 
-    [ModelProp("🏷️", "Tg*", "Tags*", "The optional tags to group models. No tags means default.", PropImportance.OPTIONAL, skipValidation: true)]
+    [EntityProp("🏷️", "Tg*", "Tags*", "The optional tags to group models. No tags means default.", PropImportance.OPTIONAL, skipValidation: true)]
     public List<TagId> Tags { get; set; } = new();
 
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the model.", PropImportance.OPTIONAL)]
+    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the model.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
     public static implicit operator Model(ModelId id) => new() { Guid = id.Guid };
@@ -3292,15 +3375,15 @@ public class Model : Model<Model>
     public string ToId() => ToIdString();
     public string ToHumanId() => ToHumanIdString();
 
-    public override string ToString() => $"Rep({ToHumanIdString()})";
+    public override string ToString() => $"Mod({ToHumanIdString()})";
 }
 
 #endregion Model
 
 #region Port
 
-[Model("🔌", "Po", "Por", "The optional local identifier of the port within the type. No id means the default port.")]
-public class PortId : Model<PortId>
+[Entity("🔌", "Po", "Por", "The optional local identifier of the port within the type. No id means the default port.")]
+public class PortId : Entity<PortId>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the port within the type.")]
     public string Guid { get; set; } = "";
@@ -3313,8 +3396,8 @@ public class PortId : Model<PortId>
     public override string ToString() => $"Por({ToHumanIdString()})";
 }
 
-[Model("📊", "PD", "PDf", "A diff for ports.")]
-public class PortDiff : Model<PortDiff>
+[Entity("📊", "PD", "PDf", "A diff for ports.")]
+public class PortDiff : Entity<PortDiff>
 {
     [Id("🆔", "Gd?", "Gid", "The optional guid of the port.")]
     public string? Guid { get; set; }
@@ -3322,19 +3405,19 @@ public class PortDiff : Model<PortDiff>
     public string? Name { get; set; }
     [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the port.")]
     public string? Description { get; set; }
-    [ModelProp("🔌", "If?", "Ifc?", "The optional interface of the port.")]
+    [EntityProp("🔌", "If?", "Ifc?", "The optional interface of the port.")]
     public InterfaceId? Interface { get; set; }
     [FalseOrTrue("💯", "Ma?", "Man?", "Whether the port is mandatory.")]
     public bool? Mandatory { get; set; }
     [NumberProp("💍", "T?", "T?", "The optional parameter t [0,1[.")]
     public float? T { get; set; }
-    [ModelProp("✖️", "Pt?", "Pnt?", "The optional connection point of the port.", PropImportance.OPTIONAL)]
+    [EntityProp("✖️", "Pt?", "Pnt?", "The optional connection point of the port.", PropImportance.OPTIONAL)]
     public Point? Point { get; set; }
-    [ModelProp("➡️", "Dr?", "Drn?", "The optional direction of the port.", PropImportance.OPTIONAL)]
+    [EntityProp("➡️", "Dr?", "Drn?", "The optional direction of the port.", PropImportance.OPTIONAL)]
     public Vector? Direction { get; set; }
-    [ModelProp("🏷️", "Pp*", "Prp*", "The optional properties of the port.", PropImportance.OPTIONAL)]
+    [EntityProp("🏷️", "Pp*", "Prp*", "The optional properties of the port.", PropImportance.OPTIONAL)]
     public List<Prop>? Props { get; set; }
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the port.", PropImportance.OPTIONAL)]
+    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the port.", PropImportance.OPTIONAL)]
     public List<Attribute>? Attributes { get; set; }
 
     public static implicit operator PortDiff(PortId id) => new() { Guid = id.Guid };
@@ -3357,14 +3440,14 @@ public class PortDiff : Model<PortDiff>
     }
 }
 
-[Model("📊", "PsD", "PsDf", "A diff for multiple ports.")]
-public class PortsDiff : Model<PortsDiff>
+[Entity("📊", "PsD", "PsDf", "A diff for multiple ports.")]
+public class PortsDiff : Entity<PortsDiff>
 {
-    [ModelProp("➖", "Rm*", "Rem*", "The optional removed ports.", PropImportance.OPTIONAL)]
+    [EntityProp("➖", "Rm*", "Rem*", "The optional removed ports.", PropImportance.OPTIONAL)]
     public List<string> Removed { get; set; } = new();
-    [ModelProp("➕", "Ad*", "Add*", "The optional added ports.", PropImportance.OPTIONAL)]
+    [EntityProp("➕", "Ad*", "Add*", "The optional added ports.", PropImportance.OPTIONAL)]
     public List<Port> Added { get; set; } = new();
-    [ModelProp("✏️", "Up*", "Upd*", "The optional updated ports.", PropImportance.OPTIONAL)]
+    [EntityProp("✏️", "Up*", "Upd*", "The optional updated ports.", PropImportance.OPTIONAL)]
     public List<DiffUpdate<PortDiff>> Updated { get; set; } = new();
 
     public PortsDiff MergeDiff(PortsDiff other)
@@ -3383,8 +3466,8 @@ public class PortsDiff : Model<PortsDiff>
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-port-"/>
 /// </summary>
-[Model("🔌", "Po", "Por", "A port is a connection point (with a direction) of a type.")]
-public class Port : Model<Port>
+[Entity("🔌", "Po", "Por", "A port is a connection point (with a direction) of a type.")]
+public class Port : Entity<Port>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the port within the type.")]
     public string Guid { get; set; } = "";
@@ -3394,17 +3477,17 @@ public class Port : Model<Port>
     public string Description { get; set; } = "";
     [FalseOrTrue("💯", "Ma?", "Man?", "Whether the port is mandatory. A mandatory port must be connected in a design.")]
     public bool Mandatory { get; set; } = false;
-    [ModelProp("🔌", "If?", "Ifc?", "The optional interface of the port. This allows to define explicit compatibility with other ports.")]
+    [EntityProp("🔌", "If?", "Ifc?", "The optional interface of the port. This allows to define explicit compatibility with other ports.")]
     public InterfaceId? Interface { get; set; }
-    [ModelProp("✖️", "Pt", "Pnt", "The connection point of the port that is attracted to another connection point.")]
+    [EntityProp("✖️", "Pt", "Pnt", "The connection point of the port that is attracted to another connection point.")]
     public Point? Point { get; set; } = null;
-    [ModelProp("➡️", "Dr", "Drn", "The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned.")]
+    [EntityProp("➡️", "Dr", "Drn", "The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned.")]
     public Vector? Direction { get; set; } = null;
     [NumberProp("💍", "T", "T", "The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.", PropImportance.REQUIRED)]
     public float T { get; set; } = 0;
-    [ModelProp("🏷️", "Pp*", "Prp*", "The optional properties of the port.", PropImportance.OPTIONAL)]
+    [EntityProp("🏷️", "Pp*", "Prp*", "The optional properties of the port.", PropImportance.OPTIONAL)]
     public List<Prop> Props { get; set; } = new();
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the port.", PropImportance.OPTIONAL)]
+    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the port.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
     public string ToIdString() => $"{Guid}";
     public string ToHumanIdString() => $"{ToIdString()}";
@@ -3466,7 +3549,7 @@ public class Port : Model<Port>
         };
     }
 
-    // TODO: Implement reflexive validation for model properties.
+    // TODO: Implement reflexive validation for entity properties.
     public override (bool, List<string>) Validate()
     {
         var (isValid, errors) = base.Validate();
@@ -3567,8 +3650,8 @@ public class Port : Model<Port>
 
 #region Type
 
-[Model("🧩", "Ty", "Typ", "The identifier of the type within the kit.")]
-public class TypeId : Model<TypeId>
+[Entity("🧩", "Ty", "Typ", "The identifier of the type within the kit.")]
+public class TypeId : Entity<TypeId>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the type.", PropImportance.ID)]
     public string Guid { get; set; } = "";
@@ -3579,14 +3662,14 @@ public class TypeId : Model<TypeId>
     public static implicit operator TypeId(TypeDiff diff) => new() { Guid = diff.Guid ?? "" };
 }
 
-[Model("🧩", "TD", "TDf", "A diff for types.")]
-public class TypeDiff : Model<TypeDiff>
+[Entity("🧩", "TD", "TDf", "A diff for types.")]
+public class TypeDiff : Entity<TypeDiff>
 {
     [Id("🆔", "Gd?", "Gid", "The optional guid of the type.")]
     public string? Guid { get; set; }
     [Name("📛", "Na?", "Nam?", "The optional name of the type.")]
     public string? Name { get; set; }
-    [ModelProp("📁", "Pa?", "Par?", "The optional parent type.", PropImportance.OPTIONAL)]
+    [EntityProp("📁", "Pa?", "Par?", "The optional parent type.", PropImportance.OPTIONAL)]
     public TypeId? Parent { get; set; }
     [FalseOrTrue("👻", "IA?", "IsA?", "Whether the type is abstract.")]
     public bool? IsAbstract { get; set; }
@@ -3606,17 +3689,17 @@ public class TypeDiff : Model<TypeDiff>
     public string Uri { get; set; } = "";
     [Name("Ⓜ️", "Ut?", "Unt?", "The optional length unit of the type.")]
     public string Unit { get; set; } = "";
-    [ModelProp("📍", "Lo?", "Loc?", "The optional location of the type.", PropImportance.OPTIONAL)]
+    [EntityProp("📍", "Lo?", "Loc?", "The optional location of the type.", PropImportance.OPTIONAL)]
     public Location? Location { get; set; }
-    [ModelProp("💾", "Rp*", "Reps*", "The optional models of the type.", PropImportance.OPTIONAL)]
+    [EntityProp("💾", "Md*", "Mods*", "The optional models of the type.", PropImportance.OPTIONAL)]
     public ModelsDiff? Models { get; set; }
-    [ModelProp("🔌", "Po*", "Pors*", "The optional ports of the type.", PropImportance.OPTIONAL)]
+    [EntityProp("🔌", "Po*", "Pors*", "The optional ports of the type.", PropImportance.OPTIONAL)]
     public PortsDiff? Ports { get; set; }
-    [ModelProp("👥", "Au*", "Aut*", "The optional authors of the type.", PropImportance.OPTIONAL)]
+    [EntityProp("👥", "Au*", "Aut*", "The optional authors of the type.", PropImportance.OPTIONAL)]
     public List<AuthorId>? Authors { get; set; }
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the type.", PropImportance.OPTIONAL)]
+    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the type.", PropImportance.OPTIONAL)]
     public List<Attribute>? Attributes { get; set; }
-    [ModelProp("💡", "Co*", "Con*", "The optional concepts of the type.", PropImportance.OPTIONAL)]
+    [EntityProp("💡", "Co*", "Con*", "The optional concepts of the type.", PropImportance.OPTIONAL)]
     public List<ConceptId>? Concepts { get; set; }
     [Name("📅", "CA?", "CrA?", "The optional created at timestamp of the type.")]
     public DateTime? CreatedAt { get; set; }
@@ -3648,14 +3731,14 @@ public class TypeDiff : Model<TypeDiff>
     public static implicit operator TypeDiff(Type type) => new() { Name = type.Name, Description = type.Description, Icon = type.Icon, Image = type.Image, Stock = type.Stock, Virtual = type.Virtual, Uri = type.Uri, Unit = type.Unit, Location = type.Location, Models = new ModelsDiff { Added = new List<Model>(), Removed = new List<string>(), Updated = type.Models.Select(m => new DiffUpdate<ModelDiff> { Id = m.Guid, Diff = m.CreateDiff() }).ToList() }, Ports = new PortsDiff { Added = new List<Port>(), Removed = new List<string>(), Updated = type.Ports.Select(p => new DiffUpdate<PortDiff> { Id = p.Guid, Diff = p.CreateDiff() }).ToList() }, Authors = type.Authors, Attributes = type.Attributes, Concepts = type.Concepts };
 }
 
-[Model("📊", "TsD", "TsDf", "A diff for multiple types.")]
-public class TypesDiff : Model<TypesDiff>
+[Entity("📊", "TsD", "TsDf", "A diff for multiple types.")]
+public class TypesDiff : Entity<TypesDiff>
 {
-    [ModelProp("➖", "Rm*", "Rem*", "The optional removed types.", PropImportance.OPTIONAL)]
+    [EntityProp("➖", "Rm*", "Rem*", "The optional removed types.", PropImportance.OPTIONAL)]
     public List<string> Removed { get; set; } = new();
-    [ModelProp("➕", "Ad*", "Add*", "The optional added types.", PropImportance.OPTIONAL)]
+    [EntityProp("➕", "Ad*", "Add*", "The optional added types.", PropImportance.OPTIONAL)]
     public List<Type> Added { get; set; } = new();
-    [ModelProp("✏️", "Up*", "Upd*", "The optional updated types.", PropImportance.OPTIONAL)]
+    [EntityProp("✏️", "Up*", "Upd*", "The optional updated types.", PropImportance.OPTIONAL)]
     public List<DiffUpdate<TypeDiff>> Updated { get; set; } = new();
 
     public static implicit operator TypesDiff(List<Type> types) => new() { Updated = types.Select(t => new DiffUpdate<TypeDiff> { Id = t.Guid, Diff = (TypeDiff)t }).ToList() };
@@ -3664,14 +3747,14 @@ public class TypesDiff : Model<TypesDiff>
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-type-"/>
 /// </summary>
-[Model("🧩", "Ty", "Typ", "A type is a reusable element that can be connected with other types over ports.")]
-public class Type : Model<Type>
+[Entity("🧩", "Ty", "Typ", "A type is a reusable element that can be connected with other types over ports.")]
+public class Type : Entity<Type>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the type.", PropImportance.ID)]
     public string Guid { get; set; } = "";
     [Name("📛", "Na", "Nam", "The name of the type.", PropImportance.REQUIRED)]
     public string Name { get; set; } = "";
-    [ModelProp("📁", "Pa?", "Par?", "The optional parent type.", PropImportance.OPTIONAL)]
+    [EntityProp("📁", "Pa?", "Par?", "The optional parent type.", PropImportance.OPTIONAL)]
     public TypeId? Parent { get; set; }
     [FalseOrTrue("👻", "IA?", "IsA?", "Whether the type is abstract.")]
     public bool? IsAbstract { get; set; }
@@ -3689,21 +3772,21 @@ public class Type : Model<Type>
     public bool Virtual { get; set; } = false;
     [Url("🔗", "Ur?", "Uri?", "The optional Unique Resource Identifier (URI) of the type.")]
     public string Uri { get; set; } = "";
-    [ModelProp("📍", "Lo?", "Loc?", "The optional location of the type.", PropImportance.OPTIONAL)]
+    [EntityProp("📍", "Lo?", "Loc?", "The optional location of the type.", PropImportance.OPTIONAL)]
     public Location? Location { get; set; }
     [Name("Ⓜ️", "Ut", "Unt", "The length unit of the point and the direction of the ports of the type.", PropImportance.REQUIRED)]
     public string Unit { get; set; } = "";
-    [ModelProp("💾", "Rp*", "Reps*", "The optional models of the type.", PropImportance.OPTIONAL)]
+    [EntityProp("💾", "Md*", "Mods*", "The optional models of the type.", PropImportance.OPTIONAL)]
     public List<Model> Models { get; set; } = new();
-    [ModelProp("🔌", "Po*", "Pors*", "The optional ports of the type.", PropImportance.OPTIONAL)]
+    [EntityProp("🔌", "Po*", "Pors*", "The optional ports of the type.", PropImportance.OPTIONAL)]
     public List<Port> Ports { get; set; } = new();
-    [ModelProp("🏷️", "Pp*", "Prp*", "The optional properties of the type.", PropImportance.OPTIONAL)]
+    [EntityProp("🏷️", "Pp*", "Prp*", "The optional properties of the type.", PropImportance.OPTIONAL)]
     public List<Prop> Props { get; set; } = new();
-    [ModelProp("👥", "Au*", "Aut*", "The optional authors of the type.", PropImportance.OPTIONAL)]
+    [EntityProp("👥", "Au*", "Aut*", "The optional authors of the type.", PropImportance.OPTIONAL)]
     public List<AuthorId> Authors { get; set; } = new();
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the type.", PropImportance.OPTIONAL)]
+    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the type.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
-    [ModelProp("💡", "Co*", "Con*", "The optional concepts of the type.", PropImportance.OPTIONAL)]
+    [EntityProp("💡", "Co*", "Con*", "The optional concepts of the type.", PropImportance.OPTIONAL)]
     public List<ConceptId> Concepts { get; set; } = new();
     [Name("📅", "CA", "CrA", "The created at timestamp of the type.", PropImportance.REQUIRED)]
     public DateTime CreatedAt { get; set; }
@@ -3717,7 +3800,29 @@ public class Type : Model<Type>
     public override string ToString() => $"Typ({ToHumanIdString()})";
 
     public static implicit operator Type(TypeId id) => new() { Guid = id.Guid, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
-    public static implicit operator Type(TypeDiff diff) => new() { Guid = diff.Guid ?? "", Name = diff.Name ?? "", Parent = diff.Parent, IsAbstract = diff.IsAbstract, Folder = diff.Folder, Description = diff.Description ?? "", Icon = diff.Icon ?? "", Image = diff.Image ?? "", Stock = diff.Stock ?? 2147483647, Virtual = diff.Virtual ?? false, Uri = diff.Uri ?? "", Unit = diff.Unit ?? "", Location = diff.Location, Models = diff.Models?.Added ?? new(), Ports = diff.Ports?.Added ?? new(), Authors = diff.Authors ?? new(), Attributes = diff.Attributes ?? new(), Concepts = diff.Concepts ?? new(), CreatedAt = diff.CreatedAt ?? DateTime.UtcNow, UpdatedAt = diff.UpdatedAt ?? DateTime.UtcNow };
+    public static implicit operator Type(TypeDiff diff) => new()
+    {
+        Guid = diff.Guid ?? "",
+        Name = diff.Name ?? "",
+        Parent = diff.Parent,
+        IsAbstract = diff.IsAbstract,
+        Folder = diff.Folder,
+        Description = diff.Description ?? "",
+        Icon = diff.Icon ?? "",
+        Image = diff.Image ?? "",
+        Stock = diff.Stock ?? 2147483647,
+        Virtual = diff.Virtual ?? false,
+        Uri = diff.Uri ?? "",
+        Unit = diff.Unit ?? "",
+        Location = diff.Location,
+        Models = diff.Models?.Added ?? new(),
+        Ports = diff.Ports?.Added ?? new(),
+        Authors = diff.Authors ?? new(),
+        Attributes = diff.Attributes ?? new(),
+        Concepts = diff.Concepts ?? new(),
+        CreatedAt = diff.CreatedAt ?? DateTime.UtcNow,
+        UpdatedAt = diff.UpdatedAt ?? DateTime.UtcNow
+    };
     public static implicit operator string(Type type) => type.Name;
     public static implicit operator Type(string name) => new() { Name = name, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
 
@@ -3822,7 +3927,7 @@ public class Type : Model<Type>
         };
     }
 
-    // TODO: Implement reflexive validation for model properties.
+    // TODO: Implement reflexive validation for entity properties.
     public override (bool, List<string>) Validate()
     {
         var (isValid, errors) = base.Validate();
@@ -3933,11 +4038,22 @@ public class Type : Model<Type>
 
 #region Layer
 
+[Entity("📄", "LI", "LyrI", "The identifier for a layer.")]
+public class LayerId : Entity<LayerId>
+{
+    [Id("🆔", "Gd", "Gui", "The guid of the layer.", PropImportance.ID)]
+    public string Guid { get; set; } = "";
+    public static implicit operator LayerId(Layer layer) => new() { Guid = layer.Guid };
+    public string ToIdString() => $"{Guid}";
+    public string ToHumanIdString() => $"{ToIdString()}";
+    public override string ToString() => $"LyrI({ToHumanIdString()})";
+}
+
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-layer-"/>
 /// </summary>
-[Model("📄", "Ly", "Lyr", "A layer for organizing design elements.")]
-public class Layer : Model<Layer>
+[Entity("📄", "Ly", "Lyr", "A layer for organizing design elements.")]
+public class Layer : Entity<Layer>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the layer.", PropImportance.ID)]
     public string Guid { get; set; } = "";
@@ -3951,7 +4067,7 @@ public class Layer : Model<Layer>
     public string Color { get; set; } = "";
     [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the layer.")]
     public string Description { get; set; } = "";
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the layer.", PropImportance.OPTIONAL)]
+    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the layer.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
     public string ToIdString() => $"{Guid}";
@@ -3963,25 +4079,38 @@ public class Layer : Model<Layer>
 
 #region Group
 
+[Entity("📁", "GI", "GrpI", "The identifier for a group.")]
+public class GroupId : Entity<GroupId>
+{
+    [Id("🆔", "Gd", "Gui", "The guid of the group.", PropImportance.ID)]
+    public string Guid { get; set; } = "";
+    public static implicit operator GroupId(Group group) => new() { Guid = group.Guid };
+    public string ToIdString() => $"{Guid}";
+    public string ToHumanIdString() => $"{ToIdString()}";
+    public override string ToString() => $"GrpI({ToHumanIdString()})";
+}
+
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-group-"/>
 /// </summary>
-[Model("📁", "Gr", "Grp", "A group for organizing design elements.")]
-public class Group : Model<Group>
+[Entity("📁", "Gr", "Grp", "A group for organizing design elements.")]
+public class Group : Entity<Group>
 {
-    [Name("📛", "Nm", "Nam", "The optional name of the group.", PropImportance.OPTIONAL)]
-    public string Name { get; set; } = "";
+    [Id("🆔", "Gd", "Gui", "The guid of the group.", PropImportance.ID)]
+    public string Guid { get; set; } = "";
+    [Name("📛", "Nm?", "Nam?", "The optional name of the group.")]
+    public string? Name { get; set; }
     [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the group.")]
-    public string Description { get; set; } = "";
-    [ModelProp("⭕", "Pc*", "Pcs*", "The pieces in the group.", PropImportance.REQUIRED)]
+    public string? Description { get; set; }
+    [EntityProp("⭕", "Pc*", "Pcs*", "The pieces in the group.", PropImportance.REQUIRED)]
     public List<PieceId> Pieces { get; set; } = new();
     [Color("🎨", "Cl?", "Col?", "The optional hex color of the group.")]
-    public string Color { get; set; } = "";
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the group.", PropImportance.OPTIONAL)]
+    public string? Color { get; set; }
+    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the group.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
-    public string ToIdString() => $"{Name}";
-    public string ToHumanIdString() => $"{Name}";
+    public string ToIdString() => $"{Guid}";
+    public string ToHumanIdString() => $"{Name ?? Guid}";
     public override string ToString() => $"Grp({ToHumanIdString()})";
 }
 
@@ -3989,8 +4118,8 @@ public class Group : Model<Group>
 
 #region Piece
 
-[Model("⭕", "Pc", "Pce", "The optional local identifier of the piece within the design. No id means the default piece.")]
-public class PieceId : Model<PieceId>
+[Entity("⭕", "Pc", "Pce", "The optional local identifier of the piece within the design. No id means the default piece.")]
+public class PieceId : Entity<PieceId>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the piece.", PropImportance.ID)]
     public string Guid { get; set; } = "";
@@ -4002,14 +4131,14 @@ public class PieceId : Model<PieceId>
     public static implicit operator PieceId(Piece piece) => new() { Guid = piece.Guid };
 }
 
-[Model("📊", "PD", "PDf", "A diff for pieces.")]
-public class PiecesDiff : Model<PiecesDiff>
+[Entity("📊", "PD", "PDf", "A diff for pieces.")]
+public class PiecesDiff : Entity<PiecesDiff>
 {
-    [ModelProp("➖", "Rm*", "Rem*", "The optional removed pieces.", PropImportance.OPTIONAL)]
+    [EntityProp("➖", "Rm*", "Rem*", "The optional removed pieces.", PropImportance.OPTIONAL)]
     public List<string> Removed { get; set; } = new();
-    [ModelProp("✏️", "Up*", "Upd*", "The optional updated pieces.", PropImportance.OPTIONAL)]
+    [EntityProp("✏️", "Up*", "Upd*", "The optional updated pieces.", PropImportance.OPTIONAL)]
     public List<DiffUpdate<PieceDiff>> Updated { get; set; } = new();
-    [ModelProp("➕", "Ad*", "Add*", "The optional added pieces.", PropImportance.OPTIONAL)]
+    [EntityProp("➕", "Ad*", "Add*", "The optional added pieces.", PropImportance.OPTIONAL)]
     public List<Piece> Added { get; set; } = new();
 
     public PiecesDiff MergeDiff(PiecesDiff other)
@@ -4025,8 +4154,8 @@ public class PiecesDiff : Model<PiecesDiff>
     public static implicit operator PiecesDiff(List<Piece> pieces) => new() { Updated = pieces.Select(p => new DiffUpdate<PieceDiff> { Id = p.Guid, Diff = p.CreateDiff() }).ToList() };
 }
 
-[Model("📊", "PcD", "PcDf", "A diff for a piece.")]
-public class PieceDiff : Model<PieceDiff>
+[Entity("📊", "PcD", "PcDf", "A diff for a piece.")]
+public class PieceDiff : Entity<PieceDiff>
 {
     [Id("🆔", "Gd?", "Gid", "The optional guid of the piece.")]
     public string? Guid { get; set; }
@@ -4034,24 +4163,38 @@ public class PieceDiff : Model<PieceDiff>
     public string? Name { get; set; }
     [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the piece.")]
     public string? Description { get; set; }
-    [ModelProp("🧩", "Ty?", "Typ?", "The optional type of the piece.", PropImportance.OPTIONAL)]
+    [EntityProp("🧩", "Ty?", "Typ?", "The optional type of the piece.", PropImportance.OPTIONAL)]
     public TypeId? Type { get; set; }
-    [ModelProp("📺", "Pl?", "Pln?", "The optional plane of the piece.", PropImportance.OPTIONAL)]
+    [EntityProp("🏙️", "Ds?", "Dsn?", "The optional design of the piece.", PropImportance.OPTIONAL)]
+    public DesignId? Design { get; set; }
+    [EntityProp("📺", "Pl?", "Pln?", "The optional plane of the piece.", PropImportance.OPTIONAL)]
     public Plane? Plane { get; set; }
-    [ModelProp("📺", "Ce?", "Cnt?", "The optional center of the piece.", PropImportance.OPTIONAL)]
+    [EntityProp("📺", "Ce?", "Cnt?", "The optional center of the piece.", PropImportance.OPTIONAL)]
     public Coord? Center { get; set; }
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the piece.", PropImportance.OPTIONAL)]
+    [NumberProp("📏", "Sc?", "Scl?", "The optional scale of the piece.")]
+    public float? Scale { get; set; }
+    [EntityProp("🪞", "Mp?", "Mir?", "The optional mirror plane of the piece.", PropImportance.OPTIONAL)]
+    public Plane? MirrorPlane { get; set; }
+    [FalseOrTrue("👁️", "Hd?", "Hid?", "Whether the piece is hidden.")]
+    public bool? IsHidden { get; set; }
+    [FalseOrTrue("🔒", "Lk?", "Lck?", "Whether the piece is locked.")]
+    public bool? IsLocked { get; set; }
+    [Color("🎨", "Cl?", "Col?", "The optional hex color of the piece.")]
+    public string? Color { get; set; }
+    [EntityProp("📊", "Pr*", "Prp*", "The optional props of the piece.", PropImportance.OPTIONAL)]
+    public List<Prop>? Props { get; set; }
+    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the piece.", PropImportance.OPTIONAL)]
     public List<Attribute>? Attributes { get; set; }
 
     public static implicit operator PieceDiff(PieceId id) => new() { Guid = id.Guid };
-    public static implicit operator PieceDiff(Piece piece) => new() { Guid = piece.Guid, Name = piece.Name, Description = piece.Description, Type = piece.Type, Plane = piece.Plane, Center = piece.Center, Attributes = piece.Attributes };
+    public static implicit operator PieceDiff(Piece piece) => new() { Guid = piece.Guid, Name = piece.Name, Description = piece.Description, Type = piece.Type, Design = piece.Design, Plane = piece.Plane, Center = piece.Center, Scale = piece.Scale, MirrorPlane = piece.MirrorPlane, IsHidden = piece.IsHidden, IsLocked = piece.IsLocked, Color = piece.Color, Props = piece.Props, Attributes = piece.Attributes };
 }
 
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-piece-"/>
 /// </summary>
-[Model("⭕", "Pc", "Pce", "A piece is an instance of either a type or a design.")]
-public class Piece : Model<Piece>
+[Entity("⭕", "Pc", "Pce", "A piece is an instance of either a type or a design.")]
+public class Piece : Entity<Piece>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the piece.", PropImportance.ID)]
     public string Guid { get; set; } = "";
@@ -4059,13 +4202,27 @@ public class Piece : Model<Piece>
     public string Name { get; set; } = "";
     [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the piece.")]
     public string Description { get; set; } = "";
-    [ModelProp("🧩", "Ty?", "Typ?", "The optional type of the piece.", PropImportance.OPTIONAL)]
+    [EntityProp("🧩", "Ty?", "Typ?", "The optional type of the piece.", PropImportance.OPTIONAL)]
     public TypeId? Type { get; set; }
-    [ModelProp("📺", "Pl?", "Pln?", "The optional plane of the piece.", PropImportance.OPTIONAL)]
+    [EntityProp("🏙️", "Ds?", "Dsn?", "The optional design of the piece (for nested designs).", PropImportance.OPTIONAL)]
+    public DesignId? Design { get; set; }
+    [EntityProp("📺", "Pl?", "Pln?", "The optional plane of the piece.", PropImportance.OPTIONAL)]
     public Plane? Plane { get; set; }
-    [ModelProp("📺", "Ce?", "Cnt?", "The optional center of the piece.", PropImportance.OPTIONAL)]
+    [EntityProp("📺", "Ce?", "Cnt?", "The optional center of the piece.", PropImportance.OPTIONAL)]
     public Coord? Center { get; set; }
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the piece.", PropImportance.OPTIONAL)]
+    [NumberProp("📏", "Sc?", "Scl?", "The optional scale of the piece.")]
+    public float? Scale { get; set; }
+    [EntityProp("🪞", "Mp?", "Mir?", "The optional mirror plane of the piece.", PropImportance.OPTIONAL)]
+    public Plane? MirrorPlane { get; set; }
+    [FalseOrTrue("👁️", "Hd?", "Hid?", "Whether the piece is hidden.")]
+    public bool? IsHidden { get; set; }
+    [FalseOrTrue("🔒", "Lk?", "Lck?", "Whether the piece is locked.")]
+    public bool? IsLocked { get; set; }
+    [Color("🎨", "Cl?", "Col?", "The optional hex color of the piece.")]
+    public string? Color { get; set; }
+    [EntityProp("📊", "Pr*", "Prp*", "The optional props of the piece.", PropImportance.OPTIONAL)]
+    public List<Prop>? Props { get; set; }
+    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the piece.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
     public string ToIdString() => $"{Guid}";
@@ -4073,7 +4230,7 @@ public class Piece : Model<Piece>
     public override string ToString() => $"Pce({ToHumanIdString()})";
 
     public static implicit operator Piece(PieceId id) => new() { Guid = id.Guid };
-    public static implicit operator Piece(PieceDiff diff) => new() { Guid = diff.Guid ?? "", Name = diff.Name ?? "", Description = diff.Description ?? "", Type = diff.Type, Plane = diff.Plane, Center = diff.Center, Attributes = diff.Attributes ?? new() };
+    public static implicit operator Piece(PieceDiff diff) => new() { Guid = diff.Guid ?? "", Name = diff.Name ?? "", Description = diff.Description ?? "", Type = diff.Type, Design = diff.Design, Plane = diff.Plane, Center = diff.Center, Scale = diff.Scale, MirrorPlane = diff.MirrorPlane, IsHidden = diff.IsHidden, IsLocked = diff.IsLocked, Color = diff.Color, Props = diff.Props, Attributes = diff.Attributes ?? new() };
 
     public Piece ApplyDiff(PieceDiff diff)
     {
@@ -4083,8 +4240,15 @@ public class Piece : Model<Piece>
             Name = diff.Name ?? Name,
             Description = diff.Description ?? Description,
             Type = diff.Type ?? Type,
+            Design = diff.Design ?? Design,
             Plane = diff.Plane ?? Plane,
             Center = diff.Center ?? Center,
+            Scale = diff.Scale ?? Scale,
+            MirrorPlane = diff.MirrorPlane ?? MirrorPlane,
+            IsHidden = diff.IsHidden ?? IsHidden,
+            IsLocked = diff.IsLocked ?? IsLocked,
+            Color = diff.Color ?? Color,
+            Props = diff.Props ?? Props,
             Attributes = diff.Attributes ?? Attributes
         };
     }
@@ -4097,8 +4261,15 @@ public class Piece : Model<Piece>
             Name = Name,
             Description = Description,
             Type = Type,
+            Design = Design,
             Plane = Plane,
             Center = Center,
+            Scale = Scale,
+            MirrorPlane = MirrorPlane,
+            IsHidden = IsHidden,
+            IsLocked = IsLocked,
+            Color = Color,
+            Props = Props,
             Attributes = Attributes
         };
     }
@@ -4107,14 +4278,14 @@ public class Piece : Model<Piece>
 #endregion Piece
 #region Side
 
-[Model("📊", "SD", "SDf", "A diff for sides.")]
-public class SideDiff : Model<SideDiff>
+[Entity("📊", "SD", "SDf", "A diff for sides.")]
+public class SideDiff : Entity<SideDiff>
 {
-    [ModelProp("⭕", "Pc?", "Pce?", "The optional piece of the side.", PropImportance.OPTIONAL)]
+    [EntityProp("⭕", "Pc?", "Pce?", "The optional piece of the side.", PropImportance.OPTIONAL)]
     public PieceId? Piece { get; set; }
-    [ModelProp("🏙️", "DP?", "DPc?", "The optional id of the piece inside the referenced design piece.", PropImportance.OPTIONAL)]
+    [EntityProp("🏙️", "DP?", "DPc?", "The optional id of the piece inside the referenced design piece.", PropImportance.OPTIONAL)]
     public PieceId? DesignPiece { get; set; } = null;
-    [ModelProp("🔌", "Po?", "Por?", "The optional port of the side.", PropImportance.OPTIONAL)]
+    [EntityProp("🔌", "Po?", "Por?", "The optional port of the side.", PropImportance.OPTIONAL)]
     public PortId? Port { get; set; }
     [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the side.")]
     public string Description { get; set; } = "";
@@ -4136,14 +4307,14 @@ public class SideDiff : Model<SideDiff>
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-side-"/>
 /// </summary>
-[Model("🧱", "Sd", "Sde", "A side of a piece in a connection.")]
-public class Side : Model<Side>
+[Entity("🧱", "Sd", "Sde", "A side of a piece in a connection.")]
+public class Side : Entity<Side>
 {
-    [ModelProp("⭕", "Pc", "Pce", "The piece-related information of the side.")]
+    [EntityProp("⭕", "Pc", "Pce", "The piece-related information of the side.")]
     public PieceId Piece { get; set; } = new();
-    [ModelProp("🏙️", "DP?", "DPc?", "The optional id of the piece inside the referenced design piece.", PropImportance.OPTIONAL)]
+    [EntityProp("🏙️", "DP?", "DPc?", "The optional id of the piece inside the referenced design piece.", PropImportance.OPTIONAL)]
     public PieceId? DesignPiece { get; set; } = null;
-    [ModelProp("🔌", "Po", "Por", "The local identifier of the port within the type.")]
+    [EntityProp("🔌", "Po", "Por", "The local identifier of the port within the type.")]
     public PortId Port { get; set; } = new();
 
     public static implicit operator Side(SideDiff diff) => new() { Piece = diff.Piece ?? new(), DesignPiece = diff.DesignPiece, Port = diff.Port ?? new() };
@@ -4203,12 +4374,12 @@ public class Side : Model<Side>
 
 #region Connection
 
-[Model("🧲", "Cn", "ConId", "The local identifier of the connection within the design.")]
-public class ConnectionId : Model<ConnectionId>
+[Entity("🧲", "Cn", "ConId", "The local identifier of the connection within the design.")]
+public class ConnectionId : Entity<ConnectionId>
 {
-    [ModelProp("🧲", "Cd", "Cnd", "The connected side of the piece.")]
+    [EntityProp("🧲", "Cd", "Cnd", "The connected side of the piece.")]
     public Side Connected { get; set; } = new();
-    [ModelProp("🧲", "Cg", "Cng", "The connecting side of the piece.")]
+    [EntityProp("🧲", "Cg", "Cng", "The connecting side of the piece.")]
     public Side Connecting { get; set; } = new();
 
     public string ToIdString() => $"{Connected.Piece.Guid + (Connected.Port.Guid != "" ? ":" + Connected.Port.Guid : "")}--{(Connecting.Port.Guid != "" ? Connecting.Port.Guid + ":" : "") + Connecting.Piece.Guid}";
@@ -4219,12 +4390,12 @@ public class ConnectionId : Model<ConnectionId>
     public static implicit operator ConnectionId(ConnectionDiff diff) => new() { Connected = diff.Connected ?? new(), Connecting = diff.Connecting ?? new() };
 }
 
-[Model("🔗", "CD", "CDf", "A diff for connections.")]
-public class ConnectionDiff : Model<ConnectionDiff>
+[Entity("🔗", "CD", "CDf", "A diff for connections.")]
+public class ConnectionDiff : Entity<ConnectionDiff>
 {
-    [ModelProp("🧲", "Cd?", "Cnd?", "The optional connected side of the piece.", PropImportance.OPTIONAL)]
+    [EntityProp("🧲", "Cd?", "Cnd?", "The optional connected side of the piece.", PropImportance.OPTIONAL)]
     public SideDiff? Connected { get; set; }
-    [ModelProp("🧲", "Cg?", "Cng?", "The optional connecting side of the piece.", PropImportance.OPTIONAL)]
+    [EntityProp("🧲", "Cg?", "Cng?", "The optional connecting side of the piece.", PropImportance.OPTIONAL)]
     public SideDiff? Connecting { get; set; }
     [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the connection.")]
     public string Description { get; set; } = "";
@@ -4244,7 +4415,7 @@ public class ConnectionDiff : Model<ConnectionDiff>
     public float? U { get; set; }
     [NumberProp("↕️", "V?", "V?", "The optional v offset for diagram positioning.")]
     public float? V { get; set; }
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the connection.", PropImportance.OPTIONAL)]
+    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the connection.", PropImportance.OPTIONAL)]
     public List<Attribute>? Attributes { get; set; }
 
     public static implicit operator ConnectionDiff(ConnectionId id) => new() { Connected = new SideDiff { Piece = id.Connected.Piece, DesignPiece = id.Connected.DesignPiece, Port = id.Connected.Port }, Connecting = new SideDiff { Piece = id.Connecting.Piece, DesignPiece = id.Connecting.DesignPiece, Port = id.Connecting.Port } };
@@ -4270,14 +4441,14 @@ public class ConnectionDiff : Model<ConnectionDiff>
     }
 }
 
-[Model("🔗", "CsD", "ConsDf", "A diff for multiple connections.")]
-public class ConnectionsDiff : Model<ConnectionsDiff>
+[Entity("🔗", "CsD", "ConsDf", "A diff for multiple connections.")]
+public class ConnectionsDiff : Entity<ConnectionsDiff>
 {
-    [ModelProp("➖", "Rm*", "Rem*", "The optional removed connections.", PropImportance.OPTIONAL)]
+    [EntityProp("➖", "Rm*", "Rem*", "The optional removed connections.", PropImportance.OPTIONAL)]
     public List<string> Removed { get; set; } = new();
-    [ModelProp("✏️", "Up*", "Upd*", "The optional updated connections.", PropImportance.OPTIONAL)]
+    [EntityProp("✏️", "Up*", "Upd*", "The optional updated connections.", PropImportance.OPTIONAL)]
     public List<DiffUpdate<ConnectionDiff>> Updated { get; set; } = new();
-    [ModelProp("➕", "Ad*", "Add*", "The optional added connections.", PropImportance.OPTIONAL)]
+    [EntityProp("➕", "Ad*", "Add*", "The optional added connections.", PropImportance.OPTIONAL)]
     public List<Connection> Added { get; set; } = new();
 
     public static implicit operator ConnectionsDiff(List<Connection> connections) => new() { Updated = connections.Select(c => new DiffUpdate<ConnectionDiff> { Id = c.Guid, Diff = (ConnectionDiff)c }).ToList() };
@@ -4296,14 +4467,14 @@ public class ConnectionsDiff : Model<ConnectionsDiff>
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-connection-"/>
 /// </summary>
-[Model("🔗", "Cn", "Con", "A connection between two pieces.")]
-public class Connection : Model<Connection>
+[Entity("🔗", "Cn", "Con", "A connection between two pieces.")]
+public class Connection : Entity<Connection>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the connection.", PropImportance.ID)]
     public string Guid { get; set; } = "";
-    [ModelProp("🧲", "Cd", "Cnd", "The connected side of the piece.")]
+    [EntityProp("🧲", "Cd", "Cnd", "The connected side of the piece.")]
     public Side Connected { get; set; } = new();
-    [ModelProp("🧲", "Cg", "Cng", "The connecting side of the piece.")]
+    [EntityProp("🧲", "Cg", "Cng", "The connecting side of the piece.")]
     public Side Connecting { get; set; } = new();
     [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the connection.")]
     public string Description { get; set; } = "";
@@ -4323,7 +4494,7 @@ public class Connection : Model<Connection>
     public float? U { get; set; }
     [NumberProp("↕️", "V?", "V?", "The optional v offset for diagram positioning.")]
     public float? V { get; set; }
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the connection.", PropImportance.OPTIONAL)]
+    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the connection.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
     public string ToIdString() => $"{Connected.Piece.Guid + (Connected.Port.Guid != "" ? ":" + Connected.Port.Guid : "")}--{(Connecting.Port.Guid != "" ? Connecting.Port.Guid + ":" : "") + Connecting.Piece.Guid}";
@@ -4436,51 +4607,68 @@ public class Connection : Model<Connection>
 
 #region Stat
 
+[Entity("🔢", "SI", "SttI", "The identifier for a stat.")]
+public class StatId : Entity<StatId>
+{
+    [Id("🆔", "Gd", "Gui", "The guid of the stat.", PropImportance.ID)]
+    public string Guid { get; set; } = "";
+    public static implicit operator StatId(Stat stat) => new() { Guid = stat.Guid };
+    public string ToIdString() => $"{Guid}";
+    public string ToHumanIdString() => $"{ToIdString()}";
+    public override string ToString() => $"SttI({ToHumanIdString()})";
+}
+
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-stat-"/>
 /// </summary>
-[Model("🔢", "St", "Stt", "A stat about a quality on a design which is optionally bounded.")]
-public class Stat : Model<Stat>
+[Entity("🔢", "St", "Stt", "A stat about a quality on a design which is optionally bounded.")]
+public class Stat : Entity<Stat>
 {
-    [Id("🔑", "Ke", "Key", "The key of the stat.")]
-    public string Key { get; set; } = "";
+    [Id("🆔", "Gd", "Gui", "The guid of the stat.", PropImportance.ID)]
+    public string Guid { get; set; } = "";
+    [EntityProp("📃", "Ql", "Qal", "The quality reference of the stat.", PropImportance.REQUIRED)]
+    public QualityId Quality { get; set; } = new();
     [Name("Ⓜ️", "Ut?", "Unt?", "The optional unit of the stat.")]
-    public string Unit { get; set; } = "";
+    public string? Unit { get; set; }
     [NumberProp("⬇️", "Mi?", "Min?", "The optional minimum value of the stat.")]
-    public float Min { get; set; } = 0;
+    public float? Min { get; set; }
     [FalseOrTrue("⬇️", "MiE?", "MiE?", "Whether the minimum value is excluded from the range.")]
-    public bool MinExcluded { get; set; } = false;
+    public bool? MinExcluded { get; set; }
     [NumberProp("⬆️", "Mx?", "Max?", "The optional maximum value of the stat.")]
-    public float Max { get; set; } = 0;
+    public float? Max { get; set; }
     [FalseOrTrue("⬆️", "MxE?", "MxE?", "Whether the maximum value is excluded from the range.")]
-    public bool MaxExcluded { get; set; } = false;
+    public bool? MaxExcluded { get; set; }
+
+    public string ToIdString() => $"{Guid}";
+    public string ToHumanIdString() => $"{ToIdString()}";
+    public override string ToString() => $"Stt({ToHumanIdString()})";
 }
 
 #endregion Stat
 
 #region Design
 
-[Model("📊", "DsD", "DsDf", "A diff for multiple designs.")]
-public class DesignsDiff : Model<DesignsDiff>
+[Entity("📊", "DsD", "DsDf", "A diff for multiple designs.")]
+public class DesignsDiff : Entity<DesignsDiff>
 {
-    [ModelProp("➖", "Rm*", "Rem*", "The optional removed designs.", PropImportance.OPTIONAL)]
+    [EntityProp("➖", "Rm*", "Rem*", "The optional removed designs.", PropImportance.OPTIONAL)]
     public List<string> Removed { get; set; } = new();
-    [ModelProp("✏️", "Up*", "Upd*", "The optional updated designs.", PropImportance.OPTIONAL)]
+    [EntityProp("✏️", "Up*", "Upd*", "The optional updated designs.", PropImportance.OPTIONAL)]
     public List<DiffUpdate<DesignDiff>> Updated { get; set; } = new();
-    [ModelProp("➕", "Ad*", "Add*", "The optional added designs.", PropImportance.OPTIONAL)]
+    [EntityProp("➕", "Ad*", "Add*", "The optional added designs.", PropImportance.OPTIONAL)]
     public List<Design> Added { get; set; } = new();
 
     public static implicit operator DesignsDiff(List<Design> designs) => new() { Updated = designs.Select(d => new DiffUpdate<DesignDiff> { Id = d.Guid, Diff = (DesignDiff)d }).ToList() };
 }
 
-[Model("🏙️", "Dn", "Dsn", "The local identifier of the design within the kit.")]
-public class DesignDiff : Model<DesignDiff>
+[Entity("🏙️", "Dn", "Dsn", "The local identifier of the design within the kit.")]
+public class DesignDiff : Entity<DesignDiff>
 {
     [Id("🆔", "Gd?", "Gid", "The optional guid of the design.")]
     public string? Guid { get; set; }
     [Name("📛", "Na?", "Nam?", "The optional name of the design.")]
     public string? Name { get; set; }
-    [ModelProp("📁", "Pa?", "Par?", "The optional parent design.", PropImportance.OPTIONAL)]
+    [EntityProp("📁", "Pa?", "Par?", "The optional parent design.", PropImportance.OPTIONAL)]
     public DesignId? Parent { get; set; }
     [FalseOrTrue("👻", "IA?", "IsA?", "Whether the design is abstract.")]
     public bool? IsAbstract { get; set; }
@@ -4492,7 +4680,7 @@ public class DesignDiff : Model<DesignDiff>
     public string? Icon { get; set; }
     [Url("🖼️", "Im?", "Img?", "The optional url to the image of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.")]
     public string? Image { get; set; }
-    [ModelProp("📍", "Lo?", "Loc?", "The optional location of the design.", PropImportance.OPTIONAL)]
+    [EntityProp("📍", "Lo?", "Loc?", "The optional location of the design.", PropImportance.OPTIONAL)]
     public Location? Location { get; set; }
     [Name("Ⓜ️", "Ut?", "Unt?", "The optional length unit for all distance-related information of the design.")]
     public string? Unit { get; set; }
@@ -4502,23 +4690,23 @@ public class DesignDiff : Model<DesignDiff>
     public bool? CanMirror { get; set; }
     [Id("🔖", "AL?", "ActL?", "The optional active layer guid.")]
     public string? ActiveLayer { get; set; }
-    [ModelProp("⭕", "Pc*", "Pcs*", "The optional pieces of the design.", PropImportance.OPTIONAL)]
+    [EntityProp("⭕", "Pc*", "Pcs*", "The optional pieces of the design.", PropImportance.OPTIONAL)]
     public PiecesDiff? Pieces { get; set; }
-    [ModelProp("🔗", "Co*", "Cons*", "The optional connections of the design.", PropImportance.OPTIONAL)]
+    [EntityProp("🔗", "Co*", "Cons*", "The optional connections of the design.", PropImportance.OPTIONAL)]
     public ConnectionsDiff? Connections { get; set; }
-    [ModelProp("🏷️", "Pp*", "Prp*", "The optional properties of the design.", PropImportance.OPTIONAL)]
+    [EntityProp("🏷️", "Pp*", "Prp*", "The optional properties of the design.", PropImportance.OPTIONAL)]
     public List<Prop>? Props { get; set; }
-    [ModelProp("🔢", "St*", "Stt*", "The optional stats of the design.", PropImportance.OPTIONAL)]
+    [EntityProp("🔢", "St*", "Stt*", "The optional stats of the design.", PropImportance.OPTIONAL)]
     public List<Stat>? Stats { get; set; }
-    [ModelProp("🔗", "Ly*", "Lyr*", "The optional layers of the design.", PropImportance.OPTIONAL)]
+    [EntityProp("🔗", "Ly*", "Lyr*", "The optional layers of the design.", PropImportance.OPTIONAL)]
     public List<Layer>? Layers { get; set; }
-    [ModelProp("🗂️", "Gr*", "Grp*", "The optional groups of the design.", PropImportance.OPTIONAL)]
+    [EntityProp("🗂️", "Gr*", "Grp*", "The optional groups of the design.", PropImportance.OPTIONAL)]
     public List<Group>? Groups { get; set; }
-    [ModelProp("👥", "Au*", "Aut*", "The optional authors of the design.", PropImportance.OPTIONAL)]
+    [EntityProp("👥", "Au*", "Aut*", "The optional authors of the design.", PropImportance.OPTIONAL)]
     public List<AuthorId>? Authors { get; set; }
-    [ModelProp("💡", "Co*", "Con*", "The optional concepts of the design.", PropImportance.OPTIONAL)]
+    [EntityProp("💡", "Co*", "Con*", "The optional concepts of the design.", PropImportance.OPTIONAL)]
     public List<ConceptId>? Concepts { get; set; }
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the design.", PropImportance.OPTIONAL)]
+    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the design.", PropImportance.OPTIONAL)]
     public List<Attribute>? Attributes { get; set; }
     [Name("📅", "CA?", "CrA?", "The optional created at timestamp of the design.")]
     public DateTime? CreatedAt { get; set; }
@@ -4560,8 +4748,8 @@ public class DesignDiff : Model<DesignDiff>
     }
 }
 
-[Model("🏙️", "Dn", "Dsn", "The local identifier of the design within the kit.")]
-public class DesignId : Model<DesignId>
+[Entity("🏙️", "Dn", "Dsn", "The local identifier of the design within the kit.")]
+public class DesignId : Entity<DesignId>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the design.", PropImportance.ID)]
     public string Guid { get; set; } = "";
@@ -4578,14 +4766,14 @@ public class DesignId : Model<DesignId>
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-design-"/>
 /// </summary>
-[Model("🏙️", "Dn", "Dsn", "A design is a collection of pieces that are connected.")]
-public class Design : Model<Design>
+[Entity("🏙️", "Dn", "Dsn", "A design is a collection of pieces that are connected.")]
+public class Design : Entity<Design>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the design.", PropImportance.ID)]
     public string Guid { get; set; } = "";
     [Name("📛", "Na", "Nam", "The name of the design.", PropImportance.REQUIRED)]
     public string Name { get; set; } = "";
-    [ModelProp("📁", "Pa?", "Par?", "The optional parent design.", PropImportance.OPTIONAL)]
+    [EntityProp("📁", "Pa?", "Par?", "The optional parent design.", PropImportance.OPTIONAL)]
     public DesignId? Parent { get; set; }
     [FalseOrTrue("👻", "IA?", "IsA?", "Whether the design is abstract.")]
     public bool? IsAbstract { get; set; }
@@ -4597,11 +4785,11 @@ public class Design : Model<Design>
     public string Icon { get; set; } = "";
     [Url("🖼️", "Im?", "Img?", "The optional url to the image of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.")]
     public string Image { get; set; } = "";
-    [ModelProp("💡", "Co*", "Con*", "The optional concepts of the design.", PropImportance.OPTIONAL)]
+    [EntityProp("💡", "Co*", "Con*", "The optional concepts of the design.", PropImportance.OPTIONAL)]
     public List<ConceptId> Concepts { get; set; } = new();
-    [ModelProp("👥", "Au*", "Aut*", "The optional authors of the design.", PropImportance.OPTIONAL)]
+    [EntityProp("👥", "Au*", "Aut*", "The optional authors of the design.", PropImportance.OPTIONAL)]
     public List<AuthorId> Authors { get; set; } = new();
-    [ModelProp("📍", "Lo?", "Loc?", "The optional location of the design.", PropImportance.OPTIONAL)]
+    [EntityProp("📍", "Lo?", "Loc?", "The optional location of the design.", PropImportance.OPTIONAL)]
     public Location? Location { get; set; }
     [Name("Ⓜ️", "Ut", "Unt", "The length unit for all distance-related information of the design.", PropImportance.REQUIRED)]
     public string Unit { get; set; } = "";
@@ -4609,21 +4797,21 @@ public class Design : Model<Design>
     public bool? CanScale { get; set; }
     [FalseOrTrue("🪞", "CM?", "CanM?", "Whether the design can be mirrored.")]
     public bool? CanMirror { get; set; }
-    [ModelProp("🔗", "Ly*", "Lyr*", "The optional layers of the design.", PropImportance.OPTIONAL)]
+    [EntityProp("🔗", "Ly*", "Lyr*", "The optional layers of the design.", PropImportance.OPTIONAL)]
     public List<Layer> Layers { get; set; } = new();
     [Id("🔖", "AL?", "ActL?", "The optional active layer guid.")]
     public string? ActiveLayer { get; set; }
-    [ModelProp("⭕", "Pc*", "Pcs*", "The optional pieces of the design.", PropImportance.OPTIONAL)]
+    [EntityProp("⭕", "Pc*", "Pcs*", "The optional pieces of the design.", PropImportance.OPTIONAL)]
     public List<Piece> Pieces { get; set; } = new();
-    [ModelProp("🗂️", "Gr*", "Grp*", "The optional groups of the design.", PropImportance.OPTIONAL)]
+    [EntityProp("🗂️", "Gr*", "Grp*", "The optional groups of the design.", PropImportance.OPTIONAL)]
     public List<Group> Groups { get; set; } = new();
-    [ModelProp("🔗", "Co*", "Cons*", "The optional connections of the design.", PropImportance.OPTIONAL)]
+    [EntityProp("🔗", "Co*", "Cons*", "The optional connections of the design.", PropImportance.OPTIONAL)]
     public List<Connection> Connections { get; set; } = new();
-    [ModelProp("🏷️", "Pp*", "Prp*", "The optional properties of the design.", PropImportance.OPTIONAL)]
+    [EntityProp("🏷️", "Pp*", "Prp*", "The optional properties of the design.", PropImportance.OPTIONAL)]
     public List<Prop> Props { get; set; } = new();
-    [ModelProp("🔢", "St*", "Stt*", "The optional stats of the design.", PropImportance.OPTIONAL)]
+    [EntityProp("🔢", "St*", "Stt*", "The optional stats of the design.", PropImportance.OPTIONAL)]
     public List<Stat> Stats { get; set; } = new();
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the design.", PropImportance.OPTIONAL)]
+    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the design.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
     [Name("📅", "CA", "CrA", "The created at timestamp of the design.", PropImportance.REQUIRED)]
     public DateTime CreatedAt { get; set; }
@@ -5208,7 +5396,7 @@ text {
     }
 
 
-    // TODO: Implement reflexive validation for model properties.
+    // TODO: Implement reflexive validation for entity properties.
     public override (bool, List<string>) Validate()
     {
         var (isValid, errors) = base.Validate();
@@ -5441,8 +5629,8 @@ text {
 
 #region Kit
 
-[Model("🗃️", "KD", "KDf", "A diff for kits.")]
-public class KitDiff : Model<KitDiff>
+[Entity("🗃️", "KD", "KDf", "A diff for kits.")]
+public class KitDiff : Entity<KitDiff>
 {
     [Id("🆔", "Gd?", "Gid", "The optional guid of the kit.")]
     public string? Guid { get; set; }
@@ -5464,21 +5652,21 @@ public class KitDiff : Model<KitDiff>
     public string? Homepage { get; set; }
     [Url("⚖️", "Li?", "Lic?", "The optional license of the kit.")]
     public string? License { get; set; }
-    [ModelProp("🧩", "Ty*", "Typ*", "The optional types diff for the kit.", PropImportance.OPTIONAL)]
+    [EntityProp("🧩", "Ty*", "Typ*", "The optional types diff for the kit.", PropImportance.OPTIONAL)]
     public TypesDiff? Types { get; set; }
-    [ModelProp("🏙️", "Dn*", "Dsn*", "The optional designs diff for the kit.", PropImportance.OPTIONAL)]
+    [EntityProp("🏙️", "Dn*", "Dsn*", "The optional designs diff for the kit.", PropImportance.OPTIONAL)]
     public DesignsDiff? Designs { get; set; }
-    [ModelProp("📄", "Fl*", "Fil*", "The optional files diff for the kit.", PropImportance.OPTIONAL)]
+    [EntityProp("📄", "Fl*", "Fil*", "The optional files diff for the kit.", PropImportance.OPTIONAL)]
     public FilesDiff? Files { get; set; }
-    [ModelProp("📁", "Fo*", "Fol*", "The optional folders diff for the kit.", PropImportance.OPTIONAL)]
+    [EntityProp("📁", "Fo*", "Fol*", "The optional folders diff for the kit.", PropImportance.OPTIONAL)]
     public FoldersDiff? Folders { get; set; }
-    [ModelProp("🔗", "In*", "Int*", "The optional interfaces diff for the kit.", PropImportance.OPTIONAL)]
+    [EntityProp("🔗", "In*", "Int*", "The optional interfaces diff for the kit.", PropImportance.OPTIONAL)]
     public InterfacesDiff? Interfaces { get; set; }
-    [ModelProp("👥", "Au*", "Aut*", "The optional authors diff for the kit.", PropImportance.OPTIONAL)]
+    [EntityProp("👥", "Au*", "Aut*", "The optional authors diff for the kit.", PropImportance.OPTIONAL)]
     public AuthorsDiff? Authors { get; set; }
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes diff for the kit.", PropImportance.OPTIONAL)]
+    [EntityProp("🔐", "At*", "Atr*", "The optional attributes diff for the kit.", PropImportance.OPTIONAL)]
     public AttributesDiff? Attributes { get; set; }
-    [ModelProp("💡", "Co*", "Con*", "The optional concepts diff for the kit.", PropImportance.OPTIONAL)]
+    [EntityProp("💡", "Co*", "Con*", "The optional concepts diff for the kit.", PropImportance.OPTIONAL)]
     public ConceptsDiff? Concepts { get; set; }
     [Name("📅", "CA?", "CrA?", "The optional creation date.")]
     public string? CreatedAt { get; set; }
@@ -5530,8 +5718,8 @@ public class KitDiff : Model<KitDiff>
     };
 }
 
-[Model("🗃️", "KId", "KitId", "The local identifier of the kit.")]
-public class KitId : Model<KitId>
+[Entity("🗃️", "KId", "KitId", "The local identifier of the kit.")]
+public class KitId : Entity<KitId>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the kit.", PropImportance.ID)]
     public string Guid { get; set; } = "";
@@ -5543,14 +5731,14 @@ public class KitId : Model<KitId>
     public static implicit operator KitId(KitDiff diff) => new() { Guid = diff.Guid ?? "" };
 }
 
-[Model("📦", "KsD", "KsDf", "A diff for multiple kits.")]
-public class KitsDiff : Model<KitsDiff>
+[Entity("📦", "KsD", "KsDf", "A diff for multiple kits.")]
+public class KitsDiff : Entity<KitsDiff>
 {
-    [ModelProp("➖", "Rm*", "Rem*", "The optional removed kits.", PropImportance.OPTIONAL)]
+    [EntityProp("➖", "Rm*", "Rem*", "The optional removed kits.", PropImportance.OPTIONAL)]
     public List<string> Removed { get; set; } = new();
-    [ModelProp("✏️", "Up*", "Upd*", "The optional updated kits.", PropImportance.OPTIONAL)]
+    [EntityProp("✏️", "Up*", "Upd*", "The optional updated kits.", PropImportance.OPTIONAL)]
     public List<DiffUpdate<KitDiff>> Updated { get; set; } = new();
-    [ModelProp("➕", "Ad*", "Add*", "The optional added kits.", PropImportance.OPTIONAL)]
+    [EntityProp("➕", "Ad*", "Add*", "The optional added kits.", PropImportance.OPTIONAL)]
     public List<Kit> Added { get; set; } = new();
 
     public static implicit operator KitsDiff(List<Kit> kits) => new() { Updated = kits.Select(k => new DiffUpdate<KitDiff> { Id = k.Guid, Diff = (KitDiff)k }).ToList() };
@@ -5559,8 +5747,8 @@ public class KitsDiff : Model<KitsDiff>
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-kit-"/>
 /// </summary>
-[Model("🗃️", "Kt", "Kit", "A kit is a collection of types and designs.")]
-public class Kit : Model<Kit>
+[Entity("🗃️", "Kt", "Kit", "A kit is a collection of types and designs.")]
+public class Kit : Entity<Kit>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the kit.", PropImportance.ID)]
     public string Guid { get; set; } = "";
@@ -5574,41 +5762,43 @@ public class Kit : Model<Kit>
     public string Icon { get; set; } = "";
     [Url("🖼️", "Im?", "Img?", "The optional url to the image of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.")]
     public string Image { get; set; } = "";
-    [ModelProp("💡", "Cp*", "Cnp*", "The optional concepts of the kit.", PropImportance.OPTIONAL)]
+    [EntityProp("💡", "Cp*", "Cnp*", "The optional concepts of the kit.", PropImportance.OPTIONAL)]
     public List<Concept> Concepts { get; set; } = new();
+    [EntityProp("🏷️", "Tg*", "Tag*", "The optional tags of the kit.", PropImportance.OPTIONAL)]
+    public List<Tag> Tags { get; set; } = new();
     [Url("☁️", "Rm?", "Rmt?", "The optional Unique Resource Locator (URL) where to fetch the kit remotely.")]
     public string Remote { get; set; } = "";
     [Url("🏠", "Hp?", "Hmp?", "The optional Unique Resource Locator (URL) of the homepage of the kit.")]
     public string Homepage { get; set; } = "";
     [Url("⚖️", "Li?", "Lic?", "The optional license [ spdx id | url ] of the kit.")]
     public string License { get; set; } = "";
-    [ModelProp("👥", "Au*", "Aut*", "The optional authors of the kit.", PropImportance.OPTIONAL)]
+    [EntityProp("👥", "Au*", "Aut*", "The optional authors of the kit.", PropImportance.OPTIONAL)]
     public List<Author> Authors { get; set; } = new();
-    [ModelProp("⭕", "Pc*", "Pcs*", "The optional pieces of the kit.", PropImportance.OPTIONAL)]
+    [EntityProp("⭕", "Pc*", "Pcs*", "The optional pieces of the kit.", PropImportance.OPTIONAL)]
     public List<Piece> Pieces { get; set; } = new();
-    [ModelProp("🗂️", "Gr*", "Grp*", "The optional groups of the kit.", PropImportance.OPTIONAL)]
+    [EntityProp("🗂️", "Gr*", "Grp*", "The optional groups of the kit.", PropImportance.OPTIONAL)]
     public List<Group> Groups { get; set; } = new();
-    [ModelProp("🔗", "Co*", "Cons*", "The optional connections of the kit.", PropImportance.OPTIONAL)]
+    [EntityProp("🔗", "Co*", "Cons*", "The optional connections of the kit.", PropImportance.OPTIONAL)]
     public List<Connection> Connections { get; set; } = new();
-    [ModelProp("🏷️", "Pp*", "Prp*", "The optional properties of the kit.", PropImportance.OPTIONAL)]
+    [EntityProp("🏷️", "Pp*", "Prp*", "The optional properties of the kit.", PropImportance.OPTIONAL)]
     public List<Prop> Props { get; set; } = new();
-    [ModelProp("🔢", "St*", "Stt*", "The optional stats of the kit.", PropImportance.OPTIONAL)]
+    [EntityProp("🔢", "St*", "Stt*", "The optional stats of the kit.", PropImportance.OPTIONAL)]
     public List<Stat> Stats { get; set; } = new();
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the kit.", PropImportance.OPTIONAL)]
+    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the kit.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
     [Url("🔮", "Pv?", "Prv?", "The optional url of the preview image of the kit. The url must point to a landscape image [ png | jpg | svg ] which will be cropped by a 2x1 rectangle. The image must be at least 1920x960 pixels and smaller than 15 MB.")]
     public string Preview { get; set; } = "";
-    [ModelProp("📃", "Ql*", "Qal*", "The optional qualities of the kit.", PropImportance.OPTIONAL)]
+    [EntityProp("📃", "Ql*", "Qal*", "The optional qualities of the kit.", PropImportance.OPTIONAL)]
     public List<Quality> Qualities { get; set; } = new();
-    [ModelProp("🔌", "If*", "Ifc*", "The optional interfaces of the kit.", PropImportance.OPTIONAL)]
+    [EntityProp("🔌", "If*", "Ifc*", "The optional interfaces of the kit.", PropImportance.OPTIONAL)]
     public List<Interface> Interfaces { get; set; } = new();
-    [ModelProp("📄", "Fl*", "Fil*", "The optional files of the kit.", PropImportance.OPTIONAL)]
+    [EntityProp("📄", "Fl*", "Fil*", "The optional files of the kit.", PropImportance.OPTIONAL)]
     public List<File> Files { get; set; } = new();
-    [ModelProp("📁", "Fo*", "Fol*", "The optional folders of the kit.", PropImportance.OPTIONAL)]
+    [EntityProp("📁", "Fo*", "Fol*", "The optional folders of the kit.", PropImportance.OPTIONAL)]
     public List<Folder> Folders { get; set; } = new();
-    [ModelProp("🧩", "Ty*", "Typ*", "The optional types of the kit.", PropImportance.OPTIONAL)]
+    [EntityProp("🧩", "Ty*", "Typ*", "The optional types of the kit.", PropImportance.OPTIONAL)]
     public List<Type> Types { get; set; } = new();
-    [ModelProp("🏙️", "Dn*", "Dsn*", "The optional designs of the kit.", PropImportance.OPTIONAL)]
+    [EntityProp("🏙️", "Dn*", "Dsn*", "The optional designs of the kit.", PropImportance.OPTIONAL)]
     public List<Design> Designs { get; set; } = new();
     [Name("📅", "CA", "CrA", "The creation date of the kit.")]
     public string CreatedAt { get; set; } = "";
@@ -5805,7 +5995,7 @@ public class Kit : Model<Kit>
         return result;
     }
 
-    // TODO: Implement reflexive validation for model properties.
+    // TODO: Implement reflexive validation for entity properties.
     public override (bool, List<string>) Validate()
     {
         var (isValid, errors) = base.Validate();
@@ -6131,62 +6321,62 @@ public class ServerException : Exception
 public static class Meta
 {
     /// <summary>
-    ///     Name of the model : Type
+    ///     Name of the entity : Type
     /// </summary>
     public static readonly ImmutableDictionary<string, System.Type> Type;
 
     /// <summary>
-    ///     Name of the model : ModelAttribute
+    ///     Name of the entity : EntityAttribute
     /// </summary>
-    public static readonly ImmutableDictionary<string, ModelAttribute> Model;
+    public static readonly ImmutableDictionary<string, EntityAttribute> Entity;
 
     /// <summary>
-    ///     Name of the model : Index of the property : PropertyInfo
+    ///     Name of the entity : Index of the property : PropertyInfo
     /// </summary>
     public static readonly ImmutableDictionary<string, ImmutableArray<PropertyInfo>> Property;
 
     /// <summary>
-    ///     Name of the model : Index of the property : PropAttribute
+    ///     Name of the entity : Index of the property : PropAttribute
     /// </summary>
     public static readonly ImmutableDictionary<string, ImmutableArray<PropAttribute>> Prop;
 
     /// <summary>
-    ///     Name of the model : Index of the property : IsList
+    ///     Name of the entity : Index of the property : IsList
     /// </summary>
     public static readonly ImmutableDictionary<string, ImmutableArray<bool>> IsPropertyList;
 
     /// <summary>
-    ///     Name of the model : Index of the property : Type
+    ///     Name of the entity : Index of the property : Type
     /// </summary>
     public static readonly ImmutableDictionary<string, ImmutableArray<System.Type>> PropertyItemType;
 
     /// <summary>
-    ///     Name of the model : Index of the property : IsModel
+    ///     Name of the entity : Index of the property : IsEntity
     /// </summary>
-    public static readonly ImmutableDictionary<string, ImmutableArray<bool>> IsPropertyModel;
+    public static readonly ImmutableDictionary<string, ImmutableArray<bool>> IsPropertyEntity;
 
     static Meta()
     {
         var type = new Dictionary<string, System.Type>();
-        var model = new Dictionary<string, ModelAttribute>();
+        var entity = new Dictionary<string, EntityAttribute>();
         var property = new Dictionary<string, List<PropertyInfo>>();
         var prop = new Dictionary<string, List<PropAttribute>>();
         var isPropertyList = new Dictionary<string, List<bool>>();
         var propertyItemType = new Dictionary<string, List<System.Type>>();
-        var isPropertyModel = new Dictionary<string, List<bool>>();
+        var isPropertyEntity = new Dictionary<string, List<bool>>();
 
-        var modelTypes = Assembly.GetExecutingAssembly()
+        var entityTypes = Assembly.GetExecutingAssembly()
             .GetTypes()
-            .Where(t => t.GetCustomAttribute<ModelAttribute>() != null);
-        foreach (var mt in modelTypes)
+            .Where(t => t.GetCustomAttribute<EntityAttribute>() != null);
+        foreach (var mt in entityTypes)
         {
             type[mt.Name] = mt;
-            model[mt.Name] = mt.GetCustomAttribute<ModelAttribute>()!;
+            entity[mt.Name] = mt.GetCustomAttribute<EntityAttribute>()!;
             property[mt.Name] = new List<PropertyInfo>();
             prop[mt.Name] = new List<PropAttribute>();
             isPropertyList[mt.Name] = new List<bool>();
             propertyItemType[mt.Name] = new List<System.Type>();
-            isPropertyModel[mt.Name] = new List<bool>();
+            isPropertyEntity[mt.Name] = new List<bool>();
 
             // TODO: Add index to prop and add to list based on index not on source code order.
             // GetProperties() returns parent last
@@ -6194,7 +6384,7 @@ public static class Meta
             var propParents = new List<PropAttribute>();
             var isPropertyListParents = new List<bool>();
             var propertyItemTypeParents = new List<System.Type>();
-            var isPropertyModelParents = new List<bool>();
+            var isPropertyEntityParents = new List<bool>();
             foreach (var mtp in mt.GetProperties()
                          .Where(mtp => mtp.GetCustomAttribute<PropAttribute>() != null))
             {
@@ -6202,7 +6392,7 @@ public static class Meta
                 var imtpl = mtp.PropertyType.IsGenericType &&
                             mtp.PropertyType.GetGenericTypeDefinition() == typeof(List<>);
                 var mtpPropertyItemType = imtpl ? mtp.PropertyType.GetGenericArguments()[0] : mtp.PropertyType;
-                var mtpIsPropertyModel = mtp.GetCustomAttribute<ModelPropAttribute>() != null;
+                var mtpIsPropertyEntity = mtp.GetCustomAttribute<EntityPropAttribute>() != null;
 
                 if (mtp.DeclaringType?.FullName != mt.FullName)
                 {
@@ -6210,7 +6400,7 @@ public static class Meta
                     if (mtpProp is not null) propParents.Add(mtpProp);
                     isPropertyListParents.Add(imtpl);
                     propertyItemTypeParents.Add(mtpPropertyItemType);
-                    isPropertyModelParents.Add(mtpIsPropertyModel);
+                    isPropertyEntityParents.Add(mtpIsPropertyEntity);
                 }
                 else
                 {
@@ -6218,7 +6408,7 @@ public static class Meta
                     if (mtpProp is not null) prop[mt.Name].Add(mtpProp);
                     isPropertyList[mt.Name].Add(imtpl);
                     propertyItemType[mt.Name].Add(mtpPropertyItemType);
-                    isPropertyModel[mt.Name].Add(mtpIsPropertyModel);
+                    isPropertyEntity[mt.Name].Add(mtpIsPropertyEntity);
                 }
             }
 
@@ -6226,11 +6416,11 @@ public static class Meta
             prop[mt.Name].InsertRange(0, propParents);
             isPropertyList[mt.Name].InsertRange(0, isPropertyListParents);
             propertyItemType[mt.Name].InsertRange(0, propertyItemTypeParents);
-            isPropertyModel[mt.Name].InsertRange(0, isPropertyModelParents);
+            isPropertyEntity[mt.Name].InsertRange(0, isPropertyEntityParents);
         }
 
         Type = type.ToImmutableDictionary();
-        Model = model.ToImmutableDictionary();
+        Entity = entity.ToImmutableDictionary();
         Property = property.ToImmutableDictionary(
             kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
         Prop = prop.ToImmutableDictionary(
@@ -6239,13 +6429,13 @@ public static class Meta
             kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
         PropertyItemType = propertyItemType.ToImmutableDictionary(
             kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
-        IsPropertyModel = isPropertyModel.ToImmutableDictionary(
+        IsPropertyEntity = isPropertyEntity.ToImmutableDictionary(
             kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
     }
 }
 
 #endregion Meta
 
-#endregion Modeling
+#endregion Entitying
 
 

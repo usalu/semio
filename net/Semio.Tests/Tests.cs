@@ -67,52 +67,26 @@ public class KitTests
     }
 
     [Fact]
-    public void SemioValidation_InvalidKit_MatchesExpectedOutput()
+    public void Validation_MatchesExpectedOutput()
     {
-        var kitJson = System.IO.File.ReadAllText(KitInvalidPath);
-        var kit = JsonConvert.DeserializeObject<Kit>(kitJson);
-        Assert.NotNull(kit);
+        // Valid kit has no errors
+        var validKitJson = System.IO.File.ReadAllText(Path.Combine(AssetsPath, "kit_metabolism.json"));
+        var validKit = JsonConvert.DeserializeObject<Kit>(validKitJson);
+        Assert.NotNull(validKit);
+        Assert.False(SemioValidator.ValidateKit(validKit!).HasErrors());
 
-        var result = SemioValidator.ValidateKit(kit!);
-        Assert.True(result.HasErrors(), "Invalid kit should have validation errors");
+        // Invalid kit matches validation.json
+        var invalidKitJson = System.IO.File.ReadAllText(KitInvalidPath);
+        var invalidKit = JsonConvert.DeserializeObject<Kit>(invalidKitJson);
+        Assert.NotNull(invalidKit);
 
+        var result = SemioValidator.ValidateKit(invalidKit!);
         var expectedJson = System.IO.File.ReadAllText(ValidationPath);
-        var expectedResult = SemioValidationResult.Parse(expectedJson);
+        var expected = SemioValidationResult.Parse(expectedJson);
 
-        Assert.True(SemioValidationResult.AreEqual(result, expectedResult),
-            $"Validation result mismatch. Got {result.Issues.Count} issues, expected {expectedResult.Issues.Count}. " +
+        Assert.True(SemioValidationResult.AreEqual(result, expected),
+            $"Validation mismatch. Got {result.Issues.Count} issues, expected {expected.Issues.Count}. " +
             $"Result: {result.Serialize()}");
-    }
-
-    [Fact]
-    public void SemioValidation_InvalidKit_HasAllExpectedRules()
-    {
-        var kitJson = System.IO.File.ReadAllText(KitInvalidPath);
-        var kit = JsonConvert.DeserializeObject<Kit>(kitJson);
-        Assert.NotNull(kit);
-
-        var result = SemioValidator.ValidateKit(kit!);
-        var ruleIds = result.Issues.Select(i => i.RuleId).ToHashSet();
-
-        var expectedRules = new[]
-        {
-            "guid-unique",
-            "type-name-unique",
-            "design-name-unique",
-            "piece-name-unique",
-            "quality-name-unique",
-            "interface-name-unique",
-            "file-name-unique",
-            "folder-name-unique",
-            "port-name-unique",
-            "model-name-unique",
-            "layer-path-unique"
-        };
-
-        foreach (var ruleId in expectedRules)
-        {
-            Assert.Contains(ruleId, ruleIds);
-        }
     }
 }
 

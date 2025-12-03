@@ -2462,7 +2462,9 @@ function ToggleGroupItem({ className, id, icon, text, action, ...props }: Toggle
         toggleVariants({
           level,
         }),
-        text ? "w-auto shrink-0 focus:z-panel focus-visible:z-panel data-[state=on]:bg-active-base data-[state=on]:hover:bg-active-base/90" : "min-w-0 flex-1 shrink-0 focus:z-panel focus-visible:z-panel data-[state=on]:bg-active-base data-[state=on]:hover:bg-active-base/90",
+        text
+          ? "w-auto shrink-0 focus:z-panel focus-visible:z-panel data-[state=on]:bg-active-base data-[state=on]:hover:bg-active-base/90"
+          : "min-w-0 flex-1 shrink-0 focus:z-panel focus-visible:z-panel data-[state=on]:bg-active-base data-[state=on]:hover:bg-active-base/90",
         (text || action) && "flex items-center gap-0 p-single aspect-auto",
         text && "w-auto",
         className,
@@ -4375,8 +4377,11 @@ export interface DiagramProps {
   onEdgeMouseLeave?: (event: React.MouseEvent, edge: Edge) => void;
   onPaneClick?: (event: React.MouseEvent) => void;
   onPaneDoubleClick?: (event: React.MouseEvent) => void;
+  // PERF: onMoveStart/onMoveEnd for tracking pan state to skip hover updates
+  onMoveStart?: () => void;
   onMoveEnd?: () => void;
   reactFlowInstanceRef?: React.RefObject<ReactFlowInstance | null>;
+  onInit?: (instance: ReactFlowInstance) => void;
   wrapperRef?: React.RefObject<HTMLDivElement> | ((node: HTMLDivElement | null) => void);
   showBackground?: boolean;
   backgroundVariant?: BackgroundVariant;
@@ -4429,8 +4434,10 @@ const DiagramInner: React.FC<DiagramProps> = ({
   onEdgeMouseLeave,
   onPaneClick,
   onPaneDoubleClick,
+  onMoveStart,
   onMoveEnd,
   reactFlowInstanceRef,
+  onInit: onInitProp,
   wrapperRef,
   showMinimap = false,
   panels,
@@ -4469,8 +4476,11 @@ const DiagramInner: React.FC<DiagramProps> = ({
       if (reactFlowInstanceRef) {
         reactFlowInstanceRef.current = instance;
       }
+      if (onInitProp) {
+        onInitProp(instance);
+      }
     },
-    [reactFlowInstanceRef],
+    [reactFlowInstanceRef, onInitProp],
   );
 
   React.useEffect(() => {
@@ -4543,6 +4553,7 @@ const DiagramInner: React.FC<DiagramProps> = ({
         onEdgeMouseLeave={onEdgeMouseLeave}
         onPaneClick={onPaneClick}
         onDoubleClick={onPaneDoubleClick}
+        onMoveStart={onMoveStart}
         onMoveEnd={onMoveEnd}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}

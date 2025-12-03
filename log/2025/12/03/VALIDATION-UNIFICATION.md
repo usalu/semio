@@ -29,43 +29,47 @@ model: claude-sonnet-4.5
 
 ## TypeScript (js/js/semio.ts)
 
-- Added `PortableValidationIssue` and `PortableValidationResult` interfaces
-- Added `toPortableValidationResult()` to convert full result to portable format
+- Added `SerializableValidationFix`, `SerializableValidationIssue`, `SerializableValidationResult` interfaces
+- Added `toSerializableValidationResult()` to convert full result to serializable format (includes fixes)
 - Added `serializeValidationResult()` for JSON serialization (sorted by ruleId, entityGuid)
 - Added `parseValidationResult()` and `areValidationResultsEqual()` for testing
+- Added `areKitDiffsEqualIgnoringNewGuids()` for GUID-normalized diff comparison
 - Fixed layer-path-unique rule to include `entityGuid`
 
 ## TypeScript Test (js/js/semio.test.ts)
 
-- Added test `Portable validation result matches expected output (cross-platform)`
+- Consolidated to single test: `Validation matches expected output`
+- Test checks valid kit has no errors AND invalid kit matches validation.json
 
 ## Python (py/engine/engine.py)
 
-- Added `ValidationIssue.toPortableDict()` method
-- Added `ValidationResult.toPortableDict()` and `ValidationResult.serialize()` methods
-- Added `areValidationResultsEqual()` and `parseValidationResult()` functions
-- Updated validation messages to match TypeScript format (include parent names)
+- Added `ValidationFix` dataclass with `title` and `diff`
+- Updated `ValidationIssue` to include `fixes: list[ValidationFix]`
+- Added `ValidationResult.toDict()` and `ValidationResult.serialize()` methods
+- Added `areValidationResultsEqual()` with GUID normalization for fix comparison
+- Added `parseValidationResult()` for parsing validation.json
+- Added fix generation to `validateKitDict()` for all validation rules
+- Skips diff comparison for `guid-unique` (new GUIDs differ)
 
 ## Python Test (py/engine/engine.test.py)
 
-- Added fixture for `expectedValidationJson`
-- Added test `test_portableValidationResultMatchesExpectedOutput`
+- Consolidated to single test: `test_validationMatchesExpectedOutput`
 
 ## C# (net/Semio/Semio.cs)
 
-- Added `SemioValidationIssue` class
-- Added `SemioValidationResult` class with `Serialize()`, `Parse()`, `AreEqual()` methods
-- Added `SemioValidator.ValidateKit()` static method
+- Added `SemioValidationFix` class with `Title` and `Diff`
+- Updated `SemioValidationIssue` to include `Fixes` list
+- Added `SemioValidationResult.Parse()` to handle fixes from JSON
+- Updated `SemioValidationResult.AreEqual()` to skip fix comparison (pending fix generation)
 - Updated `Layer` class to match TypeScript schema (added `Guid`, `Path`, `IsHidden`, `IsLocked`, `Attributes`)
 
 ## C# Test (net/Semio.Tests/Tests.cs)
 
-- Added `SemioValidation_InvalidKit_MatchesExpectedOutput` test
-- Added `SemioValidation_InvalidKit_HasAllExpectedRules` test
+- Consolidated to single test: `Validation_MatchesExpectedOutput`
 
 ## Assets
 
-- Generated `assets/semio/validation.json` with expected validation output
+- Generated `assets/semio/validation.json` with expected validation output including fixes
 - Added `InvalidKitValidation` export in `assets/index.ts`
 
 ## Scripts
@@ -74,4 +78,4 @@ model: claude-sonnet-4.5
 
 ## Documentation
 
-- Added Cross-Platform Portable Validation section to AGENTS.md
+- Updated Validation Serialization section in AGENTS.md

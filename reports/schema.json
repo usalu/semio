@@ -1,0 +1,38 @@
+{
+  "timestamp": "2025-12-03T15:38:17.509Z",
+  "summary": {
+    "typescript": {
+      "entities": 27,
+      "idTypes": 21
+    },
+    "python": {
+      "entities": 26,
+      "idTypes": 21
+    },
+    "csharp": {
+      "entities": 26,
+      "idTypes": 21
+    },
+    "grasshopper": {
+      "components": 23,
+      "params": 60,
+      "goos": 60
+    },
+    "database": {
+      "entities": 27,
+      "relationships": 13
+    },
+    "interface": {
+      "topLevelFields": 18
+    },
+    "software": {
+      "entities": 96,
+      "relationships": 64
+    },
+    "errors": 0,
+    "warnings": 0
+  },
+  "errors": [],
+  "warnings": [],
+  "status": "success"
+}

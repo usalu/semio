@@ -1,0 +1,2723 @@
+{
+  "timestamp": "2025-12-03T15:38:17.502Z",
+  "entities": [
+    {
+      "name": "Id",
+      "kind": "class",
+      "fields": []
+    },
+    {
+      "name": "Model",
+      "kind": "class",
+      "fields": []
+    },
+    {
+      "name": "Shallow",
+      "kind": "class",
+      "fields": []
+    },
+    {
+      "name": "Diff",
+      "kind": "class",
+      "fields": []
+    },
+    {
+      "name": "Diffs",
+      "kind": "class",
+      "fields": []
+    },
+    {
+      "name": "Input",
+      "kind": "class",
+      "fields": []
+    },
+    {
+      "name": "Output",
+      "kind": "class",
+      "fields": []
+    },
+    {
+      "name": "Context",
+      "kind": "class",
+      "fields": []
+    },
+    {
+      "name": "Prediction",
+      "kind": "class",
+      "fields": []
+    },
+    {
+      "name": "Attribute",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "key",
+          "type": "str"
+        },
+        {
+          "name": "value",
+          "type": "str"
+        },
+        {
+          "name": "definition",
+          "type": "str"
+        }
+      ]
+    },
+    {
+      "name": "AttributeId",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "key",
+          "type": "str"
+        }
+      ]
+    },
+    {
+      "name": "AttributeDiff",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "key",
+          "type": "str"
+        },
+        {
+          "name": "value",
+          "type": "str"
+        },
+        {
+          "name": "definition",
+          "type": "str"
+        }
+      ]
+    },
+    {
+      "name": "AttributesDiff",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "removed",
+          "type": "list[AttributeId]"
+        },
+        {
+          "name": "updated",
+          "type": "list[AttributeDiff]"
+        },
+        {
+          "name": "added",
+          "type": "list[Attribute]"
+        }
+      ]
+    },
+    {
+      "name": "Coord",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "u",
+          "type": "float"
+        },
+        {
+          "name": "v",
+          "type": "float"
+        }
+      ]
+    },
+    {
+      "name": "Vec",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "u",
+          "type": "float"
+        },
+        {
+          "name": "v",
+          "type": "float"
+        }
+      ]
+    },
+    {
+      "name": "Point",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "x",
+          "type": "float"
+        },
+        {
+          "name": "y",
+          "type": "float"
+        },
+        {
+          "name": "z",
+          "type": "float"
+        }
+      ]
+    },
+    {
+      "name": "Vector",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "x",
+          "type": "float"
+        },
+        {
+          "name": "y",
+          "type": "float"
+        },
+        {
+          "name": "z",
+          "type": "float"
+        }
+      ]
+    },
+    {
+      "name": "Plane",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "origin",
+          "type": "Point"
+        },
+        {
+          "name": "xAxis",
+          "type": "Vector"
+        },
+        {
+          "name": "yAxis",
+          "type": "Vector"
+        }
+      ]
+    },
+    {
+      "name": "Camera",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "position",
+          "type": "Point"
+        },
+        {
+          "name": "forward",
+          "type": "Vector"
+        },
+        {
+          "name": "up",
+          "type": "Vector"
+        }
+      ]
+    },
+    {
+      "name": "Location",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "longitude",
+          "type": "float"
+        },
+        {
+          "name": "latitude",
+          "type": "float"
+        },
+        {
+          "name": "altitude",
+          "type": "float"
+        },
+        {
+          "name": "attributes",
+          "type": "list[Attribute]"
+        }
+      ]
+    },
+    {
+      "name": "LocationDiff",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "longitude",
+          "type": "float"
+        },
+        {
+          "name": "latitude",
+          "type": "float"
+        },
+        {
+          "name": "altitude",
+          "type": "float"
+        },
+        {
+          "name": "attributes",
+          "type": "AttributesDiff"
+        }
+      ]
+    },
+    {
+      "name": "Author",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "name",
+          "type": "str"
+        },
+        {
+          "name": "email",
+          "type": "str"
+        },
+        {
+          "name": "attributes",
+          "type": "list[Attribute]"
+        }
+      ]
+    },
+    {
+      "name": "AuthorId",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "name",
+          "type": "str"
+        },
+        {
+          "name": "email",
+          "type": "str"
+        }
+      ]
+    },
+    {
+      "name": "AuthorDiff",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "name",
+          "type": "str"
+        },
+        {
+          "name": "email",
+          "type": "str"
+        },
+        {
+          "name": "attributes",
+          "type": "AttributesDiff"
+        }
+      ]
+    },
+    {
+      "name": "AuthorsDiff",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "removed",
+          "type": "list[AuthorId]"
+        },
+        {
+          "name": "updated",
+          "type": "list[AuthorDiff]"
+        },
+        {
+          "name": "added",
+          "type": "list[Author]"
+        }
+      ]
+    },
+    {
+      "name": "File",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "path",
+          "type": "str"
+        },
+        {
+          "name": "remoteUrl",
+          "type": "str"
+        },
+        {
+          "name": "description",
+          "type": "str"
+        },
+        {
+          "name": "attributes",
+          "type": "list[Attribute]"
+        }
+      ]
+    },
+    {
+      "name": "FileId",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "path",
+          "type": "str"
+        }
+      ]
+    },
+    {
+      "name": "FileDiff",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "path",
+          "type": "str"
+        },
+        {
+          "name": "remoteUrl",
+          "type": "str"
+        },
+        {
+          "name": "description",
+          "type": "str"
+        },
+        {
+          "name": "attributes",
+          "type": "AttributesDiff"
+        }
+      ]
+    },
+    {
+      "name": "FilesDiff",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "removed",
+          "type": "list[FileId]"
+        },
+        {
+          "name": "updated",
+          "type": "list[FileDiff]"
+        },
+        {
+          "name": "added",
+          "type": "list[File]"
+        }
+      ]
+    },
+    {
+      "name": "Benchmark",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "name",
+          "type": "str"
+        },
+        {
+          "name": "icon",
+          "type": "str"
+        },
+        {
+          "name": "min",
+          "type": "float"
+        },
+        {
+          "name": "minExcluded",
+          "type": "bool"
+        },
+        {
+          "name": "max",
+          "type": "float"
+        },
+        {
+          "name": "maxExcluded",
+          "type": "bool"
+        },
+        {
+          "name": "definition",
+          "type": "str"
+        },
+        {
+          "name": "attributes",
+          "type": "list[Attribute]"
+        }
+      ]
+    },
+    {
+      "name": "BenchmarkId",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "name",
+          "type": "str"
+        }
+      ]
+    },
+    {
+      "name": "BenchmarkDiff",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "name",
+          "type": "str"
+        },
+        {
+          "name": "icon",
+          "type": "str"
+        },
+        {
+          "name": "min",
+          "type": "float"
+        },
+        {
+          "name": "minExcluded",
+          "type": "bool"
+        },
+        {
+          "name": "max",
+          "type": "float"
+        },
+        {
+          "name": "maxExcluded",
+          "type": "bool"
+        },
+        {
+          "name": "definition",
+          "type": "str"
+        },
+        {
+          "name": "attributes",
+          "type": "AttributesDiff"
+        }
+      ]
+    },
+    {
+      "name": "BenchmarksDiff",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "removed",
+          "type": "list[BenchmarkId]"
+        },
+        {
+          "name": "updated",
+          "type": "list[BenchmarkDiff]"
+        },
+        {
+          "name": "added",
+          "type": "list[Benchmark]"
+        }
+      ]
+    },
+    {
+      "name": "QualityKind",
+      "kind": "class",
+      "fields": []
+    },
+    {
+      "name": "Quality",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "key",
+          "type": "str"
+        },
+        {
+          "name": "name",
+          "type": "str"
+        },
+        {
+          "name": "kind",
+          "type": "QualityKind"
+        },
+        {
+          "name": "default",
+          "type": "float"
+        },
+        {
+          "name": "formula",
+          "type": "str"
+        },
+        {
+          "name": "defaultSiUnit",
+          "type": "str"
+        },
+        {
+          "name": "defaultImperialUnit",
+          "type": "str"
+        },
+        {
+          "name": "min",
+          "type": "float"
+        },
+        {
+          "name": "minExcluded",
+          "type": "bool"
+        },
+        {
+          "name": "max",
+          "type": "float"
+        },
+        {
+          "name": "maxExcluded",
+          "type": "bool"
+        },
+        {
+          "name": "canScale",
+          "type": "bool"
+        },
+        {
+          "name": "benchmarks",
+          "type": "list[Benchmark]"
+        },
+        {
+          "name": "definition",
+          "type": "str"
+        },
+        {
+          "name": "attributes",
+          "type": "list[Attribute]"
+        }
+      ]
+    },
+    {
+      "name": "QualityId",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "key",
+          "type": "str"
+        }
+      ]
+    },
+    {
+      "name": "QualityDiff",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "key",
+          "type": "str"
+        },
+        {
+          "name": "name",
+          "type": "str"
+        },
+        {
+          "name": "kind",
+          "type": "QualityKind"
+        },
+        {
+          "name": "default",
+          "type": "float"
+        },
+        {
+          "name": "formula",
+          "type": "str"
+        },
+        {
+          "name": "defaultSiUnit",
+          "type": "str"
+        },
+        {
+          "name": "defaultImperialUnit",
+          "type": "str"
+        },
+        {
+          "name": "min",
+          "type": "float"
+        },
+        {
+          "name": "minExcluded",
+          "type": "bool"
+        },
+        {
+          "name": "max",
+          "type": "float"
+        },
+        {
+          "name": "maxExcluded",
+          "type": "bool"
+        },
+        {
+          "name": "canScale",
+          "type": "bool"
+        },
+        {
+          "name": "benchmarks",
+          "type": "BenchmarksDiff"
+        },
+        {
+          "name": "definition",
+          "type": "str"
+        },
+        {
+          "name": "attributes",
+          "type": "AttributesDiff"
+        }
+      ]
+    },
+    {
+      "name": "Prop",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "key",
+          "type": "str"
+        },
+        {
+          "name": "value",
+          "type": "str"
+        },
+        {
+          "name": "unit",
+          "type": "str"
+        },
+        {
+          "name": "attributes",
+          "type": "list[Attribute]"
+        }
+      ]
+    },
+    {
+      "name": "PropId",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "key",
+          "type": "str"
+        }
+      ]
+    },
+    {
+      "name": "PropDiff",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "key",
+          "type": "str"
+        },
+        {
+          "name": "value",
+          "type": "str"
+        },
+        {
+          "name": "unit",
+          "type": "str"
+        },
+        {
+          "name": "attributes",
+          "type": "AttributesDiff"
+        }
+      ]
+    },
+    {
+      "name": "PropsDiff",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "removed",
+          "type": "list[PropId]"
+        },
+        {
+          "name": "updated",
+          "type": "list[PropDiff]"
+        },
+        {
+          "name": "added",
+          "type": "list[Prop]"
+        }
+      ]
+    },
+    {
+      "name": "Tag",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "str"
+        },
+        {
+          "name": "name",
+          "type": "str"
+        },
+        {
+          "name": "description",
+          "type": "str"
+        },
+        {
+          "name": "icon",
+          "type": "str"
+        },
+        {
+          "name": "attributes",
+          "type": "list[Attribute]"
+        }
+      ]
+    },
+    {
+      "name": "TagId",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "str"
+        }
+      ]
+    },
+    {
+      "name": "TagDiff",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "name",
+          "type": "str"
+        },
+        {
+          "name": "description",
+          "type": "str"
+        },
+        {
+          "name": "icon",
+          "type": "str"
+        },
+        {
+          "name": "attributes",
+          "type": "AttributesDiff"
+        }
+      ]
+    },
+    {
+      "name": "TagsDiff",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "removed",
+          "type": "list[TagId]"
+        },
+        {
+          "name": "updated",
+          "type": "list[TagDiff]"
+        },
+        {
+          "name": "added",
+          "type": "list[Tag]"
+        }
+      ]
+    },
+    {
+      "name": "Concept",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "str"
+        },
+        {
+          "name": "name",
+          "type": "str"
+        },
+        {
+          "name": "description",
+          "type": "str"
+        },
+        {
+          "name": "icon",
+          "type": "str"
+        },
+        {
+          "name": "attributes",
+          "type": "list[Attribute]"
+        }
+      ]
+    },
+    {
+      "name": "ConceptId",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "str"
+        }
+      ]
+    },
+    {
+      "name": "ConceptDiff",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "name",
+          "type": "str"
+        },
+        {
+          "name": "description",
+          "type": "str"
+        },
+        {
+          "name": "icon",
+          "type": "str"
+        },
+        {
+          "name": "attributes",
+          "type": "AttributesDiff"
+        }
+      ]
+    },
+    {
+      "name": "ConceptsDiff",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "removed",
+          "type": "list[ConceptId]"
+        },
+        {
+          "name": "updated",
+          "type": "list[ConceptDiff]"
+        },
+        {
+          "name": "added",
+          "type": "list[Concept]"
+        }
+      ]
+    },
+    {
+      "name": "Model",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "str"
+        },
+        {
+          "name": "name",
+          "type": "str"
+        },
+        {
+          "name": "tags",
+          "type": "list[TagId]"
+        },
+        {
+          "name": "file",
+          "type": "FileId"
+        },
+        {
+          "name": "description",
+          "type": "str"
+        },
+        {
+          "name": "attributes",
+          "type": "list[Attribute]"
+        }
+      ]
+    },
+    {
+      "name": "ModelId",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "str"
+        }
+      ]
+    },
+    {
+      "name": "ModelDiff",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "name",
+          "type": "str"
+        },
+        {
+          "name": "tags",
+          "type": "list[TagId]"
+        },
+        {
+          "name": "file",
+          "type": "FileId"
+        },
+        {
+          "name": "description",
+          "type": "str"
+        },
+        {
+          "name": "attributes",
+          "type": "AttributesDiff"
+        }
+      ]
+    },
+    {
+      "name": "ModelsDiff",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "removed",
+          "type": "list[ModelId]"
+        },
+        {
+          "name": "updated",
+          "type": "list[ModelDiff]"
+        },
+        {
+          "name": "added",
+          "type": "list[Model]"
+        }
+      ]
+    },
+    {
+      "name": "Port",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "id",
+          "type": "str"
+        },
+        {
+          "name": "point",
+          "type": "Point"
+        },
+        {
+          "name": "direction",
+          "type": "Vector"
+        },
+        {
+          "name": "t",
+          "type": "float"
+        },
+        {
+          "name": "mandatory",
+          "type": "bool"
+        },
+        {
+          "name": "interface",
+          "type": "str"
+        },
+        {
+          "name": "compatibleInterfaces",
+          "type": "list[str]"
+        },
+        {
+          "name": "description",
+          "type": "str"
+        },
+        {
+          "name": "attributes",
+          "type": "list[Attribute]"
+        }
+      ]
+    },
+    {
+      "name": "PortId",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "id",
+          "type": "str"
+        }
+      ]
+    },
+    {
+      "name": "PortDiff",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "id",
+          "type": "str"
+        },
+        {
+          "name": "point",
+          "type": "Point"
+        },
+        {
+          "name": "direction",
+          "type": "Vector"
+        },
+        {
+          "name": "t",
+          "type": "float"
+        },
+        {
+          "name": "mandatory",
+          "type": "bool"
+        },
+        {
+          "name": "interface",
+          "type": "str"
+        },
+        {
+          "name": "compatibleInterfaces",
+          "type": "list[str]"
+        },
+        {
+          "name": "description",
+          "type": "str"
+        },
+        {
+          "name": "attributes",
+          "type": "AttributesDiff"
+        }
+      ]
+    },
+    {
+      "name": "PortsDiff",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "removed",
+          "type": "list[PortId]"
+        },
+        {
+          "name": "updated",
+          "type": "list[PortDiff]"
+        },
+        {
+          "name": "added",
+          "type": "list[Port]"
+        }
+      ]
+    },
+    {
+      "name": "Type",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "name",
+          "type": "str"
+        },
+        {
+          "name": "variant",
+          "type": "str"
+        },
+        {
+          "name": "models",
+          "type": "list[Model]"
+        },
+        {
+          "name": "ports",
+          "type": "list[Port]"
+        },
+        {
+          "name": "props",
+          "type": "list[Prop]"
+        },
+        {
+          "name": "isVirtual",
+          "type": "bool"
+        },
+        {
+          "name": "canScale",
+          "type": "bool"
+        },
+        {
+          "name": "canMirror",
+          "type": "bool"
+        },
+        {
+          "name": "unit",
+          "type": "str"
+        },
+        {
+          "name": "availableCount",
+          "type": "float"
+        },
+        {
+          "name": "location",
+          "type": "Location"
+        },
+        {
+          "name": "authors",
+          "type": "list[Author]"
+        },
+        {
+          "name": "concepts",
+          "type": "list[ConceptId]"
+        },
+        {
+          "name": "icon",
+          "type": "str"
+        },
+        {
+          "name": "image",
+          "type": "str"
+        },
+        {
+          "name": "description",
+          "type": "str"
+        },
+        {
+          "name": "attributes",
+          "type": "list[Attribute]"
+        },
+        {
+          "name": "created",
+          "type": "datetime"
+        },
+        {
+          "name": "updated",
+          "type": "datetime"
+        }
+      ]
+    },
+    {
+      "name": "TypeId",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "name",
+          "type": "str"
+        },
+        {
+          "name": "variant",
+          "type": "str"
+        }
+      ]
+    },
+    {
+      "name": "TypeDiff",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "name",
+          "type": "str"
+        },
+        {
+          "name": "variant",
+          "type": "str"
+        },
+        {
+          "name": "models",
+          "type": "ModelsDiff"
+        },
+        {
+          "name": "ports",
+          "type": "PortsDiff"
+        },
+        {
+          "name": "props",
+          "type": "PropsDiff"
+        },
+        {
+          "name": "isVirtual",
+          "type": "bool"
+        },
+        {
+          "name": "canScale",
+          "type": "bool"
+        },
+        {
+          "name": "canMirror",
+          "type": "bool"
+        },
+        {
+          "name": "unit",
+          "type": "str"
+        },
+        {
+          "name": "availableCount",
+          "type": "float"
+        },
+        {
+          "name": "location",
+          "type": "LocationDiff"
+        },
+        {
+          "name": "authors",
+          "type": "AuthorsDiff"
+        },
+        {
+          "name": "concepts",
+          "type": "list[ConceptId]"
+        },
+        {
+          "name": "icon",
+          "type": "str"
+        },
+        {
+          "name": "image",
+          "type": "str"
+        },
+        {
+          "name": "description",
+          "type": "str"
+        },
+        {
+          "name": "attributes",
+          "type": "AttributesDiff"
+        },
+        {
+          "name": "created",
+          "type": "datetime"
+        },
+        {
+          "name": "updated",
+          "type": "datetime"
+        }
+      ]
+    },
+    {
+      "name": "TypesDiff",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "removed",
+          "type": "list[TypeId]"
+        },
+        {
+          "name": "updated",
+          "type": "list[TypeDiff]"
+        },
+        {
+          "name": "added",
+          "type": "list[Type]"
+        }
+      ]
+    },
+    {
+      "name": "Layer",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "name",
+          "type": "str"
+        },
+        {
+          "name": "path",
+          "type": "str"
+        },
+        {
+          "name": "isHidden",
+          "type": "bool"
+        },
+        {
+          "name": "isLocked",
+          "type": "bool"
+        },
+        {
+          "name": "color",
+          "type": "str"
+        },
+        {
+          "name": "description",
+          "type": "str"
+        },
+        {
+          "name": "attributes",
+          "type": "list[Attribute]"
+        }
+      ]
+    },
+    {
+      "name": "LayerId",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "name",
+          "type": "str"
+        }
+      ]
+    },
+    {
+      "name": "LayerDiff",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "path",
+          "type": "str"
+        },
+        {
+          "name": "isHidden",
+          "type": "bool"
+        },
+        {
+          "name": "isLocked",
+          "type": "bool"
+        },
+        {
+          "name": "color",
+          "type": "str"
+        },
+        {
+          "name": "description",
+          "type": "str"
+        },
+        {
+          "name": "attributes",
+          "type": "AttributesDiff"
+        }
+      ]
+    },
+    {
+      "name": "LayersDiff",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "removed",
+          "type": "list[LayerId]"
+        },
+        {
+          "name": "updated",
+          "type": "list[LayerDiff]"
+        },
+        {
+          "name": "added",
+          "type": "list[Layer]"
+        }
+      ]
+    },
+    {
+      "name": "Piece",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "id",
+          "type": "str"
+        },
+        {
+          "name": "type",
+          "type": "Type"
+        },
+        {
+          "name": "design",
+          "type": "Design"
+        },
+        {
+          "name": "plane",
+          "type": "Plane"
+        },
+        {
+          "name": "center",
+          "type": "Coord"
+        },
+        {
+          "name": "scale",
+          "type": "float"
+        },
+        {
+          "name": "mirrorPlane",
+          "type": "Plane"
+        },
+        {
+          "name": "props",
+          "type": "list[Prop]"
+        },
+        {
+          "name": "hidden",
+          "type": "bool"
+        },
+        {
+          "name": "locked",
+          "type": "bool"
+        },
+        {
+          "name": "color",
+          "type": "str"
+        },
+        {
+          "name": "description",
+          "type": "str"
+        },
+        {
+          "name": "attributes",
+          "type": "list[Attribute]"
+        }
+      ]
+    },
+    {
+      "name": "PieceId",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "id",
+          "type": "str"
+        }
+      ]
+    },
+    {
+      "name": "PieceDiff",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "id",
+          "type": "str"
+        },
+        {
+          "name": "type",
+          "type": "TypeId"
+        },
+        {
+          "name": "design",
+          "type": "DesignId"
+        },
+        {
+          "name": "plane",
+          "type": "Plane"
+        },
+        {
+          "name": "center",
+          "type": "Coord"
+        },
+        {
+          "name": "scale",
+          "type": "float"
+        },
+        {
+          "name": "mirrorPlane",
+          "type": "Plane"
+        },
+        {
+          "name": "props",
+          "type": "PropsDiff"
+        },
+        {
+          "name": "hidden",
+          "type": "bool"
+        },
+        {
+          "name": "locked",
+          "type": "bool"
+        },
+        {
+          "name": "color",
+          "type": "str"
+        },
+        {
+          "name": "description",
+          "type": "str"
+        },
+        {
+          "name": "attributes",
+          "type": "AttributesDiff"
+        }
+      ]
+    },
+    {
+      "name": "PiecesDiff",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "removed",
+          "type": "list[PieceId]"
+        },
+        {
+          "name": "updated",
+          "type": "list[PieceDiff]"
+        },
+        {
+          "name": "added",
+          "type": "list[Piece]"
+        }
+      ]
+    },
+    {
+      "name": "Group",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "name",
+          "type": "str"
+        },
+        {
+          "name": "pieces",
+          "type": "list[Piece]"
+        },
+        {
+          "name": "color",
+          "type": "str"
+        },
+        {
+          "name": "description",
+          "type": "str"
+        },
+        {
+          "name": "attributes",
+          "type": "list[Attribute]"
+        }
+      ]
+    },
+    {
+      "name": "GroupId",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "name",
+          "type": "str"
+        }
+      ]
+    },
+    {
+      "name": "GroupDiff",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "name",
+          "type": "str"
+        },
+        {
+          "name": "pieces",
+          "type": "list[PieceId]"
+        },
+        {
+          "name": "color",
+          "type": "str"
+        },
+        {
+          "name": "description",
+          "type": "str"
+        },
+        {
+          "name": "attributes",
+          "type": "AttributesDiff"
+        }
+      ]
+    },
+    {
+      "name": "GroupsDiff",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "removed",
+          "type": "list[GroupId]"
+        },
+        {
+          "name": "updated",
+          "type": "list[GroupDiff]"
+        },
+        {
+          "name": "added",
+          "type": "list[Group]"
+        }
+      ]
+    },
+    {
+      "name": "Side",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "piece",
+          "type": "PieceId"
+        },
+        {
+          "name": "designPiece",
+          "type": "PieceId"
+        },
+        {
+          "name": "port",
+          "type": "PortId"
+        }
+      ]
+    },
+    {
+      "name": "Connection",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "connected",
+          "type": "Side"
+        },
+        {
+          "name": "connecting",
+          "type": "Side"
+        },
+        {
+          "name": "gap",
+          "type": "float"
+        },
+        {
+          "name": "shift",
+          "type": "float"
+        },
+        {
+          "name": "rise",
+          "type": "float"
+        },
+        {
+          "name": "rotation",
+          "type": "float"
+        },
+        {
+          "name": "turn",
+          "type": "float"
+        },
+        {
+          "name": "tilt",
+          "type": "float"
+        },
+        {
+          "name": "u",
+          "type": "float"
+        },
+        {
+          "name": "v",
+          "type": "float"
+        },
+        {
+          "name": "description",
+          "type": "str"
+        },
+        {
+          "name": "attributes",
+          "type": "list[Attribute]"
+        }
+      ]
+    },
+    {
+      "name": "ConnectionId",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "connected",
+          "type": "Side"
+        },
+        {
+          "name": "connecting",
+          "type": "Side"
+        }
+      ]
+    },
+    {
+      "name": "ConnectionDiff",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "connected",
+          "type": "Side"
+        },
+        {
+          "name": "connecting",
+          "type": "Side"
+        },
+        {
+          "name": "gap",
+          "type": "float"
+        },
+        {
+          "name": "shift",
+          "type": "float"
+        },
+        {
+          "name": "rise",
+          "type": "float"
+        },
+        {
+          "name": "rotation",
+          "type": "float"
+        },
+        {
+          "name": "turn",
+          "type": "float"
+        },
+        {
+          "name": "tilt",
+          "type": "float"
+        },
+        {
+          "name": "u",
+          "type": "float"
+        },
+        {
+          "name": "v",
+          "type": "float"
+        },
+        {
+          "name": "description",
+          "type": "str"
+        },
+        {
+          "name": "attributes",
+          "type": "AttributesDiff"
+        }
+      ]
+    },
+    {
+      "name": "ConnectionsDiff",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "removed",
+          "type": "list[ConnectionId]"
+        },
+        {
+          "name": "updated",
+          "type": "list[ConnectionDiff]"
+        },
+        {
+          "name": "added",
+          "type": "list[Connection]"
+        }
+      ]
+    },
+    {
+      "name": "Stat",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "key",
+          "type": "str"
+        },
+        {
+          "name": "unit",
+          "type": "str"
+        },
+        {
+          "name": "min",
+          "type": "float"
+        },
+        {
+          "name": "minExcluded",
+          "type": "bool"
+        },
+        {
+          "name": "max",
+          "type": "float"
+        },
+        {
+          "name": "maxExcluded",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "StatId",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "key",
+          "type": "str"
+        }
+      ]
+    },
+    {
+      "name": "StatDiff",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "key",
+          "type": "str"
+        },
+        {
+          "name": "unit",
+          "type": "str"
+        },
+        {
+          "name": "min",
+          "type": "float"
+        },
+        {
+          "name": "minExcluded",
+          "type": "bool"
+        },
+        {
+          "name": "max",
+          "type": "float"
+        },
+        {
+          "name": "maxExcluded",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "StatsDiff",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "removed",
+          "type": "list[StatId]"
+        },
+        {
+          "name": "updated",
+          "type": "list[StatDiff]"
+        },
+        {
+          "name": "added",
+          "type": "list[Stat]"
+        }
+      ]
+    },
+    {
+      "name": "Design",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "name",
+          "type": "str"
+        },
+        {
+          "name": "variant",
+          "type": "str"
+        },
+        {
+          "name": "view",
+          "type": "str"
+        },
+        {
+          "name": "pieces",
+          "type": "list[Piece]"
+        },
+        {
+          "name": "connections",
+          "type": "list[Connection]"
+        },
+        {
+          "name": "stats",
+          "type": "list[Stat]"
+        },
+        {
+          "name": "props",
+          "type": "list[Prop]"
+        },
+        {
+          "name": "layers",
+          "type": "list[Layer]"
+        },
+        {
+          "name": "activeLayer",
+          "type": "Layer"
+        },
+        {
+          "name": "groups",
+          "type": "list[Group]"
+        },
+        {
+          "name": "canScale",
+          "type": "bool"
+        },
+        {
+          "name": "canMirror",
+          "type": "bool"
+        },
+        {
+          "name": "unit",
+          "type": "str"
+        },
+        {
+          "name": "location",
+          "type": "Location"
+        },
+        {
+          "name": "authors",
+          "type": "list[Author]"
+        },
+        {
+          "name": "concepts",
+          "type": "list[ConceptId]"
+        },
+        {
+          "name": "icon",
+          "type": "str"
+        },
+        {
+          "name": "image",
+          "type": "str"
+        },
+        {
+          "name": "description",
+          "type": "str"
+        },
+        {
+          "name": "attributes",
+          "type": "list[Attribute]"
+        },
+        {
+          "name": "created",
+          "type": "datetime"
+        },
+        {
+          "name": "updated",
+          "type": "datetime"
+        }
+      ]
+    },
+    {
+      "name": "DesignId",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "name",
+          "type": "str"
+        },
+        {
+          "name": "variant",
+          "type": "str"
+        },
+        {
+          "name": "view",
+          "type": "str"
+        }
+      ]
+    },
+    {
+      "name": "DesignDiff",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "name",
+          "type": "str"
+        },
+        {
+          "name": "variant",
+          "type": "str"
+        },
+        {
+          "name": "view",
+          "type": "str"
+        },
+        {
+          "name": "pieces",
+          "type": "PiecesDiff"
+        },
+        {
+          "name": "connections",
+          "type": "ConnectionsDiff"
+        },
+        {
+          "name": "stats",
+          "type": "StatsDiff"
+        },
+        {
+          "name": "props",
+          "type": "PropsDiff"
+        },
+        {
+          "name": "layers",
+          "type": "LayersDiff"
+        },
+        {
+          "name": "activeLayer",
+          "type": "LayerId"
+        },
+        {
+          "name": "groups",
+          "type": "GroupsDiff"
+        },
+        {
+          "name": "canScale",
+          "type": "bool"
+        },
+        {
+          "name": "canMirror",
+          "type": "bool"
+        },
+        {
+          "name": "unit",
+          "type": "str"
+        },
+        {
+          "name": "location",
+          "type": "LocationDiff"
+        },
+        {
+          "name": "authors",
+          "type": "AuthorsDiff"
+        },
+        {
+          "name": "concepts",
+          "type": "list[ConceptId]"
+        },
+        {
+          "name": "icon",
+          "type": "str"
+        },
+        {
+          "name": "image",
+          "type": "str"
+        },
+        {
+          "name": "description",
+          "type": "str"
+        },
+        {
+          "name": "attributes",
+          "type": "AttributesDiff"
+        },
+        {
+          "name": "created",
+          "type": "datetime"
+        },
+        {
+          "name": "updated",
+          "type": "datetime"
+        }
+      ]
+    },
+    {
+      "name": "DesignsDiff",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "removed",
+          "type": "list[DesignId]"
+        },
+        {
+          "name": "updated",
+          "type": "list[DesignDiff]"
+        },
+        {
+          "name": "added",
+          "type": "list[Design]"
+        }
+      ]
+    },
+    {
+      "name": "Kit",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "name",
+          "type": "str"
+        },
+        {
+          "name": "version",
+          "type": "str"
+        },
+        {
+          "name": "types",
+          "type": "list[Type]"
+        },
+        {
+          "name": "designs",
+          "type": "list[Design]"
+        },
+        {
+          "name": "tags",
+          "type": "list[Tag]"
+        },
+        {
+          "name": "concepts",
+          "type": "list[Concept]"
+        },
+        {
+          "name": "qualities",
+          "type": "list[Quality]"
+        },
+        {
+          "name": "files",
+          "type": "list[File]"
+        },
+        {
+          "name": "authors",
+          "type": "list[Author]"
+        },
+        {
+          "name": "remoteUrl",
+          "type": "str"
+        },
+        {
+          "name": "homepageUrl",
+          "type": "str"
+        },
+        {
+          "name": "license",
+          "type": "str"
+        },
+        {
+          "name": "icon",
+          "type": "str"
+        },
+        {
+          "name": "image",
+          "type": "str"
+        },
+        {
+          "name": "description",
+          "type": "str"
+        },
+        {
+          "name": "attributes",
+          "type": "list[Attribute]"
+        },
+        {
+          "name": "created",
+          "type": "datetime"
+        },
+        {
+          "name": "updated",
+          "type": "datetime"
+        }
+      ]
+    },
+    {
+      "name": "KitId",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "name",
+          "type": "str"
+        },
+        {
+          "name": "version",
+          "type": "str"
+        }
+      ]
+    },
+    {
+      "name": "KitDiff",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "name",
+          "type": "str"
+        },
+        {
+          "name": "description",
+          "type": "str"
+        },
+        {
+          "name": "icon",
+          "type": "str"
+        },
+        {
+          "name": "image",
+          "type": "str"
+        },
+        {
+          "name": "preview",
+          "type": "str"
+        },
+        {
+          "name": "version",
+          "type": "str"
+        },
+        {
+          "name": "remote",
+          "type": "str"
+        },
+        {
+          "name": "homepage",
+          "type": "str"
+        },
+        {
+          "name": "license",
+          "type": "str"
+        },
+        {
+          "name": "tags",
+          "type": "TagsDiff"
+        },
+        {
+          "name": "concepts",
+          "type": "ConceptsDiff"
+        },
+        {
+          "name": "types",
+          "type": "TypesDiff"
+        },
+        {
+          "name": "designs",
+          "type": "DesignsDiff"
+        },
+        {
+          "name": "authors",
+          "type": "AuthorsDiff"
+        },
+        {
+          "name": "attributes",
+          "type": "AttributesDiff"
+        }
+      ]
+    },
+    {
+      "name": "KitsDiff",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "removed",
+          "type": "list[KitId]"
+        },
+        {
+          "name": "updated",
+          "type": "list[KitDiff]"
+        },
+        {
+          "name": "added",
+          "type": "list[Kit]"
+        }
+      ]
+    },
+    {
+      "name": "SemioValidationContext",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "kit",
+          "type": "Kit"
+        },
+        {
+          "name": "typesByGuid",
+          "type": "Map<Guid,"
+        },
+        {
+          "name": "designsByGuid",
+          "type": "Map<Guid,"
+        },
+        {
+          "name": "piecesByGuid",
+          "type": "Map<Guid,"
+        },
+        {
+          "name": "portsByTypeGuid",
+          "type": "Map<Guid,"
+        },
+        {
+          "name": "modelsByTypeGuid",
+          "type": "Map<Guid,"
+        }
+      ]
+    },
+    {
+      "name": "SemioValidationIssue",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "ruleId",
+          "type": "str"
+        },
+        {
+          "name": "severity",
+          "type": "SemioValidationSeverity"
+        },
+        {
+          "name": "message",
+          "type": "str"
+        },
+        {
+          "name": "location",
+          "type": "SemioDomainLocation"
+        },
+        {
+          "name": "relatedGuids",
+          "type": "Guid[]"
+        },
+        {
+          "name": "fixes",
+          "type": "SemioKitFix[]"
+        }
+      ]
+    },
+    {
+      "name": "SemioKitFix",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "title",
+          "type": "str"
+        },
+        {
+          "name": "diff",
+          "type": "KitDiff"
+        }
+      ]
+    },
+    {
+      "name": "SemioDomainLocation",
+      "kind": "class",
+      "fields": [
+        {
+          "name": "entityKind",
+          "type": "SemioEntityKind"
+        },
+        {
+          "name": "entityGuid",
+          "type": "Guid"
+        },
+        {
+          "name": "field",
+          "type": "str"
+        }
+      ]
+    },
+    {
+      "name": "SemioValidationRule",
+      "kind": "class",
+      "fields": []
+    },
+    {
+      "name": "QualityKind",
+      "kind": "enum",
+      "fields": [],
+      "enumValues": [
+        "General",
+        "Design",
+        "Type",
+        "Piece",
+        "Connection",
+        "Port"
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "from": "Plane",
+      "to": "Point",
+      "type": "composition",
+      "cardinality": "1"
+    },
+    {
+      "from": "Plane",
+      "to": "Vector",
+      "type": "composition",
+      "cardinality": "1"
+    },
+    {
+      "from": "Plane",
+      "to": "Vector",
+      "type": "composition",
+      "cardinality": "1"
+    },
+    {
+      "from": "Location",
+      "to": "Attribute",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Author",
+      "to": "Attribute",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "File",
+      "to": "Attribute",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Quality",
+      "to": "QualityKind",
+      "type": "composition",
+      "cardinality": "1"
+    },
+    {
+      "from": "Quality",
+      "to": "Benchmark",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Quality",
+      "to": "Attribute",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Benchmark",
+      "to": "Attribute",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Prop",
+      "to": "Quality",
+      "type": "aggregation",
+      "cardinality": "1"
+    },
+    {
+      "from": "Prop",
+      "to": "Attribute",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Stat",
+      "to": "Quality",
+      "type": "aggregation",
+      "cardinality": "1"
+    },
+    {
+      "from": "Type",
+      "to": "Model",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Type",
+      "to": "Port",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Type",
+      "to": "Attribute",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Type",
+      "to": "Prop",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Type",
+      "to": "Location",
+      "type": "composition",
+      "cardinality": "1"
+    },
+    {
+      "from": "Type",
+      "to": "Author",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Type",
+      "to": "Concept",
+      "type": "aggregation",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Model",
+      "to": "Attribute",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Model",
+      "to": "Tag",
+      "type": "aggregation",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Model",
+      "to": "File",
+      "type": "aggregation",
+      "cardinality": "1"
+    },
+    {
+      "from": "Port",
+      "to": "Attribute",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Port",
+      "to": "Point",
+      "type": "composition",
+      "cardinality": "1"
+    },
+    {
+      "from": "Port",
+      "to": "Vector",
+      "type": "composition",
+      "cardinality": "1"
+    },
+    {
+      "from": "Port",
+      "to": "Interface",
+      "type": "composition",
+      "cardinality": "1"
+    },
+    {
+      "from": "Port",
+      "to": "Interface",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Layer",
+      "to": "Attribute",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Piece",
+      "to": "Type",
+      "type": "composition",
+      "cardinality": "1"
+    },
+    {
+      "from": "Piece",
+      "to": "Plane",
+      "type": "aggregation",
+      "cardinality": "0..1"
+    },
+    {
+      "from": "Piece",
+      "to": "Plane",
+      "type": "aggregation",
+      "cardinality": "0..1"
+    },
+    {
+      "from": "Piece",
+      "to": "Attribute",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Piece",
+      "to": "Coord",
+      "type": "aggregation",
+      "cardinality": "0..1"
+    },
+    {
+      "from": "Piece",
+      "to": "Prop",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Group",
+      "to": "Piece",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Group",
+      "to": "Attribute",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Side",
+      "to": "Piece",
+      "type": "aggregation",
+      "cardinality": "1"
+    },
+    {
+      "from": "Side",
+      "to": "Port",
+      "type": "aggregation",
+      "cardinality": "1"
+    },
+    {
+      "from": "Connection",
+      "to": "Attribute",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Connection",
+      "to": "Side",
+      "type": "aggregation",
+      "cardinality": "1"
+    },
+    {
+      "from": "Connection",
+      "to": "Side",
+      "type": "aggregation",
+      "cardinality": "1"
+    },
+    {
+      "from": "Design",
+      "to": "Piece",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Design",
+      "to": "Connection",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Design",
+      "to": "Layer",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Design",
+      "to": "Group",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Design",
+      "to": "Attribute",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Design",
+      "to": "Stat",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Design",
+      "to": "Prop",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Design",
+      "to": "Location",
+      "type": "composition",
+      "cardinality": "1"
+    },
+    {
+      "from": "Design",
+      "to": "Author",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Design",
+      "to": "Layer",
+      "type": "aggregation",
+      "cardinality": "1"
+    },
+    {
+      "from": "Design",
+      "to": "Concept",
+      "type": "aggregation",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Kit",
+      "to": "Design",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Kit",
+      "to": "Type",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Kit",
+      "to": "Quality",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Kit",
+      "to": "Author",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Kit",
+      "to": "Attribute",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Kit",
+      "to": "Tag",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Kit",
+      "to": "Concept",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Kit",
+      "to": "File",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Tag",
+      "to": "Attribute",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "Concept",
+      "to": "Attribute",
+      "type": "composition",
+      "cardinality": "0..*"
+    },
+    {
+      "from": "SemioValidationIssue",
+      "to": "SemioKitFix",
+      "type": "composition",
+      "cardinality": "1..*"
+    }
+  ]
+}

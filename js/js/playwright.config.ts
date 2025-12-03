@@ -15,7 +15,18 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      use: {
+        ...devices["Desktop Chrome"],
+        // PERF: Use new headless mode with GPU acceleration for faster rendering
+        // This significantly improves performance for diagrams with 180+ nodes
+        launchOptions: {
+          args: [
+            "--headless=new",
+            "--enable-gpu",
+            "--disable-software-rasterizer",
+          ],
+        },
+      },
     },
 
     // {

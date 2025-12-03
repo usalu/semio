@@ -7677,67 +7677,96 @@ defaultSemioValidationRules = [
 
 // #endregion Rule registration
 
-// #region Portable validation format
+// #region Validation serialization
 
 /**
- * Portable validation issue format for cross-platform serialization.
- * This format is used to produce identical JSON output across TypeScript, Python, and C#.
+ * Serializable validation fix with title and diff.
  */
-export interface PortableValidationIssue {
+export interface SerializableValidationFix {
+  title: string;
+  diff: KitDiff;
+}
+
+/**
+ * Serializable validation issue format.
+ */
+export interface SerializableValidationIssue {
   ruleId: string;
   severity: "error" | "warning";
   message: string;
   entityKind: string;
   entityGuid: string;
+  fixes: SerializableValidationFix[];
 }
 
 /**
- * Portable validation result format for cross-platform serialization.
- * This format is used to produce identical JSON output across TypeScript, Python, and C#.
+ * Serializable validation result format.
  */
-export interface PortableValidationResult {
-  issues: PortableValidationIssue[];
+export interface SerializableValidationResult {
+  issues: SerializableValidationIssue[];
 }
 
 /**
- * Convert a SemioValidationResult to a PortableValidationResult.
- * Strips out fixes and other implementation-specific details.
+ * Convert a SemioValidationResult to a SerializableValidationResult.
  */
-export const toPortableValidationResult = (result: SemioValidationResult): PortableValidationResult => ({
+export const toSerializableValidationResult = (result: SemioValidationResult): SerializableValidationResult => ({
   issues: result.issues.map((issue) => ({
     ruleId: issue.ruleId,
     severity: issue.severity,
     message: issue.message,
     entityKind: issue.location.entityKind,
     entityGuid: issue.location.entityGuid ?? "",
+    fixes: issue.fixes.map((fix) => ({ title: fix.title, diff: fix.diff })),
   })),
 });
 
 /**
- * Serialize a validation result to JSON for cross-platform comparison.
- * Issues are sorted by ruleId, then entityGuid for deterministic output.
+ * Serialize a validation result to JSON. Issues sorted by ruleId, then entityGuid.
  */
 export const serializeValidationResult = (result: SemioValidationResult): string => {
-  const portable = toPortableValidationResult(result);
-  portable.issues.sort((a, b) => {
+  const serializable = toSerializableValidationResult(result);
+  serializable.issues.sort((a, b) => {
     const ruleCompare = a.ruleId.localeCompare(b.ruleId);
     if (ruleCompare !== 0) return ruleCompare;
     return a.entityGuid.localeCompare(b.entityGuid);
   });
-  return JSON.stringify(portable, null, 2);
+  return JSON.stringify(serializable, null, 2);
 };
 
 /**
- * Parse a portable validation result from JSON.
+ * Parse a serializable validation result from JSON.
  */
-export const parseValidationResult = (json: string): PortableValidationResult => JSON.parse(json);
+export const parseValidationResult = (json: string): SerializableValidationResult => JSON.parse(json);
 
 /**
- * Compare two portable validation results for equality.
+ * Check if a string looks like a GUID.
  */
-export const areValidationResultsEqual = (a: PortableValidationResult, b: PortableValidationResult): boolean => {
+const isGuid = (s: string): boolean => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+
+/**
+ * Compare two KitDiffs for equality, allowing new GUIDs to differ.
+ */
+export const areKitDiffsEqualIgnoringNewGuids = (a: KitDiff, b: KitDiff): boolean => {
+  const normalize = (obj: unknown): unknown => {
+    if (obj === null || obj === undefined) return obj;
+    if (typeof obj === "string" && isGuid(obj)) return "<GUID>";
+    if (Array.isArray(obj)) return obj.map(normalize);
+    if (typeof obj === "object") {
+      const result: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(obj)) result[k] = normalize(v);
+      return result;
+    }
+    return obj;
+  };
+  return JSON.stringify(normalize(a)) === JSON.stringify(normalize(b));
+};
+
+/**
+ * Compare two validation results for equality. New GUIDs in fixes can differ.
+ */
+export const areValidationResultsEqual = (a: SerializableValidationResult, b: SerializableValidationResult): boolean => {
   if (a.issues.length !== b.issues.length) return false;
-  const sortIssues = (issues: PortableValidationIssue[]) =>
+  const sortIssues = (issues: SerializableValidationIssue[]) =>
     [...issues].sort((x, y) => {
       const ruleCompare = x.ruleId.localeCompare(y.ruleId);
       if (ruleCompare !== 0) return ruleCompare;
@@ -7747,11 +7776,16 @@ export const areValidationResultsEqual = (a: PortableValidationResult, b: Portab
   const sortedB = sortIssues(b.issues);
   return sortedA.every((issueA, i) => {
     const issueB = sortedB[i];
-    return issueA.ruleId === issueB.ruleId && issueA.severity === issueB.severity && issueA.message === issueB.message && issueA.entityKind === issueB.entityKind && issueA.entityGuid === issueB.entityGuid;
+    if (issueA.ruleId !== issueB.ruleId || issueA.severity !== issueB.severity || issueA.message !== issueB.message || issueA.entityKind !== issueB.entityKind || issueA.entityGuid !== issueB.entityGuid) return false;
+    if (issueA.fixes.length !== issueB.fixes.length) return false;
+    return issueA.fixes.every((fixA, j) => {
+      const fixB = issueB.fixes[j];
+      return fixA.title === fixB.title && areKitDiffsEqualIgnoringNewGuids(fixA.diff, fixB.diff);
+    });
   });
 };
 
-// #endregion Portable validation format
+// #endregion Validation serialization
 
 // #endregion Validation
 

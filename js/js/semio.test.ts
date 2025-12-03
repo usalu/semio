@@ -21,7 +21,7 @@
 
 import { InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted } from "@semio/assets";
 import { describe, expect, it } from "vitest";
-import { applyDesignDiff, applyKitDiff, areKitDiffsEqual, areKitsEqual, areValidationResultsEqual, deserializeKit, exportKit, flattenDesign, getKitDiff, hasSemioErrors, importKit, inverseKitDiff, Kit, Plane, PortableValidationResult, serializeKit, toPortableValidationResult, validateSemioKit } from "./semio";
+import { applyDesignDiff, applyKitDiff, areKitDiffsEqual, areKitsEqual, areValidationResultsEqual, deserializeKit, exportKit, flattenDesign, getKitDiff, hasSemioErrors, importKit, inverseKitDiff, Kit, Plane, SerializableValidationResult, serializeKit, toSerializableValidationResult, validateSemioKit } from "./semio";
 
 const TOLERANCE = 0.001;
 
@@ -177,53 +177,15 @@ describe("Import/Export", () => {
 });
 
 describe("Validation", () => {
-  it("Valid kit has no errors", () => {
-    const kit = MetabolismKit as unknown as Kit;
-    const result = validateSemioKit(kit);
-    expect(hasSemioErrors(result)).toBe(false);
-  });
+  it("Validation matches expected output", () => {
+    // Valid kit has no errors
+    const validKit = MetabolismKit as unknown as Kit;
+    expect(hasSemioErrors(validateSemioKit(validKit))).toBe(false);
 
-  it("Invalid kit has all expected errors", () => {
-    const kit = InvalidKit as unknown as Kit;
-    const result = validateSemioKit(kit);
-    expect(hasSemioErrors(result)).toBe(true);
-    const ruleIds = new Set(result.issues.map((i) => i.ruleId));
-    const expectedRules = [
-      "guid-unique",
-      "type-name-unique",
-      "design-name-unique",
-      "piece-name-unique",
-      "quality-name-unique",
-      "interface-name-unique",
-      "file-name-unique",
-      "folder-name-unique",
-      "port-name-unique",
-      "model-name-unique",
-      "layer-path-unique",
-    ];
-    expectedRules.forEach((ruleId) => {
-      expect(ruleIds.has(ruleId), `Missing validation rule: ${ruleId}`).toBe(true);
-    });
-    expect(ruleIds.size).toBe(expectedRules.length);
-  });
-
-  it("Fixes can be applied to resolve issues", () => {
-    const kit = InvalidKit as unknown as Kit;
-    const result = validateSemioKit(kit);
-    expect(result.issues.length).toBeGreaterThan(0);
-    const issue = result.issues[0];
-    expect(issue.fixes.length).toBeGreaterThan(0);
-    const fix = issue.fixes[0];
-    const fixedKit = applyKitDiff(kit, fix.diff);
-    const revalidated = validateSemioKit(fixedKit);
-    expect(revalidated.issues.some((i) => i.ruleId === issue.ruleId && i.location.entityGuid === issue.location.entityGuid)).toBe(false);
-  });
-
-  it("Portable validation result matches expected output (cross-platform)", () => {
-    const kit = InvalidKit as unknown as Kit;
-    const result = validateSemioKit(kit);
-    const portableResult = toPortableValidationResult(result);
-    const expectedResult = InvalidKitValidation as PortableValidationResult;
-    expect(areValidationResultsEqual(portableResult, expectedResult)).toBe(true);
+    // Invalid kit matches validation.json (including fixes)
+    const invalidKit = InvalidKit as unknown as Kit;
+    const result = toSerializableValidationResult(validateSemioKit(invalidKit));
+    const expected = InvalidKitValidation as SerializableValidationResult;
+    expect(areValidationResultsEqual(result, expected)).toBe(true);
   });
 });

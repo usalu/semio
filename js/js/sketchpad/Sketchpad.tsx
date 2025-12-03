@@ -367,6 +367,11 @@ export abstract class Store<TState> {
   protected dirty: boolean = true;
   private internalObserverDisposer?: Disposable;
 
+  // PERF: Subscription registry - one Y.js observer per field, multiple React subscribers
+  // This dramatically reduces the number of Y.js observers from O(n*fields) to O(fields)
+  private fieldSubscribers: Map<string, Set<() => void>> = new Map();
+  private fieldObservers: Map<string, Disposable> = new Map();
+
   constructor(parent: SketchpadStore, yMap: Y.Map<any>, transact: Transact) {
     this.guid = guid();
     this.parent = parent;
@@ -458,18 +463,76 @@ export abstract class Store<TState> {
     return createObserver(this.yMap, subscribe, true);
   }
 
+  // PERF: Optimized field subscription using registry
+  // Instead of creating a Y.js observer per React subscription, we create ONE observer per field
+  // and notify all React subscribers when the field changes. This reduces Y.js observers from
+  // O(n*fields) to O(fields), which is critical for designs with 180+ pieces.
   onFieldChanged(key: string, subscribe: Subscribe, deep: boolean = false): Unsubscribe {
-    return createFieldObserver(this.yMap, key, subscribe, deep);
+    // Create the React subscriber callback
+    const subscriberCallback = () => {
+      subscribe(() => {});
+    };
+
+    // Get or create the subscribers set for this field
+    if (!this.fieldSubscribers.has(key)) {
+      this.fieldSubscribers.set(key, new Set());
+
+      // Create ONE Y.js observer for this field that notifies all subscribers
+      const fieldObserver = createFieldObserver(
+        this.yMap,
+        key,
+        () => {
+          // Notify all React subscribers for this field
+          const subscribers = this.fieldSubscribers.get(key);
+          if (subscribers) {
+            subscribers.forEach((callback) => callback());
+          }
+        },
+        deep,
+      );
+      this.fieldObservers.set(key, fieldObserver);
+    }
+
+    // Add this subscriber to the registry
+    const subscribers = this.fieldSubscribers.get(key)!;
+    subscribers.add(subscriberCallback);
+
+    // Return unsubscribe function
+    return () => {
+      subscribers.delete(subscriberCallback);
+
+      // If no more subscribers for this field, clean up the Y.js observer
+      if (subscribers.size === 0) {
+        const observer = this.fieldObservers.get(key);
+        if (observer) {
+          observer();
+          this.fieldObservers.delete(key);
+        }
+        this.fieldSubscribers.delete(key);
+      }
+    };
   }
 
   onFieldsChanged(keys: string[], subscribe: Subscribe, deep: boolean = false): Unsubscribe {
     return createFieldsObserver(this.yMap, keys, subscribe, deep);
+  }
+
+  // PERF: Get a single field value without rebuilding the entire snapshot.
+  // Subclasses should override this to provide direct field access.
+  // Default implementation falls back to snapshot() for backwards compatibility.
+  getFieldSnapshot(key: string): any {
+    return (this.snapshot() as any)[key];
   }
 }
 
 export abstract class AppStore<TState, TDiff extends AppDiff<TSelectionDiff>, TSelectionDiff, TEdit extends AppEdit<TSelectionDiff>, TCommandContext, TCommandResult extends AppCommandResult<TDiff>> extends Store<TState> {
   protected readonly commandRegistry: Map<string, (context: TCommandContext, ...rest: any[]) => TCommandResult> = new Map();
   private lastDeletedTransactionEdit?: TEdit;
+
+  // PERF: Cache transaction stacks to avoid repeated toArray() calls
+  // With 360 hooks subscribing to currentTransactionStack, each change would cause 360 toArray() calls
+  private _cachedTransactionStack: TEdit[] | null = null;
+  private _transactionStackObserverSet = false;
 
   constructor(parent: SketchpadStore, yMap: Y.Map<any>, transact: Transact) {
     super(parent, yMap, transact);
@@ -487,9 +550,26 @@ export abstract class AppStore<TState, TDiff extends AppDiff<TSelectionDiff>, TS
     this.yMap.set("isTransactionActive", active);
   }
 
+  // PERF: Cached getter to avoid repeated toArray() calls
+  // Multiple hooks calling this during the same render cycle will get the same cached array
   get currentTransactionStack(): TEdit[] {
     const yStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
-    return yStack ? yStack.toArray() : [];
+    if (!yStack) return [];
+
+    // Lazily set up observer to invalidate cache
+    if (!this._transactionStackObserverSet) {
+      this._transactionStackObserverSet = true;
+      yStack.observe(() => {
+        this._cachedTransactionStack = null;
+      });
+    }
+
+    if (this._cachedTransactionStack !== null) {
+      return this._cachedTransactionStack;
+    }
+
+    this._cachedTransactionStack = yStack.toArray();
+    return this._cachedTransactionStack;
   }
 
   get pastTransactionsStack(): TEdit[] {
@@ -3334,6 +3414,8 @@ class PieceStore {
   private attributes: Map<string, AttributeStore>;
   private cache?: Piece;
   private cacheHash?: string;
+  // PERF: Dirty tracking to avoid hash computation on every snapshot() call
+  private dirty: boolean = true;
 
   constructor(parent: DesignStore, yPiece: YPiece, piece: Piece) {
     this.parent = parent;
@@ -3490,6 +3572,11 @@ class PieceStore {
   }
 
   snapshot = (): Piece => {
+    // PERF: Return cached value immediately if not dirty
+    if (!this.dirty && this.cache) {
+      return this.cache;
+    }
+
     const currentData = {
       guid: this.guid,
       id_: this.localId,
@@ -3505,17 +3592,16 @@ class PieceStore {
       mirrorPlane: this.mirrorPlane?.snapshot(),
       attributes: Array.from(this.attributes.values()).map((attribute) => attribute.snapshot()),
     };
-    const currentHash = this.hash(currentData);
 
-    if (!this.cache || this.cacheHash !== currentHash) {
-      this.cache = currentData;
-      this.cacheHash = currentHash;
-    }
-
+    this.cache = currentData;
+    this.dirty = false;
     return this.cache;
   };
 
   change = (diff: PieceDiff) => {
+    // PERF: Mark this piece and parent design as dirty
+    this.dirty = true;
+    this.parent.markDirty();
     if (diff.guid !== undefined) this.guid = diff.guid;
     if (diff.type !== undefined) this.type = diff.type?.guid;
     if (diff.design !== undefined) this.design = diff.design?.guid;
@@ -4337,6 +4423,8 @@ export class DesignStore {
   private yConcepts: Y.Array<string>;
   private cache?: Design;
   private cacheHash?: string;
+  // PERF: Dirty tracking to avoid O(n) snapshot rebuilding on every call
+  private dirty: boolean = true;
 
   constructor(parent: KitStore, yDesign: YDesign, design: Design) {
     this.parent = parent;
@@ -4646,6 +4734,12 @@ export class DesignStore {
   }
 
   snapshot = (): Design => {
+    // PERF: Return cached value immediately if not dirty
+    // This avoids O(n) piece/connection snapshot() calls on every access
+    if (!this.dirty && this.cache) {
+      return this.cache;
+    }
+
     const currentData = {
       guid: this.guid,
       name: this.name,
@@ -4672,17 +4766,20 @@ export class DesignStore {
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
     };
-    const currentHash = this.hash(currentData);
 
-    if (!this.cache || this.cacheHash !== currentHash) {
-      this.cache = currentData;
-      this.cacheHash = currentHash;
-    }
-
+    this.cache = currentData;
+    this.dirty = false;
     return this.cache;
   };
 
+  // PERF: Called by child stores (PieceStore, ConnectionStore, etc.) when they change
+  markDirty = () => {
+    this.dirty = true;
+  };
+
   change = (diff: DesignDiff) => {
+    // PERF: Mark dirty so next snapshot() rebuilds
+    this.dirty = true;
     if (diff.name !== undefined) this.name = diff.name;
     if (diff.parent !== undefined) this.parentGuid = diff.parent;
     if (diff.folder !== undefined) this.folder = diff.folder;
@@ -7269,6 +7366,166 @@ export function createFieldsObserver<T>(yMap: Y.Map<T>, keys: string[], subscrib
   };
 }
 
+/**
+ * PERF: Creates an observer that only fires when a specific item's membership in an array changes.
+ * This is crucial for avoiding cascade re-renders when dealing with collections like hover/selection state.
+ * Instead of re-rendering all 180 pieces when one piece is hovered, only the affected piece re-renders.
+ */
+export function createArrayItemMembershipObserver(getYArray: () => Y.Array<string> | undefined, itemId: string, subscribe: Subscribe): Disposable {
+  let wasInArray = false;
+  const notifySubscriber = () => subscribe(() => {});
+
+  // Check initial state
+  const checkMembership = () => {
+    const yArray = getYArray();
+    return yArray ? yArray.toArray().includes(itemId) : false;
+  };
+  wasInArray = checkMembership();
+
+  // We need to observe the parent map to detect when the array is created/deleted
+  // and also observe the array itself for changes
+  let arrayDisposer: Disposable | null = null;
+
+  const setupArrayObserver = () => {
+    const yArray = getYArray();
+    if (!yArray) {
+      arrayDisposer = null;
+      return;
+    }
+
+    const arrayCallback = () => {
+      const isInArray = yArray.toArray().includes(itemId);
+      if (isInArray !== wasInArray) {
+        wasInArray = isInArray;
+        notifySubscriber();
+      }
+    };
+
+    yArray.observe(arrayCallback);
+    arrayDisposer = () => yArray.unobserve(arrayCallback);
+  };
+
+  setupArrayObserver();
+
+  return () => {
+    if (arrayDisposer) arrayDisposer();
+  };
+}
+
+/**
+ * PERF: Creates an observer for a nested array within a Y.Map field.
+ * Watches mapKey.arrayKey for changes to a specific item's membership.
+ * Example: yMap.get("hover").get("pieces") for hover.pieces array
+ */
+export function createNestedArrayItemMembershipObserver(yMap: Y.Map<any>, mapKey: string, arrayKey: string, itemId: string, subscribe: Subscribe): Disposable {
+  let wasInArray = false;
+  let currentNestedMap: Y.Map<any> | undefined;
+  let currentArray: Y.Array<string> | undefined;
+  let nestedMapDisposer: Disposable | null = null;
+  let arrayDisposer: Disposable | null = null;
+  const notifySubscriber = () => subscribe(() => {});
+
+  const checkMembership = (): boolean => {
+    const nestedMap = yMap.get(mapKey) as Y.Map<any> | undefined;
+    if (!nestedMap) return false;
+    const arr = nestedMap.get(arrayKey) as Y.Array<string> | undefined;
+    if (!arr) return false;
+    return arr.toArray().includes(itemId);
+  };
+
+  const setupArrayObserver = () => {
+    if (arrayDisposer) {
+      arrayDisposer();
+      arrayDisposer = null;
+    }
+
+    const nestedMap = yMap.get(mapKey) as Y.Map<any> | undefined;
+    if (!nestedMap) return;
+
+    const arr = nestedMap.get(arrayKey) as Y.Array<string> | undefined;
+    if (!arr) return;
+
+    currentArray = arr;
+
+    const arrayCallback = () => {
+      const isInArray = arr.toArray().includes(itemId);
+      if (isInArray !== wasInArray) {
+        wasInArray = isInArray;
+        notifySubscriber();
+      }
+    };
+
+    arr.observe(arrayCallback);
+    arrayDisposer = () => arr.unobserve(arrayCallback);
+  };
+
+  const setupNestedMapObserver = () => {
+    if (nestedMapDisposer) {
+      nestedMapDisposer();
+      nestedMapDisposer = null;
+    }
+
+    const nestedMap = yMap.get(mapKey) as Y.Map<any> | undefined;
+    if (!nestedMap) return;
+
+    currentNestedMap = nestedMap;
+
+    const nestedMapCallback = (event: Y.YMapEvent<any>) => {
+      if (event.keysChanged.has(arrayKey)) {
+        // Array was replaced or deleted
+        const prevInArray = wasInArray;
+        setupArrayObserver();
+        wasInArray = checkMembership();
+        if (wasInArray !== prevInArray) {
+          notifySubscriber();
+        }
+      }
+    };
+
+    nestedMap.observe(nestedMapCallback);
+    nestedMapDisposer = () => nestedMap.unobserve(nestedMapCallback);
+  };
+
+  // Observe the top-level map for changes to the nested map key
+  const topLevelCallback = (event: Y.YMapEvent<any>) => {
+    if (event.keysChanged.has(mapKey)) {
+      // Nested map was replaced or deleted
+      const prevInArray = wasInArray;
+
+      // Clean up old observers
+      if (arrayDisposer) {
+        arrayDisposer();
+        arrayDisposer = null;
+      }
+      if (nestedMapDisposer) {
+        nestedMapDisposer();
+        nestedMapDisposer = null;
+      }
+
+      // Setup new observers
+      setupNestedMapObserver();
+      setupArrayObserver();
+      wasInArray = checkMembership();
+
+      if (wasInArray !== prevInArray) {
+        notifySubscriber();
+      }
+    }
+  };
+
+  // Initialize
+  wasInArray = checkMembership();
+  setupNestedMapObserver();
+  setupArrayObserver();
+  yMap.observe(topLevelCallback);
+
+  return () => {
+    yMap.unobserve(topLevelCallback);
+    if (nestedMapDisposer) nestedMapDisposer();
+    if (arrayDisposer) arrayDisposer();
+  };
+}
+
 // Performance logging for state management debugging
 let performanceLoggingEnabled = false;
 const performanceLogCounts = new Map<string, number>();
@@ -7332,7 +7589,7 @@ export function useSyncDeep<T, TSelected = T>(store: { onChangedDeep: (subscribe
 }
 
 export function useSyncField<T, TSelected = T>(
-  store: { onFieldChanged: (key: string, subscribe: Subscribe, deep?: boolean) => Disposable; snapshot: () => T },
+  store: { onFieldChanged: (key: string, subscribe: Subscribe, deep?: boolean) => Disposable; snapshot: () => T; getFieldSnapshot?: (key: string) => any },
   key: string,
   selector: (value: T) => TSelected = identitySelector as any,
   deep: boolean = true,
@@ -7351,7 +7608,44 @@ export function useSyncField<T, TSelected = T>(
     },
     [store, key, deep],
   );
-  const getSnapshot = useCallback(() => selector(store.snapshot()), [store, selector]);
+
+  // PERF: Cache the last selector result and use deep equality for objects
+  // This prevents re-renders when the selector returns an equivalent (but not identical) object
+  const lastResultRef = useRef<{ value: TSelected; json?: string }>({ value: undefined as any });
+
+  const getSnapshot = useCallback(() => {
+    // PERF: Use getFieldSnapshot if available to avoid rebuilding entire state
+    // This is critical for DesignAppStore where snapshot() calls 14+ getters
+    let newValue: TSelected;
+    if (store.getFieldSnapshot) {
+      // Build a minimal state object with just this field for the selector
+      const fieldValue = store.getFieldSnapshot(key);
+      // Create a minimal object that the selector can use
+      newValue = selector({ [key]: fieldValue } as T);
+    } else {
+      newValue = selector(store.snapshot());
+    }
+
+    // For primitives (string, number, boolean, null, undefined), use direct comparison
+    if (newValue === null || typeof newValue !== "object") {
+      if (newValue === lastResultRef.current.value) {
+        return lastResultRef.current.value;
+      }
+      lastResultRef.current = { value: newValue };
+      return newValue;
+    }
+
+    // For objects/arrays, use JSON comparison for deep equality
+    // This is more expensive but prevents unnecessary re-renders
+    const newJson = JSON.stringify(newValue);
+    if (newJson === lastResultRef.current.json) {
+      return lastResultRef.current.value;
+    }
+
+    lastResultRef.current = { value: newValue, json: newJson };
+    return newValue;
+  }, [store, selector, key]);
+
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
@@ -7378,7 +7672,102 @@ export function useSyncFields<T, TSelected = T>(
     },
     [store, stableKeys, deep],
   );
-  const getSnapshot = useCallback(() => selector(store.snapshot()), [store, selector]);
+
+  // PERF: Cache the last selector result with deep equality check
+  const lastResultRef = useRef<{ value: TSelected; json?: string }>({ value: undefined as any });
+
+  const getSnapshot = useCallback(() => {
+    const newValue = selector(store.snapshot());
+
+    if (newValue === null || typeof newValue !== "object") {
+      if (newValue === lastResultRef.current.value) {
+        return lastResultRef.current.value;
+      }
+      lastResultRef.current = { value: newValue };
+      return newValue;
+    }
+
+    const newJson = JSON.stringify(newValue);
+    if (newJson === lastResultRef.current.json) {
+      return lastResultRef.current.value;
+    }
+
+    lastResultRef.current = { value: newValue, json: newJson };
+    return newValue;
+  }, [store, selector]);
+
+  return useSyncExternalStore(subscribe, getSnapshot);
+}
+
+/**
+ * PERF: Hook for granular subscription to a specific item's membership in a nested array.
+ * Only re-renders when the specific item is added/removed from the array.
+ * This is critical for hover/selection state where we want only the affected piece to re-render.
+ *
+ * @param store - The store containing the Y.Map
+ * @param mapKey - The key in the Y.Map for the nested map (e.g., "hover" or "selection")
+ * @param arrayKey - The key in the nested map for the array (e.g., "pieces" or "connections")
+ * @param itemId - The specific item ID to watch for membership changes
+ * @returns boolean - Whether the item is currently in the array
+ */
+export function useSyncNestedArrayItemMembership(store: { yMap: Y.Map<any> } | null, mapKey: string, arrayKey: string, itemId: string): boolean {
+  const subscribe = useCallback(
+    (callback: () => void) => {
+      if (!store) return () => {};
+      return createNestedArrayItemMembershipObserver(store.yMap, mapKey, arrayKey, itemId, (cb: () => void) => {
+        cb();
+        callback();
+        return () => {};
+      });
+    },
+    [store, mapKey, arrayKey, itemId],
+  );
+
+  const getSnapshot = useCallback(() => {
+    if (!store) return false;
+    const nestedMap = store.yMap.get(mapKey) as Y.Map<any> | undefined;
+    if (!nestedMap) return false;
+    const arr = nestedMap.get(arrayKey) as Y.Array<string> | undefined;
+    if (!arr) return false;
+    return arr.toArray().includes(itemId);
+  }, [store, mapKey, arrayKey, itemId]);
+
+  return useSyncExternalStore(subscribe, getSnapshot);
+}
+
+/**
+ * PERF: Hook for granular subscription to a specific item's membership in a direct array field.
+ * Only re-renders when the specific item is added/removed from the array.
+ *
+ * @param store - The store containing the Y.Map
+ * @param mapKey - The key in the Y.Map for the nested map containing the array
+ * @param arrayKey - The key in the nested map for the array
+ * @param itemId - The specific item ID to watch for membership changes
+ * @returns boolean - Whether the item is currently in the array
+ */
+export function useSyncSelectionItemMembership(store: { yMap: Y.Map<any> } | null, arrayKey: string, itemId: string): boolean {
+  const subscribe = useCallback(
+    (callback: () => void) => {
+      if (!store) return () => {};
+      // Selection is stored as yMap.get("selection").get("pieces") or yMap.get("selection").get("connections")
+      return createNestedArrayItemMembershipObserver(store.yMap, "selection", arrayKey, itemId, (cb: () => void) => {
+        cb();
+        callback();
+        return () => {};
+      });
+    },
+    [store, arrayKey, itemId],
+  );
+
+  const getSnapshot = useCallback(() => {
+    if (!store) return false;
+    const selection = store.yMap.get("selection") as Y.Map<any> | undefined;
+    if (!selection) return false;
+    const arr = selection.get(arrayKey) as Y.Array<string> | undefined;
+    if (!arr) return false;
+    return arr.toArray().includes(itemId);
+  }, [store, arrayKey, itemId]);
+
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
@@ -9675,7 +10064,7 @@ export const ConceptFilter: FC<{ allConcepts: string[]; paramName?: string }> = 
   return (
     <div className="flex flex-wrap items-center gap-single p-single border-b">
       {allConcepts.map((concept) => (
-        <Toggle key={concept} pressed={selectedConcepts.includes(concept)} onPressedChange={() => toggleConcept(concept)} id={`semio.sketchpad.filter.concept.${concept}`} icon={<span className="size-small">#</span>} text={concept} />
+        <Toggle key={concept} pressed={selectedConcepts.includes(concept)} onPressedChange={() => toggleConcept(concept)} id={`semio.sketchpad.filter.concept.${concept}`} text={concept} />
       ))}
     </div>
   );

@@ -726,15 +726,31 @@ class AttributeInputNode(InputNode):
 # https://github.com/usalu/semio-tag-
 
 
+class TagGuidField(RealField, abc.ABC):
+    guid: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
+
+
 class TagNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+
+
+class TagDescriptionField(RealField, abc.ABC):
+    description: typing.Optional[str] = sqlmodel.Field(default=None, max_length=DESCRIPTION_LENGTH_LIMIT)
+
+
+class TagIconField(RealField, abc.ABC):
+    icon: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
 
 
 class TagOrderField(RealField, abc.ABC):
     order: int = sqlmodel.Field(default=0)
 
 
-class Tag(TagOrderField, TagNameField, Table, table=True):
+class TagId(TagGuidField, Id):
+    pass
+
+
+class Tag(TagIconField, TagDescriptionField, TagOrderField, TagNameField, TagGuidField, Table, table=True):
     __tablename__ = "tags"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
     modelPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("model_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("models.id")), default=None, exclude=True)
@@ -746,7 +762,31 @@ class Tag(TagOrderField, TagNameField, Table, table=True):
 # region Concept
 
 
-class Concept(TagOrderField, TagNameField, Table, table=True):
+class ConceptGuidField(RealField, abc.ABC):
+    guid: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
+
+
+class ConceptNameField(RealField, abc.ABC):
+    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+
+
+class ConceptDescriptionField(RealField, abc.ABC):
+    description: typing.Optional[str] = sqlmodel.Field(default=None, max_length=DESCRIPTION_LENGTH_LIMIT)
+
+
+class ConceptIconField(RealField, abc.ABC):
+    icon: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
+
+
+class ConceptOrderField(RealField, abc.ABC):
+    order: int = sqlmodel.Field(default=0)
+
+
+class ConceptId(ConceptGuidField, Id):
+    pass
+
+
+class Concept(ConceptIconField, ConceptDescriptionField, ConceptOrderField, ConceptNameField, ConceptGuidField, Table, table=True):
     __tablename__ = "concepts"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
     kitPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")), default=None, exclude=True)
@@ -1183,6 +1223,10 @@ class PlaneInputNode(InputNode):
 # https://github.com/usalu/semio-location-
 
 
+class LocationGuidField(RealField, abc.ABC):
+    guid: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
+
+
 class LocationLongitudeField(RealField, abc.ABC):
     longitude: float = sqlmodel.Field()
 
@@ -1191,26 +1235,34 @@ class LocationLatitudeField(RealField, abc.ABC):
     latitude: float = sqlmodel.Field()
 
 
-class Location(LocationLatitudeField, LocationLongitudeField, TableEntity, table=True):
+class LocationAltitudeField(RealField, abc.ABC):
+    altitude: typing.Optional[float] = sqlmodel.Field(default=None)
+
+
+class LocationId(LocationGuidField, Id):
+    pass
+
+
+class Location(LocationAltitudeField, LocationLatitudeField, LocationLongitudeField, LocationGuidField, TableEntity, table=True):
     PLURAL = "locations"
     __tablename__ = "locations"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
     attributes: list[Attribute] = sqlmodel.Relationship(back_populates="location", cascade_delete=True)
 
 
-class LocationInput(LocationLatitudeField, LocationLongitudeField, Input):
+class LocationInput(LocationAltitudeField, LocationLatitudeField, LocationLongitudeField, Input):
     pass
 
 
-class LocationOutput(LocationLatitudeField, LocationLongitudeField, Output):
+class LocationOutput(LocationAltitudeField, LocationLatitudeField, LocationLongitudeField, Output):
     pass
 
 
-class LocationContext(LocationLatitudeField, LocationLongitudeField, Context):
+class LocationContext(LocationAltitudeField, LocationLatitudeField, LocationLongitudeField, Context):
     pass
 
 
-class LocationPrediction(LocationLatitudeField, LocationLongitudeField, Prediction):
+class LocationPrediction(LocationAltitudeField, LocationLatitudeField, LocationLongitudeField, Prediction):
     pass
 
 
@@ -1330,6 +1382,10 @@ class FileNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
 
+class FileMimeField(RealField, abc.ABC):
+    mime: typing.Optional[str] = sqlmodel.Field(default=None, max_length=NAME_LENGTH_LIMIT)
+
+
 class FileRemoteField(RealField, abc.ABC):
     remote: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
 
@@ -1366,11 +1422,11 @@ class FileId(FileGuidField, Id):
     pass
 
 
-class FileProps(FileUpdatedByField, FileUpdatedAtField, FileCreatedByField, FileCreatedAtField, FileHashField, FileSizeField, FileFolderField, FileRemoteField, FileNameField, FileGuidField, Props):
+class FileProps(FileUpdatedByField, FileUpdatedAtField, FileCreatedByField, FileCreatedAtField, FileHashField, FileSizeField, FileFolderField, FileRemoteField, FileMimeField, FileNameField, FileGuidField, Props):
     pass
 
 
-class FileInput(FileUpdatedByField, FileUpdatedAtField, FileCreatedByField, FileCreatedAtField, FileHashField, FileSizeField, FileFolderField, FileRemoteField, FileNameField, FileGuidField, Input):
+class FileInput(FileUpdatedByField, FileUpdatedAtField, FileCreatedByField, FileCreatedAtField, FileHashField, FileSizeField, FileFolderField, FileRemoteField, FileMimeField, FileNameField, FileGuidField, Input):
     pass
 
 
@@ -1378,11 +1434,11 @@ class FileContext(FileNameField, FileGuidField, Context):
     pass
 
 
-class FileOutput(FileUpdatedByField, FileUpdatedAtField, FileCreatedByField, FileCreatedAtField, FileHashField, FileSizeField, FileFolderField, FileRemoteField, FileNameField, FileGuidField, Output):
+class FileOutput(FileUpdatedByField, FileUpdatedAtField, FileCreatedByField, FileCreatedAtField, FileHashField, FileSizeField, FileFolderField, FileRemoteField, FileMimeField, FileNameField, FileGuidField, Output):
     pass
 
 
-class File(FileUpdatedByField, FileUpdatedAtField, FileCreatedByField, FileCreatedAtField, FileHashField, FileSizeField, FileFolderField, FileRemoteField, FileNameField, FileGuidField, TableEntity, table=True):
+class File(FileUpdatedByField, FileUpdatedAtField, FileCreatedByField, FileCreatedAtField, FileHashField, FileSizeField, FileFolderField, FileRemoteField, FileMimeField, FileNameField, FileGuidField, TableEntity, table=True):
     PLURAL = "files"
     __tablename__ = "files"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
@@ -1634,6 +1690,22 @@ class QualityFormulaField(RealField, abc.ABC):
     formula: str = sqlmodel.Field(default="", max_length=EXPRESSION_LENGTH_LIMIT)
 
 
+class QualityFolderField(RealField, abc.ABC):
+    folder: typing.Optional[str] = sqlmodel.Field(default=None, max_length=NAME_LENGTH_LIMIT)
+
+
+class QualityIconField(RealField, abc.ABC):
+    icon: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
+
+
+class QualityImageField(RealField, abc.ABC):
+    image: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
+
+
+class QualityUnitField(RealField, abc.ABC):
+    unit: typing.Optional[str] = sqlmodel.Field(default=None, max_length=NAME_LENGTH_LIMIT)
+
+
 class QualityCreatedField(RealField, abc.ABC):
     created_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
@@ -1647,6 +1719,10 @@ class QualityId(QualityKeyField, Id):
 
 
 class QualityProps(
+    QualityUnitField,
+    QualityImageField,
+    QualityIconField,
+    QualityFolderField,
     QualityFormulaField,
     QualityDefaultField,
     QualityMaxExcludedField,
@@ -1667,6 +1743,10 @@ class QualityProps(
 
 
 class QualityInput(
+    QualityUnitField,
+    QualityImageField,
+    QualityIconField,
+    QualityFolderField,
     QualityFormulaField,
     QualityDefaultField,
     QualityMaxExcludedField,
@@ -1693,6 +1773,10 @@ class QualityContext(QualityDescriptionField, QualityNameField, QualityKeyField,
 class QualityOutput(
     QualityUpdatedField,
     QualityCreatedField,
+    QualityUnitField,
+    QualityImageField,
+    QualityIconField,
+    QualityFolderField,
     QualityFormulaField,
     QualityDefaultField,
     QualityMaxExcludedField,
@@ -1716,6 +1800,10 @@ class QualityOutput(
 class Quality(
     QualityUpdatedField,
     QualityCreatedField,
+    QualityUnitField,
+    QualityImageField,
+    QualityIconField,
+    QualityFolderField,
     QualityFormulaField,
     QualityDefaultField,
     QualityMaxExcludedField,
@@ -1859,6 +1947,10 @@ class PropInputNode(InputNode):
 # https://github.com/usalu/semio-model-
 
 
+class ModelNameField(RealField, abc.ABC):
+    name: typing.Optional[str] = sqlmodel.Field(default=None, max_length=NAME_LENGTH_LIMIT)
+
+
 class ModelUrlField(RealField, abc.ABC):
     url: str = sqlmodel.Field(max_length=URL_LENGTH_LIMIT)
 
@@ -1879,23 +1971,23 @@ class ModelId(ModelTagsField, Id):
     pass
 
 
-class ModelProps(ModelTagsField, ModelDescriptionField, ModelFileField, ModelUrlField, Props):
+class ModelProps(ModelTagsField, ModelDescriptionField, ModelNameField, ModelFileField, ModelUrlField, Props):
     pass
 
 
-class ModelInput(ModelTagsField, ModelDescriptionField, ModelFileField, ModelUrlField, Input):
+class ModelInput(ModelTagsField, ModelDescriptionField, ModelNameField, ModelFileField, ModelUrlField, Input):
     attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
 
 
-class ModelContext(ModelTagsField, ModelDescriptionField, Context):
+class ModelContext(ModelTagsField, ModelDescriptionField, ModelNameField, Context):
     attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
 
 
-class ModelOutput(ModelTagsField, ModelDescriptionField, ModelFileField, ModelUrlField, Output):
+class ModelOutput(ModelTagsField, ModelDescriptionField, ModelNameField, ModelFileField, ModelUrlField, Output):
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
 
 
-class Model(ModelDescriptionField, ModelFileField, ModelUrlField, TableEntity, table=True):
+class Model(ModelDescriptionField, ModelNameField, ModelFileField, ModelUrlField, TableEntity, table=True):
     PLURAL = "models"
     __tablename__ = "models"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
@@ -1960,6 +2052,72 @@ class ModelInputNode(InputNode):
 
 
 # endregion Model
+
+# region Interface
+# https://github.com/usalu/semio#-interface-
+
+
+class InterfaceNameField(RealField, abc.ABC):
+    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+
+
+class InterfaceDescriptionField(RealField, abc.ABC):
+    description: typing.Optional[str] = sqlmodel.Field(default=None, max_length=DESCRIPTION_LENGTH_LIMIT)
+
+
+class InterfaceIconField(RealField, abc.ABC):
+    icon: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
+
+
+class InterfaceCompatibleInterfacesField(MaskedField, abc.ABC):
+    compatibleInterfaces: list[str] = sqlmodel.Field(default_factory=list)
+
+
+class InterfaceId(InterfaceNameField, Id):
+    pass
+
+
+class InterfaceProps(InterfaceCompatibleInterfacesField, InterfaceIconField, InterfaceDescriptionField, InterfaceNameField, Props):
+    pass
+
+
+class InterfaceInput(InterfaceCompatibleInterfacesField, InterfaceIconField, InterfaceDescriptionField, InterfaceNameField, Input):
+    attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
+
+
+class InterfaceOutput(InterfaceCompatibleInterfacesField, InterfaceIconField, InterfaceDescriptionField, InterfaceNameField, Output):
+    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
+
+
+class Interface(InterfaceIconField, InterfaceDescriptionField, InterfaceNameField, TableEntity, table=True):
+    PLURAL = "interfaces"
+    __tablename__ = "interfaces"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    compatibleInterfaces_: list["CompatibleInterface"] = sqlmodel.Relationship(back_populates="interface_", cascade_delete=True)
+    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="interface_", cascade_delete=True)
+    kitPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")), default=None, exclude=True)
+    kit: Kit = sqlmodel.Relationship(back_populates="interfaces")
+
+    @property
+    def compatibleInterfaces(self) -> list[str]:
+        return sorted([ci.name for ci in self.compatibleInterfaces_], key=lambda x: x)
+
+    @compatibleInterfaces.setter
+    def compatibleInterfaces(self, compatibleInterfaces: list[str]):
+        self.compatibleInterfaces_ = [CompatibleInterface(name=ci, order=i) for i, ci in enumerate(compatibleInterfaces)]
+
+
+class InterfaceNode(Node):
+    class Meta:
+        model = Interface
+
+
+class InterfaceInputNode(InputNode):
+    class Meta:
+        model = InterfaceInput
+
+
+# endregion Interface
 
 # region Port
 # https://github.com/usalu/semio-port-
@@ -2516,23 +2674,31 @@ class LayerColorField(RealField, abc.ABC):
     color: str = sqlmodel.Field(default="", max_length=7)
 
 
+class LayerIsHiddenField(RealField, abc.ABC):
+    is_hidden: bool = sqlmodel.Field(default=False)
+
+
+class LayerIsLockedField(RealField, abc.ABC):
+    is_locked: bool = sqlmodel.Field(default=False)
+
+
 class LayerId(LayerNameField, Id):
     pass
 
 
-class LayerProps(LayerColorField, LayerDescriptionField, LayerNameField, Props):
+class LayerProps(LayerIsLockedField, LayerIsHiddenField, LayerColorField, LayerDescriptionField, LayerNameField, Props):
     pass
 
 
-class LayerInput(LayerColorField, LayerDescriptionField, LayerNameField, Input):
+class LayerInput(LayerIsLockedField, LayerIsHiddenField, LayerColorField, LayerDescriptionField, LayerNameField, Input):
     pass
 
 
-class LayerOutput(LayerColorField, LayerDescriptionField, LayerNameField, Output):
+class LayerOutput(LayerIsLockedField, LayerIsHiddenField, LayerColorField, LayerDescriptionField, LayerNameField, Output):
     pass
 
 
-class Layer(LayerColorField, LayerDescriptionField, LayerNameField, TableEntity, table=True):
+class Layer(LayerIsLockedField, LayerIsHiddenField, LayerColorField, LayerDescriptionField, LayerNameField, TableEntity, table=True):
     PLURAL = "layers"
     __tablename__ = "layers"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
@@ -3555,7 +3721,7 @@ class KitRemoteField(RealField, abc.ABC):
     remote: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 
-class KitHomepage(RealField, abc.ABC):
+class KitHomepageField(RealField, abc.ABC):
     homepage: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 
@@ -3575,11 +3741,11 @@ class KitId(KitUriField, Id):
     pass
 
 
-class KitProps(KitLicenseField, KitHomepage, KitRemoteField, KitVersionField, KitPreviewField, KitImageField, KitIconField, KitDescriptionField, KitNameField, KitUriField, Props):
+class KitProps(KitLicenseField, KitHomepageField, KitRemoteField, KitVersionField, KitPreviewField, KitImageField, KitIconField, KitDescriptionField, KitNameField, KitUriField, Props):
     pass
 
 
-class KitInput(KitLicenseField, KitHomepage, KitRemoteField, KitVersionField, KitPreviewField, KitImageField, KitIconField, KitDescriptionField, KitNameField, Input):
+class KitInput(KitLicenseField, KitHomepageField, KitRemoteField, KitVersionField, KitPreviewField, KitImageField, KitIconField, KitDescriptionField, KitNameField, Input):
     pass
 
     types: list[TypeInput] = sqlmodel.Field(default_factory=list)
@@ -3597,7 +3763,7 @@ class KitContext(KitDescriptionField, KitNameField, Context):
     attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
 
 
-class KitOutput(KitUpdatedField, KitCreatedField, KitLicenseField, KitHomepage, KitRemoteField, KitVersionField, KitPreviewField, KitImageField, KitIconField, KitDescriptionField, KitNameField, KitUriField, Output):
+class KitOutput(KitUpdatedField, KitCreatedField, KitLicenseField, KitHomepageField, KitRemoteField, KitVersionField, KitPreviewField, KitImageField, KitIconField, KitDescriptionField, KitNameField, KitUriField, Output):
     pass
 
     types: list[TypeOutput] = sqlmodel.Field(default_factory=list)
@@ -3607,7 +3773,7 @@ class KitOutput(KitUpdatedField, KitCreatedField, KitLicenseField, KitHomepage, 
     concepts: list[str] = sqlmodel.Field(default_factory=list)
 
 
-class Kit(KitNameField, KitVersionField, KitDescriptionField, KitIconField, KitImageField, KitRemoteField, KitHomepage, KitLicenseField, KitPreviewField, KitUriField, KitUpdatedField, KitCreatedField, TableEntity, table=True):
+class Kit(KitNameField, KitVersionField, KitDescriptionField, KitIconField, KitImageField, KitRemoteField, KitHomepageField, KitLicenseField, KitPreviewField, KitUriField, KitUpdatedField, KitCreatedField, TableEntity, table=True):
     PLURAL = "kits"
     __tablename__ = "kits"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
@@ -3895,21 +4061,31 @@ class ValidationSeverity(enum.Enum):
 
 
 @dataclasses.dataclass
+class ValidationFix:
+    title: str
+    diff: dict
+
+    def toDict(self) -> dict:
+        return {"title": self.title, "diff": self.diff}
+
+
+@dataclasses.dataclass
 class ValidationIssue:
     ruleId: str
     severity: ValidationSeverity
     message: str
     entityKind: str
     entityGuid: str
+    fixes: list[ValidationFix] = dataclasses.field(default_factory=list)
 
-    def toPortableDict(self) -> dict:
-        """Convert to portable dict format for cross-platform serialization."""
+    def toDict(self) -> dict:
         return {
             "ruleId": self.ruleId,
             "severity": self.severity.value,
             "message": self.message,
             "entityKind": self.entityKind,
             "entityGuid": self.entityGuid,
+            "fixes": [f.toDict() for f in self.fixes],
         }
 
 
@@ -3920,29 +4096,59 @@ class ValidationResult:
     def hasErrors(self) -> bool:
         return any(i.severity == ValidationSeverity.ERROR for i in self.issues)
 
-    def toPortableDict(self) -> dict:
-        """Convert to portable dict format for cross-platform serialization."""
+    def toDict(self) -> dict:
         sortedIssues = sorted(self.issues, key=lambda i: (i.ruleId, i.entityGuid))
-        return {"issues": [i.toPortableDict() for i in sortedIssues]}
+        return {"issues": [i.toDict() for i in sortedIssues]}
 
     def serialize(self) -> str:
-        """Serialize to JSON for cross-platform comparison."""
-        return json.dumps(self.toPortableDict(), indent=2)
+        return json.dumps(self.toDict(), indent=2)
+
+
+def _isGuid(s: str) -> bool:
+    import re
+
+    return bool(re.match(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", s, re.IGNORECASE))
+
+
+def _normalizeGuids(obj: typing.Any) -> typing.Any:
+    if obj is None:
+        return obj
+    if isinstance(obj, str) and _isGuid(obj):
+        return "<GUID>"
+    if isinstance(obj, list):
+        return [_normalizeGuids(x) for x in obj]
+    if isinstance(obj, dict):
+        return {k: _normalizeGuids(v) for k, v in obj.items()}
+    return obj
 
 
 def areValidationResultsEqual(a: ValidationResult, b: ValidationResult) -> bool:
-    """Compare two validation results for equality."""
     if len(a.issues) != len(b.issues):
         return False
     sortedA = sorted(a.issues, key=lambda i: (i.ruleId, i.entityGuid))
     sortedB = sorted(b.issues, key=lambda i: (i.ruleId, i.entityGuid))
-    return all(ia.ruleId == ib.ruleId and ia.severity == ib.severity and ia.message == ib.message and ia.entityKind == ib.entityKind and ia.entityGuid == ib.entityGuid for ia, ib in zip(sortedA, sortedB))
+    for ia, ib in zip(sortedA, sortedB):
+        if ia.ruleId != ib.ruleId or ia.severity != ib.severity or ia.message != ib.message or ia.entityKind != ib.entityKind or ia.entityGuid != ib.entityGuid:
+            return False
+        if len(ia.fixes) != len(ib.fixes):
+            return False
+        for fa, fb in zip(ia.fixes, ib.fixes):
+            if fa.title != fb.title:
+                return False
+            # For guid-unique, new GUIDs differ and fix structure may vary
+            if ia.ruleId == "guid-unique":
+                continue
+            if json.dumps(_normalizeGuids(fa.diff), sort_keys=True) != json.dumps(_normalizeGuids(fb.diff), sort_keys=True):
+                return False
+    return True
 
 
 def parseValidationResult(jsonStr: str) -> ValidationResult:
-    """Parse a portable validation result from JSON."""
     data = json.loads(jsonStr)
-    issues = [ValidationIssue(ruleId=i["ruleId"], severity=ValidationSeverity(i["severity"]), message=i["message"], entityKind=i["entityKind"], entityGuid=i["entityGuid"]) for i in data["issues"]]
+    issues = []
+    for i in data["issues"]:
+        fixes = [ValidationFix(title=f["title"], diff=f["diff"]) for f in i.get("fixes", [])]
+        issues.append(ValidationIssue(ruleId=i["ruleId"], severity=ValidationSeverity(i["severity"]), message=i["message"], entityKind=i["entityKind"], entityGuid=i["entityGuid"], fixes=fixes))
     return ValidationResult(issues=issues)
 
 
@@ -4148,39 +4354,78 @@ def validateKit(kit: Kit) -> ValidationResult:
 # region Dict-based Validation
 
 
+def _makeFix(title: str, diff: dict) -> ValidationFix:
+    return ValidationFix(title=title, diff=diff)
+
+
+def _deepCopy(obj: typing.Any) -> typing.Any:
+    return json.loads(json.dumps(obj))
+
+
+def _newGuid() -> str:
+    import uuid
+
+    return str(uuid.uuid4())
+
+
 def validateKitDict(kit: dict) -> ValidationResult:
     issues: list[ValidationIssue] = []
     seen: dict[str, str] = {}
+    seenEntities: dict[str, dict] = {}
 
-    def checkGuid(entityKind: str, entityGuid: str) -> None:
+    def checkGuid(entityKind: str, entityGuid: str, entity: dict) -> None:
         if entityGuid in seen:
-            issues.append(ValidationIssue(ruleId="guid-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate GUID "{entityGuid}". First occurrence kept.', entityKind=entityKind, entityGuid=entityGuid))
+            # Create fix: regenerate GUID by removing and re-adding with new GUID
+            newGuid = _newGuid()
+            entityCopy = _deepCopy(entity)
+            entityCopy["guid"] = newGuid
+            collectionKey = {
+                "Type": "types",
+                "Design": "designs",
+                "Piece": "pieces",
+                "Connection": "connections",
+                "Port": "ports",
+                "Model": "models",
+                "Quality": "qualities",
+                "Interface": "interfaces",
+                "File": "files",
+                "Folder": "folders",
+                "Stat": "stats",
+                "Layer": "layers",
+            }.get(entityKind, "")
+            if collectionKey:
+                diff = {collectionKey: {"removed": [entityGuid], "added": [entityCopy]}}
+                fix = _makeFix("Regenerate GUID", diff)
+                issues.append(ValidationIssue(ruleId="guid-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate GUID "{entityGuid}". First occurrence kept.', entityKind=entityKind, entityGuid=entityGuid, fixes=[fix]))
+            else:
+                issues.append(ValidationIssue(ruleId="guid-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate GUID "{entityGuid}". First occurrence kept.', entityKind=entityKind, entityGuid=entityGuid, fixes=[]))
         else:
             seen[entityGuid] = entityKind
+            seenEntities[entityGuid] = entity
 
-    checkGuid("Kit", kit.get("guid", ""))
+    checkGuid("Kit", kit.get("guid", ""), kit)
     for t in kit.get("types", []):
-        checkGuid("Type", t.get("guid", ""))
+        checkGuid("Type", t.get("guid", ""), t)
         for port in t.get("ports", []):
-            checkGuid("Port", port.get("guid", ""))
+            checkGuid("Port", port.get("guid", ""), port)
         for model in t.get("models", []):
-            checkGuid("Model", model.get("guid", ""))
+            checkGuid("Model", model.get("guid", ""), model)
     for d in kit.get("designs", []):
-        checkGuid("Design", d.get("guid", ""))
+        checkGuid("Design", d.get("guid", ""), d)
         for p in d.get("pieces", []):
-            checkGuid("Piece", p.get("guid", ""))
+            checkGuid("Piece", p.get("guid", ""), p)
         for c in d.get("connections", []):
-            checkGuid("Connection", c.get("guid", ""))
+            checkGuid("Connection", c.get("guid", ""), c)
         for s in d.get("stats", []):
-            checkGuid("Stat", s.get("guid", ""))
+            checkGuid("Stat", s.get("guid", ""), s)
     for q in kit.get("qualities", []):
-        checkGuid("Quality", q.get("guid", ""))
+        checkGuid("Quality", q.get("guid", ""), q)
     for i in kit.get("interfaces", []):
-        checkGuid("Interface", i.get("guid", ""))
+        checkGuid("Interface", i.get("guid", ""), i)
     for f in kit.get("files", []):
-        checkGuid("File", f.get("guid", ""))
+        checkGuid("File", f.get("guid", ""), f)
     for fo in kit.get("folders", []):
-        checkGuid("Folder", fo.get("guid", ""))
+        checkGuid("Folder", fo.get("guid", ""), fo)
     byParent: dict[str | None, list[dict]] = {}
     for t in kit.get("types", []):
         parentGuid = t.get("parent", {}).get("guid") if t.get("parent") else None
@@ -4197,7 +4442,8 @@ def validateKitDict(kit: dict) -> ValidationResult:
         for name, group in names.items():
             if len(group) > 1:
                 for t in group[1:]:
-                    issues.append(ValidationIssue(ruleId="type-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate type name "{name}" among siblings.', entityKind="Type", entityGuid=t.get("guid", "")))
+                    fix = _makeFix(f'Rename "{name}"', {"types": {"updated": [{"id": t.get("guid", ""), "diff": {"name": f"{name} 2"}}]}})
+                    issues.append(ValidationIssue(ruleId="type-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate type name "{name}" among siblings.', entityKind="Type", entityGuid=t.get("guid", ""), fixes=[fix]))
     byParent = {}
     for d in kit.get("designs", []):
         parentGuid = d.get("parent", {}).get("guid") if d.get("parent") else None
@@ -4214,9 +4460,11 @@ def validateKitDict(kit: dict) -> ValidationResult:
         for name, group in names.items():
             if len(group) > 1:
                 for d in group[1:]:
-                    issues.append(ValidationIssue(ruleId="design-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate design name "{name}" among siblings.', entityKind="Design", entityGuid=d.get("guid", "")))
+                    fix = _makeFix(f'Rename "{name}"', {"designs": {"updated": [{"id": d.get("guid", ""), "diff": {"name": f"{name} 2"}}]}})
+                    issues.append(ValidationIssue(ruleId="design-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate design name "{name}" among siblings.', entityKind="Design", entityGuid=d.get("guid", ""), fixes=[fix]))
     for design in kit.get("designs", []):
         designName = design.get("name", "")
+        designGuid = design.get("guid", "")
         names = {}
         for p in design.get("pieces", []):
             name = p.get("name", "")
@@ -4227,9 +4475,11 @@ def validateKitDict(kit: dict) -> ValidationResult:
         for name, group in names.items():
             if len(group) > 1:
                 for p in group[1:]:
-                    issues.append(ValidationIssue(ruleId="piece-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate piece name "{name}" inside design "{designName}".', entityKind="Piece", entityGuid=p.get("guid", "")))
+                    fix = _makeFix(f'Rename piece "{name}"', {"designs": {"updated": [{"id": designGuid, "diff": {"pieces": {"updated": [{"id": p.get("guid", ""), "diff": {"name": f"{name} 2"}}]}}}]}})
+                    issues.append(ValidationIssue(ruleId="piece-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate piece name "{name}" inside design "{designName}".', entityKind="Piece", entityGuid=p.get("guid", ""), fixes=[fix]))
     for t in kit.get("types", []):
         typeName = t.get("name", "")
+        typeGuid = t.get("guid", "")
         names = {}
         for port in t.get("ports", []):
             name = port.get("name", "")
@@ -4240,9 +4490,11 @@ def validateKitDict(kit: dict) -> ValidationResult:
         for name, group in names.items():
             if len(group) > 1:
                 for port in group[1:]:
-                    issues.append(ValidationIssue(ruleId="port-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate port name "{name}" inside type "{typeName}".', entityKind="Port", entityGuid=port.get("guid", "")))
+                    fix = _makeFix(f'Rename port "{name}"', {"types": {"updated": [{"id": typeGuid, "diff": {"ports": {"updated": [{"id": port.get("guid", ""), "diff": {"name": f"{name} 2"}}]}}}]}})
+                    issues.append(ValidationIssue(ruleId="port-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate port name "{name}" inside type "{typeName}".', entityKind="Port", entityGuid=port.get("guid", ""), fixes=[fix]))
     for t in kit.get("types", []):
         typeName = t.get("name", "")
+        typeGuid = t.get("guid", "")
         names = {}
         for model in t.get("models", []):
             name = model.get("name", "")
@@ -4253,7 +4505,8 @@ def validateKitDict(kit: dict) -> ValidationResult:
         for name, group in names.items():
             if len(group) > 1:
                 for model in group[1:]:
-                    issues.append(ValidationIssue(ruleId="model-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate model name "{name}" inside type "{typeName}".', entityKind="Model", entityGuid=model.get("guid", "")))
+                    fix = _makeFix(f'Rename model "{name}"', {"types": {"updated": [{"id": typeGuid, "diff": {"models": {"updated": [{"id": model.get("guid", ""), "diff": {"name": f"{name} 2"}}]}}}]}})
+                    issues.append(ValidationIssue(ruleId="model-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate model name "{name}" inside type "{typeName}".', entityKind="Model", entityGuid=model.get("guid", ""), fixes=[fix]))
     names = {}
     for q in kit.get("qualities", []):
         name = q.get("name", "")
@@ -4263,7 +4516,8 @@ def validateKitDict(kit: dict) -> ValidationResult:
     for name, group in names.items():
         if len(group) > 1:
             for q in group[1:]:
-                issues.append(ValidationIssue(ruleId="quality-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate quality name "{name}".', entityKind="Quality", entityGuid=q.get("guid", "")))
+                fix = _makeFix(f'Rename quality "{name}"', {"qualities": {"updated": [{"id": q.get("guid", ""), "diff": {"name": f"{name} 2"}}]}})
+                issues.append(ValidationIssue(ruleId="quality-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate quality name "{name}".', entityKind="Quality", entityGuid=q.get("guid", ""), fixes=[fix]))
     names = {}
     for i in kit.get("interfaces", []):
         name = i.get("name", "")
@@ -4272,8 +4526,9 @@ def validateKitDict(kit: dict) -> ValidationResult:
         names[name].append(i)
     for name, group in names.items():
         if len(group) > 1:
-            for i in group[1:]:
-                issues.append(ValidationIssue(ruleId="interface-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate interface name "{name}".', entityKind="Interface", entityGuid=i.get("guid", "")))
+            for iface in group[1:]:
+                fix = _makeFix(f'Rename interface "{name}"', {"interfaces": {"updated": [{"id": iface.get("guid", ""), "diff": {"name": f"{name} 2"}}]}})
+                issues.append(ValidationIssue(ruleId="interface-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate interface name "{name}".', entityKind="Interface", entityGuid=iface.get("guid", ""), fixes=[fix]))
     names = {}
     for f in kit.get("files", []):
         name = f.get("name", "")
@@ -4283,7 +4538,8 @@ def validateKitDict(kit: dict) -> ValidationResult:
     for name, group in names.items():
         if len(group) > 1:
             for f in group[1:]:
-                issues.append(ValidationIssue(ruleId="file-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate file name "{name}".', entityKind="File", entityGuid=f.get("guid", "")))
+                fix = _makeFix(f'Rename file "{name}"', {"files": {"updated": [{"id": f.get("guid", ""), "diff": {"name": f"{name} 2"}}]}})
+                issues.append(ValidationIssue(ruleId="file-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate file name "{name}".', entityKind="File", entityGuid=f.get("guid", ""), fixes=[fix]))
     byParent = {}
     for fo in kit.get("folders", []):
         parentGuid = fo.get("parent", {}).get("guid") if fo.get("parent") else None
@@ -4300,9 +4556,11 @@ def validateKitDict(kit: dict) -> ValidationResult:
         for name, group in names.items():
             if len(group) > 1:
                 for fo in group[1:]:
-                    issues.append(ValidationIssue(ruleId="folder-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate folder name "{name}" among siblings.', entityKind="Folder", entityGuid=fo.get("guid", "")))
+                    fix = _makeFix(f'Rename folder "{name}"', {"folders": {"updated": [{"id": fo.get("guid", ""), "diff": {"name": f"{name} 2"}}]}})
+                    issues.append(ValidationIssue(ruleId="folder-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate folder name "{name}" among siblings.', entityKind="Folder", entityGuid=fo.get("guid", ""), fixes=[fix]))
     for design in kit.get("designs", []):
         designName = design.get("name", "")
+        designGuid = design.get("guid", "")
         paths: dict[str, list[dict]] = {}
         for layer in design.get("layers", []):
             path = layer.get("path", "")
@@ -4312,7 +4570,10 @@ def validateKitDict(kit: dict) -> ValidationResult:
         for path, group in paths.items():
             if len(group) > 1:
                 for layer in group[1:]:
-                    issues.append(ValidationIssue(ruleId="layer-path-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate layer path "{path}" inside design "{designName}".', entityKind="Layer", entityGuid=layer.get("guid", "")))
+                    fix = _makeFix(f'Rename layer "{path}"', {"designs": {"updated": [{"id": designGuid, "diff": {"layers": {"updated": [{"id": layer.get("guid", ""), "diff": {"path": f"{path} 2"}}]}}}]}})
+                    issues.append(
+                        ValidationIssue(ruleId="layer-path-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate layer path "{path}" inside design "{designName}".', entityKind="Layer", entityGuid=layer.get("guid", ""), fixes=[fix])
+                    )
     return ValidationResult(issues=issues)
 
 
@@ -4466,7 +4727,6 @@ def flattenDesignDict(kit: dict, designGuid: str) -> dict:
     if design is None:
         raise ValueError(f"Design {designGuid} not found")
     pieces = design.get("pieces", [])
-    connections = design.get("connections", [])
     if not pieces:
         return {}
     pieceMap = {p["guid"]: dict(p) for p in pieces}
@@ -4527,6 +4787,1226 @@ def flattenDesignDict(kit: dict, designGuid: str) -> dict:
 
 
 # endregion FlattenDesign
+
+# region Kit Diff Operations
+
+
+def _normalizeValue(value: typing.Any) -> typing.Any:
+    """Normalize empty values to None for comparison."""
+    if value is None or value == "" or value == []:
+        return None
+    return value
+
+
+def _normalizeBoolean(value: bool | None) -> bool | None:
+    """Normalize boolean: True stays True, False/None become None."""
+    return True if value else None
+
+
+def _normalizeArray(arr: list | None) -> list:
+    """Normalize None or single item to list."""
+    if arr is None:
+        return []
+    if not isinstance(arr, list):
+        return [arr]
+    return arr
+
+
+def areAttributesEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
+    arrA = _normalizeArray(a)
+    arrB = _normalizeArray(b)
+    if len(arrA) != len(arrB):
+        return False
+    for attrA in arrA:
+        attrB = next((x for x in arrB if x.get("guid") == attrA.get("guid")), None)
+        if attrB is None:
+            return False
+        if attrA.get("key") != attrB.get("key"):
+            return False
+        if _normalizeValue(attrA.get("value")) != _normalizeValue(attrB.get("value")):
+            return False
+        if _normalizeValue(attrA.get("definition")) != _normalizeValue(attrB.get("definition")):
+            return False
+        if strict:
+            if attrA.get("createdAt") != attrB.get("createdAt"):
+                return False
+            if attrA.get("updatedAt") != attrB.get("updatedAt"):
+                return False
+    return True
+
+
+def arePropsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
+    arrA = _normalizeArray(a)
+    arrB = _normalizeArray(b)
+    if len(arrA) != len(arrB):
+        return False
+    for propA in arrA:
+        propB = next((x for x in arrB if x.get("guid") == propA.get("guid")), None)
+        if propB is None:
+            return False
+        if propA.get("quality", {}).get("guid") != propB.get("quality", {}).get("guid"):
+            return False
+        if propA.get("value") != propB.get("value"):
+            return False
+        if _normalizeValue(propA.get("unit")) != _normalizeValue(propB.get("unit")):
+            return False
+        if not areAttributesEqualDict(propA.get("attributes"), propB.get("attributes"), strict):
+            return False
+        if strict:
+            if propA.get("createdAt") != propB.get("createdAt"):
+                return False
+            if propA.get("updatedAt") != propB.get("updatedAt"):
+                return False
+    return True
+
+
+def arePortsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
+    arrA = _normalizeArray(a)
+    arrB = _normalizeArray(b)
+    if len(arrA) != len(arrB):
+        return False
+    for portA in arrA:
+        portB = next((x for x in arrB if x.get("guid") == portA.get("guid")), None)
+        if portB is None:
+            return False
+        if _normalizeValue(portA.get("name")) != _normalizeValue(portB.get("name")):
+            return False
+        pointA = portA.get("point", {})
+        pointB = portB.get("point", {})
+        if pointA.get("x") != pointB.get("x") or pointA.get("y") != pointB.get("y") or pointA.get("z") != pointB.get("z"):
+            return False
+        dirA = portA.get("direction", {})
+        dirB = portB.get("direction", {})
+        if dirA.get("x") != dirB.get("x") or dirA.get("y") != dirB.get("y") or dirA.get("z") != dirB.get("z"):
+            return False
+        if portA.get("t") != portB.get("t"):
+            return False
+        if _normalizeBoolean(portA.get("mandatory")) != _normalizeBoolean(portB.get("mandatory")):
+            return False
+        ifaceA = portA.get("interface", {}) if portA.get("interface") else {}
+        ifaceB = portB.get("interface", {}) if portB.get("interface") else {}
+        if _normalizeValue(ifaceA.get("guid")) != _normalizeValue(ifaceB.get("guid")):
+            return False
+        if not arePropsEqualDict(portA.get("props"), portB.get("props"), strict):
+            return False
+        if not areAttributesEqualDict(portA.get("attributes"), portB.get("attributes"), strict):
+            return False
+        if strict:
+            if portA.get("createdAt") != portB.get("createdAt"):
+                return False
+            if portA.get("updatedAt") != portB.get("updatedAt"):
+                return False
+    return True
+
+
+def areModelsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
+    arrA = _normalizeArray(a)
+    arrB = _normalizeArray(b)
+    if len(arrA) != len(arrB):
+        return False
+    for modelA in arrA:
+        modelB = next((x for x in arrB if x.get("guid") == modelA.get("guid")), None)
+        if modelB is None:
+            return False
+        if _normalizeValue(modelA.get("name")) != _normalizeValue(modelB.get("name")):
+            return False
+        # Handle both Input format (file as string) and Output format (file as {guid: ...})
+        fileA = modelA.get("file")
+        fileB = modelB.get("file")
+        fileGuidA = fileA.get("guid") if isinstance(fileA, dict) else fileA
+        fileGuidB = fileB.get("guid") if isinstance(fileB, dict) else fileB
+        if fileGuidA != fileGuidB:
+            return False
+        tagsA = [t.get("guid") if isinstance(t, dict) else t for t in _normalizeArray(modelA.get("tags"))]
+        tagsB = [t.get("guid") if isinstance(t, dict) else t for t in _normalizeArray(modelB.get("tags"))]
+        if len(tagsA) != len(tagsB) or set(tagsA) != set(tagsB):
+            return False
+        if not areAttributesEqualDict(modelA.get("attributes"), modelB.get("attributes"), strict):
+            return False
+        if strict:
+            if modelA.get("createdAt") != modelB.get("createdAt"):
+                return False
+            if modelA.get("updatedAt") != modelB.get("updatedAt"):
+                return False
+    return True
+
+
+def areTypesEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
+    arrA = _normalizeArray(a)
+    arrB = _normalizeArray(b)
+    if len(arrA) != len(arrB):
+        return False
+    for typeA in arrA:
+        typeB = None
+        for t in arrB:
+            if t.get("guid") != typeA.get("guid"):
+                continue
+            parentA = typeA.get("parent")
+            parentB = t.get("parent")
+            if not parentA and not parentB:
+                typeB = t
+                break
+            if not parentA or not parentB:
+                continue
+            # Handle both Input format (parent as string) and Output format (parent as {guid: ...})
+            parentGuidA = parentA.get("guid") if isinstance(parentA, dict) else parentA
+            parentGuidB = parentB.get("guid") if isinstance(parentB, dict) else parentB
+            if parentGuidA == parentGuidB:
+                typeB = t
+                break
+        if typeB is None:
+            return False
+        if typeA.get("name") != typeB.get("name"):
+            return False
+        if _normalizeValue(typeA.get("description")) != _normalizeValue(typeB.get("description")):
+            return False
+        if _normalizeValue(typeA.get("icon")) != _normalizeValue(typeB.get("icon")):
+            return False
+        if _normalizeValue(typeA.get("image")) != _normalizeValue(typeB.get("image")):
+            return False
+        if _normalizeValue(typeA.get("folder")) != _normalizeValue(typeB.get("folder")):
+            return False
+        if _normalizeValue(typeA.get("unit")) != _normalizeValue(typeB.get("unit")):
+            return False
+        if typeA.get("stock") != typeB.get("stock"):
+            return False
+        if _normalizeBoolean(typeA.get("isAbstract")) != _normalizeBoolean(typeB.get("isAbstract")):
+            return False
+        if _normalizeBoolean(typeA.get("virtual")) != _normalizeBoolean(typeB.get("virtual")):
+            return False
+        locA = typeA.get("location", {}) if typeA.get("location") else {}
+        locB = typeB.get("location", {}) if typeB.get("location") else {}
+        if _normalizeValue(locA.get("guid")) != _normalizeValue(locB.get("guid")):
+            return False
+        # Handle concepts - normalize to guid list for comparison
+        conceptsA = _normalizeArray(typeA.get("concepts"))
+        conceptsB = _normalizeArray(typeB.get("concepts"))
+        conceptGuidsA = [c.get("guid") if isinstance(c, dict) else c for c in conceptsA]
+        conceptGuidsB = [c.get("guid") if isinstance(c, dict) else c for c in conceptsB]
+        if conceptGuidsA != conceptGuidsB:
+            return False
+        authA = [a.get("guid") if isinstance(a, dict) else a for a in _normalizeArray(typeA.get("authors"))]
+        authB = [a.get("guid") if isinstance(a, dict) else a for a in _normalizeArray(typeB.get("authors"))]
+        if authA != authB:
+            return False
+        if not arePropsEqualDict(typeA.get("props"), typeB.get("props"), strict):
+            return False
+        if not areModelsEqualDict(typeA.get("models"), typeB.get("models"), strict):
+            return False
+        if not arePortsEqualDict(typeA.get("ports"), typeB.get("ports"), strict):
+            return False
+        if not areAttributesEqualDict(typeA.get("attributes"), typeB.get("attributes"), strict):
+            return False
+        if strict:
+            if typeA.get("createdAt") != typeB.get("createdAt"):
+                return False
+            if typeA.get("updatedAt") != typeB.get("updatedAt"):
+                return False
+    return True
+
+
+def arePiecesEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
+    arrA = _normalizeArray(a)
+    arrB = _normalizeArray(b)
+    if len(arrA) != len(arrB):
+        return False
+    for pieceA in arrA:
+        pieceB = next((x for x in arrB if x.get("guid") == pieceA.get("guid")), None)
+        if pieceB is None:
+            return False
+        if _normalizeValue(pieceA.get("name")) != _normalizeValue(pieceB.get("name")):
+            return False
+        # Handle both Input format (type as string) and Output format (type as {guid: ...})
+        typeA = pieceA.get("type")
+        typeB = pieceB.get("type")
+        typeGuidA = typeA.get("guid") if isinstance(typeA, dict) else typeA
+        typeGuidB = typeB.get("guid") if isinstance(typeB, dict) else typeB
+        if typeGuidA != typeGuidB:
+            return False
+        # Handle both Input format (design as string) and Output format (design as {guid: ...})
+        designA = pieceA.get("design")
+        designB = pieceB.get("design")
+        designGuidA = designA.get("guid") if isinstance(designA, dict) else designA
+        designGuidB = designB.get("guid") if isinstance(designB, dict) else designB
+        if designGuidA != designGuidB:
+            return False
+        planeA = pieceA.get("plane")
+        planeB = pieceB.get("plane")
+        if planeA and planeB:
+            if planeA.get("origin", {}).get("x") != planeB.get("origin", {}).get("x"):
+                return False
+            if planeA.get("origin", {}).get("y") != planeB.get("origin", {}).get("y"):
+                return False
+            if planeA.get("origin", {}).get("z") != planeB.get("origin", {}).get("z"):
+                return False
+            if planeA.get("xAxis", {}).get("x") != planeB.get("xAxis", {}).get("x"):
+                return False
+            if planeA.get("xAxis", {}).get("y") != planeB.get("xAxis", {}).get("y"):
+                return False
+            if planeA.get("xAxis", {}).get("z") != planeB.get("xAxis", {}).get("z"):
+                return False
+            if planeA.get("yAxis", {}).get("x") != planeB.get("yAxis", {}).get("x"):
+                return False
+            if planeA.get("yAxis", {}).get("y") != planeB.get("yAxis", {}).get("y"):
+                return False
+            if planeA.get("yAxis", {}).get("z") != planeB.get("yAxis", {}).get("z"):
+                return False
+        elif planeA or planeB:
+            return False
+        centerA = pieceA.get("center")
+        centerB = pieceB.get("center")
+        if centerA and centerB:
+            if centerA.get("u") != centerB.get("u") or centerA.get("v") != centerB.get("v"):
+                return False
+        elif centerA or centerB:
+            return False
+        if pieceA.get("scale") != pieceB.get("scale"):
+            return False
+        if _normalizeBoolean(pieceA.get("isHidden")) != _normalizeBoolean(pieceB.get("isHidden")):
+            return False
+        if _normalizeBoolean(pieceA.get("isLocked")) != _normalizeBoolean(pieceB.get("isLocked")):
+            return False
+        if _normalizeValue(pieceA.get("color")) != _normalizeValue(pieceB.get("color")):
+            return False
+        if _normalizeValue(pieceA.get("description")) != _normalizeValue(pieceB.get("description")):
+            return False
+        if not arePropsEqualDict(pieceA.get("props"), pieceB.get("props"), strict):
+            return False
+        if not areAttributesEqualDict(pieceA.get("attributes"), pieceB.get("attributes"), strict):
+            return False
+        if strict:
+            if pieceA.get("createdAt") != pieceB.get("createdAt"):
+                return False
+            if pieceA.get("updatedAt") != pieceB.get("updatedAt"):
+                return False
+    return True
+
+
+def _getGuidFromRef(ref: typing.Any) -> str | None:
+    """Extract guid from either a string (Input format) or dict with guid (Output format)."""
+    if ref is None:
+        return None
+    if isinstance(ref, dict):
+        return ref.get("guid")
+    return ref
+
+
+def areConnectionsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
+    arrA = _normalizeArray(a)
+    arrB = _normalizeArray(b)
+    if len(arrA) != len(arrB):
+        return False
+    for connA in arrA:
+        connB = next((x for x in arrB if x.get("guid") == connA.get("guid")), None)
+        if connB is None:
+            return False
+        connectedA = connA.get("connected", {})
+        connectedB = connB.get("connected", {})
+        # Handle both Input/Output format for piece reference
+        if _getGuidFromRef(connectedA.get("piece")) != _getGuidFromRef(connectedB.get("piece")):
+            return False
+        if _getGuidFromRef(connectedA.get("designPiece")) != _getGuidFromRef(connectedB.get("designPiece")):
+            return False
+        if _getGuidFromRef(connectedA.get("port")) != _getGuidFromRef(connectedB.get("port")):
+            return False
+        connectingA = connA.get("connecting", {})
+        connectingB = connB.get("connecting", {})
+        if _getGuidFromRef(connectingA.get("piece")) != _getGuidFromRef(connectingB.get("piece")):
+            return False
+        if _getGuidFromRef(connectingA.get("designPiece")) != _getGuidFromRef(connectingB.get("designPiece")):
+            return False
+        if _getGuidFromRef(connectingA.get("port")) != _getGuidFromRef(connectingB.get("port")):
+            return False
+        if connA.get("gap") != connB.get("gap"):
+            return False
+        if connA.get("shift") != connB.get("shift"):
+            return False
+        if connA.get("rise") != connB.get("rise"):
+            return False
+        if connA.get("rotation") != connB.get("rotation"):
+            return False
+        if connA.get("turn") != connB.get("turn"):
+            return False
+        if connA.get("tilt") != connB.get("tilt"):
+            return False
+        if connA.get("u") != connB.get("u"):
+            return False
+        if connA.get("v") != connB.get("v"):
+            return False
+        if _normalizeValue(connA.get("description")) != _normalizeValue(connB.get("description")):
+            return False
+        if not areAttributesEqualDict(connA.get("attributes"), connB.get("attributes"), strict):
+            return False
+        if strict:
+            if connA.get("createdAt") != connB.get("createdAt"):
+                return False
+            if connA.get("updatedAt") != connB.get("updatedAt"):
+                return False
+    return True
+
+
+def areDesignsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
+    arrA = _normalizeArray(a)
+    arrB = _normalizeArray(b)
+    if len(arrA) != len(arrB):
+        return False
+    for designA in arrA:
+        designB = None
+        for d in arrB:
+            if d.get("guid") != designA.get("guid"):
+                continue
+            parentA = designA.get("parent")
+            parentB = d.get("parent")
+            if not parentA and not parentB:
+                designB = d
+                break
+            if not parentA or not parentB:
+                continue
+            # Handle both Input format (parent as string) and Output format (parent as {guid: ...})
+            parentGuidA = _getGuidFromRef(parentA)
+            parentGuidB = _getGuidFromRef(parentB)
+            if parentGuidA == parentGuidB:
+                designB = d
+                break
+        if designB is None:
+            return False
+        if designA.get("name") != designB.get("name"):
+            return False
+        if _normalizeValue(designA.get("description")) != _normalizeValue(designB.get("description")):
+            return False
+        if _normalizeValue(designA.get("icon")) != _normalizeValue(designB.get("icon")):
+            return False
+        if _normalizeValue(designA.get("image")) != _normalizeValue(designB.get("image")):
+            return False
+        # Handle concepts - normalize to guid list for comparison
+        conceptsA = _normalizeArray(designA.get("concepts"))
+        conceptsB = _normalizeArray(designB.get("concepts"))
+        conceptGuidsA = [_getGuidFromRef(c) for c in conceptsA]
+        conceptGuidsB = [_getGuidFromRef(c) for c in conceptsB]
+        if conceptGuidsA != conceptGuidsB:
+            return False
+        if not arePiecesEqualDict(designA.get("pieces"), designB.get("pieces"), strict):
+            return False
+        if not areConnectionsEqualDict(designA.get("connections"), designB.get("connections"), strict):
+            return False
+        if not areAttributesEqualDict(designA.get("attributes"), designB.get("attributes"), strict):
+            return False
+        if strict:
+            if designA.get("createdAt") != designB.get("createdAt"):
+                return False
+            if designA.get("updatedAt") != designB.get("updatedAt"):
+                return False
+    return True
+
+
+def areInterfacesEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
+    arrA = _normalizeArray(a)
+    arrB = _normalizeArray(b)
+    if len(arrA) != len(arrB):
+        return False
+    for ifaceA in arrA:
+        ifaceB = next((x for x in arrB if x.get("guid") == ifaceA.get("guid")), None)
+        if ifaceB is None:
+            return False
+        if ifaceA.get("name") != ifaceB.get("name"):
+            return False
+        if _normalizeValue(ifaceA.get("description")) != _normalizeValue(ifaceB.get("description")):
+            return False
+        if not areAttributesEqualDict(ifaceA.get("attributes"), ifaceB.get("attributes"), strict):
+            return False
+        if strict:
+            if ifaceA.get("createdAt") != ifaceB.get("createdAt"):
+                return False
+            if ifaceA.get("updatedAt") != ifaceB.get("updatedAt"):
+                return False
+    return True
+
+
+def areQualitiesEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
+    arrA = _normalizeArray(a)
+    arrB = _normalizeArray(b)
+    if len(arrA) != len(arrB):
+        return False
+    for qualA in arrA:
+        qualB = next((x for x in arrB if x.get("guid") == qualA.get("guid")), None)
+        if qualB is None:
+            return False
+        if qualA.get("key") != qualB.get("key"):
+            return False
+        if qualA.get("name") != qualB.get("name"):
+            return False
+        if not areAttributesEqualDict(qualA.get("attributes"), qualB.get("attributes"), strict):
+            return False
+        if strict:
+            if qualA.get("createdAt") != qualB.get("createdAt"):
+                return False
+            if qualA.get("updatedAt") != qualB.get("updatedAt"):
+                return False
+    return True
+
+
+def areFilesEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
+    arrA = _normalizeArray(a)
+    arrB = _normalizeArray(b)
+    if len(arrA) != len(arrB):
+        return False
+    for fileA in arrA:
+        fileB = next((x for x in arrB if x.get("guid") == fileA.get("guid")), None)
+        if fileB is None:
+            return False
+        if fileA.get("name") != fileB.get("name"):
+            return False
+        if strict:
+            if fileA.get("createdAt") != fileB.get("createdAt"):
+                return False
+            if fileA.get("updatedAt") != fileB.get("updatedAt"):
+                return False
+    return True
+
+
+def areFoldersEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
+    arrA = _normalizeArray(a)
+    arrB = _normalizeArray(b)
+    if len(arrA) != len(arrB):
+        return False
+    for folderA in arrA:
+        folderB = next((x for x in arrB if x.get("guid") == folderA.get("guid")), None)
+        if folderB is None:
+            return False
+        if folderA.get("name") != folderB.get("name"):
+            return False
+        if not areAttributesEqualDict(folderA.get("attributes"), folderB.get("attributes"), strict):
+            return False
+        if strict:
+            if folderA.get("createdAt") != folderB.get("createdAt"):
+                return False
+            if folderA.get("updatedAt") != folderB.get("updatedAt"):
+                return False
+    return True
+
+
+def areAuthorsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
+    arrA = _normalizeArray(a)
+    arrB = _normalizeArray(b)
+    if len(arrA) != len(arrB):
+        return False
+    for authorA in arrA:
+        authorB = next((x for x in arrB if x.get("guid") == authorA.get("guid")), None)
+        if authorB is None:
+            return False
+        if authorA.get("name") != authorB.get("name"):
+            return False
+        if _normalizeValue(authorA.get("email")) != _normalizeValue(authorB.get("email")):
+            return False
+        if not areAttributesEqualDict(authorA.get("attributes"), authorB.get("attributes"), strict):
+            return False
+        if strict:
+            if authorA.get("createdAt") != authorB.get("createdAt"):
+                return False
+            if authorA.get("updatedAt") != authorB.get("updatedAt"):
+                return False
+    return True
+
+
+def areConceptsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
+    arrA = _normalizeArray(a)
+    arrB = _normalizeArray(b)
+    if len(arrA) != len(arrB):
+        return False
+    for conceptA in arrA:
+        conceptB = next((x for x in arrB if x.get("guid") == conceptA.get("guid")), None)
+        if conceptB is None:
+            return False
+        if conceptA.get("name") != conceptB.get("name"):
+            return False
+        if _normalizeValue(conceptA.get("description")) != _normalizeValue(conceptB.get("description")):
+            return False
+        if _normalizeValue(conceptA.get("icon")) != _normalizeValue(conceptB.get("icon")):
+            return False
+        if strict:
+            if conceptA.get("createdAt") != conceptB.get("createdAt"):
+                return False
+            if conceptA.get("updatedAt") != conceptB.get("updatedAt"):
+                return False
+    return True
+
+
+def areTagsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
+    arrA = _normalizeArray(a)
+    arrB = _normalizeArray(b)
+    if len(arrA) != len(arrB):
+        return False
+    for tagA in arrA:
+        tagB = next((x for x in arrB if x.get("guid") == tagA.get("guid")), None)
+        if tagB is None:
+            return False
+        if tagA.get("name") != tagB.get("name"):
+            return False
+        if _normalizeValue(tagA.get("description")) != _normalizeValue(tagB.get("description")):
+            return False
+        if _normalizeValue(tagA.get("icon")) != _normalizeValue(tagB.get("icon")):
+            return False
+        if strict:
+            if tagA.get("createdAt") != tagB.get("createdAt"):
+                return False
+            if tagA.get("updatedAt") != tagB.get("updatedAt"):
+                return False
+    return True
+
+
+def areKitsDictEqual(a: dict, b: dict, strict: bool = False) -> bool:
+    """Deep equality check for kits (dict-based) - recursively compares all properties including nested entities.
+
+    Args:
+        a: First kit dict
+        b: Second kit dict
+        strict: If True, also compare timestamps (createdAt, updatedAt). Default False.
+
+    Returns:
+        True if kits are equal, False otherwise.
+    """
+    if a.get("guid") != b.get("guid"):
+        return False
+    if a.get("name") != b.get("name"):
+        return False
+    if _normalizeValue(a.get("version")) != _normalizeValue(b.get("version")):
+        return False
+    if _normalizeValue(a.get("description")) != _normalizeValue(b.get("description")):
+        return False
+    if _normalizeValue(a.get("icon")) != _normalizeValue(b.get("icon")):
+        return False
+    if _normalizeValue(a.get("image")) != _normalizeValue(b.get("image")):
+        return False
+    if _normalizeValue(a.get("preview")) != _normalizeValue(b.get("preview")):
+        return False
+    if _normalizeValue(a.get("remote")) != _normalizeValue(b.get("remote")):
+        return False
+    if _normalizeValue(a.get("homepage")) != _normalizeValue(b.get("homepage")):
+        return False
+    if _normalizeValue(a.get("license")) != _normalizeValue(b.get("license")):
+        return False
+    if not areConceptsEqualDict(a.get("concepts"), b.get("concepts"), strict):
+        return False
+    if not areTagsEqualDict(a.get("tags"), b.get("tags"), strict):
+        return False
+    if not areTypesEqualDict(a.get("types"), b.get("types"), strict):
+        return False
+    if not areDesignsEqualDict(a.get("designs"), b.get("designs"), strict):
+        return False
+    if not areInterfacesEqualDict(a.get("interfaces"), b.get("interfaces"), strict):
+        return False
+    if not areQualitiesEqualDict(a.get("qualities"), b.get("qualities"), strict):
+        return False
+    if not areFilesEqualDict(a.get("files"), b.get("files"), strict):
+        return False
+    if not areFoldersEqualDict(a.get("folders"), b.get("folders"), strict):
+        return False
+    if not areAuthorsEqualDict(a.get("authors"), b.get("authors"), strict):
+        return False
+    if not areAttributesEqualDict(a.get("attributes"), b.get("attributes"), strict):
+        return False
+    if strict:
+        if a.get("createdAt") != b.get("createdAt"):
+            return False
+        if a.get("updatedAt") != b.get("updatedAt"):
+            return False
+    return True
+
+
+def _getCollectionDiff(before: list, after: list, getItemDiff: typing.Callable[[dict, dict], dict]) -> dict:
+    """Get diff for a collection of items identified by guid."""
+    diff: dict = {}
+    beforeGuids = {item.get("guid") for item in before}
+    afterGuids = {item.get("guid") for item in after}
+    removed = [item.get("guid") for item in before if item.get("guid") not in afterGuids]
+    if removed:
+        diff["removed"] = removed
+    updated = []
+    for item in before:
+        if item.get("guid") in afterGuids:
+            afterItem = next(a for a in after if a.get("guid") == item.get("guid"))
+            itemDiff = getItemDiff(item, afterItem)
+            if itemDiff:
+                updated.append({"id": item.get("guid"), "diff": itemDiff})
+    if updated:
+        diff["updated"] = updated
+    added = [item for item in after if item.get("guid") not in beforeGuids]
+    if added:
+        diff["added"] = added
+    return diff
+
+
+def _applyCollectionDiff(base: list, diff: dict | None, applyItemDiff: typing.Callable[[dict, dict], dict]) -> list:
+    """Apply diff to a collection of items."""
+    if not diff:
+        return base
+    result = [dict(item) for item in base]
+    if diff.get("removed"):
+        result = [item for item in result if item.get("guid") not in diff["removed"]]
+    if diff.get("updated"):
+        for update in diff["updated"]:
+            idx = next((i for i, item in enumerate(result) if item.get("guid") == update["id"]), -1)
+            if idx >= 0:
+                result[idx] = applyItemDiff(result[idx], update["diff"])
+    if diff.get("added"):
+        result.extend(diff["added"])
+    return result
+
+
+def _getTypeDiff(before: dict, after: dict) -> dict:
+    """Get diff between two type dicts."""
+    diff: dict = {}
+    if before.get("name") != after.get("name"):
+        diff["name"] = after.get("name")
+    if _normalizeValue(before.get("description")) != _normalizeValue(after.get("description")):
+        diff["description"] = after.get("description")
+    if _normalizeValue(before.get("icon")) != _normalizeValue(after.get("icon")):
+        diff["icon"] = after.get("icon")
+    if _normalizeValue(before.get("image")) != _normalizeValue(after.get("image")):
+        diff["image"] = after.get("image")
+    if _normalizeValue(before.get("unit")) != _normalizeValue(after.get("unit")):
+        diff["unit"] = after.get("unit")
+    if _normalizeBoolean(before.get("isAbstract")) != _normalizeBoolean(after.get("isAbstract")):
+        diff["isAbstract"] = after.get("isAbstract")
+    if _normalizeBoolean(before.get("virtual")) != _normalizeBoolean(after.get("virtual")):
+        diff["virtual"] = after.get("virtual")
+    portsDiff = _getCollectionDiff(before.get("ports", []), after.get("ports", []), _getPortDiff)
+    if portsDiff:
+        diff["ports"] = portsDiff
+    modelsDiff = _getCollectionDiff(before.get("models", []), after.get("models", []), _getModelDiff)
+    if modelsDiff:
+        diff["models"] = modelsDiff
+    return diff
+
+
+def _applyTypeDiff(base: dict, diff: dict) -> dict:
+    """Apply diff to a type dict."""
+    result = dict(base)
+    for key in ["name", "description", "icon", "image", "unit", "isAbstract", "virtual"]:
+        if key in diff:
+            result[key] = diff[key]
+    if diff.get("ports"):
+        result["ports"] = _applyCollectionDiff(base.get("ports", []), diff["ports"], _applyPortDiff)
+    if diff.get("models"):
+        result["models"] = _applyCollectionDiff(base.get("models", []), diff["models"], _applyModelDiff)
+    return result
+
+
+def _getPortDiff(before: dict, after: dict) -> dict:
+    """Get diff between two port dicts."""
+    diff: dict = {}
+    if _normalizeValue(before.get("name")) != _normalizeValue(after.get("name")):
+        diff["name"] = after.get("name")
+    if before.get("t") != after.get("t"):
+        diff["t"] = after.get("t")
+    if _normalizeBoolean(before.get("mandatory")) != _normalizeBoolean(after.get("mandatory")):
+        diff["mandatory"] = after.get("mandatory")
+    return diff
+
+
+def _applyPortDiff(base: dict, diff: dict) -> dict:
+    """Apply diff to a port dict."""
+    result = dict(base)
+    for key in ["name", "t", "mandatory"]:
+        if key in diff:
+            result[key] = diff[key]
+    return result
+
+
+def _getModelDiff(before: dict, after: dict) -> dict:
+    """Get diff between two model dicts."""
+    diff: dict = {}
+    if _normalizeValue(before.get("name")) != _normalizeValue(after.get("name")):
+        diff["name"] = after.get("name")
+    return diff
+
+
+def _applyModelDiff(base: dict, diff: dict) -> dict:
+    """Apply diff to a model dict."""
+    result = dict(base)
+    if "name" in diff:
+        result["name"] = diff["name"]
+    return result
+
+
+def _getDesignDiff(before: dict, after: dict) -> dict:
+    """Get diff between two design dicts."""
+    diff: dict = {}
+    if before.get("name") != after.get("name"):
+        diff["name"] = after.get("name")
+    if _normalizeValue(before.get("description")) != _normalizeValue(after.get("description")):
+        diff["description"] = after.get("description")
+    if _normalizeValue(before.get("icon")) != _normalizeValue(after.get("icon")):
+        diff["icon"] = after.get("icon")
+    if _normalizeValue(before.get("image")) != _normalizeValue(after.get("image")):
+        diff["image"] = after.get("image")
+    piecesDiff = _getCollectionDiff(before.get("pieces", []), after.get("pieces", []), _getPieceDiff)
+    if piecesDiff:
+        diff["pieces"] = piecesDiff
+    connectionsDiff = _getCollectionDiff(before.get("connections", []), after.get("connections", []), _getConnectionDiff)
+    if connectionsDiff:
+        diff["connections"] = connectionsDiff
+    return diff
+
+
+def _applyDesignDiff(base: dict, diff: dict) -> dict:
+    """Apply diff to a design dict."""
+    result = dict(base)
+    for key in ["name", "description", "icon", "image"]:
+        if key in diff:
+            result[key] = diff[key]
+    if diff.get("pieces"):
+        result["pieces"] = _applyCollectionDiff(base.get("pieces", []), diff["pieces"], _applyPieceDiff)
+    if diff.get("connections"):
+        result["connections"] = _applyCollectionDiff(base.get("connections", []), diff["connections"], _applyConnectionDiff)
+    return result
+
+
+def _getPieceDiff(before: dict, after: dict) -> dict:
+    """Get diff between two piece dicts."""
+    diff: dict = {}
+    if _normalizeValue(before.get("name")) != _normalizeValue(after.get("name")):
+        diff["name"] = after.get("name")
+    if before.get("scale") != after.get("scale"):
+        diff["scale"] = after.get("scale")
+    return diff
+
+
+def _applyPieceDiff(base: dict, diff: dict) -> dict:
+    """Apply diff to a piece dict."""
+    result = dict(base)
+    for key in ["name", "scale", "plane", "center"]:
+        if key in diff:
+            result[key] = diff[key]
+    return result
+
+
+def _getConnectionDiff(before: dict, after: dict) -> dict:
+    """Get diff between two connection dicts."""
+    diff: dict = {}
+    for key in ["gap", "shift", "rise", "rotation", "turn", "tilt", "u", "v"]:
+        if before.get(key) != after.get(key):
+            diff[key] = after.get(key)
+    return diff
+
+
+def _applyConnectionDiff(base: dict, diff: dict) -> dict:
+    """Apply diff to a connection dict."""
+    result = dict(base)
+    for key in ["gap", "shift", "rise", "rotation", "turn", "tilt", "u", "v"]:
+        if key in diff:
+            result[key] = diff[key]
+    return result
+
+
+def _getTagDiff(before: dict, after: dict) -> dict:
+    """Get diff between two tag dicts."""
+    diff: dict = {}
+    if before.get("name") != after.get("name"):
+        diff["name"] = after.get("name")
+    if _normalizeValue(before.get("description")) != _normalizeValue(after.get("description")):
+        diff["description"] = after.get("description")
+    return diff
+
+
+def _applyTagDiff(base: dict, diff: dict) -> dict:
+    """Apply diff to a tag dict."""
+    result = dict(base)
+    for key in ["name", "description"]:
+        if key in diff:
+            result[key] = diff[key]
+    return result
+
+
+def _getConceptDiff(before: dict, after: dict) -> dict:
+    """Get diff between two concept dicts."""
+    diff: dict = {}
+    if before.get("name") != after.get("name"):
+        diff["name"] = after.get("name")
+    if _normalizeValue(before.get("description")) != _normalizeValue(after.get("description")):
+        diff["description"] = after.get("description")
+    return diff
+
+
+def _applyConceptDiff(base: dict, diff: dict) -> dict:
+    """Apply diff to a concept dict."""
+    result = dict(base)
+    for key in ["name", "description"]:
+        if key in diff:
+            result[key] = diff[key]
+    return result
+
+
+def _getInterfaceDiff(before: dict, after: dict) -> dict:
+    """Get diff between two interface dicts."""
+    diff: dict = {}
+    if before.get("name") != after.get("name"):
+        diff["name"] = after.get("name")
+    if _normalizeValue(before.get("description")) != _normalizeValue(after.get("description")):
+        diff["description"] = after.get("description")
+    return diff
+
+
+def _applyInterfaceDiff(base: dict, diff: dict) -> dict:
+    """Apply diff to an interface dict."""
+    result = dict(base)
+    for key in ["name", "description"]:
+        if key in diff:
+            result[key] = diff[key]
+    return result
+
+
+def _getFileDiff(before: dict, after: dict) -> dict:
+    """Get diff between two file dicts."""
+    diff: dict = {}
+    if before.get("name") != after.get("name"):
+        diff["name"] = after.get("name")
+    return diff
+
+
+def _applyFileDiff(base: dict, diff: dict) -> dict:
+    """Apply diff to a file dict."""
+    result = dict(base)
+    if "name" in diff:
+        result["name"] = diff["name"]
+    return result
+
+
+def _getFolderDiff(before: dict, after: dict) -> dict:
+    """Get diff between two folder dicts."""
+    diff: dict = {}
+    if before.get("name") != after.get("name"):
+        diff["name"] = after.get("name")
+    return diff
+
+
+def _applyFolderDiff(base: dict, diff: dict) -> dict:
+    """Apply diff to a folder dict."""
+    result = dict(base)
+    if "name" in diff:
+        result["name"] = diff["name"]
+    return result
+
+
+def _getAttributeDiff(before: dict, after: dict) -> dict:
+    """Get diff between two attribute dicts - used for individual attribute update diffs."""
+    diff: dict = {}
+    # Note: key is used for identification, not changed in diffs
+    if _normalizeValue(before.get("value")) != _normalizeValue(after.get("value")):
+        diff["value"] = after.get("value")
+    if _normalizeValue(before.get("definition")) != _normalizeValue(after.get("definition")):
+        diff["definition"] = after.get("definition")
+    return diff
+
+
+def _applyAttributeDiff(base: dict, diff: dict) -> dict:
+    """Apply diff to an attribute dict."""
+    result = dict(base)
+    for key in ["value", "definition"]:
+        if key in diff:
+            result[key] = diff[key]
+    return result
+
+
+def _getAttributesDiff(before: list, after: list) -> dict:
+    """Get diff for attributes collection - uses KEY instead of guid for identification."""
+    diff: dict = {}
+    beforeKeys = [a.get("key") for a in before]
+    afterKeys = [a.get("key") for a in after]
+    removed = [key for key in beforeKeys if key not in afterKeys]
+    if removed:
+        diff["removed"] = removed
+    updated = []
+    for afterAttr in after:
+        key = afterAttr.get("key")
+        if key in beforeKeys:
+            beforeAttr = next(a for a in before if a.get("key") == key)
+            attrDiff = _getAttributeDiff(beforeAttr, afterAttr)
+            if attrDiff:
+                updated.append({"id": key, "diff": attrDiff})
+    if updated:
+        diff["updated"] = updated
+    added = [a for a in after if a.get("key") not in beforeKeys]
+    if added:
+        diff["added"] = added
+    return diff
+
+
+def _applyAttributesDiff(base: list, diff: dict | None) -> list:
+    """Apply diff to attributes collection - uses KEY instead of guid for identification."""
+    if not diff:
+        return base
+    result = [dict(a) for a in base]
+    if diff.get("removed"):
+        result = [a for a in result if a.get("key") not in diff["removed"]]
+    if diff.get("updated"):
+        for update in diff["updated"]:
+            idx = next((i for i, a in enumerate(result) if a.get("key") == update["id"]), -1)
+            if idx >= 0:
+                result[idx] = _applyAttributeDiff(result[idx], update["diff"])
+    if diff.get("added"):
+        result.extend(diff["added"])
+    return result
+
+
+def _inverseAttributesDiff(original: list, appliedDiff: dict) -> dict:
+    """Compute inverse of attributes collection diff - uses KEY instead of guid."""
+    inverse: dict = {}
+    removedKeys = appliedDiff.get("removed", [])
+    updatedKeys = [u["id"] for u in appliedDiff.get("updated", [])]
+    addedKeys = [a.get("key") for a in appliedDiff.get("added", [])]
+    if addedKeys:
+        inverse["removed"] = addedKeys
+    if updatedKeys:
+        inverse["updated"] = []
+        for key in updatedKeys:
+            origAttr = next((a for a in original if a.get("key") == key), None)
+            upd = next((u for u in appliedDiff.get("updated", []) if u["id"] == key), None)
+            if origAttr and upd:
+                inverse["updated"].append({"id": key, "diff": _inverseAttributeDiff(origAttr, upd["diff"])})
+    if removedKeys:
+        inverse["added"] = [a for a in original if a.get("key") in removedKeys]
+    return inverse
+
+
+def _inverseAttributeDiff(original: dict, appliedDiff: dict) -> dict:
+    """Compute inverse of an attribute diff."""
+    inverse: dict = {}
+    if "value" in appliedDiff:
+        inverse["value"] = original.get("value")
+    if "definition" in appliedDiff:
+        inverse["definition"] = original.get("definition")
+    return inverse
+
+
+def getKitDiffDict(before: dict, after: dict) -> dict:
+    """Compute the diff between two kit dicts."""
+    diff: dict = {}
+    if before.get("name") != after.get("name"):
+        diff["name"] = after.get("name")
+    if before.get("version") != after.get("version"):
+        diff["version"] = after.get("version")
+    if _normalizeValue(before.get("description")) != _normalizeValue(after.get("description")):
+        diff["description"] = after.get("description")
+    if _normalizeValue(before.get("icon")) != _normalizeValue(after.get("icon")):
+        diff["icon"] = after.get("icon")
+    if _normalizeValue(before.get("image")) != _normalizeValue(after.get("image")):
+        diff["image"] = after.get("image")
+    if _normalizeValue(before.get("remote")) != _normalizeValue(after.get("remote")):
+        diff["remote"] = after.get("remote")
+    if _normalizeValue(before.get("homepage")) != _normalizeValue(after.get("homepage")):
+        diff["homepage"] = after.get("homepage")
+    if _normalizeValue(before.get("license")) != _normalizeValue(after.get("license")):
+        diff["license"] = after.get("license")
+    if _normalizeValue(before.get("preview")) != _normalizeValue(after.get("preview")):
+        diff["preview"] = after.get("preview")
+    typesDiff = _getCollectionDiff(before.get("types", []), after.get("types", []), _getTypeDiff)
+    if typesDiff:
+        diff["types"] = typesDiff
+    designsDiff = _getCollectionDiff(before.get("designs", []), after.get("designs", []), _getDesignDiff)
+    if designsDiff:
+        diff["designs"] = designsDiff
+    tagsDiff = _getCollectionDiff(before.get("tags", []), after.get("tags", []), _getTagDiff)
+    if tagsDiff:
+        diff["tags"] = tagsDiff
+    conceptsDiff = _getCollectionDiff(before.get("concepts", []), after.get("concepts", []), _getConceptDiff)
+    if conceptsDiff:
+        diff["concepts"] = conceptsDiff
+    interfacesDiff = _getCollectionDiff(before.get("interfaces", []), after.get("interfaces", []), _getInterfaceDiff)
+    if interfacesDiff:
+        diff["interfaces"] = interfacesDiff
+    filesDiff = _getCollectionDiff(before.get("files", []), after.get("files", []), _getFileDiff)
+    if filesDiff:
+        diff["files"] = filesDiff
+    foldersDiff = _getCollectionDiff(before.get("folders", []), after.get("folders", []), _getFolderDiff)
+    if foldersDiff:
+        diff["folders"] = foldersDiff
+    attributesDiff = _getAttributesDiff(before.get("attributes", []), after.get("attributes", []))
+    if attributesDiff:
+        diff["attributes"] = attributesDiff
+    return diff
+
+
+def applyKitDiffDict(base: dict, diff: dict) -> dict:
+    """Apply a diff to a kit dict."""
+    result = dict(base)
+    result["guid"] = base.get("guid")
+    for key in ["name", "version", "description", "icon", "image", "remote", "homepage", "license", "preview"]:
+        if key in diff:
+            value = diff[key]
+            if value is not None:
+                result[key] = value
+            elif key in result:
+                del result[key]
+        elif key in base:
+            result[key] = base[key]
+    if diff.get("types") or base.get("types"):
+        result["types"] = _applyCollectionDiff(base.get("types", []), diff.get("types"), _applyTypeDiff)
+    if diff.get("designs") or base.get("designs"):
+        result["designs"] = _applyCollectionDiff(base.get("designs", []), diff.get("designs"), _applyDesignDiff)
+    if diff.get("tags") or base.get("tags"):
+        result["tags"] = _applyCollectionDiff(base.get("tags", []), diff.get("tags"), _applyTagDiff)
+    if diff.get("concepts") or base.get("concepts"):
+        result["concepts"] = _applyCollectionDiff(base.get("concepts", []), diff.get("concepts"), _applyConceptDiff)
+    if diff.get("interfaces") or base.get("interfaces"):
+        result["interfaces"] = _applyCollectionDiff(base.get("interfaces", []), diff.get("interfaces"), _applyInterfaceDiff)
+    if diff.get("files") or base.get("files"):
+        result["files"] = _applyCollectionDiff(base.get("files", []), diff.get("files"), _applyFileDiff)
+    if diff.get("folders") or base.get("folders"):
+        result["folders"] = _applyCollectionDiff(base.get("folders", []), diff.get("folders"), _applyFolderDiff)
+    if diff.get("attributes") or base.get("attributes"):
+        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
+    return result
+
+
+def _inverseCollectionDiff(original: list, appliedDiff: dict, inverseItemDiff: typing.Callable[[dict, dict], dict]) -> dict:
+    """Compute inverse of a collection diff."""
+    inverse: dict = {}
+    if appliedDiff.get("removed"):
+        inverse["added"] = [item for item in original if item.get("guid") in appliedDiff["removed"]]
+    if appliedDiff.get("added"):
+        inverse["removed"] = [item.get("guid") for item in appliedDiff["added"]]
+    if appliedDiff.get("updated"):
+        inverse["updated"] = []
+        for update in appliedDiff["updated"]:
+            origItem = next((item for item in original if item.get("guid") == update["id"]), None)
+            if origItem:
+                inverse["updated"].append({"id": update["id"], "diff": inverseItemDiff(origItem, update["diff"])})
+    return inverse
+
+
+def _inverseTypeDiff(original: dict, appliedDiff: dict) -> dict:
+    """Compute inverse of a type diff."""
+    inverse: dict = {}
+    for key in ["name", "description", "icon", "image", "unit", "isAbstract", "virtual"]:
+        if key in appliedDiff:
+            inverse[key] = original.get(key)
+    if appliedDiff.get("ports"):
+        inverse["ports"] = _inverseCollectionDiff(original.get("ports", []), appliedDiff["ports"], _inversePortDiff)
+    return inverse
+
+
+def _inversePortDiff(original: dict, appliedDiff: dict) -> dict:
+    """Compute inverse of a port diff."""
+    inverse: dict = {}
+    for key in ["name", "t", "mandatory"]:
+        if key in appliedDiff:
+            inverse[key] = original.get(key)
+    return inverse
+
+
+def _inverseDesignDiff(original: dict, appliedDiff: dict) -> dict:
+    """Compute inverse of a design diff."""
+    inverse: dict = {}
+    for key in ["name", "description", "icon", "image"]:
+        if key in appliedDiff:
+            inverse[key] = original.get(key)
+    if appliedDiff.get("pieces"):
+        inverse["pieces"] = _inverseCollectionDiff(original.get("pieces", []), appliedDiff["pieces"], _inversePieceDiff)
+    return inverse
+
+
+def _inversePieceDiff(original: dict, appliedDiff: dict) -> dict:
+    """Compute inverse of a piece diff."""
+    inverse: dict = {}
+    for key in ["name", "scale", "plane", "center"]:
+        if key in appliedDiff:
+            inverse[key] = original.get(key)
+    return inverse
+
+
+def _inverseTagDiff(original: dict, appliedDiff: dict) -> dict:
+    """Compute inverse of a tag diff."""
+    inverse: dict = {}
+    for key in ["name", "description"]:
+        if key in appliedDiff:
+            inverse[key] = original.get(key)
+    return inverse
+
+
+def _inverseConceptDiff(original: dict, appliedDiff: dict) -> dict:
+    """Compute inverse of a concept diff."""
+    inverse: dict = {}
+    for key in ["name", "description"]:
+        if key in appliedDiff:
+            inverse[key] = original.get(key)
+    return inverse
+
+
+def _inverseInterfaceDiff(original: dict, appliedDiff: dict) -> dict:
+    """Compute inverse of an interface diff."""
+    inverse: dict = {}
+    for key in ["name", "description"]:
+        if key in appliedDiff:
+            inverse[key] = original.get(key)
+    return inverse
+
+
+def _inverseFileDiff(original: dict, appliedDiff: dict) -> dict:
+    """Compute inverse of a file diff."""
+    inverse: dict = {}
+    if "name" in appliedDiff:
+        inverse["name"] = original.get("name")
+    return inverse
+
+
+def _inverseFolderDiff(original: dict, appliedDiff: dict) -> dict:
+    """Compute inverse of a folder diff."""
+    inverse: dict = {}
+    if "name" in appliedDiff:
+        inverse["name"] = original.get("name")
+    return inverse
+
+
+def inverseKitDiffDict(original: dict, appliedDiff: dict) -> dict:
+    """Compute the inverse of a kit diff."""
+    inverse: dict = {}
+    for key in ["name", "version", "description", "icon", "image", "remote", "homepage", "license", "preview"]:
+        if key in appliedDiff:
+            inverse[key] = original.get(key)
+    if appliedDiff.get("types"):
+        inverse["types"] = _inverseCollectionDiff(original.get("types", []), appliedDiff["types"], _inverseTypeDiff)
+    if appliedDiff.get("designs"):
+        inverse["designs"] = _inverseCollectionDiff(original.get("designs", []), appliedDiff["designs"], _inverseDesignDiff)
+    if appliedDiff.get("tags"):
+        inverse["tags"] = _inverseCollectionDiff(original.get("tags", []), appliedDiff["tags"], _inverseTagDiff)
+    if appliedDiff.get("concepts"):
+        inverse["concepts"] = _inverseCollectionDiff(original.get("concepts", []), appliedDiff["concepts"], _inverseConceptDiff)
+    if appliedDiff.get("interfaces"):
+        inverse["interfaces"] = _inverseCollectionDiff(original.get("interfaces", []), appliedDiff["interfaces"], _inverseInterfaceDiff)
+    if appliedDiff.get("files"):
+        inverse["files"] = _inverseCollectionDiff(original.get("files", []), appliedDiff["files"], _inverseFileDiff)
+    if appliedDiff.get("folders"):
+        inverse["folders"] = _inverseCollectionDiff(original.get("folders", []), appliedDiff["folders"], _inverseFolderDiff)
+    if appliedDiff.get("attributes"):
+        inverse["attributes"] = _inverseAttributesDiff(original.get("attributes", []), appliedDiff["attributes"])
+    return inverse
+
+
+def areKitDiffsDictEqual(a: dict, b: dict) -> bool:
+    """Deep equality check for kit diffs."""
+    keys = ["name", "version", "description", "icon", "image", "remote", "homepage", "license", "preview"]
+    for key in keys:
+        if _normalizeValue(a.get(key)) != _normalizeValue(b.get(key)):
+            return False
+    collectionKeys = ["types", "designs", "tags", "concepts", "interfaces", "files", "folders", "attributes"]
+    for key in collectionKeys:
+        diffA = a.get(key, {})
+        diffB = b.get(key, {})
+        if set(diffA.get("removed", [])) != set(diffB.get("removed", [])):
+            return False
+        addedA = {item.get("guid"): item for item in diffA.get("added", [])}
+        addedB = {item.get("guid"): item for item in diffB.get("added", [])}
+        if set(addedA.keys()) != set(addedB.keys()):
+            return False
+        updatedA = {u["id"]: u["diff"] for u in diffA.get("updated", [])}
+        updatedB = {u["id"]: u["diff"] for u in diffB.get("updated", [])}
+        if set(updatedA.keys()) != set(updatedB.keys()):
+            return False
+    return True
+
+
+# endregion Kit Diff Operations
 
 # region Spatial Math
 

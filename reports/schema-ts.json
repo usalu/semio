@@ -1,0 +1,1367 @@
+{
+  "timestamp": "2025-12-03T15:38:17.466Z",
+  "entities": [
+    {
+      "name": "Attribute",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "key",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "definition",
+          "type": "string",
+          "optional": true
+        }
+      ],
+      "hasId": true,
+      "hasDiff": true,
+      "hasDiffs": true
+    },
+    {
+      "name": "Location",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "longitude",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "latitude",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "altitude",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "attributes",
+          "type": "Attribute[]",
+          "optional": true
+        }
+      ],
+      "hasId": true,
+      "hasDiff": true,
+      "hasDiffs": false
+    },
+    {
+      "name": "Author",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": true
+        }
+      ],
+      "hasId": true,
+      "hasDiff": true,
+      "hasDiffs": true
+    },
+    {
+      "name": "File",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "mime",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "remote",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "folder",
+          "type": "FolderId",
+          "optional": true
+        },
+        {
+          "name": "size",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "hash",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "createdAt",
+          "type": "unknown",
+          "optional": false
+        },
+        {
+          "name": "createdBy",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "updatedAt",
+          "type": "unknown",
+          "optional": false
+        },
+        {
+          "name": "updatedBy",
+          "type": "string",
+          "optional": true
+        }
+      ],
+      "hasId": true,
+      "hasDiff": true,
+      "hasDiffs": true
+    },
+    {
+      "name": "Folder",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "parent",
+          "type": "FolderId",
+          "optional": true
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "attributes",
+          "type": "Attribute[]",
+          "optional": true
+        },
+        {
+          "name": "createdAt",
+          "type": "unknown",
+          "optional": false
+        },
+        {
+          "name": "createdBy",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "updatedAt",
+          "type": "unknown",
+          "optional": false
+        },
+        {
+          "name": "updatedBy",
+          "type": "string",
+          "optional": true
+        }
+      ],
+      "hasId": true,
+      "hasDiff": true,
+      "hasDiffs": true
+    },
+    {
+      "name": "Benchmark",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "icon",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "min",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "minExcluded",
+          "type": "boolean",
+          "optional": true
+        },
+        {
+          "name": "max",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "maxExcluded",
+          "type": "boolean",
+          "optional": true
+        },
+        {
+          "name": "attributes",
+          "type": "Attribute[]",
+          "optional": true
+        }
+      ],
+      "hasId": true,
+      "hasDiff": true,
+      "hasDiffs": true
+    },
+    {
+      "name": "Quality",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "key",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "uri",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "kind",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "folder",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "canScale",
+          "type": "boolean",
+          "optional": true
+        },
+        {
+          "name": "defaultSiUnit",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "defaultImperialUnit",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "min",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "isMinExcluded",
+          "type": "boolean",
+          "optional": true
+        },
+        {
+          "name": "max",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "isMaxExcluded",
+          "type": "boolean",
+          "optional": true
+        },
+        {
+          "name": "defaultValue",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "formula",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "icon",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "image",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "unit",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "benchmarks",
+          "type": "Benchmark[]",
+          "optional": true
+        },
+        {
+          "name": "attributes",
+          "type": "Attribute[]",
+          "optional": true
+        }
+      ],
+      "hasId": true,
+      "hasDiff": true,
+      "hasDiffs": false
+    },
+    {
+      "name": "Interface",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "icon",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "compatibleInterfaces",
+          "type": "InterfaceId[]",
+          "optional": true
+        },
+        {
+          "name": "attributes",
+          "type": "Attribute[]",
+          "optional": true
+        }
+      ],
+      "hasId": true,
+      "hasDiff": true,
+      "hasDiffs": true
+    },
+    {
+      "name": "Prop",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "quality",
+          "type": "QualityId",
+          "optional": false
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "unit",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "attributes",
+          "type": "Attribute[]",
+          "optional": true
+        }
+      ],
+      "hasId": true,
+      "hasDiff": true,
+      "hasDiffs": true
+    },
+    {
+      "name": "Model",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "tags",
+          "type": "TagId[]",
+          "optional": true
+        },
+        {
+          "name": "file",
+          "type": "FileId",
+          "optional": false
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "attributes",
+          "type": "Attribute[]",
+          "optional": true
+        }
+      ],
+      "hasId": true,
+      "hasDiff": true,
+      "hasDiffs": true
+    },
+    {
+      "name": "Port",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "t",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "point",
+          "type": "Point",
+          "optional": false
+        },
+        {
+          "name": "direction",
+          "type": "Vector",
+          "optional": false
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "interface",
+          "type": "InterfaceId",
+          "optional": true
+        },
+        {
+          "name": "mandatory",
+          "type": "boolean",
+          "optional": true
+        },
+        {
+          "name": "props",
+          "type": "Prop[]",
+          "optional": true
+        },
+        {
+          "name": "attributes",
+          "type": "Attribute[]",
+          "optional": true
+        }
+      ],
+      "hasId": true,
+      "hasDiff": true,
+      "hasDiffs": true
+    },
+    {
+      "name": "Tag",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "icon",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "attributes",
+          "type": "Attribute[]",
+          "optional": true
+        }
+      ],
+      "hasId": true,
+      "hasDiff": true,
+      "hasDiffs": true
+    },
+    {
+      "name": "Concept",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "icon",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "attributes",
+          "type": "Attribute[]",
+          "optional": true
+        }
+      ],
+      "hasId": true,
+      "hasDiff": true,
+      "hasDiffs": true
+    },
+    {
+      "name": "Type",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "parent",
+          "type": "TypeId",
+          "optional": true
+        },
+        {
+          "name": "isAbstract",
+          "type": "boolean",
+          "optional": true
+        },
+        {
+          "name": "folder",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "models",
+          "type": "Model[]",
+          "optional": true
+        },
+        {
+          "name": "ports",
+          "type": "Port[]",
+          "optional": true
+        },
+        {
+          "name": "props",
+          "type": "Prop[]",
+          "optional": true
+        },
+        {
+          "name": "stock",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "virtual",
+          "type": "boolean",
+          "optional": true
+        },
+        {
+          "name": "unit",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "createdAt",
+          "type": "unknown",
+          "optional": false
+        },
+        {
+          "name": "updatedAt",
+          "type": "unknown",
+          "optional": false
+        },
+        {
+          "name": "location",
+          "type": "LocationId",
+          "optional": true
+        },
+        {
+          "name": "authors",
+          "type": "AuthorId[]",
+          "optional": true
+        },
+        {
+          "name": "concepts",
+          "type": "ConceptId[]",
+          "optional": true
+        },
+        {
+          "name": "icon",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "image",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "attributes",
+          "type": "Attribute[]",
+          "optional": true
+        }
+      ],
+      "hasId": true,
+      "hasDiff": true,
+      "hasDiffs": true
+    },
+    {
+      "name": "Layer",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "path",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "isHidden",
+          "type": "boolean",
+          "optional": true
+        },
+        {
+          "name": "isLocked",
+          "type": "boolean",
+          "optional": true
+        },
+        {
+          "name": "color",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "attributes",
+          "type": "Attribute[]",
+          "optional": true
+        }
+      ],
+      "hasId": true,
+      "hasDiff": true,
+      "hasDiffs": true
+    },
+    {
+      "name": "Piece",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "type",
+          "type": "TypeId",
+          "optional": true
+        },
+        {
+          "name": "design",
+          "type": "DesignId",
+          "optional": true
+        },
+        {
+          "name": "plane",
+          "type": "Plane",
+          "optional": true
+        },
+        {
+          "name": "center",
+          "type": "Coord",
+          "optional": true
+        },
+        {
+          "name": "scale",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "mirrorPlane",
+          "type": "Plane",
+          "optional": true
+        },
+        {
+          "name": "isHidden",
+          "type": "boolean",
+          "optional": true
+        },
+        {
+          "name": "isLocked",
+          "type": "boolean",
+          "optional": true
+        },
+        {
+          "name": "color",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "props",
+          "type": "Prop[]",
+          "optional": true
+        },
+        {
+          "name": "attributes",
+          "type": "Attribute[]",
+          "optional": true
+        }
+      ],
+      "hasId": true,
+      "hasDiff": true,
+      "hasDiffs": true
+    },
+    {
+      "name": "Group",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "pieces",
+          "type": "PieceId[]",
+          "optional": false
+        },
+        {
+          "name": "color",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "attributes",
+          "type": "Attribute[]",
+          "optional": true
+        }
+      ],
+      "hasId": true,
+      "hasDiff": true,
+      "hasDiffs": true
+    },
+    {
+      "name": "Connection",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "connected",
+          "type": "Side",
+          "optional": false
+        },
+        {
+          "name": "connecting",
+          "type": "Side",
+          "optional": false
+        },
+        {
+          "name": "gap",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "shift",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "rise",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "rotation",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "turn",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "tilt",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "u",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "v",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "attributes",
+          "type": "Attribute[]",
+          "optional": true
+        }
+      ],
+      "hasId": true,
+      "hasDiff": true,
+      "hasDiffs": true
+    },
+    {
+      "name": "Stat",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "quality",
+          "type": "QualityId",
+          "optional": false
+        },
+        {
+          "name": "unit",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "min",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "minExcluded",
+          "type": "boolean",
+          "optional": true
+        },
+        {
+          "name": "max",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "maxExcluded",
+          "type": "boolean",
+          "optional": true
+        }
+      ],
+      "hasId": true,
+      "hasDiff": true,
+      "hasDiffs": true
+    },
+    {
+      "name": "Design",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "parent",
+          "type": "DesignId",
+          "optional": true
+        },
+        {
+          "name": "isAbstract",
+          "type": "boolean",
+          "optional": true
+        },
+        {
+          "name": "folder",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "pieces",
+          "type": "Piece[]",
+          "optional": true
+        },
+        {
+          "name": "connections",
+          "type": "Connection[]",
+          "optional": true
+        },
+        {
+          "name": "stats",
+          "type": "Stat[]",
+          "optional": true
+        },
+        {
+          "name": "props",
+          "type": "Prop[]",
+          "optional": true
+        },
+        {
+          "name": "layers",
+          "type": "Layer[]",
+          "optional": true
+        },
+        {
+          "name": "activeLayer",
+          "type": "LayerId",
+          "optional": true
+        },
+        {
+          "name": "groups",
+          "type": "Group[]",
+          "optional": true
+        },
+        {
+          "name": "canScale",
+          "type": "boolean",
+          "optional": true
+        },
+        {
+          "name": "canMirror",
+          "type": "boolean",
+          "optional": true
+        },
+        {
+          "name": "unit",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "location",
+          "type": "LocationId",
+          "optional": true
+        },
+        {
+          "name": "authors",
+          "type": "AuthorId[]",
+          "optional": true
+        },
+        {
+          "name": "concepts",
+          "type": "ConceptId[]",
+          "optional": true
+        },
+        {
+          "name": "icon",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "image",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "attributes",
+          "type": "Attribute[]",
+          "optional": true
+        },
+        {
+          "name": "createdAt",
+          "type": "unknown",
+          "optional": false
+        },
+        {
+          "name": "updatedAt",
+          "type": "unknown",
+          "optional": false
+        }
+      ],
+      "hasId": true,
+      "hasDiff": true,
+      "hasDiffs": true
+    },
+    {
+      "name": "Kit",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "version",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "types",
+          "type": "Type[]",
+          "optional": true
+        },
+        {
+          "name": "designs",
+          "type": "Design[]",
+          "optional": true
+        },
+        {
+          "name": "tags",
+          "type": "Tag[]",
+          "optional": true
+        },
+        {
+          "name": "concepts",
+          "type": "Concept[]",
+          "optional": true
+        },
+        {
+          "name": "interfaces",
+          "type": "Interface[]",
+          "optional": true
+        },
+        {
+          "name": "qualities",
+          "type": "Quality[]",
+          "optional": true
+        },
+        {
+          "name": "files",
+          "type": "File[]",
+          "optional": true
+        },
+        {
+          "name": "folders",
+          "type": "Folder[]",
+          "optional": true
+        },
+        {
+          "name": "authors",
+          "type": "Author[]",
+          "optional": true
+        },
+        {
+          "name": "remote",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "homepage",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "license",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "preview",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "icon",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "image",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "attributes",
+          "type": "Attribute[]",
+          "optional": true
+        },
+        {
+          "name": "createdAt",
+          "type": "unknown",
+          "optional": false
+        },
+        {
+          "name": "updatedAt",
+          "type": "unknown",
+          "optional": false
+        }
+      ],
+      "hasId": true,
+      "hasDiff": true,
+      "hasDiffs": true
+    },
+    {
+      "name": "Coord",
+      "fields": [
+        {
+          "name": "u",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "hasId": false,
+      "hasDiff": true,
+      "hasDiffs": false
+    },
+    {
+      "name": "Vec",
+      "fields": [
+        {
+          "name": "u",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "hasId": false,
+      "hasDiff": true,
+      "hasDiffs": false
+    },
+    {
+      "name": "Point",
+      "fields": [
+        {
+          "name": "x",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "z",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "hasId": false,
+      "hasDiff": true,
+      "hasDiffs": false
+    },
+    {
+      "name": "Vector",
+      "fields": [
+        {
+          "name": "x",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "z",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "hasId": false,
+      "hasDiff": true,
+      "hasDiffs": false
+    },
+    {
+      "name": "Plane",
+      "fields": [
+        {
+          "name": "origin",
+          "type": "Point",
+          "optional": false
+        },
+        {
+          "name": "xAxis",
+          "type": "Vector",
+          "optional": false
+        },
+        {
+          "name": "yAxis",
+          "type": "Vector",
+          "optional": false
+        }
+      ],
+      "hasId": false,
+      "hasDiff": true,
+      "hasDiffs": false
+    },
+    {
+      "name": "Side",
+      "fields": [
+        {
+          "name": "piece",
+          "type": "PieceId",
+          "optional": false
+        },
+        {
+          "name": "designPiece",
+          "type": "PieceId",
+          "optional": true
+        },
+        {
+          "name": "port",
+          "type": "PortId",
+          "optional": true
+        }
+      ],
+      "hasId": false,
+      "hasDiff": true,
+      "hasDiffs": true
+    }
+  ],
+  "idTypes": [
+    "AttributeId",
+    "LocationId",
+    "AuthorId",
+    "FileId",
+    "FolderId",
+    "BenchmarkId",
+    "QualityId",
+    "InterfaceId",
+    "PropId",
+    "ModelId",
+    "PortId",
+    "TypeId",
+    "LayerId",
+    "PieceId",
+    "GroupId",
+    "ConnectionId",
+    "StatId",
+    "DesignId",
+    "KitId",
+    "TagId",
+    "ConceptId"
+  ],
+  "weakEntities": [
+    "Coord",
+    "Vec",
+    "Point",
+    "Vector",
+    "Plane",
+    "Side"
+  ]
+}

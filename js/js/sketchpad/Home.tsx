@@ -989,7 +989,7 @@ const Home: FC = ({}) => {
   const allConcepts = useMemo(() => {
     const conceptSet = new Set<string>();
     kits.forEach((kit) => {
-      kit.concepts?.forEach((concept) => conceptSet.add(concept.guid));
+      kit.concepts?.forEach((concept) => conceptSet.add(concept.name));
     });
     return Array.from(conceptSet).sort();
   }, [kits]);

@@ -1,0 +1,1539 @@
+{
+  "timestamp": "2025-12-03T15:38:17.498Z",
+  "components": [
+    {
+      "name": "Attribute",
+      "nickname": "Atr",
+      "inputs": [
+        {
+          "name": "Guid",
+          "type": "string",
+          "optional": false,
+          "description": "The guid of the attribute."
+        },
+        {
+          "name": "Key",
+          "type": "string",
+          "optional": false,
+          "description": "The key of the attribute."
+        },
+        {
+          "name": "Value",
+          "type": "string",
+          "optional": true,
+          "description": "The optional value of the attribute."
+        },
+        {
+          "name": "Definition",
+          "type": "string",
+          "optional": true,
+          "description": "The optional definition of the attribute."
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Guid",
+          "type": "string",
+          "optional": false,
+          "description": "The guid of the attribute."
+        },
+        {
+          "name": "Key",
+          "type": "string",
+          "optional": false,
+          "description": "The key of the attribute."
+        },
+        {
+          "name": "Value",
+          "type": "string",
+          "optional": true,
+          "description": "The optional value of the attribute."
+        },
+        {
+          "name": "Definition",
+          "type": "string",
+          "optional": true,
+          "description": "The optional definition of the attribute."
+        }
+      ]
+    },
+    {
+      "name": "Coord",
+      "nickname": "DPt",
+      "inputs": [],
+      "outputs": []
+    },
+    {
+      "name": "Location",
+      "nickname": "Loc",
+      "inputs": [
+        {
+          "name": "Attributes",
+          "type": "Attribute",
+          "optional": true,
+          "description": "The optional attributes."
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Attributes",
+          "type": "Attribute",
+          "optional": true,
+          "description": "The optional attributes."
+        }
+      ]
+    },
+    {
+      "name": "Author",
+      "nickname": "Aut",
+      "inputs": [
+        {
+          "name": "Guid",
+          "type": "string",
+          "optional": false,
+          "description": "The guid of the author."
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "optional": false,
+          "description": "The name of the author."
+        },
+        {
+          "name": "Email",
+          "type": "string",
+          "optional": false,
+          "description": "The email of the author."
+        },
+        {
+          "name": "Attributes",
+          "type": "Attribute",
+          "optional": true,
+          "description": "The optional attributes."
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Guid",
+          "type": "string",
+          "optional": false,
+          "description": "The guid of the author."
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "optional": false,
+          "description": "The name of the author."
+        },
+        {
+          "name": "Email",
+          "type": "string",
+          "optional": false,
+          "description": "The email of the author."
+        },
+        {
+          "name": "Attributes",
+          "type": "Attribute",
+          "optional": true,
+          "description": "The optional attributes."
+        }
+      ]
+    },
+    {
+      "name": "File",
+      "nickname": "Fil",
+      "inputs": [
+        {
+          "name": "Guid",
+          "type": "string",
+          "optional": false,
+          "description": "The guid of the file."
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "optional": false,
+          "description": "The name of the file."
+        },
+        {
+          "name": "Remote",
+          "type": "string",
+          "optional": true,
+          "description": "The optional remote url."
+        },
+        {
+          "name": "Folder",
+          "type": "string",
+          "optional": true,
+          "description": "The optional folder path."
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Guid",
+          "type": "string",
+          "optional": false,
+          "description": "The guid of the file."
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "optional": false,
+          "description": "The name of the file."
+        },
+        {
+          "name": "Remote",
+          "type": "string",
+          "optional": true,
+          "description": "The optional remote url."
+        },
+        {
+          "name": "Folder",
+          "type": "string",
+          "optional": true,
+          "description": "The optional folder path."
+        }
+      ]
+    },
+    {
+      "name": "Folder",
+      "nickname": "Fol",
+      "inputs": [
+        {
+          "name": "Guid",
+          "type": "string",
+          "optional": false,
+          "description": "The guid of the folder."
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "optional": false,
+          "description": "The name of the folder."
+        },
+        {
+          "name": "Parent",
+          "type": "string",
+          "optional": true,
+          "description": "The optional parent folder guid."
+        },
+        {
+          "name": "Description",
+          "type": "string",
+          "optional": true,
+          "description": "The optional description."
+        },
+        {
+          "name": "Attributes",
+          "type": "Attribute",
+          "optional": true,
+          "description": "The optional attributes."
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Guid",
+          "type": "string",
+          "optional": false,
+          "description": "The guid of the folder."
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "optional": false,
+          "description": "The name of the folder."
+        },
+        {
+          "name": "Parent",
+          "type": "string",
+          "optional": true,
+          "description": "The optional parent folder guid."
+        },
+        {
+          "name": "Description",
+          "type": "string",
+          "optional": true,
+          "description": "The optional description."
+        },
+        {
+          "name": "Attributes",
+          "type": "Attribute",
+          "optional": true,
+          "description": "The optional attributes."
+        }
+      ]
+    },
+    {
+      "name": "Benchmark",
+      "nickname": "Bmk",
+      "inputs": [],
+      "outputs": []
+    },
+    {
+      "name": "Quality",
+      "nickname": "Qal",
+      "inputs": [],
+      "outputs": []
+    },
+    {
+      "name": "Tag",
+      "nickname": "Tag",
+      "inputs": [
+        {
+          "name": "Guid",
+          "type": "string",
+          "optional": false,
+          "description": "The guid of the tag."
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "optional": false,
+          "description": "The name of the tag."
+        },
+        {
+          "name": "Description",
+          "type": "string",
+          "optional": true,
+          "description": "The optional description."
+        },
+        {
+          "name": "Icon",
+          "type": "string",
+          "optional": true,
+          "description": "The optional icon."
+        },
+        {
+          "name": "Attributes",
+          "type": "Attribute",
+          "optional": true,
+          "description": "The optional attributes."
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Guid",
+          "type": "string",
+          "optional": false,
+          "description": "The guid of the tag."
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "optional": false,
+          "description": "The name of the tag."
+        },
+        {
+          "name": "Description",
+          "type": "string",
+          "optional": true,
+          "description": "The optional description."
+        },
+        {
+          "name": "Icon",
+          "type": "string",
+          "optional": true,
+          "description": "The optional icon."
+        },
+        {
+          "name": "Attributes",
+          "type": "Attribute",
+          "optional": true,
+          "description": "The optional attributes."
+        }
+      ]
+    },
+    {
+      "name": "Prop",
+      "nickname": "Prp",
+      "inputs": [],
+      "outputs": []
+    },
+    {
+      "name": "Model",
+      "nickname": "Rep",
+      "inputs": [],
+      "outputs": []
+    },
+    {
+      "name": "Port",
+      "nickname": "Por",
+      "inputs": [
+        {
+          "name": "Guid",
+          "type": "string",
+          "optional": false,
+          "description": "The guid of the port."
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "optional": true,
+          "description": "The optional name of the port."
+        },
+        {
+          "name": "Description",
+          "type": "string",
+          "optional": true,
+          "description": "The optional description."
+        },
+        {
+          "name": "Mandatory",
+          "type": "boolean",
+          "optional": true,
+          "description": "Whether the port is mandatory."
+        },
+        {
+          "name": "Attributes",
+          "type": "Attribute",
+          "optional": true,
+          "description": "The optional attributes."
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Guid",
+          "type": "string",
+          "optional": false,
+          "description": "The guid of the port."
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "optional": true,
+          "description": "The optional name of the port."
+        },
+        {
+          "name": "Description",
+          "type": "string",
+          "optional": true,
+          "description": "The optional description."
+        },
+        {
+          "name": "Mandatory",
+          "type": "boolean",
+          "optional": true,
+          "description": "Whether the port is mandatory."
+        },
+        {
+          "name": "Attributes",
+          "type": "Attribute",
+          "optional": true,
+          "description": "The optional attributes."
+        }
+      ]
+    },
+    {
+      "name": "Concept",
+      "nickname": "Con",
+      "inputs": [
+        {
+          "name": "Guid",
+          "type": "string",
+          "optional": false,
+          "description": "The guid of the concept."
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "optional": false,
+          "description": "The name of the concept."
+        },
+        {
+          "name": "Description",
+          "type": "string",
+          "optional": true,
+          "description": "The optional description."
+        },
+        {
+          "name": "Icon",
+          "type": "string",
+          "optional": true,
+          "description": "The optional icon."
+        },
+        {
+          "name": "Attributes",
+          "type": "Attribute",
+          "optional": true,
+          "description": "The optional attributes."
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Guid",
+          "type": "string",
+          "optional": false,
+          "description": "The guid of the concept."
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "optional": false,
+          "description": "The name of the concept."
+        },
+        {
+          "name": "Description",
+          "type": "string",
+          "optional": true,
+          "description": "The optional description."
+        },
+        {
+          "name": "Icon",
+          "type": "string",
+          "optional": true,
+          "description": "The optional icon."
+        },
+        {
+          "name": "Attributes",
+          "type": "Attribute",
+          "optional": true,
+          "description": "The optional attributes."
+        }
+      ]
+    },
+    {
+      "name": "Interface",
+      "nickname": "Ifc",
+      "inputs": [
+        {
+          "name": "Guid",
+          "type": "string",
+          "optional": false,
+          "description": "The guid of the interface."
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "optional": false,
+          "description": "The name of the interface."
+        },
+        {
+          "name": "Description",
+          "type": "string",
+          "optional": true,
+          "description": "The optional description."
+        },
+        {
+          "name": "Icon",
+          "type": "string",
+          "optional": true,
+          "description": "The optional icon."
+        },
+        {
+          "name": "CompatibleInterfaces",
+          "type": "InterfaceId",
+          "optional": true,
+          "description": "The optional compatible interfaces."
+        },
+        {
+          "name": "Attributes",
+          "type": "Attribute",
+          "optional": true,
+          "description": "The optional attributes."
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Guid",
+          "type": "string",
+          "optional": false,
+          "description": "The guid of the interface."
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "optional": false,
+          "description": "The name of the interface."
+        },
+        {
+          "name": "Description",
+          "type": "string",
+          "optional": true,
+          "description": "The optional description."
+        },
+        {
+          "name": "Icon",
+          "type": "string",
+          "optional": true,
+          "description": "The optional icon."
+        },
+        {
+          "name": "CompatibleInterfaces",
+          "type": "InterfaceId",
+          "optional": true,
+          "description": "The optional compatible interfaces."
+        },
+        {
+          "name": "Attributes",
+          "type": "Attribute",
+          "optional": true,
+          "description": "The optional attributes."
+        }
+      ]
+    },
+    {
+      "name": "Type",
+      "nickname": "Typ",
+      "inputs": [
+        {
+          "name": "Guid",
+          "type": "string",
+          "optional": false,
+          "description": "The guid of the type."
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "optional": false,
+          "description": "The name of the type."
+        },
+        {
+          "name": "Description",
+          "type": "string",
+          "optional": true,
+          "description": "The optional description."
+        },
+        {
+          "name": "Icon",
+          "type": "string",
+          "optional": true,
+          "description": "The optional icon."
+        },
+        {
+          "name": "Image",
+          "type": "string",
+          "optional": true,
+          "description": "The optional image url."
+        },
+        {
+          "name": "Unit",
+          "type": "string",
+          "optional": false,
+          "description": "The length unit."
+        },
+        {
+          "name": "Virtual",
+          "type": "boolean",
+          "optional": true,
+          "description": "Whether the type is virtual."
+        },
+        {
+          "name": "Models",
+          "type": "Model",
+          "optional": true,
+          "description": "The optional models."
+        },
+        {
+          "name": "Ports",
+          "type": "Port",
+          "optional": true,
+          "description": "The optional ports."
+        },
+        {
+          "name": "Authors",
+          "type": "AuthorId",
+          "optional": true,
+          "description": "The optional authors."
+        },
+        {
+          "name": "Attributes",
+          "type": "Attribute",
+          "optional": true,
+          "description": "The optional attributes."
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Guid",
+          "type": "string",
+          "optional": false,
+          "description": "The guid of the type."
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "optional": false,
+          "description": "The name of the type."
+        },
+        {
+          "name": "Description",
+          "type": "string",
+          "optional": true,
+          "description": "The optional description."
+        },
+        {
+          "name": "Icon",
+          "type": "string",
+          "optional": true,
+          "description": "The optional icon."
+        },
+        {
+          "name": "Image",
+          "type": "string",
+          "optional": true,
+          "description": "The optional image url."
+        },
+        {
+          "name": "Unit",
+          "type": "string",
+          "optional": false,
+          "description": "The length unit."
+        },
+        {
+          "name": "Virtual",
+          "type": "boolean",
+          "optional": true,
+          "description": "Whether the type is virtual."
+        },
+        {
+          "name": "Models",
+          "type": "Model",
+          "optional": true,
+          "description": "The optional models."
+        },
+        {
+          "name": "Ports",
+          "type": "Port",
+          "optional": true,
+          "description": "The optional ports."
+        },
+        {
+          "name": "Authors",
+          "type": "AuthorId",
+          "optional": true,
+          "description": "The optional authors."
+        },
+        {
+          "name": "Attributes",
+          "type": "Attribute",
+          "optional": true,
+          "description": "The optional attributes."
+        }
+      ]
+    },
+    {
+      "name": "Layer",
+      "nickname": "Lyr",
+      "inputs": [
+        {
+          "name": "Guid",
+          "type": "string",
+          "optional": false,
+          "description": "The guid of the layer."
+        },
+        {
+          "name": "Path",
+          "type": "string",
+          "optional": false,
+          "description": "The path of the layer."
+        },
+        {
+          "name": "Color",
+          "type": "string",
+          "optional": true,
+          "description": "The optional hex color."
+        },
+        {
+          "name": "Description",
+          "type": "string",
+          "optional": true,
+          "description": "The optional description."
+        },
+        {
+          "name": "IsHidden",
+          "type": "boolean",
+          "optional": true,
+          "description": "Whether the layer is hidden."
+        },
+        {
+          "name": "IsLocked",
+          "type": "boolean",
+          "optional": true,
+          "description": "Whether the layer is locked."
+        },
+        {
+          "name": "Attributes",
+          "type": "Attribute",
+          "optional": true,
+          "description": "The optional attributes."
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Guid",
+          "type": "string",
+          "optional": false,
+          "description": "The guid of the layer."
+        },
+        {
+          "name": "Path",
+          "type": "string",
+          "optional": false,
+          "description": "The path of the layer."
+        },
+        {
+          "name": "Color",
+          "type": "string",
+          "optional": true,
+          "description": "The optional hex color."
+        },
+        {
+          "name": "Description",
+          "type": "string",
+          "optional": true,
+          "description": "The optional description."
+        },
+        {
+          "name": "IsHidden",
+          "type": "boolean",
+          "optional": true,
+          "description": "Whether the layer is hidden."
+        },
+        {
+          "name": "IsLocked",
+          "type": "boolean",
+          "optional": true,
+          "description": "Whether the layer is locked."
+        },
+        {
+          "name": "Attributes",
+          "type": "Attribute",
+          "optional": true,
+          "description": "The optional attributes."
+        }
+      ]
+    },
+    {
+      "name": "Group",
+      "nickname": "Grp",
+      "inputs": [
+        {
+          "name": "Name",
+          "type": "string",
+          "optional": true,
+          "description": "The optional name of the group."
+        },
+        {
+          "name": "Description",
+          "type": "string",
+          "optional": true,
+          "description": "The optional description."
+        },
+        {
+          "name": "Color",
+          "type": "string",
+          "optional": true,
+          "description": "The optional hex color."
+        },
+        {
+          "name": "Pieces",
+          "type": "PieceId",
+          "optional": true,
+          "description": "The pieces in the group."
+        },
+        {
+          "name": "Attributes",
+          "type": "Attribute",
+          "optional": true,
+          "description": "The optional attributes."
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Name",
+          "type": "string",
+          "optional": true,
+          "description": "The optional name of the group."
+        },
+        {
+          "name": "Description",
+          "type": "string",
+          "optional": true,
+          "description": "The optional description."
+        },
+        {
+          "name": "Color",
+          "type": "string",
+          "optional": true,
+          "description": "The optional hex color."
+        },
+        {
+          "name": "Pieces",
+          "type": "PieceId",
+          "optional": true,
+          "description": "The pieces in the group."
+        },
+        {
+          "name": "Attributes",
+          "type": "Attribute",
+          "optional": true,
+          "description": "The optional attributes."
+        }
+      ]
+    },
+    {
+      "name": "Piece",
+      "nickname": "Pce",
+      "inputs": [
+        {
+          "name": "Guid",
+          "type": "string",
+          "optional": false,
+          "description": "The guid of the piece."
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "optional": true,
+          "description": "The optional name of the piece."
+        },
+        {
+          "name": "Description",
+          "type": "string",
+          "optional": true,
+          "description": "The optional description."
+        },
+        {
+          "name": "Type",
+          "type": "TypeId",
+          "optional": true,
+          "description": "The optional type of the piece."
+        },
+        {
+          "name": "Center",
+          "type": "Coord",
+          "optional": true,
+          "description": "The optional center in the diagram."
+        },
+        {
+          "name": "Attributes",
+          "type": "Attribute",
+          "optional": true,
+          "description": "The optional attributes."
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Guid",
+          "type": "string",
+          "optional": false,
+          "description": "The guid of the piece."
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "optional": true,
+          "description": "The optional name of the piece."
+        },
+        {
+          "name": "Description",
+          "type": "string",
+          "optional": true,
+          "description": "The optional description."
+        },
+        {
+          "name": "Type",
+          "type": "TypeId",
+          "optional": true,
+          "description": "The optional type of the piece."
+        },
+        {
+          "name": "Center",
+          "type": "Coord",
+          "optional": true,
+          "description": "The optional center in the diagram."
+        },
+        {
+          "name": "Attributes",
+          "type": "Attribute",
+          "optional": true,
+          "description": "The optional attributes."
+        }
+      ]
+    },
+    {
+      "name": "Side",
+      "nickname": "Sde",
+      "inputs": [
+        {
+          "name": "Piece",
+          "type": "PieceId",
+          "optional": false,
+          "description": "The piece of the side."
+        },
+        {
+          "name": "DesignPiece",
+          "type": "PieceId",
+          "optional": true,
+          "description": "The optional design piece."
+        },
+        {
+          "name": "Port",
+          "type": "PortId",
+          "optional": false,
+          "description": "The port of the side."
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Piece",
+          "type": "PieceId",
+          "optional": false,
+          "description": "The piece of the side."
+        },
+        {
+          "name": "DesignPiece",
+          "type": "PieceId",
+          "optional": true,
+          "description": "The optional design piece."
+        },
+        {
+          "name": "Port",
+          "type": "PortId",
+          "optional": false,
+          "description": "The port of the side."
+        }
+      ]
+    },
+    {
+      "name": "Connection",
+      "nickname": "Con",
+      "inputs": [
+        {
+          "name": "Guid",
+          "type": "string",
+          "optional": false,
+          "description": "The guid of the connection."
+        },
+        {
+          "name": "Description",
+          "type": "string",
+          "optional": true,
+          "description": "The optional description."
+        },
+        {
+          "name": "Connected",
+          "type": "Side",
+          "optional": false,
+          "description": "The connected side."
+        },
+        {
+          "name": "Connecting",
+          "type": "Side",
+          "optional": false,
+          "description": "The connecting side."
+        },
+        {
+          "name": "Attributes",
+          "type": "Attribute",
+          "optional": true,
+          "description": "The optional attributes."
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Guid",
+          "type": "string",
+          "optional": false,
+          "description": "The guid of the connection."
+        },
+        {
+          "name": "Description",
+          "type": "string",
+          "optional": true,
+          "description": "The optional description."
+        },
+        {
+          "name": "Connected",
+          "type": "Side",
+          "optional": false,
+          "description": "The connected side."
+        },
+        {
+          "name": "Connecting",
+          "type": "Side",
+          "optional": false,
+          "description": "The connecting side."
+        },
+        {
+          "name": "Attributes",
+          "type": "Attribute",
+          "optional": true,
+          "description": "The optional attributes."
+        }
+      ]
+    },
+    {
+      "name": "Stat",
+      "nickname": "Stt",
+      "inputs": [
+        {
+          "name": "Key",
+          "type": "string",
+          "optional": false,
+          "description": "The key of the quality."
+        },
+        {
+          "name": "Unit",
+          "type": "string",
+          "optional": true,
+          "description": "The optional unit."
+        },
+        {
+          "name": "MinExcluded",
+          "type": "boolean",
+          "optional": true,
+          "description": "Whether min is excluded."
+        },
+        {
+          "name": "MaxExcluded",
+          "type": "boolean",
+          "optional": true,
+          "description": "Whether max is excluded."
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Key",
+          "type": "string",
+          "optional": false,
+          "description": "The key of the quality."
+        },
+        {
+          "name": "Unit",
+          "type": "string",
+          "optional": true,
+          "description": "The optional unit."
+        },
+        {
+          "name": "MinExcluded",
+          "type": "boolean",
+          "optional": true,
+          "description": "Whether min is excluded."
+        },
+        {
+          "name": "MaxExcluded",
+          "type": "boolean",
+          "optional": true,
+          "description": "Whether max is excluded."
+        }
+      ]
+    },
+    {
+      "name": "Design",
+      "nickname": "Dsn",
+      "inputs": [
+        {
+          "name": "Guid",
+          "type": "string",
+          "optional": false,
+          "description": "The guid of the design."
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "optional": false,
+          "description": "The name of the design."
+        },
+        {
+          "name": "Description",
+          "type": "string",
+          "optional": true,
+          "description": "The optional description."
+        },
+        {
+          "name": "Icon",
+          "type": "string",
+          "optional": true,
+          "description": "The optional icon."
+        },
+        {
+          "name": "Image",
+          "type": "string",
+          "optional": true,
+          "description": "The optional image url."
+        },
+        {
+          "name": "Unit",
+          "type": "string",
+          "optional": false,
+          "description": "The length unit."
+        },
+        {
+          "name": "Pieces",
+          "type": "Piece",
+          "optional": true,
+          "description": "The optional pieces."
+        },
+        {
+          "name": "Connections",
+          "type": "Connection",
+          "optional": true,
+          "description": "The optional connections."
+        },
+        {
+          "name": "Authors",
+          "type": "AuthorId",
+          "optional": true,
+          "description": "The optional authors."
+        },
+        {
+          "name": "Attributes",
+          "type": "Attribute",
+          "optional": true,
+          "description": "The optional attributes."
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Guid",
+          "type": "string",
+          "optional": false,
+          "description": "The guid of the design."
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "optional": false,
+          "description": "The name of the design."
+        },
+        {
+          "name": "Description",
+          "type": "string",
+          "optional": true,
+          "description": "The optional description."
+        },
+        {
+          "name": "Icon",
+          "type": "string",
+          "optional": true,
+          "description": "The optional icon."
+        },
+        {
+          "name": "Image",
+          "type": "string",
+          "optional": true,
+          "description": "The optional image url."
+        },
+        {
+          "name": "Unit",
+          "type": "string",
+          "optional": false,
+          "description": "The length unit."
+        },
+        {
+          "name": "Pieces",
+          "type": "Piece",
+          "optional": true,
+          "description": "The optional pieces."
+        },
+        {
+          "name": "Connections",
+          "type": "Connection",
+          "optional": true,
+          "description": "The optional connections."
+        },
+        {
+          "name": "Authors",
+          "type": "AuthorId",
+          "optional": true,
+          "description": "The optional authors."
+        },
+        {
+          "name": "Attributes",
+          "type": "Attribute",
+          "optional": true,
+          "description": "The optional attributes."
+        }
+      ]
+    },
+    {
+      "name": "Kit",
+      "nickname": "Kit",
+      "inputs": [
+        {
+          "name": "Guid",
+          "type": "string",
+          "optional": false,
+          "description": "The guid of the kit."
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "optional": false,
+          "description": "The name of the kit."
+        },
+        {
+          "name": "Version",
+          "type": "string",
+          "optional": true,
+          "description": "The optional version."
+        },
+        {
+          "name": "Description",
+          "type": "string",
+          "optional": true,
+          "description": "The optional description."
+        },
+        {
+          "name": "Icon",
+          "type": "string",
+          "optional": true,
+          "description": "The optional icon."
+        },
+        {
+          "name": "Image",
+          "type": "string",
+          "optional": true,
+          "description": "The optional image url."
+        },
+        {
+          "name": "Remote",
+          "type": "string",
+          "optional": true,
+          "description": "The optional remote url."
+        },
+        {
+          "name": "Homepage",
+          "type": "string",
+          "optional": true,
+          "description": "The optional homepage url."
+        },
+        {
+          "name": "License",
+          "type": "string",
+          "optional": true,
+          "description": "The optional license."
+        },
+        {
+          "name": "Types",
+          "type": "Type",
+          "optional": true,
+          "description": "The optional types."
+        },
+        {
+          "name": "Designs",
+          "type": "Design",
+          "optional": true,
+          "description": "The optional designs."
+        },
+        {
+          "name": "Authors",
+          "type": "Author",
+          "optional": true,
+          "description": "The optional authors."
+        },
+        {
+          "name": "Attributes",
+          "type": "Attribute",
+          "optional": true,
+          "description": "The optional attributes."
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Guid",
+          "type": "string",
+          "optional": false,
+          "description": "The guid of the kit."
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "optional": false,
+          "description": "The name of the kit."
+        },
+        {
+          "name": "Version",
+          "type": "string",
+          "optional": true,
+          "description": "The optional version."
+        },
+        {
+          "name": "Description",
+          "type": "string",
+          "optional": true,
+          "description": "The optional description."
+        },
+        {
+          "name": "Icon",
+          "type": "string",
+          "optional": true,
+          "description": "The optional icon."
+        },
+        {
+          "name": "Image",
+          "type": "string",
+          "optional": true,
+          "description": "The optional image url."
+        },
+        {
+          "name": "Remote",
+          "type": "string",
+          "optional": true,
+          "description": "The optional remote url."
+        },
+        {
+          "name": "Homepage",
+          "type": "string",
+          "optional": true,
+          "description": "The optional homepage url."
+        },
+        {
+          "name": "License",
+          "type": "string",
+          "optional": true,
+          "description": "The optional license."
+        },
+        {
+          "name": "Types",
+          "type": "Type",
+          "optional": true,
+          "description": "The optional types."
+        },
+        {
+          "name": "Designs",
+          "type": "Design",
+          "optional": true,
+          "description": "The optional designs."
+        },
+        {
+          "name": "Authors",
+          "type": "Author",
+          "optional": true,
+          "description": "The optional authors."
+        },
+        {
+          "name": "Attributes",
+          "type": "Attribute",
+          "optional": true,
+          "description": "The optional attributes."
+        }
+      ]
+    }
+  ],
+  "params": [
+    "AttributeParam",
+    "AttributeIdParam",
+    "AttributeDiffParam",
+    "CoordParam",
+    "LocationParam",
+    "AuthorParam",
+    "AuthorIdParam",
+    "FileParam",
+    "FileIdParam",
+    "FileDiffParam",
+    "FilesDiffParam",
+    "FolderParam",
+    "FolderIdParam",
+    "FolderDiffParam",
+    "FoldersDiffParam",
+    "BenchmarkParam",
+    "QualityKindParam",
+    "QualityParam",
+    "QualityIdParam",
+    "QualityDiffParam",
+    "TagParam",
+    "TagIdParam",
+    "PropParam",
+    "ModelParam",
+    "ModelIdParam",
+    "ModelDiffParam",
+    "ModelsDiffParam",
+    "PortParam",
+    "PortIdParam",
+    "PortDiffParam",
+    "PortsDiffParam",
+    "ConceptParam",
+    "ConceptIdParam",
+    "InterfaceParam",
+    "InterfaceIdParam",
+    "TypeParam",
+    "TypeIdParam",
+    "TypeDiffParam",
+    "TypesDiffParam",
+    "LayerParam",
+    "GroupParam",
+    "PieceParam",
+    "PieceIdParam",
+    "PieceDiffParam",
+    "PiecesDiffParam",
+    "SideParam",
+    "SideDiffParam",
+    "ConnectionParam",
+    "ConnectionIdParam",
+    "ConnectionDiffParam",
+    "ConnectionsDiffParam",
+    "StatParam",
+    "DesignParam",
+    "DesignIdParam",
+    "DesignDiffParam",
+    "DesignsDiffParam",
+    "KitParam",
+    "KitIdParam",
+    "KitDiffParam",
+    "KitsDiffParam"
+  ],
+  "goos": [
+    "AttributeGoo",
+    "AttributeIdGoo",
+    "AttributeDiffGoo",
+    "CoordGoo",
+    "LocationGoo",
+    "AuthorGoo",
+    "AuthorIdGoo",
+    "FileGoo",
+    "FileIdGoo",
+    "FileDiffGoo",
+    "FilesDiffGoo",
+    "FolderGoo",
+    "FolderIdGoo",
+    "FolderDiffGoo",
+    "FoldersDiffGoo",
+    "BenchmarkGoo",
+    "QualityKindGoo",
+    "QualityGoo",
+    "QualityIdGoo",
+    "QualityDiffGoo",
+    "TagGoo",
+    "TagIdGoo",
+    "PropGoo",
+    "ModelGoo",
+    "ModelIdGoo",
+    "ModelDiffGoo",
+    "ModelsDiffGoo",
+    "PortGoo",
+    "PortIdGoo",
+    "PortDiffGoo",
+    "PortsDiffGoo",
+    "ConceptGoo",
+    "ConceptIdGoo",
+    "InterfaceGoo",
+    "InterfaceIdGoo",
+    "TypeGoo",
+    "TypeIdGoo",
+    "TypeDiffGoo",
+    "TypesDiffGoo",
+    "LayerGoo",
+    "GroupGoo",
+    "PieceGoo",
+    "PieceIdGoo",
+    "PieceDiffGoo",
+    "PiecesDiffGoo",
+    "SideGoo",
+    "SideDiffGoo",
+    "ConnectionGoo",
+    "ConnectionIdGoo",
+    "ConnectionDiffGoo",
+    "ConnectionsDiffGoo",
+    "StatGoo",
+    "DesignGoo",
+    "DesignIdGoo",
+    "DesignDiffGoo",
+    "DesignsDiffGoo",
+    "KitGoo",
+    "KitIdGoo",
+    "KitDiffGoo",
+    "KitsDiffGoo"
+  ]
+}
