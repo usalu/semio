@@ -136,7 +136,25 @@ import {
   VectorDiff,
 } from "../semio";
 import type { DesignAppState } from "./Design";
-import { Breadcrumb, ButtonGroup, ButtonGroupItem, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, Footer, InteractionProvider, Layout as LayoutComponent, Navbar, NavbarItem, Toggle, Window } from "./elements";
+import {
+  Breadcrumb,
+  ButtonGroup,
+  ButtonGroupItem,
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  Footer,
+  InteractionProvider,
+  Layout as LayoutComponent,
+  Navbar,
+  NavbarItem,
+  Toggle,
+  Transaction,
+  Window,
+} from "./elements";
 import type { KitAppState } from "./Kit";
 import type { QualityAppState } from "./Quality";
 import {
@@ -6495,7 +6513,7 @@ export function useFileUrls(): Map<Url, Url> {
   return kitStore.fileUrls;
 }
 
-export function useKitTransaction(origin: string): Y.Transaction {
+export function useKitTransaction(origin: string): Transaction {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid;
@@ -12687,6 +12705,16 @@ const LayoutWrapper: FC = () => {
   const settingsSections = usePanelSections("settings");
   const consoleSections = usePanelSections("console");
 
+  useEffect(() => {
+    if (panelVisibility.settings) {
+      console.log(
+        "[Sketchpad] Settings panel is visible, sections:",
+        settingsSections.length,
+        settingsSections.map((s) => s.id),
+      );
+    }
+  }, [panelVisibility.settings, settingsSections]);
+
   const sketchpadCommands = useSketchpadCommands();
 
   useEffect(() => {
@@ -13118,12 +13146,15 @@ const LayoutWrapper: FC = () => {
               : undefined
           }
           bottomPanel={
-            panelVisibility.chat
+            // Console panel is not yet implemented - no apps add console sections
+            // When implemented, add a `console` property to PanelVisibility and PanelKind
+            consoleSections.length > 0
               ? {
-                  visible: panelVisibility.chat,
+                  visible: true,
                   size: panelSizes.consoleHeight,
                   onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "consoleHeight", size),
                   sections: consoleSections,
+                  panelKey: "console",
                 }
               : undefined
           }

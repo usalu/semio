@@ -24,7 +24,7 @@
       "description": "Updated description",
       "ports": [
         {
-          "guid": "019ae10d-1ad2-71a2-8669-5a7a36904116",
+          "guid": "019ae958-bc57-750d-8c4a-49a1c2f441e7",
           "name": "new-port",
           "point": {
             "x": 1,
@@ -1236,7 +1236,10 @@
           ],
           "name": "cylindric-capital_collider"
         }
-      ]
+      ],
+      "parent": {
+        "guid": "49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e"
+      }
     },
     {
       "ports": [
@@ -10661,7 +10664,10 @@
           ],
           "name": "cylindric-tambour_collider"
         }
-      ]
+      ],
+      "parent": {
+        "guid": "2a6bb3e8-4adb-44a3-bc87-3314b77b40f7"
+      }
     },
     {
       "ports": [
@@ -11921,16 +11927,16 @@
       ]
     },
     {
-      "guid": "019ae10d-1ad3-7135-9871-1be65f80d676",
+      "guid": "019ae958-bc58-721d-bc30-2ee3ffe207e3",
       "name": "New Test Type",
       "virtual": true,
       "unit": "mm",
       "description": "A new type added for testing",
-      "createdAt": "2025-12-02T21:52:03.795Z",
-      "updatedAt": "2025-12-02T21:52:03.795Z",
+      "createdAt": "2025-12-04T12:31:38.072Z",
+      "updatedAt": "2025-12-04T12:31:38.072Z",
       "ports": [
         {
-          "guid": "019ae10d-1ad3-7135-9871-1dbaaa496207",
+          "guid": "019ae958-bc58-721d-bc30-3107f0766860",
           "name": "test-port",
           "point": {
             "x": 0,
@@ -41101,7 +41107,7 @@
           "guid": "e6a95c19-d66e-4e74-a164-b316806022ed"
         },
         {
-          "guid": "019ae10d-1ad3-7135-9871-20678ba06fd8",
+          "guid": "019ae958-bc58-721d-bc30-347f10c6c650",
           "type": {
             "guid": "04e9b156-97a8-4db0-8bb1-f582c5955a79"
           },
@@ -121407,15 +121413,15 @@
       ]
     },
     {
-      "guid": "019ae10d-1ad3-7135-9871-24fbecbef60f",
+      "guid": "019ae958-bc58-721d-bc30-3bea9821c85c",
       "name": "New Test Design",
       "unit": "mm",
       "description": "A new design added for testing",
-      "createdAt": "2025-12-02T21:52:03.795Z",
-      "updatedAt": "2025-12-02T21:52:03.795Z",
+      "createdAt": "2025-12-04T12:31:38.072Z",
+      "updatedAt": "2025-12-04T12:31:38.072Z",
       "pieces": [
         {
-          "guid": "019ae10d-1ad3-7135-9871-2961c3b5d541",
+          "guid": "019ae958-bc58-721d-bc30-3ef596a3c8ac",
           "type": {
             "guid": "bb34f42f-68d6-418b-a613-545ca1d2aa14"
           },
@@ -121468,7 +121474,7 @@
       "name": "collider"
     },
     {
-      "guid": "019ae10d-1ad3-7135-9871-2e1d985e5acc",
+      "guid": "019ae958-bc58-721d-bc30-43a869298126",
       "name": "New Test Tag",
       "description": "A new tag for testing",
       "icon": "test-tag-icon.svg"
@@ -121485,7 +121491,7 @@
       "name": "kit-of-parts"
     },
     {
-      "guid": "019ae10d-1ad3-7135-9871-33bce1d49a16",
+      "guid": "019ae958-bc58-721d-bc30-44056d311267",
       "name": "New Test Concept",
       "description": "A new concept for testing",
       "icon": "test-concept-icon.svg"
@@ -121653,7 +121659,7 @@
       ]
     },
     {
-      "guid": "019ae10d-1ad3-7135-9871-3708d218329e",
+      "guid": "019ae958-bc58-721d-bc30-49eae8fb7070",
       "name": "New Test Interface",
       "description": "A new interface for testing",
       "icon": "test-interface-icon.svg"
@@ -123857,19 +123863,19 @@
       "mime": "model/gltf-binary"
     },
     {
-      "guid": "019ae10d-1ad3-7135-9871-3a2de2f04b46",
+      "guid": "019ae958-bc58-721d-bc30-4c61d5e5c24e",
       "name": "new-file.txt",
-      "createdAt": "2025-12-02T21:52:03.795Z",
-      "updatedAt": "2025-12-02T21:52:03.795Z"
+      "createdAt": "2025-12-04T12:31:38.072Z",
+      "updatedAt": "2025-12-04T12:31:38.072Z"
     }
   ],
   "folders": [
     {
-      "guid": "019ae10d-1ad3-7135-9871-3f0733e4516d",
+      "guid": "019ae958-bc58-721d-bc30-5191e16e964d",
       "name": "test-folder",
       "description": "A new folder for testing",
-      "createdAt": "2025-12-02T21:52:03.795Z",
-      "updatedAt": "2025-12-02T21:52:03.795Z"
+      "createdAt": "2025-12-04T12:31:38.072Z",
+      "updatedAt": "2025-12-04T12:31:38.072Z"
     }
   ],
   "authors": [
@@ -123881,7 +123887,7 @@
   ],
   "attributes": [
     {
-      "guid": "019ae10d-1ad3-7135-9871-42de1a0152fc",
+      "guid": "019ae958-bc58-721d-bc30-568cb99f5c74",
       "key": "test.attribute",
       "value": "test value",
       "definition": "A test attribute"

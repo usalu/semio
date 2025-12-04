@@ -22,7 +22,7 @@
 // #region Imports
 
 import { DragEndEvent, useDraggable, useDroppable } from "@dnd-kit/core";
-import {} from "@semio/assets";
+import { AwardIcon, CodeIcon, HandIcon, MonitorIcon, MoonIcon, MousePointerIcon, SunIcon, TutorialIcon, UserIcon } from "@semio/assets";
 import { Connection, Edge, Node, NodeTypes, ReactFlowInstance } from "@xyflow/react";
 import React, { createContext, FC, memo, useCallback, useContext, useEffect, useMemo, useRef } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
@@ -30,9 +30,28 @@ import { useTranslation } from "react-i18next";
 import * as Y from "yjs";
 import { useLabel } from "../i18n";
 import { guid, Guid, Kit, Quality, QualityDiff } from "../semio";
-import { Diagram as BaseDiagram, calculateDiagramLayout, DiagramNode, DraggableAvatar, HoverCard, HoverCardContent, HoverCardTrigger, Input, PlaceholderDiagramNode, Textarea, TreeContent, TreeItem } from "./elements";
+import {
+  Diagram as BaseDiagram,
+  calculateDiagramLayout,
+  DiagramNode,
+  DraggableAvatar,
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+  Input,
+  PlaceholderDiagramNode,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Textarea,
+  ToggleGroup,
+  TreeContent,
+  TreeItem,
+} from "./elements";
 import type { AppWindowConfig, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, QualityAppId, Transact, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
-import { AppConfig, createPanelDefinition, PanelKind, ToolKind } from "./shared";
+import { AppConfig, createPanelDefinition, Expertise, Mode, PanelKind, Theme, ToolKind } from "./shared";
 import type { KitStore, QualityStore, SketchpadStore } from "./Sketchpad";
 import {
   Canvas,
@@ -46,14 +65,19 @@ import {
   useActiveInteraction,
   useAddPanelSection,
   useAppType,
+  useExpertise,
   useKit,
   useKitScope,
+  useLanguage,
+  useLayout,
+  useMode,
   useQuality,
   useQualityScope,
   useRemovePanelSection,
   useSketchpadCommands,
   useSketchpadStore,
   useSyncDeep,
+  useTheme,
 } from "./Sketchpad";
 
 // #endregion
@@ -1774,7 +1798,7 @@ const App: FC<AppProps> = () => {
   const windowLayout = useQualityApp((s) => s.windowLayout);
 
   const defaultLayout = useMemo(() => {
-    return createDefaultLayout([QualityAppWindowKind.Formula, QualityAppWindowKind.Diagram], "row", [20, 80], ["Formula", "Diagram"]);
+    return createDefaultLayout([QualityAppWindowKind.Formula, QualityAppWindowKind.Diagram], "row", [20, 80]);
   }, []);
 
   const windowConfig: AppWindowConfig = useMemo(() => {

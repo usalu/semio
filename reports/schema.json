@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-12-03T15:38:17.509Z",
+  "timestamp": "2025-12-04T13:48:48.029Z",
   "summary": {
     "typescript": {
       "entities": 27,
@@ -10,11 +10,11 @@
       "idTypes": 21
     },
     "csharp": {
-      "entities": 26,
+      "entities": 5,
       "idTypes": 21
     },
     "grasshopper": {
-      "components": 23,
+      "components": 0,
       "params": 60,
       "goos": 60
     },
@@ -29,10 +29,264 @@
       "entities": 96,
       "relationships": 64
     },
-    "errors": 0,
-    "warnings": 0
+    "errors": 21,
+    "warnings": 21
   },
-  "errors": [],
-  "warnings": [],
-  "status": "success"
+  "errors": [
+    {
+      "severity": "error",
+      "entity": "Attribute",
+      "message": "Missing entity in C#",
+      "source": "net"
+    },
+    {
+      "severity": "error",
+      "entity": "Location",
+      "message": "Missing entity in C#",
+      "source": "net"
+    },
+    {
+      "severity": "error",
+      "entity": "Author",
+      "message": "Missing entity in C#",
+      "source": "net"
+    },
+    {
+      "severity": "error",
+      "entity": "File",
+      "message": "Missing entity in C#",
+      "source": "net"
+    },
+    {
+      "severity": "error",
+      "entity": "Folder",
+      "message": "Missing entity in C#",
+      "source": "net"
+    },
+    {
+      "severity": "error",
+      "entity": "Benchmark",
+      "message": "Missing entity in C#",
+      "source": "net"
+    },
+    {
+      "severity": "error",
+      "entity": "Quality",
+      "message": "Missing entity in C#",
+      "source": "net"
+    },
+    {
+      "severity": "error",
+      "entity": "Interface",
+      "message": "Missing entity in C#",
+      "source": "net"
+    },
+    {
+      "severity": "error",
+      "entity": "Prop",
+      "message": "Missing entity in C#",
+      "source": "net"
+    },
+    {
+      "severity": "error",
+      "entity": "Model",
+      "message": "Missing entity in C#",
+      "source": "net"
+    },
+    {
+      "severity": "error",
+      "entity": "Port",
+      "message": "Missing entity in C#",
+      "source": "net"
+    },
+    {
+      "severity": "error",
+      "entity": "Tag",
+      "message": "Missing entity in C#",
+      "source": "net"
+    },
+    {
+      "severity": "error",
+      "entity": "Concept",
+      "message": "Missing entity in C#",
+      "source": "net"
+    },
+    {
+      "severity": "error",
+      "entity": "Type",
+      "message": "Missing entity in C#",
+      "source": "net"
+    },
+    {
+      "severity": "error",
+      "entity": "Layer",
+      "message": "Missing entity in C#",
+      "source": "net"
+    },
+    {
+      "severity": "error",
+      "entity": "Piece",
+      "message": "Missing entity in C#",
+      "source": "net"
+    },
+    {
+      "severity": "error",
+      "entity": "Group",
+      "message": "Missing entity in C#",
+      "source": "net"
+    },
+    {
+      "severity": "error",
+      "entity": "Connection",
+      "message": "Missing entity in C#",
+      "source": "net"
+    },
+    {
+      "severity": "error",
+      "entity": "Stat",
+      "message": "Missing entity in C#",
+      "source": "net"
+    },
+    {
+      "severity": "error",
+      "entity": "Design",
+      "message": "Missing entity in C#",
+      "source": "net"
+    },
+    {
+      "severity": "error",
+      "entity": "Kit",
+      "message": "Missing entity in C#",
+      "source": "net"
+    }
+  ],
+  "warnings": [
+    {
+      "severity": "warning",
+      "entity": "Attribute",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "severity": "warning",
+      "entity": "Location",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "severity": "warning",
+      "entity": "Author",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "severity": "warning",
+      "entity": "File",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "severity": "warning",
+      "entity": "Folder",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "severity": "warning",
+      "entity": "Benchmark",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "severity": "warning",
+      "entity": "Quality",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "severity": "warning",
+      "entity": "Interface",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "severity": "warning",
+      "entity": "Prop",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "severity": "warning",
+      "entity": "Model",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "severity": "warning",
+      "entity": "Port",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "severity": "warning",
+      "entity": "Tag",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "severity": "warning",
+      "entity": "Concept",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "severity": "warning",
+      "entity": "Type",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "severity": "warning",
+      "entity": "Layer",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "severity": "warning",
+      "entity": "Piece",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "severity": "warning",
+      "entity": "Group",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "severity": "warning",
+      "entity": "Connection",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "severity": "warning",
+      "entity": "Stat",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "severity": "warning",
+      "entity": "Design",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "severity": "warning",
+      "entity": "Kit",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    }
+  ],
+  "status": "error"
 }

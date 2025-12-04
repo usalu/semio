@@ -8,18 +8,22 @@
   "license": "MIT-Modified",
   "types": {
     "removed": [
-      "71749140-9db9-43f6-bd81-d89011667b80"
+      {
+        "guid": "71749140-9db9-43f6-bd81-d89011667b80"
+      }
     ],
     "updated": [
       {
-        "id": "4ca3b87b-cd76-4228-9f7e-1459b711f0ab",
+        "type": {
+          "guid": "4ca3b87b-cd76-4228-9f7e-1459b711f0ab"
+        },
         "diff": {
           "name": "Ellipsoid Modified",
           "description": "Updated description",
           "ports": {
             "added": [
               {
-                "guid": "019ae10d-1ad2-71a2-8669-5a7a36904116",
+                "guid": "019ae958-bc57-750d-8c4a-49a1c2f441e7",
                 "name": "new-port",
                 "point": {
                   "x": 1,
@@ -41,16 +45,16 @@
     ],
     "added": [
       {
-        "guid": "019ae10d-1ad3-7135-9871-1be65f80d676",
+        "guid": "019ae958-bc58-721d-bc30-2ee3ffe207e3",
         "name": "New Test Type",
         "virtual": true,
         "unit": "mm",
         "description": "A new type added for testing",
-        "createdAt": "2025-12-02T21:52:03.795Z",
-        "updatedAt": "2025-12-02T21:52:03.795Z",
+        "createdAt": "2025-12-04T12:31:38.072Z",
+        "updatedAt": "2025-12-04T12:31:38.072Z",
         "ports": [
           {
-            "guid": "019ae10d-1ad3-7135-9871-1dbaaa496207",
+            "guid": "019ae958-bc58-721d-bc30-3107f0766860",
             "name": "test-port",
             "point": {
               "x": 0,
@@ -71,18 +75,22 @@
   },
   "designs": {
     "removed": [
-      "9a890dd4-0a9c-48ac-920a-9e62666465ef"
+      {
+        "guid": "9a890dd4-0a9c-48ac-920a-9e62666465ef"
+      }
     ],
     "updated": [
       {
-        "id": "37ba7ec4-9023-4be7-9ab6-e0ebc80007f8",
+        "design": {
+          "guid": "37ba7ec4-9023-4be7-9ab6-e0ebc80007f8"
+        },
         "diff": {
           "name": "Capsule Dream Modified",
           "description": "Updated design description",
           "pieces": {
             "added": [
               {
-                "guid": "019ae10d-1ad3-7135-9871-20678ba06fd8",
+                "guid": "019ae958-bc58-721d-bc30-347f10c6c650",
                 "type": {
                   "guid": "04e9b156-97a8-4db0-8bb1-f582c5955a79"
                 },
@@ -112,15 +120,15 @@
     ],
     "added": [
       {
-        "guid": "019ae10d-1ad3-7135-9871-24fbecbef60f",
+        "guid": "019ae958-bc58-721d-bc30-3bea9821c85c",
         "name": "New Test Design",
         "unit": "mm",
         "description": "A new design added for testing",
-        "createdAt": "2025-12-02T21:52:03.795Z",
-        "updatedAt": "2025-12-02T21:52:03.795Z",
+        "createdAt": "2025-12-04T12:31:38.072Z",
+        "updatedAt": "2025-12-04T12:31:38.072Z",
         "pieces": [
           {
-            "guid": "019ae10d-1ad3-7135-9871-2961c3b5d541",
+            "guid": "019ae958-bc58-721d-bc30-3ef596a3c8ac",
             "type": {
               "guid": "bb34f42f-68d6-418b-a613-545ca1d2aa14"
             },
@@ -149,11 +157,15 @@
   },
   "tags": {
     "removed": [
-      "212dec6a-b3ba-42e9-a624-b097176dbaa6"
+      {
+        "guid": "212dec6a-b3ba-42e9-a624-b097176dbaa6"
+      }
     ],
     "updated": [
       {
-        "id": "348efbfa-e275-4dda-9f66-229917c6b4ab",
+        "tag": {
+          "guid": "348efbfa-e275-4dda-9f66-229917c6b4ab"
+        },
         "diff": {
           "name": "model/vnd.3dm Modified",
           "description": "Updated tag description"
@@ -162,7 +174,7 @@
     ],
     "added": [
       {
-        "guid": "019ae10d-1ad3-7135-9871-2e1d985e5acc",
+        "guid": "019ae958-bc58-721d-bc30-43a869298126",
         "name": "New Test Tag",
         "description": "A new tag for testing",
         "icon": "test-tag-icon.svg"
@@ -171,11 +183,15 @@
   },
   "concepts": {
     "removed": [
-      "019adc5e-40ee-789d-a877-5baef7bc79fa"
+      {
+        "guid": "019adc5e-40ee-789d-a877-5baef7bc79fa"
+      }
     ],
     "updated": [
       {
-        "id": "019adc5e-9205-7364-a213-66fda12e5120",
+        "concept": {
+          "guid": "019adc5e-9205-7364-a213-66fda12e5120"
+        },
         "diff": {
           "name": "organic-city Modified",
           "description": "Updated concept description"
@@ -184,7 +200,7 @@
     ],
     "added": [
       {
-        "guid": "019ae10d-1ad3-7135-9871-33bce1d49a16",
+        "guid": "019ae958-bc58-721d-bc30-44056d311267",
         "name": "New Test Concept",
         "description": "A new concept for testing",
         "icon": "test-concept-icon.svg"
@@ -193,11 +209,15 @@
   },
   "interfaces": {
     "removed": [
-      "019ab243-21f3-7380-93c6-994a9a023448"
+      {
+        "guid": "019ab243-21f3-7380-93c6-994a9a023448"
+      }
     ],
     "updated": [
       {
-        "id": "019ab243-21f3-7380-93c6-9e678ad2f321",
+        "interface": {
+          "guid": "019ab243-21f3-7380-93c6-9e678ad2f321"
+        },
         "diff": {
           "name": "core circular top Modified",
           "description": "Updated interface description"
@@ -206,7 +226,7 @@
     ],
     "added": [
       {
-        "guid": "019ae10d-1ad3-7135-9871-3708d218329e",
+        "guid": "019ae958-bc58-721d-bc30-49eae8fb7070",
         "name": "New Test Interface",
         "description": "A new interface for testing",
         "icon": "test-interface-icon.svg"
@@ -215,11 +235,15 @@
   },
   "files": {
     "removed": [
-      "457d2061-ac4b-4317-8563-ba41afffd149"
+      {
+        "guid": "457d2061-ac4b-4317-8563-ba41afffd149"
+      }
     ],
     "updated": [
       {
-        "id": "77e02ef4-e37e-41dd-80f6-00889cfcabb4",
+        "file": {
+          "guid": "77e02ef4-e37e-41dd-80f6-00889cfcabb4"
+        },
         "diff": {
           "name": "updated-base_1to500.3dm"
         }
@@ -227,31 +251,33 @@
     ],
     "added": [
       {
-        "guid": "019ae10d-1ad3-7135-9871-3a2de2f04b46",
+        "guid": "019ae958-bc58-721d-bc30-4c61d5e5c24e",
         "name": "new-file.txt",
-        "createdAt": "2025-12-02T21:52:03.795Z",
-        "updatedAt": "2025-12-02T21:52:03.795Z"
+        "createdAt": "2025-12-04T12:31:38.072Z",
+        "updatedAt": "2025-12-04T12:31:38.072Z"
       }
     ]
   },
   "folders": {
     "removed": [
-      "019adc83-0113-75e0-90b2-9d0912f1d60f"
+      {
+        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+      }
     ],
     "added": [
       {
-        "guid": "019ae10d-1ad3-7135-9871-3f0733e4516d",
+        "guid": "019ae958-bc58-721d-bc30-5191e16e964d",
         "name": "test-folder",
         "description": "A new folder for testing",
-        "createdAt": "2025-12-02T21:52:03.795Z",
-        "updatedAt": "2025-12-02T21:52:03.795Z"
+        "createdAt": "2025-12-04T12:31:38.072Z",
+        "updatedAt": "2025-12-04T12:31:38.072Z"
       }
     ]
   },
   "attributes": {
     "added": [
       {
-        "guid": "019ae10d-1ad3-7135-9871-42de1a0152fc",
+        "guid": "019ae958-bc58-721d-bc30-568cb99f5c74",
         "key": "test.attribute",
         "value": "test value",
         "definition": "A test attribute"

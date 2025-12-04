@@ -13,7 +13,9 @@
             "designs": {
               "updated": [
                 {
-                  "id": "019ab664-6666-6666-6666-666666666666",
+                  "design": {
+                    "guid": "019ab664-6666-6666-6666-666666666666"
+                  },
                   "diff": {
                     "name": "Duplicate Design Name 2"
                   }
@@ -37,7 +39,9 @@
             "files": {
               "updated": [
                 {
-                  "id": "019ab664-CCCC-CCCC-CCCC-CCCCCCCC0000",
+                  "file": {
+                    "guid": "019ab664-CCCC-CCCC-CCCC-CCCCCCCC0000"
+                  },
                   "diff": {
                     "name": "duplicate-file.txt 2"
                   }
@@ -61,7 +65,9 @@
             "folders": {
               "updated": [
                 {
-                  "id": "019ab664-EEEE-EEEE-EEEE-EEEEEEEE0000",
+                  "folder": {
+                    "guid": "019ab664-EEEE-EEEE-EEEE-EEEEEEEE0000"
+                  },
                   "diff": {
                     "name": "duplicate-folder 2"
                   }
@@ -84,7 +90,9 @@
           "diff": {
             "designs": {
               "removed": [
-                "019ab664-3333-3333-3333-333333333333"
+                {
+                  "guid": "019ab664-3333-3333-3333-333333333333"
+                }
               ],
               "added": [
                 {
@@ -191,7 +199,9 @@
             "interfaces": {
               "updated": [
                 {
-                  "id": "019ab664-AAAA-AAAA-AAAA-AAAAAAAA0000",
+                  "interface": {
+                    "guid": "019ab664-AAAA-AAAA-AAAA-AAAAAAAA0000"
+                  },
                   "diff": {
                     "name": "Duplicate Interface Name 2"
                   }
@@ -215,12 +225,16 @@
             "designs": {
               "updated": [
                 {
-                  "id": "019ab664-3333-3333-3333-333333333333",
+                  "design": {
+                    "guid": "019ab664-3333-3333-3333-333333333333"
+                  },
                   "diff": {
                     "layers": {
                       "updated": [
                         {
-                          "id": "019ab664-3333-3333-3333-333333330001",
+                          "layer": {
+                            "guid": "019ab664-3333-3333-3333-333333330001"
+                          },
                           "diff": {
                             "path": "Duplicate.Layer.Path 2"
                           }
@@ -248,12 +262,16 @@
             "types": {
               "updated": [
                 {
-                  "id": "019ab664-1111-1111-1111-111111111111",
+                  "type": {
+                    "guid": "019ab664-1111-1111-1111-111111111111"
+                  },
                   "diff": {
                     "models": {
                       "updated": [
                         {
-                          "id": "019ab664-1111-1111-1111-111111110002",
+                          "model": {
+                            "guid": "019ab664-1111-1111-1111-111111110002"
+                          },
                           "diff": {
                             "name": "Duplicate Model Name 2"
                           }
@@ -281,12 +299,16 @@
             "designs": {
               "updated": [
                 {
-                  "id": "019ab664-3333-3333-3333-333333333333",
+                  "design": {
+                    "guid": "019ab664-3333-3333-3333-333333333333"
+                  },
                   "diff": {
                     "pieces": {
                       "updated": [
                         {
-                          "id": "019ab664-5555-5555-5555-555555555555",
+                          "piece": {
+                            "guid": "019ab664-5555-5555-5555-555555555555"
+                          },
                           "diff": {
                             "name": "Duplicate Piece Name 2"
                           }
@@ -314,12 +336,16 @@
             "types": {
               "updated": [
                 {
-                  "id": "019ab664-1111-1111-1111-111111111111",
+                  "type": {
+                    "guid": "019ab664-1111-1111-1111-111111111111"
+                  },
                   "diff": {
                     "ports": {
                       "updated": [
                         {
-                          "id": "019ab664-BBBB-BBBB-BBBB-BBBBBBBBBBBB",
+                          "port": {
+                            "guid": "019ab664-BBBB-BBBB-BBBB-BBBBBBBBBBBB"
+                          },
                           "diff": {
                             "name": "Duplicate Port Name 2"
                           }
@@ -347,7 +373,9 @@
             "qualities": {
               "updated": [
                 {
-                  "id": "019ab664-8888-8888-8888-888888888888",
+                  "quality": {
+                    "guid": "019ab664-8888-8888-8888-888888888888"
+                  },
                   "diff": {
                     "name": "Duplicate Quality Name 2"
                   }
@@ -371,7 +399,9 @@
             "types": {
               "updated": [
                 {
-                  "id": "019ab664-2222-2222-2222-222222222222",
+                  "type": {
+                    "guid": "019ab664-2222-2222-2222-222222222222"
+                  },
                   "diff": {
                     "name": "Duplicate Type Name 2"
                   }

@@ -1214,7 +1214,10 @@
           ],
           "name": "cylindric-capital_collider"
         }
-      ]
+      ],
+      "parent": {
+        "guid": "49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e"
+      }
     },
     {
       "ports": [
@@ -10639,7 +10642,10 @@
           ],
           "name": "cylindric-tambour_collider"
         }
-      ]
+      ],
+      "parent": {
+        "guid": "2a6bb3e8-4adb-44a3-bc87-3314b77b40f7"
+      }
     },
     {
       "ports": [

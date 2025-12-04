@@ -11,7 +11,7 @@
     "grepInvert": null,
     "maxFailures": 0,
     "metadata": {
-      "actualWorkers": 1
+      "actualWorkers": 5
     },
     "preserveOutput": "always",
     "reporter": [
@@ -37,7 +37,7 @@
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
-          "actualWorkers": 1
+          "actualWorkers": 5
         },
         "id": "chromium",
         "name": "chromium",
@@ -73,9 +73,77 @@
         {
           "title": "sketchpad",
           "file": "sketchpad.test.ts",
-          "line": 219,
+          "line": 313,
           "column": 6,
           "specs": [
+            {
+              "title": "Home",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 29659,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22m\n\nExpected value: \u001b[32m\"semio.sketchpad.app.home.settings\"\u001b[39m\nReceived array: \u001b[31m[]\u001b[39m",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22m\n\nExpected value: \u001b[32m\"semio.sketchpad.app.home.settings\"\u001b[39m\nReceived array: \u001b[31m[]\u001b[39m\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:321:22",
+                        "location": {
+                          "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                          "column": 22,
+                          "line": 321
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 319 |\u001b[39m     \u001b[36mawait\u001b[39m openSettingsPanel(page)\u001b[33m;\u001b[39m\n \u001b[90m 320 |\u001b[39m     \u001b[36mconst\u001b[39m sections \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m getSettingsSections(page)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 321 |\u001b[39m     expect(sections)\u001b[33m.\u001b[39mtoContain(\u001b[32m\"semio.sketchpad.app.home.settings\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                      \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 322 |\u001b[39m     expect(sections)\u001b[33m.\u001b[39mtoContain(\u001b[32m\"semio.sketchpad.settings\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 323 |\u001b[39m     \u001b[36mconst\u001b[39m homeIndex \u001b[33m=\u001b[39m sections\u001b[33m.\u001b[39mindexOf(\u001b[32m\"semio.sketchpad.app.home.settings\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 324 |\u001b[39m     \u001b[36mconst\u001b[39m sketchpadIndex \u001b[33m=\u001b[39m sections\u001b[33m.\u001b[39mindexOf(\u001b[32m\"semio.sketchpad.settings\"\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                            "column": 22,
+                            "line": 321
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22m\n\nExpected value: \u001b[32m\"semio.sketchpad.app.home.settings\"\u001b[39m\nReceived array: \u001b[31m[]\u001b[39m\n\n\u001b[0m \u001b[90m 319 |\u001b[39m     \u001b[36mawait\u001b[39m openSettingsPanel(page)\u001b[33m;\u001b[39m\n \u001b[90m 320 |\u001b[39m     \u001b[36mconst\u001b[39m sections \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m getSettingsSections(page)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 321 |\u001b[39m     expect(sections)\u001b[33m.\u001b[39mtoContain(\u001b[32m\"semio.sketchpad.app.home.settings\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                      \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 322 |\u001b[39m     expect(sections)\u001b[33m.\u001b[39mtoContain(\u001b[32m\"semio.sketchpad.settings\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 323 |\u001b[39m     \u001b[36mconst\u001b[39m homeIndex \u001b[33m=\u001b[39m sections\u001b[33m.\u001b[39mindexOf(\u001b[32m\"semio.sketchpad.app.home.settings\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 324 |\u001b[39m     \u001b[36mconst\u001b[39m sketchpadIndex \u001b[33m=\u001b[39m sections\u001b[33m.\u001b[39mindexOf(\u001b[32m\"semio.sketchpad.settings\"\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:321:22\u001b[22m"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Warning: Right panel not visible after 15s, returning empty sections\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-04T12:41:34.202Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\git\\semio.tech\\semio\\js\\js\\test-results\\sketchpad-sketchpad-Home-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                        "column": 22,
+                        "line": 321
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "1f96767271edc4239dfa-b740b36bc6e82e50ca6e",
+              "file": "sketchpad.test.ts",
+              "line": 314,
+              "column": 3
+            },
             {
               "title": "Kit",
               "ok": false,
@@ -89,10 +157,10 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 5,
-                      "parallelIndex": 0,
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
                       "status": "timedOut",
-                      "duration": 180044,
+                      "duration": 180057,
                       "error": {
                         "message": "\u001b[31mTest timeout of 180000ms exceeded.\u001b[39m",
                         "stack": "\u001b[31mTest timeout of 180000ms exceeded.\u001b[39m"
@@ -100,6 +168,14 @@
                       "errors": [
                         {
                           "message": "\u001b[31mTest timeout of 180000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                            "column": 30,
+                            "line": 77
+                          },
+                          "message": "Error: locator._expect: Target page, context or browser has been closed\n\n\u001b[0m \u001b[90m 75 |\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m openDetailsPanel(page\u001b[33m:\u001b[39m \u001b[33mPage\u001b[39m) {\n \u001b[90m 76 |\u001b[39m   \u001b[36mconst\u001b[39m navbarToggle \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'[id=\"semio.sketchpad.navbar.panelToggle.details.show\"]'\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 77 |\u001b[39m   \u001b[36mawait\u001b[39m expect(navbarToggle)\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m60000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 78 |\u001b[39m\n \u001b[90m 79 |\u001b[39m   \u001b[90m// Check if already open\u001b[39m\n \u001b[90m 80 |\u001b[39m   \u001b[36mconst\u001b[39m isPressed \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m navbarToggle\u001b[33m.\u001b[39mgetAttribute(\u001b[32m\"data-state\"\u001b[39m)\u001b[33m.\u001b[39m\u001b[36mcatch\u001b[39m(() \u001b[33m=>\u001b[39m \u001b[32m\"off\"\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at openDetailsPanel (C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:77:30)\u001b[22m\n\u001b[2m    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:494:11\u001b[22m"
                         }
                       ],
                       "stdout": [
@@ -123,11 +199,14 @@
                         },
                         {
                           "text": "[Kit Test] Concepts toggle visible: \u001b[33mfalse\u001b[39m\n"
+                        },
+                        {
+                          "text": "[Kit Panel Test] Testing all Kit app panels\n"
                         }
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-03T17:49:59.683Z",
+                      "startTime": "2025-12-04T12:41:34.272Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -143,7 +222,223 @@
               ],
               "id": "1f96767271edc4239dfa-8ea0390a28d2fa06fd58",
               "file": "sketchpad.test.ts",
-              "line": 234,
+              "line": 359,
+              "column": 3
+            },
+            {
+              "title": "Type",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "failed",
+                      "duration": 45377,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('canvas').first()\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for locator('canvas').first()\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('canvas').first()\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for locator('canvas').first()\u001b[22m\n\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:520:26",
+                        "location": {
+                          "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                          "column": 26,
+                          "line": 520
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 518 |\u001b[39m     test\u001b[33m.\u001b[39msetTimeout(\u001b[35m120000\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 519 |\u001b[39m     \u001b[36mconst\u001b[39m { errors\u001b[33m,\u001b[39m warnings\u001b[33m,\u001b[39m messages } \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m initType(page)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 520 |\u001b[39m     \u001b[36mconst\u001b[39m canvas \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m\"canvas\"\u001b[39m)\u001b[33m.\u001b[39mfirst()\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                          \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 521 |\u001b[39m     \u001b[36mawait\u001b[39m expect(canvas)\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m15000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 522 |\u001b[39m     expect(page\u001b[33m.\u001b[39murl())\u001b[33m.\u001b[39mtoContain(\u001b[32m\"/types/\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 523 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m5000\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                            "column": 26,
+                            "line": 520
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('canvas').first()\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for locator('canvas').first()\u001b[22m\n\n\n\u001b[0m \u001b[90m 518 |\u001b[39m     test\u001b[33m.\u001b[39msetTimeout(\u001b[35m120000\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 519 |\u001b[39m     \u001b[36mconst\u001b[39m { errors\u001b[33m,\u001b[39m warnings\u001b[33m,\u001b[39m messages } \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m initType(page)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 520 |\u001b[39m     \u001b[36mconst\u001b[39m canvas \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m\"canvas\"\u001b[39m)\u001b[33m.\u001b[39mfirst()\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                          \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 521 |\u001b[39m     \u001b[36mawait\u001b[39m expect(canvas)\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m15000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 522 |\u001b[39m     expect(page\u001b[33m.\u001b[39murl())\u001b[33m.\u001b[39mtoContain(\u001b[32m\"/types/\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 523 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForTimeout(\u001b[35m5000\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:520:26\u001b[22m"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "[TEST] Setting input files: C:\\git\\semio.tech\\semio\\assets\\semio\\metabolism.zip\n"
+                        },
+                        {
+                          "text": "[TEST] File set via file chooser\n"
+                        },
+                        {
+                          "text": "[TEST] Current URL after file set: http://localhost:5173/\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-04T12:41:34.151Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                        "column": 26,
+                        "line": 520
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "1f96767271edc4239dfa-99d988a262cf65a431a0",
+              "file": "sketchpad.test.ts",
+              "line": 516,
+              "column": 3
+            },
+            {
+              "title": "Design",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 3,
+                      "status": "failed",
+                      "duration": 33397,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:723:36",
+                        "location": {
+                          "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                          "column": 36,
+                          "line": 723
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 721 |\u001b[39m     \u001b[36mif\u001b[39m (\u001b[33m!\u001b[39mhasDiagram \u001b[33m&&\u001b[39m \u001b[33m!\u001b[39mhasScene) {\n \u001b[90m 722 |\u001b[39m       console\u001b[33m.\u001b[39mlog(\u001b[32m\"[Design Test] Page HTML:\"\u001b[39m\u001b[33m,\u001b[39m \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mcontent()\u001b[33m.\u001b[39mthen(c \u001b[33m=>\u001b[39m c\u001b[33m.\u001b[39mslice(\u001b[35m0\u001b[39m\u001b[33m,\u001b[39m \u001b[35m2000\u001b[39m)))\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 723 |\u001b[39m     }\n \u001b[90m     |\u001b[39m      \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 724 |\u001b[39m     expect(hasDiagram \u001b[33m||\u001b[39m hasScene)\u001b[33m.\u001b[39mtoBe(\u001b[36mtrue\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 725 |\u001b[39m\n \u001b[90m 726 |\u001b[39m     \u001b[90m// Check for infinite loop errors (critical - must be early in test)\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                            "column": 36,
+                            "line": 723
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n\u001b[0m \u001b[90m 721 |\u001b[39m     \u001b[36mif\u001b[39m (\u001b[33m!\u001b[39mhasDiagram \u001b[33m&&\u001b[39m \u001b[33m!\u001b[39mhasScene) {\n \u001b[90m 722 |\u001b[39m       console\u001b[33m.\u001b[39mlog(\u001b[32m\"[Design Test] Page HTML:\"\u001b[39m\u001b[33m,\u001b[39m \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mcontent()\u001b[33m.\u001b[39mthen(c \u001b[33m=>\u001b[39m c\u001b[33m.\u001b[39mslice(\u001b[35m0\u001b[39m\u001b[33m,\u001b[39m \u001b[35m2000\u001b[39m)))\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 723 |\u001b[39m     }\n \u001b[90m     |\u001b[39m      \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 724 |\u001b[39m     expect(hasDiagram \u001b[33m||\u001b[39m hasScene)\u001b[33m.\u001b[39mtoBe(\u001b[36mtrue\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 725 |\u001b[39m\n \u001b[90m 726 |\u001b[39m     \u001b[90m// Check for infinite loop errors (critical - must be early in test)\u001b[39m\u001b[0m\n\u001b[2m    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:723:36\u001b[22m"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "[TEST] Setting input files: C:\\git\\semio.tech\\semio\\assets\\semio\\metabolism.zip\n"
+                        },
+                        {
+                          "text": "[TEST] File set via file chooser\n"
+                        },
+                        {
+                          "text": "[TEST] Current URL after file set: http://localhost:5173/\n"
+                        },
+                        {
+                          "text": "[Design Test] Current URL: http://localhost:5173/kits/f042c2a4-3ba5-44b0-b22c-0ae8f568aacc/designs/9a890dd4-0a9c-48ac-920a-9e62666465ef\n"
+                        },
+                        {
+                          "text": "[Design Test] ReactFlow elements count: \u001b[33m0\u001b[39m\n"
+                        },
+                        {
+                          "text": "[Design Test] Window/Panel elements count: \u001b[33m0\u001b[39m\n"
+                        },
+                        {
+                          "text": "[Design Test] hasDiagram: \u001b[33mfalse\u001b[39m hasScene: \u001b[33mfalse\u001b[39m\n"
+                        },
+                        {
+                          "text": "[Design Test] Page HTML: <!DOCTYPE html><html lang=\"en\"><head>\n    <script type=\"module\">import { injectIntoGlobalHook } from \"/@react-refresh\";\ninjectIntoGlobalHook(window);\nwindow.$RefreshReg$ = () => {};\nwindow.$RefreshSig$ = () => (type) => type;</script>\n\n    <script type=\"module\" src=\"/@vite/client\"></script>\n\n    <meta charset=\"UTF-8\">\n    <title>semio · playground</title>\n  <style type=\"text/css\" data-vite-dev-id=\"C:/git/semio.tech/semio/node_modules/@xyflow/react/dist/style.css\">/* this gets exported as style.css and can be used for the default theming */\n/* these are the necessary styles for React/Svelte Flow, they get used by base.css and style.css */\n.react-flow {\n  direction: ltr;\n\n  --xy-edge-stroke-default: #b1b1b7;\n  --xy-edge-stroke-width-default: 1;\n  --xy-edge-stroke-selected-default: #555;\n\n  --xy-connectionline-stroke-default: #b1b1b7;\n  --xy-connectionline-stroke-width-default: 1;\n\n  --xy-attribution-background-color-default: rgba(255, 255, 255, 0.5);\n\n  --xy-minimap-background-color-default: #fff;\n  --xy-minimap-mask-background-color-default: rgba(240, 240, 240, 0.6);\n  --xy-minimap-mask-stroke-color-default: transparent;\n  --xy-minimap-mask-stroke-width-default: 1;\n  --xy-minimap-node-background-color-default: #e2e2e2;\n  --xy-minimap-node-stroke-color-default: transparent;\n  --xy-minimap-node-stroke-width-default: 2;\n\n  --xy-background-color-default: transparent;\n  --xy-background-pattern-dots-color-default: #91919a;\n  --xy-background-pattern-lines-color-default: #eee;\n  --xy-background-pattern-cross-color-default: #e2e2e2;\n  background-color: var(--xy-background-color, var(--xy-background-color-default));\n  --xy-node-color-default: inherit;\n  --xy-node-border-default: 1px solid #1a192b;\n  --xy-node-background-color-default: #fff;\n  --xy-node-group-background-color-default: rgba(240, 240, 240, 0.25);\n  --xy-node-boxshadow-hover-default: 0 1px 4px 1px rgba(0, 0, 0, 0.08);\n  --xy-node-boxshadow-selected-default: 0 0 0 0.5px #1a192b;\n  --xy-node-border-radius-default: 3\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-04T12:41:34.260Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                        "column": 36,
+                        "line": 723
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "1f96767271edc4239dfa-04d6a37c53e07d4a2f57",
+              "file": "sketchpad.test.ts",
+              "line": 686,
+              "column": 3
+            },
+            {
+              "title": "Docs",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 4,
+                      "status": "passed",
+                      "duration": 10627,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[Docs Panel Test] Testing all Docs app panels\n"
+                        },
+                        {
+                          "text": "[Docs Panel Test] Workbench toggle visible: true\n"
+                        },
+                        {
+                          "text": "[Docs Panel Test] Workbench panel visible: true\n"
+                        },
+                        {
+                          "text": "[Docs Panel Test] Workbench sections: semio.sketchpad.app.docs.docs, semio.sketchpad.app.docs.overview\n"
+                        },
+                        {
+                          "text": "[Docs Panel Test] Details toggle visible: true\n"
+                        },
+                        {
+                          "text": "[Docs Panel Test] Details panel visible: true\n"
+                        },
+                        {
+                          "text": "[Docs Panel Test] Details sections: semio.sketchpad.app.docs.page\n"
+                        },
+                        {
+                          "text": "[Docs Panel Test] Page section visible: true\n"
+                        },
+                        {
+                          "text": "[Docs Panel Test] Settings toggle visible: false\n"
+                        },
+                        {
+                          "text": "[Docs Panel Test] Right toggle group visible: true\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-04T12:41:34.319Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "1f96767271edc4239dfa-5a4f50354005f7ed4484",
+              "file": "sketchpad.test.ts",
+              "line": 1019,
               "column": 3
             }
           ]
@@ -153,11 +448,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2025-12-03T17:49:57.937Z",
-    "duration": 182143.56799999997,
-    "expected": 0,
+    "startTime": "2025-12-04T12:41:29.989Z",
+    "duration": 185716.26800000016,
+    "expected": 1,
     "skipped": 0,
-    "unexpected": 1,
+    "unexpected": 4,
     "flaky": 0
   }
 }

@@ -296,27 +296,17 @@ class TestDiffs:
 
     def test_kitDiffOperations(self, kitMetabolismJson: dict, kitMetabolismDiffedJson: dict, diffKitMetabolismJson: dict, diffKitMetabolismInvertedJson: dict) -> None:
         """Kit + Diff → DiffedKit & DiffedKit + InverseDiff → Kit (matching semio.test.ts exactly)"""
-        # Filter to proto designs only (matching TypeScript test: designs?.filter((d: any) => !d.parent))
         kitOriginal = copy.deepcopy(kitMetabolismJson)
         kitOriginal["designs"] = [d for d in kitOriginal.get("designs", []) if not d.get("parent")]
-
         kitDiff = diffKitMetabolismJson
         kitDiffInverted = diffKitMetabolismInvertedJson
         kitDiffed = kitMetabolismDiffedJson
-
-        # Assertion 1: getKitDiff(kitOriginal, kitDiffed) equals kitDiff
         computedDiff = engine.getKitDiffDict(kitOriginal, kitDiffed)
         assert engine.areKitDiffsDictEqual(computedDiff, kitDiff), "Computed diff should equal expected diff"
-
-        # Assertion 2: inverseKitDiff(kitOriginal, kitDiff) equals kitDiffInverted
         computedInverseDiff = engine.inverseKitDiffDict(kitOriginal, kitDiff)
         assert engine.areKitDiffsDictEqual(computedInverseDiff, kitDiffInverted), "Computed inverse diff should equal expected inverse diff"
-
-        # Assertion 3: applyKitDiff(kitOriginal, kitDiff) equals kitDiffed
         appliedForward = engine.applyKitDiffDict(kitOriginal, kitDiff)
         assert engine.areKitsDictEqual(appliedForward, kitDiffed), "Original + Diff should equal DiffedKit"
-
-        # Assertion 4: applyKitDiff(kitDiffed, kitDiffInverted) equals kitOriginal
         appliedInverse = engine.applyKitDiffDict(kitDiffed, kitDiffInverted)
         assert engine.areKitsDictEqual(appliedInverse, kitOriginal), "DiffedKit + InverseDiff should equal original Kit"
 

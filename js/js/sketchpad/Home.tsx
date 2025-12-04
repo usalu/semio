@@ -876,12 +876,12 @@ const Home: FC = ({}) => {
     const hasMultipleKits = selection.length > 1;
 
     // Remove previous section
-    removeSection("details", "semio.sketchpad.app.kit.title");
+    removeSection("details", "semio.sketchpad.app.kit.properties");
     removeSection("details", "semio.sketchpad.app.home.kits.multiple");
 
     // Only show section if something is selected
     if (hasKits) {
-      const sectionId = hasSingleKit ? "semio.sketchpad.app.kit.title" : "semio.sketchpad.app.home.kits.multiple";
+      const sectionId = hasSingleKit ? "semio.sketchpad.app.kit.properties" : "semio.sketchpad.app.home.kits.multiple";
       addSection("details", {
         id: sectionId,
         specificity: 0,
@@ -893,7 +893,7 @@ const Home: FC = ({}) => {
     }
 
     return () => {
-      removeSection("details", "semio.sketchpad.app.kit.title");
+      removeSection("details", "semio.sketchpad.app.kit.properties");
       removeSection("details", "semio.sketchpad.app.home.kits.multiple");
     };
   }, [appType, addSection, removeSection, selection.length]);
@@ -918,7 +918,12 @@ const Home: FC = ({}) => {
 
   // Add settings panel sections
   useEffect(() => {
-    if (appType !== "home") return;
+    if (appType !== "home") {
+      console.log("[Home] Not adding settings sections - appType is:", appType);
+      return;
+    }
+
+    console.log("[Home] Adding settings panel sections");
 
     // Add Home-specific settings (most specific)
     addSection("settings", {
@@ -941,10 +946,11 @@ const Home: FC = ({}) => {
     });
 
     return () => {
+      console.log("[Home] Removing settings panel sections");
       removeSection("settings", "semio.sketchpad.app.home.settings");
       removeSection("settings", "semio.sketchpad.settings");
     };
-  }, [appType, addSection, removeSection, setTheme, setLayout, setExpertise, setMode]);
+  }, [appType, addSection, removeSection, setTheme, setLanguage, setLayout, setExpertise, setMode]);
 
   // Get filters from search params (?kind=&name=&version=)
   const selectedKind = searchParams.get("kind") as KitStoreKind | null;

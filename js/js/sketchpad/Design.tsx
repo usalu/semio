@@ -28,9 +28,9 @@
 // #region Store
 
 import * as Y from "yjs";
-import { Guid, KitDiff, PieceDiff } from "../semio";
+import { ConnectionDiff, ConnectionId, Guid, KitDiff, PieceDiff, PieceId } from "../semio";
 import type { AppConfig, AppWindowConfig, DesignAppId, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolDefinition, ToolRenderContext, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
-import { createPanelDefinition, PanelKind, ToolKind } from "./shared";
+import { createPanelDefinition, Expertise, Mode, PanelKind, Theme, ToolKind } from "./shared";
 import {
   DesignStore,
   identitySelector,
@@ -56,7 +56,7 @@ import { DragEndEvent, useDraggable } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
 import { Edges, Line, Select, useFBX, useGLTF } from "@react-three/drei";
 import { ThreeEvent, useLoader } from "@react-three/fiber";
-import { AddIcon, ConnectionIcon, DiagramIcon, DisconnectIcon, RemoveIcon, SceneIcon, SelectToolIcon, TableViewIcon } from "@semio/assets";
+import { AddIcon, AwardIcon, CodeIcon, ConnectionIcon, DiagramIcon, DisconnectIcon, HandIcon, MonitorIcon, MoonIcon, MousePointerIcon, RemoveIcon, SceneIcon, SelectToolIcon, SunIcon, TableViewIcon, TutorialIcon, UserIcon } from "@semio/assets";
 import React, { createContext, FC, memo, ReactNode, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
@@ -72,13 +72,13 @@ import {
   areSameConnection,
   Camera,
   Connection,
-  ConnectionDiff,
   Coord,
   Design,
   DiffStatus,
   findAttributeValue,
   findConnectionsInDesign,
   findDesignInKit,
+  findModel,
   findPieceInDesign,
   findPortInType,
   findTypeInKit,
@@ -98,7 +98,30 @@ import {
   toThreeRotation,
   Type,
 } from "../semio";
-import { Avatar, AvatarFallback, Button, Combobox, Diagram, DraggableAvatar, Geometry, Input, Scene, Slider, SortableTreeItems, Stepper, Textarea, TreeContent, TreeItem, TreeSection } from "./elements";
+import {
+  Avatar,
+  AvatarFallback,
+  Button,
+  Combobox,
+  Diagram,
+  DraggableAvatar,
+  Geometry,
+  Input,
+  Scene,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  Select as SelectUI,
+  SelectValue,
+  Slider,
+  SortableTreeItems,
+  Stepper,
+  Textarea,
+  ToggleGroup,
+  TreeContent,
+  TreeItem,
+  TreeSection,
+} from "./elements";
 import {
   Canvas,
   ConnectionScopeProvider,
@@ -116,6 +139,7 @@ import {
   useDesign,
   useDiffedPiece,
   useDragDrop,
+  useExpertise,
   useExplodeableDesignNodes,
   useFlatDesign,
   useFlatPiecePlane,
@@ -132,6 +156,9 @@ import {
   useKitStore,
   useKitTags,
   useKitTypes,
+  useLanguage,
+  useLayout,
+  useMode,
   usePiece,
   usePiecesFromIds,
   usePiecesMetadata,
@@ -142,6 +169,7 @@ import {
   useReplacableTypes,
   useSketchpad,
   useSketchpadCommands,
+  useTheme,
   useTooltip,
   useType,
 } from "./Sketchpad";
@@ -314,7 +342,6 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
     const currentSelection = context.designApp.selection || {};
     const selectedPieces = currentSelection.pieces || [];
     const selectedConnections = currentSelection.connections || [];
-    const connectionsToRemove = (context.design.connections || []).filter((c) => selectedConnections.includes(c.guid)).map((c) => ({ connected: { piece: c.connected.piece.guid }, connecting: { piece: c.connecting.piece.guid } }));
     return {
       diff: {
         selection: {
@@ -330,13 +357,13 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
         designs: {
           updated: [
             {
-              id: context.design.guid,
+              design: { guid: context.design.guid },
               diff: {
                 pieces: {
-                  removed: selectedPieces,
+                  removed: selectedPieces.map((g) => ({ guid: g })),
                 },
                 connections: {
-                  removed: connectionsToRemove,
+                  removed: selectedConnections.map((g) => ({ guid: g })),
                 },
               },
             },
@@ -643,7 +670,7 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
         designs: {
           updated: [
             {
-              id: context.design.guid,
+              design: { guid: context.design.guid },
               diff: {
                 pieces: {
                   added: [piece],
@@ -661,7 +688,7 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
         designs: {
           updated: [
             {
-              id: context.design.guid,
+              design: { guid: context.design.guid },
               diff: {
                 pieces: {
                   added: pieces,
@@ -679,10 +706,10 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
         designs: {
           updated: [
             {
-              id: context.design.guid,
+              design: { guid: context.design.guid },
               diff: {
                 pieces: {
-                  removed: [pieceGuid],
+                  removed: [{ guid: pieceGuid }],
                 },
               },
             },
@@ -697,10 +724,10 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
         designs: {
           updated: [
             {
-              id: context.design.guid,
+              design: { guid: context.design.guid },
               diff: {
                 pieces: {
-                  removed: pieceGuids,
+                  removed: pieceGuids.map((g) => ({ guid: g })),
                 },
               },
             },
@@ -725,7 +752,7 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
         designs: {
           updated: [
             {
-              id: context.design.guid,
+              design: { guid: context.design.guid },
               diff: {
                 connections: {
                   added: [connection],
@@ -743,7 +770,7 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
         designs: {
           updated: [
             {
-              id: context.design.guid,
+              design: { guid: context.design.guid },
               diff: {
                 connections: {
                   added: connections,
@@ -756,20 +783,15 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
     };
   },
   "semio.designApp.removeConnection": (context: DesignAppCommandContext, connectionGuid: Guid): DesignAppCommandResult => {
-    const connection = context.design.connections?.find((c) => c.guid === connectionGuid);
-    if (!connection) {
-      return {};
-    }
-    const connectionId = { connected: { piece: connection.connected.piece.guid }, connecting: { piece: connection.connecting.piece.guid } };
     return {
       kitDiff: {
         designs: {
           updated: [
             {
-              id: context.design.guid,
+              design: { guid: context.design.guid },
               diff: {
                 connections: {
-                  removed: [connectionId],
+                  removed: [{ guid: connectionGuid }],
                 },
               },
             },
@@ -779,16 +801,15 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
     };
   },
   "semio.designApp.removeConnections": (context: DesignAppCommandContext, connectionGuids: Guid[]): DesignAppCommandResult => {
-    const connectionsToRemove = (context.design.connections || []).filter((c) => connectionGuids.includes(c.guid)).map((c) => ({ connected: { piece: c.connected.piece.guid }, connecting: { piece: c.connecting.piece.guid } }));
     return {
       kitDiff: {
         designs: {
           updated: [
             {
-              id: context.design.guid,
+              design: { guid: context.design.guid },
               diff: {
                 connections: {
-                  removed: connectionsToRemove,
+                  removed: connectionGuids.map((g) => ({ guid: g })),
                 },
               },
             },
@@ -803,10 +824,10 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
         designs: {
           updated: [
             {
-              id: context.design.guid,
+              design: { guid: context.design.guid },
               diff: {
                 pieces: {
-                  updated: [{ id: pieceGuid, diff: pieceDiff }],
+                  updated: [{ piece: { guid: pieceGuid }, diff: pieceDiff }],
                 },
               },
             },
@@ -815,13 +836,13 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
       },
     };
   },
-  "semio.designApp.updatePieces": (context: DesignAppCommandContext, updates: { id: Guid; diff: PieceDiff }[]): DesignAppCommandResult => {
+  "semio.designApp.updatePieces": (context: DesignAppCommandContext, updates: { piece: PieceId; diff: PieceDiff }[]): DesignAppCommandResult => {
     return {
       kitDiff: {
         designs: {
           updated: [
             {
-              id: context.design.guid,
+              design: { guid: context.design.guid },
               diff: {
                 pieces: {
                   updated: updates,
@@ -844,10 +865,10 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
         designs: {
           updated: [
             {
-              id: context.design.guid,
+              design: { guid: context.design.guid },
               diff: {
                 connections: {
-                  updated: [{ id: connectionId, diff: connectionDiff }],
+                  updated: [{ connection: { guid: connectionGuid }, diff: connectionDiff }],
                 },
               },
             },
@@ -856,24 +877,16 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
       },
     };
   },
-  "semio.designApp.updateConnections": (context: DesignAppCommandContext, updates: { id: Guid; diff: ConnectionDiff }[]): DesignAppCommandResult => {
-    const connectionUpdates = updates
-      .map((update) => {
-        const connection = context.design.connections?.find((c) => c.guid === update.id);
-        if (!connection) return null;
-        const connectionId = { connected: { piece: connection.connected.piece.guid }, connecting: { piece: connection.connecting.piece.guid } };
-        return { id: connectionId, diff: update.diff };
-      })
-      .filter((u): u is { id: { connected: { piece: string }; connecting: { piece: string } }; diff: ConnectionDiff } => u !== null);
+  "semio.designApp.updateConnections": (context: DesignAppCommandContext, updates: { connection: ConnectionId; diff: ConnectionDiff }[]): DesignAppCommandResult => {
     return {
       kitDiff: {
         designs: {
           updated: [
             {
-              id: context.design.guid,
+              design: { guid: context.design.guid },
               diff: {
                 connections: {
-                  updated: connectionUpdates,
+                  updated: updates,
                 },
               },
             },
@@ -1799,9 +1812,9 @@ function getTransactionAffectedPieces(store: DesignAppStore | null): { changedPi
       for (const designUpdate of edit.do.kitDiff.designs.updated || []) {
         if (designUpdate.diff.pieces?.updated) {
           for (const pieceUpdate of designUpdate.diff.pieces.updated) {
-            changedPieces.add(pieceUpdate.id);
-            if (!statusMap.has(pieceUpdate.id)) {
-              statusMap.set(pieceUpdate.id, DiffStatus.Modified);
+            changedPieces.add(pieceUpdate.piece.guid);
+            if (!statusMap.has(pieceUpdate.piece.guid)) {
+              statusMap.set(pieceUpdate.piece.guid, DiffStatus.Modified);
             }
           }
         }
@@ -1813,8 +1826,8 @@ function getTransactionAffectedPieces(store: DesignAppStore | null): { changedPi
         }
         if (designUpdate.diff.pieces?.removed) {
           for (const removedPieceId of designUpdate.diff.pieces.removed) {
-            changedPieces.add(removedPieceId);
-            statusMap.set(removedPieceId, DiffStatus.Removed);
+            changedPieces.add(removedPieceId.guid);
+            statusMap.set(removedPieceId.guid, DiffStatus.Removed);
           }
         }
       }
@@ -2182,12 +2195,12 @@ function getConnectionStatusFromTransactionStack(store: DesignAppStore | null, c
         }
         if (designUpdate.diff.connections?.removed) {
           for (const removedConn of designUpdate.diff.connections.removed) {
-            if (typeof removedConn === "string" && removedConn === connectionId) return DiffStatus.Removed;
+            if (removedConn.guid === connectionId) return DiffStatus.Removed;
           }
         }
         if (designUpdate.diff.connections?.updated) {
           for (const connUpdate of designUpdate.diff.connections.updated) {
-            if (typeof connUpdate.id === "string" && connUpdate.id === connectionId) return DiffStatus.Modified;
+            if (connUpdate.connection.guid === connectionId) return DiffStatus.Modified;
           }
         }
       }
@@ -6351,9 +6364,9 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
           currentHelperLines.push(...equalDistanceHelperLines);
 
-          setHelperLines(currentHelperLines);
+          // PERF: Helper lines disabled - setHelperLines(currentHelperLines);
         } else {
-          setHelperLines([]);
+          // PERF: Helper lines disabled - setHelperLines([]);
         }
 
         if (selectedNode.id === node.id) {
@@ -7013,12 +7026,7 @@ const ModelPiece: FC<ModelPieceProps> = () => {
       userData={userData}
     />
   ) : (
-    <group
-      onClick={onSelect}
-      onDoubleClick={onDoubleClick}
-      onPointerEnter={handlePointerEnter}
-      onPointerLeave={handlePointerLeave}
-    >
+    <group onClick={onSelect} onDoubleClick={onDoubleClick} onPointerEnter={handlePointerEnter} onPointerLeave={handlePointerLeave}>
       <PieceMesh />
     </group>
   );
@@ -7056,6 +7064,8 @@ const ModelDesign: FC = () => {
     [selectPieces, selection.pieces],
   );
 
+  // TransformableModel represents a piece model that can be transformed in the scene
+  type TransformableModel = { guid: string; plane: Plane | undefined; isTransformable: boolean; isSelected: boolean };
   const selectedModels = useMemo((): TransformableModel[] => {
     if (!selection.pieces || !flatDesign.pieces) return [];
 
@@ -7430,24 +7440,24 @@ const App: FC<AppProps> = () => {
     const hasPortSelected = selection.port !== undefined;
     const hasSelection = hasPieces || hasConnections || hasPortSelected;
 
-    const pieceSingleId = "semio.sketchpad.app.design.panel.details.section.piece.title";
+    const pieceSingleId = "semio.sketchpad.app.design.panel.details.section.piece.properties";
     const pieceMultipleId = "semio.sketchpad.app.design.panel.details.section.piece.multipleTitle";
-    const connectionSingleId = "semio.sketchpad.app.design.panel.details.section.connection.title";
+    const connectionSingleId = "semio.sketchpad.app.design.panel.details.section.connection.properties";
     const connectionMultipleId = "semio.sketchpad.app.design.panel.details.section.connection.multipleTitle";
     const selectionMultipleId = "semio.sketchpad.app.design.panel.details.section.selection.multipleTitle";
 
-    removeSection("details", "semio.sketchpad.app.design.title");
-    removeSection("details", "semio.sketchpad.app.type.port.title");
+    removeSection("details", "semio.sketchpad.app.design.properties");
+    removeSection("details", "semio.sketchpad.app.type.port.properties");
     removeSection("details", pieceSingleId);
     removeSection("details", pieceMultipleId);
     removeSection("details", connectionSingleId);
     removeSection("details", connectionMultipleId);
     removeSection("details", selectionMultipleId);
-    removeSection("details", "semio.sketchpad.app.kit.title");
+    removeSection("details", "semio.sketchpad.app.kit.properties");
 
     if (!hasSelection) {
       addSection("details", {
-        id: "semio.sketchpad.app.design.title",
+        id: "semio.sketchpad.app.design.properties",
         specificity: 20,
         order: 50,
         content: () =>
@@ -7461,13 +7471,13 @@ const App: FC<AppProps> = () => {
       const portPieceId = selection.port!.piece;
       const portId = selection.port!.port;
       addSection("details", {
-        id: "semio.sketchpad.app.type.port.title",
+        id: "semio.sketchpad.app.type.port.properties",
         specificity: 30,
         order: 0,
         content: () => <PortSection pieceGuid={portPieceId} portGuid={portId} />,
       });
       addSection("details", {
-        id: "semio.sketchpad.app.design.title",
+        id: "semio.sketchpad.app.design.properties",
         specificity: 20,
         order: 50,
         content: () =>
@@ -7514,7 +7524,7 @@ const App: FC<AppProps> = () => {
         });
       }
       addSection("details", {
-        id: "semio.sketchpad.app.design.title",
+        id: "semio.sketchpad.app.design.properties",
         specificity: 20,
         order: 50,
         content: () =>
@@ -7527,7 +7537,7 @@ const App: FC<AppProps> = () => {
     }
 
     addSection("details", {
-      id: "semio.sketchpad.app.kit.title",
+      id: "semio.sketchpad.app.kit.properties",
       specificity: 10,
       order: 100,
       content: () =>
@@ -7541,14 +7551,14 @@ const App: FC<AppProps> = () => {
     });
 
     return () => {
-      removeSection("details", "semio.sketchpad.app.design.title");
-      removeSection("details", "semio.sketchpad.app.type.port.title");
+      removeSection("details", "semio.sketchpad.app.design.properties");
+      removeSection("details", "semio.sketchpad.app.type.port.properties");
       removeSection("details", pieceSingleId);
       removeSection("details", pieceMultipleId);
       removeSection("details", connectionSingleId);
       removeSection("details", connectionMultipleId);
       removeSection("details", selectionMultipleId);
-      removeSection("details", "semio.sketchpad.app.kit.title");
+      removeSection("details", "semio.sketchpad.app.kit.properties");
     };
   }, [selection, addSection, removeSection, appType, t, design]);
 
@@ -7873,7 +7883,7 @@ const App: FC<AppProps> = () => {
           </TreeItem>
           <TreeItem>
             <TreeContent>
-              <Select id="semio.sketchpad.settings.language" value={language || "en"} onValueChange={(value: string) => setLanguage("semio.sketchpad.settings.language", value)} showLabel>
+              <SelectUI id="semio.sketchpad.settings.language" value={language || "en"} onValueChange={(value: string) => setLanguage("semio.sketchpad.settings.language", value)} showLabel>
                 <SelectTrigger>
                   <SelectValue placeholder={languagePlaceholder} />
                 </SelectTrigger>
@@ -7881,7 +7891,7 @@ const App: FC<AppProps> = () => {
                   <SelectItem value="en">{languageEnLabel}</SelectItem>
                   <SelectItem value="de">{languageDeLabel}</SelectItem>
                 </SelectContent>
-              </Select>
+              </SelectUI>
             </TreeContent>
           </TreeItem>
           <TreeItem>

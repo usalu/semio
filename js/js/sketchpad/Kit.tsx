@@ -21,13 +21,14 @@
 
 // #region Imports
 
-import { DragEndEvent, useDroppable } from "@dnd-kit/core";
+import { DragEndEvent, DragOverEvent, DragStartEvent, useDroppable } from "@dnd-kit/core";
 import {
   AddIcon,
   AlertCircleIcon,
   AwardIcon,
   ChevronDownIcon,
   ChevronRightIcon,
+  CodeIcon,
   DocumentIcon,
   FileCodeIcon,
   FileImageIcon,
@@ -36,18 +37,23 @@ import {
   FileTypeIcon,
   FileVideoIcon,
   FolderIcon,
+  HandIcon,
   HashIcon,
   InterfaceIcon,
   LayoutIcon,
   LightbulbIcon,
+  MonitorIcon,
+  MoonIcon,
+  MousePointerIcon,
   SortAscendingIcon,
   SortDescendingIcon,
+  SunIcon,
+  TutorialIcon,
   TypeIcon,
   UserIcon,
 } from "@semio/assets";
 import { formatDistanceToNow } from "date-fns";
 import { de, enUS } from "date-fns/locale";
-import JSZip from "jszip";
 import React, { FC, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams, useSearchParams } from "react-router";
@@ -88,9 +94,9 @@ import {
   useTheme,
   Window,
 } from "./Sketchpad";
-import { Action, Input, NotFound, Scrollable, Strip, Table, TableAvatar, Textarea, Toggle, TreeContent, TreeItem } from "./elements";
-import type { KitAppId, KitCommandContext, KitDiffAppEdit, Layout, PanelDefinition, PanelVisibility, Theme, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
-import { AppConfig, createPanelDefinition, PanelKind } from "./shared";
+import { Action, Input, NotFound, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Strip, Table, TableAvatar, Textarea, Toggle, ToggleGroup, TreeContent, TreeItem } from "./elements";
+import type { KitAppId, KitCommandContext, KitDiffAppEdit, Layout, PanelDefinition, PanelVisibility, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
+import { AppConfig, createPanelDefinition, Expertise, Mode, PanelKind, Theme } from "./shared";
 
 // #endregion Imports
 
@@ -2276,17 +2282,17 @@ const AppContent: FC = () => {
     const artifactsMultipleId = "semio.sketchpad.app.kit.artifacts.multiple";
 
     removeSection("details", artifactsMultipleId);
-    removeSection("details", "semio.sketchpad.app.design.title");
+    removeSection("details", "semio.sketchpad.app.design.properties");
     removeSection("details", "semio.sketchpad.app.kit.designs.multipleTitle");
-    removeSection("details", "semio.sketchpad.app.type.title");
+    removeSection("details", "semio.sketchpad.app.type.properties");
     removeSection("details", "semio.sketchpad.app.kit.types.multipleTitle");
-    removeSection("details", "semio.sketchpad.app.kit.interface.title");
+    removeSection("details", "semio.sketchpad.app.kit.interface.properties");
     removeSection("details", "semio.sketchpad.app.kit.interfaces.multipleTitle");
-    removeSection("details", "semio.sketchpad.app.kit.file.title");
+    removeSection("details", "semio.sketchpad.app.kit.file.properties");
     removeSection("details", "semio.sketchpad.app.kit.files.multipleTitle");
-    removeSection("details", "semio.sketchpad.app.kit.folder.title");
+    removeSection("details", "semio.sketchpad.app.kit.folder.properties");
     removeSection("details", "semio.sketchpad.app.kit.folders.multipleTitle");
-    removeSection("details", "semio.sketchpad.app.kit.title");
+    removeSection("details", "semio.sketchpad.app.kit.properties");
 
     if (totalSelectedKinds > 1) {
       addSection("details", {
@@ -2298,7 +2304,7 @@ const AppContent: FC = () => {
     }
 
     if (designsCount > 0 && totalSelectedKinds === 1) {
-      const designSectionId = designsCount === 1 ? "semio.sketchpad.app.design.title" : "semio.sketchpad.app.kit.designs.multipleTitle";
+      const designSectionId = designsCount === 1 ? "semio.sketchpad.app.design.properties" : "semio.sketchpad.app.kit.designs.multipleTitle";
       addSection("details", {
         id: designSectionId,
         specificity: 30,
@@ -2315,7 +2321,7 @@ const AppContent: FC = () => {
     }
 
     if (typesCount > 0 && totalSelectedKinds === 1) {
-      const typeSectionId = typesCount === 1 ? "semio.sketchpad.app.type.title" : "semio.sketchpad.app.kit.types.multipleTitle";
+      const typeSectionId = typesCount === 1 ? "semio.sketchpad.app.type.properties" : "semio.sketchpad.app.kit.types.multipleTitle";
       addSection("details", {
         id: typeSectionId,
         specificity: 30,
@@ -2325,7 +2331,7 @@ const AppContent: FC = () => {
     }
 
     if (interfacesCount > 0 && totalSelectedKinds === 1) {
-      const interfaceSectionId = interfacesCount === 1 ? "semio.sketchpad.app.kit.interface.title" : "semio.sketchpad.app.kit.interfaces.multipleTitle";
+      const interfaceSectionId = interfacesCount === 1 ? "semio.sketchpad.app.kit.interface.properties" : "semio.sketchpad.app.kit.interfaces.multipleTitle";
       addSection("details", {
         id: interfaceSectionId,
         specificity: 30,
@@ -2335,7 +2341,7 @@ const AppContent: FC = () => {
     }
 
     if (tagsCount > 0 && totalSelectedKinds === 1) {
-      const tagSectionId = tagsCount === 1 ? "semio.sketchpad.app.kit.tag.title" : "semio.sketchpad.app.kit.tags.multipleTitle";
+      const tagSectionId = tagsCount === 1 ? "semio.sketchpad.app.kit.tag.properties" : "semio.sketchpad.app.kit.tags.multipleTitle";
       addSection("details", {
         id: tagSectionId,
         specificity: 30,
@@ -2345,7 +2351,7 @@ const AppContent: FC = () => {
     }
 
     if (conceptsCount > 0 && totalSelectedKinds === 1) {
-      const conceptSectionId = conceptsCount === 1 ? "semio.sketchpad.app.kit.concept.title" : "semio.sketchpad.app.kit.concepts.multipleTitle";
+      const conceptSectionId = conceptsCount === 1 ? "semio.sketchpad.app.kit.concept.properties" : "semio.sketchpad.app.kit.concepts.multipleTitle";
       addSection("details", {
         id: conceptSectionId,
         specificity: 30,
@@ -2355,7 +2361,7 @@ const AppContent: FC = () => {
     }
 
     if (filesCount > 0 && totalSelectedKinds === 1) {
-      const fileSectionId = filesCount === 1 ? "semio.sketchpad.app.kit.file.title" : "semio.sketchpad.app.kit.files.multipleTitle";
+      const fileSectionId = filesCount === 1 ? "semio.sketchpad.app.kit.file.properties" : "semio.sketchpad.app.kit.files.multipleTitle";
       addSection("details", {
         id: fileSectionId,
         specificity: 30,
@@ -2365,7 +2371,7 @@ const AppContent: FC = () => {
     }
 
     if (foldersCount > 0 && totalSelectedKinds === 1) {
-      const folderSectionId = foldersCount === 1 ? "semio.sketchpad.app.kit.folder.title" : "semio.sketchpad.app.kit.folders.multipleTitle";
+      const folderSectionId = foldersCount === 1 ? "semio.sketchpad.app.kit.folder.properties" : "semio.sketchpad.app.kit.folders.multipleTitle";
       addSection("details", {
         id: folderSectionId,
         specificity: 30,
@@ -2375,7 +2381,7 @@ const AppContent: FC = () => {
     }
 
     addSection("details", {
-      id: "semio.sketchpad.app.kit.title",
+      id: "semio.sketchpad.app.kit.properties",
       specificity: 10,
       order: 100,
       content: () =>
@@ -2390,15 +2396,15 @@ const AppContent: FC = () => {
 
     return () => {
       removeSection("details", artifactsMultipleId);
-      removeSection("details", "semio.sketchpad.app.design.title");
+      removeSection("details", "semio.sketchpad.app.design.properties");
       removeSection("details", "semio.sketchpad.app.kit.designs.multipleTitle");
-      removeSection("details", "semio.sketchpad.app.type.title");
+      removeSection("details", "semio.sketchpad.app.type.properties");
       removeSection("details", "semio.sketchpad.app.kit.types.multipleTitle");
-      removeSection("details", "semio.sketchpad.app.kit.file.title");
+      removeSection("details", "semio.sketchpad.app.kit.file.properties");
       removeSection("details", "semio.sketchpad.app.kit.files.multipleTitle");
-      removeSection("details", "semio.sketchpad.app.kit.folder.title");
+      removeSection("details", "semio.sketchpad.app.kit.folder.properties");
       removeSection("details", "semio.sketchpad.app.kit.folders.multipleTitle");
-      removeSection("details", "semio.sketchpad.app.kit.title");
+      removeSection("details", "semio.sketchpad.app.kit.properties");
     };
   }, [addSection, removeSection, appType, kitApp?.selection]);
 
@@ -3978,7 +3984,9 @@ const AppContent: FC = () => {
                   />,
                 ]),
             ...(selectedName ? [<Toggle id="semio.sketchpad.app.kit.filter.name.hide" pressed={true} onPressedChange={() => toggleName(selectedName)} icon={<span className="size-small">N</span>} text={selectedName} />] : []),
-            ...(selectedKind && !selectedName && uniqueNames.length > 0 ? uniqueNames.map((name) => <Toggle key={name} pressed={false} onPressedChange={() => toggleName(name)} id="semio.sketchpad.app.kit.filter.name" icon={<span className="size-small">N</span>} text={name} />) : []),
+            ...(selectedKind && !selectedName && uniqueNames.length > 0
+              ? uniqueNames.map((name) => <Toggle key={name} pressed={false} onPressedChange={() => toggleName(name)} id="semio.sketchpad.app.kit.filter.name" icon={<span className="size-small">N</span>} text={name} />)
+              : []),
             <Input
               key="search"
               id="semio.sketchpad.app.kit.filter.search"
@@ -4209,7 +4217,9 @@ const AppContent: FC = () => {
                 />,
               ]),
           ...(selectedName ? [<Toggle id="semio.sketchpad.app.kit.filter.name.hide" pressed={true} onPressedChange={() => toggleName(selectedName)} icon={<span className="size-small">N</span>} text={selectedName} />] : []),
-          ...(selectedKind && !selectedName && uniqueNames.length > 0 ? uniqueNames.map((name) => <Toggle key={name} pressed={false} onPressedChange={() => toggleName(name)} id="semio.sketchpad.app.kit.filter.name" icon={<span className="size-small">N</span>} text={name} />) : []),
+          ...(selectedKind && !selectedName && uniqueNames.length > 0
+            ? uniqueNames.map((name) => <Toggle key={name} pressed={false} onPressedChange={() => toggleName(name)} id="semio.sketchpad.app.kit.filter.name" icon={<span className="size-small">N</span>} text={name} />)
+            : []),
           <Input
             key="search"
             id="semio.sketchpad.app.kit.canvas.table.search"
@@ -4233,9 +4243,7 @@ const AppContent: FC = () => {
               <AlertCircleIcon className="h-5 w-5 text-warning-foreground flex-shrink-0 mt-0.5" />
               <div className="flex-1 text-sm">
                 <p className="font-medium text-warning-foreground mb-1">Zip file detected</p>
-                <p className="text-warning-foreground/90">
-                  If this zip file contains a kit, please navigate to the home screen to import it properly. Zip files dropped here are added as regular files.
-                </p>
+                <p className="text-warning-foreground/90">If this zip file contains a kit, please navigate to the home screen to import it properly. Zip files dropped here are added as regular files.</p>
               </div>
               <button onClick={() => setShowZipWarning(false)} className="text-warning-foreground/70 hover:text-warning-foreground transition-colors">
                 ×

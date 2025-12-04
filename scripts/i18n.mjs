@@ -13,7 +13,8 @@
  */
 
 import fs from "fs";
-import { glob } from "glob";
+import globPkg from "glob";
+const { glob } = globPkg;
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -130,7 +131,13 @@ function getAllKeys(obj, prefix = "") {
 
 // ID Scanner
 async function scanSourceFiles() {
-  const files = await glob(CONFIG.sourceGlob, { cwd: path.join(__dirname, ".."), absolute: true });
+  const globResult = glob(CONFIG.sourceGlob, { cwd: path.join(__dirname, ".."), absolute: true });
+  const files = await new Promise((resolve, reject) => {
+    const matches = [];
+    globResult.on('match', (match) => matches.push(match));
+    globResult.on('end', () => resolve(matches));
+    globResult.on('error', reject);
+  });
   const foundIds = new Map();
 
   for (const file of files) {
@@ -189,6 +196,25 @@ async function scanSourceFiles() {
   }
 
   return foundIds;
+}
+
+// List of generic/non-specific terms that should not be used in section IDs
+const GENERIC_SECTION_TERMS = ["title", "label", "name", "section", "info", "data", "item", "content"];
+
+// Check if an ID uses generic terminology (returns warning message or null)
+function checkGenericTerminology(id) {
+  const parts = id.split(".");
+  const lastPart = parts[parts.length - 1];
+
+  // Skip metadata keys
+  if (CONFIG.metadataKeys.includes(lastPart)) return null;
+
+  // Check if the last part is a generic term
+  if (GENERIC_SECTION_TERMS.includes(lastPart)) {
+    return `Uses generic term '${lastPart}' - should be more specific (e.g., 'properties', 'metadata', 'details')`;
+  }
+
+  return null;
 }
 
 // Validation
@@ -262,24 +288,42 @@ async function validate() {
 
   console.log("\n🔍 Validating locale entries...");
   const results = {};
+  const genericTermWarnings = new Map();
 
   for (const filename of CONFIG.locales) {
     const langCode = filename.replace(".json", "");
-    results[langCode] = { Valid: [], Incomplete: [], Warnings: [], Missing: [] };
+    results[langCode] = { Valid: [], Incomplete: [], Warning: [], Missing: [] };
 
     for (const [id, { kind }] of foundIds) {
       const check = validateEntry(locales[filename], id, kind);
+      if (!results[langCode][check.status]) {
+        results[langCode][check.status] = [];
+      }
       results[langCode][check.status].push({ id, kind, details: check.details, files: Array.from(foundIds.get(id).files) });
+
+      // Check for generic terminology
+      const genericWarning = checkGenericTerminology(id);
+      if (genericWarning && !genericTermWarnings.has(id)) {
+        genericTermWarnings.set(id, { warning: genericWarning, files: Array.from(foundIds.get(id).files) });
+      }
     }
 
-    const { Valid, Incomplete, Warnings, Missing } = results[langCode];
-    const total = Valid.length + Incomplete.length + Warnings.length + Missing.length;
+    const { Valid, Incomplete, Warning, Missing } = results[langCode];
+    const total = Valid.length + Incomplete.length + Warning.length + Missing.length;
 
     console.log(`  ${filename}:`);
     console.log(`    ✓ Valid:      ${Valid.length} / ${total}`);
-    if (Warnings.length > 0) console.log(`    ⚠ Warnings:   ${Warnings.length} / ${total}`);
+    if (Warning.length > 0) console.log(`    ⚠ Warning:   ${Warning.length} / ${total}`);
     if (Incomplete.length > 0) console.log(`    ⚠ Incomplete: ${Incomplete.length} / ${total}`);
     if (Missing.length > 0) console.log(`    ✗ Missing:    ${Missing.length} / ${total}`);
+  }
+
+  // Report generic terminology warnings
+  if (genericTermWarnings.size > 0) {
+    console.log(`\n⚠️  Generic Terminology Warnings: ${genericTermWarnings.size}`);
+    for (const [id, { warning }] of genericTermWarnings) {
+      console.log(`    ${id}: ${warning}`);
+    }
   }
 
   console.log("\n🔍 Checking for unused locale keys...");
@@ -299,12 +343,12 @@ async function validate() {
     console.log(`  ${filename}: ${unusedKeys[filename].length} potentially unused keys`);
   }
 
-  return { foundIds, results, unusedKeys, locales };
+  return { foundIds, results, unusedKeys, locales, genericTermWarnings };
 }
 
 async function generateReport() {
   console.log("\n📝 Generating report...");
-  const { foundIds, results, unusedKeys } = await validate();
+  const { foundIds, results, unusedKeys, genericTermWarnings } = await validate();
 
   let report = "# i18n Validation Report\n\n";
   report += `Generated: ${new Date().toLocaleString()}\n\n`;
@@ -312,22 +356,33 @@ async function generateReport() {
 
   for (const filename of CONFIG.locales) {
     const langCode = filename.replace(".json", "");
-    const { Valid, Incomplete, Warnings, Missing } = results[langCode];
-    const total = Valid.length + Incomplete.length + Warnings.length + Missing.length;
+    const { Valid, Incomplete, Warning, Missing } = results[langCode];
+    const total = Valid.length + Incomplete.length + (Warning || []).length + Missing.length;
     const pct = ((Valid.length / total) * 100).toFixed(1);
 
     report += `\n### ${filename}\n\n`;
     report += `- ✓ Valid: ${Valid.length} / ${total} (${pct}%)\n`;
-    report += `- ⚠ Warnings: ${Warnings.length} / ${total}\n`;
+    report += `- ⚠ Warning: ${(Warning || []).length} / ${total}\n`;
     report += `- ⚠ Incomplete: ${Incomplete.length} / ${total}\n`;
     report += `- ✗ Missing: ${Missing.length} / ${total}\n`;
+  }
+
+  report += "\n\n## Generic Terminology Warnings\n\n";
+  if (genericTermWarnings && genericTermWarnings.size > 0) {
+    report += "The following IDs use generic terminology and should be more specific:\n\n";
+    report += "| ID | Warning | Files |\n|---|---|---|\n";
+    for (const [id, { warning, files }] of genericTermWarnings) {
+      report += `| \`${id}\` | ${warning} | ${files.join(", ")} |\n`;
+    }
+  } else {
+    report += "No generic terminology issues found.\n";
   }
 
   report += "\n\n## Details\n\n";
 
   for (const filename of CONFIG.locales) {
     const langCode = filename.replace(".json", "");
-    const { Incomplete, Warnings, Missing } = results[langCode];
+    const { Incomplete, Warning, Missing } = results[langCode];
 
     report += `### ${langCode} Missing Entries\n\n`;
     if (Missing.length === 0) {
@@ -350,11 +405,11 @@ async function generateReport() {
     }
 
     report += "\n#### Warnings\n\n";
-    if (Warnings.length === 0) {
+    if (!Warning || Warning.length === 0) {
       report += "No warnings.\n";
     } else {
       report += "| ID | Kind | Files | Details |\n|---|---|---|---|\n";
-      for (const { id, kind, files, details } of Warnings) {
+      for (const { id, kind, files, details } of Warning) {
         report += `| \`${id}\` | ${kind} | ${files.join(", ")} | ${details} |\n`;
       }
     }

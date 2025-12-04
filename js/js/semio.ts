@@ -309,20 +309,20 @@ export const applyAttributeDiff = (base: Attribute, diff: AttributeDiff): Attrib
 };
 
 export const AttributesDiffSchema = z.object({
-  removed: z.array(z.string()).optional(),
-  updated: z.array(z.object({ id: z.string(), diff: AttributeDiffSchema })).optional(),
+  removed: z.array(AttributeIdSchema).optional(),
+  updated: z.array(z.object({ attribute: AttributeIdSchema, diff: AttributeDiffSchema })).optional(),
   added: z.array(AttributeSchema).optional(),
 });
 export type AttributesDiff = z.infer<typeof AttributesDiffSchema>;
 
 const getAttributesDiff = (before: Attribute[], after: Attribute[]): AttributesDiff => {
-  const beforeKeys = before.map((a) => a.key);
-  const afterKeys = after.map((a) => a.key);
-  const removed = beforeKeys.filter((key) => !afterKeys.includes(key));
-  const added = after.filter((a) => !beforeKeys.includes(a.key));
+  const beforeGuids = new Set(before.map((a) => a.guid));
+  const afterGuids = new Set(after.map((a) => a.guid));
+  const removed = before.filter((a) => !afterGuids.has(a.guid)).map((a) => ({ guid: a.guid }));
+  const added = after.filter((a) => !beforeGuids.has(a.guid));
   const updated = after
-    .filter((a) => beforeKeys.includes(a.key))
-    .map((a) => ({ id: a.key, diff: getAttributeDiff(before.find((b) => b.key === a.key)!, a) }))
+    .filter((a) => beforeGuids.has(a.guid))
+    .map((a) => ({ attribute: { guid: a.guid }, diff: getAttributeDiff(before.find((b) => b.guid === a.guid)!, a) }))
     .filter((u) => Object.keys(u.diff).length > 0);
   const diff: AttributesDiff = {};
   if (removed.length > 0) diff.removed = removed;
@@ -332,20 +332,20 @@ const getAttributesDiff = (before: Attribute[], after: Attribute[]): AttributesD
 };
 
 export const inverseAttributesDiff = (original: Attribute[], appliedDiff: AttributesDiff): AttributesDiff => {
-  const removedKeys = appliedDiff.removed ?? [];
-  const updatedKeys = appliedDiff.updated?.map((a) => a.id) ?? [];
-  const addedKeys = appliedDiff.added?.map((a) => a.key) ?? [];
+  const removedGuids = appliedDiff.removed?.map((r) => r.guid) ?? [];
+  const updatedGuids = appliedDiff.updated?.map((a) => a.attribute.guid) ?? [];
+  const addedGuids = appliedDiff.added?.map((a) => a.guid) ?? [];
   return {
-    removed: addedKeys,
-    updated: updatedKeys
-      .map((key) => {
-        const orig = original.find((a) => a.key === key);
-        const upd = appliedDiff.updated?.find((a) => a.id === key);
+    removed: addedGuids.map((guid) => ({ guid })),
+    updated: updatedGuids
+      .map((guid) => {
+        const orig = original.find((a) => a.guid === guid);
+        const upd = appliedDiff.updated?.find((a) => a.attribute.guid === guid);
         if (!orig || !upd) return null;
-        return { id: key, diff: inverseAttributeDiff(orig, upd.diff) };
+        return { attribute: { guid }, diff: inverseAttributeDiff(orig, upd.diff) };
       })
-      .filter((item): item is { id: string; diff: AttributeDiff } => item !== null),
-    added: removedKeys.map((key) => original.find((a) => a.key === key)!).filter((a) => a !== undefined),
+      .filter((item): item is { attribute: AttributeId; diff: AttributeDiff } => item !== null),
+    added: removedGuids.map((guid) => original.find((a) => a.guid === guid)!).filter((a) => a !== undefined),
   };
 };
 
@@ -356,11 +356,12 @@ export const mergeAttributesDiff = (first: AttributesDiff, second: AttributesDif
 export const applyAttributesDiff = (base: Attribute[], diff: AttributesDiff): Attribute[] => {
   let result = [...base];
   if (diff.removed) {
-    result = result.filter((attr) => !diff.removed!.includes(attr.key));
+    const removedGuids = new Set(diff.removed.map((r) => r.guid));
+    result = result.filter((attr) => !removedGuids.has(attr.guid));
   }
   if (diff.updated) {
     for (const update of diff.updated) {
-      const index = result.findIndex((attr) => attr.key === update.id);
+      const index = result.findIndex((attr) => attr.guid === update.attribute.guid);
       if (index !== -1) {
         result[index] = applyAttributeDiff(result[index], update.diff);
       }
@@ -830,8 +831,8 @@ export const applyAuthorDiff = (base: Author, diff: AuthorDiff): Author => {
 };
 
 export const AuthorsDiffSchema = z.object({
-  removed: z.array(z.string()).optional(),
-  updated: z.array(z.object({ id: z.string(), diff: AuthorDiffSchema })).optional(),
+  removed: z.array(AuthorIdSchema).optional(),
+  updated: z.array(z.object({ author: AuthorIdSchema, diff: AuthorDiffSchema })).optional(),
   added: z.array(AuthorSchema).optional(),
 });
 export type AuthorsDiff = z.infer<typeof AuthorsDiffSchema>;
@@ -911,8 +912,8 @@ export const applyFileDiff = (base: File, diff: FileDiff): File => {
 };
 
 export const FilesDiffSchema = z.object({
-  removed: z.array(z.string()).optional(),
-  updated: z.array(z.object({ id: z.string(), diff: FileDiffSchema })).optional(),
+  removed: z.array(FileIdSchema).optional(),
+  updated: z.array(z.object({ file: FileIdSchema, diff: FileDiffSchema })).optional(),
   added: z.array(FileSchema).optional(),
 });
 export type FilesDiff = z.infer<typeof FilesDiffSchema>;
@@ -987,8 +988,8 @@ export const applyFolderDiff = (base: Folder, diff: FolderDiff): Folder => {
 };
 
 export const FoldersDiffSchema = z.object({
-  removed: z.array(z.string()).optional(),
-  updated: z.array(z.object({ id: z.string(), diff: FolderDiffSchema })).optional(),
+  removed: z.array(FolderIdSchema).optional(),
+  updated: z.array(z.object({ folder: FolderIdSchema, diff: FolderDiffSchema })).optional(),
   added: z.array(FolderSchema).optional(),
 });
 export type FoldersDiff = z.infer<typeof FoldersDiffSchema>;
@@ -1060,23 +1061,23 @@ export const mergeBenchmarkDiff = (diff1: BenchmarkDiff, diff2: BenchmarkDiff): 
 };
 
 export const BenchmarksDiffSchema = z.object({
-  removed: z.array(z.string()).optional(),
-  updated: z.array(z.object({ id: z.string(), diff: BenchmarkDiffSchema })).optional(),
+  removed: z.array(BenchmarkIdSchema).optional(),
+  updated: z.array(z.object({ benchmark: BenchmarkIdSchema, diff: BenchmarkDiffSchema })).optional(),
   added: z.array(BenchmarkSchema).optional(),
 });
 export type BenchmarksDiff = z.infer<typeof BenchmarksDiffSchema>;
 
 const getBenchmarksDiff = (before: Benchmark[], after: Benchmark[]): BenchmarksDiff => {
-  const beforeNames = before.map((b) => b.name);
-  const afterNames = after.map((b) => b.name);
-  const removed = beforeNames.filter((name) => !afterNames.includes(name));
-  const added = after.filter((b) => !beforeNames.includes(b.name));
+  const beforeGuids = new Set(before.map((b) => b.guid));
+  const afterGuids = new Set(after.map((b) => b.guid));
+  const removed = before.filter((b) => !afterGuids.has(b.guid)).map((b) => ({ guid: b.guid }));
+  const added = after.filter((b) => !beforeGuids.has(b.guid));
   const updated = after
-    .filter((b) => beforeNames.includes(b.name))
+    .filter((b) => beforeGuids.has(b.guid))
     .map((afterBenchmark) => {
-      const beforeBenchmark = before.find((b) => b.name === afterBenchmark.name)!;
+      const beforeBenchmark = before.find((b) => b.guid === afterBenchmark.guid)!;
       const diff = getBenchmarkDiff(beforeBenchmark, afterBenchmark);
-      return { id: afterBenchmark.name, diff };
+      return { benchmark: { guid: afterBenchmark.guid }, diff };
     })
     .filter((update) => Object.keys(update.diff).length > 0);
   const diff: BenchmarksDiff = {};
@@ -1087,16 +1088,16 @@ const getBenchmarksDiff = (before: Benchmark[], after: Benchmark[]): BenchmarksD
 };
 
 const inverseBenchmarksDiff = (original: Benchmark[], appliedDiff: BenchmarksDiff): BenchmarksDiff => {
-  const addedNames = appliedDiff.added?.map((b) => b.name) ?? [];
-  const removedNames = appliedDiff.removed ?? [];
-  const updatedNames = appliedDiff.updated?.map((u) => u.id) ?? [];
+  const addedGuids = appliedDiff.added?.map((b) => b.guid) ?? [];
+  const removedGuids = appliedDiff.removed?.map((r) => r.guid) ?? [];
+  const updatedGuids = appliedDiff.updated?.map((u) => u.benchmark.guid) ?? [];
   return {
-    removed: addedNames,
-    added: original.filter((b) => removedNames.includes(b.name)),
-    updated: updatedNames.map((name) => {
-      const orig = original.find((b) => b.name === name)!;
-      const upd = appliedDiff.updated?.find((u) => u.id === name)!;
-      return { id: name, diff: inverseBenchmarkDiff(orig, upd.diff) };
+    removed: addedGuids.map((guid) => ({ guid })),
+    added: original.filter((b) => removedGuids.includes(b.guid)),
+    updated: updatedGuids.map((guid) => {
+      const orig = original.find((b) => b.guid === guid)!;
+      const upd = appliedDiff.updated?.find((u) => u.benchmark.guid === guid)!;
+      return { benchmark: { guid }, diff: inverseBenchmarkDiff(orig, upd.diff) };
     }),
   };
 };
@@ -1108,11 +1109,12 @@ const mergeBenchmarksDiff = (first: BenchmarksDiff, second: BenchmarksDiff): Ben
 const applyBenchmarksDiff = (base: Benchmark[], diff: BenchmarksDiff): Benchmark[] => {
   let result = [...base];
   if (diff.removed) {
-    result = result.filter((benchmark) => !diff.removed!.includes(benchmark.name));
+    const removedGuids = new Set(diff.removed.map((r) => r.guid));
+    result = result.filter((benchmark) => !removedGuids.has(benchmark.guid));
   }
   if (diff.updated) {
     for (const update of diff.updated) {
-      const index = result.findIndex((benchmark) => benchmark.name === update.id);
+      const index = result.findIndex((benchmark) => benchmark.guid === update.benchmark.guid);
       if (index !== -1) {
         result[index] = applyBenchmarkDiff(result[index], update.diff);
       }
@@ -1254,8 +1256,8 @@ export const applyQualityDiff = (base: Quality, diff: QualityDiff): Quality => {
 };
 
 export const QualitiesDiffSchema = z.object({
-  removed: z.array(z.string()).optional(),
-  updated: z.array(z.object({ id: z.string(), diff: QualityDiffSchema })).optional(),
+  removed: z.array(QualityIdSchema).optional(),
+  updated: z.array(z.object({ quality: QualityIdSchema, diff: QualityDiffSchema })).optional(),
   added: z.array(QualitySchema).optional(),
 });
 
@@ -1336,8 +1338,8 @@ export const applyInterfaceDiff = (base: Interface, diff: InterfaceDiff): Interf
 };
 
 export const InterfacesDiffSchema = z.object({
-  removed: z.array(z.string()).optional(),
-  updated: z.array(z.object({ id: z.string(), diff: InterfaceDiffSchema })).optional(),
+  removed: z.array(InterfaceIdSchema).optional(),
+  updated: z.array(z.object({ interface: InterfaceIdSchema, diff: InterfaceDiffSchema })).optional(),
   added: z.array(InterfaceSchema).optional(),
 });
 export type InterfacesDiff = z.infer<typeof InterfacesDiffSchema>;
@@ -1345,14 +1347,14 @@ export const getInterfacesDiff = (before: Interface[], after: Interface[]): Inte
   const diff: InterfacesDiff = {};
   const beforeGuids = new Set(before.map((i) => i.guid));
   const afterGuids = new Set(after.map((i) => i.guid));
-  const removed = before.filter((i) => !afterGuids.has(i.guid)).map((i) => i.guid);
+  const removed = before.filter((i) => !afterGuids.has(i.guid)).map((i) => ({ guid: i.guid }));
   if (removed.length > 0) diff.removed = removed;
   const updated = before
     .filter((i) => afterGuids.has(i.guid))
     .map((i) => {
       const afterInterface = after.find((a) => a.guid === i.guid)!;
       const interfaceDiff = getInterfaceDiff(i, afterInterface);
-      return { id: i.guid, diff: interfaceDiff };
+      return { interface: { guid: i.guid }, diff: interfaceDiff };
     })
     .filter((u) => Object.keys(u.diff).length > 0);
   if (updated.length > 0) diff.updated = updated;
@@ -1362,12 +1364,13 @@ export const getInterfacesDiff = (before: Interface[], after: Interface[]): Inte
 };
 export const inverseInterfacesDiff = (original: Interface[], appliedDiff: InterfacesDiff): InterfacesDiff => {
   const inverse: InterfacesDiff = {};
-  if (appliedDiff.removed) inverse.added = original.filter((i) => appliedDiff.removed!.includes(i.guid));
-  if (appliedDiff.added) inverse.removed = appliedDiff.added.map((i) => i.guid);
+  const removedGuids = appliedDiff.removed?.map((r) => r.guid) ?? [];
+  if (appliedDiff.removed) inverse.added = original.filter((i) => removedGuids.includes(i.guid));
+  if (appliedDiff.added) inverse.removed = appliedDiff.added.map((i) => ({ guid: i.guid }));
   if (appliedDiff.updated) {
     inverse.updated = appliedDiff.updated.map((u) => {
-      const originalInterface = original.find((i) => i.guid === u.id)!;
-      return { id: u.id, diff: inverseInterfaceDiff(originalInterface, u.diff) };
+      const originalInterface = original.find((i) => i.guid === u.interface.guid)!;
+      return { interface: { guid: u.interface.guid }, diff: inverseInterfaceDiff(originalInterface, u.diff) };
     });
   }
   return inverse;
@@ -1382,11 +1385,12 @@ export const mergeInterfacesDiff = (diff1: InterfacesDiff, diff2: InterfacesDiff
 export const applyInterfacesDiff = (base: Interface[], diff: InterfacesDiff): Interface[] => {
   let result = [...base];
   if (diff.removed) {
-    result = result.filter((i) => !diff.removed!.includes(i.guid));
+    const removedGuids = new Set(diff.removed.map((r) => r.guid));
+    result = result.filter((i) => !removedGuids.has(i.guid));
   }
   if (diff.updated) {
     for (const update of diff.updated) {
-      const index = result.findIndex((i) => i.guid === update.id);
+      const index = result.findIndex((i) => i.guid === update.interface.guid);
       if (index !== -1) {
         result[index] = applyInterfaceDiff(result[index], update.diff);
       }
@@ -1464,23 +1468,23 @@ export const applyPropDiff = (base: Prop, diff: PropDiff): Prop => {
 };
 
 export const PropsDiffSchema = z.object({
-  removed: z.array(z.string()).optional(),
-  updated: z.array(z.object({ id: z.string(), diff: PropDiffSchema })).optional(),
+  removed: z.array(PropIdSchema).optional(),
+  updated: z.array(z.object({ prop: PropIdSchema, diff: PropDiffSchema })).optional(),
   added: z.array(PropSchema).optional(),
 });
 export type PropsDiff = z.infer<typeof PropsDiffSchema>;
 
 const getPropsDiff = (before: Prop[], after: Prop[]): PropsDiff => {
-  const beforeKeys = before.map((p) => p.quality.guid);
-  const afterKeys = after.map((p) => p.quality.guid);
-  const removed = beforeKeys.filter((key) => !afterKeys.includes(key));
-  const added = after.filter((p) => !beforeKeys.includes(p.quality.guid));
+  const beforeGuids = new Set(before.map((p) => p.guid));
+  const afterGuids = new Set(after.map((p) => p.guid));
+  const removed = before.filter((p) => !afterGuids.has(p.guid)).map((p) => ({ guid: p.guid }));
+  const added = after.filter((p) => !beforeGuids.has(p.guid));
   const updated = after
-    .filter((p) => beforeKeys.includes(p.quality.guid))
+    .filter((p) => beforeGuids.has(p.guid))
     .map((afterProp) => {
-      const beforeProp = before.find((p) => p.quality.guid === afterProp.quality.guid)!;
+      const beforeProp = before.find((p) => p.guid === afterProp.guid)!;
       const diff = getPropDiff(beforeProp, afterProp);
-      return { id: afterProp.quality.guid, diff };
+      return { prop: { guid: afterProp.guid }, diff };
     })
     .filter((update) => Object.keys(update.diff).length > 0);
   const diff: PropsDiff = {};
@@ -1491,16 +1495,16 @@ const getPropsDiff = (before: Prop[], after: Prop[]): PropsDiff => {
 };
 
 const inversePropsDiff = (original: Prop[], appliedDiff: PropsDiff): PropsDiff => {
-  const addedKeys = appliedDiff.added?.map((p) => p.quality.guid) ?? [];
-  const removedKeys = appliedDiff.removed ?? [];
-  const updatedKeys = appliedDiff.updated?.map((u) => u.id) ?? [];
+  const addedGuids = appliedDiff.added?.map((p) => p.guid) ?? [];
+  const removedGuids = appliedDiff.removed?.map((r) => r.guid) ?? [];
+  const updatedGuids = appliedDiff.updated?.map((u) => u.prop.guid) ?? [];
   return {
-    removed: addedKeys,
-    added: original.filter((p) => removedKeys.includes(p.quality.guid)),
-    updated: updatedKeys.map((key) => {
-      const orig = original.find((p) => p.quality.guid === key)!;
-      const upd = appliedDiff.updated?.find((u) => u.id === key)!;
-      return { id: key, diff: inversePropDiff(orig, upd.diff) };
+    removed: addedGuids.map((guid) => ({ guid })),
+    added: original.filter((p) => removedGuids.includes(p.guid)),
+    updated: updatedGuids.map((guid) => {
+      const orig = original.find((p) => p.guid === guid)!;
+      const upd = appliedDiff.updated?.find((u) => u.prop.guid === guid)!;
+      return { prop: { guid }, diff: inversePropDiff(orig, upd.diff) };
     }),
   };
 };
@@ -1512,11 +1516,12 @@ const mergePropsDiff = (first: PropsDiff, second: PropsDiff): PropsDiff => {
 const applyPropsDiff = (base: Prop[], diff: PropsDiff): Prop[] => {
   let result = [...base];
   if (diff.removed) {
-    result = result.filter((prop) => !diff.removed!.includes(prop.quality.guid));
+    const removedGuids = new Set(diff.removed.map((r) => r.guid));
+    result = result.filter((prop) => !removedGuids.has(prop.guid));
   }
   if (diff.updated) {
     for (const update of diff.updated) {
-      const index = result.findIndex((prop) => prop.quality.guid === update.id);
+      const index = result.findIndex((prop) => prop.guid === update.prop.guid);
       if (index !== -1) {
         result[index] = applyPropDiff(result[index], update.diff);
       }
@@ -1595,8 +1600,8 @@ export const applyTagDiff = (base: Tag, diff: TagDiff): Tag => {
 };
 
 export const TagsDiffSchema = z.object({
-  removed: z.array(z.string()).optional(),
-  updated: z.array(z.object({ id: z.string(), diff: TagDiffSchema })).optional(),
+  removed: z.array(TagIdSchema).optional(),
+  updated: z.array(z.object({ tag: TagIdSchema, diff: TagDiffSchema })).optional(),
   added: z.array(TagSchema).optional(),
 });
 export type TagsDiff = z.infer<typeof TagsDiffSchema>;
@@ -1604,14 +1609,14 @@ export const getTagsDiff = (before: Tag[], after: Tag[]): TagsDiff => {
   const diff: TagsDiff = {};
   const beforeGuids = new Set(before.map((t) => t.guid));
   const afterGuids = new Set(after.map((t) => t.guid));
-  const removed = before.filter((t) => !afterGuids.has(t.guid)).map((t) => t.guid);
+  const removed = before.filter((t) => !afterGuids.has(t.guid)).map((t) => ({ guid: t.guid }));
   if (removed.length > 0) diff.removed = removed;
   const updated = before
     .filter((t) => afterGuids.has(t.guid))
     .map((t) => {
       const afterTag = after.find((a) => a.guid === t.guid)!;
       const tagDiff = getTagDiff(t, afterTag);
-      return { id: t.guid, diff: tagDiff };
+      return { tag: { guid: t.guid }, diff: tagDiff };
     })
     .filter((u) => Object.keys(u.diff).length > 0);
   if (updated.length > 0) diff.updated = updated;
@@ -1621,12 +1626,13 @@ export const getTagsDiff = (before: Tag[], after: Tag[]): TagsDiff => {
 };
 export const inverseTagsDiff = (original: Tag[], appliedDiff: TagsDiff): TagsDiff => {
   const inverse: TagsDiff = {};
-  if (appliedDiff.removed) inverse.added = original.filter((t) => appliedDiff.removed!.includes(t.guid));
-  if (appliedDiff.added) inverse.removed = appliedDiff.added.map((t) => t.guid);
+  const removedGuids = appliedDiff.removed?.map((r) => r.guid) ?? [];
+  if (appliedDiff.removed) inverse.added = original.filter((t) => removedGuids.includes(t.guid));
+  if (appliedDiff.added) inverse.removed = appliedDiff.added.map((t) => ({ guid: t.guid }));
   if (appliedDiff.updated) {
     inverse.updated = appliedDiff.updated.map((u) => {
-      const originalTag = original.find((t) => t.guid === u.id)!;
-      return { id: u.id, diff: inverseTagDiff(originalTag, u.diff) };
+      const originalTag = original.find((t) => t.guid === u.tag.guid)!;
+      return { tag: { guid: u.tag.guid }, diff: inverseTagDiff(originalTag, u.diff) };
     });
   }
   return inverse;
@@ -1634,12 +1640,12 @@ export const inverseTagsDiff = (original: Tag[], appliedDiff: TagsDiff): TagsDif
 export const mergeTagsDiff = (diff1: TagsDiff, diff2: TagsDiff): TagsDiff => {
   const removed = [...(diff1.removed ?? []), ...(diff2.removed ?? [])];
   const added = [...(diff1.added ?? []), ...(diff2.added ?? [])];
-  const updated1Map = new Map((diff1.updated ?? []).map((u) => [u.id, u.diff]));
-  const updated2Map = new Map((diff2.updated ?? []).map((u) => [u.id, u.diff]));
-  const allIds = new Set([...updated1Map.keys(), ...updated2Map.keys()]);
-  const updated = Array.from(allIds).map((id) => ({
-    id,
-    diff: mergeTagDiff(updated1Map.get(id) ?? {}, updated2Map.get(id) ?? {}),
+  const updated1Map = new Map((diff1.updated ?? []).map((u) => [u.tag.guid, u.diff]));
+  const updated2Map = new Map((diff2.updated ?? []).map((u) => [u.tag.guid, u.diff]));
+  const allGuids = new Set([...updated1Map.keys(), ...updated2Map.keys()]);
+  const updated = Array.from(allGuids).map((guid) => ({
+    tag: { guid },
+    diff: mergeTagDiff(updated1Map.get(guid) ?? {}, updated2Map.get(guid) ?? {}),
   }));
   return {
     removed: removed.length > 0 ? removed : undefined,
@@ -1650,11 +1656,12 @@ export const mergeTagsDiff = (diff1: TagsDiff, diff2: TagsDiff): TagsDiff => {
 export const applyTagsDiff = (base: Tag[], diff: TagsDiff): Tag[] => {
   let result = [...base];
   if (diff.removed) {
-    result = result.filter((t) => !diff.removed!.includes(t.guid));
+    const removedGuids = new Set(diff.removed.map((r) => r.guid));
+    result = result.filter((t) => !removedGuids.has(t.guid));
   }
   if (diff.updated) {
     for (const update of diff.updated) {
-      const index = result.findIndex((t) => t.guid === update.id);
+      const index = result.findIndex((t) => t.guid === update.tag.guid);
       if (index !== -1) {
         result[index] = applyTagDiff(result[index], update.diff);
       }
@@ -1739,8 +1746,8 @@ export const applyConceptDiff = (base: Concept, diff: ConceptDiff): Concept => {
 };
 
 export const ConceptsDiffSchema = z.object({
-  removed: z.array(z.string()).optional(),
-  updated: z.array(z.object({ id: z.string(), diff: ConceptDiffSchema })).optional(),
+  removed: z.array(ConceptIdSchema).optional(),
+  updated: z.array(z.object({ concept: ConceptIdSchema, diff: ConceptDiffSchema })).optional(),
   added: z.array(ConceptSchema).optional(),
 });
 export type ConceptsDiff = z.infer<typeof ConceptsDiffSchema>;
@@ -1748,14 +1755,14 @@ export const getConceptsDiff = (before: Concept[], after: Concept[]): ConceptsDi
   const diff: ConceptsDiff = {};
   const beforeGuids = new Set(before.map((c) => c.guid));
   const afterGuids = new Set(after.map((c) => c.guid));
-  const removed = before.filter((c) => !afterGuids.has(c.guid)).map((c) => c.guid);
+  const removed = before.filter((c) => !afterGuids.has(c.guid)).map((c) => ({ guid: c.guid }));
   if (removed.length > 0) diff.removed = removed;
   const updated = before
     .filter((c) => afterGuids.has(c.guid))
     .map((c) => {
       const afterConcept = after.find((a) => a.guid === c.guid)!;
       const conceptDiff = getConceptDiff(c, afterConcept);
-      return { id: c.guid, diff: conceptDiff };
+      return { concept: { guid: c.guid }, diff: conceptDiff };
     })
     .filter((u) => Object.keys(u.diff).length > 0);
   if (updated.length > 0) diff.updated = updated;
@@ -1765,12 +1772,13 @@ export const getConceptsDiff = (before: Concept[], after: Concept[]): ConceptsDi
 };
 export const inverseConceptsDiff = (original: Concept[], appliedDiff: ConceptsDiff): ConceptsDiff => {
   const inverse: ConceptsDiff = {};
-  if (appliedDiff.removed) inverse.added = original.filter((c) => appliedDiff.removed!.includes(c.guid));
-  if (appliedDiff.added) inverse.removed = appliedDiff.added.map((c) => c.guid);
+  const removedGuids = appliedDiff.removed?.map((r) => r.guid) ?? [];
+  if (appliedDiff.removed) inverse.added = original.filter((c) => removedGuids.includes(c.guid));
+  if (appliedDiff.added) inverse.removed = appliedDiff.added.map((c) => ({ guid: c.guid }));
   if (appliedDiff.updated) {
     inverse.updated = appliedDiff.updated.map((u) => {
-      const originalConcept = original.find((c) => c.guid === u.id)!;
-      return { id: u.id, diff: inverseConceptDiff(originalConcept, u.diff) };
+      const originalConcept = original.find((c) => c.guid === u.concept.guid)!;
+      return { concept: { guid: u.concept.guid }, diff: inverseConceptDiff(originalConcept, u.diff) };
     });
   }
   return inverse;
@@ -1778,12 +1786,12 @@ export const inverseConceptsDiff = (original: Concept[], appliedDiff: ConceptsDi
 export const mergeConceptsDiff = (diff1: ConceptsDiff, diff2: ConceptsDiff): ConceptsDiff => {
   const removed = [...(diff1.removed ?? []), ...(diff2.removed ?? [])];
   const added = [...(diff1.added ?? []), ...(diff2.added ?? [])];
-  const updated1Map = new Map((diff1.updated ?? []).map((u) => [u.id, u.diff]));
-  const updated2Map = new Map((diff2.updated ?? []).map((u) => [u.id, u.diff]));
-  const allIds = new Set([...updated1Map.keys(), ...updated2Map.keys()]);
-  const updated = Array.from(allIds).map((id) => ({
-    id,
-    diff: mergeConceptDiff(updated1Map.get(id) ?? {}, updated2Map.get(id) ?? {}),
+  const updated1Map = new Map((diff1.updated ?? []).map((u) => [u.concept.guid, u.diff]));
+  const updated2Map = new Map((diff2.updated ?? []).map((u) => [u.concept.guid, u.diff]));
+  const allGuids = new Set([...updated1Map.keys(), ...updated2Map.keys()]);
+  const updated = Array.from(allGuids).map((guid) => ({
+    concept: { guid },
+    diff: mergeConceptDiff(updated1Map.get(guid) ?? {}, updated2Map.get(guid) ?? {}),
   }));
   return {
     removed: removed.length > 0 ? removed : undefined,
@@ -1794,11 +1802,12 @@ export const mergeConceptsDiff = (diff1: ConceptsDiff, diff2: ConceptsDiff): Con
 export const applyConceptsDiff = (base: Concept[], diff: ConceptsDiff): Concept[] => {
   let result = [...base];
   if (diff.removed) {
-    result = result.filter((c) => !diff.removed!.includes(c.guid));
+    const removedGuids = new Set(diff.removed.map((r) => r.guid));
+    result = result.filter((c) => !removedGuids.has(c.guid));
   }
   if (diff.updated) {
     for (const update of diff.updated) {
-      const index = result.findIndex((c) => c.guid === update.id);
+      const index = result.findIndex((c) => c.guid === update.concept.guid);
       if (index !== -1) {
         result[index] = applyConceptDiff(result[index], update.diff);
       }
@@ -1875,8 +1884,8 @@ export const applyModelDiff = (base: Model, diff: ModelDiff): Model => {
 };
 
 export const ModelsDiffSchema = z.object({
-  removed: z.array(z.string()).optional(),
-  updated: z.array(z.object({ id: z.string(), diff: ModelDiffSchema })).optional(),
+  removed: z.array(ModelIdSchema).optional(),
+  updated: z.array(z.object({ model: ModelIdSchema, diff: ModelDiffSchema })).optional(),
   added: z.array(ModelSchema).optional(),
 });
 
@@ -2099,25 +2108,26 @@ export const applyPortDiff = (base: Port, diff: PortDiff): Port => {
 };
 
 export const PortsDiffSchema = z.object({
-  removed: z.array(z.string()).optional(),
-  updated: z.array(z.object({ id: z.string(), diff: PortDiffSchema })).optional(),
+  removed: z.array(PortIdSchema).optional(),
+  updated: z.array(z.object({ port: PortIdSchema, diff: PortDiffSchema })).optional(),
   added: z.array(PortSchema).optional(),
 });
+export type PortsDiff = z.infer<typeof PortsDiffSchema>;
 
-const getPortsDiff = (before: Port[], after: Port[]): { removed?: string[]; updated?: { id: string; diff: PortDiff }[]; added?: Port[] } => {
-  const beforeGuids = before.map((p) => p.guid);
-  const afterGuids = after.map((p) => p.guid);
-  const removed = beforeGuids.filter((guid) => !afterGuids.includes(guid));
-  const added = after.filter((p) => !beforeGuids.includes(p.guid));
+const getPortsDiff = (before: Port[], after: Port[]): PortsDiff => {
+  const beforeGuids = new Set(before.map((p) => p.guid));
+  const afterGuids = new Set(after.map((p) => p.guid));
+  const removed = before.filter((p) => !afterGuids.has(p.guid)).map((p) => ({ guid: p.guid }));
+  const added = after.filter((p) => !beforeGuids.has(p.guid));
   const updated = after
-    .filter((p) => beforeGuids.includes(p.guid))
+    .filter((p) => beforeGuids.has(p.guid))
     .map((afterPort) => {
       const beforePort = before.find((p) => p.guid === afterPort.guid)!;
       const diff = getPortDiff(beforePort, afterPort);
-      return { id: afterPort.guid, diff };
+      return { port: { guid: afterPort.guid }, diff };
     })
     .filter((update) => Object.keys(update.diff).length > 0);
-  const diff: { removed?: string[]; updated?: { id: string; diff: PortDiff }[]; added?: Port[] } = {};
+  const diff: PortsDiff = {};
   if (removed.length > 0) diff.removed = removed;
   if (updated.length > 0) diff.updated = updated;
   if (added.length > 0) diff.added = added;
@@ -2342,11 +2352,11 @@ export const getTypeDiff = (before: Type, after: Type): TypeDiff => {
   if (before.description !== after.description) diff.description = after.description;
   if (!arraysEqual(before.authors, after.authors)) diff.authors = after.authors;
   if (!arraysEqual(before.concepts, after.concepts)) diff.concepts = after.concepts;
-  const modelsDiff = getCollectionDiff(before.models ?? [], after.models ?? [], getModelDiff);
+  const modelsDiff = getCollectionDiff("model", before.models ?? [], after.models ?? [], getModelDiff);
   if (Object.keys(modelsDiff).length > 0) diff.models = modelsDiff;
-  const portsDiff = getCollectionDiff(before.ports ?? [], after.ports ?? [], getPortDiff);
+  const portsDiff = getCollectionDiff("port", before.ports ?? [], after.ports ?? [], getPortDiff);
   if (Object.keys(portsDiff).length > 0) diff.ports = portsDiff;
-  const propsDiff = getCollectionDiff(before.props ?? [], after.props ?? [], getPropDiff);
+  const propsDiff = getCollectionDiff("prop", before.props ?? [], after.props ?? [], getPropDiff);
   if (Object.keys(propsDiff).length > 0) diff.props = propsDiff;
   const attributesDiff = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   if (Object.keys(attributesDiff).length > 0) diff.attributes = attributesDiff;
@@ -2354,9 +2364,9 @@ export const getTypeDiff = (before: Type, after: Type): TypeDiff => {
 };
 
 export const applyTypeDiff = (base: Type, diff: TypeDiff): Type => {
-  const models = diff.models || base.models ? applyCollectionDiff(base.models ?? [], diff.models, applyModelDiff) : undefined;
-  const ports = diff.ports || base.ports ? applyCollectionDiff(base.ports ?? [], diff.ports, applyPortDiff) : undefined;
-  const props = diff.props || base.props ? applyCollectionDiff(base.props ?? [], diff.props, applyPropDiff) : undefined;
+  const models = diff.models || base.models ? applyCollectionDiff("model", base.models ?? [], diff.models, applyModelDiff) : undefined;
+  const ports = diff.ports || base.ports ? applyCollectionDiff("port", base.ports ?? [], diff.ports, applyPortDiff) : undefined;
+  const props = diff.props || base.props ? applyCollectionDiff("prop", base.props ?? [], diff.props, applyPropDiff) : undefined;
   const attributes = diff.attributes || base.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes ?? {}) : undefined;
 
   const result: Type = {
@@ -2412,16 +2422,16 @@ export const inverseTypeDiff = (original: Type, appliedDiff: TypeDiff): TypeDiff
   if (appliedDiff.description !== undefined) inverse.description = original.description ?? null;
   if (appliedDiff.authors !== undefined) inverse.authors = original.authors ?? null;
   if (appliedDiff.concepts !== undefined) inverse.concepts = original.concepts ?? null;
-  if (appliedDiff.models) inverse.models = inverseCollectionDiff(original.models ?? [], appliedDiff.models, inverseModelDiff);
-  if (appliedDiff.ports) inverse.ports = inverseCollectionDiff(original.ports ?? [], appliedDiff.ports, inversePortDiff);
-  if (appliedDiff.props) inverse.props = inverseCollectionDiff(original.props ?? [], appliedDiff.props, inversePropDiff);
+  if (appliedDiff.models) inverse.models = inverseCollectionDiff("model", original.models ?? [], appliedDiff.models, inverseModelDiff);
+  if (appliedDiff.ports) inverse.ports = inverseCollectionDiff("port", original.ports ?? [], appliedDiff.ports, inversePortDiff);
+  if (appliedDiff.props) inverse.props = inverseCollectionDiff("prop", original.props ?? [], appliedDiff.props, inversePropDiff);
   if (appliedDiff.attributes) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
   return inverse;
 };
 
 export const TypesDiffSchema = z.object({
-  removed: z.array(z.string()).optional(),
-  updated: z.array(z.object({ id: z.string(), diff: TypeDiffSchema })).optional(),
+  removed: z.array(TypeIdSchema).optional(),
+  updated: z.array(z.object({ type: TypeIdSchema, diff: TypeDiffSchema })).optional(),
   added: z.array(TypeSchema).optional(),
 });
 export type TypesDiff = z.infer<typeof TypesDiffSchema>;
@@ -2492,8 +2502,8 @@ export const applyLayerDiff = (base: Layer, diff: LayerDiff): Layer => {
 };
 
 export const LayersDiffSchema = z.object({
-  removed: z.array(z.string()).optional(),
-  updated: z.array(z.object({ id: z.string(), diff: LayerDiffSchema })).optional(),
+  removed: z.array(LayerIdSchema).optional(),
+  updated: z.array(z.object({ layer: LayerIdSchema, diff: LayerDiffSchema })).optional(),
   added: z.array(LayerSchema).optional(),
 });
 export type LayersDiff = z.infer<typeof LayersDiffSchema>;
@@ -2606,8 +2616,8 @@ export const applyPieceDiff = (base: Piece, diff: PieceDiff): Piece => {
 };
 
 export const PiecesDiffSchema = z.object({
-  removed: z.array(z.string()).optional(),
-  updated: z.array(z.object({ id: z.string(), diff: PieceDiffSchema })).optional(),
+  removed: z.array(PieceIdSchema).optional(),
+  updated: z.array(z.object({ piece: PieceIdSchema, diff: PieceDiffSchema })).optional(),
   added: z.array(PieceSchema).optional(),
 });
 export type PiecesDiff = z.infer<typeof PiecesDiffSchema>;
@@ -2657,7 +2667,7 @@ export const fixPieceInDesign = (kit: Kit, designId: string, pieceId: string): D
   const parentConnection = findParentConnectionForPieceInDesign(kit, designId, pieceId);
   return {
     connections: {
-      removed: [parentConnection.guid],
+      removed: [{ guid: parentConnection.guid }],
     },
   };
 };
@@ -2666,7 +2676,7 @@ export const fixPiecesInDesign = (kit: Kit, designId: string, pieceIds: string[]
   const parentConnections = pieceIds.map((pieceId) => findParentConnectionForPieceInDesign(kit, designId, pieceId));
   return {
     connections: {
-      removed: parentConnections.map((c) => c.guid),
+      removed: parentConnections.map((c) => ({ guid: c.guid })),
     },
   };
 };
@@ -2744,8 +2754,8 @@ export const mergeGroupDiff = (diff1: GroupDiff, diff2: GroupDiff): GroupDiff =>
   };
 };
 export const GroupsDiffSchema = z.object({
-  removed: z.array(z.string()).optional(),
-  updated: z.array(z.object({ id: z.string(), diff: GroupDiffSchema })).optional(),
+  removed: z.array(GroupIdSchema).optional(),
+  updated: z.array(z.object({ group: GroupIdSchema, diff: GroupDiffSchema })).optional(),
   added: z.array(GroupSchema).optional(),
 });
 export const serializeGroup = (group: Group): string => JSON.stringify(GroupSchema.parse(group));
@@ -2764,9 +2774,11 @@ export const SideSchema = z.object({
 export type Side = z.infer<typeof SideSchema>;
 export const SideDiffSchema = SideSchema.partial();
 export type SideDiff = z.infer<typeof SideDiffSchema>;
+export const SideIdSchema = z.object({ piece: PieceIdSchema, designPiece: PieceIdSchema.optional(), port: PortIdSchema.optional() });
+export type SideId = z.infer<typeof SideIdSchema>;
 export const SidesDiffSchema = z.object({
-  removed: z.array(z.object({ piece: z.string(), designPiece: z.string().optional(), port: z.string() })).optional(),
-  updated: z.array(z.object({ id: z.object({ piece: z.string(), designPiece: z.string().optional(), port: z.string() }), diff: SideDiffSchema })).optional(),
+  removed: z.array(SideIdSchema).optional(),
+  updated: z.array(z.object({ side: SideIdSchema, diff: SideDiffSchema })).optional(),
   added: z.array(SideSchema).optional(),
 });
 export type SidesDiff = z.infer<typeof SidesDiffSchema>;
@@ -2896,8 +2908,8 @@ export const inverseConnectionDiff = (original: Connection, appliedDiff: Connect
 };
 
 export const ConnectionsDiffSchema = z.object({
-  removed: z.array(z.string()).optional(),
-  updated: z.array(z.object({ id: z.string(), diff: ConnectionDiffSchema })).optional(),
+  removed: z.array(ConnectionIdSchema).optional(),
+  updated: z.array(z.object({ connection: ConnectionIdSchema, diff: ConnectionDiffSchema })).optional(),
   added: z.array(ConnectionSchema).optional(),
 });
 export type ConnectionsDiff = z.infer<typeof ConnectionsDiffSchema>;
@@ -2990,8 +3002,8 @@ export const mergeStatDiff = (diff1: StatDiff, diff2: StatDiff): StatDiff => {
   return { ...diff1, ...diff2 };
 };
 export const StatsDiffSchema = z.object({
-  removed: z.array(z.string()).optional(),
-  updated: z.array(z.object({ id: z.string(), diff: StatDiffSchema })).optional(),
+  removed: z.array(StatIdSchema).optional(),
+  updated: z.array(z.object({ stat: StatIdSchema, diff: StatDiffSchema })).optional(),
   added: z.array(StatSchema).optional(),
 });
 export const serializeStat = (stat: Stat): string => JSON.stringify(StatSchema.parse(stat));
@@ -3069,17 +3081,17 @@ export const getDesignDiff = (before: Design, after: Design): DesignDiff => {
   if (before.description !== after.description) diff.description = after.description;
   if (!arraysEqual(before.authors, after.authors)) diff.authors = after.authors as any;
   if (!arraysEqual(before.concepts, after.concepts)) diff.concepts = after.concepts;
-  const piecesDiff = getCollectionDiff(before.pieces ?? [], after.pieces ?? [], getPieceDiff);
+  const piecesDiff = getCollectionDiff("piece", before.pieces ?? [], after.pieces ?? [], getPieceDiff);
   if (Object.keys(piecesDiff).length > 0) diff.pieces = piecesDiff;
-  const connectionsDiff = getCollectionDiff(before.connections ?? [], after.connections ?? [], getConnectionDiff);
+  const connectionsDiff = getCollectionDiff("connection", before.connections ?? [], after.connections ?? [], getConnectionDiff);
   if (Object.keys(connectionsDiff).length > 0) diff.connections = connectionsDiff;
-  const statsDiff = getCollectionDiff(before.stats ?? [], after.stats ?? [], getStatDiff);
+  const statsDiff = getCollectionDiff("stat", before.stats ?? [], after.stats ?? [], getStatDiff);
   if (Object.keys(statsDiff).length > 0) diff.stats = statsDiff;
-  const propsDiff = getCollectionDiff(before.props ?? [], after.props ?? [], getPropDiff);
+  const propsDiff = getCollectionDiff("prop", before.props ?? [], after.props ?? [], getPropDiff);
   if (Object.keys(propsDiff).length > 0) diff.props = propsDiff;
-  const layersDiff = getCollectionDiff(before.layers ?? [], after.layers ?? [], getLayerDiff);
+  const layersDiff = getCollectionDiff("layer", before.layers ?? [], after.layers ?? [], getLayerDiff);
   if (Object.keys(layersDiff).length > 0) diff.layers = layersDiff;
-  const groupsDiff = getCollectionDiff(before.groups ?? [], after.groups ?? [], getGroupDiff);
+  const groupsDiff = getCollectionDiff("group", before.groups ?? [], after.groups ?? [], getGroupDiff);
   if (Object.keys(groupsDiff).length > 0) diff.groups = groupsDiff;
   const attributesDiff = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   if (Object.keys(attributesDiff).length > 0) diff.attributes = attributesDiff;
@@ -3089,12 +3101,12 @@ export const mergeDesignDiff = (diff1: DesignDiff, diff2: DesignDiff): DesignDif
   return {
     ...diff1,
     ...diff2,
-    pieces: diff1.pieces || diff2.pieces ? mergeCollectionDiff(diff1.pieces ?? {}, diff2.pieces ?? {}, mergePieceDiff) : undefined,
-    connections: diff1.connections || diff2.connections ? mergeCollectionDiff(diff1.connections ?? {}, diff2.connections ?? {}, mergeConnectionDiff) : undefined,
-    stats: diff1.stats || diff2.stats ? mergeCollectionDiff(diff1.stats ?? {}, diff2.stats ?? {}, mergeStatDiff) : undefined,
-    props: diff1.props || diff2.props ? mergeCollectionDiff(diff1.props ?? {}, diff2.props ?? {}, mergePropDiff) : undefined,
-    layers: diff1.layers || diff2.layers ? mergeCollectionDiff(diff1.layers ?? {}, diff2.layers ?? {}, mergeLayerDiff) : undefined,
-    groups: diff1.groups || diff2.groups ? mergeCollectionDiff(diff1.groups ?? {}, diff2.groups ?? {}, mergeGroupDiff) : undefined,
+    pieces: diff1.pieces || diff2.pieces ? mergeCollectionDiff("piece", diff1.pieces ?? {}, diff2.pieces ?? {}, mergePieceDiff) : undefined,
+    connections: diff1.connections || diff2.connections ? mergeCollectionDiff("connection", diff1.connections ?? {}, diff2.connections ?? {}, mergeConnectionDiff) : undefined,
+    stats: diff1.stats || diff2.stats ? mergeCollectionDiff("stat", diff1.stats ?? {}, diff2.stats ?? {}, mergeStatDiff) : undefined,
+    props: diff1.props || diff2.props ? mergeCollectionDiff("prop", diff1.props ?? {}, diff2.props ?? {}, mergePropDiff) : undefined,
+    layers: diff1.layers || diff2.layers ? mergeCollectionDiff("layer", diff1.layers ?? {}, diff2.layers ?? {}, mergeLayerDiff) : undefined,
+    groups: diff1.groups || diff2.groups ? mergeCollectionDiff("group", diff1.groups ?? {}, diff2.groups ?? {}, mergeGroupDiff) : undefined,
     authors: diff2.authors ?? diff1.authors,
     attributes: diff1.attributes || diff2.attributes ? mergeAttributesDiff(diff1.attributes ?? {}, diff2.attributes ?? {}) : undefined,
   };
@@ -3115,12 +3127,12 @@ export const inverseDesignDiff = (original: Design, appliedDiff: DesignDiff): De
   if (appliedDiff.description !== undefined) inverse.description = original.description;
   if (appliedDiff.authors !== undefined) inverse.authors = original.authors as any;
   if (appliedDiff.concepts !== undefined) inverse.concepts = original.concepts;
-  if (appliedDiff.pieces) inverse.pieces = inverseCollectionDiff(original.pieces ?? [], appliedDiff.pieces, inversePieceDiff);
-  if (appliedDiff.connections) inverse.connections = inverseCollectionDiff(original.connections ?? [], appliedDiff.connections, inverseConnectionDiff);
-  if (appliedDiff.stats) inverse.stats = inverseCollectionDiff(original.stats ?? [], appliedDiff.stats, inverseStatDiff);
-  if (appliedDiff.props) inverse.props = inverseCollectionDiff(original.props ?? [], appliedDiff.props, inversePropDiff);
-  if (appliedDiff.layers) inverse.layers = inverseCollectionDiff(original.layers ?? [], appliedDiff.layers, inverseLayerDiff);
-  if (appliedDiff.groups) inverse.groups = inverseCollectionDiff(original.groups ?? [], appliedDiff.groups, inverseGroupDiff);
+  if (appliedDiff.pieces) inverse.pieces = inverseCollectionDiff("piece", original.pieces ?? [], appliedDiff.pieces, inversePieceDiff);
+  if (appliedDiff.connections) inverse.connections = inverseCollectionDiff("connection", original.connections ?? [], appliedDiff.connections, inverseConnectionDiff);
+  if (appliedDiff.stats) inverse.stats = inverseCollectionDiff("stat", original.stats ?? [], appliedDiff.stats, inverseStatDiff);
+  if (appliedDiff.props) inverse.props = inverseCollectionDiff("prop", original.props ?? [], appliedDiff.props, inversePropDiff);
+  if (appliedDiff.layers) inverse.layers = inverseCollectionDiff("layer", original.layers ?? [], appliedDiff.layers, inverseLayerDiff);
+  if (appliedDiff.groups) inverse.groups = inverseCollectionDiff("group", original.groups ?? [], appliedDiff.groups, inverseGroupDiff);
   if (appliedDiff.attributes) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
   return inverse;
 };
@@ -3248,12 +3260,12 @@ export const removeConnectionsFromDesignDiff = (designDiff: any, connectionIds: 
 };
 
 export const applyDesignDiff = (base: Design, diff: DesignDiff): Design => {
-  const pieces = diff.pieces || base.pieces ? applyCollectionDiff(base.pieces ?? [], diff.pieces, applyPieceDiff) : undefined;
-  const connections = diff.connections || base.connections ? applyCollectionDiff(base.connections ?? [], diff.connections, applyConnectionDiff) : undefined;
-  const stats = diff.stats || base.stats ? applyCollectionDiff(base.stats ?? [], diff.stats, applyStatDiff) : undefined;
-  const props = diff.props || base.props ? applyCollectionDiff(base.props ?? [], diff.props, applyPropDiff) : undefined;
-  const layers = diff.layers || base.layers ? applyCollectionDiff(base.layers ?? [], diff.layers, applyLayerDiff) : undefined;
-  const groups = diff.groups || base.groups ? applyCollectionDiff(base.groups ?? [], diff.groups, applyGroupDiff) : undefined;
+  const pieces = diff.pieces || base.pieces ? applyCollectionDiff("piece", base.pieces ?? [], diff.pieces, applyPieceDiff) : undefined;
+  const connections = diff.connections || base.connections ? applyCollectionDiff("connection", base.connections ?? [], diff.connections, applyConnectionDiff) : undefined;
+  const stats = diff.stats || base.stats ? applyCollectionDiff("stat", base.stats ?? [], diff.stats, applyStatDiff) : undefined;
+  const props = diff.props || base.props ? applyCollectionDiff("prop", base.props ?? [], diff.props, applyPropDiff) : undefined;
+  const layers = diff.layers || base.layers ? applyCollectionDiff("layer", base.layers ?? [], diff.layers, applyLayerDiff) : undefined;
+  const groups = diff.groups || base.groups ? applyCollectionDiff("group", base.groups ?? [], diff.groups, applyGroupDiff) : undefined;
   const attributes = diff.attributes || base.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes ?? {}) : undefined;
 
   const result: Design = {
@@ -3291,8 +3303,8 @@ export const applyDesignDiff = (base: Design, diff: DesignDiff): Design => {
 };
 
 export const DesignsDiffSchema = z.object({
-  removed: z.array(z.string()).optional(),
-  updated: z.array(z.object({ id: z.string(), diff: DesignDiffSchema })).optional(),
+  removed: z.array(DesignIdSchema).optional(),
+  updated: z.array(z.object({ design: DesignIdSchema, diff: DesignDiffSchema })).optional(),
   added: z.array(DesignSchema).optional(),
 });
 export type DesignsDiff = z.infer<typeof DesignsDiffSchema>;
@@ -3321,10 +3333,10 @@ export const orientDesign = (plane?: Plane, center?: Coord): DesignDiff => {
 export const removePiecesAndConnectionsFromDesign = (kit: Kit, designId: string, pieceIds: string[], connectionIds: string[]): DesignDiff => {
   return {
     pieces: {
-      removed: pieceIds,
+      removed: pieceIds.map((guid) => ({ guid })),
     },
     connections: {
-      removed: connectionIds,
+      removed: connectionIds.map((guid) => ({ guid })),
     },
   };
 };
@@ -3693,11 +3705,11 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
       if (Object.keys(pieceDiff).length === 0) return null;
 
       return {
-        id: flatPiece.guid,
+        piece: { guid: flatPiece.guid },
         diff: pieceDiff,
       };
     })
-    .filter((update) => update !== null) as Array<{ id: string; diff: PieceDiff }>;
+    .filter((update) => update !== null) as Array<{ piece: PieceId; diff: PieceDiff }>;
 
   const removedConnections = design.connections?.map((c) => ({ connected: { piece: c.connected.piece.guid }, connecting: { piece: c.connecting.piece.guid } })) || [];
 
@@ -3765,7 +3777,7 @@ export const createClusteredDesign = (originalDesign: Design, clusterPieceIds: s
  */
 export const replaceClusterWithDesign = (originalDesign: Design, clusterPieceIds: string[], clusteredDesign: Design, externalConnections: Connection[]): DesignDiff => {
   // Remove clustered pieces
-  const piecesToRemove = clusterPieceIds;
+  const piecesToRemove = clusterPieceIds.map((guid) => ({ guid }));
 
   // Remove all connections involving clustered pieces
   const connectionsToRemove = (originalDesign.connections || [])
@@ -3774,7 +3786,7 @@ export const replaceClusterWithDesign = (originalDesign: Design, clusterPieceIds
       const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece.guid);
       return connectedInCluster || connectingInCluster;
     })
-    .map((c) => c.guid);
+    .map((c) => ({ guid: c.guid }));
 
   // Update external connections to use direct design references
   const updatedExternalConnections = externalConnections.map((connection) => {
@@ -4106,18 +4118,30 @@ export const KitDiffSchema = KitSchema.partial()
     preview: z.string().nullable().optional(),
   });
 export type KitDiff = z.infer<typeof KitDiffSchema>;
-const getCollectionDiff = <T extends { guid: string }, D>(before: T[], after: T[], getItemDiff: (before: T, after: T) => D): { removed?: string[]; updated?: { id: string; diff: D }[]; added?: T[] } => {
-  const diff: { removed?: string[]; updated?: { id: string; diff: D }[]; added?: T[] } = {};
+type EntityIdType = { guid: string };
+type CollectionDiff<K extends string, T extends { guid: string }, D> = {
+  removed?: EntityIdType[];
+  updated?: Array<{ [key in K]: EntityIdType } & { diff: D }>;
+  added?: T[];
+};
+
+const getCollectionDiff = <K extends string, T extends { guid: string }, D>(
+  entityKey: K,
+  before: T[],
+  after: T[],
+  getItemDiff: (before: T, after: T) => D
+): CollectionDiff<K, T, D> => {
+  const diff: CollectionDiff<K, T, D> = {};
   const beforeGuids = new Set(before.map((i) => i.guid));
   const afterGuids = new Set(after.map((i) => i.guid));
-  const removed = before.filter((i) => !afterGuids.has(i.guid)).map((i) => i.guid);
+  const removed = before.filter((i) => !afterGuids.has(i.guid)).map((i) => ({ guid: i.guid }));
   if (removed.length > 0) diff.removed = removed;
   const updated = before
     .filter((i) => afterGuids.has(i.guid))
     .map((i) => {
       const afterItem = after.find((a) => a.guid === i.guid)!;
       const itemDiff = getItemDiff(i, afterItem);
-      return { id: i.guid, diff: itemDiff };
+      return { [entityKey]: { guid: i.guid }, diff: itemDiff } as { [key in K]: EntityIdType } & { diff: D };
     })
     .filter((u) => Object.keys(u.diff as any).length > 0);
   if (updated.length > 0) diff.updated = updated;
@@ -4126,32 +4150,42 @@ const getCollectionDiff = <T extends { guid: string }, D>(before: T[], after: T[
   return diff;
 };
 
-const inverseCollectionDiff = <T extends { guid: string }, D>(
+const inverseCollectionDiff = <K extends string, T extends { guid: string }, D>(
+  entityKey: K,
   original: T[],
-  appliedDiff: { removed?: string[]; updated?: { id: string; diff: D }[]; added?: T[] },
+  appliedDiff: CollectionDiff<K, T, D>,
   inverseItemDiff: (original: T, appliedDiff: D) => D,
-): { removed?: string[]; updated?: { id: string; diff: D }[]; added?: T[] } => {
-  const inverse: { removed?: string[]; updated?: { id: string; diff: D }[]; added?: T[] } = {};
-  if (appliedDiff.removed) inverse.added = original.filter((i) => appliedDiff.removed!.includes(i.guid));
-  if (appliedDiff.added) inverse.removed = appliedDiff.added.map((i) => i.guid);
+): CollectionDiff<K, T, D> => {
+  const inverse: CollectionDiff<K, T, D> = {};
+  const removedGuids = appliedDiff.removed?.map((r) => r.guid) ?? [];
+  if (appliedDiff.removed) inverse.added = original.filter((i) => removedGuids.includes(i.guid));
+  if (appliedDiff.added) inverse.removed = appliedDiff.added.map((i) => ({ guid: i.guid }));
   if (appliedDiff.updated) {
     inverse.updated = appliedDiff.updated.map((u) => {
-      const originalItem = original.find((i) => i.guid === u.id)!;
-      return { id: u.id, diff: inverseItemDiff(originalItem, u.diff) };
+      const entityId = (u as any)[entityKey] as EntityIdType;
+      const originalItem = original.find((i) => i.guid === entityId.guid)!;
+      return { [entityKey]: entityId, diff: inverseItemDiff(originalItem, u.diff) } as { [key in K]: EntityIdType } & { diff: D };
     });
   }
   return inverse;
 };
 
-const applyCollectionDiff = <T extends { guid: string }, D>(base: T[], diff: { removed?: string[]; updated?: { id: string; diff: D }[]; added?: T[] } | undefined, applyItemDiff: (base: T, diff: D) => T): T[] => {
+const applyCollectionDiff = <K extends string, T extends { guid: string }, D>(
+  entityKey: K,
+  base: T[],
+  diff: CollectionDiff<K, T, D> | undefined,
+  applyItemDiff: (base: T, diff: D) => T
+): T[] => {
   if (!diff) return base;
   let result = [...base];
   if (diff.removed) {
-    result = result.filter((i) => !diff.removed!.includes(i.guid));
+    const removedGuids = new Set(diff.removed.map((r) => r.guid));
+    result = result.filter((i) => !removedGuids.has(i.guid));
   }
   if (diff.updated) {
     for (const update of diff.updated) {
-      const index = result.findIndex((i) => i.guid === update.id);
+      const entityId = (update as any)[entityKey] as EntityIdType;
+      const index = result.findIndex((i) => i.guid === entityId.guid);
       if (index !== -1) {
         result[index] = applyItemDiff(result[index], update.diff);
       }
@@ -4163,20 +4197,22 @@ const applyCollectionDiff = <T extends { guid: string }, D>(base: T[], diff: { r
   return result;
 };
 
-const mergeCollectionDiff = <T extends { guid: string }, D>(
-  diff1: { removed?: string[]; updated?: { id: string; diff: D }[]; added?: T[] },
-  diff2: { removed?: string[]; updated?: { id: string; diff: D }[]; added?: T[] },
+const mergeCollectionDiff = <K extends string, T extends { guid: string }, D>(
+  entityKey: K,
+  diff1: CollectionDiff<K, T, D>,
+  diff2: CollectionDiff<K, T, D>,
   mergeItemDiff: (diff1: D, diff2: D) => D,
-): { removed?: string[]; updated?: { id: string; diff: D }[]; added?: T[] } => {
+): CollectionDiff<K, T, D> => {
   const removed = [...(diff1.removed ?? []), ...(diff2.removed ?? [])];
   const added = [...(diff1.added ?? []), ...(diff2.added ?? [])];
-  const updated1Map = new Map((diff1.updated ?? []).map((u) => [u.id, u.diff]));
-  const updated2Map = new Map((diff2.updated ?? []).map((u) => [u.id, u.diff]));
-  const allIds = new Set([...updated1Map.keys(), ...updated2Map.keys()]);
-  const updated = Array.from(allIds).map((id) => ({
-    id,
-    diff: mergeItemDiff(updated1Map.get(id) ?? ({} as D), updated2Map.get(id) ?? ({} as D)),
-  }));
+  const getEntityGuid = (u: any) => (u[entityKey] as EntityIdType).guid;
+  const updated1Map = new Map((diff1.updated ?? []).map((u) => [getEntityGuid(u), u.diff]));
+  const updated2Map = new Map((diff2.updated ?? []).map((u) => [getEntityGuid(u), u.diff]));
+  const allGuids = new Set([...updated1Map.keys(), ...updated2Map.keys()]);
+  const updated = Array.from(allGuids).map((guid) => ({
+    [entityKey]: { guid },
+    diff: mergeItemDiff(updated1Map.get(guid) ?? ({} as D), updated2Map.get(guid) ?? ({} as D)),
+  })) as Array<{ [key in K]: EntityIdType } & { diff: D }>;
   return {
     removed: removed.length > 0 ? removed : undefined,
     updated: updated.length > 0 ? updated : undefined,
@@ -4195,9 +4231,9 @@ export const getKitDiff = (before: Kit, after: Kit): KitDiff => {
   if (before.homepage !== after.homepage) diff.homepage = after.homepage;
   if (before.license !== after.license) diff.license = after.license;
   if (before.preview !== after.preview) diff.preview = after.preview;
-  const typesDiff = getCollectionDiff(before.types ?? [], after.types ?? [], getTypeDiff);
+  const typesDiff = getCollectionDiff("type", before.types ?? [], after.types ?? [], getTypeDiff);
   if (Object.keys(typesDiff).length > 0) diff.types = typesDiff;
-  const designsDiff = getCollectionDiff(before.designs ?? [], after.designs ?? [], getDesignDiff);
+  const designsDiff = getCollectionDiff("design", before.designs ?? [], after.designs ?? [], getDesignDiff);
   if (Object.keys(designsDiff).length > 0) diff.designs = designsDiff;
   const tagsDiff = getTagsDiff(before.tags ?? [], after.tags ?? []);
   if (Object.keys(tagsDiff).length > 0) diff.tags = tagsDiff;
@@ -4205,13 +4241,13 @@ export const getKitDiff = (before: Kit, after: Kit): KitDiff => {
   if (Object.keys(conceptsDiff).length > 0) diff.concepts = conceptsDiff;
   const interfacesDiff = getInterfacesDiff(before.interfaces ?? [], after.interfaces ?? []);
   if (Object.keys(interfacesDiff).length > 0) diff.interfaces = interfacesDiff;
-  const qualitiesDiff = getCollectionDiff(before.qualities ?? [], after.qualities ?? [], getQualityDiff);
+  const qualitiesDiff = getCollectionDiff("quality", before.qualities ?? [], after.qualities ?? [], getQualityDiff);
   if (Object.keys(qualitiesDiff).length > 0) diff.qualities = qualitiesDiff;
-  const filesDiff = getCollectionDiff(before.files ?? [], after.files ?? [], getFileDiff);
+  const filesDiff = getCollectionDiff("file", before.files ?? [], after.files ?? [], getFileDiff);
   if (Object.keys(filesDiff).length > 0) diff.files = filesDiff;
-  const foldersDiff = getCollectionDiff(before.folders ?? [], after.folders ?? [], getFolderDiff);
+  const foldersDiff = getCollectionDiff("folder", before.folders ?? [], after.folders ?? [], getFolderDiff);
   if (Object.keys(foldersDiff).length > 0) diff.folders = foldersDiff;
-  const authorsDiff = getCollectionDiff(before.authors ?? [], after.authors ?? [], getAuthorDiff);
+  const authorsDiff = getCollectionDiff("author", before.authors ?? [], after.authors ?? [], getAuthorDiff);
   if (Object.keys(authorsDiff).length > 0) diff.authors = authorsDiff;
   const attributesDiff = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   if (Object.keys(attributesDiff).length > 0) diff.attributes = attributesDiff;
@@ -4228,31 +4264,32 @@ export const inverseKitDiff = (original: Kit, appliedDiff: KitDiff): KitDiff => 
   if (appliedDiff.homepage !== undefined) inverse.homepage = original.homepage ?? null;
   if (appliedDiff.license !== undefined) inverse.license = original.license ?? null;
   if (appliedDiff.preview !== undefined) inverse.preview = original.preview ?? null;
-  if (appliedDiff.types) inverse.types = inverseCollectionDiff(original.types ?? [], appliedDiff.types, inverseTypeDiff);
-  if (appliedDiff.designs) inverse.designs = inverseCollectionDiff(original.designs ?? [], appliedDiff.designs, inverseDesignDiff);
+  if (appliedDiff.types) inverse.types = inverseCollectionDiff("type", original.types ?? [], appliedDiff.types, inverseTypeDiff);
+  if (appliedDiff.designs) inverse.designs = inverseCollectionDiff("design", original.designs ?? [], appliedDiff.designs, inverseDesignDiff);
   if (appliedDiff.tags) inverse.tags = inverseTagsDiff(original.tags ?? [], appliedDiff.tags);
   if (appliedDiff.concepts) inverse.concepts = inverseConceptsDiff(original.concepts ?? [], appliedDiff.concepts);
   if (appliedDiff.interfaces) inverse.interfaces = inverseInterfacesDiff(original.interfaces ?? [], appliedDiff.interfaces);
-  if (appliedDiff.qualities) inverse.qualities = inverseCollectionDiff(original.qualities ?? [], appliedDiff.qualities, inverseQualityDiff);
-  if (appliedDiff.files) inverse.files = inverseCollectionDiff(original.files ?? [], appliedDiff.files, inverseFileDiff);
-  if (appliedDiff.folders) inverse.folders = inverseCollectionDiff(original.folders ?? [], appliedDiff.folders, inverseFolderDiff);
-  if (appliedDiff.authors) inverse.authors = inverseCollectionDiff(original.authors ?? [], appliedDiff.authors, inverseAuthorDiff);
+  if (appliedDiff.qualities) inverse.qualities = inverseCollectionDiff("quality", original.qualities ?? [], appliedDiff.qualities, inverseQualityDiff);
+  if (appliedDiff.files) inverse.files = inverseCollectionDiff("file", original.files ?? [], appliedDiff.files, inverseFileDiff);
+  if (appliedDiff.folders) inverse.folders = inverseCollectionDiff("folder", original.folders ?? [], appliedDiff.folders, inverseFolderDiff);
+  if (appliedDiff.authors) inverse.authors = inverseCollectionDiff("author", original.authors ?? [], appliedDiff.authors, inverseAuthorDiff);
   if (appliedDiff.attributes) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
   return inverse;
 };
 export const mergeKitDiff = (diff1: KitDiff, diff2: KitDiff): KitDiff => {
+  const mergeSimpleDiff = <D>(d1: D, d2: D): D => ({ ...d1, ...d2 });
   return {
     ...diff1,
     ...diff2,
-    types: diff1.types || diff2.types ? (mergeInterfacesDiff(diff1.types ?? {}, diff2.types ?? {}) as any) : undefined,
-    designs: diff1.designs || diff2.designs ? (mergeInterfacesDiff(diff1.designs ?? {}, diff2.designs ?? {}) as any) : undefined,
+    types: diff1.types || diff2.types ? mergeCollectionDiff("type", diff1.types ?? {}, diff2.types ?? {}, mergeTypeDiff) : undefined,
+    designs: diff1.designs || diff2.designs ? mergeCollectionDiff("design", diff1.designs ?? {}, diff2.designs ?? {}, mergeDesignDiff) : undefined,
     tags: diff1.tags || diff2.tags ? mergeTagsDiff(diff1.tags ?? {}, diff2.tags ?? {}) : undefined,
     concepts: diff1.concepts || diff2.concepts ? mergeConceptsDiff(diff1.concepts ?? {}, diff2.concepts ?? {}) : undefined,
     interfaces: diff1.interfaces || diff2.interfaces ? mergeInterfacesDiff(diff1.interfaces ?? {}, diff2.interfaces ?? {}) : undefined,
-    qualities: diff1.qualities || diff2.qualities ? (mergeInterfacesDiff(diff1.qualities ?? {}, diff2.qualities ?? {}) as any) : undefined,
-    files: diff1.files || diff2.files ? (mergeInterfacesDiff(diff1.files ?? {}, diff2.files ?? {}) as any) : undefined,
-    folders: diff1.folders || diff2.folders ? (mergeInterfacesDiff(diff1.folders ?? {}, diff2.folders ?? {}) as any) : undefined,
-    authors: diff1.authors || diff2.authors ? (mergeInterfacesDiff(diff1.authors ?? {}, diff2.authors ?? {}) as any) : undefined,
+    qualities: diff1.qualities || diff2.qualities ? mergeCollectionDiff("quality", diff1.qualities ?? {}, diff2.qualities ?? {}, mergeQualityDiff) : undefined,
+    files: diff1.files || diff2.files ? mergeCollectionDiff("file", diff1.files ?? {}, diff2.files ?? {}, mergeSimpleDiff) : undefined,
+    folders: diff1.folders || diff2.folders ? mergeCollectionDiff("folder", diff1.folders ?? {}, diff2.folders ?? {}, mergeSimpleDiff) : undefined,
+    authors: diff1.authors || diff2.authors ? mergeCollectionDiff("author", diff1.authors ?? {}, diff2.authors ?? {}, mergeSimpleDiff) : undefined,
     attributes: diff1.attributes || diff2.attributes ? mergeAttributesDiff(diff1.attributes ?? {}, diff2.attributes ?? {}) : undefined,
   };
 };
@@ -4278,11 +4315,11 @@ export const applyKitDiff = (base: Kit, diff: KitDiff): Kit => {
 
   // Collections - only include if result is non-empty
   if (diff.types || base.types) {
-    const types = applyCollectionDiff(base.types ?? [], diff.types, applyTypeDiff);
+    const types = applyCollectionDiff("type", base.types ?? [], diff.types, applyTypeDiff);
     if (types.length > 0) result.types = types;
   }
   if (diff.designs || base.designs) {
-    const designs = applyCollectionDiff(base.designs ?? [], diff.designs, applyDesignDiff);
+    const designs = applyCollectionDiff("design", base.designs ?? [], diff.designs, applyDesignDiff);
     if (designs.length > 0) result.designs = designs;
   }
   if (diff.tags || base.tags) {
@@ -4298,19 +4335,19 @@ export const applyKitDiff = (base: Kit, diff: KitDiff): Kit => {
     if (interfaces.length > 0) result.interfaces = interfaces;
   }
   if (diff.qualities || base.qualities) {
-    const qualities = applyCollectionDiff(base.qualities ?? [], diff.qualities, applyQualityDiff);
+    const qualities = applyCollectionDiff("quality", base.qualities ?? [], diff.qualities, applyQualityDiff);
     if (qualities.length > 0) result.qualities = qualities;
   }
   if (diff.files || base.files) {
-    const files = applyCollectionDiff(base.files ?? [], diff.files, applyFileDiff);
+    const files = applyCollectionDiff("file", base.files ?? [], diff.files, applyFileDiff);
     if (files.length > 0) result.files = files;
   }
   if (diff.folders || base.folders) {
-    const folders = applyCollectionDiff(base.folders ?? [], diff.folders, applyFolderDiff);
+    const folders = applyCollectionDiff("folder", base.folders ?? [], diff.folders, applyFolderDiff);
     if (folders.length > 0) result.folders = folders;
   }
   if (diff.authors || base.authors) {
-    const authors = applyCollectionDiff(base.authors ?? [], diff.authors, applyAuthorDiff);
+    const authors = applyCollectionDiff("author", base.authors ?? [], diff.authors, applyAuthorDiff);
     if (authors.length > 0) result.authors = authors;
   }
   if (diff.attributes || base.attributes) {
@@ -4322,8 +4359,8 @@ export const applyKitDiff = (base: Kit, diff: KitDiff): Kit => {
 };
 
 export const KitsDiffSchema = z.object({
-  removed: z.array(z.string()).optional(),
-  updated: z.array(z.object({ id: z.string(), diff: KitDiffSchema })).optional(),
+  removed: z.array(KitIdSchema).optional(),
+  updated: z.array(z.object({ kit: KitIdSchema, diff: KitDiffSchema })).optional(),
   added: z.array(KitSchema).optional(),
 });
 
@@ -4338,7 +4375,7 @@ export const setTypeInKit = (type: Type): KitDiff => ({
   },
 });
 export const removeTypeFromKit = (typeGuid: string): KitDiff => ({
-  types: { removed: [typeGuid] },
+  types: { removed: [{ guid: typeGuid }] },
 });
 
 export const addDesignToKit = (design: Design): KitDiff => ({
@@ -4354,7 +4391,7 @@ export const setDesignInKit = (design: Design): KitDiff => ({
 export const removeDesignFromKit = (designGuid: string): KitDiff => {
   return {
     designs: {
-      removed: [designGuid],
+      removed: [{ guid: designGuid }],
     },
   };
 };
@@ -4376,7 +4413,7 @@ export const setInterfaceInKit = (iface: Interface): KitDiff => ({
   },
 });
 export const removeInterfaceFromKit = (interfaceGuid: string): KitDiff => ({
-  interfaces: { removed: [interfaceGuid] },
+  interfaces: { removed: [{ guid: interfaceGuid }] },
 });
 export const updateInterfaceInKit = (iface: Interface): KitDiff => ({
   interfaces: {
@@ -4393,7 +4430,7 @@ export const findFileInKit = (kit: Kit, fileGuid: string): File => {
 export const addFileToKit = (file: File): KitDiff => ({ files: { added: [file] } });
 export const setFileInKit = (file: File): KitDiff => ({ files: { added: [file] } });
 export const removeFileFromKit = (fileGuid: string): KitDiff => ({
-  files: { removed: [fileGuid] },
+  files: { removed: [{ guid: fileGuid }] },
 });
 
 export const setAttributeInKit = (attribute: Attribute): KitDiff => ({
@@ -4409,7 +4446,7 @@ export const findTagInKit = (kit: Kit, tagGuid: string): Tag => {
 export const addTagToKit = (tag: Tag): KitDiff => ({ tags: { added: [tag] } });
 export const setTagInKit = (tag: Tag): KitDiff => ({ tags: { added: [tag] } });
 export const removeTagFromKit = (tagGuid: string): KitDiff => ({
-  tags: { removed: [tagGuid] },
+  tags: { removed: [{ guid: tagGuid }] },
 });
 
 export const findConceptInKit = (kit: Kit, conceptGuid: string): Concept => {
@@ -4421,7 +4458,7 @@ export const findConceptInKit = (kit: Kit, conceptGuid: string): Concept => {
 export const addConceptToKit = (concept: Concept): KitDiff => ({ concepts: { added: [concept] } });
 export const setConceptInKit = (concept: Concept): KitDiff => ({ concepts: { added: [concept] } });
 export const removeConceptFromKit = (conceptGuid: string): KitDiff => ({
-  concepts: { removed: [conceptGuid] },
+  concepts: { removed: [{ guid: conceptGuid }] },
 });
 
 export const findReplacableDesignsForDesignPiece = (kit: Kit, currentDesignGuid: string, designPiece: Piece): Design[] => {
@@ -4684,7 +4721,7 @@ const getColorForText = (text?: string): string => {
 };
 
 export const colorPortsForTypes = (types: Type[]): TypesDiff => {
-  const updated: { id: string; diff: TypeDiff }[] = [];
+  const updated: { type: TypeId; diff: TypeDiff }[] = [];
 
   for (const type of types) {
     const updatedPorts = (type.ports || []).map((port) => ({
@@ -4700,7 +4737,7 @@ export const colorPortsForTypes = (types: Type[]): TypesDiff => {
     }));
 
     updated.push({
-      id: type.guid,
+      type: { guid: type.guid },
       diff: {
         ports: { added: updatedPorts },
       },
@@ -5298,16 +5335,27 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
   };
   const normalizeValue = (value: any): any => (value === null || value === "" || value === undefined ? undefined : value);
   const normalizeBoolean = (value: boolean | undefined): boolean | undefined => (value ? true : undefined);
+  const areRemovedArraysEqual = (a?: { guid: string }[], b?: { guid: string }[]): boolean => {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+    if (a.length !== b.length) return false;
+    const aGuids = new Set(a.map((x) => x.guid));
+    const bGuids = new Set(b.map((x) => x.guid));
+    for (const guid of aGuids) {
+      if (!bGuids.has(guid)) return false;
+    }
+    return true;
+  };
 
   const areAttributesDiffsEqual = (a?: AttributesDiff, b?: AttributesDiff): boolean => {
     if (!a && !b) return true;
     if (!a || !b) return false;
-    if (!arraysEqual(a.removed, b.removed)) return false;
+    if (!areRemovedArraysEqual(a.removed, b.removed)) return false;
     const updatedA = normalizeArray(a.updated);
     const updatedB = normalizeArray(b.updated);
     if (updatedA.length !== updatedB.length) return false;
     for (const ua of updatedA) {
-      const ub = updatedB.find((x) => x.id === ua.id);
+      const ub = updatedB.find((x) => x.attribute.guid === ua.attribute.guid);
       if (!ub) return false;
       if (!areAttributeDiffsEqual(ua.diff, ub.diff)) return false;
     }
@@ -5336,12 +5384,12 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
   const arePropsDiffsEqual = (a?: PropsDiff, b?: PropsDiff): boolean => {
     if (!a && !b) return true;
     if (!a || !b) return false;
-    if (!arraysEqual(a.removed, b.removed)) return false;
+    if (!areRemovedArraysEqual(a.removed, b.removed)) return false;
     const updatedA = normalizeArray(a.updated);
     const updatedB = normalizeArray(b.updated);
     if (updatedA.length !== updatedB.length) return false;
     for (const ua of updatedA) {
-      const ub = updatedB.find((x) => x.id === ua.id);
+      const ub = updatedB.find((x) => x.prop.guid === ua.prop.guid);
       if (!ub) return false;
       if (!arePropDiffsEqual(ua.diff, ub.diff)) return false;
     }
@@ -5370,12 +5418,12 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
   const arePortsDiffsEqual = (a?: z.infer<typeof PortsDiffSchema>, b?: z.infer<typeof PortsDiffSchema>): boolean => {
     if (!a && !b) return true;
     if (!a || !b) return false;
-    if (!arraysEqual(a.removed, b.removed)) return false;
+    if (!areRemovedArraysEqual(a.removed, b.removed)) return false;
     const updatedA = normalizeArray(a.updated);
     const updatedB = normalizeArray(b.updated);
     if (updatedA.length !== updatedB.length) return false;
     for (const ua of updatedA) {
-      const ub = updatedB.find((x) => x.id === ua.id);
+      const ub = updatedB.find((x) => x.port.guid === ua.port.guid);
       if (!ub) return false;
       if (!arePortDiffsEqual(ua.diff, ub.diff)) return false;
     }
@@ -5427,12 +5475,12 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
   const areModelsDiffsEqual = (a?: z.infer<typeof ModelsDiffSchema>, b?: z.infer<typeof ModelsDiffSchema>): boolean => {
     if (!a && !b) return true;
     if (!a || !b) return false;
-    if (!arraysEqual(a.removed, b.removed)) return false;
+    if (!areRemovedArraysEqual(a.removed, b.removed)) return false;
     const updatedA = normalizeArray(a.updated);
     const updatedB = normalizeArray(b.updated);
     if (updatedA.length !== updatedB.length) return false;
     for (const ua of updatedA) {
-      const ub = updatedB.find((x) => x.id === ua.id);
+      const ub = updatedB.find((x) => x.model.guid === ua.model.guid);
       if (!ub) return false;
       if (!areModelDiffsEqual(ua.diff, ub.diff)) return false;
     }
@@ -5466,12 +5514,12 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
   const areTypesDiffsEqual = (a?: TypesDiff, b?: TypesDiff): boolean => {
     if (!a && !b) return true;
     if (!a || !b) return false;
-    if (!arraysEqual(a.removed, b.removed)) return false;
+    if (!areRemovedArraysEqual(a.removed, b.removed)) return false;
     const updatedA = normalizeArray(a.updated);
     const updatedB = normalizeArray(b.updated);
     if (updatedA.length !== updatedB.length) return false;
     for (const ua of updatedA) {
-      const ub = updatedB.find((x) => x.id === ua.id);
+      const ub = updatedB.find((x) => x.type.guid === ua.type.guid);
       if (!ub) return false;
       if (!areTypeDiffsEqual(ua.diff, ub.diff)) return false;
     }
@@ -5514,12 +5562,12 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
   const arePiecesDiffsEqual = (a?: PiecesDiff, b?: PiecesDiff): boolean => {
     if (!a && !b) return true;
     if (!a || !b) return false;
-    if (!arraysEqual(a.removed, b.removed)) return false;
+    if (!areRemovedArraysEqual(a.removed, b.removed)) return false;
     const updatedA = normalizeArray(a.updated);
     const updatedB = normalizeArray(b.updated);
     if (updatedA.length !== updatedB.length) return false;
     for (const ua of updatedA) {
-      const ub = updatedB.find((x) => x.id === ua.id);
+      const ub = updatedB.find((x) => x.piece.guid === ua.piece.guid);
       if (!ub) return false;
       if (!arePieceDiffsEqual(ua.diff, ub.diff)) return false;
     }
@@ -5580,12 +5628,12 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
   const areConnectionsDiffsEqual = (a?: ConnectionsDiff, b?: ConnectionsDiff): boolean => {
     if (!a && !b) return true;
     if (!a || !b) return false;
-    if (!arraysEqual(a.removed, b.removed)) return false;
+    if (!areRemovedArraysEqual(a.removed, b.removed)) return false;
     const updatedA = normalizeArray(a.updated);
     const updatedB = normalizeArray(b.updated);
     if (updatedA.length !== updatedB.length) return false;
     for (const ua of updatedA) {
-      const ub = updatedB.find((x) => x.id === ua.id);
+      const ub = updatedB.find((x) => x.connection.guid === ua.connection.guid);
       if (!ub) return false;
       if (!areConnectionDiffsEqual(ua.diff, ub.diff)) return false;
     }
@@ -5620,12 +5668,12 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
   const areDesignsDiffsEqual = (a?: DesignsDiff, b?: DesignsDiff): boolean => {
     if (!a && !b) return true;
     if (!a || !b) return false;
-    if (!arraysEqual(a.removed, b.removed)) return false;
+    if (!areRemovedArraysEqual(a.removed, b.removed)) return false;
     const updatedA = normalizeArray(a.updated);
     const updatedB = normalizeArray(b.updated);
     if (updatedA.length !== updatedB.length) return false;
     for (const ua of updatedA) {
-      const ub = updatedB.find((x) => x.id === ua.id);
+      const ub = updatedB.find((x) => x.design.guid === ua.design.guid);
       if (!ub) return false;
       if (!areDesignDiffsEqual(ua.diff, ub.diff)) return false;
     }
@@ -5661,12 +5709,12 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
   const areInterfacesDiffsEqual = (a?: InterfacesDiff, b?: InterfacesDiff): boolean => {
     if (!a && !b) return true;
     if (!a || !b) return false;
-    if (!arraysEqual(a.removed, b.removed)) return false;
+    if (!areRemovedArraysEqual(a.removed, b.removed)) return false;
     const updatedA = normalizeArray(a.updated);
     const updatedB = normalizeArray(b.updated);
     if (updatedA.length !== updatedB.length) return false;
     for (const ua of updatedA) {
-      const ub = updatedB.find((x) => x.id === ua.id);
+      const ub = updatedB.find((x) => x.interface.guid === ua.interface.guid);
       if (!ub) return false;
       if (!areInterfaceDiffsEqual(ua.diff, ub.diff)) return false;
     }
@@ -5693,12 +5741,12 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
   const areQualitiesDiffsEqual = (a?: z.infer<typeof QualitiesDiffSchema>, b?: z.infer<typeof QualitiesDiffSchema>): boolean => {
     if (!a && !b) return true;
     if (!a || !b) return false;
-    if (!arraysEqual(a.removed, b.removed)) return false;
+    if (!areRemovedArraysEqual(a.removed, b.removed)) return false;
     const updatedA = normalizeArray(a.updated);
     const updatedB = normalizeArray(b.updated);
     if (updatedA.length !== updatedB.length) return false;
     for (const ua of updatedA) {
-      const ub = updatedB.find((x) => x.id === ua.id);
+      const ub = updatedB.find((x) => x.quality.guid === ua.quality.guid);
       if (!ub) return false;
       if (!areQualityDiffsEqual(ua.diff, ub.diff)) return false;
     }
@@ -5726,12 +5774,12 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
   const areFilesDiffsEqual = (a?: FilesDiff, b?: FilesDiff): boolean => {
     if (!a && !b) return true;
     if (!a || !b) return false;
-    if (!arraysEqual(a.removed, b.removed)) return false;
+    if (!areRemovedArraysEqual(a.removed, b.removed)) return false;
     const updatedA = normalizeArray(a.updated);
     const updatedB = normalizeArray(b.updated);
     if (updatedA.length !== updatedB.length) return false;
     for (const ua of updatedA) {
-      const ub = updatedB.find((x) => x.id === ua.id);
+      const ub = updatedB.find((x) => x.file.guid === ua.file.guid);
       if (!ub) return false;
       if (!areFileDiffsEqual(ua.diff, ub.diff)) return false;
     }
@@ -5756,12 +5804,12 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
   const areFoldersDiffsEqual = (a?: FoldersDiff, b?: FoldersDiff): boolean => {
     if (!a && !b) return true;
     if (!a || !b) return false;
-    if (!arraysEqual(a.removed, b.removed)) return false;
+    if (!areRemovedArraysEqual(a.removed, b.removed)) return false;
     const updatedA = normalizeArray(a.updated);
     const updatedB = normalizeArray(b.updated);
     if (updatedA.length !== updatedB.length) return false;
     for (const ua of updatedA) {
-      const ub = updatedB.find((x) => x.id === ua.id);
+      const ub = updatedB.find((x) => x.folder.guid === ua.folder.guid);
       if (!ub) return false;
       if (!areFolderDiffsEqual(ua.diff, ub.diff)) return false;
     }
@@ -5787,12 +5835,12 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
   const areAuthorsDiffsEqual = (a?: AuthorsDiff, b?: AuthorsDiff): boolean => {
     if (!a && !b) return true;
     if (!a || !b) return false;
-    if (!arraysEqual(a.removed, b.removed)) return false;
+    if (!areRemovedArraysEqual(a.removed, b.removed)) return false;
     const updatedA = normalizeArray(a.updated);
     const updatedB = normalizeArray(b.updated);
     if (updatedA.length !== updatedB.length) return false;
     for (const ua of updatedA) {
-      const ub = updatedB.find((x) => x.id === ua.id);
+      const ub = updatedB.find((x) => x.author.guid === ua.author.guid);
       if (!ub) return false;
       if (!areAuthorDiffsEqual(ua.diff, ub.diff)) return false;
     }

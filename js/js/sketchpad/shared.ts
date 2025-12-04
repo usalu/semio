@@ -148,7 +148,7 @@ export interface FileProvider {
   getUrl: (kitId: string, fileId: string, path: string) => string;
 }
 
-export interface MemoryFileProviderConfig {}
+export interface MemoryFileProviderConfig { }
 
 export interface LocalFileProviderConfig {
   dbName?: string;
@@ -307,6 +307,7 @@ export interface PanelSizes {
 export interface PanelSection {
   id: string;
   content: ReactNode | (() => ReactNode);
+  specificity?: number;
   defaultOpen?: boolean;
   order?: number;
   actions?: Array<{
@@ -408,7 +409,7 @@ export interface AppConfig {
   order?: number;
 }
 
-export interface AppRegistration extends AppConfig {}
+export interface AppRegistration extends AppConfig { }
 
 // #endregion App Registry
 

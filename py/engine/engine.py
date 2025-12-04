@@ -634,6 +634,8 @@ class Attribute(AttributeDefinitionField, AttributeValueField, AttributeKeyField
     benchmark: Benchmark = sqlmodel.Relationship(back_populates="attributes")
     folderPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("folder_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("folders.id")), default=None, exclude=True)
     folder: Folder = sqlmodel.Relationship(back_populates="attributes")
+    interfacePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("interface_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("interfaces.id")), default=None, exclude=True)
+    interface_: Interface = sqlmodel.Relationship(back_populates="attributes")
 
     __table_args__ = (
         sqlalchemy.CheckConstraint(
@@ -1266,9 +1268,10 @@ class LocationPrediction(LocationAltitudeField, LocationLatitudeField, LocationL
     pass
 
 
+# Use LocationOutput instead of Location to avoid SQLModel Relationship field issues
 class LocationNode(Node):
     class Meta:
-        model = Location
+        model = LocationOutput
 
 
 class LocationInputNode(InputNode):
@@ -2093,23 +2096,15 @@ class Interface(InterfaceIconField, InterfaceDescriptionField, InterfaceNameFiel
     PLURAL = "interfaces"
     __tablename__ = "interfaces"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
-    compatibleInterfaces_: list["CompatibleInterface"] = sqlmodel.Relationship(back_populates="interface_", cascade_delete=True)
     attributes: list[Attribute] = sqlmodel.Relationship(back_populates="interface_", cascade_delete=True)
     kitPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")), default=None, exclude=True)
     kit: Kit = sqlmodel.Relationship(back_populates="interfaces")
 
-    @property
-    def compatibleInterfaces(self) -> list[str]:
-        return sorted([ci.name for ci in self.compatibleInterfaces_], key=lambda x: x)
 
-    @compatibleInterfaces.setter
-    def compatibleInterfaces(self, compatibleInterfaces: list[str]):
-        self.compatibleInterfaces_ = [CompatibleInterface(name=ci, order=i) for i, ci in enumerate(compatibleInterfaces)]
-
-
-class InterfaceNode(Node):
-    class Meta:
-        model = Interface
+# TODO: Fix InterfaceNode - was incorrectly changed to TableEntityNode in latest commit
+# class InterfaceNode(TableEntityNode):
+#     class Meta:
+#         model = Interface
 
 
 class InterfaceInputNode(InputNode):
@@ -3781,6 +3776,7 @@ class Kit(KitNameField, KitVersionField, KitDescriptionField, KitIconField, KitI
     authors_: list[Author] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
     files_: list[File] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
     folders_: list[Folder] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
+    interfaces: list[Interface] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
     types: list[Type] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
     designs: list[Design] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
     qualities: list[Quality] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
@@ -4394,7 +4390,7 @@ def validateKitDict(kit: dict) -> ValidationResult:
                 "Layer": "layers",
             }.get(entityKind, "")
             if collectionKey:
-                diff = {collectionKey: {"removed": [entityGuid], "added": [entityCopy]}}
+                diff = {collectionKey: {"removed": [{"guid": entityGuid}], "added": [entityCopy]}}
                 fix = _makeFix("Regenerate GUID", diff)
                 issues.append(ValidationIssue(ruleId="guid-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate GUID "{entityGuid}". First occurrence kept.', entityKind=entityKind, entityGuid=entityGuid, fixes=[fix]))
             else:
@@ -4442,7 +4438,7 @@ def validateKitDict(kit: dict) -> ValidationResult:
         for name, group in names.items():
             if len(group) > 1:
                 for t in group[1:]:
-                    fix = _makeFix(f'Rename "{name}"', {"types": {"updated": [{"id": t.get("guid", ""), "diff": {"name": f"{name} 2"}}]}})
+                    fix = _makeFix(f'Rename "{name}"', {"types": {"updated": [{"type": {"guid": t.get("guid", "")}, "diff": {"name": f"{name} 2"}}]}})
                     issues.append(ValidationIssue(ruleId="type-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate type name "{name}" among siblings.', entityKind="Type", entityGuid=t.get("guid", ""), fixes=[fix]))
     byParent = {}
     for d in kit.get("designs", []):
@@ -4460,7 +4456,7 @@ def validateKitDict(kit: dict) -> ValidationResult:
         for name, group in names.items():
             if len(group) > 1:
                 for d in group[1:]:
-                    fix = _makeFix(f'Rename "{name}"', {"designs": {"updated": [{"id": d.get("guid", ""), "diff": {"name": f"{name} 2"}}]}})
+                    fix = _makeFix(f'Rename "{name}"', {"designs": {"updated": [{"design": {"guid": d.get("guid", "")}, "diff": {"name": f"{name} 2"}}]}})
                     issues.append(ValidationIssue(ruleId="design-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate design name "{name}" among siblings.', entityKind="Design", entityGuid=d.get("guid", ""), fixes=[fix]))
     for design in kit.get("designs", []):
         designName = design.get("name", "")
@@ -4475,7 +4471,7 @@ def validateKitDict(kit: dict) -> ValidationResult:
         for name, group in names.items():
             if len(group) > 1:
                 for p in group[1:]:
-                    fix = _makeFix(f'Rename piece "{name}"', {"designs": {"updated": [{"id": designGuid, "diff": {"pieces": {"updated": [{"id": p.get("guid", ""), "diff": {"name": f"{name} 2"}}]}}}]}})
+                    fix = _makeFix(f'Rename piece "{name}"', {"designs": {"updated": [{"design": {"guid": designGuid}, "diff": {"pieces": {"updated": [{"piece": {"guid": p.get("guid", "")}, "diff": {"name": f"{name} 2"}}]}}}]}})
                     issues.append(ValidationIssue(ruleId="piece-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate piece name "{name}" inside design "{designName}".', entityKind="Piece", entityGuid=p.get("guid", ""), fixes=[fix]))
     for t in kit.get("types", []):
         typeName = t.get("name", "")
@@ -4490,7 +4486,7 @@ def validateKitDict(kit: dict) -> ValidationResult:
         for name, group in names.items():
             if len(group) > 1:
                 for port in group[1:]:
-                    fix = _makeFix(f'Rename port "{name}"', {"types": {"updated": [{"id": typeGuid, "diff": {"ports": {"updated": [{"id": port.get("guid", ""), "diff": {"name": f"{name} 2"}}]}}}]}})
+                    fix = _makeFix(f'Rename port "{name}"', {"types": {"updated": [{"type": {"guid": typeGuid}, "diff": {"ports": {"updated": [{"port": {"guid": port.get("guid", "")}, "diff": {"name": f"{name} 2"}}]}}}]}})
                     issues.append(ValidationIssue(ruleId="port-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate port name "{name}" inside type "{typeName}".', entityKind="Port", entityGuid=port.get("guid", ""), fixes=[fix]))
     for t in kit.get("types", []):
         typeName = t.get("name", "")
@@ -4505,7 +4501,7 @@ def validateKitDict(kit: dict) -> ValidationResult:
         for name, group in names.items():
             if len(group) > 1:
                 for model in group[1:]:
-                    fix = _makeFix(f'Rename model "{name}"', {"types": {"updated": [{"id": typeGuid, "diff": {"models": {"updated": [{"id": model.get("guid", ""), "diff": {"name": f"{name} 2"}}]}}}]}})
+                    fix = _makeFix(f'Rename model "{name}"', {"types": {"updated": [{"type": {"guid": typeGuid}, "diff": {"models": {"updated": [{"model": {"guid": model.get("guid", "")}, "diff": {"name": f"{name} 2"}}]}}}]}})
                     issues.append(ValidationIssue(ruleId="model-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate model name "{name}" inside type "{typeName}".', entityKind="Model", entityGuid=model.get("guid", ""), fixes=[fix]))
     names = {}
     for q in kit.get("qualities", []):
@@ -4516,7 +4512,7 @@ def validateKitDict(kit: dict) -> ValidationResult:
     for name, group in names.items():
         if len(group) > 1:
             for q in group[1:]:
-                fix = _makeFix(f'Rename quality "{name}"', {"qualities": {"updated": [{"id": q.get("guid", ""), "diff": {"name": f"{name} 2"}}]}})
+                fix = _makeFix(f'Rename quality "{name}"', {"qualities": {"updated": [{"quality": {"guid": q.get("guid", "")}, "diff": {"name": f"{name} 2"}}]}})
                 issues.append(ValidationIssue(ruleId="quality-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate quality name "{name}".', entityKind="Quality", entityGuid=q.get("guid", ""), fixes=[fix]))
     names = {}
     for i in kit.get("interfaces", []):
@@ -4527,7 +4523,7 @@ def validateKitDict(kit: dict) -> ValidationResult:
     for name, group in names.items():
         if len(group) > 1:
             for iface in group[1:]:
-                fix = _makeFix(f'Rename interface "{name}"', {"interfaces": {"updated": [{"id": iface.get("guid", ""), "diff": {"name": f"{name} 2"}}]}})
+                fix = _makeFix(f'Rename interface "{name}"', {"interfaces": {"updated": [{"interface": {"guid": iface.get("guid", "")}, "diff": {"name": f"{name} 2"}}]}})
                 issues.append(ValidationIssue(ruleId="interface-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate interface name "{name}".', entityKind="Interface", entityGuid=iface.get("guid", ""), fixes=[fix]))
     names = {}
     for f in kit.get("files", []):
@@ -4538,7 +4534,7 @@ def validateKitDict(kit: dict) -> ValidationResult:
     for name, group in names.items():
         if len(group) > 1:
             for f in group[1:]:
-                fix = _makeFix(f'Rename file "{name}"', {"files": {"updated": [{"id": f.get("guid", ""), "diff": {"name": f"{name} 2"}}]}})
+                fix = _makeFix(f'Rename file "{name}"', {"files": {"updated": [{"file": {"guid": f.get("guid", "")}, "diff": {"name": f"{name} 2"}}]}})
                 issues.append(ValidationIssue(ruleId="file-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate file name "{name}".', entityKind="File", entityGuid=f.get("guid", ""), fixes=[fix]))
     byParent = {}
     for fo in kit.get("folders", []):
@@ -4556,7 +4552,7 @@ def validateKitDict(kit: dict) -> ValidationResult:
         for name, group in names.items():
             if len(group) > 1:
                 for fo in group[1:]:
-                    fix = _makeFix(f'Rename folder "{name}"', {"folders": {"updated": [{"id": fo.get("guid", ""), "diff": {"name": f"{name} 2"}}]}})
+                    fix = _makeFix(f'Rename folder "{name}"', {"folders": {"updated": [{"folder": {"guid": fo.get("guid", "")}, "diff": {"name": f"{name} 2"}}]}})
                     issues.append(ValidationIssue(ruleId="folder-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate folder name "{name}" among siblings.', entityKind="Folder", entityGuid=fo.get("guid", ""), fixes=[fix]))
     for design in kit.get("designs", []):
         designName = design.get("name", "")
@@ -4570,7 +4566,7 @@ def validateKitDict(kit: dict) -> ValidationResult:
         for path, group in paths.items():
             if len(group) > 1:
                 for layer in group[1:]:
-                    fix = _makeFix(f'Rename layer "{path}"', {"designs": {"updated": [{"id": designGuid, "diff": {"layers": {"updated": [{"id": layer.get("guid", ""), "diff": {"path": f"{path} 2"}}]}}}]}})
+                    fix = _makeFix(f'Rename layer "{path}"', {"designs": {"updated": [{"design": {"guid": designGuid}, "diff": {"layers": {"updated": [{"layer": {"guid": layer.get("guid", "")}, "diff": {"path": f"{path} 2"}}]}}}]}})
                     issues.append(
                         ValidationIssue(ruleId="layer-path-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate layer path "{path}" inside design "{designName}".', entityKind="Layer", entityGuid=layer.get("guid", ""), fixes=[fix])
                     )
@@ -5413,12 +5409,20 @@ def areKitsDictEqual(a: dict, b: dict, strict: bool = False) -> bool:
     return True
 
 
-def _getCollectionDiff(before: list, after: list, getItemDiff: typing.Callable[[dict, dict], dict]) -> dict:
-    """Get diff for a collection of items identified by guid."""
+def _getCollectionDiff(before: list, after: list, getItemDiff: typing.Callable[[dict, dict], dict], entityKey: str = "") -> dict:
+    """Get diff for a collection of items identified by guid.
+
+    Args:
+        before: The before collection
+        after: The after collection
+        getItemDiff: Function to get item-level diff
+        entityKey: The key name for the entity ID in the updated array (e.g., "type", "design", "piece")
+    """
     diff: dict = {}
     beforeGuids = {item.get("guid") for item in before}
     afterGuids = {item.get("guid") for item in after}
-    removed = [item.get("guid") for item in before if item.get("guid") not in afterGuids]
+    # EntityId format: removed is [{"guid": ...}]
+    removed = [{"guid": item.get("guid")} for item in before if item.get("guid") not in afterGuids]
     if removed:
         diff["removed"] = removed
     updated = []
@@ -5427,7 +5431,11 @@ def _getCollectionDiff(before: list, after: list, getItemDiff: typing.Callable[[
             afterItem = next(a for a in after if a.get("guid") == item.get("guid"))
             itemDiff = getItemDiff(item, afterItem)
             if itemDiff:
-                updated.append({"id": item.get("guid"), "diff": itemDiff})
+                # EntityId format: updated is [{entityKey: {"guid": ...}, "diff": ...}]
+                if entityKey:
+                    updated.append({entityKey: {"guid": item.get("guid")}, "diff": itemDiff})
+                else:
+                    updated.append({"id": item.get("guid"), "diff": itemDiff})
     if updated:
         diff["updated"] = updated
     added = [item for item in after if item.get("guid") not in beforeGuids]
@@ -5436,16 +5444,27 @@ def _getCollectionDiff(before: list, after: list, getItemDiff: typing.Callable[[
     return diff
 
 
-def _applyCollectionDiff(base: list, diff: dict | None, applyItemDiff: typing.Callable[[dict, dict], dict]) -> list:
-    """Apply diff to a collection of items."""
+def _applyCollectionDiff(base: list, diff: dict | None, applyItemDiff: typing.Callable[[dict, dict], dict], entityKey: str = "") -> list:
+    """Apply diff to a collection of items.
+
+    Args:
+        base: The base collection
+        diff: The diff to apply (with removed, updated, added)
+        applyItemDiff: Function to apply item-level diff
+        entityKey: The key name for the entity ID in the updated array (e.g., "type", "design", "piece")
+    """
     if not diff:
         return base
     result = [dict(item) for item in base]
     if diff.get("removed"):
-        result = [item for item in result if item.get("guid") not in diff["removed"]]
+        # EntityId format: removed is now [{"guid": ...}, ...] instead of ["...", ...]
+        removedGuids = [r["guid"] if isinstance(r, dict) else r for r in diff["removed"]]
+        result = [item for item in result if item.get("guid") not in removedGuids]
     if diff.get("updated"):
         for update in diff["updated"]:
-            idx = next((i for i, item in enumerate(result) if item.get("guid") == update["id"]), -1)
+            # EntityId format: update is now {"<entity>": {"guid": ...}, "diff": ...} instead of {"id": ..., "diff": ...}
+            updateGuid = update[entityKey]["guid"] if entityKey and entityKey in update else update.get("id", "")
+            idx = next((i for i, item in enumerate(result) if item.get("guid") == updateGuid), -1)
             if idx >= 0:
                 result[idx] = applyItemDiff(result[idx], update["diff"])
     if diff.get("added"):
@@ -5470,10 +5489,10 @@ def _getTypeDiff(before: dict, after: dict) -> dict:
         diff["isAbstract"] = after.get("isAbstract")
     if _normalizeBoolean(before.get("virtual")) != _normalizeBoolean(after.get("virtual")):
         diff["virtual"] = after.get("virtual")
-    portsDiff = _getCollectionDiff(before.get("ports", []), after.get("ports", []), _getPortDiff)
+    portsDiff = _getCollectionDiff(before.get("ports", []), after.get("ports", []), _getPortDiff, "port")
     if portsDiff:
         diff["ports"] = portsDiff
-    modelsDiff = _getCollectionDiff(before.get("models", []), after.get("models", []), _getModelDiff)
+    modelsDiff = _getCollectionDiff(before.get("models", []), after.get("models", []), _getModelDiff, "model")
     if modelsDiff:
         diff["models"] = modelsDiff
     return diff
@@ -5486,9 +5505,9 @@ def _applyTypeDiff(base: dict, diff: dict) -> dict:
         if key in diff:
             result[key] = diff[key]
     if diff.get("ports"):
-        result["ports"] = _applyCollectionDiff(base.get("ports", []), diff["ports"], _applyPortDiff)
+        result["ports"] = _applyCollectionDiff(base.get("ports", []), diff["ports"], _applyPortDiff, "port")
     if diff.get("models"):
-        result["models"] = _applyCollectionDiff(base.get("models", []), diff["models"], _applyModelDiff)
+        result["models"] = _applyCollectionDiff(base.get("models", []), diff["models"], _applyModelDiff, "model")
     return result
 
 
@@ -5540,10 +5559,10 @@ def _getDesignDiff(before: dict, after: dict) -> dict:
         diff["icon"] = after.get("icon")
     if _normalizeValue(before.get("image")) != _normalizeValue(after.get("image")):
         diff["image"] = after.get("image")
-    piecesDiff = _getCollectionDiff(before.get("pieces", []), after.get("pieces", []), _getPieceDiff)
+    piecesDiff = _getCollectionDiff(before.get("pieces", []), after.get("pieces", []), _getPieceDiff, "piece")
     if piecesDiff:
         diff["pieces"] = piecesDiff
-    connectionsDiff = _getCollectionDiff(before.get("connections", []), after.get("connections", []), _getConnectionDiff)
+    connectionsDiff = _getCollectionDiff(before.get("connections", []), after.get("connections", []), _getConnectionDiff, "connection")
     if connectionsDiff:
         diff["connections"] = connectionsDiff
     return diff
@@ -5556,9 +5575,9 @@ def _applyDesignDiff(base: dict, diff: dict) -> dict:
         if key in diff:
             result[key] = diff[key]
     if diff.get("pieces"):
-        result["pieces"] = _applyCollectionDiff(base.get("pieces", []), diff["pieces"], _applyPieceDiff)
+        result["pieces"] = _applyCollectionDiff(base.get("pieces", []), diff["pieces"], _applyPieceDiff, "piece")
     if diff.get("connections"):
-        result["connections"] = _applyCollectionDiff(base.get("connections", []), diff["connections"], _applyConnectionDiff)
+        result["connections"] = _applyCollectionDiff(base.get("connections", []), diff["connections"], _applyConnectionDiff, "connection")
     return result
 
 
@@ -5709,39 +5728,45 @@ def _applyAttributeDiff(base: dict, diff: dict) -> dict:
 
 
 def _getAttributesDiff(before: list, after: list) -> dict:
-    """Get diff for attributes collection - uses KEY instead of guid for identification."""
+    """Get diff for attributes collection - uses GUID for identification with EntityId format."""
     diff: dict = {}
-    beforeKeys = [a.get("key") for a in before]
-    afterKeys = [a.get("key") for a in after]
-    removed = [key for key in beforeKeys if key not in afterKeys]
+    beforeGuids = {a.get("guid") for a in before}
+    afterGuids = {a.get("guid") for a in after}
+    # EntityId format: removed is [{"guid": ...}]
+    removed = [{"guid": a.get("guid")} for a in before if a.get("guid") not in afterGuids]
     if removed:
         diff["removed"] = removed
     updated = []
     for afterAttr in after:
-        key = afterAttr.get("key")
-        if key in beforeKeys:
-            beforeAttr = next(a for a in before if a.get("key") == key)
+        guid = afterAttr.get("guid")
+        if guid in beforeGuids:
+            beforeAttr = next(a for a in before if a.get("guid") == guid)
             attrDiff = _getAttributeDiff(beforeAttr, afterAttr)
             if attrDiff:
-                updated.append({"id": key, "diff": attrDiff})
+                # EntityId format: updated is [{"attribute": {"guid": ...}, "diff": ...}]
+                updated.append({"attribute": {"guid": guid}, "diff": attrDiff})
     if updated:
         diff["updated"] = updated
-    added = [a for a in after if a.get("key") not in beforeKeys]
+    added = [a for a in after if a.get("guid") not in beforeGuids]
     if added:
         diff["added"] = added
     return diff
 
 
 def _applyAttributesDiff(base: list, diff: dict | None) -> list:
-    """Apply diff to attributes collection - uses KEY instead of guid for identification."""
+    """Apply diff to attributes collection - uses GUID for identification with EntityId format."""
     if not diff:
         return base
     result = [dict(a) for a in base]
     if diff.get("removed"):
-        result = [a for a in result if a.get("key") not in diff["removed"]]
+        # EntityId format: removed is [{"guid": ...}]
+        removedGuids = {r["guid"] if isinstance(r, dict) else r for r in diff["removed"]}
+        result = [a for a in result if a.get("guid") not in removedGuids]
     if diff.get("updated"):
         for update in diff["updated"]:
-            idx = next((i for i, a in enumerate(result) if a.get("key") == update["id"]), -1)
+            # EntityId format: updated is [{"attribute": {"guid": ...}, "diff": ...}]
+            updateGuid = update["attribute"]["guid"] if "attribute" in update else update.get("id", "")
+            idx = next((i for i, a in enumerate(result) if a.get("guid") == updateGuid), -1)
             if idx >= 0:
                 result[idx] = _applyAttributeDiff(result[idx], update["diff"])
     if diff.get("added"):
@@ -5750,22 +5775,31 @@ def _applyAttributesDiff(base: list, diff: dict | None) -> list:
 
 
 def _inverseAttributesDiff(original: list, appliedDiff: dict) -> dict:
-    """Compute inverse of attributes collection diff - uses KEY instead of guid."""
+    """Compute inverse of attributes collection diff - uses GUID with EntityId format."""
     inverse: dict = {}
-    removedKeys = appliedDiff.get("removed", [])
-    updatedKeys = [u["id"] for u in appliedDiff.get("updated", [])]
-    addedKeys = [a.get("key") for a in appliedDiff.get("added", [])]
-    if addedKeys:
-        inverse["removed"] = addedKeys
-    if updatedKeys:
+    # EntityId format: removed is [{"guid": ...}]
+    removedGuids = [r["guid"] if isinstance(r, dict) else r for r in appliedDiff.get("removed", [])]
+    # Extract guids from updated entries
+    updatedGuids = []
+    for u in appliedDiff.get("updated", []):
+        if "attribute" in u:
+            updatedGuids.append(u["attribute"]["guid"])
+        else:
+            updatedGuids.append(u.get("id", ""))
+    addedGuids = [a.get("guid") for a in appliedDiff.get("added", [])]
+    if addedGuids:
+        # EntityId format: removed is [{"guid": ...}]
+        inverse["removed"] = [{"guid": guid} for guid in addedGuids]
+    if updatedGuids:
         inverse["updated"] = []
-        for key in updatedKeys:
-            origAttr = next((a for a in original if a.get("key") == key), None)
-            upd = next((u for u in appliedDiff.get("updated", []) if u["id"] == key), None)
+        for guid in updatedGuids:
+            origAttr = next((a for a in original if a.get("guid") == guid), None)
+            upd = next((u for u in appliedDiff.get("updated", []) if (u.get("attribute", {}).get("guid") if "attribute" in u else u.get("id")) == guid), None)
             if origAttr and upd:
-                inverse["updated"].append({"id": key, "diff": _inverseAttributeDiff(origAttr, upd["diff"])})
-    if removedKeys:
-        inverse["added"] = [a for a in original if a.get("key") in removedKeys]
+                # EntityId format: updated is [{"attribute": {"guid": ...}, "diff": ...}]
+                inverse["updated"].append({"attribute": {"guid": guid}, "diff": _inverseAttributeDiff(origAttr, upd["diff"])})
+    if removedGuids:
+        inverse["added"] = [a for a in original if a.get("guid") in removedGuids]
     return inverse
 
 
@@ -5800,25 +5834,25 @@ def getKitDiffDict(before: dict, after: dict) -> dict:
         diff["license"] = after.get("license")
     if _normalizeValue(before.get("preview")) != _normalizeValue(after.get("preview")):
         diff["preview"] = after.get("preview")
-    typesDiff = _getCollectionDiff(before.get("types", []), after.get("types", []), _getTypeDiff)
+    typesDiff = _getCollectionDiff(before.get("types", []), after.get("types", []), _getTypeDiff, "type")
     if typesDiff:
         diff["types"] = typesDiff
-    designsDiff = _getCollectionDiff(before.get("designs", []), after.get("designs", []), _getDesignDiff)
+    designsDiff = _getCollectionDiff(before.get("designs", []), after.get("designs", []), _getDesignDiff, "design")
     if designsDiff:
         diff["designs"] = designsDiff
-    tagsDiff = _getCollectionDiff(before.get("tags", []), after.get("tags", []), _getTagDiff)
+    tagsDiff = _getCollectionDiff(before.get("tags", []), after.get("tags", []), _getTagDiff, "tag")
     if tagsDiff:
         diff["tags"] = tagsDiff
-    conceptsDiff = _getCollectionDiff(before.get("concepts", []), after.get("concepts", []), _getConceptDiff)
+    conceptsDiff = _getCollectionDiff(before.get("concepts", []), after.get("concepts", []), _getConceptDiff, "concept")
     if conceptsDiff:
         diff["concepts"] = conceptsDiff
-    interfacesDiff = _getCollectionDiff(before.get("interfaces", []), after.get("interfaces", []), _getInterfaceDiff)
+    interfacesDiff = _getCollectionDiff(before.get("interfaces", []), after.get("interfaces", []), _getInterfaceDiff, "interface")
     if interfacesDiff:
         diff["interfaces"] = interfacesDiff
-    filesDiff = _getCollectionDiff(before.get("files", []), after.get("files", []), _getFileDiff)
+    filesDiff = _getCollectionDiff(before.get("files", []), after.get("files", []), _getFileDiff, "file")
     if filesDiff:
         diff["files"] = filesDiff
-    foldersDiff = _getCollectionDiff(before.get("folders", []), after.get("folders", []), _getFolderDiff)
+    foldersDiff = _getCollectionDiff(before.get("folders", []), after.get("folders", []), _getFolderDiff, "folder")
     if foldersDiff:
         diff["folders"] = foldersDiff
     attributesDiff = _getAttributesDiff(before.get("attributes", []), after.get("attributes", []))
@@ -5841,37 +5875,52 @@ def applyKitDiffDict(base: dict, diff: dict) -> dict:
         elif key in base:
             result[key] = base[key]
     if diff.get("types") or base.get("types"):
-        result["types"] = _applyCollectionDiff(base.get("types", []), diff.get("types"), _applyTypeDiff)
+        result["types"] = _applyCollectionDiff(base.get("types", []), diff.get("types"), _applyTypeDiff, "type")
     if diff.get("designs") or base.get("designs"):
-        result["designs"] = _applyCollectionDiff(base.get("designs", []), diff.get("designs"), _applyDesignDiff)
+        result["designs"] = _applyCollectionDiff(base.get("designs", []), diff.get("designs"), _applyDesignDiff, "design")
     if diff.get("tags") or base.get("tags"):
-        result["tags"] = _applyCollectionDiff(base.get("tags", []), diff.get("tags"), _applyTagDiff)
+        result["tags"] = _applyCollectionDiff(base.get("tags", []), diff.get("tags"), _applyTagDiff, "tag")
     if diff.get("concepts") or base.get("concepts"):
-        result["concepts"] = _applyCollectionDiff(base.get("concepts", []), diff.get("concepts"), _applyConceptDiff)
+        result["concepts"] = _applyCollectionDiff(base.get("concepts", []), diff.get("concepts"), _applyConceptDiff, "concept")
     if diff.get("interfaces") or base.get("interfaces"):
-        result["interfaces"] = _applyCollectionDiff(base.get("interfaces", []), diff.get("interfaces"), _applyInterfaceDiff)
+        result["interfaces"] = _applyCollectionDiff(base.get("interfaces", []), diff.get("interfaces"), _applyInterfaceDiff, "interface")
     if diff.get("files") or base.get("files"):
-        result["files"] = _applyCollectionDiff(base.get("files", []), diff.get("files"), _applyFileDiff)
+        result["files"] = _applyCollectionDiff(base.get("files", []), diff.get("files"), _applyFileDiff, "file")
     if diff.get("folders") or base.get("folders"):
-        result["folders"] = _applyCollectionDiff(base.get("folders", []), diff.get("folders"), _applyFolderDiff)
+        result["folders"] = _applyCollectionDiff(base.get("folders", []), diff.get("folders"), _applyFolderDiff, "folder")
     if diff.get("attributes") or base.get("attributes"):
         result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
     return result
 
 
-def _inverseCollectionDiff(original: list, appliedDiff: dict, inverseItemDiff: typing.Callable[[dict, dict], dict]) -> dict:
-    """Compute inverse of a collection diff."""
+def _inverseCollectionDiff(original: list, appliedDiff: dict, inverseItemDiff: typing.Callable[[dict, dict], dict], entityKey: str = "") -> dict:
+    """Compute inverse of a collection diff.
+
+    Args:
+        original: The original collection before diff was applied
+        appliedDiff: The diff that was applied
+        inverseItemDiff: Function to compute inverse of item-level diff
+        entityKey: The key name for the entity ID (e.g., "type", "design", "piece")
+    """
     inverse: dict = {}
     if appliedDiff.get("removed"):
-        inverse["added"] = [item for item in original if item.get("guid") in appliedDiff["removed"]]
+        # EntityId format: removed is [{"guid": ...}]
+        removedGuids = [r["guid"] if isinstance(r, dict) else r for r in appliedDiff["removed"]]
+        inverse["added"] = [item for item in original if item.get("guid") in removedGuids]
     if appliedDiff.get("added"):
-        inverse["removed"] = [item.get("guid") for item in appliedDiff["added"]]
+        # EntityId format: removed should be [{"guid": ...}]
+        inverse["removed"] = [{"guid": item.get("guid")} for item in appliedDiff["added"]]
     if appliedDiff.get("updated"):
         inverse["updated"] = []
         for update in appliedDiff["updated"]:
-            origItem = next((item for item in original if item.get("guid") == update["id"]), None)
+            # EntityId format: update is {"<entity>": {"guid": ...}, "diff": ...}
+            updateGuid = update[entityKey]["guid"] if entityKey and entityKey in update else update.get("id", "")
+            origItem = next((item for item in original if item.get("guid") == updateGuid), None)
             if origItem:
-                inverse["updated"].append({"id": update["id"], "diff": inverseItemDiff(origItem, update["diff"])})
+                if entityKey:
+                    inverse["updated"].append({entityKey: {"guid": updateGuid}, "diff": inverseItemDiff(origItem, update["diff"])})
+                else:
+                    inverse["updated"].append({"id": updateGuid, "diff": inverseItemDiff(origItem, update["diff"])})
     return inverse
 
 
@@ -5882,7 +5931,7 @@ def _inverseTypeDiff(original: dict, appliedDiff: dict) -> dict:
         if key in appliedDiff:
             inverse[key] = original.get(key)
     if appliedDiff.get("ports"):
-        inverse["ports"] = _inverseCollectionDiff(original.get("ports", []), appliedDiff["ports"], _inversePortDiff)
+        inverse["ports"] = _inverseCollectionDiff(original.get("ports", []), appliedDiff["ports"], _inversePortDiff, "port")
     return inverse
 
 
@@ -5902,7 +5951,7 @@ def _inverseDesignDiff(original: dict, appliedDiff: dict) -> dict:
         if key in appliedDiff:
             inverse[key] = original.get(key)
     if appliedDiff.get("pieces"):
-        inverse["pieces"] = _inverseCollectionDiff(original.get("pieces", []), appliedDiff["pieces"], _inversePieceDiff)
+        inverse["pieces"] = _inverseCollectionDiff(original.get("pieces", []), appliedDiff["pieces"], _inversePieceDiff, "piece")
     return inverse
 
 
@@ -5965,22 +6014,30 @@ def inverseKitDiffDict(original: dict, appliedDiff: dict) -> dict:
         if key in appliedDiff:
             inverse[key] = original.get(key)
     if appliedDiff.get("types"):
-        inverse["types"] = _inverseCollectionDiff(original.get("types", []), appliedDiff["types"], _inverseTypeDiff)
+        inverse["types"] = _inverseCollectionDiff(original.get("types", []), appliedDiff["types"], _inverseTypeDiff, "type")
     if appliedDiff.get("designs"):
-        inverse["designs"] = _inverseCollectionDiff(original.get("designs", []), appliedDiff["designs"], _inverseDesignDiff)
+        inverse["designs"] = _inverseCollectionDiff(original.get("designs", []), appliedDiff["designs"], _inverseDesignDiff, "design")
     if appliedDiff.get("tags"):
-        inverse["tags"] = _inverseCollectionDiff(original.get("tags", []), appliedDiff["tags"], _inverseTagDiff)
+        inverse["tags"] = _inverseCollectionDiff(original.get("tags", []), appliedDiff["tags"], _inverseTagDiff, "tag")
     if appliedDiff.get("concepts"):
-        inverse["concepts"] = _inverseCollectionDiff(original.get("concepts", []), appliedDiff["concepts"], _inverseConceptDiff)
+        inverse["concepts"] = _inverseCollectionDiff(original.get("concepts", []), appliedDiff["concepts"], _inverseConceptDiff, "concept")
     if appliedDiff.get("interfaces"):
-        inverse["interfaces"] = _inverseCollectionDiff(original.get("interfaces", []), appliedDiff["interfaces"], _inverseInterfaceDiff)
+        inverse["interfaces"] = _inverseCollectionDiff(original.get("interfaces", []), appliedDiff["interfaces"], _inverseInterfaceDiff, "interface")
     if appliedDiff.get("files"):
-        inverse["files"] = _inverseCollectionDiff(original.get("files", []), appliedDiff["files"], _inverseFileDiff)
+        inverse["files"] = _inverseCollectionDiff(original.get("files", []), appliedDiff["files"], _inverseFileDiff, "file")
     if appliedDiff.get("folders"):
-        inverse["folders"] = _inverseCollectionDiff(original.get("folders", []), appliedDiff["folders"], _inverseFolderDiff)
+        inverse["folders"] = _inverseCollectionDiff(original.get("folders", []), appliedDiff["folders"], _inverseFolderDiff, "folder")
     if appliedDiff.get("attributes"):
         inverse["attributes"] = _inverseAttributesDiff(original.get("attributes", []), appliedDiff["attributes"])
     return inverse
+
+
+def _extractUpdateGuid(update: dict, entityKeys: list[str]) -> str:
+    """Extract guid from an updated entry which might use EntityId format or old id format."""
+    for key in entityKeys:
+        if key in update and isinstance(update[key], dict):
+            return update[key].get("guid", "")
+    return update.get("id", "")
 
 
 def areKitDiffsDictEqual(a: dict, b: dict) -> bool:
@@ -5989,18 +6046,32 @@ def areKitDiffsDictEqual(a: dict, b: dict) -> bool:
     for key in keys:
         if _normalizeValue(a.get(key)) != _normalizeValue(b.get(key)):
             return False
-    collectionKeys = ["types", "designs", "tags", "concepts", "interfaces", "files", "folders", "attributes"]
-    for key in collectionKeys:
-        diffA = a.get(key, {})
-        diffB = b.get(key, {})
-        if set(diffA.get("removed", [])) != set(diffB.get("removed", [])):
+    # Collection keys with their entity names for EntityId format
+    collectionConfig = [
+        ("types", "type"),
+        ("designs", "design"),
+        ("tags", "tag"),
+        ("concepts", "concept"),
+        ("interfaces", "interface"),
+        ("files", "file"),
+        ("folders", "folder"),
+        ("attributes", "attribute"),
+    ]
+    for collectionKey, entityKey in collectionConfig:
+        diffA = a.get(collectionKey, {})
+        diffB = b.get(collectionKey, {})
+        # EntityId format: removed is [{"guid": ...}]
+        removedA = {r["guid"] if isinstance(r, dict) else r for r in diffA.get("removed", [])}
+        removedB = {r["guid"] if isinstance(r, dict) else r for r in diffB.get("removed", [])}
+        if removedA != removedB:
             return False
         addedA = {item.get("guid"): item for item in diffA.get("added", [])}
         addedB = {item.get("guid"): item for item in diffB.get("added", [])}
         if set(addedA.keys()) != set(addedB.keys()):
             return False
-        updatedA = {u["id"]: u["diff"] for u in diffA.get("updated", [])}
-        updatedB = {u["id"]: u["diff"] for u in diffB.get("updated", [])}
+        # EntityId format: updated is [{"<entity>": {"guid": ...}, "diff": ...}]
+        updatedA = {_extractUpdateGuid(u, [entityKey]): u["diff"] for u in diffA.get("updated", [])}
+        updatedB = {_extractUpdateGuid(u, [entityKey]): u["diff"] for u in diffB.get("updated", [])}
         if set(updatedA.keys()) != set(updatedB.keys()):
             return False
     return True

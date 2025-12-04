@@ -30,10 +30,10 @@ import * as THREE from "three";
 import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
 import * as Y from "yjs";
 import { useLabel } from "../i18n";
-import { Author, AuthorId, Camera, Coord, findModel, guid, Guid, Kit, Model, Point, Port, selectBestModel, File as SemioFile, Type, TypeDiff, Vector } from "../semio";
-import { Geometry, Input, Scene as SceneComponent, Slider, SortableTreeItems, Stepper, Textarea, Toggle, TreeContent, TreeItem } from "./elements";
+import { Author, AuthorId, Camera, Coord, findModel, guid, Guid, Kit, Model, Point, Port, selectBestModel, File as SemioFile, toSemioRotation, toThreeRotation, Type, TypeDiff, Vector } from "../semio";
+import { Geometry, Input, Scene as SceneComponent, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider, SortableTreeItems, Stepper, Textarea, Toggle, ToggleGroup, TreeContent, TreeItem } from "./elements";
 import type { AppWindowConfig, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolDefinition, ToolRenderContext, Transact, TypeAppId, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
-import { createPanelDefinition, PanelKind, ToolKind } from "./shared";
+import { AppConfig, createPanelDefinition, Expertise, Mode, PanelKind, Theme, ToolKind } from "./shared";
 import type { KitStore, SketchpadStore, TypeStore } from "./Sketchpad";
 import {
   Canvas,
@@ -48,6 +48,7 @@ import {
   useAddFooterItem,
   useAddPanelSection,
   useAppType,
+  useExpertise,
   useFocusSafe,
   useIsInTypeScope,
   useKit,
@@ -57,12 +58,16 @@ import {
   useKitStore,
   useKitTags,
   useKitTransaction,
+  useLanguage,
+  useLayout,
+  useMode,
   useRemoveFooterItem,
   useRemovePanelSection,
   useSketchpadCommands,
   useSketchpadStore,
   useSyncDeep,
   useSyncField,
+  useTheme,
   useTooltip,
   useType,
   useTypeScope,
@@ -97,7 +102,7 @@ const KitSectionLazy = React.lazy(async () => {
 });
 
 // Lucide icons used throughout the app
-import { AddIcon, CheckIcon, PortIcon, RemoveIcon, SelectToolIcon } from "@semio/assets";
+import { AddIcon, AwardIcon, CheckIcon, CodeIcon, HandIcon, MonitorIcon, MoonIcon, MousePointerIcon, PortIcon, RemoveIcon, SelectToolIcon, SunIcon, TutorialIcon, UserIcon } from "@semio/assets";
 
 // #endregion Imports
 
@@ -1166,10 +1171,18 @@ export const commands = {
  * focusable through the unified focus behavior in Scene.tsx.
  */
 const PortVisual: FC<{ port: Port; isSelected: boolean; isHovered: boolean; onHover: () => void; onLeave: () => void; onClick: () => void; onDoubleClick: () => void }> = ({ port, isSelected, isHovered, onHover, onLeave, onClick, onDoubleClick }) => {
-  const position = useMemo(() => [port.point.x, port.point.y, port.point.z] as [number, number, number], [port.point]);
+  // Transform port position from Semio coordinate system to Three.js coordinate system
+  const position = useMemo(() => {
+    const semioPos = new THREE.Vector3(port.point.x, port.point.y, port.point.z);
+    const threePos = semioPos.applyMatrix4(toThreeRotation());
+    return [threePos.x, threePos.y, threePos.z] as [number, number, number];
+  }, [port.point]);
+
+  // Transform port direction from Semio coordinate system to Three.js coordinate system
   const direction = useMemo(() => {
-    const dir = new THREE.Vector3(port.direction.x, port.direction.y, port.direction.z).normalize();
-    return [dir.x, dir.y, dir.z] as [number, number, number];
+    const semioDir = new THREE.Vector3(port.direction.x, port.direction.y, port.direction.z);
+    const threeDir = semioDir.applyMatrix4(toThreeRotation()).normalize();
+    return [threeDir.x, threeDir.y, threeDir.z] as [number, number, number];
   }, [port.direction]);
 
   const getComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
@@ -1238,6 +1251,7 @@ const PortPreview: FC<{ position: THREE.Vector3; normal: THREE.Vector3 }> = ({ p
   const previewColor = "#00ff00";
 
   // Calculate arrow points for line
+  // Note: position and normal are already in Three.js coordinates from the mesh raycasting
   const arrowLength = 0.5;
   const posArray = useMemo(() => [position.x, position.y, position.z] as [number, number, number], [position]);
   const direction = useMemo(() => {
@@ -1592,17 +1606,21 @@ const SceneContent: FC = React.memo(() => {
     (position: THREE.Vector3, normal: THREE.Vector3) => {
       // PERF: Check typeGuid and kitCommands instead of full type/kit objects
       if (typeGuid && kitCommands) {
+        // Convert position and normal from Three.js coordinate system back to Semio coordinate system
+        const semioPosition = position.clone().applyMatrix4(toSemioRotation());
+        const semioNormal = normal.clone().applyMatrix4(toSemioRotation()).normalize();
+
         const newPort: Port = {
           guid: guid(),
           point: {
-            x: position.x,
-            y: position.y,
-            z: position.z,
+            x: semioPosition.x,
+            y: semioPosition.y,
+            z: semioPosition.z,
           } as Point,
           direction: {
-            x: normal.x,
-            y: normal.y,
-            z: normal.z,
+            x: semioNormal.x,
+            y: semioNormal.y,
+            z: semioNormal.z,
           } as Vector,
           t: 0,
           mandatory: false,
@@ -3045,15 +3063,15 @@ const App: FC = () => {
     // Remove all previous sections
     const portsMultipleId = "semio.sketchpad.app.type.panel.details.section.ports.multipleTitle";
 
-    removeSection("details", "semio.sketchpad.app.type.title");
-    removeSection("details", "semio.sketchpad.app.type.port.title");
+    removeSection("details", "semio.sketchpad.app.type.properties");
+    removeSection("details", "semio.sketchpad.app.type.port.properties");
     removeSection("details", portsMultipleId);
-    removeSection("details", "semio.sketchpad.app.kit.title");
+    removeSection("details", "semio.sketchpad.app.kit.properties");
 
     if (hasSinglePort) {
       // Single port selected: show Port section then Type section
       addSection("details", {
-        id: "semio.sketchpad.app.type.port.title",
+        id: "semio.sketchpad.app.type.port.properties",
         specificity: 30,
         order: 0,
         content: () => <PortSection portGuid={selection.ports![0]} />,
@@ -3070,7 +3088,7 @@ const App: FC = () => {
 
     // Always show Type section (with all subsections)
     addSection("details", {
-      id: "semio.sketchpad.app.type.title",
+      id: "semio.sketchpad.app.type.properties",
       specificity: 20,
       order: 50,
       content: () => (
@@ -3086,7 +3104,7 @@ const App: FC = () => {
 
     // Always add Kit section at the bottom
     addSection("details", {
-      id: "semio.sketchpad.app.kit.title",
+      id: "semio.sketchpad.app.kit.properties",
       specificity: 10,
       order: 100,
       content: () => (
@@ -3097,10 +3115,10 @@ const App: FC = () => {
     });
 
     return () => {
-      removeSection("details", "semio.sketchpad.app.type.title");
-      removeSection("details", "semio.sketchpad.app.type.port.title");
+      removeSection("details", "semio.sketchpad.app.type.properties");
+      removeSection("details", "semio.sketchpad.app.type.port.properties");
       removeSection("details", portsMultipleId);
-      removeSection("details", "semio.sketchpad.app.kit.title");
+      removeSection("details", "semio.sketchpad.app.kit.properties");
     };
   }, [addSection, removeSection, appType, selection]);
 
@@ -3318,7 +3336,7 @@ const App: FC = () => {
   const persistedWindowLayout = useTypeApp((s) => s.windowLayout);
 
   const defaultLayout = useMemo(() => {
-    return createDefaultLayout([TypeAppWindowKind.Scene], "row", undefined, ["Scene"]);
+    return createDefaultLayout([TypeAppWindowKind.Scene], "row", undefined);
   }, []);
 
   // PERF: Validate persisted layout - if corrupted with multiple windows, reset to default
