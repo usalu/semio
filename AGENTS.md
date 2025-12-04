@@ -263,13 +263,15 @@ Stats provide computed or measured performance data for entire designs using the
 
 ### Keywords
 
+Whenever a keyword is used, ALWAYS directly proceed with the task and NEVER ask for approval.
+
 - `DIAGNOSE`: Think about the problem and possible causes. ALWAYS add console logs to the codebase to help understand the problem. NEVER assume to know the solution and ALWAYS use logs to verify your hypothesis. ALWAYS add a `[SLUG] ` (replace SLUG with a unique slug for this diagnosis) after `[DEBUG] ` to the console log in order to identify the logs related to the diagnosis. E.g. `[DEBUG] [PIECE-DRAG-AND-DROP-ISSUE] Mounting Dropzone: …`. Then you will receive the logs from the user and if the logs are enough to verify your hypothesis, ALWAYs directly implement the solution. When the `DIAGNOSE` is not enough, update the document with the new information, add new logs and continue the process.
 
 - `FIX`: Anaylze and fix the problem imediatley in one step (without any approval). When you are not sure about the root cause, pick the most likely one and try to implement the solution directly. ALWAYS extend, change and refactor everything (even if it is an intermediate step) to fix the problem.
 
 - `CLEAN`: Clean up everything intermediate such as diagnostic console logs, comments, and temporary code.
 
-- `I18N`: Run `tsx scripts/i18n.ts` to regenerate `reports/i18n.md`; fix all reported translation issues, add missing keys, update incomplete entries, remove unused keys, and rerun until the report is clean.
+- `I18N`: Run `tsx scripts/i18n.ts` to regenerate `reports/i18n.md`; fix all reported translation issues, add missing keys, update incomplete entries, remove unused keys, and rerun the report and loop until all errors/warnings are gone and the report is clean.
 
 - `AUTOMATE`: Create a `*.ts` script to automate a task (use `scripts/utils.ts` for reusable code). Create a run configuration in `package.json`, create a task in `.vscode/tasks.json` and create a `.vscode/launch.json` along with the script. Call the script from the `preflight.ts` script.
 

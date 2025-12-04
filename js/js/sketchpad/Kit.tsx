@@ -94,7 +94,7 @@ import {
   useTheme,
   Window,
 } from "./Sketchpad";
-import { Action, Input, NotFound, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Strip, Table, TableAvatar, Textarea, Toggle, ToggleGroup, TreeContent, TreeItem } from "./elements";
+import { Action, Input, NotFound, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Strip, Table, TableAvatar, Textarea, Toggle, ToggleGroup, Transaction, TreeContent, TreeItem } from "./elements";
 import type { KitAppId, KitCommandContext, KitDiffAppEdit, Layout, PanelDefinition, PanelVisibility, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
 import { AppConfig, createPanelDefinition, Expertise, Mode, PanelKind, Theme } from "./shared";
 
@@ -955,9 +955,9 @@ export function useKitAppCommands(id?: KitAppId) {
     removeDesign: (origin: string, Guid: Guid) => store.execute("semio.kitApp.removeDesign", origin, Guid),
     removeDesigns: (origin: string, designIds: Guid[]) => store.execute("semio.kitApp.removeDesigns", origin, designIds),
     updateType: (origin: string, guid: Guid, typeDiff: TypeDiff) => store.execute("semio.kitApp.updateType", origin, guid, typeDiff),
-    updateTypes: (origin: string, updates: { id: Guid; diff: TypeDiff }[]) => store.execute("semio.kitApp.updateTypes", origin, updates),
+    updateTypes: (origin: string, updates: { type: { guid: Guid }; diff: TypeDiff }[]) => store.execute("semio.kitApp.updateTypes", origin, updates),
     updateDesign: (origin: string, guid: Guid, designDiff: DesignDiff) => store.execute("semio.kitApp.updateDesign", origin, guid, designDiff),
-    updateDesigns: (origin: string, updates: { id: Guid; diff: DesignDiff }[]) => store.execute("semio.kitApp.updateDesigns", origin, updates),
+    updateDesigns: (origin: string, updates: { design: { guid: Guid }; diff: DesignDiff }[]) => store.execute("semio.kitApp.updateDesigns", origin, updates),
     togglePanel: (origin: string, panelKey: keyof PanelVisibility) => {
       const current = store.snapshot().panelVisibility;
       store.change({
@@ -1011,7 +1011,7 @@ export function useKitAppTypeStatus(typeId: string, id?: KitAppId): DiffStatus {
         // Check removed types
         if (edit.do.kitDiff.types.removed) {
           for (const removedId of edit.do.kitDiff.types.removed) {
-            if (removedId === typeId) {
+            if (removedId.guid === typeId) {
               return DiffStatus.Removed;
             }
           }
@@ -1019,7 +1019,7 @@ export function useKitAppTypeStatus(typeId: string, id?: KitAppId): DiffStatus {
         // Check modified types
         if (edit.do.kitDiff.types.updated) {
           for (const typeUpdate of edit.do.kitDiff.types.updated) {
-            if (typeUpdate.id === typeId) {
+            if (typeUpdate.type.guid === typeId) {
               return DiffStatus.Modified;
             }
           }
@@ -1121,7 +1121,7 @@ export function useKitAppDesignStatus(designId: string, id?: KitAppId): DiffStat
         // Check removed designs
         if (edit.do.kitDiff.designs.removed) {
           for (const removedId of edit.do.kitDiff.designs.removed) {
-            if (removedId === designId) {
+            if (removedId.guid === designId) {
               return DiffStatus.Removed;
             }
           }
@@ -1129,7 +1129,7 @@ export function useKitAppDesignStatus(designId: string, id?: KitAppId): DiffStat
         // Check modified designs
         if (edit.do.kitDiff.designs.updated) {
           for (const designUpdate of edit.do.kitDiff.designs.updated) {
-            if (designUpdate.id === designId) {
+            if (designUpdate.design.guid === designId) {
               return DiffStatus.Modified;
             }
           }
@@ -1785,8 +1785,8 @@ export const commands = {
         },
       },
       kitDiff: {
-        types: { removed: selection?.types },
-        designs: { removed: selection?.designs },
+        types: { removed: selection?.types?.map((g) => ({ guid: g })) },
+        designs: { removed: selection?.designs?.map((g) => ({ guid: g })) },
       },
     };
   },
@@ -1810,7 +1810,7 @@ export const commands = {
     return {
       diff: {},
       kitDiff: {
-        types: { removed: [Guid] },
+        types: { removed: [{ guid: Guid }] },
       },
     };
   },
@@ -1818,7 +1818,7 @@ export const commands = {
     return {
       diff: {},
       kitDiff: {
-        types: { removed: typeIds },
+        types: { removed: typeIds.map((g) => ({ guid: g })) },
       },
     };
   },
@@ -1842,7 +1842,7 @@ export const commands = {
     return {
       diff: {},
       kitDiff: {
-        designs: { removed: [Guid] },
+        designs: { removed: [{ guid: Guid }] },
       },
     };
   },
@@ -1850,7 +1850,7 @@ export const commands = {
     return {
       diff: {},
       kitDiff: {
-        designs: { removed: designIds },
+        designs: { removed: designIds.map((g) => ({ guid: g })) },
       },
     };
   },
@@ -1858,11 +1858,11 @@ export const commands = {
     return {
       diff: {},
       kitDiff: {
-        types: { updated: [{ id: guid, diff: typeDiff }] },
+        types: { updated: [{ type: { guid }, diff: typeDiff }] },
       },
     };
   },
-  "semio.kitApp.updateTypes": (context: KitAppCommandContext, updates: { id: Guid; diff: TypeDiff }[]): KitAppCommandResult => {
+  "semio.kitApp.updateTypes": (context: KitAppCommandContext, updates: { type: { guid: Guid }; diff: TypeDiff }[]): KitAppCommandResult => {
     return {
       diff: {},
       kitDiff: {
@@ -1874,11 +1874,11 @@ export const commands = {
     return {
       diff: {},
       kitDiff: {
-        designs: { updated: [{ id: guid, diff: designDiff }] },
+        designs: { updated: [{ design: { guid }, diff: designDiff }] },
       },
     };
   },
-  "semio.kitApp.updateDesigns": (context: KitAppCommandContext, updates: { id: Guid; diff: DesignDiff }[]): KitAppCommandResult => {
+  "semio.kitApp.updateDesigns": (context: KitAppCommandContext, updates: { design: { guid: Guid }; diff: DesignDiff }[]): KitAppCommandResult => {
     return {
       diff: {},
       kitDiff: {
@@ -2172,12 +2172,18 @@ const AppContent: FC = () => {
   const selectionTypes = kitApp?.selection?.types || [];
   const selectionDesigns = kitApp?.selection?.designs || [];
   const selectionQualities = kitApp?.selection?.qualities || [];
+  const selectionInterfaces = kitApp?.selection?.interfaces || [];
+  const selectionTags = kitApp?.selection?.tags || [];
+  const selectionConcepts = kitApp?.selection?.concepts || [];
   const selectionFiles = kitApp?.selection?.files || [];
   const selectionFolders = kitApp?.selection?.folders || [];
   const selectionAuthors = kitApp?.selection?.authors || [];
   const selectionTypesKey = selectionTypes.join(",");
   const selectionDesignsKey = selectionDesigns.join(",");
   const selectionQualitiesKey = selectionQualities.join(",");
+  const selectionInterfacesKey = selectionInterfaces.join(",");
+  const selectionTagsKey = selectionTags.join(",");
+  const selectionConceptsKey = selectionConcepts.join(",");
   const selectionFilesKey = selectionFiles.join(",");
   const selectionFoldersKey = selectionFolders.join(",");
   const selectionAuthorsKey = selectionAuthors.join(",");
@@ -2186,11 +2192,14 @@ const AppContent: FC = () => {
       types: selectionTypes,
       designs: selectionDesigns,
       qualities: selectionQualities,
+      interfaces: selectionInterfaces,
+      tags: selectionTags,
+      concepts: selectionConcepts,
       files: selectionFiles,
       folders: selectionFolders,
       authors: selectionAuthors,
     }),
-    [selectionTypesKey, selectionDesignsKey, selectionQualitiesKey, selectionFilesKey, selectionFoldersKey, selectionAuthorsKey],
+    [selectionTypesKey, selectionDesignsKey, selectionQualitiesKey, selectionInterfacesKey, selectionTagsKey, selectionConceptsKey, selectionFilesKey, selectionFoldersKey, selectionAuthorsKey],
   );
   const sortColumn = kitApp?.sortColumn;
   const sortDirection = kitApp?.sortDirection || "asc";
@@ -2216,9 +2225,14 @@ const AppContent: FC = () => {
 
   const allConcepts = useMemo(() => {
     const conceptSet = new Set<string>();
-    kitDesigns?.forEach((d: Design) => d.concepts?.forEach((c) => conceptSet.add(c.name)));
+    kitDesigns?.forEach((d: Design) =>
+      d.concepts?.forEach((c) => {
+        const concept = kitConcepts?.find((kc) => kc.guid === c.guid);
+        if (concept?.name) conceptSet.add(concept.name);
+      }),
+    );
     return Array.from(conceptSet).sort();
-  }, [kitDesignsKey]);
+  }, [kitDesignsKey, kitConcepts]);
 
   // Collect unique names for the selected kind (or unified when no kind selected)
   // Names are shown hierarchically based on selectedName filter
@@ -2557,7 +2571,7 @@ const AppContent: FC = () => {
   const allRows = useMemo<TableRow[]>(() => {
     const result: TableRow[] = [];
     const locale = i18n.language === "de" ? de : enUS;
-    const formatDate = (date?: Date) => {
+    const formatDate = (date?: Date | string) => {
       if (!date) return "";
       const parsedDate = date instanceof Date ? date : new Date(date);
       if (isNaN(parsedDate.getTime())) return "";
@@ -2628,7 +2642,7 @@ const AppContent: FC = () => {
         childDesigns.forEach((design) => {
           // Skip designs not in the input set (for filtered views)
           if (!designs.includes(design)) return;
-          if (selectedConcepts.length > 0 && !design.concepts?.some((c) => selectedConcepts.includes(c))) return;
+          if (selectedConcepts.length > 0 && !design.concepts?.some((c) => selectedConcepts.includes(c.guid))) return;
           if (searchQuery && !design.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
           // Skip root designs that are in folders when not viewing the folders kind
           // Only filter at root level (parentGuid === undefined), not children
@@ -3827,8 +3841,8 @@ const AppContent: FC = () => {
         name: file.name,
         size: file.size,
         hash: undefined,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
 
       try {
@@ -4920,7 +4934,7 @@ export const FileSection: FC = () => {
     return `${(bytes / 1024).toFixed(1)} KB`;
   };
 
-  const formatDate = (date?: Date) => {
+  const formatDate = (date?: Date | string) => {
     if (!date) return "";
     const parsedDate = date instanceof Date ? date : new Date(date);
     if (isNaN(parsedDate.getTime())) return "";
@@ -4966,7 +4980,6 @@ export const FolderSection: FC = () => {
   const kitApp = useKitApp() as KitAppState;
   const kit = useKit() as Kit;
   const kitStore = useKitStore() as any;
-  const { startTransaction, finalizeTransaction, abortTransaction } = useKitAppCommands();
   const selection = kitApp?.selection;
   const selectedFolders = selection?.folders || [];
 
@@ -4983,7 +4996,7 @@ export const FolderSection: FC = () => {
 
   const folder = folders[0]!;
 
-  const formatDate = (date?: Date) => {
+  const formatDate = (date?: Date | string) => {
     if (!date) return "";
     const parsedDate = date instanceof Date ? date : new Date(date);
     if (isNaN(parsedDate.getTime())) return "";
@@ -5002,9 +5015,7 @@ export const FolderSection: FC = () => {
               const folderStore = (kitStore as any).folder(folder.guid);
               folderStore.change({ name: value });
             }}
-            startTransaction={() => startTransaction?.("semio.sketchpad.app.kit.panel.details.section.folder.name")}
-            finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.kit.panel.details.section.folder.name")}
-            abortTransaction={() => abortTransaction?.("semio.sketchpad.app.kit.panel.details.section.folder.name")}
+            transaction={useKitAppTransaction("semio.sketchpad.app.kit.panel.details.section.folder.name")}
             showLabel
           />
         </TreeContent>
@@ -5021,9 +5032,7 @@ export const FolderSection: FC = () => {
                 const folderStore = (kitStore as any).folder(folder.guid);
                 folderStore.change({ description: value });
               }}
-              startTransaction={() => startTransaction?.("semio.sketchpad.app.kit.panel.details.section.folder.description")}
-              finalizeTransaction={() => finalizeTransaction?.("semio.sketchpad.app.kit.panel.details.section.folder.description")}
-              abortTransaction={() => abortTransaction?.("semio.sketchpad.app.kit.panel.details.section.folder.description")}
+              transaction={useKitAppTransaction("semio.sketchpad.app.kit.panel.details.section.folder.description")}
               showLabel
             />
           </TreeContent>

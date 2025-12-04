@@ -576,7 +576,7 @@ function DescriptionTooltipContent({ id }: DescriptionTooltipContentProps) {
   const label = useLabel(id);
   const manualLabel = useLabel("tooltip.manual");
   const tutorialLabel = useLabel("tooltip.tutorial");
-  const value = t(id);
+  const value = t(id as any) as any;
   const manualPath = typeof value === "object" && value?.manual ? value.manual : undefined;
   const tutorialPath = typeof value === "object" && value?.tutorial ? value.tutorial : undefined;
 
@@ -585,7 +585,7 @@ function DescriptionTooltipContent({ id }: DescriptionTooltipContentProps) {
     hotkey = typeof value.hotkey === "string" ? value.hotkey : undefined;
   } else {
     const hotkeyKey = `${id}.hotkey`;
-    const hotkeyValue = t(hotkeyKey);
+    const hotkeyValue = t(hotkeyKey as any) as any;
     if (typeof hotkeyValue === "string" && hotkeyValue !== hotkeyKey) {
       hotkey = hotkeyValue;
     } else if (hotkeyValue && typeof hotkeyValue === "object" && hotkeyValue.hotkey) {
@@ -1119,7 +1119,7 @@ const ActionGroupContext = React.createContext<{ level: Level }>({
   level: "base",
 });
 
-interface ActionGroupProps extends Omit<React.ComponentProps<"div">, "children" | "id"> {
+interface ActionGroupProps extends Omit<React.ComponentProps<"div">, "children"> {
   children: React.ReactNode;
   level?: Level;
 }
@@ -1280,9 +1280,15 @@ const buttonGroupItemVariants = cva(
         panel: "hover:bg-hover-panel",
         temporary: "hover:bg-hover-temporary",
       },
+      variant: {
+        default: "",
+        ghost: "border-transparent bg-transparent",
+        outline: "border-border",
+      },
     },
     defaultVariants: {
       level: "base",
+      variant: "default",
     },
   },
 );
@@ -2509,7 +2515,7 @@ const addIconSize = (element: React.ReactNode): React.ReactNode => {
     // Only add size-small if no size class is already present
     if (!existingClassName.includes("size-")) {
       return React.cloneElement(element, {
-        ...element.props,
+        ...(element.props as object),
         className: cn(existingClassName, "size-small"),
       } as any);
     }
@@ -3726,7 +3732,7 @@ function Breadcrumb({ className, items, level: propLevel, ...props }: Breadcrumb
     <nav aria-label="breadcrumb" data-slot="breadcrumb" className={cn("flex h-medium items-stretch border border-border bg-base", className)} {...props}>
       <ol data-slot="breadcrumb-list" className="flex flex-wrap items-stretch text-xs break-words overflow-hidden h-full">
         {items.map((item, index) => {
-          const hasOptions = item.options && item.options.length > 0;
+          const hasOptions = !!(item.options && item.options.length > 0);
           const isOpen = openIndex === index;
 
           return (
@@ -3741,11 +3747,12 @@ function Breadcrumb({ className, items, level: propLevel, ...props }: Breadcrumb
   );
 }
 
-interface BreadcrumbItemProps extends React.ComponentProps<"li"> {
+interface BreadcrumbItemProps extends Omit<React.ComponentProps<"li">, "content"> {
   id?: string;
   content?: React.ReactNode;
   onNavigate?: (href: string) => void;
   options?: { label: React.ReactNode; href: string; id?: string }[];
+  level?: Level;
 }
 
 function BreadcrumbItem({ className, id, content, children, onNavigate, options, ...props }: BreadcrumbItemProps) {
@@ -3761,7 +3768,7 @@ function BreadcrumbItem({ className, id, content, children, onNavigate, options,
         );
       }
       const elementProps = itemContent.props as { className?: string; ["data-slot"]?: string };
-      return React.cloneElement(itemContent, {
+      return React.cloneElement(itemContent as React.ReactElement<any>, {
         className: cn("cursor-selectable", elementProps?.className),
         "data-slot": elementProps?.["data-slot"] ?? "breadcrumb-link",
       });
@@ -3871,7 +3878,6 @@ function BreadcrumbSeparatorItem({ level, hasOptions, isOpen, onOpenChange, id, 
 }
 
 export { Breadcrumb, BreadcrumbItem };
-export type { BreadcrumbItemData };
 
 // #region PageNavigation
 
@@ -3975,7 +3981,7 @@ export type ResizeSide = "left" | "right" | "top" | "bottom";
 export interface PanelSection {
   id: string;
   content: React.ReactNode | (() => React.ReactNode);
-  specificity: number;
+  specificity?: number;
   defaultOpen?: boolean;
   order?: number;
   actions?: Array<{

@@ -2465,7 +2465,7 @@ const getDesignTools = (): ToolDefinition[] => [
 export const ToolsToggleGroup: FC = () => {
   const { kit, design } = useParams();
   // PERF: Only subscribe to activeTool field, not entire app state
-  const activeTool = useDesignApp((s) => s?.activeTool ?? ToolKind.SELECTION_NORMAL, kit && design ? { kit, design } : undefined);
+  const activeTool = useDesignAppActiveTool(kit && design ? { kit, design } : undefined);
   const { setActiveTool } = useDesignAppCommands(kit && design ? { kit, design } : undefined);
 
   if (!kit || !design) return null;
@@ -2783,11 +2783,11 @@ const DesignSectionForm: FC = () => {
             <TreeContent>
               <Stepper
                 id="semio.sketchpad.app.design.panel.details.section.location.longitude"
-                value={design.location?.longitude ?? 0}
+                value={(design.location as any)?.longitude ?? 0}
                 onChange={(value: number) =>
                   handleChange("semio.sketchpad.app.design.panel.details.section.location.longitude", {
                     ...design,
-                    location: { ...design.location!, longitude: value },
+                    location: { ...(design.location as any)!, longitude: value },
                   })
                 }
                 transaction={{
@@ -2803,11 +2803,11 @@ const DesignSectionForm: FC = () => {
             <TreeContent>
               <Stepper
                 id="semio.sketchpad.app.design.panel.details.section.location.latitude"
-                value={design.location?.latitude ?? 0}
+                value={(design.location as any)?.latitude ?? 0}
                 onChange={(value: number) =>
                   handleChange("semio.sketchpad.app.design.panel.details.section.location.latitude", {
                     ...design,
-                    location: { ...design.location!, latitude: value },
+                    location: { ...(design.location as any)!, latitude: value },
                   })
                 }
                 transaction={{
@@ -3076,8 +3076,8 @@ const DesignSectionForm: FC = () => {
               id="semio.sketchpad.app.design.panel.details.section.design.createdAt"
               value={(() => {
                 const date = design.createdAt;
-                if (date instanceof Date) return date.toISOString().split("T")[0];
-                if (typeof date === "string") return (date as string).split("T")[0];
+                if (typeof date === "string") return date.split("T")[0];
+                if (date && typeof (date as any).toISOString === "function") return (date as any).toISOString().split("T")[0];
                 return "";
               })()}
               disabled
@@ -3093,8 +3093,8 @@ const DesignSectionForm: FC = () => {
               id="semio.sketchpad.app.design.panel.details.section.design.updatedAt"
               value={(() => {
                 const date = design.updatedAt;
-                if (date instanceof Date) return date.toISOString().split("T")[0];
-                if (typeof date === "string") return (date as string).split("T")[0];
+                if (typeof date === "string") return date.split("T")[0];
+                if (date && typeof (date as any).toISOString === "function") return (date as any).toISOString().split("T")[0];
                 return "";
               })()}
               disabled
@@ -3775,7 +3775,7 @@ const ConnectionsSectionForm: FC<{
           </TreeItem>
           <TreeItem>
             <TreeContent>
-              <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectingPortId" value={connection!.connecting.port.guid} disabled showLabel />
+              <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectingPortId" value={connection!.connecting.port?.guid ?? ""} disabled showLabel />
             </TreeContent>
           </TreeItem>
           {connection!.connecting.designPiece && (
@@ -3792,7 +3792,7 @@ const ConnectionsSectionForm: FC<{
           </TreeItem>
           <TreeItem>
             <TreeContent>
-              <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectedPortId" value={connection!.connected.port.guid} disabled showLabel />
+              <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectedPortId" value={connection!.connected.port?.guid ?? ""} disabled showLabel />
             </TreeContent>
           </TreeItem>
           {connection!.connected.designPiece && (
@@ -3999,7 +3999,7 @@ const PortSectionForm: FC<{ pieceGuid: Guid; portGuid: Guid }> = ({ pieceGuid, p
       {port.interface && (
         <TreeItem>
           <TreeContent>
-            <Input id="semio.sketchpad.app.design.panel.details.section.port.interface" value={port.interface} disabled showLabel />
+            <Input id="semio.sketchpad.app.design.panel.details.section.port.interface" value={port.interface.guid} disabled showLabel />
           </TreeContent>
         </TreeItem>
       )}
@@ -4020,8 +4020,8 @@ const PortSectionForm: FC<{ pieceGuid: Guid; portGuid: Guid }> = ({ pieceGuid, p
           <Input id="semio.sketchpad.app.design.panel.details.section.port.direction" value={`(${port.direction.x.toFixed(2)}, ${port.direction.y.toFixed(2)}, ${port.direction.z.toFixed(2)})`} disabled showLabel />
         </TreeContent>
       </TreeItem>
-      {port.compatibleInterfaces &&
-        port.compatibleInterfaces.map((interface_: string, index: number) => (
+      {(port as any).compatibleInterfaces &&
+        (port as any).compatibleInterfaces.map((interface_: string, index: number) => (
           <TreeItem key={`compatible-interface-${index}`}>
             <TreeContent>
               <Input id="semio.sketchpad.app.design.panel.details.section.port.compatibleInterface" value={interface_} disabled showLabel />
@@ -4519,11 +4519,10 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, type, ports,
       const SemioConnection: SemioConnection = {
         guid: crypto.randomUUID(),
         connecting: {
-          guid: crypto.randomUUID(),
           piece: { guid: currentSelectedPort.piece },
           port: { guid: currentSelectedPort.port },
         },
-        connected: { guid: crypto.randomUUID(), piece: { guid: piece.guid }, port: { guid: port.guid } },
+        connected: { piece: { guid: piece.guid }, port: { guid: port.guid } },
       };
       addConnection(SemioConnection);
       deselectPiecePort();
@@ -4692,8 +4691,8 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
 
     return {
       guid: `port-${portIndex}`,
-      description: `Port for SemioConnection to ${originalSide.piece}:${originalSide.port}`,
-      interface: "default",
+      description: `Port for SemioConnection to ${originalSide.piece.guid}:${originalSide.port?.guid ?? ""}`,
+      interface: { guid: "default" },
       mandatory: false,
       t: t,
       point: { x: portX, y: portY, z: portZ },
@@ -4702,22 +4701,22 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
         {
           guid: crypto.randomUUID(),
           key: "semio.originalPieceId",
-          value: designSide.piece || "",
+          value: designSide.piece.guid || "",
         },
         {
           guid: crypto.randomUUID(),
           key: "semio.originalPortId",
-          value: designSide.port || "",
+          value: designSide.port?.guid || "",
         },
         {
           guid: crypto.randomUUID(),
           key: "semio.externalPieceId",
-          value: originalSide.piece || "",
+          value: originalSide.piece.guid || "",
         },
         {
           guid: crypto.randomUUID(),
           key: "semio.externalPortId",
-          value: originalSide.port || "",
+          value: originalSide.port?.guid || "",
         },
       ],
     };
@@ -4779,11 +4778,10 @@ const DesignNodeInner: React.FC<DesignNodeInnerProps> = ({ id, piece, ports, isS
       const SemioConnection: SemioConnection = {
         guid: crypto.randomUUID(),
         connecting: {
-          guid: crypto.randomUUID(),
           piece: { guid: currentSelectedPort.piece },
           port: { guid: currentSelectedPort.port },
         },
-        connected: { guid: crypto.randomUUID(), piece: { guid: piece.guid }, port: { guid: port.guid } },
+        connected: { piece: { guid: piece.guid }, port: { guid: port.guid } },
       };
       addConnection(SemioConnection);
       deselectPiecePort();
@@ -5358,7 +5356,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       const pieceGuid = piece.guid;
       const isSelected = selectedPieces.has(pieceGuid);
       const isHovered = transitivelyHoveredPieces.has(pieceGuid);
-      const diffStatus = transactionStatusMap.get(pieceGuid) ?? DiffStatus.Unchanged;
+      const diffStatus: DiffStatus = transactionStatusMap.get(pieceGuid) ?? DiffStatus.Unchanged;
       const isChangedInTransaction = diffStatus !== DiffStatus.Unchanged;
 
       // Compute fill/stroke/opacity based on state (same logic as useDesignAppPieceColor)
@@ -5388,13 +5386,15 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       }
 
       if (isSelected) {
+        // Use string comparison to avoid TypeScript narrowing issues
+        const status = diffStatus as string;
         if (isChangedInTransaction) {
           fill = "var(--color-selected-changed)";
-        } else if (diffStatus === DiffStatus.Added) {
+        } else if (status === "added") {
           fill = "var(--color-selected-added)";
-        } else if (diffStatus === DiffStatus.Removed) {
+        } else if (status === "removed") {
           fill = "var(--color-selected-removed)";
-        } else if (diffStatus === DiffStatus.Modified) {
+        } else if (status === "modified") {
           fill = "var(--color-selected-changed)";
         } else {
           fill = "var(--active-base)";
@@ -5916,6 +5916,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       const MIN_DISTANCE = 150;
       const SNAP_THRESHOLD = 20;
       const lastPostition = dragPositionRef.current;
+      if (!lastPostition || !reactFlowInstanceRef.current) return;
 
       const altPressed = event.altKey;
 
@@ -5932,7 +5933,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
       for (const selectedNode of nodes.filter((n) => selectionRef.current?.pieces?.includes(getPieceIdFromNode(n)))) {
         const piece = selectedNode.data.piece;
-        const selectedInternalNode = reactFlowInstanceRef.current.getInternalNode(selectedNode.id)!;
+        const selectedInternalNode = reactFlowInstanceRef.current!.getInternalNode(selectedNode.id)!;
 
         // Design nodes are moved without port snapping
         if (selectedNode.type === "design") {
@@ -5944,8 +5945,8 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
           }
 
           const scaledOffset = {
-            x: (draggedX - lastPostition.x) / ICON_WIDTH,
-            y: -(draggedY - lastPostition.y) / ICON_WIDTH,
+            x: (draggedX - lastPostition!.x) / ICON_WIDTH,
+            y: -(draggedY - lastPostition!.y) / ICON_WIDTH,
           };
           updatedPieces.push({
             id: piece.guid,
@@ -6387,13 +6388,14 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
               } as SemioConnection),
             );
             if (existingConnection) continue;
-            const otherInternalNode = reactFlowInstanceRef.current.getInternalNode(otherNode.id)!;
+            if (!reactFlowInstanceRef.current) continue;
+            const otherInternalNode = reactFlowInstanceRef.current!.getInternalNode(otherNode.id)!;
             for (const handle of selectedInternalNode.internals.handleBounds?.source ?? []) {
               if (!handle.id) {
                 console.error("[ORIGIN] onNodeDrag: handle.id is undefined", { handle, selectedNode });
                 continue;
               }
-              const port = findPortInType(type, handle.id);
+              const port = findPortInType(type, handle.id!);
               if (!port || !port.guid) {
                 console.error("[ORIGIN] onNodeDrag: port or port.guid is undefined", { port, handleId: handle.id, type });
                 continue;
@@ -6403,7 +6405,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
                   console.error("[ORIGIN] onNodeDrag: otherHandle.id is undefined", { otherHandle, otherNode });
                   continue;
                 }
-                const otherPort = findPortInType((otherNode as PieceNode).data.type, otherHandle.id);
+                const otherPort = findPortInType((otherNode as PieceNode).data.type, otherHandle.id!);
                 if (!otherPort || !otherPort.guid) {
                   console.error("[ORIGIN] onNodeDrag: otherPort or otherPort.guid is undefined", { otherPort, otherHandleId: otherHandle.id, otherNode });
                   continue;
@@ -6417,7 +6419,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
                   continue;
                 }
                 const haveSameFixedPiece = fixedPieceId && fixedPieceId === metadata.get(otherNode.data.piece.guid)?.fixedPieceId;
-                if (haveSameFixedPiece || !arePortsCompatible(port, otherPort) || (design && isPortInUse(design, piece.guid, port.guid)) || (design && isPortInUse(design, otherNode.data.piece.guid, otherPort.guid))) continue;
+                if (haveSameFixedPiece || !arePortsCompatible(port, otherPort) || (design && isPortInUse(design as Design, piece.guid, port.guid)) || (design && isPortInUse(design as Design, otherNode.data.piece.guid, otherPort.guid))) continue;
                 const dx = selectedInternalNode.internals.positionAbsolute.x + handle.x - (otherInternalNode.internals.positionAbsolute.x + otherHandle.x);
                 const dy = selectedInternalNode.internals.positionAbsolute.y + handle.y - (otherInternalNode.internals.positionAbsolute.y + otherHandle.y);
                 const distance = Math.sqrt(dx * dx + dy * dy);
@@ -6425,17 +6427,15 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
                   closestConnection = {
                     guid: crypto.randomUUID(),
                     connected: {
-                      guid: crypto.randomUUID(),
                       piece: { guid: otherNode.data.piece.guid },
-                      port: { guid: otherHandle.id },
+                      port: { guid: otherHandle.id! },
                     },
                     connecting: {
-                      guid: crypto.randomUUID(),
                       piece: { guid: selectedNode.data.piece.guid },
-                      port: { guid: handle.id },
+                      port: { guid: handle.id! },
                     },
-                    x: (selectedInternalNode.internals.positionAbsolute.x + handle.x - (otherInternalNode.internals.positionAbsolute.x + otherHandle.x)) / ICON_WIDTH,
-                    y: -((selectedInternalNode.internals.positionAbsolute.y + handle.y - (otherInternalNode.internals.positionAbsolute.y + otherHandle.y)) / ICON_WIDTH),
+                    u: (selectedInternalNode.internals.positionAbsolute.x + handle.x - (otherInternalNode.internals.positionAbsolute.x + otherHandle.x)) / ICON_WIDTH,
+                    v: -((selectedInternalNode.internals.positionAbsolute.y + handle.y - (otherInternalNode.internals.positionAbsolute.y + otherHandle.y)) / ICON_WIDTH),
                   };
                   closestDistance = distance;
                 }
@@ -6445,7 +6445,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         }
 
         if (closestConnection) {
-          addedConnections.push(closestConnection);
+          addedConnections.push(closestConnection!);
           updatedPieces.push({
             id: selectedNode.data.piece.guid,
             diff: {
@@ -6455,8 +6455,8 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
           });
         } else {
           const scaledOffset = {
-            x: (draggedX - lastPostition.x) / ICON_WIDTH,
-            y: -(draggedY - lastPostition.y) / ICON_WIDTH,
+            x: (draggedX - lastPostition!.x) / ICON_WIDTH,
+            y: -(draggedY - lastPostition!.y) / ICON_WIDTH,
           };
           updatedPieces.push({
             id: piece.guid,
@@ -6572,17 +6572,15 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       const newConnection: SemioConnection = {
         guid: crypto.randomUUID(),
         connected: {
-          guid: crypto.randomUUID(),
           piece: sourcePieceId,
           port: { guid: params.sourceHandle },
         },
         connecting: {
-          guid: crypto.randomUUID(),
           piece: targetPieceId,
           port: { guid: params.targetHandle },
         },
-        x: (sourceInternalNode.internals.positionAbsolute.x + sourceHandle.x - (targetInternalNode.internals.positionAbsolute.x + targetHandle.x)) / ICON_WIDTH,
-        y: -((sourceInternalNode.internals.positionAbsolute.y + sourceHandle.y - (targetInternalNode.internals.positionAbsolute.y + targetHandle.y)) / ICON_WIDTH),
+        u: (sourceInternalNode.internals.positionAbsolute.x + sourceHandle.x - (targetInternalNode.internals.positionAbsolute.x + targetHandle.x)) / ICON_WIDTH,
+        v: -((sourceInternalNode.internals.positionAbsolute.y + sourceHandle.y - (targetInternalNode.internals.positionAbsolute.y + targetHandle.y)) / ICON_WIDTH),
       };
 
       if (!design) return;
@@ -7564,7 +7562,7 @@ const App: FC<AppProps> = () => {
 
   const PiecesWorkbenchContent: FC = () => {
     const handleCreateTypeChild = (parentType: Type) => {
-      const existingChildren = workbenchTypes?.filter((type) => type.parent === parentType.guid) || [];
+      const existingChildren = workbenchTypes?.filter((type) => type.parent?.guid === parentType.guid) || [];
       const uniqueName = generateUniqueName(
         parentType.name,
         existingChildren.map((type) => type.name),
@@ -7573,15 +7571,15 @@ const App: FC<AppProps> = () => {
         guid: guid(),
         name: uniqueName,
         parent: { guid: parentType.guid },
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
       kitAppCommands.addType("semio.sketchpad.app.design.panel.workbench.types.createChild", newType);
       if (kitGuid) navigateToType(kitGuid, newType.guid);
     };
 
     const handleCreateDesignChild = (parentDesign: Design) => {
-      const existingChildren = workbenchDesigns?.filter((design) => design.parent === parentDesign.guid) || [];
+      const existingChildren = workbenchDesigns?.filter((design) => design.parent?.guid === parentDesign.guid) || [];
       const uniqueName = generateUniqueName(
         parentDesign.name,
         existingChildren.map((design) => design.name),
@@ -7590,8 +7588,8 @@ const App: FC<AppProps> = () => {
         guid: guid(),
         name: uniqueName,
         parent: { guid: parentDesign.guid },
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
       kitAppCommands.addDesign("semio.sketchpad.app.design.panel.workbench.designs.createChild", newDesign);
       if (kitGuid) navigateToDesign(kitGuid, newDesign.guid);
@@ -7632,8 +7630,8 @@ const App: FC<AppProps> = () => {
       const newType: Type = {
         guid: guid(),
         name: `Type ${typeNumber}`,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
       kitAppCommands.addType("semio.sketchpad.app.design.panel.workbench.types.create", newType);
       if (kitGuid) navigateToType(kitGuid, newType.guid);
@@ -7645,8 +7643,8 @@ const App: FC<AppProps> = () => {
       const newDesign: Design = {
         guid: guid(),
         name: `Design ${designNumber}`,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
       kitAppCommands.addDesign("semio.sketchpad.app.design.panel.workbench.designs.create", newDesign);
       if (kitGuid) navigateToDesign(kitGuid, newDesign.guid);

@@ -992,10 +992,11 @@ const Home: FC = ({}) => {
   }, [kits, selectedName]);
 
   // Collect all unique concepts from kits
+  // Note: In KitShallow, concepts is string[] (guids), not Concept[]
   const allConcepts = useMemo(() => {
     const conceptSet = new Set<string>();
     kits.forEach((kit) => {
-      kit.concepts?.forEach((concept) => conceptSet.add(concept.name));
+      kit.concepts?.forEach((concept) => conceptSet.add(concept));
     });
     return Array.from(conceptSet).sort();
   }, [kits]);
@@ -1009,7 +1010,7 @@ const Home: FC = ({}) => {
   const rows = useMemo<TableRow[]>(() => {
     const result: TableRow[] = [];
     const locale = i18n.language === "de" ? de : enUS;
-    const formatDate = (date?: Date) => {
+    const formatDate = (date?: Date | string) => {
       if (!date) return "";
       const parsedDate = date instanceof Date ? date : new Date(date);
       if (isNaN(parsedDate.getTime())) return "";

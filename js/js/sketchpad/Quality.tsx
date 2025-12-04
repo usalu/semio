@@ -899,7 +899,7 @@ class QualityAppStore extends KitDiffAppStore<QualityAppState, QualityAppDiff, Q
     if (result.qualityDiff) {
       kitStore.change({
         qualities: {
-          updated: [{ id: this.Guid.quality, diff: result.qualityDiff }],
+          updated: [{ quality: { guid: this.Guid.quality }, diff: result.qualityDiff }],
         },
       });
     }

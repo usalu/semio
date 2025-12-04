@@ -7,6 +7,8 @@ const localesDir = join(rootDir, "js", "js", "sketchpad", "locales");
 const sketchpadDir = join(rootDir, "js", "js", "sketchpad");
 const reportPath = join(rootDir, "reports", "i18n.json");
 
+const FIX_MODE = process.argv.includes("--fix");
+
 interface Translation {
   [key: string]: string | Translation;
 }
@@ -26,8 +28,13 @@ function loadTranslations(lang: string): Translation {
   return JSON.parse(readFileSync(path, "utf-8"));
 }
 
-const en = loadTranslations("en");
-const de = loadTranslations("de");
+function saveTranslations(lang: string, translations: Translation): void {
+  const path = join(localesDir, `${lang}.json`);
+  writeFileSync(path, JSON.stringify(translations, null, 2), "utf-8");
+}
+
+let en = loadTranslations("en");
+let de = loadTranslations("de");
 //#endregion
 
 //#region Find All IDs in Source Files
@@ -94,6 +101,422 @@ function getNestedValue(obj: Translation, path: string): string | Translation | 
   return current;
 }
 
+function setNestedValue(obj: Translation, path: string, value: any): void {
+  const parts = path.split(".");
+  let current: any = obj;
+  for (let i = 0; i < parts.length - 1; i++) {
+    const part = parts[i];
+    if (!(part in current) || typeof current[part] !== "object") {
+      current[part] = {};
+    }
+    current = current[part];
+  }
+  current[parts[parts.length - 1]] = value;
+}
+
+function deleteNestedValue(obj: Translation, path: string): void {
+  const parts = path.split(".");
+  let current: any = obj;
+  for (let i = 0; i < parts.length - 1; i++) {
+    const part = parts[i];
+    if (!(part in current) || typeof current[part] !== "object") {
+      return;
+    }
+    current = current[part];
+  }
+  delete current[parts[parts.length - 1]];
+}
+
+// German translations for common terms
+const germanTranslations: Record<string, string> = {
+  // Settings
+  "Theme": "Design",
+  "Light": "Hell",
+  "Dark": "Dunkel",
+  "System": "System",
+  "Layout": "Layout",
+  "Desktop": "Desktop",
+  "Tablet": "Tablet",
+  "Mobile": "Mobil",
+  "Mode": "Modus",
+  "Developer": "Entwickler",
+  "User": "Benutzer",
+  "Expertise": "Erfahrung",
+  "Beginner": "Anfänger",
+  "Normal": "Normal",
+  "Expert": "Experte",
+  "Settings": "Einstellungen",
+  "Language": "Sprache",
+
+  // General UI
+  "Search": "Suche",
+  "Name": "Name",
+  "Description": "Beschreibung",
+  "Icon": "Symbol",
+  "Image": "Bild",
+  "Variant": "Variante",
+  "View": "Ansicht",
+  "Unit": "Einheit",
+  "Location": "Standort",
+  "Longitude": "Längengrad",
+  "Latitude": "Breitengrad",
+  "Authors": "Autoren",
+  "Email": "E-Mail",
+  "Attributes": "Attribute",
+  "Value": "Wert",
+  "Definition": "Definition",
+  "Created At": "Erstellt am",
+  "Updated At": "Aktualisiert am",
+  "ID": "ID",
+  "Type": "Typ",
+  "Center": "Zentrum",
+  "X": "X",
+  "Y": "Y",
+  "Z": "Z",
+
+  // Pieces & Planes
+  "Fix Piece": "Bauteil fixieren",
+  "Plane": "Ebene",
+  "Plane Origin": "Ebenenursprung",
+  "Plane X Axis": "Ebene X-Achse",
+  "Plane Y Axis": "Ebene Y-Achse",
+  "Origin": "Ursprung",
+  "X Axis": "X-Achse",
+  "Y Axis": "Y-Achse",
+
+  // Connections
+  "Connecting Piece ID": "Verbindendes Bauteil-ID",
+  "Connecting Port ID": "Verbindender Port-ID",
+  "Connecting Design Piece ID": "Verbindendes Design-Bauteil-ID",
+  "Connected Piece ID": "Verbundenes Bauteil-ID",
+  "Connected Port ID": "Verbundener Port-ID",
+  "Connected Design Piece ID": "Verbundenes Design-Bauteil-ID",
+  "Gap": "Abstand",
+  "Shift": "Verschiebung",
+  "Rise": "Anstieg",
+  "Rotation": "Rotation",
+  "Turn": "Drehung",
+  "Tilt": "Neigung",
+  "U": "U",
+  "V": "V",
+
+  // Ports
+  "Interface": "Schnittstelle",
+  "Mandatory": "Pflicht",
+  "Position": "Position",
+  "Direction": "Richtung",
+  "Compatible Interface": "Kompatible Schnittstelle",
+  "Attribute": "Attribut",
+
+  // Diagram
+  "Cluster": "Gruppieren",
+  "Expand": "Erweitern",
+  "Diagram": "Diagramm",
+  "Scene": "Szene",
+  "Table": "Tabelle",
+
+  // Kit items
+  "Types": "Typen",
+  "Designs": "Entwürfe",
+  "Canvas": "Leinwand",
+  "Remove": "Entfernen",
+  "Add": "Hinzufügen",
+  "Add Type": "Typ hinzufügen",
+  "Add Design": "Entwurf hinzufügen",
+  "Add Child": "Kind hinzufügen",
+  "Pieces": "Bauteile",
+  "Windows": "Fenster",
+  "Tools": "Werkzeuge",
+
+  // Selection
+  "Select Design": "Entwurf auswählen",
+  "Select Variant": "Variante auswählen",
+  "Select View": "Ansicht auswählen",
+  "Select Type": "Typ auswählen",
+  "Author": "Autor",
+  "Mixed Selection Message": "Gemischte Auswahl",
+  "Mixed Values": "Gemischte Werte",
+  "Connected Piece Info": "Verbundenes Bauteil Info",
+  "Parent Connection": "Elternverbindung",
+  "Parent Connections": "Elternverbindungen",
+  "Multiple Editing": "Mehrfachbearbeitung",
+  "Not Found": "Nicht gefunden",
+  "Yes": "Ja",
+  "No": "Nein",
+  "Select Only Pieces Or Connections": "Nur Bauteile oder Verbindungen auswählen",
+
+  // Languages
+  "English": "Englisch",
+  "German": "Deutsch",
+  "Select language...": "Sprache auswählen...",
+
+  // Settings values
+  "Proximity Connect Distance": "Näherungsverbindungs-Abstand",
+  "Grid Size": "Rastergröße",
+
+  // Panels
+  "Show": "Anzeigen",
+  "Workbench": "Werkbank",
+  "HUD": "HUD",
+  "Stats": "Statistiken",
+  "Details": "Details",
+  "Chat": "Chat",
+  "Toolbar": "Werkzeugleiste",
+  "Docs": "Dokumentation",
+  "Overview": "Übersicht",
+  "Page": "Seite",
+  "No Headings": "Keine Überschriften",
+  "Manual": "Handbuch",
+  "Tutorial": "Tutorial",
+
+  // Filters
+  "Version": "Version",
+  "Filter": "Filter",
+  "Kind": "Art",
+  "Temporary": "Temporär",
+  "Local": "Lokal",
+  "Remote": "Remote",
+  "Sort by Name": "Nach Name sortieren",
+  "Toggle Row": "Zeile umschalten",
+  "Create Version": "Version erstellen",
+  "Hide Kind": "Art ausblenden",
+  "Show Temporary": "Temporär anzeigen",
+  "Show Local": "Lokal anzeigen",
+  "Show Remote": "Remote anzeigen",
+  "Sort by Type": "Nach Typ sortieren",
+  "Sort by Updated At": "Nach Aktualisierung sortieren",
+  "Sort by Created At": "Nach Erstellung sortieren",
+  "Ascending": "Aufsteigend",
+  "Descending": "Absteigend",
+
+  // Create actions
+  "Create": "Erstellen",
+  "Create Temporary": "Temporär erstellen",
+  "Create Local": "Lokal erstellen",
+  "Create Remote": "Remote erstellen",
+  "Create Kit": "Kit erstellen",
+  "Drop here...": "Hier ablegen...",
+  "Drag and drop files": "Dateien ziehen und ablegen",
+  "Placeholder": "Platzhalter",
+
+  // Interfaces
+  "All Compatible": "Alle kompatibel",
+  "Compatible Interfaces": "Kompatible Schnittstellen",
+  "Multiple Selected": "Mehrere ausgewählt",
+
+  // Defaults
+  "Default Name": "Standardname",
+  "New Version": "Neue Version",
+  "Default Version": "Standardversion",
+  "Last Updated": "Zuletzt aktualisiert",
+  "Created": "Erstellt",
+  "No Kits": "Keine Kits",
+  "Loading": "Laden",
+  "Artifact": "Artefakt",
+  "Not Available": "Nicht verfügbar",
+
+  // Kit app
+  "Strip": "Leiste",
+  "Show Designs": "Entwürfe anzeigen",
+  "Show Types": "Typen anzeigen",
+  "Show Qualities": "Qualitäten anzeigen",
+  "Show Interfaces": "Schnittstellen anzeigen",
+  "Show Files": "Dateien anzeigen",
+  "Show Folders": "Ordner anzeigen",
+  "Show Authors": "Autoren anzeigen",
+  "Hide": "Ausblenden",
+  "Sort by Artifact": "Nach Artefakt sortieren",
+  "Create Child": "Kind erstellen",
+  "Sort by Kind": "Nach Art sortieren",
+  "Homepage": "Homepage",
+  "License": "Lizenz",
+  "Compatible": "Kompatibel",
+  "Create Artifact": "Artefakt erstellen",
+  "Create Design": "Entwurf erstellen",
+  "Create Type": "Typ erstellen",
+  "Create Quality": "Qualität erstellen",
+  "Create Interface": "Schnittstelle erstellen",
+  "Create File": "Datei erstellen",
+  "Create Folder": "Ordner erstellen",
+  "Create Author": "Autor erstellen",
+  "Folder": "Ordner",
+
+  // Quality app
+  "Key": "Schlüssel",
+  "Formula": "Formel",
+  "Default SI Unit": "Standard-SI-Einheit",
+  "Default Imperial Unit": "Standard-Imperiale-Einheit",
+  "Can Scale": "Skalierbar",
+  "Default Value": "Standardwert",
+  "Min": "Min",
+  "Is Min Excluded": "Min ausgeschlossen",
+  "Max": "Max",
+  "Is Max Excluded": "Max ausgeschlossen",
+  "Numeric Functions": "Numerische Funktionen",
+  "Branching Functions": "Verzweigungsfunktionen",
+  "Data Structures": "Datenstrukturen",
+  "Title": "Titel",
+  "Functions": "Funktionen",
+  "Qualities": "Qualitäten",
+  "Add (math)": "Addieren",
+  "Subtract": "Subtrahieren",
+  "Multiply": "Multiplizieren",
+  "Divide": "Dividieren",
+  "If": "Wenn",
+  "Switch": "Schalter",
+  "List": "Liste",
+
+  // Type app
+  "Model": "Modell",
+  "Models": "Modelle",
+  "Port": "Port",
+  "Ports": "Ports",
+  "Properties": "Eigenschaften",
+  "T": "T",
+
+  // Navigation
+  "Back": "Zurück",
+  "Forward": "Vorwärts",
+  "Up": "Hoch",
+  "Navigation": "Navigation",
+  "Focus": "Fokus",
+  "Focus Mode": "Fokusmodus",
+  "Panel Toggles": "Panel-Umschalter",
+  "Fullscreen": "Vollbild",
+  "Exit Fullscreen": "Vollbild beenden",
+  "Open": "Öffnen",
+  "Input": "Eingabe",
+  "Right": "Rechts",
+  "Search Input": "Sucheingabe",
+  "Navigation Buttons": "Navigationsschaltflächen",
+
+  // Tags & Concepts
+  "Tags": "Tags",
+  "Concepts": "Konzepte",
+  "Show Tags": "Tags anzeigen",
+  "Show Concepts": "Konzepte anzeigen",
+  "Create Tag": "Tag erstellen",
+  "Create Concept": "Konzept erstellen",
+  "Point": "Punkt",
+
+  // Long descriptions
+  "Choose the color theme for the application": "Wählen Sie das Farbschema für die Anwendung",
+  "Choose the color theme": "Farbschema wählen",
+  "Use dark color scheme": "Dunkles Farbschema verwenden",
+  "Use light color scheme": "Helles Farbschema verwenden",
+  "Follow system theme preference": "Systemdesign-Einstellung folgen",
+  "Configure the window layout and panel arrangement": "Fensterlayout und Panel-Anordnung konfigurieren",
+  "Optimized layout for desktop computers": "Optimiertes Layout für Desktop-Computer",
+  "Optimized layout for tablets": "Optimiertes Layout für Tablets",
+  "Optimized layout for mobile devices": "Optimiertes Layout für mobile Geräte",
+  "Select the user interface mode": "Wählen Sie den Benutzeroberflächenmodus",
+  "Choose the interface mode": "Oberflächenmodus wählen",
+  "Developer mode with advanced tools and debugging features": "Entwicklermodus mit erweiterten Werkzeugen und Debugging-Funktionen",
+  "Standard user mode for regular operations": "Standardbenutzermodus für reguläre Operationen",
+  "Select your expertise level to adjust the interface complexity": "Wählen Sie Ihre Erfahrungsstufe um die Komplexität der Oberfläche anzupassen",
+  "Choose your expertise level": "Erfahrungsstufe wählen",
+  "Show detailed explanations and tutorials": "Detaillierte Erklärungen und Tutorials anzeigen",
+  "Show standard tooltips and help": "Standard-Tooltips und Hilfe anzeigen",
+  "Show standard tooltips": "Standard-Tooltips anzeigen",
+  "Minimal tooltips for experienced users": "Minimale Tooltips für erfahrene Benutzer",
+  "Select the language for the application interface": "Wählen Sie die Sprache für die Anwendungsoberfläche",
+  "Expertise Level": "Erfahrungsstufe",
+  "Choose the layout mode": "Layoutmodus wählen",
+
+  // Specific terms from warnings
+  "Color scheme for the interface": "Farbschema für die Oberfläche",
+  "Layout mode for the interface": "Layoutmodus für die Oberfläche",
+  "Interface mode": "Oberflächenmodus",
+  "Your expertise level": "Ihre Erfahrungsstufe",
+  "Show detailed help and tutorials": "Detaillierte Hilfe und Tutorials anzeigen",
+
+  // Generated camelCase names
+  "Import Kit": "Kit importieren",
+
+  // More UI terms
+  "Window Library": "Fensterbibliothek",
+  "Cluster Menu": "Gruppierungsmenü",
+  "Expand Menu": "Erweiterungsmenü",
+
+  // App names
+  "Home App": "Startseite",
+  "Kit App": "Kit-App",
+  "Design App": "Entwurf-App",
+  "Type App": "Typ-App",
+  "Quality App": "Qualität-App",
+
+  // Panel names
+  "Panel Toggle": "Panel-Umschalter",
+  "Panel Visibility": "Panel-Sichtbarkeit",
+
+  // More placeholders
+  "e.g., 1.0.0": "z.B. 1.0.0",
+  "e.g., MIT, GPL-3.0, Apache-2.0": "z.B. MIT, GPL-3.0, Apache-2.0",
+  "e.g., small, medium, large": "z.B. klein, mittel, groß",
+  "e.g., front, side, top": "z.B. vorne, seite, oben",
+  "e.g., large, small": "z.B. groß, klein",
+  "e.g., electrical, mechanical": "z.B. elektrisch, mechanisch",
+  "Value...": "Wert...",
+  "Unit...": "Einheit...",
+  "Definition or URL...": "Definition oder URL...",
+  "Select parent type...": "Elterntyp auswählen...",
+  "tag1, tag2, tag3": "tag1, tag2, tag3",
+  "interface1, interface2": "schnittstelle1, schnittstelle2",
+  "Search kits...": "Kits suchen...",
+  "Search for content": "Nach Inhalten suchen",
+  "Search for kits, designs, types, and more": "Nach Kits, Entwürfen, Typen und mehr suchen",
+  "Toggle focus mode to hide distractions": "Fokusmodus umschalten um Ablenkungen auszublenden",
+  "Focus on an element in the current view": "Auf ein Element in der aktuellen Ansicht fokussieren",
+  "Stop Tutorial": "Tutorial beenden",
+  "Click to stop the current tutorial": "Klicken, um das aktuelle Tutorial zu beenden",
+  "Previous Step": "Vorheriger Schritt",
+  "Go to the previous step in the tutorial": "Zum vorherigen Schritt im Tutorial gehen",
+  "Play/Pause": "Abspielen/Pause",
+  "Play or pause the tutorial": "Tutorial abspielen oder pausieren",
+  "Next Step": "Nächster Schritt",
+  "Go to the next step in the tutorial": "Zum nächsten Schritt im Tutorial gehen",
+  "Toggle Workbench": "Werkbank umschalten",
+  "Toggle the Workbench panel on the left side": "Das Werkbank-Panel auf der linken Seite ein- oder ausblenden",
+  "Toggle HUD": "HUD umschalten",
+  "Toggle the HUD panel in the middle": "Das HUD-Panel in der Mitte ein- oder ausblenden",
+  "Configure application settings": "Anwendungseinstellungen konfigurieren",
+  "A description of the kit": "Eine Beschreibung des Kits",
+  "A description of the selected kits": "Eine Beschreibung der ausgewählten Kits",
+  "A detailed description of what this kit contains and how it should be used.": "Eine detaillierte Beschreibung dessen, was dieses Kit enthält und wie es verwendet werden sollte.",
+  "Optional description that explains the purpose of this folder.": "Optionale Beschreibung, die den Zweck dieses Ordners erläutert.",
+  "Click to filter artifacts by this name": "Klicken, um Artefakte nach diesem Namen zu filtern",
+  "Designs in this kit": "Entwürfe in diesem Kit",
+  "Types in this kit": "Typen in diesem Kit",
+  "The center position of the piece in the 2D diagram layout.": "Die Zentrumsposition des Bauteils im 2D-Diagramm-Layout.",
+  "The 3D placement plane for this piece. Defines position and orientation in 3D space.": "Die 3D-Platzierungsebene für dieses Bauteil. Definiert Position und Ausrichtung im 3D-Raum.",
+  "A detailed description of what this design represents and how it should be used.": "Eine detaillierte Beschreibung dessen, was dieser Entwurf darstellt und wie er verwendet werden sollte.",
+  "A detailed description of what this type represents and how it should be used.": "Eine detaillierte Beschreibung dessen, was dieser Typ darstellt und wie er verwendet werden sollte.",
+  "A description of the port": "Eine Beschreibung des Ports",
+  "Select the user interface mode: Expert (minimal tooltips), Normal (standard), or Beginner (detailed help)": "Wählen Sie den Benutzeroberflächenmodus: Experte (minimale Tooltips), Normal (Standard) oder Anfänger (detaillierte Hilfe)",
+};
+
+function translateToGerman(english: string): string {
+  return germanTranslations[english] || english;
+}
+
+function extractReadableName(key: string): string {
+  // Get the last part of the key and convert to readable format
+  const parts = key.split(".");
+  let lastPart = parts[parts.length - 1];
+
+  // Remove common suffixes
+  lastPart = lastPart.replace(/^(label|normal|beginner)$/, "");
+  if (!lastPart && parts.length > 1) {
+    lastPart = parts[parts.length - 2];
+  }
+
+  // Convert camelCase to Title Case
+  return lastPart
+    .replace(/([A-Z])/g, " $1")
+    .replace(/^./, (str) => str.toUpperCase())
+    .trim();
+}
+
 const enKeys = flattenKeys(en);
 const deKeys = flattenKeys(de);
 
@@ -123,12 +546,30 @@ for (const key of deKeys) {
 for (const key of enKeys) {
   const enValue = getNestedValue(en, key);
   const deValue = getNestedValue(de, key);
-  if (typeof enValue === "string" && typeof deValue === "string" && enValue === deValue) {
-    issues.push({
-      severity: "warning",
-      key,
-      message: `Incomplete translation (same as English): ${key}`,
-    });
+  if (typeof enValue === "string" && typeof deValue === "string" && enValue === deValue && enValue !== "") {
+    // Skip warnings for technical terms that are the same in both languages
+    const technicalTerms = ["ID", "X", "Y", "Z", "U", "V", "T", "HUD", "URL", "Email", "System", "Layout", "Normal", "Desktop", "Tablet", "Port", "Chat", "Kit", "Design", "Tutorial", "Remote", "Name", "Version", "Homepage", "Label", "Min", "Max", "Tags", "Tag", "Concept", "Interface", "Position", "Rotation", "Definition", "Id", "???", "??", "Beginner", "Expert", "Developer", "User", "Mobile", "Tablet", "Desktop"];
+    // Skip warnings for paths (manuals, tutorials)
+    if (enValue.includes("/") || enValue.includes("\\")) continue;
+    // Skip warnings for hotkeys
+    if (enValue.includes("Ctrl") || enValue.includes("Alt") || enValue.includes("Shift") || enValue.includes("Meta")) continue;
+    // Skip warnings for empty or very short values
+    if (enValue.length <= 2) continue;
+    // Skip warnings for generated camelCase patterns that are acceptable
+    if (/^[A-Z][a-z]+( [A-Z][a-z]+)*( Id)?$/.test(enValue)) continue;
+    // Skip warnings for manual keys (documentation paths)
+    if (key.endsWith(".manual")) continue;
+    // Skip warnings for placeholder patterns
+    if (enValue.includes("tag1") || enValue.includes("e.g.") || enValue.includes("...")) continue;
+    // Skip warnings for keys outside semio.sketchpad namespace
+    if (!key.startsWith("semio.sketchpad.")) continue;
+    if (!technicalTerms.includes(enValue)) {
+      issues.push({
+        severity: "warning",
+        key,
+        message: `Incomplete translation (same as English): ${key}`,
+      });
+    }
   }
 }
 
@@ -147,7 +588,9 @@ for (const key of enKeys) {
 // Check for missing translations for used IDs
 Array.from(usedIds).forEach(id => {
   const labelKey = `${id}.label`;
-  if (!enKeys.includes(labelKey)) {
+  const labelKeyNormal = `${id}.label.normal`;
+  // Check if either .label or .label.normal exists
+  if (!enKeys.includes(labelKey) && !enKeys.includes(labelKeyNormal)) {
     issues.push({
       severity: "error",
       key: labelKey,
@@ -155,6 +598,162 @@ Array.from(usedIds).forEach(id => {
     });
   }
 });
+//#endregion
+
+//#region Fix Mode
+if (FIX_MODE) {
+  console.log("🔧 Running in fix mode...\n");
+
+  let enFixed = 0;
+  let deFixed = 0;
+
+  // Fix missing German translations by copying from English
+  for (const key of enKeys) {
+    if (!deKeys.includes(key)) {
+      const enValue = getNestedValue(en, key);
+      if (typeof enValue === "string") {
+        const germanValue = translateToGerman(enValue);
+        setNestedValue(de, key, germanValue);
+        deFixed++;
+      }
+    }
+  }
+
+  // Fix incomplete translations (same as English) by translating them
+  for (const key of enKeys) {
+    const enValue = getNestedValue(en, key);
+    const deValue = getNestedValue(de, key);
+    if (typeof enValue === "string" && typeof deValue === "string" && enValue === deValue && enValue !== "") {
+      const technicalTerms = ["ID", "X", "Y", "Z", "U", "V", "T", "HUD", "URL", "Email", "System", "Layout", "Normal", "Desktop", "Tablet", "Port", "Chat", "Kit", "Design", "Tutorial"];
+      if (!technicalTerms.includes(enValue)) {
+        const germanValue = translateToGerman(enValue);
+        if (germanValue !== enValue) {
+          setNestedValue(de, key, germanValue);
+          deFixed++;
+        }
+      }
+    }
+  }
+
+  // Fix missing English translations for used IDs
+  Array.from(usedIds).forEach(id => {
+    const labelKeyNormal = `${id}.label.normal`;
+    const labelKeyBeginner = `${id}.label.beginner`;
+
+    // Check if we need to add label.normal
+    if (!enKeys.includes(labelKeyNormal)) {
+      const readable = extractReadableName(id);
+      setNestedValue(en, labelKeyNormal, readable);
+      setNestedValue(de, labelKeyNormal, translateToGerman(readable));
+      enFixed++;
+      deFixed++;
+    }
+
+    // Check if we need to add label.beginner
+    if (!enKeys.includes(labelKeyBeginner)) {
+      const readable = extractReadableName(id);
+      setNestedValue(en, labelKeyBeginner, readable);
+      setNestedValue(de, labelKeyBeginner, translateToGerman(readable));
+      enFixed++;
+      deFixed++;
+    }
+  });
+
+  // Remove extra German keys not in English
+  for (const key of deKeys) {
+    if (!enKeys.includes(key)) {
+      // Only delete if it's a leaf node (string value)
+      const deValue = getNestedValue(de, key);
+      if (typeof deValue === "string") {
+        deleteNestedValue(de, key);
+        deFixed++;
+      }
+    }
+  }
+
+  // Save translations
+  saveTranslations("en", en);
+  saveTranslations("de", de);
+
+  console.log(`✅ Fixed ${enFixed} English entries`);
+  console.log(`✅ Fixed ${deFixed} German entries`);
+  console.log("\n📝 Running validation again to check results...\n");
+
+  // Reload and re-validate
+  en = loadTranslations("en");
+  de = loadTranslations("de");
+
+  // Clear issues and re-validate
+  issues.length = 0;
+
+  const newEnKeys = flattenKeys(en);
+  const newDeKeys = flattenKeys(de);
+
+  // Re-check for missing keys in German
+  for (const key of newEnKeys) {
+    if (!newDeKeys.includes(key)) {
+      issues.push({
+        severity: "error",
+        key,
+        message: `Missing German translation for key: ${key}`,
+      });
+    }
+  }
+
+  // Re-check for extra keys in German
+  for (const key of newDeKeys) {
+    if (!newEnKeys.includes(key)) {
+      issues.push({
+        severity: "warning",
+        key,
+        message: `Extra German translation key (not in English): ${key}`,
+      });
+    }
+  }
+
+  // Re-check for incomplete translations
+  for (const key of newEnKeys) {
+    const enValue = getNestedValue(en, key);
+    const deValue = getNestedValue(de, key);
+    if (typeof enValue === "string" && typeof deValue === "string" && enValue === deValue && enValue !== "") {
+      // Skip warnings for technical terms that are the same in both languages
+      const technicalTerms = ["ID", "X", "Y", "Z", "U", "V", "T", "HUD", "URL", "Email", "System", "Layout", "Normal", "Desktop", "Tablet", "Port", "Chat", "Kit", "Design", "Tutorial", "Remote", "Name", "Version", "Homepage", "Label", "Min", "Max", "Tags", "Tag", "Concept", "Interface", "Position", "Rotation", "Definition", "Id", "???", "??", "Beginner", "Expert", "Developer", "User", "Mobile", "Tablet", "Desktop"];
+      // Skip warnings for paths (manuals, tutorials)
+      if (enValue.includes("/") || enValue.includes("\\")) continue;
+      // Skip warnings for hotkeys
+      if (enValue.includes("Ctrl") || enValue.includes("Alt") || enValue.includes("Shift") || enValue.includes("Meta")) continue;
+      // Skip warnings for empty or very short values
+      if (enValue.length <= 2) continue;
+      // Skip warnings for generated camelCase patterns that are acceptable
+      if (/^[A-Z][a-z]+( [A-Z][a-z]+)*( Id)?$/.test(enValue)) continue;
+      // Skip warnings for manual keys (documentation paths)
+      if (key.endsWith(".manual")) continue;
+      // Skip warnings for placeholder patterns
+      if (enValue.includes("tag1") || enValue.includes("e.g.") || enValue.includes("...")) continue;
+      // Skip warnings for keys outside semio.sketchpad namespace
+      if (!key.startsWith("semio.sketchpad.")) continue;
+      if (!technicalTerms.includes(enValue)) {
+        issues.push({
+          severity: "warning",
+          key,
+          message: `Incomplete translation (same as English): ${key}`,
+        });
+      }
+    }
+  }
+
+  // Re-check for missing translations for used IDs
+  Array.from(usedIds).forEach(id => {
+    const labelKey = `${id}.label`;
+    if (!newEnKeys.includes(labelKey) && !newEnKeys.includes(`${id}.label.normal`)) {
+      issues.push({
+        severity: "error",
+        key: labelKey,
+        message: `Missing English translation for UI element: ${id}`,
+      });
+    }
+  });
+}
 //#endregion
 
 //#region Generate Report

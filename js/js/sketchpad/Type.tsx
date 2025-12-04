@@ -1835,9 +1835,9 @@ const TypeDetailsForm: FC = () => {
           <Input
             lazy
             id="semio.sketchpad.app.type.panel.details.section.type.parent"
-            value={type.parent || ""}
+            value={type.parent?.guid || ""}
             placeholderId="semio.sketchpad.app.type.parentPlaceholder.label"
-            onLazyChange={(value) => updateTypeField("semio.sketchpad.app.type.panel.details.section.type.parent", { parent: value })}
+            onLazyChange={(value) => updateTypeField("semio.sketchpad.app.type.panel.details.section.type.parent", { parent: value ? { guid: value } : undefined })}
             showLabel
           />
         </TreeContent>
@@ -2593,7 +2593,7 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
     }
     kitCommands?.updateType(origin, type.guid, {
       ports: {
-        updated: [{ id, diff }],
+        updated: [{ port: { guid: id }, diff }],
       },
     });
   };
@@ -2605,10 +2605,10 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
           <Input
             lazy
             id="semio.sketchpad.app.type.panel.details.section.ports.interface"
-            value={port.interface || ""}
+            value={port.interface?.guid || ""}
             placeholderId="semio.sketchpad.app.type.portInterfacePlaceholder.label"
             onLazyChange={(value: string) => {
-              updatePort("semio.sketchpad.app.type.panel.details.section.ports.interface", port.guid, { interface: value });
+              updatePort("semio.sketchpad.app.type.panel.details.section.ports.interface", port.guid, { interface: value ? { guid: value } : undefined });
             }}
             showLabel
           />
@@ -2731,7 +2731,7 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
           <Input
             lazy
             id="semio.sketchpad.app.type.panel.details.section.ports.compatibleInterfaces"
-            value={(port.compatibleInterfaces || []).join(", ")}
+            value={((port as any).compatibleInterfaces || []).join(", ")}
             placeholderId="semio.sketchpad.app.type.portCompatibleInterfacesPlaceholder.label"
             onLazyChange={(value: string) => {
               updatePort("semio.sketchpad.app.type.panel.details.section.ports.compatibleInterfaces", port.guid, {
@@ -2739,7 +2739,7 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
                   .split(",")
                   .map((interface_) => interface_.trim())
                   .filter((interface_) => interface_),
-              });
+              } as any);
             }}
             showLabel
           />
@@ -2796,7 +2796,7 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
       }
       kitCommands?.updateType(origin, type.guid, {
         ports: {
-          updated: [{ id: port.guid, diff }],
+          updated: [{ port: { guid: port.guid }, diff }],
         },
       });
     });

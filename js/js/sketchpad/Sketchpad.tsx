@@ -499,12 +499,14 @@ export abstract class Store<TState> {
       const fieldObserver = createFieldObserver(
         this.yMap,
         key,
-        () => {
+        (callback: () => void) => {
           // Notify all React subscribers for this field
           const subscribers = this.fieldSubscribers.get(key);
           if (subscribers) {
-            subscribers.forEach((callback) => callback());
+            subscribers.forEach((cb) => cb());
           }
+          callback();
+          return () => {};
         },
         deep,
       );
@@ -926,10 +928,28 @@ export abstract class KitDiffAppStore<TState, TDiff extends AppDiff<TSelectionDi
 let docsRegistryCache: any = null;
 let docsRegistryPromise: Promise<any> | null = null;
 
+// Define minimal DocsPage and DocsSection types for fallback
+interface DocsPageMin {
+  title: string;
+  description?: string;
+  icon?: string;
+  path: string;
+  section: string;
+  order?: number;
+  concepts?: string[];
+}
+
+interface DocsSectionMin {
+  id: string;
+  label: string;
+  icon?: React.ReactNode;
+  order?: number;
+}
+
 // Fallback registry that returns empty arrays until the real one loads
 const fallbackDocsRegistry = {
-  getAllSections: () => [],
-  getAllPages: () => [],
+  getAllSections: (): DocsSectionMin[] => [],
+  getAllPages: (): DocsPageMin[] => [],
 };
 
 function getDocsRegistry() {
@@ -2099,8 +2119,8 @@ class FileStore {
       remote: this.remote,
       size: this.size,
       hash: this.fileHash,
-      createdAt: this.createdAt,
-      updatedAt: this.updatedAt,
+      createdAt: this.createdAt?.toISOString(),
+      updatedAt: this.updatedAt?.toISOString(),
       createdBy: this.createdBy,
       updatedBy: this.updatedBy,
     };
@@ -2186,16 +2206,28 @@ class FolderStore {
     const date = this.yFolder.get("createdAt") as string | undefined;
     return date ? new Date(date) : undefined;
   }
-  set createdAt(createdAt: Date | undefined) {
-    this.yFolder.set("createdAt", createdAt?.toISOString() || "");
+  set createdAt(createdAt: Date | string | undefined) {
+    if (!createdAt) {
+      this.yFolder.set("createdAt", "");
+    } else if (typeof createdAt === "string") {
+      this.yFolder.set("createdAt", createdAt);
+    } else {
+      this.yFolder.set("createdAt", createdAt.toISOString());
+    }
   }
 
   get updatedAt(): Date | undefined {
     const date = this.yFolder.get("updatedAt") as string | undefined;
     return date ? new Date(date) : undefined;
   }
-  set updatedAt(updatedAt: Date | undefined) {
-    this.yFolder.set("updatedAt", updatedAt?.toISOString() || "");
+  set updatedAt(updatedAt: Date | string | undefined) {
+    if (!updatedAt) {
+      this.yFolder.set("updatedAt", "");
+    } else if (typeof updatedAt === "string") {
+      this.yFolder.set("updatedAt", updatedAt);
+    } else {
+      this.yFolder.set("updatedAt", updatedAt.toISOString());
+    }
   }
 
   get createdBy(): Guid | undefined {
@@ -2222,8 +2254,8 @@ class FolderStore {
       name: this.name,
       parent: this.parent ? { guid: this.parent } : undefined,
       description: this.description,
-      createdAt: this.createdAt,
-      updatedAt: this.updatedAt,
+      createdAt: this.createdAt?.toISOString(),
+      updatedAt: this.updatedAt?.toISOString(),
       createdBy: this.createdBy,
       updatedBy: this.updatedBy,
     };
@@ -2733,9 +2765,9 @@ class PortStore {
   constructor(yPort: YPort, port: Port) {
     this.yPort = yPort;
     this.guid = port.guid;
-    this.localId = port.guid;
+    this.localId = port.name;
     this.description = port.description;
-    this.interface = port.interface;
+    this.interface = port.interface?.guid;
     this.mandatory = port.mandatory;
     this.t = port.t;
 
@@ -2797,9 +2829,9 @@ class PortStore {
   snapshot = (): Port => {
     const currentData = {
       guid: this.guid,
-      id_: this.localId,
+      name: this.localId,
       description: this.description,
-      interface: this.interface,
+      interface: this.interface ? { guid: this.interface } : undefined,
       mandatory: this.mandatory,
       t: this.t,
       point: this.point.snapshot(),
@@ -2818,7 +2850,7 @@ class PortStore {
   apply(diff: PortDiff): void {
     if (diff.guid !== undefined) this.guid = diff.guid;
     if (diff.description !== undefined) this.description = diff.description;
-    if (diff.interface !== undefined) this.interface = diff.interface;
+    if (diff.interface !== undefined) this.interface = diff.interface?.guid;
     if (diff.mandatory !== undefined) this.mandatory = diff.mandatory;
     if (diff.t !== undefined) this.t = diff.t;
   }
@@ -2868,7 +2900,7 @@ export class TypeStore {
 
     this.guid = type.guid;
     this.name = type.name;
-    this.parentGuid = type.parent;
+    this.parentGuid = type.parent?.guid;
     this.abstract = type.isAbstract;
     this.stock = type.stock;
     this.virtual = type.virtual;
@@ -3096,7 +3128,7 @@ export class TypeStore {
     const currentData = {
       guid: this.guid,
       name: this.name,
-      parent: this.parentGuid,
+      parent: this.parentGuid ? { guid: this.parentGuid } : undefined,
       folder: this.folder,
       isAbstract: this.abstract,
       stock: this.stock,
@@ -3109,8 +3141,8 @@ export class TypeStore {
       attributes: Array.from(this.attributes.values()).map((attribute) => attribute.snapshot()),
       models: Array.from(this.models.values()).map((rep) => rep.snapshot()),
       ports: Array.from(this.ports.values()).map((port) => port.snapshot()),
-      createdAt: this.createdAt,
-      updatedAt: this.updatedAt,
+      createdAt: this.createdAt?.toISOString(),
+      updatedAt: this.updatedAt?.toISOString(),
     };
     const currentHash = this.hash(currentData);
 
@@ -3126,7 +3158,7 @@ export class TypeStore {
     this.parent.yDoc.transact(() => {
       if (diff.name !== undefined) this.yType.set("name", diff.name);
       if (diff.parent !== undefined) {
-        if (diff.parent) this.yType.set("parent", diff.parent);
+        if (diff.parent) this.yType.set("parent", diff.parent.guid);
         else this.yType.delete("parent");
       }
       if (diff.folder !== undefined) {
@@ -3140,13 +3172,13 @@ export class TypeStore {
       if (diff.stock !== undefined) this.yType.set("stock", diff.stock);
       if (diff.virtual !== undefined) this.yType.set("virtual", diff.virtual);
       if (diff.unit !== undefined) this.yType.set("unit", diff.unit);
-      if (diff.icon !== undefined) this.yType.set("icon", diff.icon);
-      if (diff.image !== undefined) this.yType.set("image", diff.image);
-      if (diff.description !== undefined) this.yType.set("description", diff.description);
-      if (diff.createdAt !== undefined) this.yType.set("createdAt", diff.createdAt.toISOString());
-      if (diff.updatedAt !== undefined) this.yType.set("updatedAt", diff.updatedAt.toISOString());
+      if (diff.icon !== undefined) this.yType.set("icon", diff.icon || "");
+      if (diff.image !== undefined) this.yType.set("image", diff.image || "");
+      if (diff.description !== undefined) this.yType.set("description", diff.description || "");
+      if (diff.createdAt !== undefined) this.yType.set("createdAt", diff.createdAt);
+      if (diff.updatedAt !== undefined) this.yType.set("updatedAt", diff.updatedAt);
 
-      if (diff.authors !== undefined) {
+      if (diff.authors !== undefined && diff.authors !== null) {
         this.yAuthors.delete(0, this.yAuthors.length);
         this.authors = new Map(
           diff.authors.map((authorId) => {
@@ -3159,7 +3191,8 @@ export class TypeStore {
 
       if (diff.models) {
         if (diff.models.removed) {
-          diff.models.removed.forEach((guid) => {
+          diff.models.removed.forEach((modelId) => {
+            const guid = modelId.guid;
             const index = Array.from(this.models.keys()).indexOf(guid);
             if (index !== -1) {
               this.yModels.delete(index, 1);
@@ -3173,8 +3206,8 @@ export class TypeStore {
           });
         }
         if (diff.models.updated) {
-          diff.models.updated.forEach(({ id, diff: repDiff }) => {
-            const rep = this.models.get(id);
+          diff.models.updated.forEach(({ model, diff: repDiff }) => {
+            const rep = this.models.get(model.guid);
             if (rep) rep.apply(repDiff);
           });
         }
@@ -3182,7 +3215,8 @@ export class TypeStore {
 
       if (diff.ports) {
         if (diff.ports.removed) {
-          diff.ports.removed.forEach((guid) => {
+          diff.ports.removed.forEach((portId) => {
+            const guid = portId.guid;
             const index = Array.from(this.ports.keys()).indexOf(guid);
             if (index !== -1) {
               this.yPorts.delete(index, 1);
@@ -3196,9 +3230,9 @@ export class TypeStore {
           });
         }
         if (diff.ports.updated) {
-          diff.ports.updated.forEach(({ id, diff: portDiff }) => {
-            const port = this.ports.get(id);
-            if (port) port.change(portDiff);
+          diff.ports.updated.forEach(({ port, diff: portDiff }) => {
+            const p = this.ports.get(port.guid);
+            if (p) p.change(portDiff);
           });
         }
       }
@@ -3206,7 +3240,7 @@ export class TypeStore {
       if (diff.attributes) {
         if (diff.attributes.removed) {
           diff.attributes.removed.forEach((identifier) => {
-            const attribute = this.findAttributeStore(identifier);
+            const attribute = this.findAttributeStore(identifier.guid);
             if (!attribute) return;
             const index = this.findAttributeIndexByGuid(attribute.guid);
             if (index !== -1) {
@@ -3221,10 +3255,10 @@ export class TypeStore {
           });
         }
         if (diff.attributes.updated) {
-          diff.attributes.updated.forEach(({ id, diff: attributeDiff }) => {
-            const attribute = this.findAttributeStore(id);
-            if (!attribute) return;
-            attribute.change(attributeDiff);
+          diff.attributes.updated.forEach(({ attribute, diff: attributeDiff }) => {
+            const attr = this.findAttributeStore(attribute.guid);
+            if (!attr) return;
+            attr.change(attributeDiff);
           });
         }
       }
@@ -3318,11 +3352,19 @@ class LayerStore {
 
   constructor(yLayer: YLayer, layer: Layer) {
     this.yLayer = yLayer;
+    this.guid = layer.guid;
     this.path = layer.path;
     this.isHidden = layer.isHidden;
     this.isLocked = layer.isLocked;
     this.color = layer.color;
     this.description = layer.description;
+  }
+
+  get guid(): string {
+    return this.yLayer.get("guid") as string;
+  }
+  set guid(guid: string) {
+    this.yLayer.set("guid", guid);
   }
 
   get path(): string {
@@ -3370,6 +3412,7 @@ class LayerStore {
 
   snapshot(): Layer {
     const currentHash = this.hash({
+      guid: this.guid,
       path: this.path,
       isHidden: this.isHidden,
       isLocked: this.isLocked,
@@ -3382,6 +3425,7 @@ class LayerStore {
     }
 
     const layer: Layer = {
+      guid: this.guid,
       path: this.path,
       isHidden: this.isHidden,
       isLocked: this.isLocked,
@@ -3823,6 +3867,7 @@ class GroupStore {
 
   constructor(yGroup: YGroup, group: Group) {
     this.yGroup = yGroup;
+    this.guid = group.guid;
     this.color = group.color;
     this.name = group.name;
     this.description = group.description;
@@ -3835,6 +3880,13 @@ class GroupStore {
       );
       this.yGroup.set("pieces", yPieces);
     }
+  }
+
+  get guid(): string {
+    return this.yGroup.get("guid") as string;
+  }
+  set guid(guid: string) {
+    this.yGroup.set("guid", guid);
   }
 
   get color(): string | undefined {
@@ -3881,6 +3933,7 @@ class GroupStore {
 
   snapshot = (): Group => {
     const currentData = {
+      guid: this.guid,
       pieces: this.pieces.map((guid) => ({ guid })),
       color: this.color,
       name: this.name,
@@ -3925,7 +3978,6 @@ class SideStore {
   constructor(parent: DesignStore, ySide: YSide, side: Side) {
     this.parent = parent;
     this.ySide = ySide;
-    this.guid = side.guid;
 
     // Store piece UUID
     const pieceStore = this.parent.piece(side.piece.guid);
@@ -3942,7 +3994,7 @@ class SideStore {
     }
 
     // Store port UUID - need to find it through the piece's type
-    if (pieceStore) {
+    if (pieceStore && side.port) {
       const typeGuid = pieceStore.type;
       if (typeGuid) {
         const typeStore = this.parent.parent.type(typeGuid);
@@ -3956,17 +4008,10 @@ class SideStore {
     }
   }
 
-  get guid(): string {
-    return this.ySide.get("guid") as string;
-  }
-  set guid(guid: string) {
-    this.ySide.set("guid", guid);
-  }
-
   get piece(): Guid {
     const pieceUuid = this.ySide.get("piece") as string;
     if (!pieceUuid) {
-      throw new Error(`[ORIGIN] SideStore.piece: pieceUuid is undefined for side ${this.guid}`);
+      throw new Error(`[ORIGIN] SideStore.piece: pieceUuid is undefined`);
     }
     return this.parent.piece(pieceUuid).guid;
   }
@@ -4029,10 +4074,9 @@ class SideStore {
 
   snapshot = (): Side => {
     const currentData = {
-      guid: this.guid,
       piece: { guid: this.piece },
       designPiece: this.designPiece ? { guid: this.designPiece } : undefined,
-      port: { guid: this.port },
+      port: this.port ? { guid: this.port } : undefined,
     };
     const currentHash = this.hash(currentData);
 
@@ -4045,13 +4089,13 @@ class SideStore {
   };
 
   id = (): string => {
-    return this.guid;
+    return this.piece;
   };
 
   change = (diff: SideDiff) => {
     if (diff.piece !== undefined) this.piece = diff.piece.guid;
     if (diff.designPiece !== undefined) this.designPiece = diff.designPiece?.guid;
-    if (diff.port !== undefined) this.port = diff.port.guid;
+    if (diff.port !== undefined && diff.port !== null) this.port = diff.port.guid;
   };
 
   onChanged = (subscribe: Subscribe) => {
@@ -4459,7 +4503,7 @@ export class DesignStore {
     this.authors = new Map();
 
     this.name = design.name;
-    this.parentGuid = design.parent;
+    this.parentGuid = design.parent?.guid;
     this.abstract = design.isAbstract;
     this.canScale = design.canScale;
     this.canMirror = design.canMirror;
@@ -4542,17 +4586,17 @@ export class DesignStore {
       }
     }
 
-    if (design.location) {
+    if (design.location && "longitude" in design.location) {
       const yLocation = new Y.Map() as YLocation;
       this.yDesign.set("location", yLocation);
-      this.location = new YLocationStore(yLocation, design.location);
+      this.location = new YLocationStore(yLocation, design.location as Location);
     }
 
     const yDesignConcepts = new Y.Array<string>();
     this.yDesign.set("concepts", yDesignConcepts);
     this.yConcepts = yDesignConcepts;
     if (design.concepts) {
-      design.concepts.forEach((concept) => this.yConcepts.push([concept]));
+      design.concepts.forEach((concept) => this.yConcepts.push([concept.guid]));
     }
 
     this.authors = new Map();
@@ -4761,7 +4805,7 @@ export class DesignStore {
     const currentData = {
       guid: this.guid,
       name: this.name,
-      parent: this.parentGuid,
+      parent: this.parentGuid ? { guid: this.parentGuid } : undefined,
       folder: this.folder,
       isAbstract: this.abstract,
       canScale: this.canScale,
@@ -4779,10 +4823,10 @@ export class DesignStore {
       groups: Array.from(this.groups.values()).map((group) => group.snapshot()),
       location: this.location?.snapshot(),
       authors: Array.from(this.authors.values()).map((author) => ({ guid: author.guid })),
-      concepts: (this.yDesign.get("concepts") as Y.Array<string> | undefined)?.toArray(),
+      concepts: (this.yDesign.get("concepts") as Y.Array<string> | undefined)?.toArray()?.map((g) => ({ guid: g })),
       attributes: Array.from(this.attributes.values()).map((attribute) => attribute.snapshot()),
-      createdAt: this.createdAt,
-      updatedAt: this.updatedAt,
+      createdAt: this.createdAt?.toISOString(),
+      updatedAt: this.updatedAt?.toISOString(),
     };
 
     this.cache = currentData;
@@ -4799,7 +4843,7 @@ export class DesignStore {
     // PERF: Mark dirty so next snapshot() rebuilds
     this.dirty = true;
     if (diff.name !== undefined) this.name = diff.name;
-    if (diff.parent !== undefined) this.parentGuid = diff.parent;
+    if (diff.parent !== undefined) this.parentGuid = diff.parent?.guid;
     if (diff.folder !== undefined) this.folder = diff.folder;
     if (diff.isAbstract !== undefined) this.abstract = diff.isAbstract;
     if (diff.canScale !== undefined) this.canScale = diff.canScale;
@@ -4816,16 +4860,16 @@ export class DesignStore {
           diff.pieces.added.forEach((piece) => this.createPiece(piece));
         }
         if (diff.pieces.updated) {
-          diff.pieces.updated.forEach(({ id, diff: pieceDiff }) => {
-            const pieceStore = this.pieces.get(id);
+          diff.pieces.updated.forEach(({ piece, diff: pieceDiff }) => {
+            const pieceStore = this.pieces.get(piece.guid);
             if (pieceStore) {
               pieceStore.change(pieceDiff);
-            } else {
             }
           });
         }
         if (diff.pieces.removed) {
-          diff.pieces.removed.forEach((guid) => {
+          diff.pieces.removed.forEach((pieceId) => {
+            const guid = pieceId.guid;
             if (this.pieces.has(guid)) {
               const pieceArray = Array.from(this.pieces.values());
               const pieceIndex = pieceArray.findIndex((p) => p.guid === guid);
@@ -4856,29 +4900,22 @@ export class DesignStore {
           diff.connections.added.forEach((connection) => this.createConnection(connection));
         }
         if (diff.connections.updated) {
-          diff.connections.updated.forEach(({ id, diff: connectionDiff }) => {
-            // Find connection by composite id (connected/connecting pieces)
-            const connectionStore = Array.from(this.connections.values()).find((c) => {
-              const snapshot = c.snapshot();
-              return snapshot.connected.piece.guid === id.connected.piece && snapshot.connecting.piece.guid === id.connecting.piece;
-            });
+          diff.connections.updated.forEach(({ connection, diff: connectionDiff }) => {
+            const connectionStore = this.connections.get(connection.guid);
             if (connectionStore) {
               connectionStore.change(connectionDiff);
             }
           });
         }
         if (diff.connections.removed) {
-          diff.connections.removed.forEach((compositeId) => {
-            // Find connection by composite id
-            const connectionStore = Array.from(this.connections.values()).find((c) => {
-              const snapshot = c.snapshot();
-              return snapshot.connected.piece.guid === compositeId.connected.piece && snapshot.connecting.piece.guid === compositeId.connecting.piece;
-            });
+          diff.connections.removed.forEach((connectionId) => {
+            const guid = connectionId.guid;
+            const connectionStore = this.connections.get(guid);
             if (connectionStore) {
               const connectionArray = Array.from(this.connections.values());
-              const connectionIndex = connectionArray.findIndex((c) => c.guid === connectionStore.guid);
+              const connectionIndex = connectionArray.findIndex((c) => c.guid === guid);
               if (connectionIndex !== -1) {
-                this.connections.delete(connectionStore.guid);
+                this.connections.delete(guid);
                 this.yConnections.delete(connectionIndex, 1);
               }
             }
@@ -4899,7 +4936,8 @@ export class DesignStore {
 
     if (diff.stats !== undefined) {
       if (diff.stats.removed) {
-        diff.stats.removed.forEach((guid) => {
+        diff.stats.removed.forEach((statId) => {
+          const guid = statId.guid;
           this.stats.delete(guid);
           const yStats = this.yDesign.get("stats") as Y.Array<YStat>;
           if (yStats) {
@@ -4909,8 +4947,8 @@ export class DesignStore {
         });
       }
       if (diff.stats.updated) {
-        diff.stats.updated.forEach(({ id, diff: statDiff }) => {
-          const statStore = this.stats.get(id);
+        diff.stats.updated.forEach(({ stat, diff: statDiff }) => {
+          const statStore = this.stats.get(stat.guid);
           if (statStore) statStore.change(statDiff);
         });
       }
@@ -4923,18 +4961,19 @@ export class DesignStore {
 
     if (diff.props !== undefined) {
       if (diff.props.removed) {
-        diff.props.removed.forEach((key) => {
-          this.props.delete(key);
+        diff.props.removed.forEach((propId) => {
+          const guid = propId.guid;
+          this.props.delete(guid);
           const yProps = this.yDesign.get("props") as Y.Array<YProp>;
           if (yProps) {
-            const index = yProps.toArray().findIndex((yProp) => (yProp as Y.Map<unknown>).get("key") === key);
+            const index = yProps.toArray().findIndex((yProp) => (yProp as Y.Map<unknown>).get("guid") === guid);
             if (index >= 0) yProps.delete(index, 1);
           }
         });
       }
       if (diff.props.updated) {
-        diff.props.updated.forEach(({ id, diff: propDiff }) => {
-          const propStore = this.props.get(id);
+        diff.props.updated.forEach(({ prop, diff: propDiff }) => {
+          const propStore = this.props.get(prop.guid);
           if (propStore) propStore.change(propDiff);
         });
       }
@@ -4947,18 +4986,19 @@ export class DesignStore {
 
     if (diff.layers !== undefined) {
       if (diff.layers.removed) {
-        diff.layers.removed.forEach((path) => {
-          this.layers.delete(path);
+        diff.layers.removed.forEach((layerId) => {
+          const guid = layerId.guid;
+          this.layers.delete(guid);
           const yLayers = this.yDesign.get("layers") as Y.Array<YLayer>;
           if (yLayers) {
-            const index = yLayers.toArray().findIndex((yLayer) => (yLayer as Y.Map<unknown>).get("path") === path);
+            const index = yLayers.toArray().findIndex((yLayer) => (yLayer as Y.Map<unknown>).get("guid") === guid);
             if (index >= 0) yLayers.delete(index, 1);
           }
         });
       }
       if (diff.layers.updated) {
-        diff.layers.updated.forEach(({ id, diff: layerDiff }) => {
-          const layerStore = this.layers.get(id);
+        diff.layers.updated.forEach(({ layer, diff: layerDiff }) => {
+          const layerStore = this.layers.get(layer.guid);
           if (layerStore) layerStore.change(layerDiff);
         });
       }
@@ -4979,23 +5019,19 @@ export class DesignStore {
 
     if (diff.groups !== undefined) {
       if (diff.groups.removed) {
-        diff.groups.removed.forEach((pieces) => {
-          const groupKey = pieces.join(",");
-          this.groups.delete(groupKey);
+        diff.groups.removed.forEach((groupId) => {
+          const guid = groupId.guid;
+          this.groups.delete(guid);
           const yGroups = this.yDesign.get("groups") as Y.Array<YGroup>;
           if (yGroups) {
-            const index = yGroups.toArray().findIndex((yGroup) => {
-              const groupPieces = (yGroup as Y.Map<unknown>).get("pieces") as Y.Array<string>;
-              return groupPieces?.toArray().join(",") === groupKey;
-            });
+            const index = yGroups.toArray().findIndex((yGroup) => (yGroup as Y.Map<unknown>).get("guid") === guid);
             if (index >= 0) yGroups.delete(index, 1);
           }
         });
       }
       if (diff.groups.updated) {
-        diff.groups.updated.forEach(({ id, diff: groupDiff }) => {
-          const groupKey = id.join(",");
-          const groupStore = this.groups.get(groupKey);
+        diff.groups.updated.forEach(({ group, diff: groupDiff }) => {
+          const groupStore = this.groups.get(group.guid);
           if (groupStore) groupStore.change(groupDiff);
         });
       }
@@ -5023,13 +5059,13 @@ export class DesignStore {
 
     if (diff.authors !== undefined) {
       if (diff.authors.removed) {
-        diff.authors.removed.forEach((authorGuid) => {
-          this.authors.delete(authorGuid);
+        diff.authors.removed.forEach((authorId) => {
+          this.authors.delete(authorId.guid);
         });
       }
       if (diff.authors.updated) {
-        diff.authors.updated.forEach(({ id, diff: authorDiff }) => {
-          const authorStore = this.authors.get(id);
+        diff.authors.updated.forEach(({ author, diff: authorDiff }) => {
+          const authorStore = this.authors.get(author.guid);
           if (authorStore) authorStore.change(authorDiff);
         });
       }
@@ -5044,7 +5080,7 @@ export class DesignStore {
     if (diff.concepts !== undefined) {
       if (diff.concepts) {
         const yConcepts = new Y.Array<string>();
-        diff.concepts.forEach((concept) => yConcepts.push([concept]));
+        diff.concepts.forEach((concept) => yConcepts.push([concept.guid]));
         this.yDesign.set("concepts", yConcepts);
       } else {
         this.yDesign.delete("concepts");
@@ -5055,7 +5091,8 @@ export class DesignStore {
       if (diff.attributes && typeof diff.attributes === "object" && ("added" in diff.attributes || "removed" in diff.attributes || "updated" in diff.attributes)) {
         // Handle incremental updates
         if (diff.attributes.removed) {
-          diff.attributes.removed.forEach((guid) => {
+          diff.attributes.removed.forEach((attrId) => {
+            const guid = attrId.guid;
             const attr = this.attributes.get(guid);
             if (attr) {
               const yAttrIndex = Array.from(this.yAttributes).findIndex((yAttr: any) => {
@@ -5070,8 +5107,8 @@ export class DesignStore {
           });
         }
         if (diff.attributes.updated) {
-          diff.attributes.updated.forEach(({ id, diff: attrDiff }) => {
-            const attr = this.attributes.get(id);
+          diff.attributes.updated.forEach(({ attribute, diff: attrDiff }) => {
+            const attr = this.attributes.get(attribute.guid);
             if (attr) {
               attr.change(attrDiff);
             }
@@ -5408,7 +5445,7 @@ export class KitStore {
       this.homepage = kit.homepage;
       this.license = kit.license;
       this.preview = kit.preview;
-      this.concepts = kit.concepts;
+      this.concepts = kit.concepts?.map((c) => c.guid);
       this.icon = kit.icon;
       this.image = kit.image;
       this.description = kit.description;
@@ -5613,8 +5650,8 @@ export class KitStore {
     if (file.remote) yFile.set("remote", file.remote);
     if (file.size !== undefined) yFile.set("size", file.size);
     if (file.hash) yFile.set("hash", file.hash);
-    if (file.createdAt) yFile.set("createdAt", file.createdAt instanceof Date ? file.createdAt.toISOString() : file.createdAt);
-    if (file.updatedAt) yFile.set("updatedAt", file.updatedAt instanceof Date ? file.updatedAt.toISOString() : file.updatedAt);
+    if (file.createdAt) yFile.set("createdAt", file.createdAt);
+    if (file.updatedAt) yFile.set("updatedAt", file.updatedAt);
     if (file.createdBy) yFile.set("createdBy", file.createdBy);
     if (file.updatedBy) yFile.set("updatedBy", file.updatedBy);
     this.yFiles.push([yFile]);
@@ -5637,8 +5674,8 @@ export class KitStore {
     yFolder.set("name", folder.name);
     if (folder.parent?.guid) yFolder.set("parent", folder.parent.guid);
     if (folder.description) yFolder.set("description", folder.description);
-    if (folder.createdAt) yFolder.set("createdAt", folder.createdAt instanceof Date ? folder.createdAt.toISOString() : folder.createdAt);
-    if (folder.updatedAt) yFolder.set("updatedAt", folder.updatedAt instanceof Date ? folder.updatedAt.toISOString() : folder.updatedAt);
+    if (folder.createdAt) yFolder.set("createdAt", folder.createdAt);
+    if (folder.updatedAt) yFolder.set("updatedAt", folder.updatedAt);
     if (folder.createdBy) yFolder.set("createdBy", folder.createdBy);
     if (folder.updatedBy) yFolder.set("updatedBy", folder.updatedBy);
     this.yFolders.push([yFolder]);
@@ -5858,7 +5895,7 @@ export class KitStore {
       homepage: this.homepage,
       license: this.license,
       preview: this.preview,
-      concepts: this.concepts,
+      concepts: this.concepts?.map((guid) => ({ guid, name: guid })),
       icon: this.icon,
       image: this.image,
       description: this.description,
@@ -5869,8 +5906,8 @@ export class KitStore {
       folders: Array.from(this.folders.values()).map((folder) => folder.snapshot()),
       authors: Array.from(this.authors.values()).map((author) => author.snapshot()),
       attributes: Array.from(this.attributes.values()).map((attribute) => attribute.snapshot()),
-      createdAt: this.createdAt,
-      updatedAt: this.updatedAt,
+      createdAt: this.createdAt.toISOString(),
+      updatedAt: this.updatedAt.toISOString(),
     };
     const currentHash = this.hash(currentData);
     if (!this.cache || this.cacheHash !== currentHash) {
@@ -5895,16 +5932,16 @@ export class KitStore {
           diff.authors.added.forEach((author) => this.createAuthor(author));
         }
         if (diff.authors.updated) {
-          diff.authors.updated.forEach(({ id, diff: authorDiff }) => {
-            const authorStore = this.authors.get(id as string);
+          diff.authors.updated.forEach(({ author, diff: authorDiff }) => {
+            const authorStore = this.authors.get(author.guid);
             if (authorStore) {
               authorStore.change(authorDiff);
             }
           });
         }
         if (diff.authors.removed) {
-          diff.authors.removed.forEach((authorGuidOrObject) => {
-            const authorGuid = typeof authorGuidOrObject === "string" ? authorGuidOrObject : (authorGuidOrObject as any).guid;
+          diff.authors.removed.forEach((authorId) => {
+            const authorGuid = authorId.guid;
             if (this.authors.has(authorGuid)) {
               this.authors.delete(authorGuid);
               // Find and delete from Y.Array
@@ -5924,21 +5961,22 @@ export class KitStore {
           diff.types.added.forEach((type) => this.createType(type));
         }
         if (diff.types.updated) {
-          diff.types.updated.forEach(({ id, diff: typeDiff }) => {
-            const typeStore = this.types.get(id);
+          diff.types.updated.forEach(({ type, diff: typeDiff }) => {
+            const typeStore = this.types.get(type.guid);
             if (typeStore) {
               typeStore.change(typeDiff);
             }
           });
         }
         if (diff.types.removed) {
-          diff.types.removed.forEach((Guid) => {
-            if (this.types.has(Guid)) {
-              this.types.delete(Guid);
+          diff.types.removed.forEach((typeId) => {
+            const guid = typeId.guid;
+            if (this.types.has(guid)) {
+              this.types.delete(guid);
               // Find and delete from Y.Array
               const index = Array.from(this.yTypes).findIndex((yType: any) => {
                 const yMap = yType[0] as Y.Map<any>;
-                return yMap.get("guid") === Guid;
+                return yMap.get("guid") === guid;
               });
               if (index !== -1) {
                 this.yTypes.delete(index, 1);
@@ -5952,21 +5990,22 @@ export class KitStore {
           diff.designs.added.forEach((design) => this.createDesign(design));
         }
         if (diff.designs.updated) {
-          diff.designs.updated.forEach(({ id, diff: designDiff }) => {
-            const designStore = this.designs.get(id);
+          diff.designs.updated.forEach(({ design, diff: designDiff }) => {
+            const designStore = this.designs.get(design.guid);
             if (designStore) {
               designStore.change(designDiff);
             }
           });
         }
         if (diff.designs.removed) {
-          diff.designs.removed.forEach((Guid) => {
-            if (this.designs.has(Guid)) {
-              this.designs.delete(Guid);
+          diff.designs.removed.forEach((designId) => {
+            const guid = designId.guid;
+            if (this.designs.has(guid)) {
+              this.designs.delete(guid);
               // Find and delete from Y.Array
               const index = Array.from(this.yDesigns).findIndex((yDesign: any) => {
                 const yMap = yDesign[0] as Y.Map<any>;
-                return yMap.get("guid") === Guid;
+                return yMap.get("guid") === guid;
               });
               if (index !== -1) {
                 this.yDesigns.delete(index, 1);
@@ -5980,8 +6019,8 @@ export class KitStore {
           diff.files.added.forEach((file) => this.createFile(file));
         }
         if (diff.files.updated) {
-          diff.files.updated.forEach(({ id, diff: fileDiff }) => {
-            const fileStore = this.files.get(id);
+          diff.files.updated.forEach(({ file, diff: fileDiff }) => {
+            const fileStore = this.files.get(file.guid);
             if (fileStore) {
               fileStore.change(fileDiff);
             }
@@ -5989,12 +6028,13 @@ export class KitStore {
         }
         if (diff.files.removed) {
           diff.files.removed.forEach((fileId) => {
-            if (this.files.has(fileId)) {
-              this.files.delete(fileId);
+            const guid = fileId.guid;
+            if (this.files.has(guid)) {
+              this.files.delete(guid);
               // Find and delete from Y.Array
               const index = Array.from(this.yFiles).findIndex((yFile: any) => {
                 const yMap = yFile[0] as Y.Map<any>;
-                return yMap.get("guid") === fileId;
+                return yMap.get("guid") === guid;
               });
               if (index !== -1) {
                 this.yFiles.delete(index, 1);
@@ -6008,21 +6048,22 @@ export class KitStore {
           diff.folders.added.forEach((folder) => this.createFolder(folder));
         }
         if (diff.folders.updated) {
-          diff.folders.updated.forEach(({ id, diff: folderDiff }) => {
-            const folderStore = this.folders.get(id);
+          diff.folders.updated.forEach(({ folder, diff: folderDiff }) => {
+            const folderStore = this.folders.get(folder.guid);
             if (folderStore) {
               folderStore.change(folderDiff);
             }
           });
         }
         if (diff.folders.removed) {
-          diff.folders.removed.forEach((folderGuid) => {
-            if (this.folders.has(folderGuid)) {
-              this.folders.delete(folderGuid);
+          diff.folders.removed.forEach((folderId) => {
+            const guid = folderId.guid;
+            if (this.folders.has(guid)) {
+              this.folders.delete(guid);
               // Find and delete from Y.Array
               const index = Array.from(this.yFolders).findIndex((yFolder: any) => {
                 const yMap = yFolder[0] as Y.Map<any>;
-                return yMap.get("guid") === folderGuid;
+                return yMap.get("guid") === guid;
               });
               if (index !== -1) {
                 this.yFolders.delete(index, 1);
@@ -6036,21 +6077,22 @@ export class KitStore {
           diff.qualities.added.forEach((quality) => this.createQuality(quality));
         }
         if (diff.qualities.updated) {
-          diff.qualities.updated.forEach(({ id, diff: qualityDiff }) => {
-            const qualityStore = this.qualities.get(id);
+          diff.qualities.updated.forEach(({ quality, diff: qualityDiff }) => {
+            const qualityStore = this.qualities.get(quality.guid);
             if (qualityStore) {
               qualityStore.change(qualityDiff);
             }
           });
         }
         if (diff.qualities.removed) {
-          diff.qualities.removed.forEach((qualityGuid) => {
-            if (this.qualities.has(qualityGuid)) {
-              this.qualities.delete(qualityGuid);
+          diff.qualities.removed.forEach((qualityId) => {
+            const guid = qualityId.guid;
+            if (this.qualities.has(guid)) {
+              this.qualities.delete(guid);
               // Find and delete from Y.Array
               const index = Array.from(this.yQualities).findIndex((yQuality: any) => {
                 const yMap = yQuality[0] as Y.Map<any>;
-                return yMap.get("guid") === qualityGuid;
+                return yMap.get("guid") === guid;
               });
               if (index !== -1) {
                 this.yQualities.delete(index, 1);
@@ -6222,7 +6264,8 @@ export class KitStore {
         // Delete removed files
         if (result.diff.files.removed) {
           for (const fileId of result.diff.files.removed) {
-            const fileStore = this.files.get(fileId);
+            const guid = fileId.guid;
+            const fileStore = this.files.get(guid);
             if (fileStore) {
               const file = fileStore.snapshot();
               const storagePath = this.getFileStoragePath(file);
@@ -6235,7 +6278,7 @@ export class KitStore {
 
               if (this.fileProvider) {
                 try {
-                  await this.fileProvider.delete(this.guid, fileId, storagePath);
+                  await this.fileProvider.delete(this.guid, guid, storagePath);
                 } catch (error) {
                   console.error(`[KIT ${this.name}] Failed to delete file ${storagePath}:`, error);
                 }
@@ -6482,7 +6525,7 @@ export function useKitConcepts(guid?: Guid): Concept[] {
  */
 export function useTypeFromKit(typeGuid: Guid, kitGuid?: Guid): Type | undefined {
   // Use useCallback to memoize the selector since it depends on typeGuid
-  const selector = useCallback((k: KitShallow | Kit) => k.types?.find((t) => t.guid === typeGuid), [typeGuid]);
+  const selector = useCallback((k: KitShallow | Kit) => k.types?.find((t) => (typeof t === "string" ? t === typeGuid : t.guid === typeGuid)), [typeGuid]);
   return useKit(selector, kitGuid, true) as Type | undefined;
 }
 
@@ -6491,7 +6534,7 @@ export function useTypeFromKit(typeGuid: Guid, kitGuid?: Guid): Type | undefined
  */
 export function useDesignFromKit(designGuid: Guid, kitGuid?: Guid): Design | undefined {
   // Use useCallback to memoize the selector since it depends on designGuid
-  const selector = useCallback((k: KitShallow | Kit) => k.designs?.find((d) => d.guid === designGuid), [designGuid]);
+  const selector = useCallback((k: KitShallow | Kit) => k.designs?.find((d) => (typeof d === "string" ? d === designGuid : d.guid === designGuid)), [designGuid]);
   return useKit(selector, kitGuid, true) as Design | undefined;
 }
 
@@ -6604,12 +6647,12 @@ export const kitCommands = {
   },
   "semio.kit.updateAuthor": (context: KitCommandContext, guid: Guid, diff: AuthorDiff): KitCommandResult => {
     return {
-      diff: { authors: { updated: [{ id: guid, diff: diff }] } },
+      diff: { authors: { updated: [{ author: { guid }, diff }] } },
     };
   },
   "semio.kit.deleteAuthor": (context: KitCommandContext, guid: Guid): KitCommandResult => {
     return {
-      diff: { authors: { removed: [guid] } },
+      diff: { authors: { removed: [{ guid }] } },
     };
   },
   "semio.kit.createType": (context: KitCommandContext, type: Type): KitCommandResult => {
@@ -6619,12 +6662,12 @@ export const kitCommands = {
   },
   "semio.kit.updateType": (context: KitCommandContext, guid: Guid, diff: TypeDiff): KitCommandResult => {
     return {
-      diff: { types: { updated: [{ id: guid, diff: diff }] } },
+      diff: { types: { updated: [{ type: { guid }, diff }] } },
     };
   },
   "semio.kit.deleteType": (context: KitCommandContext, guid: Guid): KitCommandResult => {
     return {
-      diff: { types: { removed: [guid] } },
+      diff: { types: { removed: [{ guid }] } },
     };
   },
   "semio.kit.createDesign": (context: KitCommandContext, design: Design): KitCommandResult => {
@@ -6634,12 +6677,12 @@ export const kitCommands = {
   },
   "semio.kit.updateDesign": (context: KitCommandContext, guid: Guid, diff: DesignDiff): KitCommandResult => {
     return {
-      diff: { designs: { updated: [{ id: guid, diff: diff }] } },
+      diff: { designs: { updated: [{ design: { guid }, diff }] } },
     };
   },
   "semio.kit.deleteDesign": (context: KitCommandContext, guid: Guid): KitCommandResult => {
     return {
-      diff: { designs: { removed: [guid] } },
+      diff: { designs: { removed: [{ guid }] } },
     };
   },
   "semio.kit.createQuality": (context: KitCommandContext, quality: Quality): KitCommandResult => {
@@ -6649,12 +6692,12 @@ export const kitCommands = {
   },
   "semio.kit.updateQuality": (context: KitCommandContext, guid: Guid, diff: QualityDiff): KitCommandResult => {
     return {
-      diff: { qualities: { updated: [{ id: guid, diff: diff }] } },
+      diff: { qualities: { updated: [{ quality: { guid }, diff }] } },
     };
   },
   "semio.kit.deleteQuality": (context: KitCommandContext, guid: Guid): KitCommandResult => {
     return {
-      diff: { qualities: { removed: [guid] } },
+      diff: { qualities: { removed: [{ guid }] } },
     };
   },
   "semio.kit.createInterface": (context: KitCommandContext, iface: Interface): KitCommandResult => {
@@ -6664,12 +6707,12 @@ export const kitCommands = {
   },
   "semio.kit.updateInterface": (context: KitCommandContext, guid: Guid, diff: InterfaceDiff): KitCommandResult => {
     return {
-      diff: { interfaces: { updated: [{ id: guid, diff: diff }] } },
+      diff: { interfaces: { updated: [{ interface: { guid }, diff }] } },
     };
   },
   "semio.kit.deleteInterface": (context: KitCommandContext, guid: Guid): KitCommandResult => {
     return {
-      diff: { interfaces: { removed: [guid] } },
+      diff: { interfaces: { removed: [{ guid }] } },
     };
   },
   "semio.kit.createTag": (context: KitCommandContext, tag: Tag): KitCommandResult => {
@@ -6679,12 +6722,12 @@ export const kitCommands = {
   },
   "semio.kit.updateTag": (context: KitCommandContext, guid: Guid, diff: TagDiff): KitCommandResult => {
     return {
-      diff: { tags: { updated: [{ id: guid, diff: diff }] } },
+      diff: { tags: { updated: [{ tag: { guid }, diff }] } },
     };
   },
   "semio.kit.deleteTag": (context: KitCommandContext, guid: Guid): KitCommandResult => {
     return {
-      diff: { tags: { removed: [guid] } },
+      diff: { tags: { removed: [{ guid }] } },
     };
   },
   "semio.kit.createConcept": (context: KitCommandContext, concept: Concept): KitCommandResult => {
@@ -6694,12 +6737,12 @@ export const kitCommands = {
   },
   "semio.kit.updateConcept": (context: KitCommandContext, guid: Guid, diff: ConceptDiff): KitCommandResult => {
     return {
-      diff: { concepts: { updated: [{ id: guid, diff: diff }] } },
+      diff: { concepts: { updated: [{ concept: { guid }, diff }] } },
     };
   },
   "semio.kit.deleteConcept": (context: KitCommandContext, guid: Guid): KitCommandResult => {
     return {
-      diff: { concepts: { removed: [guid] } },
+      diff: { concepts: { removed: [{ guid }] } },
     };
   },
   "semio.kit.addFile": (context: KitCommandContext, file: SemioFile, blob?: Blob): KitCommandResult => {
@@ -6726,13 +6769,13 @@ export const kitCommands = {
     const fileName = fileDiff.name ?? existing?.name ?? "file";
     const files: File[] = blob ? [new File([blob], fileName)] : [];
     return {
-      diff: { files: { updated: [{ id: fileGuid, diff: fileDiff }] } },
+      diff: { files: { updated: [{ file: { guid: fileGuid }, diff: fileDiff }] } },
       files,
     };
   },
   "semio.kit.removeFile": (context: KitCommandContext, fileGuid: Url): KitCommandResult => {
     return {
-      diff: { files: { removed: [fileGuid] } },
+      diff: { files: { removed: [{ guid: fileGuid }] } },
     };
   },
   "semio.kit.createFolder": (context: KitCommandContext, folder: Folder): KitCommandResult => {
@@ -6742,12 +6785,12 @@ export const kitCommands = {
   },
   "semio.kit.updateFolder": (context: KitCommandContext, guid: Guid, diff: FolderDiff): KitCommandResult => {
     return {
-      diff: { folders: { updated: [{ id: guid, diff: diff }] } },
+      diff: { folders: { updated: [{ folder: { guid }, diff }] } },
     };
   },
   "semio.kit.deleteFolder": (context: KitCommandContext, guid: Guid): KitCommandResult => {
     return {
-      diff: { folders: { removed: [guid] } },
+      diff: { folders: { removed: [{ guid }] } },
     };
   },
   "semio.kit.moveToFolder": (context: KitCommandContext, artifactGuid: Guid, artifactKind: "type" | "design" | "quality" | "file" | "folder", folderGuid?: Guid): KitCommandResult => {
@@ -6757,26 +6800,26 @@ export const kitCommands = {
         if (!type) throw new Error(`Type ${artifactGuid} not found`);
         if (type.parent) throw new Error("Only prototypes (types without parent) can be moved to folders");
         const folderDiff = { folder: folderGuid };
-        return { diff: { types: { updated: [{ id: artifactGuid, diff: folderDiff }] } } };
+        return { diff: { types: { updated: [{ type: { guid: artifactGuid }, diff: folderDiff }] } } };
       }
       case "design": {
         const design = context.kit.designs?.find((d) => d.guid === artifactGuid);
         if (!design) throw new Error(`Design ${artifactGuid} not found`);
         if (design.parent) throw new Error("Only protodesigns (designs without parent) can be moved to folders");
         const folderDiff = { folder: folderGuid };
-        return { diff: { designs: { updated: [{ id: artifactGuid, diff: folderDiff }] } } };
+        return { diff: { designs: { updated: [{ design: { guid: artifactGuid }, diff: folderDiff }] } } };
       }
       case "quality": {
         const folderDiff = { folder: folderGuid };
-        return { diff: { qualities: { updated: [{ id: artifactGuid, diff: folderDiff }] } } };
+        return { diff: { qualities: { updated: [{ quality: { guid: artifactGuid }, diff: folderDiff }] } } };
       }
       case "file": {
         const folderDiff = { folder: folderGuid ? { guid: folderGuid } : undefined };
-        return { diff: { files: { updated: [{ id: artifactGuid, diff: folderDiff }] } } };
+        return { diff: { files: { updated: [{ file: { guid: artifactGuid }, diff: folderDiff }] } } };
       }
       case "folder": {
         const parentDiff = { parent: folderGuid ? { guid: folderGuid } : undefined };
-        return { diff: { folders: { updated: [{ id: artifactGuid, diff: parentDiff }] } } };
+        return { diff: { folders: { updated: [{ folder: { guid: artifactGuid }, diff: parentDiff }] } } };
       }
     }
   },
@@ -6887,7 +6930,7 @@ export const kitCommands = {
         designs: {
           updated: [
             {
-              id: guid,
+              design: { guid },
               diff: {
                 pieces: {
                   added: [
@@ -6917,7 +6960,7 @@ export const kitCommands = {
         designs: {
           updated: [
             {
-              id: guid,
+              design: { guid },
               diff: {
                 pieces: {
                   added: pieces.map((candidate) =>
@@ -6946,8 +6989,8 @@ export const kitCommands = {
         designs: {
           updated: [
             {
-              id: guid,
-              diff: { pieces: { removed: [piece] } },
+              design: { guid },
+              diff: { pieces: { removed: [{ guid: piece }] } },
             },
           ],
         },
@@ -6960,8 +7003,8 @@ export const kitCommands = {
         designs: {
           updated: [
             {
-              id: guid,
-              diff: { pieces: { removed: pieces } },
+              design: { guid },
+              diff: { pieces: { removed: pieces.map((p) => ({ guid: p })) } },
             },
           ],
         },
@@ -6974,7 +7017,7 @@ export const kitCommands = {
         designs: {
           updated: [
             {
-              id: guid,
+              design: { guid },
               diff: { connections: { added: [connection] } },
             },
           ],
@@ -6988,7 +7031,7 @@ export const kitCommands = {
         designs: {
           updated: [
             {
-              id: guid,
+              design: { guid },
               diff: { connections: { added: connections } },
             },
           ],
@@ -7005,8 +7048,8 @@ export const kitCommands = {
         designs: {
           updated: [
             {
-              id: guid,
-              diff: { connections: { removed: [{ connected: { piece: connection.connected.piece.guid }, connecting: { piece: connection.connecting.piece.guid } }] } },
+              design: { guid },
+              diff: { connections: { removed: [{ guid: connection.guid }] } },
             },
           ],
         },
@@ -7014,19 +7057,13 @@ export const kitCommands = {
     };
   },
   "semio.kit.removeConnections": (context: KitCommandContext, guid: Guid, connectionGuids: Guid[]): KitCommandResult => {
-    const design = findDesignInKit(context.kit, guid);
-    const connectionsToRemove =
-      connectionGuids
-        .map((connGuid) => design?.connections?.find((c) => c.guid === connGuid))
-        .filter((c): c is Connection => c !== undefined)
-        .map((c) => ({ connected: { piece: c.connected.piece }, connecting: { piece: c.connecting.piece } })) ?? [];
     return {
       diff: {
         designs: {
           updated: [
             {
-              id: guid,
-              diff: { connections: { removed: connectionsToRemove.map((c) => ({ connected: { piece: c.connected.piece.guid }, connecting: { piece: c.connecting.piece.guid } })) } },
+              design: { guid },
+              diff: { connections: { removed: connectionGuids.map((connGuid) => ({ guid: connGuid })) } },
             },
           ],
         },
@@ -7217,7 +7254,7 @@ export function usePortColoredTypes(): Type[] {
   const typesWithColoredPorts = useMemo(() => {
     if (!diffedKit.types || !kit.types) return [];
     const colorDiff = colorPortsForTypes(diffedKit.types);
-    const updatedIds = colorDiff.updated?.map((u) => u.id) || [];
+    const updatedIds = colorDiff.updated?.map((u) => u.type.guid) || [];
     return kit.types.filter((t) => updatedIds.includes(t.guid));
   }, [diffedKit.types, kit.types]);
   return typesWithColoredPorts;
@@ -8303,8 +8340,8 @@ export class SketchpadStore {
                 name: relativePath.split("/").pop() || relativePath,
                 size: fileBlob.size,
                 hash: undefined,
-                createdAt: new Date(),
-                updatedAt: new Date(),
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
               };
               await kitStore.execute("semio.kit.addFile", "system.loadKitFiles", file, fileBlob);
             }),
@@ -8995,6 +9032,7 @@ export class SketchpadStore {
           });
 
           const yKit = yDoc.getMap();
+          const conceptGuids = yKit.get("concepts") as string[] | undefined;
           const kit: Kit = {
             guid: yKit.get("guid") as string,
             name: yKit.get("name") as string,
@@ -9003,12 +9041,12 @@ export class SketchpadStore {
             homepage: yKit.get("homepage") as string,
             license: yKit.get("license") as string,
             preview: yKit.get("preview") as string,
-            concepts: yKit.get("concepts") as string[],
+            concepts: conceptGuids?.map((g) => ({ guid: g, name: g })),
             icon: yKit.get("icon") as string,
             image: yKit.get("image") as string,
             description: yKit.get("description") as string,
-            createdAt: yKit.get("createdAt") ? new Date(yKit.get("createdAt") as string) : undefined,
-            updatedAt: yKit.get("updatedAt") ? new Date(yKit.get("updatedAt") as string) : undefined,
+            createdAt: yKit.get("createdAt") as string | undefined,
+            updatedAt: yKit.get("updatedAt") as string | undefined,
             types: [],
             designs: [],
             files: [],
@@ -9858,11 +9896,7 @@ class AppRegistry {
   getPanelConfigs(getLabelFn: (key: string) => string, getHotkeyFn?: (key: string) => string): Record<string, PanelDefinition[]> {
     const configs: Record<string, PanelDefinition[]> = {};
     for (const [id, app] of this.apps.entries()) {
-      if (app.getPanels.length === 2) {
-        configs[id] = app.getPanels(getLabelFn, getHotkeyFn || getLabelFn);
-      } else {
-        configs[id] = app.getPanels(getLabelFn);
-      }
+      configs[id] = app.getPanels(getLabelFn, getHotkeyFn || getLabelFn);
     }
     return configs;
   }
@@ -9954,7 +9988,7 @@ export const PanelSectionProvider: FC<{ children: ReactNode }> = ({ children }) 
       const updated = {
         ...prev,
         [panelKey]: [...prev[panelKey].filter((s) => s.id !== section.id), section].sort((a, b) => {
-          const specificityDiff = b.specificity - a.specificity;
+          const specificityDiff = (b.specificity ?? 0) - (a.specificity ?? 0);
           if (specificityDiff !== 0) return specificityDiff;
           return (a.order || 0) - (b.order || 0);
         }),
@@ -10082,7 +10116,7 @@ export const ConceptFilter: FC<{ allConcepts: string[]; paramName?: string }> = 
   return (
     <div className="flex flex-wrap items-center gap-single p-single border-b">
       {allConcepts.map((concept) => (
-        <Toggle key={concept} pressed={selectedConcepts.includes(concept)} onPressedChange={() => toggleConcept(concept)} id={`semio.sketchpad.filter.concept.${concept}`} text={concept} />
+        <Toggle key={concept} pressed={selectedConcepts.includes(concept)} onPressedChange={() => toggleConcept(concept)} id={`semio.sketchpad.filter.concept.${concept}`} icon={null} text={concept} />
       ))}
     </div>
   );
@@ -10210,11 +10244,13 @@ export function usePanelConfigs(): Record<string, EnrichedPanelDefinition[]> {
   const qualityApp = apps.find((a) => a.id === "quality");
   const kitApp = apps.find((a) => a.id === "kit");
 
-  const homeConfigs = homeApp?.getPanels.length === 0 ? homeApp.getPanels() : [];
-  const designConfigs = designApp?.getPanels.length === 0 ? designApp.getPanels() : [];
-  const typeConfigs = typeApp?.getPanels.length === 0 ? typeApp.getPanels() : [];
-  const qualityConfigs = qualityApp?.getPanels.length === 0 ? qualityApp.getPanels() : [];
-  const kitConfigs = kitApp?.getPanels.length === 0 ? kitApp.getPanels() : [];
+  const emptyLabelFn = () => "";
+  const emptyHotkeyFn = () => "";
+  const homeConfigs = homeApp ? homeApp.getPanels(emptyLabelFn, emptyHotkeyFn) : [];
+  const designConfigs = designApp ? designApp.getPanels(emptyLabelFn, emptyHotkeyFn) : [];
+  const typeConfigs = typeApp ? typeApp.getPanels(emptyLabelFn, emptyHotkeyFn) : [];
+  const qualityConfigs = qualityApp ? qualityApp.getPanels(emptyLabelFn, emptyHotkeyFn) : [];
+  const kitConfigs = kitApp ? kitApp.getPanels(emptyLabelFn, emptyHotkeyFn) : [];
 
   const { t } = useI18nTranslation();
 
@@ -10222,11 +10258,11 @@ export function usePanelConfigs(): Record<string, EnrichedPanelDefinition[]> {
     if (!docsApp || docsApp.getPanels.length !== 2) return [];
     const getLabelFn = () => "";
     const getHotkeyFn = (id: string) => {
-      const value = t(id);
+      const value = t(id as any) as any;
       if (typeof value === "object" && value?.hotkey) {
         return typeof value.hotkey === "string" ? value.hotkey : "";
       }
-      const hotkeyValue = t(`${id}.hotkey`);
+      const hotkeyValue = t(`${id}.hotkey` as any) as any;
       if (typeof hotkeyValue === "string") return hotkeyValue;
       if (hotkeyValue && typeof hotkeyValue === "object" && hotkeyValue.hotkey) {
         return typeof hotkeyValue.hotkey === "string" ? hotkeyValue.hotkey : "";
@@ -10250,12 +10286,12 @@ export function usePanelConfigs(): Record<string, EnrichedPanelDefinition[]> {
   const hotkeysMap = useMemo(() => {
     const map = new Map<string, string | undefined>();
     allPanelIds.forEach((id) => {
-      const value = t(id);
+      const value = t(id as any) as any;
       let hotkey: string | undefined;
       if (typeof value === "object" && value?.hotkey) {
         hotkey = typeof value.hotkey === "string" ? value.hotkey : undefined;
       } else {
-        const hotkeyValue = t(`${id}.hotkey`);
+        const hotkeyValue = t(`${id}.hotkey` as any) as any;
         if (typeof hotkeyValue === "string") {
           hotkey = hotkeyValue;
         } else if (hotkeyValue && typeof hotkeyValue === "object" && hotkeyValue.hotkey) {
@@ -10386,7 +10422,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   const handleCreateKit = useCallback(
     (origin: string) => {
       const guid = crypto.randomUUID();
-      const now = new Date();
+      const now = new Date().toISOString();
       const existingNames = kits.map((k) => k.name);
       const uniqueName = generateUniqueName(defaultKitName, existingNames);
       sketchpadCommands.createKit(origin, {
@@ -10406,7 +10442,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     (origin: string) => {
       if (!kit) return;
       const newGuid = crypto.randomUUID();
-      const now = new Date();
+      const now = new Date().toISOString();
       const existingVersions = kits.filter((k) => k.name === kit.name).map((k) => k.version || "");
       const uniqueVersion = generateUniqueName(newVersionLabel, existingVersions);
       sketchpadCommands.createKit(origin, {
@@ -10518,7 +10554,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     // Find the root design (traverse up the parent chain)
     let rootDesign = designObj;
     while (rootDesign.parent) {
-      const parent = allDesigns.find((d) => d.guid === rootDesign.parent);
+      const parent = allDesigns.find((d) => d.guid === rootDesign.parent?.guid);
       if (!parent) break;
       rootDesign = parent;
     }
@@ -10546,7 +10582,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     // Find the root type (traverse up the parent chain)
     let rootType = typeObj;
     while (rootType.parent) {
-      const parent = allTypes.find((t) => t.guid === rootType.parent);
+      const parent = allTypes.find((t) => t.guid === rootType.parent?.guid);
       if (!parent) break;
       rootType = parent;
     }
@@ -10574,7 +10610,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     let current: Design | undefined = designObj;
     while (current) {
       if (!current.parent) break;
-      const parentId: string = current.parent;
+      const parentId: string = current.parent.guid;
       const parent: Design | undefined = allDesigns.find((d) => d.guid === parentId);
       if (!parent) break;
       chain.unshift(parent);
@@ -10591,7 +10627,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     let current: Type | undefined = typeObj;
     while (current) {
       if (!current.parent) break;
-      const parentId: string = current.parent;
+      const parentId: string = current.parent.guid;
       const parent: Type | undefined = allTypes.find((t) => t.guid === parentId);
       if (!parent) break;
       chain.unshift(parent);
@@ -10622,7 +10658,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   // Build child items for each parent in the chain
   const designParentChildItems = useMemo(() => {
     return designParentChain.map((parent) => {
-      const children = allDesigns.filter((d) => d.parent === parent.guid);
+      const children = allDesigns.filter((d) => d.parent?.guid === parent.guid);
       const items = children.map((d) => ({
         label: d.name,
         href: `/kits/${kitGuid}/designs/${d.guid}`,
@@ -10635,7 +10671,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   const designChildItems = useMemo(() => {
     if (!design || typeof design !== "object" || !("guid" in design)) return [];
     const designObj = design as Design;
-    const children = allDesigns.filter((d) => d.parent === designObj.guid);
+    const children = allDesigns.filter((d) => d.parent?.guid === designObj.guid);
     const items = children.map((d) => ({
       label: d.name,
       href: `/kits/${kitGuid}/designs/${d.guid}`,
@@ -10660,7 +10696,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   // Build child items for each parent in the chain
   const typeParentChildItems = useMemo(() => {
     return typeParentChain.map((parent) => {
-      const children = allTypes.filter((t) => t.parent === parent.guid);
+      const children = allTypes.filter((t) => t.parent?.guid === parent.guid);
       const items = children.map((t) => ({
         label: t.name,
         href: `/kits/${kitGuid}/types/${t.guid}`,
@@ -10673,7 +10709,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   const typeChildItems = useMemo(() => {
     if (!type || typeof type !== "object" || !("guid" in type)) return [];
     const typeObj = type as Type;
-    const children = allTypes.filter((t) => t.parent === typeObj.guid);
+    const children = allTypes.filter((t) => t.parent?.guid === typeObj.guid);
     const items = children.map((typeObj) => ({
       label: typeObj.name,
       href: `/kits/${kitGuid}/types/${typeObj.guid}`,
@@ -11164,7 +11200,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
         content: (
           <a onClick={() => navigate(`/docs/${docsSection}`)} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base cursor-selectable">
             {(() => {
-              const sectionInfo = docsSectionsList.find((s) => s.id === docsSection);
+              const sectionInfo = docsSectionsList.find((s: DocsSectionMin) => s.id === docsSection);
               if (!sectionInfo) return docsSection;
               return (
                 <span className="flex items-center gap-single">
@@ -11179,9 +11215,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     }
     if (docsPagePath && docsSection) {
       const pathAfterSection = docsPagePath.split("/").slice(1);
-      const sectionPages = getDocsRegistry()
-        .getAllPages()
-        .filter((page) => page.section === docsSection);
+      const sectionPages = (getDocsRegistry().getAllPages() as DocsPageMin[]).filter((page: DocsPageMin) => page.section === docsSection);
 
       pathAfterSection.forEach((part, index) => {
         const isLast = index === pathAfterSection.length - 1;
@@ -11190,7 +11224,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
         const partialPath = `docs/${docsSection}/${partialParts.join("/")}`;
         const parentParts = pathAfterSection.slice(0, index);
         const siblings = sectionPages
-          .filter((page) => {
+          .filter((page: DocsPageMin) => {
             const segments = page.path.replace(/^docs\//, "").split("/");
             const trimmedSegments = segments[segments.length - 1] === "index" ? segments.slice(0, -1) : segments;
             if (trimmedSegments[0] !== docsSection) return false;
@@ -11201,14 +11235,14 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
             }
             return true;
           })
-          .sort((a, b) => {
+          .sort((a: DocsPageMin, b: DocsPageMin) => {
             const orderDiff = (a.order ?? 999) - (b.order ?? 999);
             if (orderDiff !== 0) return orderDiff;
             return a.title.localeCompare(b.title);
           });
         const nextParts = pathAfterSection.slice(0, index + 2);
         const nextSiblings = sectionPages
-          .filter((page) => {
+          .filter((page: DocsPageMin) => {
             const segments = page.path.replace(/^docs\//, "").split("/");
             const trimmedSegments = segments[segments.length - 1] === "index" ? segments.slice(0, -1) : segments;
             if (trimmedSegments[0] !== docsSection) return false;
@@ -11219,13 +11253,13 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
             }
             return true;
           })
-          .sort((a, b) => {
+          .sort((a: DocsPageMin, b: DocsPageMin) => {
             const orderDiff = (a.order ?? 999) - (b.order ?? 999);
             if (orderDiff !== 0) return orderDiff;
             return a.title.localeCompare(b.title);
           });
         const separatorItems = isFirst
-          ? docsSectionsList.map((s) => ({
+          ? docsSectionsList.map((s: DocsSectionMin) => ({
               label: (
                 <span className="flex items-center gap-single">
                   {s.icon && <span aria-hidden="true">{s.icon}</span>}
@@ -11234,7 +11268,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
               ),
               href: `/docs/${s.id}`,
             }))
-          : nextSiblings.map((page) => ({
+          : nextSiblings.map((page: DocsPageMin) => ({
               label: page.title,
               href: `/${page.path.replace(/\/index$/, "")}`,
             }));
@@ -11316,8 +11350,8 @@ const Search: FC = ({}) => {
         if (typeof quality === "object") results.push({ type: "quality", item: quality as Quality, kitGuid: kit.guid });
       });
     });
-    const docsPages = getDocsRegistry().getAllPages();
-    docsPages.forEach((page) => {
+    const docsPages = getDocsRegistry().getAllPages() as DocsPageMin[];
+    docsPages.forEach((page: DocsPageMin) => {
       results.push({ type: "docs", item: page });
     });
     tutorials.forEach((tutorial) => {
@@ -13049,11 +13083,11 @@ const LayoutWrapper: FC = () => {
       return rectCollisions;
     }
 
-    // Last resort: closest center (returns single object or null)
-    const centerCollision = closestCenter(args);
+    // Last resort: closest center (returns array of collisions)
+    const centerCollisions = closestCenter(args);
 
-    if (centerCollision && centerCollision.id) {
-      return [centerCollision]; // Wrap in array
+    if (centerCollisions && centerCollisions.length > 0) {
+      return centerCollisions;
     }
     return [];
   }, []);
@@ -13191,11 +13225,21 @@ const LayoutWrapper: FC = () => {
 
 // Bridge component that connects Sketchpad interaction system to generic InteractionProvider
 const SketchpadInteractionBridge: FC<{ children: React.ReactNode }> = ({ children }) => {
-  const commands = useSketchpadCommands();
+  const sketchpadCommands = useSketchpadCommands();
   const activeInteraction = useActiveInteraction();
 
+  // Adapt Sketchpad's setActiveInteraction to match InteractionCommands interface
+  const interactionCommands = useMemo(
+    () => ({
+      setActiveInteraction: (elementId?: string, interactionId?: string) => {
+        sketchpadCommands.setActiveInteraction(elementId || "semio.interaction", interactionId);
+      },
+    }),
+    [sketchpadCommands],
+  );
+
   return (
-    <InteractionProvider commands={commands} activeInteraction={activeInteraction}>
+    <InteractionProvider commands={interactionCommands} activeInteraction={activeInteraction}>
       {children}
     </InteractionProvider>
   );

@@ -221,7 +221,9 @@ export const useHeadings = () => {
       setHeadings(headingsState.getAll());
     });
     setHeadings(headingsState.getAll());
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const registerHeading = useCallback((heading: HeadingNode) => {
@@ -857,7 +859,7 @@ if (typeof window !== "undefined") {
   registerDocsAppStoreFactory((parent, yMap, transact) => {
     const store = new DocsAppStore(parent, yMap, transact);
     Object.entries(docsCommands).forEach(([commandId, command]) => {
-      store.registerCommand(commandId, command);
+      store.registerCommand(commandId, command as any);
     });
     return store;
   });

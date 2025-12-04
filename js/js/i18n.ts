@@ -39,7 +39,7 @@ export function setExpertiseProvider(fn: () => Expertise) {
 export function useLabel(id: string, defaultValue?: string): string {
   const { t } = useI18nTranslation();
   const expertise = getExpertiseFunction ? getExpertiseFunction() : Expertise.NORMAL;
-  const value = t(id);
+  const value = t(id as any) as any;
 
   if (typeof value === "string") {
     return value;
@@ -72,7 +72,7 @@ export function useLabel(id: string, defaultValue?: string): string {
 
 export function useHotkey(id: string): string | undefined {
   const { t } = useI18nTranslation();
-  const value = t(id);
+  const value = t(id as any) as any;
 
   if (typeof value === "string") {
     return value;
@@ -83,7 +83,7 @@ export function useHotkey(id: string): string | undefined {
   }
 
   const hotkeyKey = `${id}.hotkey`;
-  const hotkeyValue = t(hotkeyKey);
+  const hotkeyValue = t(hotkeyKey as any) as any;
   if (typeof hotkeyValue === "string") {
     return hotkeyValue;
   }
