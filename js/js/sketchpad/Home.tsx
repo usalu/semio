@@ -849,6 +849,7 @@ const Home: FC = ({}) => {
   const navigate = useNavigate();
   const navigation = useNavigation();
   const [searchParams, setSearchParams] = useSearchParams();
+  const store = useSketchpadStore();
   const kits = useKits();
   const getKitKind = useGetKitKind();
   const { createKit, navigateToKit, setTheme, setLanguage, setLayout, setExpertise, setMode } = useSketchpadCommands();
@@ -992,19 +993,24 @@ const Home: FC = ({}) => {
   }, [kits, selectedName]);
 
   // Collect all unique concepts from kits
-  // Note: In KitShallow, concepts should be string[] (guids), but may sometimes contain Concept objects
+  // Note: In KitShallow, concepts are string[] (GUIDs), so we need to resolve them to names
   const allConcepts = useMemo(() => {
     const conceptSet = new Set<string>();
-    kits.forEach((kit) => {
-      kit.concepts?.forEach((concept) => {
-        // Handle both string GUIDs and Concept objects
-        // ConceptFilter expects concept names, not GUIDs
-        const name = typeof concept === 'string' ? concept : (concept as any).name;
-        if (name) conceptSet.add(name);
+    kits.forEach((kitShallow) => {
+      // Get full kit data to access Concept objects with names
+      const kitStore = store.kit(kitShallow.guid);
+      const fullKit = kitStore.snapshot();
+
+      // Map concept GUIDs to their names
+      kitShallow.concepts?.forEach((conceptGuid) => {
+        const concept = fullKit.concepts?.find((c) => c.guid === conceptGuid);
+        if (concept?.name) {
+          conceptSet.add(concept.name);
+        }
       });
     });
     return Array.from(conceptSet).sort();
-  }, [kits]);
+  }, [kits, store]);
 
   // Get selected concepts from search params
   const selectedConcepts = useMemo(() => {
@@ -1107,7 +1113,17 @@ const Home: FC = ({}) => {
       if (searchQuery && !kit.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
       if (selectedName && kit.name !== selectedName) return;
       if (selectedVersion && (kit.version || "") !== selectedVersion) return;
-      if (selectedConcepts.length > 0 && !kit.concepts?.some((c) => selectedConcepts.includes(c))) return;
+
+      // Filter by concepts: resolve GUIDs to names first
+      if (selectedConcepts.length > 0) {
+        const kitStore = store.kit(kit.guid);
+        const fullKit = kitStore.snapshot();
+        const kitConceptNames = kit.concepts?.map(
+          (conceptGuid) => fullKit.concepts?.find((c) => c.guid === conceptGuid)?.name
+        ).filter((name): name is string => name !== undefined) || [];
+
+        if (!kitConceptNames.some((name) => selectedConcepts.includes(name))) return;
+      }
 
       const key = kit.name;
       if (!kitGroups.has(key)) kitGroups.set(key, []);

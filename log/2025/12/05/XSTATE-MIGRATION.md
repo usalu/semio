@@ -758,3 +758,188 @@ All 5 Playwright tests pass with good performance:
 
 - Scene Pan 2: ~36ms (target: <500ms)
 - All panel toggles work correctly
+
+## 2025-12-05: Unified Machine Refactor
+
+### Goal
+
+Full migration to single `sketchpadMachine` with all app state. Y.js only for Kit sync.
+
+### Status: Unified Machine Complete
+
+The unified `sketchpadMachine` now has:
+
+1. **Unified `SketchpadContext`** with all app state:
+   - `homeApp: HomeAppState`
+   - `kitApps: Record<Guid, KitAppState>`
+   - `typeApps: Record<string, TypeAppState>`
+   - `designApps: Record<string, DesignAppState>` (key: `kitGuid:designGuid`)
+   - `qualityApps: Record<string, QualityAppState>`
+   - `tutorial: TutorialContext`
+   - `transactions: Record<string, TransactionState>`
+
+2. **Namespaced events** for all apps:
+   - `HOME.*` - Home app events
+   - `KIT.*` - Kit app events
+   - `TYPE.*` - Type app events
+   - `DESIGN.*` - Design app events
+   - `QUALITY.*` - Quality app events
+   - `TUTORIAL.*` - Tutorial events
+
+3. **App-specific actions** wired to event handlers
+
+4. **Selectors** exported for reading state:
+   - `createDesignAppSelector`, `createDesignSelectionSelector`, etc.
+   - `createTypeAppSelector`, `createTypePanelVisibilitySelector`, etc.
+   - `selectHomeApp`, `selectHomePanelVisibility`, etc.
+
+### Current Architecture
+
+The codebase now has a hybrid architecture that maintains performance while enabling XState:
+
+1. **Single `sketchpadMachine`** - Contains unified state for all apps
+2. **Y.js stores** - Still used for reading app state (proven performant)
+3. **XState selectors** - Ready for when we switch from Y.js reads
+4. **Y.js commands** - App state commands go through Y.js store for now
+
+This architecture allows:
+
+- Y.js to provide persistent state and real-time sync
+- XState machine to define the state shape and transitions
+- Gradual migration of reads from Y.js to XState selectors
+
+### Key Learnings
+
+Attempted full XState migration for Design.tsx but reverted because:
+
+- XState state is empty by default (not persisted)
+- Y.js stores have the actual app state from previous sessions
+- Commands updating XState while hooks read from Y.js caused data mismatch
+
+### Y.js → XState Sync Implementation
+
+Added sync mechanism:
+
+1. **INIT and SYNC events** added to `SketchpadEvent`:
+   - `DESIGN.INIT` - Initialize full design app state
+   - `DESIGN.SYNC` - Sync partial state changes
+   - `TYPE.INIT`, `TYPE.SYNC` - Same for Type app
+
+2. **Actions** added to machine:
+   - `designInit`, `designSync`, `typeInit`, `typeSync`
+   - `designSetActiveTool`, `designSetFullscreen`
+
+3. **Sync hook** `useDesignAppYjsToXStateSync`:
+   - Watches Y.js state via `useDesignApp`
+   - Sends `DESIGN.SYNC` events when state changes
+   - Transforms `Coord` (u,v) to machine format (x,y)
+
+4. **DesignAppFullscreenWindow enum** exported from machines.ts
+
+### Architecture
+
+```
+Y.js Store (source of truth)
+    │
+    ├─► useDesignApp hook (watch changes)
+    │       │
+    │       └─► DESIGN.SYNC event ─► XState Machine
+    │                                     │
+    │                                     └─► Context updated
+    │
+    └─► useDesignAppCommands ─► store.execute() ─► Y.js mutation
+```
+
+Y.js remains the source of truth. XState receives sync events to keep its state current.
+When commands are routed through XState, the flow will reverse.
+
+### Hooks Migration Status
+
+Successfully migrated `useDesignAppPanelVisibility` to use XState selectors:
+
+```typescript
+export function useDesignAppPanelVisibility(id?: DesignAppId): PanelVisibility {
+  const actor = useSketchpadActor();
+  const kitGuid = kitScope?.guid ?? id?.kit ?? "";
+  const designGuid = designScope?.guid ?? id?.design ?? "";
+  const selector = useMemo(() => createDesignPanelVisibilitySelector(kitGuid, designGuid), [kitGuid, designGuid]);
+  return useSelector(actor, selector);
+}
+```
+
+Other hooks remain Y.js-based because:
+
+- XState state must be synced before hooks can read it
+- Selection/hover hooks are used during initial render
+- Panel visibility is less critical to initial render
+
+### Current State
+
+**Working with XState:**
+
+- `useDesignAppPanelVisibility` - reads from XState (proven to work)
+
+**Working with Y.js (sync in background):**
+
+- `useDesignAppSelection`, `useDesignAppHover`, `useDesignAppActiveTool`, etc.
+- These feed data to XState via the sync component
+
+**Commands:**
+
+- Still go through Y.js store (sync updates XState)
+
+### Next Steps
+
+1. Add synchronous initialization of XState state before first render
+2. Then switch remaining hooks to XState selectors
+3. Route commands through XState events
+4. Remove Y.js app stores
+
+### Tests
+
+All 5 Playwright tests pass:
+
+- Scene Pan 2: ~68ms (target: <500ms)
+- All panel toggles work correctly
+
+## 2025-12-05: Machine Consolidation Complete
+
+### Changes
+
+Consolidated all XState machines into a single `sketchpadMachine`:
+
+**Before:** 11 separate `createMachine` calls
+
+- transactionMachine
+- kitMachine
+- homeAppMachine
+- kitAppMachine
+- typeAppMachine
+- designAppMachine
+- qualityAppMachine
+- tutorialMachine
+- appMachineTemplate
+- sketchpadMachine
+
+**After:** 1 `createMachine` call
+
+- `sketchpadMachine` (contains all app state)
+
+### File Changes
+
+`machines.ts` reduced from ~2500 lines to ~1370 lines:
+
+- Lines 1-920: Setup and actions for unified machine
+- Lines 921-1030: Machine definition and event handlers
+- Lines 1032-1193: Selectors for all app states
+- Lines 1195-1370: Factory function and legacy type exports
+
+### Tests
+
+All 5 Playwright tests pass:
+
+- Home: 4.6s
+- Kit: 22.2s
+- Type: 31.6s (Pan: ~18ms avg)
+- Design: 43.3s (Scene Pan 2: ~60ms)
+- Docs: 5.9s

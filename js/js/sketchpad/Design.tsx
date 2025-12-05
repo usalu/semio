@@ -41,6 +41,7 @@ import {
   useDesignScope,
   useKitScope,
   usePieceScope,
+  useSketchpadActor,
   useSketchpadStore,
   useSyncDeep,
   useSyncField,
@@ -57,15 +58,15 @@ import { arrayMove } from "@dnd-kit/sortable";
 import { Edges, Line, Select, useFBX, useGLTF } from "@react-three/drei";
 import { ThreeEvent, useLoader } from "@react-three/fiber";
 import { AddIcon, AwardIcon, CodeIcon, ConnectionIcon, DiagramIcon, DisconnectIcon, HandIcon, MonitorIcon, MoonIcon, MousePointerIcon, RemoveIcon, SceneIcon, SelectToolIcon, SunIcon, TableViewIcon, TutorialIcon, UserIcon } from "@semio/assets";
+import { useSelector } from "@xstate/react";
 import React, { createContext, FC, memo, ReactNode, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router";
 import * as THREE from "three";
 import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
-import { ActorRefFrom } from "xstate";
 import { useLabel } from "../i18n";
-import { designAppMachine } from "./machines";
+import { createDesignPanelVisibilitySelector } from "./machines";
 
 import type { ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, Connection as RFConnection } from "@xyflow/react";
 import { applyNodeChanges, BaseEdge, Handle, Position, ReactFlowInstance, ReactFlowProvider, useReactFlow, ViewportPortal } from "@xyflow/react";
@@ -1526,20 +1527,62 @@ if (typeof window !== "undefined") {
 type DesignAppScope = { id: string };
 const DesignAppScopeContext = createContext<DesignAppScope | null>(null);
 
-// XState actor type for Design app
-type DesignAppActorRef = ActorRefFrom<typeof designAppMachine>;
-const DesignAppActorContext = createContext<DesignAppActorRef | null>(null);
+// Design app now uses the unified sketchpadMachine - no separate actor needed
+// Keep context for backwards compatibility with components that check for it
+const DesignAppActorContext = createContext<any>(null);
+
+// Internal component to run the Y.js → XState sync hook
+const DesignAppSyncComponent = ({ children }: { children: React.ReactNode }) => {
+  useDesignAppYjsToXStateSyncInternal();
+  return <>{children}</>;
+};
+
+// Internal sync hook (used by DesignAppScopeProvider)
+function useDesignAppYjsToXStateSyncInternal() {
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const designScope = useDesignScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const designGuid = designScope?.guid ?? "";
+  const store = useSketchpadStore().designApp(kitGuid, designGuid);
+
+  // Sync Y.js state to XState on mount and changes
+  const state = useSyncDeep<DesignAppState, DesignAppState>(store, (s) => s);
+
+  useEffect(() => {
+    if (!state || !kitGuid || !designGuid) return;
+
+    actor.send({
+      type: "DESIGN.SYNC",
+      kitGuid,
+      designGuid,
+      state: {
+        panelVisibility: state.panelVisibility,
+        selection: state.selection,
+        hover: state.hover,
+        focusedPiece: state.focusedPieceGuid,
+        selectedModelTags: state.selectedModelTags ?? {},
+        diagramCenter: state.diagramCenter ? { x: state.diagramCenter.u, y: state.diagramCenter.v } : undefined,
+        diagramScale: state.diagramScale,
+        camera: state.camera,
+        activeTool: state.activeTool,
+        fullscreenWindow: state.fullscreenWindow,
+      },
+    });
+  }, [actor, state, kitGuid, designGuid]);
+}
 
 export const DesignAppScopeProvider = (props: { id: string; children: React.ReactNode }) => {
   const value = { id: props.id };
-  // XState actor creation disabled - hooks use Y.js stores, commands use stores
-  // Actor can be enabled when performance optimization is complete
-  return React.createElement(DesignAppScopeContext.Provider, { value }, React.createElement(DesignAppActorContext.Provider, { value: null }, props.children as any));
+  // Design app state is now managed by the unified sketchpadMachine
+  // The sync component keeps XState in sync with Y.js
+  return React.createElement(DesignAppScopeContext.Provider, { value }, React.createElement(DesignAppActorContext.Provider, { value: null }, React.createElement(DesignAppSyncComponent, null, props.children)));
 };
+
 const useDesignAppScope = () => useContext(DesignAppScopeContext);
 
-// XState hook to get the Design app actor
-export function useDesignAppActor(): DesignAppActorRef | null {
+// XState hook to get the Design app actor (deprecated - use useSketchpadActor instead)
+export function useDesignAppActor(): any {
   return useContext(DesignAppActorContext);
 }
 
@@ -1582,20 +1625,26 @@ const selectModelTags = (s: DesignAppState) => s.selectedModelTags ?? EMPTY_MODE
 const selectHover = (s: DesignAppState) => s.hover;
 const selectPanelVisibility = (s: DesignAppState) => s.panelVisibility;
 
-// Hooks read from Y.js stores (optimized), commands go to XState actor
+// Hooks read from Y.js stores (proven performant), commands go through XState
+// Y.js provides persistent state that survives page reloads and syncs across tabs
+// XState handles state transitions and commands
+
 export function useDesignAppSelection(id?: DesignAppId): DesignAppSelection {
+  // Y.js-based implementation (XState sync happens in background)
   const store = useDesignAppStore(identitySelector, id);
   if (!store) return EMPTY_SELECTION;
   return useSyncField<DesignAppState, DesignAppSelection>(store as DesignAppStore, "selection", selectSelection);
 }
 
 export function useDesignAppFullscreen(id?: DesignAppId): DesignAppFullscreenWindow {
+  // Y.js-based implementation (XState sync happens in background)
   const store = useDesignAppStore(identitySelector, id);
   if (!store) return DesignAppFullscreenWindow.None;
   return useSyncField<DesignAppState, DesignAppFullscreenWindow>(store as DesignAppStore, "fullscreenWindow", selectFullscreen, false);
 }
 
 export function useDesignAppActiveTool(id?: DesignAppId): ToolKind {
+  // Y.js-based implementation (XState sync happens in background)
   const store = useDesignAppStore(identitySelector, id);
   if (!store) return ToolKind.SELECTION_NORMAL;
   return useSyncField<DesignAppState, ToolKind>(store as DesignAppStore, "activeTool", selectActiveTool, false);
@@ -1642,15 +1691,21 @@ export function useDesignAppSelectedModelTags(id?: DesignAppId): Record<Guid, st
 }
 
 export function useDesignAppHover(id?: DesignAppId): DesignAppHover | undefined {
+  // Y.js-based implementation (XState sync happens in background)
   const store = useDesignAppStore(identitySelector, id);
   if (!store) return undefined;
   return useSyncField<DesignAppState, DesignAppHover | undefined>(store as DesignAppStore, "hover", selectHover);
 }
 
 export function useDesignAppPanelVisibility(id?: DesignAppId): PanelVisibility {
-  const store = useDesignAppStore(identitySelector, id);
-  if (!store) return DEFAULT_PANEL_VISIBILITY;
-  return useSyncField<DesignAppState, PanelVisibility>(store as DesignAppStore, "panelVisibility", selectPanelVisibility);
+  // XState-based implementation (reads from synced XState state)
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const designScope = useDesignScope();
+  const kitGuid = kitScope?.guid ?? id?.kit ?? "";
+  const designGuid = designScope?.guid ?? id?.design ?? "";
+  const selector = useMemo(() => createDesignPanelVisibilitySelector(kitGuid, designGuid), [kitGuid, designGuid]);
+  return useSelector(actor, selector);
 }
 
 // PERF: Memoized empty commands object for when store is null
@@ -1712,8 +1767,8 @@ const EMPTY_COMMANDS = {
 export function useDesignAppCommands(id?: DesignAppId) {
   const store = useDesignAppStore(undefined, id) as DesignAppStore | null;
 
-  // PERF: Memoize the commands object to prevent re-renders
-  // Commands go through Y.js stores - XState migration pending performance optimization
+  // PERF: All commands go through Y.js store for now
+  // XState migration for commands requires hooks to also use XState (to be synced)
   return useMemo(() => {
     if (!store) {
       return EMPTY_COMMANDS;
@@ -1795,6 +1850,45 @@ export function useDesignAppCommands(id?: DesignAppId) {
       execute: (origin: string, command: string, ...args: any[]) => store.execute(command, origin, ...args),
     };
   }, [store]);
+}
+
+/**
+ * Hook to sync Y.js store state to XState machine.
+ * Call this in a component that wraps Design app to ensure XState has the state.
+ * This enables XState selectors to work while Y.js remains the source of truth.
+ */
+export function useDesignAppYjsToXStateSync(id?: DesignAppId) {
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const designScope = useDesignScope();
+  const kitGuid = kitScope?.guid ?? id?.kit ?? "";
+  const designGuid = designScope?.guid ?? id?.design ?? "";
+
+  // Watch Y.js state and sync to XState
+  const state = useDesignApp((s) => s, id);
+
+  useEffect(() => {
+    if (!state || !kitGuid || !designGuid) return;
+
+    // Sync Y.js state to XState
+    actor.send({
+      type: "DESIGN.SYNC",
+      kitGuid,
+      designGuid,
+      state: {
+        panelVisibility: state.panelVisibility,
+        selection: state.selection,
+        hover: state.hover,
+        focusedPiece: state.focusedPieceGuid,
+        selectedModelTags: state.selectedModelTags ?? {},
+        diagramCenter: state.diagramCenter ? { x: state.diagramCenter.u, y: state.diagramCenter.v } : undefined,
+        diagramScale: state.diagramScale,
+        camera: state.camera,
+        activeTool: state.activeTool,
+        fullscreenWindow: state.fullscreenWindow,
+      },
+    });
+  }, [actor, state, kitGuid, designGuid]);
 }
 
 // PERF: Helper to compute ALL pieces affected by the current transaction at once
