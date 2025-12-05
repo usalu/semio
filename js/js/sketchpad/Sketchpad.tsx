@@ -41,6 +41,7 @@ import {
   TypeIcon,
   UserIcon,
 } from "@semio/assets";
+import { useSelector } from "@xstate/react";
 import { ReactFlowProvider } from "@xyflow/react";
 import Fuse, { FuseResult } from "fuse.js";
 import React, { ComponentType, createContext, FC, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
@@ -156,6 +157,7 @@ import {
   Window,
 } from "./elements";
 import type { KitAppState } from "./Kit";
+import { createSketchpadActor, selectExpertise, selectIsFullscreen, selectLanguage, selectLayout, selectMode, selectNavigation, selectPanelSizes, selectSnapshot, selectTheme } from "./machines";
 import type { QualityAppState } from "./Quality";
 import {
   AppCommandResult,
@@ -9085,7 +9087,22 @@ if (import.meta.hot?.data.stores) {
   }
 }
 
+// XState actors for state management (parallel to existing stores during migration)
+type SketchpadActorRef = ReturnType<typeof createSketchpadActor>;
+let actors: Map<Guid, SketchpadActorRef>;
+if (import.meta.hot?.data.actors) {
+  actors = import.meta.hot.data.actors;
+} else {
+  actors = new Map();
+  if (import.meta.hot) {
+    import.meta.hot.data.actors = actors;
+  }
+}
+
 const SketchpadScopeContext = createContext<SketchpadScope | null>(null);
+
+// Context for XState actor (for gradual migration)
+const SketchpadActorContext = createContext<SketchpadActorRef | null>(null);
 
 export const SketchpadScopeProvider = (props: { id?: string; remote?: RemoteProviders; onWindowEvents?: WindowEvents; initialState?: ExtendedInitialState; children: React.ReactNode }) => {
   const id = useMemo(() => props.id || guid(), [props.id]);
@@ -9094,11 +9111,23 @@ export const SketchpadScopeProvider = (props: { id?: string; remote?: RemoteProv
     const store = new SketchpadStore(id, props?.remote, props?.initialState);
     stores.set(id, store);
 
+    // Create XState actor alongside the store
+    // The actor observes the same Y.js data as the store
+    const yDoc = (store as any).yDoc as Y.Doc;
+    const ySketchpad = (store as any).ySketchpad as Y.Map<any>;
+    const actor = createSketchpadActor({ yDoc, ySketchpad, id });
+    actor.start();
+    actors.set(id, actor);
+
     if (typeof window !== "undefined") {
       (window as any).__SEMIO_STORE__ = store;
+      (window as any).__SEMIO_ACTOR__ = actor;
     }
   }
-  return React.createElement(SketchpadScopeContext.Provider, { value: { id, remote: props.remote, onWindowEvents: props.onWindowEvents } }, props.children as any);
+
+  const actor = actors.get(id)!;
+
+  return React.createElement(SketchpadScopeContext.Provider, { value: { id, remote: props.remote, onWindowEvents: props.onWindowEvents } }, React.createElement(SketchpadActorContext.Provider, { value: actor }, props.children));
 };
 
 export const useSketchpadScope = () => useContext(SketchpadScopeContext);
@@ -9238,6 +9267,133 @@ export function useNavigationHistory(): {
     canGoForward: currentIndex < history.length - 1,
   };
 }
+
+// #region XState Hooks
+
+/**
+ * Get the XState actor ref for the sketchpad.
+ * This allows components to send events to the state machine.
+ */
+export function useSketchpadActor(): SketchpadActorRef {
+  const actor = useContext(SketchpadActorContext);
+  if (!actor) {
+    throw new Error("useSketchpadActor must be used within a SketchpadScopeProvider");
+  }
+  return actor;
+}
+
+/**
+ * XState-based hook for selecting sketchpad state.
+ * Uses @xstate/react's useSelector for optimal performance.
+ *
+ * @param selector - Function to select part of the state
+ * @returns The selected state
+ */
+export function useSketchpadSelector<T>(selector: (snapshot: ReturnType<SketchpadActorRef["getSnapshot"]>) => T): T {
+  const actor = useSketchpadActor();
+  return useSelector(actor, selector);
+}
+
+/**
+ * XState-based hook to get the full sketchpad snapshot.
+ * Prefer using useSketchpadSelector with a specific selector for better performance.
+ */
+export function useSketchpadSnapshot(): SketchpadState {
+  const actor = useSketchpadActor();
+  return useSelector(actor, (snapshot) => selectSnapshot(snapshot.context));
+}
+
+/**
+ * XState-based hook for navigation (read-only).
+ * For navigation actions, use useSketchpadCommands().
+ */
+export function useNavigationXState(): string {
+  const actor = useSketchpadActor();
+  return useSelector(actor, (snapshot) => selectNavigation(snapshot.context));
+}
+
+/**
+ * XState-based hook for theme.
+ */
+export function useThemeXState(): Theme {
+  const actor = useSketchpadActor();
+  return useSelector(actor, (snapshot) => selectTheme(snapshot.context));
+}
+
+/**
+ * XState-based hook for language.
+ */
+export function useLanguageXState(): string {
+  const actor = useSketchpadActor();
+  return useSelector(actor, (snapshot) => selectLanguage(snapshot.context));
+}
+
+/**
+ * XState-based hook for expertise level.
+ */
+export function useExpertiseXState(): Expertise {
+  const actor = useSketchpadActor();
+  return useSelector(actor, (snapshot) => selectExpertise(snapshot.context));
+}
+
+/**
+ * XState-based hook for mode.
+ */
+export function useModeXState(): Mode {
+  const actor = useSketchpadActor();
+  return useSelector(actor, (snapshot) => selectMode(snapshot.context));
+}
+
+/**
+ * XState-based hook for layout.
+ */
+export function useLayoutXState(): Layout {
+  const actor = useSketchpadActor();
+  return useSelector(actor, (snapshot) => selectLayout(snapshot.context));
+}
+
+/**
+ * XState-based hook for fullscreen state.
+ */
+export function useIsFullscreenXState(): boolean {
+  const actor = useSketchpadActor();
+  return useSelector(actor, (snapshot) => selectIsFullscreen(snapshot.context));
+}
+
+/**
+ * XState-based hook for panel sizes.
+ */
+export function usePanelSizesXState(): PanelSizes {
+  const actor = useSketchpadActor();
+  return useSelector(actor, (snapshot) => selectPanelSizes(snapshot.context));
+}
+
+/**
+ * Hook to send events to the sketchpad actor.
+ * Returns functions that send XState events.
+ */
+export function useSketchpadActions() {
+  const actor = useSketchpadActor();
+
+  return useMemo(
+    () => ({
+      navigate: (path: string) => actor.send({ type: "NAVIGATE", path }),
+      navigateBack: () => actor.send({ type: "NAVIGATE_BACK" }),
+      navigateForward: () => actor.send({ type: "NAVIGATE_FORWARD" }),
+      setTheme: (theme: Theme) => actor.send({ type: "SET_THEME", theme }),
+      setLanguage: (language: string) => actor.send({ type: "SET_LANGUAGE", language }),
+      setExpertise: (expertise: Expertise) => actor.send({ type: "SET_EXPERTISE", expertise }),
+      setMode: (mode: Mode) => actor.send({ type: "SET_MODE", mode }),
+      setLayout: (layout: Layout) => actor.send({ type: "SET_LAYOUT", layout }),
+      toggleFullscreen: () => actor.send({ type: "TOGGLE_FULLSCREEN" }),
+      setPanelSize: (panel: keyof PanelSizes, size: number) => actor.send({ type: "SET_PANEL_SIZE", panel, size }),
+      change: (diff: SketchpadDiff) => actor.send({ type: "CHANGE", diff }),
+    }),
+    [actor],
+  );
+}
+
+// #endregion XState Hooks
 
 export function useKitShallows(): KitShallow[] {
   const store = useSketchpadStore();

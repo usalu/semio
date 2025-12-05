@@ -1802,6 +1802,65 @@ executeCommand<T>(command: string, ...args): Promise<T>
 - `js/js/sketchpad/Home.tsx` - HomeStore and home experience
 - `js/js/sketchpad/Docs.tsx` - DocsAppStore and documentation app
 - `js/js/sketchpad/Tutorials.tsx` - Tutorial system (consolidated)
+- `js/js/sketchpad/machines.ts` - XState machine definitions
+- `js/js/sketchpad/shared.ts` - Shared types and XState bridge utilities
+
+### XState State Machines
+
+The application uses XState v5 for state machine logic alongside Y.js for persistence.
+
+#### Architecture
+
+- **Y.js** remains the source of truth for persistence and CRDT sync
+- **XState machines** provide structured event handling and React integration
+- **fromCallback actors** observe Y.js changes and sync to machine context
+- **React hooks** use `@xstate/react` `useSelector` for optimal rendering
+
+#### Machine Files
+
+**`machines.ts`** contains:
+
+- `sketchpadMachine` - Root machine for sketchpad state
+- `kitMachine` - Machine for kit stores
+- `homeAppMachine` - Home app with kit selection, sorting
+- `kitAppMachine` - Kit app with filtering, row expansion
+- `typeAppMachine` - Type app with port focus, model tags, camera
+- `designAppMachine` - Design app with piece/connection selection, diagram
+- `qualityAppMachine` - Quality app with benchmark expansion
+- `tutorialMachine` - Tutorial playback and recording
+- `transactionMachine` - Reusable transaction state machine
+- `createAppMachine()` - Generic factory for custom app machines
+- Selectors and actor factories for each machine
+
+#### XState Hooks
+
+**`Sketchpad.tsx`** provides XState-based hooks:
+
+- `useSketchpadActor()` - Get the XState actor ref
+- `useSketchpadSelector()` - Generic selector using @xstate/react
+- `useSketchpadSnapshot()` - Full state snapshot
+- `useSketchpadActions()` - Event dispatching functions
+- App-specific hooks: `useThemeXState()`, `useModeXState()`, etc.
+
+#### Y.js-XState Bridge
+
+**`shared.ts`** contains bridge utilities:
+
+- `createYjsSyncActor()` - Creates callback actor for Y.js observation
+- `createYjsFieldSyncActor()` - Single field observation
+- `yTransact()` - Transaction wrapper
+- `createYjsUpdateAssign()` - Assign action for Y_UPDATE events
+- `createYjsSelector()` - Cached selector with dirty checking
+
+#### Transaction State Machine
+
+App machines include transaction support:
+
+```
+States: idle <-> transaction
+Events: START_TRANSACTION, FINALIZE_TRANSACTION, ABORT_TRANSACTION
+Actions: recordEdit, undoFromPast, redoFromStack
+```
 
 ### Command System
 

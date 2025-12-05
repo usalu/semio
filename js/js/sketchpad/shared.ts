@@ -23,6 +23,7 @@
 
 import { ChatIcon, DetailsIcon, HudIcon, SettingsIcon, StatsIcon, ToolbarIcon, ToolsIcon, WorkbenchIcon } from "@semio/assets";
 import { ComponentType, ReactNode } from "react";
+import { AnyActorRef, assign, fromCallback } from "xstate";
 import * as Y from "yjs";
 import { Guid, Kit, KitDiff } from "../semio";
 
@@ -727,3 +728,293 @@ export interface ResizablePanelProps {
 // #endregion Panel Props
 
 // #endregion Interfaces
+
+// #region XState Integration
+
+// #region XState Types
+
+/**
+ * Base context for all XState machines that sync with Y.js
+ */
+export interface YjsSyncContext {
+  /** Whether the Y.js data has changed since last snapshot */
+  dirty: boolean;
+  /** Cached snapshot of the Y.js data */
+  cache?: any;
+}
+
+/**
+ * Context for the root Sketchpad machine
+ */
+export interface SketchpadMachineContext extends YjsSyncContext {
+  navigation: string;
+  navigationHistory: string[];
+  navigationHistoryIndex: number;
+  recentSearches: string[];
+  recentFocusItems: Record<string, string[]>;
+  theme: Theme;
+  language: string;
+  layout: Layout;
+  expertise: Expertise;
+  mode: Mode;
+  settings: {
+    apps: Record<string, any>;
+  };
+  panelSizes: PanelSizes;
+  isFullscreen: boolean;
+  isMobile: boolean;
+  activeInteraction?: string;
+  hotkeyOverrides?: Record<string, string>;
+  activeHotkeySetting?: string;
+  /** Map of kit guids to their actor refs */
+  kits: Record<Guid, AnyActorRef>;
+  /** Home app actor ref */
+  homeRef?: AnyActorRef;
+  /** Docs app actor ref */
+  docsRef?: AnyActorRef;
+}
+
+/**
+ * Events for the Sketchpad machine
+ */
+export type SketchpadMachineEvent =
+  | { type: "NAVIGATE"; path: string }
+  | { type: "NAVIGATE_BACK" }
+  | { type: "NAVIGATE_FORWARD" }
+  | { type: "SET_THEME"; theme: Theme }
+  | { type: "SET_LANGUAGE"; language: string }
+  | { type: "SET_EXPERTISE"; expertise: Expertise }
+  | { type: "SET_MODE"; mode: Mode }
+  | { type: "SET_LAYOUT"; layout: Layout }
+  | { type: "TOGGLE_FULLSCREEN" }
+  | { type: "SET_PANEL_SIZE"; panel: keyof PanelSizes; size: number }
+  | { type: "CREATE_KIT"; kit: Kit }
+  | { type: "DELETE_KIT"; guid: Guid }
+  | { type: "Y_UPDATE"; data: any }
+  | { type: "Y_FIELD_UPDATE"; field: string; value: any };
+
+/**
+ * Context for Kit machines (spawned actors)
+ */
+export interface KitMachineContext extends YjsSyncContext {
+  guid: Guid;
+  kit: Kit;
+  /** Map of type guids to their stores */
+  types: Record<Guid, any>;
+  /** Map of design guids to their stores */
+  designs: Record<Guid, any>;
+  /** File URL cache */
+  fileUrls: Map<string, string>;
+  /** Whether this kit is local */
+  local: boolean;
+  /** Whether this kit is remote */
+  remote: boolean;
+}
+
+/**
+ * Events for Kit machines
+ */
+export type KitMachineEvent =
+  | { type: "LOAD" }
+  | { type: "CHANGE"; diff: KitDiff }
+  | { type: "CREATE_TYPE"; typeData: any }
+  | { type: "UPDATE_TYPE"; guid: Guid; diff: any }
+  | { type: "DELETE_TYPE"; guid: Guid }
+  | { type: "CREATE_DESIGN"; design: any }
+  | { type: "UPDATE_DESIGN"; guid: Guid; diff: any }
+  | { type: "DELETE_DESIGN"; guid: Guid }
+  | { type: "Y_UPDATE"; data: any };
+
+/**
+ * Generic App machine context
+ */
+export interface AppMachineContext<TSelection = any> extends YjsSyncContext {
+  panelVisibility: PanelVisibility;
+  selection?: TSelection;
+  hover?: any;
+  presence?: any;
+  others: any[];
+  /** Transaction state */
+  isTransactionActive: boolean;
+  currentTransactionStack: any[];
+  pastTransactionsStack: any[];
+  redoStack: any[];
+}
+
+/**
+ * Generic App machine events
+ */
+export type AppMachineEvent<TSelectionDiff = any, TDiff = any> =
+  | { type: "START_TRANSACTION" }
+  | { type: "FINALIZE_TRANSACTION" }
+  | { type: "ABORT_TRANSACTION" }
+  | { type: "UNDO" }
+  | { type: "REDO" }
+  | { type: "TOGGLE_PANEL"; panel: keyof PanelVisibility }
+  | { type: "SELECT"; diff: TSelectionDiff }
+  | { type: "DESELECT" }
+  | { type: "HOVER"; data: any }
+  | { type: "CLEAR_HOVER" }
+  | { type: "CHANGE"; diff: TDiff }
+  | { type: "Y_UPDATE"; data: any };
+
+/**
+ * KitDiff App machine context (for apps that can modify kits)
+ */
+export interface KitDiffAppMachineContext<TSelection = any> extends AppMachineContext<TSelection> {
+  kitGuid: Guid;
+}
+
+// #endregion XState Types
+
+// #region Y.js-XState Bridge
+
+/**
+ * Creates an XState actor that observes a Y.js Map and sends Y_UPDATE events
+ * when the data changes. This is the core bridge between Y.js and XState.
+ * 
+ * @param yMap - The Y.js Map to observe
+ * @returns An actor logic that can be invoked in a machine
+ * 
+ * @example
+ * ```ts
+ * const machine = createMachine({
+ *   invoke: {
+ *     id: 'yjsSync',
+ *     src: createYjsSyncActor(yMap)
+ *   },
+ *   on: {
+ *     Y_UPDATE: { actions: 'handleYjsUpdate' }
+ *   }
+ * });
+ * ```
+ */
+export function createYjsSyncActor(yMap: Y.Map<any>) {
+  return fromCallback<{ type: "Y_UPDATE"; data: any }>(({ sendBack }: { sendBack: (event: { type: "Y_UPDATE"; data: any }) => void }) => {
+    const observer = () => {
+      sendBack({ type: "Y_UPDATE", data: yMap.toJSON() });
+    };
+
+    // Send initial state
+    observer();
+
+    // Observe deep changes
+    yMap.observeDeep(observer);
+
+    // Return cleanup function
+    return () => {
+      yMap.unobserveDeep(observer);
+    };
+  });
+}
+
+/**
+ * Creates an XState actor that observes a specific field in a Y.js Map
+ * and sends Y_FIELD_UPDATE events when that field changes.
+ * 
+ * @param yMap - The Y.js Map to observe
+ * @param field - The field name to observe
+ * @returns An actor logic that can be invoked in a machine
+ */
+export function createYjsFieldSyncActor(yMap: Y.Map<any>, field: string) {
+  return fromCallback<{ type: "Y_FIELD_UPDATE"; field: string; value: any }>(({ sendBack }: { sendBack: (event: { type: "Y_FIELD_UPDATE"; field: string; value: any }) => void }) => {
+    const observer = (events: Y.YMapEvent<any>[]) => {
+      for (const event of events) {
+        if (event.keysChanged.has(field)) {
+          sendBack({ type: "Y_FIELD_UPDATE", field, value: yMap.get(field) });
+        }
+      }
+    };
+
+    // Send initial state
+    sendBack({ type: "Y_FIELD_UPDATE", field, value: yMap.get(field) });
+
+    // Observe changes
+    yMap.observe(observer as any);
+
+    // Return cleanup function
+    return () => {
+      yMap.unobserve(observer as any);
+    };
+  });
+}
+
+/**
+ * Wraps a Y.js transaction in a function that can be called from XState actions.
+ * This ensures Y.js changes are atomic and can be properly synced.
+ * 
+ * @param yDoc - The Y.js document
+ * @param fn - The function to execute within the transaction
+ * @param origin - Optional origin string for the transaction
+ */
+export function yTransact(yDoc: Y.Doc, fn: () => void, origin?: string): void {
+  yDoc.transact(fn, origin);
+}
+
+/**
+ * Creates an assign action that updates Y.js data and marks cache as dirty.
+ * This is used to handle Y_UPDATE events in XState machines.
+ * 
+ * @returns An assign action configuration
+ */
+export function createYjsUpdateAssign() {
+  return assign({
+    dirty: () => true,
+    cache: ({ event }: { event: { type: "Y_UPDATE"; data: any } }) => (event as any).data,
+  });
+}
+
+/**
+ * Helper to create a selector that accesses cached Y.js data with dirty checking.
+ * If dirty, rebuilds the cache; otherwise returns cached data.
+ * 
+ * @param buildSnapshot - Function to build snapshot from Y.js data
+ * @returns A function that returns the snapshot
+ */
+export function createYjsSelector<TContext extends YjsSyncContext, TSnapshot>(
+  buildSnapshot: (context: TContext) => TSnapshot
+): (context: TContext) => TSnapshot {
+  return (context: TContext): TSnapshot => {
+    if (!context.dirty && context.cache) {
+      return context.cache as TSnapshot;
+    }
+    return buildSnapshot(context);
+  };
+}
+
+// #endregion Y.js-XState Bridge
+
+// #region Machine Factories
+
+/**
+ * Input type for creating app machines
+ */
+export interface AppMachineInput {
+  yMap: Y.Map<any>;
+  transact: Transact;
+}
+
+/**
+ * Input type for creating kit-diff app machines
+ */
+export interface KitDiffAppMachineInput extends AppMachineInput {
+  kitGuid: Guid;
+}
+
+/**
+ * Configuration for transaction machine
+ */
+export interface TransactionMachineConfig<TEdit = any> {
+  /** Function to apply an edit's selection diff */
+  applySelectionDiff: (selectionDiff: any) => void;
+  /** Function to compute inverse of a selection diff */
+  inverseSelectionDiff: (selection: any, diff: any) => any;
+  /** Optional function to apply kit diff (for KitDiff apps) */
+  applyKitDiff?: (kitDiff: KitDiff) => void;
+  /** Optional function to compute inverse of kit diff */
+  inverseKitDiff?: (kit: Kit, diff: KitDiff) => KitDiff;
+}
+
+// #endregion Machine Factories
+
+// #endregion XState Integration

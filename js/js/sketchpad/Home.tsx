@@ -992,11 +992,16 @@ const Home: FC = ({}) => {
   }, [kits, selectedName]);
 
   // Collect all unique concepts from kits
-  // Note: In KitShallow, concepts is string[] (guids), not Concept[]
+  // Note: In KitShallow, concepts should be string[] (guids), but may sometimes contain Concept objects
   const allConcepts = useMemo(() => {
     const conceptSet = new Set<string>();
     kits.forEach((kit) => {
-      kit.concepts?.forEach((concept) => conceptSet.add(concept));
+      kit.concepts?.forEach((concept) => {
+        // Handle both string GUIDs and Concept objects
+        // ConceptFilter expects concept names, not GUIDs
+        const name = typeof concept === 'string' ? concept : (concept as any).name;
+        if (name) conceptSet.add(name);
+      });
     });
     return Array.from(conceptSet).sort();
   }, [kits]);

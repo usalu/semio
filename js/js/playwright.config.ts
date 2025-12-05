@@ -21,7 +21,7 @@ export default defineConfig({
         // This significantly improves performance for diagrams with 180+ nodes
         launchOptions: {
           args: [
-            "--headless=new",
+            // "--headless=new",
             "--enable-gpu",
             "--disable-software-rasterizer",
           ],

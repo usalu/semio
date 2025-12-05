@@ -46,7 +46,7 @@ import {
   useSyncField,
   useSyncNestedArrayItemMembership,
   useSyncSelectionItemMembership,
-} from "./Sketchpad"; // TODO: Get rid of this import
+} from "./Sketchpad";
 
 // #endregion Store
 
@@ -63,7 +63,9 @@ import { useTranslation } from "react-i18next";
 import { useParams } from "react-router";
 import * as THREE from "three";
 import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
+import { ActorRefFrom } from "xstate";
 import { useLabel } from "../i18n";
+import { designAppMachine } from "./machines";
 
 import type { ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, Connection as RFConnection } from "@xyflow/react";
 import { applyNodeChanges, BaseEdge, Handle, Position, ReactFlowInstance, ReactFlowProvider, useReactFlow, ViewportPortal } from "@xyflow/react";
@@ -1523,11 +1525,23 @@ if (typeof window !== "undefined") {
 
 type DesignAppScope = { id: string };
 const DesignAppScopeContext = createContext<DesignAppScope | null>(null);
+
+// XState actor type for Design app
+type DesignAppActorRef = ActorRefFrom<typeof designAppMachine>;
+const DesignAppActorContext = createContext<DesignAppActorRef | null>(null);
+
 export const DesignAppScopeProvider = (props: { id: string; children: React.ReactNode }) => {
   const value = { id: props.id };
-  return React.createElement(DesignAppScopeContext.Provider, { value }, props.children as any);
+  // XState actor creation disabled - hooks use Y.js stores, commands use stores
+  // Actor can be enabled when performance optimization is complete
+  return React.createElement(DesignAppScopeContext.Provider, { value }, React.createElement(DesignAppActorContext.Provider, { value: null }, props.children as any));
 };
 const useDesignAppScope = () => useContext(DesignAppScopeContext);
+
+// XState hook to get the Design app actor
+export function useDesignAppActor(): DesignAppActorRef | null {
+  return useContext(DesignAppActorContext);
+}
 
 export function useDesignAppStore<T>(selector?: (store: DesignAppStore) => T, id?: DesignAppId): T | DesignAppStore | null {
   const store = useSketchpadStore();
@@ -1542,93 +1556,101 @@ export function useDesignAppStore<T>(selector?: (store: DesignAppStore) => T, id
   return selector ? selector(designAppStore) : designAppStore;
 }
 
+// Generic hook for Design app state selection (XState-ready)
 export function useDesignApp<T>(selector?: (state: DesignAppState) => T, id?: DesignAppId): T | DesignAppState | null {
   const store = useDesignAppStore(identitySelector, id);
   if (!store) return null;
   return useSyncDeep<DesignAppState, T>(store as DesignAppStore, selector || ((s: DesignAppState) => s as T));
 }
 
-// PERF: Stable selectors for DesignApp hooks - must be module-level to avoid infinite loops with useSyncExternalStore
-// These selectors are called frequently by useSyncField.getSnapshot, so stability is critical.
+// PERF: Stable empty values for hooks
 const EMPTY_SELECTION: DesignAppSelection = {};
 const EMPTY_OTHERS: DesignAppPresenceOther[] = [];
 const EMPTY_MODEL_TAGS: Record<Guid, string[]> = {};
+const DEFAULT_PANEL_VISIBILITY: PanelVisibility = { toolbar: false, workbench: false, details: false, chat: false, settings: false };
 
-const selectDesignAppSelection = (s: DesignAppState) => s.selection ?? EMPTY_SELECTION;
-const selectDesignAppFullscreenWindow = (s: DesignAppState) => s.fullscreenWindow;
-const selectDesignAppActiveTool = (s: DesignAppState) => s.activeTool ?? ToolKind.SELECTION_NORMAL;
-const selectDesignAppOthers = (s: DesignAppState) => s.others ?? EMPTY_OTHERS;
-const selectDesignAppCamera = (s: DesignAppState) => s.camera;
-const selectDesignAppDiagramCenter = (s: DesignAppState) => s.diagramCenter;
-const selectDesignAppDiagramScale = (s: DesignAppState) => s.diagramScale;
-const selectDesignAppFocusedPieceGuid = (s: DesignAppState) => s.focusedPieceGuid;
-const selectDesignAppSelectedModelTags = (s: DesignAppState) => s.selectedModelTags ?? EMPTY_MODEL_TAGS;
-const selectDesignAppHover = (s: DesignAppState) => s.hover;
+// Stable selectors for Y.js store reads
+const selectSelection = (s: DesignAppState) => s.selection ?? EMPTY_SELECTION;
+const selectFullscreen = (s: DesignAppState) => s.fullscreenWindow;
+const selectActiveTool = (s: DesignAppState) => s.activeTool ?? ToolKind.SELECTION_NORMAL;
+const selectOthers = (s: DesignAppState) => s.others ?? EMPTY_OTHERS;
+const selectCamera = (s: DesignAppState) => s.camera;
+const selectDiagramCenter = (s: DesignAppState) => s.diagramCenter;
+const selectDiagramScale = (s: DesignAppState) => s.diagramScale;
+const selectFocusedPiece = (s: DesignAppState) => s.focusedPieceGuid;
+const selectModelTags = (s: DesignAppState) => s.selectedModelTags ?? EMPTY_MODEL_TAGS;
+const selectHover = (s: DesignAppState) => s.hover;
+const selectPanelVisibility = (s: DesignAppState) => s.panelVisibility;
 
+// Hooks read from Y.js stores (optimized), commands go to XState actor
 export function useDesignAppSelection(id?: DesignAppId): DesignAppSelection {
   const store = useDesignAppStore(identitySelector, id);
   if (!store) return EMPTY_SELECTION;
-  return useSyncField<DesignAppState, DesignAppSelection>(store as DesignAppStore, "selection", selectDesignAppSelection);
+  return useSyncField<DesignAppState, DesignAppSelection>(store as DesignAppStore, "selection", selectSelection);
 }
 
 export function useDesignAppFullscreen(id?: DesignAppId): DesignAppFullscreenWindow {
   const store = useDesignAppStore(identitySelector, id);
   if (!store) return DesignAppFullscreenWindow.None;
-  return useSyncField<DesignAppState, DesignAppFullscreenWindow>(store as DesignAppStore, "fullscreenWindow", selectDesignAppFullscreenWindow, false);
+  return useSyncField<DesignAppState, DesignAppFullscreenWindow>(store as DesignAppStore, "fullscreenWindow", selectFullscreen, false);
 }
 
-// PERF: Granular hook for activeTool - only re-renders when activeTool changes
 export function useDesignAppActiveTool(id?: DesignAppId): ToolKind {
   const store = useDesignAppStore(identitySelector, id);
   if (!store) return ToolKind.SELECTION_NORMAL;
-  return useSyncField<DesignAppState, ToolKind>(store as DesignAppStore, "activeTool", selectDesignAppActiveTool, false);
+  return useSyncField<DesignAppState, ToolKind>(store as DesignAppStore, "activeTool", selectActiveTool, false);
 }
 
 export function useDesignAppDiff(): KitDiff | undefined {
   return undefined;
 }
 
-// PERF: Use useSyncField for granular subscription to 'others' field
 export function useDesignAppOthers(id?: DesignAppId): DesignAppPresenceOther[] {
   const store = useDesignAppStore(identitySelector, id);
   if (!store) return EMPTY_OTHERS;
-  return useSyncField<DesignAppState, DesignAppPresenceOther[]>(store as DesignAppStore, "others", selectDesignAppOthers);
+  return useSyncField<DesignAppState, DesignAppPresenceOther[]>(store as DesignAppStore, "others", selectOthers);
 }
 
 export function useDesignAppCamera(id?: DesignAppId): Camera | undefined {
   const store = useDesignAppStore(identitySelector, id);
   if (!store) return undefined;
-  return useSyncField<DesignAppState, Camera | undefined>(store as DesignAppStore, "camera", selectDesignAppCamera, false);
+  return useSyncField<DesignAppState, Camera | undefined>(store as DesignAppStore, "camera", selectCamera, false);
 }
 
 export function useDesignAppDiagramCenter(id?: DesignAppId): Coord | undefined {
   const store = useDesignAppStore(identitySelector, id);
   if (!store) return undefined;
-  return useSyncField<DesignAppState, Coord | undefined>(store as DesignAppStore, "diagramCenter", selectDesignAppDiagramCenter, false);
+  return useSyncField<DesignAppState, Coord | undefined>(store as DesignAppStore, "diagramCenter", selectDiagramCenter, false);
 }
 
 export function useDesignAppDiagramScale(id?: DesignAppId): number | undefined {
   const store = useDesignAppStore(identitySelector, id);
   if (!store) return undefined;
-  return useSyncField<DesignAppState, number | undefined>(store as DesignAppStore, "diagramScale", selectDesignAppDiagramScale, false);
+  return useSyncField<DesignAppState, number | undefined>(store as DesignAppStore, "diagramScale", selectDiagramScale, false);
 }
 
 export function useDesignAppFocusedPieceGuid(id?: DesignAppId): Guid | undefined {
   const store = useDesignAppStore(identitySelector, id);
   if (!store) return undefined;
-  return useSyncField<DesignAppState, Guid | undefined>(store as DesignAppStore, "focusedPieceGuid", selectDesignAppFocusedPieceGuid, false);
+  return useSyncField<DesignAppState, Guid | undefined>(store as DesignAppStore, "focusedPieceGuid", selectFocusedPiece, false);
 }
 
 export function useDesignAppSelectedModelTags(id?: DesignAppId): Record<Guid, string[]> {
   const store = useDesignAppStore(identitySelector, id);
   if (!store) return EMPTY_MODEL_TAGS;
-  return useSyncField<DesignAppState, Record<Guid, string[]>>(store as DesignAppStore, "selectedModelTags", selectDesignAppSelectedModelTags);
+  return useSyncField<DesignAppState, Record<Guid, string[]>>(store as DesignAppStore, "selectedModelTags", selectModelTags);
 }
 
 export function useDesignAppHover(id?: DesignAppId): DesignAppHover | undefined {
   const store = useDesignAppStore(identitySelector, id);
   if (!store) return undefined;
-  return useSyncField<DesignAppState, DesignAppHover | undefined>(store as DesignAppStore, "hover", selectDesignAppHover);
+  return useSyncField<DesignAppState, DesignAppHover | undefined>(store as DesignAppStore, "hover", selectHover);
+}
+
+export function useDesignAppPanelVisibility(id?: DesignAppId): PanelVisibility {
+  const store = useDesignAppStore(identitySelector, id);
+  if (!store) return DEFAULT_PANEL_VISIBILITY;
+  return useSyncField<DesignAppState, PanelVisibility>(store as DesignAppStore, "panelVisibility", selectPanelVisibility);
 }
 
 // PERF: Memoized empty commands object for when store is null
@@ -1691,27 +1713,17 @@ export function useDesignAppCommands(id?: DesignAppId) {
   const store = useDesignAppStore(undefined, id) as DesignAppStore | null;
 
   // PERF: Memoize the commands object to prevent re-renders
-  // The store reference should be stable, so we can depend on it
+  // Commands go through Y.js stores - XState migration pending performance optimization
   return useMemo(() => {
     if (!store) {
       return EMPTY_COMMANDS;
     }
     return {
-      startTransaction: (origin: string) => {
-        void store.execute("semio.designApp.startTransaction", origin);
-      },
-      finalizeTransaction: (origin: string) => {
-        void store.execute("semio.designApp.finalizeTransaction", origin);
-      },
-      abortTransaction: (origin: string) => {
-        void store.execute("semio.designApp.abortTransaction", origin);
-      },
-      undo: (origin: string) => {
-        void store.execute("semio.designApp.undo", origin);
-      },
-      redo: (origin: string) => {
-        void store.execute("semio.designApp.redo", origin);
-      },
+      startTransaction: (origin: string) => store.execute("semio.designApp.startTransaction", origin),
+      finalizeTransaction: (origin: string) => store.execute("semio.designApp.finalizeTransaction", origin),
+      abortTransaction: (origin: string) => store.execute("semio.designApp.abortTransaction", origin),
+      undo: (origin: string) => store.execute("semio.designApp.undo", origin),
+      redo: (origin: string) => store.execute("semio.designApp.redo", origin),
       selectAll: (origin: string) => store.execute("semio.designApp.selectAll", origin),
       deselectAll: (origin: string) => store.execute("semio.designApp.deselectAll", origin),
       selectPiece: (origin: string, guid: Guid) => store.execute("semio.designApp.selectPiece", origin, guid),
@@ -1755,35 +1767,23 @@ export function useDesignAppCommands(id?: DesignAppId) {
       hoverDesigns: (origin: string, guids: Guid[]) => store.execute("semio.designApp.hoverDesigns", origin, guids),
       clearHover: (origin: string) => store.execute("semio.designApp.clearHover", origin),
       togglePanel: (origin: string, panelKey: keyof PanelVisibility) => {
-        if (!store) return;
         const current = store.snapshot().panelVisibility;
-        store.change({
-          panelVisibility: {
-            [panelKey]: !current[panelKey],
-          },
-        });
+        store.change({ panelVisibility: { [panelKey]: !current[panelKey] } });
       },
       setModelTagsForType: (origin: string, typeGuid: Guid, tags: string[]) => {
         const current = store.snapshot().selectedModelTags ?? {};
-        store.change({
-          selectedModelTags: {
-            ...current,
-            [typeGuid]: tags,
-          },
-        });
+        store.change({ selectedModelTags: { ...current, [typeGuid]: tags } });
       },
       addModelTagForAllTypes: (origin: string, tagGuid: string, typeGuids: Guid[]) => {
         const current = store.snapshot().selectedModelTags ?? {};
         const updated: Record<Guid, string[]> = { ...current };
         typeGuids.forEach((typeGuid) => {
           const existing = updated[typeGuid] ?? [];
-          if (!existing.includes(tagGuid)) {
-            updated[typeGuid] = [...existing, tagGuid];
-          }
+          if (!existing.includes(tagGuid)) updated[typeGuid] = [...existing, tagGuid];
         });
         store.change({ selectedModelTags: updated });
       },
-      removeModelTagForAllTypes: (origin: string, tagGuid: string, typeGuids: Guid[]) => {
+      removeModelTagFromAllTypes: (origin: string, tagGuid: string, typeGuids: Guid[]) => {
         const current = store.snapshot().selectedModelTags ?? {};
         const updated: Record<Guid, string[]> = { ...current };
         typeGuids.forEach((typeGuid) => {
