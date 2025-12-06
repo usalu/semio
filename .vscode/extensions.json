@@ -19,6 +19,7 @@
     "bradlc.vscode-tailwindcss",
     "unifiedjs.vscode-mdx",
     "astro-build.astro-vscode",
+    "statelyai.stately-vscode",
     "vitest.explorer",
     "stripe.markdoc-language-support",
     "firefox-devtools.vscode-firefox-debug",

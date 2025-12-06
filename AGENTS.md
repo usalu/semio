@@ -1383,7 +1383,10 @@ Shared react components. The main component is Sketchpad. Sketchpad is used in t
 #### General
 
 - Domain logic is ALWAYS in semio.ts and whenever an operation is not ui bound, it should be implemented there.
-- State managment ALWAYS is in the corresponding store.tsx. State is ALWAYS accessed over hooks. There are internal hooks (e.g. store accessors) that are NEVER used directly in components. Mutation ALWAYS are executed via commands. NEVER use useState or other local state in components.
+- **State Management Architecture**: XState is the SINGLE SOURCE OF TRUTH for all UI state. Yjs is ONLY used for collaborative Kit data (types, designs, etc.). React components read state via `useSelector(actor, ...)` and send events via `actor.send({type: ...})`. NO Yjs in React components.
+  - `machines.ts` - Unified XState machine with all app state
+  - `xstate-hooks.ts` - Clean React hooks using XState selectors
+  - State is ALWAYS accessed over hooks. Mutation ALWAYS is via actor events. NEVER use useState for app state.
 - **Targeted Hooks**: Components MUST use targeted hooks for kit data access. Use the following hooks from `Sketchpad.tsx`:
   - `useKitTypes(guid?)` - returns types array
   - `useKitFiles(guid?)` - returns files array
@@ -1851,6 +1854,18 @@ The application uses XState v5 for state machine logic alongside Y.js for persis
 - `yTransact()` - Transaction wrapper
 - `createYjsUpdateAssign()` - Assign action for Y_UPDATE events
 - `createYjsSelector()` - Cached selector with dirty checking
+
+#### Full XState Transition
+
+The current hybrid architecture keeps the Y.js stores as the persistence layer while XState manages structured events. The full transition elevates the `sketchpadMachine` to the canonical runtime: it already exposes all app slices (home, kit, type, design, quality, tutorial, transactions) via selectors, and the machine context mirrors the live store data through explicit sync events.
+
+Key sync events and helpers:
+
+- `DESIGN.INIT`/`TYPE.INIT` events populate machine context when a new app instance is created.
+- `DESIGN.SYNC`/`TYPE.SYNC` events carry partial updates from the stores (`Coord`/diagram data is normalized to machine-friendly formats).
+- Hooks such as `useDesignAppYjsToXStateSync` observe Y.js state via `useDesignApp`, translate changes, and send the sync events to keep the machine current.
+
+The final step removes direct Y.js observers from the stores so that commands dispatch through XState actors, the actors own the Y.js subscriptions, and React hooks simply read from `useSketchpadSelector()`/app-specific selectors. Until that cutover, the architecture relies on the Y.js-to-XState bridge utilities listed above to keep both layers aligned.
 
 #### Transaction State Machine
 

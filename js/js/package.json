@@ -6,7 +6,8 @@
   "type": "module",
   "exports": {
     ".": "./index.ts",
-    "./semio": "./semio.ts"
+    "./semio": "./semio.ts",
+    "./globals.css": "./globals.css"
   },
   "scripts": {
     "dev": "storybook dev -p 6006 --no-open --debug",

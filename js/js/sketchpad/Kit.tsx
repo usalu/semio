@@ -54,21 +54,21 @@ import {
 } from "@semio/assets";
 import { formatDistanceToNow } from "date-fns";
 import { de, enUS } from "date-fns/locale";
-import React, { FC, useEffect, useMemo, useRef, useState } from "react";
+import React, { FC, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams, useSearchParams } from "react-router";
 import { Camera } from "three";
 import * as Y from "yjs";
 import i18n, { useLabel } from "../i18n";
 import { Author, buildFileTree, Concept, Coord, Design, DesignDiff, DiffStatus, flattenFileTree, Folder, generateUniqueName, guid, Guid, Interface, Kit, KitDiff, Quality, File as SemioFile, Tag, Type, TypeDiff } from "../semio";
-import type { KitStore, SketchpadStore } from "./Sketchpad";
+import type { KitStore as KitDataSource, SketchpadStore as SketchpadOrchestrator } from "./Sketchpad";
 import {
   Canvas,
   ConceptFilter,
   identitySelector,
-  KitDiffAppStore,
+  KitDiffAppStore as KitDiffAppController,
   KitScopeProvider,
-  registerKitAppStoreFactory,
+  registerKitAppStoreFactory as registerKitAppControllerFactory,
   useAddFooterItem,
   useAddPanelSection,
   useAppType,
@@ -89,7 +89,6 @@ import {
   useRemovePanelSection,
   useSketchpadCommands,
   useSketchpadStore,
-  useSync,
   useSyncDeep,
   useTheme,
   Window,
@@ -97,10 +96,11 @@ import {
 import { Action, Input, NotFound, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Strip, Table, TableAvatar, Textarea, Toggle, ToggleGroup, Transaction, TreeContent, TreeItem } from "./elements";
 import type { KitAppId, KitCommandContext, KitDiffAppEdit, Layout, PanelDefinition, PanelVisibility, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
 import { AppConfig, createPanelDefinition, Expertise, Mode, PanelKind, Theme } from "./shared";
+import { useKitApp as useKitAppXState, useSketchpadActorHook } from "./xstate-hooks";
 
 // #endregion Imports
 
-// #region Store
+// #region Internal State Management
 
 type YKitAppVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
 type YKitApp = Y.Map<YKitAppVal>;
@@ -291,8 +291,8 @@ export const inverseKitAppSelectionDiff = (selection: KitAppSelection, diff: Kit
 export const areSameKitApp = (kitApp: KitAppId, other: KitAppId): boolean => kitApp.kit === other.kit;
 export const hasSameKitApp = (kitApp: KitAppId, others: KitAppId[]): boolean => others.some((other) => areSameKitApp(kitApp, other));
 
-class KitAppStore extends KitDiffAppStore<KitAppState, KitAppDiff, KitAppSelectionDiff, KitAppEdit, KitAppCommandContext, KitAppCommandResult> {
-  constructor(parent: SketchpadStore, yMap: YKitApp, transact: (fn: () => void) => void, id: KitAppId, state?: KitAppState) {
+class KitAppController extends KitDiffAppController<KitAppState, KitAppDiff, KitAppSelectionDiff, KitAppEdit, KitAppCommandContext, KitAppCommandResult> {
+  constructor(parent: SketchpadOrchestrator, yMap: YKitApp, transact: (fn: () => void) => void, id: KitAppId, state?: KitAppState) {
     super(parent, yMap, transact);
 
     const kit = this.parent.kit(id.kit);
@@ -453,7 +453,7 @@ class KitAppStore extends KitDiffAppStore<KitAppState, KitAppDiff, KitAppSelecti
     return this.yMap.get("sortDirection") as KitAppSortDirection | undefined;
   }
 
-  kit(): KitStore {
+  kit(): KitDataSource {
     return this.parent.kit(this.yMap.get("kit") as string);
   }
 
@@ -746,15 +746,15 @@ class KitAppStore extends KitDiffAppStore<KitAppState, KitAppDiff, KitAppSelecti
 
     console.group(`[${origin || "unknown"}] Executing command: "${command}"`);
     const callback = this.commandRegistry.get(command);
-    if (!callback) throw new Error(`Command "${command}" not found in kit app store`);
+    if (!callback) throw new Error(`Command "${command}" not found in kit app controller`);
 
-    const kitStore = this.kit();
+    const kitData = this.kit();
     const state = this.snapshot();
 
     const context: KitAppCommandContext = {
       kitApp: state,
-      kit: kitStore.snapshot(),
-      fileUrls: kitStore.fileUrls,
+      kit: kitData.snapshot(),
+      fileUrls: kitData.fileUrls,
       origin,
     };
     const result = callback(context, ...rest);
@@ -762,7 +762,7 @@ class KitAppStore extends KitDiffAppStore<KitAppState, KitAppDiff, KitAppSelecti
       this.change(result.diff);
     }
     if (result.kitDiff) {
-      kitStore.change(result.kitDiff);
+      kitData.change(result.kitDiff);
     }
     this.recordEdit(result);
     console.groupEnd();
@@ -775,41 +775,73 @@ class KitAppStore extends KitDiffAppStore<KitAppState, KitAppDiff, KitAppSelecti
 }
 
 if (typeof window !== "undefined") {
-  registerKitAppStoreFactory((parent, yMap, transact, id, state) => new KitAppStore(parent, yMap, transact, id, state));
+  registerKitAppControllerFactory((parent, yMap, transact, id, state) => new KitAppController(parent, yMap, transact, id, state));
 }
 
-function useKitAppStore<T>(selector?: (store: KitAppStore) => T, id?: KitAppId): T | KitAppStore | null {
-  const store = useSketchpadStore();
+function useKitAppController<T>(selector?: (controller: KitAppController) => T, id?: KitAppId): T | KitAppController | null {
+  const orchestrator = useSketchpadStore();
   const kitScope = useKitScope();
   const resolvedKitId = kitScope?.guid ?? id?.kit;
   if (!resolvedKitId) {
     return null;
   }
   try {
-    if (!store.hasKit(resolvedKitId)) {
+    if (!orchestrator || !orchestrator.hasKit(resolvedKitId)) {
       return null;
     }
-    const kitAppStore = store.kitApp(resolvedKitId);
-    const result = selector ? selector(kitAppStore) : kitAppStore;
+    const kitAppController = orchestrator.kitApp(resolvedKitId);
+    const result = selector ? selector(kitAppController) : kitAppController;
     return result;
   } catch {
     return null;
   }
 }
 
-export function useKitApp<T>(selector?: (state: KitAppState) => T, id?: KitAppId): T | KitAppState | null {
-  const store = useKitAppStore(undefined, id);
-  if (!store) {
-    return null;
+/**
+ * Get Kit app state from XState.
+ * This is the new XState-based hook.
+ */
+export function useKitApp<T>(selector?: (state: KitAppState) => T, id?: KitAppId): T | KitAppState {
+  const kitScope = useKitScope();
+  const kitGuid = kitScope?.guid ?? id?.kit;
+
+  // Create a default state when no kitGuid is available
+  const defaultState: KitAppState = {
+    panelVisibility: { toolbar: true, workbench: false, details: false, chat: false, settings: false },
+    selection: undefined,
+    hover: undefined,
+    fullscreenWindow: KitAppFullscreenWindow.None,
+    filterSearch: "",
+    expandedRows: [],
+    sortColumn: "artifact",
+    sortDirection: "asc",
+    others: [],
+  };
+
+  if (!kitGuid) {
+    if (selector) {
+      return selector(defaultState) as T;
+    }
+    return defaultState;
   }
-  const result = useSyncDeep<KitAppState>(store as KitAppStore, selector ? (state: KitAppState) => selector(state) as any : identitySelector);
-  return result;
+
+  const xstateState = useKitAppXState(kitGuid) as any;
+
+  // Convert expandedRows Set back to array for compatibility
+  const state: KitAppState = {
+    ...xstateState,
+    expandedRows: xstateState.expandedRows ? Array.from(xstateState.expandedRows) : [],
+  };
+
+  if (selector) {
+    return selector(state) as T;
+  }
+  return state;
 }
 
 export function useKitAppSelection(id?: KitAppId): KitAppSelection {
-  const store = useKitAppStore(identitySelector, id) as KitAppStore | null;
-  if (!store) return emptyKitAppSelection;
-  return (useSync<KitAppState>(store, (state) => (state.selection ?? emptyKitAppSelection) as any as KitAppState) as unknown as KitAppSelection) ?? emptyKitAppSelection;
+  const state = useKitApp(identitySelector, id);
+  return (state as KitAppState).selection ?? emptyKitAppSelection;
 }
 
 export function useKitAppFullscreen(): KitAppFullscreenWindow {
@@ -821,21 +853,21 @@ export function useKitAppOthers(): KitAppPresenceOther[] {
 }
 
 export function useKitAppTransaction(origin: string, id?: KitAppId): Transaction {
-  const store = useKitAppStore(undefined, id) as KitAppStore | null;
-  if (!store) {
+  const controller = useKitAppController(undefined, id) as KitAppController | null;
+  if (!controller) {
     return {};
   }
   return {
-    start: () => store.execute("semio.kitApp.startTransaction", origin),
-    finalize: () => store.execute("semio.kitApp.finalizeTransaction", origin),
-    abort: () => store.execute("semio.kitApp.abortTransaction", origin),
+    start: () => controller.execute("semio.kitApp.startTransaction", origin),
+    finalize: () => controller.execute("semio.kitApp.finalizeTransaction", origin),
+    abort: () => controller.execute("semio.kitApp.abortTransaction", origin),
   };
 }
 
 export function useKitAppCommands(id?: KitAppId) {
-  const store = useKitAppStore(undefined, id) as KitAppStore | null;
+  const controller = useKitAppController(undefined, id) as KitAppController | null;
   const noOp = () => {};
-  if (!store) {
+  if (!controller) {
     return {
       undo: noOp,
       redo: noOp,
@@ -903,76 +935,76 @@ export function useKitAppCommands(id?: KitAppId) {
     };
   }
   return {
-    undo: (origin: string) => store.execute("semio.kitApp.undo", origin),
-    redo: (origin: string) => store.execute("semio.kitApp.redo", origin),
-    selectAll: (origin: string) => store.execute("semio.kitApp.selectAll", origin),
-    deselectAll: (origin: string) => store.execute("semio.kitApp.deselectAll", origin),
-    selectType: (origin: string, Guid: Guid) => store.execute("semio.kitApp.selectType", origin, Guid),
-    selectTypes: (origin: string, typeIds: Guid[]) => store.execute("semio.kitApp.selectTypes", origin, typeIds),
-    addTypeToSelection: (origin: string, Guid: Guid) => store.execute("semio.kitApp.addTypeToSelection", origin, Guid),
-    removeTypeFromSelection: (origin: string, Guid: Guid) => store.execute("semio.kitApp.removeTypeFromSelection", origin, Guid),
-    selectDesign: (origin: string, Guid: Guid) => store.execute("semio.kitApp.selectDesign", origin, Guid),
-    selectDesigns: (origin: string, designIds: Guid[]) => store.execute("semio.kitApp.selectDesigns", origin, designIds),
-    addDesignToSelection: (origin: string, Guid: Guid) => store.execute("semio.kitApp.addDesignToSelection", origin, Guid),
-    removeDesignFromSelection: (origin: string, Guid: Guid) => store.execute("semio.kitApp.removeDesignFromSelection", origin, Guid),
-    selectQuality: (origin: string, key: string) => store.execute("semio.kitApp.selectQuality", origin, key),
-    selectQualities: (origin: string, keys: string[]) => store.execute("semio.kitApp.selectQualities", origin, keys),
-    addQualityToSelection: (origin: string, key: string) => store.execute("semio.kitApp.addQualityToSelection", origin, key),
-    removeQualityFromSelection: (origin: string, key: string) => store.execute("semio.kitApp.removeQualityFromSelection", origin, key),
-    selectInterface: (origin: string, guid: Guid) => store.execute("semio.kitApp.selectInterface", origin, guid),
-    selectInterfaces: (origin: string, guids: Guid[]) => store.execute("semio.kitApp.selectInterfaces", origin, guids),
-    addInterfaceToSelection: (origin: string, guid: Guid) => store.execute("semio.kitApp.addInterfaceToSelection", origin, guid),
-    removeInterfaceFromSelection: (origin: string, guid: Guid) => store.execute("semio.kitApp.removeInterfaceFromSelection", origin, guid),
-    selectTag: (origin: string, guid: Guid) => store.execute("semio.kitApp.selectTag", origin, guid),
-    selectTags: (origin: string, guids: Guid[]) => store.execute("semio.kitApp.selectTags", origin, guids),
-    addTagToSelection: (origin: string, guid: Guid) => store.execute("semio.kitApp.addTagToSelection", origin, guid),
-    removeTagFromSelection: (origin: string, guid: Guid) => store.execute("semio.kitApp.removeTagFromSelection", origin, guid),
-    selectConcept: (origin: string, guid: Guid) => store.execute("semio.kitApp.selectConcept", origin, guid),
-    selectConcepts: (origin: string, guids: Guid[]) => store.execute("semio.kitApp.selectConcepts", origin, guids),
-    addConceptToSelection: (origin: string, guid: Guid) => store.execute("semio.kitApp.addConceptToSelection", origin, guid),
-    removeConceptFromSelection: (origin: string, guid: Guid) => store.execute("semio.kitApp.removeConceptFromSelection", origin, guid),
-    selectFile: (origin: string, path: string) => store.execute("semio.kitApp.selectFile", origin, path),
-    selectFiles: (origin: string, paths: string[]) => store.execute("semio.kitApp.selectFiles", origin, paths),
-    addFileToSelection: (origin: string, path: string) => store.execute("semio.kitApp.addFileToSelection", origin, path),
-    removeFileFromSelection: (origin: string, path: string) => store.execute("semio.kitApp.removeFileFromSelection", origin, path),
-    selectFolder: (origin: string, guid: Guid) => store.execute("semio.kitApp.selectFolder", origin, guid),
-    selectFolders: (origin: string, guids: Guid[]) => store.execute("semio.kitApp.selectFolders", origin, guids),
-    addFolderToSelection: (origin: string, guid: Guid) => store.execute("semio.kitApp.addFolderToSelection", origin, guid),
-    removeFolderFromSelection: (origin: string, guid: Guid) => store.execute("semio.kitApp.removeFolderFromSelection", origin, guid),
-    selectAuthor: (origin: string, name: string) => store.execute("semio.kitApp.selectAuthor", origin, name),
-    selectAuthors: (origin: string, names: string[]) => store.execute("semio.kitApp.selectAuthors", origin, names),
-    addAuthorToSelection: (origin: string, name: string) => store.execute("semio.kitApp.addAuthorToSelection", origin, name),
-    removeAuthorFromSelection: (origin: string, name: string) => store.execute("semio.kitApp.removeAuthorFromSelection", origin, name),
-    deleteSelected: (origin: string) => store.execute("semio.kitApp.deleteSelected", origin),
-    toggleTypesFullscreen: (origin: string) => store.execute("semio.kitApp.toggleTypesFullscreen", origin),
-    toggleDesignsFullscreen: (origin: string) => store.execute("semio.kitApp.toggleDesignsFullscreen", origin),
-    addType: (origin: string, type: Type) => store.execute("semio.kitApp.addType", origin, type),
-    addTypes: (origin: string, types: Type[]) => store.execute("semio.kitApp.addTypes", origin, types),
-    removeType: (origin: string, Guid: Guid) => store.execute("semio.kitApp.removeType", origin, Guid),
-    removeTypes: (origin: string, typeIds: Guid[]) => store.execute("semio.kitApp.removeTypes", origin, typeIds),
-    addDesign: (origin: string, design: Design) => store.execute("semio.kitApp.addDesign", origin, design),
-    addDesigns: (origin: string, designs: Design[]) => store.execute("semio.kitApp.addDesigns", origin, designs),
-    removeDesign: (origin: string, Guid: Guid) => store.execute("semio.kitApp.removeDesign", origin, Guid),
-    removeDesigns: (origin: string, designIds: Guid[]) => store.execute("semio.kitApp.removeDesigns", origin, designIds),
-    updateType: (origin: string, guid: Guid, typeDiff: TypeDiff) => store.execute("semio.kitApp.updateType", origin, guid, typeDiff),
-    updateTypes: (origin: string, updates: { type: { guid: Guid }; diff: TypeDiff }[]) => store.execute("semio.kitApp.updateTypes", origin, updates),
-    updateDesign: (origin: string, guid: Guid, designDiff: DesignDiff) => store.execute("semio.kitApp.updateDesign", origin, guid, designDiff),
-    updateDesigns: (origin: string, updates: { design: { guid: Guid }; diff: DesignDiff }[]) => store.execute("semio.kitApp.updateDesigns", origin, updates),
+    undo: (origin: string) => controller.execute("semio.kitApp.undo", origin),
+    redo: (origin: string) => controller.execute("semio.kitApp.redo", origin),
+    selectAll: (origin: string) => controller.execute("semio.kitApp.selectAll", origin),
+    deselectAll: (origin: string) => controller.execute("semio.kitApp.deselectAll", origin),
+    selectType: (origin: string, Guid: Guid) => controller.execute("semio.kitApp.selectType", origin, Guid),
+    selectTypes: (origin: string, typeIds: Guid[]) => controller.execute("semio.kitApp.selectTypes", origin, typeIds),
+    addTypeToSelection: (origin: string, Guid: Guid) => controller.execute("semio.kitApp.addTypeToSelection", origin, Guid),
+    removeTypeFromSelection: (origin: string, Guid: Guid) => controller.execute("semio.kitApp.removeTypeFromSelection", origin, Guid),
+    selectDesign: (origin: string, Guid: Guid) => controller.execute("semio.kitApp.selectDesign", origin, Guid),
+    selectDesigns: (origin: string, designIds: Guid[]) => controller.execute("semio.kitApp.selectDesigns", origin, designIds),
+    addDesignToSelection: (origin: string, Guid: Guid) => controller.execute("semio.kitApp.addDesignToSelection", origin, Guid),
+    removeDesignFromSelection: (origin: string, Guid: Guid) => controller.execute("semio.kitApp.removeDesignFromSelection", origin, Guid),
+    selectQuality: (origin: string, key: string) => controller.execute("semio.kitApp.selectQuality", origin, key),
+    selectQualities: (origin: string, keys: string[]) => controller.execute("semio.kitApp.selectQualities", origin, keys),
+    addQualityToSelection: (origin: string, key: string) => controller.execute("semio.kitApp.addQualityToSelection", origin, key),
+    removeQualityFromSelection: (origin: string, key: string) => controller.execute("semio.kitApp.removeQualityFromSelection", origin, key),
+    selectInterface: (origin: string, guid: Guid) => controller.execute("semio.kitApp.selectInterface", origin, guid),
+    selectInterfaces: (origin: string, guids: Guid[]) => controller.execute("semio.kitApp.selectInterfaces", origin, guids),
+    addInterfaceToSelection: (origin: string, guid: Guid) => controller.execute("semio.kitApp.addInterfaceToSelection", origin, guid),
+    removeInterfaceFromSelection: (origin: string, guid: Guid) => controller.execute("semio.kitApp.removeInterfaceFromSelection", origin, guid),
+    selectTag: (origin: string, guid: Guid) => controller.execute("semio.kitApp.selectTag", origin, guid),
+    selectTags: (origin: string, guids: Guid[]) => controller.execute("semio.kitApp.selectTags", origin, guids),
+    addTagToSelection: (origin: string, guid: Guid) => controller.execute("semio.kitApp.addTagToSelection", origin, guid),
+    removeTagFromSelection: (origin: string, guid: Guid) => controller.execute("semio.kitApp.removeTagFromSelection", origin, guid),
+    selectConcept: (origin: string, guid: Guid) => controller.execute("semio.kitApp.selectConcept", origin, guid),
+    selectConcepts: (origin: string, guids: Guid[]) => controller.execute("semio.kitApp.selectConcepts", origin, guids),
+    addConceptToSelection: (origin: string, guid: Guid) => controller.execute("semio.kitApp.addConceptToSelection", origin, guid),
+    removeConceptFromSelection: (origin: string, guid: Guid) => controller.execute("semio.kitApp.removeConceptFromSelection", origin, guid),
+    selectFile: (origin: string, path: string) => controller.execute("semio.kitApp.selectFile", origin, path),
+    selectFiles: (origin: string, paths: string[]) => controller.execute("semio.kitApp.selectFiles", origin, paths),
+    addFileToSelection: (origin: string, path: string) => controller.execute("semio.kitApp.addFileToSelection", origin, path),
+    removeFileFromSelection: (origin: string, path: string) => controller.execute("semio.kitApp.removeFileFromSelection", origin, path),
+    selectFolder: (origin: string, guid: Guid) => controller.execute("semio.kitApp.selectFolder", origin, guid),
+    selectFolders: (origin: string, guids: Guid[]) => controller.execute("semio.kitApp.selectFolders", origin, guids),
+    addFolderToSelection: (origin: string, guid: Guid) => controller.execute("semio.kitApp.addFolderToSelection", origin, guid),
+    removeFolderFromSelection: (origin: string, guid: Guid) => controller.execute("semio.kitApp.removeFolderFromSelection", origin, guid),
+    selectAuthor: (origin: string, name: string) => controller.execute("semio.kitApp.selectAuthor", origin, name),
+    selectAuthors: (origin: string, names: string[]) => controller.execute("semio.kitApp.selectAuthors", origin, names),
+    addAuthorToSelection: (origin: string, name: string) => controller.execute("semio.kitApp.addAuthorToSelection", origin, name),
+    removeAuthorFromSelection: (origin: string, name: string) => controller.execute("semio.kitApp.removeAuthorFromSelection", origin, name),
+    deleteSelected: (origin: string) => controller.execute("semio.kitApp.deleteSelected", origin),
+    toggleTypesFullscreen: (origin: string) => controller.execute("semio.kitApp.toggleTypesFullscreen", origin),
+    toggleDesignsFullscreen: (origin: string) => controller.execute("semio.kitApp.toggleDesignsFullscreen", origin),
+    addType: (origin: string, type: Type) => controller.execute("semio.kitApp.addType", origin, type),
+    addTypes: (origin: string, types: Type[]) => controller.execute("semio.kitApp.addTypes", origin, types),
+    removeType: (origin: string, Guid: Guid) => controller.execute("semio.kitApp.removeType", origin, Guid),
+    removeTypes: (origin: string, typeIds: Guid[]) => controller.execute("semio.kitApp.removeTypes", origin, typeIds),
+    addDesign: (origin: string, design: Design) => controller.execute("semio.kitApp.addDesign", origin, design),
+    addDesigns: (origin: string, designs: Design[]) => controller.execute("semio.kitApp.addDesigns", origin, designs),
+    removeDesign: (origin: string, Guid: Guid) => controller.execute("semio.kitApp.removeDesign", origin, Guid),
+    removeDesigns: (origin: string, designIds: Guid[]) => controller.execute("semio.kitApp.removeDesigns", origin, designIds),
+    updateType: (origin: string, guid: Guid, typeDiff: TypeDiff) => controller.execute("semio.kitApp.updateType", origin, guid, typeDiff),
+    updateTypes: (origin: string, updates: { type: { guid: Guid }; diff: TypeDiff }[]) => controller.execute("semio.kitApp.updateTypes", origin, updates),
+    updateDesign: (origin: string, guid: Guid, designDiff: DesignDiff) => controller.execute("semio.kitApp.updateDesign", origin, guid, designDiff),
+    updateDesigns: (origin: string, updates: { design: { guid: Guid }; diff: DesignDiff }[]) => controller.execute("semio.kitApp.updateDesigns", origin, updates),
     togglePanel: (origin: string, panelKey: keyof PanelVisibility) => {
-      const current = store.snapshot().panelVisibility;
-      store.change({
+      const current = controller.snapshot().panelVisibility;
+      controller.change({
         panelVisibility: {
           [panelKey]: !current[panelKey],
         },
       });
     },
-    setFilterSearch: (origin: string, search: string) => store.execute("semio.kitApp.setFilterSearch", origin, search),
-    setExpandedRows: (origin: string, rows: string[]) => store.execute("semio.kitApp.setExpandedRows", origin, rows),
-    toggleExpandedRow: (origin: string, rowId: string) => store.execute("semio.kitApp.toggleExpandedRow", origin, rowId),
-    setSortColumn: (origin: string, column: KitAppSortColumn) => store.execute("semio.kitApp.setSortColumn", origin, column),
-    setSortDirection: (origin: string, direction: KitAppSortDirection) => store.execute("semio.kitApp.setSortDirection", origin, direction),
-    toggleSort: (origin: string, column: KitAppSortColumn) => store.execute("semio.kitApp.toggleSort", origin, column),
-    execute: (origin: string, command: string, ...args: any[]) => store.execute(command, origin, ...args),
+    setFilterSearch: (origin: string, search: string) => controller.execute("semio.kitApp.setFilterSearch", origin, search),
+    setExpandedRows: (origin: string, rows: string[]) => controller.execute("semio.kitApp.setExpandedRows", origin, rows),
+    toggleExpandedRow: (origin: string, rowId: string) => controller.execute("semio.kitApp.toggleExpandedRow", origin, rowId),
+    setSortColumn: (origin: string, column: KitAppSortColumn) => controller.execute("semio.kitApp.setSortColumn", origin, column),
+    setSortDirection: (origin: string, direction: KitAppSortDirection) => controller.execute("semio.kitApp.setSortDirection", origin, direction),
+    toggleSort: (origin: string, column: KitAppSortColumn) => controller.execute("semio.kitApp.toggleSort", origin, column),
+    execute: (origin: string, command: string, ...args: any[]) => controller.execute(command, origin, ...args),
   };
 }
 
@@ -991,43 +1023,8 @@ export function useKitAppIsTypeHovered(typeId: string, id?: KitAppId): boolean {
  * Get the diff status of a type from the current kit diff
  */
 export function useKitAppTypeStatus(typeId: string, id?: KitAppId): DiffStatus {
-  const store = useKitAppStore(identitySelector, id) as KitAppStore;
-  if (!store) return DiffStatus.Unchanged;
-
-  const state = useSync<KitAppState>(store, identitySelector);
-  const currentStack = store?.currentTransactionStack;
-
-  if (currentStack && currentStack.length > 0) {
-    for (const edit of currentStack) {
-      if (edit.do?.kitDiff?.types) {
-        // Check added types
-        if (edit.do.kitDiff.types.added) {
-          for (const type of edit.do.kitDiff.types.added) {
-            if (type.guid === typeId) {
-              return DiffStatus.Added;
-            }
-          }
-        }
-        // Check removed types
-        if (edit.do.kitDiff.types.removed) {
-          for (const removedId of edit.do.kitDiff.types.removed) {
-            if (removedId.guid === typeId) {
-              return DiffStatus.Removed;
-            }
-          }
-        }
-        // Check modified types
-        if (edit.do.kitDiff.types.updated) {
-          for (const typeUpdate of edit.do.kitDiff.types.updated) {
-            if (typeUpdate.type.guid === typeId) {
-              return DiffStatus.Modified;
-            }
-          }
-        }
-      }
-    }
-  }
-
+  // Diff status is not part of XState UI state - this would come from Kit data
+  // For now, return Unchanged as diff tracking is being migrated
   return DiffStatus.Unchanged;
 }
 
@@ -1101,43 +1098,8 @@ export function useKitAppIsDesignHovered(designId: string, id?: KitAppId): boole
  * Get the diff status of a design from the current kit diff
  */
 export function useKitAppDesignStatus(designId: string, id?: KitAppId): DiffStatus {
-  const store = useKitAppStore(identitySelector, id) as KitAppStore;
-  if (!store) return DiffStatus.Unchanged;
-
-  const state = useSync<KitAppState>(store, identitySelector);
-  const currentStack = store?.currentTransactionStack;
-
-  if (currentStack && currentStack.length > 0) {
-    for (const edit of currentStack) {
-      if (edit.do?.kitDiff?.designs) {
-        // Check added designs
-        if (edit.do.kitDiff.designs.added) {
-          for (const design of edit.do.kitDiff.designs.added) {
-            if (design.guid === designId) {
-              return DiffStatus.Added;
-            }
-          }
-        }
-        // Check removed designs
-        if (edit.do.kitDiff.designs.removed) {
-          for (const removedId of edit.do.kitDiff.designs.removed) {
-            if (removedId.guid === designId) {
-              return DiffStatus.Removed;
-            }
-          }
-        }
-        // Check modified designs
-        if (edit.do.kitDiff.designs.updated) {
-          for (const designUpdate of edit.do.kitDiff.designs.updated) {
-            if (designUpdate.design.guid === designId) {
-              return DiffStatus.Modified;
-            }
-          }
-        }
-      }
-    }
-  }
-
+  // Diff status is not part of XState UI state - this would come from Kit data
+  // For now, return Unchanged as diff tracking is being migrated
   return DiffStatus.Unchanged;
 }
 
@@ -1198,7 +1160,7 @@ export function useKitAppDesignColor(designId: string, isSelected: boolean, id?:
 
 // #endregion Designs
 
-// #endregion Store
+// #endregion Internal State Management
 
 // #region Commands
 
@@ -2128,7 +2090,7 @@ const AppContent: FC = () => {
   const kitAppCommands = useKitAppCommands();
   const kitApp = useKitApp() as KitAppState;
   const isMobile = useIsMobile();
-  const store = useSketchpadStore();
+  const orchestrator = useSketchpadStore();
 
   const [isDragOver, setIsDragOver] = React.useState(false);
   const [showZipWarning, setShowZipWarning] = React.useState(false);
@@ -2267,14 +2229,7 @@ const AppContent: FC = () => {
     return Array.from(nameSet).sort();
   }, [kitDesignsKey, kitTypesKey, selectedKind, selectedName]);
 
-  useEffect(() => {
-    if (appType !== "kit" || !kitScope?.guid || !hasKit) {
-      return;
-    }
-    if (!store.hasKitApp({ kit: kitScope.guid })) {
-      sketchpadCommands.createKitApp("semio.sketchpad.app.kit.autoCreate", { kit: kitScope.guid });
-    }
-  }, [appType, kitScope?.guid, hasKit, sketchpadCommands, store]);
+  // Kit app creation is now handled by useKitAppYjsToXStateSync hook
 
   useEffect(() => {
     if (appType !== "kit") {
@@ -4469,7 +4424,72 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode; fallbac
   }
 }
 
+// Sync hook to keep Y.js controller state in sync with XState
+function useKitAppYjsToXStateSync() {
+  const actor = useSketchpadActorHook();
+  const kitScope = useKitScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const sketchpadStore = useSketchpadStore();
+  const sketchpadCommands = useSketchpadCommands();
+  const hasKit = useHasKit(kitGuid);
+  const hasInitialized = useRef(false);
+
+  // Ensure Kit app exists before syncing
+  useLayoutEffect(() => {
+    if (!kitGuid || !hasKit) return;
+
+    if (!sketchpadStore.hasKitApp({ kit: kitGuid })) {
+      sketchpadCommands.createKitApp("semio.sketchpad.app.kit.autoCreateForSync", { kit: kitGuid });
+    }
+  }, [kitGuid, hasKit, sketchpadStore, sketchpadCommands]);
+
+  // Initialize XState with Y.js state synchronously (before paint)
+  useLayoutEffect(() => {
+    if (hasInitialized.current || !kitGuid || !sketchpadStore.hasKitApp({ kit: kitGuid })) return;
+
+    const store = sketchpadStore.kitApp(kitGuid);
+    const initialState = store.snapshot();
+
+    // Convert expandedRows array to Set for XState
+    const xstateInitialState = {
+      ...initialState,
+      expandedRows: new Set(initialState.expandedRows || []),
+    };
+
+    // Initialize XState with current Y.js state
+    actor.send({
+      type: "KIT.INIT",
+      kitGuid,
+      state: xstateInitialState,
+    });
+    hasInitialized.current = true;
+  }, [actor, sketchpadStore, kitGuid]);
+
+  // Continue syncing Y.js changes to XState
+  const store = kitGuid && sketchpadStore.hasKitApp({ kit: kitGuid }) ? sketchpadStore.kitApp(kitGuid) : null;
+  const state = useSyncDeep<KitAppState, KitAppState>(store, (s: KitAppState) => s);
+
+  useEffect(() => {
+    if (!state || !kitGuid || !hasInitialized.current) return;
+
+    // Convert expandedRows array to Set for XState
+    const xstateState = {
+      ...state,
+      expandedRows: new Set(state.expandedRows || []),
+    };
+
+    actor.send({
+      type: "KIT.SYNC",
+      kitGuid,
+      state: xstateState,
+    });
+  }, [actor, state, kitGuid]);
+}
+
 const App: FC = () => {
+  // Sync Y.js state to XState
+  useKitAppYjsToXStateSync();
+
   return (
     <ErrorBoundary
       fallback={
@@ -4520,7 +4540,7 @@ const KitSectionForm: FC = () => {
         </TreeItem>
       );
     }
-    const kitStore = useKitStore() as any;
+    const kitDataSource = useKitStore() as any;
     return (
       <>
         <TreeItem>
@@ -4529,7 +4549,7 @@ const KitSectionForm: FC = () => {
               lazy
               id="semio.sketchpad.app.kit.panel.details.section.kit.name"
               value={kit.name}
-              onLazyChange={(value) => kitStore.change({ name: value })}
+              onLazyChange={(value) => kitDataSource.change({ name: value })}
               transaction={useKitAppTransaction("semio.sketchpad.app.kit.panel.details.section.kit.name")}
               showLabel
             />
@@ -4542,7 +4562,7 @@ const KitSectionForm: FC = () => {
               id="semio.sketchpad.app.kit.panel.details.section.kit.version"
               value={kit.version || ""}
               placeholder={useLabel("semio.sketchpad.app.kit.versionPlaceholder.label")}
-              onLazyChange={(value) => kitStore.change({ version: value })}
+              onLazyChange={(value) => kitDataSource.change({ version: value })}
               transaction={useKitAppTransaction("semio.sketchpad.app.kit.panel.details.section.kit.version")}
               showLabel
             />
@@ -4555,7 +4575,7 @@ const KitSectionForm: FC = () => {
               id="semio.sketchpad.app.kit.panel.details.section.kit.description"
               value={kit.description || ""}
               placeholder={useLabel("semio.sketchpad.app.kit.descriptionPlaceholder.label")}
-              onLazyChange={(value) => kitStore.change({ description: value })}
+              onLazyChange={(value) => kitDataSource.change({ description: value })}
               transaction={useKitAppTransaction("semio.sketchpad.app.kit.panel.details.section.kit.description")}
               showLabel
             />
@@ -4568,7 +4588,7 @@ const KitSectionForm: FC = () => {
               id="semio.sketchpad.app.kit.panel.details.section.kit.icon"
               value={kit.icon || ""}
               placeholder={useLabel("semio.sketchpad.app.kit.iconPlaceholder.label")}
-              onLazyChange={(value) => kitStore.change({ icon: value })}
+              onLazyChange={(value) => kitDataSource.change({ icon: value })}
               transaction={useKitAppTransaction("semio.sketchpad.app.kit.panel.details.section.kit.icon")}
               showLabel
             />
@@ -4581,7 +4601,7 @@ const KitSectionForm: FC = () => {
               id="semio.sketchpad.app.kit.panel.details.section.kit.image"
               value={kit.image || ""}
               placeholder={useLabel("semio.sketchpad.app.kit.imagePlaceholder.label")}
-              onLazyChange={(value) => kitStore.change({ image: value })}
+              onLazyChange={(value) => kitDataSource.change({ image: value })}
               transaction={useKitAppTransaction("semio.sketchpad.app.kit.panel.details.section.kit.image")}
               showLabel
             />
@@ -4594,7 +4614,7 @@ const KitSectionForm: FC = () => {
               id="semio.sketchpad.app.kit.panel.details.section.kit.homepage"
               value={kit.homepage || ""}
               placeholder={useLabel("semio.sketchpad.app.kit.homepagePlaceholder.label")}
-              onLazyChange={(value) => kitStore.change({ homepage: value })}
+              onLazyChange={(value) => kitDataSource.change({ homepage: value })}
               transaction={useKitAppTransaction("semio.sketchpad.app.kit.panel.details.section.kit.homepage")}
               showLabel
             />
@@ -4607,7 +4627,7 @@ const KitSectionForm: FC = () => {
               id="semio.sketchpad.app.kit.panel.details.section.kit.license"
               value={kit.license || ""}
               placeholder={useLabel("semio.sketchpad.app.kit.licensePlaceholder.label")}
-              onLazyChange={(value) => kitStore.change({ license: value })}
+              onLazyChange={(value) => kitDataSource.change({ license: value })}
               transaction={useKitAppTransaction("semio.sketchpad.app.kit.panel.details.section.kit.license")}
               showLabel
             />
@@ -4979,7 +4999,7 @@ export const FolderSection: FC = () => {
   const { t } = useTranslation();
   const kitApp = useKitApp() as KitAppState;
   const kit = useKit() as Kit;
-  const kitStore = useKitStore() as any;
+  const kitDataSource = useKitStore() as any;
   const selection = kitApp?.selection;
   const selectedFolders = selection?.folders || [];
 
@@ -5012,8 +5032,8 @@ export const FolderSection: FC = () => {
             id="semio.sketchpad.app.kit.panel.details.section.folder.name"
             value={folder.name}
             onLazyChange={(value) => {
-              const folderStore = (kitStore as any).folder(folder.guid);
-              folderStore.change({ name: value });
+              const folderDataSource = (kitDataSource as any).folder(folder.guid);
+              folderDataSource.change({ name: value });
             }}
             transaction={useKitAppTransaction("semio.sketchpad.app.kit.panel.details.section.folder.name")}
             showLabel
@@ -5029,8 +5049,8 @@ export const FolderSection: FC = () => {
               value={folder.description || ""}
               placeholder={useLabel("semio.sketchpad.app.folder.descriptionPlaceholder.label")}
               onLazyChange={(value) => {
-                const folderStore = (kitStore as any).folder(folder.guid);
-                folderStore.change({ description: value });
+                const folderDataSource = (kitDataSource as any).folder(folder.guid);
+                folderDataSource.change({ description: value });
               }}
               transaction={useKitAppTransaction("semio.sketchpad.app.kit.panel.details.section.folder.description")}
               showLabel

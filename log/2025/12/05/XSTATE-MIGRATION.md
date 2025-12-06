@@ -943,3 +943,54 @@ All 5 Playwright tests pass:
 - Type: 31.6s (Pan: ~18ms avg)
 - Design: 43.3s (Scene Pan 2: ~60ms)
 - Docs: 5.9s
+
+## 2025-12-05: Store Removal Blocked
+
+### Finding
+
+Attempted to remove Y.js stores from Design app hooks and use XState selectors directly.
+**Result: Tests fail** because XState isn't initialized before React's first render.
+
+### Technical Issue
+
+1. Hooks like `useDesignAppSelection()` are called during React render
+2. They try to read from XState via `useSelector(actor, selector)`
+3. XState machine's `designApps` context is empty until INIT event fires
+4. INIT event is sent in `useLayoutEffect`, which runs AFTER first render
+5. First render returns empty/undefined values, breaking the diagram
+
+### Attempted Solutions
+
+1. **Synchronous initialization during render** - Violates React rules (side effects in render)
+2. **useLayoutEffect for INIT** - Still runs after first render, too late
+3. **Y.js fallback** - Works but doesn't eliminate stores
+
+### Required Architecture Changes
+
+To fully eliminate stores and use XState as single source of truth:
+
+1. **Pre-initialize XState before component mounts**
+   - When navigation changes to a design route, send DESIGN.INIT immediately
+   - This should happen in routing layer, before Design components render
+
+2. **Use React Suspense**
+   - Make hooks throw Promise until XState is ready
+   - Use `<Suspense>` to show loading state
+
+3. **Keep Y.js stores for now** (current state)
+   - Stores remain source of truth for reading
+   - XState syncs from Y.js for commands/transactions
+   - Gradual migration as architecture improves
+
+### Current State
+
+- **Machines consolidated**: Single `sketchpadMachine` (1 createMachine call)
+- **Design hooks**: Read from Y.js stores (reverted)
+- **Commands**: Route through Y.js stores (unchanged)
+- **XState sync**: Background sync from Y.js → XState for panel visibility
+
+### Next Steps
+
+1. Implement navigation-based XState initialization
+2. Or implement Suspense-based loading pattern
+3. Then migrate hooks to XState selectors

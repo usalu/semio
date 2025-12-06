@@ -157,7 +157,7 @@ import {
   Window,
 } from "./elements";
 import type { KitAppState } from "./Kit";
-import { createSketchpadActor, selectExpertise, selectIsFullscreen, selectLanguage, selectLayout, selectMode, selectNavigation, selectPanelSizes, selectSnapshot, selectTheme } from "./machines";
+import { createSketchpadActor, selectExpertise, selectIsFullscreen, selectLanguage, selectLayout, selectMode, selectNavigation, selectPanelSizes, selectSnapshot, selectTheme, SketchpadActorRef } from "./machines";
 import type { QualityAppState } from "./Quality";
 import {
   AppCommandResult,
@@ -226,6 +226,7 @@ import {
 } from "./shared";
 import { Tutorial, TutorialProvider, TutorialStore, useAvailableTutorials } from "./Tutorials";
 import type { TypeAppState } from "./Type";
+import { SketchpadActorContext } from "./xstate-hooks";
 // Lazy imports to break circular dependency - hooks are imported inside functions that use them
 // Module cache for lazy-loaded hooks
 let designAppModuleCache: any = null;
@@ -9088,7 +9089,6 @@ if (import.meta.hot?.data.stores) {
 }
 
 // XState actors for state management (parallel to existing stores during migration)
-type SketchpadActorRef = ReturnType<typeof createSketchpadActor>;
 let actors: Map<Guid, SketchpadActorRef>;
 if (import.meta.hot?.data.actors) {
   actors = import.meta.hot.data.actors;
@@ -9101,8 +9101,7 @@ if (import.meta.hot?.data.actors) {
 
 const SketchpadScopeContext = createContext<SketchpadScope | null>(null);
 
-// Context for XState actor (for gradual migration)
-const SketchpadActorContext = createContext<SketchpadActorRef | null>(null);
+// SketchpadActorContext is imported from xstate-hooks.ts
 
 export const SketchpadScopeProvider = (props: { id?: string; remote?: RemoteProviders; onWindowEvents?: WindowEvents; initialState?: ExtendedInitialState; children: React.ReactNode }) => {
   const id = useMemo(() => props.id || guid(), [props.id]);
@@ -9734,6 +9733,15 @@ export function useSketchpadCommands() {
           panelSizes: newSizes,
         });
       },
+      storeKitFileBlobs: async (kitGuid: Guid, files: Map<string, Blob>) => {
+        if (!store.hasKit(kitGuid)) return;
+        const kitStore = store.kit(kitGuid);
+        await kitStore.storeFileBlobs(files);
+      },
+      getKitSnapshot: (kitGuid: Guid): Kit | null => {
+        if (!store.hasKit(kitGuid)) return null;
+        return store.kit(kitGuid).snapshot();
+      },
     }),
     [store, navigate, reactNavigate],
   );
@@ -10063,6 +10071,22 @@ class AppRegistry {
 }
 
 const appRegistry = new AppRegistry();
+
+// Register core apps manually
+import { config as designConfig } from "./Design";
+import { config as docsConfig } from "./Docs";
+import { config as homeConfig } from "./Home";
+import { config as kitConfig } from "./Kit";
+import { config as qualityConfig } from "./Quality";
+import { config as typeConfig } from "./Type";
+
+appRegistry.register(homeConfig);
+appRegistry.register(docsConfig);
+appRegistry.register(kitConfig);
+appRegistry.register(typeConfig);
+appRegistry.register(designConfig);
+appRegistry.register(qualityConfig);
+
 export { appRegistry };
 
 // #endregion Apps Registry

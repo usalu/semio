@@ -25,31 +25,15 @@
 
 // #endregion Commands
 
-// #region Store
+// #region Internal State Management
 
 import * as Y from "yjs";
 import { ConnectionDiff, ConnectionId, Guid, KitDiff, PieceDiff, PieceId } from "../semio";
 import type { AppConfig, AppWindowConfig, DesignAppId, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolDefinition, ToolRenderContext, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
 import { createPanelDefinition, Expertise, Mode, PanelKind, Theme, ToolKind } from "./shared";
-import {
-  DesignStore,
-  identitySelector,
-  KitDiffAppStore,
-  KitStore,
-  registerDesignAppStoreFactory,
-  SketchpadStore,
-  useDesignScope,
-  useKitScope,
-  usePieceScope,
-  useSketchpadActor,
-  useSketchpadStore,
-  useSyncDeep,
-  useSyncField,
-  useSyncNestedArrayItemMembership,
-  useSyncSelectionItemMembership,
-} from "./Sketchpad";
+import { identitySelector, useDesignScope, useKitScope, usePieceScope, useSketchpadActor } from "./Sketchpad";
 
-// #endregion Store
+// #endregion Internal State Management
 
 // #region Imports
 
@@ -58,7 +42,6 @@ import { arrayMove } from "@dnd-kit/sortable";
 import { Edges, Line, Select, useFBX, useGLTF } from "@react-three/drei";
 import { ThreeEvent, useLoader } from "@react-three/fiber";
 import { AddIcon, AwardIcon, CodeIcon, ConnectionIcon, DiagramIcon, DisconnectIcon, HandIcon, MonitorIcon, MoonIcon, MousePointerIcon, RemoveIcon, SceneIcon, SelectToolIcon, SunIcon, TableViewIcon, TutorialIcon, UserIcon } from "@semio/assets";
-import { useSelector } from "@xstate/react";
 import React, { createContext, FC, memo, ReactNode, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
@@ -66,7 +49,6 @@ import { useParams } from "react-router";
 import * as THREE from "three";
 import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
 import { useLabel } from "../i18n";
-import { createDesignPanelVisibilitySelector } from "./machines";
 
 import type { ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, Connection as RFConnection } from "@xyflow/react";
 import { applyNodeChanges, BaseEdge, Handle, Position, ReactFlowInstance, ReactFlowProvider, useReactFlow, ViewportPortal } from "@xyflow/react";
@@ -129,10 +111,14 @@ import {
   Canvas,
   ConnectionScopeProvider,
   DesignScopeProvider,
+  DesignStore,
   getKitAppHooks,
+  KitDiffAppStore,
   KitScopeProvider,
+  KitStore,
   LayoutCanvas,
   PieceScopeProvider,
+  SketchpadStore,
   ToolGroup,
   useAddFooterItem,
   useAddPanelSection,
@@ -172,10 +158,21 @@ import {
   useReplacableTypes,
   useSketchpad,
   useSketchpadCommands,
+  useSketchpadStore,
+  useSyncDeep,
+  useSyncField,
+  useSyncNestedArrayItemMembership,
+  useSyncSelectionItemMembership,
   useTheme,
   useTooltip,
   useType,
 } from "./Sketchpad";
+import { useDesignApp as useDesignAppXState } from "./xstate-hooks";
+
+// Stub for controller factory registration - legacy pattern being phased out
+const registerDesignAppControllerFactory = (_factory: any) => {
+  // No-op: Controller pattern deprecated in favor of XState
+};
 
 let kitAppModuleCache: any = null;
 if (typeof window !== "undefined" && (window as any).__KIT_APP_MODULE_CACHE__) {
@@ -938,7 +935,7 @@ export const inverseDesignAppSelectionDiff = (selection: DesignAppSelection, dif
 export const areSameDesignApp = (designApp: DesignAppId, other: DesignAppId): boolean => designApp.kit === other.kit && designApp.design === other.design;
 export const hasSameDesignApp = (designApp: DesignAppId, others: DesignAppId[]): boolean => others.some((other) => areSameDesignApp(designApp, other));
 
-export class DesignAppStore extends KitDiffAppStore<DesignAppState, DesignAppDiff, DesignAppSelectionDiff, DesignAppEdit, DesignAppCommandContext, DesignAppCommandResult> {
+export class DesignAppController extends KitDiffAppStore<DesignAppState, DesignAppDiff, DesignAppSelectionDiff, DesignAppEdit, DesignAppCommandContext, DesignAppCommandResult> {
   private readonly kitGuid: Guid;
   private readonly designGuid: Guid;
 
@@ -1204,7 +1201,7 @@ export class DesignAppStore extends KitDiffAppStore<DesignAppState, DesignAppDif
   }
 
   // PERF: Override to directly access individual fields without rebuilding entire snapshot.
-  // This is critical for performance - DesignAppStore has 14+ getters, each reading from Y.js.
+  // This is critical for performance - DesignAppController has 14+ getters, each reading from Y.js.
   // When a hook uses useSyncField("hover"), we only need the hover value, not all 14 fields.
   getFieldSnapshot(key: string): any {
     switch (key) {
@@ -1516,12 +1513,12 @@ export class DesignAppStore extends KitDiffAppStore<DesignAppState, DesignAppDif
   }
 }
 
-export function initializeDesignAppStore() {
-  registerDesignAppStoreFactory((parent, yMap, transact, id, state) => new DesignAppStore(parent, yMap as any, transact, id, state));
+export function initializeDesignAppController() {
+  registerDesignAppControllerFactory((parent: any, yMap: any, transact: any, id: any, state: any) => new DesignAppController(parent, yMap as any, transact, id, state));
 }
 
 if (typeof window !== "undefined") {
-  setTimeout(() => initializeDesignAppStore(), 0);
+  setTimeout(() => initializeDesignAppController(), 0);
 }
 
 type DesignAppScope = { id: string };
@@ -1537,6 +1534,22 @@ const DesignAppSyncComponent = ({ children }: { children: React.ReactNode }) => 
   return <>{children}</>;
 };
 
+// Convert Y.js DesignAppState to XState DesignAppState format
+function convertToXStateDesignAppState(state: DesignAppState): import("./machines").DesignAppState {
+  return {
+    panelVisibility: state.panelVisibility,
+    selection: state.selection,
+    hover: state.hover,
+    focusedPiece: state.focusedPieceGuid,
+    selectedModelTags: state.selectedModelTags ?? {},
+    diagramCenter: state.diagramCenter ? { x: state.diagramCenter.u, y: state.diagramCenter.v } : undefined,
+    diagramScale: state.diagramScale,
+    camera: state.camera,
+    activeTool: state.activeTool,
+    fullscreenWindow: state.fullscreenWindow,
+  };
+}
+
 // Internal sync hook (used by DesignAppScopeProvider)
 function useDesignAppYjsToXStateSyncInternal() {
   const actor = useSketchpadActor();
@@ -1544,30 +1557,36 @@ function useDesignAppYjsToXStateSyncInternal() {
   const designScope = useDesignScope();
   const kitGuid = kitScope?.guid ?? "";
   const designGuid = designScope?.guid ?? "";
-  const store = useSketchpadStore().designApp(kitGuid, designGuid);
+  const sketchpadStore = useSketchpadStore();
+  const hasInitialized = useRef(false);
 
-  // Sync Y.js state to XState on mount and changes
+  // Initialize XState with Y.js state synchronously (before paint)
+  useLayoutEffect(() => {
+    if (hasInitialized.current || !kitGuid || !designGuid) return;
+
+    const store = sketchpadStore.designApp(kitGuid, designGuid);
+    const initialState = store.snapshot();
+    actor.send({
+      type: "DESIGN.INIT",
+      kitGuid,
+      designGuid,
+      state: convertToXStateDesignAppState(initialState),
+    });
+    hasInitialized.current = true;
+  }, [actor, sketchpadStore, kitGuid, designGuid]);
+
+  // Continue syncing Y.js changes to XState
+  const store = kitGuid && designGuid ? sketchpadStore.designApp(kitGuid, designGuid) : null;
   const state = useSyncDeep<DesignAppState, DesignAppState>(store, (s) => s);
 
   useEffect(() => {
-    if (!state || !kitGuid || !designGuid) return;
+    if (!state || !kitGuid || !designGuid || !hasInitialized.current) return;
 
     actor.send({
       type: "DESIGN.SYNC",
       kitGuid,
       designGuid,
-      state: {
-        panelVisibility: state.panelVisibility,
-        selection: state.selection,
-        hover: state.hover,
-        focusedPiece: state.focusedPieceGuid,
-        selectedModelTags: state.selectedModelTags ?? {},
-        diagramCenter: state.diagramCenter ? { x: state.diagramCenter.u, y: state.diagramCenter.v } : undefined,
-        diagramScale: state.diagramScale,
-        camera: state.camera,
-        activeTool: state.activeTool,
-        fullscreenWindow: state.fullscreenWindow,
-      },
+      state: convertToXStateDesignAppState(state),
     });
   }, [actor, state, kitGuid, designGuid]);
 }
@@ -1586,7 +1605,7 @@ export function useDesignAppActor(): any {
   return useContext(DesignAppActorContext);
 }
 
-export function useDesignAppStore<T>(selector?: (store: DesignAppStore) => T, id?: DesignAppId): T | DesignAppStore | null {
+export function useDesignAppController<T>(selector?: (store: DesignAppController) => T, id?: DesignAppId): T | DesignAppController | null {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
   const designScope = useDesignScope();
@@ -1599,11 +1618,23 @@ export function useDesignAppStore<T>(selector?: (store: DesignAppStore) => T, id
   return selector ? selector(designAppStore) : designAppStore;
 }
 
-// Generic hook for Design app state selection (XState-ready)
+/**
+ * Get Design app state from XState.
+ * This is the new XState-based hook.
+ */
 export function useDesignApp<T>(selector?: (state: DesignAppState) => T, id?: DesignAppId): T | DesignAppState | null {
-  const store = useDesignAppStore(identitySelector, id);
-  if (!store) return null;
-  return useSyncDeep<DesignAppState, T>(store as DesignAppStore, selector || ((s: DesignAppState) => s as T));
+  const kitScope = useKitScope();
+  const designScope = useDesignScope();
+  const kitGuid = kitScope?.guid ?? id?.kit;
+  const designGuid = designScope?.guid ?? id?.design;
+
+  if (!kitGuid || !designGuid) return null;
+
+  const state = useDesignAppXState(kitGuid, designGuid);
+  if (selector) {
+    return selector(state as unknown as DesignAppState) as T;
+  }
+  return state as unknown as DesignAppState;
 }
 
 // PERF: Stable empty values for hooks
@@ -1625,29 +1656,25 @@ const selectModelTags = (s: DesignAppState) => s.selectedModelTags ?? EMPTY_MODE
 const selectHover = (s: DesignAppState) => s.hover;
 const selectPanelVisibility = (s: DesignAppState) => s.panelVisibility;
 
-// Hooks read from Y.js stores (proven performant), commands go through XState
-// Y.js provides persistent state that survives page reloads and syncs across tabs
+// Hooks read from XState stores
 // XState handles state transitions and commands
 
 export function useDesignAppSelection(id?: DesignAppId): DesignAppSelection {
-  // Y.js-based implementation (XState sync happens in background)
-  const store = useDesignAppStore(identitySelector, id);
-  if (!store) return EMPTY_SELECTION;
-  return useSyncField<DesignAppState, DesignAppSelection>(store as DesignAppStore, "selection", selectSelection);
+  const state = useDesignApp(identitySelector, id);
+  if (!state) return EMPTY_SELECTION;
+  return selectSelection(state as DesignAppState);
 }
 
 export function useDesignAppFullscreen(id?: DesignAppId): DesignAppFullscreenWindow {
-  // Y.js-based implementation (XState sync happens in background)
-  const store = useDesignAppStore(identitySelector, id);
-  if (!store) return DesignAppFullscreenWindow.None;
-  return useSyncField<DesignAppState, DesignAppFullscreenWindow>(store as DesignAppStore, "fullscreenWindow", selectFullscreen, false);
+  const state = useDesignApp(identitySelector, id);
+  if (!state) return DesignAppFullscreenWindow.None;
+  return selectFullscreen(state as DesignAppState);
 }
 
 export function useDesignAppActiveTool(id?: DesignAppId): ToolKind {
-  // Y.js-based implementation (XState sync happens in background)
-  const store = useDesignAppStore(identitySelector, id);
-  if (!store) return ToolKind.SELECTION_NORMAL;
-  return useSyncField<DesignAppState, ToolKind>(store as DesignAppStore, "activeTool", selectActiveTool, false);
+  const state = useDesignApp(identitySelector, id);
+  if (!state) return ToolKind.SELECTION_NORMAL;
+  return selectActiveTool(state as DesignAppState);
 }
 
 export function useDesignAppDiff(): KitDiff | undefined {
@@ -1655,57 +1682,51 @@ export function useDesignAppDiff(): KitDiff | undefined {
 }
 
 export function useDesignAppOthers(id?: DesignAppId): DesignAppPresenceOther[] {
-  const store = useDesignAppStore(identitySelector, id);
-  if (!store) return EMPTY_OTHERS;
-  return useSyncField<DesignAppState, DesignAppPresenceOther[]>(store as DesignAppStore, "others", selectOthers);
+  const state = useDesignApp(identitySelector, id);
+  if (!state) return EMPTY_OTHERS;
+  return selectOthers(state as DesignAppState);
 }
 
 export function useDesignAppCamera(id?: DesignAppId): Camera | undefined {
-  const store = useDesignAppStore(identitySelector, id);
-  if (!store) return undefined;
-  return useSyncField<DesignAppState, Camera | undefined>(store as DesignAppStore, "camera", selectCamera, false);
+  const state = useDesignApp(identitySelector, id);
+  if (!state) return undefined;
+  return selectCamera(state as DesignAppState);
 }
 
 export function useDesignAppDiagramCenter(id?: DesignAppId): Coord | undefined {
-  const store = useDesignAppStore(identitySelector, id);
-  if (!store) return undefined;
-  return useSyncField<DesignAppState, Coord | undefined>(store as DesignAppStore, "diagramCenter", selectDiagramCenter, false);
+  const state = useDesignApp(identitySelector, id);
+  if (!state) return undefined;
+  return selectDiagramCenter(state as DesignAppState);
 }
 
 export function useDesignAppDiagramScale(id?: DesignAppId): number | undefined {
-  const store = useDesignAppStore(identitySelector, id);
-  if (!store) return undefined;
-  return useSyncField<DesignAppState, number | undefined>(store as DesignAppStore, "diagramScale", selectDiagramScale, false);
+  const state = useDesignApp(identitySelector, id);
+  if (!state) return undefined;
+  return selectDiagramScale(state as DesignAppState);
 }
 
 export function useDesignAppFocusedPieceGuid(id?: DesignAppId): Guid | undefined {
-  const store = useDesignAppStore(identitySelector, id);
-  if (!store) return undefined;
-  return useSyncField<DesignAppState, Guid | undefined>(store as DesignAppStore, "focusedPieceGuid", selectFocusedPiece, false);
+  const state = useDesignApp(identitySelector, id);
+  if (!state) return undefined;
+  return selectFocusedPiece(state as DesignAppState);
 }
 
 export function useDesignAppSelectedModelTags(id?: DesignAppId): Record<Guid, string[]> {
-  const store = useDesignAppStore(identitySelector, id);
-  if (!store) return EMPTY_MODEL_TAGS;
-  return useSyncField<DesignAppState, Record<Guid, string[]>>(store as DesignAppStore, "selectedModelTags", selectModelTags);
+  const state = useDesignApp(identitySelector, id);
+  if (!state) return EMPTY_MODEL_TAGS;
+  return selectModelTags(state as DesignAppState);
 }
 
 export function useDesignAppHover(id?: DesignAppId): DesignAppHover | undefined {
-  // Y.js-based implementation (XState sync happens in background)
-  const store = useDesignAppStore(identitySelector, id);
-  if (!store) return undefined;
-  return useSyncField<DesignAppState, DesignAppHover | undefined>(store as DesignAppStore, "hover", selectHover);
+  const state = useDesignApp(identitySelector, id);
+  if (!state) return undefined;
+  return selectHover(state as DesignAppState);
 }
 
 export function useDesignAppPanelVisibility(id?: DesignAppId): PanelVisibility {
-  // XState-based implementation (reads from synced XState state)
-  const actor = useSketchpadActor();
-  const kitScope = useKitScope();
-  const designScope = useDesignScope();
-  const kitGuid = kitScope?.guid ?? id?.kit ?? "";
-  const designGuid = designScope?.guid ?? id?.design ?? "";
-  const selector = useMemo(() => createDesignPanelVisibilitySelector(kitGuid, designGuid), [kitGuid, designGuid]);
-  return useSelector(actor, selector);
+  const state = useDesignApp(identitySelector, id);
+  if (!state) return DEFAULT_PANEL_VISIBILITY;
+  return selectPanelVisibility(state as DesignAppState);
 }
 
 // PERF: Memoized empty commands object for when store is null
@@ -1765,7 +1786,7 @@ const EMPTY_COMMANDS = {
 } as any;
 
 export function useDesignAppCommands(id?: DesignAppId) {
-  const store = useDesignAppStore(undefined, id) as DesignAppStore | null;
+  const store = useDesignAppController(undefined, id) as DesignAppController | null;
 
   // PERF: All commands go through Y.js store for now
   // XState migration for commands requires hooks to also use XState (to be synced)
@@ -1893,7 +1914,7 @@ export function useDesignAppYjsToXStateSync(id?: DesignAppId) {
 
 // PERF: Helper to compute ALL pieces affected by the current transaction at once
 // This is called ONCE per transaction change, not 180 times
-function getTransactionAffectedPieces(store: DesignAppStore | null): { changedPieces: Set<string>; statusMap: Map<string, DiffStatus> } {
+function getTransactionAffectedPieces(store: DesignAppController | null): { changedPieces: Set<string>; statusMap: Map<string, DiffStatus> } {
   const changedPieces = new Set<string>();
   const statusMap = new Map<string, DiffStatus>();
 
@@ -1950,7 +1971,7 @@ const TransactionPiecesContext = createContext<TransactionPiecesContextValue>(EM
  * All child components can then check membership in O(1) time without individual subscriptions.
  */
 export function TransactionPiecesProvider({ children }: { children: ReactNode }) {
-  const store = useDesignAppStore(identitySelector) as DesignAppStore;
+  const store = useDesignAppController(identitySelector) as DesignAppController;
 
   // Track last computed value to ensure stable references
   const lastValueRef = useRef<TransactionPiecesContextValue>(EMPTY_TRANSACTION_CONTEXT);
@@ -1985,7 +2006,7 @@ export function useIsDesignPieceChangedInTransaction(id: DesignAppId | undefined
 }
 
 export function useDesignAppIsPieceHovered(id: DesignAppId | undefined, pieceId: string): boolean {
-  const store = useDesignAppStore(identitySelector, id) as DesignAppStore;
+  const store = useDesignAppController(identitySelector, id) as DesignAppController;
   // PERF: Use granular subscription that only re-renders when this specific piece's hover state changes
   // Instead of re-rendering all 180 pieces when any hover changes, only the affected piece re-renders
   return useSyncNestedArrayItemMembership(store, "hover", "pieces", pieceId);
@@ -2007,7 +2028,7 @@ const EMPTY_HOVER_CONTEXT: HoverPiecesContextValue = {
 const HoverPiecesContext = createContext<HoverPiecesContextValue>(EMPTY_HOVER_CONTEXT);
 
 // PERF: Helper to compute hover data with stable references
-function computeHoverData(store: DesignAppStore | null, state: DesignAppState): HoverPiecesContextValue {
+function computeHoverData(store: DesignAppController | null, state: DesignAppState): HoverPiecesContextValue {
   const hover = state.hover;
   const transitivelyHoveredPieces = new Set<string>();
   const transitivelyHoveredTypes = new Set<string>();
@@ -2053,7 +2074,7 @@ function computeHoverData(store: DesignAppStore | null, state: DesignAppState): 
  * This avoids 180 individual subscriptions each calling store.design().snapshot().
  */
 export function HoverPiecesProvider({ children }: { children: ReactNode }) {
-  const store = useDesignAppStore(identitySelector) as DesignAppStore;
+  const store = useDesignAppController(identitySelector) as DesignAppController;
 
   // Track last computed value to ensure stable references
   const lastValueRef = useRef<HoverPiecesContextValue>(EMPTY_HOVER_CONTEXT);
@@ -2109,7 +2130,7 @@ export function useDesignAppPieceStatus(id: DesignAppId | undefined, pieceId: st
 }
 
 export function useDesignAppIsPieceSelected(id: DesignAppId | undefined, pieceId: string): boolean {
-  const store = useDesignAppStore(identitySelector, id) as DesignAppStore;
+  const store = useDesignAppController(identitySelector, id) as DesignAppController;
   // PERF: Use granular subscription that only re-renders when this specific piece's selection state changes
   return useSyncSelectionItemMembership(store, "pieces", pieceId);
 }
@@ -2172,19 +2193,19 @@ export function useDesignAppPieceColor(id: DesignAppId | undefined, pieceId: str
 }
 
 export function useDesignAppIsConnectionHovered(id: DesignAppId | undefined, connectionId: string): boolean {
-  const store = useDesignAppStore(identitySelector, id) as DesignAppStore;
+  const store = useDesignAppController(identitySelector, id) as DesignAppController;
   // PERF: Use granular subscription that only re-renders when this specific connection's hover state changes
   return useSyncNestedArrayItemMembership(store, "hover", "connections", connectionId);
 }
 
 export function useDesignAppIsConnectionSelected(id: DesignAppId | undefined, connectionId: string): boolean {
-  const store = useDesignAppStore(identitySelector, id) as DesignAppStore;
+  const store = useDesignAppController(identitySelector, id) as DesignAppController;
   // PERF: Use granular subscription that only re-renders when this specific connection's selection state changes
   return useSyncSelectionItemMembership(store, "connections", connectionId);
 }
 
 export function useDesignAppIsPortHovered(id: DesignAppId | undefined, pieceId: string, portId: string): boolean {
-  const store = useDesignAppStore(identitySelector, id) as DesignAppStore;
+  const store = useDesignAppController(identitySelector, id) as DesignAppController;
   // PERF: Memoize selector to prevent new function reference on each render
   const selector = useCallback((state: DesignAppState) => state.hover?.ports?.some((p) => p.piece === pieceId && p.port === portId) ?? false, [pieceId, portId]);
   if (!store) return false;
@@ -2200,7 +2221,7 @@ const EMPTY_PORT: DesignAppSelection["port"] = undefined;
  * This prevents 180 callbacks from firing when piece selection changes.
  */
 export function useDesignAppSelectedPort(id?: DesignAppId): DesignAppSelection["port"] | undefined {
-  const store = useDesignAppStore(identitySelector, id) as DesignAppStore;
+  const store = useDesignAppController(identitySelector, id) as DesignAppController;
 
   // Track the last port value for stability
   const lastPortRef = useRef<{ value: DesignAppSelection["port"]; json: string }>({ value: undefined, json: "" });
@@ -2266,7 +2287,7 @@ export function useDesignAppSelectedPort(id?: DesignAppId): DesignAppSelection["
  * Only re-renders when this specific piece's port selection changes.
  */
 export function useDesignAppIsPiecePortSelected(pieceId: string, portId?: string): boolean {
-  const store = useDesignAppStore(identitySelector) as DesignAppStore;
+  const store = useDesignAppController(identitySelector) as DesignAppController;
   // PERF: Memoize selector to prevent new function reference on each render
   const selector = useCallback((state: DesignAppState) => state.selection?.port?.piece === pieceId && state.selection?.port?.port === portId, [pieceId, portId]);
   if (!store || !portId) return false;
@@ -2274,7 +2295,7 @@ export function useDesignAppIsPiecePortSelected(pieceId: string, portId?: string
 }
 
 // PERF: Helper to get connection status from transaction stack
-function getConnectionStatusFromTransactionStack(store: DesignAppStore | null, connectionId: string): DiffStatus {
+function getConnectionStatusFromTransactionStack(store: DesignAppController | null, connectionId: string): DiffStatus {
   if (!store) return DiffStatus.Unchanged;
   const currentStack = store.currentTransactionStack;
   if (!currentStack || currentStack.length === 0) return DiffStatus.Unchanged;
@@ -2305,7 +2326,7 @@ function getConnectionStatusFromTransactionStack(store: DesignAppStore | null, c
 
 // PERF: Use useSyncField for granular subscription to transaction stack changes only
 export function useDesignAppConnectionStatus(id: DesignAppId | undefined, connectionId: string): DiffStatus {
-  const store = useDesignAppStore(identitySelector, id) as DesignAppStore;
+  const store = useDesignAppController(identitySelector, id) as DesignAppController;
   // PERF: Memoize selector to prevent new function reference on each render
   const selector = useCallback(() => getConnectionStatusFromTransactionStack(store, connectionId), [store, connectionId]);
   return useSyncField<DesignAppState, DiffStatus>(store, "currentTransactionStack", selector);
@@ -7352,6 +7373,9 @@ const renderCountRef = { current: 0 };
 
 const App: FC<AppProps> = () => {
   renderCountRef.current++;
+  // Sync Y.js state to XState on mount and changes
+  useDesignAppYjsToXStateSyncInternal();
+
   const { t } = useTranslation();
   const { selectAll, deselectAll, deleteSelected, undo, redo, toggleDiagramFullscreen, toggleAccesslFullscreen, addPiece, startTransaction, finalizeTransaction, togglePanel, setActiveTool, hoverTypes, hoverDesigns, clearHover } =
     useDesignAppCommands();
@@ -7370,7 +7394,7 @@ const App: FC<AppProps> = () => {
 
   const reactFlowInstanceRef = useRef<ReactFlowInstance | null>(null);
 
-  const store = useDesignAppStore() as DesignAppStore | null;
+  const store = useDesignAppController() as DesignAppController | null;
   const storedWindowLayout = useDesignApp((s) => s.windowLayout);
 
   const defaultLayout = useMemo(() => {

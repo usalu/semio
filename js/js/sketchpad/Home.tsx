@@ -46,20 +46,15 @@ import { de, enUS } from "date-fns/locale";
 import { FC, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router";
-import * as Y from "yjs";
 import i18n, { useLabel } from "../i18n";
 import { generateUniqueName, guid, Guid, importKit, Kit, KitShallow } from "../semio";
 import { docsRegistry } from "./Docs";
 import { Action, Input, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Spinner, Strip, Table, TableAvatar, TableColumn, Textarea, Toggle, ToggleGroup, TreeContent, TreeItem } from "./elements";
 import type { AppConfig, AppEdit, PanelDefinition, PanelVisibility } from "./shared";
 import { createPanelDefinition, Expertise, Layout, Mode, PanelKind, Theme } from "./shared";
-import type { SketchpadStore } from "./Sketchpad";
 import {
-  AppStore,
   Canvas,
   ConceptFilter,
-  identitySelector,
-  registerHomeStoreFactory,
   useAddFooterItem,
   useAddPanelSection,
   useAppType,
@@ -77,12 +72,14 @@ import {
   useRemoveFooterItem,
   useRemovePanelSection,
   useSketchpadCommands,
-  useSketchpadStore,
-  useSyncDeep,
   useTheme,
   useTooltip,
   Window,
 } from "./Sketchpad";
+import { useHomeApp, useHomeCommands } from "./xstate-hooks";
+
+// Alias for internal use
+const useHome = useHomeApp;
 
 // #endregion Imports
 
@@ -133,297 +130,21 @@ export interface HomeCommandResult {
 
 // #endregion Types
 
-// #region Store
+// #region Hooks (XState-based)
 
-export class HomeStore extends AppStore<HomeState, HomeDiff, HomeSelectionDiff, HomeEdit, HomeCommandContext, HomeCommandResult> {
-  constructor(parent: SketchpadStore, yMap: Y.Map<any>, transact: (fn: () => void) => void) {
-    super(parent, yMap, transact);
+// Re-export hooks for backwards compatibility from xstate-hooks
+export {
+  useHomeApp as useHomeAppExported,
+  useHomeLoadingKits as useHomeLoadingKitsExported,
+  useHomePanelVisibility as useHomePanelVisibilityExported,
+  useHomeSelection as useHomeSelectionExported,
+  useHomeSortColumn as useHomeSortColumnExported,
+  useHomeSortDirection as useHomeSortDirectionExported,
+} from "./xstate-hooks";
+// Re-export the local alias
+export { useHome };
 
-    transact(() => {
-      if (!yMap.has("panelVisibility")) {
-        const yPanelVisibility = new Y.Map<boolean>();
-        yPanelVisibility.set("toolbar", false);
-        yPanelVisibility.set("workbench", false);
-        yPanelVisibility.set("details", false);
-        yPanelVisibility.set("chat", false);
-        yPanelVisibility.set("settings", false);
-        yMap.set("panelVisibility", yPanelVisibility);
-      }
-      if (!yMap.has("isTransactionActive")) {
-        yMap.set("isTransactionActive", false);
-      }
-      if (!yMap.has("currentTransactionStack")) {
-        yMap.set("currentTransactionStack", new Y.Array<any>());
-      }
-      if (!yMap.has("pastTransactionsStack")) {
-        yMap.set("pastTransactionsStack", new Y.Array<any>());
-      }
-      if (!yMap.has("redoStack")) {
-        yMap.set("redoStack", new Y.Array<any>());
-      }
-    });
-  }
-
-  get panelVisibility(): PanelVisibility {
-    const yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
-    if (!yPanelVisibility) {
-      return {
-        toolbar: false,
-        workbench: false,
-        details: false,
-        chat: false,
-        settings: false,
-      };
-    }
-    return {
-      toolbar: yPanelVisibility.get("toolbar") ?? false,
-      workbench: yPanelVisibility.get("workbench") ?? false,
-      details: yPanelVisibility.get("details") ?? false,
-      chat: yPanelVisibility.get("chat") ?? false,
-      settings: yPanelVisibility.get("settings") ?? false,
-    };
-  }
-
-  get selection(): HomeSelection | undefined {
-    const yKits = this.yMap.get("selectedKits") as Y.Array<string>;
-    if (!yKits || yKits.length === 0) return undefined;
-    return {
-      kits: yKits.toArray(),
-    };
-  }
-
-  get sortColumn(): HomeSortColumn | undefined {
-    return this.yMap.get("sortColumn") as HomeSortColumn | undefined;
-  }
-
-  get sortDirection(): HomeSortDirection | undefined {
-    return this.yMap.get("sortDirection") as HomeSortDirection | undefined;
-  }
-
-  get loadingKits(): LoadingKit[] {
-    const yLoadingKits = this.yMap.get("loadingKits") as Y.Array<any>;
-    return yLoadingKits ? yLoadingKits.toArray() : [];
-  }
-
-  addLoadingKit(loadingKit: LoadingKit): void {
-    this.transact(() => {
-      let yLoadingKits = this.yMap.get("loadingKits") as Y.Array<any>;
-      if (!yLoadingKits) {
-        yLoadingKits = new Y.Array<any>();
-        this.yMap.set("loadingKits", yLoadingKits);
-      }
-      yLoadingKits.push([loadingKit]);
-    });
-  }
-
-  removeLoadingKit(tempGuid: Guid): void {
-    this.transact(() => {
-      const yLoadingKits = this.yMap.get("loadingKits") as Y.Array<any>;
-      if (yLoadingKits) {
-        const index = yLoadingKits.toArray().findIndex((k: LoadingKit) => k.tempGuid === tempGuid);
-        if (index !== -1) yLoadingKits.delete(index, 1);
-      }
-    });
-  }
-
-  protected hash(state: HomeState): string {
-    return JSON.stringify(state);
-  }
-
-  protected buildSnapshot(): HomeState {
-    return {
-      panelVisibility: this.panelVisibility,
-      selection: this.selection,
-      sortColumn: this.sortColumn,
-      sortDirection: this.sortDirection,
-      loadingKits: this.loadingKits,
-    };
-  }
-
-  protected applySelectionDiff(selectionDiff: HomeSelectionDiff): void {
-    let yKits = this.yMap.get("selectedKits") as Y.Array<string>;
-    if (!yKits) {
-      yKits = new Y.Array<string>();
-      this.yMap.set("selectedKits", yKits);
-    }
-    if (selectionDiff.removed) {
-      selectionDiff.removed.forEach((guid) => {
-        const index = yKits.toArray().indexOf(guid);
-        if (index !== -1) {
-          yKits.delete(index, 1);
-        }
-      });
-    }
-    if (selectionDiff.added) {
-      selectionDiff.added.forEach((guid) => {
-        if (!yKits.toArray().includes(guid)) {
-          yKits.push([guid]);
-        }
-      });
-    }
-  }
-
-  protected inverseSelectionDiff(selection: HomeSelection, diff: HomeSelectionDiff): HomeSelectionDiff {
-    const inverseDiff: HomeSelectionDiff = {};
-    if (diff.added) {
-      inverseDiff.removed = diff.added;
-    }
-    if (diff.removed) {
-      inverseDiff.added = diff.removed;
-    }
-    return inverseDiff;
-  }
-
-  protected getSelection(): HomeSelection | undefined {
-    return this.selection;
-  }
-
-  async executeCommand<T>(command: string, ...args: any[]): Promise<T> {
-    let origin: string | undefined;
-    let rest: any[];
-
-    if (typeof args[0] === "string" && args[0].startsWith("semio.sketchpad.")) {
-      origin = args[0];
-      rest = args.slice(1);
-    } else {
-      origin = undefined;
-      rest = args;
-    }
-
-    console.group(`[${origin || "unknown"}] Executing command: "${command}"`);
-    const callback = this.commandRegistry.get(command);
-    if (!callback) {
-      console.groupEnd();
-      throw new Error(`Command "${command}" not found in home store`);
-    }
-    const state = this.snapshot();
-    const context: HomeCommandContext = { home: state, origin };
-    const result = await callback(context, ...rest);
-    if (result.diff) {
-      this.change(result.diff);
-      this.recordEdit(result);
-    }
-    console.groupEnd();
-    return result as T;
-  }
-
-  change(diff: HomeDiff): void {
-    super.change({
-      panelVisibility: diff.panelVisibility,
-      selection: diff.selection,
-    });
-    this.transact(() => {
-      if (diff.sortColumn !== undefined) {
-        this.yMap.set("sortColumn", diff.sortColumn);
-      }
-      if (diff.sortDirection !== undefined) {
-        this.yMap.set("sortDirection", diff.sortDirection);
-      }
-    });
-  }
-}
-
-registerHomeStoreFactory((parent, yMap, transact) => new HomeStore(parent, yMap, transact));
-
-function useHomeStore<T>(selector?: (store: HomeStore) => T): T | HomeStore {
-  const store = useSketchpadStore();
-  const homeStore = store.home();
-  return selector ? selector(homeStore) : homeStore;
-}
-
-export function useHome<T>(selector?: (state: HomeState) => T): T | HomeState {
-  const store = useHomeStore(identitySelector) as HomeStore;
-  if (selector) {
-    return useSyncDeep<HomeState>(store, selector as (value: HomeState) => HomeState) as T;
-  }
-  return useSyncDeep<HomeState>(store, identitySelector);
-}
-
-export function useHomePanelVisibility(): PanelVisibility {
-  return useHome((s) => s.panelVisibility) as PanelVisibility;
-}
-
-export function useHomeCommands() {
-  const store = useHomeStore() as HomeStore;
-  return {
-    togglePanel: (origin: string, panelKey: keyof PanelVisibility) => {
-      const current = store.snapshot().panelVisibility;
-      store.change({
-        panelVisibility: {
-          [panelKey]: !current[panelKey],
-        },
-      });
-    },
-    selectKit: (origin: string, Guid: Guid) => {
-      const current = store.snapshot();
-      store.change({
-        selection: {
-          removed: current.selection?.kits ?? [],
-          added: [Guid],
-        },
-      });
-    },
-    addKitToSelection: (origin: string, Guid: Guid) => {
-      store.change({
-        selection: {
-          added: [Guid],
-        },
-      });
-    },
-    removeKitFromSelection: (origin: string, Guid: Guid) => {
-      store.change({
-        selection: {
-          removed: [Guid],
-        },
-      });
-    },
-    selectKits: (origin: string, kitIds: Guid[]) => {
-      const current = store.snapshot();
-      store.change({
-        selection: {
-          removed: current.selection?.kits ?? [],
-          added: kitIds,
-        },
-      });
-    },
-    deselectAll: (origin: string) => {
-      const current = store.snapshot();
-      store.change({
-        selection: {
-          removed: current.selection?.kits ?? [],
-        },
-      });
-    },
-    setSortColumn: (origin: string, column: HomeSortColumn) => {
-      store.change({
-        sortColumn: column,
-      });
-    },
-    setSortDirection: (origin: string, direction: HomeSortDirection) => {
-      store.change({
-        sortDirection: direction,
-      });
-    },
-    toggleSort: (origin: string, column: HomeSortColumn) => {
-      const current = store.snapshot();
-      if (current.sortColumn === column) {
-        store.change({
-          sortDirection: current.sortDirection === "asc" ? "desc" : "asc",
-        });
-      } else {
-        store.change({
-          sortColumn: column,
-          sortDirection: "asc",
-        });
-      }
-    },
-    execute: (origin: string, command: string, ...args: any[]) => store.executeCommand(command, origin, ...args),
-  };
-}
-
-// #endregion Home Store
-
-// #endregion Store
+// #endregion Hooks
 
 // #region Commands
 
@@ -730,10 +451,17 @@ const HomeAppFooter: FC = () => {
 
 const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isDragging, setIsDragging] = useState(false);
+  const [loadingKits, setLoadingKits] = useState<Array<{ tempGuid: string; name: string }>>([]);
   const { t } = useTranslation();
-  const { createKit, navigateToKit } = useSketchpadCommands();
-  const store = useSketchpadStore();
-  const homeStore = store.home();
+  const { createKit, navigateToKit, storeKitFileBlobs } = useSketchpadCommands();
+
+  const addLoadingKit = (kit: { tempGuid: string; name: string }) => {
+    setLoadingKits((prev) => [...prev, kit]);
+  };
+
+  const removeLoadingKit = (tempGuid: string) => {
+    setLoadingKits((prev) => prev.filter((k) => k.tempGuid !== tempGuid));
+  };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -765,19 +493,18 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
     if (zipFile) {
       const tempGuid = guid();
       const kitName = zipFile.name.replace(/\.(semio\.)?zip$/, "");
-      homeStore.addLoadingKit({ tempGuid, name: kitName });
+      addLoadingKit({ tempGuid, name: kitName });
       try {
         const { kit, files: importedFiles } = await importKit(zipFile);
         await createKit("semio.sketchpad.app.home.dropzone", kit, false, false);
-        const kitStore = store.kit(kit.guid);
-        homeStore.removeLoadingKit(tempGuid);
+        removeLoadingKit(tempGuid);
         // Store blobs for existing kit files BEFORE navigating (kit already has file definitions from SQLite)
-        await kitStore.storeFileBlobs(importedFiles);
+        await storeKitFileBlobs(kit.guid, importedFiles);
         await new Promise((resolve) => setTimeout(resolve, 0));
         navigateToKit(kit.guid);
       } catch (error) {
         console.error("[Home] Failed to import kit:", error);
-        homeStore.removeLoadingKit(tempGuid);
+        removeLoadingKit(tempGuid);
       }
     }
   };
@@ -788,19 +515,18 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
     if (file.name.endsWith(".zip") || file.name.endsWith(".semio.zip")) {
       const tempGuid = guid();
       const kitName = file.name.replace(/\.(semio\.)?zip$/, "");
-      homeStore.addLoadingKit({ tempGuid, name: kitName });
+      addLoadingKit({ tempGuid, name: kitName });
       try {
         const { kit, files: importedFiles } = await importKit(file);
         await createKit("semio.sketchpad.app.home.fileInput", kit, false, false);
-        const kitStore = store.kit(kit.guid);
-        homeStore.removeLoadingKit(tempGuid);
+        removeLoadingKit(tempGuid);
         // Store blobs for existing kit files BEFORE navigating (kit already has file definitions from SQLite)
-        await kitStore.storeFileBlobs(importedFiles);
+        await storeKitFileBlobs(kit.guid, importedFiles);
         await new Promise((resolve) => setTimeout(resolve, 100));
         navigateToKit(kit.guid);
       } catch (error) {
         console.error("[Home] Failed to import kit:", error);
-        homeStore.removeLoadingKit(tempGuid);
+        removeLoadingKit(tempGuid);
       }
     }
     e.target.value = "";
@@ -827,7 +553,7 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
 
 // #region App
 
-type KitStoreKind = "temporary" | "local" | "remote";
+type KitKind = "temporary" | "local" | "remote";
 
 type TableRow = {
   id: string;
@@ -836,7 +562,7 @@ type TableRow = {
   parentId?: string;
   hasChildren: boolean;
   isExpanded: boolean;
-  type: KitStoreKind | "docs" | "loading";
+  type: KitKind | "docs" | "loading";
   updatedAt: string;
   createdAt: string;
   kit?: KitShallow;
@@ -849,10 +575,9 @@ const Home: FC = ({}) => {
   const navigate = useNavigate();
   const navigation = useNavigation();
   const [searchParams, setSearchParams] = useSearchParams();
-  const store = useSketchpadStore();
   const kits = useKits();
   const getKitKind = useGetKitKind();
-  const { createKit, navigateToKit, setTheme, setLanguage, setLayout, setExpertise, setMode } = useSketchpadCommands();
+  const { createKit, navigateToKit, setTheme, setLanguage, setLayout, setExpertise, setMode, getKitSnapshot } = useSketchpadCommands();
 
   const homeState = useHome() as any;
   const homeCommands = useHomeCommands();
@@ -954,7 +679,7 @@ const Home: FC = ({}) => {
   }, [appType, addSection, removeSection, setTheme, setLanguage, setLayout, setExpertise, setMode]);
 
   // Get filters from search params (?kind=&name=&version=)
-  const selectedKind = searchParams.get("kind") as KitStoreKind | null;
+  const selectedKind = searchParams.get("kind") as KitKind | null;
   const selectedName = searchParams.get("name");
   const selectedVersion = searchParams.get("version");
 
@@ -998,8 +723,8 @@ const Home: FC = ({}) => {
     const conceptSet = new Set<string>();
     kits.forEach((kitShallow) => {
       // Get full kit data to access Concept objects with names
-      const kitStore = store.kit(kitShallow.guid);
-      const fullKit = kitStore.snapshot();
+      const fullKit = getKitSnapshot(kitShallow.guid);
+      if (!fullKit) return;
 
       // Map concept GUIDs to their names
       kitShallow.concepts?.forEach((conceptGuid) => {
@@ -1010,7 +735,7 @@ const Home: FC = ({}) => {
       });
     });
     return Array.from(conceptSet).sort();
-  }, [kits, store]);
+  }, [kits, getKitSnapshot]);
 
   // Get selected concepts from search params
   const selectedConcepts = useMemo(() => {
@@ -1116,11 +841,9 @@ const Home: FC = ({}) => {
 
       // Filter by concepts: resolve GUIDs to names first
       if (selectedConcepts.length > 0) {
-        const kitStore = store.kit(kit.guid);
-        const fullKit = kitStore.snapshot();
-        const kitConceptNames = kit.concepts?.map(
-          (conceptGuid) => fullKit.concepts?.find((c) => c.guid === conceptGuid)?.name
-        ).filter((name): name is string => name !== undefined) || [];
+        const fullKit = getKitSnapshot(kit.guid);
+        if (!fullKit) return;
+        const kitConceptNames = kit.concepts?.map((conceptGuid) => fullKit.concepts?.find((c) => c.guid === conceptGuid)?.name).filter((name): name is string => name !== undefined) || [];
 
         if (!kitConceptNames.some((name) => selectedConcepts.includes(name))) return;
       }
@@ -1251,7 +974,7 @@ const Home: FC = ({}) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleCreateKit = (type: KitStoreKind) => {
+  const handleCreateKit = (type: KitKind) => {
     const existingNames = kits.map((k) => k.name);
     const uniqueName = generateUniqueName(defaultKitName, existingNames);
     const newKit: Kit = {
@@ -1267,7 +990,7 @@ const Home: FC = ({}) => {
     navigateToKit(newKit.guid);
   };
 
-  const handleCreateVersion = (kitName: string, type: KitStoreKind) => {
+  const handleCreateVersion = (kitName: string, type: KitKind) => {
     const existingVersions = kits.filter((k) => k.name === kitName).map((k) => k.version || "");
     const uniqueVersion = generateUniqueName(newVersionLabel, existingVersions);
     const newKit: Kit = {
@@ -1283,7 +1006,7 @@ const Home: FC = ({}) => {
     navigateToKit(newKit.guid);
   };
 
-  const toggleKind = (type: KitStoreKind) => {
+  const toggleKind = (type: KitKind) => {
     const newParams = new URLSearchParams(searchParams);
     if (selectedKind === type) {
       newParams.delete("kind");
@@ -1534,7 +1257,7 @@ const Home: FC = ({}) => {
                             level="base"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleCreateVersion(row.name, row.type as KitStoreKind);
+                              handleCreateVersion(row.name, row.type as KitKind);
                             }}
                             id={"semio.sketchpad.app.home.createVersion"}
                             icon={<AddIcon />}
@@ -1727,7 +1450,7 @@ const Home: FC = ({}) => {
                               level="base"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleCreateVersion(row.name, row.type as KitStoreKind);
+                                handleCreateVersion(row.name, row.type as KitKind);
                               }}
                               id={"semio.sketchpad.app.home.createVersion"}
                               icon={<AddIcon />}
