@@ -31,6 +31,96 @@ import { Guid, Kit, KitDiff } from "../semio";
 
 // #region Types
 
+// #region YPath Types
+
+/**
+ * A segment in a Y.js path for navigating nested structures.
+ * 
+ * - mapKey: Access a key in a Y.Map
+ * - arrayIndex: Access an index in a Y.Array
+ * - arrayItemById: Find an item in a Y.Array by its id property
+ */
+export type YPathSegment =
+  | { kind: "mapKey"; key: string }
+  | { kind: "arrayIndex"; index: number }
+  | { kind: "arrayItemById"; id: string; idKey: string };
+
+/**
+ * A path through Y.js structures for granular subscriptions.
+ * Each segment describes how to navigate to the next level.
+ */
+export type YPath = YPathSegment[];
+
+// #endregion YPath Types
+
+// #region Granular Hook Types
+
+/**
+ * Return type for all granular hooks following the [state, setState, canSetState] pattern.
+ * 
+ * @template T - The type of the state value
+ * 
+ * @example
+ * ```typescript
+ * const [name, setName, canSetName] = useKitName()
+ * // name: string - The current value
+ * // setName: ((value: string) => void) | undefined - Setter (undefined if not available)
+ * // canSetName: boolean - Whether the setter is available (use for disabled prop)
+ * 
+ * <Input value={name} onChange={setName} disabled={!canSetName} />
+ * ```
+ */
+export type GranularHookResult<T> = readonly [
+  T,
+  ((value: T) => void) | undefined,
+  boolean
+];
+
+/**
+ * Read-only granular hook result constant.
+ * Use when the hook only provides read access.
+ */
+export const READONLY_SETTER = undefined as undefined;
+export const READONLY_CAN = false;
+
+/**
+ * Creates a read-only granular hook result.
+ * @param value - The current state value
+ */
+export function readonlyHookResult<T>(value: T): GranularHookResult<T> {
+  return [value, READONLY_SETTER, READONLY_CAN] as const;
+}
+
+/**
+ * Creates a writable granular hook result.
+ * @param value - The current state value
+ * @param setter - Function to update the value
+ * @param canSet - Whether the setter can be used (defaults to true if setter exists)
+ */
+export function writableHookResult<T>(
+  value: T,
+  setter: (value: T) => void,
+  canSet: boolean = true
+): GranularHookResult<T> {
+  return [value, canSet ? setter : undefined, canSet] as const;
+}
+
+/**
+ * Creates a conditional granular hook result.
+ * @param value - The current state value
+ * @param setter - Function to update the value (or undefined)
+ * @param canSet - Whether the setter can be used
+ */
+export function conditionalHookResult<T>(
+  value: T,
+  setter: ((value: T) => void) | undefined,
+  canSet: boolean
+): GranularHookResult<T> {
+  return [value, canSet ? setter : undefined, canSet] as const;
+}
+
+// #endregion Granular Hook Types
+
 export type Url = string;
 
 export type Subscribe = (callback: () => void) => () => void;
@@ -1018,3 +1108,261 @@ export interface TransactionMachineConfig<TEdit = any> {
 // #endregion Machine Factories
 
 // #endregion XState Integration
+
+// #region YPath Helpers
+
+/**
+ * Creates a YPath segment for accessing a map key.
+ */
+export function yPathMapKey(key: string): YPathSegment {
+  return { kind: "mapKey", key };
+}
+
+/**
+ * Creates a YPath segment for accessing an array index.
+ */
+export function yPathArrayIndex(index: number): YPathSegment {
+  return { kind: "arrayIndex", index };
+}
+
+/**
+ * Creates a YPath segment for finding an item in an array by its id.
+ */
+export function yPathArrayItemById(id: string, idKey: string = "guid"): YPathSegment {
+  return { kind: "arrayItemById", id, idKey };
+}
+
+/**
+ * Gets the value at a path in a Y.js structure.
+ * Returns undefined if the path doesn't exist.
+ */
+export function getValueAtPath(root: Y.Map<any> | Y.Array<any>, path: YPath): any {
+  let current: any = root;
+  for (const segment of path) {
+    if (current === undefined || current === null) return undefined;
+    if (segment.kind === "mapKey") {
+      if (!(current instanceof Y.Map)) return undefined;
+      current = current.get(segment.key);
+    } else if (segment.kind === "arrayIndex") {
+      if (!(current instanceof Y.Array)) return undefined;
+      current = current.get(segment.index);
+    } else if (segment.kind === "arrayItemById") {
+      if (!(current instanceof Y.Array)) return undefined;
+      const arr = current.toArray();
+      const item = arr.find((item: any) => {
+        if (item instanceof Y.Map) return item.get(segment.idKey) === segment.id;
+        return item?.[segment.idKey] === segment.id;
+      });
+      current = item;
+    }
+  }
+  return current;
+}
+
+/**
+ * Creates an observer for a specific path in a Y.js structure.
+ * Only fires when the value at the path changes.
+ */
+export function createPathObserver(root: Y.Map<any>, path: YPath, subscribe: Subscribe): Disposable {
+  if (path.length === 0) {
+    const callback = () => subscribe(() => {});
+    root.observeDeep(callback);
+    return () => root.unobserveDeep(callback);
+  }
+  const disposables: Disposable[] = [];
+  let lastValue = getValueAtPath(root, path);
+  const notifyIfChanged = () => {
+    const newValue = getValueAtPath(root, path);
+    const lastJson = JSON.stringify(lastValue instanceof Y.Map || lastValue instanceof Y.Array ? lastValue.toJSON() : lastValue);
+    const newJson = JSON.stringify(newValue instanceof Y.Map || newValue instanceof Y.Array ? newValue.toJSON() : newValue);
+    if (lastJson !== newJson) {
+      lastValue = newValue;
+      subscribe(() => {});
+    }
+  };
+  const setupObservers = (current: any, remainingPath: YPath, depth: number) => {
+    if (!current || remainingPath.length === 0) return;
+    const segment = remainingPath[0];
+    const rest = remainingPath.slice(1);
+    if (segment.kind === "mapKey" && current instanceof Y.Map) {
+      const mapCallback = (event: Y.YMapEvent<any>) => {
+        if (event.keysChanged.has(segment.key)) {
+          disposables.slice(depth + 1).forEach((d) => d());
+          disposables.length = depth + 1;
+          const next = current.get(segment.key);
+          if (rest.length > 0 && next) setupObservers(next, rest, depth + 1);
+          notifyIfChanged();
+        }
+      };
+      current.observe(mapCallback);
+      disposables.push(() => current.unobserve(mapCallback));
+      const next = current.get(segment.key);
+      if (rest.length > 0 && next) setupObservers(next, rest, depth + 1);
+      else if (rest.length === 0 && next instanceof Y.Map) {
+        const deepCallback = () => notifyIfChanged();
+        next.observeDeep(deepCallback);
+        disposables.push(() => next.unobserveDeep(deepCallback));
+      } else if (rest.length === 0 && next instanceof Y.Array) {
+        const deepCallback = () => notifyIfChanged();
+        next.observeDeep(deepCallback);
+        disposables.push(() => next.unobserveDeep(deepCallback));
+      }
+    } else if (segment.kind === "arrayIndex" && current instanceof Y.Array) {
+      const arrayCallback = () => notifyIfChanged();
+      current.observe(arrayCallback);
+      disposables.push(() => current.unobserve(arrayCallback));
+      const next = current.get(segment.index);
+      if (rest.length > 0 && next) setupObservers(next, rest, depth + 1);
+    } else if (segment.kind === "arrayItemById" && current instanceof Y.Array) {
+      const arrayCallback = () => {
+        disposables.slice(depth + 1).forEach((d) => d());
+        disposables.length = depth + 1;
+        const arr = current.toArray();
+        const item = arr.find((item: any) => {
+          if (item instanceof Y.Map) return item.get(segment.idKey) === segment.id;
+          return item?.[segment.idKey] === segment.id;
+        });
+        if (rest.length > 0 && item) setupObservers(item, rest, depth + 1);
+        notifyIfChanged();
+      };
+      current.observe(arrayCallback);
+      disposables.push(() => current.unobserve(arrayCallback));
+      const arr = current.toArray();
+      const item = arr.find((item: any) => {
+        if (item instanceof Y.Map) return item.get(segment.idKey) === segment.id;
+        return item?.[segment.idKey] === segment.id;
+      });
+      if (rest.length > 0 && item) setupObservers(item, rest, depth + 1);
+    }
+  };
+  setupObservers(root, path, 0);
+  return () => disposables.forEach((d) => d());
+}
+
+// #endregion YPath Helpers
+
+// #region Derived Store
+
+/**
+ * A base dependency for a derived node - a path in a specific store.
+ */
+export interface BaseDependency {
+  store: { onPathChanged: (path: YPath, subscribe: Subscribe) => Disposable; getPathSnapshot: (path: YPath) => any };
+  path: YPath;
+}
+
+/**
+ * A node in the derived dependency graph.
+ * Caches computed values and only recomputes when dependencies change.
+ */
+export class DerivedNode<T> {
+  private deps: BaseDependency[];
+  private compute: () => T;
+  private value: T | undefined;
+  private valueJson?: string;
+  private subscribers = new Set<() => void>();
+  private unsubscribers: Disposable[] = [];
+  private initialized = false;
+
+  constructor(deps: BaseDependency[], compute: () => T) {
+    this.deps = deps;
+    this.compute = compute;
+  }
+
+  private init() {
+    if (this.initialized) return;
+    this.initialized = true;
+    this.unsubscribers = this.deps.map((d) =>
+      d.store.onPathChanged(d.path, () => {
+        this.recompute();
+        return () => {};
+      }),
+    );
+    this.recompute();
+  }
+
+  private recompute() {
+    const next = this.compute();
+    const nextJson = JSON.stringify(next);
+    if (nextJson !== this.valueJson) {
+      this.value = next;
+      this.valueJson = nextJson;
+      this.subscribers.forEach((cb) => cb());
+    }
+  }
+
+  snapshot(): T {
+    if (!this.initialized) this.init();
+    if (this.value === undefined) this.recompute();
+    return this.value!;
+  }
+
+  subscribe(cb: () => void): Disposable {
+    if (!this.initialized) this.init();
+    this.subscribers.add(cb);
+    return () => {
+      this.subscribers.delete(cb);
+      if (this.subscribers.size === 0) {
+        this.unsubscribers.forEach((u) => u());
+        this.unsubscribers = [];
+        this.initialized = false;
+        this.value = undefined;
+        this.valueJson = undefined;
+      }
+    };
+  }
+
+  dispose() {
+    this.unsubscribers.forEach((u) => u());
+    this.unsubscribers = [];
+    this.subscribers.clear();
+    this.initialized = false;
+    this.value = undefined;
+    this.valueJson = undefined;
+  }
+}
+
+/**
+ * A store for managing derived nodes.
+ * Provides caching and lazy initialization of computed values.
+ */
+export class DerivedStore {
+  private nodes = new Map<string, DerivedNode<any>>();
+
+  getOrCreate<T>(key: string, deps: BaseDependency[], compute: () => T): DerivedNode<T> {
+    if (!this.nodes.has(key)) {
+      this.nodes.set(key, new DerivedNode<T>(deps, compute));
+    }
+    return this.nodes.get(key)! as DerivedNode<T>;
+  }
+
+  get<T>(key: string): DerivedNode<T> | undefined {
+    return this.nodes.get(key) as DerivedNode<T> | undefined;
+  }
+
+  delete(key: string): boolean {
+    const node = this.nodes.get(key);
+    if (node) {
+      node.dispose();
+      this.nodes.delete(key);
+      return true;
+    }
+    return false;
+  }
+
+  clear() {
+    this.nodes.forEach((node) => node.dispose());
+    this.nodes.clear();
+  }
+
+  has(key: string): boolean {
+    return this.nodes.has(key);
+  }
+
+  keys(): IterableIterator<string> {
+    return this.nodes.keys();
+  }
+}
+
+// #endregion Derived Store
+

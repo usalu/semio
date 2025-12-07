@@ -1387,6 +1387,23 @@ Shared react components. The main component is Sketchpad. Sketchpad is used in t
   - `machines.ts` - Unified XState machine with all app state
   - `xstate-hooks.ts` - Clean React hooks using XState selectors
   - State is ALWAYS accessed over hooks. Mutation ALWAYS is via actor events. NEVER use useState for app state.
+- **Granular Hook Architecture**: All app state hooks follow the `[value, setter, canSet]` tuple pattern:
+  - **Pattern**: `const [value, setValue, canSetValue] = useAppValue();`
+  - **Types**: `GranularHookResult<T>` for read-write hooks, `GranularHookNoSetResult<T>` for read-only hooks
+  - **No Parameters**: Hooks use scope providers (`useKitScope()`, `useDesignScope()`, `useTypeScope()`, `usePieceScope()`, `useConnectionScope()`, `useQualityScope()`) to get context
+  - **canSet**: Boolean indicating if the action is available (scope exists and controller is valid). Use this to disable UI elements when action is unavailable.
+  - **Examples**:
+    - `const [selection, setSelection, canSetSelection] = useDesignAppSelection();`
+    - `const [camera, setCamera, canSetCamera] = useTypeAppCamera();`
+    - `const [isHovered, _, canReadHover] = useKitAppIsTypeHovered();` (inside TypeScopeProvider)
+    - `const [loadingKits, _, canReadLoadingKits] = useHomeLoadingKits();` (read-only)
+  - **Scope Providers**: Wrap components in appropriate scope providers to enable hooks:
+    - `<KitScopeProvider guid={kitGuid}>` - For kit context
+    - `<DesignScopeProvider guid={designGuid}>` - For design context
+    - `<TypeScopeProvider guid={typeGuid}>` - For type context
+    - `<PieceScopeProvider guid={pieceGuid}>` - For piece context
+    - `<ConnectionScopeProvider guid={connectionGuid}>` - For connection context
+    - `<QualityScopeProvider guid={qualityGuid}>` - For quality context
 - **Targeted Hooks**: Components MUST use targeted hooks for kit data access. Use the following hooks from `Sketchpad.tsx`:
   - `useKitTypes(guid?)` - returns types array
   - `useKitFiles(guid?)` - returns files array
@@ -1425,6 +1442,20 @@ Shared react components. The main component is Sketchpad. Sketchpad is used in t
   ```
 
 - **Performance Logging**: Use `enablePerformanceLogging(true)` to enable performance logging that tracks overfetching. Check console for `[PERF] Rapid re-render` warnings indicating components re-rendering too frequently.
+- **Granular Piece Metadata System**: The piece metadata system uses DerivedStore for efficient caching of computed piece data:
+  - **`usePiecesMetadataMap()`**: Returns a cached `Map<string, PieceMetadata>` for all pieces in the current design. Uses DerivedStore to cache the full piecesMetadata computation. Only recomputes when pieces or connections change.
+  - **`usePieceMetadata(pieceId?)`**: Returns metadata for a specific piece, extracting from the cached Map.
+  - **`useFlatPiecePlane(id?)`**: Returns the flattened plane for a piece.
+  - **`useFlatPieceCenter(id?)`**: Returns the flattened center for a piece.
+  - **`useIsConnectedPiece(id?)`**: Returns whether a piece has a parent connection.
+  - **`usePieceDepth(id?)`**: Returns the depth of a piece in the connection hierarchy.
+  - **`useFixedPieceId(id?)`**: Returns the fixed piece ID (root of the connected component).
+  - **`useParentPieceId(id?)`**: Returns the parent piece ID if connected.
+- **YPath and DerivedStore**: For fine-grained subscriptions beyond field-level:
+  - **YPath**: Navigate Y.js structures with `[yPathMapKey("pieces"), yPathArrayItemById(pieceGuid, "guid")]`
+  - **usePath(store, path, selector)**: Subscribe to a specific path in a Y.js store
+  - **useDerived(derivedStore, key, deps, compute, selector)**: Subscribe to a computed value that depends on base paths
+  - **DerivedStore**: Each `KitStore` and `DesignStore` has a `derived` property for caching computed values
 - Commands ALWAYS have an origin. ALWAYS add the id of the ui element as origin when calling commands.
 - There is a transaction mechanism for kits. Every app transaction is an extended kit transaction. The undo redo manager is on app level and stores the diff of the transaction along with the app state. This way undo redo works even when the kit changes because only the diff is stored. The inverted diff is stored along with the diff to enable relative undo redo.
 - NEVER use direct strings or `useTranslation` for displaying text. ALWAYS assign an `id` the ui element and use i18n keys which match the id.

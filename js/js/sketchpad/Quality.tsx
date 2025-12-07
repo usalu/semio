@@ -50,7 +50,7 @@ import {
   TreeContent,
   TreeItem,
 } from "./elements";
-import type { AppWindowConfig, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, QualityAppId, Transact, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
+import type { AppWindowConfig, GranularHookNoSetResult, GranularHookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, QualityAppId, Transact, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
 import { AppConfig, createPanelDefinition, Expertise, Mode, PanelKind, Theme, ToolKind } from "./shared";
 import type { KitStore, QualityStore, SketchpadStore } from "./Sketchpad";
 import {
@@ -998,6 +998,97 @@ export function useQualityAppCommands(id?: QualityAppId) {
   };
 }
 
+export function useQualityAppFullscreen(): GranularHookResult<QualityAppFullscreenWindow> {
+  const qualityScope = useQualityScope();
+  const store = useQualityAppStore() as QualityAppStore | null;
+  const fullscreen = useQualityApp((s) => s.fullscreenWindow) as QualityAppFullscreenWindow;
+  const canSet = qualityScope !== null && store !== null;
+  const setFullscreen = useCallback(
+    (value: QualityAppFullscreenWindow) => {
+      if (store) store.execute("semio.qualityApp.setFullscreen", value);
+    },
+    [store]
+  );
+  return [fullscreen ?? QualityAppFullscreenWindow.None, setFullscreen, canSet];
+}
+
+export function useQualityAppSelection(): GranularHookResult<QualityAppSelection> {
+  const qualityScope = useQualityScope();
+  const store = useQualityAppStore() as QualityAppStore | null;
+  const selection = useQualityApp((s) => s.selection) as QualityAppSelection | undefined;
+  const canSet = qualityScope !== null && store !== null;
+  const setSelection = useCallback(
+    (value: QualityAppSelection) => {
+      if (store) store.execute("semio.qualityApp.setSelection", value);
+    },
+    [store]
+  );
+  return [selection ?? {}, setSelection, canSet];
+}
+
+export function useQualityAppHover(): GranularHookResult<QualityAppHover | undefined> {
+  const qualityScope = useQualityScope();
+  const store = useQualityAppStore() as QualityAppStore | null;
+  const hover = useQualityApp((s) => s.hover) as QualityAppHover | undefined;
+  const canSet = qualityScope !== null && store !== null;
+  const setHover = useCallback(
+    (value: QualityAppHover | undefined) => {
+      if (store) store.execute("semio.qualityApp.setHover", value);
+    },
+    [store]
+  );
+  return [hover, setHover, canSet];
+}
+
+export function useQualityAppActiveTool(): GranularHookResult<ToolKind> {
+  const qualityScope = useQualityScope();
+  const store = useQualityAppStore() as QualityAppStore | null;
+  const activeTool = useQualityApp((s) => s.activeTool) as ToolKind;
+  const canSet = qualityScope !== null && store !== null;
+  const setActiveTool = useCallback(
+    (value: ToolKind) => {
+      if (store) store.execute("semio.qualityApp.setActiveTool", value);
+    },
+    [store]
+  );
+  return [activeTool ?? ToolKind.Select, setActiveTool, canSet];
+}
+
+export function useQualityAppFormulaNodes(): GranularHookNoSetResult<FormulaNode[]> {
+  const qualityScope = useQualityScope();
+  const formulaNodes = useQualityApp((s) => s.formulaNodes) as FormulaNode[];
+  const canRead = qualityScope !== null;
+  return [formulaNodes ?? [], undefined, canRead];
+}
+
+export function useQualityAppPanelVisibility(): GranularHookResult<PanelVisibility> {
+  const qualityScope = useQualityScope();
+  const store = useQualityAppStore() as QualityAppStore | null;
+  const panelVisibility = useQualityApp((s) => s.panelVisibility) as PanelVisibility;
+  const canSet = qualityScope !== null && store !== null;
+  const setPanelVisibility = useCallback(
+    (value: PanelVisibility) => {
+      if (store) store.change({ panelVisibility: value });
+    },
+    [store]
+  );
+  return [panelVisibility ?? { toolbar: true, workbench: false, details: false, chat: false, settings: false }, setPanelVisibility, canSet];
+}
+
+export function useQualityAppWindowLayout(): GranularHookResult<any> {
+  const qualityScope = useQualityScope();
+  const store = useQualityAppStore() as QualityAppStore | null;
+  const windowLayout = useQualityApp((s) => s.windowLayout);
+  const canSet = qualityScope !== null && store !== null;
+  const setWindowLayout = useCallback(
+    (value: any) => {
+      if (store) store.change({ windowLayout: value });
+    },
+    [store]
+  );
+  return [windowLayout, setWindowLayout, canSet];
+}
+
 // #endregion
 
 // #region Components
@@ -1052,7 +1143,7 @@ interface QualityDiagramProps {
 }
 
 const QualityDiagram: FC<QualityDiagramProps> = ({ reactFlowInstanceRef }) => {
-  const formulaNodes = useQualityApp((s) => s.formulaNodes) as any[];
+  const [formulaNodes] = useQualityAppFormulaNodes();
   const { selectFormulaNode, hoverFormulaNode, clearHover, connectNodes } = useQualityAppCommands();
   const { setNodeRef: setDroppableRef } = useDroppable({ id: "quality-diagram-drop-zone" });
 
@@ -1558,7 +1649,7 @@ const DiagramWindow = memo<{ reactFlowInstanceRef: React.RefObject<ReactFlowInst
 DiagramWindow.displayName = "DiagramWindow";
 
 const App: FC<AppProps> = () => {
-  const fullscreenWindow = useQualityApp((s) => s.fullscreenWindow) as QualityAppFullscreenWindow;
+  const [fullscreenWindow] = useQualityAppFullscreen();
   const { undo, redo, toggleFormulaFullscreen, toggleDiagramFullscreen, deselectAll, togglePanel, addFormulaNode, connectNodes, startTransaction, finalizeTransaction } = useQualityAppCommands();
   const quality = useQuality() as Quality | undefined;
   const appType = useAppType();
@@ -1795,7 +1886,7 @@ const App: FC<AppProps> = () => {
   }, [handleDragEnd]);
 
   const store = useQualityAppStore() as QualityAppStore | null;
-  const windowLayout = useQualityApp((s) => s.windowLayout);
+  const [windowLayout] = useQualityAppWindowLayout();
 
   const defaultLayout = useMemo(() => {
     return createDefaultLayout([QualityAppWindowKind.Formula, QualityAppWindowKind.Diagram], "row", [20, 80]);

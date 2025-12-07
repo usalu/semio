@@ -54,7 +54,7 @@ import {
 } from "@semio/assets";
 import { formatDistanceToNow } from "date-fns";
 import { de, enUS } from "date-fns/locale";
-import React, { FC, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import React, { FC, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams, useSearchParams } from "react-router";
 import { Camera } from "three";
@@ -72,6 +72,7 @@ import {
   useAddFooterItem,
   useAddPanelSection,
   useAppType,
+  useDesignScope,
   useExpertise,
   useFocus,
   useHasKit,
@@ -91,10 +92,11 @@ import {
   useSketchpadStore,
   useSyncDeep,
   useTheme,
+  useTypeScope,
   Window,
 } from "./Sketchpad";
 import { Action, Input, NotFound, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Strip, Table, TableAvatar, Textarea, Toggle, ToggleGroup, Transaction, TreeContent, TreeItem } from "./elements";
-import type { KitAppId, KitCommandContext, KitDiffAppEdit, Layout, PanelDefinition, PanelVisibility, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
+import type { GranularHookNoSetResult, GranularHookResult, KitAppId, KitCommandContext, KitDiffAppEdit, Layout, PanelDefinition, PanelVisibility, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
 import { AppConfig, createPanelDefinition, Expertise, Mode, PanelKind, Theme } from "./shared";
 import { useKitApp as useKitAppXState, useSketchpadActorHook } from "./xstate-hooks";
 
@@ -839,21 +841,44 @@ export function useKitApp<T>(selector?: (state: KitAppState) => T, id?: KitAppId
   return state;
 }
 
-export function useKitAppSelection(id?: KitAppId): KitAppSelection {
-  const state = useKitApp(identitySelector, id);
-  return (state as KitAppState).selection ?? emptyKitAppSelection;
+export function useKitAppSelection(): GranularHookResult<KitAppSelection> {
+  const kitScope = useKitScope();
+  const controller = useKitAppController() as KitAppController | null;
+  const state = useKitApp(identitySelector);
+  const selection = (state as KitAppState).selection ?? emptyKitAppSelection;
+  const canSet = kitScope !== null && controller !== null;
+  const setSelection = useCallback(
+    (value: KitAppSelection) => {
+      if (controller) controller.execute("semio.kitApp.setSelection", value);
+    },
+    [controller]
+  );
+  return [selection, setSelection, canSet];
 }
 
-export function useKitAppFullscreen(): KitAppFullscreenWindow {
-  return useKitApp((s) => s.fullscreenWindow) as KitAppFullscreenWindow;
+export function useKitAppFullscreen(): GranularHookResult<KitAppFullscreenWindow> {
+  const kitScope = useKitScope();
+  const controller = useKitAppController() as KitAppController | null;
+  const fullscreen = useKitApp((s) => s.fullscreenWindow) as KitAppFullscreenWindow;
+  const canSet = kitScope !== null && controller !== null;
+  const setFullscreen = useCallback(
+    (value: KitAppFullscreenWindow) => {
+      if (controller) controller.execute("semio.kitApp.setFullscreen", value);
+    },
+    [controller]
+  );
+  return [fullscreen, setFullscreen, canSet];
 }
 
-export function useKitAppOthers(): KitAppPresenceOther[] {
-  return useKitApp((s) => s.others) as KitAppPresenceOther[];
+export function useKitAppOthers(): GranularHookNoSetResult<KitAppPresenceOther[]> {
+  const kitScope = useKitScope();
+  const others = useKitApp((s) => s.others) as KitAppPresenceOther[];
+  const canRead = kitScope !== null;
+  return [others, undefined, canRead];
 }
 
-export function useKitAppTransaction(origin: string, id?: KitAppId): Transaction {
-  const controller = useKitAppController(undefined, id) as KitAppController | null;
+export function useKitAppTransaction(origin: string): Transaction {
+  const controller = useKitAppController() as KitAppController | null;
   if (!controller) {
     return {};
   }
@@ -1012,34 +1037,30 @@ export function useKitAppCommands(id?: KitAppId) {
 
 // #region Types
 
-/**
- * Check if a specific type is directly hovered in Kit App
- */
-export function useKitAppIsTypeHovered(typeId: string, id?: KitAppId): boolean {
-  return (useKitApp((state) => state.hover?.type === typeId, id) as boolean) ?? false;
+export function useKitAppIsTypeHovered(): GranularHookNoSetResult<boolean> {
+  const typeScope = useTypeScope();
+  const typeGuid = typeScope?.guid;
+  const isHovered = useKitApp((state) => typeGuid ? state.hover?.type === typeGuid : false) as boolean;
+  const canRead = typeScope !== null;
+  return [isHovered ?? false, undefined, canRead];
 }
 
-/**
- * Get the diff status of a type from the current kit diff
- */
-export function useKitAppTypeStatus(typeId: string, id?: KitAppId): DiffStatus {
-  // Diff status is not part of XState UI state - this would come from Kit data
-  // For now, return Unchanged as diff tracking is being migrated
-  return DiffStatus.Unchanged;
+export function useKitAppTypeStatus(): GranularHookNoSetResult<DiffStatus> {
+  const typeScope = useTypeScope();
+  const canRead = typeScope !== null;
+  return [DiffStatus.Unchanged, undefined, canRead];
 }
 
-/**
- * Get the color for a type based on its state
- */
-export function useKitAppTypeColor(typeId: string, isSelected: boolean, id?: KitAppId): { fill: string; stroke: string; opacity: number } {
-  const isHovered = useKitAppIsTypeHovered(typeId, id);
-  const status = useKitAppTypeStatus(typeId, id);
+export function useKitAppTypeColor(isSelected: boolean): GranularHookNoSetResult<{ fill: string; stroke: string; opacity: number }> {
+  const typeScope = useTypeScope();
+  const [isHovered] = useKitAppIsTypeHovered();
+  const [status] = useKitAppTypeStatus();
+  const canRead = typeScope !== null;
 
   let fill = "var(--foreground)";
   let stroke = "var(--foreground)";
   let opacity = 1;
 
-  // Base state colors
   if (status === DiffStatus.Added) {
     fill = "var(--color-success)";
     stroke = "var(--color-success)";
@@ -1055,14 +1076,12 @@ export function useKitAppTypeColor(typeId: string, isSelected: boolean, id?: Kit
     stroke = "var(--foreground)";
   }
 
-  // Hover state
   if (isHovered && !isSelected) {
     fill = "var(--hover-base)";
     stroke = "var(--foreground)";
     opacity = 1;
   }
 
-  // Selected state
   if (isSelected) {
     if (status === DiffStatus.Added) {
       fill = "var(--color-selected-added)";
@@ -1080,41 +1099,37 @@ export function useKitAppTypeColor(typeId: string, isSelected: boolean, id?: Kit
     opacity = 1;
   }
 
-  return { fill, stroke, opacity };
+  return [{ fill, stroke, opacity }, undefined, canRead];
 }
 
 // #endregion Types
 
 // #region Designs
 
-/**
- * Check if a specific design is directly hovered in Kit App
- */
-export function useKitAppIsDesignHovered(designId: string, id?: KitAppId): boolean {
-  return (useKitApp((state) => state.hover?.design === designId, id) as boolean) ?? false;
+export function useKitAppIsDesignHovered(): GranularHookNoSetResult<boolean> {
+  const designScope = useDesignScope();
+  const designGuid = designScope?.guid;
+  const isHovered = useKitApp((state) => designGuid ? state.hover?.design === designGuid : false) as boolean;
+  const canRead = designScope !== null;
+  return [isHovered ?? false, undefined, canRead];
 }
 
-/**
- * Get the diff status of a design from the current kit diff
- */
-export function useKitAppDesignStatus(designId: string, id?: KitAppId): DiffStatus {
-  // Diff status is not part of XState UI state - this would come from Kit data
-  // For now, return Unchanged as diff tracking is being migrated
-  return DiffStatus.Unchanged;
+export function useKitAppDesignStatus(): GranularHookNoSetResult<DiffStatus> {
+  const designScope = useDesignScope();
+  const canRead = designScope !== null;
+  return [DiffStatus.Unchanged, undefined, canRead];
 }
 
-/**
- * Get the color for a design based on its state
- */
-export function useKitAppDesignColor(designId: string, isSelected: boolean, id?: KitAppId): { fill: string; stroke: string; opacity: number } {
-  const isHovered = useKitAppIsDesignHovered(designId, id);
-  const status = useKitAppDesignStatus(designId, id);
+export function useKitAppDesignColor(isSelected: boolean): GranularHookNoSetResult<{ fill: string; stroke: string; opacity: number }> {
+  const designScope = useDesignScope();
+  const [isHovered] = useKitAppIsDesignHovered();
+  const [status] = useKitAppDesignStatus();
+  const canRead = designScope !== null;
 
   let fill = "var(--foreground)";
   let stroke = "var(--foreground)";
   let opacity = 1;
 
-  // Base state colors
   if (status === DiffStatus.Added) {
     fill = "var(--color-success)";
     stroke = "var(--color-success)";
@@ -1130,14 +1145,12 @@ export function useKitAppDesignColor(designId: string, isSelected: boolean, id?:
     stroke = "var(--foreground)";
   }
 
-  // Hover state
   if (isHovered && !isSelected) {
     fill = "var(--hover-base)";
     stroke = "var(--foreground)";
     opacity = 1;
   }
 
-  // Selected state
   if (isSelected) {
     if (status === DiffStatus.Added) {
       fill = "var(--color-selected-added)";
@@ -1155,7 +1168,7 @@ export function useKitAppDesignColor(designId: string, isSelected: boolean, id?:
     opacity = 1;
   }
 
-  return { fill, stroke, opacity };
+  return [{ fill, stroke, opacity }, undefined, canRead];
 }
 
 // #endregion Designs

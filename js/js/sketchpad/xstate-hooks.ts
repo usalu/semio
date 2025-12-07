@@ -19,8 +19,8 @@
 // #region Imports
 
 import { useSelector } from "@xstate/react";
-import { createContext, useContext, useMemo } from "react";
-import { Guid } from "../semio";
+import { createContext, useContext, useMemo, useCallback } from "react";
+import { Camera, Coord, Guid } from "../semio";
 import {
     createDesignActiveToolSelector,
     createDesignAppSelector,
@@ -83,7 +83,7 @@ import {
     TypeAppSelection,
     TypeAppState
 } from "./machines";
-import { PanelVisibility, ToolKind } from "./shared";
+import { GranularHookNoSetResult, GranularHookResult, PanelVisibility, ToolKind } from "./shared";
 
 // #endregion Imports
 
@@ -116,60 +116,69 @@ export { useActor as useSketchpadActorHook };
 
 // #region Home App Hooks
 
-/**
- * Get the full home app state.
- */
 export function useHomeApp(): HomeAppState {
     const actor = useActor();
     return useSelector(actor, selectHomeApp);
 }
 
-/**
- * Get home app panel visibility.
- */
-export function useHomePanelVisibility(): PanelVisibility {
+export function useHomePanelVisibility(): GranularHookResult<PanelVisibility> {
     const actor = useActor();
-    return useSelector(actor, selectHomePanelVisibility);
+    const value = useSelector(actor, selectHomePanelVisibility);
+    const canSet = actor !== null;
+    const setValue = useMemo(() => (panelVisibility: PanelVisibility) => {
+        actor.send({ type: "HOME.SET_PANEL_VISIBILITY", panelVisibility });
+    }, [actor]);
+    return [value, setValue, canSet];
 }
 
-/**
- * Get home app selection.
- */
-export function useHomeSelection(): HomeAppSelection | undefined {
+export function useHomeSelection(): GranularHookResult<HomeAppSelection | undefined> {
     const actor = useActor();
-    return useSelector(actor, selectHomeSelection);
+    const value = useSelector(actor, selectHomeSelection);
+    const canSet = actor !== null;
+    const setValue = useMemo(() => (selection: HomeAppSelection | undefined) => {
+        if (selection?.kits) {
+            selection.kits.forEach(g => actor.send({ type: "HOME.SELECT_KIT", guid: g }));
+        }
+    }, [actor]);
+    return [value, setValue, canSet];
 }
 
-/**
- * Get home app hover state.
- */
-export function useHomeHover(): { kits?: Guid[] } | undefined {
+export function useHomeHover(): GranularHookResult<{ kits?: Guid[] } | undefined> {
     const actor = useActor();
-    return useSelector(actor, selectHomeHover);
+    const value = useSelector(actor, selectHomeHover);
+    const canSet = actor !== null;
+    const setValue = useMemo(() => (hover: { kits?: Guid[] } | undefined) => {
+        actor.send({ type: "HOME.SET_HOVER", kits: hover?.kits ?? [] });
+    }, [actor]);
+    return [value, setValue, canSet];
 }
 
-/**
- * Get home app sort column.
- */
-export function useHomeSortColumn(): string | undefined {
+export function useHomeSortColumn(): GranularHookResult<string | undefined> {
     const actor = useActor();
-    return useSelector(actor, selectHomeSortColumn);
+    const value = useSelector(actor, selectHomeSortColumn);
+    const canSet = actor !== null;
+    const setValue = useMemo(() => (column: string | undefined) => {
+        if (column) actor.send({ type: "HOME.SET_SORT", column, direction: "asc" });
+    }, [actor]);
+    return [value, setValue, canSet];
 }
 
-/**
- * Get home app sort direction.
- */
-export function useHomeSortDirection(): "asc" | "desc" | undefined {
+export function useHomeSortDirection(): GranularHookResult<"asc" | "desc" | undefined> {
     const actor = useActor();
-    return useSelector(actor, selectHomeSortDirection);
+    const value = useSelector(actor, selectHomeSortDirection);
+    const column = useSelector(actor, selectHomeSortColumn);
+    const canSet = actor !== null;
+    const setValue = useMemo(() => (direction: "asc" | "desc" | undefined) => {
+        if (direction && column) actor.send({ type: "HOME.SET_SORT", column, direction });
+    }, [actor, column]);
+    return [value, setValue, canSet];
 }
 
-/**
- * Get loading kits list.
- */
-export function useHomeLoadingKits(): Array<{ tempGuid: string; name: string }> {
+export function useHomeLoadingKits(): GranularHookNoSetResult<Array<{ tempGuid: string; name: string }>> {
     const actor = useActor();
-    return useSelector(actor, selectHomeLoadingKits);
+    const value = useSelector(actor, selectHomeLoadingKits);
+    const canRead = actor !== null;
+    return [value, undefined, canRead];
 }
 
 /**
@@ -902,6 +911,515 @@ export function useTransactionCommands(appKey: string) {
 }
 
 // #endregion Transaction Hooks
+
+// #region Scope-Based Triadic Hooks
+// These hooks follow the triadic pattern [value, setValue, canSetValue] and use scopes for context.
+// They abstract the XState actor and events from UI components, providing a simple React hook interface.
+// All writes go through: UI hook → actor.send() → machine action → state update
+
+// Lazy scope imports to avoid circular dependencies
+let scopeImportsCache: {
+    useKitScope: () => { guid: string } | null;
+    useDesignScope: () => { guid: string } | null;
+    useTypeScope: () => { guid: string } | null;
+    usePieceScope: () => { guid: string } | null;
+    useConnectionScope: () => { guid: string } | null;
+    useQualityScope: () => { guid: string } | null;
+} | null = null;
+
+const getScopeImports = () => {
+    if (scopeImportsCache) return scopeImportsCache;
+    const mod = require("./Sketchpad");
+    scopeImportsCache = {
+        useKitScope: mod.useKitScope,
+        useDesignScope: mod.useDesignScope,
+        useTypeScope: mod.useTypeScope,
+        usePieceScope: mod.usePieceScope,
+        useConnectionScope: mod.useConnectionScope,
+        useQualityScope: mod.useQualityScope,
+    };
+    return scopeImportsCache;
+};
+
+// #region Design App Triadic Hooks
+
+export function useDesignAppSelection(): GranularHookResult<DesignAppSelection | undefined> {
+    const actor = useActor();
+    const { useKitScope, useDesignScope } = getScopeImports();
+    const kitScope = useKitScope();
+    const designScope = useDesignScope();
+    const kitGuid = kitScope?.guid ?? "";
+    const designGuid = designScope?.guid ?? "";
+    const selector = useMemo(() => createDesignSelectionSelector(kitGuid, designGuid), [kitGuid, designGuid]);
+    const value = useSelector(actor, selector);
+    const canSet = !!(kitGuid && designGuid);
+    const setValue = useCallback((selection: DesignAppSelection | undefined) => {
+        if (!canSet) return;
+        if (selection) {
+            actor.send({ type: "DESIGN.SET_SELECTION", kitGuid, designGuid, selection });
+        } else {
+            actor.send({ type: "DESIGN.CLEAR_SELECTION", kitGuid, designGuid });
+        }
+    }, [actor, kitGuid, designGuid, canSet]);
+    return [value, canSet ? setValue : undefined, canSet];
+}
+
+export function useDesignAppHover(): GranularHookResult<DesignAppHover | undefined> {
+    const actor = useActor();
+    const { useKitScope, useDesignScope } = getScopeImports();
+    const kitScope = useKitScope();
+    const designScope = useDesignScope();
+    const kitGuid = kitScope?.guid ?? "";
+    const designGuid = designScope?.guid ?? "";
+    const selector = useMemo(() => createDesignHoverSelector(kitGuid, designGuid), [kitGuid, designGuid]);
+    const value = useSelector(actor, selector);
+    const canSet = !!(kitGuid && designGuid);
+    const setValue = useCallback((hover: DesignAppHover | undefined) => {
+        if (!canSet) return;
+        if (hover) {
+            actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover });
+        } else {
+            actor.send({ type: "DESIGN.CLEAR_HOVER", kitGuid, designGuid });
+        }
+    }, [actor, kitGuid, designGuid, canSet]);
+    return [value, canSet ? setValue : undefined, canSet];
+}
+
+export function useDesignAppDiagramScale(): GranularHookResult<number | undefined> {
+    const actor = useActor();
+    const { useKitScope, useDesignScope } = getScopeImports();
+    const kitScope = useKitScope();
+    const designScope = useDesignScope();
+    const kitGuid = kitScope?.guid ?? "";
+    const designGuid = designScope?.guid ?? "";
+    const selector = useMemo(() => createDesignDiagramScaleSelector(kitGuid, designGuid), [kitGuid, designGuid]);
+    const value = useSelector(actor, selector);
+    const canSet = !!(kitGuid && designGuid);
+    const setValue = useCallback((scale: number | undefined) => {
+        if (!canSet || scale === undefined) return;
+        actor.send({ type: "DESIGN.SET_DIAGRAM_SCALE", kitGuid, designGuid, scale });
+    }, [actor, kitGuid, designGuid, canSet]);
+    return [value, canSet ? setValue : undefined, canSet];
+}
+
+export function useDesignAppDiagramCenter(): GranularHookResult<Coord | undefined> {
+    const actor = useActor();
+    const { useKitScope, useDesignScope } = getScopeImports();
+    const kitScope = useKitScope();
+    const designScope = useDesignScope();
+    const kitGuid = kitScope?.guid ?? "";
+    const designGuid = designScope?.guid ?? "";
+    const selector = useMemo(() => createDesignDiagramCenterSelector(kitGuid, designGuid), [kitGuid, designGuid]);
+    const value = useSelector(actor, selector);
+    const canSet = !!(kitGuid && designGuid);
+    const setValue = useCallback((center: Coord | undefined) => {
+        if (!canSet || !center) return;
+        actor.send({ type: "DESIGN.SET_DIAGRAM_CENTER", kitGuid, designGuid, center: { x: center.u, y: center.v } });
+    }, [actor, kitGuid, designGuid, canSet]);
+    return [value as Coord | undefined, canSet ? setValue : undefined, canSet];
+}
+
+export function useDesignAppCamera(): GranularHookResult<Camera | undefined> {
+    const actor = useActor();
+    const { useKitScope, useDesignScope } = getScopeImports();
+    const kitScope = useKitScope();
+    const designScope = useDesignScope();
+    const kitGuid = kitScope?.guid ?? "";
+    const designGuid = designScope?.guid ?? "";
+    const selector = useMemo(() => createDesignCameraSelector(kitGuid, designGuid), [kitGuid, designGuid]);
+    const value = useSelector(actor, selector);
+    const canSet = !!(kitGuid && designGuid);
+    const setValue = useCallback((camera: Camera | undefined) => {
+        if (!canSet) return;
+        actor.send({ type: "DESIGN.SET_CAMERA", kitGuid, designGuid, camera });
+    }, [actor, kitGuid, designGuid, canSet]);
+    return [value, canSet ? setValue : undefined, canSet];
+}
+
+export function useDesignAppActiveTool(): GranularHookResult<ToolKind | undefined> {
+    const actor = useActor();
+    const { useKitScope, useDesignScope } = getScopeImports();
+    const kitScope = useKitScope();
+    const designScope = useDesignScope();
+    const kitGuid = kitScope?.guid ?? "";
+    const designGuid = designScope?.guid ?? "";
+    const selector = useMemo(() => createDesignActiveToolSelector(kitGuid, designGuid), [kitGuid, designGuid]);
+    const value = useSelector(actor, selector);
+    const canSet = !!(kitGuid && designGuid);
+    const setValue = useCallback((tool: ToolKind | undefined) => {
+        if (!canSet || !tool) return;
+        actor.send({ type: "DESIGN.SET_ACTIVE_TOOL", kitGuid, designGuid, tool });
+    }, [actor, kitGuid, designGuid, canSet]);
+    return [value, canSet ? setValue : undefined, canSet];
+}
+
+export function useDesignAppFullscreenWindow(): GranularHookResult<DesignAppFullscreenWindow | undefined> {
+    const actor = useActor();
+    const { useKitScope, useDesignScope } = getScopeImports();
+    const kitScope = useKitScope();
+    const designScope = useDesignScope();
+    const kitGuid = kitScope?.guid ?? "";
+    const designGuid = designScope?.guid ?? "";
+    const selector = useMemo(() => createDesignFullscreenWindowSelector(kitGuid, designGuid), [kitGuid, designGuid]);
+    const value = useSelector(actor, selector);
+    const canSet = !!(kitGuid && designGuid);
+    const setValue = useCallback((window: DesignAppFullscreenWindow | undefined) => {
+        if (!canSet || !window) return;
+        actor.send({ type: "DESIGN.SET_FULLSCREEN", kitGuid, designGuid, window });
+    }, [actor, kitGuid, designGuid, canSet]);
+    return [value, canSet ? setValue : undefined, canSet];
+}
+
+export function useDesignAppFocusedPiece(): GranularHookResult<Guid | undefined> {
+    const actor = useActor();
+    const { useKitScope, useDesignScope } = getScopeImports();
+    const kitScope = useKitScope();
+    const designScope = useDesignScope();
+    const kitGuid = kitScope?.guid ?? "";
+    const designGuid = designScope?.guid ?? "";
+    const selector = useMemo(() => createDesignFocusedPieceSelector(kitGuid, designGuid), [kitGuid, designGuid]);
+    const value = useSelector(actor, selector);
+    const canSet = !!(kitGuid && designGuid);
+    const setValue = useCallback((pieceGuid: Guid | undefined) => {
+        if (!canSet) return;
+        actor.send({ type: "DESIGN.FOCUS_PIECE", kitGuid, designGuid, pieceGuid });
+    }, [actor, kitGuid, designGuid, canSet]);
+    return [value, canSet ? setValue : undefined, canSet];
+}
+
+export function useDesignAppPanelVisibility(): GranularHookResult<PanelVisibility> {
+    const actor = useActor();
+    const { useKitScope, useDesignScope } = getScopeImports();
+    const kitScope = useKitScope();
+    const designScope = useDesignScope();
+    const kitGuid = kitScope?.guid ?? "";
+    const designGuid = designScope?.guid ?? "";
+    const selector = useMemo(() => createDesignPanelVisibilitySelector(kitGuid, designGuid), [kitGuid, designGuid]);
+    const value = useSelector(actor, selector);
+    const canSet = !!(kitGuid && designGuid);
+    const setValue = useCallback((panelVisibility: PanelVisibility) => {
+        if (!canSet) return;
+        actor.send({ type: "DESIGN.SET_PANEL_VISIBILITY", kitGuid, designGuid, panelVisibility });
+    }, [actor, kitGuid, designGuid, canSet]);
+    return [value, canSet ? setValue : undefined, canSet];
+}
+
+export function useDesignAppSelectedModelTags(): GranularHookResult<Record<Guid, Guid[]>> {
+    const actor = useActor();
+    const { useKitScope, useDesignScope } = getScopeImports();
+    const kitScope = useKitScope();
+    const designScope = useDesignScope();
+    const kitGuid = kitScope?.guid ?? "";
+    const designGuid = designScope?.guid ?? "";
+    const selector = useMemo(() => createDesignSelectedModelTagsSelector(kitGuid, designGuid), [kitGuid, designGuid]);
+    const value = useSelector(actor, selector);
+    const canSet = !!(kitGuid && designGuid);
+    const setValue = useCallback((tags: Record<Guid, Guid[]>) => {
+        if (!canSet) return;
+        Object.entries(tags).forEach(([typeGuid, tagGuids]) => {
+            tagGuids.forEach((tagGuid) => {
+                actor.send({ type: "DESIGN.SELECT_MODEL_TAG", kitGuid, designGuid, typeGuid, tagGuid });
+            });
+        });
+    }, [actor, kitGuid, designGuid, canSet]);
+    return [value, canSet ? setValue : undefined, canSet];
+}
+
+// #endregion Design App Triadic Hooks
+
+// #region Type App Triadic Hooks
+
+export function useTypeAppSelection(): GranularHookResult<TypeAppSelection | undefined> {
+    const actor = useActor();
+    const { useKitScope, useTypeScope } = getScopeImports();
+    const kitScope = useKitScope();
+    const typeScope = useTypeScope();
+    const kitGuid = kitScope?.guid ?? "";
+    const typeGuid = typeScope?.guid ?? "";
+    const selector = useMemo(() => createTypeSelectionSelector(kitGuid, typeGuid), [kitGuid, typeGuid]);
+    const value = useSelector(actor, selector);
+    const canSet = !!(kitGuid && typeGuid);
+    const setValue = useCallback((selection: TypeAppSelection | undefined) => {
+        if (!canSet) return;
+        if (selection) {
+            actor.send({ type: "TYPE.SET_SELECTION", kitGuid, typeGuid, selection });
+        } else {
+            actor.send({ type: "TYPE.CLEAR_SELECTION", kitGuid, typeGuid });
+        }
+    }, [actor, kitGuid, typeGuid, canSet]);
+    return [value, canSet ? setValue : undefined, canSet];
+}
+
+export function useTypeAppHover(): GranularHookResult<TypeAppHover | undefined> {
+    const actor = useActor();
+    const { useKitScope, useTypeScope } = getScopeImports();
+    const kitScope = useKitScope();
+    const typeScope = useTypeScope();
+    const kitGuid = kitScope?.guid ?? "";
+    const typeGuid = typeScope?.guid ?? "";
+    const selector = useMemo(() => createTypeHoverSelector(kitGuid, typeGuid), [kitGuid, typeGuid]);
+    const value = useSelector(actor, selector);
+    const canSet = !!(kitGuid && typeGuid);
+    const setValue = useCallback((hover: TypeAppHover | undefined) => {
+        if (!canSet) return;
+        if (hover) {
+            actor.send({ type: "TYPE.SET_HOVER", kitGuid, typeGuid, hover });
+        } else {
+            actor.send({ type: "TYPE.CLEAR_HOVER", kitGuid, typeGuid });
+        }
+    }, [actor, kitGuid, typeGuid, canSet]);
+    return [value, canSet ? setValue : undefined, canSet];
+}
+
+export function useTypeAppCamera(): GranularHookResult<Camera | undefined> {
+    const actor = useActor();
+    const { useKitScope, useTypeScope } = getScopeImports();
+    const kitScope = useKitScope();
+    const typeScope = useTypeScope();
+    const kitGuid = kitScope?.guid ?? "";
+    const typeGuid = typeScope?.guid ?? "";
+    const selector = useMemo(() => createTypeCameraSelector(kitGuid, typeGuid), [kitGuid, typeGuid]);
+    const value = useSelector(actor, selector);
+    const canSet = !!(kitGuid && typeGuid);
+    const setValue = useCallback((camera: Camera | undefined) => {
+        if (!canSet) return;
+        actor.send({ type: "TYPE.SET_CAMERA", kitGuid, typeGuid, camera });
+    }, [actor, kitGuid, typeGuid, canSet]);
+    return [value, canSet ? setValue : undefined, canSet];
+}
+
+export function useTypeAppActiveTool(): GranularHookResult<ToolKind> {
+    const actor = useActor();
+    const { useKitScope, useTypeScope } = getScopeImports();
+    const kitScope = useKitScope();
+    const typeScope = useTypeScope();
+    const kitGuid = kitScope?.guid ?? "";
+    const typeGuid = typeScope?.guid ?? "";
+    const selector = useMemo(() => createTypeActiveToolSelector(kitGuid, typeGuid), [kitGuid, typeGuid]);
+    const value = useSelector(actor, selector);
+    const canSet = !!(kitGuid && typeGuid);
+    const setValue = useCallback((tool: ToolKind) => {
+        if (!canSet) return;
+        actor.send({ type: "TYPE.SET_ACTIVE_TOOL", kitGuid, typeGuid, tool });
+    }, [actor, kitGuid, typeGuid, canSet]);
+    return [value, canSet ? setValue : undefined, canSet];
+}
+
+export function useTypeAppFocusedPort(): GranularHookResult<Guid | undefined> {
+    const actor = useActor();
+    const { useKitScope, useTypeScope } = getScopeImports();
+    const kitScope = useKitScope();
+    const typeScope = useTypeScope();
+    const kitGuid = kitScope?.guid ?? "";
+    const typeGuid = typeScope?.guid ?? "";
+    const selector = useMemo(() => createTypeFocusedPortSelector(kitGuid, typeGuid), [kitGuid, typeGuid]);
+    const value = useSelector(actor, selector);
+    const canSet = !!(kitGuid && typeGuid);
+    const setValue = useCallback((portGuid: Guid | undefined) => {
+        if (!canSet) return;
+        actor.send({ type: "TYPE.FOCUS_PORT", kitGuid, typeGuid, portGuid });
+    }, [actor, kitGuid, typeGuid, canSet]);
+    return [value, canSet ? setValue : undefined, canSet];
+}
+
+export function useTypeAppPanelVisibility(): GranularHookResult<PanelVisibility> {
+    const actor = useActor();
+    const { useKitScope, useTypeScope } = getScopeImports();
+    const kitScope = useKitScope();
+    const typeScope = useTypeScope();
+    const kitGuid = kitScope?.guid ?? "";
+    const typeGuid = typeScope?.guid ?? "";
+    const selector = useMemo(() => createTypePanelVisibilitySelector(kitGuid, typeGuid), [kitGuid, typeGuid]);
+    const value = useSelector(actor, selector);
+    const canSet = !!(kitGuid && typeGuid);
+    const setValue = useCallback((panelVisibility: PanelVisibility) => {
+        if (!canSet) return;
+        actor.send({ type: "TYPE.SET_PANEL_VISIBILITY", kitGuid, typeGuid, panelVisibility });
+    }, [actor, kitGuid, typeGuid, canSet]);
+    return [value, canSet ? setValue : undefined, canSet];
+}
+
+export function useTypeAppFullscreenWindow(): GranularHookResult<TypeAppFullscreenWindow> {
+    const actor = useActor();
+    const { useKitScope, useTypeScope } = getScopeImports();
+    const kitScope = useKitScope();
+    const typeScope = useTypeScope();
+    const kitGuid = kitScope?.guid ?? "";
+    const typeGuid = typeScope?.guid ?? "";
+    const selector = useMemo(() => createTypeFullscreenWindowSelector(kitGuid, typeGuid), [kitGuid, typeGuid]);
+    const value = useSelector(actor, selector);
+    const canSet = !!(kitGuid && typeGuid);
+    const setValue = useCallback((window: TypeAppFullscreenWindow) => {
+        if (!canSet) return;
+        actor.send({ type: "TYPE.SET_FULLSCREEN_WINDOW", kitGuid, typeGuid, window });
+    }, [actor, kitGuid, typeGuid, canSet]);
+    return [value, canSet ? setValue : undefined, canSet];
+}
+
+export function useTypeAppSelectedModelTags(): GranularHookResult<Guid[]> {
+    const actor = useActor();
+    const { useKitScope, useTypeScope } = getScopeImports();
+    const kitScope = useKitScope();
+    const typeScope = useTypeScope();
+    const kitGuid = kitScope?.guid ?? "";
+    const typeGuid = typeScope?.guid ?? "";
+    const selector = useMemo(() => createTypeSelectedModelTagsSelector(kitGuid, typeGuid), [kitGuid, typeGuid]);
+    const value = useSelector(actor, selector);
+    const canSet = !!(kitGuid && typeGuid);
+    const setValue = useCallback((tags: Guid[]) => {
+        if (!canSet) return;
+        actor.send({ type: "TYPE.SET_MODEL_TAGS", kitGuid, typeGuid, tags });
+    }, [actor, kitGuid, typeGuid, canSet]);
+    return [value, canSet ? setValue : undefined, canSet];
+}
+
+// #endregion Type App Triadic Hooks
+
+// #region Kit App Triadic Hooks
+
+export function useKitAppSelection(): GranularHookResult<KitAppSelection | undefined> {
+    const actor = useActor();
+    const { useKitScope } = getScopeImports();
+    const kitScope = useKitScope();
+    const kitGuid = kitScope?.guid ?? "";
+    const selector = useMemo(() => createKitSelectionSelector(kitGuid), [kitGuid]);
+    const value = useSelector(actor, selector);
+    const canSet = !!kitGuid;
+    const setValue = useCallback((selection: KitAppSelection | undefined) => {
+        if (!canSet) return;
+        if (selection) {
+            actor.send({ type: "KIT.SET_SELECTION", kitGuid, selection });
+        } else {
+            actor.send({ type: "KIT.CLEAR_SELECTION", kitGuid });
+        }
+    }, [actor, kitGuid, canSet]);
+    return [value, canSet ? setValue : undefined, canSet];
+}
+
+export function useKitAppHover(): GranularHookResult<any> {
+    const actor = useActor();
+    const { useKitScope } = getScopeImports();
+    const kitScope = useKitScope();
+    const kitGuid = kitScope?.guid ?? "";
+    const selector = useMemo(() => createKitHoverSelector(kitGuid), [kitGuid]);
+    const value = useSelector(actor, selector);
+    const canSet = !!kitGuid;
+    const setValue = useCallback((hover: any) => {
+        if (!canSet) return;
+        if (hover) {
+            actor.send({ type: "KIT.SET_HOVER", kitGuid, hover });
+        } else {
+            actor.send({ type: "KIT.CLEAR_HOVER", kitGuid });
+        }
+    }, [actor, kitGuid, canSet]);
+    return [value, canSet ? setValue : undefined, canSet];
+}
+
+export function useKitAppPanelVisibility(): GranularHookResult<PanelVisibility> {
+    const actor = useActor();
+    const { useKitScope } = getScopeImports();
+    const kitScope = useKitScope();
+    const kitGuid = kitScope?.guid ?? "";
+    const selector = useMemo(() => createKitPanelVisibilitySelector(kitGuid), [kitGuid]);
+    const value = useSelector(actor, selector);
+    const canSet = !!kitGuid;
+    const setValue = useCallback((panelVisibility: PanelVisibility) => {
+        if (!canSet) return;
+        actor.send({ type: "KIT.SET_PANEL_VISIBILITY", kitGuid, panelVisibility });
+    }, [actor, kitGuid, canSet]);
+    return [value, canSet ? setValue : undefined, canSet];
+}
+
+export function useKitAppFilterSearch(): GranularHookResult<string> {
+    const actor = useActor();
+    const { useKitScope } = getScopeImports();
+    const kitScope = useKitScope();
+    const kitGuid = kitScope?.guid ?? "";
+    const selector = useMemo(() => createKitFilterSearchSelector(kitGuid), [kitGuid]);
+    const value = useSelector(actor, selector);
+    const canSet = !!kitGuid;
+    const setValue = useCallback((search: string) => {
+        if (!canSet) return;
+        actor.send({ type: "KIT.SET_FILTER", kitGuid, search });
+    }, [actor, kitGuid, canSet]);
+    return [value, canSet ? setValue : undefined, canSet];
+}
+
+export function useKitAppExpandedRows(): GranularHookResult<Set<string>> {
+    const actor = useActor();
+    const { useKitScope } = getScopeImports();
+    const kitScope = useKitScope();
+    const kitGuid = kitScope?.guid ?? "";
+    const selector = useMemo(() => createKitExpandedRowsSelector(kitGuid), [kitGuid]);
+    const value = useSelector(actor, selector);
+    const canSet = !!kitGuid;
+    const setValue = useCallback((expandedRows: Set<string>) => {
+        if (!canSet) return;
+        actor.send({ type: "KIT.SET_EXPANDED_ROWS", kitGuid, expandedRows });
+    }, [actor, kitGuid, canSet]);
+    return [value, canSet ? setValue : undefined, canSet];
+}
+
+// #endregion Kit App Triadic Hooks
+
+// #region Home App Triadic Hooks (no scope needed)
+
+export function useHomeAppSelection(): GranularHookResult<HomeAppSelection | undefined> {
+    const actor = useActor();
+    const value = useSelector(actor, selectHomeSelection);
+    const canSet = true;
+    const setValue = useCallback((selection: HomeAppSelection | undefined) => {
+        if (selection?.kits) {
+            selection.kits.forEach((g) => actor.send({ type: "HOME.SELECT_KIT", guid: g }));
+        }
+    }, [actor]);
+    return [value, setValue, canSet];
+}
+
+export function useHomeAppHover(): GranularHookResult<{ kits?: Guid[] } | undefined> {
+    const actor = useActor();
+    const value = useSelector(actor, selectHomeHover);
+    const canSet = true;
+    const setValue = useCallback((hover: { kits?: Guid[] } | undefined) => {
+        actor.send({ type: "HOME.SET_HOVER", kits: hover?.kits ?? [] });
+    }, [actor]);
+    return [value, setValue, canSet];
+}
+
+export function useHomeAppPanelVisibility(): GranularHookResult<PanelVisibility> {
+    const actor = useActor();
+    const value = useSelector(actor, selectHomePanelVisibility);
+    const canSet = true;
+    const setValue = useCallback((panelVisibility: PanelVisibility) => {
+        actor.send({ type: "HOME.SET_PANEL_VISIBILITY", panelVisibility });
+    }, [actor]);
+    return [value, setValue, canSet];
+}
+
+export function useHomeAppSortColumn(): GranularHookResult<string | undefined> {
+    const actor = useActor();
+    const value = useSelector(actor, selectHomeSortColumn);
+    const canSet = true;
+    const setValue = useCallback((column: string | undefined) => {
+        if (column) actor.send({ type: "HOME.SET_SORT", column, direction: "asc" });
+    }, [actor]);
+    return [value, setValue, canSet];
+}
+
+export function useHomeAppSortDirection(): GranularHookResult<"asc" | "desc" | undefined> {
+    const actor = useActor();
+    const value = useSelector(actor, selectHomeSortDirection);
+    const column = useSelector(actor, selectHomeSortColumn);
+    const canSet = !!column;
+    const setValue = useCallback((direction: "asc" | "desc" | undefined) => {
+        if (direction && column) actor.send({ type: "HOME.SET_SORT", column, direction });
+    }, [actor, column]);
+    return [value, canSet ? setValue : undefined, canSet];
+}
+
+// #endregion Home App Triadic Hooks
+
+// #endregion Scope-Based Triadic Hooks
 
 // #region Re-exports
 

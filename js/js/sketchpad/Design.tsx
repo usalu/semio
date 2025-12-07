@@ -29,8 +29,8 @@
 
 import * as Y from "yjs";
 import { ConnectionDiff, ConnectionId, Guid, KitDiff, PieceDiff, PieceId } from "../semio";
-import type { AppConfig, AppWindowConfig, DesignAppId, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolDefinition, ToolRenderContext, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
-import { createPanelDefinition, Expertise, Mode, PanelKind, Theme, ToolKind } from "./shared";
+import type { AppConfig, AppWindowConfig, DesignAppId, GranularHookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolDefinition, ToolRenderContext, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
+import { conditionalHookResult, createPanelDefinition, Expertise, Mode, PanelKind, readonlyHookResult, Theme, ToolKind, writableHookResult } from "./shared";
 import { identitySelector, useDesignScope, useKitScope, usePieceScope, useSketchpadActor } from "./Sketchpad";
 
 // #endregion Internal State Management
@@ -118,6 +118,7 @@ import {
   KitStore,
   LayoutCanvas,
   PieceScopeProvider,
+  PieceMetadata,
   SketchpadStore,
   ToolGroup,
   useAddFooterItem,
@@ -130,7 +131,7 @@ import {
   useDragDrop,
   useExpertise,
   useExplodeableDesignNodes,
-  useFlatDesign,
+  useFixedPieceId,
   useFlatPiecePlane,
   useFocusSafe,
   useIsConnectionHovered,
@@ -150,7 +151,7 @@ import {
   useMode,
   usePiece,
   usePiecesFromIds,
-  usePiecesMetadata,
+  usePiecesMetadataMap,
   usePieceStatus,
   useRemoveFooterItem,
   useRemovePanelSection,
@@ -1658,75 +1659,149 @@ const selectPanelVisibility = (s: DesignAppState) => s.panelVisibility;
 
 // Hooks read from XState stores
 // XState handles state transitions and commands
+// All hooks follow the [state, setState, canSetState] pattern
 
-export function useDesignAppSelection(id?: DesignAppId): DesignAppSelection {
-  const state = useDesignApp(identitySelector, id);
-  if (!state) return EMPTY_SELECTION;
-  return selectSelection(state as DesignAppState);
+export function useDesignAppSelection(): GranularHookResult<DesignAppSelection> {
+  const state = useDesignApp(identitySelector);
+  const store = useDesignAppController() as DesignAppController | null;
+  const value = state ? selectSelection(state as DesignAppState) : EMPTY_SELECTION;
+  const canSet = store !== null;
+  const setter = useMemo(() => {
+    if (!store) return undefined;
+    return (selection: DesignAppSelection) => {
+      const current = store.snapshot().selection ?? {};
+      const piecesToAdd = selection.pieces?.filter((p) => !current.pieces?.includes(p)) ?? [];
+      const piecesToRemove = current.pieces?.filter((p) => !selection.pieces?.includes(p)) ?? [];
+      const connectionsToAdd = selection.connections?.filter((c) => !current.connections?.includes(c)) ?? [];
+      const connectionsToRemove = current.connections?.filter((c) => !selection.connections?.includes(c)) ?? [];
+      store.change({
+        selection: {
+          pieces: { added: piecesToAdd, removed: piecesToRemove },
+          connections: { added: connectionsToAdd, removed: connectionsToRemove },
+          port: selection.port,
+        },
+      });
+    };
+  }, [store]);
+  return conditionalHookResult(value, setter, canSet);
 }
 
-export function useDesignAppFullscreen(id?: DesignAppId): DesignAppFullscreenWindow {
-  const state = useDesignApp(identitySelector, id);
-  if (!state) return DesignAppFullscreenWindow.None;
-  return selectFullscreen(state as DesignAppState);
+export function useDesignAppFullscreen(): GranularHookResult<DesignAppFullscreenWindow> {
+  const state = useDesignApp(identitySelector);
+  const store = useDesignAppController() as DesignAppController | null;
+  const value = state ? selectFullscreen(state as DesignAppState) : DesignAppFullscreenWindow.None;
+  const canSet = store !== null;
+  const setter = useMemo(() => {
+    if (!store) return undefined;
+    return (fullscreen: DesignAppFullscreenWindow) => store.change({ fullscreenWindow: fullscreen });
+  }, [store]);
+  return conditionalHookResult(value, setter, canSet);
 }
 
-export function useDesignAppActiveTool(id?: DesignAppId): ToolKind {
-  const state = useDesignApp(identitySelector, id);
-  if (!state) return ToolKind.SELECTION_NORMAL;
-  return selectActiveTool(state as DesignAppState);
+export function useDesignAppActiveTool(): GranularHookResult<ToolKind> {
+  const state = useDesignApp(identitySelector);
+  const store = useDesignAppController() as DesignAppController | null;
+  const value = state ? selectActiveTool(state as DesignAppState) : ToolKind.SELECTION_NORMAL;
+  const canSet = store !== null;
+  const setter = useMemo(() => {
+    if (!store) return undefined;
+    return (tool: ToolKind) => store.change({ activeTool: tool });
+  }, [store]);
+  return conditionalHookResult(value, setter, canSet);
 }
 
-export function useDesignAppDiff(): KitDiff | undefined {
-  return undefined;
+export function useDesignAppDiff(): GranularHookResult<KitDiff | undefined> {
+  return readonlyHookResult(undefined);
 }
 
-export function useDesignAppOthers(id?: DesignAppId): DesignAppPresenceOther[] {
-  const state = useDesignApp(identitySelector, id);
-  if (!state) return EMPTY_OTHERS;
-  return selectOthers(state as DesignAppState);
+export function useDesignAppOthers(): GranularHookResult<DesignAppPresenceOther[]> {
+  const state = useDesignApp(identitySelector);
+  const value = state ? selectOthers(state as DesignAppState) : EMPTY_OTHERS;
+  return readonlyHookResult(value);
 }
 
-export function useDesignAppCamera(id?: DesignAppId): Camera | undefined {
-  const state = useDesignApp(identitySelector, id);
-  if (!state) return undefined;
-  return selectCamera(state as DesignAppState);
+export function useDesignAppCamera(): GranularHookResult<Camera | undefined> {
+  const state = useDesignApp(identitySelector);
+  const store = useDesignAppController() as DesignAppController | null;
+  const value = state ? selectCamera(state as DesignAppState) : undefined;
+  const canSet = store !== null;
+  const setter = useMemo(() => {
+    if (!store) return undefined;
+    return (camera: Camera | undefined) => store.change({ camera });
+  }, [store]);
+  return conditionalHookResult(value, setter, canSet);
 }
 
-export function useDesignAppDiagramCenter(id?: DesignAppId): Coord | undefined {
-  const state = useDesignApp(identitySelector, id);
-  if (!state) return undefined;
-  return selectDiagramCenter(state as DesignAppState);
+export function useDesignAppDiagramCenter(): GranularHookResult<Coord | undefined> {
+  const state = useDesignApp(identitySelector);
+  const store = useDesignAppController() as DesignAppController | null;
+  const value = state ? selectDiagramCenter(state as DesignAppState) : undefined;
+  const canSet = store !== null;
+  const setter = useMemo(() => {
+    if (!store) return undefined;
+    return (center: Coord | undefined) => store.change({ diagramCenter: center });
+  }, [store]);
+  return conditionalHookResult(value, setter, canSet);
 }
 
-export function useDesignAppDiagramScale(id?: DesignAppId): number | undefined {
-  const state = useDesignApp(identitySelector, id);
-  if (!state) return undefined;
-  return selectDiagramScale(state as DesignAppState);
+export function useDesignAppDiagramScale(): GranularHookResult<number | undefined> {
+  const state = useDesignApp(identitySelector);
+  const store = useDesignAppController() as DesignAppController | null;
+  const value = state ? selectDiagramScale(state as DesignAppState) : undefined;
+  const canSet = store !== null;
+  const setter = useMemo(() => {
+    if (!store) return undefined;
+    return (scale: number | undefined) => store.change({ diagramScale: scale });
+  }, [store]);
+  return conditionalHookResult(value, setter, canSet);
 }
 
-export function useDesignAppFocusedPieceGuid(id?: DesignAppId): Guid | undefined {
-  const state = useDesignApp(identitySelector, id);
-  if (!state) return undefined;
-  return selectFocusedPiece(state as DesignAppState);
+export function useDesignAppFocusedPieceGuid(): GranularHookResult<Guid | undefined> {
+  const state = useDesignApp(identitySelector);
+  const store = useDesignAppController() as DesignAppController | null;
+  const value = state ? selectFocusedPiece(state as DesignAppState) : undefined;
+  const canSet = store !== null;
+  const setter = useMemo(() => {
+    if (!store) return undefined;
+    return (guid: Guid | undefined) => store.change({ focusedPieceGuid: guid ?? null });
+  }, [store]);
+  return conditionalHookResult(value, setter, canSet);
 }
 
-export function useDesignAppSelectedModelTags(id?: DesignAppId): Record<Guid, string[]> {
-  const state = useDesignApp(identitySelector, id);
-  if (!state) return EMPTY_MODEL_TAGS;
-  return selectModelTags(state as DesignAppState);
+export function useDesignAppSelectedModelTags(): GranularHookResult<Record<Guid, string[]>> {
+  const state = useDesignApp(identitySelector);
+  const store = useDesignAppController() as DesignAppController | null;
+  const value = state ? selectModelTags(state as DesignAppState) : EMPTY_MODEL_TAGS;
+  const canSet = store !== null;
+  const setter = useMemo(() => {
+    if (!store) return undefined;
+    return (tags: Record<Guid, string[]>) => store.change({ selectedModelTags: tags });
+  }, [store]);
+  return conditionalHookResult(value, setter, canSet);
 }
 
-export function useDesignAppHover(id?: DesignAppId): DesignAppHover | undefined {
-  const state = useDesignApp(identitySelector, id);
-  if (!state) return undefined;
-  return selectHover(state as DesignAppState);
+export function useDesignAppHover(): GranularHookResult<DesignAppHover | undefined> {
+  const state = useDesignApp(identitySelector);
+  const store = useDesignAppController() as DesignAppController | null;
+  const value = state ? selectHover(state as DesignAppState) : undefined;
+  const canSet = store !== null;
+  const setter = useMemo(() => {
+    if (!store) return undefined;
+    return (hover: DesignAppHover | undefined) => store.change({ hover: hover ?? {} });
+  }, [store]);
+  return conditionalHookResult(value, setter, canSet);
 }
 
-export function useDesignAppPanelVisibility(id?: DesignAppId): PanelVisibility {
-  const state = useDesignApp(identitySelector, id);
-  if (!state) return DEFAULT_PANEL_VISIBILITY;
-  return selectPanelVisibility(state as DesignAppState);
+export function useDesignAppPanelVisibility(): GranularHookResult<PanelVisibility> {
+  const state = useDesignApp(identitySelector);
+  const store = useDesignAppController() as DesignAppController | null;
+  const value = state ? selectPanelVisibility(state as DesignAppState) : DEFAULT_PANEL_VISIBILITY;
+  const canSet = store !== null;
+  const setter = useMemo(() => {
+    if (!store) return undefined;
+    return (visibility: PanelVisibility) => store.change({ panelVisibility: visibility });
+  }, [store]);
+  return conditionalHookResult(value, setter, canSet);
 }
 
 // PERF: Memoized empty commands object for when store is null
@@ -2384,7 +2459,7 @@ export function useDesignAppPieceCenter(id?: DesignAppId, pieceId?: Guid): Coord
   const appId = id ?? (scope ? JSON.parse(scope.id) : undefined);
   const pieceScope = usePieceScope();
   const finalPieceId = pieceId ?? pieceScope?.guid;
-  const metadata = usePiecesMetadata();
+  const metadata = usePiecesMetadataMap();
   return finalPieceId ? metadata.get(finalPieceId)?.center : undefined;
 }
 
@@ -2393,7 +2468,7 @@ export function useDesignAppPiecePlane(id?: DesignAppId, pieceId?: Guid): Plane 
   const appId = id ?? (scope ? JSON.parse(scope.id) : undefined);
   const pieceScope = usePieceScope();
   const finalPieceId = pieceId ?? pieceScope?.guid;
-  const metadata = usePiecesMetadata();
+  const metadata = usePiecesMetadataMap();
   return finalPieceId ? metadata.get(finalPieceId)?.plane : undefined;
 }
 
@@ -2580,7 +2655,7 @@ const getDesignTools = (): ToolDefinition[] => [
 export const ToolsToggleGroup: FC = () => {
   const { kit, design } = useParams();
   // PERF: Only subscribe to activeTool field, not entire app state
-  const activeTool = useDesignAppActiveTool(kit && design ? { kit, design } : undefined);
+  const [activeTool, , canSetActiveTool] = useDesignAppActiveTool();
   const { setActiveTool } = useDesignAppCommands(kit && design ? { kit, design } : undefined);
 
   if (!kit || !design) return null;
@@ -3234,7 +3309,7 @@ const PiecesSectionForm: FC = () => {
   const design = useDesign() as Design;
   const kit = useKit() as Kit;
   const metadata = new Map();
-  const selection = useDesignAppSelection();
+  const [selection] = useDesignAppSelection();
   const pieces = usePiecesFromIds(selection.pieces || []);
 
   const isSingle = pieces.length === 1;
@@ -4287,7 +4362,7 @@ type ExpandMenuProps = {
 };
 
 const ExpandMenu: FC<ExpandMenuProps> = ({ nodes, edges, onExpand }) => {
-  const selection = useDesignAppSelection();
+  const [selection] = useDesignAppSelection();
   const kit = useKit() as Kit;
   const explodeableDesignNodes = useExplodeableDesignNodes(nodes, selection);
 
@@ -5251,13 +5326,13 @@ const connectionToEdge = (
 };
 
 // PERF: Remove selection parameter - selection is now handled by individual components via granular hooks
-const designToNodesAndEdges = (design: Design, flattenedDesign: Design, metadata: Map<string, any>, kit: any) => {
+const designToNodesAndEdges = (design: Design, metadata: Map<string, PieceMetadata>, kit: any) => {
   if (!design) return null;
 
   const centerMap = new Map<string, Coord>();
-  flattenedDesign.pieces?.forEach((piece) => {
-    if (piece.guid && piece.center) {
-      centerMap.set(piece.guid, piece.center);
+  metadata.forEach((meta, pieceGuid) => {
+    if (meta.center) {
+      centerMap.set(pieceGuid, meta.center);
     }
   });
 
@@ -5435,21 +5510,20 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const kitDesigns = useKitDesigns();
   const kit = useKit() as Kit;
   // PERF: Use granular hook instead of useDesignApp to avoid re-renders on any state change
-  const activeTool = useDesignAppActiveTool();
+  const [activeTool] = useDesignAppActiveTool();
 
   // PERF: Use ref to hold selection to avoid callback recreation on selection changes
-  const selection = useDesignAppSelection();
+  const [selection] = useDesignAppSelection();
   const selectionRef = useRef(selection);
   selectionRef.current = selection;
-  const fullscreenWindow = useDesignAppFullscreen();
-  const others = useDesignAppOthers();
-  const savedDiagramCenter = useDesignAppDiagramCenter();
-  const savedDiagramScale = useDesignAppDiagramScale();
+  const [fullscreenWindow] = useDesignAppFullscreen();
+  const [others] = useDesignAppOthers();
+  const [savedDiagramCenter] = useDesignAppDiagramCenter();
+  const [savedDiagramScale] = useDesignAppDiagramScale();
   const panelVisibility = useAppPanelVisibility();
 
   const design = useDesign() as Design | null;
-  const flattenedDesign = useFlatDesign();
-  const metadata = usePiecesMetadata();
+  const metadata = usePiecesMetadataMap();
 
   // PERF: Set shared commands ref once - all 180 nodes reuse this instead of calling useDesignAppCommands
   const commands = useDesignAppCommands();
@@ -5536,11 +5610,11 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
   // PERF: Compute base nodes/edges from design data
   const { baseNodes, edges } = useMemo(() => {
-    if (!design || !flattenedDesign) return { baseNodes: [], edges: [] };
+    if (!design) return { baseNodes: [], edges: [] };
     const minimalKit = { types: kitTypes, designs: kitDesigns } as Kit;
-    const result = designToNodesAndEdges(design, flattenedDesign, metadata, minimalKit) ?? { nodes: [], edges: [] };
+    const result = designToNodesAndEdges(design, metadata, minimalKit) ?? { nodes: [], edges: [] };
     return { baseNodes: result.nodes, edges: result.edges };
-  }, [design, flattenedDesign, metadata, kitTypes, kitDesigns]);
+  }, [design, metadata, kitTypes, kitDesigns]);
 
   // PERF: Use local state for nodes during drag - ReactFlow updates this during drag operations
   // This decouples drag visual updates from store updates
@@ -7160,8 +7234,8 @@ const ModelPiece: FC<ModelPieceProps> = () => {
 
 const ModelDesign: FC = () => {
   const commands = useDesignAppCommands();
-  const selection = useDesignAppSelection();
-  const others = useDesignAppOthers();
+  const [selection] = useDesignAppSelection();
+  const [others] = useDesignAppOthers();
   const design = useDesign();
   const flatDesign = design as Design;
 
@@ -7221,9 +7295,10 @@ const ModelDesign: FC = () => {
 
 const DesignAppScene: FC = () => {
   const { deselectAll, toggleAccesslFullscreen, setCamera, clearFocus, addPiece, startTransaction, finalizeTransaction } = useDesignAppCommands();
-  const fullscreen = useDesignAppFullscreen() === DesignAppFullscreenWindow.Accessl;
-  const camera = useDesignAppCamera();
-  const focusedPieceGuid = useDesignAppFocusedPieceGuid();
+  const [fullscreenValue] = useDesignAppFullscreen();
+  const fullscreen = fullscreenValue === DesignAppFullscreenWindow.Accessl;
+  const [camera] = useDesignAppCamera();
+  const [focusedPieceGuid] = useDesignAppFocusedPieceGuid();
   const panelVisibility = useAppPanelVisibility();
   const [projection, setProjection] = React.useState<"camera" | "orthographic">("orthographic");
   // PERF: Use targeted hooks to avoid re-renders during scene interactions
@@ -7380,9 +7455,9 @@ const App: FC<AppProps> = () => {
   const { selectAll, deselectAll, deleteSelected, undo, redo, toggleDiagramFullscreen, toggleAccesslFullscreen, addPiece, startTransaction, finalizeTransaction, togglePanel, setActiveTool, hoverTypes, hoverDesigns, clearHover } =
     useDesignAppCommands();
   // PERF: Use targeted hook instead of full state subscription
-  const activeTool = useDesignAppActiveTool();
+  const [activeTool] = useDesignAppActiveTool();
 
-  const selection = useDesignAppSelection();
+  const [selection] = useDesignAppSelection();
   const design = useDesign() as Design | undefined;
   // PERF: Use targeted hooks - only get what we need to avoid re-renders
   const kitGuid = useKitScope()?.guid;

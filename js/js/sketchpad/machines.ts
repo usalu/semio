@@ -202,6 +202,7 @@ export type SketchpadEvent =
     | { type: "Y_UPDATE"; data: any }
     // Home app events
     | { type: "HOME.TOGGLE_PANEL"; panel: keyof PanelVisibility }
+    | { type: "HOME.SET_PANEL_VISIBILITY"; panelVisibility: PanelVisibility }
     | { type: "HOME.SET_SORT"; column: string; direction: "asc" | "desc" }
     | { type: "HOME.SELECT_KIT"; guid: Guid }
     | { type: "HOME.DESELECT_KIT"; guid: Guid }
@@ -211,8 +212,10 @@ export type SketchpadEvent =
     | { type: "KIT.INIT"; kitGuid: Guid; state: KitAppState }
     | { type: "KIT.SYNC"; kitGuid: Guid; state: Partial<KitAppState> }
     | { type: "KIT.TOGGLE_PANEL"; kitGuid: Guid; panel: keyof PanelVisibility }
+    | { type: "KIT.SET_PANEL_VISIBILITY"; kitGuid: Guid; panelVisibility: PanelVisibility }
     | { type: "KIT.SET_FILTER"; kitGuid: Guid; search: string }
     | { type: "KIT.TOGGLE_ROW"; kitGuid: Guid; rowId: string }
+    | { type: "KIT.SET_EXPANDED_ROWS"; kitGuid: Guid; expandedRows: Set<string> }
     | { type: "KIT.SET_SORT"; kitGuid: Guid; column: string; direction: "asc" | "desc" }
     | { type: "KIT.SELECT_TYPE"; kitGuid: Guid; typeGuid: Guid }
     | { type: "KIT.DESELECT_TYPE"; kitGuid: Guid; typeGuid: Guid }
@@ -226,7 +229,9 @@ export type SketchpadEvent =
     | { type: "TYPE.INIT"; kitGuid: Guid; typeGuid: Guid; state: TypeAppState }
     | { type: "TYPE.SYNC"; kitGuid: Guid; typeGuid: Guid; state: Partial<TypeAppState> }
     | { type: "TYPE.TOGGLE_PANEL"; kitGuid: Guid; typeGuid: Guid; panel: keyof PanelVisibility }
+    | { type: "TYPE.SET_PANEL_VISIBILITY"; kitGuid: Guid; typeGuid: Guid; panelVisibility: PanelVisibility }
     | { type: "TYPE.SET_ACTIVE_TOOL"; kitGuid: Guid; typeGuid: Guid; tool: ToolKind }
+    | { type: "TYPE.SET_FULLSCREEN_WINDOW"; kitGuid: Guid; typeGuid: Guid; window: TypeAppFullscreenWindow }
     | { type: "TYPE.SET_SELECTION"; kitGuid: Guid; typeGuid: Guid; selection: TypeAppSelection }
     | { type: "TYPE.CLEAR_SELECTION"; kitGuid: Guid; typeGuid: Guid }
     | { type: "TYPE.SELECT_PORT"; kitGuid: Guid; typeGuid: Guid; portGuid: Guid }
@@ -253,6 +258,7 @@ export type SketchpadEvent =
     | { type: "DESIGN.INIT"; kitGuid: Guid; designGuid: Guid; state: DesignAppState }
     | { type: "DESIGN.SYNC"; kitGuid: Guid; designGuid: Guid; state: Partial<DesignAppState> }
     | { type: "DESIGN.TOGGLE_PANEL"; kitGuid: Guid; designGuid: Guid; panel: keyof PanelVisibility }
+    | { type: "DESIGN.SET_PANEL_VISIBILITY"; kitGuid: Guid; designGuid: Guid; panelVisibility: PanelVisibility }
     | { type: "DESIGN.SET_ACTIVE_TOOL"; kitGuid: Guid; designGuid: Guid; tool: ToolKind }
     | { type: "DESIGN.SET_FULLSCREEN"; kitGuid: Guid; designGuid: Guid; window: DesignAppFullscreenWindow }
     | { type: "DESIGN.SELECT_PIECE"; kitGuid: Guid; designGuid: Guid; pieceGuid: Guid }
@@ -701,6 +707,12 @@ export const sketchpadMachine = setup({
                 },
             };
         }),
+        homeSetPanelVisibility: assign(({ context, event }) => {
+            if (event.type !== "HOME.SET_PANEL_VISIBILITY") return {};
+            return {
+                homeApp: { ...context.homeApp, panelVisibility: event.panelVisibility },
+            };
+        }),
         homeSetSort: assign(({ context, event }) => {
             if (event.type !== "HOME.SET_SORT") return {};
             return {
@@ -780,6 +792,12 @@ export const sketchpadMachine = setup({
                     },
                 },
             };
+        }),
+        designSetPanelVisibility: assign(({ context, event }) => {
+            if (event.type !== "DESIGN.SET_PANEL_VISIBILITY") return {};
+            const key = `${event.kitGuid}:${event.designGuid}`;
+            const app = context.designApps[key] || createDefaultDesignAppState();
+            return { designApps: { ...context.designApps, [key]: { ...app, panelVisibility: event.panelVisibility } } };
         }),
         designSetSelection: assign(({ context, event }) => {
             if (event.type !== "DESIGN.SET_SELECTION") return {};
@@ -874,6 +892,18 @@ export const sketchpadMachine = setup({
                     },
                 },
             };
+        }),
+        typeSetPanelVisibility: assign(({ context, event }) => {
+            if (event.type !== "TYPE.SET_PANEL_VISIBILITY") return {};
+            const key = `${event.kitGuid}:${event.typeGuid}`;
+            const app = context.typeApps[key] || createDefaultTypeAppState();
+            return { typeApps: { ...context.typeApps, [key]: { ...app, panelVisibility: event.panelVisibility } } };
+        }),
+        typeSetFullscreenWindow: assign(({ context, event }) => {
+            if (event.type !== "TYPE.SET_FULLSCREEN_WINDOW") return {};
+            const key = `${event.kitGuid}:${event.typeGuid}`;
+            const app = context.typeApps[key] || createDefaultTypeAppState();
+            return { typeApps: { ...context.typeApps, [key]: { ...app, fullscreenWindow: event.window } } };
         }),
         typeFocusPort: assign(({ context, event }) => {
             if (event.type !== "TYPE.FOCUS_PORT") return {};
@@ -1060,6 +1090,11 @@ export const sketchpadMachine = setup({
                 },
             };
         }),
+        kitSetPanelVisibility: assign(({ context, event }) => {
+            if (event.type !== "KIT.SET_PANEL_VISIBILITY") return {};
+            const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
+            return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, panelVisibility: event.panelVisibility } } };
+        }),
         kitSetFilter: assign(({ context, event }) => {
             if (event.type !== "KIT.SET_FILTER") return {};
             const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
@@ -1075,6 +1110,11 @@ export const sketchpadMachine = setup({
                 expanded.add(event.rowId);
             }
             return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, expandedRows: expanded } } };
+        }),
+        kitSetExpandedRows: assign(({ context, event }) => {
+            if (event.type !== "KIT.SET_EXPANDED_ROWS") return {};
+            const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
+            return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, expandedRows: event.expandedRows } } };
         }),
         kitSetSort: assign(({ context, event }) => {
             if (event.type !== "KIT.SET_SORT") return {};
@@ -1461,6 +1501,7 @@ export const sketchpadMachine = setup({
         },
         // Home app events
         "HOME.TOGGLE_PANEL": { actions: "homeTogglePanel" },
+        "HOME.SET_PANEL_VISIBILITY": { actions: "homeSetPanelVisibility" },
         "HOME.SET_SORT": { actions: "homeSetSort" },
         "HOME.SELECT_KIT": { actions: "homeSelectKit" },
         "HOME.DESELECT_KIT": { actions: "homeDeselectKit" },
@@ -1473,6 +1514,7 @@ export const sketchpadMachine = setup({
         "DESIGN.INIT": { actions: "designInit" },
         "DESIGN.SYNC": { actions: "designSync" },
         "DESIGN.TOGGLE_PANEL": { actions: "designTogglePanel" },
+        "DESIGN.SET_PANEL_VISIBILITY": { actions: "designSetPanelVisibility" },
         "DESIGN.SET_ACTIVE_TOOL": { actions: "designSetActiveTool" },
         "DESIGN.SET_FULLSCREEN": { actions: "designSetFullscreen" },
         "DESIGN.SET_SELECTION": { actions: "designSetSelection" },
@@ -1501,6 +1543,8 @@ export const sketchpadMachine = setup({
         "TYPE.INIT": { actions: "typeInit" },
         "TYPE.SYNC": { actions: "typeSync" },
         "TYPE.TOGGLE_PANEL": { actions: "typeTogglePanel" },
+        "TYPE.SET_PANEL_VISIBILITY": { actions: "typeSetPanelVisibility" },
+        "TYPE.SET_FULLSCREEN_WINDOW": { actions: "typeSetFullscreenWindow" },
         "TYPE.SET_ACTIVE_TOOL": { actions: "typeSetActiveTool" },
         "TYPE.SET_SELECTION": { actions: "typeSetSelection" },
         "TYPE.CLEAR_SELECTION": {
@@ -1534,8 +1578,10 @@ export const sketchpadMachine = setup({
         "KIT.INIT": { actions: "kitInit" },
         "KIT.SYNC": { actions: "kitSync" },
         "KIT.TOGGLE_PANEL": { actions: "kitTogglePanel" },
+        "KIT.SET_PANEL_VISIBILITY": { actions: "kitSetPanelVisibility" },
         "KIT.SET_FILTER": { actions: "kitSetFilter" },
         "KIT.TOGGLE_ROW": { actions: "kitToggleRow" },
+        "KIT.SET_EXPANDED_ROWS": { actions: "kitSetExpandedRows" },
         "KIT.SET_SORT": { actions: "kitSetSort" },
         "KIT.SELECT_TYPE": { actions: "kitSelectType" },
         "KIT.DESELECT_TYPE": { actions: "kitDeselectType" },

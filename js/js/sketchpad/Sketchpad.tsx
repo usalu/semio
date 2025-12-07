@@ -167,8 +167,13 @@ import {
   AppKind,
   AppRegistration,
   AppStep,
+  BaseDependency,
   CompleteState,
   CompositeFileProviderConfig,
+  conditionalHookResult,
+  createPathObserver,
+  DerivedNode,
+  DerivedStore,
   DesignAppId,
   Disposable,
   EnrichedPanelDefinition,
@@ -179,6 +184,9 @@ import {
   FileProviderFactory,
   FocusItem,
   FooterItem,
+  getValueAtPath,
+  GranularHookNoSetResult,
+  GranularHookResult,
   KitAppId,
   KitCommandContext,
   KitCommandResult,
@@ -219,9 +227,13 @@ import {
   Unsubscribe,
   Url,
   WindowEvents,
+  writableHookResult,
   YAttributes,
   YLeafMapNumber,
   YLeafMapString,
+  YPath,
+  yPathArrayItemById,
+  yPathMapKey,
   YStringArray,
 } from "./shared";
 import { Tutorial, TutorialProvider, TutorialStore, useAvailableTutorials } from "./Tutorials";
@@ -546,6 +558,54 @@ export abstract class Store<TState> {
   getFieldSnapshot(key: string): any {
     return (this.snapshot() as any)[key];
   }
+
+  // #region YPath API
+
+  // PERF: Subscription registry for paths - one Y.js observer per path, multiple React subscribers
+  private pathSubscribers: Map<string, Set<() => void>> = new Map();
+  private pathObservers: Map<string, Disposable> = new Map();
+
+  /**
+   * Subscribe to changes at a specific path in the Y.js structure.
+   * Uses a registry to share Y.js observers between multiple React subscribers.
+   */
+  onPathChanged(path: YPath, subscribe: Subscribe): Unsubscribe {
+    const pathKey = JSON.stringify(path);
+    const subscriberCallback = () => {
+      subscribe(() => {});
+    };
+    if (!this.pathSubscribers.has(pathKey)) {
+      this.pathSubscribers.set(pathKey, new Set());
+      const pathObserver = createPathObserver(this.yMap, path, () => {
+        const subscribers = this.pathSubscribers.get(pathKey);
+        if (subscribers) subscribers.forEach((cb) => cb());
+        return () => {};
+      });
+      this.pathObservers.set(pathKey, pathObserver);
+    }
+    const subscribers = this.pathSubscribers.get(pathKey)!;
+    subscribers.add(subscriberCallback);
+    return () => {
+      subscribers.delete(subscriberCallback);
+      if (subscribers.size === 0) {
+        const observer = this.pathObservers.get(pathKey);
+        if (observer) {
+          observer();
+          this.pathObservers.delete(pathKey);
+        }
+        this.pathSubscribers.delete(pathKey);
+      }
+    };
+  }
+
+  /**
+   * Get the value at a specific path in the Y.js structure.
+   */
+  getPathSnapshot(path: YPath): any {
+    return getValueAtPath(this.yMap, path);
+  }
+
+  // #endregion YPath API
 }
 
 export abstract class AppStore<TState, TDiff extends AppDiff<TSelectionDiff>, TSelectionDiff, TEdit extends AppEdit<TSelectionDiff>, TCommandContext, TCommandResult extends AppCommandResult<TDiff>> extends Store<TState> {
@@ -3788,69 +3848,101 @@ export function useCurrentPiecePlane(): Plane {
   return plane;
 }
 
-export function useFlatPiece<T>(selector?: (piece: Piece) => T, id?: Guid): T | Piece | null {
+export type PieceMetadata = {
+  plane: Plane;
+  center: Coord;
+  fixedPieceId: string;
+  parentPieceId: string | null;
+  depth: number;
+};
+
+export function usePiecesMetadataMap(): Map<string, PieceMetadata> {
+  const kitStore = useKitStore(identitySelector) as KitStore | null;
+  const designStore = useDesignStore(identitySelector) as DesignStore | null;
+  const designScope = useDesignScope();
+  const emptyMap = useMemo(() => new Map<string, PieceMetadata>(), []);
+  const key = designScope ? `piecesMetadata:${designScope.guid}` : "";
+  const deps: BaseDependency[] = useMemo(() => {
+    if (!designStore) return [];
+    return [
+      { store: designStore, path: [yPathMapKey("pieces")] },
+      { store: designStore, path: [yPathMapKey("connections")] },
+    ];
+  }, [designStore]);
+  const compute = useCallback(() => {
+    if (!kitStore || !designScope) return new Map<string, PieceMetadata>();
+    const kit = kitStore.snapshot();
+    return piecesMetadata(kit, designScope.guid);
+  }, [kitStore, designScope?.guid]);
+  if (!designStore || !designScope) return emptyMap;
+  return useDerived(designStore.derived, key, deps, compute) ?? emptyMap;
+}
+
+export function usePieceMetadata(pieceId?: Guid): PieceMetadata | undefined {
   const pieceScope = usePieceScope();
-  const pieceGuid = (typeof id === "string" ? id : typeof pieceScope === "string" ? pieceScope : null) as string | null;
-  const metadata = usePiecesMetadata();
-  const piece = usePiece(identitySelector, pieceGuid || undefined) as Piece | null;
-
-  if (!piece || !pieceGuid) return null;
-
-  const meta = metadata.get(pieceGuid);
-  if (!meta) return piece;
-
-  const flatPiece: Piece = {
-    ...piece,
-    plane: meta.plane,
-    center: meta.center,
-  };
-
-  return selector ? selector(flatPiece) : flatPiece;
+  const resolvedPieceId = pieceId ?? pieceScope?.guid;
+  const metadataMap = usePiecesMetadataMap();
+  return resolvedPieceId ? metadataMap.get(resolvedPieceId) : undefined;
 }
 
 export function useFlatPiecePlane(id?: Guid): Plane {
-  const plane = useFlatPiece((p) => p.plane, id) as Plane | undefined;
-
-  if (!plane) {
-    return {
-      origin: { x: 0, y: 0, z: 0 },
-      xAxis: { x: 1, y: 0, z: 0 },
-      yAxis: { x: 0, y: 1, z: 0 },
-    };
-  }
-
-  return plane;
+  const meta = usePieceMetadata(id);
+  return meta?.plane ?? { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } };
 }
 
 export function useFlatPieceCenter(id?: Guid): Coord {
-  const center = useFlatPiece((p) => p.center, id) as Coord | undefined;
-
-  if (!center) {
-    return { u: 0, v: 0 };
-  }
-
-  return center;
+  const meta = usePieceMetadata(id);
+  return meta?.center ?? { u: 0, v: 0 };
 }
 
 export function useIsConnectedPiece(id?: Guid): boolean {
-  const pieceScope = usePieceScope();
-  const pieceGuid = (typeof id === "string" ? id : typeof pieceScope === "string" ? pieceScope : null) as string | null;
-  const metadata = usePiecesMetadata();
-
-  if (!pieceGuid) return false;
-
-  const meta = metadata.get(pieceGuid);
+  const meta = usePieceMetadata(id);
   return meta ? meta.parentPieceId !== null : false;
 }
 
+export function usePieceDepth(id?: Guid): number {
+  const meta = usePieceMetadata(id);
+  return meta?.depth ?? 0;
+}
+
+export function useFixedPieceId(id?: Guid): string | undefined {
+  const meta = usePieceMetadata(id);
+  return meta?.fixedPieceId;
+}
+
+export function useParentPieceId(id?: Guid): string | null {
+  const meta = usePieceMetadata(id);
+  return meta?.parentPieceId ?? null;
+}
+
+/**
+ * Returns the connection where the piece is involved (as connecting or connected).
+ * PERF: Uses connections observer instead of full design subscription.
+ */
 export function usePieceParentConnection(id?: Guid): Connection | null {
   const pieceScope = usePieceScope();
-  const pieceGuid = (typeof id === "string" ? id : typeof pieceScope === "string" ? pieceScope : null) as string | null;
-  const design = useDesign() as Design;
+  const pieceGuid = (typeof id === "string" ? id : pieceScope?.guid ?? null) as string | null;
+  const designStore = useDesignStore(identitySelector) as DesignStore | null;
 
-  if (!pieceGuid || !design.connections) return null;
+  const subscribe = useCallback(
+    (callback: () => void) => {
+      if (!designStore) return () => {};
+      return designStore.onConnectionsChanged((cb: () => void) => {
+        cb();
+        callback();
+        return () => {};
+      }, true);
+    },
+    [designStore],
+  );
 
-  return design.connections.find((c: Connection) => c.connecting.piece.guid === pieceGuid || c.connected.piece.guid === pieceGuid) ?? null;
+  const getSnapshot = useCallback(() => {
+    if (!pieceGuid || !designStore) return null;
+    const connections = designStore.snapshotConnections();
+    return connections.find((c: Connection) => c.connecting.piece.guid === pieceGuid || c.connected.piece.guid === pieceGuid) ?? null;
+  }, [pieceGuid, designStore]);
+
+  return useSyncExternalStore(subscribe, getSnapshot);
 }
 
 // usePieceStatus and useDiffedPiece - moved to designAppIntegration.ts
@@ -4490,6 +4582,13 @@ export class DesignStore {
   private cacheHash?: string;
   // PERF: Dirty tracking to avoid O(n) snapshot rebuilding on every call
   private dirty: boolean = true;
+  // PERF: Field-specific caching to avoid rebuilding entire design on every access
+  private _piecesCache?: Piece[];
+  private _piecesVersion = 0;
+  private _connectionsCache?: Connection[];
+  private _connectionsVersion = 0;
+  // PERF: Derived store for computed values that depend on kit + design data
+  public readonly derived: DerivedStore = new DerivedStore();
 
   constructor(parent: KitStore, yDesign: YDesign, design: Design) {
     this.parent = parent;
@@ -5144,6 +5243,98 @@ export class DesignStore {
   onChangedDeep = (subscribe: Subscribe) => {
     return createObserver(this.yDesign, subscribe, true);
   };
+
+  // PERF: Field-specific snapshot methods with caching
+  snapshotPieces = (): Piece[] => {
+    const currentVersion = (this.yPieces as any)._clock || this.pieces.size;
+    if (this._piecesCache && this._piecesVersion === currentVersion) {
+      return this._piecesCache;
+    }
+    this._piecesCache = Array.from(this.pieces.values()).map((piece) => piece.snapshot());
+    this._piecesVersion = currentVersion;
+    return this._piecesCache;
+  };
+
+  snapshotConnections = (): Connection[] => {
+    const currentVersion = (this.yConnections as any)._clock || this.connections.size;
+    if (this._connectionsCache && this._connectionsVersion === currentVersion) {
+      return this._connectionsCache;
+    }
+    this._connectionsCache = Array.from(this.connections.values()).map((connection) => connection.snapshot());
+    this._connectionsVersion = currentVersion;
+    return this._connectionsCache;
+  };
+
+  // Field-level observers for targeted subscriptions (avoids overfetching)
+  onPiecesChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
+    const notifySubscriber = () => {
+      this._piecesCache = undefined; // Invalidate cache
+      subscribe(() => {});
+    };
+    if (deep) {
+      this.yPieces.observeDeep(notifySubscriber);
+      return () => this.yPieces.unobserveDeep(notifySubscriber);
+    }
+    this.yPieces.observe(notifySubscriber);
+    return () => this.yPieces.unobserve(notifySubscriber);
+  };
+
+  onConnectionsChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
+    const notifySubscriber = () => {
+      this._connectionsCache = undefined; // Invalidate cache
+      subscribe(() => {});
+    };
+    if (deep) {
+      this.yConnections.observeDeep(notifySubscriber);
+      return () => this.yConnections.unobserveDeep(notifySubscriber);
+    }
+    this.yConnections.observe(notifySubscriber);
+    return () => this.yConnections.unobserve(notifySubscriber);
+  };
+
+  onScalarFieldChanged = (key: string, subscribe: Subscribe): Disposable => {
+    return createFieldObserver(this.yDesign, key, subscribe, false);
+  };
+
+  // #region YPath API
+
+  private pathSubscribers: Map<string, Set<() => void>> = new Map();
+  private pathObservers: Map<string, Disposable> = new Map();
+
+  onPathChanged = (path: YPath, subscribe: Subscribe): Unsubscribe => {
+    const pathKey = JSON.stringify(path);
+    const subscriberCallback = () => {
+      subscribe(() => {});
+    };
+    if (!this.pathSubscribers.has(pathKey)) {
+      this.pathSubscribers.set(pathKey, new Set());
+      const pathObserver = createPathObserver(this.yDesign, path, () => {
+        const subscribers = this.pathSubscribers.get(pathKey);
+        if (subscribers) subscribers.forEach((cb) => cb());
+        return () => {};
+      });
+      this.pathObservers.set(pathKey, pathObserver);
+    }
+    const subscribers = this.pathSubscribers.get(pathKey)!;
+    subscribers.add(subscriberCallback);
+    return () => {
+      subscribers.delete(subscriberCallback);
+      if (subscribers.size === 0) {
+        const observer = this.pathObservers.get(pathKey);
+        if (observer) {
+          observer();
+          this.pathObservers.delete(pathKey);
+        }
+        this.pathSubscribers.delete(pathKey);
+      }
+    };
+  };
+
+  getPathSnapshot = (path: YPath): any => {
+    return getValueAtPath(this.yDesign, path);
+  };
+
+  // #endregion YPath API
 }
 
 type DesignScope = { guid: string };
@@ -5180,184 +5371,203 @@ export function useDesign<T>(selector?: (design: DesignShallow | Design) => T, i
   return useSync<DesignShallow, T>(store as any, selector ? selector : (identitySelector as any));
 }
 
+const EMPTY_PIECES: Piece[] = [];
+const EMPTY_CONNECTIONS: Connection[] = [];
+
+/**
+ * Returns only the pieces array from the design.
+ * PERF: Uses field-specific observer and snapshot to avoid rebuilding entire design.
+ */
 export function usePieces(): Piece[] {
-  const design = useDesign() as Design;
-  return design.pieces ?? [];
+  const designStore = useDesignStore(identitySelector) as DesignStore | null;
+
+  const subscribe = useCallback(
+    (callback: () => void) => {
+      if (!designStore) return () => {};
+      return designStore.onPiecesChanged((cb: () => void) => {
+        cb();
+        callback();
+        return () => {};
+      }, true);
+    },
+    [designStore],
+  );
+
+  const getSnapshot = useCallback(() => {
+    if (!designStore) return EMPTY_PIECES;
+    return designStore.snapshotPieces();
+  }, [designStore]);
+
+  return useSyncExternalStore(subscribe, getSnapshot);
 }
 
-export function useFlattenDiff(): DesignDiff {
-  const designScope = useDesignScope();
-  // PERF: Use targeted hooks instead of full kit to avoid overfetching
-  const types = useKitTypes();
-  const designs = useKitDesigns();
-  if (!designScope) throw new Error("useFlattenDiff must be called within a DesignScopeProvider");
-  // Build minimal kit object with only what flattenDesign needs
-  return useMemo(() => {
-    const minimalKit = { types, designs } as Kit;
-    return flattenDesign(minimalKit, designScope.guid);
-  }, [types, designs, designScope.guid]);
+/**
+ * Returns only the connections array from the design.
+ * PERF: Uses field-specific observer and snapshot to avoid rebuilding entire design.
+ */
+export function useConnections(): Connection[] {
+  const designStore = useDesignStore(identitySelector) as DesignStore | null;
+
+  const subscribe = useCallback(
+    (callback: () => void) => {
+      if (!designStore) return () => {};
+      return designStore.onConnectionsChanged((cb: () => void) => {
+        cb();
+        callback();
+        return () => {};
+      }, true);
+    },
+    [designStore],
+  );
+
+  const getSnapshot = useCallback(() => {
+    if (!designStore) return EMPTY_CONNECTIONS;
+    return designStore.snapshotConnections();
+  }, [designStore]);
+
+  return useSyncExternalStore(subscribe, getSnapshot);
 }
 
-export function useFlatDesign(): Design {
-  const design = useDesign() as Design;
-  const diff = useFlattenDiff();
-  // PERF: Memoize the result to prevent unnecessary re-renders
-  return useMemo(() => applyDesignDiff(design, diff), [design, diff]);
-}
-
-export function useFlatPieces(): Piece[] {
-  const design = useFlatDesign();
-  // PERF: Memoize to prevent unnecessary re-renders
-  return useMemo(() => design.pieces ?? [], [design.pieces]);
-}
-
-export function usePiecesMetadata(): Map<
-  string,
-  {
-    plane: Plane;
-    center: Coord;
-    fixedPieceId: string;
-    parentPieceId: string | null;
-    depth: number;
-  }
-> {
-  // PERF: Use targeted hooks instead of full kit with deep subscription
-  const types = useKitTypes();
-  const designs = useKitDesigns();
-  const designScope = useDesignScope();
-  if (!designScope) throw new Error("usePiecesMetadata must be called within a DesignScopeProvider");
-  // Build minimal kit object with only what piecesMetadata needs
-  return useMemo(() => {
-    const minimalKit = { types, designs } as Kit;
-    return piecesMetadata(minimalKit, designScope.guid);
-  }, [types, designs, designScope.guid]);
-}
-
-export function usePieceCenter(pieceId?: Guid): Coord | undefined {
-  const scope = usePieceScope();
-  const id = pieceId ?? scope?.guid;
-  const metadata = usePiecesMetadata();
-  return id ? metadata.get(id)?.center : undefined;
-}
-
-export function usePiecePlane(pieceId?: Guid): Plane | undefined {
-  const scope = usePieceScope();
-  const id = pieceId ?? scope?.guid;
-  const metadata = usePiecesMetadata();
-  return id ? metadata.get(id)?.plane : undefined;
-}
-
+/**
+ * Returns included design information.
+ * PERF: Uses granular pieces and connections subscriptions.
+ */
 export function useIncludedDesigns() {
-  const design = useDesign() as Design;
-  return useMemo(() => getIncludedDesigns(design), [design]);
+  const designScope = useDesignScope();
+  const pieces = usePieces();
+  const connections = useConnections();
+  return useMemo(() => {
+    if (!designScope) return [];
+    const design = { guid: designScope.guid, pieces, connections } as Design;
+    return getIncludedDesigns(design);
+  }, [designScope?.guid, pieces, connections]);
 }
 
+/**
+ * Returns the design ID (name + parent).
+ * PERF: Uses field-specific observers to avoid rebuilding entire design.
+ */
 export function useDesignId() {
-  const design = useDesign() as Design;
-  return useMemo(() => ({ name: design.name, parent: design.parent }), [design.name, design.parent]);
+  const designStore = useDesignStore(identitySelector) as DesignStore | null;
+
+  const subscribe = useCallback(
+    (callback: () => void) => {
+      if (!designStore) return () => {};
+      const unsubName = designStore.onScalarFieldChanged("name", () => {
+        callback();
+        return () => {};
+      });
+      const unsubParent = designStore.onScalarFieldChanged("parent", () => {
+        callback();
+        return () => {};
+      });
+      return () => {
+        unsubName();
+        unsubParent();
+      };
+    },
+    [designStore],
+  );
+
+  const getSnapshot = useCallback(() => {
+    if (!designStore) return { name: "", parent: undefined };
+    return { name: designStore.name, parent: designStore.parentGuid ? { guid: designStore.parentGuid } : undefined };
+  }, [designStore]);
+
+  return useSyncExternalStore(subscribe, getSnapshot);
 }
 
 // useClusterableGroups - moved to designAppIntegration.ts
 
-export function usePiecePlanes(): Plane[] {
-  const flatDesign = useFlatDesign();
-  return useMemo(() => flatDesign.pieces?.map((p: Piece) => p.plane!) || [], [flatDesign]);
-}
-
-export function usePieceModelUrls(): Map<string, string> {
-  const flatDesign = useFlatDesign();
-  // PERF: Use targeted hooks instead of full kit subscription
-  const types = useKitTypes();
-  const files = useKitFiles();
-  const kitStore = useKitStore((s) => s) as KitStore;
-  const getFileUrl = React.useCallback(
-    (fileGuid: string) => {
-      return kitStore.getFileUrl(fileGuid);
-    },
-    [kitStore],
-  );
-  return useMemo(() => getPieceModelUrls(flatDesign, types, files, getFileUrl), [flatDesign, types, files, getFileUrl]);
-}
-
-export function usePieceDiffStatuses(): DiffStatus[] {
-  const flatDesign = useFlatDesign();
-  return useMemo(() => {
-    return (
-      flatDesign.pieces?.map((piece: Piece) => {
-        const diffAttribute = piece.attributes?.find((q: any) => q.key === "semio.diffStatus");
-        return (diffAttribute?.value as DiffStatus) || DiffStatus.Unchanged;
-      }) || []
-    );
-  }, [flatDesign]);
-}
-
+/**
+ * Returns pieces from a list of piece IDs.
+ * PERF: Uses granular pieces subscription instead of full design.
+ */
 export function usePiecesFromIds(pieceIds: Guid[]) {
-  const design = useDesign() as Design;
+  const pieces = usePieces();
   const includedDesigns = useIncludedDesigns();
   const includedDesignMap = useMemo(() => new Map(includedDesigns.map((d) => [d.guid, d])), [includedDesigns]);
+  const piecesMap = useMemo(() => new Map(pieces.map((p) => [p.guid, p])), [pieces]);
 
   return useMemo(() => {
     return pieceIds.map((id) => {
-      try {
-        const foundPiece = findPieceInDesign(design, id);
+      const pieceIdString = typeof id === "string" ? id : (id as any).guid;
+      const foundPiece = piecesMap.get(pieceIdString);
+      if (foundPiece) {
         return {
           ...foundPiece,
           id_: foundPiece.guid,
         };
-      } catch {
-        const pieceIdString = typeof id === "string" ? id : (id as any).guid;
-        const includedDesign = includedDesignMap.get(pieceIdString);
-        if (includedDesign) {
-          return {
-            id_: pieceIdString,
-            type: {
-              name: "design",
-              variant: includedDesign.designGuid,
-            },
-            center: includedDesign.center,
-            plane: includedDesign.plane,
-            description: `${includedDesign.type === "fixed" ? "Fixed" : "Clustered"} design`,
-          };
-        }
+      }
+      const includedDesign = includedDesignMap.get(pieceIdString);
+      if (includedDesign) {
         return {
           id_: pieceIdString,
           type: {
-            name: "unknown",
-            variant: "",
+            name: "design",
+            variant: includedDesign.designGuid,
           },
-          description: `Unknown piece: ${pieceIdString}`,
+          center: includedDesign.center,
+          plane: includedDesign.plane,
+          description: `${includedDesign.type === "fixed" ? "Fixed" : "Clustered"} design`,
         };
       }
+      return {
+        id_: pieceIdString,
+        type: {
+          name: "unknown",
+          variant: "",
+        },
+        description: `Unknown piece: ${pieceIdString}`,
+      };
     });
-  }, [pieceIds, design, includedDesignMap]);
+  }, [pieceIds, piecesMap, includedDesignMap]);
 }
 
+/**
+ * Returns replaceable types for selected pieces.
+ * PERF: Uses granular types and pieces subscriptions.
+ */
 export function useReplacableTypes(pieceIds: Guid[], selectedVariants?: string[]) {
-  const kit = useKit() as Kit;
-  const design = useDesign() as Design;
-  const designGuid = design.guid;
+  const kitTypes = useKitTypes();
+  const designScope = useDesignScope();
+  const pieces = usePieces();
+  const connections = useConnections();
 
   return useMemo(() => {
+    if (!designScope) return [];
+    const kit = { types: kitTypes } as Kit;
+    const design = { guid: designScope.guid, pieces, connections } as Design;
     if (pieceIds.length === 1) {
-      return findReplacableTypesForPieceInDesign(kit, designGuid, pieceIds[0], selectedVariants);
+      return findReplacableTypesForPieceInDesign(kit, design.guid, pieceIds[0], selectedVariants);
     } else {
-      return findReplacableTypesForPiecesInDesign(kit, designGuid, pieceIds, selectedVariants);
+      return findReplacableTypesForPiecesInDesign(kit, design.guid, pieceIds, selectedVariants);
     }
-  }, [kit, designGuid, pieceIds, selectedVariants]);
+  }, [kitTypes, pieces, connections, designScope?.guid, pieceIds, selectedVariants]);
 }
 
+/**
+ * Returns replaceable designs for a design piece.
+ * PERF: Uses granular designs subscription.
+ */
 export function useReplacableDesigns(piece: Piece) {
-  const kit = useKit() as Kit;
-  const design = useDesign() as Design;
-  const designGuid = design.guid;
+  const kitDesigns = useKitDesigns();
+  const designScope = useDesignScope();
+  const pieces = usePieces();
 
   return useMemo(() => {
-    return findReplacableDesignsForDesignPiece(kit, designGuid, piece);
-  }, [kit, designGuid, piece]);
+    if (!designScope) return [];
+    const kit = { designs: kitDesigns } as Kit;
+    return findReplacableDesignsForDesignPiece(kit, designScope.guid, piece);
+  }, [kitDesigns, designScope?.guid, pieces, piece]);
 }
 
+/**
+ * Returns design nodes that can be exploded.
+ * PERF: Uses granular designs subscription.
+ */
 export function useExplodeableDesignNodes(nodes: any[], selection: any) {
-  const kit = useKit() as Kit;
+  const kitDesigns = useKitDesigns();
   return useMemo(() => {
     return nodes.filter((node) => {
       if (node.type !== "design") return false;
@@ -5365,10 +5575,10 @@ export function useExplodeableDesignNodes(nodes: any[], selection: any) {
       if (!selection.pieces?.includes(Guid)) return false;
       const designName = (node.data.piece as any).type?.variant;
       if (!designName) return false;
-      if (!kit?.designs?.find((d: any) => d.name === designName)) return false;
+      if (!kitDesigns?.find((d: any) => d.name === designName)) return false;
       return true;
     });
-  }, [nodes, selection.pieces, kit]);
+  }, [nodes, selection.pieces, kitDesigns]);
 }
 
 // #endregion Design
@@ -5413,6 +5623,14 @@ export class KitStore {
   private _filesVersion = 0;
   private _typesCache?: Type[];
   private _typesVersion = 0;
+  private _designsCache?: Design[];
+  private _designsVersion = 0;
+  private _qualitiesCache?: Quality[];
+  private _qualitiesVersion = 0;
+  private _authorsCache?: Author[];
+  private _authorsVersion = 0;
+  private _foldersCache?: Folder[];
+  private _foldersVersion = 0;
 
   constructor(parent: SketchpadStore, kit: Kit, local?: boolean, remote?: boolean, remoteProviders?: RemoteProviders) {
     this.parent = parent;
@@ -6119,6 +6337,47 @@ export class KitStore {
     return createObserver(this.yKit, subscribe, true);
   };
 
+  // #region YPath API
+
+  private pathSubscribers: Map<string, Set<() => void>> = new Map();
+  private pathObservers: Map<string, Disposable> = new Map();
+  public readonly derived: DerivedStore = new DerivedStore();
+
+  onPathChanged = (path: YPath, subscribe: Subscribe): Unsubscribe => {
+    const pathKey = JSON.stringify(path);
+    const subscriberCallback = () => {
+      subscribe(() => {});
+    };
+    if (!this.pathSubscribers.has(pathKey)) {
+      this.pathSubscribers.set(pathKey, new Set());
+      const pathObserver = createPathObserver(this.yKit, path, () => {
+        const subscribers = this.pathSubscribers.get(pathKey);
+        if (subscribers) subscribers.forEach((cb) => cb());
+        return () => {};
+      });
+      this.pathObservers.set(pathKey, pathObserver);
+    }
+    const subscribers = this.pathSubscribers.get(pathKey)!;
+    subscribers.add(subscriberCallback);
+    return () => {
+      subscribers.delete(subscriberCallback);
+      if (subscribers.size === 0) {
+        const observer = this.pathObservers.get(pathKey);
+        if (observer) {
+          observer();
+          this.pathObservers.delete(pathKey);
+        }
+        this.pathSubscribers.delete(pathKey);
+      }
+    };
+  };
+
+  getPathSnapshot = (path: YPath): any => {
+    return getValueAtPath(this.yKit, path);
+  };
+
+  // #endregion YPath API
+
   // PERF: Field-specific snapshot methods with caching
   // These avoid rebuilding the entire kit when only one field is needed
   snapshotFiles = (): SemioFile[] => {
@@ -6139,6 +6398,46 @@ export class KitStore {
     this._typesCache = Array.from(this.types.values()).map((type) => type.snapshot());
     this._typesVersion = currentVersion;
     return this._typesCache;
+  };
+
+  snapshotDesigns = (): Design[] => {
+    const currentVersion = (this.yDesigns as any)._clock || this.designs.size;
+    if (this._designsCache && this._designsVersion === currentVersion) {
+      return this._designsCache;
+    }
+    this._designsCache = Array.from(this.designs.values()).map((design) => design.snapshot());
+    this._designsVersion = currentVersion;
+    return this._designsCache;
+  };
+
+  snapshotQualities = (): Quality[] => {
+    const currentVersion = (this.yQualities as any)._clock || this.qualities.size;
+    if (this._qualitiesCache && this._qualitiesVersion === currentVersion) {
+      return this._qualitiesCache;
+    }
+    this._qualitiesCache = Array.from(this.qualities.values()).map((quality) => quality.snapshot());
+    this._qualitiesVersion = currentVersion;
+    return this._qualitiesCache;
+  };
+
+  snapshotAuthors = (): Author[] => {
+    const currentVersion = (this.yAuthors as any)._clock || this.authors.size;
+    if (this._authorsCache && this._authorsVersion === currentVersion) {
+      return this._authorsCache;
+    }
+    this._authorsCache = Array.from(this.authors.values()).map((author) => author.snapshot());
+    this._authorsVersion = currentVersion;
+    return this._authorsCache;
+  };
+
+  snapshotFolders = (): Folder[] => {
+    const currentVersion = (this.yFolders as any)._clock || this.folders.size;
+    if (this._foldersCache && this._foldersVersion === currentVersion) {
+      return this._foldersCache;
+    }
+    this._foldersCache = Array.from(this.folders.values()).map((folder) => folder.snapshot());
+    this._foldersVersion = currentVersion;
+    return this._foldersCache;
   };
 
   // Field-level observers for targeted subscriptions (avoids overfetching)
@@ -6169,7 +6468,10 @@ export class KitStore {
   };
 
   onDesignsChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
-    const notifySubscriber = () => subscribe(() => {});
+    const notifySubscriber = () => {
+      this._designsCache = undefined; // Invalidate cache
+      subscribe(() => {});
+    };
     if (deep) {
       this.yDesigns.observeDeep(notifySubscriber);
       return () => this.yDesigns.unobserveDeep(notifySubscriber);
@@ -6179,7 +6481,10 @@ export class KitStore {
   };
 
   onQualitiesChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
-    const notifySubscriber = () => subscribe(() => {});
+    const notifySubscriber = () => {
+      this._qualitiesCache = undefined; // Invalidate cache
+      subscribe(() => {});
+    };
     if (deep) {
       this.yQualities.observeDeep(notifySubscriber);
       return () => this.yQualities.unobserveDeep(notifySubscriber);
@@ -6189,7 +6494,10 @@ export class KitStore {
   };
 
   onAuthorsChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
-    const notifySubscriber = () => subscribe(() => {});
+    const notifySubscriber = () => {
+      this._authorsCache = undefined; // Invalidate cache
+      subscribe(() => {});
+    };
     if (deep) {
       this.yAuthors.observeDeep(notifySubscriber);
       return () => this.yAuthors.unobserveDeep(notifySubscriber);
@@ -6199,7 +6507,10 @@ export class KitStore {
   };
 
   onFoldersChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
-    const notifySubscriber = () => subscribe(() => {});
+    const notifySubscriber = () => {
+      this._foldersCache = undefined; // Invalidate cache
+      subscribe(() => {});
+    };
     if (deep) {
       this.yFolders.observeDeep(notifySubscriber);
       return () => this.yFolders.unobserveDeep(notifySubscriber);
@@ -6428,23 +6739,87 @@ export function useKitTypes(guid?: Guid): Type[] {
 
 /**
  * Returns only the kit name.
+ * PERF: Uses field-specific observer to avoid rebuilding entire kit.
  */
 export function useKitName(guid?: Guid): string {
-  return useKit(selectName, guid) as string;
+  const kitScope = useKitScope();
+  const resolvedGuid = guid ?? kitScope?.guid;
+  const kitStore = useKitStore(identitySelector, resolvedGuid) as KitStore | null;
+
+  const subscribe = useCallback(
+    (callback: () => void) => {
+      if (!kitStore) return () => {};
+      return kitStore.onScalarFieldChanged("name", () => {
+        callback();
+        return () => {};
+      });
+    },
+    [kitStore],
+  );
+
+  const getSnapshot = useCallback(() => {
+    if (!kitStore) return "";
+    return kitStore.name;
+  }, [kitStore]);
+
+  return useSyncExternalStore(subscribe, getSnapshot);
 }
 
 /**
  * Returns only the kit description.
+ * PERF: Uses field-specific observer to avoid rebuilding entire kit.
  */
 export function useKitDescription(guid?: Guid): string | undefined {
-  return useKit(selectDescription, guid) as string | undefined;
+  const kitScope = useKitScope();
+  const resolvedGuid = guid ?? kitScope?.guid;
+  const kitStore = useKitStore(identitySelector, resolvedGuid) as KitStore | null;
+
+  const subscribe = useCallback(
+    (callback: () => void) => {
+      if (!kitStore) return () => {};
+      return kitStore.onScalarFieldChanged("description", () => {
+        callback();
+        return () => {};
+      });
+    },
+    [kitStore],
+  );
+
+  const getSnapshot = useCallback(() => {
+    if (!kitStore) return undefined;
+    return kitStore.description;
+  }, [kitStore]);
+
+  return useSyncExternalStore(subscribe, getSnapshot);
 }
 
 /**
  * Returns only the authors array from the kit.
+ * PERF: Uses field-specific observer and snapshot to avoid rebuilding entire kit.
  */
 export function useKitAuthors(guid?: Guid): Author[] {
-  return useKit(selectAuthors, guid) as Author[];
+  const kitScope = useKitScope();
+  const resolvedGuid = guid ?? kitScope?.guid;
+  const kitStore = useKitStore(identitySelector, resolvedGuid) as KitStore | null;
+
+  const subscribe = useCallback(
+    (callback: () => void) => {
+      if (!kitStore) return () => {};
+      return kitStore.onAuthorsChanged((cb: () => void) => {
+        cb();
+        callback();
+        return () => {};
+      }, true);
+    },
+    [kitStore],
+  );
+
+  const getSnapshot = useCallback(() => {
+    if (!kitStore) return EMPTY_AUTHORS;
+    return kitStore.snapshotAuthors();
+  }, [kitStore]);
+
+  return useSyncExternalStore(subscribe, getSnapshot);
 }
 
 /**
@@ -6478,28 +6853,94 @@ export function useKitFiles(guid?: Guid): SemioFile[] {
 
 /**
  * Returns only the qualities array from the kit.
+ * PERF: Uses field-specific observer and snapshot to avoid rebuilding entire kit.
  */
 export function useKitQualities(guid?: Guid): Quality[] {
-  return useKit(selectQualities, guid) as Quality[];
+  const kitScope = useKitScope();
+  const resolvedGuid = guid ?? kitScope?.guid;
+  const kitStore = useKitStore(identitySelector, resolvedGuid) as KitStore | null;
+
+  const subscribe = useCallback(
+    (callback: () => void) => {
+      if (!kitStore) return () => {};
+      return kitStore.onQualitiesChanged((cb: () => void) => {
+        cb();
+        callback();
+        return () => {};
+      }, true);
+    },
+    [kitStore],
+  );
+
+  const getSnapshot = useCallback(() => {
+    if (!kitStore) return EMPTY_QUALITIES;
+    return kitStore.snapshotQualities();
+  }, [kitStore]);
+
+  return useSyncExternalStore(subscribe, getSnapshot);
 }
 
 /**
  * Returns only the designs array from the kit.
+ * PERF: Uses field-specific observer and snapshot to avoid rebuilding entire kit.
  */
 export function useKitDesigns(guid?: Guid): Design[] {
-  return useKit(selectDesigns, guid) as Design[];
+  const kitScope = useKitScope();
+  const resolvedGuid = guid ?? kitScope?.guid;
+  const kitStore = useKitStore(identitySelector, resolvedGuid) as KitStore | null;
+
+  const subscribe = useCallback(
+    (callback: () => void) => {
+      if (!kitStore) return () => {};
+      return kitStore.onDesignsChanged((cb: () => void) => {
+        cb();
+        callback();
+        return () => {};
+      }, true);
+    },
+    [kitStore],
+  );
+
+  const getSnapshot = useCallback(() => {
+    if (!kitStore) return EMPTY_DESIGNS;
+    return kitStore.snapshotDesigns();
+  }, [kitStore]);
+
+  return useSyncExternalStore(subscribe, getSnapshot);
 }
 
 // Legacy alias
 export function useDesigns(): Design[] {
-  return useKit(selectDesigns) as Design[];
+  return useKitDesigns();
 }
 
 /**
  * Returns only the folders array from the kit.
+ * PERF: Uses field-specific observer and snapshot to avoid rebuilding entire kit.
  */
 export function useKitFolders(guid?: Guid): Folder[] {
-  return useKit(selectFolders, guid) as Folder[];
+  const kitScope = useKitScope();
+  const resolvedGuid = guid ?? kitScope?.guid;
+  const kitStore = useKitStore(identitySelector, resolvedGuid) as KitStore | null;
+
+  const subscribe = useCallback(
+    (callback: () => void) => {
+      if (!kitStore) return () => {};
+      return kitStore.onFoldersChanged((cb: () => void) => {
+        cb();
+        callback();
+        return () => {};
+      }, true);
+    },
+    [kitStore],
+  );
+
+  const getSnapshot = useCallback(() => {
+    if (!kitStore) return EMPTY_FOLDERS;
+    return kitStore.snapshotFolders();
+  }, [kitStore]);
+
+  return useSyncExternalStore(subscribe, getSnapshot);
 }
 
 /**
@@ -6525,20 +6966,20 @@ export function useKitConcepts(guid?: Guid): Concept[] {
 
 /**
  * Returns a specific type by guid from the kit.
+ * PERF: Uses granular types subscription instead of full kit.
  */
 export function useTypeFromKit(typeGuid: Guid, kitGuid?: Guid): Type | undefined {
-  // Use useCallback to memoize the selector since it depends on typeGuid
-  const selector = useCallback((k: KitShallow | Kit) => k.types?.find((t) => (typeof t === "string" ? t === typeGuid : t.guid === typeGuid)), [typeGuid]);
-  return useKit(selector, kitGuid, true) as Type | undefined;
+  const kitTypes = useKitTypes(kitGuid);
+  return useMemo(() => kitTypes?.find((t) => t.guid === typeGuid), [kitTypes, typeGuid]);
 }
 
 /**
  * Returns a specific design by guid from the kit.
+ * PERF: Uses granular designs subscription instead of full kit.
  */
 export function useDesignFromKit(designGuid: Guid, kitGuid?: Guid): Design | undefined {
-  // Use useCallback to memoize the selector since it depends on designGuid
-  const selector = useCallback((k: KitShallow | Kit) => k.designs?.find((d) => (typeof d === "string" ? d === designGuid : d.guid === designGuid)), [designGuid]);
-  return useKit(selector, kitGuid, true) as Design | undefined;
+  const kitDesigns = useKitDesigns(kitGuid);
+  return useMemo(() => kitDesigns?.find((d) => d.guid === designGuid), [kitDesigns, designGuid]);
 }
 
 /**
@@ -7183,6 +7624,118 @@ export function useDiffedPiece<T>(selector?: (piece: Piece) => T, id?: string, d
   return selector ? selector(diffedPiece) : diffedPiece;
 }
 
+export function usePieceCenterU(): GranularHookResult<number> {
+  const pieceScope = usePieceScope();
+  const piece = usePiece() as Piece | null;
+  const { useDesignAppCommands } = getDesignAppHooks();
+  const commands = useDesignAppCommands();
+  const setter = useCallback(
+    (value: number) => {
+      if (pieceScope && piece) commands.updatePiece("semio.sketchpad.app.design.panel.details.section.piece.center.u", pieceScope.guid, { center: { u: value, v: piece.center?.v ?? 0 } });
+    },
+    [pieceScope, piece, commands],
+  );
+  return conditionalHookResult(!!pieceScope && !!piece, piece?.center?.u ?? 0, setter);
+}
+
+export function usePieceCenterV(): GranularHookResult<number> {
+  const pieceScope = usePieceScope();
+  const piece = usePiece() as Piece | null;
+  const { useDesignAppCommands } = getDesignAppHooks();
+  const commands = useDesignAppCommands();
+  const setter = useCallback(
+    (value: number) => {
+      if (pieceScope && piece) commands.updatePiece("semio.sketchpad.app.design.panel.details.section.piece.center.v", pieceScope.guid, { center: { u: piece.center?.u ?? 0, v: value } });
+    },
+    [pieceScope, piece, commands],
+  );
+  return conditionalHookResult(!!pieceScope && !!piece, piece?.center?.v ?? 0, setter);
+}
+
+export function usePieceScale(): GranularHookResult<number> {
+  const pieceScope = usePieceScope();
+  const piece = usePiece() as Piece | null;
+  const { useDesignAppCommands } = getDesignAppHooks();
+  const commands = useDesignAppCommands();
+  const setter = useCallback(
+    (value: number) => {
+      if (pieceScope) commands.updatePiece("semio.sketchpad.app.design.panel.details.section.piece.scale", pieceScope.guid, { scale: value });
+    },
+    [pieceScope, commands],
+  );
+  return conditionalHookResult(!!pieceScope && !!piece, piece?.scale ?? 1, setter);
+}
+
+export function usePieceIsHidden(): GranularHookResult<boolean> {
+  const pieceScope = usePieceScope();
+  const piece = usePiece() as Piece | null;
+  const { useDesignAppCommands } = getDesignAppHooks();
+  const commands = useDesignAppCommands();
+  const setter = useCallback(
+    (value: boolean) => {
+      if (pieceScope) commands.updatePiece("semio.sketchpad.app.design.panel.details.section.piece.isHidden", pieceScope.guid, { isHidden: value });
+    },
+    [pieceScope, commands],
+  );
+  return conditionalHookResult(!!pieceScope && !!piece, piece?.isHidden ?? false, setter);
+}
+
+export function usePieceIsLocked(): GranularHookResult<boolean> {
+  const pieceScope = usePieceScope();
+  const piece = usePiece() as Piece | null;
+  const { useDesignAppCommands } = getDesignAppHooks();
+  const commands = useDesignAppCommands();
+  const setter = useCallback(
+    (value: boolean) => {
+      if (pieceScope) commands.updatePiece("semio.sketchpad.app.design.panel.details.section.piece.isLocked", pieceScope.guid, { isLocked: value });
+    },
+    [pieceScope, commands],
+  );
+  return conditionalHookResult(!!pieceScope && !!piece, piece?.isLocked ?? false, setter);
+}
+
+export function usePieceColor(): GranularHookResult<string | undefined> {
+  const pieceScope = usePieceScope();
+  const piece = usePiece() as Piece | null;
+  const { useDesignAppCommands } = getDesignAppHooks();
+  const commands = useDesignAppCommands();
+  const setter = useCallback(
+    (value: string | undefined) => {
+      if (pieceScope) commands.updatePiece("semio.sketchpad.app.design.panel.details.section.piece.color", pieceScope.guid, { color: value });
+    },
+    [pieceScope, commands],
+  );
+  return conditionalHookResult(!!pieceScope && !!piece, piece?.color, setter);
+}
+
+export function usePieceDescription(): GranularHookResult<string | undefined> {
+  const pieceScope = usePieceScope();
+  const piece = usePiece() as Piece | null;
+  const { useDesignAppCommands } = getDesignAppHooks();
+  const commands = useDesignAppCommands();
+  const setter = useCallback(
+    (value: string | undefined) => {
+      if (pieceScope) commands.updatePiece("semio.sketchpad.app.design.panel.details.section.piece.description", pieceScope.guid, { description: value });
+    },
+    [pieceScope, commands],
+  );
+  return conditionalHookResult(!!pieceScope && !!piece, piece?.description, setter);
+}
+
+export function usePieceName(): GranularHookResult<string | undefined> {
+  const pieceScope = usePieceScope();
+  const piece = usePiece() as Piece | null;
+  const { useDesignAppCommands } = getDesignAppHooks();
+  const commands = useDesignAppCommands();
+  const setter = useCallback(
+    (value: string | undefined) => {
+      if (pieceScope) commands.updatePiece("semio.sketchpad.app.design.panel.details.section.piece.name", pieceScope.guid, { name: value });
+    },
+    [pieceScope, commands],
+  );
+  return conditionalHookResult(!!pieceScope && !!piece, piece?.name, setter);
+}
+
 export function useIsConnectionSelected(): boolean {
   const connectionScope = useConnectionScope();
   const { useDesignAppIsConnectionSelected } = getDesignAppHooks();
@@ -7234,16 +7787,139 @@ export function useConnectionStatus(): DiffStatus {
   return DiffStatus.Unchanged;
 }
 
+export function useConnectionGap(): GranularHookResult<number> {
+  const connectionScope = useConnectionScope();
+  const connection = useConnection() as Connection | null;
+  const { useDesignAppCommands } = getDesignAppHooks();
+  const commands = useDesignAppCommands();
+  const setter = useCallback(
+    (value: number) => {
+      if (connectionScope) commands.updateConnection("semio.sketchpad.app.design.panel.details.section.connection.gap", connectionScope.guid, { gap: value });
+    },
+    [connectionScope, commands],
+  );
+  return conditionalHookResult(!!connectionScope && !!connection, connection?.gap ?? 0, setter);
+}
+
+export function useConnectionShift(): GranularHookResult<number> {
+  const connectionScope = useConnectionScope();
+  const connection = useConnection() as Connection | null;
+  const { useDesignAppCommands } = getDesignAppHooks();
+  const commands = useDesignAppCommands();
+  const setter = useCallback(
+    (value: number) => {
+      if (connectionScope) commands.updateConnection("semio.sketchpad.app.design.panel.details.section.connection.shift", connectionScope.guid, { shift: value });
+    },
+    [connectionScope, commands],
+  );
+  return conditionalHookResult(!!connectionScope && !!connection, connection?.shift ?? 0, setter);
+}
+
+export function useConnectionRise(): GranularHookResult<number> {
+  const connectionScope = useConnectionScope();
+  const connection = useConnection() as Connection | null;
+  const { useDesignAppCommands } = getDesignAppHooks();
+  const commands = useDesignAppCommands();
+  const setter = useCallback(
+    (value: number) => {
+      if (connectionScope) commands.updateConnection("semio.sketchpad.app.design.panel.details.section.connection.rise", connectionScope.guid, { rise: value });
+    },
+    [connectionScope, commands],
+  );
+  return conditionalHookResult(!!connectionScope && !!connection, connection?.rise ?? 0, setter);
+}
+
+export function useConnectionRotation(): GranularHookResult<number> {
+  const connectionScope = useConnectionScope();
+  const connection = useConnection() as Connection | null;
+  const { useDesignAppCommands } = getDesignAppHooks();
+  const commands = useDesignAppCommands();
+  const setter = useCallback(
+    (value: number) => {
+      if (connectionScope) commands.updateConnection("semio.sketchpad.app.design.panel.details.section.connection.rotation", connectionScope.guid, { rotation: value });
+    },
+    [connectionScope, commands],
+  );
+  return conditionalHookResult(!!connectionScope && !!connection, connection?.rotation ?? 0, setter);
+}
+
+export function useConnectionTurn(): GranularHookResult<number> {
+  const connectionScope = useConnectionScope();
+  const connection = useConnection() as Connection | null;
+  const { useDesignAppCommands } = getDesignAppHooks();
+  const commands = useDesignAppCommands();
+  const setter = useCallback(
+    (value: number) => {
+      if (connectionScope) commands.updateConnection("semio.sketchpad.app.design.panel.details.section.connection.turn", connectionScope.guid, { turn: value });
+    },
+    [connectionScope, commands],
+  );
+  return conditionalHookResult(!!connectionScope && !!connection, connection?.turn ?? 0, setter);
+}
+
+export function useConnectionTilt(): GranularHookResult<number> {
+  const connectionScope = useConnectionScope();
+  const connection = useConnection() as Connection | null;
+  const { useDesignAppCommands } = getDesignAppHooks();
+  const commands = useDesignAppCommands();
+  const setter = useCallback(
+    (value: number) => {
+      if (connectionScope) commands.updateConnection("semio.sketchpad.app.design.panel.details.section.connection.tilt", connectionScope.guid, { tilt: value });
+    },
+    [connectionScope, commands],
+  );
+  return conditionalHookResult(!!connectionScope && !!connection, connection?.tilt ?? 0, setter);
+}
+
+export function useConnectionU(): GranularHookResult<number> {
+  const connectionScope = useConnectionScope();
+  const connection = useConnection() as Connection | null;
+  const { useDesignAppCommands } = getDesignAppHooks();
+  const commands = useDesignAppCommands();
+  const setter = useCallback(
+    (value: number) => {
+      if (connectionScope) commands.updateConnection("semio.sketchpad.app.design.panel.details.section.connection.u", connectionScope.guid, { u: value });
+    },
+    [connectionScope, commands],
+  );
+  return conditionalHookResult(!!connectionScope && !!connection, connection?.u ?? 0, setter);
+}
+
+export function useConnectionV(): GranularHookResult<number> {
+  const connectionScope = useConnectionScope();
+  const connection = useConnection() as Connection | null;
+  const { useDesignAppCommands } = getDesignAppHooks();
+  const commands = useDesignAppCommands();
+  const setter = useCallback(
+    (value: number) => {
+      if (connectionScope) commands.updateConnection("semio.sketchpad.app.design.panel.details.section.connection.v", connectionScope.guid, { v: value });
+    },
+    [connectionScope, commands],
+  );
+  return conditionalHookResult(!!connectionScope && !!connection, connection?.v ?? 0, setter);
+}
+
+/**
+ * Returns clusterable groups from design.
+ * PERF: Uses granular pieces and connections subscriptions.
+ */
 export function useClusterableGroups() {
-  const design = useDesign() as Design;
+  const designScope = useDesignScope();
+  const pieces = usePieces();
+  const connections = useConnections();
   const { useDesignAppSelection } = getDesignAppHooks();
   const selection = useDesignAppSelection();
   return useMemo(() => {
-    if (!design) return [];
+    if (!designScope) return [];
+    const design = { guid: designScope.guid, pieces, connections } as Design;
     return getClusterableGroups(design, selection.pieces ?? []);
-  }, [design, selection.pieces]);
+  }, [designScope?.guid, pieces, connections, selection.pieces]);
 }
 
+/**
+ * Returns diffed kit with pending changes applied.
+ * Note: This requires full kit access because diffs are applied to entire kit.
+ */
 export function useDiffedKit(): Kit {
   const kit = useKit() as Kit;
   const { useDesignAppDiff } = getDesignAppHooks();
@@ -7251,15 +7927,19 @@ export function useDiffedKit(): Kit {
   return diff ? applyKitDiff(kit, diff) : kit;
 }
 
+/**
+ * Returns types with colored ports for visualization.
+ * PERF: Uses granular types subscription where possible.
+ */
 export function usePortColoredTypes(): Type[] {
   const diffedKit = useDiffedKit();
-  const kit = useKit() as Kit;
+  const kitTypes = useKitTypes();
   const typesWithColoredPorts = useMemo(() => {
-    if (!diffedKit.types || !kit.types) return [];
+    if (!diffedKit.types || !kitTypes) return [];
     const colorDiff = colorPortsForTypes(diffedKit.types);
     const updatedIds = colorDiff.updated?.map((u) => u.type.guid) || [];
-    return kit.types.filter((t) => updatedIds.includes(t.guid));
-  }, [diffedKit.types, kit.types]);
+    return kitTypes.filter((t) => updatedIds.includes(t.guid));
+  }, [diffedKit.types, kitTypes]);
   return typesWithColoredPorts;
 }
 
@@ -7828,6 +8508,106 @@ export function useSyncSelectionItemMembership(store: { yMap: Y.Map<any> } | nul
 
   return useSyncExternalStore(subscribe, getSnapshot);
 }
+
+// #region Granular Path & Derived Hooks
+
+/**
+ * Hook for subscribing to a specific path in a Y.js store.
+ * Only re-renders when the value at the path changes.
+ * 
+ * @param store - The store with path API
+ * @param path - The YPath to subscribe to
+ * @param selector - Optional selector to transform the value
+ * @returns The value at the path (or selected value)
+ */
+export function usePath<T, TSelected = T>(
+  store: { onPathChanged: (path: YPath, subscribe: Subscribe) => Disposable; getPathSnapshot: (path: YPath) => any } | null,
+  path: YPath,
+  selector: (value: any) => TSelected = identitySelector as any,
+): TSelected | undefined {
+  const pathKey = useMemo(() => JSON.stringify(path), [path]);
+  const subscribe = useCallback(
+    (callback: () => void) => {
+      if (!store) return () => {};
+      return store.onPathChanged(path, () => {
+        callback();
+        return () => {};
+      });
+    },
+    [store, pathKey],
+  );
+  const lastResultRef = useRef<{ value: TSelected; json?: string }>({ value: undefined as any });
+  const getSnapshot = useCallback(() => {
+    if (!store) return undefined;
+    const rawValue = store.getPathSnapshot(path);
+    const value = rawValue instanceof Y.Map || rawValue instanceof Y.Array ? rawValue.toJSON() : rawValue;
+    const newValue = selector(value);
+    if (newValue === null || typeof newValue !== "object") {
+      if (newValue === lastResultRef.current.value) return lastResultRef.current.value;
+      lastResultRef.current = { value: newValue };
+      return newValue;
+    }
+    const newJson = JSON.stringify(newValue);
+    if (newJson === lastResultRef.current.json) return lastResultRef.current.value;
+    lastResultRef.current = { value: newValue, json: newJson };
+    return newValue;
+  }, [store, pathKey, selector]);
+  return useSyncExternalStore(subscribe, getSnapshot);
+}
+
+/**
+ * Hook for subscribing to a derived value computed from base dependencies.
+ * The value is cached and only recomputed when dependencies change.
+ * 
+ * @param derivedStore - The DerivedStore managing derived nodes
+ * @param key - Unique key for this derived value
+ * @param deps - Base dependencies (store + path pairs)
+ * @param compute - Function to compute the derived value
+ * @param selector - Optional selector to transform the value
+ * @returns The derived value (or selected value)
+ */
+export function useDerived<T, TSelected = T>(
+  derivedStore: DerivedStore | null,
+  key: string,
+  deps: BaseDependency[],
+  compute: () => T,
+  selector: (value: T) => TSelected = identitySelector as any,
+): TSelected | undefined {
+  const nodeRef = useRef<DerivedNode<T> | null>(null);
+  const depsKey = useMemo(() => JSON.stringify(deps.map((d) => ({ path: d.path }))), [deps]);
+  useEffect(() => {
+    if (!derivedStore) return;
+    nodeRef.current = derivedStore.getOrCreate(key, deps, compute);
+    return () => {
+      nodeRef.current = null;
+    };
+  }, [derivedStore, key, depsKey]);
+  const subscribe = useCallback(
+    (callback: () => void) => {
+      if (!nodeRef.current) return () => {};
+      return nodeRef.current.subscribe(callback);
+    },
+    [derivedStore, key, depsKey],
+  );
+  const lastResultRef = useRef<{ value: TSelected; json?: string }>({ value: undefined as any });
+  const getSnapshot = useCallback(() => {
+    if (!nodeRef.current) return undefined;
+    const rawValue = nodeRef.current.snapshot();
+    const newValue = selector(rawValue);
+    if (newValue === null || typeof newValue !== "object") {
+      if (newValue === lastResultRef.current.value) return lastResultRef.current.value;
+      lastResultRef.current = { value: newValue };
+      return newValue;
+    }
+    const newJson = JSON.stringify(newValue);
+    if (newJson === lastResultRef.current.json) return lastResultRef.current.value;
+    lastResultRef.current = { value: newValue, json: newJson };
+    return newValue;
+  }, [derivedStore, key, depsKey, selector]);
+  return useSyncExternalStore(subscribe, getSnapshot);
+}
+
+// #endregion Granular Path & Derived Hooks
 
 const defaultPanelVisibility: PanelVisibility = {
   toolbar: true,

@@ -33,8 +33,8 @@ import * as Y from "yjs";
 import { useLabel } from "../i18n";
 import { Author, AuthorId, Camera, Coord, findModel, guid, Guid, Kit, Model, Point, Port, selectBestModel, File as SemioFile, toSemioRotation, toThreeRotation, Type, TypeDiff, Vector } from "../semio";
 import { Geometry, Input, Scene as SceneComponent, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider, SortableTreeItems, Stepper, Textarea, Toggle, ToggleGroup, TreeContent, TreeItem } from "./elements";
-import type { AppWindowConfig, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolDefinition, ToolRenderContext, TypeAppId, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
-import { AppConfig, createPanelDefinition, Expertise, Mode, PanelKind, Theme, ToolKind } from "./shared";
+import type { AppWindowConfig, GranularHookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolDefinition, ToolRenderContext, TypeAppId, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
+import { AppConfig, conditionalHookResult, createPanelDefinition, Expertise, Mode, PanelKind, readonlyHookResult, Theme, ToolKind } from "./shared";
 import {
   Canvas,
   createDefaultLayout,
@@ -223,46 +223,128 @@ export function useTypeApp<T>(selector?: (state: TypeAppState) => T, id?: TypeAp
   return state as unknown as TypeAppState;
 }
 
-export function useTypeAppSelection(id?: TypeAppId): TypeAppSelection {
-  const state = useTypeApp((s) => s, id);
-  if (!state) return EMPTY_TYPE_SELECTION;
-  return (state as TypeAppState).selection ?? EMPTY_TYPE_SELECTION;
+export function useTypeAppSelection(): GranularHookResult<TypeAppSelection> {
+  const state = useTypeApp((s) => s);
+  const actor = useSketchpadActorHook();
+  const kitScope = useKitScope();
+  const typeScope = useTypeScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const typeGuid = typeScope?.guid ?? "";
+  const value = state ? ((state as TypeAppState).selection ?? EMPTY_TYPE_SELECTION) : EMPTY_TYPE_SELECTION;
+  const canSet = !!kitGuid && !!typeGuid;
+  const setter = useMemo(() => {
+    if (!canSet) return undefined;
+    return (selection: TypeAppSelection) => {
+      actor.send({ type: "TYPE.SET_SELECTION", kitGuid, typeGuid, selection });
+    };
+  }, [actor, kitGuid, typeGuid, canSet]);
+  return conditionalHookResult(value, setter, canSet);
 }
 
-export function useTypeAppPanelVisibility(id?: TypeAppId): PanelVisibility {
-  const state = useTypeApp((s) => s, id);
-  if (!state) return EMPTY_PANEL_VISIBILITY;
-  return (state as TypeAppState).panelVisibility ?? EMPTY_PANEL_VISIBILITY;
+export function useTypeAppPanelVisibility(): GranularHookResult<PanelVisibility> {
+  const state = useTypeApp((s) => s);
+  const actor = useSketchpadActorHook();
+  const kitScope = useKitScope();
+  const typeScope = useTypeScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const typeGuid = typeScope?.guid ?? "";
+  const value = state ? ((state as TypeAppState).panelVisibility ?? EMPTY_PANEL_VISIBILITY) : EMPTY_PANEL_VISIBILITY;
+  const canSet = !!kitGuid && !!typeGuid;
+  const setter = useMemo(() => {
+    if (!canSet) return undefined;
+    return (visibility: PanelVisibility) => {
+      actor.send({ type: "TYPE.SET_PANEL_VISIBILITY", kitGuid, typeGuid, panelVisibility: visibility });
+    };
+  }, [actor, kitGuid, typeGuid, canSet]);
+  return conditionalHookResult(value, setter, canSet);
 }
 
-export function useTypeAppOthers(id?: TypeAppId): TypeAppPresenceOther[] {
-  const state = useTypeApp((s) => s, id);
-  if (!state) return EMPTY_OTHERS;
-  return (state as TypeAppState).others ?? EMPTY_OTHERS;
+export function useTypeAppOthers(): GranularHookResult<TypeAppPresenceOther[]> {
+  const state = useTypeApp((s) => s);
+  const value = state ? ((state as TypeAppState).others ?? EMPTY_OTHERS) : EMPTY_OTHERS;
+  return readonlyHookResult(value);
 }
 
-export function useTypeAppCamera(id?: TypeAppId): Camera | undefined {
-  const state = useTypeApp((s) => s, id);
-  if (!state) return undefined;
-  return (state as TypeAppState).camera;
+export function useTypeAppCamera(): GranularHookResult<Camera | undefined> {
+  const state = useTypeApp((s) => s);
+  const actor = useSketchpadActorHook();
+  const kitScope = useKitScope();
+  const typeScope = useTypeScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const typeGuid = typeScope?.guid ?? "";
+  const value = state ? (state as TypeAppState).camera : undefined;
+  const canSet = !!kitGuid && !!typeGuid;
+  const setter = useMemo(() => {
+    if (!canSet) return undefined;
+    return (camera: Camera | undefined) => {
+      actor.send({ type: "TYPE.SET_CAMERA", kitGuid, typeGuid, camera: camera! });
+    };
+  }, [actor, kitGuid, typeGuid, canSet]);
+  return conditionalHookResult(value, setter, canSet);
 }
 
-export function useTypeAppFocusedPortGuid(id?: TypeAppId): Guid | undefined {
-  const state = useTypeApp((s) => s, id);
-  if (!state) return undefined;
-  return (state as TypeAppState).focusedPortGuid;
+export function useTypeAppFocusedPortGuid(): GranularHookResult<Guid | undefined> {
+  const state = useTypeApp((s) => s);
+  const actor = useSketchpadActorHook();
+  const kitScope = useKitScope();
+  const typeScope = useTypeScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const typeGuid = typeScope?.guid ?? "";
+  const value = state ? (state as TypeAppState).focusedPortGuid : undefined;
+  const canSet = !!kitGuid && !!typeGuid;
+  const setter = useMemo(() => {
+    if (!canSet) return undefined;
+    return (portGuid: Guid | undefined) => {
+      if (portGuid) {
+        actor.send({ type: "TYPE.FOCUS_PORT", kitGuid, typeGuid, portGuid });
+      } else {
+        actor.send({ type: "TYPE.CLEAR_FOCUS", kitGuid, typeGuid });
+      }
+    };
+  }, [actor, kitGuid, typeGuid, canSet]);
+  return conditionalHookResult(value, setter, canSet);
 }
 
-export function useTypeAppHover(id?: TypeAppId): TypeAppHover | undefined {
-  const state = useTypeApp((s) => s, id);
-  if (!state) return undefined;
-  return (state as TypeAppState).hover;
+export function useTypeAppHover(): GranularHookResult<TypeAppHover | undefined> {
+  const state = useTypeApp((s) => s);
+  const actor = useSketchpadActorHook();
+  const kitScope = useKitScope();
+  const typeScope = useTypeScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const typeGuid = typeScope?.guid ?? "";
+  const value = state ? (state as TypeAppState).hover : undefined;
+  const canSet = !!kitGuid && !!typeGuid;
+  const setter = useMemo(() => {
+    if (!canSet) return undefined;
+    return (hover: TypeAppHover | undefined) => {
+      if (hover?.port) {
+        actor.send({ type: "TYPE.HOVER_PORT", kitGuid, typeGuid, portGuid: hover.port });
+      } else if (hover?.model) {
+        actor.send({ type: "TYPE.HOVER_MODEL", kitGuid, typeGuid, modelGuid: hover.model });
+      } else {
+        actor.send({ type: "TYPE.CLEAR_HOVER", kitGuid, typeGuid });
+      }
+    };
+  }, [actor, kitGuid, typeGuid, canSet]);
+  return conditionalHookResult(value, setter, canSet);
 }
 
-export function useTypeAppActiveTool(id?: TypeAppId): ToolKind {
-  const state = useTypeApp((s) => s, id);
-  if (!state) return ToolKind.SELECTION_NORMAL;
-  return (state as TypeAppState).activeTool ?? ToolKind.SELECTION_NORMAL;
+export function useTypeAppActiveTool(): GranularHookResult<ToolKind> {
+  const state = useTypeApp((s) => s);
+  const actor = useSketchpadActorHook();
+  const kitScope = useKitScope();
+  const typeScope = useTypeScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const typeGuid = typeScope?.guid ?? "";
+  const value = state ? ((state as TypeAppState).activeTool ?? ToolKind.SELECTION_NORMAL) : ToolKind.SELECTION_NORMAL;
+  const canSet = !!kitGuid && !!typeGuid;
+  const setter = useMemo(() => {
+    if (!canSet) return undefined;
+    return (tool: ToolKind) => {
+      actor.send({ type: "TYPE.SET_ACTIVE_TOOL", kitGuid, typeGuid, tool });
+    };
+  }, [actor, kitGuid, typeGuid, canSet]);
+  return conditionalHookResult(value, setter, canSet);
 }
 
 interface Transaction {
@@ -351,48 +433,89 @@ export function useTypeAppCommands(id?: TypeAppId) {
   }, [actor, kitGuid, typeGuid]);
 }
 
-export function useTypeAppIsPortSelected(id: TypeAppId | undefined, portId: string): boolean {
+export function useTypeAppIsPortSelected(portId: string): GranularHookResult<boolean> {
   const actor = useSketchpadActorHook();
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
-  const kitGuid = kitScope?.guid ?? id?.kit ?? "";
-  const typeGuid = typeScope?.guid ?? id?.type ?? "";
+  const kitGuid = kitScope?.guid ?? "";
+  const typeGuid = typeScope?.guid ?? "";
   const selector = useMemo(() => createTypeSelectionSelector(kitGuid, typeGuid), [kitGuid, typeGuid]);
   const selection = useSelector(actor, selector);
-  return selection?.ports?.includes(portId) ?? false;
+  const value = selection?.ports?.includes(portId) ?? false;
+  const canSet = !!kitGuid && !!typeGuid;
+  const setter = useMemo(() => {
+    if (!canSet) return undefined;
+    return (isSelected: boolean) => {
+      if (isSelected) {
+        actor.send({ type: "TYPE.SELECT_PORT", kitGuid, typeGuid, portGuid: portId });
+      } else {
+        actor.send({ type: "TYPE.DESELECT_PORT", kitGuid, typeGuid, portGuid: portId });
+      }
+    };
+  }, [actor, kitGuid, typeGuid, portId, canSet]);
+  return conditionalHookResult(value, setter, canSet);
 }
 
-export function useTypeAppIsPortHovered(id: TypeAppId | undefined, portId: string): boolean {
+export function useTypeAppIsPortHovered(portId: string): GranularHookResult<boolean> {
   const actor = useSketchpadActorHook();
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
-  const kitGuid = kitScope?.guid ?? id?.kit ?? "";
-  const typeGuid = typeScope?.guid ?? id?.type ?? "";
+  const kitGuid = kitScope?.guid ?? "";
+  const typeGuid = typeScope?.guid ?? "";
   const selector = useMemo(() => createTypeHoverSelector(kitGuid, typeGuid), [kitGuid, typeGuid]);
   const hover = useSelector(actor, selector);
-  return hover?.port === portId;
+  const value = hover?.port === portId;
+  const canSet = !!kitGuid && !!typeGuid;
+  const setter = useMemo(() => {
+    if (!canSet) return undefined;
+    return (isHovered: boolean) => {
+      if (isHovered) {
+        actor.send({ type: "TYPE.HOVER_PORT", kitGuid, typeGuid, portGuid: portId });
+      } else {
+        actor.send({ type: "TYPE.CLEAR_HOVER", kitGuid, typeGuid });
+      }
+    };
+  }, [actor, kitGuid, typeGuid, portId, canSet]);
+  return conditionalHookResult(value, setter, canSet);
 }
 
-export function useTypeAppSelectedModelGuid(id?: TypeAppId): Guid | undefined {
+export function useTypeAppSelectedModelGuid(): GranularHookResult<Guid | undefined> {
   const actor = useSketchpadActorHook();
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
-  const kitGuid = kitScope?.guid ?? id?.kit ?? "";
-  const typeGuid = typeScope?.guid ?? id?.type ?? "";
-  // TODO: Add createTypeSelectedModelGuidSelector to machines.ts
+  const kitGuid = kitScope?.guid ?? "";
+  const typeGuid = typeScope?.guid ?? "";
   const selector = useMemo(() => createTypeAppSelector(kitGuid, typeGuid), [kitGuid, typeGuid]);
   const state = useSelector(actor, selector);
-  return state?.selectedModelGuid;
+  const value = state?.selectedModelGuid;
+  const canSet = !!kitGuid && !!typeGuid;
+  const setter = useMemo(() => {
+    if (!canSet) return undefined;
+    return (modelGuid: Guid | undefined) => {
+      if (modelGuid) {
+        actor.send({ type: "TYPE.SET_SELECTED_MODEL", kitGuid, typeGuid, modelGuid });
+      }
+    };
+  }, [actor, kitGuid, typeGuid, canSet]);
+  return conditionalHookResult(value, setter, canSet);
 }
 
-export function useTypeAppSelectedModelTags(id?: TypeAppId): string[] {
+export function useTypeAppSelectedModelTags(): GranularHookResult<string[]> {
   const actor = useSketchpadActorHook();
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
-  const kitGuid = kitScope?.guid ?? id?.kit ?? "";
-  const typeGuid = typeScope?.guid ?? id?.type ?? "";
+  const kitGuid = kitScope?.guid ?? "";
+  const typeGuid = typeScope?.guid ?? "";
   const selector = useMemo(() => createTypeSelectedModelTagsSelector(kitGuid, typeGuid), [kitGuid, typeGuid]);
-  return useSelector(actor, selector) ?? EMPTY_MODEL_TAG_ARRAY;
+  const value = useSelector(actor, selector) ?? EMPTY_MODEL_TAG_ARRAY;
+  const canSet = !!kitGuid && !!typeGuid;
+  const setter = useMemo(() => {
+    if (!canSet) return undefined;
+    return (tags: string[]) => {
+      actor.send({ type: "TYPE.SET_MODEL_TAGS", kitGuid, typeGuid, tags });
+    };
+  }, [actor, kitGuid, typeGuid, canSet]);
+  return conditionalHookResult(value, setter, canSet);
 }
 
 const TypeAppScopeContext = createContext<{ id: string } | undefined>(undefined);
@@ -959,15 +1082,15 @@ const selectTypeGuid = (type: Type) => type.guid;
 
 // PERF: SceneContent is memoized to prevent re-renders when Scene re-renders due to camera changes
 const SceneContent: FC = React.memo(() => {
-  const activeTool = useTypeAppActiveTool();
+  const [activeTool] = useTypeAppActiveTool();
   // PERF: Use targeted selectors instead of fetching full type/kit
   // Only subscribe to the specific fields we actually need
   const typePorts = useType(selectTypePorts) as Port[] | undefined;
   const typeGuid = useType(selectTypeGuid) as string | undefined;
   // PERF: useKit was only used to check existence - kitCommands being non-null serves same purpose
   const kitCommands = useKitCommands();
-  const selection = useTypeAppSelection();
-  const hover = useTypeAppHover();
+  const [selection] = useTypeAppSelection();
+  const [hover] = useTypeAppHover();
   // PERF: Removed useTypeApp((s) => s) - was causing full re-renders on every state change
   // Tools (SelectionNormalTool, PortTool, etc.) return null/empty scene content anyway
   const { selectPort, deselectPort, hoverPort, clearHover, focusPort } = useTypeAppCommands();
@@ -1112,8 +1235,8 @@ const SceneContent: FC = React.memo(() => {
 
 const Scene: FC<{ isDragOver?: boolean }> = ({ isDragOver = false }) => {
   const { setCamera, deselectAll, clearFocus } = useTypeAppCommands();
-  const camera = useTypeAppCamera();
-  const focusedPortGuid = useTypeAppFocusedPortGuid();
+  const [camera] = useTypeAppCamera();
+  const [focusedPortGuid] = useTypeAppFocusedPortGuid();
 
   const onCameraChange = useCallback(
     (newCamera: Camera) => {
@@ -1282,8 +1405,8 @@ const ModelsSectionForm: FC = () => {
   const { selectModel, deselectModel, hoverModel, clearHover } = useTypeAppCommands();
   const kitCommands = useKitCommands();
   const type = useType(undefined, undefined, true) as Type;
-  const selection = useTypeAppSelection();
-  const hover = useTypeAppHover();
+  const [selection] = useTypeAppSelection();
+  const [hover] = useTypeAppHover();
 
   const applyDiff = (origin: string, diff: any) => {
     kitCommands?.updateType(origin, type.guid, diff);
@@ -1434,8 +1557,8 @@ const PortsListSectionForm: FC = () => {
   const { selectPort, deselectPort, hoverPort, clearHover } = useTypeAppCommands();
   const kitCommands = useKitCommands();
   const type = useType(undefined, undefined, true) as Type;
-  const selection = useTypeAppSelection();
-  const hover = useTypeAppHover();
+  const [selection] = useTypeAppSelection();
+  const [hover] = useTypeAppHover();
 
   const applyDiff = (origin: string, diff: any) => {
     kitCommands?.updateType(origin, type.guid, diff);
@@ -2408,7 +2531,7 @@ export const ToolsToggleGroup: FC = () => {
   const { kit, type } = useParams();
   const typeAppId: TypeAppId | undefined = kit && type ? { kit, type } : undefined;
   // PERF: Use targeted hook instead of full state subscription
-  const activeTool = useTypeAppActiveTool(typeAppId);
+  const [activeTool, , canSetActiveTool] = useTypeAppActiveTool();
   const { setActiveTool } = useTypeAppCommands(typeAppId);
 
   if (!kit || !type) return null;
@@ -2428,8 +2551,8 @@ const App: FC = () => {
   const appType = useAppType();
   const { setActiveTool } = useTypeAppCommands();
   // PERF: Use targeted hook instead of full state subscription
-  const activeTool = useTypeAppActiveTool();
-  const selection = useTypeAppSelection();
+  const [activeTool] = useTypeAppActiveTool();
+  const [selection] = useTypeAppSelection();
   const [isDragOver, setIsDragOver] = useState(false);
 
   useEffect(() => {
