@@ -77,6 +77,16 @@ export type GranularHookResult<T> = readonly [
 ];
 
 /**
+ * Granular hook result for read-only hooks.
+ * Returns [value, undefined, canRead] tuple.
+ */
+export type GranularHookNoSetResult<T> = readonly [
+  T,
+  undefined,
+  boolean
+];
+
+/**
  * Read-only granular hook result constant.
  * Use when the hook only provides read access.
  */
@@ -107,14 +117,14 @@ export function writableHookResult<T>(
 
 /**
  * Creates a conditional granular hook result.
+ * @param canSet - Whether the setter can be used
  * @param value - The current state value
  * @param setter - Function to update the value (or undefined)
- * @param canSet - Whether the setter can be used
  */
 export function conditionalHookResult<T>(
+  canSet: boolean,
   value: T,
-  setter: ((value: T) => void) | undefined,
-  canSet: boolean
+  setter: ((value: T) => void) | undefined
 ): GranularHookResult<T> {
   return [value, canSet ? setter : undefined, canSet] as const;
 }
@@ -1165,7 +1175,7 @@ export function getValueAtPath(root: Y.Map<any> | Y.Array<any>, path: YPath): an
  */
 export function createPathObserver(root: Y.Map<any>, path: YPath, subscribe: Subscribe): Disposable {
   if (path.length === 0) {
-    const callback = () => subscribe(() => {});
+    const callback = () => subscribe(() => { });
     root.observeDeep(callback);
     return () => root.unobserveDeep(callback);
   }
@@ -1177,7 +1187,7 @@ export function createPathObserver(root: Y.Map<any>, path: YPath, subscribe: Sub
     const newJson = JSON.stringify(newValue instanceof Y.Map || newValue instanceof Y.Array ? newValue.toJSON() : newValue);
     if (lastJson !== newJson) {
       lastValue = newValue;
-      subscribe(() => {});
+      subscribe(() => { });
     }
   };
   const setupObservers = (current: any, remainingPath: YPath, depth: number) => {
@@ -1275,7 +1285,7 @@ export class DerivedNode<T> {
     this.unsubscribers = this.deps.map((d) =>
       d.store.onPathChanged(d.path, () => {
         this.recompute();
-        return () => {};
+        return () => { };
       }),
     );
     this.recompute();
@@ -1365,4 +1375,56 @@ export class DerivedStore {
 }
 
 // #endregion Derived Store
+
+// #region Store Factory Registry
+
+// Factory types - using any to avoid circular type dependencies
+export type DesignAppStoreFactory = (parent: any, yMap: any, transact: (fn: () => void) => void, id: any, state?: any) => any;
+export type KitAppStoreFactory = (parent: any, yMap: any, transact: (fn: () => void) => void, id: any, state?: any) => any;
+export type TypeAppStoreFactory = (parent: any, yMap: any, transact: (fn: () => void) => void, id: any, state?: any) => any;
+export type QualityAppStoreFactory = (parent: any, yMap: any, transact: (fn: () => void) => void, id: any, state?: any) => any;
+
+// Global factory registry - lives in shared.ts to avoid circular dependencies
+let designAppStoreFactory: DesignAppStoreFactory | undefined;
+let kitAppStoreFactory: KitAppStoreFactory | undefined;
+let typeAppStoreFactory: TypeAppStoreFactory | undefined;
+let qualityAppStoreFactory: QualityAppStoreFactory | undefined;
+
+export function registerDesignAppStoreFactory(factory: DesignAppStoreFactory) {
+  designAppStoreFactory = factory;
+}
+
+export function registerKitAppStoreFactory(factory: KitAppStoreFactory) {
+  kitAppStoreFactory = factory;
+}
+
+export function registerTypeAppStoreFactory(factory: TypeAppStoreFactory) {
+  typeAppStoreFactory = factory;
+}
+
+export function registerQualityAppStoreFactory(factory: QualityAppStoreFactory) {
+  qualityAppStoreFactory = factory;
+}
+
+export function getDesignAppStoreFactory(): DesignAppStoreFactory {
+  if (!designAppStoreFactory) throw new Error("Design app store factory not registered");
+  return designAppStoreFactory;
+}
+
+export function getKitAppStoreFactory(): KitAppStoreFactory {
+  if (!kitAppStoreFactory) throw new Error("Kit app store factory not registered");
+  return kitAppStoreFactory;
+}
+
+export function getTypeAppStoreFactory(): TypeAppStoreFactory {
+  if (!typeAppStoreFactory) throw new Error("Type app store factory not registered");
+  return typeAppStoreFactory;
+}
+
+export function getQualityAppStoreFactory(): QualityAppStoreFactory {
+  if (!qualityAppStoreFactory) throw new Error("Quality app store factory not registered");
+  return qualityAppStoreFactory;
+}
+
+// #endregion Store Factory Registry
 

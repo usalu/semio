@@ -32,12 +32,16 @@ import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
 import * as Y from "yjs";
 import { useLabel } from "../i18n";
 import { Author, AuthorId, Camera, Coord, findModel, guid, Guid, Kit, Model, Point, Port, selectBestModel, File as SemioFile, toSemioRotation, toThreeRotation, Type, TypeDiff, Vector } from "../semio";
-import { Geometry, Input, Scene as SceneComponent, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider, SortableTreeItems, Stepper, Textarea, Toggle, ToggleGroup, TreeContent, TreeItem } from "./elements";
+import { Geometry, Input, Scene as SceneComponent, Slider, SortableTreeItems, Stepper, Textarea, Toggle, TreeContent, TreeItem } from "./elements";
 import type { AppWindowConfig, GranularHookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolDefinition, ToolRenderContext, TypeAppId, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
-import { AppConfig, conditionalHookResult, createPanelDefinition, Expertise, Mode, PanelKind, readonlyHookResult, Theme, ToolKind } from "./shared";
+import { AppConfig, conditionalHookResult, createPanelDefinition, PanelKind, readonlyHookResult, ToolKind } from "./shared";
 import {
   Canvas,
   createDefaultLayout,
+  createTypeAppSelector,
+  createTypeHoverSelector,
+  createTypeSelectedModelTagsSelector,
+  createTypeSelectionSelector,
   KitScopeProvider,
   KitStore,
   LayoutCanvas,
@@ -46,7 +50,6 @@ import {
   useAddFooterItem,
   useAddPanelSection,
   useAppType,
-  useExpertise,
   useFocusSafe,
   useIsInTypeScope,
   useKit,
@@ -56,20 +59,17 @@ import {
   useKitStore,
   useKitTags,
   useKitTransaction,
-  useLanguage,
-  useLayout,
-  useMode,
   useRemoveFooterItem,
   useRemovePanelSection,
+  useSketchpadActor,
   useSketchpadCommands,
   useSketchpadStore,
   useSyncDeep,
-  useTheme,
   useTooltip,
   useType,
+  useTypeAppXState,
   useTypeScope,
 } from "./Sketchpad";
-import { createTypeAppSelector, createTypeHoverSelector, createTypeSelectedModelTagsSelector, createTypeSelectionSelector, useSketchpadActorHook, useTypeApp as useTypeAppXState } from "./xstate-hooks";
 
 let kitAppModuleCache: any = null;
 if (typeof window !== "undefined" && (window as any).__KIT_APP_MODULE_CACHE__) {
@@ -100,7 +100,7 @@ const KitSectionLazy = React.lazy(async () => {
 });
 
 // Lucide icons used throughout the app
-import { AddIcon, AwardIcon, CheckIcon, CodeIcon, HandIcon, MonitorIcon, MoonIcon, MousePointerIcon, PortIcon, RemoveIcon, SelectToolIcon, SunIcon, TutorialIcon, UserIcon } from "@semio/assets";
+import { AddIcon, CheckIcon, PortIcon, RemoveIcon, SelectToolIcon } from "@semio/assets";
 
 // #endregion Imports
 
@@ -225,7 +225,7 @@ export function useTypeApp<T>(selector?: (state: TypeAppState) => T, id?: TypeAp
 
 export function useTypeAppSelection(): GranularHookResult<TypeAppSelection> {
   const state = useTypeApp((s) => s);
-  const actor = useSketchpadActorHook();
+  const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
   const kitGuid = kitScope?.guid ?? "";
@@ -238,12 +238,12 @@ export function useTypeAppSelection(): GranularHookResult<TypeAppSelection> {
       actor.send({ type: "TYPE.SET_SELECTION", kitGuid, typeGuid, selection });
     };
   }, [actor, kitGuid, typeGuid, canSet]);
-  return conditionalHookResult(value, setter, canSet);
+  return conditionalHookResult(canSet, value, setter);
 }
 
 export function useTypeAppPanelVisibility(): GranularHookResult<PanelVisibility> {
   const state = useTypeApp((s) => s);
-  const actor = useSketchpadActorHook();
+  const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
   const kitGuid = kitScope?.guid ?? "";
@@ -256,7 +256,7 @@ export function useTypeAppPanelVisibility(): GranularHookResult<PanelVisibility>
       actor.send({ type: "TYPE.SET_PANEL_VISIBILITY", kitGuid, typeGuid, panelVisibility: visibility });
     };
   }, [actor, kitGuid, typeGuid, canSet]);
-  return conditionalHookResult(value, setter, canSet);
+  return conditionalHookResult(canSet, value, setter);
 }
 
 export function useTypeAppOthers(): GranularHookResult<TypeAppPresenceOther[]> {
@@ -267,7 +267,7 @@ export function useTypeAppOthers(): GranularHookResult<TypeAppPresenceOther[]> {
 
 export function useTypeAppCamera(): GranularHookResult<Camera | undefined> {
   const state = useTypeApp((s) => s);
-  const actor = useSketchpadActorHook();
+  const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
   const kitGuid = kitScope?.guid ?? "";
@@ -280,12 +280,12 @@ export function useTypeAppCamera(): GranularHookResult<Camera | undefined> {
       actor.send({ type: "TYPE.SET_CAMERA", kitGuid, typeGuid, camera: camera! });
     };
   }, [actor, kitGuid, typeGuid, canSet]);
-  return conditionalHookResult(value, setter, canSet);
+  return conditionalHookResult(canSet, value, setter);
 }
 
 export function useTypeAppFocusedPortGuid(): GranularHookResult<Guid | undefined> {
   const state = useTypeApp((s) => s);
-  const actor = useSketchpadActorHook();
+  const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
   const kitGuid = kitScope?.guid ?? "";
@@ -302,12 +302,12 @@ export function useTypeAppFocusedPortGuid(): GranularHookResult<Guid | undefined
       }
     };
   }, [actor, kitGuid, typeGuid, canSet]);
-  return conditionalHookResult(value, setter, canSet);
+  return conditionalHookResult(canSet, value, setter);
 }
 
 export function useTypeAppHover(): GranularHookResult<TypeAppHover | undefined> {
   const state = useTypeApp((s) => s);
-  const actor = useSketchpadActorHook();
+  const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
   const kitGuid = kitScope?.guid ?? "";
@@ -326,12 +326,12 @@ export function useTypeAppHover(): GranularHookResult<TypeAppHover | undefined> 
       }
     };
   }, [actor, kitGuid, typeGuid, canSet]);
-  return conditionalHookResult(value, setter, canSet);
+  return conditionalHookResult(canSet, value, setter);
 }
 
 export function useTypeAppActiveTool(): GranularHookResult<ToolKind> {
   const state = useTypeApp((s) => s);
-  const actor = useSketchpadActorHook();
+  const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
   const kitGuid = kitScope?.guid ?? "";
@@ -344,7 +344,7 @@ export function useTypeAppActiveTool(): GranularHookResult<ToolKind> {
       actor.send({ type: "TYPE.SET_ACTIVE_TOOL", kitGuid, typeGuid, tool });
     };
   }, [actor, kitGuid, typeGuid, canSet]);
-  return conditionalHookResult(value, setter, canSet);
+  return conditionalHookResult(canSet, value, setter);
 }
 
 interface Transaction {
@@ -363,7 +363,7 @@ export function useTypeAppTransaction(_origin: string, _id?: TypeAppId): Transac
 }
 
 export function useTypeAppCommands(id?: TypeAppId) {
-  const actor = useSketchpadActorHook();
+  const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
   const kitGuid = kitScope?.guid ?? id?.kit ?? "";
@@ -434,7 +434,7 @@ export function useTypeAppCommands(id?: TypeAppId) {
 }
 
 export function useTypeAppIsPortSelected(portId: string): GranularHookResult<boolean> {
-  const actor = useSketchpadActorHook();
+  const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
   const kitGuid = kitScope?.guid ?? "";
@@ -453,11 +453,11 @@ export function useTypeAppIsPortSelected(portId: string): GranularHookResult<boo
       }
     };
   }, [actor, kitGuid, typeGuid, portId, canSet]);
-  return conditionalHookResult(value, setter, canSet);
+  return conditionalHookResult(canSet, value, setter);
 }
 
 export function useTypeAppIsPortHovered(portId: string): GranularHookResult<boolean> {
-  const actor = useSketchpadActorHook();
+  const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
   const kitGuid = kitScope?.guid ?? "";
@@ -476,11 +476,11 @@ export function useTypeAppIsPortHovered(portId: string): GranularHookResult<bool
       }
     };
   }, [actor, kitGuid, typeGuid, portId, canSet]);
-  return conditionalHookResult(value, setter, canSet);
+  return conditionalHookResult(canSet, value, setter);
 }
 
 export function useTypeAppSelectedModelGuid(): GranularHookResult<Guid | undefined> {
-  const actor = useSketchpadActorHook();
+  const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
   const kitGuid = kitScope?.guid ?? "";
@@ -497,11 +497,11 @@ export function useTypeAppSelectedModelGuid(): GranularHookResult<Guid | undefin
       }
     };
   }, [actor, kitGuid, typeGuid, canSet]);
-  return conditionalHookResult(value, setter, canSet);
+  return conditionalHookResult(canSet, value, setter);
 }
 
 export function useTypeAppSelectedModelTags(): GranularHookResult<string[]> {
-  const actor = useSketchpadActorHook();
+  const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
   const kitGuid = kitScope?.guid ?? "";
@@ -515,7 +515,7 @@ export function useTypeAppSelectedModelTags(): GranularHookResult<string[]> {
       actor.send({ type: "TYPE.SET_MODEL_TAGS", kitGuid, typeGuid, tags });
     };
   }, [actor, kitGuid, typeGuid, canSet]);
-  return conditionalHookResult(value, setter, canSet);
+  return conditionalHookResult(canSet, value, setter);
 }
 
 const TypeAppScopeContext = createContext<{ id: string } | undefined>(undefined);
@@ -886,8 +886,8 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
   // Use targeted hook instead of deep kit subscription - we only need files
   const files = useKitFiles();
   const kitDataSource = useKitStore() as KitStore;
-  const selectedModelGuid = useTypeAppSelectedModelGuid();
-  const selectedModelTags = useTypeAppSelectedModelTags();
+  const [selectedModelGuid] = useTypeAppSelectedModelGuid();
+  const [selectedModelTags] = useTypeAppSelectedModelTags();
   const [isPointerDown, setIsPointerDown] = useState(false);
   const pointerDownTimeRef = useRef<number>(0);
   const pointerDownPositionRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -1058,14 +1058,7 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
   const foregroundColor = useMemo(() => getComputedColor("--foreground"), []);
 
   if (!blobUrl) {
-    // Render placeholder box when no model is loaded (same as design pieces)
-    return (
-      <mesh>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color={foregroundColor} emissive={foregroundColor} emissiveIntensity={0.45} />
-        <Edges scale={1.001} color={foregroundColor} />
-      </mesh>
-    );
+    return null;
   }
 
   return (
@@ -2661,15 +2654,7 @@ const App: FC = () => {
   useEffect(() => {
     if (appType !== "type") return;
 
-    const { setTheme, setLanguage, setLayout, setExpertise, setMode } = sketchpadCommands;
-
     const SketchpadSettingsContent = () => {
-      const theme = useTheme();
-      const language = useLanguage();
-      const layout = useLayout();
-      const expertise = useExpertise();
-      const mode = useMode();
-
       const languageEnLabel = useLabel("semio.sketchpad.settings.language.en");
       const languageDeLabel = useLabel("semio.sketchpad.settings.language.de");
       const languagePlaceholder = useLabel("semio.sketchpad.app.home.settings.language.placeholder");
@@ -2678,77 +2663,37 @@ const App: FC = () => {
         <>
           <TreeItem>
             <TreeContent>
-              <ToggleGroup
-                id="semio.sketchpad.settings.theme"
-                value={theme}
-                onValueChange={(value: string) => setTheme("semio.sketchpad.settings.theme", value as Theme)}
-                showLabel
-                kind="single"
-                items={[
-                  { value: Theme.SYSTEM, id: "semio.sketchpad.settings.theme.system", icon: <MonitorIcon className="size-small" /> },
-                  { value: Theme.LIGHT, id: "semio.sketchpad.settings.theme.light", icon: <SunIcon className="size-small" /> },
-                  { value: Theme.DARK, id: "semio.sketchpad.settings.theme.dark", icon: <MoonIcon className="size-small" /> },
-                ]}
-              />
+              <OriginProvider id="semio.sketchpad.app.type.settings.theme">
+                <TypeThemeToggle />
+              </OriginProvider>
             </TreeContent>
           </TreeItem>
           <TreeItem>
             <TreeContent>
-              <Select id="semio.sketchpad.settings.language" value={language || "en"} onValueChange={(value: string) => setLanguage("semio.sketchpad.settings.language", value)} showLabel>
-                <SelectTrigger>
-                  <SelectValue placeholder={languagePlaceholder} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="en">{languageEnLabel}</SelectItem>
-                  <SelectItem value="de">{languageDeLabel}</SelectItem>
-                </SelectContent>
-              </Select>
+              <OriginProvider id="semio.sketchpad.app.type.settings.language">
+                <TypeLanguageSelect languageEnLabel={languageEnLabel} languageDeLabel={languageDeLabel} languagePlaceholder={languagePlaceholder} />
+              </OriginProvider>
             </TreeContent>
           </TreeItem>
           <TreeItem>
             <TreeContent>
-              <ToggleGroup
-                id="semio.sketchpad.settings.layout"
-                value={typeof layout === "object" ? "desktop" : layout}
-                onValueChange={(value: string) => setLayout("semio.sketchpad.settings.layout", value as "desktop" | "tablet")}
-                showLabel
-                kind="single"
-                items={[
-                  { value: "desktop", id: "semio.sketchpad.settings.layout.desktop", icon: <MousePointerIcon className="size-small" /> },
-                  { value: "tablet", id: "semio.sketchpad.settings.layout.tablet", icon: <HandIcon className="size-small" /> },
-                ]}
-              />
+              <OriginProvider id="semio.sketchpad.app.type.settings.layout">
+                <TypeLayoutToggle />
+              </OriginProvider>
             </TreeContent>
           </TreeItem>
           <TreeItem>
             <TreeContent>
-              <ToggleGroup
-                id="semio.sketchpad.settings.expertise"
-                value={expertise}
-                onValueChange={(value: string) => setExpertise("semio.sketchpad.settings.expertise", value as Expertise)}
-                showLabel
-                kind="single"
-                items={[
-                  { value: Expertise.BEGINNER, id: "semio.sketchpad.settings.expertise.beginner", icon: <TutorialIcon className="size-small" /> },
-                  { value: Expertise.NORMAL, id: "semio.sketchpad.settings.expertise.normal", icon: <UserIcon className="size-small" /> },
-                  { value: Expertise.EXPERT, id: "semio.sketchpad.settings.expertise.expert", icon: <AwardIcon className="size-small" /> },
-                ]}
-              />
+              <OriginProvider id="semio.sketchpad.app.type.settings.expertise">
+                <TypeExpertiseToggle />
+              </OriginProvider>
             </TreeContent>
           </TreeItem>
           <TreeItem>
             <TreeContent>
-              <ToggleGroup
-                id="semio.sketchpad.settings.mode"
-                value={mode}
-                onValueChange={(value: string) => setMode("semio.sketchpad.settings.mode", value as Mode)}
-                showLabel
-                kind="single"
-                items={[
-                  { value: Mode.USER, id: "semio.sketchpad.settings.mode.user", icon: <UserIcon className="size-small" /> },
-                  { value: Mode.DEV, id: "semio.sketchpad.settings.mode.dev", icon: <CodeIcon className="size-small" /> },
-                ]}
-              />
+              <OriginProvider id="semio.sketchpad.app.type.settings.mode">
+                <TypeModeToggle />
+              </OriginProvider>
             </TreeContent>
           </TreeItem>
         </>
@@ -2945,7 +2890,7 @@ const TypeApp: FC = () => {
 
 // Sync hook to keep Y.js controller state in sync with XState
 function useTypeAppYjsToXStateSync() {
-  const actor = useSketchpadActorHook();
+  const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
   const kitGuid = kitScope?.guid ?? "";
@@ -2981,7 +2926,7 @@ function useTypeAppYjsToXStateSync() {
       type: "TYPE.SYNC",
       kitGuid,
       typeGuid,
-      state: state as Partial<TypeAppState>,
+      state: state as any,
     });
   }, [actor, state, kitGuid, typeGuid]);
 }
@@ -2998,7 +2943,7 @@ export const TypeAppFooter: FC = () => {
   const appType = useAppType();
   const type = useType() as Type | undefined;
   const tags = useKitTags();
-  const selectedModelTags = useTypeAppSelectedModelTags();
+  const [selectedModelTags] = useTypeAppSelectedModelTags();
   const { addModelTag, removeModelTag } = useTypeAppCommands();
 
   // Controller refs for callbacks to avoid recreating them in useEffect
@@ -3079,6 +3024,95 @@ export const TypeAppFooter: FC = () => {
 };
 
 // #endregion Footer
+
+// #region Settings Helper Components
+
+const TypeThemeToggle: FC = () => {
+  const [theme, setTheme] = useTheme();
+  return (
+    <ToggleGroup
+      id="semio.sketchpad.settings.theme"
+      value={theme}
+      onValueChange={(value: string) => setTheme?.(value as Theme)}
+      showLabel
+      kind="single"
+      items={[
+        { value: Theme.SYSTEM, id: "semio.sketchpad.settings.theme.system", icon: <MonitorIcon className="size-small" /> },
+        { value: Theme.LIGHT, id: "semio.sketchpad.settings.theme.light", icon: <SunIcon className="size-small" /> },
+        { value: Theme.DARK, id: "semio.sketchpad.settings.theme.dark", icon: <MoonIcon className="size-small" /> },
+      ]}
+    />
+  );
+};
+
+const TypeLanguageSelect: FC<{ languageEnLabel: string; languageDeLabel: string; languagePlaceholder: string }> = ({ languageEnLabel, languageDeLabel, languagePlaceholder }) => {
+  const [language, setLanguage] = useLanguage();
+  return (
+    <Select id="semio.sketchpad.settings.language" value={language || "en"} onValueChange={(value: string) => setLanguage?.(value)} showLabel>
+      <SelectTrigger>
+        <SelectValue placeholder={languagePlaceholder} />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="en">{languageEnLabel}</SelectItem>
+        <SelectItem value="de">{languageDeLabel}</SelectItem>
+      </SelectContent>
+    </Select>
+  );
+};
+
+const TypeLayoutToggle: FC = () => {
+  const [layout, setLayout] = useLayout();
+  return (
+    <ToggleGroup
+      id="semio.sketchpad.settings.layout"
+      value={typeof layout === "object" ? "desktop" : layout}
+      onValueChange={(value: string) => setLayout?.(value as "desktop" | "tablet")}
+      showLabel
+      kind="single"
+      items={[
+        { value: "desktop", id: "semio.sketchpad.settings.layout.desktop", icon: <MousePointerIcon className="size-small" /> },
+        { value: "tablet", id: "semio.sketchpad.settings.layout.tablet", icon: <HandIcon className="size-small" /> },
+      ]}
+    />
+  );
+};
+
+const TypeExpertiseToggle: FC = () => {
+  const [expertise, setExpertise] = useExpertise();
+  return (
+    <ToggleGroup
+      id="semio.sketchpad.settings.expertise"
+      value={expertise}
+      onValueChange={(value: string) => setExpertise?.(value as Expertise)}
+      showLabel
+      kind="single"
+      items={[
+        { value: Expertise.BEGINNER, id: "semio.sketchpad.settings.expertise.beginner", icon: <TutorialIcon className="size-small" /> },
+        { value: Expertise.NORMAL, id: "semio.sketchpad.settings.expertise.normal", icon: <UserIcon className="size-small" /> },
+        { value: Expertise.EXPERT, id: "semio.sketchpad.settings.expertise.expert", icon: <AwardIcon className="size-small" /> },
+      ]}
+    />
+  );
+};
+
+const TypeModeToggle: FC = () => {
+  const [mode, setMode] = useMode();
+  return (
+    <ToggleGroup
+      id="semio.sketchpad.settings.mode"
+      value={mode}
+      onValueChange={(value: string) => setMode?.(value as Mode)}
+      showLabel
+      kind="single"
+      items={[
+        { value: Mode.USER, id: "semio.sketchpad.settings.mode.user", icon: <UserIcon className="size-small" /> },
+        { value: Mode.DEV, id: "semio.sketchpad.settings.mode.dev", icon: <CodeIcon className="size-small" /> },
+      ]}
+    />
+  );
+};
+
+// #endregion Settings Helper Components
 
 // #region Config
 

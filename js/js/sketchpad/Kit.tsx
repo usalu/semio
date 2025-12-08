@@ -79,6 +79,7 @@ import {
   useIsInKitScope,
   useIsMobile,
   useKit,
+  useKitAppXState,
   useKitCommands,
   useKitScope,
   useKitStore,
@@ -88,6 +89,7 @@ import {
   useNavigation,
   useRemoveFooterItem,
   useRemovePanelSection,
+  useSketchpadActor,
   useSketchpadCommands,
   useSketchpadStore,
   useSyncDeep,
@@ -98,7 +100,6 @@ import {
 import { Action, Input, NotFound, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Strip, Table, TableAvatar, Textarea, Toggle, ToggleGroup, Transaction, TreeContent, TreeItem } from "./elements";
 import type { GranularHookNoSetResult, GranularHookResult, KitAppId, KitCommandContext, KitDiffAppEdit, Layout, PanelDefinition, PanelVisibility, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
 import { AppConfig, createPanelDefinition, Expertise, Mode, PanelKind, Theme } from "./shared";
-import { useKitApp as useKitAppXState, useSketchpadActorHook } from "./xstate-hooks";
 
 // #endregion Imports
 
@@ -777,7 +778,7 @@ class KitAppController extends KitDiffAppController<KitAppState, KitAppDiff, Kit
 }
 
 if (typeof window !== "undefined") {
-  registerKitAppControllerFactory((parent, yMap, transact, id, state) => new KitAppController(parent, yMap, transact, id, state));
+  registerKitAppControllerFactory((parent, yMap, transact, id, state) => new KitAppController(parent, yMap, transact, id, state as any));
 }
 
 function useKitAppController<T>(selector?: (controller: KitAppController) => T, id?: KitAppId): T | KitAppController | null {
@@ -851,7 +852,7 @@ export function useKitAppSelection(): GranularHookResult<KitAppSelection> {
     (value: KitAppSelection) => {
       if (controller) controller.execute("semio.kitApp.setSelection", value);
     },
-    [controller]
+    [controller],
   );
   return [selection, setSelection, canSet];
 }
@@ -865,7 +866,7 @@ export function useKitAppFullscreen(): GranularHookResult<KitAppFullscreenWindow
     (value: KitAppFullscreenWindow) => {
       if (controller) controller.execute("semio.kitApp.setFullscreen", value);
     },
-    [controller]
+    [controller],
   );
   return [fullscreen, setFullscreen, canSet];
 }
@@ -1040,7 +1041,7 @@ export function useKitAppCommands(id?: KitAppId) {
 export function useKitAppIsTypeHovered(): GranularHookNoSetResult<boolean> {
   const typeScope = useTypeScope();
   const typeGuid = typeScope?.guid;
-  const isHovered = useKitApp((state) => typeGuid ? state.hover?.type === typeGuid : false) as boolean;
+  const isHovered = useKitApp((state) => (typeGuid ? state.hover?.type === typeGuid : false)) as boolean;
   const canRead = typeScope !== null;
   return [isHovered ?? false, undefined, canRead];
 }
@@ -1109,7 +1110,7 @@ export function useKitAppTypeColor(isSelected: boolean): GranularHookNoSetResult
 export function useKitAppIsDesignHovered(): GranularHookNoSetResult<boolean> {
   const designScope = useDesignScope();
   const designGuid = designScope?.guid;
-  const isHovered = useKitApp((state) => designGuid ? state.hover?.design === designGuid : false) as boolean;
+  const isHovered = useKitApp((state) => (designGuid ? state.hover?.design === designGuid : false)) as boolean;
   const canRead = designScope !== null;
   return [isHovered ?? false, undefined, canRead];
 }
@@ -2394,14 +2395,12 @@ const AppContent: FC = () => {
   useEffect(() => {
     if (appType !== "kit") return;
 
-    const { setTheme, setLanguage, setLayout, setExpertise, setMode } = sketchpadCommands;
-
     const SettingsContent = () => {
-      const theme = useTheme();
-      const language = useLanguage();
-      const layout = useLayout();
-      const expertise = useExpertise();
-      const mode = useMode();
+      const [theme, setTheme] = useTheme();
+      const [language, setLanguage] = useLanguage();
+      const [layout, setLayout] = useLayout();
+      const [expertise, setExpertise] = useExpertise();
+      const [mode, setMode] = useMode();
 
       const languageEnLabel = useLabel("semio.sketchpad.settings.language.en");
       const languageDeLabel = useLabel("semio.sketchpad.settings.language.de");
@@ -2414,7 +2413,7 @@ const AppContent: FC = () => {
               <ToggleGroup
                 id="semio.sketchpad.settings.theme"
                 value={theme}
-                onValueChange={(value: string) => setTheme("semio.sketchpad.settings.theme", value as Theme)}
+                onValueChange={(value: string) => setTheme?.(value as Theme)}
                 showLabel
                 kind="single"
                 items={[
@@ -2427,7 +2426,7 @@ const AppContent: FC = () => {
           </TreeItem>
           <TreeItem>
             <TreeContent>
-              <Select id="semio.sketchpad.settings.language" value={language || "en"} onValueChange={(value: string) => setLanguage("semio.sketchpad.settings.language", value)} showLabel>
+              <Select id="semio.sketchpad.settings.language" value={language || "en"} onValueChange={(value: string) => setLanguage?.(value)} showLabel>
                 <SelectTrigger>
                   <SelectValue placeholder={languagePlaceholder} />
                 </SelectTrigger>
@@ -2443,7 +2442,7 @@ const AppContent: FC = () => {
               <ToggleGroup
                 id="semio.sketchpad.settings.layout"
                 value={typeof layout === "object" ? "desktop" : layout}
-                onValueChange={(value: string) => setLayout("semio.sketchpad.settings.layout", value as "desktop" | "tablet")}
+                onValueChange={(value: string) => setLayout?.(value as "desktop" | "tablet")}
                 showLabel
                 kind="single"
                 items={[
@@ -2458,7 +2457,7 @@ const AppContent: FC = () => {
               <ToggleGroup
                 id="semio.sketchpad.settings.expertise"
                 value={expertise}
-                onValueChange={(value: string) => setExpertise("semio.sketchpad.settings.expertise", value as Expertise)}
+                onValueChange={(value: string) => setExpertise?.(value as Expertise)}
                 showLabel
                 kind="single"
                 items={[
@@ -2474,7 +2473,7 @@ const AppContent: FC = () => {
               <ToggleGroup
                 id="semio.sketchpad.settings.mode"
                 value={mode}
-                onValueChange={(value: string) => setMode("semio.sketchpad.settings.mode", value as Mode)}
+                onValueChange={(value: string) => setMode?.(value as Mode)}
                 showLabel
                 kind="single"
                 items={[
@@ -4439,7 +4438,7 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode; fallbac
 
 // Sync hook to keep Y.js controller state in sync with XState
 function useKitAppYjsToXStateSync() {
-  const actor = useSketchpadActorHook();
+  const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid ?? "";
   const sketchpadStore = useSketchpadStore();

@@ -132,7 +132,6 @@ import {
   Vector,
   VectorDiff,
 } from "../semio";
-import type { DesignAppState } from "./Design";
 import {
   Breadcrumb,
   ButtonGroup,
@@ -152,9 +151,6 @@ import {
   Transaction,
   Window,
 } from "./elements";
-import { createSketchpadActor, selectExpertise, selectIsFullscreen, selectLanguage, selectLayout, selectMode, selectNavigation, selectPanelSizes, selectSnapshot, selectTheme, SketchpadActorRef } from "./hooks";
-import type { KitAppState } from "./Kit";
-import type { QualityAppState } from "./Quality";
 import {
   AppCommandResult,
   AppConfig,
@@ -231,8 +227,42 @@ import {
   YStringArray,
 } from "./shared";
 import { Tutorial, TutorialProvider, TutorialStore, useAvailableTutorials } from "./Tutorials";
-import type { TypeAppState } from "./Type";
-import { SketchpadActorContext } from "./xstate-hooks";
+
+// #region Origin Context
+
+/**
+ * Context for tracking the origin (component id) for commands.
+ * Components with an id should wrap their children in OriginProvider
+ * to provide the origin context for triadic hooks.
+ */
+const OriginContext = createContext<string | null>(null);
+
+/**
+ * Provider for the origin context. Wraps children with the specified origin.
+ * Origins are hierarchical - child providers override parent providers.
+ */
+export const OriginProvider: FC<{ id: string; children: ReactNode }> = ({ id, children }) => {
+  return <OriginContext.Provider value={id}>{children}</OriginContext.Provider>;
+};
+
+/**
+ * Hook to get the current origin from context.
+ * Returns a default origin if no OriginProvider is in the tree.
+ */
+export function useOrigin(): string {
+  const origin = useContext(OriginContext);
+  return origin ?? "semio.sketchpad.unknown";
+}
+
+/**
+ * Hook to safely get the current origin, returning null if not in an OriginProvider.
+ */
+export function useOriginSafe(): string | null {
+  return useContext(OriginContext);
+}
+
+// #endregion Origin Context
+
 let designAppModuleCache: any = null;
 let homeAppModuleCache: any = null;
 let kitAppModuleCache: any = null;
@@ -7394,6 +7424,8 @@ export interface KitAppState {
   panelVisibility: PanelVisibility;
   selection?: KitAppSelection;
   hover?: any;
+  fullscreenWindow: any;
+  others: any[];
   filterSearch?: string;
   expandedRows: Set<string>;
   sortColumn?: string;
@@ -7649,11 +7681,22 @@ export type SketchpadEvent =
 // #region Helpers
 
 /**
- * Path migration helper (matches existing implementation)
+ * Path migration helper - migrates old paths to new format
  */
 function migratePath(path: string): string {
-  // Remove any leading double slashes
-  return path.replace(/^\/+/, "/");
+  if (path.match(/^\/kit\/([^/]+)\/design\/([^/]+)/)) {
+    return path.replace(/^\/kit\/([^/]+)\/design\/([^/]+)/, "/kits/$1/designs/$2");
+  }
+  if (path.match(/^\/kit\/([^/]+)\/type\/([^/]+)/)) {
+    return path.replace(/^\/kit\/([^/]+)\/type\/([^/]+)/, "/kits/$1/types/$2");
+  }
+  if (path.match(/^\/kit\/([^/]+)/)) {
+    return path.replace(/^\/kit\/([^/]+)/, "/kits/$1");
+  }
+  if (path.match(/^\/kit\?/)) {
+    return path.replace(/^\/kit\?/, "/kits?");
+  }
+  return path;
 }
 
 /**
@@ -7817,6 +7860,8 @@ function createDefaultKitAppState(): KitAppState {
     panelVisibility: defaultPanelVisibility,
     selection: undefined,
     hover: undefined,
+    fullscreenWindow: "none",
+    others: [],
     filterSearch: undefined,
     expandedRows: new Set<string>(),
     sortColumn: undefined,
@@ -10158,6 +10203,11 @@ export type SketchpadSnapshot = SnapshotFrom<typeof sketchpadMachine>;
  */
 export type SketchpadState$ = { context: SketchpadContext };
 
+/**
+ * Context for providing the XState actor to child components.
+ */
+export const SketchpadActorContext = createContext<SketchpadActorRef | null>(null);
+
 // #endregion Actor Types
 
 // #endregion Machine
@@ -10918,9 +10968,10 @@ export function useSync<T, TSelected = T>(store: { onChanged: (subscribe: Subscr
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
-export function useSyncDeep<T, TSelected = T>(store: { onChangedDeep: (subscribe: Subscribe) => Disposable; snapshot: () => T }, selector: (value: T) => TSelected = identitySelector as any, deep?: boolean): TSelected {
+export function useSyncDeep<T, TSelected = T>(store: { onChangedDeep: (subscribe: Subscribe) => Disposable; snapshot: () => T } | null | undefined, selector: (value: T) => TSelected = identitySelector as any, deep?: boolean): TSelected | null {
   const subscribe = useCallback(
     (callback: () => void) => {
+      if (!store) return () => {};
       return store.onChangedDeep((cb: () => void) => {
         cb();
         callback();
@@ -10930,6 +10981,7 @@ export function useSyncDeep<T, TSelected = T>(store: { onChangedDeep: (subscribe
     [store],
   );
   const getSnapshot = useCallback(() => {
+    if (!store) return null as TSelected | null;
     logStateAccess("useSyncDeep", (store as any).constructor?.name || "unknown", selector === identitySelector ? "FULL_STATE_DEEP" : "selector");
     return selector(store.snapshot());
   }, [store, selector]);
@@ -11158,14 +11210,6 @@ export function useDerived<T, TSelected = T>(derivedStore: DerivedStore | null, 
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
-const defaultPanelVisibility: PanelVisibility = {
-  toolbar: true,
-  workbench: false,
-  details: false,
-  chat: false,
-  settings: false,
-};
-
 const initialDocsPanelVisibility: PanelVisibility = {
   toolbar: false,
   workbench: false,
@@ -11284,61 +11328,36 @@ type HomeStoreInstance = any;
 type DocsAppStoreInstance = any;
 
 type KitAppStoreFactory = (parent: SketchpadStore, yMap: YKitApp, transact: (fn: () => void) => void, id: KitAppId, state?: KitAppState) => KitAppStoreInstance;
-type DesignAppStoreFactory = (parent: SketchpadStore, yMap: YDesignApp, transact: (fn: () => void) => void, id: DesignAppId, state?: DesignAppState) => DesignAppStoreInstance;
-type TypeAppStoreFactory = (parent: SketchpadStore, yMap: YTypeApp, transact: (fn: () => void) => void, id: TypeAppId, state?: TypeAppState) => TypeAppStoreInstance;
-type QualityAppStoreFactory = (parent: SketchpadStore, yMap: YQualityApp, transact: (fn: () => void) => void, id: QualityAppId, state?: QualityAppState) => QualityAppStoreInstance;
+// Factory types - local aliases for type checking
+type DesignAppStoreFactoryLocal = (parent: SketchpadStore, yMap: YDesignApp, transact: (fn: () => void) => void, id: DesignAppId, state?: DesignAppState) => DesignAppStoreInstance;
+type TypeAppStoreFactoryLocal = (parent: SketchpadStore, yMap: YTypeApp, transact: (fn: () => void) => void, id: TypeAppId, state?: TypeAppState) => TypeAppStoreInstance;
+type QualityAppStoreFactoryLocal = (parent: SketchpadStore, yMap: YQualityApp, transact: (fn: () => void) => void, id: QualityAppId, state?: QualityAppState) => QualityAppStoreInstance;
 type HomeStoreFactory = (parent: SketchpadStore, yMap: Y.Map<any>, transact: (fn: () => void) => void) => HomeStoreInstance;
 type DocsAppStoreFactory = (parent: SketchpadStore, yMap: Y.Map<any>, transact: (fn: () => void) => void) => DocsAppStoreInstance;
 
-let kitAppStoreFactory: KitAppStoreFactory | undefined;
-let designAppStoreFactory: DesignAppStoreFactory | undefined;
-let typeAppStoreFactory: TypeAppStoreFactory | undefined;
-let qualityAppStoreFactory: QualityAppStoreFactory | undefined;
+// Import factory registry from shared.ts to avoid circular dependencies
+import {
+  registerDesignAppStoreFactory,
+  registerKitAppStoreFactory,
+  registerQualityAppStoreFactory,
+  registerTypeAppStoreFactory,
+  getDesignAppStoreFactory as resolveDesignAppStoreFactory,
+  getKitAppStoreFactory as resolveKitAppStoreFactory,
+  getQualityAppStoreFactory as resolveQualityAppStoreFactory,
+  getTypeAppStoreFactory as resolveTypeAppStoreFactory,
+} from "./shared";
+
+// Keep local factories for Home and Docs (they don't have circular dependency issues)
 let homeStoreFactory: HomeStoreFactory | undefined;
 let docsAppStoreFactory: DocsAppStoreFactory | undefined;
 
-export function registerKitAppStoreFactory(factory: KitAppStoreFactory) {
-  kitAppStoreFactory = factory;
-}
-
-export function registerDesignAppStoreFactory(factory: DesignAppStoreFactory) {
-  designAppStoreFactory = factory;
-}
-
-export function registerTypeAppStoreFactory(factory: TypeAppStoreFactory) {
-  typeAppStoreFactory = factory;
-}
-
-export function registerQualityAppStoreFactory(factory: QualityAppStoreFactory) {
-  qualityAppStoreFactory = factory;
-}
-
+// ... (rest of the code remains the same)
 export function registerHomeStoreFactory(factory: HomeStoreFactory) {
   homeStoreFactory = factory;
 }
 
 export function registerDocsAppStoreFactory(factory: DocsAppStoreFactory) {
   docsAppStoreFactory = factory;
-}
-
-function resolveKitAppStoreFactory(): KitAppStoreFactory {
-  if (!kitAppStoreFactory) throw new Error("Kit app store factory not registered");
-  return kitAppStoreFactory;
-}
-
-function resolveDesignAppStoreFactory(): DesignAppStoreFactory {
-  if (!designAppStoreFactory) throw new Error("Design app store factory not registered");
-  return designAppStoreFactory;
-}
-
-function resolveTypeAppStoreFactory(): TypeAppStoreFactory {
-  if (!typeAppStoreFactory) throw new Error("Type app store factory not registered");
-  return typeAppStoreFactory;
-}
-
-function resolveQualityAppStoreFactory(): QualityAppStoreFactory {
-  if (!qualityAppStoreFactory) throw new Error("Quality app store factory not registered");
-  return qualityAppStoreFactory;
 }
 
 function resolveHomeStoreFactory(): HomeStoreFactory {
@@ -11350,6 +11369,9 @@ function resolveDocsAppStoreFactory(): DocsAppStoreFactory {
   if (!docsAppStoreFactory) throw new Error("Docs app store factory not registered");
   return docsAppStoreFactory;
 }
+
+// Re-export for backwards compatibility
+export { registerDesignAppStoreFactory, registerKitAppStoreFactory, registerQualityAppStoreFactory, registerTypeAppStoreFactory };
 
 type YSketchpadVal = string | number | boolean | YDesignApps;
 type YSketchpad = Y.Map<YSketchpadVal>;
@@ -12430,10 +12452,16 @@ if (import.meta.hot?.data.actors) {
 
 const SketchpadScopeContext = createContext<SketchpadScope | null>(null);
 
-// SketchpadActorContext is imported from xstate-hooks.ts
-
 export const SketchpadScopeProvider = (props: { id?: string; remote?: RemoteProviders; onWindowEvents?: WindowEvents; initialState?: ExtendedInitialState; children: React.ReactNode }) => {
   const id = useMemo(() => props.id || guid(), [props.id]);
+  const [configsReady, setConfigsReady] = useState(appConfigsLoaded);
+
+  // Load app configs on mount
+  useEffect(() => {
+    if (!configsReady) {
+      loadAppConfigs().then(() => setConfigsReady(true));
+    }
+  }, [configsReady]);
 
   if (!stores.has(id)) {
     const store = new SketchpadStore(id, props?.remote, props?.initialState);
@@ -12455,7 +12483,9 @@ export const SketchpadScopeProvider = (props: { id?: string; remote?: RemoteProv
 
   const actor = actors.get(id)!;
 
-  return React.createElement(SketchpadScopeContext.Provider, { value: { id, remote: props.remote, onWindowEvents: props.onWindowEvents } }, React.createElement(SketchpadActorContext.Provider, { value: actor }, props.children));
+  // Always provide the context, but render loading state until configs are ready
+  // This prevents context-related errors when components try to use hooks during loading
+  return React.createElement(SketchpadScopeContext.Provider, { value: { id, remote: props.remote, onWindowEvents: props.onWindowEvents } }, React.createElement(SketchpadActorContext.Provider, { value: actor }, configsReady ? props.children : null));
 };
 
 export const useSketchpadScope = () => useContext(SketchpadScopeContext);
@@ -12476,22 +12506,6 @@ export function useSketchpad<T>(selector?: (state: SketchpadState) => T, id?: st
 export function useNavigation(): string {
   const location = useLocation();
   return location.pathname;
-}
-
-export function migratePath(path: string): string {
-  if (path.match(/^\/kit\/([^/]+)\/design\/([^/]+)/)) {
-    return path.replace(/^\/kit\/([^/]+)\/design\/([^/]+)/, "/kits/$1/designs/$2");
-  }
-  if (path.match(/^\/kit\/([^/]+)\/type\/([^/]+)/)) {
-    return path.replace(/^\/kit\/([^/]+)\/type\/([^/]+)/, "/kits/$1/types/$2");
-  }
-  if (path.match(/^\/kit\/([^/]+)/)) {
-    return path.replace(/^\/kit\/([^/]+)/, "/kits/$1");
-  }
-  if (path.match(/^\/kit\?/)) {
-    return path.replace(/^\/kit\?/, "/kits?");
-  }
-  return path;
 }
 
 export function useAppType(): AppKind {
@@ -12525,28 +12539,98 @@ export function getAppTypeFromPath(path: string): AppKind {
   return "home";
 }
 
-export function useTheme(): Theme {
-  return useSketchpad((s) => s.theme) as Theme;
+export function useTheme(): GranularHookResult<Theme> {
+  const actor = useSketchpadActorSafe();
+  const store = useSketchpadStore();
+  const origin = useOrigin();
+  const value = useSketchpad((s) => s.theme) as Theme;
+  const setter = useCallback(
+    (theme: Theme) => {
+      if (actor) {
+        actor.send({ type: "SET_THEME", theme });
+      }
+      store.execute("semio.sketchpad.setTheme", origin, theme);
+    },
+    [actor, store, origin],
+  );
+  const canSet = true;
+  return [value, canSet ? setter : undefined, canSet] as const;
 }
 
-export function useLanguage(): string {
-  return useSketchpad((s) => s.language) as string;
+export function useLanguage(): GranularHookResult<string> {
+  const actor = useSketchpadActorSafe();
+  const store = useSketchpadStore();
+  const origin = useOrigin();
+  const value = useSketchpad((s) => s.language) as string;
+  const setter = useCallback(
+    (language: string) => {
+      if (actor) {
+        actor.send({ type: "SET_LANGUAGE", language });
+      }
+      store.execute("semio.sketchpad.setLanguage", origin, language);
+    },
+    [actor, store, origin],
+  );
+  const canSet = true;
+  return [value, canSet ? setter : undefined, canSet] as const;
 }
 
-export function useLayout(): Layout {
-  return useSketchpad((s) => s.layout) as Layout;
+export function useLayout(): GranularHookResult<Layout> {
+  const actor = useSketchpadActorSafe();
+  const store = useSketchpadStore();
+  const origin = useOrigin();
+  const value = useSketchpad((s) => s.layout) as Layout;
+  const setter = useCallback(
+    (layout: Layout) => {
+      if (actor) {
+        actor.send({ type: "SET_LAYOUT", layout });
+      }
+      store.execute("semio.sketchpad.setLayout", origin, layout);
+    },
+    [actor, store, origin],
+  );
+  const canSet = true;
+  return [value, canSet ? setter : undefined, canSet] as const;
 }
 
-export function useMode(): Mode {
-  return useSketchpad((s) => s.mode) as Mode;
+export function useMode(): GranularHookResult<Mode> {
+  const actor = useSketchpadActorSafe();
+  const store = useSketchpadStore();
+  const origin = useOrigin();
+  const value = useSketchpad((s) => s.mode) as Mode;
+  const setter = useCallback(
+    (mode: Mode) => {
+      if (actor) {
+        actor.send({ type: "SET_MODE", mode });
+      }
+      store.execute("semio.sketchpad.setMode", origin, mode);
+    },
+    [actor, store, origin],
+  );
+  const canSet = true;
+  return [value, canSet ? setter : undefined, canSet] as const;
 }
 
-export function useExpertise(): Expertise {
-  return useSketchpad((s) => s.expertise) as Expertise;
+export function useExpertise(): GranularHookResult<Expertise> {
+  const actor = useSketchpadActorSafe();
+  const store = useSketchpadStore();
+  const origin = useOrigin();
+  const value = useSketchpad((s) => s.expertise) as Expertise;
+  const setter = useCallback(
+    (expertise: Expertise) => {
+      if (actor) {
+        actor.send({ type: "SET_EXPERTISE", expertise });
+      }
+      store.execute("semio.sketchpad.setExpertise", origin, expertise);
+    },
+    [actor, store, origin],
+  );
+  const canSet = true;
+  return [value, canSet ? setter : undefined, canSet] as const;
 }
 
 export function useTooltip(): (key: string) => string | undefined {
-  const expertise = useExpertise();
+  const [expertise] = useExpertise();
   return (key: string) => {
     if (expertise === Expertise.EXPERT) return undefined;
     return key;
@@ -12554,21 +12638,35 @@ export function useTooltip(): (key: string) => string | undefined {
 }
 
 export function useSemioTooltip() {
-  const mode = useMode();
+  const [mode] = useMode();
   return { mode };
 }
 
-export function useIsFullscreen(): boolean {
-  return useSketchpad((s) => s.isFullscreen) as boolean;
+export function useIsFullscreen(): GranularHookResult<boolean> {
+  const actor = useSketchpadActorSafe();
+  const store = useSketchpadStore();
+  const origin = useOrigin();
+  const value = useSketchpad((s) => s.isFullscreen) as boolean;
+  const setter = useCallback(
+    (isFullscreen: boolean) => {
+      if (actor) {
+        actor.send({ type: "TOGGLE_FULLSCREEN" });
+      }
+      store.execute("semio.sketchpad.toggleFullscreen", origin);
+    },
+    [actor, store, origin],
+  );
+  const canSet = true;
+  return [value, canSet ? setter : undefined, canSet] as const;
 }
 
 export function useIsNavbarExpanded(): boolean {
-  const layout = useLayout();
+  const [layout] = useLayout();
   return typeof layout === "object" ? layout.isNavbarExpanded : false;
 }
 
 export function useIsFooterExpanded(): boolean {
-  const layout = useLayout();
+  const [layout] = useLayout();
   return typeof layout === "object" ? layout.isFooterExpanded : false;
 }
 
@@ -12608,6 +12706,14 @@ export function useSketchpadActor(): SketchpadActorRef {
     throw new Error("useSketchpadActor must be used within a SketchpadScopeProvider");
   }
   return actor;
+}
+
+/**
+ * Safe version of useSketchpadActor that returns null instead of throwing.
+ * Useful for sync hooks that may run during edge cases.
+ */
+export function useSketchpadActorSafe(): SketchpadActorRef | null {
+  return useContext(SketchpadActorContext);
 }
 
 /**
@@ -12722,6 +12828,127 @@ export function useSketchpadActions() {
 }
 
 // #endregion XState Hooks
+
+/**
+ * XState-based hook for design app state.
+ * Uses the XState selector infrastructure for optimal performance.
+ */
+export function useDesignAppXState(kitGuid: Guid, designGuid: Guid): DesignAppState {
+  const actor = useSketchpadActor();
+  const selector = useMemo(() => createDesignAppSelector(kitGuid, designGuid), [kitGuid, designGuid]);
+  return useSelector(actor, selector);
+}
+
+/**
+ * XState-based hook for type app state.
+ * Uses the XState selector infrastructure for optimal performance.
+ */
+export function useTypeAppXState(kitGuid: Guid, typeGuid: Guid): TypeAppState {
+  const actor = useSketchpadActor();
+  const selector = useMemo(() => createTypeAppSelector(kitGuid, typeGuid), [kitGuid, typeGuid]);
+  return useSelector(actor, selector);
+}
+
+/**
+ * XState-based hook for kit app state.
+ * Uses the XState selector infrastructure for optimal performance.
+ */
+export function useKitAppXState(kitGuid: Guid): KitAppState {
+  const actor = useSketchpadActor();
+  const selector = useMemo(() => createKitAppSelector(kitGuid), [kitGuid]);
+  return useSelector(actor, selector);
+}
+
+/**
+ * XState-based hook for home app state.
+ */
+export function useHomeApp(): HomeAppState {
+  const actor = useSketchpadActor();
+  return useSelector(actor, selectHomeApp);
+}
+
+/**
+ * XState-based hook for home panel visibility.
+ */
+export function useHomePanelVisibility(): PanelVisibility {
+  const actor = useSketchpadActor();
+  return useSelector(actor, selectHomePanelVisibility);
+}
+
+/**
+ * XState-based hook for home selection.
+ */
+export function useHomeSelection(): HomeAppSelection | undefined {
+  const actor = useSketchpadActor();
+  return useSelector(actor, selectHomeSelection);
+}
+
+/**
+ * XState-based hook for home hover state.
+ */
+export function useHomeHover(): { kits?: Guid[] } | undefined {
+  const actor = useSketchpadActor();
+  return useSelector(actor, selectHomeHover);
+}
+
+/**
+ * XState-based hook for home sort column.
+ */
+export function useHomeSortColumn(): string | undefined {
+  const actor = useSketchpadActor();
+  return useSelector(actor, selectHomeSortColumn);
+}
+
+/**
+ * XState-based hook for home sort direction.
+ */
+export function useHomeSortDirection(): "asc" | "desc" | undefined {
+  const actor = useSketchpadActor();
+  return useSelector(actor, selectHomeSortDirection);
+}
+
+/**
+ * XState-based hook for home loading kits.
+ */
+export function useHomeLoadingKits(): Array<{ tempGuid: string; name: string }> {
+  const actor = useSketchpadActor();
+  return useSelector(actor, selectHomeLoadingKits);
+}
+
+/**
+ * XState-based hook for home app commands.
+ * Note: These events may not be fully implemented in the state machine yet.
+ */
+export function useHomeCommands() {
+  const actor = useSketchpadActor();
+  return useMemo(
+    () => ({
+      selectKit: (origin: string, kitGuid: Guid) => actor.send({ type: "HOME.SELECT_KIT", guid: kitGuid } as any),
+      selectKits: (origin: string, kitGuids: Guid[]) => {
+        actor.send({ type: "HOME.CLEAR_SELECTION" } as any);
+        for (const guid of kitGuids) {
+          actor.send({ type: "HOME.SELECT_KIT", guid } as any);
+        }
+      },
+      deselectKit: (origin: string, kitGuid: Guid) => actor.send({ type: "HOME.DESELECT_KIT", guid: kitGuid } as any),
+      addKitToSelection: (origin: string, kitGuid: Guid) => actor.send({ type: "HOME.SELECT_KIT", guid: kitGuid } as any),
+      removeKitFromSelection: (origin: string, kitGuid: Guid) => actor.send({ type: "HOME.DESELECT_KIT", guid: kitGuid } as any),
+      clearSelection: () => actor.send({ type: "HOME.CLEAR_SELECTION" } as any),
+      deselectAll: (origin: string) => actor.send({ type: "HOME.CLEAR_SELECTION" } as any),
+      hoverKit: (origin: string, kitGuid: Guid) => actor.send({ type: "HOME.HOVER_KIT", guid: kitGuid } as any),
+      clearHover: () => actor.send({ type: "HOME.CLEAR_HOVER" } as any),
+      setSortColumn: (origin: string, column: string) => actor.send({ type: "HOME.SET_SORT_COLUMN", column } as any),
+      setSortDirection: (origin: string, direction: "asc" | "desc") => actor.send({ type: "HOME.SET_SORT_DIRECTION", direction } as any),
+      toggleSort: (origin: string, column: string) => {
+        actor.send({ type: "HOME.SET_SORT_COLUMN", column } as any);
+      },
+      togglePanel: (panel: keyof PanelVisibility) => actor.send({ type: "HOME.TOGGLE_PANEL", panel } as any),
+      addLoadingKit: (tempGuid: string, name: string) => actor.send({ type: "HOME.ADD_LOADING_KIT", tempGuid, name } as any),
+      removeLoadingKit: (tempGuid: string) => actor.send({ type: "HOME.REMOVE_LOADING_KIT", tempGuid } as any),
+    }),
+    [actor],
+  );
+}
 
 export function useKitShallows(): KitShallow[] {
   const store = useSketchpadStore();
@@ -13401,23 +13628,44 @@ class AppRegistry {
 
 const appRegistry = new AppRegistry();
 
-// Register core apps manually
+// Import xstate outside the circular dependency
 import { ActorRefFrom, AnyActorRef, assign, createActor, fromCallback, setup, SnapshotFrom } from "xstate";
-import { config as designConfig } from "./Design";
-import { config as docsConfig } from "./Docs";
-import { config as homeConfig } from "./Home";
-import { config as kitConfig } from "./Kit";
-import { config as qualityConfig } from "./Quality";
-import { config as typeConfig } from "./Type";
 
-appRegistry.register(homeConfig);
-appRegistry.register(docsConfig);
-appRegistry.register(kitConfig);
-appRegistry.register(typeConfig);
-appRegistry.register(designConfig);
-appRegistry.register(qualityConfig);
+// Lazy-load app configs to avoid circular dependency issues
+// These modules import KitDiffAppStore from this file, so we need to defer loading
+let appConfigsLoaded = false;
+async function loadAppConfigs() {
+  if (appConfigsLoaded) return;
+  appConfigsLoaded = true;
 
-export { appRegistry };
+  const [homeModule, docsModule, kitModule, typeModule, designModule, qualityModule] = await Promise.all([import("./Home"), import("./Docs"), import("./Kit"), import("./Type"), import("./Design"), import("./Quality")]);
+
+  // Initialize store factories before registering app configs
+  // This ensures factories are available when apps are rendered
+  if (designModule.initializeDesignAppController) {
+    designModule.initializeDesignAppController();
+  }
+  if (kitModule.initializeKitAppController) {
+    kitModule.initializeKitAppController();
+  }
+
+  appRegistry.register(homeModule.config);
+  appRegistry.register(docsModule.config);
+  appRegistry.register(kitModule.config);
+  appRegistry.register(typeModule.config);
+  appRegistry.register(designModule.config);
+  appRegistry.register(qualityModule.config);
+}
+
+// Start loading configs immediately but don't block module initialization
+if (typeof window !== "undefined") {
+  // Use queueMicrotask to ensure this runs after module initialization completes
+  queueMicrotask(() => {
+    loadAppConfigs().catch((err) => console.error("Failed to load app configs:", err));
+  });
+}
+
+export { appRegistry, loadAppConfigs };
 
 // #endregion Apps Registry
 
@@ -15607,6 +15855,7 @@ export const LayoutCanvas: FC<{
   const handleSplitterHoverRef = useRef<((e: MouseEvent) => void) | null>(null);
   const handleSplitterLeaveRef = useRef<((e: MouseEvent) => void) | null>(null);
   const sketchpadScope = useSketchpadScope();
+  const sketchpadActor = useSketchpadActorSafe();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -15635,6 +15884,9 @@ export const LayoutCanvas: FC<{
     }
     if (kit) {
       wrapped = <KitScopeProvider guid={kit}>{wrapped}</KitScopeProvider>;
+    }
+    if (sketchpadActor) {
+      wrapped = <SketchpadActorContext.Provider value={sketchpadActor}>{wrapped}</SketchpadActorContext.Provider>;
     }
     if (sketchpadScope) {
       wrapped = <SketchpadScopeContext.Provider value={sketchpadScope}>{wrapped}</SketchpadScopeContext.Provider>;
@@ -16208,10 +16460,10 @@ const LayoutWrapper: FC = () => {
   const tutorialStore = store.tutorialStore();
 
   const navigation = useNavigation();
-  const theme = useTheme();
-  const language = useLanguage();
-  const layout = useLayout();
-  const isFullscreen = useIsFullscreen();
+  const [theme] = useTheme();
+  const [language] = useLanguage();
+  const [layout] = useLayout();
+  const [isFullscreen] = useIsFullscreen();
   const isNavbarExpanded = useIsNavbarExpanded();
   const isFooterExpanded = useIsFooterExpanded();
   const panelVisibility = useAppPanelVisibility();

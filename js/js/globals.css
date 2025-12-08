@@ -302,6 +302,7 @@
     --active-foreground: var(--color-dark);
     --border-color: var(--color-foreground);
     --plaster: var(--color-gray);
+    --plaster-edge: var(--color-foreground);
     --info-bg: var(--color-light-8-9);
     --info-foreground: var(--color-dark);
     --info-border: var(--color-info);
@@ -687,6 +688,7 @@
   --color-selected-added: color-mix(in oklch, var(--active-base) 50%, var(--color-success) 50%);
   --color-selected-removed: color-mix(in oklch, var(--active-base) 50%, var(--color-danger) 50%);
   --color-plaster: var(--plaster);
+  --color-plaster-edge: var(--plaster-edge);
   --color-popover: var(--temporary);
   --color-popover-foreground: var(--foreground);
   --color-border: var(--foreground);
