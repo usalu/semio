@@ -1852,19 +1852,58 @@ The application uses XState v5 for state machine logic alongside Y.js for persis
 
 #### Machine Files
 
-**`machines.ts`** contains:
+**`machines.ts`** contains two main machines:
 
-- `sketchpadMachine` - Root machine for sketchpad state
-- `kitMachine` - Machine for kit stores
-- `homeAppMachine` - Home app with kit selection, sorting
-- `kitAppMachine` - Kit app with filtering, row expansion
-- `typeAppMachine` - Type app with port focus, model tags, camera
-- `designAppMachine` - Design app with piece/connection selection, diagram
-- `qualityAppMachine` - Quality app with benchmark expansion
-- `tutorialMachine` - Tutorial playback and recording
-- `transactionMachine` - Reusable transaction state machine
-- `createAppMachine()` - Generic factory for custom app machines
-- Selectors and actor factories for each machine
+##### sketchpadMachine
+
+Root machine for data and app configuration:
+
+- Y.js sync for Kit data persistence
+- App state for Home, Kit, Type, Design, Quality apps
+- Transaction management for undo/redo
+- Tutorial state
+- Selectors and actor factories for each app
+
+##### uiMachine
+
+Hierarchical UI state machine for navigation and interaction:
+
+**Navigation States:**
+- `idle` → `home` → `kit` → `design`/`type`/`quality` → `docs`
+
+**Parallel Regions per App:**
+- `interaction`: Idle → Hovered → Selected → ContextMenu substates
+- `tool`: Active tool state (Design/Type apps)
+- `drag`: Drag-and-drop state (Design app)
+- `modal`: Command palette and search overlays
+
+**Context Menu Substates per App:**
+- Home: kitMenu
+- Kit: typeMenu, designMenu, qualityMenu, fileMenu, authorMenu
+- Design: pieceMenu, connectionMenu, piecesMenu, connectionsMenu, typeMenu, designMenu, canvasMenu
+- Type: portMenu, portsMenu, modelMenu, modelsMenu, canvasMenu
+- Quality: benchmarkMenu, canvasMenu
+
+**Key Events:**
+- Navigation: `load`, `open.kit`, `open.design`, `open.type`, `open.quality`, `open.docs`, `back`
+- Interaction: `hover`, `unhover`, `select`, `deselect`, `deselect.all`
+- Context Menu: `menu.open`, `menu.close`, `menu.action`
+- Drag: `drag.start`, `drag.move`, `drag.end`, `drag.cancel`
+- Tool: `tool.select`
+- Modal: `command.open`, `command.close`, `search.open`, `search.close`
+- Global: `escape`, `focus`, `focus.clear`
+
+**Usage:**
+```typescript
+import { createUiActor, selectUiIsInDesign, selectUiSelectedEntities } from "./machines";
+
+const actor = createUiActor();
+actor.start();
+actor.send({ type: "load" });
+actor.send({ type: "open.kit", kitGuid: "..." });
+actor.send({ type: "hover", entity: { kind: "piece", guid: "..." } });
+actor.send({ type: "menu.open", position: { x: 100, y: 200 }, target: { kind: "piece", guid: "..." } });
+```
 
 #### XState Hooks
 

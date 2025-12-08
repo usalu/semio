@@ -142,7 +142,84 @@ const [originX, setOriginX, canSetOriginX] = usePiecePlaneOriginX()
 - `useHomeSortDirection()` → `[direction, setDirection, canSet]`
 - `useHomeLoadingKits()` → `[kits, undefined, canRead]` (read-only)
 
-## Phase 3: Documentation
+### Sketchpad.tsx (Field-Level Hooks)
+
+#### Connection Field Hooks (use ConnectionScope)
+- `useConnectionGap()` → `[gap, setGap, canSet]`
+- `useConnectionShift()` → `[shift, setShift, canSet]`
+- `useConnectionRise()` → `[rise, setRise, canSet]`
+- `useConnectionRotation()` → `[rotation, setRotation, canSet]`
+- `useConnectionTurn()` → `[turn, setTurn, canSet]`
+- `useConnectionTilt()` → `[tilt, setTilt, canSet]`
+- `useConnectionU()` → `[u, setU, canSet]`
+- `useConnectionV()` → `[v, setV, canSet]`
+
+#### Piece Field Hooks (use PieceScope)
+- `usePieceCenterU()` → `[centerU, setCenterU, canSet]`
+- `usePieceCenterV()` → `[centerV, setCenterV, canSet]`
+- `usePieceScale()` → `[scale, setScale, canSet]`
+- `usePieceIsHidden()` → `[isHidden, setIsHidden, canSet]`
+- `usePieceIsLocked()` → `[isLocked, setIsLocked, canSet]`
+- `usePieceColor()` → `[color, setColor, canSet]`
+- `usePieceDescription()` → `[description, setDescription, canSet]`
+- `usePieceName()` → `[name, setName, canSet]`
+
+## Phase 3: Component Refactoring
+
+### ConnectionsSectionForm Refactoring (Design.tsx)
+Refactored `ConnectionsSectionForm` to use granular hooks instead of manual diff creation:
+
+**Before:**
+```tsx
+const ConnectionsSectionForm: FC<{connections: Connection[]}> = ({ connections }) => {
+  const { updateConnection } = useDesignAppCommands();
+  // Manual diff creation
+  const handleChange = (updatedConnection: Connection) => {
+    const diff: ConnectionDiff = {};
+    if (updatedConnection.gap !== connection.gap) diff.gap = updatedConnection.gap;
+    // ... more manual diff building
+    updateConnection(origin, updatedConnection.guid, diff);
+  };
+  // ... 200+ lines of form with isSingle checks everywhere
+};
+```
+
+**After:**
+```tsx
+const SingleConnectionInfo: FC = () => {
+  const connection = useConnection() as Connection;
+  // Read-only info display using useConnection() hook
+};
+
+const SingleConnectionFields: FC = () => {
+  const [gap, setGap] = useConnectionGap();
+  const [shift, setShift] = useConnectionShift();
+  // ... other granular hooks
+  // No manual diff creation - hooks handle it internally
+};
+
+const ConnectionsSectionForm: FC<{connections: Connection[]}> = ({ connections }) => {
+  const isSingle = connections.length === 1;
+  if (isSingle) {
+    return (
+      <ConnectionScopeProvider guid={connections[0].guid}>
+        <SingleConnectionInfo />
+        <SingleConnectionFields />
+      </ConnectionScopeProvider>
+    );
+  }
+  return <MultipleConnectionsMessage />;
+};
+```
+
+**Key benefits:**
+1. No manual diff creation in components
+2. Granular subscriptions - only re-render when specific field changes
+3. Consistent origin tracking via hooks (origin is in hook implementation)
+4. Cleaner separation of concerns (info vs fields)
+5. Multi-selection case explicitly separated
+
+## Phase 4: Documentation
 - Updated AGENTS.md with new "Granular Hook Architecture" section
 - Documented all scope providers and usage patterns
 - Added examples for different hook types

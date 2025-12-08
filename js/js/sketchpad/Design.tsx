@@ -29,8 +29,24 @@
 
 import * as Y from "yjs";
 import { ConnectionDiff, ConnectionId, Guid, KitDiff, PieceDiff, PieceId } from "../semio";
-import type { AppConfig, AppWindowConfig, DesignAppId, GranularHookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolDefinition, ToolRenderContext, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
-import { conditionalHookResult, createPanelDefinition, Expertise, Mode, PanelKind, readonlyHookResult, Theme, ToolKind, writableHookResult } from "./shared";
+import type {
+  AppConfig,
+  AppWindowConfig,
+  DesignAppId,
+  GranularHookResult,
+  KitCommandContext,
+  KitDiffAppEdit,
+  PanelDefinition,
+  PanelVisibility,
+  Tool,
+  ToolDefinition,
+  ToolRenderContext,
+  YAttributes,
+  YLeafMapNumber,
+  YLeafMapString,
+  YStringArray,
+} from "./shared";
+import { conditionalHookResult, createPanelDefinition, Expertise, Mode, PanelKind, readonlyHookResult, Theme, ToolKind } from "./shared";
 import { identitySelector, useDesignScope, useKitScope, usePieceScope, useSketchpadActor } from "./Sketchpad";
 
 // #endregion Internal State Management
@@ -117,8 +133,8 @@ import {
   KitScopeProvider,
   KitStore,
   LayoutCanvas,
-  PieceScopeProvider,
   PieceMetadata,
+  PieceScopeProvider,
   SketchpadStore,
   ToolGroup,
   useAddFooterItem,
@@ -126,12 +142,20 @@ import {
   useAppPanelVisibility,
   useAppType,
   useClusterableGroups,
+  useConnection,
+  useConnectionGap,
+  useConnectionRise,
+  useConnectionRotation,
+  useConnectionShift,
+  useConnectionTilt,
+  useConnectionTurn,
+  useConnectionU,
+  useConnectionV,
   useDesign,
   useDiffedPiece,
   useDragDrop,
   useExpertise,
   useExplodeableDesignNodes,
-  useFixedPieceId,
   useFlatPiecePlane,
   useFocusSafe,
   useIsConnectionHovered,
@@ -1536,7 +1560,7 @@ const DesignAppSyncComponent = ({ children }: { children: React.ReactNode }) => 
 };
 
 // Convert Y.js DesignAppState to XState DesignAppState format
-function convertToXStateDesignAppState(state: DesignAppState): import("./machines").DesignAppState {
+function convertToXStateDesignAppState(state: DesignAppState): import("./hooks").DesignAppState {
   return {
     panelVisibility: state.panelVisibility,
     selection: state.selection,
@@ -3876,137 +3900,66 @@ export const ConnectionsSection: FC<{
   return <ConnectionsSectionForm connections={connections} sectionLabel={sectionLabel} />;
 };
 
-const ConnectionsSectionForm: FC<{
-  connections: Connection[];
-  sectionLabel?: string;
-}> = ({ connections, sectionLabel }) => {
-  const { t } = useTranslation();
-  const { updateConnection, startTransaction, finalizeTransaction, abortTransaction } = useDesignAppCommands();
-  const connectionObjects = connections;
-
-  const isSingle = connections.length === 1;
-  const connection = isSingle ? connectionObjects[0] : null;
-
-  const getCommonValue = <T,>(getter: (connection: Connection) => T | undefined): T | undefined => {
-    const values = connectionObjects.map(getter).filter((v) => v !== undefined);
-    if (values.length === 0) return undefined;
-    const firstValue = values[0];
-    return values.every((v) => JSON.stringify(v) === JSON.stringify(firstValue)) ? firstValue : undefined;
-  };
-
-  const handleChange = (updatedConnection: Connection) => {
-    if (!updatedConnection || !updatedConnection.guid) return;
-    const origin = "semio.sketchpad.app.design.panel.details.section.connection.change";
-
-    const diff: ConnectionDiff = {};
-    if (connection) {
-      if (updatedConnection.gap !== connection.gap) diff.gap = updatedConnection.gap;
-      if (updatedConnection.shift !== connection.shift) diff.shift = updatedConnection.shift;
-      if (updatedConnection.rise !== connection.rise) diff.rise = updatedConnection.rise;
-      if (updatedConnection.rotation !== connection.rotation) diff.rotation = updatedConnection.rotation;
-      if (updatedConnection.turn !== connection.turn) diff.turn = updatedConnection.turn;
-      if (updatedConnection.tilt !== connection.tilt) diff.tilt = updatedConnection.tilt;
-      if (updatedConnection.u !== connection.u) diff.u = updatedConnection.u;
-      if (updatedConnection.v !== connection.v) diff.v = updatedConnection.v;
-    }
-
-    updateConnection(origin, updatedConnection.guid, diff);
-  };
-
-  const handleGapChange = (value: number) => {
-    if (isSingle) handleChange({ ...connection!, gap: value });
-  };
-
-  const handleShiftChange = (value: number) => {
-    if (isSingle) handleChange({ ...connection!, shift: value });
-  };
-
-  const handleRiseChange = (value: number) => {
-    if (isSingle) handleChange({ ...connection!, rise: value });
-  };
-
-  const handleXOffsetChange = (value: number) => {
-    if (isSingle) handleChange({ ...connection!, u: value });
-  };
-
-  const handleYOffsetChange = (value: number) => {
-    if (isSingle) handleChange({ ...connection!, v: value });
-  };
-
-  const handleRotationChange = (value: number) => {
-    if (isSingle) handleChange({ ...connection!, rotation: value });
-  };
-
-  const handleTurnChange = (value: number) => {
-    if (isSingle) handleChange({ ...connection!, turn: value });
-  };
-
-  const handleTiltChange = (value: number) => {
-    if (isSingle) handleChange({ ...connection!, tilt: value });
-  };
-
-  const commonGap = getCommonValue((c) => c.gap);
-  const commonShift = getCommonValue((c) => c.shift);
-  const commonRise = getCommonValue((c) => c.rise);
-  const commonUOffset = getCommonValue((c) => c.u);
-  const commonVOffset = getCommonValue((c) => c.v);
-  const commonRotation = getCommonValue((c) => c.rotation);
-  const commonTurn = getCommonValue((c) => c.turn);
-  const commonTilt = getCommonValue((c) => c.tilt);
-
+const SingleConnectionInfo: FC = () => {
+  const connection = useConnection() as Connection;
   return (
     <>
-      {isSingle && (
-        <>
-          <TreeItem>
-            <TreeContent>
-              <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectingPieceId" value={connection!.connecting.piece.guid} disabled showLabel />
-            </TreeContent>
-          </TreeItem>
-          <TreeItem>
-            <TreeContent>
-              <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectingPortId" value={connection!.connecting.port?.guid ?? ""} disabled showLabel />
-            </TreeContent>
-          </TreeItem>
-          {connection!.connecting.designPiece && (
-            <TreeItem>
-              <TreeContent>
-                <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectingDesignPieceId" value={connection!.connecting.designPiece?.guid ?? ""} disabled showLabel />
-              </TreeContent>
-            </TreeItem>
-          )}
-          <TreeItem>
-            <TreeContent>
-              <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectedPieceId" value={connection!.connected.piece.guid} disabled showLabel />
-            </TreeContent>
-          </TreeItem>
-          <TreeItem>
-            <TreeContent>
-              <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectedPortId" value={connection!.connected.port?.guid ?? ""} disabled showLabel />
-            </TreeContent>
-          </TreeItem>
-          {connection!.connected.designPiece && (
-            <TreeItem>
-              <TreeContent>
-                <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectedDesignPieceId" value={connection!.connected.designPiece?.guid ?? ""} disabled showLabel />
-              </TreeContent>
-            </TreeItem>
-          )}
-        </>
-      )}
-      {!isSingle && (
+      <TreeItem>
+        <TreeContent>
+          <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectingPieceId" value={connection.connecting.piece.guid} disabled showLabel />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectingPortId" value={connection.connecting.port?.guid ?? ""} disabled showLabel />
+        </TreeContent>
+      </TreeItem>
+      {connection.connecting.designPiece && (
         <TreeItem>
           <TreeContent>
-            <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.design.panel.details.section.connection.multipleEditing")}</p>
+            <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectingDesignPieceId" value={connection.connecting.designPiece?.guid ?? ""} disabled showLabel />
           </TreeContent>
         </TreeItem>
       )}
       <TreeItem>
         <TreeContent>
+          <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectedPieceId" value={connection.connected.piece.guid} disabled showLabel />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectedPortId" value={connection.connected.port?.guid ?? ""} disabled showLabel />
+        </TreeContent>
+      </TreeItem>
+      {connection.connected.designPiece && (
+        <TreeItem>
+          <TreeContent>
+            <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectedDesignPieceId" value={connection.connected.designPiece?.guid ?? ""} disabled showLabel />
+          </TreeContent>
+        </TreeItem>
+      )}
+    </>
+  );
+};
+
+const SingleConnectionFields: FC = () => {
+  const [gap, setGap] = useConnectionGap();
+  const [shift, setShift] = useConnectionShift();
+  const [rise, setRise] = useConnectionRise();
+  const [rotation, setRotation] = useConnectionRotation();
+  const [turn, setTurn] = useConnectionTurn();
+  const [tilt, setTilt] = useConnectionTilt();
+  const [u, setU] = useConnectionU();
+  const [v, setV] = useConnectionV();
+  const { startTransaction, finalizeTransaction, abortTransaction } = useDesignAppCommands();
+  return (
+    <>
+      <TreeItem>
+        <TreeContent>
           <Stepper
             id="semio.sketchpad.app.design.panel.details.section.connection.gap"
-            value={isSingle ? (connection!.gap ?? 0) : (commonGap ?? 0)}
-            onChange={handleGapChange}
+            value={gap}
+            onChange={setGap!}
             transaction={{
               start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.gap"),
               finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.gap"),
@@ -4020,8 +3973,8 @@ const ConnectionsSectionForm: FC<{
         <TreeContent>
           <Stepper
             id="semio.sketchpad.app.design.panel.details.section.connection.shift"
-            value={isSingle ? (connection!.shift ?? 0) : (commonShift ?? 0)}
-            onChange={handleShiftChange}
+            value={shift}
+            onChange={setShift!}
             transaction={{
               start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.shift"),
               finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.shift"),
@@ -4035,8 +3988,8 @@ const ConnectionsSectionForm: FC<{
         <TreeContent>
           <Stepper
             id="semio.sketchpad.app.design.panel.details.section.connection.rise"
-            value={isSingle ? (connection!.rise ?? 0) : (commonRise ?? 0)}
-            onChange={handleRiseChange}
+            value={rise}
+            onChange={setRise!}
             transaction={{
               start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.rise"),
               finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.rise"),
@@ -4052,8 +4005,8 @@ const ConnectionsSectionForm: FC<{
             <label className="text-xs">{useLabel("semio.sketchpad.app.design.connection.rotation")}</label>
             <Slider
               id="semio.sketchpad.app.design.panel.details.section.connection.rotation"
-              value={[isSingle ? (connection!.rotation ?? 0) : (commonRotation ?? 0)]}
-              onValueChange={([value]) => handleRotationChange(value)}
+              value={[rotation]}
+              onValueChange={([value]) => setRotation!(value)}
               transaction={{
                 start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.rotation"),
                 finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.rotation"),
@@ -4072,8 +4025,8 @@ const ConnectionsSectionForm: FC<{
             <label className="text-xs">{useLabel("semio.sketchpad.app.design.connection.turn")}</label>
             <Slider
               id="semio.sketchpad.app.design.panel.details.section.connection.turn"
-              value={[isSingle ? (connection!.turn ?? 0) : (commonTurn ?? 0)]}
-              onValueChange={([value]) => handleTurnChange(value)}
+              value={[turn]}
+              onValueChange={([value]) => setTurn!(value)}
               transaction={{
                 start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.turn"),
                 finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.turn"),
@@ -4092,8 +4045,8 @@ const ConnectionsSectionForm: FC<{
             <label className="text-xs">{useLabel("semio.sketchpad.app.design.connection.tilt")}</label>
             <Slider
               id="semio.sketchpad.app.design.panel.details.section.connection.tilt"
-              value={[isSingle ? (connection!.tilt ?? 0) : (commonTilt ?? 0)]}
-              onValueChange={([value]) => handleTiltChange(value)}
+              value={[tilt]}
+              onValueChange={([value]) => setTilt!(value)}
               transaction={{
                 start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.tilt"),
                 finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.tilt"),
@@ -4110,8 +4063,8 @@ const ConnectionsSectionForm: FC<{
         <TreeContent>
           <Stepper
             id="semio.sketchpad.app.design.panel.details.section.connection.u"
-            value={isSingle ? (connection!.u ?? 0) : (commonUOffset ?? 0)}
-            onChange={handleXOffsetChange}
+            value={u}
+            onChange={setU!}
             transaction={{
               start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.u"),
               finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.u"),
@@ -4125,8 +4078,8 @@ const ConnectionsSectionForm: FC<{
         <TreeContent>
           <Stepper
             id="semio.sketchpad.app.design.panel.details.section.connection.v"
-            value={isSingle ? (connection!.v ?? 0) : (commonVOffset ?? 0)}
-            onChange={handleYOffsetChange}
+            value={v}
+            onChange={setV!}
             transaction={{
               start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.v"),
               finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.v"),
@@ -4134,6 +4087,31 @@ const ConnectionsSectionForm: FC<{
             }}
             step={0.1}
           />
+        </TreeContent>
+      </TreeItem>
+    </>
+  );
+};
+
+const ConnectionsSectionForm: FC<{
+  connections: Connection[];
+  sectionLabel?: string;
+}> = ({ connections, sectionLabel }) => {
+  const isSingle = connections.length === 1;
+  const connection = isSingle ? connections[0] : null;
+  if (isSingle && connection) {
+    return (
+      <ConnectionScopeProvider guid={connection.guid}>
+        <SingleConnectionInfo />
+        <SingleConnectionFields />
+      </ConnectionScopeProvider>
+    );
+  }
+  return (
+    <>
+      <TreeItem>
+        <TreeContent>
+          <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.design.panel.details.section.connection.multipleEditing")}</p>
         </TreeContent>
       </TreeItem>
     </>
