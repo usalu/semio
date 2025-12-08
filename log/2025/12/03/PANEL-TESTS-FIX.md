@@ -3,7 +3,7 @@ date: "2025-12-03T18:04:43.663Z"
 slug: PANEL-TESTS-FIX
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix broken panel code and extend sketchpad tests for all panel types
-model: claude-sonnet-4.5
+model: claude-opus-4.5
 ---
 
 # Previously

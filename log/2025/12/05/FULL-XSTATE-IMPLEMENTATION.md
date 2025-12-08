@@ -3,7 +3,7 @@ date: "2025-12-05T15:40:53.424Z"
 slug: FULL-XSTATE-IMPLEMENTATION
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Implement full XState transition - no Yjs in apps
-model: claude-sonnet-4.5
+model: claude-opus-4.5
 ---
 
 # Previously

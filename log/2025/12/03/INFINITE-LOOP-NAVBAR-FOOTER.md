@@ -3,7 +3,7 @@ date: "2025-12-02T23:24:30.311Z"
 slug: INFINITE-LOOP-NAVBAR-FOOTER
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix infinite loop and missing navbar/footer in Design/Type apps after import
-model: claude-sonnet-4.5
+model: claude-opus-4.5
 ---
 
 # Previously

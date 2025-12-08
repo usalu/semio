@@ -1,10 +1,11 @@
 ---
-date: '2025-11-28T23:21:35.075Z'
+date: "2025-11-28T23:21:35.075Z"
 slug: CSHARP-TESTS-SYNC
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Sync C# unit tests with JS fixtures and fix all test failures
-model: claude-sonnet-4.5
+model: claude-opus-4.5
 ---
+
 # Previously
 
 The C# codebase was out of date compared to the JavaScript/TypeScript implementation. Schema mismatches existed in diff classes, and tests were not passing.
@@ -12,7 +13,7 @@ The C# codebase was out of date compared to the JavaScript/TypeScript implementa
 # Plan
 
 1. Fix schema mismatches between C# and JS for all diff classes
-2. Fix `Design.Flatten` method bugs (inconsistent dictionary keys)  
+2. Fix `Design.Flatten` method bugs (inconsistent dictionary keys)
 3. Fix Expression tests for cross-framework compatibility (net7.0/net48)
 4. Ensure all 62 tests pass on both .NET 7.0 and .NET 4.8
 
@@ -70,5 +71,6 @@ The C# codebase was out of date compared to the JavaScript/TypeScript implementa
 ## Test Results
 
 All 62 tests pass on both frameworks:
+
 - .NET 7.0: 62/62 passed
 - .NET 4.8: 62/62 passed

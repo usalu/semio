@@ -1869,15 +1869,18 @@ Root machine for data and app configuration:
 Hierarchical UI state machine for navigation and interaction:
 
 **Navigation States:**
+
 - `idle` → `home` → `kit` → `design`/`type`/`quality` → `docs`
 
 **Parallel Regions per App:**
+
 - `interaction`: Idle → Hovered → Selected → ContextMenu substates
 - `tool`: Active tool state (Design/Type apps)
 - `drag`: Drag-and-drop state (Design app)
 - `modal`: Command palette and search overlays
 
 **Context Menu Substates per App:**
+
 - Home: kitMenu
 - Kit: typeMenu, designMenu, qualityMenu, fileMenu, authorMenu
 - Design: pieceMenu, connectionMenu, piecesMenu, connectionsMenu, typeMenu, designMenu, canvasMenu
@@ -1885,6 +1888,7 @@ Hierarchical UI state machine for navigation and interaction:
 - Quality: benchmarkMenu, canvasMenu
 
 **Key Events:**
+
 - Navigation: `load`, `open.kit`, `open.design`, `open.type`, `open.quality`, `open.docs`, `back`
 - Interaction: `hover`, `unhover`, `select`, `deselect`, `deselect.all`
 - Context Menu: `menu.open`, `menu.close`, `menu.action`
@@ -1894,6 +1898,7 @@ Hierarchical UI state machine for navigation and interaction:
 - Global: `escape`, `focus`, `focus.clear`
 
 **Usage:**
+
 ```typescript
 import { createUiActor, selectUiIsInDesign, selectUiSelectedEntities } from "./machines";
 

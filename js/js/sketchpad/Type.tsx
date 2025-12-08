@@ -29,12 +29,11 @@ import React, { createContext, FC, Suspense, useCallback, useContext, useEffect,
 import { useParams } from "react-router";
 import * as THREE from "three";
 import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
-import * as Y from "yjs";
 import { useLabel } from "../i18n";
 import { Author, AuthorId, Camera, Coord, findModel, guid, Guid, Kit, Model, Point, Port, selectBestModel, File as SemioFile, toSemioRotation, toThreeRotation, Type, TypeDiff, Vector } from "../semio";
-import { Geometry, Input, Scene as SceneComponent, Slider, SortableTreeItems, Stepper, Textarea, Toggle, TreeContent, TreeItem } from "./elements";
-import type { AppWindowConfig, GranularHookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolDefinition, ToolRenderContext, TypeAppId, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
-import { AppConfig, conditionalHookResult, createPanelDefinition, PanelKind, readonlyHookResult, ToolKind } from "./shared";
+import { Geometry, Input, Scene as SceneComponent, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider, SortableTreeItems, Stepper, Textarea, Toggle, ToggleGroup, TreeContent, TreeItem } from "./elements";
+import type { AppWindowConfig, GranularHookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolDefinition, ToolRenderContext, TypeAppId } from "./shared";
+import { AppConfig, conditionalHookResult, createPanelDefinition, Expertise, Mode, PanelKind, readonlyHookResult, Theme, ToolKind } from "./shared";
 import {
   Canvas,
   createDefaultLayout,
@@ -45,11 +44,13 @@ import {
   KitScopeProvider,
   KitStore,
   LayoutCanvas,
+  TypeAppFullscreenWindow as SketchpadTypeAppFullscreenWindow,
   ToolGroup,
   TypeScopeProvider,
   useAddFooterItem,
   useAddPanelSection,
   useAppType,
+  useExpertise,
   useFocusSafe,
   useIsInTypeScope,
   useKit,
@@ -59,12 +60,14 @@ import {
   useKitStore,
   useKitTags,
   useKitTransaction,
+  useLanguage,
+  useLayout,
+  useMode,
   useRemoveFooterItem,
   useRemovePanelSection,
   useSketchpadActor,
   useSketchpadCommands,
-  useSketchpadStore,
-  useSyncDeep,
+  useTheme,
   useTooltip,
   useType,
   useTypeAppXState,
@@ -100,15 +103,11 @@ const KitSectionLazy = React.lazy(async () => {
 });
 
 // Lucide icons used throughout the app
-import { AddIcon, CheckIcon, PortIcon, RemoveIcon, SelectToolIcon } from "@semio/assets";
+import { AddIcon, AwardIcon, CheckIcon, CodeIcon, HandIcon, MonitorIcon, MoonIcon, MousePointerIcon, PortIcon, RemoveIcon, SelectToolIcon, SunIcon, TutorialIcon, UserIcon } from "@semio/assets";
 
 // #endregion Imports
 
 // #region Internal State Management
-
-type YTypeAppVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
-type YTypeApp = Y.Map<YTypeAppVal>;
-type YTypeApps = Y.Map<YTypeApp>;
 
 export interface TypeAppSelection {
   ports?: Guid[];
@@ -184,7 +183,7 @@ export interface TypeAppCommandResult {
   typeDiff?: TypeDiff;
 }
 
-// NOTE: The old TypeAppController Y.js-based class has been removed.
+// NOTE: The old TypeStore Y.js-based class has been removed.
 // All state management now goes through XState.
 // Y.js is only used internally for Kit data sync (types, designs, pieces, etc.)
 
@@ -195,7 +194,7 @@ const EMPTY_OTHERS: TypeAppPresenceOther[] = [];
 const EMPTY_MODEL_TAG_ARRAY: string[] = [];
 
 /**
- * REMOVED: TypeAppController class
+ * REMOVED: TypeStore class
  * All state is now managed by the XState sketchpadMachine.
  * Use useTypeApp* hooks that internally use useSelector from @xstate/react.
  */
@@ -1058,7 +1057,14 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
   const foregroundColor = useMemo(() => getComputedColor("--foreground"), []);
 
   if (!blobUrl) {
-    return null;
+    // Render placeholder box when no model is loaded (same as design pieces)
+    return (
+      <mesh>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color={foregroundColor} emissive={foregroundColor} emissiveIntensity={0.45} />
+        <Edges scale={1.001} color={foregroundColor} />
+      </mesh>
+    );
   }
 
   return (
@@ -2654,7 +2660,15 @@ const App: FC = () => {
   useEffect(() => {
     if (appType !== "type") return;
 
+    const { setTheme, setLanguage, setLayout, setExpertise, setMode } = sketchpadCommands;
+
     const SketchpadSettingsContent = () => {
+      const theme = useTheme();
+      const language = useLanguage();
+      const layout = useLayout();
+      const expertise = useExpertise();
+      const mode = useMode();
+
       const languageEnLabel = useLabel("semio.sketchpad.settings.language.en");
       const languageDeLabel = useLabel("semio.sketchpad.settings.language.de");
       const languagePlaceholder = useLabel("semio.sketchpad.app.home.settings.language.placeholder");
@@ -2663,37 +2677,77 @@ const App: FC = () => {
         <>
           <TreeItem>
             <TreeContent>
-              <OriginProvider id="semio.sketchpad.app.type.settings.theme">
-                <TypeThemeToggle />
-              </OriginProvider>
+              <ToggleGroup
+                id="semio.sketchpad.settings.theme"
+                value={theme}
+                onValueChange={(value: string) => setTheme("semio.sketchpad.settings.theme", value as Theme)}
+                showLabel
+                kind="single"
+                items={[
+                  { value: Theme.SYSTEM, id: "semio.sketchpad.settings.theme.system", icon: <MonitorIcon className="size-small" /> },
+                  { value: Theme.LIGHT, id: "semio.sketchpad.settings.theme.light", icon: <SunIcon className="size-small" /> },
+                  { value: Theme.DARK, id: "semio.sketchpad.settings.theme.dark", icon: <MoonIcon className="size-small" /> },
+                ]}
+              />
             </TreeContent>
           </TreeItem>
           <TreeItem>
             <TreeContent>
-              <OriginProvider id="semio.sketchpad.app.type.settings.language">
-                <TypeLanguageSelect languageEnLabel={languageEnLabel} languageDeLabel={languageDeLabel} languagePlaceholder={languagePlaceholder} />
-              </OriginProvider>
+              <Select id="semio.sketchpad.settings.language" value={language || "en"} onValueChange={(value: string) => setLanguage("semio.sketchpad.settings.language", value)} showLabel>
+                <SelectTrigger>
+                  <SelectValue placeholder={languagePlaceholder} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="en">{languageEnLabel}</SelectItem>
+                  <SelectItem value="de">{languageDeLabel}</SelectItem>
+                </SelectContent>
+              </Select>
             </TreeContent>
           </TreeItem>
           <TreeItem>
             <TreeContent>
-              <OriginProvider id="semio.sketchpad.app.type.settings.layout">
-                <TypeLayoutToggle />
-              </OriginProvider>
+              <ToggleGroup
+                id="semio.sketchpad.settings.layout"
+                value={typeof layout === "object" ? "desktop" : layout}
+                onValueChange={(value: string) => setLayout("semio.sketchpad.settings.layout", value as "desktop" | "tablet")}
+                showLabel
+                kind="single"
+                items={[
+                  { value: "desktop", id: "semio.sketchpad.settings.layout.desktop", icon: <MousePointerIcon className="size-small" /> },
+                  { value: "tablet", id: "semio.sketchpad.settings.layout.tablet", icon: <HandIcon className="size-small" /> },
+                ]}
+              />
             </TreeContent>
           </TreeItem>
           <TreeItem>
             <TreeContent>
-              <OriginProvider id="semio.sketchpad.app.type.settings.expertise">
-                <TypeExpertiseToggle />
-              </OriginProvider>
+              <ToggleGroup
+                id="semio.sketchpad.settings.expertise"
+                value={expertise}
+                onValueChange={(value: string) => setExpertise("semio.sketchpad.settings.expertise", value as Expertise)}
+                showLabel
+                kind="single"
+                items={[
+                  { value: Expertise.BEGINNER, id: "semio.sketchpad.settings.expertise.beginner", icon: <TutorialIcon className="size-small" /> },
+                  { value: Expertise.NORMAL, id: "semio.sketchpad.settings.expertise.normal", icon: <UserIcon className="size-small" /> },
+                  { value: Expertise.EXPERT, id: "semio.sketchpad.settings.expertise.expert", icon: <AwardIcon className="size-small" /> },
+                ]}
+              />
             </TreeContent>
           </TreeItem>
           <TreeItem>
             <TreeContent>
-              <OriginProvider id="semio.sketchpad.app.type.settings.mode">
-                <TypeModeToggle />
-              </OriginProvider>
+              <ToggleGroup
+                id="semio.sketchpad.settings.mode"
+                value={mode}
+                onValueChange={(value: string) => setMode("semio.sketchpad.settings.mode", value as Mode)}
+                showLabel
+                kind="single"
+                items={[
+                  { value: Mode.USER, id: "semio.sketchpad.settings.mode.user", icon: <UserIcon className="size-small" /> },
+                  { value: Mode.DEV, id: "semio.sketchpad.settings.mode.dev", icon: <CodeIcon className="size-small" /> },
+                ]}
+              />
             </TreeContent>
           </TreeItem>
         </>
@@ -2882,53 +2936,40 @@ const TypeApp: FC = () => {
     };
   }, [addSection, removeSection]);
 
-  // Sync Y.js state to XState
-  useTypeAppYjsToXStateSync();
+  useTypeAppInitialize();
 
   return <App />;
 };
 
-// Sync hook to keep Y.js controller state in sync with XState
-function useTypeAppYjsToXStateSync() {
+// Initialize Type app state in XState when entering the app
+function useTypeAppInitialize() {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
   const kitGuid = kitScope?.guid ?? "";
   const typeGuid = typeScope?.guid ?? "";
-  const sketchpadStore = useSketchpadStore();
   const hasInitialized = useRef(false);
 
-  // Initialize XState with Y.js state synchronously (before paint)
   useLayoutEffect(() => {
-    if (hasInitialized.current || !kitGuid || !typeGuid || !sketchpadStore.hasTypeApp({ kit: kitGuid, type: typeGuid })) return;
+    if (hasInitialized.current || !kitGuid || !typeGuid) return;
 
-    const store = sketchpadStore.typeApp(kitGuid, typeGuid);
-    const initialState = store.snapshot();
-
-    // Initialize XState with current Y.js state
     actor.send({
       type: "TYPE.INIT",
       kitGuid,
       typeGuid,
-      state: initialState,
+      state: {
+        panelVisibility: { toolbar: true, workbench: false, details: false, chat: false, settings: false },
+        selection: undefined,
+        hover: undefined,
+        focusedPort: undefined,
+        camera: undefined,
+        activeTool: ToolKind.SELECTION_NORMAL,
+        fullscreenWindow: SketchpadTypeAppFullscreenWindow.None,
+        selectedModelTags: [],
+      },
     });
     hasInitialized.current = true;
-  }, [actor, sketchpadStore, kitGuid, typeGuid]);
-
-  // Continue syncing Y.js changes to XState
-  const store = kitGuid && typeGuid && sketchpadStore.hasTypeApp({ kit: kitGuid, type: typeGuid }) ? sketchpadStore.typeApp(kitGuid, typeGuid) : null;
-  const state = useSyncDeep<TypeAppState, TypeAppState>(store, (s: TypeAppState) => s);
-
-  useEffect(() => {
-    if (!state || !kitGuid || !typeGuid || !hasInitialized.current) return;
-
-    actor.send({
-      type: "TYPE.SYNC",
-      kitGuid,
-      typeGuid,
-      state: state as any,
-    });
-  }, [actor, state, kitGuid, typeGuid]);
+  }, [actor, kitGuid, typeGuid]);
 }
 
 export default TypeApp;
@@ -3024,95 +3065,6 @@ export const TypeAppFooter: FC = () => {
 };
 
 // #endregion Footer
-
-// #region Settings Helper Components
-
-const TypeThemeToggle: FC = () => {
-  const [theme, setTheme] = useTheme();
-  return (
-    <ToggleGroup
-      id="semio.sketchpad.settings.theme"
-      value={theme}
-      onValueChange={(value: string) => setTheme?.(value as Theme)}
-      showLabel
-      kind="single"
-      items={[
-        { value: Theme.SYSTEM, id: "semio.sketchpad.settings.theme.system", icon: <MonitorIcon className="size-small" /> },
-        { value: Theme.LIGHT, id: "semio.sketchpad.settings.theme.light", icon: <SunIcon className="size-small" /> },
-        { value: Theme.DARK, id: "semio.sketchpad.settings.theme.dark", icon: <MoonIcon className="size-small" /> },
-      ]}
-    />
-  );
-};
-
-const TypeLanguageSelect: FC<{ languageEnLabel: string; languageDeLabel: string; languagePlaceholder: string }> = ({ languageEnLabel, languageDeLabel, languagePlaceholder }) => {
-  const [language, setLanguage] = useLanguage();
-  return (
-    <Select id="semio.sketchpad.settings.language" value={language || "en"} onValueChange={(value: string) => setLanguage?.(value)} showLabel>
-      <SelectTrigger>
-        <SelectValue placeholder={languagePlaceholder} />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="en">{languageEnLabel}</SelectItem>
-        <SelectItem value="de">{languageDeLabel}</SelectItem>
-      </SelectContent>
-    </Select>
-  );
-};
-
-const TypeLayoutToggle: FC = () => {
-  const [layout, setLayout] = useLayout();
-  return (
-    <ToggleGroup
-      id="semio.sketchpad.settings.layout"
-      value={typeof layout === "object" ? "desktop" : layout}
-      onValueChange={(value: string) => setLayout?.(value as "desktop" | "tablet")}
-      showLabel
-      kind="single"
-      items={[
-        { value: "desktop", id: "semio.sketchpad.settings.layout.desktop", icon: <MousePointerIcon className="size-small" /> },
-        { value: "tablet", id: "semio.sketchpad.settings.layout.tablet", icon: <HandIcon className="size-small" /> },
-      ]}
-    />
-  );
-};
-
-const TypeExpertiseToggle: FC = () => {
-  const [expertise, setExpertise] = useExpertise();
-  return (
-    <ToggleGroup
-      id="semio.sketchpad.settings.expertise"
-      value={expertise}
-      onValueChange={(value: string) => setExpertise?.(value as Expertise)}
-      showLabel
-      kind="single"
-      items={[
-        { value: Expertise.BEGINNER, id: "semio.sketchpad.settings.expertise.beginner", icon: <TutorialIcon className="size-small" /> },
-        { value: Expertise.NORMAL, id: "semio.sketchpad.settings.expertise.normal", icon: <UserIcon className="size-small" /> },
-        { value: Expertise.EXPERT, id: "semio.sketchpad.settings.expertise.expert", icon: <AwardIcon className="size-small" /> },
-      ]}
-    />
-  );
-};
-
-const TypeModeToggle: FC = () => {
-  const [mode, setMode] = useMode();
-  return (
-    <ToggleGroup
-      id="semio.sketchpad.settings.mode"
-      value={mode}
-      onValueChange={(value: string) => setMode?.(value as Mode)}
-      showLabel
-      kind="single"
-      items={[
-        { value: Mode.USER, id: "semio.sketchpad.settings.mode.user", icon: <UserIcon className="size-small" /> },
-        { value: Mode.DEV, id: "semio.sketchpad.settings.mode.dev", icon: <CodeIcon className="size-small" /> },
-      ]}
-    />
-  );
-};
-
-// #endregion Settings Helper Components
 
 // #region Config
 

@@ -3,7 +3,7 @@ date: "2025-11-29T23:19:05.106Z"
 slug: YJS-UNATTACHED-MAP
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix Y.js Invalid access warnings when importing kits
-model: claude-sonnet-4.5
+model: claude-opus-4.5
 ---
 
 # Previously

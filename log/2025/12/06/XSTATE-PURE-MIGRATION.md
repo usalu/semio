@@ -3,7 +3,7 @@ date: "2025-12-05T23:12:54.610Z"
 slug: XSTATE-PURE-MIGRATION
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Complete pure XState migration by removing all legacy controller code
-model: claude-sonnet-4.5
+model: claude-opus-4.5
 ---
 
 # Previously
@@ -19,9 +19,9 @@ Tests failed because the migration was incomplete - legacy Y.js controllers were
 
 # Plan
 
-1. **Remove Design.tsx DesignAppController** - Pure XState for Design app state
-2. **Remove Kit.tsx KitAppController** - Pure XState for Kit app state
-3. **Remove Type.tsx TypeAppController** - Pure XState for Type app state
+1. **Remove Design.tsx DesignStore** - Pure XState for Design app state
+2. **Remove Kit.tsx KitStore** - Pure XState for Kit app state
+3. **Remove Type.tsx TypeStore** - Pure XState for Type app state
 4. **Clean Home.tsx** - Remove backwards compatibility, pure XState only
 5. **Remove AppStore/KitDiffAppStore classes** - No longer needed with pure XState
 6. **Keep KitStore/DesignStore/TypeStore** - These handle Y.js Kit data synchronization only
@@ -49,10 +49,10 @@ Tests failed because the migration was incomplete - legacy Y.js controllers were
   - `useDesignAppFullscreen()` → pure XState
   - `useDesignAppActiveTool()` → pure XState
   - `useDesignAppCamera()`, `useDesignAppHover()`, etc. → all pure XState
-- Hooks no longer use `useSyncField` or `useDesignAppController`
+- Hooks no longer use `useSyncField` or `useDesignStore`
 - TypeScript compiles successfully
 - `useDesignAppCommands()` still uses controller (needs migration for commands)
-- `DesignAppController` class still exists (can be removed once commands migrate)
+- `DesignStore` class still exists (can be removed once commands migrate)
 
 ## Type.tsx Commands - Pure XState Migration (COMPLETED)
 
@@ -61,12 +61,12 @@ Tests failed because the migration was incomplete - legacy Y.js controllers were
   - `useTypeAppFullscreen()` → pure XState
   - `useTypeAppActiveTool()` → pure XState
   - `useTypeAppCamera()`, `useTypeAppHover()`, etc. → all pure XState
-- Hooks no longer use `useSyncField` or `useTypeAppController`
+- Hooks no longer use `useSyncField` or `useTypeStore`
 - TypeScript compiles successfully
-- ✅ Hooks no longer use `useSyncField` or `useDesignAppController`
+- ✅ Hooks no longer use `useSyncField` or `useDesignStore`
 - ✅ TypeScript compiles successfully
 - ⚠️ `useDesignAppCommands()` still uses controller (needs migration for commands)
-- ⚠️ `DesignAppController` class still exists (can be removed once commands migrate)
+- ⚠️ `DesignStore` class still exists (can be removed once commands migrate)
 
 ## Test Results
 
@@ -96,6 +96,6 @@ The problem is NOT with XState migration - it's that the test Kit data needs to 
 
 1. **Verify Y.js Kit data loading** - Ensure test kits are properly created in Y.js
 2. **Check Kit/Type/Design data hooks** - `useKit()`, `useType()`, `useDesign()` should read from Y.js
-3. **Remove controllers** - Delete DesignAppController, KitAppController, TypeAppController classes (no longer used)
+3. **Remove controllers** - Delete DesignStore, KitStore, TypeStore classes (no longer used)
 4. **Clean up** - Remove useSyncField, useSyncDeep, backwards compat stubs
 5. **Design commands migration** - Convert remaining Design commands to XState events

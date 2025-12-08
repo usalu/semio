@@ -5,7 +5,7 @@ author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: >-
   Added dirty flag cache optimization to KitStore.snapshot() to prevent
   expensive rebuilds on unrelated UI updates
-model: claude-sonnet-4.5
+model: claude-opus-4.5
 ---
 
 # Previously

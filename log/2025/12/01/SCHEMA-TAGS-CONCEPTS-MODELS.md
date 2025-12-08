@@ -3,7 +3,7 @@ date: "2025-12-01T15:35:06.610Z"
 slug: SCHEMA-TAGS-CONCEPTS-MODELS
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: "Tags, Concepts become kit entities; Models link to files with guid"
-model: claude-sonnet-4.5
+model: claude-opus-4.5
 ---
 
 # Previously

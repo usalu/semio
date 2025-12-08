@@ -3,7 +3,7 @@ date: "2025-12-01T16:49:41.908Z"
 slug: MIGRATE-KIT-MODELS
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Migrate models from kit_metabolism.json.old to kit_metabolism.json
-model: claude-sonnet-4.5
+model: claude-opus-4.5
 ---
 
 # Previously

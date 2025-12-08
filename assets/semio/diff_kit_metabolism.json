@@ -23,7 +23,7 @@
           "ports": {
             "added": [
               {
-                "guid": "019ae958-bc57-750d-8c4a-49a1c2f441e7",
+                "guid": "019aff1a-8949-76be-8c75-ddf1e0944947",
                 "name": "new-port",
                 "point": {
                   "x": 1,
@@ -45,16 +45,16 @@
     ],
     "added": [
       {
-        "guid": "019ae958-bc58-721d-bc30-2ee3ffe207e3",
+        "guid": "019aff1a-894a-74ca-858d-4b864b531ec7",
         "name": "New Test Type",
         "virtual": true,
         "unit": "mm",
         "description": "A new type added for testing",
-        "createdAt": "2025-12-04T12:31:38.072Z",
-        "updatedAt": "2025-12-04T12:31:38.072Z",
+        "createdAt": "2025-12-08T17:55:20.522Z",
+        "updatedAt": "2025-12-08T17:55:20.522Z",
         "ports": [
           {
-            "guid": "019ae958-bc58-721d-bc30-3107f0766860",
+            "guid": "019aff1a-894a-74ca-858d-4d586397b06e",
             "name": "test-port",
             "point": {
               "x": 0,
@@ -90,7 +90,7 @@
           "pieces": {
             "added": [
               {
-                "guid": "019ae958-bc58-721d-bc30-347f10c6c650",
+                "guid": "019aff1a-894a-74ca-858d-53e442f1b6f8",
                 "type": {
                   "guid": "04e9b156-97a8-4db0-8bb1-f582c5955a79"
                 },
@@ -120,15 +120,15 @@
     ],
     "added": [
       {
-        "guid": "019ae958-bc58-721d-bc30-3bea9821c85c",
+        "guid": "019aff1a-894a-74ca-858d-560b8d8972ed",
         "name": "New Test Design",
         "unit": "mm",
         "description": "A new design added for testing",
-        "createdAt": "2025-12-04T12:31:38.072Z",
-        "updatedAt": "2025-12-04T12:31:38.072Z",
+        "createdAt": "2025-12-08T17:55:20.522Z",
+        "updatedAt": "2025-12-08T17:55:20.522Z",
         "pieces": [
           {
-            "guid": "019ae958-bc58-721d-bc30-3ef596a3c8ac",
+            "guid": "019aff1a-894a-74ca-858d-58a7dd51091c",
             "type": {
               "guid": "bb34f42f-68d6-418b-a613-545ca1d2aa14"
             },
@@ -174,7 +174,7 @@
     ],
     "added": [
       {
-        "guid": "019ae958-bc58-721d-bc30-43a869298126",
+        "guid": "019aff1a-894a-74ca-858d-5e238fc32111",
         "name": "New Test Tag",
         "description": "A new tag for testing",
         "icon": "test-tag-icon.svg"
@@ -200,7 +200,7 @@
     ],
     "added": [
       {
-        "guid": "019ae958-bc58-721d-bc30-44056d311267",
+        "guid": "019aff1a-894a-74ca-858d-629997b83008",
         "name": "New Test Concept",
         "description": "A new concept for testing",
         "icon": "test-concept-icon.svg"
@@ -226,7 +226,7 @@
     ],
     "added": [
       {
-        "guid": "019ae958-bc58-721d-bc30-49eae8fb7070",
+        "guid": "019aff1a-894a-74ca-858d-679548d84ef4",
         "name": "New Test Interface",
         "description": "A new interface for testing",
         "icon": "test-interface-icon.svg"
@@ -251,10 +251,10 @@
     ],
     "added": [
       {
-        "guid": "019ae958-bc58-721d-bc30-4c61d5e5c24e",
+        "guid": "019aff1a-894a-74ca-858d-6be9d05ec48c",
         "name": "new-file.txt",
-        "createdAt": "2025-12-04T12:31:38.072Z",
-        "updatedAt": "2025-12-04T12:31:38.072Z"
+        "createdAt": "2025-12-08T17:55:20.522Z",
+        "updatedAt": "2025-12-08T17:55:20.522Z"
       }
     ]
   },
@@ -266,18 +266,18 @@
     ],
     "added": [
       {
-        "guid": "019ae958-bc58-721d-bc30-5191e16e964d",
+        "guid": "019aff1a-894a-74ca-858d-6f1852b63694",
         "name": "test-folder",
         "description": "A new folder for testing",
-        "createdAt": "2025-12-04T12:31:38.072Z",
-        "updatedAt": "2025-12-04T12:31:38.072Z"
+        "createdAt": "2025-12-08T17:55:20.522Z",
+        "updatedAt": "2025-12-08T17:55:20.522Z"
       }
     ]
   },
   "attributes": {
     "added": [
       {
-        "guid": "019ae958-bc58-721d-bc30-568cb99f5c74",
+        "guid": "019aff1a-894a-74ca-858d-71d3724a88da",
         "key": "test.attribute",
         "value": "test value",
         "definition": "A test attribute"

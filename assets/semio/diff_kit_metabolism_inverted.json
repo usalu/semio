@@ -18,7 +18,7 @@
     ],
     "removed": [
       {
-        "guid": "019ae958-bc58-721d-bc30-2ee3ffe207e3"
+        "guid": "019aff1a-894a-74ca-858d-4b864b531ec7"
       }
     ],
     "updated": [
@@ -32,7 +32,7 @@
           "ports": {
             "removed": [
               {
-                "guid": "019ae958-bc57-750d-8c4a-49a1c2f441e7"
+                "guid": "019aff1a-8949-76be-8c75-ddf1e0944947"
               }
             ]
           }
@@ -6983,7 +6983,7 @@
     ],
     "removed": [
       {
-        "guid": "019ae958-bc58-721d-bc30-3bea9821c85c"
+        "guid": "019aff1a-894a-74ca-858d-560b8d8972ed"
       }
     ],
     "updated": [
@@ -6997,7 +6997,7 @@
           "pieces": {
             "removed": [
               {
-                "guid": "019ae958-bc58-721d-bc30-347f10c6c650"
+                "guid": "019aff1a-894a-74ca-858d-53e442f1b6f8"
               }
             ]
           }
@@ -7014,7 +7014,7 @@
     ],
     "removed": [
       {
-        "guid": "019ae958-bc58-721d-bc30-43a869298126"
+        "guid": "019aff1a-894a-74ca-858d-5e238fc32111"
       }
     ],
     "updated": [
@@ -7038,7 +7038,7 @@
     ],
     "removed": [
       {
-        "guid": "019ae958-bc58-721d-bc30-44056d311267"
+        "guid": "019aff1a-894a-74ca-858d-629997b83008"
       }
     ],
     "updated": [
@@ -7067,7 +7067,7 @@
     ],
     "removed": [
       {
-        "guid": "019ae958-bc58-721d-bc30-49eae8fb7070"
+        "guid": "019aff1a-894a-74ca-858d-679548d84ef4"
       }
     ],
     "updated": [
@@ -7097,7 +7097,7 @@
     ],
     "removed": [
       {
-        "guid": "019ae958-bc58-721d-bc30-4c61d5e5c24e"
+        "guid": "019aff1a-894a-74ca-858d-6be9d05ec48c"
       }
     ],
     "updated": [
@@ -7122,14 +7122,14 @@
     ],
     "removed": [
       {
-        "guid": "019ae958-bc58-721d-bc30-5191e16e964d"
+        "guid": "019aff1a-894a-74ca-858d-6f1852b63694"
       }
     ]
   },
   "attributes": {
     "removed": [
       {
-        "guid": "019ae958-bc58-721d-bc30-568cb99f5c74"
+        "guid": "019aff1a-894a-74ca-858d-71d3724a88da"
       }
     ],
     "updated": [],

@@ -5,7 +5,7 @@ author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: >-
   Refactor sketchpad state management to fix performance issues with
   overfetching
-model: claude-sonnet-4.5
+model: claude-opus-4.5
 ---
 
 # Previously

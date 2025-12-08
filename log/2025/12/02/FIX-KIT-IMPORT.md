@@ -3,7 +3,7 @@ date: "2025-12-02T17:31:33.308Z"
 slug: FIX-KIT-IMPORT
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix kit import and design app infinite loop
-model: claude-sonnet-4.5
+model: claude-opus-4.5
 ---
 
 # Previously

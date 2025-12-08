@@ -3,7 +3,7 @@ date: "2025-12-04T23:05:06.444Z"
 slug: XSTATE-MIGRATION
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Plan XState migration for Sketchpad state management
-model: claude-sonnet-4.5
+model: claude-opus-4.5
 ---
 
 # Previously

@@ -3,7 +3,7 @@ date: "2025-12-01T14:11:54.142Z"
 slug: SKETCHPAD-TESTS
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Extend/adjust/refactor code to comply with sketchpad tests
-model: claude-sonnet-4.5
+model: claude-opus-4.5
 ---
 
 # Previously

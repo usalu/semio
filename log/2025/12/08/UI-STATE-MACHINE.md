@@ -1,19 +1,22 @@
 ---
-date: '2025-12-07T23:50:42.452Z'
+date: "2025-12-07T23:50:42.452Z"
 slug: UI-STATE-MACHINE
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-summary: 'Finish the UI state machine with proper states, guards, menus, and context'
-model: claude-sonnet-4.5
+summary: "Finish the UI state machine with proper states, guards, menus, and context"
+model: claude-opus-4.5
 ---
+
 # Previously
 
 The existing `machines.ts` has a unified `sketchpadMachine` that handles:
+
 - Y.js sync for Kit data persistence
 - App state for Home, Kit, Type, Design, Quality apps
 - Transaction management for undo/redo
 - Tutorial state
 
 However, the machine is "flat" - all events are handled at the root level without proper hierarchical state modeling. The user started designing a proper statechart with:
+
 - Navigation hierarchy: Idle → Home → Kit → Design/Type/Quality → Docs
 - Parallel states within each app for interaction modes
 - Context menu states for different entities

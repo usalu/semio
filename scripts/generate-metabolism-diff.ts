@@ -36,6 +36,7 @@ import {
     Kit,
     File as KitFile,
     Quality,
+    Tag,
     Type
 } from "../js/js/semio";
 

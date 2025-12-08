@@ -66,9 +66,9 @@ import {
   Canvas,
   ConceptFilter,
   identitySelector,
-  KitDiffAppStore as KitDiffAppController,
+  KitDiffAppStore as KitDiffStore,
   KitScopeProvider,
-  registerKitAppStoreFactory as registerKitAppControllerFactory,
+  registerKitAppStoreFactory as registerKitStoreFactory,
   useAddFooterItem,
   useAddPanelSection,
   useAppType,
@@ -82,7 +82,6 @@ import {
   useKitAppXState,
   useKitCommands,
   useKitScope,
-  useKitStore,
   useLanguage,
   useLayout,
   useMode,
@@ -294,7 +293,7 @@ export const inverseKitAppSelectionDiff = (selection: KitAppSelection, diff: Kit
 export const areSameKitApp = (kitApp: KitAppId, other: KitAppId): boolean => kitApp.kit === other.kit;
 export const hasSameKitApp = (kitApp: KitAppId, others: KitAppId[]): boolean => others.some((other) => areSameKitApp(kitApp, other));
 
-class KitAppController extends KitDiffAppController<KitAppState, KitAppDiff, KitAppSelectionDiff, KitAppEdit, KitAppCommandContext, KitAppCommandResult> {
+class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff, KitAppEdit, KitAppCommandContext, KitAppCommandResult> {
   constructor(parent: SketchpadOrchestrator, yMap: YKitApp, transact: (fn: () => void) => void, id: KitAppId, state?: KitAppState) {
     super(parent, yMap, transact);
 
@@ -778,10 +777,10 @@ class KitAppController extends KitDiffAppController<KitAppState, KitAppDiff, Kit
 }
 
 if (typeof window !== "undefined") {
-  registerKitAppControllerFactory((parent, yMap, transact, id, state) => new KitAppController(parent, yMap, transact, id, state as any));
+  registerKitStoreFactory((parent, yMap, transact, id, state) => new KitStore(parent, yMap, transact, id, state as any));
 }
 
-function useKitAppController<T>(selector?: (controller: KitAppController) => T, id?: KitAppId): T | KitAppController | null {
+function useKitStore<T>(selector?: (controller: KitStore) => T, id?: KitAppId): T | KitStore | null {
   const orchestrator = useSketchpadStore();
   const kitScope = useKitScope();
   const resolvedKitId = kitScope?.guid ?? id?.kit;
@@ -792,8 +791,8 @@ function useKitAppController<T>(selector?: (controller: KitAppController) => T, 
     if (!orchestrator || !orchestrator.hasKit(resolvedKitId)) {
       return null;
     }
-    const kitAppController = orchestrator.kitApp(resolvedKitId);
-    const result = selector ? selector(kitAppController) : kitAppController;
+    const kitStore = orchestrator.kitApp(resolvedKitId);
+    const result = selector ? selector(kitStore) : kitStore;
     return result;
   } catch {
     return null;
@@ -844,7 +843,7 @@ export function useKitApp<T>(selector?: (state: KitAppState) => T, id?: KitAppId
 
 export function useKitAppSelection(): GranularHookResult<KitAppSelection> {
   const kitScope = useKitScope();
-  const controller = useKitAppController() as KitAppController | null;
+  const controller = useKitStore() as KitStore | null;
   const state = useKitApp(identitySelector);
   const selection = (state as KitAppState).selection ?? emptyKitAppSelection;
   const canSet = kitScope !== null && controller !== null;
@@ -859,7 +858,7 @@ export function useKitAppSelection(): GranularHookResult<KitAppSelection> {
 
 export function useKitAppFullscreen(): GranularHookResult<KitAppFullscreenWindow> {
   const kitScope = useKitScope();
-  const controller = useKitAppController() as KitAppController | null;
+  const controller = useKitStore() as KitStore | null;
   const fullscreen = useKitApp((s) => s.fullscreenWindow) as KitAppFullscreenWindow;
   const canSet = kitScope !== null && controller !== null;
   const setFullscreen = useCallback(
@@ -879,7 +878,7 @@ export function useKitAppOthers(): GranularHookNoSetResult<KitAppPresenceOther[]
 }
 
 export function useKitAppTransaction(origin: string): Transaction {
-  const controller = useKitAppController() as KitAppController | null;
+  const controller = useKitStore() as KitStore | null;
   if (!controller) {
     return {};
   }
@@ -891,7 +890,7 @@ export function useKitAppTransaction(origin: string): Transaction {
 }
 
 export function useKitAppCommands(id?: KitAppId) {
-  const controller = useKitAppController(undefined, id) as KitAppController | null;
+  const controller = useKitStore(undefined, id) as KitStore | null;
   const noOp = () => {};
   if (!controller) {
     return {
@@ -2395,12 +2394,14 @@ const AppContent: FC = () => {
   useEffect(() => {
     if (appType !== "kit") return;
 
+    const { setTheme, setLanguage, setLayout, setExpertise, setMode } = sketchpadCommands;
+
     const SettingsContent = () => {
-      const [theme, setTheme] = useTheme();
-      const [language, setLanguage] = useLanguage();
-      const [layout, setLayout] = useLayout();
-      const [expertise, setExpertise] = useExpertise();
-      const [mode, setMode] = useMode();
+      const theme = useTheme();
+      const language = useLanguage();
+      const layout = useLayout();
+      const expertise = useExpertise();
+      const mode = useMode();
 
       const languageEnLabel = useLabel("semio.sketchpad.settings.language.en");
       const languageDeLabel = useLabel("semio.sketchpad.settings.language.de");
@@ -2413,7 +2414,7 @@ const AppContent: FC = () => {
               <ToggleGroup
                 id="semio.sketchpad.settings.theme"
                 value={theme}
-                onValueChange={(value: string) => setTheme?.(value as Theme)}
+                onValueChange={(value: string) => setTheme("semio.sketchpad.settings.theme", value as Theme)}
                 showLabel
                 kind="single"
                 items={[
@@ -2426,7 +2427,7 @@ const AppContent: FC = () => {
           </TreeItem>
           <TreeItem>
             <TreeContent>
-              <Select id="semio.sketchpad.settings.language" value={language || "en"} onValueChange={(value: string) => setLanguage?.(value)} showLabel>
+              <Select id="semio.sketchpad.settings.language" value={language || "en"} onValueChange={(value: string) => setLanguage("semio.sketchpad.settings.language", value)} showLabel>
                 <SelectTrigger>
                   <SelectValue placeholder={languagePlaceholder} />
                 </SelectTrigger>
@@ -2442,7 +2443,7 @@ const AppContent: FC = () => {
               <ToggleGroup
                 id="semio.sketchpad.settings.layout"
                 value={typeof layout === "object" ? "desktop" : layout}
-                onValueChange={(value: string) => setLayout?.(value as "desktop" | "tablet")}
+                onValueChange={(value: string) => setLayout("semio.sketchpad.settings.layout", value as "desktop" | "tablet")}
                 showLabel
                 kind="single"
                 items={[
@@ -2457,7 +2458,7 @@ const AppContent: FC = () => {
               <ToggleGroup
                 id="semio.sketchpad.settings.expertise"
                 value={expertise}
-                onValueChange={(value: string) => setExpertise?.(value as Expertise)}
+                onValueChange={(value: string) => setExpertise("semio.sketchpad.settings.expertise", value as Expertise)}
                 showLabel
                 kind="single"
                 items={[
@@ -2473,7 +2474,7 @@ const AppContent: FC = () => {
               <ToggleGroup
                 id="semio.sketchpad.settings.mode"
                 value={mode}
-                onValueChange={(value: string) => setMode?.(value as Mode)}
+                onValueChange={(value: string) => setMode("semio.sketchpad.settings.mode", value as Mode)}
                 showLabel
                 kind="single"
                 items={[

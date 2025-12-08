@@ -3,7 +3,7 @@ date: "2025-12-02T18:01:55.369Z"
 slug: FIX-DESIGN-PAN-PERF
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix design app panning performance
-model: claude-sonnet-4.5
+model: claude-opus-4.5
 ---
 
 # Previously

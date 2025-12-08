@@ -3,7 +3,7 @@ date: "2025-12-03T09:00:05.451Z"
 slug: GRASSHOPPER-REFLECTION-REMOVAL
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Remove reflection from Grasshopper components and hardcode inputs/outputs
-model: claude-sonnet-4.5
+model: claude-opus-4.5
 ---
 
 # Previously

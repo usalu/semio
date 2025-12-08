@@ -3,7 +3,7 @@ date: "2025-12-05T15:19:47.750Z"
 slug: FULL-XSTATE-TRANSITION
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Document full xstate transition process
-model: claude-sonnet-4.5
+model: claude-opus-4.5
 ---
 
 # Previously

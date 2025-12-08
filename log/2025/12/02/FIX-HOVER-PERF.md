@@ -3,7 +3,7 @@ date: "2025-12-02T20:00:52.810Z"
 slug: FIX-HOVER-PERF
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix hover and selection state overfetching for performance
-model: claude-sonnet-4.5
+model: claude-opus-4.5
 ---
 
 # Previously

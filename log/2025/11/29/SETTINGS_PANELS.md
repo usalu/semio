@@ -1,3 +1,11 @@
+---
+date: "2025-11-29T23:46:42.072Z"
+slug: SETTINGS_PANELS
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+summary: Implement settings panel hierarchy
+model: claude-opus-4.5
+---
+
 # Settings Panel Hierarchy
 
 ## App Hierarchy
@@ -13,6 +21,7 @@ Sketchpad (root)
 ```
 
 ### App Levels:
+
 - **Sketchpad**: Root application container providing global settings (theme, language, layout, expertise, mode)
 - **Home**: Displays list of kits and kit management
 - **Kit**: Shows types and designs within a kit
@@ -24,6 +33,7 @@ Sketchpad (root)
 Panels from the same kind have different sections ordered from most specific (top) to least specific (bottom).
 
 ### Specificity Levels:
+
 - **30**: App-specific settings (Design, Type)
 - **20**: App-specific settings (Home)
 - **10**: Kit-level settings
@@ -32,6 +42,7 @@ Panels from the same kind have different sections ordered from most specific (to
 ### Settings Panel Sections by App:
 
 #### Home App
+
 1. **Home Settings** (specificity: 20)
    - Theme (System, Light, Dark)
    - Language (English, German)
@@ -43,6 +54,7 @@ Panels from the same kind have different sections ordered from most specific (to
    - Same global settings as above
 
 #### Kit App
+
 1. **Kit Settings** (specificity: 10)
    - Theme, Language, Layout, Expertise, Mode
 
@@ -50,6 +62,7 @@ Panels from the same kind have different sections ordered from most specific (to
    - Global settings
 
 #### Design App
+
 1. **Design Settings** (specificity: 30)
    - Proximity Connect Distance
    - Grid Size
@@ -61,6 +74,7 @@ Panels from the same kind have different sections ordered from most specific (to
    - Global settings
 
 #### Type App
+
 1. **Type Settings** (specificity: 30)
    - (Currently placeholder, can be extended with type-specific settings)
 
@@ -75,6 +89,7 @@ Panels from the same kind have different sections ordered from most specific (to
 ### Panel Section Structure
 
 Each panel section has the following properties:
+
 - `id`: Unique identifier (e.g., "semio.sketchpad.app.home.settings")
 - `specificity`: Number indicating hierarchy level (higher = more specific)
 - `order`: Number for ordering within same specificity level
@@ -83,19 +98,21 @@ Each panel section has the following properties:
 ### Sorting Logic
 
 Sections are sorted by:
+
 1. **Specificity** (descending): Higher specificity appears first
 2. **Order** (ascending): Lower order appears first within same specificity
 
 Example from `Sketchpad.tsx`:
+
 ```typescript
 const addSection = useCallback((panelKey: PanelKey, section: PanelSection) => {
   setSections((prev) => {
     const updated = {
       ...prev,
       [panelKey]: [...prev[panelKey].filter((s) => s.id !== section.id), section].sort((a, b) => {
-        const specificityDiff = b.specificity - a.specificity;  // Higher specificity first
+        const specificityDiff = b.specificity - a.specificity; // Higher specificity first
         if (specificityDiff !== 0) return specificityDiff;
-        return (a.order || 0) - (b.order || 0);  // Lower order first
+        return (a.order || 0) - (b.order || 0); // Lower order first
       }),
     };
     return updated;
@@ -143,6 +160,7 @@ The settings panel hierarchy is tested using Playwright end-to-end tests in `ske
 3. All apps have access to global Sketchpad settings
 
 Example test structure:
+
 ```typescript
 test("Home app shows correct settings sections in order", async ({ page }) => {
   await page.goto("/");

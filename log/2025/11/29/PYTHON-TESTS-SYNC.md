@@ -3,7 +3,7 @@ date: "2025-11-28T23:26:42.072Z"
 slug: PYTHON-TESTS-SYNC
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Sync Python unit tests with JS fixtures and extend engine.py
-model: claude-sonnet-4.5
+model: claude-opus-4.5
 ---
 
 # Previously

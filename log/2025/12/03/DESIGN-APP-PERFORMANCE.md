@@ -3,7 +3,7 @@ date: "2025-12-03T14:13:54.989Z"
 slug: DESIGN-APP-PERFORMANCE
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Design App Pan Performance Investigation
-model: claude-sonnet-4.5
+model: claude-opus-4.5
 ---
 
 # Previously

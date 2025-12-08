@@ -3,7 +3,7 @@ date: "2025-11-30T00:39:37.870Z"
 slug: STATE-MANAGEMENT-REFINEMENT
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: "Refine state management: granular Yjs subscriptions for selectors"
-model: claude-sonnet-4.5
+model: claude-opus-4.5
 ---
 
 # Previously

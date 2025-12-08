@@ -3,7 +3,7 @@ date: "2025-12-02T21:44:16.196Z"
 slug: FIX-DIFF-TEST
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: "Fix diff test - schema changed, concepts now objects"
-model: claude-sonnet-4.5
+model: claude-opus-4.5
 ---
 
 # Previously

@@ -3,7 +3,7 @@ date: "2025-12-02T21:22:30.744Z"
 slug: FIX-TAMBOUR-MODEL-WARNING
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix Tambour model warning by regenerating metabolism.zip with models
-model: claude-sonnet-4.5
+model: claude-opus-4.5
 ---
 
 # Previously

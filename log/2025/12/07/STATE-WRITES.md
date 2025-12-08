@@ -3,7 +3,7 @@ date: "2025-12-07T21:39:04.368Z"
 slug: STATE-WRITES
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Update state writes handling
-model: claude-sonnet-4.5
+model: claude-opus-4.5
 ---
 
 # Previously
@@ -27,8 +27,8 @@ Right now:
 
 - **Design app commands:**
   - Defined in `Design.tsx` (`designAppCommands` map).
-  - Registered into `DesignAppController`’s `commandRegistry` in its constructor.
-  - Executed via `DesignAppController.execute(commandId, origin, ...args)` which:
+  - Registered into `DesignStore`’s `commandRegistry` in its constructor.
+  - Executed via `DesignStore.execute(commandId, origin, ...args)` which:
     - Wraps `executeCommand`.
     - Builds a `DesignAppCommandContext` (kit snapshot, design snapshot, designApp state).
     - Runs the command.
@@ -50,7 +50,7 @@ Right now:
 
 Goal: flip this so that **all writes** go:
 
-> UI hook → `actor.send(...)` → machine action → `DesignAppController.execute(...)` → commands → Yjs.
+> UI hook → `actor.send(...)` → machine action → `DesignStore.execute(...)` → commands → Yjs.
 
 Reads stay as they are.
 
@@ -117,7 +117,7 @@ For any design app write (e.g. delete selection, move piece, change plane compon
      designUpdatePiecePlaneXAxisY: ({ context, event }) => {
        if (event.type !== "DESIGN.UPDATE_PIECE_PLANE_XAXIS_Y") return;
 
-       const store = context.sketchpadStore.designApp({ kit: event.kitGuid, design: event.designGuid }) as DesignAppController;
+       const store = context.sketchpadStore.designApp({ kit: event.kitGuid, design: event.designGuid }) as DesignStore;
 
        store.execute(
          "semio.designApp.updatePieces", // existing command
@@ -287,7 +287,7 @@ Implementation sketch:
 
    Then in `machines.ts`:
    - Add the `"DESIGN.UPDATE_PIECE_PLANE_XAXIS_Y"` event type.
-   - Add an action that calls `DesignAppController.execute("semio.designApp.updatePieces", origin, [{ id, diff }])` as shown earlier.
+   - Add an action that calls `DesignStore.execute("semio.designApp.updatePieces", origin, [{ id, diff }])` as shown earlier.
 
 No second hook, no factory, no new read system.
 
@@ -354,6 +354,7 @@ function getScopeImports() {
 Implemented triadic hooks for each app following the pattern `[value, setValue, canSetValue]`:
 
 **Design App Hooks:**
+
 - `useDesignAppSelection()` - Selection state (pieces, connections, ports)
 - `useDesignAppHover()` - Hover state
 - `useDesignAppDiagramScale()` - Diagram zoom scale
@@ -366,6 +367,7 @@ Implemented triadic hooks for each app following the pattern `[value, setValue, 
 - `useDesignAppSelectedModelTags()` - Selected model tags per type
 
 **Type App Hooks:**
+
 - `useTypeAppSelection()` - Selection state (ports, models)
 - `useTypeAppHover()` - Hover state
 - `useTypeAppCamera()` - 3D camera state
@@ -376,6 +378,7 @@ Implemented triadic hooks for each app following the pattern `[value, setValue, 
 - `useTypeAppSelectedModelTags()` - Selected model tags
 
 **Kit App Hooks:**
+
 - `useKitAppSelection()` - Selection state
 - `useKitAppHover()` - Hover state
 - `useKitAppPanelVisibility()` - Panel open/closed state
@@ -383,6 +386,7 @@ Implemented triadic hooks for each app following the pattern `[value, setValue, 
 - `useKitAppExpandedRows()` - Expanded row GUIDs
 
 **Home App Hooks:**
+
 - `useHomeAppSelection()` - Kit selection state
 - `useHomeAppHover()` - Hover state
 - `useHomeAppPanelVisibility()` - Panel open/closed state
@@ -392,6 +396,7 @@ Implemented triadic hooks for each app following the pattern `[value, setValue, 
 ### 2. Added New Events to `machines.ts`
 
 Added to `SketchpadEvent` type:
+
 - `HOME.SET_PANEL_VISIBILITY` - Set home panel visibility
 - `KIT.SET_PANEL_VISIBILITY` - Set kit panel visibility
 - `KIT.SET_EXPANDED_ROWS` - Set expanded rows in kit table
@@ -402,6 +407,7 @@ Added to `SketchpadEvent` type:
 ### 3. Added New Actions to `machines.ts`
 
 Implemented action handlers:
+
 - `homeSetPanelVisibility` - Updates `homeApp.panels` Map
 - `kitSetPanelVisibility` - Updates `kitApps[key].panels` Map
 - `kitSetExpandedRows` - Updates `kitApps[key].expandedRows` Set
@@ -412,6 +418,7 @@ Implemented action handlers:
 ### 4. Wired Events to Actions
 
 Added event handlers in the machine's `on` block:
+
 ```ts
 "HOME.SET_PANEL_VISIBILITY": { actions: "homeSetPanelVisibility" }
 "KIT.SET_PANEL_VISIBILITY": { actions: "kitSetPanelVisibility" }
@@ -425,9 +432,11 @@ Added event handlers in the machine's `on` block:
 
 - **Piece-level hooks**: Implement `useFlatPiecePlaneXAxisY` which requires:
   - `DESIGN.UPDATE_PIECE_PLANE_XAXIS_Y` event
-  - Action that calls `DesignAppController.execute("semio.designApp.updatePieces", ...)`
+  - Action that calls `DesignStore.execute("semio.designApp.updatePieces", ...)`
   - Uses `usePieceScope()` for piece context
 - **Replace UI usages**: Gradually replace `useDesignAppCommands()` calls with triadic hooks
 - **Quality app hooks**: Add triadic hooks for quality app once needed
 
-````
+```
+
+```

@@ -3,7 +3,7 @@ date: "2025-12-03T09:12:44.719Z"
 slug: TYPE-APP-STATE-OPTIMIZATION
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Optimize TypeApp state management to fix overfetching and overrendering
-model: claude-sonnet-4.5
+model: claude-opus-4.5
 ---
 
 # Previously

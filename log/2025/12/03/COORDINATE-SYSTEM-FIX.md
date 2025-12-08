@@ -1,3 +1,11 @@
+---
+date: "2025-12-03T10:35:43.796Z"
+slug: COORDINATE-SYSTEM-FIX
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+summary: Fix coordinate system transformation for ports and geometry
+model: claude-opus-4.5
+---
+
 # Coordinate System Transformation Fix
 
 **Date:** 2025-12-03
@@ -11,6 +19,7 @@ The application uses two different coordinate systems:
 - **Three.js**: X-right, Y-up, Z-backward (right-handed, Z-backward)
 
 This mismatch was causing:
+
 1. Ports in the Type app to be displayed at incorrect positions
 2. Port directions to point incorrectly
 3. Potential issues with plane-based geometry rendering
@@ -18,10 +27,12 @@ This mismatch was causing:
 ## Transformation
 
 The coordinate transformation between the two systems is:
+
 - **Semio (x, y, z) → Three.js (x, -z, y)**
 - **Three.js (x, y, z) → Semio (x, z, -y)**
 
 This transformation is implemented in [semio.ts](../../js/js/semio.ts#L139-L151):
+
 - `toThreeRotation()` - matrix for Semio → Three.js
 - `toSemioRotation()` - matrix for Three.js → Semio
 
@@ -30,11 +41,13 @@ This transformation is implemented in [semio.ts](../../js/js/semio.ts#L139-L151)
 ### 1. Port Rendering ([Type.tsx](../../js/js/sketchpad/Type.tsx))
 
 **Import coordinate transformation functions:**
+
 ```typescript
 import { toThreeRotation, toSemioRotation } from "../semio";
 ```
 
 **PortVisual component (lines 1169-1181):**
+
 - Added coordinate transformation when rendering ports
 - Port positions are now transformed from Semio to Three.js coordinates
 - Port directions are now transformed and normalized correctly
@@ -56,6 +69,7 @@ const direction = useMemo(() => {
 ```
 
 **Port creation (lines 1600-1632):**
+
 - When users click on the mesh to create a port, the position and normal from Three.js raycasting are now converted back to Semio coordinates before being stored
 
 ```typescript
@@ -75,6 +89,7 @@ const threeMatrix = new THREE.Matrix4().multiplyMatrices(toThreeRotation(), plan
 ### 3. Gizmo Labels (Already Correct)
 
 The coordinate gizmo labels at [elements.tsx:4854](../../js/js/sketchpad/elements.tsx#L4854) correctly display the Semio coordinate system axes:
+
 ```typescript
 const labels = ["X", "Z", "-Y"];
 ```
@@ -84,6 +99,7 @@ This shows users the Semio coordinate system even though the rendering is in Thr
 ## Testing
 
 The changes ensure that:
+
 - ✅ Ports are displayed at correct positions in the 3D scene
 - ✅ Port direction arrows point correctly
 - ✅ Newly created ports are stored with correct Semio coordinates

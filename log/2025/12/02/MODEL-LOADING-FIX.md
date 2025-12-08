@@ -5,7 +5,7 @@ author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: >-
   Fix model loading in Type app by matching imported file blobs to existing kit
   file definitions
-model: claude-sonnet-4.5
+model: claude-opus-4.5
 ---
 
 # Previously

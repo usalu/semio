@@ -46,8 +46,8 @@ import type {
   YLeafMapString,
   YStringArray,
 } from "./shared";
-import { conditionalHookResult, createPanelDefinition, PanelKind, readonlyHookResult, ToolKind } from "./shared";
-import { identitySelector, useDesignScope, useKitScope, usePieceScope, useSketchpadActorSafe } from "./Sketchpad";
+import { conditionalHookResult, createPanelDefinition, Expertise, Mode, PanelKind, readonlyHookResult, Theme, ToolKind } from "./shared";
+import { identitySelector, useDesignScope, useKitScope, usePieceScope, useSketchpadActor, useSketchpadActorSafe } from "./Sketchpad";
 
 // #endregion Internal State Management
 
@@ -57,7 +57,7 @@ import { DragEndEvent, useDraggable } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
 import { Edges, Line, Select, useFBX, useGLTF } from "@react-three/drei";
 import { ThreeEvent, useLoader } from "@react-three/fiber";
-import { AddIcon, ConnectionIcon, DiagramIcon, DisconnectIcon, RemoveIcon, SceneIcon, SelectToolIcon, TableViewIcon } from "@semio/assets";
+import { AddIcon, AwardIcon, CodeIcon, ConnectionIcon, DiagramIcon, DisconnectIcon, HandIcon, MonitorIcon, MoonIcon, MousePointerIcon, RemoveIcon, SceneIcon, SelectToolIcon, SunIcon, TableViewIcon, TutorialIcon, UserIcon } from "@semio/assets";
 import React, { createContext, FC, memo, ReactNode, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
@@ -99,13 +99,35 @@ import {
   toThreeRotation,
   Type,
 } from "../semio";
-import { Avatar, AvatarFallback, Button, Combobox, Diagram, DraggableAvatar, Geometry, Input, Scene, Slider, SortableTreeItems, Stepper, Textarea, TreeContent, TreeItem, TreeSection } from "./elements";
+import {
+  Avatar,
+  AvatarFallback,
+  Button,
+  Combobox,
+  Diagram,
+  DraggableAvatar,
+  Geometry,
+  Input,
+  Scene,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  Select as SelectUI,
+  SelectValue,
+  Slider,
+  SortableTreeItems,
+  Stepper,
+  Textarea,
+  ToggleGroup,
+  TreeContent,
+  TreeItem,
+  TreeSection,
+} from "./elements";
 import { registerDesignAppStoreFactory } from "./shared";
 import {
   Canvas,
   ConnectionScopeProvider,
   DesignScopeProvider,
-  DesignStore,
   getKitAppHooks,
   KitDiffAppStore,
   KitScopeProvider,
@@ -133,6 +155,7 @@ import {
   useDesignAppXState,
   useDiffedPiece,
   useDragDrop,
+  useExpertise,
   useExplodeableDesignNodes,
   useFlatPiecePlane,
   useFocusSafe,
@@ -148,6 +171,9 @@ import {
   useKitStore,
   useKitTags,
   useKitTypes,
+  useLanguage,
+  useLayout,
+  useMode,
   usePiece,
   usePiecesFromIds,
   usePiecesMetadataMap,
@@ -159,10 +185,10 @@ import {
   useSketchpad,
   useSketchpadCommands,
   useSketchpadStore,
-  useSyncDeep,
   useSyncField,
   useSyncNestedArrayItemMembership,
   useSyncSelectionItemMembership,
+  useTheme,
   useTooltip,
   useType,
 } from "./Sketchpad";
@@ -926,7 +952,7 @@ export const inverseDesignAppSelectionDiff = (selection: DesignAppSelection, dif
 export const areSameDesignApp = (designApp: DesignAppId, other: DesignAppId): boolean => designApp.kit === other.kit && designApp.design === other.design;
 export const hasSameDesignApp = (designApp: DesignAppId, others: DesignAppId[]): boolean => others.some((other) => areSameDesignApp(designApp, other));
 
-export class DesignAppController extends KitDiffAppStore<DesignAppState, DesignAppDiff, DesignAppSelectionDiff, DesignAppEdit, DesignAppCommandContext, DesignAppCommandResult> {
+export class DesignStore extends KitDiffAppStore<DesignAppState, DesignAppDiff, DesignAppSelectionDiff, DesignAppEdit, DesignAppCommandContext, DesignAppCommandResult> {
   private readonly kitGuid: Guid;
   private readonly designGuid: Guid;
 
@@ -1498,11 +1524,11 @@ export class DesignAppController extends KitDiffAppStore<DesignAppState, DesignA
   }
 }
 
-let designAppControllerInitialized = false;
-export function initializeDesignAppController() {
-  if (designAppControllerInitialized) return;
-  designAppControllerInitialized = true;
-  registerDesignAppStoreFactory((parent: any, yMap: any, transact: any, id: any, state: any) => new DesignAppController(parent, yMap as any, transact, id, state));
+let designStoreInitialized = false;
+export function initializeDesignStore() {
+  if (designStoreInitialized) return;
+  designStoreInitialized = true;
+  registerDesignAppStoreFactory((parent: any, yMap: any, transact: any, id: any, state: any) => new DesignStore(parent, yMap as any, transact, id, state));
 }
 
 type DesignAppScope = { id: string };
@@ -1511,7 +1537,7 @@ const DesignAppScopeContext = createContext<DesignAppScope | null>(null);
 const DesignAppActorContext = createContext<any>(null);
 
 const DesignAppSyncComponent = ({ children }: { children: React.ReactNode }) => {
-  useDesignAppYjsToXStateSyncInternal();
+  useDesignAppInitialize();
   return <>{children}</>;
 };
 
@@ -1530,42 +1556,33 @@ function convertToXStateDesignAppState(state: DesignAppState): any {
   };
 }
 
-function useDesignAppYjsToXStateSyncInternal() {
-  const actor = useSketchpadActorSafe();
+function useDesignAppInitialize() {
+  const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const designScope = useDesignScope();
   const kitGuid = kitScope?.guid ?? "";
   const designGuid = designScope?.guid ?? "";
-  const sketchpadStore = useSketchpadStore();
   const hasInitialized = useRef(false);
 
   useLayoutEffect(() => {
-    if (!actor || hasInitialized.current || !kitGuid || !designGuid) return;
-
-    const store = sketchpadStore.designApp(kitGuid, designGuid);
-    const initialState = store.snapshot();
+    if (hasInitialized.current || !kitGuid || !designGuid) return;
     actor.send({
       type: "DESIGN.INIT",
       kitGuid,
       designGuid,
-      state: convertToXStateDesignAppState(initialState),
+      state: {
+        panelVisibility: { toolbar: true, workbench: false, details: false, chat: false, settings: false },
+        selection: undefined,
+        hover: undefined,
+        focusedPiece: undefined,
+        camera: undefined,
+        activeTool: ToolKind.SELECTION_NORMAL,
+        fullscreenWindow: DesignAppFullscreenWindow.None,
+        selectedModelTags: {},
+      },
     });
     hasInitialized.current = true;
-  }, [actor, sketchpadStore, kitGuid, designGuid]);
-
-  const store = kitGuid && designGuid ? sketchpadStore.designApp(kitGuid, designGuid) : null;
-  const state = useSyncDeep<DesignAppState, DesignAppState>(store, (s) => s);
-
-  useEffect(() => {
-    if (!actor || !state || !kitGuid || !designGuid || !hasInitialized.current) return;
-
-    actor.send({
-      type: "DESIGN.SYNC",
-      kitGuid,
-      designGuid,
-      state: convertToXStateDesignAppState(state),
-    });
-  }, [actor, state, kitGuid, designGuid]);
+  }, [actor, kitGuid, designGuid]);
 }
 
 export const DesignAppScopeProvider = (props: { id: string; children: React.ReactNode }) => {
@@ -1579,7 +1596,7 @@ export function useDesignAppActor(): any {
   return useContext(DesignAppActorContext);
 }
 
-export function useDesignAppController<T>(selector?: (store: DesignAppController) => T, id?: DesignAppId): T | DesignAppController | null {
+export function useDesignStore<T>(selector?: (store: DesignStore) => T, id?: DesignAppId): T | DesignStore | null {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
   const designScope = useDesignScope();
@@ -1626,50 +1643,51 @@ const selectPanelVisibility = (s: DesignAppState) => s.panelVisibility;
 
 export function useDesignAppSelection(): GranularHookResult<DesignAppSelection> {
   const state = useDesignApp(identitySelector);
-  const store = useDesignAppController() as DesignAppController | null;
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const designScope = useDesignScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const designGuid = designScope?.guid ?? "";
   const value = state ? selectSelection(state as DesignAppState) : EMPTY_SELECTION;
-  const canSet = store !== null;
+  const canSet = !!state && !!kitGuid && !!designGuid;
   const setter = useMemo(() => {
-    if (!store) return undefined;
+    if (!canSet) return undefined;
     return (selection: DesignAppSelection) => {
-      const current = store.snapshot().selection ?? {};
-      const piecesToAdd = selection.pieces?.filter((p) => !current.pieces?.includes(p)) ?? [];
-      const piecesToRemove = current.pieces?.filter((p) => !selection.pieces?.includes(p)) ?? [];
-      const connectionsToAdd = selection.connections?.filter((c) => !current.connections?.includes(c)) ?? [];
-      const connectionsToRemove = current.connections?.filter((c) => !selection.connections?.includes(c)) ?? [];
-      store.change({
-        selection: {
-          pieces: { added: piecesToAdd, removed: piecesToRemove },
-          connections: { added: connectionsToAdd, removed: connectionsToRemove },
-          port: selection.port,
-        },
-      });
+      actor.send({ type: "DESIGN.SET_SELECTION", kitGuid, designGuid, selection });
     };
-  }, [store]);
+  }, [actor, kitGuid, designGuid, canSet]);
   return conditionalHookResult(canSet, value, setter);
 }
 
 export function useDesignAppFullscreen(): GranularHookResult<DesignAppFullscreenWindow> {
   const state = useDesignApp(identitySelector);
-  const store = useDesignAppController() as DesignAppController | null;
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const designScope = useDesignScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const designGuid = designScope?.guid ?? "";
   const value = state ? selectFullscreen(state as DesignAppState) : DesignAppFullscreenWindow.None;
-  const canSet = store !== null;
+  const canSet = !!state && !!kitGuid && !!designGuid;
   const setter = useMemo(() => {
-    if (!store) return undefined;
-    return (fullscreen: DesignAppFullscreenWindow) => store.change({ fullscreenWindow: fullscreen });
-  }, [store]);
+    if (!canSet) return undefined;
+    return (fullscreen: DesignAppFullscreenWindow) => actor.send({ type: "DESIGN.SET_FULLSCREEN", kitGuid, designGuid, window: fullscreen });
+  }, [actor, kitGuid, designGuid, canSet]);
   return conditionalHookResult(canSet, value, setter);
 }
 
 export function useDesignAppActiveTool(): GranularHookResult<ToolKind> {
   const state = useDesignApp(identitySelector);
-  const store = useDesignAppController() as DesignAppController | null;
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const designScope = useDesignScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const designGuid = designScope?.guid ?? "";
   const value = state ? selectActiveTool(state as DesignAppState) : ToolKind.SELECTION_NORMAL;
-  const canSet = store !== null;
+  const canSet = !!state && !!kitGuid && !!designGuid;
   const setter = useMemo(() => {
-    if (!store) return undefined;
-    return (tool: ToolKind) => store.change({ activeTool: tool });
-  }, [store]);
+    if (!canSet) return undefined;
+    return (tool: ToolKind) => actor.send({ type: "DESIGN.SET_ACTIVE_TOOL", kitGuid, designGuid, tool });
+  }, [actor, kitGuid, designGuid, canSet]);
   return conditionalHookResult(canSet, value, setter);
 }
 
@@ -1685,85 +1703,129 @@ export function useDesignAppOthers(): GranularHookResult<DesignAppPresenceOther[
 
 export function useDesignAppCamera(): GranularHookResult<Camera | undefined> {
   const state = useDesignApp(identitySelector);
-  const store = useDesignAppController() as DesignAppController | null;
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const designScope = useDesignScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const designGuid = designScope?.guid ?? "";
   const value = state ? selectCamera(state as DesignAppState) : undefined;
-  const canSet = store !== null;
+  const canSet = !!state && !!kitGuid && !!designGuid;
   const setter = useMemo(() => {
-    if (!store) return undefined;
-    return (camera: Camera | undefined) => store.change({ camera });
-  }, [store]);
+    if (!canSet) return undefined;
+    return (camera: Camera | undefined) => actor.send({ type: "DESIGN.SET_CAMERA", kitGuid, designGuid, camera });
+  }, [actor, kitGuid, designGuid, canSet]);
   return conditionalHookResult(canSet, value, setter);
 }
 
 export function useDesignAppDiagramCenter(): GranularHookResult<Coord | undefined> {
   const state = useDesignApp(identitySelector);
-  const store = useDesignAppController() as DesignAppController | null;
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const designScope = useDesignScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const designGuid = designScope?.guid ?? "";
   const value = state ? selectDiagramCenter(state as DesignAppState) : undefined;
-  const canSet = store !== null;
+  const canSet = !!state && !!kitGuid && !!designGuid;
   const setter = useMemo(() => {
-    if (!store) return undefined;
-    return (center: Coord | undefined) => store.change({ diagramCenter: center });
-  }, [store]);
+    if (!canSet) return undefined;
+    return (center: Coord | undefined) => {
+      if (center) {
+        actor.send({ type: "DESIGN.SET_DIAGRAM_CENTER", kitGuid, designGuid, center: { x: center.u, y: center.v } });
+      }
+    };
+  }, [actor, kitGuid, designGuid, canSet]);
   return conditionalHookResult(canSet, value, setter);
 }
 
 export function useDesignAppDiagramScale(): GranularHookResult<number | undefined> {
   const state = useDesignApp(identitySelector);
-  const store = useDesignAppController() as DesignAppController | null;
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const designScope = useDesignScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const designGuid = designScope?.guid ?? "";
   const value = state ? selectDiagramScale(state as DesignAppState) : undefined;
-  const canSet = store !== null;
+  const canSet = !!state && !!kitGuid && !!designGuid;
   const setter = useMemo(() => {
-    if (!store) return undefined;
-    return (scale: number | undefined) => store.change({ diagramScale: scale });
-  }, [store]);
+    if (!canSet) return undefined;
+    return (scale: number | undefined) => {
+      if (scale !== undefined) {
+        actor.send({ type: "DESIGN.SET_DIAGRAM_SCALE", kitGuid, designGuid, scale });
+      }
+    };
+  }, [actor, kitGuid, designGuid, canSet]);
   return conditionalHookResult(canSet, value, setter);
 }
 
 export function useDesignAppFocusedPieceGuid(): GranularHookResult<Guid | undefined> {
   const state = useDesignApp(identitySelector);
-  const store = useDesignAppController() as DesignAppController | null;
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const designScope = useDesignScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const designGuid = designScope?.guid ?? "";
   const value = state ? selectFocusedPiece(state as DesignAppState) : undefined;
-  const canSet = store !== null;
+  const canSet = !!state && !!kitGuid && !!designGuid;
   const setter = useMemo(() => {
-    if (!store) return undefined;
-    return (guid: Guid | undefined) => store.change({ focusedPieceGuid: guid ?? null });
-  }, [store]);
+    if (!canSet) return undefined;
+    return (pieceGuid: Guid | undefined) => actor.send({ type: "DESIGN.FOCUS_PIECE", kitGuid, designGuid, pieceGuid });
+  }, [actor, kitGuid, designGuid, canSet]);
   return conditionalHookResult(canSet, value, setter);
 }
 
 export function useDesignAppSelectedModelTags(): GranularHookResult<Record<Guid, string[]>> {
   const state = useDesignApp(identitySelector);
-  const store = useDesignAppController() as DesignAppController | null;
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const designScope = useDesignScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const designGuid = designScope?.guid ?? "";
   const value = state ? selectModelTags(state as DesignAppState) : EMPTY_MODEL_TAGS;
-  const canSet = store !== null;
+  const canSet = !!state && !!kitGuid && !!designGuid;
   const setter = useMemo(() => {
-    if (!store) return undefined;
-    return (tags: Record<Guid, string[]>) => store.change({ selectedModelTags: tags });
-  }, [store]);
+    if (!canSet) return undefined;
+    return (tags: Record<Guid, string[]>) => {
+      actor.send({ type: "DESIGN.SYNC", kitGuid, designGuid, state: { selectedModelTags: tags } });
+    };
+  }, [actor, kitGuid, designGuid, canSet]);
   return conditionalHookResult(canSet, value, setter);
 }
 
 export function useDesignAppHover(): GranularHookResult<DesignAppHover | undefined> {
   const state = useDesignApp(identitySelector);
-  const store = useDesignAppController() as DesignAppController | null;
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const designScope = useDesignScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const designGuid = designScope?.guid ?? "";
   const value = state ? selectHover(state as DesignAppState) : undefined;
-  const canSet = store !== null;
+  const canSet = !!state && !!kitGuid && !!designGuid;
   const setter = useMemo(() => {
-    if (!store) return undefined;
-    return (hover: DesignAppHover | undefined) => store.change({ hover: hover ?? {} });
-  }, [store]);
+    if (!canSet) return undefined;
+    return (hover: DesignAppHover | undefined) => {
+      if (hover && (hover.pieces?.length || hover.connections?.length)) {
+        actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover });
+      } else {
+        actor.send({ type: "DESIGN.CLEAR_HOVER", kitGuid, designGuid });
+      }
+    };
+  }, [actor, kitGuid, designGuid, canSet]);
   return conditionalHookResult(canSet, value, setter);
 }
 
 export function useDesignAppPanelVisibility(): GranularHookResult<PanelVisibility> {
   const state = useDesignApp(identitySelector);
-  const store = useDesignAppController() as DesignAppController | null;
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const designScope = useDesignScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const designGuid = designScope?.guid ?? "";
   const value = state ? selectPanelVisibility(state as DesignAppState) : DEFAULT_PANEL_VISIBILITY;
-  const canSet = store !== null;
+  const canSet = !!state && !!kitGuid && !!designGuid;
   const setter = useMemo(() => {
-    if (!store) return undefined;
-    return (visibility: PanelVisibility) => store.change({ panelVisibility: visibility });
-  }, [store]);
+    if (!canSet) return undefined;
+    return (visibility: PanelVisibility) => actor.send({ type: "DESIGN.SET_PANEL_VISIBILITY", kitGuid, designGuid, panelVisibility: visibility });
+  }, [actor, kitGuid, designGuid, canSet]);
   return conditionalHookResult(canSet, value, setter);
 }
 
@@ -1823,7 +1885,7 @@ const EMPTY_COMMANDS = {
 } as any;
 
 export function useDesignAppCommands(id?: DesignAppId) {
-  const store = useDesignAppController(undefined, id) as DesignAppController | null;
+  const store = useDesignStore(undefined, id) as DesignStore | null;
 
   return useMemo(() => {
     if (!store) {
@@ -1947,7 +2009,7 @@ export function useDesignAppYjsToXStateSync(id?: DesignAppId) {
   }, [actor, state, kitGuid, designGuid]);
 }
 
-function getTransactionAffectedPieces(store: DesignAppController | null): { changedPieces: Set<string>; statusMap: Map<string, DiffStatus> } {
+function getTransactionAffectedPieces(store: DesignStore | null): { changedPieces: Set<string>; statusMap: Map<string, DiffStatus> } {
   const changedPieces = new Set<string>();
   const statusMap = new Map<string, DiffStatus>();
 
@@ -1997,7 +2059,7 @@ const EMPTY_TRANSACTION_CONTEXT: TransactionPiecesContextValue = {
 const TransactionPiecesContext = createContext<TransactionPiecesContextValue>(EMPTY_TRANSACTION_CONTEXT);
 
 export function TransactionPiecesProvider({ children }: { children: ReactNode }) {
-  const store = useDesignAppController(identitySelector) as DesignAppController;
+  const store = useDesignStore(identitySelector) as DesignStore;
 
   const lastValueRef = useRef<TransactionPiecesContextValue>(EMPTY_TRANSACTION_CONTEXT);
   const lastJsonRef = useRef<string>("");
@@ -2024,7 +2086,7 @@ export function useIsDesignPieceChangedInTransaction(id: DesignAppId | undefined
 }
 
 export function useDesignAppIsPieceHovered(id: DesignAppId | undefined, pieceId: string): boolean {
-  const store = useDesignAppController(identitySelector, id) as DesignAppController;
+  const store = useDesignStore(identitySelector, id) as DesignStore;
   return useSyncNestedArrayItemMembership(store, "hover", "pieces", pieceId);
 }
 
@@ -2040,7 +2102,7 @@ const EMPTY_HOVER_CONTEXT: HoverPiecesContextValue = {
 
 const HoverPiecesContext = createContext<HoverPiecesContextValue>(EMPTY_HOVER_CONTEXT);
 
-function computeHoverData(store: DesignAppController | null, state: DesignAppState): HoverPiecesContextValue {
+function computeHoverData(store: DesignStore | null, state: DesignAppState): HoverPiecesContextValue {
   const hover = state.hover;
   const transitivelyHoveredPieces = new Set<string>();
   const transitivelyHoveredTypes = new Set<string>();
@@ -2077,7 +2139,7 @@ function computeHoverData(store: DesignAppController | null, state: DesignAppSta
 }
 
 export function HoverPiecesProvider({ children }: { children: ReactNode }) {
-  const store = useDesignAppController(identitySelector) as DesignAppController;
+  const store = useDesignStore(identitySelector) as DesignStore;
 
   const lastValueRef = useRef<HoverPiecesContextValue>(EMPTY_HOVER_CONTEXT);
   const lastJsonRef = useRef<string>("");
@@ -2117,7 +2179,7 @@ export function useDesignAppPieceStatus(id: DesignAppId | undefined, pieceId: st
 }
 
 export function useDesignAppIsPieceSelected(id: DesignAppId | undefined, pieceId: string): boolean {
-  const store = useDesignAppController(identitySelector, id) as DesignAppController;
+  const store = useDesignStore(identitySelector, id) as DesignStore;
   return useSyncSelectionItemMembership(store, "pieces", pieceId);
 }
 
@@ -2179,17 +2241,17 @@ export function useDesignAppPieceColor(id: DesignAppId | undefined, pieceId: str
 }
 
 export function useDesignAppIsConnectionHovered(id: DesignAppId | undefined, connectionId: string): boolean {
-  const store = useDesignAppController(identitySelector, id) as DesignAppController;
+  const store = useDesignStore(identitySelector, id) as DesignStore;
   return useSyncNestedArrayItemMembership(store, "hover", "connections", connectionId);
 }
 
 export function useDesignAppIsConnectionSelected(id: DesignAppId | undefined, connectionId: string): boolean {
-  const store = useDesignAppController(identitySelector, id) as DesignAppController;
+  const store = useDesignStore(identitySelector, id) as DesignStore;
   return useSyncSelectionItemMembership(store, "connections", connectionId);
 }
 
 export function useDesignAppIsPortHovered(id: DesignAppId | undefined, pieceId: string, portId: string): boolean {
-  const store = useDesignAppController(identitySelector, id) as DesignAppController;
+  const store = useDesignStore(identitySelector, id) as DesignStore;
   const selector = useCallback((state: DesignAppState) => state.hover?.ports?.some((p) => p.piece === pieceId && p.port === portId) ?? false, [pieceId, portId]);
   if (!store) return false;
   return useSyncField<DesignAppState, boolean>(store, "hover", selector);
@@ -2198,7 +2260,7 @@ export function useDesignAppIsPortHovered(id: DesignAppId | undefined, pieceId: 
 const EMPTY_PORT: DesignAppSelection["port"] = undefined;
 
 export function useDesignAppSelectedPort(id?: DesignAppId): DesignAppSelection["port"] | undefined {
-  const store = useDesignAppController(identitySelector, id) as DesignAppController;
+  const store = useDesignStore(identitySelector, id) as DesignStore;
 
   const lastPortRef = useRef<{ value: DesignAppSelection["port"]; json: string }>({ value: undefined, json: "" });
 
@@ -2255,13 +2317,13 @@ export function useDesignAppSelectedPort(id?: DesignAppId): DesignAppSelection["
 }
 
 export function useDesignAppIsPiecePortSelected(pieceId: string, portId?: string): boolean {
-  const store = useDesignAppController(identitySelector) as DesignAppController;
+  const store = useDesignStore(identitySelector) as DesignStore;
   const selector = useCallback((state: DesignAppState) => state.selection?.port?.piece === pieceId && state.selection?.port?.port === portId, [pieceId, portId]);
   if (!store || !portId) return false;
   return useSyncField<DesignAppState, boolean>(store, "selection", selector, false);
 }
 
-function getConnectionStatusFromTransactionStack(store: DesignAppController | null, connectionId: string): DiffStatus {
+function getConnectionStatusFromTransactionStack(store: DesignStore | null, connectionId: string): DiffStatus {
   if (!store) return DiffStatus.Unchanged;
   const currentStack = store.currentTransactionStack;
   if (!currentStack || currentStack.length === 0) return DiffStatus.Unchanged;
@@ -2291,7 +2353,7 @@ function getConnectionStatusFromTransactionStack(store: DesignAppController | nu
 }
 
 export function useDesignAppConnectionStatus(id: DesignAppId | undefined, connectionId: string): DiffStatus {
-  const store = useDesignAppController(identitySelector, id) as DesignAppController;
+  const store = useDesignStore(identitySelector, id) as DesignStore;
   const selector = useCallback(() => getConnectionStatusFromTransactionStack(store, connectionId), [store, connectionId]);
   return useSyncField<DesignAppState, DiffStatus>(store, "currentTransactionStack", selector);
 }
@@ -7125,7 +7187,7 @@ const renderCountRef = { current: 0 };
 
 const App: FC<AppProps> = () => {
   renderCountRef.current++;
-  useDesignAppYjsToXStateSyncInternal();
+  useDesignAppInitialize();
 
   const { t } = useTranslation();
   const { selectAll, deselectAll, deleteSelected, undo, redo, toggleDiagramFullscreen, toggleAccesslFullscreen, addPiece, startTransaction, finalizeTransaction, togglePanel, setActiveTool, hoverTypes, hoverDesigns, clearHover } =
@@ -7143,7 +7205,7 @@ const App: FC<AppProps> = () => {
 
   const reactFlowInstanceRef = useRef<ReactFlowInstance | null>(null);
 
-  const store = useDesignAppController() as DesignAppController | null;
+  const store = useDesignStore() as DesignStore | null;
   const storedWindowLayout = useDesignApp((s) => s.windowLayout);
 
   const defaultLayout = useMemo(() => {
@@ -7705,7 +7767,15 @@ const App: FC<AppProps> = () => {
   }, [appType, kitGuid, workbenchTypes?.length, workbenchDesigns?.length]);
 
   useEffect(() => {
+    const { setTheme, setLanguage, setLayout, setExpertise, setMode } = sketchpadCommands;
+
     const SketchpadSettingsContent = () => {
+      const theme = useTheme();
+      const language = useLanguage();
+      const layout = useLayout();
+      const expertise = useExpertise();
+      const mode = useMode();
+
       const languageEnLabel = useLabel("semio.sketchpad.settings.language.en");
       const languageDeLabel = useLabel("semio.sketchpad.settings.language.de");
       const languagePlaceholder = useLabel("semio.sketchpad.app.home.settings.language.placeholder");
@@ -7714,37 +7784,77 @@ const App: FC<AppProps> = () => {
         <>
           <TreeItem>
             <TreeContent>
-              <OriginProvider id="semio.sketchpad.app.design.settings.theme">
-                <DesignThemeToggle />
-              </OriginProvider>
+              <ToggleGroup
+                id="semio.sketchpad.settings.theme"
+                value={theme}
+                onValueChange={(value: string) => setTheme("semio.sketchpad.settings.theme", value as Theme)}
+                showLabel
+                kind="single"
+                items={[
+                  { value: Theme.SYSTEM, id: "semio.sketchpad.settings.theme.system", icon: <MonitorIcon className="size-small" /> },
+                  { value: Theme.LIGHT, id: "semio.sketchpad.settings.theme.light", icon: <SunIcon className="size-small" /> },
+                  { value: Theme.DARK, id: "semio.sketchpad.settings.theme.dark", icon: <MoonIcon className="size-small" /> },
+                ]}
+              />
             </TreeContent>
           </TreeItem>
           <TreeItem>
             <TreeContent>
-              <OriginProvider id="semio.sketchpad.app.design.settings.language">
-                <DesignLanguageSelect languageEnLabel={languageEnLabel} languageDeLabel={languageDeLabel} languagePlaceholder={languagePlaceholder} />
-              </OriginProvider>
+              <SelectUI id="semio.sketchpad.settings.language" value={language || "en"} onValueChange={(value: string) => setLanguage("semio.sketchpad.settings.language", value)} showLabel>
+                <SelectTrigger>
+                  <SelectValue placeholder={languagePlaceholder} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="en">{languageEnLabel}</SelectItem>
+                  <SelectItem value="de">{languageDeLabel}</SelectItem>
+                </SelectContent>
+              </SelectUI>
             </TreeContent>
           </TreeItem>
           <TreeItem>
             <TreeContent>
-              <OriginProvider id="semio.sketchpad.app.design.settings.layout">
-                <DesignLayoutToggle />
-              </OriginProvider>
+              <ToggleGroup
+                id="semio.sketchpad.settings.layout"
+                value={typeof layout === "object" ? "desktop" : layout}
+                onValueChange={(value: string) => setLayout("semio.sketchpad.settings.layout", value as "desktop" | "tablet")}
+                showLabel
+                kind="single"
+                items={[
+                  { value: "desktop", id: "semio.sketchpad.settings.layout.desktop", icon: <MousePointerIcon className="size-small" /> },
+                  { value: "tablet", id: "semio.sketchpad.settings.layout.tablet", icon: <HandIcon className="size-small" /> },
+                ]}
+              />
             </TreeContent>
           </TreeItem>
           <TreeItem>
             <TreeContent>
-              <OriginProvider id="semio.sketchpad.app.design.settings.expertise">
-                <DesignExpertiseToggle />
-              </OriginProvider>
+              <ToggleGroup
+                id="semio.sketchpad.settings.expertise"
+                value={expertise}
+                onValueChange={(value: string) => setExpertise("semio.sketchpad.settings.expertise", value as Expertise)}
+                showLabel
+                kind="single"
+                items={[
+                  { value: Expertise.BEGINNER, id: "semio.sketchpad.settings.expertise.beginner", icon: <TutorialIcon className="size-small" /> },
+                  { value: Expertise.NORMAL, id: "semio.sketchpad.settings.expertise.normal", icon: <UserIcon className="size-small" /> },
+                  { value: Expertise.EXPERT, id: "semio.sketchpad.settings.expertise.expert", icon: <AwardIcon className="size-small" /> },
+                ]}
+              />
             </TreeContent>
           </TreeItem>
           <TreeItem>
             <TreeContent>
-              <OriginProvider id="semio.sketchpad.app.design.settings.mode">
-                <DesignModeToggle />
-              </OriginProvider>
+              <ToggleGroup
+                id="semio.sketchpad.settings.mode"
+                value={mode}
+                onValueChange={(value: string) => setMode("semio.sketchpad.settings.mode", value as Mode)}
+                showLabel
+                kind="single"
+                items={[
+                  { value: Mode.USER, id: "semio.sketchpad.settings.mode.user", icon: <UserIcon className="size-small" /> },
+                  { value: Mode.DEV, id: "semio.sketchpad.settings.mode.dev", icon: <CodeIcon className="size-small" /> },
+                ]}
+              />
             </TreeContent>
           </TreeItem>
         </>
@@ -7824,7 +7934,7 @@ const App: FC<AppProps> = () => {
 };
 
 const DesignApp: FC = () => {
-  initializeDesignAppController();
+  initializeDesignStore();
 
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
@@ -7850,95 +7960,6 @@ const DesignApp: FC = () => {
     </TransactionPiecesProvider>
   );
 };
-
-// #region Settings Helper Components
-
-const DesignThemeToggle: FC = () => {
-  const [theme, setTheme] = useTheme();
-  return (
-    <ToggleGroup
-      id="semio.sketchpad.settings.theme"
-      value={theme}
-      onValueChange={(value: string) => setTheme?.(value as Theme)}
-      showLabel
-      kind="single"
-      items={[
-        { value: Theme.SYSTEM, id: "semio.sketchpad.settings.theme.system", icon: <MonitorIcon className="size-small" /> },
-        { value: Theme.LIGHT, id: "semio.sketchpad.settings.theme.light", icon: <SunIcon className="size-small" /> },
-        { value: Theme.DARK, id: "semio.sketchpad.settings.theme.dark", icon: <MoonIcon className="size-small" /> },
-      ]}
-    />
-  );
-};
-
-const DesignLanguageSelect: FC<{ languageEnLabel: string; languageDeLabel: string; languagePlaceholder: string }> = ({ languageEnLabel, languageDeLabel, languagePlaceholder }) => {
-  const [language, setLanguage] = useLanguage();
-  return (
-    <SelectUI id="semio.sketchpad.settings.language" value={language || "en"} onValueChange={(value: string) => setLanguage?.(value)} showLabel>
-      <SelectTrigger>
-        <SelectValue placeholder={languagePlaceholder} />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="en">{languageEnLabel}</SelectItem>
-        <SelectItem value="de">{languageDeLabel}</SelectItem>
-      </SelectContent>
-    </SelectUI>
-  );
-};
-
-const DesignLayoutToggle: FC = () => {
-  const [layout, setLayout] = useLayout();
-  return (
-    <ToggleGroup
-      id="semio.sketchpad.settings.layout"
-      value={typeof layout === "object" ? "desktop" : layout}
-      onValueChange={(value: string) => setLayout?.(value as "desktop" | "tablet")}
-      showLabel
-      kind="single"
-      items={[
-        { value: "desktop", id: "semio.sketchpad.settings.layout.desktop", icon: <MousePointerIcon className="size-small" /> },
-        { value: "tablet", id: "semio.sketchpad.settings.layout.tablet", icon: <HandIcon className="size-small" /> },
-      ]}
-    />
-  );
-};
-
-const DesignExpertiseToggle: FC = () => {
-  const [expertise, setExpertise] = useExpertise();
-  return (
-    <ToggleGroup
-      id="semio.sketchpad.settings.expertise"
-      value={expertise}
-      onValueChange={(value: string) => setExpertise?.(value as Expertise)}
-      showLabel
-      kind="single"
-      items={[
-        { value: Expertise.BEGINNER, id: "semio.sketchpad.settings.expertise.beginner", icon: <TutorialIcon className="size-small" /> },
-        { value: Expertise.NORMAL, id: "semio.sketchpad.settings.expertise.normal", icon: <UserIcon className="size-small" /> },
-        { value: Expertise.EXPERT, id: "semio.sketchpad.settings.expertise.expert", icon: <AwardIcon className="size-small" /> },
-      ]}
-    />
-  );
-};
-
-const DesignModeToggle: FC = () => {
-  const [mode, setMode] = useMode();
-  return (
-    <ToggleGroup
-      id="semio.sketchpad.settings.mode"
-      value={mode}
-      onValueChange={(value: string) => setMode?.(value as Mode)}
-      showLabel
-      kind="single"
-      items={[
-        { value: Mode.USER, id: "semio.sketchpad.settings.mode.user", icon: <UserIcon className="size-small" /> },
-        { value: Mode.DEV, id: "semio.sketchpad.settings.mode.dev", icon: <CodeIcon className="size-small" /> },
-      ]}
-    />
-  );
-};
-
-// #endregion Settings Helper Components
 
 // #region Config
 

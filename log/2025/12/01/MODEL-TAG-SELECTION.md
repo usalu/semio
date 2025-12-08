@@ -3,7 +3,7 @@ date: "2025-12-01T16:18:54.361Z"
 slug: MODEL-TAG-SELECTION
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Add model tag selection in footer for design and type apps
-model: claude-sonnet-4.5
+model: claude-opus-4.5
 ---
 
 # Previously

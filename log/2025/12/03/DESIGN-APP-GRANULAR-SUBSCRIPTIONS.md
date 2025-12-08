@@ -3,7 +3,7 @@ date: "2025-12-03T12:00:02.758Z"
 slug: DESIGN-APP-GRANULAR-SUBSCRIPTIONS
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Optimize state management with granular Y.js subscriptions
-model: claude-sonnet-4.5
+model: claude-opus-4.5
 ---
 
 # Previously

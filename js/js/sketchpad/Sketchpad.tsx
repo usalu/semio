@@ -227,42 +227,6 @@ import {
   YStringArray,
 } from "./shared";
 import { Tutorial, TutorialProvider, TutorialStore, useAvailableTutorials } from "./Tutorials";
-
-// #region Origin Context
-
-/**
- * Context for tracking the origin (component id) for commands.
- * Components with an id should wrap their children in OriginProvider
- * to provide the origin context for triadic hooks.
- */
-const OriginContext = createContext<string | null>(null);
-
-/**
- * Provider for the origin context. Wraps children with the specified origin.
- * Origins are hierarchical - child providers override parent providers.
- */
-export const OriginProvider: FC<{ id: string; children: ReactNode }> = ({ id, children }) => {
-  return <OriginContext.Provider value={id}>{children}</OriginContext.Provider>;
-};
-
-/**
- * Hook to get the current origin from context.
- * Returns a default origin if no OriginProvider is in the tree.
- */
-export function useOrigin(): string {
-  const origin = useContext(OriginContext);
-  return origin ?? "semio.sketchpad.unknown";
-}
-
-/**
- * Hook to safely get the current origin, returning null if not in an OriginProvider.
- */
-export function useOriginSafe(): string | null {
-  return useContext(OriginContext);
-}
-
-// #endregion Origin Context
-
 let designAppModuleCache: any = null;
 let homeAppModuleCache: any = null;
 let kitAppModuleCache: any = null;
@@ -7969,6 +7933,21 @@ export const sketchpadMachine = setup({
       if (!app?.selection) return false;
       return (app.selection.ports?.length ?? 0) > 0 || (app.selection.models?.length ?? 0) > 0;
     },
+    // App initialized guards - used by triadic hooks to check canSetState
+    designAppExists: ({ context, event }) => {
+      const { kitGuid, designGuid } = event as any;
+      const key = `${kitGuid}:${designGuid}`;
+      return !!context.designApps[key];
+    },
+    typeAppExists: ({ context, event }) => {
+      const { kitGuid, typeGuid } = event as any;
+      const key = `${kitGuid}:${typeGuid}`;
+      return !!context.typeApps[key];
+    },
+    kitAppExists: ({ context, event }) => {
+      const { kitGuid } = event as any;
+      return !!context.kitApps[kitGuid];
+    },
   },
   actions: {
     navigate: assign({
@@ -8894,84 +8873,84 @@ export const sketchpadMachine = setup({
     },
     // Design app events
     "DESIGN.INIT": { actions: "designInit" },
-    "DESIGN.SYNC": { actions: "designSync" },
-    "DESIGN.TOGGLE_PANEL": { actions: "designTogglePanel" },
-    "DESIGN.SET_PANEL_VISIBILITY": { actions: "designSetPanelVisibility" },
-    "DESIGN.SET_ACTIVE_TOOL": { actions: "designSetActiveTool" },
-    "DESIGN.SET_FULLSCREEN": { actions: "designSetFullscreen" },
-    "DESIGN.SET_SELECTION": { actions: "designSetSelection" },
+    "DESIGN.SYNC": { guard: "designAppExists", actions: "designSync" },
+    "DESIGN.TOGGLE_PANEL": { guard: "designAppExists", actions: "designTogglePanel" },
+    "DESIGN.SET_PANEL_VISIBILITY": { guard: "designAppExists", actions: "designSetPanelVisibility" },
+    "DESIGN.SET_ACTIVE_TOOL": { guard: "designAppExists", actions: "designSetActiveTool" },
+    "DESIGN.SET_FULLSCREEN": { guard: "designAppExists", actions: "designSetFullscreen" },
+    "DESIGN.SET_SELECTION": { guard: "designAppExists", actions: "designSetSelection" },
     "DESIGN.CLEAR_SELECTION": {
       guard: "hasDesignSelection",
       actions: "designClearSelection",
     },
-    "DESIGN.SET_HOVER": { actions: "designSetHover" },
+    "DESIGN.SET_HOVER": { guard: "designAppExists", actions: "designSetHover" },
     "DESIGN.CLEAR_HOVER": {
       guard: "hasDesignHover",
       actions: "designClearHover",
     },
-    "DESIGN.FOCUS_PIECE": { actions: "designFocusPiece" },
-    "DESIGN.SET_DIAGRAM_CENTER": { actions: "designSetDiagramCenter" },
-    "DESIGN.SET_DIAGRAM_SCALE": { actions: "designSetDiagramScale" },
-    "DESIGN.SET_CAMERA": { actions: "designSetCamera" },
-    "DESIGN.SELECT_MODEL_TAG": { actions: "designSelectModelTag" },
-    "DESIGN.DESELECT_MODEL_TAG": { actions: "designDeselectModelTag" },
-    "DESIGN.SELECT_PIECE": { actions: "designSelectPiece" },
-    "DESIGN.DESELECT_PIECE": { actions: "designDeselectPiece" },
-    "DESIGN.SELECT_CONNECTION": { actions: "designSelectConnection" },
-    "DESIGN.DESELECT_CONNECTION": { actions: "designDeselectConnection" },
-    "DESIGN.SELECT_ALL": { actions: "designSelectAll" },
-    "DESIGN.DELETE_SELECTED": { actions: "designDeleteSelected" },
+    "DESIGN.FOCUS_PIECE": { guard: "designAppExists", actions: "designFocusPiece" },
+    "DESIGN.SET_DIAGRAM_CENTER": { guard: "designAppExists", actions: "designSetDiagramCenter" },
+    "DESIGN.SET_DIAGRAM_SCALE": { guard: "designAppExists", actions: "designSetDiagramScale" },
+    "DESIGN.SET_CAMERA": { guard: "designAppExists", actions: "designSetCamera" },
+    "DESIGN.SELECT_MODEL_TAG": { guard: "designAppExists", actions: "designSelectModelTag" },
+    "DESIGN.DESELECT_MODEL_TAG": { guard: "designAppExists", actions: "designDeselectModelTag" },
+    "DESIGN.SELECT_PIECE": { guard: "designAppExists", actions: "designSelectPiece" },
+    "DESIGN.DESELECT_PIECE": { guard: "designAppExists", actions: "designDeselectPiece" },
+    "DESIGN.SELECT_CONNECTION": { guard: "designAppExists", actions: "designSelectConnection" },
+    "DESIGN.DESELECT_CONNECTION": { guard: "designAppExists", actions: "designDeselectConnection" },
+    "DESIGN.SELECT_ALL": { guard: "designAppExists", actions: "designSelectAll" },
+    "DESIGN.DELETE_SELECTED": { guard: "designAppExists", actions: "designDeleteSelected" },
     // Type app events
     "TYPE.INIT": { actions: "typeInit" },
-    "TYPE.SYNC": { actions: "typeSync" },
-    "TYPE.TOGGLE_PANEL": { actions: "typeTogglePanel" },
-    "TYPE.SET_PANEL_VISIBILITY": { actions: "typeSetPanelVisibility" },
-    "TYPE.SET_FULLSCREEN_WINDOW": { actions: "typeSetFullscreenWindow" },
-    "TYPE.SET_ACTIVE_TOOL": { actions: "typeSetActiveTool" },
-    "TYPE.SET_SELECTION": { actions: "typeSetSelection" },
+    "TYPE.SYNC": { guard: "typeAppExists", actions: "typeSync" },
+    "TYPE.TOGGLE_PANEL": { guard: "typeAppExists", actions: "typeTogglePanel" },
+    "TYPE.SET_PANEL_VISIBILITY": { guard: "typeAppExists", actions: "typeSetPanelVisibility" },
+    "TYPE.SET_FULLSCREEN_WINDOW": { guard: "typeAppExists", actions: "typeSetFullscreenWindow" },
+    "TYPE.SET_ACTIVE_TOOL": { guard: "typeAppExists", actions: "typeSetActiveTool" },
+    "TYPE.SET_SELECTION": { guard: "typeAppExists", actions: "typeSetSelection" },
     "TYPE.CLEAR_SELECTION": {
       guard: "hasTypeSelection",
       actions: "typeClearSelection",
     },
-    "TYPE.SELECT_PORT": { actions: "typeSelectPort" },
-    "TYPE.DESELECT_PORT": { actions: "typeDeselectPort" },
-    "TYPE.SET_HOVER": { actions: "typeSetHover" },
+    "TYPE.SELECT_PORT": { guard: "typeAppExists", actions: "typeSelectPort" },
+    "TYPE.DESELECT_PORT": { guard: "typeAppExists", actions: "typeDeselectPort" },
+    "TYPE.SET_HOVER": { guard: "typeAppExists", actions: "typeSetHover" },
     "TYPE.CLEAR_HOVER": {
       guard: "hasTypeHover",
       actions: "typeClearHover",
     },
-    "TYPE.FOCUS_PORT": { actions: "typeFocusPort" },
-    "TYPE.SELECT_MODEL_TAG": { actions: "typeSelectModelTag" },
-    "TYPE.DESELECT_MODEL_TAG": { actions: "typeDeselectModelTag" },
-    "TYPE.SET_MODEL_TAGS": { actions: "typeSetModelTags" },
-    "TYPE.SET_CAMERA": { actions: "typeSetCamera" },
-    "TYPE.SELECT_ALL": { actions: "typeSelectAll" },
-    "TYPE.DESELECT_ALL": { actions: "typeDeselectAll" },
-    "TYPE.CLEAR_FOCUS": { actions: "typeClearFocus" },
-    "TYPE.SELECT_MODEL": { actions: "typeSelectModel" },
-    "TYPE.DESELECT_MODEL": { actions: "typeDeselectModel" },
-    "TYPE.HOVER_PORT": { actions: "typeHoverPort" },
-    "TYPE.HOVER_MODEL": { actions: "typeHoverModel" },
-    "TYPE.SET_SELECTED_MODEL": { actions: "typeSetSelectedModel" },
-    "TYPE.ADD_MODEL_TAG": { actions: "typeAddModelTag" },
-    "TYPE.REMOVE_MODEL_TAG": { actions: "typeRemoveModelTag" },
-    "TYPE.CLEAR_MODEL_TAGS": { actions: "typeClearModelTags" },
+    "TYPE.FOCUS_PORT": { guard: "typeAppExists", actions: "typeFocusPort" },
+    "TYPE.SELECT_MODEL_TAG": { guard: "typeAppExists", actions: "typeSelectModelTag" },
+    "TYPE.DESELECT_MODEL_TAG": { guard: "typeAppExists", actions: "typeDeselectModelTag" },
+    "TYPE.SET_MODEL_TAGS": { guard: "typeAppExists", actions: "typeSetModelTags" },
+    "TYPE.SET_CAMERA": { guard: "typeAppExists", actions: "typeSetCamera" },
+    "TYPE.SELECT_ALL": { guard: "typeAppExists", actions: "typeSelectAll" },
+    "TYPE.DESELECT_ALL": { guard: "typeAppExists", actions: "typeDeselectAll" },
+    "TYPE.CLEAR_FOCUS": { guard: "typeAppExists", actions: "typeClearFocus" },
+    "TYPE.SELECT_MODEL": { guard: "typeAppExists", actions: "typeSelectModel" },
+    "TYPE.DESELECT_MODEL": { guard: "typeAppExists", actions: "typeDeselectModel" },
+    "TYPE.HOVER_PORT": { guard: "typeAppExists", actions: "typeHoverPort" },
+    "TYPE.HOVER_MODEL": { guard: "typeAppExists", actions: "typeHoverModel" },
+    "TYPE.SET_SELECTED_MODEL": { guard: "typeAppExists", actions: "typeSetSelectedModel" },
+    "TYPE.ADD_MODEL_TAG": { guard: "typeAppExists", actions: "typeAddModelTag" },
+    "TYPE.REMOVE_MODEL_TAG": { guard: "typeAppExists", actions: "typeRemoveModelTag" },
+    "TYPE.CLEAR_MODEL_TAGS": { guard: "typeAppExists", actions: "typeClearModelTags" },
     // Kit app events
     "KIT.INIT": { actions: "kitInit" },
-    "KIT.SYNC": { actions: "kitSync" },
-    "KIT.TOGGLE_PANEL": { actions: "kitTogglePanel" },
-    "KIT.SET_PANEL_VISIBILITY": { actions: "kitSetPanelVisibility" },
-    "KIT.SET_FILTER": { actions: "kitSetFilter" },
-    "KIT.TOGGLE_ROW": { actions: "kitToggleRow" },
-    "KIT.SET_EXPANDED_ROWS": { actions: "kitSetExpandedRows" },
-    "KIT.SET_SORT": { actions: "kitSetSort" },
-    "KIT.SELECT_TYPE": { actions: "kitSelectType" },
-    "KIT.DESELECT_TYPE": { actions: "kitDeselectType" },
-    "KIT.SELECT_DESIGN": { actions: "kitSelectDesign" },
-    "KIT.DESELECT_DESIGN": { actions: "kitDeselectDesign" },
-    "KIT.SET_SELECTION": { actions: "kitSetSelection" },
-    "KIT.CLEAR_SELECTION": { actions: "kitClearSelection" },
-    "KIT.SET_HOVER": { actions: "kitSetHover" },
+    "KIT.SYNC": { guard: "kitAppExists", actions: "kitSync" },
+    "KIT.TOGGLE_PANEL": { guard: "kitAppExists", actions: "kitTogglePanel" },
+    "KIT.SET_PANEL_VISIBILITY": { guard: "kitAppExists", actions: "kitSetPanelVisibility" },
+    "KIT.SET_FILTER": { guard: "kitAppExists", actions: "kitSetFilter" },
+    "KIT.TOGGLE_ROW": { guard: "kitAppExists", actions: "kitToggleRow" },
+    "KIT.SET_EXPANDED_ROWS": { guard: "kitAppExists", actions: "kitSetExpandedRows" },
+    "KIT.SET_SORT": { guard: "kitAppExists", actions: "kitSetSort" },
+    "KIT.SELECT_TYPE": { guard: "kitAppExists", actions: "kitSelectType" },
+    "KIT.DESELECT_TYPE": { guard: "kitAppExists", actions: "kitDeselectType" },
+    "KIT.SELECT_DESIGN": { guard: "kitAppExists", actions: "kitSelectDesign" },
+    "KIT.DESELECT_DESIGN": { guard: "kitAppExists", actions: "kitDeselectDesign" },
+    "KIT.SET_SELECTION": { guard: "kitAppExists", actions: "kitSetSelection" },
+    "KIT.CLEAR_SELECTION": { guard: "kitAppExists", actions: "kitClearSelection" },
+    "KIT.SET_HOVER": { guard: "kitAppExists", actions: "kitSetHover" },
     "KIT.CLEAR_HOVER": {
       guard: "hasKitHover",
       actions: "kitClearHover",
@@ -12539,98 +12518,28 @@ export function getAppTypeFromPath(path: string): AppKind {
   return "home";
 }
 
-export function useTheme(): GranularHookResult<Theme> {
-  const actor = useSketchpadActorSafe();
-  const store = useSketchpadStore();
-  const origin = useOrigin();
-  const value = useSketchpad((s) => s.theme) as Theme;
-  const setter = useCallback(
-    (theme: Theme) => {
-      if (actor) {
-        actor.send({ type: "SET_THEME", theme });
-      }
-      store.execute("semio.sketchpad.setTheme", origin, theme);
-    },
-    [actor, store, origin],
-  );
-  const canSet = true;
-  return [value, canSet ? setter : undefined, canSet] as const;
+export function useTheme(): Theme {
+  return useSketchpad((s) => s.theme) as Theme;
 }
 
-export function useLanguage(): GranularHookResult<string> {
-  const actor = useSketchpadActorSafe();
-  const store = useSketchpadStore();
-  const origin = useOrigin();
-  const value = useSketchpad((s) => s.language) as string;
-  const setter = useCallback(
-    (language: string) => {
-      if (actor) {
-        actor.send({ type: "SET_LANGUAGE", language });
-      }
-      store.execute("semio.sketchpad.setLanguage", origin, language);
-    },
-    [actor, store, origin],
-  );
-  const canSet = true;
-  return [value, canSet ? setter : undefined, canSet] as const;
+export function useLanguage(): string {
+  return useSketchpad((s) => s.language) as string;
 }
 
-export function useLayout(): GranularHookResult<Layout> {
-  const actor = useSketchpadActorSafe();
-  const store = useSketchpadStore();
-  const origin = useOrigin();
-  const value = useSketchpad((s) => s.layout) as Layout;
-  const setter = useCallback(
-    (layout: Layout) => {
-      if (actor) {
-        actor.send({ type: "SET_LAYOUT", layout });
-      }
-      store.execute("semio.sketchpad.setLayout", origin, layout);
-    },
-    [actor, store, origin],
-  );
-  const canSet = true;
-  return [value, canSet ? setter : undefined, canSet] as const;
+export function useLayout(): Layout {
+  return useSketchpad((s) => s.layout) as Layout;
 }
 
-export function useMode(): GranularHookResult<Mode> {
-  const actor = useSketchpadActorSafe();
-  const store = useSketchpadStore();
-  const origin = useOrigin();
-  const value = useSketchpad((s) => s.mode) as Mode;
-  const setter = useCallback(
-    (mode: Mode) => {
-      if (actor) {
-        actor.send({ type: "SET_MODE", mode });
-      }
-      store.execute("semio.sketchpad.setMode", origin, mode);
-    },
-    [actor, store, origin],
-  );
-  const canSet = true;
-  return [value, canSet ? setter : undefined, canSet] as const;
+export function useMode(): Mode {
+  return useSketchpad((s) => s.mode) as Mode;
 }
 
-export function useExpertise(): GranularHookResult<Expertise> {
-  const actor = useSketchpadActorSafe();
-  const store = useSketchpadStore();
-  const origin = useOrigin();
-  const value = useSketchpad((s) => s.expertise) as Expertise;
-  const setter = useCallback(
-    (expertise: Expertise) => {
-      if (actor) {
-        actor.send({ type: "SET_EXPERTISE", expertise });
-      }
-      store.execute("semio.sketchpad.setExpertise", origin, expertise);
-    },
-    [actor, store, origin],
-  );
-  const canSet = true;
-  return [value, canSet ? setter : undefined, canSet] as const;
+export function useExpertise(): Expertise {
+  return useSketchpad((s) => s.expertise) as Expertise;
 }
 
 export function useTooltip(): (key: string) => string | undefined {
-  const [expertise] = useExpertise();
+  const expertise = useExpertise();
   return (key: string) => {
     if (expertise === Expertise.EXPERT) return undefined;
     return key;
@@ -12638,35 +12547,21 @@ export function useTooltip(): (key: string) => string | undefined {
 }
 
 export function useSemioTooltip() {
-  const [mode] = useMode();
+  const mode = useMode();
   return { mode };
 }
 
-export function useIsFullscreen(): GranularHookResult<boolean> {
-  const actor = useSketchpadActorSafe();
-  const store = useSketchpadStore();
-  const origin = useOrigin();
-  const value = useSketchpad((s) => s.isFullscreen) as boolean;
-  const setter = useCallback(
-    (isFullscreen: boolean) => {
-      if (actor) {
-        actor.send({ type: "TOGGLE_FULLSCREEN" });
-      }
-      store.execute("semio.sketchpad.toggleFullscreen", origin);
-    },
-    [actor, store, origin],
-  );
-  const canSet = true;
-  return [value, canSet ? setter : undefined, canSet] as const;
+export function useIsFullscreen(): boolean {
+  return useSketchpad((s) => s.isFullscreen) as boolean;
 }
 
 export function useIsNavbarExpanded(): boolean {
-  const [layout] = useLayout();
+  const layout = useLayout();
   return typeof layout === "object" ? layout.isNavbarExpanded : false;
 }
 
 export function useIsFooterExpanded(): boolean {
-  const [layout] = useLayout();
+  const layout = useLayout();
   return typeof layout === "object" ? layout.isFooterExpanded : false;
 }
 
@@ -12735,6 +12630,19 @@ export function useSketchpadSelector<T>(selector: (snapshot: ReturnType<Sketchpa
 export function useSketchpadSnapshot(): SketchpadState {
   const actor = useSketchpadActor();
   return useSelector(actor, (snapshot) => selectSnapshot(snapshot.context));
+}
+
+/**
+ * Check if an event can be sent to the sketchpad state machine.
+ * Uses the XState can() method to check if the event would be handled
+ * in the current state (passes all guards).
+ *
+ * @param event - The event to check (type and payload)
+ * @returns Whether the event can be sent
+ */
+export function useSketchpadCan(event: SketchpadEvent): boolean {
+  const actor = useSketchpadActor();
+  return useSelector(actor, (snapshot) => snapshot.can(event));
 }
 
 /**
@@ -13640,13 +13548,8 @@ async function loadAppConfigs() {
 
   const [homeModule, docsModule, kitModule, typeModule, designModule, qualityModule] = await Promise.all([import("./Home"), import("./Docs"), import("./Kit"), import("./Type"), import("./Design"), import("./Quality")]);
 
-  // Initialize store factories before registering app configs
-  // This ensures factories are available when apps are rendered
-  if (designModule.initializeDesignAppController) {
-    designModule.initializeDesignAppController();
-  }
-  if (kitModule.initializeKitAppController) {
-    kitModule.initializeKitAppController();
+  if (designModule.initializeDesignStore) {
+    designModule.initializeDesignStore();
   }
 
   appRegistry.register(homeModule.config);
@@ -13657,9 +13560,7 @@ async function loadAppConfigs() {
   appRegistry.register(qualityModule.config);
 }
 
-// Start loading configs immediately but don't block module initialization
 if (typeof window !== "undefined") {
-  // Use queueMicrotask to ensure this runs after module initialization completes
   queueMicrotask(() => {
     loadAppConfigs().catch((err) => console.error("Failed to load app configs:", err));
   });
@@ -16460,10 +16361,10 @@ const LayoutWrapper: FC = () => {
   const tutorialStore = store.tutorialStore();
 
   const navigation = useNavigation();
-  const [theme] = useTheme();
-  const [language] = useLanguage();
-  const [layout] = useLayout();
-  const [isFullscreen] = useIsFullscreen();
+  const theme = useTheme();
+  const language = useLanguage();
+  const layout = useLayout();
+  const isFullscreen = useIsFullscreen();
   const isNavbarExpanded = useIsNavbarExpanded();
   const isFooterExpanded = useIsFooterExpanded();
   const panelVisibility = useAppPanelVisibility();

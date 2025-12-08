@@ -3,7 +3,7 @@ date: "2025-12-03T19:27:55.067Z"
 slug: ENTITY-ID-DIFF-REFACTOR
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Refactor EntityId and Diff Schemas
-model: claude-sonnet-4.5
+model: claude-opus-4.5
 ---
 
 # Previously

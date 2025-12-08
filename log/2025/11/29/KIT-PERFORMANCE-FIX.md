@@ -3,7 +3,7 @@ date: "2025-11-29T22:33:45.718Z"
 slug: KIT-PERFORMANCE-FIX
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix Kit app performance after importing large kits
-model: claude-sonnet-4.5
+model: claude-opus-4.5
 ---
 
 # Previously

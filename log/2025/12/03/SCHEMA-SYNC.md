@@ -3,7 +3,7 @@ date: "2025-12-03T14:01:17.461Z"
 slug: SCHEMA-SYNC
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Schema extraction and synchronization script
-model: claude-sonnet-4.5
+model: claude-opus-4.5
 ---
 
 # Previously

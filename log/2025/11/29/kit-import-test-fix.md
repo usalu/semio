@@ -1,9 +1,9 @@
 ---
 date: "2025-11-29T00:53:42.477Z"
-slug: kit-import-test-fix
+slug: KIT-IMPORT-TEST-FIX
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix Kit Import Playwright Test
-model: claude-sonnet-4.5
+model: claude-opus-4.5
 ---
 
 # Previously

@@ -5707,6 +5707,74 @@ def _applyFolderDiff(base: dict, diff: dict) -> dict:
     return result
 
 
+def _getQualityDiff(before: dict, after: dict) -> dict:
+    """Get diff between two quality dicts."""
+    diff: dict = {}
+    if before.get("key") != after.get("key"):
+        diff["key"] = after.get("key")
+    if before.get("name") != after.get("name"):
+        diff["name"] = after.get("name")
+    if _normalizeValue(before.get("description")) != _normalizeValue(after.get("description")):
+        diff["description"] = after.get("description")
+    if _normalizeValue(before.get("uri")) != _normalizeValue(after.get("uri")):
+        diff["uri"] = after.get("uri")
+    if before.get("kind") != after.get("kind"):
+        diff["kind"] = after.get("kind")
+    if _normalizeBoolean(before.get("canScale")) != _normalizeBoolean(after.get("canScale")):
+        diff["canScale"] = after.get("canScale")
+    if _normalizeValue(before.get("defaultSiUnit")) != _normalizeValue(after.get("defaultSiUnit")):
+        diff["defaultSiUnit"] = after.get("defaultSiUnit")
+    if _normalizeValue(before.get("defaultImperialUnit")) != _normalizeValue(after.get("defaultImperialUnit")):
+        diff["defaultImperialUnit"] = after.get("defaultImperialUnit")
+    if before.get("min") != after.get("min"):
+        diff["min"] = after.get("min")
+    if _normalizeBoolean(before.get("isMinExcluded")) != _normalizeBoolean(after.get("isMinExcluded")):
+        diff["isMinExcluded"] = after.get("isMinExcluded")
+    if before.get("max") != after.get("max"):
+        diff["max"] = after.get("max")
+    if _normalizeBoolean(before.get("isMaxExcluded")) != _normalizeBoolean(after.get("isMaxExcluded")):
+        diff["isMaxExcluded"] = after.get("isMaxExcluded")
+    if before.get("defaultValue") != after.get("defaultValue"):
+        diff["defaultValue"] = after.get("defaultValue")
+    if _normalizeValue(before.get("formula")) != _normalizeValue(after.get("formula")):
+        diff["formula"] = after.get("formula")
+    if _normalizeValue(before.get("icon")) != _normalizeValue(after.get("icon")):
+        diff["icon"] = after.get("icon")
+    if _normalizeValue(before.get("image")) != _normalizeValue(after.get("image")):
+        diff["image"] = after.get("image")
+    if _normalizeValue(before.get("unit")) != _normalizeValue(after.get("unit")):
+        diff["unit"] = after.get("unit")
+    return diff
+
+
+def _applyQualityDiff(base: dict, diff: dict) -> dict:
+    """Apply diff to a quality dict."""
+    result = dict(base)
+    for key in ["key", "name", "description", "uri", "kind", "canScale", "defaultSiUnit", "defaultImperialUnit", "min", "isMinExcluded", "max", "isMaxExcluded", "defaultValue", "formula", "icon", "image", "unit"]:
+        if key in diff:
+            result[key] = diff[key]
+    return result
+
+
+def _getAuthorDiff(before: dict, after: dict) -> dict:
+    """Get diff between two author dicts."""
+    diff: dict = {}
+    if before.get("name") != after.get("name"):
+        diff["name"] = after.get("name")
+    if _normalizeValue(before.get("email")) != _normalizeValue(after.get("email")):
+        diff["email"] = after.get("email")
+    return diff
+
+
+def _applyAuthorDiff(base: dict, diff: dict) -> dict:
+    """Apply diff to an author dict."""
+    result = dict(base)
+    for key in ["name", "email"]:
+        if key in diff:
+            result[key] = diff[key]
+    return result
+
+
 def _getAttributeDiff(before: dict, after: dict) -> dict:
     """Get diff between two attribute dicts - used for individual attribute update diffs."""
     diff: dict = {}
@@ -5855,6 +5923,12 @@ def getKitDiffDict(before: dict, after: dict) -> dict:
     foldersDiff = _getCollectionDiff(before.get("folders", []), after.get("folders", []), _getFolderDiff, "folder")
     if foldersDiff:
         diff["folders"] = foldersDiff
+    qualitiesDiff = _getCollectionDiff(before.get("qualities", []), after.get("qualities", []), _getQualityDiff, "quality")
+    if qualitiesDiff:
+        diff["qualities"] = qualitiesDiff
+    authorsDiff = _getCollectionDiff(before.get("authors", []), after.get("authors", []), _getAuthorDiff, "author")
+    if authorsDiff:
+        diff["authors"] = authorsDiff
     attributesDiff = _getAttributesDiff(before.get("attributes", []), after.get("attributes", []))
     if attributesDiff:
         diff["attributes"] = attributesDiff
@@ -5888,6 +5962,10 @@ def applyKitDiffDict(base: dict, diff: dict) -> dict:
         result["files"] = _applyCollectionDiff(base.get("files", []), diff.get("files"), _applyFileDiff, "file")
     if diff.get("folders") or base.get("folders"):
         result["folders"] = _applyCollectionDiff(base.get("folders", []), diff.get("folders"), _applyFolderDiff, "folder")
+    if diff.get("qualities") or base.get("qualities"):
+        result["qualities"] = _applyCollectionDiff(base.get("qualities", []), diff.get("qualities"), _applyQualityDiff, "quality")
+    if diff.get("authors") or base.get("authors"):
+        result["authors"] = _applyCollectionDiff(base.get("authors", []), diff.get("authors"), _applyAuthorDiff, "author")
     if diff.get("attributes") or base.get("attributes"):
         result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
     return result
@@ -6007,6 +6085,24 @@ def _inverseFolderDiff(original: dict, appliedDiff: dict) -> dict:
     return inverse
 
 
+def _inverseQualityDiff(original: dict, appliedDiff: dict) -> dict:
+    """Compute inverse of a quality diff."""
+    inverse: dict = {}
+    for key in ["key", "name", "description", "uri", "kind", "canScale", "defaultSiUnit", "defaultImperialUnit", "min", "isMinExcluded", "max", "isMaxExcluded", "defaultValue", "formula", "icon", "image", "unit"]:
+        if key in appliedDiff:
+            inverse[key] = original.get(key)
+    return inverse
+
+
+def _inverseAuthorDiff(original: dict, appliedDiff: dict) -> dict:
+    """Compute inverse of an author diff."""
+    inverse: dict = {}
+    for key in ["name", "email"]:
+        if key in appliedDiff:
+            inverse[key] = original.get(key)
+    return inverse
+
+
 def inverseKitDiffDict(original: dict, appliedDiff: dict) -> dict:
     """Compute the inverse of a kit diff."""
     inverse: dict = {}
@@ -6027,6 +6123,10 @@ def inverseKitDiffDict(original: dict, appliedDiff: dict) -> dict:
         inverse["files"] = _inverseCollectionDiff(original.get("files", []), appliedDiff["files"], _inverseFileDiff, "file")
     if appliedDiff.get("folders"):
         inverse["folders"] = _inverseCollectionDiff(original.get("folders", []), appliedDiff["folders"], _inverseFolderDiff, "folder")
+    if appliedDiff.get("qualities"):
+        inverse["qualities"] = _inverseCollectionDiff(original.get("qualities", []), appliedDiff["qualities"], _inverseQualityDiff, "quality")
+    if appliedDiff.get("authors"):
+        inverse["authors"] = _inverseCollectionDiff(original.get("authors", []), appliedDiff["authors"], _inverseAuthorDiff, "author")
     if appliedDiff.get("attributes"):
         inverse["attributes"] = _inverseAttributesDiff(original.get("attributes", []), appliedDiff["attributes"])
     return inverse

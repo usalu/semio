@@ -3,7 +3,7 @@ date: "2025-12-02T21:07:42.301Z"
 slug: STORE-OVERFETCH-FIX
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix store overfetching and overrendering in design app
-model: claude-sonnet-4.5
+model: claude-opus-4.5
 ---
 
 # Previously

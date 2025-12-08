@@ -67,7 +67,7 @@ function getDefaultAuthor(): string {
 }
 
 function getCurrentModel(): string {
-  return process.env.SEMIO_MODEL || "claude-sonnet-4.5";
+  return process.env.SEMIO_MODEL || "claude-opus-4.5";
 }
 //#endregion
 

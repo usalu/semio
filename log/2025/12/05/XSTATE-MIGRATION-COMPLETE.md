@@ -5,7 +5,7 @@ author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: >-
   Complete XState migration - remove Y.js from sketchpad, add guards and proper
   state machine patterns
-model: claude-sonnet-4.5
+model: claude-opus-4.5
 ---
 
 # Previously
@@ -66,7 +66,7 @@ model: claude-sonnet-4.5
 ## Design.tsx
 
 - Added missing imports: `useSketchpadStore`, `useSyncDeep`, `useSyncField`, `useSyncNestedArrayItemMembership`, `useSyncSelectionItemMembership`
-- Added no-op stub for `registerDesignAppControllerFactory` (legacy pattern being phased out)
+- Added no-op stub for `registerDesignStoreFactory` (legacy pattern being phased out)
 
 ## Home.tsx
 

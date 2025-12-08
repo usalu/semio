@@ -3,7 +3,7 @@ date: "2025-12-04T15:50:49.346Z"
 slug: I18N-FIX-ALL
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix all i18n errors and warnings
-model: claude-sonnet-4.5
+model: claude-opus-4.5
 ---
 
 # Previously

@@ -51,11 +51,10 @@ import { generateUniqueName, guid, Guid, importKit, Kit, KitShallow } from "../s
 import { docsRegistry } from "./Docs";
 import { Action, Input, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Spinner, Strip, Table, TableAvatar, TableColumn, Textarea, Toggle, ToggleGroup, TreeContent, TreeItem } from "./elements";
 import type { AppConfig, AppEdit, PanelDefinition, PanelVisibility } from "./shared";
-import { createPanelDefinition, Expertise, Mode, PanelKind, Theme } from "./shared";
+import { createPanelDefinition, Expertise, Layout, Mode, PanelKind, Theme } from "./shared";
 import {
   Canvas,
   ConceptFilter,
-  OriginProvider,
   useAddFooterItem,
   useAddPanelSection,
   useAppType,
@@ -64,6 +63,11 @@ import {
   useGetKitKind,
   useHomeApp,
   useHomeCommands,
+  useHomeLoadingKits,
+  useHomePanelVisibility,
+  useHomeSelection,
+  useHomeSortColumn,
+  useHomeSortDirection,
   useHotkeys,
   useIsMobile,
   useKits,
@@ -135,7 +139,12 @@ export interface HomeCommandResult {
 // #region Hooks (XState-based)
 
 // Re-export hooks from Sketchpad for backwards compatibility
-export { useHomeApp as useHomeAppExported, useHomeLoadingKits as useHomeLoadingKitsExported, useHomePanelVisibility as useHomePanelVisibilityExported, useHomeSelection as useHomeSelectionExported } from "./Sketchpad";
+export {
+  useHomeApp as useHomeAppExported,
+  useHomeLoadingKits as useHomeLoadingKitsExported,
+  useHomePanelVisibility as useHomePanelVisibilityExported,
+  useHomeSelection as useHomeSelectionExported,
+} from "./Sketchpad";
 // Re-export the local alias
 export { useHome };
 
@@ -310,7 +319,19 @@ const ChatPlaceholder: FC = () => {
 
 // #region Settings
 
-const SettingsContent: FC = () => {
+const SettingsContent: FC<{
+  setTheme: (origin: string, theme: Theme) => void;
+  setLanguage: (origin: string, language: string) => void;
+  setLayout: (origin: string, layout: Layout) => void;
+  setExpertise: (origin: string, expertise: Expertise) => void;
+  setMode: (origin: string, mode: Mode) => void;
+}> = ({ setTheme, setLanguage, setLayout, setExpertise, setMode }) => {
+  const theme = useTheme();
+  const language = useLanguage();
+  const layout = useLayout();
+  const expertise = useExpertise();
+  const mode = useMode();
+
   const languageEnLabel = useLabel("semio.sketchpad.settings.language.en");
   const languageDeLabel = useLabel("semio.sketchpad.settings.language.de");
   const languagePlaceholder = useLabel("semio.sketchpad.app.home.settings.language.placeholder");
@@ -319,125 +340,80 @@ const SettingsContent: FC = () => {
     <>
       <TreeItem>
         <TreeContent>
-          <OriginProvider id="semio.sketchpad.app.home.settings.theme">
-            <ThemeToggle />
-          </OriginProvider>
+          <ToggleGroup
+            id="semio.sketchpad.app.home.settings.theme"
+            value={theme}
+            onValueChange={(value: string) => setTheme("semio.sketchpad.app.home.settings.theme", value as Theme)}
+            showLabel
+            kind="single"
+            items={[
+              { value: Theme.SYSTEM, id: "semio.sketchpad.settings.theme.system", icon: <MonitorIcon className="size-small" /> },
+              { value: Theme.LIGHT, id: "semio.sketchpad.settings.theme.light", icon: <SunIcon className="size-small" /> },
+              { value: Theme.DARK, id: "semio.sketchpad.settings.theme.dark", icon: <MoonIcon className="size-small" /> },
+            ]}
+          />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <OriginProvider id="semio.sketchpad.app.home.settings.language">
-            <LanguageSelect languageEnLabel={languageEnLabel} languageDeLabel={languageDeLabel} languagePlaceholder={languagePlaceholder} />
-          </OriginProvider>
+          <Select id="semio.sketchpad.app.home.settings.language" value={language || "en"} onValueChange={(value: string) => setLanguage("semio.sketchpad.app.home.settings.language", value)} showLabel>
+            <SelectTrigger>
+              <SelectValue placeholder={languagePlaceholder} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="en">{languageEnLabel}</SelectItem>
+              <SelectItem value="de">{languageDeLabel}</SelectItem>
+            </SelectContent>
+          </Select>
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <OriginProvider id="semio.sketchpad.app.home.settings.layout">
-            <LayoutToggle />
-          </OriginProvider>
+          <ToggleGroup
+            id="semio.sketchpad.app.home.settings.layout"
+            value={typeof layout === "object" ? "desktop" : layout}
+            onValueChange={(value: string) => setLayout("semio.sketchpad.app.home.settings.layout", value as "desktop" | "tablet")}
+            showLabel
+            kind="single"
+            items={[
+              { value: "desktop", id: "semio.sketchpad.settings.layout.desktop", icon: <MousePointerIcon className="size-small" /> },
+              { value: "tablet", id: "semio.sketchpad.settings.layout.tablet", icon: <HandIcon className="size-small" /> },
+            ]}
+          />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <OriginProvider id="semio.sketchpad.app.home.settings.expertise">
-            <ExpertiseToggle />
-          </OriginProvider>
+          <ToggleGroup
+            id="semio.sketchpad.app.home.settings.expertise"
+            value={expertise}
+            onValueChange={(value: string) => setExpertise("semio.sketchpad.app.home.settings.expertise", value as Expertise)}
+            showLabel
+            kind="single"
+            items={[
+              { value: Expertise.BEGINNER, id: "semio.sketchpad.settings.expertise.beginner", icon: <TutorialIcon className="size-small" /> },
+              { value: Expertise.NORMAL, id: "semio.sketchpad.settings.expertise.normal", icon: <UserIcon className="size-small" /> },
+              { value: Expertise.EXPERT, id: "semio.sketchpad.settings.expertise.expert", icon: <AwardIcon className="size-small" /> },
+            ]}
+          />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <OriginProvider id="semio.sketchpad.app.home.settings.mode">
-            <ModeToggle />
-          </OriginProvider>
+          <ToggleGroup
+            id="semio.sketchpad.app.home.settings.mode"
+            value={mode}
+            onValueChange={(value: string) => setMode("semio.sketchpad.app.home.settings.mode", value as Mode)}
+            showLabel
+            kind="single"
+            items={[
+              { value: Mode.USER, id: "semio.sketchpad.settings.mode.user", icon: <UserIcon className="size-small" /> },
+              { value: Mode.DEV, id: "semio.sketchpad.settings.mode.dev", icon: <CodeIcon className="size-small" /> },
+            ]}
+          />
         </TreeContent>
       </TreeItem>
     </>
-  );
-};
-
-const ThemeToggle: FC = () => {
-  const [theme, setTheme] = useTheme();
-  return (
-    <ToggleGroup
-      id="semio.sketchpad.app.home.settings.theme"
-      value={theme}
-      onValueChange={(value: string) => setTheme?.(value as Theme)}
-      showLabel
-      kind="single"
-      items={[
-        { value: Theme.SYSTEM, id: "semio.sketchpad.settings.theme.system", icon: <MonitorIcon className="size-small" /> },
-        { value: Theme.LIGHT, id: "semio.sketchpad.settings.theme.light", icon: <SunIcon className="size-small" /> },
-        { value: Theme.DARK, id: "semio.sketchpad.settings.theme.dark", icon: <MoonIcon className="size-small" /> },
-      ]}
-    />
-  );
-};
-
-const LanguageSelect: FC<{ languageEnLabel: string; languageDeLabel: string; languagePlaceholder: string }> = ({ languageEnLabel, languageDeLabel, languagePlaceholder }) => {
-  const [language, setLanguage] = useLanguage();
-  return (
-    <Select id="semio.sketchpad.app.home.settings.language" value={language || "en"} onValueChange={(value: string) => setLanguage?.(value)} showLabel>
-      <SelectTrigger>
-        <SelectValue placeholder={languagePlaceholder} />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="en">{languageEnLabel}</SelectItem>
-        <SelectItem value="de">{languageDeLabel}</SelectItem>
-      </SelectContent>
-    </Select>
-  );
-};
-
-const LayoutToggle: FC = () => {
-  const [layout, setLayout] = useLayout();
-  return (
-    <ToggleGroup
-      id="semio.sketchpad.app.home.settings.layout"
-      value={typeof layout === "object" ? "desktop" : layout}
-      onValueChange={(value: string) => setLayout?.(value as "desktop" | "tablet")}
-      showLabel
-      kind="single"
-      items={[
-        { value: "desktop", id: "semio.sketchpad.settings.layout.desktop", icon: <MousePointerIcon className="size-small" /> },
-        { value: "tablet", id: "semio.sketchpad.settings.layout.tablet", icon: <HandIcon className="size-small" /> },
-      ]}
-    />
-  );
-};
-
-const ExpertiseToggle: FC = () => {
-  const [expertise, setExpertise] = useExpertise();
-  return (
-    <ToggleGroup
-      id="semio.sketchpad.app.home.settings.expertise"
-      value={expertise}
-      onValueChange={(value: string) => setExpertise?.(value as Expertise)}
-      showLabel
-      kind="single"
-      items={[
-        { value: Expertise.BEGINNER, id: "semio.sketchpad.settings.expertise.beginner", icon: <TutorialIcon className="size-small" /> },
-        { value: Expertise.NORMAL, id: "semio.sketchpad.settings.expertise.normal", icon: <UserIcon className="size-small" /> },
-        { value: Expertise.EXPERT, id: "semio.sketchpad.settings.expertise.expert", icon: <AwardIcon className="size-small" /> },
-      ]}
-    />
-  );
-};
-
-const ModeToggle: FC = () => {
-  const [mode, setMode] = useMode();
-  return (
-    <ToggleGroup
-      id="semio.sketchpad.app.home.settings.mode"
-      value={mode}
-      onValueChange={(value: string) => setMode?.(value as Mode)}
-      showLabel
-      kind="single"
-      items={[
-        { value: Mode.USER, id: "semio.sketchpad.settings.mode.user", icon: <UserIcon className="size-small" /> },
-        { value: Mode.DEV, id: "semio.sketchpad.settings.mode.dev", icon: <CodeIcon className="size-small" /> },
-      ]}
-    />
   );
 };
 
@@ -605,7 +581,7 @@ const Home: FC = ({}) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const kits = useKits();
   const getKitKind = useGetKitKind();
-  const { createKit, navigateToKit, getKitSnapshot } = useSketchpadCommands();
+  const { createKit, navigateToKit, setTheme, setLanguage, setLayout, setExpertise, setMode, getKitSnapshot } = useSketchpadCommands();
 
   const homeState = useHome() as any;
   const homeCommands = useHomeCommands();
@@ -685,7 +661,7 @@ const Home: FC = ({}) => {
       specificity: 20,
       order: 0,
       content: () => {
-        return <SettingsContent />;
+        return <SettingsContent setTheme={setTheme} setLanguage={setLanguage} setLayout={setLayout} setExpertise={setExpertise} setMode={setMode} />;
       },
     });
 
@@ -695,7 +671,7 @@ const Home: FC = ({}) => {
       specificity: 0,
       order: 0,
       content: () => {
-        return <SettingsContent />;
+        return <SettingsContent setTheme={setTheme} setLanguage={setLanguage} setLayout={setLayout} setExpertise={setExpertise} setMode={setMode} />;
       },
     });
 
@@ -704,7 +680,7 @@ const Home: FC = ({}) => {
       removeSection("settings", "semio.sketchpad.app.home.settings");
       removeSection("settings", "semio.sketchpad.settings");
     };
-  }, [appType, addSection, removeSection]);
+  }, [appType, addSection, removeSection, setTheme, setLanguage, setLayout, setExpertise, setMode]);
 
   // Get filters from search params (?kind=&name=&version=)
   const selectedKind = searchParams.get("kind") as KitKind | null;
