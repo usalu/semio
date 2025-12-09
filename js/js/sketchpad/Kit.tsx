@@ -82,6 +82,8 @@ import {
   useKitAppXState,
   useKitCommands,
   useKitScope,
+  useLanguage,
+  useLayout,
   useNavigation,
   useRemoveFooterItem,
   useRemovePanelSection,
@@ -89,11 +91,12 @@ import {
   useSketchpadCommands,
   useSketchpadStore,
   useSyncDeep,
+  useTheme,
   useTypeScope,
   Window,
 } from "./Sketchpad";
 import { Action, Input, NotFound, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Strip, Table, TableAvatar, Textarea, Toggle, ToggleGroup, Transaction, TreeContent, TreeItem } from "./elements";
-import type { GranularHookNoSetResult, GranularHookResult, KitAppId, KitCommandContext, KitDiffAppEdit, Layout, PanelDefinition, PanelVisibility, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
+import type { HookNoSetResult, HookResult, KitAppId, KitCommandContext, KitDiffAppEdit, Layout, PanelDefinition, PanelVisibility, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
 import { AppConfig, createPanelDefinition, Expertise, Mode, PanelKind, Theme } from "./shared";
 
 // #endregion Imports
@@ -837,7 +840,7 @@ export function useKitApp<T>(selector?: (state: KitAppState) => T, id?: KitAppId
   return state;
 }
 
-export function useKitAppSelection(): GranularHookResult<KitAppSelection> {
+export function useKitAppSelection(): HookResult<KitAppSelection> {
   const kitScope = useKitScope();
   const controller = useKitStore() as KitStore | null;
   const state = useKitApp(identitySelector);
@@ -852,7 +855,7 @@ export function useKitAppSelection(): GranularHookResult<KitAppSelection> {
   return [selection, setSelection, canSet];
 }
 
-export function useKitAppFullscreen(): GranularHookResult<KitAppFullscreenWindow> {
+export function useKitAppFullscreen(): HookResult<KitAppFullscreenWindow> {
   const kitScope = useKitScope();
   const controller = useKitStore() as KitStore | null;
   const fullscreen = useKitApp((s) => s.fullscreenWindow) as KitAppFullscreenWindow;
@@ -866,7 +869,7 @@ export function useKitAppFullscreen(): GranularHookResult<KitAppFullscreenWindow
   return [fullscreen, setFullscreen, canSet];
 }
 
-export function useKitAppOthers(): GranularHookNoSetResult<KitAppPresenceOther[]> {
+export function useKitAppOthers(): HookNoSetResult<KitAppPresenceOther[]> {
   const kitScope = useKitScope();
   const others = useKitApp((s) => s.others) as KitAppPresenceOther[];
   const canRead = kitScope !== null;
@@ -1215,7 +1218,7 @@ export function useKitAppTogglePanel(): ActionHookResult<[panel: keyof PanelVisi
 
 // #region Types
 
-export function useKitAppIsTypeHovered(): GranularHookNoSetResult<boolean> {
+export function useKitAppIsTypeHovered(): HookNoSetResult<boolean> {
   const typeScope = useTypeScope();
   const typeGuid = typeScope?.guid;
   const isHovered = useKitApp((state) => (typeGuid ? state.hover?.type === typeGuid : false)) as boolean;
@@ -1223,13 +1226,13 @@ export function useKitAppIsTypeHovered(): GranularHookNoSetResult<boolean> {
   return [isHovered ?? false, undefined, canRead];
 }
 
-export function useKitAppTypeStatus(): GranularHookNoSetResult<DiffStatus> {
+export function useKitAppTypeStatus(): HookNoSetResult<DiffStatus> {
   const typeScope = useTypeScope();
   const canRead = typeScope !== null;
   return [DiffStatus.Unchanged, undefined, canRead];
 }
 
-export function useKitAppTypeColor(isSelected: boolean): GranularHookNoSetResult<{ fill: string; stroke: string; opacity: number }> {
+export function useKitAppTypeColor(isSelected: boolean): HookNoSetResult<{ fill: string; stroke: string; opacity: number }> {
   const typeScope = useTypeScope();
   const [isHovered] = useKitAppIsTypeHovered();
   const [status] = useKitAppTypeStatus();
@@ -1284,7 +1287,7 @@ export function useKitAppTypeColor(isSelected: boolean): GranularHookNoSetResult
 
 // #region Designs
 
-export function useKitAppIsDesignHovered(): GranularHookNoSetResult<boolean> {
+export function useKitAppIsDesignHovered(): HookNoSetResult<boolean> {
   const designScope = useDesignScope();
   const designGuid = designScope?.guid;
   const isHovered = useKitApp((state) => (designGuid ? state.hover?.design === designGuid : false)) as boolean;
@@ -1292,13 +1295,13 @@ export function useKitAppIsDesignHovered(): GranularHookNoSetResult<boolean> {
   return [isHovered ?? false, undefined, canRead];
 }
 
-export function useKitAppDesignStatus(): GranularHookNoSetResult<DiffStatus> {
+export function useKitAppDesignStatus(): HookNoSetResult<DiffStatus> {
   const designScope = useDesignScope();
   const canRead = designScope !== null;
   return [DiffStatus.Unchanged, undefined, canRead];
 }
 
-export function useKitAppDesignColor(isSelected: boolean): GranularHookNoSetResult<{ fill: string; stroke: string; opacity: number }> {
+export function useKitAppDesignColor(isSelected: boolean): HookNoSetResult<{ fill: string; stroke: string; opacity: number }> {
   const designScope = useDesignScope();
   const [isHovered] = useKitAppIsDesignHovered();
   const [status] = useKitAppDesignStatus();
@@ -2582,11 +2585,11 @@ const AppContent: FC = () => {
     if (appType !== "kit") return;
 
     const SettingsContent = () => {
-      const [theme, setTheme, canSetTheme] = useThemeTriadic();
-      const [language, setLanguage, canSetLanguage] = useLanguageTriadic();
-      const [layout, setLayout, canSetLayout] = useLayoutTriadic();
-      const [expertise, setExpertise, canSetExpertise] = useExpertiseTriadic();
-      const [mode, setMode, canSetMode] = useModeTriadic();
+      const [theme, setTheme, canSetTheme] = useTheme();
+      const [language, setLanguage, canSetLanguage] = useLanguage();
+      const [layout, setLayout, canSetLayout] = useLayout();
+      const [expertise, setExpertise, canSetExpertise] = useExpertise();
+      const [mode, setMode, canSetMode] = useMode();
 
       const languageEnLabel = useLabel("semio.sketchpad.settings.language.en");
       const languageDeLabel = useLabel("semio.sketchpad.settings.language.de");
@@ -3802,16 +3805,26 @@ const AppContent: FC = () => {
       const rangeRows = rows.slice(start, end + 1);
 
       // Group selected items by kind
-      const selectedByKind = {
-        types: [] as Guid[],
-        designs: [] as Guid[],
-        qualities: [] as string[],
-        interfaces: [] as Guid[],
-        tags: [] as Guid[],
-        concepts: [] as Guid[],
-        files: [] as string[],
-        folders: [] as Guid[],
-        authors: [] as string[],
+      const selectedByKind: {
+        types: Guid[];
+        designs: Guid[];
+        qualities: string[];
+        interfaces: Guid[];
+        tags: Guid[];
+        concepts: Guid[];
+        files: string[];
+        folders: Guid[];
+        authors: string[];
+      } = {
+        types: [],
+        designs: [],
+        qualities: [],
+        interfaces: [],
+        tags: [],
+        concepts: [],
+        files: [],
+        folders: [],
+        authors: [],
       };
 
       rangeRows.forEach((r) => {
@@ -3826,16 +3839,8 @@ const AppContent: FC = () => {
         else if (r.kind === "authors") selectedByKind.authors.push((r.data as Author).name);
       });
 
-      // Select all items at once
-      if (selectedByKind.types.length > 0) kitAppCommands.selectTypes("semio.sketchpad.app.kit.canvas.table.selectTypesRange", selectedByKind.types);
-      if (selectedByKind.designs.length > 0) kitAppCommands.selectDesigns("semio.sketchpad.app.kit.canvas.table.selectDesignsRange", selectedByKind.designs);
-      if (selectedByKind.qualities.length > 0) kitAppCommands.selectQualities("semio.sketchpad.app.kit.canvas.table.selectQualitiesRange", selectedByKind.qualities);
-      if (selectedByKind.interfaces.length > 0) kitAppCommands.selectInterfaces("semio.sketchpad.app.kit.canvas.table.selectInterfacesRange", selectedByKind.interfaces);
-      if (selectedByKind.tags.length > 0) kitAppCommands.selectTags("semio.sketchpad.app.kit.canvas.table.selectTagsRange", selectedByKind.tags);
-      if (selectedByKind.concepts.length > 0) kitAppCommands.selectConcepts("semio.sketchpad.app.kit.canvas.table.selectConceptsRange", selectedByKind.concepts);
-      if (selectedByKind.files.length > 0) kitAppCommands.selectFiles("semio.sketchpad.app.kit.canvas.table.selectFilesRange", selectedByKind.files);
-      if (selectedByKind.folders.length > 0) kitAppCommands.selectFolders("semio.sketchpad.app.kit.canvas.table.selectFoldersRange", selectedByKind.folders);
-      if (selectedByKind.authors.length > 0) kitAppCommands.selectAuthors("semio.sketchpad.app.kit.canvas.table.selectAuthorsRange", selectedByKind.authors);
+      // Select all items at once via XState
+      setSelectionAction?.(selectedByKind);
 
       lastClickedIndexRef.current = index;
       return;
@@ -3846,65 +3851,65 @@ const AppContent: FC = () => {
       if (row.kind === "designs") {
         const designId = (row.data as Design).guid;
         if (selection.designs.includes(designId)) {
-          kitAppCommands.removeDesignFromSelection("semio.sketchpad.app.kit.canvas.table.removeDesignCtrl", designId);
+          setSelectionAction?.({ ...selection, designs: selection.designs.filter((d) => d !== designId) });
         } else {
-          kitAppCommands.addDesignToSelection("semio.sketchpad.app.kit.canvas.table.addDesignCtrl", designId);
+          setSelectionAction?.({ ...selection, designs: [...selection.designs, designId] });
         }
       } else if (row.kind === "types") {
         const typeId = (row.data as Type).guid;
         if (selection.types.includes(typeId)) {
-          kitAppCommands.removeTypeFromSelection("semio.sketchpad.app.kit.canvas.table.removeTypeCtrl", typeId);
+          setSelectionAction?.({ ...selection, types: selection.types.filter((t) => t !== typeId) });
         } else {
-          kitAppCommands.addTypeToSelection("semio.sketchpad.app.kit.canvas.table.addTypeCtrl", typeId);
+          setSelectionAction?.({ ...selection, types: [...selection.types, typeId] });
         }
       } else if (row.kind === "qualities") {
         const qualityKey = (row.data as Quality).key;
         if (selection.qualities.includes(qualityKey)) {
-          kitAppCommands.removeQualityFromSelection("semio.sketchpad.app.kit.canvas.table.removeQualityCtrl", qualityKey);
+          setSelectionAction?.({ ...selection, qualities: selection.qualities.filter((q) => q !== qualityKey) });
         } else {
-          kitAppCommands.addQualityToSelection("semio.sketchpad.app.kit.canvas.table.addQualityCtrl", qualityKey);
+          setSelectionAction?.({ ...selection, qualities: [...selection.qualities, qualityKey] });
         }
       } else if (row.kind === "interfaces") {
         const interfaceId = (row.data as Interface).guid;
         if (selection.interfaces && selection.interfaces.includes(interfaceId)) {
-          kitAppCommands.removeInterfaceFromSelection("semio.sketchpad.app.kit.canvas.table.removeInterfaceCtrl", interfaceId);
+          setSelectionAction?.({ ...selection, interfaces: selection.interfaces.filter((i) => i !== interfaceId) });
         } else {
-          kitAppCommands.addInterfaceToSelection("semio.sketchpad.app.kit.canvas.table.addInterfaceCtrl", interfaceId);
+          setSelectionAction?.({ ...selection, interfaces: [...(selection.interfaces || []), interfaceId] });
         }
       } else if (row.kind === "tags") {
         const tagId = (row.data as Tag).guid;
         if (selection.tags && selection.tags.includes(tagId)) {
-          kitAppCommands.removeTagFromSelection("semio.sketchpad.app.kit.canvas.table.removeTagCtrl", tagId);
+          setSelectionAction?.({ ...selection, tags: selection.tags.filter((t) => t !== tagId) });
         } else {
-          kitAppCommands.addTagToSelection("semio.sketchpad.app.kit.canvas.table.addTagCtrl", tagId);
+          setSelectionAction?.({ ...selection, tags: [...(selection.tags || []), tagId] });
         }
       } else if (row.kind === "concepts") {
         const conceptId = (row.data as Concept).guid;
         if (selection.concepts && selection.concepts.includes(conceptId)) {
-          kitAppCommands.removeConceptFromSelection("semio.sketchpad.app.kit.canvas.table.removeConceptCtrl", conceptId);
+          setSelectionAction?.({ ...selection, concepts: selection.concepts.filter((c) => c !== conceptId) });
         } else {
-          kitAppCommands.addConceptToSelection("semio.sketchpad.app.kit.canvas.table.addConceptCtrl", conceptId);
+          setSelectionAction?.({ ...selection, concepts: [...(selection.concepts || []), conceptId] });
         }
       } else if (row.kind === "files") {
         const fileGuid = (row.data as SemioFile).guid;
         if (selection.files.includes(fileGuid)) {
-          kitAppCommands.removeFileFromSelection("semio.sketchpad.app.kit.canvas.table.removeFileCtrl", fileGuid);
+          setSelectionAction?.({ ...selection, files: selection.files.filter((f) => f !== fileGuid) });
         } else {
-          kitAppCommands.addFileToSelection("semio.sketchpad.app.kit.canvas.table.addFileCtrl", fileGuid);
+          setSelectionAction?.({ ...selection, files: [...selection.files, fileGuid] });
         }
       } else if (row.kind === "folders") {
         const folderId = (row.data as Folder).guid;
         if (selection.folders && selection.folders.includes(folderId)) {
-          kitAppCommands.removeFolderFromSelection("semio.sketchpad.app.kit.canvas.table.removeFolderCtrl", folderId);
+          setSelectionAction?.({ ...selection, folders: selection.folders.filter((f) => f !== folderId) });
         } else {
-          kitAppCommands.addFolderToSelection("semio.sketchpad.app.kit.canvas.table.addFolderCtrl", folderId);
+          setSelectionAction?.({ ...selection, folders: [...(selection.folders || []), folderId] });
         }
       } else if (row.kind === "authors") {
         const authorName = (row.data as Author).name;
         if (selection.authors.includes(authorName)) {
-          kitAppCommands.removeAuthorFromSelection("semio.sketchpad.app.kit.canvas.table.removeAuthorCtrl", authorName);
+          setSelectionAction?.({ ...selection, authors: selection.authors.filter((a) => a !== authorName) });
         } else {
-          kitAppCommands.addAuthorToSelection("semio.sketchpad.app.kit.canvas.table.addAuthorCtrl", authorName);
+          setSelectionAction?.({ ...selection, authors: [...selection.authors, authorName] });
         }
       }
       // Don't update lastClickedIndexRef for ctrl/cmd clicks
@@ -3914,23 +3919,23 @@ const AppContent: FC = () => {
     // Handle normal single selection with delay to detect double-click
     clickTimerRef.current = setTimeout(() => {
       if (row.kind === "designs") {
-        kitAppCommands.selectDesign("semio.sketchpad.app.kit.canvas.table.selectDesign", (row.data as Design).guid);
+        setSelectionAction?.({ designs: [(row.data as Design).guid] });
       } else if (row.kind === "types") {
-        kitAppCommands.selectType("semio.sketchpad.app.kit.canvas.table.selectType", (row.data as Type).guid);
+        setSelectionAction?.({ types: [(row.data as Type).guid] });
       } else if (row.kind === "qualities") {
-        kitAppCommands.selectQuality("semio.sketchpad.app.kit.canvas.table.selectQuality", (row.data as Quality).key);
+        setSelectionAction?.({ qualities: [(row.data as Quality).key] });
       } else if (row.kind === "interfaces") {
-        kitAppCommands.selectInterface("semio.sketchpad.app.kit.canvas.table.selectInterface", (row.data as Interface).guid);
+        setSelectionAction?.({ interfaces: [(row.data as Interface).guid] });
       } else if (row.kind === "tags") {
-        kitAppCommands.selectTag("semio.sketchpad.app.kit.canvas.table.selectTag", (row.data as Tag).guid);
+        setSelectionAction?.({ tags: [(row.data as Tag).guid] });
       } else if (row.kind === "concepts") {
-        kitAppCommands.selectConcept("semio.sketchpad.app.kit.canvas.table.selectConcept", (row.data as Concept).guid);
+        setSelectionAction?.({ concepts: [(row.data as Concept).guid] });
       } else if (row.kind === "files") {
-        kitAppCommands.selectFile("semio.sketchpad.app.kit.canvas.table.selectFile", (row.data as SemioFile).guid);
+        setSelectionAction?.({ files: [(row.data as SemioFile).guid] });
       } else if (row.kind === "folders") {
-        kitAppCommands.selectFolder("semio.sketchpad.app.kit.canvas.table.selectFolder", (row.data as Folder).guid);
+        setSelectionAction?.({ folders: [(row.data as Folder).guid] });
       } else if (row.kind === "authors") {
-        kitAppCommands.selectAuthor("semio.sketchpad.app.kit.canvas.table.selectAuthor", (row.data as Author).name);
+        setSelectionAction?.({ authors: [(row.data as Author).name] });
       }
       clickTimerRef.current = null;
     }, 200);

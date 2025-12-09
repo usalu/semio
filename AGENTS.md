@@ -437,6 +437,13 @@ test("drag type from workbench to canvas", async ({ page }) => {
 });
 ```
 
+**Known Limitation: dnd-kit Drag-and-Drop Testing**
+
+dnd-kit's `PointerSensor` requires native browser `PointerEvent` objects. Playwright's synthetic events (`page.mouse`, `dragTo`, `dispatchEvent`) fail the `instanceof PointerEvent` check. To test drag-and-drop:
+- **Validate infrastructure**: Test that draggable elements exist with `aria-roledescription="draggable"`
+- **Validate post-drop state**: Use exposed commands to create pieces directly, then validate plane properties
+- **Future**: Consider adding `KeyboardSensor` to enable keyboard-based drag testing
+
 ### VS Code Extension Tests
 
 **Location:** `js/vscode/extension.test.ts`
@@ -1067,6 +1074,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ ├── logo
 │ ├── models
 │ └── semio
+│ `assets/index.ts` re-exports the `./icons` layer and the Metabolism kit fixtures along with `MetabolismKitTypes`, `MetabolismKitDesigns`, `MetabolismKitInterfaces`, `MetabolismKitQualities`, `MetabolismKitFiles`, `MetabolismKitFolders`, `MetabolismKitAuthors`, `MetabolismKitTags`, `MetabolismKitConcepts`, `MetabolismKitAttributes`, `MetabolismKitNakaginCapsuleTowerDesigns`, and the direct lookup maps (`MetabolismKitTypesByGuid`, `MetabolismKitTypesByName`, `MetabolismKitDesignsByGuid`, `MetabolismKitDesignsByName`, `MetabolismKitInterfacesByGuid`, `MetabolismKitInterfacesByName`).
 ├── engineering
 │ ├── dataarchitecture.pu # blueprint for sql schemas
 │ ├── interfacearchitecture.txt # blueprint for json-based (rest api, graphql api, copy&paste) schemas
@@ -1389,7 +1397,7 @@ Shared react components. The main component is Sketchpad. Sketchpad is used in t
   - State is ALWAYS accessed over hooks. Mutation ALWAYS is via actor events. NEVER use useState for app state.
 - **Granular Hook Architecture**: All app state hooks follow the `[value, setter, canSet]` tuple pattern:
   - **Pattern**: `const [value, setValue, canSetValue] = useAppValue();`
-  - **Types**: `GranularHookResult<T>` for read-write hooks, `GranularHookNoSetResult<T>` for read-only hooks
+  - **Types**: `HookResult<T>` for read-write hooks, `HookNoSetResult<T>` for read-only hooks
   - **No Parameters**: Hooks use scope providers (`useKitScope()`, `useDesignScope()`, `useTypeScope()`, `usePieceScope()`, `useConnectionScope()`, `useQualityScope()`) to get context
   - **canSet**: Boolean indicating if the action is available (scope exists and controller is valid). Use this to disable UI elements when action is unavailable.
   - **Examples**:
@@ -1461,6 +1469,7 @@ Shared react components. The main component is Sketchpad. Sketchpad is used in t
   - **usePath(store, path, selector)**: Subscribe to a specific path in a Y.js store
   - **useDerived(derivedStore, key, deps, compute, selector)**: Subscribe to a computed value that depends on base paths
   - **DerivedStore**: Each `KitStore` and `DesignStore` has a `derived` property for caching computed values
+- Kit concepts live in `KitStore` as `ConceptStore` entries backed by the `yConcepts` Y.Array; snapshots return full `Concept` objects (name, description, icon, attributes) and persistence rebuilds them from `yDoc.getArray("concepts")` with legacy guid fallback.
 - Commands ALWAYS have an origin. ALWAYS add the id of the ui element as origin when calling commands.
 - There is a transaction mechanism for kits. Every app transaction is an extended kit transaction. The undo redo manager is on app level and stores the diff of the transaction along with the app state. This way undo redo works even when the kit changes because only the diff is stored. The inverted diff is stored along with the diff to enable relative undo redo.
 - NEVER use direct strings or `useTranslation` for displaying text. ALWAYS assign an `id` the ui element and use i18n keys which match the id.

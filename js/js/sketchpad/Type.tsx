@@ -32,7 +32,7 @@ import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
 import { useLabel } from "../i18n";
 import { Author, AuthorId, Camera, Coord, findModel, guid, Guid, Kit, Model, Point, Port, selectBestModel, File as SemioFile, toSemioRotation, toThreeRotation, Type, TypeDiff, Vector } from "../semio";
 import { Geometry, Input, Scene as SceneComponent, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider, SortableTreeItems, Stepper, Textarea, Toggle, ToggleGroup, TreeContent, TreeItem } from "./elements";
-import type { AppWindowConfig, GranularHookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolDefinition, ToolRenderContext, TypeAppId } from "./shared";
+import type { AppWindowConfig, HookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolDefinition, ToolRenderContext, TypeAppId } from "./shared";
 import { AppConfig, conditionalHookResult, createPanelDefinition, Expertise, Mode, PanelKind, readonlyHookResult, Theme, ToolKind } from "./shared";
 import {
   Canvas,
@@ -50,6 +50,7 @@ import {
   useAddFooterItem,
   useAddPanelSection,
   useAppType,
+  useExpertise,
   useFocusSafe,
   useIsInTypeScope,
   useKit,
@@ -59,9 +60,13 @@ import {
   useKitStore,
   useKitTags,
   useKitTransaction,
+  useLanguage,
+  useLayout,
+  useMode,
   useRemoveFooterItem,
   useRemovePanelSection,
   useSketchpadActor,
+  useTheme,
   useTooltip,
   useType,
   useTypeAppXState,
@@ -216,7 +221,7 @@ export function useTypeApp<T>(selector?: (state: TypeAppState) => T, id?: TypeAp
   return state as unknown as TypeAppState;
 }
 
-export function useTypeAppSelection(): GranularHookResult<TypeAppSelection> {
+export function useTypeAppSelection(): HookResult<TypeAppSelection> {
   const state = useTypeApp((s) => s);
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -235,7 +240,7 @@ export function useTypeAppSelection(): GranularHookResult<TypeAppSelection> {
   return conditionalHookResult(canSet, value, setter);
 }
 
-export function useTypeAppPanelVisibility(): GranularHookResult<PanelVisibility> {
+export function useTypeAppPanelVisibility(): HookResult<PanelVisibility> {
   const state = useTypeApp((s) => s);
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -254,13 +259,13 @@ export function useTypeAppPanelVisibility(): GranularHookResult<PanelVisibility>
   return conditionalHookResult(canSet, value, setter);
 }
 
-export function useTypeAppOthers(): GranularHookResult<TypeAppPresenceOther[]> {
+export function useTypeAppOthers(): HookResult<TypeAppPresenceOther[]> {
   const state = useTypeApp((s) => s);
   const value = state ? ((state as TypeAppState).others ?? EMPTY_OTHERS) : EMPTY_OTHERS;
   return readonlyHookResult(value);
 }
 
-export function useTypeAppCamera(): GranularHookResult<Camera | undefined> {
+export function useTypeAppCamera(): HookResult<Camera | undefined> {
   const state = useTypeApp((s) => s);
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -279,7 +284,7 @@ export function useTypeAppCamera(): GranularHookResult<Camera | undefined> {
   return conditionalHookResult(canSet, value, setter);
 }
 
-export function useTypeAppFocusedPortGuid(): GranularHookResult<Guid | undefined> {
+export function useTypeAppFocusedPortGuid(): HookResult<Guid | undefined> {
   const state = useTypeApp((s) => s);
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -302,7 +307,7 @@ export function useTypeAppFocusedPortGuid(): GranularHookResult<Guid | undefined
   return conditionalHookResult(canSet, value, setter);
 }
 
-export function useTypeAppHover(): GranularHookResult<TypeAppHover | undefined> {
+export function useTypeAppHover(): HookResult<TypeAppHover | undefined> {
   const state = useTypeApp((s) => s);
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -327,7 +332,7 @@ export function useTypeAppHover(): GranularHookResult<TypeAppHover | undefined> 
   return conditionalHookResult(canSet, value, setter);
 }
 
-export function useTypeAppActiveTool(): GranularHookResult<ToolKind> {
+export function useTypeAppActiveTool(): HookResult<ToolKind> {
   const state = useTypeApp((s) => s);
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -432,7 +437,7 @@ export function useTypeAppCommands(id?: TypeAppId) {
   }, [actor, kitGuid, typeGuid]);
 }
 
-export function useTypeAppIsPortSelected(portId: string): GranularHookResult<boolean> {
+export function useTypeAppIsPortSelected(portId: string): HookResult<boolean> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
@@ -456,7 +461,7 @@ export function useTypeAppIsPortSelected(portId: string): GranularHookResult<boo
   return conditionalHookResult(canSet, value, setter);
 }
 
-export function useTypeAppIsPortHovered(portId: string): GranularHookResult<boolean> {
+export function useTypeAppIsPortHovered(portId: string): HookResult<boolean> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
@@ -480,7 +485,7 @@ export function useTypeAppIsPortHovered(portId: string): GranularHookResult<bool
   return conditionalHookResult(canSet, value, setter);
 }
 
-export function useTypeAppSelectedModelGuid(): GranularHookResult<Guid | undefined> {
+export function useTypeAppSelectedModelGuid(): HookResult<Guid | undefined> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
@@ -502,7 +507,7 @@ export function useTypeAppSelectedModelGuid(): GranularHookResult<Guid | undefin
   return conditionalHookResult(canSet, value, setter);
 }
 
-export function useTypeAppSelectedModelTags(): GranularHookResult<string[]> {
+export function useTypeAppSelectedModelTags(): HookResult<string[]> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
@@ -973,45 +978,101 @@ const PortPreview: FC<{ position: THREE.Vector3; normal: THREE.Vector3 }> = ({ p
 };
 
 // Separate components for each loader type to avoid conditional hook calls
+const getComputedColorForMesh = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
+
 const GLTFMesh: FC<{ url: string; onPointerDown: any; onPointerUp: any; onPointerMove: any; onPointerOut: any }> = ({ url, onPointerDown, onPointerUp, onPointerMove, onPointerOut }) => {
   const gltf = useGLTF(url);
+  const plasterColor = useMemo(() => new THREE.Color(getComputedColorForMesh("--plaster")), []);
+  const plasterEdgeColor = useMemo(() => new THREE.Color(getComputedColorForMesh("--plaster-edge")), []);
+
   const clonedScene = useMemo(() => {
     const cloned = gltf.scene.clone();
+    const plasterMaterial = new THREE.MeshStandardMaterial({
+      color: plasterColor,
+      flatShading: false,
+      metalness: 0,
+      roughness: 0.8
+    });
+    const edgeMaterial = new THREE.LineBasicMaterial({ color: plasterEdgeColor });
+
     cloned.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.raycast = THREE.Mesh.prototype.raycast;
+        if (Array.isArray(child.material)) {
+          child.material = child.material.map(() => plasterMaterial.clone());
+        } else {
+          child.material = plasterMaterial.clone();
+        }
+      } else if (child instanceof THREE.Line || child instanceof THREE.LineSegments || child instanceof THREE.Points) {
+        (child as any).material = edgeMaterial.clone();
       }
     });
     return cloned;
-  }, [gltf.scene]);
+  }, [gltf.scene, plasterColor, plasterEdgeColor]);
   return <primitive object={clonedScene} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerMove={onPointerMove} onPointerOut={onPointerOut} />;
 };
 
 const FBXMesh: FC<{ url: string; onPointerDown: any; onPointerUp: any; onPointerMove: any; onPointerOut: any }> = ({ url, onPointerDown, onPointerUp, onPointerMove, onPointerOut }) => {
   const scene = useFBX(url);
+  const plasterColor = useMemo(() => new THREE.Color(getComputedColorForMesh("--plaster")), []);
+  const plasterEdgeColor = useMemo(() => new THREE.Color(getComputedColorForMesh("--plaster-edge")), []);
+
   const clonedScene = useMemo(() => {
     const cloned = scene.clone();
+    const plasterMaterial = new THREE.MeshStandardMaterial({
+      color: plasterColor,
+      flatShading: false,
+      metalness: 0,
+      roughness: 0.8
+    });
+    const edgeMaterial = new THREE.LineBasicMaterial({ color: plasterEdgeColor });
+
     cloned.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.raycast = THREE.Mesh.prototype.raycast;
+        if (Array.isArray(child.material)) {
+          child.material = child.material.map(() => plasterMaterial.clone());
+        } else {
+          child.material = plasterMaterial.clone();
+        }
+      } else if (child instanceof THREE.Line || child instanceof THREE.LineSegments || child instanceof THREE.Points) {
+        (child as any).material = edgeMaterial.clone();
       }
     });
     return cloned;
-  }, [scene]);
+  }, [scene, plasterColor, plasterEdgeColor]);
   return <primitive object={clonedScene} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerMove={onPointerMove} onPointerOut={onPointerOut} />;
 };
 
 const OBJMesh: FC<{ url: string; onPointerDown: any; onPointerUp: any; onPointerMove: any; onPointerOut: any }> = ({ url, onPointerDown, onPointerUp, onPointerMove, onPointerOut }) => {
   const obj = useLoader(OBJLoader, url);
+  const plasterColor = useMemo(() => new THREE.Color(getComputedColorForMesh("--plaster")), []);
+  const plasterEdgeColor = useMemo(() => new THREE.Color(getComputedColorForMesh("--plaster-edge")), []);
+
   const clonedScene = useMemo(() => {
     const cloned = obj.clone();
+    const plasterMaterial = new THREE.MeshStandardMaterial({
+      color: plasterColor,
+      flatShading: false,
+      metalness: 0,
+      roughness: 0.8
+    });
+    const edgeMaterial = new THREE.LineBasicMaterial({ color: plasterEdgeColor });
+
     cloned.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.raycast = THREE.Mesh.prototype.raycast;
+        if (Array.isArray(child.material)) {
+          child.material = child.material.map(() => plasterMaterial.clone());
+        } else {
+          child.material = plasterMaterial.clone();
+        }
+      } else if (child instanceof THREE.Line || child instanceof THREE.LineSegments || child instanceof THREE.Points) {
+        (child as any).material = edgeMaterial.clone();
       }
     });
     return cloned;
-  }, [obj]);
+  }, [obj, plasterColor, plasterEdgeColor]);
   return <primitive object={clonedScene} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerMove={onPointerMove} onPointerOut={onPointerOut} />;
 };
 
@@ -2835,11 +2896,11 @@ const App: FC = () => {
     if (appType !== "type") return;
 
     const SketchpadSettingsContent = () => {
-      const [theme, setTheme, canSetTheme] = useThemeTriadic();
-      const [language, setLanguage, canSetLanguage] = useLanguageTriadic();
-      const [layout, setLayout, canSetLayout] = useLayoutTriadic();
-      const [expertise, setExpertise, canSetExpertise] = useExpertiseTriadic();
-      const [mode, setMode, canSetMode] = useModeTriadic();
+      const [theme, setTheme, canSetTheme] = useTheme();
+      const [language, setLanguage, canSetLanguage] = useLanguage();
+      const [layout, setLayout, canSetLayout] = useLayout();
+      const [expertise, setExpertise, canSetExpertise] = useExpertise();
+      const [mode, setMode, canSetMode] = useMode();
 
       const languageEnLabel = useLabel("semio.sketchpad.settings.language.en");
       const languageDeLabel = useLabel("semio.sketchpad.settings.language.de");

@@ -58,7 +58,6 @@ import {
   useAddFooterItem,
   useAddPanelSection,
   useAppType,
-  useExpertiseTriadic,
   useFocus,
   useGetKitKind,
   useHomeApp,
@@ -67,15 +66,11 @@ import {
   useIsMobile,
   useKits,
   useKitShallows,
-  useLanguageTriadic,
-  useLayoutTriadic,
-  useModeTriadic,
   useNavigation,
   useRemoveFooterItem,
   useRemovePanelSection,
   useSketchpadActor,
   useSketchpadCommands,
-  useThemeTriadic,
   useTooltip,
   Window,
 } from "./Sketchpad";
@@ -311,11 +306,11 @@ const ChatPlaceholder: FC = () => {
 // #region Settings
 
 const SettingsContent: FC = () => {
-  const [theme, setTheme, canSetTheme] = useThemeTriadic();
-  const [language, setLanguage, canSetLanguage] = useLanguageTriadic();
-  const [layout, setLayout, canSetLayout] = useLayoutTriadic();
-  const [expertise, setExpertise, canSetExpertise] = useExpertiseTriadic();
-  const [mode, setMode, canSetMode] = useModeTriadic();
+  const [theme, setTheme, canSetTheme] = useTheme();
+  const [language, setLanguage, canSetLanguage] = useLanguage();
+  const [layout, setLayout, canSetLayout] = useLayout();
+  const [expertise, setExpertise, canSetExpertise] = useExpertise();
+  const [mode, setMode, canSetMode] = useMode();
 
   const languageEnLabel = useLabel("semio.sketchpad.settings.language.en");
   const languageDeLabel = useLabel("semio.sketchpad.settings.language.de");
@@ -493,14 +488,16 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
       const operationId = `kit-import-${guid()}`;
       const kitName = zipFile.name.replace(/\.(semio\.)?zip$/, "");
       startKitImport(operationId, kitName);
+      // Allow React to render loading state before starting CPU-intensive import
+      // Double rAF ensures the browser has painted the loading row
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       try {
         const { kit, files: importedFiles } = await importKit(zipFile);
         await createKit("semio.sketchpad.app.home.dropzone", kit, false, false);
         // Store blobs for existing kit files BEFORE navigating (kit already has file definitions from SQLite)
         await storeKitFileBlobs(kit.guid, importedFiles);
         completeKitImport(operationId);
-        await new Promise((resolve) => setTimeout(resolve, 0));
-        navigateToKit(kit.guid);
+        // Don't auto-navigate - let user click the now-enabled row
       } catch (error) {
         console.error("[Home] Failed to import kit:", error);
         failKitImport(operationId, error instanceof Error ? error.message : String(error));
@@ -515,14 +512,16 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
       const operationId = `kit-import-${guid()}`;
       const kitName = file.name.replace(/\.(semio\.)?zip$/, "");
       startKitImport(operationId, kitName);
+      // Allow React to render loading state before starting CPU-intensive import
+      // Double rAF ensures the browser has painted the loading row
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       try {
         const { kit, files: importedFiles } = await importKit(file);
         await createKit("semio.sketchpad.app.home.fileInput", kit, false, false);
         // Store blobs for existing kit files BEFORE navigating (kit already has file definitions from SQLite)
         await storeKitFileBlobs(kit.guid, importedFiles);
         completeKitImport(operationId);
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        navigateToKit(kit.guid);
+        // Don't auto-navigate - let user click the now-enabled row
       } catch (error) {
         console.error("[Home] Failed to import kit:", error);
         failKitImport(operationId, error instanceof Error ? error.message : String(error));
@@ -726,11 +725,10 @@ const Home: FC = ({}) => {
       if (!fullKit) return;
 
       // Map concept GUIDs to their names
-      kitShallow.concepts?.forEach((conceptGuid) => {
+      kitShallow.concepts?.forEach((conceptEntry) => {
+        const conceptGuid = typeof conceptEntry === "string" ? conceptEntry : (conceptEntry as any).guid;
         const concept = fullKit.concepts?.find((c) => c.guid === conceptGuid);
-        if (concept?.name) {
-          conceptSet.add(concept.name);
-        }
+        if (concept?.name) conceptSet.add(concept.name);
       });
     });
     return Array.from(conceptSet).sort();
@@ -842,7 +840,13 @@ const Home: FC = ({}) => {
       if (selectedConcepts.length > 0) {
         const fullKit = getKitSnapshot(kit.guid);
         if (!fullKit) return;
-        const kitConceptNames = kit.concepts?.map((conceptGuid) => fullKit.concepts?.find((c) => c.guid === conceptGuid)?.name).filter((name): name is string => name !== undefined) || [];
+        const kitConceptNames =
+          kit.concepts
+            ?.map((conceptEntry) => {
+              const conceptGuid = typeof conceptEntry === "string" ? conceptEntry : (conceptEntry as any).guid;
+              return fullKit.concepts?.find((c) => c.guid === conceptGuid)?.name;
+            })
+            .filter((name): name is string => name !== undefined) || [];
 
         if (!kitConceptNames.some((name) => selectedConcepts.includes(name))) return;
       }
@@ -1211,13 +1215,15 @@ const Home: FC = ({}) => {
               {rows.map((row) => {
                 const isSelected = row.kit ? selection.includes(row.kit.guid) : false;
                 const isDocsRow = row.type === "docs";
+                const isLoadingRow = row.isLoading;
                 return (
                   <div
                     key={row.id}
-                    className={`border-b p-single cursor-selectable h-large ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`}
+                    className={`border-b p-single cursor-selectable h-large ${isLoadingRow ? "opacity-50 pointer-events-none" : ""} ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`}
                     role="button"
-                    tabIndex={0}
+                    tabIndex={isLoadingRow ? -1 : 0}
                     onClick={(e) => {
+                      if (isLoadingRow) return;
                       if (isDocsRow && row.docsPath) {
                         navigate(`/${row.docsPath}`);
                       } else if (row.kit) {
@@ -1225,6 +1231,7 @@ const Home: FC = ({}) => {
                       }
                     }}
                     onDoubleClick={() => {
+                      if (isLoadingRow) return;
                       if (isDocsRow && row.docsPath) {
                         navigate(`/${row.docsPath}`);
                       } else if (row.kit) {
@@ -1249,9 +1256,10 @@ const Home: FC = ({}) => {
                         )}
                         <TableAvatar name={row.name} icon={row.kit?.icon} />
                         <span className="text-left flex-1 min-w-0 truncate">{row.name}</span>
+                        {isLoadingRow && <Spinner size="small" />}
                       </div>
                       <div className="flex items-center gap-single shrink-0">
-                        {row.level === 0 && row.type !== "docs" && (
+                        {row.level === 0 && row.type !== "docs" && row.type !== "loading" && (
                           <Action
                             level="base"
                             onClick={(e) => {

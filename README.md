@@ -714,6 +714,8 @@ Key mechanics for that transition:
 
 This keeps Y.js as the persistence backend while preparing every component for a single machine-driven source once the transition completes.
 
+KitStore keeps kit concepts in the `yConcepts` array as `ConceptStore` entries so snapshots expose full concept data (name, description, icon, attributes) and persistence rehydrates from that array instead of guid placeholders.
+
 ## Preflight Checks
 
 The repository uses a hierarchical `preflight` command that runs all formatters, linters, and validation tools before committing code.
@@ -1504,6 +1506,12 @@ Each badge is created with [shields.io](https://shields.io) with style `flat-squ
 1. Hit `Generate Favicon` and download the zip file to `assets/icons/temp/NAME.zip` where `NAME` is the lowercase name and verb of the icon 📂
 1. Repeat the process for all icons 🔁
 1. Run `build icons` in the debugger of vscode 🔨
+
+### 🧱 Kits
+
+`assets/index.ts` is the shared entry point for `@semio/assets`. It re-exports the icon layer plus the Metabolism kit fixtures and helper constants. The kit fixtures are available as `MetabolismKit`, `MetabolismKitDiff`, `MetabolismKitDiffed`, `MetabolismKitDiffInverted`, `InvalidKit`, and `InvalidKitValidation`, while each kit entity list is exposed through `MetabolismKitTypes`, `MetabolismKitDesigns`, `MetabolismKitInterfaces`, `MetabolismKitQualities`, `MetabolismKitFiles`, `MetabolismKitFolders`, `MetabolismKitAuthors`, `MetabolismKitTags`, `MetabolismKitConcepts`, `MetabolismKitAttributes`, and the dedicated `MetabolismKitNakaginCapsuleTowerDesigns`.
+
+Lookup tables `MetabolismKitTypesByGuid`, `MetabolismKitTypesByName`, `MetabolismKitDesignsByGuid`, `MetabolismKitDesignsByName`, `MetabolismKitInterfacesByGuid`, and `MetabolismKitInterfacesByName` provide direct access to every type, design, and interface without filtering.
 
 # 🏘️ [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)
 

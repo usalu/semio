@@ -177,7 +177,7 @@ import {
   FocusItem,
   FooterItem,
   getValueAtPath,
-  GranularHookResult,
+  HookResult,
   KitAppId,
   KitCommandContext,
   KitCommandResult,
@@ -3494,6 +3494,7 @@ class PieceStore {
       const design = this.parent.parent.design(piece.design!.guid);
       this.yPiece.set("design", design.guid);
     }
+    this.name = piece.name;
     this.scale = piece.scale;
     this.isHidden = piece.isHidden;
     this.isLocked = piece.isLocked;
@@ -3598,6 +3599,12 @@ class PieceStore {
   set color(color: string | undefined) {
     this.yPiece.set("color", color || "");
   }
+  get name(): string | undefined {
+    return this.yPiece.get("name") as string | undefined;
+  }
+  set name(name: string | undefined) {
+    this.yPiece.set("name", name || "");
+  }
   get description(): string | undefined {
     return this.yPiece.get("description") as string | undefined;
   }
@@ -3642,6 +3649,7 @@ class PieceStore {
     const currentData = {
       guid: this.guid,
       id_: this.localId,
+      name: this.name,
       type: this.type ? { guid: this.type } : undefined,
       design: this.design ? { guid: this.design } : undefined,
       scale: this.scale,
@@ -3664,6 +3672,7 @@ class PieceStore {
     this.dirty = true;
     this.parent.markDirty();
     if (diff.guid !== undefined) this.guid = diff.guid;
+    if (diff.name !== undefined) this.name = diff.name;
     if (diff.type !== undefined) this.type = diff.type?.guid;
     if (diff.design !== undefined) this.design = diff.design?.guid;
     if (diff.scale !== undefined) this.scale = diff.scale;
@@ -5474,8 +5483,161 @@ export function useExplodeableDesignNodes(nodes: any[], selection: any) {
 
 // #region Kit
 
+type YConceptVal = string | YAttributes;
+type YConcept = Y.Map<YConceptVal>;
+type YConcepts = Y.Array<YConcept>;
+
+class ConceptStore {
+  private yConcept: YConcept;
+  private yAttributes: YAttributes;
+  private attributes: Map<string, AttributeStore>;
+  private cache?: Concept;
+  private cacheHash?: string;
+
+  constructor(yConcept: YConcept, concept: Concept) {
+    this.yConcept = yConcept;
+    this.yAttributes = new Y.Array<YAttribute>();
+    this.yConcept.set("attributes", this.yAttributes);
+    this.attributes = new Map();
+    this.guid = concept.guid;
+    this.name = concept.name;
+    this.description = concept.description;
+    this.icon = concept.icon;
+    concept.attributes?.forEach((attribute) => this.createAttribute(attribute));
+  }
+
+  get guid(): string {
+    return this.yConcept.get("guid") as string;
+  }
+  set guid(guid: string) {
+    this.yConcept.set("guid", guid);
+  }
+
+  get name(): string {
+    return this.yConcept.get("name") as string;
+  }
+  set name(name: string) {
+    this.yConcept.set("name", name);
+  }
+
+  get description(): string | undefined {
+    return this.yConcept.get("description") as string | undefined;
+  }
+  set description(description: string | undefined) {
+    if (description !== undefined) this.yConcept.set("description", description);
+    else this.yConcept.delete("description");
+  }
+
+  get icon(): string | undefined {
+    return this.yConcept.get("icon") as string | undefined;
+  }
+  set icon(icon: string | undefined) {
+    if (icon !== undefined) this.yConcept.set("icon", icon);
+    else this.yConcept.delete("icon");
+  }
+
+  hasAttribute(guid: string): boolean {
+    return this.attributes.has(guid);
+  }
+
+  createAttribute(attribute: Attribute): void {
+    if (this.hasAttribute(attribute.guid)) throw new Error(`Attribute (${attribute.key}) already exists.`);
+    const yAttribute = new Y.Map<YAttributeVal>();
+    yAttribute.set("guid", attribute.guid);
+    yAttribute.set("key", attribute.key);
+    yAttribute.set("value", attribute.value || "");
+    yAttribute.set("definition", attribute.definition || "");
+    this.yAttributes.push([yAttribute]);
+    const attributeStore = new AttributeStore(yAttribute, attribute);
+    this.attributes.set(attribute.guid, attributeStore);
+  }
+
+  attribute(guid: string): AttributeStore {
+    return this.attributes.get(guid)!;
+  }
+
+  private findAttributeStore = (guid: string): AttributeStore | undefined => this.attributes.get(guid);
+
+  private findAttributeIndexByGuid = (guid: string): number => {
+    return Array.from(this.yAttributes).findIndex((yAttribute: any) => {
+      const yMap = yAttribute[0] as Y.Map<any>;
+      return yMap.get("guid") === guid;
+    });
+  };
+
+  hash = (concept: Concept): string => {
+    return JSON.stringify(concept);
+  };
+
+  snapshot = (): Concept => {
+    const attributes = Array.from(this.attributes.values()).map((attribute) => attribute.snapshot());
+    const currentData: Concept = {
+      guid: this.guid,
+      name: this.name,
+    };
+    const description = this.description;
+    if (description !== undefined) currentData.description = description;
+    const icon = this.icon;
+    if (icon !== undefined) currentData.icon = icon;
+    if (attributes.length > 0) currentData.attributes = attributes;
+    const currentHash = this.hash(currentData);
+    if (!this.cache || this.cacheHash !== currentHash) {
+      this.cache = currentData;
+      this.cacheHash = currentHash;
+    }
+    return this.cache;
+  };
+
+  change = (diff: ConceptDiff) => {
+    if (diff.name !== undefined) this.name = diff.name;
+    if (diff.description !== undefined) {
+      const value = diff.description ?? undefined;
+      if (value !== undefined) this.description = value;
+      else this.yConcept.delete("description");
+    }
+    if (diff.icon !== undefined) {
+      const value = diff.icon ?? undefined;
+      if (value !== undefined) this.icon = value;
+      else this.yConcept.delete("icon");
+    }
+    if (diff.attributes) {
+      if (diff.attributes.removed) {
+        diff.attributes.removed.forEach((identifier) => {
+          const attribute = this.findAttributeStore(identifier.guid);
+          if (!attribute) return;
+          const index = this.findAttributeIndexByGuid(attribute.guid);
+          if (index !== -1) {
+            this.yAttributes.delete(index, 1);
+          }
+          this.attributes.delete(attribute.guid);
+        });
+      }
+      if (diff.attributes.added) {
+        diff.attributes.added.forEach((attribute) => this.createAttribute(attribute));
+      }
+      if (diff.attributes.updated) {
+        diff.attributes.updated.forEach(({ attribute, diff: attributeDiff }) => {
+          const attr = this.findAttributeStore(attribute.guid);
+          if (!attr) return;
+          attr.change(attributeDiff);
+        });
+      }
+    }
+    this.cache = undefined;
+    this.cacheHash = undefined;
+  };
+
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.yConcept, subscribe, false);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.yConcept, subscribe, true);
+  };
+}
+
 type YIdMap = Y.Map<string>;
-type YKitVal = string | Y.Array<string> | YIdMap | YAttributes | YAuthors | YFiles | YFolders | YBenchmarks | YQualities | YProps | YTypes | YDesigns;
+type YKitVal = string | Y.Array<string> | YIdMap | YAttributes | YAuthors | YFiles | YFolders | YBenchmarks | YQualities | YProps | YTypes | YDesigns | YConcepts;
 type YKit = Y.Map<YKitVal>;
 type YKits = Y.Array<YKit>;
 
@@ -5485,8 +5647,10 @@ export class KitStore {
   private fileProvider?: FileProvider;
   public readonly yDoc: Y.Doc;
   private readonly yKit: YKit;
+  private readonly yConcepts: YConcepts;
   private readonly yTypes: YTypes;
   private readonly types: Map<string, TypeStore>;
+  private readonly conceptStores: Map<string, ConceptStore>;
   private readonly yDesigns: YDesigns;
   private readonly designs: Map<string, DesignStore>;
   private readonly yFiles: YFiles;
@@ -5519,6 +5683,8 @@ export class KitStore {
   private _authorsVersion = 0;
   private _foldersCache?: Folder[];
   private _foldersVersion = 0;
+  private _conceptsCache?: Concept[];
+  private _conceptsVersion = 0;
 
   constructor(parent: SketchpadStore, kit: Kit, local?: boolean, remote?: boolean, remoteProviders?: RemoteProviders) {
     this.parent = parent;
@@ -5528,6 +5694,7 @@ export class KitStore {
     this.commandRegistry = new Map();
     this.regularFiles = new Map();
     this.types = new Map();
+    this.conceptStores = new Map();
     this.designs = new Map();
     this.files = new Map();
     this.folders = new Map();
@@ -5537,6 +5704,7 @@ export class KitStore {
     this.attributes = new Map();
 
     this.yKit = this.yDoc.getMap() as YKit;
+    this.yConcepts = this.yDoc.getArray("concepts");
     this.yTypes = this.yDoc.getArray("types");
     this.yDesigns = this.yDoc.getArray("designs");
     this.yFiles = this.yDoc.getArray("files");
@@ -5554,7 +5722,7 @@ export class KitStore {
       this.homepage = kit.homepage;
       this.license = kit.license;
       this.preview = kit.preview;
-      this.concepts = kit.concepts?.map((c) => c.guid);
+      this.concepts = kit.concepts;
       this.icon = kit.icon;
       this.image = kit.image;
       this.description = kit.description;
@@ -5653,18 +5821,16 @@ export class KitStore {
   set preview(preview: string | undefined) {
     this.yKit.set("preview", preview || "");
   }
-  get concepts(): string[] | undefined {
-    const yConcepts = this.yKit.get("concepts") as Y.Array<string> | undefined;
-    return yConcepts ? yConcepts.toArray() : undefined;
+  get concepts(): Concept[] | undefined {
+    const concepts = this.snapshotConcepts();
+    return concepts.length > 0 ? concepts : undefined;
   }
-  set concepts(concepts: string[] | undefined) {
-    if (concepts) {
-      const yConcepts = new Y.Array<string>();
-      concepts.forEach((concept) => yConcepts.push([concept]));
-      this.yKit.set("concepts", yConcepts);
-    } else {
-      this.yKit.delete("concepts");
-    }
+  set concepts(concepts: Concept[] | undefined) {
+    this.yConcepts.delete(0, this.yConcepts.length);
+    this.conceptStores.clear();
+    this._conceptsCache = undefined;
+    this._conceptsVersion = 0;
+    if (concepts) concepts.forEach((concept) => this.createConcept(concept));
   }
   get icon(): string | undefined {
     return this.yKit.get("icon") as string | undefined;
@@ -5980,6 +6146,51 @@ export class KitStore {
     return this.attributes.get(guid)!;
   }
 
+  hasConcept(guid: string): boolean {
+    return this.conceptStores.has(guid);
+  }
+
+  createConcept(concept: Concept): void {
+    if (this.hasConcept(concept.guid)) throw new Error(`Concept (${concept.name}) already exists.`);
+    const yConcept = new Y.Map() as YConcept;
+    yConcept.set("guid", concept.guid);
+    yConcept.set("name", concept.name);
+    if (concept.description !== undefined) yConcept.set("description", concept.description);
+    if (concept.icon !== undefined) yConcept.set("icon", concept.icon);
+    this.yConcepts.push([yConcept]);
+    const yConceptStore = new ConceptStore(yConcept, concept);
+    this.conceptStores.set(concept.guid, yConceptStore);
+    this._conceptsCache = undefined;
+    this._conceptsVersion = 0;
+  }
+
+  concept(guid: string): ConceptStore {
+    return this.conceptStores.get(guid)!;
+  }
+
+  updateConcept(guid: string, conceptDiff: ConceptDiff): void {
+    const conceptStore = this.conceptStores.get(guid);
+    if (!conceptStore) throw new Error(`Concept with guid ${guid} not found.`);
+    conceptStore.change(conceptDiff);
+    this._conceptsCache = undefined;
+    this._conceptsVersion = 0;
+  }
+
+  deleteConcept(guid: string): void {
+    const conceptStore = this.conceptStores.get(guid);
+    if (!conceptStore) throw new Error(`Concept with guid ${guid} not found.`);
+    const index = this.yConcepts.toArray().findIndex((yConcept: any) => {
+      const yMap = yConcept[0] as Y.Map<any>;
+      return yMap.get("guid") === guid;
+    });
+    if (index !== -1) {
+      this.yConcepts.delete(index, 1);
+    }
+    this.conceptStores.delete(guid);
+    this._conceptsCache = undefined;
+    this._conceptsVersion = 0;
+  }
+
   hash(kit: Kit): string {
     return JSON.stringify(kit);
   }
@@ -6001,7 +6212,7 @@ export class KitStore {
       homepage: this.homepage,
       license: this.license,
       preview: this.preview,
-      concepts: this.concepts?.map((guid) => ({ guid, name: guid })),
+      concepts: this.snapshotConcepts(),
       icon: this.icon,
       image: this.image,
       description: this.description,
@@ -6032,6 +6243,30 @@ export class KitStore {
       if (diff.remote) this.remote = diff.remote;
       if (diff.homepage) this.homepage = diff.homepage;
       if (diff.license) this.license = diff.license;
+
+      if (diff.concepts) {
+        if (diff.concepts.added) {
+          diff.concepts.added.forEach((concept) => this.createConcept(concept));
+        }
+        if (diff.concepts.updated) {
+          diff.concepts.updated.forEach(({ concept, diff: conceptDiff }) => {
+            const conceptStore = this.conceptStores.get(concept.guid);
+            if (conceptStore) {
+              conceptStore.change(conceptDiff);
+            }
+          });
+        }
+        if (diff.concepts.removed) {
+          diff.concepts.removed.forEach((conceptId) => {
+            const conceptGuid = conceptId.guid;
+            if (this.conceptStores.has(conceptGuid)) {
+              this.deleteConcept(conceptGuid);
+            }
+          });
+        }
+        this._conceptsCache = undefined;
+        this._conceptsVersion = 0;
+      }
 
       if (diff.authors) {
         if (diff.authors.added) {
@@ -6263,6 +6498,16 @@ export class KitStore {
 
   // #endregion YPath API
 
+  snapshotConcepts = (): Concept[] => {
+    const currentVersion = (this.yConcepts as any)._clock || this.conceptStores.size;
+    if (this._conceptsCache && this._conceptsVersion === currentVersion) {
+      return this._conceptsCache;
+    }
+    this._conceptsCache = Array.from(this.conceptStores.values()).map((concept) => concept.snapshot());
+    this._conceptsVersion = currentVersion;
+    return this._conceptsCache;
+  };
+
   snapshotFiles = (): SemioFile[] => {
     const currentVersion = (this.yFiles as any)._clock || this.files.size;
     if (this._filesCache && this._filesVersion === currentVersion) {
@@ -6324,6 +6569,19 @@ export class KitStore {
   };
 
   // Field-level observers for targeted subscriptions (avoids overfetching)
+  onConceptsChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
+    const notifySubscriber = () => {
+      this._conceptsCache = undefined;
+      subscribe(() => {});
+    };
+    if (deep) {
+      this.yConcepts.observeDeep(notifySubscriber);
+      return () => this.yConcepts.unobserveDeep(notifySubscriber);
+    }
+    this.yConcepts.observe(notifySubscriber);
+    return () => this.yConcepts.unobserve(notifySubscriber);
+  };
+
   onTypesChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._typesCache = undefined; // Invalidate cache
@@ -8650,26 +8908,53 @@ export const sketchpadMachine = setup({
     // Background operation actions
     backgroundStart: assign(({ context, event }) => {
       if (event.type !== "BACKGROUND.START") return {};
-      return {
+      const updates: Partial<SketchpadContext> = {
         backgroundOperations: {
           ...context.backgroundOperations,
           [event.operationId]: { type: event.operationType, status: "running" as const },
         },
       };
+      // If this is a kit import, add to loadingKits
+      if (event.operationType.startsWith("kit-import:")) {
+        const kitName = event.operationType.replace("kit-import:", "");
+        updates.homeApp = {
+          ...context.homeApp,
+          loadingKits: [...context.homeApp.loadingKits, { tempGuid: event.operationId, name: kitName }],
+        };
+      }
+      return updates;
     }),
     backgroundComplete: assign(({ context, event }) => {
       if (event.type !== "BACKGROUND.COMPLETE") return {};
+      const operation = context.backgroundOperations[event.operationId];
       const { [event.operationId]: _, ...rest } = context.backgroundOperations;
-      return { backgroundOperations: rest };
+      const updates: Partial<SketchpadContext> = { backgroundOperations: rest };
+      // If this was a kit import, remove from loadingKits
+      if (operation?.type.startsWith("kit-import:")) {
+        updates.homeApp = {
+          ...context.homeApp,
+          loadingKits: context.homeApp.loadingKits.filter((k) => k.tempGuid !== event.operationId),
+        };
+      }
+      return updates;
     }),
     backgroundFail: assign(({ context, event }) => {
       if (event.type !== "BACKGROUND.FAIL") return {};
-      return {
+      const operation = context.backgroundOperations[event.operationId];
+      const updates: Partial<SketchpadContext> = {
         backgroundOperations: {
           ...context.backgroundOperations,
           [event.operationId]: { ...context.backgroundOperations[event.operationId], status: "failed" as const, error: event.error },
         },
       };
+      // If this was a kit import, remove from loadingKits
+      if (operation?.type.startsWith("kit-import:")) {
+        updates.homeApp = {
+          ...context.homeApp,
+          loadingKits: context.homeApp.loadingKits.filter((k) => k.tempGuid !== event.operationId),
+        };
+      }
+      return updates;
     }),
     // Design transaction actions (scoped to design app)
     designTransactionStart: assign(({ context, event }) => {
@@ -10591,7 +10876,7 @@ export function useDiffedPiece<T>(selector?: (piece: Piece) => T, id?: string, d
   return selector ? selector(diffedPiece) : diffedPiece;
 }
 
-export function usePieceCenterU(): GranularHookResult<number> {
+export function usePieceCenterU(): HookResult<number> {
   const pieceScope = usePieceScope();
   const piece = usePiece() as Piece | null;
   const { useDesignAppCommands } = getDesignAppHooks();
@@ -10605,7 +10890,7 @@ export function usePieceCenterU(): GranularHookResult<number> {
   return conditionalHookResult(!!pieceScope && !!piece, piece?.center?.u ?? 0, setter);
 }
 
-export function usePieceCenterV(): GranularHookResult<number> {
+export function usePieceCenterV(): HookResult<number> {
   const pieceScope = usePieceScope();
   const piece = usePiece() as Piece | null;
   const { useDesignAppCommands } = getDesignAppHooks();
@@ -10619,7 +10904,7 @@ export function usePieceCenterV(): GranularHookResult<number> {
   return conditionalHookResult(!!pieceScope && !!piece, piece?.center?.v ?? 0, setter);
 }
 
-export function usePieceScale(): GranularHookResult<number> {
+export function usePieceScale(): HookResult<number> {
   const pieceScope = usePieceScope();
   const piece = usePiece() as Piece | null;
   const { useDesignAppCommands } = getDesignAppHooks();
@@ -10633,7 +10918,7 @@ export function usePieceScale(): GranularHookResult<number> {
   return conditionalHookResult(!!pieceScope && !!piece, piece?.scale ?? 1, setter);
 }
 
-export function usePieceIsHidden(): GranularHookResult<boolean> {
+export function usePieceIsHidden(): HookResult<boolean> {
   const pieceScope = usePieceScope();
   const piece = usePiece() as Piece | null;
   const { useDesignAppCommands } = getDesignAppHooks();
@@ -10647,7 +10932,7 @@ export function usePieceIsHidden(): GranularHookResult<boolean> {
   return conditionalHookResult(!!pieceScope && !!piece, piece?.isHidden ?? false, setter);
 }
 
-export function usePieceIsLocked(): GranularHookResult<boolean> {
+export function usePieceIsLocked(): HookResult<boolean> {
   const pieceScope = usePieceScope();
   const piece = usePiece() as Piece | null;
   const { useDesignAppCommands } = getDesignAppHooks();
@@ -10661,7 +10946,7 @@ export function usePieceIsLocked(): GranularHookResult<boolean> {
   return conditionalHookResult(!!pieceScope && !!piece, piece?.isLocked ?? false, setter);
 }
 
-export function usePieceColor(): GranularHookResult<string | undefined> {
+export function usePieceColor(): HookResult<string | undefined> {
   const pieceScope = usePieceScope();
   const piece = usePiece() as Piece | null;
   const { useDesignAppCommands } = getDesignAppHooks();
@@ -10675,7 +10960,7 @@ export function usePieceColor(): GranularHookResult<string | undefined> {
   return conditionalHookResult(!!pieceScope && !!piece, piece?.color, setter);
 }
 
-export function usePieceDescription(): GranularHookResult<string | undefined> {
+export function usePieceDescription(): HookResult<string | undefined> {
   const pieceScope = usePieceScope();
   const piece = usePiece() as Piece | null;
   const { useDesignAppCommands } = getDesignAppHooks();
@@ -10689,7 +10974,7 @@ export function usePieceDescription(): GranularHookResult<string | undefined> {
   return conditionalHookResult(!!pieceScope && !!piece, piece?.description, setter);
 }
 
-export function usePieceName(): GranularHookResult<string | undefined> {
+export function usePieceName(): HookResult<string | undefined> {
   const pieceScope = usePieceScope();
   const piece = usePiece() as Piece | null;
   const { useDesignAppCommands } = getDesignAppHooks();
@@ -10754,7 +11039,7 @@ export function useConnectionStatus(): DiffStatus {
   return DiffStatus.Unchanged;
 }
 
-export function useConnectionGap(): GranularHookResult<number> {
+export function useConnectionGap(): HookResult<number> {
   const connectionScope = useConnectionScope();
   const connection = useConnection() as Connection | null;
   const { useDesignAppCommands } = getDesignAppHooks();
@@ -10768,7 +11053,7 @@ export function useConnectionGap(): GranularHookResult<number> {
   return conditionalHookResult(!!connectionScope && !!connection, connection?.gap ?? 0, setter);
 }
 
-export function useConnectionShift(): GranularHookResult<number> {
+export function useConnectionShift(): HookResult<number> {
   const connectionScope = useConnectionScope();
   const connection = useConnection() as Connection | null;
   const { useDesignAppCommands } = getDesignAppHooks();
@@ -10782,7 +11067,7 @@ export function useConnectionShift(): GranularHookResult<number> {
   return conditionalHookResult(!!connectionScope && !!connection, connection?.shift ?? 0, setter);
 }
 
-export function useConnectionRise(): GranularHookResult<number> {
+export function useConnectionRise(): HookResult<number> {
   const connectionScope = useConnectionScope();
   const connection = useConnection() as Connection | null;
   const { useDesignAppCommands } = getDesignAppHooks();
@@ -10796,7 +11081,7 @@ export function useConnectionRise(): GranularHookResult<number> {
   return conditionalHookResult(!!connectionScope && !!connection, connection?.rise ?? 0, setter);
 }
 
-export function useConnectionRotation(): GranularHookResult<number> {
+export function useConnectionRotation(): HookResult<number> {
   const connectionScope = useConnectionScope();
   const connection = useConnection() as Connection | null;
   const { useDesignAppCommands } = getDesignAppHooks();
@@ -10810,7 +11095,7 @@ export function useConnectionRotation(): GranularHookResult<number> {
   return conditionalHookResult(!!connectionScope && !!connection, connection?.rotation ?? 0, setter);
 }
 
-export function useConnectionTurn(): GranularHookResult<number> {
+export function useConnectionTurn(): HookResult<number> {
   const connectionScope = useConnectionScope();
   const connection = useConnection() as Connection | null;
   const { useDesignAppCommands } = getDesignAppHooks();
@@ -10824,7 +11109,7 @@ export function useConnectionTurn(): GranularHookResult<number> {
   return conditionalHookResult(!!connectionScope && !!connection, connection?.turn ?? 0, setter);
 }
 
-export function useConnectionTilt(): GranularHookResult<number> {
+export function useConnectionTilt(): HookResult<number> {
   const connectionScope = useConnectionScope();
   const connection = useConnection() as Connection | null;
   const { useDesignAppCommands } = getDesignAppHooks();
@@ -10838,7 +11123,7 @@ export function useConnectionTilt(): GranularHookResult<number> {
   return conditionalHookResult(!!connectionScope && !!connection, connection?.tilt ?? 0, setter);
 }
 
-export function useConnectionU(): GranularHookResult<number> {
+export function useConnectionU(): HookResult<number> {
   const connectionScope = useConnectionScope();
   const connection = useConnection() as Connection | null;
   const { useDesignAppCommands } = getDesignAppHooks();
@@ -10852,7 +11137,7 @@ export function useConnectionU(): GranularHookResult<number> {
   return conditionalHookResult(!!connectionScope && !!connection, connection?.u ?? 0, setter);
 }
 
-export function useConnectionV(): GranularHookResult<number> {
+export function useConnectionV(): HookResult<number> {
   const connectionScope = useConnectionScope();
   const connection = useConnection() as Connection | null;
   const { useDesignAppCommands } = getDesignAppHooks();
@@ -12662,6 +12947,35 @@ export class SketchpadStore {
 
           const yKit = yDoc.getMap();
           const conceptGuids = yKit.get("concepts") as string[] | undefined;
+          const yConcepts = yDoc.getArray("concepts");
+          const concepts =
+            yConcepts.length > 0
+              ? Array.from(yConcepts).map((yConcept: any) => {
+                  const yMap = yConcept[0] as Y.Map<any>;
+                  const concept: Concept = {
+                    guid: yMap.get("guid") as string,
+                    name: yMap.get("name") as string,
+                  };
+                  const description = yMap.get("description") as string | undefined;
+                  if (description) concept.description = description;
+                  const icon = yMap.get("icon") as string | undefined;
+                  if (icon) concept.icon = icon;
+                  const yAttrs = yMap.get("attributes") as Y.Array<any> | undefined;
+                  if (yAttrs && yAttrs.length > 0) {
+                    const attributes = Array.from(yAttrs).map((yAttr: any) => {
+                      const attrMap = yAttr[0] as Y.Map<any>;
+                      const attribute: Attribute = { guid: attrMap.get("guid") as string, key: attrMap.get("key") as string };
+                      const value = attrMap.get("value") as string | undefined;
+                      if (value) attribute.value = value;
+                      const definition = attrMap.get("definition") as string | undefined;
+                      if (definition) attribute.definition = definition;
+                      return attribute;
+                    });
+                    if (attributes.length > 0) concept.attributes = attributes;
+                  }
+                  return concept;
+                })
+              : conceptGuids?.map((g) => ({ guid: g, name: g }));
           const kit: Kit = {
             guid: yKit.get("guid") as string,
             name: yKit.get("name") as string,
@@ -12670,7 +12984,7 @@ export class SketchpadStore {
             homepage: yKit.get("homepage") as string,
             license: yKit.get("license") as string,
             preview: yKit.get("preview") as string,
-            concepts: conceptGuids?.map((g) => ({ guid: g, name: g })),
+            concepts,
             icon: yKit.get("icon") as string,
             image: yKit.get("image") as string,
             description: yKit.get("description") as string,
@@ -12727,16 +13041,14 @@ if (import.meta.hot?.data.actors) {
 
 const SketchpadScopeContext = createContext<SketchpadScope | null>(null);
 
-export const SketchpadScopeProvider = (props: { id?: string; remote?: RemoteProviders; onWindowEvents?: WindowEvents; initialState?: ExtendedInitialState; children: React.ReactNode }) => {
+export const SketchpadScopeProvider = (props: { id?: string; remote?: RemoteProviders; onWindowEvents?: WindowEvents; initialState?: ExtendedInitialState; importKitUrls?: string[]; children: React.ReactNode }) => {
   const id = useMemo(() => props.id || guid(), [props.id]);
-  const [configsReady, setConfigsReady] = useState(appConfigsLoaded);
+  const [configsReady, setConfigsReady] = useState(false);
 
   // Load app configs on mount
   useEffect(() => {
-    if (!configsReady) {
-      loadAppConfigs().then(() => setConfigsReady(true));
-    }
-  }, [configsReady]);
+    loadAppConfigs().then(() => setConfigsReady(true));
+  }, []);
 
   if (!stores.has(id)) {
     const store = new SketchpadStore(id, props?.remote, props?.initialState);
@@ -12753,10 +13065,36 @@ export const SketchpadScopeProvider = (props: { id?: string; remote?: RemoteProv
     if (typeof window !== "undefined") {
       (window as any).__SEMIO_STORE__ = store;
       (window as any).__SEMIO_ACTOR__ = actor;
+      (window as any).__piecesMetadata = piecesMetadata;
     }
   }
 
   const actor = actors.get(id)!;
+  const store = stores.get(id)!;
+
+  // Auto-import kits from URLs when configs are ready
+  useEffect(() => {
+    if (!configsReady || !props.importKitUrls || props.importKitUrls.length === 0) return;
+
+    const doImportKits = async () => {
+      for (const url of props.importKitUrls!) {
+        try {
+          const { kit, files: importedFiles } = await importKit(url);
+          // Create the kit in the store
+          await store.execute("semio.sketchpad.createKit", "semio.sketchpad.importKitUrls", kit, false, false);
+          // Store file blobs if the kit was created successfully
+          if (store.hasKit(kit.guid)) {
+            const kitStore = store.kit(kit.guid);
+            await kitStore.storeFileBlobs(importedFiles);
+          }
+        } catch (error) {
+          console.error(`[Sketchpad] Failed to auto-import kit from ${url}:`, error);
+        }
+      }
+    };
+
+    doImportKits();
+  }, [configsReady, props.importKitUrls, store]);
 
   // Always provide the context, but render loading state until configs are ready
   // This prevents context-related errors when components try to use hooks during loading
@@ -12814,28 +13152,80 @@ export function getAppTypeFromPath(path: string): AppKind {
   return "home";
 }
 
-export function useTheme(): Theme {
-  return useSketchpad((s) => s.theme) as Theme;
+export function useTheme(): HookResult<Theme> {
+  const actor = useSketchpadActor();
+  const value = useSelector(actor, (snapshot) => selectTheme(snapshot.context));
+  const canSetEvent = useMemo(() => ({ type: "SET_THEME" as const, theme: Theme.LIGHT }), []);
+  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
+  const setter = useMemo(() => {
+    if (!canSet) return undefined;
+    return (theme: Theme) => actor.send({ type: "SET_THEME", theme });
+  }, [actor, canSet]);
+  return conditionalHookResult(canSet, value, setter);
 }
 
-export function useLanguage(): string {
-  return useSketchpad((s) => s.language) as string;
+export function useLanguage(): HookResult<string> {
+  const actor = useSketchpadActor();
+  const value = useSelector(actor, (snapshot) => selectLanguage(snapshot.context));
+  const canSetEvent = useMemo(() => ({ type: "SET_LANGUAGE" as const, language: "en" }), []);
+  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
+  const setter = useMemo(() => {
+    if (!canSet) return undefined;
+    return (language: string) => actor.send({ type: "SET_LANGUAGE", language });
+  }, [actor, canSet]);
+  return conditionalHookResult(canSet, value, setter);
 }
 
-export function useLayout(): Layout {
-  return useSketchpad((s) => s.layout) as Layout;
+export function useLayout(): HookResult<Layout> {
+  const actor = useSketchpadActor();
+  const value = useSelector(actor, (snapshot) => selectLayout(snapshot.context));
+  const canSetEvent = useMemo(() => ({ type: "SET_LAYOUT" as const, layout: "desktop" as Layout }), []);
+  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
+  const setter = useMemo(() => {
+    if (!canSet) return undefined;
+    return (layout: Layout) => actor.send({ type: "SET_LAYOUT", layout });
+  }, [actor, canSet]);
+  return conditionalHookResult(canSet, value, setter);
 }
 
-export function useMode(): Mode {
-  return useSketchpad((s) => s.mode) as Mode;
+export function useMode(): HookResult<Mode> {
+  const actor = useSketchpadActor();
+  const value = useSelector(actor, (snapshot) => selectMode(snapshot.context));
+  const canSetEvent = useMemo(() => ({ type: "SET_MODE" as const, mode: Mode.USER }), []);
+  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
+  const setter = useMemo(() => {
+    if (!canSet) return undefined;
+    return (mode: Mode) => actor.send({ type: "SET_MODE", mode });
+  }, [actor, canSet]);
+  return conditionalHookResult(canSet, value, setter);
 }
 
-export function useExpertise(): Expertise {
-  return useSketchpad((s) => s.expertise) as Expertise;
+export function useExpertise(): HookResult<Expertise> {
+  const actor = useSketchpadActor();
+  const value = useSelector(actor, (snapshot) => selectExpertise(snapshot.context));
+  const canSetEvent = useMemo(() => ({ type: "SET_EXPERTISE" as const, expertise: Expertise.NORMAL }), []);
+  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
+  const setter = useMemo(() => {
+    if (!canSet) return undefined;
+    return (expertise: Expertise) => actor.send({ type: "SET_EXPERTISE", expertise });
+  }, [actor, canSet]);
+  return conditionalHookResult(canSet, value, setter);
+}
+
+export function useFullscreen(): HookResult<boolean> {
+  const actor = useSketchpadActor();
+  const value = useSelector(actor, (snapshot) => selectIsFullscreen(snapshot.context));
+  const canSetEvent = useMemo(() => ({ type: "TOGGLE_FULLSCREEN" as const }), []);
+  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
+  const setter = useMemo(() => {
+    if (!canSet) return undefined;
+    return (_value: boolean) => actor.send({ type: "TOGGLE_FULLSCREEN" });
+  }, [actor, canSet]);
+  return conditionalHookResult(canSet, value, setter);
 }
 
 export function useTooltip(): (key: string) => string | undefined {
-  const expertise = useExpertise();
+  const [expertise] = useExpertise();
   return (key: string) => {
     if (expertise === Expertise.EXPERT) return undefined;
     return key;
@@ -12843,21 +13233,17 @@ export function useTooltip(): (key: string) => string | undefined {
 }
 
 export function useSemioTooltip() {
-  const mode = useMode();
+  const [mode] = useMode();
   return { mode };
 }
 
-export function useIsFullscreen(): boolean {
-  return useSketchpad((s) => s.isFullscreen) as boolean;
-}
-
 export function useIsNavbarExpanded(): boolean {
-  const layout = useLayout();
+  const [layout] = useLayout();
   return typeof layout === "object" ? layout.isNavbarExpanded : false;
 }
 
 export function useIsFooterExpanded(): boolean {
-  const layout = useLayout();
+  const [layout] = useLayout();
   return typeof layout === "object" ? layout.isFooterExpanded : false;
 }
 
@@ -13030,101 +13416,6 @@ export function useSketchpadActions() {
     [actor],
   );
 }
-
-// #region Triadic Hooks (Global Settings)
-
-/**
- * Triadic hook for theme: [value, setter, canSet]
- * Returns the current theme, a function to set it, and whether setting is allowed.
- */
-export function useThemeTriadic(): GranularHookResult<Theme> {
-  const actor = useSketchpadActor();
-  const value = useSelector(actor, (snapshot) => selectTheme(snapshot.context));
-  const canSetEvent = useMemo(() => ({ type: "SET_THEME" as const, theme: Theme.LIGHT }), []);
-  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
-  const setter = useMemo(() => {
-    if (!canSet) return undefined;
-    return (theme: Theme) => actor.send({ type: "SET_THEME", theme });
-  }, [actor, canSet]);
-  return conditionalHookResult(canSet, value, setter);
-}
-
-/**
- * Triadic hook for language: [value, setter, canSet]
- */
-export function useLanguageTriadic(): GranularHookResult<string> {
-  const actor = useSketchpadActor();
-  const value = useSelector(actor, (snapshot) => selectLanguage(snapshot.context));
-  const canSetEvent = useMemo(() => ({ type: "SET_LANGUAGE" as const, language: "en" }), []);
-  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
-  const setter = useMemo(() => {
-    if (!canSet) return undefined;
-    return (language: string) => actor.send({ type: "SET_LANGUAGE", language });
-  }, [actor, canSet]);
-  return conditionalHookResult(canSet, value, setter);
-}
-
-/**
- * Triadic hook for expertise: [value, setter, canSet]
- */
-export function useExpertiseTriadic(): GranularHookResult<Expertise> {
-  const actor = useSketchpadActor();
-  const value = useSelector(actor, (snapshot) => selectExpertise(snapshot.context));
-  const canSetEvent = useMemo(() => ({ type: "SET_EXPERTISE" as const, expertise: Expertise.NORMAL }), []);
-  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
-  const setter = useMemo(() => {
-    if (!canSet) return undefined;
-    return (expertise: Expertise) => actor.send({ type: "SET_EXPERTISE", expertise });
-  }, [actor, canSet]);
-  return conditionalHookResult(canSet, value, setter);
-}
-
-/**
- * Triadic hook for mode: [value, setter, canSet]
- */
-export function useModeTriadic(): GranularHookResult<Mode> {
-  const actor = useSketchpadActor();
-  const value = useSelector(actor, (snapshot) => selectMode(snapshot.context));
-  const canSetEvent = useMemo(() => ({ type: "SET_MODE" as const, mode: Mode.USER }), []);
-  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
-  const setter = useMemo(() => {
-    if (!canSet) return undefined;
-    return (mode: Mode) => actor.send({ type: "SET_MODE", mode });
-  }, [actor, canSet]);
-  return conditionalHookResult(canSet, value, setter);
-}
-
-/**
- * Triadic hook for layout: [value, setter, canSet]
- */
-export function useLayoutTriadic(): GranularHookResult<Layout> {
-  const actor = useSketchpadActor();
-  const value = useSelector(actor, (snapshot) => selectLayout(snapshot.context));
-  const canSetEvent = useMemo(() => ({ type: "SET_LAYOUT" as const, layout: "desktop" as Layout }), []);
-  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
-  const setter = useMemo(() => {
-    if (!canSet) return undefined;
-    return (layout: Layout) => actor.send({ type: "SET_LAYOUT", layout });
-  }, [actor, canSet]);
-  return conditionalHookResult(canSet, value, setter);
-}
-
-/**
- * Triadic hook for fullscreen state: [value, toggle, canToggle]
- */
-export function useFullscreenTriadic(): GranularHookResult<boolean> {
-  const actor = useSketchpadActor();
-  const value = useSelector(actor, (snapshot) => selectIsFullscreen(snapshot.context));
-  const canSetEvent = useMemo(() => ({ type: "TOGGLE_FULLSCREEN" as const }), []);
-  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
-  const setter = useMemo(() => {
-    if (!canSet) return undefined;
-    return (_value: boolean) => actor.send({ type: "TOGGLE_FULLSCREEN" });
-  }, [actor, canSet]);
-  return conditionalHookResult(canSet, value, setter);
-}
-
-// #endregion Triadic Hooks (Global Settings)
 
 // #endregion XState Hooks
 
@@ -13937,6 +14228,7 @@ class AppRegistry {
 
   async initialize(): Promise<void> {
     await this.autoDiscover();
+    await loadAppConfigs();
   }
 }
 
@@ -13947,29 +14239,26 @@ import { ActorRefFrom, AnyActorRef, assign, createActor, fromCallback, setup, Sn
 
 // Lazy-load app configs to avoid circular dependency issues
 // These modules import KitDiffAppStore from this file, so we need to defer loading
-let appConfigsLoaded = false;
+let appConfigsLoadPromise: Promise<void> | null = null;
 async function loadAppConfigs() {
-  if (appConfigsLoaded) return;
-  appConfigsLoaded = true;
+  if (appConfigsLoadPromise) return appConfigsLoadPromise;
 
-  const [homeModule, docsModule, kitModule, typeModule, designModule, qualityModule] = await Promise.all([import("./Home"), import("./Docs"), import("./Kit"), import("./Type"), import("./Design"), import("./Quality")]);
+  appConfigsLoadPromise = (async () => {
+    const [homeModule, docsModule, kitModule, typeModule, designModule, qualityModule] = await Promise.all([import("./Home"), import("./Docs"), import("./Kit"), import("./Type"), import("./Design"), import("./Quality")]);
 
-  if (designModule.initializeDesignStore) {
-    designModule.initializeDesignStore();
-  }
+    if (designModule.initializeDesignStore) {
+      designModule.initializeDesignStore();
+    }
 
-  appRegistry.register(homeModule.config);
-  appRegistry.register(docsModule.config);
-  appRegistry.register(kitModule.config);
-  appRegistry.register(typeModule.config);
-  appRegistry.register(designModule.config);
-  appRegistry.register(qualityModule.config);
-}
+    appRegistry.register(homeModule.config);
+    appRegistry.register(docsModule.config);
+    appRegistry.register(kitModule.config);
+    appRegistry.register(typeModule.config);
+    appRegistry.register(designModule.config);
+    appRegistry.register(qualityModule.config);
+  })();
 
-if (typeof window !== "undefined") {
-  queueMicrotask(() => {
-    loadAppConfigs().catch((err) => console.error("Failed to load app configs:", err));
-  });
+  return appConfigsLoadPromise;
 }
 
 export { appRegistry, loadAppConfigs };
@@ -14401,7 +14690,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   const [searchParams] = useSearchParams();
   const kits = useKits();
 
-  const mode = useMode();
+  const [mode] = useMode();
   const isMobile = useIsMobile();
   const isNavbarExpanded = useIsNavbarExpanded();
 
@@ -16767,10 +17056,10 @@ const LayoutWrapper: FC = () => {
   const tutorialStore = store.tutorialStore();
 
   const navigation = useNavigation();
-  const theme = useTheme();
-  const language = useLanguage();
-  const layout = useLayout();
-  const isFullscreen = useIsFullscreen();
+  const [theme] = useTheme();
+  const [language] = useLanguage();
+  const [layout] = useLayout();
+  const [isFullscreen] = useFullscreen();
   const isNavbarExpanded = useIsNavbarExpanded();
   const isFooterExpanded = useIsFooterExpanded();
   const panelVisibility = useAppPanelVisibility();
@@ -17293,7 +17582,7 @@ const SketchpadContent: FC = () => {
   return <LayoutWrapper />;
 };
 
-const Sketchpad: FC<{ id?: string; remote?: RemoteProviders; onWindowEvents?: WindowEvents; initialState?: ExtendedInitialState; embedded?: boolean }> = ({ id, remote, onWindowEvents, initialState, embedded }) => {
+const Sketchpad: FC<{ id?: string; remote?: RemoteProviders; onWindowEvents?: WindowEvents; initialState?: ExtendedInitialState; importKitUrls?: string[]; embedded?: boolean }> = ({ id, remote, onWindowEvents, initialState, importKitUrls, embedded }) => {
   const initialEntries = useMemo(() => {
     if (!embedded) return undefined;
     if (typeof window !== "undefined" && window.location) {
@@ -17303,7 +17592,7 @@ const Sketchpad: FC<{ id?: string; remote?: RemoteProviders; onWindowEvents?: Wi
   }, [embedded]);
 
   const routerContent = (
-    <SketchpadScopeProvider id={id} remote={remote} onWindowEvents={onWindowEvents} initialState={initialState}>
+    <SketchpadScopeProvider id={id} remote={remote} onWindowEvents={onWindowEvents} initialState={initialState} importKitUrls={importKitUrls}>
       <SketchpadInteractionBridge>
         <FocusProvider>
           <PanelSectionProvider>

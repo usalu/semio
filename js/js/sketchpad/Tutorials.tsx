@@ -116,7 +116,7 @@ export const RecordingControls: FC = () => {
   const addFooterItem = useAddFooterItem();
   const removeFooterItem = useRemoveFooterItem();
   const store = useTutorialStore();
-  const mode = useMode();
+  const [mode] = useMode();
   useEffect(() => {
     if (mode !== Mode.DEV) {
       removeFooterItem("recording-controls");
@@ -198,7 +198,7 @@ const RecordingControlsContent: FC = () => {
 export const RecordButton: FC = () => {
   const addFooterItem = useAddFooterItem();
   const removeFooterItem = useRemoveFooterItem();
-  const mode = useMode();
+  const [mode] = useMode();
   const isRecording = useIsRecording();
   const store = useTutorialStore();
   useEffect(() => {

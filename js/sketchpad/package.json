@@ -1,0 +1,28 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "name": "@semio/sketchpad",
+  "version": "0.1.0",
+  "description": "semio ⋅ sketchpad",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "publish": "vite build && npm publish",
+    "preflight": "echo \"No preflight checks configured\"",
+    "postinstall": "node -e \"require('fs').copyFileSync('../../node_modules/sql.js/dist/sql-wasm.wasm', 'public/sql-wasm.wasm')\""
+  },
+  "dependencies": {
+    "@semio/js": "*"
+  },
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.com",
+    "url": "https://github.com/usalu"
+  },
+  "license": "AGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "js/play"
+  }
+}

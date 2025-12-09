@@ -7,10 +7,11 @@
   "exports": {
     ".": "./index.ts",
     "./semio": "./semio.ts",
-    "./globals.css": "./globals.css"
+    "./globals.css": "./globals.css",
+    "./theme.css": "./theme.css"
   },
   "scripts": {
-    "dev": "storybook dev -p 6006 --no-open --debug",
+    "dev": "tsx dev.ts",
     "build": "storybook build",
     "test": "vitest run",
     "test:ui": "vitest --ui",

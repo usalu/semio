@@ -37,6 +37,12 @@ out
 *storybook.log
 .playwright-mcp
 test-results
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
 #--------------------------------------TURBO--------------------------------------
 .turbo
 #--------------------------------------ASTRO--------------------------------------

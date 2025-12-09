@@ -70,7 +70,7 @@ export type YPath = YPathSegment[];
  * <Input value={name} onChange={setName} disabled={!canSetName} />
  * ```
  */
-export type GranularHookResult<T> = readonly [
+export type HookResult<T> = readonly [
   T,
   ((value: T) => void) | undefined,
   boolean
@@ -80,7 +80,7 @@ export type GranularHookResult<T> = readonly [
  * Granular hook result for read-only hooks.
  * Returns [value, undefined, canRead] tuple.
  */
-export type GranularHookNoSetResult<T> = readonly [
+export type HookNoSetResult<T> = readonly [
   T,
   undefined,
   boolean
@@ -97,7 +97,7 @@ export const READONLY_CAN = false;
  * Creates a read-only granular hook result.
  * @param value - The current state value
  */
-export function readonlyHookResult<T>(value: T): GranularHookResult<T> {
+export function readonlyHookResult<T>(value: T): HookResult<T> {
   return [value, READONLY_SETTER, READONLY_CAN] as const;
 }
 
@@ -111,7 +111,7 @@ export function writableHookResult<T>(
   value: T,
   setter: (value: T) => void,
   canSet: boolean = true
-): GranularHookResult<T> {
+): HookResult<T> {
   return [value, canSet ? setter : undefined, canSet] as const;
 }
 
@@ -125,7 +125,7 @@ export function conditionalHookResult<T>(
   canSet: boolean,
   value: T,
   setter: ((value: T) => void) | undefined
-): GranularHookResult<T> {
+): HookResult<T> {
   return [value, canSet ? setter : undefined, canSet] as const;
 }
 

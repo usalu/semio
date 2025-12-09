@@ -4797,40 +4797,40 @@ interface GltfProps {
   roughness?: number;
   metalness?: number;
 }
-const Gltf: React.FC<GltfProps> = ({ src, roughness, metalness }) => {
+
+const getComputedColorForGltf = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
+
+const Gltf: React.FC<GltfProps> = ({ src, roughness = 0.8, metalness = 0 }) => {
   const { scene } = useGLTF(src);
+  const plasterColor = React.useMemo(() => new THREE.Color(getComputedColorForGltf("--plaster")), []);
+  const plasterEdgeColor = React.useMemo(() => new THREE.Color(getComputedColorForGltf("--plaster-edge")), []);
 
-  React.useEffect(() => {
-    if (roughness !== undefined || metalness !== undefined) {
-      scene.traverse((node) => {
-        if ((node as any).isMesh && (node as any).material) {
-          if ((node as any).material.roughness !== undefined && roughness !== undefined) {
-            (node as any).material.roughness = roughness;
-          }
-          if ((node as any).material.metalness !== undefined && metalness !== undefined) {
-            (node as any).material.metalness = metalness;
-          }
+  const clonedScene = React.useMemo(() => {
+    const cloned = scene.clone();
+    const plasterMaterial = new THREE.MeshStandardMaterial({
+      color: plasterColor,
+      flatShading: false,
+      metalness,
+      roughness
+    });
+    const edgeMaterial = new THREE.LineBasicMaterial({ color: plasterEdgeColor });
 
-          if (Array.isArray((node as any).material)) {
-            (node as any).material.forEach((material: any) => {
-              if (material.roughness !== undefined && roughness !== undefined) {
-                material.roughness = roughness;
-              }
-              if (material.metalness !== undefined && metalness !== undefined) {
-                material.metalness = metalness;
-              }
-            });
-          }
-
-          if ((node as any).material.needsUpdate !== undefined) {
-            (node as any).material.needsUpdate = true;
-          }
+    cloned.traverse((child) => {
+      if ((child as any).isMesh) {
+        (child as any).raycast = THREE.Mesh.prototype.raycast;
+        if (Array.isArray((child as any).material)) {
+          (child as any).material = (child as any).material.map(() => plasterMaterial.clone());
+        } else {
+          (child as any).material = plasterMaterial.clone();
         }
-      });
-    }
-  }, [scene, roughness, metalness]);
+      } else if (child instanceof THREE.Line || child instanceof THREE.LineSegments || child instanceof THREE.Points) {
+        (child as any).material = edgeMaterial.clone();
+      }
+    });
+    return cloned;
+  }, [scene, plasterColor, plasterEdgeColor, roughness, metalness]);
 
-  return <primitive object={scene} />;
+  return <primitive object={clonedScene} />;
 };
 
 interface GeometryFileProps {
@@ -4856,9 +4856,30 @@ interface GizmoProps {
 }
 
 const Gizmo: React.FC<GizmoProps> = ({ show = true }) => {
-  const colors = React.useMemo(() => [getComputedColor("--accent"), getComputedColor("--accent-tertiary"), getComputedColor("--accent-secondary")] as [string, string, string], []);
+  const [colors, setColors] = React.useState<[string, string, string]>(() => [
+    getComputedColor("--accent"),
+    getComputedColor("--accent-tertiary"),
+    getComputedColor("--accent-secondary"),
+  ]);
   const labels = React.useMemo(() => ["X", "Z", "-Y"] as [string, string, string], []);
   const margin = React.useMemo(() => [80, 80] as [number, number], []);
+
+  React.useEffect(() => {
+    const updateColors = () =>
+      setColors([
+        getComputedColor("--accent"),
+        getComputedColor("--accent-tertiary"),
+        getComputedColor("--accent-secondary"),
+      ]);
+    updateColors();
+    const observer = new MutationObserver(updateColors);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    return () => observer.disconnect();
+  }, []);
+
   if (!show) return null;
   return (
     <GizmoHelper alignment="bottom-right" margin={margin}>
@@ -5138,7 +5159,7 @@ export const Scene: React.FC<SceneProps> = ({
           <ActionDropdown id="scene-projection" options={projectionOptions} value={projection} onValueChange={(value) => onProjectionChange(value as "camera" | "orthographic")} level="base" />
         </div>
       )}
-      <ThreeCanvas onPointerMissed={onPointerMissed} orthographic={orthographic} shadows={shadows} camera={orthographic ? { zoom: 50, position: [10, 10, 10] } : undefined} style={{ width: "100%", height: "100%" }}>
+      <ThreeCanvas onPointerMissed={onPointerMissed} orthographic={orthographic} shadows={shadows} camera={orthographic ? { zoom: 50, position: [10, 10, 10], near: -10000, far: 10000 } : undefined} style={{ width: "100%", height: "100%" }}>
         <SceneInner showGrid={showGrid} showGizmo={showGizmo} camera={camera} onCameraChange={onCameraChange} focusedItemId={focusedItemId} onFocusComplete={onFocusComplete}>
           {children}
         </SceneInner>

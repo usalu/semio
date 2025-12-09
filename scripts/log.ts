@@ -66,8 +66,14 @@ function getDefaultAuthor(): string {
   return "Unknown";
 }
 
+enum Model {
+  CLAUDE_SONNET_4_5 = "claude-sonnet-4.5",
+  CLAUDE_OPUS_4_5 = "claude-opus-4.5",
+  GPT_5_1_CODEX_MAX = "gpt-5.1-codex-max",
+}
+
 function getCurrentModel(): string {
-  return process.env.SEMIO_MODEL || "claude-opus-4.5";
+  return process.env.SEMIO_MODEL || Model.CLAUDE_OPUS_4_5;
 }
 //#endregion
 

@@ -50,7 +50,7 @@ import {
   TreeContent,
   TreeItem,
 } from "./elements";
-import type { AppWindowConfig, GranularHookNoSetResult, GranularHookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, QualityAppId, Transact, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
+import type { AppWindowConfig, HookNoSetResult, HookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, QualityAppId, Transact, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
 import { AppConfig, createPanelDefinition, Expertise, Mode, PanelKind, Theme, ToolKind } from "./shared";
 import type { KitStore, QualityStore, SketchpadStore } from "./Sketchpad";
 import {
@@ -65,14 +65,19 @@ import {
   useActiveInteraction,
   useAddPanelSection,
   useAppType,
+  useExpertise,
   useKit,
   useKitScope,
+  useLanguage,
+  useLayout,
+  useMode,
   useQuality,
   useQualityScope,
   useRemovePanelSection,
   useSketchpadCommands,
   useSketchpadStore,
   useSyncDeep,
+  useTheme,
 } from "./Sketchpad";
 
 // #endregion
@@ -993,7 +998,7 @@ export function useQualityAppCommands(id?: QualityAppId) {
   };
 }
 
-export function useQualityAppFullscreen(): GranularHookResult<QualityAppFullscreenWindow> {
+export function useQualityAppFullscreen(): HookResult<QualityAppFullscreenWindow> {
   const qualityScope = useQualityScope();
   const store = useQualityAppStore() as QualityAppStore | null;
   const fullscreen = useQualityApp((s) => s.fullscreenWindow) as QualityAppFullscreenWindow;
@@ -1007,7 +1012,7 @@ export function useQualityAppFullscreen(): GranularHookResult<QualityAppFullscre
   return [fullscreen ?? QualityAppFullscreenWindow.None, setFullscreen, canSet];
 }
 
-export function useQualityAppSelection(): GranularHookResult<QualityAppSelection> {
+export function useQualityAppSelection(): HookResult<QualityAppSelection> {
   const qualityScope = useQualityScope();
   const store = useQualityAppStore() as QualityAppStore | null;
   const selection = useQualityApp((s) => s.selection) as QualityAppSelection | undefined;
@@ -1021,7 +1026,7 @@ export function useQualityAppSelection(): GranularHookResult<QualityAppSelection
   return [selection ?? {}, setSelection, canSet];
 }
 
-export function useQualityAppHover(): GranularHookResult<QualityAppHover | undefined> {
+export function useQualityAppHover(): HookResult<QualityAppHover | undefined> {
   const qualityScope = useQualityScope();
   const store = useQualityAppStore() as QualityAppStore | null;
   const hover = useQualityApp((s) => s.hover) as QualityAppHover | undefined;
@@ -1035,7 +1040,7 @@ export function useQualityAppHover(): GranularHookResult<QualityAppHover | undef
   return [hover, setHover, canSet];
 }
 
-export function useQualityAppActiveTool(): GranularHookResult<ToolKind> {
+export function useQualityAppActiveTool(): HookResult<ToolKind> {
   const qualityScope = useQualityScope();
   const store = useQualityAppStore() as QualityAppStore | null;
   const activeTool = useQualityApp((s) => s.activeTool) as ToolKind;
@@ -1049,14 +1054,14 @@ export function useQualityAppActiveTool(): GranularHookResult<ToolKind> {
   return [activeTool ?? ToolKind.SELECTION_NORMAL, setActiveTool, canSet];
 }
 
-export function useQualityAppFormulaNodes(): GranularHookNoSetResult<FormulaNode[]> {
+export function useQualityAppFormulaNodes(): HookNoSetResult<FormulaNode[]> {
   const qualityScope = useQualityScope();
   const formulaNodes = useQualityApp((s) => s.formulaNodes) as FormulaNode[];
   const canRead = qualityScope !== null;
   return [formulaNodes ?? [], undefined, canRead];
 }
 
-export function useQualityAppPanelVisibility(): GranularHookResult<PanelVisibility> {
+export function useQualityAppPanelVisibility(): HookResult<PanelVisibility> {
   const qualityScope = useQualityScope();
   const store = useQualityAppStore() as QualityAppStore | null;
   const panelVisibility = useQualityApp((s) => s.panelVisibility) as PanelVisibility;
@@ -1070,7 +1075,7 @@ export function useQualityAppPanelVisibility(): GranularHookResult<PanelVisibili
   return [panelVisibility ?? { toolbar: true, workbench: false, details: false, chat: false, settings: false }, setPanelVisibility, canSet];
 }
 
-export function useQualityAppWindowLayout(): GranularHookResult<any> {
+export function useQualityAppWindowLayout(): HookResult<any> {
   const qualityScope = useQualityScope();
   const store = useQualityAppStore() as QualityAppStore | null;
   const windowLayout = useQualityApp((s) => s.windowLayout);
@@ -1742,11 +1747,11 @@ const App: FC<AppProps> = () => {
     if (appType !== "quality") return;
 
     const SketchpadSettingsContent = () => {
-      const [theme, setTheme, canSetTheme] = useThemeTriadic();
-      const [language, setLanguage, canSetLanguage] = useLanguageTriadic();
-      const [layout, setLayout, canSetLayout] = useLayoutTriadic();
-      const [expertise, setExpertise, canSetExpertise] = useExpertiseTriadic();
-      const [mode, setMode, canSetMode] = useModeTriadic();
+      const [theme, setTheme, canSetTheme] = useTheme();
+      const [language, setLanguage, canSetLanguage] = useLanguage();
+      const [layout, setLayout, canSetLayout] = useLayout();
+      const [expertise, setExpertise, canSetExpertise] = useExpertise();
+      const [mode, setMode, canSetMode] = useMode();
 
       const languageEnLabel = useLabel("semio.sketchpad.settings.language.en");
       const languageDeLabel = useLabel("semio.sketchpad.settings.language.de");

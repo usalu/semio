@@ -1,5 +1,5 @@
 ---
-date: '2025-12-08T22:48:50.627Z'
+date: "2025-12-08T22:48:50.627Z"
 slug: MIGRATE-DESIGN-APP-TRIADIC-HOOKS
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: >-
@@ -7,6 +7,7 @@ summary: >-
   hooks
 model: claude-opus-4.5
 ---
+
 # Previously
 
 The codebase used `useDesignAppCommands()` hook to access all design app commands. UI components would destructure specific commands and call them with origin strings. This mixed app state operations (hover, selection, focus) with kit mutations (addPiece, updatePiece, addConnection).
@@ -61,12 +62,14 @@ The codebase used `useDesignAppCommands()` hook to access all design app command
 - All **kit mutations** correctly use commands with origin strings for undo/redo
 
 ### Kit Mutations (remain using useDesignAppCommands)
+
 - `addPiece`, `updatePiece`, `updatePieces`, `deletePiece`
 - `addConnection`, `addConnections`, `updateConnection`, `updateConnections`
 - `startTransaction`, `finalizeTransaction`, `abortTransaction`
 - `undo`, `redo`, `deleteSelected`, `execute`
 
 ### App State Operations (migrated to action hooks)
+
 - Selection: `selectPiece`, `selectPieces`, `addPieceToSelection`, `removePieceFromSelection`, `selectConnection`, `addConnectionToSelection`, `removeConnectionFromSelection`, `selectAll`, `deselectAll`
 - Hover: `hoverPiece`, `hoverConnection`, `hoverPort`, `hoverTypes`, `hoverDesigns`, `clearHover`
 - Focus: `focusPiece`, `clearFocus`
@@ -76,6 +79,7 @@ The codebase used `useDesignAppCommands()` hook to access all design app command
 ## Type.tsx Migration (Completed)
 
 ### Action Hooks Created
+
 - Selection: `useTypeAppSelectPort`, `useTypeAppDeselectPort`, `useTypeAppDeselectAll`, `useTypeAppSelectModel`, `useTypeAppDeselectModel`
 - Hover: `useTypeAppHoverPort`, `useTypeAppHoverModel`, `useTypeAppClearHover`
 - Focus: `useTypeAppFocusPort`, `useTypeAppClearFocus`
@@ -83,6 +87,7 @@ The codebase used `useDesignAppCommands()` hook to access all design app command
 - Model Tags: `useTypeAppAddModelTag`, `useTypeAppRemoveModelTag`, `useTypeAppSetSelectedModel`
 
 ### UI Components Migrated
+
 - `SceneContent`: selectPort, deselectPort, hoverPort, clearHover, focusPort
 - `Scene`: setCamera, deselectAll, clearFocus
 - `ModelsSectionForm`: selectModel, deselectModel, hoverModel, clearHover
@@ -92,6 +97,7 @@ The codebase used `useDesignAppCommands()` hook to access all design app command
 - `TypeAppFooter`: addModelTag, removeModelTag
 
 ### Remaining Commands (kit mutations)
+
 - `addPort`, `updatePort`, `deletePort`
 - `addModel`, `updateModel`, `deleteModel`
 - `undo`, `redo`
@@ -99,36 +105,46 @@ The codebase used `useDesignAppCommands()` hook to access all design app command
 ## Quality.tsx Migration (Completed)
 
 ### Action Hooks Created
+
 - Selection: `useQualityAppSelectFormulaNode`, `useQualityAppDeselectAll`
 - Hover: `useQualityAppHoverFormulaNode`, `useQualityAppClearHover`
 - UI: `useQualityAppTogglePanel`, `useQualityAppToggleFormulaFullscreen`, `useQualityAppToggleDiagramFullscreen`
 
 ### UI Components Migrated
+
 - `QualityDiagram`: selectFormulaNode, hoverFormulaNode, clearHover
 - `App`: deselectAll, togglePanel, toggleFormulaFullscreen, toggleDiagramFullscreen
 
 ### Remaining Commands (kit mutations)
+
 - `connectNodes`, `updateFormula`
 - `undo`, `redo`
 
 ## Remaining Work
 
 ### Kit.tsx
+
 Extensive selection operations still using `useKitAppCommands`:
+
 - `selectDesign`, `selectType`, `deselectAll`
 - `addToSelection`, `removeFromSelection`
 - `toggleExpandedRow`
 - `setCamera`
 
 ### Home.tsx
+
 Selection and sorting operations still using `useHomeCommands`:
+
 - `selectKit`, `deselectAll`
 - `setSortColumn`, `setSortDirection`, `toggleSort`
 
 ### Sketchpad-level
+
 Settings commands used across apps:
+
 - `setTheme`, `setLanguage`, `setLayout`, `setExpertise`, `setMode`
 
 ## Test Results
+
 - All 9 tests pass
 - No new TypeScript errors in Type.tsx or Quality.tsx (pre-existing Design.tsx errors remain)

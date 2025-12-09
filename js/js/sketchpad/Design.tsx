@@ -34,7 +34,7 @@ import type {
   AppConfig,
   AppWindowConfig,
   DesignAppId,
-  GranularHookResult,
+  HookResult,
   KitCommandContext,
   KitDiffAppEdit,
   PanelDefinition,
@@ -48,7 +48,7 @@ import type {
   YStringArray,
 } from "./shared";
 import { conditionalHookResult, createPanelDefinition, Expertise, Mode, PanelKind, readonlyHookResult, Theme, ToolKind } from "./shared";
-import { identitySelector, useDesignScope, useKitScope, usePieceScope, useSketchpadActor, useSketchpadActorSafe } from "./Sketchpad";
+import { identitySelector, useDesignScope, useExpertise, useKitScope, useLanguage, useLayout, useMode, usePieceScope, useSketchpadActor, useSketchpadActorSafe, useTheme } from "./Sketchpad";
 
 // #endregion Internal State Management
 
@@ -97,6 +97,7 @@ import {
   Port,
   selectBestModel,
   TOLERANCE,
+  toSemioRotation,
   toThreeRotation,
   Type,
 } from "../semio";
@@ -1611,6 +1612,8 @@ export function useDesignStore<T>(selector?: (store: DesignStore) => T, id?: Des
   return selector ? selector(designAppStore) : designAppStore;
 }
 
+export { useDesignStore as useDesignAppStore };
+
 export function useDesignApp<T>(selector?: (state: DesignAppState) => T, id?: DesignAppId): T | DesignAppState | null {
   const kitScope = useKitScope();
   const designScope = useDesignScope();
@@ -1643,7 +1646,7 @@ const selectModelTags = (s: DesignAppState) => s.selectedModelTags ?? EMPTY_MODE
 const selectHover = (s: DesignAppState) => s.hover;
 const selectPanelVisibility = (s: DesignAppState) => s.panelVisibility;
 
-export function useDesignAppSelection(): GranularHookResult<DesignAppSelection> {
+export function useDesignAppSelection(): HookResult<DesignAppSelection> {
   const state = useDesignApp(identitySelector);
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -1662,7 +1665,7 @@ export function useDesignAppSelection(): GranularHookResult<DesignAppSelection> 
   return conditionalHookResult(canSet, value, setter);
 }
 
-export function useDesignAppFullscreen(): GranularHookResult<DesignAppFullscreenWindow> {
+export function useDesignAppFullscreen(): HookResult<DesignAppFullscreenWindow> {
   const state = useDesignApp(identitySelector);
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -1679,7 +1682,7 @@ export function useDesignAppFullscreen(): GranularHookResult<DesignAppFullscreen
   return conditionalHookResult(canSet, value, setter);
 }
 
-export function useDesignAppActiveTool(): GranularHookResult<ToolKind> {
+export function useDesignAppActiveTool(): HookResult<ToolKind> {
   const state = useDesignApp(identitySelector);
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -1696,17 +1699,17 @@ export function useDesignAppActiveTool(): GranularHookResult<ToolKind> {
   return conditionalHookResult(canSet, value, setter);
 }
 
-export function useDesignAppDiff(): GranularHookResult<KitDiff | undefined> {
+export function useDesignAppDiff(): HookResult<KitDiff | undefined> {
   return readonlyHookResult<KitDiff | undefined>(undefined);
 }
 
-export function useDesignAppOthers(): GranularHookResult<DesignAppPresenceOther[]> {
+export function useDesignAppOthers(): HookResult<DesignAppPresenceOther[]> {
   const state = useDesignApp(identitySelector);
   const value = state ? selectOthers(state as DesignAppState) : EMPTY_OTHERS;
   return readonlyHookResult(value);
 }
 
-export function useDesignAppCamera(): GranularHookResult<Camera | undefined> {
+export function useDesignAppCamera(): HookResult<Camera | undefined> {
   const state = useDesignApp(identitySelector);
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -1723,7 +1726,7 @@ export function useDesignAppCamera(): GranularHookResult<Camera | undefined> {
   return conditionalHookResult(canSet, value, setter);
 }
 
-export function useDesignAppDiagramCenter(): GranularHookResult<Coord | undefined> {
+export function useDesignAppDiagramCenter(): HookResult<Coord | undefined> {
   const state = useDesignApp(identitySelector);
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -1744,7 +1747,7 @@ export function useDesignAppDiagramCenter(): GranularHookResult<Coord | undefine
   return conditionalHookResult(canSet, value, setter);
 }
 
-export function useDesignAppDiagramScale(): GranularHookResult<number | undefined> {
+export function useDesignAppDiagramScale(): HookResult<number | undefined> {
   const state = useDesignApp(identitySelector);
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -1765,7 +1768,7 @@ export function useDesignAppDiagramScale(): GranularHookResult<number | undefine
   return conditionalHookResult(canSet, value, setter);
 }
 
-export function useDesignAppFocusedPieceGuid(): GranularHookResult<Guid | undefined> {
+export function useDesignAppFocusedPieceGuid(): HookResult<Guid | undefined> {
   const state = useDesignApp(identitySelector);
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -1782,7 +1785,7 @@ export function useDesignAppFocusedPieceGuid(): GranularHookResult<Guid | undefi
   return conditionalHookResult(canSet, value, setter);
 }
 
-export function useDesignAppSelectedModelTags(): GranularHookResult<Record<Guid, string[]>> {
+export function useDesignAppSelectedModelTags(): HookResult<Record<Guid, string[]>> {
   const state = useDesignApp(identitySelector);
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -1801,7 +1804,7 @@ export function useDesignAppSelectedModelTags(): GranularHookResult<Record<Guid,
   return conditionalHookResult(canSet, value, setter);
 }
 
-export function useDesignAppHover(): GranularHookResult<DesignAppHover | undefined> {
+export function useDesignAppHover(): HookResult<DesignAppHover | undefined> {
   const state = useDesignApp(identitySelector);
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -1824,7 +1827,7 @@ export function useDesignAppHover(): GranularHookResult<DesignAppHover | undefin
   return conditionalHookResult(canSet, value, setter);
 }
 
-export function useDesignAppPanelVisibility(): GranularHookResult<PanelVisibility> {
+export function useDesignAppPanelVisibility(): HookResult<PanelVisibility> {
   const state = useDesignApp(identitySelector);
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -6959,43 +6962,100 @@ const PlaneThree: FC<PlaneThreeProps> = ({ plane }) => {
 
 const GLTFMesh: FC<{ url: string }> = ({ url }) => {
   const gltf = useGLTF(url);
+  const plasterColor = useMemo(() => new THREE.Color(getComputedColor("--plaster")), []);
+  const plasterEdgeColor = useMemo(() => new THREE.Color(getComputedColor("--plaster-edge")), []);
+
   const clonedScene = useMemo(() => {
     const cloned = gltf.scene.clone();
+    cloned.applyMatrix4(toSemioRotation());
+    const plasterMaterial = new THREE.MeshStandardMaterial({
+      color: plasterColor,
+      flatShading: false,
+      metalness: 0,
+      roughness: 0.8
+    });
+    const edgeMaterial = new THREE.LineBasicMaterial({ color: plasterEdgeColor });
+
     cloned.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.raycast = THREE.Mesh.prototype.raycast;
+        if (Array.isArray(child.material)) {
+          child.material = child.material.map(() => plasterMaterial.clone());
+        } else {
+          child.material = plasterMaterial.clone();
+        }
+      } else if (child instanceof THREE.Line || child instanceof THREE.LineSegments || child instanceof THREE.Points) {
+        (child as any).material = edgeMaterial.clone();
       }
     });
     return cloned;
-  }, [gltf.scene]);
+  }, [gltf.scene, plasterColor, plasterEdgeColor]);
   return <primitive object={clonedScene} />;
 };
 
 const FBXMesh: FC<{ url: string }> = ({ url }) => {
   const scene = useFBX(url);
+  const plasterColor = useMemo(() => new THREE.Color(getComputedColor("--plaster")), []);
+  const plasterEdgeColor = useMemo(() => new THREE.Color(getComputedColor("--plaster-edge")), []);
+
   const clonedScene = useMemo(() => {
     const cloned = scene.clone();
+    cloned.applyMatrix4(toSemioRotation());
+    const plasterMaterial = new THREE.MeshStandardMaterial({
+      color: plasterColor,
+      flatShading: false,
+      metalness: 0,
+      roughness: 0.8
+    });
+    const edgeMaterial = new THREE.LineBasicMaterial({ color: plasterEdgeColor });
+
     cloned.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.raycast = THREE.Mesh.prototype.raycast;
+        if (Array.isArray(child.material)) {
+          child.material = child.material.map(() => plasterMaterial.clone());
+        } else {
+          child.material = plasterMaterial.clone();
+        }
+      } else if (child instanceof THREE.Line || child instanceof THREE.LineSegments || child instanceof THREE.Points) {
+        (child as any).material = edgeMaterial.clone();
       }
     });
     return cloned;
-  }, [scene]);
+  }, [scene, plasterColor, plasterEdgeColor]);
   return <primitive object={clonedScene} />;
 };
 
 const OBJMesh: FC<{ url: string }> = ({ url }) => {
   const obj = useLoader(OBJLoader, url);
+  const plasterColor = useMemo(() => new THREE.Color(getComputedColor("--plaster")), []);
+  const plasterEdgeColor = useMemo(() => new THREE.Color(getComputedColor("--plaster-edge")), []);
+
   const clonedScene = useMemo(() => {
     const cloned = obj.clone();
+    cloned.applyMatrix4(toSemioRotation());
+    const plasterMaterial = new THREE.MeshStandardMaterial({
+      color: plasterColor,
+      flatShading: false,
+      metalness: 0,
+      roughness: 0.8
+    });
+    const edgeMaterial = new THREE.LineBasicMaterial({ color: plasterEdgeColor });
+
     cloned.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.raycast = THREE.Mesh.prototype.raycast;
+        if (Array.isArray(child.material)) {
+          child.material = child.material.map(() => plasterMaterial.clone());
+        } else {
+          child.material = plasterMaterial.clone();
+        }
+      } else if (child instanceof THREE.Line || child instanceof THREE.LineSegments || child instanceof THREE.Points) {
+        (child as any).material = edgeMaterial.clone();
       }
     });
     return cloned;
-  }, [obj]);
+  }, [obj, plasterColor, plasterEdgeColor]);
   return <primitive object={clonedScene} />;
 };
 
@@ -7086,16 +7146,8 @@ const PieceMesh: FC = () => {
     };
   }, [fileGuid, kitStore]);
 
-  const foregroundColor = useMemo(() => getComputedColor("--foreground"), []);
-
   if (!blobUrl) {
-    return (
-      <mesh>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color={foregroundColor} emissive={foregroundColor} emissiveIntensity={0.45} />
-        <Edges scale={1.001} color={foregroundColor} />
-      </mesh>
-    );
+    return null;
   }
 
   return (
@@ -8119,11 +8171,11 @@ const App: FC<AppProps> = () => {
 
   useEffect(() => {
     const SketchpadSettingsContent = () => {
-      const [theme, setTheme, canSetTheme] = useThemeTriadic();
-      const [language, setLanguage, canSetLanguage] = useLanguageTriadic();
-      const [layout, setLayout, canSetLayout] = useLayoutTriadic();
-      const [expertise, setExpertise, canSetExpertise] = useExpertiseTriadic();
-      const [mode, setMode, canSetMode] = useModeTriadic();
+      const [theme, setTheme, canSetTheme] = useTheme();
+      const [language, setLanguage, canSetLanguage] = useLanguage();
+      const [layout, setLayout, canSetLayout] = useLayout();
+      const [expertise, setExpertise, canSetExpertise] = useExpertise();
+      const [mode, setMode, canSetMode] = useMode();
 
       const languageEnLabel = useLabel("semio.sketchpad.settings.language.en");
       const languageDeLabel = useLabel("semio.sketchpad.settings.language.de");

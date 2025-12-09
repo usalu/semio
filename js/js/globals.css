@@ -293,6 +293,8 @@
     --muted: var(--color-light-8-9);
     --muted-foreground: var(--color-gray);
     --accent: var(--color-primary);
+    --accent-secondary: var(--color-secondary);
+    --accent-tertiary: var(--color-tertiary);
     --accent-foreground: var(--color-dark);
     --hover-base: var(--color-gray-700);
     --hover-panel: var(--color-gray-600);
@@ -569,6 +571,8 @@
   --muted: var(--color-dark-8-9);
   --muted-foreground: var(--color-gray);
   --accent: var(--color-primary);
+  --accent-secondary: var(--color-secondary);
+  --accent-tertiary: var(--color-tertiary);
   --accent-foreground: var(--color-light);
   --hover-base: var(--color-gray-300);
   --hover-panel: var(--color-gray-400);
