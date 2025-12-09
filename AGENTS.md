@@ -1397,6 +1397,11 @@ Shared react components. The main component is Sketchpad. Sketchpad is used in t
     - `const [camera, setCamera, canSetCamera] = useTypeAppCamera();`
     - `const [isHovered, _, canReadHover] = useKitAppIsTypeHovered();` (inside TypeScopeProvider)
     - `const [loadingKits, _, canReadLoadingKits] = useHomeLoadingKits();` (read-only)
+    - `const [theme, setTheme, canSetTheme] = useThemeTriadic();` (global settings)
+    - `const [language, setLanguage, canSetLanguage] = useLanguageTriadic();` (global settings)
+    - `const [expertise, setExpertise, canSetExpertise] = useExpertiseTriadic();` (global settings)
+    - `const [mode, setMode, canSetMode] = useModeTriadic();` (global settings)
+    - `const [layout, setLayout, canSetLayout] = useLayoutTriadic();` (global settings)
   - **Scope Providers**: Wrap components in appropriate scope providers to enable hooks:
     - `<KitScopeProvider guid={kitGuid}>` - For kit context
     - `<DesignScopeProvider guid={designGuid}>` - For design context
@@ -1856,59 +1861,68 @@ The application uses XState v5 for state machine logic alongside Y.js for persis
 
 ##### sketchpadMachine
 
-Root machine for data and app configuration:
+Unified state machine combining data management and hierarchical navigation:
 
-- Y.js sync for Kit data persistence
-- App state for Home, Kit, Type, Design, Quality apps
-- Transaction management for undo/redo
-- Tutorial state
-- Selectors and actor factories for each app
+**Root Structure (parallel):**
 
-##### uiMachine
-
-Hierarchical UI state machine for navigation and interaction:
+- Y.js sync for Kit data persistence via `yjsSync` callback actor
+- `navigation` parallel state with hierarchical sub-states
 
 **Navigation States:**
 
-- `idle` → `home` → `kit` → `design`/`type`/`quality` → `docs`
+- `home` → `kit` → `design`/`type`/`quality`/`docs`
+- State transitions via `KIT.INIT`, `DESIGN.INIT`, `TYPE.INIT` events
 
-**Parallel Regions per App:**
+**State-Scoped Events:**
 
-- `interaction`: Idle → Hovered → Selected → ContextMenu substates
-- `tool`: Active tool state (Design/Type apps)
-- `drag`: Drag-and-drop state (Design app)
-- `modal`: Command palette and search overlays
+App-specific events are only available in their respective navigation states:
 
-**Context Menu Substates per App:**
+- **home**: `HOME.TOGGLE_PANEL`, `HOME.SET_HOVER`, `HOME.SELECT_KIT`, etc.
+- **kit**: `KIT.SYNC`, `KIT.TOGGLE_PANEL`, `KIT.SET_FILTER`, `KIT.SELECT_TYPE`, etc.
+- **design**: `DESIGN.SYNC`, `DESIGN.SET_HOVER`, `DESIGN.SELECT_PIECE`, `DESIGN.DELETE_SELECTED`, etc.
+- **type**: `TYPE.SYNC`, `TYPE.SET_HOVER`, `TYPE.SELECT_PORT`, `TYPE.HOVER_MODEL`, etc.
+- **quality**: `QUALITY.TOGGLE_PANEL`, `QUALITY.TOGGLE_BENCHMARK`
 
-- Home: kitMenu
-- Kit: typeMenu, designMenu, qualityMenu, fileMenu, authorMenu
-- Design: pieceMenu, connectionMenu, piecesMenu, connectionsMenu, typeMenu, designMenu, canvasMenu
-- Type: portMenu, portsMenu, modelMenu, modelsMenu, canvasMenu
-- Quality: benchmarkMenu, canvasMenu
+**Global Events (always available):**
 
-**Key Events:**
+- Navigation: `NAVIGATE`, `NAVIGATE_BACK`, `NAVIGATE_FORWARD`
+- Settings: `SET_THEME`, `SET_LANGUAGE`, `SET_EXPERTISE`, `SET_MODE`, `SET_LAYOUT`
+- Background operations: `BACKGROUND.START`, `BACKGROUND.COMPLETE`, `BACKGROUND.FAIL`
+- Tutorial: `TUTORIAL.START`, `TUTORIAL.END`, `TUTORIAL.NEXT_STEP`, etc.
+- Sync: `CHANGE`, `Y_UPDATE`
 
-- Navigation: `load`, `open.kit`, `open.design`, `open.type`, `open.quality`, `open.docs`, `back`
-- Interaction: `hover`, `unhover`, `select`, `deselect`, `deselect.all`
-- Context Menu: `menu.open`, `menu.close`, `menu.action`
-- Drag: `drag.start`, `drag.move`, `drag.end`, `drag.cancel`
-- Tool: `tool.select`
-- Modal: `command.open`, `command.close`, `search.open`, `search.close`
-- Global: `escape`, `focus`, `focus.clear`
+**Per-App Transaction Events (scoped to navigation state):**
 
-**Usage:**
+Transaction management is per-app, not global. Each app (Design, Type, Kit) has its own transaction state embedded in its app state interface.
+
+- **design**: `DESIGN.TRANSACTION.START`, `DESIGN.TRANSACTION.COMMIT`, `DESIGN.TRANSACTION.ABORT`, `DESIGN.TRANSACTION.UNDO`, `DESIGN.TRANSACTION.REDO`, `DESIGN.TRANSACTION.RECORD_EDIT`
+- **type**: `TYPE.TRANSACTION.START`, `TYPE.TRANSACTION.COMMIT`, `TYPE.TRANSACTION.ABORT`, `TYPE.TRANSACTION.UNDO`, `TYPE.TRANSACTION.REDO`, `TYPE.TRANSACTION.RECORD_EDIT`
+- **kit**: `KIT.TRANSACTION.START`, `KIT.TRANSACTION.COMMIT`, `KIT.TRANSACTION.ABORT`, `KIT.TRANSACTION.UNDO`, `KIT.TRANSACTION.REDO`, `KIT.TRANSACTION.RECORD_EDIT`
+
+**Navigation State Selectors:**
 
 ```typescript
-import { createUiActor, selectUiIsInDesign, selectUiSelectedEntities } from "./machines";
+import { selectNavigationState, selectIsInDesign, selectIsInType } from "./Sketchpad";
 
-const actor = createUiActor();
-actor.start();
-actor.send({ type: "load" });
-actor.send({ type: "open.kit", kitGuid: "..." });
-actor.send({ type: "hover", entity: { kind: "piece", guid: "..." } });
-actor.send({ type: "menu.open", position: { x: 100, y: 200 }, target: { kind: "piece", guid: "..." } });
+// Check current navigation state
+const navState = useSelector(actor, selectNavigationState); // "home" | "kit" | "design" | "type" | "quality" | "docs"
+const isInDesign = useSelector(actor, selectIsInDesign); // boolean
 ```
+
+**Constraint Enforcement:**
+
+- `DESIGN.DELETE_SELECTED` requires `hasDesignSelection` guard AND being in design state
+- App-specific events are silently ignored when not in the correct navigation state
+- This prevents invalid state transitions (e.g., selecting a piece when not in design view)
+
+##### uiMachine (legacy)
+
+Separate hierarchical UI state machine (kept for reference, functionality merged into sketchpadMachine):
+
+- `interaction` region: Idle → Hovered → Selected → ContextMenu substates
+- `tool` region: Active tool state (Design/Type apps)
+- `drag` region: Drag-and-drop state (Design app)
+- `modal` region: Command palette and search overlays
 
 #### XState Hooks
 
@@ -1942,15 +1956,44 @@ Key sync events and helpers:
 
 The final step removes direct Y.js observers from the stores so that commands dispatch through XState actors, the actors own the Y.js subscriptions, and React hooks simply read from `useSketchpadSelector()`/app-specific selectors. Until that cutover, the architecture relies on the Y.js-to-XState bridge utilities listed above to keep both layers aligned.
 
-#### Transaction State Machine
+#### Transaction State Management
 
-App machines include transaction support:
+Transaction state is embedded in each app's state interface via `AppTransactionState`:
 
+```typescript
+interface AppTransactionState<TEdit = any> {
+  isTransactionActive: boolean;
+  currentTransactionStack: TEdit[]; // Edits in current active transaction
+  pastTransactionStack: TEdit[]; // Finalized transactions (for undo)
+  redoStack: TEdit[]; // Undone transactions (for redo)
+}
 ```
-States: idle <-> transaction
-Events: START_TRANSACTION, FINALIZE_TRANSACTION, ABORT_TRANSACTION
-Actions: recordEdit, undoFromPast, redoFromStack
+
+**Transaction Flow:**
+
+1. **Start**: `APP.TRANSACTION.START` activates transaction mode, clears redo stack
+2. **Record Edit**: `APP.TRANSACTION.RECORD_EDIT` pushes edit to current stack
+3. **Commit**: `APP.TRANSACTION.COMMIT` merges current stack into one edit, moves to past stack
+4. **Abort**: `APP.TRANSACTION.ABORT` discards current stack, deactivates transaction mode
+5. **Undo**: `APP.TRANSACTION.UNDO` pops from current (if active) or past stack
+6. **Redo**: `APP.TRANSACTION.REDO` moves edit from redo back to past stack
+
+**Background Operations:**
+
+Long-running async operations (kit import, file upload) are tracked via `backgroundOperations`:
+
+```typescript
+backgroundOperations: Record<
+  string,
+  {
+    type: string;
+    status: "pending" | "running" | "completed" | "failed";
+    error?: string;
+  }
+>;
 ```
+
+These continue even when navigating away from the originating app.
 
 ### Command System
 

@@ -22,7 +22,7 @@
 // #region Imports
 
 import { arrayMove } from "@dnd-kit/sortable";
-import { Edges, Line, Sphere, useFBX, useGLTF } from "@react-three/drei";
+import { Line, Sphere, useFBX, useGLTF } from "@react-three/drei";
 import { ThreeEvent, useLoader } from "@react-three/fiber";
 import { useSelector } from "@xstate/react";
 import React, { createContext, FC, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -50,7 +50,6 @@ import {
   useAddFooterItem,
   useAddPanelSection,
   useAppType,
-  useExpertise,
   useFocusSafe,
   useIsInTypeScope,
   useKit,
@@ -60,14 +59,9 @@ import {
   useKitStore,
   useKitTags,
   useKitTransaction,
-  useLanguage,
-  useLayout,
-  useMode,
   useRemoveFooterItem,
   useRemovePanelSection,
   useSketchpadActor,
-  useSketchpadCommands,
-  useTheme,
   useTooltip,
   useType,
   useTypeAppXState,
@@ -230,7 +224,8 @@ export function useTypeAppSelection(): GranularHookResult<TypeAppSelection> {
   const kitGuid = kitScope?.guid ?? "";
   const typeGuid = typeScope?.guid ?? "";
   const value = state ? ((state as TypeAppState).selection ?? EMPTY_TYPE_SELECTION) : EMPTY_TYPE_SELECTION;
-  const canSet = !!kitGuid && !!typeGuid;
+  const canSetEvent = useMemo(() => ({ type: "TYPE.SET_SELECTION" as const, kitGuid, typeGuid, selection: {} as TypeAppSelection }), [kitGuid, typeGuid]);
+  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setter = useMemo(() => {
     if (!canSet) return undefined;
     return (selection: TypeAppSelection) => {
@@ -248,7 +243,8 @@ export function useTypeAppPanelVisibility(): GranularHookResult<PanelVisibility>
   const kitGuid = kitScope?.guid ?? "";
   const typeGuid = typeScope?.guid ?? "";
   const value = state ? ((state as TypeAppState).panelVisibility ?? EMPTY_PANEL_VISIBILITY) : EMPTY_PANEL_VISIBILITY;
-  const canSet = !!kitGuid && !!typeGuid;
+  const canSetEvent = useMemo(() => ({ type: "TYPE.SET_PANEL_VISIBILITY" as const, kitGuid, typeGuid, panelVisibility: {} as PanelVisibility }), [kitGuid, typeGuid]);
+  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setter = useMemo(() => {
     if (!canSet) return undefined;
     return (visibility: PanelVisibility) => {
@@ -272,7 +268,8 @@ export function useTypeAppCamera(): GranularHookResult<Camera | undefined> {
   const kitGuid = kitScope?.guid ?? "";
   const typeGuid = typeScope?.guid ?? "";
   const value = state ? (state as TypeAppState).camera : undefined;
-  const canSet = !!kitGuid && !!typeGuid;
+  const canSetEvent = useMemo(() => ({ type: "TYPE.SET_CAMERA" as const, kitGuid, typeGuid, camera: undefined as Camera | undefined }), [kitGuid, typeGuid]);
+  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setter = useMemo(() => {
     if (!canSet) return undefined;
     return (camera: Camera | undefined) => {
@@ -290,7 +287,8 @@ export function useTypeAppFocusedPortGuid(): GranularHookResult<Guid | undefined
   const kitGuid = kitScope?.guid ?? "";
   const typeGuid = typeScope?.guid ?? "";
   const value = state ? (state as TypeAppState).focusedPortGuid : undefined;
-  const canSet = !!kitGuid && !!typeGuid;
+  const canSetEvent = useMemo(() => ({ type: "TYPE.FOCUS_PORT" as const, kitGuid, typeGuid, portGuid: "" }), [kitGuid, typeGuid]);
+  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setter = useMemo(() => {
     if (!canSet) return undefined;
     return (portGuid: Guid | undefined) => {
@@ -312,7 +310,8 @@ export function useTypeAppHover(): GranularHookResult<TypeAppHover | undefined> 
   const kitGuid = kitScope?.guid ?? "";
   const typeGuid = typeScope?.guid ?? "";
   const value = state ? (state as TypeAppState).hover : undefined;
-  const canSet = !!kitGuid && !!typeGuid;
+  const canSetEvent = useMemo(() => ({ type: "TYPE.SET_HOVER" as const, kitGuid, typeGuid, hover: {} as TypeAppHover }), [kitGuid, typeGuid]);
+  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setter = useMemo(() => {
     if (!canSet) return undefined;
     return (hover: TypeAppHover | undefined) => {
@@ -336,7 +335,8 @@ export function useTypeAppActiveTool(): GranularHookResult<ToolKind> {
   const kitGuid = kitScope?.guid ?? "";
   const typeGuid = typeScope?.guid ?? "";
   const value = state ? ((state as TypeAppState).activeTool ?? ToolKind.SELECTION_NORMAL) : ToolKind.SELECTION_NORMAL;
-  const canSet = !!kitGuid && !!typeGuid;
+  const canSetEvent = useMemo(() => ({ type: "TYPE.SET_ACTIVE_TOOL" as const, kitGuid, typeGuid, tool: ToolKind.SELECTION_NORMAL }), [kitGuid, typeGuid]);
+  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setter = useMemo(() => {
     if (!canSet) return undefined;
     return (tool: ToolKind) => {
@@ -401,11 +401,11 @@ export function useTypeAppCommands(id?: TypeAppId) {
     }
 
     return {
-      startTransaction: (_origin?: string) => actor.send({ type: "TRANSACTION.START", appKey: `type-${kitGuid}-${typeGuid}` }),
-      finalizeTransaction: (_origin?: string) => actor.send({ type: "TRANSACTION.COMMIT", appKey: `type-${kitGuid}-${typeGuid}` }),
-      abortTransaction: (_origin?: string) => actor.send({ type: "TRANSACTION.ABORT", appKey: `type-${kitGuid}-${typeGuid}` }),
-      undo: (_origin?: string) => actor.send({ type: "TRANSACTION.UNDO", appKey: `type-${kitGuid}-${typeGuid}` }),
-      redo: (_origin?: string) => actor.send({ type: "TRANSACTION.REDO", appKey: `type-${kitGuid}-${typeGuid}` }),
+      startTransaction: (_origin?: string) => actor.send({ type: "TYPE.TRANSACTION.START", kitGuid, typeGuid }),
+      finalizeTransaction: (_origin?: string) => actor.send({ type: "TYPE.TRANSACTION.COMMIT", kitGuid, typeGuid }),
+      abortTransaction: (_origin?: string) => actor.send({ type: "TYPE.TRANSACTION.ABORT", kitGuid, typeGuid }),
+      undo: (_origin?: string) => actor.send({ type: "TYPE.TRANSACTION.UNDO", kitGuid, typeGuid }),
+      redo: (_origin?: string) => actor.send({ type: "TYPE.TRANSACTION.REDO", kitGuid, typeGuid }),
       selectAll: (_origin?: string) => actor.send({ type: "TYPE.SELECT_ALL", kitGuid, typeGuid }),
       deselectAll: (_origin?: string) => actor.send({ type: "TYPE.DESELECT_ALL", kitGuid, typeGuid }),
       togglePanel: (panelKey: keyof PanelVisibility, _origin?: string) => actor.send({ type: "TYPE.TOGGLE_PANEL", kitGuid, typeGuid, panel: panelKey }),
@@ -441,7 +441,8 @@ export function useTypeAppIsPortSelected(portId: string): GranularHookResult<boo
   const selector = useMemo(() => createTypeSelectionSelector(kitGuid, typeGuid), [kitGuid, typeGuid]);
   const selection = useSelector(actor, selector);
   const value = selection?.ports?.includes(portId) ?? false;
-  const canSet = !!kitGuid && !!typeGuid;
+  const canSetEvent = useMemo(() => ({ type: "TYPE.SELECT_PORT" as const, kitGuid, typeGuid, portGuid: portId }), [kitGuid, typeGuid, portId]);
+  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setter = useMemo(() => {
     if (!canSet) return undefined;
     return (isSelected: boolean) => {
@@ -464,7 +465,8 @@ export function useTypeAppIsPortHovered(portId: string): GranularHookResult<bool
   const selector = useMemo(() => createTypeHoverSelector(kitGuid, typeGuid), [kitGuid, typeGuid]);
   const hover = useSelector(actor, selector);
   const value = hover?.port === portId;
-  const canSet = !!kitGuid && !!typeGuid;
+  const canSetEvent = useMemo(() => ({ type: "TYPE.HOVER_PORT" as const, kitGuid, typeGuid, portGuid: portId }), [kitGuid, typeGuid, portId]);
+  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setter = useMemo(() => {
     if (!canSet) return undefined;
     return (isHovered: boolean) => {
@@ -487,7 +489,8 @@ export function useTypeAppSelectedModelGuid(): GranularHookResult<Guid | undefin
   const selector = useMemo(() => createTypeAppSelector(kitGuid, typeGuid), [kitGuid, typeGuid]);
   const state = useSelector(actor, selector);
   const value = state?.selectedModelGuid;
-  const canSet = !!kitGuid && !!typeGuid;
+  const canSetEvent = useMemo(() => ({ type: "TYPE.SET_SELECTED_MODEL" as const, kitGuid, typeGuid, modelGuid: "" }), [kitGuid, typeGuid]);
+  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setter = useMemo(() => {
     if (!canSet) return undefined;
     return (modelGuid: Guid | undefined) => {
@@ -507,7 +510,8 @@ export function useTypeAppSelectedModelTags(): GranularHookResult<string[]> {
   const typeGuid = typeScope?.guid ?? "";
   const selector = useMemo(() => createTypeSelectedModelTagsSelector(kitGuid, typeGuid), [kitGuid, typeGuid]);
   const value = useSelector(actor, selector) ?? EMPTY_MODEL_TAG_ARRAY;
-  const canSet = !!kitGuid && !!typeGuid;
+  const canSetEvent = useMemo(() => ({ type: "TYPE.SET_MODEL_TAGS" as const, kitGuid, typeGuid, tags: [] }), [kitGuid, typeGuid]);
+  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setter = useMemo(() => {
     if (!canSet) return undefined;
     return (tags: string[]) => {
@@ -516,6 +520,174 @@ export function useTypeAppSelectedModelTags(): GranularHookResult<string[]> {
   }, [actor, kitGuid, typeGuid, canSet]);
   return conditionalHookResult(canSet, value, setter);
 }
+
+//#region Action Hooks
+
+export type ActionHookResult<TArgs extends any[]> = readonly [action: ((...args: TArgs) => void) | undefined, canAct: boolean];
+
+export function useTypeAppSelectPort(): ActionHookResult<[portGuid: string]> {
+  const [, setSelection, canSetSelection] = useTypeAppSelection();
+  const [selection] = useTypeAppSelection();
+  const action = useMemo(() => {
+    if (!canSetSelection || !setSelection) return undefined;
+    return (portGuid: string) => setSelection({ ...selection, ports: [portGuid], models: [] });
+  }, [setSelection, canSetSelection, selection]);
+  return [action, canSetSelection];
+}
+
+export function useTypeAppDeselectPort(): ActionHookResult<[portGuid: string]> {
+  const [, setSelection, canSetSelection] = useTypeAppSelection();
+  const [selection] = useTypeAppSelection();
+  const action = useMemo(() => {
+    if (!canSetSelection || !setSelection) return undefined;
+    return (portGuid: string) => {
+      const currentPorts = selection?.ports ?? [];
+      setSelection({ ...selection, ports: currentPorts.filter((p) => p !== portGuid) });
+    };
+  }, [setSelection, canSetSelection, selection]);
+  return [action, canSetSelection];
+}
+
+export function useTypeAppHoverPort(): ActionHookResult<[portGuid: string]> {
+  const [, setHover, canSetHover] = useTypeAppHover();
+  const action = useMemo(() => {
+    if (!canSetHover || !setHover) return undefined;
+    return (portGuid: string) => setHover({ port: portGuid });
+  }, [setHover, canSetHover]);
+  return [action, canSetHover];
+}
+
+export function useTypeAppHoverModel(): ActionHookResult<[modelGuid: string]> {
+  const [, setHover, canSetHover] = useTypeAppHover();
+  const action = useMemo(() => {
+    if (!canSetHover || !setHover) return undefined;
+    return (modelGuid: string) => setHover({ model: modelGuid });
+  }, [setHover, canSetHover]);
+  return [action, canSetHover];
+}
+
+export function useTypeAppClearHover(): ActionHookResult<[]> {
+  const [, setHover, canSetHover] = useTypeAppHover();
+  const action = useMemo(() => {
+    if (!canSetHover || !setHover) return undefined;
+    return () => setHover(undefined);
+  }, [setHover, canSetHover]);
+  return [action, canSetHover];
+}
+
+export function useTypeAppFocusPort(): ActionHookResult<[portGuid: string]> {
+  const [, setFocusedPortGuid, canSetFocusedPortGuid] = useTypeAppFocusedPortGuid();
+  const action = useMemo(() => {
+    if (!canSetFocusedPortGuid || !setFocusedPortGuid) return undefined;
+    return (portGuid: string) => setFocusedPortGuid(portGuid);
+  }, [setFocusedPortGuid, canSetFocusedPortGuid]);
+  return [action, canSetFocusedPortGuid];
+}
+
+export function useTypeAppClearFocus(): ActionHookResult<[]> {
+  const [, setFocusedPortGuid, canSetFocusedPortGuid] = useTypeAppFocusedPortGuid();
+  const action = useMemo(() => {
+    if (!canSetFocusedPortGuid || !setFocusedPortGuid) return undefined;
+    return () => setFocusedPortGuid(undefined);
+  }, [setFocusedPortGuid, canSetFocusedPortGuid]);
+  return [action, canSetFocusedPortGuid];
+}
+
+export function useTypeAppDeselectAll(): ActionHookResult<[]> {
+  const [, setSelection, canSetSelection] = useTypeAppSelection();
+  const action = useMemo(() => {
+    if (!canSetSelection || !setSelection) return undefined;
+    return () => setSelection({ ports: [], models: [] });
+  }, [setSelection, canSetSelection]);
+  return [action, canSetSelection];
+}
+
+export function useTypeAppSelectModel(): ActionHookResult<[modelGuid: string]> {
+  const [, setSelection, canSetSelection] = useTypeAppSelection();
+  const [selection] = useTypeAppSelection();
+  const action = useMemo(() => {
+    if (!canSetSelection || !setSelection) return undefined;
+    return (modelGuid: string) => setSelection({ ...selection, models: [modelGuid], ports: [] });
+  }, [setSelection, canSetSelection, selection]);
+  return [action, canSetSelection];
+}
+
+export function useTypeAppDeselectModel(): ActionHookResult<[modelGuid: string]> {
+  const [, setSelection, canSetSelection] = useTypeAppSelection();
+  const [selection] = useTypeAppSelection();
+  const action = useMemo(() => {
+    if (!canSetSelection || !setSelection) return undefined;
+    return (modelGuid: string) => {
+      const currentModels = selection?.models ?? [];
+      setSelection({ ...selection, models: currentModels.filter((m) => m !== modelGuid) });
+    };
+  }, [setSelection, canSetSelection, selection]);
+  return [action, canSetSelection];
+}
+
+export function useTypeAppSetActiveTool(): ActionHookResult<[tool: ToolKind]> {
+  const [, setActiveTool, canSetActiveTool] = useTypeAppActiveTool();
+  const action = useMemo(() => {
+    if (!canSetActiveTool || !setActiveTool) return undefined;
+    return (tool: ToolKind) => setActiveTool(tool);
+  }, [setActiveTool, canSetActiveTool]);
+  return [action, canSetActiveTool];
+}
+
+export function useTypeAppSetCamera(): ActionHookResult<[camera: Camera]> {
+  const [, setCamera, canSetCamera] = useTypeAppCamera();
+  const action = useMemo(() => {
+    if (!canSetCamera || !setCamera) return undefined;
+    return (camera: Camera) => setCamera(camera);
+  }, [setCamera, canSetCamera]);
+  return [action, canSetCamera];
+}
+
+export function useTypeAppTogglePanel(): ActionHookResult<[panelKey: keyof PanelVisibility]> {
+  const [panelVisibility, setPanelVisibility, canSetPanelVisibility] = useTypeAppPanelVisibility();
+  const action = useMemo(() => {
+    if (!canSetPanelVisibility || !setPanelVisibility) return undefined;
+    return (panelKey: keyof PanelVisibility) => {
+      setPanelVisibility({ ...panelVisibility, [panelKey]: !panelVisibility[panelKey] });
+    };
+  }, [setPanelVisibility, canSetPanelVisibility, panelVisibility]);
+  return [action, canSetPanelVisibility];
+}
+
+export function useTypeAppAddModelTag(): ActionHookResult<[tag: string]> {
+  const [selectedTags, setSelectedTags, canSetSelectedTags] = useTypeAppSelectedModelTags();
+  const action = useMemo(() => {
+    if (!canSetSelectedTags || !setSelectedTags) return undefined;
+    return (tag: string) => {
+      if (!selectedTags.includes(tag)) {
+        setSelectedTags([...selectedTags, tag]);
+      }
+    };
+  }, [setSelectedTags, canSetSelectedTags, selectedTags]);
+  return [action, canSetSelectedTags];
+}
+
+export function useTypeAppRemoveModelTag(): ActionHookResult<[tag: string]> {
+  const [selectedTags, setSelectedTags, canSetSelectedTags] = useTypeAppSelectedModelTags();
+  const action = useMemo(() => {
+    if (!canSetSelectedTags || !setSelectedTags) return undefined;
+    return (tag: string) => {
+      setSelectedTags(selectedTags.filter((t) => t !== tag));
+    };
+  }, [setSelectedTags, canSetSelectedTags, selectedTags]);
+  return [action, canSetSelectedTags];
+}
+
+export function useTypeAppSetSelectedModel(): ActionHookResult<[modelGuid: string]> {
+  const [, setSelectedModel, canSetSelectedModel] = useTypeAppSelectedModelGuid();
+  const action = useMemo(() => {
+    if (!canSetSelectedModel || !setSelectedModel) return undefined;
+    return (modelGuid: string) => setSelectedModel(modelGuid);
+  }, [setSelectedModel, canSetSelectedModel]);
+  return [action, canSetSelectedModel];
+}
+
+//#endregion Action Hooks
 
 const TypeAppScopeContext = createContext<{ id: string } | undefined>(undefined);
 export const TypeAppScopeProvider = (props: { id: string; children: React.ReactNode }) => {
@@ -990,11 +1162,10 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
     })();
 
     // Cleanup on unmount or when fileGuid changes
+    // Note: We do NOT revoke the blob URL here because it's owned by KitStore's regularFiles cache.
+    // The KitStore revokes blob URLs when files are removed from the kit.
     return () => {
       cancelled = true;
-      if (currentBlobUrl && currentBlobUrl.startsWith("blob:")) {
-        URL.revokeObjectURL(currentBlobUrl);
-      }
     };
   }, [fileGuid, kitDataSource]);
 
@@ -1057,14 +1228,7 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
   const foregroundColor = useMemo(() => getComputedColor("--foreground"), []);
 
   if (!blobUrl) {
-    // Render placeholder box when no model is loaded (same as design pieces)
-    return (
-      <mesh>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color={foregroundColor} emissive={foregroundColor} emissiveIntensity={0.45} />
-        <Edges scale={1.001} color={foregroundColor} />
-      </mesh>
-    );
+    return null;
   }
 
   return (
@@ -1092,7 +1256,11 @@ const SceneContent: FC = React.memo(() => {
   const [hover] = useTypeAppHover();
   // PERF: Removed useTypeApp((s) => s) - was causing full re-renders on every state change
   // Tools (SelectionNormalTool, PortTool, etc.) return null/empty scene content anyway
-  const { selectPort, deselectPort, hoverPort, clearHover, focusPort } = useTypeAppCommands();
+  const [selectPort] = useTypeAppSelectPort();
+  const [deselectPort] = useTypeAppDeselectPort();
+  const [hoverPort] = useTypeAppHoverPort();
+  const [clearHover] = useTypeAppClearHover();
+  const [focusPort] = useTypeAppFocusPort();
   const [portPreview, setPortPreview] = useState<{ position: THREE.Vector3; normal: THREE.Vector3 } | null>(null);
   const focusContext = useFocusSafe();
   const prevItemsRef = useRef<string>("");
@@ -1116,7 +1284,7 @@ const SceneContent: FC = React.memo(() => {
   useEffect(() => {
     if (!focusContext) return;
     const handleFocus = (itemId: string) => {
-      focusPort(itemId, "");
+      if (focusPort) focusPort(itemId);
     };
     focusContext.setOnFocusItem(handleFocus);
     return () => {
@@ -1167,23 +1335,23 @@ const SceneContent: FC = React.memo(() => {
 
   const handleClearPreview = useCallback(() => {
     setPortPreview(null);
-    clearHover("");
+    if (clearHover) clearHover();
   }, [clearHover]);
 
   const handlePortClick = useCallback(
     (portId: string) => {
       const isSelected = selection?.ports?.includes(portId) || false;
       if (activeTool === ToolKind.SELECTION_ADDITIVE) {
-        if (!isSelected) selectPort(portId, "");
+        if (!isSelected && selectPort) selectPort(portId);
       } else if (activeTool === ToolKind.SELECTION_SUBTRACTIVE) {
-        if (isSelected) deselectPort(portId);
+        if (isSelected && deselectPort) deselectPort(portId);
       } else {
         const currentPorts = selection?.ports ?? [];
         if (currentPorts.length > 0) {
-          currentPorts.forEach((id) => deselectPort(id));
+          currentPorts.forEach((id) => deselectPort && deselectPort(id));
         }
         if (!isSelected || currentPorts.length > 1) {
-          selectPort(portId, "");
+          if (selectPort) selectPort(portId);
         }
       }
     },
@@ -1192,18 +1360,18 @@ const SceneContent: FC = React.memo(() => {
 
   const handlePortHover = useCallback(
     (portId: string) => {
-      hoverPort(portId, "");
+      if (hoverPort) hoverPort(portId);
     },
     [hoverPort],
   );
 
   const handlePortLeave = useCallback(() => {
-    clearHover("");
+    if (clearHover) clearHover();
   }, [clearHover]);
 
   const handlePortDoubleClick = useCallback(
     (portId: string) => {
-      focusPort(portId, "");
+      if (focusPort) focusPort(portId);
     },
     [focusPort],
   );
@@ -1233,26 +1401,28 @@ const SceneContent: FC = React.memo(() => {
 });
 
 const Scene: FC<{ isDragOver?: boolean }> = ({ isDragOver = false }) => {
-  const { setCamera, deselectAll, clearFocus } = useTypeAppCommands();
+  const [setCamera] = useTypeAppSetCamera();
+  const [deselectAll] = useTypeAppDeselectAll();
+  const [clearFocus] = useTypeAppClearFocus();
   const [camera] = useTypeAppCamera();
   const [focusedPortGuid] = useTypeAppFocusedPortGuid();
 
   const onCameraChange = useCallback(
     (newCamera: Camera) => {
-      setCamera(newCamera);
+      if (setCamera) setCamera(newCamera);
     },
     [setCamera],
   );
 
   const onPointerMissed = useCallback(
     (event: MouseEvent) => {
-      if (!(event.ctrlKey || event.metaKey) && !event.shiftKey) deselectAll();
+      if (!(event.ctrlKey || event.metaKey) && !event.shiftKey && deselectAll) deselectAll();
     },
     [deselectAll],
   );
 
   const onFocusComplete = useCallback(() => {
-    clearFocus();
+    if (clearFocus) clearFocus();
   }, [clearFocus]);
 
   return (
@@ -1401,7 +1571,10 @@ export const ModelsSection: FC = () => {
 
 const ModelsSectionForm: FC = () => {
   const tooltip = useTooltip();
-  const { selectModel, deselectModel, hoverModel, clearHover } = useTypeAppCommands();
+  const [selectModel] = useTypeAppSelectModel();
+  const [deselectModel] = useTypeAppDeselectModel();
+  const [hoverModel] = useTypeAppHoverModel();
+  const [clearHover] = useTypeAppClearHover();
   const kitCommands = useKitCommands();
   const type = useType(undefined, undefined, true) as Type;
   const [selection] = useTypeAppSelection();
@@ -1464,9 +1637,9 @@ const ModelsSectionForm: FC = () => {
               return (
                 <div
                   key={`model-${index}`}
-                  onPointerEnter={() => hoverModel("semio.sketchpad.app.type.panel.details.model.hover", model.guid)}
-                  onPointerLeave={() => clearHover("semio.sketchpad.app.type.panel.details.model.leave")}
-                  onClick={() => (isSelected ? deselectModel("semio.sketchpad.app.type.panel.details.model.deselect", model.guid) : selectModel("semio.sketchpad.app.type.panel.details.model.select", model.guid))}
+                  onPointerEnter={() => hoverModel && hoverModel(model.guid)}
+                  onPointerLeave={() => clearHover && clearHover()}
+                  onClick={() => (isSelected ? deselectModel && deselectModel(model.guid) : selectModel && selectModel(model.guid))}
                 >
                   <TreeItem
                     key={`model-${index}`}
@@ -1553,7 +1726,10 @@ export const PortsListSection: FC = () => {
 
 const PortsListSectionForm: FC = () => {
   const tooltip = useTooltip();
-  const { selectPort, deselectPort, hoverPort, clearHover } = useTypeAppCommands();
+  const [selectPort] = useTypeAppSelectPort();
+  const [deselectPort] = useTypeAppDeselectPort();
+  const [hoverPort] = useTypeAppHoverPort();
+  const [clearHover] = useTypeAppClearHover();
   const kitCommands = useKitCommands();
   const type = useType(undefined, undefined, true) as Type;
   const [selection] = useTypeAppSelection();
@@ -1639,18 +1815,18 @@ const PortsListSectionForm: FC = () => {
               const handleClick = (event: React.MouseEvent) => {
                 event.stopPropagation();
                 if (isSelected) {
-                  deselectPort("semio.sketchpad.app.type.panel.details.section.ports.deselect", port.guid);
+                  if (deselectPort) deselectPort(port.guid);
                 } else {
-                  selectPort("semio.sketchpad.app.type.panel.details.section.ports.select", port.guid);
+                  if (selectPort) selectPort(port.guid);
                 }
               };
 
               const handleHover = () => {
-                hoverPort("semio.sketchpad.app.type.panel.details.section.ports.hover", port.guid);
+                if (hoverPort) hoverPort(port.guid);
               };
 
               const handleLeave = () => {
-                clearHover("semio.sketchpad.app.type.panel.details.section.ports.leave");
+                if (clearHover) clearHover();
               };
 
               return (
@@ -2528,14 +2704,13 @@ const getTypeTools = (): ToolDefinition[] => [
 
 export const ToolsToggleGroup: FC = () => {
   const { kit, type } = useParams();
-  const typeAppId: TypeAppId | undefined = kit && type ? { kit, type } : undefined;
   // PERF: Use targeted hook instead of full state subscription
   const [activeTool, , canSetActiveTool] = useTypeAppActiveTool();
-  const { setActiveTool } = useTypeAppCommands(typeAppId);
+  const [setActiveTool] = useTypeAppSetActiveTool();
 
-  if (!kit || !type) return null;
+  if (!kit || !type || !canSetActiveTool) return null;
 
-  return <ToolGroup tools={getTypeTools()} activeTool={activeTool} onToolChange={(tool) => setActiveTool(tool as ToolKind)} level="panel" />;
+  return <ToolGroup tools={getTypeTools()} activeTool={activeTool} onToolChange={(tool) => setActiveTool && setActiveTool(tool as ToolKind)} level="panel" />;
 };
 
 // #endregion Tools
@@ -2548,7 +2723,7 @@ const App: FC = () => {
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
   const appType = useAppType();
-  const { setActiveTool } = useTypeAppCommands();
+  const [setActiveTool] = useTypeAppSetActiveTool();
   // PERF: Use targeted hook instead of full state subscription
   const [activeTool] = useTypeAppActiveTool();
   const [selection] = useTypeAppSelection();
@@ -2558,17 +2733,17 @@ const App: FC = () => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (activeTool === ToolKind.SELECTION_NORMAL) {
         if (e.shiftKey && !e.ctrlKey && !e.metaKey) {
-          setActiveTool(ToolKind.SELECTION_ADDITIVE);
+          if (setActiveTool) setActiveTool(ToolKind.SELECTION_ADDITIVE);
         } else if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
-          setActiveTool(ToolKind.SELECTION_SUBTRACTIVE);
+          if (setActiveTool) setActiveTool(ToolKind.SELECTION_SUBTRACTIVE);
         }
       }
     };
     const handleKeyUp = (e: KeyboardEvent) => {
       if (activeTool === ToolKind.SELECTION_ADDITIVE && !e.shiftKey) {
-        setActiveTool(ToolKind.SELECTION_NORMAL);
+        if (setActiveTool) setActiveTool(ToolKind.SELECTION_NORMAL);
       } else if (activeTool === ToolKind.SELECTION_SUBTRACTIVE && !e.ctrlKey && !e.metaKey) {
-        setActiveTool(ToolKind.SELECTION_NORMAL);
+        if (setActiveTool) setActiveTool(ToolKind.SELECTION_NORMAL);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -2653,21 +2828,18 @@ const App: FC = () => {
 
   const type = useType() as Type | undefined;
   const kitCommands = useKitCommands();
-  const typeAppCommands = useTypeAppCommands();
-  const sketchpadCommands = useSketchpadCommands();
+  const [setSelectedModel] = useTypeAppSetSelectedModel();
 
   // Add settings sections
   useEffect(() => {
     if (appType !== "type") return;
 
-    const { setTheme, setLanguage, setLayout, setExpertise, setMode } = sketchpadCommands;
-
     const SketchpadSettingsContent = () => {
-      const theme = useTheme();
-      const language = useLanguage();
-      const layout = useLayout();
-      const expertise = useExpertise();
-      const mode = useMode();
+      const [theme, setTheme, canSetTheme] = useThemeTriadic();
+      const [language, setLanguage, canSetLanguage] = useLanguageTriadic();
+      const [layout, setLayout, canSetLayout] = useLayoutTriadic();
+      const [expertise, setExpertise, canSetExpertise] = useExpertiseTriadic();
+      const [mode, setMode, canSetMode] = useModeTriadic();
 
       const languageEnLabel = useLabel("semio.sketchpad.settings.language.en");
       const languageDeLabel = useLabel("semio.sketchpad.settings.language.de");
@@ -2680,9 +2852,10 @@ const App: FC = () => {
               <ToggleGroup
                 id="semio.sketchpad.settings.theme"
                 value={theme}
-                onValueChange={(value: string) => setTheme("semio.sketchpad.settings.theme", value as Theme)}
+                onValueChange={(value: string) => setTheme?.(value as Theme)}
                 showLabel
                 kind="single"
+                disabled={!canSetTheme}
                 items={[
                   { value: Theme.SYSTEM, id: "semio.sketchpad.settings.theme.system", icon: <MonitorIcon className="size-small" /> },
                   { value: Theme.LIGHT, id: "semio.sketchpad.settings.theme.light", icon: <SunIcon className="size-small" /> },
@@ -2693,7 +2866,7 @@ const App: FC = () => {
           </TreeItem>
           <TreeItem>
             <TreeContent>
-              <Select id="semio.sketchpad.settings.language" value={language || "en"} onValueChange={(value: string) => setLanguage("semio.sketchpad.settings.language", value)} showLabel>
+              <Select id="semio.sketchpad.settings.language" value={language || "en"} onValueChange={(value: string) => setLanguage?.(value)} showLabel disabled={!canSetLanguage}>
                 <SelectTrigger>
                   <SelectValue placeholder={languagePlaceholder} />
                 </SelectTrigger>
@@ -2709,9 +2882,10 @@ const App: FC = () => {
               <ToggleGroup
                 id="semio.sketchpad.settings.layout"
                 value={typeof layout === "object" ? "desktop" : layout}
-                onValueChange={(value: string) => setLayout("semio.sketchpad.settings.layout", value as "desktop" | "tablet")}
+                onValueChange={(value: string) => setLayout?.(value as "desktop" | "tablet")}
                 showLabel
                 kind="single"
+                disabled={!canSetLayout}
                 items={[
                   { value: "desktop", id: "semio.sketchpad.settings.layout.desktop", icon: <MousePointerIcon className="size-small" /> },
                   { value: "tablet", id: "semio.sketchpad.settings.layout.tablet", icon: <HandIcon className="size-small" /> },
@@ -2724,9 +2898,10 @@ const App: FC = () => {
               <ToggleGroup
                 id="semio.sketchpad.settings.expertise"
                 value={expertise}
-                onValueChange={(value: string) => setExpertise("semio.sketchpad.settings.expertise", value as Expertise)}
+                onValueChange={(value: string) => setExpertise?.(value as Expertise)}
                 showLabel
                 kind="single"
+                disabled={!canSetExpertise}
                 items={[
                   { value: Expertise.BEGINNER, id: "semio.sketchpad.settings.expertise.beginner", icon: <TutorialIcon className="size-small" /> },
                   { value: Expertise.NORMAL, id: "semio.sketchpad.settings.expertise.normal", icon: <UserIcon className="size-small" /> },
@@ -2740,9 +2915,10 @@ const App: FC = () => {
               <ToggleGroup
                 id="semio.sketchpad.settings.mode"
                 value={mode}
-                onValueChange={(value: string) => setMode("semio.sketchpad.settings.mode", value as Mode)}
+                onValueChange={(value: string) => setMode?.(value as Mode)}
                 showLabel
                 kind="single"
+                disabled={!canSetMode}
                 items={[
                   { value: Mode.USER, id: "semio.sketchpad.settings.mode.user", icon: <UserIcon className="size-small" /> },
                   { value: Mode.DEV, id: "semio.sketchpad.settings.mode.dev", icon: <CodeIcon className="size-small" /> },
@@ -2783,7 +2959,7 @@ const App: FC = () => {
       removeSection("settings", "semio.sketchpad.app.kit.settings");
       removeSection("settings", "semio.sketchpad.settings");
     };
-  }, [appType, addSection, removeSection, sketchpadCommands]);
+  }, [appType, addSection, removeSection]);
 
   // Handle file drops
   useEffect(() => {
@@ -2795,7 +2971,7 @@ const App: FC = () => {
       setIsDragOver(false);
 
       const files = event.dataTransfer?.files;
-      if (!files || files.length === 0 || !type || !kitCommands || !typeAppCommands) return;
+      if (!files || files.length === 0 || !type || !kitCommands || !setSelectedModel) return;
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
@@ -2829,7 +3005,7 @@ const App: FC = () => {
         });
 
         // Select the new model
-        typeAppCommands.setSelectedModel("semio.sketchpad.app.type.dropModel", newModelGuid);
+        setSelectedModel(newModelGuid);
       }
     };
 
@@ -2859,7 +3035,7 @@ const App: FC = () => {
       document.removeEventListener("dragover", handleDragOver);
       document.removeEventListener("dragleave", handleDragLeave);
     };
-  }, [appType, type, kitCommands, typeAppCommands]);
+  }, [appType, type, kitCommands, setSelectedModel]);
 
   // Window layout is managed by XState - persistedWindowLayout comes from the machine
   const persistedWindowLayout = useTypeApp((s) => s?.windowLayout);
@@ -2966,6 +3142,12 @@ function useTypeAppInitialize() {
         activeTool: ToolKind.SELECTION_NORMAL,
         fullscreenWindow: SketchpadTypeAppFullscreenWindow.None,
         selectedModelTags: [],
+        transaction: {
+          isTransactionActive: false,
+          currentTransactionStack: [],
+          pastTransactionStack: [],
+          redoStack: [],
+        },
       },
     });
     hasInitialized.current = true;
@@ -2985,7 +3167,8 @@ export const TypeAppFooter: FC = () => {
   const type = useType() as Type | undefined;
   const tags = useKitTags();
   const [selectedModelTags] = useTypeAppSelectedModelTags();
-  const { addModelTag, removeModelTag } = useTypeAppCommands();
+  const [addModelTag] = useTypeAppAddModelTag();
+  const [removeModelTag] = useTypeAppRemoveModelTag();
 
   // Controller refs for callbacks to avoid recreating them in useEffect
   const addModelTagRef = useRef(addModelTag);
@@ -3042,9 +3225,9 @@ export const TypeAppFooter: FC = () => {
           // Use refs in onClick to get current values at click time
           const currentSelected = isTagSelected(tagGuid);
           if (currentSelected) {
-            removeModelTagRef.current("semio.sketchpad.app.type.footer.tag.remove", tagGuid);
+            if (removeModelTagRef.current) removeModelTagRef.current(tagGuid);
           } else {
-            addModelTagRef.current("semio.sketchpad.app.type.footer.tag.add", tagGuid);
+            if (addModelTagRef.current) addModelTagRef.current(tagGuid);
           }
         },
         order: index,

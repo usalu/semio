@@ -52,6 +52,7 @@ import {
   TypeIcon,
   UserIcon,
 } from "@semio/assets";
+import { useSelector } from "@xstate/react";
 import { formatDistanceToNow } from "date-fns";
 import { de, enUS } from "date-fns/locale";
 import React, { FC, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -73,7 +74,6 @@ import {
   useAddPanelSection,
   useAppType,
   useDesignScope,
-  useExpertise,
   useFocus,
   useHasKit,
   useIsInKitScope,
@@ -82,9 +82,6 @@ import {
   useKitAppXState,
   useKitCommands,
   useKitScope,
-  useLanguage,
-  useLayout,
-  useMode,
   useNavigation,
   useRemoveFooterItem,
   useRemovePanelSection,
@@ -92,7 +89,6 @@ import {
   useSketchpadCommands,
   useSketchpadStore,
   useSyncDeep,
-  useTheme,
   useTypeScope,
   Window,
 } from "./Sketchpad";
@@ -1032,6 +1028,188 @@ export function useKitAppCommands(id?: KitAppId) {
     execute: (origin: string, command: string, ...args: any[]) => controller.execute(command, origin, ...args),
   };
 }
+
+//#region Action Hooks
+
+export type ActionHookResult<TArgs extends any[]> = readonly [action: ((...args: TArgs) => void) | undefined, canAct: boolean];
+
+export function useKitAppSelectType(): ActionHookResult<[typeGuid: Guid]> {
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const canActEvent = useMemo(() => ({ type: "KIT.SELECT_TYPE" as const, kitGuid, typeGuid: "" }), [kitGuid]);
+  const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
+  const action = useMemo(() => {
+    if (!canAct) return undefined;
+    return (typeGuid: Guid) => actor.send({ type: "KIT.SELECT_TYPE", kitGuid, typeGuid });
+  }, [actor, kitGuid, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppDeselectType(): ActionHookResult<[typeGuid: Guid]> {
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const canActEvent = useMemo(() => ({ type: "KIT.DESELECT_TYPE" as const, kitGuid, typeGuid: "" }), [kitGuid]);
+  const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
+  const action = useMemo(() => {
+    if (!canAct) return undefined;
+    return (typeGuid: Guid) => actor.send({ type: "KIT.DESELECT_TYPE", kitGuid, typeGuid });
+  }, [actor, kitGuid, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppSelectDesign(): ActionHookResult<[designGuid: Guid]> {
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const canActEvent = useMemo(() => ({ type: "KIT.SELECT_DESIGN" as const, kitGuid, designGuid: "" }), [kitGuid]);
+  const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
+  const action = useMemo(() => {
+    if (!canAct) return undefined;
+    return (designGuid: Guid) => actor.send({ type: "KIT.SELECT_DESIGN", kitGuid, designGuid });
+  }, [actor, kitGuid, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppDeselectDesign(): ActionHookResult<[designGuid: Guid]> {
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const canActEvent = useMemo(() => ({ type: "KIT.DESELECT_DESIGN" as const, kitGuid, designGuid: "" }), [kitGuid]);
+  const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
+  const action = useMemo(() => {
+    if (!canAct) return undefined;
+    return (designGuid: Guid) => actor.send({ type: "KIT.DESELECT_DESIGN", kitGuid, designGuid });
+  }, [actor, kitGuid, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppSetSelection(): ActionHookResult<[selection: KitAppSelection]> {
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const canActEvent = useMemo(() => ({ type: "KIT.SET_SELECTION" as const, kitGuid, selection: {} as KitAppSelection }), [kitGuid]);
+  const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
+  const action = useMemo(() => {
+    if (!canAct) return undefined;
+    return (selection: KitAppSelection) => actor.send({ type: "KIT.SET_SELECTION", kitGuid, selection });
+  }, [actor, kitGuid, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppClearSelection(): ActionHookResult<[]> {
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const canActEvent = useMemo(() => ({ type: "KIT.CLEAR_SELECTION" as const, kitGuid }), [kitGuid]);
+  const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
+  const action = useMemo(() => {
+    if (!canAct) return undefined;
+    return () => actor.send({ type: "KIT.CLEAR_SELECTION", kitGuid });
+  }, [actor, kitGuid, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppSetFilter(): ActionHookResult<[search: string]> {
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const canActEvent = useMemo(() => ({ type: "KIT.SET_FILTER" as const, kitGuid, search: "" }), [kitGuid]);
+  const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
+  const action = useMemo(() => {
+    if (!canAct) return undefined;
+    return (search: string) => actor.send({ type: "KIT.SET_FILTER", kitGuid, search });
+  }, [actor, kitGuid, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppToggleRow(): ActionHookResult<[rowId: string]> {
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const canActEvent = useMemo(() => ({ type: "KIT.TOGGLE_ROW" as const, kitGuid, rowId: "" }), [kitGuid]);
+  const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
+  const action = useMemo(() => {
+    if (!canAct) return undefined;
+    return (rowId: string) => actor.send({ type: "KIT.TOGGLE_ROW", kitGuid, rowId });
+  }, [actor, kitGuid, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppSetSort(): ActionHookResult<[column: string, direction: "asc" | "desc"]> {
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const canActEvent = useMemo(() => ({ type: "KIT.SET_SORT" as const, kitGuid, column: "", direction: "asc" as const }), [kitGuid]);
+  const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
+  const action = useMemo(() => {
+    if (!canAct) return undefined;
+    return (column: string, direction: "asc" | "desc") => actor.send({ type: "KIT.SET_SORT", kitGuid, column, direction });
+  }, [actor, kitGuid, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppToggleSort(): ActionHookResult<[column: KitAppSortColumn]> {
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const [selection] = useKitAppSelection();
+  const kitApp = useKitAppXState();
+  const sortColumn = kitApp?.sortColumn;
+  const sortDirection = kitApp?.sortDirection;
+  const canActEvent = useMemo(() => ({ type: "KIT.SET_SORT" as const, kitGuid, column: "", direction: "asc" as const }), [kitGuid]);
+  const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
+  const action = useMemo(() => {
+    if (!canAct) return undefined;
+    return (column: KitAppSortColumn) => {
+      const newDirection = sortColumn === column && sortDirection === "asc" ? "desc" : "asc";
+      actor.send({ type: "KIT.SET_SORT", kitGuid, column, direction: newDirection });
+    };
+  }, [actor, kitGuid, canAct, sortColumn, sortDirection]);
+  return [action, canAct];
+}
+
+export function useKitAppSetHover(): ActionHookResult<[hover: { type?: Guid; design?: Guid }]> {
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const canActEvent = useMemo(() => ({ type: "KIT.SET_HOVER" as const, kitGuid, hover: {} }), [kitGuid]);
+  const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
+  const action = useMemo(() => {
+    if (!canAct) return undefined;
+    return (hover: { type?: Guid; design?: Guid }) => actor.send({ type: "KIT.SET_HOVER", kitGuid, hover });
+  }, [actor, kitGuid, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppClearHover(): ActionHookResult<[]> {
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const canActEvent = useMemo(() => ({ type: "KIT.CLEAR_HOVER" as const, kitGuid }), [kitGuid]);
+  const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
+  const action = useMemo(() => {
+    if (!canAct) return undefined;
+    return () => actor.send({ type: "KIT.CLEAR_HOVER", kitGuid });
+  }, [actor, kitGuid, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppTogglePanel(): ActionHookResult<[panel: keyof PanelVisibility]> {
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const canActEvent = useMemo(() => ({ type: "KIT.TOGGLE_PANEL" as const, kitGuid, panel: "workbench" as keyof PanelVisibility }), [kitGuid]);
+  const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
+  const action = useMemo(() => {
+    if (!canAct) return undefined;
+    return (panel: keyof PanelVisibility) => actor.send({ type: "KIT.TOGGLE_PANEL", kitGuid, panel });
+  }, [actor, kitGuid, canAct]);
+  return [action, canAct];
+}
+
+//#endregion Action Hooks
 
 // #endregion Kit App
 
@@ -2105,6 +2283,15 @@ const AppContent: FC = () => {
   const isMobile = useIsMobile();
   const orchestrator = useSketchpadStore();
 
+  const [selectTypeAction, canSelectType] = useKitAppSelectType();
+  const [selectDesignAction, canSelectDesign] = useKitAppSelectDesign();
+  const [setSelectionAction, canSetSelection] = useKitAppSetSelection();
+  const [clearSelectionAction, canClearSelection] = useKitAppClearSelection();
+  const [setFilterAction, canSetFilter] = useKitAppSetFilter();
+  const [toggleRowAction, canToggleRow] = useKitAppToggleRow();
+  const [setSortAction, canSetSort] = useKitAppSetSort();
+  const [toggleSortAction, canToggleSort] = useKitAppToggleSort();
+
   const [isDragOver, setIsDragOver] = React.useState(false);
   const [showZipWarning, setShowZipWarning] = React.useState(false);
   const [activeId, setActiveId] = React.useState<string | null>(null);
@@ -2394,14 +2581,12 @@ const AppContent: FC = () => {
   useEffect(() => {
     if (appType !== "kit") return;
 
-    const { setTheme, setLanguage, setLayout, setExpertise, setMode } = sketchpadCommands;
-
     const SettingsContent = () => {
-      const theme = useTheme();
-      const language = useLanguage();
-      const layout = useLayout();
-      const expertise = useExpertise();
-      const mode = useMode();
+      const [theme, setTheme, canSetTheme] = useThemeTriadic();
+      const [language, setLanguage, canSetLanguage] = useLanguageTriadic();
+      const [layout, setLayout, canSetLayout] = useLayoutTriadic();
+      const [expertise, setExpertise, canSetExpertise] = useExpertiseTriadic();
+      const [mode, setMode, canSetMode] = useModeTriadic();
 
       const languageEnLabel = useLabel("semio.sketchpad.settings.language.en");
       const languageDeLabel = useLabel("semio.sketchpad.settings.language.de");
@@ -2414,9 +2599,10 @@ const AppContent: FC = () => {
               <ToggleGroup
                 id="semio.sketchpad.settings.theme"
                 value={theme}
-                onValueChange={(value: string) => setTheme("semio.sketchpad.settings.theme", value as Theme)}
+                onValueChange={(value: string) => setTheme?.(value as Theme)}
                 showLabel
                 kind="single"
+                disabled={!canSetTheme}
                 items={[
                   { value: Theme.SYSTEM, id: "semio.sketchpad.settings.theme.system", icon: <MonitorIcon className="size-small" /> },
                   { value: Theme.LIGHT, id: "semio.sketchpad.settings.theme.light", icon: <SunIcon className="size-small" /> },
@@ -2427,7 +2613,7 @@ const AppContent: FC = () => {
           </TreeItem>
           <TreeItem>
             <TreeContent>
-              <Select id="semio.sketchpad.settings.language" value={language || "en"} onValueChange={(value: string) => setLanguage("semio.sketchpad.settings.language", value)} showLabel>
+              <Select id="semio.sketchpad.settings.language" value={language || "en"} onValueChange={(value: string) => setLanguage?.(value)} showLabel disabled={!canSetLanguage}>
                 <SelectTrigger>
                   <SelectValue placeholder={languagePlaceholder} />
                 </SelectTrigger>
@@ -2443,9 +2629,10 @@ const AppContent: FC = () => {
               <ToggleGroup
                 id="semio.sketchpad.settings.layout"
                 value={typeof layout === "object" ? "desktop" : layout}
-                onValueChange={(value: string) => setLayout("semio.sketchpad.settings.layout", value as "desktop" | "tablet")}
+                onValueChange={(value: string) => setLayout?.(value as "desktop" | "tablet")}
                 showLabel
                 kind="single"
+                disabled={!canSetLayout}
                 items={[
                   { value: "desktop", id: "semio.sketchpad.settings.layout.desktop", icon: <MousePointerIcon className="size-small" /> },
                   { value: "tablet", id: "semio.sketchpad.settings.layout.tablet", icon: <HandIcon className="size-small" /> },
@@ -2458,9 +2645,10 @@ const AppContent: FC = () => {
               <ToggleGroup
                 id="semio.sketchpad.settings.expertise"
                 value={expertise}
-                onValueChange={(value: string) => setExpertise("semio.sketchpad.settings.expertise", value as Expertise)}
+                onValueChange={(value: string) => setExpertise?.(value as Expertise)}
                 showLabel
                 kind="single"
+                disabled={!canSetExpertise}
                 items={[
                   { value: Expertise.BEGINNER, id: "semio.sketchpad.settings.expertise.beginner", icon: <TutorialIcon className="size-small" /> },
                   { value: Expertise.NORMAL, id: "semio.sketchpad.settings.expertise.normal", icon: <UserIcon className="size-small" /> },
@@ -2474,9 +2662,10 @@ const AppContent: FC = () => {
               <ToggleGroup
                 id="semio.sketchpad.settings.mode"
                 value={mode}
-                onValueChange={(value: string) => setMode("semio.sketchpad.settings.mode", value as Mode)}
+                onValueChange={(value: string) => setMode?.(value as Mode)}
                 showLabel
                 kind="single"
+                disabled={!canSetMode}
                 items={[
                   { value: Mode.USER, id: "semio.sketchpad.settings.mode.user", icon: <UserIcon className="size-small" /> },
                   { value: Mode.DEV, id: "semio.sketchpad.settings.mode.dev", icon: <CodeIcon className="size-small" /> },
@@ -2508,7 +2697,7 @@ const AppContent: FC = () => {
       removeSection("settings", "semio.sketchpad.app.kit.settings");
       removeSection("settings", "semio.sketchpad.settings");
     };
-  }, [appType, addSection, removeSection, sketchpadCommands]);
+  }, [appType, addSection, removeSection]);
 
   // Auto-select design/type when select parameter is present
   useEffect(() => {
@@ -2516,18 +2705,16 @@ const AppContent: FC = () => {
 
     if (selectedKind === "designs") {
       const design = kitDesigns?.find((d: Design) => d.guid === selectParam);
-      if (design) {
-        kitAppCommands.selectDesign("semio.sketchpad.app.kit.autoselect.design", selectParam);
-        // Remove the select parameter after selecting
+      if (design && selectDesign) {
+        selectDesign(selectParam);
         const newParams = new URLSearchParams(searchParams);
         newParams.delete("select");
         setSearchParams(newParams, { replace: true });
       }
     } else if (selectedKind === "types") {
       const type = kitTypes?.find((t: Type) => t.guid === selectParam);
-      if (type) {
-        kitAppCommands.selectType("semio.sketchpad.app.kit.autoselect.type", selectParam);
-        // Remove the select parameter after selecting
+      if (type && selectType) {
+        selectType(selectParam);
         const newParams = new URLSearchParams(searchParams);
         newParams.delete("select");
         setSearchParams(newParams, { replace: true });
@@ -4463,10 +4650,16 @@ function useKitAppYjsToXStateSync() {
     const store = sketchpadStore.kitApp(kitGuid);
     const initialState = store.snapshot();
 
-    // Convert expandedRows array to Set for XState
+    // Convert expandedRows array to Set for XState and add transaction state
     const xstateInitialState = {
       ...initialState,
       expandedRows: new Set(initialState.expandedRows || []),
+      transaction: {
+        isTransactionActive: false,
+        currentTransactionStack: [],
+        pastTransactionStack: [],
+        redoStack: [],
+      },
     };
 
     // Initialize XState with current Y.js state

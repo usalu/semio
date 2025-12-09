@@ -145,3 +145,116 @@ All 5 playwright tests pass (Home, Kit, Type, Design, Docs).
 - `Sketchpad.tsx` - `LayoutWrapper` destructures triadic hooks
 
 All 5 playwright tests pass after the refactor.
+
+## Refactored useDesignAppCommands to use XState (Dec 9, 2025)
+
+`useDesignAppCommands` now routes all app state operations through XState `actor.send()`:
+
+**App state operations (via XState):**
+- `selectAll`, `deselectAll` - DESIGN.SELECT_ALL, DESIGN.CLEAR_SELECTION
+- `selectPiece`, `selectPieces`, `addPieceToSelection`, `removePieceFromSelection` - DESIGN.SELECT_PIECE, DESIGN.DESELECT_PIECE  
+- `selectConnection`, `addConnectionToSelection`, `removeConnectionFromSelection` - DESIGN.SELECT_CONNECTION, DESIGN.DESELECT_CONNECTION
+- `selectPiecePort`, `deselectPiecePort` - DESIGN.SET_SELECTION
+- `toggleDiagramFullscreen`, `toggleAccesslFullscreen` - DESIGN.SET_FULLSCREEN
+- `setActiveTool` - DESIGN.SET_ACTIVE_TOOL
+- `setCamera`, `focusPiece`, `clearFocus` - DESIGN.SET_CAMERA, DESIGN.FOCUS_PIECE
+- `setDiagramCenter`, `setDiagramScale` - DESIGN.SET_DIAGRAM_CENTER, DESIGN.SET_DIAGRAM_SCALE
+- `hoverPiece`, `hoverPieces`, `hoverConnection`, `hoverConnections`, `hoverPort`, `hoverType`, `hoverTypes`, `hoverDesign`, `hoverDesigns`, `clearHover` - DESIGN.SET_HOVER, DESIGN.CLEAR_HOVER
+- `togglePanel` - DESIGN.TOGGLE_PANEL
+- `setModelTagsForType`, `addModelTagForAllTypes`, `removeModelTagFromAllTypes` - DESIGN.SYNC
+
+**Kit data operations (still via store.execute()):**
+- `addPiece`, `addPieces`, `removePiece`, `removePieces`
+- `addConnection`, `addConnections`, `removeConnection`, `removeConnections`
+- `updatePiece`, `updatePieces`, `updateConnection`, `updateConnections`
+- `deleteSelected`
+- `startTransaction`, `finalizeTransaction`, `abortTransaction`, `undo`, `redo`
+
+Type.tsx's `useTypeAppCommands` was already fully migrated to XState previously.
+
+All 5 playwright tests pass (31.4s).
+
+## Next Steps
+
+1. [x] Update `canSetState` in triadic hooks to use `actor.can()` instead of simple boolean checks
+2. [ ] Replace UI component usages of `useDesignAppCommands` with granular triadic hooks
+3. [ ] Remove Y.js import from Design.tsx (currently used for DesignStore internal state)
+4. [ ] Verify all tests still pass
+
+## Updated triadic hooks to use actor.can() (Dec 9, 2025)
+
+All triadic hooks in Design.tsx and Type.tsx now use XState `actor.can()` via `useSelector` to derive `canSetState`:
+
+**Pattern:**
+```typescript
+const canSetEvent = useMemo(() => ({ type: "DESIGN.SET_SELECTION" as const, kitGuid, designGuid, selection: {} }), [kitGuid, designGuid]);
+const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
+```
+
+**Design.tsx hooks updated:**
+- `useDesignAppSelection()`
+- `useDesignAppFullscreen()`
+- `useDesignAppActiveTool()`
+- `useDesignAppCamera()`
+- `useDesignAppDiagramCenter()`
+- `useDesignAppDiagramScale()`
+- `useDesignAppFocusedPieceGuid()`
+- `useDesignAppSelectedModelTags()`
+- `useDesignAppHover()`
+- `useDesignAppPanelVisibility()`
+
+**Type.tsx hooks updated:**
+- `useTypeAppSelection()`
+- `useTypeAppPanelVisibility()`
+- `useTypeAppCamera()`
+- `useTypeAppFocusedPortGuid()`
+- `useTypeAppHover()`
+- `useTypeAppActiveTool()`
+- `useTypeAppIsPortSelected()`
+- `useTypeAppIsPortHovered()`
+- `useTypeAppSelectedModelGuid()`
+- `useTypeAppSelectedModelTags()`
+
+Added `useSelector` import from `@xstate/react` to Design.tsx (already existed in Type.tsx).
+
+All 5 playwright tests pass (32.8s).
+
+## Replaced ToolsToggleGroup to use only triadic hook (Dec 9, 2025)
+
+Refactored `ToolsToggleGroup` component to use only the triadic hook:
+
+**Before:**
+```typescript
+const [activeTool, , canSetActiveTool] = useDesignAppActiveTool();
+const { setActiveTool } = useDesignAppCommands(kit && design ? { kit, design } : undefined);
+```
+
+**After:**
+```typescript
+const [activeTool, setActiveTool, canSetActiveTool] = useDesignAppActiveTool();
+```
+
+This is an example of the migration pattern for components that only need app state operations.
+
+All 5 playwright tests pass (30.9s).
+
+## Current Status
+
+**Completed:**
+1. ✅ `useDesignAppCommands` routes app state operations through XState `actor.send()`
+2. ✅ `useTypeAppCommands` already uses XState for all operations
+3. ✅ All triadic hooks use `actor.can()` for `canSetState`
+4. ✅ `useSelector` from `@xstate/react` added to Design.tsx
+5. ✅ Example component `ToolsToggleGroup` refactored to use only triadic hooks
+
+**Remaining (13 usages of useDesignAppCommands):**
+- Components using kit mutations (addPiece, updatePiece, removeConnection, etc.) still need commands
+- Components using app state operations can be migrated to triadic hooks
+- Some components mix both patterns
+
+**Architecture:**
+- **Kit reads**: Y.js granular hooks (useKitTypes, useDesign, etc.)
+- **Kit writes**: Commands via store.execute() for transaction-based mutations
+- **App state reads/writes**: XState triadic hooks with actor.can() for canSetState
+
+```

@@ -7394,6 +7394,8 @@ export interface KitAppState {
   expandedRows: Set<string>;
   sortColumn?: string;
   sortDirection?: "asc" | "desc";
+  // Transaction state for undo/redo
+  transaction: AppTransactionState;
 }
 
 export interface TypeAppSelection {
@@ -7408,6 +7410,17 @@ export enum TypeAppFullscreenWindow {
   None = "none",
   Scene = "scene",
 }
+/**
+ * Transaction state for undo/redo support within an app.
+ * Each app manages its own transaction stack independently.
+ */
+export interface AppTransactionState<TEdit = any> {
+  isTransactionActive: boolean;
+  currentTransactionStack: TEdit[];
+  pastTransactionStack: TEdit[];
+  redoStack: TEdit[];
+}
+
 export interface TypeAppState {
   panelVisibility: PanelVisibility;
   activeTool: ToolKind;
@@ -7419,6 +7432,8 @@ export interface TypeAppState {
   selectedModelGuid?: Guid;
   camera?: { position: { x: number; y: number; z: number }; target: { x: number; y: number; z: number } };
   windowLayout?: any;
+  // Transaction state for undo/redo
+  transaction: AppTransactionState;
 }
 
 export interface DesignAppSelection {
@@ -7449,6 +7464,8 @@ export interface DesignAppState {
   camera?: any;
   activeTool?: ToolKind;
   fullscreenWindow?: DesignAppFullscreenWindow;
+  // Transaction state for undo/redo
+  transaction: AppTransactionState;
 }
 
 export interface QualityAppSelection {
@@ -7459,6 +7476,8 @@ export interface QualityAppState {
   selection?: QualityAppSelection;
   hover?: any;
   expandedBenchmarks: Set<string>;
+  // Transaction state for undo/redo
+  transaction: AppTransactionState;
 }
 
 // Tutorial types
@@ -7507,7 +7526,8 @@ export interface SketchpadContext {
   // Kit actors for Y.js data sync
   kits: Record<Guid, AnyActorRef>;
 
-  // All app state is pure in-memory XState
+  // All app state is pure in-memory XState (no Y.js dependencies)
+  // Transaction state is now embedded in each app's state interface
   homeApp: HomeAppState;
   kitApps: Record<Guid, KitAppState>;
   typeApps: Record<string, TypeAppState>; // key: `${kitGuid}:${typeGuid}`
@@ -7515,16 +7535,8 @@ export interface SketchpadContext {
   qualityApps: Record<string, QualityAppState>; // key: `${kitGuid}:${qualityGuid}`
   tutorial: TutorialContext;
 
-  // Transaction state (per active app)
-  transactions: Record<
-    string,
-    {
-      isActive: boolean;
-      currentStack: any[];
-      pastStack: any[];
-      redoStack: any[];
-    }
-  >;
+  // Background operations (kit imports, file uploads, etc.)
+  backgroundOperations: Record<string, { type: string; status: "pending" | "running" | "completed" | "failed"; error?: string }>;
 }
 
 /**
@@ -7623,12 +7635,31 @@ export type SketchpadEvent =
   | { type: "DESIGN.SET_CAMERA"; kitGuid: Guid; designGuid: Guid; camera: any }
   | { type: "DESIGN.SELECT_ALL"; kitGuid: Guid; designGuid: Guid }
   | { type: "DESIGN.DELETE_SELECTED"; kitGuid: Guid; designGuid: Guid }
-  // Transaction events (generic for any app with transactions)
-  | { type: "TRANSACTION.START"; appKey: string }
-  | { type: "TRANSACTION.COMMIT"; appKey: string }
-  | { type: "TRANSACTION.ABORT"; appKey: string }
-  | { type: "TRANSACTION.UNDO"; appKey: string }
-  | { type: "TRANSACTION.REDO"; appKey: string }
+  // Design transaction events (scoped to design app)
+  | { type: "DESIGN.TRANSACTION.START"; kitGuid: Guid; designGuid: Guid }
+  | { type: "DESIGN.TRANSACTION.COMMIT"; kitGuid: Guid; designGuid: Guid }
+  | { type: "DESIGN.TRANSACTION.ABORT"; kitGuid: Guid; designGuid: Guid }
+  | { type: "DESIGN.TRANSACTION.UNDO"; kitGuid: Guid; designGuid: Guid }
+  | { type: "DESIGN.TRANSACTION.REDO"; kitGuid: Guid; designGuid: Guid }
+  | { type: "DESIGN.TRANSACTION.RECORD_EDIT"; kitGuid: Guid; designGuid: Guid; edit: any }
+  // Type transaction events (scoped to type app)
+  | { type: "TYPE.TRANSACTION.START"; kitGuid: Guid; typeGuid: Guid }
+  | { type: "TYPE.TRANSACTION.COMMIT"; kitGuid: Guid; typeGuid: Guid }
+  | { type: "TYPE.TRANSACTION.ABORT"; kitGuid: Guid; typeGuid: Guid }
+  | { type: "TYPE.TRANSACTION.UNDO"; kitGuid: Guid; typeGuid: Guid }
+  | { type: "TYPE.TRANSACTION.REDO"; kitGuid: Guid; typeGuid: Guid }
+  | { type: "TYPE.TRANSACTION.RECORD_EDIT"; kitGuid: Guid; typeGuid: Guid; edit: any }
+  // Kit transaction events (scoped to kit app)
+  | { type: "KIT.TRANSACTION.START"; kitGuid: Guid }
+  | { type: "KIT.TRANSACTION.COMMIT"; kitGuid: Guid }
+  | { type: "KIT.TRANSACTION.ABORT"; kitGuid: Guid }
+  | { type: "KIT.TRANSACTION.UNDO"; kitGuid: Guid }
+  | { type: "KIT.TRANSACTION.REDO"; kitGuid: Guid }
+  | { type: "KIT.TRANSACTION.RECORD_EDIT"; kitGuid: Guid; edit: any }
+  // Background operation events (for async operations that continue when navigating away)
+  | { type: "BACKGROUND.START"; operationId: string; operationType: string }
+  | { type: "BACKGROUND.COMPLETE"; operationId: string }
+  | { type: "BACKGROUND.FAIL"; operationId: string; error: string }
   // Quality app events (scoped by kitGuid:qualityGuid)
   | { type: "QUALITY.TOGGLE_PANEL"; kitGuid: Guid; qualityGuid: Guid; panel: keyof PanelVisibility }
   | { type: "QUALITY.TOGGLE_BENCHMARK"; kitGuid: Guid; qualityGuid: Guid; benchmarkGuid: Guid }
@@ -7781,6 +7812,18 @@ function applyDiff(yDoc: Y.Doc, ySketchpad: Y.Map<any>, diff: SketchpadDiff): vo
 }
 
 /**
+ * Create default transaction state for an app
+ */
+function createDefaultTransactionState(): AppTransactionState {
+  return {
+    isTransactionActive: false,
+    currentTransactionStack: [],
+    pastTransactionStack: [],
+    redoStack: [],
+  };
+}
+
+/**
  * Create default design app state
  */
 function createDefaultDesignAppState(): DesignAppState {
@@ -7795,6 +7838,7 @@ function createDefaultDesignAppState(): DesignAppState {
     camera: undefined,
     activeTool: undefined,
     fullscreenWindow: undefined,
+    transaction: createDefaultTransactionState(),
   };
 }
 
@@ -7813,6 +7857,7 @@ function createDefaultTypeAppState(): TypeAppState {
     selectedModelGuid: undefined,
     camera: undefined,
     windowLayout: undefined,
+    transaction: createDefaultTransactionState(),
   };
 }
 
@@ -7830,6 +7875,7 @@ function createDefaultKitAppState(): KitAppState {
     expandedRows: new Set<string>(),
     sortColumn: undefined,
     sortDirection: undefined,
+    transaction: createDefaultTransactionState(),
   };
 }
 
@@ -7842,6 +7888,7 @@ function createDefaultQualityAppState(): QualityAppState {
     selection: undefined,
     hover: undefined,
     expandedBenchmarks: new Set<string>(),
+    transaction: createDefaultTransactionState(),
   };
 }
 
@@ -7881,15 +7928,6 @@ export const sketchpadMachine = setup({
       const history = historyStr ? JSON.parse(historyStr) : ["/"];
       const index = (context.ySketchpad.get("navigationHistoryIndex") as number) ?? 0;
       return index < history.length - 1;
-    },
-    // Transaction guards
-    hasActiveTransaction: ({ context, event }) => {
-      const appKey = (event as any).appKey;
-      return context.transactions[appKey]?.isActive ?? false;
-    },
-    noActiveTransaction: ({ context, event }) => {
-      const appKey = (event as any).appKey;
-      return !(context.transactions[appKey]?.isActive ?? false);
     },
     // Home hover guards
     hasHomeHover: ({ context }) => {
@@ -8609,110 +8647,243 @@ export const sketchpadMachine = setup({
       };
     }),
     // Transaction actions
-    transactionStart: assign(({ context, event }) => {
-      if (event.type !== "TRANSACTION.START") return {};
-      const { appKey } = event;
-      const existing = context.transactions[appKey] || {
-        isActive: false,
-        currentStack: [],
-        pastStack: [],
-        redoStack: [],
+    // Background operation actions
+    backgroundStart: assign(({ context, event }) => {
+      if (event.type !== "BACKGROUND.START") return {};
+      return {
+        backgroundOperations: {
+          ...context.backgroundOperations,
+          [event.operationId]: { type: event.operationType, status: "running" as const },
+        },
       };
-      // If already active, finalize first then start new
-      if (existing.isActive) {
-        // Auto-finalize: merge current stack into one edit and push to past
-        const pastStack = [...existing.pastStack];
-        if (existing.currentStack.length > 0) {
-          const merged = existing.currentStack.length === 1 ? existing.currentStack[0] : { do: existing.currentStack[existing.currentStack.length - 1].do, undo: existing.currentStack[0].undo };
+    }),
+    backgroundComplete: assign(({ context, event }) => {
+      if (event.type !== "BACKGROUND.COMPLETE") return {};
+      const { [event.operationId]: _, ...rest } = context.backgroundOperations;
+      return { backgroundOperations: rest };
+    }),
+    backgroundFail: assign(({ context, event }) => {
+      if (event.type !== "BACKGROUND.FAIL") return {};
+      return {
+        backgroundOperations: {
+          ...context.backgroundOperations,
+          [event.operationId]: { ...context.backgroundOperations[event.operationId], status: "failed" as const, error: event.error },
+        },
+      };
+    }),
+    // Design transaction actions (scoped to design app)
+    designTransactionStart: assign(({ context, event }) => {
+      if (event.type !== "DESIGN.TRANSACTION.START") return {};
+      const key = `${event.kitGuid}:${event.designGuid}`;
+      const app = context.designApps[key] || createDefaultDesignAppState();
+      const tx = app.transaction;
+      if (tx.isTransactionActive) {
+        // Auto-finalize first
+        const pastStack = [...tx.pastTransactionStack];
+        if (tx.currentTransactionStack.length > 0) {
+          const merged = tx.currentTransactionStack.length === 1 ? tx.currentTransactionStack[0] : { do: tx.currentTransactionStack[tx.currentTransactionStack.length - 1].do, undo: tx.currentTransactionStack[0].undo };
           pastStack.push(merged);
         }
-        return {
-          transactions: {
-            ...context.transactions,
-            [appKey]: { isActive: true, currentStack: [], pastStack, redoStack: [] },
-          },
-        };
+        return { designApps: { ...context.designApps, [key]: { ...app, transaction: { isTransactionActive: true, currentTransactionStack: [], pastTransactionStack: pastStack, redoStack: [] } } } };
       }
-      return {
-        transactions: {
-          ...context.transactions,
-          [appKey]: { ...existing, isActive: true, currentStack: [], redoStack: [] },
-        },
-      };
+      return { designApps: { ...context.designApps, [key]: { ...app, transaction: { ...tx, isTransactionActive: true, currentTransactionStack: [], redoStack: [] } } } };
     }),
-    transactionCommit: assign(({ context, event }) => {
-      if (event.type !== "TRANSACTION.COMMIT") return {};
-      const { appKey } = event;
-      const existing = context.transactions[appKey];
-      if (!existing || !existing.isActive) return {};
-      const pastStack = [...existing.pastStack];
-      if (existing.currentStack.length > 0) {
-        const merged = existing.currentStack.length === 1 ? existing.currentStack[0] : { do: existing.currentStack[existing.currentStack.length - 1].do, undo: existing.currentStack[0].undo };
+    designTransactionCommit: assign(({ context, event }) => {
+      if (event.type !== "DESIGN.TRANSACTION.COMMIT") return {};
+      const key = `${event.kitGuid}:${event.designGuid}`;
+      const app = context.designApps[key];
+      if (!app || !app.transaction.isTransactionActive) return {};
+      const tx = app.transaction;
+      const pastStack = [...tx.pastTransactionStack];
+      if (tx.currentTransactionStack.length > 0) {
+        const merged = tx.currentTransactionStack.length === 1 ? tx.currentTransactionStack[0] : { do: tx.currentTransactionStack[tx.currentTransactionStack.length - 1].do, undo: tx.currentTransactionStack[0].undo };
         pastStack.push(merged);
       }
-      return {
-        transactions: {
-          ...context.transactions,
-          [appKey]: { isActive: false, currentStack: [], pastStack, redoStack: [] },
-        },
-      };
+      return { designApps: { ...context.designApps, [key]: { ...app, transaction: { isTransactionActive: false, currentTransactionStack: [], pastTransactionStack: pastStack, redoStack: [] } } } };
     }),
-    transactionAbort: assign(({ context, event }) => {
-      if (event.type !== "TRANSACTION.ABORT") return {};
-      const { appKey } = event;
-      const existing = context.transactions[appKey];
-      if (!existing || !existing.isActive) return {};
-      // Revert all edits in current stack (would need to apply undo diffs - simplified here)
-      return {
-        transactions: {
-          ...context.transactions,
-          [appKey]: { ...existing, isActive: false, currentStack: [] },
-        },
-      };
+    designTransactionAbort: assign(({ context, event }) => {
+      if (event.type !== "DESIGN.TRANSACTION.ABORT") return {};
+      const key = `${event.kitGuid}:${event.designGuid}`;
+      const app = context.designApps[key];
+      if (!app || !app.transaction.isTransactionActive) return {};
+      return { designApps: { ...context.designApps, [key]: { ...app, transaction: { ...app.transaction, isTransactionActive: false, currentTransactionStack: [] } } } };
     }),
-    transactionUndo: assign(({ context, event }) => {
-      if (event.type !== "TRANSACTION.UNDO") return {};
-      const { appKey } = event;
-      const existing = context.transactions[appKey];
-      if (!existing) return {};
-      if (existing.isActive && existing.currentStack.length > 0) {
-        // Undo within active transaction
-        const currentStack = [...existing.currentStack];
-        const edit = currentStack.pop()!;
-        return {
-          transactions: {
-            ...context.transactions,
-            [appKey]: { ...existing, currentStack },
-          },
-        };
-      } else if (!existing.isActive && existing.pastStack.length > 0) {
-        // Undo from past transactions
-        const pastStack = [...existing.pastStack];
+    designTransactionUndo: assign(({ context, event }) => {
+      if (event.type !== "DESIGN.TRANSACTION.UNDO") return {};
+      const key = `${event.kitGuid}:${event.designGuid}`;
+      const app = context.designApps[key];
+      if (!app) return {};
+      const tx = app.transaction;
+      if (tx.isTransactionActive && tx.currentTransactionStack.length > 0) {
+        const currentStack = [...tx.currentTransactionStack];
+        currentStack.pop();
+        return { designApps: { ...context.designApps, [key]: { ...app, transaction: { ...tx, currentTransactionStack: currentStack } } } };
+      } else if (!tx.isTransactionActive && tx.pastTransactionStack.length > 0) {
+        const pastStack = [...tx.pastTransactionStack];
         const edit = pastStack.pop()!;
-        const redoStack = [...existing.redoStack, edit];
-        return {
-          transactions: {
-            ...context.transactions,
-            [appKey]: { ...existing, pastStack, redoStack },
-          },
-        };
+        const redoStack = [...tx.redoStack, edit];
+        return { designApps: { ...context.designApps, [key]: { ...app, transaction: { ...tx, pastTransactionStack: pastStack, redoStack } } } };
       }
       return {};
     }),
-    transactionRedo: assign(({ context, event }) => {
-      if (event.type !== "TRANSACTION.REDO") return {};
-      const { appKey } = event;
-      const existing = context.transactions[appKey];
-      if (!existing || existing.isActive || existing.redoStack.length === 0) return {};
-      const redoStack = [...existing.redoStack];
+    designTransactionRedo: assign(({ context, event }) => {
+      if (event.type !== "DESIGN.TRANSACTION.REDO") return {};
+      const key = `${event.kitGuid}:${event.designGuid}`;
+      const app = context.designApps[key];
+      if (!app || app.transaction.isTransactionActive || app.transaction.redoStack.length === 0) return {};
+      const tx = app.transaction;
+      const redoStack = [...tx.redoStack];
       const edit = redoStack.pop()!;
-      const pastStack = [...existing.pastStack, edit];
-      return {
-        transactions: {
-          ...context.transactions,
-          [appKey]: { ...existing, pastStack, redoStack },
-        },
-      };
+      const pastStack = [...tx.pastTransactionStack, edit];
+      return { designApps: { ...context.designApps, [key]: { ...app, transaction: { ...tx, pastTransactionStack: pastStack, redoStack } } } };
+    }),
+    designTransactionRecordEdit: assign(({ context, event }) => {
+      if (event.type !== "DESIGN.TRANSACTION.RECORD_EDIT") return {};
+      const key = `${event.kitGuid}:${event.designGuid}`;
+      const app = context.designApps[key];
+      if (!app || !app.transaction.isTransactionActive) return {};
+      const currentStack = [...app.transaction.currentTransactionStack, event.edit];
+      return { designApps: { ...context.designApps, [key]: { ...app, transaction: { ...app.transaction, currentTransactionStack: currentStack, redoStack: [] } } } };
+    }),
+    // Type transaction actions (scoped to type app)
+    typeTransactionStart: assign(({ context, event }) => {
+      if (event.type !== "TYPE.TRANSACTION.START") return {};
+      const key = `${event.kitGuid}:${event.typeGuid}`;
+      const app = context.typeApps[key] || createDefaultTypeAppState();
+      const tx = app.transaction;
+      if (tx.isTransactionActive) {
+        const pastStack = [...tx.pastTransactionStack];
+        if (tx.currentTransactionStack.length > 0) {
+          const merged = tx.currentTransactionStack.length === 1 ? tx.currentTransactionStack[0] : { do: tx.currentTransactionStack[tx.currentTransactionStack.length - 1].do, undo: tx.currentTransactionStack[0].undo };
+          pastStack.push(merged);
+        }
+        return { typeApps: { ...context.typeApps, [key]: { ...app, transaction: { isTransactionActive: true, currentTransactionStack: [], pastTransactionStack: pastStack, redoStack: [] } } } };
+      }
+      return { typeApps: { ...context.typeApps, [key]: { ...app, transaction: { ...tx, isTransactionActive: true, currentTransactionStack: [], redoStack: [] } } } };
+    }),
+    typeTransactionCommit: assign(({ context, event }) => {
+      if (event.type !== "TYPE.TRANSACTION.COMMIT") return {};
+      const key = `${event.kitGuid}:${event.typeGuid}`;
+      const app = context.typeApps[key];
+      if (!app || !app.transaction.isTransactionActive) return {};
+      const tx = app.transaction;
+      const pastStack = [...tx.pastTransactionStack];
+      if (tx.currentTransactionStack.length > 0) {
+        const merged = tx.currentTransactionStack.length === 1 ? tx.currentTransactionStack[0] : { do: tx.currentTransactionStack[tx.currentTransactionStack.length - 1].do, undo: tx.currentTransactionStack[0].undo };
+        pastStack.push(merged);
+      }
+      return { typeApps: { ...context.typeApps, [key]: { ...app, transaction: { isTransactionActive: false, currentTransactionStack: [], pastTransactionStack: pastStack, redoStack: [] } } } };
+    }),
+    typeTransactionAbort: assign(({ context, event }) => {
+      if (event.type !== "TYPE.TRANSACTION.ABORT") return {};
+      const key = `${event.kitGuid}:${event.typeGuid}`;
+      const app = context.typeApps[key];
+      if (!app || !app.transaction.isTransactionActive) return {};
+      return { typeApps: { ...context.typeApps, [key]: { ...app, transaction: { ...app.transaction, isTransactionActive: false, currentTransactionStack: [] } } } };
+    }),
+    typeTransactionUndo: assign(({ context, event }) => {
+      if (event.type !== "TYPE.TRANSACTION.UNDO") return {};
+      const key = `${event.kitGuid}:${event.typeGuid}`;
+      const app = context.typeApps[key];
+      if (!app) return {};
+      const tx = app.transaction;
+      if (tx.isTransactionActive && tx.currentTransactionStack.length > 0) {
+        const currentStack = [...tx.currentTransactionStack];
+        currentStack.pop();
+        return { typeApps: { ...context.typeApps, [key]: { ...app, transaction: { ...tx, currentTransactionStack: currentStack } } } };
+      } else if (!tx.isTransactionActive && tx.pastTransactionStack.length > 0) {
+        const pastStack = [...tx.pastTransactionStack];
+        const edit = pastStack.pop()!;
+        const redoStack = [...tx.redoStack, edit];
+        return { typeApps: { ...context.typeApps, [key]: { ...app, transaction: { ...tx, pastTransactionStack: pastStack, redoStack } } } };
+      }
+      return {};
+    }),
+    typeTransactionRedo: assign(({ context, event }) => {
+      if (event.type !== "TYPE.TRANSACTION.REDO") return {};
+      const key = `${event.kitGuid}:${event.typeGuid}`;
+      const app = context.typeApps[key];
+      if (!app || app.transaction.isTransactionActive || app.transaction.redoStack.length === 0) return {};
+      const tx = app.transaction;
+      const redoStack = [...tx.redoStack];
+      const edit = redoStack.pop()!;
+      const pastStack = [...tx.pastTransactionStack, edit];
+      return { typeApps: { ...context.typeApps, [key]: { ...app, transaction: { ...tx, pastTransactionStack: pastStack, redoStack } } } };
+    }),
+    typeTransactionRecordEdit: assign(({ context, event }) => {
+      if (event.type !== "TYPE.TRANSACTION.RECORD_EDIT") return {};
+      const key = `${event.kitGuid}:${event.typeGuid}`;
+      const app = context.typeApps[key];
+      if (!app || !app.transaction.isTransactionActive) return {};
+      const currentStack = [...app.transaction.currentTransactionStack, event.edit];
+      return { typeApps: { ...context.typeApps, [key]: { ...app, transaction: { ...app.transaction, currentTransactionStack: currentStack, redoStack: [] } } } };
+    }),
+    // Kit transaction actions (scoped to kit app)
+    kitTransactionStart: assign(({ context, event }) => {
+      if (event.type !== "KIT.TRANSACTION.START") return {};
+      const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
+      const tx = app.transaction;
+      if (tx.isTransactionActive) {
+        const pastStack = [...tx.pastTransactionStack];
+        if (tx.currentTransactionStack.length > 0) {
+          const merged = tx.currentTransactionStack.length === 1 ? tx.currentTransactionStack[0] : { do: tx.currentTransactionStack[tx.currentTransactionStack.length - 1].do, undo: tx.currentTransactionStack[0].undo };
+          pastStack.push(merged);
+        }
+        return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, transaction: { isTransactionActive: true, currentTransactionStack: [], pastTransactionStack: pastStack, redoStack: [] } } } };
+      }
+      return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, transaction: { ...tx, isTransactionActive: true, currentTransactionStack: [], redoStack: [] } } } };
+    }),
+    kitTransactionCommit: assign(({ context, event }) => {
+      if (event.type !== "KIT.TRANSACTION.COMMIT") return {};
+      const app = context.kitApps[event.kitGuid];
+      if (!app || !app.transaction.isTransactionActive) return {};
+      const tx = app.transaction;
+      const pastStack = [...tx.pastTransactionStack];
+      if (tx.currentTransactionStack.length > 0) {
+        const merged = tx.currentTransactionStack.length === 1 ? tx.currentTransactionStack[0] : { do: tx.currentTransactionStack[tx.currentTransactionStack.length - 1].do, undo: tx.currentTransactionStack[0].undo };
+        pastStack.push(merged);
+      }
+      return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, transaction: { isTransactionActive: false, currentTransactionStack: [], pastTransactionStack: pastStack, redoStack: [] } } } };
+    }),
+    kitTransactionAbort: assign(({ context, event }) => {
+      if (event.type !== "KIT.TRANSACTION.ABORT") return {};
+      const app = context.kitApps[event.kitGuid];
+      if (!app || !app.transaction.isTransactionActive) return {};
+      return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, transaction: { ...app.transaction, isTransactionActive: false, currentTransactionStack: [] } } } };
+    }),
+    kitTransactionUndo: assign(({ context, event }) => {
+      if (event.type !== "KIT.TRANSACTION.UNDO") return {};
+      const app = context.kitApps[event.kitGuid];
+      if (!app) return {};
+      const tx = app.transaction;
+      if (tx.isTransactionActive && tx.currentTransactionStack.length > 0) {
+        const currentStack = [...tx.currentTransactionStack];
+        currentStack.pop();
+        return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, transaction: { ...tx, currentTransactionStack: currentStack } } } };
+      } else if (!tx.isTransactionActive && tx.pastTransactionStack.length > 0) {
+        const pastStack = [...tx.pastTransactionStack];
+        const edit = pastStack.pop()!;
+        const redoStack = [...tx.redoStack, edit];
+        return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, transaction: { ...tx, pastTransactionStack: pastStack, redoStack } } } };
+      }
+      return {};
+    }),
+    kitTransactionRedo: assign(({ context, event }) => {
+      if (event.type !== "KIT.TRANSACTION.REDO") return {};
+      const app = context.kitApps[event.kitGuid];
+      if (!app || app.transaction.isTransactionActive || app.transaction.redoStack.length === 0) return {};
+      const tx = app.transaction;
+      const redoStack = [...tx.redoStack];
+      const edit = redoStack.pop()!;
+      const pastStack = [...tx.pastTransactionStack, edit];
+      return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, transaction: { ...tx, pastTransactionStack: pastStack, redoStack } } } };
+    }),
+    kitTransactionRecordEdit: assign(({ context, event }) => {
+      if (event.type !== "KIT.TRANSACTION.RECORD_EDIT") return {};
+      const app = context.kitApps[event.kitGuid];
+      if (!app || !app.transaction.isTransactionActive) return {};
+      const currentStack = [...app.transaction.currentTransactionStack, event.edit];
+      return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, transaction: { ...app.transaction, currentTransactionStack: currentStack, redoStack: [] } } } };
     }),
     // Design app piece/connection selection actions
     designSelectPiece: assign(({ context, event }) => {
@@ -8781,6 +8952,7 @@ export const sketchpadMachine = setup({
   },
 }).createMachine({
   id: "sketchpad",
+  type: "parallel",
   context: ({ input }) => ({
     yDoc: input.yDoc,
     ySketchpad: input.ySketchpad,
@@ -8810,7 +8982,9 @@ export const sketchpadMachine = setup({
       recordingState: "idle" as const,
       recordedEvents: [],
     },
-    transactions: {},
+    // Transaction state is now in each app's state
+    // Background operations track async tasks that continue when navigating away
+    backgroundOperations: {},
   }),
   invoke: {
     id: "yjsSync",
@@ -8821,7 +8995,9 @@ export const sketchpadMachine = setup({
       id: context.id,
     }),
   },
+  // Global events available in all states
   on: {
+    // Navigation events
     NAVIGATE: {
       actions: ["navigate", "navigateImpl"],
     },
@@ -8833,6 +9009,21 @@ export const sketchpadMachine = setup({
       guard: "canNavigateForward",
       actions: ["markDirty", "navigateForward"],
     },
+    // App INIT events - available globally for direct URL navigation
+    // These transition to the appropriate navigation state and initialize app data
+    "KIT.INIT": {
+      target: ".navigation.kit",
+      actions: "kitInit",
+    },
+    "DESIGN.INIT": {
+      target: ".navigation.design",
+      actions: "designInit",
+    },
+    "TYPE.INIT": {
+      target: ".navigation.type",
+      actions: "typeInit",
+    },
+    // Settings events - always available
     SET_THEME: {
       actions: ["markDirty", "setTheme"],
     },
@@ -8860,126 +9051,172 @@ export const sketchpadMachine = setup({
     Y_UPDATE: {
       actions: "markDirty",
     },
-    // Home app events
-    "HOME.TOGGLE_PANEL": { actions: "homeTogglePanel" },
-    "HOME.SET_PANEL_VISIBILITY": { actions: "homeSetPanelVisibility" },
-    "HOME.SET_SORT": { actions: "homeSetSort" },
-    "HOME.SELECT_KIT": { actions: "homeSelectKit" },
-    "HOME.DESELECT_KIT": { actions: "homeDeselectKit" },
-    "HOME.SET_HOVER": { actions: "homeSetHover" },
-    "HOME.CLEAR_HOVER": {
-      guard: "hasHomeHover",
-      actions: "homeClearHover",
-    },
-    // Design app events
-    "DESIGN.INIT": { actions: "designInit" },
-    "DESIGN.SYNC": { guard: "designAppExists", actions: "designSync" },
-    "DESIGN.TOGGLE_PANEL": { guard: "designAppExists", actions: "designTogglePanel" },
-    "DESIGN.SET_PANEL_VISIBILITY": { guard: "designAppExists", actions: "designSetPanelVisibility" },
-    "DESIGN.SET_ACTIVE_TOOL": { guard: "designAppExists", actions: "designSetActiveTool" },
-    "DESIGN.SET_FULLSCREEN": { guard: "designAppExists", actions: "designSetFullscreen" },
-    "DESIGN.SET_SELECTION": { guard: "designAppExists", actions: "designSetSelection" },
-    "DESIGN.CLEAR_SELECTION": {
-      guard: "hasDesignSelection",
-      actions: "designClearSelection",
-    },
-    "DESIGN.SET_HOVER": { guard: "designAppExists", actions: "designSetHover" },
-    "DESIGN.CLEAR_HOVER": {
-      guard: "hasDesignHover",
-      actions: "designClearHover",
-    },
-    "DESIGN.FOCUS_PIECE": { guard: "designAppExists", actions: "designFocusPiece" },
-    "DESIGN.SET_DIAGRAM_CENTER": { guard: "designAppExists", actions: "designSetDiagramCenter" },
-    "DESIGN.SET_DIAGRAM_SCALE": { guard: "designAppExists", actions: "designSetDiagramScale" },
-    "DESIGN.SET_CAMERA": { guard: "designAppExists", actions: "designSetCamera" },
-    "DESIGN.SELECT_MODEL_TAG": { guard: "designAppExists", actions: "designSelectModelTag" },
-    "DESIGN.DESELECT_MODEL_TAG": { guard: "designAppExists", actions: "designDeselectModelTag" },
-    "DESIGN.SELECT_PIECE": { guard: "designAppExists", actions: "designSelectPiece" },
-    "DESIGN.DESELECT_PIECE": { guard: "designAppExists", actions: "designDeselectPiece" },
-    "DESIGN.SELECT_CONNECTION": { guard: "designAppExists", actions: "designSelectConnection" },
-    "DESIGN.DESELECT_CONNECTION": { guard: "designAppExists", actions: "designDeselectConnection" },
-    "DESIGN.SELECT_ALL": { guard: "designAppExists", actions: "designSelectAll" },
-    "DESIGN.DELETE_SELECTED": { guard: "designAppExists", actions: "designDeleteSelected" },
-    // Type app events
-    "TYPE.INIT": { actions: "typeInit" },
-    "TYPE.SYNC": { guard: "typeAppExists", actions: "typeSync" },
-    "TYPE.TOGGLE_PANEL": { guard: "typeAppExists", actions: "typeTogglePanel" },
-    "TYPE.SET_PANEL_VISIBILITY": { guard: "typeAppExists", actions: "typeSetPanelVisibility" },
-    "TYPE.SET_FULLSCREEN_WINDOW": { guard: "typeAppExists", actions: "typeSetFullscreenWindow" },
-    "TYPE.SET_ACTIVE_TOOL": { guard: "typeAppExists", actions: "typeSetActiveTool" },
-    "TYPE.SET_SELECTION": { guard: "typeAppExists", actions: "typeSetSelection" },
-    "TYPE.CLEAR_SELECTION": {
-      guard: "hasTypeSelection",
-      actions: "typeClearSelection",
-    },
-    "TYPE.SELECT_PORT": { guard: "typeAppExists", actions: "typeSelectPort" },
-    "TYPE.DESELECT_PORT": { guard: "typeAppExists", actions: "typeDeselectPort" },
-    "TYPE.SET_HOVER": { guard: "typeAppExists", actions: "typeSetHover" },
-    "TYPE.CLEAR_HOVER": {
-      guard: "hasTypeHover",
-      actions: "typeClearHover",
-    },
-    "TYPE.FOCUS_PORT": { guard: "typeAppExists", actions: "typeFocusPort" },
-    "TYPE.SELECT_MODEL_TAG": { guard: "typeAppExists", actions: "typeSelectModelTag" },
-    "TYPE.DESELECT_MODEL_TAG": { guard: "typeAppExists", actions: "typeDeselectModelTag" },
-    "TYPE.SET_MODEL_TAGS": { guard: "typeAppExists", actions: "typeSetModelTags" },
-    "TYPE.SET_CAMERA": { guard: "typeAppExists", actions: "typeSetCamera" },
-    "TYPE.SELECT_ALL": { guard: "typeAppExists", actions: "typeSelectAll" },
-    "TYPE.DESELECT_ALL": { guard: "typeAppExists", actions: "typeDeselectAll" },
-    "TYPE.CLEAR_FOCUS": { guard: "typeAppExists", actions: "typeClearFocus" },
-    "TYPE.SELECT_MODEL": { guard: "typeAppExists", actions: "typeSelectModel" },
-    "TYPE.DESELECT_MODEL": { guard: "typeAppExists", actions: "typeDeselectModel" },
-    "TYPE.HOVER_PORT": { guard: "typeAppExists", actions: "typeHoverPort" },
-    "TYPE.HOVER_MODEL": { guard: "typeAppExists", actions: "typeHoverModel" },
-    "TYPE.SET_SELECTED_MODEL": { guard: "typeAppExists", actions: "typeSetSelectedModel" },
-    "TYPE.ADD_MODEL_TAG": { guard: "typeAppExists", actions: "typeAddModelTag" },
-    "TYPE.REMOVE_MODEL_TAG": { guard: "typeAppExists", actions: "typeRemoveModelTag" },
-    "TYPE.CLEAR_MODEL_TAGS": { guard: "typeAppExists", actions: "typeClearModelTags" },
-    // Kit app events
-    "KIT.INIT": { actions: "kitInit" },
-    "KIT.SYNC": { guard: "kitAppExists", actions: "kitSync" },
-    "KIT.TOGGLE_PANEL": { guard: "kitAppExists", actions: "kitTogglePanel" },
-    "KIT.SET_PANEL_VISIBILITY": { guard: "kitAppExists", actions: "kitSetPanelVisibility" },
-    "KIT.SET_FILTER": { guard: "kitAppExists", actions: "kitSetFilter" },
-    "KIT.TOGGLE_ROW": { guard: "kitAppExists", actions: "kitToggleRow" },
-    "KIT.SET_EXPANDED_ROWS": { guard: "kitAppExists", actions: "kitSetExpandedRows" },
-    "KIT.SET_SORT": { guard: "kitAppExists", actions: "kitSetSort" },
-    "KIT.SELECT_TYPE": { guard: "kitAppExists", actions: "kitSelectType" },
-    "KIT.DESELECT_TYPE": { guard: "kitAppExists", actions: "kitDeselectType" },
-    "KIT.SELECT_DESIGN": { guard: "kitAppExists", actions: "kitSelectDesign" },
-    "KIT.DESELECT_DESIGN": { guard: "kitAppExists", actions: "kitDeselectDesign" },
-    "KIT.SET_SELECTION": { guard: "kitAppExists", actions: "kitSetSelection" },
-    "KIT.CLEAR_SELECTION": { guard: "kitAppExists", actions: "kitClearSelection" },
-    "KIT.SET_HOVER": { guard: "kitAppExists", actions: "kitSetHover" },
-    "KIT.CLEAR_HOVER": {
-      guard: "hasKitHover",
-      actions: "kitClearHover",
-    },
-    // Quality app events
-    "QUALITY.TOGGLE_PANEL": { actions: "qualityTogglePanel" },
-    "QUALITY.TOGGLE_BENCHMARK": { actions: "qualityToggleBenchmark" },
-    // Tutorial events
+    // Tutorial events - always available
     "TUTORIAL.START": { actions: "tutorialStart" },
     "TUTORIAL.END": { actions: "tutorialEnd" },
     "TUTORIAL.NEXT_STEP": { actions: "tutorialNextStep" },
     "TUTORIAL.PREV_STEP": { actions: "tutorialPrevStep" },
     "TUTORIAL.GO_TO_STEP": { actions: "tutorialGoToStep" },
     "TUTORIAL.COMPLETE_STEP": { actions: "tutorialCompleteStep" },
-    // Transaction events with guards
-    "TRANSACTION.START": {
-      guard: "noActiveTransaction",
-      actions: "transactionStart",
+    // Background operation events - always available (for kit import, file upload, etc.)
+    // These operations continue even when navigating away
+    "BACKGROUND.START": { actions: "backgroundStart" },
+    "BACKGROUND.COMPLETE": { actions: "backgroundComplete" },
+    "BACKGROUND.FAIL": { actions: "backgroundFail" },
+  },
+  states: {
+    // Navigation state - hierarchical states for app navigation
+    navigation: {
+      initial: "home",
+      states: {
+        // Home state - kit selection and global settings
+        home: {
+          on: {
+            // Home app events - only available in home state
+            "HOME.TOGGLE_PANEL": { actions: "homeTogglePanel" },
+            "HOME.SET_PANEL_VISIBILITY": { actions: "homeSetPanelVisibility" },
+            "HOME.SET_SORT": { actions: "homeSetSort" },
+            "HOME.SELECT_KIT": { actions: "homeSelectKit" },
+            "HOME.DESELECT_KIT": { actions: "homeDeselectKit" },
+            "HOME.SET_HOVER": { actions: "homeSetHover" },
+            "HOME.CLEAR_HOVER": {
+              guard: "hasHomeHover",
+              actions: "homeClearHover",
+            },
+          },
+        },
+        // Kit state - browsing types, designs, files within a kit
+        kit: {
+          on: {
+            // Kit app events - only available in kit state
+            "KIT.SYNC": { guard: "kitAppExists", actions: "kitSync" },
+            "KIT.TOGGLE_PANEL": { guard: "kitAppExists", actions: "kitTogglePanel" },
+            "KIT.SET_PANEL_VISIBILITY": { guard: "kitAppExists", actions: "kitSetPanelVisibility" },
+            "KIT.SET_FILTER": { guard: "kitAppExists", actions: "kitSetFilter" },
+            "KIT.TOGGLE_ROW": { guard: "kitAppExists", actions: "kitToggleRow" },
+            "KIT.SET_EXPANDED_ROWS": { guard: "kitAppExists", actions: "kitSetExpandedRows" },
+            "KIT.SET_SORT": { guard: "kitAppExists", actions: "kitSetSort" },
+            "KIT.SELECT_TYPE": { guard: "kitAppExists", actions: "kitSelectType" },
+            "KIT.DESELECT_TYPE": { guard: "kitAppExists", actions: "kitDeselectType" },
+            "KIT.SELECT_DESIGN": { guard: "kitAppExists", actions: "kitSelectDesign" },
+            "KIT.DESELECT_DESIGN": { guard: "kitAppExists", actions: "kitDeselectDesign" },
+            "KIT.SET_SELECTION": { guard: "kitAppExists", actions: "kitSetSelection" },
+            "KIT.CLEAR_SELECTION": { guard: "kitAppExists", actions: "kitClearSelection" },
+            "KIT.SET_HOVER": { guard: "kitAppExists", actions: "kitSetHover" },
+            "KIT.CLEAR_HOVER": {
+              guard: "hasKitHover",
+              actions: "kitClearHover",
+            },
+            // Kit transaction events (scoped to kit app)
+            "KIT.TRANSACTION.START": { guard: "kitAppExists", actions: "kitTransactionStart" },
+            "KIT.TRANSACTION.COMMIT": { guard: "kitAppExists", actions: "kitTransactionCommit" },
+            "KIT.TRANSACTION.ABORT": { guard: "kitAppExists", actions: "kitTransactionAbort" },
+            "KIT.TRANSACTION.UNDO": { guard: "kitAppExists", actions: "kitTransactionUndo" },
+            "KIT.TRANSACTION.REDO": { guard: "kitAppExists", actions: "kitTransactionRedo" },
+            "KIT.TRANSACTION.RECORD_EDIT": { guard: "kitAppExists", actions: "kitTransactionRecordEdit" },
+          },
+        },
+        // Design state - editing a design with pieces and connections
+        design: {
+          on: {
+            // Design app events - only available in design state
+            "DESIGN.SYNC": { guard: "designAppExists", actions: "designSync" },
+            "DESIGN.TOGGLE_PANEL": { guard: "designAppExists", actions: "designTogglePanel" },
+            "DESIGN.SET_PANEL_VISIBILITY": { guard: "designAppExists", actions: "designSetPanelVisibility" },
+            "DESIGN.SET_ACTIVE_TOOL": { guard: "designAppExists", actions: "designSetActiveTool" },
+            "DESIGN.SET_FULLSCREEN": { guard: "designAppExists", actions: "designSetFullscreen" },
+            "DESIGN.SET_SELECTION": { guard: "designAppExists", actions: "designSetSelection" },
+            "DESIGN.CLEAR_SELECTION": {
+              guard: "hasDesignSelection",
+              actions: "designClearSelection",
+            },
+            "DESIGN.SET_HOVER": { guard: "designAppExists", actions: "designSetHover" },
+            "DESIGN.CLEAR_HOVER": {
+              guard: "hasDesignHover",
+              actions: "designClearHover",
+            },
+            "DESIGN.FOCUS_PIECE": { guard: "designAppExists", actions: "designFocusPiece" },
+            "DESIGN.SET_DIAGRAM_CENTER": { guard: "designAppExists", actions: "designSetDiagramCenter" },
+            "DESIGN.SET_DIAGRAM_SCALE": { guard: "designAppExists", actions: "designSetDiagramScale" },
+            "DESIGN.SET_CAMERA": { guard: "designAppExists", actions: "designSetCamera" },
+            "DESIGN.SELECT_MODEL_TAG": { guard: "designAppExists", actions: "designSelectModelTag" },
+            "DESIGN.DESELECT_MODEL_TAG": { guard: "designAppExists", actions: "designDeselectModelTag" },
+            "DESIGN.SELECT_PIECE": { guard: "designAppExists", actions: "designSelectPiece" },
+            "DESIGN.DESELECT_PIECE": { guard: "designAppExists", actions: "designDeselectPiece" },
+            "DESIGN.SELECT_CONNECTION": { guard: "designAppExists", actions: "designSelectConnection" },
+            "DESIGN.DESELECT_CONNECTION": { guard: "designAppExists", actions: "designDeselectConnection" },
+            "DESIGN.SELECT_ALL": { guard: "designAppExists", actions: "designSelectAll" },
+            "DESIGN.DELETE_SELECTED": {
+              guard: "hasDesignSelection",
+              actions: "designDeleteSelected",
+            },
+            // Design transaction events (scoped to design app)
+            "DESIGN.TRANSACTION.START": { guard: "designAppExists", actions: "designTransactionStart" },
+            "DESIGN.TRANSACTION.COMMIT": { guard: "designAppExists", actions: "designTransactionCommit" },
+            "DESIGN.TRANSACTION.ABORT": { guard: "designAppExists", actions: "designTransactionAbort" },
+            "DESIGN.TRANSACTION.UNDO": { guard: "designAppExists", actions: "designTransactionUndo" },
+            "DESIGN.TRANSACTION.REDO": { guard: "designAppExists", actions: "designTransactionRedo" },
+            "DESIGN.TRANSACTION.RECORD_EDIT": { guard: "designAppExists", actions: "designTransactionRecordEdit" },
+          },
+        },
+        // Type state - editing a type with ports and models
+        type: {
+          on: {
+            // Type app events - only available in type state
+            "TYPE.SYNC": { guard: "typeAppExists", actions: "typeSync" },
+            "TYPE.TOGGLE_PANEL": { guard: "typeAppExists", actions: "typeTogglePanel" },
+            "TYPE.SET_PANEL_VISIBILITY": { guard: "typeAppExists", actions: "typeSetPanelVisibility" },
+            "TYPE.SET_FULLSCREEN_WINDOW": { guard: "typeAppExists", actions: "typeSetFullscreenWindow" },
+            "TYPE.SET_ACTIVE_TOOL": { guard: "typeAppExists", actions: "typeSetActiveTool" },
+            "TYPE.SET_SELECTION": { guard: "typeAppExists", actions: "typeSetSelection" },
+            "TYPE.CLEAR_SELECTION": {
+              guard: "hasTypeSelection",
+              actions: "typeClearSelection",
+            },
+            "TYPE.SELECT_PORT": { guard: "typeAppExists", actions: "typeSelectPort" },
+            "TYPE.DESELECT_PORT": { guard: "typeAppExists", actions: "typeDeselectPort" },
+            "TYPE.SET_HOVER": { guard: "typeAppExists", actions: "typeSetHover" },
+            "TYPE.CLEAR_HOVER": {
+              guard: "hasTypeHover",
+              actions: "typeClearHover",
+            },
+            "TYPE.FOCUS_PORT": { guard: "typeAppExists", actions: "typeFocusPort" },
+            "TYPE.SELECT_MODEL_TAG": { guard: "typeAppExists", actions: "typeSelectModelTag" },
+            "TYPE.DESELECT_MODEL_TAG": { guard: "typeAppExists", actions: "typeDeselectModelTag" },
+            "TYPE.SET_MODEL_TAGS": { guard: "typeAppExists", actions: "typeSetModelTags" },
+            "TYPE.SET_CAMERA": { guard: "typeAppExists", actions: "typeSetCamera" },
+            "TYPE.SELECT_ALL": { guard: "typeAppExists", actions: "typeSelectAll" },
+            "TYPE.DESELECT_ALL": { guard: "typeAppExists", actions: "typeDeselectAll" },
+            "TYPE.CLEAR_FOCUS": { guard: "typeAppExists", actions: "typeClearFocus" },
+            "TYPE.SELECT_MODEL": { guard: "typeAppExists", actions: "typeSelectModel" },
+            "TYPE.DESELECT_MODEL": { guard: "typeAppExists", actions: "typeDeselectModel" },
+            "TYPE.HOVER_PORT": { guard: "typeAppExists", actions: "typeHoverPort" },
+            "TYPE.HOVER_MODEL": { guard: "typeAppExists", actions: "typeHoverModel" },
+            "TYPE.SET_SELECTED_MODEL": { guard: "typeAppExists", actions: "typeSetSelectedModel" },
+            "TYPE.ADD_MODEL_TAG": { guard: "typeAppExists", actions: "typeAddModelTag" },
+            "TYPE.REMOVE_MODEL_TAG": { guard: "typeAppExists", actions: "typeRemoveModelTag" },
+            "TYPE.CLEAR_MODEL_TAGS": { guard: "typeAppExists", actions: "typeClearModelTags" },
+            // Type transaction events (scoped to type app)
+            "TYPE.TRANSACTION.START": { guard: "typeAppExists", actions: "typeTransactionStart" },
+            "TYPE.TRANSACTION.COMMIT": { guard: "typeAppExists", actions: "typeTransactionCommit" },
+            "TYPE.TRANSACTION.ABORT": { guard: "typeAppExists", actions: "typeTransactionAbort" },
+            "TYPE.TRANSACTION.UNDO": { guard: "typeAppExists", actions: "typeTransactionUndo" },
+            "TYPE.TRANSACTION.REDO": { guard: "typeAppExists", actions: "typeTransactionRedo" },
+            "TYPE.TRANSACTION.RECORD_EDIT": { guard: "typeAppExists", actions: "typeTransactionRecordEdit" },
+          },
+        },
+        // Quality state - editing a quality with benchmarks
+        quality: {
+          on: {
+            // Quality app events - only available in quality state
+            "QUALITY.TOGGLE_PANEL": { actions: "qualityTogglePanel" },
+            "QUALITY.TOGGLE_BENCHMARK": { actions: "qualityToggleBenchmark" },
+          },
+        },
+        // Docs state - viewing documentation
+        docs: {},
+      },
     },
-    "TRANSACTION.COMMIT": {
-      guard: "hasActiveTransaction",
-      actions: "transactionCommit",
-    },
-    "TRANSACTION.ABORT": {
-      guard: "hasActiveTransaction",
-      actions: "transactionAbort",
-    },
-    "TRANSACTION.UNDO": { actions: "transactionUndo" },
-    "TRANSACTION.REDO": { actions: "transactionRedo" },
   },
 });
 
@@ -8990,6 +9227,27 @@ export const sketchpadMachine = setup({
  * Use these with useSelector(actor, selector) in React components.
  */
 
+// Navigation state selectors - check which app navigation state is active
+export type NavigationState = "home" | "kit" | "design" | "type" | "quality" | "docs";
+export const selectNavigationState = (state: { value: any }): NavigationState => {
+  const value = state.value;
+  if (typeof value === "object" && "navigation" in value) {
+    const nav = value.navigation;
+    if (typeof nav === "string") return nav as NavigationState;
+    if (typeof nav === "object") {
+      // Parallel states have object values
+      return Object.keys(nav)[0] as NavigationState;
+    }
+  }
+  return "home";
+};
+export const selectIsInHome = (state: { value: any }): boolean => selectNavigationState(state) === "home";
+export const selectIsInKit = (state: { value: any }): boolean => selectNavigationState(state) === "kit";
+export const selectIsInDesign = (state: { value: any }): boolean => selectNavigationState(state) === "design";
+export const selectIsInType = (state: { value: any }): boolean => selectNavigationState(state) === "type";
+export const selectIsInQuality = (state: { value: any }): boolean => selectNavigationState(state) === "quality";
+export const selectIsInDocs = (state: { value: any }): boolean => selectNavigationState(state) === "docs";
+
 // Home app selectors
 export const selectHomeApp = (state: { context: SketchpadContext }) => state.context.homeApp;
 export const selectHomePanelVisibility = (state: { context: SketchpadContext }) => state.context.homeApp.panelVisibility;
@@ -8998,6 +9256,20 @@ export const selectHomeHover = (state: { context: SketchpadContext }) => state.c
 export const selectHomeSortColumn = (state: { context: SketchpadContext }) => state.context.homeApp.sortColumn;
 export const selectHomeSortDirection = (state: { context: SketchpadContext }) => state.context.homeApp.sortDirection;
 export const selectHomeLoadingKits = (state: { context: SketchpadContext }) => state.context.homeApp.loadingKits;
+
+// Background operations selectors
+export const selectBackgroundOperations = (state: { context: SketchpadContext }) => state.context.backgroundOperations;
+export const selectKitImportOperations = (state: { context: SketchpadContext }) => {
+  const ops = state.context.backgroundOperations;
+  return Object.entries(ops)
+    .filter(([_, op]) => op.type.startsWith("kit-import:"))
+    .map(([id, op]) => ({
+      operationId: id,
+      kitName: op.type.replace("kit-import:", ""),
+      status: op.status,
+      error: op.error,
+    }));
+};
 
 // Design app selectors (take kitGuid and designGuid as curried parameters)
 export const createDesignAppSelector = (kitGuid: Guid, designGuid: Guid) => {
@@ -9204,21 +9476,45 @@ export const selectSketchpadSettings = (state: { context: SketchpadContext }) =>
   return settingsStr ? JSON.parse(settingsStr) : { apps: { design: { diagram: { proximityConnectDistance: 10 }, scene: { gridSize: 24 } } } };
 };
 
-// Transaction selectors
-export const createTransactionSelector = (appKey: string) => (state: { context: SketchpadContext }) => state.context.transactions[appKey] || { isActive: false, currentStack: [], pastStack: [], redoStack: [] };
+// Transaction selectors - now per-app (transactions embedded in each app's state)
+// Helper to get transaction state from an app key (format: "design-{kitGuid}-{designGuid}", "type-{kitGuid}-{typeGuid}", "kit-{kitGuid}")
+const getAppTransaction = (context: SketchpadContext, appKey: string): AppTransactionState | undefined => {
+  const parts = appKey.split("-");
+  if (parts[0] === "design" && parts.length >= 3) {
+    const key = `${parts[1]}:${parts.slice(2).join("-")}`;
+    return context.designApps[key]?.transaction;
+  }
+  if (parts[0] === "type" && parts.length >= 3) {
+    const key = `${parts[1]}:${parts.slice(2).join("-")}`;
+    return context.typeApps[key]?.transaction;
+  }
+  if (parts[0] === "kit" && parts.length >= 2) {
+    return context.kitApps[parts[1]]?.transaction;
+  }
+  return undefined;
+};
 
-export const createTransactionIsActiveSelector = (appKey: string) => (state: { context: SketchpadContext }) => state.context.transactions[appKey]?.isActive ?? false;
+const defaultTransactionState: AppTransactionState = {
+  isTransactionActive: false,
+  currentTransactionStack: [],
+  pastTransactionStack: [],
+  redoStack: [],
+};
+
+export const createTransactionSelector = (appKey: string) => (state: { context: SketchpadContext }) => getAppTransaction(state.context, appKey) || defaultTransactionState;
+
+export const createTransactionIsActiveSelector = (appKey: string) => (state: { context: SketchpadContext }) => getAppTransaction(state.context, appKey)?.isTransactionActive ?? false;
 
 export const createTransactionCanUndoSelector = (appKey: string) => (state: { context: SketchpadContext }) => {
-  const tx = state.context.transactions[appKey];
+  const tx = getAppTransaction(state.context, appKey);
   if (!tx) return false;
-  return tx.isActive ? tx.currentStack.length > 0 : tx.pastStack.length > 0;
+  return tx.isTransactionActive ? tx.currentTransactionStack.length > 0 : tx.pastTransactionStack.length > 0;
 };
 
 export const createTransactionCanRedoSelector = (appKey: string) => (state: { context: SketchpadContext }) => {
-  const tx = state.context.transactions[appKey];
+  const tx = getAppTransaction(state.context, appKey);
   if (!tx) return false;
-  return !tx.isActive && tx.redoStack.length > 0;
+  return !tx.isTransactionActive && tx.redoStack.length > 0;
 };
 
 // #endregion Sketchpad Selectors
@@ -12735,6 +13031,101 @@ export function useSketchpadActions() {
   );
 }
 
+// #region Triadic Hooks (Global Settings)
+
+/**
+ * Triadic hook for theme: [value, setter, canSet]
+ * Returns the current theme, a function to set it, and whether setting is allowed.
+ */
+export function useThemeTriadic(): GranularHookResult<Theme> {
+  const actor = useSketchpadActor();
+  const value = useSelector(actor, (snapshot) => selectTheme(snapshot.context));
+  const canSetEvent = useMemo(() => ({ type: "SET_THEME" as const, theme: Theme.LIGHT }), []);
+  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
+  const setter = useMemo(() => {
+    if (!canSet) return undefined;
+    return (theme: Theme) => actor.send({ type: "SET_THEME", theme });
+  }, [actor, canSet]);
+  return conditionalHookResult(canSet, value, setter);
+}
+
+/**
+ * Triadic hook for language: [value, setter, canSet]
+ */
+export function useLanguageTriadic(): GranularHookResult<string> {
+  const actor = useSketchpadActor();
+  const value = useSelector(actor, (snapshot) => selectLanguage(snapshot.context));
+  const canSetEvent = useMemo(() => ({ type: "SET_LANGUAGE" as const, language: "en" }), []);
+  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
+  const setter = useMemo(() => {
+    if (!canSet) return undefined;
+    return (language: string) => actor.send({ type: "SET_LANGUAGE", language });
+  }, [actor, canSet]);
+  return conditionalHookResult(canSet, value, setter);
+}
+
+/**
+ * Triadic hook for expertise: [value, setter, canSet]
+ */
+export function useExpertiseTriadic(): GranularHookResult<Expertise> {
+  const actor = useSketchpadActor();
+  const value = useSelector(actor, (snapshot) => selectExpertise(snapshot.context));
+  const canSetEvent = useMemo(() => ({ type: "SET_EXPERTISE" as const, expertise: Expertise.NORMAL }), []);
+  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
+  const setter = useMemo(() => {
+    if (!canSet) return undefined;
+    return (expertise: Expertise) => actor.send({ type: "SET_EXPERTISE", expertise });
+  }, [actor, canSet]);
+  return conditionalHookResult(canSet, value, setter);
+}
+
+/**
+ * Triadic hook for mode: [value, setter, canSet]
+ */
+export function useModeTriadic(): GranularHookResult<Mode> {
+  const actor = useSketchpadActor();
+  const value = useSelector(actor, (snapshot) => selectMode(snapshot.context));
+  const canSetEvent = useMemo(() => ({ type: "SET_MODE" as const, mode: Mode.USER }), []);
+  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
+  const setter = useMemo(() => {
+    if (!canSet) return undefined;
+    return (mode: Mode) => actor.send({ type: "SET_MODE", mode });
+  }, [actor, canSet]);
+  return conditionalHookResult(canSet, value, setter);
+}
+
+/**
+ * Triadic hook for layout: [value, setter, canSet]
+ */
+export function useLayoutTriadic(): GranularHookResult<Layout> {
+  const actor = useSketchpadActor();
+  const value = useSelector(actor, (snapshot) => selectLayout(snapshot.context));
+  const canSetEvent = useMemo(() => ({ type: "SET_LAYOUT" as const, layout: "desktop" as Layout }), []);
+  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
+  const setter = useMemo(() => {
+    if (!canSet) return undefined;
+    return (layout: Layout) => actor.send({ type: "SET_LAYOUT", layout });
+  }, [actor, canSet]);
+  return conditionalHookResult(canSet, value, setter);
+}
+
+/**
+ * Triadic hook for fullscreen state: [value, toggle, canToggle]
+ */
+export function useFullscreenTriadic(): GranularHookResult<boolean> {
+  const actor = useSketchpadActor();
+  const value = useSelector(actor, (snapshot) => selectIsFullscreen(snapshot.context));
+  const canSetEvent = useMemo(() => ({ type: "TOGGLE_FULLSCREEN" as const }), []);
+  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
+  const setter = useMemo(() => {
+    if (!canSet) return undefined;
+    return (_value: boolean) => actor.send({ type: "TOGGLE_FULLSCREEN" });
+  }, [actor, canSet]);
+  return conditionalHookResult(canSet, value, setter);
+}
+
+// #endregion Triadic Hooks (Global Settings)
+
 // #endregion XState Hooks
 
 /**
@@ -12821,6 +13212,21 @@ export function useHomeSortDirection(): "asc" | "desc" | undefined {
 export function useHomeLoadingKits(): Array<{ tempGuid: string; name: string }> {
   const actor = useSketchpadActor();
   return useSelector(actor, selectHomeLoadingKits);
+}
+
+/**
+ * XState-based hook for kit import operations.
+ * Returns all kit import operations tracked in background operations.
+ * These operations continue even when navigating away from Home.
+ */
+export function useKitImportOperations(): Array<{
+  operationId: string;
+  kitName: string;
+  status: "pending" | "running" | "completed" | "failed";
+  error?: string;
+}> {
+  const actor = useSketchpadActor();
+  return useSelector(actor, selectKitImportOperations);
 }
 
 /**

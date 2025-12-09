@@ -51,35 +51,31 @@ import { generateUniqueName, guid, Guid, importKit, Kit, KitShallow } from "../s
 import { docsRegistry } from "./Docs";
 import { Action, Input, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Spinner, Strip, Table, TableAvatar, TableColumn, Textarea, Toggle, ToggleGroup, TreeContent, TreeItem } from "./elements";
 import type { AppConfig, AppEdit, PanelDefinition, PanelVisibility } from "./shared";
-import { createPanelDefinition, Expertise, Layout, Mode, PanelKind, Theme } from "./shared";
+import { createPanelDefinition, Expertise, Mode, PanelKind, Theme } from "./shared";
 import {
   Canvas,
   ConceptFilter,
   useAddFooterItem,
   useAddPanelSection,
   useAppType,
-  useExpertise,
+  useExpertiseTriadic,
   useFocus,
   useGetKitKind,
   useHomeApp,
   useHomeCommands,
-  useHomeLoadingKits,
-  useHomePanelVisibility,
-  useHomeSelection,
-  useHomeSortColumn,
-  useHomeSortDirection,
   useHotkeys,
   useIsMobile,
   useKits,
   useKitShallows,
-  useLanguage,
-  useLayout,
-  useMode,
+  useLanguageTriadic,
+  useLayoutTriadic,
+  useModeTriadic,
   useNavigation,
   useRemoveFooterItem,
   useRemovePanelSection,
+  useSketchpadActor,
   useSketchpadCommands,
-  useTheme,
+  useThemeTriadic,
   useTooltip,
   Window,
 } from "./Sketchpad";
@@ -139,12 +135,7 @@ export interface HomeCommandResult {
 // #region Hooks (XState-based)
 
 // Re-export hooks from Sketchpad for backwards compatibility
-export {
-  useHomeApp as useHomeAppExported,
-  useHomeLoadingKits as useHomeLoadingKitsExported,
-  useHomePanelVisibility as useHomePanelVisibilityExported,
-  useHomeSelection as useHomeSelectionExported,
-} from "./Sketchpad";
+export { useHomeApp as useHomeAppExported, useHomeLoadingKits as useHomeLoadingKitsExported, useHomePanelVisibility as useHomePanelVisibilityExported, useHomeSelection as useHomeSelectionExported } from "./Sketchpad";
 // Re-export the local alias
 export { useHome };
 
@@ -319,18 +310,12 @@ const ChatPlaceholder: FC = () => {
 
 // #region Settings
 
-const SettingsContent: FC<{
-  setTheme: (origin: string, theme: Theme) => void;
-  setLanguage: (origin: string, language: string) => void;
-  setLayout: (origin: string, layout: Layout) => void;
-  setExpertise: (origin: string, expertise: Expertise) => void;
-  setMode: (origin: string, mode: Mode) => void;
-}> = ({ setTheme, setLanguage, setLayout, setExpertise, setMode }) => {
-  const theme = useTheme();
-  const language = useLanguage();
-  const layout = useLayout();
-  const expertise = useExpertise();
-  const mode = useMode();
+const SettingsContent: FC = () => {
+  const [theme, setTheme, canSetTheme] = useThemeTriadic();
+  const [language, setLanguage, canSetLanguage] = useLanguageTriadic();
+  const [layout, setLayout, canSetLayout] = useLayoutTriadic();
+  const [expertise, setExpertise, canSetExpertise] = useExpertiseTriadic();
+  const [mode, setMode, canSetMode] = useModeTriadic();
 
   const languageEnLabel = useLabel("semio.sketchpad.settings.language.en");
   const languageDeLabel = useLabel("semio.sketchpad.settings.language.de");
@@ -343,9 +328,10 @@ const SettingsContent: FC<{
           <ToggleGroup
             id="semio.sketchpad.app.home.settings.theme"
             value={theme}
-            onValueChange={(value: string) => setTheme("semio.sketchpad.app.home.settings.theme", value as Theme)}
+            onValueChange={(value: string) => setTheme?.(value as Theme)}
             showLabel
             kind="single"
+            disabled={!canSetTheme}
             items={[
               { value: Theme.SYSTEM, id: "semio.sketchpad.settings.theme.system", icon: <MonitorIcon className="size-small" /> },
               { value: Theme.LIGHT, id: "semio.sketchpad.settings.theme.light", icon: <SunIcon className="size-small" /> },
@@ -356,7 +342,7 @@ const SettingsContent: FC<{
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Select id="semio.sketchpad.app.home.settings.language" value={language || "en"} onValueChange={(value: string) => setLanguage("semio.sketchpad.app.home.settings.language", value)} showLabel>
+          <Select id="semio.sketchpad.app.home.settings.language" value={language || "en"} onValueChange={(value: string) => setLanguage?.(value)} showLabel disabled={!canSetLanguage}>
             <SelectTrigger>
               <SelectValue placeholder={languagePlaceholder} />
             </SelectTrigger>
@@ -372,9 +358,10 @@ const SettingsContent: FC<{
           <ToggleGroup
             id="semio.sketchpad.app.home.settings.layout"
             value={typeof layout === "object" ? "desktop" : layout}
-            onValueChange={(value: string) => setLayout("semio.sketchpad.app.home.settings.layout", value as "desktop" | "tablet")}
+            onValueChange={(value: string) => setLayout?.(value as "desktop" | "tablet")}
             showLabel
             kind="single"
+            disabled={!canSetLayout}
             items={[
               { value: "desktop", id: "semio.sketchpad.settings.layout.desktop", icon: <MousePointerIcon className="size-small" /> },
               { value: "tablet", id: "semio.sketchpad.settings.layout.tablet", icon: <HandIcon className="size-small" /> },
@@ -387,9 +374,10 @@ const SettingsContent: FC<{
           <ToggleGroup
             id="semio.sketchpad.app.home.settings.expertise"
             value={expertise}
-            onValueChange={(value: string) => setExpertise("semio.sketchpad.app.home.settings.expertise", value as Expertise)}
+            onValueChange={(value: string) => setExpertise?.(value as Expertise)}
             showLabel
             kind="single"
+            disabled={!canSetExpertise}
             items={[
               { value: Expertise.BEGINNER, id: "semio.sketchpad.settings.expertise.beginner", icon: <TutorialIcon className="size-small" /> },
               { value: Expertise.NORMAL, id: "semio.sketchpad.settings.expertise.normal", icon: <UserIcon className="size-small" /> },
@@ -403,9 +391,10 @@ const SettingsContent: FC<{
           <ToggleGroup
             id="semio.sketchpad.app.home.settings.mode"
             value={mode}
-            onValueChange={(value: string) => setMode("semio.sketchpad.app.home.settings.mode", value as Mode)}
+            onValueChange={(value: string) => setMode?.(value as Mode)}
             showLabel
             kind="single"
+            disabled={!canSetMode}
             items={[
               { value: Mode.USER, id: "semio.sketchpad.settings.mode.user", icon: <UserIcon className="size-small" /> },
               { value: Mode.DEV, id: "semio.sketchpad.settings.mode.dev", icon: <CodeIcon className="size-small" /> },
@@ -455,16 +444,22 @@ const HomeAppFooter: FC = () => {
 
 const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isDragging, setIsDragging] = useState(false);
-  const [loadingKits, setLoadingKits] = useState<Array<{ tempGuid: string; name: string }>>([]);
   const { t } = useTranslation();
   const { createKit, navigateToKit, storeKitFileBlobs } = useSketchpadCommands();
+  const actor = useSketchpadActor();
 
-  const addLoadingKit = (kit: { tempGuid: string; name: string }) => {
-    setLoadingKits((prev) => [...prev, kit]);
+  // Use XState background operations for tracking kit imports
+  // This ensures imports continue even when navigating away from Home
+  const startKitImport = (operationId: string, kitName: string) => {
+    actor.send({ type: "BACKGROUND.START", operationId, operationType: `kit-import:${kitName}` });
   };
 
-  const removeLoadingKit = (tempGuid: string) => {
-    setLoadingKits((prev) => prev.filter((k) => k.tempGuid !== tempGuid));
+  const completeKitImport = (operationId: string) => {
+    actor.send({ type: "BACKGROUND.COMPLETE", operationId });
+  };
+
+  const failKitImport = (operationId: string, error: string) => {
+    actor.send({ type: "BACKGROUND.FAIL", operationId, error });
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -495,20 +490,20 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
     const zipFile = files.find((f) => f.name.endsWith(".zip") || f.name.endsWith(".semio.zip"));
 
     if (zipFile) {
-      const tempGuid = guid();
+      const operationId = `kit-import-${guid()}`;
       const kitName = zipFile.name.replace(/\.(semio\.)?zip$/, "");
-      addLoadingKit({ tempGuid, name: kitName });
+      startKitImport(operationId, kitName);
       try {
         const { kit, files: importedFiles } = await importKit(zipFile);
         await createKit("semio.sketchpad.app.home.dropzone", kit, false, false);
-        removeLoadingKit(tempGuid);
         // Store blobs for existing kit files BEFORE navigating (kit already has file definitions from SQLite)
         await storeKitFileBlobs(kit.guid, importedFiles);
+        completeKitImport(operationId);
         await new Promise((resolve) => setTimeout(resolve, 0));
         navigateToKit(kit.guid);
       } catch (error) {
         console.error("[Home] Failed to import kit:", error);
-        removeLoadingKit(tempGuid);
+        failKitImport(operationId, error instanceof Error ? error.message : String(error));
       }
     }
   };
@@ -517,20 +512,20 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.name.endsWith(".zip") || file.name.endsWith(".semio.zip")) {
-      const tempGuid = guid();
+      const operationId = `kit-import-${guid()}`;
       const kitName = file.name.replace(/\.(semio\.)?zip$/, "");
-      addLoadingKit({ tempGuid, name: kitName });
+      startKitImport(operationId, kitName);
       try {
         const { kit, files: importedFiles } = await importKit(file);
         await createKit("semio.sketchpad.app.home.fileInput", kit, false, false);
-        removeLoadingKit(tempGuid);
         // Store blobs for existing kit files BEFORE navigating (kit already has file definitions from SQLite)
         await storeKitFileBlobs(kit.guid, importedFiles);
+        completeKitImport(operationId);
         await new Promise((resolve) => setTimeout(resolve, 100));
         navigateToKit(kit.guid);
       } catch (error) {
         console.error("[Home] Failed to import kit:", error);
-        removeLoadingKit(tempGuid);
+        failKitImport(operationId, error instanceof Error ? error.message : String(error));
       }
     }
     e.target.value = "";
@@ -581,7 +576,7 @@ const Home: FC = ({}) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const kits = useKits();
   const getKitKind = useGetKitKind();
-  const { createKit, navigateToKit, setTheme, setLanguage, setLayout, setExpertise, setMode, getKitSnapshot } = useSketchpadCommands();
+  const { createKit, navigateToKit, getKitSnapshot } = useSketchpadCommands();
 
   const homeState = useHome() as any;
   const homeCommands = useHomeCommands();
@@ -661,7 +656,7 @@ const Home: FC = ({}) => {
       specificity: 20,
       order: 0,
       content: () => {
-        return <SettingsContent setTheme={setTheme} setLanguage={setLanguage} setLayout={setLayout} setExpertise={setExpertise} setMode={setMode} />;
+        return <SettingsContent />;
       },
     });
 
@@ -671,7 +666,7 @@ const Home: FC = ({}) => {
       specificity: 0,
       order: 0,
       content: () => {
-        return <SettingsContent setTheme={setTheme} setLanguage={setLanguage} setLayout={setLayout} setExpertise={setExpertise} setMode={setMode} />;
+        return <SettingsContent />;
       },
     });
 
@@ -680,7 +675,7 @@ const Home: FC = ({}) => {
       removeSection("settings", "semio.sketchpad.app.home.settings");
       removeSection("settings", "semio.sketchpad.settings");
     };
-  }, [appType, addSection, removeSection, setTheme, setLanguage, setLayout, setExpertise, setMode]);
+  }, [appType, addSection, removeSection]);
 
   // Get filters from search params (?kind=&name=&version=)
   const selectedKind = searchParams.get("kind") as KitKind | null;

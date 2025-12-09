@@ -89,10 +89,10 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 15,
+                      "workerIndex": 5,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4061,
+                      "duration": 5105,
                       "errors": [],
                       "stdout": [
                         {
@@ -107,7 +107,7 @@
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T21:24:51.900Z",
+                      "startTime": "2025-12-09T01:37:45.931Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -133,10 +133,10 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 16,
+                      "workerIndex": 6,
                       "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 19690,
+                      "duration": 21059,
                       "errors": [],
                       "stdout": [
                         {
@@ -160,7 +160,7 @@
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T21:24:51.899Z",
+                      "startTime": "2025-12-09T01:37:45.929Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -186,10 +186,10 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 17,
+                      "workerIndex": 7,
                       "parallelIndex": 2,
                       "status": "passed",
-                      "duration": 29862,
+                      "duration": 31214,
                       "errors": [],
                       "stdout": [
                         {
@@ -211,16 +211,16 @@
                           "text": "[Type Test] Starting pan operations on three.js canvas\n"
                         },
                         {
-                          "text": "[Type Test] Pan 1 took 20ms\n"
+                          "text": "[Type Test] Pan 1 took 24ms\n"
                         },
                         {
-                          "text": "[Type Test] Pan 2 took 18ms\n"
+                          "text": "[Type Test] Pan 2 took 22ms\n"
                         },
                         {
-                          "text": "[Type Test] Pan 3 took 19ms\n"
+                          "text": "[Type Test] Pan 3 took 18ms\n"
                         },
                         {
-                          "text": "[Type Test] Average pan time: 19ms\n"
+                          "text": "[Type Test] Average pan time: 21.333333333333332ms\n"
                         },
                         {
                           "text": "[Type] Verifying Type app panel toggles\n"
@@ -231,7 +231,7 @@
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T21:24:51.919Z",
+                      "startTime": "2025-12-09T01:37:45.960Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -257,10 +257,10 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 18,
+                      "workerIndex": 8,
                       "parallelIndex": 3,
                       "status": "passed",
-                      "duration": 28442,
+                      "duration": 29533,
                       "errors": [],
                       "stdout": [
                         {
@@ -294,19 +294,19 @@
                           "text": "[Design Test] Piece count: \u001b[33m180\u001b[39m\n"
                         },
                         {
-                          "text": "[Design Test] Pan 1 took 18ms\n"
+                          "text": "[Design Test] Pan 1 took 19ms\n"
                         },
                         {
-                          "text": "[Design Test] Pan 2 took 17ms\n"
+                          "text": "[Design Test] Pan 2 took 16ms\n"
                         },
                         {
-                          "text": "[Design Test] Hover (mouse enter) took 5ms\n"
+                          "text": "[Design Test] Hover (mouse enter) took 59ms\n"
                         },
                         {
                           "text": "[Design Test] Unhover (mouse leave) took 4ms\n"
                         },
                         {
-                          "text": "[Design Test] Hover cycle times: 19, 6, 9ms\n"
+                          "text": "[Design Test] Hover cycle times: 3, 2, 17ms\n"
                         },
                         {
                           "text": "[Design] Verifying Design app panel toggles\n"
@@ -317,7 +317,7 @@
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T21:24:51.903Z",
+                      "startTime": "2025-12-09T01:37:46.000Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -343,10 +343,10 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 19,
+                      "workerIndex": 9,
                       "parallelIndex": 4,
                       "status": "passed",
-                      "duration": 5452,
+                      "duration": 5798,
                       "errors": [],
                       "stdout": [
                         {
@@ -358,7 +358,7 @@
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-08T21:24:51.923Z",
+                      "startTime": "2025-12-09T01:37:45.964Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -378,8 +378,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2025-12-08T21:24:50.184Z",
-    "duration": 31963.346000000834,
+    "startTime": "2025-12-09T01:37:44.122Z",
+    "duration": 33480.71399999969,
     "expected": 5,
     "skipped": 0,
     "unexpected": 0,
