@@ -58,6 +58,7 @@ import {
   useAddFooterItem,
   useAddPanelSection,
   useAppType,
+  useExpertise,
   useFocus,
   useGetKitKind,
   useHomeApp,
@@ -66,11 +67,15 @@ import {
   useIsMobile,
   useKits,
   useKitShallows,
+  useLanguage,
+  useLayout,
+  useMode,
   useNavigation,
   useRemoveFooterItem,
   useRemovePanelSection,
   useSketchpadActor,
   useSketchpadCommands,
+  useTheme,
   useTooltip,
   Window,
 } from "./Sketchpad";
@@ -643,11 +648,8 @@ const Home: FC = ({}) => {
   // Add settings panel sections
   useEffect(() => {
     if (appType !== "home") {
-      console.log("[Home] Not adding settings sections - appType is:", appType);
       return;
     }
-
-    console.log("[Home] Adding settings panel sections");
 
     // Add Home-specific settings (most specific)
     addSection("settings", {
@@ -670,7 +672,6 @@ const Home: FC = ({}) => {
     });
 
     return () => {
-      console.log("[Home] Removing settings panel sections");
       removeSection("settings", "semio.sketchpad.app.home.settings");
       removeSection("settings", "semio.sketchpad.settings");
     };
@@ -1564,9 +1565,9 @@ export const config: AppConfig = {
   routeSegments: [],
   additionalPaths: ["kits"],
   getPanels: (): PanelDefinition[] => [
-    createPanelDefinition(PanelKind.SETTINGS, "semio.sketchpad.navbar.panelToggle.settings.show"),
     createPanelDefinition(PanelKind.DETAILS, "semio.sketchpad.navbar.panelToggle.details.show"),
     createPanelDefinition(PanelKind.CHAT, "semio.sketchpad.navbar.panelToggle.chat.show"),
+    createPanelDefinition(PanelKind.SETTINGS, "semio.sketchpad.navbar.panelToggle.settings.show"),
   ],
   matchesPath: (pathParts) => pathParts.length === 0 || (pathParts.length === 1 && pathParts[0] === "kits"),
   order: 0,

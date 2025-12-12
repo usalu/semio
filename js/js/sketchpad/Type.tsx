@@ -71,6 +71,7 @@ import {
   useType,
   useTypeAppXState,
   useTypeScope,
+  useOrigin,
 } from "./Sketchpad";
 
 let kitAppModuleCache: any = null;
@@ -357,7 +358,7 @@ interface Transaction {
   abort?: () => void;
 }
 
-export function useTypeAppTransaction(_origin: string, _id?: TypeAppId): Transaction {
+export function useTypeAppTransaction(_id?: TypeAppId): Transaction {
   // TODO: Implement transaction via XState events
   return {
     start: () => {},
@@ -406,31 +407,31 @@ export function useTypeAppCommands(id?: TypeAppId) {
     }
 
     return {
-      startTransaction: (_origin?: string) => actor.send({ type: "TYPE.TRANSACTION.START", kitGuid, typeGuid }),
-      finalizeTransaction: (_origin?: string) => actor.send({ type: "TYPE.TRANSACTION.COMMIT", kitGuid, typeGuid }),
-      abortTransaction: (_origin?: string) => actor.send({ type: "TYPE.TRANSACTION.ABORT", kitGuid, typeGuid }),
-      undo: (_origin?: string) => actor.send({ type: "TYPE.TRANSACTION.UNDO", kitGuid, typeGuid }),
-      redo: (_origin?: string) => actor.send({ type: "TYPE.TRANSACTION.REDO", kitGuid, typeGuid }),
-      selectAll: (_origin?: string) => actor.send({ type: "TYPE.SELECT_ALL", kitGuid, typeGuid }),
-      deselectAll: (_origin?: string) => actor.send({ type: "TYPE.DESELECT_ALL", kitGuid, typeGuid }),
-      togglePanel: (panelKey: keyof PanelVisibility, _origin?: string) => actor.send({ type: "TYPE.TOGGLE_PANEL", kitGuid, typeGuid, panel: panelKey }),
-      setCamera: (camera: Camera, _origin?: string) => actor.send({ type: "TYPE.SET_CAMERA", kitGuid, typeGuid, camera }),
-      focusPort: (portGuid: Guid, _origin?: string) => actor.send({ type: "TYPE.FOCUS_PORT", kitGuid, typeGuid, portGuid }),
-      clearFocus: (_origin?: string) => actor.send({ type: "TYPE.CLEAR_FOCUS", kitGuid, typeGuid }),
-      setActiveTool: (tool: ToolKind, _origin?: string) => actor.send({ type: "TYPE.SET_ACTIVE_TOOL", kitGuid, typeGuid, tool }),
-      selectPort: (portGuid: Guid, _origin?: string) => actor.send({ type: "TYPE.SELECT_PORT", kitGuid, typeGuid, portGuid }),
-      deselectPort: (portGuid: Guid, _origin?: string) => actor.send({ type: "TYPE.DESELECT_PORT", kitGuid, typeGuid, portGuid }),
-      selectModel: (modelGuid: Guid, _origin?: string) => actor.send({ type: "TYPE.SELECT_MODEL", kitGuid, typeGuid, modelGuid }),
-      deselectModel: (modelGuid: Guid, _origin?: string) => actor.send({ type: "TYPE.DESELECT_MODEL", kitGuid, typeGuid, modelGuid }),
-      hoverPort: (portGuid: Guid, _origin?: string) => actor.send({ type: "TYPE.HOVER_PORT", kitGuid, typeGuid, portGuid }),
-      hoverModel: (modelGuid: Guid, _origin?: string) => actor.send({ type: "TYPE.HOVER_MODEL", kitGuid, typeGuid, modelGuid }),
-      clearHover: (_origin?: string) => actor.send({ type: "TYPE.CLEAR_HOVER", kitGuid, typeGuid }),
-      setSelectedModel: (modelGuid: Guid, _origin?: string) => actor.send({ type: "TYPE.SET_SELECTED_MODEL", kitGuid, typeGuid, modelGuid }),
-      addModelTag: (tag: string, _origin?: string) => actor.send({ type: "TYPE.ADD_MODEL_TAG", kitGuid, typeGuid, tag }),
-      removeModelTag: (tag: string, _origin?: string) => actor.send({ type: "TYPE.REMOVE_MODEL_TAG", kitGuid, typeGuid, tag }),
-      clearModelTags: (_origin?: string) => actor.send({ type: "TYPE.CLEAR_MODEL_TAGS", kitGuid, typeGuid }),
-      setModelTags: (tags: string[], _origin?: string) => actor.send({ type: "TYPE.SET_MODEL_TAGS", kitGuid, typeGuid, tags }),
-      execute: (command: string, _origin?: string, ..._args: any[]) => {
+      startTransaction: () => actor.send({ type: "TYPE.TRANSACTION.START", kitGuid, typeGuid }),
+      finalizeTransaction: () => actor.send({ type: "TYPE.TRANSACTION.COMMIT", kitGuid, typeGuid }),
+      abortTransaction: () => actor.send({ type: "TYPE.TRANSACTION.ABORT", kitGuid, typeGuid }),
+      undo: () => actor.send({ type: "TYPE.TRANSACTION.UNDO", kitGuid, typeGuid }),
+      redo: () => actor.send({ type: "TYPE.TRANSACTION.REDO", kitGuid, typeGuid }),
+      selectAll: () => actor.send({ type: "TYPE.SELECT_ALL", kitGuid, typeGuid }),
+      deselectAll: () => actor.send({ type: "TYPE.DESELECT_ALL", kitGuid, typeGuid }),
+      togglePanel: (panelKey: keyof PanelVisibility) => actor.send({ type: "TYPE.TOGGLE_PANEL", kitGuid, typeGuid, panel: panelKey }),
+      setCamera: (camera: Camera) => actor.send({ type: "TYPE.SET_CAMERA", kitGuid, typeGuid, camera }),
+      focusPort: (portGuid: Guid) => actor.send({ type: "TYPE.FOCUS_PORT", kitGuid, typeGuid, portGuid }),
+      clearFocus: () => actor.send({ type: "TYPE.CLEAR_FOCUS", kitGuid, typeGuid }),
+      setActiveTool: (tool: ToolKind) => actor.send({ type: "TYPE.SET_ACTIVE_TOOL", kitGuid, typeGuid, tool }),
+      selectPort: (portGuid: Guid) => actor.send({ type: "TYPE.SELECT_PORT", kitGuid, typeGuid, portGuid }),
+      deselectPort: (portGuid: Guid) => actor.send({ type: "TYPE.DESELECT_PORT", kitGuid, typeGuid, portGuid }),
+      selectModel: (modelGuid: Guid) => actor.send({ type: "TYPE.SELECT_MODEL", kitGuid, typeGuid, modelGuid }),
+      deselectModel: (modelGuid: Guid) => actor.send({ type: "TYPE.DESELECT_MODEL", kitGuid, typeGuid, modelGuid }),
+      hoverPort: (portGuid: Guid) => actor.send({ type: "TYPE.HOVER_PORT", kitGuid, typeGuid, portGuid }),
+      hoverModel: (modelGuid: Guid) => actor.send({ type: "TYPE.HOVER_MODEL", kitGuid, typeGuid, modelGuid }),
+      clearHover: () => actor.send({ type: "TYPE.CLEAR_HOVER", kitGuid, typeGuid }),
+      setSelectedModel: (modelGuid: Guid) => actor.send({ type: "TYPE.SET_SELECTED_MODEL", kitGuid, typeGuid, modelGuid }),
+      addModelTag: (tag: string) => actor.send({ type: "TYPE.ADD_MODEL_TAG", kitGuid, typeGuid, tag }),
+      removeModelTag: (tag: string) => actor.send({ type: "TYPE.REMOVE_MODEL_TAG", kitGuid, typeGuid, tag }),
+      clearModelTags: () => actor.send({ type: "TYPE.CLEAR_MODEL_TAGS", kitGuid, typeGuid }),
+      setModelTags: (tags: string[]) => actor.send({ type: "TYPE.SET_MODEL_TAGS", kitGuid, typeGuid, tags }),
+      execute: (command: string, ..._args: any[]) => {
         console.warn(`Type app execute not yet migrated for command: ${command}`);
       },
     };
@@ -1182,11 +1183,9 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
     return { modelUrl: null, fileExtension: ext, fileGuid: file.guid, modelGuid: model.guid, selectionReason: reason };
   }, [typeModels, typeConcepts, files, kitDataSource, selectedModelGuid, selectedModelTags]);
 
-  // PERF: Log model selection only once when the model actually changes
   useEffect(() => {
     if (modelGuid && modelGuid !== prevModelGuidRef.current) {
       prevModelGuidRef.current = modelGuid;
-      console.log(`[TypeMesh] Selected ${selectionReason} model:`, modelGuid);
     } else if (!modelGuid && !typeModels) {
       console.warn("[TypeMesh] No models available for type:", typeGuid);
     } else if (!modelGuid && selectionReason === "no-model-found") {
@@ -3333,9 +3332,9 @@ export const config: AppConfig = {
     createPanelDefinition(PanelKind.TOOLBAR, "semio.sketchpad.navbar.panelToggle.toolbar.show"),
     createPanelDefinition(PanelKind.HUD, "semio.sketchpad.navbar.panelToggle.hud.show"),
     createPanelDefinition(PanelKind.STATS, "semio.sketchpad.navbar.panelToggle.stats.show"),
-    createPanelDefinition(PanelKind.SETTINGS, "semio.sketchpad.navbar.panelToggle.settings.show"),
     createPanelDefinition(PanelKind.DETAILS, "semio.sketchpad.navbar.panelToggle.details.show"),
     createPanelDefinition(PanelKind.CHAT, "semio.sketchpad.navbar.panelToggle.chat.show"),
+    createPanelDefinition(PanelKind.SETTINGS, "semio.sketchpad.navbar.panelToggle.settings.show"),
   ],
   matchesPath: (pathParts: string[]) => {
     const isUuidPattern = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);

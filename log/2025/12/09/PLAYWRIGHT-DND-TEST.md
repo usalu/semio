@@ -1,13 +1,15 @@
 ---
-date: '2025-12-09T13:28:21.113Z'
+date: "2025-12-09T13:28:21.113Z"
 slug: PLAYWRIGHT-DND-TEST
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Update Playwright drag-and-drop test for dnd-kit compatibility
 model: claude-opus-4.5
 ---
+
 # Previously
 
 User requested extending the Design E2E test to:
+
 1. Drag and drop pieces to middle and all corners of the screen
 2. Pan and drop again
 3. Validate plane properties (origin.z=0, xAxis=1,0,0, yAxis=0,1,0)
@@ -35,6 +37,7 @@ if (!(event.activatorEvent instanceof PointerEvent)) {
 ```
 
 **Attempts Made**:
+
 1. `page.mouse.move/down/up` - dnd-kit doesn't recognize as drag
 2. `locator.dragTo()` - Same issue
 3. `dispatchEvent(new PointerEvent())` - Fails instanceof check
@@ -52,6 +55,7 @@ Changed approach to validate existing infrastructure:
 4. **Validate Existing Pieces**: Checks plane properties of existing pieces in design
 
 **Test Results**:
+
 - 118 draggable type avatars found
 - 180 pieces in design
 - 1 piece with standard plane (origin.z=0, xAxis=1,0,0, yAxis=0,1,0)

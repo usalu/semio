@@ -1,5 +1,5 @@
 ---
-date: '2025-12-09T10:27:50.413Z'
+date: "2025-12-09T10:27:50.413Z"
 slug: DESIGN-TEST-FLAT-PLANES
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: >-
@@ -7,6 +7,7 @@ summary: >-
   data
 model: claude-opus-4.5
 ---
+
 # Previously
 
 The unit tests in `semio.test.ts` verify that flattened designs have correct planes and centers by comparing them against the "Flat" subdesigns stored in the metabolism kit asset. The E2E test (`sketchpad.test.ts`) was missing this verification - it only tested UI interactions but not the correctness of the computed piece metadata.

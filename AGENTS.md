@@ -250,6 +250,7 @@ Stats provide computed or measured performance data for entire designs using the
 - NEVER add extra new blank lines/newlines inside of code.
 - NEVER add raw text to ui elements. ALWAYS use i18n setups and provide translations for the existing languages.
 - ALWAYS add `[DEBUG] ` prefix to temporary logs so that they can be easily removed later.
+- Keep Sketchpad runtime console output clean: avoid persistent `console.log` usage and rely on warnings/errors plus removable `[DEBUG]` diagnostics only when investigating.
 - NEVER build or run the code.
 - NEVER care about backwards compatibility unless explicitly asked to. Even on schema changes ALWAYS refactor to clean code and introduce breaking changes.
 - NEVER use `type` for naming enums, interfaces, or types. ALWAYS use `kind` instead to avoid confusion with the native `type` concept in Semio. Examples: `ArtifactType` → `ArtifactKind`, `WindowType` → `WindowKind`, etc.
@@ -440,6 +441,7 @@ test("drag type from workbench to canvas", async ({ page }) => {
 **Known Limitation: dnd-kit Drag-and-Drop Testing**
 
 dnd-kit's `PointerSensor` requires native browser `PointerEvent` objects. Playwright's synthetic events (`page.mouse`, `dragTo`, `dispatchEvent`) fail the `instanceof PointerEvent` check. To test drag-and-drop:
+
 - **Validate infrastructure**: Test that draggable elements exist with `aria-roledescription="draggable"`
 - **Validate post-drop state**: Use exposed commands to create pieces directly, then validate plane properties
 - **Future**: Consider adding `KeyboardSensor` to enable keyboard-based drag testing
@@ -1333,6 +1335,7 @@ Javascript code with shared core (@semio/js) that uses storybook and exports a h
 ### Styling
 
 - The ui consists of a three horizontal strips: navbar, canvas and footer. A canvas consists of windows. On top of the canvas are panels which can toggled on and off.
+- Navbar panel toggles always order panels as Details, Chat, then Settings for every app.
 
 ## net
 
@@ -1962,6 +1965,7 @@ Key sync events and helpers:
 - `DESIGN.INIT`/`TYPE.INIT` events populate machine context when a new app instance is created.
 - `DESIGN.SYNC`/`TYPE.SYNC` events carry partial updates from the stores (`Coord`/diagram data is normalized to machine-friendly formats).
 - Hooks such as `useDesignAppYjsToXStateSync` observe Y.js state via `useDesignApp`, translate changes, and send the sync events to keep the machine current.
+- Kit table row expansion updates the machine first via `useKitAppToggleRow` and then calls `semio.kitApp.toggleExpandedRow` so the UI reflects the expansion immediately while Y.js remains authoritative.
 
 The final step removes direct Y.js observers from the stores so that commands dispatch through XState actors, the actors own the Y.js subscriptions, and React hooks simply read from `useSketchpadSelector()`/app-specific selectors. Until that cutover, the architecture relies on the Y.js-to-XState bridge utilities listed above to keep both layers aligned.
 

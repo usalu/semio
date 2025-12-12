@@ -188,6 +188,7 @@ import {
   useSyncSelectionItemMembership,
   useTooltip,
   useType,
+  useOrigin,
 } from "./Sketchpad";
 
 let kitAppModuleCache: any = null;
@@ -1463,18 +1464,15 @@ export class DesignStore extends KitDiffAppStore<DesignAppState, DesignAppDiff, 
     }
 
     if (command === "semio.designApp.startTransaction") {
-      console.group(`[${origin || "unknown"}] Transaction: "${command}"`);
       this.startTransaction();
       return {} as T;
     }
     if (command === "semio.designApp.finalizeTransaction") {
       this.finalizeTransaction();
-      console.groupEnd();
       return {} as T;
     }
     if (command === "semio.designApp.abortTransaction") {
       this.abortTransaction();
-      console.groupEnd();
       return {} as T;
     }
     if (command === "semio.designApp.undo") {
@@ -1486,7 +1484,6 @@ export class DesignStore extends KitDiffAppStore<DesignAppState, DesignAppDiff, 
       return {} as T;
     }
 
-    console.group(`[${origin || "unknown"}] Executing command: "${command}"`);
     const callback = this.commandRegistry.get(command);
     if (!callback) throw new Error(`Command "${command}" not found in design app store`);
 
@@ -1512,7 +1509,6 @@ export class DesignStore extends KitDiffAppStore<DesignAppState, DesignAppDiff, 
       kitStore.change(result.kitDiff);
     }
     this.recordEdit(result);
-    console.groupEnd();
     return result as T;
   }
 
@@ -2113,6 +2109,187 @@ export function useDesignAppRemoveModelTagFromAllTypes(): ActionHookResult<[tagG
     };
   }, [selectedModelTags, setSelectedModelTags, canSetSelectedModelTags]);
   return [action, canSetSelectedModelTags];
+}
+
+export interface TransactionActions {
+  start: () => void;
+  finalize: () => void;
+  abort: () => void;
+}
+
+export function useDesignAppTransaction(): [TransactionActions | undefined, boolean] {
+  const store = useDesignStore() as DesignStore | null;
+  const getOrigin = useOrigin();
+  const canTransact = !!store;
+  const actions = useMemo(() => {
+    if (!store) return undefined;
+    return {
+      start: () => store.execute("semio.designApp.startTransaction", getOrigin()),
+      finalize: () => store.execute("semio.designApp.finalizeTransaction", getOrigin()),
+      abort: () => store.execute("semio.designApp.abortTransaction", getOrigin()),
+    };
+  }, [store, getOrigin]);
+  return [actions, canTransact];
+}
+
+export function useDesignAppUndo(): ActionHookResult<[]> {
+  const store = useDesignStore() as DesignStore | null;
+  const getOrigin = useOrigin();
+  const action = useMemo(() => {
+    if (!store) return undefined;
+    return () => store.execute("semio.designApp.undo", getOrigin());
+  }, [store, getOrigin]);
+  return [action, !!store];
+}
+
+export function useDesignAppRedo(): ActionHookResult<[]> {
+  const store = useDesignStore() as DesignStore | null;
+  const getOrigin = useOrigin();
+  const action = useMemo(() => {
+    if (!store) return undefined;
+    return () => store.execute("semio.designApp.redo", getOrigin());
+  }, [store, getOrigin]);
+  return [action, !!store];
+}
+
+export function useDesignAppDeleteSelected(): ActionHookResult<[]> {
+  const store = useDesignStore() as DesignStore | null;
+  const getOrigin = useOrigin();
+  const action = useMemo(() => {
+    if (!store) return undefined;
+    return () => store.execute("semio.designApp.deleteSelected", getOrigin());
+  }, [store, getOrigin]);
+  return [action, !!store];
+}
+
+export function useDesignAppAddPiece(): ActionHookResult<[piece: Piece]> {
+  const store = useDesignStore() as DesignStore | null;
+  const getOrigin = useOrigin();
+  const action = useMemo(() => {
+    if (!store) return undefined;
+    return (piece: Piece) => store.execute("semio.designApp.addPiece", getOrigin(), piece);
+  }, [store, getOrigin]);
+  return [action, !!store];
+}
+
+export function useDesignAppAddPieces(): ActionHookResult<[pieces: Piece[]]> {
+  const store = useDesignStore() as DesignStore | null;
+  const getOrigin = useOrigin();
+  const action = useMemo(() => {
+    if (!store) return undefined;
+    return (pieces: Piece[]) => store.execute("semio.designApp.addPieces", getOrigin(), pieces);
+  }, [store, getOrigin]);
+  return [action, !!store];
+}
+
+export function useDesignAppRemovePiece(): ActionHookResult<[pieceGuid: Guid]> {
+  const store = useDesignStore() as DesignStore | null;
+  const getOrigin = useOrigin();
+  const action = useMemo(() => {
+    if (!store) return undefined;
+    return (pieceGuid: Guid) => store.execute("semio.designApp.removePiece", getOrigin(), pieceGuid);
+  }, [store, getOrigin]);
+  return [action, !!store];
+}
+
+export function useDesignAppRemovePieces(): ActionHookResult<[pieceGuids: Guid[]]> {
+  const store = useDesignStore() as DesignStore | null;
+  const getOrigin = useOrigin();
+  const action = useMemo(() => {
+    if (!store) return undefined;
+    return (pieceGuids: Guid[]) => store.execute("semio.designApp.removePieces", getOrigin(), pieceGuids);
+  }, [store, getOrigin]);
+  return [action, !!store];
+}
+
+export function useDesignAppUpdatePiece(): ActionHookResult<[pieceGuid: Guid, diff: PieceDiff]> {
+  const store = useDesignStore() as DesignStore | null;
+  const getOrigin = useOrigin();
+  const action = useMemo(() => {
+    if (!store) return undefined;
+    return (pieceGuid: Guid, diff: PieceDiff) => store.execute("semio.designApp.updatePiece", getOrigin(), { piece: pieceGuid, diff });
+  }, [store, getOrigin]);
+  return [action, !!store];
+}
+
+export function useDesignAppUpdatePieces(): ActionHookResult<[updates: { id: Guid; diff: PieceDiff }[]]> {
+  const store = useDesignStore() as DesignStore | null;
+  const getOrigin = useOrigin();
+  const action = useMemo(() => {
+    if (!store) return undefined;
+    return (updates: { id: Guid; diff: PieceDiff }[]) =>
+      store.execute(
+        "semio.designApp.updatePieces",
+        getOrigin(),
+        updates.map((u) => ({ piece: u.id, diff: u.diff })),
+      );
+  }, [store, getOrigin]);
+  return [action, !!store];
+}
+
+export function useDesignAppAddConnection(): ActionHookResult<[connection: Connection]> {
+  const store = useDesignStore() as DesignStore | null;
+  const getOrigin = useOrigin();
+  const action = useMemo(() => {
+    if (!store) return undefined;
+    return (connection: Connection) => store.execute("semio.designApp.addConnection", getOrigin(), connection);
+  }, [store, getOrigin]);
+  return [action, !!store];
+}
+
+export function useDesignAppAddConnections(): ActionHookResult<[connections: Connection[]]> {
+  const store = useDesignStore() as DesignStore | null;
+  const getOrigin = useOrigin();
+  const action = useMemo(() => {
+    if (!store) return undefined;
+    return (connections: Connection[]) => store.execute("semio.designApp.addConnections", getOrigin(), connections);
+  }, [store, getOrigin]);
+  return [action, !!store];
+}
+
+export function useDesignAppRemoveConnection(): ActionHookResult<[connectionGuid: Guid]> {
+  const store = useDesignStore() as DesignStore | null;
+  const getOrigin = useOrigin();
+  const action = useMemo(() => {
+    if (!store) return undefined;
+    return (connectionGuid: Guid) => store.execute("semio.designApp.removeConnection", getOrigin(), connectionGuid);
+  }, [store, getOrigin]);
+  return [action, !!store];
+}
+
+export function useDesignAppRemoveConnections(): ActionHookResult<[connectionGuids: Guid[]]> {
+  const store = useDesignStore() as DesignStore | null;
+  const getOrigin = useOrigin();
+  const action = useMemo(() => {
+    if (!store) return undefined;
+    return (connectionGuids: Guid[]) => store.execute("semio.designApp.removeConnections", getOrigin(), connectionGuids);
+  }, [store, getOrigin]);
+  return [action, !!store];
+}
+
+export function useDesignAppUpdateConnection(): ActionHookResult<[connectionGuid: Guid, diff: ConnectionDiff]> {
+  const store = useDesignStore() as DesignStore | null;
+  const getOrigin = useOrigin();
+  const action = useMemo(() => {
+    if (!store) return undefined;
+    return (connectionGuid: Guid, diff: ConnectionDiff) => store.execute("semio.designApp.updateConnection", getOrigin(), { connection: connectionGuid, diff });
+  }, [store, getOrigin]);
+  return [action, !!store];
+}
+
+export function useDesignAppUpdateConnections(): ActionHookResult<[updates: { id: Guid; diff: ConnectionDiff }[]]> {
+  const store = useDesignStore() as DesignStore | null;
+  const getOrigin = useOrigin();
+  const action = useMemo(() => {
+    if (!store) return undefined;
+    return (updates: { id: Guid; diff: ConnectionDiff }[]) =>
+      store.execute(
+        "semio.designApp.updateConnections",
+        getOrigin(),
+        updates.map((u) => ({ connection: u.id, diff: u.diff })),
+      );
+  }, [store, getOrigin]);
+  return [action, !!store];
 }
 
 //#endregion Action Hooks
@@ -3051,7 +3228,7 @@ export const DesignSection: FC = () => {
 const DesignSectionForm: FC = () => {
   const { t } = useTranslation();
   const tooltip = useTooltip();
-  const { startTransaction, finalizeTransaction, abortTransaction } = useDesignAppCommands();
+  const [transaction] = useDesignAppTransaction();
   const kitCommands = useKitCommands();
   const design = useDesign() as Design;
 
@@ -3068,15 +3245,15 @@ const DesignSectionForm: FC = () => {
   };
 
   const addLocation = () => {
-    startTransaction("semio.sketchpad.app.design.panel.details.location.add");
+    transaction?.start("semio.sketchpad.app.design.panel.details.location.add");
     updateDesignField("semio.sketchpad.app.design.panel.details.location.add", { location: { guid: guid(), longitude: 0, latitude: 0 } });
-    finalizeTransaction("semio.sketchpad.app.design.panel.details.location.add");
+    transaction?.finalize("semio.sketchpad.app.design.panel.details.location.add");
   };
 
   const removeLocation = () => {
-    startTransaction("semio.sketchpad.app.design.panel.details.location.remove");
+    transaction?.start("semio.sketchpad.app.design.panel.details.location.remove");
     updateDesignField("semio.sketchpad.app.design.panel.details.location.remove", { location: undefined });
-    finalizeTransaction("semio.sketchpad.app.design.panel.details.location.remove");
+    transaction?.finalize("semio.sketchpad.app.design.panel.details.location.remove");
   };
 
   return (
@@ -3089,9 +3266,9 @@ const DesignSectionForm: FC = () => {
             value={design.name}
             onLazyChange={(value) => updateDesignField("semio.sketchpad.app.design.panel.details.section.design.name", { name: value })}
             transaction={{
-              start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.design.name"),
-              finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.design.name"),
-              abort: () => abortTransaction?.("semio.sketchpad.app.design.panel.details.section.design.name"),
+              start: () => transaction?.start("semio.sketchpad.app.design.panel.details.section.design.name"),
+              finalize: () => transaction?.finalize("semio.sketchpad.app.design.panel.details.section.design.name"),
+              abort: () => transaction?.abort("semio.sketchpad.app.design.panel.details.section.design.name"),
             }}
             showLabel
           />
@@ -3106,9 +3283,9 @@ const DesignSectionForm: FC = () => {
             placeholderId="semio.sketchpad.app.design.descriptionPlaceholder"
             onLazyChange={(value) => updateDesignField("semio.sketchpad.app.design.panel.details.section.design.description", { description: value })}
             transaction={{
-              start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.design.description"),
-              finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.design.description"),
-              abort: () => abortTransaction?.("semio.sketchpad.app.design.panel.details.section.design.description"),
+              start: () => transaction?.start("semio.sketchpad.app.design.panel.details.section.design.description"),
+              finalize: () => transaction?.finalize("semio.sketchpad.app.design.panel.details.section.design.description"),
+              abort: () => transaction?.abort("semio.sketchpad.app.design.panel.details.section.design.description"),
             }}
             showLabel
           />
@@ -3123,9 +3300,9 @@ const DesignSectionForm: FC = () => {
             placeholderId="semio.sketchpad.app.design.iconPlaceholder"
             onLazyChange={(value) => updateDesignField("semio.sketchpad.app.design.panel.details.section.design.icon", { icon: value })}
             transaction={{
-              start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.design.icon"),
-              finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.design.icon"),
-              abort: () => abortTransaction?.("semio.sketchpad.app.design.panel.details.section.design.icon"),
+              start: () => transaction?.start("semio.sketchpad.app.design.panel.details.section.design.icon"),
+              finalize: () => transaction?.finalize("semio.sketchpad.app.design.panel.details.section.design.icon"),
+              abort: () => transaction?.abort("semio.sketchpad.app.design.panel.details.section.design.icon"),
             }}
             showLabel
           />
@@ -3140,9 +3317,9 @@ const DesignSectionForm: FC = () => {
             placeholderId="semio.sketchpad.app.design.imagePlaceholder"
             onLazyChange={(value) => updateDesignField("semio.sketchpad.app.design.panel.details.section.design.image", { image: value })}
             transaction={{
-              start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.design.image"),
-              finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.design.image"),
-              abort: () => abortTransaction?.("semio.sketchpad.app.design.panel.details.section.design.image"),
+              start: () => transaction?.start("semio.sketchpad.app.design.panel.details.section.design.image"),
+              finalize: () => transaction?.finalize("semio.sketchpad.app.design.panel.details.section.design.image"),
+              abort: () => transaction?.abort("semio.sketchpad.app.design.panel.details.section.design.image"),
             }}
             showLabel
           />
@@ -3157,9 +3334,9 @@ const DesignSectionForm: FC = () => {
             placeholderId="semio.sketchpad.app.design.variantPlaceholder"
             onLazyChange={(value) => updateDesignField("semio.sketchpad.app.design.panel.details.section.design.variant", { variant: value })}
             transaction={{
-              start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.design.variant"),
-              finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.design.variant"),
-              abort: () => abortTransaction?.("semio.sketchpad.app.design.panel.details.section.design.variant"),
+              start: () => transaction?.start("semio.sketchpad.app.design.panel.details.section.design.variant"),
+              finalize: () => transaction?.finalize("semio.sketchpad.app.design.panel.details.section.design.variant"),
+              abort: () => transaction?.abort("semio.sketchpad.app.design.panel.details.section.design.variant"),
             }}
             showLabel
           />
@@ -3174,9 +3351,9 @@ const DesignSectionForm: FC = () => {
             placeholderId="semio.sketchpad.app.design.viewPlaceholder"
             onLazyChange={(value) => updateDesignField("semio.sketchpad.app.design.panel.details.section.design.view", { view: value })}
             transaction={{
-              start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.design.view"),
-              finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.design.view"),
-              abort: () => abortTransaction?.("semio.sketchpad.app.design.panel.details.section.design.view"),
+              start: () => transaction?.start("semio.sketchpad.app.design.panel.details.section.design.view"),
+              finalize: () => transaction?.finalize("semio.sketchpad.app.design.panel.details.section.design.view"),
+              abort: () => transaction?.abort("semio.sketchpad.app.design.panel.details.section.design.view"),
             }}
             showLabel
           />
@@ -3190,9 +3367,9 @@ const DesignSectionForm: FC = () => {
             value={design.unit || ""}
             onLazyChange={(value) => updateDesignField("semio.sketchpad.app.design.panel.details.section.design.unit", { unit: value })}
             transaction={{
-              start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.design.unit"),
-              finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.design.unit"),
-              abort: () => abortTransaction?.("semio.sketchpad.app.design.panel.details.section.design.unit"),
+              start: () => transaction?.start("semio.sketchpad.app.design.panel.details.section.design.unit"),
+              finalize: () => transaction?.finalize("semio.sketchpad.app.design.panel.details.section.design.unit"),
+              abort: () => transaction?.abort("semio.sketchpad.app.design.panel.details.section.design.unit"),
             }}
             showLabel
           />
@@ -3221,9 +3398,9 @@ const DesignSectionForm: FC = () => {
                   })
                 }
                 transaction={{
-                  start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.location.longitude"),
-                  finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.location.longitude"),
-                  abort: () => abortTransaction?.("semio.sketchpad.app.design.panel.details.section.location.longitude"),
+                  start: () => transaction?.start("semio.sketchpad.app.design.panel.details.section.location.longitude"),
+                  finalize: () => transaction?.finalize("semio.sketchpad.app.design.panel.details.section.location.longitude"),
+                  abort: () => transaction?.abort("semio.sketchpad.app.design.panel.details.section.location.longitude"),
                 }}
                 step={0.000001}
               />
@@ -3241,9 +3418,9 @@ const DesignSectionForm: FC = () => {
                   })
                 }
                 transaction={{
-                  start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.location.latitude"),
-                  finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.location.latitude"),
-                  abort: () => abortTransaction?.("semio.sketchpad.app.design.panel.details.section.location.latitude"),
+                  start: () => transaction?.start("semio.sketchpad.app.design.panel.details.section.location.latitude"),
+                  finalize: () => transaction?.finalize("semio.sketchpad.app.design.panel.details.section.location.latitude"),
+                  abort: () => transaction?.abort("semio.sketchpad.app.design.panel.details.section.location.latitude"),
                 }}
                 step={0.000001}
               />
@@ -3269,11 +3446,11 @@ const DesignSectionForm: FC = () => {
             icon: <AddIcon />,
             onClick: () => {
               const origin = "semio.sketchpad.app.design.panel.details.authors.add";
-              startTransaction(origin);
+              transaction?.start(origin);
               updateDesignField(origin, {
                 authors: [...(design.authors || []), { name: "", email: "" }],
               });
-              finalizeTransaction(origin);
+              transaction?.finalize(origin);
             },
             id: "semio.sketchpad.common.add",
           },
@@ -3288,11 +3465,11 @@ const DesignSectionForm: FC = () => {
             }))}
             onReorder={(oldIndex, newIndex) => {
               const origin = "semio.sketchpad.app.design.panel.details.authors.reorder";
-              startTransaction(origin);
+              transaction?.start(origin);
               updateDesignField(origin, {
                 authors: arrayMove(design.authors!, oldIndex, newIndex),
               });
-              finalizeTransaction(origin);
+              transaction?.finalize(origin);
             }}
           >
             {(author, index) => (
@@ -3307,11 +3484,11 @@ const DesignSectionForm: FC = () => {
                     icon: <RemoveIcon />,
                     onClick: () => {
                       const origin = "semio.sketchpad.app.design.panel.details.authors.remove";
-                      startTransaction(origin);
+                      transaction?.start(origin);
                       updateDesignField(origin, {
                         authors: design.authors?.filter((_: any, i: number) => i !== index),
                       });
-                      finalizeTransaction(origin);
+                      transaction?.finalize(origin);
                     },
                     id: "semio.sketchpad.common.remove",
                   },
@@ -3330,8 +3507,8 @@ const DesignSectionForm: FC = () => {
                         };
                         updateDesignField("semio.sketchpad.app.design.panel.details.section.authors.name", { authors: updatedAuthors });
                       }}
-                      onFocus={() => startTransaction?.("semio.sketchpad.app.design.panel.details.section.authors.name")}
-                      onBlur={() => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.authors.name")}
+                      onFocus={() => transaction?.start("semio.sketchpad.app.design.panel.details.section.authors.name")}
+                      onBlur={() => transaction?.finalize("semio.sketchpad.app.design.panel.details.section.authors.name")}
                       showLabel
                     />
                   </TreeContent>
@@ -3349,8 +3526,8 @@ const DesignSectionForm: FC = () => {
                         };
                         updateDesignField("semio.sketchpad.app.design.panel.details.section.authors.email", { authors: updatedAuthors });
                       }}
-                      onFocus={() => startTransaction?.("semio.sketchpad.app.design.panel.details.section.authors.email")}
-                      onBlur={() => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.authors.email")}
+                      onFocus={() => transaction?.start("semio.sketchpad.app.design.panel.details.section.authors.email")}
+                      onBlur={() => transaction?.finalize("semio.sketchpad.app.design.panel.details.section.authors.email")}
                       showLabel
                     />
                   </TreeContent>
@@ -3367,11 +3544,11 @@ const DesignSectionForm: FC = () => {
             icon: <AddIcon />,
             onClick: () => {
               const origin = "semio.sketchpad.app.design.panel.details.attributes.add";
-              startTransaction(origin);
+              transaction?.start(origin);
               updateDesignField(origin, {
                 attributes: [...(design.attributes || []), { key: "" }],
               });
-              finalizeTransaction(origin);
+              transaction?.finalize(origin);
             },
             id: "semio.sketchpad.common.add",
           },
@@ -3386,11 +3563,11 @@ const DesignSectionForm: FC = () => {
             }))}
             onReorder={(oldIndex, newIndex) => {
               const origin = "semio.sketchpad.app.design.panel.details.attributes.reorder";
-              startTransaction(origin);
+              transaction?.start(origin);
               updateDesignField(origin, {
                 attributes: arrayMove(design.attributes!, oldIndex, newIndex),
               });
-              finalizeTransaction(origin);
+              transaction?.finalize(origin);
             }}
           >
             {(attribute, index) => (
@@ -3405,11 +3582,11 @@ const DesignSectionForm: FC = () => {
                     icon: <RemoveIcon />,
                     onClick: () => {
                       const origin = "semio.sketchpad.app.design.panel.details.attributes.remove";
-                      startTransaction(origin);
+                      transaction?.start(origin);
                       updateDesignField(origin, {
                         attributes: design.attributes?.filter((_: any, i: number) => i !== index),
                       });
-                      finalizeTransaction(origin);
+                      transaction?.finalize(origin);
                     },
                     id: "semio.sketchpad.common.remove",
                   },
@@ -3428,8 +3605,8 @@ const DesignSectionForm: FC = () => {
                         };
                         updateDesignField("semio.sketchpad.app.design.panel.details.section.attributes.name", { attributes: updatedAttributes });
                       }}
-                      onFocus={() => startTransaction?.("semio.sketchpad.app.design.panel.details.section.attributes.name")}
-                      onBlur={() => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.attributes.name")}
+                      onFocus={() => transaction?.start("semio.sketchpad.app.design.panel.details.section.attributes.name")}
+                      onBlur={() => transaction?.finalize("semio.sketchpad.app.design.panel.details.section.attributes.name")}
                       showLabel
                     />
                   </TreeContent>
@@ -3448,8 +3625,8 @@ const DesignSectionForm: FC = () => {
                         };
                         updateDesignField("semio.sketchpad.app.design.panel.details.section.attributes.value", { attributes: updatedAttributes });
                       }}
-                      onFocus={() => startTransaction?.("semio.sketchpad.app.design.panel.details.section.attributes.value")}
-                      onBlur={() => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.attributes.value")}
+                      onFocus={() => transaction?.start("semio.sketchpad.app.design.panel.details.section.attributes.value")}
+                      onBlur={() => transaction?.finalize("semio.sketchpad.app.design.panel.details.section.attributes.value")}
                       showLabel
                     />
                   </TreeContent>
@@ -3468,8 +3645,8 @@ const DesignSectionForm: FC = () => {
                         };
                         updateDesignField("semio.sketchpad.app.design.panel.details.section.attributes.unit", { attributes: updatedAttributes });
                       }}
-                      onFocus={() => startTransaction?.("semio.sketchpad.app.design.panel.details.section.attributes.unit")}
-                      onBlur={() => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.attributes.unit")}
+                      onFocus={() => transaction?.start("semio.sketchpad.app.design.panel.details.section.attributes.unit")}
+                      onBlur={() => transaction?.finalize("semio.sketchpad.app.design.panel.details.section.attributes.unit")}
                       showLabel
                     />
                   </TreeContent>
@@ -3488,8 +3665,8 @@ const DesignSectionForm: FC = () => {
                         };
                         updateDesignField("semio.sketchpad.app.design.panel.details.section.attributes.definition", { attributes: updatedAttributes });
                       }}
-                      onFocus={() => startTransaction?.("semio.sketchpad.app.design.panel.details.section.attributes.definition")}
-                      onBlur={() => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.attributes.definition")}
+                      onFocus={() => transaction?.start("semio.sketchpad.app.design.panel.details.section.attributes.definition")}
+                      onBlur={() => transaction?.finalize("semio.sketchpad.app.design.panel.details.section.attributes.definition")}
                       showLabel
                     />
                   </TreeContent>
@@ -3545,7 +3722,9 @@ export const PiecesSection: FC = () => {
 
 const PiecesSectionForm: FC = () => {
   const { t } = useTranslation();
-  const { startTransaction, finalizeTransaction, abortTransaction, updatePiece, updatePieces } = useDesignAppCommands();
+  const [transaction] = useDesignAppTransaction();
+  const [updatePiece] = useDesignAppUpdatePiece();
+  const [updatePieces] = useDesignAppUpdatePieces();
   const design = useDesign() as Design;
   const kit = useKit() as Kit;
   const metadata = new Map();
@@ -3913,9 +4092,9 @@ const PiecesSectionForm: FC = () => {
                 value={isSingle && piece ? piece.center?.u : commonCenterX}
                 onChange={handleCenterXChange}
                 transaction={{
-                  start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.piece.center.x"),
-                  finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.piece.center.x"),
-                  abort: () => abortTransaction?.("semio.sketchpad.app.design.panel.details.section.piece.center.x"),
+                  start: () => transaction?.start("semio.sketchpad.app.design.panel.details.section.piece.center.x"),
+                  finalize: () => transaction?.finalize("semio.sketchpad.app.design.panel.details.section.piece.center.x"),
+                  abort: () => transaction?.abort("semio.sketchpad.app.design.panel.details.section.piece.center.x"),
                 }}
                 step={0.1}
               />
@@ -3928,9 +4107,9 @@ const PiecesSectionForm: FC = () => {
                 value={isSingle && piece ? piece.center?.v : commonCenterY}
                 onChange={handleCenterYChange}
                 transaction={{
-                  start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.piece.center.y"),
-                  finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.piece.center.y"),
-                  abort: () => abortTransaction?.("semio.sketchpad.app.design.panel.details.section.piece.center.y"),
+                  start: () => transaction?.start("semio.sketchpad.app.design.panel.details.section.piece.center.y"),
+                  finalize: () => transaction?.finalize("semio.sketchpad.app.design.panel.details.section.piece.center.y"),
+                  abort: () => transaction?.abort("semio.sketchpad.app.design.panel.details.section.piece.center.y"),
                 }}
                 step={0.1}
               />
@@ -3961,9 +4140,9 @@ const PiecesSectionForm: FC = () => {
                   value={isSingle && piece ? piece.plane?.origin.x : commonPlaneOriginX}
                   onChange={handlePlaneOriginXChange}
                   transaction={{
-                    start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.piece.plane.origin.x"),
-                    finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.piece.plane.origin.x"),
-                    abort: () => abortTransaction?.("semio.sketchpad.app.design.panel.details.section.piece.plane.origin.x"),
+                    start: () => transaction?.start("semio.sketchpad.app.design.panel.details.section.piece.plane.origin.x"),
+                    finalize: () => transaction?.finalize("semio.sketchpad.app.design.panel.details.section.piece.plane.origin.x"),
+                    abort: () => transaction?.abort("semio.sketchpad.app.design.panel.details.section.piece.plane.origin.x"),
                   }}
                   step={0.1}
                 />
@@ -3976,9 +4155,9 @@ const PiecesSectionForm: FC = () => {
                   value={isSingle && piece ? piece.plane?.origin.y : commonPlaneOriginY}
                   onChange={handlePlaneOriginYChange}
                   transaction={{
-                    start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.piece.plane.origin.y"),
-                    finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.piece.plane.origin.y"),
-                    abort: () => abortTransaction?.("semio.sketchpad.app.design.panel.details.section.piece.plane.origin.y"),
+                    start: () => transaction?.start("semio.sketchpad.app.design.panel.details.section.piece.plane.origin.y"),
+                    finalize: () => transaction?.finalize("semio.sketchpad.app.design.panel.details.section.piece.plane.origin.y"),
+                    abort: () => transaction?.abort("semio.sketchpad.app.design.panel.details.section.piece.plane.origin.y"),
                   }}
                   step={0.1}
                 />
@@ -3991,9 +4170,9 @@ const PiecesSectionForm: FC = () => {
                   value={isSingle && piece ? piece.plane?.origin.z : commonPlaneOriginZ}
                   onChange={handlePlaneOriginZChange}
                   transaction={{
-                    start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.piece.plane.origin.z"),
-                    finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.piece.plane.origin.z"),
-                    abort: () => abortTransaction?.("semio.sketchpad.app.design.panel.details.section.piece.plane.origin.z"),
+                    start: () => transaction?.start("semio.sketchpad.app.design.panel.details.section.piece.plane.origin.z"),
+                    finalize: () => transaction?.finalize("semio.sketchpad.app.design.panel.details.section.piece.plane.origin.z"),
+                    abort: () => transaction?.abort("semio.sketchpad.app.design.panel.details.section.piece.plane.origin.z"),
                   }}
                   step={0.1}
                 />
@@ -4008,9 +4187,9 @@ const PiecesSectionForm: FC = () => {
                   value={isSingle && piece ? piece.plane?.xAxis.x : commonPlaneXAxisX}
                   onChange={handlePlaneXAxisXChange}
                   transaction={{
-                    start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.piece.plane.xaxis.x"),
-                    finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.piece.plane.xaxis.x"),
-                    abort: () => abortTransaction?.("semio.sketchpad.app.design.panel.details.section.piece.plane.xaxis.x"),
+                    start: () => transaction?.start("semio.sketchpad.app.design.panel.details.section.piece.plane.xaxis.x"),
+                    finalize: () => transaction?.finalize("semio.sketchpad.app.design.panel.details.section.piece.plane.xaxis.x"),
+                    abort: () => transaction?.abort("semio.sketchpad.app.design.panel.details.section.piece.plane.xaxis.x"),
                   }}
                   step={0.1}
                 />
@@ -4023,9 +4202,9 @@ const PiecesSectionForm: FC = () => {
                   value={isSingle && piece ? piece.plane?.xAxis.y : commonPlaneXAxisY}
                   onChange={handlePlaneXAxisYChange}
                   transaction={{
-                    start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.piece.plane.xaxis.y"),
-                    finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.piece.plane.xaxis.y"),
-                    abort: () => abortTransaction?.("semio.sketchpad.app.design.panel.details.section.piece.plane.xaxis.y"),
+                    start: () => transaction?.start("semio.sketchpad.app.design.panel.details.section.piece.plane.xaxis.y"),
+                    finalize: () => transaction?.finalize("semio.sketchpad.app.design.panel.details.section.piece.plane.xaxis.y"),
+                    abort: () => transaction?.abort("semio.sketchpad.app.design.panel.details.section.piece.plane.xaxis.y"),
                   }}
                   step={0.1}
                 />
@@ -4038,9 +4217,9 @@ const PiecesSectionForm: FC = () => {
                   value={isSingle && piece ? piece.plane?.xAxis.z : commonPlaneXAxisZ}
                   onChange={handlePlaneXAxisZChange}
                   transaction={{
-                    start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.piece.plane.xaxis.z"),
-                    finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.piece.plane.xaxis.z"),
-                    abort: () => abortTransaction?.("semio.sketchpad.app.design.panel.details.section.piece.plane.xaxis.z"),
+                    start: () => transaction?.start("semio.sketchpad.app.design.panel.details.section.piece.plane.xaxis.z"),
+                    finalize: () => transaction?.finalize("semio.sketchpad.app.design.panel.details.section.piece.plane.xaxis.z"),
+                    abort: () => transaction?.abort("semio.sketchpad.app.design.panel.details.section.piece.plane.xaxis.z"),
                   }}
                   step={0.1}
                 />
@@ -4055,9 +4234,9 @@ const PiecesSectionForm: FC = () => {
                   value={isSingle && piece ? piece.plane?.yAxis.x : commonPlaneYAxisX}
                   onChange={handlePlaneYAxisXChange}
                   transaction={{
-                    start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.piece.plane.yaxis.x"),
-                    finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.piece.plane.yaxis.x"),
-                    abort: () => abortTransaction?.("semio.sketchpad.app.design.panel.details.section.piece.plane.yaxis.x"),
+                    start: () => transaction?.start("semio.sketchpad.app.design.panel.details.section.piece.plane.yaxis.x"),
+                    finalize: () => transaction?.finalize("semio.sketchpad.app.design.panel.details.section.piece.plane.yaxis.x"),
+                    abort: () => transaction?.abort("semio.sketchpad.app.design.panel.details.section.piece.plane.yaxis.x"),
                   }}
                   step={0.1}
                 />
@@ -4070,9 +4249,9 @@ const PiecesSectionForm: FC = () => {
                   value={isSingle && piece ? piece.plane?.yAxis.y : commonPlaneYAxisY}
                   onChange={handlePlaneYAxisYChange}
                   transaction={{
-                    start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.piece.plane.yaxis.y"),
-                    finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.piece.plane.yaxis.y"),
-                    abort: () => abortTransaction?.("semio.sketchpad.app.design.panel.details.section.piece.plane.yaxis.y"),
+                    start: () => transaction?.start("semio.sketchpad.app.design.panel.details.section.piece.plane.yaxis.y"),
+                    finalize: () => transaction?.finalize("semio.sketchpad.app.design.panel.details.section.piece.plane.yaxis.y"),
+                    abort: () => transaction?.abort("semio.sketchpad.app.design.panel.details.section.piece.plane.yaxis.y"),
                   }}
                   step={0.1}
                 />
@@ -4085,9 +4264,9 @@ const PiecesSectionForm: FC = () => {
                   value={isSingle && piece ? piece.plane?.yAxis.z : commonPlaneYAxisZ}
                   onChange={handlePlaneYAxisZChange}
                   transaction={{
-                    start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.piece.plane.yaxis.z"),
-                    finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.piece.plane.yaxis.z"),
-                    abort: () => abortTransaction?.("semio.sketchpad.app.design.panel.details.section.piece.plane.yaxis.z"),
+                    start: () => transaction?.start("semio.sketchpad.app.design.panel.details.section.piece.plane.yaxis.z"),
+                    finalize: () => transaction?.finalize("semio.sketchpad.app.design.panel.details.section.piece.plane.yaxis.z"),
+                    abort: () => transaction?.abort("semio.sketchpad.app.design.panel.details.section.piece.plane.yaxis.z"),
                   }}
                   step={0.1}
                 />
@@ -4167,7 +4346,7 @@ const SingleConnectionFields: FC = () => {
   const [tilt, setTilt] = useConnectionTilt();
   const [u, setU] = useConnectionU();
   const [v, setV] = useConnectionV();
-  const { startTransaction, finalizeTransaction, abortTransaction } = useDesignAppCommands();
+  const [transaction] = useDesignAppTransaction();
   return (
     <>
       <TreeItem>
@@ -4177,9 +4356,9 @@ const SingleConnectionFields: FC = () => {
             value={gap}
             onChange={setGap!}
             transaction={{
-              start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.gap"),
-              finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.gap"),
-              abort: () => abortTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.gap"),
+              start: () => transaction?.start("semio.sketchpad.app.design.panel.details.section.connection.gap"),
+              finalize: () => transaction?.finalize("semio.sketchpad.app.design.panel.details.section.connection.gap"),
+              abort: () => transaction?.abort("semio.sketchpad.app.design.panel.details.section.connection.gap"),
             }}
             step={0.1}
           />
@@ -4192,9 +4371,9 @@ const SingleConnectionFields: FC = () => {
             value={shift}
             onChange={setShift!}
             transaction={{
-              start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.shift"),
-              finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.shift"),
-              abort: () => abortTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.shift"),
+              start: () => transaction?.start("semio.sketchpad.app.design.panel.details.section.connection.shift"),
+              finalize: () => transaction?.finalize("semio.sketchpad.app.design.panel.details.section.connection.shift"),
+              abort: () => transaction?.abort("semio.sketchpad.app.design.panel.details.section.connection.shift"),
             }}
             step={0.1}
           />
@@ -4207,9 +4386,9 @@ const SingleConnectionFields: FC = () => {
             value={rise}
             onChange={setRise!}
             transaction={{
-              start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.rise"),
-              finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.rise"),
-              abort: () => abortTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.rise"),
+              start: () => transaction?.start("semio.sketchpad.app.design.panel.details.section.connection.rise"),
+              finalize: () => transaction?.finalize("semio.sketchpad.app.design.panel.details.section.connection.rise"),
+              abort: () => transaction?.abort("semio.sketchpad.app.design.panel.details.section.connection.rise"),
             }}
             step={0.1}
           />
@@ -4224,9 +4403,9 @@ const SingleConnectionFields: FC = () => {
               value={[rotation]}
               onValueChange={([value]) => setRotation!(value)}
               transaction={{
-                start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.rotation"),
-                finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.rotation"),
-                abort: () => abortTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.rotation"),
+                start: () => transaction?.start("semio.sketchpad.app.design.panel.details.section.connection.rotation"),
+                finalize: () => transaction?.finalize("semio.sketchpad.app.design.panel.details.section.connection.rotation"),
+                abort: () => transaction?.abort("semio.sketchpad.app.design.panel.details.section.connection.rotation"),
               }}
               min={-180}
               max={180}
@@ -4244,9 +4423,9 @@ const SingleConnectionFields: FC = () => {
               value={[turn]}
               onValueChange={([value]) => setTurn!(value)}
               transaction={{
-                start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.turn"),
-                finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.turn"),
-                abort: () => abortTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.turn"),
+                start: () => transaction?.start("semio.sketchpad.app.design.panel.details.section.connection.turn"),
+                finalize: () => transaction?.finalize("semio.sketchpad.app.design.panel.details.section.connection.turn"),
+                abort: () => transaction?.abort("semio.sketchpad.app.design.panel.details.section.connection.turn"),
               }}
               min={-180}
               max={180}
@@ -4264,9 +4443,9 @@ const SingleConnectionFields: FC = () => {
               value={[tilt]}
               onValueChange={([value]) => setTilt!(value)}
               transaction={{
-                start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.tilt"),
-                finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.tilt"),
-                abort: () => abortTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.tilt"),
+                start: () => transaction?.start("semio.sketchpad.app.design.panel.details.section.connection.tilt"),
+                finalize: () => transaction?.finalize("semio.sketchpad.app.design.panel.details.section.connection.tilt"),
+                abort: () => transaction?.abort("semio.sketchpad.app.design.panel.details.section.connection.tilt"),
               }}
               min={-180}
               max={180}
@@ -4282,9 +4461,9 @@ const SingleConnectionFields: FC = () => {
             value={u}
             onChange={setU!}
             transaction={{
-              start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.u"),
-              finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.u"),
-              abort: () => abortTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.u"),
+              start: () => transaction?.start("semio.sketchpad.app.design.panel.details.section.connection.u"),
+              finalize: () => transaction?.finalize("semio.sketchpad.app.design.panel.details.section.connection.u"),
+              abort: () => transaction?.abort("semio.sketchpad.app.design.panel.details.section.connection.u"),
             }}
             step={0.1}
           />
@@ -4297,9 +4476,9 @@ const SingleConnectionFields: FC = () => {
             value={v}
             onChange={setV!}
             transaction={{
-              start: () => startTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.v"),
-              finalize: () => finalizeTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.v"),
-              abort: () => abortTransaction?.("semio.sketchpad.app.design.panel.details.section.connection.v"),
+              start: () => transaction?.start("semio.sketchpad.app.design.panel.details.section.connection.v"),
+              finalize: () => transaction?.finalize("semio.sketchpad.app.design.panel.details.section.connection.v"),
+              abort: () => transaction?.abort("semio.sketchpad.app.design.panel.details.section.connection.v"),
             }}
             step={0.1}
           />
@@ -4950,7 +5129,7 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
     piece: { guid, attributes },
     externalConnections,
   } = data as DesignNodeProps & { diffStatus: DiffStatus };
-  const commands = useDesignAppCommands();
+  const [addConnectionAction] = useDesignAppAddConnection();
   const isSelected = useDesignAppIsPieceSelected(undefined, guid);
   const selectedPort = useDesignAppSelectedPort();
   const diff = (attributes?.find((q) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
@@ -4973,9 +5152,9 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
 
   const addConnection = useCallback(
     (connection: SemioConnection) => {
-      commands.addConnection("semio.sketchpad.app.design.canvas.diagram.designNode", connection);
+      addConnectionAction?.(connection);
     },
-    [commands],
+    [addConnectionAction],
   );
 
   const handleMouseEnter = useCallback(
@@ -5625,7 +5804,12 @@ interface DesignDiagramProps {
 }
 
 const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
-  const { startTransaction, finalizeTransaction, abortTransaction, execute, addConnection, addConnections, updatePieces, updateConnections, addPiece } = useDesignAppCommands();
+  const [transaction] = useDesignAppTransaction();
+  const [addPiece] = useDesignAppAddPiece();
+  const [updatePieces] = useDesignAppUpdatePieces();
+  const [addConnection] = useDesignAppAddConnection();
+  const [addConnections] = useDesignAppAddConnections();
+  const [updateConnections] = useDesignAppUpdateConnections();
 
   const [deselectAll] = useDesignAppDeselectAll();
   const [selectPiece] = useDesignAppSelectPiece();
@@ -5884,15 +6068,15 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       if (dragData.type === "type" && dragData.typeGuid) {
         const droppedType = kitTypes?.find((t) => t.guid === dragData.typeGuid);
         if (!droppedType) return;
-        startTransaction("semio.sketchpad.app.design.dragEnd.type");
+        transaction?.start("semio.sketchpad.app.design.dragEnd.type");
         const pieceGuid = guid();
         const piece = { guid: pieceGuid, id_: pieceGuid, type: { guid: droppedType.guid }, center: { u: centerU, v: centerV } };
-        addPiece("semio.sketchpad.app.design.dragEnd.type", piece);
-        finalizeTransaction("semio.sketchpad.app.design.dragEnd.type");
+        addPiece?.("semio.sketchpad.app.design.dragEnd.type", piece);
+        transaction?.finalize("semio.sketchpad.app.design.dragEnd.type");
       } else if (dragData.type === "design" && dragData.designGuid) {
         const droppedDesign = kitDesigns?.find((d) => d.guid === dragData.designGuid);
         if (!droppedDesign) return;
-        startTransaction("semio.sketchpad.app.design.dragEnd.design");
+        transaction?.start("semio.sketchpad.app.design.dragEnd.design");
         const pieceGuid = guid();
         const piece = {
           guid: pieceGuid,
@@ -5900,13 +6084,13 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
           design: { guid: droppedDesign.guid },
           center: { u: centerU, v: centerV },
         };
-        addPiece("semio.sketchpad.app.design.dragEnd.design", piece);
-        finalizeTransaction("semio.sketchpad.app.design.dragEnd.design");
+        addPiece?.("semio.sketchpad.app.design.dragEnd.design", piece);
+        transaction?.finalize("semio.sketchpad.app.design.dragEnd.design");
       }
       setActiveDraggedType(null);
       setActiveDraggedDesign(null);
     },
-    [reactFlowInstanceRef, kitTypes, kitDesigns, startTransaction, addPiece, finalizeTransaction, setActiveDraggedType, setActiveDraggedDesign, diagramId],
+    [reactFlowInstanceRef, kitTypes, kitDesigns, transaction, addPiece, setActiveDraggedType, setActiveDraggedDesign, diagramId],
   );
 
   useEffect(() => {
@@ -5921,7 +6105,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape" && isDraggingRef.current) {
-        abortTransaction("semio.sketchpad.app.design.canvas.diagram.handleEscape");
+        transaction?.abort("semio.sketchpad.app.design.canvas.diagram.handleEscape");
         isDraggingRef.current = false;
         dragPositionRef.current = null;
         pendingPieceUpdatesRef.current = [];
@@ -5934,7 +6118,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
-  }, [abortTransaction]);
+  }, [transaction]);
 
   useEffect(() => {
     if (!viewportRestoredRef.current && savedDiagramCenter && savedDiagramScale !== undefined && reactFlowInstanceRef.current) {
@@ -6752,11 +6936,11 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         pendingSelectionRef.current = null;
       }
 
-      startTransaction("semio.sketchpad.app.design.canvas.diagram.onNodeDragStop");
+      transaction?.start("semio.sketchpad.app.design.canvas.diagram.onNodeDragStop");
 
       const pendingUpdates = pendingPieceUpdatesRef.current;
       if (pendingUpdates && pendingUpdates.length > 0) {
-        updatePieces("semio.sketchpad.app.design.canvas.diagram.onNodeDragStop", pendingUpdates);
+        updatePieces?.("semio.sketchpad.app.design.canvas.diagram.onNodeDragStop", pendingUpdates);
       } else if (node && selectionRef.current?.pieces?.length) {
         const updatedPieces: Array<{ id: string; diff: any }> = [];
         for (const pieceId of selectionRef.current!.pieces!) {
@@ -6773,18 +6957,18 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
           }
         }
         if (updatedPieces.length > 0) {
-          updatePieces("semio.sketchpad.app.design.canvas.diagram.onNodeDragStop", updatedPieces);
+          updatePieces?.("semio.sketchpad.app.design.canvas.diagram.onNodeDragStop", updatedPieces);
         }
       }
 
-      finalizeTransaction("semio.sketchpad.app.design.canvas.diagram.onNodeDragStop");
+      transaction?.finalize("semio.sketchpad.app.design.canvas.diagram.onNodeDragStop");
 
       isDraggingRef.current = false;
       isDraggingNode = false;
       dragPositionRef.current = null;
       pendingPieceUpdatesRef.current = [];
     },
-    [finalizeTransaction, updatePieces, nodes, startTransaction, selectPiece, addPieceToSelection, removePieceFromSelection],
+    [transaction, updatePieces, nodes, selectPiece, addPieceToSelection, removePieceFromSelection],
   );
 
   const onConnect = useCallback(
@@ -6972,7 +7156,7 @@ const GLTFMesh: FC<{ url: string }> = ({ url }) => {
       color: plasterColor,
       flatShading: false,
       metalness: 0,
-      roughness: 0.8
+      roughness: 0.8,
     });
     const edgeMaterial = new THREE.LineBasicMaterial({ color: plasterEdgeColor });
 
@@ -7005,7 +7189,7 @@ const FBXMesh: FC<{ url: string }> = ({ url }) => {
       color: plasterColor,
       flatShading: false,
       metalness: 0,
-      roughness: 0.8
+      roughness: 0.8,
     });
     const edgeMaterial = new THREE.LineBasicMaterial({ color: plasterEdgeColor });
 
@@ -7038,7 +7222,7 @@ const OBJMesh: FC<{ url: string }> = ({ url }) => {
       color: plasterColor,
       flatShading: false,
       metalness: 0,
-      roughness: 0.8
+      roughness: 0.8,
     });
     const edgeMaterial = new THREE.LineBasicMaterial({ color: plasterEdgeColor });
 
@@ -7089,16 +7273,13 @@ const PieceMesh: FC = () => {
     let model: Model | undefined;
     if (tagsForType.length > 0) {
       model = selectBestModel(type.models, tagsForType);
-      console.log("[PieceMesh] Selected model using manual tags:", model?.guid, "tags:", tagsForType);
     } else {
       const conceptGuids = type.concepts?.map((c) => c.guid) ?? [];
       if (conceptGuids.length > 0) {
         model = findModel(type.models, conceptGuids);
-        console.log("[PieceMesh] Selected model using type concepts:", model?.guid, "concepts:", conceptGuids);
       } else {
         const defaultRep = type.models.find((r) => !r.tags || r.tags.length === 0);
         model = defaultRep ?? type.models[0];
-        console.log("[PieceMesh] Selected default/first model:", model?.guid);
       }
     }
     if (!model) {
@@ -7117,7 +7298,6 @@ const PieceMesh: FC = () => {
       console.warn("[PieceMesh] File URL not available:", file.guid, file.name);
       return { modelUrl: null, fileExtension: ext, fileGuid: file.guid };
     }
-    console.log("[PieceMesh] Model ready to load:", model.guid, "file:", file.name);
     return { modelUrl: url, fileExtension: ext, fileGuid: file.guid };
   }, [type, files, kitStore, selectedModelTags]);
 
@@ -7338,14 +7518,14 @@ const ModelPiece: FC<ModelPieceProps> = () => {
 };
 
 const ModelDesign: FC = () => {
-  const commands = useDesignAppCommands();
+  const [transaction] = useDesignAppTransaction();
+  const [updatePiece] = useDesignAppUpdatePiece();
   const [selection] = useDesignAppSelection();
   const [others] = useDesignAppOthers();
   const design = useDesign();
   const flatDesign = design as Design;
 
   const [selectPieces] = useDesignAppSelectPieces();
-  const { startTransaction, finalizeTransaction, updatePiece } = commands;
 
   const onChange = useCallback(
     (selected: THREE.Object3D[]) => {
@@ -7374,7 +7554,7 @@ const ModelDesign: FC = () => {
   const handleMultiPlaneUpdate = useCallback(
     (updates: Array<{ modelGuid: string; newPlane: Plane }>) => {
       updates.forEach(({ modelGuid, newPlane }) => {
-        updatePiece("semio.sketchpad.app.design.canvas.scene.modelDesign.updatePiece", modelGuid, { plane: newPlane });
+        updatePiece?.("semio.sketchpad.app.design.canvas.scene.modelDesign.updatePiece", modelGuid, { plane: newPlane });
       });
     },
     [updatePiece],
@@ -7399,7 +7579,8 @@ const ModelDesign: FC = () => {
 };
 
 const DesignAppScene: FC = () => {
-  const { addPiece, startTransaction, finalizeTransaction } = useDesignAppCommands();
+  const [transaction] = useDesignAppTransaction();
+  const [addPiece] = useDesignAppAddPiece();
   const [deselectAll] = useDesignAppDeselectAll();
   const [toggleAccesslFullscreen] = useDesignAppToggleAccesslFullscreen();
   const [, setCamera] = useDesignAppCamera();
@@ -7463,24 +7644,24 @@ const DesignAppScene: FC = () => {
       if (dragData.type === "type" && dragData.typeGuid) {
         const droppedType = sceneTypes?.find((t) => t.guid === dragData.typeGuid);
         if (!droppedType) return;
-        startTransaction("semio.sketchpad.app.design.scene.dragEnd.type");
+        transaction?.start("semio.sketchpad.app.design.scene.dragEnd.type");
         const pieceGuid = guid();
         const piece = { guid: pieceGuid, id_: pieceGuid, type: { guid: droppedType.guid }, plane, center };
-        addPiece("semio.sketchpad.app.design.scene.dragEnd.type", piece);
-        finalizeTransaction("semio.sketchpad.app.design.scene.dragEnd.type");
+        addPiece?.("semio.sketchpad.app.design.scene.dragEnd.type", piece);
+        transaction?.finalize("semio.sketchpad.app.design.scene.dragEnd.type");
       } else if (dragData.type === "design" && dragData.designGuid) {
         const droppedDesign = sceneDesigns?.find((d) => d.guid === dragData.designGuid);
         if (!droppedDesign) return;
-        startTransaction("semio.sketchpad.app.design.scene.dragEnd.design");
+        transaction?.start("semio.sketchpad.app.design.scene.dragEnd.design");
         const pieceGuid = guid();
         const piece = { guid: pieceGuid, id_: pieceGuid, design: { guid: droppedDesign.guid }, plane, center };
-        addPiece("semio.sketchpad.app.design.scene.dragEnd.design", piece);
-        finalizeTransaction("semio.sketchpad.app.design.scene.dragEnd.design");
+        addPiece?.("semio.sketchpad.app.design.scene.dragEnd.design", piece);
+        transaction?.finalize("semio.sketchpad.app.design.scene.dragEnd.design");
       }
       setActiveDraggedType(null);
       setActiveDraggedDesign(null);
     },
-    [sceneTypes, sceneDesigns, camera, startTransaction, addPiece, finalizeTransaction, setActiveDraggedType, setActiveDraggedDesign],
+    [sceneTypes, sceneDesigns, camera, transaction, addPiece, setActiveDraggedType, setActiveDraggedDesign],
   );
 
   useEffect(() => {
@@ -7559,7 +7740,11 @@ const App: FC<AppProps> = () => {
   useDesignAppInitialize();
 
   const { t } = useTranslation();
-  const { deleteSelected, undo, redo, addPiece, startTransaction, finalizeTransaction } = useDesignAppCommands();
+  const [transaction] = useDesignAppTransaction();
+  const [deleteSelected] = useDesignAppDeleteSelected();
+  const [undo] = useDesignAppUndo();
+  const [redo] = useDesignAppRedo();
+  const [addPiece] = useDesignAppAddPiece();
   const [selectAll] = useDesignAppSelectAll();
   const [deselectAll] = useDesignAppDeselectAll();
   const [toggleDiagramFullscreen] = useDesignAppToggleDiagramFullscreen();
@@ -8389,9 +8574,9 @@ export const config: AppConfig = {
     createPanelDefinition(PanelKind.TOOLBAR, "semio.sketchpad.navbar.panelToggle.toolbar.show"),
     createPanelDefinition(PanelKind.HUD, "semio.sketchpad.navbar.panelToggle.hud.show"),
     createPanelDefinition(PanelKind.STATS, "semio.sketchpad.navbar.panelToggle.stats.show"),
-    createPanelDefinition(PanelKind.SETTINGS, "semio.sketchpad.navbar.panelToggle.settings.show"),
     createPanelDefinition(PanelKind.DETAILS, "semio.sketchpad.navbar.panelToggle.details.show"),
     createPanelDefinition(PanelKind.CHAT, "semio.sketchpad.navbar.panelToggle.chat.show"),
+    createPanelDefinition(PanelKind.SETTINGS, "semio.sketchpad.navbar.panelToggle.settings.show"),
   ],
   matchesPath: (pathParts: string[]) => {
     const isUuidPattern = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);

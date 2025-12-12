@@ -46,7 +46,7 @@
         "testMatch": [
           "**/sketchpad.test.ts"
         ],
-        "timeout": 30000
+        "timeout": 60000
       }
     ],
     "shard": null,
@@ -72,16 +72,16 @@
         {
           "title": "sketchpad",
           "file": "sketchpad.test.ts",
-          "line": 518,
+          "line": 560,
           "column": 6,
           "specs": [
             {
-              "title": "Design Drag and Drop",
-              "ok": false,
+              "title": "Home",
+              "ok": true,
               "tags": [],
               "tests": [
                 {
-                  "timeout": 180000,
+                  "timeout": 60000,
                   "annotations": [],
                   "expectedStatus": "passed",
                   "projectId": "chromium",
@@ -90,93 +90,172 @@
                     {
                       "workerIndex": 0,
                       "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 27245,
-                      "error": {
-                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m",
-                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:1084:23",
-                        "location": {
-                          "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
-                          "column": 23,
-                          "line": 1084
-                        },
-                        "snippet": "\u001b[0m \u001b[90m 1082 |\u001b[39m     }\n \u001b[90m 1083 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 1084 |\u001b[39m     expect(typeCount)\u001b[33m.\u001b[39mtoBeGreaterThan(\u001b[35m0\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m      |\u001b[39m                       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 1085 |\u001b[39m\n \u001b[90m 1086 |\u001b[39m     \u001b[36mconst\u001b[39m firstTypeAvatar \u001b[33m=\u001b[39m typeAvatars\u001b[33m!\u001b[39m\u001b[33m.\u001b[39mfirst()\u001b[33m;\u001b[39m\n \u001b[90m 1087 |\u001b[39m\u001b[0m"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
-                            "column": 23,
-                            "line": 1084
-                          },
-                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n\n\u001b[0m \u001b[90m 1082 |\u001b[39m     }\n \u001b[90m 1083 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 1084 |\u001b[39m     expect(typeCount)\u001b[33m.\u001b[39mtoBeGreaterThan(\u001b[35m0\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m      |\u001b[39m                       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 1085 |\u001b[39m\n \u001b[90m 1086 |\u001b[39m     \u001b[36mconst\u001b[39m firstTypeAvatar \u001b[33m=\u001b[39m typeAvatars\u001b[33m!\u001b[39m\u001b[33m.\u001b[39mfirst()\u001b[33m;\u001b[39m\n \u001b[90m 1087 |\u001b[39m\u001b[0m\n\u001b[2m    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:1084:23\u001b[22m"
-                        }
-                      ],
+                      "status": "passed",
+                      "duration": 9822,
+                      "errors": [],
                       "stdout": [
                         {
-                          "text": "[TEST] Setting input files: C:\\git\\semio.tech\\semio\\assets\\semio\\metabolism.zip\n"
+                          "text": "[Home] Testing Home app panel toggles\n"
                         },
                         {
-                          "text": "[TEST] File set via file chooser\n"
+                          "text": "[Home] Settings toggle visible: true\n"
                         },
                         {
-                          "text": "[TEST] Current URL after file set: http://localhost:5173/\n"
+                          "text": "[Home] Settings panel visible: false\n"
                         },
                         {
-                          "text": "[Drag&Drop Test] In Design app: http://localhost:5173/kits/f042c2a4-3ba5-44b0-b22c-0ae8f568aacc/designs/9a890dd4-0a9c-48ac-920a-9e62666465ef\n"
-                        },
-                        {
-                          "text": "[Drag&Drop Test] Scene canvas is visible\n"
-                        },
-                        {
-                          "text": "[Drag&Drop Test] Workbench panel opened\n"
-                        },
-                        {
-                          "text": "[Drag&Drop Test] Pieces section visible: true\n"
-                        },
-                        {
-                          "text": "[Drag&Drop Test] Types section visible: true\n"
-                        },
-                        {
-                          "text": "[Drag&Drop Test] Clicked types section to expand\n"
-                        },
-                        {
-                          "text": "[Drag&Drop Test] Total avatars on page: 298\n"
-                        },
-                        {
-                          "text": "[Drag&Drop Test] Found 0 avatars in pieces section\n"
-                        },
-                        {
-                          "text": "[Drag&Drop Test] No avatars found in workbench. Checking for expandable sections...\n"
-                        },
-                        {
-                          "text": "[Drag&Drop Test] Found 0 collapsed sections\n"
+                          "text": "[Home] Details toggle visible: false\n"
                         }
                       ],
-                      "stderr": [],
+                      "stderr": [
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m=> browserType.launch started \u001b[38;5;45m+0ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m<= browserType.launch succeeded \u001b[38;5;45m+331ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m=> browser.newContext started \u001b[38;5;45m+5ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m<= browser.newContext succeeded \u001b[38;5;45m+12ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m=> browserContext.newPage started \u001b[38;5;45m+3ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m<= browserContext.newPage succeeded \u001b[38;5;45m+299ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m=> page.goto started \u001b[38;5;45m+3ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0mnavigating to \"http://localhost:5173/\", waiting until \"load\" \u001b[38;5;45m+1ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m  \"commit\" event fired \u001b[38;5;45m+16ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m  navigated to \"http://localhost:5173/\" \u001b[38;5;45m+1ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m  \"domcontentloaded\" event fired \u001b[38;5;45m+619ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m  \"load\" event fired \u001b[38;5;45m+1ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m<= page.goto succeeded \u001b[38;5;45m+1ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m=> page.waitForLoadState started \u001b[38;5;45m+2ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m  navigated to \"http://localhost:5173/\" \u001b[38;5;45m+6ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m  \"networkidle\" event fired \u001b[38;5;45m+6s\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m<= page.waitForLoadState succeeded \u001b[38;5;45m+2ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m=> page.waitForTimeout started \u001b[38;5;45m+1ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m<= page.waitForTimeout succeeded \u001b[38;5;45m+2s\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m=> locator.isVisible started \u001b[38;5;45m+5ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m  checking visibility of locator('[id=\"semio.sketchpad.navbar.panelToggle.settings.show\"]') \u001b[38;5;45m+0ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m<= locator.isVisible succeeded \u001b[38;5;45m+20ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m=> locator.click started \u001b[38;5;45m+2ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0mwaiting for locator('[id=\"semio.sketchpad.navbar.panelToggle.settings.show\"]') \u001b[38;5;45m+0ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m  locator resolved to <button role=\"radio\" type=\"button\" tabindex=\"-1\" data-state=\"off\" aria-checked=\"false\" data-slot=\"toggle-group-item\" data-radix-collection-item=\"\" id=\"semio.sketchpad.navbar.panelToggle.settings.show\" class=\"text-foreground justify-center gap-single text-sm font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0 focus-visible:border-ring focus-visible:ring-ring/50 fo…>…</button> \u001b[38;5;45m+15ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0mattempting click action \u001b[38;5;45m+2ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m  waiting for element to be visible, enabled and stable \u001b[38;5;45m+1ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m  element is visible, enabled and stable \u001b[38;5;45m+30ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m  scrolling into view if needed \u001b[38;5;45m+0ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m  done scrolling \u001b[38;5;45m+1ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m  performing click action \u001b[38;5;45m+28ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m  click action done \u001b[38;5;45m+21ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m  waiting for scheduled navigations to finish \u001b[38;5;45m+0ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m  navigations have finished \u001b[38;5;45m+0ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m<= locator.click succeeded \u001b[38;5;45m+1ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m=> page.waitForTimeout started \u001b[38;5;45m+1ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m<= page.waitForTimeout succeeded \u001b[38;5;45m+501ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m=> locator.isVisible started \u001b[38;5;45m+2ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m  checking visibility of locator('[data-panel=\"settings\"]').first() \u001b[38;5;45m+1ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m<= locator.isVisible succeeded \u001b[38;5;45m+2ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m=> locator.isVisible started \u001b[38;5;45m+2ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m  checking visibility of locator('[id=\"semio.sketchpad.navbar.panelToggle.details.show\"]') \u001b[38;5;45m+0ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m<= locator.isVisible succeeded \u001b[38;5;45m+2ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m=> browserContext.close started \u001b[38;5;45m+7ms\u001b[0m\n"
+                        },
+                        {
+                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m<= browserContext.close succeeded \u001b[38;5;45m+53ms\u001b[0m\n"
+                        }
+                      ],
                       "retry": 0,
-                      "startTime": "2025-12-09T12:44:04.564Z",
+                      "startTime": "2025-12-12T17:54:49.901Z",
                       "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "C:\\git\\semio.tech\\semio\\js\\js\\test-results\\sketchpad-sketchpad-Design-Drag-and-Drop-chromium\\error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
-                        "column": 23,
-                        "line": 1084
-                      }
+                      "attachments": []
                     }
                   ],
-                  "status": "unexpected"
+                  "status": "expected"
                 }
               ],
-              "id": "1f96767271edc4239dfa-c0e2503970275979ef7c",
+              "id": "1f96767271edc4239dfa-b740b36bc6e82e50ca6e",
               "file": "sketchpad.test.ts",
-              "line": 992,
+              "line": 561,
               "column": 3
             }
           ]
@@ -186,11 +265,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2025-12-09T12:44:03.178Z",
-    "duration": 29219.133,
-    "expected": 0,
+    "startTime": "2025-12-12T17:54:48.916Z",
+    "duration": 11602.982,
+    "expected": 1,
     "skipped": 0,
-    "unexpected": 1,
+    "unexpected": 0,
     "flaky": 0
   }
 }

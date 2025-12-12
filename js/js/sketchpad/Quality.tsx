@@ -850,18 +850,15 @@ class QualityAppStore extends KitDiffAppStore<QualityAppState, QualityAppDiff, Q
     }
 
     if (command === "semio.qualityApp.startTransaction") {
-      console.group(`[${origin || "unknown"}] Transaction: "${command}"`);
       this.startTransaction();
       return {} as T;
     }
     if (command === "semio.qualityApp.finalizeTransaction") {
       this.finalizeTransaction();
-      console.groupEnd();
       return {} as T;
     }
     if (command === "semio.qualityApp.abortTransaction") {
       this.abortTransaction();
-      console.groupEnd();
       return {} as T;
     }
     if (command === "semio.qualityApp.undo") {
@@ -873,10 +870,8 @@ class QualityAppStore extends KitDiffAppStore<QualityAppState, QualityAppDiff, Q
       return {} as T;
     }
 
-    console.group(`[${origin || "unknown"}] Executing command: "${command}"`);
     const callback = this.commandRegistry.get(command);
     if (!callback) {
-      console.groupEnd();
       throw new Error(`Command "${command}" not found in quality app store`);
     }
 
@@ -904,7 +899,6 @@ class QualityAppStore extends KitDiffAppStore<QualityAppState, QualityAppDiff, Q
       });
     }
     this.recordEdit(result);
-    console.groupEnd();
     return result as T;
   }
 

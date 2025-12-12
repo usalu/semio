@@ -6679,7 +6679,6 @@ export class KitStore {
       rest = args;
     }
 
-    console.group(`[${origin || "unknown"}] Executing command: "${command}"`);
     const callback = this.commandRegistry.get(command);
     if (!callback) throw new Error(`Command "${command}" not found in kit store`);
     const context: KitCommandContext = {
@@ -6752,7 +6751,6 @@ export class KitStore {
       });
     }
 
-    console.groupEnd();
     return result as T;
   }
 
@@ -7088,10 +7086,11 @@ export function useFileUrls(): Map<Url, Url> {
   return kitStore.fileUrls;
 }
 
-export function useKitTransaction(origin: string): Transaction {
+export function useKitTransaction(): Transaction {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid;
+  const getOrigin = useOrigin();
 
   if (!kitGuid || !store.hasKit(kitGuid)) {
     return {};
@@ -7100,15 +7099,10 @@ export function useKitTransaction(origin: string): Transaction {
   const kitStore = store.kit(kitGuid);
   return {
     start: () => {
-      console.group(`[${origin}] Transaction: "kit.startTransaction"`);
-      kitStore.yDoc.transact(() => {}, origin);
+      kitStore.yDoc.transact(() => {}, getOrigin());
     },
-    finalize: () => {
-      console.groupEnd();
-    },
-    abort: () => {
-      console.groupEnd();
-    },
+    finalize: () => {},
+    abort: () => {},
   };
 }
 
@@ -7116,6 +7110,7 @@ export function useKitCommands() {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid;
+  const getOrigin = useOrigin();
 
   if (!kitGuid || !store.hasKit(kitGuid)) {
     return null;
@@ -7123,45 +7118,45 @@ export function useKitCommands() {
 
   const kitStore = store.kit(kitGuid);
   return {
-    importKit: (origin: string, url: string) => kitStore.execute("semio.kit.import", origin, url),
-    exportKit: (origin: string) => kitStore.execute("semio.kit.export", origin),
-    createAuthor: (origin: string, author: Author) => kitStore.execute("semio.kit.createAuthor", origin, author),
-    updateAuthor: (origin: string, Guid: Guid, authorDiff: AuthorDiff) => kitStore.execute("semio.kit.updateAuthor", origin, Guid, authorDiff),
-    deleteAuthor: (origin: string, Guid: Guid) => kitStore.execute("semio.kit.deleteAuthor", origin, Guid),
-    createType: (origin: string, type: Type) => kitStore.execute("semio.kit.createType", origin, type),
-    updateType: (origin: string, guid: Guid, diff: TypeDiff) => kitStore.execute("semio.kit.updateType", origin, guid, diff),
-    deleteType: (origin: string, guid: Guid) => kitStore.execute("semio.kit.deleteType", origin, guid),
-    createDesign: (origin: string, design: Design) => kitStore.execute("semio.kit.createDesign", origin, design),
-    updateDesign: (origin: string, guid: Guid, diff: DesignDiff) => kitStore.execute("semio.kit.updateDesign", origin, guid, diff),
-    deleteDesign: (origin: string, guid: Guid) => kitStore.execute("semio.kit.deleteDesign", origin, guid),
-    createQuality: (origin: string, quality: Quality) => kitStore.execute("semio.kit.createQuality", origin, quality),
-    updateQuality: (origin: string, guid: Guid, diff: QualityDiff) => kitStore.execute("semio.kit.updateQuality", origin, guid, diff),
-    deleteQuality: (origin: string, guid: Guid) => kitStore.execute("semio.kit.deleteQuality", origin, guid),
-    createInterface: (origin: string, iface: Interface) => kitStore.execute("semio.kit.createInterface", origin, iface),
-    updateInterface: (origin: string, guid: Guid, diff: InterfaceDiff) => kitStore.execute("semio.kit.updateInterface", origin, guid, diff),
-    deleteInterface: (origin: string, guid: Guid) => kitStore.execute("semio.kit.deleteInterface", origin, guid),
-    createTag: (origin: string, tag: Tag) => kitStore.execute("semio.kit.createTag", origin, tag),
-    updateTag: (origin: string, guid: Guid, diff: TagDiff) => kitStore.execute("semio.kit.updateTag", origin, guid, diff),
-    deleteTag: (origin: string, guid: Guid) => kitStore.execute("semio.kit.deleteTag", origin, guid),
-    createConcept: (origin: string, concept: Concept) => kitStore.execute("semio.kit.createConcept", origin, concept),
-    updateConcept: (origin: string, guid: Guid, diff: ConceptDiff) => kitStore.execute("semio.kit.updateConcept", origin, guid, diff),
-    deleteConcept: (origin: string, guid: Guid) => kitStore.execute("semio.kit.deleteConcept", origin, guid),
-    addFile: (origin: string, file: SemioFile, blob?: Blob) => kitStore.execute("semio.kit.addFile", origin, file, blob),
-    updateFile: (origin: string, url: Url, fileDiff: FileDiff, blob?: Blob) => kitStore.execute("semio.kit.updateFile", origin, url, fileDiff, blob),
-    removeFile: (origin: string, url: Url) => kitStore.execute("semio.kit.removeFile", origin, url),
-    createFolder: (origin: string, folder: Folder) => kitStore.execute("semio.kit.createFolder", origin, folder),
-    updateFolder: (origin: string, guid: Guid, folderDiff: FolderDiff) => kitStore.execute("semio.kit.updateFolder", origin, guid, folderDiff),
-    deleteFolder: (origin: string, guid: Guid) => kitStore.execute("semio.kit.deleteFolder", origin, guid),
-    moveToFolder: (origin: string, artifactKind: string, artifactGuid: Guid, folderGuid: Guid | null) => kitStore.execute("semio.kit.moveToFolder", origin, artifactGuid, artifactKind, folderGuid),
-    addPiece: (origin: string, design: Guid, piece: Piece) => kitStore.execute("semio.kit.addPiece", origin, design, piece),
-    addPieces: (origin: string, design: Guid, pieces: Piece[]) => kitStore.execute("semio.kit.addPieces", origin, design, pieces),
-    removePiece: (origin: string, design: Guid, piece: Guid) => kitStore.execute("semio.kit.removePiece", origin, design, piece),
-    removePieces: (origin: string, design: Guid, pieces: Guid[]) => kitStore.execute("semio.kit.removePieces", origin, design, pieces),
-    addConnection: (origin: string, design: Guid, connection: Connection) => kitStore.execute("semio.kit.addConnection", origin, design, connection),
-    addConnections: (origin: string, design: Guid, connections: Connection[]) => kitStore.execute("semio.kit.addConnections", origin, design, connections),
-    removeConnection: (origin: string, design: Guid, connection: Guid) => kitStore.execute("semio.kit.removeConnection", origin, design, connection),
-    removeConnections: (origin: string, design: Guid, connections: Guid[]) => kitStore.execute("semio.kit.removeConnections", origin, design, connections),
-    deleteSelected: (origin: string, design: Guid, selectedPieces: Guid[], selectedConnections: Guid[]) => kitStore.execute("semio.kit.deleteSelected", origin, design, selectedPieces, selectedConnections),
+    importKit: (url: string) => kitStore.execute("semio.kit.import", getOrigin(), url),
+    exportKit: () => kitStore.execute("semio.kit.export", getOrigin()),
+    createAuthor: (author: Author) => kitStore.execute("semio.kit.createAuthor", getOrigin(), author),
+    updateAuthor: (Guid: Guid, authorDiff: AuthorDiff) => kitStore.execute("semio.kit.updateAuthor", getOrigin(), Guid, authorDiff),
+    deleteAuthor: (Guid: Guid) => kitStore.execute("semio.kit.deleteAuthor", getOrigin(), Guid),
+    createType: (type: Type) => kitStore.execute("semio.kit.createType", getOrigin(), type),
+    updateType: (guid: Guid, diff: TypeDiff) => kitStore.execute("semio.kit.updateType", getOrigin(), guid, diff),
+    deleteType: (guid: Guid) => kitStore.execute("semio.kit.deleteType", getOrigin(), guid),
+    createDesign: (design: Design) => kitStore.execute("semio.kit.createDesign", getOrigin(), design),
+    updateDesign: (guid: Guid, diff: DesignDiff) => kitStore.execute("semio.kit.updateDesign", getOrigin(), guid, diff),
+    deleteDesign: (guid: Guid) => kitStore.execute("semio.kit.deleteDesign", getOrigin(), guid),
+    createQuality: (quality: Quality) => kitStore.execute("semio.kit.createQuality", getOrigin(), quality),
+    updateQuality: (guid: Guid, diff: QualityDiff) => kitStore.execute("semio.kit.updateQuality", getOrigin(), guid, diff),
+    deleteQuality: (guid: Guid) => kitStore.execute("semio.kit.deleteQuality", getOrigin(), guid),
+    createInterface: (iface: Interface) => kitStore.execute("semio.kit.createInterface", getOrigin(), iface),
+    updateInterface: (guid: Guid, diff: InterfaceDiff) => kitStore.execute("semio.kit.updateInterface", getOrigin(), guid, diff),
+    deleteInterface: (guid: Guid) => kitStore.execute("semio.kit.deleteInterface", getOrigin(), guid),
+    createTag: (tag: Tag) => kitStore.execute("semio.kit.createTag", getOrigin(), tag),
+    updateTag: (guid: Guid, diff: TagDiff) => kitStore.execute("semio.kit.updateTag", getOrigin(), guid, diff),
+    deleteTag: (guid: Guid) => kitStore.execute("semio.kit.deleteTag", getOrigin(), guid),
+    createConcept: (concept: Concept) => kitStore.execute("semio.kit.createConcept", getOrigin(), concept),
+    updateConcept: (guid: Guid, diff: ConceptDiff) => kitStore.execute("semio.kit.updateConcept", getOrigin(), guid, diff),
+    deleteConcept: (guid: Guid) => kitStore.execute("semio.kit.deleteConcept", getOrigin(), guid),
+    addFile: (file: SemioFile, blob?: Blob) => kitStore.execute("semio.kit.addFile", getOrigin(), file, blob),
+    updateFile: (url: Url, fileDiff: FileDiff, blob?: Blob) => kitStore.execute("semio.kit.updateFile", getOrigin(), url, fileDiff, blob),
+    removeFile: (url: Url) => kitStore.execute("semio.kit.removeFile", getOrigin(), url),
+    createFolder: (folder: Folder) => kitStore.execute("semio.kit.createFolder", getOrigin(), folder),
+    updateFolder: (guid: Guid, folderDiff: FolderDiff) => kitStore.execute("semio.kit.updateFolder", getOrigin(), guid, folderDiff),
+    deleteFolder: (guid: Guid) => kitStore.execute("semio.kit.deleteFolder", getOrigin(), guid),
+    moveToFolder: (artifactKind: string, artifactGuid: Guid, folderGuid: Guid | null) => kitStore.execute("semio.kit.moveToFolder", getOrigin(), artifactGuid, artifactKind, folderGuid),
+    addPiece: (design: Guid, piece: Piece) => kitStore.execute("semio.kit.addPiece", getOrigin(), design, piece),
+    addPieces: (design: Guid, pieces: Piece[]) => kitStore.execute("semio.kit.addPieces", getOrigin(), design, pieces),
+    removePiece: (design: Guid, piece: Guid) => kitStore.execute("semio.kit.removePiece", getOrigin(), design, piece),
+    removePieces: (design: Guid, pieces: Guid[]) => kitStore.execute("semio.kit.removePieces", getOrigin(), design, pieces),
+    addConnection: (design: Guid, connection: Connection) => kitStore.execute("semio.kit.addConnection", getOrigin(), design, connection),
+    addConnections: (design: Guid, connections: Connection[]) => kitStore.execute("semio.kit.addConnections", getOrigin(), design, connections),
+    removeConnection: (design: Guid, connection: Guid) => kitStore.execute("semio.kit.removeConnection", getOrigin(), design, connection),
+    removeConnections: (design: Guid, connections: Guid[]) => kitStore.execute("semio.kit.removeConnections", getOrigin(), design, connections),
+    deleteSelected: (design: Guid, selectedPieces: Guid[], selectedConnections: Guid[]) => kitStore.execute("semio.kit.deleteSelected", getOrigin(), design, selectedPieces, selectedConnections),
   };
 }
 
@@ -7822,6 +7817,7 @@ export type SketchpadEvent =
   | { type: "HOME.SET_SORT"; column: string; direction: "asc" | "desc" }
   | { type: "HOME.SELECT_KIT"; guid: Guid }
   | { type: "HOME.DESELECT_KIT"; guid: Guid }
+  | { type: "HOME.CLEAR_SELECTION" }
   | { type: "HOME.SET_HOVER"; kits?: Guid[] }
   | { type: "HOME.CLEAR_HOVER" }
   // Kit app events (scoped by kitGuid)
@@ -8395,6 +8391,9 @@ export const sketchpadMachine = setup({
         homeApp: { ...context.homeApp, selection: { kits: kits.filter((k: Guid) => k !== event.guid) } },
       };
     }),
+    homeClearSelection: assign(({ context }) => ({
+      homeApp: { ...context.homeApp, selection: undefined },
+    })),
     homeSetHover: assign(({ context, event }) => {
       if (event.type !== "HOME.SET_HOVER") return {};
       return { homeApp: { ...context.homeApp, hover: { kits: event.kits } } };
@@ -9363,6 +9362,7 @@ export const sketchpadMachine = setup({
             "HOME.SET_SORT": { actions: "homeSetSort" },
             "HOME.SELECT_KIT": { actions: "homeSelectKit" },
             "HOME.DESELECT_KIT": { actions: "homeDeselectKit" },
+            "HOME.CLEAR_SELECTION": { actions: "homeClearSelection" },
             "HOME.SET_HOVER": { actions: "homeSetHover" },
             "HOME.CLEAR_HOVER": {
               guard: "hasHomeHover",
@@ -10597,7 +10597,24 @@ export function createUiActor() {
  * All old separate machines have been consolidated into this single machine.
  */
 export function createSketchpadActor(input: SketchpadMachineInput) {
-  return createActor(sketchpadMachine, { input });
+  return createActor(sketchpadMachine, {
+    input,
+    inspect: (inspectionEvent) => {
+      if (inspectionEvent.type === "@xstate.snapshot") {
+        // Log state transitions with source and target
+        const { snapshot, event, actorRef } = inspectionEvent;
+        if (event.type === "xstate.init") return; // Skip initial event
+        const stateValue = typeof snapshot.value === "object" ? JSON.stringify(snapshot.value) : snapshot.value;
+        // Extract event params (everything except type)
+        const { type, ...params } = event as any;
+        const hasParams = Object.keys(params).length > 0;
+        console.log(
+          `[Machine] ${type} → ${stateValue}`,
+          hasParams ? params : ""
+        );
+      }
+    },
+  });
 }
 
 // #endregion Factory
@@ -12521,7 +12538,6 @@ export class SketchpadStore {
       input.click();
       return {} as T;
     }
-    console.group(`[${origin || "unknown"}] Executing command: "${command}"`);
     const callback = this.commandRegistry.get(command);
     if (!callback) {
       throw new Error(`Command "${command}" not found in sketchpad store`);
@@ -12534,7 +12550,6 @@ export class SketchpadStore {
     if (result.diff) {
       this.change(result.diff);
     }
-    console.groupEnd();
     return result as T;
   }
 
@@ -13528,7 +13543,10 @@ export function useHomeCommands() {
   const actor = useSketchpadActor();
   return useMemo(
     () => ({
-      selectKit: (origin: string, kitGuid: Guid) => actor.send({ type: "HOME.SELECT_KIT", guid: kitGuid } as any),
+      selectKit: (origin: string, kitGuid: Guid) => {
+        actor.send({ type: "HOME.CLEAR_SELECTION" } as any);
+        actor.send({ type: "HOME.SELECT_KIT", guid: kitGuid } as any);
+      },
       selectKits: (origin: string, kitGuids: Guid[]) => {
         actor.send({ type: "HOME.CLEAR_SELECTION" } as any);
         for (const guid of kitGuids) {
@@ -14380,6 +14398,78 @@ export const useRemovePanelSection = () => {
 };
 
 // #endregion Panel Sections
+
+// #region Origin
+
+type OriginStore = {
+  subscribe: (callback: () => void) => () => void;
+  getOrigin: () => string;
+};
+
+const DEFAULT_ORIGIN = "semio.sketchpad.unknown";
+
+function createOriginStore(): OriginStore & { setOrigin: (origin: string) => void } {
+  let origin = DEFAULT_ORIGIN;
+  const listeners = new Set<() => void>();
+  const subscribe = (callback: () => void) => {
+    listeners.add(callback);
+    return () => {
+      listeners.delete(callback);
+    };
+  };
+  const setOrigin = (next: string) => {
+    if (origin === next) return;
+    origin = next;
+    listeners.forEach((cb) => cb());
+  };
+  return { subscribe, setOrigin, getOrigin: () => origin };
+}
+
+function resolveOriginFromTarget(target: EventTarget | null): string {
+  if (!(target instanceof Element)) return DEFAULT_ORIGIN;
+  const resolved = target.closest('[id^="semio.sketchpad."]')?.getAttribute("id") ?? "";
+  if (!resolved) return DEFAULT_ORIGIN;
+  if (!resolved.startsWith("semio.sketchpad.")) return DEFAULT_ORIGIN;
+  return resolved;
+}
+
+const OriginContext = createContext<OriginStore | null>(null);
+
+export const OriginProvider: FC<{ children: ReactNode }> = ({ children }) => {
+  const storeRef = useRef<ReturnType<typeof createOriginStore> | null>(null);
+  if (!storeRef.current) storeRef.current = createOriginStore();
+  useEffect(() => {
+    const store = storeRef.current;
+    if (!store) return;
+    const handler = (event: Event) => {
+      store.setOrigin(resolveOriginFromTarget(event.target));
+    };
+    document.addEventListener("pointerdown", handler, true);
+    document.addEventListener("keydown", handler, true);
+    document.addEventListener("focusin", handler, true);
+    return () => {
+      document.removeEventListener("pointerdown", handler, true);
+      document.removeEventListener("keydown", handler, true);
+      document.removeEventListener("focusin", handler, true);
+    };
+  }, []);
+  return <OriginContext.Provider value={storeRef.current}>{children}</OriginContext.Provider>;
+};
+
+export function useOrigin(): () => string {
+  const store = useContext(OriginContext);
+  return useCallback(() => store?.getOrigin() ?? DEFAULT_ORIGIN, [store]);
+}
+
+export function useOriginValue(): string {
+  const store = useContext(OriginContext);
+  return useSyncExternalStore(
+    useCallback((callback: () => void) => (store ? store.subscribe(callback) : () => {}), [store]),
+    useCallback(() => store?.getOrigin() ?? DEFAULT_ORIGIN, [store]),
+  );
+}
+
+// #endregion Origin
 
 // #region Footer Items
 
@@ -17076,16 +17166,6 @@ const LayoutWrapper: FC = () => {
   const settingsSections = usePanelSections("settings");
   const consoleSections = usePanelSections("console");
 
-  useEffect(() => {
-    if (panelVisibility.settings) {
-      console.log(
-        "[Sketchpad] Settings panel is visible, sections:",
-        settingsSections.length,
-        settingsSections.map((s) => s.id),
-      );
-    }
-  }, [panelVisibility.settings, settingsSections]);
-
   const sketchpadCommands = useSketchpadCommands();
 
   useEffect(() => {
@@ -17594,15 +17674,17 @@ const Sketchpad: FC<{ id?: string; remote?: RemoteProviders; onWindowEvents?: Wi
   const routerContent = (
     <SketchpadScopeProvider id={id} remote={remote} onWindowEvents={onWindowEvents} initialState={initialState} importKitUrls={importKitUrls}>
       <SketchpadInteractionBridge>
-        <FocusProvider>
-          <PanelSectionProvider>
-            <FooterItemProvider>
-              <DragDropProvider>
-                <SketchpadContent />
-              </DragDropProvider>
-            </FooterItemProvider>
-          </PanelSectionProvider>
-        </FocusProvider>
+        <OriginProvider>
+          <FocusProvider>
+            <PanelSectionProvider>
+              <FooterItemProvider>
+                <DragDropProvider>
+                  <SketchpadContent />
+                </DragDropProvider>
+              </FooterItemProvider>
+            </PanelSectionProvider>
+          </FocusProvider>
+        </OriginProvider>
       </SketchpadInteractionBridge>
     </SketchpadScopeProvider>
   );

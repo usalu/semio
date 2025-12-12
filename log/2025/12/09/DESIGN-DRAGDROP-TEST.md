@@ -1,5 +1,5 @@
 ---
-date: '2025-12-09T12:30:30.691Z'
+date: "2025-12-09T12:30:30.691Z"
 slug: DESIGN-DRAGDROP-TEST
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: >-
@@ -7,9 +7,11 @@ summary: >-
   validation
 model: claude-opus-4.5
 ---
+
 # Previously
 
 The existing Design test verifies:
+
 - Navigation to design app
 - Diagram and scene visibility
 - Pan operations on diagram and scene

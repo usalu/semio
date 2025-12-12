@@ -3,9 +3,9 @@ export * from "./icons";
 export { default as MetabolismKitDiff } from "./semio/diff_kit_metabolism.json";
 export { default as MetabolismKitDiffInverted } from "./semio/diff_kit_metabolism_inverted.json";
 export { default as InvalidKit } from "./semio/kit_invalid.json";
-export { MetabolismKitData as MetabolismKit };
 export { default as MetabolismKitDiffed } from "./semio/kit_metabolism_diffed.json";
 export { default as InvalidKitValidation } from "./semio/validation.json";
+export { MetabolismKitData as MetabolismKit };
 
 export const MetabolismKitTypes = MetabolismKitData.types ?? [];
 export const MetabolismKitDesigns = MetabolismKitData.designs ?? [];
@@ -18,18 +18,18 @@ export const MetabolismKitTags = MetabolismKitData.tags ?? [];
 export const MetabolismKitConcepts = MetabolismKitData.concepts ?? [];
 export const MetabolismKitAttributes = MetabolismKitData.attributes ?? [];
 export const MetabolismKitNakaginCapsuleTowerDesigns = MetabolismKitDesigns.filter(
-  (design) => design.name === "Nakagin Capsule Tower",
+    (design) => design.name === "Nakagin Capsule Tower",
 ) ?? [];
 
 const buildLookup = (items: any[] = []) => {
-  const byGuid: Record<string, any> = {};
-  const byName: Record<string, any> = {};
-  items.forEach((item) => {
-    if (!item) return;
-    if (item.guid) byGuid[item.guid] = item;
-    if (item.name) byName[item.name] = item;
-  });
-  return { byGuid, byName };
+    const byGuid: Record<string, any> = {};
+    const byName: Record<string, any> = {};
+    items.forEach((item) => {
+        if (!item) return;
+        if (item.guid) byGuid[item.guid] = item;
+        if (item.name) byName[item.name] = item;
+    });
+    return { byGuid, byName };
 };
 
 const typeLookup = buildLookup(MetabolismKitTypes);
@@ -45,11 +45,11 @@ export const MetabolismKitInterfacesByName = interfaceLookup.byName;
 
 const nakaginCapsuleTowerDesign = MetabolismKitDesigns.find((d) => d.name === "Nakagin Capsule Tower");
 const nakaginCapsuleTowerFlatDesign = MetabolismKitDesigns.find(
-  (d) => d.name === "Flat" && d.parent?.guid === nakaginCapsuleTowerDesign?.guid,
+    (d) => d.name === "Flat" && d.parent?.guid === nakaginCapsuleTowerDesign?.guid,
 );
 export const MetabolismKitNakaginCapsuleTowerFlatPieces =
-  nakaginCapsuleTowerFlatDesign?.pieces?.map((p) => ({
-    name: p.name,
-    plane: p.plane,
-    center: p.center,
-  })) ?? [];
+    nakaginCapsuleTowerFlatDesign?.pieces?.map((p) => ({
+        name: p.name,
+        plane: p.plane,
+        center: p.center,
+    })) ?? [];

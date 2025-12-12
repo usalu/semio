@@ -85,6 +85,7 @@ import {
   useLanguage,
   useLayout,
   useNavigation,
+  useOrigin,
   useRemoveFooterItem,
   useRemovePanelSection,
   useSketchpadActor,
@@ -720,18 +721,15 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
     }
 
     if (command === "semio.kitApp.startTransaction") {
-      console.group(`[${origin || "unknown"}] Transaction: "${command}"`);
       this.startTransaction();
       return {} as T;
     }
     if (command === "semio.kitApp.finalizeTransaction") {
       this.finalizeTransaction();
-      console.groupEnd();
       return {} as T;
     }
     if (command === "semio.kitApp.abortTransaction") {
       this.abortTransaction();
-      console.groupEnd();
       return {} as T;
     }
     if (command === "semio.kitApp.undo") {
@@ -739,13 +737,10 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
       return {} as T;
     }
     if (command === "semio.kitApp.redo") {
-      console.group(`[${origin || "unknown"}] Executing (special) command: "${command}"`);
       this.redo();
-      console.groupEnd();
       return {} as T;
     }
 
-    console.group(`[${origin || "unknown"}] Executing command: "${command}"`);
     const callback = this.commandRegistry.get(command);
     if (!callback) throw new Error(`Command "${command}" not found in kit app controller`);
 
@@ -766,7 +761,6 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
       kitData.change(result.kitDiff);
     }
     this.recordEdit(result);
-    console.groupEnd();
     return result as T;
   }
 
@@ -876,20 +870,22 @@ export function useKitAppOthers(): HookNoSetResult<KitAppPresenceOther[]> {
   return [others, undefined, canRead];
 }
 
-export function useKitAppTransaction(origin: string): Transaction {
+export function useKitAppTransaction(): Transaction {
   const controller = useKitStore() as KitStore | null;
+  const getOrigin = useOrigin();
   if (!controller) {
     return {};
   }
   return {
-    start: () => controller.execute("semio.kitApp.startTransaction", origin),
-    finalize: () => controller.execute("semio.kitApp.finalizeTransaction", origin),
-    abort: () => controller.execute("semio.kitApp.abortTransaction", origin),
+    start: () => controller.execute("semio.kitApp.startTransaction", getOrigin()),
+    finalize: () => controller.execute("semio.kitApp.finalizeTransaction", getOrigin()),
+    abort: () => controller.execute("semio.kitApp.abortTransaction", getOrigin()),
   };
 }
 
 export function useKitAppCommands(id?: KitAppId) {
   const controller = useKitStore(undefined, id) as KitStore | null;
+  const getOrigin = useOrigin();
   const noOp = () => {};
   if (!controller) {
     return {
@@ -959,62 +955,62 @@ export function useKitAppCommands(id?: KitAppId) {
     };
   }
   return {
-    undo: (origin: string) => controller.execute("semio.kitApp.undo", origin),
-    redo: (origin: string) => controller.execute("semio.kitApp.redo", origin),
-    selectAll: (origin: string) => controller.execute("semio.kitApp.selectAll", origin),
-    deselectAll: (origin: string) => controller.execute("semio.kitApp.deselectAll", origin),
-    selectType: (origin: string, Guid: Guid) => controller.execute("semio.kitApp.selectType", origin, Guid),
-    selectTypes: (origin: string, typeIds: Guid[]) => controller.execute("semio.kitApp.selectTypes", origin, typeIds),
-    addTypeToSelection: (origin: string, Guid: Guid) => controller.execute("semio.kitApp.addTypeToSelection", origin, Guid),
-    removeTypeFromSelection: (origin: string, Guid: Guid) => controller.execute("semio.kitApp.removeTypeFromSelection", origin, Guid),
-    selectDesign: (origin: string, Guid: Guid) => controller.execute("semio.kitApp.selectDesign", origin, Guid),
-    selectDesigns: (origin: string, designIds: Guid[]) => controller.execute("semio.kitApp.selectDesigns", origin, designIds),
-    addDesignToSelection: (origin: string, Guid: Guid) => controller.execute("semio.kitApp.addDesignToSelection", origin, Guid),
-    removeDesignFromSelection: (origin: string, Guid: Guid) => controller.execute("semio.kitApp.removeDesignFromSelection", origin, Guid),
-    selectQuality: (origin: string, key: string) => controller.execute("semio.kitApp.selectQuality", origin, key),
-    selectQualities: (origin: string, keys: string[]) => controller.execute("semio.kitApp.selectQualities", origin, keys),
-    addQualityToSelection: (origin: string, key: string) => controller.execute("semio.kitApp.addQualityToSelection", origin, key),
-    removeQualityFromSelection: (origin: string, key: string) => controller.execute("semio.kitApp.removeQualityFromSelection", origin, key),
-    selectInterface: (origin: string, guid: Guid) => controller.execute("semio.kitApp.selectInterface", origin, guid),
-    selectInterfaces: (origin: string, guids: Guid[]) => controller.execute("semio.kitApp.selectInterfaces", origin, guids),
-    addInterfaceToSelection: (origin: string, guid: Guid) => controller.execute("semio.kitApp.addInterfaceToSelection", origin, guid),
-    removeInterfaceFromSelection: (origin: string, guid: Guid) => controller.execute("semio.kitApp.removeInterfaceFromSelection", origin, guid),
-    selectTag: (origin: string, guid: Guid) => controller.execute("semio.kitApp.selectTag", origin, guid),
-    selectTags: (origin: string, guids: Guid[]) => controller.execute("semio.kitApp.selectTags", origin, guids),
-    addTagToSelection: (origin: string, guid: Guid) => controller.execute("semio.kitApp.addTagToSelection", origin, guid),
-    removeTagFromSelection: (origin: string, guid: Guid) => controller.execute("semio.kitApp.removeTagFromSelection", origin, guid),
-    selectConcept: (origin: string, guid: Guid) => controller.execute("semio.kitApp.selectConcept", origin, guid),
-    selectConcepts: (origin: string, guids: Guid[]) => controller.execute("semio.kitApp.selectConcepts", origin, guids),
-    addConceptToSelection: (origin: string, guid: Guid) => controller.execute("semio.kitApp.addConceptToSelection", origin, guid),
-    removeConceptFromSelection: (origin: string, guid: Guid) => controller.execute("semio.kitApp.removeConceptFromSelection", origin, guid),
-    selectFile: (origin: string, path: string) => controller.execute("semio.kitApp.selectFile", origin, path),
-    selectFiles: (origin: string, paths: string[]) => controller.execute("semio.kitApp.selectFiles", origin, paths),
-    addFileToSelection: (origin: string, path: string) => controller.execute("semio.kitApp.addFileToSelection", origin, path),
-    removeFileFromSelection: (origin: string, path: string) => controller.execute("semio.kitApp.removeFileFromSelection", origin, path),
-    selectFolder: (origin: string, guid: Guid) => controller.execute("semio.kitApp.selectFolder", origin, guid),
-    selectFolders: (origin: string, guids: Guid[]) => controller.execute("semio.kitApp.selectFolders", origin, guids),
-    addFolderToSelection: (origin: string, guid: Guid) => controller.execute("semio.kitApp.addFolderToSelection", origin, guid),
-    removeFolderFromSelection: (origin: string, guid: Guid) => controller.execute("semio.kitApp.removeFolderFromSelection", origin, guid),
-    selectAuthor: (origin: string, name: string) => controller.execute("semio.kitApp.selectAuthor", origin, name),
-    selectAuthors: (origin: string, names: string[]) => controller.execute("semio.kitApp.selectAuthors", origin, names),
-    addAuthorToSelection: (origin: string, name: string) => controller.execute("semio.kitApp.addAuthorToSelection", origin, name),
-    removeAuthorFromSelection: (origin: string, name: string) => controller.execute("semio.kitApp.removeAuthorFromSelection", origin, name),
-    deleteSelected: (origin: string) => controller.execute("semio.kitApp.deleteSelected", origin),
-    toggleTypesFullscreen: (origin: string) => controller.execute("semio.kitApp.toggleTypesFullscreen", origin),
-    toggleDesignsFullscreen: (origin: string) => controller.execute("semio.kitApp.toggleDesignsFullscreen", origin),
-    addType: (origin: string, type: Type) => controller.execute("semio.kitApp.addType", origin, type),
-    addTypes: (origin: string, types: Type[]) => controller.execute("semio.kitApp.addTypes", origin, types),
-    removeType: (origin: string, Guid: Guid) => controller.execute("semio.kitApp.removeType", origin, Guid),
-    removeTypes: (origin: string, typeIds: Guid[]) => controller.execute("semio.kitApp.removeTypes", origin, typeIds),
-    addDesign: (origin: string, design: Design) => controller.execute("semio.kitApp.addDesign", origin, design),
-    addDesigns: (origin: string, designs: Design[]) => controller.execute("semio.kitApp.addDesigns", origin, designs),
-    removeDesign: (origin: string, Guid: Guid) => controller.execute("semio.kitApp.removeDesign", origin, Guid),
-    removeDesigns: (origin: string, designIds: Guid[]) => controller.execute("semio.kitApp.removeDesigns", origin, designIds),
-    updateType: (origin: string, guid: Guid, typeDiff: TypeDiff) => controller.execute("semio.kitApp.updateType", origin, guid, typeDiff),
-    updateTypes: (origin: string, updates: { type: { guid: Guid }; diff: TypeDiff }[]) => controller.execute("semio.kitApp.updateTypes", origin, updates),
-    updateDesign: (origin: string, guid: Guid, designDiff: DesignDiff) => controller.execute("semio.kitApp.updateDesign", origin, guid, designDiff),
-    updateDesigns: (origin: string, updates: { design: { guid: Guid }; diff: DesignDiff }[]) => controller.execute("semio.kitApp.updateDesigns", origin, updates),
-    togglePanel: (origin: string, panelKey: keyof PanelVisibility) => {
+    undo: () => controller.execute("semio.kitApp.undo", getOrigin()),
+    redo: () => controller.execute("semio.kitApp.redo", getOrigin()),
+    selectAll: () => controller.execute("semio.kitApp.selectAll", getOrigin()),
+    deselectAll: () => controller.execute("semio.kitApp.deselectAll", getOrigin()),
+    selectType: (guid: Guid) => controller.execute("semio.kitApp.selectType", getOrigin(), guid),
+    selectTypes: (typeIds: Guid[]) => controller.execute("semio.kitApp.selectTypes", getOrigin(), typeIds),
+    addTypeToSelection: (guid: Guid) => controller.execute("semio.kitApp.addTypeToSelection", getOrigin(), guid),
+    removeTypeFromSelection: (guid: Guid) => controller.execute("semio.kitApp.removeTypeFromSelection", getOrigin(), guid),
+    selectDesign: (guid: Guid) => controller.execute("semio.kitApp.selectDesign", getOrigin(), guid),
+    selectDesigns: (designIds: Guid[]) => controller.execute("semio.kitApp.selectDesigns", getOrigin(), designIds),
+    addDesignToSelection: (guid: Guid) => controller.execute("semio.kitApp.addDesignToSelection", getOrigin(), guid),
+    removeDesignFromSelection: (guid: Guid) => controller.execute("semio.kitApp.removeDesignFromSelection", getOrigin(), guid),
+    selectQuality: (key: string) => controller.execute("semio.kitApp.selectQuality", getOrigin(), key),
+    selectQualities: (keys: string[]) => controller.execute("semio.kitApp.selectQualities", getOrigin(), keys),
+    addQualityToSelection: (key: string) => controller.execute("semio.kitApp.addQualityToSelection", getOrigin(), key),
+    removeQualityFromSelection: (key: string) => controller.execute("semio.kitApp.removeQualityFromSelection", getOrigin(), key),
+    selectInterface: (guid: Guid) => controller.execute("semio.kitApp.selectInterface", getOrigin(), guid),
+    selectInterfaces: (guids: Guid[]) => controller.execute("semio.kitApp.selectInterfaces", getOrigin(), guids),
+    addInterfaceToSelection: (guid: Guid) => controller.execute("semio.kitApp.addInterfaceToSelection", getOrigin(), guid),
+    removeInterfaceFromSelection: (guid: Guid) => controller.execute("semio.kitApp.removeInterfaceFromSelection", getOrigin(), guid),
+    selectTag: (guid: Guid) => controller.execute("semio.kitApp.selectTag", getOrigin(), guid),
+    selectTags: (guids: Guid[]) => controller.execute("semio.kitApp.selectTags", getOrigin(), guids),
+    addTagToSelection: (guid: Guid) => controller.execute("semio.kitApp.addTagToSelection", getOrigin(), guid),
+    removeTagFromSelection: (guid: Guid) => controller.execute("semio.kitApp.removeTagFromSelection", getOrigin(), guid),
+    selectConcept: (guid: Guid) => controller.execute("semio.kitApp.selectConcept", getOrigin(), guid),
+    selectConcepts: (guids: Guid[]) => controller.execute("semio.kitApp.selectConcepts", getOrigin(), guids),
+    addConceptToSelection: (guid: Guid) => controller.execute("semio.kitApp.addConceptToSelection", getOrigin(), guid),
+    removeConceptFromSelection: (guid: Guid) => controller.execute("semio.kitApp.removeConceptFromSelection", getOrigin(), guid),
+    selectFile: (path: string) => controller.execute("semio.kitApp.selectFile", getOrigin(), path),
+    selectFiles: (paths: string[]) => controller.execute("semio.kitApp.selectFiles", getOrigin(), paths),
+    addFileToSelection: (path: string) => controller.execute("semio.kitApp.addFileToSelection", getOrigin(), path),
+    removeFileFromSelection: (path: string) => controller.execute("semio.kitApp.removeFileFromSelection", getOrigin(), path),
+    selectFolder: (guid: Guid) => controller.execute("semio.kitApp.selectFolder", getOrigin(), guid),
+    selectFolders: (guids: Guid[]) => controller.execute("semio.kitApp.selectFolders", getOrigin(), guids),
+    addFolderToSelection: (guid: Guid) => controller.execute("semio.kitApp.addFolderToSelection", getOrigin(), guid),
+    removeFolderFromSelection: (guid: Guid) => controller.execute("semio.kitApp.removeFolderFromSelection", getOrigin(), guid),
+    selectAuthor: (name: string) => controller.execute("semio.kitApp.selectAuthor", getOrigin(), name),
+    selectAuthors: (names: string[]) => controller.execute("semio.kitApp.selectAuthors", getOrigin(), names),
+    addAuthorToSelection: (name: string) => controller.execute("semio.kitApp.addAuthorToSelection", getOrigin(), name),
+    removeAuthorFromSelection: (name: string) => controller.execute("semio.kitApp.removeAuthorFromSelection", getOrigin(), name),
+    deleteSelected: () => controller.execute("semio.kitApp.deleteSelected", getOrigin()),
+    toggleTypesFullscreen: () => controller.execute("semio.kitApp.toggleTypesFullscreen", getOrigin()),
+    toggleDesignsFullscreen: () => controller.execute("semio.kitApp.toggleDesignsFullscreen", getOrigin()),
+    addType: (type: Type) => controller.execute("semio.kitApp.addType", getOrigin(), type),
+    addTypes: (types: Type[]) => controller.execute("semio.kitApp.addTypes", getOrigin(), types),
+    removeType: (guid: Guid) => controller.execute("semio.kitApp.removeType", getOrigin(), guid),
+    removeTypes: (typeIds: Guid[]) => controller.execute("semio.kitApp.removeTypes", getOrigin(), typeIds),
+    addDesign: (design: Design) => controller.execute("semio.kitApp.addDesign", getOrigin(), design),
+    addDesigns: (designs: Design[]) => controller.execute("semio.kitApp.addDesigns", getOrigin(), designs),
+    removeDesign: (guid: Guid) => controller.execute("semio.kitApp.removeDesign", getOrigin(), guid),
+    removeDesigns: (designIds: Guid[]) => controller.execute("semio.kitApp.removeDesigns", getOrigin(), designIds),
+    updateType: (guid: Guid, typeDiff: TypeDiff) => controller.execute("semio.kitApp.updateType", getOrigin(), guid, typeDiff),
+    updateTypes: (updates: { type: { guid: Guid }; diff: TypeDiff }[]) => controller.execute("semio.kitApp.updateTypes", getOrigin(), updates),
+    updateDesign: (guid: Guid, designDiff: DesignDiff) => controller.execute("semio.kitApp.updateDesign", getOrigin(), guid, designDiff),
+    updateDesigns: (updates: { design: { guid: Guid }; diff: DesignDiff }[]) => controller.execute("semio.kitApp.updateDesigns", getOrigin(), updates),
+    togglePanel: (panelKey: keyof PanelVisibility) => {
       const current = controller.snapshot().panelVisibility;
       controller.change({
         panelVisibility: {
@@ -1022,13 +1018,13 @@ export function useKitAppCommands(id?: KitAppId) {
         },
       });
     },
-    setFilterSearch: (origin: string, search: string) => controller.execute("semio.kitApp.setFilterSearch", origin, search),
-    setExpandedRows: (origin: string, rows: string[]) => controller.execute("semio.kitApp.setExpandedRows", origin, rows),
-    toggleExpandedRow: (origin: string, rowId: string) => controller.execute("semio.kitApp.toggleExpandedRow", origin, rowId),
-    setSortColumn: (origin: string, column: KitAppSortColumn) => controller.execute("semio.kitApp.setSortColumn", origin, column),
-    setSortDirection: (origin: string, direction: KitAppSortDirection) => controller.execute("semio.kitApp.setSortDirection", origin, direction),
-    toggleSort: (origin: string, column: KitAppSortColumn) => controller.execute("semio.kitApp.toggleSort", origin, column),
-    execute: (origin: string, command: string, ...args: any[]) => controller.execute(command, origin, ...args),
+    setFilterSearch: (search: string) => controller.execute("semio.kitApp.setFilterSearch", getOrigin(), search),
+    setExpandedRows: (rows: string[]) => controller.execute("semio.kitApp.setExpandedRows", getOrigin(), rows),
+    toggleExpandedRow: (rowId: string) => controller.execute("semio.kitApp.toggleExpandedRow", getOrigin(), rowId),
+    setSortColumn: (column: KitAppSortColumn) => controller.execute("semio.kitApp.setSortColumn", getOrigin(), column),
+    setSortDirection: (direction: KitAppSortDirection) => controller.execute("semio.kitApp.setSortDirection", getOrigin(), direction),
+    toggleSort: (column: KitAppSortColumn) => controller.execute("semio.kitApp.toggleSort", getOrigin(), column),
+    execute: (command: string, ...args: any[]) => controller.execute(command, getOrigin(), ...args),
   };
 }
 
@@ -2291,7 +2287,7 @@ const AppContent: FC = () => {
   const [setSelectionAction, canSetSelection] = useKitAppSetSelection();
   const [clearSelectionAction, canClearSelection] = useKitAppClearSelection();
   const [setFilterAction, canSetFilter] = useKitAppSetFilter();
-  const [toggleRowAction, canToggleRow] = useKitAppToggleRow();
+  const [toggleRowAction] = useKitAppToggleRow();
   const [setSortAction, canSetSort] = useKitAppSetSort();
   const [toggleSortAction, canToggleSort] = useKitAppToggleSort();
 
@@ -3452,8 +3448,11 @@ const AppContent: FC = () => {
     }
   }, [focusedItemId, rows]);
 
-  const toggleRow = (rowId: string) => {
-    kitAppCommands.toggleExpandedRow("semio.sketchpad.app.kit.canvas.table.toggleRow", rowId);
+  const toggleRow = (rowId: string, origin: string = "semio.sketchpad.app.kit.canvas.table.toggleRow") => {
+    if (toggleRowAction) {
+      toggleRowAction(rowId);
+    }
+    kitAppCommands.toggleExpandedRow(origin, rowId);
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -3613,7 +3612,7 @@ const AppContent: FC = () => {
     if (shouldExpandFolder && targetFolderId) {
       const folderId = `folder-${targetFolderId}`;
       if (!expandedRows.has(folderId)) {
-        kitAppCommands.toggleExpandedRow("semio.sketchpad.app.kit.canvas.table.expandFolder", folderId);
+        toggleRow(folderId, "semio.sketchpad.app.kit.canvas.table.expandFolder");
       }
     }
 
@@ -3621,7 +3620,7 @@ const AppContent: FC = () => {
     if (shouldExpandParent && targetParentId) {
       const parentRowId = draggedRow.kind === "designs" ? `design-${targetParentId}` : `type-${targetParentId}`;
       if (!expandedRows.has(parentRowId)) {
-        kitAppCommands.toggleExpandedRow("semio.sketchpad.app.kit.canvas.table.expandParent", parentRowId);
+        toggleRow(parentRowId, "semio.sketchpad.app.kit.canvas.table.expandParent");
       }
     }
   };
@@ -4206,7 +4205,7 @@ const AppContent: FC = () => {
                         level="base"
                         onClick={(e) => {
                           e.stopPropagation();
-                          kitAppCommands.toggleExpandedRow("semio.sketchpad.app.kit.canvas.table.toggleRow", row.id);
+                          toggleRow(row.id);
                         }}
                         icon={row.isExpanded ? <ChevronDownIcon /> : <ChevronRightIcon />}
                       />
@@ -4497,7 +4496,7 @@ const AppContent: FC = () => {
                         level="base"
                         onClick={(e) => {
                           e.stopPropagation();
-                          kitAppCommands.toggleExpandedRow("semio.sketchpad.app.kit.canvas.table.toggleRow", row.id);
+                          toggleRow(row.id);
                         }}
                         icon={row.isExpanded ? <ChevronDownIcon /> : <ChevronRightIcon />}
                       />
@@ -4649,8 +4648,10 @@ function useKitAppYjsToXStateSync() {
   }, [kitGuid, hasKit, sketchpadStore, sketchpadCommands]);
 
   // Initialize XState with Y.js state synchronously (before paint)
+  // Note: hasKit is included in deps so this effect runs when hasKit changes from false to true
+  // (which is when the first effect creates the kit app)
   useLayoutEffect(() => {
-    if (hasInitialized.current || !kitGuid || !sketchpadStore.hasKitApp({ kit: kitGuid })) return;
+    if (hasInitialized.current || !kitGuid || !hasKit || !sketchpadStore.hasKitApp({ kit: kitGuid })) return;
 
     const store = sketchpadStore.kitApp(kitGuid);
     const initialState = store.snapshot();
@@ -4674,7 +4675,7 @@ function useKitAppYjsToXStateSync() {
       state: xstateInitialState,
     });
     hasInitialized.current = true;
-  }, [actor, sketchpadStore, kitGuid]);
+  }, [actor, sketchpadStore, kitGuid, hasKit]);
 
   // Continue syncing Y.js changes to XState
   const store = kitGuid && sketchpadStore.hasKitApp({ kit: kitGuid }) ? sketchpadStore.kitApp(kitGuid) : null;
@@ -5385,9 +5386,9 @@ export const config: AppConfig = {
     },
   ],
   getPanels: (): PanelDefinition[] => [
-    createPanelDefinition(PanelKind.SETTINGS, "semio.sketchpad.navbar.panelToggle.settings.show"),
     createPanelDefinition(PanelKind.DETAILS, "semio.sketchpad.navbar.panelToggle.details.show"),
     createPanelDefinition(PanelKind.CHAT, "semio.sketchpad.navbar.panelToggle.chat.show"),
+    createPanelDefinition(PanelKind.SETTINGS, "semio.sketchpad.navbar.panelToggle.settings.show"),
   ],
   matchesPath: (pathParts) => {
     const isUuidPattern = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
