@@ -10608,10 +10608,7 @@ export function createSketchpadActor(input: SketchpadMachineInput) {
         // Extract event params (everything except type)
         const { type, ...params } = event as any;
         const hasParams = Object.keys(params).length > 0;
-        console.log(
-          `[Machine] ${type} → ${stateValue}`,
-          hasParams ? params : ""
-        );
+        console.log(`[Machine] ${type} → ${stateValue}`, hasParams ? params : "");
       }
     },
   });
@@ -13565,7 +13562,7 @@ export function useHomeCommands() {
       toggleSort: (origin: string, column: string) => {
         actor.send({ type: "HOME.SET_SORT_COLUMN", column } as any);
       },
-      togglePanel: (panel: keyof PanelVisibility) => actor.send({ type: "HOME.TOGGLE_PANEL", panel } as any),
+      togglePanel: (_origin: string, panel: keyof PanelVisibility) => actor.send({ type: "HOME.TOGGLE_PANEL", panel } as any),
       addLoadingKit: (tempGuid: string, name: string) => actor.send({ type: "HOME.ADD_LOADING_KIT", tempGuid, name } as any),
       removeLoadingKit: (tempGuid: string) => actor.send({ type: "HOME.REMOVE_LOADING_KIT", tempGuid } as any),
     }),
@@ -17662,7 +17659,14 @@ const SketchpadContent: FC = () => {
   return <LayoutWrapper />;
 };
 
-const Sketchpad: FC<{ id?: string; remote?: RemoteProviders; onWindowEvents?: WindowEvents; initialState?: ExtendedInitialState; importKitUrls?: string[]; embedded?: boolean }> = ({ id, remote, onWindowEvents, initialState, importKitUrls, embedded }) => {
+const Sketchpad: FC<{ id?: string; remote?: RemoteProviders; onWindowEvents?: WindowEvents; initialState?: ExtendedInitialState; importKitUrls?: string[]; embedded?: boolean }> = ({
+  id,
+  remote,
+  onWindowEvents,
+  initialState,
+  importKitUrls,
+  embedded,
+}) => {
   const initialEntries = useMemo(() => {
     if (!embedded) return undefined;
     if (typeof window !== "undefined" && window.location) {

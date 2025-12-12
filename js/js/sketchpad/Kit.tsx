@@ -98,7 +98,7 @@ import {
 } from "./Sketchpad";
 import { Action, Input, NotFound, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Strip, Table, TableAvatar, Textarea, Toggle, ToggleGroup, Transaction, TreeContent, TreeItem } from "./elements";
 import type { HookNoSetResult, HookResult, KitAppId, KitCommandContext, KitDiffAppEdit, Layout, PanelDefinition, PanelVisibility, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
-import { AppConfig, createPanelDefinition, Expertise, Mode, PanelKind, Theme } from "./shared";
+import { AppConfig, AppPlugin, conditionalHookResult, createPanelDefinition, Expertise, Mode, PanelKind, registerAppPlugin, Theme } from "./shared";
 
 // #endregion Imports
 
@@ -773,6 +773,45 @@ if (typeof window !== "undefined") {
   registerKitStoreFactory((parent, yMap, transact, id, state) => new KitStore(parent, yMap, transact, id, state as any));
 }
 
+// #region Kit App Plugin Registration
+
+/**
+ * Kit app plugin for the sketchpad machine.
+ * Provides KIT.* events, actions, and guards.
+ */
+const kitAppPlugin: AppPlugin = {
+  id: "kit",
+  namespace: "KIT",
+  machine: {
+    // Actions are defined in Sketchpad.tsx for now
+    // TODO: Move kit-specific actions here when Sketchpad.tsx is refactored
+    actions: {},
+    guards: {},
+    eventHandlers: {},
+    selectors: {},
+    createDefaultState: () => ({
+      panelVisibility: { toolbar: true, workbench: false, details: false, chat: false, settings: false },
+      selection: undefined,
+      hover: undefined,
+      fullscreenWindow: KitAppFullscreenWindow.None,
+      others: [],
+      filterSearch: "",
+      expandedRows: new Set<string>(),
+      sortColumn: undefined,
+      sortDirection: undefined,
+    }),
+  },
+  registerStores: () => {
+    // Store factory already registered above
+  },
+};
+
+if (typeof window !== "undefined") {
+  registerAppPlugin(kitAppPlugin);
+}
+
+// #endregion Kit App Plugin Registration
+
 function useKitStore<T>(selector?: (controller: KitStore) => T, id?: KitAppId): T | KitStore | null {
   const orchestrator = useSketchpadStore();
   const kitScope = useKitScope();
@@ -836,19 +875,22 @@ export function useKitApp<T>(selector?: (state: KitAppState) => T, id?: KitAppId
 
 export function useKitAppSelection(): HookResult<KitAppSelection> {
   const kitScope = useKitScope();
-  const controller = useKitStore() as KitStore | null;
+  const actor = useSketchpadActor();
+  const kitGuid = kitScope?.guid ?? "";
   const state = useKitApp(identitySelector);
   const selection = (state as KitAppState).selection ?? emptyKitAppSelection;
-  const canSet = kitScope !== null && controller !== null;
-  const setSelection = useCallback(
-    (value: KitAppSelection) => {
-      if (controller) controller.execute("semio.kitApp.setSelection", value);
-    },
-    [controller],
-  );
-  return [selection, setSelection, canSet];
+  const canSetEvent = useMemo(() => ({ type: "KIT.SET_SELECTION" as const, kitGuid, selection: {} as KitAppSelection }), [kitGuid]);
+  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
+  const setSelection = useMemo(() => {
+    if (!canSet) return undefined;
+    return (value: KitAppSelection) => {
+      actor.send({ type: "KIT.SET_SELECTION", kitGuid, selection: value });
+    };
+  }, [actor, kitGuid, canSet]);
+  return conditionalHookResult(canSet, selection, setSelection);
 }
 
+// TODO: Add KIT.SET_FULLSCREEN event to XState machine, then migrate this hook
 export function useKitAppFullscreen(): HookResult<KitAppFullscreenWindow> {
   const kitScope = useKitScope();
   const controller = useKitStore() as KitStore | null;
@@ -871,15 +913,17 @@ export function useKitAppOthers(): HookNoSetResult<KitAppPresenceOther[]> {
 }
 
 export function useKitAppTransaction(): Transaction {
-  const controller = useKitStore() as KitStore | null;
-  const getOrigin = useOrigin();
-  if (!controller) {
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const kitGuid = kitScope?.guid ?? "";
+
+  if (!kitGuid) {
     return {};
   }
   return {
-    start: () => controller.execute("semio.kitApp.startTransaction", getOrigin()),
-    finalize: () => controller.execute("semio.kitApp.finalizeTransaction", getOrigin()),
-    abort: () => controller.execute("semio.kitApp.abortTransaction", getOrigin()),
+    start: () => actor.send({ type: "KIT.TRANSACTION.START", kitGuid }),
+    finalize: () => actor.send({ type: "KIT.TRANSACTION.COMMIT", kitGuid }),
+    abort: () => actor.send({ type: "KIT.TRANSACTION.ABORT", kitGuid }),
   };
 }
 
@@ -1010,7 +1054,7 @@ export function useKitAppCommands(id?: KitAppId) {
     updateTypes: (updates: { type: { guid: Guid }; diff: TypeDiff }[]) => controller.execute("semio.kitApp.updateTypes", getOrigin(), updates),
     updateDesign: (guid: Guid, designDiff: DesignDiff) => controller.execute("semio.kitApp.updateDesign", getOrigin(), guid, designDiff),
     updateDesigns: (updates: { design: { guid: Guid }; diff: DesignDiff }[]) => controller.execute("semio.kitApp.updateDesigns", getOrigin(), updates),
-    togglePanel: (panelKey: keyof PanelVisibility) => {
+    togglePanel: (_origin: string, panelKey: keyof PanelVisibility) => {
       const current = controller.snapshot().panelVisibility;
       controller.change({
         panelVisibility: {
@@ -1154,7 +1198,7 @@ export function useKitAppToggleSort(): ActionHookResult<[column: KitAppSortColum
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid ?? "";
   const [selection] = useKitAppSelection();
-  const kitApp = useKitAppXState();
+  const kitApp = useKitAppXState(kitGuid);
   const sortColumn = kitApp?.sortColumn;
   const sortDirection = kitApp?.sortDirection;
   const canActEvent = useMemo(() => ({ type: "KIT.SET_SORT" as const, kitGuid, column: "", direction: "asc" as const }), [kitGuid]);
@@ -3448,11 +3492,11 @@ const AppContent: FC = () => {
     }
   }, [focusedItemId, rows]);
 
-  const toggleRow = (rowId: string, origin: string = "semio.sketchpad.app.kit.canvas.table.toggleRow") => {
+  const toggleRow = (rowId: string) => {
     if (toggleRowAction) {
       toggleRowAction(rowId);
     }
-    kitAppCommands.toggleExpandedRow(origin, rowId);
+    kitAppCommands.toggleExpandedRow(rowId);
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -3566,17 +3610,17 @@ const AppContent: FC = () => {
       if (targetParentId !== undefined) {
         // Dropped onto another design - set as parent
         if (design.parent?.guid !== targetParentId) {
-          kitCommands.updateDesign("semio.sketchpad.app.kit.canvas.table.setDesignParent", design.guid, { parent: { guid: targetParentId } });
+          kitCommands.updateDesign(design.guid, { parent: { guid: targetParentId } });
         }
       } else if (targetFolderId === undefined && (design.parent || design.folder)) {
         // Dropped on root - unparent and remove from folder
-        kitCommands.updateDesign("semio.sketchpad.app.kit.canvas.table.unparentDesign", design.guid, { parent: undefined });
+        kitCommands.updateDesign(design.guid, { parent: undefined });
         if (design.folder) {
-          kitCommands.moveToFolder("semio.sketchpad.app.kit.canvas.table.moveDesignToRoot", "design", design.guid, null);
+          kitCommands.moveToFolder("design", design.guid, null);
         }
       } else if (!design.parent) {
         // Root design (protodesign) - can be moved to folders or root
-        kitCommands.moveToFolder("semio.sketchpad.app.kit.canvas.table.moveDesignToFolder", "design", design.guid, targetFolderId ?? null);
+        kitCommands.moveToFolder("design", design.guid, targetFolderId ?? null);
       }
     } else if (draggedRow.kind === "types" && kitCommands) {
       const type = draggedRow.data as Type;
@@ -3585,34 +3629,34 @@ const AppContent: FC = () => {
       if (targetParentId !== undefined) {
         // Dropped onto another type - set as parent
         if (type.parent?.guid !== targetParentId) {
-          kitCommands.updateType("semio.sketchpad.app.kit.canvas.table.setTypeParent", type.guid, { parent: { guid: targetParentId } });
+          kitCommands.updateType(type.guid, { parent: { guid: targetParentId } });
         }
       } else if (targetFolderId === undefined && (type.parent || type.folder)) {
         // Dropped on root - unparent and remove from folder
-        kitCommands.updateType("semio.sketchpad.app.kit.canvas.table.unparentType", type.guid, { parent: undefined });
+        kitCommands.updateType(type.guid, { parent: undefined });
         if (type.folder) {
-          kitCommands.moveToFolder("semio.sketchpad.app.kit.canvas.table.moveTypeToRoot", "type", type.guid, null);
+          kitCommands.moveToFolder("type", type.guid, null);
         }
       } else if (!type.parent) {
         // Root type (prototype) - can be moved to folders or root
-        kitCommands.moveToFolder("semio.sketchpad.app.kit.canvas.table.moveTypeToFolder", "type", type.guid, targetFolderId ?? null);
+        kitCommands.moveToFolder("type", type.guid, targetFolderId ?? null);
       }
     } else if (draggedRow.kind === "qualities" && kitCommands) {
       const quality = draggedRow.data as Quality;
-      kitCommands.moveToFolder("semio.sketchpad.app.kit.canvas.table.moveQualityToFolder", "quality", quality.guid, targetFolderId ?? null);
+      kitCommands.moveToFolder("quality", quality.guid, targetFolderId ?? null);
     } else if (draggedRow.kind === "files" && kitCommands) {
       const file = draggedRow.data as SemioFile;
-      kitCommands.moveToFolder("semio.sketchpad.app.kit.canvas.table.moveFileToFolder", "file", file.guid, targetFolderId ?? null);
+      kitCommands.moveToFolder("file", file.guid, targetFolderId ?? null);
     } else if (draggedRow.kind === "folders" && kitCommands) {
       const folder = draggedRow.data as Folder;
-      kitCommands.moveToFolder("semio.sketchpad.app.kit.canvas.table.moveFolderToFolder", "folder", folder.guid, targetFolderId ?? null);
+      kitCommands.moveToFolder("folder", folder.guid, targetFolderId ?? null);
     }
 
     // Expand the target folder if moving into a folder
     if (shouldExpandFolder && targetFolderId) {
       const folderId = `folder-${targetFolderId}`;
       if (!expandedRows.has(folderId)) {
-        toggleRow(folderId, "semio.sketchpad.app.kit.canvas.table.expandFolder");
+        toggleRow(folderId);
       }
     }
 
@@ -3620,7 +3664,7 @@ const AppContent: FC = () => {
     if (shouldExpandParent && targetParentId) {
       const parentRowId = draggedRow.kind === "designs" ? `design-${targetParentId}` : `type-${targetParentId}`;
       if (!expandedRows.has(parentRowId)) {
-        toggleRow(parentRowId, "semio.sketchpad.app.kit.canvas.table.expandParent");
+        toggleRow(parentRowId);
       }
     }
   };
@@ -3636,7 +3680,7 @@ const AppContent: FC = () => {
           pieces: [],
           connections: [],
         };
-        if (kitCommands) kitCommands.createDesign("semio.sketchpad.app.kit.canvas.table.createDesign", newDesign);
+        if (kitCommands) kitCommands.createDesign(newDesign);
         sketchpadCommands.navigateToDesign(kit.guid, newDesign.guid);
         break;
       }
@@ -3648,7 +3692,7 @@ const AppContent: FC = () => {
           name: uniqueName,
           ports: [],
         };
-        if (kitCommands) kitCommands.createType("semio.sketchpad.app.kit.canvas.table.createType", newType);
+        if (kitCommands) kitCommands.createType(newType);
         sketchpadCommands.navigateToType(kit.guid, newType.guid);
         break;
       }
@@ -3662,7 +3706,7 @@ const AppContent: FC = () => {
           key: uniqueKey,
           name: uniqueName,
         };
-        if (kitCommands) kitCommands.createQuality("semio.sketchpad.app.kit.canvas.table.createQuality", newQuality);
+        if (kitCommands) kitCommands.createQuality(newQuality);
         sketchpadCommands.navigateToQuality(kit.guid, newQuality.guid);
         break;
       }
@@ -3673,7 +3717,7 @@ const AppContent: FC = () => {
           guid: guid(),
           name: uniqueName,
         };
-        if (kitCommands) kitCommands.createInterface("semio.sketchpad.app.kit.canvas.table.createInterface", newInterface);
+        if (kitCommands) kitCommands.createInterface(newInterface);
         break;
       }
       case "tags": {
@@ -3683,7 +3727,7 @@ const AppContent: FC = () => {
           guid: guid(),
           name: uniqueName,
         };
-        if (kitCommands) kitCommands.createTag("semio.sketchpad.app.kit.canvas.table.createTag", newTag);
+        if (kitCommands) kitCommands.createTag(newTag);
         break;
       }
       case "concepts": {
@@ -3693,7 +3737,7 @@ const AppContent: FC = () => {
           guid: guid(),
           name: uniqueName,
         };
-        if (kitCommands) kitCommands.createConcept("semio.sketchpad.app.kit.canvas.table.createConcept", newConcept);
+        if (kitCommands) kitCommands.createConcept(newConcept);
         break;
       }
       case "files": {
@@ -3707,7 +3751,7 @@ const AppContent: FC = () => {
           guid: guid(),
           name: uniqueName,
         };
-        if (kitCommands) kitCommands.createFolder("semio.sketchpad.app.kit.canvas.table.createFolder", newFolder);
+        if (kitCommands) kitCommands.createFolder(newFolder);
         break;
       }
       case "authors": {
@@ -3729,7 +3773,7 @@ const AppContent: FC = () => {
         pieces: [],
         connections: [],
       };
-      if (kitCommands) kitCommands.createDesign("semio.sketchpad.app.kit.canvas.table.createChild", newDesign);
+      if (kitCommands) kitCommands.createDesign(newDesign);
       sketchpadCommands.navigateToDesign(kit.guid, newDesign.guid);
     } else if (row.kind === "types") {
       const type = row.data as Type;
@@ -3741,7 +3785,7 @@ const AppContent: FC = () => {
         parent: { guid: type.guid },
         ports: [],
       };
-      if (kitCommands) kitCommands.createType("semio.sketchpad.app.kit.canvas.table.createChild", newType);
+      if (kitCommands) kitCommands.createType(newType);
       sketchpadCommands.navigateToType(kit.guid, newType.guid);
     }
   };
@@ -3960,7 +4004,7 @@ const AppContent: FC = () => {
   };
 
   const handleSortClick = (column: "artifact" | "kind" | "authors" | "updatedAt" | "createdAt") => {
-    kitAppCommands.toggleSort("semio.sketchpad.app.kit.canvas.table.toggleSort", column);
+    kitAppCommands.toggleSort(column);
   };
 
   const handleFileDragOver = (e: React.DragEvent) => {
@@ -4005,7 +4049,7 @@ const AppContent: FC = () => {
       };
 
       try {
-        await kitCommands?.addFile("semio.sketchpad.app.kit.dropFile", newFile, file);
+        await kitCommands?.addFile(newFile, file);
       } catch (error) {
         console.error(`Failed to add file ${file.name}:`, error);
       }
@@ -4031,7 +4075,7 @@ const AppContent: FC = () => {
         className="flex flex-col h-full"
         onClick={(e: React.MouseEvent) => {
           if (e.target === e.currentTarget) {
-            kitAppCommands.deselectAll("semio.sketchpad.app.kit.canvas.table.deselect");
+            kitAppCommands.deselectAll();
           }
         }}
       >
@@ -4160,14 +4204,7 @@ const AppContent: FC = () => {
             ...(selectedKind && !selectedName && uniqueNames.length > 0
               ? uniqueNames.map((name) => <Toggle key={name} pressed={false} onPressedChange={() => toggleName(name)} id="semio.sketchpad.app.kit.filter.name" icon={<span className="size-small">N</span>} text={name} />)
               : []),
-            <Input
-              key="search"
-              id="semio.sketchpad.app.kit.filter.search"
-              className="flex-1 min-w-[160px]"
-              placeholder={labelSearch}
-              value={searchQuery}
-              onChange={(e) => kitAppCommands.setFilterSearch("semio.sketchpad.app.kit.filter.search", e.target.value)}
-            />,
+            <Input key="search" id="semio.sketchpad.app.kit.filter.search" className="flex-1 min-w-[160px]" placeholder={labelSearch} value={searchQuery} onChange={(e) => kitAppCommands.setFilterSearch(e.target.value)} />,
           ]}
         />
         <ConceptFilter allConcepts={allConcepts} paramName="c" />
@@ -4186,8 +4223,8 @@ const AppContent: FC = () => {
                     pressed={sortColumn === "artifact"}
                     value={sortColumn === "artifact" ? sortDirection : "asc"}
                     onValueChange={(value) => {
-                      kitAppCommands.setSortColumn("semio.sketchpad.app.kit.header.artifact.sortColumn", "artifact");
-                      kitAppCommands.setSortDirection("semio.sketchpad.app.kit.header.artifact.sortDirection", value as "asc" | "desc");
+                      kitAppCommands.setSortColumn("artifact");
+                      kitAppCommands.setSortDirection(value as "asc" | "desc");
                     }}
                     items={[
                       { value: "asc", label: <SortAscendingIcon />, id: "semio.sketchpad.sort.ascending" },
@@ -4267,7 +4304,7 @@ const AppContent: FC = () => {
       className="flex flex-col h-full"
       onClick={(e: React.MouseEvent) => {
         if (e.target === e.currentTarget) {
-          kitAppCommands.deselectAll("semio.sketchpad.app.kit.canvas.table.deselect");
+          kitAppCommands.deselectAll();
         }
       }}
     >
@@ -4399,7 +4436,7 @@ const AppContent: FC = () => {
             className="flex-1 min-w-[200px]"
             placeholder={useLabel("semio.sketchpad.common.search")}
             value={searchQuery}
-            onChange={(e) => kitAppCommands.setFilterSearch("semio.sketchpad.app.kit.canvas.table.search", e.target.value)}
+            onChange={(e) => kitAppCommands.setFilterSearch(e.target.value)}
           />,
         ]}
       />
@@ -4438,8 +4475,8 @@ const AppContent: FC = () => {
                           pressed={sortColumn === "kind"}
                           value={sortColumn === "kind" ? sortDirection : "asc"}
                           onValueChange={(value) => {
-                            kitAppCommands.setSortColumn("semio.sketchpad.app.kit.header.kind.sortColumn", "kind");
-                            kitAppCommands.setSortDirection("semio.sketchpad.app.kit.header.kind.sortDirection", value as "asc" | "desc");
+                            kitAppCommands.setSortColumn("kind");
+                            kitAppCommands.setSortDirection(value as "asc" | "desc");
                           }}
                           items={[
                             { value: "asc", label: <SortAscendingIcon />, id: "semio.sketchpad.sort.ascending" },
@@ -4477,8 +4514,8 @@ const AppContent: FC = () => {
                     pressed={sortColumn === "artifact"}
                     value={sortColumn === "artifact" ? sortDirection : "asc"}
                     onValueChange={(value) => {
-                      kitAppCommands.setSortColumn("semio.sketchpad.app.kit.header.artifact.sortColumn", "artifact");
-                      kitAppCommands.setSortDirection("semio.sketchpad.app.kit.header.artifact.sortDirection", value as "asc" | "desc");
+                      kitAppCommands.setSortColumn("artifact");
+                      kitAppCommands.setSortDirection(value as "asc" | "desc");
                     }}
                     items={[
                       { value: "asc", label: <SortAscendingIcon />, id: "semio.sketchpad.sort.ascending" },
@@ -4532,8 +4569,8 @@ const AppContent: FC = () => {
                     pressed={sortColumn === "updatedAt"}
                     value={sortColumn === "updatedAt" ? sortDirection : "asc"}
                     onValueChange={(value) => {
-                      kitAppCommands.setSortColumn("semio.sketchpad.app.kit.header.updatedAt.sortColumn", "updatedAt");
-                      kitAppCommands.setSortDirection("semio.sketchpad.app.kit.header.updatedAt.sortDirection", value as "asc" | "desc");
+                      kitAppCommands.setSortColumn("updatedAt");
+                      kitAppCommands.setSortDirection(value as "asc" | "desc");
                     }}
                     items={[
                       { value: "asc", label: <SortAscendingIcon />, id: "semio.sketchpad.sort.ascending" },
@@ -4556,8 +4593,8 @@ const AppContent: FC = () => {
                     pressed={sortColumn === "createdAt"}
                     value={sortColumn === "createdAt" ? sortDirection : "asc"}
                     onValueChange={(value) => {
-                      kitAppCommands.setSortColumn("semio.sketchpad.app.kit.header.createdAt.sortColumn", "createdAt");
-                      kitAppCommands.setSortDirection("semio.sketchpad.app.kit.header.createdAt.sortDirection", value as "asc" | "desc");
+                      kitAppCommands.setSortColumn("createdAt");
+                      kitAppCommands.setSortDirection(value as "asc" | "desc");
                     }}
                     items={[
                       { value: "asc", label: <SortAscendingIcon />, id: "semio.sketchpad.sort.ascending" },
@@ -4757,14 +4794,7 @@ const KitSectionForm: FC = () => {
       <>
         <TreeItem>
           <TreeContent>
-            <Input
-              lazy
-              id="semio.sketchpad.app.kit.panel.details.section.kit.name"
-              value={kit.name}
-              onLazyChange={(value) => kitDataSource.change({ name: value })}
-              transaction={useKitAppTransaction("semio.sketchpad.app.kit.panel.details.section.kit.name")}
-              showLabel
-            />
+            <Input lazy id="semio.sketchpad.app.kit.panel.details.section.kit.name" value={kit.name} onLazyChange={(value) => kitDataSource.change({ name: value })} transaction={useKitAppTransaction()} showLabel />
           </TreeContent>
         </TreeItem>
         <TreeItem>
@@ -4775,7 +4805,7 @@ const KitSectionForm: FC = () => {
               value={kit.version || ""}
               placeholder={useLabel("semio.sketchpad.app.kit.versionPlaceholder.label")}
               onLazyChange={(value) => kitDataSource.change({ version: value })}
-              transaction={useKitAppTransaction("semio.sketchpad.app.kit.panel.details.section.kit.version")}
+              transaction={useKitAppTransaction()}
               showLabel
             />
           </TreeContent>
@@ -4788,7 +4818,7 @@ const KitSectionForm: FC = () => {
               value={kit.description || ""}
               placeholder={useLabel("semio.sketchpad.app.kit.descriptionPlaceholder.label")}
               onLazyChange={(value) => kitDataSource.change({ description: value })}
-              transaction={useKitAppTransaction("semio.sketchpad.app.kit.panel.details.section.kit.description")}
+              transaction={useKitAppTransaction()}
               showLabel
             />
           </TreeContent>
@@ -4801,7 +4831,7 @@ const KitSectionForm: FC = () => {
               value={kit.icon || ""}
               placeholder={useLabel("semio.sketchpad.app.kit.iconPlaceholder.label")}
               onLazyChange={(value) => kitDataSource.change({ icon: value })}
-              transaction={useKitAppTransaction("semio.sketchpad.app.kit.panel.details.section.kit.icon")}
+              transaction={useKitAppTransaction()}
               showLabel
             />
           </TreeContent>
@@ -4814,7 +4844,7 @@ const KitSectionForm: FC = () => {
               value={kit.image || ""}
               placeholder={useLabel("semio.sketchpad.app.kit.imagePlaceholder.label")}
               onLazyChange={(value) => kitDataSource.change({ image: value })}
-              transaction={useKitAppTransaction("semio.sketchpad.app.kit.panel.details.section.kit.image")}
+              transaction={useKitAppTransaction()}
               showLabel
             />
           </TreeContent>
@@ -4827,7 +4857,7 @@ const KitSectionForm: FC = () => {
               value={kit.homepage || ""}
               placeholder={useLabel("semio.sketchpad.app.kit.homepagePlaceholder.label")}
               onLazyChange={(value) => kitDataSource.change({ homepage: value })}
-              transaction={useKitAppTransaction("semio.sketchpad.app.kit.panel.details.section.kit.homepage")}
+              transaction={useKitAppTransaction()}
               showLabel
             />
           </TreeContent>
@@ -4840,7 +4870,7 @@ const KitSectionForm: FC = () => {
               value={kit.license || ""}
               placeholder={useLabel("semio.sketchpad.app.kit.licensePlaceholder.label")}
               onLazyChange={(value) => kitDataSource.change({ license: value })}
-              transaction={useKitAppTransaction("semio.sketchpad.app.kit.panel.details.section.kit.license")}
+              transaction={useKitAppTransaction()}
               showLabel
             />
           </TreeContent>
@@ -5247,7 +5277,7 @@ export const FolderSection: FC = () => {
               const folderDataSource = (kitDataSource as any).folder(folder.guid);
               folderDataSource.change({ name: value });
             }}
-            transaction={useKitAppTransaction("semio.sketchpad.app.kit.panel.details.section.folder.name")}
+            transaction={useKitAppTransaction()}
             showLabel
           />
         </TreeContent>
@@ -5264,7 +5294,7 @@ export const FolderSection: FC = () => {
                 const folderDataSource = (kitDataSource as any).folder(folder.guid);
                 folderDataSource.change({ description: value });
               }}
-              transaction={useKitAppTransaction("semio.sketchpad.app.kit.panel.details.section.folder.description")}
+              transaction={useKitAppTransaction()}
               showLabel
             />
           </TreeContent>

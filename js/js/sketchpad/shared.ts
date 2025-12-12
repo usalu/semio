@@ -1428,3 +1428,138 @@ export function getQualityAppStoreFactory(): QualityAppStoreFactory {
 
 // #endregion Store Factory Registry
 
+// #region App Plugin Registry
+
+/**
+ * Machine contribution from an app plugin.
+ * Apps provide their own events, actions, guards, and selectors.
+ */
+export interface AppMachineContribution {
+  /** Event type definitions (for TypeScript union type) */
+  eventTypes?: Record<string, any>;
+  /** Action implementations keyed by action name */
+  actions?: Record<string, (context: any, event: any) => any>;
+  /** Guard implementations keyed by guard name */
+  guards?: Record<string, (context: any, event: any) => boolean>;
+  /** Event-to-action/guard mappings for the machine's `on` config */
+  eventHandlers?: Record<string, { guard?: string; actions?: string | string[] }>;
+  /** Selector functions for reading app state */
+  selectors?: Record<string, (context: any, ...args: any[]) => any>;
+  /** Default state factory for this app */
+  createDefaultState?: () => any;
+}
+
+/**
+ * App plugin that contributes to the sketchpad machine.
+ * Each app registers a plugin on module import to provide its machine contributions.
+ */
+export interface AppPlugin {
+  /** Unique identifier for the app (e.g., "home", "kit", "type", "design") */
+  id: string;
+  /** Event namespace prefix (e.g., "HOME", "KIT", "TYPE", "DESIGN") */
+  namespace: string;
+  /** Machine contributions (events, actions, guards) */
+  machine: AppMachineContribution;
+  /** Optional store factory registration */
+  registerStores?: () => void;
+  /** Optional initialization hook called when plugin is registered */
+  onRegister?: () => void;
+}
+
+// Global plugin registry
+const appPlugins: Map<string, AppPlugin> = new Map();
+
+/**
+ * Register an app plugin.
+ * Should be called as a side-effect when the app module is imported.
+ */
+export function registerAppPlugin(plugin: AppPlugin): void {
+  if (appPlugins.has(plugin.id)) {
+    console.warn(`App plugin "${plugin.id}" already registered, replacing...`);
+  }
+  appPlugins.set(plugin.id, plugin);
+
+  // Call store registration if provided
+  if (plugin.registerStores) {
+    plugin.registerStores();
+  }
+
+  // Call initialization hook if provided
+  if (plugin.onRegister) {
+    plugin.onRegister();
+  }
+}
+
+/**
+ * Get all registered app plugins.
+ */
+export function getAppPlugins(): AppPlugin[] {
+  return Array.from(appPlugins.values());
+}
+
+/**
+ * Get a specific app plugin by ID.
+ */
+export function getAppPlugin(id: string): AppPlugin | undefined {
+  return appPlugins.get(id);
+}
+
+/**
+ * Check if an app plugin is registered.
+ */
+export function hasAppPlugin(id: string): boolean {
+  return appPlugins.has(id);
+}
+
+/**
+ * Compose all machine contributions from registered plugins.
+ * Returns merged actions, guards, and event handlers.
+ */
+export function composePluginContributions(): {
+  actions: Record<string, (context: any, event: any) => any>;
+  guards: Record<string, (context: any, event: any) => boolean>;
+  eventHandlers: Record<string, { guard?: string; actions?: string | string[] }>;
+  selectors: Record<string, (context: any, ...args: any[]) => any>;
+} {
+  const actions: Record<string, any> = {};
+  const guards: Record<string, any> = {};
+  const eventHandlers: Record<string, any> = {};
+  const selectors: Record<string, any> = {};
+
+  for (const plugin of appPlugins.values()) {
+    const contribution = plugin.machine;
+
+    // Merge actions with namespace prefix
+    if (contribution.actions) {
+      for (const [name, fn] of Object.entries(contribution.actions)) {
+        actions[name] = fn;
+      }
+    }
+
+    // Merge guards with namespace prefix
+    if (contribution.guards) {
+      for (const [name, fn] of Object.entries(contribution.guards)) {
+        guards[name] = fn;
+      }
+    }
+
+    // Merge event handlers
+    if (contribution.eventHandlers) {
+      for (const [eventType, handler] of Object.entries(contribution.eventHandlers)) {
+        eventHandlers[eventType] = handler;
+      }
+    }
+
+    // Merge selectors with namespace prefix
+    if (contribution.selectors) {
+      for (const [name, fn] of Object.entries(contribution.selectors)) {
+        selectors[`${plugin.id}.${name}`] = fn;
+      }
+    }
+  }
+
+  return { actions, guards, eventHandlers, selectors };
+}
+
+// #endregion App Plugin Registry
+

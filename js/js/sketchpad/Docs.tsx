@@ -30,7 +30,7 @@ import { useLabel } from "../i18n";
 import type { SketchpadStore } from "./Sketchpad";
 import { AppStore, Canvas, Window, registerDocsAppStoreFactory, useAddFooterItem, useAddPanelSection, useAppType, useFocus, useFocusSafe, useRemoveFooterItem, useRemovePanelSection } from "./Sketchpad";
 import { Aside, Tabs as BaseTabs, FileTreeNode, Page, PageFrontmatter, PageNavigation, TabsContent, TabsList, TabsTrigger, TreeItem, TreeStateProvider } from "./elements";
-import { PanelKind, createPanelDefinition, type AppConfig, type AppEdit, type PanelVisibility } from "./shared";
+import { PanelKind, createPanelDefinition, registerAppPlugin, type AppConfig, type AppEdit, type PanelVisibility } from "./shared";
 
 // #endregion Imports
 
@@ -864,6 +864,34 @@ if (typeof window !== "undefined") {
     return store;
   });
 }
+
+// #region Docs App Plugin Registration
+
+/**
+ * Docs app plugin for the sketchpad machine.
+ * Provides DOCS.* events, actions, and guards.
+ */
+const docsAppPlugin: AppPlugin = {
+  id: "docs",
+  namespace: "DOCS",
+  machine: {
+    actions: {},
+    guards: {},
+    eventHandlers: {},
+    selectors: {},
+    createDefaultState: (): DocsAppState => ({
+      panelVisibility: { toolbar: false, workbench: false, details: false, chat: false, settings: false },
+      selection: undefined,
+      sectionStates: {},
+    }),
+  },
+};
+
+if (typeof window !== "undefined") {
+  registerAppPlugin(docsAppPlugin);
+}
+
+// #endregion Docs App Plugin Registration
 
 // #endregion Commands
 

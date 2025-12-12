@@ -33,7 +33,7 @@ import { useLabel } from "../i18n";
 import { Author, AuthorId, Camera, Coord, findModel, guid, Guid, Kit, Model, Point, Port, selectBestModel, File as SemioFile, toSemioRotation, toThreeRotation, Type, TypeDiff, Vector } from "../semio";
 import { Geometry, Input, Scene as SceneComponent, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider, SortableTreeItems, Stepper, Textarea, Toggle, ToggleGroup, TreeContent, TreeItem } from "./elements";
 import type { AppWindowConfig, HookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolDefinition, ToolRenderContext, TypeAppId } from "./shared";
-import { AppConfig, conditionalHookResult, createPanelDefinition, Expertise, Mode, PanelKind, readonlyHookResult, Theme, ToolKind } from "./shared";
+import { AppConfig, AppPlugin, conditionalHookResult, createPanelDefinition, Expertise, Mode, PanelKind, readonlyHookResult, registerAppPlugin, Theme, ToolKind } from "./shared";
 import {
   Canvas,
   createDefaultLayout,
@@ -71,7 +71,6 @@ import {
   useType,
   useTypeAppXState,
   useTypeScope,
-  useOrigin,
 } from "./Sketchpad";
 
 let kitAppModuleCache: any = null;
@@ -200,6 +199,45 @@ const EMPTY_MODEL_TAG_ARRAY: string[] = [];
  */
 
 // #endregion Internal State Management
+
+// #region Type App Plugin Registration
+
+/**
+ * Type app plugin for the sketchpad machine.
+ * Provides TYPE.* events, actions, and guards.
+ */
+const typeAppPlugin: AppPlugin = {
+  id: "type",
+  namespace: "TYPE",
+  machine: {
+    // Actions are defined in Sketchpad.tsx for now
+    // TODO: Move type-specific actions here when Sketchpad.tsx is refactored
+    actions: {},
+    guards: {},
+    eventHandlers: {},
+    selectors: {},
+    createDefaultState: (): TypeAppState => ({
+      panelVisibility: EMPTY_PANEL_VISIBILITY,
+      activeTool: ToolKind.SELECTION_NORMAL,
+      fullscreenWindow: TypeAppFullscreenWindow.None,
+      selection: undefined,
+      hover: undefined,
+      presence: undefined,
+      others: [],
+      camera: undefined,
+      focusedPortGuid: undefined,
+      selectedModelGuid: undefined,
+      selectedModelTags: [],
+      windowLayout: undefined,
+    }),
+  },
+};
+
+if (typeof window !== "undefined") {
+  registerAppPlugin(typeAppPlugin);
+}
+
+// #endregion Type App Plugin Registration
 
 // #region XState Hooks
 
@@ -414,7 +452,7 @@ export function useTypeAppCommands(id?: TypeAppId) {
       redo: () => actor.send({ type: "TYPE.TRANSACTION.REDO", kitGuid, typeGuid }),
       selectAll: () => actor.send({ type: "TYPE.SELECT_ALL", kitGuid, typeGuid }),
       deselectAll: () => actor.send({ type: "TYPE.DESELECT_ALL", kitGuid, typeGuid }),
-      togglePanel: (panelKey: keyof PanelVisibility) => actor.send({ type: "TYPE.TOGGLE_PANEL", kitGuid, typeGuid, panel: panelKey }),
+      togglePanel: (_origin: string, panelKey: keyof PanelVisibility) => actor.send({ type: "TYPE.TOGGLE_PANEL", kitGuid, typeGuid, panel: panelKey }),
       setCamera: (camera: Camera) => actor.send({ type: "TYPE.SET_CAMERA", kitGuid, typeGuid, camera }),
       focusPort: (portGuid: Guid) => actor.send({ type: "TYPE.FOCUS_PORT", kitGuid, typeGuid, portGuid }),
       clearFocus: () => actor.send({ type: "TYPE.CLEAR_FOCUS", kitGuid, typeGuid }),
@@ -992,7 +1030,7 @@ const GLTFMesh: FC<{ url: string; onPointerDown: any; onPointerUp: any; onPointe
       color: plasterColor,
       flatShading: false,
       metalness: 0,
-      roughness: 0.8
+      roughness: 0.8,
     });
     const edgeMaterial = new THREE.LineBasicMaterial({ color: plasterEdgeColor });
 
@@ -1024,7 +1062,7 @@ const FBXMesh: FC<{ url: string; onPointerDown: any; onPointerUp: any; onPointer
       color: plasterColor,
       flatShading: false,
       metalness: 0,
-      roughness: 0.8
+      roughness: 0.8,
     });
     const edgeMaterial = new THREE.LineBasicMaterial({ color: plasterEdgeColor });
 
@@ -1056,7 +1094,7 @@ const OBJMesh: FC<{ url: string; onPointerDown: any; onPointerUp: any; onPointer
       color: plasterColor,
       flatShading: false,
       metalness: 0,
-      roughness: 0.8
+      roughness: 0.8,
     });
     const edgeMaterial = new THREE.LineBasicMaterial({ color: plasterEdgeColor });
 
@@ -1383,7 +1421,7 @@ const SceneContent: FC = React.memo(() => {
           mandatory: false,
         };
 
-        kitCommands.updateType("semio.sketchpad.app.type.canvas.scene.addPort", typeGuid, {
+        kitCommands.updateType(typeGuid, {
           ports: {
             added: [newPort],
           },
@@ -1542,15 +1580,15 @@ const TypeDetailsForm: FC = () => {
   const kitCommands = useKitCommands();
   const type = useType(undefined, undefined, true) as Type;
 
-  const updateTypeField = (origin: string, diff: any) => {
-    kitCommands?.updateType(origin, type.guid, diff);
+  const updateTypeField = (diff: any) => {
+    kitCommands?.updateType(type.guid, diff);
   };
 
   return (
     <>
       <TreeItem>
         <TreeContent>
-          <Input lazy id="semio.sketchpad.app.type.panel.details.section.type.name" value={type.name} onLazyChange={(value) => updateTypeField("semio.sketchpad.app.type.panel.details.section.type.name", { name: value })} showLabel />
+          <Input lazy id="semio.sketchpad.app.type.panel.details.section.type.name" value={type.name} onLazyChange={(value) => updateTypeField({ name: value })} showLabel />
         </TreeContent>
       </TreeItem>
       <TreeItem>
@@ -1560,33 +1598,19 @@ const TypeDetailsForm: FC = () => {
             id="semio.sketchpad.app.type.panel.details.section.type.description"
             value={type.description || ""}
             placeholderId="semio.sketchpad.app.type.descriptionPlaceholder.label"
-            onLazyChange={(value) => updateTypeField("semio.sketchpad.app.type.panel.details.section.type.description", { description: value })}
+            onLazyChange={(value) => updateTypeField({ description: value })}
             showLabel
           />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Input
-            lazy
-            id="semio.sketchpad.app.type.panel.details.section.type.icon"
-            value={type.icon || ""}
-            placeholderId="semio.sketchpad.app.type.iconPlaceholder.label"
-            onLazyChange={(value) => updateTypeField("semio.sketchpad.app.type.panel.details.section.type.icon", { icon: value })}
-            showLabel
-          />
+          <Input lazy id="semio.sketchpad.app.type.panel.details.section.type.icon" value={type.icon || ""} placeholderId="semio.sketchpad.app.type.iconPlaceholder.label" onLazyChange={(value) => updateTypeField({ icon: value })} showLabel />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Input
-            lazy
-            id="semio.sketchpad.app.type.panel.details.section.type.image"
-            value={type.image || ""}
-            placeholderId="semio.sketchpad.app.type.imagePlaceholder.label"
-            onLazyChange={(value) => updateTypeField("semio.sketchpad.app.type.panel.details.section.type.image", { image: value })}
-            showLabel
-          />
+          <Input lazy id="semio.sketchpad.app.type.panel.details.section.type.image" value={type.image || ""} placeholderId="semio.sketchpad.app.type.imagePlaceholder.label" onLazyChange={(value) => updateTypeField({ image: value })} showLabel />
         </TreeContent>
       </TreeItem>
       <TreeItem>
@@ -1596,26 +1620,20 @@ const TypeDetailsForm: FC = () => {
             id="semio.sketchpad.app.type.panel.details.section.type.parent"
             value={type.parent?.guid || ""}
             placeholderId="semio.sketchpad.app.type.parentPlaceholder.label"
-            onLazyChange={(value) => updateTypeField("semio.sketchpad.app.type.panel.details.section.type.parent", { parent: value ? { guid: value } : undefined })}
+            onLazyChange={(value) => updateTypeField({ parent: value ? { guid: value } : undefined })}
             showLabel
           />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Toggle
-            id="semio.sketchpad.app.type.panel.details.section.type.abstract"
-            pressed={type.isAbstract || false}
-            onPressedChange={(value) => updateTypeField("semio.sketchpad.app.type.panel.details.section.type.abstract", { isAbstract: value })}
-            showLabel
-            icon={<CheckIcon />}
-          />
+          <Toggle id="semio.sketchpad.app.type.panel.details.section.type.abstract" pressed={type.isAbstract || false} onPressedChange={(value) => updateTypeField({ isAbstract: value })} showLabel icon={<CheckIcon />} />
         </TreeContent>
       </TreeItem>
       {type.unit !== undefined && (
         <TreeItem>
           <TreeContent>
-            <Input lazy id="semio.sketchpad.app.type.panel.details.section.type.unit" value={type.unit} onLazyChange={(value) => updateTypeField("semio.sketchpad.app.type.panel.details.section.type.unit", { unit: value })} showLabel />
+            <Input lazy id="semio.sketchpad.app.type.panel.details.section.type.unit" value={type.unit} onLazyChange={(value) => updateTypeField({ unit: value })} showLabel />
           </TreeContent>
         </TreeItem>
       )}
@@ -1640,12 +1658,12 @@ const ModelsSectionForm: FC = () => {
   const [selection] = useTypeAppSelection();
   const [hover] = useTypeAppHover();
 
-  const applyDiff = (origin: string, diff: any) => {
-    kitCommands?.updateType(origin, type.guid, diff);
+  const applyDiff = (diff: any) => {
+    kitCommands?.updateType(type.guid, diff);
   };
 
-  const updateModel = (origin: string, id: string, modelDiff: any) => {
-    applyDiff(origin, {
+  const updateModel = (id: string, modelDiff: any) => {
+    applyDiff({
       models: {
         updated: [{ id, diff: modelDiff }],
       },
@@ -1663,7 +1681,7 @@ const ModelsSectionForm: FC = () => {
             icon: <AddIcon />,
             onClick: () => {
               const origin = "semio.sketchpad.app.type.panel.details.models.add";
-              applyDiff(origin, {
+              applyDiff({
                 models: {
                   added: [{ guid: guid(), url: "", tags: [] }],
                 },
@@ -1683,7 +1701,7 @@ const ModelsSectionForm: FC = () => {
             onReorder={(oldIndex, newIndex) => {
               if (!type.models) return;
               const origin = "semio.sketchpad.app.type.panel.details.models.reorder";
-              applyDiff(origin, {
+              applyDiff({
                 models: {
                   removed: type.models.map((model: any) => model.guid),
                   added: arrayMove(type.models, oldIndex, newIndex),
@@ -1714,7 +1732,7 @@ const ModelsSectionForm: FC = () => {
                         icon: <RemoveIcon />,
                         onClick: () => {
                           const origin = "semio.sketchpad.app.type.panel.details.models.remove";
-                          applyDiff(origin, {
+                          applyDiff({
                             models: {
                               removed: [model.guid],
                             },
@@ -1730,7 +1748,7 @@ const ModelsSectionForm: FC = () => {
                           id="semio.sketchpad.app.type.panel.details.section.models.url"
                           value={model.url}
                           onChange={(e) => {
-                            updateModel("semio.sketchpad.app.type.panel.details.section.models.url", model.guid, { url: e.target.value });
+                            updateModel(model.guid, { url: e.target.value });
                           }}
                           showLabel
                         />
@@ -1743,7 +1761,7 @@ const ModelsSectionForm: FC = () => {
                           value={model.description || ""}
                           placeholderId="semio.sketchpad.app.type.modelDescriptionPlaceholder.label"
                           onChange={(e) => {
-                            updateModel("semio.sketchpad.app.type.panel.details.section.models.description", model.guid, { description: e.target.value });
+                            updateModel(model.guid, { description: e.target.value });
                           }}
                           showLabel
                         />
@@ -1756,7 +1774,7 @@ const ModelsSectionForm: FC = () => {
                           value={(model.tags || []).join(", ")}
                           placeholderId="semio.sketchpad.app.type.modelTagsPlaceholder.label"
                           onChange={(e) => {
-                            updateModel("semio.sketchpad.app.type.panel.details.section.models.tags", model.guid, {
+                            updateModel(model.guid, {
                               tags: e.target.value
                                 .split(",")
                                 .map((tag) => tag.trim())
@@ -1795,11 +1813,11 @@ const PortsListSectionForm: FC = () => {
   const [selection] = useTypeAppSelection();
   const [hover] = useTypeAppHover();
 
-  const applyDiff = (origin: string, diff: any) => {
-    kitCommands?.updateType(origin, type.guid, diff);
+  const applyDiff = (diff: any) => {
+    kitCommands?.updateType(type.guid, diff);
   };
 
-  const updatePort = (origin: string, id: string, portDiff: any) => {
+  const updatePort = (id: string, portDiff: any) => {
     const port = type.ports?.find((existingPort) => existingPort.guid === id);
     const diff: any = { ...portDiff };
     if (port) {
@@ -1816,7 +1834,7 @@ const PortsListSectionForm: FC = () => {
         if (portDiff.direction.z !== undefined) diff.direction.z = portDiff.direction.z - port.direction.z;
       }
     }
-    applyDiff(origin, {
+    applyDiff({
       ports: {
         updated: [{ id, diff }],
       },
@@ -1834,7 +1852,7 @@ const PortsListSectionForm: FC = () => {
             icon: <AddIcon />,
             onClick: () => {
               const origin = "semio.sketchpad.app.type.panel.details.ports.add";
-              applyDiff(origin, {
+              applyDiff({
                 ports: {
                   added: [
                     {
@@ -1861,7 +1879,7 @@ const PortsListSectionForm: FC = () => {
             onReorder={(oldIndex, newIndex) => {
               if (!type.ports) return;
               const origin = "semio.sketchpad.app.type.panel.details.ports.reorder";
-              applyDiff(origin, {
+              applyDiff({
                 ports: {
                   removed: type.ports.map((existingPort: any) => existingPort.guid),
                   added: arrayMove(type.ports, oldIndex, newIndex),
@@ -1904,7 +1922,7 @@ const PortsListSectionForm: FC = () => {
                         icon: <RemoveIcon />,
                         onClick: () => {
                           const origin = "semio.sketchpad.app.type.panel.details.ports.remove";
-                          applyDiff(origin, {
+                          applyDiff({
                             ports: {
                               removed: [port.guid],
                             },
@@ -1922,7 +1940,7 @@ const PortsListSectionForm: FC = () => {
                           value={port.interface || ""}
                           placeholderId="semio.sketchpad.app.type.portInterfacePlaceholder.label"
                           onLazyChange={(value: string) => {
-                            updatePort("semio.sketchpad.app.type.panel.details.section.ports.interface", port.guid, { interface: value });
+                            updatePort(port.guid, { interface: value });
                           }}
                           showLabel
                         />
@@ -1936,7 +1954,7 @@ const PortsListSectionForm: FC = () => {
                           value={port.description || ""}
                           placeholderId="semio.sketchpad.app.type.portDescriptionPlaceholder.label"
                           onLazyChange={(value: string) => {
-                            updatePort("semio.sketchpad.app.type.panel.details.section.ports.description", port.guid, { description: value });
+                            updatePort(port.guid, { description: value });
                           }}
                           showLabel
                         />
@@ -1948,9 +1966,9 @@ const PortsListSectionForm: FC = () => {
                           id="semio.sketchpad.app.type.panel.details.section.ports.t"
                           value={[port.t ?? 0]}
                           onValueChange={([value]) => {
-                            updatePort("semio.sketchpad.app.type.panel.details.section.ports.t", port.guid, { t: value });
+                            updatePort(port.guid, { t: value });
                           }}
-                          transaction={useKitTransaction("semio.sketchpad.app.type.panel.details.section.ports.t")}
+                          transaction={useKitTransaction()}
                           min={0}
                           max={1}
                           step={0.01}
@@ -1965,9 +1983,9 @@ const PortsListSectionForm: FC = () => {
                             id="semio.sketchpad.app.type.panel.details.section.ports.point.x"
                             value={port.point.x}
                             onChange={(value: number) => {
-                              updatePort("semio.sketchpad.app.type.panel.details.section.ports.point.x", port.guid, { point: { x: value } });
+                              updatePort(port.guid, { point: { x: value } });
                             }}
-                            transaction={useKitTransaction("semio.sketchpad.app.type.panel.details.section.ports.point.x")}
+                            transaction={useKitTransaction()}
                             step={0.1}
                           />
                         </TreeContent>
@@ -1978,9 +1996,9 @@ const PortsListSectionForm: FC = () => {
                             id="semio.sketchpad.app.type.panel.details.section.ports.point.y"
                             value={port.point.y}
                             onChange={(value: number) => {
-                              updatePort("semio.sketchpad.app.type.panel.details.section.ports.point.y", port.guid, { point: { y: value } });
+                              updatePort(port.guid, { point: { y: value } });
                             }}
-                            transaction={useKitTransaction("semio.sketchpad.app.type.panel.details.section.ports.point.y")}
+                            transaction={useKitTransaction()}
                             step={0.1}
                           />
                         </TreeContent>
@@ -1991,9 +2009,9 @@ const PortsListSectionForm: FC = () => {
                             id="semio.sketchpad.app.type.panel.details.section.ports.point.z"
                             value={port.point.z}
                             onChange={(value: number) => {
-                              updatePort("semio.sketchpad.app.type.panel.details.section.ports.point.z", port.guid, { point: { z: value } });
+                              updatePort(port.guid, { point: { z: value } });
                             }}
-                            transaction={useKitTransaction("semio.sketchpad.app.type.panel.details.section.ports.point.z")}
+                            transaction={useKitTransaction()}
                             step={0.1}
                           />
                         </TreeContent>
@@ -2006,9 +2024,9 @@ const PortsListSectionForm: FC = () => {
                             id="semio.sketchpad.app.type.panel.details.section.ports.direction.x"
                             value={port.direction.x}
                             onChange={(value: number) => {
-                              updatePort("semio.sketchpad.app.type.panel.details.section.ports.direction.x", port.guid, { direction: { x: value } });
+                              updatePort(port.guid, { direction: { x: value } });
                             }}
-                            transaction={useKitTransaction("semio.sketchpad.app.type.panel.details.section.ports.direction.x")}
+                            transaction={useKitTransaction()}
                             step={0.1}
                           />
                         </TreeContent>
@@ -2019,9 +2037,9 @@ const PortsListSectionForm: FC = () => {
                             id="semio.sketchpad.app.type.panel.details.section.ports.direction.y"
                             value={port.direction.y}
                             onChange={(value: number) => {
-                              updatePort("semio.sketchpad.app.type.panel.details.section.ports.direction.y", port.guid, { direction: { y: value } });
+                              updatePort(port.guid, { direction: { y: value } });
                             }}
-                            transaction={useKitTransaction("semio.sketchpad.app.type.panel.details.section.ports.direction.y")}
+                            transaction={useKitTransaction()}
                             step={0.1}
                           />
                         </TreeContent>
@@ -2032,9 +2050,9 @@ const PortsListSectionForm: FC = () => {
                             id="semio.sketchpad.app.type.panel.details.section.ports.direction.z"
                             value={port.direction.z}
                             onChange={(value: number) => {
-                              updatePort("semio.sketchpad.app.type.panel.details.section.ports.direction.z", port.guid, { direction: { z: value } });
+                              updatePort(port.guid, { direction: { z: value } });
                             }}
-                            transaction={useKitTransaction("semio.sketchpad.app.type.panel.details.section.ports.direction.z")}
+                            transaction={useKitTransaction()}
                             step={0.1}
                           />
                         </TreeContent>
@@ -2048,7 +2066,7 @@ const PortsListSectionForm: FC = () => {
                           value={(port.compatibleInterfaces || []).join(", ")}
                           placeholderId="semio.sketchpad.app.type.portCompatibleInterfacesPlaceholder.label"
                           onLazyChange={(value: string) => {
-                            updatePort("semio.sketchpad.app.type.panel.details.section.ports.compatibleInterfaces", port.guid, {
+                            updatePort(port.guid, {
                               compatibleInterfaces: value
                                 .split(",")
                                 .map((interface_) => interface_.trim())
@@ -2082,8 +2100,8 @@ const AuthorsSectionForm: FC = () => {
   const type = useType(undefined, undefined, true) as Type;
   const kit = useKit() as Kit;
 
-  const updateAuthors = (origin: string, authors: string[]) => {
-    kitCommands?.updateType(origin, type.guid, { authors: authors.map((a) => ({ guid: a })) });
+  const updateAuthors = (authors: string[]) => {
+    kitCommands?.updateType(type.guid, { authors: authors.map((a) => ({ guid: a })) });
   };
 
   const hasAuthors = type.authors && type.authors.length > 0;
@@ -2096,14 +2114,13 @@ const AuthorsSectionForm: FC = () => {
           {
             icon: <AddIcon />,
             onClick: () => {
-              const origin = "semio.sketchpad.app.type.panel.details.authors.add";
               const newAuthorGuid = guid();
-              kitCommands?.createAuthor(origin, {
+              kitCommands?.createAuthor({
                 guid: newAuthorGuid,
                 name: "",
                 email: "",
               });
-              updateAuthors(origin, [...(type.authors || []).map((a) => a.guid), newAuthorGuid]);
+              updateAuthors([...(type.authors || []).map((a) => a.guid), newAuthorGuid]);
             },
             id: "semio.sketchpad.common.add",
           },
@@ -2122,11 +2139,7 @@ const AuthorsSectionForm: FC = () => {
               };
             })}
             onReorder={(oldIndex, newIndex) => {
-              const origin = "semio.sketchpad.app.type.panel.details.authors.reorder";
-              updateAuthors(
-                origin,
-                arrayMove(type.authors!, oldIndex, newIndex).map((a) => a.guid),
-              );
+              updateAuthors(arrayMove(type.authors!, oldIndex, newIndex).map((a) => a.guid));
             }}
           >
             {(item, index) => (
@@ -2141,11 +2154,7 @@ const AuthorsSectionForm: FC = () => {
                   {
                     icon: <RemoveIcon />,
                     onClick: () => {
-                      const origin = "semio.sketchpad.app.type.panel.details.authors.remove";
-                      updateAuthors(
-                        origin,
-                        (type.authors || []).filter((_, i: number) => i !== index).map((a) => a.guid),
-                      );
+                      updateAuthors((type.authors || []).filter((_, i: number) => i !== index).map((a) => a.guid));
                     },
                     id: "semio.sketchpad.common.remove",
                   },
@@ -2157,7 +2166,7 @@ const AuthorsSectionForm: FC = () => {
                       id="semio.sketchpad.app.type.panel.details.section.authors.name"
                       value={item.name}
                       onChange={(e) => {
-                        kitCommands?.updateAuthor("semio.sketchpad.app.type.panel.details.section.authors.name", item.guid, { name: e.target.value });
+                        kitCommands?.updateAuthor(item.guid, { name: e.target.value });
                       }}
                       showLabel
                     />
@@ -2169,7 +2178,7 @@ const AuthorsSectionForm: FC = () => {
                       id="semio.sketchpad.app.type.panel.details.section.authors.email"
                       value={item.email}
                       onChange={(e) => {
-                        kitCommands?.updateAuthor("semio.sketchpad.app.type.panel.details.section.authors.email", item.guid, { email: e.target.value });
+                        kitCommands?.updateAuthor(item.guid, { email: e.target.value });
                       }}
                       showLabel
                     />
@@ -2195,12 +2204,12 @@ const AttributesSectionForm: FC = () => {
   const kitCommands = useKitCommands();
   const type = useType(undefined, undefined, true) as Type;
 
-  const applyDiff = (origin: string, diff: any) => {
-    kitCommands?.updateType(origin, type.guid, diff);
+  const applyDiff = (diff: any) => {
+    kitCommands?.updateType(type.guid, diff);
   };
 
-  const updateAttribute = (origin: string, id: string, attributeDiff: any) => {
-    applyDiff(origin, {
+  const updateAttribute = (id: string, attributeDiff: any) => {
+    applyDiff({
       attributes: {
         updated: [{ id, diff: attributeDiff }],
       },
@@ -2218,7 +2227,7 @@ const AttributesSectionForm: FC = () => {
             icon: <AddIcon />,
             onClick: () => {
               const origin = "semio.sketchpad.app.type.panel.details.attributes.add";
-              applyDiff(origin, {
+              applyDiff({
                 attributes: {
                   added: [{ guid: guid(), key: "" }],
                 },
@@ -2238,7 +2247,7 @@ const AttributesSectionForm: FC = () => {
             onReorder={(oldIndex, newIndex) => {
               if (!type.attributes) return;
               const origin = "semio.sketchpad.app.type.panel.details.attributes.reorder";
-              applyDiff(origin, {
+              applyDiff({
                 attributes: {
                   removed: type.attributes.map((attribute: any) => attribute.guid),
                   added: arrayMove(type.attributes, oldIndex, newIndex),
@@ -2259,7 +2268,7 @@ const AttributesSectionForm: FC = () => {
                     icon: <RemoveIcon />,
                     onClick: () => {
                       const origin = "semio.sketchpad.app.type.panel.details.attributes.remove";
-                      applyDiff(origin, {
+                      applyDiff({
                         attributes: {
                           removed: [attribute.guid],
                         },
@@ -2275,7 +2284,7 @@ const AttributesSectionForm: FC = () => {
                       id="semio.sketchpad.app.type.panel.details.section.attributes.name"
                       value={attribute.key}
                       onChange={(e) => {
-                        updateAttribute("semio.sketchpad.app.type.panel.details.section.attributes.name", attribute.guid, { key: e.target.value });
+                        updateAttribute(attribute.guid, { key: e.target.value });
                       }}
                       showLabel
                     />
@@ -2288,7 +2297,7 @@ const AttributesSectionForm: FC = () => {
                       value={attribute.value || ""}
                       placeholderId="semio.sketchpad.app.type.attributeValuePlaceholder.label"
                       onChange={(e) => {
-                        updateAttribute("semio.sketchpad.app.type.panel.details.section.attributes.value", attribute.guid, { value: e.target.value });
+                        updateAttribute(attribute.guid, { value: e.target.value });
                       }}
                       showLabel
                     />
@@ -2301,7 +2310,7 @@ const AttributesSectionForm: FC = () => {
                       value={attribute.definition || ""}
                       placeholderId="semio.sketchpad.app.type.attributeDefinitionPlaceholder.label"
                       onChange={(e) => {
-                        updateAttribute("semio.sketchpad.app.type.panel.details.section.attributes.definition", attribute.guid, { definition: e.target.value });
+                        updateAttribute(attribute.guid, { definition: e.target.value });
                       }}
                       showLabel
                     />
@@ -2339,7 +2348,7 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
     );
   }
 
-  const updatePort = (origin: string, id: string, portDiff: any) => {
+  const updatePort = (id: string, portDiff: any) => {
     const port = type.ports?.find((existingPort) => existingPort.guid === id);
     const diff: any = { ...portDiff };
     if (port) {
@@ -2356,7 +2365,7 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
         if (portDiff.direction.z !== undefined) diff.direction.z = portDiff.direction.z - port.direction.z;
       }
     }
-    kitCommands?.updateType(origin, type.guid, {
+    kitCommands?.updateType(type.guid, {
       ports: {
         updated: [{ port: { guid: id }, diff }],
       },
@@ -2373,7 +2382,7 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
             value={port.interface?.guid || ""}
             placeholderId="semio.sketchpad.app.type.portInterfacePlaceholder.label"
             onLazyChange={(value: string) => {
-              updatePort("semio.sketchpad.app.type.panel.details.section.ports.interface", port.guid, { interface: value ? { guid: value } : undefined });
+              updatePort(port.guid, { interface: value ? { guid: value } : undefined });
             }}
             showLabel
           />
@@ -2387,7 +2396,7 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
             value={port.description || ""}
             placeholderId="semio.sketchpad.app.type.portDescriptionPlaceholder.label"
             onLazyChange={(value: string) => {
-              updatePort("semio.sketchpad.app.type.panel.details.section.ports.description", port.guid, { description: value });
+              updatePort(port.guid, { description: value });
             }}
             showLabel
           />
@@ -2399,9 +2408,9 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
             id="semio.sketchpad.app.type.panel.details.section.ports.t"
             value={[port.t ?? 0]}
             onValueChange={([value]) => {
-              updatePort("semio.sketchpad.app.type.panel.details.section.ports.t", port.guid, { t: value });
+              updatePort(port.guid, { t: value });
             }}
-            transaction={useKitTransaction("semio.sketchpad.app.type.panel.details.section.ports.t")}
+            transaction={useKitTransaction()}
             min={0}
             max={1}
             step={0.01}
@@ -2416,9 +2425,9 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
               id="semio.sketchpad.app.type.panel.details.section.ports.point.x"
               value={port.point.x}
               onChange={(value: number) => {
-                updatePort("semio.sketchpad.app.type.panel.details.section.ports.point.x", port.guid, { point: { x: value } });
+                updatePort(port.guid, { point: { x: value } });
               }}
-              transaction={useKitTransaction("semio.sketchpad.app.type.panel.details.section.ports.point.x")}
+              transaction={useKitTransaction()}
               step={0.1}
             />
           </TreeContent>
@@ -2429,9 +2438,9 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
               id="semio.sketchpad.app.type.panel.details.section.ports.point.y"
               value={port.point.y}
               onChange={(value: number) => {
-                updatePort("semio.sketchpad.app.type.panel.details.section.ports.point.y", port.guid, { point: { y: value } });
+                updatePort(port.guid, { point: { y: value } });
               }}
-              transaction={useKitTransaction("semio.sketchpad.app.type.panel.details.section.ports.point.y")}
+              transaction={useKitTransaction()}
               step={0.1}
             />
           </TreeContent>
@@ -2442,9 +2451,9 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
               id="semio.sketchpad.app.type.panel.details.section.ports.point.z"
               value={port.point.z}
               onChange={(value: number) => {
-                updatePort("semio.sketchpad.app.type.panel.details.section.ports.point.z", port.guid, { point: { z: value } });
+                updatePort(port.guid, { point: { z: value } });
               }}
-              transaction={useKitTransaction("semio.sketchpad.app.type.panel.details.section.ports.point.z")}
+              transaction={useKitTransaction()}
               step={0.1}
             />
           </TreeContent>
@@ -2457,9 +2466,9 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
               id="semio.sketchpad.app.type.panel.details.section.ports.direction.x"
               value={port.direction.x}
               onChange={(value: number) => {
-                updatePort("semio.sketchpad.app.type.panel.details.section.ports.direction.x", port.guid, { direction: { x: value } });
+                updatePort(port.guid, { direction: { x: value } });
               }}
-              transaction={useKitTransaction("semio.sketchpad.app.type.panel.details.section.ports.direction.x")}
+              transaction={useKitTransaction()}
               step={0.1}
             />
           </TreeContent>
@@ -2470,9 +2479,9 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
               id="semio.sketchpad.app.type.panel.details.section.ports.direction.y"
               value={port.direction.y}
               onChange={(value: number) => {
-                updatePort("semio.sketchpad.app.type.panel.details.section.ports.direction.y", port.guid, { direction: { y: value } });
+                updatePort(port.guid, { direction: { y: value } });
               }}
-              transaction={useKitTransaction("semio.sketchpad.app.type.panel.details.section.ports.direction.y")}
+              transaction={useKitTransaction()}
               step={0.1}
             />
           </TreeContent>
@@ -2483,9 +2492,9 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
               id="semio.sketchpad.app.type.panel.details.section.ports.direction.z"
               value={port.direction.z}
               onChange={(value: number) => {
-                updatePort("semio.sketchpad.app.type.panel.details.section.ports.direction.z", port.guid, { direction: { z: value } });
+                updatePort(port.guid, { direction: { z: value } });
               }}
-              transaction={useKitTransaction("semio.sketchpad.app.type.panel.details.section.ports.direction.z")}
+              transaction={useKitTransaction()}
               step={0.1}
             />
           </TreeContent>
@@ -2499,7 +2508,7 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
             value={((port as any).compatibleInterfaces || []).join(", ")}
             placeholderId="semio.sketchpad.app.type.portCompatibleInterfacesPlaceholder.label"
             onLazyChange={(value: string) => {
-              updatePort("semio.sketchpad.app.type.panel.details.section.ports.compatibleInterfaces", port.guid, {
+              updatePort(port.guid, {
                 compatibleInterfaces: value
                   .split(",")
                   .map((interface_) => interface_.trim())
@@ -2559,7 +2568,7 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
         if (portDiff.direction.y !== undefined) diff.direction.y = portDiff.direction.y - port.direction.y;
         if (portDiff.direction.z !== undefined) diff.direction.z = portDiff.direction.z - port.direction.z;
       }
-      kitCommands?.updateType(origin, type.guid, {
+      kitCommands?.updateType(type.guid, {
         ports: {
           updated: [{ port: { guid: port.guid }, diff }],
         },
@@ -2598,7 +2607,7 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
             onValueChange={([value]) => {
               updatePorts("semio.sketchpad.app.type.panel.details.section.ports.t", { t: value });
             }}
-            transaction={useKitTransaction("semio.sketchpad.app.type.panel.details.section.ports.t")}
+            transaction={useKitTransaction()}
             min={0}
             max={1}
             step={0.01}
@@ -3055,10 +3064,10 @@ const App: FC = () => {
         };
 
         // Add file to kit with blob
-        await kitCommands.addFile("semio.sketchpad.app.type.panel.details.addFile", newFile, file);
+        await kitCommands.addFile(newFile, file);
 
         // Add model to type
-        await kitCommands.updateType("semio.sketchpad.app.type.panel.details.addModel", type.guid, {
+        await kitCommands.updateType(type.guid, {
           models: {
             added: [newModel],
           },

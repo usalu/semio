@@ -51,7 +51,7 @@ import {
   TreeItem,
 } from "./elements";
 import type { AppWindowConfig, HookNoSetResult, HookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, QualityAppId, Transact, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
-import { AppConfig, createPanelDefinition, Expertise, Mode, PanelKind, Theme, ToolKind } from "./shared";
+import { AppConfig, createPanelDefinition, Expertise, Mode, PanelKind, registerAppPlugin, Theme, ToolKind } from "./shared";
 import type { KitStore, QualityStore, SketchpadStore } from "./Sketchpad";
 import {
   Canvas,
@@ -910,6 +910,41 @@ class QualityAppStore extends KitDiffAppStore<QualityAppState, QualityAppDiff, Q
 if (typeof window !== "undefined") {
   registerQualityAppStoreFactory((parent, yMap, transact, id, state) => new QualityAppStore(parent, yMap, transact, id));
 }
+
+// #region Quality App Plugin Registration
+
+/**
+ * Quality app plugin for the sketchpad machine.
+ * Provides QUALITY.* events, actions, and guards.
+ */
+const qualityAppPlugin: AppPlugin = {
+  id: "quality",
+  namespace: "QUALITY",
+  machine: {
+    actions: {},
+    guards: {},
+    eventHandlers: {},
+    selectors: {},
+    createDefaultState: (): QualityAppState => ({
+      fullscreenWindow: QualityAppFullscreenWindow.None,
+      panelVisibility: { toolbar: true, workbench: false, details: false, chat: false, settings: false },
+      activeTool: ToolKind.SELECTION_NORMAL,
+      selection: undefined,
+      hover: undefined,
+      formulaNodes: [],
+      windowLayout: undefined,
+    }),
+  },
+  registerStores: () => {
+    // Store factory already registered above
+  },
+};
+
+if (typeof window !== "undefined") {
+  registerAppPlugin(qualityAppPlugin);
+}
+
+// #endregion Quality App Plugin Registration
 
 type QualityAppScope = { guid: string };
 const QualityAppScopeContext = createContext<QualityAppScope | null>(null);

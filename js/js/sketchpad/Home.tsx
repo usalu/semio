@@ -51,7 +51,7 @@ import { generateUniqueName, guid, Guid, importKit, Kit, KitShallow } from "../s
 import { docsRegistry } from "./Docs";
 import { Action, Input, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Spinner, Strip, Table, TableAvatar, TableColumn, Textarea, Toggle, ToggleGroup, TreeContent, TreeItem } from "./elements";
 import type { AppConfig, AppEdit, PanelDefinition, PanelVisibility } from "./shared";
-import { createPanelDefinition, Expertise, Mode, PanelKind, Theme } from "./shared";
+import { createPanelDefinition, Expertise, Mode, PanelKind, registerAppPlugin, Theme } from "./shared";
 import {
   Canvas,
   ConceptFilter,
@@ -131,6 +131,38 @@ export interface HomeCommandResult {
 }
 
 // #endregion Types
+
+// #region Home App Plugin Registration
+
+/**
+ * Home app plugin for the sketchpad machine.
+ * Provides HOME.* events, actions, and guards.
+ */
+const homeAppPlugin: AppPlugin = {
+  id: "home",
+  namespace: "HOME",
+  machine: {
+    // Actions are defined in Sketchpad.tsx for now
+    // TODO: Move home-specific actions here when Sketchpad.tsx is refactored
+    actions: {},
+    guards: {},
+    eventHandlers: {},
+    selectors: {},
+    createDefaultState: (): HomeState => ({
+      panelVisibility: { toolbar: true, workbench: false, details: false, chat: false, settings: false },
+      selection: undefined,
+      sortColumn: undefined,
+      sortDirection: undefined,
+      loadingKits: [],
+    }),
+  },
+};
+
+if (typeof window !== "undefined") {
+  registerAppPlugin(homeAppPlugin);
+}
+
+// #endregion Home App Plugin Registration
 
 // #region Hooks (XState-based)
 

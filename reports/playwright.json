@@ -46,12 +46,12 @@
         "testMatch": [
           "**/sketchpad.test.ts"
         ],
-        "timeout": 60000
+        "timeout": 30000
       }
     ],
     "shard": null,
     "updateSnapshots": "missing",
-    "updateSourceMethod": "patch",
+    "updateSourceMethod": "3way",
     "version": "1.56.1",
     "workers": 8,
     "webServer": {
@@ -72,180 +72,152 @@
         {
           "title": "sketchpad",
           "file": "sketchpad.test.ts",
-          "line": 560,
+          "line": 623,
           "column": 6,
           "specs": [
             {
-              "title": "Home",
+              "title": "Design",
               "ok": true,
               "tags": [],
               "tests": [
                 {
-                  "timeout": 60000,
+                  "timeout": 120000,
                   "annotations": [],
                   "expectedStatus": "passed",
                   "projectId": "chromium",
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 0,
+                      "workerIndex": 8,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 9822,
+                      "duration": 37903,
                       "errors": [],
                       "stdout": [
                         {
-                          "text": "[Home] Testing Home app panel toggles\n"
+                          "text": "[TEST] Setting input files: C:\\git\\semio.tech\\semio\\assets\\semio\\metabolism.zip\n"
                         },
                         {
-                          "text": "[Home] Settings toggle visible: true\n"
+                          "text": "[TEST] File set via file chooser\n"
                         },
                         {
-                          "text": "[Home] Settings panel visible: false\n"
+                          "text": "[TEST] Page text contains 'Metabolism': \u001b[33mtrue\u001b[39m\n"
                         },
                         {
-                          "text": "[Home] Details toggle visible: false\n"
+                          "text": "[TEST] Page text contains 'Loading': \u001b[33mfalse\u001b[39m\n"
+                        },
+                        {
+                          "text": "[TEST] Metabolism row visible: \u001b[33mfalse\u001b[39m\n"
+                        },
+                        {
+                          "text": "[TEST] Metabolism cell visible: \u001b[33mtrue\u001b[39m\n"
+                        },
+                        {
+                          "text": "[TEST] Double-clicked on Metabolism cell\n"
+                        },
+                        {
+                          "text": "[TEST] Navigated to: http://localhost:5173/kits/f042c2a4-3ba5-44b0-b22c-0ae8f568aacc\n"
+                        },
+                        {
+                          "text": "[initDesign] Design visible: true\n"
+                        },
+                        {
+                          "text": "[initDesign] About to double-click on design\n"
+                        },
+                        {
+                          "text": "[initDesign] Double-clicked on design\n"
+                        },
+                        {
+                          "text": "[Design Test] Current URL: http://localhost:5173/kits/f042c2a4-3ba5-44b0-b22c-0ae8f568aacc/designs/9a890dd4-0a9c-48ac-920a-9e62666465ef\n"
+                        },
+                        {
+                          "text": "[Design Test] ReactFlow elements count: \u001b[33m1\u001b[39m\n"
+                        },
+                        {
+                          "text": "[Design Test] Window/Panel elements count: \u001b[33m25\u001b[39m\n"
+                        },
+                        {
+                          "text": "[Design Test] hasDiagram: \u001b[33mtrue\u001b[39m hasScene: \u001b[33mtrue\u001b[39m\n"
+                        },
+                        {
+                          "text": "[Design Test] Navbar is visible\n"
+                        },
+                        {
+                          "text": "[Design Test] Footer is visible\n"
+                        },
+                        {
+                          "text": "[Design Test] Piece count: \u001b[33m180\u001b[39m\n"
+                        },
+                        {
+                          "text": "[Design Test] Pan 1 took 19ms\n"
+                        },
+                        {
+                          "text": "[Design Test] Pan 2 took 14ms\n"
+                        },
+                        {
+                          "text": "[Design Test] Hover (mouse enter) took 87ms\n"
+                        },
+                        {
+                          "text": "[Design Test] Unhover (mouse leave) took 18ms\n"
+                        },
+                        {
+                          "text": "[Design Test] Hover cycle times: 160, 82, 10ms\n"
+                        },
+                        {
+                          "text": "[Design Test] Starting scene pan operations on three.js canvas\n"
+                        },
+                        {
+                          "text": "[Design Test] Scene Pan 1 took 381ms\n"
+                        },
+                        {
+                          "text": "[Design Test] Scene Pan 2 took 494ms\n"
+                        },
+                        {
+                          "text": "[Design Test] Scene Pan 3 took 539ms\n"
+                        },
+                        {
+                          "text": "[Design Test] Average subsequent scene pan time: 516.5ms\n"
+                        },
+                        {
+                          "text": "[Design] Testing Design app panel toggles\n"
+                        },
+                        {
+                          "text": "[Design] Workbench toggle visible: true\n"
+                        },
+                        {
+                          "text": "[Design] Toggle workbench: initial=false, after=false, changed=false\n"
+                        },
+                        {
+                          "text": "[Design] Settings toggle visible: false\n"
+                        },
+                        {
+                          "text": "[Design] Details toggle visible: true\n"
+                        },
+                        {
+                          "text": "[Design] Toggle details: initial=false, after=true, changed=true\n"
+                        },
+                        {
+                          "text": "[Design] Panel details content: 0 buttons, 0 inputs, 0 tree items (total: 0)\n"
+                        },
+                        {
+                          "text": "[Design] Panel details has 0 content items\n"
+                        },
+                        {
+                          "text": "[Design] Panel toggle verification complete: workbench=false, settings=false, details=true\n"
+                        },
+                        {
+                          "text": "[Design Test] Verifying flat planes and centers match expected asset data\n"
+                        },
+                        {
+                          "text": "[Design Test] Comparing 180 computed pieces with 180 expected flat pieces\n"
+                        },
+                        {
+                          "text": "[Design Test] Flat planes/centers verification: 180 matches, 0 mismatches\n"
                         }
                       ],
-                      "stderr": [
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m=> browserType.launch started \u001b[38;5;45m+0ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m<= browserType.launch succeeded \u001b[38;5;45m+331ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m=> browser.newContext started \u001b[38;5;45m+5ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m<= browser.newContext succeeded \u001b[38;5;45m+12ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m=> browserContext.newPage started \u001b[38;5;45m+3ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m<= browserContext.newPage succeeded \u001b[38;5;45m+299ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m=> page.goto started \u001b[38;5;45m+3ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0mnavigating to \"http://localhost:5173/\", waiting until \"load\" \u001b[38;5;45m+1ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m  \"commit\" event fired \u001b[38;5;45m+16ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m  navigated to \"http://localhost:5173/\" \u001b[38;5;45m+1ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m  \"domcontentloaded\" event fired \u001b[38;5;45m+619ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m  \"load\" event fired \u001b[38;5;45m+1ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m<= page.goto succeeded \u001b[38;5;45m+1ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m=> page.waitForLoadState started \u001b[38;5;45m+2ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m  navigated to \"http://localhost:5173/\" \u001b[38;5;45m+6ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m  \"networkidle\" event fired \u001b[38;5;45m+6s\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m<= page.waitForLoadState succeeded \u001b[38;5;45m+2ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m=> page.waitForTimeout started \u001b[38;5;45m+1ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m<= page.waitForTimeout succeeded \u001b[38;5;45m+2s\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m=> locator.isVisible started \u001b[38;5;45m+5ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m  checking visibility of locator('[id=\"semio.sketchpad.navbar.panelToggle.settings.show\"]') \u001b[38;5;45m+0ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m<= locator.isVisible succeeded \u001b[38;5;45m+20ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m=> locator.click started \u001b[38;5;45m+2ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0mwaiting for locator('[id=\"semio.sketchpad.navbar.panelToggle.settings.show\"]') \u001b[38;5;45m+0ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m  locator resolved to <button role=\"radio\" type=\"button\" tabindex=\"-1\" data-state=\"off\" aria-checked=\"false\" data-slot=\"toggle-group-item\" data-radix-collection-item=\"\" id=\"semio.sketchpad.navbar.panelToggle.settings.show\" class=\"text-foreground justify-center gap-single text-sm font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0 focus-visible:border-ring focus-visible:ring-ring/50 fo…>…</button> \u001b[38;5;45m+15ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0mattempting click action \u001b[38;5;45m+2ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m  waiting for element to be visible, enabled and stable \u001b[38;5;45m+1ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m  element is visible, enabled and stable \u001b[38;5;45m+30ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m  scrolling into view if needed \u001b[38;5;45m+0ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m  done scrolling \u001b[38;5;45m+1ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m  performing click action \u001b[38;5;45m+28ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m  click action done \u001b[38;5;45m+21ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m  waiting for scheduled navigations to finish \u001b[38;5;45m+0ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m  navigations have finished \u001b[38;5;45m+0ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m<= locator.click succeeded \u001b[38;5;45m+1ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m=> page.waitForTimeout started \u001b[38;5;45m+1ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m<= page.waitForTimeout succeeded \u001b[38;5;45m+501ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m=> locator.isVisible started \u001b[38;5;45m+2ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m  checking visibility of locator('[data-panel=\"settings\"]').first() \u001b[38;5;45m+1ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m<= locator.isVisible succeeded \u001b[38;5;45m+2ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m=> locator.isVisible started \u001b[38;5;45m+2ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m  checking visibility of locator('[id=\"semio.sketchpad.navbar.panelToggle.details.show\"]') \u001b[38;5;45m+0ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m<= locator.isVisible succeeded \u001b[38;5;45m+2ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m=> browserContext.close started \u001b[38;5;45m+7ms\u001b[0m\n"
-                        },
-                        {
-                          "text": "  \u001b[38;5;45;1mpw:api \u001b[0m<= browserContext.close succeeded \u001b[38;5;45m+53ms\u001b[0m\n"
-                        }
-                      ],
+                      "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-12T17:54:49.901Z",
+                      "startTime": "2025-12-12T21:02:00.657Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -253,9 +225,9 @@
                   "status": "expected"
                 }
               ],
-              "id": "1f96767271edc4239dfa-b740b36bc6e82e50ca6e",
+              "id": "1f96767271edc4239dfa-04d6a37c53e07d4a2f57",
               "file": "sketchpad.test.ts",
-              "line": 561,
+              "line": 792,
               "column": 3
             }
           ]
@@ -265,8 +237,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2025-12-12T17:54:48.916Z",
-    "duration": 11602.982,
+    "startTime": "2025-12-12T21:01:58.853Z",
+    "duration": 40077.71800000034,
     "expected": 1,
     "skipped": 0,
     "unexpected": 0,

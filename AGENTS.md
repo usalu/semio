@@ -2953,3 +2953,87 @@ Use this hierarchy for code organization (order of appearance of regions, classe
 13. Image
 14. Description
 15. Attributes
+
+## Sketchpad App Plugin Architecture
+
+The sketchpad uses a plugin-based architecture for apps. Each app (Home, Kit, Type, Design, Quality, Docs) registers itself via the `AppPlugin` system, enabling open/closed extensibility.
+
+### Plugin Structure
+
+Each app plugin provides:
+
+- **id**: Unique identifier (e.g., "home", "kit", "type", "design")
+- **namespace**: Event prefix (e.g., "HOME", "KIT", "TYPE", "DESIGN")
+- **machine**: XState machine contributions (actions, guards, eventHandlers, selectors)
+- **createDefaultState**: Factory for initial app state
+- **registerStores**: Optional store factory registration
+
+### File Layout
+
+```
+js/js/sketchpad/
+  shared.ts          # AppPlugin interface, registry functions
+  apps/
+    index.ts         # Single import point for all app plugins
+  Home.tsx           # Home app + homeAppPlugin
+  Kit.tsx            # Kit app + kitAppPlugin
+  Type.tsx           # Type app + typeAppPlugin
+  Design.tsx         # Design app + designAppPlugin
+  Quality.tsx        # Quality app + qualityAppPlugin
+  Docs.tsx           # Docs app + docsAppPlugin
+  Sketchpad.tsx      # Main orchestrator, XState machine
+```
+
+### Plugin Registration
+
+Apps register plugins as a side-effect on module import:
+
+```typescript
+const myAppPlugin: AppPlugin = {
+  id: "myapp",
+  namespace: "MYAPP",
+  machine: {
+    actions: {},
+    guards: {},
+    eventHandlers: {},
+    selectors: {},
+    createDefaultState: () => ({ ... }),
+  },
+};
+
+if (typeof window !== "undefined") {
+  registerAppPlugin(myAppPlugin);
+}
+```
+
+### Hook Pattern (Triadic)
+
+All hooks follow the triadic pattern: `[value, setValue, canSetValue]`
+
+- **UI components**: Only use triadic hooks, never access stores directly
+- **Hooks**: Read from stores via subscriptions, write via `actor.send()` XState events
+- **State machine**: Only writer API, accepts contributions from plugins
+- **Stores/commands**: Implementation details behind machine actions
+
+Example:
+
+```typescript
+export function useMyAppSelection(): HookResult<MySelection> {
+  const actor = useSketchpadActor();
+  const canSetEvent = useMemo(() => ({ type: "MYAPP.SET_SELECTION" as const, ... }), [...]);
+  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
+  const setSelection = useMemo(() => {
+    if (!canSet) return undefined;
+    return (value: MySelection) => actor.send({ type: "MYAPP.SET_SELECTION", ... });
+  }, [actor, canSet, ...]);
+  return conditionalHookResult(canSet, selection, setSelection);
+}
+```
+
+### Adding a New App
+
+1. Create app file with types, state, hooks, and UI components
+2. Define `AppPlugin` with namespace and machine contributions
+3. Register plugin: `registerAppPlugin(myAppPlugin)`
+4. Import app module in `apps/index.ts`
+5. No edits to `Sketchpad.tsx` required (open/closed principle)

@@ -151,6 +151,22 @@ export interface Transaction {
   abort?: () => void;
 }
 
+const TransactionContext = React.createContext<Transaction | undefined>(undefined);
+
+export const TransactionProvider: React.FC<{
+  transaction?: Transaction;
+  children: React.ReactNode;
+}> = ({ transaction, children }) => {
+  return <TransactionContext.Provider value={transaction}>{children}</TransactionContext.Provider>;
+};
+
+export const useTransaction = (): Transaction | undefined => React.useContext(TransactionContext);
+
+const useResolvedTransaction = (propTransaction?: Transaction): Transaction | undefined => {
+  const contextTransaction = useTransaction();
+  return propTransaction ?? contextTransaction;
+};
+
 export interface ElementBaseProps {
   id: string;
   level?: Level;
@@ -1197,19 +1213,24 @@ interface ActionDropdownProps extends Omit<React.ComponentProps<"button">, "chil
   onValueChange?: (value: string) => void;
   startTransaction?: () => void;
   finalizeTransaction?: () => void;
+  transaction?: Transaction;
   level?: Level;
 }
 
-function ActionDropdown({ className, level: propLevel, id, options, value, onValueChange, startTransaction, finalizeTransaction, ...props }: ActionDropdownProps) {
+function ActionDropdown({ className, level: propLevel, id, options, value, onValueChange, startTransaction, finalizeTransaction, transaction: propTransaction, ...props }: ActionDropdownProps) {
+  const contextTransaction = useTransaction();
+  const transaction = propTransaction ?? contextTransaction;
   const [open, setOpen] = React.useState(false);
   const level = useElementLevel(propLevel);
 
   const selectedOption = options.find((option) => option.value === value);
 
   const handleOpenChange = (isOpen: boolean) => {
-    if (isOpen && startTransaction) startTransaction();
+    const start = startTransaction ?? transaction?.start;
+    const finalize = finalizeTransaction ?? transaction?.finalize;
+    if (isOpen && start) start();
     setOpen(isOpen);
-    if (!isOpen && finalizeTransaction) finalizeTransaction();
+    if (!isOpen && finalize) finalize();
   };
 
   const handleSelect = (optionValue: string) => {
@@ -1453,7 +1474,8 @@ interface ComboboxProps extends ElementProps {
   showLabel?: boolean;
 }
 
-export const Combobox: React.FC<ComboboxProps> = ({ options, value = "", placeholder = "Select option...", placeholderId, emptyMessage = "No options found.", onValueChange, className, allowClear = false, showLabel, id, transaction }) => {
+export const Combobox: React.FC<ComboboxProps> = ({ options, value = "", placeholder = "Select option...", placeholderId, emptyMessage = "No options found.", onValueChange, className, allowClear = false, showLabel, id, transaction: propTransaction }) => {
+  const transaction = useResolvedTransaction(propTransaction);
   const [open, setOpen] = React.useState(false);
   const { t } = useTranslation();
   const computedPlaceholder = placeholderId ? useLabel(placeholderId) : placeholder;
@@ -1537,7 +1559,8 @@ interface InputProps extends Omit<React.ComponentProps<"input">, "value" | "onCh
   showLabel?: boolean;
 }
 
-function Input({ className, type, lazy, value: externalValue, onChange, onLazyChange, interactionId, id, placeholderId, placeholder, showLabel, transaction, ...props }: InputProps) {
+function Input({ className, type, lazy, value: externalValue, onChange, onLazyChange, interactionId, id, placeholderId, placeholder, showLabel, transaction: propTransaction, ...props }: InputProps) {
+  const transaction = useResolvedTransaction(propTransaction);
   const [localValue, setLocalValue] = React.useState(externalValue?.toString() || "");
   const [isEditing, setIsEditing] = React.useState(false);
   const commands = useInteractionCommands();
@@ -1642,7 +1665,8 @@ export { Input };
 
 // #region Select
 
-function Select({ id, showLabel, children, value, defaultValue, onOpenChange, transaction, ...props }: React.ComponentProps<typeof SelectPrimitive.Root> & ElementProps & { showLabel?: boolean }) {
+function Select({ id, showLabel, children, value, defaultValue, onOpenChange, transaction: propTransaction, ...props }: React.ComponentProps<typeof SelectPrimitive.Root> & ElementProps & { showLabel?: boolean }) {
+  const transaction = useResolvedTransaction(propTransaction);
   const fallbackValue = React.useMemo(() => {
     const findValue = (nodes: React.ReactNode[]): string | undefined => {
       for (const node of nodes) {
@@ -1828,7 +1852,7 @@ function Slider({
   interactionId,
   id,
   snapValues,
-  transaction,
+  transaction: propTransaction,
   ...props
 }: React.ComponentProps<typeof SliderPrimitive.Root> &
   ElementProps & {
@@ -1839,6 +1863,7 @@ function Slider({
     interactionId?: string;
     snapValues?: number[];
   }) {
+  const transaction = useResolvedTransaction(propTransaction);
   const [isEditing, setIsEditing] = React.useState(false);
   const [isSliding, setIsSliding] = React.useState(false);
   const [editValue, setEditValue] = React.useState("");
@@ -2045,7 +2070,8 @@ interface StepperProps extends ElementProps {
   interactionId?: string;
 }
 
-export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1, onChange, onPointerDown, onPointerUp, onPointerCancel, interactionId, id, transaction }) => {
+export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1, onChange, onPointerDown, onPointerUp, onPointerCancel, interactionId, id, transaction: propTransaction }) => {
+  const transaction = useResolvedTransaction(propTransaction);
   const [internalValue, setInternalValue] = React.useState(value ?? defaultValue);
   const [isEditing, setIsEditing] = React.useState(false);
   const intervalRef = React.useRef<NodeJS.Timeout | null>(null);
@@ -2268,7 +2294,8 @@ interface TextareaProps extends Omit<React.ComponentProps<"textarea">, "value" |
   placeholderId?: string;
 }
 
-function Textarea({ className, lazy, value: externalValue, onChange, onLazyChange, id, showLabel, placeholderId, placeholder, transaction, ...props }: TextareaProps) {
+function Textarea({ className, lazy, value: externalValue, onChange, onLazyChange, id, showLabel, placeholderId, placeholder, transaction: propTransaction, ...props }: TextareaProps) {
+  const transaction = useResolvedTransaction(propTransaction);
   const [localValue, setLocalValue] = React.useState(externalValue?.toString() || "");
   const [isEditing, setIsEditing] = React.useState(false);
   const computedPlaceholder = placeholderId ? useLabel(placeholderId) : placeholder;
