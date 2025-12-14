@@ -46,7 +46,7 @@
         "testMatch": [
           "**/sketchpad.test.ts"
         ],
-        "timeout": 180000
+        "timeout": 30000
       }
     ],
     "shard": null,
@@ -76,12 +76,12 @@
           "column": 6,
           "specs": [
             {
-              "title": "Type",
-              "ok": false,
+              "title": "Panel Section Switching",
+              "ok": true,
               "tags": [],
               "tests": [
                 {
-                  "timeout": 120000,
+                  "timeout": 180000,
                   "annotations": [],
                   "expectedStatus": "passed",
                   "projectId": "chromium",
@@ -90,29 +90,31 @@
                     {
                       "workerIndex": 0,
                       "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 35792,
-                      "error": {
-                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
-                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:815:45",
-                        "location": {
-                          "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
-                          "column": 45,
-                          "line": 815
-                        },
-                        "snippet": "\u001b[0m \u001b[90m 813 |\u001b[39m     console\u001b[33m.\u001b[39mlog(\u001b[32m`[Type] Selection tool toggle visible: ${hasSelectionTool}`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 814 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 815 |\u001b[39m     expect(hasPortTool \u001b[33m||\u001b[39m hasSelectionTool)\u001b[33m.\u001b[39mtoBe(\u001b[36mtrue\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                             \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 816 |\u001b[39m\n \u001b[90m 817 |\u001b[39m     \u001b[36mif\u001b[39m (hasPortTool) {\n \u001b[90m 818 |\u001b[39m       console\u001b[33m.\u001b[39mlog(\u001b[32m\"[Type] Testing port tool: clicking to activate\"\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
-                            "column": 45,
-                            "line": 815
-                          },
-                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n\u001b[0m \u001b[90m 813 |\u001b[39m     console\u001b[33m.\u001b[39mlog(\u001b[32m`[Type] Selection tool toggle visible: ${hasSelectionTool}`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 814 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 815 |\u001b[39m     expect(hasPortTool \u001b[33m||\u001b[39m hasSelectionTool)\u001b[33m.\u001b[39mtoBe(\u001b[36mtrue\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                             \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 816 |\u001b[39m\n \u001b[90m 817 |\u001b[39m     \u001b[36mif\u001b[39m (hasPortTool) {\n \u001b[90m 818 |\u001b[39m       console\u001b[33m.\u001b[39mlog(\u001b[32m\"[Type] Testing port tool: clicking to activate\"\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:815:45\u001b[22m"
-                        }
-                      ],
+                      "status": "passed",
+                      "duration": 120909,
+                      "errors": [],
                       "stdout": [
+                        {
+                          "text": "[Panel Section Test] Testing Home app\n"
+                        },
+                        {
+                          "text": "[Panel Section Test] Testing Home with panels: details, chat, settings\n"
+                        },
+                        {
+                          "text": "[Panel Section Test] Home/details: opened successfully\n"
+                        },
+                        {
+                          "text": "[Panel Section Test] Home/chat: toggle not visible, skipping\n"
+                        },
+                        {
+                          "text": "[Panel Section Test] Home/settings: toggle not visible, skipping\n"
+                        },
+                        {
+                          "text": "[Panel Section Test] Home: Testing rapid switching...\n"
+                        },
+                        {
+                          "text": "[Panel Section Test] Testing Kit app\n"
+                        },
                         {
                           "text": "[TEST] Setting input files: C:\\git\\semio.tech\\semio\\assets\\semio\\metabolism.zip\n"
                         },
@@ -138,78 +140,145 @@
                           "text": "[TEST] Navigated to: http://localhost:5173/kits/f042c2a4-3ba5-44b0-b22c-0ae8f568aacc\n"
                         },
                         {
-                          "text": "[Type Test] Navbar is visible\n"
+                          "text": "[Panel Section Test] Testing Kit with panels: workbench, details, chat, settings\n"
                         },
                         {
-                          "text": "[Type Test] Footer is visible\n"
+                          "text": "[Panel Section Test] Kit/workbench: toggle not visible, skipping\n"
                         },
                         {
-                          "text": "[Type Test] Starting pan operations on three.js canvas\n"
+                          "text": "[Panel Section Test] Kit/details: opened successfully\n"
                         },
                         {
-                          "text": "[Type Test] Pan 1 took 16ms\n"
+                          "text": "[Panel Section Test] Kit/chat: toggle not visible, skipping\n"
                         },
                         {
-                          "text": "[Type Test] Pan 2 took 18ms\n"
+                          "text": "[Panel Section Test] Kit/settings: toggle not visible, skipping\n"
                         },
                         {
-                          "text": "[Type Test] Pan 3 took 18ms\n"
+                          "text": "[Panel Section Test] Kit: Testing rapid switching...\n"
                         },
                         {
-                          "text": "[Type Test] Average pan time: 17.333333333333332ms\n"
+                          "text": "[Panel Section Test] Testing Type app\n"
                         },
                         {
-                          "text": "[Type] Testing Type app panel toggles\n"
+                          "text": "[TEST] Setting input files: C:\\git\\semio.tech\\semio\\assets\\semio\\metabolism.zip\n"
                         },
                         {
-                          "text": "[Type] Workbench toggle visible: true\n"
+                          "text": "[TEST] File set via file chooser\n"
                         },
                         {
-                          "text": "[Type] Toggle workbench: initial=false, after=false, changed=false\n"
+                          "text": "[TEST] Page text contains 'Metabolism': \u001b[33mtrue\u001b[39m\n"
                         },
                         {
-                          "text": "[Type] Settings toggle visible: false\n"
+                          "text": "[TEST] Page text contains 'Loading': \u001b[33mfalse\u001b[39m\n"
                         },
                         {
-                          "text": "[Type] Panel toggle verification complete: workbench=false, settings=false\n"
+                          "text": "[TEST] Metabolism row visible: \u001b[33mfalse\u001b[39m\n"
                         },
                         {
-                          "text": "[Type] Testing toolbar visibility and port tool\n"
+                          "text": "[TEST] Metabolism cell visible: \u001b[33mtrue\u001b[39m\n"
                         },
                         {
-                          "text": "[Type] Toolbar visible: true\n"
+                          "text": "[TEST] Double-clicked on Metabolism cell\n"
                         },
                         {
-                          "text": "[Type] Port tool toggle visible: false\n"
+                          "text": "[TEST] Navigated to: http://localhost:5173/kits/f042c2a4-3ba5-44b0-b22c-0ae8f568aacc\n"
                         },
                         {
-                          "text": "[Type] Selection tool toggle visible: false\n"
+                          "text": "[Panel Section Test] Testing Type with panels: workbench, toolbar, details, chat, settings\n"
+                        },
+                        {
+                          "text": "[Panel Section Test] Type/workbench: opened successfully\n"
+                        },
+                        {
+                          "text": "[Panel Section Test] Type/toolbar: toggle not visible, skipping\n"
+                        },
+                        {
+                          "text": "[Panel Section Test] Type/details: opened successfully\n"
+                        },
+                        {
+                          "text": "[Panel Section Test] Type/chat: toggle not visible, skipping\n"
+                        },
+                        {
+                          "text": "[Panel Section Test] Type/settings: toggle not visible, skipping\n"
+                        },
+                        {
+                          "text": "[Panel Section Test] Type: Testing rapid switching...\n"
+                        },
+                        {
+                          "text": "[Panel Section Test] Testing Design app\n"
+                        },
+                        {
+                          "text": "[TEST] Setting input files: C:\\git\\semio.tech\\semio\\assets\\semio\\metabolism.zip\n"
+                        },
+                        {
+                          "text": "[TEST] File set via file chooser\n"
+                        },
+                        {
+                          "text": "[TEST] Page text contains 'Metabolism': \u001b[33mtrue\u001b[39m\n"
+                        },
+                        {
+                          "text": "[TEST] Page text contains 'Loading': \u001b[33mfalse\u001b[39m\n"
+                        },
+                        {
+                          "text": "[TEST] Metabolism row visible: \u001b[33mfalse\u001b[39m\n"
+                        },
+                        {
+                          "text": "[TEST] Metabolism cell visible: \u001b[33mtrue\u001b[39m\n"
+                        },
+                        {
+                          "text": "[TEST] Double-clicked on Metabolism cell\n"
+                        },
+                        {
+                          "text": "[TEST] Navigated to: http://localhost:5173/kits/f042c2a4-3ba5-44b0-b22c-0ae8f568aacc\n"
+                        },
+                        {
+                          "text": "[initDesign] Design visible: true\n"
+                        },
+                        {
+                          "text": "[initDesign] About to double-click on design\n"
+                        },
+                        {
+                          "text": "[initDesign] Double-clicked on design\n"
+                        },
+                        {
+                          "text": "[Panel Section Test] Testing Design with panels: workbench, toolbar, details, chat, settings\n"
+                        },
+                        {
+                          "text": "[Panel Section Test] Design/workbench: opened successfully\n"
+                        },
+                        {
+                          "text": "[Panel Section Test] Design/toolbar: toggle not visible, skipping\n"
+                        },
+                        {
+                          "text": "[Panel Section Test] Design/details: opened successfully\n"
+                        },
+                        {
+                          "text": "[Panel Section Test] Design/chat: toggle not visible, skipping\n"
+                        },
+                        {
+                          "text": "[Panel Section Test] Design/settings: toggle not visible, skipping\n"
+                        },
+                        {
+                          "text": "[Panel Section Test] Design: Testing rapid switching...\n"
+                        },
+                        {
+                          "text": "[Panel Section Test] Results: {\n  \"Home\": {\n    \"success\": true,\n    \"errors\": []\n  },\n  \"Kit\": {\n    \"success\": true,\n    \"errors\": []\n  },\n  \"Type\": {\n    \"success\": true,\n    \"errors\": []\n  },\n  \"Design\": {\n    \"success\": true,\n    \"errors\": []\n  }\n}\n"
                         }
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-14T17:46:13.578Z",
+                      "startTime": "2025-12-14T21:19:58.166Z",
                       "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "C:\\git\\semio.tech\\semio\\js\\js\\test-results\\sketchpad-sketchpad-Type-chromium\\error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
-                        "column": 45,
-                        "line": 815
-                      }
+                      "attachments": []
                     }
                   ],
-                  "status": "unexpected"
+                  "status": "expected"
                 }
               ],
-              "id": "1f96767271edc4239dfa-99d988a262cf65a431a0",
+              "id": "1f96767271edc4239dfa-6e6af0d945db1bc5f470",
               "file": "sketchpad.test.ts",
-              "line": 695,
+              "line": 1424,
               "column": 3
             }
           ]
@@ -219,11 +288,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2025-12-14T17:46:10.848Z",
-    "duration": 38779.939000000006,
-    "expected": 0,
+    "startTime": "2025-12-14T21:19:56.926Z",
+    "duration": 122375.44600000001,
+    "expected": 1,
     "skipped": 0,
-    "unexpected": 1,
+    "unexpected": 0,
     "flaky": 0
   }
 }

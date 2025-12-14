@@ -3,7 +3,7 @@ This document MUST ALWAYS BE followed unless explicitly asked to do otherwise.
 IMPORTANT:
 
 - The codebase in under design and development and not used in production yet. There are many inconsistencies that need to be refactored. ALWAYS use clean mechanisms that might require large refactorings and NEVER care about backwards compatibility.
-- For every task you are working on, you MUST create or update a markdown log using `npx tsx scripts/log.ts create SLUG "Summary"`. Logs are stored in `log/YEAR/MONTH/DAY/SLUG.md` with YAML frontmatter. The script automatically creates three sections to be filled/updated during execution of the task: `# Previously`, `# Plan`, and `#Changes`.The purpose of the log is to understand the context, problem and decision making process. It is only about the process.
+- For every task you are working on, you MUST create or update a markdown log using `npx tsx scripts/log.ts create SLUG "Summary" --model=MODEL --prompt="User prompt..."`. Logs are stored in `log/YEAR/MONTH/DAY/SLUG.md` with YAML frontmatter. The script automatically creates three sections to be filled/updated during execution of the task: `# Previously`, `# Plan`, and `#Changes`.The purpose of the log is to understand the context, problem and decision making process. It is only about the process.
 - For every task you are working on, you MUST update the dev docs (`README.md` and `AGENTS.md`). Every key decision and mechanism ALWAYS needs to be documemented. The purpose of the dev docs is to understand the codebase. NEVER add reasoning or process related (such as what changed, why, how, … - this is part of the log) to the dev docs.
 
 # Specs
@@ -492,10 +492,18 @@ Every log file MUST have YAML frontmatter:
 ```yaml
 ---
 date: TIMESTAMP # ISO 8601 timestamp (e.g., 2025-11-24T10:30:00.000Z)
-slug: SLUG # Kebab-case identifier (e.g., VALIDATION-SYSTEM)
+slug: SLUG # Upper kebab-case identifier (e.g., VALIDATION-SYSTEM)
 author: NAME <EMAIL> # From git config (e.g., "John Doe <john@example.com>")
 summary: SUMMARY # One-line description for commit messages
 model: MODEL # LLM model used (e.g., claude-sonnet-4.5)
+prompts: # Array of user prompts for the task
+  - "First user prompt..."
+stats: # Git-based task stats (updated via scripts/log.ts stats)
+  base: GIT_SHA # Base commit hash for diffing
+  affectedFiles: [] # Paths changed during the task
+  addedLines: 0
+  removedLines: 0
+  updatedAt: TIMESTAMP # ISO 8601
 ---
 ```
 
@@ -504,7 +512,33 @@ model: MODEL # LLM model used (e.g., claude-sonnet-4.5)
 **Create a new log:**
 
 ```bash
-npx tsx scripts/log.ts create SLUG "Summary description"
+npx tsx scripts/log.ts create SLUG "Summary description" --model=claude-opus-4.5 --prompt="User prompt..."
+```
+
+**Append a prompt (per user message):**
+
+```bash
+npx tsx scripts/log.ts prompt SLUG "User prompt..."
+```
+
+**Track task-scoped affected files:**
+
+```bash
+npx tsx scripts/log.ts files SLUG <paths...>
+npx tsx scripts/log.ts files SLUG --detect --reset
+```
+
+**Update git stats (run when a task is done, and rerun across multiple prompts):**
+
+```bash
+npx tsx scripts/log.ts stats SLUG
+npx tsx scripts/log.ts stats SLUG --detect
+```
+
+**List available models:**
+
+```bash
+npx tsx scripts/log.ts models
 ```
 
 **Read a log:**
@@ -549,15 +583,16 @@ npx tsx scripts/log.ts migrate
 #### Programmatic Usage
 
 ```typescript
-import { createLog, readLog, updateLog, deleteLog, listLogs, searchLogs } from "./scripts/log";
+import { createLog, readLog, updateLog, deleteLog, listLogs, searchLogs, Model } from "./scripts/log";
 
 // Create
 const log = createLog({
   slug: "MY-TASK",
   summary: "Implement new feature",
+  prompts: ["User prompt..."],
   content: "# Task Details\n\nImplementation notes...",
   date: new Date(), // Optional, defaults to now
-  model: "claude-sonnet-4.5", // Optional, defaults to SEMIO_MODEL env var
+  model: Model.CLAUDE_SONNET_4_5,
   author: "Name <email>", // Optional, defaults to git config
 });
 
@@ -568,7 +603,7 @@ const log = readLog(2025, 11, 24, "MY-TASK");
 updateLog(2025, 11, 24, "MY-TASK", {
   summary: "Updated summary",
   content: "New content",
-  model: "different-model",
+  model: Model.GPT_5_2_CODEX,
 });
 
 // List with filters
@@ -589,7 +624,7 @@ deleteLog(2025, 11, 24, "MY-TASK");
 
 #### Environment Variables
 
-- `SEMIO_MODEL`: Default LLM model identifier (default: `claude-sonnet-4.5`)
+- `scripts/log.ts` requires an explicit `model` value; there is no default model environment variable.
 
 #### Git Configuration
 
@@ -1565,6 +1600,7 @@ Panel sections are dynamically added in the app's `useEffect`:
 
 ```typescript
 useEffect(() => {
+  removeSection("details", "my-section");
   addSection("details", {
     id: "my-section",
     label: t("mySection"),
@@ -1574,6 +1610,12 @@ useEffect(() => {
   return () => removeSection("details", "my-section");
 }, [appType, addSection, removeSection]);
 ```
+
+Rules:
+
+1. When a section id is conditional (for example `"properties"` vs `"multipleTitle"`), always `removeSection` for all possible ids before adding the currently active one.
+2. Always `removeSection` for every id you `addSection` (including conditional variants) in the effect cleanup.
+3. If the section content uses scope-bound hooks (`useKit()`, `useDesign()`, `useType()`), wrap `content` with the corresponding `*ScopeProvider` when registering the section.
 
 ##### Tutorials
 

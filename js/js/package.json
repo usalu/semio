@@ -12,8 +12,8 @@
   },
   "scripts": {
     "dev": "tsx dev.ts",
-    "dev-storybook": "storybook dev -p 6006 --no-open --debug",
-    "dev-sketchpad": "vite --port 5174",
+    "dev:storybook": "storybook dev -p 6006 --no-open --debug",
+    "dev:sketchpad": "vite --port 5174",
     "build": "storybook build",
     "test": "vitest run",
     "test:ui": "vitest --ui",

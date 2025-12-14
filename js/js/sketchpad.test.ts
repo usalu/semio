@@ -1265,6 +1265,303 @@ test.describe("sketchpad", () => {
     expect(infiniteLoopErrors).toHaveLength(0);
   });
 
+  test("Panel Toggle Independence", async ({ page }) => {
+    test.setTimeout(180000);
+
+    const { errors } = await initConsole(page);
+    await initDesign(page);
+
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(2000);
+
+    console.log("[Panel Independence Test] In Design app:", page.url());
+    expect(page.url()).toContain("/designs/");
+
+    const verifyPanelToggleIndependence = async (
+      toggleId: string,
+      panelKey: string,
+      otherPanelKeys: string[]
+    ): Promise<{ toggled: boolean; independent: boolean }> => {
+      const toggle = page.locator(`[id="${toggleId}"]`);
+      const isVisible = await toggle.isVisible({ timeout: 3000 }).catch(() => false);
+      if (!isVisible) {
+        console.log(`[Panel Independence Test] Toggle ${panelKey} not visible, skipping`);
+        return { toggled: false, independent: true };
+      }
+
+      const panel = page.locator(`[data-panel="${panelKey}"]`).first();
+      const wasVisible = await panel.isVisible().catch(() => false);
+
+      const otherPanelStates: Record<string, boolean> = {};
+      for (const otherKey of otherPanelKeys) {
+        const otherPanel = page.locator(`[data-panel="${otherKey}"]`).first();
+        otherPanelStates[otherKey] = await otherPanel.isVisible().catch(() => false);
+      }
+
+      await toggle.click();
+      await page.waitForTimeout(400);
+
+      const isNowVisible = await panel.isVisible().catch(() => false);
+      const toggled = wasVisible !== isNowVisible;
+      console.log(`[Panel Independence Test] ${panelKey}: was=${wasVisible}, now=${isNowVisible}, toggled=${toggled}`);
+
+      let independent = true;
+      for (const otherKey of otherPanelKeys) {
+        const otherPanel = page.locator(`[data-panel="${otherKey}"]`).first();
+        const otherNowVisible = await otherPanel.isVisible().catch(() => false);
+        if (otherPanelStates[otherKey] !== otherNowVisible) {
+          console.log(`[Panel Independence Test] WARNING: ${otherKey} changed from ${otherPanelStates[otherKey]} to ${otherNowVisible} when toggling ${panelKey}`);
+          independent = false;
+        }
+      }
+
+      return { toggled, independent };
+    };
+
+    const allPanels = ["workbench", "toolbar", "details", "chat", "settings"];
+    const results: Record<string, { toggled: boolean; independent: boolean }> = {};
+
+    for (const panelKey of allPanels) {
+      const toggleId = `semio.sketchpad.navbar.panelToggle.${panelKey}.show`;
+      const otherPanels = allPanels.filter(p => p !== panelKey);
+      results[panelKey] = await verifyPanelToggleIndependence(toggleId, panelKey, otherPanels);
+    }
+
+    console.log("[Panel Independence Test] Results:", JSON.stringify(results, null, 2));
+
+    const testedPanels = Object.entries(results).filter(([, r]) => r.toggled);
+    console.log(`[Panel Independence Test] ${testedPanels.length}/${allPanels.length} panels toggled successfully`);
+    expect(testedPanels.length).toBeGreaterThan(0);
+
+    const independentPanels = Object.entries(results).filter(([, r]) => r.independent);
+    console.log(`[Panel Independence Test] ${independentPanels.length}/${allPanels.length} panels are independent`);
+    expect(independentPanels.length).toBe(Object.keys(results).length);
+
+    const infiniteLoopErrors = errors.filter(e => e.includes("Maximum update depth exceeded"));
+    expect(infiniteLoopErrors).toHaveLength(0);
+  });
+
+  test("All Apps Panel Toggles", async ({ page }) => {
+    test.setTimeout(300000);
+
+    const { errors } = await initConsole(page);
+
+    const verifyAppPanelToggles = async (appName: string, panelKeys: string[]): Promise<number> => {
+      let successCount = 0;
+      for (const panelKey of panelKeys) {
+        const toggle = page.locator(`[id="semio.sketchpad.navbar.panelToggle.${panelKey}.show"]`);
+        const isVisible = await toggle.isVisible({ timeout: 3000 }).catch(() => false);
+        if (!isVisible) {
+          console.log(`[${appName}] Panel toggle ${panelKey} not visible`);
+          continue;
+        }
+
+        const panel = page.locator(`[data-panel="${panelKey}"]`).first();
+        const wasVisible = await panel.isVisible().catch(() => false);
+
+        await toggle.click();
+        await page.waitForTimeout(300);
+
+        const isNowVisible = await panel.isVisible().catch(() => false);
+        if (wasVisible !== isNowVisible) {
+          console.log(`[${appName}] Panel ${panelKey}: toggled (${wasVisible} -> ${isNowVisible})`);
+          successCount++;
+
+          await toggle.click();
+          await page.waitForTimeout(300);
+          const isRestoredVisible = await panel.isVisible().catch(() => false);
+          if (isRestoredVisible !== wasVisible) {
+            console.log(`[${appName}] Panel ${panelKey}: double toggle worked`);
+          }
+        } else {
+          console.log(`[${appName}] Panel ${panelKey}: toggle did not change state`);
+        }
+      }
+      return successCount;
+    };
+
+    console.log("[All Apps Panel Test] Testing Home app");
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(2000);
+    const homeResults = await verifyAppPanelToggles("Home", ["details", "chat", "settings"]);
+    console.log(`[All Apps Panel Test] Home: ${homeResults} panels toggled successfully`);
+
+    console.log("[All Apps Panel Test] Testing Kit app");
+    await initHome(page);
+    await page.waitForTimeout(2000);
+    const kitResults = await verifyAppPanelToggles("Kit", ["workbench", "details", "chat", "settings"]);
+    console.log(`[All Apps Panel Test] Kit: ${kitResults} panels toggled successfully`);
+
+    console.log("[All Apps Panel Test] Testing Type app");
+    await initType(page);
+    await page.waitForTimeout(2000);
+    const typeResults = await verifyAppPanelToggles("Type", ["workbench", "toolbar", "details", "chat", "settings"]);
+    console.log(`[All Apps Panel Test] Type: ${typeResults} panels toggled successfully`);
+
+    console.log("[All Apps Panel Test] Testing Design app");
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+    await initDesign(page);
+    await page.waitForTimeout(2000);
+    const designResults = await verifyAppPanelToggles("Design", ["workbench", "toolbar", "details", "chat", "settings"]);
+    console.log(`[All Apps Panel Test] Design: ${designResults} panels toggled successfully`);
+
+    console.log("[All Apps Panel Test] Testing Docs app");
+    await initDocs(page);
+    await page.waitForTimeout(2000);
+    const docsResults = await verifyAppPanelToggles("Docs", ["workbench", "details", "chat", "settings"]);
+    console.log(`[All Apps Panel Test] Docs: ${docsResults} panels toggled successfully`);
+
+    const totalResults = homeResults + kitResults + typeResults + designResults + docsResults;
+    console.log(`[All Apps Panel Test] Total panels toggled: ${totalResults}`);
+    expect(totalResults).toBeGreaterThan(5);
+
+    const infiniteLoopErrors = errors.filter(e => e.includes("Maximum update depth exceeded"));
+    expect(infiniteLoopErrors).toHaveLength(0);
+  });
+
+  test("Panel Section Switching", async ({ page }) => {
+    // This test verifies that switching between different panel kinds
+    // (details -> settings -> chat, etc.) works without React hooks order errors.
+    // This caught a bug where SettingsContent was defined inside useEffect,
+    // causing hooks order violations when switching panels.
+    test.setTimeout(180000);
+
+    const { errors } = await initConsole(page);
+
+    const verifyPanelSectionSwitching = async (appName: string, panelKeys: string[]): Promise<{ success: boolean; errors: string[] }> => {
+      const sectionErrors: string[] = [];
+      console.log(`[Panel Section Test] Testing ${appName} with panels: ${panelKeys.join(", ")}`);
+
+      // First, close all panels
+      for (const panelKey of panelKeys) {
+        const hideToggle = page.locator(`[id="semio.sketchpad.navbar.panelToggle.${panelKey}.hide"]`);
+        if (await hideToggle.isVisible({ timeout: 1000 }).catch(() => false)) {
+          await hideToggle.click();
+          await page.waitForTimeout(200);
+        }
+      }
+
+      // Test opening each panel individually and verify no errors
+      for (const panelKey of panelKeys) {
+        const showToggle = page.locator(`[id="semio.sketchpad.navbar.panelToggle.${panelKey}.show"]`);
+        const isVisible = await showToggle.isVisible({ timeout: 2000 }).catch(() => false);
+        if (!isVisible) {
+          console.log(`[Panel Section Test] ${appName}/${panelKey}: toggle not visible, skipping`);
+          continue;
+        }
+
+        await showToggle.click();
+        await page.waitForTimeout(500);
+
+        const panel = page.locator(`[data-panel="${panelKey}"]`).first();
+        const panelVisible = await panel.isVisible({ timeout: 2000 }).catch(() => false);
+        if (!panelVisible) {
+          console.log(`[Panel Section Test] ${appName}/${panelKey}: panel not visible after opening`);
+          sectionErrors.push(`${appName}/${panelKey}: panel not visible`);
+        } else {
+          console.log(`[Panel Section Test] ${appName}/${panelKey}: opened successfully`);
+        }
+
+        // Check for React hooks errors in console
+        const hookErrors = errors.filter(e => 
+          e.includes("Rendered more hooks than during the previous render") ||
+          e.includes("change in the order of Hooks")
+        );
+        if (hookErrors.length > 0) {
+          console.log(`[Panel Section Test] ${appName}/${panelKey}: HOOK ERROR detected!`);
+          sectionErrors.push(`${appName}/${panelKey}: hooks error`);
+        }
+
+        // Close this panel before opening the next
+        const hideToggle = page.locator(`[id="semio.sketchpad.navbar.panelToggle.${panelKey}.hide"]`);
+        if (await hideToggle.isVisible({ timeout: 1000 }).catch(() => false)) {
+          await hideToggle.click();
+          await page.waitForTimeout(200);
+        }
+      }
+
+      // Test rapid switching between panels (the actual bug scenario)
+      console.log(`[Panel Section Test] ${appName}: Testing rapid switching...`);
+      for (let i = 0; i < 3; i++) {
+        for (const panelKey of panelKeys) {
+          const showToggle = page.locator(`[id="semio.sketchpad.navbar.panelToggle.${panelKey}.show"]`);
+          if (await showToggle.isVisible({ timeout: 500 }).catch(() => false)) {
+            await showToggle.click();
+            await page.waitForTimeout(100);
+          }
+        }
+      }
+      await page.waitForTimeout(500);
+
+      // Final check for hooks errors
+      const finalHookErrors = errors.filter(e => 
+        e.includes("Rendered more hooks than during the previous render") ||
+        e.includes("change in the order of Hooks")
+      );
+      if (finalHookErrors.length > 0) {
+        console.log(`[Panel Section Test] ${appName}: HOOK ERRORS after rapid switching!`, finalHookErrors.length);
+        sectionErrors.push(`${appName}: hooks error after rapid switching`);
+      }
+
+      return { success: sectionErrors.length === 0, errors: sectionErrors };
+    };
+
+    // Test each app
+    const allResults: Record<string, { success: boolean; errors: string[] }> = {};
+
+    // Home app
+    console.log("[Panel Section Test] Testing Home app");
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(2000);
+    allResults["Home"] = await verifyPanelSectionSwitching("Home", ["details", "chat", "settings"]);
+
+    // Kit app
+    console.log("[Panel Section Test] Testing Kit app");
+    await initHome(page);
+    await page.waitForTimeout(2000);
+    allResults["Kit"] = await verifyPanelSectionSwitching("Kit", ["workbench", "details", "chat", "settings"]);
+
+    // Type app
+    console.log("[Panel Section Test] Testing Type app");
+    await initType(page);
+    await page.waitForTimeout(2000);
+    allResults["Type"] = await verifyPanelSectionSwitching("Type", ["workbench", "toolbar", "details", "chat", "settings"]);
+
+    // Design app
+    console.log("[Panel Section Test] Testing Design app");
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+    await initDesign(page);
+    await page.waitForTimeout(2000);
+    allResults["Design"] = await verifyPanelSectionSwitching("Design", ["workbench", "toolbar", "details", "chat", "settings"]);
+
+    // Log results
+    console.log("[Panel Section Test] Results:", JSON.stringify(allResults, null, 2));
+
+    // Check that all apps passed
+    const failedApps = Object.entries(allResults).filter(([, r]) => !r.success);
+    if (failedApps.length > 0) {
+      console.log("[Panel Section Test] Failed apps:", failedApps.map(([name]) => name).join(", "));
+      for (const [name, result] of failedApps) {
+        console.log(`[Panel Section Test] ${name} errors:`, result.errors);
+      }
+    }
+
+    // Verify no hooks errors in overall error log
+    const hookErrors = errors.filter(e => 
+      e.includes("Rendered more hooks than during the previous render") ||
+      e.includes("change in the order of Hooks")
+    );
+    expect(hookErrors).toHaveLength(0);
+
+    // Verify at least some apps were tested successfully
+    const successfulApps = Object.entries(allResults).filter(([, r]) => r.success);
+    expect(successfulApps.length).toBeGreaterThanOrEqual(2);
+  });
+
   test("Design Drag and Drop", async ({ page }) => {
     // This test verifies that:
     // 1. Existing pieces in the design have correct plane properties

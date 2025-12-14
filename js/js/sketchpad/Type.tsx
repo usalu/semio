@@ -2692,6 +2692,102 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
 
 // #region Settings
 
+const TypeSettingsContent: FC = () => {
+  const [theme, setTheme, canSetTheme] = useTheme();
+  const [language, setLanguage, canSetLanguage] = useLanguage();
+  const [layout, setLayout, canSetLayout] = useLayout();
+  const [expertise, setExpertise, canSetExpertise] = useExpertise();
+  const [mode, setMode, canSetMode] = useMode();
+
+  const languageEnLabel = useLabel("semio.sketchpad.settings.language.en");
+  const languageDeLabel = useLabel("semio.sketchpad.settings.language.de");
+  const languagePlaceholder = useLabel("semio.sketchpad.app.home.settings.language.placeholder");
+
+  return (
+    <>
+      <TreeItem>
+        <TreeContent>
+          <ToggleGroup
+            id="semio.sketchpad.settings.theme"
+            value={theme}
+            onValueChange={(value: string) => setTheme?.(value as Theme)}
+            showLabel
+            kind="single"
+            disabled={!canSetTheme}
+            items={[
+              { value: Theme.SYSTEM, id: "semio.sketchpad.settings.theme.system", icon: <MonitorIcon className="size-small" /> },
+              { value: Theme.LIGHT, id: "semio.sketchpad.settings.theme.light", icon: <SunIcon className="size-small" /> },
+              { value: Theme.DARK, id: "semio.sketchpad.settings.theme.dark", icon: <MoonIcon className="size-small" /> },
+            ]}
+          />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Select id="semio.sketchpad.settings.language" value={language || "en"} onValueChange={(value: string) => setLanguage?.(value)} showLabel disabled={!canSetLanguage}>
+            <SelectTrigger>
+              <SelectValue placeholder={languagePlaceholder} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="en">{languageEnLabel}</SelectItem>
+              <SelectItem value="de">{languageDeLabel}</SelectItem>
+            </SelectContent>
+          </Select>
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <ToggleGroup
+            id="semio.sketchpad.settings.layout"
+            value={typeof layout === "object" ? "desktop" : layout}
+            onValueChange={(value: string) => setLayout?.(value as "desktop" | "tablet")}
+            showLabel
+            kind="single"
+            disabled={!canSetLayout}
+            items={[
+              { value: "desktop", id: "semio.sketchpad.settings.layout.desktop", icon: <MousePointerIcon className="size-small" /> },
+              { value: "tablet", id: "semio.sketchpad.settings.layout.tablet", icon: <HandIcon className="size-small" /> },
+            ]}
+          />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <ToggleGroup
+            id="semio.sketchpad.settings.expertise"
+            value={expertise}
+            onValueChange={(value: string) => setExpertise?.(value as Expertise)}
+            showLabel
+            kind="single"
+            disabled={!canSetExpertise}
+            items={[
+              { value: Expertise.BEGINNER, id: "semio.sketchpad.settings.expertise.beginner", icon: <TutorialIcon className="size-small" /> },
+              { value: Expertise.NORMAL, id: "semio.sketchpad.settings.expertise.normal", icon: <UserIcon className="size-small" /> },
+              { value: Expertise.EXPERT, id: "semio.sketchpad.settings.expertise.expert", icon: <AwardIcon className="size-small" /> },
+            ]}
+          />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <ToggleGroup
+            id="semio.sketchpad.settings.mode"
+            value={mode}
+            onValueChange={(value: string) => setMode?.(value as Mode)}
+            showLabel
+            kind="single"
+            disabled={!canSetMode}
+            items={[
+              { value: Mode.USER, id: "semio.sketchpad.settings.mode.user", icon: <UserIcon className="size-small" /> },
+              { value: Mode.DEV, id: "semio.sketchpad.settings.mode.dev", icon: <CodeIcon className="size-small" /> },
+            ]}
+          />
+        </TreeContent>
+      </TreeItem>
+    </>
+  );
+};
+
 // #endregion Settings
 
 // #endregion Right
@@ -2890,102 +2986,6 @@ const App: FC = () => {
   useEffect(() => {
     if (appType !== "type") return;
 
-    const SketchpadSettingsContent = () => {
-      const [theme, setTheme, canSetTheme] = useTheme();
-      const [language, setLanguage, canSetLanguage] = useLanguage();
-      const [layout, setLayout, canSetLayout] = useLayout();
-      const [expertise, setExpertise, canSetExpertise] = useExpertise();
-      const [mode, setMode, canSetMode] = useMode();
-
-      const languageEnLabel = useLabel("semio.sketchpad.settings.language.en");
-      const languageDeLabel = useLabel("semio.sketchpad.settings.language.de");
-      const languagePlaceholder = useLabel("semio.sketchpad.app.home.settings.language.placeholder");
-
-      return (
-        <>
-          <TreeItem>
-            <TreeContent>
-              <ToggleGroup
-                id="semio.sketchpad.settings.theme"
-                value={theme}
-                onValueChange={(value: string) => setTheme?.(value as Theme)}
-                showLabel
-                kind="single"
-                disabled={!canSetTheme}
-                items={[
-                  { value: Theme.SYSTEM, id: "semio.sketchpad.settings.theme.system", icon: <MonitorIcon className="size-small" /> },
-                  { value: Theme.LIGHT, id: "semio.sketchpad.settings.theme.light", icon: <SunIcon className="size-small" /> },
-                  { value: Theme.DARK, id: "semio.sketchpad.settings.theme.dark", icon: <MoonIcon className="size-small" /> },
-                ]}
-              />
-            </TreeContent>
-          </TreeItem>
-          <TreeItem>
-            <TreeContent>
-              <Select id="semio.sketchpad.settings.language" value={language || "en"} onValueChange={(value: string) => setLanguage?.(value)} showLabel disabled={!canSetLanguage}>
-                <SelectTrigger>
-                  <SelectValue placeholder={languagePlaceholder} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="en">{languageEnLabel}</SelectItem>
-                  <SelectItem value="de">{languageDeLabel}</SelectItem>
-                </SelectContent>
-              </Select>
-            </TreeContent>
-          </TreeItem>
-          <TreeItem>
-            <TreeContent>
-              <ToggleGroup
-                id="semio.sketchpad.settings.layout"
-                value={typeof layout === "object" ? "desktop" : layout}
-                onValueChange={(value: string) => setLayout?.(value as "desktop" | "tablet")}
-                showLabel
-                kind="single"
-                disabled={!canSetLayout}
-                items={[
-                  { value: "desktop", id: "semio.sketchpad.settings.layout.desktop", icon: <MousePointerIcon className="size-small" /> },
-                  { value: "tablet", id: "semio.sketchpad.settings.layout.tablet", icon: <HandIcon className="size-small" /> },
-                ]}
-              />
-            </TreeContent>
-          </TreeItem>
-          <TreeItem>
-            <TreeContent>
-              <ToggleGroup
-                id="semio.sketchpad.settings.expertise"
-                value={expertise}
-                onValueChange={(value: string) => setExpertise?.(value as Expertise)}
-                showLabel
-                kind="single"
-                disabled={!canSetExpertise}
-                items={[
-                  { value: Expertise.BEGINNER, id: "semio.sketchpad.settings.expertise.beginner", icon: <TutorialIcon className="size-small" /> },
-                  { value: Expertise.NORMAL, id: "semio.sketchpad.settings.expertise.normal", icon: <UserIcon className="size-small" /> },
-                  { value: Expertise.EXPERT, id: "semio.sketchpad.settings.expertise.expert", icon: <AwardIcon className="size-small" /> },
-                ]}
-              />
-            </TreeContent>
-          </TreeItem>
-          <TreeItem>
-            <TreeContent>
-              <ToggleGroup
-                id="semio.sketchpad.settings.mode"
-                value={mode}
-                onValueChange={(value: string) => setMode?.(value as Mode)}
-                showLabel
-                kind="single"
-                disabled={!canSetMode}
-                items={[
-                  { value: Mode.USER, id: "semio.sketchpad.settings.mode.user", icon: <UserIcon className="size-small" /> },
-                  { value: Mode.DEV, id: "semio.sketchpad.settings.mode.dev", icon: <CodeIcon className="size-small" /> },
-                ]}
-              />
-            </TreeContent>
-          </TreeItem>
-        </>
-      );
-    };
-
     // Add Type-specific settings (most specific)
     addSection("settings", {
       id: "semio.sketchpad.app.type.settings",
@@ -2999,7 +2999,7 @@ const App: FC = () => {
       id: "semio.sketchpad.app.kit.settings",
       specificity: 10,
       order: 0,
-      content: SketchpadSettingsContent,
+      content: () => <TypeSettingsContent />,
     });
 
     // Add global Sketchpad settings (least specific)
@@ -3007,7 +3007,7 @@ const App: FC = () => {
       id: "semio.sketchpad.settings",
       specificity: 0,
       order: 0,
-      content: SketchpadSettingsContent,
+      content: () => <TypeSettingsContent />,
     });
 
     return () => {

@@ -9374,26 +9374,28 @@ export const sketchpadMachine = setup({
         kit: {
           on: {
             // Kit app events - only available in kit state
+            // NOTE: Guards removed because actions use createDefaultKitAppState() fallback
+            // This allows panel toggles to work even when navigating directly via URL
             "KIT.SYNC": { guard: "kitAppExists", actions: "kitSync" },
-            "KIT.TOGGLE_PANEL": { guard: "kitAppExists", actions: "kitTogglePanel" },
-            "KIT.SET_PANEL_VISIBILITY": { guard: "kitAppExists", actions: "kitSetPanelVisibility" },
-            "KIT.SET_FILTER": { guard: "kitAppExists", actions: "kitSetFilter" },
-            "KIT.TOGGLE_ROW": { guard: "kitAppExists", actions: "kitToggleRow" },
-            "KIT.SET_EXPANDED_ROWS": { guard: "kitAppExists", actions: "kitSetExpandedRows" },
-            "KIT.SET_SORT": { guard: "kitAppExists", actions: "kitSetSort" },
-            "KIT.SELECT_TYPE": { guard: "kitAppExists", actions: "kitSelectType" },
-            "KIT.DESELECT_TYPE": { guard: "kitAppExists", actions: "kitDeselectType" },
-            "KIT.SELECT_DESIGN": { guard: "kitAppExists", actions: "kitSelectDesign" },
-            "KIT.DESELECT_DESIGN": { guard: "kitAppExists", actions: "kitDeselectDesign" },
-            "KIT.SET_SELECTION": { guard: "kitAppExists", actions: "kitSetSelection" },
-            "KIT.CLEAR_SELECTION": { guard: "kitAppExists", actions: "kitClearSelection" },
-            "KIT.SET_HOVER": { guard: "kitAppExists", actions: "kitSetHover" },
+            "KIT.TOGGLE_PANEL": { actions: "kitTogglePanel" },
+            "KIT.SET_PANEL_VISIBILITY": { actions: "kitSetPanelVisibility" },
+            "KIT.SET_FILTER": { actions: "kitSetFilter" },
+            "KIT.TOGGLE_ROW": { actions: "kitToggleRow" },
+            "KIT.SET_EXPANDED_ROWS": { actions: "kitSetExpandedRows" },
+            "KIT.SET_SORT": { actions: "kitSetSort" },
+            "KIT.SELECT_TYPE": { actions: "kitSelectType" },
+            "KIT.DESELECT_TYPE": { actions: "kitDeselectType" },
+            "KIT.SELECT_DESIGN": { actions: "kitSelectDesign" },
+            "KIT.DESELECT_DESIGN": { actions: "kitDeselectDesign" },
+            "KIT.SET_SELECTION": { actions: "kitSetSelection" },
+            "KIT.CLEAR_SELECTION": { actions: "kitClearSelection" },
+            "KIT.SET_HOVER": { actions: "kitSetHover" },
             "KIT.CLEAR_HOVER": {
               guard: "hasKitHover",
               actions: "kitClearHover",
             },
             // Kit transaction events (scoped to kit app)
-            "KIT.TRANSACTION.START": { guard: "kitAppExists", actions: "kitTransactionStart" },
+            "KIT.TRANSACTION.START": { actions: "kitTransactionStart" },
             "KIT.TRANSACTION.COMMIT": { guard: "kitAppExists", actions: "kitTransactionCommit" },
             "KIT.TRANSACTION.ABORT": { guard: "kitAppExists", actions: "kitTransactionAbort" },
             "KIT.TRANSACTION.UNDO": { guard: "kitAppExists", actions: "kitTransactionUndo" },
@@ -9405,38 +9407,40 @@ export const sketchpadMachine = setup({
         design: {
           on: {
             // Design app events - only available in design state
+            // NOTE: Guards removed because actions use createDefaultDesignAppState() fallback
+            // This allows panel toggles to work even when navigating directly via URL
             "DESIGN.SYNC": { guard: "designAppExists", actions: "designSync" },
-            "DESIGN.TOGGLE_PANEL": { guard: "designAppExists", actions: "designTogglePanel" },
-            "DESIGN.SET_PANEL_VISIBILITY": { guard: "designAppExists", actions: "designSetPanelVisibility" },
-            "DESIGN.SET_ACTIVE_TOOL": { guard: "designAppExists", actions: "designSetActiveTool" },
-            "DESIGN.SET_FULLSCREEN": { guard: "designAppExists", actions: "designSetFullscreen" },
-            "DESIGN.SET_SELECTION": { guard: "designAppExists", actions: "designSetSelection" },
+            "DESIGN.TOGGLE_PANEL": { actions: "designTogglePanel" },
+            "DESIGN.SET_PANEL_VISIBILITY": { actions: "designSetPanelVisibility" },
+            "DESIGN.SET_ACTIVE_TOOL": { actions: "designSetActiveTool" },
+            "DESIGN.SET_FULLSCREEN": { actions: "designSetFullscreen" },
+            "DESIGN.SET_SELECTION": { actions: "designSetSelection" },
             "DESIGN.CLEAR_SELECTION": {
               guard: "hasDesignSelection",
               actions: "designClearSelection",
             },
-            "DESIGN.SET_HOVER": { guard: "designAppExists", actions: "designSetHover" },
+            "DESIGN.SET_HOVER": { actions: "designSetHover" },
             "DESIGN.CLEAR_HOVER": {
               guard: "hasDesignHover",
               actions: "designClearHover",
             },
-            "DESIGN.FOCUS_PIECE": { guard: "designAppExists", actions: "designFocusPiece" },
-            "DESIGN.SET_DIAGRAM_CENTER": { guard: "designAppExists", actions: "designSetDiagramCenter" },
-            "DESIGN.SET_DIAGRAM_SCALE": { guard: "designAppExists", actions: "designSetDiagramScale" },
-            "DESIGN.SET_CAMERA": { guard: "designAppExists", actions: "designSetCamera" },
-            "DESIGN.SELECT_MODEL_TAG": { guard: "designAppExists", actions: "designSelectModelTag" },
-            "DESIGN.DESELECT_MODEL_TAG": { guard: "designAppExists", actions: "designDeselectModelTag" },
-            "DESIGN.SELECT_PIECE": { guard: "designAppExists", actions: "designSelectPiece" },
-            "DESIGN.DESELECT_PIECE": { guard: "designAppExists", actions: "designDeselectPiece" },
-            "DESIGN.SELECT_CONNECTION": { guard: "designAppExists", actions: "designSelectConnection" },
-            "DESIGN.DESELECT_CONNECTION": { guard: "designAppExists", actions: "designDeselectConnection" },
-            "DESIGN.SELECT_ALL": { guard: "designAppExists", actions: "designSelectAll" },
+            "DESIGN.FOCUS_PIECE": { actions: "designFocusPiece" },
+            "DESIGN.SET_DIAGRAM_CENTER": { actions: "designSetDiagramCenter" },
+            "DESIGN.SET_DIAGRAM_SCALE": { actions: "designSetDiagramScale" },
+            "DESIGN.SET_CAMERA": { actions: "designSetCamera" },
+            "DESIGN.SELECT_MODEL_TAG": { actions: "designSelectModelTag" },
+            "DESIGN.DESELECT_MODEL_TAG": { actions: "designDeselectModelTag" },
+            "DESIGN.SELECT_PIECE": { actions: "designSelectPiece" },
+            "DESIGN.DESELECT_PIECE": { actions: "designDeselectPiece" },
+            "DESIGN.SELECT_CONNECTION": { actions: "designSelectConnection" },
+            "DESIGN.DESELECT_CONNECTION": { actions: "designDeselectConnection" },
+            "DESIGN.SELECT_ALL": { actions: "designSelectAll" },
             "DESIGN.DELETE_SELECTED": {
               guard: "hasDesignSelection",
               actions: "designDeleteSelected",
             },
             // Design transaction events (scoped to design app)
-            "DESIGN.TRANSACTION.START": { guard: "designAppExists", actions: "designTransactionStart" },
+            "DESIGN.TRANSACTION.START": { actions: "designTransactionStart" },
             "DESIGN.TRANSACTION.COMMIT": { guard: "designAppExists", actions: "designTransactionCommit" },
             "DESIGN.TRANSACTION.ABORT": { guard: "designAppExists", actions: "designTransactionAbort" },
             "DESIGN.TRANSACTION.UNDO": { guard: "designAppExists", actions: "designTransactionUndo" },
@@ -9448,41 +9452,43 @@ export const sketchpadMachine = setup({
         type: {
           on: {
             // Type app events - only available in type state
+            // NOTE: Guards removed because actions use createDefaultTypeAppState() fallback
+            // This allows panel toggles to work even when navigating directly via URL
             "TYPE.SYNC": { guard: "typeAppExists", actions: "typeSync" },
-            "TYPE.TOGGLE_PANEL": { guard: "typeAppExists", actions: "typeTogglePanel" },
-            "TYPE.SET_PANEL_VISIBILITY": { guard: "typeAppExists", actions: "typeSetPanelVisibility" },
-            "TYPE.SET_FULLSCREEN_WINDOW": { guard: "typeAppExists", actions: "typeSetFullscreenWindow" },
-            "TYPE.SET_ACTIVE_TOOL": { guard: "typeAppExists", actions: "typeSetActiveTool" },
-            "TYPE.SET_SELECTION": { guard: "typeAppExists", actions: "typeSetSelection" },
+            "TYPE.TOGGLE_PANEL": { actions: "typeTogglePanel" },
+            "TYPE.SET_PANEL_VISIBILITY": { actions: "typeSetPanelVisibility" },
+            "TYPE.SET_FULLSCREEN_WINDOW": { actions: "typeSetFullscreenWindow" },
+            "TYPE.SET_ACTIVE_TOOL": { actions: "typeSetActiveTool" },
+            "TYPE.SET_SELECTION": { actions: "typeSetSelection" },
             "TYPE.CLEAR_SELECTION": {
               guard: "hasTypeSelection",
               actions: "typeClearSelection",
             },
-            "TYPE.SELECT_PORT": { guard: "typeAppExists", actions: "typeSelectPort" },
-            "TYPE.DESELECT_PORT": { guard: "typeAppExists", actions: "typeDeselectPort" },
-            "TYPE.SET_HOVER": { guard: "typeAppExists", actions: "typeSetHover" },
+            "TYPE.SELECT_PORT": { actions: "typeSelectPort" },
+            "TYPE.DESELECT_PORT": { actions: "typeDeselectPort" },
+            "TYPE.SET_HOVER": { actions: "typeSetHover" },
             "TYPE.CLEAR_HOVER": {
               guard: "hasTypeHover",
               actions: "typeClearHover",
             },
-            "TYPE.FOCUS_PORT": { guard: "typeAppExists", actions: "typeFocusPort" },
-            "TYPE.SELECT_MODEL_TAG": { guard: "typeAppExists", actions: "typeSelectModelTag" },
-            "TYPE.DESELECT_MODEL_TAG": { guard: "typeAppExists", actions: "typeDeselectModelTag" },
-            "TYPE.SET_MODEL_TAGS": { guard: "typeAppExists", actions: "typeSetModelTags" },
-            "TYPE.SET_CAMERA": { guard: "typeAppExists", actions: "typeSetCamera" },
-            "TYPE.SELECT_ALL": { guard: "typeAppExists", actions: "typeSelectAll" },
-            "TYPE.DESELECT_ALL": { guard: "typeAppExists", actions: "typeDeselectAll" },
-            "TYPE.CLEAR_FOCUS": { guard: "typeAppExists", actions: "typeClearFocus" },
-            "TYPE.SELECT_MODEL": { guard: "typeAppExists", actions: "typeSelectModel" },
-            "TYPE.DESELECT_MODEL": { guard: "typeAppExists", actions: "typeDeselectModel" },
-            "TYPE.HOVER_PORT": { guard: "typeAppExists", actions: "typeHoverPort" },
-            "TYPE.HOVER_MODEL": { guard: "typeAppExists", actions: "typeHoverModel" },
-            "TYPE.SET_SELECTED_MODEL": { guard: "typeAppExists", actions: "typeSetSelectedModel" },
-            "TYPE.ADD_MODEL_TAG": { guard: "typeAppExists", actions: "typeAddModelTag" },
-            "TYPE.REMOVE_MODEL_TAG": { guard: "typeAppExists", actions: "typeRemoveModelTag" },
-            "TYPE.CLEAR_MODEL_TAGS": { guard: "typeAppExists", actions: "typeClearModelTags" },
+            "TYPE.FOCUS_PORT": { actions: "typeFocusPort" },
+            "TYPE.SELECT_MODEL_TAG": { actions: "typeSelectModelTag" },
+            "TYPE.DESELECT_MODEL_TAG": { actions: "typeDeselectModelTag" },
+            "TYPE.SET_MODEL_TAGS": { actions: "typeSetModelTags" },
+            "TYPE.SET_CAMERA": { actions: "typeSetCamera" },
+            "TYPE.SELECT_ALL": { actions: "typeSelectAll" },
+            "TYPE.DESELECT_ALL": { actions: "typeDeselectAll" },
+            "TYPE.CLEAR_FOCUS": { actions: "typeClearFocus" },
+            "TYPE.SELECT_MODEL": { actions: "typeSelectModel" },
+            "TYPE.DESELECT_MODEL": { actions: "typeDeselectModel" },
+            "TYPE.HOVER_PORT": { actions: "typeHoverPort" },
+            "TYPE.HOVER_MODEL": { actions: "typeHoverModel" },
+            "TYPE.SET_SELECTED_MODEL": { actions: "typeSetSelectedModel" },
+            "TYPE.ADD_MODEL_TAG": { actions: "typeAddModelTag" },
+            "TYPE.REMOVE_MODEL_TAG": { actions: "typeRemoveModelTag" },
+            "TYPE.CLEAR_MODEL_TAGS": { actions: "typeClearModelTags" },
             // Type transaction events (scoped to type app)
-            "TYPE.TRANSACTION.START": { guard: "typeAppExists", actions: "typeTransactionStart" },
+            "TYPE.TRANSACTION.START": { actions: "typeTransactionStart" },
             "TYPE.TRANSACTION.COMMIT": { guard: "typeAppExists", actions: "typeTransactionCommit" },
             "TYPE.TRANSACTION.ABORT": { guard: "typeAppExists", actions: "typeTransactionAbort" },
             "TYPE.TRANSACTION.UNDO": { guard: "typeAppExists", actions: "typeTransactionUndo" },
@@ -9703,6 +9709,11 @@ export const createQualityAppSelector = (kitGuid: Guid, qualityGuid: Guid) => {
   };
 };
 
+export const createQualityPanelVisibilitySelector = (kitGuid: Guid, qualityGuid: Guid) => {
+  const key = `${kitGuid}:${qualityGuid}`;
+  return (state: { context: SketchpadContext }) => state.context.qualityApps[key]?.panelVisibility ?? defaultPanelVisibility;
+};
+
 // Tutorial selectors
 export const selectTutorial = (state: { context: SketchpadContext }) => state.context.tutorial;
 export const selectActiveTutorial = (state: { context: SketchpadContext }) => state.context.tutorial.activeTutorial;
@@ -9889,40 +9900,59 @@ export const uiMachine = setup({
     canNavigateBack: ({ context }) => context.activeDesignGuid !== undefined || context.activeTypeGuid !== undefined || context.activeQualityGuid !== undefined || context.activeKitGuid !== undefined,
   },
   actions: {
-    setActiveKit: assign(({ event }) => {
+    setActiveKit: assign(({ context, event }) => {
       if (event.type !== "open.kit") return {};
       return {
         activeKitGuid: event.kitGuid,
         activeDesignGuid: undefined,
         activeTypeGuid: undefined,
         activeQualityGuid: undefined,
+        // Initialize kitApps entry if it doesn't exist
+        kitApps: context.kitApps[event.kitGuid]
+          ? context.kitApps
+          : { ...context.kitApps, [event.kitGuid]: createDefaultKitAppState() },
       };
     }),
-    setActiveDesign: assign(({ event }) => {
+    setActiveDesign: assign(({ context, event }) => {
       if (event.type !== "open.design") return {};
+      const designKey = `${event.kitGuid}:${event.designGuid}`;
       return {
         activeKitGuid: event.kitGuid,
         activeDesignGuid: event.designGuid,
         activeTypeGuid: undefined,
         activeQualityGuid: undefined,
+        // Initialize designApps entry if it doesn't exist
+        designApps: context.designApps[designKey]
+          ? context.designApps
+          : { ...context.designApps, [designKey]: createDefaultDesignAppState() },
       };
     }),
-    setActiveType: assign(({ event }) => {
+    setActiveType: assign(({ context, event }) => {
       if (event.type !== "open.type") return {};
+      const typeKey = `${event.kitGuid}:${event.typeGuid}`;
       return {
         activeKitGuid: event.kitGuid,
         activeTypeGuid: event.typeGuid,
         activeDesignGuid: undefined,
         activeQualityGuid: undefined,
+        // Initialize typeApps entry if it doesn't exist
+        typeApps: context.typeApps[typeKey]
+          ? context.typeApps
+          : { ...context.typeApps, [typeKey]: createDefaultTypeAppState() },
       };
     }),
-    setActiveQuality: assign(({ event }) => {
+    setActiveQuality: assign(({ context, event }) => {
       if (event.type !== "open.quality") return {};
+      const qualityKey = `${event.kitGuid}:${event.qualityGuid}`;
       return {
         activeKitGuid: event.kitGuid,
         activeQualityGuid: event.qualityGuid,
         activeDesignGuid: undefined,
         activeTypeGuid: undefined,
+        // Initialize qualityApps entry if it doesn't exist
+        qualityApps: context.qualityApps[qualityKey]
+          ? context.qualityApps
+          : { ...context.qualityApps, [qualityKey]: createDefaultQualityAppState() },
       };
     }),
     clearActiveArtifact: assign(() => ({
@@ -13670,80 +13700,41 @@ export function useSettings(): { apps: Record<string, any> } {
 export function useAppPanelVisibility(): PanelVisibility {
   const navigation = useNavigation();
   const appType = useAppType();
-  const store = useSketchpadStore();
   const actor = useSketchpadActor();
 
   const pathMatch = navigation.match(/^\/kits\/([^/?]+)(?:\/(designs|types|qualities)\/([^/?]+))?/);
   const kitGuid = pathMatch?.[1];
-  const appKind = pathMatch?.[2];
   const itemGuid = pathMatch?.[3];
 
   const docsPanelVisibility = useSyncExternalStore(subscribeDocsPanelVisibility, getDocsPanelVisibilitySnapshot, getDocsPanelVisibilitySnapshot);
-  const homePanelVisibility = useSelector(actor, selectHomePanelVisibility);
 
-  const app = useMemo(() => {
-    if (appType === "docs" || appType === "home") return null;
-    try {
-      switch (appType) {
-        case "kit":
-          if (kitGuid) return store.kitApp(kitGuid);
-          return null;
-        case "design":
-          if (kitGuid && itemGuid) return store.designApp(kitGuid, itemGuid);
-          return null;
-        case "type":
-          if (kitGuid && itemGuid) return store.typeApp(kitGuid, itemGuid);
-          return null;
-        case "quality":
-          if (kitGuid && itemGuid) return store.qualityApp(kitGuid, itemGuid);
-          return null;
-        default:
-          return null;
-      }
-    } catch (e) {
-      return null;
+  const selector = useMemo(() => {
+    switch (appType) {
+      case "home":
+        return selectHomePanelVisibility;
+      case "kit":
+        if (kitGuid) return createKitPanelVisibilitySelector(kitGuid);
+        return () => defaultPanelVisibility;
+      case "design":
+        if (kitGuid && itemGuid) return createDesignPanelVisibilitySelector(kitGuid, itemGuid);
+        return () => defaultPanelVisibility;
+      case "type":
+        if (kitGuid && itemGuid) return createTypePanelVisibilitySelector(kitGuid, itemGuid);
+        return () => defaultPanelVisibility;
+      case "quality":
+        if (kitGuid && itemGuid) return createQualityPanelVisibilitySelector(kitGuid, itemGuid);
+        return () => defaultPanelVisibility;
+      case "docs":
+        return () => docsPanelVisibility;
+      default:
+        return () => defaultPanelVisibility;
     }
-  }, [store, appType, kitGuid, itemGuid]);
+  }, [appType, kitGuid, itemGuid, docsPanelVisibility]);
 
-  const yPanelVisibilityMap = useMemo(() => {
-    if (!app) return null;
-    const yMap = (app as any).yMap;
-    if (!yMap) return null;
-    return yMap.get("panelVisibility") as Y.Map<boolean> | null;
-  }, [app]);
+  const panelVisibility = useSelector(actor, selector);
 
-  const subscribe = useCallback(
-    (callback: () => void) => {
-      if (!yPanelVisibilityMap) {
-        return () => {};
-      }
-      const observer = () => {
-        callback();
-      };
-      yPanelVisibilityMap.observe(observer);
-      return () => {
-        yPanelVisibilityMap.unobserve(observer);
-      };
-    },
-    [yPanelVisibilityMap],
-  );
-
-  const getSnapshot = useCallback(() => {
-    if (!app) {
-      return defaultPanelVisibility;
-    }
-    const snapshot = app.snapshot();
-    return snapshot?.panelVisibility || defaultPanelVisibility;
-  }, [app]);
-
-  const panelVisibility = useSyncExternalStore(subscribe, getSnapshot);
-
-  // Return docs panel visibility for docs app, home panel visibility for home app, otherwise return app panel visibility
   if (appType === "docs") {
     return docsPanelVisibility;
-  }
-  if (appType === "home") {
-    return homePanelVisibility;
   }
 
   return panelVisibility;
@@ -13760,65 +13751,91 @@ export function useAppCommands() {
   const itemGuid = pathMatch?.[3];
 
   return useMemo(() => {
-    let app: any;
-    try {
-      switch (appType) {
-        case "home":
-          return {
-            togglePanel: (origin: string, panelKey: keyof PanelVisibility) => {
-              actor.send({ type: "HOME.TOGGLE_PANEL", panel: panelKey } as any);
-            },
-            execute: (origin: string, command: string, ...args: any[]) => {},
-          };
-          break;
-        case "kit":
-          if (kitGuid) app = store.kitApp(kitGuid);
-          break;
-        case "design":
-          if (kitGuid && itemGuid) app = store.designApp(kitGuid, itemGuid);
-          break;
-        case "type":
-          if (kitGuid && itemGuid) app = store.typeApp(kitGuid, itemGuid);
-          break;
-        case "quality":
-          if (kitGuid && itemGuid) app = store.qualityApp(kitGuid, itemGuid);
-          break;
-        case "docs":
-          return {
-            togglePanel: (origin: string, panelKey: keyof PanelVisibility) => {
-              updateDocsPanelVisibilityState((prev) => ({
-                ...prev,
-                [panelKey]: !prev[panelKey],
-              }));
-            },
-            execute: (origin: string, command: string, ...args: any[]) => {},
-          };
-      }
-    } catch (e) {}
-
-    return {
-      togglePanel: (origin: string, panelKey: keyof PanelVisibility) => {
-        if (!app) {
-          return;
-        }
-        try {
-          const current = app.snapshot()?.panelVisibility;
-          if (!current) {
-            return;
-          }
-          app.change({
-            panelVisibility: {
-              [panelKey]: !current[panelKey],
-            },
-          });
-        } catch (e) {}
-      },
-      execute: (origin: string, command: string, ...args: any[]) => {
-        if (!app) return;
-        return app.execute(command, origin, ...args);
-      },
-    };
-  }, [store, appType, kitGuid, itemGuid, navigation, actor]);
+    switch (appType) {
+      case "home":
+        return {
+          togglePanel: (_origin: string, panelKey: keyof PanelVisibility) => {
+            actor.send({ type: "HOME.TOGGLE_PANEL", panel: panelKey } as any);
+          },
+          execute: (_origin: string, _command: string, ..._args: any[]) => {},
+        };
+      case "kit":
+        return {
+          togglePanel: (_origin: string, panelKey: keyof PanelVisibility) => {
+            if (kitGuid) {
+              actor.send({ type: "KIT.TOGGLE_PANEL", kitGuid, panel: panelKey } as any);
+            }
+          },
+          execute: (origin: string, command: string, ...args: any[]) => {
+            if (!kitGuid) return;
+            try {
+              const app = store.kitApp(kitGuid);
+              return app?.execute(command, origin, ...args);
+            } catch (e) {}
+          },
+        };
+      case "design":
+        return {
+          togglePanel: (_origin: string, panelKey: keyof PanelVisibility) => {
+            if (kitGuid && itemGuid) {
+              actor.send({ type: "DESIGN.TOGGLE_PANEL", kitGuid, designGuid: itemGuid, panel: panelKey } as any);
+            }
+          },
+          execute: (origin: string, command: string, ...args: any[]) => {
+            if (!kitGuid || !itemGuid) return;
+            try {
+              const app = store.designApp(kitGuid, itemGuid);
+              return app?.execute(command, origin, ...args);
+            } catch (e) {}
+          },
+        };
+      case "type":
+        return {
+          togglePanel: (_origin: string, panelKey: keyof PanelVisibility) => {
+            if (kitGuid && itemGuid) {
+              actor.send({ type: "TYPE.TOGGLE_PANEL", kitGuid, typeGuid: itemGuid, panel: panelKey } as any);
+            }
+          },
+          execute: (origin: string, command: string, ...args: any[]) => {
+            if (!kitGuid || !itemGuid) return;
+            try {
+              const app = store.typeApp(kitGuid, itemGuid);
+              return app?.execute(command, origin, ...args);
+            } catch (e) {}
+          },
+        };
+      case "quality":
+        return {
+          togglePanel: (_origin: string, panelKey: keyof PanelVisibility) => {
+            if (kitGuid && itemGuid) {
+              actor.send({ type: "QUALITY.TOGGLE_PANEL", kitGuid, qualityGuid: itemGuid, panel: panelKey } as any);
+            }
+          },
+          execute: (origin: string, command: string, ...args: any[]) => {
+            if (!kitGuid || !itemGuid) return;
+            try {
+              const app = store.qualityApp(kitGuid, itemGuid);
+              return app?.execute(command, origin, ...args);
+            } catch (e) {}
+          },
+        };
+      case "docs":
+        return {
+          togglePanel: (_origin: string, panelKey: keyof PanelVisibility) => {
+            updateDocsPanelVisibilityState((prev) => ({
+              ...prev,
+              [panelKey]: !prev[panelKey],
+            }));
+          },
+          execute: (_origin: string, _command: string, ..._args: any[]) => {},
+        };
+      default:
+        return {
+          togglePanel: (_origin: string, _panelKey: keyof PanelVisibility) => {},
+          execute: (_origin: string, _command: string, ..._args: any[]) => {},
+        };
+    }
+  }, [store, appType, kitGuid, itemGuid, actor]);
 }
 
 export function useUpdateRecentSearches() {

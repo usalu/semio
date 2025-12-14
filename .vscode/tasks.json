@@ -83,7 +83,7 @@
       "label": "dev:storybook",
       "type": "shell",
       "isBackground": true,
-      "command": "npx nx dev-storybook @semio/js",
+      "command": "npx nx dev:storybook @semio/js",
       "problemMatcher": {
         "owner": "custom",
         "pattern": [
@@ -109,7 +109,7 @@
       "label": "dev js js storybook",
       "type": "shell",
       "isBackground": true,
-      "command": "npx nx dev-storybook @semio/js",
+      "command": "npx nx dev:storybook @semio/js",
       "problemMatcher": {
         "owner": "custom",
         "pattern": [
@@ -135,7 +135,7 @@
       "label": "dev:sketchpad",
       "type": "shell",
       "isBackground": true,
-      "command": "npx nx dev-sketchpad @semio/js",
+      "command": "npx nx dev:sketchpad @semio/js",
       "problemMatcher": {
         "owner": "custom",
         "pattern": [
@@ -161,7 +161,7 @@
       "label": "dev js js sketchpad",
       "type": "shell",
       "isBackground": true,
-      "command": "npx nx dev-sketchpad @semio/js",
+      "command": "npx nx dev:sketchpad @semio/js",
       "problemMatcher": {
         "owner": "custom",
         "pattern": [
