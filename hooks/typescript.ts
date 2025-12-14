@@ -32,7 +32,7 @@ try {
   const report = {
     timestamp: new Date().toISOString(),
     status: "error",
-    errors: output.split('\n').filter(line => line.trim()),
+    errors: output.split("\n").filter((line: string) => line.trim()),
   };
   writeFileSync(reportPath, JSON.stringify(report, null, 2));
   

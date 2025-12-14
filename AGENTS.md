@@ -235,6 +235,7 @@ Stats provide computed or measured performance data for entire designs using the
 - ALWAYS make the choice directly! If you have several options, don't ask in between, be opionionated and just go for it. Try to do as much as you can.
 - ALWAYS toolfriendly over intuitive.
 - ALWAYS expose the canonical CI/CD scripts `dev`, `build`, `test`, `update`, `prepublish`, and `publish` only at the root (which forwards them through `npx nx run-many -t <target>`). Do not add missing commands to workspace packages; keep only the scripts they already define, treat `dev` as the only long-running watch mode, and make sure the remaining commands exit so CI runners and agents can finish reliably.
+- When multiple long-running dev processes exist for a single workspace, use hierarchical naming for VS Code tasks/launch configs (e.g. `dev js js storybook`, `dev js js sketchpad`) and use `dev:<...>` for root `package.json` scripts when spaces are not possible.
 - NEVER create new files. ALWAYS add code to existing files using regions and subregions for structuring. Regions organize code into collapsible sections (e.g., `#region RegionName` / `#endregion` in C#, or `//#region RegionName` / `//#endregion` in JavaScript/TypeScript). Use subregions within regions for hierarchical organization. This keeps related code together and maintains a single source of truth per logical unit.
 - NEVER create new folders unless for temporary purposes.
 - NEVER create additional example files and implement it directly in the dependent parts.
@@ -335,6 +336,11 @@ npx tsx hooks/i18n.ts        # i18n validation
 npx tsx hooks/typescript.ts  # TypeScript check
 npx tsx hooks/eslint.ts      # ESLint check
 ```
+
+### TypeScript Check Configuration
+
+- The canonical repo-wide TypeScript check is `hooks/typescript.ts` which runs `tsc --noEmit --project tsconfig.json`.
+- The root `tsconfig.json` is configured for `moduleResolution: "bundler"`, `strict: true`, `skipLibCheck: true`, explicitly includes `js/js/.storybook/**/*.ts(x)`, and excludes `temp/`, `js/temp/`, `reports/`, and `log/`.
 
 ### Hook Configuration
 
@@ -1587,6 +1593,8 @@ Register items inside effects and always call the remove helper in the cleanup; 
 
 Providing an `id` shows the translated `DescriptionTooltipContent`, and the base footer auto-hides in fullscreen until the cursor nears the bottom edge, so interactive elements must tolerate that visibility change.
 
+The shared `Footer` component uses `heightKind` (unit-based) and defaults to `large` (`h-large` / `--size-large`).
+
 #### Styling
 
 - NEVER use colors and spacing directly. ALWAYS use semantic variables from `global.css`. Only `global.css` uses colors and pixels directly.
@@ -1596,7 +1604,7 @@ Providing an `id` shows the translated `DescriptionTooltipContent`, and the base
   - Tiny: 3 units - height/width of icons within actions, small text size (e.g. `h-3`, `w-3`)
   - Small: 5 units - height/width of actions, avatars, default text size (e.g. `h-5`, `w-5`)
   - Medium: 7 units - height of tree items, height of buttons and simple toggles, height of input (e.g. `h-7`)
-  - Large: 9 units - height of navbar, height of table row, height of table header (e.g. `h-9`)
+  - Large: 9 units - height of navbar, footer, table row, table header (e.g. `h-9`)
   - Huge: 11 units - height of navigation buttons at bottom of docs pages (e.g. `h-11`)
   - Mega: 13 units - width of toggles with actions (toggles with dropdown or action buttons) (e.g. `w-13`)
   - Giga: 15 units - reserved for future use (e.g. `w-15`)
@@ -1677,6 +1685,14 @@ Every app supports transactions:
 4. **Abort Transaction**: `abortTransaction()`
    - Undoes all edits in current transaction
    - Clears current transaction stack
+
+##### UI Transaction Context (Sketchpad elements)
+
+Sketchpad UI elements resolve transactions via React context (not props):
+
+- `js/js/sketchpad/elements.tsx` defines `TransactionProvider` and `useTransaction()`.
+- Elements such as `Input`, `Textarea`, `Select`, `Slider`, `Stepper`, `Combobox`, and `ActionDropdown` call `useTransaction()` internally and do not accept a `transaction` prop.
+- Apps are responsible for scoping transactions by wrapping their UI subtree with `TransactionProvider` using the appropriate transaction hook (per-app or kit-level), so all descendant elements participate consistently.
 
 ##### Hooks and Helpers
 
@@ -1855,6 +1871,11 @@ executeCommand<T>(command: string, ...args): Promise<T>
 - `js/js/sketchpad/Tutorials.tsx` - Tutorial system (consolidated)
 - `js/js/sketchpad/machines.ts` - XState machine definitions
 - `js/js/sketchpad/shared.ts` - Shared types and XState bridge utilities
+
+#### Kit app artifact creation
+
+- `js/js/sketchpad/Kit.tsx` create actions for `interfaces`, `tags`, `concepts`, and `folders` set the active `kind` filter and selection to the newly created entity.
+- Default names are resolved via i18n labels: `semio.sketchpad.app.interface.defaultName`, `semio.sketchpad.app.tag.defaultName`, `semio.sketchpad.app.concept.defaultName`.
 
 ### XState State Machines
 

@@ -788,6 +788,66 @@ test.describe("sketchpad", () => {
     }
     expect(hasWorkbench || hasSettings).toBe(true);
     console.log(`[Type] Panel toggle verification complete: workbench=${workbenchWorked}, settings=${settingsWorked}`);
+
+    console.log("[Type] Testing toolbar visibility and port tool");
+    
+    await page.waitForTimeout(2000);
+    
+    const toolbar = page.locator('[id="semio.sketchpad.toolbar"]');
+    const hasToolbar = await toolbar.isVisible({ timeout: 5000 }).catch(() => false);
+    console.log(`[Type] Toolbar visible: ${hasToolbar}`);
+    expect(hasToolbar).toBe(true);
+
+    const portToolToggle = page.locator('[id="semio.sketchpad.tool.port"]');
+    const portToolCount = await portToolToggle.count();
+    const hasPortTool = portToolCount > 0;
+    console.log(`[Type] Port tool visible: ${hasPortTool}`);
+
+    const selectionToolToggle = page.locator('[id="semio.sketchpad.tool.selection"]');
+    const selectionToolCount = await selectionToolToggle.count();
+    const hasSelectionTool = selectionToolCount > 0;
+    console.log(`[Type] Selection tool visible: ${hasSelectionTool}`);
+
+    expect(hasPortTool || hasSelectionTool).toBe(true);
+
+    if (hasPortTool) {
+      console.log("[Type] Testing port tool: clicking to activate");
+      const portToolButton = portToolToggle.locator('button[role="radio"]').first();
+      await portToolButton.click();
+      await page.waitForTimeout(500);
+
+      const isPortToolActive = await portToolButton.getAttribute("data-state");
+      console.log(`[Type] Port tool active state: ${isPortToolActive}`);
+      expect(isPortToolActive).toBe("on");
+
+      const canvasForPort = page.locator("canvas").first();
+      const canvasBoxForPort = await canvasForPort.boundingBox();
+      if (canvasBoxForPort) {
+        const portX = canvasBoxForPort.x + canvasBoxForPort.width / 2;
+        const portY = canvasBoxForPort.y + canvasBoxForPort.height / 2;
+
+        console.log("[Type] Moving cursor to canvas center for port creation preview");
+        await page.mouse.move(portX, portY);
+        await page.waitForTimeout(300);
+
+        console.log("[Type] Clicking on canvas to create port");
+        await page.mouse.click(portX, portY);
+        await page.waitForTimeout(500);
+
+        console.log("[Type] Port tool test completed - port creation attempted");
+      }
+
+      if (hasSelectionTool) {
+        console.log("[Type] Switching back to selection tool");
+        const selectionToolButton = selectionToolToggle.locator('button[role="radio"]').first();
+        await selectionToolButton.click();
+        await page.waitForTimeout(300);
+        const isSelectionActive = await selectionToolButton.getAttribute("data-state");
+        console.log(`[Type] Selection tool active state after switch: ${isSelectionActive}`);
+      }
+    }
+
+    console.log("[Type] Toolbar and tools test complete");
   });
   test("Design", async ({ page }) => {
     test.setTimeout(120000);
@@ -1004,6 +1064,27 @@ test.describe("sketchpad", () => {
     }
     expect(hasWorkbench || hasSettings || hasDetails).toBe(true);
     console.log(`[Design] Panel toggle verification complete: workbench=${workbenchWorked}, settings=${settingsWorked}, details=${detailsWorked}`);
+
+    // Verify the design properties details section contains the name input as a tree item
+    console.log("[Design Test] Verifying design properties details section");
+    await openDetailsPanel(page);
+    const detailsPanel = page.locator('[data-panel="details"]').first();
+    const isDetailsPanelVisible = await detailsPanel.isVisible({ timeout: 5000 }).catch(() => false);
+    console.log(`[Design Test] Details panel visible: ${isDetailsPanelVisible}`);
+
+    if (isDetailsPanelVisible) {
+      // The design name input should be rendered as a tree item in the design properties section
+      const nameInput = detailsPanel.locator('[id="semio.sketchpad.app.design.panel.details.section.design.name"]');
+      const hasNameInput = await nameInput.isVisible({ timeout: 5000 }).catch(() => false);
+      console.log(`[Design Test] Design name input visible: ${hasNameInput}`);
+      expect(hasNameInput).toBe(true);
+
+      // Verify the name input is within a tree item structure
+      const nameTreeItem = nameInput.locator('xpath=ancestor::*[@role="treeitem"]').first();
+      const isInTreeItem = await nameTreeItem.isVisible({ timeout: 2000 }).catch(() => false);
+      console.log(`[Design Test] Design name input is within a tree item: ${isInTreeItem}`);
+      expect(isInTreeItem).toBe(true);
+    }
 
     console.log("[Design Test] Verifying flat planes and centers match expected asset data");
 

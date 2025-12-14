@@ -38,26 +38,24 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  render: () => {
-    const [value, setValue] = useState([75]);
+  args: {
+    id: "slider-default",
+    value: [75],
+    onValueChange: () => {},
+    min: 50,
+    max: 150,
+    step: 5,
+    showLabel: true,
+    onPointerDown: () => {},
+    onPointerUp: () => {},
+    onPointerCancel: () => {},
+    interactionId: "slider-interaction",
+    className: "w-96",
+  },
+  render: (args) => {
+    const [value, setValue] = useState(args.value);
     return (
-      <Slider
-        id="slider-default"
-        value={value}
-        onValueChange={setValue}
-        min={50}
-        max={150}
-        step={5}
-        showLabel
-        onPointerDown={() => {}}
-        onPointerUp={() => {}}
-        onPointerCancel={() => {}}
-        startTransaction={() => {}}
-        finalizeTransaction={() => {}}
-        abortTransaction={() => {}}
-        interactionId="slider-interaction"
-        className="w-96"
-      />
+      <Slider {...args} value={value} onValueChange={setValue} />
     );
   },
 };

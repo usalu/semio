@@ -31,7 +31,7 @@ import * as THREE from "three";
 import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
 import { useLabel } from "../i18n";
 import { Author, AuthorId, Camera, Coord, findModel, guid, Guid, Kit, Model, Point, Port, selectBestModel, File as SemioFile, toSemioRotation, toThreeRotation, Type, TypeDiff, Vector } from "../semio";
-import { Geometry, Input, Scene as SceneComponent, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider, SortableTreeItems, Stepper, Textarea, Toggle, ToggleGroup, TreeContent, TreeItem } from "./elements";
+import { Geometry, Input, Scene as SceneComponent, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider, SortableTreeItems, Stepper, Textarea, Toggle, ToggleGroup, TransactionProvider, TreeContent, TreeItem } from "./elements";
 import type { AppWindowConfig, HookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolDefinition, ToolRenderContext, TypeAppId } from "./shared";
 import { AppConfig, AppPlugin, conditionalHookResult, createPanelDefinition, Expertise, Mode, PanelKind, readonlyHookResult, registerAppPlugin, Theme, ToolKind } from "./shared";
 import {
@@ -1968,7 +1968,6 @@ const PortsListSectionForm: FC = () => {
                           onValueChange={([value]) => {
                             updatePort(port.guid, { t: value });
                           }}
-                          transaction={useKitTransaction()}
                           min={0}
                           max={1}
                           step={0.01}
@@ -1985,7 +1984,6 @@ const PortsListSectionForm: FC = () => {
                             onChange={(value: number) => {
                               updatePort(port.guid, { point: { x: value } });
                             }}
-                            transaction={useKitTransaction()}
                             step={0.1}
                           />
                         </TreeContent>
@@ -1998,7 +1996,6 @@ const PortsListSectionForm: FC = () => {
                             onChange={(value: number) => {
                               updatePort(port.guid, { point: { y: value } });
                             }}
-                            transaction={useKitTransaction()}
                             step={0.1}
                           />
                         </TreeContent>
@@ -2011,7 +2008,6 @@ const PortsListSectionForm: FC = () => {
                             onChange={(value: number) => {
                               updatePort(port.guid, { point: { z: value } });
                             }}
-                            transaction={useKitTransaction()}
                             step={0.1}
                           />
                         </TreeContent>
@@ -2026,7 +2022,6 @@ const PortsListSectionForm: FC = () => {
                             onChange={(value: number) => {
                               updatePort(port.guid, { direction: { x: value } });
                             }}
-                            transaction={useKitTransaction()}
                             step={0.1}
                           />
                         </TreeContent>
@@ -2039,7 +2034,6 @@ const PortsListSectionForm: FC = () => {
                             onChange={(value: number) => {
                               updatePort(port.guid, { direction: { y: value } });
                             }}
-                            transaction={useKitTransaction()}
                             step={0.1}
                           />
                         </TreeContent>
@@ -2052,7 +2046,6 @@ const PortsListSectionForm: FC = () => {
                             onChange={(value: number) => {
                               updatePort(port.guid, { direction: { z: value } });
                             }}
-                            transaction={useKitTransaction()}
                             step={0.1}
                           />
                         </TreeContent>
@@ -2410,7 +2403,6 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
             onValueChange={([value]) => {
               updatePort(port.guid, { t: value });
             }}
-            transaction={useKitTransaction()}
             min={0}
             max={1}
             step={0.01}
@@ -2427,7 +2419,6 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
               onChange={(value: number) => {
                 updatePort(port.guid, { point: { x: value } });
               }}
-              transaction={useKitTransaction()}
               step={0.1}
             />
           </TreeContent>
@@ -2440,7 +2431,6 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
               onChange={(value: number) => {
                 updatePort(port.guid, { point: { y: value } });
               }}
-              transaction={useKitTransaction()}
               step={0.1}
             />
           </TreeContent>
@@ -2453,7 +2443,6 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
               onChange={(value: number) => {
                 updatePort(port.guid, { point: { z: value } });
               }}
-              transaction={useKitTransaction()}
               step={0.1}
             />
           </TreeContent>
@@ -2468,7 +2457,6 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
               onChange={(value: number) => {
                 updatePort(port.guid, { direction: { x: value } });
               }}
-              transaction={useKitTransaction()}
               step={0.1}
             />
           </TreeContent>
@@ -2481,7 +2469,6 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
               onChange={(value: number) => {
                 updatePort(port.guid, { direction: { y: value } });
               }}
-              transaction={useKitTransaction()}
               step={0.1}
             />
           </TreeContent>
@@ -2494,7 +2481,6 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
               onChange={(value: number) => {
                 updatePort(port.guid, { direction: { z: value } });
               }}
-              transaction={useKitTransaction()}
               step={0.1}
             />
           </TreeContent>
@@ -2607,7 +2593,6 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
             onValueChange={([value]) => {
               updatePorts("semio.sketchpad.app.type.panel.details.section.ports.t", { t: value });
             }}
-            transaction={useKitTransaction()}
             min={0}
             max={1}
             step={0.01}
@@ -2772,8 +2757,10 @@ const getTypeTools = (): ToolDefinition[] => [
 ];
 
 export const ToolsToggleGroup: FC = () => {
-  const { kit, type } = useParams();
-  // PERF: Use targeted hook instead of full state subscription
+  const kitScope = useKitScope();
+  const typeScope = useTypeScope();
+  const kit = kitScope?.guid;
+  const type = typeScope?.guid;
   const [activeTool, , canSetActiveTool] = useTypeAppActiveTool();
   const [setActiveTool] = useTypeAppSetActiveTool();
 
@@ -3183,7 +3170,12 @@ const TypeApp: FC = () => {
 
   useTypeAppInitialize();
 
-  return <App />;
+  const transaction = useKitTransaction();
+  return (
+    <TransactionProvider transaction={transaction}>
+      <App />
+    </TransactionProvider>
+  );
 };
 
 // Initialize Type app state in XState when entering the app

@@ -162,18 +162,12 @@ export const TransactionProvider: React.FC<{
 
 export const useTransaction = (): Transaction | undefined => React.useContext(TransactionContext);
 
-const useResolvedTransaction = (propTransaction?: Transaction): Transaction | undefined => {
-  const contextTransaction = useTransaction();
-  return propTransaction ?? contextTransaction;
-};
-
 export interface ElementBaseProps {
   id: string;
   level?: Level;
 }
 
 export interface ElementProps extends ElementBaseProps {
-  transaction?: Transaction;
 }
 
 export const useElementLevel = (propLevel?: Level): Level => {
@@ -291,14 +285,14 @@ export interface FooterItem {
 export interface FooterProps {
   items?: FooterItem[];
   className?: string;
-  height?: number;
+  heightKind?: "tiny" | "small" | "medium" | "large" | "huge" | "mega" | "giga";
   isVisible?: boolean;
 }
 
-const Footer: React.FC<FooterProps> = ({ items = [], className = "", height = 20, isVisible = true }) => {
+const Footer: React.FC<FooterProps> = ({ items = [], className = "", heightKind = "large", isVisible = true }) => {
   const sortedItems = [...items].sort((a, b) => (a.order || 0) - (b.order || 0));
   return (
-    <footer className={`bg-base border-t flex items-center transition-transform duration-200 ${isVisible ? "translate-y-0" : "translate-y-full"} ${className}`} style={{ height: `${height}px` }}>
+    <footer className={`bg-base border-t flex items-center transition-transform duration-200 ${isVisible ? "translate-y-0" : "translate-y-full"} ${({ tiny: "h-tiny", small: "h-small", medium: "h-medium", large: "h-large", huge: "h-huge", mega: "h-mega", giga: "h-giga" } as const)[heightKind]} ${className}`}>
       {sortedItems.map((item, index) => (
         <div key={item.id} id={item.id} className="flex items-center h-full">
           {index > 0 && <div className="h-full w-px bg-border" />}
@@ -1213,13 +1207,11 @@ interface ActionDropdownProps extends Omit<React.ComponentProps<"button">, "chil
   onValueChange?: (value: string) => void;
   startTransaction?: () => void;
   finalizeTransaction?: () => void;
-  transaction?: Transaction;
   level?: Level;
 }
 
-function ActionDropdown({ className, level: propLevel, id, options, value, onValueChange, startTransaction, finalizeTransaction, transaction: propTransaction, ...props }: ActionDropdownProps) {
-  const contextTransaction = useTransaction();
-  const transaction = propTransaction ?? contextTransaction;
+function ActionDropdown({ className, level: propLevel, id, options, value, onValueChange, startTransaction, finalizeTransaction, ...props }: ActionDropdownProps) {
+  const transaction = useTransaction();
   const [open, setOpen] = React.useState(false);
   const level = useElementLevel(propLevel);
 
@@ -1474,8 +1466,8 @@ interface ComboboxProps extends ElementProps {
   showLabel?: boolean;
 }
 
-export const Combobox: React.FC<ComboboxProps> = ({ options, value = "", placeholder = "Select option...", placeholderId, emptyMessage = "No options found.", onValueChange, className, allowClear = false, showLabel, id, transaction: propTransaction }) => {
-  const transaction = useResolvedTransaction(propTransaction);
+export const Combobox: React.FC<ComboboxProps> = ({ options, value = "", placeholder = "Select option...", placeholderId, emptyMessage = "No options found.", onValueChange, className, allowClear = false, showLabel, id }) => {
+  const transaction = useTransaction();
   const [open, setOpen] = React.useState(false);
   const { t } = useTranslation();
   const computedPlaceholder = placeholderId ? useLabel(placeholderId) : placeholder;
@@ -1559,8 +1551,8 @@ interface InputProps extends Omit<React.ComponentProps<"input">, "value" | "onCh
   showLabel?: boolean;
 }
 
-function Input({ className, type, lazy, value: externalValue, onChange, onLazyChange, interactionId, id, placeholderId, placeholder, showLabel, transaction: propTransaction, ...props }: InputProps) {
-  const transaction = useResolvedTransaction(propTransaction);
+function Input({ className, type, lazy, value: externalValue, onChange, onLazyChange, interactionId, id, placeholderId, placeholder, showLabel, ...props }: InputProps) {
+  const transaction = useTransaction();
   const [localValue, setLocalValue] = React.useState(externalValue?.toString() || "");
   const [isEditing, setIsEditing] = React.useState(false);
   const commands = useInteractionCommands();
@@ -1665,8 +1657,8 @@ export { Input };
 
 // #region Select
 
-function Select({ id, showLabel, children, value, defaultValue, onOpenChange, transaction: propTransaction, ...props }: React.ComponentProps<typeof SelectPrimitive.Root> & ElementProps & { showLabel?: boolean }) {
-  const transaction = useResolvedTransaction(propTransaction);
+function Select({ id, showLabel, children, value, defaultValue, onOpenChange, ...props }: React.ComponentProps<typeof SelectPrimitive.Root> & ElementProps & { showLabel?: boolean }) {
+  const transaction = useTransaction();
   const fallbackValue = React.useMemo(() => {
     const findValue = (nodes: React.ReactNode[]): string | undefined => {
       for (const node of nodes) {
@@ -1852,7 +1844,6 @@ function Slider({
   interactionId,
   id,
   snapValues,
-  transaction: propTransaction,
   ...props
 }: React.ComponentProps<typeof SliderPrimitive.Root> &
   ElementProps & {
@@ -1863,7 +1854,7 @@ function Slider({
     interactionId?: string;
     snapValues?: number[];
   }) {
-  const transaction = useResolvedTransaction(propTransaction);
+  const transaction = useTransaction();
   const [isEditing, setIsEditing] = React.useState(false);
   const [isSliding, setIsSliding] = React.useState(false);
   const [editValue, setEditValue] = React.useState("");
@@ -2070,8 +2061,8 @@ interface StepperProps extends ElementProps {
   interactionId?: string;
 }
 
-export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1, onChange, onPointerDown, onPointerUp, onPointerCancel, interactionId, id, transaction: propTransaction }) => {
-  const transaction = useResolvedTransaction(propTransaction);
+export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1, onChange, onPointerDown, onPointerUp, onPointerCancel, interactionId, id }) => {
+  const transaction = useTransaction();
   const [internalValue, setInternalValue] = React.useState(value ?? defaultValue);
   const [isEditing, setIsEditing] = React.useState(false);
   const intervalRef = React.useRef<NodeJS.Timeout | null>(null);
@@ -2294,8 +2285,8 @@ interface TextareaProps extends Omit<React.ComponentProps<"textarea">, "value" |
   placeholderId?: string;
 }
 
-function Textarea({ className, lazy, value: externalValue, onChange, onLazyChange, id, showLabel, placeholderId, placeholder, transaction: propTransaction, ...props }: TextareaProps) {
-  const transaction = useResolvedTransaction(propTransaction);
+function Textarea({ className, lazy, value: externalValue, onChange, onLazyChange, id, showLabel, placeholderId, placeholder, ...props }: TextareaProps) {
+  const transaction = useTransaction();
   const [localValue, setLocalValue] = React.useState(externalValue?.toString() || "");
   const [isEditing, setIsEditing] = React.useState(false);
   const computedPlaceholder = placeholderId ? useLabel(placeholderId) : placeholder;

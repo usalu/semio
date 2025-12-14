@@ -40,8 +40,11 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  render: () => (
-    <ResizablePanelGroup direction="horizontal" className="w-[800px] h-[500px] border">
+  args: {
+    direction: "horizontal",
+  },
+  render: (args) => (
+    <ResizablePanelGroup {...args} className="w-[800px] h-[500px] border">
       <ResizablePanel defaultSize={35} minSize={25}>
         <div className="flex flex-col h-full p-small bg-muted/20">
           <h3 className="text-sm font-semibold mb-4">Type Library</h3>

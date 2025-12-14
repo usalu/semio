@@ -38,9 +38,9 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  render: () => (
-    <div className="border p-4">
-      <Tree>
+  args: {
+    children: (
+      <>
         <TreeSection label="Kit" icon={<Folder size={14} />}>
           <TreeItem label="Types" icon={<Folder size={12} />}>
             <TreeItem label="Capsules" icon={<Folder size={12} />}>
@@ -74,7 +74,12 @@ export const Default: Story = {
             </TreeContent>
           </TreeItem>
         </TreeSection>
-      </Tree>
+      </>
+    ),
+  },
+  render: (args) => (
+    <div className="border p-4">
+      <Tree {...args} />
     </div>
   ),
 };

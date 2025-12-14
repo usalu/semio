@@ -46,9 +46,21 @@ const types = [
 ];
 
 export const Default: Story = {
-  render: () => {
-    const [value, setValue] = useState("capsule");
-    return <Combobox id="combobox-default" options={types} value={value} onValueChange={setValue} placeholder="Select type..." placeholderId="combobox.placeholder" emptyMessage="No types match your search." allowClear showLabel className="w-96" />;
+  args: {
+    id: "combobox-default",
+    options: types,
+    value: "capsule",
+    onValueChange: () => {},
+    placeholder: "Select type...",
+    placeholderId: "combobox.placeholder",
+    emptyMessage: "No types match your search.",
+    allowClear: true,
+    showLabel: true,
+    className: "w-96",
+  },
+  render: (args) => {
+    const [value, setValue] = useState(args.value);
+    return <Combobox {...args} value={value} onValueChange={setValue} />;
   },
 };
 

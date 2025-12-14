@@ -44,13 +44,11 @@ export const Default: Story = {
     defaultValue: "standard",
     level: "base",
     showLabel: true,
-    children: (
-      <>
-        <ToggleGroupItem id="toggle-default-standard" value="standard" icon={<Lock />} />
-        <ToggleGroupItem id="toggle-action-settings" value="settings" icon={<Settings />} action={<Action id="toggle-action-settings-add" icon={<Plus />} level="base" />} />
-        <ToggleGroupItem id="toggle-dropdown-box" value="box" icon={<Box />} action={<Action id="toggle-dropdown-box-action" icon={<Network />} level="base" />} />
-      </>
-    ),
+    items: [
+      { id: "toggle-default-standard", value: "standard", icon: <Lock /> },
+      { id: "toggle-action-settings", value: "settings", icon: <Settings />, action: <Action id="toggle-action-settings-add" icon={<Plus />} level="base" /> },
+      { id: "toggle-dropdown-box", value: "box", icon: <Box />, action: <Action id="toggle-dropdown-box-action" icon={<Network />} level="base" /> },
+    ],
   },
 };
 
@@ -61,16 +59,14 @@ export const Multiple: Story = {
     defaultValue: ["box"],
     level: "base",
     showLabel: true,
-    children: (
-      <>
-        <ToggleGroupItem id="toggle-multiple-standard" value="standard" icon={<Lock />} />
-        <ToggleGroupItem id="toggle-multiple-box" value="box" icon={<Box />} />
-        <ToggleGroupItem id="toggle-multiple-network" value="network" icon={<Network />} />
-        <ToggleGroupItem id="toggle-multiple-list" value="list" icon={<List />} />
-        <ToggleGroupItem id="toggle-multiple-settings" value="settings" icon={<Settings />} />
-        <ToggleGroupItem id="toggle-multiple-plus" value="plus" icon={<Plus />} />
-      </>
-    ),
+    items: [
+      { id: "toggle-multiple-standard", value: "standard", icon: <Lock /> },
+      { id: "toggle-multiple-box", value: "box", icon: <Box /> },
+      { id: "toggle-multiple-network", value: "network", icon: <Network /> },
+      { id: "toggle-multiple-list", value: "list", icon: <List /> },
+      { id: "toggle-multiple-settings", value: "settings", icon: <Settings /> },
+      { id: "toggle-multiple-plus", value: "plus", icon: <Plus /> },
+    ],
   },
 };
 

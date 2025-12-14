@@ -30,7 +30,7 @@ import { useLabel } from "../i18n";
 import type { SketchpadStore } from "./Sketchpad";
 import { AppStore, Canvas, Window, registerDocsAppStoreFactory, useAddFooterItem, useAddPanelSection, useAppType, useFocus, useFocusSafe, useRemoveFooterItem, useRemovePanelSection } from "./Sketchpad";
 import { Aside, Tabs as BaseTabs, FileTreeNode, Page, PageFrontmatter, PageNavigation, TabsContent, TabsList, TabsTrigger, TreeItem, TreeStateProvider } from "./elements";
-import { PanelKind, createPanelDefinition, registerAppPlugin, type AppConfig, type AppEdit, type PanelVisibility } from "./shared";
+import { PanelKind, createPanelDefinition, registerAppPlugin, type AppConfig, type AppEdit, type AppPlugin, type PanelVisibility } from "./shared";
 
 // #endregion Imports
 

@@ -22,6 +22,10 @@
   "packageManager": "npm@10.8.2",
   "scripts": {
     "dev": "npx nx run-many -t dev",
+    "dev:storybook": "npx nx dev-storybook @semio/js",
+    "dev:sketchpad": "npx nx dev-sketchpad @semio/js",
+    "dev:js:js:storybook": "npm run dev:storybook",
+    "dev:js:js:sketchpad": "npm run dev:sketchpad",
     "build": "npx nx run-many -t build",
     "test": "npx nx run-many -t test",
     "preflight": "npx nx run-many -t preflight",

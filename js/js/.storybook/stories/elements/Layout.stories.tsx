@@ -22,7 +22,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Home, Settings, User } from "lucide-react";
 import { useState } from "react";
-import { Canvas, HorizontalWindows } from "../../../sketchpad/App";
+import { Canvas, HorizontalWindows } from "../../../sketchpad/Sketchpad";
 import { Footer, Layout, Navbar, Window } from "../../../sketchpad/elements";
 
 // #region Layout
@@ -46,6 +46,7 @@ const ExampleContent = ({ title }: { title: string }) => (
 );
 
 export const Default: Story = {
+  args: { canvas: null },
   render: () => {
     const [leftSize, setLeftSize] = useState(250);
     const [rightSize, setRightSize] = useState(300);
@@ -74,7 +75,7 @@ export const Default: Story = {
               { id: "cursor", content: "Ln 1, Col 1", order: 1 },
               { id: "selection", content: "UTF-8", order: 2 },
             ]}
-            height={20}
+            heightKind="small"
           />
         }
         leftPanel={{

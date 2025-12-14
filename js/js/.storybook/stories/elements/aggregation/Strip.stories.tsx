@@ -45,6 +45,7 @@ type Story = StoryObj<typeof meta>;
 
 export const HorizontalWithToggles: Story = {
   args: {
+    id: "strip-horizontal-with-toggles",
     direction: "horizontal",
     items: [
       <Toggle
@@ -124,6 +125,7 @@ export const HorizontalWithToggles: Story = {
 
 export const HorizontalWithMixedElements: Story = {
   args: {
+    id: "strip-horizontal-mixed",
     direction: "horizontal",
     items: [
       <Toggle key="1" pressed={true} onPressedChange={() => {}} id="toggle-1" icon={<LayoutIcon className="size-tiny" />} />,
@@ -143,6 +145,7 @@ export const HorizontalWithMixedElements: Story = {
 
 export const VerticalWithToggles: Story = {
   args: {
+    id: "strip-vertical-with-toggles",
     direction: "vertical",
     items: [
       <Toggle
@@ -200,6 +203,7 @@ export const VerticalWithToggles: Story = {
 
 export const OverflowingHorizontal: Story = {
   args: {
+    id: "strip-overflowing-horizontal",
     direction: "horizontal",
     items: Array.from({ length: 20 }, (_, i) => <Toggle key={i} pressed={false} onPressedChange={() => {}} id={`toggle-${i}`} icon={`Item ${i + 1}`} />),
   },
@@ -212,6 +216,7 @@ export const OverflowingHorizontal: Story = {
 
 export const OverflowingVertical: Story = {
   args: {
+    id: "strip-overflowing-vertical",
     direction: "vertical",
     items: Array.from({ length: 20 }, (_, i) => <Toggle key={i} pressed={false} onPressedChange={() => {}} id={`toggle-${i}`} icon={`Item ${i + 1}`} />),
   },

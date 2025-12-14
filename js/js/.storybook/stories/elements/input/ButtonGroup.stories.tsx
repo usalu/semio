@@ -38,11 +38,17 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  render: () => (
-    <ButtonGroup id="button-group-default" variant="default" level="base" defaultValue="model" showLabel>
-      <ButtonGroupItem id="button-group-default-model" value="model" icon={<Box />} />
-      <ButtonGroupItem id="button-group-default-diagram" value="diagram" icon={<Network />} />
-      <ButtonGroupItem id="button-group-default-details" value="details" icon={<List />} />
+  args: {
+    id: "button-group-default",
+    level: "base",
+    showLabel: true,
+    children: null,
+  },
+  render: (args) => (
+    <ButtonGroup {...args}>
+      <ButtonGroupItem id="button-group-default-model" icon={<Box />} onClick={() => {}} />
+      <ButtonGroupItem id="button-group-default-diagram" icon={<Network />} onClick={() => {}} />
+      <ButtonGroupItem id="button-group-default-details" icon={<List />} onClick={() => {}} />
     </ButtonGroup>
   ),
 };

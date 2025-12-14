@@ -46,12 +46,12 @@
         "testMatch": [
           "**/sketchpad.test.ts"
         ],
-        "timeout": 30000
+        "timeout": 180000
       }
     ],
     "shard": null,
     "updateSnapshots": "missing",
-    "updateSourceMethod": "3way",
+    "updateSourceMethod": "patch",
     "version": "1.56.1",
     "workers": 8,
     "webServer": {
@@ -76,8 +76,8 @@
           "column": 6,
           "specs": [
             {
-              "title": "Design",
-              "ok": true,
+              "title": "Type",
+              "ok": false,
               "tags": [],
               "tests": [
                 {
@@ -88,11 +88,30 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 8,
+                      "workerIndex": 0,
                       "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 37903,
-                      "errors": [],
+                      "status": "failed",
+                      "duration": 35792,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:815:45",
+                        "location": {
+                          "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                          "column": 45,
+                          "line": 815
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 813 |\u001b[39m     console\u001b[33m.\u001b[39mlog(\u001b[32m`[Type] Selection tool toggle visible: ${hasSelectionTool}`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 814 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 815 |\u001b[39m     expect(hasPortTool \u001b[33m||\u001b[39m hasSelectionTool)\u001b[33m.\u001b[39mtoBe(\u001b[36mtrue\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                             \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 816 |\u001b[39m\n \u001b[90m 817 |\u001b[39m     \u001b[36mif\u001b[39m (hasPortTool) {\n \u001b[90m 818 |\u001b[39m       console\u001b[33m.\u001b[39mlog(\u001b[32m\"[Type] Testing port tool: clicking to activate\"\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                            "column": 45,
+                            "line": 815
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n\u001b[0m \u001b[90m 813 |\u001b[39m     console\u001b[33m.\u001b[39mlog(\u001b[32m`[Type] Selection tool toggle visible: ${hasSelectionTool}`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 814 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 815 |\u001b[39m     expect(hasPortTool \u001b[33m||\u001b[39m hasSelectionTool)\u001b[33m.\u001b[39mtoBe(\u001b[36mtrue\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                             \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 816 |\u001b[39m\n \u001b[90m 817 |\u001b[39m     \u001b[36mif\u001b[39m (hasPortTool) {\n \u001b[90m 818 |\u001b[39m       console\u001b[33m.\u001b[39mlog(\u001b[32m\"[Type] Testing port tool: clicking to activate\"\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:815:45\u001b[22m"
+                        }
+                      ],
                       "stdout": [
                         {
                           "text": "[TEST] Setting input files: C:\\git\\semio.tech\\semio\\assets\\semio\\metabolism.zip\n"
@@ -119,115 +138,78 @@
                           "text": "[TEST] Navigated to: http://localhost:5173/kits/f042c2a4-3ba5-44b0-b22c-0ae8f568aacc\n"
                         },
                         {
-                          "text": "[initDesign] Design visible: true\n"
+                          "text": "[Type Test] Navbar is visible\n"
                         },
                         {
-                          "text": "[initDesign] About to double-click on design\n"
+                          "text": "[Type Test] Footer is visible\n"
                         },
                         {
-                          "text": "[initDesign] Double-clicked on design\n"
+                          "text": "[Type Test] Starting pan operations on three.js canvas\n"
                         },
                         {
-                          "text": "[Design Test] Current URL: http://localhost:5173/kits/f042c2a4-3ba5-44b0-b22c-0ae8f568aacc/designs/9a890dd4-0a9c-48ac-920a-9e62666465ef\n"
+                          "text": "[Type Test] Pan 1 took 16ms\n"
                         },
                         {
-                          "text": "[Design Test] ReactFlow elements count: \u001b[33m1\u001b[39m\n"
+                          "text": "[Type Test] Pan 2 took 18ms\n"
                         },
                         {
-                          "text": "[Design Test] Window/Panel elements count: \u001b[33m25\u001b[39m\n"
+                          "text": "[Type Test] Pan 3 took 18ms\n"
                         },
                         {
-                          "text": "[Design Test] hasDiagram: \u001b[33mtrue\u001b[39m hasScene: \u001b[33mtrue\u001b[39m\n"
+                          "text": "[Type Test] Average pan time: 17.333333333333332ms\n"
                         },
                         {
-                          "text": "[Design Test] Navbar is visible\n"
+                          "text": "[Type] Testing Type app panel toggles\n"
                         },
                         {
-                          "text": "[Design Test] Footer is visible\n"
+                          "text": "[Type] Workbench toggle visible: true\n"
                         },
                         {
-                          "text": "[Design Test] Piece count: \u001b[33m180\u001b[39m\n"
+                          "text": "[Type] Toggle workbench: initial=false, after=false, changed=false\n"
                         },
                         {
-                          "text": "[Design Test] Pan 1 took 19ms\n"
+                          "text": "[Type] Settings toggle visible: false\n"
                         },
                         {
-                          "text": "[Design Test] Pan 2 took 14ms\n"
+                          "text": "[Type] Panel toggle verification complete: workbench=false, settings=false\n"
                         },
                         {
-                          "text": "[Design Test] Hover (mouse enter) took 87ms\n"
+                          "text": "[Type] Testing toolbar visibility and port tool\n"
                         },
                         {
-                          "text": "[Design Test] Unhover (mouse leave) took 18ms\n"
+                          "text": "[Type] Toolbar visible: true\n"
                         },
                         {
-                          "text": "[Design Test] Hover cycle times: 160, 82, 10ms\n"
+                          "text": "[Type] Port tool toggle visible: false\n"
                         },
                         {
-                          "text": "[Design Test] Starting scene pan operations on three.js canvas\n"
-                        },
-                        {
-                          "text": "[Design Test] Scene Pan 1 took 381ms\n"
-                        },
-                        {
-                          "text": "[Design Test] Scene Pan 2 took 494ms\n"
-                        },
-                        {
-                          "text": "[Design Test] Scene Pan 3 took 539ms\n"
-                        },
-                        {
-                          "text": "[Design Test] Average subsequent scene pan time: 516.5ms\n"
-                        },
-                        {
-                          "text": "[Design] Testing Design app panel toggles\n"
-                        },
-                        {
-                          "text": "[Design] Workbench toggle visible: true\n"
-                        },
-                        {
-                          "text": "[Design] Toggle workbench: initial=false, after=false, changed=false\n"
-                        },
-                        {
-                          "text": "[Design] Settings toggle visible: false\n"
-                        },
-                        {
-                          "text": "[Design] Details toggle visible: true\n"
-                        },
-                        {
-                          "text": "[Design] Toggle details: initial=false, after=true, changed=true\n"
-                        },
-                        {
-                          "text": "[Design] Panel details content: 0 buttons, 0 inputs, 0 tree items (total: 0)\n"
-                        },
-                        {
-                          "text": "[Design] Panel details has 0 content items\n"
-                        },
-                        {
-                          "text": "[Design] Panel toggle verification complete: workbench=false, settings=false, details=true\n"
-                        },
-                        {
-                          "text": "[Design Test] Verifying flat planes and centers match expected asset data\n"
-                        },
-                        {
-                          "text": "[Design Test] Comparing 180 computed pieces with 180 expected flat pieces\n"
-                        },
-                        {
-                          "text": "[Design Test] Flat planes/centers verification: 180 matches, 0 mismatches\n"
+                          "text": "[Type] Selection tool toggle visible: false\n"
                         }
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-12T21:02:00.657Z",
+                      "startTime": "2025-12-14T17:46:13.578Z",
                       "annotations": [],
-                      "attachments": []
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\git\\semio.tech\\semio\\js\\js\\test-results\\sketchpad-sketchpad-Type-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                        "column": 45,
+                        "line": 815
+                      }
                     }
                   ],
-                  "status": "expected"
+                  "status": "unexpected"
                 }
               ],
-              "id": "1f96767271edc4239dfa-04d6a37c53e07d4a2f57",
+              "id": "1f96767271edc4239dfa-99d988a262cf65a431a0",
               "file": "sketchpad.test.ts",
-              "line": 792,
+              "line": 695,
               "column": 3
             }
           ]
@@ -237,11 +219,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2025-12-12T21:01:58.853Z",
-    "duration": 40077.71800000034,
-    "expected": 1,
+    "startTime": "2025-12-14T17:46:10.848Z",
+    "duration": 38779.939000000006,
+    "expected": 0,
     "skipped": 0,
-    "unexpected": 0,
+    "unexpected": 1,
     "flaky": 0
   }
 }

@@ -1762,6 +1762,42 @@
             }
           }
         },
+        "interface": {
+          "label": {
+            "normal": "Interface",
+            "beginner": "Interface"
+          },
+          "defaultName": {
+            "label": {
+              "normal": "New Interface",
+              "beginner": "New Interface"
+            }
+          }
+        },
+        "tag": {
+          "label": {
+            "normal": "Tag",
+            "beginner": "Tag"
+          },
+          "defaultName": {
+            "label": {
+              "normal": "New Tag",
+              "beginner": "New Tag"
+            }
+          }
+        },
+        "concept": {
+          "label": {
+            "normal": "Concept",
+            "beginner": "Concept"
+          },
+          "defaultName": {
+            "label": {
+              "normal": "New Concept",
+              "beginner": "New Concept"
+            }
+          }
+        },
         "folder": {
           "label": {
             "normal": "",

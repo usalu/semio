@@ -32,6 +32,7 @@ import * as Y from "yjs";
 import { ConnectionDiff, ConnectionId, Guid, KitDiff, PieceDiff, PieceId } from "../semio";
 import type {
   AppConfig,
+  AppPlugin,
   AppWindowConfig,
   DesignAppId,
   HookResult,
@@ -49,6 +50,7 @@ import type {
 } from "./shared";
 import { conditionalHookResult, createPanelDefinition, Expertise, Mode, PanelKind, readonlyHookResult, registerAppPlugin, Theme, ToolKind } from "./shared";
 import { identitySelector, useDesignScope, useExpertise, useKitScope, useLanguage, useLayout, useMode, usePieceScope, useSketchpadActor, useSketchpadActorSafe, useTheme } from "./Sketchpad";
+import type { DesignStore as DesignEntityStore } from "./Sketchpad";
 
 // #endregion Internal State Management
 
@@ -961,12 +963,14 @@ export class DesignStore extends KitDiffAppStore<DesignAppState, DesignAppDiff, 
     let kitGuid = yMap.get("kit") as string;
     let designGuid = yMap.get("design") as string;
 
-    if (!kitGuid || !designGuid) {
-      const kit = this.parent.kit(id.kit);
-      const design = kit.design(id.design);
-      kitGuid = kit.guid;
-      designGuid = design.guid;
+    // id.kit and id.design are already GUIDs from createDesignApp
+    // Use them directly instead of looking up from stores
+    if (!kitGuid) {
+      kitGuid = id.kit;
       yMap.set("kit", kitGuid);
+    }
+    if (!designGuid) {
+      designGuid = id.design;
       yMap.set("design", designGuid);
     }
 
@@ -1184,7 +1188,7 @@ export class DesignStore extends KitDiffAppStore<DesignAppState, DesignAppDiff, 
     return this.parent.kit(this.kitGuid);
   }
 
-  design(): DesignStore {
+  design(): DesignEntityStore {
     return this.kit().design(this.designGuid);
   }
 
@@ -2063,7 +2067,7 @@ export function useDesignAppDeselectAll(): ActionHookResult<[]> {
 }
 
 export function useDesignAppSelectAll(): ActionHookResult<[]> {
-  const design = useDesign();
+  const design = useDesign() as Design | null;
   const [, setSelection, canSetSelection] = useDesignAppSelection();
   const action = useMemo(() => {
     if (!canSetSelection || !setSelection || !design) return undefined;
@@ -2427,11 +2431,11 @@ export function useDesignAppCommands(id?: DesignAppId) {
       removeConnectionFromSelection: (_origin: string, connectionGuid: Guid) => actor.send({ type: "DESIGN.DESELECT_CONNECTION", kitGuid, designGuid, connectionGuid }),
       selectPiecePort: (_origin: string, piece: Guid, port: Guid) => {
         const current = store.snapshot().selection || {};
-        actor.send({ type: "DESIGN.SET_SELECTION", kitGuid, designGuid, selection: { ...current, port: { piece, port } } });
+        actor.send({ type: "DESIGN.SET_SELECTION", kitGuid, designGuid, selection: { pieces: current.pieces, connections: current.connections, ports: [{ piece, port }] } });
       },
       deselectPiecePort: (_origin: string) => {
         const current = store.snapshot().selection || {};
-        actor.send({ type: "DESIGN.SET_SELECTION", kitGuid, designGuid, selection: { ...current, port: undefined } });
+        actor.send({ type: "DESIGN.SET_SELECTION", kitGuid, designGuid, selection: { pieces: current.pieces, connections: current.connections, ports: undefined } });
       },
       deleteSelected: (origin: string) => store.execute("semio.designApp.deleteSelected", origin),
       toggleDiagramFullscreen: (_origin: string) => {
@@ -3764,100 +3768,100 @@ const PiecesSectionForm: FC = () => {
 
   const handleCenterXChange = (value: number) => {
     if (isSingle && piece) {
-      updatePiece(getPieceId(piece), { center: { u: value, v: piece.center?.v ?? 0 } });
+      updatePiece?.(getPieceId(piece), { center: { u: value, v: piece.center?.v ?? 0 } });
     } else {
       const updates = pieces.map((p) => ({ id: getPieceId(p), diff: { center: { u: value, v: p.center?.v ?? 0 } } }));
-      updatePieces(updates);
+      updatePieces?.(updates);
     }
   };
 
   const handleCenterYChange = (value: number) => {
     if (isSingle && piece) {
-      updatePiece(getPieceId(piece), { center: { u: piece.center?.u ?? 0, v: value } });
+      updatePiece?.(getPieceId(piece), { center: { u: piece.center?.u ?? 0, v: value } });
     } else {
       const updates = pieces.map((p) => ({ id: getPieceId(p), diff: { center: { u: p.center?.u ?? 0, v: value } } }));
-      updatePieces(updates);
+      updatePieces?.(updates);
     }
   };
 
   const handlePlaneOriginXChange = (value: number) => {
     if (isSingle && piece && piece.plane) {
-      updatePiece(getPieceId(piece), { plane: { ...piece.plane, origin: { ...piece.plane.origin, x: value } } });
+      updatePiece?.(getPieceId(piece), { plane: { ...piece.plane, origin: { ...piece.plane.origin, x: value } } });
     } else {
       const updates = pieces.filter((p) => p.plane).map((p) => ({ id: getPieceId(p), diff: { plane: { ...p.plane!, origin: { ...p.plane!.origin, x: value } } } }));
-      updatePieces(updates);
+      updatePieces?.(updates);
     }
   };
 
   const handlePlaneOriginYChange = (value: number) => {
     if (isSingle && piece && piece.plane) {
-      updatePiece(getPieceId(piece), { plane: { ...piece.plane, origin: { ...piece.plane.origin, y: value } } });
+      updatePiece?.(getPieceId(piece), { plane: { ...piece.plane, origin: { ...piece.plane.origin, y: value } } });
     } else {
       const updates = pieces.filter((p) => p.plane).map((p) => ({ id: getPieceId(p), diff: { plane: { ...p.plane!, origin: { ...p.plane!.origin, y: value } } } }));
-      updatePieces(updates);
+      updatePieces?.(updates);
     }
   };
 
   const handlePlaneOriginZChange = (value: number) => {
     if (isSingle && piece && piece.plane) {
-      updatePiece(getPieceId(piece), { plane: { ...piece.plane, origin: { ...piece.plane.origin, z: value } } });
+      updatePiece?.(getPieceId(piece), { plane: { ...piece.plane, origin: { ...piece.plane.origin, z: value } } });
     } else {
       const updates = pieces.filter((p) => p.plane).map((p) => ({ id: getPieceId(p), diff: { plane: { ...p.plane!, origin: { ...p.plane!.origin, z: value } } } }));
-      updatePieces(updates);
+      updatePieces?.(updates);
     }
   };
 
   const handlePlaneXAxisXChange = (value: number) => {
     if (isSingle && piece && piece.plane) {
-      updatePiece(getPieceId(piece), { plane: { ...piece.plane, xAxis: { ...piece.plane.xAxis, x: value } } });
+      updatePiece?.(getPieceId(piece), { plane: { ...piece.plane, xAxis: { ...piece.plane.xAxis, x: value } } });
     } else {
       const updates = pieces.filter((p) => p.plane).map((p) => ({ id: getPieceId(p), diff: { plane: { ...p.plane!, xAxis: { ...p.plane!.xAxis, x: value } } } }));
-      updatePieces(updates);
+      updatePieces?.(updates);
     }
   };
 
   const handlePlaneXAxisYChange = (value: number) => {
     if (isSingle && piece && piece.plane) {
-      updatePiece(getPieceId(piece), { plane: { ...piece.plane, xAxis: { ...piece.plane.xAxis, y: value } } });
+      updatePiece?.(getPieceId(piece), { plane: { ...piece.plane, xAxis: { ...piece.plane.xAxis, y: value } } });
     } else {
       const updates = pieces.filter((p) => p.plane).map((p) => ({ id: getPieceId(p), diff: { plane: { ...p.plane!, xAxis: { ...p.plane!.xAxis, y: value } } } }));
-      updatePieces(updates);
+      updatePieces?.(updates);
     }
   };
 
   const handlePlaneXAxisZChange = (value: number) => {
     if (isSingle && piece && piece.plane) {
-      updatePiece(getPieceId(piece), { plane: { ...piece.plane, xAxis: { ...piece.plane.xAxis, z: value } } });
+      updatePiece?.(getPieceId(piece), { plane: { ...piece.plane, xAxis: { ...piece.plane.xAxis, z: value } } });
     } else {
       const updates = pieces.filter((p) => p.plane).map((p) => ({ id: getPieceId(p), diff: { plane: { ...p.plane!, xAxis: { ...p.plane!.xAxis, z: value } } } }));
-      updatePieces(updates);
+      updatePieces?.(updates);
     }
   };
 
   const handlePlaneYAxisXChange = (value: number) => {
     if (isSingle && piece && piece.plane) {
-      updatePiece(getPieceId(piece), { plane: { ...piece.plane, yAxis: { ...piece.plane.yAxis, x: value } } });
+      updatePiece?.(getPieceId(piece), { plane: { ...piece.plane, yAxis: { ...piece.plane.yAxis, x: value } } });
     } else {
       const updates = pieces.filter((p) => p.plane).map((p) => ({ id: getPieceId(p), diff: { plane: { ...p.plane!, yAxis: { ...p.plane!.yAxis, x: value } } } }));
-      updatePieces(updates);
+      updatePieces?.(updates);
     }
   };
 
   const handlePlaneYAxisYChange = (value: number) => {
     if (isSingle && piece && piece.plane) {
-      updatePiece(getPieceId(piece), { plane: { ...piece.plane, yAxis: { ...piece.plane.yAxis, y: value } } });
+      updatePiece?.(getPieceId(piece), { plane: { ...piece.plane, yAxis: { ...piece.plane.yAxis, y: value } } });
     } else {
       const updates = pieces.filter((p) => p.plane).map((p) => ({ id: getPieceId(p), diff: { plane: { ...p.plane!, yAxis: { ...p.plane!.yAxis, y: value } } } }));
-      updatePieces(updates);
+      updatePieces?.(updates);
     }
   };
 
   const handlePlaneYAxisZChange = (value: number) => {
     if (isSingle && piece && piece.plane) {
-      updatePiece(getPieceId(piece), { plane: { ...piece.plane, yAxis: { ...piece.plane.yAxis, z: value } } });
+      updatePiece?.(getPieceId(piece), { plane: { ...piece.plane, yAxis: { ...piece.plane.yAxis, z: value } } });
     } else {
       const updates = pieces.filter((p) => p.plane).map((p) => ({ id: getPieceId(p), diff: { plane: { ...p.plane!, yAxis: { ...p.plane!.yAxis, z: value } } } }));
-      updatePieces(updates);
+      updatePieces?.(updates);
     }
   };
 
@@ -5870,7 +5874,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
   const dragPositionRef = useRef<{ x: number; y: number } | null>(null);
   const pendingPieceUpdatesRef = useRef<Array<{ id: string; diff: any }>>([]);
-  const helperLines: HelperLine[] = [];
+  const [helperLines, setHelperLines] = useState<HelperLine[]>([]);
   const fullscreen = fullscreenWindow === DesignAppFullscreenWindow.Diagram;
   const viewportRestoredRef = useRef(false);
   const isUpdatingViewportRef = useRef(false);
@@ -6801,7 +6805,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       }
 
       if (addedConnections.length > 0) {
-        addedConnections.forEach((conn) => addConnection(conn));
+        addedConnections.forEach((conn) => addConnection?.(conn));
       }
       dragPositionRef.current = { x: draggedX, y: draggedY };
       pendingPieceUpdatesRef.current = updatedPieces;
@@ -6903,7 +6907,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
       if (!design) return;
       if (((design as Design).connections ?? []).find((c: SemioConnection) => areSameConnection(c, newConnection))) return;
-      addConnection(newConnection);
+      addConnection?.(newConnection);
     },
     [addConnection, reactFlowInstanceRef, design],
   );
@@ -7778,10 +7782,10 @@ const App: FC<AppProps> = () => {
     },
     { enableOnFormTags: true },
   );
-  useHotkeys("delete", () => deleteSelected(), { enableOnFormTags: true });
-  useHotkeys("ctrl+z", () => undo(), { enableOnFormTags: true });
-  useHotkeys("ctrl+y", () => redo(), { enableOnFormTags: true });
-  useHotkeys("ctrl+shift+z", () => redo(), { enableOnFormTags: true });
+  useHotkeys("delete", () => deleteSelected?.(), { enableOnFormTags: true });
+  useHotkeys("ctrl+z", () => undo?.(), { enableOnFormTags: true });
+  useHotkeys("ctrl+y", () => redo?.(), { enableOnFormTags: true });
+  useHotkeys("ctrl+shift+z", () => redo?.(), { enableOnFormTags: true });
 
   const appType = useAppType();
 

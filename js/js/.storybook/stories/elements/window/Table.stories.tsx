@@ -54,6 +54,7 @@ const sampleData: Person[] = [
 ];
 
 export const WithAvatars: Story = {
+  args: { columns: [], data: [] },
   render: () => {
     const columns: TableColumn<Person>[] = [
       {
@@ -90,6 +91,7 @@ export const WithAvatars: Story = {
 };
 
 export const SelectableWithAvatars: Story = {
+  args: { columns: [], data: [] },
   render: () => {
     const columns: TableColumn<Person>[] = [
       {
@@ -126,6 +128,7 @@ export const SelectableWithAvatars: Story = {
 };
 
 export const CompactWithAvatars: Story = {
+  args: { columns: [], data: [] },
   render: () => {
     const columns: TableColumn<Person>[] = [
       {
@@ -177,6 +180,7 @@ const fileData: FileItem[] = [
 ];
 
 export const WithIconAvatars: Story = {
+  args: { columns: [], data: [] },
   render: () => {
     const getIconForType = (type: FileItem["type"]) => {
       switch (type) {

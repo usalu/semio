@@ -38,24 +38,22 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  render: () => {
-    const [value, setValue] = useState(12);
+  args: {
+    id: "stepper-default",
+    value: 12,
+    onChange: () => {},
+    min: 1,
+    max: 50,
+    step: 1,
+    onPointerDown: () => {},
+    onPointerUp: () => {},
+    onPointerCancel: () => {},
+    interactionId: "stepper-interaction",
+  },
+  render: (args) => {
+    const [value, setValue] = useState(args.value);
     return (
-      <Stepper
-        id="stepper-default"
-        value={value}
-        onChange={setValue}
-        min={1}
-        max={50}
-        step={1}
-        onPointerDown={() => {}}
-        onPointerUp={() => {}}
-        onPointerCancel={() => {}}
-        startTransaction={() => {}}
-        finalizeTransaction={() => {}}
-        abortTransaction={() => {}}
-        interactionId="stepper-interaction"
-      />
+      <Stepper {...args} value={value} onChange={setValue} />
     );
   },
 };

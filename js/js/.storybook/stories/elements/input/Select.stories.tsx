@@ -38,8 +38,13 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  render: () => (
-    <Select id="select-default" showLabel defaultValue="capsule" startTransaction={() => {}} finalizeTransaction={() => {}}>
+  args: {
+    id: "select-default",
+    showLabel: true,
+    defaultValue: "capsule",
+  },
+  render: (args) => (
+    <Select {...args}>
       <SelectTrigger id="select-trigger-default" size="default" level="base" className="w-[220px]">
         <SelectValue placeholder="Select a type" />
       </SelectTrigger>

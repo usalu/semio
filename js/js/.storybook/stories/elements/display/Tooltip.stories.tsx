@@ -23,10 +23,59 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Plus, Settings, Trash2 } from "lucide-react";
 import { Button, Tooltip, TooltipContent, TooltipTrigger } from "../../../../sketchpad/elements";
 
+const TooltipExamples = () => (
+  <div className="space-y-4">
+    <div className="flex gap-double">
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button id="tooltip-trigger-default">
+            <Plus />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">
+          <p>Add new capsule instance to the design</p>
+        </TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button variant="default" onClick={() => {}}>
+            <Settings />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="right">
+          Settings <span className="text-xs ml-1 opacity-60">(Ctrl+,)</span>
+        </TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button variant="outline" onClick={() => {}}>
+            <Trash2 />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="top">
+          <p>Delete selected item</p>
+        </TooltipContent>
+      </Tooltip>
+    </div>
+    <div className="text-sm">
+      This is some text with{" "}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="underline cursor-help">a tooltip</span>
+        </TooltipTrigger>
+        <TooltipContent side="left">
+          <p>Additional information</p>
+        </TooltipContent>
+      </Tooltip>{" "}
+      inline.
+    </div>
+  </div>
+);
+
 // #region Tooltip
 const meta = {
   title: "Elements/Display/Tooltip",
-  component: Tooltip,
+  component: TooltipExamples,
   parameters: {
     layout: "centered",
   },
@@ -38,54 +87,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  render: () => (
-    <div className="space-y-4">
-      <div className="flex gap-double">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button id="tooltip-trigger-default">
-              <Plus />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">
-            <p>Add new capsule instance to the design</p>
-          </TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant="default">
-              <Settings />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="right">
-            Settings <span className="text-xs ml-1 opacity-60">(Ctrl+,)</span>
-          </TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant="destructive">
-              <Trash2 />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="top">
-            <p>Delete selected item</p>
-          </TooltipContent>
-        </Tooltip>
-      </div>
-      <div className="text-sm">
-        This is some text with{" "}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span className="underline cursor-help">a tooltip</span>
-          </TooltipTrigger>
-          <TooltipContent side="left">
-            <p>Additional information</p>
-          </TooltipContent>
-        </Tooltip>{" "}
-        inline.
-      </div>
-    </div>
-  ),
+  render: () => <TooltipExamples />,
 };
 
 // #endregion Tooltip

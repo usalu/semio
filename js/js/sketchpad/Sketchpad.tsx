@@ -5283,8 +5283,8 @@ function useDesignStore<T>(selector?: (store: DesignStore) => T, guid?: string):
   if (!kitStore) return null;
   const designScope = useDesignScope();
   const designGuid = designScope?.guid ?? guid;
-  if (!designGuid) throw new Error("useDesignStore must be called within a DesignScopeProvider or be directly provided with a guid");
-  if (!kitStore.hasDesign(designGuid)) throw new Error(`Design store not found for design ${designGuid}`);
+  if (!designGuid) return null;
+  if (!kitStore.hasDesign(designGuid)) return null;
   const designStore = kitStore.design(designGuid);
   return selector ? selector(designStore) : designStore;
 }
@@ -10604,7 +10604,7 @@ export function createSketchpadActor(input: SketchpadMachineInput) {
         // Log state transitions with source and target
         const { snapshot, event, actorRef } = inspectionEvent;
         if (event.type === "xstate.init") return; // Skip initial event
-        const stateValue = typeof snapshot.value === "object" ? JSON.stringify(snapshot.value) : snapshot.value;
+        const stateValue = "value" in (snapshot as any) ? (typeof (snapshot as any).value === "object" ? JSON.stringify((snapshot as any).value) : (snapshot as any).value) : JSON.stringify(snapshot);
         // Extract event params (everything except type)
         const { type, ...params } = event as any;
         const hasParams = Object.keys(params).length > 0;
@@ -13671,6 +13671,7 @@ export function useAppPanelVisibility(): PanelVisibility {
   const navigation = useNavigation();
   const appType = useAppType();
   const store = useSketchpadStore();
+  const actor = useSketchpadActor();
 
   const pathMatch = navigation.match(/^\/kits\/([^/?]+)(?:\/(designs|types|qualities)\/([^/?]+))?/);
   const kitGuid = pathMatch?.[1];
@@ -13678,13 +13679,12 @@ export function useAppPanelVisibility(): PanelVisibility {
   const itemGuid = pathMatch?.[3];
 
   const docsPanelVisibility = useSyncExternalStore(subscribeDocsPanelVisibility, getDocsPanelVisibilitySnapshot, getDocsPanelVisibilitySnapshot);
+  const homePanelVisibility = useSelector(actor, selectHomePanelVisibility);
 
   const app = useMemo(() => {
-    if (appType === "docs") return null;
+    if (appType === "docs" || appType === "home") return null;
     try {
       switch (appType) {
-        case "home":
-          return store.home();
         case "kit":
           if (kitGuid) return store.kitApp(kitGuid);
           return null;
@@ -13738,9 +13738,12 @@ export function useAppPanelVisibility(): PanelVisibility {
 
   const panelVisibility = useSyncExternalStore(subscribe, getSnapshot);
 
-  // Return docs panel visibility for docs app, otherwise return app panel visibility
+  // Return docs panel visibility for docs app, home panel visibility for home app, otherwise return app panel visibility
   if (appType === "docs") {
     return docsPanelVisibility;
+  }
+  if (appType === "home") {
+    return homePanelVisibility;
   }
 
   return panelVisibility;
@@ -13750,6 +13753,7 @@ export function useAppCommands() {
   const navigation = useNavigation();
   const appType = useAppType();
   const store = useSketchpadStore();
+  const actor = useSketchpadActor();
 
   const pathMatch = navigation.match(/^\/kits\/([^/?]+)(?:\/(designs|types|qualities)\/([^/?]+))?/);
   const kitGuid = pathMatch?.[1];
@@ -13760,7 +13764,12 @@ export function useAppCommands() {
     try {
       switch (appType) {
         case "home":
-          app = store.home();
+          return {
+            togglePanel: (origin: string, panelKey: keyof PanelVisibility) => {
+              actor.send({ type: "HOME.TOGGLE_PANEL", panel: panelKey } as any);
+            },
+            execute: (origin: string, command: string, ...args: any[]) => {},
+          };
           break;
         case "kit":
           if (kitGuid) app = store.kitApp(kitGuid);
@@ -13809,7 +13818,7 @@ export function useAppCommands() {
         return app.execute(command, origin, ...args);
       },
     };
-  }, [store, appType, kitGuid, itemGuid, navigation]);
+  }, [store, appType, kitGuid, itemGuid, navigation, actor]);
 }
 
 export function useUpdateRecentSearches() {
@@ -17135,6 +17144,36 @@ const AppRouter: FC = () => {
 
 // #region Sketchpad
 
+const ToolbarScopeWrapper: FC<{ children: ReactNode }> = ({ children }) => {
+  const location = useLocation();
+  const scopeGuids = useMemo(() => {
+    const pathMatch = location.pathname.match(/^\/kits\/([^/?]+)(?:\/(designs|types|qualities)\/([^/?]+))?/);
+    return {
+      kit: pathMatch?.[1],
+      itemType: pathMatch?.[2],
+      item: pathMatch?.[3],
+    };
+  }, [location.pathname]);
+
+  const { kit, itemType, item } = scopeGuids;
+  let wrapped = <>{children}</>;
+
+  if (item && kit) {
+    if (itemType === "qualities") {
+      wrapped = <QualityScopeProvider guid={item}>{wrapped}</QualityScopeProvider>;
+    } else if (itemType === "types") {
+      wrapped = <TypeScopeProvider guid={item}>{wrapped}</TypeScopeProvider>;
+    } else if (itemType === "designs") {
+      wrapped = <DesignScopeProvider guid={item}>{wrapped}</DesignScopeProvider>;
+    }
+  }
+  if (kit) {
+    wrapped = <KitScopeProvider guid={kit}>{wrapped}</KitScopeProvider>;
+  }
+
+  return wrapped;
+};
+
 const LayoutWrapper: FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -17608,13 +17647,15 @@ const LayoutWrapper: FC = () => {
             <div className="relative h-full w-full">
               <AppRouter />
               {(panelVisibility.toolbar || appType === "type" || appType === "design") && (
-                <div className="absolute bottom-single left-1/2 -translate-x-1/2 z-panel pointer-events-auto">
+                <div id="semio.sketchpad.toolbar" className="absolute bottom-single left-1/2 -translate-x-1/2 z-panel pointer-events-auto">
                   <div className="flex items-center gap-single bg-panel border p-single">
-                    {toolbarSections.length > 0 ? (
-                      toolbarSections.map((section) => <div key={section.id}>{typeof section.content === "function" ? section.content() : section.content}</div>)
-                    ) : (
-                      <div className="text-muted-foreground text-sm">Loading...</div>
-                    )}
+                    <ToolbarScopeWrapper>
+                      {toolbarSections.length > 0 ? (
+                        toolbarSections.map((section) => <div key={section.id}>{typeof section.content === "function" ? section.content() : section.content}</div>)
+                      ) : (
+                        <div className="text-muted-foreground text-sm">Loading...</div>
+                      )}
+                    </ToolbarScopeWrapper>
                   </div>
                 </div>
               )}

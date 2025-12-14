@@ -82,12 +82,14 @@ import {
   useKitAppXState,
   useKitCommands,
   useKitScope,
+  useMode,
   useLanguage,
   useLayout,
   useNavigation,
   useOrigin,
   useRemoveFooterItem,
   useRemovePanelSection,
+  useExpertise,
   useSketchpadActor,
   useSketchpadCommands,
   useSketchpadStore,
@@ -96,7 +98,7 @@ import {
   useTypeScope,
   Window,
 } from "./Sketchpad";
-import { Action, Input, NotFound, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Strip, Table, TableAvatar, Textarea, Toggle, ToggleGroup, Transaction, TreeContent, TreeItem } from "./elements";
+import { Action, Input, NotFound, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Strip, Table, TableAvatar, Textarea, Toggle, ToggleGroup, Transaction, TransactionProvider, TreeContent, TreeItem } from "./elements";
 import type { HookNoSetResult, HookResult, KitAppId, KitCommandContext, KitDiffAppEdit, Layout, PanelDefinition, PanelVisibility, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
 import { AppConfig, AppPlugin, conditionalHookResult, createPanelDefinition, Expertise, Mode, PanelKind, registerAppPlugin, Theme } from "./shared";
 
@@ -2351,6 +2353,9 @@ const AppContent: FC = () => {
   const defaultTypeName = useLabel("semio.sketchpad.app.type.defaultName");
   const defaultQualityName = useLabel("semio.sketchpad.app.quality.defaultName");
   const defaultFolderName = useLabel("semio.sketchpad.app.folder.defaultName");
+  const defaultInterfaceName = useLabel("semio.sketchpad.app.interface.defaultName");
+  const defaultTagName = useLabel("semio.sketchpad.app.tag.defaultName");
+  const defaultConceptName = useLabel("semio.sketchpad.app.concept.defaultName");
   const kitLoadingLabel = useLabel("semio.sketchpad.app.kit.loading");
 
   // Pre-call all useLabel hooks used in JSX to avoid conditional hook calls
@@ -2748,16 +2753,16 @@ const AppContent: FC = () => {
 
     if (selectedKind === "designs") {
       const design = kitDesigns?.find((d: Design) => d.guid === selectParam);
-      if (design && selectDesign) {
-        selectDesign(selectParam);
+      if (design && selectDesignAction) {
+        selectDesignAction(selectParam);
         const newParams = new URLSearchParams(searchParams);
         newParams.delete("select");
         setSearchParams(newParams, { replace: true });
       }
     } else if (selectedKind === "types") {
       const type = kitTypes?.find((t: Type) => t.guid === selectParam);
-      if (type && selectType) {
-        selectType(selectParam);
+      if (type && selectTypeAction) {
+        selectTypeAction(selectParam);
         const newParams = new URLSearchParams(searchParams);
         newParams.delete("select");
         setSearchParams(newParams, { replace: true });
@@ -3712,32 +3717,38 @@ const AppContent: FC = () => {
       }
       case "interfaces": {
         const existingNames = (kit.interfaces || []).map((i: Interface) => i.name);
-        const uniqueName = generateUniqueName("New Interface", existingNames);
+        const uniqueName = generateUniqueName(defaultInterfaceName, existingNames);
         const newInterface: Interface = {
           guid: guid(),
           name: uniqueName,
         };
         if (kitCommands) kitCommands.createInterface(newInterface);
+        setKind("interfaces");
+        setSelectionAction?.({ interfaces: [newInterface.guid] });
         break;
       }
       case "tags": {
         const existingNames = (kit.tags || []).map((t: Tag) => t.name);
-        const uniqueName = generateUniqueName("New Tag", existingNames);
+        const uniqueName = generateUniqueName(defaultTagName, existingNames);
         const newTag: Tag = {
           guid: guid(),
           name: uniqueName,
         };
         if (kitCommands) kitCommands.createTag(newTag);
+        setKind("tags");
+        setSelectionAction?.({ tags: [newTag.guid] });
         break;
       }
       case "concepts": {
         const existingNames = (kit.concepts || []).map((c: Concept) => c.name);
-        const uniqueName = generateUniqueName("New Concept", existingNames);
+        const uniqueName = generateUniqueName(defaultConceptName, existingNames);
         const newConcept: Concept = {
           guid: guid(),
           name: uniqueName,
         };
         if (kitCommands) kitCommands.createConcept(newConcept);
+        setKind("concepts");
+        setSelectionAction?.({ concepts: [newConcept.guid] });
         break;
       }
       case "files": {
@@ -3752,6 +3763,8 @@ const AppContent: FC = () => {
           name: uniqueName,
         };
         if (kitCommands) kitCommands.createFolder(newFolder);
+        setKind("folders");
+        setSelectionAction?.({ folders: [newFolder.guid] });
         break;
       }
       case "authors": {
@@ -3803,6 +3816,14 @@ const AppContent: FC = () => {
       newParams.delete("variant");
       newParams.delete("view");
     }
+    setSearchParams(newParams);
+  };
+  const setKind = (kind: ArtifactKind) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("kind", kind);
+    newParams.delete("name");
+    newParams.delete("variant");
+    newParams.delete("view");
     setSearchParams(newParams);
   };
 
@@ -4738,6 +4759,7 @@ function useKitAppYjsToXStateSync() {
 const App: FC = () => {
   // Sync Y.js state to XState
   useKitAppYjsToXStateSync();
+  const transaction = useKitAppTransaction();
 
   return (
     <ErrorBoundary
@@ -4747,13 +4769,15 @@ const App: FC = () => {
         </div>
       }
     >
-      <KitDropZone>
-        <Canvas>
-          <Window id="kit-table">
-            <AppContent />
-          </Window>
-        </Canvas>
-      </KitDropZone>
+      <TransactionProvider transaction={transaction}>
+        <KitDropZone>
+          <Canvas>
+            <Window id="kit-table">
+              <AppContent />
+            </Window>
+          </Canvas>
+        </KitDropZone>
+      </TransactionProvider>
     </ErrorBoundary>
   );
 };
@@ -4794,7 +4818,7 @@ const KitSectionForm: FC = () => {
       <>
         <TreeItem>
           <TreeContent>
-            <Input lazy id="semio.sketchpad.app.kit.panel.details.section.kit.name" value={kit.name} onLazyChange={(value) => kitDataSource.change({ name: value })} transaction={useKitAppTransaction()} showLabel />
+            <Input lazy id="semio.sketchpad.app.kit.panel.details.section.kit.name" value={kit.name} onLazyChange={(value) => kitDataSource.change({ name: value })} showLabel />
           </TreeContent>
         </TreeItem>
         <TreeItem>
@@ -4805,7 +4829,6 @@ const KitSectionForm: FC = () => {
               value={kit.version || ""}
               placeholder={useLabel("semio.sketchpad.app.kit.versionPlaceholder.label")}
               onLazyChange={(value) => kitDataSource.change({ version: value })}
-              transaction={useKitAppTransaction()}
               showLabel
             />
           </TreeContent>
@@ -4818,7 +4841,6 @@ const KitSectionForm: FC = () => {
               value={kit.description || ""}
               placeholder={useLabel("semio.sketchpad.app.kit.descriptionPlaceholder.label")}
               onLazyChange={(value) => kitDataSource.change({ description: value })}
-              transaction={useKitAppTransaction()}
               showLabel
             />
           </TreeContent>
@@ -4831,7 +4853,6 @@ const KitSectionForm: FC = () => {
               value={kit.icon || ""}
               placeholder={useLabel("semio.sketchpad.app.kit.iconPlaceholder.label")}
               onLazyChange={(value) => kitDataSource.change({ icon: value })}
-              transaction={useKitAppTransaction()}
               showLabel
             />
           </TreeContent>
@@ -4844,7 +4865,6 @@ const KitSectionForm: FC = () => {
               value={kit.image || ""}
               placeholder={useLabel("semio.sketchpad.app.kit.imagePlaceholder.label")}
               onLazyChange={(value) => kitDataSource.change({ image: value })}
-              transaction={useKitAppTransaction()}
               showLabel
             />
           </TreeContent>
@@ -4857,7 +4877,6 @@ const KitSectionForm: FC = () => {
               value={kit.homepage || ""}
               placeholder={useLabel("semio.sketchpad.app.kit.homepagePlaceholder.label")}
               onLazyChange={(value) => kitDataSource.change({ homepage: value })}
-              transaction={useKitAppTransaction()}
               showLabel
             />
           </TreeContent>
@@ -4870,7 +4889,6 @@ const KitSectionForm: FC = () => {
               value={kit.license || ""}
               placeholder={useLabel("semio.sketchpad.app.kit.licensePlaceholder.label")}
               onLazyChange={(value) => kitDataSource.change({ license: value })}
-              transaction={useKitAppTransaction()}
               showLabel
             />
           </TreeContent>
@@ -5277,7 +5295,6 @@ export const FolderSection: FC = () => {
               const folderDataSource = (kitDataSource as any).folder(folder.guid);
               folderDataSource.change({ name: value });
             }}
-            transaction={useKitAppTransaction()}
             showLabel
           />
         </TreeContent>
@@ -5294,7 +5311,6 @@ export const FolderSection: FC = () => {
                 const folderDataSource = (kitDataSource as any).folder(folder.guid);
                 folderDataSource.change({ description: value });
               }}
-              transaction={useKitAppTransaction()}
               showLabel
             />
           </TreeContent>

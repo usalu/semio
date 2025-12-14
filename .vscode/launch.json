@@ -74,6 +74,24 @@
       "webRoot": "${workspaceRoot}/js/js"
     },
     {
+      "name": "dev:storybook",
+      "preLaunchTask": "dev:storybook",
+      // "postDebugTask": "kill dev",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:6006",
+      "webRoot": "${workspaceRoot}/js/js"
+    },
+    {
+      "name": "dev js js storybook",
+      "preLaunchTask": "dev js js storybook",
+      // "postDebugTask": "kill dev",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:6006",
+      "webRoot": "${workspaceRoot}/js/js"
+    },
+    {
       "name": "dev play",
       "preLaunchTask": "dev play",
       // "postDebugTask": "kill dev",
@@ -81,6 +99,24 @@
       "request": "launch",
       "url": "http://localhost:5173",
       "webRoot": "${workspaceRoot}/js/play"
+    },
+    {
+      "name": "dev:sketchpad",
+      "preLaunchTask": "dev:sketchpad",
+      // "postDebugTask": "kill dev",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:5174",
+      "webRoot": "${workspaceRoot}/js/js"
+    },
+    {
+      "name": "dev js js sketchpad",
+      "preLaunchTask": "dev js js sketchpad",
+      // "postDebugTask": "kill dev",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:5174",
+      "webRoot": "${workspaceRoot}/js/js"
     },
     {
       "name": "dev docs",

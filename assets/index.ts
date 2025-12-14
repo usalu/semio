@@ -10,13 +10,13 @@ export { MetabolismKitData as MetabolismKit };
 export const MetabolismKitTypes = MetabolismKitData.types ?? [];
 export const MetabolismKitDesigns = MetabolismKitData.designs ?? [];
 export const MetabolismKitInterfaces = MetabolismKitData.interfaces ?? [];
-export const MetabolismKitQualities = MetabolismKitData.qualities ?? [];
+export const MetabolismKitQualities = (MetabolismKitData as { qualities?: unknown[] }).qualities ?? [];
 export const MetabolismKitFiles = MetabolismKitData.files ?? [];
 export const MetabolismKitFolders = MetabolismKitData.folders ?? [];
 export const MetabolismKitAuthors = MetabolismKitData.authors ?? [];
 export const MetabolismKitTags = MetabolismKitData.tags ?? [];
 export const MetabolismKitConcepts = MetabolismKitData.concepts ?? [];
-export const MetabolismKitAttributes = MetabolismKitData.attributes ?? [];
+export const MetabolismKitAttributes = (MetabolismKitData as { attributes?: unknown[] }).attributes ?? [];
 export const MetabolismKitNakaginCapsuleTowerDesigns = MetabolismKitDesigns.filter(
     (design) => design.name === "Nakagin Capsule Tower",
 ) ?? [];

@@ -50,7 +50,7 @@ import i18n, { useLabel } from "../i18n";
 import { generateUniqueName, guid, Guid, importKit, Kit, KitShallow } from "../semio";
 import { docsRegistry } from "./Docs";
 import { Action, Input, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Spinner, Strip, Table, TableAvatar, TableColumn, Textarea, Toggle, ToggleGroup, TreeContent, TreeItem } from "./elements";
-import type { AppConfig, AppEdit, PanelDefinition, PanelVisibility } from "./shared";
+import type { AppConfig, AppEdit, AppPlugin, PanelDefinition, PanelVisibility } from "./shared";
 import { createPanelDefinition, Expertise, Mode, PanelKind, registerAppPlugin, Theme } from "./shared";
 import {
   Canvas,

@@ -20,7 +20,7 @@
 // #endregion
 
 import type { Meta, StoryObj } from "@storybook/react";
-import { Canvas, HorizontalWindows } from "../../../sketchpad/App";
+import { Canvas, HorizontalWindows } from "../../../sketchpad/Sketchpad";
 import { Window } from "../../../sketchpad/elements";
 
 // #region Canvas
@@ -44,18 +44,21 @@ const WindowContent = ({ title, color = "bg-panel" }: { title: string; color?: s
 );
 
 export const Default: Story = {
-  render: () => (
+  args: {
+    children: (
+      <HorizontalWindows>
+        <Window id="left" defaultSize={50}>
+          <WindowContent title="Left Window" color="bg-panel" />
+        </Window>
+        <Window id="right" defaultSize={50}>
+          <WindowContent title="Right Window" color="bg-base" />
+        </Window>
+      </HorizontalWindows>
+    ),
+  },
+  render: (args) => (
     <div className="h-screen">
-      <Canvas>
-        <HorizontalWindows>
-          <Window id="left" defaultSize={50}>
-            <WindowContent title="Left Window" color="bg-panel" />
-          </Window>
-          <Window id="right" defaultSize={50}>
-            <WindowContent title="Right Window" color="bg-base" />
-          </Window>
-        </HorizontalWindows>
-      </Canvas>
+      <Canvas {...args} />
     </div>
   ),
 };

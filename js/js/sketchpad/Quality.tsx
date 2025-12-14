@@ -51,7 +51,7 @@ import {
   TreeItem,
 } from "./elements";
 import type { AppWindowConfig, HookNoSetResult, HookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, QualityAppId, Transact, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
-import { AppConfig, createPanelDefinition, Expertise, Mode, PanelKind, registerAppPlugin, Theme, ToolKind } from "./shared";
+import { AppConfig, AppPlugin, createPanelDefinition, Expertise, Mode, PanelKind, registerAppPlugin, Theme, ToolKind } from "./shared";
 import type { KitStore, QualityStore, SketchpadStore } from "./Sketchpad";
 import {
   Canvas,

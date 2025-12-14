@@ -38,15 +38,20 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  render: () => (
-    <ActionGroup id="action-group-default" variant="default" level="base" showLabel>
-      <ActionGroupItem id="action-group-default-copy" variant="default" level="base">
+  args: {
+    id: "action-group-default",
+    level: "base",
+    children: null,
+  },
+  render: (args) => (
+    <ActionGroup {...args}>
+      <ActionGroupItem id="action-group-default-copy">
         <Copy />
       </ActionGroupItem>
-      <ActionGroupItem id="action-group-default-download" variant="default" level="base">
+      <ActionGroupItem id="action-group-default-download">
         <Download />
       </ActionGroupItem>
-      <ActionGroupItem id="action-group-default-external" variant="default" level="base">
+      <ActionGroupItem id="action-group-default-external">
         <ExternalLink />
       </ActionGroupItem>
     </ActionGroup>

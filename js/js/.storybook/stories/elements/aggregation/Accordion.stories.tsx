@@ -37,9 +37,13 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  render: () => (
+  args: {
+    type: "multiple",
+    defaultValue: ["item-2", "item-3"],
+  },
+  render: (args) => (
     <div className="w-96">
-      <Accordion type="multiple" defaultValue={["item-2", "item-3"]}>
+      <Accordion {...args}>
         <AccordionItem value="item-1" disabled={false}>
           <AccordionTrigger>What is a Kit?</AccordionTrigger>
           <AccordionContent>

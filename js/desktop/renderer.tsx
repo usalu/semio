@@ -53,7 +53,7 @@ function App() {
     fetchUserId();
   }, []);
 
-  return <div className="h-screen w-screen">{userId ? <Sketchpad onWindowEvents={windowEvents} userId={userId} /> : <div className="flex h-full w-full items-center justify-center">Loading user data...</div>}</div>;
+  return <div className="h-screen w-screen">{userId ? <Sketchpad onWindowEvents={windowEvents} id={userId} /> : <div className="flex h-full w-full items-center justify-center">Loading user data...</div>}</div>;
 }
 
 export default App;

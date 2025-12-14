@@ -1490,6 +1490,42 @@
             }
           }
         },
+        "interface": {
+          "label": {
+            "normal": "Schnittstelle",
+            "beginner": "Schnittstelle"
+          },
+          "defaultName": {
+            "label": {
+              "normal": "Neue Schnittstelle",
+              "beginner": "Neue Schnittstelle"
+            }
+          }
+        },
+        "tag": {
+          "label": {
+            "normal": "Tag",
+            "beginner": "Tag"
+          },
+          "defaultName": {
+            "label": {
+              "normal": "Neuer Tag",
+              "beginner": "Neuer Tag"
+            }
+          }
+        },
+        "concept": {
+          "label": {
+            "normal": "Konzept",
+            "beginner": "Konzept"
+          },
+          "defaultName": {
+            "label": {
+              "normal": "Neues Konzept",
+              "beginner": "Neues Konzept"
+            }
+          }
+        },
         "folder": {
           "label": {
             "normal": "",
