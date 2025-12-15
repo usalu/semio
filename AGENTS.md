@@ -320,7 +320,7 @@ npm install  # Husky will auto-install via prepare script
 
 **Formatters** (apply changes automatically):
 
-1. **Prettier** - Formats JavaScript/TypeScript/JSON/YAML/Markdown
+1. **Prettier** - Formats JavaScript/TypeScript/JSON/YAML/Markdown (uses `.prettierignore` via `--ignore-path`, including `**/prompts.md`)
 2. **Ruff Format** - Formats Python code
 3. **Ruff Fix** - Auto-fixes Python linting issues
 
@@ -1488,11 +1488,11 @@ Shared react components. The main component is Sketchpad. Sketchpad is used in t
     - `const [camera, setCamera, canSetCamera] = useTypeAppCamera();`
     - `const [isHovered, _, canReadHover] = useKitAppIsTypeHovered();` (inside TypeScopeProvider)
     - `const [loadingKits, _, canReadLoadingKits] = useHomeLoadingKits();` (read-only)
-    - `const [theme, setTheme, canSetTheme] = useThemeTriadic();` (global settings)
-    - `const [language, setLanguage, canSetLanguage] = useLanguageTriadic();` (global settings)
-    - `const [expertise, setExpertise, canSetExpertise] = useExpertiseTriadic();` (global settings)
-    - `const [mode, setMode, canSetMode] = useModeTriadic();` (global settings)
-    - `const [layout, setLayout, canSetLayout] = useLayoutTriadic();` (global settings)
+    - `const [theme, setTheme, canSetTheme] = useTheme();` (global settings)
+    - `const [language, setLanguage, canSetLanguage] = useLanguage();` (global settings)
+    - `const [expertise, setExpertise, canSetExpertise] = useExpertise();` (global settings)
+    - `const [mode, setMode, canSetMode] = useMode();` (global settings)
+    - `const [device, setDevice, canSetDevice] = useDevice();` (global settings)
   - **Scope Providers**: Wrap components in appropriate scope providers to enable hooks:
     - `<KitScopeProvider guid={kitGuid}>` - For kit context
     - `<DesignScopeProvider guid={designGuid}>` - For design context
@@ -1689,6 +1689,7 @@ The shared `Footer` component has a fixed `h-medium` height.
   - Huge: 11 units - height of navigation buttons at bottom of docs pages (e.g. `h-11`)
   - Mega: 13 units - width of toggles with actions (toggles with dropdown or action buttons) (e.g. `w-mega`)
   - Giga: 15 units - reserved for future use (e.g. `w-giga`)
+- Table body cells MUST NOT add vertical padding; `Table` centers cell content and uses `px-single py-0` so `h-medium` rows stay fixed even when rendering `h-medium` controls.
 
 ### Store Architecture
 
@@ -2001,7 +2002,7 @@ App-specific events are only available in their respective navigation states:
 **Global Events (always available):**
 
 - Navigation: `NAVIGATE`, `NAVIGATE_BACK`, `NAVIGATE_FORWARD`
-- Settings: `SET_THEME`, `SET_LANGUAGE`, `SET_EXPERTISE`, `SET_MODE`, `SET_LAYOUT`
+- Settings: `SET_THEME`, `SET_LANGUAGE`, `SET_EXPERTISE`, `SET_MODE`, `SET_DEVICE`
 - Background operations: `BACKGROUND.START`, `BACKGROUND.COMPLETE`, `BACKGROUND.FAIL`
 - Tutorial: `TUTORIAL.START`, `TUTORIAL.END`, `TUTORIAL.NEXT_STEP`, etc.
 - Sketchpad state updates: `CHANGE`
@@ -3100,6 +3101,76 @@ if (typeof window !== "undefined") {
   registerAppPlugin(myAppPlugin);
 }
 ```
+
+### Dynamic Event Dispatch
+
+The sketchpad machine uses **dynamic event dispatch** via `dispatchAppEvent` action with **wildcard event handling**. Navigation states use `"*"` wildcard to accept ANY event, which is then dispatched to registered handlers.
+
+**Architecture:**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Sketchpad.tsx (App-Agnostic)                                │
+│                                                             │
+│  sketchpadMachine:                                          │
+│    navigation:                                              │
+│      home:  { on: { "*": dispatchAppEvent } }              │
+│      kit:   { on: { "*": dispatchAppEvent } }              │
+│      design:{ on: { "*": dispatchAppEvent } }              │
+│      type:  { on: { "*": dispatchAppEvent } }              │
+│      ...                                                    │
+└─────────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│ shared.ts (Event Registry)                                  │
+│                                                             │
+│  registerEventHandler("HOME.TOGGLE_PANEL", handler)        │
+│  registerEventHandler("KIT.SET_FILTER", handler)           │
+│  executeEventHandler(context, event) → context updates     │
+└─────────────────────────────────────────────────────────────┘
+                           ▲
+                           │
+┌──────────────┬──────────────┬──────────────┬───────────────┐
+│  Home.tsx    │   Kit.tsx    │  Design.tsx  │   Type.tsx    │
+│              │              │              │               │
+│ registerEvent│ registerEvent│ registerEvent│ registerEvent │
+│ Handler(...) │ Handler(...) │ Handler(...) │ Handler(...) │
+└──────────────┴──────────────┴──────────────┴───────────────┘
+```
+
+**Event Handler Registration:**
+
+```typescript
+import { registerEventHandler } from "./shared";
+
+// Register handler for a specific event type
+registerEventHandler("MYAPP.TOGGLE_PANEL", {
+  guard: (context, event) => context.myApp !== undefined, // optional
+  action: (context, event) => ({
+    myApp: {
+      ...context.myApp,
+      panelVisibility: { ...context.myApp.panelVisibility, [event.panel]: !context.myApp.panelVisibility[event.panel] },
+    },
+  }),
+});
+```
+
+**Key Functions:**
+
+- **`registerEventHandler(eventType, config)`**: Registers a handler for a specific event type (e.g., "HOME.TOGGLE_PANEL")
+- **`executeEventHandler(context, event)`**: Looks up and executes the handler for the event type
+- **`dispatchAppEvent` action**: The sketchpad machine action that dispatches events dynamically
+- **Fallback**: If no handler is registered via `registerEventHandler`, falls back to legacy `registerRuntimeAction` handlers
+
+**Benefits:**
+
+- **Open/Closed Principle**: Adding a new app requires NO changes to `Sketchpad.tsx`
+- **Self-contained apps**: Each app file registers its own event handlers
+- **Wildcard handling**: Navigation states accept any event via `"*"` pattern
+- **Guards in handlers**: Guards can be defined in the handler config, not in the machine
+- **Gradual migration**: Existing `registerRuntimeAction` handlers continue to work
+- **Single machine**: Only one `createMachine` call - `uiMachine` has been removed
 
 ### Hook Pattern (Triadic)
 

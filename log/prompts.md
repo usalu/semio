@@ -1,14 +1,71 @@
 # Prompt history
 
+The refactor is far from done.
+- There are still 2 createMachine calls (ui should be consolidated into sketchpad)
+- You are still not following the open/closed principle. Sketchpad should be independed of the apps and the apps should be self-contained. E.g. all design app events in Sketchpad.tsx dont belong there. Same for type app events, etc. Adding/removing an another app to sketchpad should just be to add or remove a file without having to modify the internals of Sketchpad.tsx
+
+The way that code and documentation are written should be improved.
+Every feature, decision should be undocumented in the code and documented in the dev docs (AGENTS.md and README.md). Once under products where it is described from user perspective (framework-agnostic, no implementation references, etc) and once under the components where it is described from dev perspective (framework-mechnaisms, implementation details, etc).
+Example:
+```markdown
+# Products
+## sketchpad
+
+- canvas-based (navbar, canvas, panels on top of the canvas, footer)
+- multi-app (home, kit, design, type, quality, docs)
+- multi-window (every app has its own window kinds)
+- multi-user (studio where users can collaborate on kits)
+- multi-device (desktop, tablet, mobile)
+- multi-language (english, german)
+- multi-theme (light, dark)
+- multi-expertise (beginner, intermediate, advanced)
+- consistent ui (tables, diagrams, scenes)
+- 
+
+### Apps
+
+#### Home
+
+- table
+
+# Components
+
+## @semio/js
+
+### Sketchpad.tsx
+
+-
+
+####
+
+```
+
+Consolidate all useHOOKXState into useHOOK. There should never be double hooks but just the useHOOK that internally uses xstate to write (setState) and check if the transition can be taken (canSetState).
+
+Rename layout in useLayout to device and useDevice, etc. All types enums etc. Not the Layout component. 
+
+When holding shift and selecting rows then the last selected row shouldnt update. E.g.
+A
+B
+C (last selected)
+D
+E
+Then clicking on A should select A, B, C.
+If afterwards clicking on E should select C, D, E and not A, B, C, D, E as currently.
+
+The scroll bar is just a line that is one spacing unit away from the edge of the scrollable element.
+
+Refactor the state machines:
+-Currently there are two machines being used (createMachine). There should be only one global sketchpad machine.
+- All app specfic logic should be part of the APP.tsx files. There should be no design, type, etc logic part of Sketchpad.tsx file. All should follow open/closed principle. If the file is deleted then sketchpad should work, if a new file is added, the new app should work.
+  Make sure all tests pass after the refactor.
 - Add comment detector and fixer.
 
 design app:
-
 - The piece nodes dont show hover color when hovering over the piece in diagram.
 - The piece geometry material is not showing hover or select color.
 
 i18n script:
-
 - has hardcoded german translations (should only use locales files)
 - has mjs and ts file
 - is falsely classifying a lot of keys as unused
@@ -540,9 +597,7 @@ sketchpad -> docs
 ⦁ Never use browser API directly because sketchpad also runs in different context such as desktop through electron. Use only sketchpad ui elements.
 
 vscode:
-
 - add test for invalid kit. Complete the invalid kit for all other validation rules. The invalid kit should be max invalid.
-
 - Remove VALIDATION.md and integrate into README.md and AGENTS.md
   Generalize
 

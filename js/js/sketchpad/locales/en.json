@@ -493,27 +493,27 @@
               }
             }
           },
-          "layout": {
+          "device": {
             "label": {
-              "normal": "Layout",
-              "beginner": "Configure the window layout and panel arrangement"
+              "normal": "Device",
+              "beginner": "Choose the device mode for interaction"
             },
             "desktop": {
               "label": {
                 "normal": "Desktop",
-                "beginner": "Optimized layout for desktop computers"
+                "beginner": "Optimized for mouse and keyboard"
               }
             },
             "tablet": {
               "label": {
                 "normal": "Tablet",
-                "beginner": "Optimized layout for tablets"
+                "beginner": "Optimized for touch interaction"
               }
             },
             "mobile": {
               "label": {
                 "normal": "Mobile",
-                "beginner": "Optimized layout for mobile devices"
+                "beginner": "Optimized for touch interaction on small screens"
               }
             }
           },
@@ -694,10 +694,10 @@
             }
           }
         },
-        "layout": {
+        "device": {
           "label": {
-            "normal": "Layout",
-            "beginner": "Layout mode for the interface"
+            "normal": "Device",
+            "beginner": "Device mode for the interface"
           },
           "desktop": {
             "label": {

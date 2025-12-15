@@ -7,7 +7,7 @@ const rootDir = join(__dirname, "..");
 console.log("🎨 Formatting with Prettier...");
 
 try {
-  execSync("npx prettier --write .", {
+  execSync("npx prettier --ignore-path .prettierignore --write .", {
     cwd: rootDir,
     stdio: "inherit",
   });

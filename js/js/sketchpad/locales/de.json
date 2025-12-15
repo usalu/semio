@@ -493,10 +493,10 @@
               }
             }
           },
-          "layout": {
+          "device": {
             "label": {
-              "normal": "Layout",
-              "beginner": "Fensterlayout und Panel-Anordnung konfigurieren"
+              "normal": "Geraet",
+              "beginner": "Geraetemodus fuer die Interaktion waehlen"
             },
             "desktop": {
               "label": {
@@ -3310,9 +3310,9 @@
             }
           }
         },
-        "layout": {
+        "device": {
           "label": {
-            "normal": "Layout",
+            "normal": "Geraet",
             "beginner": "Layoutmodus für die Oberfläche"
           },
           "desktop": {

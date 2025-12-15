@@ -51,7 +51,7 @@ import { generateUniqueName, guid, Guid, importKit, Kit, KitShallow } from "../s
 import { docsRegistry } from "./Docs";
 import { Action, Band, Input, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Spinner, Table, TableAvatar, TableColumn, Textarea, Toggle, ToggleGroup, TreeContent, TreeItem } from "./elements";
 import type { AppConfig, AppEdit, AppPlugin, PanelDefinition, PanelVisibility } from "./shared";
-import { createPanelDefinition, Expertise, Mode, PanelKind, registerAppPlugin, Theme } from "./shared";
+import { createPanelDefinition, Expertise, Mode, PanelKind, registerAppPlugin, registerEventHandler, registerRuntimeAction, Theme } from "./shared";
 import {
   Canvas,
   ConceptFilter,
@@ -68,7 +68,7 @@ import {
   useKits,
   useKitShallows,
   useLanguage,
-  useLayout,
+  useDevice,
   useMode,
   useNavigation,
   useRemoveFooterItem,
@@ -160,6 +160,104 @@ const homeAppPlugin: AppPlugin = {
 
 if (typeof window !== "undefined") {
   registerAppPlugin(homeAppPlugin);
+
+  // Register event handlers using the new dynamic dispatch system
+  // These handlers are called directly by the sketchpad machine's APP_EVENT action
+  registerEventHandler("HOME.TOGGLE_PANEL", {
+    action: (context: any, event: any) => ({
+      homeApp: {
+        ...context.homeApp,
+        panelVisibility: {
+          ...context.homeApp.panelVisibility,
+          [event.panel]: !context.homeApp.panelVisibility[event.panel],
+        },
+      },
+    }),
+  });
+
+  registerEventHandler("HOME.SET_PANEL_VISIBILITY", {
+    action: (context: any, event: any) => ({
+      homeApp: { ...context.homeApp, panelVisibility: event.panelVisibility },
+    }),
+  });
+
+  registerEventHandler("HOME.SET_SORT", {
+    action: (context: any, event: any) => ({
+      homeApp: { ...context.homeApp, sortColumn: event.column, sortDirection: event.direction },
+    }),
+  });
+
+  registerEventHandler("HOME.SELECT_KIT", {
+    action: (context: any, event: any) => {
+      const kits = context.homeApp.selection?.kits || [];
+      if (kits.includes(event.guid)) return {};
+      return { homeApp: { ...context.homeApp, selection: { kits: [...kits, event.guid] } } };
+    },
+  });
+
+  registerEventHandler("HOME.DESELECT_KIT", {
+    action: (context: any, event: any) => {
+      const kits = context.homeApp.selection?.kits || [];
+      return { homeApp: { ...context.homeApp, selection: { kits: kits.filter((k: Guid) => k !== event.guid) } } };
+    },
+  });
+
+  registerEventHandler("HOME.CLEAR_SELECTION", {
+    action: (context: any) => ({ homeApp: { ...context.homeApp, selection: undefined } }),
+  });
+
+  registerEventHandler("HOME.SET_HOVER", {
+    action: (context: any, event: any) => ({
+      homeApp: { ...context.homeApp, hover: { kits: event.kits } },
+    }),
+  });
+
+  registerEventHandler("HOME.CLEAR_HOVER", {
+    guard: (context: any) => {
+      const hover = context.homeApp.hover;
+      return hover !== undefined && (hover.kits?.length ?? 0) > 0;
+    },
+    action: (context: any) => ({ homeApp: { ...context.homeApp, hover: undefined } }),
+  });
+
+  // Keep legacy runtime actions for backwards compatibility during migration
+  registerRuntimeAction("homeTogglePanel", (context: any, event: any) => {
+    if (event.type !== "HOME.TOGGLE_PANEL") return {};
+    return {
+      homeApp: {
+        ...context.homeApp,
+        panelVisibility: {
+          ...context.homeApp.panelVisibility,
+          [event.panel]: !context.homeApp.panelVisibility[event.panel],
+        },
+      },
+    };
+  });
+  registerRuntimeAction("homeSetPanelVisibility", (context: any, event: any) => {
+    if (event.type !== "HOME.SET_PANEL_VISIBILITY") return {};
+    return { homeApp: { ...context.homeApp, panelVisibility: event.panelVisibility } };
+  });
+  registerRuntimeAction("homeSetSort", (context: any, event: any) => {
+    if (event.type !== "HOME.SET_SORT") return {};
+    return { homeApp: { ...context.homeApp, sortColumn: event.column, sortDirection: event.direction } };
+  });
+  registerRuntimeAction("homeSelectKit", (context: any, event: any) => {
+    if (event.type !== "HOME.SELECT_KIT") return {};
+    const kits = context.homeApp.selection?.kits || [];
+    if (kits.includes(event.guid)) return {};
+    return { homeApp: { ...context.homeApp, selection: { kits: [...kits, event.guid] } } };
+  });
+  registerRuntimeAction("homeDeselectKit", (context: any, event: any) => {
+    if (event.type !== "HOME.DESELECT_KIT") return {};
+    const kits = context.homeApp.selection?.kits || [];
+    return { homeApp: { ...context.homeApp, selection: { kits: kits.filter((k: Guid) => k !== event.guid) } } };
+  });
+  registerRuntimeAction("homeClearSelection", (context: any) => ({ homeApp: { ...context.homeApp, selection: undefined } }));
+  registerRuntimeAction("homeSetHover", (context: any, event: any) => {
+    if (event.type !== "HOME.SET_HOVER") return {};
+    return { homeApp: { ...context.homeApp, hover: { kits: event.kits } } };
+  });
+  registerRuntimeAction("homeClearHover", (context: any) => ({ homeApp: { ...context.homeApp, hover: undefined } }));
 }
 
 // #endregion Home App Plugin Registration
@@ -345,7 +443,7 @@ const ChatPlaceholder: FC = () => {
 const SettingsContent: FC = () => {
   const [theme, setTheme, canSetTheme] = useTheme();
   const [language, setLanguage, canSetLanguage] = useLanguage();
-  const [layout, setLayout, canSetLayout] = useLayout();
+  const [device, setDevice, canSetDevice] = useDevice();
   const [expertise, setExpertise, canSetExpertise] = useExpertise();
   const [mode, setMode, canSetMode] = useMode();
 
@@ -388,15 +486,15 @@ const SettingsContent: FC = () => {
       <TreeItem>
         <TreeContent>
           <ToggleGroup
-            id="semio.sketchpad.app.home.settings.layout"
-            value={typeof layout === "object" ? "desktop" : layout}
-            onValueChange={(value: string) => setLayout?.(value as "desktop" | "tablet")}
+            id="semio.sketchpad.app.home.settings.device"
+            value={typeof device === "object" ? "desktop" : device}
+            onValueChange={(value: string) => setDevice?.(value as "desktop" | "tablet")}
             showLabel
             kind="single"
-            disabled={!canSetLayout}
+            disabled={!canSetDevice}
             items={[
-              { value: "desktop", id: "semio.sketchpad.settings.layout.desktop", icon: <MousePointerIcon className="size-small" /> },
-              { value: "tablet", id: "semio.sketchpad.settings.layout.tablet", icon: <HandIcon className="size-small" /> },
+              { value: "desktop", id: "semio.sketchpad.settings.device.desktop", icon: <MousePointerIcon className="size-small" /> },
+              { value: "tablet", id: "semio.sketchpad.settings.device.tablet", icon: <HandIcon className="size-small" /> },
             ]}
           />
         </TreeContent>
@@ -1519,13 +1617,7 @@ const Home: FC = ({}) => {
                           <Scrollable orientation="horizontal" className="flex-1 min-w-0 max-w-[200px]">
                             <div className="flex items-center gap-single px-single h-medium w-fit">
                               {row.concepts.map((concept) => (
-                                <Action
-                                  key={concept}
-                                  onClick={() => toggleConcept(concept)}
-                                  id={`semio.sketchpad.app.home.row.concept.${concept}`}
-                                  text={concept}
-                                  className={selectedConcepts.includes(concept) ? "bg-active-base" : ""}
-                                />
+                                <Action key={concept} onClick={() => toggleConcept(concept)} id={`semio.sketchpad.app.home.row.concept.${concept}`} text={concept} className={selectedConcepts.includes(concept) ? "bg-active-base" : ""} />
                               ))}
                             </div>
                           </Scrollable>

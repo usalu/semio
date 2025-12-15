@@ -51,11 +51,12 @@ import {
   TreeItem,
 } from "./elements";
 import type { AppWindowConfig, HookNoSetResult, HookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, QualityAppId, Transact, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
-import { AppConfig, AppPlugin, createPanelDefinition, Expertise, Mode, PanelKind, registerAppPlugin, Theme, ToolKind } from "./shared";
+import { AppConfig, AppPlugin, createPanelDefinition, Expertise, Mode, PanelKind, registerAppPlugin, registerRuntimeAction, Theme, ToolKind } from "./shared";
 import type { KitStore, QualityStore, SketchpadStore } from "./Sketchpad";
 import {
   Canvas,
   createDefaultLayout,
+  createDefaultQualityAppState,
   identitySelector,
   KitDiffAppStore,
   KitScopeProvider,
@@ -69,7 +70,7 @@ import {
   useKit,
   useKitScope,
   useLanguage,
-  useLayout,
+  useDevice,
   useMode,
   useQuality,
   useQualityScope,
@@ -942,6 +943,21 @@ const qualityAppPlugin: AppPlugin = {
 
 if (typeof window !== "undefined") {
   registerAppPlugin(qualityAppPlugin);
+  registerRuntimeAction("qualityTogglePanel", (context: any, event: any) => {
+    if (event.type !== "QUALITY.TOGGLE_PANEL") return {};
+    const key = `${event.kitGuid}:${event.qualityGuid}`;
+    const app = context.qualityApps[key] || createDefaultQualityAppState();
+    return { qualityApps: { ...context.qualityApps, [key]: { ...app, panelVisibility: { ...app.panelVisibility, [event.panel]: !app.panelVisibility[event.panel] } } } };
+  });
+  registerRuntimeAction("qualityToggleBenchmark", (context: any, event: any) => {
+    if (event.type !== "QUALITY.TOGGLE_BENCHMARK") return {};
+    const key = `${event.kitGuid}:${event.qualityGuid}`;
+    const app = context.qualityApps[key] || createDefaultQualityAppState();
+    const expanded = new Set(app.expandedBenchmarks);
+    if (expanded.has(event.benchmarkGuid)) expanded.delete(event.benchmarkGuid);
+    else expanded.add(event.benchmarkGuid);
+    return { qualityApps: { ...context.qualityApps, [key]: { ...app, expandedBenchmarks: expanded } } };
+  });
 }
 
 // #endregion Quality App Plugin Registration
@@ -1778,7 +1794,7 @@ const App: FC<AppProps> = () => {
     const SketchpadSettingsContent = () => {
       const [theme, setTheme, canSetTheme] = useTheme();
       const [language, setLanguage, canSetLanguage] = useLanguage();
-      const [layout, setLayout, canSetLayout] = useLayout();
+      const [device, setDevice, canSetDevice] = useDevice();
       const [expertise, setExpertise, canSetExpertise] = useExpertise();
       const [mode, setMode, canSetMode] = useMode();
 
@@ -1821,15 +1837,15 @@ const App: FC<AppProps> = () => {
           <TreeItem>
             <TreeContent>
               <ToggleGroup
-                id="semio.sketchpad.settings.layout"
-                value={typeof layout === "object" ? "desktop" : layout}
-                onValueChange={(value: string) => setLayout?.(value as "desktop" | "tablet")}
+                id="semio.sketchpad.settings.device"
+                value={typeof device === "object" ? "desktop" : device}
+                onValueChange={(value: string) => setDevice?.(value as "desktop" | "tablet")}
                 showLabel
                 kind="single"
-                disabled={!canSetLayout}
+                disabled={!canSetDevice}
                 items={[
-                  { value: "desktop", id: "semio.sketchpad.settings.layout.desktop", icon: <MousePointerIcon className="size-small" /> },
-                  { value: "tablet", id: "semio.sketchpad.settings.layout.tablet", icon: <HandIcon className="size-small" /> },
+                  { value: "desktop", id: "semio.sketchpad.settings.device.desktop", icon: <MousePointerIcon className="size-small" /> },
+                  { value: "tablet", id: "semio.sketchpad.settings.device.tablet", icon: <HandIcon className="size-small" /> },
                 ]}
               />
             </TreeContent>

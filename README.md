@@ -747,6 +747,8 @@ npm run analyze
 - `fix`: `hooks/prettier.ts`, `hooks/ruff.ts`
 - `analyze`: `hooks/i18n.ts`, `hooks/typescript.ts`, `hooks/eslint.ts`
 
+Prettier uses `.prettierignore` (via `hooks/prettier.ts` `--ignore-path`, includes `**/prompts.md`).
+
 `test` runs `preflight` and then `nx run-many -t test`. `build` runs `test` and then `nx run-many -t build`. `prepublish` and `publish` run `build` first.
 
 ### Skip Mechanism
@@ -776,6 +778,8 @@ The pre-commit hook automatically runs `npm run preflight` to ensure all code me
 ### VS Code Integration
 
 All monorepo commands are available in VS Code through Tasks and Launch configurations.
+
+Formatting uses `.prettierrc.json` and `.prettierignore` via `.vscode/settings.json` (`prettier.configPath`, `prettier.ignorePath`).
 
 #### Running Tasks
 
@@ -1262,6 +1266,8 @@ The core which is shared in the [semio JavaScript ecosystem](#-javascript-) 🥜
 - `js/js/sketchpad/Sketchpad.tsx` exposes a single `sketchpadMachine` actor that owns all Sketchpad UI state (`SketchpadState` + app slices like Home/Kit/Design/Type/Quality/Tutorial).
 - Y.js is reserved for Kit data synchronization (per-kit `KitStore` documents).
 - Sketchpad UI state is persisted locally via `localStorage` key `semio.sketchpad.state.<id>` (no Y.js dependency for settings/navigation/panel sizes).
+- Global interaction mode is stored as `SketchpadState.device` and controlled via `useDevice()` / `SET_DEVICE` with i18n IDs `semio.sketchpad.settings.device.*`.
+- `layout` naming is reserved for window layout configs (GoldenLayout) and the `Layout` component in `js/js/sketchpad/elements.tsx`.
 
 KitStore keeps kit concepts in the `yConcepts` array as `ConceptStore` entries so snapshots expose full concept data (name, description, icon, attributes) and persistence rehydrates from that array instead of guid placeholders.
 
@@ -1290,6 +1296,7 @@ All size constants are defined in `js/js/globals.css` and derived from `--spacin
 - Toggles with actions (dropdown or action button) use `h-medium w-mega`
 - Bands and navbars use `h-large`
 - Strips, footers, and table rows use `h-medium`
+- Table body cells use `px-single py-0` and center their content so `h-medium` row height stays fixed even when cells contain `h-medium` controls (toggles/inputs)
 - Table headers use `h-large`
 - Large navigation elements use `h-11` (huge)
 - Navbar panel toggles list panels in the fixed order Details, Chat, Settings across all apps

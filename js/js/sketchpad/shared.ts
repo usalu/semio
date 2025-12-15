@@ -145,7 +145,7 @@ export type YProviderFactory = (doc: Y.Doc, id: string) => Promise<void>;
 
 export type AppKind = string;
 
-export type Layout = "desktop" | "tablet" | MobileLayout;
+export type Device = "desktop" | "tablet" | MobileDevice;
 
 export type PanelKey = "details" | "workbench" | "tools" | "hud" | "stats" | "console" | "chat" | "settings" | "toolbar";
 
@@ -516,7 +516,7 @@ export interface AppRegistration extends AppConfig { }
 
 // #region Sketchpad State
 
-export interface MobileLayout {
+export interface MobileDevice {
   isNavbarExpanded: boolean;
   isFooterExpanded: boolean;
 }
@@ -529,7 +529,7 @@ export interface SketchpadChangableState {
   recentFocusItems: Record<string, string[]>;
   theme: Theme;
   language: string;
-  layout: Layout;
+  device: Device;
   expertise: Expertise;
   mode: Mode;
   settings: {
@@ -556,7 +556,7 @@ export interface SketchpadDiff {
   recentFocusItems?: Record<string, string[]>;
   theme?: Theme;
   language?: string;
-  layout?: Layout;
+  device?: Device;
   expertise?: Expertise;
   mode?: Mode;
   settings?: {
@@ -857,7 +857,7 @@ export interface SketchpadMachineContext extends YjsSyncContext {
   recentFocusItems: Record<string, string[]>;
   theme: Theme;
   language: string;
-  layout: Layout;
+  device: Device;
   expertise: Expertise;
   mode: Mode;
   settings: {
@@ -888,7 +888,7 @@ export type SketchpadMachineEvent =
   | { type: "SET_LANGUAGE"; language: string }
   | { type: "SET_EXPERTISE"; expertise: Expertise }
   | { type: "SET_MODE"; mode: Mode }
-  | { type: "SET_LAYOUT"; layout: Layout }
+  | { type: "SET_DEVICE"; device: Device }
   | { type: "TOGGLE_FULLSCREEN" }
   | { type: "SET_PANEL_SIZE"; panel: keyof PanelSizes; size: number }
   | { type: "CREATE_KIT"; kit: Kit }
@@ -1565,3 +1565,188 @@ export function composePluginContributions(): {
 }
 
 // #endregion App Plugin Registry
+
+// #region Runtime Action Registry
+
+export type RuntimeActionHandler<TContext = any, TEvent = any> = (context: TContext, event: TEvent) => Partial<TContext>;
+
+const runtimeActionHandlers: Map<string, RuntimeActionHandler> = new Map();
+
+export function registerRuntimeAction<TContext = any, TEvent = any>(actionName: string, handler: RuntimeActionHandler<TContext, TEvent>): void {
+  runtimeActionHandlers.set(actionName, handler);
+}
+
+export function unregisterRuntimeAction(actionName: string): void {
+  runtimeActionHandlers.delete(actionName);
+}
+
+export function getRuntimeAction(actionName: string): RuntimeActionHandler | undefined {
+  return runtimeActionHandlers.get(actionName);
+}
+
+export function hasRuntimeAction(actionName: string): boolean {
+  return runtimeActionHandlers.has(actionName);
+}
+
+export function executeRuntimeAction<TContext = any, TEvent = any>(actionName: string, context: TContext, event: TEvent): Partial<TContext> {
+  const handler = runtimeActionHandlers.get(actionName);
+  if (!handler) return {};
+  return handler(context, event);
+}
+
+// #endregion Runtime Action Registry
+
+// #region Dynamic Event Dispatch Registry
+
+/**
+ * Event handler configuration for dynamic dispatch.
+ * Apps register handlers that are invoked when events matching their namespace are received.
+ */
+export interface EventHandlerConfig<TContext = any, TEvent = any> {
+  /** Guard function - returns true if the event should be handled */
+  guard?: (context: TContext, event: TEvent) => boolean;
+  /** Action function - returns partial context updates */
+  action: (context: TContext, event: TEvent) => Partial<TContext>;
+}
+
+/**
+ * Registry mapping event types to their handlers.
+ * Key is the full event type (e.g., "HOME.TOGGLE_PANEL", "DESIGN.SET_HOVER")
+ */
+const eventHandlerRegistry: Map<string, EventHandlerConfig> = new Map();
+
+/**
+ * Registry mapping guard names to guard functions.
+ * Used by the sketchpad machine for dynamic guard lookup.
+ */
+const guardRegistry: Map<string, (context: any, event: any) => boolean> = new Map();
+
+/**
+ * Register an event handler for a specific event type.
+ * Called by app modules to register their event handlers.
+ * 
+ * @example
+ * ```ts
+ * registerEventHandler("HOME.TOGGLE_PANEL", {
+ *   action: (context, event) => {
+ *     const { panel } = event;
+ *     return {
+ *       homeApp: {
+ *         ...context.homeApp,
+ *         panelVisibility: { ...context.homeApp.panelVisibility, [panel]: !context.homeApp.panelVisibility[panel] }
+ *       }
+ *     };
+ *   }
+ * });
+ * ```
+ */
+export function registerEventHandler<TContext = any, TEvent = any>(
+  eventType: string,
+  config: EventHandlerConfig<TContext, TEvent>
+): void {
+  eventHandlerRegistry.set(eventType, config as EventHandlerConfig);
+}
+
+/**
+ * Unregister an event handler.
+ */
+export function unregisterEventHandler(eventType: string): void {
+  eventHandlerRegistry.delete(eventType);
+}
+
+/**
+ * Check if an event handler is registered.
+ */
+export function hasEventHandler(eventType: string): boolean {
+  return eventHandlerRegistry.has(eventType);
+}
+
+/**
+ * Get an event handler configuration.
+ */
+export function getEventHandler(eventType: string): EventHandlerConfig | undefined {
+  return eventHandlerRegistry.get(eventType);
+}
+
+/**
+ * Execute a registered event handler.
+ * Returns empty object if no handler is registered for the event type.
+ */
+export function executeEventHandler<TContext = any, TEvent extends { type: string } = any>(
+  context: TContext,
+  event: TEvent
+): Partial<TContext> {
+  const handler = eventHandlerRegistry.get(event.type);
+  if (!handler) return {};
+
+  // Check guard if present
+  if (handler.guard && !handler.guard(context, event)) {
+    return {};
+  }
+
+  return handler.action(context, event);
+}
+
+/**
+ * Register a guard function.
+ * Guards are used by the sketchpad machine to conditionally handle events.
+ */
+export function registerGuard(name: string, guard: (context: any, event: any) => boolean): void {
+  guardRegistry.set(name, guard);
+}
+
+/**
+ * Unregister a guard function.
+ */
+export function unregisterGuard(name: string): void {
+  guardRegistry.delete(name);
+}
+
+/**
+ * Get a guard function by name.
+ */
+export function getGuard(name: string): ((context: any, event: any) => boolean) | undefined {
+  return guardRegistry.get(name);
+}
+
+/**
+ * Check if a guard is registered.
+ */
+export function hasGuard(name: string): boolean {
+  return guardRegistry.has(name);
+}
+
+/**
+ * Execute a guard by name.
+ * Returns false if guard is not found.
+ */
+export function executeGuard(name: string, context: any, event: any): boolean {
+  const guard = guardRegistry.get(name);
+  if (!guard) return false;
+  return guard(context, event);
+}
+
+/**
+ * Get all registered event types for a namespace.
+ * Useful for debugging and documentation.
+ */
+export function getEventTypesForNamespace(namespace: string): string[] {
+  const prefix = `${namespace}.`;
+  return Array.from(eventHandlerRegistry.keys()).filter(key => key.startsWith(prefix));
+}
+
+/**
+ * Get all registered namespaces.
+ */
+export function getRegisteredNamespaces(): string[] {
+  const namespaces = new Set<string>();
+  for (const eventType of eventHandlerRegistry.keys()) {
+    const dotIndex = eventType.indexOf(".");
+    if (dotIndex > 0) {
+      namespaces.add(eventType.substring(0, dotIndex));
+    }
+  }
+  return Array.from(namespaces);
+}
+
+// #endregion Dynamic Event Dispatch Registry

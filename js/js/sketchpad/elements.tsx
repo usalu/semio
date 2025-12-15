@@ -5416,8 +5416,8 @@ const Table = <T,>({
         data-row-id={rowId}
       >
         {visibleColumns.map((column) => (
-          <td key={column.id} className={`p-single text-sm [&_svg:not([class*='size-'])]:size-small [&_img]:size-small ${column.className || ""}`}>
-            {column.accessor(row)}
+          <td key={column.id} className={`${rowHeightClass} px-single py-0 align-middle text-sm [&_svg:not([class*='size-'])]:size-small [&_img]:size-small ${column.className || ""}`}>
+            <div className="flex items-center h-full min-w-0">{column.accessor(row)}</div>
           </td>
         ))}
       </tr>
@@ -5498,8 +5498,8 @@ const Table = <T,>({
                     data-row-id={rowId}
                   >
                     {visibleColumns.map((column) => (
-                      <td key={column.id} className={`p-single text-sm [&_svg:not([class*='size-'])]:size-small [&_img]:size-small ${column.className || ""}`}>
-                        {column.accessor(row)}
+                      <td key={column.id} className={`${rowHeightClass} px-single py-0 align-middle text-sm [&_svg:not([class*='size-'])]:size-small [&_img]:size-small ${column.className || ""}`}>
+                        <div className="flex items-center h-full min-w-0">{column.accessor(row)}</div>
                       </td>
                     ))}
                   </tr>
@@ -5549,8 +5549,10 @@ export const TableSkeleton: React.FC<TableSkeletonProps> = ({ columns, rowCount 
         {Array.from({ length: rowCount }).map((_, index) => (
           <tr key={index} className="border-b h-medium">
             {columns.map((column) => (
-              <td key={column.id} className={`p-single text-sm [&_svg:not([class*='size-'])]:size-small [&_img]:size-small ${column.className || ""}`}>
-                <div className="h-small bg-muted-foreground/20 rounded animate-pulse" />
+              <td key={column.id} className={`h-medium px-single py-0 align-middle text-sm [&_svg:not([class*='size-'])]:size-small [&_img]:size-small ${column.className || ""}`}>
+                <div className="flex items-center h-full min-w-0">
+                  <div className="h-small bg-muted-foreground/20 rounded animate-pulse w-full" />
+                </div>
               </td>
             ))}
           </tr>

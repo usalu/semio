@@ -11,7 +11,7 @@
     "grepInvert": null,
     "maxFailures": 0,
     "metadata": {
-      "actualWorkers": 1
+      "actualWorkers": 3
     },
     "preserveOutput": "always",
     "reporter": [
@@ -37,7 +37,7 @@
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
-          "actualWorkers": 1
+          "actualWorkers": 3
         },
         "id": "chromium",
         "name": "chromium",
@@ -76,7 +76,63 @@
           "column": 6,
           "specs": [
             {
-              "title": "Panel Section Switching",
+              "title": "Home",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 10230,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[Home] Testing Home app panel toggles\n"
+                        },
+                        {
+                          "text": "[Home] Settings toggle visible: false\n"
+                        },
+                        {
+                          "text": "[Home] Details toggle visible: true\n"
+                        },
+                        {
+                          "text": "[Home] Toggle details: initial=false, after=true, changed=true\n"
+                        },
+                        {
+                          "text": "[Home] Panel details content: 0 buttons, 0 inputs, 0 tree items (total: 0)\n"
+                        },
+                        {
+                          "text": "[Home] Panel details has 0 content items\n"
+                        },
+                        {
+                          "text": "[Home] Panel toggle verification complete: settings=false, details=true\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-15T13:29:32.435Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "1f96767271edc4239dfa-b740b36bc6e82e50ca6e",
+              "file": "sketchpad.test.ts",
+              "line": 624,
+              "column": 3
+            },
+            {
+              "title": "Kit",
               "ok": true,
               "tags": [],
               "tests": [
@@ -88,34 +144,13 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 120909,
+                      "duration": 26247,
                       "errors": [],
                       "stdout": [
                         {
-                          "text": "[Panel Section Test] Testing Home app\n"
-                        },
-                        {
-                          "text": "[Panel Section Test] Testing Home with panels: details, chat, settings\n"
-                        },
-                        {
-                          "text": "[Panel Section Test] Home/details: opened successfully\n"
-                        },
-                        {
-                          "text": "[Panel Section Test] Home/chat: toggle not visible, skipping\n"
-                        },
-                        {
-                          "text": "[Panel Section Test] Home/settings: toggle not visible, skipping\n"
-                        },
-                        {
-                          "text": "[Panel Section Test] Home: Testing rapid switching...\n"
-                        },
-                        {
-                          "text": "[Panel Section Test] Testing Kit app\n"
-                        },
-                        {
                           "text": "[TEST] Setting input files: C:\\git\\semio.tech\\semio\\assets\\semio\\metabolism.zip\n"
                         },
                         {
@@ -140,135 +175,30 @@
                           "text": "[TEST] Navigated to: http://localhost:5173/kits/f042c2a4-3ba5-44b0-b22c-0ae8f568aacc\n"
                         },
                         {
-                          "text": "[Panel Section Test] Testing Kit with panels: workbench, details, chat, settings\n"
+                          "text": "[Kit] Testing Kit app panel toggles\n"
                         },
                         {
-                          "text": "[Panel Section Test] Kit/workbench: toggle not visible, skipping\n"
+                          "text": "[Kit] Settings toggle visible: false\n"
                         },
                         {
-                          "text": "[Panel Section Test] Kit/details: opened successfully\n"
+                          "text": "[Kit] Details toggle visible: true\n"
                         },
                         {
-                          "text": "[Panel Section Test] Kit/chat: toggle not visible, skipping\n"
+                          "text": "[Kit] Toggle details: initial=false, after=true, changed=true\n"
                         },
                         {
-                          "text": "[Panel Section Test] Kit/settings: toggle not visible, skipping\n"
+                          "text": "[Kit] Panel details content: 1 buttons, 6 inputs, 0 tree items (total: 7)\n"
                         },
                         {
-                          "text": "[Panel Section Test] Kit: Testing rapid switching...\n"
+                          "text": "[Kit] Panel details has 7 content items\n"
                         },
                         {
-                          "text": "[Panel Section Test] Testing Type app\n"
-                        },
-                        {
-                          "text": "[TEST] Setting input files: C:\\git\\semio.tech\\semio\\assets\\semio\\metabolism.zip\n"
-                        },
-                        {
-                          "text": "[TEST] File set via file chooser\n"
-                        },
-                        {
-                          "text": "[TEST] Page text contains 'Metabolism': \u001b[33mtrue\u001b[39m\n"
-                        },
-                        {
-                          "text": "[TEST] Page text contains 'Loading': \u001b[33mfalse\u001b[39m\n"
-                        },
-                        {
-                          "text": "[TEST] Metabolism row visible: \u001b[33mfalse\u001b[39m\n"
-                        },
-                        {
-                          "text": "[TEST] Metabolism cell visible: \u001b[33mtrue\u001b[39m\n"
-                        },
-                        {
-                          "text": "[TEST] Double-clicked on Metabolism cell\n"
-                        },
-                        {
-                          "text": "[TEST] Navigated to: http://localhost:5173/kits/f042c2a4-3ba5-44b0-b22c-0ae8f568aacc\n"
-                        },
-                        {
-                          "text": "[Panel Section Test] Testing Type with panels: workbench, toolbar, details, chat, settings\n"
-                        },
-                        {
-                          "text": "[Panel Section Test] Type/workbench: opened successfully\n"
-                        },
-                        {
-                          "text": "[Panel Section Test] Type/toolbar: toggle not visible, skipping\n"
-                        },
-                        {
-                          "text": "[Panel Section Test] Type/details: opened successfully\n"
-                        },
-                        {
-                          "text": "[Panel Section Test] Type/chat: toggle not visible, skipping\n"
-                        },
-                        {
-                          "text": "[Panel Section Test] Type/settings: toggle not visible, skipping\n"
-                        },
-                        {
-                          "text": "[Panel Section Test] Type: Testing rapid switching...\n"
-                        },
-                        {
-                          "text": "[Panel Section Test] Testing Design app\n"
-                        },
-                        {
-                          "text": "[TEST] Setting input files: C:\\git\\semio.tech\\semio\\assets\\semio\\metabolism.zip\n"
-                        },
-                        {
-                          "text": "[TEST] File set via file chooser\n"
-                        },
-                        {
-                          "text": "[TEST] Page text contains 'Metabolism': \u001b[33mtrue\u001b[39m\n"
-                        },
-                        {
-                          "text": "[TEST] Page text contains 'Loading': \u001b[33mfalse\u001b[39m\n"
-                        },
-                        {
-                          "text": "[TEST] Metabolism row visible: \u001b[33mfalse\u001b[39m\n"
-                        },
-                        {
-                          "text": "[TEST] Metabolism cell visible: \u001b[33mtrue\u001b[39m\n"
-                        },
-                        {
-                          "text": "[TEST] Double-clicked on Metabolism cell\n"
-                        },
-                        {
-                          "text": "[TEST] Navigated to: http://localhost:5173/kits/f042c2a4-3ba5-44b0-b22c-0ae8f568aacc\n"
-                        },
-                        {
-                          "text": "[initDesign] Design visible: true\n"
-                        },
-                        {
-                          "text": "[initDesign] About to double-click on design\n"
-                        },
-                        {
-                          "text": "[initDesign] Double-clicked on design\n"
-                        },
-                        {
-                          "text": "[Panel Section Test] Testing Design with panels: workbench, toolbar, details, chat, settings\n"
-                        },
-                        {
-                          "text": "[Panel Section Test] Design/workbench: opened successfully\n"
-                        },
-                        {
-                          "text": "[Panel Section Test] Design/toolbar: toggle not visible, skipping\n"
-                        },
-                        {
-                          "text": "[Panel Section Test] Design/details: opened successfully\n"
-                        },
-                        {
-                          "text": "[Panel Section Test] Design/chat: toggle not visible, skipping\n"
-                        },
-                        {
-                          "text": "[Panel Section Test] Design/settings: toggle not visible, skipping\n"
-                        },
-                        {
-                          "text": "[Panel Section Test] Design: Testing rapid switching...\n"
-                        },
-                        {
-                          "text": "[Panel Section Test] Results: {\n  \"Home\": {\n    \"success\": true,\n    \"errors\": []\n  },\n  \"Kit\": {\n    \"success\": true,\n    \"errors\": []\n  },\n  \"Type\": {\n    \"success\": true,\n    \"errors\": []\n  },\n  \"Design\": {\n    \"success\": true,\n    \"errors\": []\n  }\n}\n"
+                          "text": "[Kit] Panel toggle verification complete: settings=false, details=true\n"
                         }
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-14T21:19:58.166Z",
+                      "startTime": "2025-12-15T13:29:32.453Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -276,9 +206,149 @@
                   "status": "expected"
                 }
               ],
-              "id": "1f96767271edc4239dfa-6e6af0d945db1bc5f470",
+              "id": "1f96767271edc4239dfa-8ea0390a28d2fa06fd58",
               "file": "sketchpad.test.ts",
-              "line": 1424,
+              "line": 648,
+              "column": 3
+            },
+            {
+              "title": "Type",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "passed",
+                      "duration": 40291,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[TEST] Setting input files: C:\\git\\semio.tech\\semio\\assets\\semio\\metabolism.zip\n"
+                        },
+                        {
+                          "text": "[TEST] File set via file chooser\n"
+                        },
+                        {
+                          "text": "[TEST] Page text contains 'Metabolism': \u001b[33mtrue\u001b[39m\n"
+                        },
+                        {
+                          "text": "[TEST] Page text contains 'Loading': \u001b[33mfalse\u001b[39m\n"
+                        },
+                        {
+                          "text": "[TEST] Metabolism row visible: \u001b[33mfalse\u001b[39m\n"
+                        },
+                        {
+                          "text": "[TEST] Metabolism cell visible: \u001b[33mtrue\u001b[39m\n"
+                        },
+                        {
+                          "text": "[TEST] Double-clicked on Metabolism cell\n"
+                        },
+                        {
+                          "text": "[TEST] Navigated to: http://localhost:5173/kits/f042c2a4-3ba5-44b0-b22c-0ae8f568aacc\n"
+                        },
+                        {
+                          "text": "[Type Test] Navbar is visible\n"
+                        },
+                        {
+                          "text": "[Type Test] Footer is visible\n"
+                        },
+                        {
+                          "text": "[Type Test] Starting pan operations on three.js canvas\n"
+                        },
+                        {
+                          "text": "[Type Test] Pan 1 took 18ms\n"
+                        },
+                        {
+                          "text": "[Type Test] Pan 2 took 26ms\n"
+                        },
+                        {
+                          "text": "[Type Test] Pan 3 took 16ms\n"
+                        },
+                        {
+                          "text": "[Type Test] Average pan time: 20ms\n"
+                        },
+                        {
+                          "text": "[Type] Testing Type app panel toggles\n"
+                        },
+                        {
+                          "text": "[Type] Workbench toggle visible: true\n"
+                        },
+                        {
+                          "text": "[Type] Toggle workbench: initial=false, after=true, changed=true\n"
+                        },
+                        {
+                          "text": "[Type] Panel workbench content: 0 buttons, 0 inputs, 0 tree items (total: 0)\n"
+                        },
+                        {
+                          "text": "[Type] Panel workbench has 0 content items\n"
+                        },
+                        {
+                          "text": "[Type] Workbench panel has ports/models section: false\n"
+                        },
+                        {
+                          "text": "[Type] Settings toggle visible: false\n"
+                        },
+                        {
+                          "text": "[Type] Panel toggle verification complete: workbench=true, settings=false\n"
+                        },
+                        {
+                          "text": "[Type] Testing toolbar visibility and port tool\n"
+                        },
+                        {
+                          "text": "[Type] Toolbar visible: true\n"
+                        },
+                        {
+                          "text": "[Type] Port tool visible: true\n"
+                        },
+                        {
+                          "text": "[Type] Selection tool visible: true\n"
+                        },
+                        {
+                          "text": "[Type] Testing port tool: clicking to activate\n"
+                        },
+                        {
+                          "text": "[Type] Port tool active state: on\n"
+                        },
+                        {
+                          "text": "[Type] Moving cursor to canvas center for port creation preview\n"
+                        },
+                        {
+                          "text": "[Type] Clicking on canvas to create port\n"
+                        },
+                        {
+                          "text": "[Type] Port tool test completed - port creation attempted\n"
+                        },
+                        {
+                          "text": "[Type] Switching back to selection tool\n"
+                        },
+                        {
+                          "text": "[Type] Selection tool active state after switch: off\n"
+                        },
+                        {
+                          "text": "[Type] Toolbar and tools test complete\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-15T13:29:32.440Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "1f96767271edc4239dfa-99d988a262cf65a431a0",
+              "file": "sketchpad.test.ts",
+              "line": 695,
               "column": 3
             }
           ]
@@ -288,9 +358,9 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2025-12-14T21:19:56.926Z",
-    "duration": 122375.44600000001,
-    "expected": 1,
+    "startTime": "2025-12-15T13:29:31.201Z",
+    "duration": 41908.770000000004,
+    "expected": 3,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0

@@ -3,7 +3,12 @@ slug: STATE-MACHINE-REFACTOR
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Refactor sketchpad state machine for proper state transitions
 model: claude-opus-4.5
-input: []
+input:
+  - prompt: >-
+      Implementing runtime action registry pattern to allow apps to register
+      their action implementations at runtime, avoiding circular dependencies
+      that caused previous attempt to fail.
+    date: '2025-12-15T13:13:15.777Z'
 commit: unknown
 files: {}
 lines:

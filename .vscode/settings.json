@@ -9,6 +9,7 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "prettier.configPath": ".prettierrc.json",
+  "prettier.ignorePath": ".prettierignore",
   "[python]": {
     "editor.defaultFormatter": "charliermarsh.ruff"
   },

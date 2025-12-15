@@ -172,6 +172,8 @@ import {
   Disposable,
   EnrichedPanelDefinition,
   enrichPanelDefinition,
+  executeEventHandler,
+  executeRuntimeAction,
   Expertise,
   ExtendedInitialState,
   FileProvider,
@@ -186,7 +188,6 @@ import {
   KitDiffAppCommandResult,
   KitDiffAppEdit,
   KitDiffAppStep,
-  Layout,
   LocalFileProviderConfig,
   MemoryFileProviderConfig,
   Mode,
@@ -7801,7 +7802,7 @@ export type SketchpadEvent =
   | { type: "SET_LANGUAGE"; language: string }
   | { type: "SET_EXPERTISE"; expertise: Expertise }
   | { type: "SET_MODE"; mode: Mode }
-  | { type: "SET_LAYOUT"; layout: Layout }
+  | { type: "SET_DEVICE"; device: Device }
   | { type: "TOGGLE_FULLSCREEN" }
   | { type: "SET_PANEL_SIZE"; panel: keyof PanelSizes; size: number }
   | { type: "CREATE_KIT"; kit: Kit; local?: boolean; remote?: boolean }
@@ -7987,8 +7988,8 @@ function buildSnapshot(ySketchpad: Y.Map<any>): SketchpadState {
   const hotkeyOverridesStr = ySketchpad.get("hotkeyOverrides") as string;
   const hotkeyOverrides = hotkeyOverridesStr ? JSON.parse(hotkeyOverridesStr) : {};
 
-  const layoutStr = ySketchpad.get("layout") as string;
-  const layout: Layout = layoutStr ? JSON.parse(layoutStr) : "desktop";
+  const deviceStr = ySketchpad.get("device") as string;
+  const device: Device = deviceStr ? JSON.parse(deviceStr) : "desktop";
 
   return {
     navigation: migratePath((ySketchpad.get("navigation") as string) || "/"),
@@ -7998,7 +7999,7 @@ function buildSnapshot(ySketchpad: Y.Map<any>): SketchpadState {
     recentFocusItems,
     theme: ySketchpad.get("theme") as Theme,
     language: (ySketchpad.get("language") as string) || "en",
-    layout,
+    device,
     expertise: (ySketchpad.get("expertise") as Expertise) ?? Expertise.BEGINNER,
     mode: (ySketchpad.get("mode") as Mode) ?? Mode.USER,
     settings,
@@ -8036,7 +8037,7 @@ function applyDiff(yDoc: Y.Doc, ySketchpad: Y.Map<any>, diff: SketchpadDiff): vo
     if (diff.language !== undefined) {
       ySketchpad.set("language", diff.language);
     }
-    if (diff.layout) ySketchpad.set("layout", JSON.stringify(diff.layout));
+    if (diff.device) ySketchpad.set("device", JSON.stringify(diff.device));
     if (diff.expertise) ySketchpad.set("expertise", diff.expertise);
     if (diff.mode) ySketchpad.set("mode", diff.mode);
     if (diff.isFullscreen !== undefined) ySketchpad.set("isFullscreen", diff.isFullscreen);
@@ -8064,7 +8065,7 @@ function applyDiff(yDoc: Y.Doc, ySketchpad: Y.Map<any>, diff: SketchpadDiff): vo
 /**
  * Create default transaction state for an app
  */
-function createDefaultTransactionState(): AppTransactionState {
+export function createDefaultTransactionState(): AppTransactionState {
   return {
     isTransactionActive: false,
     currentTransactionStack: [],
@@ -8076,7 +8077,7 @@ function createDefaultTransactionState(): AppTransactionState {
 /**
  * Create default design app state
  */
-function createDefaultDesignAppState(): DesignAppState {
+export function createDefaultDesignAppState(): DesignAppState {
   return {
     panelVisibility: defaultPanelVisibility,
     selection: undefined,
@@ -8095,7 +8096,7 @@ function createDefaultDesignAppState(): DesignAppState {
 /**
  * Create default type app state
  */
-function createDefaultTypeAppState(): TypeAppState {
+export function createDefaultTypeAppState(): TypeAppState {
   return {
     panelVisibility: { ...defaultPanelVisibility, toolbar: true },
     activeTool: ToolKind.SELECTION_NORMAL,
@@ -8114,7 +8115,7 @@ function createDefaultTypeAppState(): TypeAppState {
 /**
  * Create default kit app state
  */
-function createDefaultKitAppState(): KitAppState {
+export function createDefaultKitAppState(): KitAppState {
   return {
     panelVisibility: defaultPanelVisibility,
     selection: undefined,
@@ -8132,7 +8133,7 @@ function createDefaultKitAppState(): KitAppState {
 /**
  * Create default quality app state
  */
-function createDefaultQualityAppState(): QualityAppState {
+export function createDefaultQualityAppState(): QualityAppState {
   return {
     panelVisibility: defaultPanelVisibility,
     selection: undefined,
@@ -8152,7 +8153,7 @@ function createDefaultSketchpadState(id?: string): SketchpadState {
     recentFocusItems: {},
     theme: Theme.SYSTEM,
     language: "en",
-    layout: "desktop",
+    device: "desktop",
     expertise: Expertise.BEGINNER,
     mode: Mode.USER,
     settings: {
@@ -8240,7 +8241,7 @@ function applySketchpadDiffToState(state: SketchpadState, diff: SketchpadDiff): 
   if ("recentFocusItems" in diff) next = { ...next, recentFocusItems: { ...(next.recentFocusItems || {}), ...(diff.recentFocusItems || {}) } };
   if (diff.theme) next = { ...next, theme: diff.theme };
   if (diff.language !== undefined) next = { ...next, language: diff.language };
-  if (diff.layout) next = { ...next, layout: diff.layout };
+  if (diff.device) next = { ...next, device: diff.device };
   if (diff.expertise) next = { ...next, expertise: diff.expertise };
   if (diff.mode) next = { ...next, mode: diff.mode };
   if (diff.isFullscreen !== undefined) next = { ...next, isFullscreen: diff.isFullscreen };
@@ -8395,9 +8396,9 @@ export const sketchpadMachine = setup({
       if (event.type !== "SET_MODE") return {};
       return { sketchpad: { ...context.sketchpad, mode: event.mode } };
     }),
-    setLayout: assign(({ context, event }) => {
-      if (event.type !== "SET_LAYOUT") return {};
-      return { sketchpad: { ...context.sketchpad, layout: event.layout } };
+    setDevice: assign(({ context, event }) => {
+      if (event.type !== "SET_DEVICE") return {};
+      return { sketchpad: { ...context.sketchpad, device: event.device } };
     }),
     toggleFullscreen: assign(({ context }) => ({ sketchpad: { ...context.sketchpad, isFullscreen: !context.sketchpad.isFullscreen } })),
     setPanelSize: assign(({ context, event }) => {
@@ -8409,509 +8410,102 @@ export const sketchpadMachine = setup({
       return { sketchpad: applySketchpadDiffToState(context.sketchpad, event.diff) };
     }),
     markDirty: () => {},
-    // Home app actions
-    homeTogglePanel: assign(({ context, event }) => {
-      if (event.type !== "HOME.TOGGLE_PANEL") return {};
-      return {
-        homeApp: {
-          ...context.homeApp,
-          panelVisibility: {
-            ...context.homeApp.panelVisibility,
-            [event.panel]: !context.homeApp.panelVisibility[event.panel],
-          },
-        },
-      };
+    // Generic app event dispatcher - uses dynamic event handler registry
+    // Apps register handlers via registerEventHandler() which are looked up by event.type
+    dispatchAppEvent: assign(({ context, event }) => {
+      // Try new event handler registry first, then fall back to runtime action registry
+      const result = executeEventHandler(context, event);
+      if (Object.keys(result).length > 0) return result;
+      // Fallback: derive action name from event type (e.g., "HOME.TOGGLE_PANEL" -> "homeTogglePanel")
+      const parts = event.type.split(".");
+      if (parts.length >= 2) {
+        const namespace = parts[0].toLowerCase();
+        const action = parts
+          .slice(1)
+          .map((p: string, i: number) => (i === 0 ? p.toLowerCase() : p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()))
+          .join("");
+        const actionName = namespace + action.charAt(0).toUpperCase() + action.slice(1);
+        return executeRuntimeAction(actionName, context, event);
+      }
+      return {};
     }),
-    homeSetPanelVisibility: assign(({ context, event }) => {
-      if (event.type !== "HOME.SET_PANEL_VISIBILITY") return {};
-      return {
-        homeApp: { ...context.homeApp, panelVisibility: event.panelVisibility },
-      };
-    }),
-    homeSetSort: assign(({ context, event }) => {
-      if (event.type !== "HOME.SET_SORT") return {};
-      return {
-        homeApp: { ...context.homeApp, sortColumn: event.column, sortDirection: event.direction },
-      };
-    }),
-    homeSelectKit: assign(({ context, event }) => {
-      if (event.type !== "HOME.SELECT_KIT") return {};
-      const kits = context.homeApp.selection?.kits || [];
-      if (kits.includes(event.guid)) return {};
-      return {
-        homeApp: { ...context.homeApp, selection: { kits: [...kits, event.guid] } },
-      };
-    }),
-    homeDeselectKit: assign(({ context, event }) => {
-      if (event.type !== "HOME.DESELECT_KIT") return {};
-      const kits = context.homeApp.selection?.kits || [];
-      return {
-        homeApp: { ...context.homeApp, selection: { kits: kits.filter((k: Guid) => k !== event.guid) } },
-      };
-    }),
-    homeClearSelection: assign(({ context }) => ({
-      homeApp: { ...context.homeApp, selection: undefined },
-    })),
-    homeSetHover: assign(({ context, event }) => {
-      if (event.type !== "HOME.SET_HOVER") return {};
-      return { homeApp: { ...context.homeApp, hover: { kits: event.kits } } };
-    }),
-    homeClearHover: assign(({ context }) => ({
-      homeApp: { ...context.homeApp, hover: undefined },
-    })),
-    // Type app INIT/SYNC actions
-    typeInit: assign(({ context, event }) => {
-      if (event.type !== "TYPE.INIT") return {};
-      const key = `${event.kitGuid}:${event.typeGuid}`;
-      return { typeApps: { ...context.typeApps, [key]: event.state } };
-    }),
-    typeSync: assign(({ context, event }) => {
-      if (event.type !== "TYPE.SYNC") return {};
-      const key = `${event.kitGuid}:${event.typeGuid}`;
-      const app = context.typeApps[key] || createDefaultTypeAppState();
-      return { typeApps: { ...context.typeApps, [key]: { ...app, ...event.state } } };
-    }),
-    // Design app INIT/SYNC actions
-    designInit: assign(({ context, event }) => {
-      if (event.type !== "DESIGN.INIT") return {};
-      const key = `${event.kitGuid}:${event.designGuid}`;
-      return { designApps: { ...context.designApps, [key]: event.state } };
-    }),
-    designSync: assign(({ context, event }) => {
-      if (event.type !== "DESIGN.SYNC") return {};
-      const key = `${event.kitGuid}:${event.designGuid}`;
-      const app = context.designApps[key] || createDefaultDesignAppState();
-      return { designApps: { ...context.designApps, [key]: { ...app, ...event.state } } };
-    }),
-    // Design app state actions
-    designSetActiveTool: assign(({ context, event }) => {
-      if (event.type !== "DESIGN.SET_ACTIVE_TOOL") return {};
-      const key = `${event.kitGuid}:${event.designGuid}`;
-      const app = context.designApps[key] || createDefaultDesignAppState();
-      return { designApps: { ...context.designApps, [key]: { ...app, activeTool: event.tool } } };
-    }),
-    designSetFullscreen: assign(({ context, event }) => {
-      if (event.type !== "DESIGN.SET_FULLSCREEN") return {};
-      const key = `${event.kitGuid}:${event.designGuid}`;
-      const app = context.designApps[key] || createDefaultDesignAppState();
-      return { designApps: { ...context.designApps, [key]: { ...app, fullscreenWindow: event.window } } };
-    }),
-    // Design app actions (most important for the migration)
-    designTogglePanel: assign(({ context, event }) => {
-      if (event.type !== "DESIGN.TOGGLE_PANEL") return {};
-      const key = `${event.kitGuid}:${event.designGuid}`;
-      const app = context.designApps[key] || createDefaultDesignAppState();
-      return {
-        designApps: {
-          ...context.designApps,
-          [key]: {
-            ...app,
-            panelVisibility: { ...app.panelVisibility, [event.panel]: !app.panelVisibility[event.panel] },
-          },
-        },
-      };
-    }),
-    designSetPanelVisibility: assign(({ context, event }) => {
-      if (event.type !== "DESIGN.SET_PANEL_VISIBILITY") return {};
-      const key = `${event.kitGuid}:${event.designGuid}`;
-      const app = context.designApps[key] || createDefaultDesignAppState();
-      return { designApps: { ...context.designApps, [key]: { ...app, panelVisibility: event.panelVisibility } } };
-    }),
-    designSetSelection: assign(({ context, event }) => {
-      if (event.type !== "DESIGN.SET_SELECTION") return {};
-      const key = `${event.kitGuid}:${event.designGuid}`;
-      const app = context.designApps[key] || createDefaultDesignAppState();
-      return { designApps: { ...context.designApps, [key]: { ...app, selection: event.selection } } };
-    }),
-    designClearSelection: assign(({ context, event }) => {
-      if (event.type !== "DESIGN.CLEAR_SELECTION") return {};
-      const key = `${event.kitGuid}:${event.designGuid}`;
-      const app = context.designApps[key] || createDefaultDesignAppState();
-      return { designApps: { ...context.designApps, [key]: { ...app, selection: undefined } } };
-    }),
-    designSetHover: assign(({ context, event }) => {
-      if (event.type !== "DESIGN.SET_HOVER") return {};
-      const key = `${event.kitGuid}:${event.designGuid}`;
-      const app = context.designApps[key] || createDefaultDesignAppState();
-      return { designApps: { ...context.designApps, [key]: { ...app, hover: event.hover } } };
-    }),
-    designClearHover: assign(({ context, event }) => {
-      if (event.type !== "DESIGN.CLEAR_HOVER") return {};
-      const key = `${event.kitGuid}:${event.designGuid}`;
-      const app = context.designApps[key] || createDefaultDesignAppState();
-      return { designApps: { ...context.designApps, [key]: { ...app, hover: undefined } } };
-    }),
-    designFocusPiece: assign(({ context, event }) => {
-      if (event.type !== "DESIGN.FOCUS_PIECE") return {};
-      const key = `${event.kitGuid}:${event.designGuid}`;
-      const app = context.designApps[key] || createDefaultDesignAppState();
-      return { designApps: { ...context.designApps, [key]: { ...app, focusedPiece: event.pieceGuid } } };
-    }),
-    designSetDiagramCenter: assign(({ context, event }) => {
-      if (event.type !== "DESIGN.SET_DIAGRAM_CENTER") return {};
-      const key = `${event.kitGuid}:${event.designGuid}`;
-      const app = context.designApps[key] || createDefaultDesignAppState();
-      return { designApps: { ...context.designApps, [key]: { ...app, diagramCenter: event.center } } };
-    }),
-    designSetDiagramScale: assign(({ context, event }) => {
-      if (event.type !== "DESIGN.SET_DIAGRAM_SCALE") return {};
-      const key = `${event.kitGuid}:${event.designGuid}`;
-      const app = context.designApps[key] || createDefaultDesignAppState();
-      return { designApps: { ...context.designApps, [key]: { ...app, diagramScale: event.scale } } };
-    }),
-    designSetCamera: assign(({ context, event }) => {
-      if (event.type !== "DESIGN.SET_CAMERA") return {};
-      const key = `${event.kitGuid}:${event.designGuid}`;
-      const app = context.designApps[key] || createDefaultDesignAppState();
-      return { designApps: { ...context.designApps, [key]: { ...app, camera: event.camera } } };
-    }),
-    designSelectModelTag: assign(({ context, event }) => {
-      if (event.type !== "DESIGN.SELECT_MODEL_TAG") return {};
-      const key = `${event.kitGuid}:${event.designGuid}`;
-      const app = context.designApps[key] || createDefaultDesignAppState();
-      const tags = app.selectedModelTags[event.typeGuid] || [];
-      if (tags.includes(event.tagGuid)) return {};
-      return {
-        designApps: {
-          ...context.designApps,
-          [key]: {
-            ...app,
-            selectedModelTags: { ...app.selectedModelTags, [event.typeGuid]: [...tags, event.tagGuid] },
-          },
-        },
-      };
-    }),
-    designDeselectModelTag: assign(({ context, event }) => {
-      if (event.type !== "DESIGN.DESELECT_MODEL_TAG") return {};
-      const key = `${event.kitGuid}:${event.designGuid}`;
-      const app = context.designApps[key] || createDefaultDesignAppState();
-      const tags = app.selectedModelTags[event.typeGuid] || [];
-      return {
-        designApps: {
-          ...context.designApps,
-          [key]: {
-            ...app,
-            selectedModelTags: { ...app.selectedModelTags, [event.typeGuid]: tags.filter((g: Guid) => g !== event.tagGuid) },
-          },
-        },
-      };
-    }),
-    // Type app actions
-    typeTogglePanel: assign(({ context, event }) => {
-      if (event.type !== "TYPE.TOGGLE_PANEL") return {};
-      const key = `${event.kitGuid}:${event.typeGuid}`;
-      const app = context.typeApps[key] || createDefaultTypeAppState();
-      return {
-        typeApps: {
-          ...context.typeApps,
-          [key]: {
-            ...app,
-            panelVisibility: { ...app.panelVisibility, [event.panel]: !app.panelVisibility[event.panel] },
-          },
-        },
-      };
-    }),
-    typeSetPanelVisibility: assign(({ context, event }) => {
-      if (event.type !== "TYPE.SET_PANEL_VISIBILITY") return {};
-      const key = `${event.kitGuid}:${event.typeGuid}`;
-      const app = context.typeApps[key] || createDefaultTypeAppState();
-      return { typeApps: { ...context.typeApps, [key]: { ...app, panelVisibility: event.panelVisibility } } };
-    }),
-    typeSetFullscreenWindow: assign(({ context, event }) => {
-      if (event.type !== "TYPE.SET_FULLSCREEN_WINDOW") return {};
-      const key = `${event.kitGuid}:${event.typeGuid}`;
-      const app = context.typeApps[key] || createDefaultTypeAppState();
-      return { typeApps: { ...context.typeApps, [key]: { ...app, fullscreenWindow: event.window } } };
-    }),
-    typeFocusPort: assign(({ context, event }) => {
-      if (event.type !== "TYPE.FOCUS_PORT") return {};
-      const key = `${event.kitGuid}:${event.typeGuid}`;
-      const app = context.typeApps[key] || createDefaultTypeAppState();
-      return { typeApps: { ...context.typeApps, [key]: { ...app, focusedPort: event.portGuid } } };
-    }),
-    typeSelectModelTag: assign(({ context, event }) => {
-      if (event.type !== "TYPE.SELECT_MODEL_TAG") return {};
-      const key = `${event.kitGuid}:${event.typeGuid}`;
-      const app = context.typeApps[key] || createDefaultTypeAppState();
-      const tags = app.selectedModelTags || [];
-      if (tags.includes(event.tagGuid)) return {};
-      return {
-        typeApps: {
-          ...context.typeApps,
-          [key]: { ...app, selectedModelTags: [...tags, event.tagGuid] },
-        },
-      };
-    }),
-    typeDeselectModelTag: assign(({ context, event }) => {
-      if (event.type !== "TYPE.DESELECT_MODEL_TAG") return {};
-      const key = `${event.kitGuid}:${event.typeGuid}`;
-      const app = context.typeApps[key] || createDefaultTypeAppState();
-      const tags = app.selectedModelTags || [];
-      return {
-        typeApps: {
-          ...context.typeApps,
-          [key]: { ...app, selectedModelTags: tags.filter((g: Guid) => g !== event.tagGuid) },
-        },
-      };
-    }),
-    typeSetCamera: assign(({ context, event }) => {
-      if (event.type !== "TYPE.SET_CAMERA") return {};
-      const key = `${event.kitGuid}:${event.typeGuid}`;
-      const app = context.typeApps[key] || createDefaultTypeAppState();
-      return { typeApps: { ...context.typeApps, [key]: { ...app, camera: event.camera } } };
-    }),
-    typeSetActiveTool: assign(({ context, event }) => {
-      if (event.type !== "TYPE.SET_ACTIVE_TOOL") return {};
-      const key = `${event.kitGuid}:${event.typeGuid}`;
-      const app = context.typeApps[key] || createDefaultTypeAppState();
-      return { typeApps: { ...context.typeApps, [key]: { ...app, activeTool: event.tool } } };
-    }),
-    typeSetSelection: assign(({ context, event }) => {
-      if (event.type !== "TYPE.SET_SELECTION") return {};
-      const key = `${event.kitGuid}:${event.typeGuid}`;
-      const app = context.typeApps[key] || createDefaultTypeAppState();
-      return { typeApps: { ...context.typeApps, [key]: { ...app, selection: event.selection } } };
-    }),
-    typeClearSelection: assign(({ context, event }) => {
-      if (event.type !== "TYPE.CLEAR_SELECTION") return {};
-      const key = `${event.kitGuid}:${event.typeGuid}`;
-      const app = context.typeApps[key] || createDefaultTypeAppState();
-      return { typeApps: { ...context.typeApps, [key]: { ...app, selection: undefined } } };
-    }),
-    typeSelectPort: assign(({ context, event }) => {
-      if (event.type !== "TYPE.SELECT_PORT") return {};
-      const key = `${event.kitGuid}:${event.typeGuid}`;
-      const app = context.typeApps[key] || createDefaultTypeAppState();
-      const ports = [...(app.selection?.ports || [])];
-      if (!ports.includes(event.portGuid)) ports.push(event.portGuid);
-      return { typeApps: { ...context.typeApps, [key]: { ...app, selection: { ...app.selection, ports } } } };
-    }),
-    typeDeselectPort: assign(({ context, event }) => {
-      if (event.type !== "TYPE.DESELECT_PORT") return {};
-      const key = `${event.kitGuid}:${event.typeGuid}`;
-      const app = context.typeApps[key] || createDefaultTypeAppState();
-      const ports = (app.selection?.ports || []).filter((p: Guid) => p !== event.portGuid);
-      return { typeApps: { ...context.typeApps, [key]: { ...app, selection: { ...app.selection, ports } } } };
-    }),
-    typeSetHover: assign(({ context, event }) => {
-      if (event.type !== "TYPE.SET_HOVER") return {};
-      const key = `${event.kitGuid}:${event.typeGuid}`;
-      const app = context.typeApps[key] || createDefaultTypeAppState();
-      return { typeApps: { ...context.typeApps, [key]: { ...app, hover: event.hover } } };
-    }),
-    typeClearHover: assign(({ context, event }) => {
-      if (event.type !== "TYPE.CLEAR_HOVER") return {};
-      const key = `${event.kitGuid}:${event.typeGuid}`;
-      const app = context.typeApps[key] || createDefaultTypeAppState();
-      return { typeApps: { ...context.typeApps, [key]: { ...app, hover: undefined } } };
-    }),
-    typeSetModelTags: assign(({ context, event }) => {
-      if (event.type !== "TYPE.SET_MODEL_TAGS") return {};
-      const key = `${event.kitGuid}:${event.typeGuid}`;
-      const app = context.typeApps[key] || createDefaultTypeAppState();
-      return { typeApps: { ...context.typeApps, [key]: { ...app, selectedModelTags: event.tags } } };
-    }),
-    typeSelectAll: assign(({ context, event }) => {
-      if (event.type !== "TYPE.SELECT_ALL") return {};
-      const key = `${event.kitGuid}:${event.typeGuid}`;
-      const app = context.typeApps[key] || createDefaultTypeAppState();
-      // Select all ports and models - implementation depends on having type data available
-      return { typeApps: { ...context.typeApps, [key]: { ...app, selection: { ports: [], models: [] } } } };
-    }),
-    typeDeselectAll: assign(({ context, event }) => {
-      if (event.type !== "TYPE.DESELECT_ALL") return {};
-      const key = `${event.kitGuid}:${event.typeGuid}`;
-      const app = context.typeApps[key] || createDefaultTypeAppState();
-      return { typeApps: { ...context.typeApps, [key]: { ...app, selection: undefined } } };
-    }),
-    typeClearFocus: assign(({ context, event }) => {
-      if (event.type !== "TYPE.CLEAR_FOCUS") return {};
-      const key = `${event.kitGuid}:${event.typeGuid}`;
-      const app = context.typeApps[key] || createDefaultTypeAppState();
-      return { typeApps: { ...context.typeApps, [key]: { ...app, focusedPort: undefined } } };
-    }),
-    typeSelectModel: assign(({ context, event }) => {
-      if (event.type !== "TYPE.SELECT_MODEL") return {};
-      const key = `${event.kitGuid}:${event.typeGuid}`;
-      const app = context.typeApps[key] || createDefaultTypeAppState();
-      const models = [...(app.selection?.models || [])];
-      if (!models.includes(event.modelGuid)) models.push(event.modelGuid);
-      return { typeApps: { ...context.typeApps, [key]: { ...app, selection: { ...app.selection, models } } } };
-    }),
-    typeDeselectModel: assign(({ context, event }) => {
-      if (event.type !== "TYPE.DESELECT_MODEL") return {};
-      const key = `${event.kitGuid}:${event.typeGuid}`;
-      const app = context.typeApps[key] || createDefaultTypeAppState();
-      const models = (app.selection?.models || []).filter((m: Guid) => m !== event.modelGuid);
-      return { typeApps: { ...context.typeApps, [key]: { ...app, selection: { ...app.selection, models } } } };
-    }),
-    typeHoverPort: assign(({ context, event }) => {
-      if (event.type !== "TYPE.HOVER_PORT") return {};
-      const key = `${event.kitGuid}:${event.typeGuid}`;
-      const app = context.typeApps[key] || createDefaultTypeAppState();
-      return { typeApps: { ...context.typeApps, [key]: { ...app, hover: { port: event.portGuid } } } };
-    }),
-    typeHoverModel: assign(({ context, event }) => {
-      if (event.type !== "TYPE.HOVER_MODEL") return {};
-      const key = `${event.kitGuid}:${event.typeGuid}`;
-      const app = context.typeApps[key] || createDefaultTypeAppState();
-      return { typeApps: { ...context.typeApps, [key]: { ...app, hover: { model: event.modelGuid } } } };
-    }),
-    typeSetSelectedModel: assign(({ context, event }) => {
-      if (event.type !== "TYPE.SET_SELECTED_MODEL") return {};
-      const key = `${event.kitGuid}:${event.typeGuid}`;
-      const app = context.typeApps[key] || createDefaultTypeAppState();
-      return { typeApps: { ...context.typeApps, [key]: { ...app, selectedModelGuid: event.modelGuid } } };
-    }),
-    typeAddModelTag: assign(({ context, event }) => {
-      if (event.type !== "TYPE.ADD_MODEL_TAG") return {};
-      const key = `${event.kitGuid}:${event.typeGuid}`;
-      const app = context.typeApps[key] || createDefaultTypeAppState();
-      const tags = [...(app.selectedModelTags || [])];
-      if (!tags.includes(event.tag)) tags.push(event.tag);
-      return { typeApps: { ...context.typeApps, [key]: { ...app, selectedModelTags: tags } } };
-    }),
-    typeRemoveModelTag: assign(({ context, event }) => {
-      if (event.type !== "TYPE.REMOVE_MODEL_TAG") return {};
-      const key = `${event.kitGuid}:${event.typeGuid}`;
-      const app = context.typeApps[key] || createDefaultTypeAppState();
-      const tags = (app.selectedModelTags || []).filter((t: string) => t !== event.tag);
-      return { typeApps: { ...context.typeApps, [key]: { ...app, selectedModelTags: tags } } };
-    }),
-    typeClearModelTags: assign(({ context, event }) => {
-      if (event.type !== "TYPE.CLEAR_MODEL_TAGS") return {};
-      const key = `${event.kitGuid}:${event.typeGuid}`;
-      const app = context.typeApps[key] || createDefaultTypeAppState();
-      return { typeApps: { ...context.typeApps, [key]: { ...app, selectedModelTags: [] } } };
-    }),
+    // Home app actions (delegated to runtime action registry)
+    homeTogglePanel: assign(({ context, event }) => executeRuntimeAction("homeTogglePanel", context, event)),
+    homeSetPanelVisibility: assign(({ context, event }) => executeRuntimeAction("homeSetPanelVisibility", context, event)),
+    homeSetSort: assign(({ context, event }) => executeRuntimeAction("homeSetSort", context, event)),
+    homeSelectKit: assign(({ context, event }) => executeRuntimeAction("homeSelectKit", context, event)),
+    homeDeselectKit: assign(({ context, event }) => executeRuntimeAction("homeDeselectKit", context, event)),
+    homeClearSelection: assign(({ context, event }) => executeRuntimeAction("homeClearSelection", context, event)),
+    homeSetHover: assign(({ context, event }) => executeRuntimeAction("homeSetHover", context, event)),
+    homeClearHover: assign(({ context, event }) => executeRuntimeAction("homeClearHover", context, event)),
+    // Type app actions (delegated to runtime action registry)
+    typeInit: assign(({ context, event }) => executeRuntimeAction("typeInit", context, event)),
+    typeSync: assign(({ context, event }) => executeRuntimeAction("typeSync", context, event)),
+    // Design app actions (delegated to runtime action registry)
+    designInit: assign(({ context, event }) => executeRuntimeAction("designInit", context, event)),
+    designSync: assign(({ context, event }) => executeRuntimeAction("designSync", context, event)),
+    designSetActiveTool: assign(({ context, event }) => executeRuntimeAction("designSetActiveTool", context, event)),
+    designSetFullscreen: assign(({ context, event }) => executeRuntimeAction("designSetFullscreen", context, event)),
+    designTogglePanel: assign(({ context, event }) => executeRuntimeAction("designTogglePanel", context, event)),
+    designSetPanelVisibility: assign(({ context, event }) => executeRuntimeAction("designSetPanelVisibility", context, event)),
+    designSetSelection: assign(({ context, event }) => executeRuntimeAction("designSetSelection", context, event)),
+    designClearSelection: assign(({ context, event }) => executeRuntimeAction("designClearSelection", context, event)),
+    designSetHover: assign(({ context, event }) => executeRuntimeAction("designSetHover", context, event)),
+    designClearHover: assign(({ context, event }) => executeRuntimeAction("designClearHover", context, event)),
+    designFocusPiece: assign(({ context, event }) => executeRuntimeAction("designFocusPiece", context, event)),
+    designSetDiagramCenter: assign(({ context, event }) => executeRuntimeAction("designSetDiagramCenter", context, event)),
+    designSetDiagramScale: assign(({ context, event }) => executeRuntimeAction("designSetDiagramScale", context, event)),
+    designSetCamera: assign(({ context, event }) => executeRuntimeAction("designSetCamera", context, event)),
+    designSelectModelTag: assign(({ context, event }) => executeRuntimeAction("designSelectModelTag", context, event)),
+    designDeselectModelTag: assign(({ context, event }) => executeRuntimeAction("designDeselectModelTag", context, event)),
+    // Type app actions (delegated to runtime action registry)
+    typeTogglePanel: assign(({ context, event }) => executeRuntimeAction("typeTogglePanel", context, event)),
+    typeSetPanelVisibility: assign(({ context, event }) => executeRuntimeAction("typeSetPanelVisibility", context, event)),
+    typeSetFullscreenWindow: assign(({ context, event }) => executeRuntimeAction("typeSetFullscreenWindow", context, event)),
+    typeFocusPort: assign(({ context, event }) => executeRuntimeAction("typeFocusPort", context, event)),
+    typeSelectModelTag: assign(({ context, event }) => executeRuntimeAction("typeSelectModelTag", context, event)),
+    typeDeselectModelTag: assign(({ context, event }) => executeRuntimeAction("typeDeselectModelTag", context, event)),
+    typeSetCamera: assign(({ context, event }) => executeRuntimeAction("typeSetCamera", context, event)),
+    typeSetActiveTool: assign(({ context, event }) => executeRuntimeAction("typeSetActiveTool", context, event)),
+    typeSetSelection: assign(({ context, event }) => executeRuntimeAction("typeSetSelection", context, event)),
+    typeClearSelection: assign(({ context, event }) => executeRuntimeAction("typeClearSelection", context, event)),
+    typeSelectPort: assign(({ context, event }) => executeRuntimeAction("typeSelectPort", context, event)),
+    typeDeselectPort: assign(({ context, event }) => executeRuntimeAction("typeDeselectPort", context, event)),
+    typeSetHover: assign(({ context, event }) => executeRuntimeAction("typeSetHover", context, event)),
+    typeClearHover: assign(({ context, event }) => executeRuntimeAction("typeClearHover", context, event)),
+    typeSetModelTags: assign(({ context, event }) => executeRuntimeAction("typeSetModelTags", context, event)),
+    typeSelectAll: assign(({ context, event }) => executeRuntimeAction("typeSelectAll", context, event)),
+    typeDeselectAll: assign(({ context, event }) => executeRuntimeAction("typeDeselectAll", context, event)),
+    typeClearFocus: assign(({ context, event }) => executeRuntimeAction("typeClearFocus", context, event)),
+    typeSelectModel: assign(({ context, event }) => executeRuntimeAction("typeSelectModel", context, event)),
+    typeDeselectModel: assign(({ context, event }) => executeRuntimeAction("typeDeselectModel", context, event)),
+    typeHoverPort: assign(({ context, event }) => executeRuntimeAction("typeHoverPort", context, event)),
+    typeHoverModel: assign(({ context, event }) => executeRuntimeAction("typeHoverModel", context, event)),
+    typeSetSelectedModel: assign(({ context, event }) => executeRuntimeAction("typeSetSelectedModel", context, event)),
+    typeAddModelTag: assign(({ context, event }) => executeRuntimeAction("typeAddModelTag", context, event)),
+    typeRemoveModelTag: assign(({ context, event }) => executeRuntimeAction("typeRemoveModelTag", context, event)),
+    typeClearModelTags: assign(({ context, event }) => executeRuntimeAction("typeClearModelTags", context, event)),
     // Kit app INIT/SYNC actions
-    kitInit: assign(({ context, event }) => {
-      if (event.type !== "KIT.INIT") return {};
-      return { kitApps: { ...context.kitApps, [event.kitGuid]: event.state } };
-    }),
-    kitSync: assign(({ context, event }) => {
-      if (event.type !== "KIT.SYNC") return {};
-      const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
-      return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, ...event.state } } };
-    }),
-    // Kit app actions
-    kitTogglePanel: assign(({ context, event }) => {
-      if (event.type !== "KIT.TOGGLE_PANEL") return {};
-      const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
-      return {
-        kitApps: {
-          ...context.kitApps,
-          [event.kitGuid]: {
-            ...app,
-            panelVisibility: { ...app.panelVisibility, [event.panel]: !app.panelVisibility[event.panel] },
-          },
-        },
-      };
-    }),
-    kitSetPanelVisibility: assign(({ context, event }) => {
-      if (event.type !== "KIT.SET_PANEL_VISIBILITY") return {};
-      const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
-      return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, panelVisibility: event.panelVisibility } } };
-    }),
-    kitSetFilter: assign(({ context, event }) => {
-      if (event.type !== "KIT.SET_FILTER") return {};
-      const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
-      return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, filterSearch: event.search } } };
-    }),
-    kitToggleRow: assign(({ context, event }) => {
-      if (event.type !== "KIT.TOGGLE_ROW") return {};
-      const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
-      const expanded = new Set(app.expandedRows);
-      if (expanded.has(event.rowId)) {
-        expanded.delete(event.rowId);
-      } else {
-        expanded.add(event.rowId);
-      }
-      return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, expandedRows: expanded } } };
-    }),
-    kitSetExpandedRows: assign(({ context, event }) => {
-      if (event.type !== "KIT.SET_EXPANDED_ROWS") return {};
-      const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
-      return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, expandedRows: event.expandedRows } } };
-    }),
-    kitSetSort: assign(({ context, event }) => {
-      if (event.type !== "KIT.SET_SORT") return {};
-      const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
-      return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, sortColumn: event.column, sortDirection: event.direction } } };
-    }),
-    kitSelectType: assign(({ context, event }) => {
-      if (event.type !== "KIT.SELECT_TYPE") return {};
-      const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
-      const types = [...(app.selection?.types || [])];
-      if (!types.includes(event.typeGuid)) types.push(event.typeGuid);
-      return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, selection: { ...app.selection, types } } } };
-    }),
-    kitDeselectType: assign(({ context, event }) => {
-      if (event.type !== "KIT.DESELECT_TYPE") return {};
-      const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
-      const types = (app.selection?.types || []).filter((t: Guid) => t !== event.typeGuid);
-      return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, selection: { ...app.selection, types } } } };
-    }),
-    kitSelectDesign: assign(({ context, event }) => {
-      if (event.type !== "KIT.SELECT_DESIGN") return {};
-      const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
-      const designs = [...(app.selection?.designs || [])];
-      if (!designs.includes(event.designGuid)) designs.push(event.designGuid);
-      return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, selection: { ...app.selection, designs } } } };
-    }),
-    kitDeselectDesign: assign(({ context, event }) => {
-      if (event.type !== "KIT.DESELECT_DESIGN") return {};
-      const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
-      const designs = (app.selection?.designs || []).filter((d: Guid) => d !== event.designGuid);
-      return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, selection: { ...app.selection, designs } } } };
-    }),
-    kitSetSelection: assign(({ context, event }) => {
-      if (event.type !== "KIT.SET_SELECTION") return {};
-      const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
-      return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, selection: event.selection } } };
-    }),
-    kitClearSelection: assign(({ context, event }) => {
-      if (event.type !== "KIT.CLEAR_SELECTION") return {};
-      const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
-      return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, selection: undefined } } };
-    }),
-    kitSetHover: assign(({ context, event }) => {
-      if (event.type !== "KIT.SET_HOVER") return {};
-      const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
-      return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, hover: event.hover } } };
-    }),
-    kitClearHover: assign(({ context, event }) => {
-      if (event.type !== "KIT.CLEAR_HOVER") return {};
-      const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
-      return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, hover: undefined } } };
-    }),
-    // Quality app actions
-    qualityTogglePanel: assign(({ context, event }) => {
-      if (event.type !== "QUALITY.TOGGLE_PANEL") return {};
-      const key = `${event.kitGuid}:${event.qualityGuid}`;
-      const app = context.qualityApps[key] || createDefaultQualityAppState();
-      return {
-        qualityApps: {
-          ...context.qualityApps,
-          [key]: {
-            ...app,
-            panelVisibility: { ...app.panelVisibility, [event.panel]: !app.panelVisibility[event.panel] },
-          },
-        },
-      };
-    }),
-    qualityToggleBenchmark: assign(({ context, event }) => {
-      if (event.type !== "QUALITY.TOGGLE_BENCHMARK") return {};
-      const key = `${event.kitGuid}:${event.qualityGuid}`;
-      const app = context.qualityApps[key] || createDefaultQualityAppState();
-      const expanded = new Set(app.expandedBenchmarks);
-      if (expanded.has(event.benchmarkGuid)) {
-        expanded.delete(event.benchmarkGuid);
-      } else {
-        expanded.add(event.benchmarkGuid);
-      }
-      return { qualityApps: { ...context.qualityApps, [key]: { ...app, expandedBenchmarks: expanded } } };
-    }),
+    kitInit: assign(({ context, event }) => executeRuntimeAction("kitInit", context, event)),
+    kitSync: assign(({ context, event }) => executeRuntimeAction("kitSync", context, event)),
+    // Kit app actions (delegated to runtime action registry)
+    kitTogglePanel: assign(({ context, event }) => executeRuntimeAction("kitTogglePanel", context, event)),
+    kitSetPanelVisibility: assign(({ context, event }) => executeRuntimeAction("kitSetPanelVisibility", context, event)),
+    kitSetFilter: assign(({ context, event }) => executeRuntimeAction("kitSetFilter", context, event)),
+    kitToggleRow: assign(({ context, event }) => executeRuntimeAction("kitToggleRow", context, event)),
+    kitSetExpandedRows: assign(({ context, event }) => executeRuntimeAction("kitSetExpandedRows", context, event)),
+    kitSetSort: assign(({ context, event }) => executeRuntimeAction("kitSetSort", context, event)),
+    kitSelectType: assign(({ context, event }) => executeRuntimeAction("kitSelectType", context, event)),
+    kitDeselectType: assign(({ context, event }) => executeRuntimeAction("kitDeselectType", context, event)),
+    kitSelectDesign: assign(({ context, event }) => executeRuntimeAction("kitSelectDesign", context, event)),
+    kitDeselectDesign: assign(({ context, event }) => executeRuntimeAction("kitDeselectDesign", context, event)),
+    kitSetSelection: assign(({ context, event }) => executeRuntimeAction("kitSetSelection", context, event)),
+    kitClearSelection: assign(({ context, event }) => executeRuntimeAction("kitClearSelection", context, event)),
+    kitSetHover: assign(({ context, event }) => executeRuntimeAction("kitSetHover", context, event)),
+    kitClearHover: assign(({ context, event }) => executeRuntimeAction("kitClearHover", context, event)),
+    // Quality app actions (delegated to runtime action registry)
+    qualityTogglePanel: assign(({ context, event }) => executeRuntimeAction("qualityTogglePanel", context, event)),
+    qualityToggleBenchmark: assign(({ context, event }) => executeRuntimeAction("qualityToggleBenchmark", context, event)),
     // Tutorial actions
     tutorialStart: assign(({ context, event }) => {
       if (event.type !== "TUTORIAL.START") return {};
@@ -9013,266 +8607,34 @@ export const sketchpadMachine = setup({
       }
       return updates;
     }),
-    // Design transaction actions (scoped to design app)
-    designTransactionStart: assign(({ context, event }) => {
-      if (event.type !== "DESIGN.TRANSACTION.START") return {};
-      const key = `${event.kitGuid}:${event.designGuid}`;
-      const app = context.designApps[key] || createDefaultDesignAppState();
-      const tx = app.transaction;
-      if (tx.isTransactionActive) {
-        // Auto-finalize first
-        const pastStack = [...tx.pastTransactionStack];
-        if (tx.currentTransactionStack.length > 0) {
-          const merged = tx.currentTransactionStack.length === 1 ? tx.currentTransactionStack[0] : { do: tx.currentTransactionStack[tx.currentTransactionStack.length - 1].do, undo: tx.currentTransactionStack[0].undo };
-          pastStack.push(merged);
-        }
-        return { designApps: { ...context.designApps, [key]: { ...app, transaction: { isTransactionActive: true, currentTransactionStack: [], pastTransactionStack: pastStack, redoStack: [] } } } };
-      }
-      return { designApps: { ...context.designApps, [key]: { ...app, transaction: { ...tx, isTransactionActive: true, currentTransactionStack: [], redoStack: [] } } } };
-    }),
-    designTransactionCommit: assign(({ context, event }) => {
-      if (event.type !== "DESIGN.TRANSACTION.COMMIT") return {};
-      const key = `${event.kitGuid}:${event.designGuid}`;
-      const app = context.designApps[key];
-      if (!app || !app.transaction.isTransactionActive) return {};
-      const tx = app.transaction;
-      const pastStack = [...tx.pastTransactionStack];
-      if (tx.currentTransactionStack.length > 0) {
-        const merged = tx.currentTransactionStack.length === 1 ? tx.currentTransactionStack[0] : { do: tx.currentTransactionStack[tx.currentTransactionStack.length - 1].do, undo: tx.currentTransactionStack[0].undo };
-        pastStack.push(merged);
-      }
-      return { designApps: { ...context.designApps, [key]: { ...app, transaction: { isTransactionActive: false, currentTransactionStack: [], pastTransactionStack: pastStack, redoStack: [] } } } };
-    }),
-    designTransactionAbort: assign(({ context, event }) => {
-      if (event.type !== "DESIGN.TRANSACTION.ABORT") return {};
-      const key = `${event.kitGuid}:${event.designGuid}`;
-      const app = context.designApps[key];
-      if (!app || !app.transaction.isTransactionActive) return {};
-      return { designApps: { ...context.designApps, [key]: { ...app, transaction: { ...app.transaction, isTransactionActive: false, currentTransactionStack: [] } } } };
-    }),
-    designTransactionUndo: assign(({ context, event }) => {
-      if (event.type !== "DESIGN.TRANSACTION.UNDO") return {};
-      const key = `${event.kitGuid}:${event.designGuid}`;
-      const app = context.designApps[key];
-      if (!app) return {};
-      const tx = app.transaction;
-      if (tx.isTransactionActive && tx.currentTransactionStack.length > 0) {
-        const currentStack = [...tx.currentTransactionStack];
-        currentStack.pop();
-        return { designApps: { ...context.designApps, [key]: { ...app, transaction: { ...tx, currentTransactionStack: currentStack } } } };
-      } else if (!tx.isTransactionActive && tx.pastTransactionStack.length > 0) {
-        const pastStack = [...tx.pastTransactionStack];
-        const edit = pastStack.pop()!;
-        const redoStack = [...tx.redoStack, edit];
-        return { designApps: { ...context.designApps, [key]: { ...app, transaction: { ...tx, pastTransactionStack: pastStack, redoStack } } } };
-      }
-      return {};
-    }),
-    designTransactionRedo: assign(({ context, event }) => {
-      if (event.type !== "DESIGN.TRANSACTION.REDO") return {};
-      const key = `${event.kitGuid}:${event.designGuid}`;
-      const app = context.designApps[key];
-      if (!app || app.transaction.isTransactionActive || app.transaction.redoStack.length === 0) return {};
-      const tx = app.transaction;
-      const redoStack = [...tx.redoStack];
-      const edit = redoStack.pop()!;
-      const pastStack = [...tx.pastTransactionStack, edit];
-      return { designApps: { ...context.designApps, [key]: { ...app, transaction: { ...tx, pastTransactionStack: pastStack, redoStack } } } };
-    }),
-    designTransactionRecordEdit: assign(({ context, event }) => {
-      if (event.type !== "DESIGN.TRANSACTION.RECORD_EDIT") return {};
-      const key = `${event.kitGuid}:${event.designGuid}`;
-      const app = context.designApps[key];
-      if (!app || !app.transaction.isTransactionActive) return {};
-      const currentStack = [...app.transaction.currentTransactionStack, event.edit];
-      return { designApps: { ...context.designApps, [key]: { ...app, transaction: { ...app.transaction, currentTransactionStack: currentStack, redoStack: [] } } } };
-    }),
-    // Type transaction actions (scoped to type app)
-    typeTransactionStart: assign(({ context, event }) => {
-      if (event.type !== "TYPE.TRANSACTION.START") return {};
-      const key = `${event.kitGuid}:${event.typeGuid}`;
-      const app = context.typeApps[key] || createDefaultTypeAppState();
-      const tx = app.transaction;
-      if (tx.isTransactionActive) {
-        const pastStack = [...tx.pastTransactionStack];
-        if (tx.currentTransactionStack.length > 0) {
-          const merged = tx.currentTransactionStack.length === 1 ? tx.currentTransactionStack[0] : { do: tx.currentTransactionStack[tx.currentTransactionStack.length - 1].do, undo: tx.currentTransactionStack[0].undo };
-          pastStack.push(merged);
-        }
-        return { typeApps: { ...context.typeApps, [key]: { ...app, transaction: { isTransactionActive: true, currentTransactionStack: [], pastTransactionStack: pastStack, redoStack: [] } } } };
-      }
-      return { typeApps: { ...context.typeApps, [key]: { ...app, transaction: { ...tx, isTransactionActive: true, currentTransactionStack: [], redoStack: [] } } } };
-    }),
-    typeTransactionCommit: assign(({ context, event }) => {
-      if (event.type !== "TYPE.TRANSACTION.COMMIT") return {};
-      const key = `${event.kitGuid}:${event.typeGuid}`;
-      const app = context.typeApps[key];
-      if (!app || !app.transaction.isTransactionActive) return {};
-      const tx = app.transaction;
-      const pastStack = [...tx.pastTransactionStack];
-      if (tx.currentTransactionStack.length > 0) {
-        const merged = tx.currentTransactionStack.length === 1 ? tx.currentTransactionStack[0] : { do: tx.currentTransactionStack[tx.currentTransactionStack.length - 1].do, undo: tx.currentTransactionStack[0].undo };
-        pastStack.push(merged);
-      }
-      return { typeApps: { ...context.typeApps, [key]: { ...app, transaction: { isTransactionActive: false, currentTransactionStack: [], pastTransactionStack: pastStack, redoStack: [] } } } };
-    }),
-    typeTransactionAbort: assign(({ context, event }) => {
-      if (event.type !== "TYPE.TRANSACTION.ABORT") return {};
-      const key = `${event.kitGuid}:${event.typeGuid}`;
-      const app = context.typeApps[key];
-      if (!app || !app.transaction.isTransactionActive) return {};
-      return { typeApps: { ...context.typeApps, [key]: { ...app, transaction: { ...app.transaction, isTransactionActive: false, currentTransactionStack: [] } } } };
-    }),
-    typeTransactionUndo: assign(({ context, event }) => {
-      if (event.type !== "TYPE.TRANSACTION.UNDO") return {};
-      const key = `${event.kitGuid}:${event.typeGuid}`;
-      const app = context.typeApps[key];
-      if (!app) return {};
-      const tx = app.transaction;
-      if (tx.isTransactionActive && tx.currentTransactionStack.length > 0) {
-        const currentStack = [...tx.currentTransactionStack];
-        currentStack.pop();
-        return { typeApps: { ...context.typeApps, [key]: { ...app, transaction: { ...tx, currentTransactionStack: currentStack } } } };
-      } else if (!tx.isTransactionActive && tx.pastTransactionStack.length > 0) {
-        const pastStack = [...tx.pastTransactionStack];
-        const edit = pastStack.pop()!;
-        const redoStack = [...tx.redoStack, edit];
-        return { typeApps: { ...context.typeApps, [key]: { ...app, transaction: { ...tx, pastTransactionStack: pastStack, redoStack } } } };
-      }
-      return {};
-    }),
-    typeTransactionRedo: assign(({ context, event }) => {
-      if (event.type !== "TYPE.TRANSACTION.REDO") return {};
-      const key = `${event.kitGuid}:${event.typeGuid}`;
-      const app = context.typeApps[key];
-      if (!app || app.transaction.isTransactionActive || app.transaction.redoStack.length === 0) return {};
-      const tx = app.transaction;
-      const redoStack = [...tx.redoStack];
-      const edit = redoStack.pop()!;
-      const pastStack = [...tx.pastTransactionStack, edit];
-      return { typeApps: { ...context.typeApps, [key]: { ...app, transaction: { ...tx, pastTransactionStack: pastStack, redoStack } } } };
-    }),
-    typeTransactionRecordEdit: assign(({ context, event }) => {
-      if (event.type !== "TYPE.TRANSACTION.RECORD_EDIT") return {};
-      const key = `${event.kitGuid}:${event.typeGuid}`;
-      const app = context.typeApps[key];
-      if (!app || !app.transaction.isTransactionActive) return {};
-      const currentStack = [...app.transaction.currentTransactionStack, event.edit];
-      return { typeApps: { ...context.typeApps, [key]: { ...app, transaction: { ...app.transaction, currentTransactionStack: currentStack, redoStack: [] } } } };
-    }),
-    // Kit transaction actions (scoped to kit app)
-    kitTransactionStart: assign(({ context, event }) => {
-      if (event.type !== "KIT.TRANSACTION.START") return {};
-      const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
-      const tx = app.transaction;
-      if (tx.isTransactionActive) {
-        const pastStack = [...tx.pastTransactionStack];
-        if (tx.currentTransactionStack.length > 0) {
-          const merged = tx.currentTransactionStack.length === 1 ? tx.currentTransactionStack[0] : { do: tx.currentTransactionStack[tx.currentTransactionStack.length - 1].do, undo: tx.currentTransactionStack[0].undo };
-          pastStack.push(merged);
-        }
-        return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, transaction: { isTransactionActive: true, currentTransactionStack: [], pastTransactionStack: pastStack, redoStack: [] } } } };
-      }
-      return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, transaction: { ...tx, isTransactionActive: true, currentTransactionStack: [], redoStack: [] } } } };
-    }),
-    kitTransactionCommit: assign(({ context, event }) => {
-      if (event.type !== "KIT.TRANSACTION.COMMIT") return {};
-      const app = context.kitApps[event.kitGuid];
-      if (!app || !app.transaction.isTransactionActive) return {};
-      const tx = app.transaction;
-      const pastStack = [...tx.pastTransactionStack];
-      if (tx.currentTransactionStack.length > 0) {
-        const merged = tx.currentTransactionStack.length === 1 ? tx.currentTransactionStack[0] : { do: tx.currentTransactionStack[tx.currentTransactionStack.length - 1].do, undo: tx.currentTransactionStack[0].undo };
-        pastStack.push(merged);
-      }
-      return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, transaction: { isTransactionActive: false, currentTransactionStack: [], pastTransactionStack: pastStack, redoStack: [] } } } };
-    }),
-    kitTransactionAbort: assign(({ context, event }) => {
-      if (event.type !== "KIT.TRANSACTION.ABORT") return {};
-      const app = context.kitApps[event.kitGuid];
-      if (!app || !app.transaction.isTransactionActive) return {};
-      return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, transaction: { ...app.transaction, isTransactionActive: false, currentTransactionStack: [] } } } };
-    }),
-    kitTransactionUndo: assign(({ context, event }) => {
-      if (event.type !== "KIT.TRANSACTION.UNDO") return {};
-      const app = context.kitApps[event.kitGuid];
-      if (!app) return {};
-      const tx = app.transaction;
-      if (tx.isTransactionActive && tx.currentTransactionStack.length > 0) {
-        const currentStack = [...tx.currentTransactionStack];
-        currentStack.pop();
-        return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, transaction: { ...tx, currentTransactionStack: currentStack } } } };
-      } else if (!tx.isTransactionActive && tx.pastTransactionStack.length > 0) {
-        const pastStack = [...tx.pastTransactionStack];
-        const edit = pastStack.pop()!;
-        const redoStack = [...tx.redoStack, edit];
-        return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, transaction: { ...tx, pastTransactionStack: pastStack, redoStack } } } };
-      }
-      return {};
-    }),
-    kitTransactionRedo: assign(({ context, event }) => {
-      if (event.type !== "KIT.TRANSACTION.REDO") return {};
-      const app = context.kitApps[event.kitGuid];
-      if (!app || app.transaction.isTransactionActive || app.transaction.redoStack.length === 0) return {};
-      const tx = app.transaction;
-      const redoStack = [...tx.redoStack];
-      const edit = redoStack.pop()!;
-      const pastStack = [...tx.pastTransactionStack, edit];
-      return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, transaction: { ...tx, pastTransactionStack: pastStack, redoStack } } } };
-    }),
-    kitTransactionRecordEdit: assign(({ context, event }) => {
-      if (event.type !== "KIT.TRANSACTION.RECORD_EDIT") return {};
-      const app = context.kitApps[event.kitGuid];
-      if (!app || !app.transaction.isTransactionActive) return {};
-      const currentStack = [...app.transaction.currentTransactionStack, event.edit];
-      return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, transaction: { ...app.transaction, currentTransactionStack: currentStack, redoStack: [] } } } };
-    }),
+    // Design transaction actions (delegated to runtime action registry)
+    designTransactionStart: assign(({ context, event }) => executeRuntimeAction("designTransactionStart", context, event)),
+    designTransactionCommit: assign(({ context, event }) => executeRuntimeAction("designTransactionCommit", context, event)),
+    designTransactionAbort: assign(({ context, event }) => executeRuntimeAction("designTransactionAbort", context, event)),
+    designTransactionUndo: assign(({ context, event }) => executeRuntimeAction("designTransactionUndo", context, event)),
+    designTransactionRedo: assign(({ context, event }) => executeRuntimeAction("designTransactionRedo", context, event)),
+    designTransactionRecordEdit: assign(({ context, event }) => executeRuntimeAction("designTransactionRecordEdit", context, event)),
+    // Type transaction actions (delegated to runtime action registry)
+    typeTransactionStart: assign(({ context, event }) => executeRuntimeAction("typeTransactionStart", context, event)),
+    typeTransactionCommit: assign(({ context, event }) => executeRuntimeAction("typeTransactionCommit", context, event)),
+    typeTransactionAbort: assign(({ context, event }) => executeRuntimeAction("typeTransactionAbort", context, event)),
+    typeTransactionUndo: assign(({ context, event }) => executeRuntimeAction("typeTransactionUndo", context, event)),
+    typeTransactionRedo: assign(({ context, event }) => executeRuntimeAction("typeTransactionRedo", context, event)),
+    typeTransactionRecordEdit: assign(({ context, event }) => executeRuntimeAction("typeTransactionRecordEdit", context, event)),
+    // Kit transaction actions (delegated to runtime action registry)
+    kitTransactionStart: assign(({ context, event }) => executeRuntimeAction("kitTransactionStart", context, event)),
+    kitTransactionCommit: assign(({ context, event }) => executeRuntimeAction("kitTransactionCommit", context, event)),
+    kitTransactionAbort: assign(({ context, event }) => executeRuntimeAction("kitTransactionAbort", context, event)),
+    kitTransactionUndo: assign(({ context, event }) => executeRuntimeAction("kitTransactionUndo", context, event)),
+    kitTransactionRedo: assign(({ context, event }) => executeRuntimeAction("kitTransactionRedo", context, event)),
+    kitTransactionRecordEdit: assign(({ context, event }) => executeRuntimeAction("kitTransactionRecordEdit", context, event)),
     // Design app piece/connection selection actions
-    designSelectPiece: assign(({ context, event }) => {
-      if (event.type !== "DESIGN.SELECT_PIECE") return {};
-      const key = `${event.kitGuid}:${event.designGuid}`;
-      const app = context.designApps[key] || createDefaultDesignAppState();
-      const pieces = [...(app.selection?.pieces || [])];
-      if (!pieces.includes(event.pieceGuid)) pieces.push(event.pieceGuid);
-      return { designApps: { ...context.designApps, [key]: { ...app, selection: { ...app.selection, pieces } } } };
-    }),
-    designDeselectPiece: assign(({ context, event }) => {
-      if (event.type !== "DESIGN.DESELECT_PIECE") return {};
-      const key = `${event.kitGuid}:${event.designGuid}`;
-      const app = context.designApps[key] || createDefaultDesignAppState();
-      const pieces = (app.selection?.pieces || []).filter((p: Guid) => p !== event.pieceGuid);
-      return { designApps: { ...context.designApps, [key]: { ...app, selection: { ...app.selection, pieces } } } };
-    }),
-    designSelectConnection: assign(({ context, event }) => {
-      if (event.type !== "DESIGN.SELECT_CONNECTION") return {};
-      const key = `${event.kitGuid}:${event.designGuid}`;
-      const app = context.designApps[key] || createDefaultDesignAppState();
-      const connections = [...(app.selection?.connections || [])];
-      if (!connections.includes(event.connectionGuid)) connections.push(event.connectionGuid);
-      return { designApps: { ...context.designApps, [key]: { ...app, selection: { ...app.selection, connections } } } };
-    }),
-    designDeselectConnection: assign(({ context, event }) => {
-      if (event.type !== "DESIGN.DESELECT_CONNECTION") return {};
-      const key = `${event.kitGuid}:${event.designGuid}`;
-      const app = context.designApps[key] || createDefaultDesignAppState();
-      const connections = (app.selection?.connections || []).filter((c: Guid) => c !== event.connectionGuid);
-      return { designApps: { ...context.designApps, [key]: { ...app, selection: { ...app.selection, connections } } } };
-    }),
-    designSelectAll: assign(({ context, event }) => {
-      if (event.type !== "DESIGN.SELECT_ALL") return {};
-      const key = `${event.kitGuid}:${event.designGuid}`;
-      const app = context.designApps[key] || createDefaultDesignAppState();
-      // Note: actual piece/connection GUIDs should come from the kit data
-      // For now, we just mark that select all was triggered
-      return { designApps: { ...context.designApps, [key]: { ...app, selection: { pieces: [], connections: [] } } } };
-    }),
-    designDeleteSelected: assign(({ context, event }) => {
-      if (event.type !== "DESIGN.DELETE_SELECTED") return {};
-      const key = `${event.kitGuid}:${event.designGuid}`;
-      const app = context.designApps[key] || createDefaultDesignAppState();
-      // Clear selection after delete
-      return { designApps: { ...context.designApps, [key]: { ...app, selection: undefined } } };
-    }),
+    designSelectPiece: assign(({ context, event }) => executeRuntimeAction("designSelectPiece", context, event)),
+    designDeselectPiece: assign(({ context, event }) => executeRuntimeAction("designDeselectPiece", context, event)),
+    designSelectConnection: assign(({ context, event }) => executeRuntimeAction("designSelectConnection", context, event)),
+    designDeselectConnection: assign(({ context, event }) => executeRuntimeAction("designDeselectConnection", context, event)),
+    designSelectAll: assign(({ context, event }) => executeRuntimeAction("designSelectAll", context, event)),
+    designDeleteSelected: assign(({ context, event }) => executeRuntimeAction("designDeleteSelected", context, event)),
   },
 }).createMachine({
   id: "sketchpad",
@@ -9348,8 +8710,8 @@ export const sketchpadMachine = setup({
     SET_MODE: {
       actions: ["setMode"],
     },
-    SET_LAYOUT: {
-      actions: ["setLayout"],
+    SET_DEVICE: {
+      actions: ["setDevice"],
     },
     TOGGLE_FULLSCREEN: {
       actions: ["toggleFullscreen"],
@@ -9379,158 +8741,42 @@ export const sketchpadMachine = setup({
       initial: "home",
       states: {
         // Home state - kit selection and global settings
+        // Uses wildcard "*" to accept ANY event - apps register handlers via registerEventHandler
         home: {
           on: {
-            // Home app events - only available in home state
-            "HOME.TOGGLE_PANEL": { actions: "homeTogglePanel" },
-            "HOME.SET_PANEL_VISIBILITY": { actions: "homeSetPanelVisibility" },
-            "HOME.SET_SORT": { actions: "homeSetSort" },
-            "HOME.SELECT_KIT": { actions: "homeSelectKit" },
-            "HOME.DESELECT_KIT": { actions: "homeDeselectKit" },
-            "HOME.CLEAR_SELECTION": { actions: "homeClearSelection" },
-            "HOME.SET_HOVER": { actions: "homeSetHover" },
-            "HOME.CLEAR_HOVER": {
-              guard: "hasHomeHover",
-              actions: "homeClearHover",
-            },
+            "*": { actions: "dispatchAppEvent" },
           },
         },
         // Kit state - browsing types, designs, files within a kit
         kit: {
           on: {
-            // Kit app events - only available in kit state
-            // NOTE: Guards removed because actions use createDefaultKitAppState() fallback
-            // This allows panel toggles to work even when navigating directly via URL
-            "KIT.SYNC": { guard: "kitAppExists", actions: "kitSync" },
-            "KIT.TOGGLE_PANEL": { actions: "kitTogglePanel" },
-            "KIT.SET_PANEL_VISIBILITY": { actions: "kitSetPanelVisibility" },
-            "KIT.SET_FILTER": { actions: "kitSetFilter" },
-            "KIT.TOGGLE_ROW": { actions: "kitToggleRow" },
-            "KIT.SET_EXPANDED_ROWS": { actions: "kitSetExpandedRows" },
-            "KIT.SET_SORT": { actions: "kitSetSort" },
-            "KIT.SELECT_TYPE": { actions: "kitSelectType" },
-            "KIT.DESELECT_TYPE": { actions: "kitDeselectType" },
-            "KIT.SELECT_DESIGN": { actions: "kitSelectDesign" },
-            "KIT.DESELECT_DESIGN": { actions: "kitDeselectDesign" },
-            "KIT.SET_SELECTION": { actions: "kitSetSelection" },
-            "KIT.CLEAR_SELECTION": { actions: "kitClearSelection" },
-            "KIT.SET_HOVER": { actions: "kitSetHover" },
-            "KIT.CLEAR_HOVER": {
-              guard: "hasKitHover",
-              actions: "kitClearHover",
-            },
-            // Kit transaction events (scoped to kit app)
-            "KIT.TRANSACTION.START": { actions: "kitTransactionStart" },
-            "KIT.TRANSACTION.COMMIT": { guard: "kitAppExists", actions: "kitTransactionCommit" },
-            "KIT.TRANSACTION.ABORT": { guard: "kitAppExists", actions: "kitTransactionAbort" },
-            "KIT.TRANSACTION.UNDO": { guard: "kitAppExists", actions: "kitTransactionUndo" },
-            "KIT.TRANSACTION.REDO": { guard: "kitAppExists", actions: "kitTransactionRedo" },
-            "KIT.TRANSACTION.RECORD_EDIT": { guard: "kitAppExists", actions: "kitTransactionRecordEdit" },
+            "*": { actions: "dispatchAppEvent" },
           },
         },
         // Design state - editing a design with pieces and connections
         design: {
           on: {
-            // Design app events - only available in design state
-            // NOTE: Guards removed because actions use createDefaultDesignAppState() fallback
-            // This allows panel toggles to work even when navigating directly via URL
-            "DESIGN.SYNC": { guard: "designAppExists", actions: "designSync" },
-            "DESIGN.TOGGLE_PANEL": { actions: "designTogglePanel" },
-            "DESIGN.SET_PANEL_VISIBILITY": { actions: "designSetPanelVisibility" },
-            "DESIGN.SET_ACTIVE_TOOL": { actions: "designSetActiveTool" },
-            "DESIGN.SET_FULLSCREEN": { actions: "designSetFullscreen" },
-            "DESIGN.SET_SELECTION": { actions: "designSetSelection" },
-            "DESIGN.CLEAR_SELECTION": {
-              guard: "hasDesignSelection",
-              actions: "designClearSelection",
-            },
-            "DESIGN.SET_HOVER": { actions: "designSetHover" },
-            "DESIGN.CLEAR_HOVER": {
-              guard: "hasDesignHover",
-              actions: "designClearHover",
-            },
-            "DESIGN.FOCUS_PIECE": { actions: "designFocusPiece" },
-            "DESIGN.SET_DIAGRAM_CENTER": { actions: "designSetDiagramCenter" },
-            "DESIGN.SET_DIAGRAM_SCALE": { actions: "designSetDiagramScale" },
-            "DESIGN.SET_CAMERA": { actions: "designSetCamera" },
-            "DESIGN.SELECT_MODEL_TAG": { actions: "designSelectModelTag" },
-            "DESIGN.DESELECT_MODEL_TAG": { actions: "designDeselectModelTag" },
-            "DESIGN.SELECT_PIECE": { actions: "designSelectPiece" },
-            "DESIGN.DESELECT_PIECE": { actions: "designDeselectPiece" },
-            "DESIGN.SELECT_CONNECTION": { actions: "designSelectConnection" },
-            "DESIGN.DESELECT_CONNECTION": { actions: "designDeselectConnection" },
-            "DESIGN.SELECT_ALL": { actions: "designSelectAll" },
-            "DESIGN.DELETE_SELECTED": {
-              guard: "hasDesignSelection",
-              actions: "designDeleteSelected",
-            },
-            // Design transaction events (scoped to design app)
-            "DESIGN.TRANSACTION.START": { actions: "designTransactionStart" },
-            "DESIGN.TRANSACTION.COMMIT": { guard: "designAppExists", actions: "designTransactionCommit" },
-            "DESIGN.TRANSACTION.ABORT": { guard: "designAppExists", actions: "designTransactionAbort" },
-            "DESIGN.TRANSACTION.UNDO": { guard: "designAppExists", actions: "designTransactionUndo" },
-            "DESIGN.TRANSACTION.REDO": { guard: "designAppExists", actions: "designTransactionRedo" },
-            "DESIGN.TRANSACTION.RECORD_EDIT": { guard: "designAppExists", actions: "designTransactionRecordEdit" },
+            "*": { actions: "dispatchAppEvent" },
           },
         },
         // Type state - editing a type with ports and models
         type: {
           on: {
-            // Type app events - only available in type state
-            // NOTE: Guards removed because actions use createDefaultTypeAppState() fallback
-            // This allows panel toggles to work even when navigating directly via URL
-            "TYPE.SYNC": { guard: "typeAppExists", actions: "typeSync" },
-            "TYPE.TOGGLE_PANEL": { actions: "typeTogglePanel" },
-            "TYPE.SET_PANEL_VISIBILITY": { actions: "typeSetPanelVisibility" },
-            "TYPE.SET_FULLSCREEN_WINDOW": { actions: "typeSetFullscreenWindow" },
-            "TYPE.SET_ACTIVE_TOOL": { actions: "typeSetActiveTool" },
-            "TYPE.SET_SELECTION": { actions: "typeSetSelection" },
-            "TYPE.CLEAR_SELECTION": {
-              guard: "hasTypeSelection",
-              actions: "typeClearSelection",
-            },
-            "TYPE.SELECT_PORT": { actions: "typeSelectPort" },
-            "TYPE.DESELECT_PORT": { actions: "typeDeselectPort" },
-            "TYPE.SET_HOVER": { actions: "typeSetHover" },
-            "TYPE.CLEAR_HOVER": {
-              guard: "hasTypeHover",
-              actions: "typeClearHover",
-            },
-            "TYPE.FOCUS_PORT": { actions: "typeFocusPort" },
-            "TYPE.SELECT_MODEL_TAG": { actions: "typeSelectModelTag" },
-            "TYPE.DESELECT_MODEL_TAG": { actions: "typeDeselectModelTag" },
-            "TYPE.SET_MODEL_TAGS": { actions: "typeSetModelTags" },
-            "TYPE.SET_CAMERA": { actions: "typeSetCamera" },
-            "TYPE.SELECT_ALL": { actions: "typeSelectAll" },
-            "TYPE.DESELECT_ALL": { actions: "typeDeselectAll" },
-            "TYPE.CLEAR_FOCUS": { actions: "typeClearFocus" },
-            "TYPE.SELECT_MODEL": { actions: "typeSelectModel" },
-            "TYPE.DESELECT_MODEL": { actions: "typeDeselectModel" },
-            "TYPE.HOVER_PORT": { actions: "typeHoverPort" },
-            "TYPE.HOVER_MODEL": { actions: "typeHoverModel" },
-            "TYPE.SET_SELECTED_MODEL": { actions: "typeSetSelectedModel" },
-            "TYPE.ADD_MODEL_TAG": { actions: "typeAddModelTag" },
-            "TYPE.REMOVE_MODEL_TAG": { actions: "typeRemoveModelTag" },
-            "TYPE.CLEAR_MODEL_TAGS": { actions: "typeClearModelTags" },
-            // Type transaction events (scoped to type app)
-            "TYPE.TRANSACTION.START": { actions: "typeTransactionStart" },
-            "TYPE.TRANSACTION.COMMIT": { guard: "typeAppExists", actions: "typeTransactionCommit" },
-            "TYPE.TRANSACTION.ABORT": { guard: "typeAppExists", actions: "typeTransactionAbort" },
-            "TYPE.TRANSACTION.UNDO": { guard: "typeAppExists", actions: "typeTransactionUndo" },
-            "TYPE.TRANSACTION.REDO": { guard: "typeAppExists", actions: "typeTransactionRedo" },
-            "TYPE.TRANSACTION.RECORD_EDIT": { guard: "typeAppExists", actions: "typeTransactionRecordEdit" },
+            "*": { actions: "dispatchAppEvent" },
           },
         },
         // Quality state - editing a quality with benchmarks
         quality: {
           on: {
-            // Quality app events - only available in quality state
-            "QUALITY.TOGGLE_PANEL": { actions: "qualityTogglePanel" },
-            "QUALITY.TOGGLE_BENCHMARK": { actions: "qualityToggleBenchmark" },
+            "*": { actions: "dispatchAppEvent" },
           },
         },
         // Docs state - viewing documentation
-        docs: {},
+        docs: {
+          on: {
+            "*": { actions: "dispatchAppEvent" },
+          },
+        },
       },
     },
   },
@@ -9756,7 +9002,7 @@ export const selectSketchpadTheme = (state: { context: SketchpadContext }) => st
 export const selectSketchpadLanguage = (state: { context: SketchpadContext }) => state.context.sketchpad.language || "en";
 export const selectSketchpadExpertise = (state: { context: SketchpadContext }) => state.context.sketchpad.expertise ?? Expertise.BEGINNER;
 export const selectSketchpadMode = (state: { context: SketchpadContext }) => state.context.sketchpad.mode ?? Mode.USER;
-export const selectSketchpadLayout = (state: { context: SketchpadContext }) => state.context.sketchpad.layout || "desktop";
+export const selectSketchpadDevice = (state: { context: SketchpadContext }) => state.context.sketchpad.device || "desktop";
 export const selectSketchpadIsFullscreen = (state: { context: SketchpadContext }) => state.context.sketchpad.isFullscreen || false;
 export const selectSketchpadPanelSizes = (state: { context: SketchpadContext }) => state.context.sketchpad.panelSizes || createDefaultSketchpadState().panelSizes;
 export const selectSketchpadNavigationHistory = (state: { context: SketchpadContext }) => (state.context.sketchpad.navigationHistory || ["/"]).map(migratePath);
@@ -9808,816 +9054,39 @@ export const createTransactionCanRedoSelector = (appKey: string) => (state: { co
 
 // #endregion Sketchpad Machine
 
-// #region UI State Machine
+// NOTE: uiMachine has been removed and consolidated into sketchpadMachine
+// All UI state is now managed by the single sketchpadMachine
 
-/**
- * UI State Machine - Models navigation and interaction states
- *
- * This machine complements sketchpadMachine by providing:
- * - Hierarchical navigation states (Home → Kit → Design/Type/Quality)
- * - Parallel interaction states within each app (hover, selection, context menus)
- * - Tool states for Design and Type apps
- * - Modal states (dialogs, command palette, search)
- *
- * Architecture:
- * - sketchpadMachine: Data and app configuration (Y.js sync, settings)
- * - uiMachine: UI interaction states (navigation, hover, menus, modals)
- */
-
-// #region UI Types
-
-export interface UiContext {
-  activeKitGuid?: Guid;
-  activeDesignGuid?: Guid;
-  activeTypeGuid?: Guid;
-  activeQualityGuid?: Guid;
-  kitApps: Record<Guid, KitAppState>;
-  designApps: Record<string, DesignAppState>;
-  typeApps: Record<string, TypeAppState>;
-  qualityApps: Record<string, QualityAppState>;
-  hoveredEntity?: { kind: UiEntityKind; guid: Guid; parentGuid?: Guid };
-  selectedEntities: Array<{ kind: UiEntityKind; guid: Guid; parentGuid?: Guid }>;
-  menuPosition?: { x: number; y: number };
-  menuTarget?: { kind: UiEntityKind; guid: Guid; parentGuid?: Guid };
-  dragState?: { kind: UiEntityKind; guid: Guid; startPosition: { x: number; y: number } };
-  commandPaletteQuery?: string;
-  searchQuery?: string;
-}
-
+// Legacy type export for backwards compatibility during migration
 export type UiEntityKind = "kit" | "type" | "design" | "piece" | "connection" | "port" | "model" | "quality" | "benchmark" | "file" | "folder" | "author" | "interface" | "tag" | "concept";
 
-export type UiEvent =
-  | { type: "load" }
-  | { type: "open.kit"; kitGuid: Guid }
-  | { type: "open.design"; kitGuid: Guid; designGuid: Guid }
-  | { type: "open.type"; kitGuid: Guid; typeGuid: Guid }
-  | { type: "open.quality"; kitGuid: Guid; qualityGuid: Guid }
-  | { type: "open.docs" }
-  | { type: "back" }
-  | { type: "hover"; entity: { kind: UiEntityKind; guid: Guid; parentGuid?: Guid } }
-  | { type: "unhover" }
-  | { type: "select"; entity: { kind: UiEntityKind; guid: Guid; parentGuid?: Guid }; additive?: boolean }
-  | { type: "deselect"; entity: { kind: UiEntityKind; guid: Guid; parentGuid?: Guid } }
-  | { type: "deselect.all" }
-  | { type: "menu.open"; position: { x: number; y: number }; target: { kind: UiEntityKind; guid: Guid; parentGuid?: Guid } }
-  | { type: "menu.close" }
-  | { type: "menu.action"; action: string }
-  | { type: "drag.start"; entity: { kind: UiEntityKind; guid: Guid }; position: { x: number; y: number } }
-  | { type: "drag.move"; position: { x: number; y: number } }
-  | { type: "drag.end"; position: { x: number; y: number } }
-  | { type: "drag.cancel" }
-  | { type: "tool.select"; tool: ToolKind }
-  | { type: "panel.toggle"; panel: keyof PanelVisibility }
-  | { type: "command.open" }
-  | { type: "command.close" }
-  | { type: "command.query"; query: string }
-  | { type: "command.execute"; command: string }
-  | { type: "search.open" }
-  | { type: "search.close" }
-  | { type: "search.query"; query: string }
-  | { type: "focus"; entity: { kind: UiEntityKind; guid: Guid; parentGuid?: Guid } }
-  | { type: "focus.clear" }
-  | { type: "escape" };
-
-// #endregion UI Types
-
-export const uiMachine = setup({
-  types: {
-    context: {} as UiContext,
-    events: {} as UiEvent,
-  },
-  guards: {
-    hasHoveredEntity: ({ context }) => context.hoveredEntity !== undefined,
-    hasSelection: ({ context }) => context.selectedEntities.length > 0,
-    hasMenuTarget: ({ context }) => context.menuTarget !== undefined,
-    hasDragState: ({ context }) => context.dragState !== undefined,
-    isAdditiveSelect: ({ event }) => (event as any).additive === true,
-    canNavigateBack: ({ context }) => context.activeDesignGuid !== undefined || context.activeTypeGuid !== undefined || context.activeQualityGuid !== undefined || context.activeKitGuid !== undefined,
-  },
-  actions: {
-    setActiveKit: assign(({ context, event }) => {
-      if (event.type !== "open.kit") return {};
-      return {
-        activeKitGuid: event.kitGuid,
-        activeDesignGuid: undefined,
-        activeTypeGuid: undefined,
-        activeQualityGuid: undefined,
-        // Initialize kitApps entry if it doesn't exist
-        kitApps: context.kitApps[event.kitGuid]
-          ? context.kitApps
-          : { ...context.kitApps, [event.kitGuid]: createDefaultKitAppState() },
-      };
-    }),
-    setActiveDesign: assign(({ context, event }) => {
-      if (event.type !== "open.design") return {};
-      const designKey = `${event.kitGuid}:${event.designGuid}`;
-      return {
-        activeKitGuid: event.kitGuid,
-        activeDesignGuid: event.designGuid,
-        activeTypeGuid: undefined,
-        activeQualityGuid: undefined,
-        // Initialize designApps entry if it doesn't exist
-        designApps: context.designApps[designKey]
-          ? context.designApps
-          : { ...context.designApps, [designKey]: createDefaultDesignAppState() },
-      };
-    }),
-    setActiveType: assign(({ context, event }) => {
-      if (event.type !== "open.type") return {};
-      const typeKey = `${event.kitGuid}:${event.typeGuid}`;
-      return {
-        activeKitGuid: event.kitGuid,
-        activeTypeGuid: event.typeGuid,
-        activeDesignGuid: undefined,
-        activeQualityGuid: undefined,
-        // Initialize typeApps entry if it doesn't exist
-        typeApps: context.typeApps[typeKey]
-          ? context.typeApps
-          : { ...context.typeApps, [typeKey]: createDefaultTypeAppState() },
-      };
-    }),
-    setActiveQuality: assign(({ context, event }) => {
-      if (event.type !== "open.quality") return {};
-      const qualityKey = `${event.kitGuid}:${event.qualityGuid}`;
-      return {
-        activeKitGuid: event.kitGuid,
-        activeQualityGuid: event.qualityGuid,
-        activeDesignGuid: undefined,
-        activeTypeGuid: undefined,
-        // Initialize qualityApps entry if it doesn't exist
-        qualityApps: context.qualityApps[qualityKey]
-          ? context.qualityApps
-          : { ...context.qualityApps, [qualityKey]: createDefaultQualityAppState() },
-      };
-    }),
-    clearActiveArtifact: assign(() => ({
-      activeDesignGuid: undefined,
-      activeTypeGuid: undefined,
-      activeQualityGuid: undefined,
-    })),
-    clearActiveKit: assign(() => ({
-      activeKitGuid: undefined,
-      activeDesignGuid: undefined,
-      activeTypeGuid: undefined,
-      activeQualityGuid: undefined,
-    })),
-    setHoveredEntity: assign(({ event }) => {
-      if (event.type !== "hover") return {};
-      return { hoveredEntity: event.entity };
-    }),
-    clearHoveredEntity: assign(() => ({ hoveredEntity: undefined })),
-    selectEntity: assign(({ context, event }) => {
-      if (event.type !== "select") return {};
-      const entity = event.entity;
-      const existing = context.selectedEntities.find((e) => e.kind === entity.kind && e.guid === entity.guid);
-      if (existing) return {};
-      if (event.additive) {
-        return { selectedEntities: [...context.selectedEntities, entity] };
-      }
-      return { selectedEntities: [entity] };
-    }),
-    deselectEntity: assign(({ context, event }) => {
-      if (event.type !== "deselect") return {};
-      return {
-        selectedEntities: context.selectedEntities.filter((e) => !(e.kind === event.entity.kind && e.guid === event.entity.guid)),
-      };
-    }),
-    clearSelection: assign(() => ({ selectedEntities: [] })),
-    openMenu: assign(({ event }) => {
-      if (event.type !== "menu.open") return {};
-      return { menuPosition: event.position, menuTarget: event.target };
-    }),
-    closeMenu: assign(() => ({ menuPosition: undefined, menuTarget: undefined })),
-    startDrag: assign(({ event }) => {
-      if (event.type !== "drag.start") return {};
-      return { dragState: { kind: event.entity.kind, guid: event.entity.guid, startPosition: event.position } };
-    }),
-    endDrag: assign(() => ({ dragState: undefined })),
-    setCommandQuery: assign(({ event }) => {
-      if (event.type !== "command.query") return {};
-      return { commandPaletteQuery: event.query };
-    }),
-    clearCommandQuery: assign(() => ({ commandPaletteQuery: undefined })),
-    setSearchQuery: assign(({ event }) => {
-      if (event.type !== "search.query") return {};
-      return { searchQuery: event.query };
-    }),
-    clearSearchQuery: assign(() => ({ searchQuery: undefined })),
-  },
-}).createMachine({
-  id: "ui",
-  initial: "idle",
-  context: {
-    activeKitGuid: undefined,
-    activeDesignGuid: undefined,
-    activeTypeGuid: undefined,
-    activeQualityGuid: undefined,
-    kitApps: {},
-    designApps: {},
-    typeApps: {},
-    qualityApps: {},
-    hoveredEntity: undefined,
-    selectedEntities: [],
-    menuPosition: undefined,
-    menuTarget: undefined,
-    dragState: undefined,
-    commandPaletteQuery: undefined,
-    searchQuery: undefined,
-  },
-  states: {
-    idle: {
-      on: {
-        load: { target: "home" },
-      },
-    },
-    home: {
-      type: "parallel",
-      on: {
-        "open.kit": { target: "kit", actions: "setActiveKit" },
-        "open.docs": { target: "docs" },
-      },
-      states: {
-        interaction: {
-          initial: "idle",
-          states: {
-            idle: {
-              on: {
-                hover: { target: "hovered", actions: "setHoveredEntity" },
-              },
-            },
-            hovered: {
-              on: {
-                unhover: { target: "idle", actions: "clearHoveredEntity" },
-                hover: { actions: "setHoveredEntity" },
-                select: { target: "selected", actions: "selectEntity" },
-                "menu.open": { target: "contextMenu", actions: "openMenu" },
-              },
-            },
-            selected: {
-              on: {
-                hover: { target: "selectedHovered", actions: "setHoveredEntity" },
-                select: { actions: "selectEntity" },
-                deselect: { actions: "deselectEntity" },
-                "deselect.all": { target: "idle", actions: "clearSelection" },
-                "menu.open": { target: "contextMenu", actions: "openMenu" },
-                escape: { target: "idle", actions: "clearSelection" },
-              },
-            },
-            selectedHovered: {
-              on: {
-                unhover: { target: "selected", actions: "clearHoveredEntity" },
-                hover: { actions: "setHoveredEntity" },
-                select: { actions: "selectEntity" },
-                deselect: { actions: "deselectEntity" },
-                "menu.open": { target: "contextMenu", actions: "openMenu" },
-              },
-            },
-            contextMenu: {
-              initial: "kitMenu",
-              on: {
-                "menu.close": { target: "idle", actions: "closeMenu" },
-                escape: { target: "idle", actions: "closeMenu" },
-              },
-              states: {
-                kitMenu: {},
-              },
-            },
-          },
-        },
-        modal: {
-          initial: "none",
-          states: {
-            none: {
-              on: {
-                "command.open": { target: "commandPalette" },
-                "search.open": { target: "search" },
-              },
-            },
-            commandPalette: {
-              on: {
-                "command.close": { target: "none", actions: "clearCommandQuery" },
-                "command.query": { actions: "setCommandQuery" },
-                "command.execute": { target: "none", actions: "clearCommandQuery" },
-                escape: { target: "none", actions: "clearCommandQuery" },
-              },
-            },
-            search: {
-              on: {
-                "search.close": { target: "none", actions: "clearSearchQuery" },
-                "search.query": { actions: "setSearchQuery" },
-                escape: { target: "none", actions: "clearSearchQuery" },
-              },
-            },
-          },
-        },
-      },
-    },
-    kit: {
-      type: "parallel",
-      on: {
-        "open.design": { target: "design", actions: "setActiveDesign" },
-        "open.type": { target: "type", actions: "setActiveType" },
-        "open.quality": { target: "quality", actions: "setActiveQuality" },
-        "open.docs": { target: "docs" },
-        back: { target: "home", actions: "clearActiveKit" },
-      },
-      states: {
-        interaction: {
-          initial: "idle",
-          states: {
-            idle: {
-              on: {
-                hover: { target: "hovered", actions: "setHoveredEntity" },
-              },
-            },
-            hovered: {
-              on: {
-                unhover: { target: "idle", actions: "clearHoveredEntity" },
-                hover: { actions: "setHoveredEntity" },
-                select: { target: "selected", actions: "selectEntity" },
-                "menu.open": { target: "contextMenu", actions: "openMenu" },
-              },
-            },
-            selected: {
-              on: {
-                hover: { target: "selectedHovered", actions: "setHoveredEntity" },
-                select: { actions: "selectEntity" },
-                deselect: { actions: "deselectEntity" },
-                "deselect.all": { target: "idle", actions: "clearSelection" },
-                "menu.open": { target: "contextMenu", actions: "openMenu" },
-                escape: { target: "idle", actions: "clearSelection" },
-              },
-            },
-            selectedHovered: {
-              on: {
-                unhover: { target: "selected", actions: "clearHoveredEntity" },
-                hover: { actions: "setHoveredEntity" },
-                select: { actions: "selectEntity" },
-                deselect: { actions: "deselectEntity" },
-                "menu.open": { target: "contextMenu", actions: "openMenu" },
-              },
-            },
-            contextMenu: {
-              initial: "typeMenu",
-              on: {
-                "menu.close": { target: "idle", actions: "closeMenu" },
-                escape: { target: "idle", actions: "closeMenu" },
-              },
-              states: {
-                typeMenu: {},
-                designMenu: {},
-                qualityMenu: {},
-                fileMenu: {},
-                authorMenu: {},
-              },
-            },
-          },
-        },
-        modal: {
-          initial: "none",
-          states: {
-            none: {
-              on: {
-                "command.open": { target: "commandPalette" },
-                "search.open": { target: "search" },
-              },
-            },
-            commandPalette: {
-              on: {
-                "command.close": { target: "none", actions: "clearCommandQuery" },
-                "command.query": { actions: "setCommandQuery" },
-                "command.execute": { target: "none", actions: "clearCommandQuery" },
-                escape: { target: "none", actions: "clearCommandQuery" },
-              },
-            },
-            search: {
-              on: {
-                "search.close": { target: "none", actions: "clearSearchQuery" },
-                "search.query": { actions: "setSearchQuery" },
-                escape: { target: "none", actions: "clearSearchQuery" },
-              },
-            },
-          },
-        },
-      },
-    },
-    design: {
-      type: "parallel",
-      on: {
-        "open.type": { target: "type", actions: "setActiveType" },
-        "open.docs": { target: "docs" },
-        back: { target: "kit", actions: "clearActiveArtifact" },
-      },
-      states: {
-        interaction: {
-          initial: "idle",
-          states: {
-            idle: {
-              on: {
-                hover: { target: "hovered", actions: "setHoveredEntity" },
-              },
-            },
-            hovered: {
-              on: {
-                unhover: { target: "idle", actions: "clearHoveredEntity" },
-                hover: { actions: "setHoveredEntity" },
-                select: { target: "selected", actions: "selectEntity" },
-                "menu.open": { target: "contextMenu", actions: "openMenu" },
-              },
-            },
-            selected: {
-              on: {
-                hover: { target: "selectedHovered", actions: "setHoveredEntity" },
-                select: { actions: "selectEntity" },
-                deselect: { actions: "deselectEntity" },
-                "deselect.all": { target: "idle", actions: "clearSelection" },
-                "menu.open": { target: "contextMenu", actions: "openMenu" },
-                escape: { target: "idle", actions: "clearSelection" },
-              },
-            },
-            selectedHovered: {
-              on: {
-                unhover: { target: "selected", actions: "clearHoveredEntity" },
-                hover: { actions: "setHoveredEntity" },
-                select: { actions: "selectEntity" },
-                deselect: { actions: "deselectEntity" },
-                "menu.open": { target: "contextMenu", actions: "openMenu" },
-              },
-            },
-            contextMenu: {
-              initial: "pieceMenu",
-              on: {
-                "menu.close": { target: "idle", actions: "closeMenu" },
-                escape: { target: "idle", actions: "closeMenu" },
-              },
-              states: {
-                pieceMenu: {},
-                connectionMenu: {},
-                piecesMenu: {},
-                connectionsMenu: {},
-                typeMenu: {},
-                designMenu: {},
-                canvasMenu: {},
-              },
-            },
-          },
-        },
-        tool: {
-          initial: "selectionNormal",
-          states: {
-            selectionNormal: {
-              on: {
-                "tool.select": [
-                  { guard: ({ event }) => event.tool === ToolKind.SELECTION_ADDITIVE, target: "selectionAdditive" },
-                  { guard: ({ event }) => event.tool === ToolKind.SELECTION_SUBTRACTIVE, target: "selectionSubtractive" },
-                  { guard: ({ event }) => event.tool === ToolKind.LASSO_RECTANGULAR, target: "lassoRectangular" },
-                  { guard: ({ event }) => event.tool === ToolKind.LASSO_FREEFORM, target: "lassoFreeform" },
-                ],
-              },
-            },
-            selectionAdditive: {
-              on: {
-                "tool.select": [
-                  { guard: ({ event }) => event.tool === ToolKind.SELECTION_NORMAL, target: "selectionNormal" },
-                  { guard: ({ event }) => event.tool === ToolKind.SELECTION_SUBTRACTIVE, target: "selectionSubtractive" },
-                  { guard: ({ event }) => event.tool === ToolKind.LASSO_RECTANGULAR, target: "lassoRectangular" },
-                  { guard: ({ event }) => event.tool === ToolKind.LASSO_FREEFORM, target: "lassoFreeform" },
-                ],
-              },
-            },
-            selectionSubtractive: {
-              on: {
-                "tool.select": [
-                  { guard: ({ event }) => event.tool === ToolKind.SELECTION_NORMAL, target: "selectionNormal" },
-                  { guard: ({ event }) => event.tool === ToolKind.SELECTION_ADDITIVE, target: "selectionAdditive" },
-                  { guard: ({ event }) => event.tool === ToolKind.LASSO_RECTANGULAR, target: "lassoRectangular" },
-                  { guard: ({ event }) => event.tool === ToolKind.LASSO_FREEFORM, target: "lassoFreeform" },
-                ],
-              },
-            },
-            lassoRectangular: {
-              on: {
-                "tool.select": [
-                  { guard: ({ event }) => event.tool === ToolKind.SELECTION_NORMAL, target: "selectionNormal" },
-                  { guard: ({ event }) => event.tool === ToolKind.SELECTION_ADDITIVE, target: "selectionAdditive" },
-                  { guard: ({ event }) => event.tool === ToolKind.SELECTION_SUBTRACTIVE, target: "selectionSubtractive" },
-                  { guard: ({ event }) => event.tool === ToolKind.LASSO_FREEFORM, target: "lassoFreeform" },
-                ],
-              },
-            },
-            lassoFreeform: {
-              on: {
-                "tool.select": [
-                  { guard: ({ event }) => event.tool === ToolKind.SELECTION_NORMAL, target: "selectionNormal" },
-                  { guard: ({ event }) => event.tool === ToolKind.SELECTION_ADDITIVE, target: "selectionAdditive" },
-                  { guard: ({ event }) => event.tool === ToolKind.SELECTION_SUBTRACTIVE, target: "selectionSubtractive" },
-                  { guard: ({ event }) => event.tool === ToolKind.LASSO_RECTANGULAR, target: "lassoRectangular" },
-                ],
-              },
-            },
-          },
-        },
-        drag: {
-          initial: "idle",
-          states: {
-            idle: {
-              on: {
-                "drag.start": { target: "dragging", actions: "startDrag" },
-              },
-            },
-            dragging: {
-              on: {
-                "drag.end": { target: "idle", actions: "endDrag" },
-                "drag.cancel": { target: "idle", actions: "endDrag" },
-                escape: { target: "idle", actions: "endDrag" },
-              },
-            },
-          },
-        },
-        modal: {
-          initial: "none",
-          states: {
-            none: {
-              on: {
-                "command.open": { target: "commandPalette" },
-                "search.open": { target: "search" },
-              },
-            },
-            commandPalette: {
-              on: {
-                "command.close": { target: "none", actions: "clearCommandQuery" },
-                "command.query": { actions: "setCommandQuery" },
-                "command.execute": { target: "none", actions: "clearCommandQuery" },
-                escape: { target: "none", actions: "clearCommandQuery" },
-              },
-            },
-            search: {
-              on: {
-                "search.close": { target: "none", actions: "clearSearchQuery" },
-                "search.query": { actions: "setSearchQuery" },
-                escape: { target: "none", actions: "clearSearchQuery" },
-              },
-            },
-          },
-        },
-      },
-    },
-    type: {
-      type: "parallel",
-      on: {
-        "open.design": { target: "design", actions: "setActiveDesign" },
-        "open.docs": { target: "docs" },
-        back: { target: "kit", actions: "clearActiveArtifact" },
-      },
-      states: {
-        interaction: {
-          initial: "idle",
-          states: {
-            idle: {
-              on: {
-                hover: { target: "hovered", actions: "setHoveredEntity" },
-              },
-            },
-            hovered: {
-              on: {
-                unhover: { target: "idle", actions: "clearHoveredEntity" },
-                hover: { actions: "setHoveredEntity" },
-                select: { target: "selected", actions: "selectEntity" },
-                "menu.open": { target: "contextMenu", actions: "openMenu" },
-              },
-            },
-            selected: {
-              on: {
-                hover: { target: "selectedHovered", actions: "setHoveredEntity" },
-                select: { actions: "selectEntity" },
-                deselect: { actions: "deselectEntity" },
-                "deselect.all": { target: "idle", actions: "clearSelection" },
-                "menu.open": { target: "contextMenu", actions: "openMenu" },
-                escape: { target: "idle", actions: "clearSelection" },
-              },
-            },
-            selectedHovered: {
-              on: {
-                unhover: { target: "selected", actions: "clearHoveredEntity" },
-                hover: { actions: "setHoveredEntity" },
-                select: { actions: "selectEntity" },
-                deselect: { actions: "deselectEntity" },
-                "menu.open": { target: "contextMenu", actions: "openMenu" },
-              },
-            },
-            contextMenu: {
-              initial: "portMenu",
-              on: {
-                "menu.close": { target: "idle", actions: "closeMenu" },
-                escape: { target: "idle", actions: "closeMenu" },
-              },
-              states: {
-                portMenu: {},
-                portsMenu: {},
-                modelMenu: {},
-                modelsMenu: {},
-                canvasMenu: {},
-              },
-            },
-          },
-        },
-        tool: {
-          initial: "selectionNormal",
-          states: {
-            selectionNormal: {
-              on: {
-                "tool.select": [{ guard: ({ event }) => event.tool === ToolKind.PORT, target: "port" }],
-              },
-            },
-            port: {
-              on: {
-                "tool.select": [{ guard: ({ event }) => event.tool === ToolKind.SELECTION_NORMAL, target: "selectionNormal" }],
-              },
-            },
-          },
-        },
-        modal: {
-          initial: "none",
-          states: {
-            none: {
-              on: {
-                "command.open": { target: "commandPalette" },
-                "search.open": { target: "search" },
-              },
-            },
-            commandPalette: {
-              on: {
-                "command.close": { target: "none", actions: "clearCommandQuery" },
-                "command.query": { actions: "setCommandQuery" },
-                "command.execute": { target: "none", actions: "clearCommandQuery" },
-                escape: { target: "none", actions: "clearCommandQuery" },
-              },
-            },
-            search: {
-              on: {
-                "search.close": { target: "none", actions: "clearSearchQuery" },
-                "search.query": { actions: "setSearchQuery" },
-                escape: { target: "none", actions: "clearSearchQuery" },
-              },
-            },
-          },
-        },
-      },
-    },
-    quality: {
-      type: "parallel",
-      on: {
-        "open.docs": { target: "docs" },
-        back: { target: "kit", actions: "clearActiveArtifact" },
-      },
-      states: {
-        interaction: {
-          initial: "idle",
-          states: {
-            idle: {
-              on: {
-                hover: { target: "hovered", actions: "setHoveredEntity" },
-              },
-            },
-            hovered: {
-              on: {
-                unhover: { target: "idle", actions: "clearHoveredEntity" },
-                hover: { actions: "setHoveredEntity" },
-                select: { target: "selected", actions: "selectEntity" },
-                "menu.open": { target: "contextMenu", actions: "openMenu" },
-              },
-            },
-            selected: {
-              on: {
-                hover: { target: "selectedHovered", actions: "setHoveredEntity" },
-                select: { actions: "selectEntity" },
-                deselect: { actions: "deselectEntity" },
-                "deselect.all": { target: "idle", actions: "clearSelection" },
-                "menu.open": { target: "contextMenu", actions: "openMenu" },
-                escape: { target: "idle", actions: "clearSelection" },
-              },
-            },
-            selectedHovered: {
-              on: {
-                unhover: { target: "selected", actions: "clearHoveredEntity" },
-                hover: { actions: "setHoveredEntity" },
-                select: { actions: "selectEntity" },
-                deselect: { actions: "deselectEntity" },
-                "menu.open": { target: "contextMenu", actions: "openMenu" },
-              },
-            },
-            contextMenu: {
-              initial: "benchmarkMenu",
-              on: {
-                "menu.close": { target: "idle", actions: "closeMenu" },
-                escape: { target: "idle", actions: "closeMenu" },
-              },
-              states: {
-                benchmarkMenu: {},
-                canvasMenu: {},
-              },
-            },
-          },
-        },
-        modal: {
-          initial: "none",
-          states: {
-            none: {
-              on: {
-                "command.open": { target: "commandPalette" },
-                "search.open": { target: "search" },
-              },
-            },
-            commandPalette: {
-              on: {
-                "command.close": { target: "none", actions: "clearCommandQuery" },
-                "command.query": { actions: "setCommandQuery" },
-                "command.execute": { target: "none", actions: "clearCommandQuery" },
-                escape: { target: "none", actions: "clearCommandQuery" },
-              },
-            },
-            search: {
-              on: {
-                "search.close": { target: "none", actions: "clearSearchQuery" },
-                "search.query": { actions: "setSearchQuery" },
-                escape: { target: "none", actions: "clearSearchQuery" },
-              },
-            },
-          },
-        },
-      },
-    },
-    docs: {
-      type: "parallel",
-      on: {
-        back: [{ guard: "canNavigateBack", target: "kit" }, { target: "home" }],
-        "open.kit": { target: "kit", actions: "setActiveKit" },
-      },
-      states: {
-        interaction: {
-          initial: "idle",
-          states: {
-            idle: {},
-          },
-        },
-        modal: {
-          initial: "none",
-          states: {
-            none: {
-              on: {
-                "search.open": { target: "search" },
-              },
-            },
-            search: {
-              on: {
-                "search.close": { target: "none", actions: "clearSearchQuery" },
-                "search.query": { actions: "setSearchQuery" },
-                escape: { target: "none", actions: "clearSearchQuery" },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-});
-
-// #region UI Selectors
-
-export const selectUiActiveKitGuid = (state: { context: UiContext }) => state.context.activeKitGuid;
-export const selectUiActiveDesignGuid = (state: { context: UiContext }) => state.context.activeDesignGuid;
-export const selectUiActiveTypeGuid = (state: { context: UiContext }) => state.context.activeTypeGuid;
-export const selectUiActiveQualityGuid = (state: { context: UiContext }) => state.context.activeQualityGuid;
-export const selectUiHoveredEntity = (state: { context: UiContext }) => state.context.hoveredEntity;
-export const selectUiSelectedEntities = (state: { context: UiContext }) => state.context.selectedEntities;
-export const selectUiMenuPosition = (state: { context: UiContext }) => state.context.menuPosition;
-export const selectUiMenuTarget = (state: { context: UiContext }) => state.context.menuTarget;
-export const selectUiDragState = (state: { context: UiContext }) => state.context.dragState;
-export const selectUiCommandPaletteQuery = (state: { context: UiContext }) => state.context.commandPaletteQuery;
-export const selectUiSearchQuery = (state: { context: UiContext }) => state.context.searchQuery;
-
-// Navigation state selectors
-export const selectUiIsInHome = (state: { value: any }) => state.value === "home" || (typeof state.value === "object" && "home" in state.value);
-export const selectUiIsInKit = (state: { value: any }) => state.value === "kit" || (typeof state.value === "object" && "kit" in state.value);
-export const selectUiIsInDesign = (state: { value: any }) => state.value === "design" || (typeof state.value === "object" && "design" in state.value);
-export const selectUiIsInType = (state: { value: any }) => state.value === "type" || (typeof state.value === "object" && "type" in state.value);
-export const selectUiIsInQuality = (state: { value: any }) => state.value === "quality" || (typeof state.value === "object" && "quality" in state.value);
-export const selectUiIsInDocs = (state: { value: any }) => state.value === "docs" || (typeof state.value === "object" && "docs" in state.value);
-
-// #endregion UI Selectors
-
-// #region UI Factory
-
-export type UiActorRef = ActorRefFrom<typeof uiMachine>;
-export type UiSnapshot = SnapshotFrom<typeof uiMachine>;
-
-export function createUiActor() {
-  return createActor(uiMachine);
-}
-
-// #endregion UI Factory
-
-// #endregion UI State Machine
+// Legacy selectors pointing to sketchpad equivalents (derive from navigation path)
+export const selectUiActiveKitGuid = (state: { context: SketchpadContext }) => {
+  const path = state.context.sketchpad?.navigation || "/";
+  const match = path.match(/\/kit\/([^/]+)/);
+  return match ? match[1] : undefined;
+};
+export const selectUiActiveDesignGuid = (state: { context: SketchpadContext }) => {
+  const path = state.context.sketchpad?.navigation || "/";
+  const match = path.match(/\/design\/([^/]+)/);
+  return match ? match[1] : undefined;
+};
+export const selectUiActiveTypeGuid = (state: { context: SketchpadContext }) => {
+  const path = state.context.sketchpad?.navigation || "/";
+  const match = path.match(/\/type\/([^/]+)/);
+  return match ? match[1] : undefined;
+};
+export const selectUiActiveQualityGuid = (state: { context: SketchpadContext }) => {
+  const path = state.context.sketchpad?.navigation || "/";
+  const match = path.match(/\/quality\/([^/]+)/);
+  return match ? match[1] : undefined;
+};
+export const selectUiIsInHome = selectIsInHome;
+export const selectUiIsInKit = selectIsInKit;
+export const selectUiIsInDesign = selectIsInDesign;
+export const selectUiIsInType = selectIsInType;
+export const selectUiIsInQuality = selectIsInQuality;
+export const selectUiIsInDocs = selectIsInDocs;
 
 // #region Factory
 
@@ -10741,8 +9210,8 @@ export function selectMode(context: SketchpadContext): Mode {
   return context.sketchpad.mode ?? Mode.USER;
 }
 
-export function selectLayout(context: SketchpadContext): Layout {
-  return context.sketchpad.layout || "desktop";
+export function selectDevice(context: SketchpadContext): Device {
+  return context.sketchpad.device || "desktop";
 }
 
 export function selectIsFullscreen(context: SketchpadContext): boolean {
@@ -12094,8 +10563,8 @@ export class SketchpadStore {
       if (!this.ySketchpad.has("language")) {
         this.ySketchpad.set("language", "en");
       }
-      if (!this.ySketchpad.has("layout")) {
-        this.ySketchpad.set("layout", JSON.stringify("desktop"));
+      if (!this.ySketchpad.has("device")) {
+        this.ySketchpad.set("device", JSON.stringify("desktop"));
       }
       if (!this.ySketchpad.has("expertise")) {
         this.ySketchpad.set("expertise", Expertise.BEGINNER);
@@ -12158,7 +10627,7 @@ export class SketchpadStore {
         if (initialState.recentFocusItems !== undefined) this.ySketchpad.set("recentFocusItems", JSON.stringify(initialState.recentFocusItems));
         if (initialState.theme !== undefined) this.ySketchpad.set("theme", initialState.theme);
         if (initialState.language !== undefined) this.ySketchpad.set("language", initialState.language);
-        if (initialState.layout !== undefined) this.ySketchpad.set("layout", JSON.stringify(initialState.layout));
+        if (initialState.device !== undefined) this.ySketchpad.set("device", JSON.stringify(initialState.device));
         if (initialState.expertise !== undefined) this.ySketchpad.set("expertise", initialState.expertise);
         if (initialState.mode !== undefined) this.ySketchpad.set("mode", initialState.mode);
         if (initialState.settings !== undefined) this.ySketchpad.set("settings", JSON.stringify(initialState.settings));
@@ -12234,8 +10703,8 @@ export class SketchpadStore {
     const recentFocusItems = recentFocusItemsStr ? JSON.parse(recentFocusItemsStr) : {};
     const hotkeyOverridesStr = this.ySketchpad.get("hotkeyOverrides") as string;
     const hotkeyOverrides = hotkeyOverridesStr ? JSON.parse(hotkeyOverridesStr) : {};
-    const layoutStr = this.ySketchpad.get("layout") as string;
-    const layout: Layout = layoutStr ? JSON.parse(layoutStr) : "desktop";
+    const deviceStr = this.ySketchpad.get("device") as string;
+    const device: Device = deviceStr ? JSON.parse(deviceStr) : "desktop";
     const currentValues = {
       navigation: migratePath((this.ySketchpad.get("navigation") as string) || "/"),
       navigationHistory: navigationHistory,
@@ -12244,7 +10713,7 @@ export class SketchpadStore {
       recentFocusItems: recentFocusItems,
       theme: this.ySketchpad.get("theme") as Theme,
       language: (this.ySketchpad.get("language") as string) || "en",
-      layout: layout,
+      device: device,
       expertise: (this.ySketchpad.get("expertise") as Expertise) ?? Expertise.BEGINNER,
       mode: (this.ySketchpad.get("mode") as Mode) ?? Mode.USER,
       settings: settings,
@@ -12381,7 +10850,7 @@ export class SketchpadStore {
       if (diff.language !== undefined) {
         this.ySketchpad.set("language", diff.language);
       }
-      if (diff.layout) this.ySketchpad.set("layout", JSON.stringify(diff.layout));
+      if (diff.device) this.ySketchpad.set("device", JSON.stringify(diff.device));
       if (diff.expertise) this.ySketchpad.set("expertise", diff.expertise);
       if (diff.mode) this.ySketchpad.set("mode", diff.mode);
       if (diff.isFullscreen !== undefined) this.ySketchpad.set("isFullscreen", diff.isFullscreen);
@@ -12701,7 +11170,7 @@ export class SketchpadStore {
       this.ySketchpad.set("recentSearches", JSON.stringify(state.sketchpad.recentSearches));
       this.ySketchpad.set("recentFocusItems", JSON.stringify(state.sketchpad.recentFocusItems));
       this.ySketchpad.set("theme", state.sketchpad.theme);
-      this.ySketchpad.set("layout", JSON.stringify(state.sketchpad.layout));
+      this.ySketchpad.set("device", JSON.stringify(state.sketchpad.device));
       this.ySketchpad.set("expertise", state.sketchpad.expertise);
       this.ySketchpad.set("mode", state.sketchpad.mode);
       this.ySketchpad.set("settings", JSON.stringify(state.sketchpad.settings));
@@ -13236,14 +11705,14 @@ export function useLanguage(): HookResult<string> {
   return conditionalHookResult(canSet, value, setter);
 }
 
-export function useLayout(): HookResult<Layout> {
+export function useDevice(): HookResult<Device> {
   const actor = useSketchpadActor();
-  const value = useSelector(actor, (snapshot) => selectLayout(snapshot.context));
-  const canSetEvent = useMemo(() => ({ type: "SET_LAYOUT" as const, layout: "desktop" as Layout }), []);
+  const value = useSelector(actor, (snapshot) => selectDevice(snapshot.context));
+  const canSetEvent = useMemo(() => ({ type: "SET_DEVICE" as const, device: "desktop" as Device }), []);
   const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setter = useMemo(() => {
     if (!canSet) return undefined;
-    return (layout: Layout) => actor.send({ type: "SET_LAYOUT", layout });
+    return (device: Device) => actor.send({ type: "SET_DEVICE", device });
   }, [actor, canSet]);
   return conditionalHookResult(canSet, value, setter);
 }
@@ -13298,13 +11767,13 @@ export function useSemioTooltip() {
 }
 
 export function useIsNavbarExpanded(): boolean {
-  const [layout] = useLayout();
-  return typeof layout === "object" ? layout.isNavbarExpanded : false;
+  const [device] = useDevice();
+  return typeof device === "object" ? device.isNavbarExpanded : false;
 }
 
 export function useIsFooterExpanded(): boolean {
-  const [layout] = useLayout();
-  return typeof layout === "object" ? layout.isFooterExpanded : false;
+  const [device] = useDevice();
+  return typeof device === "object" ? device.isFooterExpanded : false;
 }
 
 export function useActiveInteraction(): string | undefined {
@@ -13429,11 +11898,11 @@ export function useModeXState(): Mode {
 }
 
 /**
- * XState-based hook for layout.
+ * XState-based hook for device.
  */
-export function useLayoutXState(): Layout {
+export function useDeviceXState(): Device {
   const actor = useSketchpadActor();
-  return useSelector(actor, (snapshot) => selectLayout(snapshot.context));
+  return useSelector(actor, (snapshot) => selectDevice(snapshot.context));
 }
 
 /**
@@ -13468,7 +11937,7 @@ export function useSketchpadActions() {
       setLanguage: (language: string) => actor.send({ type: "SET_LANGUAGE", language }),
       setExpertise: (expertise: Expertise) => actor.send({ type: "SET_EXPERTISE", expertise }),
       setMode: (mode: Mode) => actor.send({ type: "SET_MODE", mode }),
-      setLayout: (layout: Layout) => actor.send({ type: "SET_LAYOUT", layout }),
+      setDevice: (device: Device) => actor.send({ type: "SET_DEVICE", device }),
       toggleFullscreen: () => actor.send({ type: "TOGGLE_FULLSCREEN" }),
       setPanelSize: (panel: keyof PanelSizes, size: number) => actor.send({ type: "SET_PANEL_SIZE", panel, size }),
       change: (diff: SketchpadDiff) => actor.send({ type: "CHANGE", diff }),
@@ -13902,7 +12371,7 @@ export function useSketchpadCommands() {
     () => ({
       setTheme: (origin: string, theme: Theme) => store.execute("semio.sketchpad.setTheme", origin, theme),
       setLanguage: (origin: string, language: string) => store.execute("semio.sketchpad.setLanguage", origin, language),
-      setLayout: (origin: string, layout: Layout) => store.execute("semio.sketchpad.setLayout", origin, layout),
+      setDevice: (origin: string, device: Device) => store.execute("semio.sketchpad.setDevice", origin, device),
       setExpertise: (origin: string, expertise: Expertise) => store.execute("semio.sketchpad.setExpertise", origin, expertise),
       setMode: (origin: string, mode: Mode) => store.execute("semio.sketchpad.setMode", origin, mode),
       exportState: (origin: string) => store.execute("semio.sketchpad.exportState", origin),
@@ -14037,9 +12506,9 @@ export const commands = {
       diff: { theme },
     };
   },
-  "semio.sketchpad.setLayout": (context: SketchpadCommandContext, layout: Layout): SketchpadCommandResult => {
+  "semio.sketchpad.setDevice": (context: SketchpadCommandContext, device: Device): SketchpadCommandResult => {
     return {
-      diff: { layout },
+      diff: { device },
     };
   },
   "semio.sketchpad.setExpertise": (context: SketchpadCommandContext, expertise: Expertise): SketchpadCommandResult => {
@@ -14063,19 +12532,19 @@ export const commands = {
     };
   },
   "semio.sketchpad.toggleNavbarExpanded": (context: SketchpadCommandContext): SketchpadCommandResult => {
-    const layout = context.sketchpad.layout;
-    if (typeof layout === "object") {
+    const device = context.sketchpad.device;
+    if (typeof device === "object") {
       return {
-        diff: { layout: { ...layout, isNavbarExpanded: !layout.isNavbarExpanded } },
+        diff: { device: { ...device, isNavbarExpanded: !device.isNavbarExpanded } },
       };
     }
     return {};
   },
   "semio.sketchpad.toggleFooterExpanded": (context: SketchpadCommandContext): SketchpadCommandResult => {
-    const layout = context.sketchpad.layout;
-    if (typeof layout === "object") {
+    const device = context.sketchpad.device;
+    if (typeof device === "object") {
       return {
-        diff: { layout: { ...layout, isFooterExpanded: !layout.isFooterExpanded } },
+        diff: { device: { ...device, isFooterExpanded: !device.isFooterExpanded } },
       };
     }
     return {};
@@ -14194,7 +12663,7 @@ export const commands = {
     if (state.recentFocusItems !== undefined) diff.recentFocusItems = state.recentFocusItems;
     if (state.theme !== undefined) diff.theme = state.theme;
     if (state.language !== undefined) diff.language = state.language;
-    if (state.layout !== undefined) diff.layout = state.layout;
+    if (state.device !== undefined) diff.device = state.device;
     if (state.expertise !== undefined) diff.expertise = state.expertise;
     if (state.mode !== undefined) diff.mode = state.mode;
     if (state.settings !== undefined) diff.settings = state.settings;
@@ -14294,7 +12763,7 @@ class AppRegistry {
 const appRegistry = new AppRegistry();
 
 // Import xstate outside the circular dependency
-import { ActorRefFrom, AnyActorRef, assign, createActor, fromCallback, setup, SnapshotFrom } from "xstate";
+import { ActorRefFrom, AnyActorRef, assign, createActor, setup, SnapshotFrom } from "xstate";
 
 // Lazy-load app configs to avoid circular dependency issues
 // These modules import KitDiffAppStore from this file, so we need to defer loading
@@ -14603,14 +13072,7 @@ export const ConceptFilter: FC<{ allConcepts: string[]; paramName?: string }> = 
       id="semio.sketchpad.filter.concepts"
       items={allConcepts.map((concept) => ({
         key: concept,
-        content: (
-          <Action
-            onClick={() => toggleConcept(concept)}
-            id={`semio.sketchpad.filter.concept.${concept}`}
-            text={concept}
-            className={selectedConcepts.includes(concept) ? "bg-active-base" : ""}
-          />
-        ),
+        content: <Action onClick={() => toggleConcept(concept)} id={`semio.sketchpad.filter.concept.${concept}`} text={concept} className={selectedConcepts.includes(concept) ? "bg-active-base" : ""} />,
       }))}
     />
   );
@@ -17228,7 +15690,7 @@ const LayoutWrapper: FC = () => {
   const navigation = useNavigation();
   const [theme] = useTheme();
   const [language] = useLanguage();
-  const [layout] = useLayout();
+  const [device] = useDevice();
   const [isFullscreen] = useFullscreen();
   const isNavbarExpanded = useIsNavbarExpanded();
   const isFooterExpanded = useIsFooterExpanded();
@@ -17308,12 +15770,12 @@ const LayoutWrapper: FC = () => {
   useEffect(() => {
     if (typeof document === "undefined") return;
     const root = document.documentElement;
-    if (layout === "tablet") {
+    if (device === "tablet") {
       root.classList.add("touch");
     } else {
       root.classList.remove("touch");
     }
-  }, [layout]);
+  }, [device]);
 
   useEffect(() => {
     if (typeof document === "undefined") return;
