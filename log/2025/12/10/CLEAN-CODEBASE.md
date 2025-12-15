@@ -1,9 +1,17 @@
 ---
-date: '2025-12-10T10:23:05.772Z'
+date:
+  created: '2025-12-10T10:23:05.772Z'
+  updated: '2025-12-10T10:23:05.772Z'
 slug: CLEAN-CODEBASE
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Cleanup diagnostic artifacts
 model: claude-opus-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 # Previously
 

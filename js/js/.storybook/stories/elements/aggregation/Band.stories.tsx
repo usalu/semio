@@ -1,6 +1,6 @@
 // #region Header
 
-// Strip.stories.tsx
+// Band.stories.tsx
 
 // 2025 Ueli Saluz
 
@@ -21,23 +21,16 @@
 
 import { AddIcon, AwardIcon, DocumentIcon, FolderIcon, LayoutIcon, TypeIcon, UserIcon } from "@semio/assets";
 import type { Meta, StoryObj } from "@storybook/react";
-import { Button, Input, Strip, Toggle } from "../../../../sketchpad/elements";
+import { Band, Button, Input, Toggle } from "../../../../sketchpad/elements";
 
 const meta = {
-  title: "Elements/Aggregation/Strip",
-  component: Strip,
+  title: "Elements/Aggregation/Band",
+  component: Band,
   parameters: {
     layout: "centered",
   },
   tags: ["autodocs"],
-  argTypes: {
-    direction: {
-      control: "radio",
-      options: ["horizontal", "vertical"],
-      description: "Direction of the strip",
-    },
-  },
-} satisfies Meta<typeof Strip>;
+} satisfies Meta<typeof Band>;
 
 export default meta;
 
@@ -45,8 +38,7 @@ type Story = StoryObj<typeof meta>;
 
 export const HorizontalWithToggles: Story = {
   args: {
-    id: "strip-horizontal-with-toggles",
-    direction: "horizontal",
+    id: "band-horizontal-with-toggles",
     items: [
       <Toggle
         key="designs"
@@ -114,19 +106,18 @@ export const HorizontalWithToggles: Story = {
         actionId="semio.sketchpad.app.kit.kitApp.createAuthor"
         icon={<UserIcon className="size-tiny" />}
       />,
-    ],
+    ].map((content) => ({ content })),
   },
   render: (args) => (
     <div className="w-[600px]">
-      <Strip {...args} />
+      <Band {...args} />
     </div>
   ),
 };
 
 export const HorizontalWithMixedElements: Story = {
   args: {
-    id: "strip-horizontal-mixed",
-    direction: "horizontal",
+    id: "band-horizontal-mixed",
     items: [
       <Toggle key="1" pressed={true} onPressedChange={() => {}} id="toggle-1" icon={<LayoutIcon className="size-tiny" />} />,
       <Toggle key="2" pressed={false} onPressedChange={() => {}} id="toggle-2" icon={<TypeIcon className="size-tiny" />} />,
@@ -134,19 +125,19 @@ export const HorizontalWithMixedElements: Story = {
       <Button key="4" id="action" icon={<AddIcon className="size-tiny" />}>
         Add
       </Button>,
-    ],
+    ].map((content) => ({ content })),
   },
   render: (args) => (
     <div className="w-[600px]">
-      <Strip {...args} />
+      <Band {...args} />
     </div>
   ),
 };
 
 export const VerticalWithToggles: Story = {
   args: {
-    id: "strip-vertical-with-toggles",
-    direction: "vertical",
+    id: "band-non-scrollable-with-toggles",
+    scrollable: false,
     items: [
       <Toggle
         key="designs"
@@ -192,37 +183,36 @@ export const VerticalWithToggles: Story = {
         actionId="semio.sketchpad.app.kit.kitApp.createFile"
         icon={<DocumentIcon className="size-tiny" />}
       />,
-    ],
+    ].map((content) => ({ content })),
   },
   render: (args) => (
-    <div className="h-[400px]">
-      <Strip {...args} />
+    <div className="w-[400px]">
+      <Band {...args} />
     </div>
   ),
 };
 
 export const OverflowingHorizontal: Story = {
   args: {
-    id: "strip-overflowing-horizontal",
-    direction: "horizontal",
-    items: Array.from({ length: 20 }, (_, i) => <Toggle key={i} pressed={false} onPressedChange={() => {}} id={`toggle-${i}`} icon={`Item ${i + 1}`} />),
+    id: "band-overflowing-horizontal",
+    items: Array.from({ length: 20 }, (_, i) => <Toggle key={i} pressed={false} onPressedChange={() => {}} id={`toggle-${i}`} icon={`Item ${i + 1}`} />).map((content) => ({ content })),
   },
   render: (args) => (
     <div className="w-[600px]">
-      <Strip {...args} />
+      <Band {...args} />
     </div>
   ),
 };
 
 export const OverflowingVertical: Story = {
   args: {
-    id: "strip-overflowing-vertical",
-    direction: "vertical",
-    items: Array.from({ length: 20 }, (_, i) => <Toggle key={i} pressed={false} onPressedChange={() => {}} id={`toggle-${i}`} icon={`Item ${i + 1}`} />),
+    id: "band-overflowing-non-scrollable",
+    scrollable: false,
+    items: Array.from({ length: 20 }, (_, i) => <Toggle key={i} pressed={false} onPressedChange={() => {}} id={`toggle-${i}`} icon={`Item ${i + 1}`} />).map((content) => ({ content })),
   },
   render: (args) => (
-    <div className="h-[400px]">
-      <Strip {...args} />
+    <div className="w-[600px]">
+      <Band {...args} />
     </div>
   ),
 };

@@ -1,9 +1,17 @@
 ---
-date: "2025-11-25T17:23:19.394Z"
+date:
+  created: '2025-11-25T17:23:19.394Z'
+  updated: '2025-11-25T17:23:19.394Z'
 slug: DESIGN-WINDOWS-LAYOUT
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix design app window layout to be 50% diagram | 50% scene
 model: claude-sonnet-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 
 ## Problem

@@ -1,9 +1,17 @@
 ---
-date: "2025-12-03T09:12:44.719Z"
+date:
+  created: '2025-12-03T09:12:44.719Z'
+  updated: '2025-12-03T09:12:44.719Z'
 slug: TYPE-APP-STATE-OPTIMIZATION
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Optimize TypeApp state management to fix overfetching and overrendering
 model: claude-opus-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 
 # Previously

@@ -1,9 +1,17 @@
 ---
-date: "2025-11-27T01:10:58.310Z"
+date:
+  created: '2025-11-27T01:10:58.310Z'
+  updated: '2025-11-27T01:10:58.310Z'
 slug: DROP-COORDS
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix drop coordinates for diagram and scene
 model: claude-sonnet-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 
 # Previously

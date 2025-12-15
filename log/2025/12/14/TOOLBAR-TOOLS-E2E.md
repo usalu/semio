@@ -1,9 +1,17 @@
 ---
-date: '2025-12-14T17:41:20.589Z'
+date:
+  created: '2025-12-14T17:41:20.589Z'
+  updated: '2025-12-14T17:41:20.589Z'
 slug: TOOLBAR-TOOLS-E2E
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Implement toolbar in apps and extend Type app E2E test for port tool
 model: claude-opus-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 # Previously
 

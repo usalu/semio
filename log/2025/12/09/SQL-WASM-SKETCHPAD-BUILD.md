@@ -1,9 +1,17 @@
 ---
-date: "2025-12-09T18:40:37.210Z"
+date:
+  created: '2025-12-09T18:40:37.210Z'
+  updated: '2025-12-09T18:40:37.210Z'
 slug: SQL-WASM-SKETCHPAD-BUILD
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix sql-wasm.wasm not being included in sketchpad production build
 model: claude-opus-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 
 # Previously

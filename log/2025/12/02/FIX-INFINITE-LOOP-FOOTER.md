@@ -1,9 +1,17 @@
 ---
-date: "2025-12-02T22:42:03.352Z"
+date:
+  created: '2025-12-02T22:42:03.352Z'
+  updated: '2025-12-02T22:42:03.352Z'
 slug: FIX-INFINITE-LOOP-FOOTER
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix infinite loop in DesignAppFooter and TypeAppFooter useEffect dependencies
 model: claude-opus-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 
 # Previously

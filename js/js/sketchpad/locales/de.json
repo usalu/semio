@@ -187,14 +187,14 @@
           },
           "temporary": {
             "label": {
-              "normal": "Temporary",
-              "beginner": "Temporary"
+              "normal": "Temporär",
+              "beginner": "Temporär"
             }
           },
           "local": {
             "label": {
-              "normal": "Local",
-              "beginner": "Local"
+              "normal": "Lokal",
+              "beginner": "Lokal"
             }
           },
           "remote": {
@@ -211,8 +211,8 @@
           },
           "authors": {
             "label": {
-              "normal": "Authors",
-              "beginner": "Authors"
+              "normal": "Autoren",
+              "beginner": "Autoren"
             }
           }
         },
@@ -314,8 +314,8 @@
             },
             "show": {
               "label": {
-                "normal": "Show",
-                "beginner": "Show"
+                "normal": "Anzeigen",
+                "beginner": "Anzeigen"
               }
             }
           },
@@ -326,8 +326,8 @@
             },
             "show": {
               "label": {
-                "normal": "Show",
-                "beginner": "Show"
+                "normal": "Anzeigen",
+                "beginner": "Anzeigen"
               }
             }
           },
@@ -340,48 +340,48 @@
           "tools": {
             "show": {
               "label": {
-                "normal": "Show",
-                "beginner": "Show"
+                "normal": "Anzeigen",
+                "beginner": "Anzeigen"
               }
             }
           },
           "toolbar": {
             "show": {
               "label": {
-                "normal": "Show",
-                "beginner": "Show"
+                "normal": "Anzeigen",
+                "beginner": "Anzeigen"
               }
             }
           },
           "stats": {
             "show": {
               "label": {
-                "normal": "Show",
-                "beginner": "Show"
+                "normal": "Anzeigen",
+                "beginner": "Anzeigen"
               }
             }
           },
           "details": {
             "show": {
               "label": {
-                "normal": "Show",
-                "beginner": "Show"
+                "normal": "Anzeigen",
+                "beginner": "Anzeigen"
               }
             }
           },
           "chat": {
             "show": {
               "label": {
-                "normal": "Show",
-                "beginner": "Show"
+                "normal": "Anzeigen",
+                "beginner": "Anzeigen"
               }
             }
           },
           "settings": {
             "show": {
               "label": {
-                "normal": "Show",
-                "beginner": "Show"
+                "normal": "Anzeigen",
+                "beginner": "Anzeigen"
               }
             }
           }
@@ -418,8 +418,8 @@
         },
         "type": {
           "label": {
-            "normal": "Type",
-            "beginner": "Type"
+            "normal": "Typ",
+            "beginner": "Typ"
           }
         },
         "quality": {
@@ -436,8 +436,8 @@
         },
         "panelToggles": {
           "label": {
-            "normal": "Panel Toggles",
-            "beginner": "Panel Toggles"
+            "normal": "Panel-Umschalter",
+            "beginner": "Panel-Umschalter"
           }
         },
         "fullscreenToggle": {
@@ -461,6 +461,102 @@
             "label": {
               "normal": "Fragen Sie etwas...",
               "beginner": "Fragen Sie etwas..."
+            }
+          }
+        },
+        "settings": {
+          "label": {
+            "normal": "",
+            "beginner": ""
+          },
+          "theme": {
+            "label": {
+              "normal": "Design",
+              "beginner": "Wählen Sie das Farbschema für die Anwendung"
+            },
+            "dark": {
+              "label": {
+                "normal": "Dunkel",
+                "beginner": "Dunkles Farbschema verwenden"
+              }
+            },
+            "light": {
+              "label": {
+                "normal": "Hell",
+                "beginner": "Helles Farbschema verwenden"
+              }
+            },
+            "system": {
+              "label": {
+                "normal": "System",
+                "beginner": "Systemdesign-Einstellung folgen"
+              }
+            }
+          },
+          "layout": {
+            "label": {
+              "normal": "Layout",
+              "beginner": "Fensterlayout und Panel-Anordnung konfigurieren"
+            },
+            "desktop": {
+              "label": {
+                "normal": "Desktop",
+                "beginner": "Optimiertes Layout für Desktop-Computer"
+              }
+            },
+            "tablet": {
+              "label": {
+                "normal": "Tablet",
+                "beginner": "Optimiertes Layout für Tablets"
+              }
+            },
+            "mobile": {
+              "label": {
+                "normal": "Mobil",
+                "beginner": "Optimiertes Layout für mobile Geräte"
+              }
+            }
+          },
+          "mode": {
+            "label": {
+              "normal": "Modus",
+              "beginner": "Wählen Sie den Benutzeroberflächenmodus: Experte (minimale Tooltips), Normal (Standard) oder Anfänger (detaillierte Hilfe)"
+            },
+            "dev": {
+              "label": {
+                "normal": "Entwickler",
+                "beginner": "Entwicklermodus mit erweiterten Werkzeugen und Debugging-Funktionen"
+              }
+            },
+            "user": {
+              "label": {
+                "normal": "Benutzer",
+                "beginner": "Standardbenutzermodus für reguläre Operationen"
+              }
+            }
+          },
+          "expertise": {
+            "label": {
+              "normal": "Erfahrung",
+              "beginner": "Wählen Sie Ihre Erfahrungsstufe um die Komplexität der Oberfläche anzupassen"
+            },
+            "beginner": {
+              "label": {
+                "normal": "Anfänger",
+                "beginner": "Detaillierte Erklärungen und Tutorials anzeigen"
+              }
+            },
+            "normal": {
+              "label": {
+                "normal": "Normal",
+                "beginner": "Standard-Tooltips und Hilfe anzeigen"
+              }
+            },
+            "expert": {
+              "label": {
+                "normal": "Experte",
+                "beginner": "Minimale Tooltips für erfahrene Benutzer"
+              }
             }
           }
         }
@@ -498,44 +594,74 @@
         },
         "no": {
           "label": {
-            "normal": "No",
-            "beginner": "No"
+            "normal": "Nein",
+            "beginner": "Nein"
           }
         },
         "yes": {
           "label": {
-            "normal": "Yes",
-            "beginner": "Yes"
+            "normal": "Ja",
+            "beginner": "Ja"
           }
         },
         "add": {
           "label": {
-            "normal": "Add",
-            "beginner": "Add"
+            "normal": "Hinzufügen",
+            "beginner": "Hinzufügen"
           }
         },
         "remove": {
           "label": {
-            "normal": "Remove",
-            "beginner": "Remove"
+            "normal": "Entfernen",
+            "beginner": "Entfernen"
           }
         },
         "addChild": {
           "label": {
-            "normal": "Add Child",
-            "beginner": "Add Child"
+            "normal": "Kind hinzufügen",
+            "beginner": "Kind hinzufügen"
           }
         },
         "addType": {
           "label": {
-            "normal": "Add Type",
-            "beginner": "Add Type"
+            "normal": "Typ hinzufügen",
+            "beginner": "Typ hinzufügen"
           }
         },
         "addDesign": {
           "label": {
-            "normal": "Add Design",
-            "beginner": "Add Design"
+            "normal": "Entwurf hinzufügen",
+            "beginner": "Entwurf hinzufügen"
+          }
+        },
+        "settings": {
+          "label": {
+            "normal": "",
+            "beginner": ""
+          },
+          "theme": {
+            "label": {
+              "normal": "Design",
+              "beginner": "Farbschema wählen"
+            }
+          },
+          "layout": {
+            "label": {
+              "normal": "Layout",
+              "beginner": "Layoutmodus wählen"
+            }
+          },
+          "mode": {
+            "label": {
+              "normal": "Modus",
+              "beginner": "Oberflächenmodus wählen"
+            }
+          },
+          "expertise": {
+            "label": {
+              "normal": "Erfahrungsstufe",
+              "beginner": "Erfahrungsstufe wählen"
+            }
           }
         }
       },
@@ -660,7 +786,7 @@
               },
               "hotkey": "Ctrl+V"
             },
-            "strip": {
+            "band": {
               "label": {
                 "normal": "Filterleiste",
                 "beginner": "Filterleiste ein- oder ausblenden"
@@ -681,7 +807,7 @@
             },
             "theme": {
               "label": {
-                "normal": "Theme",
+                "normal": "Design",
                 "beginner": "Waehlen Sie das Farbschema fuer die Anwendung"
               }
             },
@@ -705,7 +831,7 @@
             },
             "expertise": {
               "label": {
-                "normal": "Expertise",
+                "normal": "Erfahrung",
                 "beginner": "Waehlen Sie Ihr Erfahrungsniveau"
               }
             },
@@ -812,8 +938,8 @@
           },
           "noKits": {
             "label": {
-              "normal": "No Kits",
-              "beginner": "No Kits"
+              "normal": "Keine Kits",
+              "beginner": "Keine Kits"
             }
           },
           "sortByName": {
@@ -824,38 +950,38 @@
           },
           "toggleRow": {
             "label": {
-              "normal": "Toggle Row",
-              "beginner": "Toggle Row"
+              "normal": "Zeile umschalten",
+              "beginner": "Zeile umschalten"
             }
           },
           "createVersion": {
             "label": {
-              "normal": "Create Version",
-              "beginner": "Create Version"
+              "normal": "Version erstellen",
+              "beginner": "Version erstellen"
             }
           },
           "hideKind": {
             "label": {
-              "normal": "Hide Kind",
-              "beginner": "Hide Kind"
+              "normal": "Art ausblenden",
+              "beginner": "Art ausblenden"
             }
           },
           "showTemporary": {
             "label": {
-              "normal": "Show Temporary",
-              "beginner": "Show Temporary"
+              "normal": "Temporär anzeigen",
+              "beginner": "Temporär anzeigen"
             }
           },
           "showLocal": {
             "label": {
-              "normal": "Show Local",
-              "beginner": "Show Local"
+              "normal": "Lokal anzeigen",
+              "beginner": "Lokal anzeigen"
             }
           },
           "showRemote": {
             "label": {
-              "normal": "Show Remote",
-              "beginner": "Show Remote"
+              "normal": "Remote anzeigen",
+              "beginner": "Remote anzeigen"
             }
           },
           "sortByType": {
@@ -884,26 +1010,32 @@
           },
           "createKit": {
             "label": {
-              "normal": "Create Kit",
-              "beginner": "Create Kit"
+              "normal": "Kit erstellen",
+              "beginner": "Kit erstellen"
             }
           },
           "createTemporary": {
             "label": {
-              "normal": "Create Temporary",
-              "beginner": "Create Temporary"
+              "normal": "Temporär erstellen",
+              "beginner": "Temporär erstellen"
             }
           },
           "createLocal": {
             "label": {
-              "normal": "Create Local",
-              "beginner": "Create Local"
+              "normal": "Lokal erstellen",
+              "beginner": "Lokal erstellen"
             }
           },
           "createRemote": {
             "label": {
-              "normal": "Create Remote",
-              "beginner": "Create Remote"
+              "normal": "Remote erstellen",
+              "beginner": "Remote erstellen"
+            }
+          },
+          "importKit": {
+            "label": {
+              "normal": "Kit importieren",
+              "beginner": "Kit importieren"
             }
           }
         },
@@ -1027,7 +1159,7 @@
                 "hotkey": "Ctrl+Shift+N"
               }
             },
-            "strip": {
+            "band": {
               "label": {
                 "normal": "Filterleiste",
                 "beginner": "Filterleiste ein- oder ausblenden"
@@ -1057,8 +1189,8 @@
             "tutorial": "hello-semio/model-design",
             "multipleSelected": {
               "label": {
-                "normal": "Multiple Selected",
-                "beginner": "Multiple Selected"
+                "normal": "Mehrere ausgewählt",
+                "beginner": "Mehrere ausgewählt"
               }
             },
             "multipleTitle": {
@@ -1077,8 +1209,8 @@
             "tutorial": "hello-semio/model-brick-set",
             "multipleSelected": {
               "label": {
-                "normal": "Multiple Selected",
-                "beginner": "Multiple Selected"
+                "normal": "Mehrere ausgewählt",
+                "beginner": "Mehrere ausgewählt"
               }
             },
             "multipleTitle": {
@@ -1250,6 +1382,18 @@
                 "normal": "Kind erstellen",
                 "beginner": "Ein Kindelement erstellen"
               }
+            },
+            "showTags": {
+              "label": {
+                "normal": "Tags anzeigen",
+                "beginner": "Tags anzeigen"
+              }
+            },
+            "showConcepts": {
+              "label": {
+                "normal": "Konzepte anzeigen",
+                "beginner": "Konzepte anzeigen"
+              }
             }
           },
           "canvas": {
@@ -1347,7 +1491,7 @@
                   },
                   "icon": {
                     "label": {
-                      "normal": "Icon",
+                      "normal": "Symbol",
                       "beginner": "Ein Icon zur Darstellung dieses Kits. Kann ein Emoji oder eine URL zu einem Bild sein."
                     },
                     "manual": "kit#metadata",
@@ -1403,20 +1547,48 @@
                 "interface": {
                   "compatible": {
                     "label": {
-                      "normal": "Compatible",
-                      "beginner": "Compatible"
+                      "normal": "Kompatibel",
+                      "beginner": "Kompatibel"
                     }
                   },
                   "description": {
                     "label": {
-                      "normal": "Description",
-                      "beginner": "Description"
+                      "normal": "Beschreibung",
+                      "beginner": "Beschreibung"
                     }
                   },
                   "name": {
                     "label": {
                       "normal": "Name",
                       "beginner": "Name"
+                    }
+                  }
+                },
+                "tag": {
+                  "name": {
+                    "label": {
+                      "normal": "Name",
+                      "beginner": "Name"
+                    }
+                  },
+                  "description": {
+                    "label": {
+                      "normal": "Beschreibung",
+                      "beginner": "Beschreibung"
+                    }
+                  }
+                },
+                "concept": {
+                  "name": {
+                    "label": {
+                      "normal": "Name",
+                      "beginner": "Name"
+                    }
+                  },
+                  "description": {
+                    "label": {
+                      "normal": "Beschreibung",
+                      "beginner": "Beschreibung"
                     }
                   }
                 }
@@ -1432,14 +1604,14 @@
           "interface": {
             "allCompatible": {
               "label": {
-                "normal": "All Compatible",
-                "beginner": "All Compatible"
+                "normal": "Alle kompatibel",
+                "beginner": "Alle kompatibel"
               }
             },
             "compatibleInterfaces": {
               "label": {
-                "normal": "Compatible Interfaces",
-                "beginner": "Compatible Interfaces"
+                "normal": "Kompatible Schnittstellen",
+                "beginner": "Kompatible Schnittstellen"
               }
             },
             "descriptionPlaceholder": {
@@ -1454,8 +1626,8 @@
           "interfaces": {
             "multipleSelected": {
               "label": {
-                "normal": "Multiple Selected",
-                "beginner": "Multiple Selected"
+                "normal": "Mehrere ausgewählt",
+                "beginner": "Mehrere ausgewählt"
               }
             }
           },
@@ -1485,8 +1657,22 @@
           },
           "title": {
             "label": {
-              "normal": "Title",
-              "beginner": "Title"
+              "normal": "Titel",
+              "beginner": "Titel"
+            }
+          },
+          "folder": {
+            "label": {
+              "normal": "Ordner",
+              "beginner": "Ordner"
+            },
+            "descriptionPlaceholder": {
+              "label": {
+                "label": {
+                  "normal": "Describe this folder...",
+                  "beginner": "Describe this folder..."
+                }
+              }
             }
           }
         },
@@ -1566,25 +1752,19 @@
               "label": {
                 "normal": "Szenen-Fenster",
                 "beginner": "Durchsuchen und Hinzufuegen von 3D-Szenen-Fenstern zum Betrachten Ihres Entwurfs im 3D-Raum."
-              },
-              "manual": "design#windows",
-              "tutorial": "hello-semio/model-design#scene"
+              }
             },
             "diagram": {
               "label": {
                 "normal": "Diagramm-Fenster",
                 "beginner": "Durchsuchen und Hinzufuegen von 2D-Diagramm-Fenstern zum Betrachten der Verbindungstopologie."
-              },
-              "manual": "design#windows",
-              "tutorial": "hello-semio/model-design#diagram"
+              }
             },
             "table": {
               "label": {
                 "normal": "Tabellen-Fenster",
                 "beginner": "Durchsuchen und Hinzufuegen von Tabellen-Fenstern zum Betrachten von Entwurfsdaten in tabellarischer Form."
-              },
-              "manual": "design#windows",
-              "tutorial": "hello-semio/model-design#table"
+              }
             }
           },
           "diagram": {
@@ -1768,10 +1948,7 @@
             }
           },
           "connection": {
-            "label": {
-              "normal": "",
-              "beginner": ""
-            },
+            "label": {},
             "rotation": {
               "label": {
                 "normal": "Rotation",
@@ -1780,14 +1957,14 @@
             },
             "turn": {
               "label": {
-                "normal": "Turn",
-                "beginner": "Turn"
+                "normal": "Drehung",
+                "beginner": "Drehung"
               }
             },
             "tilt": {
               "label": {
-                "normal": "Tilt",
-                "beginner": "Tilt"
+                "normal": "Neigung",
+                "beginner": "Neigung"
               }
             }
           },
@@ -1829,7 +2006,7 @@
                   },
                   "icon": {
                     "label": {
-                      "normal": "Icon",
+                      "normal": "Symbol",
                       "beginner": "URL oder Pfad zu einem Icon, das diesen Entwurf in Listen und Vorschauen darstellt."
                     },
                     "manual": "design#metadata",
@@ -1997,20 +2174,20 @@
                       },
                       "x": {
                         "label": {
-                          "normal": "Origin X",
-                          "beginner": "Origin X"
+                          "normal": "Ursprung X",
+                          "beginner": "X-Koordinate des Ursprungs"
                         }
                       },
                       "y": {
                         "label": {
-                          "normal": "Origin Y",
-                          "beginner": "Origin Y"
+                          "normal": "Ursprung Y",
+                          "beginner": "Y-Koordinate des Ursprungs"
                         }
                       },
                       "z": {
                         "label": {
-                          "normal": "Origin Z",
-                          "beginner": "Origin Z"
+                          "normal": "Ursprung Z",
+                          "beginner": "Z-Koordinate des Ursprungs"
                         }
                       }
                     },
@@ -2021,20 +2198,20 @@
                       },
                       "x": {
                         "label": {
-                          "normal": "Axis X",
-                          "beginner": "Axis X"
+                          "normal": "X-Achse X",
+                          "beginner": "X-Komponente der X-Achse"
                         }
                       },
                       "y": {
                         "label": {
-                          "normal": "Axis Y",
-                          "beginner": "Axis Y"
+                          "normal": "X-Achse Y",
+                          "beginner": "Y-Komponente der X-Achse"
                         }
                       },
                       "z": {
                         "label": {
-                          "normal": "Axis Z",
-                          "beginner": "Axis Z"
+                          "normal": "X-Achse Z",
+                          "beginner": "Z-Komponente der X-Achse"
                         }
                       }
                     },
@@ -2045,20 +2222,20 @@
                       },
                       "x": {
                         "label": {
-                          "normal": "Axis X",
-                          "beginner": "Axis X"
+                          "normal": "Y-Achse X",
+                          "beginner": "X-Komponente der Y-Achse"
                         }
                       },
                       "y": {
                         "label": {
-                          "normal": "Axis Y",
-                          "beginner": "Axis Y"
+                          "normal": "Y-Achse Y",
+                          "beginner": "Y-Komponente der Y-Achse"
                         }
                       },
                       "z": {
                         "label": {
-                          "normal": "Axis Z",
-                          "beginner": "Axis Z"
+                          "normal": "Y-Achse Z",
+                          "beginner": "Z-Komponente der Y-Achse"
                         }
                       }
                     }
@@ -2113,20 +2290,20 @@
                   },
                   "gap": {
                     "label": {
-                      "normal": "Gap",
-                      "beginner": "Gap"
+                      "normal": "Abstand",
+                      "beginner": "Abstand"
                     }
                   },
                   "shift": {
                     "label": {
-                      "normal": "Shift",
-                      "beginner": "Shift"
+                      "normal": "Verschiebung",
+                      "beginner": "Verschiebung"
                     }
                   },
                   "rise": {
                     "label": {
-                      "normal": "Rise",
-                      "beginner": "Rise"
+                      "normal": "Anstieg",
+                      "beginner": "Anstieg"
                     }
                   },
                   "rotation": {
@@ -2137,26 +2314,38 @@
                   },
                   "turn": {
                     "label": {
-                      "normal": "Turn",
-                      "beginner": "Turn"
+                      "normal": "Drehung",
+                      "beginner": "Drehung"
                     }
                   },
                   "tilt": {
                     "label": {
-                      "normal": "Tilt",
-                      "beginner": "Tilt"
+                      "normal": "Neigung",
+                      "beginner": "Neigung"
                     }
                   },
                   "x": {
                     "label": {
-                      "normal": "Diagram X Offset",
-                      "beginner": "Diagram X Offset"
+                      "normal": "Diagramm X-Versatz",
+                      "beginner": "X-Versatz im Diagramm"
                     }
                   },
                   "y": {
                     "label": {
-                      "normal": "Diagram Y Offset",
-                      "beginner": "Diagram Y Offset"
+                      "normal": "Diagramm Y-Versatz",
+                      "beginner": "Y-Versatz im Diagramm"
+                    }
+                  },
+                  "u": {
+                    "label": {
+                      "normal": "U",
+                      "beginner": "U"
+                    }
+                  },
+                  "v": {
+                    "label": {
+                      "normal": "V",
+                      "beginner": "V"
                     }
                   }
                 },
@@ -2215,66 +2404,78 @@
                   },
                   "notFound": {
                     "label": {
-                      "normal": "Not Found",
-                      "beginner": "Not Found"
+                      "normal": "Nicht gefunden",
+                      "beginner": "Nicht gefunden"
                     }
                   }
                 }
               },
               "parentConnection": {
                 "label": {
-                  "normal": "Parent Connection",
-                  "beginner": "Parent Connection"
+                  "normal": "Elternverbindung",
+                  "beginner": "Elternverbindung"
                 }
               },
               "parentConnections": {
                 "label": {
-                  "normal": "Parent Connections",
-                  "beginner": "Parent Connections"
+                  "normal": "Elternverbindungen",
+                  "beginner": "Elternverbindungen"
                 }
               }
             }
           },
           "gridSize": {
             "label": {
-              "normal": "Grid Size",
-              "beginner": "Grid Size"
+              "normal": "Rastergröße",
+              "beginner": "Rastergröße"
             }
           },
           "proximityConnectDistance": {
             "label": {
-              "normal": "Proximity Connect Distance",
-              "beginner": "Proximity Connect Distance"
+              "normal": "Näherungsverbindungs-Abstand",
+              "beginner": "Näherungsverbindungs-Abstand"
             }
           },
           "selectOnlyPiecesOrConnections": {
             "label": {
-              "normal": "Select Only Pieces Or Connections",
-              "beginner": "Select Only Pieces Or Connections"
+              "normal": "Nur Bauteile oder Verbindungen auswählen",
+              "beginner": "Nur Bauteile oder Verbindungen auswählen"
             }
           },
           "title": {
             "label": {
-              "normal": "Title",
-              "beginner": "Title"
+              "normal": "Titel",
+              "beginner": "Titel"
             }
           },
           "tools": {
             "label": {
-              "normal": "Tools",
-              "beginner": "Tools"
+              "normal": "Werkzeuge",
+              "beginner": "Werkzeuge"
             }
           },
           "windows": {
             "label": {
-              "normal": "Windows",
-              "beginner": "Windows"
+              "normal": "Fenster",
+              "beginner": "Fenster"
             }
           },
           "appTitle": {
             "label": {
               "normal": "App Title",
               "beginner": "App Title"
+            }
+          },
+          "canvas": {
+            "diagram": {
+              "label": {
+                "normal": "Diagramm",
+                "beginner": "Diagramm"
+              }
+            },
+            "label": {
+              "normal": "Leinwand",
+              "beginner": "Leinwand"
             }
           }
         },
@@ -2291,26 +2492,26 @@
           },
           "docs": {
             "label": {
-              "normal": "Docs",
-              "beginner": "Docs"
+              "normal": "Dokumentation",
+              "beginner": "Dokumentation"
             }
           },
           "overview": {
             "label": {
-              "normal": "Overview",
-              "beginner": "Overview"
+              "normal": "Übersicht",
+              "beginner": "Übersicht"
             }
           },
           "page": {
             "label": {
-              "normal": "Page",
-              "beginner": "Page"
+              "normal": "Seite",
+              "beginner": "Seite"
             }
           },
           "settings": {
             "label": {
-              "normal": "Settings",
-              "beginner": "Settings"
+              "normal": "Einstellungen",
+              "beginner": "Einstellungen"
             }
           },
           "navigation": {
@@ -2430,8 +2631,8 @@
             },
             "title": {
               "label": {
-                "normal": "Title",
-                "beginner": "Title"
+                "normal": "Titel",
+                "beginner": "Titel"
               }
             }
           },
@@ -2565,7 +2766,7 @@
                   },
                   "icon": {
                     "label": {
-                      "normal": "Icon",
+                      "normal": "Symbol",
                       "beginner": "Ein Icon zur visuellen Darstellung dieses Typs. Kann ein Emoji, Iconname oder URL zu einem Bild sein."
                     },
                     "manual": "type#metadata",
@@ -2797,14 +2998,14 @@
           },
           "tools": {
             "label": {
-              "normal": "Tools",
-              "beginner": "Tools"
+              "normal": "Werkzeuge",
+              "beginner": "Werkzeuge"
             }
           },
           "title": {
             "label": {
-              "normal": "Title",
-              "beginner": "Title"
+              "normal": "Titel",
+              "beginner": "Titel"
             }
           }
         },
@@ -3062,20 +3263,20 @@
           },
           "title": {
             "label": {
-              "normal": "Title",
-              "beginner": "Title"
+              "normal": "Titel",
+              "beginner": "Titel"
             }
           },
           "functions": {
             "label": {
-              "normal": "Functions",
-              "beginner": "Functions"
+              "normal": "Funktionen",
+              "beginner": "Funktionen"
             }
           },
           "qualities": {
             "label": {
-              "normal": "Qualities",
-              "beginner": "Qualities"
+              "normal": "Qualitäten",
+              "beginner": "Qualitäten"
             }
           }
         }
@@ -3087,8 +3288,8 @@
         },
         "theme": {
           "label": {
-            "normal": "Theme",
-            "beginner": "Color scheme for the interface"
+            "normal": "Design",
+            "beginner": "Farbschema für die Oberfläche"
           },
           "system": {
             "label": {
@@ -3098,21 +3299,21 @@
           },
           "light": {
             "label": {
-              "normal": "Light",
-              "beginner": "Light"
+              "normal": "Hell",
+              "beginner": "Hell"
             }
           },
           "dark": {
             "label": {
-              "normal": "Dark",
-              "beginner": "Dark"
+              "normal": "Dunkel",
+              "beginner": "Dunkel"
             }
           }
         },
         "layout": {
           "label": {
             "normal": "Layout",
-            "beginner": "Layout mode for the interface"
+            "beginner": "Layoutmodus für die Oberfläche"
           },
           "desktop": {
             "label": {
@@ -3129,13 +3330,13 @@
         },
         "mode": {
           "label": {
-            "normal": "Mode",
-            "beginner": "Interface mode"
+            "normal": "Modus",
+            "beginner": "Oberflächenmodus"
           },
           "user": {
             "label": {
-              "normal": "User",
-              "beginner": "User"
+              "normal": "Benutzer",
+              "beginner": "Benutzer"
             }
           },
           "dev": {
@@ -3147,25 +3348,25 @@
         },
         "expertise": {
           "label": {
-            "normal": "Expertise",
-            "beginner": "Your expertise level"
+            "normal": "Erfahrung",
+            "beginner": "Ihre Erfahrungsstufe"
           },
           "beginner": {
             "label": {
-              "normal": "Beginner",
-              "beginner": "Show detailed help and tutorials"
+              "normal": "Anfänger",
+              "beginner": "Detaillierte Hilfe und Tutorials anzeigen"
             }
           },
           "normal": {
             "label": {
               "normal": "Normal",
-              "beginner": "Show standard tooltips"
+              "beginner": "Standard-Tooltips anzeigen"
             }
           },
           "expert": {
             "label": {
-              "normal": "Expert",
-              "beginner": "Expert"
+              "normal": "Experte",
+              "beginner": "Experte"
             }
           }
         },
@@ -3188,8 +3389,8 @@
           },
           "en": {
             "label": {
-              "normal": "English",
-              "beginner": "English"
+              "normal": "Englisch",
+              "beginner": "Englisch"
             }
           }
         }
@@ -3201,14 +3402,80 @@
         },
         "ascending": {
           "label": {
-            "normal": "Ascending",
-            "beginner": "Ascending"
+            "normal": "Aufsteigend",
+            "beginner": "Aufsteigend"
           }
         },
         "descending": {
           "label": {
-            "normal": "Descending",
-            "beginner": "Descending"
+            "normal": "Absteigend",
+            "beginner": "Absteigend"
+          }
+        }
+      },
+      "docs": {
+        "navigation": {
+          "previous": {
+            "label": {
+              "normal": "Previous",
+              "beginner": "Previous"
+            }
+          },
+          "next": {
+            "label": {
+              "normal": "Next",
+              "beginner": "Next"
+            }
+          }
+        }
+      },
+      "toolbar": {
+        "label": {
+          "normal": "Werkzeugleiste",
+          "beginner": "Werkzeugleiste"
+        }
+      },
+      "tutorial": {
+        "controls": {
+          "stop": {
+            "label": {
+              "normal": "Stop",
+              "beginner": "Stop"
+            }
+          },
+          "previous": {
+            "label": {
+              "normal": "Previous",
+              "beginner": "Previous"
+            }
+          },
+          "playPause": {
+            "label": {
+              "normal": "Play Pause",
+              "beginner": "Play Pause"
+            }
+          },
+          "next": {
+            "label": {
+              "normal": "Next",
+              "beginner": "Next"
+            }
+          }
+        }
+      },
+      "recording": {
+        "controls": {
+          "playPause": {
+            "label": {
+              "normal": "Play Pause",
+              "beginner": "Play Pause"
+            }
+          },
+          "stop": {
+            "label": {
+              "normal": "Stop",
+              "beginner": "Stop"
+            }
           }
         }
       }
@@ -3217,14 +3484,88 @@
   "tooltip": {
     "manual": {
       "label": {
-        "normal": "Manual",
-        "beginner": "Manual"
+        "normal": "Handbuch",
+        "beginner": "Handbuch"
       }
     },
     "tutorial": {
       "label": {
         "normal": "Tutorial",
         "beginner": "Tutorial"
+      }
+    }
+  },
+  "settings": {
+    "layout": {
+      "normal": {
+        "label": {
+          "normal": "Normal layout",
+          "beginner": "Use the standard layout optimized for mouse and keyboard."
+        }
+      },
+      "desktop": {
+        "label": {
+          "normal": "Desktop layout",
+          "beginner": "Use the desktop layout optimized for large screens."
+        }
+      },
+      "tablet": {
+        "label": {
+          "normal": "Tablet layout",
+          "beginner": "Use the tablet layout optimized for medium screens."
+        }
+      },
+      "mobile": {
+        "label": {
+          "normal": "Mobile layout",
+          "beginner": "Use the mobile layout optimized for small screens."
+        }
+      }
+    },
+    "mode": {
+      "dev": {
+        "label": {
+          "normal": "Developer mode",
+          "beginner": "Show developer tools and advanced options."
+        }
+      },
+      "user": {
+        "label": {
+          "normal": "User mode",
+          "beginner": "Show standard user interface."
+        }
+      },
+      "beginner": {
+        "label": {
+          "normal": "Beginner mode",
+          "beginner": "Show full guidance, tutorials, and detailed tooltips."
+        }
+      },
+      "normal": {
+        "label": {
+          "normal": "Normal mode",
+          "beginner": "Show contextual help without tutorials."
+        }
+      }
+    },
+    "expertise": {
+      "beginner": {
+        "label": {
+          "normal": "Anfänger",
+          "beginner": "Show full guidance and tutorials."
+        }
+      },
+      "normal": {
+        "label": {
+          "normal": "Normal",
+          "beginner": "Show contextual help."
+        }
+      },
+      "expert": {
+        "label": {
+          "normal": "Experte",
+          "beginner": "Hide guidance."
+        }
       }
     }
   }

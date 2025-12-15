@@ -1,9 +1,17 @@
 ---
-date: "2025-12-09T00:00:04.372Z"
+date:
+  created: '2025-12-09T00:00:04.372Z'
+  updated: '2025-12-09T00:00:04.372Z'
 slug: SKETCHPAD-FSM-HIERARCHY
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Migrate sketchpad FSM to hierarchical states with proper constraints
 model: claude-opus-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 
 # Previously

@@ -1,9 +1,17 @@
 ---
-date: "2025-11-28T23:26:42.072Z"
+date:
+  created: '2025-11-28T23:26:42.072Z'
+  updated: '2025-11-28T23:26:42.072Z'
 slug: PYTHON-TESTS-SYNC
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Sync Python unit tests with JS fixtures and extend engine.py
 model: claude-opus-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 
 # Previously

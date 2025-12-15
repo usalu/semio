@@ -1,9 +1,17 @@
 ---
-date: "2025-11-26T18:16:40.379Z"
+date:
+  created: '2025-11-26T18:16:40.379Z'
+  updated: '2025-11-26T18:16:40.379Z'
 slug: DRAG-DROP-FINISH
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Finish drag and drop functionality for pieces in diagram and scene
 model: claude-sonnet-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 
 # Previously

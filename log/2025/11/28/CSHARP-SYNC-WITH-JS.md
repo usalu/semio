@@ -1,9 +1,17 @@
 ---
-date: '2025-11-28T22:46:18.370Z'
+date:
+  created: '2025-11-28T22:46:18.370Z'
+  updated: '2025-11-28T22:46:18.370Z'
 slug: CSHARP-SYNC-WITH-JS
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Sync C# codebase with JS schema changes
 model: claude-sonnet-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 # Previously
 

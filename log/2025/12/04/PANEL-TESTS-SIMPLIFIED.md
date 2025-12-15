@@ -1,9 +1,17 @@
 ---
-date: "2025-12-04T15:30:02.086Z"
+date:
+  created: '2025-12-04T15:30:02.086Z'
+  updated: '2025-12-04T15:30:02.086Z'
 slug: PANEL-TESTS-SIMPLIFIED
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Simplified panel tests to verify toggle existence
 model: claude-opus-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 
 # Previously

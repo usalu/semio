@@ -1,9 +1,17 @@
 ---
-date: "2025-12-09T00:24:40.323Z"
+date:
+  created: '2025-12-09T00:24:40.323Z'
+  updated: '2025-12-09T00:24:40.323Z'
 slug: APP-STATE-DECOUPLE
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-summary: "Decouple app state from Y.js, move transactions to app level"
+summary: 'Decouple app state from Y.js, move transactions to app level'
 model: claude-opus-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 
 # Previously

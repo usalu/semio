@@ -1,9 +1,17 @@
 ---
-date: '2025-11-21T23:00:00.000Z'
+date:
+  created: '2025-11-21T23:00:00.000Z'
+  updated: '2025-11-21T23:00:00.000Z'
 slug: IMPORT-EXPORT-FIXES
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Migration from 2025-11-22_IMPORT-EXPORT-FIXES.md
 model: unknown
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 # Import/Export Fixes - 2025-01-22
 

@@ -1,9 +1,17 @@
 ---
-date: '2025-11-20T23:00:00.000Z'
+date:
+  created: '2025-11-20T23:00:00.000Z'
+  updated: '2025-11-20T23:00:00.000Z'
 slug: SQL-FILES-DEEP-EQUALITY
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Migration from 2025-11-21_SQL-FILES-DEEP-EQUALITY.md
 model: unknown
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 # Kit Import/Export - Final Implementation
 

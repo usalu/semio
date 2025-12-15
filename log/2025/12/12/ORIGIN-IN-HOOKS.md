@@ -1,9 +1,17 @@
 ---
-date: '2025-12-12T19:10:42.672Z'
+date:
+  created: '2025-12-12T19:10:42.672Z'
+  updated: '2025-12-12T19:10:42.672Z'
 slug: ORIGIN-IN-HOOKS
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Hooks auto-inject command origins via useOrigin
 model: claude-opus-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 # Previously
 

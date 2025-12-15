@@ -316,7 +316,7 @@ const germanTranslations: Record<string, string> = {
   "Not Available": "Nicht verfügbar",
 
   // Kit app
-  "Strip": "Leiste",
+  "Band": "Leiste",
   "Show Designs": "Entwürfe anzeigen",
   "Show Types": "Typen anzeigen",
   "Show Qualities": "Qualitäten anzeigen",

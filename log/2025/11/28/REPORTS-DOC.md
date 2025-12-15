@@ -1,9 +1,17 @@
 ---
-date: '2025-11-28T20:15:16.132Z'
+date:
+  created: '2025-11-28T20:15:16.132Z'
+  updated: '2025-11-28T20:15:16.132Z'
 slug: REPORTS-DOC
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Document reports folder in AGENTS
 model: claude-sonnet-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 # Previously
 

@@ -1,9 +1,17 @@
 ---
-date: "2025-12-03T08:40:30.014Z"
+date:
+  created: '2025-12-03T08:40:30.014Z'
+  updated: '2025-12-03T08:40:30.014Z'
 slug: STATE-MANAGEMENT-OPTIMIZATION
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Optimize Yjs state management to prevent overfetching and infinite rerenders
 model: claude-opus-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 
 # Previously

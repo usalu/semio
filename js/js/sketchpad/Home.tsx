@@ -49,7 +49,7 @@ import { useNavigate, useSearchParams } from "react-router";
 import i18n, { useLabel } from "../i18n";
 import { generateUniqueName, guid, Guid, importKit, Kit, KitShallow } from "../semio";
 import { docsRegistry } from "./Docs";
-import { Action, Input, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Spinner, Strip, Table, TableAvatar, TableColumn, Textarea, Toggle, ToggleGroup, TreeContent, TreeItem } from "./elements";
+import { Action, Band, Input, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Spinner, Table, TableAvatar, TableColumn, Textarea, Toggle, ToggleGroup, TreeContent, TreeItem } from "./elements";
 import type { AppConfig, AppEdit, AppPlugin, PanelDefinition, PanelVisibility } from "./shared";
 import { createPanelDefinition, Expertise, Mode, PanelKind, registerAppPlugin, Theme } from "./shared";
 import {
@@ -1157,9 +1157,8 @@ const Home: FC = ({}) => {
             }
           }}
         >
-          <Strip
-            direction="horizontal"
-            id="semio.sketchpad.app.home.filter.strip"
+          <Band
+            id="semio.sketchpad.app.home.filter.band"
             items={[
               ...(selectedKind
                 ? [
@@ -1223,7 +1222,7 @@ const Home: FC = ({}) => {
                   ))
                 : []),
               <Input key="search" id="semio.sketchpad.app.home.search" className="flex-1 min-w-[160px]" placeholder={useLabel("semio.sketchpad.app.home.searchPlaceholder")} value={searchQuery} onChange={(e) => handleSearchChange(e.target.value)} />,
-            ]}
+            ].map((content) => ({ content }))}
           />
           <ConceptFilter allConcepts={allConcepts} />
           <div className="flex items-center justify-between border-b px-single h-large">
@@ -1329,9 +1328,8 @@ const Home: FC = ({}) => {
                 }
               }}
             >
-              <Strip
-                direction="horizontal"
-                id="semio.sketchpad.app.home.filter.strip"
+              <Band
+                id="semio.sketchpad.app.home.filter.band"
                 items={[
                   ...(selectedKind
                     ? [
@@ -1400,7 +1398,7 @@ const Home: FC = ({}) => {
                     value={searchQuery}
                     onChange={(e) => handleSearchChange(e.target.value)}
                   />,
-                ]}
+                ].map((content) => ({ content }))}
               />
               {/* Concept Filter */}
               <ConceptFilter allConcepts={allConcepts} />

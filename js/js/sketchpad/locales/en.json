@@ -842,10 +842,10 @@
               "normal": "",
               "beginner": ""
             },
-            "strip": {
+            "band": {
               "label": {
-                "normal": "Filter strip",
-                "beginner": "Toggle the filter strip to show or hide filter options"
+                "normal": "Filter band",
+                "beginner": "Toggle the filter band to show or hide filter options"
               },
               "hotkey": "Ctrl+F"
             },
@@ -1163,6 +1163,12 @@
               "normal": "Create Remote",
               "beginner": "Create Remote"
             }
+          },
+          "importKit": {
+            "label": {
+              "normal": "Import Kit",
+              "beginner": "Import Kit"
+            }
           }
         },
         "kit": {
@@ -1291,10 +1297,10 @@
                 "hotkey": "Ctrl+Shift+N"
               }
             },
-            "strip": {
+            "band": {
               "label": {
-                "normal": "Filter strip",
-                "beginner": "Toggle the filter strip to show or hide filter options"
+                "normal": "Filter band",
+                "beginner": "Toggle the filter band to show or hide filter options"
               },
               "hotkey": "Ctrl+F"
             },
@@ -1528,6 +1534,18 @@
                 "normal": "Create Child",
                 "beginner": "Create a child element"
               }
+            },
+            "showTags": {
+              "label": {
+                "normal": "Show Tags",
+                "beginner": "Show Tags"
+              }
+            },
+            "showConcepts": {
+              "label": {
+                "normal": "Show Concepts",
+                "beginner": "Show Concepts"
+              }
             }
           },
           "canvas": {
@@ -1695,6 +1713,34 @@
                     "label": {
                       "normal": "Name",
                       "beginner": "Name"
+                    }
+                  }
+                },
+                "tag": {
+                  "name": {
+                    "label": {
+                      "normal": "Name",
+                      "beginner": "Name"
+                    }
+                  },
+                  "description": {
+                    "label": {
+                      "normal": "Description",
+                      "beginner": "Description"
+                    }
+                  }
+                },
+                "concept": {
+                  "name": {
+                    "label": {
+                      "normal": "Name",
+                      "beginner": "Name"
+                    }
+                  },
+                  "description": {
+                    "label": {
+                      "normal": "Description",
+                      "beginner": "Description"
                     }
                   }
                 }
@@ -2400,6 +2446,18 @@
                       "normal": "Diagram Y Offset",
                       "beginner": "Diagram Y Offset"
                     }
+                  },
+                  "u": {
+                    "label": {
+                      "normal": "U",
+                      "beginner": "U"
+                    }
+                  },
+                  "v": {
+                    "label": {
+                      "normal": "V",
+                      "beginner": "V"
+                    }
                   }
                 },
                 "port": {
@@ -2537,6 +2595,18 @@
             "label": {
               "normal": "App Title",
               "beginner": "App Title"
+            }
+          },
+          "canvas": {
+            "diagram": {
+              "label": {
+                "normal": "Diagram",
+                "beginner": "Diagram"
+              }
+            },
+            "label": {
+              "normal": "Canvas",
+              "beginner": "Canvas"
             }
           }
         },
@@ -3338,6 +3408,72 @@
                 "normal": "Next",
                 "beginner": "Navigate to the next page"
               }
+            }
+          }
+        }
+      },
+      "docs": {
+        "navigation": {
+          "previous": {
+            "label": {
+              "normal": "Previous",
+              "beginner": "Previous"
+            }
+          },
+          "next": {
+            "label": {
+              "normal": "Next",
+              "beginner": "Next"
+            }
+          }
+        }
+      },
+      "toolbar": {
+        "label": {
+          "normal": "Toolbar",
+          "beginner": "Toolbar"
+        }
+      },
+      "tutorial": {
+        "controls": {
+          "stop": {
+            "label": {
+              "normal": "Stop",
+              "beginner": "Stop"
+            }
+          },
+          "previous": {
+            "label": {
+              "normal": "Previous",
+              "beginner": "Previous"
+            }
+          },
+          "playPause": {
+            "label": {
+              "normal": "Play Pause",
+              "beginner": "Play Pause"
+            }
+          },
+          "next": {
+            "label": {
+              "normal": "Next",
+              "beginner": "Next"
+            }
+          }
+        }
+      },
+      "recording": {
+        "controls": {
+          "playPause": {
+            "label": {
+              "normal": "Play Pause",
+              "beginner": "Play Pause"
+            }
+          },
+          "stop": {
+            "label": {
+              "normal": "Stop",
+              "beginner": "Stop"
             }
           }
         }

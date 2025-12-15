@@ -218,6 +218,18 @@ Stats provide computed or measured performance data for entire designs using the
 
 # Monorepo
 
+## Git
+
+- The `main` branch is compressed (squashed history) and acts as the canonical integration branch.
+- If a release receives updates after `main` already progressed, create a parallel `release/rYY.MM-V` branch for that release and keep it compressed as well.
+- Commit messages follow `MAIN-TASK-SYMBOL SUMMARY WORK-SYMBOL` where `WORK-SYMBOL` is one of `🪛` < `🔨` < `🛠️` < `🏗️`.
+
+## AI
+
+- Tool choice is based on billing model (request-based vs token-based), required context size, and whether a workflow benefits from MCP (e.g. Playwright).
+- Default tools: Copilot (most tickets), Windsurf (token-heavy TDD + MCP), Claude Code (small bugs), Cursor (main editor + docs), Codex (simple tasks).
+- Default model for agent work: `claude-opus-4.5`. Alternative: `gpt-5.2-codex`.
+
 ## Rules
 
 ### General
@@ -491,19 +503,20 @@ Every log file MUST have YAML frontmatter:
 
 ```yaml
 ---
-date: TIMESTAMP # ISO 8601 timestamp (e.g., 2025-11-24T10:30:00.000Z)
+date:
+  created: TIMESTAMP # ISO 8601 timestamp (e.g., 2025-11-24T10:30:00.000Z)
+  updated: TIMESTAMP # ISO 8601 timestamp (updated on prompt/files/stats)
 slug: SLUG # Upper kebab-case identifier (e.g., VALIDATION-SYSTEM)
 author: NAME <EMAIL> # From git config (e.g., "John Doe <john@example.com>")
 summary: SUMMARY # One-line description for commit messages
 model: MODEL # LLM model used (e.g., claude-sonnet-4.5)
 prompts: # Array of user prompts for the task
   - "First user prompt..."
-stats: # Git-based task stats (updated via scripts/log.ts stats)
-  base: GIT_SHA # Base commit hash for diffing
-  affectedFiles: [] # Paths changed during the task
-  addedLines: 0
-  removedLines: 0
-  updatedAt: TIMESTAMP # ISO 8601
+commit: GIT_SHA # Base commit hash for diffing
+affectedFiles: [] # Paths changed during the task
+lines:
+  added: 0
+  removed: 0
 ---
 ```
 
@@ -1056,18 +1069,31 @@ The tooltip system automatically resolves i18n content from element IDs, adaptin
 - All closed ui elements ALWAYS have a border.
 - NEVER use hardcoded pixels. ALWAYS use the standardized unit-based sizing system defined in globals.css (derived from `--spacing`):
   - Single: 1 unit - spacing between elements and between icon and element (e.g. `gap-1`)
-  - Tiny: 3 units - height/width of icons within actions, small text size (e.g. `h-3`, `w-3`)
-  - Small: 5 units - height/width of actions, avatars, default text size (e.g. `h-5`, `w-5`)
-  - Medium: 7 units - height of tree items, height of buttons and simple toggles, height of input (e.g. `h-7`)
-  - Large: 9 units - height of navbar, height of table row, height of table header (e.g. `h-9`)
+  - Tiny: 3 units - icon size in actions, action text size (e.g. `h-tiny`, `w-tiny`, `text-tiny`)
+  - Small: 5 units - actions, avatars, Strip items (e.g. `h-small`, `w-small`)
+  - Medium: 7 units - buttons, toggles, inputs, sliders, steppers, Footer, table rows, Strip (e.g. `h-medium`, `w-medium`)
+  - Large: 9 units - Band, Navbar, table headers (e.g. `h-large`, `w-large`)
   - Huge: 11 units - height of navigation buttons at bottom of docs pages (e.g. `h-11`)
-  - Mega: 13 units - width of toggles with actions (toggles with dropdown or action buttons) (e.g. `w-13`)
-  - Giga: 15 units - reserved for future use (e.g. `w-15`)
+  - Mega: 13 units - width of toggles with actions (toggles with dropdown or action buttons) (e.g. `w-mega`)
+  - Giga: 15 units - reserved for future use (e.g. `w-giga`)
 - NEVER use rounded corners unless a circle.
 - NEVER use shadows.
 - Whenever a ui element can be interacted (left/right clicked with/without hold or modifier keys, dragged, …) with, ALWAYS make it visible (different hover color, different cursor, tooltip, …).
 - The ui ALWAYS consists of three layers: 1. base, 2. panel and 3. temporary. Every layer has a darker background color and is on top of the previous layer. Every ui element ALWAYS has an enum for the layer and hence ALWAYS has three different color sets.
 - ALWAYS indicate on the element and the cursor when it is interactive. Clickable elements have a pointer cursor and a hover effect. Dragable elements have a grab cursor. While dragging, the cursor changes to a grabbing cursor.
+
+### Horizontal Containers
+
+- **Band**: Horizontal-only container with `h-large` height and optional horizontal scrolling; accepts `items: BandItem[]` (each item renders in a `h-medium` slot and can set wrapper `className` like `flex-1 min-w-0`).
+- **Strip**: Smaller horizontal container with `h-medium` height and optional horizontal scrolling; accepts `items: StripItem[]` (each item renders in a `h-small` slot).
+- **Navbar**: Non-scrollable Band with `h-large` height and fixed DOM id `navbar`; accepts `items: NavbarItem[]` and `level` for background theming.
+- **Footer**: A horizontal container with h-medium height. Contains ordered footer items. Uses `level` prop for background theming.
+
+### Action Components
+
+- **Action**: A clickable action with optional `icon` and/or `text`. When `text` is provided, it renders with tiny text size (`text-tiny`).
+- **ActionGroup**: A group of related actions displayed together.
+- **ActionGroupItem**: Items within an ActionGroup that support `icon` and/or `text` props.
 
 ## File Structure
 
@@ -1635,7 +1661,7 @@ Register items inside effects and always call the remove helper in the cleanup; 
 
 Providing an `id` shows the translated `DescriptionTooltipContent`, and the base footer auto-hides in fullscreen until the cursor nears the bottom edge, so interactive elements must tolerate that visibility change.
 
-The shared `Footer` component uses `heightKind` (unit-based) and defaults to `large` (`h-large` / `--size-large`).
+The shared `Footer` component has a fixed `h-medium` height.
 
 #### Styling
 
@@ -1643,13 +1669,13 @@ The shared `Footer` component uses `heightKind` (unit-based) and defaults to `la
 - NEVER add semantic values and ALWAYS use hardcoded values in `theme.css`. NEVER use `theme.css` outside of `global.css`.
 - ALWAYS use the standardized unit-based sizing system defined in globals.css (derived from `--spacing`):
   - Single: 1 unit - spacing between elements and between icon and element (e.g. `gap-1`)
-  - Tiny: 3 units - height/width of icons within actions, small text size (e.g. `h-3`, `w-3`)
-  - Small: 5 units - height/width of actions, avatars, default text size (e.g. `h-5`, `w-5`)
-  - Medium: 7 units - height of tree items, height of buttons and simple toggles, height of input (e.g. `h-7`)
-  - Large: 9 units - height of navbar, footer, table row, table header (e.g. `h-9`)
+  - Tiny: 3 units - icon size in actions, action text size (e.g. `h-tiny`, `w-tiny`, `text-tiny`)
+  - Small: 5 units - actions, avatars, Strip items (e.g. `h-small`, `w-small`)
+  - Medium: 7 units - buttons, toggles, inputs, sliders, steppers, Footer, table rows, Strip (e.g. `h-medium`, `w-medium`)
+  - Large: 9 units - Band, Navbar, table headers (e.g. `h-large`, `w-large`)
   - Huge: 11 units - height of navigation buttons at bottom of docs pages (e.g. `h-11`)
-  - Mega: 13 units - width of toggles with actions (toggles with dropdown or action buttons) (e.g. `w-13`)
-  - Giga: 15 units - reserved for future use (e.g. `w-15`)
+  - Mega: 13 units - width of toggles with actions (toggles with dropdown or action buttons) (e.g. `w-mega`)
+  - Giga: 15 units - reserved for future use (e.g. `w-giga`)
 
 ### Store Architecture
 
@@ -1911,8 +1937,7 @@ executeCommand<T>(command: string, ...args): Promise<T>
 - `js/js/sketchpad/Home.tsx` - HomeStore and home experience
 - `js/js/sketchpad/Docs.tsx` - DocsAppStore and documentation app
 - `js/js/sketchpad/Tutorials.tsx` - Tutorial system (consolidated)
-- `js/js/sketchpad/machines.ts` - XState machine definitions
-- `js/js/sketchpad/shared.ts` - Shared types and XState bridge utilities
+- `js/js/sketchpad/shared.ts` - Shared types and utilities
 
 #### Kit app artifact creation
 
@@ -1921,18 +1946,18 @@ executeCommand<T>(command: string, ...args): Promise<T>
 
 ### XState State Machines
 
-The application uses XState v5 for state machine logic alongside Y.js for persistence.
+The application uses XState v5 for all Sketchpad UI state. Y.js is reserved for collaborative Kit data.
 
 #### Architecture
 
-- **Y.js** remains the source of truth for persistence and CRDT sync
-- **XState machines** provide structured event handling and React integration
-- **fromCallback actors** observe Y.js changes and sync to machine context
-- **React hooks** use `@xstate/react` `useSelector` for optimal rendering
+- **XState actor** is the source of truth for Sketchpad UI state (`SketchpadState` + app slices).
+- **Local persistence**: Sketchpad UI state is written to `localStorage` at `semio.sketchpad.state.<id>`.
+- **Y.js** is used only for Kit data (per-kit `KitStore` documents, optionally connected via `RemoteProviders.yProvider`).
+- **React hooks** read via `@xstate/react` `useSelector` and write via `actor.send({ type: ... })`.
 
 #### Machine Files
 
-**`machines.ts`** contains two main machines:
+**`Sketchpad.tsx`** contains the main machines:
 
 ##### sketchpadMachine
 
@@ -1940,7 +1965,7 @@ Unified state machine combining data management and hierarchical navigation:
 
 **Root Structure (parallel):**
 
-- Y.js sync for Kit data persistence via `yjsSync` callback actor
+- Sketchpad UI state lives in the machine context (`SketchpadState` + app slices)
 - `navigation` parallel state with hierarchical sub-states
 
 **Navigation States:**
@@ -1964,7 +1989,7 @@ App-specific events are only available in their respective navigation states:
 - Settings: `SET_THEME`, `SET_LANGUAGE`, `SET_EXPERTISE`, `SET_MODE`, `SET_LAYOUT`
 - Background operations: `BACKGROUND.START`, `BACKGROUND.COMPLETE`, `BACKGROUND.FAIL`
 - Tutorial: `TUTORIAL.START`, `TUTORIAL.END`, `TUTORIAL.NEXT_STEP`, etc.
-- Sync: `CHANGE`, `Y_UPDATE`
+- Sketchpad state updates: `CHANGE`
 
 **Per-App Transaction Events (scoped to navigation state):**
 
@@ -2019,18 +2044,10 @@ Separate hierarchical UI state machine (kept for reference, functionality merged
 - `createYjsUpdateAssign()` - Assign action for Y_UPDATE events
 - `createYjsSelector()` - Cached selector with dirty checking
 
-#### Full XState Transition
+#### State ownership
 
-The current hybrid architecture keeps the Y.js stores as the persistence layer while XState manages structured events. The full transition elevates the `sketchpadMachine` to the canonical runtime: it already exposes all app slices (home, kit, type, design, quality, tutorial, transactions) via selectors, and the machine context mirrors the live store data through explicit sync events.
-
-Key sync events and helpers:
-
-- `DESIGN.INIT`/`TYPE.INIT` events populate machine context when a new app instance is created.
-- `DESIGN.SYNC`/`TYPE.SYNC` events carry partial updates from the stores (`Coord`/diagram data is normalized to machine-friendly formats).
-- Hooks such as `useDesignAppYjsToXStateSync` observe Y.js state via `useDesignApp`, translate changes, and send the sync events to keep the machine current.
-- Kit table row expansion updates the machine first via `useKitAppToggleRow` and then calls `semio.kitApp.toggleExpandedRow` so the UI reflects the expansion immediately while Y.js remains authoritative.
-
-The final step removes direct Y.js observers from the stores so that commands dispatch through XState actors, the actors own the Y.js subscriptions, and React hooks simply read from `useSketchpadSelector()`/app-specific selectors. Until that cutover, the architecture relies on the Y.js-to-XState bridge utilities listed above to keep both layers aligned.
+- Sketchpad UI state (navigation/settings/panel sizes and per-app UI slices) is owned by `sketchpadMachine` context and exposed through XState selectors.
+- Kit data is owned by per-kit Y.js documents (`KitStore`) and accessed via kit-level stores/hooks.
 
 #### Transaction State Management
 

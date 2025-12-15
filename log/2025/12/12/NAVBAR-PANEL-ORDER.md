@@ -1,9 +1,17 @@
 ---
-date: '2025-12-12T18:20:44.600Z'
+date:
+  created: '2025-12-12T18:20:44.600Z'
+  updated: '2025-12-12T18:20:44.600Z'
 slug: NAVBAR-PANEL-ORDER
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Enforce navbar panel order Details Chat Settings
 model: claude-opus-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 # Previously
 

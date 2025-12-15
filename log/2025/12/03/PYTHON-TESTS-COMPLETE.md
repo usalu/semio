@@ -1,9 +1,17 @@
 ---
-date: "2025-12-03T11:23:57.109Z"
+date:
+  created: '2025-12-03T11:23:57.109Z'
+  updated: '2025-12-03T11:23:57.109Z'
 slug: PYTHON-TESTS-COMPLETE
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Complete Python engine tests to match TypeScript semio.test.ts functionality
 model: claude-opus-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 
 # Previously

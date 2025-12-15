@@ -1,9 +1,17 @@
 ---
-date: "2025-12-03T13:46:49.034Z"
+date:
+  created: '2025-12-03T13:46:49.034Z'
+  updated: '2025-12-03T13:46:49.034Z'
 slug: GRASSHOPPER-COMPONENTS
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix Grasshopper entity components to match semio.ts schema
 model: claude-opus-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 
 # Previously

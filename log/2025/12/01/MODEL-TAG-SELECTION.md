@@ -1,9 +1,17 @@
 ---
-date: "2025-12-01T16:18:54.361Z"
+date:
+  created: '2025-12-01T16:18:54.361Z'
+  updated: '2025-12-01T16:18:54.361Z'
 slug: MODEL-TAG-SELECTION
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Add model tag selection in footer for design and type apps
 model: claude-opus-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 
 # Previously

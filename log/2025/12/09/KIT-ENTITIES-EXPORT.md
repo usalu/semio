@@ -1,9 +1,17 @@
 ---
-date: "2025-12-09T10:21:07.262Z"
+date:
+  created: '2025-12-09T10:21:07.262Z'
+  updated: '2025-12-09T10:21:07.262Z'
 slug: KIT-ENTITIES-EXPORT
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Expose kit entities individually from assets index
 model: gpt-5.1-codex-max
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 
 # Previously

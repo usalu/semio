@@ -1,9 +1,17 @@
 ---
-date: "2025-12-02T18:01:55.369Z"
+date:
+  created: '2025-12-02T18:01:55.369Z'
+  updated: '2025-12-02T18:01:55.369Z'
 slug: FIX-DESIGN-PAN-PERF
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix design app panning performance
 model: claude-opus-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 
 # Previously

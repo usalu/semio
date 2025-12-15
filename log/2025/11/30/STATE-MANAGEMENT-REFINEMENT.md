@@ -1,9 +1,17 @@
 ---
-date: "2025-11-30T00:39:37.870Z"
+date:
+  created: '2025-11-30T00:39:37.870Z'
+  updated: '2025-11-30T00:39:37.870Z'
 slug: STATE-MANAGEMENT-REFINEMENT
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-summary: "Refine state management: granular Yjs subscriptions for selectors"
+summary: 'Refine state management: granular Yjs subscriptions for selectors'
 model: claude-opus-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 
 # Previously

@@ -1,11 +1,19 @@
 ---
-date: "2025-12-09T12:30:30.691Z"
+date:
+  created: '2025-12-09T12:30:30.691Z'
+  updated: '2025-12-09T12:30:30.691Z'
 slug: DESIGN-DRAGDROP-TEST
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: >-
   Extend Design test with drag and drop to corners and center with plane
   validation
 model: claude-opus-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 
 # Previously

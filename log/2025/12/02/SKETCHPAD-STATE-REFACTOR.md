@@ -1,11 +1,19 @@
 ---
-date: "2025-12-02T10:37:18.948Z"
+date:
+  created: '2025-12-02T10:37:18.948Z'
+  updated: '2025-12-02T10:37:18.948Z'
 slug: SKETCHPAD-STATE-REFACTOR
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: >-
   Refactor sketchpad state management to fix performance issues with
   overfetching
 model: claude-opus-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 
 # Previously

@@ -1,9 +1,17 @@
 ---
-date: "2025-12-08T13:21:49.206Z"
+date:
+  created: '2025-12-08T13:21:49.206Z'
+  updated: '2025-12-08T13:21:49.206Z'
 slug: STATE-MANAGEMENT-REFACTOR
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Complete state management refactor with triadic hooks pattern
 model: claude-opus-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 
 # Previously

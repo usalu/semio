@@ -76,6 +76,7 @@ import {
   useAddPanelSection,
   useAppType,
   useDesignScope,
+  useExpertise,
   useFocus,
   useHasKit,
   useIsInKitScope,
@@ -84,14 +85,13 @@ import {
   useKitAppXState,
   useKitCommands,
   useKitScope,
-  useMode,
   useLanguage,
   useLayout,
+  useMode,
   useNavigation,
   useOrigin,
   useRemoveFooterItem,
   useRemovePanelSection,
-  useExpertise,
   useSketchpadActor,
   useSketchpadCommands,
   useSketchpadStore,
@@ -100,7 +100,7 @@ import {
   useTypeScope,
   Window,
 } from "./Sketchpad";
-import { Action, Input, NotFound, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Strip, Table, TableAvatar, Textarea, Toggle, ToggleGroup, Transaction, TransactionProvider, TreeContent, TreeItem } from "./elements";
+import { Action, Band, Input, NotFound, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Table, TableAvatar, Textarea, Toggle, ToggleGroup, Transaction, TransactionProvider, TreeContent, TreeItem } from "./elements";
 import type { HookNoSetResult, HookResult, KitAppId, KitCommandContext, KitDiffAppEdit, Layout, PanelDefinition, PanelVisibility, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
 import { AppConfig, AppPlugin, conditionalHookResult, createPanelDefinition, Expertise, Mode, PanelKind, registerAppPlugin, Theme } from "./shared";
 
@@ -4058,9 +4058,8 @@ const AppContent: FC = () => {
           }
         }}
       >
-        <Strip
-          direction="horizontal"
-          id="semio.sketchpad.app.kit.filter.strip"
+        <Band
+          id="semio.sketchpad.app.kit.filter.band"
           items={[
             ...(selectedKind
               ? [
@@ -4184,7 +4183,7 @@ const AppContent: FC = () => {
               ? uniqueNames.map((name) => <Toggle key={name} pressed={false} onPressedChange={() => toggleName(name)} id="semio.sketchpad.app.kit.filter.name" icon={<span className="size-small">N</span>} text={name} />)
               : []),
             <Input key="search" id="semio.sketchpad.app.kit.filter.search" className="flex-1 min-w-[160px]" placeholder={labelSearch} value={searchQuery} onChange={(e) => kitAppCommands.setFilterSearch(e.target.value)} />,
-          ]}
+          ].map((content) => ({ content }))}
         />
         <ConceptFilter allConcepts={allConcepts} paramName="c" />
 
@@ -4287,9 +4286,8 @@ const AppContent: FC = () => {
         }
       }}
     >
-      <Strip
-        direction="horizontal"
-        id="semio.sketchpad.app.kit.filter.strip"
+      <Band
+        id="semio.sketchpad.app.kit.filter.band"
         items={[
           ...(selectedKind
             ? [
@@ -4417,7 +4415,7 @@ const AppContent: FC = () => {
             value={searchQuery}
             onChange={(e) => kitAppCommands.setFilterSearch(e.target.value)}
           />,
-        ]}
+        ].map((content) => ({ content }))}
       />
       <ConceptFilter allConcepts={allConcepts} paramName="c" />
       <Scrollable ref={scrollAreaRef} className="flex-1 min-h-0" onDragOver={handleFileDragOver} onDragLeave={handleFileDragLeave} onDrop={handleFileDrop}>

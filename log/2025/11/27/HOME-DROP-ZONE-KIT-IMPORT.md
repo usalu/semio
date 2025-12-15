@@ -1,11 +1,19 @@
 ---
-date: "2025-11-27T01:05:55.465Z"
+date:
+  created: '2025-11-27T01:05:55.465Z'
+  updated: '2025-11-27T01:05:55.465Z'
 slug: HOME-DROP-ZONE-KIT-IMPORT
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: >-
   Add drag and drop of zip files to home app and fix kit app to not import
   .semio folder
 model: claude-sonnet-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 
 # Previously

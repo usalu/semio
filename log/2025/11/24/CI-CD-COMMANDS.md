@@ -1,9 +1,17 @@
 ---
-date: 2025-11-24T00:00:00.000Z
+date:
+  created: '2025-11-23T23:00:00.000Z'
+  updated: '2025-11-23T23:00:00.000Z'
 slug: CI-CD-COMMANDS
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: CI/CD automation and canonical commands
 model: claude-sonnet-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 
 # CI/CD Automation and Canonical Commands

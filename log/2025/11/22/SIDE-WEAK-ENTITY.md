@@ -1,9 +1,17 @@
 ---
-date: '2025-11-21T23:00:00.000Z'
+date:
+  created: '2025-11-21T23:00:00.000Z'
+  updated: '2025-11-21T23:00:00.000Z'
 slug: SIDE-WEAK-ENTITY
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Migration from 2025-11-22_SIDE-WEAK-ENTITY.md
 model: unknown
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 # Side as Weak Entity - Schema Change
 

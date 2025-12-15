@@ -55,7 +55,6 @@ export const Default: Story = {
       { id: "encoding", content: "UTF-8", order: 3 },
       { id: "language", content: "TypeScript", order: 4 },
     ],
-    heightKind: "small",
     isVisible: true,
   },
 };

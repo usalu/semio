@@ -1,9 +1,17 @@
 ---
-date: "2025-12-06T00:29:48.068Z"
+date:
+  created: '2025-12-06T00:29:48.068Z'
+  updated: '2025-12-06T00:29:48.068Z'
 slug: SKETCHPAD-XSTATE-REFACTOR
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Refactor sketchpad to use pure XState machines with no Y.js in app state
 model: claude-opus-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 
 # Previously

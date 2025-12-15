@@ -167,8 +167,7 @@ export interface ElementBaseProps {
   level?: Level;
 }
 
-export interface ElementProps extends ElementBaseProps {
-}
+export interface ElementProps extends ElementBaseProps {}
 
 export const useElementLevel = (propLevel?: Level): Level => {
   const contextLevel = useLevel();
@@ -282,31 +281,40 @@ export interface FooterItem {
   className?: string;
 }
 
+// #region Footer
+
 export interface FooterProps {
   items?: FooterItem[];
   className?: string;
-  heightKind?: "tiny" | "small" | "medium" | "large" | "huge" | "mega" | "giga";
   isVisible?: boolean;
+  level?: Level;
 }
 
-const Footer: React.FC<FooterProps> = ({ items = [], className = "", heightKind = "large", isVisible = true }) => {
+const Footer: React.FC<FooterProps> = ({ items = [], className = "", isVisible = true, level = "base" }) => {
   const sortedItems = [...items].sort((a, b) => (a.order || 0) - (b.order || 0));
+  const bgClass = level === "panel" ? "bg-panel" : level === "temporary" ? "bg-temporary" : "bg-base";
   return (
-    <footer className={`bg-base border-t flex items-center transition-transform duration-200 ${isVisible ? "translate-y-0" : "translate-y-full"} ${({ tiny: "h-tiny", small: "h-small", medium: "h-medium", large: "h-large", huge: "h-huge", mega: "h-mega", giga: "h-giga" } as const)[heightKind]} ${className}`}>
+    <footer
+      id="footer"
+      data-slot="footer"
+      className={cn("border-t flex items-center h-medium transition-transform duration-200", bgClass, isVisible ? "translate-y-0" : "translate-y-full", className)}
+    >
       {sortedItems.map((item, index) => (
         <div key={item.id} id={item.id} className="flex items-center h-full">
           {index > 0 && <div className="h-full w-px bg-border" />}
           {item.id ? (
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className={`flex items-center h-full px-single text-xs cursor-pointer ${item.className || ""}`} onClick={item.onClick}>
+                <div className={cn("flex items-center h-full px-single text-xs cursor-pointer", item.className)} onClick={item.onClick}>
                   {item.content}
                 </div>
               </TooltipTrigger>
-              <TooltipContent>{item.id}</TooltipContent>
+              <TooltipContent>
+                <DescriptionTooltipContent id={item.id} />
+              </TooltipContent>
             </Tooltip>
           ) : (
-            <div className={`flex items-center h-full px-single text-xs ${item.onClick ? "cursor-pointer" : ""} ${item.className || ""}`} onClick={item.onClick}>
+            <div className={cn("flex items-center h-full px-single text-xs", item.onClick && "cursor-pointer", item.className)} onClick={item.onClick}>
               {item.content}
             </div>
           )}
@@ -354,58 +362,6 @@ const Layout: React.FC<LayoutProps> = ({ navbar, footer, leftPanel, middlePanel,
 export { Layout };
 
 // #endregion Layout
-
-// #region Navbar
-
-export interface NavbarItem {
-  id: string;
-  content: React.ReactNode;
-  onClick?: () => void;
-  className?: string;
-  order?: number;
-}
-
-export interface NavbarProps {
-  leftItems?: NavbarItem[];
-  centerItems?: NavbarItem[];
-  rightItems?: NavbarItem[];
-  className?: string;
-  height?: number;
-  isExpanded?: boolean;
-}
-
-const Navbar: React.FC<NavbarProps> = ({ leftItems = [], centerItems = [], rightItems = [], className = "", height, isExpanded = false }) => {
-  const sortedLeft = [...leftItems].sort((a, b) => (a.order || 0) - (b.order || 0));
-  const sortedCenter = [...centerItems].sort((a, b) => (a.order || 0) - (b.order || 0));
-  const sortedRight = [...rightItems].sort((a, b) => (a.order || 0) - (b.order || 0));
-  return (
-    <nav id="navbar" className={`bg-base border-b flex items-center gap-single px-single h-large z-base ${className}`} style={height ? { height: `${height}px`, transition: "height 150ms" } : { transition: "height 150ms" }}>
-      {sortedLeft.map((item) => (
-        <div key={item.id} id={item.id} className={`flex items-center ${item.className || ""}`} onClick={item.onClick}>
-          {item.content}
-        </div>
-      ))}
-      {sortedCenter.map((item) => (
-        <div key={item.id} id={item.id} className={`flex items-center ${item.className || ""}`} onClick={item.onClick}>
-          {item.content}
-        </div>
-      ))}
-      {sortedRight.length > 0 && (
-        <div className="ml-auto flex items-center gap-single">
-          {sortedRight.map((item) => (
-            <div key={item.id} id={item.id} className={`flex items-center ${item.className || ""}`} onClick={item.onClick}>
-              {item.content}
-            </div>
-          ))}
-        </div>
-      )}
-    </nav>
-  );
-};
-
-export { Navbar };
-
-// #endregion Navbar
 
 // #region Popover
 
@@ -1147,14 +1103,17 @@ function ActionGroupItem({
   className,
   children,
   id,
+  text,
   as: Component = "button",
   ...props
 }: React.ComponentProps<"button"> & {
   id?: string;
+  text?: string;
   as?: "button" | "div";
 }) {
   const context = React.useContext(ActionGroupContext);
   const level = context.level ?? "base";
+  const hasText = Boolean(text);
 
   const actionGroupItemElement = (
     <Component
@@ -1170,11 +1129,13 @@ function ActionGroupItem({
         }),
         "min-w-0 shrink-0 focus:z-panel focus-visible:z-panel",
         !id && "flex-1",
+        hasText && "aspect-auto gap-single",
         className,
       )}
       {...(props as any)}
     >
       {children}
+      {text && <span className="text-tiny whitespace-nowrap">{text}</span>}
     </Component>
   );
 
@@ -1263,16 +1224,17 @@ function ActionDropdown({ className, level: propLevel, id, options, value, onVal
 interface ActionProps extends Omit<React.ComponentProps<"button">, "children"> {
   as?: "button" | "div";
   loading?: boolean;
-  icon: React.ReactNode;
+  icon?: React.ReactNode;
+  text?: string;
   id?: string;
   level?: Level;
 }
 
-function Action({ className, level: propLevel, id, icon, as = "button", ...props }: ActionProps) {
+function Action({ className, level: propLevel, id, icon, text, as = "button", ...props }: ActionProps) {
   const level = useElementLevel(propLevel);
   return (
     <ActionGroup level={level} className={className}>
-      <ActionGroupItem as={as} id={id} {...props}>
+      <ActionGroupItem as={as} id={id} text={text} {...props}>
         {icon}
       </ActionGroupItem>
     </ActionGroup>
@@ -2938,33 +2900,109 @@ export { Scrollable, ScrollBar };
 
 // #endregion Scrollable
 
-// #region Strip
+// #region Band
 
-export interface StripProps extends ElementProps {
-  direction?: "horizontal" | "vertical";
-  items: React.ReactNode[];
+export interface BandItem {
+  content: React.ReactNode;
+  className?: string;
+  key?: React.Key;
+}
+
+export interface BandProps extends ElementProps {
+  items: BandItem[];
+  scrollable?: boolean;
   className?: string;
 }
 
-function Strip({ direction = "horizontal", items, className, level: propLevel, id }: StripProps) {
+function Band({ items, scrollable = true, className, level: propLevel, id }: BandProps) {
   const level = useElementLevel(propLevel);
-
-  return (
-    <Scrollable orientation="horizontal" className={cn("border-b", direction === "horizontal" ? "h-large" : "w-large", className)}>
-      <div id={id} className={cn("p-single flex gap-single", direction === "horizontal" ? "flex-row h-full items-center w-fit" : "flex-col w-full")}>
-        {items.map((item, index) => (
-          <div key={index} className={cn(direction === "horizontal" ? "h-medium" : "w-medium", "shrink-0")}>
-            {item}
-          </div>
-        ))}
-      </div>
-    </Scrollable>
+  const bgClass = level === "panel" ? "bg-panel" : level === "temporary" ? "bg-temporary" : "bg-base";
+  const itemsElement = (
+    <div id={id} data-slot="band" className={cn("px-single flex gap-single h-full items-center min-w-0", scrollable ? "w-fit" : "w-full")}>
+      {items.map((item, index) => (
+        <div key={item.key ?? index} className={cn("h-medium flex items-center min-w-0", item.className)}>
+          {item.content}
+        </div>
+      ))}
+    </div>
   );
+
+  if (scrollable) return <Scrollable orientation="horizontal" className={cn("border-b h-large", bgClass, className)}>{itemsElement}</Scrollable>;
+  return <div className={cn("border-b h-large", bgClass, className)}>{itemsElement}</div>;
+}
+
+export { Band as Band };
+
+// #endregion Band
+
+// #region Strip
+
+export interface StripItem {
+  content: React.ReactNode;
+  className?: string;
+  key?: React.Key;
+}
+
+export interface StripProps extends ElementProps {
+  items: StripItem[];
+  scrollable?: boolean;
+  className?: string;
+}
+
+function Strip({ items, scrollable = true, className, level: propLevel, id }: StripProps) {
+  const level = useElementLevel(propLevel);
+  const bgClass = level === "panel" ? "bg-panel" : level === "temporary" ? "bg-temporary" : "bg-base";
+  const itemsElement = (
+    <div id={id} data-slot="strip" className={cn("px-single flex gap-single h-full items-center min-w-0", scrollable ? "w-fit" : "w-full")}>
+      {items.map((item, index) => (
+        <div key={item.key ?? index} className={cn("h-small flex items-center min-w-0", item.className)}>
+          {item.content}
+        </div>
+      ))}
+    </div>
+  );
+
+  if (scrollable) return <Scrollable orientation="horizontal" className={cn("border-b h-medium", bgClass, className)}>{itemsElement}</Scrollable>;
+  return <div className={cn("border-b h-medium", bgClass, className)}>{itemsElement}</div>;
 }
 
 export { Strip };
 
 // #endregion Strip
+
+// #region Navbar
+
+export interface NavbarItem {
+  content: React.ReactNode;
+  className?: string;
+  key?: React.Key;
+}
+
+export interface NavbarProps {
+  items: NavbarItem[];
+  className?: string;
+  level?: Level;
+}
+
+function Navbar({ items, className, level: propLevel }: NavbarProps) {
+  const level = useElementLevel(propLevel);
+  const bgClass = level === "panel" ? "bg-panel" : level === "temporary" ? "bg-temporary" : "bg-base";
+  return (
+    <nav id="navbar" data-slot="navbar" className={cn("border-b h-large z-navbar", bgClass, className)}>
+      <div className="px-single flex gap-single h-full items-center min-w-0">
+        {items.map((item, index) => (
+          <div key={item.key ?? index} className={cn("h-medium flex items-center min-w-0", item.className)}>
+            {item.content}
+          </div>
+        ))}
+      </div>
+    </nav>
+  );
+}
+
+export { Navbar };
+
+// #endregion Navbar
 
 // #region Tabs
 
@@ -4829,7 +4867,7 @@ const Gltf: React.FC<GltfProps> = ({ src, roughness = 0.8, metalness = 0 }) => {
       color: plasterColor,
       flatShading: false,
       metalness,
-      roughness
+      roughness,
     });
     const edgeMaterial = new THREE.LineBasicMaterial({ color: plasterEdgeColor });
 
@@ -4874,21 +4912,12 @@ interface GizmoProps {
 }
 
 const Gizmo: React.FC<GizmoProps> = ({ show = true }) => {
-  const [colors, setColors] = React.useState<[string, string, string]>(() => [
-    getComputedColor("--accent"),
-    getComputedColor("--accent-tertiary"),
-    getComputedColor("--accent-secondary"),
-  ]);
+  const [colors, setColors] = React.useState<[string, string, string]>(() => [getComputedColor("--accent"), getComputedColor("--accent-tertiary"), getComputedColor("--accent-secondary")]);
   const labels = React.useMemo(() => ["X", "Z", "-Y"] as [string, string, string], []);
   const margin = React.useMemo(() => [80, 80] as [number, number], []);
 
   React.useEffect(() => {
-    const updateColors = () =>
-      setColors([
-        getComputedColor("--accent"),
-        getComputedColor("--accent-tertiary"),
-        getComputedColor("--accent-secondary"),
-      ]);
+    const updateColors = () => setColors([getComputedColor("--accent"), getComputedColor("--accent-tertiary"), getComputedColor("--accent-secondary")]);
     updateColors();
     const observer = new MutationObserver(updateColors);
     observer.observe(document.documentElement, {

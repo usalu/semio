@@ -56,16 +56,13 @@ export const Default: Story = {
       <Layout
         navbar={
           <Navbar
-            leftItems={[
-              { id: "home", content: <Home size={20} />, onClick: () => console.log("Home"), order: 0 },
-              { id: "title", content: <span className="font-bold">Application</span>, order: 1 },
+            items={[
+              { content: <Home size={20} />, key: "home" },
+              { content: <span className="font-bold">Application</span>, key: "title" },
+              { content: <input type="text" placeholder="Search..." className="px-2 py-1 bg-panel border rounded w-full" />, key: "search", className: "flex-1" },
+              { content: <Settings size={20} />, key: "settings" },
+              { content: <User size={20} />, key: "user" },
             ]}
-            centerItems={[{ id: "search", content: <input type="text" placeholder="Search..." className="px-2 py-1 bg-panel border rounded" />, order: 0 }]}
-            rightItems={[
-              { id: "settings", content: <Settings size={20} />, onClick: () => console.log("Settings"), order: 0 },
-              { id: "user", content: <User size={20} />, onClick: () => console.log("User"), order: 1 },
-            ]}
-            height={48}
           />
         }
         footer={
@@ -75,7 +72,6 @@ export const Default: Story = {
               { id: "cursor", content: "Ln 1, Col 1", order: 1 },
               { id: "selection", content: "UTF-8", order: 2 },
             ]}
-            heightKind="small"
           />
         }
         leftPanel={{

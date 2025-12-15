@@ -1,5 +1,46 @@
 # Prompt history
 
+Update log system:
+Logs should instead of having prompts and date {created,updated} have input [{prompt,date}]
+affected files should be extended to nested: files {read,updated,removed,created}
+Affected files in logs shouldnt be derived from git but added manually based on the files that were edited. The update command should be able to add affected files. But the lines should be derived from git with the affected files.
+Migrate all existing logs to the new format.
+
+The ci/cd system should be improved. The individual commands should work more closely together and be more integrated.
+Currently preflights runs all analysis and formatters. There should be two new commands: analyze and fix. Preflight runs both of them.
+
+The ui system needs to be more tightly integrated with itself and new components are added and existing ones refactored.
+In general there should be as little props as possible and the system needs to take the decisions.
+Bands should only be horizontal and never vertical. Bands should be optionally scrollable. Navbar should be a non-scrollable band.
+A new ui element should be introduced called Strip. A strip is a smaller version of a band. It is also optionally scrollable.
+Both band and strip receive an items prop which is an array of compatible items. This is determined by height. Compatible for bands are items with medium height. Compatible for strips are items with small height.
+Actions should be extended by a text prop (tiny text height same as tiny icon size). Either action have icon or text or both.
+Heights should not be variable but rather defined by the system. E.g.
+tiny: icons within actions, tiny text size
+small: actions, avatars, small text size
+medium: tree items, buttons toggles, inputs, sliders, steppers, footer, table row, strip, …
+large: band, navbar, table header
+Update elements and all usages in sketchpad. No need to worry about breaking changes the ui elements are only used in this codebase. Just refactor everything cleanly.
+
+The git section of the dev docs is outdated.
+The git repo has a compressed main branch. If the release receives updates after main already has progressed, then a parallel release branch is created that works like main but for this release. The first symbol is a summary of the main task of the commit. The last symbol is encoded the amount of work (🪛🔨🛠️🏗️).
+The ai part is outdated.
+Due to token vs request based we use mainly copilot for most tickets, windsurf for the most token-heavy test-driven-development workflows with mcp (such as playwright), claude code for small bugs, cursor when docs are needed and as main editor with tab autocomplete, codex for simple tasks.
+opus 4.5 is the current model.
+gpt 5.2 alternative.
+In general the dev docs are often written for the js codebase but it is a monorepo. Make sure to complete all repo information and move all js to the ecosystem and the packages.
+
+Yjs should only be used to synchronize the kit data. All app state should be stored in the state machine. E.g. when updating sketchpad settings I get:
+[Machine] Y_UPDATE → {"navigation":"design"}
+
+Extend the log.ts functionality. Enhance the script and documentation.
+Include in the frontmatter: prompts an array of all the prompts provided by the user. Whenever the user sends a new prompt append it to the array.
+Expand log.ts to take model name (of the llm) as forced input. Use the enum values. When a model doesnt exist extend the enum.
+Include stats in the frontmatter. When done with a task add stats to the ticket. affected files and then use git to compute stats for the task: total added lines of code and total removed lines of code. Add an additional command to update the stats of the ticket. Use the affected files to recompute with git the changes. This will happen when tasks take multiple prompts.
+
+Remove stats nesting, add nesting to lines {added;removed}, Add nesting to date {created,updated}, rename base to commit.
+Migrate all existing logs to new format.
+
 Expand the app test to check each individual panel kind.
 E.g. When opening the details from kit app and then changing to settings I get:
 

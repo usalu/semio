@@ -252,6 +252,8 @@
     --size-huge: calc(11 * var(--spacing));
     --size-mega: calc(13 * var(--spacing));
     --size-giga: calc(15 * var(--spacing));
+    --text-2xs: 0.6rem;
+    --text-2xs--line-height: calc(0.9 / 0.6);
     --text-xs: 0.7rem;
     --text-xs--line-height: calc(1 / 0.7);
     --text-sm: 0.8rem;
@@ -949,6 +951,11 @@
 
 @utility z-tutorial {
   z-index: var(--z-tutorial);
+}
+
+@utility text-tiny {
+  font-size: var(--text-2xs);
+  line-height: var(--text-2xs--line-height);
 }
 
 .docs-content {

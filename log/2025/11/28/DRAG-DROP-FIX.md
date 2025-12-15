@@ -1,9 +1,17 @@
 ---
-date: "2025-11-28T19:32:07.052Z"
+date:
+  created: '2025-11-28T19:32:07.052Z'
+  updated: '2025-11-28T19:32:07.052Z'
 slug: DRAG-DROP-FIX
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix drag and drop piece placement in diagram and scene
 model: claude-sonnet-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 
 # Previously

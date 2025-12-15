@@ -1,9 +1,17 @@
 ---
-date: '2025-11-20T23:00:00.000Z'
+date:
+  created: '2025-11-20T23:00:00.000Z'
+  updated: '2025-11-20T23:00:00.000Z'
 slug: PORT-LOOKUP-FIX
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Migration from 2025-11-21_PORT-LOOKUP-FIX.md
 model: unknown
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 # Port Lookup Fix - Nov 21, 2025
 

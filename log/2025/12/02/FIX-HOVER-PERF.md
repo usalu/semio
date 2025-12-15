@@ -1,9 +1,17 @@
 ---
-date: "2025-12-02T20:00:52.810Z"
+date:
+  created: '2025-12-02T20:00:52.810Z'
+  updated: '2025-12-02T20:00:52.810Z'
 slug: FIX-HOVER-PERF
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix hover and selection state overfetching for performance
 model: claude-opus-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 
 # Previously

@@ -1,9 +1,17 @@
 ---
-date: "2025-12-09T10:31:50.168Z"
+date:
+  created: '2025-12-09T10:31:50.168Z'
+  updated: '2025-12-09T10:31:50.168Z'
 slug: KIT-ENTITIES-LOOKUP
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Export individual kit entities
 model: gpt-5.1-codex-max
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 
 # Previously

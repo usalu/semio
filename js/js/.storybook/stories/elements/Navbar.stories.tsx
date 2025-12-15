@@ -39,39 +39,32 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    leftItems: [
-      { id: "menu", content: <Menu size={20} />, onClick: () => alert("Menu"), order: 0 },
-      { id: "home", content: <Home size={20} />, onClick: () => alert("Home"), order: 1 },
-      { id: "title", content: <span className="font-bold ml-2">Application</span>, order: 2 },
-    ],
-    centerItems: [
+    items: [
+      { key: "menu", content: <Menu size={20} /> },
+      { key: "home", content: <Home size={20} /> },
+      { key: "title", content: <span className="font-bold ml-2">Application</span> },
       {
-        id: "search",
+        key: "search",
         content: (
-          <div className="flex items-center gap-double bg-panel px-3 py-1 rounded border">
+          <div className="flex items-center gap-double bg-panel px-3 py-1 rounded border w-full">
             <Search size={16} />
-            <input type="text" placeholder="Search..." className="bg-transparent outline-none w-64" />
+            <input type="text" placeholder="Search..." className="bg-transparent outline-none w-full" />
           </div>
         ),
-        order: 0,
+        className: "flex-1",
       },
-    ],
-    rightItems: [
-      { id: "bell", content: <Bell size={20} />, onClick: () => alert("Notifications"), order: 0 },
-      { id: "settings", content: <Settings size={20} />, onClick: () => alert("Settings"), order: 1 },
+      { key: "bell", content: <Bell size={20} /> },
+      { key: "settings", content: <Settings size={20} /> },
       {
-        id: "user",
+        key: "user",
         content: (
           <div className="flex items-center gap-double">
             <User size={20} />
             <ChevronDown size={16} />
           </div>
         ),
-        onClick: () => alert("Profile"),
-        order: 2,
       },
     ],
-    height: 64,
   },
 };
 

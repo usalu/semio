@@ -1,9 +1,17 @@
 ---
-date: "2025-12-03T10:49:48.397Z"
+date:
+  created: '2025-12-03T10:49:48.397Z'
+  updated: '2025-12-03T10:49:48.397Z'
 slug: VALIDATION-UNIFICATION
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-summary: "Unify validation mechanism across TypeScript, Python and C#"
+summary: 'Unify validation mechanism across TypeScript, Python and C#'
 model: claude-opus-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 
 # Previously

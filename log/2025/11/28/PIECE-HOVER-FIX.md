@@ -1,3 +1,18 @@
+---
+date:
+  created: '2025-11-27T23:00:00.000Z'
+  updated: '2025-11-27T23:00:00.000Z'
+slug: PIECE-HOVER-FIX
+author: Unknown
+summary: ''
+model: unknown
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
+---
 ````markdown
 ---
 date: "2025-11-28T18:49:22.576Z"

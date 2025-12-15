@@ -1,9 +1,17 @@
 ---
-date: "2025-12-08T15:57:09.894Z"
+date:
+  created: '2025-12-08T15:57:09.894Z'
+  updated: '2025-12-08T15:57:09.894Z'
 slug: SKETCHPAD-XSTATE-CONTEXT-FIX
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix XState actor context for GoldenLayout windows
 model: claude-opus-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 
 # Previously

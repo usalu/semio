@@ -1,11 +1,19 @@
 ---
-date: '2025-12-12T18:42:08.587Z'
+date:
+  created: '2025-12-12T18:42:08.587Z'
+  updated: '2025-12-12T18:42:08.587Z'
 slug: TRIADIC-HOOKS-REFACTOR
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: >-
   Refactor components to use triadic hooks instead of direct store/commands
   access
 model: claude-opus-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 # Previously
 

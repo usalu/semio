@@ -1,9 +1,17 @@
 ---
-date: "2025-12-07T21:39:04.368Z"
+date:
+  created: '2025-12-07T21:39:04.368Z'
+  updated: '2025-12-07T21:39:04.368Z'
 slug: STATE-WRITES
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Update state writes handling
 model: claude-opus-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 
 # Previously

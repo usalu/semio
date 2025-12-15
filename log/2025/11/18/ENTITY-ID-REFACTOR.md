@@ -1,9 +1,17 @@
 ---
-date: '2025-11-17T23:00:00.000Z'
+date:
+  created: '2025-11-17T23:00:00.000Z'
+  updated: '2025-11-17T23:00:00.000Z'
 slug: ENTITY-ID-REFACTOR
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Migration from 2025-11-18_ENTITY-ID-REFACTOR.md
 model: unknown
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 # Entity ID Refactor Plan
 

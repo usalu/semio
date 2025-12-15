@@ -146,7 +146,7 @@ import {
   InteractionProvider,
   Layout as LayoutComponent,
   Navbar,
-  NavbarItem,
+  type NavbarItem,
   Toggle,
   Transaction,
   Window,
@@ -7759,22 +7759,17 @@ export interface TutorialContext {
  * Input for creating the sketchpad machine
  */
 export interface SketchpadMachineInput {
-  yDoc: Y.Doc;
-  ySketchpad: Y.Map<any>;
   id?: string;
+  initialState?: Partial<SketchpadState>;
 }
 
 /**
  * Unified context for the sketchpad machine.
- * Contains all app state - Y.js only for Kit data sync.
+ * Contains all app state in XState.
  */
 export interface SketchpadContext {
-  // Y.js references for sketchpad settings and kit sync
-  yDoc: Y.Doc;
-  ySketchpad: Y.Map<any>;
   id?: string;
-  cache?: SketchpadState;
-  dirty: boolean;
+  sketchpad: SketchpadState;
 
   // Kit actors for Y.js data sync
   kits: Record<Guid, AnyActorRef>;
@@ -7810,7 +7805,6 @@ export type SketchpadEvent =
   | { type: "CREATE_KIT"; kit: Kit; local?: boolean; remote?: boolean }
   | { type: "DELETE_KIT"; guid: Guid }
   | { type: "CHANGE"; diff: SketchpadDiff }
-  | { type: "Y_UPDATE"; data: any }
   // Home app events
   | { type: "HOME.TOGGLE_PANEL"; panel: keyof PanelVisibility }
   | { type: "HOME.SET_PANEL_VISIBILITY"; panelVisibility: PanelVisibility }
@@ -8146,6 +8140,128 @@ function createDefaultQualityAppState(): QualityAppState {
   };
 }
 
+function createDefaultSketchpadState(id?: string): SketchpadState {
+  return {
+    id,
+    navigation: "/",
+    navigationHistory: ["/"],
+    navigationHistoryIndex: 0,
+    recentSearches: [],
+    recentFocusItems: {},
+    theme: Theme.SYSTEM,
+    language: "en",
+    layout: "desktop",
+    expertise: Expertise.BEGINNER,
+    mode: Mode.USER,
+    settings: {
+      apps: {
+        design: {
+          diagram: { proximityConnectDistance: 10 },
+          scene: { gridSize: 24 },
+        },
+      },
+    },
+    panelSizes: {
+      toolbarHeight: 52,
+      workbenchWidth: 230,
+      toolsWidth: 230,
+      hudWidth: 230,
+      statsWidth: 230,
+      detailsWidth: 230,
+      chatWidth: 230,
+      settingsWidth: 230,
+      consoleHeight: 200,
+    },
+    isFullscreen: false,
+    isMobile: false,
+    activeInteraction: undefined,
+    hotkeyOverrides: undefined,
+    activeHotkeySetting: undefined,
+    persisted: false,
+  };
+}
+
+function mergeSketchpadState(base: SketchpadState, partial?: Partial<SketchpadState>): SketchpadState {
+  if (!partial) return base;
+  return {
+    ...base,
+    ...partial,
+    settings: {
+      ...base.settings,
+      ...partial.settings,
+      apps: {
+        ...(base.settings?.apps || {}),
+        ...(partial.settings?.apps || {}),
+      },
+    },
+    panelSizes: {
+      ...base.panelSizes,
+      ...(partial.panelSizes || {}),
+    },
+    navigationHistory: partial.navigationHistory ?? base.navigationHistory,
+    recentSearches: partial.recentSearches ?? base.recentSearches,
+    recentFocusItems: partial.recentFocusItems ?? base.recentFocusItems,
+    hotkeyOverrides: partial.hotkeyOverrides ?? base.hotkeyOverrides,
+  };
+}
+
+function readSketchpadStateFromLocalStorage(id: string): Partial<SketchpadState> | undefined {
+  if (typeof window === "undefined") return undefined;
+  try {
+    const raw = window.localStorage.getItem(`semio.sketchpad.state.${id}`);
+    if (!raw) return undefined;
+    return JSON.parse(raw) as Partial<SketchpadState>;
+  } catch {
+    return undefined;
+  }
+}
+
+function writeSketchpadStateToLocalStorage(id: string, state: SketchpadState): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(`semio.sketchpad.state.${id}`, JSON.stringify(state));
+  } catch {}
+}
+
+function toSketchpadInitialState(initialState?: ExtendedInitialState): Partial<SketchpadState> | undefined {
+  if (!initialState) return undefined;
+  const { kits: _kits, ...rest } = initialState;
+  return rest;
+}
+
+function applySketchpadDiffToState(state: SketchpadState, diff: SketchpadDiff): SketchpadState {
+  let next = state;
+  if (diff.navigationHistory !== undefined) next = { ...next, navigationHistory: diff.navigationHistory };
+  if (diff.navigationHistoryIndex !== undefined) next = { ...next, navigationHistoryIndex: diff.navigationHistoryIndex };
+  if (diff.navigation) next = { ...next, navigation: diff.navigation };
+  if ("recentSearches" in diff) next = { ...next, recentSearches: diff.recentSearches || [] };
+  if ("recentFocusItems" in diff) next = { ...next, recentFocusItems: { ...(next.recentFocusItems || {}), ...(diff.recentFocusItems || {}) } };
+  if (diff.theme) next = { ...next, theme: diff.theme };
+  if (diff.language !== undefined) next = { ...next, language: diff.language };
+  if (diff.layout) next = { ...next, layout: diff.layout };
+  if (diff.expertise) next = { ...next, expertise: diff.expertise };
+  if (diff.mode) next = { ...next, mode: diff.mode };
+  if (diff.isFullscreen !== undefined) next = { ...next, isFullscreen: diff.isFullscreen };
+  if (diff.isMobile !== undefined) next = { ...next, isMobile: diff.isMobile };
+  if ("activeInteraction" in diff) next = { ...next, activeInteraction: diff.activeInteraction || undefined };
+  if (diff.settings) {
+    next = {
+      ...next,
+      settings: {
+        ...next.settings,
+        apps: {
+          ...(next.settings?.apps || {}),
+          ...(diff.settings.apps || {}),
+        },
+      },
+    };
+  }
+  if (diff.panelSizes) next = { ...next, panelSizes: { ...(next.panelSizes || {}), ...diff.panelSizes } };
+  if (diff.hotkeyOverrides) next = { ...next, hotkeyOverrides: { ...(next.hotkeyOverrides || {}), ...diff.hotkeyOverrides } };
+  if ("activeHotkeySetting" in diff) next = { ...next, activeHotkeySetting: diff.activeHotkeySetting || undefined };
+  return next;
+}
+
 // #endregion Helpers
 
 // #region Sketchpad Machine
@@ -8154,11 +8270,10 @@ function createDefaultQualityAppState(): QualityAppState {
  * XState machine for the Sketchpad root store.
  *
  * This machine:
- * - Observes Y.js changes via the yjsSync actor
  * - Handles navigation, theme, and settings changes
  * - Spawns kit actors for each kit
  *
- * Y.js remains the source of truth - this machine provides:
+ * This machine provides:
  * - Structured event handling
  * - State machine logic
  * - React integration via @xstate/react
@@ -8172,16 +8287,10 @@ export const sketchpadMachine = setup({
   guards: {
     // Navigation guards
     canNavigateBack: ({ context }) => {
-      const historyStr = context.ySketchpad.get("navigationHistory") as string;
-      const history = historyStr ? JSON.parse(historyStr) : ["/"];
-      const index = (context.ySketchpad.get("navigationHistoryIndex") as number) ?? 0;
-      return index > 0;
+      return context.sketchpad.navigationHistoryIndex > 0;
     },
     canNavigateForward: ({ context }) => {
-      const historyStr = context.ySketchpad.get("navigationHistory") as string;
-      const history = historyStr ? JSON.parse(historyStr) : ["/"];
-      const index = (context.ySketchpad.get("navigationHistoryIndex") as number) ?? 0;
-      return index < history.length - 1;
+      return context.sketchpad.navigationHistoryIndex < context.sketchpad.navigationHistory.length - 1;
     },
     // Home hover guards
     hasHomeHover: ({ context }) => {
@@ -8242,115 +8351,62 @@ export const sketchpadMachine = setup({
     },
   },
   actions: {
-    navigate: assign({
-      dirty: () => true,
-    }),
-    navigateImpl: ({ context, event }) => {
-      if (event.type !== "NAVIGATE") return;
-      const { yDoc, ySketchpad } = context;
-      const currentNav = ySketchpad.get("navigation") as string;
-      const historyStr = ySketchpad.get("navigationHistory") as string;
-      const history = historyStr ? JSON.parse(historyStr) : ["/"];
-      const index = (ySketchpad.get("navigationHistoryIndex") as number) ?? 0;
-
-      // Don't navigate if already there
-      if (currentNav === event.path) return;
-
-      // Truncate history at current index and add new path
+    navigate: () => {},
+    navigateImpl: assign(({ context, event }) => {
+      if (event.type !== "NAVIGATE") return {};
+      const currentNav = context.sketchpad.navigation;
+      const history = context.sketchpad.navigationHistory.length > 0 ? context.sketchpad.navigationHistory : ["/"];
+      const index = context.sketchpad.navigationHistoryIndex ?? 0;
+      if (currentNav === event.path) {
+        return { sketchpad: { ...context.sketchpad, navigation: event.path } };
+      }
       const newHistory = [...history.slice(0, index + 1), event.path];
-
-      yDoc.transact(() => {
-        ySketchpad.set("navigation", event.path);
-        ySketchpad.set("navigationHistory", JSON.stringify(newHistory));
-        ySketchpad.set("navigationHistoryIndex", newHistory.length - 1);
-      });
-    },
-    navigateBack: ({ context }) => {
-      const { yDoc, ySketchpad } = context;
-      const historyStr = ySketchpad.get("navigationHistory") as string;
-      const history = historyStr ? JSON.parse(historyStr) : ["/"];
-      const index = (ySketchpad.get("navigationHistoryIndex") as number) ?? 0;
-
-      if (index > 0) {
-        const newIndex = index - 1;
-        yDoc.transact(() => {
-          ySketchpad.set("navigation", history[newIndex]);
-          ySketchpad.set("navigationHistoryIndex", newIndex);
-        });
-      }
-    },
-    navigateForward: ({ context }) => {
-      const { yDoc, ySketchpad } = context;
-      const historyStr = ySketchpad.get("navigationHistory") as string;
-      const history = historyStr ? JSON.parse(historyStr) : ["/"];
-      const index = (ySketchpad.get("navigationHistoryIndex") as number) ?? 0;
-
-      if (index < history.length - 1) {
-        const newIndex = index + 1;
-        yDoc.transact(() => {
-          ySketchpad.set("navigation", history[newIndex]);
-          ySketchpad.set("navigationHistoryIndex", newIndex);
-        });
-      }
-    },
-    setTheme: ({ context, event }) => {
-      if (event.type !== "SET_THEME") return;
-      context.yDoc.transact(() => {
-        context.ySketchpad.set("theme", event.theme);
-      });
-    },
-    setLanguage: ({ context, event }) => {
-      if (event.type !== "SET_LANGUAGE") return;
-      context.yDoc.transact(() => {
-        context.ySketchpad.set("language", event.language);
-      });
-    },
-    setExpertise: ({ context, event }) => {
-      if (event.type !== "SET_EXPERTISE") return;
-      context.yDoc.transact(() => {
-        context.ySketchpad.set("expertise", event.expertise);
-      });
-    },
-    setMode: ({ context, event }) => {
-      if (event.type !== "SET_MODE") return;
-      context.yDoc.transact(() => {
-        context.ySketchpad.set("mode", event.mode);
-      });
-    },
-    setLayout: ({ context, event }) => {
-      if (event.type !== "SET_LAYOUT") return;
-      context.yDoc.transact(() => {
-        context.ySketchpad.set("layout", JSON.stringify(event.layout));
-      });
-    },
-    toggleFullscreen: ({ context }) => {
-      const current = context.ySketchpad.get("isFullscreen") as boolean;
-      context.yDoc.transact(() => {
-        context.ySketchpad.set("isFullscreen", !current);
-      });
-    },
-    setPanelSize: ({ context, event }) => {
-      if (event.type !== "SET_PANEL_SIZE") return;
-      const currentStr = context.ySketchpad.get("panelSizes") as string;
-      const current = currentStr ? JSON.parse(currentStr) : {};
-      context.yDoc.transact(() => {
-        context.ySketchpad.set(
-          "panelSizes",
-          JSON.stringify({
-            ...current,
-            [event.panel]: event.size,
-          }),
-        );
-      });
-    },
-    applyChange: ({ context, event }) => {
-      if (event.type !== "CHANGE") return;
-      applyDiff(context.yDoc, context.ySketchpad, event.diff);
-    },
-    markDirty: assign({
-      dirty: () => true,
-      cache: () => undefined,
+      return { sketchpad: { ...context.sketchpad, navigation: event.path, navigationHistory: newHistory, navigationHistoryIndex: newHistory.length - 1 } };
     }),
+    navigateBack: assign(({ context }) => {
+      const history = context.sketchpad.navigationHistory.length > 0 ? context.sketchpad.navigationHistory : ["/"];
+      const index = context.sketchpad.navigationHistoryIndex ?? 0;
+      if (index <= 0) return {};
+      const newIndex = index - 1;
+      return { sketchpad: { ...context.sketchpad, navigation: history[newIndex], navigationHistoryIndex: newIndex } };
+    }),
+    navigateForward: assign(({ context }) => {
+      const history = context.sketchpad.navigationHistory.length > 0 ? context.sketchpad.navigationHistory : ["/"];
+      const index = context.sketchpad.navigationHistoryIndex ?? 0;
+      if (index >= history.length - 1) return {};
+      const newIndex = index + 1;
+      return { sketchpad: { ...context.sketchpad, navigation: history[newIndex], navigationHistoryIndex: newIndex } };
+    }),
+    setTheme: assign(({ context, event }) => {
+      if (event.type !== "SET_THEME") return {};
+      return { sketchpad: { ...context.sketchpad, theme: event.theme } };
+    }),
+    setLanguage: assign(({ context, event }) => {
+      if (event.type !== "SET_LANGUAGE") return {};
+      return { sketchpad: { ...context.sketchpad, language: event.language } };
+    }),
+    setExpertise: assign(({ context, event }) => {
+      if (event.type !== "SET_EXPERTISE") return {};
+      return { sketchpad: { ...context.sketchpad, expertise: event.expertise } };
+    }),
+    setMode: assign(({ context, event }) => {
+      if (event.type !== "SET_MODE") return {};
+      return { sketchpad: { ...context.sketchpad, mode: event.mode } };
+    }),
+    setLayout: assign(({ context, event }) => {
+      if (event.type !== "SET_LAYOUT") return {};
+      return { sketchpad: { ...context.sketchpad, layout: event.layout } };
+    }),
+    toggleFullscreen: assign(({ context }) => ({ sketchpad: { ...context.sketchpad, isFullscreen: !context.sketchpad.isFullscreen } })),
+    setPanelSize: assign(({ context, event }) => {
+      if (event.type !== "SET_PANEL_SIZE") return {};
+      return { sketchpad: { ...context.sketchpad, panelSizes: { ...(context.sketchpad.panelSizes || {}), [event.panel]: event.size } } };
+    }),
+    applyChange: assign(({ context, event }) => {
+      if (event.type !== "CHANGE") return {};
+      return { sketchpad: applySketchpadDiffToState(context.sketchpad, event.diff) };
+    }),
+    markDirty: () => {},
     // Home app actions
     homeTogglePanel: assign(({ context, event }) => {
       if (event.type !== "HOME.TOGGLE_PANEL") return {};
@@ -9216,33 +9272,12 @@ export const sketchpadMachine = setup({
       return { designApps: { ...context.designApps, [key]: { ...app, selection: undefined } } };
     }),
   },
-  actors: {
-    yjsSync: fromCallback<{ type: "Y_UPDATE"; data: any }, SketchpadMachineInput>(({ sendBack, input }) => {
-      const observer = () => {
-        sendBack({ type: "Y_UPDATE", data: input.ySketchpad.toJSON() });
-      };
-
-      // Send initial state
-      observer();
-
-      // Observe deep changes
-      input.ySketchpad.observeDeep(observer);
-
-      // Return cleanup function
-      return () => {
-        input.ySketchpad.unobserveDeep(observer);
-      };
-    }),
-  },
 }).createMachine({
   id: "sketchpad",
   type: "parallel",
   context: ({ input }) => ({
-    yDoc: input.yDoc,
-    ySketchpad: input.ySketchpad,
     id: input.id,
-    cache: undefined,
-    dirty: true,
+    sketchpad: mergeSketchpadState(createDefaultSketchpadState(input.id), input.initialState),
     kits: {},
     // All app state is pure in-memory XState
     homeApp: {
@@ -9270,15 +9305,6 @@ export const sketchpadMachine = setup({
     // Background operations track async tasks that continue when navigating away
     backgroundOperations: {},
   }),
-  invoke: {
-    id: "yjsSync",
-    src: "yjsSync",
-    input: ({ context }) => ({
-      yDoc: context.yDoc,
-      ySketchpad: context.ySketchpad,
-      id: context.id,
-    }),
-  },
   // Global events available in all states
   on: {
     // Navigation events
@@ -9287,11 +9313,11 @@ export const sketchpadMachine = setup({
     },
     NAVIGATE_BACK: {
       guard: "canNavigateBack",
-      actions: ["markDirty", "navigateBack"],
+      actions: ["navigateBack"],
     },
     NAVIGATE_FORWARD: {
       guard: "canNavigateForward",
-      actions: ["markDirty", "navigateForward"],
+      actions: ["navigateForward"],
     },
     // App INIT events - available globally for direct URL navigation
     // These transition to the appropriate navigation state and initialize app data
@@ -9309,31 +9335,28 @@ export const sketchpadMachine = setup({
     },
     // Settings events - always available
     SET_THEME: {
-      actions: ["markDirty", "setTheme"],
+      actions: ["setTheme"],
     },
     SET_LANGUAGE: {
-      actions: ["markDirty", "setLanguage"],
+      actions: ["setLanguage"],
     },
     SET_EXPERTISE: {
-      actions: ["markDirty", "setExpertise"],
+      actions: ["setExpertise"],
     },
     SET_MODE: {
-      actions: ["markDirty", "setMode"],
+      actions: ["setMode"],
     },
     SET_LAYOUT: {
-      actions: ["markDirty", "setLayout"],
+      actions: ["setLayout"],
     },
     TOGGLE_FULLSCREEN: {
-      actions: ["markDirty", "toggleFullscreen"],
+      actions: ["toggleFullscreen"],
     },
     SET_PANEL_SIZE: {
-      actions: ["markDirty", "setPanelSize"],
+      actions: ["setPanelSize"],
     },
     CHANGE: {
-      actions: ["markDirty", "applyChange"],
-    },
-    Y_UPDATE: {
-      actions: "markDirty",
+      actions: ["applyChange"],
     },
     // Tutorial events - always available
     "TUTORIAL.START": { actions: "tutorialStart" },
@@ -9721,56 +9744,22 @@ export const selectTutorialCurrentStep = (state: { context: SketchpadContext }) 
 export const selectTutorialSteps = (state: { context: SketchpadContext }) => state.context.tutorial.steps;
 
 // Sketchpad global selectors
-export const selectSketchpadCache = (state: { context: SketchpadContext }) => state.context.cache;
-export const selectSketchpadDirty = (state: { context: SketchpadContext }) => state.context.dirty;
 export const selectSketchpadKits = (state: { context: SketchpadContext }) => state.context.kits;
 
-// Sketchpad state selectors (read from Y.js via context)
-export const selectSketchpadNavigation = (state: { context: SketchpadContext }) => migratePath((state.context.ySketchpad.get("navigation") as string) || "/");
+export const selectSketchpadState = (state: { context: SketchpadContext }) => state.context.sketchpad;
 
-export const selectSketchpadTheme = (state: { context: SketchpadContext }) => state.context.ySketchpad.get("theme") as Theme;
-
-export const selectSketchpadLanguage = (state: { context: SketchpadContext }) => (state.context.ySketchpad.get("language") as string) || "en";
-
-export const selectSketchpadExpertise = (state: { context: SketchpadContext }) => (state.context.ySketchpad.get("expertise") as Expertise) ?? Expertise.BEGINNER;
-
-export const selectSketchpadMode = (state: { context: SketchpadContext }) => (state.context.ySketchpad.get("mode") as Mode) ?? Mode.USER;
-
-export const selectSketchpadLayout = (state: { context: SketchpadContext }) => {
-  const layoutStr = state.context.ySketchpad.get("layout") as string;
-  return layoutStr ? JSON.parse(layoutStr) : "desktop";
-};
-
-export const selectSketchpadIsFullscreen = (state: { context: SketchpadContext }) => (state.context.ySketchpad.get("isFullscreen") as boolean) || false;
-
-export const selectSketchpadPanelSizes = (state: { context: SketchpadContext }) => {
-  const panelSizesStr = state.context.ySketchpad.get("panelSizes") as string;
-  return panelSizesStr
-    ? JSON.parse(panelSizesStr)
-    : {
-        toolbarHeight: 52,
-        workbenchWidth: 230,
-        toolsWidth: 230,
-        hudWidth: 230,
-        statsWidth: 230,
-        detailsWidth: 230,
-        chatWidth: 230,
-        settingsWidth: 230,
-        consoleHeight: 200,
-      };
-};
-
-export const selectSketchpadNavigationHistory = (state: { context: SketchpadContext }) => {
-  const historyStr = state.context.ySketchpad.get("navigationHistory") as string;
-  return historyStr ? JSON.parse(historyStr).map(migratePath) : ["/"];
-};
-
-export const selectSketchpadNavigationHistoryIndex = (state: { context: SketchpadContext }) => (state.context.ySketchpad.get("navigationHistoryIndex") as number) ?? 0;
-
-export const selectSketchpadSettings = (state: { context: SketchpadContext }) => {
-  const settingsStr = state.context.ySketchpad.get("settings") as string;
-  return settingsStr ? JSON.parse(settingsStr) : { apps: { design: { diagram: { proximityConnectDistance: 10 }, scene: { gridSize: 24 } } } };
-};
+// Sketchpad state selectors (read from XState context)
+export const selectSketchpadNavigation = (state: { context: SketchpadContext }) => migratePath(state.context.sketchpad.navigation || "/");
+export const selectSketchpadTheme = (state: { context: SketchpadContext }) => state.context.sketchpad.theme;
+export const selectSketchpadLanguage = (state: { context: SketchpadContext }) => state.context.sketchpad.language || "en";
+export const selectSketchpadExpertise = (state: { context: SketchpadContext }) => state.context.sketchpad.expertise ?? Expertise.BEGINNER;
+export const selectSketchpadMode = (state: { context: SketchpadContext }) => state.context.sketchpad.mode ?? Mode.USER;
+export const selectSketchpadLayout = (state: { context: SketchpadContext }) => state.context.sketchpad.layout || "desktop";
+export const selectSketchpadIsFullscreen = (state: { context: SketchpadContext }) => state.context.sketchpad.isFullscreen || false;
+export const selectSketchpadPanelSizes = (state: { context: SketchpadContext }) => state.context.sketchpad.panelSizes || createDefaultSketchpadState().panelSizes;
+export const selectSketchpadNavigationHistory = (state: { context: SketchpadContext }) => (state.context.sketchpad.navigationHistory || ["/"]).map(migratePath);
+export const selectSketchpadNavigationHistoryIndex = (state: { context: SketchpadContext }) => state.context.sketchpad.navigationHistoryIndex ?? 0;
+export const selectSketchpadSettings = (state: { context: SketchpadContext }) => state.context.sketchpad.settings || createDefaultSketchpadState().settings;
 
 // Transaction selectors - now per-app (transactions embedded in each app's state)
 // Helper to get transaction state from an app key (format: "design-{kitGuid}-{designGuid}", "type-{kitGuid}-{typeGuid}", "kit-{kitGuid}")
@@ -9840,6 +9829,10 @@ export interface UiContext {
   activeDesignGuid?: Guid;
   activeTypeGuid?: Guid;
   activeQualityGuid?: Guid;
+  kitApps: Record<Guid, KitAppState>;
+  designApps: Record<string, DesignAppState>;
+  typeApps: Record<string, TypeAppState>;
+  qualityApps: Record<string, QualityAppState>;
   hoveredEntity?: { kind: UiEntityKind; guid: Guid; parentGuid?: Guid };
   selectedEntities: Array<{ kind: UiEntityKind; guid: Guid; parentGuid?: Guid }>;
   menuPosition?: { x: number; y: number };
@@ -10017,6 +10010,10 @@ export const uiMachine = setup({
     activeDesignGuid: undefined,
     activeTypeGuid: undefined,
     activeQualityGuid: undefined,
+    kitApps: {},
+    designApps: {},
+    typeApps: {},
+    qualityApps: {},
     hoveredEntity: undefined,
     selectedEntities: [],
     menuPosition: undefined,
@@ -10719,56 +10716,39 @@ function buildKitSnapshot(yKit: Y.Map<any>): Partial<Kit> {
 }
 
 export function selectSnapshot(context: SketchpadContext): SketchpadState {
-  if (!context.dirty && context.cache) {
-    return context.cache;
-  }
-  return buildSnapshot(context.ySketchpad);
+  return context.sketchpad;
 }
 
 export function selectNavigation(context: SketchpadContext): string {
-  return migratePath((context.ySketchpad.get("navigation") as string) || "/");
+  return migratePath(context.sketchpad.navigation || "/");
 }
 
 export function selectTheme(context: SketchpadContext): Theme {
-  return context.ySketchpad.get("theme") as Theme;
+  return context.sketchpad.theme;
 }
 
 export function selectLanguage(context: SketchpadContext): string {
-  return (context.ySketchpad.get("language") as string) || "en";
+  return context.sketchpad.language || "en";
 }
 
 export function selectExpertise(context: SketchpadContext): Expertise {
-  return (context.ySketchpad.get("expertise") as Expertise) ?? Expertise.BEGINNER;
+  return context.sketchpad.expertise ?? Expertise.BEGINNER;
 }
 
 export function selectMode(context: SketchpadContext): Mode {
-  return (context.ySketchpad.get("mode") as Mode) ?? Mode.USER;
+  return context.sketchpad.mode ?? Mode.USER;
 }
 
 export function selectLayout(context: SketchpadContext): Layout {
-  const layoutStr = context.ySketchpad.get("layout") as string;
-  return layoutStr ? JSON.parse(layoutStr) : "desktop";
+  return context.sketchpad.layout || "desktop";
 }
 
 export function selectIsFullscreen(context: SketchpadContext): boolean {
-  return (context.ySketchpad.get("isFullscreen") as boolean) || false;
+  return context.sketchpad.isFullscreen || false;
 }
 
 export function selectPanelSizes(context: SketchpadContext): PanelSizes {
-  const panelSizesStr = context.ySketchpad.get("panelSizes") as string;
-  return panelSizesStr
-    ? JSON.parse(panelSizesStr)
-    : {
-        toolbarHeight: 52,
-        workbenchWidth: 230,
-        toolsWidth: 230,
-        hudWidth: 230,
-        statsWidth: 230,
-        detailsWidth: 230,
-        chatWidth: 230,
-        settingsWidth: 230,
-        consoleHeight: 200,
-      };
+  return context.sketchpad.panelSizes || createDefaultSketchpadState().panelSizes;
 }
 
 export function selectKitGuid(context: KitContext): Guid {
@@ -12041,6 +12021,8 @@ export class SketchpadStore {
   private readonly designAppCreatedSubscribers: Set<() => void>;
   private readonly designAppDeletedSubscribers: Set<() => void>;
   private readonly tutorialStoreInstance: any;
+  private actor?: SketchpadActorRef;
+  private actorUnsubscribe?: () => void;
 
   constructor(id?: string, remote?: RemoteProviders, initialState?: ExtendedInitialState) {
     this.id = id;
@@ -12192,11 +12174,31 @@ export class SketchpadStore {
     }
   }
 
+  setActor = (actor: SketchpadActorRef) => {
+    if (this.actorUnsubscribe) {
+      this.actorUnsubscribe();
+      this.actorUnsubscribe = undefined;
+    }
+    this.actor = actor;
+    this.cache = undefined;
+    this.cacheHash = undefined;
+    if (this.id) {
+      writeSketchpadStateToLocalStorage(this.id, actor.getSnapshot().context.sketchpad);
+      const subscription = actor.subscribe((snapshot) => {
+        writeSketchpadStateToLocalStorage(this.id!, snapshot.context.sketchpad);
+      });
+      this.actorUnsubscribe = () => subscription.unsubscribe();
+    }
+  };
+
   hash = (state: SketchpadState): string => {
     return JSON.stringify(state);
   };
 
   snapshot = (): SketchpadState => {
+    if (this.actor) {
+      return this.actor.getSnapshot().context.sketchpad;
+    }
     const settingsStr = this.ySketchpad.get("settings") as string;
     const settings = settingsStr
       ? JSON.parse(settingsStr)
@@ -12352,6 +12354,10 @@ export class SketchpadStore {
   };
 
   change(diff: SketchpadDiff) {
+    if (this.actor) {
+      this.actor.send({ type: "CHANGE", diff });
+      return;
+    }
     this.yDoc.transact(() => {
       if (diff.navigationHistory !== undefined) {
         this.ySketchpad.set("navigationHistory", JSON.stringify(diff.navigationHistory));
@@ -12484,10 +12490,22 @@ export class SketchpadStore {
   };
 
   onChanged = (subscribe: Subscribe): Unsubscribe => {
+    if (this.actor) {
+      const subscription = this.actor.subscribe(() => {
+        subscribe(() => {});
+      });
+      return () => subscription.unsubscribe();
+    }
     return createObserver(this.ySketchpad, subscribe);
   };
 
   onChangedDeep = (subscribe: Subscribe): Unsubscribe => {
+    if (this.actor) {
+      const subscription = this.actor.subscribe(() => {
+        subscribe(() => {});
+      });
+      return () => subscription.unsubscribe();
+    }
     return createObserver(this.ySketchpad, subscribe, true);
   };
 
@@ -13097,12 +13115,10 @@ export const SketchpadScopeProvider = (props: { id?: string; remote?: RemoteProv
     stores.set(id, store);
 
     // Create XState actor alongside the store
-    // The actor observes the same Y.js data as the store
-    const yDoc = (store as any).yDoc as Y.Doc;
-    const ySketchpad = (store as any).ySketchpad as Y.Map<any>;
-    const actor = createSketchpadActor({ yDoc, ySketchpad, id });
+    const actor = createSketchpadActor({ id, initialState: mergeSketchpadState(mergeSketchpadState(store.snapshot(), readSketchpadStateFromLocalStorage(id)), toSketchpadInitialState(props?.initialState)) });
     actor.start();
     actors.set(id, actor);
+    store.setActor(actor);
 
     if (typeof window !== "undefined") {
       (window as any).__SEMIO_STORE__ = store;
@@ -17429,12 +17445,9 @@ const LayoutWrapper: FC = () => {
   const fullscreenToggleId = isFullscreen ? "semio.sketchpad.navbar.exitFullscreen" : "semio.sketchpad.navbar.fullscreen";
 
   const navbarItems = useMemo(() => {
-    const leftItems: NavbarItem[] = [];
-    const centerItems: NavbarItem[] = [];
-    const rightItems: NavbarItem[] = [];
-
-    leftItems.push({
-      id: "semio.sketchpad.navbar.navigationButtons",
+    const items: NavbarItem[] = [];
+    items.push({
+      key: "navigationButtons",
       content: (
         <ButtonGroup id="semio.sketchpad.navbar.navigationButtons">
           <ButtonGroupItem value="back" id="semio.sketchpad.navbar.back" onClick={() => sketchpadCommands.navigateBack("semio.sketchpad.navbar.back")} disabled={!navigationHistory.canGoBack}>
@@ -17455,36 +17468,13 @@ const LayoutWrapper: FC = () => {
           </ButtonGroupItem>
         </ButtonGroup>
       ),
-      order: 0,
     });
-
-    centerItems.push({
-      id: "semio.sketchpad.navbar.navigation",
-      content: <Navigation />,
-      className: "flex-1 min-w-0",
-      order: 0,
-    });
-
-    rightItems.push({
-      id: "semio.sketchpad.navbar.search",
-      content: <Search />,
-      order: 0,
-    });
-
-    rightItems.push({
-      id: "semio.sketchpad.navbar.focus",
-      content: <Focus />,
-      order: 1,
-    });
-
-    rightItems.push({
-      id: "semio.sketchpad.navbar.panelToggles",
-      content: <PanelToggles />,
-      order: 2,
-    });
-
-    rightItems.push({
-      id: "semio.sketchpad.navbar.fullscreenToggle",
+    items.push({ key: "navigation", content: <Navigation />, className: "flex-1 min-w-0" });
+    items.push({ key: "search", content: <Search /> });
+    items.push({ key: "focus", content: <Focus /> });
+    items.push({ key: "panelToggles", content: <PanelToggles /> });
+    items.push({
+      key: "fullscreenToggle",
       content: (
         <Toggle
           id={fullscreenToggleId}
@@ -17518,11 +17508,9 @@ const LayoutWrapper: FC = () => {
           icon={isFullscreen ? <Minimize2Icon size={16} /> : <Maximize2Icon size={16} />}
         />
       ),
-      order: 3,
     });
-
-    return { leftItems, centerItems, rightItems };
-  }, [navigationHistory, upTarget, isAtRoot, navigate, sketchpadCommands, isFullscreen]);
+    return items;
+  }, [navigationHistory, upTarget, isAtRoot, navigate, sketchpadCommands, fullscreenToggleId, isFullscreen]);
 
   const activeInteraction = useActiveInteraction();
   const panelOpacity = activeInteraction === "dragging" ? 0.3 : 1;
@@ -17601,7 +17589,7 @@ const LayoutWrapper: FC = () => {
       >
         <LayoutComponent
           className="bg-base text-foreground relative border"
-          navbar={<Navbar leftItems={navbarItems.leftItems} centerItems={navbarItems.centerItems} rightItems={navbarItems.rightItems} isExpanded={isNavbarExpanded} />}
+          navbar={<Navbar items={navbarItems} />}
           footer={
             !isFullscreen || isFooterExpanded ? (
               <Footer

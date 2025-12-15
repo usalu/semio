@@ -1,9 +1,17 @@
 ---
-date: "2025-12-01T16:49:41.908Z"
+date:
+  created: '2025-12-01T16:49:41.908Z'
+  updated: '2025-12-01T16:49:41.908Z'
 slug: MIGRATE-KIT-MODELS
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Migrate models from kit_metabolism.json.old to kit_metabolism.json
 model: claude-opus-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 
 # Previously

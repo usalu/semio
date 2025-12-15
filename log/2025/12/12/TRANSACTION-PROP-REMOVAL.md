@@ -1,9 +1,17 @@
 ---
-date: '2025-12-12T22:24:17.054Z'
+date:
+  created: '2025-12-12T22:24:17.054Z'
+  updated: '2025-12-12T22:24:17.054Z'
 slug: TRANSACTION-PROP-REMOVAL
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Remove transaction props from elements
 model: claude-opus-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 # Previously
 Sketchpad UI elements accepted an optional `transaction` prop that could override the ambient `TransactionProvider` context. This leaked transaction plumbing through most form controls and encouraged repeated `useKitTransaction()` / `useKitAppTransaction()` calls at call sites.

@@ -1,11 +1,19 @@
 ---
-date: "2025-12-05T22:38:50.063Z"
+date:
+  created: '2025-12-05T22:38:50.063Z'
+  updated: '2025-12-05T22:38:50.063Z'
 slug: XSTATE-MIGRATION-COMPLETE
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: >-
   Complete XState migration - remove Y.js from sketchpad, add guards and proper
   state machine patterns
 model: claude-opus-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 
 # Previously

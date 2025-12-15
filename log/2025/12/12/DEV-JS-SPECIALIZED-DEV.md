@@ -1,9 +1,17 @@
 ---
-date: "2025-12-12T22:37:27.485Z"
+date:
+  created: '2025-12-12T22:37:27.485Z'
+  updated: '2025-12-12T22:37:27.485Z'
 slug: DEV-JS-SPECIALIZED-DEV
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Split @semio/js dev scripts
 model: claude-opus-4.5
+prompts: []
+commit: unknown
+affectedFiles: []
+lines:
+  added: 0
+  removed: 0
 ---
 
 # Previously
