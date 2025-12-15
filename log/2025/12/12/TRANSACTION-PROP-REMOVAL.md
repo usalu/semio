@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-12-12T22:24:17.054Z'
-  updated: '2025-12-12T22:24:17.054Z'
 slug: TRANSACTION-PROP-REMOVAL
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Remove transaction props from elements
 model: claude-opus-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-12-08T15:43:43.165Z'
-  updated: '2025-12-08T15:43:43.165Z'
 slug: STATE-MACHINE-REFACTOR
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Refactor sketchpad state machine for proper state transitions
 model: claude-opus-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

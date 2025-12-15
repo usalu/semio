@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-11-26T16:43:17.475Z'
-  updated: '2025-11-26T16:43:17.475Z'
 slug: TUTORIALS-CONSOLIDATION
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Consolidate tutorials into single file
 model: claude-sonnet-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

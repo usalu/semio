@@ -718,7 +718,7 @@ Then you can run `npm run build` from the root to build all packages, or run `ts
 
 ## Preflight Checks
 
-The repository uses a hierarchical `preflight` command that runs all formatters, linters, and validation tools before committing code.
+The repository uses a split `fix`/`analyze` pipeline where `preflight` runs both.
 
 ### Running Preflight
 
@@ -728,17 +728,40 @@ Run all preflight checks across the entire monorepo:
 npm run preflight
 ```
 
-Or run preflight for a specific workspace:
+Run only auto-fixes/formatters:
 
 ```bash
-cd <workspace> && npm run preflight
+npm run fix
+```
+
+Run only non-mutating checks (reports in `reports/`):
+
+```bash
+npm run analyze
 ```
 
 ### What Preflight Does
 
-The preflight command runs different checks depending on the workspace:
+`preflight` runs:
 
-- Each workspace defines its own `preflight` (formatters + linters + type checks) and the root command aggregates them via Nx.
+- `fix`: `hooks/prettier.ts`, `hooks/ruff.ts`
+- `analyze`: `hooks/i18n.ts`, `hooks/typescript.ts`, `hooks/eslint.ts`
+
+`test` runs `preflight` and then `nx run-many -t test`. `build` runs `test` and then `nx run-many -t build`. `prepublish` and `publish` run `build` first.
+
+### Skip Mechanism
+
+All pipeline commands support skipping earlier steps:
+
+- Skip `preflight` when running tests: `npm run test -- --skip=preflight`
+- Skip `test` when running a build: `npm run build -- --skip=test`
+- Skip `build` when running `prepublish`/`publish`: `npm run publish -- --skip=build`
+
+To scope Nx-powered steps (e.g. `test`, `build`, ESLint) to specific projects, pass Nx args after `--nx`:
+
+```bash
+npm run test -- --nx --projects=@semio/js
+```
 
 ### Pre-commit Hooks (Husky)
 
@@ -761,6 +784,8 @@ Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on macOS) → "Tasks: Run Task" and selec
 **Root-level commands:**
 - `build` - Build all packages
 - `test` - Run all tests
+- `fix` - Run auto-fixes/formatters
+- `analyze` - Run non-mutating checks
 - `preflight` - Run all preflight checks (default build task)
 - `update` - Update dependencies
 - `prepublish` - Prepare for publishing
@@ -787,6 +812,10 @@ Press `F5` or use the Run and Debug panel to launch:
 **Testing:**
 - `test` - Run all tests
 - `test js` / `test engine` / `test vscode` - Individual test suites
+
+**Fix / Analyze:**
+- `fix` - Run auto-fixes/formatters
+- `analyze` - Run non-mutating checks
 
 **Preflight:**
 - `preflight` - Run all preflight checks
@@ -962,8 +991,8 @@ The default model for agent work is **Claude Opus 4.5**, with **GPT-5.2 Codex** 
 
 </details>
 
-All automation, CI runs, and agent workflows are controlled through the six commands `dev`, `build`, `test`, `update`, `prepublish`, and `publish`. The root `package.json` forwards each command to `npx nx run-many -t <target>`, so every project executes the same target and inherits the dependency chain defined in `nx.json`. Only `dev` is allowed to stay live for watch mode, while the remaining commands must exit so CI and agents can finish reliably. `prepublish` stages a fresh build before a `publish`, and `publish` can wrap the project-specific delivery steps while still returning control. The `prepublish` step already pushes artifacts to the shared test registry used by our package managers so downstream targets can install against that snapshot before any final release.
-Packages should keep the commands they already expose rather than inventing new ones.
+All automation, CI runs, and agent workflows are controlled through the canonical root commands `dev`, `fix`, `analyze`, `preflight`, `test`, `build`, `update`, `prepublish`, and `publish`. Only `dev` is allowed to stay live for watch mode, while the remaining commands must exit so CI and agents can finish reliably. `prepublish` and `publish` always run a full `build` first.
+The root `package.json` uses `preflight.ts` to orchestrate the command pipeline, and delegates project builds/tests/publishing to Nx (`npx nx run-many -t <target>`).
 
 # ♻️ Ecosystems [↑](#-overview)
 
@@ -1215,6 +1244,11 @@ The core which is shared in the [semio JavaScript ecosystem](#-javascript-) 🥜
 - Sketchpad elements (`Input`, `Textarea`, `Select`, `Slider`, `Stepper`, `Combobox`, ...) use `useTransaction()` internally and do not accept a `transaction` prop.
 - Apps wrap their UI subtree with `TransactionProvider` using the appropriate transaction hook so all descendant elements participate in undo/redo consistently.
 
+#### Sketchpad selection + hover visuals
+
+- `js/js/sketchpad/elements.tsx` `Geometry` renders selection/hover colors even when a base `color` is provided (it is treated as the non-interactive default).
+- `js/js/sketchpad/Design.tsx` diagram nodes use `ring-*` (not `ring-inset`) so hover/selection rings remain visible with `AvatarFallback` backgrounds.
+
 #### Kit app artifact creation
 
 - `js/js/sketchpad/Kit.tsx` create actions for `interfaces`, `tags`, `concepts`, and `folders` set the `kind` filter and selection to the newly created entity so the details panel opens immediately.
@@ -1243,7 +1277,7 @@ All size constants are defined in `js/js/globals.css` and derived from `--spacin
 - **Tiny**: 3 units (e.g. `h-tiny`, `w-tiny`, `text-tiny`) - icon size in actions, action text size
 - **Small**: 5 units (e.g. `h-small`, `w-small`) - actions, avatars, Strip items
 - **Medium**: 7 units (e.g. `h-medium`, `w-medium`) - buttons, toggles, inputs, sliders, steppers, Footer, table rows, Strip
-- **Large**: 9 units (e.g. `h-large`, `w-large`) - Band, Navbar, table headers
+- **Large**: 9 units (e.g. `h-large`, `w-large`) - Band, Navbar
 - **Huge**: 11 units (e.g. `h-11`) - height of navigation buttons at bottom of docs pages
 - **Mega**: 13 units (e.g. `w-mega`) - width of toggles with actions (toggles with dropdown or action buttons)
 - **Giga**: 15 units (e.g. `w-giga`) - reserved for future use

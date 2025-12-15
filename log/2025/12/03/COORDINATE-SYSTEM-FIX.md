@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-12-03T10:35:43.796Z'
-  updated: '2025-12-03T10:35:43.796Z'
 slug: COORDINATE-SYSTEM-FIX
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix coordinate system transformation for ports and geometry
 model: claude-opus-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

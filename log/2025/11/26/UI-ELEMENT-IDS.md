@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-11-26T17:12:27.700Z'
-  updated: '2025-11-26T17:12:27.700Z'
 slug: UI-ELEMENT-IDS
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Add missing IDs to all Sketchpad UI elements
 model: claude-sonnet-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

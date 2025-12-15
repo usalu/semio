@@ -1,16 +1,13 @@
 ---
-date:
-  created: '2025-12-09T10:27:50.413Z'
-  updated: '2025-12-09T10:27:50.413Z'
 slug: DESIGN-TEST-FLAT-PLANES
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: >-
   Extend design E2E test to verify flat planes and centers match expected asset
   data
 model: claude-opus-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

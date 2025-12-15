@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-11-28T23:21:35.075Z'
-  updated: '2025-11-28T23:21:35.075Z'
 slug: CSHARP-TESTS-SYNC
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Sync C# unit tests with JS fixtures and fix all test failures
 model: claude-opus-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

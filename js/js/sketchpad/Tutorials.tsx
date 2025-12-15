@@ -45,6 +45,7 @@ export const TutorialControls: FC = () => {
       addFooterItem({
         id: "tutorial-controls",
         content: <TutorialControlsContent />,
+        className: "aspect-auto",
         order: 100,
       });
     } else {
@@ -127,6 +128,7 @@ export const RecordingControls: FC = () => {
       addFooterItem({
         id: "recording-controls",
         content: <RecordingControlsContent />,
+        className: "aspect-auto",
         order: 1,
       });
     } else {
@@ -138,6 +140,7 @@ export const RecordingControls: FC = () => {
         addFooterItem({
           id: "recording-controls",
           content: <RecordingControlsContent />,
+          className: "aspect-auto",
           order: 1,
         });
       } else {

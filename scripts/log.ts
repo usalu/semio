@@ -4,9 +4,9 @@ import { dirname, join } from "path";
 const matter = require("gray-matter");
 
 //#region Types
-interface LogDate {
-  created: string;
-  updated: string;
+interface LogInput {
+  prompt: string;
+  date: string;
 }
 
 interface LogLines {
@@ -14,15 +14,21 @@ interface LogLines {
   removed: number;
 }
 
+interface LogFiles {
+  read?: string[];
+  updated?: string[];
+  removed?: string[];
+  created?: string[];
+}
+
 interface LogFrontmatter {
-  date: LogDate;
   slug: string;
   author: string;
   summary: string;
   model: string;
-  prompts?: string[];
+  input?: LogInput[];
   commit?: string;
-  affectedFiles?: string[];
+  files?: LogFiles;
   lines?: LogLines;
 }
 
@@ -35,21 +41,21 @@ interface Log {
 interface LogCreateInput {
   slug: string;
   summary: string;
-  prompts: string[];
+  prompt: string;
   model: string;
   content?: string;
   date?: Date;
   author?: string;
+  files?: LogFiles;
 }
 
 interface LogUpdateInput {
   summary?: string;
   content?: string;
   model?: string;
-  prompts?: string[];
-  date?: Partial<LogDate>;
+  prompt?: string;
   commit?: string;
-  affectedFiles?: string[];
+  files?: LogFiles;
   lines?: LogLines;
 }
 
@@ -68,6 +74,21 @@ interface LogSearchOptions extends LogListOptions {
 
 //#region Configuration
 const LOG_ROOT = join(process.cwd(), "log");
+
+function sanitizeForMatter(value: any): any {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  if (Array.isArray(value)) return value.map((v) => sanitizeForMatter(v)).filter((v) => v !== undefined);
+  if (typeof value === "object") {
+    const out: any = {};
+    for (const [key, v] of Object.entries(value)) {
+      const sanitized = sanitizeForMatter(v);
+      if (sanitized !== undefined) out[key] = sanitized;
+    }
+    return out;
+  }
+  return value;
+}
 
 function getGitConfig(key: string): string {
   try {
@@ -128,28 +149,59 @@ function ensureDirectoryExists(filePath: string): void {
 //#region Frontmatter Utilities
 function normalizeLogFrontmatter(frontmatter: any, context?: { slug?: string; createdFromPath?: string }): LogFrontmatter {
   const now = new Date().toISOString();
-  const dateCreated = typeof frontmatter?.date === "string" ? frontmatter.date : frontmatter?.date?.created || context?.createdFromPath;
-  const dateUpdatedFromStats = frontmatter?.stats?.updatedAt;
-  const dateUpdated = frontmatter?.date?.updated || dateUpdatedFromStats || dateCreated || now;
   const slug = frontmatter?.slug || context?.slug || "UNKNOWN";
   const author = frontmatter?.author || "Unknown";
   const summary = frontmatter?.summary || "";
   const model = frontmatter?.model || "unknown";
   const commit = frontmatter?.commit || frontmatter?.stats?.base || "unknown";
-  const affectedFiles = frontmatter?.affectedFiles || frontmatter?.stats?.affectedFiles || [];
   const lines = frontmatter?.lines || (frontmatter?.stats ? { added: frontmatter?.stats?.addedLines || 0, removed: frontmatter?.stats?.removedLines || 0 } : { added: 0, removed: 0 });
+
+  // Handle input migration from legacy prompts format
+  let input: LogInput[] = frontmatter?.input || [];
+  if (input.length === 0 && frontmatter?.prompts?.length > 0) {
+    // Migrate from legacy prompts array to input array
+    const dateCreated = typeof frontmatter?.date === "string" ? frontmatter.date : frontmatter?.date?.created || context?.createdFromPath || now;
+    input = frontmatter.prompts.map((prompt: string, index: number) => ({
+      prompt,
+      date: index === 0 ? dateCreated : frontmatter?.date?.updated || dateCreated,
+    }));
+  }
+
+  // Handle files migration from legacy affectedFiles format
+  let files: LogFiles = frontmatter?.files || {};
+  if (!files.read && !files.updated && !files.removed && !files.created) {
+    const legacyFiles = frontmatter?.affectedFiles || frontmatter?.stats?.affectedFiles || [];
+    if (legacyFiles.length > 0) {
+      // Migrate legacy affectedFiles to files.updated
+      files = { updated: legacyFiles };
+    }
+  }
+
   const migrated: LogFrontmatter = {
-    date: { created: dateCreated || now, updated: dateUpdated },
     slug,
     author,
     summary,
     model,
-    prompts: frontmatter.prompts || [],
+    input,
     commit,
-    affectedFiles,
+    files,
     lines,
   };
   return migrated;
+}
+
+function getLatestInputDate(frontmatter: LogFrontmatter): string {
+  if (!frontmatter.input || frontmatter.input.length === 0) {
+    return new Date().toISOString();
+  }
+  return frontmatter.input[frontmatter.input.length - 1].date;
+}
+
+function getFirstInputDate(frontmatter: LogFrontmatter): string {
+  if (!frontmatter.input || frontmatter.input.length === 0) {
+    return new Date().toISOString();
+  }
+  return frontmatter.input[0].date;
 }
 //#endregion
 
@@ -166,18 +218,17 @@ export function createLog(input: LogCreateInput): Log {
   }
   const now = date.toISOString();
   const frontmatter: LogFrontmatter = {
-    date: { created: now, updated: now },
     slug,
     author: input.author || getDefaultAuthor(),
     summary: input.summary,
     model: input.model,
-    prompts: input.prompts,
+    input: [{ prompt: input.prompt, date: now }],
     commit: getGitHead(),
-    affectedFiles: [],
+    files: input.files || {},
     lines: { added: 0, removed: 0 },
   };
   const content = input.content || "# Previously\n\n# Plan\n\n# Changes\n";
-  const fileContent = matter.stringify(content, frontmatter);
+  const fileContent = matter.stringify(content, sanitizeForMatter(frontmatter));
   ensureDirectoryExists(logPath);
   writeFileSync(logPath, fileContent, "utf-8");
   return { frontmatter, content, path: logPath };
@@ -199,19 +250,34 @@ export function readLog(year: number, month: number, day: number, slug: string):
 
 export function updateLog(year: number, month: number, day: number, slug: string, update: LogUpdateInput): Log {
   const log = readLog(year, month, day, slug);
-  const date = update.date ? { ...log.frontmatter.date, ...update.date } : log.frontmatter.date;
+  const now = new Date().toISOString();
+
+  // Add new input if prompt is provided
+  const newInput = update.prompt
+    ? [...(log.frontmatter.input || []), { prompt: update.prompt, date: now }]
+    : log.frontmatter.input;
+
+  const existingFiles = log.frontmatter.files || {};
+  const newFiles = update.files
+    ? {
+        read: update.files.read ?? existingFiles.read,
+        updated: update.files.updated ?? existingFiles.updated,
+        removed: update.files.removed ?? existingFiles.removed,
+        created: update.files.created ?? existingFiles.created,
+      }
+    : existingFiles;
+
   const newFrontmatter: LogFrontmatter = {
     ...log.frontmatter,
-    date,
     summary: update.summary ?? log.frontmatter.summary,
     model: update.model ?? log.frontmatter.model,
-    prompts: update.prompts ?? log.frontmatter.prompts,
+    input: newInput,
     commit: update.commit ?? log.frontmatter.commit,
-    affectedFiles: update.affectedFiles ?? log.frontmatter.affectedFiles,
+    files: newFiles,
     lines: update.lines ?? log.frontmatter.lines,
   };
   const newContent = update.content ?? log.content;
-  const fileContent = matter.stringify(newContent, newFrontmatter);
+  const fileContent = matter.stringify(newContent, sanitizeForMatter(newFrontmatter));
   writeFileSync(log.path, fileContent, "utf-8");
   return { frontmatter: newFrontmatter, content: newContent, path: log.path };
 }
@@ -257,7 +323,7 @@ export function listLogs(options: LogListOptions = {}): Log[] {
     }
   }
   walk(LOG_ROOT);
-  return logs.sort((a, b) => new Date(b.frontmatter.date.updated).getTime() - new Date(a.frontmatter.date.updated).getTime());
+  return logs.sort((a, b) => new Date(getLatestInputDate(b.frontmatter)).getTime() - new Date(getLatestInputDate(a.frontmatter)).getTime());
 }
 
 export function searchLogs(options: LogSearchOptions = {}): Log[] {
@@ -300,22 +366,21 @@ export function migrateOldLogs(): void {
     const capitalizedSlug = slug.toUpperCase();
     const content = readFileSync(fullPath, "utf-8");
     const parsed = matter(content);
-    if (parsed.data.date) {
+    if (parsed.data.input) {
       console.log(`Skipping already migrated log: ${entry}`);
       continue;
     }
-    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
     const frontmatter: LogFrontmatter = {
-      date: { created: date.toISOString(), updated: date.toISOString() },
       slug: capitalizedSlug,
       author: getDefaultAuthor(),
       summary: `Migration from ${entry}`,
       model: "unknown",
-      prompts: [],
+      input: [],
+      files: {},
     };
     const newPath = getLogPath(parseInt(year), parseInt(month), parseInt(day), capitalizedSlug);
     ensureDirectoryExists(newPath);
-    const fileContent = matter.stringify(parsed.content || content, frontmatter);
+    const fileContent = matter.stringify(parsed.content || content, sanitizeForMatter(frontmatter));
     writeFileSync(newPath, fileContent, "utf-8");
     unlinkSync(fullPath);
     console.log(`Migrated: ${entry} -> ${newPath}`);
@@ -373,7 +438,7 @@ function getChangedFilesSince(base: string): string[] {
 }
 
 function quoteGitPath(path: string): string {
-  return `"${path.replaceAll("\"", "\\\"")}"`;
+  return `"${path.replace(/"/g, "\\\"")}"`;  // eslint-disable-line no-useless-escape
 }
 
 function execGitDiffNoIndexNumstat(nullPath: string, filePath: string): string {
@@ -441,24 +506,35 @@ Usage: tsx scripts/log.ts <command> [options]
 Commands:
   create <slug> <summary>              Create a new log (slug will be capitalized)
                                        Required: --model=MODEL --prompt="..."
+                                       Optional: --file=PATH (can repeat for multiple files)
+  update <slug>                        Update an existing log (same API as create)
+                                       Optional: --prompt="..." --file=PATH --file-read=PATH
+                                                 --file-created=PATH --file-removed=PATH
+                                                 --summary="..." --model=MODEL
   prompt <slug> <prompt>               Append a user prompt to the latest log for the slug
-  files <slug> [paths...]              Update tracked affected files for the latest log for the slug
+  files <slug> [paths...]              Update tracked files for the latest log for the slug
                                        Optional: --detect (from git), --reset (replace list)
-  stats <slug> [--detect]              Update git stats for the latest log for the slug (uses tracked affected files)
+                                                 --category=read|updated|removed|created (default: updated)
+  stats <slug> [--detect]              Update git stats for the latest log for the slug (uses tracked files)
   models                               List available model enum values
   read <year> <month> <day> <slug>     Read a log
-  update <year> <month> <day> <slug>   Update a log (non-interactive flags)
   delete <year> <month> <day> <slug>   Delete a log
   list [year] [month] [day]            List logs (optionally filtered)
   search [query] [--limit=N]           Search logs by query (searches slug, summary, content, author)
                                        Optional: --year=YYYY --month=MM --day=DD --limit=N
   migrate                              Migrate all logs to the latest structure
 
+Log Format:
+  input: [{prompt, date}]              Array of inputs with prompts and timestamps
+  files: {read, updated, removed, created}  Categorized file lists (manually tracked)
+  lines: {added, removed}              Line statistics (derived from git)
+
 Examples:
   tsx scripts/log.ts create my-task "Implement new feature" --model=${Model.CLAUDE_OPUS_4_5} --prompt="User request..."
+  tsx scripts/log.ts update MY-TASK --prompt="Follow-up request..." --file=scripts/log.ts
   tsx scripts/log.ts prompt MY-TASK "Follow-up user request..."
   tsx scripts/log.ts files MY-TASK scripts/log.ts README.md AGENTS.md
-  tsx scripts/log.ts files MY-TASK --detect --reset
+  tsx scripts/log.ts files MY-TASK --detect --reset --category=updated
   tsx scripts/log.ts stats MY-TASK
   tsx scripts/log.ts stats MY-TASK --detect
   tsx scripts/log.ts read 2025 11 24 MY-TASK
@@ -511,14 +587,21 @@ function getLatestLogBySlug(slug: string): { year: number; month: number; day: n
   return parsed;
 }
 
-function ensureLogTracking(log: Log): { commit: string; affectedFiles: string[]; lines: LogLines; date: LogDate } {
-  const now = new Date().toISOString();
+function ensureLogTracking(log: Log): { commit: string; files: LogFiles; lines: LogLines } {
   return {
     commit: log.frontmatter.commit || getGitHead(),
-    affectedFiles: log.frontmatter.affectedFiles || [],
+    files: log.frontmatter.files || {},
     lines: log.frontmatter.lines || { added: 0, removed: 0 },
-    date: log.frontmatter.date || { created: now, updated: now },
   };
+}
+
+function getAllFilesFromLogFiles(files: LogFiles): string[] {
+  const allFiles = new Set<string>();
+  if (files.read) files.read.forEach((f) => allFiles.add(f));
+  if (files.updated) files.updated.forEach((f) => allFiles.add(f));
+  if (files.removed) files.removed.forEach((f) => allFiles.add(f));
+  if (files.created) files.created.forEach((f) => allFiles.add(f));
+  return Array.from(allFiles).sort();
 }
 
 function migrateLogFileFrontmatter(path: string): boolean {
@@ -531,7 +614,7 @@ function migrateLogFileFrontmatter(path: string): boolean {
   const dataJson = JSON.stringify(parsed.data);
   const normalizedJson = JSON.stringify(normalized);
   if (dataJson === normalizedJson) return false;
-  const output = matter.stringify(parsed.content, normalized);
+  const output = matter.stringify(parsed.content, sanitizeForMatter(normalized));
   writeFileSync(path, output, "utf-8");
   return true;
 }
@@ -574,15 +657,12 @@ if (require.main === module) {
           process.exit(1);
         }
         const model = validateModel(requireFlag(rest, "model"));
-        const prompts = parseFlags(rest, "prompt");
-        if (!prompts.length) {
-          console.error("Error: Missing prompt(s). Provide at least one --prompt=... flag.");
-          printUsage();
-          process.exit(1);
-        }
+        const prompt = requireFlag(rest, "prompt");
         const dateArg = rest.find((arg) => arg.startsWith("--date="));
         const date = dateArg ? new Date(dateArg.split("=")[1]) : undefined;
-        const log = createLog({ slug, summary, date, model, prompts });
+        const filesUpdated = parseFlags(rest, "file");
+        const files: LogFiles = filesUpdated.length > 0 ? { updated: filesUpdated } : {};
+        const log = createLog({ slug, summary, date, model, prompt, files });
         console.log(`Created log: ${log.path}`);
         console.log(`Summary: ${log.frontmatter.summary}`);
         break;
@@ -601,9 +681,7 @@ if (require.main === module) {
         const prompt = promptParts.join(" ");
         const latest = getLatestLogBySlug(slug);
         const log = readLog(latest.year, latest.month, latest.day, latest.slug);
-        const prompts = (log.frontmatter.prompts || []).slice();
-        prompts.push(prompt);
-        updateLog(latest.year, latest.month, latest.day, latest.slug, { prompts, date: { updated: new Date().toISOString() } });
+        updateLog(latest.year, latest.month, latest.day, latest.slug, { prompt });
         console.log(`Appended prompt to log: ${log.path}`);
         break;
       }
@@ -620,16 +698,16 @@ if (require.main === module) {
         if (tracking.commit === "unknown") throw new Error(`Unknown commit for ${latest.slug}. Set the commit in frontmatter before using --detect.`);
         const detect = rest.includes("--detect");
         const reset = rest.includes("--reset");
+        const category = parseFlag(rest, "category") || "updated";
         const paths = rest.filter((arg) => !arg.startsWith("--"));
         const detected = detect ? getChangedFilesSince(tracking.commit) : [];
-        const updated = reset ? [...detected, ...paths] : [...tracking.affectedFiles, ...detected, ...paths];
-        const affectedFiles = Array.from(new Set(updated.filter((path) => path.trim()))).sort();
-        updateLog(latest.year, latest.month, latest.day, latest.slug, {
-          affectedFiles,
-          date: { updated: new Date().toISOString() },
-        });
-        console.log(`Updated affected files for log: ${log.path}`);
-        console.log(`Affected files: ${affectedFiles.length}`);
+        const existingFiles = getAllFilesFromLogFiles(tracking.files);
+        const newPaths = reset ? [...detected, ...paths] : [...existingFiles, ...detected, ...paths];
+        const uniquePaths = Array.from(new Set(newPaths.filter((path) => path.trim()))).sort();
+        const files: LogFiles = { [category]: uniquePaths };
+        updateLog(latest.year, latest.month, latest.day, latest.slug, { files });
+        console.log(`Updated files for log: ${log.path}`);
+        console.log(`Files (${category}): ${uniquePaths.length}`);
         break;
       }
       case "stats": {
@@ -644,18 +722,17 @@ if (require.main === module) {
         const tracking = ensureLogTracking(log);
         if (tracking.commit === "unknown") throw new Error(`Unknown commit for ${latest.slug}. Set the commit in frontmatter before running stats.`);
         const detect = rest.includes("--detect");
-        const affectedFiles = detect ? getChangedFilesSince(tracking.commit) : tracking.affectedFiles;
+        const trackedFiles = getAllFilesFromLogFiles(tracking.files);
+        const affectedFiles = detect ? getChangedFilesSince(tracking.commit) : trackedFiles;
         if (!affectedFiles.length) {
-          throw new Error(`No affected files tracked for ${latest.slug}. Use: tsx scripts/log.ts files ${latest.slug} --detect OR tsx scripts/log.ts files ${latest.slug} <paths...>`);
+          throw new Error(`No files tracked for ${latest.slug}. Use: tsx scripts/log.ts files ${latest.slug} --detect OR tsx scripts/log.ts files ${latest.slug} <paths...>`);
         }
         const computed = computeGitStats(tracking.commit, affectedFiles);
         updateLog(latest.year, latest.month, latest.day, latest.slug, {
-          affectedFiles: computed.affectedFiles,
           lines: { added: computed.added, removed: computed.removed },
-          date: { updated: new Date().toISOString() },
         });
         console.log(`Updated stats for log: ${log.path}`);
-        console.log(`Affected files: ${computed.affectedFiles.length}`);
+        console.log(`Files: ${computed.affectedFiles.length}`);
         console.log(`Lines: +${computed.added} -${computed.removed}`);
         break;
       }
@@ -668,44 +745,64 @@ if (require.main === module) {
         }
         const log = readLog(parseInt(year), parseInt(month), parseInt(day), slug);
         console.log(`\nPath: ${log.path}`);
-        console.log(`Date created: ${log.frontmatter.date.created}`);
-        console.log(`Date updated: ${log.frontmatter.date.updated}`);
         console.log(`Author: ${log.frontmatter.author}`);
         console.log(`Summary: ${log.frontmatter.summary}`);
         console.log(`Model: ${log.frontmatter.model}`);
-        console.log(`Prompts: ${log.frontmatter.prompts?.length || 0}`);
+        console.log(`Input: ${log.frontmatter.input?.length || 0}`);
+        if (log.frontmatter.input?.length) {
+          console.log(`  First: ${getFirstInputDate(log.frontmatter)}`);
+          console.log(`  Latest: ${getLatestInputDate(log.frontmatter)}`);
+        }
         if (log.frontmatter.commit) console.log(`Commit: ${log.frontmatter.commit}`);
-        if (log.frontmatter.affectedFiles?.length) console.log(`Affected files: ${log.frontmatter.affectedFiles.length}`);
+        const files = log.frontmatter.files || {};
+        const totalFiles = (files.read?.length || 0) + (files.updated?.length || 0) + (files.removed?.length || 0) + (files.created?.length || 0);
+        if (totalFiles > 0) {
+          console.log(`Files: ${totalFiles}`);
+          if (files.read?.length) console.log(`  Read: ${files.read.length}`);
+          if (files.updated?.length) console.log(`  Updated: ${files.updated.length}`);
+          if (files.removed?.length) console.log(`  Removed: ${files.removed.length}`);
+          if (files.created?.length) console.log(`  Created: ${files.created.length}`);
+        }
         if (log.frontmatter.lines) console.log(`Lines: +${log.frontmatter.lines.added} -${log.frontmatter.lines.removed}`);
         console.log(`\nContent:\n${log.content}`);
         break;
       }
       case "update": {
-        const [, year, month, day, slug] = args;
-        if (!year || !month || !day || !slug) {
-          console.error("Error: Missing year, month, day, or slug");
+        const [, slugArg, ...rest] = args;
+        if (!slugArg) {
+          console.error("Error: Missing slug");
           printUsage();
           process.exit(1);
         }
-        const rest = args.slice(5);
+        const latest = getLatestLogBySlug(slugArg);
         const summary = parseFlag(rest, "summary");
         const modelFlag = parseFlag(rest, "model");
         const model = modelFlag ? validateModel(modelFlag) : undefined;
         const contentFile = parseFlag(rest, "contentFile");
         const content = contentFile ? readFileSync(contentFile, "utf-8") : undefined;
-        const prompts = parseFlags(rest, "prompt");
+        const prompt = parseFlag(rest, "prompt");
+        const filesUpdated = parseFlags(rest, "file");
+        const filesRead = parseFlags(rest, "file-read");
+        const filesCreated = parseFlags(rest, "file-created");
+        const filesRemoved = parseFlags(rest, "file-removed");
         const update: LogUpdateInput = {};
         if (summary) update.summary = summary;
         if (model) update.model = model;
         if (content !== undefined) update.content = content;
-        if (prompts.length) update.prompts = prompts;
+        if (prompt) update.prompt = prompt;
+        if (filesUpdated.length || filesRead.length || filesCreated.length || filesRemoved.length) {
+          update.files = {};
+          if (filesUpdated.length) update.files.updated = filesUpdated;
+          if (filesRead.length) update.files.read = filesRead;
+          if (filesCreated.length) update.files.created = filesCreated;
+          if (filesRemoved.length) update.files.removed = filesRemoved;
+        }
         if (!Object.keys(update).length) {
           console.error("Error: No update flags provided");
           printUsage();
           process.exit(1);
         }
-        update.date = { updated: new Date().toISOString() };
-        const updated = updateLog(parseInt(year), parseInt(month), parseInt(day), slug, update);
+        const updated = updateLog(latest.year, latest.month, latest.day, latest.slug, update);
         console.log(`Updated log: ${updated.path}`);
         break;
       }

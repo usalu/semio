@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-11-20T23:00:00.000Z'
-  updated: '2025-11-20T23:00:00.000Z'
 slug: KIT-DIFF-TEST
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Migration from 2025-11-21_KIT-DIFF-TEST.md
 model: unknown
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

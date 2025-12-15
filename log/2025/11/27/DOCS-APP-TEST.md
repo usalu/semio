@@ -1,16 +1,13 @@
 ---
-date:
-  created: '2025-11-27T00:34:29.374Z'
-  updated: '2025-11-27T00:34:29.374Z'
 slug: DOCS-APP-TEST
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: >-
   Create E2E test for docs app covering content loading, images, workbench panel
   pages, and details panel headings
 model: claude-sonnet-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

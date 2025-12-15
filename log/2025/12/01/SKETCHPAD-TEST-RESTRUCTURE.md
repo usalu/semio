@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-12-01T16:26:23.181Z'
-  updated: '2025-12-01T16:26:23.181Z'
 slug: SKETCHPAD-TEST-RESTRUCTURE
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Restructure sketchpad tests to one test per app with parent initialization
 model: claude-opus-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

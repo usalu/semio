@@ -1,6 +1,11 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "targetDefaults": {
+    "lint": {
+      "dependsOn": ["^lint"],
+      "inputs": ["{projectRoot}/**/*", "{projectRoot}/.env*"],
+      "cache": true
+    },
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["{projectRoot}/**/*", "{projectRoot}/.env*"],

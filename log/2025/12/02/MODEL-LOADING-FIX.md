@@ -1,16 +1,13 @@
 ---
-date:
-  created: '2025-12-02T19:04:21.228Z'
-  updated: '2025-12-02T19:04:21.228Z'
 slug: MODEL-LOADING-FIX
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: >-
   Fix model loading in Type app by matching imported file blobs to existing kit
   file definitions
 model: claude-opus-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

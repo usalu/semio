@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-12-04T19:19:30.464Z'
-  updated: '2025-12-04T19:19:30.464Z'
 slug: TYPESCRIPT-ERRORS-FIX
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix TypeScript errors in sketchpad components
 model: claude-opus-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

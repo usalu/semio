@@ -268,23 +268,191 @@
       }
     },
     {
-      "label": "build",
+      "label": "analyze",
       "type": "shell",
-      "command": "npm run build",
+      "command": "npm run analyze",
       "group": {
         "kind": "build",
-        "isDefault": true
+        "isDefault": false
       },
       "problemMatcher": []
     },
     {
-      "label": "test",
+      "label": "analyze js",
       "type": "shell",
-      "command": "npm run test",
+      "command": "npm run analyze -- --nx --projects=@semio/js",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "analyze engine",
+      "type": "shell",
+      "command": "npm run analyze -- --nx --projects=@semio/engine",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "analyze vscode",
+      "type": "shell",
+      "command": "npm run analyze -- --nx --projects=@semio/vscode",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "analyze docs",
+      "type": "shell",
+      "command": "npm run analyze -- --nx --projects=@semio/docs",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "analyze play",
+      "type": "shell",
+      "command": "npm run analyze -- --nx --projects=@semio/play",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "analyze desktop",
+      "type": "shell",
+      "command": "npm run analyze -- --nx --projects=@semio/desktop",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "analyze assets",
+      "type": "shell",
+      "command": "npm run analyze -- --nx --projects=@semio/assets",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "analyze icons",
+      "type": "shell",
+      "command": "npm run analyze -- --nx --projects=@semio/icons",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "analyze logo",
+      "type": "shell",
+      "command": "npm run analyze -- --nx --projects=@semio/logo",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "analyze net",
+      "type": "shell",
+      "command": "npm run analyze -- --nx --projects=@semio/net",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "analyze grasshopper",
+      "type": "shell",
+      "command": "npm run analyze -- --nx --projects=@semio/grasshopper",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "analyze yak",
+      "type": "shell",
+      "command": "npm run analyze -- --nx --projects=@semio/yak",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "fix",
+      "type": "shell",
+      "command": "npm run fix",
       "group": {
-        "kind": "test",
-        "isDefault": true
+        "kind": "build",
+        "isDefault": false
       },
+      "problemMatcher": []
+    },
+    {
+      "label": "fix js",
+      "type": "shell",
+      "command": "npm run fix -- --nx --projects=@semio/js",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "fix engine",
+      "type": "shell",
+      "command": "npm run fix -- --nx --projects=@semio/engine",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "fix vscode",
+      "type": "shell",
+      "command": "npm run fix -- --nx --projects=@semio/vscode",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "fix docs",
+      "type": "shell",
+      "command": "npm run fix -- --nx --projects=@semio/docs",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "fix play",
+      "type": "shell",
+      "command": "npm run fix -- --nx --projects=@semio/play",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "fix desktop",
+      "type": "shell",
+      "command": "npm run fix -- --nx --projects=@semio/desktop",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "fix assets",
+      "type": "shell",
+      "command": "npm run fix -- --nx --projects=@semio/assets",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "fix icons",
+      "type": "shell",
+      "command": "npm run fix -- --nx --projects=@semio/icons",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "fix logo",
+      "type": "shell",
+      "command": "npm run fix -- --nx --projects=@semio/logo",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "fix net",
+      "type": "shell",
+      "command": "npm run fix -- --nx --projects=@semio/net",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "fix grasshopper",
+      "type": "shell",
+      "command": "npm run fix -- --nx --projects=@semio/grasshopper",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "fix yak",
+      "type": "shell",
+      "command": "npm run fix -- --nx --projects=@semio/yak",
+      "group": "build",
       "problemMatcher": []
     },
     {
@@ -298,9 +466,275 @@
       "problemMatcher": []
     },
     {
-      "label": "update",
+      "label": "preflight js",
       "type": "shell",
-      "command": "npm run update",
+      "command": "npm run preflight -- --nx --projects=@semio/js",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "preflight engine",
+      "type": "shell",
+      "command": "npm run preflight -- --nx --projects=@semio/engine",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "preflight vscode",
+      "type": "shell",
+      "command": "npm run preflight -- --nx --projects=@semio/vscode",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "preflight docs",
+      "type": "shell",
+      "command": "npm run preflight -- --nx --projects=@semio/docs",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "preflight play",
+      "type": "shell",
+      "command": "npm run preflight -- --nx --projects=@semio/play",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "preflight desktop",
+      "type": "shell",
+      "command": "npm run preflight -- --nx --projects=@semio/desktop",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "preflight assets",
+      "type": "shell",
+      "command": "npm run preflight -- --nx --projects=@semio/assets",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "preflight icons",
+      "type": "shell",
+      "command": "npm run preflight -- --nx --projects=@semio/icons",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "preflight logo",
+      "type": "shell",
+      "command": "npm run preflight -- --nx --projects=@semio/logo",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "preflight net",
+      "type": "shell",
+      "command": "npm run preflight -- --nx --projects=@semio/net",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "preflight grasshopper",
+      "type": "shell",
+      "command": "npm run preflight -- --nx --projects=@semio/grasshopper",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "preflight yak",
+      "type": "shell",
+      "command": "npm run preflight -- --nx --projects=@semio/yak",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "test",
+      "type": "shell",
+      "command": "npm run test",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "test js",
+      "type": "shell",
+      "command": "npm run test -- --nx --projects=@semio/js",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "test engine",
+      "type": "shell",
+      "command": "npm run test -- --nx --projects=@semio/engine",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "test vscode",
+      "type": "shell",
+      "command": "npm run test -- --nx --projects=@semio/vscode",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "test docs",
+      "type": "shell",
+      "command": "npm run test -- --nx --projects=@semio/docs",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "test play",
+      "type": "shell",
+      "command": "npm run test -- --nx --projects=@semio/play",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "test desktop",
+      "type": "shell",
+      "command": "npm run test -- --nx --projects=@semio/desktop",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "test assets",
+      "type": "shell",
+      "command": "npm run test -- --nx --projects=@semio/assets",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "test icons",
+      "type": "shell",
+      "command": "npm run test -- --nx --projects=@semio/icons",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "test logo",
+      "type": "shell",
+      "command": "npm run test -- --nx --projects=@semio/logo",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "test net",
+      "type": "shell",
+      "command": "npm run test -- --nx --projects=@semio/net",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "test grasshopper",
+      "type": "shell",
+      "command": "npm run test -- --nx --projects=@semio/grasshopper",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "test yak",
+      "type": "shell",
+      "command": "npm run test -- --nx --projects=@semio/yak",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "build",
+      "type": "shell",
+      "command": "npm run build",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "build js",
+      "type": "shell",
+      "command": "npm run build -- --nx --projects=@semio/js",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "build engine",
+      "type": "shell",
+      "command": "npm run build -- --nx --projects=@semio/engine",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "build vscode",
+      "type": "shell",
+      "command": "npm run build -- --nx --projects=@semio/vscode",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "build docs",
+      "type": "shell",
+      "command": "npm run build -- --nx --projects=@semio/docs",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "build play",
+      "type": "shell",
+      "command": "npm run build -- --nx --projects=@semio/play",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "build desktop",
+      "type": "shell",
+      "command": "npm run build -- --nx --projects=@semio/desktop",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "build assets",
+      "type": "shell",
+      "command": "npm run build -- --nx --projects=@semio/assets",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "build icons",
+      "type": "shell",
+      "command": "npm run build -- --nx --projects=@semio/icons",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "build logo",
+      "type": "shell",
+      "command": "npm run build -- --nx --projects=@semio/logo",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "build net",
+      "type": "shell",
+      "command": "npm run build -- --nx --projects=@semio/net",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "build grasshopper",
+      "type": "shell",
+      "command": "npm run build -- --nx --projects=@semio/grasshopper",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "build yak",
+      "type": "shell",
+      "command": "npm run build -- --nx --projects=@semio/yak",
+      "group": "build",
       "problemMatcher": []
     },
     {
@@ -310,156 +744,231 @@
       "problemMatcher": []
     },
     {
+      "label": "prepublish js",
+      "type": "shell",
+      "command": "npm run prepublish -- --nx --projects=@semio/js",
+      "problemMatcher": []
+    },
+    {
+      "label": "prepublish engine",
+      "type": "shell",
+      "command": "npm run prepublish -- --nx --projects=@semio/engine",
+      "problemMatcher": []
+    },
+    {
+      "label": "prepublish vscode",
+      "type": "shell",
+      "command": "npm run prepublish -- --nx --projects=@semio/vscode",
+      "problemMatcher": []
+    },
+    {
+      "label": "prepublish docs",
+      "type": "shell",
+      "command": "npm run prepublish -- --nx --projects=@semio/docs",
+      "problemMatcher": []
+    },
+    {
+      "label": "prepublish play",
+      "type": "shell",
+      "command": "npm run prepublish -- --nx --projects=@semio/play",
+      "problemMatcher": []
+    },
+    {
+      "label": "prepublish desktop",
+      "type": "shell",
+      "command": "npm run prepublish -- --nx --projects=@semio/desktop",
+      "problemMatcher": []
+    },
+    {
+      "label": "prepublish assets",
+      "type": "shell",
+      "command": "npm run prepublish -- --nx --projects=@semio/assets",
+      "problemMatcher": []
+    },
+    {
+      "label": "prepublish icons",
+      "type": "shell",
+      "command": "npm run prepublish -- --nx --projects=@semio/icons",
+      "problemMatcher": []
+    },
+    {
+      "label": "prepublish logo",
+      "type": "shell",
+      "command": "npm run prepublish -- --nx --projects=@semio/logo",
+      "problemMatcher": []
+    },
+    {
+      "label": "prepublish net",
+      "type": "shell",
+      "command": "npm run prepublish -- --nx --projects=@semio/net",
+      "problemMatcher": []
+    },
+    {
+      "label": "prepublish grasshopper",
+      "type": "shell",
+      "command": "npm run prepublish -- --nx --projects=@semio/grasshopper",
+      "problemMatcher": []
+    },
+    {
+      "label": "prepublish yak",
+      "type": "shell",
+      "command": "npm run prepublish -- --nx --projects=@semio/yak",
+      "problemMatcher": []
+    },
+    {
       "label": "publish",
       "type": "shell",
       "command": "npm run publish",
       "problemMatcher": []
     },
     {
-      "label": "build js",
+      "label": "publish js",
       "type": "shell",
-      "command": "npx nx build @semio/js",
-      "group": "build",
+      "command": "npm run publish -- --nx --projects=@semio/js",
       "problemMatcher": []
     },
     {
-      "label": "build engine",
+      "label": "publish engine",
       "type": "shell",
-      "command": "npx nx build @semio/engine",
-      "group": "build",
+      "command": "npm run publish -- --nx --projects=@semio/engine",
       "problemMatcher": []
     },
     {
-      "label": "build net",
+      "label": "publish vscode",
       "type": "shell",
-      "command": "npx nx build @semio/net",
-      "group": "build",
+      "command": "npm run publish -- --nx --projects=@semio/vscode",
       "problemMatcher": []
     },
     {
-      "label": "build grasshopper",
+      "label": "publish docs",
       "type": "shell",
-      "command": "npx nx build @semio/grasshopper",
-      "group": "build",
+      "command": "npm run publish -- --nx --projects=@semio/docs",
       "problemMatcher": []
     },
     {
-      "label": "build vscode",
+      "label": "publish play",
       "type": "shell",
-      "command": "npx nx build @semio/vscode",
-      "group": "build",
+      "command": "npm run publish -- --nx --projects=@semio/play",
       "problemMatcher": []
     },
     {
-      "label": "build docs",
+      "label": "publish desktop",
       "type": "shell",
-      "command": "npx nx build @semio/docs",
-      "group": "build",
+      "command": "npm run publish -- --nx --projects=@semio/desktop",
       "problemMatcher": []
     },
     {
-      "label": "build play",
+      "label": "publish assets",
       "type": "shell",
-      "command": "npx nx build @semio/play",
-      "group": "build",
+      "command": "npm run publish -- --nx --projects=@semio/assets",
       "problemMatcher": []
     },
     {
-      "label": "build desktop",
+      "label": "publish icons",
       "type": "shell",
-      "command": "npx nx build @semio/desktop",
-      "group": "build",
+      "command": "npm run publish -- --nx --projects=@semio/icons",
       "problemMatcher": []
     },
     {
-      "label": "build icons",
+      "label": "publish logo",
       "type": "shell",
-      "command": "npx nx build @semio/icons",
-      "group": "build",
+      "command": "npm run publish -- --nx --projects=@semio/logo",
       "problemMatcher": []
     },
     {
-      "label": "test js",
+      "label": "publish net",
       "type": "shell",
-      "command": "npx nx test @semio/js",
-      "group": "test",
+      "command": "npm run publish -- --nx --projects=@semio/net",
       "problemMatcher": []
     },
     {
-      "label": "test engine",
+      "label": "publish grasshopper",
       "type": "shell",
-      "command": "npx nx test @semio/engine",
-      "group": "test",
+      "command": "npm run publish -- --nx --projects=@semio/grasshopper",
       "problemMatcher": []
     },
     {
-      "label": "test vscode",
+      "label": "publish yak",
       "type": "shell",
-      "command": "npx nx test @semio/vscode",
-      "group": "test",
+      "command": "npm run publish -- --nx --projects=@semio/yak",
       "problemMatcher": []
     },
     {
-      "label": "preflight js",
+      "label": "update",
       "type": "shell",
-      "command": "npx nx preflight @semio/js",
-      "group": "build",
+      "command": "npm run update",
       "problemMatcher": []
     },
     {
-      "label": "preflight engine",
+      "label": "update js",
       "type": "shell",
-      "command": "npx nx preflight @semio/engine",
-      "group": "build",
+      "command": "npm run update -- --projects=@semio/js",
       "problemMatcher": []
     },
     {
-      "label": "preflight net",
+      "label": "update engine",
       "type": "shell",
-      "command": "npx nx preflight @semio/net",
-      "group": "build",
+      "command": "npm run update -- --projects=@semio/engine",
       "problemMatcher": []
     },
     {
-      "label": "preflight grasshopper",
+      "label": "update vscode",
       "type": "shell",
-      "command": "npx nx preflight @semio/grasshopper",
-      "group": "build",
+      "command": "npm run update -- --projects=@semio/vscode",
       "problemMatcher": []
     },
     {
-      "label": "preflight vscode",
+      "label": "update docs",
       "type": "shell",
-      "command": "npx nx preflight @semio/vscode",
-      "group": "build",
+      "command": "npm run update -- --projects=@semio/docs",
       "problemMatcher": []
     },
     {
-      "label": "preflight docs",
+      "label": "update play",
       "type": "shell",
-      "command": "npx nx preflight @semio/docs",
-      "group": "build",
+      "command": "npm run update -- --projects=@semio/play",
       "problemMatcher": []
     },
     {
-      "label": "preflight play",
+      "label": "update desktop",
       "type": "shell",
-      "command": "npx nx preflight @semio/play",
-      "group": "build",
+      "command": "npm run update -- --projects=@semio/desktop",
       "problemMatcher": []
     },
     {
-      "label": "preflight desktop",
+      "label": "update assets",
       "type": "shell",
-      "command": "npx nx preflight @semio/desktop",
-      "group": "build",
+      "command": "npm run update -- --projects=@semio/assets",
       "problemMatcher": []
     },
     {
-      "label": "preflight assets",
+      "label": "update icons",
       "type": "shell",
-      "command": "npx nx preflight @semio/assets",
-      "group": "build",
+      "command": "npm run update -- --projects=@semio/icons",
+      "problemMatcher": []
+    },
+    {
+      "label": "update logo",
+      "type": "shell",
+      "command": "npm run update -- --projects=@semio/logo",
+      "problemMatcher": []
+    },
+    {
+      "label": "update net",
+      "type": "shell",
+      "command": "npm run update -- --projects=@semio/net",
+      "problemMatcher": []
+    },
+    {
+      "label": "update grasshopper",
+      "type": "shell",
+      "command": "npm run update -- --projects=@semio/grasshopper",
+      "problemMatcher": []
+    },
+    {
+      "label": "update yak",
+      "type": "shell",
+      "command": "npm run update -- --projects=@semio/yak",
       "problemMatcher": []
     },
     {

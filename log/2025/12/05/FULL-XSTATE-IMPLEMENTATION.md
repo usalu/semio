@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-12-05T15:40:53.424Z'
-  updated: '2025-12-05T15:40:53.424Z'
 slug: FULL-XSTATE-IMPLEMENTATION
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Implement full XState transition - no Yjs in apps
 model: claude-opus-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

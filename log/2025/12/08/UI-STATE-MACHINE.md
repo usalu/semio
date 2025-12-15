@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-12-07T23:50:42.452Z'
-  updated: '2025-12-07T23:50:42.452Z'
 slug: UI-STATE-MACHINE
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: 'Finish the UI state machine with proper states, guards, menus, and context'
 model: claude-opus-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

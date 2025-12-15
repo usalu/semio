@@ -3875,6 +3875,188 @@ class Kit(KitNameField, KitVersionField, KitDescriptionField, KitIconField, KitI
     def guid(self) -> str:
         return self.id()
 
+    # region Design Family Helpers
+
+    def find_design_by_guid(self, design_guid: str) -> "Design":
+        """
+        Finds a design by its GUID.
+
+        Args:
+            design_guid: The GUID of the design to find.
+
+        Returns:
+            The design with the specified GUID.
+
+        Raises:
+            ValueError: If the design is not found.
+        """
+        for design in self.designs:
+            if design.guid == design_guid:
+                return design
+        raise ValueError(f"Design {design_guid} not found in kit {self.name}")
+
+    def get_primitive_design(self, design_guid: str) -> "Design":
+        """
+        Gets the primitive (root) design of a design family.
+        A primitive design is a design that has no parent.
+
+        Args:
+            design_guid: The GUID of any design in the family.
+
+        Returns:
+            The primitive design at the root of the family tree.
+        """
+        current = self.find_design_by_guid(design_guid)
+        while current.parent and current.parent.guid:
+            current = self.find_design_by_guid(current.parent.guid)
+        return current
+
+    def get_design_family(self, design_guid: str) -> list["Design"]:
+        """
+        Gets all designs in a design family (the entire tree).
+
+        Args:
+            design_guid: The GUID of any design in the family.
+
+        Returns:
+            All designs in the family tree.
+        """
+        primitive = self.get_primitive_design(design_guid)
+        family: list[Design] = []
+        self._collect_design_descendants(primitive.guid, family)
+        return family
+
+    def _collect_design_descendants(self, parent_guid: str, family: list["Design"]) -> None:
+        """Helper to collect all descendants of a design."""
+        parent = self.find_design_by_guid(parent_guid)
+        family.append(parent)
+        children = [d for d in self.designs if d.parent and d.parent.guid == parent_guid]
+        for child in children:
+            self._collect_design_descendants(child.guid, family)
+
+    def are_designs_in_same_family(self, design_guid_a: str, design_guid_b: str) -> bool:
+        """
+        Checks if two designs belong to the same design family.
+
+        Args:
+            design_guid_a: The GUID of the first design.
+            design_guid_b: The GUID of the second design.
+
+        Returns:
+            True if both designs are in the same family tree.
+        """
+        primitive_a = self.get_primitive_design(design_guid_a)
+        primitive_b = self.get_primitive_design(design_guid_b)
+        return primitive_a.guid == primitive_b.guid
+
+    def can_use_design_as_piece(self, container_design_guid: str, piece_design_guid: str) -> bool:
+        """
+        Checks if a design can be used as a design piece in another design.
+        A design cannot contain a design piece from the same family.
+
+        Args:
+            container_design_guid: The GUID of the design that would contain the piece.
+            piece_design_guid: The GUID of the design to be used as a piece.
+
+        Returns:
+            True if the design piece can be added without violating the family constraint.
+        """
+        return not self.are_designs_in_same_family(container_design_guid, piece_design_guid)
+
+    def find_same_family_design_pieces(self, design_guid: str) -> list["Piece"]:
+        """
+        Finds design pieces in a design that violate the same-family constraint.
+
+        Args:
+            design_guid: The GUID of the design to check.
+
+        Returns:
+            List of pieces that reference designs in the same family.
+        """
+        design = self.find_design_by_guid(design_guid)
+        return [
+            p for p in design.pieces
+            if p.design and p.design.guid and self.are_designs_in_same_family(design_guid, p.design.guid)
+        ]
+
+    # endregion Design Family Helpers
+
+    # region Type Family Helpers
+
+    def find_type_by_guid(self, type_guid: str) -> "Type":
+        """
+        Finds a type by its GUID.
+
+        Args:
+            type_guid: The GUID of the type to find.
+
+        Returns:
+            The type with the specified GUID.
+
+        Raises:
+            ValueError: If the type is not found.
+        """
+        for type_ in self.types:
+            if type_.guid == type_guid:
+                return type_
+        raise ValueError(f"Type {type_guid} not found in kit {self.name}")
+
+    def get_primitive_type(self, type_guid: str) -> "Type":
+        """
+        Gets the primitive (root) type of a type family.
+        A primitive type is a type that has no parent.
+
+        Args:
+            type_guid: The GUID of any type in the family.
+
+        Returns:
+            The primitive type at the root of the family tree.
+        """
+        current = self.find_type_by_guid(type_guid)
+        while current.parent and current.parent.guid:
+            current = self.find_type_by_guid(current.parent.guid)
+        return current
+
+    def get_type_family(self, type_guid: str) -> list["Type"]:
+        """
+        Gets all types in a type family (the entire tree).
+
+        Args:
+            type_guid: The GUID of any type in the family.
+
+        Returns:
+            All types in the family tree.
+        """
+        primitive = self.get_primitive_type(type_guid)
+        family: list[Type] = []
+        self._collect_type_descendants(primitive.guid, family)
+        return family
+
+    def _collect_type_descendants(self, parent_guid: str, family: list["Type"]) -> None:
+        """Helper to collect all descendants of a type."""
+        parent = self.find_type_by_guid(parent_guid)
+        family.append(parent)
+        children = [t for t in self.types if t.parent and t.parent.guid == parent_guid]
+        for child in children:
+            self._collect_type_descendants(child.guid, family)
+
+    def are_types_in_same_family(self, type_guid_a: str, type_guid_b: str) -> bool:
+        """
+        Checks if two types belong to the same type family.
+
+        Args:
+            type_guid_a: The GUID of the first type.
+            type_guid_b: The GUID of the second type.
+
+        Returns:
+            True if both types are in the same family tree.
+        """
+        primitive_a = self.get_primitive_type(type_guid_a)
+        primitive_b = self.get_primitive_type(type_guid_b)
+        return primitive_a.guid == primitive_b.guid
+
+    # endregion Type Family Helpers
+
 
 # region Moved Graphene Nodes
 # These classes were moved here to ensure all SQLModel table classes are defined

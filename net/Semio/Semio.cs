@@ -6195,6 +6195,171 @@ public class Kit : Entity<Kit>
             Attributes = newAttributes
         };
     }
+
+    #region Design Family Helpers
+
+    /// <summary>
+    /// Finds a design by its GUID.
+    /// </summary>
+    /// <param name="designGuid">The GUID of the design to find.</param>
+    /// <returns>The design with the specified GUID.</returns>
+    /// <exception cref="ArgumentException">If the design is not found.</exception>
+    public Design FindDesignByGuid(string designGuid)
+    {
+        var design = Designs.FirstOrDefault(d => d.Guid == designGuid);
+        if (design is null) throw new ArgumentException($"Design {designGuid} not found in kit {Name}");
+        return design;
+    }
+
+    /// <summary>
+    /// Gets the primitive (root) design of a design family.
+    /// A primitive design is a design that has no parent.
+    /// </summary>
+    /// <param name="designGuid">The GUID of any design in the family.</param>
+    /// <returns>The primitive design at the root of the family tree.</returns>
+    public Design GetPrimitiveDesign(string designGuid)
+    {
+        var current = FindDesignByGuid(designGuid);
+        while (current.Parent?.Guid is not null)
+        {
+            current = FindDesignByGuid(current.Parent.Guid);
+        }
+        return current;
+    }
+
+    /// <summary>
+    /// Gets all designs in a design family (the entire tree).
+    /// </summary>
+    /// <param name="designGuid">The GUID of any design in the family.</param>
+    /// <returns>All designs in the family tree.</returns>
+    public List<Design> GetDesignFamily(string designGuid)
+    {
+        var primitive = GetPrimitiveDesign(designGuid);
+        var family = new List<Design>();
+        CollectDesignDescendants(primitive.Guid, family);
+        return family;
+    }
+
+    private void CollectDesignDescendants(string parentGuid, List<Design> family)
+    {
+        var parent = FindDesignByGuid(parentGuid);
+        family.Add(parent);
+        var children = Designs.Where(d => d.Parent?.Guid == parentGuid);
+        foreach (var child in children)
+        {
+            CollectDesignDescendants(child.Guid, family);
+        }
+    }
+
+    /// <summary>
+    /// Checks if two designs belong to the same design family.
+    /// </summary>
+    /// <param name="designGuidA">The GUID of the first design.</param>
+    /// <param name="designGuidB">The GUID of the second design.</param>
+    /// <returns>True if both designs are in the same family tree.</returns>
+    public bool AreDesignsInSameFamily(string designGuidA, string designGuidB)
+    {
+        var primitiveA = GetPrimitiveDesign(designGuidA);
+        var primitiveB = GetPrimitiveDesign(designGuidB);
+        return primitiveA.Guid == primitiveB.Guid;
+    }
+
+    /// <summary>
+    /// Checks if a design can be used as a design piece in another design.
+    /// A design cannot contain a design piece from the same family.
+    /// </summary>
+    /// <param name="containerDesignGuid">The GUID of the design that would contain the piece.</param>
+    /// <param name="pieceDesignGuid">The GUID of the design to be used as a piece.</param>
+    /// <returns>True if the design piece can be added without violating the family constraint.</returns>
+    public bool CanUseDesignAsPiece(string containerDesignGuid, string pieceDesignGuid)
+    {
+        return !AreDesignsInSameFamily(containerDesignGuid, pieceDesignGuid);
+    }
+
+    /// <summary>
+    /// Finds design pieces in a design that violate the same-family constraint.
+    /// </summary>
+    /// <param name="designGuid">The GUID of the design to check.</param>
+    /// <returns>List of pieces that reference designs in the same family.</returns>
+    public List<Piece> FindSameFamilyDesignPieces(string designGuid)
+    {
+        var design = FindDesignByGuid(designGuid);
+        return design.Pieces
+            .Where(p => p.Design?.Guid is not null && AreDesignsInSameFamily(designGuid, p.Design.Guid))
+            .ToList();
+    }
+
+    #endregion Design Family Helpers
+
+    #region Type Family Helpers
+
+    /// <summary>
+    /// Finds a type by its GUID.
+    /// </summary>
+    /// <param name="typeGuid">The GUID of the type to find.</param>
+    /// <returns>The type with the specified GUID.</returns>
+    /// <exception cref="ArgumentException">If the type is not found.</exception>
+    public Type FindTypeByGuid(string typeGuid)
+    {
+        var type = Types.FirstOrDefault(t => t.Guid == typeGuid);
+        if (type is null) throw new ArgumentException($"Type {typeGuid} not found in kit {Name}");
+        return type;
+    }
+
+    /// <summary>
+    /// Gets the primitive (root) type of a type family.
+    /// A primitive type is a type that has no parent.
+    /// </summary>
+    /// <param name="typeGuid">The GUID of any type in the family.</param>
+    /// <returns>The primitive type at the root of the family tree.</returns>
+    public Type GetPrimitiveType(string typeGuid)
+    {
+        var current = FindTypeByGuid(typeGuid);
+        while (current.Parent?.Guid is not null)
+        {
+            current = FindTypeByGuid(current.Parent.Guid);
+        }
+        return current;
+    }
+
+    /// <summary>
+    /// Gets all types in a type family (the entire tree).
+    /// </summary>
+    /// <param name="typeGuid">The GUID of any type in the family.</param>
+    /// <returns>All types in the family tree.</returns>
+    public List<Type> GetTypeFamily(string typeGuid)
+    {
+        var primitive = GetPrimitiveType(typeGuid);
+        var family = new List<Type>();
+        CollectTypeDescendants(primitive.Guid, family);
+        return family;
+    }
+
+    private void CollectTypeDescendants(string parentGuid, List<Type> family)
+    {
+        var parent = FindTypeByGuid(parentGuid);
+        family.Add(parent);
+        var children = Types.Where(t => t.Parent?.Guid == parentGuid);
+        foreach (var child in children)
+        {
+            CollectTypeDescendants(child.Guid, family);
+        }
+    }
+
+    /// <summary>
+    /// Checks if two types belong to the same type family.
+    /// </summary>
+    /// <param name="typeGuidA">The GUID of the first type.</param>
+    /// <param name="typeGuidB">The GUID of the second type.</param>
+    /// <returns>True if both types are in the same family tree.</returns>
+    public bool AreTypesInSameFamily(string typeGuidA, string typeGuidB)
+    {
+        var primitiveA = GetPrimitiveType(typeGuidA);
+        var primitiveB = GetPrimitiveType(typeGuidB);
+        return primitiveA.Guid == primitiveB.Guid;
+    }
+
+    #endregion Type Family Helpers
 }
 
 #endregion Kit

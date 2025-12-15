@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-12-14T18:08:53.458Z'
-  updated: '2025-12-14T18:08:53.458Z'
 slug: TSC-ERRORS
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix all TypeScript errors from tsc
 model: claude-opus-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

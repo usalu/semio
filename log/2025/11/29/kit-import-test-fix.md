@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-11-29T00:53:42.477Z'
-  updated: '2025-11-29T00:53:42.477Z'
 slug: KIT-IMPORT-TEST-FIX
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix Kit Import Playwright Test
 model: claude-opus-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

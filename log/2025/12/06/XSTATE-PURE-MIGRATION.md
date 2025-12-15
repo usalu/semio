@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-12-05T23:12:54.610Z'
-  updated: '2025-12-05T23:12:54.610Z'
 slug: XSTATE-PURE-MIGRATION
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Complete pure XState migration by removing all legacy controller code
 model: claude-opus-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

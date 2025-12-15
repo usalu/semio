@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-12-08T17:52:22.396Z'
-  updated: '2025-12-08T17:52:22.396Z'
 slug: KIT-DIFF-TESTS
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix kit diff tests and regenerate assets
 model: claude-opus-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

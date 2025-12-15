@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-11-23T23:00:00.000Z'
-  updated: '2025-11-23T23:00:00.000Z'
 slug: UI-ID-SYSTEM-ANALYSIS
 author: Unknown
 summary: ''
 model: unknown
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

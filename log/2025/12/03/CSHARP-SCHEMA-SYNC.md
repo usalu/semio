@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-12-03T10:39:43.796Z'
-  updated: '2025-12-03T10:39:43.796Z'
 slug: CSHARP-SCHEMA-SYNC
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Sync C# schema with TypeScript semio.ts
 model: claude-opus-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

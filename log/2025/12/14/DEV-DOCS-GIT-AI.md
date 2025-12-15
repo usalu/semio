@@ -1,17 +1,16 @@
 ---
-date:
-  created: '2025-12-14T22:42:35.169Z'
-  updated: '2025-12-14T23:37:01.541Z'
 slug: DEV-DOCS-GIT-AI
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Update git + AI dev docs
 model: claude-opus-4.5
-prompts:
-  - "The git section of the dev docs is outdated. The git repo has a compressed main branch. If the release receives updates after main already has progressed, then a parallel release branch is created that works like main but for this release. The first symbol is a summary of the main task of the commit. The last symbol is encoded the amount of work (\U0001FA9B\U0001F528\U0001F6E0️\U0001F3D7️). The ai part is outdated. Due to token vs request based we use mainly copilot for most tickets, windsurf for the most token-heavy test-driven-development workflows with mcp (such as playwright), claude code for small bugs, cursor when docs are needed and as main editor with tab autocomplete, codex for simple tasks. opus 4.5 is the current model. gpt 5.2 alternative."
+input:
+  - prompt: "The git section of the dev docs is outdated. The git repo has a compressed main branch. If the release receives updates after main already has progressed, then a parallel release branch is created that works like main but for this release. The first symbol is a summary of the main task of the commit. The last symbol is encoded the amount of work (\U0001FA9B\U0001F528\U0001F6E0️\U0001F3D7️). The ai part is outdated. Due to token vs request based we use mainly copilot for most tickets, windsurf for the most token-heavy test-driven-development workflows with mcp (such as playwright), claude code for small bugs, cursor when docs are needed and as main editor with tab autocomplete, codex for simple tasks. opus 4.5 is the current model. gpt 5.2 alternative."
+    date: '2025-12-14T22:42:35.169Z'
 commit: 7765b633fe739bc29cd811ac7ec884e782e2e945
-affectedFiles:
-  - AGENTS.md
-  - README.md
+files:
+  updated:
+    - AGENTS.md
+    - README.md
 lines:
   added: 128
   removed: 108

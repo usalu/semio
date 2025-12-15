@@ -604,6 +604,7 @@ type TableRow = {
   docsPath?: string;
   icon?: string;
   isLoading?: boolean;
+  concepts?: string[];
 };
 
 const Home: FC = ({}) => {
@@ -889,6 +890,20 @@ const Home: FC = ({}) => {
       kitGroups.get(key)!.push(kit);
     });
 
+    // Helper to resolve concept GUIDs to names
+    const resolveKitConcepts = (kit: KitShallow): string[] => {
+      const fullKit = getKitSnapshot(kit.guid);
+      if (!fullKit) return [];
+      return (
+        kit.concepts
+          ?.map((conceptEntry) => {
+            const conceptGuid = typeof conceptEntry === "string" ? conceptEntry : (conceptEntry as any).guid;
+            return fullKit.concepts?.find((c) => c.guid === conceptGuid)?.name;
+          })
+          .filter((name): name is string => name !== undefined) || []
+      );
+    };
+
     kitGroups.forEach((groupKits, name) => {
       const parentId = `kit-${name}`;
       const defaultKit = groupKits.find((k) => !k.version);
@@ -907,6 +922,7 @@ const Home: FC = ({}) => {
         updatedAt: formatDate(parentKit.updatedAt),
         createdAt: formatDate(parentKit.createdAt),
         kit: parentKit,
+        concepts: resolveKitConcepts(parentKit),
       });
 
       if (expandedRows.has(parentId) && hasChildren) {
@@ -926,6 +942,7 @@ const Home: FC = ({}) => {
             updatedAt: formatDate(kit.updatedAt),
             createdAt: formatDate(kit.createdAt),
             kit: kit,
+            concepts: resolveKitConcepts(kit),
           });
         });
       }
@@ -1079,6 +1096,22 @@ const Home: FC = ({}) => {
       newParams.delete("version");
     } else {
       newParams.set("version", version);
+    }
+    setSearchParams(newParams);
+  };
+
+  const toggleConcept = (concept: string) => {
+    const newParams = new URLSearchParams(searchParams);
+    const currentConcepts = newParams.get("concepts")?.split(",").filter(Boolean) || [];
+    if (currentConcepts.includes(concept)) {
+      const updated = currentConcepts.filter((c) => c !== concept);
+      if (updated.length > 0) {
+        newParams.set("concepts", updated.join(","));
+      } else {
+        newParams.delete("concepts");
+      }
+    } else {
+      newParams.set("concepts", [...currentConcepts, concept].join(","));
     }
     setSearchParams(newParams);
   };
@@ -1251,7 +1284,7 @@ const Home: FC = ({}) => {
                 return (
                   <div
                     key={row.id}
-                    className={`border-b p-single cursor-selectable h-large ${isLoadingRow ? "opacity-50 pointer-events-none" : ""} ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`}
+                    className={`border-b p-single cursor-selectable h-medium ${isLoadingRow ? "opacity-50 pointer-events-none" : ""} ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`}
                     role="button"
                     tabIndex={isLoadingRow ? -1 : 0}
                     onClick={(e) => {
@@ -1479,9 +1512,24 @@ const Home: FC = ({}) => {
                             <span className="size-small shrink-0" />
                           )}
                           <TableAvatar name={row.name} icon={row.type === "docs" ? row.icon : row.kit?.icon} />
-                          <span className="text-left flex-1 min-w-0 truncate">{row.name}</span>
+                          <span className="text-left min-w-0 truncate">{row.name}</span>
                           {row.isLoading && <Spinner size="small" />}
                         </div>
+                        {row.concepts && row.concepts.length > 0 && (
+                          <Scrollable orientation="horizontal" className="flex-1 min-w-0 max-w-[200px]">
+                            <div className="flex items-center gap-single px-single h-medium w-fit">
+                              {row.concepts.map((concept) => (
+                                <Action
+                                  key={concept}
+                                  onClick={() => toggleConcept(concept)}
+                                  id={`semio.sketchpad.app.home.row.concept.${concept}`}
+                                  text={concept}
+                                  className={selectedConcepts.includes(concept) ? "bg-active-base" : ""}
+                                />
+                              ))}
+                            </div>
+                          </Scrollable>
+                        )}
                         <div className="flex items-center gap-single shrink-0">
                           {row.level === 0 && row.type !== "docs" && row.type !== "loading" && (
                             <Action
@@ -1572,7 +1620,7 @@ const Home: FC = ({}) => {
                 onFocusComplete={() => setFocusedItemId(undefined)}
                 emptyMessage={useLabel("semio.sketchpad.app.home.noKits")}
                 stickyHeader={true}
-                headerClassName="sticky top-0 border-b h-large"
+                headerClassName="sticky top-0 border-b"
                 hierarchical={true}
               />
             </div>

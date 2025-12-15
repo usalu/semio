@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-12-01T15:35:06.610Z'
-  updated: '2025-12-01T15:35:06.610Z'
 slug: SCHEMA-TAGS-CONCEPTS-MODELS
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: 'Tags, Concepts become kit entities; Models link to files with guid'
 model: claude-opus-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

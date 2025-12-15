@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-12-09T13:28:21.113Z'
-  updated: '2025-12-09T13:28:21.113Z'
 slug: PLAYWRIGHT-DND-TEST
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Update Playwright drag-and-drop test for dnd-kit compatibility
 model: claude-opus-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

@@ -1,22 +1,21 @@
 ---
-date:
-  created: '2025-12-14T22:53:36.715Z'
-  updated: '2025-12-14T22:57:06.255Z'
 slug: YJS-KIT-ONLY
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: XState owns Sketchpad UI state
 model: gpt-5.2-codex
-prompts:
-  - >-
-    Yjs should only be used to synchronize the kit data. All app state should be
-    stored in the state machine. E.g. when updating sketchpad settings I get:
-    [Machine] Y_UPDATE → {\navigation\:\design\}
+input:
+  - prompt: >-
+      Yjs should only be used to synchronize the kit data. All app state should
+      be stored in the state machine. E.g. when updating sketchpad settings I
+      get: [Machine] Y_UPDATE → {\navigation\:\design\}
+    date: '2025-12-14T22:53:36.715Z'
 commit: 7765b633fe739bc29cd811ac7ec884e782e2e945
-affectedFiles:
-  - AGENTS.md
-  - README.md
-  - js/js/sketchpad/Sketchpad.tsx
-  - log/2025/12/14/YJS-KIT-ONLY.md
+files:
+  updated:
+    - AGENTS.md
+    - README.md
+    - js/js/sketchpad/Sketchpad.tsx
+    - log/2025/12/14/YJS-KIT-ONLY.md
 lines:
   added: 353
   removed: 323

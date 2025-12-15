@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-11-28T22:00:31.396Z'
-  updated: '2025-11-28T22:00:31.396Z'
 slug: DRAG-DROP-IMPORT-TEST
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Create test for kit import drag and drop
 model: claude-sonnet-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

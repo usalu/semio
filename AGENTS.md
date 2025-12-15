@@ -295,6 +295,19 @@ Whenever a keyword is used, ALWAYS directly proceed with the task and NEVER ask 
 
 ## CI/CD
 
+### Commands
+
+- `npm run fix` runs `hooks/prettier.ts` and `hooks/ruff.ts`.
+- `npm run analyze` runs `hooks/i18n.ts`, `hooks/typescript.ts`, and `hooks/eslint.ts`.
+- `npm run preflight` runs `fix` and `analyze` (in that order).
+- `npm run test` runs `preflight` and then `nx run-many -t test`.
+- `npm run build` runs `test` and then `nx run-many -t build`.
+- `npm run prepublish` and `npm run publish` run `build` first.
+
+### Skip Mechanism
+
+All pipeline commands accept `--skip=fix,analyze,preflight,test,build` and can pass Nx args after `--nx` (e.g. `npm run test -- --skip=preflight --nx --projects=@semio/js`).
+
 ### Pre-commit Hooks (Husky)
 
 All commits are validated using husky hooks:
@@ -1072,7 +1085,7 @@ The tooltip system automatically resolves i18n content from element IDs, adaptin
   - Tiny: 3 units - icon size in actions, action text size (e.g. `h-tiny`, `w-tiny`, `text-tiny`)
   - Small: 5 units - actions, avatars, Strip items (e.g. `h-small`, `w-small`)
   - Medium: 7 units - buttons, toggles, inputs, sliders, steppers, Footer, table rows, Strip (e.g. `h-medium`, `w-medium`)
-  - Large: 9 units - Band, Navbar, table headers (e.g. `h-large`, `w-large`)
+  - Large: 9 units - Band, Navbar (e.g. `h-large`, `w-large`)
   - Huge: 11 units - height of navigation buttons at bottom of docs pages (e.g. `h-11`)
   - Mega: 13 units - width of toggles with actions (toggles with dropdown or action buttons) (e.g. `w-mega`)
   - Giga: 15 units - reserved for future use (e.g. `w-giga`)
@@ -1087,7 +1100,7 @@ The tooltip system automatically resolves i18n content from element IDs, adaptin
 - **Band**: Horizontal-only container with `h-large` height and optional horizontal scrolling; accepts `items: BandItem[]` (each item renders in a `h-medium` slot and can set wrapper `className` like `flex-1 min-w-0`).
 - **Strip**: Smaller horizontal container with `h-medium` height and optional horizontal scrolling; accepts `items: StripItem[]` (each item renders in a `h-small` slot).
 - **Navbar**: Non-scrollable Band with `h-large` height and fixed DOM id `navbar`; accepts `items: NavbarItem[]` and `level` for background theming.
-- **Footer**: A horizontal container with h-medium height. Contains ordered footer items. Uses `level` prop for background theming.
+- **Footer**: A horizontal container with `h-medium` height. Footer items are action-like and render via `ActionGroupItem` (supports `icon`, `text`, or `content`) with ordering and optional click handlers.
 
 ### Action Components
 
@@ -1672,7 +1685,7 @@ The shared `Footer` component has a fixed `h-medium` height.
   - Tiny: 3 units - icon size in actions, action text size (e.g. `h-tiny`, `w-tiny`, `text-tiny`)
   - Small: 5 units - actions, avatars, Strip items (e.g. `h-small`, `w-small`)
   - Medium: 7 units - buttons, toggles, inputs, sliders, steppers, Footer, table rows, Strip (e.g. `h-medium`, `w-medium`)
-  - Large: 9 units - Band, Navbar, table headers (e.g. `h-large`, `w-large`)
+  - Large: 9 units - Band, Navbar (e.g. `h-large`, `w-large`)
   - Huge: 11 units - height of navigation buttons at bottom of docs pages (e.g. `h-11`)
   - Mega: 13 units - width of toggles with actions (toggles with dropdown or action buttons) (e.g. `w-mega`)
   - Giga: 15 units - reserved for future use (e.g. `w-giga`)
@@ -1759,6 +1772,8 @@ Every app supports transactions:
 Sketchpad UI elements resolve transactions via React context (not props):
 
 - `js/js/sketchpad/elements.tsx` defines `TransactionProvider` and `useTransaction()`.
+- `js/js/sketchpad/elements.tsx` `Geometry` treats `color` as the base (non-interactive) color and uses selection/hover theme colors for the rendered material/edges when `selected`/`hovered` are true.
+- `js/js/sketchpad/Design.tsx` diagram piece nodes use non-inset rings (`ring-*`, not `ring-inset`) so rings remain visible on `Avatar` nodes with full-size `AvatarFallback` backgrounds.
 - Elements such as `Input`, `Textarea`, `Select`, `Slider`, `Stepper`, `Combobox`, and `ActionDropdown` call `useTransaction()` internally and do not accept a `transaction` prop.
 - Apps are responsible for scoping transactions by wrapping their UI subtree with `TransactionProvider` using the appropriate transaction hook (per-app or kit-level), so all descendant elements participate consistently.
 

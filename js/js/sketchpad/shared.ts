@@ -809,10 +809,13 @@ export interface FocusItem {
 
 export interface FooterItem {
   id: string;
-  icon?: any;
+  icon?: ReactNode;
+  text?: string;
   content?: ReactNode;
   onClick?: () => void;
   order?: number;
+  className?: string;
+  disabled?: boolean;
 }
 
 // #endregion Footer
@@ -1562,4 +1565,3 @@ export function composePluginContributions(): {
 }
 
 // #endregion App Plugin Registry
-

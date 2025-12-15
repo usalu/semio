@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-11-29T22:33:45.718Z'
-  updated: '2025-11-29T22:33:45.718Z'
 slug: KIT-PERFORMANCE-FIX
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix Kit app performance after importing large kits
 model: claude-opus-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

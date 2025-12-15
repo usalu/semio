@@ -1,16 +1,13 @@
 ---
-date:
-  created: '2025-12-09T09:50:11.174Z'
-  updated: '2025-12-09T09:50:11.174Z'
 slug: HOOK-REFACTOR
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: >-
   State management refactor: remove Triadic/Safe/Granular suffixes, redirect
   writes to state machine
 model: claude-opus-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

@@ -1,16 +1,13 @@
 ---
-date:
-  created: '2025-11-27T00:54:01.213Z'
-  updated: '2025-11-27T00:54:01.213Z'
 slug: DOCS-HEADINGS-FIX
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: >-
   Fix HeadingsProvider context issue - Details panel shows no headings because
   it's outside the HeadingsProvider context
 model: claude-sonnet-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-12-02T10:21:40.172Z'
-  updated: '2025-12-02T10:21:40.172Z'
 slug: KIT-SERIALIZATION-FIXES
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix Kit Serialization for Vitest Tests
 model: claude-opus-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

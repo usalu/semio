@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-11-27T01:16:37.981Z'
-  updated: '2025-11-27T01:16:37.981Z'
 slug: CLEAN-UP-DEBUG-LOGS
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Remove debug diagnostics and temporary logs
 model: claude-sonnet-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

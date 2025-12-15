@@ -3281,7 +3281,8 @@ export const TypeAppFooter: FC = () => {
 
       addFooterItem({
         id: `semio.sketchpad.app.type.footer.tag.${tagGuid}`,
-        content: <span className={`cursor-pointer transition-colors ${isSelected ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`}>{tagName}</span>,
+        text: tagName,
+        className: isSelected ? "bg-active-base text-active-foreground" : "text-muted-foreground hover:text-foreground",
         onClick: () => {
           // Use refs in onClick to get current values at click time
           const currentSelected = isTagSelected(tagGuid);

@@ -275,10 +275,13 @@ export { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, Comma
 
 export interface FooterItem {
   id: string;
-  content: React.ReactNode;
+  icon?: React.ReactNode;
+  text?: string;
+  content?: React.ReactNode;
   order?: number;
   onClick?: () => void;
   className?: string;
+  disabled?: boolean;
 }
 
 // #region Footer
@@ -299,27 +302,15 @@ const Footer: React.FC<FooterProps> = ({ items = [], className = "", isVisible =
       data-slot="footer"
       className={cn("border-t flex items-center h-medium transition-transform duration-200", bgClass, isVisible ? "translate-y-0" : "translate-y-full", className)}
     >
-      {sortedItems.map((item, index) => (
-        <div key={item.id} id={item.id} className="flex items-center h-full">
-          {index > 0 && <div className="h-full w-px bg-border" />}
-          {item.id ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className={cn("flex items-center h-full px-single text-xs cursor-pointer", item.className)} onClick={item.onClick}>
-                  {item.content}
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <DescriptionTooltipContent id={item.id} />
-              </TooltipContent>
-            </Tooltip>
-          ) : (
-            <div className={cn("flex items-center h-full px-single text-xs", item.onClick && "cursor-pointer", item.className)} onClick={item.onClick}>
-              {item.content}
-            </div>
-          )}
-        </div>
-      ))}
+      <div className="flex items-center h-full px-single min-w-0">
+        <ActionGroup level={level} className="border">
+          {sortedItems.map((item) => (
+            <ActionGroupItem key={item.id} as={item.onClick ? "button" : "div"} id={item.id} text={item.text} onClick={item.onClick} disabled={item.disabled} className={cn(item.content && !item.text && "aspect-auto", item.className)}>
+              {item.content ?? item.icon}
+            </ActionGroupItem>
+          ))}
+        </ActionGroup>
+      </div>
     </footer>
   );
 };
@@ -758,8 +749,8 @@ export const DraggableAvatar = React.forwardRef<HTMLDivElement, DraggableAvatarP
         <Avatar
           className={cn(
             "cursor-grab active:cursor-grabbing select-none border-[color:var(--border-color)]",
-            isSelected && "ring-1 ring-inset ring-[color:var(--active-base)]",
-            isHovered && !isSelected && "ring-1 ring-inset ring-[color:var(--hover-base)]",
+            isSelected && "ring-1 ring-[color:var(--active-base)]",
+            isHovered && !isSelected && "ring-1 ring-[color:var(--hover-base)]",
           )}
           style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}
         >
@@ -1120,8 +1111,8 @@ function ActionGroupItem({
       data-slot="action-group-item"
       id={id}
       type={Component === "button" ? "button" : undefined}
-      role={Component === "div" ? "button" : undefined}
-      tabIndex={Component === "div" ? 0 : undefined}
+      role={Component === "div" && (props as any).onClick ? "button" : undefined}
+      tabIndex={Component === "div" && (props as any).onClick ? 0 : undefined}
       data-level={context.level || level}
       className={cn(
         actionGroupItemVariants({
@@ -4793,14 +4784,24 @@ export const Geometry: React.FC<GeometryProps> = ({ children, selected = false, 
   const isInteractive = Boolean(onClick || onDoubleClick);
 
   const resolvedColor = React.useMemo(() => {
-    if (color) return color;
     if (selected) return activeBaseColor;
     if (hovered) return hoverBaseColor;
+    if (color) return color;
     return foregroundColor;
   }, [color, selected, hovered, activeBaseColor, hoverBaseColor, foregroundColor]);
 
-  const resolvedEmissiveColor = emissiveColor || resolvedColor;
-  const resolvedEdgeColor = edgeColor || foregroundColor;
+  const resolvedEmissiveColor = React.useMemo(() => {
+    if (selected) return activeBaseColor;
+    if (hovered) return hoverBaseColor;
+    if (emissiveColor) return emissiveColor;
+    return resolvedColor;
+  }, [selected, hovered, activeBaseColor, hoverBaseColor, emissiveColor, resolvedColor]);
+  const resolvedEdgeColor = React.useMemo(() => {
+    if (edgeColor) return edgeColor;
+    if (selected) return activeBaseColor;
+    if (hovered) return hoverBaseColor;
+    return foregroundColor;
+  }, [edgeColor, selected, hovered, activeBaseColor, hoverBaseColor, foregroundColor]);
   const handlePointerEnter = React.useCallback(
     (event: ThreeEvent<PointerEvent>) => {
       if (isInteractive) {
@@ -5349,9 +5350,9 @@ const Table = <T,>({
   }, [focusedItemId, data, getRowId, rowKey, onFocusComplete, isMobile]);
 
   const rowHeightClass = {
-    compact: "h-large",
-    normal: "h-large",
-    comfortable: "h-large",
+    compact: "h-medium",
+    normal: "h-medium",
+    comfortable: "h-medium",
   }[rowHeight];
 
   const visibleColumns = columns.filter((col) => {
@@ -5415,7 +5416,7 @@ const Table = <T,>({
         data-row-id={rowId}
       >
         {visibleColumns.map((column) => (
-          <td key={column.id} className={`p-single ${column.className || ""}`}>
+          <td key={column.id} className={`p-single text-sm [&_svg:not([class*='size-'])]:size-small [&_img]:size-small ${column.className || ""}`}>
             {column.accessor(row)}
           </td>
         ))}
@@ -5459,7 +5460,7 @@ const Table = <T,>({
           <thead className={`bg-base border-b ${stickyHeader ? "sticky top-0 z-panel" : ""} ${headerClassName}`}>
             <tr className="h-large">
               {visibleColumns.map((column) => (
-                <th key={column.id} className={`text-left p-single font-medium ${rowHeightClass} ${column.headerClassName || column.className || ""}`} style={{ width: column.width }}>
+                <th key={column.id} className={`text-left p-single font-medium h-large ${column.headerClassName || column.className || ""}`} style={{ width: column.width }}>
                   {column.header}
                 </th>
               ))}
@@ -5497,7 +5498,7 @@ const Table = <T,>({
                     data-row-id={rowId}
                   >
                     {visibleColumns.map((column) => (
-                      <td key={column.id} className={`p-single ${column.className || ""}`}>
+                      <td key={column.id} className={`p-single text-sm [&_svg:not([class*='size-'])]:size-small [&_img]:size-small ${column.className || ""}`}>
                         {column.accessor(row)}
                       </td>
                     ))}
@@ -5546,9 +5547,9 @@ export const TableSkeleton: React.FC<TableSkeletonProps> = ({ columns, rowCount 
       </thead>
       <tbody>
         {Array.from({ length: rowCount }).map((_, index) => (
-          <tr key={index} className="border-b h-large">
+          <tr key={index} className="border-b h-medium">
             {columns.map((column) => (
-              <td key={column.id} className={`p-single text-sm ${column.className || ""}`}>
+              <td key={column.id} className={`p-single text-sm [&_svg:not([class*='size-'])]:size-small [&_img]:size-small ${column.className || ""}`}>
                 <div className="h-small bg-muted-foreground/20 rounded animate-pulse" />
               </td>
             ))}

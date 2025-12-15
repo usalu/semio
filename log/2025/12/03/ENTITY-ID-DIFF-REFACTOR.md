@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-12-03T19:27:55.067Z'
-  updated: '2025-12-03T19:27:55.067Z'
 slug: ENTITY-ID-DIFF-REFACTOR
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Refactor EntityId and Diff Schemas
 model: claude-opus-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

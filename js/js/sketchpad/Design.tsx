@@ -72,6 +72,7 @@ import { useLabel } from "../i18n";
 import type { ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, Connection as RFConnection } from "@xyflow/react";
 import { applyNodeChanges, BaseEdge, Handle, Position, ReactFlowInstance, ReactFlowProvider, useReactFlow, ViewportPortal } from "@xyflow/react";
 import {
+  areDesignsInSameFamily,
   arePortsCompatible,
   areSameConnection,
   Camera,
@@ -1661,12 +1662,15 @@ export { useDesignStore as useDesignAppStore };
 export function useDesignApp<T>(selector?: (state: DesignAppState) => T, id?: DesignAppId): T | DesignAppState | null {
   const kitScope = useKitScope();
   const designScope = useDesignScope();
-  const kitGuid = kitScope?.guid ?? id?.kit;
-  const designGuid = designScope?.guid ?? id?.design;
+  const kitGuid = kitScope?.guid ?? id?.kit ?? "";
+  const designGuid = designScope?.guid ?? id?.design ?? "";
 
+  // Always call hooks unconditionally to satisfy Rules of Hooks
+  const state = useDesignAppXState(kitGuid, designGuid);
+
+  // Return null if we don't have valid guids
   if (!kitGuid || !designGuid) return null;
 
-  const state = useDesignAppXState(kitGuid, designGuid);
   if (selector) {
     return selector(state as unknown as DesignAppState) as T;
   }
@@ -3045,7 +3049,8 @@ export const DesignAppFooter: FC = () => {
 
       addFooterItem({
         id: `semio.sketchpad.app.design.footer.tag.${tagGuid}`,
-        content: <span className={`cursor-pointer transition-colors ${selected ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`}>{tagName}</span>,
+        text: tagName,
+        className: selected ? "bg-active-base text-active-foreground" : "text-muted-foreground hover:text-foreground",
         onClick: () => {
           const currentSelected = isTagSelected(tagGuid);
           const currentTypesWithTag = getTypesWithTag(tagGuid);
@@ -4919,7 +4924,7 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, type, ports,
   const showHoverBackground = fill === "var(--hover-base)";
   const textColor = isSelected ? "var(--active-foreground)" : backgroundColor && !showHoverBackground ? "var(--background)" : "var(--foreground)";
   const avatarTitle = typeName || piece.guid;
-  const ringClass = isSelected ? "ring-1 ring-inset ring-[color:var(--active-base)]" : isHovered ? "ring-1 ring-inset ring-[color:var(--hover-base)]" : "";
+  const ringClass = isSelected ? "ring-1 ring-[color:var(--active-base)]" : isHovered ? "ring-1 ring-[color:var(--hover-base)]" : "";
   const fallbackStyle = backgroundColor ? { backgroundColor, color: textColor } : { color: textColor };
 
   const onPortClick = (port: Port) => {
@@ -7003,6 +7008,23 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 // #region Scene
 
 const getComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
+const applyHighlightToLoadedScene = (scene: THREE.Object3D, highlightThreeColor: THREE.Color | null, plasterColor: THREE.Color, plasterEdgeColor: THREE.Color): void => {
+  scene.traverse((child) => {
+    if (child instanceof THREE.Mesh) {
+      const materials = Array.isArray(child.material) ? child.material : [child.material];
+      materials.forEach((material) => {
+        if (material && "color" in material && material.color instanceof THREE.Color) {
+          material.color.copy(highlightThreeColor ?? plasterColor);
+        }
+      });
+    } else if (child instanceof THREE.Line || child instanceof THREE.LineSegments || child instanceof THREE.Points) {
+      const material = (child as any).material;
+      if (material && material.color instanceof THREE.Color) {
+        material.color.copy(highlightThreeColor ?? plasterEdgeColor);
+      }
+    }
+  });
+};
 
 const PresenceThree: FC<DesignAppPresenceOther> = ({ name, cursor, camera }) => {
   if (!camera) return null;
@@ -7032,10 +7054,11 @@ const PlaneThree: FC<PlaneThreeProps> = ({ plane }) => {
   );
 };
 
-const GLTFMesh: FC<{ url: string }> = ({ url }) => {
+const GLTFMesh: FC<{ url: string; highlightColor: string | null }> = ({ url, highlightColor }) => {
   const gltf = useGLTF(url);
   const plasterColor = useMemo(() => new THREE.Color(getComputedColor("--plaster")), []);
   const plasterEdgeColor = useMemo(() => new THREE.Color(getComputedColor("--plaster-edge")), []);
+  const highlightThreeColor = useMemo(() => (highlightColor ? new THREE.Color(highlightColor) : null), [highlightColor]);
 
   const clonedScene = useMemo(() => {
     const cloned = gltf.scene.clone();
@@ -7062,13 +7085,17 @@ const GLTFMesh: FC<{ url: string }> = ({ url }) => {
     });
     return cloned;
   }, [gltf.scene, plasterColor, plasterEdgeColor]);
+  useEffect(() => {
+    applyHighlightToLoadedScene(clonedScene, highlightThreeColor, plasterColor, plasterEdgeColor);
+  }, [clonedScene, highlightThreeColor, plasterColor, plasterEdgeColor]);
   return <primitive object={clonedScene} />;
 };
 
-const FBXMesh: FC<{ url: string }> = ({ url }) => {
+const FBXMesh: FC<{ url: string; highlightColor: string | null }> = ({ url, highlightColor }) => {
   const scene = useFBX(url);
   const plasterColor = useMemo(() => new THREE.Color(getComputedColor("--plaster")), []);
   const plasterEdgeColor = useMemo(() => new THREE.Color(getComputedColor("--plaster-edge")), []);
+  const highlightThreeColor = useMemo(() => (highlightColor ? new THREE.Color(highlightColor) : null), [highlightColor]);
 
   const clonedScene = useMemo(() => {
     const cloned = scene.clone();
@@ -7095,13 +7122,17 @@ const FBXMesh: FC<{ url: string }> = ({ url }) => {
     });
     return cloned;
   }, [scene, plasterColor, plasterEdgeColor]);
+  useEffect(() => {
+    applyHighlightToLoadedScene(clonedScene, highlightThreeColor, plasterColor, plasterEdgeColor);
+  }, [clonedScene, highlightThreeColor, plasterColor, plasterEdgeColor]);
   return <primitive object={clonedScene} />;
 };
 
-const OBJMesh: FC<{ url: string }> = ({ url }) => {
+const OBJMesh: FC<{ url: string; highlightColor: string | null }> = ({ url, highlightColor }) => {
   const obj = useLoader(OBJLoader, url);
   const plasterColor = useMemo(() => new THREE.Color(getComputedColor("--plaster")), []);
   const plasterEdgeColor = useMemo(() => new THREE.Color(getComputedColor("--plaster-edge")), []);
+  const highlightThreeColor = useMemo(() => (highlightColor ? new THREE.Color(highlightColor) : null), [highlightColor]);
 
   const clonedScene = useMemo(() => {
     const cloned = obj.clone();
@@ -7128,23 +7159,26 @@ const OBJMesh: FC<{ url: string }> = ({ url }) => {
     });
     return cloned;
   }, [obj, plasterColor, plasterEdgeColor]);
+  useEffect(() => {
+    applyHighlightToLoadedScene(clonedScene, highlightThreeColor, plasterColor, plasterEdgeColor);
+  }, [clonedScene, highlightThreeColor, plasterColor, plasterEdgeColor]);
   return <primitive object={clonedScene} />;
 };
 
-const LoadedPieceMesh: FC<{ url: string; fileExtension: string }> = ({ url, fileExtension }) => {
+const LoadedPieceMesh: FC<{ url: string; fileExtension: string; highlightColor: string | null }> = ({ url, fileExtension, highlightColor }) => {
   const ext = fileExtension.toLowerCase();
   if (ext === "glb" || ext === "gltf") {
-    return <GLTFMesh url={url} />;
+    return <GLTFMesh url={url} highlightColor={highlightColor} />;
   } else if (ext === "fbx") {
-    return <FBXMesh url={url} />;
+    return <FBXMesh url={url} highlightColor={highlightColor} />;
   } else if (ext === "obj") {
-    return <OBJMesh url={url} />;
+    return <OBJMesh url={url} highlightColor={highlightColor} />;
   } else {
-    return <GLTFMesh url={url} />;
+    return <GLTFMesh url={url} highlightColor={highlightColor} />;
   }
 };
 
-const PieceMesh: FC = () => {
+const PieceMesh: FC<{ highlightColor: string | null }> = ({ highlightColor }) => {
   const piece = usePiece() as Piece;
   const type = useType(undefined, typeof piece.type === "string" ? piece.type : piece.type?.guid) as Type | undefined;
   const files = useKitFiles();
@@ -7220,7 +7254,7 @@ const PieceMesh: FC = () => {
 
   return (
     <Suspense fallback={null}>
-      <LoadedPieceMesh url={blobUrl} fileExtension={fileExtension} />
+      <LoadedPieceMesh url={blobUrl} fileExtension={fileExtension} highlightColor={highlightColor} />
     </Suspense>
   );
 };
@@ -7246,6 +7280,9 @@ const ModelPiece: FC<ModelPieceProps> = () => {
 
   const foregroundColor = useMemo(() => getComputedColor("--foreground"), []);
   const mutedForegroundColor = useMemo(() => getComputedColor("--muted-foreground"), []);
+  const activeBaseColor = useMemo(() => getComputedColor("--active-base"), []);
+  const hoverBaseColor = useMemo(() => getComputedColor("--hover-base"), []);
+  const highlightColor = useMemo(() => (isSelected ? activeBaseColor : isHovered ? hoverBaseColor : null), [isSelected, isHovered, activeBaseColor, hoverBaseColor]);
 
   const originalPlane = piece.plane || flatPlane;
   const diffedPlane = diffedPiece.plane || flatPlane;
@@ -7382,12 +7419,11 @@ const ModelPiece: FC<ModelPieceProps> = () => {
       emissiveColor={emissiveColor}
       emissiveIntensity={0.45}
       showEdges
-      edgeColor={foregroundColor}
       userData={userData}
     />
   ) : (
     <group onClick={onSelect} onDoubleClick={onDoubleClick} onPointerEnter={handlePointerEnter} onPointerLeave={handlePointerLeave}>
-      <PieceMesh />
+      <PieceMesh highlightColor={highlightColor} />
     </group>
   );
 
@@ -7945,6 +7981,8 @@ const App: FC<AppProps> = () => {
   }, [selection, addSection, removeSection, appType, t, design]);
 
   const PiecesWorkbenchContent: FC = () => {
+    const kit = useKit() as Kit;
+
     const handleCreateTypeChild = (parentType: Type) => {
       const existingChildren = workbenchTypes?.filter((type) => type.parent?.guid === parentType.guid) || [];
       const uniqueName = generateUniqueName(
@@ -8001,19 +8039,22 @@ const App: FC<AppProps> = () => {
     };
 
     const renderDesignTree = (designs: Design[]): ReactNode[] => {
-      return designs.map((design) => {
-        const children = workbenchDesigns?.filter((child) => (typeof child.parent === "object" ? child.parent?.guid === design.guid : child.parent === design.guid)) || [];
+      return designs.map((workbenchDesign) => {
+        const children = workbenchDesigns?.filter((child) => (typeof child.parent === "object" ? child.parent?.guid === workbenchDesign.guid : child.parent === workbenchDesign.guid)) || [];
+        // Disable designs that are in the same family as the current design being edited
+        // This prevents circular references when adding design pieces
+        const isDisabled = design && kit ? areDesignsInSameFamily(kit, design.guid, workbenchDesign.guid) : false;
         return (
           <div
-            key={design.guid}
+            key={workbenchDesign.guid}
             onPointerEnter={() => {
-              if (hoverDesigns) hoverDesigns([design.guid]);
+              if (hoverDesigns) hoverDesigns([workbenchDesign.guid]);
             }}
             onPointerLeave={() => {
               if (clearHover) clearHover();
             }}
           >
-            <DesignTreeItem design={design} onCreateChild={handleCreateDesignChild}>
+            <DesignTreeItem design={workbenchDesign} onCreateChild={handleCreateDesignChild} disabled={isDisabled}>
               {children.length > 0 && renderDesignTree(children)}
             </DesignTreeItem>
           </div>
@@ -8163,36 +8204,39 @@ const App: FC<AppProps> = () => {
     );
   };
 
-  const DesignTreeItem: FC<{ design: Design; onCreateChild: (design: Design) => void; children?: ReactNode }> = ({ design, onCreateChild, children }) => {
+  const DesignTreeItem: FC<{ design: Design; onCreateChild: (design: Design) => void; disabled?: boolean; children?: ReactNode }> = ({ design, onCreateChild, disabled, children }) => {
     const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
       id: `design-${design.guid}`,
       data: { type: "design", designGuid: design.guid },
+      disabled: disabled,
     });
 
     const handleDragStart = () => {
-      setActiveDraggedDesign(design);
+      if (!disabled) {
+        setActiveDraggedDesign(design);
+      }
     };
 
     useEffect(() => {
-      if (isDragging) {
+      if (isDragging && !disabled) {
         handleDragStart();
       }
-    }, [isDragging]);
+    }, [isDragging, disabled]);
 
     return (
       <TreeItem
         label={
-          <div className="flex items-center gap-single min-w-0">
+          <div className={`flex items-center gap-single min-w-0 ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}>
             <DraggableAvatar
               ref={setNodeRef}
               dragRef={setNodeRef}
-              dragListeners={listeners}
-              dragAttributes={attributes}
+              dragListeners={disabled ? {} : listeners}
+              dragAttributes={disabled ? {} : attributes}
               content={design.name.substring(0, 2).toUpperCase()}
               isSelected={false}
               isHovered={false}
               shouldFade={isDragging}
-              title={design.name}
+              title={disabled ? `${design.name} (same design family - cannot be used as design piece)` : design.name}
             />
             <span className="truncate">{design.name}</span>
           </div>

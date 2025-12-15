@@ -133,6 +133,7 @@ import {
   VectorDiff,
 } from "../semio";
 import {
+  Action,
   Breadcrumb,
   ButtonGroup,
   ButtonGroupItem,
@@ -147,6 +148,7 @@ import {
   Layout as LayoutComponent,
   Navbar,
   type NavbarItem,
+  Strip,
   Toggle,
   Transaction,
   Window,
@@ -14597,11 +14599,20 @@ export const ConceptFilter: FC<{ allConcepts: string[]; paramName?: string }> = 
   if (allConcepts.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-single p-single border-b">
-      {allConcepts.map((concept) => (
-        <Toggle key={concept} pressed={selectedConcepts.includes(concept)} onPressedChange={() => toggleConcept(concept)} id={`semio.sketchpad.filter.concept.${concept}`} icon={null} text={concept} />
-      ))}
-    </div>
+    <Strip
+      id="semio.sketchpad.filter.concepts"
+      items={allConcepts.map((concept) => ({
+        key: concept,
+        content: (
+          <Action
+            onClick={() => toggleConcept(concept)}
+            id={`semio.sketchpad.filter.concept.${concept}`}
+            text={concept}
+            className={selectedConcepts.includes(concept) ? "bg-active-base" : ""}
+          />
+        ),
+      }))}
+    />
   );
 };
 
@@ -17595,6 +17606,8 @@ const LayoutWrapper: FC = () => {
               <Footer
                 items={footerItems.map((item) => ({
                   id: item.id,
+                  icon: item.icon,
+                  text: item.text,
                   content: item.content,
                   order: item.order,
                   onClick: item.onClick,

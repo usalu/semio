@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-11-29T22:28:09.886Z'
-  updated: '2025-11-29T22:28:09.886Z'
 slug: LOADING-ERROR-MECHANISMS
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Add loading spinners and not-found pages to Sketchpad
 model: claude-opus-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

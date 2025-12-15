@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-12-12T18:17:31.608Z'
-  updated: '2025-12-12T18:17:31.608Z'
 slug: KIT-ROW-EXPAND
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix kit table row expansion
 model: claude-opus-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

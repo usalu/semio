@@ -62,7 +62,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router";
 import { Camera } from "three";
 import * as Y from "yjs";
 import i18n, { useLabel } from "../i18n";
-import { Author, buildFileTree, Concept, Coord, Design, DesignDiff, DiffStatus, flattenFileTree, Folder, generateUniqueName, guid, Guid, Interface, Kit, KitDiff, Quality, File as SemioFile, Tag, Type, TypeDiff } from "../semio";
+import { areDesignsInSameFamily, areTypesInSameFamily, Author, buildFileTree, Concept, Coord, Design, DesignDiff, DiffStatus, flattenFileTree, Folder, generateUniqueName, guid, Guid, Interface, Kit, KitDiff, Quality, File as SemioFile, Tag, Type, TypeDiff } from "../semio";
 import type { KitStore as KitDataSource, SketchpadStore as SketchpadOrchestrator } from "./Sketchpad";
 import {
   Canvas,
@@ -105,6 +105,40 @@ import type { HookNoSetResult, HookResult, KitAppId, KitCommandContext, KitDiffA
 import { AppConfig, AppPlugin, conditionalHookResult, createPanelDefinition, Expertise, Mode, PanelKind, registerAppPlugin, Theme } from "./shared";
 
 // #endregion Imports
+
+// #region Design Family Helpers
+
+/**
+ * Gets all design GUIDs in a design family as a Set for efficient lookup.
+ * @param kit - The kit containing the designs.
+ * @param designGuid - The GUID of any design in the family.
+ * @returns Set of all design GUIDs in the family tree.
+ */
+const getDesignFamilyGuids = (kit: Kit, designGuid: string): Set<string> => {
+  const guids = new Set<string>();
+
+  // Find the primitive (root) design
+  let currentGuid = designGuid;
+  let current = kit.designs?.find((d) => d.guid === currentGuid);
+  while (current?.parent?.guid) {
+    const parent = kit.designs?.find((d) => d.guid === current!.parent!.guid);
+    if (!parent) break;
+    current = parent;
+    currentGuid = parent.guid;
+  }
+
+  // Collect all descendants
+  const collectDescendants = (parentGuid: string) => {
+    guids.add(parentGuid);
+    const children = (kit.designs || []).filter((d) => d.parent?.guid === parentGuid);
+    children.forEach((child) => collectDescendants(child.guid));
+  };
+  collectDescendants(currentGuid);
+
+  return guids;
+};
+
+// #endregion Design Family Helpers
 
 // #region Internal State Management
 
@@ -2168,6 +2202,7 @@ type TableRow = {
   isExpanded: boolean;
   data: Design | Type | Quality | Interface | Tag | Concept | SemioFile | Author | Folder;
   folderId?: string;
+  concepts?: string[];
 };
 
 const ChevronRight: FC<{ className?: string }> = ({ className }) => (
@@ -2813,6 +2848,12 @@ const AppContent: FC = () => {
           const children = designsByParent.get(design.guid) || [];
           const hasChildren = children.length > 0;
 
+          // Resolve concept GUIDs to names
+          const designConceptNames =
+            design.concepts
+              ?.map((c) => kitConcepts?.find((kc) => kc.guid === c.guid)?.name)
+              .filter((name): name is string => name !== undefined) || [];
+
           result.push({
             id: rowId,
             kind: "designs",
@@ -2825,6 +2866,7 @@ const AppContent: FC = () => {
             hasChildren,
             isExpanded: false, // Computed in visibleRows
             data: design,
+            concepts: designConceptNames,
           });
 
           if (hasChildren) {
@@ -3573,6 +3615,17 @@ const AppContent: FC = () => {
       if (targetParentId !== undefined) {
         // Dropped onto another design - set as parent
         if (design.parent?.guid !== targetParentId) {
+          // Check if reparenting would violate the same-family constraint for design pieces
+          // A design cannot have design pieces that reference designs in the same family
+          const designPieces = (design.pieces || []).filter((p) => p.design?.guid);
+          const targetFamily = kit ? getDesignFamilyGuids(kit, targetParentId) : new Set<string>();
+          const wouldViolateConstraint = designPieces.some((p) => p.design?.guid && targetFamily.has(p.design.guid));
+
+          if (wouldViolateConstraint) {
+            console.warn(`Cannot reparent design "${design.name}" to "${targetParentId}": would violate same-family constraint for design pieces`);
+            return;
+          }
+
           kitCommands.updateDesign(design.guid, { parent: { guid: targetParentId } });
         }
       } else if (targetFolderId === undefined && (design.parent || design.folder)) {
@@ -4228,8 +4281,23 @@ const AppContent: FC = () => {
                       <span className="size-small shrink-0" />
                     )}
                     <TableAvatar name={row.artifact} icon={getRowIcon(row)} />
-                    <span className="text-left flex-1 min-w-0 truncate">{row.artifact}</span>
+                    <span className="text-left min-w-0 truncate">{row.artifact}</span>
                   </div>
+                  {row.concepts && row.concepts.length > 0 && (
+                    <Scrollable orientation="horizontal" className="flex-1 min-w-0 max-w-[200px]">
+                      <div className="flex items-center gap-single px-single h-medium w-fit">
+                        {row.concepts.map((concept) => (
+                          <Action
+                            key={concept}
+                            onClick={() => toggleConcept(concept)}
+                            id={`semio.sketchpad.app.kit.row.concept.${concept}`}
+                            text={concept}
+                            className={selectedConcepts.includes(concept) ? "bg-active-base" : ""}
+                          />
+                        ))}
+                      </div>
+                    </Scrollable>
+                  )}
                   <div className="flex items-center gap-single shrink-0">
                     {(row.kind === "designs" || row.kind === "types") && (
                       <Action
@@ -4518,8 +4586,23 @@ const AppContent: FC = () => {
                       <span className="size-small shrink-0" />
                     )}
                     <TableAvatar name={row.artifact} icon={getRowIcon(row)} />
-                    <span className="text-left flex-1 min-w-0 truncate">{row.artifact}</span>
+                    <span className="text-left min-w-0 truncate">{row.artifact}</span>
                   </div>
+                  {row.concepts && row.concepts.length > 0 && (
+                    <Scrollable orientation="horizontal" className="flex-1 min-w-0 max-w-[200px]">
+                      <div className="flex items-center gap-single px-single h-medium w-fit">
+                        {row.concepts.map((concept) => (
+                          <Action
+                            key={concept}
+                            onClick={() => toggleConcept(concept)}
+                            id={`semio.sketchpad.app.kit.row.concept.${concept}`}
+                            text={concept}
+                            className={selectedConcepts.includes(concept) ? "bg-active-base" : ""}
+                          />
+                        ))}
+                      </div>
+                    </Scrollable>
+                  )}
                   <div className="flex items-center gap-single shrink-0">
                     {(row.kind === "designs" || row.kind === "types") && (
                       <Action

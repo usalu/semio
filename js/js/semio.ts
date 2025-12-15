@@ -4491,6 +4491,178 @@ export const findDesignInKit = (kit: Kit, designGuid: string): Design => {
   return design;
 };
 
+// #region Design Family Helpers
+
+/**
+ * Gets the primitive (root) design of a design family.
+ * A primitive design is a design that has no parent.
+ * @param kit - The kit containing the designs.
+ * @param designGuid - The GUID of a design in the family.
+ * @returns The primitive design at the root of the family tree.
+ */
+export const getPrimitiveDesign = (kit: Kit, designGuid: string): Design => {
+  let current = findDesignInKit(kit, designGuid);
+  while (current.parent?.guid) {
+    current = findDesignInKit(kit, current.parent.guid);
+  }
+  return current;
+};
+
+/**
+ * Gets all designs in a design family (the entire tree).
+ * @param kit - The kit containing the designs.
+ * @param designGuid - The GUID of any design in the family.
+ * @returns All designs in the family tree.
+ */
+export const getDesignFamily = (kit: Kit, designGuid: string): Design[] => {
+  const primitive = getPrimitiveDesign(kit, designGuid);
+  const family: Design[] = [];
+  const collectDescendants = (parentGuid: string) => {
+    const parent = findDesignInKit(kit, parentGuid);
+    family.push(parent);
+    const children = (kit.designs || []).filter((d) => d.parent?.guid === parentGuid);
+    children.forEach((child) => collectDescendants(child.guid));
+  };
+  collectDescendants(primitive.guid);
+  return family;
+};
+
+/**
+ * Gets the sibling designs (designs with the same parent) of a design.
+ * @param kit - The kit containing the designs.
+ * @param designGuid - The GUID of the design.
+ * @returns Sibling designs (excluding the design itself).
+ */
+export const getDesignSiblings = (kit: Kit, designGuid: string): Design[] => {
+  const design = findDesignInKit(kit, designGuid);
+  const parentGuid = design.parent?.guid;
+  return (kit.designs || []).filter((d) => d.parent?.guid === parentGuid && d.guid !== designGuid);
+};
+
+/**
+ * Gets the child designs of a design.
+ * @param kit - The kit containing the designs.
+ * @param designGuid - The GUID of the parent design.
+ * @returns Child designs.
+ */
+export const getDesignChildren = (kit: Kit, designGuid: string): Design[] => {
+  return (kit.designs || []).filter((d) => d.parent?.guid === designGuid);
+};
+
+/**
+ * Checks if two designs belong to the same design family.
+ * @param kit - The kit containing the designs.
+ * @param designGuidA - The GUID of the first design.
+ * @param designGuidB - The GUID of the second design.
+ * @returns True if both designs are in the same family tree.
+ */
+export const areDesignsInSameFamily = (kit: Kit, designGuidA: string, designGuidB: string): boolean => {
+  const primitiveA = getPrimitiveDesign(kit, designGuidA);
+  const primitiveB = getPrimitiveDesign(kit, designGuidB);
+  return primitiveA.guid === primitiveB.guid;
+};
+
+/**
+ * Checks if a design can be used as a design piece in another design.
+ * A design cannot contain a design piece from the same family (to prevent circular references).
+ * @param kit - The kit containing the designs.
+ * @param containerDesignGuid - The GUID of the design that would contain the piece.
+ * @param pieceDesignGuid - The GUID of the design to be used as a piece.
+ * @returns True if the design piece can be added without violating the family constraint.
+ */
+export const canUseDesignAsPiece = (kit: Kit, containerDesignGuid: string, pieceDesignGuid: string): boolean => {
+  return !areDesignsInSameFamily(kit, containerDesignGuid, pieceDesignGuid);
+};
+
+/**
+ * Finds design pieces in a design that violate the same-family constraint.
+ * @param kit - The kit containing the designs.
+ * @param designGuid - The GUID of the design to check.
+ * @returns Array of pieces that reference designs in the same family.
+ */
+export const findSameFamilyDesignPieces = (kit: Kit, designGuid: string): Piece[] => {
+  const design = findDesignInKit(kit, designGuid);
+  return (design.pieces || []).filter((piece) => {
+    if (!piece.design?.guid) return false;
+    return areDesignsInSameFamily(kit, designGuid, piece.design.guid);
+  });
+};
+
+// #endregion Design Family Helpers
+
+// #region Type Family Helpers
+
+/**
+ * Gets the primitive (root) type of a type family.
+ * A primitive type is a type that has no parent.
+ * @param kit - The kit containing the types.
+ * @param typeGuid - The GUID of a type in the family.
+ * @returns The primitive type at the root of the family tree.
+ */
+export const getPrimitiveType = (kit: Kit, typeGuid: string): Type => {
+  let current = findTypeInKit(kit, typeGuid);
+  while (current.parent?.guid) {
+    current = findTypeInKit(kit, current.parent.guid);
+  }
+  return current;
+};
+
+/**
+ * Gets all types in a type family (the entire tree).
+ * @param kit - The kit containing the types.
+ * @param typeGuid - The GUID of any type in the family.
+ * @returns All types in the family tree.
+ */
+export const getTypeFamily = (kit: Kit, typeGuid: string): Type[] => {
+  const primitive = getPrimitiveType(kit, typeGuid);
+  const family: Type[] = [];
+  const collectDescendants = (parentGuid: string) => {
+    const parent = findTypeInKit(kit, parentGuid);
+    family.push(parent);
+    const children = (kit.types || []).filter((t) => t.parent?.guid === parentGuid);
+    children.forEach((child) => collectDescendants(child.guid));
+  };
+  collectDescendants(primitive.guid);
+  return family;
+};
+
+/**
+ * Gets the sibling types (types with the same parent) of a type.
+ * @param kit - The kit containing the types.
+ * @param typeGuid - The GUID of the type.
+ * @returns Sibling types (excluding the type itself).
+ */
+export const getTypeSiblings = (kit: Kit, typeGuid: string): Type[] => {
+  const type = findTypeInKit(kit, typeGuid);
+  const parentGuid = type.parent?.guid;
+  return (kit.types || []).filter((t) => t.parent?.guid === parentGuid && t.guid !== typeGuid);
+};
+
+/**
+ * Gets the child types of a type.
+ * @param kit - The kit containing the types.
+ * @param typeGuid - The GUID of the parent type.
+ * @returns Child types.
+ */
+export const getTypeChildren = (kit: Kit, typeGuid: string): Type[] => {
+  return (kit.types || []).filter((t) => t.parent?.guid === typeGuid);
+};
+
+/**
+ * Checks if two types belong to the same type family.
+ * @param kit - The kit containing the types.
+ * @param typeGuidA - The GUID of the first type.
+ * @param typeGuidB - The GUID of the second type.
+ * @returns True if both types are in the same family tree.
+ */
+export const areTypesInSameFamily = (kit: Kit, typeGuidA: string, typeGuidB: string): boolean => {
+  const primitiveA = getPrimitiveType(kit, typeGuidA);
+  const primitiveB = getPrimitiveType(kit, typeGuidB);
+  return primitiveA.guid === primitiveB.guid;
+};
+
+// #endregion Type Family Helpers
+
 export const findInterfaceInKit = (kit: Kit, interfaceGuid: string): Interface => {
   const iface = kit.interfaces?.find((i) => i.guid === interfaceGuid);
   if (!iface) throw new Error(`Interface ${interfaceGuid} not found in kit ${kit.name}`);
@@ -7707,6 +7879,71 @@ export const semioLayerPathUniquenessRule: SemioValidationRule = (ctx) => {
 
 // #endregion Rule: Layer path uniqueness within design
 
+// #region Rule: Design piece same family constraint
+
+/**
+ * Validation rule: A design cannot have design pieces from the same design family.
+ * This prevents circular references and ensures design family integrity.
+ */
+export const semioDesignPieceSameFamilyRule: SemioValidationRule = (ctx) => {
+  const issues: SemioValidationIssue[] = [];
+  toArray(ctx.kit.designs).forEach((design) => {
+    const pieces = toArray(design.pieces);
+    pieces.forEach((piece) => {
+      if (!piece.design?.guid) return; // Skip non-design pieces
+      try {
+        const pieceDesign = ctx.designsByGuid.get(piece.design.guid);
+        if (!pieceDesign) return; // Skip if referenced design not found
+
+        // Check if the piece's design is in the same family as the container design
+        const containerPrimitive = getPrimitiveDesignFromContext(ctx, design.guid);
+        const piecePrimitive = getPrimitiveDesignFromContext(ctx, piece.design.guid);
+
+        if (containerPrimitive === piecePrimitive) {
+          const fix = semioMakeFix(ctx, `Remove design piece "${piece.name || piece.guid}"`, (clone) => {
+            const cd = toArray(clone.designs).find((d) => d.guid === design.guid);
+            if (!cd) return;
+            cd.pieces = toArray(cd.pieces).filter((p) => p.guid !== piece.guid);
+            // Also remove connections involving this piece
+            cd.connections = toArray(cd.connections).filter(
+              (c) => c.connected.piece.guid !== piece.guid && c.connecting.piece.guid !== piece.guid
+            );
+          });
+          issues.push({
+            ruleId: "design-piece-same-family",
+            severity: "error",
+            message: `Design piece "${piece.name || piece.guid}" references design "${pieceDesign.name}" which is in the same design family as container design "${design.name}". A design cannot contain design pieces from the same family.`,
+            location: { entityKind: "Piece", entityGuid: piece.guid, field: "design" },
+            relatedGuids: [piece.guid, design.guid, pieceDesign.guid],
+            fixes: [fix],
+          });
+        }
+      } catch {
+        // Ignore errors (e.g., design not found)
+      }
+    });
+  });
+  return issues;
+};
+
+/**
+ * Helper to get primitive design from validation context.
+ */
+const getPrimitiveDesignFromContext = (ctx: SemioValidationContext, designGuid: string): string => {
+  let currentGuid = designGuid;
+  let iterations = 0;
+  const maxIterations = 1000; // Prevent infinite loops
+  while (iterations < maxIterations) {
+    const design = ctx.designsByGuid.get(currentGuid);
+    if (!design || !design.parent?.guid) return currentGuid;
+    currentGuid = design.parent.guid;
+    iterations++;
+  }
+  return currentGuid;
+};
+
+// #endregion Rule: Design piece same family constraint
+
 // #region Rule registration
 
 defaultSemioValidationRules = [
@@ -7721,6 +7958,7 @@ defaultSemioValidationRules = [
   semioPortNameUniquenessRule,
   semioModelNameUniquenessRule,
   semioLayerPathUniquenessRule,
+  semioDesignPieceSameFamilyRule,
 ];
 
 // #endregion Rule registration

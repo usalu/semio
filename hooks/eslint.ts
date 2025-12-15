@@ -5,11 +5,12 @@ import { join } from "path";
 
 const rootDir = join(__dirname, "..");
 const reportPath = join(rootDir, "reports", "eslint.json");
+const nxArgs = process.argv.slice(2);
 
 console.log("🔍 Running ESLint...");
 
 try {
-  const output = execSync("npx nx run-many -t lint --parallel=1 --output-style=stream", {
+  const output = execSync(["npx", "nx", "run-many", "-t", "lint", "--parallel=1", "--output-style=stream", ...nxArgs].join(" "), {
     cwd: rootDir,
     encoding: "utf-8",
   });

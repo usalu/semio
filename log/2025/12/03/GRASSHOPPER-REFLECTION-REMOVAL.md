@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-12-03T09:00:05.451Z'
-  updated: '2025-12-03T09:00:05.451Z'
 slug: GRASSHOPPER-REFLECTION-REMOVAL
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Remove reflection from Grasshopper components and hardcode inputs/outputs
 model: claude-opus-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

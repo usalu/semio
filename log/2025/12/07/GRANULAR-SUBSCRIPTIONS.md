@@ -1,16 +1,13 @@
 ---
-date:
-  created: '2025-12-07T20:50:21.810Z'
-  updated: '2025-12-07T20:50:21.810Z'
 slug: GRANULAR-SUBSCRIPTIONS
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: >-
   Migrate all exported hooks to granular subscriptions with [state, setState,
   canSetState] pattern
 model: claude-opus-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

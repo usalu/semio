@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-12-03T14:13:54.989Z'
-  updated: '2025-12-03T14:13:54.989Z'
 slug: DESIGN-APP-PERFORMANCE
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Design App Pan Performance Investigation
 model: claude-opus-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

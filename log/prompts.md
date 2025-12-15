@@ -1,13 +1,40 @@
 # Prompt history
 
+- Add comment detector and fixer.
+
+design app:
+
+- The piece nodes dont show hover color when hovering over the piece in diagram.
+- The piece geometry material is not showing hover or select color.
+
+i18n script:
+
+- has hardcoded german translations (should only use locales files)
+- has mjs and ts file
+- is falsely classifying a lot of keys as unused
+
+The development section should be extended by a section port numbers (not semio ports but "regular" port). There should be an overview table of all ports used for dev commands (such as storybook, sketchpad, play) or final packages (such as engine that has a variable port number according release numer r25.02-1->2507).
+
+Add a new rule that whenever a new file is created, deleted or moved, it should update the file and folder structure in the dev docs (AGENTS.md and README.md)
+
+Concepts shouldnt use toggles but actions (active when part of filter). The concept band should be a concept strip. The concepts next to the name should be wrapped into a strip that when there is not enough space only the strip is scrollable.
+
+Every name row (such as in home and kit app) should have between the name and the + action a strip with concepts. When a concept is added for the first time it should be added to the concept filter. If it is already active then it should be removed if pressed again.
+
+There is a complex additional contraint for designs: A design can only have design pieces of different design families. This means that e.g. in workbench the design tree items must be disabled in design app. Or the drag and drop to reparent in kit app can only be designs where no piece of the design is a design piece of the same design family.
+Terminology: A design family is tree of designs. The root of the tree is called primitve design. The branches on the same level are called siblings. There are child designs and parent designs.
+Same for types. A type family is tree of types. The root of the tree is called primitive type. The branches on the same level are called siblings. There are child types and parent types.
+
+When I add a child design in workbench in design app I get:
+
 Update log system:
 Logs should instead of having prompts and date {created,updated} have input [{prompt,date}]
 affected files should be extended to nested: files {read,updated,removed,created}
-Affected files in logs shouldnt be derived from git but added manually based on the files that were edited. The update command should be able to add affected files. But the lines should be derived from git with the affected files.
+Affected files in logs shouldnt be derived from git but added manually based on the files that were edited. The update command should have the same api as create and automatically add the new input with the current date and add the new affected files (in case they were not already added). But the lines should be derived from git with the affected files.
 Migrate all existing logs to the new format.
 
 The ci/cd system should be improved. The individual commands should work more closely together and be more integrated.
-Currently preflights runs all analysis and formatters. There should be two new commands: analyze and fix. Preflight runs both of them.
+Currently preflights runs all analysis and formatters. There should be two new commands: analyze and fix. Preflight runs both of them. Test should run preflight and then test. build should run test. prepublish and publish should run build. All scripts should have a skip mechnaism to skip preceeding individual steps. Adding a command always means updating all hooks, nx configs, .vscode tasks, launch.json, etc.
 
 The ui system needs to be more tightly integrated with itself and new components are added and existing ones refactored.
 In general there should be as little props as possible and the system needs to take the decisions.

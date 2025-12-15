@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-11-24T15:44:24.363Z'
-  updated: '2025-11-24T15:44:24.363Z'
 slug: AGENTS-REPORTS-UPDATE
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Update agents reports and docs
 model: claude-sonnet-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

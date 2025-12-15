@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-12-12T22:52:15.401Z'
-  updated: '2025-12-12T22:52:15.401Z'
 slug: TABLE-ROW-HEIGHT-FOOTER
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Unify table row and footer bar height
 model: claude-opus-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

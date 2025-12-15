@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-12-03T14:01:17.461Z'
-  updated: '2025-12-03T14:01:17.461Z'
 slug: SCHEMA-SYNC
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Schema extraction and synchronization script
 model: claude-opus-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

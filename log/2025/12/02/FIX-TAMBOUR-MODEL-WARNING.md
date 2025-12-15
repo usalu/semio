@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-12-02T21:22:30.744Z'
-  updated: '2025-12-02T21:22:30.744Z'
 slug: FIX-TAMBOUR-MODEL-WARNING
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix Tambour model warning by regenerating metabolism.zip with models
 model: claude-opus-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

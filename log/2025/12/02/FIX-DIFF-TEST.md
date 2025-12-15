@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-12-02T21:44:16.196Z'
-  updated: '2025-12-02T21:44:16.196Z'
 slug: FIX-DIFF-TEST
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: 'Fix diff test - schema changed, concepts now objects'
 model: claude-opus-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

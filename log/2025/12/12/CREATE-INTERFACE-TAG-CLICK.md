@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-12-12T22:51:23.422Z'
-  updated: '2025-12-12T22:51:23.422Z'
 slug: CREATE-INTERFACE-TAG-CLICK
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix create interface/tag buttons doing nothing
 model: claude-opus-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-12-01T22:00:33.879Z'
-  updated: '2025-12-01T22:00:33.879Z'
 slug: SKETCHPAD-TEST-EXTEND
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Extend sketchpad tests for type app and design app panels
 model: claude-opus-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

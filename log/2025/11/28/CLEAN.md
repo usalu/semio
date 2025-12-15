@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-11-28T20:29:07.741Z'
-  updated: '2025-11-28T20:29:07.741Z'
 slug: CLEAN
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Cleanup logs for diagnostic traces
 model: claude-sonnet-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

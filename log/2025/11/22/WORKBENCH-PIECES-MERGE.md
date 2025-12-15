@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-11-21T23:00:00.000Z'
-  updated: '2025-11-21T23:00:00.000Z'
 slug: WORKBENCH-PIECES-MERGE
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Merge design app workbench sections into single pieces section
 model: claude-sonnet-4.5
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0

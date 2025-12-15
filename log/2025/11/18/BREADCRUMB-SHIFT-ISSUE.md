@@ -1,14 +1,11 @@
 ---
-date:
-  created: '2025-11-17T23:00:00.000Z'
-  updated: '2025-11-17T23:00:00.000Z'
 slug: BREADCRUMB-SHIFT-ISSUE
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Migration from 2025-11-18_BREADCRUMB-SHIFT-ISSUE.md
 model: unknown
-prompts: []
+input: []
 commit: unknown
-affectedFiles: []
+files: {}
 lines:
   added: 0
   removed: 0
