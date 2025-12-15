@@ -1,43 +1,139 @@
 # Prompt history
 
+The analyze script should be extended to create a report for the codebase producing `code.json` (for typescript, python, c#). It should check for:
+- Comments in the code. Code needs to undocumented/uncommented.
+- Missing License headers.
+- Regions that dont close (every `#region REGIONNAME` needs to have a corresponding `#endregion REGIONNAME`).
+
+design app:
+- Hover is not showing in piece nodes background and piece geometry material.
+- Selection is not showing in piece geometry material.
+
+Updated logs in log.ts should NEVER take the updated files from the git commit and only take lines from it. files can only be added to the list (added, updated or removed) over the cli explicitly. The reason is that multiple agents work in one commit hence the files list would be cluttered. But they usually work on different files hence the lines are ok.
+
 The refactor is far from done.
 - There are still 2 createMachine calls (ui should be consolidated into sketchpad)
 - You are still not following the open/closed principle. Sketchpad should be independed of the apps and the apps should be self-contained. E.g. all design app events in Sketchpad.tsx dont belong there. Same for type app events, etc. Adding/removing an another app to sketchpad should just be to add or remove a file without having to modify the internals of Sketchpad.tsx
 
 The way that code and documentation are written should be improved.
-Every feature, decision should be undocumented in the code and documented in the dev docs (AGENTS.md and README.md). Once under products where it is described from user perspective (framework-agnostic, no implementation references, etc) and once under the components where it is described from dev perspective (framework-mechnaisms, implementation details, etc).
-Example:
+Every feature, decision should be undocumented/uncommented in the code and documented in the dev docs (AGENTS.md and README.md). The documentation ALWAYS happens four times:
+1. Under products in README.md where it is described from user perspective [architects, designers, engineers, …] (framework-agnostic, no implementation references, etc)
+2. Under components in README.md where it is described from junior-developer perspective (mechanism explanation and reasoning behind the decision, how theory links to implementation, etc).
+3. Under Software Requirements Specification in AGENTS.md where it is described from human-interface-designer perspective (concise technical terms without explanation, framework-agnostic, no implementation references).
+4. Under Codebase in AGENTS.md where it is described from senior-developer perspective (framework-mechanisms, consice technical terms without explanation, implementation details, etc).
+The AGENTS.md `# Codebase` section has the same header structure as the files and folders. All files and folders are flat with `## PATH` e.g. `## js/js/sketchpad/` or `## net/Semio.cs`
+The README.md structure is more human friendly according ecosystem and components.
+Migrate all existing docs and code to the new structure. Update outdated docs.
+Example
+1. User
 ```markdown
-# Products
-## sketchpad
-
+# 🛍️ Products [↑](#-overview)
+## ✏️ sketchpad [↑](#%EF%B8%8F-products-)
+[sketchpad](#%EF%B8%8F-sketchpad-) is a simple-to-use, accessible and browser-based user interface for semio🖱️
+It is the digital pencil for sketching plans and digital scalpel for building models in semio ✍️
+![sketchpad demo](/assets/images/sketchpad-demo.gif)
+```
+2. Junior-Developer
+```markdown
+# 🛍️ Products [↑](#-overview)
+## 🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/js) [↑](#-components-)
+<details>
+<summary><strong>📚 Resources:</strong></summary>
+- [React](https://www.npmjs.com/package/react) - `npm`
+  - [Docs](https://react.dev) - `official`
+  - [Issues](https://github.com/facebook/react/issues) - `github`
+- [Vite](https://www.npmjs.com/package/vite) - `npm`
+  - [Docs](https://vitejs.dev/guide) - `official`
+  - [Config](https://vitejs.dev/config) - `config`
+  - [Issues](https://github.com/vitejs/vite/issues) - `github`
+- [Tailwind CSS](https://tailwindcss.com) - `official`
+  - [Docs](https://tailwindcss.com/docs) - `docs`
+  - [Issues](https://github.com/tailwindlabs/tailwindcss/issues) - `github`
+- [Shadcn](https://ui.shadcn.com) - `official`
+  - [Docs](https://ui.shadcn.com/docs) - `docs`
+  - [Issues](https://github.com/shadcn-ui/ui/issues) - `github`
+- [Radix UI](https://www.radix-ui.com/) - `official`
+  - [Docs](https://www.radix-ui.com/primitives/docs/overview/introduction) - `docs`
+  - [Issues](https://github.com/radix-ui/primitives/issues) - `github`
+- [Lucide](https://www.npmjs.com/package/lucide-react) - `npm`
+  - [Docs](https://lucide.dev/docs/lucide-react) - `docs`
+  - [Icons](https://lucide.dev/icons/) - `gallery`
+- [Storybook](https://www.npmjs.com/package/@storybook/react) - `npm`
+  - [Docs](https://storybook.js.org/docs) - `official`
+  - [Issues](https://github.com/storybookjs/storybook/issues) - `github`
+- [Three.js](https://www.npmjs.com/package/three) - `npm`
+  - [Docs](https://threejs.org/docs/) - `official`
+  - [Examples](https://threejs.org/examples/) - `gallery`
+- [React Three Fiber](https://www.npmjs.com/package/@react-three/fiber) - `npm`
+  - [Docs](https://docs.pmnd.rs/react-three-fiber) - `official`
+  - [Issues](https://github.com/pmndrs/react-three-fiber/issues) - `github`
+- [React Three Drei](https://www.npmjs.com/package/@react-three/drei) - `npm`
+  - [Docs](https://github.com/pmndrs/drei) - `github`
+  - [Examples](https://drei.pmnd.rs/) - `storybook`
+- [React Flow](https://www.npmjs.com/package/@xyflow/react) - `npm`
+  - [Docs](https://reactflow.dev/docs) - `official`
+  - [Examples](https://reactflow.dev/examples) - `gallery`
+- [Yjs](https://www.npmjs.com/package/yjs) - `npm`
+  - [Docs](https://docs.yjs.dev) - `official`
+  - [API](https://github.com/yjs/yjs) - `github`
+  - [Issues](https://github.com/yjs/yjs/issues) - `github`
+- [sql.js](https://www.npmjs.com/package/sql.js) - `npm`
+  - [Docs](https://sql.js.org) - `official`
+  - [API](https://sql.js.org/documentation) - `docs`
+  - [Issues](https://github.com/sql-js/sql.js/issues) - `github`
+  - [Playground](https://sql.js.org/examples/GUI) - `demo`
+- [dnd kit](https://www.npmjs.com/package/@dnd-kit/core) - `npm`
+  - [Docs](https://docs.dndkit.com/) - `official`
+  - [Examples](https://master--5fc05e08a4a65d0021ae0bf2.chromatic.com/) - `storybook`
+- [Cytoscape](https://www.npmjs.com/package/cytoscape) - `npm`
+  - [Docs](https://js.cytoscape.org/) - `official`
+  - [API](https://js.cytoscape.org/#core) - `reference`
+- [Markdoc](https://www.npmjs.com/package/@markdoc/markdoc) - `npm`
+  - [Docs](https://markdoc.dev/docs/getting-started) - `official`
+  - [Issues](https://github.com/markdoc/markdoc/issues) - `github`
+- [Motion](https://www.npmjs.com/package/motion) - `npm`
+  - [Docs](https://motion.dev/docs) - `official`
+  - [Examples](https://motion.dev/examples) - `gallery`
+</details>
+<details>
+<summary><strong>📼 Videos:</strong></summary>
+- [React State Managment](https://www.youtube.com/watch?v=-bEzt5ISACA)
+</details>
+The core which is shared in the [semio JavaScript ecosystem](#-javascript-) 🥜
+```
+3. Human-Interface-Design
+```markdown
+# Software Requirements Specification
+## UI/UX
+### sketchpad
 - canvas-based (navbar, canvas, panels on top of the canvas, footer)
 - multi-app (home, kit, design, type, quality, docs)
 - multi-window (every app has its own window kinds)
-- multi-user (studio where users can collaborate on kits)
+- multi-user (users collaborate inside a studio)
 - multi-device (desktop, tablet, mobile)
 - multi-language (english, german)
 - multi-theme (light, dark)
 - multi-expertise (beginner, intermediate, advanced)
 - consistent ui (tables, diagrams, scenes)
-- 
+- local-first (by default all data is stored locally in the browser and only synced to the server when the user wants to share it)
+#### Apps
+##### Home
+- canvas (filter band, concept strip, table)
+```
+4. Senior-Developer
+```markdown
+# Codebase
+## js
+## js/js
+## js/js/sketchpad
+## js/js/sketchpad/Sketchpad.tsx
+### State managment
 
-### Apps
-
-#### Home
-
-- table
-
-# Components
-
-## @semio/js
-
-### Sketchpad.tsx
-
--
-
-####
-
+- ui components access and modify state only via triadic hooks `[STATE,SETSTATE,CANSETSTATE] = useSELECTOR()`
+- one global sketchpad `createMachine` is used for app state
+- apps register their state machine contributions to the global sketchpad machine
+- kits have specialized stores that use Y.Doc and use `observe` in conjunction with `useSyncExternalStore` to sync the kit data.
+The kit hooks use the kit store for STATE and the global state machine for SETSTATE and CANSETSTATE.
 ```
 
 Consolidate all useHOOKXState into useHOOK. There should never be double hooks but just the useHOOK that internally uses xstate to write (setState) and check if the transition can be taken (canSetState).

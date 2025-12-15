@@ -43,7 +43,7 @@ import {
 } from "@semio/assets";
 import { formatDistanceToNow } from "date-fns";
 import { de, enUS } from "date-fns/locale";
-import { FC, useEffect, useMemo, useRef, useState } from "react";
+import React, { FC, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router";
 import i18n, { useLabel } from "../i18n";
@@ -58,6 +58,7 @@ import {
   useAddFooterItem,
   useAddPanelSection,
   useAppType,
+  useDevice,
   useExpertise,
   useFocus,
   useGetKitKind,
@@ -68,7 +69,6 @@ import {
   useKits,
   useKitShallows,
   useLanguage,
-  useDevice,
   useMode,
   useNavigation,
   useRemoveFooterItem,
@@ -722,6 +722,7 @@ const Home: FC = ({}) => {
   const tooltip = useTooltip();
 
   const selection = homeState?.selection?.kits || [];
+  const lastClickedIdRef = React.useRef<string | null>(null);
 
   const defaultKitName = useLabel("semio.sketchpad.app.kit.defaultName");
   const newVersionLabel = useLabel("semio.sketchpad.app.kit.newVersion");
@@ -1247,9 +1248,8 @@ const Home: FC = ({}) => {
   const handleRowClick = (kitId: string, e: React.MouseEvent) => {
     if (e.shiftKey) {
       const currentIndex = rows.findIndex((r) => r.kit?.guid === kitId);
-      if (selection.length > 0) {
-        const lastSelectedId = selection[selection.length - 1];
-        const lastIndex = rows.findIndex((r) => r.kit?.guid === lastSelectedId);
+      if (lastClickedIdRef.current) {
+        const lastIndex = rows.findIndex((r) => r.kit?.guid === lastClickedIdRef.current);
         if (lastIndex !== -1 && currentIndex !== -1) {
           const start = Math.min(lastIndex, currentIndex);
           const end = Math.max(lastIndex, currentIndex);
@@ -1261,15 +1261,19 @@ const Home: FC = ({}) => {
         }
       } else {
         homeCommands.selectKit("semio.sketchpad.app.home.canvas.table.selectKitShift", kitId);
+        lastClickedIdRef.current = kitId;
       }
+      // Don't update lastClickedIdRef for shift-clicks - keep the anchor stable
     } else if (e.metaKey || e.ctrlKey) {
       if (selection.includes(kitId)) {
         homeCommands.removeKitFromSelection("semio.sketchpad.app.home.canvas.table.removeKitCtrl", kitId);
       } else {
         homeCommands.addKitToSelection("semio.sketchpad.app.home.canvas.table.addKitCtrl", kitId);
       }
+      // Don't update lastClickedIdRef for ctrl/cmd clicks
     } else {
       homeCommands.selectKit("semio.sketchpad.app.home.canvas.table.selectKit", kitId);
+      lastClickedIdRef.current = kitId;
     }
   };
 

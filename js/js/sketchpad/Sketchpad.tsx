@@ -7053,15 +7053,15 @@ export function useKitFolders(guid?: Guid): Folder[] {
 }
 
 export function useKitInterfaces(guid?: Guid): Interface[] {
-  return useKit(selectInterfaces, guid) as Interface[];
+  return useKit(selectInterfaces, guid, true) as Interface[];
 }
 
 export function useKitTags(guid?: Guid): Tag[] {
-  return useKit(selectTags, guid) as Tag[];
+  return useKit(selectTags, guid, true) as Tag[];
 }
 
 export function useKitConcepts(guid?: Guid): Concept[] {
-  return useKit(selectConcepts, guid) as Concept[];
+  return useKit(selectConcepts, guid, true) as Concept[];
 }
 
 export function useTypeFromKit(typeGuid: Guid, kitGuid?: Guid): Type | undefined {
@@ -8417,13 +8417,14 @@ export const sketchpadMachine = setup({
       const result = executeEventHandler(context, event);
       if (Object.keys(result).length > 0) return result;
       // Fallback: derive action name from event type (e.g., "HOME.TOGGLE_PANEL" -> "homeTogglePanel")
+      // Split by "." to get namespace and action parts, then convert SCREAMING_SNAKE_CASE to camelCase
       const parts = event.type.split(".");
       if (parts.length >= 2) {
         const namespace = parts[0].toLowerCase();
-        const action = parts
-          .slice(1)
-          .map((p: string, i: number) => (i === 0 ? p.toLowerCase() : p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()))
-          .join("");
+        // Convert action parts from SCREAMING_SNAKE_CASE to camelCase
+        // e.g., "TOGGLE_PANEL" -> "togglePanel", "SET_PANEL_VISIBILITY" -> "setPanelVisibility"
+        const actionParts = parts.slice(1).join("_").split("_");
+        const action = actionParts.map((p: string, i: number) => (i === 0 ? p.toLowerCase() : p.charAt(0).toUpperCase() + p.slice(1).toLowerCase())).join("");
         const actionName = namespace + action.charAt(0).toUpperCase() + action.slice(1);
         return executeRuntimeAction(actionName, context, event);
       }
@@ -8643,7 +8644,6 @@ export const sketchpadMachine = setup({
     id: input.id,
     sketchpad: mergeSketchpadState(createDefaultSketchpadState(input.id), input.initialState),
     kits: {},
-    // All app state is pure in-memory XState
     homeApp: {
       panelVisibility: defaultPanelVisibility,
       selection: undefined,
@@ -8669,7 +8669,6 @@ export const sketchpadMachine = setup({
     // Background operations track async tasks that continue when navigating away
     backgroundOperations: {},
   }),
-  // Global events available in all states
   on: {
     // Navigation events
     NAVIGATE: {
@@ -8734,6 +8733,10 @@ export const sketchpadMachine = setup({
     "BACKGROUND.START": { actions: "backgroundStart" },
     "BACKGROUND.COMPLETE": { actions: "backgroundComplete" },
     "BACKGROUND.FAIL": { actions: "backgroundFail" },
+    // Wildcard handler at root level to catch all app-specific events
+    // This ensures events like HOME.*, KIT.*, DESIGN.*, TYPE.*, QUALITY.* are dispatched
+    // Apps register handlers via registerEventHandler() which are looked up by event.type
+    "*": { actions: "dispatchAppEvent" },
   },
   states: {
     // Navigation state - hierarchical states for app navigation
@@ -8741,42 +8744,17 @@ export const sketchpadMachine = setup({
       initial: "home",
       states: {
         // Home state - kit selection and global settings
-        // Uses wildcard "*" to accept ANY event - apps register handlers via registerEventHandler
-        home: {
-          on: {
-            "*": { actions: "dispatchAppEvent" },
-          },
-        },
+        home: {},
         // Kit state - browsing types, designs, files within a kit
-        kit: {
-          on: {
-            "*": { actions: "dispatchAppEvent" },
-          },
-        },
+        kit: {},
         // Design state - editing a design with pieces and connections
-        design: {
-          on: {
-            "*": { actions: "dispatchAppEvent" },
-          },
-        },
+        design: {},
         // Type state - editing a type with ports and models
-        type: {
-          on: {
-            "*": { actions: "dispatchAppEvent" },
-          },
-        },
+        type: {},
         // Quality state - editing a quality with benchmarks
-        quality: {
-          on: {
-            "*": { actions: "dispatchAppEvent" },
-          },
-        },
+        quality: {},
         // Docs state - viewing documentation
-        docs: {
-          on: {
-            "*": { actions: "dispatchAppEvent" },
-          },
-        },
+        docs: {},
       },
     },
   },
@@ -9287,9 +9265,11 @@ export function useIsPieceHovered(): boolean {
 
 export function useIsPieceTransitiveHovered(): boolean {
   const pieceScope = usePieceScope();
-  if (!pieceScope) return false;
   const { useDesignAppIsPieceTransitiveHovered } = getDesignAppHooks();
-  return useDesignAppIsPieceTransitiveHovered(undefined, pieceScope.guid);
+  // Hook must be called unconditionally to follow React's rules of hooks
+  const isHovered = useDesignAppIsPieceTransitiveHovered(undefined, pieceScope?.guid ?? "");
+  if (!pieceScope) return false;
+  return isHovered;
 }
 
 export function usePieceStatus(): DiffStatus {

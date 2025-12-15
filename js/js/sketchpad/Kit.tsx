@@ -4072,7 +4072,7 @@ const AppContent: FC = () => {
       // Select all items at once via XState
       setSelectionAction?.(selectedByKind);
 
-      lastClickedIndexRef.current = index;
+      // Don't update lastClickedIndexRef for shift-clicks - keep the anchor stable
       return;
     }
 

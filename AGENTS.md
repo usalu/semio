@@ -4,11 +4,27 @@ IMPORTANT:
 
 - The codebase in under design and development and not used in production yet. There are many inconsistencies that need to be refactored. ALWAYS use clean mechanisms that might require large refactorings and NEVER care about backwards compatibility.
 - For every task you are working on, you MUST create or update a markdown log using `npx tsx scripts/log.ts create SLUG "Summary" --model=MODEL --prompt="User prompt..."`. Logs are stored in `log/YEAR/MONTH/DAY/SLUG.md` with YAML frontmatter. The script automatically creates three sections to be filled/updated during execution of the task: `# Previously`, `# Plan`, and `#Changes`.The purpose of the log is to understand the context, problem and decision making process. It is only about the process.
-- For every task you are working on, you MUST update the dev docs (`README.md` and `AGENTS.md`). Every key decision and mechanism ALWAYS needs to be documemented. The purpose of the dev docs is to understand the codebase. NEVER add reasoning or process related (such as what changed, why, how, … - this is part of the log) to the dev docs.
+- For every task you are working on, you MUST update the dev docs (`README.md` and `AGENTS.md`). Every key decision and mechanism ALWAYS needs to be documemented. Every feature, decision MUST be undocumented/uncommented in the code and MUST be documented in the dev docs (AGENTS.md and README.md). The documentation ALWAYS happens four times:
 
-# Specs
+1. Under `# 🛍️ Products` in README.md where it is described from user perspective [architects, designers, engineers, …] (framework-agnostic, no implementation references, etc)
+2. Under `# 📦 Components` in README.md where it is described from junior-developer perspective (mechanism explanation and reasoning behind the decision, how theory links to implementation, etc).
+3. Under `# Software Requirements Specification` in AGENTS.md where it is described from human-interface-designer perspective (concise technical terms without explanation, framework-agnostic, no implementation references). There are two sections: `# Business Logic` and `# UI/UX`.
+4. Under `# Codebase` in AGENTS.md where it is described from senior-developer perspective (framework-mechanisms, consice technical terms without explanation, implementation details, etc). The section has the same header structure as the files and folders. All files and folders are flat with `## PATH` e.g. `## js/js/sketchpad/` or `## net/Semio.cs`
+   The purpose of the dev docs is to understand the codebase. NEVER add reasoning or process related (such as what changed, why, how, … - this is part of the log) to the dev docs.
 
-## Kit
+# Software Requirements Specification
+
+## Business Logic
+
+### Code Hygiene
+
+Source files MUST include an SPDX license header.
+
+Source files MUST NOT include inline comments except for license headers and region markers.
+
+Region blocks MUST be properly nested and MUST be closed with a matching named end marker.
+
+### Kit
 
 A `kit` is a collection of `types`, `designs`, `authors`, `qualities`, `attributes`, and `concepts`.
 
@@ -20,7 +36,7 @@ The SQL-schema of `kit.db` is found in `./sql/sqlite/schema.sql`.
 
 For Inter-Process-Communication (IPC) the JSON-schema in `./jsonschema/kit.json` is used.
 
-## Design
+### Design
 
 A `design` is an undirected graph of `pieces` (nodes) and `connections` (edges) with organizational `layers`, `groups`, `stats`, `attributes`, and `concepts`.
 
@@ -34,7 +50,7 @@ The `pieces` are _placed_ _hierarchically_ (breadth-first) for every _component_
 
 Additional `connections` which where not used in the _placement_ can be used to validate the computed `planes`.
 
-## Type
+### Type
 
 A `type` is a reusable component with different `models`, `ports`, `attributes`, `concepts`, and `authors`.
 
@@ -44,7 +60,7 @@ The _childen_ of a _parent_ `type` are _subtypes_.
 
 A `type` can be **virtual** (intermediate type requiring other virtual types to form a physical type), **scalable**, and **mirrorable** with **stock** quantity, **unit**, and optional **location**.
 
-## Connection
+### Connection
 
 A `connection` is a 3D-Link between two `pieces` with the _translation_ parameters **gap** (offset in y-direction), **shift** (offset in x-direction) and **rise** (offset in z-direction), and the _rotation_ parameters **rotation** (rotation around y-axis), **turn** (rotation around z-axis) and **tilt** (rotation around x-axis).
 
@@ -56,7 +72,7 @@ The _direction_ of a `connection` goes from the lower _hierarchy_ to the higher 
 
 A `connection` can have `attributes` and diagram positioning with **u** and **v** offsets.
 
-## Piece
+### Piece
 
 A `piece` is an instance of either a `type` or a `design` with **id**, optional **name**, optional **description**, optional **plane**, **center** position, **scale**, optional **mirror plane**, **hidden** and **locked** states, **color**, and `attributes`.
 
@@ -66,7 +82,7 @@ A group of _connected_ `pieces` is called a _component_.
 
 The _hierarchy_ of a `piece` is the length of the shortest path to the next _fixed_ `piece`.
 
-## Port
+### Port
 
 A `port` is a conceptual connection **point** with an outwards **direction**, **id**, optional **name**, optional **description**, and **t** value for diagram ring positioning.
 
@@ -80,7 +96,7 @@ Port compatibility is determined by the `interface` definitions at the kit level
 
 A `port` can have `props` that define measurable characteristics and `attributes` for additional metadata.
 
-## Model
+### Model
 
 A `model` is a **guid**, optional **name**, **file** reference (FileId), optional **tags** (TagId references), optional **description**, and `attributes`.
 
@@ -90,19 +106,15 @@ The **tags** are optional references to kit-level `tag` entities via `TagId` (gu
 
 The similarity of `models` is determined by the jaccard index of their **tag** guids.
 
-### Supported 3D File Extensions
+##### Supported 3D File Extensions
 
-Model files should use supported 3D formats. The `SUPPORTED_3D_EXTENSIONS` constant in `semio.ts` lists all supported formats including: `gltf`, `glb`, `fbx`, `obj`, `dae`, `3ds`, `stl`, `ply`, `usdz`, `vrm`, `ifc`, `3mf`, and more. Use `validateModelFile(filename)` to check if a file extension is supported.
+Model files should use supported 3D formats including: `gltf`, `glb`, `fbx`, `obj`, `dae`, `3ds`, `stl`, `ply`, `usdz`, `vrm`, `ifc`, `3mf`, and more.
 
-### Model Tag Selection
+##### Model Tag Selection
 
-In **Type app** and **Design app**, the footer displays all tag names from the type's/design's models. Clicking a tag toggles its selection. The model with the highest Jaccard index matching the selected tags is displayed in the scene. This is implemented via:
+The footer displays all tag names from the type's/design's models. Clicking a tag toggles its selection. The model with the highest Jaccard index matching the selected tags is displayed in the scene.
 
-- `TypeAppFooter` and `DesignAppFooter` components showing clickable tag names
-- `selectBestModel(models, selectedTagGuids)` function to find the best matching model
-- `selectedModelTags` state tracked per type (in Design app: `Record<Guid, string[]>` mapping type guids to selected tag guids)
-
-## Attribute
+### Attribute
 
 A `attribute` is metadata with a unique **name**, an optional **value**, an optional **unit** and an optional **definition** (`url` or text).
 
@@ -127,31 +139,31 @@ The **unit** is a unit identifier.
 
 A list of attributes is semantically equivalent to nested dictionaries where the key is the **name** and the value is the **value**.
 
-## Tag
+### Tag
 
 A `tag` is a kit-level entity with a unique **guid**, **name**, optional **description**, optional **icon**, and `attributes`.
 
 Tags are used to categorize and filter `models` within a `type`. A `model` references tags via `TagId` (guid reference).
 
-## Concept
+### Concept
 
 A `concept` is a kit-level entity with a unique **guid**, **name**, optional **description**, optional **icon**, and `attributes`.
 
 Concepts provide semantic grouping for `types` and `designs`. Types and designs reference concepts via `ConceptId` (guid reference).
 
-## Plane
+### Plane
 
 A `plane` is a location (**origin**) and orientation (**x-axis**, **y-axis** and derived z-axis) in 3D space.
 
 The coordinate system is left-handed where the thumb points up into the direction of the z-axis, the index-finger forwards into the direction of the y-axis and the middle-finger points to the right into the direction of the x-axis.
 
-## Url
+### Url
 
 A `url` is either _relative_ (to the root of the `.zip` file) or _remote_ (http, https, ftp, ...) string.
 
 A _relative_ `url` is a `/`-normalized path to a file in the `.zip` file and is not prefixed with with `.`, `./`, `/`, ....
 
-## Quality
+### Quality
 
 A `quality` is a measurement definition with a **key**, **name**, **description**, **kind** (General, Design, Type, Piece, Connection, Port), **unit information** (SI and Imperial), **range constraints** (min/max with exclusion flags), **default value**, and optional **formula**.
 
@@ -159,13 +171,13 @@ A `quality` can be **scalable** (adjusts with piece scaling) and have multiple *
 
 The **kind** determines which entities the quality can be applied to using a bitwise enum system.
 
-## Benchmark
+### Benchmark
 
 A `benchmark` is a performance standard within a `quality` with a **name**, optional **icon**, and **range** (min/max with exclusion flags).
 
 Benchmarks provide reference points for evaluating quality measurements against industry or design standards.
 
-## Interface
+### Interface
 
 An `interface` is a port compatibility definition with **name**, optional **description**, optional **icon**, optional list of **compatible interfaces** (InterfaceId references), and `attributes`.
 
@@ -180,41 +192,45 @@ Two ports are compatible if:
 - One interface's compatible list includes the other interface's guid
 - Either interface has an empty compatible list and the other explicitly allows it
 
-## Concept
+### Concept
 
 A `concept` is a **name** and **order** pair that provides semantic grouping for `kits`, `types`, or `designs`.
 
 Concepts enable hierarchical organization and categorization of design elements beyond simple naming.
 
-## Author
+### Author
 
 An `author` has a **name** and **email** and can be associated with `kits`, `types`, or `designs` with a **rank** indicating contribution level.
 
 Authors provide attribution and contact information for design ownership and collaboration.
 
-## Layer
+### Layer
 
 A `layer` is an organizational grouping within a `design` with a **name**, optional **description**, and **color** for visual organization.
 
 Layers provide a way to group and manage pieces logically within complex designs.
 
-## Group
+### Group
 
 A `group` is a collection of `pieces` within a `design` with optional **name**, **description**, **color**, and **attributes**.
 
 Groups enable semantic clustering of pieces that belong together functionally or conceptually.
 
-## Prop
+### Prop
 
 A `prop` is a **key-value** pair on a `port` that references a `quality` with a specific **value** and optional **unit**.
 
 Props define measurable characteristics of ports using the quality system for standardized measurement.
 
-## Stat
+### Stat
 
 A `stat` is a statistical measurement on a `design` that references a `quality` with **range** (min/max) and optional **unit**.
 
 Stats provide computed or measured performance data for entire designs using the quality framework.
+
+## UI/UX
+
+### Sketchpad
 
 # Monorepo
 
@@ -224,15 +240,7 @@ Stats provide computed or measured performance data for entire designs using the
 - If a release receives updates after `main` already progressed, create a parallel `release/rYY.MM-V` branch for that release and keep it compressed as well.
 - Commit messages follow `MAIN-TASK-SYMBOL SUMMARY WORK-SYMBOL` where `WORK-SYMBOL` is one of `🪛` < `🔨` < `🛠️` < `🏗️`.
 
-## AI
-
-- Tool choice is based on billing model (request-based vs token-based), required context size, and whether a workflow benefits from MCP (e.g. Playwright).
-- Default tools: Copilot (most tickets), Windsurf (token-heavy TDD + MCP), Claude Code (small bugs), Cursor (main editor + docs), Codex (simple tasks).
-- Default model for agent work: `claude-opus-4.5`. Alternative: `gpt-5.2-codex`.
-
-## Rules
-
-### General
+**Rules:**
 
 - ALWAYS document mechanisms technicallly in `AGENTS.md` and in `README.md`. Those documents NEVER keep a log and ALWAYS show the current state of the codebase.
 - ALWAYS finish everything without asking in between.
@@ -275,7 +283,7 @@ Stats provide computed or measured performance data for entire designs using the
 - ALWAYS run specific tests and NEVER use default interactive test mode that creates a never ending process.
 - NEVER say that a test is passing when you didn't run it. ALWAYS run the test and check the report.
 
-### Keywords
+## Keywords
 
 Whenever a keyword is used, ALWAYS directly proceed with the task and NEVER ask for approval.
 
@@ -298,7 +306,7 @@ Whenever a keyword is used, ALWAYS directly proceed with the task and NEVER ask 
 ### Commands
 
 - `npm run fix` runs `hooks/prettier.ts` and `hooks/ruff.ts`.
-- `npm run analyze` runs `hooks/i18n.ts`, `hooks/typescript.ts`, and `hooks/eslint.ts`.
+- `npm run analyze` runs `hooks/i18n.ts`, `hooks/typescript.ts`, and `hooks/eslint.ts` (including `reports/code.json`).
 - `npm run preflight` runs `fix` and `analyze` (in that order).
 - `npm run test` runs `preflight` and then `nx run-many -t test`.
 - `npm run build` runs `test` and then `nx run-many -t build`.
@@ -329,6 +337,7 @@ npm install  # Husky will auto-install via prepare script
 1. **i18n Validation** - Validates translation keys and completeness
 2. **TypeScript** - Type checking
 3. **ESLint** - JavaScript/TypeScript linting
+4. **Code** - Codebase scan (comments, license headers, regions)
 
 ### Reports
 
@@ -336,6 +345,7 @@ Linters generate JSON reports in `reports/`:
 
 - `reports/i18n.json` - i18n translation validation
 - `reports/eslint.json` - ESLint linting issues
+- `reports/code.json` - Codebase code-quality issues
 - `reports/typescript.json` - TypeScript compiler errors
 - `reports/ruff.json` - Python Ruff linting issues
 
@@ -358,7 +368,7 @@ Run linters:
 
 ```bash
 npx tsx hooks/i18n.ts        # i18n validation
-npx tsx hooks/typescript.ts  # TypeScript check
+npx tsx hooks/typescript.ts  # TypeScript check + code report
 npx tsx hooks/eslint.ts      # ESLint check
 ```
 
@@ -1108,7 +1118,7 @@ The tooltip system automatically resolves i18n content from element IDs, adaptin
 - **ActionGroup**: A group of related actions displayed together.
 - **ActionGroupItem**: Items within an ActionGroup that support `icon` and/or `text` props.
 
-## File Structure
+# Codebase
 
 The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNAME | …]? [SUMMARY]?
 
@@ -1133,12 +1143,13 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ ├── i18n.ts # i18n validation hook (generates JSON report)
 │ ├── prettier.ts # Prettier formatter hook (applies formatting)
 │ ├── eslint.ts # ESLint linting hook (generates JSON report)
-│ ├── typescript.ts # TypeScript compiler check hook (generates JSON report)
+│ ├── typescript.ts # TypeScript compiler check + codebase scan hook (generates JSON reports)
 │ └── ruff.ts # Python Ruff formatter and linter hook (applies formatting, generates JSON report)
 ├── reports # Generated validation reports (gitignored except README.md)
 │ ├── README.md # Reports documentation
 │ ├── i18n.json # i18n validation report
 │ ├── eslint.json # ESLint linting report
+│ ├── code.json # Codebase code-quality report
 │ ├── typescript.json # TypeScript compiler report
 │ └── ruff.json # Python Ruff linter report
 ├── .vscode
@@ -1399,9 +1410,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 
 In general, if the user talks about an old file, then probably there is the same file with the suffix `*.old` that is the original state.
 
-# Ecosystems
-
-## js
+## js/
 
 Javascript code with shared core (@semio/js) that uses storybook and exports a handful of React components (Sketchpad, Diagram, Model) for both web-based and desktop-based environments, a documentation (@semio/docs) that uses astro with starlight and mdx, and desktop (@semio/desktop) that runs in electron.
 
@@ -1417,50 +1426,7 @@ Javascript code with shared core (@semio/js) that uses storybook and exports a h
 - The ui consists of a three horizontal strips: navbar, canvas and footer. A canvas consists of windows. On top of the canvas are panels which can toggled on and off.
 - Navbar panel toggles always order panels as Details, Chat, then Settings for every app.
 
-## net
-
-C# code with the core library (`Semio.cs`) and Grasshopper plugin (`Semio.Grasshopper.cs`).
-
-### Semio.cs
-
-Core library containing all model definitions, validation, serialization, and the Meta class for reflection-based metadata.
-
-### Semio.Grasshopper.cs
-
-Grasshopper plugin providing components for constructing, deconstructing, and modifying Semio models.
-
-#### Architecture
-
-The plugin uses a component hierarchy with base classes that provide default behavior:
-
-- **`ModelComponent<TParam, TGoo, TModel>`**: Base class for model components with virtual methods for customization
-- **`IdComponent`**, **`DiffComponent`**: Specialized base classes for Id and Diff model types
-- **`SerializeComponent`**, **`DeserializeComponent`**: Base classes for serialization components
-
-#### Component Structure
-
-Each model type has a set of classes:
-
-- **`*Goo`**: Grasshopper wrapper for the model type with cast methods
-- **`*Param`**: Grasshopper parameter definition
-- **`*Component`**: Main model component for construct/deconstruct/modify
-- **`Serialize*Component`**: JSON serialization component
-- **`Deserialize*Component`**: JSON deserialization component
-
-#### Hardcoded Parameters
-
-Components use virtual methods to define their inputs/outputs:
-
-- `RegisterModelInputParams(pManager)`: Define input parameters
-- `RegisterModelOutputParams(pManager)`: Define output parameters
-- `GetModelData(DA, model)`: Read input data into model
-- `SetModelData(DA, model)`: Write model data to outputs
-
-Components can override these to hardcode their parameter structure, ensuring stable input/output definitions across schema changes.
-
-# Packages
-
-## @semio/js
+## js/js/
 
 Shared react components. The main component is Sketchpad. Sketchpad is used in three different szenarios:
 
@@ -1469,9 +1435,7 @@ Shared react components. The main component is Sketchpad. Sketchpad is used in t
 3. As user mode in a desktop app (electron).
    Sketchpad has a local store in yjs which syncs with indexeddb and the backend provider.
 
-### Rules
-
-#### General
+**Rules:**
 
 - Domain logic is ALWAYS in semio.ts and whenever an operation is not ui bound, it should be implemented there.
 - **State Management Architecture**: XState is the SINGLE SOURCE OF TRUTH for all UI state. Yjs is ONLY used for collaborative Kit data (types, designs, etc.). React components read state via `useSelector(actor, ...)` and send events via `actor.send({type: ...})`. NO Yjs in React components.
@@ -1557,14 +1521,172 @@ Shared react components. The main component is Sketchpad. Sketchpad is used in t
 - There is a transaction mechanism for kits. Every app transaction is an extended kit transaction. The undo redo manager is on app level and stores the diff of the transaction along with the app state. This way undo redo works even when the kit changes because only the diff is stored. The inverted diff is stored along with the diff to enable relative undo redo.
 - NEVER use direct strings or `useTranslation` for displaying text. ALWAYS assign an `id` the ui element and use i18n keys which match the id.
 - The code runs in different environments (different browsers, electron, mobile/desktop/tablet). Platform-specific functionality MUST be generalized and provided as props to Sketchpad. NEVER hardcode platform-specific behavior or APIs directly in components.
+- Model tag selection is implemented via `TypeAppFooter` and `DesignAppFooter` components showing clickable tag names, the `selectBestModel(models, selectedTagGuids)` function to find the best matching model, and `selectedModelTags` state tracked per type (in Design app: `Record<Guid, string[]>` mapping type guids to selected tag guids).
+- `SUPPORTED_3D_EXTENSIONS` constant in `semio.ts` lists all supported 3D formats. Use `validateModelFile(filename)` to check if a file extension is supported.
 
 The former `Canvas`, `Navbar`, `Footer`, `Panel`, and `store` modules now live inside `js/js/sketchpad/Sketchpad.tsx`. Keep the region order intact when modifying this file so downstream imports continue to work.
 
-#### Architecture - Open-Closed Principle
+### Architecture - Open-Closed Principle
 
 The codebase follows the Open-Closed Principle (OCP): closed for modification, open for extension. Adding new features ONLY requires adding new files/folders, NEVER modifying existing ones.
 
-##### App Structure Standards
+### Sketchpad App Plugin Architecture
+
+The sketchpad uses a plugin-based architecture for apps. Each app (Home, Kit, Type, Design, Quality, Docs) registers itself via the `AppPlugin` system, enabling open/closed extensibility.
+
+#### Plugin Structure
+
+Each app plugin provides:
+
+- **id**: Unique identifier (e.g., "home", "kit", "type", "design")
+- **namespace**: Event prefix (e.g., "HOME", "KIT", "TYPE", "DESIGN")
+- **machine**: XState machine contributions (actions, guards, eventHandlers, selectors)
+- **createDefaultState**: Factory for initial app state
+- **registerStores**: Optional store factory registration
+
+##### File Layout
+
+```
+js/js/sketchpad/
+  shared.ts          # AppPlugin interface, registry functions
+  apps/
+    index.ts         # Single import point for all app plugins
+  Home.tsx           # Home app + homeAppPlugin
+  Kit.tsx            # Kit app + kitAppPlugin
+  Type.tsx           # Type app + typeAppPlugin
+  Design.tsx         # Design app + designAppPlugin
+  Quality.tsx        # Quality app + qualityAppPlugin
+  Docs.tsx           # Docs app + docsAppPlugin
+  Sketchpad.tsx      # Main orchestrator, XState machine
+```
+
+##### Plugin Registration
+
+Apps register plugins as a side-effect on module import:
+
+```typescript
+const myAppPlugin: AppPlugin = {
+  id: "myapp",
+  namespace: "MYAPP",
+  machine: {
+    actions: {},
+    guards: {},
+    eventHandlers: {},
+    selectors: {},
+    createDefaultState: () => ({ ... }),
+  },
+};
+
+if (typeof window !== "undefined") {
+  registerAppPlugin(myAppPlugin);
+}
+```
+
+##### Dynamic Event Dispatch
+
+The sketchpad machine uses **dynamic event dispatch** via `dispatchAppEvent` action with **wildcard event handling**. Navigation states use `"*"` wildcard to accept ANY event, which is then dispatched to registered handlers.
+
+**Architecture:**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Sketchpad.tsx (App-Agnostic)                                │
+│                                                             │
+│  sketchpadMachine:                                          │
+│    on: {                                                    │
+│      // Explicit handlers for global events                 │
+│      SET_THEME, SET_LANGUAGE, NAVIGATE, ...                │
+│      // Wildcard at ROOT level catches all app events       │
+│      "*": { actions: "dispatchAppEvent" }                  │
+│    }                                                        │
+│    states:                                                  │
+│      navigation: { home: {}, kit: {}, design: {}, ... }    │
+└─────────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│ shared.ts (Event Registry)                                  │
+│                                                             │
+│  registerEventHandler("HOME.TOGGLE_PANEL", handler)        │
+│  registerEventHandler("KIT.SET_FILTER", handler)           │
+│  executeEventHandler(context, event) → context updates     │
+└─────────────────────────────────────────────────────────────┘
+                           ▲
+                           │
+┌──────────────┬──────────────┬──────────────┬───────────────┐
+│  Home.tsx    │   Kit.tsx    │  Design.tsx  │   Type.tsx    │
+│              │              │              │               │
+│ registerEvent│ registerEvent│ registerEvent│ registerEvent │
+│ Handler(...) │ Handler(...) │ Handler(...) │ Handler(...) │
+└──────────────┴──────────────┴──────────────┴───────────────┘
+```
+
+**Event Handler Registration:**
+
+```typescript
+import { registerEventHandler } from "./shared";
+
+// Register handler for a specific event type
+registerEventHandler("MYAPP.TOGGLE_PANEL", {
+  guard: (context, event) => context.myApp !== undefined, // optional
+  action: (context, event) => ({
+    myApp: {
+      ...context.myApp,
+      panelVisibility: { ...context.myApp.panelVisibility, [event.panel]: !context.myApp.panelVisibility[event.panel] },
+    },
+  }),
+});
+```
+
+**Key Functions:**
+
+- **`registerEventHandler(eventType, config)`**: Registers a handler for a specific event type (e.g., "HOME.TOGGLE_PANEL")
+- **`executeEventHandler(context, event)`**: Looks up and executes the handler for the event type
+- **`dispatchAppEvent` action**: The sketchpad machine action that dispatches events dynamically
+- **Fallback**: If no handler is registered via `registerEventHandler`, falls back to legacy `registerRuntimeAction` handlers
+
+**Benefits:**
+
+- **Open/Closed Principle**: Adding a new app requires NO changes to `Sketchpad.tsx`
+- **Self-contained apps**: Each app file registers its own event handlers
+- **Wildcard handling**: Navigation states accept any event via `"*"` pattern
+- **Guards in handlers**: Guards can be defined in the handler config, not in the machine
+- **Gradual migration**: Existing `registerRuntimeAction` handlers continue to work
+- **Single machine**: Only one `createMachine` call - `uiMachine` has been removed
+
+##### Hook Pattern (Triadic)
+
+All hooks follow the triadic pattern: `[value, setValue, canSetValue]`
+
+- **UI components**: Only use triadic hooks, never access stores directly
+- **Hooks**: Read from stores via subscriptions, write via `actor.send()` XState events
+- **State machine**: Only writer API, accepts contributions from plugins
+- **Stores/commands**: Implementation details behind machine actions
+
+Example:
+
+```typescript
+export function useMyAppSelection(): HookResult<MySelection> {
+  const actor = useSketchpadActor();
+  const canSetEvent = useMemo(() => ({ type: "MYAPP.SET_SELECTION" as const, ... }), [...]);
+  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
+  const setSelection = useMemo(() => {
+    if (!canSet) return undefined;
+    return (value: MySelection) => actor.send({ type: "MYAPP.SET_SELECTION", ... });
+  }, [actor, canSet, ...]);
+  return conditionalHookResult(canSet, selection, setSelection);
+}
+```
+
+##### Adding a New App
+
+1. Create app file with types, state, hooks, and UI components
+2. Define `AppPlugin` with namespace and machine contributions
+3. Register plugin: `registerAppPlugin(myAppPlugin)`
+4. Import app module in `apps/index.ts`
+5. No edits to `Sketchpad.tsx` required (open/closed principle)
+
+####### App Structure Standards
 
 All apps in `js/js/sketchpad/*App.tsx` (Design.tsx, Home.tsx, Kit.tsx, Quality.tsx, Type.tsx, Docs.tsx) MUST follow this structure:
 
@@ -1578,7 +1700,7 @@ All apps in `js/js/sketchpad/*App.tsx` (Design.tsx, Home.tsx, Kit.tsx, Quality.t
 
 See `REFACTOR.md` for detailed rationale and migration guide.
 
-##### Adding a New App
+####### Adding a New App
 
 To add a new app:
 
@@ -1613,7 +1735,200 @@ export const config: AppConfig = {
 export default App;
 ```
 
-##### Adding a New Tool
+##### Sketchpad Apps
+
+###### Home App (Home.tsx)
+
+Landing page for kit management. Extends `AppStore` (no kit modifications).
+
+**State (`HomeState`):**
+
+- `panelVisibility` - Panel toggle states
+- `selection` - Selected kit GUIDs
+- `sortColumn` / `sortDirection` - Sorting preferences
+- `loadingKits` - Kits currently being loaded
+
+**Events:**
+
+- `HOME.TOGGLE_PANEL` - Toggle panel visibility
+- `HOME.SET_PANEL_VISIBILITY` - Set all panel states
+- `HOME.SELECT_KIT` / `HOME.DESELECT_KIT` - Kit selection
+- `HOME.SET_SORT` - Change sorting
+
+**Hooks:**
+
+- `useHomeApp()` - Full home app state
+- `useHomeSelection()` - Selected kits
+- `useHomeLoadingKits()` - Loading state
+- `useHomePanelVisibility()` - Panel visibility
+
+###### Kit App (Kit.tsx)
+
+Kit artifact management. Extends `KitDiffAppStore` (modifies kit data).
+
+**State (`KitAppState`):**
+
+- `panelVisibility` - Panel toggle states
+- `selection` - Selected artifacts (types, designs, qualities, interfaces, tags, concepts, files, folders, authors)
+- `hover` - Hovered artifact
+- `filterSearch` - Search filter string
+- `expandedRows` - Expanded table rows
+- `sortColumn` / `sortDirection` - Sorting preferences
+
+**Selection Types:** Types, designs, qualities, interfaces, tags, concepts, files, folders, authors
+
+**Events:**
+
+- `KIT.TOGGLE_PANEL` - Toggle panel visibility
+- `KIT.SELECT_TYPE` / `KIT.DESELECT_TYPE` - Type selection
+- `KIT.SELECT_DESIGN` / `KIT.DESELECT_DESIGN` - Design selection
+- `KIT.SET_HOVER` - Set hover state
+- `KIT.SET_FILTER_SEARCH` - Update search filter
+- `KIT.SET_EXPANDED_ROWS` - Expand/collapse rows
+- `KIT.CREATE_TYPE` / `KIT.CREATE_DESIGN` / `KIT.CREATE_QUALITY` - Create artifacts
+
+**Hooks:**
+
+- `useKitApp()` - Full kit app state
+- `useKitAppSelection()` - Current selection
+- `useKitAppHover()` - Hover state
+- `useKitAppFilterSearch()` - Filter string
+
+###### Type App (Type.tsx)
+
+Type editing (ports, models). Extends `KitDiffAppStore`.
+
+**State (`TypeAppState`):**
+
+- `panelVisibility` - Panel toggle states
+- `activeTool` - Current tool (selection, etc.)
+- `selection` - Selected ports/models
+- `hover` - Hovered port/model
+- `camera` - 3D camera state
+- `focusedPortGuid` - Port being edited
+- `selectedModelGuid` - Active model
+- `selectedModelTags` - Tags for model selection
+- `fullscreenWindow` - Fullscreen mode
+- `windowLayout` - Window arrangement
+
+**Events:**
+
+- `TYPE.TOGGLE_PANEL` - Toggle panel visibility
+- `TYPE.SET_TOOL` - Change active tool
+- `TYPE.SELECT_PORT` / `TYPE.DESELECT_PORT` - Port selection
+- `TYPE.SELECT_MODEL` / `TYPE.DESELECT_MODEL` - Model selection
+- `TYPE.SET_HOVER` - Set hover state
+- `TYPE.SET_CAMERA` - Update camera
+- `TYPE.SET_SELECTED_MODEL_TAGS` - Model tag selection
+
+**Hooks:**
+
+- `useTypeApp()` - Full type app state
+- `useTypeAppSelection()` - Current selection
+- `useTypeAppHover()` - Hover state
+- `useTypeAppCamera()` - Camera state
+- `useTypeAppActiveTool()` - Active tool
+
+###### Design App (Design.tsx)
+
+Design editing (pieces, connections). Extends `KitDiffAppStore`.
+
+**State (`DesignAppState`):**
+
+- `panelVisibility` - Panel toggle states
+- `activeTool` - Current tool (selection, connection, etc.)
+- `selection` - Selected pieces/connections/port
+- `hover` - Hovered pieces/connections/ports/types/designs
+- `camera` - 3D camera state
+- `diagramCenter` / `diagramScale` - 2D diagram view
+- `focusedPieceGuid` - Piece being edited
+- `selectedModelTags` - Model tags per type (`Record<Guid, string[]>`)
+- `fullscreenWindow` - Fullscreen mode
+- `windowLayout` - Window arrangement
+
+**Selection Types:** Pieces, connections, port (single port selection for connection)
+
+**Events:**
+
+- `DESIGN.TOGGLE_PANEL` - Toggle panel visibility
+- `DESIGN.SET_TOOL` - Change active tool
+- `DESIGN.SELECT_PIECE` / `DESIGN.DESELECT_PIECE` - Piece selection
+- `DESIGN.SELECT_CONNECTION` / `DESIGN.DESELECT_CONNECTION` - Connection selection
+- `DESIGN.SET_HOVER` - Set hover state
+- `DESIGN.SET_CAMERA` - Update 3D camera
+- `DESIGN.SET_DIAGRAM_CENTER` / `DESIGN.SET_DIAGRAM_SCALE` - 2D diagram view
+- `DESIGN.DELETE_SELECTED` - Delete selected elements
+- `DESIGN.SET_SELECTED_MODEL_TAGS` - Model tag selection per type
+
+**Commands:**
+
+- `semio.designApp.selectAll` - Select all pieces and connections
+- `semio.designApp.deselectAll` - Clear selection
+- `semio.designApp.deleteSelected` - Delete selected elements
+
+**Hooks:**
+
+- `useDesignApp()` - Full design app state
+- `useDesignAppSelection()` - Current selection
+- `useDesignAppHover()` - Hover state
+- `useDesignAppCamera()` - 3D camera
+- `useDesignAppActiveTool()` - Active tool
+- `useDesignAppDiagramCenter()` / `useDesignAppDiagramScale()` - Diagram view
+
+###### Quality App (Quality.tsx)
+
+Quality/benchmark editing with formula visualization. Extends `KitDiffAppStore`.
+
+**State (`QualityAppState`):**
+
+- `panelVisibility` - Panel toggle states
+- `activeTool` - Current tool
+- `selection` - Selected formula nodes
+- `hover` - Hovered formula node
+- `formulaNodes` - Parsed formula tree
+- `fullscreenWindow` - Fullscreen mode
+- `windowLayout` - Window arrangement
+
+**Formula Functions:** Numeric (Add, Subtract, Multiply, Divide, ...), Branching (If, Switch, ...), Data (Min, Max, Avg, ...), Text, Comparison
+
+**Events:**
+
+- `QUALITY.TOGGLE_PANEL` - Toggle panel visibility
+- `QUALITY.SET_TOOL` - Change active tool
+- `QUALITY.SELECT_FORMULA_NODE` / `QUALITY.DESELECT_FORMULA_NODE` - Node selection
+- `QUALITY.SET_HOVER` - Set hover state
+
+**Hooks:**
+
+- `useQualityApp()` - Full quality app state
+- `useQualityAppSelection()` - Current selection
+- `useQualityAppHover()` - Hover state
+
+###### Docs App (Docs.tsx)
+
+In-app documentation viewer with MDX support.
+
+**Features:**
+
+- MDX file loading from `./pages/**/*.mdx`
+- Section-based navigation
+- Heading extraction for table of contents
+- Tab components for content organization
+
+**MDX Loading:**
+
+- `loadMDXFile(path)` - Load single MDX file
+- `getAllMDXFiles()` - List all MDX files
+- `getMDXFilesBySection(section)` - Files in a section
+- `getAllSections()` - All available sections
+
+**Heading State:**
+
+- `useHeadings()` - Subscribe to heading updates
+- `headingsState.registerHeading(id, level, text)` - Register heading
+- `headingsState.setActiveHeading(id)` - Set active heading
+
+####### Adding a New Tool
 
 To add a new tool to an app:
 
@@ -1633,7 +1948,7 @@ export const MyTool: Tool<MyAppState> = {
 };
 ```
 
-##### Adding Panel Sections
+####### Adding Panel Sections
 
 Panel sections are dynamically added in the app's `useEffect`:
 
@@ -1656,7 +1971,7 @@ Rules:
 2. Always `removeSection` for every id you `addSection` (including conditional variants) in the effect cleanup.
 3. If the section content uses scope-bound hooks (`useKit()`, `useDesign()`, `useType()`), wrap `content` with the corresponding `*ScopeProvider` when registering the section.
 
-##### Tutorials
+####### Tutorials
 
 The tutorial system is consolidated in `js/js/sketchpad/Tutorials.tsx` and is split into regions for types, store, commands, built-in tutorials, and UI components. `TutorialStore` wraps a Y.js map and keeps playback, milestone ordering, and recording state (`TutorialPlaybackState`, `TutorialRecordingState`). Always create the store with the app transaction handler so tutorial mutations participate in undo/redo.
 
@@ -1666,7 +1981,7 @@ Tutorial commands are consolidated in `Tutorials.tsx` under the `tutorialCommand
 
 All tutorial-related code (types, store, commands, UI components, and built-in tutorials) is now in a single file using regions for organization instead of being spread across multiple files in a separate folder.
 
-##### Footer
+####### Footer
 
 `FooterItemProvider` wraps `Sketchpad` so apps can register footer entries with `useAddFooterItem` and remove them via `useRemoveFooterItem`; the provider keeps items ordered by the optional `order` field.
 
@@ -1676,7 +1991,7 @@ Providing an `id` shows the translated `DescriptionTooltipContent`, and the base
 
 The shared `Footer` component has a fixed `h-medium` height.
 
-#### Styling
+##### Styling
 
 - NEVER use colors and spacing directly. ALWAYS use semantic variables from `global.css`. Only `global.css` uses colors and pixels directly.
 - NEVER add semantic values and ALWAYS use hardcoded values in `theme.css`. NEVER use `theme.css` outside of `global.css`.
@@ -1691,7 +2006,7 @@ The shared `Footer` component has a fixed `h-medium` height.
   - Giga: 15 units - reserved for future use (e.g. `w-giga`)
 - Table body cells MUST NOT add vertical padding; `Table` centers cell content and uses `px-single py-0` so `h-medium` rows stay fixed even when rendering `h-medium` controls.
 
-### Store Architecture
+##### Store Architecture
 
 This document describes the generalized store hierarchy for the Semio application.
 
@@ -1802,7 +2117,7 @@ Each edit stores:
 - **do**: Forward diff to apply the change
 - **undo**: Inverse diff to revert the change
 
-### Abstract Methods (in addition to Store)
+#### Abstract Methods (in addition to Store)
 
 - `applySelectionDiff(selectionDiff: TSelectionDiff): void` - Apply selection changes to Y.js
 - `inverseSelectionDiff(selection, diff): TSelectionDiff` - Calculate inverse diff for undo
@@ -1960,7 +2275,7 @@ executeCommand<T>(command: string, ...args): Promise<T>
 - `js/js/sketchpad/Kit.tsx` create actions for `interfaces`, `tags`, `concepts`, and `folders` set the active `kind` filter and selection to the newly created entity.
 - Default names are resolved via i18n labels: `semio.sketchpad.app.interface.defaultName`, `semio.sketchpad.app.tag.defaultName`, `semio.sketchpad.app.concept.defaultName`.
 
-### XState State Machines
+#### XState State Machines
 
 The application uses XState v5 for all Sketchpad UI state. Y.js is reserved for collaborative Kit data.
 
@@ -2104,7 +2419,7 @@ backgroundOperations: Record<
 
 These continue even when navigating away from the originating app.
 
-### Command System
+#### Command System
 
 All state mutations are executed through commands. Commands provide a consistent interface for operations and enable undo/redo, logging, and origin tracking.
 
@@ -2267,6 +2582,312 @@ Users can override default hotkeys via `hotkeyOverrides` in SketchpadStore. Over
 - `useSetHotkey()` - Set hotkey override
 - `useResetHotkey()` - Reset hotkey to default
 - `useResetAllHotkeys()` - Reset all overrides
+
+### Core Types (shared.ts)
+
+The `shared.ts` module exports all core types, enums, and interfaces used across the Sketchpad.
+
+#### Hook Result Types
+
+All hooks follow the triadic pattern returning `[value, setter, canSet]`:
+
+```typescript
+type HookResult<T> = readonly [T, ((value: T) => void) | undefined, boolean];
+type HookNoSetResult<T> = readonly [T, undefined, boolean];
+```
+
+**Helper Functions:**
+
+- `readonlyHookResult(value)` - Create read-only result
+- `writableHookResult(value, setter, canSet?)` - Create writable result
+- `conditionalHookResult(canSet, value, setter)` - Create conditional result
+
+#### Core Enums
+
+```typescript
+enum Theme {
+  SYSTEM = "system",
+  LIGHT = "light",
+  DARK = "dark",
+}
+enum Expertise {
+  BEGINNER = "beginner",
+  NORMAL = "normal",
+  EXPERT = "expert",
+}
+enum Mode {
+  USER = "user",
+  DEV = "dev",
+}
+enum StoreStatus {
+  IDLE = "idle",
+  LOADING = "loading",
+  ERROR = "error",
+  READY = "ready",
+}
+enum ToolKind {
+  SELECTION_NORMAL,
+  SELECTION_ADDITIVE,
+  SELECTION_SUBTRACTIVE,
+  LASSO_RECTANGULAR,
+  LASSO_FREEFORM,
+  PORT,
+}
+enum WindowKind {
+  TABLE = "table",
+  SCENE = "scene",
+  DIAGRAM = "diagram",
+  CUSTOM = "custom",
+}
+enum PanelPosition {
+  LEFT = "left",
+  RIGHT = "right",
+  MIDDLE = "middle",
+  BOTTOM = "bottom",
+}
+enum PanelKind {
+  WORKBENCH,
+  TOOLS,
+  TOOLBAR,
+  HUD,
+  STATS,
+  DETAILS,
+  CHAT,
+  SETTINGS,
+  PARAMS,
+}
+```
+
+#### Panel System
+
+Panels are configured via `PanelKind` with predefined positions and behaviors:
+
+```typescript
+interface PanelKindConfig {
+  icon: ComponentType<{ size?: number }>;
+  position: PanelPosition;
+  group?: string;
+  isTransparent?: boolean;
+  isGroupable?: boolean;
+  hotkey?: string;
+}
+
+interface PanelVisibility {
+  toolbar?: boolean;
+  workbench?: boolean;
+  tools?: boolean;
+  hud?: boolean;
+  stats?: boolean;
+  details?: boolean;
+  chat?: boolean;
+  settings?: boolean;
+  params?: boolean;
+}
+
+interface PanelSection {
+  id: string;
+  content: ReactNode | (() => ReactNode);
+  specificity?: number;
+  defaultOpen?: boolean;
+  order?: number;
+  actions?: Array<{ id: string; icon: ReactNode; onClick: () => void }>;
+}
+```
+
+**Panel Positioning:**
+
+- **LEFT**: Workbench, Tools (grouped)
+- **RIGHT**: Details, Chat, Settings (grouped)
+- **MIDDLE**: HUD, Stats (grouped, transparent)
+- **BOTTOM**: Toolbar
+
+#### Tool System
+
+Tools define interaction modes within apps:
+
+```typescript
+interface Tool<TState = any> {
+  id: ToolKind | string;
+  icon?: ReactNode;
+  render: (context: ToolRenderContext<TState>) => { scene?: ReactNode; diagram?: ReactNode | null; table?: ReactNode | null };
+}
+
+interface ToolMode {
+  id: string;
+  icon?: ReactNode;
+  label?: string;
+  tooltipId?: string;
+}
+
+interface ToolDefinition {
+  id: string;
+  defaultMode: ToolKind | string;
+  modes: ToolMode[];
+}
+```
+
+#### App IDs
+
+Each app has a typed ID structure:
+
+```typescript
+interface KitAppId {
+  kit: Guid;
+}
+interface TypeAppId {
+  kit: Guid;
+  type: Guid;
+}
+interface DesignAppId {
+  kit: Guid;
+  design: Guid;
+}
+interface QualityAppId {
+  kit: Guid;
+  quality: Guid;
+}
+```
+
+### YPath and DerivedStore
+
+YPath provides granular subscriptions to nested Y.js structures. DerivedStore caches computed values.
+
+#### YPath
+
+Navigate Y.js structures with path segments:
+
+```typescript
+type YPathSegment = { kind: "mapKey"; key: string } | { kind: "arrayIndex"; index: number } | { kind: "arrayItemById"; id: string; idKey: string };
+
+type YPath = YPathSegment[];
+```
+
+**Path Helpers:**
+
+- `yPathMapKey(key)` - Access a Y.Map key
+- `yPathArrayIndex(index)` - Access a Y.Array index
+- `yPathArrayItemById(id, idKey?)` - Find array item by ID
+
+**Usage:**
+
+```typescript
+const path = [yPathMapKey("pieces"), yPathArrayItemById(pieceGuid, "guid")];
+const value = getValueAtPath(yMap, path);
+```
+
+#### DerivedStore
+
+Caches computed values that depend on Y.js paths:
+
+```typescript
+class DerivedNode<T> {
+  snapshot(): T;
+  subscribe(cb: () => void): Disposable;
+  dispose(): void;
+}
+
+class DerivedStore {
+  getOrCreate<T>(key: string, deps: BaseDependency[], compute: () => T): DerivedNode<T>;
+  get<T>(key: string): DerivedNode<T> | undefined;
+  delete(key: string): boolean;
+  clear(): void;
+}
+```
+
+**Usage:**
+
+```typescript
+const piecesMetadataNode = derivedStore.getOrCreate("piecesMetadata", [{ store: designStore, path: [yPathMapKey("pieces")] }], () => computePiecesMetadata(designStore.snapshot()));
+```
+
+### App Plugin Registry
+
+Apps register plugins that contribute event handlers, guards, and state factories.
+
+#### AppPlugin Interface
+
+```typescript
+interface AppPlugin {
+  id: string; // e.g., "home", "kit", "design"
+  namespace: string; // e.g., "HOME", "KIT", "DESIGN"
+  machine: AppMachineContribution;
+  registerStores?: () => void;
+  onRegister?: () => void;
+}
+
+interface AppMachineContribution {
+  actions?: Record<string, (context: any, event: any) => any>;
+  guards?: Record<string, (context: any, event: any) => boolean>;
+  eventHandlers?: Record<string, { guard?: string; actions?: string | string[] }>;
+  selectors?: Record<string, (context: any, ...args: any[]) => any>;
+  createDefaultState?: () => any;
+}
+```
+
+#### Registration Functions
+
+- `registerAppPlugin(plugin)` - Register an app plugin
+- `getAppPlugins()` - Get all registered plugins
+- `getAppPlugin(id)` - Get plugin by ID
+- `hasAppPlugin(id)` - Check if plugin exists
+- `composePluginContributions()` - Merge all plugin contributions
+
+#### Event Handler Registry
+
+Dynamic event dispatch for app-specific events:
+
+```typescript
+interface EventHandlerConfig<TContext = any, TEvent = any> {
+  guard?: (context: TContext, event: TEvent) => boolean;
+  action: (context: TContext, event: TEvent) => Partial<TContext>;
+}
+```
+
+**Registration:**
+
+```typescript
+registerEventHandler("HOME.TOGGLE_PANEL", {
+  action: (context, event) => ({
+    homeApp: {
+      ...context.homeApp,
+      panelVisibility: { ...context.homeApp.panelVisibility, [event.panel]: !context.homeApp.panelVisibility[event.panel] },
+    },
+  }),
+});
+```
+
+**Functions:**
+
+- `registerEventHandler(eventType, config)` - Register handler
+- `unregisterEventHandler(eventType)` - Remove handler
+- `executeEventHandler(context, event)` - Execute handler
+- `getEventTypesForNamespace(namespace)` - List events for namespace
+- `getRegisteredNamespaces()` - List all namespaces
+
+#### Guard Registry
+
+Named guards for conditional event handling:
+
+- `registerGuard(name, guard)` - Register guard
+- `unregisterGuard(name)` - Remove guard
+- `getGuard(name)` - Get guard function
+- `executeGuard(name, context, event)` - Execute guard
+
+### Store Factory Registry
+
+Apps register store factories to avoid circular dependencies:
+
+```typescript
+registerDesignAppStoreFactory(factory);
+registerKitAppStoreFactory(factory);
+registerTypeAppStoreFactory(factory);
+registerQualityAppStoreFactory(factory);
+
+getDesignAppStoreFactory();
+getKitAppStoreFactory();
+getTypeAppStoreFactory();
+getQualityAppStoreFactory();
+```
 
 ### File Providers
 
@@ -2754,6 +3375,101 @@ npx tsx scripts/generate-validation.ts
 - Fix diffs are normalized (GUIDs replaced with `<GUID>`) before comparison
 - C# fix generation is pending; comparison skips fix diff for now
 
+## net
+
+C# code with the core library (`Semio.cs`) and Grasshopper plugin (`Semio.Grasshopper.cs`).
+
+## net/Semio.cs
+
+Core library containing all model definitions, validation, serialization, and the Meta class for reflection-based metadata.
+
+## net/Semio.Grasshopper.cs
+
+Grasshopper plugin providing components for constructing, deconstructing, and modifying Semio models.
+
+#### Architecture
+
+The plugin uses a component hierarchy with base classes that provide default behavior:
+
+- **`ModelComponent<TParam, TGoo, TModel>`**: Base class for model components with virtual methods for customization
+- **`IdComponent`**, **`DiffComponent`**: Specialized base classes for Id and Diff model types
+- **`SerializeComponent`**, **`DeserializeComponent`**: Base classes for serialization components
+
+#### Component Structure
+
+Each model type has a set of classes:
+
+- **`*Goo`**: Grasshopper wrapper for the model type with cast methods
+- **`*Param`**: Grasshopper parameter definition
+- **`*Component`**: Main model component for construct/deconstruct/modify
+- **`Serialize*Component`**: JSON serialization component
+- **`Deserialize*Component`**: JSON deserialization component
+
+#### Hardcoded Parameters
+
+Components use virtual methods to define their inputs/outputs:
+
+- `RegisterModelInputParams(pManager)`: Define input parameters
+- `RegisterModelOutputParams(pManager)`: Define output parameters
+- `GetModelData(DA, model)`: Read input data into model
+- `SetModelData(DA, model)`: Write model data to outputs
+
+Components can override these to hardcode their parameter structure, ensuring stable input/output definitions across schema changes.
+
+## py/
+
+Python code with the engine (@semio/engine) for schema generation and validation.
+
+## py/engine/
+
+Python engine providing schema generation, validation, and backend functionality.
+
+- `engine.py` - Main engine module with Kit parsing, validation, and transformation
+- `engine.test.py` - Unit tests for engine functionality
+- `generate-schemas.ts` - Generates GraphQL, JSON, and SQL schemas from TypeScript definitions
+- `sqliteschema.ts` - SQLite schema generation utilities
+
+## net/
+
+C# code with the core library (`Semio.cs`) and Grasshopper plugin (`Semio.Grasshopper.cs`).
+
+## net/Semio/Semio.cs
+
+Core library containing all model definitions, validation, serialization, and the Meta class for reflection-based metadata.
+
+## net/Semio.Grasshopper/Semio.Grasshopper.cs
+
+Grasshopper plugin providing components for constructing, deconstructing, and modifying Semio models.
+
+### Architecture
+
+The plugin uses a component hierarchy with base classes that provide default behavior:
+
+- **`ModelComponent<TParam, TGoo, TModel>`**: Base class for model components with virtual methods for customization
+- **`IdComponent`**, **`DiffComponent`**: Specialized base classes for Id and Diff model types
+- **`SerializeComponent`**, **`DeserializeComponent`**: Base classes for serialization components
+
+### Component Structure
+
+Each model type has a set of classes:
+
+- **`*Goo`**: Grasshopper wrapper for the model type with cast methods
+- **`*Param`**: Grasshopper parameter definition
+- **`*Component`**: Main model component for construct/deconstruct/modify
+- **`Serialize*Component`**: JSON serialization component
+- **`Deserialize*Component`**: JSON deserialization component
+
+### Hardcoded Parameters
+
+Components use virtual methods to define their inputs/outputs:
+
+- `RegisterModelInputParams(pManager)`: Define input parameters
+- `RegisterModelOutputParams(pManager)`: Define output parameters
+- `GetModelData(DA, model)`: Read input data into model
+- `SetModelData(DA, model)`: Write model data to outputs
+
+Components can override these to hardcode their parameter structure, ensuring stable input/output definitions across schema changes.
+
 # Hierarchies
 
 Use this hierarchy for code organization (order of appearance of regions, classes, properties, functions, methods, types, statements, constants, …).
@@ -3049,157 +3765,3 @@ Use this hierarchy for code organization (order of appearance of regions, classe
 13. Image
 14. Description
 15. Attributes
-
-## Sketchpad App Plugin Architecture
-
-The sketchpad uses a plugin-based architecture for apps. Each app (Home, Kit, Type, Design, Quality, Docs) registers itself via the `AppPlugin` system, enabling open/closed extensibility.
-
-### Plugin Structure
-
-Each app plugin provides:
-
-- **id**: Unique identifier (e.g., "home", "kit", "type", "design")
-- **namespace**: Event prefix (e.g., "HOME", "KIT", "TYPE", "DESIGN")
-- **machine**: XState machine contributions (actions, guards, eventHandlers, selectors)
-- **createDefaultState**: Factory for initial app state
-- **registerStores**: Optional store factory registration
-
-### File Layout
-
-```
-js/js/sketchpad/
-  shared.ts          # AppPlugin interface, registry functions
-  apps/
-    index.ts         # Single import point for all app plugins
-  Home.tsx           # Home app + homeAppPlugin
-  Kit.tsx            # Kit app + kitAppPlugin
-  Type.tsx           # Type app + typeAppPlugin
-  Design.tsx         # Design app + designAppPlugin
-  Quality.tsx        # Quality app + qualityAppPlugin
-  Docs.tsx           # Docs app + docsAppPlugin
-  Sketchpad.tsx      # Main orchestrator, XState machine
-```
-
-### Plugin Registration
-
-Apps register plugins as a side-effect on module import:
-
-```typescript
-const myAppPlugin: AppPlugin = {
-  id: "myapp",
-  namespace: "MYAPP",
-  machine: {
-    actions: {},
-    guards: {},
-    eventHandlers: {},
-    selectors: {},
-    createDefaultState: () => ({ ... }),
-  },
-};
-
-if (typeof window !== "undefined") {
-  registerAppPlugin(myAppPlugin);
-}
-```
-
-### Dynamic Event Dispatch
-
-The sketchpad machine uses **dynamic event dispatch** via `dispatchAppEvent` action with **wildcard event handling**. Navigation states use `"*"` wildcard to accept ANY event, which is then dispatched to registered handlers.
-
-**Architecture:**
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│ Sketchpad.tsx (App-Agnostic)                                │
-│                                                             │
-│  sketchpadMachine:                                          │
-│    navigation:                                              │
-│      home:  { on: { "*": dispatchAppEvent } }              │
-│      kit:   { on: { "*": dispatchAppEvent } }              │
-│      design:{ on: { "*": dispatchAppEvent } }              │
-│      type:  { on: { "*": dispatchAppEvent } }              │
-│      ...                                                    │
-└─────────────────────────────────────────────────────────────┘
-                           │
-                           ▼
-┌─────────────────────────────────────────────────────────────┐
-│ shared.ts (Event Registry)                                  │
-│                                                             │
-│  registerEventHandler("HOME.TOGGLE_PANEL", handler)        │
-│  registerEventHandler("KIT.SET_FILTER", handler)           │
-│  executeEventHandler(context, event) → context updates     │
-└─────────────────────────────────────────────────────────────┘
-                           ▲
-                           │
-┌──────────────┬──────────────┬──────────────┬───────────────┐
-│  Home.tsx    │   Kit.tsx    │  Design.tsx  │   Type.tsx    │
-│              │              │              │               │
-│ registerEvent│ registerEvent│ registerEvent│ registerEvent │
-│ Handler(...) │ Handler(...) │ Handler(...) │ Handler(...) │
-└──────────────┴──────────────┴──────────────┴───────────────┘
-```
-
-**Event Handler Registration:**
-
-```typescript
-import { registerEventHandler } from "./shared";
-
-// Register handler for a specific event type
-registerEventHandler("MYAPP.TOGGLE_PANEL", {
-  guard: (context, event) => context.myApp !== undefined, // optional
-  action: (context, event) => ({
-    myApp: {
-      ...context.myApp,
-      panelVisibility: { ...context.myApp.panelVisibility, [event.panel]: !context.myApp.panelVisibility[event.panel] },
-    },
-  }),
-});
-```
-
-**Key Functions:**
-
-- **`registerEventHandler(eventType, config)`**: Registers a handler for a specific event type (e.g., "HOME.TOGGLE_PANEL")
-- **`executeEventHandler(context, event)`**: Looks up and executes the handler for the event type
-- **`dispatchAppEvent` action**: The sketchpad machine action that dispatches events dynamically
-- **Fallback**: If no handler is registered via `registerEventHandler`, falls back to legacy `registerRuntimeAction` handlers
-
-**Benefits:**
-
-- **Open/Closed Principle**: Adding a new app requires NO changes to `Sketchpad.tsx`
-- **Self-contained apps**: Each app file registers its own event handlers
-- **Wildcard handling**: Navigation states accept any event via `"*"` pattern
-- **Guards in handlers**: Guards can be defined in the handler config, not in the machine
-- **Gradual migration**: Existing `registerRuntimeAction` handlers continue to work
-- **Single machine**: Only one `createMachine` call - `uiMachine` has been removed
-
-### Hook Pattern (Triadic)
-
-All hooks follow the triadic pattern: `[value, setValue, canSetValue]`
-
-- **UI components**: Only use triadic hooks, never access stores directly
-- **Hooks**: Read from stores via subscriptions, write via `actor.send()` XState events
-- **State machine**: Only writer API, accepts contributions from plugins
-- **Stores/commands**: Implementation details behind machine actions
-
-Example:
-
-```typescript
-export function useMyAppSelection(): HookResult<MySelection> {
-  const actor = useSketchpadActor();
-  const canSetEvent = useMemo(() => ({ type: "MYAPP.SET_SELECTION" as const, ... }), [...]);
-  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
-  const setSelection = useMemo(() => {
-    if (!canSet) return undefined;
-    return (value: MySelection) => actor.send({ type: "MYAPP.SET_SELECTION", ... });
-  }, [actor, canSet, ...]);
-  return conditionalHookResult(canSet, selection, setSelection);
-}
-```
-
-### Adding a New App
-
-1. Create app file with types, state, hooks, and UI components
-2. Define `AppPlugin` with namespace and machine contributions
-3. Register plugin: `registerAppPlugin(myAppPlugin)`
-4. Import app module in `apps/index.ts`
-5. No edits to `Sketchpad.tsx` required (open/closed principle)

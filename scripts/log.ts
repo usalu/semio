@@ -513,7 +513,7 @@ Commands:
                                                  --summary="..." --model=MODEL
   prompt <slug> <prompt>               Append a user prompt to the latest log for the slug
   files <slug> [paths...]              Update tracked files for the latest log for the slug
-                                       Optional: --detect (from git), --reset (replace list)
+                                       Optional: --reset (replace list)
                                                  --category=read|updated|removed|created (default: updated)
   stats <slug> [--detect]              Update git stats for the latest log for the slug (uses tracked files)
   models                               List available model enum values
@@ -534,7 +534,7 @@ Examples:
   tsx scripts/log.ts update MY-TASK --prompt="Follow-up request..." --file=scripts/log.ts
   tsx scripts/log.ts prompt MY-TASK "Follow-up user request..."
   tsx scripts/log.ts files MY-TASK scripts/log.ts README.md AGENTS.md
-  tsx scripts/log.ts files MY-TASK --detect --reset --category=updated
+  tsx scripts/log.ts files MY-TASK --reset --category=updated
   tsx scripts/log.ts stats MY-TASK
   tsx scripts/log.ts stats MY-TASK --detect
   tsx scripts/log.ts read 2025 11 24 MY-TASK
@@ -695,14 +695,16 @@ if (require.main === module) {
         const latest = getLatestLogBySlug(slug);
         const log = readLog(latest.year, latest.month, latest.day, latest.slug);
         const tracking = ensureLogTracking(log);
-        if (tracking.commit === "unknown") throw new Error(`Unknown commit for ${latest.slug}. Set the commit in frontmatter before using --detect.`);
-        const detect = rest.includes("--detect");
         const reset = rest.includes("--reset");
         const category = parseFlag(rest, "category") || "updated";
         const paths = rest.filter((arg) => !arg.startsWith("--"));
-        const detected = detect ? getChangedFilesSince(tracking.commit) : [];
-        const existingFiles = getAllFilesFromLogFiles(tracking.files);
-        const newPaths = reset ? [...detected, ...paths] : [...existingFiles, ...detected, ...paths];
+        if (!paths.length) {
+          console.error("Error: No file paths provided. Files must be added explicitly via CLI.");
+          printUsage();
+          process.exit(1);
+        }
+        const existingFiles = reset ? [] : getAllFilesFromLogFiles(tracking.files);
+        const newPaths = [...existingFiles, ...paths];
         const uniquePaths = Array.from(new Set(newPaths.filter((path) => path.trim()))).sort();
         const files: LogFiles = { [category]: uniquePaths };
         updateLog(latest.year, latest.month, latest.day, latest.slug, { files });
@@ -725,7 +727,7 @@ if (require.main === module) {
         const trackedFiles = getAllFilesFromLogFiles(tracking.files);
         const affectedFiles = detect ? getChangedFilesSince(tracking.commit) : trackedFiles;
         if (!affectedFiles.length) {
-          throw new Error(`No files tracked for ${latest.slug}. Use: tsx scripts/log.ts files ${latest.slug} --detect OR tsx scripts/log.ts files ${latest.slug} <paths...>`);
+          throw new Error(`No files tracked for ${latest.slug}. Use: tsx scripts/log.ts files ${latest.slug} <paths...>`);
         }
         const computed = computeGitStats(tracking.commit, affectedFiles);
         updateLog(latest.year, latest.month, latest.day, latest.slug, {
