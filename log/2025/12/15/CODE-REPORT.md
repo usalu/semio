@@ -11,17 +11,34 @@ input:
       (every #region REGIONNAME needs to have a corresponding #endregion
       REGIONNAME).
     date: '2025-12-15T22:44:34.206Z'
+  - prompt: >-
+      The code analysis should be a different hook. typescript is only tsc, etc.
+      Make sure to that the fix script removes the comments automatically.
+      Analyze should not mark regions as comments. Make sure analyze, fix and
+      preflight run properly from vscode launch.
+    date: '2025-12-15T23:18:32.363Z'
+  - prompt: Add the detection of temporary console logs to the code analysis.
+    date: '2025-12-16T10:27:46.789Z'
+  - prompt: >-
+      Add detection of additional README.md and AGENTS.md files outside of the
+      main in root. Make sure that the fix script deletes them.
+    date: '2025-12-16T10:32:22.681Z'
 commit: 2fb81ef29354981c1b9625769dba4a06360a4aef
 files:
   updated:
     - AGENTS.md
     - README.md
+    - hooks/code.ts
+    - hooks/eslint.ts
+    - hooks/i18n.ts
+    - hooks/prettier.ts
+    - hooks/ruff.ts
     - hooks/typescript.ts
     - log/2025/12/15/CODE-REPORT.md
-    - reports/README.md
+    - preflight.ts
 lines:
-  added: 1343
-  removed: 317
+  added: 2064
+  removed: 352
 ---
 # Previously
 
@@ -38,9 +55,12 @@ lines:
 
 # Changes
 
-# Added `reports/code.json` generation to `hooks/typescript.ts`, alongside the existing `reports/typescript.json` output.
-# Implemented file scanning for TypeScript/Python/C# with:
-# - SPDX header detection (expects `SPDX-License-Identifier:` in the header block)
-# - Inline comment detection with allowances for license headers and region markers
-# - Region stack validation requiring named `#region`/`#endregion` pairs and proper nesting
-# Added `reports/README.md` and documented `code.json` across `README.md` and `AGENTS.md`.
+# Split codebase scanning into its own hook `hooks/code.ts` (TypeScript hook is now only `tsc` + `reports/typescript.json`).
+# Wired pipelines:
+# - `fix` runs `hooks/code.ts --fix` to strip comments (keeps SPDX header lines and region markers), then runs Prettier and Ruff.
+# - `analyze` runs `hooks/code.ts` to emit `reports/code.json`, then runs `hooks/typescript.ts` and `hooks/eslint.ts`.
+# Kept region markers out of comment findings and ensured `analyze`/`fix`/`preflight` launch configs keep working via `npm run {analyze|fix|preflight}`.
+# Added `reports/README.md` and updated dev docs (`README.md`, `AGENTS.md`) to reflect the new hook and report.
+# Updated `preflight.ts` to always run `hooks/code.ts` first and to continue running remaining steps even when a step fails, so `reports/code.json` is still produced for diagnostics.
+# Extended `hooks/code.ts` to flag temporary `[DEBUG]` logs (TypeScript `console.*`, Python `print`/`logging.*`, C# `Console.Write*`).
+# Extended `hooks/code.ts` to flag and (on `--fix`) delete any non-root `README.md`/`AGENTS.md` files; the rule applies to tracked and untracked files.

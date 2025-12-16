@@ -1595,6 +1595,12 @@
                   }
                 }
               }
+            },
+            "diagram": {
+              "label": {
+                "normal": "Diagram",
+                "beginner": "A force-directed graph showing all kit artifacts and their relationships"
+              }
             }
           },
           "panel": {

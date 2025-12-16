@@ -99,8 +99,8 @@ export enum SectionSpecificity {
 // #endregion Section Specificity
 
 // #region Interaction Context
-// Generic interaction tracking system for UI elements
-// This allows elements to track focus/active states without coupling to specific app logic
+
+
 
 interface InteractionCommands {
   setActiveInteraction: (elementId?: string, interactionId?: string) => void;

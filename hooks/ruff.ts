@@ -1,4 +1,5 @@
 #!/usr/bin/env tsx
+// SPDX-License-Identifier: AGPL-3.0-only
 import { execSync } from "child_process";
 import { existsSync, writeFileSync } from "fs";
 import { join } from "path";
@@ -15,19 +16,19 @@ if (!existsSync(pyEngineDir)) {
 console.log("🐍 Formatting and linting Python with Ruff...");
 
 try {
-  // Format first
+  
   execSync("ruff format .", {
     cwd: pyEngineDir,
     stdio: "inherit",
   });
   
-  // Then fix auto-fixable issues
+  
   execSync("ruff check --fix .", {
     cwd: pyEngineDir,
     stdio: "inherit",
   });
   
-  // Generate JSON report for remaining issues
+  
   try {
     const output = execSync("ruff check --output-format=json .", {
       cwd: pyEngineDir,

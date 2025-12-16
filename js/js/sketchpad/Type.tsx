@@ -102,7 +102,7 @@ const KitSectionLazy = React.lazy(async () => {
   return { default: module.KitSection };
 });
 
-// Lucide icons used throughout the app
+
 import { AddIcon, AwardIcon, CheckIcon, CodeIcon, HandIcon, MonitorIcon, MoonIcon, MousePointerIcon, PortIcon, RemoveIcon, SelectToolIcon, SunIcon, TutorialIcon, UserIcon } from "@semio/assets";
 
 // #endregion Imports
@@ -183,36 +183,29 @@ export interface TypeAppCommandResult {
   typeDiff?: TypeDiff;
 }
 
-// NOTE: The old TypeStore Y.js-based class has been removed.
-// All state management now goes through XState.
-// Y.js is only used internally for Kit data sync (types, designs, pieces, etc.)
 
-// Stable selectors for TypeApp hooks - must be module-level to avoid infinite loops
+
+
+
+
 const EMPTY_TYPE_SELECTION: TypeAppSelection = {};
 const EMPTY_PANEL_VISIBILITY: PanelVisibility = { toolbar: true, workbench: false, details: false, chat: false, settings: false };
 const EMPTY_OTHERS: TypeAppPresenceOther[] = [];
 const EMPTY_MODEL_TAG_ARRAY: string[] = [];
 
-/**
- * REMOVED: TypeStore class
- * All state is now managed by the XState sketchpadMachine.
- * Use useTypeApp* hooks that internally use useSelector from @xstate/react.
- */
+
 
 // #endregion Internal State Management
 
 // #region Type App Plugin Registration
 
-/**
- * Type app plugin for the sketchpad machine.
- * Provides TYPE.* events, actions, and guards.
- */
+
 const typeAppPlugin: AppPlugin = {
   id: "type",
   namespace: "TYPE",
   machine: {
-    // Actions are defined in Sketchpad.tsx for now
-    // TODO: Move type-specific actions here when Sketchpad.tsx is refactored
+    
+    
     actions: {},
     guards: {},
     eventHandlers: {},

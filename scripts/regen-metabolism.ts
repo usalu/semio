@@ -4,12 +4,10 @@ import { join } from "path";
 import { MetabolismKit } from "../assets/index";
 import { exportKit, importKit } from "../js/js/semio";
 
-// Folders to include from examples/metabolism
+
 const INCLUDE_FOLDERS = ["representations", "icons", "images"];
 
-/**
- * Recursively collect files from a directory, filtering by allowed folders
- */
+
 function collectFiles(dir: string, basePath: string = ""): Map<string, Blob> {
     const files = new Map<string, Blob>();
     const entries = readdirSync(dir, { withFileTypes: true });

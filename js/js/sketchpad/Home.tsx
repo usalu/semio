@@ -80,7 +80,7 @@ import {
   Window,
 } from "./Sketchpad";
 
-// Alias for internal use
+
 const useHome = useHomeApp;
 
 // #endregion Imports
@@ -134,16 +134,13 @@ export interface HomeCommandResult {
 
 // #region Home App Plugin Registration
 
-/**
- * Home app plugin for the sketchpad machine.
- * Provides HOME.* events, actions, and guards.
- */
+
 const homeAppPlugin: AppPlugin = {
   id: "home",
   namespace: "HOME",
   machine: {
-    // Actions are defined in Sketchpad.tsx for now
-    // TODO: Move home-specific actions here when Sketchpad.tsx is refactored
+    
+    
     actions: {},
     guards: {},
     eventHandlers: {},
@@ -161,8 +158,8 @@ const homeAppPlugin: AppPlugin = {
 if (typeof window !== "undefined") {
   registerAppPlugin(homeAppPlugin);
 
-  // Register event handlers using the new dynamic dispatch system
-  // These handlers are called directly by the sketchpad machine's APP_EVENT action
+  
+  
   registerEventHandler("HOME.TOGGLE_PANEL", {
     action: (context: any, event: any) => ({
       homeApp: {
@@ -220,7 +217,7 @@ if (typeof window !== "undefined") {
     action: (context: any) => ({ homeApp: { ...context.homeApp, hover: undefined } }),
   });
 
-  // Keep legacy runtime actions for backwards compatibility during migration
+  
   registerRuntimeAction("homeTogglePanel", (context: any, event: any) => {
     if (event.type !== "HOME.TOGGLE_PANEL") return {};
     return {
@@ -264,9 +261,9 @@ if (typeof window !== "undefined") {
 
 // #region Hooks (XState-based)
 
-// Re-export hooks from Sketchpad for backwards compatibility
+
 export { useHomeApp as useHomeAppExported, useHomeLoadingKits as useHomeLoadingKitsExported, useHomePanelVisibility as useHomePanelVisibilityExported, useHomeSelection as useHomeSelectionExported } from "./Sketchpad";
-// Re-export the local alias
+
 export { useHome };
 
 // #endregion Hooks
@@ -353,7 +350,7 @@ const MultipleKitsSection: FC<{ kitIds: string[] }> = ({ kitIds }) => {
   const kitShallows = useKitShallows();
   const kits = kitIds.map((id) => kitShallows.find((k) => k.guid === id)).filter((k) => k !== undefined) as KitShallow[];
 
-  // Helper function to get common value or undefined if different
+  
   const getCommonValue = <T,>(getter: (kit: KitShallow) => T): T | undefined => {
     if (kits.length === 0) return undefined;
     const firstValue = getter(kits[0]);
@@ -558,10 +555,10 @@ const HomeAppFooter: FC = () => {
   useEffect(() => {
     if (appType !== "home") return;
 
-    // TODO: Add home-specific footer items here
+    
 
     return () => {
-      // Cleanup
+      
     };
   }, [appType, addFooterItem, removeFooterItem]);
 
@@ -578,8 +575,8 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
   const { createKit, navigateToKit, storeKitFileBlobs } = useSketchpadCommands();
   const actor = useSketchpadActor();
 
-  // Use XState background operations for tracking kit imports
-  // This ensures imports continue even when navigating away from Home
+  
+  
   const startKitImport = (operationId: string, kitName: string) => {
     actor.send({ type: "BACKGROUND.START", operationId, operationType: `kit-import:${kitName}` });
   };

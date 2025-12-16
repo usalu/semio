@@ -654,6 +654,10 @@ test.describe("sketchpad", () => {
     await page.waitForLoadState("networkidle");
     await page.waitForTimeout(2000);
 
+    // Print debug messages from the app
+    console.log("[Kit] Debug messages from app:");
+    messages.filter(m => m.includes("DEBUG")).forEach(m => console.log(m));
+
     const pageText = await page.evaluate(() => document.body.innerText);
     expect(pageText).toContain("Metabolism");
     expect(warnings.filter(w => w.includes("Invalid access"))).toHaveLength(0);

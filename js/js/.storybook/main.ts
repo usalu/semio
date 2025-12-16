@@ -32,10 +32,7 @@ import { dirname, join } from "path";
 
 const require = createRequire(import.meta.url);
 
-/**
- * This function is used to resolve the absolute path of a package.
- * It is needed in projects that use Yarn PnP or are set up within a monorepo.
- */
+
 function getAbsolutePath(value: string): any {
   return dirname(require.resolve(join(value, "package.json")));
 }
@@ -44,11 +41,11 @@ const config: StorybookConfig = {
     "./stories/elements/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)",
     "../sketchpad/stories/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)",
     "../sketchpad/panels/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)",
-    // Explicitly exclude apps directory
+    
   ],
   addons: [
-    // getAbsolutePath('@storybook/addon-essentials'),
-    // getAbsolutePath('@chromatic-com/storybook'),
+    
+    
     getAbsolutePath("@storybook/addon-vitest"),
     getAbsolutePath("@storybook/addon-docs"),
   ],
@@ -70,19 +67,19 @@ const config: StorybookConfig = {
   async viteFinal(config) {
     config.plugins = config.plugins || [];
 
-    // Find and remove all MDX-related plugins (both @mdx-js/rollup and storybook:mdx-plugin)
+    
     const indicesToRemove: number[] = [];
 
     for (let i = 0; i < config.plugins.length; i++) {
       const plugin: any = config.plugins[i];
 
-      // Check if it's a direct MDX plugin reference
+      
       if (plugin === "@mdx-js/rollup" || (plugin && typeof plugin === "object" && plugin.name === "@mdx-js/rollup")) {
         indicesToRemove.push(i);
         continue;
       }
 
-      // Check if it's a Promise that contains storybook:mdx-plugin
+      
       if (plugin instanceof Promise) {
         try {
           const resolved: any = await plugin;
@@ -90,17 +87,17 @@ const config: StorybookConfig = {
             indicesToRemove.push(i);
           }
         } catch (e) {
-          // Ignore promise resolution errors
+          
         }
       }
     }
 
-    // Remove all MDX plugins in reverse order
+    
     for (let i = indicesToRemove.length - 1; i >= 0; i--) {
       config.plugins.splice(indicesToRemove[i], 1);
     }
 
-    // Add our single configured MDX plugin
+    
     const mdx = await import("@mdx-js/rollup");
     config.plugins.push(
       mdx.default({
@@ -109,7 +106,7 @@ const config: StorybookConfig = {
       }),
     );
 
-    // Configure golden-layout for CommonJS compatibility
+    
     config.optimizeDeps = config.optimizeDeps || {};
     config.optimizeDeps.include = [...(config.optimizeDeps.include || []), "golden-layout"];
     config.optimizeDeps.esbuildOptions = {
@@ -117,7 +114,7 @@ const config: StorybookConfig = {
       target: "es2020",
     };
 
-    // Ensure React runs in development mode for Storybook
+    
     config.mode = "development";
     config.define = {
       ...config.define,

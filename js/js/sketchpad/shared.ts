@@ -33,80 +33,43 @@ import { Guid, Kit, KitDiff } from "../semio";
 
 // #region YPath Types
 
-/**
- * A segment in a Y.js path for navigating nested structures.
- * 
- * - mapKey: Access a key in a Y.Map
- * - arrayIndex: Access an index in a Y.Array
- * - arrayItemById: Find an item in a Y.Array by its id property
- */
+
 export type YPathSegment =
   | { kind: "mapKey"; key: string }
   | { kind: "arrayIndex"; index: number }
   | { kind: "arrayItemById"; id: string; idKey: string };
 
-/**
- * A path through Y.js structures for granular subscriptions.
- * Each segment describes how to navigate to the next level.
- */
+
 export type YPath = YPathSegment[];
 
 // #endregion YPath Types
 
 // #region Granular Hook Types
 
-/**
- * Return type for all granular hooks following the [state, setState, canSetState] pattern.
- * 
- * @template T - The type of the state value
- * 
- * @example
- * ```typescript
- * const [name, setName, canSetName] = useKitName()
- * // name: string - The current value
- * // setName: ((value: string) => void) | undefined - Setter (undefined if not available)
- * // canSetName: boolean - Whether the setter is available (use for disabled prop)
- * 
- * <Input value={name} onChange={setName} disabled={!canSetName} />
- * ```
- */
+
 export type HookResult<T> = readonly [
   T,
   ((value: T) => void) | undefined,
   boolean
 ];
 
-/**
- * Granular hook result for read-only hooks.
- * Returns [value, undefined, canRead] tuple.
- */
+
 export type HookNoSetResult<T> = readonly [
   T,
   undefined,
   boolean
 ];
 
-/**
- * Read-only granular hook result constant.
- * Use when the hook only provides read access.
- */
+
 export const READONLY_SETTER = undefined as undefined;
 export const READONLY_CAN = false;
 
-/**
- * Creates a read-only granular hook result.
- * @param value - The current state value
- */
+
 export function readonlyHookResult<T>(value: T): HookResult<T> {
   return [value, READONLY_SETTER, READONLY_CAN] as const;
 }
 
-/**
- * Creates a writable granular hook result.
- * @param value - The current state value
- * @param setter - Function to update the value
- * @param canSet - Whether the setter can be used (defaults to true if setter exists)
- */
+
 export function writableHookResult<T>(
   value: T,
   setter: (value: T) => void,
@@ -115,12 +78,7 @@ export function writableHookResult<T>(
   return [value, canSet ? setter : undefined, canSet] as const;
 }
 
-/**
- * Creates a conditional granular hook result.
- * @param canSet - Whether the setter can be used
- * @param value - The current state value
- * @param setter - Function to update the value (or undefined)
- */
+
 export function conditionalHookResult<T>(
   canSet: boolean,
   value: T,

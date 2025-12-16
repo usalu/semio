@@ -1,19 +1,5 @@
 #!/usr/bin/env tsx
-/**
- * Schema extraction and synchronization script.
- *
- * Extracts schema definitions from:
- * - semio.ts (TypeScript - source of truth)
- * - engine.py (Python)
- * - Semio.cs (C#)
- * - Semio.Grasshopper.cs (Grasshopper components)
- * - dataarchitecture.pu (Database schema)
- * - interfacearchitecture.txt (API schema)
- * - softwarearchitecture.pu (Software class diagrams)
- *
- * Generates reports: schema-ts.json, schema-py.json, schema-net.json, schema-grasshopper.json,
- * schema-database.json, schema-interface.json, schema-software.json, schema.json (summary)
- */
+
 
 import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
@@ -22,7 +8,7 @@ const rootDir = join(__dirname, "..");
 const reportsDir = join(rootDir, "reports");
 const engineeringDir = join(rootDir, "engineering");
 
-// File paths
+
 const semioTsPath = join(rootDir, "js", "js", "semio.ts");
 const enginePyPath = join(rootDir, "py", "engine", "engine.py");
 const semioCsPath = join(rootDir, "net", "Semio", "Semio.cs");
@@ -146,7 +132,7 @@ interface SoftwareReport {
 
 // #endregion Types
 
-// Known main entities (non-weak, have guid)
+
 const MAIN_ENTITIES = [
     "Attribute",
     "Location",
@@ -171,7 +157,7 @@ const MAIN_ENTITIES = [
     "Kit",
 ];
 
-// Weak entities (no guid)
+
 const WEAK_ENTITIES = ["Coord", "Vec", "Point", "Vector", "Plane", "Range", "Side"];
 
 // #region TypeScript Parser
@@ -182,16 +168,16 @@ function parseTypeScriptSchema(): SchemaReport {
     const idTypes: string[] = [];
     const weakEntities: string[] = [];
 
-    // Extract entity ID types
+    
     const idTypeRegex = /export type (\w+Id) = \{ guid: Guid \}/g;
     let match;
     while ((match = idTypeRegex.exec(content)) !== null) {
         idTypes.push(match[1]);
     }
 
-    // Extract schema definitions by region markers
+    
     for (const entityName of [...MAIN_ENTITIES, ...WEAK_ENTITIES]) {
-        // Look for the Schema definition
+        
         const schemaRegex = new RegExp(
             `export const ${entityName}Schema = z\\.object\\(\\{([\\s\\S]*?)\\}\\)`,
             "m"

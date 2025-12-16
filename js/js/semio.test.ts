@@ -26,7 +26,7 @@ import { applyDesignDiff, applyKitDiff, areKitDiffsEqual, areKitsEqual, areValid
 const TOLERANCE = 0.001;
 
 const planesEqual = (p1?: Plane, p2?: Plane): boolean => {
-  if (!p1 || !p2) return false; // Both must exist to be equal
+  if (!p1 || !p2) return false; 
   if (!p1.origin || !p2.origin || !p1.xAxis || !p2.xAxis || !p1.yAxis || !p2.yAxis) return false;
   return (
     Math.abs(p1.origin.x - p2.origin.x) < TOLERANCE &&
@@ -178,11 +178,11 @@ describe("Import/Export", () => {
 
 describe("Validation", () => {
   it("Validation matches expected output", () => {
-    // Valid kit has no errors
+    
     const validKit = MetabolismKit as unknown as Kit;
     expect(hasSemioErrors(validateSemioKit(validKit))).toBe(false);
 
-    // Invalid kit matches validation.json (including fixes)
+    
     const invalidKit = InvalidKit as unknown as Kit;
     const result = toSerializableValidationResult(validateSemioKit(invalidKit));
     const expected = InvalidKitValidation as SerializableValidationResult;

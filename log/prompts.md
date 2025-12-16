@@ -1,5 +1,12 @@
 # Prompt history
 
+- Table window is empty.
+- All nodes should just be circle as all other nodes of the other diagrams with the icon of the artifact.
+- The layout is not a draggable forced layout. Add force slider to diagram settings of kit app.
+Migrate the existing kit app tests and make sure they pass.
+
+The kit app should be extended to a multi-window app like the design app. It should have two window kinds: table and diagram. The table window is the current canvas. The diagram window should show a forced layout graph of all the artifacts of the kits and their relationships. There are two different kind of relationships: part of (children of parents, artifacts inside folders) and references (such as between a type and a design if there is a piece inside of the design with that type). Hover and selection of artefacts are again shared among the windows.
+
 The analyze script should be extended to create a report for the codebase producing `code.json` (for typescript, python, c#). It should check for:
 - Comments in the code. Code needs to undocumented/uncommented.
 - Missing License headers.

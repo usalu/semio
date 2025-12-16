@@ -1,22 +1,22 @@
 // #region Header
 
-// Tutorials.tsx
-// Consolidated tutorial system
-// commands.ts
-// 2025 Ueli Saluz
-// exampleTutorial.ts
-// Example tutorial demonstrating the tutorial system
-// RecordButton.tsx
-// Dev mode record button for footer
-// sketchpadTour.ts
-// store.tsx
-// 2025 Ueli Saluz
-// TutorialControls.tsx
-// 2025 Ueli Saluz
-// TutorialOverlay.tsx
-// 2025 Ueli Saluz
-// types.ts
-// Type definitions for the tutorial system
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // #endregion
 

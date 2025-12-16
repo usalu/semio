@@ -1,4 +1,5 @@
 #!/usr/bin/env tsx
+// SPDX-License-Identifier: AGPL-3.0-only
 import { execFileSync } from "child_process";
 import { join } from "path";
 
@@ -42,35 +43,52 @@ function parseArgs(argv: string[]): ParsedArgs {
 
 //#region Exec
 const rootDir = join(__dirname);
+type StepResult = { ok: boolean; label: string };
 function run(command: string, args: string[] = []): void {
   execFileSync(command, args, { stdio: "inherit", cwd: rootDir });
+}
+function runStep(label: string, command: string, args: string[] = []): StepResult {
+  try {
+    run(command, args);
+    return { ok: true, label };
+  } catch {
+    return { ok: false, label };
+  }
 }
 //#endregion
 
 //#region Steps
-function runFix(skip: Set<string>): void {
+function runFix(skip: Set<string>): boolean {
   if (skip.has("fix")) {
-    return;
+    return true;
   }
-  run("npx", ["tsx", "hooks/prettier.ts"]);
-  run("npx", ["tsx", "hooks/ruff.ts"]);
+  let ok = true;
+  ok = runStep("hooks/code.ts --fix", "npx", ["tsx", "hooks/code.ts", "--fix"]).ok && ok;
+  ok = runStep("hooks/prettier.ts", "npx", ["tsx", "hooks/prettier.ts"]).ok && ok;
+  ok = runStep("hooks/ruff.ts", "npx", ["tsx", "hooks/ruff.ts"]).ok && ok;
+  return ok;
 }
 
-function runAnalyze(skip: Set<string>, nxArgs: string[]): void {
+function runAnalyze(skip: Set<string>, nxArgs: string[]): boolean {
   if (skip.has("analyze")) {
-    return;
+    return true;
   }
-  run("npx", ["tsx", "hooks/i18n.ts"]);
-  run("npx", ["tsx", "hooks/typescript.ts"]);
-  run("npx", ["tsx", "hooks/eslint.ts", ...nxArgs]);
+  let ok = true;
+  ok = runStep("hooks/code.ts", "npx", ["tsx", "hooks/code.ts"]).ok && ok;
+  ok = runStep("hooks/i18n.ts", "npx", ["tsx", "hooks/i18n.ts"]).ok && ok;
+  ok = runStep("hooks/typescript.ts", "npx", ["tsx", "hooks/typescript.ts"]).ok && ok;
+  ok = runStep("hooks/eslint.ts", "npx", ["tsx", "hooks/eslint.ts", ...nxArgs]).ok && ok;
+  return ok;
 }
 
-function runPreflight(skip: Set<string>, nxArgs: string[]): void {
+function runPreflight(skip: Set<string>, nxArgs: string[]): boolean {
   if (skip.has("preflight")) {
-    return;
+    return true;
   }
-  runFix(skip);
-  runAnalyze(skip, nxArgs);
+  let ok = true;
+  ok = runFix(skip) && ok;
+  ok = runAnalyze(skip, nxArgs) && ok;
+  return ok;
 }
 
 function runNx(target: string, nxArgs: string[]): void {
@@ -78,8 +96,8 @@ function runNx(target: string, nxArgs: string[]): void {
 }
 
 function runTest(skip: Set<string>, nxArgs: string[]): void {
-  if (!skip.has("preflight")) {
-    runPreflight(skip, nxArgs);
+  if (!skip.has("preflight") && !runPreflight(skip, nxArgs)) {
+    process.exit(1);
   }
   runNx("test", nxArgs);
 }
@@ -109,11 +127,17 @@ function runPublish(skip: Set<string>, nxArgs: string[]): void {
 //#region Main
 const parsed = parseArgs(process.argv);
 if (parsed.command === "fix") {
-  runFix(parsed.skip);
+  if (!runFix(parsed.skip)) {
+    process.exit(1);
+  }
 } else if (parsed.command === "analyze") {
-  runAnalyze(parsed.skip, parsed.nxArgs);
+  if (!runAnalyze(parsed.skip, parsed.nxArgs)) {
+    process.exit(1);
+  }
 } else if (parsed.command === "preflight") {
-  runPreflight(parsed.skip, parsed.nxArgs);
+  if (!runPreflight(parsed.skip, parsed.nxArgs)) {
+    process.exit(1);
+  }
 } else if (parsed.command === "test") {
   runTest(parsed.skip, parsed.nxArgs);
 } else if (parsed.command === "build") {

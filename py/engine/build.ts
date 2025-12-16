@@ -5,15 +5,15 @@ import { join } from "path";
 
 const cwd = __dirname;
 
-// Ensure venv exists
+
 if (!existsSync(join(cwd, ".venv"))) {
   execSync("ux sync", { cwd, stdio: "inherit" });
 }
 
-// Activate venv and generate schemas
+
 execSync(".venv/Scripts/activate.ps1 && tsx ./generate-schemas.ts", { cwd, stdio: "inherit", shell: "powershell.exe" });
 
-// Clean build directories
+
 if (existsSync(join(cwd, "build"))) {
   rmSync(join(cwd, "build"), { recursive: true });
 }
@@ -21,7 +21,7 @@ if (existsSync(join(cwd, "dist"))) {
   rmSync(join(cwd, "dist"), { recursive: true });
 }
 
-// Run pyinstaller
+
 const args = [
   "--name", "semio-engine",
   "--windowed",

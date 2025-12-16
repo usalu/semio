@@ -1,10 +1,6 @@
 #!/usr/bin/env npx tsx
 
-/**
- * Temporary script to migrate:
- * - Cylindric Capital to be a child of Capital
- * - Cylindric Tambour to be a child of Tambour
- */
+
 
 import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
@@ -18,11 +14,11 @@ async function main() {
 
     console.log("Finding entities...");
 
-    // Find the parent entities
+    
     const capital = kit.types?.find(t => t.name === "Capital" && !t.parent);
     const tambour = kit.types?.find(t => t.name === "Tambour" && !t.parent);
 
-    // Find the child entities
+    
     const cylindricCapital = kit.types?.find(t => t.name === "Cylindric Capital");
     const cylindricTambour = kit.types?.find(t => t.name === "Cylindric Tambour");
 

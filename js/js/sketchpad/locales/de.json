@@ -1443,6 +1443,12 @@
                   }
                 }
               }
+            },
+            "diagram": {
+              "label": {
+                "normal": "Diagramm",
+                "beginner": "Ein kraftgerichteter Graph, der alle Kit-Artefakte und ihre Beziehungen zeigt"
+              }
             }
           },
           "panel": {

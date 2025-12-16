@@ -169,6 +169,7 @@ import {
   DerivedNode,
   DerivedStore,
   DesignAppId,
+  Device,
   Disposable,
   EnrichedPanelDefinition,
   enrichPanelDefinition,
@@ -10713,8 +10714,10 @@ export class SketchpadStore {
   };
 
   createKit = (kit: Kit, local?: boolean, remote?: boolean) => {
+    console.log("[DEBUG] [STORE] createKit called. storeId:", this.id, "guid:", kit.guid, "name:", kit.name);
     const kitStore = new KitStore(this, kit, local, remote, this.remote);
     this.kits.set(kit.guid, kitStore);
+    console.log("[DEBUG] [STORE] Kit added to store. storeId:", this.id, "kits.size:", this.kits.size, "kitGuids:", Array.from(this.kits.keys()));
 
     this.yDoc.transact(() => {
       const kitMetadata = new Y.Map<string | boolean>();
@@ -10724,6 +10727,7 @@ export class SketchpadStore {
       this.yKits.push([kitMetadata as any]);
     });
 
+    console.log("[DEBUG] [STORE] Notifying", this.kitCreatedSubscribers.size, "subscribers");
     this.kitCreatedSubscribers.forEach((subscriber) => subscriber());
   };
 
@@ -12367,16 +12371,35 @@ export function useSketchpadCommands() {
       createDesignApp: (origin: string, designAppId: DesignAppId) => store.execute("semio.sketchpad.createDesignApp", origin, designAppId),
       navigateToKit: (kit: Guid, search?: string) => {
         const path = `/kits/${kit}${search ? (search.startsWith("?") ? search : `?${search}`) : ""}`;
-        navigate(path);
+        if (typeof window !== "undefined" && window.location.pathname !== path) {
+          window.location.href = path;
+        } else {
+          navigate(path);
+        }
       },
       navigateToDesign: (kit: Guid, design: Guid) => {
-        navigate(`/kits/${kit}/designs/${design}`);
+        const path = `/kits/${kit}/designs/${design}`;
+        if (typeof window !== "undefined") {
+          window.location.href = path;
+        } else {
+          navigate(path);
+        }
       },
       navigateToType: (kit: Guid, type: Guid) => {
-        navigate(`/kits/${kit}/types/${type}`);
+        const path = `/kits/${kit}/types/${type}`;
+        if (typeof window !== "undefined") {
+          window.location.href = path;
+        } else {
+          navigate(path);
+        }
       },
       navigateToQuality: (kit: Guid, quality: Guid) => {
-        navigate(`/kits/${kit}/qualities/${quality}`);
+        const path = `/kits/${kit}/qualities/${quality}`;
+        if (typeof window !== "undefined") {
+          window.location.href = path;
+        } else {
+          navigate(path);
+        }
       },
       navigateBack: (origin: string) => {
         store.execute("semio.sketchpad.navigateBack", origin);
@@ -15017,6 +15040,49 @@ const WindowControlsGroup: FC<{ controls: WindowControl[] }> = ({ controls }) =>
   );
 };
 
+interface LayoutErrorBoundaryProps {
+  children: ReactNode;
+  windowId: string;
+  onError?: (error: Error, info: React.ErrorInfo) => void;
+}
+interface LayoutErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+class LayoutErrorBoundary extends React.Component<LayoutErrorBoundaryProps, LayoutErrorBoundaryState> {
+  constructor(props: LayoutErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    this.props.onError?.(error, errorInfo);
+  }
+  componentDidUpdate(prevProps: LayoutErrorBoundaryProps) {
+    if (prevProps.children !== this.props.children && this.state.hasError) {
+      this.setState({ hasError: false, error: null });
+    }
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex flex-col items-center justify-center h-full gap-2 p-4">
+          <p className="text-sm text-muted-foreground">Error rendering {this.props.windowId}</p>
+          <p className="text-xs text-red-500 font-mono whitespace-pre-wrap max-w-full overflow-auto" data-testid="layout-error-message">
+            {this.state.error?.message}
+          </p>
+          <p className="text-xs text-muted-foreground font-mono whitespace-pre-wrap max-w-full overflow-auto max-h-32" data-testid="layout-error-stack">
+            {this.state.error?.stack?.split("\n").slice(0, 5).join("\n")}
+          </p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export const LayoutCanvas: FC<{
   windowConfig: AppWindowConfig;
   layoutState?: any;
@@ -15069,6 +15135,15 @@ export const LayoutCanvas: FC<{
     if (sketchpadScope) {
       wrapped = <SketchpadScopeContext.Provider value={sketchpadScope}>{wrapped}</SketchpadScopeContext.Provider>;
     }
+    wrapped = (
+      <OriginProvider>
+        <FocusProvider>
+          <PanelSectionProvider>
+            <FooterItemProvider>{wrapped}</FooterItemProvider>
+          </PanelSectionProvider>
+        </FocusProvider>
+      </OriginProvider>
+    );
 
     return wrapped;
   };
@@ -15294,14 +15369,22 @@ export const LayoutCanvas: FC<{
             const WindowComponent = windowType.component;
 
             const WrappedComponent = () => {
+              console.log("[DEBUG] [LAYOUT-WINDOW] Rendering window:", windowType.id, "location:", location.pathname, "scopeGuids:", scopeGuids);
               return (
                 <MemoryRouter initialEntries={[location.pathname + location.search]} initialIndex={0}>
                   <LayoutScopeWrapper>
                     <DragDropProvider>
                       <ReactFlowProvider>
-                        <Window id={windowType.id} isVisible={true} controls={windowType.controls ? <WindowControlsGroup controls={windowType.controls} /> : undefined}>
-                          <WindowComponent />
-                        </Window>
+                        <LayoutErrorBoundary
+                          windowId={windowType.id}
+                          onError={(error: Error, info: React.ErrorInfo) => {
+                            console.error("[DEBUG] [LAYOUT-WINDOW] Error in window:", windowType.id, error, info);
+                          }}
+                        >
+                          <Window id={windowType.id} isVisible={true} controls={windowType.controls ? <WindowControlsGroup controls={windowType.controls} /> : undefined}>
+                            <WindowComponent />
+                          </Window>
+                        </LayoutErrorBoundary>
                       </ReactFlowProvider>
                     </DragDropProvider>
                   </LayoutScopeWrapper>

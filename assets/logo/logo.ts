@@ -25,19 +25,17 @@ interface KeyframeData {
   groups: GroupData[];
 }
 
-/**
- * Convert transform values to a 2D matrix
- */
+
 function transformToMatrix(translate: { x: number; y: number }, rotate: { angle: number; cx: number; cy: number }, scale: { x: number; y: number }): string {
   const tx = translate.x;
   const ty = translate.y;
-  const angle = (rotate.angle * Math.PI) / 180; // Convert to radians
+  const angle = (rotate.angle * Math.PI) / 180; 
   const cx = rotate.cx;
   const cy = rotate.cy;
   const sx = scale.x === 0 ? 1 : scale.x;
   const sy = scale.y === 0 ? 1 : scale.y;
 
-  // Start with identity matrix
+  
   let a = 1,
     b = 0,
     c = 0,
@@ -45,17 +43,17 @@ function transformToMatrix(translate: { x: number; y: number }, rotate: { angle:
     e = 0,
     f = 0;
 
-  // Apply translation
+  
   e += tx;
   f += ty;
 
-  // Apply rotation around point (cx, cy)
+  
   if (angle !== 0) {
-    // Translate to rotation center
+    
     e -= cx;
     f -= cy;
 
-    // Apply rotation
+    
     const cos_a = Math.cos(angle);
     const sin_a = Math.sin(angle);
     const new_a = a * cos_a - b * sin_a;
@@ -72,12 +70,12 @@ function transformToMatrix(translate: { x: number; y: number }, rotate: { angle:
     e = new_e;
     f = new_f;
 
-    // Translate back from rotation center
+    
     e += cx;
     f += cy;
   }
 
-  // Apply scale
+  
   a *= sx;
   b *= sx;
   c *= sy;

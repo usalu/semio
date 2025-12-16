@@ -17,7 +17,7 @@ const storybook = spawn(
   }
 );
 
-// Handle process termination
+
 process.on("SIGINT", () => {
   vite.kill();
   storybook.kill();

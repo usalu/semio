@@ -1,10 +1,6 @@
 #!/usr/bin/env npx tsx
 
-/**
- * Generate validation.json from kit_invalid.json
- *
- * Usage: npx tsx scripts/generate-validation.ts
- */
+
 
 import { InvalidKit } from "@semio/assets";
 import * as fs from "fs";

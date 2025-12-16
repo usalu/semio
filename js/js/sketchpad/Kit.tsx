@@ -30,6 +30,7 @@ import {
   ChevronDownIcon,
   ChevronRightIcon,
   CodeIcon,
+  DiagramIcon,
   DocumentIcon,
   FileCodeIcon,
   FileImageIcon,
@@ -49,14 +50,17 @@ import {
   SortAscendingIcon,
   SortDescendingIcon,
   SunIcon,
+  TableViewIcon,
   TutorialIcon,
   TypeIcon,
   UserIcon,
 } from "@semio/assets";
 import { useSelector } from "@xstate/react";
+import type { Edge, Node, NodeProps } from "@xyflow/react";
+import { Background, Handle, Position, ReactFlow, ReactFlowProvider, useReactFlow } from "@xyflow/react";
 import { formatDistanceToNow } from "date-fns";
 import { de, enUS } from "date-fns/locale";
-import React, { FC, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import React, { FC, memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams, useSearchParams } from "react-router";
 import { Camera } from "three";
@@ -65,12 +69,15 @@ import i18n, { useLabel } from "../i18n";
 import { areDesignsInSameFamily, areTypesInSameFamily, Author, buildFileTree, Concept, Coord, Design, DesignDiff, DiffStatus, flattenFileTree, Folder, generateUniqueName, guid, Guid, Interface, Kit, KitDiff, Quality, File as SemioFile, Tag, Type, TypeDiff } from "../semio";
 import type { KitStore as KitDataSource, SketchpadStore as SketchpadOrchestrator } from "./Sketchpad";
 import {
+  AppWindowConfig,
   Canvas,
   ConceptFilter,
+  createDefaultLayout,
   defaultPanelVisibility,
   identitySelector,
   KitDiffAppStore as KitDiffStore,
   KitScopeProvider,
+  LayoutCanvas,
   registerKitAppStoreFactory as registerKitStoreFactory,
   useAddFooterItem,
   useAddPanelSection,
@@ -84,7 +91,14 @@ import {
   useKit,
   useKitAppXState,
   useKitCommands,
+  useKitDesigns,
+  useKitFiles,
+  useKitFolders,
+  useKitInterfaces,
+  useKitQualities,
   useKitScope,
+  useKitTags,
+  useKitTypes,
   useLanguage,
   useDevice,
   useMode,
@@ -208,8 +222,12 @@ export interface KitAppSelectionDiff {
 }
 export enum KitAppFullscreenWindow {
   None = "none",
-  Types = "types",
-  Designs = "designs",
+  Table = "table",
+  Diagram = "diagram",
+}
+export enum KitAppWindowKind {
+  Table = "table",
+  Diagram = "diagram",
 }
 export interface KitAppPresence {
   cursor?: Coord;
@@ -235,6 +253,7 @@ export interface KitAppDiff {
   expandedRows?: string[];
   sortColumn?: KitAppSortColumn;
   sortDirection?: KitAppSortDirection;
+  windowLayout?: any;
 }
 export interface KitAppEdit extends KitDiffAppEdit<KitAppSelectionDiff> {}
 export interface KitAppState {
@@ -248,6 +267,7 @@ export interface KitAppState {
   expandedRows: string[];
   sortColumn?: KitAppSortColumn;
   sortDirection?: KitAppSortDirection;
+  windowLayout?: any;
 }
 
 export interface KitAppCommandContext extends KitCommandContext {
@@ -494,6 +514,10 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
     return this.yMap.get("sortDirection") as KitAppSortDirection | undefined;
   }
 
+  get windowLayout(): any {
+    return this.yMap.get("windowLayout");
+  }
+
   kit(): KitDataSource {
     return this.parent.kit(this.yMap.get("kit") as string);
   }
@@ -517,13 +541,13 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
       canRedo: this.canRedo(),
       presence: this.presence,
       others: this.others,
-      // diff: this.diff, // TODO: KitAppState doesn't have a diff property
       currentTransactionStack: this.currentTransactionStack,
       pastTransactionsStack: this.pastTransactionsStack,
       filterSearch: this.filterSearch,
       expandedRows: this.expandedRows,
       sortColumn: this.sortColumn,
       sortDirection: this.sortDirection,
+      windowLayout: this.windowLayout,
     } as any;
   }
 
@@ -585,6 +609,9 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
       }
       if (diff.sortDirection !== undefined) {
         this.yMap.set("sortDirection", diff.sortDirection);
+      }
+      if (diff.windowLayout !== undefined) {
+        this.yMap.set("windowLayout", diff.windowLayout);
       }
     });
   };
@@ -822,8 +849,6 @@ const kitAppPlugin: AppPlugin = {
   id: "kit",
   namespace: "KIT",
   machine: {
-    // Actions are defined in Sketchpad.tsx for now
-    // TODO: Move kit-specific actions here when Sketchpad.tsx is refactored
     actions: {},
     guards: {},
     eventHandlers: {},
@@ -838,6 +863,7 @@ const kitAppPlugin: AppPlugin = {
       expandedRows: new Set<string>(),
       sortColumn: undefined,
       sortDirection: undefined,
+      windowLayout: undefined,
     }),
   },
   registerStores: () => {
@@ -1001,6 +1027,11 @@ if (typeof window !== "undefined") {
     const currentStack = [...app.transaction.currentTransactionStack, event.edit];
     return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, transaction: { ...app.transaction, currentTransactionStack: currentStack, redoStack: [] } } } };
   });
+  registerRuntimeAction("kitSetWindowLayout", (context: any, event: any) => {
+    if (event.type !== "KIT.SET_WINDOW_LAYOUT") return {};
+    const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
+    return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, windowLayout: event.windowLayout } } };
+  });
 }
 
 // #endregion Kit App Plugin Registration
@@ -1103,6 +1134,21 @@ export function useKitAppOthers(): HookNoSetResult<KitAppPresenceOther[]> {
   const others = useKitApp((s) => s.others) as KitAppPresenceOther[];
   const canRead = kitScope !== null;
   return [others, undefined, canRead];
+}
+
+export function useKitAppWindowLayout(): HookResult<any> {
+  const kitScope = useKitScope();
+  const kitGuid = kitScope?.guid;
+  const controller = useKitStore() as KitStore | null;
+  const windowLayout = useKitApp((s) => s.windowLayout);
+  const canSet = !!kitGuid && controller !== null;
+  const setWindowLayout = useMemo(() => {
+    if (!canSet || !kitGuid) return undefined;
+    return (value: any) => {
+      if (controller) controller.change({ windowLayout: value });
+    };
+  }, [kitGuid, canSet, controller]);
+  return conditionalHookResult(canSet, windowLayout, setWindowLayout);
 }
 
 export function useKitAppTransaction(): Transaction {
@@ -1598,18 +1644,18 @@ export const commands = {
   "semio.kitApp.setDevice": (context: KitAppCommandContext, device: Device): KitAppCommandResult => {
     return { diff: {} };
   },
-  "semio.kitApp.toggleTypesFullscreen": (context: KitAppCommandContext): KitAppCommandResult => {
+  "semio.kitApp.toggleTableFullscreen": (context: KitAppCommandContext): KitAppCommandResult => {
     const currentPanel = context.kitApp.fullscreenWindow;
-    const newPanel = currentPanel === KitAppFullscreenWindow.Types ? KitAppFullscreenWindow.None : KitAppFullscreenWindow.Types;
+    const newPanel = currentPanel === KitAppFullscreenWindow.Table ? KitAppFullscreenWindow.None : KitAppFullscreenWindow.Table;
     return {
       diff: {
         fullscreenWindow: newPanel,
       },
     };
   },
-  "semio.kitApp.toggleDesignsFullscreen": (context: KitAppCommandContext): KitAppCommandResult => {
+  "semio.kitApp.toggleDiagramFullscreen": (context: KitAppCommandContext): KitAppCommandResult => {
     const currentPanel = context.kitApp.fullscreenWindow;
-    const newPanel = currentPanel === KitAppFullscreenWindow.Designs ? KitAppFullscreenWindow.None : KitAppFullscreenWindow.Designs;
+    const newPanel = currentPanel === KitAppFullscreenWindow.Diagram ? KitAppFullscreenWindow.None : KitAppFullscreenWindow.Diagram;
     return {
       diff: {
         fullscreenWindow: newPanel,
@@ -2508,7 +2554,11 @@ const AppContent: FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const kitScope = useKitScope();
+  const orchestratorForDebug = useSketchpadStore();
+  const kitGuidsInStore = Array.from((orchestratorForDebug as any).kits?.keys?.() || []);
+  console.log("[DEBUG] [TABLE-WINDOW] AppContent kitScope:", kitScope?.guid, "kitGuidsInStore:", kitGuidsInStore);
   const hasKit = useHasKit(kitScope?.guid || "");
+  console.log("[DEBUG] [TABLE-WINDOW] AppContent hasKit=", hasKit, "for guid=", kitScope?.guid);
 
   // Use shallow subscription (deep=false) since this component primarily cares about
   // array-level changes (adding/removing items), not deep property changes within items
@@ -4244,11 +4294,14 @@ const AppContent: FC = () => {
   };
 
   // Early return checks after all hooks have been called
+  console.log("[DEBUG] [TABLE-WINDOW] Early return checks: hasKit=", hasKit, "kit=", !!kit, "kitApp=", !!kitApp, "isMobile=", isMobile);
   if (!hasKit || !kit) {
+    console.log("[DEBUG] [TABLE-WINDOW] Returning NotFound");
     return <NotFound title={t("semio.sketchpad.app.kit.notFound.label.normal")} description={t("semio.sketchpad.app.kit.notFound.description.normal")} parentPath="/" parentLabel={t("semio.sketchpad.app.home.title")} />;
   }
 
   if (!kitApp) {
+    console.log("[DEBUG] [TABLE-WINDOW] Returning loading (no kitApp)");
     return (
       <div className="flex items-center justify-center h-full">
         <p className="text-sm text-muted-foreground">{kitLoadingLabel}</p>
@@ -4257,6 +4310,7 @@ const AppContent: FC = () => {
   }
 
   if (isMobile) {
+    console.log("[DEBUG] [TABLE-WINDOW] Returning mobile layout");
     return (
       <div
         className="flex flex-col h-full"
@@ -4998,9 +5052,461 @@ const App: FC = () => {
   );
 };
 
-export default App;
-
 // #endregion Table
+
+// #region Diagram
+
+type DiagramNodeKind = "type" | "design" | "quality" | "interface" | "tag" | "concept" | "file" | "folder" | "author";
+
+interface KitDiagramNode extends Record<string, unknown> {
+  guid: string;
+  name: string;
+  kind: DiagramNodeKind;
+  icon?: string;
+  parentGuid?: string;
+  concepts?: string[];
+}
+
+interface KitDiagramEdge {
+  id: string;
+  source: string;
+  target: string;
+  relationship: "part-of" | "reference";
+}
+
+const KitArtifactNode: FC<NodeProps<Node<KitDiagramNode>>> = ({ data, selected }) => {
+  const [selection] = useKitAppSelection();
+  const [setHover] = useKitAppSetHover();
+  const kitScope = useKitScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const actor = useSketchpadActor();
+
+  const isSelected = useMemo(() => {
+    if (!selection) return false;
+    switch (data.kind) {
+      case "type":
+        return selection.types?.includes(data.guid) ?? false;
+      case "design":
+        return selection.designs?.includes(data.guid) ?? false;
+      case "quality":
+        return selection.qualities?.includes(data.guid) ?? false;
+      case "interface":
+        return selection.interfaces?.includes(data.guid) ?? false;
+      case "tag":
+        return selection.tags?.includes(data.guid) ?? false;
+      case "concept":
+        return selection.concepts?.includes(data.guid) ?? false;
+      case "file":
+        return selection.files?.includes(data.guid) ?? false;
+      case "folder":
+        return selection.folders?.includes(data.guid) ?? false;
+      case "author":
+        return selection.authors?.includes(data.guid) ?? false;
+      default:
+        return false;
+    }
+  }, [selection, data.kind, data.guid]);
+
+  const handleClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      const eventTypeMap: Record<DiagramNodeKind, string> = {
+        type: "KIT.SELECT_TYPE",
+        design: "KIT.SELECT_DESIGN",
+        quality: "KIT.SELECT_QUALITY",
+        interface: "KIT.SELECT_INTERFACE",
+        tag: "KIT.SELECT_TAG",
+        concept: "KIT.SELECT_CONCEPT",
+        file: "KIT.SELECT_FILE",
+        folder: "KIT.SELECT_FOLDER",
+        author: "KIT.SELECT_AUTHOR",
+      };
+      const guidFieldMap: Record<DiagramNodeKind, string> = {
+        type: "typeGuid",
+        design: "designGuid",
+        quality: "qualityGuid",
+        interface: "interfaceGuid",
+        tag: "tagGuid",
+        concept: "conceptGuid",
+        file: "fileGuid",
+        folder: "folderGuid",
+        author: "authorGuid",
+      };
+      const eventType = eventTypeMap[data.kind];
+      const guidField = guidFieldMap[data.kind];
+      if (eventType && guidField) {
+        actor.send({
+          type: eventType,
+          kitGuid,
+          [guidField]: data.guid,
+        } as any);
+      }
+    },
+    [actor, kitGuid, data.kind, data.guid],
+  );
+
+  const handleMouseEnter = useCallback(() => {
+    if (setHover) {
+      if (data.kind === "type") setHover({ type: data.guid });
+      else if (data.kind === "design") setHover({ design: data.guid });
+    }
+  }, [setHover, data.kind, data.guid]);
+
+  const handleMouseLeave = useCallback(() => {
+    if (setHover) setHover({});
+  }, [setHover]);
+
+  const iconContent = useMemo(() => {
+    switch (data.kind) {
+      case "type":
+        return <TypeIcon className="size-tiny" />;
+      case "design":
+        return <LayoutIcon className="size-tiny" />;
+      case "quality":
+        return <AwardIcon className="size-tiny" />;
+      case "interface":
+        return <InterfaceIcon className="size-tiny" />;
+      case "tag":
+        return <HashIcon className="size-tiny" />;
+      case "concept":
+        return <LightbulbIcon className="size-tiny" />;
+      case "file":
+        return <DocumentIcon className="size-tiny" />;
+      case "folder":
+        return <FolderIcon className="size-tiny" />;
+      case "author":
+        return <UserIcon className="size-tiny" />;
+      default:
+        return null;
+    }
+  }, [data.kind]);
+
+  return (
+    <div
+      className={`flex items-center gap-1 px-2 py-1 border rounded cursor-pointer transition-colors ${
+        isSelected ? "bg-active-base border-foreground" : "bg-base border-foreground/20 hover:bg-hover-base"
+      }`}
+      onClick={handleClick}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      <Handle type="target" position={Position.Top} className="!bg-foreground/50 !w-2 !h-2" />
+      <Handle type="source" position={Position.Bottom} className="!bg-foreground/50 !w-2 !h-2" />
+      <Handle type="target" position={Position.Left} className="!bg-foreground/50 !w-2 !h-2" />
+      <Handle type="source" position={Position.Right} className="!bg-foreground/50 !w-2 !h-2" />
+      {iconContent}
+      <span className="text-xs truncate max-w-24">{data.name || data.guid.substring(0, 8)}</span>
+    </div>
+  );
+};
+
+const kitNodeTypes = {
+  artifact: KitArtifactNode,
+};
+
+const edgeStyle = {
+  "part-of": { stroke: "var(--foreground)", strokeWidth: 2 },
+  reference: { stroke: "var(--foreground)", strokeWidth: 1, strokeDasharray: "5,5" },
+};
+
+const buildKitDiagramData = (kit: Kit): { nodes: Node<KitDiagramNode>[]; edges: Edge[] } => {
+  const nodes: Node<KitDiagramNode>[] = [];
+  const edges: Edge[] = [];
+  const nodePositions = new Map<string, { x: number; y: number }>();
+
+  const kindGroups: DiagramNodeKind[] = ["type", "design", "quality", "interface", "tag", "concept", "file", "folder", "author"];
+  let globalY = 0;
+
+  for (const kind of kindGroups) {
+    let items: Array<{ guid: string; name: string; icon?: string; parentGuid?: string; concepts?: string[] }> = [];
+
+    switch (kind) {
+      case "type":
+        items = (kit.types ?? []).map((t) => ({
+          guid: t.guid,
+          name: t.name,
+          icon: t.icon,
+          parentGuid: t.parent?.guid,
+          concepts: t.concepts?.map((c) => c.guid),
+        }));
+        break;
+      case "design":
+        items = (kit.designs ?? []).map((d) => ({
+          guid: d.guid,
+          name: d.name,
+          icon: d.icon,
+          parentGuid: d.parent?.guid,
+          concepts: d.concepts?.map((c) => c.guid),
+        }));
+        break;
+      case "quality":
+        items = (kit.qualities ?? []).map((q) => ({ guid: q.guid, name: q.name, icon: q.icon }));
+        break;
+      case "interface":
+        items = (kit.interfaces ?? []).map((i) => ({ guid: i.guid, name: i.name, icon: i.icon }));
+        break;
+      case "tag":
+        items = (kit.tags ?? []).map((t) => ({ guid: t.guid, name: t.name, icon: t.icon }));
+        break;
+      case "concept":
+        items = (kit.concepts ?? []).map((c) => ({ guid: c.guid, name: c.name, icon: c.icon }));
+        break;
+      case "file":
+        items = (kit.files ?? []).map((f) => ({ guid: f.guid, name: f.name, parentGuid: f.folder?.guid }));
+        break;
+      case "folder":
+        items = (kit.folders ?? []).map((f) => ({ guid: f.guid, name: f.name, parentGuid: f.parent?.guid }));
+        break;
+      case "author":
+        items = (kit.authors ?? []).map((a) => ({ guid: a.guid, name: a.name }));
+        break;
+    }
+
+    let x = 0;
+    for (const item of items) {
+      const position = { x, y: globalY };
+      nodePositions.set(item.guid, position);
+
+      nodes.push({
+        id: item.guid,
+        type: "artifact",
+        position,
+        data: {
+          guid: item.guid,
+          name: item.name,
+          kind,
+          icon: item.icon,
+          parentGuid: item.parentGuid,
+          concepts: item.concepts,
+        },
+      });
+
+      if (item.parentGuid) {
+        edges.push({
+          id: `${item.parentGuid}-${item.guid}`,
+          source: item.parentGuid,
+          target: item.guid,
+          type: "default",
+          style: edgeStyle["part-of"],
+          data: { relationship: "part-of" },
+        });
+      }
+
+      x += 180;
+    }
+
+    if (items.length > 0) globalY += 100;
+  }
+
+  for (const design of kit.designs ?? []) {
+    for (const piece of design.pieces ?? []) {
+      if (piece.type?.guid) {
+        const typeGuid = piece.type.guid;
+        const edgeId = `ref-${design.guid}-${typeGuid}`;
+        if (!edges.some((e) => e.id === edgeId)) {
+          edges.push({
+            id: edgeId,
+            source: typeGuid,
+            target: design.guid,
+            type: "default",
+            style: edgeStyle["reference"],
+            data: { relationship: "reference" },
+          });
+        }
+      }
+      if (piece.design?.guid) {
+        const nestedDesignGuid = piece.design.guid;
+        const edgeId = `ref-${design.guid}-${nestedDesignGuid}`;
+        if (!edges.some((e) => e.id === edgeId)) {
+          edges.push({
+            id: edgeId,
+            source: nestedDesignGuid,
+            target: design.guid,
+            type: "default",
+            style: edgeStyle["reference"],
+            data: { relationship: "reference" },
+          });
+        }
+      }
+    }
+  }
+
+  return { nodes, edges };
+};
+
+interface KitDiagramProps {}
+
+const KitDiagram: FC<KitDiagramProps> = () => {
+  const kit = useKit() as Kit | undefined;
+  const reactFlowWrapper = useRef<HTMLDivElement>(null);
+  const reactFlow = useReactFlow();
+  const kitCommands = useKitAppCommands();
+
+  const { nodes, edges } = useMemo(() => {
+    if (!kit) return { nodes: [], edges: [] };
+    return buildKitDiagramData(kit);
+  }, [kit]);
+
+  const handlePaneClick = useCallback(() => {
+    kitCommands.deselectAll?.();
+  }, [kitCommands]);
+
+  if (!kit) return null;
+
+  return (
+    <div ref={reactFlowWrapper} className="w-full h-full">
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        nodeTypes={kitNodeTypes}
+        fitView
+        fitViewOptions={{ padding: 0.2 }}
+        minZoom={0.1}
+        maxZoom={2}
+        onPaneClick={handlePaneClick}
+        proOptions={{ hideAttribution: true }}
+      >
+        <Background gap={20} size={1} />
+      </ReactFlow>
+    </div>
+  );
+};
+
+const TableWindow = memo(() => {
+  return <AppContent />;
+});
+TableWindow.displayName = "TableWindow";
+
+const DiagramWindow = memo(() => {
+  return (
+    <ReactFlowProvider>
+      <KitDiagram />
+    </ReactFlowProvider>
+  );
+});
+DiagramWindow.displayName = "DiagramWindow";
+
+const MultiWindowApp: FC = () => {
+  useKitAppYjsToXStateSync();
+  const transaction = useKitAppTransaction();
+  const actor = useSketchpadActor();
+  const sketchpadStore = useSketchpadStore();
+  const kitGuid = useKitScope()?.guid;
+  
+  // Wait for kit to be available before rendering GoldenLayout
+  // This prevents a race condition where GoldenLayout renders before the kit is loaded
+  const hasKit = useHasKit(kitGuid || "");
+  
+  // Debug logging
+  const storeId = (sketchpadStore as any).id;
+  const kitGuidsInStore = Array.from((sketchpadStore as any).kits?.keys?.() || []);
+  console.log("[DEBUG] [MultiWindowApp] storeId:", storeId, "kitGuid:", kitGuid, "hasKit:", hasKit, "kitGuidsInStore:", kitGuidsInStore);
+  
+  const store = useMemo(() => {
+    if (!kitGuid || !sketchpadStore?.hasKitApp?.({ kit: kitGuid })) return null;
+    return sketchpadStore.kitApp(kitGuid);
+  }, [sketchpadStore, kitGuid]);
+
+  const storedWindowLayout = useSyncDeep<any, any>(store, (s: KitAppState | null) => s?.windowLayout);
+
+  const defaultLayout = useMemo(
+    () => ({
+      root: {
+        type: "row",
+        content: [
+          {
+            type: "stack",
+            size: "50%",
+            content: [
+              {
+                type: "component",
+                componentName: KitAppWindowKind.Table,
+                title: "table",
+                componentState: {},
+              },
+            ],
+          },
+          {
+            type: "stack",
+            size: "50%",
+            content: [
+              {
+                type: "component",
+                componentName: KitAppWindowKind.Diagram,
+                title: "diagram",
+                componentState: {},
+              },
+            ],
+          },
+        ],
+      },
+    }),
+    [],
+  );
+
+  const windowLayout = useMemo(() => storedWindowLayout || defaultLayout, [storedWindowLayout, defaultLayout]);
+
+  const windowConfig: AppWindowConfig = useMemo(
+    () => ({
+      windowKinds: [
+        {
+          id: KitAppWindowKind.Table,
+          label: "table",
+          component: () => <TableWindow />,
+        },
+        {
+          id: KitAppWindowKind.Diagram,
+          label: "diagram",
+          component: () => <DiagramWindow />,
+        },
+      ],
+      defaultLayout,
+    }),
+    [defaultLayout],
+  );
+
+  const handleLayoutChange = useCallback(
+    (config: any) => {
+      if (store && typeof store.change === "function") {
+        store.change({ windowLayout: config });
+      }
+    },
+    [store],
+  );
+
+  // Wait for kit to be available before rendering GoldenLayout
+  // This prevents a race condition where GoldenLayout windows render and show NotFound
+  // before the kit is loaded into the store
+  if (!hasKit) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-sm text-muted-foreground">Loading kit...</p>
+      </div>
+    );
+  }
+
+  return (
+    <ErrorBoundary
+      fallback={
+        <div className="flex items-center justify-center h-full">
+          <p className="text-sm text-muted-foreground">Failed to load kit app</p>
+        </div>
+      }
+    >
+      <TransactionProvider transaction={transaction}>
+        <KitDropZone>
+          <Canvas id="semio.sketchpad.app.kit.canvas">
+            <LayoutCanvas windowConfig={windowConfig} layoutState={windowLayout} onLayoutChange={handleLayoutChange} />
+          </Canvas>
+        </KitDropZone>
+      </TransactionProvider>
+    </ErrorBoundary>
+  );
+};
+
+export default MultiWindowApp;
+
+// #endregion Diagram
 
 // #endregion Windows
 
@@ -5821,7 +6327,7 @@ export const KitAppFooter: FC = () => {
 
 export const config: AppConfig = {
   id: "kit",
-  component: App,
+  component: MultiWindowApp,
   routeSegments: [
     {
       path: "kits/:kit",

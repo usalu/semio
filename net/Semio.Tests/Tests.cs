@@ -17,7 +17,7 @@ public class KitTests
         var kitOriginal = JsonConvert.DeserializeObject<Kit>(kitOriginalJson);
         Assert.NotNull(kitOriginal);
 
-        // Filter to only proto designs (no parent) to match JS behavior
+        
         kitOriginal!.Designs = kitOriginal.Designs.Where(d => d.Parent == null).ToList();
 
         var kitDiffJson = System.IO.File.ReadAllText(Path.Combine(AssetsPath, "diff_kit_metabolism.json"));
@@ -32,19 +32,19 @@ public class KitTests
         var kitDiffed = JsonConvert.DeserializeObject<Kit>(kitDiffedJson);
         Assert.NotNull(kitDiffed);
 
-        // Apply forward diff
+        
         var appliedForward = kitOriginal.ApplyDiff(kitDiff!);
         Assert.NotNull(appliedForward);
 
-        // Verify name and version changed correctly
+        
         Assert.Equal(kitDiffed!.Name, appliedForward.Name);
         Assert.Equal(kitDiffed.Version, appliedForward.Version);
 
-        // Apply inverse diff to get back to original
+        
         var appliedInverse = appliedForward.ApplyDiff(kitDiffInverted!);
         Assert.NotNull(appliedInverse);
 
-        // Verify we got back to original
+        
         Assert.Equal(kitOriginal.Name, appliedInverse.Name);
         Assert.Equal(kitOriginal.Version, appliedInverse.Version);
     }
@@ -69,13 +69,13 @@ public class KitTests
     [Fact]
     public void Validation_MatchesExpectedOutput()
     {
-        // Valid kit has no errors
+        
         var validKitJson = System.IO.File.ReadAllText(Path.Combine(AssetsPath, "kit_metabolism.json"));
         var validKit = JsonConvert.DeserializeObject<Kit>(validKitJson);
         Assert.NotNull(validKit);
         Assert.False(SemioValidator.ValidateKit(validKit!).HasErrors());
 
-        // Invalid kit matches validation.json
+        
         var invalidKitJson = System.IO.File.ReadAllText(KitInvalidPath);
         var invalidKit = JsonConvert.DeserializeObject<Kit>(invalidKitJson);
         Assert.NotNull(invalidKit);
@@ -104,13 +104,13 @@ public class FlattenDesignTests
         float gap, float shift, float rise,
         float rotation, float turn, float tilt)
     {
-        // Parent local x-axis
+        
         var parentXVec = new float[] { parentPlane.XAxis.X, parentPlane.XAxis.Y, parentPlane.XAxis.Z };
         var parentYVec = new float[] { parentPlane.YAxis.X, parentPlane.YAxis.Y, parentPlane.YAxis.Z };
-        // Parent z-axis = cross(x, y) for left-handed
+        
         var parentZVec = Cross(parentXVec, parentYVec);
 
-        // Port world position
+        
         var worldPortPos = new float[]
         {
             parentPlane.Origin.X + parentPort.X * parentXVec[0] + parentPort.Y * parentYVec[0] + parentPort.Z * parentZVec[0],
@@ -118,7 +118,7 @@ public class FlattenDesignTests
             parentPlane.Origin.Z + parentPort.X * parentXVec[2] + parentPort.Y * parentYVec[2] + parentPort.Z * parentZVec[2]
         };
 
-        // Port world direction
+        
         var worldDir = new float[]
         {
             parentDirection.X * parentXVec[0] + parentDirection.Y * parentYVec[0] + parentDirection.Z * parentZVec[0],
@@ -127,7 +127,7 @@ public class FlattenDesignTests
         };
         Normalize(worldDir);
 
-        // Apply translations
+        
         var translated = new float[]
         {
             worldPortPos[0] + gap * worldDir[0],
@@ -135,8 +135,8 @@ public class FlattenDesignTests
             worldPortPos[2] + gap * worldDir[2]
         };
 
-        // The child's plane origin is at the translated position minus child port offset
-        // For simplicity, return identity-like plane at the translated position
+        
+        
         return new Plane
         {
             Origin = new Point { X = translated[0], Y = translated[1], Z = translated[2] },
@@ -203,7 +203,7 @@ public class FlattenDesignTests
         var kit = JsonConvert.DeserializeObject<Kit>(kitJson);
         Assert.NotNull(kit);
 
-        // Navigate through the design hierarchy using the path
+        
         Design? design = null;
         string? parentGuid = null;
 
@@ -211,12 +211,12 @@ public class FlattenDesignTests
         {
             if (parentGuid == null)
             {
-                // Find root design (no parent)
+                
                 design = kit!.Designs.FirstOrDefault(d => d.Name == designName && d.Parent is null);
             }
             else
             {
-                // Find child design with matching parent
+                
                 design = kit!.Designs.FirstOrDefault(d => d.Name == designName && d.Parent is not null && d.Parent.Guid == parentGuid);
             }
 

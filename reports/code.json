@@ -1,0 +1,3277 @@
+{
+  "timestamp": "2025-12-16T10:34:00.099Z",
+  "status": "error",
+  "summary": {
+    "filesScanned": 131,
+    "issues": 375,
+    "byKind": {
+      "comment": 1,
+      "temporary_log": 8,
+      "missing_license_header": 124,
+      "extra_dev_docs": 0,
+      "region_name_missing": 108,
+      "region_mismatch": 134,
+      "region_unclosed": 0,
+      "unreadable_file": 0
+    },
+    "byLanguage": {
+      "typescript": 120,
+      "python": 3,
+      "csharp": 8,
+      "meta": 0
+    }
+  },
+  "issues": [
+    {
+      "path": "assets/grasshopper/build.py",
+      "language": "python",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "assets/icons.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "assets/index.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "assets/logo/logo.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/desktop/forge.config.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/desktop/forge.env.d.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/desktop/main.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/desktop/postcss.config.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/desktop/preload.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/desktop/renderer.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/desktop/tailwind.config.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/desktop/vite.main.config.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/desktop/vite.preload.config.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/desktop/vite.renderer.config.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/docs/index.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/docs/postcss.config.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/docs/postcss.config.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/docs/postcss.config.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/docs/tailwind.config.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/.storybook/main.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/.storybook/main.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 22,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/main.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 22,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 3, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/preview.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/.storybook/preview.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/preview.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/Canvas.stories.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/Canvas.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/Canvas.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/Command.stories.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/Command.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/Command.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/Footer.stories.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/Footer.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/Footer.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/Layout.stories.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/Layout.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/Layout.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/Navbar.stories.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/Navbar.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/Navbar.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/Popover.stories.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/Popover.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/Popover.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Accordion.stories.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Accordion.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Accordion.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Band.stories.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Band.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Band.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Collapsible.stories.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Collapsible.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Collapsible.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Dialog.stories.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Dialog.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Dialog.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Scrollable.stories.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Scrollable.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Scrollable.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Tabs.stories.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Tabs.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Tabs.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Tree.stories.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Tree.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Tree.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/display/Avatar.stories.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/display/Avatar.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/display/Avatar.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/display/HoverCard.stories.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/display/HoverCard.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/display/HoverCard.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/display/Icons.stories.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/display/Icons.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/display/Icons.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/display/Tooltip.stories.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/display/Tooltip.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/display/Tooltip.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/input/ActionGroup.stories.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/input/ActionGroup.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/input/ActionGroup.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/input/Button.stories.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/input/Button.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/input/Button.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/input/ButtonGroup.stories.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/input/ButtonGroup.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/input/ButtonGroup.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/input/Combobox.stories.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/input/Combobox.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/input/Combobox.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/input/Input.stories.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/input/Input.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/input/Input.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/input/Select.stories.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/input/Select.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/input/Select.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/input/Slider.stories.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/input/Slider.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/input/Slider.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/input/Stepper.stories.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/input/Stepper.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/input/Stepper.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/input/Textarea.stories.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/input/Textarea.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/input/Textarea.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/input/Toggle.stories.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/input/Toggle.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/input/Toggle.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/input/ToggleGroup.stories.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/input/ToggleGroup.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/input/ToggleGroup.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/window/Table.stories.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/window/Table.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/window/Table.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/vitest.setup.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/.storybook/vitest.setup.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/vitest.setup.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/withTheme.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/.storybook/withTheme.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/withTheme.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/dev.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/eslint.config.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/eslint.config.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/eslint.config.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/i18n.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/index.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/index.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/index.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/playwright.config.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/postcss.config.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/postcss.config.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/postcss.config.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/semio.test.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/semio.test.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/semio.test.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/semio.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/semio.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/semio.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/semio.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 417,
+      "column": 1,
+      "message": "Region mismatch: opened \"Coord (weak entity)\" at line 378, closed \"Coord\"",
+      "excerpt": "// #endregion Coord"
+    },
+    {
+      "path": "js/js/semio.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 458,
+      "column": 1,
+      "message": "Region mismatch: opened \"Vec (weak entity)\" at line 419, closed \"Vec\"",
+      "excerpt": "// #endregion Vec"
+    },
+    {
+      "path": "js/js/semio.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 509,
+      "column": 1,
+      "message": "Region mismatch: opened \"Point (weak entity)\" at line 460, closed \"Point\"",
+      "excerpt": "// #endregion Point"
+    },
+    {
+      "path": "js/js/semio.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 560,
+      "column": 1,
+      "message": "Region mismatch: opened \"Vector (weak entity)\" at line 511, closed \"Vector\"",
+      "excerpt": "// #endregion Vector"
+    },
+    {
+      "path": "js/js/semio.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 683,
+      "column": 1,
+      "message": "Region mismatch: opened \"Plane (weak entity)\" at line 562, closed \"Plane\"",
+      "excerpt": "// #endregion Plane"
+    },
+    {
+      "path": "js/js/semio.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 734,
+      "column": 1,
+      "message": "Region mismatch: opened \"Camera (weak entity)\" at line 685, closed \"Camera\"",
+      "excerpt": "// #endregion Camera"
+    },
+    {
+      "path": "js/js/site.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/sketchpad.test.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/sketchpad/Design.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/sketchpad/Design.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Design.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Design.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 3171,
+      "column": 1,
+      "message": "Region mismatch: opened \"Imports\" at line 57, closed \"Store\"",
+      "excerpt": "// #endregion Store"
+    },
+    {
+      "path": "js/js/sketchpad/Docs.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/sketchpad/Docs.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Docs.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Docs.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 635,
+      "column": 1,
+      "message": "Region mismatch: opened \"Store\" at line 627, closed \"Registry\"",
+      "excerpt": "// #endregion Registry"
+    },
+    {
+      "path": "js/js/sketchpad/Home.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/sketchpad/Home.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Home.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Home.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 269,
+      "column": 1,
+      "message": "Region mismatch: opened \"Hooks (XState-based)\" at line 262, closed \"Hooks\"",
+      "excerpt": "// #endregion Hooks"
+    },
+    {
+      "path": "js/js/sketchpad/Kit.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/sketchpad/Kit.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Kit.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Kit.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 1485,
+      "column": 1,
+      "message": "Region mismatch: opened \"Internal State Management\" at line 153, closed \"Kit App\"",
+      "excerpt": "// #endregion Kit App"
+    },
+    {
+      "path": "js/js/sketchpad/Kit.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 1625,
+      "column": 1,
+      "message": "Endregion without matching region",
+      "excerpt": "// #endregion Internal State Management"
+    },
+    {
+      "path": "js/js/sketchpad/Kit.tsx",
+      "language": "typescript",
+      "kind": "temporary_log",
+      "line": 2546,
+      "column": 3,
+      "message": "Temporary [DEBUG] console log found",
+      "excerpt": "console.log(\"[DEBUG] [TABLE-WINDOW] AppContent kitScope:\", kitScope);"
+    },
+    {
+      "path": "js/js/sketchpad/Kit.tsx",
+      "language": "typescript",
+      "kind": "temporary_log",
+      "line": 2548,
+      "column": 3,
+      "message": "Temporary [DEBUG] console log found",
+      "excerpt": "console.log(\"[DEBUG] [TABLE-WINDOW] AppContent render: kitScope=\", kitScope?.guid, \"hasKit=\", hasKit);"
+    },
+    {
+      "path": "js/js/sketchpad/Kit.tsx",
+      "language": "typescript",
+      "kind": "temporary_log",
+      "line": 4284,
+      "column": 3,
+      "message": "Temporary [DEBUG] console log found",
+      "excerpt": "console.log(\"[DEBUG] [TABLE-WINDOW] Early return checks: hasKit=\", hasKit, \"kit=\", !!kit, \"kitApp=\", !!kitApp, \"isMobile=\", isMobile);"
+    },
+    {
+      "path": "js/js/sketchpad/Kit.tsx",
+      "language": "typescript",
+      "kind": "temporary_log",
+      "line": 4286,
+      "column": 5,
+      "message": "Temporary [DEBUG] console log found",
+      "excerpt": "console.log(\"[DEBUG] [TABLE-WINDOW] Returning NotFound\");"
+    },
+    {
+      "path": "js/js/sketchpad/Kit.tsx",
+      "language": "typescript",
+      "kind": "temporary_log",
+      "line": 4291,
+      "column": 5,
+      "message": "Temporary [DEBUG] console log found",
+      "excerpt": "console.log(\"[DEBUG] [TABLE-WINDOW] Returning loading (no kitApp)\");"
+    },
+    {
+      "path": "js/js/sketchpad/Kit.tsx",
+      "language": "typescript",
+      "kind": "temporary_log",
+      "line": 4300,
+      "column": 5,
+      "message": "Temporary [DEBUG] console log found",
+      "excerpt": "console.log(\"[DEBUG] [TABLE-WINDOW] Returning mobile layout\");"
+    },
+    {
+      "path": "js/js/sketchpad/Quality.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/sketchpad/Quality.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Quality.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Quality.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 84,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Quality.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 84,
+      "column": 1,
+      "message": "Region mismatch: opened \"Imports\" at line 22, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Quality.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 171,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Quality.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 171,
+      "column": 1,
+      "message": "Region mismatch: opened \"Types\" at line 86, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Quality.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 492,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Quality.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 492,
+      "column": 1,
+      "message": "Region mismatch: opened \"Functions\" at line 173, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Quality.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 601,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Quality.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 601,
+      "column": 1,
+      "message": "Region mismatch: opened \"Commands\" at line 494, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Quality.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 1208,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Quality.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 1208,
+      "column": 1,
+      "message": "Region mismatch: opened \"Store\" at line 603, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Quality.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 1758,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Quality.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 1758,
+      "column": 1,
+      "message": "Region mismatch: opened \"Components\" at line 1210, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Quality.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 2058,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Quality.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 2058,
+      "column": 1,
+      "message": "Region mismatch: opened \"App\" at line 1760, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Quality.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 2094,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Quality.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 2094,
+      "column": 1,
+      "message": "Region mismatch: opened \"Config\" at line 2060, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Sketchpad.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/sketchpad/Sketchpad.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Sketchpad.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Sketchpad.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 570,
+      "column": 1,
+      "message": "Region mismatch: opened \"Store\" at line 374, closed \"YPath API\"",
+      "excerpt": "// #endregion YPath API"
+    },
+    {
+      "path": "js/js/sketchpad/Sketchpad.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 1149,
+      "column": 1,
+      "message": "Region mismatch: opened \"Local File Provider (IndexedDB)\" at line 1054, closed \"Local File Provider\"",
+      "excerpt": "// #endregion Local File Provider"
+    },
+    {
+      "path": "js/js/sketchpad/Sketchpad.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 1381,
+      "column": 1,
+      "message": "Region mismatch: opened \"Kits\" at line 1305, closed \"Attribute\"",
+      "excerpt": "// #endregion Attribute"
+    },
+    {
+      "path": "js/js/sketchpad/Sketchpad.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 7600,
+      "column": 1,
+      "message": "Endregion without matching region",
+      "excerpt": "// #endregion Store"
+    },
+    {
+      "path": "js/js/sketchpad/Sketchpad.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 12491,
+      "column": 1,
+      "message": "Region mismatch: opened \"Sketchpad\" at line 9719, closed \"Store\"",
+      "excerpt": "// #endregion Store"
+    },
+    {
+      "path": "js/js/sketchpad/Sketchpad.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 12902,
+      "column": 1,
+      "message": "Region mismatch: opened \"Navbar\" at line 12788, closed \"Panel Sections\"",
+      "excerpt": "// #endregion Panel Sections"
+    },
+    {
+      "path": "js/js/sketchpad/Sketchpad.tsx",
+      "language": "typescript",
+      "kind": "temporary_log",
+      "line": 15361,
+      "column": 15,
+      "message": "Temporary [DEBUG] console log found",
+      "excerpt": "console.log(\"[DEBUG] [LAYOUT-WINDOW] Rendering window:\", windowType.id, \"location:\", location.pathname, \"scopeGuids:\", scopeGuids);"
+    },
+    {
+      "path": "js/js/sketchpad/Sketchpad.tsx",
+      "language": "typescript",
+      "kind": "temporary_log",
+      "line": 15370,
+      "column": 29,
+      "message": "Temporary [DEBUG] console log found",
+      "excerpt": "console.error(\"[DEBUG] [LAYOUT-WINDOW] Error in window:\", windowType.id, error, info);"
+    },
+    {
+      "path": "js/js/sketchpad/Tutorials.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/sketchpad/Tutorials.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 21,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Tutorials.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 21,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Tutorials.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 33,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Tutorials.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 33,
+      "column": 1,
+      "message": "Region mismatch: opened \"Imports\" at line 23, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Tutorials.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 112,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Tutorials.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 112,
+      "column": 1,
+      "message": "Region mismatch: opened \"Tutorial Controls\" at line 37, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Tutorials.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 197,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Tutorials.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 197,
+      "column": 1,
+      "message": "Region mismatch: opened \"Recording Controls\" at line 114, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Tutorials.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 239,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Tutorials.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 239,
+      "column": 1,
+      "message": "Region mismatch: opened \"Record Button\" at line 199, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Tutorials.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 376,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Tutorials.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 376,
+      "column": 1,
+      "message": "Region mismatch: opened \"Tutorial Overlay\" at line 241, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Tutorials.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 378,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Tutorials.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 378,
+      "column": 1,
+      "message": "Region mismatch: opened \"Components\" at line 35, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Tutorials.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 513,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Tutorials.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 513,
+      "column": 1,
+      "message": "Region mismatch: opened \"Built-in Tutorials\" at line 379, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Tutorials.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 588,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Tutorials.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 588,
+      "column": 1,
+      "message": "Region mismatch: opened \"Commands\" at line 515, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Tutorials.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 610,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Tutorials.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 610,
+      "column": 1,
+      "message": "Region mismatch: opened \"Command Interceptor\" at line 590, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Tutorials.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 641,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Tutorials.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 641,
+      "column": 1,
+      "message": "Region mismatch: opened \"Hooks\" at line 612, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Tutorials.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 681,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Tutorials.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 681,
+      "column": 1,
+      "message": "Region mismatch: opened \"Context\" at line 643, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Tutorials.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 781,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Tutorials.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 781,
+      "column": 1,
+      "message": "Region mismatch: opened \"Tutorial Entities\" at line 685, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Tutorials.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 783,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Tutorials.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 783,
+      "column": 1,
+      "message": "Region mismatch: opened \"Types\" at line 683, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Tutorials.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 1095,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Tutorials.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 1095,
+      "column": 1,
+      "message": "Region mismatch: opened \"Store\" at line 785, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Type.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/sketchpad/Type.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Type.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/Type.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 988,
+      "column": 1,
+      "message": "Region mismatch: opened \"XState Hooks\" at line 487, closed \"Internal State Management\"",
+      "excerpt": "// #endregion Internal State Management"
+    },
+    {
+      "path": "js/js/sketchpad/Type.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 1790,
+      "column": 1,
+      "message": "Endregion without matching region",
+      "excerpt": "// #endregion Windows"
+    },
+    {
+      "path": "js/js/sketchpad/Type.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 3115,
+      "column": 1,
+      "message": "Endregion without matching region",
+      "excerpt": "// #endregion Canvas"
+    },
+    {
+      "path": "js/js/sketchpad/apps/index.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/sketchpad/apps/index.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/apps/index.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/elements.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/sketchpad/elements.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/elements.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/elements.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 181,
+      "column": 1,
+      "message": "Region mismatch: opened \"Root Components\" at line 179, closed \"Canvas\"",
+      "excerpt": "// #endregion Canvas"
+    },
+    {
+      "path": "js/js/sketchpad/elements.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 392,
+      "column": 1,
+      "message": "Region mismatch: opened \"Footer\" at line 274, closed \"Root Components\"",
+      "excerpt": "// #endregion Root Components"
+    },
+    {
+      "path": "js/js/sketchpad/elements.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 669,
+      "column": 1,
+      "message": "Region mismatch: opened \"Display Components\" at line 629, closed \"Tooltip\"",
+      "excerpt": "// #endregion Tooltip"
+    },
+    {
+      "path": "js/js/sketchpad/elements.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 1238,
+      "column": 1,
+      "message": "Region mismatch: opened \"ActionGroup\" at line 1057, closed \"ActionGroupup\"",
+      "excerpt": "// #endregion ActionGroupup"
+    },
+    {
+      "path": "js/js/sketchpad/elements.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 1401,
+      "column": 1,
+      "message": "Region mismatch: opened \"Input Components\" at line 1055, closed \"ButtonGroup\"",
+      "excerpt": "// #endregion ButtonGroup"
+    },
+    {
+      "path": "js/js/sketchpad/elements.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 2643,
+      "column": 1,
+      "message": "Region mismatch: opened \"Footer\" at line 272, closed \"Input Components\"",
+      "excerpt": "// #endregion Input Components"
+    },
+    {
+      "path": "js/js/sketchpad/shared.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/sketchpad/shared.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/shared.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/shared.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 30,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/sketchpad/shared.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 30,
+      "column": 1,
+      "message": "Region mismatch: opened \"Imports\" at line 22, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/tailwind.config.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/tailwind.config.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/tailwind.config.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/vite-env.d.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/vite.config.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/js/vite.config.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/vite.config.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/play/index.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/play/postcss.config.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/play/postcss.config.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/play/postcss.config.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/play/tailwind.config.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/play/vite.config.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/sketchpad/index.tsx",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/sketchpad/postcss.config.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/sketchpad/postcss.config.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/sketchpad/postcss.config.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/sketchpad/tailwind.config.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/sketchpad/vite.config.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/vscode/eslint.config.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/vscode/eslint.config.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/vscode/eslint.config.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/vscode/extension.test.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/vscode/extension.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/vscode/vite.config.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "js/vscode/vite.test.config.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "jsonschema/build.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "net/Semio.Grasshopper.Tests/Tests.cs",
+      "language": "csharp",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "net/Semio.Grasshopper.Tests/Usings.cs",
+      "language": "csharp",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "net/Semio.Grasshopper/Resources.Designer.cs",
+      "language": "csharp",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "net/Semio.Grasshopper/Semio.Grasshopper.cs",
+      "language": "csharp",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "net/Semio.Grasshopper/Semio.Grasshopper.cs",
+      "language": "csharp",
+      "kind": "region_name_missing",
+      "line": 39,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "#endregion"
+    },
+    {
+      "path": "net/Semio.Grasshopper/Semio.Grasshopper.cs",
+      "language": "csharp",
+      "kind": "region_mismatch",
+      "line": 39,
+      "column": 1,
+      "message": "Region mismatch: opened \"TODOs\" at line 21, closed \"\"",
+      "excerpt": "#endregion"
+    },
+    {
+      "path": "net/Semio.Grasshopper/Semio.Grasshopper.cs",
+      "language": "csharp",
+      "kind": "region_name_missing",
+      "line": 955,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "#endregion"
+    },
+    {
+      "path": "net/Semio.Grasshopper/Semio.Grasshopper.cs",
+      "language": "csharp",
+      "kind": "region_mismatch",
+      "line": 955,
+      "column": 1,
+      "message": "Region mismatch: opened \"Attribute\" at line 682, closed \"\"",
+      "excerpt": "#endregion"
+    },
+    {
+      "path": "net/Semio.Grasshopper/Semio.Grasshopper.cs",
+      "language": "csharp",
+      "kind": "region_name_missing",
+      "line": 5591,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "#endregion"
+    },
+    {
+      "path": "net/Semio.Grasshopper/Semio.Grasshopper.cs",
+      "language": "csharp",
+      "kind": "region_mismatch",
+      "line": 5591,
+      "column": 1,
+      "message": "Region mismatch: opened \"Persistence\" at line 5515, closed \"\"",
+      "excerpt": "#endregion"
+    },
+    {
+      "path": "net/Semio.Grasshopper/build-value-lists.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "net/Semio.Grasshopper/build.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "net/Semio.Tests/Tests.cs",
+      "language": "csharp",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "net/Semio.Tests/Usings.cs",
+      "language": "csharp",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "net/Semio/Resources.Designer.cs",
+      "language": "csharp",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "net/Semio/Semio.cs",
+      "language": "csharp",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "net/Semio/Semio.cs",
+      "language": "csharp",
+      "kind": "region_name_missing",
+      "line": 19,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "#endregion"
+    },
+    {
+      "path": "net/Semio/Semio.cs",
+      "language": "csharp",
+      "kind": "region_mismatch",
+      "line": 19,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "#endregion"
+    },
+    {
+      "path": "net/Semio/Semio.cs",
+      "language": "csharp",
+      "kind": "region_name_missing",
+      "line": 35,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "#endregion"
+    },
+    {
+      "path": "net/Semio/Semio.cs",
+      "language": "csharp",
+      "kind": "region_mismatch",
+      "line": 35,
+      "column": 1,
+      "message": "Region mismatch: opened \"TODOs\" at line 21, closed \"\"",
+      "excerpt": "#endregion"
+    },
+    {
+      "path": "net/Semio/Semio.cs",
+      "language": "csharp",
+      "kind": "region_name_missing",
+      "line": 118,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "#endregion"
+    },
+    {
+      "path": "net/Semio/Semio.cs",
+      "language": "csharp",
+      "kind": "region_mismatch",
+      "line": 118,
+      "column": 1,
+      "message": "Region mismatch: opened \"Constants\" at line 60, closed \"\"",
+      "excerpt": "#endregion"
+    },
+    {
+      "path": "net/Semio/build.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "preflight.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 42,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "preflight.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 42,
+      "column": 1,
+      "message": "Region mismatch: opened \"Cli\" at line 6, closed \"\"",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "preflight.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 58,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "preflight.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 58,
+      "column": 1,
+      "message": "Region mismatch: opened \"Exec\" at line 44, closed \"\"",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "preflight.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 125,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "preflight.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 125,
+      "column": 1,
+      "message": "Region mismatch: opened \"Steps\" at line 60, closed \"\"",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "preflight.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 152,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "preflight.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 152,
+      "column": 1,
+      "message": "Region mismatch: opened \"Main\" at line 127, closed \"\"",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "py/engine/build.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "py/engine/dev.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "py/engine/engine.py",
+      "language": "python",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "py/engine/engine.py",
+      "language": "python",
+      "kind": "comment",
+      "line": 1,
+      "column": 1,
+      "message": "Line comment found",
+      "excerpt": "#!/usr/bin/env python"
+    },
+    {
+      "path": "py/engine/engine.test.py",
+      "language": "python",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "py/engine/generate-schemas.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "py/engine/post-build.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "py/engine/sqliteschema.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "py/engine/test.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "scripts/generate-metabolism-diff.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "scripts/generate-metabolism-diff.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "scripts/generate-metabolism-diff.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "scripts/generate-validation.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "scripts/i18n.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "scripts/i18n.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 38,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "scripts/i18n.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 38,
+      "column": 1,
+      "message": "Region mismatch: opened \"Load Translations\" at line 25, closed \"\"",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "scripts/i18n.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 75,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "scripts/i18n.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 75,
+      "column": 1,
+      "message": "Region mismatch: opened \"Find All IDs in Source Files\" at line 40, closed \"\"",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "scripts/i18n.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 601,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "scripts/i18n.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 601,
+      "column": 1,
+      "message": "Region mismatch: opened \"Validate Translations\" at line 77, closed \"\"",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "scripts/i18n.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 757,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "scripts/i18n.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 757,
+      "column": 1,
+      "message": "Region mismatch: opened \"Fix Mode\" at line 603, closed \"\"",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "scripts/i18n.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 782,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "scripts/i18n.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 782,
+      "column": 1,
+      "message": "Region mismatch: opened \"Generate Report\" at line 759, closed \"\"",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "scripts/log.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "scripts/log.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 73,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "scripts/log.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 73,
+      "column": 1,
+      "message": "Region mismatch: opened \"Types\" at line 6, closed \"\"",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "scripts/log.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 120,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "scripts/log.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 120,
+      "column": 1,
+      "message": "Region mismatch: opened \"Configuration\" at line 75, closed \"\"",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "scripts/log.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 147,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "scripts/log.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 147,
+      "column": 1,
+      "message": "Region mismatch: opened \"Path Utilities\" at line 122, closed \"\"",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "scripts/log.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 206,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "scripts/log.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 206,
+      "column": 1,
+      "message": "Region mismatch: opened \"Frontmatter Utilities\" at line 149, closed \"\"",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "scripts/log.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 352,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "scripts/log.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 352,
+      "column": 1,
+      "message": "Region mismatch: opened \"CRUD Operations\" at line 208, closed \"\"",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "scripts/log.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 389,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "scripts/log.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 389,
+      "column": 1,
+      "message": "Region mismatch: opened \"Migration\" at line 354, closed \"\"",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "scripts/log.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 499,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "scripts/log.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 499,
+      "column": 1,
+      "message": "Region mismatch: opened \"Git Stats\" at line 391, closed \"\"",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "scripts/log.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 899,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "scripts/log.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 899,
+      "column": 1,
+      "message": "Region mismatch: opened \"CLI\" at line 501, closed \"\"",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "scripts/regen-metabolism.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "scripts/schema.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "scripts/temp-migrate-capitals-tambours.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "scripts/utils.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "scripts/utils.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 20,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "scripts/utils.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 20,
+      "column": 1,
+      "message": "Region mismatch: opened \"Image Processing\" at line 6, closed \"\"",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "scripts/utils.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 57,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "scripts/utils.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 57,
+      "column": 1,
+      "message": "Region mismatch: opened \"File Operations\" at line 22, closed \"\"",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "scripts/utils.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 100,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "scripts/utils.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 100,
+      "column": 1,
+      "message": "Region mismatch: opened \"Process Management\" at line 59, closed \"\"",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "scripts/utils.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 108,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "scripts/utils.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 108,
+      "column": 1,
+      "message": "Region mismatch: opened \"JSON Utilities\" at line 102, closed \"\"",
+      "excerpt": "//#endregion"
+    },
+    {
+      "path": "yak/build.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "yak/login.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "yak/publish.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "yak/test-push.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "yak/test-search.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "yak/unyank.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    },
+    {
+      "path": "yak/yank.ts",
+      "language": "typescript",
+      "kind": "missing_license_header",
+      "line": 1,
+      "column": 1,
+      "message": "Missing SPDX license header (SPDX-License-Identifier: ...)"
+    }
+  ]
+}

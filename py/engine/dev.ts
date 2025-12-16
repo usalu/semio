@@ -12,7 +12,7 @@ const proc = runProcess("uv", ["run", "engine.py"], {
   },
 });
 
-// Wait for process to finish
+
 proc.on("exit", (code) => {
   process.exit(code ?? 0);
 });

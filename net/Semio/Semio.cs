@@ -316,10 +316,10 @@ public static class Utility
             return (float)results.First().ConvertedValue;
         }
 
-        /// <summary>
-        ///     Adapted from
-        ///     https://github.com/microsoft/PowerToys/tree/95919508758e71dca88632add8a03c089a822d1c/src/modules/launcher/Plugins/Community.PowerToys.Run.Plugin.UnitConverter
-        /// </summary>
+        
+        
+        
+        
         private class PowerToysRunUnitConverter
         {
             internal class ConvertEntity
@@ -471,7 +471,7 @@ public abstract class Operator : Symbol
     }
 }
 
-// Numeric Operators
+
 public class Sum : Operator
 {
     public override string Keyword => "sum";
@@ -690,7 +690,7 @@ public class Modulo : Operator
     }
 }
 
-// Boolean/Logical Operators (using 1.0f for true, 0.0f for false)
+
 public class And : Operator
 {
     public override string Keyword => "and";
@@ -734,7 +734,7 @@ public class Invert : Operator
     }
 }
 
-// Comparison Operators
+
 public class Equal : Operator
 {
     public override string Keyword => "equal";
@@ -800,7 +800,7 @@ public class LessThanOrEqual : Operator
     }
 }
 
-// Conditional Operator
+
 public class If : Operator
 {
     public override string Keyword => "if";
@@ -811,7 +811,7 @@ public class If : Operator
     }
 }
 
-// Additional Math Operators
+
 public class Absolute : Operator
 {
     public override string Keyword => "abs";
@@ -853,7 +853,7 @@ public class Round : Operator
     }
 }
 
-// Text/String Operators
+
 public class Length : Operator
 {
     public override string Keyword => "length";
@@ -960,7 +960,7 @@ public class Replace : Operator
     }
 }
 
-// Conversion Operators
+
 public class ToNumber : Operator
 {
     public override string Keyword => "number";
@@ -1003,7 +1003,7 @@ public class ToBoolean : Operator
     }
 }
 
-// Additional Utility Operators
+
 public class Clamp : Operator
 {
     public override string Keyword => "clamp";
@@ -1098,7 +1098,7 @@ public class Expression
     {
         _operators = new Dictionary<string, Func<Operator>>(StringComparer.OrdinalIgnoreCase)
         {
-            // Arithmetic operators
+            
             { "sum", () => new Sum() },
             { "multiply", () => new Multiply() },
             { "subtract", () => new Subtract() },
@@ -1115,23 +1115,23 @@ public class Expression
             { "average", () => new Average() },
             { "mod", () => new Modulo() },
             
-            // Boolean operators
+            
             { "and", () => new And() },
             { "or", () => new Or() },
             { "xor", () => new ExclusiveOr() },
             { "not", () => new Invert() },
             
-            // Comparison operators
+            
             { "equal", () => new Equal() },
             { "greater", () => new GreaterThan() },
             { "less", () => new LessThan() },
             { "greater-equal", () => new GreaterThanOrEqual() },
             { "less-equal", () => new LessThanOrEqual() },
             
-            // Conditional operator
+            
             { "if", () => new If() },
             
-            // Text operators
+            
             { "length", () => new Length() },
             { "startswith", () => new StartsWith() },
             { "endswith", () => new EndsWith() },
@@ -1143,12 +1143,12 @@ public class Expression
             { "trim", () => new Trim() },
             { "replace", () => new Replace() },
             
-            // Conversion operators
+            
             { "number", () => new ToNumber() },
             { "text", () => new ToText() },
             { "boolean", () => new ToBoolean() },
             
-            // Utility operators
+            
             { "clamp", () => new Clamp() },
             { "lerp", () => new Lerp() },
             { "sign", () => new Sign() },
@@ -1202,7 +1202,7 @@ public class Expression
         return this;
     }
 
-    // --- Serialization helpers ---
+    
 
     private void SerializeTerm(Term term, StringBuilder sb)
     {
@@ -1234,7 +1234,7 @@ public class Expression
         }
     }
 
-    // --- Parsing ---
+    
 
     private enum TokenKind { Identifier, Number, String, UnitLiteral, LeftParenthesis, RightParenthesis }
 
@@ -1257,23 +1257,23 @@ public class Expression
         {
             char c = input[i];
 
-            // skip whitespace
+            
             if (char.IsWhiteSpace(c)) { i++; continue; }
 
             if (c == '(') { tokens.Add(new Token(TokenKind.LeftParenthesis, "(", i)); i++; continue; }
             if (c == ')') { tokens.Add(new Token(TokenKind.RightParenthesis, ")", i)); i++; continue; }
 
-            // string literal
+            
             if (c == '"')
             {
                 int start = i;
-                i++; // skip opening quote
+                i++; 
                 var sb = new StringBuilder();
                 while (i < input.Length && input[i] != '"')
                 {
                     if (input[i] == '\\' && i + 1 < input.Length)
                     {
-                        i++; // skip backslash
+                        i++; 
                         switch (input[i])
                         {
                             case '"': sb.Append('"'); break;
@@ -1291,22 +1291,22 @@ public class Expression
                     i++;
                 }
                 if (i >= input.Length) throw new FormatException($"Unterminated string literal starting at {start}.");
-                i++; // skip closing quote
+                i++; 
                 tokens.Add(new Token(TokenKind.String, sb.ToString(), start));
                 continue;
             }
 
-            // unit literal (single quotes)
+            
             if (c == '\'')
             {
                 int start = i;
-                i++; // skip opening quote
+                i++; 
                 var sb = new StringBuilder();
                 while (i < input.Length && input[i] != '\'')
                 {
                     if (input[i] == '\\' && i + 1 < input.Length)
                     {
-                        i++; // skip backslash
+                        i++; 
                         switch (input[i])
                         {
                             case '\'': sb.Append('\''); break;
@@ -1324,18 +1324,18 @@ public class Expression
                     i++;
                 }
                 if (i >= input.Length) throw new FormatException($"Unterminated unit literal starting at {start}.");
-                i++; // skip closing quote
+                i++; 
                 tokens.Add(new Token(TokenKind.UnitLiteral, sb.ToString(), start));
                 continue;
             }
 
-            // number (supports leading sign and decimal point)
+            
             if (char.IsDigit(c) || (c == '.' && i + 1 < input.Length && char.IsDigit(input[i + 1])))
             {
                 int start = i;
                 i++;
                 while (i < input.Length && (char.IsDigit(input[i]) || input[i] == '.')) i++;
-                // optional exponent
+                
                 if (i < input.Length && (input[i] == 'e' || input[i] == 'E'))
                 {
                     int ePos = i++;
@@ -1348,7 +1348,7 @@ public class Expression
                 continue;
             }
 
-            // identifier: letters/digits/_ plus '.' and '-' allowed within
+            
             if (char.IsLetter(c) || c == '_')
             {
                 int start = i;
@@ -1363,18 +1363,18 @@ public class Expression
                 continue;
             }
 
-            // allow identifiers that start with digits if they contain dot/hyphen? Not typical; reject:
+            
             throw new FormatException($"Unexpected character '{c}' at position {i}.");
         }
         return tokens;
     }
 
-    // Grammar:
-    //   expr := number
-    //         | string
-    //         | identifier
-    //         | identifier '(' expr* ')'
-    // Operands are space-separated; no commas required.
+    
+    
+    
+    
+    
+    
     private Term ParseExpr(List<Token> tokens, ref int index)
     {
         if (index >= tokens.Count) throw new FormatException("Unexpected end of input.");
@@ -1403,14 +1403,14 @@ public class Expression
 
             if (parts.Length == 1)
             {
-                // Just a number without unit: '2.3'
+                
                 if (!float.TryParse(parts[0], NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out var val))
                     throw new FormatException($"Invalid number '{parts[0]}' in unit literal at {t.Position}.");
                 return new NumberConstant(val);
             }
             else
             {
-                // Number with unit: '2.3 m'
+                
                 if (!float.TryParse(parts[0], NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out var val))
                     throw new FormatException($"Invalid number '{parts[0]}' in unit literal at {t.Position}.");
                 var unit = string.Join(" ", parts.Skip(1));
@@ -1420,28 +1420,28 @@ public class Expression
 
         if (t.Kind == TokenKind.Identifier)
         {
-            // lookahead to see if this is a call: <ident> '(' ... ')'
+            
             string ident = t.Text;
             int idPos = t.Position;
             index++;
 
             if (index < tokens.Count && tokens[index].Kind == TokenKind.LeftParenthesis)
             {
-                // operator application
-                index++; // consume '('
+                
+                index++; 
                 var args = new List<Term>();
                 while (index < tokens.Count && tokens[index].Kind != TokenKind.RightParenthesis)
                 {
-                    // parse next expr
+                    
                     args.Add(ParseExpr(tokens, ref index));
-                    // arguments are separated by whitespace; no special token to consume
+                    
                 }
                 if (index >= tokens.Count || tokens[index].Kind != TokenKind.RightParenthesis)
                     throw new FormatException($"Missing closing ')' for call starting at {idPos}.");
-                index++; // consume ')'
+                index++; 
 
                 var op = InstantiateOperator(ident, idPos);
-                // Optional arity checks per operator (divide >= 2)
+                
                 if (op is Divide && args.Count < 2)
                     throw new FormatException("divide requires at least 2 operands.");
 
@@ -1449,19 +1449,19 @@ public class Expression
             }
             else
             {
-                // plain variable
+                
                 return new Variable(ident);
             }
         }
 
         if (t.Kind == TokenKind.LeftParenthesis)
         {
-            // Support parenthesized single expression: ( expr )
-            index++; // '('
+            
+            index++; 
             var inner = ParseExpr(tokens, ref index);
             if (index >= tokens.Count || tokens[index].Kind != TokenKind.RightParenthesis)
                 throw new FormatException($"Missing ')' for parenthesized expression starting at {t.Position}.");
-            index++; // ')'
+            index++; 
             return inner;
         }
 
@@ -1761,7 +1761,7 @@ public class EntityValidator<T> : AbstractValidator<T> where T : Entity<T>
                     return
                         $"The {property.Name.ToLower()} must be at most {textAttribute.LengthLimit} characters long. The provided text ({preview}) has {value?.Length ?? 0} characters.";
                 });
-            // All non-description text
+            
             if (property.GetCustomAttribute<DescriptionAttribute>() == null)
             {
                 RuleFor(entity => property.GetValue(entity) as string)
@@ -1790,8 +1790,8 @@ public class EntityValidator<T> : AbstractValidator<T> where T : Entity<T>
         }
         else if (property.PropertyType == typeof(List<string>))
         {
-            // TODO: Fix bug where multiple items fail for the same rule
-            // On ["","","toooLonnngg","alsoToooLong"], only the first notEmtpy and the firstMaxLength are shown.
+            
+            
             var textAttribute = property.GetCustomAttribute<TextAttribute>();
             if (textAttribute is null) return;
             RuleForEach(list => property.GetValue(list) as List<string>)
@@ -1814,31 +1814,31 @@ public class EntityValidator<T> : AbstractValidator<T> where T : Entity<T>
         }
         else if (isPropertyEntity && !isPropertyList)
         {
-            // TODO: Implement reflexive validation for entity properties.
-            //var validatorType = typeof(EntityValidator<>).MakeGenericType(property.PropertyType);
-            //RuleFor(entity => property.GetValue(entity)).SetValidator((dynamic)Activator.CreateInstance(validatorType));
+            
+            
+            
         }
         else if (isPropertyEntity && isPropertyList)
         {
-            // TODO: Implement reflexive validation for entity properties.
+            
         }
     }
 }
 
 #region SemioValidation
 
-/// <summary>
-/// Validation fix with title and diff.
-/// </summary>
+
+
+
 public class SemioValidationFix
 {
     public string Title { get; set; } = "";
     public object? Diff { get; set; }
 }
 
-/// <summary>
-/// Validation issue format.
-/// </summary>
+
+
+
 public class SemioValidationIssue
 {
     public string RuleId { get; set; } = "";
@@ -1849,9 +1849,9 @@ public class SemioValidationIssue
     public List<SemioValidationFix> Fixes { get; set; } = new();
 }
 
-/// <summary>
-/// Validation result format.
-/// </summary>
+
+
+
 public class SemioValidationResult
 {
     public List<SemioValidationIssue> Issues { get; set; } = new();
@@ -1908,17 +1908,17 @@ public class SemioValidationResult
             var ib = sortedB[i];
             if (ia.RuleId != ib.RuleId || ia.Severity != ib.Severity || ia.Message != ib.Message || ia.EntityKind != ib.EntityKind || ia.EntityGuid != ib.EntityGuid)
                 return false;
-            // C# doesn't generate fixes yet - skip fix comparison
-            // Future: add fix generation and enable comparison
+            
+            
         }
         return true;
     }
 }
 
-/// <summary>
-/// Validate a Kit and return a SemioValidationResult with all issues.
-/// This produces identical output to TypeScript and Python implementations.
-/// </summary>
+
+
+
+
 public static class SemioValidator
 {
     public static SemioValidationResult ValidateKit(Kit kit)
@@ -1950,14 +1950,14 @@ public static class SemioValidator
             CheckGuid("Design", d.Guid);
             foreach (var p in d.Pieces) CheckGuid("Piece", p.Guid);
             foreach (var c in d.Connections) CheckGuid("Connection", c.Guid);
-            // Note: Stats don't have GUIDs in C#, they use Key
+            
         }
         foreach (var q in kit.Qualities) CheckGuid("Quality", q.Guid);
         foreach (var i in kit.Interfaces) CheckGuid("Interface", i.Guid);
         foreach (var f in kit.Files) CheckGuid("File", f.Guid);
         foreach (var fo in kit.Folders) CheckGuid("Folder", fo.Guid);
 
-        // Type name uniqueness
+        
         var typesByParent = kit.Types.GroupBy(t => t.Parent?.Guid);
         foreach (var group in typesByParent)
         {
@@ -1975,7 +1975,7 @@ public static class SemioValidator
             }
         }
 
-        // Design name uniqueness
+        
         var designsByParent = kit.Designs.GroupBy(d => d.Parent?.Guid);
         foreach (var group in designsByParent)
         {
@@ -1993,7 +1993,7 @@ public static class SemioValidator
             }
         }
 
-        // Piece name uniqueness within design
+        
         foreach (var design in kit.Designs)
         {
             var nameGroups = design.Pieces.Where(p => !string.IsNullOrEmpty(p.Name)).GroupBy(p => p.Name);
@@ -2010,7 +2010,7 @@ public static class SemioValidator
             }
         }
 
-        // Port name uniqueness within type
+        
         foreach (var t in kit.Types)
         {
             var nameGroups = t.Ports.Where(p => !string.IsNullOrEmpty(p.Name)).GroupBy(p => p.Name);
@@ -2027,7 +2027,7 @@ public static class SemioValidator
             }
         }
 
-        // Model name uniqueness within type
+        
         foreach (var t in kit.Types)
         {
             var nameGroups = t.Models.Where(m => !string.IsNullOrEmpty(m.Name)).GroupBy(m => m.Name);
@@ -2044,7 +2044,7 @@ public static class SemioValidator
             }
         }
 
-        // Quality name uniqueness
+        
         var qualityNameGroups = kit.Qualities.GroupBy(q => q.Name ?? "");
         foreach (var nameGroup in qualityNameGroups)
         {
@@ -2058,7 +2058,7 @@ public static class SemioValidator
             }
         }
 
-        // Interface name uniqueness
+        
         var interfaceNameGroups = kit.Interfaces.GroupBy(i => i.Name ?? "");
         foreach (var nameGroup in interfaceNameGroups)
         {
@@ -2072,7 +2072,7 @@ public static class SemioValidator
             }
         }
 
-        // File name uniqueness
+        
         var fileNameGroups = kit.Files.GroupBy(f => f.Name ?? "");
         foreach (var nameGroup in fileNameGroups)
         {
@@ -2086,7 +2086,7 @@ public static class SemioValidator
             }
         }
 
-        // Folder name uniqueness
+        
         var foldersByParent = kit.Folders.GroupBy(f => f.Parent);
         foreach (var group in foldersByParent)
         {
@@ -2104,7 +2104,7 @@ public static class SemioValidator
             }
         }
 
-        // Layer path uniqueness within design
+        
         foreach (var design in kit.Designs)
         {
             var pathGroups = design.Layers.GroupBy(l => l.Path ?? "");
@@ -2195,9 +2195,9 @@ public class AttributesDiff : Entity<AttributesDiff>
     public static implicit operator AttributesDiff(List<Attribute> attributes) => new() { Updated = attributes.Select(a => new DiffUpdate<AttributeDiff> { Id = a.Guid, Diff = (AttributeDiff)a }).ToList() };
 }
 
-/// <summary>
-/// <see href="https://github.com/usalu/semio#-attribute-"/>
-/// </summary>
+
+
+
 [Entity("🏷️", "At", "Atr", "A attribute is a key value pair with an an optional definition.")]
 public class Attribute : Entity<Attribute>
 {
@@ -2256,9 +2256,9 @@ public class Attribute : Entity<Attribute>
 
 #region Coord
 
-/// <summary>
-/// <see href="https://github.com/usalu/semio#-diagram-point-"/>
-/// </summary>
+
+
+
 [Entity("📺", "DP", "DPt", "A 2d-point (uv) of floats in the diagram. One unit is equal the width of a piece icon.")]
 public class Coord : Entity<Coord>
 {
@@ -2279,9 +2279,9 @@ public class Coord : Entity<Coord>
 
 #region Point
 
-/// <summary>
-/// <see href="https://github.com/usalu/semio#-point-"/>
-/// </summary>
+
+
+
 [Entity("✖️", "Pt", "Pnt", "A 3-point (xyz) of floating point numbers.")]
 public class Point : Entity<Point>
 {
@@ -2297,9 +2297,9 @@ public class Point : Entity<Point>
 
 #region Vector
 
-/// <summary>
-/// <see href="https://github.com/usalu/semio#-vector-"/>
-/// </summary>
+
+
+
 [Entity("➡️", "Vc", "Vec", "A 3d-vector (xyz) of floating point numbers.")]
 public class Vector : Entity<Vector>
 {
@@ -2338,9 +2338,9 @@ public class Vector : Entity<Vector>
 
 #region Plane
 
-/// <summary>
-/// <see href="https://github.com/usalu/semio#-plane-"/>
-/// </summary>
+
+
+
 [Entity("◳", "Pn", "Pln", "A plane is an origin (point) and an orientation (x-axis and y-axis).")]
 public class Plane : Entity<Plane>
 {
@@ -2353,7 +2353,7 @@ public class Plane : Entity<Plane>
     [EntityProp("➡️", "YA", "YAx", "The y-axis of the plane.")]
     public Vector YAxis { get; set; } = new() { Y = 1 };
 
-    // TODO: Implement reflexive validation for entity properties.
+    
     public override (bool, List<string>) Validate()
     {
         var (isValid, errors) = base.Validate();
@@ -2502,7 +2502,7 @@ public class Author : Entity<Author>
 
     public override (bool, List<string>) Validate()
     {
-        // TODO: proper email validation
+        
         var (isValid, errors) = base.Validate();
         if (!Email.Contains("@"))
         {
@@ -2777,9 +2777,9 @@ public class BenchmarkId : Entity<BenchmarkId>
     public override string ToString() => $"BmI({ToHumanIdString()})";
 }
 
-/// <summary>
-/// <see href="https://github.com/usalu/semio#-benchmark-"/>
-/// </summary>
+
+
+
 [Entity("🔢", "Bm", "Bmk", "A benchmark is a value with an optional unit for a quality.")]
 public class Benchmark : Entity<Benchmark>
 {
@@ -2824,9 +2824,9 @@ public enum QualityKind
 
 #region Quality
 
-/// <summary>
-/// <see href="https://github.com/usalu/semio#-quality-"/>
-/// </summary>
+
+
+
 [Entity("🔑", "Ql", "Qal", "A quality id is a guid for a quality.")]
 public class QualityId : Entity<QualityId>
 {
@@ -2880,9 +2880,9 @@ public class QualityDiff : Entity<QualityDiff>
     public static implicit operator QualityDiff(Quality quality) => new() { Guid = quality.Guid, Key = quality.Key, Name = quality.Name, Description = quality.Description, Uri = quality.Uri, Scalable = quality.Scalable, Kind = quality.Kind, SI = quality.SI, Imperial = quality.Imperial, Min = quality.Min, MinExcluded = quality.MinExcluded, Max = quality.Max, MaxExcluded = quality.MaxExcluded, Default = quality.Default, Formula = quality.Formula, Benchmarks = quality.Benchmarks, Attributes = quality.Attributes };
 }
 
-/// <summary>
-/// <see href="https://github.com/usalu/semio#-quality-"/>
-/// </summary>
+
+
+
 [Entity("📃", "Ql", "Qal", "A quality is numeric metadata used for stats and benchmarks.")]
 public class Quality : Entity<Quality>
 {
@@ -2957,9 +2957,9 @@ public class Quality : Entity<Quality>
 
 #region Tag
 
-/// <summary>
-/// <see href="https://github.com/usalu/semio#-tag-"/>
-/// </summary>
+
+
+
 [Entity("🏷️", "Tg", "Tag", "A tag id is a guid for a tag.")]
 public class TagId : Entity<TagId>
 {
@@ -2969,9 +2969,9 @@ public class TagId : Entity<TagId>
     public static implicit operator TagId(Tag tag) => new() { Guid = tag.Guid };
 }
 
-/// <summary>
-/// <see href="https://github.com/usalu/semio#-tag-"/>
-/// </summary>
+
+
+
 [Entity("🏷️", "Tg", "Tag", "A tag is a label for categorizing entitys.")]
 public class Tag : Entity<Tag>
 {
@@ -2993,9 +2993,9 @@ public class Tag : Entity<Tag>
 
 #region Concept
 
-/// <summary>
-/// <see href="https://github.com/usalu/semio#-concept-"/>
-/// </summary>
+
+
+
 [Entity("💡", "Cp", "Con", "A concept id is a guid for a concept.")]
 public class ConceptId : Entity<ConceptId>
 {
@@ -3005,9 +3005,9 @@ public class ConceptId : Entity<ConceptId>
     public static implicit operator ConceptId(Concept concept) => new() { Guid = concept.Guid };
 }
 
-/// <summary>
-/// <see href="https://github.com/usalu/semio#-concept-"/>
-/// </summary>
+
+
+
 [Entity("💡", "Cp", "Con", "A concept is a semantic grouping for types or designs.")]
 public class Concept : Entity<Concept>
 {
@@ -3065,9 +3065,9 @@ public class ConceptsDiff : Entity<ConceptsDiff>
 
 #region Interface
 
-/// <summary>
-/// <see href="https://github.com/usalu/semio#-interface-"/>
-/// </summary>
+
+
+
 [Entity("🔑", "If", "Ifc", "An interface id is a guid for an interface.")]
 public class InterfaceId : Entity<InterfaceId>
 {
@@ -3111,9 +3111,9 @@ public class InterfacesDiff : Entity<InterfacesDiff>
     public static implicit operator InterfacesDiff(List<Interface> interfaces) => new() { Updated = interfaces.Select(i => new DiffUpdate<InterfaceDiff> { Id = i.Guid, Diff = (InterfaceDiff)i }).ToList() };
 }
 
-/// <summary>
-/// <see href="https://github.com/usalu/semio#-interface-"/>
-/// </summary>
+
+
+
 [Entity("🔌", "If", "Ifc", "An interface defines port compatibility.")]
 public class Interface : Entity<Interface>
 {
@@ -3196,9 +3196,9 @@ public class PropId : Entity<PropId>
     public override string ToString() => $"PrpI({ToHumanIdString()})";
 }
 
-/// <summary>
-/// <see href="https://github.com/usalu/semio#-property-"/>
-/// </summary>
+
+
+
 [Entity("🏷️", "Pp", "Prp", "A property is a value with an optional unit for a quality.")]
 public class Prop : Entity<Prop>
 {
@@ -3290,9 +3290,9 @@ public class ModelsDiff : Entity<ModelsDiff>
     public static implicit operator ModelsDiff(List<Model> models) => new() { Updated = models.Select(r => new DiffUpdate<ModelDiff> { Id = r.Guid, Diff = (ModelDiff)r }).ToList() };
 }
 
-/// <summary>
-/// <see href="https://github.com/usalu/semio#-model-"/>
-/// </summary>
+
+
+
 [Entity("💾", "Md", "Mod",
     "A model is a link to a resource that describes a type for a certain level of detail and tags.")]
 public class Model : Entity<Model>
@@ -3463,9 +3463,9 @@ public class PortsDiff : Entity<PortsDiff>
     public static implicit operator PortsDiff(List<Port> ports) => new() { Updated = ports.Select(p => new DiffUpdate<PortDiff> { Id = p.Guid, Diff = (PortDiff)p }).ToList() };
 }
 
-/// <summary>
-/// <see href="https://github.com/usalu/semio#-port-"/>
-/// </summary>
+
+
+
 [Entity("🔌", "Po", "Por", "A port is a connection point (with a direction) of a type.")]
 public class Port : Entity<Port>
 {
@@ -3549,7 +3549,7 @@ public class Port : Entity<Port>
         };
     }
 
-    // TODO: Implement reflexive validation for entity properties.
+    
     public override (bool, List<string>) Validate()
     {
         var (isValid, errors) = base.Validate();
@@ -3744,9 +3744,9 @@ public class TypesDiff : Entity<TypesDiff>
     public static implicit operator TypesDiff(List<Type> types) => new() { Updated = types.Select(t => new DiffUpdate<TypeDiff> { Id = t.Guid, Diff = (TypeDiff)t }).ToList() };
 }
 
-/// <summary>
-/// <see href="https://github.com/usalu/semio#-type-"/>
-/// </summary>
+
+
+
 [Entity("🧩", "Ty", "Typ", "A type is a reusable element that can be connected with other types over ports.")]
 public class Type : Entity<Type>
 {
@@ -3927,7 +3927,7 @@ public class Type : Entity<Type>
         };
     }
 
-    // TODO: Implement reflexive validation for entity properties.
+    
     public override (bool, List<string>) Validate()
     {
         var (isValid, errors) = base.Validate();
@@ -4049,9 +4049,9 @@ public class LayerId : Entity<LayerId>
     public override string ToString() => $"LyrI({ToHumanIdString()})";
 }
 
-/// <summary>
-/// <see href="https://github.com/usalu/semio#-layer-"/>
-/// </summary>
+
+
+
 [Entity("📄", "Ly", "Lyr", "A layer for organizing design elements.")]
 public class Layer : Entity<Layer>
 {
@@ -4090,9 +4090,9 @@ public class GroupId : Entity<GroupId>
     public override string ToString() => $"GrpI({ToHumanIdString()})";
 }
 
-/// <summary>
-/// <see href="https://github.com/usalu/semio#-group-"/>
-/// </summary>
+
+
+
 [Entity("📁", "Gr", "Grp", "A group for organizing design elements.")]
 public class Group : Entity<Group>
 {
@@ -4190,9 +4190,9 @@ public class PieceDiff : Entity<PieceDiff>
     public static implicit operator PieceDiff(Piece piece) => new() { Guid = piece.Guid, Name = piece.Name, Description = piece.Description, Type = piece.Type, Design = piece.Design, Plane = piece.Plane, Center = piece.Center, Scale = piece.Scale, MirrorPlane = piece.MirrorPlane, IsHidden = piece.IsHidden, IsLocked = piece.IsLocked, Color = piece.Color, Props = piece.Props, Attributes = piece.Attributes };
 }
 
-/// <summary>
-/// <see href="https://github.com/usalu/semio#-piece-"/>
-/// </summary>
+
+
+
 [Entity("⭕", "Pc", "Pce", "A piece is an instance of either a type or a design.")]
 public class Piece : Entity<Piece>
 {
@@ -4304,9 +4304,9 @@ public class SideDiff : Entity<SideDiff>
     }
 }
 
-/// <summary>
-/// <see href="https://github.com/usalu/semio#-side-"/>
-/// </summary>
+
+
+
 [Entity("🧱", "Sd", "Sde", "A side of a piece in a connection.")]
 public class Side : Entity<Side>
 {
@@ -4466,9 +4466,9 @@ public class ConnectionsDiff : Entity<ConnectionsDiff>
     }
 }
 
-/// <summary>
-/// <see href="https://github.com/usalu/semio#-connection-"/>
-/// </summary>
+
+
+
 [Entity("🔗", "Cn", "Con", "A connection between two pieces.")]
 public class Connection : Entity<Connection>
 {
@@ -4620,9 +4620,9 @@ public class StatId : Entity<StatId>
     public override string ToString() => $"SttI({ToHumanIdString()})";
 }
 
-/// <summary>
-/// <see href="https://github.com/usalu/semio#-stat-"/>
-/// </summary>
+
+
+
 [Entity("🔢", "St", "Stt", "A stat about a quality on a design which is optionally bounded.")]
 public class Stat : Entity<Stat>
 {
@@ -4765,9 +4765,9 @@ public class DesignId : Entity<DesignId>
     public override string ToString() => $"DsnId({ToHumanIdString()})";
 }
 
-/// <summary>
-/// <see href="https://github.com/usalu/semio#-design-"/>
-/// </summary>
+
+
+
 [Entity("🏙️", "Dn", "Dsn", "A design is a collection of pieces that are connected.")]
 public class Design : Entity<Design>
 {
@@ -5148,7 +5148,7 @@ public class Design : Entity<Design>
     public Piece? Piece(string guid) => Pieces.Find(piece => piece.Guid == guid);
     private Design FlatToSvgCoordinates(float iconWidth, float iconWidthMax, float margin)
     {
-        // scale to iconWidth and change coordinate system
+        
         foreach (var piece in Pieces)
         {
             if (piece.Center is null) continue;
@@ -5162,7 +5162,7 @@ public class Design : Entity<Design>
             if (connection.V.HasValue) connection.V = -(connection.V * iconWidth);
         }
 
-        // recenter
+        
         var maxIconOffset = iconWidthMax - iconWidth;
         var minX = Pieces.Where(p => p.Center is not null).Min(piece => piece.Center!.U) - (margin + maxIconOffset);
         var minY = Pieces.Where(p => p.Center is not null).Min(piece => piece.Center!.V) - (margin + maxIconOffset);
@@ -5180,9 +5180,9 @@ public class Design : Entity<Design>
         return this;
     }
 
-    // TODO: Remove computeChildPlane and separate the flatten diagram and flatten planes parts.
-    // TODO: Parametrize colors for diagram
-    // TODO: Make remote uris work for diagram.
+    
+    
+    
     public string Diagram(
         IEnumerable<Type> types,
         Func<Plane, Point, Vector, Point, Vector, float, float, float, float, float, float, Plane> computeChildPlane,
@@ -5259,7 +5259,7 @@ public class Design : Entity<Design>
             var iconKind = Utility.ParseIconKind(icon);
             if (iconKind == IconKind.Logogram)
             {
-                // TODO: Variable font size to fit logogram text to width
+                
                 var fontSize = iconWidth / 2;
                 var text = new SvgText
                 {
@@ -5267,10 +5267,10 @@ public class Design : Entity<Design>
                     FontSize = fontSize,
                     TextAnchor = SvgTextAnchor.Middle,
                     Fill = new SvgColourServer(Color.Black),
-                    // TODO: Mask the icon logogram text
+                    
                     CustomAttributes =
                     {
-                        // { "mask", "url(#iconMask)" }
+                        
                     }
                 };
                 var textTransformed = new SvgGroup
@@ -5398,7 +5398,7 @@ text {
     }
 
 
-    // TODO: Implement reflexive validation for entity properties.
+    
     public override (bool, List<string>) Validate()
     {
         var (isValid, errors) = base.Validate();
@@ -5746,9 +5746,9 @@ public class KitsDiff : Entity<KitsDiff>
     public static implicit operator KitsDiff(List<Kit> kits) => new() { Updated = kits.Select(k => new DiffUpdate<KitDiff> { Id = k.Guid, Diff = (KitDiff)k }).ToList() };
 }
 
-/// <summary>
-/// <see href="https://github.com/usalu/semio#-kit-"/>
-/// </summary>
+
+
+
 [Entity("🗃️", "Kt", "Kit", "A kit is a collection of types and designs.")]
 public class Kit : Entity<Kit>
 {
@@ -5997,26 +5997,26 @@ public class Kit : Entity<Kit>
         return result;
     }
 
-    // TODO: Implement reflexive validation for entity properties.
+    
     public override (bool, List<string>) Validate()
     {
         var (isValid, errors) = base.Validate();
-        // TODO: Develop a validation template for urls.
-        //if (Icon != "" && Utility.UriIsNotAbsoluteFilePath(Icon))
-        //{
-        //    isValid = false;
-        //    errors.Add("The icon url can't be absolute.");
-        //}
-        //if (Image != "" && Utility.UriIsNotAbsoluteFilePath(Image))
-        //{
-        //    isValid = false;
-        //    errors.Add("The image url can't be absolute.");
-        //}
-        //if (Preview != "" && Utility.UriIsNotAbsoluteFilePath(Preview))
-        //{
-        //    isValid = false;
-        //    errors.Add("The preview url can't be absolute.");
-        //}
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         foreach (var type in Types)
         {
             var (isValidType, errorsType) = type.Validate();
@@ -6198,12 +6198,12 @@ public class Kit : Entity<Kit>
 
     #region Design Family Helpers
 
-    /// <summary>
-    /// Finds a design by its GUID.
-    /// </summary>
-    /// <param name="designGuid">The GUID of the design to find.</param>
-    /// <returns>The design with the specified GUID.</returns>
-    /// <exception cref="ArgumentException">If the design is not found.</exception>
+    
+    
+    
+    
+    
+    
     public Design FindDesignByGuid(string designGuid)
     {
         var design = Designs.FirstOrDefault(d => d.Guid == designGuid);
@@ -6211,12 +6211,12 @@ public class Kit : Entity<Kit>
         return design;
     }
 
-    /// <summary>
-    /// Gets the primitive (root) design of a design family.
-    /// A primitive design is a design that has no parent.
-    /// </summary>
-    /// <param name="designGuid">The GUID of any design in the family.</param>
-    /// <returns>The primitive design at the root of the family tree.</returns>
+    
+    
+    
+    
+    
+    
     public Design GetPrimitiveDesign(string designGuid)
     {
         var current = FindDesignByGuid(designGuid);
@@ -6227,11 +6227,11 @@ public class Kit : Entity<Kit>
         return current;
     }
 
-    /// <summary>
-    /// Gets all designs in a design family (the entire tree).
-    /// </summary>
-    /// <param name="designGuid">The GUID of any design in the family.</param>
-    /// <returns>All designs in the family tree.</returns>
+    
+    
+    
+    
+    
     public List<Design> GetDesignFamily(string designGuid)
     {
         var primitive = GetPrimitiveDesign(designGuid);
@@ -6251,12 +6251,12 @@ public class Kit : Entity<Kit>
         }
     }
 
-    /// <summary>
-    /// Checks if two designs belong to the same design family.
-    /// </summary>
-    /// <param name="designGuidA">The GUID of the first design.</param>
-    /// <param name="designGuidB">The GUID of the second design.</param>
-    /// <returns>True if both designs are in the same family tree.</returns>
+    
+    
+    
+    
+    
+    
     public bool AreDesignsInSameFamily(string designGuidA, string designGuidB)
     {
         var primitiveA = GetPrimitiveDesign(designGuidA);
@@ -6264,23 +6264,23 @@ public class Kit : Entity<Kit>
         return primitiveA.Guid == primitiveB.Guid;
     }
 
-    /// <summary>
-    /// Checks if a design can be used as a design piece in another design.
-    /// A design cannot contain a design piece from the same family.
-    /// </summary>
-    /// <param name="containerDesignGuid">The GUID of the design that would contain the piece.</param>
-    /// <param name="pieceDesignGuid">The GUID of the design to be used as a piece.</param>
-    /// <returns>True if the design piece can be added without violating the family constraint.</returns>
+    
+    
+    
+    
+    
+    
+    
     public bool CanUseDesignAsPiece(string containerDesignGuid, string pieceDesignGuid)
     {
         return !AreDesignsInSameFamily(containerDesignGuid, pieceDesignGuid);
     }
 
-    /// <summary>
-    /// Finds design pieces in a design that violate the same-family constraint.
-    /// </summary>
-    /// <param name="designGuid">The GUID of the design to check.</param>
-    /// <returns>List of pieces that reference designs in the same family.</returns>
+    
+    
+    
+    
+    
     public List<Piece> FindSameFamilyDesignPieces(string designGuid)
     {
         var design = FindDesignByGuid(designGuid);
@@ -6293,12 +6293,12 @@ public class Kit : Entity<Kit>
 
     #region Type Family Helpers
 
-    /// <summary>
-    /// Finds a type by its GUID.
-    /// </summary>
-    /// <param name="typeGuid">The GUID of the type to find.</param>
-    /// <returns>The type with the specified GUID.</returns>
-    /// <exception cref="ArgumentException">If the type is not found.</exception>
+    
+    
+    
+    
+    
+    
     public Type FindTypeByGuid(string typeGuid)
     {
         var type = Types.FirstOrDefault(t => t.Guid == typeGuid);
@@ -6306,12 +6306,12 @@ public class Kit : Entity<Kit>
         return type;
     }
 
-    /// <summary>
-    /// Gets the primitive (root) type of a type family.
-    /// A primitive type is a type that has no parent.
-    /// </summary>
-    /// <param name="typeGuid">The GUID of any type in the family.</param>
-    /// <returns>The primitive type at the root of the family tree.</returns>
+    
+    
+    
+    
+    
+    
     public Type GetPrimitiveType(string typeGuid)
     {
         var current = FindTypeByGuid(typeGuid);
@@ -6322,11 +6322,11 @@ public class Kit : Entity<Kit>
         return current;
     }
 
-    /// <summary>
-    /// Gets all types in a type family (the entire tree).
-    /// </summary>
-    /// <param name="typeGuid">The GUID of any type in the family.</param>
-    /// <returns>All types in the family tree.</returns>
+    
+    
+    
+    
+    
     public List<Type> GetTypeFamily(string typeGuid)
     {
         var primitive = GetPrimitiveType(typeGuid);
@@ -6346,12 +6346,12 @@ public class Kit : Entity<Kit>
         }
     }
 
-    /// <summary>
-    /// Checks if two types belong to the same type family.
-    /// </summary>
-    /// <param name="typeGuidA">The GUID of the first type.</param>
-    /// <param name="typeGuidB">The GUID of the second type.</param>
-    /// <returns>True if both types are in the same family tree.</returns>
+    
+    
+    
+    
+    
+    
     public bool AreTypesInSameFamily(string typeGuidA, string typeGuidB)
     {
         var primitiveA = GetPrimitiveType(typeGuidA);
@@ -6487,39 +6487,39 @@ public class ServerException : Exception
 
 public static class Meta
 {
-    /// <summary>
-    ///     Name of the entity : Type
-    /// </summary>
+    
+    
+    
     public static readonly ImmutableDictionary<string, System.Type> Type;
 
-    /// <summary>
-    ///     Name of the entity : EntityAttribute
-    /// </summary>
+    
+    
+    
     public static readonly ImmutableDictionary<string, EntityAttribute> Entity;
 
-    /// <summary>
-    ///     Name of the entity : Index of the property : PropertyInfo
-    /// </summary>
+    
+    
+    
     public static readonly ImmutableDictionary<string, ImmutableArray<PropertyInfo>> Property;
 
-    /// <summary>
-    ///     Name of the entity : Index of the property : PropAttribute
-    /// </summary>
+    
+    
+    
     public static readonly ImmutableDictionary<string, ImmutableArray<PropAttribute>> Prop;
 
-    /// <summary>
-    ///     Name of the entity : Index of the property : IsList
-    /// </summary>
+    
+    
+    
     public static readonly ImmutableDictionary<string, ImmutableArray<bool>> IsPropertyList;
 
-    /// <summary>
-    ///     Name of the entity : Index of the property : Type
-    /// </summary>
+    
+    
+    
     public static readonly ImmutableDictionary<string, ImmutableArray<System.Type>> PropertyItemType;
 
-    /// <summary>
-    ///     Name of the entity : Index of the property : IsEntity
-    /// </summary>
+    
+    
+    
     public static readonly ImmutableDictionary<string, ImmutableArray<bool>> IsPropertyEntity;
 
     static Meta()
@@ -6545,8 +6545,8 @@ public static class Meta
             propertyItemType[mt.Name] = new List<System.Type>();
             isPropertyEntity[mt.Name] = new List<bool>();
 
-            // TODO: Add index to prop and add to list based on index not on source code order.
-            // GetProperties() returns parent last
+            
+            
             var propertyParents = new List<PropertyInfo>();
             var propParents = new List<PropAttribute>();
             var isPropertyListParents = new List<bool>();

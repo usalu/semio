@@ -1,27 +1,27 @@
 // #region Header
 
-// Design.tsx
 
-// 2025 Ueli Saluz
 
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as
-// published by the Free Software Foundation, either version 3 of the
-// License, or (at your option) any later version.
 
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
 
-// You should have received a copy of the GNU Lesser General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
+
+
+
+
+
+
+
+
+
+
 
 // #endregion
 
 // #region Commands
 
-// Commands are defined after interfaces below
+
 
 // #endregion Commands
 
@@ -223,11 +223,11 @@ const KitSectionLazy = React.lazy(async () => {
   return { default: module.KitSection };
 });
 
-// Local components - will be consolidated into regions below
-// import { DesignAppFooter } from "./Footer";
-// import { ToolsToggleGroup } from "./Tools";
 
-// designAppCommands will be set after commands are defined below
+
+
+
+
 let designAppCommands: Record<string, (context: any, ...args: any[]) => Promise<any> | any>;
 
 type YDesignAppVal = string | number | boolean | YLeafMapString | YLeafMapNumber | Y.Map<boolean> | YAttributes | YStringArray;
@@ -964,8 +964,8 @@ export class DesignStore extends KitDiffAppStore<DesignAppState, DesignAppDiff, 
     let kitGuid = yMap.get("kit") as string;
     let designGuid = yMap.get("design") as string;
 
-    // id.kit and id.design are already GUIDs from createDesignApp
-    // Use them directly instead of looking up from stores
+    
+    
     if (!kitGuid) {
       kitGuid = id.kit;
       yMap.set("kit", kitGuid);
@@ -1532,16 +1532,13 @@ export function initializeDesignStore() {
 
 // #region Design App Plugin Registration
 
-/**
- * Design app plugin for the sketchpad machine.
- * Provides DESIGN.* events, actions, and guards.
- */
+
 const designAppPlugin: AppPlugin = {
   id: "design",
   namespace: "DESIGN",
   machine: {
-    // Actions are defined in Sketchpad.tsx for now
-    // TODO: Move design-specific actions here when Sketchpad.tsx is refactored
+    
+    
     actions: {},
     guards: {},
     eventHandlers: {},

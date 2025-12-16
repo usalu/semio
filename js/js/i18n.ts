@@ -65,7 +65,7 @@ export function useLabel(id: string, defaultValue?: string): string {
     }
   }
 
-  // Safety: ensure we always return a string, never an object
+  
   const fallback = defaultValue ?? id;
   return typeof fallback === "string" ? fallback : String(fallback);
 }

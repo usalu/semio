@@ -1,21 +1,21 @@
 // #region Header
 
-// generate-metabolism-diff.ts
 
-// 2025 Ueli Saluz
 
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as
-// published by the Free Software Foundation, either version 3 of the
-// License, or (at your option) any later version.
 
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
 
-// You should have received a copy of the GNU Lesser General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
+
+
+
+
+
+
+
+
+
+
 
 // #endregion
 
@@ -49,22 +49,22 @@ async function main() {
     const kitJson = await fs.readFile(kitPath, "utf-8");
     let original: Kit = JSON.parse(kitJson);
 
-    // Remove flattened designs (designs with parents) to avoid GUID mismatches in tests
-    // since flattenDesign generates new GUIDs for pieces
+    
+    
     console.log("Removing flattened designs from original...");
     original.designs = original.designs?.filter(d => !d.parent);
 
     console.log("Creating comprehensive diff...");
 
-    // First, create a modified version of the kit by applying incremental changes
+    
     let modified: Kit = JSON.parse(JSON.stringify(original));
 
-    // ===========================================
-    // COMPREHENSIVE DIFF TEST COVERAGE
-    // Tests: add, remove, update for all entities
-    // ===========================================
+    
+    
+    
+    
 
-    // 1. Top-level scalar properties
+    
     modified.name = "Metabolism Modified";
     modified.version = "r25.08-1";
     modified.description = "Modified version for comprehensive diff testing";
@@ -73,12 +73,12 @@ async function main() {
     modified.homepage = "https://modified.example.com";
     modified.license = "MIT-Modified";
 
-    // 2. Types: Add, remove, update
+    
     if (modified.types && modified.types.length > 0) {
-        // Remove first type
+        
         modified.types.splice(0, 1);
 
-        // Update second type (now first)
+        
         if (modified.types.length > 0) {
             modified.types[0].name = modified.types[0].name + " Modified";
             modified.types[0].description = "Updated description";
@@ -93,7 +93,7 @@ async function main() {
             });
         }
 
-        // Add new type
+        
         const newType: Type = {
             guid: guid(),
             name: "New Test Type",
@@ -116,12 +116,12 @@ async function main() {
         modified.types.push(newType);
     }
 
-    // 3. Designs: Add, remove, update
+    
     if (modified.designs && modified.designs.length > 0) {
-        // Remove first design
+        
         modified.designs.splice(0, 1);
 
-        // Update second design (now first)
+        
         if (modified.designs.length > 0) {
             modified.designs[0].name = modified.designs[0].name + " Modified";
             modified.designs[0].description = "Updated design description";
@@ -138,7 +138,7 @@ async function main() {
             });
         }
 
-        // Add new design
+        
         const newDesign: Design = {
             guid: guid(),
             name: "New Test Design",
@@ -162,18 +162,18 @@ async function main() {
         modified.designs.push(newDesign);
     }
 
-    // 4. Tags: Add, remove, update
+    
     if (modified.tags && modified.tags.length > 0) {
-        // Remove first tag
+        
         const removedTag = modified.tags.splice(0, 1)[0];
 
-        // Update second tag (now first)
+        
         if (modified.tags.length > 0) {
             modified.tags[0].name = modified.tags[0].name + " Modified";
             modified.tags[0].description = "Updated tag description";
         }
 
-        // Add new tag
+        
         const newTag: Tag = {
             guid: guid(),
             name: "New Test Tag",
@@ -183,18 +183,18 @@ async function main() {
         modified.tags.push(newTag);
     }
 
-    // 5. Concepts: Add, remove, update
+    
     if (modified.concepts && modified.concepts.length > 0) {
-        // Remove first concept
+        
         modified.concepts.splice(0, 1);
 
-        // Update second concept (now first)
+        
         if (modified.concepts.length > 0) {
             modified.concepts[0].name = modified.concepts[0].name + " Modified";
             modified.concepts[0].description = "Updated concept description";
         }
 
-        // Add new concept
+        
         const newConcept: Concept = {
             guid: guid(),
             name: "New Test Concept",
@@ -204,18 +204,18 @@ async function main() {
         modified.concepts.push(newConcept);
     }
 
-    // 6. Interfaces: Add, remove, update
+    
     if (modified.interfaces && modified.interfaces.length > 0) {
-        // Remove first interface
+        
         modified.interfaces.splice(0, 1);
 
-        // Update second interface (now first)
+        
         if (modified.interfaces.length > 0) {
             modified.interfaces[0].name = modified.interfaces[0].name + " Modified";
             modified.interfaces[0].description = "Updated interface description";
         }
 
-        // Add new interface
+        
         const newInterface: Interface = {
             guid: guid(),
             name: "New Test Interface",
@@ -224,7 +224,7 @@ async function main() {
         };
         modified.interfaces.push(newInterface);
     } else {
-        // If no interfaces exist, just add one
+        
         modified.interfaces = [{
             guid: guid(),
             name: "Test Interface",
@@ -233,19 +233,19 @@ async function main() {
         }];
     }
 
-    // 7. Qualities: Add, remove, update
+    
     if (modified.qualities && modified.qualities.length > 0) {
-        // Remove first quality
+        
         modified.qualities.splice(0, 1);
 
-        // Update second quality (now first)
+        
         if (modified.qualities.length > 0) {
             modified.qualities[0].name = modified.qualities[0].name + " Modified";
             modified.qualities[0].description = "Updated quality description";
             modified.qualities[0].defaultValue = 99;
         }
 
-        // Add new quality
+        
         const newQuality: Quality = {
             guid: guid(),
             key: "test.quality",
@@ -260,17 +260,17 @@ async function main() {
         modified.qualities.push(newQuality);
     }
 
-    // 8. Files: Add, remove, update
+    
     if (modified.files && modified.files.length > 0) {
-        // Remove first file
+        
         modified.files.splice(0, 1);
 
-        // Update second file (now first)
+        
         if (modified.files.length > 0) {
             modified.files[0].name = "updated-" + modified.files[0].name;
         }
 
-        // Add new file
+        
         const newFile: KitFile = {
             guid: guid(),
             name: "new-file.txt",
@@ -280,18 +280,18 @@ async function main() {
         modified.files.push(newFile);
     }
 
-    // 9. Folders: Add, remove, update
+    
     if (modified.folders && modified.folders.length > 0) {
-        // Remove first folder
+        
         modified.folders.splice(0, 1);
 
-        // Update second folder (now first)
+        
         if (modified.folders.length > 0) {
             modified.folders[0].name = modified.folders[0].name + " Modified";
             modified.folders[0].description = "Updated folder description";
         }
 
-        // Add new folder
+        
         const newFolder: Folder = {
             guid: guid(),
             name: "test-folder",
@@ -301,7 +301,7 @@ async function main() {
         };
         modified.folders.push(newFolder);
     } else {
-        // If no folders exist, just add one
+        
         modified.folders = [{
             guid: guid(),
             name: "test-folder",
@@ -311,16 +311,16 @@ async function main() {
         }];
     }
 
-    // 10. Authors: Add, remove, update
+    
     if (modified.authors && modified.authors.length > 1) {
-        // Update first author
+        
         modified.authors[0].name = modified.authors[0].name + " Modified";
         modified.authors[0].email = "modified@example.com";
 
-        // Remove second author
+        
         modified.authors.splice(1, 1);
 
-        // Add new author
+        
         const newAuthor: Author = {
             guid: guid(),
             name: "Test Author",
@@ -329,18 +329,18 @@ async function main() {
         modified.authors.push(newAuthor);
     }
 
-    // 11. Attributes: Add, remove, update
+    
     if (modified.attributes && modified.attributes.length > 0) {
-        // Remove first attribute
+        
         modified.attributes.splice(0, 1);
 
-        // Update second attribute (now first)
+        
         if (modified.attributes.length > 0) {
             modified.attributes[0].value = "modified-value";
             modified.attributes[0].definition = "Updated attribute definition";
         }
 
-        // Add new attribute
+        
         const newAttribute: Attribute = {
             guid: guid(),
             key: "test.attribute",
@@ -349,7 +349,7 @@ async function main() {
         };
         modified.attributes.push(newAttribute);
     } else {
-        // If no attributes exist, just add one
+        
         modified.attributes = [{
             guid: guid(),
             key: "test.attribute",
