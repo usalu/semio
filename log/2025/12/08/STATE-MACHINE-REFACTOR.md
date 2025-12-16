@@ -1,19 +1,15 @@
 ---
 slug: STATE-MACHINE-REFACTOR
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Refactor sketchpad state machine for proper state transitions
-model: claude-opus-4.5
-input:
+iterations:
   - prompt: >-
       Implementing runtime action registry pattern to allow apps to register
       their action implementations at runtime, avoiding circular dependencies
       that caused previous attempt to fail.
-    date: '2025-12-15T13:13:15.777Z'
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
+    date: "2025-12-15T13:13:15.777Z"
+    model: claude-opus-4-5
+    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+    commit: unknown
 ---
 
 # Previously
@@ -161,8 +157,9 @@ All 5 playwright tests pass after the refactor.
 `useDesignAppCommands` now routes all app state operations through XState `actor.send()`:
 
 **App state operations (via XState):**
+
 - `selectAll`, `deselectAll` - DESIGN.SELECT_ALL, DESIGN.CLEAR_SELECTION
-- `selectPiece`, `selectPieces`, `addPieceToSelection`, `removePieceFromSelection` - DESIGN.SELECT_PIECE, DESIGN.DESELECT_PIECE  
+- `selectPiece`, `selectPieces`, `addPieceToSelection`, `removePieceFromSelection` - DESIGN.SELECT_PIECE, DESIGN.DESELECT_PIECE
 - `selectConnection`, `addConnectionToSelection`, `removeConnectionFromSelection` - DESIGN.SELECT_CONNECTION, DESIGN.DESELECT_CONNECTION
 - `selectPiecePort`, `deselectPiecePort` - DESIGN.SET_SELECTION
 - `toggleDiagramFullscreen`, `toggleAccesslFullscreen` - DESIGN.SET_FULLSCREEN
@@ -174,6 +171,7 @@ All 5 playwright tests pass after the refactor.
 - `setModelTagsForType`, `addModelTagForAllTypes`, `removeModelTagFromAllTypes` - DESIGN.SYNC
 
 **Kit data operations (still via store.execute()):**
+
 - `addPiece`, `addPieces`, `removePiece`, `removePieces`
 - `addConnection`, `addConnections`, `removeConnection`, `removeConnections`
 - `updatePiece`, `updatePieces`, `updateConnection`, `updateConnections`
@@ -196,12 +194,14 @@ All 5 playwright tests pass (31.4s).
 All triadic hooks in Design.tsx and Type.tsx now use XState `actor.can()` via `useSelector` to derive `canSetState`:
 
 **Pattern:**
+
 ```typescript
 const canSetEvent = useMemo(() => ({ type: "DESIGN.SET_SELECTION" as const, kitGuid, designGuid, selection: {} }), [kitGuid, designGuid]);
 const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
 ```
 
 **Design.tsx hooks updated:**
+
 - `useDesignAppSelection()`
 - `useDesignAppFullscreen()`
 - `useDesignAppActiveTool()`
@@ -214,6 +214,7 @@ const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
 - `useDesignAppPanelVisibility()`
 
 **Type.tsx hooks updated:**
+
 - `useTypeAppSelection()`
 - `useTypeAppPanelVisibility()`
 - `useTypeAppCamera()`
@@ -234,12 +235,14 @@ All 5 playwright tests pass (32.8s).
 Refactored `ToolsToggleGroup` component to use only the triadic hook:
 
 **Before:**
+
 ```typescript
 const [activeTool, , canSetActiveTool] = useDesignAppActiveTool();
 const { setActiveTool } = useDesignAppCommands(kit && design ? { kit, design } : undefined);
 ```
 
 **After:**
+
 ```typescript
 const [activeTool, setActiveTool, canSetActiveTool] = useDesignAppActiveTool();
 ```
@@ -251,6 +254,7 @@ All 5 playwright tests pass (30.9s).
 ## Current Status
 
 **Completed:**
+
 1. ✅ `useDesignAppCommands` routes app state operations through XState `actor.send()`
 2. ✅ `useTypeAppCommands` already uses XState for all operations
 3. ✅ All triadic hooks use `actor.can()` for `canSetState`
@@ -258,13 +262,17 @@ All 5 playwright tests pass (30.9s).
 5. ✅ Example component `ToolsToggleGroup` refactored to use only triadic hooks
 
 **Remaining (13 usages of useDesignAppCommands):**
+
 - Components using kit mutations (addPiece, updatePiece, removeConnection, etc.) still need commands
 - Components using app state operations can be migrated to triadic hooks
 - Some components mix both patterns
 
 **Architecture:**
+
 - **Kit reads**: Y.js granular hooks (useKitTypes, useDesign, etc.)
 - **Kit writes**: Commands via store.execute() for transaction-based mutations
 - **App state reads/writes**: XState triadic hooks with actor.can() for canSetState
+
+```
 
 ```

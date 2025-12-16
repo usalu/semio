@@ -1,14 +1,6 @@
 ---
 slug: KIT-IMPORT-EXPORT-COMPLETE
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Migration from 2025-11-21_KIT-IMPORT-EXPORT-COMPLETE.md
-model: unknown
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 # Kit Import/Export Implementation - Complete
 

@@ -1,14 +1,6 @@
 ---
 slug: PANEL-TESTS-SIMPLIFIED
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Simplified panel tests to verify toggle existence
-model: claude-opus-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 
 # Previously

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { execSync } from "child_process";
 import { existsSync, readFileSync, unlinkSync, writeFileSync } from "fs";
-import { join } from "path";
+import { basename, dirname, join } from "path";
 import * as ts from "typescript";
 
 type CodeLanguage = "typescript" | "python" | "csharp" | "meta";
@@ -30,6 +30,27 @@ function getRepoFiles(): string[] {
   return Array.from(new Set([...getTrackedFiles(), ...getUntrackedFiles()].map(normalizePath))).sort();
 }
 
+function getPackageRootDirs(repoFiles: string[]): Set<string> {
+  const roots = new Set<string>();
+  for (const file of repoFiles) {
+    if (file.endsWith("/package.json") || file.endsWith("/pyproject.toml") || file.endsWith(".csproj") || file.endsWith(".fsproj") || file.endsWith("/yak.toml")) roots.add(dirname(file).replace(/\\/g, "/"));
+  }
+  return roots;
+}
+
+function isConfigFile(path: string): boolean {
+  const base = basename(path);
+  if (base.endsWith(".config.ts") || base.endsWith(".config.tsx")) return true;
+  if (base === "vite.config.ts" || base === "vite.config.tsx") return true;
+  if (base === "vite.test.config.ts" || base === "vite.test.config.tsx") return true;
+  if (base === "vitest.config.ts" || base === "vitest.config.tsx") return true;
+  if (base === "eslint.config.ts" || base === "eslint.config.tsx") return true;
+  if (base === "playwright.config.ts" || base === "playwright.config.tsx") return true;
+  if (base === "tailwind.config.ts" || base === "tailwind.config.tsx") return true;
+  if (base === "postcss.config.ts" || base === "postcss.config.tsx") return true;
+  return false;
+}
+
 function getLanguage(path: string): CodeLanguage | null {
   if (path.endsWith(".ts") || path.endsWith(".tsx")) return "typescript";
   if (path.endsWith(".py")) return "python";
@@ -37,10 +58,12 @@ function getLanguage(path: string): CodeLanguage | null {
   return null;
 }
 
-function isExtraDevDoc(path: string): boolean {
+function isExtraDevDoc(path: string, packageRoots: Set<string>): boolean {
   const normalized = normalizePath(path);
   if (normalized === "README.md" || normalized === "AGENTS.md") return false;
-  return /(^|\/)(README\.md|AGENTS\.md)$/.test(normalized);
+  if (normalized.endsWith("/AGENTS.md")) return true;
+  if (normalized.endsWith("/README.md") && packageRoots.has(dirname(normalized))) return false;
+  return normalized.endsWith("/README.md");
 }
 
 function shouldScan(path: string): boolean {
@@ -106,8 +129,8 @@ function getLicenseHeaderEndLine(lines: string[], language: CodeLanguage): { has
 function parseRegions(lines: string[], language: CodeLanguage, path: string): CodeIssue[] {
   const issues: CodeIssue[] = [];
   const stack: { name: string; line: number }[] = [];
-  const regionRegex = language === "csharp" ? /^\s*#region\b(.*)$/ : language === "python" ? /^\s*#region\b(.*)$/ : /^\s*\/\/\s*#region\b(.*)$/;
-  const endRegionRegex = language === "csharp" ? /^\s*#endregion\b(.*)$/ : language === "python" ? /^\s*#endregion\b(.*)$/ : /^\s*\/\/\s*#endregion\b(.*)$/;
+  const regionRegex = language === "csharp" ? /^\s*#\s*region\b(.*)$/ : language === "python" ? /^\s*#\s*region\b(.*)$/ : /^\s*\/\/\s*#region\b(.*)$/;
+  const endRegionRegex = language === "csharp" ? /^\s*#\s*endregion\b(.*)$/ : language === "python" ? /^\s*#\s*endregion\b(.*)$/ : /^\s*\/\/\s*#endregion\b(.*)$/;
   for (let i = 0; i < lines.length; i++) {
     const lineNumber = i + 1;
     const line = lines[i] ?? "";
@@ -136,6 +159,33 @@ function parseRegions(lines: string[], language: CodeLanguage, path: string): Co
   return issues;
 }
 
+function getHeaderRegionLines(lines: string[], language: CodeLanguage): Set<number> {
+  const set = new Set<number>();
+  const headerNames = new Set(["header", "headers", "fileheader", "file-header"]);
+  const regionRegex = language === "csharp" ? /^\s*#\s*region\b(.*)$/ : language === "python" ? /^\s*#\s*region\b(.*)$/ : /^\s*\/\/\s*#region\b(.*)$/;
+  const endRegionRegex = language === "csharp" ? /^\s*#\s*endregion\b(.*)$/ : language === "python" ? /^\s*#\s*endregion\b(.*)$/ : /^\s*\/\/\s*#endregion\b(.*)$/;
+  const stack: string[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    const lineNumber = i + 1;
+    const line = lines[i] ?? "";
+    const startMatch = line.match(regionRegex);
+    if (startMatch) {
+      const name = (startMatch[1] ?? "").trim().toLowerCase().replace(/\s+/g, "");
+      stack.push(name);
+      if (stack.some((n) => headerNames.has(n))) set.add(lineNumber);
+      continue;
+    }
+    const endMatch = line.match(endRegionRegex);
+    if (endMatch) {
+      if (stack.some((n) => headerNames.has(n))) set.add(lineNumber);
+      stack.pop();
+      continue;
+    }
+    if (stack.some((n) => headerNames.has(n))) set.add(lineNumber);
+  }
+  return set;
+}
+
 function isTsRegionLineText(textAfterSlashes: string): boolean {
   const t = textAfterSlashes.trim();
   return t.startsWith("#region") || t.startsWith("#endregion");
@@ -143,7 +193,9 @@ function isTsRegionLineText(textAfterSlashes: string): boolean {
 
 function scanTypescriptComments(content: string, lines: string[], path: string, licenseHeaderEndLine: number): CodeIssue[] {
   const issues: CodeIssue[] = [];
+  if (isConfigFile(path)) return issues;
   const sourceFile = ts.createSourceFile(path, content, ts.ScriptTarget.Latest, true, path.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
+  const headerLines = getHeaderRegionLines(lines, "typescript");
   const scanner = ts.createScanner(ts.ScriptTarget.Latest, false, path.endsWith(".tsx") ? ts.LanguageVariant.JSX : ts.LanguageVariant.Standard, content);
   while (scanner.scan() !== ts.SyntaxKind.EndOfFileToken) {
     const kind = scanner.getToken();
@@ -155,7 +207,10 @@ function scanTypescriptComments(content: string, lines: string[], path: string, 
     const column = character + 1;
     if (lineNumber <= licenseHeaderEndLine) continue;
     const tokenText = content.slice(pos, end);
+    if (headerLines.has(lineNumber)) continue;
+    if (/todo/i.test(tokenText)) continue;
     if (tokenText.includes("SPDX-License-Identifier:")) continue;
+    if (kind === ts.SyntaxKind.SingleLineCommentTrivia && tokenText.startsWith("///") && /<\s*reference\b/i.test(tokenText)) continue;
     const lineText = lines[lineNumber - 1] ?? "";
     if (kind === ts.SyntaxKind.SingleLineCommentTrivia) {
       const after = lineText.slice(Math.max(0, lineText.indexOf("//") + 2));
@@ -201,7 +256,9 @@ function scanTypescriptTemporaryLogs(content: string, lines: string[], path: str
 }
 
 function stripTypescriptComments(content: string, lines: string[], path: string, licenseHeaderEndLine: number): string {
+  if (isConfigFile(path)) return content;
   const sourceFile = ts.createSourceFile(path, content, ts.ScriptTarget.Latest, true, path.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
+  const headerLines = getHeaderRegionLines(lines, "typescript");
   const scanner = ts.createScanner(ts.ScriptTarget.Latest, false, path.endsWith(".tsx") ? ts.LanguageVariant.JSX : ts.LanguageVariant.Standard, content);
   const removals: { start: number; end: number; insertSpace: boolean }[] = [];
   while (scanner.scan() !== ts.SyntaxKind.EndOfFileToken) {
@@ -213,11 +270,14 @@ function stripTypescriptComments(content: string, lines: string[], path: string,
     const lineNumber = line + 1;
     if (lineNumber <= licenseHeaderEndLine) continue;
     const tokenText = content.slice(start, end);
+    if (headerLines.has(lineNumber)) continue;
+    if (/todo/i.test(tokenText)) continue;
     if (tokenText.includes("SPDX-License-Identifier:")) continue;
     if (kind === ts.SyntaxKind.SingleLineCommentTrivia) {
       const lineText = lines[lineNumber - 1] ?? "";
       const after = lineText.slice(Math.max(0, lineText.indexOf("//") + 2));
       if (isTsRegionLineText(after)) continue;
+      if (tokenText.startsWith("///") && /<\s*reference\b/i.test(tokenText)) continue;
     }
     const prev = start > 0 ? content[start - 1] ?? "" : "";
     const next = end < content.length ? content[end] ?? "" : "";
@@ -349,12 +409,13 @@ function scanTsOrCsharpComments(content: string, lines: string[], language: Code
 }
 
 function isPythonRegionLine(lineText: string): boolean {
-  const trimmed = lineText.trimStart();
-  return trimmed.startsWith("#region") || trimmed.startsWith("#endregion");
+  return /^\s*#\s*(?:end)?region\b/i.test(lineText);
 }
 
 function scanPythonComments(content: string, lines: string[], path: string, licenseHeaderEndLine: number): CodeIssue[] {
   const issues: CodeIssue[] = [];
+  if (isConfigFile(path)) return issues;
+  const headerLines = getHeaderRegionLines(lines, "python");
   let inSingle = false;
   let inDouble = false;
   let inTripleSingle = false;
@@ -439,11 +500,19 @@ function scanPythonComments(content: string, lines: string[], path: string, lice
         col += 1;
         continue;
       }
+      if (headerLines.has(line)) {
+        col += 1;
+        continue;
+      }
       if (isPythonRegionLine(lineText)) {
         col += 1;
         continue;
       }
       if (after.includes("SPDX-License-Identifier:")) {
+        col += 1;
+        continue;
+      }
+      if (/todo/i.test(after)) {
         col += 1;
         continue;
       }
@@ -473,6 +542,8 @@ function scanPythonTemporaryLogs(lines: string[], path: string, licenseHeaderEnd
 
 function scanCsharpComments(content: string, lines: string[], path: string, licenseHeaderEndLine: number): CodeIssue[] {
   const issues: CodeIssue[] = [];
+  if (isConfigFile(path)) return issues;
+  const headerLines = getHeaderRegionLines(lines, "csharp");
   let inChar = false;
   let inString = false;
   let inVerbatimString = false;
@@ -568,6 +639,14 @@ function scanCsharpComments(content: string, lines: string[], path: string, lice
         col += 2;
         continue;
       }
+      if (headerLines.has(line)) {
+        col += 2;
+        continue;
+      }
+      if (/todo/i.test(lineText)) {
+        col += 2;
+        continue;
+      }
       issues.push({ path, language: "csharp", kind: "comment", line, column: col, message: "Line comment found", excerpt: getExcerpt(lineText) });
       while (i < content.length && (content[i] ?? "") !== "\n") i += 1;
       line += 1;
@@ -577,6 +656,14 @@ function scanCsharpComments(content: string, lines: string[], path: string, lice
     if (ch === "/" && next === "*") {
       const lineText = lines[line - 1] ?? "";
       if (line <= licenseHeaderEndLine) {
+        inBlockComment = true;
+        i += 1;
+        col += 2;
+        continue;
+      }
+      const endIndex = content.indexOf("*/", i + 2);
+      const blockText = endIndex === -1 ? content.slice(i) : content.slice(i, endIndex + 2);
+      if (headerLines.has(line) || /todo/i.test(blockText)) {
         inBlockComment = true;
         i += 1;
         col += 2;
@@ -608,6 +695,7 @@ function scanCsharpTemporaryLogs(lines: string[], path: string, licenseHeaderEnd
 }
 
 function stripCsharpComments(content: string, lines: string[], licenseHeaderEndLine: number): string {
+  const headerLines = getHeaderRegionLines(lines, "csharp");
   let out = "";
   let inChar = false;
   let inString = false;
@@ -712,12 +800,20 @@ function stripCsharpComments(content: string, lines: string[], licenseHeaderEndL
         i -= 1;
         continue;
       }
+      if (headerLines.has(line) || /todo/i.test(lines[line - 1] ?? "")) {
+        while (i < content.length && (content[i] ?? "") !== "\n") i += 1;
+        out += content.slice(startIndex, i);
+        i -= 1;
+        continue;
+      }
       while (i < content.length && (content[i] ?? "") !== "\n") i += 1;
       i -= 1;
       continue;
     }
     if (ch === "/" && next === "*") {
-      if (line <= licenseHeaderEndLine) {
+      const endIndex = content.indexOf("*/", i + 2);
+      const blockText = endIndex === -1 ? content.slice(i) : content.slice(i, endIndex + 2);
+      if (line <= licenseHeaderEndLine || headerLines.has(line) || /todo/i.test(blockText)) {
         out += "/*";
         i += 1;
         inBlockCommentKeep = true;
@@ -841,6 +937,7 @@ function stripTsOrCsharpComments(content: string, lines: string[], language: Cod
 }
 
 function stripPythonComments(content: string, lines: string[], licenseHeaderEndLine: number): string {
+  const headerLines = getHeaderRegionLines(lines, "python");
   let out = "";
   let inSingle = false;
   let inDouble = false;
@@ -919,7 +1016,7 @@ function stripPythonComments(content: string, lines: string[], licenseHeaderEndL
     if (ch === "#") {
       const lineText = lines[line - 1] ?? "";
       const after = lineText.slice(lineText.indexOf("#") + 1).trim();
-      const keep = line <= licenseHeaderEndLine || after.includes("SPDX-License-Identifier:") || isPythonRegionLine(lineText) || lineText.trimStart().startsWith("#!");
+      const keep = line <= licenseHeaderEndLine || headerLines.has(line) || after.includes("SPDX-License-Identifier:") || isPythonRegionLine(lineText) || /todo/i.test(after) || lineText.trimStart().startsWith("#!");
       if (keep) {
         const startIndex = i;
         while (i < content.length && (content[i] ?? "") !== "\n") i += 1;
@@ -946,7 +1043,8 @@ function run(): void {
   const byKind: Record<CodeIssueKind, number> = { comment: 0, temporary_log: 0, missing_license_header: 0, extra_dev_docs: 0, region_name_missing: 0, region_mismatch: 0, region_unclosed: 0, unreadable_file: 0 };
   const byLanguage: Record<CodeLanguage, number> = { typescript: 0, python: 0, csharp: 0, meta: 0 };
   const repoFiles = getRepoFiles().filter(shouldScan);
-  for (const docPath of repoFiles.filter(isExtraDevDoc)) {
+  const packageRoots = getPackageRootDirs(repoFiles);
+  for (const docPath of repoFiles.filter((file) => isExtraDevDoc(file, packageRoots))) {
     const absolute = join(rootDir, docPath);
     if (fix) {
       try {
@@ -979,8 +1077,23 @@ function run(): void {
     }
     let lines = splitLines(content);
     let license = getLicenseHeaderEndLine(lines, language);
+    if (fix && !license.hasSpdx) {
+      const year = new Date().getFullYear();
+      const prefix = language === "python" ? "# " : "// ";
+      const insertionStart = (() => {
+        let index = 0;
+        if ((lines[0] ?? "").startsWith("#!")) index = 1;
+        if (language === "python" && index === 1 && /^\s*#\s*coding[:=]/i.test(lines[1] ?? "")) index = 2;
+        return index;
+      })();
+      const insertAt = language === "typescript" ? (() => { let index = insertionStart; while ((lines[index] ?? "").trimStart().startsWith("///") && /<\s*reference\b/i.test(lines[index] ?? "")) index += 1; return index; })() : insertionStart;
+      content = [...lines.slice(0, insertAt), `${prefix}SPDX-License-Identifier: AGPL-3.0-only`, `${prefix}Copyright (C) ${year} Ueli Saluz`, ...lines.slice(insertAt)].join("\n");
+      writeFileSync(absolute, content, "utf-8");
+      lines = splitLines(content);
+      license = getLicenseHeaderEndLine(lines, language);
+    }
     if (fix) {
-      const updated = language === "python" ? stripPythonComments(content, lines, license.headerEndLine) : language === "typescript" ? stripTypescriptComments(content, lines, path, license.headerEndLine) : stripCsharpComments(content, lines, license.headerEndLine);
+      const updated = language === "python" ? isConfigFile(path) ? content : stripPythonComments(content, lines, license.headerEndLine) : language === "typescript" ? stripTypescriptComments(content, lines, path, license.headerEndLine) : isConfigFile(path) ? content : stripCsharpComments(content, lines, license.headerEndLine);
       if (updated !== content) {
         writeFileSync(absolute, updated, "utf-8");
         content = updated;

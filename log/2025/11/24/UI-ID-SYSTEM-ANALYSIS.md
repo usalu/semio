@@ -1,14 +1,6 @@
 ---
 slug: UI-ID-SYSTEM-ANALYSIS
-author: Unknown
 summary: ''
-model: unknown
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 # UI ID System Analysis
 

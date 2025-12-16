@@ -1,14 +1,6 @@
 ---
 slug: FIX-HOVER-PERF
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix hover and selection state overfetching for performance
-model: claude-opus-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 
 # Previously

@@ -3,7 +3,7 @@ This document MUST ALWAYS BE followed unless explicitly asked to do otherwise.
 IMPORTANT:
 
 - The codebase in under design and development and not used in production yet. There are many inconsistencies that need to be refactored. ALWAYS use clean mechanisms that might require large refactorings and NEVER care about backwards compatibility.
-- For every task you are working on, you MUST create or update a markdown log using `npx tsx scripts/log.ts create SLUG "Summary" --model=MODEL --prompt="User prompt..."`. Logs are stored in `log/YEAR/MONTH/DAY/SLUG.md` with YAML frontmatter. The script automatically creates three sections to be filled/updated during execution of the task: `# Previously`, `# Plan`, and `#Changes`.The purpose of the log is to understand the context, problem and decision making process. It is only about the process.
+- For every task you are working on, you MUST create or update a markdown ticket using `npx tsx scripts/log.ts ticket create SLUG "Summary"`. Tickets are stored in `log/YEAR/MONTH/DAY/SLUG.md` with YAML frontmatter and optional **iterations**. The script automatically creates three sections to be filled/updated during execution of the task: `# Previously`, `# Plan`, and `#Changes`.The purpose of the ticket is to understand the context, problem and decision making process. It is only about the process.
 - For every task you are working on, you MUST update the dev docs (`README.md` and `AGENTS.md`). Every key decision and mechanism ALWAYS needs to be documemented. Every feature, decision MUST be undocumented/uncommented in the code and MUST be documented in the dev docs (AGENTS.md and README.md). The documentation ALWAYS happens four times:
 
 1. Under `# 🛍️ Products` in README.md where it is described from user perspective [architects, designers, engineers, …] (framework-agnostic, no implementation references, etc)
@@ -26,7 +26,23 @@ Temporary diagnostic logs MUST include the `[DEBUG]` prefix and are considered r
 
 Region blocks MUST be properly nested and MUST be closed with a matching named end marker.
 
-Developer documentation MUST be centralized in the root `README.md` and `AGENTS.md`; any other `README.md`/`AGENTS.md` files are forbidden.
+Developer documentation MUST be centralized in the root `README.md` and `AGENTS.md`; non-root `AGENTS.md` files and non-package `README.md` files are forbidden.
+
+### Ticket
+
+A `ticket` is a development artifact that tracks a task over multiple `iterations`.
+
+A `ticket` has a `status` of **open** or **finished**.
+
+A `ticket` stores an ordered list of `iterations` where each iteration records a `prompt`, `model`, `date`, optional `finished` timestamp, optional `commit`, and optional `files` lists (`updated`, `created`, `removed`).
+
+A ticket MUST NOT start a new iteration while the latest iteration is unfinished.
+
+A ticket MUST NOT be finished while the latest iteration is unfinished.
+
+Iteration start and iteration finish MUST declare at least one file across `updated`, `created`, or `removed`.
+
+Ticket finish MUST aggregate all iteration files as ticket-level `files` and MUST compute ticket-level `lines` via git diff against the ticket `base` commit.
 
 ### Kit
 
@@ -302,7 +318,7 @@ Whenever a keyword is used, ALWAYS directly proceed with the task and NEVER ask 
 
 - `AUTOMATE`: Create a `*.ts` script to automate a task (use `scripts/utils.ts` for reusable code). Create a run configuration in `package.json`, create a task in `.vscode/tasks.json` and create a `.vscode/launch.json` along with the script. Call the script from the `preflight.ts` script.
 
-- `FINISH`: Finish a task that was started but not completed. ALWAYS first search for recent logs using `npx tsx scripts/log.ts search [query] --limit=10` and analyze with git staged and unstaged changes that are related to the task.
+- `FINISH`: Finish a task that was started but not completed. ALWAYS first search for recent tickets using `npx tsx scripts/log.ts ticket search [query] --limit=10` and analyze with git staged and unstaged changes that are related to the task.
 
 - `SCHEMA`: Extend the schema for `semio.ts` then run `tsx scripts/schema.ts` to regenerate `reports/schema.json`; Fix all reported schema issues, add missing fields, update incomplete entries, remove unused fields, and rerun until the report is clean. Rerun the script until the report is clean.
 
@@ -510,9 +526,9 @@ dnd-kit's `PointerSensor` requires native browser `PointerEvent` objects. Playwr
 
 - `AUTOMATE`: Create a script to automate a task. `*.ts` for all automation tasks (use `scripts/utils.ts` for reusable code). `*.py` for python related tasks (use `@semio/engine` for reusable code).
 
-### Log System
+### Ticket System
 
-All development tasks are tracked via markdown logs with YAML frontmatter stored in a nested date-based structure.
+All development tasks are tracked via markdown tickets with YAML frontmatter stored in a nested date-based structure. Each ticket can track multiple **iterations** (agent work sessions), where each iteration captures the prompt, model, commit, and per-file line changes.
 
 #### Directory Structure
 
@@ -528,53 +544,83 @@ Example: `log/2025/11/24/VALIDATION-SYSTEM.md`
 
 #### Frontmatter Format
 
-Every log file MUST have YAML frontmatter:
+Every ticket file MUST have YAML frontmatter with a slug and summary; iterations are optional:
 
 ```yaml
 ---
-date:
-  created: TIMESTAMP # ISO 8601 timestamp (e.g., 2025-11-24T10:30:00.000Z)
-  updated: TIMESTAMP # ISO 8601 timestamp (updated on prompt/files/stats)
 slug: SLUG # Upper kebab-case identifier (e.g., VALIDATION-SYSTEM)
-author: NAME <EMAIL> # From git config (e.g., "John Doe <john@example.com>")
 summary: SUMMARY # One-line description for commit messages
-model: MODEL # LLM model used (e.g., claude-sonnet-4.5)
-prompts: # Array of user prompts for the task
-  - "First user prompt..."
-commit: GIT_SHA # Base commit hash for diffing
-affectedFiles: [] # Paths changed during the task
-lines:
-  added: 0
-  removed: 0
+status: open # open | finished
+author: NAME <EMAIL> # From git config
+created: TIMESTAMP # ISO 8601 timestamp
+base: GIT_SHA # Git base commit for ticket-level line stats
+iterations:
+  - prompt: "First user prompt..." # The user's request
+    date: TIMESTAMP # ISO 8601 timestamp
+    model: MODEL # LLM model used (required)
+  - prompt: "Follow-up prompt..."
+    date: TIMESTAMP
+    finished: TIMESTAMP
+    model: MODEL
+    commit: GIT_SHA # Set when iteration is finished
+    files:
+      updated: # Files modified (with per-file line stats)
+        - path: path/to/modified.ts
+          lines:
+            added: 50
+            removed: 10
+      created: # New files (with line stats)
+        - path: path/to/new.ts
+          lines:
+            added: 100
+            removed: 0
+      removed: # Deleted files
+        - path: path/to/deleted.ts
+          lines:
+            added: 0
+            removed: 50
+files: # Aggregated from all iterations (set on ticket finish)
+  updated: [path/to/modified.ts]
+  created: [path/to/new.ts]
+  removed: [path/to/deleted.ts]
+lines: # Ticket-level totals from git diff against base (set on ticket finish)
+  added: 150
+  removed: 60
 ---
 ```
 
+#### Workflow
+
+1. **Create** a ticket when starting work on a task
+2. **Start** an iteration for each prompt (requires files)
+3. **Finish** the iteration when the agent stops working (computes git lines per file)
+4. **Finish** the ticket when the task is done (aggregates files and computes ticket-level lines)
+
 #### Script Usage
 
-**Create a new log:**
+**Create a new ticket:**
 
 ```bash
-npx tsx scripts/log.ts create SLUG "Summary description" --model=claude-opus-4.5 --prompt="User prompt..."
+npx tsx scripts/log.ts ticket create SLUG "Summary description"
 ```
 
-**Append a prompt (per user message):**
+**Start a new iteration (requires files):**
 
 ```bash
-npx tsx scripts/log.ts prompt SLUG "User prompt..."
+npx tsx scripts/log.ts ticket iteration start SLUG --model=claude-opus-4.5 --prompt="User prompt..." --file=path.ts
 ```
 
-**Track task-scoped affected files:**
+**Finish the latest iteration (requires files, computes git lines per file):**
 
 ```bash
-npx tsx scripts/log.ts files SLUG <paths...>
-npx tsx scripts/log.ts files SLUG --detect --reset
+npx tsx scripts/log.ts ticket iteration finish SLUG --file=path1.ts --file=path2.ts
+npx tsx scripts/log.ts ticket iteration finish SLUG --file=updated.ts --file-created=new.ts --file-removed=deleted.ts
 ```
 
-**Update git stats (run when a task is done, and rerun across multiple prompts):**
+**Finish a ticket (requires latest iteration finished):**
 
 ```bash
-npx tsx scripts/log.ts stats SLUG
-npx tsx scripts/log.ts stats SLUG --detect
+npx tsx scripts/log.ts ticket finish SLUG
 ```
 
 **List available models:**
@@ -583,37 +629,37 @@ npx tsx scripts/log.ts stats SLUG --detect
 npx tsx scripts/log.ts models
 ```
 
-**Read a log:**
+**Read a ticket:**
 
 ```bash
-npx tsx scripts/log.ts read YEAR MONTH DAY SLUG
-npx tsx scripts/log.ts read 2025 11 24 VALIDATION-SYSTEM
+npx tsx scripts/log.ts ticket read YEAR MONTH DAY SLUG
+npx tsx scripts/log.ts ticket read 2025 11 24 VALIDATION-SYSTEM
 ```
 
-**List logs:**
+**List tickets:**
 
 ```bash
-npx tsx scripts/log.ts list              # All logs
-npx tsx scripts/log.ts list 2025         # Logs from 2025
-npx tsx scripts/log.ts list 2025 11      # Logs from November 2025
-npx tsx scripts/log.ts list 2025 11 24   # Logs from November 24, 2025
+npx tsx scripts/log.ts ticket list              # All tickets
+npx tsx scripts/log.ts ticket list 2025         # Tickets from 2025
+npx tsx scripts/log.ts ticket list 2025 11      # Tickets from November 2025
+npx tsx scripts/log.ts ticket list 2025 11 24   # Tickets from November 24, 2025
 ```
 
-**Search logs:**
+**Search tickets:**
 
 ```bash
-npx tsx scripts/log.ts search "drag drop"                    # Search for "drag drop" in all logs
-npx tsx scripts/log.ts search "test" --limit=5               # Search and show first 5 results
-npx tsx scripts/log.ts search --year=2025 --month=12         # Search in December 2025
-npx tsx scripts/log.ts search "validation" --limit=3         # Search for "validation" (limit 3)
+npx tsx scripts/log.ts ticket search "drag drop"                    # Search for "drag drop" in all tickets
+npx tsx scripts/log.ts ticket search "test" --limit=5               # Search and show first 5 results
+npx tsx scripts/log.ts ticket search --year=2025 --month=12         # Search in December 2025
+npx tsx scripts/log.ts ticket search "validation" --limit=3         # Search for "validation" (limit 3)
 ```
 
 Searches in slug, summary, content, and author fields (case-insensitive).
 
-**Delete a log:**
+**Delete a ticket:**
 
 ```bash
-npx tsx scripts/log.ts delete YEAR MONTH DAY SLUG
+npx tsx scripts/log.ts ticket delete YEAR MONTH DAY SLUG
 ```
 
 **Migrate old logs:**
@@ -625,34 +671,39 @@ npx tsx scripts/log.ts migrate
 #### Programmatic Usage
 
 ```typescript
-import { createLog, readLog, updateLog, deleteLog, listLogs, searchLogs, Model } from "./scripts/log";
+import { createTicket, readTicket, startTicketIteration, finishTicketIteration, finishTicket, deleteTicket, listTickets, searchTickets, Model } from "./scripts/log";
 
-// Create
-const log = createLog({
+// Create (no iterations)
+const createdTicket = createTicket({
   slug: "MY-TASK",
   summary: "Implement new feature",
-  prompts: ["User prompt..."],
-  content: "# Task Details\n\nImplementation notes...",
+  content: "# Task Details\n\nImplementation notes...", // Optional
   date: new Date(), // Optional, defaults to now
-  model: Model.CLAUDE_SONNET_4_5,
   author: "Name <email>", // Optional, defaults to git config
 });
 
 // Read
-const log = readLog(2025, 11, 24, "MY-TASK");
+const readBackTicket = readTicket(2025, 11, 24, "MY-TASK");
 
-// Update
-updateLog(2025, 11, 24, "MY-TASK", {
-  summary: "Updated summary",
-  content: "New content",
+// Start iteration (adds new iteration, requires files)
+startTicketIteration(2025, 11, 24, "MY-TASK", {
+  prompt: "Follow-up prompt...",
   model: Model.GPT_5_2_CODEX,
+  summary: "Updated summary", // Optional
+  files: { updated: ["path/to/modified.ts"] },
+});
+
+// Finish iteration (computes git lines per file)
+finishTicketIteration(2025, 11, 24, "MY-TASK", {
+  updated: ["path/to/modified.ts"],
+  created: ["path/to/new.ts"],
 });
 
 // List with filters
-const logs = listLogs({ year: 2025, month: 11 });
+const tickets = listTickets({ year: 2025, month: 11 });
 
 // Search with query and filters
-const results = searchLogs({
+const results = searchTickets({
   query: "drag drop", // Search term (optional)
   year: 2025, // Filter by year (optional)
   month: 12, // Filter by month (optional)
@@ -660,13 +711,16 @@ const results = searchLogs({
   limit: 10, // Limit results (optional)
 });
 
+// Finish ticket
+finishTicket(2025, 11, 24, "MY-TASK");
+
 // Delete
-deleteLog(2025, 11, 24, "MY-TASK");
+deleteTicket(2025, 11, 24, "MY-TASK");
 ```
 
 #### Environment Variables
 
-- `scripts/log.ts` requires an explicit `model` value; there is no default model environment variable.
+- `scripts/log.ts` requires an explicit `model` value for `ticket iteration start`; there is no default model environment variable.
 
 #### Git Configuration
 
@@ -1395,7 +1449,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 ├── rdf
 ├── scripts
 │ ├── i18n.ts # Checks that all i18n keys are up to date and produces report under `reports/i18n.json`
-│ ├── log.ts # Interact/search with the log files in `log/{year}/{month}/{day}/{slug}.md`
+│ ├── log.ts # Ticket CLI and frontmatter utilities for `log/{year}/{month}/{day}/{slug}.md` (ticket create, ticket iteration start/finish, ticket finish)
 │ ├── utils.ts # General TypeScript utilities for scripts
 │ └── schema.ts # Checks that all schemas are up to date and produces report under `reports/schema.json`
 ├── sql

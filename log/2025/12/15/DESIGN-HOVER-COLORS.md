@@ -1,27 +1,37 @@
 ---
 slug: DESIGN-HOVER-COLORS
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix design piece hover/select colors
-model: gpt-5.2-codex
-input:
+iterations:
   - prompt: >-
       design app: - The piece nodes dont show hover color when hovering over the
       piece in diagram. - The piece geometry material is not showing hover or
       select color.
-    date: '2025-12-15T09:58:28.842Z'
-commit: 67126961d64c89450f396abedd5d477670f1ad4d
-files:
-  updated:
-    - AGENTS.md
-    - README.md
-    - js/js/sketchpad/Design.tsx
-    - js/js/sketchpad/elements.tsx
-  created:
-    - log/2025/12/15/DESIGN-HOVER-COLORS.md
-lines:
-  added: 215
-  removed: 78
+    date: "2025-12-15T09:58:28.842Z"
+    model: gpt-5-2
+    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+    commit: 67126961d64c89450f396abedd5d477670f1ad4d
+    files:
+      updated:
+        - path: AGENTS.md
+          lines:
+            added: 54
+            removed: 20
+        - path: README.md
+          lines:
+            added: 54
+            removed: 20
+        - path: js/js/sketchpad/Design.tsx
+          lines:
+            added: 54
+            removed: 20
+        - path: js/js/sketchpad/elements.tsx
+          lines:
+            added: 54
+            removed: 20
+      created:
+        - path: log/2025/12/15/DESIGN-HOVER-COLORS.md
 ---
+
 # Previously
 
 - Diagram hover state was being set, but the `Avatar` node used `ring-inset` so the hover/selection ring was visually hidden by the full-size `AvatarFallback` background.

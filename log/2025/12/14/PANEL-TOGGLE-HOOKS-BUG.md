@@ -1,16 +1,8 @@
 ---
 slug: PANEL-TOGGLE-HOOKS-BUG
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: >-
   Investigate and fix React hooks order error when switching between panel
   sections
-model: claude-opus-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 # Previously
 

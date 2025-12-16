@@ -1,14 +1,6 @@
 ---
 slug: IMPORT-EXPORT-COMPLETE
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Migration from 2025-11-23_IMPORT-EXPORT-COMPLETE.md
-model: unknown
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 # Import/Export Complete Implementation
 

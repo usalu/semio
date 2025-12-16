@@ -7641,6 +7641,18 @@ export interface KitAppSelection {
   files?: Guid[];
   authors?: Guid[];
 }
+export interface DiagramForceSettings {
+  chargeStrength: number;
+  linkDistance: number;
+  collideRadius: number;
+  centerStrength: number;
+}
+export const defaultDiagramForceSettings: DiagramForceSettings = {
+  chargeStrength: -150,
+  linkDistance: 100,
+  collideRadius: 40,
+  centerStrength: 0.05,
+};
 export interface KitAppState {
   panelVisibility: PanelVisibility;
   selection?: KitAppSelection;
@@ -7651,6 +7663,7 @@ export interface KitAppState {
   expandedRows: Set<string>;
   sortColumn?: string;
   sortDirection?: "asc" | "desc";
+  diagramForce?: DiagramForceSettings;
   // Transaction state for undo/redo
   transaction: AppTransactionState;
 }
@@ -8127,6 +8140,7 @@ export function createDefaultKitAppState(): KitAppState {
     expandedRows: new Set<string>(),
     sortColumn: undefined,
     sortDirection: undefined,
+    diagramForce: { ...defaultDiagramForceSettings },
     transaction: createDefaultTransactionState(),
   };
 }
@@ -10714,10 +10728,8 @@ export class SketchpadStore {
   };
 
   createKit = (kit: Kit, local?: boolean, remote?: boolean) => {
-    console.log("[DEBUG] [STORE] createKit called. storeId:", this.id, "guid:", kit.guid, "name:", kit.name);
     const kitStore = new KitStore(this, kit, local, remote, this.remote);
     this.kits.set(kit.guid, kitStore);
-    console.log("[DEBUG] [STORE] Kit added to store. storeId:", this.id, "kits.size:", this.kits.size, "kitGuids:", Array.from(this.kits.keys()));
 
     this.yDoc.transact(() => {
       const kitMetadata = new Y.Map<string | boolean>();
@@ -10727,7 +10739,6 @@ export class SketchpadStore {
       this.yKits.push([kitMetadata as any]);
     });
 
-    console.log("[DEBUG] [STORE] Notifying", this.kitCreatedSubscribers.size, "subscribers");
     this.kitCreatedSubscribers.forEach((subscriber) => subscriber());
   };
 
@@ -12371,32 +12382,40 @@ export function useSketchpadCommands() {
       createDesignApp: (origin: string, designAppId: DesignAppId) => store.execute("semio.sketchpad.createDesignApp", origin, designAppId),
       navigateToKit: (kit: Guid, search?: string) => {
         const path = `/kits/${kit}${search ? (search.startsWith("?") ? search : `?${search}`) : ""}`;
-        if (typeof window !== "undefined" && window.location.pathname !== path) {
-          window.location.href = path;
+        // Use global navigate function from the main BrowserRouter (works from MemoryRouter contexts)
+        const globalNavigate = (window as any).__SEMIO_NAVIGATE__;
+        if (globalNavigate) {
+          globalNavigate(path);
         } else {
           navigate(path);
         }
       },
       navigateToDesign: (kit: Guid, design: Guid) => {
         const path = `/kits/${kit}/designs/${design}`;
-        if (typeof window !== "undefined") {
-          window.location.href = path;
+        // Use global navigate function from the main BrowserRouter (works from MemoryRouter contexts)
+        const globalNavigate = (window as any).__SEMIO_NAVIGATE__;
+        if (globalNavigate) {
+          globalNavigate(path);
         } else {
           navigate(path);
         }
       },
       navigateToType: (kit: Guid, type: Guid) => {
         const path = `/kits/${kit}/types/${type}`;
-        if (typeof window !== "undefined") {
-          window.location.href = path;
+        // Use global navigate function from the main BrowserRouter (works from MemoryRouter contexts)
+        const globalNavigate = (window as any).__SEMIO_NAVIGATE__;
+        if (globalNavigate) {
+          globalNavigate(path);
         } else {
           navigate(path);
         }
       },
       navigateToQuality: (kit: Guid, quality: Guid) => {
         const path = `/kits/${kit}/qualities/${quality}`;
-        if (typeof window !== "undefined") {
-          window.location.href = path;
+        // Use global navigate function from the main BrowserRouter (works from MemoryRouter contexts)
+        const globalNavigate = (window as any).__SEMIO_NAVIGATE__;
+        if (globalNavigate) {
+          globalNavigate(path);
         } else {
           navigate(path);
         }
@@ -15369,7 +15388,6 @@ export const LayoutCanvas: FC<{
             const WindowComponent = windowType.component;
 
             const WrappedComponent = () => {
-              console.log("[DEBUG] [LAYOUT-WINDOW] Rendering window:", windowType.id, "location:", location.pathname, "scopeGuids:", scopeGuids);
               return (
                 <MemoryRouter initialEntries={[location.pathname + location.search]} initialIndex={0}>
                   <LayoutScopeWrapper>
@@ -15378,7 +15396,7 @@ export const LayoutCanvas: FC<{
                         <LayoutErrorBoundary
                           windowId={windowType.id}
                           onError={(error: Error, info: React.ErrorInfo) => {
-                            console.error("[DEBUG] [LAYOUT-WINDOW] Error in window:", windowType.id, error, info);
+                            console.error("Error in window:", windowType.id, error, info);
                           }}
                         >
                           <Window id={windowType.id} isVisible={true} controls={windowType.controls ? <WindowControlsGroup controls={windowType.controls} /> : undefined}>
@@ -16239,6 +16257,28 @@ const SketchpadInteractionBridge: FC<{ children: React.ReactNode }> = ({ childre
   );
 };
 
+/**
+ * Component that exposes React Router's navigate function to the global window object.
+ * This enables navigation from MemoryRouter contexts (like GoldenLayout windows)
+ * while still updating the browser URL properly.
+ */
+const GlobalNavigationBridge: FC<{ children: React.ReactNode }> = ({ children }) => {
+  const reactNavigate = useReactNavigate();
+  
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      (window as any).__SEMIO_NAVIGATE__ = reactNavigate;
+    }
+    return () => {
+      if (typeof window !== "undefined") {
+        delete (window as any).__SEMIO_NAVIGATE__;
+      }
+    };
+  }, [reactNavigate]);
+  
+  return <>{children}</>;
+};
+
 const SketchpadContent: FC = () => {
   return <LayoutWrapper />;
 };
@@ -16260,21 +16300,23 @@ const Sketchpad: FC<{ id?: string; remote?: RemoteProviders; onWindowEvents?: Wi
   }, [embedded]);
 
   const routerContent = (
-    <SketchpadScopeProvider id={id} remote={remote} onWindowEvents={onWindowEvents} initialState={initialState} importKitUrls={importKitUrls}>
-      <SketchpadInteractionBridge>
-        <OriginProvider>
-          <FocusProvider>
-            <PanelSectionProvider>
-              <FooterItemProvider>
-                <DragDropProvider>
-                  <SketchpadContent />
-                </DragDropProvider>
-              </FooterItemProvider>
-            </PanelSectionProvider>
-          </FocusProvider>
-        </OriginProvider>
-      </SketchpadInteractionBridge>
-    </SketchpadScopeProvider>
+    <GlobalNavigationBridge>
+      <SketchpadScopeProvider id={id} remote={remote} onWindowEvents={onWindowEvents} initialState={initialState} importKitUrls={importKitUrls}>
+        <SketchpadInteractionBridge>
+          <OriginProvider>
+            <FocusProvider>
+              <PanelSectionProvider>
+                <FooterItemProvider>
+                  <DragDropProvider>
+                    <SketchpadContent />
+                  </DragDropProvider>
+                </FooterItemProvider>
+              </PanelSectionProvider>
+            </FocusProvider>
+          </OriginProvider>
+        </SketchpadInteractionBridge>
+      </SketchpadScopeProvider>
+    </GlobalNavigationBridge>
   );
 
   if (embedded) {

@@ -1,36 +1,50 @@
 ---
 slug: PROMPTS-MD-FORMAT-EXCLUDE
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Exclude prompts.md from formatting
-model: gpt-5.2-codex
-input:
+iterations:
   - prompt: >-
       prompts.md should be excluded from all kinds of formatting (such as by
       preflight script or format on save in vscode, etc)
-    date: '2025-12-15T12:52:39.541Z'
-commit: 76900221ecf5cfb30a37d69fbb66abb3e0a0e45a
-files:
-  read: []
-  updated:
-    - .prettierignore
-    - .vscode/settings.json
-    - AGENTS.md
-    - README.md
-    - hooks/prettier.ts
-  removed: []
-  created:
-    - log/2025/12/15/PROMPTS-MD-FORMAT-EXCLUDE.md
-lines:
-  added: 48
-  removed: 4
+    date: "2025-12-15T12:52:39.541Z"
+    model: gpt-5-2
+    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+    commit: 76900221ecf5cfb30a37d69fbb66abb3e0a0e45a
+    files:
+      updated:
+        - path: .prettierignore
+          lines:
+            added: 10
+            removed: 1
+        - path: .vscode/settings.json
+          lines:
+            added: 10
+            removed: 1
+        - path: AGENTS.md
+          lines:
+            added: 10
+            removed: 1
+        - path: README.md
+          lines:
+            added: 10
+            removed: 1
+        - path: hooks/prettier.ts
+          lines:
+            added: 10
+            removed: 1
+      created:
+        - path: log/2025/12/15/PROMPTS-MD-FORMAT-EXCLUDE.md
 ---
+
 # Previously
+
 `log/prompts.md` was formatted by Prettier (preflight + VS Code format on save).
 
 # Plan
+
 Exclude `**/prompts.md` via `.prettierignore` and ensure VS Code Prettier uses the same ignore file.
 
 # Changes
+
 - Updated `.prettierignore` to ignore `**/prompts.md`.
 - Updated `.vscode/settings.json` to set `prettier.ignorePath` to `.prettierignore`.
 - Updated `hooks/prettier.ts` to pass `--ignore-path .prettierignore`.

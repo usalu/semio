@@ -1,14 +1,6 @@
 ---
 slug: FLATTEN-DESIGN
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Migration from 2025-11-19_FLATTEN-DESIGN.md
-model: unknown
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 # Flatten Design Implementation
 

@@ -1,14 +1,6 @@
 ---
 slug: PYTHON-TESTS-SYNC
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Sync Python unit tests with JS fixtures and extend engine.py
-model: claude-opus-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 
 # Previously

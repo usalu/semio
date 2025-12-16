@@ -1,14 +1,6 @@
 ---
 slug: PANEL-TOGGLE-FIX
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix panel toggle signature mismatch and investigate store issue
-model: claude-opus-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 
 # Previously

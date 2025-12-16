@@ -1,14 +1,6 @@
 ---
 slug: DRAG-DROP-FINISH
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Finish drag and drop functionality for pieces in diagram and scene
-model: claude-sonnet-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 
 # Previously

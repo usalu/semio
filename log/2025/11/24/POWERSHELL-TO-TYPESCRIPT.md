@@ -1,14 +1,6 @@
 ---
 slug: POWERSHELL-TO-TYPESCRIPT
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Migration from 2025-11-24_POWERSHELL-TO-TYPESCRIPT.md
-model: unknown
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 # PowerShell to TypeScript Migration
 

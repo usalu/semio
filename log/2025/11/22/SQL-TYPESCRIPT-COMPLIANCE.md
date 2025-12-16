@@ -1,14 +1,6 @@
 ---
 slug: SQL-TYPESCRIPT-COMPLIANCE
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Migration from 2025-11-22_SQL-TYPESCRIPT-COMPLIANCE.md
-model: unknown
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 # SQL Schema Compliance with TypeScript (2025-11-22)
 

@@ -1,16 +1,8 @@
 ---
 slug: DOCS-APP-TEST
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: >-
   Create E2E test for docs app covering content loading, images, workbench panel
   pages, and details panel headings
-model: claude-sonnet-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 
 # Previously

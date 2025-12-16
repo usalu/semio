@@ -1,14 +1,6 @@
 ---
 slug: FIXTURE-DATA-ISSUES
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Migration from 2025-11-22_FIXTURE-DATA-ISSUES.md
-model: unknown
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 # Metabolism Kit Fixture Data Issues
 

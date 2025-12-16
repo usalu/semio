@@ -1,14 +1,6 @@
 ---
 slug: CREATE-INTERFACE-TAG-CLICK
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix create interface/tag buttons doing nothing
-model: claude-opus-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 # Previously
 Create actions in the Kit app are triggered via filter-strip `Toggle` action buttons.

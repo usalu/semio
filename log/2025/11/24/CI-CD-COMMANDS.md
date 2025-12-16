@@ -1,14 +1,6 @@
 ---
 slug: CI-CD-COMMANDS
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: CI/CD automation and canonical commands
-model: claude-sonnet-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 
 # CI/CD Automation and Canonical Commands

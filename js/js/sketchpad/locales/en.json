@@ -667,8 +667,8 @@
       },
       "settings": {
         "label": {
-          "normal": "",
-          "beginner": ""
+          "normal": "Sketchpad",
+          "beginner": "Global sketchpad settings"
         },
         "theme": {
           "label": {
@@ -971,6 +971,36 @@
               "label": {
                 "normal": "Layout",
                 "beginner": "Choose the layout for the kit overview"
+              }
+            },
+            "diagram": {
+              "label": {
+                "normal": "Diagram",
+                "beginner": "Configure the force-directed diagram layout"
+              },
+              "chargeStrength": {
+                "label": {
+                  "normal": "Charge Strength",
+                  "beginner": "Controls how strongly nodes repel each other. More negative values push nodes further apart."
+                }
+              },
+              "linkDistance": {
+                "label": {
+                  "normal": "Link Distance",
+                  "beginner": "The target distance between connected nodes. Larger values spread the diagram out."
+                }
+              },
+              "collideRadius": {
+                "label": {
+                  "normal": "Collision Radius",
+                  "beginner": "The minimum distance between node centers to prevent overlap."
+                }
+              },
+              "centerStrength": {
+                "label": {
+                  "normal": "Center Strength",
+                  "beginner": "How strongly nodes are pulled toward the center of the diagram."
+                }
               }
             }
           },
@@ -1750,6 +1780,68 @@
                     }
                   }
                 }
+              }
+            }
+          },
+          "settings": {
+            "label": {
+              "normal": "Kit Editor",
+              "beginner": "Kit editor settings"
+            },
+            "diagram": {
+              "chargeStrength": {
+                "label": {
+                  "normal": "Charge Strength",
+                  "beginner": "Repulsion force between nodes"
+                }
+              },
+              "linkDistance": {
+                "label": {
+                  "normal": "Link Distance",
+                  "beginner": "Target distance between connected nodes"
+                }
+              },
+              "collideRadius": {
+                "label": {
+                  "normal": "Collide Radius",
+                  "beginner": "Collision radius preventing node overlap"
+                }
+              },
+              "centerStrength": {
+                "label": {
+                  "normal": "Center Strength",
+                  "beginner": "Force pulling nodes toward center"
+                }
+              }
+            },
+            "theme": {
+              "label": {
+                "normal": "Theme",
+                "beginner": "Color theme"
+              }
+            },
+            "language": {
+              "label": {
+                "normal": "Language",
+                "beginner": "Interface language"
+              }
+            },
+            "device": {
+              "label": {
+                "normal": "Device",
+                "beginner": "Input device type"
+              }
+            },
+            "expertise": {
+              "label": {
+                "normal": "Expertise",
+                "beginner": "User expertise level"
+              }
+            },
+            "mode": {
+              "label": {
+                "normal": "Mode",
+                "beginner": "User or developer mode"
               }
             }
           },

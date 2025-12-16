@@ -1,14 +1,6 @@
 ---
 slug: TABLE-ROW-HEIGHT-FOOTER
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Unify table row and footer bar height
-model: claude-opus-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 # Previously
 Table rows use the unit sizing system (`h-large` / `--size-large`) while the shared `Footer` component defaulted to a fixed `20px` height, so table rows and the footer bar did not match.

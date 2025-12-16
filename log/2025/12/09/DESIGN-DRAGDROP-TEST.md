@@ -1,16 +1,8 @@
 ---
 slug: DESIGN-DRAGDROP-TEST
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: >-
   Extend Design test with drag and drop to corners and center with plane
   validation
-model: claude-opus-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 
 # Previously

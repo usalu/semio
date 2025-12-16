@@ -1,14 +1,6 @@
 ---
 slug: SCHEMA-CHANGES-NAMES-AND-INTERFACES
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Migration from 2025-11-20_SCHEMA-CHANGES-NAMES-AND-INTERFACES.md
-model: unknown
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 # Schema Changes: Names and Interfaces
 

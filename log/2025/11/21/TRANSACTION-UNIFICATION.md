@@ -1,14 +1,6 @@
 ---
 slug: TRANSACTION-UNIFICATION
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Migration from 2025-11-21_TRANSACTION-UNIFICATION.md
-model: unknown
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 # Transaction Pattern Unification - COMPLETED
 

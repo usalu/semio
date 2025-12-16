@@ -1,14 +1,6 @@
 ---
 slug: PORT-LOOKUP-FIX
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Migration from 2025-11-21_PORT-LOOKUP-FIX.md
-model: unknown
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 # Port Lookup Fix - Nov 21, 2025
 

@@ -1,14 +1,6 @@
 ---
 slug: KIT-ENTITIES-EXPORT
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Expose kit entities individually from assets index
-model: gpt-5.1-codex-max
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 
 # Previously

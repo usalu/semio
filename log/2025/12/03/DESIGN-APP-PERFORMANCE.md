@@ -1,14 +1,6 @@
 ---
 slug: DESIGN-APP-PERFORMANCE
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Design App Pan Performance Investigation
-model: claude-opus-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 
 # Previously

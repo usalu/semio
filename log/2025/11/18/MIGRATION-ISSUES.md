@@ -1,14 +1,6 @@
 ---
 slug: MIGRATION-ISSUES
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Migration from 2025-11-18_MIGRATION-ISSUES.md
-model: unknown
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 # Migration Issues
 

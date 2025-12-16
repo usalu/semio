@@ -1,4 +1,41 @@
+---
+slug: PROMPTS
+summary: ''
+---
 # Prompt history
+
+A new app should be added: Feedback
+The goal of the feedback app is to make contributions (mostly bug reports) as easy as possible.
+
+The kit app is not finished.
+- The icons should be the same avatars as the ones in the table window. The edges of the node have somehow a bigger circle than the circle of the nodes. 
+- Nodes are currently not draggable.
+- The states of the table and the diagram should be completly shared. When something is filtered in the table it should also be filtered in the diagram. When something is not expanded and hence no row exists in the table it should also not exist in the diagram. Only rows that are in the table should be nodes in the diagram. When hovering over something in the table it should also show in the diagram. The selection already works.
+- Selection on the node fires the events but nothing happens.
+Make sure to extend the kit app tests to check for all features.
+You can use playwright mcp.
+
+- Only allow files to be created, updated and deleted files.
+- Create ticket shouldnt create an iteration. Iteration need files. Add author and date to ticket from git.
+- Once finished, combine all the files from all iterations and add it as extra field to the ticket. Use git one last time to compute the lines.
+
+Improve log script semantics.
+Rename logs to tickets.
+create log becomes ticket create.
+Then a new command is ticket iteration start
+Then there should be ticket iteration finish
+finish becomes ticket finish
+Throw an error if an iteration is unifinished for a ticket (e.g. when another iteration start or ticket finish is called)
+Force files to be a necessary parameter to call for iteration start and iteration finish. Update the file list on finish for the iteration and compute stats (lines).
+
+The diagram in kit app should be a d3-force layout. The nodes should be a circle with the icons. Add the paramters for the simulation to the settings of the kit app.
+
+The model, commit, author, files in logs should be for every input {prompt,date,model,commit,files}. Make sure model is a required paramter for creating and updating. The rest is only taken from git. lines should be moved to every file. Make sure there is a command to finish an iteration (an iteration is when the agent stops working). Rename input to iterations. When the iteration is finished by the agent then use git to compute the lines for the files that were edited in this iteration.
+Migrate all existing logs to new schema.
+
+Make sure that comments in config files and comments between header region are ignored in comment analysis and removal. TODOs should also be ignored. <reference types... in typescript files should also be ignored. In python regions are classified as comments but they shouldnt.
+Extend the fix script to automatically add license headers when they are missing. They all follow the same structure. Use Ueli Saluz as default.
+Ignore all package READMEs such as net/Semio/README.md
 
 - Table window is empty.
 - All nodes should just be circle as all other nodes of the other diagrams with the icon of the artifact.

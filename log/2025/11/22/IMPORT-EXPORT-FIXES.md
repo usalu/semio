@@ -1,14 +1,6 @@
 ---
 slug: IMPORT-EXPORT-FIXES
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Migration from 2025-11-22_IMPORT-EXPORT-FIXES.md
-model: unknown
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 # Import/Export Fixes - 2025-01-22
 

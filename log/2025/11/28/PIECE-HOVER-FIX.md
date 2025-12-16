@@ -1,14 +1,6 @@
 ---
 slug: PIECE-HOVER-FIX
-author: Unknown
 summary: ''
-model: unknown
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 ````markdown
 ---

@@ -636,8 +636,8 @@
         },
         "settings": {
           "label": {
-            "normal": "",
-            "beginner": ""
+            "normal": "Sketchpad",
+            "beginner": "Globale Sketchpad-Einstellungen"
           },
           "theme": {
             "label": {
@@ -839,6 +839,36 @@
               "label": {
                 "normal": "Layout",
                 "beginner": "Waehlen Sie das Layout fuer die Kit-Uebersicht"
+              }
+            },
+            "diagram": {
+              "label": {
+                "normal": "Diagramm",
+                "beginner": "Konfigurieren Sie das kraftgerichtete Diagramm-Layout"
+              },
+              "chargeStrength": {
+                "label": {
+                  "normal": "Ladungsstaerke",
+                  "beginner": "Steuert, wie stark Knoten sich abstossen. Negativere Werte druecken Knoten weiter auseinander."
+                }
+              },
+              "linkDistance": {
+                "label": {
+                  "normal": "Verbindungsabstand",
+                  "beginner": "Der Zielabstand zwischen verbundenen Knoten. Groessere Werte verteilen das Diagramm."
+                }
+              },
+              "collideRadius": {
+                "label": {
+                  "normal": "Kollisionsradius",
+                  "beginner": "Der Mindestabstand zwischen Knotenzentren zur Vermeidung von Ueberlappung."
+                }
+              },
+              "centerStrength": {
+                "label": {
+                  "normal": "Zentrierungsstaerke",
+                  "beginner": "Wie stark Knoten zur Mitte des Diagramms gezogen werden."
+                }
               }
             }
           },
@@ -1605,6 +1635,68 @@
             "label": {
               "normal": "Kit nicht gefunden",
               "beginner": "Das angeforderte Kit wurde nicht gefunden"
+            }
+          },
+          "settings": {
+            "label": {
+              "normal": "Kit-Editor",
+              "beginner": "Kit-Editor-Einstellungen"
+            },
+            "diagram": {
+              "chargeStrength": {
+                "label": {
+                  "normal": "Ladungsstärke",
+                  "beginner": "Abstoßungskraft zwischen Knoten"
+                }
+              },
+              "linkDistance": {
+                "label": {
+                  "normal": "Verbindungsabstand",
+                  "beginner": "Zielabstand zwischen verbundenen Knoten"
+                }
+              },
+              "collideRadius": {
+                "label": {
+                  "normal": "Kollisionsradius",
+                  "beginner": "Kollisionsradius zur Vermeidung von Knotenüberlappung"
+                }
+              },
+              "centerStrength": {
+                "label": {
+                  "normal": "Zentrierungsstärke",
+                  "beginner": "Kraft, die Knoten zur Mitte zieht"
+                }
+              }
+            },
+            "theme": {
+              "label": {
+                "normal": "Thema",
+                "beginner": "Farbthema"
+              }
+            },
+            "language": {
+              "label": {
+                "normal": "Sprache",
+                "beginner": "Oberflächensprache"
+              }
+            },
+            "device": {
+              "label": {
+                "normal": "Gerät",
+                "beginner": "Eingabegerätetyp"
+              }
+            },
+            "expertise": {
+              "label": {
+                "normal": "Expertise",
+                "beginner": "Benutzerexpertise-Stufe"
+              }
+            },
+            "mode": {
+              "label": {
+                "normal": "Modus",
+                "beginner": "Benutzer- oder Entwicklermodus"
+              }
             }
           },
           "interface": {

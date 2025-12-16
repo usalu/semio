@@ -1,14 +1,6 @@
 ---
 slug: I18N-FIX-ALL
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix all i18n errors and warnings
-model: claude-opus-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 
 # Previously

@@ -1,14 +1,6 @@
 ---
 slug: KIT-ENTITIES-LOOKUP
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Export individual kit entities
-model: gpt-5.1-codex-max
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 
 # Previously

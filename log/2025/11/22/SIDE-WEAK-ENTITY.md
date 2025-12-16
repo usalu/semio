@@ -1,14 +1,6 @@
 ---
 slug: SIDE-WEAK-ENTITY
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Migration from 2025-11-22_SIDE-WEAK-ENTITY.md
-model: unknown
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 # Side as Weak Entity - Schema Change
 

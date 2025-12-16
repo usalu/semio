@@ -1,14 +1,6 @@
 ---
 slug: GRANULAR-STORE
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Implement granular store architecture with YPath and DerivedStore
-model: claude-opus-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 
 # Previously

@@ -1,18 +1,12 @@
 ---
 slug: SKETCHPAD-STATE-FIX
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix sketchpad state machine wildcard event handling
-model: claude-sonnet-4.5
-input:
+iterations:
   - prompt: Fix apps not working after wildcard refactor - state not changing
-    date: "2025-12-15T15:04:25.300Z"
-commit: 2fb81ef29354981c1b9625769dba4a06360a4aef
-files:
-  js/js/sketchpad/Sketchpad.tsx: modified
-  js/js/sketchpad.test.ts: modified
-lines:
-  added: 170
-  removed: 50
+    date: '2025-12-15T15:04:25.300Z'
+    model: claude-sonnet-4.5
+    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+    commit: 2fb81ef29354981c1b9625769dba4a06360a4aef
 ---
 
 # Previously

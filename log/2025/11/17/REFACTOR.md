@@ -1,14 +1,6 @@
 ---
 slug: REFACTOR
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Migration from REFACTOR.md
-model: unknown
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 
 # Sketchpad Apps Refactoring Proposal

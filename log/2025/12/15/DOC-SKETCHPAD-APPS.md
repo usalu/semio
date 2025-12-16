@@ -1,24 +1,26 @@
 ---
 slug: DOC-SKETCHPAD-APPS
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Document Sketchpad apps and core mechanisms
-model: claude-opus-4.5
-input:
+iterations:
   - prompt: >-
       The dev docs are significantly incomplete with the implementation. All
       apps in sketchpad are missing. The core mechanisms are not explained etc.
-    date: '2025-12-15T17:24:42.224Z'
-commit: 2fb81ef29354981c1b9625769dba4a06360a4aef
-files:
-  updated:
-    - AGENTS.md
-lines:
-  added: 2279
-  removed: 340
+    date: "2025-12-15T17:24:42.224Z"
+    model: claude-opus-4-5
+    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+    commit: 2fb81ef29354981c1b9625769dba4a06360a4aef
+    files:
+      updated:
+        - path: AGENTS.md
+          lines:
+            added: 2279
+            removed: 340
 ---
+
 # Previously
 
 The AGENTS.md documentation had architecture-level documentation for the Sketchpad but was missing:
+
 - Documentation for individual apps (Home, Kit, Type, Design, Quality, Docs)
 - Core mechanism documentation (shared.ts types, YPath, DerivedStore, App Plugin Registry)
 - Store factory registry documentation
@@ -40,35 +42,41 @@ The AGENTS.md documentation had architecture-level documentation for the Sketchp
 ### Added "##### Sketchpad Apps" section with documentation for:
 
 **Home App (Home.tsx):**
+
 - HomeState: panelVisibility, selection, sortColumn/Direction, loadingKits
 - Events: HOME.TOGGLE_PANEL, HOME.SET_PANEL_VISIBILITY, HOME.SELECT_KIT/DESELECT_KIT, HOME.SET_SORT
 - Hooks: useHomeApp(), useHomeSelection(), useHomeLoadingKits(), useHomePanelVisibility()
 
 **Kit App (Kit.tsx):**
+
 - KitAppState: panelVisibility, selection (9 artifact types), hover, filterSearch, expandedRows, sorting
 - Selection Types: types, designs, qualities, interfaces, tags, concepts, files, folders, authors
-- Events: KIT.TOGGLE_PANEL, KIT.SELECT_*/DESELECT_*, KIT.SET_HOVER, KIT.SET_FILTER_SEARCH, KIT.CREATE_*
+- Events: KIT.TOGGLE*PANEL, KIT.SELECT*_/DESELECT\__, KIT.SET*HOVER, KIT.SET_FILTER_SEARCH, KIT.CREATE*\*
 - Hooks: useKitApp(), useKitAppSelection(), useKitAppHover(), useKitAppFilterSearch()
 
 **Type App (Type.tsx):**
+
 - TypeAppState: panelVisibility, activeTool, selection (ports/models), hover, camera, focusedPortGuid, selectedModelGuid
-- Events: TYPE.TOGGLE_PANEL, TYPE.SET_TOOL, TYPE.SELECT_*/DESELECT_*, TYPE.SET_HOVER, TYPE.SET_CAMERA
+- Events: TYPE.TOGGLE*PANEL, TYPE.SET_TOOL, TYPE.SELECT*_/DESELECT\__, TYPE.SET_HOVER, TYPE.SET_CAMERA
 - Hooks: useTypeApp(), useTypeAppSelection(), useTypeAppHover(), useTypeAppCamera(), useTypeAppActiveTool()
 
 **Design App (Design.tsx):**
+
 - DesignAppState: panelVisibility, activeTool, selection (pieces/connections/port), hover, camera, diagram state
 - Commands: semio.designApp.selectAll, semio.designApp.deselectAll, semio.designApp.deleteSelected
-- Events: DESIGN.TOGGLE_PANEL, DESIGN.SET_TOOL, DESIGN.SELECT_*/DESELECT_*, DESIGN.DELETE_SELECTED
+- Events: DESIGN.TOGGLE*PANEL, DESIGN.SET_TOOL, DESIGN.SELECT*_/DESELECT\__, DESIGN.DELETE_SELECTED
 - Hooks: useDesignApp(), useDesignAppSelection(), useDesignAppHover(), useDesignAppCamera(), useDesignAppActiveTool()
 
 **Quality App (Quality.tsx):**
+
 - QualityAppState: panelVisibility, activeTool, selection (formulaNodes), hover, formulaNodes
 - FormulaNode: id, kind (function/quality/variable/unit/value), name, children, x, y
 - Formula Functions: Numeric, Branching, Data, Text, Comparison
-- Events: QUALITY.TOGGLE_PANEL, QUALITY.SET_TOOL, QUALITY.SELECT_*/DESELECT_FORMULA_NODE, QUALITY.SET_HOVER
+- Events: QUALITY.TOGGLE*PANEL, QUALITY.SET_TOOL, QUALITY.SELECT*\*/DESELECT_FORMULA_NODE, QUALITY.SET_HOVER
 - Hooks: useQualityApp(), useQualityAppSelection(), useQualityAppHover()
 
 **Docs App (Docs.tsx):**
+
 - MDX loading system: loadMDXFile(), getAllMDXFiles(), getMDXFilesBySection(), getAllSections()
 - Heading state: useHeadings(), headingsState.registerHeading(), headingsState.setActiveHeading()
 

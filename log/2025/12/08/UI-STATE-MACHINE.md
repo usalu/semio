@@ -1,14 +1,6 @@
 ---
 slug: UI-STATE-MACHINE
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: 'Finish the UI state machine with proper states, guards, menus, and context'
-model: claude-opus-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 
 # Previously

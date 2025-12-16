@@ -1,14 +1,6 @@
 ---
 slug: DESIGN-WINDOWS-LAYOUT
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix design app window layout to be 50% diagram | 50% scene
-model: claude-sonnet-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 
 ## Problem

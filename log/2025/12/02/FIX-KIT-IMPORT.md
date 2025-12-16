@@ -1,14 +1,6 @@
 ---
 slug: FIX-KIT-IMPORT
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix kit import and design app infinite loop
-model: claude-opus-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 
 # Previously

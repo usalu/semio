@@ -1,16 +1,8 @@
 ---
 slug: KIT-SNAPSHOT-OPTIMIZATION
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: >-
   Added dirty flag cache optimization to KitStore.snapshot() to prevent
   expensive rebuilds on unrelated UI updates
-model: claude-opus-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 
 # Previously

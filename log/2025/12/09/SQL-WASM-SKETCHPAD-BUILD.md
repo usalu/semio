@@ -1,14 +1,6 @@
 ---
 slug: SQL-WASM-SKETCHPAD-BUILD
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix sql-wasm.wasm not being included in sketchpad production build
-model: claude-opus-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 
 # Previously

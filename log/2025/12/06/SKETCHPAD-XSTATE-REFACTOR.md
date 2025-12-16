@@ -1,14 +1,6 @@
 ---
 slug: SKETCHPAD-XSTATE-REFACTOR
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Refactor sketchpad to use pure XState machines with no Y.js in app state
-model: claude-opus-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 
 # Previously

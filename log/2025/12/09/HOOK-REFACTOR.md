@@ -1,16 +1,8 @@
 ---
 slug: HOOK-REFACTOR
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: >-
   State management refactor: remove Triadic/Safe/Granular suffixes, redirect
   writes to state machine
-model: claude-opus-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 
 # Previously

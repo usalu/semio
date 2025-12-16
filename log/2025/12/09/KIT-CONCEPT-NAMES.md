@@ -1,14 +1,6 @@
 ---
 slug: KIT-CONCEPT-NAMES
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Display concept names in kit app rows
-model: claude-opus-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 # Previously
 

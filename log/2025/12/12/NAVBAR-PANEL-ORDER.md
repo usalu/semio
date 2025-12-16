@@ -1,14 +1,6 @@
 ---
 slug: NAVBAR-PANEL-ORDER
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Enforce navbar panel order Details Chat Settings
-model: claude-opus-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 # Previously
 

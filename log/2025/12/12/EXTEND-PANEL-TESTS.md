@@ -1,16 +1,8 @@
 ---
 slug: EXTEND-PANEL-TESTS
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: >-
   Extend sketchpad tests to verify panel toggle functionality in navbar for all
   apps
-model: claude-opus-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 
 # Previously

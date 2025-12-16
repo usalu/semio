@@ -30,7 +30,6 @@ import {
   ChevronDownIcon,
   ChevronRightIcon,
   CodeIcon,
-  DiagramIcon,
   DocumentIcon,
   FileCodeIcon,
   FileImageIcon,
@@ -50,14 +49,14 @@ import {
   SortAscendingIcon,
   SortDescendingIcon,
   SunIcon,
-  TableViewIcon,
   TutorialIcon,
   TypeIcon,
   UserIcon,
 } from "@semio/assets";
 import { useSelector } from "@xstate/react";
-import type { Edge, Node, NodeProps } from "@xyflow/react";
-import { Background, Handle, Position, ReactFlow, ReactFlowProvider, useReactFlow } from "@xyflow/react";
+import type { ConnectionLineComponentProps, Edge, EdgeProps, Node, NodeProps } from "@xyflow/react";
+import { Background, BaseEdge, getBezierPath, Handle, Position, ReactFlow, ReactFlowProvider, useInternalNode, useReactFlow } from "@xyflow/react";
+import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "d3-force";
 import { formatDistanceToNow } from "date-fns";
 import { de, enUS } from "date-fns/locale";
 import React, { FC, memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -66,13 +65,13 @@ import { useNavigate, useParams, useSearchParams } from "react-router";
 import { Camera } from "three";
 import * as Y from "yjs";
 import i18n, { useLabel } from "../i18n";
-import { areDesignsInSameFamily, areTypesInSameFamily, Author, buildFileTree, Concept, Coord, Design, DesignDiff, DiffStatus, flattenFileTree, Folder, generateUniqueName, guid, Guid, Interface, Kit, KitDiff, Quality, File as SemioFile, Tag, Type, TypeDiff } from "../semio";
+import { Author, buildFileTree, Concept, Coord, Design, DesignDiff, DiffStatus, flattenFileTree, Folder, generateUniqueName, guid, Guid, Interface, Kit, KitDiff, Quality, File as SemioFile, Tag, Type, TypeDiff } from "../semio";
 import type { KitStore as KitDataSource, SketchpadStore as SketchpadOrchestrator } from "./Sketchpad";
 import {
   AppWindowConfig,
   Canvas,
   ConceptFilter,
-  createDefaultLayout,
+  createDefaultKitAppState,
   defaultPanelVisibility,
   identitySelector,
   KitDiffAppStore as KitDiffStore,
@@ -83,6 +82,7 @@ import {
   useAddPanelSection,
   useAppType,
   useDesignScope,
+  useDevice,
   useExpertise,
   useFocus,
   useHasKit,
@@ -91,16 +91,8 @@ import {
   useKit,
   useKitAppXState,
   useKitCommands,
-  useKitDesigns,
-  useKitFiles,
-  useKitFolders,
-  useKitInterfaces,
-  useKitQualities,
   useKitScope,
-  useKitTags,
-  useKitTypes,
   useLanguage,
-  useDevice,
   useMode,
   useNavigation,
   useOrigin,
@@ -113,9 +105,32 @@ import {
   useTheme,
   useTypeScope,
   Window,
-  createDefaultKitAppState,
 } from "./Sketchpad";
-import { Action, Band, Input, NotFound, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Table, TableAvatar, Textarea, Toggle, ToggleGroup, Transaction, TransactionProvider, TreeContent, TreeItem } from "./elements";
+import {
+  Action,
+  Band,
+  Input,
+  NotFound,
+  Scrollable,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Slider,
+  Table,
+  TableAvatar,
+  Textarea,
+  Toggle,
+  ToggleGroup,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  Transaction,
+  TransactionProvider,
+  TreeContent,
+  TreeItem,
+} from "./elements";
 import type { Device, HookNoSetResult, HookResult, KitAppId, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
 import { AppConfig, AppPlugin, conditionalHookResult, createPanelDefinition, Expertise, Mode, PanelKind, registerAppPlugin, registerRuntimeAction, Theme } from "./shared";
 
@@ -243,6 +258,20 @@ export interface KitAppPresenceOther extends KitAppPresence {
 export type KitAppSortColumn = "artifact" | "kind" | "authors" | "updatedAt" | "createdAt";
 export type KitAppSortDirection = "asc" | "desc";
 
+export interface DiagramForceSettings {
+  chargeStrength: number;
+  linkDistance: number;
+  collideRadius: number;
+  centerStrength: number;
+}
+
+export const defaultDiagramForceSettings: DiagramForceSettings = {
+  chargeStrength: -80,
+  linkDistance: 60,
+  collideRadius: 30,
+  centerStrength: 0.15,
+};
+
 export interface KitAppDiff {
   selection?: KitAppSelectionDiff;
   presence?: KitAppPresence;
@@ -254,6 +283,7 @@ export interface KitAppDiff {
   sortColumn?: KitAppSortColumn;
   sortDirection?: KitAppSortDirection;
   windowLayout?: any;
+  diagramForce?: Partial<DiagramForceSettings>;
 }
 export interface KitAppEdit extends KitDiffAppEdit<KitAppSelectionDiff> {}
 export interface KitAppState {
@@ -268,6 +298,7 @@ export interface KitAppState {
   sortColumn?: KitAppSortColumn;
   sortDirection?: KitAppSortDirection;
   windowLayout?: any;
+  diagramForce: DiagramForceSettings;
 }
 
 export interface KitAppCommandContext extends KitCommandContext {
@@ -864,6 +895,7 @@ const kitAppPlugin: AppPlugin = {
       sortColumn: undefined,
       sortDirection: undefined,
       windowLayout: undefined,
+      diagramForce: { ...defaultDiagramForceSettings },
     }),
   },
   registerStores: () => {
@@ -1032,6 +1064,13 @@ if (typeof window !== "undefined") {
     const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
     return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, windowLayout: event.windowLayout } } };
   });
+  registerRuntimeAction("kitSetDiagramForce", (context: any, event: any) => {
+    if (event.type !== "KIT.SET_DIAGRAM_FORCE") return {};
+    const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
+    const currentForce = app.diagramForce || { ...defaultDiagramForceSettings };
+    const newForce = { ...currentForce, ...event.diagramForce };
+    return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, diagramForce: newForce } } };
+  });
 }
 
 // #endregion Kit App Plugin Registration
@@ -1074,6 +1113,7 @@ export function useKitApp<T>(selector?: (state: KitAppState) => T, id?: KitAppId
     sortColumn: "artifact",
     sortDirection: "asc",
     others: [],
+    diagramForce: { ...defaultDiagramForceSettings },
   };
 
   if (!kitGuid) {
@@ -1149,6 +1189,22 @@ export function useKitAppWindowLayout(): HookResult<any> {
     };
   }, [kitGuid, canSet, controller]);
   return conditionalHookResult(canSet, windowLayout, setWindowLayout);
+}
+
+export function useKitAppDiagramForce(): readonly [DiagramForceSettings, ((value: Partial<DiagramForceSettings>) => void) | undefined, boolean] {
+  const kitScope = useKitScope();
+  const kitGuid = kitScope?.guid;
+  const actor = useSketchpadActor();
+  const force = useKitApp((s) => s.diagramForce) as DiagramForceSettings | undefined;
+  const resolvedForce = force ?? defaultDiagramForceSettings;
+  const canSet = !!kitGuid && !!actor;
+  const setForce = useMemo(() => {
+    if (!canSet || !kitGuid) return undefined;
+    return (value: Partial<DiagramForceSettings>) => {
+      actor.send({ type: "KIT.SET_DIAGRAM_FORCE", kitGuid, diagramForce: value } as any);
+    };
+  }, [kitGuid, canSet, actor]);
+  return [resolvedForce, canSet ? setForce : undefined, canSet] as const;
 }
 
 export function useKitAppTransaction(): Transaction {
@@ -2554,11 +2610,7 @@ const AppContent: FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const kitScope = useKitScope();
-  const orchestratorForDebug = useSketchpadStore();
-  const kitGuidsInStore = Array.from((orchestratorForDebug as any).kits?.keys?.() || []);
-  console.log("[DEBUG] [TABLE-WINDOW] AppContent kitScope:", kitScope?.guid, "kitGuidsInStore:", kitGuidsInStore);
   const hasKit = useHasKit(kitScope?.guid || "");
-  console.log("[DEBUG] [TABLE-WINDOW] AppContent hasKit=", hasKit, "for guid=", kitScope?.guid);
 
   // Use shallow subscription (deep=false) since this component primarily cares about
   // array-level changes (adding/removing items), not deep property changes within items
@@ -2919,26 +2971,20 @@ const AppContent: FC = () => {
     };
   }, [addSection, removeSection, appType, kitApp?.selection]);
 
-  // Add settings sections
   useEffect(() => {
     if (appType !== "kit") return;
-
-    // Add Kit-specific settings (more specific)
     addSection("settings", {
       id: "semio.sketchpad.app.kit.settings",
       specificity: 10,
       order: 0,
-      content: () => <KitSettingsContent />,
+      content: () => <KitEditorSettingsContent />,
     });
-
-    // Add global Sketchpad settings (least specific)
     addSection("settings", {
       id: "semio.sketchpad.settings",
       specificity: 0,
       order: 0,
-      content: () => <KitSettingsContent />,
+      content: () => <SketchpadSettingsContent />,
     });
-
     return () => {
       removeSection("settings", "semio.sketchpad.app.kit.settings");
       removeSection("settings", "semio.sketchpad.settings");
@@ -3054,10 +3100,7 @@ const AppContent: FC = () => {
           const hasChildren = children.length > 0;
 
           // Resolve concept GUIDs to names
-          const designConceptNames =
-            design.concepts
-              ?.map((c) => kitConcepts?.find((kc) => kc.guid === c.guid)?.name)
-              .filter((name): name is string => name !== undefined) || [];
+          const designConceptNames = design.concepts?.map((c) => kitConcepts?.find((kc) => kc.guid === c.guid)?.name).filter((name): name is string => name !== undefined) || [];
 
           result.push({
             id: rowId,
@@ -4294,14 +4337,11 @@ const AppContent: FC = () => {
   };
 
   // Early return checks after all hooks have been called
-  console.log("[DEBUG] [TABLE-WINDOW] Early return checks: hasKit=", hasKit, "kit=", !!kit, "kitApp=", !!kitApp, "isMobile=", isMobile);
   if (!hasKit || !kit) {
-    console.log("[DEBUG] [TABLE-WINDOW] Returning NotFound");
     return <NotFound title={t("semio.sketchpad.app.kit.notFound.label.normal")} description={t("semio.sketchpad.app.kit.notFound.description.normal")} parentPath="/" parentLabel={t("semio.sketchpad.app.home.title")} />;
   }
 
   if (!kitApp) {
-    console.log("[DEBUG] [TABLE-WINDOW] Returning loading (no kitApp)");
     return (
       <div className="flex items-center justify-center h-full">
         <p className="text-sm text-muted-foreground">{kitLoadingLabel}</p>
@@ -4310,7 +4350,6 @@ const AppContent: FC = () => {
   }
 
   if (isMobile) {
-    console.log("[DEBUG] [TABLE-WINDOW] Returning mobile layout");
     return (
       <div
         className="flex flex-col h-full"
@@ -4496,13 +4535,7 @@ const AppContent: FC = () => {
                     <Scrollable orientation="horizontal" className="flex-1 min-w-0 max-w-[200px]">
                       <div className="flex items-center gap-single px-single h-medium w-fit">
                         {row.concepts.map((concept) => (
-                          <Action
-                            key={concept}
-                            onClick={() => toggleConcept(concept)}
-                            id={`semio.sketchpad.app.kit.row.concept.${concept}`}
-                            text={concept}
-                            className={selectedConcepts.includes(concept) ? "bg-active-base" : ""}
-                          />
+                          <Action key={concept} onClick={() => toggleConcept(concept)} id={`semio.sketchpad.app.kit.row.concept.${concept}`} text={concept} className={selectedConcepts.includes(concept) ? "bg-active-base" : ""} />
                         ))}
                       </div>
                     </Scrollable>
@@ -4801,13 +4834,7 @@ const AppContent: FC = () => {
                     <Scrollable orientation="horizontal" className="flex-1 min-w-0 max-w-[200px]">
                       <div className="flex items-center gap-single px-single h-medium w-fit">
                         {row.concepts.map((concept) => (
-                          <Action
-                            key={concept}
-                            onClick={() => toggleConcept(concept)}
-                            id={`semio.sketchpad.app.kit.row.concept.${concept}`}
-                            text={concept}
-                            className={selectedConcepts.includes(concept) ? "bg-active-base" : ""}
-                          />
+                          <Action key={concept} onClick={() => toggleConcept(concept)} id={`semio.sketchpad.app.kit.row.concept.${concept}`} text={concept} className={selectedConcepts.includes(concept) ? "bg-active-base" : ""} />
                         ))}
                       </div>
                     </Scrollable>
@@ -5077,9 +5104,18 @@ interface KitDiagramEdge {
 const KitArtifactNode: FC<NodeProps<Node<KitDiagramNode>>> = ({ data, selected }) => {
   const [selection] = useKitAppSelection();
   const [setHover] = useKitAppSetHover();
+  const [clearHover] = useKitAppClearHover();
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid ?? "";
   const actor = useSketchpadActor();
+  const hover = useKitApp((state) => state?.hover) as KitAppHover | undefined;
+
+  const isHovered = useMemo(() => {
+    if (!hover) return false;
+    if (data.kind === "type") return hover.type === data.guid;
+    if (data.kind === "design") return hover.design === data.guid;
+    return false;
+  }, [hover, data.kind, data.guid]);
 
   const isSelected = useMemo(() => {
     if (!selection) return false;
@@ -5153,50 +5189,29 @@ const KitArtifactNode: FC<NodeProps<Node<KitDiagramNode>>> = ({ data, selected }
   }, [setHover, data.kind, data.guid]);
 
   const handleMouseLeave = useCallback(() => {
-    if (setHover) setHover({});
-  }, [setHover]);
-
-  const iconContent = useMemo(() => {
-    switch (data.kind) {
-      case "type":
-        return <TypeIcon className="size-tiny" />;
-      case "design":
-        return <LayoutIcon className="size-tiny" />;
-      case "quality":
-        return <AwardIcon className="size-tiny" />;
-      case "interface":
-        return <InterfaceIcon className="size-tiny" />;
-      case "tag":
-        return <HashIcon className="size-tiny" />;
-      case "concept":
-        return <LightbulbIcon className="size-tiny" />;
-      case "file":
-        return <DocumentIcon className="size-tiny" />;
-      case "folder":
-        return <FolderIcon className="size-tiny" />;
-      case "author":
-        return <UserIcon className="size-tiny" />;
-      default:
-        return null;
-    }
-  }, [data.kind]);
+    if (clearHover) clearHover();
+  }, [clearHover]);
 
   return (
-    <div
-      className={`flex items-center gap-1 px-2 py-1 border rounded cursor-pointer transition-colors ${
-        isSelected ? "bg-active-base border-foreground" : "bg-base border-foreground/20 hover:bg-hover-base"
-      }`}
-      onClick={handleClick}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
-      <Handle type="target" position={Position.Top} className="!bg-foreground/50 !w-2 !h-2" />
-      <Handle type="source" position={Position.Bottom} className="!bg-foreground/50 !w-2 !h-2" />
-      <Handle type="target" position={Position.Left} className="!bg-foreground/50 !w-2 !h-2" />
-      <Handle type="source" position={Position.Right} className="!bg-foreground/50 !w-2 !h-2" />
-      {iconContent}
-      <span className="text-xs truncate max-w-24">{data.name || data.guid.substring(0, 8)}</span>
-    </div>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div
+          className={`flex items-center justify-center cursor-grab active:cursor-grabbing transition-colors ${isSelected ? "ring-2 ring-active-base" : isHovered ? "ring-2 ring-hover-base" : ""}`}
+          onClick={handleClick}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        >
+          <Handle type="target" position={Position.Top} className="!bg-transparent !border-none !w-0 !h-0 !min-w-0 !min-h-0" />
+          <Handle type="source" position={Position.Bottom} className="!bg-transparent !border-none !w-0 !h-0 !min-w-0 !min-h-0" />
+          <Handle type="target" position={Position.Left} className="!bg-transparent !border-none !w-0 !h-0 !min-w-0 !min-h-0" />
+          <Handle type="source" position={Position.Right} className="!bg-transparent !border-none !w-0 !h-0 !min-w-0 !min-h-0" />
+          <TableAvatar name={data.name} icon={data.icon} className={isSelected ? "bg-active-base" : isHovered ? "bg-hover-base" : ""} />
+        </div>
+      </TooltipTrigger>
+      <TooltipContent>
+        <span className="text-xs">{data.name || data.guid.substring(0, 8)}</span>
+      </TooltipContent>
+    </Tooltip>
   );
 };
 
@@ -5209,13 +5224,110 @@ const edgeStyle = {
   reference: { stroke: "var(--foreground)", strokeWidth: 1, strokeDasharray: "5,5" },
 };
 
+// Floating edges utility functions
+// Nodes are circular with size-small (40px), so radius is 20px
+const NODE_RADIUS = 20;
+
+function getNodeIntersection(intersectionNode: Node, targetNode: Node): { x: number; y: number } {
+  const x = intersectionNode.position.x;
+  const y = intersectionNode.position.y;
+
+  const dx = targetNode.position.x - x;
+  const dy = targetNode.position.y - y;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+
+  if (distance === 0) {
+    return { x, y };
+  }
+
+  // Calculate intersection point on circle boundary
+  const ratio = NODE_RADIUS / distance;
+  return {
+    x: x + dx * ratio,
+    y: y + dy * ratio,
+  };
+}
+
+function getEdgePosition(node: Node, intersectionPoint: { x: number; y: number }): Position {
+  const dx = intersectionPoint.x - node.position.x;
+  const dy = intersectionPoint.y - node.position.y;
+
+  // For circular nodes, determine position based on angle
+  const angle = Math.atan2(dy, dx);
+  const absAngle = Math.abs(angle);
+
+  if (absAngle < Math.PI / 4 || absAngle > (3 * Math.PI) / 4) {
+    return dx > 0 ? Position.Right : Position.Left;
+  }
+  return dy > 0 ? Position.Bottom : Position.Top;
+}
+
+function getEdgeParams(source: Node, target: Node) {
+  const sourceIntersection = getNodeIntersection(source, target);
+  const targetIntersection = getNodeIntersection(target, source);
+
+  const sourcePos = getEdgePosition(source, sourceIntersection);
+  const targetPos = getEdgePosition(target, targetIntersection);
+
+  return {
+    sx: sourceIntersection.x,
+    sy: sourceIntersection.y,
+    tx: targetIntersection.x,
+    ty: targetIntersection.y,
+    sourcePos,
+    targetPos,
+  };
+}
+
+// FloatingEdge component
+const FloatingEdge: FC<EdgeProps> = ({ id, source, target, markerEnd, style }) => {
+  const sourceNode = useInternalNode(source);
+  const targetNode = useInternalNode(target);
+
+  if (!sourceNode || !targetNode) {
+    return null;
+  }
+
+  // Convert internal node format to position format
+  const sourcePos = sourceNode.internals?.positionAbsolute ?? { x: 0, y: 0 };
+  const targetPos = targetNode.internals?.positionAbsolute ?? { x: 0, y: 0 };
+
+  const sourceNodeForCalc = { position: sourcePos } as Node;
+  const targetNodeForCalc = { position: targetPos } as Node;
+
+  const { sx, sy, tx, ty, sourcePos: sPos, targetPos: tPos } = getEdgeParams(sourceNodeForCalc, targetNodeForCalc);
+
+  const [edgePath] = getBezierPath({
+    sourceX: sx,
+    sourceY: sy,
+    sourcePosition: sPos,
+    targetX: tx,
+    targetY: ty,
+    targetPosition: tPos,
+  });
+
+  return <BaseEdge id={id} path={edgePath} markerEnd={markerEnd} style={style} />;
+};
+
+// FloatingConnectionLine component
+const FloatingConnectionLine: FC<ConnectionLineComponentProps> = ({ fromX, fromY, toX, toY }) => {
+  const edgePath = getBezierPath({
+    sourceX: fromX,
+    sourceY: fromY,
+    targetX: toX,
+    targetY: toY,
+    sourcePosition: Position.Top,
+    targetPosition: Position.Top,
+  })[0];
+
+  return <BaseEdge path={edgePath} style={{ stroke: "var(--foreground)", strokeWidth: 2 }} />;
+};
+
 const buildKitDiagramData = (kit: Kit): { nodes: Node<KitDiagramNode>[]; edges: Edge[] } => {
   const nodes: Node<KitDiagramNode>[] = [];
   const edges: Edge[] = [];
-  const nodePositions = new Map<string, { x: number; y: number }>();
 
   const kindGroups: DiagramNodeKind[] = ["type", "design", "quality", "interface", "tag", "concept", "file", "folder", "author"];
-  let globalY = 0;
 
   for (const kind of kindGroups) {
     let items: Array<{ guid: string; name: string; icon?: string; parentGuid?: string; concepts?: string[] }> = [];
@@ -5262,15 +5374,11 @@ const buildKitDiagramData = (kit: Kit): { nodes: Node<KitDiagramNode>[]; edges: 
         break;
     }
 
-    let x = 0;
     for (const item of items) {
-      const position = { x, y: globalY };
-      nodePositions.set(item.guid, position);
-
       nodes.push({
         id: item.guid,
         type: "artifact",
-        position,
+        position: { x: 0, y: 0 },
         data: {
           guid: item.guid,
           name: item.name,
@@ -5286,16 +5394,12 @@ const buildKitDiagramData = (kit: Kit): { nodes: Node<KitDiagramNode>[]; edges: 
           id: `${item.parentGuid}-${item.guid}`,
           source: item.parentGuid,
           target: item.guid,
-          type: "default",
+          type: "floating",
           style: edgeStyle["part-of"],
           data: { relationship: "part-of" },
         });
       }
-
-      x += 180;
     }
-
-    if (items.length > 0) globalY += 100;
   }
 
   for (const design of kit.designs ?? []) {
@@ -5308,7 +5412,7 @@ const buildKitDiagramData = (kit: Kit): { nodes: Node<KitDiagramNode>[]; edges: 
             id: edgeId,
             source: typeGuid,
             target: design.guid,
-            type: "default",
+            type: "floating",
             style: edgeStyle["reference"],
             data: { relationship: "reference" },
           });
@@ -5322,7 +5426,7 @@ const buildKitDiagramData = (kit: Kit): { nodes: Node<KitDiagramNode>[]; edges: 
             id: edgeId,
             source: nestedDesignGuid,
             target: design.guid,
-            type: "default",
+            type: "floating",
             style: edgeStyle["reference"],
             data: { relationship: "reference" },
           });
@@ -5336,16 +5440,169 @@ const buildKitDiagramData = (kit: Kit): { nodes: Node<KitDiagramNode>[]; edges: 
 
 interface KitDiagramProps {}
 
-const KitDiagram: FC<KitDiagramProps> = () => {
+interface ForceNode extends SimulationNodeDatum {
+  id: string;
+  data: KitDiagramNode;
+}
+
+interface ForceLink extends SimulationLinkDatum<ForceNode> {
+  id: string;
+  relationship: "part-of" | "reference";
+}
+
+const KitDiagramInner: FC = () => {
   const kit = useKit() as Kit | undefined;
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const reactFlow = useReactFlow();
   const kitCommands = useKitAppCommands();
+  const [diagramForce] = useKitAppDiagramForce();
+  const simulationRef = useRef<Simulation<ForceNode, ForceLink> | null>(null);
+  const [nodes, setNodes] = useState<Node<KitDiagramNode>[]>([]);
+  const [edges, setEdges] = useState<Edge[]>([]);
+  const [isSimulating, setIsSimulating] = useState(true);
+  const draggingNodeRef = useRef<string | null>(null);
+  const hasFittedRef = useRef(false);
+  const { fitView } = useReactFlow();
 
-  const { nodes, edges } = useMemo(() => {
-    if (!kit) return { nodes: [], edges: [] };
-    return buildKitDiagramData(kit);
-  }, [kit]);
+  const kitApp = useKitApp(identitySelector) as KitAppState;
+  const expandedRowsArray = kitApp?.expandedRows || [];
+  const expandedRowsArrayKey = expandedRowsArray.join(",");
+  const expandedRows = useMemo(() => new Set(expandedRowsArray), [expandedRowsArrayKey]);
+  const filterSearch = kitApp?.filterSearch || "";
+
+  const visibleGuids = useMemo(() => {
+    if (!kit) return new Set<string>();
+    const guids = new Set<string>();
+    const searchLower = filterSearch.toLowerCase();
+
+    const addIfVisible = (guid: string, name: string, parentGuid?: string, rowIdPrefix?: string) => {
+      if (searchLower && !name.toLowerCase().includes(searchLower)) return false;
+      const rowId = rowIdPrefix ? `${rowIdPrefix}-${guid}` : guid;
+      if (parentGuid) {
+        const parentRowId = rowIdPrefix ? `${rowIdPrefix}-${parentGuid}` : parentGuid;
+        if (!expandedRows.has(parentRowId)) return false;
+      }
+      guids.add(guid);
+      return true;
+    };
+
+    (kit.types ?? []).forEach((t) => addIfVisible(t.guid, t.name, t.parent?.guid, "types"));
+    (kit.designs ?? []).forEach((d) => addIfVisible(d.guid, d.name, d.parent?.guid, "designs"));
+
+    return guids;
+  }, [kit, expandedRows, filterSearch]);
+
+  const { initialEdges, forceNodes, forceLinks } = useMemo(() => {
+    if (!kit) return { initialEdges: [], forceNodes: [], forceLinks: [] };
+    const { nodes: rfNodes, edges: rfEdges } = buildKitDiagramData(kit);
+
+    const filteredNodes = rfNodes.filter((n) => visibleGuids.has(n.id));
+    const filteredNodeIds = new Set(filteredNodes.map((n) => n.id));
+    const filteredEdges = rfEdges.filter((e) => filteredNodeIds.has(e.source) && filteredNodeIds.has(e.target));
+
+    const spread = Math.min(500, Math.max(100, Math.sqrt(filteredNodes.length) * 30));
+    const fNodes: ForceNode[] = filteredNodes.map((n, i) => {
+      const angle = (i / filteredNodes.length) * Math.PI * 2;
+      const radius = spread * 0.3 + Math.random() * spread * 0.2;
+      return {
+        id: n.id,
+        x: Math.cos(angle) * radius,
+        y: Math.sin(angle) * radius,
+        data: n.data,
+      };
+    });
+    const fLinks: ForceLink[] = filteredEdges.map((e) => ({
+      id: e.id,
+      source: e.source,
+      target: e.target,
+      relationship: (e.data?.relationship as "part-of" | "reference") ?? "part-of",
+    }));
+    return { initialEdges: filteredEdges, forceNodes: fNodes, forceLinks: fLinks };
+  }, [kit, visibleGuids]);
+
+  useEffect(() => {
+    hasFittedRef.current = false;
+  }, [kit, visibleGuids]);
+
+  useEffect(() => {
+    if (forceNodes.length === 0) {
+      setNodes([]);
+      setEdges([]);
+      return;
+    }
+    setEdges(initialEdges);
+    const nodesCopy = forceNodes.map((n) => ({ ...n }));
+    const linksCopy = forceLinks.map((l) => ({ ...l }));
+    const simulation = forceSimulation<ForceNode, ForceLink>(nodesCopy)
+      .force("charge", forceManyBody().strength(diagramForce.chargeStrength))
+      .force(
+        "link",
+        forceLink<ForceNode, ForceLink>(linksCopy)
+          .id((d) => d.id)
+          .distance(diagramForce.linkDistance),
+      )
+      .force("collide", forceCollide().radius(diagramForce.collideRadius))
+      .force("center", forceCenter(0, 0).strength(diagramForce.centerStrength))
+      .alphaDecay(0.05)
+      .on("tick", () => {
+        setNodes(
+          nodesCopy.map((n) => ({
+            id: n.id,
+            type: "artifact",
+            position: { x: n.x ?? 0, y: n.y ?? 0 },
+            data: n.data,
+          })),
+        );
+      })
+      .on("end", () => {
+        setIsSimulating(false);
+        if (!hasFittedRef.current) {
+          hasFittedRef.current = true;
+          setTimeout(() => fitView({ padding: 0.3, duration: 200 }), 50);
+        }
+      });
+    simulationRef.current = simulation;
+    setIsSimulating(true);
+    return () => {
+      simulation.stop();
+      simulationRef.current = null;
+    };
+  }, [forceNodes, forceLinks, initialEdges, diagramForce, fitView]);
+
+  const handleNodeDragStart = useCallback((_: React.MouseEvent, node: Node<KitDiagramNode>) => {
+    draggingNodeRef.current = node.id;
+    const sim = simulationRef.current;
+    if (sim) {
+      const forceNode = sim.nodes().find((n) => n.id === node.id);
+      if (forceNode) {
+        forceNode.fx = forceNode.x;
+        forceNode.fy = forceNode.y;
+      }
+    }
+  }, []);
+
+  const handleNodeDrag = useCallback((_: React.MouseEvent, node: Node<KitDiagramNode>) => {
+    const sim = simulationRef.current;
+    if (sim && draggingNodeRef.current === node.id) {
+      const forceNode = sim.nodes().find((n) => n.id === node.id);
+      if (forceNode) {
+        forceNode.fx = node.position.x;
+        forceNode.fy = node.position.y;
+      }
+    }
+  }, []);
+
+  const handleNodeDragStop = useCallback((_: React.MouseEvent, node: Node<KitDiagramNode>) => {
+    draggingNodeRef.current = null;
+    const sim = simulationRef.current;
+    if (sim) {
+      const forceNode = sim.nodes().find((n) => n.id === node.id);
+      if (forceNode) {
+        forceNode.fx = null;
+        forceNode.fy = null;
+      }
+      sim.alphaTarget(0);
+    }
+  }, []);
 
   const handlePaneClick = useCallback(() => {
     kitCommands.deselectAll?.();
@@ -5353,22 +5610,42 @@ const KitDiagram: FC<KitDiagramProps> = () => {
 
   if (!kit) return null;
 
+  const edgeTypes = useMemo(
+    () => ({
+      floating: FloatingEdge,
+    }),
+    [],
+  );
+
   return (
-    <div ref={reactFlowWrapper} className="w-full h-full">
+    <div ref={reactFlowWrapper} className="w-full h-full" data-testid="kit-diagram">
       <ReactFlow
         nodes={nodes}
         edges={edges}
         nodeTypes={kitNodeTypes}
-        fitView
-        fitViewOptions={{ padding: 0.2 }}
+        edgeTypes={edgeTypes}
+        connectionLineComponent={FloatingConnectionLine}
         minZoom={0.1}
-        maxZoom={2}
+        maxZoom={4}
+        defaultViewport={{ x: 0, y: 0, zoom: 1 }}
         onPaneClick={handlePaneClick}
+        onNodeDragStart={handleNodeDragStart}
+        onNodeDrag={handleNodeDrag}
+        onNodeDragStop={handleNodeDragStop}
+        nodesDraggable={true}
         proOptions={{ hideAttribution: true }}
       >
         <Background gap={20} size={1} />
       </ReactFlow>
     </div>
+  );
+};
+
+const KitDiagram: FC<KitDiagramProps> = () => {
+  return (
+    <ReactFlowProvider>
+      <KitDiagramInner />
+    </ReactFlowProvider>
   );
 };
 
@@ -5378,11 +5655,7 @@ const TableWindow = memo(() => {
 TableWindow.displayName = "TableWindow";
 
 const DiagramWindow = memo(() => {
-  return (
-    <ReactFlowProvider>
-      <KitDiagram />
-    </ReactFlowProvider>
-  );
+  return <KitDiagram />;
 });
 DiagramWindow.displayName = "DiagramWindow";
 
@@ -5392,16 +5665,11 @@ const MultiWindowApp: FC = () => {
   const actor = useSketchpadActor();
   const sketchpadStore = useSketchpadStore();
   const kitGuid = useKitScope()?.guid;
-  
+
   // Wait for kit to be available before rendering GoldenLayout
   // This prevents a race condition where GoldenLayout renders before the kit is loaded
   const hasKit = useHasKit(kitGuid || "");
-  
-  // Debug logging
-  const storeId = (sketchpadStore as any).id;
-  const kitGuidsInStore = Array.from((sketchpadStore as any).kits?.keys?.() || []);
-  console.log("[DEBUG] [MultiWindowApp] storeId:", storeId, "kitGuid:", kitGuid, "hasKit:", hasKit, "kitGuidsInStore:", kitGuidsInStore);
-  
+
   const store = useMemo(() => {
     if (!kitGuid || !sketchpadStore?.hasKitApp?.({ kit: kitGuid })) return null;
     return sketchpadStore.kitApp(kitGuid);
@@ -6187,23 +6455,85 @@ export const MultipleArtifactsSection: FC = () => {
 
 // #region Settings
 
-const KitSettingsContent: FC = () => {
+const KitEditorSettingsContent: FC = () => {
+  const [diagramForce, setDiagramForce, canSetDiagramForce] = useKitAppDiagramForce();
+  return (
+    <>
+      <TreeItem>
+        <TreeContent>
+          <Slider
+            id="semio.sketchpad.app.kit.settings.diagram.chargeStrength"
+            showLabel
+            min={-500}
+            max={0}
+            step={10}
+            value={[diagramForce.chargeStrength]}
+            onValueChange={(value: number[]) => setDiagramForce?.({ chargeStrength: value[0] })}
+            disabled={!canSetDiagramForce}
+          />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Slider
+            id="semio.sketchpad.app.kit.settings.diagram.linkDistance"
+            showLabel
+            min={20}
+            max={300}
+            step={10}
+            value={[diagramForce.linkDistance]}
+            onValueChange={(value: number[]) => setDiagramForce?.({ linkDistance: value[0] })}
+            disabled={!canSetDiagramForce}
+          />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Slider
+            id="semio.sketchpad.app.kit.settings.diagram.collideRadius"
+            showLabel
+            min={10}
+            max={100}
+            step={5}
+            value={[diagramForce.collideRadius]}
+            onValueChange={(value: number[]) => setDiagramForce?.({ collideRadius: value[0] })}
+            disabled={!canSetDiagramForce}
+          />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem>
+        <TreeContent>
+          <Slider
+            id="semio.sketchpad.app.kit.settings.diagram.centerStrength"
+            showLabel
+            min={0}
+            max={1}
+            step={0.01}
+            value={[diagramForce.centerStrength]}
+            onValueChange={(value: number[]) => setDiagramForce?.({ centerStrength: value[0] })}
+            disabled={!canSetDiagramForce}
+          />
+        </TreeContent>
+      </TreeItem>
+    </>
+  );
+};
+
+const SketchpadSettingsContent: FC = () => {
   const [theme, setTheme, canSetTheme] = useTheme();
   const [language, setLanguage, canSetLanguage] = useLanguage();
   const [device, setDevice, canSetDevice] = useDevice();
   const [expertise, setExpertise, canSetExpertise] = useExpertise();
   const [mode, setMode, canSetMode] = useMode();
-
   const languageEnLabel = useLabel("semio.sketchpad.settings.language.en");
   const languageDeLabel = useLabel("semio.sketchpad.settings.language.de");
   const languagePlaceholder = useLabel("semio.sketchpad.app.home.settings.language.placeholder");
-
   return (
     <>
       <TreeItem>
         <TreeContent>
           <ToggleGroup
-            id="semio.sketchpad.settings.theme"
+            id="semio.sketchpad.app.kit.settings.theme"
             value={theme}
             onValueChange={(value: string) => setTheme?.(value as Theme)}
             showLabel
@@ -6219,7 +6549,7 @@ const KitSettingsContent: FC = () => {
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Select id="semio.sketchpad.settings.language" value={language || "en"} onValueChange={(value: string) => setLanguage?.(value)} showLabel disabled={!canSetLanguage}>
+          <Select id="semio.sketchpad.app.kit.settings.language" value={language || "en"} onValueChange={(value: string) => setLanguage?.(value)} showLabel disabled={!canSetLanguage}>
             <SelectTrigger>
               <SelectValue placeholder={languagePlaceholder} />
             </SelectTrigger>
@@ -6233,7 +6563,7 @@ const KitSettingsContent: FC = () => {
       <TreeItem>
         <TreeContent>
           <ToggleGroup
-            id="semio.sketchpad.settings.device"
+            id="semio.sketchpad.app.kit.settings.device"
             value={typeof device === "object" ? "desktop" : device}
             onValueChange={(value: string) => setDevice?.(value as "desktop" | "tablet")}
             showLabel
@@ -6249,7 +6579,7 @@ const KitSettingsContent: FC = () => {
       <TreeItem>
         <TreeContent>
           <ToggleGroup
-            id="semio.sketchpad.settings.expertise"
+            id="semio.sketchpad.app.kit.settings.expertise"
             value={expertise}
             onValueChange={(value: string) => setExpertise?.(value as Expertise)}
             showLabel
@@ -6266,7 +6596,7 @@ const KitSettingsContent: FC = () => {
       <TreeItem>
         <TreeContent>
           <ToggleGroup
-            id="semio.sketchpad.settings.mode"
+            id="semio.sketchpad.app.kit.settings.mode"
             value={mode}
             onValueChange={(value: string) => setMode?.(value as Mode)}
             showLabel

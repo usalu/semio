@@ -1,14 +1,6 @@
 ---
 slug: XSTATE-MIGRATION
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Plan XState migration for Sketchpad state management
-model: claude-opus-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 
 # Previously

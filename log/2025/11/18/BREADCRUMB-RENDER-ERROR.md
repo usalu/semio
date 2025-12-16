@@ -1,14 +1,6 @@
 ---
 slug: BREADCRUMB-RENDER-ERROR
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Migration from 2025-11-18_BREADCRUMB-RENDER-ERROR.md
-model: unknown
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 # Diagnosis: Breadcrumb Render Error
 

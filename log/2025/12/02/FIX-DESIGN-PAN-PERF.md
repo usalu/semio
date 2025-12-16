@@ -1,14 +1,6 @@
 ---
 slug: FIX-DESIGN-PAN-PERF
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix design app panning performance
-model: claude-opus-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 
 # Previously

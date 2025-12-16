@@ -1,14 +1,6 @@
 ---
 slug: WORKBENCH-PIECES-MERGE
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Merge design app workbench sections into single pieces section
-model: claude-sonnet-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 
 # Merge Design App Workbench Sections

@@ -1,14 +1,6 @@
 ---
 slug: SQL-FILES-DEEP-EQUALITY
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Migration from 2025-11-21_SQL-FILES-DEEP-EQUALITY.md
-model: unknown
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 # Kit Import/Export - Final Implementation
 

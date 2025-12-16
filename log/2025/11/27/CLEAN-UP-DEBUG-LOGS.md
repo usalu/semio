@@ -1,14 +1,6 @@
 ---
 slug: CLEAN-UP-DEBUG-LOGS
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Remove debug diagnostics and temporary logs
-model: claude-sonnet-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 # Previously
 - Debug logging was still present in drag/drop collision helpers, kit and home dropzone import handlers, and the flatten design tests.

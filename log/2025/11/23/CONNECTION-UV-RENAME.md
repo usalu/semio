@@ -1,14 +1,6 @@
 ---
 slug: CONNECTION-UV-RENAME
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Migration from 2025-11-23_CONNECTION-UV-RENAME.md
-model: unknown
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 # Connection Coordinate Rename: x/y → u/v
 

@@ -1,16 +1,8 @@
 ---
 slug: TRIADIC-HOOKS-REFACTOR
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: >-
   Refactor components to use triadic hooks instead of direct store/commands
   access
-model: claude-opus-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 # Previously
 

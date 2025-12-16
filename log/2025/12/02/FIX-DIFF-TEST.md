@@ -1,14 +1,6 @@
 ---
 slug: FIX-DIFF-TEST
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: 'Fix diff test - schema changed, concepts now objects'
-model: claude-opus-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 
 # Previously

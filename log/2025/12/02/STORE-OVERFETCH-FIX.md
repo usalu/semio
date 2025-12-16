@@ -1,14 +1,6 @@
 ---
 slug: STORE-OVERFETCH-FIX
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix store overfetching and overrendering in design app
-model: claude-opus-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 
 # Previously

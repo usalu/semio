@@ -1,16 +1,8 @@
 ---
 slug: MIGRATE-DESIGN-APP-TRIADIC-HOOKS
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: >-
   Migrate Design.tsx UI components from useDesignAppCommands to triadic action
   hooks
-model: claude-opus-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 
 # Previously

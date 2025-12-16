@@ -1,14 +1,6 @@
 ---
 slug: KIT-DIFF-TEST
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Migration from 2025-11-21_KIT-DIFF-TEST.md
-model: unknown
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 # Kit Diff Test
 

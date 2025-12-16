@@ -1,14 +1,6 @@
 ---
 slug: DRAG-DROP-IMPORT-TEST
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Create test for kit import drag and drop
-model: claude-sonnet-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 
 # Previously

@@ -1,14 +1,6 @@
 ---
 slug: KIT-ROW-EXPAND
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix kit table row expansion
-model: claude-opus-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 # Previously
 - Kit table row expansion triggered `semio.kitApp.toggleExpandedRow` but the UI never reflected the change, implying the machine-facing state was not updated by the interaction.

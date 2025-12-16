@@ -1,14 +1,6 @@
 ---
 slug: SKETCHPAD-TEST-RESTRUCTURE
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Restructure sketchpad tests to one test per app with parent initialization
-model: claude-opus-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 
 # Previously

@@ -1,14 +1,6 @@
 ---
 slug: I18N-SCRIPT-FIXES
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Migration from 2025-11-21_I18N-SCRIPT-FIXES.md
-model: unknown
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 # i18n Script Fixes - 2025-11-21
 

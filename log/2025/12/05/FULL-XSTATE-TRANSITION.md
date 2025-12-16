@@ -1,14 +1,6 @@
 ---
 slug: FULL-XSTATE-TRANSITION
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Document full xstate transition process
-model: claude-opus-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 
 # Previously

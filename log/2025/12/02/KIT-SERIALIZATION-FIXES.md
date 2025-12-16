@@ -1,14 +1,6 @@
 ---
 slug: KIT-SERIALIZATION-FIXES
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix Kit Serialization for Vitest Tests
-model: claude-opus-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 
 # Previously

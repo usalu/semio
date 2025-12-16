@@ -1,16 +1,8 @@
 ---
 slug: APP-PLUGIN-REFACTOR
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: >-
   Refactor sketchpad apps to use open/closed plugin architecture with triadic
   hooks
-model: claude-opus-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 
 # Previously

@@ -1,16 +1,8 @@
 ---
 slug: LOG-SYSTEM
-author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: >-
   Implement comprehensive log management system with CRUD, nested structure, and
   YAML frontmatter
-model: claude-sonnet-4.5
-input: []
-commit: unknown
-files: {}
-lines:
-  added: 0
-  removed: 0
 ---
 
 # Log System Implementation
