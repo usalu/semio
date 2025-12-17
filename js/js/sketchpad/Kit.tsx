@@ -2446,6 +2446,152 @@ export const commands = {
 
 type ArtifactKind = "designs" | "types" | "qualities" | "interfaces" | "tags" | "concepts" | "files" | "folders" | "authors";
 
+const KitToolbarFilters: FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const kit = useKit() as Kit | undefined;
+  const kitCommands = useKitCommands();
+  const sketchpadCommands = useSketchpadCommands();
+
+  const selectedKind = searchParams.get("kind") as ArtifactKind | null;
+  const defaultDesignName = useLabel("semio.sketchpad.app.kit.defaultDesignName");
+  const defaultTypeName = useLabel("semio.sketchpad.app.kit.defaultTypeName");
+
+  const toggleKind = (kind: ArtifactKind) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (selectedKind === kind) {
+      newParams.delete("kind");
+      newParams.delete("name");
+      newParams.delete("variant");
+      newParams.delete("view");
+    } else {
+      newParams.set("kind", kind);
+      newParams.delete("name");
+      newParams.delete("variant");
+      newParams.delete("view");
+    }
+    setSearchParams(newParams);
+  };
+
+  const handleCreateArtifact = (kind: ArtifactKind) => {
+    if (!kit || !kitCommands) return;
+    switch (kind) {
+      case "designs": {
+        const existingNames = (kit.designs || []).map((d: Design) => d.name);
+        const uniqueName = generateUniqueName(defaultDesignName, existingNames);
+        const newDesign: Design = { guid: guid(), name: uniqueName, pieces: [], connections: [] };
+        kitCommands.createDesign(newDesign);
+        sketchpadCommands.navigateToDesign(kit.guid, newDesign.guid);
+        break;
+      }
+      case "types": {
+        const existingNames = (kit.types || []).map((t: Type) => t.name);
+        const uniqueName = generateUniqueName(defaultTypeName, existingNames);
+        const newType: Type = { guid: guid(), name: uniqueName, ports: [] };
+        kitCommands.createType(newType);
+        sketchpadCommands.navigateToType(kit.guid, newType.guid);
+        break;
+      }
+      default:
+        break;
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-single">
+      <Toggle
+        kind="withAction"
+        pressed={selectedKind === "designs"}
+        onPressedChange={() => toggleKind("designs")}
+        actionIcon={<AddIcon />}
+        onActionClick={() => handleCreateArtifact("designs")}
+        id="semio.sketchpad.app.kit.toolbar.showDesigns"
+        actionId="semio.sketchpad.app.kit.toolbar.createDesign"
+        icon={<LayoutIcon />}
+      />
+      <Toggle
+        kind="withAction"
+        pressed={selectedKind === "types"}
+        onPressedChange={() => toggleKind("types")}
+        actionIcon={<AddIcon />}
+        onActionClick={() => handleCreateArtifact("types")}
+        id="semio.sketchpad.app.kit.toolbar.showTypes"
+        actionId="semio.sketchpad.app.kit.toolbar.createType"
+        icon={<TypeIcon />}
+      />
+      <Toggle
+        kind="withAction"
+        pressed={selectedKind === "qualities"}
+        onPressedChange={() => toggleKind("qualities")}
+        actionIcon={<AddIcon />}
+        onActionClick={() => handleCreateArtifact("qualities")}
+        id="semio.sketchpad.app.kit.toolbar.showQualities"
+        actionId="semio.sketchpad.app.kit.toolbar.createQuality"
+        icon={<AwardIcon />}
+      />
+      <Toggle
+        kind="withAction"
+        pressed={selectedKind === "interfaces"}
+        onPressedChange={() => toggleKind("interfaces")}
+        actionIcon={<AddIcon />}
+        onActionClick={() => handleCreateArtifact("interfaces")}
+        id="semio.sketchpad.app.kit.toolbar.showInterfaces"
+        actionId="semio.sketchpad.app.kit.toolbar.createInterface"
+        icon={<InterfaceIcon />}
+      />
+      <Toggle
+        kind="withAction"
+        pressed={selectedKind === "tags"}
+        onPressedChange={() => toggleKind("tags")}
+        actionIcon={<AddIcon />}
+        onActionClick={() => handleCreateArtifact("tags")}
+        id="semio.sketchpad.app.kit.toolbar.showTags"
+        actionId="semio.sketchpad.app.kit.toolbar.createTag"
+        icon={<HashIcon />}
+      />
+      <Toggle
+        kind="withAction"
+        pressed={selectedKind === "concepts"}
+        onPressedChange={() => toggleKind("concepts")}
+        actionIcon={<AddIcon />}
+        onActionClick={() => handleCreateArtifact("concepts")}
+        id="semio.sketchpad.app.kit.toolbar.showConcepts"
+        actionId="semio.sketchpad.app.kit.toolbar.createConcept"
+        icon={<LightbulbIcon />}
+      />
+      <Toggle
+        kind="withAction"
+        pressed={selectedKind === "files"}
+        onPressedChange={() => toggleKind("files")}
+        actionIcon={<AddIcon />}
+        onActionClick={() => handleCreateArtifact("files")}
+        id="semio.sketchpad.app.kit.toolbar.showFiles"
+        actionId="semio.sketchpad.app.kit.toolbar.createFile"
+        icon={<DocumentIcon />}
+      />
+      <Toggle
+        kind="withAction"
+        pressed={selectedKind === "folders"}
+        onPressedChange={() => toggleKind("folders")}
+        actionIcon={<AddIcon />}
+        onActionClick={() => handleCreateArtifact("folders")}
+        id="semio.sketchpad.app.kit.toolbar.showFolders"
+        actionId="semio.sketchpad.app.kit.toolbar.createFolder"
+        icon={<FolderIcon />}
+      />
+      <Toggle
+        kind="withAction"
+        pressed={selectedKind === "authors"}
+        onPressedChange={() => toggleKind("authors")}
+        actionIcon={<AddIcon />}
+        onActionClick={() => handleCreateArtifact("authors")}
+        id="semio.sketchpad.app.kit.toolbar.showAuthors"
+        actionId="semio.sketchpad.app.kit.toolbar.createAuthor"
+        icon={<UserIcon />}
+      />
+    </div>
+  );
+};
+
 type TableRow = {
   id: string;
   kind: ArtifactKind;
@@ -5784,6 +5930,25 @@ const MultiWindowApp: FC = () => {
   const actor = useSketchpadActor();
   const sketchpadStore = useSketchpadStore();
   const kitGuid = useKitScope()?.guid;
+  const appType = useAppType();
+  const addSection = useAddPanelSection();
+  const removeSection = useRemovePanelSection();
+
+  // Add toolbar section with artifact kind filter toggles
+  useEffect(() => {
+    if (appType !== "kit") return;
+
+    addSection("toolbar", {
+      id: "semio.sketchpad.app.kit.toolbar.filters",
+      specificity: 20,
+      order: 0,
+      content: <KitToolbarFilters />,
+    });
+
+    return () => {
+      removeSection("toolbar", "semio.sketchpad.app.kit.toolbar.filters");
+    };
+  }, [appType, addSection, removeSection]);
 
   // Wait for kit to be available before rendering GoldenLayout
   // This prevents a race condition where GoldenLayout renders before the kit is loaded
@@ -6785,6 +6950,7 @@ export const config: AppConfig = {
     },
   ],
   getPanels: (): PanelDefinition[] => [
+    createPanelDefinition(PanelKind.TOOLBAR, "semio.sketchpad.navbar.panelToggle.toolbar.show"),
     createPanelDefinition(PanelKind.DETAILS, "semio.sketchpad.navbar.panelToggle.details.show"),
     createPanelDefinition(PanelKind.CHAT, "semio.sketchpad.navbar.panelToggle.chat.show"),
     createPanelDefinition(PanelKind.SETTINGS, "semio.sketchpad.navbar.panelToggle.settings.show"),

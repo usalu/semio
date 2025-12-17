@@ -1,8 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // #region Header
-
-// elements.tsx
-
-// 2025 Ueli Saluz
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as
@@ -99,8 +96,6 @@ export enum SectionSpecificity {
 // #endregion Section Specificity
 
 // #region Interaction Context
-
-
 
 interface InteractionCommands {
   setActiveInteraction: (elementId?: string, interactionId?: string) => void;
@@ -297,11 +292,7 @@ const Footer: React.FC<FooterProps> = ({ items = [], className = "", isVisible =
   const sortedItems = [...items].sort((a, b) => (a.order || 0) - (b.order || 0));
   const bgClass = level === "panel" ? "bg-panel" : level === "temporary" ? "bg-temporary" : "bg-base";
   return (
-    <footer
-      id="footer"
-      data-slot="footer"
-      className={cn("border-t flex items-center h-medium transition-transform duration-200", bgClass, isVisible ? "translate-y-0" : "translate-y-full", className)}
-    >
+    <footer id="footer" data-slot="footer" className={cn("border-t flex items-center h-medium transition-transform duration-200", bgClass, isVisible ? "translate-y-0" : "translate-y-full", className)}>
       <div className="flex items-center h-full px-single min-w-0">
         <ActionGroup level={level} className="border">
           {sortedItems.map((item) => (
@@ -712,7 +703,7 @@ export const Aside: React.FC<AsideProps> = ({ kind = "note", title, children }) 
 // #region Avatar
 
 const Avatar = React.forwardRef<React.ElementRef<typeof AvatarPrimitive.Root>, React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Root>>(({ className, ...props }, ref) => (
-  <AvatarPrimitive.Root ref={ref} data-slot="avatar" className={cn("relative flex size-small shrink-0 overflow-hidden rounded-full border", className)} {...props} />
+  <AvatarPrimitive.Root ref={ref} data-slot="avatar" className={cn("relative flex size-small shrink-0 overflow-hidden rounded-full border border-element", className)} {...props} />
 ));
 Avatar.displayName = "Avatar";
 
@@ -747,11 +738,7 @@ export const DraggableAvatar = React.forwardRef<HTMLDivElement, DraggableAvatarP
     return (
       <div data-slot="avatar" ref={dragRef || ref} {...dragListeners} {...dragAttributes} onClick={onClick} onDoubleClick={onDoubleClick} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} title={title} className={className}>
         <Avatar
-          className={cn(
-            "cursor-grab active:cursor-grabbing select-none border-[color:var(--border-color)]",
-            isSelected && "ring-1 ring-[color:var(--active-base)]",
-            isHovered && !isSelected && "ring-1 ring-[color:var(--hover-base)]",
-          )}
+          className={cn("cursor-grab active:cursor-grabbing select-none", isSelected && "ring-1 ring-[color:var(--active-base)]", isHovered && !isSelected && "ring-1 ring-[color:var(--hover-base)]")}
           style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}
         >
           <AvatarFallback className={cn("select-none", isSelected && "bg-[var(--active-base)] text-[var(--active-foreground)]", isHovered && !isSelected && "bg-[var(--hover-base)] text-foreground", !isSelected && !isHovered && "bg-muted")}>
@@ -1084,7 +1071,7 @@ interface ActionGroupProps extends Omit<React.ComponentProps<"div">, "children">
 function ActionGroup({ className, level: propLevel, children, ...props }: ActionGroupProps) {
   const level = useElementLevel(propLevel);
   return (
-    <div data-slot="action-group" data-level={level} className={cn("group/action-group flex h-small items-center border divide-x divide-[color:var(--border-color)] overflow-hidden", className)} {...props}>
+    <div data-slot="action-group" data-level={level} className={cn("group/action-group flex h-small items-center border border-element divide-x divide-element overflow-hidden", className, "[&:not(:first-child)]:border-l-[length:1px] [&:not(:first-child)]:border-l-element")} {...props}>
       <ActionGroupContext.Provider value={{ level }}>{children}</ActionGroupContext.Provider>
     </div>
   );
@@ -1249,7 +1236,7 @@ const buttonGroupItemVariants = cva(
       variant: {
         default: "",
         ghost: "border-transparent bg-transparent",
-        outline: "border-border",
+        outline: "border border-element",
       },
     },
     defaultVariants: {
@@ -1273,7 +1260,7 @@ interface ButtonGroupProps extends Omit<React.ComponentProps<"div">, "id"> {
 function ButtonGroup({ className, level: propLevel, id, showLabel, children, ...props }: ButtonGroupProps) {
   const level = useElementLevel(propLevel);
   const buttonGroupElement = (
-    <div data-slot="button-group" data-level={level} className={cn("group/button-group flex w-fit items-center border divide-x divide-[color:var(--border-color)] overflow-hidden h-medium", className)} {...props}>
+    <div data-slot="button-group" data-level={level} className={cn("group/button-group flex w-fit items-center border border-element divide-x divide-element overflow-hidden h-medium", className, "[&:not(:first-child)]:border-l-[length:1px] [&:not(:first-child)]:border-l-element")} {...props}>
       <ButtonGroupContext.Provider value={{ level }}>{children as React.ReactNode}</ButtonGroupContext.Provider>
     </div>
   );
@@ -1734,10 +1721,11 @@ function SelectLabel({ className, ...props }: React.ComponentProps<typeof Select
   return <SelectPrimitive.Label data-slot="select-label" className={cn("text-muted-foreground p-single text-xs", className)} {...props} />;
 }
 
-function SelectItem({ className, children, ...props }: React.ComponentProps<typeof SelectPrimitive.Item>) {
+function SelectItem({ className, children, id, ...props }: React.ComponentProps<typeof SelectPrimitive.Item> & { id?: string }) {
   return (
     <SelectPrimitive.Item
       data-slot="select-item"
+      id={id}
       className={cn(
         "focus:bg-hover-temporary focus:text-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full items-center gap-single rounded-sm py-single pr-medium pl-single text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-tiny *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-single",
         "cursor-selectable",
@@ -2142,7 +2130,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
   const labelElementId = `${id.split(".").join("-")}-label`;
 
   const stepperElement = (
-    <div className="flex h-large flex-1 min-w-0 items-stretch border border-border transition-[border-color] focus-within:border-accent">
+    <div className="flex h-large flex-1 min-w-0 items-stretch border border-element transition-[border-color] focus-within:border-accent">
       <button
         type="button"
         onMouseDown={handleMouseDown(-step)}
@@ -2151,7 +2139,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
         onTouchStart={handleMouseDown(-step)}
         onTouchEnd={handleMouseUp}
         disabled={!canStepDown}
-        className="flex h-full w-large cursor-pointer items-center justify-center border-r border-border hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-muted"
+        className="flex h-full w-large cursor-pointer items-center justify-center border-r border-element hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-muted"
       >
         <RemoveIcon className="size-tiny" />
       </button>
@@ -2215,7 +2203,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
         onTouchStart={handleMouseDown(step)}
         onTouchEnd={handleMouseUp}
         disabled={!canStepUp}
-        className="flex h-full w-large cursor-pointer items-center justify-center border-l border-border hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-muted"
+        className="flex h-full w-large cursor-pointer items-center justify-center border-l border-element hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-muted"
       >
         <AddIcon className="size-tiny" />
       </button>
@@ -2407,7 +2395,7 @@ interface ToggleGroupProps extends Omit<React.ComponentProps<typeof ToggleGroupP
 function ToggleGroup({ className, id, showLabel, level: propLevel, items, kind = "single", ...restProps }: ToggleGroupProps) {
   const level = useElementLevel(propLevel);
   const toggleGroupElement = (
-    <ToggleGroupPrimitive.Root data-slot="toggle-group" id={id} type={kind} className={cn("group/toggle-group flex w-fit items-center border overflow-hidden h-medium divide-x divide-[color:var(--border-color)]", className)} {...(restProps as any)}>
+    <ToggleGroupPrimitive.Root data-slot="toggle-group" id={id} type={kind} className={cn("group/toggle-group flex w-fit items-center border border-element overflow-hidden h-medium divide-x divide-element", className, "[&:not(:first-child)]:border-l-[length:1px] [&:not(:first-child)]:border-l-element")} {...(restProps as any)}>
       <ToggleGroupContext.Provider value={{ level }}>
         {items.map((item) => (
           <ToggleGroupItem key={item.value} {...item} />
@@ -2909,7 +2897,7 @@ function Band({ items, scrollable = true, className, level: propLevel, id }: Ban
   const level = useElementLevel(propLevel);
   const bgClass = level === "panel" ? "bg-panel" : level === "temporary" ? "bg-temporary" : "bg-base";
   const itemsElement = (
-    <div id={id} data-slot="band" className={cn("px-single flex gap-single h-full items-center min-w-0", scrollable ? "w-fit" : "w-full")}>
+    <div id={id} data-slot="band" className={cn("p-single flex gap-single items-center min-w-0", scrollable ? "w-fit" : "w-full")}>
       {items.map((item, index) => (
         <div key={item.key ?? index} className={cn("h-medium flex items-center min-w-0", item.className)}>
           {item.content}
@@ -2918,7 +2906,12 @@ function Band({ items, scrollable = true, className, level: propLevel, id }: Ban
     </div>
   );
 
-  if (scrollable) return <Scrollable orientation="horizontal" className={cn("border-b h-large", bgClass, className)}>{itemsElement}</Scrollable>;
+  if (scrollable)
+    return (
+      <Scrollable orientation="horizontal" className={cn("border-b h-large", bgClass, className)}>
+        {itemsElement}
+      </Scrollable>
+    );
   return <div className={cn("border-b h-large", bgClass, className)}>{itemsElement}</div>;
 }
 
@@ -2944,7 +2937,7 @@ function Strip({ items, scrollable = true, className, level: propLevel, id }: St
   const level = useElementLevel(propLevel);
   const bgClass = level === "panel" ? "bg-panel" : level === "temporary" ? "bg-temporary" : "bg-base";
   const itemsElement = (
-    <div id={id} data-slot="strip" className={cn("px-single flex gap-single h-full items-center min-w-0", scrollable ? "w-fit" : "w-full")}>
+    <div id={id} data-slot="strip" className={cn("p-single flex gap-single items-center min-w-0", scrollable ? "w-fit" : "w-full")}>
       {items.map((item, index) => (
         <div key={item.key ?? index} className={cn("h-small flex items-center min-w-0", item.className)}>
           {item.content}
@@ -2953,7 +2946,12 @@ function Strip({ items, scrollable = true, className, level: propLevel, id }: St
     </div>
   );
 
-  if (scrollable) return <Scrollable orientation="horizontal" className={cn("border-b h-medium", bgClass, className)}>{itemsElement}</Scrollable>;
+  if (scrollable)
+    return (
+      <Scrollable orientation="horizontal" className={cn("border-b h-medium", bgClass, className)}>
+        {itemsElement}
+      </Scrollable>
+    );
   return <div className={cn("border-b h-medium", bgClass, className)}>{itemsElement}</div>;
 }
 
@@ -2980,7 +2978,7 @@ function Navbar({ items, className, level: propLevel }: NavbarProps) {
   const bgClass = level === "panel" ? "bg-panel" : level === "temporary" ? "bg-temporary" : "bg-base";
   return (
     <nav id="navbar" data-slot="navbar" className={cn("border-b h-large z-navbar", bgClass, className)}>
-      <div className="px-single flex gap-single h-full items-center min-w-0">
+      <div className="p-single flex gap-single items-center min-w-0">
         {items.map((item, index) => (
           <div key={item.key ?? index} className={cn("h-medium flex items-center min-w-0", item.className)}>
             {item.content}
@@ -3733,7 +3731,7 @@ Tree.Files = ({ title = "In this section", nodes, currentPath, onNavigate, as = 
 
   return (
     <TreeStateProvider>
-      <div className={`not-prose my-medium p-medium rounded-lg border border-border bg-card ${className}`}>
+      <div className={`not-prose my-medium p-medium rounded-lg border border-element bg-card ${className}`}>
         {title && <h3 className="text-lg font-semibold mb-4">{title}</h3>}
         <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: false }}>
           <div className="flex flex-col gap-single">
@@ -3776,7 +3774,7 @@ function Breadcrumb({ className, items, level: propLevel, ...props }: Breadcrumb
   const [openIndex, setOpenIndex] = React.useState<number | null>(null);
 
   return (
-    <nav aria-label="breadcrumb" data-slot="breadcrumb" className={cn("flex h-medium items-stretch border border-border bg-base", className)} {...props}>
+    <nav aria-label="breadcrumb" data-slot="breadcrumb" className={cn("flex h-medium items-stretch border border-element bg-base", className)} {...props}>
       <ol data-slot="breadcrumb-list" className="flex flex-wrap items-stretch text-xs break-words overflow-hidden h-full">
         {items.map((item, index) => {
           const hasOptions = !!(item.options && item.options.length > 0);
@@ -3828,7 +3826,7 @@ function BreadcrumbItem({ className, id, content, children, onNavigate, options,
   }, [itemContent]);
 
   const itemElement = (
-    <li data-slot="breadcrumb-item" id={id} className={cn("flex items-stretch border-l first:border-l-0 cursor-selectable", className)} {...props}>
+    <li data-slot="breadcrumb-item" id={id} className={cn("flex items-stretch cursor-selectable", className)} {...props}>
       {interactiveContent}
     </li>
   );
@@ -3867,14 +3865,14 @@ function BreadcrumbSeparatorItem({ level, hasOptions, isOpen, onOpenChange, id, 
 
   if (!hasOptions || !options?.length) {
     return (
-      <li data-slot="breadcrumb-separator" role="presentation" aria-hidden="true" className="flex items-center border-l p-single">
+      <li data-slot="breadcrumb-separator" role="presentation" aria-hidden="true" className="flex items-center p-single">
         <Action level={level} icon={icon} className="cursor-foldable pointer-events-none" as="div" />
       </li>
     );
   }
 
   return (
-    <li data-slot="breadcrumb-separator" role="presentation" className="flex items-center border-l p-single">
+    <li data-slot="breadcrumb-separator" role="presentation" className="flex items-center p-single">
       <DropdownMenuPrimitive.Root open={isOpen} onOpenChange={onOpenChange}>
         <DropdownMenuPrimitive.Trigger asChild>
           <div>
@@ -3946,7 +3944,7 @@ const PageNavigation: React.FC<PageNavigationProps> = ({ prev, next }) => {
   if (!prev && !next) return null;
 
   return (
-    <div className="flex items-center justify-between border-t border-border pt-4 mt-8">
+    <div className="flex items-center justify-between border-t border-element pt-4 mt-8">
       {prev ? (
         <Button id="semio.sketchpad.docs.navigation.previous" onClick={() => navigate(`/${prev.path}`)} className="flex items-center gap-single">
           <ChevronLeftIcon className="size-tiny" />
@@ -4243,6 +4241,7 @@ export { BottomPanel };
 export interface WindowConfig {
   id: string;
   children: React.ReactNode;
+  kind?: "canvas" | "layout";
   defaultSize?: number;
   onDoubleClick?: () => void;
   className?: string;
@@ -4271,7 +4270,7 @@ const DefaultErrorDisplay: React.FC<{ error: Error }> = ({ error }) => (
   </div>
 );
 
-const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className = "", isVisible = true, loading = false, error = null, skeleton, showControls = false, onOpenInNewWindow, onMaximize, onMinimize, onClose, controls }) => {
+const Window: React.FC<WindowProps> = ({ id, children, kind = "canvas", onDoubleClick, className = "", isVisible = true, loading = false, error = null, skeleton, showControls = false, onOpenInNewWindow, onMaximize, onMinimize, onClose, controls }) => {
   const [isMaximized, setIsMaximized] = React.useState(false);
 
   const handleMaximize = () => {
@@ -4282,7 +4281,7 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
 
   if (!isVisible) return null;
   return (
-    <div id={id} className={`relative h-full w-full ${className}`} onDoubleClick={onDoubleClick}>
+    <div id={id} className={`relative h-full w-full ${kind === "canvas" ? "border border-window bg-base" : ""} ${className}`} onDoubleClick={onDoubleClick}>
       {(showControls || controls) && (
         <div className="absolute top-1 right-1 z-panel">
           {controls || (
@@ -4628,7 +4627,7 @@ const DiagramInner: React.FC<DiagramProps> = ({
         proOptions={{ hideAttribution: true }}
         className="bg-background"
       >
-        {showMinimap && <MiniMap className="border border-border" maskColor="var(--accent)" bgColor="var(--background)" nodeStrokeWidth={3} zoomable pannable nodeComponent={miniMapNodeComponent} />}
+        {showMinimap && <MiniMap className="border border-element" maskColor="var(--accent)" bgColor="var(--background)" nodeStrokeWidth={3} zoomable pannable nodeComponent={miniMapNodeComponent} />}
         {panels}
       </ReactFlow>
     </div>

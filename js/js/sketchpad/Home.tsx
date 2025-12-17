@@ -80,7 +80,6 @@ import {
   Window,
 } from "./Sketchpad";
 
-
 const useHome = useHomeApp;
 
 // #endregion Imports
@@ -134,13 +133,10 @@ export interface HomeCommandResult {
 
 // #region Home App Plugin Registration
 
-
 const homeAppPlugin: AppPlugin = {
   id: "home",
   namespace: "HOME",
   machine: {
-    
-    
     actions: {},
     guards: {},
     eventHandlers: {},
@@ -158,8 +154,6 @@ const homeAppPlugin: AppPlugin = {
 if (typeof window !== "undefined") {
   registerAppPlugin(homeAppPlugin);
 
-  
-  
   registerEventHandler("HOME.TOGGLE_PANEL", {
     action: (context: any, event: any) => ({
       homeApp: {
@@ -217,7 +211,6 @@ if (typeof window !== "undefined") {
     action: (context: any) => ({ homeApp: { ...context.homeApp, hover: undefined } }),
   });
 
-  
   registerRuntimeAction("homeTogglePanel", (context: any, event: any) => {
     if (event.type !== "HOME.TOGGLE_PANEL") return {};
     return {
@@ -260,7 +253,6 @@ if (typeof window !== "undefined") {
 // #endregion Home App Plugin Registration
 
 // #region Hooks (XState-based)
-
 
 export { useHomeApp as useHomeAppExported, useHomeLoadingKits as useHomeLoadingKitsExported, useHomePanelVisibility as useHomePanelVisibilityExported, useHomeSelection as useHomeSelectionExported } from "./Sketchpad";
 
@@ -350,7 +342,6 @@ const MultipleKitsSection: FC<{ kitIds: string[] }> = ({ kitIds }) => {
   const kitShallows = useKitShallows();
   const kits = kitIds.map((id) => kitShallows.find((k) => k.guid === id)).filter((k) => k !== undefined) as KitShallow[];
 
-  
   const getCommonValue = <T,>(getter: (kit: KitShallow) => T): T | undefined => {
     if (kits.length === 0) return undefined;
     const firstValue = getter(kits[0]);
@@ -555,11 +546,7 @@ const HomeAppFooter: FC = () => {
   useEffect(() => {
     if (appType !== "home") return;
 
-    
-
-    return () => {
-      
-    };
+    return () => {};
   }, [appType, addFooterItem, removeFooterItem]);
 
   return null;
@@ -575,8 +562,6 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
   const { createKit, navigateToKit, storeKitFileBlobs } = useSketchpadCommands();
   const actor = useSketchpadActor();
 
-  
-  
   const startKitImport = (operationId: string, kitName: string) => {
     actor.send({ type: "BACKGROUND.START", operationId, operationType: `kit-import:${kitName}` });
   };
@@ -684,6 +669,81 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
 // #region App
 
 type KitKind = "temporary" | "local" | "remote";
+
+const HomeToolbarFilters: FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const kits = useKits();
+  const getKitKind = useGetKitKind();
+  const { createKit, navigateToKit } = useSketchpadCommands();
+
+  const selectedKind = searchParams.get("kind") as KitKind | null;
+  const defaultKitName = useLabel("semio.sketchpad.app.kit.defaultName");
+
+  const toggleKind = (type: KitKind) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (selectedKind === type) {
+      newParams.delete("kind");
+      newParams.delete("name");
+      newParams.delete("version");
+    } else {
+      newParams.set("kind", type);
+      newParams.delete("name");
+      newParams.delete("version");
+    }
+    setSearchParams(newParams);
+  };
+
+  const handleCreateKit = (type: KitKind) => {
+    const existingNames = kits.map((k) => k.name);
+    const uniqueName = generateUniqueName(defaultKitName, existingNames);
+    const newKit: Kit = {
+      guid: guid(),
+      name: uniqueName,
+      version: "",
+      types: [],
+      designs: [],
+    };
+    const local = type === "local" || type === "remote";
+    const remote = type === "remote";
+    createKit("semio.sketchpad.app.home.toolbar.createKit", newKit, local, remote);
+    navigateToKit(newKit.guid);
+  };
+
+  return (
+    <div className="flex items-center gap-single">
+      <Toggle
+        kind="withAction"
+        pressed={selectedKind === "temporary"}
+        onPressedChange={() => toggleKind("temporary")}
+        actionIcon={<AddIcon />}
+        onActionClick={() => handleCreateKit("temporary")}
+        id="semio.sketchpad.app.home.toolbar.showTemporary"
+        actionId="semio.sketchpad.app.home.toolbar.createTemporary"
+        icon={<TemporaryKitIcon />}
+      />
+      <Toggle
+        kind="withAction"
+        pressed={selectedKind === "local"}
+        onPressedChange={() => toggleKind("local")}
+        actionIcon={<AddIcon />}
+        onActionClick={() => handleCreateKit("local")}
+        id="semio.sketchpad.app.home.toolbar.showLocal"
+        actionId="semio.sketchpad.app.home.toolbar.createLocal"
+        icon={<LocalKitIcon />}
+      />
+      <Toggle
+        kind="withAction"
+        pressed={selectedKind === "remote"}
+        onPressedChange={() => toggleKind("remote")}
+        actionIcon={<AddIcon />}
+        onActionClick={() => handleCreateKit("remote")}
+        id="semio.sketchpad.app.home.toolbar.showRemote"
+        actionId="semio.sketchpad.app.home.toolbar.createRemote"
+        icon={<RemoteKitIcon />}
+      />
+    </div>
+  );
+};
 
 type TableRow = {
   id: string;
@@ -1173,6 +1233,22 @@ const Home: FC = ({}) => {
   useHotkeys("semio.sketchpad.app.home.filter.kind.temporary", () => toggleKind("temporary"));
   useHotkeys("semio.sketchpad.app.home.filter.kind.local", () => toggleKind("local"));
   useHotkeys("semio.sketchpad.app.home.filter.kind.remote", () => toggleKind("remote"));
+
+  // Add toolbar section with kit kind filter toggles
+  useEffect(() => {
+    if (appType !== "home") return;
+
+    addSection("toolbar", {
+      id: "semio.sketchpad.app.home.toolbar.filters",
+      specificity: 20,
+      order: 0,
+      content: <HomeToolbarFilters />,
+    });
+
+    return () => {
+      removeSection("toolbar", "semio.sketchpad.app.home.toolbar.filters");
+    };
+  }, [appType, addSection, removeSection]);
 
   const toggleName = (name: string) => {
     const newParams = new URLSearchParams(searchParams);
@@ -1736,6 +1812,7 @@ export const config: AppConfig = {
   routeSegments: [],
   additionalPaths: ["kits"],
   getPanels: (): PanelDefinition[] => [
+    createPanelDefinition(PanelKind.TOOLBAR, "semio.sketchpad.navbar.panelToggle.toolbar.show"),
     createPanelDefinition(PanelKind.DETAILS, "semio.sketchpad.navbar.panelToggle.details.show"),
     createPanelDefinition(PanelKind.CHAT, "semio.sketchpad.navbar.panelToggle.chat.show"),
     createPanelDefinition(PanelKind.SETTINGS, "semio.sketchpad.navbar.panelToggle.settings.show"),

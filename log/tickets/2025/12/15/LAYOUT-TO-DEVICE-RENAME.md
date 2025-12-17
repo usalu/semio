@@ -67,7 +67,7 @@ iterations:
           lines:
             added: 111
             removed: 141
-        - path: log/2025/12/15/LAYOUT-TO-DEVICE-RENAME.md
+        - path: log/tickets/2025/12/15/LAYOUT-TO-DEVICE-RENAME.md
           lines:
             added: 111
             removed: 141

@@ -34,7 +34,7 @@ iterations:
           lines:
             added: 113
             removed: 59
-        - path: log/2025/12/16/TICKET-FILES-ONLY.md
+        - path: log/tickets/2025/12/16/TICKET-FILES-ONLY.md
           lines:
             added: 34
             removed: 0
@@ -47,7 +47,7 @@ files:
   updated:
     - AGENTS.md
     - README.md
-    - log/2025/12/16/TICKET-FILES-ONLY.md
+    - log/tickets/2025/12/16/TICKET-FILES-ONLY.md
     - scripts/log.ts
   created: []
   removed: []

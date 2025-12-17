@@ -38,7 +38,7 @@ iterations:
             added: 10
             removed: 1
       created:
-        - log/2025/12/15/PROMPTS-MD-FORMAT-EXCLUDE.md
+        - log/tickets/2025/12/15/PROMPTS-MD-FORMAT-EXCLUDE.md
       removed: []
     lines:
       added: 50

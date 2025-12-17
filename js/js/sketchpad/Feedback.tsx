@@ -21,15 +21,15 @@
 
 // #region Imports
 
-import { ChatIcon as FeedbackIcon } from "@semio/assets";
-import React, { FC, useCallback, useState } from "react";
+import { CheckIcon, ChatIcon as FeedbackIcon } from "@semio/assets";
+import { FC, useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import { useLabel } from "../i18n";
 import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Textarea, Window } from "./elements";
-import type { AppConfig, AppPlugin, PanelVisibility } from "./shared";
-import { registerAppPlugin, registerEventHandler } from "./shared";
-import { Canvas, useAppType } from "./Sketchpad";
+import type { AppConfig, AppPlugin, PanelDefinition, PanelVisibility } from "./shared";
+import { createPanelDefinition, PanelKind, registerAppPlugin, registerEventHandler } from "./shared";
+import { Canvas, useAddPanelSection, useAppType, useRemovePanelSection } from "./Sketchpad";
 
 // #endregion Imports
 
@@ -286,7 +286,7 @@ const FeedbackForm: FC = () => {
           {kindLabel}
         </label>
         <Select id="semio.sketchpad.app.feedback.form.kind" value={kind} onValueChange={(v) => setKind(v as FeedbackKind)}>
-          <SelectTrigger>
+          <SelectTrigger id="semio.sketchpad.app.feedback.form.kind">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -313,7 +313,7 @@ const FeedbackForm: FC = () => {
             {appLabel}
           </label>
           <Select id="semio.sketchpad.app.feedback.form.app" value={app || ""} onValueChange={(v) => setApp(v as FeedbackAppKind)}>
-            <SelectTrigger>
+            <SelectTrigger id="semio.sketchpad.app.feedback.form.app">
               <SelectValue placeholder={t("semio.sketchpad.app.feedback.form.appPlaceholder.label.normal", "Select app...")} />
             </SelectTrigger>
             <SelectContent>
@@ -335,7 +335,9 @@ const FeedbackForm: FC = () => {
           id="semio.sketchpad.app.feedback.form.description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder={kind === "bug" ? t("semio.sketchpad.app.feedback.form.bugDescriptionPlaceholder.label.normal", "Describe what happened...") : t("semio.sketchpad.app.feedback.form.ideaDescriptionPlaceholder.label.normal", "Describe your idea...")}
+          placeholder={
+            kind === "bug" ? t("semio.sketchpad.app.feedback.form.bugDescriptionPlaceholder.label.normal", "Describe what happened...") : t("semio.sketchpad.app.feedback.form.ideaDescriptionPlaceholder.label.normal", "Describe your idea...")
+          }
           className="min-h-[120px]"
         />
       </div>
@@ -375,10 +377,46 @@ const FeedbackForm: FC = () => {
 
 // #region App
 
+const FeedbackToolbar: FC = () => {
+  const { t } = useTranslation();
+  const submitLabel = useLabel("semio.sketchpad.app.feedback.form.submit");
+
+  const handleSendClick = () => {
+    const submitButton = document.getElementById("semio.sketchpad.app.feedback.form.submit") as HTMLButtonElement;
+    if (submitButton) {
+      submitButton.click();
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-single">
+      <Button id="semio.sketchpad.app.feedback.toolbar.send" onClick={handleSendClick} className="gap-single">
+        <CheckIcon className="size-small" />
+        {submitLabel}
+      </Button>
+    </div>
+  );
+};
+
 const Feedback: FC = () => {
   const appType = useAppType();
+  const addSection = useAddPanelSection();
+  const removeSection = useRemovePanelSection();
 
-  if (appType !== "feedback") return null;
+  useEffect(() => {
+    if (appType !== "feedback") return;
+
+    addSection("toolbar", {
+      id: "semio.sketchpad.app.feedback.toolbar.send",
+      specificity: 20,
+      order: 0,
+      content: <FeedbackToolbar />,
+    });
+
+    return () => {
+      removeSection("toolbar", "semio.sketchpad.app.feedback.toolbar.send");
+    };
+  }, [appType, addSection, removeSection]);
 
   return (
     <Canvas>
@@ -399,7 +437,7 @@ export const config: AppConfig = {
   id: "feedback",
   component: Feedback,
   routeSegments: [{ path: "feedback" }],
-  getPanels: () => [],
+  getPanels: (): PanelDefinition[] => [createPanelDefinition(PanelKind.TOOLBAR, "semio.sketchpad.navbar.panelToggle.toolbar.show")],
   matchesPath: (pathParts) => pathParts.length === 1 && pathParts[0] === "feedback",
   order: 10,
 };

@@ -112,6 +112,7 @@ export {
   startIteration,
   finishIteration,
   finishTicket,
+  reopenTicket,
   deleteTicket,
   listTickets,
   searchTickets,
@@ -154,12 +155,12 @@ function getGitHead(): string {
 function getTicketPath(year: number, month: number, day: number, slug: string): string {
   const monthStr = month.toString().padStart(2, "0");
   const dayStr = day.toString().padStart(2, "0");
-  return join(LOG_ROOT, year.toString(), monthStr, dayStr, `${slug}.md`);
+  return join(LOG_ROOT, "tickets", year.toString(), monthStr, dayStr, `${slug}.md`);
 }
 
 function parseTicketPath(path: string): { year: number; month: number; day: number; slug: string } | null {
   const relativePath = path.replace(LOG_ROOT, "").replace(/\\/g, "/");
-  const match = relativePath.match(/^\/(\d{4})\/(\d{2})\/(\d{2})\/(.+)\.md$/);
+  const match = relativePath.match(/^\/tickets\/(\d{4})\/(\d{2})\/(\d{2})\/(.+)\.md$/);
   if (!match) return null;
   return {
     year: parseInt(match[1]),
@@ -518,6 +519,19 @@ function finishTicket(year: number, month: number, day: number, slug: string): T
   return ticket;
 }
 
+function reopenTicket(year: number, month: number, day: number, slug: string): Ticket {
+  const ticket = readTicket(year, month, day, slug);
+  if (ticket.frontmatter.status === "open") throw new Error(`Ticket is already open: ${slug}`);
+  ticket.frontmatter.status = "open";
+  delete ticket.frontmatter.date.finished;
+  delete ticket.frontmatter.commit;
+  delete ticket.frontmatter.model;
+  delete ticket.frontmatter.files;
+  delete ticket.frontmatter.lines;
+  writeTicket(ticket);
+  return ticket;
+}
+
 function deleteTicket(year: number, month: number, day: number, slug: string): void {
   const ticketPath = getTicketPath(year, month, day, slug);
   if (!existsSync(ticketPath)) throw new Error(`Ticket not found: ${ticketPath}`);
@@ -555,7 +569,7 @@ function listTickets(options: ListOptions = {}): Ticket[] {
       }
     }
   }
-  walk(LOG_ROOT);
+  walk(join(LOG_ROOT, "tickets"));
   return tickets.sort((a, b) => new Date(b.frontmatter.date.created).getTime() - new Date(a.frontmatter.date.created).getTime());
 }
 
@@ -598,6 +612,7 @@ Commands:
   ticket iteration finish <slug>       Finish the latest iteration
                                        Required: at least one file flag
   ticket finish <slug>                 Finish the ticket (requires latest iteration finished)
+  ticket reopen <slug>                 Reopen a finished ticket (removes total files/lines)
   ticket read <year> <month> <day> <slug>     Read a ticket
   ticket delete <year> <month> <day> <slug>   Delete a ticket
   ticket list [year] [month] [day]            List tickets (optionally filtered)
@@ -630,6 +645,7 @@ Examples:
   tsx scripts/log.ts ticket iteration start MY-TASK --model=${Model.CLAUDE_OPUS_4_5} --prompt="User request..." --file=scripts/log.ts
   tsx scripts/log.ts ticket iteration finish MY-TASK --file=scripts/log.ts --file=README.md
   tsx scripts/log.ts ticket finish MY-TASK
+  tsx scripts/log.ts ticket reopen MY-TASK
   tsx scripts/log.ts ticket read 2025 12 16 MY-TASK
   tsx scripts/log.ts ticket list 2025 12
   tsx scripts/log.ts ticket search "drag drop"
@@ -743,6 +759,20 @@ if (require.main === module) {
           console.log(`Finished ticket: ${ticket.path}`);
           console.log(`Commit: ${ticket.frontmatter.commit}`);
           if (ticket.frontmatter.lines) console.log(`Lines: +${ticket.frontmatter.lines.added} -${ticket.frontmatter.lines.removed}`);
+          break;
+        }
+        if (sub === "reopen") {
+          const [slugArg] = rest;
+          if (!slugArg) {
+            console.error("Error: Missing slug");
+            printUsage();
+            process.exit(1);
+          }
+          const latest = findLatestTicketBySlug(slugArg);
+          const ticket = reopenTicket(latest.year, latest.month, latest.day, latest.slug);
+          console.log(`Reopened ticket: ${ticket.path}`);
+          console.log(`Status: ${ticket.frontmatter.status}`);
+          console.log(`Iterations preserved: ${ticket.frontmatter.iterations.length}`);
           break;
         }
         if (sub === "read") {

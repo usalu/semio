@@ -1,8 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // #region Header
-
-// Sketchpad.tsx
-
-// 2025 Ueli Saluz
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as
@@ -25,12 +22,12 @@ import { closestCenter, DndContext, DragOverlay, PointerSensor, pointerWithin, r
 import {
   AwardIcon,
   DocumentIcon,
+  MessageCircle as FeedbackIcon,
   FocusIcon,
   HomeIcon,
   LayoutIcon,
   LocalKitIcon,
   Maximize2Icon,
-  MessageCircle as FeedbackIcon,
   Minimize2Icon,
   NavigateBackIcon,
   NavigateForwardIcon,
@@ -8094,7 +8091,7 @@ export function createDefaultTransactionState(): AppTransactionState {
  */
 export function createDefaultDesignAppState(): DesignAppState {
   return {
-    panelVisibility: defaultPanelVisibility,
+    panelVisibility: { ...defaultPanelVisibility, toolbar: true },
     selection: undefined,
     hover: undefined,
     focusedPiece: undefined,
@@ -8132,7 +8129,7 @@ export function createDefaultTypeAppState(): TypeAppState {
  */
 export function createDefaultKitAppState(): KitAppState {
   return {
-    panelVisibility: defaultPanelVisibility,
+    panelVisibility: { ...defaultPanelVisibility, toolbar: true },
     selection: undefined,
     hover: undefined,
     fullscreenWindow: "none",
@@ -8151,7 +8148,7 @@ export function createDefaultKitAppState(): KitAppState {
  */
 export function createDefaultQualityAppState(): QualityAppState {
   return {
-    panelVisibility: defaultPanelVisibility,
+    panelVisibility: { ...defaultPanelVisibility, toolbar: true },
     selection: undefined,
     hover: undefined,
     expandedBenchmarks: new Set<string>(),
@@ -8661,7 +8658,7 @@ export const sketchpadMachine = setup({
     sketchpad: mergeSketchpadState(createDefaultSketchpadState(input.id), input.initialState),
     kits: {},
     homeApp: {
-      panelVisibility: defaultPanelVisibility,
+      panelVisibility: { ...defaultPanelVisibility, toolbar: true },
       selection: undefined,
       hover: undefined,
       sortColumn: undefined,
@@ -11659,6 +11656,7 @@ export function useAppType(): AppKind {
       return "kit";
     }
     if (pathParts[0] === "docs") return "docs";
+    if (pathParts[0] === "feedback") return "feedback";
     return "home";
   }, [navigation]);
 }
@@ -11674,6 +11672,7 @@ export function getAppTypeFromPath(path: string): AppKind {
     return "kit";
   }
   if (pathParts[0] === "docs") return "docs";
+  if (pathParts[0] === "feedback") return "feedback";
   return "home";
 }
 
@@ -12728,6 +12727,11 @@ export async function loadAppPanels(appId: string): Promise<PanelConfig[]> {
 class AppRegistry {
   private apps: Map<string, AppRegistration> = new Map();
   private autoDiscovered = false;
+  private _initialized = false;
+
+  get isInitialized(): boolean {
+    return this._initialized || this.apps.size > 0;
+  }
 
   private async autoDiscover(): Promise<void> {
     if (this.autoDiscovered) return;
@@ -12778,8 +12782,10 @@ class AppRegistry {
   }
 
   async initialize(): Promise<void> {
+    if (this._initialized) return;
     await this.autoDiscover();
     await loadAppConfigs();
+    this._initialized = true;
   }
 }
 
@@ -12795,7 +12801,15 @@ async function loadAppConfigs() {
   if (appConfigsLoadPromise) return appConfigsLoadPromise;
 
   appConfigsLoadPromise = (async () => {
-    const [homeModule, docsModule, kitModule, typeModule, designModule, qualityModule] = await Promise.all([import("./Home"), import("./Docs"), import("./Kit"), import("./Type"), import("./Design"), import("./Quality")]);
+    const [homeModule, docsModule, kitModule, typeModule, designModule, qualityModule, feedbackModule] = await Promise.all([
+      import("./Home"),
+      import("./Docs"),
+      import("./Kit"),
+      import("./Type"),
+      import("./Design"),
+      import("./Quality"),
+      import("./Feedback"),
+    ]);
 
     if (designModule.initializeDesignStore) {
       designModule.initializeDesignStore();
@@ -12807,6 +12821,7 @@ async function loadAppConfigs() {
     appRegistry.register(typeModule.config);
     appRegistry.register(designModule.config);
     appRegistry.register(qualityModule.config);
+    appRegistry.register(feedbackModule.config);
   })();
 
   return appConfigsLoadPromise;
@@ -14910,7 +14925,7 @@ const PanelToggles: FC = ({}) => {
   const ActiveRightIcon = activeRightConfig?.icon;
 
   return (
-    <div className="flex items-stretch border overflow-hidden h-medium divide-x divide-[color:var(--border-color)]">
+    <div className="flex items-stretch border border-element overflow-hidden h-medium divide-x divide-element">
       {workbenchConfigs.length > 0 && (
         <Toggle
           kind="dropdown"
@@ -15010,18 +15025,18 @@ export function useCanvasContext() {
 
 export const Canvas: FC<{ children: ReactNode; id?: string }> = ({ children, id }) => {
   return (
-    <div id={id} className="h-full w-full">
+    <div id={id} className="h-full w-full box-border p-single">
       {children}
     </div>
   );
 };
 
 export const HorizontalWindows: FC<{ children: ReactNode }> = ({ children }) => {
-  return <div className="flex flex-row h-full w-full">{children}</div>;
+  return <div className="flex flex-row h-full w-full gap-single">{children}</div>;
 };
 
 export const VerticalWindows: FC<{ children: ReactNode }> = ({ children }) => {
-  return <div className="flex flex-col h-full w-full">{children}</div>;
+  return <div className="flex flex-col h-full w-full gap-single">{children}</div>;
 };
 
 export function createDefaultLayout(windowIds: string[], direction: "row" | "column" = "row", sizes?: number[]): any {
@@ -15425,7 +15440,7 @@ export const LayoutCanvas: FC<{
                             console.error("Error in window:", windowType.id, error, info);
                           }}
                         >
-                          <Window id={windowType.id} isVisible={true} controls={windowType.controls ? <WindowControlsGroup controls={windowType.controls} /> : undefined}>
+                          <Window kind="layout" id={windowType.id} isVisible={true} controls={windowType.controls ? <WindowControlsGroup controls={windowType.controls} /> : undefined}>
                             <WindowComponent />
                           </Window>
                         </LayoutErrorBoundary>
@@ -15638,7 +15653,7 @@ export const LayoutCanvas: FC<{
         {hoveredSplitter &&
           hoveredSplitter.element &&
           createPortal(
-            <div data-splitter-buttons className="pointer-events-auto absolute left-1/2 top-1/2 flex flex-row -translate-x-1/2 -translate-y-1/2 gap-single border border-border bg-temporary p-single">
+            <div data-splitter-buttons className="pointer-events-auto absolute left-1/2 top-1/2 flex flex-row -translate-x-1/2 -translate-y-1/2 gap-single border border-element bg-temporary p-single">
               {windowConfig.windowKinds.map((windowType) => {
                 const typeId = windowType.id;
                 const direction = hoveredSplitter.direction;
@@ -15651,7 +15666,7 @@ export const LayoutCanvas: FC<{
                     key={typeId}
                     type="button"
                     disabled={!layoutLoaded}
-                    className="border border-border bg-panel p-single text-xs hover:bg-hover-panel disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="border border-element bg-panel p-single text-xs hover:bg-hover-panel disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={(e: React.MouseEvent) => {
                       e.stopPropagation();
                       if (!splitterElement) {
@@ -15691,11 +15706,13 @@ const ScopeWrapper: FC<{ ScopeProvider: ComponentType<{ guid: string; children: 
 };
 
 const AppRouter: FC = () => {
-  const [appsInitialized, setAppsInitialized] = useState(false);
+  const [appsInitialized, setAppsInitialized] = useState(() => appRegistry.isInitialized);
 
   useEffect(() => {
-    appRegistry.initialize().then(() => setAppsInitialized(true));
-  }, []);
+    if (!appsInitialized) {
+      appRegistry.initialize().then(() => setAppsInitialized(true));
+    }
+  }, [appsInitialized]);
 
   const apps = useMemo(() => {
     if (!appsInitialized) return [];
@@ -16253,7 +16270,7 @@ const LayoutWrapper: FC = () => {
         <DragOverlay>
           {activeDragId && activeDragData ? (
             <div className="cursor-grabbing">
-              <div className="bg-base border border-[color:var(--border-color)] rounded-full w-small h-small flex items-center justify-center shadow-lg">
+              <div className="bg-base border border-element rounded-full w-small h-small flex items-center justify-center shadow-lg">
                 <span className="text-small font-medium select-none">{getTypeOrDesignName()?.substring(0, 2).toUpperCase() || "?"}</span>
               </div>
             </div>
@@ -16291,7 +16308,7 @@ const SketchpadInteractionBridge: FC<{ children: React.ReactNode }> = ({ childre
  */
 const GlobalNavigationBridge: FC<{ children: React.ReactNode }> = ({ children }) => {
   const reactNavigate = useReactNavigate();
-  
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       (window as any).__SEMIO_NAVIGATE__ = reactNavigate;
@@ -16302,7 +16319,7 @@ const GlobalNavigationBridge: FC<{ children: React.ReactNode }> = ({ children })
       }
     };
   }, [reactNavigate]);
-  
+
   return <>{children}</>;
 };
 

@@ -73,7 +73,7 @@ npx tsx scripts/log.ts migrate
 Migrated 31 existing logs from flat structure:
 
 - Old: `log/2025-11-24_SLUG.md`
-- New: `log/2025/11/24/SLUG.md`
+- New: `log/tickets/2025/11/24/SLUG.md`
 
 All logs now have proper YAML frontmatter with metadata.
 

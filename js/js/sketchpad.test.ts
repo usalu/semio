@@ -643,6 +643,40 @@ test.describe("sketchpad", () => {
     }
     expect(hasSettings || hasDetails).toBe(true);
     console.log(`[Home] Panel toggle verification complete: settings=${settingsWorked}, details=${detailsWorked}`);
+
+    console.log("[Home] Testing toolbar visibility and filter toggles");
+    const toolbar = page.locator('[id="semio.sketchpad.toolbar"]');
+    const hasToolbar = await toolbar.isVisible({ timeout: 5000 }).catch(() => false);
+    console.log(`[Home] Toolbar visible: ${hasToolbar}`);
+    expect(hasToolbar).toBe(true);
+
+    const temporaryToggle = page.locator('[id="semio.sketchpad.app.home.toolbar.showTemporary"]');
+    const localToggle = page.locator('[id="semio.sketchpad.app.home.toolbar.showLocal"]');
+    const remoteToggle = page.locator('[id="semio.sketchpad.app.home.toolbar.showRemote"]');
+
+    const hasTemporary = await temporaryToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    const hasLocal = await localToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    const hasRemote = await remoteToggle.isVisible({ timeout: 3000 }).catch(() => false);
+
+    console.log(`[Home] Filter toggles - temporary: ${hasTemporary}, local: ${hasLocal}, remote: ${hasRemote}`);
+    expect(hasTemporary || hasLocal || hasRemote).toBe(true);
+
+    if (hasTemporary) {
+      console.log("[Home] Testing temporary filter toggle click");
+      await temporaryToggle.click();
+      await page.waitForTimeout(500);
+      const urlAfterClick = page.url();
+      console.log(`[Home] URL after temporary toggle click: ${urlAfterClick}`);
+      expect(urlAfterClick).toContain("kind=temporary");
+
+      await temporaryToggle.click();
+      await page.waitForTimeout(500);
+      const urlAfterUnclick = page.url();
+      console.log(`[Home] URL after temporary toggle unclick: ${urlAfterUnclick}`);
+      expect(urlAfterUnclick).not.toContain("kind=temporary");
+    }
+
+    console.log("[Home] Toolbar and filter toggles test complete");
   });
 
   test("Kit", async ({ page }) => {
@@ -738,6 +772,38 @@ test.describe("sketchpad", () => {
         expect(nodeBox.height).toBeGreaterThan(5);
       }
     }
+
+    console.log("[Kit] Testing toolbar visibility and artifact filter toggles");
+    const toolbar = page.locator('[id="semio.sketchpad.toolbar"]');
+    const hasToolbar = await toolbar.isVisible({ timeout: 5000 }).catch(() => false);
+    console.log(`[Kit] Toolbar visible: ${hasToolbar}`);
+    expect(hasToolbar).toBe(true);
+
+    const toolbarDesignsToggle = page.locator('[id="semio.sketchpad.app.kit.toolbar.showDesigns"]');
+    const toolbarTypesToggle = page.locator('[id="semio.sketchpad.app.kit.toolbar.showTypes"]');
+
+    const hasToolbarDesigns = await toolbarDesignsToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    const hasToolbarTypes = await toolbarTypesToggle.isVisible({ timeout: 3000 }).catch(() => false);
+
+    console.log(`[Kit] Filter toggles - designs: ${hasToolbarDesigns}, types: ${hasToolbarTypes}`);
+    expect(hasToolbarDesigns || hasToolbarTypes).toBe(true);
+
+    if (hasToolbarDesigns) {
+      console.log("[Kit] Testing designs filter toggle click");
+      await toolbarDesignsToggle.click();
+      await page.waitForTimeout(500);
+      const urlAfterClick = page.url();
+      console.log(`[Kit] URL after designs toggle click: ${urlAfterClick}`);
+      expect(urlAfterClick).toContain("kind=designs");
+
+      await toolbarDesignsToggle.click();
+      await page.waitForTimeout(500);
+      const urlAfterUnclick = page.url();
+      console.log(`[Kit] URL after designs toggle unclick: ${urlAfterUnclick}`);
+      expect(urlAfterUnclick).not.toContain("kind=designs");
+    }
+
+    console.log("[Kit] Toolbar and artifact filter toggles test complete");
   });
   test("Type", async ({ page }) => {
     test.setTimeout(120000);
@@ -1112,6 +1178,19 @@ test.describe("sketchpad", () => {
     }
     expect(hasWorkbench || hasSettings || hasDetails).toBe(true);
     console.log(`[Design] Panel toggle verification complete: workbench=${workbenchWorked}, settings=${settingsWorked}, details=${detailsWorked}`);
+
+    console.log("[Design] Testing toolbar visibility and selection tools");
+    const designToolbar = page.locator('[id="semio.sketchpad.toolbar"]');
+    const hasDesignToolbar = await designToolbar.isVisible({ timeout: 5000 }).catch(() => false);
+    console.log(`[Design] Toolbar visible: ${hasDesignToolbar}`);
+    expect(hasDesignToolbar).toBe(true);
+
+    const designSelectionTool = page.locator('[id="semio.sketchpad.tool.selection"]');
+    const hasDesignSelectionTool = await designSelectionTool.count() > 0;
+    console.log(`[Design] Selection tool visible: ${hasDesignSelectionTool}`);
+    expect(hasDesignSelectionTool).toBe(true);
+
+    console.log("[Design] Toolbar and selection tools test complete");
 
     // Verify the design properties details section contains the name input as a tree item
     console.log("[Design Test] Verifying design properties details section");
@@ -2498,6 +2577,24 @@ test.describe("Feedback App", () => {
 
     const submitButton = page.locator('[id="semio.sketchpad.app.feedback.form.submit"]');
     await expect(submitButton).toBeVisible();
+  });
+
+  test("should have toolbar with send button", async ({ page }) => {
+    await page.goto("/feedback");
+    await page.waitForTimeout(500);
+
+    console.log("[Feedback] Testing toolbar visibility and send button");
+    const feedbackToolbar = page.locator('[id="semio.sketchpad.toolbar"]');
+    const hasFeedbackToolbar = await feedbackToolbar.isVisible({ timeout: 5000 }).catch(() => false);
+    console.log(`[Feedback] Toolbar visible: ${hasFeedbackToolbar}`);
+    expect(hasFeedbackToolbar).toBe(true);
+
+    const sendButton = page.locator('[id="semio.sketchpad.app.feedback.toolbar.send"]');
+    const hasSendButton = await sendButton.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Feedback] Send button visible: ${hasSendButton}`);
+    expect(hasSendButton).toBe(true);
+
+    console.log("[Feedback] Toolbar and send button test complete");
   });
 
   test("should validate required fields for bug report", async ({ page }) => {

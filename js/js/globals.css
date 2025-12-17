@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 @import "@semio/js/theme.css";
@@ -47,6 +48,7 @@
 .lm_item {
   z-index: var(--z-base) !important;
   position: relative !important;
+  box-sizing: border-box !important;
 }
 
 .lm_header,
@@ -185,6 +187,9 @@
   border: 1px solid var(--border-color) !important;
   background-color: var(--base) !important;
 }
+.lm_item.lm_component {
+  border: none !important;
+}
 
 .lm_content {
   border: none !important;
@@ -196,14 +201,21 @@
 }
 
 .lm_splitter {
-  background-color: var(--border-color) !important;
-  width: 5px !important;
-  min-width: 5px !important;
+  background-color: var(--base) !important;
+}
+.lm_splitter.lm_splitter_vertical {
+  width: var(--spacing-single) !important;
+  min-width: var(--spacing-single) !important;
   cursor: var(--cursor-ew-resize) !important;
+}
+.lm_splitter.lm_splitter_horizontal {
+  height: var(--spacing-single) !important;
+  min-height: var(--spacing-single) !important;
+  cursor: var(--cursor-ns-resize) !important;
 }
 
 .lm_splitter:hover {
-  background-color: var(--hover-base) !important;
+  background-color: var(--border-element-color) !important;
 }
 
 /* https://tailwindcss.com/docs/theme */
@@ -304,7 +316,9 @@
     --hover-temporary: var(--color-light-gray-gray);
     --active-base: var(--color-primary);
     --active-foreground: var(--color-dark);
-    --border-color: var(--color-foreground);
+    --border-window-color: var(--color-foreground);
+    --border-element-color: var(--hover-base);
+    --border-color: var(--border-window-color);
     --plaster: var(--color-gray);
     --plaster-edge: var(--color-foreground);
     --info-bg: var(--color-light-8-9);
@@ -697,7 +711,9 @@
   --color-plaster-edge: var(--plaster-edge);
   --color-popover: var(--temporary);
   --color-popover-foreground: var(--foreground);
-  --color-border: var(--foreground);
+  --color-border: var(--border-window-color);
+  --color-element: var(--border-element-color);
+  --color-window: var(--border-window-color);
 }
 
 @utility gap-single {

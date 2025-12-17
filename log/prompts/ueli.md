@@ -1,5 +1,31 @@
 # Prompt history
 
+Extend ticket api to be able to reopen a ticket. This should remove the total files and lines from the ticket (not from the individual iterations) and set the status to open.
+
+The windows dont have a border on the bottom and on the right. Make the window border dashed.
+
+The tool mechanism should be generally improved and extended. Currently only the type app has working tools. The toolbar should be a floating panel in the canvas area above the footer.
+The home app should have the filter toggles for different kit kinds in the toolbar.
+The kit app should have the filter toggles for different artifact kinds in the toolbar.
+The feedback app should have send in the toolbar.
+The design app selection should be identical to the type app selection.
+Extend each app test to test each tool.
+Use playwright mcp.
+Make sure all sketchpad app tests comply. Dont remove functionality from the tests.@Design.tsx@Feedback.tsx@Home.tsx@Kit.tsx@shared.ts@Sketchpad.tsx@Type.tsx @sketchpad.test.ts 
+
+The panel toggles in the navbar still have no vertical borders. This shouldnt be possible. Dont override on the specific group but make sure that all toggle groups always have this.
+
+Every window should have a single unit margin between the window and the border of the canvas or between windows. Every window has a continuous border around it.
+
+A toggle group should like a button group always have vertical element borders between the items. This should be consistent for all groups. E.g. currently the navbar toggles have no vertical elelement borders.
+
+The border mechnanism of all ui elements should be more flexible. Different semantic border kinds should have different kind of styles (stroke, color, pattern, etc).
+Currently there is only one border color. All ui elements have border kind called element border (in tailwind we want to use border-element). The ui element border color should be the hover color. The second border kind is for distinguishing windows (border-window). The window border is as current normal border.
+
+The testing system is currently not clean. Right now there are spread tests for indiviudal features. The testing strategy should not be feature-based but rather component-based. For sketchpad there should be only test per app that covers all the features.
+
+Consolidate all sketchpad tests. Everything that should remain is one
+
 The diagram of the kit app should only show the rows of the table. This means that e.g. if a design in the able is collapsed then all child design node in the diagram are hidden. Same for types. If a folder is collapsed then all the items of the folder are not present in the diagram. In the end every visible row equals one node.
 
 - Not only top level rows should be displayed as node but all of the rows.

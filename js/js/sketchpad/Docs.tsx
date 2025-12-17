@@ -1121,7 +1121,7 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
         {/* Auto-inject section tree on index pages */}
         {treeData && (
           <TreeStateProvider>
-            <div className="not-prose my-8 p-6 rounded-lg border border-border bg-card">
+            <div className="not-prose my-8 p-6 rounded-lg border border-element bg-card">
               <h3 className="text-lg font-semibold mb-4">In this section</h3>
               <div className="flex flex-col gap-single">{renderTreeNode(treeData)}</div>
             </div>

@@ -81,7 +81,7 @@ iterations:
           lines:
             added: 206
             removed: 35
-        - path: log/2025/12/15/CODE-REPORT.md
+        - path: log/tickets/2025/12/15/CODE-REPORT.md
           lines:
             added: 206
             removed: 35

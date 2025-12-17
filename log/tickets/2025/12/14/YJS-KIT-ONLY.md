@@ -30,7 +30,7 @@ iterations:
           lines:
             added: 88
             removed: 81
-        - path: log/2025/12/14/YJS-KIT-ONLY.md
+        - path: log/tickets/2025/12/14/YJS-KIT-ONLY.md
           lines:
             added: 88
             removed: 81

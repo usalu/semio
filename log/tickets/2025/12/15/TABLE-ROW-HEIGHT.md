@@ -29,7 +29,7 @@ iterations:
           lines:
             added: 11
             removed: 2
-        - path: log/2025/12/15/TABLE-ROW-HEIGHT.md
+        - path: log/tickets/2025/12/15/TABLE-ROW-HEIGHT.md
           lines:
             added: 11
             removed: 2

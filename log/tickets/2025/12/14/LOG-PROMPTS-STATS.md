@@ -29,7 +29,7 @@ iterations:
           lines:
             added: 105
             removed: 5
-        - path: log/2025/12/14/LOG-PROMPTS-STATS.md
+        - path: log/tickets/2025/12/14/LOG-PROMPTS-STATS.md
           lines:
             added: 105
             removed: 5

@@ -35,7 +35,7 @@ iterations:
             added: 54
             removed: 20
       created:
-        - log/2025/12/15/DESIGN-HOVER-COLORS.md
+        - log/tickets/2025/12/15/DESIGN-HOVER-COLORS.md
       removed: []
     lines:
       added: 216

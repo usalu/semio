@@ -36,7 +36,7 @@ iterations:
           lines:
             added: 107
             removed: 59
-        - path: log/2025/12/16/TICKET-SCRIPT-SEMANTICS.md
+        - path: log/tickets/2025/12/16/TICKET-SCRIPT-SEMANTICS.md
           lines:
             added: 35
             removed: 0

@@ -661,7 +661,7 @@ Performance features built into machines:
 ### Documentation Updated
 
 - `AGENTS.md` - Added XState State Machines section
-- `log/2025/12/05/XSTATE-MIGRATION.md` - Full implementation log
+- `log/tickets/2025/12/05/XSTATE-MIGRATION.md` - Full implementation log
 
 ### Files Created/Modified
 

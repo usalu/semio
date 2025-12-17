@@ -17,7 +17,7 @@ User requested extending the Design E2E test to:
 2. Pan and drop again
 3. Validate plane properties (origin.z=0, xAxis=1,0,0, yAxis=0,1,0)
 
-Previous work in `log/2025/11/28/DRAG-DROP-FIX.md` fixed coordinate calculation in `handleDragEnd` to properly use screen-to-world conversion.
+Previous work in `log/tickets/2025/11/28/DRAG-DROP-FIX.md` fixed coordinate calculation in `handleDragEnd` to properly use screen-to-world conversion.
 
 # Plan
 

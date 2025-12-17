@@ -4978,7 +4978,7 @@ const PortHandle: React.FC<PortHandleProps> = ({ port, pieceId, selected = false
         left: x + ICON_WIDTH / 2,
         top: y,
         backgroundColor: selected ? "var(--active-base)" : isHovered ? "var(--hover-base)" : portColor,
-        border: selected || isHovered ? "2px solid var(--border-color)" : "0",
+        border: selected || isHovered ? "2px solid var(--border-element-color)" : "0",
         zIndex: selected || isHovered ? 20 : 10,
       }}
       position={Position.Top}
@@ -5208,7 +5208,7 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, type, ports,
         </div>
       )}
 
-      <Avatar role="button" title={avatarTitle} className={`w-full h-full border-[color:var(--border-color)] ${ringClass}`} style={{ borderColor: stroke, borderWidth: isDesignPiece ? 4 : undefined }}>
+      <Avatar role="button" title={avatarTitle} className={`w-full h-full border-element ${ringClass}`} style={{ borderColor: stroke, borderWidth: isDesignPiece ? 4 : undefined }}>
         <AvatarFallback className="select-none text-xs font-bold" style={fallbackStyle}>
           {initials}
         </AvatarFallback>
@@ -8509,7 +8509,7 @@ const App: FC<AppProps> = () => {
                   {useLabel("semio.sketchpad.app.design.proximityConnectDistance")}: {appSettings.design?.proximityConnectDistance}
                 </label>
                 <div className="w-full flex items-center" style={{ height: "20px" }}>
-                  <div className="w-full relative" style={{ height: "4px", backgroundColor: "var(--border-color)" }}>
+                  <div className="w-full relative" style={{ height: "4px", backgroundColor: "var(--border-element-color)" }}>
                     <div
                       style={{
                         position: "absolute",
@@ -8519,7 +8519,7 @@ const App: FC<AppProps> = () => {
                         width: "16px",
                         height: "16px",
                         backgroundColor: "var(--foreground)",
-                        border: "1px solid var(--border-color)",
+                        border: "1px solid var(--border-element-color)",
                       }}
                     />
                   </div>

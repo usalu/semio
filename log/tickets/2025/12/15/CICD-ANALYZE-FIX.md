@@ -50,7 +50,7 @@ iterations:
           lines:
             added: 105
             removed: 27
-        - path: log/2025/12/15/CICD-ANALYZE-FIX.md
+        - path: log/tickets/2025/12/15/CICD-ANALYZE-FIX.md
           lines:
             added: 105
             removed: 27

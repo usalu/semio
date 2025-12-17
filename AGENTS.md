@@ -252,6 +252,12 @@ Stats provide computed or measured performance data for entire designs using the
 
 ### Sketchpad
 
+#### Borders
+
+- Element border kind (hover color)
+- Window border kind (normal border color)
+- Window spacing: 1-unit gap between windows and 1-unit margin to canvas edge
+
 # Monorepo
 
 ## Git
@@ -534,13 +540,14 @@ All development tasks are tracked via markdown tickets with YAML frontmatter sto
 
 ```
 log/
-  YEAR/
-    MONTH/
-      DAY/
-        SLUG.md
+  tickets/
+    YEAR/
+      MONTH/
+        DAY/
+          SLUG.md
 ```
 
-Example: `log/2025/11/24/VALIDATION-SYSTEM.md`
+Example: `log/tickets/2025/11/24/VALIDATION-SYSTEM.md`
 
 #### Frontmatter Format
 
@@ -1342,7 +1349,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ ├── de.json
 │ │ │ └── en.json
 │ │ ├── sketchpad
-│ │ │ ├── Sketchpad.tsx # central barrel (Canvas, Navbar, Footer, store, kits, panels)
+│ │ │ ├── Sketchpad.tsx # central barrel (Canvas padding, window containers, LayoutCanvas GoldenLayout integration, Navbar, Footer, store, kits, panels)
 │ │ │ ├── Design.tsx # design app
 │ │ │ ├── Docs.tsx # documentation app
 │ │ │ ├── Home.tsx # home app
@@ -1350,7 +1357,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ ├── Quality.tsx # quality app
 │ │ │ ├── Type.tsx # type app
 │ │ │ ├── Tutorials.tsx # consolidated tutorial system
-│ │ │ ├── elements.tsx # UI elements
+│ │ │ ├── elements.tsx # UI elements (Window kind, TransactionProvider, primitives)
 │ │ │ ├── locales
 │ │ │ │ ├── de.json
 │ │ │ │ └── en.json
@@ -1404,7 +1411,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ ├── components.json
 │ │ ├── constants.json
 │ │ ├── eslint.config.ts
-│ │ ├── globals.css
+│ │ ├── globals.css # Tailwind utilities, sizing tokens, GoldenLayout theme overrides (window borders, 1-unit splitter gaps)
 │ │ ├── i18n.ts
 │ │ ├── index.ts
 │ │ ├── package.json
@@ -1481,6 +1488,7 @@ Javascript code with shared core (@semio/js) that uses storybook and exports a h
 
 - NEVER use inline styling. Use tailwindcss (v4). v4 uses a `theme.css` (`@semio/js/theme.css`) for theming and not `{theme:{…}}` in `tailwindconfig`.
 - ALWAYS use colors defined in `@theme inline {…}` from `js/js/globals.css`. NEVER use direct colors such as light, gray, …, dark, primary, secondary, tertiary outside of `js/js/globals.css` and ALWAYS use semantic colors instead such as active, disabled, hover, …
+- Borders use semantic kinds via Tailwind color tokens: `border-element` (hover color) and `border-window` (normal border color).
 - ALWAYS add tooltips (normal and extensive) to all ui elements.
 - ALWAYS load icons via the semantic icon layer in `@semio/assets` and NEVER import icons directly from external libraries (lucide, heroicons, .). Only reexport placeholder assets from those libraries inside `@semio/assets` and consume them through its semantic exports.
 
