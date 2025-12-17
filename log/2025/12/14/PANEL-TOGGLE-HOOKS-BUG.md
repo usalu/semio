@@ -3,10 +3,18 @@ slug: PANEL-TOGGLE-HOOKS-BUG
 summary: >-
   Investigate and fix React hooks order error when switching between panel
   sections
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.944Z"
+commit: "0000000000000000000000000000000000000000"
+iterations: []
 ---
+
 # Previously
 
 User reported React hooks order error when switching from details to settings panel in Kit app:
+
 ```
 Uncaught Error: Rendered more hooks than during the previous render.
 ```
@@ -29,9 +37,10 @@ Found that `SettingsContent` components were defined **inside** `useEffect` hook
 3. React sees different hook counts between renders, causing the error
 
 Example of bad pattern (in Kit.tsx useEffect):
+
 ```tsx
 const SettingsContent: FC = () => {
-  const [theme, setTheme] = useTheme();  // Hook inside inline component
+  const [theme, setTheme] = useTheme(); // Hook inside inline component
   // ...
 };
 addSection("settings", { content: SettingsContent });
@@ -42,13 +51,14 @@ addSection("settings", { content: SettingsContent });
 Moved settings content components to **module level** (outside any hooks) and wrapped with JSX function:
 
 1. **Kit.tsx**: Added `KitSettingsContent: FC` in Settings region (~line 5542)
-2. **Type.tsx**: Added `TypeSettingsContent: FC` in Settings region (~line 2693)  
+2. **Type.tsx**: Added `TypeSettingsContent: FC` in Settings region (~line 2693)
 3. **Design.tsx**: Added new Settings region with `DesignSettingsContent: FC` before DesignApp
 
 Updated useEffect registrations to use wrapper pattern:
+
 ```tsx
-addSection("settings", { 
-  content: () => <KitSettingsContent />,  // Wrapper function
+addSection("settings", {
+  content: () => <KitSettingsContent />, // Wrapper function
   // ...
 });
 ```
@@ -58,6 +68,7 @@ This pattern matches the existing correct implementation in Home.tsx (`HomeSetti
 ## Test Added
 
 Added "Panel Section Switching" test to sketchpad.test.ts that:
+
 - Tests each panel kind individually (details, settings, chat, workbench, toolbar)
 - Tests rapid panel switching to catch hooks errors
 - Checks console for React hooks errors

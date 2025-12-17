@@ -1,12 +1,20 @@
 ---
 slug: PANEL-SECTION-HIERARCHY
 summary: Migration from 2025-11-22_PANEL-SECTION-HIERARCHY.md
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.702Z"
+commit: "0000000000000000000000000000000000000000"
+iterations: []
 ---
+
 # Panel Section Hierarchy
 
 ## Analysis
 
 The panel system should order sections by specificity:
+
 - **Most specific** (top): App-specific sections (e.g., Design App selection details)
 - **Less specific**: App-level sections (e.g., Kit App settings)
 - **Least specific** (bottom): Sketchpad-level sections (e.g., general settings)
@@ -20,16 +28,19 @@ The panel system should order sections by specificity:
 ### Expected Behavior Examples
 
 #### Details Panel
+
 - **Top (most specific)**: Selection details (pieces, connections, ports selected)
 - **Middle**: Design details (current design metadata)
 - **Bottom**: Kit details (kit metadata)
 
 #### Settings Panel
+
 - **Top (most specific)**: Design App settings (tool preferences, view options)
 - **Middle**: Kit App settings (kit-specific preferences)
 - **Bottom**: Sketchpad settings (theme, language, expertise, layout, mode)
 
 #### Workbench Panel
+
 - **Top**: Design-specific workbench (layers, groups)
 - **Bottom**: Kit workbench (types, designs, qualities)
 
@@ -38,6 +49,7 @@ The panel system should order sections by specificity:
 ### 1. Add Section Hierarchy System
 
 Modify `PanelSection` interface to include:
+
 - `specificity: number` - Higher number = more specific (rendered first)
 - `appId?: string` - Which app owns this section (for automatic cleanup)
 
@@ -51,37 +63,42 @@ Modify `PanelSection` interface to include:
 
 ```typescript
 enum SectionSpecificity {
-  SKETCHPAD = 0,      // General sketchpad-level
-  KIT = 10,           // Kit-level 
-  QUALITY = 20,       // Quality app
-  TYPE = 20,          // Type app
-  DESIGN = 20,        // Design app
-  SELECTION = 30,     // Current selection (most specific)
+  SKETCHPAD = 0, // General sketchpad-level
+  KIT = 10, // Kit-level
+  QUALITY = 20, // Quality app
+  TYPE = 20, // Type app
+  DESIGN = 20, // Design app
+  SELECTION = 30, // Current selection (most specific)
 }
 ```
 
 ### 4. Update Each App
 
 #### Sketchpad (App.tsx)
+
 - Register base settings section with `specificity: 0`
 - Register base details section with `specificity: 0`
 
 #### Kit App
+
 - Register kit settings with `specificity: 10`
 - Register kit details with `specificity: 10`
 - Register workbench with `specificity: 10`
 
 #### Design App
+
 - Register design settings with `specificity: 20`
 - Register design details with `specificity: 20`
 - Register workbench (layers/groups) with `specificity: 20`
 - Register selection details with `specificity: 30`
 
 #### Type App
+
 - Register type settings with `specificity: 20`
 - Register type details with `specificity: 20`
 
 #### Quality App
+
 - Register quality settings with `specificity: 20`
 - Register quality details with `specificity: 20`
 
@@ -101,6 +118,7 @@ enum SectionSpecificity {
 ## Implementation Complete
 
 All sections now include `specificity` field and will be ordered correctly:
+
 - **Specificity 30** (most specific, top): Selected items (ports, pieces, connections, artifacts)
 - **Specificity 20**: App-level details (Design, Type, Quality, Docs)
 - **Specificity 10**: Kit-level details

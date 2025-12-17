@@ -1,6 +1,12 @@
 ---
 slug: DESIGN-APP-GRANULAR-SUBSCRIPTIONS
 summary: Optimize state management with granular Y.js subscriptions
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.833Z"
+commit: "0000000000000000000000000000000000000000"
+iterations: []
 ---
 
 # Previously

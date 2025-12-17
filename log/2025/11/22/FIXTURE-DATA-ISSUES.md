@@ -1,7 +1,14 @@
 ---
 slug: FIXTURE-DATA-ISSUES
 summary: Migration from 2025-11-22_FIXTURE-DATA-ISSUES.md
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.695Z"
+commit: "0000000000000000000000000000000000000000"
+iterations: []
 ---
+
 # Metabolism Kit Fixture Data Issues
 
 ## Overview
@@ -15,6 +22,7 @@ The MetabolismKit fixture in `assets/metabolism.json` contains invalid data that
 The fixture contains ~4000+ connections where the `connected.port` and/or `connecting.port` properties are undefined. This violates the schema where ports are required.
 
 **Example validation errors:**
+
 ```
 Invalid input: expected object, received undefined at:
 - designs[0].connections[0].connected.port
@@ -27,6 +35,7 @@ Invalid input: expected object, received undefined at:
 ### 2. Schema Incompleteness
 
 The SQL schema in `sql/sqlite/schema.sql` is missing tables/fields for:
+
 - `type_author` table (types don't have author relationships)
 - `type_guid` field in `prop` table (types can't have props directly)
 
@@ -35,11 +44,13 @@ The SQL schema in `sql/sqlite/schema.sql` is missing tables/fields for:
 ### 3. Field Normalization Issues
 
 Several fields have inconsistent representations between original and imported kits:
+
 - Boolean fields: `true` vs `undefined` (should be equivalent)
 - Empty string fields: `""` vs `undefined` (should be equivalent)
 - Missing properties: properties like `interface`, `props` appear in one but not the other
 
 **Examples from test output:**
+
 ```
 kit.types[5].ports[0].mandatory: type boolean vs undefined
 kit.types[5].ports[0].attributes[0].definition: type string vs undefined
@@ -54,26 +65,25 @@ kit.types[5].authors: missing in b
 ### 1. Made Port Optional in SideSchema
 
 Modified `SideSchema` to allow `port` to be optional:
+
 ```typescript
 export const SideSchema = z.object({
   piece: PieceIdSchema,
   designPiece: PieceIdSchema.optional(),
-  port: PortIdSchema.optional(),  // Changed from required
+  port: PortIdSchema.optional(), // Changed from required
 });
 ```
 
 ### 2. Filter Invalid Connections in Test
 
 Added connection filtering in test setup:
+
 ```typescript
 const originalKit: Kit = {
   ...parsedKit,
   designs: parsedKit.designs?.map((d) => ({
     ...d,
-    connections: d.connections?.filter(
-      (c) => c.connected?.port && c.connecting?.port && 
-             c.connected?.piece && c.connecting?.piece
-    ),
+    connections: d.connections?.filter((c) => c.connected?.port && c.connecting?.port && c.connected?.piece && c.connecting?.piece),
   })),
 };
 ```
@@ -81,6 +91,7 @@ const originalKit: Kit = {
 ### 3. Added Missing Type Fields to SQL Import
 
 Updated `sqliteToKit` to read additional Type fields:
+
 - `isAbstract`
 - `folder`
 - `location`
@@ -89,6 +100,7 @@ Updated `sqliteToKit` to read additional Type fields:
 ### 4. Conditional Property Assignment
 
 Changed Type import to only assign properties when they have values:
+
 ```typescript
 const type: any = {
   guid: typeGuid,
@@ -147,6 +159,7 @@ if (row.folder) type.folder = row.folder;
 Current: **5 passing, 2 failing**
 
 Failing tests:
+
 1. `Kit Diff` - Related to fixture data issues
 2. `Kit Import/Export` - Field normalization and schema issues
 

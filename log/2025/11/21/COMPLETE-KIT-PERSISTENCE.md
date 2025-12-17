@@ -1,7 +1,14 @@
 ---
 slug: COMPLETE-KIT-PERSISTENCE
 summary: Migration from 2025-11-21_COMPLETE-KIT-PERSISTENCE.md
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.680Z"
+commit: "0000000000000000000000000000000000000000"
+iterations: []
 ---
+
 # Complete Kit Persistence Implementation
 
 ## Status: IN PROGRESS
@@ -9,6 +16,7 @@ summary: Migration from 2025-11-21_COMPLETE-KIT-PERSISTENCE.md
 ## Goal
 
 Implement 100% data persistence for Kit import/export with:
+
 - Complete SQLite ↔ JSON conversion for ALL entities
 - Deep equality checks for all models
 - SQL from files (browser-compatible inline SQL constants)
@@ -17,6 +25,7 @@ Implement 100% data persistence for Kit import/export with:
 ## Implementation Plan
 
 ### 1. Complete sqliteToKit() ✅ NEXT
+
 - [x] Kit metadata + concepts + attributes
 - [x] Types + models + tags + ports + props + attributes + concepts
 - [x] Designs + pieces + connections + layers + groups + stats + attributes + concepts
@@ -26,6 +35,7 @@ Implement 100% data persistence for Kit import/export with:
 - [x] Authors
 
 ### 2. Complete kitToSqlite() 🔄 PENDING
+
 - [ ] Use new schema.sql structure
 - [ ] Persist all kit properties
 - [ ] Persist all nested entities (interfaces, qualities, files, folders, authors)
@@ -34,6 +44,7 @@ Implement 100% data persistence for Kit import/export with:
 - [ ] Persist all attributes everywhere
 
 ### 3. Deep Equality Functions 🔄 PARTIAL
+
 - [x] areSameKit() - top level implemented
 - [x] areSameType() - basic implementation
 - [x] areSameDesign() - basic implementation
@@ -46,12 +57,14 @@ Implement 100% data persistence for Kit import/export with:
 - [ ] Add areSameModel(), areSamePort(), areSamePiece(), areSameConnection(), etc.
 
 ### 4. Update Kit Commands ❌ PENDING
+
 - [ ] Find kit import command
 - [ ] Replace with call to importKit()
-- [ ] Find kit export command  
+- [ ] Find kit export command
 - [ ] Replace with call to exportKit()
 
 ### 5. Enhanced Tests ❌ PENDING
+
 - [ ] Verify 100% data roundtrip
 - [ ] Test all entity types
 - [ ] Test all nested arrays
@@ -61,11 +74,13 @@ Implement 100% data persistence for Kit import/export with:
 ## Key Technical Decisions
 
 ### SQL Strategy
+
 - ✅ Use inline SQL constants (browser compatible)
 - ✅ New GUID-based schema only (no backward compatibility)
 - ✅ Composite UNIQUE constraints for entities with duplicate GUIDs
 
 ### Data Coverage
+
 - ALL 22 tables from schema.sql must be fully populated
 - ALL Kit properties must persist
 - ALL nested entities must persist

@@ -1,7 +1,14 @@
 ---
 slug: IMPORT-EXPORT-COMPLETE
 summary: Migration from 2025-11-23_IMPORT-EXPORT-COMPLETE.md
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.707Z"
+commit: "0000000000000000000000000000000000000000"
+iterations: []
 ---
+
 # Import/Export Complete Implementation
 
 ## Analysis

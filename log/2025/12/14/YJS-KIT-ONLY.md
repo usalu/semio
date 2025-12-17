@@ -1,12 +1,18 @@
 ---
 slug: YJS-KIT-ONLY
 summary: XState owns Sketchpad UI state
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.948Z"
+commit: "0000000000000000000000000000000000000000"
 iterations:
   - prompt: >-
       Yjs should only be used to synchronize the kit data. All app state should
       be stored in the state machine. E.g. when updating sketchpad settings I
       get: [Machine] Y_UPDATE → {\navigation\:\design\}
-    date: "2025-12-14T22:53:36.715Z"
+    date:
+      started: "2025-12-14T22:53:36.715Z"
     model: gpt-5-2
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
     commit: 7765b633fe739bc29cd811ac7ec884e782e2e945
@@ -28,6 +34,11 @@ iterations:
           lines:
             added: 88
             removed: 81
+      created: []
+      removed: []
+    lines:
+      added: 352
+      removed: 324
 ---
 
 # Previously

@@ -5289,11 +5289,12 @@ const FloatingEdge: FC<EdgeProps> = ({ id, source, target, markerEnd, style }) =
   }
 
   // Convert internal node format to position format
+  // positionAbsolute is top-left corner, add NODE_RADIUS to get center
   const sourcePos = sourceNode.internals?.positionAbsolute ?? { x: 0, y: 0 };
   const targetPos = targetNode.internals?.positionAbsolute ?? { x: 0, y: 0 };
 
-  const sourceNodeForCalc = { position: sourcePos } as Node;
-  const targetNodeForCalc = { position: targetPos } as Node;
+  const sourceNodeForCalc = { position: { x: sourcePos.x + NODE_RADIUS, y: sourcePos.y + NODE_RADIUS } } as Node;
+  const targetNodeForCalc = { position: { x: targetPos.x + NODE_RADIUS, y: targetPos.y + NODE_RADIUS } } as Node;
 
   const { sx, sy, tx, ty, sourcePos: sPos, targetPos: tPos } = getEdgeParams(sourceNodeForCalc, targetNodeForCalc);
 
@@ -5464,32 +5465,147 @@ const KitDiagramInner: FC = () => {
   const { fitView } = useReactFlow();
 
   const kitApp = useKitApp(identitySelector) as KitAppState;
-  const expandedRowsArray = kitApp?.expandedRows || [];
-  const expandedRowsArrayKey = expandedRowsArray.join(",");
-  const expandedRows = useMemo(() => new Set(expandedRowsArray), [expandedRowsArrayKey]);
   const filterSearch = kitApp?.filterSearch || "";
+  const expandedRowsArray = kitApp?.expandedRows || [];
+  const expandedRowsKey = expandedRowsArray.join(",");
+  const expandedRows = useMemo(() => new Set(expandedRowsArray), [expandedRowsKey]);
 
+  // Compute visible GUIDs based on table row visibility (expanded/collapsed state)
   const visibleGuids = useMemo(() => {
     if (!kit) return new Set<string>();
     const guids = new Set<string>();
     const searchLower = filterSearch.toLowerCase();
 
-    const addIfVisible = (guid: string, name: string, parentGuid?: string, rowIdPrefix?: string) => {
-      if (searchLower && !name.toLowerCase().includes(searchLower)) return false;
-      const rowId = rowIdPrefix ? `${rowIdPrefix}-${guid}` : guid;
-      if (parentGuid) {
-        const parentRowId = rowIdPrefix ? `${rowIdPrefix}-${parentGuid}` : parentGuid;
-        if (!expandedRows.has(parentRowId)) return false;
+    // Build lookup maps for hierarchy
+    const designByGuid = new Map((kit.designs ?? []).map((d) => [d.guid, d]));
+    const typeByGuid = new Map((kit.types ?? []).map((t) => [t.guid, t]));
+    const folderByGuid = new Map((kit.folders ?? []).map((f) => [f.guid, f]));
+
+    // Helper to check if a row's ancestors are all expanded
+    const isAncestorChainExpanded = (rowId: string, parentRowId: string | undefined): boolean => {
+      if (!parentRowId) return true; // No parent, always visible
+      if (!expandedRows.has(parentRowId)) return false; // Parent is collapsed
+      // Check parent's parent recursively by extracting info from parentRowId
+      // Format: "design-{guid}", "type-{guid}", "folder-{guid}"
+      const [kind, guid] = parentRowId.split("-", 2);
+      if (kind === "design") {
+        const parentDesign = designByGuid.get(guid);
+        if (parentDesign?.parent?.guid) {
+          return isAncestorChainExpanded(parentRowId, `design-${parentDesign.parent.guid}`);
+        }
+        // Check if design is in a folder (folder is a string guid)
+        if (parentDesign?.folder) {
+          return isAncestorChainExpanded(parentRowId, `folder-${parentDesign.folder}`);
+        }
+      } else if (kind === "type") {
+        const parentType = typeByGuid.get(guid);
+        if (parentType?.parent?.guid) {
+          return isAncestorChainExpanded(parentRowId, `type-${parentType.parent.guid}`);
+        }
+        // Check if type is in a folder (folder is a string guid)
+        if (parentType?.folder) {
+          return isAncestorChainExpanded(parentRowId, `folder-${parentType.folder}`);
+        }
+      } else if (kind === "folder") {
+        const parentFolder = folderByGuid.get(guid);
+        if (parentFolder?.parent?.guid) {
+          return isAncestorChainExpanded(parentRowId, `folder-${parentFolder.parent.guid}`);
+        }
       }
-      guids.add(guid);
       return true;
     };
 
-    (kit.types ?? []).forEach((t) => addIfVisible(t.guid, t.name, t.parent?.guid, "types"));
-    (kit.designs ?? []).forEach((d) => addIfVisible(d.guid, d.name, d.parent?.guid, "designs"));
+    // Helper to check if an entity's row is visible in the table
+    const isRowVisible = (rowId: string, parentRowId: string | undefined, name: string): boolean => {
+      if (searchLower && !name.toLowerCase().includes(searchLower)) return false;
+      return isAncestorChainExpanded(rowId, parentRowId);
+    };
+
+    // Designs - check hierarchy (parent is { guid }, folder is string)
+    (kit.designs ?? []).forEach((d) => {
+      const rowId = `design-${d.guid}`;
+      let parentRowId: string | undefined;
+      if (d.parent?.guid) {
+        parentRowId = `design-${d.parent.guid}`;
+      } else if (d.folder) {
+        parentRowId = `folder-${d.folder}`;
+      }
+      if (isRowVisible(rowId, parentRowId, d.name)) {
+        guids.add(d.guid);
+      }
+    });
+
+    // Types - check hierarchy (parent is { guid }, folder is string)
+    (kit.types ?? []).forEach((t) => {
+      const rowId = `type-${t.guid}`;
+      let parentRowId: string | undefined;
+      if (t.parent?.guid) {
+        parentRowId = `type-${t.parent.guid}`;
+      } else if (t.folder) {
+        parentRowId = `folder-${t.folder}`;
+      }
+      if (isRowVisible(rowId, parentRowId, t.name)) {
+        guids.add(t.guid);
+      }
+    });
+
+    // Qualities - check folder (folder is string)
+    (kit.qualities ?? []).forEach((q) => {
+      const rowId = `quality-${q.guid}`;
+      const parentRowId = q.folder ? `folder-${q.folder}` : undefined;
+      if (isRowVisible(rowId, parentRowId, q.name)) {
+        guids.add(q.guid);
+      }
+    });
+
+    // Interfaces - no hierarchy
+    (kit.interfaces ?? []).forEach((i) => {
+      if (!searchLower || i.name.toLowerCase().includes(searchLower)) {
+        guids.add(i.guid);
+      }
+    });
+
+    // Tags - no hierarchy
+    (kit.tags ?? []).forEach((t) => {
+      if (!searchLower || t.name.toLowerCase().includes(searchLower)) {
+        guids.add(t.guid);
+      }
+    });
+
+    // Concepts - no hierarchy
+    (kit.concepts ?? []).forEach((c) => {
+      if (!searchLower || c.name.toLowerCase().includes(searchLower)) {
+        guids.add(c.guid);
+      }
+    });
+
+    // Files - check folder (folder is { guid })
+    (kit.files ?? []).forEach((f) => {
+      const rowId = `file-${f.guid}`;
+      const parentRowId = f.folder?.guid ? `folder-${f.folder.guid}` : undefined;
+      if (isRowVisible(rowId, parentRowId, f.name)) {
+        guids.add(f.guid);
+      }
+    });
+
+    // Folders - check hierarchy (parent is { guid })
+    (kit.folders ?? []).forEach((f) => {
+      const rowId = `folder-${f.guid}`;
+      const parentRowId = f.parent?.guid ? `folder-${f.parent.guid}` : undefined;
+      if (isRowVisible(rowId, parentRowId, f.name)) {
+        guids.add(f.guid);
+      }
+    });
+
+    // Authors - no hierarchy
+    (kit.authors ?? []).forEach((a) => {
+      if (!searchLower || a.name.toLowerCase().includes(searchLower)) {
+        guids.add(a.guid);
+      }
+    });
 
     return guids;
-  }, [kit, expandedRows, filterSearch]);
+  }, [kit, filterSearch, expandedRows]);
 
   const { initialEdges, forceNodes, forceLinks } = useMemo(() => {
     if (!kit) return { initialEdges: [], forceNodes: [], forceLinks: [] };
@@ -5577,6 +5693,8 @@ const KitDiagramInner: FC = () => {
         forceNode.fx = forceNode.x;
         forceNode.fy = forceNode.y;
       }
+      // Restart simulation with low alpha to allow smooth dragging
+      sim.alphaTarget(0.3).restart();
     }
   }, []);
 
@@ -5600,6 +5718,7 @@ const KitDiagramInner: FC = () => {
         forceNode.fx = null;
         forceNode.fy = null;
       }
+      // Let simulation cool down naturally
       sim.alphaTarget(0);
     }
   }, []);

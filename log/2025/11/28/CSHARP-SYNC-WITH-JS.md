@@ -1,10 +1,18 @@
 ---
 slug: CSHARP-SYNC-WITH-JS
 summary: Sync C# codebase with JS schema changes
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.746Z"
+commit: "0000000000000000000000000000000000000000"
+iterations: []
 ---
+
 # Previously
 
 C# codebase was out of date with JS schema. Key issues:
+
 - `Type.Parent` and `Design.Parent` were `string?` but JSON uses `{ guid: "..." }` objects
 - `Connection.X/Y` should be `U/V` (lowercase, nullable float)
 - `Port.CompatibleInterfaces` was obsolete (only valid on `Interface` class)
@@ -25,6 +33,7 @@ C# codebase was out of date with JS schema. Key issues:
 # Changes
 
 ## `net/Semio/Semio.cs`
+
 - Changed `Type.Parent` from `string?` to `TypeId?`
 - Changed `TypeDiff.Parent` from `string?` to `TypeId?`
 - Changed `Design.Parent` from `string?` to `DesignId?`
@@ -36,14 +45,17 @@ C# codebase was out of date with JS schema. Key issues:
 - Added `HashCode` polyfill struct (conditional compilation for NET48)
 
 ## `net/Semio/Semio.csproj`
+
 - Added `<DefineConstants Condition="'$(TargetFramework)' == 'net48'">$(DefineConstants);NET48</DefineConstants>`
 
 ## `net/Semio.Tests/Tests.cs`
+
 - Complete rewrite with 14 tests matching JS semio.test.ts structure:
   - `KitTests`: DeserializeKitMetabolism, SerializeKitMetabolism, DiffKitMetabolism, ValidateKitInvalid
   - `FlattenDesignTests`: 10 tests for Nakagin variants and Capsule Dream designs
 - Uses JSON fixtures from `assets/semio/` folder
 
 ## Test Results
+
 - All 14 tests passing on net7.0
 - Both net7.0 and net48 targets build successfully

@@ -1,10 +1,18 @@
 ---
 slug: TOOLBAR-TOOLS-E2E
 summary: Implement toolbar in apps and extend Type app E2E test for port tool
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.946Z"
+commit: "0000000000000000000000000000000000000000"
+iterations: []
 ---
+
 # Previously
 
 User requested:
+
 1. Get tools in apps working
 2. Implement a toolbar in the bottom middle between left and right panels
 3. Extend the Type app E2E test to test the port tool (select the tool, move cursor to geometry, click to create port)
@@ -14,7 +22,7 @@ The toolbar container existed but the tools inside were not rendering.
 # Plan
 
 1. Investigate why toolbar sections are not visible
-2. Fix the rendering issue 
+2. Fix the rendering issue
 3. Add E2E test for port tool functionality
 4. Clean up test code
 
@@ -23,6 +31,7 @@ The toolbar container existed but the tools inside were not rendering.
 ## Root Cause Analysis
 
 The toolbar was rendering but showing "Loading..." because:
+
 1. `ToolsToggleGroup` was registered as a panel section by `TypeApp`
 2. When rendered in `LayoutWrapper`, it used `useParams()` to get route params
 3. `useParams()` returned empty because the toolbar is rendered outside `<AppRouter>` routes
@@ -31,6 +40,7 @@ The toolbar was rendering but showing "Loading..." because:
 ## Fix 1: ToolbarScopeWrapper (Sketchpad.tsx)
 
 Created `ToolbarScopeWrapper` component that:
+
 - Parses URL path to extract kit/type/design/quality GUIDs
 - Wraps toolbar content with appropriate scope providers (KitScopeProvider, TypeScopeProvider, etc.)
 - Provides the context that `useKitScope()` and `useTypeScope()` hooks need
@@ -51,6 +61,7 @@ Applied wrapper in toolbar render section.
 ## Fix 2: ToolsToggleGroup (Type.tsx)
 
 Changed from `useParams()` to scope hooks:
+
 ```tsx
 // Before
 const { kit, type } = useParams();
@@ -69,6 +80,7 @@ Added `id="semio.sketchpad.toolbar"` to the toolbar container div for testabilit
 ## Fix 4: E2E Test (sketchpad.test.ts)
 
 Extended Type test to:
+
 1. Wait for toolbar to be visible
 2. Locate port and selection tool toggles
 3. Click port tool button to activate it

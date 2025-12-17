@@ -552,16 +552,18 @@ slug: SLUG # Upper kebab-case identifier (e.g., VALIDATION-SYSTEM)
 summary: SUMMARY # One-line description for commit messages
 status: open # open | finished
 author: NAME <EMAIL> # From git config
-created: TIMESTAMP # ISO 8601 timestamp
-base: GIT_SHA # Git base commit for ticket-level line stats
+date:
+  created: TIMESTAMP # ISO 8601 timestamp
+  finished: TIMESTAMP # ISO 8601 timestamp (set on ticket finish)
+commit: GIT_SHA # Git commit at ticket creation for line stats
+model: MODEL # Optional ticket-level default model
 iterations:
   - prompt: "First user prompt..." # The user's request
-    date: TIMESTAMP # ISO 8601 timestamp
-    model: MODEL # LLM model used (required)
-  - prompt: "Follow-up prompt..."
-    date: TIMESTAMP
-    finished: TIMESTAMP
-    model: MODEL
+    date:
+      started: TIMESTAMP # ISO 8601 timestamp
+      ended: TIMESTAMP # ISO 8601 timestamp (set on iteration finish)
+    model: MODEL # LLM model used
+    author: NAME <EMAIL> # Optional iteration author
     commit: GIT_SHA # Set when iteration is finished
     files:
       updated: # Files modified (with per-file line stats)
@@ -579,11 +581,18 @@ iterations:
           lines:
             added: 0
             removed: 50
+    lines: # Iteration-level totals (sum of file lines)
+      added: 150
+      removed: 60
 files: # Aggregated from all iterations (set on ticket finish)
-  updated: [path/to/modified.ts]
-  created: [path/to/new.ts]
-  removed: [path/to/deleted.ts]
-lines: # Ticket-level totals from git diff against base (set on ticket finish)
+  updated:
+    - path: path/to/modified.ts
+      lines: { added: 50, removed: 10 }
+  created:
+    - path/to/new.ts
+  removed:
+    - path/to/deleted.ts
+lines: # Ticket-level totals from git diff against commit (set on ticket finish)
   added: 150
   removed: 60
 ---
@@ -660,12 +669,6 @@ Searches in slug, summary, content, and author fields (case-insensitive).
 
 ```bash
 npx tsx scripts/log.ts ticket delete YEAR MONTH DAY SLUG
-```
-
-**Migrate old logs:**
-
-```bash
-npx tsx scripts/log.ts migrate
 ```
 
 #### Programmatic Usage
@@ -1617,6 +1620,7 @@ js/js/sketchpad/
   Design.tsx         # Design app + designAppPlugin
   Quality.tsx        # Quality app + qualityAppPlugin
   Docs.tsx           # Docs app + docsAppPlugin
+  Feedback.tsx       # Feedback app + feedbackAppPlugin
   Sketchpad.tsx      # Main orchestrator, XState machine
 ```
 
@@ -1999,6 +2003,38 @@ In-app documentation viewer with MDX support.
 - `useHeadings()` - Subscribe to heading updates
 - `headingsState.registerHeading(id, level, text)` - Register heading
 - `headingsState.setActiveHeading(id)` - Set active heading
+
+###### Feedback App (Feedback.tsx)
+
+Bug report and feature idea submission form. Extends `AppStore` (no kit modifications).
+
+**Route:** `/feedback`
+
+**State (`FeedbackState`):**
+
+- `panelVisibility` - Panel toggle states
+- `formData` - Form data (kind, title, description, app, name, email)
+- `isSubmitting` - Form submission in progress
+- `isSubmitted` - Form successfully submitted
+- `error` - Error message if submission failed
+
+**Form Kinds (`FeedbackKind`):**
+
+- `bug` - Bug report (requires app selection)
+- `idea` - Feature idea
+
+**Events:**
+
+- `FEEDBACK.TOGGLE_PANEL` - Toggle panel visibility
+- `FEEDBACK.SET_FORM_DATA` - Update form fields
+- `FEEDBACK.RESET_FORM` - Reset form to initial state
+- `FEEDBACK.SET_SUBMITTING` - Set submitting state
+- `FEEDBACK.SET_SUBMITTED` - Set submitted state
+- `FEEDBACK.SET_ERROR` - Set error message
+
+**Global Footer Action:**
+
+The feedback icon appears in every app's footer via `GlobalFooterItems` component in Sketchpad.tsx, providing universal access to the feedback form.
 
 ####### Adding a New Tool
 

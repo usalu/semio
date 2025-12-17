@@ -1,7 +1,14 @@
 ---
 slug: ENTITY-ID-REFACTOR
 summary: Migration from 2025-11-18_ENTITY-ID-REFACTOR.md
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.675Z"
+commit: "0000000000000000000000000000000000000000"
+iterations: []
 ---
+
 # Entity ID Refactor Plan
 
 **Date:** 2025-11-18  

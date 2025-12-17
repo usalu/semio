@@ -1,6 +1,12 @@
 ---
 slug: PLAYWRIGHT-DND-TEST
 summary: Update Playwright drag-and-drop test for dnd-kit compatibility
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.898Z"
+commit: "0000000000000000000000000000000000000000"
+iterations: []
 ---
 
 # Previously

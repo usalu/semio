@@ -665,6 +665,18 @@
           }
         }
       },
+      "footer": {
+        "label": {
+          "normal": "",
+          "beginner": ""
+        },
+        "feedback": {
+          "label": {
+            "normal": "Feedback",
+            "beginner": "Feedback senden, um Semio zu verbessern"
+          }
+        }
+      },
       "app": {
         "label": {
           "normal": "",
@@ -2623,6 +2635,224 @@
               "label": {
                 "normal": "Weiter",
                 "beginner": "Zur nächsten Seite navigieren"
+              }
+            }
+          }
+        },
+        "feedback": {
+          "label": {
+            "normal": "Feedback",
+            "beginner": "Feedback"
+          },
+          "form": {
+            "label": {
+              "normal": "Feedback-Formular",
+              "beginner": "Teilen Sie Ihre Gedanken mit uns"
+            }
+          },
+          "kind": {
+            "label": {
+              "normal": "Art",
+              "beginner": "Welche Art von Feedback möchten Sie geben?"
+            }
+          },
+          "bugReport": {
+            "label": {
+              "normal": "Fehlerbericht",
+              "beginner": "Einen Fehler oder ein Problem melden"
+            }
+          },
+          "featureIdea": {
+            "label": {
+              "normal": "Feature-Idee",
+              "beginner": "Ein neues Feature oder eine Verbesserung vorschlagen"
+            }
+          },
+          "title": {
+            "label": {
+              "normal": "Titel",
+              "beginner": "Eine kurze Zusammenfassung Ihres Feedbacks"
+            },
+            "placeholder": {
+              "label": {
+                "normal": "Kurze Zusammenfassung eingeben...",
+                "beginner": "Kurze Zusammenfassung eingeben..."
+              }
+            }
+          },
+          "description": {
+            "label": {
+              "normal": "Beschreibung",
+              "beginner": "Detaillierte Beschreibung Ihres Feedbacks"
+            },
+            "bugPlaceholder": {
+              "label": {
+                "normal": "Beschreiben Sie, was passiert ist und wie es reproduziert werden kann...",
+                "beginner": "Beschreiben Sie, was passiert ist und wie es reproduziert werden kann..."
+              }
+            },
+            "ideaPlaceholder": {
+              "label": {
+                "normal": "Beschreiben Sie Ihre Feature-Idee oder Verbesserung...",
+                "beginner": "Beschreiben Sie Ihre Feature-Idee oder Verbesserung..."
+              }
+            }
+          },
+          "app": {
+            "label": {
+              "normal": "App",
+              "beginner": "In welcher App ist der Fehler aufgetreten?"
+            },
+            "placeholder": {
+              "label": {
+                "normal": "App auswählen...",
+                "beginner": "App auswählen..."
+              }
+            },
+            "options": {
+              "home": {
+                "label": {
+                  "normal": "Home",
+                  "beginner": "Home"
+                }
+              },
+              "kit": {
+                "label": {
+                  "normal": "Kit",
+                  "beginner": "Kit"
+                }
+              },
+              "design": {
+                "label": {
+                  "normal": "Design",
+                  "beginner": "Design"
+                }
+              },
+              "type": {
+                "label": {
+                  "normal": "Typ",
+                  "beginner": "Typ"
+                }
+              },
+              "quality": {
+                "label": {
+                  "normal": "Qualität",
+                  "beginner": "Qualität"
+                }
+              },
+              "docs": {
+                "label": {
+                  "normal": "Dokumentation",
+                  "beginner": "Dokumentation"
+                }
+              },
+              "feedback": {
+                "label": {
+                  "normal": "Feedback",
+                  "beginner": "Feedback"
+                }
+              }
+            }
+          },
+          "name": {
+            "label": {
+              "normal": "Ihr Name",
+              "beginner": "Optional: Ihr Name für Rückmeldungen"
+            },
+            "placeholder": {
+              "label": {
+                "normal": "Name (optional)",
+                "beginner": "Name (optional)"
+              }
+            }
+          },
+          "email": {
+            "label": {
+              "normal": "E-Mail",
+              "beginner": "Optional: Ihre E-Mail für Rückmeldungen"
+            },
+            "placeholder": {
+              "label": {
+                "normal": "email@beispiel.de (optional)",
+                "beginner": "email@beispiel.de (optional)"
+              }
+            }
+          },
+          "submit": {
+            "label": {
+              "normal": "Feedback senden",
+              "beginner": "Klicken, um Ihr Feedback zu senden"
+            }
+          },
+          "submitting": {
+            "label": {
+              "normal": "Wird gesendet...",
+              "beginner": "Ihr Feedback wird gesendet"
+            }
+          },
+          "success": {
+            "title": {
+              "label": {
+                "normal": "Vielen Dank!",
+                "beginner": "Vielen Dank!"
+              }
+            },
+            "message": {
+              "label": {
+                "normal": "Ihr Feedback wurde erfolgreich gesendet. Wir schätzen Ihren Beitrag zur Verbesserung von Semio.",
+                "beginner": "Ihr Feedback wurde erfolgreich gesendet. Wir schätzen Ihren Beitrag zur Verbesserung von Semio."
+              }
+            },
+            "sendAnother": {
+              "label": {
+                "normal": "Weiteres Feedback senden",
+                "beginner": "Klicken, um ein weiteres Feedback zu senden"
+              }
+            }
+          },
+          "error": {
+            "title": {
+              "label": {
+                "normal": "Fehler",
+                "beginner": "Fehler"
+              }
+            },
+            "message": {
+              "label": {
+                "normal": "Beim Senden Ihres Feedbacks ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
+                "beginner": "Beim Senden Ihres Feedbacks ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut."
+              }
+            },
+            "retry": {
+              "label": {
+                "normal": "Erneut versuchen",
+                "beginner": "Klicken, um erneut zu versuchen"
+              }
+            }
+          },
+          "validation": {
+            "titleRequired": {
+              "label": {
+                "normal": "Titel ist erforderlich",
+                "beginner": "Titel ist erforderlich"
+              }
+            },
+            "descriptionRequired": {
+              "label": {
+                "normal": "Beschreibung ist erforderlich",
+                "beginner": "Beschreibung ist erforderlich"
+              }
+            },
+            "appRequired": {
+              "label": {
+                "normal": "Bitte wählen Sie die App aus, in der der Fehler aufgetreten ist",
+                "beginner": "Bitte wählen Sie die App aus, in der der Fehler aufgetreten ist"
+              }
+            },
+            "invalidEmail": {
+              "label": {
+                "normal": "Bitte geben Sie eine gültige E-Mail-Adresse ein",
+                "beginner": "Bitte geben Sie eine gültige E-Mail-Adresse ein"
               }
             }
           }

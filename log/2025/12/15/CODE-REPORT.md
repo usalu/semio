@@ -1,6 +1,11 @@
 ---
 slug: CODE-REPORT
 summary: Generate code.json code-quality report
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.953Z"
+commit: "0000000000000000000000000000000000000000"
 iterations:
   - prompt: >-
       The analyze script should be extended to create a report for the codebase
@@ -8,7 +13,8 @@ iterations:
       Comments in the code. Missing License headers. Regions that dont close
       (every #region REGIONNAME needs to have a corresponding #endregion
       REGIONNAME).
-    date: "2025-12-15T22:44:34.206Z"
+    date:
+      started: "2025-12-15T22:44:34.206Z"
     model: gpt-5-2
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
   - prompt: >-
@@ -16,15 +22,18 @@ iterations:
       Make sure to that the fix script removes the comments automatically.
       Analyze should not mark regions as comments. Make sure analyze, fix and
       preflight run properly from vscode launch.
-    date: "2025-12-15T23:18:32.363Z"
+    date:
+      started: "2025-12-15T23:18:32.363Z"
     model: gpt-5-2
   - prompt: Add the detection of temporary console logs to the code analysis.
-    date: "2025-12-16T10:27:46.789Z"
+    date:
+      started: "2025-12-16T10:27:46.789Z"
     model: gpt-5-2
   - prompt: >-
       Add detection of additional README.md and AGENTS.md files outside of the
       main in root. Make sure that the fix script deletes them.
-    date: "2025-12-16T10:32:22.681Z"
+    date:
+      started: "2025-12-16T10:32:22.681Z"
     model: gpt-5-2
   - prompt: >-
       Make sure that comments in config files and comments between header region
@@ -34,7 +43,8 @@ iterations:
       script to automatically add license headers when they are missing. They
       all follow the same structure. Use Ueli Saluz as default. Ignore all
       package READMEs such as net/Semio/README.md
-    date: "2025-12-16T11:11:15.289Z"
+    date:
+      started: "2025-12-16T11:11:15.289Z"
     model: gpt-5-2
     commit: 2fb81ef29354981c1b9625769dba4a06360a4aef
     files:
@@ -79,6 +89,11 @@ iterations:
           lines:
             added: 206
             removed: 35
+      created: []
+      removed: []
+    lines:
+      added: 2060
+      removed: 350
 ---
 
 # Previously

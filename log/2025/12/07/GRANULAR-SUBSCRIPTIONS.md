@@ -3,12 +3,20 @@ slug: GRANULAR-SUBSCRIPTIONS
 summary: >-
   Migrate all exported hooks to granular subscriptions with [state, setState,
   canSetState] pattern
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.884Z"
+commit: "0000000000000000000000000000000000000000"
+iterations: []
 ---
+
 # Previously
 
 The Sketchpad hooks were using `useKit()`, `useDesign()`, and `useType()` with selector patterns that caused overfetching. Every component that needed just one field (like kit name or pieces array) would subscribe to the entire store, causing unnecessary re-renders when unrelated fields changed.
 
 Current hook patterns have several issues:
+
 1. Hooks take optional `id` parameters instead of using scopes consistently
 2. Hooks return only the state value, not setters or capability flags
 3. No consistent way to determine if a state can be modified (for disabling UI elements)
@@ -19,8 +27,9 @@ Current hook patterns have several issues:
 ## New Hook Architecture: [STATE, SETSTATE, CANSETSTATE] = useSELECTOR()
 
 All hooks will follow this unified pattern:
+
 ```typescript
-const [value, setValue, canSetValue] = useValue()
+const [value, setValue, canSetValue] = useValue();
 ```
 
 ### Key Principles:
@@ -31,8 +40,9 @@ const [value, setValue, canSetValue] = useValue()
 4. **Scope-Based**: Use provider contexts instead of passing IDs
 
 ### Return Type:
+
 ```typescript
-type GranularHookResult<T> = readonly [T, ((value: T) => void) | undefined, boolean]
+type GranularHookResult<T> = readonly [T, ((value: T) => void) | undefined, boolean];
 ```
 
 - `T`: The current state value
@@ -42,22 +52,25 @@ type GranularHookResult<T> = readonly [T, ((value: T) => void) | undefined, bool
 ### Hook Categories:
 
 #### 1. Read-Only Hooks (can always be false)
+
 ```typescript
-const [pieces, , canSet] = usePieces() // canSet always false, no setter
-const [depth, , ] = usePieceDepth() // Read-only derived value
+const [pieces, , canSet] = usePieces(); // canSet always false, no setter
+const [depth, ,] = usePieceDepth(); // Read-only derived value
 ```
 
 #### 2. Read-Write Hooks (can depends on context)
+
 ```typescript
-const [name, setName, canSetName] = useKitName()
-const [camera, setCamera, canSetCamera] = useDesignAppCamera()
-const [isSelected, setIsSelected, canSetIsSelected] = useIsPieceSelected()
+const [name, setName, canSetName] = useKitName();
+const [camera, setCamera, canSetCamera] = useDesignAppCamera();
+const [isSelected, setIsSelected, canSetIsSelected] = useIsPieceSelected();
 ```
 
 #### 3. Nested Field Hooks (deep granularity)
+
 ```typescript
-const [xAxisY, setXAxisY, canSetXAxisY] = useFlatPiecePlaneXAxisY()
-const [originX, setOriginX, canSetOriginX] = usePiecePlaneOriginX()
+const [xAxisY, setXAxisY, canSetXAxisY] = useFlatPiecePlaneXAxisY();
+const [originX, setOriginX, canSetOriginX] = usePiecePlaneOriginX();
 ```
 
 ### Migration Strategy:
@@ -66,7 +79,7 @@ const [originX, setOriginX, canSetOriginX] = usePiecePlaneOriginX()
 2. Create `createGranularHook` utility for consistent hook creation
 3. Migrate each app's hooks systematically:
    - Sketchpad.tsx: Global and Kit hooks
-   - Design.tsx: Design app hooks  
+   - Design.tsx: Design app hooks
    - Type.tsx: Type app hooks
    - Kit.tsx: Kit app hooks
    - Quality.tsx: Quality app hooks
@@ -78,12 +91,14 @@ const [originX, setOriginX, canSetOriginX] = usePiecePlaneOriginX()
 # Changes
 
 ## Phase 1: Type Definitions (shared.ts)
+
 - Added `GranularHookResult<T> = [T, (value: T) => void, boolean]` for read-write hooks
 - Added `GranularHookNoSetResult<T> = [T, undefined, boolean]` for read-only hooks
 
 ## Phase 2: App Hooks Migration
 
 ### Design.tsx
+
 - `useDesignAppSelection()` → `[selection, setSelection, canSet]`
 - `useDesignAppFullscreen()` → `[fullscreen, setFullscreen, canSet]`
 - `useDesignAppCamera()` → `[camera, setCamera, canSet]`
@@ -101,6 +116,7 @@ const [originX, setOriginX, canSetOriginX] = usePiecePlaneOriginX()
 - `useDesignAppIsConnectionHovered()` → `[isHovered, undefined, canRead]` (read-only, uses ConnectionScope)
 
 ### Type.tsx
+
 - `useTypeAppSelection()` → `[selection, setSelection, canSet]`
 - `useTypeAppFullscreen()` → `[fullscreen, setFullscreen, canSet]`
 - `useTypeAppCamera()` → `[camera, setCamera, canSet]`
@@ -114,6 +130,7 @@ const [originX, setOriginX, canSetOriginX] = usePiecePlaneOriginX()
 - `useTypeAppSelectedModelTags()` → `[tags, setTags, canSet]`
 
 ### Kit.tsx
+
 - `useKitAppSelection()` → `[selection, setSelection, canSet]`
 - `useKitAppFullscreen()` → `[fullscreen, setFullscreen, canSet]`
 - `useKitAppOthers()` → `[others, undefined, canRead]` (read-only)
@@ -125,6 +142,7 @@ const [originX, setOriginX, canSetOriginX] = usePiecePlaneOriginX()
 - `useKitAppDesignColor()` → `[color, undefined, canRead]` (uses DesignScope)
 
 ### Quality.tsx
+
 - `useQualityAppFullscreen()` → `[fullscreen, setFullscreen, canSet]`
 - `useQualityAppSelection()` → `[selection, setSelection, canSet]`
 - `useQualityAppHover()` → `[hover, setHover, canSet]`
@@ -134,6 +152,7 @@ const [originX, setOriginX, canSetOriginX] = usePiecePlaneOriginX()
 - `useQualityAppWindowLayout()` → `[layout, setLayout, canSet]`
 
 ### Home (xstate-hooks.ts)
+
 - `useHomePanelVisibility()` → `[visibility, setVisibility, canSet]`
 - `useHomeSelection()` → `[selection, setSelection, canSet]`
 - `useHomeHover()` → `[hover, setHover, canSet]`
@@ -144,6 +163,7 @@ const [originX, setOriginX, canSetOriginX] = usePiecePlaneOriginX()
 ### Sketchpad.tsx (Field-Level Hooks)
 
 #### Connection Field Hooks (use ConnectionScope)
+
 - `useConnectionGap()` → `[gap, setGap, canSet]`
 - `useConnectionShift()` → `[shift, setShift, canSet]`
 - `useConnectionRise()` → `[rise, setRise, canSet]`
@@ -154,6 +174,7 @@ const [originX, setOriginX, canSetOriginX] = usePiecePlaneOriginX()
 - `useConnectionV()` → `[v, setV, canSet]`
 
 #### Piece Field Hooks (use PieceScope)
+
 - `usePieceCenterU()` → `[centerU, setCenterU, canSet]`
 - `usePieceCenterV()` → `[centerV, setCenterV, canSet]`
 - `usePieceScale()` → `[scale, setScale, canSet]`
@@ -166,11 +187,13 @@ const [originX, setOriginX, canSetOriginX] = usePiecePlaneOriginX()
 ## Phase 3: Component Refactoring
 
 ### ConnectionsSectionForm Refactoring (Design.tsx)
+
 Refactored `ConnectionsSectionForm` to use granular hooks instead of manual diff creation:
 
 **Before:**
+
 ```tsx
-const ConnectionsSectionForm: FC<{connections: Connection[]}> = ({ connections }) => {
+const ConnectionsSectionForm: FC<{ connections: Connection[] }> = ({ connections }) => {
   const { updateConnection } = useDesignAppCommands();
   // Manual diff creation
   const handleChange = (updatedConnection: Connection) => {
@@ -184,6 +207,7 @@ const ConnectionsSectionForm: FC<{connections: Connection[]}> = ({ connections }
 ```
 
 **After:**
+
 ```tsx
 const SingleConnectionInfo: FC = () => {
   const connection = useConnection() as Connection;
@@ -197,7 +221,7 @@ const SingleConnectionFields: FC = () => {
   // No manual diff creation - hooks handle it internally
 };
 
-const ConnectionsSectionForm: FC<{connections: Connection[]}> = ({ connections }) => {
+const ConnectionsSectionForm: FC<{ connections: Connection[] }> = ({ connections }) => {
   const isSingle = connections.length === 1;
   if (isSingle) {
     return (
@@ -212,6 +236,7 @@ const ConnectionsSectionForm: FC<{connections: Connection[]}> = ({ connections }
 ```
 
 **Key benefits:**
+
 1. No manual diff creation in components
 2. Granular subscriptions - only re-render when specific field changes
 3. Consistent origin tracking via hooks (origin is in hook implementation)
@@ -219,6 +244,7 @@ const ConnectionsSectionForm: FC<{connections: Connection[]}> = ({ connections }
 5. Multi-selection case explicitly separated
 
 ## Phase 4: Documentation
+
 - Updated AGENTS.md with new "Granular Hook Architecture" section
 - Documented all scope providers and usage patterns
 - Added examples for different hook types

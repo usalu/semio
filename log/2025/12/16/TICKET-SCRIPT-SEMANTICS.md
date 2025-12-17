@@ -2,8 +2,11 @@
 slug: TICKET-SCRIPT-SEMANTICS
 summary: Rename log workflow to ticket+iterations
 status: finished
-created: "2025-12-16T15:26:35.793Z"
-finished: "2025-12-16T15:59:31.839Z"
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T15:26:35.793Z"
+  finished: "2025-12-16T15:59:31.839Z"
+commit: "0000000000000000000000000000000000000000"
 iterations:
   - prompt: >-
       Improve log script semantics. Rename logs to tickets. create log becomes
@@ -13,11 +16,12 @@ iterations:
       iteration start or ticket finish is called) Force files to be a necessary
       parameter to call for iteration start and iteration finish. Update the
       file list on finish for the iteration and compute stats (lines).
-    date: "2025-12-16T15:26:35.793Z"
+    date:
+      started: "2025-12-16T15:26:35.793Z"
+      ended: "2025-12-16T15:59:24.768Z"
     model: gpt-5-2
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
     commit: c44e5e38193be007ca56cc649aa2f58238c1ec40
-    finished: "2025-12-16T15:59:24.768Z"
     files:
       updated:
         - path: scripts/log.ts
@@ -36,6 +40,11 @@ iterations:
           lines:
             added: 35
             removed: 0
+      created: []
+      removed: []
+    lines:
+      added: 851
+      removed: 315
 ---
 
 # Previously

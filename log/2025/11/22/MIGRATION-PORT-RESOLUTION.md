@@ -1,7 +1,14 @@
 ---
 slug: MIGRATION-PORT-RESOLUTION
 summary: Migration from 2025-11-22_MIGRATION-PORT-RESOLUTION.md
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.701Z"
+commit: "0000000000000000000000000000000000000000"
+iterations: []
 ---
+
 # Migration Script Port Resolution Issue
 
 ## Current Status

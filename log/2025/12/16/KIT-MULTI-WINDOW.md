@@ -1,6 +1,11 @@
 ---
 slug: KIT-MULTI-WINDOW
 summary: Extend kit app to multi-window with table and diagram views
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.971Z"
+commit: "0000000000000000000000000000000000000000"
 iterations:
   - prompt: >-
       The kit app should be extended to a multi-window app like the design app.
@@ -11,7 +16,8 @@ iterations:
       inside folders) and references (such as between a type and a design if
       there is a piece inside of the design with that type). Hover and selection
       of artefacts are again shared among the windows.
-    date: "2025-12-15T23:29:43.849Z"
+    date:
+      started: "2025-12-15T23:29:43.849Z"
     model: claude-opus-4-5
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
   - prompt: >-
@@ -19,7 +25,8 @@ iterations:
       diagram nodes with artifact icons. Layout is not a draggable force layout
       - add force slider to diagram settings. Migrate existing kit app tests and
       ensure they pass.
-    date: "2025-12-16T00:01:48.177Z"
+    date:
+      started: "2025-12-16T00:01:48.177Z"
     model: claude-opus-4-5
     commit: 06f516fab841773c499e5e7b9dbcdcfa63ad94cb
     files:
@@ -40,6 +47,11 @@ iterations:
           lines:
             added: 131
             removed: 5
+      created: []
+      removed: []
+    lines:
+      added: 524
+      removed: 20
 ---
 
 # Previously

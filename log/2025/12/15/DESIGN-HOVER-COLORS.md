@@ -1,12 +1,18 @@
 ---
 slug: DESIGN-HOVER-COLORS
 summary: Fix design piece hover/select colors
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.954Z"
+commit: "0000000000000000000000000000000000000000"
 iterations:
   - prompt: >-
       design app: - The piece nodes dont show hover color when hovering over the
       piece in diagram. - The piece geometry material is not showing hover or
       select color.
-    date: "2025-12-15T09:58:28.842Z"
+    date:
+      started: "2025-12-15T09:58:28.842Z"
     model: gpt-5-2
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
     commit: 67126961d64c89450f396abedd5d477670f1ad4d
@@ -29,7 +35,11 @@ iterations:
             added: 54
             removed: 20
       created:
-        - path: log/2025/12/15/DESIGN-HOVER-COLORS.md
+        - log/2025/12/15/DESIGN-HOVER-COLORS.md
+      removed: []
+    lines:
+      added: 216
+      removed: 80
 ---
 
 # Previously

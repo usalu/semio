@@ -665,6 +665,18 @@
           }
         }
       },
+      "footer": {
+        "label": {
+          "normal": "",
+          "beginner": ""
+        },
+        "feedback": {
+          "label": {
+            "normal": "Feedback",
+            "beginner": "Send feedback to help improve Semio"
+          }
+        }
+      },
       "settings": {
         "label": {
           "normal": "Sketchpad",
@@ -3505,6 +3517,226 @@
               "label": {
                 "normal": "Next",
                 "beginner": "Navigate to the next page"
+              }
+            }
+          }
+        },
+        "feedback": {
+          "label": {
+            "normal": "Feedback",
+            "beginner": "Send feedback to help improve Semio"
+          },
+          "title": {
+            "label": {
+              "normal": "Feedback",
+              "beginner": "Feedback"
+            }
+          },
+          "subtitle": {
+            "label": {
+              "normal": "Help us improve Semio by reporting bugs or sharing ideas.",
+              "beginner": "Help us improve Semio by reporting bugs or sharing ideas."
+            }
+          },
+          "form": {
+            "kind": {
+              "label": {
+                "normal": "Type",
+                "beginner": "Select bug report or feature idea"
+              }
+            },
+            "title": {
+              "label": {
+                "normal": "Title",
+                "beginner": "A brief summary of your feedback"
+              }
+            },
+            "titlePlaceholder": {
+              "label": {
+                "normal": "Enter a brief title...",
+                "beginner": "Enter a brief title..."
+              }
+            },
+            "description": {
+              "label": {
+                "normal": "Description",
+                "beginner": "Detailed description of the issue or idea"
+              }
+            },
+            "bugDescriptionPlaceholder": {
+              "label": {
+                "normal": "Describe what happened...",
+                "beginner": "Describe what happened..."
+              }
+            },
+            "ideaDescriptionPlaceholder": {
+              "label": {
+                "normal": "Describe your idea...",
+                "beginner": "Describe your idea..."
+              }
+            },
+            "app": {
+              "label": {
+                "normal": "App",
+                "beginner": "Which app did the bug occur in?"
+              }
+            },
+            "appPlaceholder": {
+              "label": {
+                "normal": "Select app...",
+                "beginner": "Select app..."
+              }
+            },
+            "name": {
+              "label": {
+                "normal": "Name",
+                "beginner": "Your name (optional)"
+              }
+            },
+            "namePlaceholder": {
+              "label": {
+                "normal": "Your name (optional)",
+                "beginner": "Your name (optional)"
+              }
+            },
+            "email": {
+              "label": {
+                "normal": "Email",
+                "beginner": "Your email address (optional)"
+              }
+            },
+            "emailPlaceholder": {
+              "label": {
+                "normal": "your@email.com (optional)",
+                "beginner": "your@email.com (optional)"
+              }
+            },
+            "submit": {
+              "label": {
+                "normal": "Submit Feedback",
+                "beginner": "Submit your feedback"
+              }
+            },
+            "submitting": {
+              "label": {
+                "normal": "Submitting...",
+                "beginner": "Submitting..."
+              }
+            }
+          },
+          "kind": {
+            "bug": {
+              "label": {
+                "normal": "Bug Report",
+                "beginner": "Report a problem or error"
+              }
+            },
+            "idea": {
+              "label": {
+                "normal": "Feature Idea",
+                "beginner": "Suggest a new feature or improvement"
+              }
+            }
+          },
+          "appOption": {
+            "home": {
+              "label": {
+                "normal": "Home",
+                "beginner": "Home"
+              }
+            },
+            "kit": {
+              "label": {
+                "normal": "Kit",
+                "beginner": "Kit"
+              }
+            },
+            "design": {
+              "label": {
+                "normal": "Design",
+                "beginner": "Design"
+              }
+            },
+            "type": {
+              "label": {
+                "normal": "Type",
+                "beginner": "Type"
+              }
+            },
+            "quality": {
+              "label": {
+                "normal": "Quality",
+                "beginner": "Quality"
+              }
+            },
+            "docs": {
+              "label": {
+                "normal": "Docs",
+                "beginner": "Docs"
+              }
+            },
+            "feedback": {
+              "label": {
+                "normal": "Feedback",
+                "beginner": "Feedback"
+              }
+            }
+          },
+          "optional": {
+            "label": {
+              "normal": "Optional contact information",
+              "beginner": "Optional contact information"
+            }
+          },
+          "success": {
+            "thankYou": {
+              "label": {
+                "normal": "Thank You!",
+                "beginner": "Thank You!"
+              }
+            },
+            "message": {
+              "label": {
+                "normal": "Your feedback has been received. We appreciate your contribution!",
+                "beginner": "Your feedback has been received. We appreciate your contribution!"
+              }
+            },
+            "sendAnother": {
+              "label": {
+                "normal": "Send Another",
+                "beginner": "Submit another feedback"
+              }
+            },
+            "goHome": {
+              "label": {
+                "normal": "Go Home",
+                "beginner": "Return to home page"
+              }
+            }
+          },
+          "error": {
+            "titleRequired": {
+              "label": {
+                "normal": "Title is required",
+                "beginner": "Title is required"
+              }
+            },
+            "descriptionRequired": {
+              "label": {
+                "normal": "Description is required",
+                "beginner": "Description is required"
+              }
+            },
+            "appRequired": {
+              "label": {
+                "normal": "Please select which app the bug occurred in",
+                "beginner": "Please select which app the bug occurred in"
+              }
+            },
+            "submitFailed": {
+              "label": {
+                "normal": "Failed to submit feedback. Please try again.",
+                "beginner": "Failed to submit feedback. Please try again."
               }
             }
           }

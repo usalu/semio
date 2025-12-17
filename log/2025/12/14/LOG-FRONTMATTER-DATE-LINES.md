@@ -1,12 +1,18 @@
 ---
 slug: LOG-FRONTMATTER-DATE-LINES
 summary: Reshape log frontmatter and migrate logs
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.935Z"
+commit: "0000000000000000000000000000000000000000"
 iterations:
   - prompt: >-
       Remove stats nesting, add nesting to lines {added;removed}, add nesting to
       date {created,updated}, rename base to commit, and migrate all existing
       logs to the new format.
-    date: "2025-12-14T22:02:37.644Z"
+    date:
+      started: "2025-12-14T22:02:37.644Z"
     model: gpt-5-2
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
     commit: 7765b633fe739bc29cd811ac7ec884e782e2e945
@@ -644,6 +650,11 @@ iterations:
           lines:
             added: 11
             removed: 2
+      created: []
+      removed: []
+    lines:
+      added: 1738
+      removed: 316
 ---
 
 # Previously

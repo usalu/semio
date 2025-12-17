@@ -1,7 +1,14 @@
 ---
 slug: KIT-IMPORT-EXPORT
 summary: Migration from 2025-11-21_KIT-IMPORT-EXPORT.md
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.684Z"
+commit: "0000000000000000000000000000000000000000"
+iterations: []
 ---
+
 # Kit Import/Export Implementation
 
 ## Plan
@@ -16,6 +23,7 @@ Extract the import/export logic from kit commands and make it reusable:
 ### 2. Implementation Details
 
 #### Import
+
 1. Fetch the URL (could be remote HTTP or local file://)
 2. Unzip the archive
 3. Read `.semio/kit.db` SQLite file
@@ -24,6 +32,7 @@ Extract the import/export logic from kit commands and make it reusable:
 6. Return `{ kit, files }`
 
 #### Export
+
 1. Convert Kit JSON to SQLite schema
 2. Create `.semio/kit.db` in memory
 3. Add all files to zip
@@ -33,6 +42,7 @@ Extract the import/export logic from kit commands and make it reusable:
 ### 3. Test Strategy
 
 Use `examples/metabolism` as test case:
+
 1. Load metabolism kit JSON from `@semio/assets`
 2. Load pure files from `examples/metabolism` folder (excluding `.semio`)
 3. Export to zip blob
@@ -79,6 +89,7 @@ The implementation uses a GUID-based schema instead of the legacy integer-based 
 ### Test Results
 
 The roundtrip test successfully:
+
 - Exports the metabolism kit to a zip blob
 - Imports it back from the blob
 - Verifies kit metadata matches

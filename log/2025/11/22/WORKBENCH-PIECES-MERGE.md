@@ -1,6 +1,12 @@
 ---
 slug: WORKBENCH-PIECES-MERGE
 summary: Merge design app workbench sections into single pieces section
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.705Z"
+commit: "0000000000000000000000000000000000000000"
+iterations: []
 ---
 
 # Merge Design App Workbench Sections

@@ -1,6 +1,12 @@
 ---
 slug: YJS-UNATTACHED-MAP
 summary: Fix Y.js Invalid access warnings when importing kits
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.792Z"
+commit: "0000000000000000000000000000000000000000"
+iterations: []
 ---
 
 # Previously

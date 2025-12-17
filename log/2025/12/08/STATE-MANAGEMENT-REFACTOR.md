@@ -1,6 +1,12 @@
 ---
 slug: STATE-MANAGEMENT-REFACTOR
 summary: Complete state management refactor with triadic hooks pattern
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.890Z"
+commit: "0000000000000000000000000000000000000000"
+iterations: []
 ---
 
 # Previously

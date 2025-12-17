@@ -1,11 +1,94 @@
----
-slug: PROMPTS
-summary: ''
----
 # Prompt history
 
-A new app should be added: Feedback
+The diagram of the kit app should only show the rows of the table. This means that e.g. if a design in the able is collapsed then all child design node in the diagram are hidden. Same for types. If a folder is collapsed then all the items of the folder are not present in the diagram. In the end every visible row equals one node.
+
+- Not only top level rows should be displayed as node but all of the rows.
+- Many nodes are missing (folders, authors,  tags, etc)
+- When dragging nothing happens. Not even Machine logs.
+- Edges are still wrong and not around the node
+Extend kit app test to test all features (all nodes are visible, etc)
+Use playwright mcp.
+
+log.ts and all logs should change:
+Every ticket should have
+{slug, summary, status, author, date{created,finished}, commit, model,iterations{prompt,date,model,commit,files{updated[PATH{lines{added,removed}}],created[PATH],removed[PATH]},lines{added,removed}}}
+, files{updated[PATH{lines{added,removed}}],created[PATH],removed[PATH]}, lines{added,removed}
+E.g.
+---
+slug: TICKET-FILES-ONLY
+summary: Restrict ticket files and aggregate stats
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: '2025-12-16T16:09:53.578Z'
+  finished: '2025-12-16T16:25:36.733Z'
+commit: c44e5e38193be007ca56cc649aa2f58238c1ec40
+model: claude-opus-4-5
+iterations:
+  - prompt: >-
+      Only allow files to be created, updated and deleted files. Create ticket
+      shouldnt create an iteration. Iteration need files. Add author and date to
+      ticket from git. Once finished, combine all the files from all iterations
+      and add it as extra field to the ticket. Use git one last time to compute
+      the lines.
+    date:
+      started: '2025-12-16T16:09:53.578Z'
+      ended: '2025-12-16T16:25:23.282Z'
+    model: gpt-5.2-codex
+    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+    commit: c44e5e38193be007ca56cc649aa2f58238c1ec40
+    files:
+      updated:
+        - scripts/log.ts
+          lines:
+            added: 701
+            removed: 253
+        - README.md:
+          lines:
+            added: 18
+            removed: 9
+        - AGENTS.md:
+          lines:
+            added: 113
+            removed: 59
+      created: []
+      removed: []
+    lines:
+      added: 888
+      removed: 321
+files:
+  updated:
+    - AGENTS.md:
+      lines:
+        added: 72
+        removed: 5
+    - README.md:
+      lines:
+        added: 95
+        removed: 10
+    - scripts/log.ts:
+      lines:
+        added: 701
+        removed: 253
+  created: []
+  removed: []
+lines:
+  added: 888
+  removed: 321
+---
+Author, commit, lines and date should be taken from git and is forbidden to set manually.
+Files and model must be set manually.
+When the ticket is finished, the files and lines should be computed from git.
+Write a migration script all existing logs to new schema. The log script should be clean and only work for the new schema. No legacy api, etc.
+
+A new app should be created: Feedback
 The goal of the feedback app is to make contributions (mostly bug reports) as easy as possible.
+It is a single page form.
+Login is not required. On submission a request is sent a server and a thank you message is shown with options to send another feedback or go back to the home page.
+The form has a kind [bug or idea] field and depending on the kind other fields are shown.
+The bug report has a title, a description how it happened and a dropdown in which app the bug happened [home, kit, design, type, quality, docs, feedback].
+The feature idea has a title and a description what it is about.
+All forms have an optional name, an optional field for email and a submit button.
 
 The kit app is not finished.
 - The icons should be the same avatars as the ones in the table window. The edges of the node have somehow a bigger circle than the circle of the nodes. 

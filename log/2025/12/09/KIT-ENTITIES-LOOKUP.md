@@ -1,6 +1,12 @@
 ---
 slug: KIT-ENTITIES-LOOKUP
 summary: Export individual kit entities
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.897Z"
+commit: "0000000000000000000000000000000000000000"
+iterations: []
 ---
 
 # Previously

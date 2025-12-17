@@ -1,11 +1,17 @@
 ---
 slug: DOC-RESTRUCTURE-FOUR-LAYER
 summary: Restructure documentation to four-layer system
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.955Z"
+commit: "0000000000000000000000000000000000000000"
 iterations:
   - prompt: >-
       Migrate all existing docs and code to the new structure. Update outdated
       docs.
-    date: "2025-12-15T17:11:13.450Z"
+    date:
+      started: "2025-12-15T17:11:13.450Z"
     model: claude-opus-4-5
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
     commit: 2fb81ef29354981c1b9625769dba4a06360a4aef
@@ -15,6 +21,11 @@ iterations:
           lines:
             added: 372
             removed: 539
+      created: []
+      removed: []
+    lines:
+      added: 372
+      removed: 539
 ---
 
 # Previously

@@ -1,6 +1,12 @@
 ---
 slug: CSHARP-SCHEMA-SYNC
 summary: Sync C# schema with TypeScript semio.ts
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.832Z"
+commit: "0000000000000000000000000000000000000000"
+iterations: []
 ---
 
 # Previously

@@ -1,6 +1,12 @@
 ---
 slug: INFINITE-LOOP-NAVBAR-FOOTER
 summary: Fix infinite loop and missing navbar/footer in Design/Type apps after import
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.843Z"
+commit: "0000000000000000000000000000000000000000"
+iterations: []
 ---
 
 # Previously

@@ -1,7 +1,14 @@
 ---
 slug: FLATTEN-DESIGN-DIAGNOSIS
 summary: Migration from 2025-11-19_FLATTEN-DESIGN-DIAGNOSIS.md
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.677Z"
+commit: "0000000000000000000000000000000000000000"
+iterations: []
 ---
+
 # Flatten Design Diagnosis
 
 ## Date

@@ -3,12 +3,18 @@ slug: KIT-D3-FORCE-DIAGRAM
 summary: >-
   Implement d3-force layout for kit diagram with configurable simulation
   parameters
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.969Z"
+commit: "0000000000000000000000000000000000000000"
 iterations:
   - prompt: >-
       PLAN: The diagram in kit app should be a d3-force layout. The nodes should
       be a circle with the icons. Add the parameters for the simulation to the
       settings of the kit app.
-    date: "2025-12-16T12:33:44.245Z"
+    date:
+      started: "2025-12-16T12:33:44.245Z"
     model: claude-opus-4-5
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
     commit: c44e5e38193be007ca56cc649aa2f58238c1ec40
@@ -34,18 +40,25 @@ iterations:
           lines:
             added: 30
             removed: 0
+      created: []
+      removed: []
+    lines:
+      added: 366
+      removed: 62
   - prompt: >-
       Fix flickering and nodes disappearing: exclusively use force layout with
       random initial positions, remove fitView prop, call fitView after
       simulation settles, add test for node presence
-    date: "2025-12-16T13:13:53.032Z"
+    date:
+      started: "2025-12-16T13:13:53.032Z"
     model: claude-opus-4-5
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
   - prompt: >-
       Implement floating edges: add useInternalNode import, update FloatingEdge
       to use useInternalNode with positionAbsolute, change all edges to use
       floating type
-    date: "2025-12-16T13:27:05.937Z"
+    date:
+      started: "2025-12-16T13:27:05.937Z"
     model: claude-opus-4-5
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
   - prompt: >-
@@ -53,7 +66,8 @@ iterations:
       centerStrength, reduce chargeStrength; 2) Dragging makes diagram disappear
       - remove sim.alphaTarget(0.3).restart() on drag start; 3) Hovering not
       shown - add hover state visual feedback with ring styling
-    date: "2025-12-16T13:47:12.353Z"
+    date:
+      started: "2025-12-16T13:47:12.353Z"
     model: claude-opus-4-5
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 ---

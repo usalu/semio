@@ -1,11 +1,17 @@
 ---
 slug: DOC-SKETCHPAD-APPS
 summary: Document Sketchpad apps and core mechanisms
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.956Z"
+commit: "0000000000000000000000000000000000000000"
 iterations:
   - prompt: >-
       The dev docs are significantly incomplete with the implementation. All
       apps in sketchpad are missing. The core mechanisms are not explained etc.
-    date: "2025-12-15T17:24:42.224Z"
+    date:
+      started: "2025-12-15T17:24:42.224Z"
     model: claude-opus-4-5
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
     commit: 2fb81ef29354981c1b9625769dba4a06360a4aef
@@ -15,6 +21,11 @@ iterations:
           lines:
             added: 2279
             removed: 340
+      created: []
+      removed: []
+    lines:
+      added: 2279
+      removed: 340
 ---
 
 # Previously
@@ -51,20 +62,20 @@ The AGENTS.md documentation had architecture-level documentation for the Sketchp
 
 - KitAppState: panelVisibility, selection (9 artifact types), hover, filterSearch, expandedRows, sorting
 - Selection Types: types, designs, qualities, interfaces, tags, concepts, files, folders, authors
-- Events: KIT.TOGGLE*PANEL, KIT.SELECT*_/DESELECT\__, KIT.SET*HOVER, KIT.SET_FILTER_SEARCH, KIT.CREATE*\*
+- Events: KIT.TOGGLE*PANEL, KIT.SELECT*\_/DESELECT\_\_, KIT.SET*HOVER, KIT.SET_FILTER_SEARCH, KIT.CREATE*\*
 - Hooks: useKitApp(), useKitAppSelection(), useKitAppHover(), useKitAppFilterSearch()
 
 **Type App (Type.tsx):**
 
 - TypeAppState: panelVisibility, activeTool, selection (ports/models), hover, camera, focusedPortGuid, selectedModelGuid
-- Events: TYPE.TOGGLE*PANEL, TYPE.SET_TOOL, TYPE.SELECT*_/DESELECT\__, TYPE.SET_HOVER, TYPE.SET_CAMERA
+- Events: TYPE.TOGGLE*PANEL, TYPE.SET_TOOL, TYPE.SELECT*\_/DESELECT\_\_, TYPE.SET_HOVER, TYPE.SET_CAMERA
 - Hooks: useTypeApp(), useTypeAppSelection(), useTypeAppHover(), useTypeAppCamera(), useTypeAppActiveTool()
 
 **Design App (Design.tsx):**
 
 - DesignAppState: panelVisibility, activeTool, selection (pieces/connections/port), hover, camera, diagram state
 - Commands: semio.designApp.selectAll, semio.designApp.deselectAll, semio.designApp.deleteSelected
-- Events: DESIGN.TOGGLE*PANEL, DESIGN.SET_TOOL, DESIGN.SELECT*_/DESELECT\__, DESIGN.DELETE_SELECTED
+- Events: DESIGN.TOGGLE*PANEL, DESIGN.SET_TOOL, DESIGN.SELECT*\_/DESELECT\_\_, DESIGN.DELETE_SELECTED
 - Hooks: useDesignApp(), useDesignAppSelection(), useDesignAppHover(), useDesignAppCamera(), useDesignAppActiveTool()
 
 **Quality App (Quality.tsx):**

@@ -3,6 +3,12 @@ slug: MODEL-LOADING-FIX
 summary: >-
   Fix model loading in Type app by matching imported file blobs to existing kit
   file definitions
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.823Z"
+commit: "0000000000000000000000000000000000000000"
+iterations: []
 ---
 
 # Previously

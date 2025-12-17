@@ -1,16 +1,24 @@
 ---
 slug: KIT-DIFF-TEST
 summary: Migration from 2025-11-21_KIT-DIFF-TEST.md
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.682Z"
+commit: "0000000000000000000000000000000000000000"
+iterations: []
 ---
+
 # Kit Diff Test
 
-## Status  
+## Status
 
 ✅ **COMPLETE** - All implementation finished, types are correct, ready to use
 
 ## Summary
 
 All kit diff functions are fully implemented in `semio.ts`:
+
 - ✅ `getKitDiff(before, after)` - Computes comprehensive diff
 - ✅ `inverseKitDiff(original, appliedDiff)` - Computes inverse for undo
 - ✅ `applyKitDiff(base, diff)` - Applies diff with collection support
@@ -53,6 +61,7 @@ Test in `semio.test.ts` with single test containing 4 expects for deep equality 
 ### Generic Collection Diff Helpers
 
 Created reusable helper functions:
+
 - `getCollectionDiff<T, D>()` - Generic diff computation
 - `inverseCollectionDiff<T, D>()` - Generic inverse diff
 - `applyCollectionDiff<T, D>()` - Generic diff application
@@ -71,6 +80,7 @@ Vitest configuration issue in `js/js/` prevents test execution. All test files f
 ## Verification
 
 The implementation is complete and type-safe:
+
 - ✅ No TypeScript errors
 - ✅ All functions properly typed
 - ✅ Test file properly structured with single test and 4 expectations

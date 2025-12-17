@@ -1,6 +1,12 @@
 ---
 slug: KIT-PERFORMANCE-FIX
 summary: Fix Kit app performance after importing large kits
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.769Z"
+commit: "0000000000000000000000000000000000000000"
+iterations: []
 ---
 
 # Previously

@@ -5,134 +5,127 @@ import { dirname, join } from "path";
 const matter = require("gray-matter");
 
 //#region Types
-interface LogLines {
+interface Lines {
   added: number;
   removed: number;
 }
 
-interface FileWithLines {
+interface FileEntry {
   path: string;
-  lines?: LogLines;
+  lines: Lines;
 }
 
-interface IterationFiles {
-  updated?: FileWithLines[];
-  removed?: FileWithLines[];
-  created?: FileWithLines[];
+interface Files {
+  updated: FileEntry[];
+  created: FileEntry[];
+  removed: FileEntry[];
 }
 
-interface LogIteration {
+interface IterationDate {
+  started: string;
+  ended?: string;
+}
+
+interface Iteration {
   prompt: string;
-  date: string;
-  finished?: string;
+  date: IterationDate;
   model: string;
-  author?: string;
+  author: string;
   commit?: string;
-  files?: IterationFiles;
+  files: Files;
+  lines: Lines;
 }
 
-interface LogFrontmatter {
+interface TicketDate {
+  created: string;
+  finished?: string;
+}
+
+interface TicketFrontmatter {
   slug: string;
   summary: string;
-  status?: "open" | "finished";
-  author?: string;
-  created?: string;
-  base?: string;
-  finished?: string;
-  files?: { updated?: string[]; created?: string[]; removed?: string[] };
-  lines?: LogLines;
-  iterations?: LogIteration[];
+  status: "open" | "finished";
+  author: string;
+  date: TicketDate;
+  commit?: string;
+  model?: string;
+  iterations: Iteration[];
+  files?: Files;
+  lines?: Lines;
 }
 
-interface Log {
-  frontmatter: LogFrontmatter;
+interface Ticket {
+  frontmatter: TicketFrontmatter;
   content: string;
   path: string;
 }
 
-interface LogCreateInput {
+interface TicketCreateInput {
   slug: string;
   summary: string;
   content?: string;
-  date?: Date;
-  author?: string;
 }
 
-interface LogUpdateInput {
-  summary?: string;
-  content?: string;
-  model: string;
+interface IterationStartInput {
   prompt: string;
+  model: string;
   files: { updated?: string[]; created?: string[]; removed?: string[] };
 }
 
-interface LogListOptions {
+interface IterationFinishInput {
+  files: { updated?: string[]; created?: string[]; removed?: string[] };
+}
+
+interface ListOptions {
   year?: number;
   month?: number;
   day?: number;
   slug?: string;
 }
 
-interface LogSearchOptions extends LogListOptions {
+interface SearchOptions extends ListOptions {
   query?: string;
   limit?: number;
 }
-
-interface LegacyLogInput {
-  prompt: string;
-  date: string;
-  model?: string;
-}
-
-interface LegacyLogFiles {
-  read?: string[];
-  updated?: string[];
-  removed?: string[];
-  created?: string[];
-}
-
-interface LegacyLogFrontmatter {
-  slug: string;
-  author?: string;
-  summary: string;
-  model?: string;
-  input?: LegacyLogInput[];
-  commit?: string;
-  files?: LegacyLogFiles;
-  lines?: LogLines;
-  prompts?: string[];
-  date?: string | { created?: string; updated?: string };
-  affectedFiles?: string[];
-  stats?: { base?: string; addedLines?: number; removedLines?: number; affectedFiles?: string[] };
-}
 //#endregion
 
-//#region Ticket API Aliases
-export const createTicket = createLog;
-export const readTicket = readLog;
-export const startTicketIteration = updateLog;
-export const finishTicketIteration = finishIteration;
-export const deleteTicket = deleteLog;
-export const listTickets = listLogs;
-export const searchTickets = searchLogs;
+//#region Exports
+export type {
+  Lines,
+  FileEntry,
+  Files,
+  IterationDate,
+  Iteration,
+  TicketDate,
+  TicketFrontmatter,
+  Ticket,
+  TicketCreateInput,
+  IterationStartInput,
+  IterationFinishInput,
+  ListOptions,
+  SearchOptions,
+};
+
+export {
+  createTicket,
+  readTicket,
+  startIteration,
+  finishIteration,
+  finishTicket,
+  deleteTicket,
+  listTickets,
+  searchTickets,
+};
 //#endregion
 
 //#region Configuration
 const LOG_ROOT = join(process.cwd(), "log");
 
-function sanitizeForMatter(value: any): any {
-  if (value === undefined) return undefined;
-  if (value === null) return null;
-  if (Array.isArray(value)) return value.map((v) => sanitizeForMatter(v)).filter((v) => v !== undefined);
-  if (typeof value === "object") {
-    const out: any = {};
-    for (const [key, v] of Object.entries(value)) {
-      const sanitized = sanitizeForMatter(v);
-      if (sanitized !== undefined) out[key] = sanitized;
-    }
-    return out;
-  }
-  return value;
+export enum Model {
+  CLAUDE_SONNET_4_5 = "claude-sonnet-4-5",
+  CLAUDE_OPUS_4_5 = "claude-opus-4-5",
+  GPT_5_1_CODEX_MAX = "gpt-5.1-codex-max",
+  GPT_5_2_CODEX = "gpt-5.2-codex",
 }
 
 function getGitConfig(key: string): string {
@@ -143,7 +136,7 @@ function getGitConfig(key: string): string {
   }
 }
 
-function getDefaultAuthor(): string {
+function getGitAuthor(): string {
   const name = getGitConfig("user.name");
   const email = getGitConfig("user.email");
   if (name && email) return `${name} <${email}>`;
@@ -152,26 +145,19 @@ function getDefaultAuthor(): string {
   return "Unknown";
 }
 
-export enum Model {
-  CLAUDE_SONNET_4_5 = "claude-sonnet-4.5",
-  CLAUDE_OPUS_4_5 = "claude-opus-4.5",
-  GPT_5_1_CODEX_MAX = "gpt-5.1-codex-max",
-  GPT_5_2_CODEX = "gpt-5.2-codex",
-}
-
 function getGitHead(): string {
   return execSync("git rev-parse HEAD", { encoding: "utf-8" }).trim();
 }
 //#endregion
 
 //#region Path Utilities
-function getLogPath(year: number, month: number, day: number, slug: string): string {
+function getTicketPath(year: number, month: number, day: number, slug: string): string {
   const monthStr = month.toString().padStart(2, "0");
   const dayStr = day.toString().padStart(2, "0");
   return join(LOG_ROOT, year.toString(), monthStr, dayStr, `${slug}.md`);
 }
 
-function parseLogPath(path: string): { year: number; month: number; day: number; slug: string } | null {
+function parseTicketPath(path: string): { year: number; month: number; day: number; slug: string } | null {
   const relativePath = path.replace(LOG_ROOT, "").replace(/\\/g, "/");
   const match = relativePath.match(/^\/(\d{4})\/(\d{2})\/(\d{2})\/(.+)\.md$/);
   if (!match) return null;
@@ -185,446 +171,13 @@ function parseLogPath(path: string): { year: number; month: number; day: number;
 
 function ensureDirectoryExists(filePath: string): void {
   const dir = dirname(filePath);
-  if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true });
-  }
-}
-//#endregion
-
-//#region Frontmatter Utilities
-function normalizeLogFrontmatter(frontmatter: any, context?: { slug?: string; createdFromPath?: string }): LogFrontmatter {
-  const now = new Date().toISOString();
-  const slug = frontmatter?.slug || context?.slug || "UNKNOWN";
-  const summary = frontmatter?.summary || "";
-
-  if (Array.isArray(frontmatter?.iterations)) {
-    return {
-      slug,
-      summary,
-      status: frontmatter?.status || "open",
-      created: frontmatter?.created || context?.createdFromPath || frontmatter.iterations[0]?.date || now,
-      author: frontmatter?.author,
-      base: frontmatter?.base,
-      finished: frontmatter?.finished,
-      files: frontmatter?.files,
-      lines: frontmatter?.lines,
-      iterations: frontmatter.iterations,
-    };
-  }
-
-  if (frontmatter?.status || frontmatter?.created || frontmatter?.base || frontmatter?.author) {
-    return {
-      slug,
-      summary,
-      status: frontmatter?.status || "open",
-      created: frontmatter?.created || context?.createdFromPath || now,
-      author: frontmatter?.author,
-      base: frontmatter?.base,
-      finished: frontmatter?.finished,
-      files: frontmatter?.files,
-      lines: frontmatter?.lines,
-      iterations: undefined,
-    };
-  }
-
-  const author = frontmatter?.author || "Unknown";
-  const model = frontmatter?.model || "unknown";
-  const commit = frontmatter?.commit || frontmatter?.stats?.base;
-  const lines = frontmatter?.lines || (frontmatter?.stats ? { added: frontmatter?.stats?.addedLines || 0, removed: frontmatter?.stats?.removedLines || 0 } : undefined);
-
-  let legacyInput: LegacyLogInput[] = frontmatter?.input || [];
-  if (legacyInput.length === 0 && frontmatter?.prompts?.length > 0) {
-    const dateCreated = typeof frontmatter?.date === "string" ? frontmatter.date : frontmatter?.date?.created || context?.createdFromPath || now;
-    legacyInput = frontmatter.prompts.map((prompt: string, index: number) => ({
-      prompt,
-      date: index === 0 ? dateCreated : frontmatter?.date?.updated || dateCreated,
-      model: model,
-    }));
-  }
-
-  let legacyFiles: LegacyLogFiles = frontmatter?.files || {};
-  if (!legacyFiles.read && !legacyFiles.updated && !legacyFiles.removed && !legacyFiles.created) {
-    const affectedFiles = frontmatter?.affectedFiles || frontmatter?.stats?.affectedFiles || [];
-    if (affectedFiles.length > 0) {
-      legacyFiles = { updated: affectedFiles };
-    }
-  }
-
-  const iterations: LogIteration[] = legacyInput.map((input, index) => {
-    const isLast = index === legacyInput.length - 1;
-    const iteration: LogIteration = {
-      prompt: input.prompt,
-      date: input.date,
-      model: input.model || model,
-      author: index === 0 ? author : undefined,
-    };
-
-    if (isLast && commit) {
-      iteration.commit = commit;
-    }
-
-    if (isLast && legacyFiles) {
-      const iterationFiles: IterationFiles = {};
-      if (legacyFiles.updated?.length) {
-        const perFileLines = lines && legacyFiles.updated.length > 0 ? {
-          added: Math.round(lines.added / legacyFiles.updated.length),
-          removed: Math.round(lines.removed / legacyFiles.updated.length),
-        } : undefined;
-        iterationFiles.updated = legacyFiles.updated.map((path) => ({
-          path,
-          lines: perFileLines,
-        }));
-      }
-      if (legacyFiles.removed?.length) {
-        iterationFiles.removed = legacyFiles.removed.map((path) => ({ path }));
-      }
-      if (legacyFiles.created?.length) {
-        iterationFiles.created = legacyFiles.created.map((path) => ({ path }));
-      }
-      if (Object.keys(iterationFiles).length > 0) {
-        iteration.files = iterationFiles;
-      }
-    }
-
-    return iteration;
-  });
-
-  return {
-    slug,
-    summary,
-    status: "open",
-    created: context?.createdFromPath || now,
-    iterations: iterations.length > 0 ? iterations : undefined,
-  };
-}
-
-function getLatestIterationDate(frontmatter: LogFrontmatter): string {
-  if (!frontmatter.iterations || frontmatter.iterations.length === 0) {
-    return new Date().toISOString();
-  }
-  return frontmatter.iterations[frontmatter.iterations.length - 1].date;
-}
-
-function getFirstIterationDate(frontmatter: LogFrontmatter): string {
-  if (!frontmatter.iterations || frontmatter.iterations.length === 0) {
-    return new Date().toISOString();
-  }
-  return frontmatter.iterations[0].date;
-}
-
-function getLatestIteration(frontmatter: LogFrontmatter): LogIteration | undefined {
-  if (!frontmatter.iterations || frontmatter.iterations.length === 0) {
-    return undefined;
-  }
-  return frontmatter.iterations[frontmatter.iterations.length - 1];
-}
-
-function getIsIterationFinished(iteration: LogIteration): boolean {
-  return Boolean(iteration.commit || iteration.finished);
-}
-
-function requireFiles(files: { updated?: string[]; created?: string[]; removed?: string[] }): void {
-  const hasAny = Boolean((files.updated && files.updated.length) || (files.created && files.created.length) || (files.removed && files.removed.length));
-  if (!hasAny) throw new Error("Missing required file flags: provide at least one of --file=, --file-created=, --file-removed=");
-}
-
-function buildIterationFilesWithoutLines(files: { updated?: string[]; created?: string[]; removed?: string[] }): IterationFiles | undefined {
-  const iterationFiles: IterationFiles = {};
-  if (files.updated?.length) iterationFiles.updated = files.updated.map((path) => ({ path }));
-  if (files.created?.length) iterationFiles.created = files.created.map((path) => ({ path }));
-  if (files.removed?.length) iterationFiles.removed = files.removed.map((path) => ({ path }));
-  return Object.keys(iterationFiles).length > 0 ? iterationFiles : undefined;
-}
-//#endregion
-
-//#region CRUD Operations
-export function createLog(input: LogCreateInput): Log {
-  const date = input.date || new Date();
-  const year = date.getFullYear();
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-  const slug = input.slug.toUpperCase();
-  const logPath = getLogPath(year, month, day, slug);
-  if (existsSync(logPath)) {
-    throw new Error(`Log already exists: ${logPath}`);
-  }
-  const now = date.toISOString();
-  const frontmatter: LogFrontmatter = {
-    slug,
-    summary: input.summary,
-    status: "open",
-    author: input.author || getDefaultAuthor(),
-    created: now,
-    base: getGitHead(),
-  };
-  const content = input.content || "# Previously\n\n# Plan\n\n# Changes\n";
-  const fileContent = matter.stringify(content, sanitizeForMatter(frontmatter));
-  ensureDirectoryExists(logPath);
-  writeFileSync(logPath, fileContent, "utf-8");
-  return { frontmatter, content, path: logPath };
-}
-
-export function readLog(year: number, month: number, day: number, slug: string): Log {
-  const logPath = getLogPath(year, month, day, slug);
-  if (!existsSync(logPath)) {
-    throw new Error(`Log not found: ${logPath}`);
-  }
-  const fileContent = readFileSync(logPath, "utf-8");
-  const parsed = matter(fileContent);
-  return {
-    frontmatter: normalizeLogFrontmatter(parsed.data as LogFrontmatter, { slug }),
-    content: parsed.content,
-    path: logPath,
-  };
-}
-
-export function updateLog(year: number, month: number, day: number, slug: string, update: LogUpdateInput): Log {
-  const log = readLog(year, month, day, slug);
-  const now = new Date().toISOString();
-  requireFiles(update.files);
-  const iterations = log.frontmatter.iterations || [];
-  const latest = iterations.length ? iterations[iterations.length - 1] : undefined;
-  if (latest && !getIsIterationFinished(latest)) {
-    throw new Error(`Cannot start a new iteration while the latest iteration is unfinished (date: ${latest.date})`);
-  }
-
-  const newIteration: LogIteration = {
-    prompt: update.prompt,
-    date: now,
-    model: update.model,
-    files: buildIterationFilesWithoutLines(update.files),
-  };
-
-  const newIterations = [...iterations, newIteration];
-
-  const newFrontmatter: LogFrontmatter = {
-    ...log.frontmatter,
-    summary: update.summary ?? log.frontmatter.summary,
-    status: log.frontmatter.status || "open",
-    author: log.frontmatter.author || getDefaultAuthor(),
-    created: log.frontmatter.created || now,
-    base: log.frontmatter.base || getGitHead(),
-    iterations: newIterations,
-  };
-  const newContent = update.content ?? log.content;
-  const fileContent = matter.stringify(newContent, sanitizeForMatter(newFrontmatter));
-  writeFileSync(log.path, fileContent, "utf-8");
-  return { frontmatter: newFrontmatter, content: newContent, path: log.path };
-}
-
-export function finishIteration(year: number, month: number, day: number, slug: string, files: { updated?: string[]; created?: string[]; removed?: string[] }): Log {
-  const log = readLog(year, month, day, slug);
-  const iterations = log.frontmatter.iterations || [];
-  requireFiles(files);
-
-  if (iterations.length === 0) {
-    throw new Error(`No iterations found for ticket: ${slug}`);
-  }
-
-  const lastIteration = iterations[iterations.length - 1];
-
-  if (getIsIterationFinished(lastIteration)) {
-    throw new Error(`Latest iteration already finished with commit: ${lastIteration.commit || "unknown"}`);
-  }
-
-  const commit = getGitHead();
-  const finished = new Date().toISOString();
-
-  const iterationFiles: IterationFiles = {};
-
-  if (files.updated?.length) {
-    iterationFiles.updated = files.updated.map((path) => {
-      const lines = computeGitStatsForFile(path);
-      return { path, lines };
-    });
-  }
-
-  if (files.created?.length) {
-    iterationFiles.created = files.created.map((path) => {
-      const lines = computeGitStatsForFile(path);
-      return { path, lines };
-    });
-  }
-
-  if (files.removed?.length) {
-    iterationFiles.removed = files.removed.map((path) => {
-      const lines = computeGitStatsForFile(path);
-      return { path, lines };
-    });
-  }
-
-  const updatedLastIteration: LogIteration = {
-    ...lastIteration,
-    commit,
-    finished,
-    files: Object.keys(iterationFiles).length > 0 ? iterationFiles : undefined,
-  };
-
-  const newIterations = [...iterations.slice(0, -1), updatedLastIteration];
-
-  const newFrontmatter: LogFrontmatter = {
-    ...log.frontmatter,
-    status: log.frontmatter.status || "open",
-    author: log.frontmatter.author || getDefaultAuthor(),
-    created: log.frontmatter.created || getFirstIterationDate(log.frontmatter),
-    base: log.frontmatter.base || getGitHead(),
-    iterations: newIterations,
-  };
-
-  const fileContent = matter.stringify(log.content, sanitizeForMatter(newFrontmatter));
-  writeFileSync(log.path, fileContent, "utf-8");
-  return { frontmatter: newFrontmatter, content: log.content, path: log.path };
-}
-
-export function finishTicket(year: number, month: number, day: number, slug: string): Log {
-  const log = readLog(year, month, day, slug);
-  const iterations = log.frontmatter.iterations || [];
-  if (iterations.length === 0) {
-    throw new Error(`Cannot finish ticket without any iterations: ${slug}`);
-  }
-  const latest = iterations[iterations.length - 1];
-  if (!getIsIterationFinished(latest)) {
-    throw new Error(`Cannot finish ticket while the latest iteration is unfinished (date: ${latest.date})`);
-  }
-  const updatedFiles = new Set<string>();
-  const createdFiles = new Set<string>();
-  const removedFiles = new Set<string>();
-  for (const iteration of iterations) {
-    if (iteration.files?.updated?.length) for (const file of iteration.files.updated) updatedFiles.add(file.path);
-    if (iteration.files?.created?.length) for (const file of iteration.files.created) createdFiles.add(file.path);
-    if (iteration.files?.removed?.length) for (const file of iteration.files.removed) removedFiles.add(file.path);
-  }
-  const affectedFiles = Array.from(new Set([...updatedFiles, ...createdFiles, ...removedFiles])).sort();
-  const base = log.frontmatter.base || getGitHead();
-  const stats = computeGitStats(base, affectedFiles);
-  const finished = new Date().toISOString();
-  const newFrontmatter: LogFrontmatter = {
-    ...log.frontmatter,
-    status: "finished",
-    created: log.frontmatter.created || getFirstIterationDate(log.frontmatter),
-    base,
-    finished,
-    files: {
-      updated: Array.from(updatedFiles).sort(),
-      created: Array.from(createdFiles).sort(),
-      removed: Array.from(removedFiles).sort(),
-    },
-    lines: { added: stats.added, removed: stats.removed },
-  };
-  const fileContent = matter.stringify(log.content, sanitizeForMatter(newFrontmatter));
-  writeFileSync(log.path, fileContent, "utf-8");
-  return { frontmatter: newFrontmatter, content: log.content, path: log.path };
-}
-
-export function deleteLog(year: number, month: number, day: number, slug: string): void {
-  const logPath = getLogPath(year, month, day, slug);
-  if (!existsSync(logPath)) {
-    throw new Error(`Log not found: ${logPath}`);
-  }
-  unlinkSync(logPath);
-}
-
-export function listLogs(options: LogListOptions = {}): Log[] {
-  const logs: Log[] = [];
-  function walk(dir: string): void {
-    if (!existsSync(dir)) return;
-    const entries = readdirSync(dir);
-    for (const entry of entries) {
-      const fullPath = join(dir, entry);
-      const stat = statSync(fullPath);
-      if (stat.isDirectory()) {
-        walk(fullPath);
-      } else if (entry.endsWith(".md")) {
-        const parsed = parseLogPath(fullPath);
-        if (!parsed) continue;
-        if (options.year !== undefined && parsed.year !== options.year) continue;
-        if (options.month !== undefined && parsed.month !== options.month) continue;
-        if (options.day !== undefined && parsed.day !== options.day) continue;
-        if (options.slug !== undefined && parsed.slug !== options.slug) continue;
-        try {
-          const fileContent = readFileSync(fullPath, "utf-8");
-          const matterParsed = matter(fileContent);
-          const createdFromPath = new Date(parsed.year, parsed.month - 1, parsed.day).toISOString();
-          logs.push({
-            frontmatter: normalizeLogFrontmatter(matterParsed.data as LogFrontmatter, { slug: parsed.slug, createdFromPath }),
-            content: matterParsed.content,
-            path: fullPath,
-          });
-        } catch (error) {
-          console.error(`Failed to parse ticket: ${fullPath}`, error);
-        }
-      }
-    }
-  }
-  walk(LOG_ROOT);
-  return logs.sort((a, b) => new Date(getLatestIterationDate(b.frontmatter)).getTime() - new Date(getLatestIterationDate(a.frontmatter)).getTime());
-}
-
-export function searchLogs(options: LogSearchOptions = {}): Log[] {
-  const allLogs = listLogs({
-    year: options.year,
-    month: options.month,
-    day: options.day,
-    slug: options.slug,
-  });
-
-  if (!options.query) {
-    return options.limit ? allLogs.slice(0, options.limit) : allLogs;
-  }
-
-  const query = options.query.toLowerCase();
-  const matchedLogs = allLogs.filter((log) => {
-    const slugMatch = log.frontmatter.slug?.toLowerCase().includes(query) ?? false;
-    const summaryMatch = log.frontmatter.summary?.toLowerCase().includes(query) ?? false;
-    const contentMatch = log.content?.toLowerCase().includes(query) ?? false;
-    const authorMatch = (log.frontmatter.author?.toLowerCase().includes(query) ?? false) || (log.frontmatter.iterations?.some((it) => it.author?.toLowerCase().includes(query)) ?? false);
-    return slugMatch || summaryMatch || contentMatch || authorMatch;
-  });
-
-  return options.limit ? matchedLogs.slice(0, options.limit) : matchedLogs;
-}
-//#endregion
-
-//#region Migration
-export function migrateOldLogs(): void {
-  const oldLogPattern = /^(\d{4})-(\d{2})-(\d{2})_(.+)\.md$/;
-  if (!existsSync(LOG_ROOT)) return;
-  const entries = readdirSync(LOG_ROOT);
-  for (const entry of entries) {
-    const fullPath = join(LOG_ROOT, entry);
-    const stat = statSync(fullPath);
-    if (!stat.isFile() || !entry.endsWith(".md")) continue;
-    const match = entry.match(oldLogPattern);
-    if (!match) continue;
-    const [, year, month, day, slug] = match;
-    const capitalizedSlug = slug.toUpperCase();
-    const content = readFileSync(fullPath, "utf-8");
-    const parsed = matter(content);
-    if (parsed.data.iterations) {
-      console.log(`Skipping already migrated ticket: ${entry}`);
-      continue;
-    }
-    const frontmatter: LogFrontmatter = {
-      slug: capitalizedSlug,
-      summary: `Migration from ${entry}`,
-    };
-    const newPath = getLogPath(parseInt(year), parseInt(month), parseInt(day), capitalizedSlug);
-    ensureDirectoryExists(newPath);
-    const fileContent = matter.stringify(parsed.content || content, sanitizeForMatter(frontmatter));
-    writeFileSync(newPath, fileContent, "utf-8");
-    unlinkSync(fullPath);
-    console.log(`Migrated: ${entry} -> ${newPath}`);
-  }
+  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
 }
 //#endregion
 
 //#region Git Stats
 function getGitStatusPorcelain(): string {
   return execSync("git status --porcelain", { encoding: "utf-8" });
-}
-
-function getGitDiffNameOnly(base: string): string {
-  return execSync(`git diff --name-only ${base}`, { encoding: "utf-8" });
 }
 
 function parseGitPath(rawPath: string): string {
@@ -640,108 +193,396 @@ function parseGitPath(rawPath: string): string {
   return trimmed;
 }
 
-function getChangedFilesSince(base: string): string[] {
+function getUntrackedFiles(): Set<string> {
   const files = new Set<string>();
-  for (const line of getGitDiffNameOnly(base).split(/\r?\n/)) {
-    const path = line.trim();
-    if (!path) continue;
-    files.add(path);
-  }
   for (const line of getGitStatusPorcelain().split(/\r?\n/)) {
-    if (!line.trim()) continue;
-    const status = line.slice(0, 2);
-    const rawPath = line.slice(3);
-    if (!rawPath) continue;
-    if (status.includes("R") || status.includes("C")) {
-      const parts = rawPath.split("->").map((part) => part.trim());
-      if (parts.length === 2) {
-        const renamedPath = parseGitPath(parts[1]);
-        if (renamedPath) files.add(renamedPath);
-      }
-      continue;
-    }
-    const path = parseGitPath(rawPath);
-    if (!path) continue;
-    files.add(path);
+    if (!line.startsWith("?? ")) continue;
+    const path = parseGitPath(line.slice(3));
+    if (path) files.add(path);
   }
-  return Array.from(files).sort();
+  return files;
 }
 
 function quoteGitPath(path: string): string {
   return "\"" + path.replaceAll("\"", "\\\"") + "\"";
 }
 
-function execGitDiffNoIndexNumstat(nullPath: string, filePath: string): string {
-  try {
-    return execSync(`git diff --no-index --numstat -- ${nullPath} ${quoteGitPath(filePath)}`, { encoding: "utf-8" });
-  } catch (error: any) {
-    if (error && error.stdout) {
-      return Buffer.isBuffer(error.stdout) ? error.stdout.toString("utf-8") : String(error.stdout);
-    }
-    return "";
-  }
-}
-
-function getUntrackedFiles(): string[] {
-  const files: string[] = [];
-  for (const line of getGitStatusPorcelain().split(/\r?\n/)) {
-    if (!line.startsWith("?? ")) continue;
-    const path = parseGitPath(line.slice(3));
-    if (!path) continue;
-    files.push(path);
-  }
-  return files;
-}
-
-function parseGitNumstatOutput(output: string): { added: number; removed: number } {
-  let addedTotal = 0;
-  let removedTotal = 0;
+function parseGitNumstatOutput(output: string): Lines {
+  let added = 0;
+  let removed = 0;
   for (const line of output.split(/\r?\n/)) {
     const trimmed = line.trim();
     if (!trimmed) continue;
     const parts = trimmed.split("\t");
     if (parts.length < 2) continue;
-    const added = parts[0] === "-" ? 0 : parseInt(parts[0]);
-    const removed = parts[1] === "-" ? 0 : parseInt(parts[1]);
-    if (!Number.isNaN(added)) addedTotal += added;
-    if (!Number.isNaN(removed)) removedTotal += removed;
+    const a = parts[0] === "-" ? 0 : parseInt(parts[0]);
+    const r = parts[1] === "-" ? 0 : parseInt(parts[1]);
+    if (!Number.isNaN(a)) added += a;
+    if (!Number.isNaN(r)) removed += r;
   }
-  return { added: addedTotal, removed: removedTotal };
+  return { added, removed };
 }
 
-function computeGitStatsForFile(filePath: string): LogLines {
-  const untracked = new Set(getUntrackedFiles());
+function computeGitLinesForFile(filePath: string, base?: string): Lines {
+  const untracked = getUntrackedFiles();
   const nullPath = process.platform === "win32" ? "NUL" : "/dev/null";
-
   if (untracked.has(filePath)) {
-    const output = execGitDiffNoIndexNumstat(nullPath, filePath);
-    return parseGitNumstatOutput(output);
+    try {
+      const output = execSync(`git diff --no-index --numstat -- ${nullPath} ${quoteGitPath(filePath)}`, { encoding: "utf-8" });
+      return parseGitNumstatOutput(output);
+    } catch (error: any) {
+      if (error && error.stdout) {
+        const stdout = Buffer.isBuffer(error.stdout) ? error.stdout.toString("utf-8") : String(error.stdout);
+        return parseGitNumstatOutput(stdout);
+      }
+      return { added: 0, removed: 0 };
+    }
   }
-
+  const ref = base || "HEAD";
   try {
-    const output = execSync(`git diff --numstat HEAD -- ${quoteGitPath(filePath)}`, { encoding: "utf-8" });
+    const output = execSync(`git diff --numstat ${ref} -- ${quoteGitPath(filePath)}`, { encoding: "utf-8" });
     return parseGitNumstatOutput(output);
   } catch {
     return { added: 0, removed: 0 };
   }
 }
 
-function computeGitStats(base: string, affectedFiles: string[]): { added: number; removed: number; affectedFiles: string[] } {
-  const untracked = new Set(getUntrackedFiles());
-  const trackedFiles = affectedFiles.filter((file) => !untracked.has(file));
-  const trackedOutput = trackedFiles.length ? execSync(`git diff --numstat ${base} -- ${trackedFiles.map(quoteGitPath).join(" ")}`, { encoding: "utf-8" }) : "";
-  const tracked = parseGitNumstatOutput(trackedOutput);
-  const nullPath = process.platform === "win32" ? "NUL" : "/dev/null";
-  let added = tracked.added;
-  let removed = tracked.removed;
-  for (const file of affectedFiles) {
-    if (!untracked.has(file)) continue;
-    const output = execGitDiffNoIndexNumstat(nullPath, file);
-    const parsed = parseGitNumstatOutput(output);
-    added += parsed.added;
-    removed += parsed.removed;
+function computeGitLinesForFiles(filePaths: string[], base?: string): Lines {
+  let added = 0;
+  let removed = 0;
+  for (const filePath of filePaths) {
+    const lines = computeGitLinesForFile(filePath, base);
+    added += lines.added;
+    removed += lines.removed;
   }
-  return { added, removed, affectedFiles };
+  return { added, removed };
+}
+
+function buildFilesWithLines(input: { updated?: string[]; created?: string[]; removed?: string[] }, base?: string): Files {
+  const updated: FileEntry[] = (input.updated || []).map((path) => ({ path, lines: computeGitLinesForFile(path, base) }));
+  const created: FileEntry[] = (input.created || []).map((path) => ({ path, lines: computeGitLinesForFile(path, base) }));
+  const removed: FileEntry[] = (input.removed || []).map((path) => ({ path, lines: computeGitLinesForFile(path, base) }));
+  return { updated, created, removed };
+}
+
+function computeTotalLines(files: Files): Lines {
+  let added = 0;
+  let removed = 0;
+  for (const f of files.updated) {
+    added += f.lines.added;
+    removed += f.lines.removed;
+  }
+  for (const f of files.created) {
+    added += f.lines.added;
+    removed += f.lines.removed;
+  }
+  for (const f of files.removed) {
+    added += f.lines.added;
+    removed += f.lines.removed;
+  }
+  return { added, removed };
+}
+//#endregion
+
+//#region Validation
+function requireFiles(files: { updated?: string[]; created?: string[]; removed?: string[] }): void {
+  const hasAny = Boolean((files.updated && files.updated.length) || (files.created && files.created.length) || (files.removed && files.removed.length));
+  if (!hasAny) throw new Error("Missing required files: provide at least one of --file=, --file-created=, --file-removed=");
+}
+
+function validateModel(model: string): string {
+  const values = Object.values(Model);
+  if (!values.includes(model as any)) throw new Error(`Unknown model: ${model}. Add it to the Model enum in scripts/log.ts.`);
+  return model;
+}
+//#endregion
+
+//#region Serialization
+function sanitizeForMatter(value: any): any {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  if (Array.isArray(value)) return value.map((v) => sanitizeForMatter(v)).filter((v) => v !== undefined);
+  if (typeof value === "object") {
+    const out: any = {};
+    for (const [key, v] of Object.entries(value)) {
+      const sanitized = sanitizeForMatter(v);
+      if (sanitized !== undefined) out[key] = sanitized;
+    }
+    return out;
+  }
+  return value;
+}
+
+function serializeFileEntry(entry: FileEntry): any {
+  return { [entry.path]: { lines: entry.lines } };
+}
+
+function serializeFiles(files: Files): any {
+  return {
+    updated: files.updated.map(serializeFileEntry),
+    created: files.created.map((f) => f.path),
+    removed: files.removed.map((f) => f.path),
+  };
+}
+
+function serializeIteration(iteration: Iteration): any {
+  return {
+    prompt: iteration.prompt,
+    date: iteration.date,
+    model: iteration.model,
+    author: iteration.author,
+    commit: iteration.commit,
+    files: serializeFiles(iteration.files),
+    lines: iteration.lines,
+  };
+}
+
+function serializeFrontmatter(fm: TicketFrontmatter): any {
+  const result: any = {
+    slug: fm.slug,
+    summary: fm.summary,
+    status: fm.status,
+    author: fm.author,
+    date: fm.date,
+  };
+  if (fm.commit) result.commit = fm.commit;
+  if (fm.model) result.model = fm.model;
+  result.iterations = fm.iterations.map(serializeIteration);
+  if (fm.files) result.files = serializeFiles(fm.files);
+  if (fm.lines) result.lines = fm.lines;
+  return result;
+}
+
+function deserializeFileEntry(entry: any): FileEntry {
+  if (typeof entry === "string") return { path: entry, lines: { added: 0, removed: 0 } };
+  const keys = Object.keys(entry);
+  if (keys.length === 1) {
+    const path = keys[0];
+    const value = entry[path];
+    return { path, lines: value?.lines || { added: 0, removed: 0 } };
+  }
+  return { path: entry.path || "", lines: entry.lines || { added: 0, removed: 0 } };
+}
+
+function deserializeFiles(raw: any): Files {
+  if (!raw) return { updated: [], created: [], removed: [] };
+  const updated = (raw.updated || []).map(deserializeFileEntry);
+  const created = (raw.created || []).map((e: any) => (typeof e === "string" ? { path: e, lines: { added: 0, removed: 0 } } : deserializeFileEntry(e)));
+  const removed = (raw.removed || []).map((e: any) => (typeof e === "string" ? { path: e, lines: { added: 0, removed: 0 } } : deserializeFileEntry(e)));
+  return { updated, created, removed };
+}
+
+function deserializeIteration(raw: any): Iteration {
+  const date: IterationDate = typeof raw.date === "string" ? { started: raw.date } : { started: raw.date?.started || "", ended: raw.date?.ended };
+  return {
+    prompt: raw.prompt || "",
+    date,
+    model: raw.model || "unknown",
+    author: raw.author || "Unknown",
+    commit: raw.commit,
+    files: deserializeFiles(raw.files),
+    lines: raw.lines || { added: 0, removed: 0 },
+  };
+}
+
+function deserializeFrontmatter(raw: any): TicketFrontmatter {
+  const date: TicketDate = typeof raw.date === "string" ? { created: raw.date } : { created: raw.date?.created || new Date().toISOString(), finished: raw.date?.finished };
+  return {
+    slug: raw.slug || "UNKNOWN",
+    summary: raw.summary || "",
+    status: raw.status || "open",
+    author: raw.author || "Unknown",
+    date,
+    commit: raw.commit,
+    model: raw.model,
+    iterations: (raw.iterations || []).map(deserializeIteration),
+    files: raw.files ? deserializeFiles(raw.files) : undefined,
+    lines: raw.lines,
+  };
+}
+//#endregion
+
+//#region CRUD Operations
+function createTicket(input: TicketCreateInput): Ticket {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+  const day = now.getDate();
+  const slug = input.slug.toUpperCase();
+  const ticketPath = getTicketPath(year, month, day, slug);
+  if (existsSync(ticketPath)) throw new Error(`Ticket already exists: ${ticketPath}`);
+  const frontmatter: TicketFrontmatter = {
+    slug,
+    summary: input.summary,
+    status: "open",
+    author: getGitAuthor(),
+    date: { created: now.toISOString() },
+    iterations: [],
+  };
+  const content = input.content || "# Previously\n\n# Plan\n\n# Changes\n";
+  const fileContent = matter.stringify(content, sanitizeForMatter(serializeFrontmatter(frontmatter)));
+  ensureDirectoryExists(ticketPath);
+  writeFileSync(ticketPath, fileContent, "utf-8");
+  return { frontmatter, content, path: ticketPath };
+}
+
+function readTicket(year: number, month: number, day: number, slug: string): Ticket {
+  const ticketPath = getTicketPath(year, month, day, slug);
+  if (!existsSync(ticketPath)) throw new Error(`Ticket not found: ${ticketPath}`);
+  const fileContent = readFileSync(ticketPath, "utf-8");
+  const parsed = matter(fileContent);
+  return {
+    frontmatter: deserializeFrontmatter(parsed.data),
+    content: parsed.content,
+    path: ticketPath,
+  };
+}
+
+function writeTicket(ticket: Ticket): void {
+  const fileContent = matter.stringify(ticket.content, sanitizeForMatter(serializeFrontmatter(ticket.frontmatter)));
+  writeFileSync(ticket.path, fileContent, "utf-8");
+}
+
+function startIteration(year: number, month: number, day: number, slug: string, input: IterationStartInput): Ticket {
+  requireFiles(input.files);
+  const ticket = readTicket(year, month, day, slug);
+  const iterations = ticket.frontmatter.iterations;
+  if (iterations.length > 0) {
+    const last = iterations[iterations.length - 1];
+    if (!last.date.ended) throw new Error(`Cannot start a new iteration while the latest iteration is unfinished (started: ${last.date.started})`);
+  }
+  const now = new Date().toISOString();
+  const files = buildFilesWithLines(input.files);
+  const lines = computeTotalLines(files);
+  const newIteration: Iteration = {
+    prompt: input.prompt,
+    date: { started: now },
+    model: input.model,
+    author: getGitAuthor(),
+    files,
+    lines,
+  };
+  ticket.frontmatter.iterations.push(newIteration);
+  writeTicket(ticket);
+  return ticket;
+}
+
+function finishIteration(year: number, month: number, day: number, slug: string, input: IterationFinishInput): Ticket {
+  requireFiles(input.files);
+  const ticket = readTicket(year, month, day, slug);
+  const iterations = ticket.frontmatter.iterations;
+  if (iterations.length === 0) throw new Error(`No iterations found for ticket: ${slug}`);
+  const lastIteration = iterations[iterations.length - 1];
+  if (lastIteration.date.ended) throw new Error(`Latest iteration already finished at: ${lastIteration.date.ended}`);
+  const now = new Date().toISOString();
+  const commit = getGitHead();
+  const files = buildFilesWithLines(input.files);
+  const lines = computeTotalLines(files);
+  lastIteration.date.ended = now;
+  lastIteration.commit = commit;
+  lastIteration.files = files;
+  lastIteration.lines = lines;
+  writeTicket(ticket);
+  return ticket;
+}
+
+function finishTicket(year: number, month: number, day: number, slug: string): Ticket {
+  const ticket = readTicket(year, month, day, slug);
+  const iterations = ticket.frontmatter.iterations;
+  if (iterations.length === 0) throw new Error(`Cannot finish ticket without any iterations: ${slug}`);
+  const last = iterations[iterations.length - 1];
+  if (!last.date.ended) throw new Error(`Cannot finish ticket while the latest iteration is unfinished (started: ${last.date.started})`);
+  const updatedPaths = new Set<string>();
+  const createdPaths = new Set<string>();
+  const removedPaths = new Set<string>();
+  for (const iteration of iterations) {
+    for (const f of iteration.files.updated) updatedPaths.add(f.path);
+    for (const f of iteration.files.created) createdPaths.add(f.path);
+    for (const f of iteration.files.removed) removedPaths.add(f.path);
+  }
+  const allPaths = [...updatedPaths, ...createdPaths, ...removedPaths];
+  const base = getGitHead();
+  const updated: FileEntry[] = [...updatedPaths].sort().map((path) => ({ path, lines: computeGitLinesForFile(path, base) }));
+  const created: FileEntry[] = [...createdPaths].sort().map((path) => ({ path, lines: computeGitLinesForFile(path, base) }));
+  const removed: FileEntry[] = [...removedPaths].sort().map((path) => ({ path, lines: computeGitLinesForFile(path, base) }));
+  const files: Files = { updated, created, removed };
+  const lines = computeGitLinesForFiles(allPaths, base);
+  const now = new Date().toISOString();
+  ticket.frontmatter.status = "finished";
+  ticket.frontmatter.date.finished = now;
+  ticket.frontmatter.commit = getGitHead();
+  ticket.frontmatter.model = last.model;
+  ticket.frontmatter.files = files;
+  ticket.frontmatter.lines = lines;
+  writeTicket(ticket);
+  return ticket;
+}
+
+function deleteTicket(year: number, month: number, day: number, slug: string): void {
+  const ticketPath = getTicketPath(year, month, day, slug);
+  if (!existsSync(ticketPath)) throw new Error(`Ticket not found: ${ticketPath}`);
+  unlinkSync(ticketPath);
+}
+
+function listTickets(options: ListOptions = {}): Ticket[] {
+  const tickets: Ticket[] = [];
+  function walk(dir: string): void {
+    if (!existsSync(dir)) return;
+    const entries = readdirSync(dir);
+    for (const entry of entries) {
+      const fullPath = join(dir, entry);
+      const stat = statSync(fullPath);
+      if (stat.isDirectory()) {
+        walk(fullPath);
+      } else if (entry.endsWith(".md") && entry !== "prompts.md") {
+        const parsed = parseTicketPath(fullPath);
+        if (!parsed) continue;
+        if (options.year !== undefined && parsed.year !== options.year) continue;
+        if (options.month !== undefined && parsed.month !== options.month) continue;
+        if (options.day !== undefined && parsed.day !== options.day) continue;
+        if (options.slug !== undefined && parsed.slug !== options.slug) continue;
+        try {
+          const fileContent = readFileSync(fullPath, "utf-8");
+          const matterParsed = matter(fileContent);
+          tickets.push({
+            frontmatter: deserializeFrontmatter(matterParsed.data),
+            content: matterParsed.content,
+            path: fullPath,
+          });
+        } catch (error) {
+          console.error(`Failed to parse ticket: ${fullPath}`, error);
+        }
+      }
+    }
+  }
+  walk(LOG_ROOT);
+  return tickets.sort((a, b) => new Date(b.frontmatter.date.created).getTime() - new Date(a.frontmatter.date.created).getTime());
+}
+
+function searchTickets(options: SearchOptions = {}): Ticket[] {
+  const allTickets = listTickets({ year: options.year, month: options.month, day: options.day, slug: options.slug });
+  if (!options.query) return options.limit ? allTickets.slice(0, options.limit) : allTickets;
+  const query = options.query.toLowerCase();
+  const matchedTickets = allTickets.filter((ticket) => {
+    const slugMatch = ticket.frontmatter.slug.toLowerCase().includes(query);
+    const summaryMatch = ticket.frontmatter.summary.toLowerCase().includes(query);
+    const contentMatch = ticket.content.toLowerCase().includes(query);
+    const authorMatch = ticket.frontmatter.author.toLowerCase().includes(query);
+    return slugMatch || summaryMatch || contentMatch || authorMatch;
+  });
+  return options.limit ? matchedTickets.slice(0, options.limit) : matchedTickets;
+}
+//#endregion
+
+//#region Lookup
+function findLatestTicketBySlug(slug: string): { year: number; month: number; day: number; slug: string } {
+  const normalizedSlug = slug.toUpperCase();
+  const tickets = listTickets({ slug: normalizedSlug });
+  const latest = tickets[0];
+  if (!latest) throw new Error(`No ticket found for slug: ${normalizedSlug}`);
+  const parsed = parseTicketPath(latest.path);
+  if (!parsed) throw new Error(`Failed to parse ticket path: ${latest.path}`);
+  return parsed;
 }
 //#endregion
 
@@ -752,46 +593,47 @@ Usage: tsx scripts/log.ts <command> [options]
 
 Commands:
   ticket create <slug> <summary>       Create a ticket (no iterations)
-                                       Optional: --date=ISO
   ticket iteration start <slug>        Start a new iteration on a ticket
                                        Required: --model=MODEL --prompt="..." and at least one file flag
-                                       Optional: --summary="..."
-  ticket iteration finish <slug>       Finish the latest iteration (computes git line stats per file)
+  ticket iteration finish <slug>       Finish the latest iteration
                                        Required: at least one file flag
   ticket finish <slug>                 Finish the ticket (requires latest iteration finished)
-  models                               List available model enum values
-  ticket read <year> <month> <day> <slug>     Read a ticket with all iterations
+  ticket read <year> <month> <day> <slug>     Read a ticket
   ticket delete <year> <month> <day> <slug>   Delete a ticket
   ticket list [year] [month] [day]            List tickets (optionally filtered)
-  ticket search [query] [--limit=N]           Search tickets by query (searches slug, summary, content, author)
+  ticket search [query] [--limit=N]           Search tickets
                                              Optional: --year=YYYY --month=MM --day=DD --limit=N
-  migrate                              Migrate all logs to the latest structure
+  models                               List available model enum values
 
-Ticket Format:
-  status: "open" | "finished"
-  iterations: [{prompt, date, finished, model, commit, files}]  Array of iterations
-  files: {updated: string[], created: string[], removed: string[]}
-  lines: {added: number, removed: number}
+File Flags:
+  --file=PATH              Add file to updated list
+  --file-created=PATH      Add file to created list
+  --file-removed=PATH      Add file to removed list
+
+Ticket Schema:
+  slug, summary, status, author, date{created, finished}, commit, model,
+  iterations[{prompt, date{started, ended}, model, author, commit, files{...}, lines{...}}],
+  files{updated[{path, lines}], created[path], removed[path]}, lines{added, removed}
+
+  - author, commit, date, lines: derived from git (forbidden to set manually)
+  - model, files: must be set manually
+  - when ticket is finished: files and lines are computed from git
 
 Workflow:
-  1. Create a ticket when starting work: ticket create <slug> <summary>
-  2. Start the first iteration: ticket iteration start <slug> --model=MODEL --prompt="..." --file=...
-  3. Finish the iteration when stopping: ticket iteration finish <slug> --file=...
-  4. Finish the ticket: ticket finish <slug>
+  1. Create a ticket: ticket create <slug> <summary>
+  2. Start iteration: ticket iteration start <slug> --model=MODEL --prompt="..." --file=...
+  3. Finish iteration: ticket iteration finish <slug> --file=...
+  4. Finish ticket: ticket finish <slug>
 
 Examples:
-  tsx scripts/log.ts ticket create my-task "Implement new feature"
+  tsx scripts/log.ts ticket create MY-TASK "Implement new feature"
   tsx scripts/log.ts ticket iteration start MY-TASK --model=${Model.CLAUDE_OPUS_4_5} --prompt="User request..." --file=scripts/log.ts
   tsx scripts/log.ts ticket iteration finish MY-TASK --file=scripts/log.ts --file=README.md
   tsx scripts/log.ts ticket finish MY-TASK
-  tsx scripts/log.ts ticket read 2025 11 24 MY-TASK
-  tsx scripts/log.ts ticket list 2025 11
+  tsx scripts/log.ts ticket read 2025 12 16 MY-TASK
+  tsx scripts/log.ts ticket list 2025 12
   tsx scripts/log.ts ticket search "drag drop"
-  tsx scripts/log.ts ticket search "test" --limit=5
-  tsx scripts/log.ts migrate
-
-Legacy Aliases:
-  create, update, finish, read, delete, list, search
+  tsx scripts/log.ts models
 `);
 }
 
@@ -818,97 +660,15 @@ function requireFlag(args: string[], name: string): string {
   return value;
 }
 
-function validateModel(model: string): string {
-  const values = Object.values(Model);
-  if (!values.includes(model as any)) {
-    throw new Error(`Unknown model: ${model}. Add it to the Model enum in scripts/log.ts.`);
-  }
-  return model;
-}
-
-function getLatestLogBySlug(slug: string): { year: number; month: number; day: number; slug: string } {
-  const normalizedSlug = slug.toUpperCase();
-  const logs = listLogs({ slug: normalizedSlug });
-  const latest = logs[0];
-  if (!latest) throw new Error(`No ticket found for slug: ${normalizedSlug}`);
-  const parsed = parseLogPath(latest.path);
-  if (!parsed) throw new Error(`Failed to parse ticket path: ${latest.path}`);
-  return parsed;
-}
-
-function getIterationAuthor(frontmatter: LogFrontmatter): string | undefined {
-  if (frontmatter.author) return frontmatter.author;
-  if (!frontmatter.iterations || frontmatter.iterations.length === 0) return undefined;
-  for (const iteration of frontmatter.iterations) {
-    if (iteration.author) return iteration.author;
-  }
-  return undefined;
-}
-
-function getIterationModel(frontmatter: LogFrontmatter): string | undefined {
-  if (!frontmatter.iterations || frontmatter.iterations.length === 0) return undefined;
-  return frontmatter.iterations[frontmatter.iterations.length - 1].model;
-}
-
-function getTotalLines(frontmatter: LogFrontmatter): LogLines {
-  let added = 0;
-  let removed = 0;
-  if (!frontmatter.iterations) return { added, removed };
-  for (const iteration of frontmatter.iterations) {
-    if (!iteration.files) continue;
-    const allFiles = [
-      ...(iteration.files.updated || []),
-      ...(iteration.files.created || []),
-      ...(iteration.files.removed || []),
-    ];
-    for (const file of allFiles) {
-      if (file.lines) {
-        added += file.lines.added;
-        removed += file.lines.removed;
-      }
-    }
-  }
-  return { added, removed };
-}
-
-function migrateLogFileFrontmatter(path: string): boolean {
-  const fileContent = readFileSync(path, "utf-8");
-  const parsed = matter(fileContent);
-  const parsedPath = parseLogPath(path);
-  const createdFromPath = parsedPath ? new Date(parsedPath.year, parsedPath.month - 1, parsedPath.day).toISOString() : undefined;
-  const slug = parsedPath ? parsedPath.slug : path.split(/[\\/]/).pop()?.replace(/\.md$/, "").toUpperCase() || "UNKNOWN";
-  const normalized = normalizeLogFrontmatter(parsed.data, { slug, createdFromPath });
-  const dataJson = JSON.stringify(parsed.data);
-  const normalizedJson = JSON.stringify(normalized);
-  if (dataJson === normalizedJson) return false;
-  const output = matter.stringify(parsed.content, sanitizeForMatter(normalized));
-  writeFileSync(path, output, "utf-8");
-  return true;
-}
-
-function migrateAllLogFrontmatter(): { scanned: number; updated: number } {
-  let scanned = 0;
-  let updated = 0;
-  function walk(dir: string): void {
-    if (!existsSync(dir)) return;
-    for (const entry of readdirSync(dir)) {
-      const fullPath = join(dir, entry);
-      const stat = statSync(fullPath);
-      if (stat.isDirectory()) {
-        walk(fullPath);
-        continue;
-      }
-      if (!entry.endsWith(".md")) continue;
-      scanned += 1;
-      try {
-        if (migrateLogFileFrontmatter(fullPath)) updated += 1;
-      } catch (error) {
-        console.error(`Failed to migrate ticket: ${fullPath}`, error);
-      }
-    }
-  }
-  walk(LOG_ROOT);
-  return { scanned, updated };
+function parseFilesFromFlags(flags: string[]): { updated?: string[]; created?: string[]; removed?: string[] } {
+  const filesUpdated = parseFlags(flags, "file");
+  const filesCreated = parseFlags(flags, "file-created");
+  const filesRemoved = parseFlags(flags, "file-removed");
+  return {
+    updated: filesUpdated.length > 0 ? filesUpdated : undefined,
+    created: filesCreated.length > 0 ? filesCreated : undefined,
+    removed: filesRemoved.length > 0 ? filesRemoved : undefined,
+  };
 }
 
 if (require.main === module) {
@@ -924,17 +684,15 @@ if (require.main === module) {
           process.exit(1);
         }
         if (sub === "create") {
-          const [slug, summary, ...flags] = rest;
+          const [slug, summary] = rest;
           if (!slug || !summary) {
             console.error("Error: Missing slug or summary");
             printUsage();
             process.exit(1);
           }
-          const dateArg = flags.find((arg) => arg.startsWith("--date="));
-          const date = dateArg ? new Date(dateArg.split("=")[1]) : undefined;
-          const log = createLog({ slug, summary, date });
-          console.log(`Created ticket: ${log.path}`);
-          console.log(`Summary: ${log.frontmatter.summary}`);
+          const ticket = createTicket({ slug, summary });
+          console.log(`Created ticket: ${ticket.path}`);
+          console.log(`Summary: ${ticket.frontmatter.summary}`);
           break;
         }
         if (sub === "iteration") {
@@ -947,21 +705,10 @@ if (require.main === module) {
             }
             const model = validateModel(requireFlag(flags, "model"));
             const prompt = requireFlag(flags, "prompt");
-            const summary = parseFlag(flags, "summary");
-            const latest = getLatestLogBySlug(slugArg);
-            const filesUpdated = parseFlags(flags, "file");
-            const filesCreated = parseFlags(flags, "file-created");
-            const filesRemoved = parseFlags(flags, "file-removed");
-            const files = {
-              updated: filesUpdated.length > 0 ? filesUpdated : undefined,
-              created: filesCreated.length > 0 ? filesCreated : undefined,
-              removed: filesRemoved.length > 0 ? filesRemoved : undefined,
-            };
-            const update: LogUpdateInput = { model, prompt, files };
-            if (summary) update.summary = summary;
-            const updated = updateLog(latest.year, latest.month, latest.day, latest.slug, update);
-            console.log(`Updated ticket: ${updated.path}`);
-            console.log(`Added iteration ${updated.frontmatter.iterations?.length || 0}`);
+            const files = parseFilesFromFlags(flags);
+            const latest = findLatestTicketBySlug(slugArg);
+            const ticket = startIteration(latest.year, latest.month, latest.day, latest.slug, { prompt, model, files });
+            console.log(`Started iteration ${ticket.frontmatter.iterations.length} for ticket: ${ticket.path}`);
             break;
           }
           if (iterationCommand === "finish") {
@@ -970,21 +717,16 @@ if (require.main === module) {
               printUsage();
               process.exit(1);
             }
-            const latest = getLatestLogBySlug(slugArg);
-            const filesUpdated = parseFlags(flags, "file");
-            const filesCreated = parseFlags(flags, "file-created");
-            const filesRemoved = parseFlags(flags, "file-removed");
-            const files = {
-              updated: filesUpdated.length > 0 ? filesUpdated : undefined,
-              created: filesCreated.length > 0 ? filesCreated : undefined,
-              removed: filesRemoved.length > 0 ? filesRemoved : undefined,
-            };
-            const log = finishIteration(latest.year, latest.month, latest.day, latest.slug, files);
-            const lastIteration = getLatestIteration(log.frontmatter);
-            console.log(`Finished iteration for ticket: ${log.path}`);
-            console.log(`Commit: ${lastIteration?.commit || "none"}`);
+            const files = parseFilesFromFlags(flags);
+            const latest = findLatestTicketBySlug(slugArg);
+            const ticket = finishIteration(latest.year, latest.month, latest.day, latest.slug, { files });
+            const lastIteration = ticket.frontmatter.iterations[ticket.frontmatter.iterations.length - 1];
+            console.log(`Finished iteration for ticket: ${ticket.path}`);
+            console.log(`Commit: ${lastIteration.commit || "none"}`);
+            console.log(`Lines: +${lastIteration.lines.added} -${lastIteration.lines.removed}`);
             break;
           }
+          console.error("Error: Unknown iteration command");
           printUsage();
           process.exit(1);
           break;
@@ -996,9 +738,11 @@ if (require.main === module) {
             printUsage();
             process.exit(1);
           }
-          const latest = getLatestLogBySlug(slugArg);
-          const log = finishTicket(latest.year, latest.month, latest.day, latest.slug);
-          console.log(`Finished ticket: ${log.path}`);
+          const latest = findLatestTicketBySlug(slugArg);
+          const ticket = finishTicket(latest.year, latest.month, latest.day, latest.slug);
+          console.log(`Finished ticket: ${ticket.path}`);
+          console.log(`Commit: ${ticket.frontmatter.commit}`);
+          if (ticket.frontmatter.lines) console.log(`Lines: +${ticket.frontmatter.lines.added} -${ticket.frontmatter.lines.removed}`);
           break;
         }
         if (sub === "read") {
@@ -1008,45 +752,35 @@ if (require.main === module) {
             printUsage();
             process.exit(1);
           }
-          const log = readLog(parseInt(year), parseInt(month), parseInt(day), slug);
-          console.log(`\nPath: ${log.path}`);
-          console.log(`Summary: ${log.frontmatter.summary}`);
-          console.log(`Status: ${log.frontmatter.status || "open"}`);
-          const author = getIterationAuthor(log.frontmatter);
-          if (author) console.log(`Author: ${author}`);
-          if (log.frontmatter.files) {
-            console.log(`Files: ${((log.frontmatter.files.updated || []).length + (log.frontmatter.files.created || []).length + (log.frontmatter.files.removed || []).length)}`);
-          }
-          if (log.frontmatter.lines) {
-            console.log(`Lines: +${log.frontmatter.lines.added} -${log.frontmatter.lines.removed}`);
-          }
-          const iterations = log.frontmatter.iterations || [];
-          console.log(`Iterations: ${iterations.length}`);
-          if (iterations.length) {
-            console.log(`  First: ${getFirstIterationDate(log.frontmatter)}`);
-            console.log(`  Latest: ${getLatestIterationDate(log.frontmatter)}`);
-          }
-          for (let i = 0; i < iterations.length; i++) {
-            const it = iterations[i];
-            console.log(`\n  [${i + 1}] ${it.date}`);
+          const ticket = readTicket(parseInt(year), parseInt(month), parseInt(day), slug);
+          console.log(`\nPath: ${ticket.path}`);
+          console.log(`Slug: ${ticket.frontmatter.slug}`);
+          console.log(`Summary: ${ticket.frontmatter.summary}`);
+          console.log(`Status: ${ticket.frontmatter.status}`);
+          console.log(`Author: ${ticket.frontmatter.author}`);
+          console.log(`Created: ${ticket.frontmatter.date.created}`);
+          if (ticket.frontmatter.date.finished) console.log(`Finished: ${ticket.frontmatter.date.finished}`);
+          if (ticket.frontmatter.commit) console.log(`Commit: ${ticket.frontmatter.commit}`);
+          if (ticket.frontmatter.model) console.log(`Model: ${ticket.frontmatter.model}`);
+          console.log(`Iterations: ${ticket.frontmatter.iterations.length}`);
+          for (let i = 0; i < ticket.frontmatter.iterations.length; i++) {
+            const it = ticket.frontmatter.iterations[i];
+            console.log(`\n  [${i + 1}] ${it.date.started}`);
             console.log(`      Model: ${it.model}`);
-            if (it.author) console.log(`      Author: ${it.author}`);
-            if (it.finished) console.log(`      Finished: ${it.finished}`);
+            console.log(`      Author: ${it.author}`);
+            if (it.date.ended) console.log(`      Ended: ${it.date.ended}`);
             if (it.commit) console.log(`      Commit: ${it.commit.substring(0, 8)}`);
-            if (it.files) {
-              if (it.files.updated?.length) {
-                console.log(`      Updated: ${it.files.updated.length} files (+${it.files.updated.reduce((s, f) => s + (f.lines?.added || 0), 0)} -${it.files.updated.reduce((s, f) => s + (f.lines?.removed || 0), 0)})`);
-              }
-              if (it.files.created?.length) console.log(`      Created: ${it.files.created.length} files`);
-              if (it.files.removed?.length) console.log(`      Removed: ${it.files.removed.length} files`);
-            }
+            console.log(`      Lines: +${it.lines.added} -${it.lines.removed}`);
+            const totalFiles = it.files.updated.length + it.files.created.length + it.files.removed.length;
+            console.log(`      Files: ${totalFiles} (${it.files.updated.length} updated, ${it.files.created.length} created, ${it.files.removed.length} removed)`);
             console.log(`      Prompt: ${it.prompt.substring(0, 80)}${it.prompt.length > 80 ? "..." : ""}`);
           }
-          const totalLines = getTotalLines(log.frontmatter);
-          if (totalLines.added || totalLines.removed) {
-            console.log(`\nTotal Lines: +${totalLines.added} -${totalLines.removed}`);
+          if (ticket.frontmatter.files) {
+            const totalFiles = ticket.frontmatter.files.updated.length + ticket.frontmatter.files.created.length + ticket.frontmatter.files.removed.length;
+            console.log(`\nTotal Files: ${totalFiles}`);
           }
-          console.log(`\nContent:\n${log.content}`);
+          if (ticket.frontmatter.lines) console.log(`Total Lines: +${ticket.frontmatter.lines.added} -${ticket.frontmatter.lines.removed}`);
+          console.log(`\nContent:\n${ticket.content}`);
           break;
         }
         if (sub === "delete") {
@@ -1056,68 +790,56 @@ if (require.main === module) {
             printUsage();
             process.exit(1);
           }
-          deleteLog(parseInt(year), parseInt(month), parseInt(day), slug);
+          deleteTicket(parseInt(year), parseInt(month), parseInt(day), slug);
           console.log(`Deleted ticket: ${year}/${month}/${day}/${slug}`);
           break;
         }
         if (sub === "list") {
           const [year, month, day] = rest;
-          const options: LogListOptions = {};
+          const options: ListOptions = {};
           if (year) options.year = parseInt(year);
           if (month) options.month = parseInt(month);
           if (day) options.day = parseInt(day);
-          const logs = listLogs(options);
-          console.log(`\nFound ${logs.length} ticket(s):\n`);
-          for (const log of logs) {
-            const parsed = parseLogPath(log.path);
+          const tickets = listTickets(options);
+          console.log(`\nFound ${tickets.length} ticket(s):\n`);
+          for (const ticket of tickets) {
+            const parsed = parseTicketPath(ticket.path);
             if (parsed) {
               console.log(`${parsed.year}-${String(parsed.month).padStart(2, "0")}-${String(parsed.day).padStart(2, "0")} ${parsed.slug}`);
-              console.log(`  Summary: ${log.frontmatter.summary}`);
-              console.log(`  Status: ${log.frontmatter.status || "open"}`);
-              const author = getIterationAuthor(log.frontmatter);
-              if (author) console.log(`  Author: ${author}`);
-              const model = getIterationModel(log.frontmatter);
-              if (model) console.log(`  Model: ${model}`);
-              console.log(`  Iterations: ${log.frontmatter.iterations?.length || 0}`);
+              console.log(`  Summary: ${ticket.frontmatter.summary}`);
+              console.log(`  Status: ${ticket.frontmatter.status}`);
+              console.log(`  Author: ${ticket.frontmatter.author}`);
+              if (ticket.frontmatter.model) console.log(`  Model: ${ticket.frontmatter.model}`);
+              console.log(`  Iterations: ${ticket.frontmatter.iterations.length}`);
               console.log();
             }
           }
           break;
         }
         if (sub === "search") {
-          const options: LogSearchOptions = {};
+          const options: SearchOptions = {};
           let query = "";
           for (const arg of rest) {
-            if (arg.startsWith("--year=")) {
-              options.year = parseInt(arg.split("=")[1]);
-            } else if (arg.startsWith("--month=")) {
-              options.month = parseInt(arg.split("=")[1]);
-            } else if (arg.startsWith("--day=")) {
-              options.day = parseInt(arg.split("=")[1]);
-            } else if (arg.startsWith("--limit=")) {
-              options.limit = parseInt(arg.split("=")[1]);
-            } else if (!arg.startsWith("--")) {
-              query = arg;
-            }
+            if (arg.startsWith("--year=")) options.year = parseInt(arg.split("=")[1]);
+            else if (arg.startsWith("--month=")) options.month = parseInt(arg.split("=")[1]);
+            else if (arg.startsWith("--day=")) options.day = parseInt(arg.split("=")[1]);
+            else if (arg.startsWith("--limit=")) options.limit = parseInt(arg.split("=")[1]);
+            else if (!arg.startsWith("--")) query = arg;
           }
-          if (query) {
-            options.query = query;
-          }
-          const logs = searchLogs(options);
+          if (query) options.query = query;
+          const tickets = searchTickets(options);
           const limitText = options.limit ? ` (showing first ${options.limit})` : "";
-          console.log(`\nFound ${logs.length} ticket(s)${limitText}:\n`);
-          for (const log of logs) {
-            const parsed = parseLogPath(log.path);
+          console.log(`\nFound ${tickets.length} ticket(s)${limitText}:\n`);
+          for (const ticket of tickets) {
+            const parsed = parseTicketPath(ticket.path);
             if (parsed) {
               console.log(`${parsed.year}-${String(parsed.month).padStart(2, "0")}-${String(parsed.day).padStart(2, "0")} ${parsed.slug}`);
-              console.log(`  Summary: ${log.frontmatter.summary}`);
-              console.log(`  Status: ${log.frontmatter.status || "open"}`);
-              const author = getIterationAuthor(log.frontmatter);
-              if (author) console.log(`  Author: ${author}`);
-              const model = getIterationModel(log.frontmatter);
-              if (model) console.log(`  Model: ${model}`);
+              console.log(`  Summary: ${ticket.frontmatter.summary}`);
+              console.log(`  Status: ${ticket.frontmatter.status}`);
+              console.log(`  Author: ${ticket.frontmatter.author}`);
+              if (ticket.frontmatter.model) console.log(`  Model: ${ticket.frontmatter.model}`);
               if (options.query) {
-                const contentPreview = log.content.substring(0, 200).replace(/\n/g, " ");
+                const contentPreview = ticket.content.substring(0, 200).replace(/\n/g, " ");
                 console.log(`  Preview: ${contentPreview}...`);
               }
               console.log();
@@ -1125,214 +847,14 @@ if (require.main === module) {
           }
           break;
         }
+        console.error("Error: Unknown ticket command");
         printUsage();
         process.exit(1);
         break;
       }
-      case "create": {
-        const [, slug, summary, ...rest] = args;
-        if (!slug || !summary) {
-          console.error("Error: Missing slug or summary");
-          printUsage();
-          process.exit(1);
-        }
-        const dateArg = rest.find((arg) => arg.startsWith("--date="));
-        const date = dateArg ? new Date(dateArg.split("=")[1]) : undefined;
-        const log = createLog({ slug, summary, date });
-        console.log(`Created ticket: ${log.path}`);
-        console.log(`Summary: ${log.frontmatter.summary}`);
-        break;
-      }
       case "models": {
-        console.log(Object.values(Model).join("\n"));
-        break;
-      }
-      case "update": {
-        const [, slugArg, ...rest] = args;
-        if (!slugArg) {
-          console.error("Error: Missing slug");
-          printUsage();
-          process.exit(1);
-        }
-        const model = validateModel(requireFlag(rest, "model"));
-        const prompt = requireFlag(rest, "prompt");
-        const summary = parseFlag(rest, "summary");
-        const latest = getLatestLogBySlug(slugArg);
-        const filesUpdated = parseFlags(rest, "file");
-        const filesCreated = parseFlags(rest, "file-created");
-        const filesRemoved = parseFlags(rest, "file-removed");
-        const files = {
-          updated: filesUpdated.length > 0 ? filesUpdated : undefined,
-          created: filesCreated.length > 0 ? filesCreated : undefined,
-          removed: filesRemoved.length > 0 ? filesRemoved : undefined,
-        };
-        const update: LogUpdateInput = { model, prompt, files };
-        if (summary) update.summary = summary;
-        const updated = updateLog(latest.year, latest.month, latest.day, latest.slug, update);
-        console.log(`Updated ticket: ${updated.path}`);
-        console.log(`Added iteration ${updated.frontmatter.iterations?.length || 0}`);
-        break;
-      }
-      case "finish": {
-        const [, slug, ...rest] = args;
-        if (!slug) {
-          console.error("Error: Missing slug");
-          printUsage();
-          process.exit(1);
-        }
-        const latest = getLatestLogBySlug(slug);
-        const filesUpdated = parseFlags(rest, "file");
-        const filesCreated = parseFlags(rest, "file-created");
-        const filesRemoved = parseFlags(rest, "file-removed");
-        const files = {
-          updated: filesUpdated.length > 0 ? filesUpdated : undefined,
-          created: filesCreated.length > 0 ? filesCreated : undefined,
-          removed: filesRemoved.length > 0 ? filesRemoved : undefined,
-        };
-        const log = finishIteration(latest.year, latest.month, latest.day, latest.slug, files);
-        const lastIteration = getLatestIteration(log.frontmatter);
-        console.log(`Finished iteration for ticket: ${log.path}`);
-        console.log(`Commit: ${lastIteration?.commit || "none"}`);
-        if (lastIteration?.files) {
-          const totalFiles = (lastIteration.files.updated?.length || 0) +
-            (lastIteration.files.created?.length || 0) +
-            (lastIteration.files.removed?.length || 0);
-          console.log(`Files: ${totalFiles}`);
-        }
-        break;
-      }
-      case "read": {
-        const [, year, month, day, slug] = args;
-        if (!year || !month || !day || !slug) {
-          console.error("Error: Missing year, month, day, or slug");
-          printUsage();
-          process.exit(1);
-        }
-        const log = readLog(parseInt(year), parseInt(month), parseInt(day), slug);
-        console.log(`\nPath: ${log.path}`);
-        console.log(`Summary: ${log.frontmatter.summary}`);
-        console.log(`Status: ${log.frontmatter.status || "open"}`);
-        const author = getIterationAuthor(log.frontmatter);
-        if (author) console.log(`Author: ${author}`);
-        if (log.frontmatter.files) {
-          console.log(`Files: ${((log.frontmatter.files.updated || []).length + (log.frontmatter.files.created || []).length + (log.frontmatter.files.removed || []).length)}`);
-        }
-        if (log.frontmatter.lines) {
-          console.log(`Lines: +${log.frontmatter.lines.added} -${log.frontmatter.lines.removed}`);
-        }
-        const iterations = log.frontmatter.iterations || [];
-        console.log(`Iterations: ${iterations.length}`);
-        if (iterations.length) {
-          console.log(`  First: ${getFirstIterationDate(log.frontmatter)}`);
-          console.log(`  Latest: ${getLatestIterationDate(log.frontmatter)}`);
-        }
-        for (let i = 0; i < iterations.length; i++) {
-          const it = iterations[i];
-          console.log(`\n  [${i + 1}] ${it.date}`);
-          console.log(`      Model: ${it.model}`);
-          if (it.author) console.log(`      Author: ${it.author}`);
-          if (it.finished) console.log(`      Finished: ${it.finished}`);
-          if (it.commit) console.log(`      Commit: ${it.commit.substring(0, 8)}`);
-          if (it.files) {
-            if (it.files.updated?.length) {
-              console.log(`      Updated: ${it.files.updated.length} files (+${it.files.updated.reduce((s, f) => s + (f.lines?.added || 0), 0)} -${it.files.updated.reduce((s, f) => s + (f.lines?.removed || 0), 0)})`);
-            }
-            if (it.files.created?.length) console.log(`      Created: ${it.files.created.length} files`);
-            if (it.files.removed?.length) console.log(`      Removed: ${it.files.removed.length} files`);
-          }
-          console.log(`      Prompt: ${it.prompt.substring(0, 80)}${it.prompt.length > 80 ? "..." : ""}`);
-        }
-        const totalLines = getTotalLines(log.frontmatter);
-        if (totalLines.added || totalLines.removed) {
-          console.log(`\nTotal Lines: +${totalLines.added} -${totalLines.removed}`);
-        }
-        console.log(`\nContent:\n${log.content}`);
-        break;
-      }
-      case "delete": {
-        const [, year, month, day, slug] = args;
-        if (!year || !month || !day || !slug) {
-          console.error("Error: Missing year, month, day, or slug");
-          printUsage();
-          process.exit(1);
-        }
-        deleteLog(parseInt(year), parseInt(month), parseInt(day), slug);
-        console.log(`Deleted ticket: ${year}/${month}/${day}/${slug}`);
-        break;
-      }
-      case "list": {
-        const [, year, month, day] = args;
-        const options: LogListOptions = {};
-        if (year) options.year = parseInt(year);
-        if (month) options.month = parseInt(month);
-        if (day) options.day = parseInt(day);
-        const logs = listLogs(options);
-        console.log(`\nFound ${logs.length} ticket(s):\n`);
-        for (const log of logs) {
-          const parsed = parseLogPath(log.path);
-          if (parsed) {
-            console.log(`${parsed.year}-${String(parsed.month).padStart(2, "0")}-${String(parsed.day).padStart(2, "0")} ${parsed.slug}`);
-            console.log(`  Summary: ${log.frontmatter.summary}`);
-            console.log(`  Status: ${log.frontmatter.status || "open"}`);
-            const author = getIterationAuthor(log.frontmatter);
-            if (author) console.log(`  Author: ${author}`);
-            const model = getIterationModel(log.frontmatter);
-            if (model) console.log(`  Model: ${model}`);
-            console.log(`  Iterations: ${log.frontmatter.iterations?.length || 0}`);
-            console.log();
-          }
-        }
-        break;
-      }
-      case "search": {
-        const [, ...rest] = args;
-        const options: LogSearchOptions = {};
-        let query = "";
-
-        for (const arg of rest) {
-          if (arg.startsWith("--year=")) {
-            options.year = parseInt(arg.split("=")[1]);
-          } else if (arg.startsWith("--month=")) {
-            options.month = parseInt(arg.split("=")[1]);
-          } else if (arg.startsWith("--day=")) {
-            options.day = parseInt(arg.split("=")[1]);
-          } else if (arg.startsWith("--limit=")) {
-            options.limit = parseInt(arg.split("=")[1]);
-          } else if (!arg.startsWith("--")) {
-            query = arg;
-          }
-        }
-
-        if (query) {
-          options.query = query;
-        }
-
-        const logs = searchLogs(options);
-        const limitText = options.limit ? ` (showing first ${options.limit})` : "";
-        console.log(`\nFound ${logs.length} ticket(s)${limitText}:\n`);
-        for (const log of logs) {
-          const parsed = parseLogPath(log.path);
-          if (parsed) {
-            console.log(`${parsed.year}-${String(parsed.month).padStart(2, "0")}-${String(parsed.day).padStart(2, "0")} ${parsed.slug}`);
-            console.log(`  Summary: ${log.frontmatter.summary}`);
-            console.log(`  Status: ${log.frontmatter.status || "open"}`);
-            const author = getIterationAuthor(log.frontmatter);
-            if (author) console.log(`  Author: ${author}`);
-            const model = getIterationModel(log.frontmatter);
-            if (model) console.log(`  Model: ${model}`);
-            if (options.query) {
-              const contentPreview = log.content.substring(0, 200).replace(/\n/g, " ");
-              console.log(`  Preview: ${contentPreview}...`);
-            }
-            console.log();
-          }
-        }
-        break;
-      }
-      case "migrate": {
-        migrateOldLogs();
-        const migrated = migrateAllLogFrontmatter();
-        console.log(`Migration complete (scanned ${migrated.scanned}, updated ${migrated.updated})`);
+        console.log("Available models:");
+        for (const model of Object.values(Model)) console.log(`  ${model}`);
         break;
       }
       default:

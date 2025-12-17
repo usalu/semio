@@ -1,6 +1,6 @@
 export {
   Plus as AddIcon, AlertCircle as AlertCircleIcon, ArrowLeft as ArrowLeftIcon, Award as AwardIcon,
-  BookOpen as BookIcon, Camera as CameraIcon, MessageCircle as ChatIcon, Check as CheckIcon,
+  BookOpen as BookIcon, Camera as CameraIcon, MessageCircle as ChatIcon, MessageCircle, Check as CheckIcon,
   CheckIcon as CheckIconAlt,
   ChevronDown as ChevronDownIcon,
   ChevronDownIcon as ChevronDownIconAlt,

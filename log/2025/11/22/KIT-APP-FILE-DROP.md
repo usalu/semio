@@ -1,7 +1,14 @@
 ---
 slug: KIT-APP-FILE-DROP
 summary: Migration from 2025-11-22_KIT-APP-FILE-DROP.md
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.698Z"
+commit: "0000000000000000000000000000000000000000"
+iterations: []
 ---
+
 # Kit App File Drop Implementation
 
 ## 1. Problem Description

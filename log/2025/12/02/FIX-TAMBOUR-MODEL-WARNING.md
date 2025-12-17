@@ -1,6 +1,12 @@
 ---
 slug: FIX-TAMBOUR-MODEL-WARNING
 summary: Fix Tambour model warning by regenerating metabolism.zip with models
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.815Z"
+commit: "0000000000000000000000000000000000000000"
+iterations: []
 ---
 
 # Previously

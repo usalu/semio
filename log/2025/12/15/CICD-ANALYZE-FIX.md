@@ -1,6 +1,11 @@
 ---
 slug: CICD-ANALYZE-FIX
 summary: Integrate analyze/fix CI pipeline
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.950Z"
+commit: "0000000000000000000000000000000000000000"
 iterations:
   - prompt: >-
       The ci/cd system should be improved. The individual commands should work
@@ -11,14 +16,16 @@ iterations:
       scripts should have a skip mechnaism to skip preceeding individual steps.
       Adding a command always means updating all hooks, nx configs, .vscode
       tasks, launch.json, etc.
-    date: "2025-12-15T08:58:34.318Z"
+    date:
+      started: "2025-12-15T08:58:34.318Z"
     model: gpt-5-2
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
   - prompt: >-
       All commands in .vscode should be available for all granularity levels
       (every child). The order is DEV, ANALYZE, FIX, PREFLIGHT, TEST, BUILD,
       PREPUBLISH, PUBLISH, UPDATE, COMMANDS
-    date: "2025-12-15T09:27:27.418Z"
+    date:
+      started: "2025-12-15T09:27:27.418Z"
     model: gpt-5-2
     commit: 67126961d64c89450f396abedd5d477670f1ad4d
     files:
@@ -63,6 +70,11 @@ iterations:
           lines:
             added: 105
             removed: 27
+      created: []
+      removed: []
+    lines:
+      added: 1050
+      removed: 270
 ---
 
 # Previously

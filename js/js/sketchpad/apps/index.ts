@@ -24,6 +24,7 @@
 
 import "../Design";
 import "../Docs";
+import "../Feedback";
 import "../Home";
 import "../Kit";
 import "../Quality";

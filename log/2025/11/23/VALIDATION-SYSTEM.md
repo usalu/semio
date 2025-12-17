@@ -1,7 +1,14 @@
 ---
 slug: VALIDATION-SYSTEM
 summary: Migration from 2025-11-23_VALIDATION-SYSTEM.md
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.708Z"
+commit: "0000000000000000000000000000000000000000"
+iterations: []
 ---
+
 # Semio Validation & Diff-Based Fix System
 
 **Date:** 2025-11-23  

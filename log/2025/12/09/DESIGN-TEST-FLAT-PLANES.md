@@ -3,6 +3,12 @@ slug: DESIGN-TEST-FLAT-PLANES
 summary: >-
   Extend design E2E test to verify flat planes and centers match expected asset
   data
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.894Z"
+commit: "0000000000000000000000000000000000000000"
+iterations: []
 ---
 
 # Previously

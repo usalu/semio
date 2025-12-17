@@ -3,6 +3,12 @@ slug: XSTATE-MIGRATION-COMPLETE
 summary: >-
   Complete XState migration - remove Y.js from sketchpad, add guards and proper
   state machine patterns
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.874Z"
+commit: "0000000000000000000000000000000000000000"
+iterations: []
 ---
 
 # Previously

@@ -1,6 +1,12 @@
 ---
 slug: MODEL-TAG-SELECTION
 summary: Add model tag selection in footer for design and type apps
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.795Z"
+commit: "0000000000000000000000000000000000000000"
+iterations: []
 ---
 
 # Previously

@@ -1,6 +1,11 @@
 ---
 slug: UI-SYSTEM-INTEGRATION
 summary: "Integrate UI system with fixed heights, bands/strips, and action text"
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.966Z"
+commit: "0000000000000000000000000000000000000000"
 iterations:
   - prompt: >-
       The task introduced errors. Make sure to always check after every finished
@@ -23,24 +28,28 @@ iterations:
       header. Update elements and all usages in sketchpad. No need to worry
       about breaking changes the ui elements are only used in this codebase.
       Just refactor everything cleanly.
-    date: "2025-12-15T00:16:53.759Z"
+    date:
+      started: "2025-12-15T00:16:53.759Z"
     model: gpt-5-2
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
   - prompt: >-
       Footer and table row are still large but should be medium heigh as
       mentioned in the new system. Footer items are all actions.
-    date: "2025-12-15T01:02:28.138Z"
+    date:
+      started: "2025-12-15T01:02:28.138Z"
     model: gpt-5-2
   - prompt: >-
       All table rows (e.g. in home or kit app) should be medium height and not
       large.
-    date: "2025-12-15T01:02:28.138Z"
+    date:
+      started: "2025-12-15T01:02:28.138Z"
     model: gpt-5-2
   - prompt: >-
       All table rows still are large heigh. Table headers should remain large
       only the rows should be medium. All content of a row needs to be small.
       E.g. the kind icons.
-    date: "2025-12-15T01:12:45.347Z"
+    date:
+      started: "2025-12-15T01:12:45.347Z"
     model: gpt-5-2
     commit: 7765b633fe739bc29cd811ac7ec884e782e2e945
     files:
@@ -773,6 +782,11 @@ iterations:
           lines:
             added: 19
             removed: 7
+      created: []
+      removed: []
+    lines:
+      added: 3458
+      removed: 1274
 ---
 
 # Previously

@@ -1,7 +1,14 @@
 ---
 slug: POWERSHELL-TO-TYPESCRIPT
 summary: Migration from 2025-11-24_POWERSHELL-TO-TYPESCRIPT.md
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.712Z"
+commit: "0000000000000000000000000000000000000000"
+iterations: []
 ---
+
 # PowerShell to TypeScript Migration
 
 **Date:** 2025-11-24  
@@ -24,6 +31,7 @@ Migrated the entire codebase from PowerShell-based CI/CD scripting to TypeScript
 ### 1. Infrastructure Setup
 
 Created `scripts/utils.ts` with reusable utilities:
+
 - `resizeImage()` - Image processing with sharp
 - `renameFilesByPattern()` - Recursive file renaming
 - `deleteFilesByPattern()` - Recursive file deletion
@@ -34,12 +42,14 @@ Created `scripts/utils.ts` with reusable utilities:
 ### 2. Migrated Scripts
 
 #### Core Scripts
+
 - `powershell.ps1` → `scripts/utils.ts` (utilities)
 - `scripts/i18n.ps1` → `scripts/i18n.ts`
 - `scripts/export-metabolism.ps1` → `scripts/export-metabolism.ts`
 - `scripts/remove-submodule.ps1` → `scripts/remove-submodule.ts`
 
 #### Python Engine Scripts
+
 - `py/engine/dev.ps1` → `py/engine/dev.ts`
 - `py/engine/build.ps1` → `py/engine/build.ts`
 - `py/engine/test.ps1` → `py/engine/test.ts`
@@ -48,11 +58,13 @@ Created `scripts/utils.ts` with reusable utilities:
 - `py/engine/sqliteschema.ps1` → `py/engine/sqliteschema.ts`
 
 #### .NET Build Scripts
+
 - `net/Semio/build.ts` (created new)
 - `net/Semio.Grasshopper/build.ps1` → `net/Semio.Grasshopper/build.ts`
 - `net/Semio.Grasshopper/build-value-lists.ps1` → `net/Semio.Grasshopper/build-value-lists.ts`
 
 #### Yak Scripts
+
 - `yak/build.ps1` → `yak/build.ts`
 - `yak/login.ps1` → `yak/login.ts`
 - `yak/publish.ps1` → `yak/publish.ts`
@@ -62,13 +74,14 @@ Created `scripts/utils.ts` with reusable utilities:
 - `yak/test-push.ps1` → `yak/test-push.ts`
 
 #### Other Scripts
+
 - `jsonschema/build.ps1` → `jsonschema/build.ts`
 
 ### 3. Package.json Updates
 
 Updated all workspace packages to use `tsx` instead of `powershell`:
 
-- `py/engine/package.json`: 
+- `py/engine/package.json`:
   - `dev`: `powershell ... dev.ps1` → `tsx ./dev.ts`
   - `build`: `powershell ... build.ps1` → `tsx ./build.ts`
   - `test`: `powershell ... test.ps1` → `tsx ./test.ts`
@@ -86,6 +99,7 @@ Updated all workspace packages to use `tsx` instead of `powershell`:
 ### 4. Dependencies Added
 
 Added to root `package.json`:
+
 - `@types/node`: TypeScript definitions for Node.js
 - `csv-parse`: CSV parsing for value list generation
 - `sharp`: Image processing library
@@ -94,7 +108,7 @@ Added to root `package.json`:
 ### 5. Documentation Updates
 
 - `README.md`: Removed PowerShell-specific instructions, updated to reference TypeScript scripts
-- `AGENTS.md`: 
+- `AGENTS.md`:
   - Updated `I18N` keyword: `scripts/i18n.ps1` → `tsx scripts/i18n.ts`
   - Updated `AUTOMATE` keyword: Changed from PowerShell to TypeScript for all scripts
   - Updated file structure to show `scripts/utils.ts` instead of `powershell.ps1`
@@ -103,6 +117,7 @@ Added to root `package.json`:
 ### 6. Cleanup
 
 Deleted all migrated `.ps1` files (31 files total), excluding:
+
 - `temp/*` folder (temporary files)
 - `node_modules/*` folder
 - Python virtual environment activation scripts (kept as needed by Python)
@@ -111,30 +126,31 @@ Deleted all migrated `.ps1` files (31 files total), excluding:
 
 ### PowerShell → TypeScript Equivalents
 
-| PowerShell | TypeScript (Node.js) |
-|------------|---------------------|
-| `Get-ChildItem` | `readdirSync()`, `statSync()` |
-| `Remove-Item` | `rmSync()`, `unlinkSync()` |
-| `Move-Item` | `renameSync()` |
-| `Copy-Item` | `copyFileSync()` |
-| `New-Item -ItemType Directory` | `mkdirSync()` |
-| `Test-Path` | `existsSync()` |
-| `& command args` | `execSync()` or `spawn()` |
-| `Start-Process` | `spawn()` |
-| `Stop-Process` | `process.kill()` |
-| `netstat -ano` | `execSync("netstat -ano")` |
-| `Import-Csv` | `parse()` from csv-parse |
+| PowerShell                     | TypeScript (Node.js)          |
+| ------------------------------ | ----------------------------- |
+| `Get-ChildItem`                | `readdirSync()`, `statSync()` |
+| `Remove-Item`                  | `rmSync()`, `unlinkSync()`    |
+| `Move-Item`                    | `renameSync()`                |
+| `Copy-Item`                    | `copyFileSync()`              |
+| `New-Item -ItemType Directory` | `mkdirSync()`                 |
+| `Test-Path`                    | `existsSync()`                |
+| `& command args`               | `execSync()` or `spawn()`     |
+| `Start-Process`                | `spawn()`                     |
+| `Stop-Process`                 | `process.kill()`              |
+| `netstat -ano`                 | `execSync("netstat -ano")`    |
+| `Import-Csv`                   | `parse()` from csv-parse      |
 
 ### Script Execution
 
-| Before | After |
-|--------|-------|
-| `powershell -ExecutionPolicy Bypass -File script.ps1` | `tsx script.ts` |
-| `.\script.ps1` | `tsx ./script.ts` |
+| Before                                                | After             |
+| ----------------------------------------------------- | ----------------- |
+| `powershell -ExecutionPolicy Bypass -File script.ps1` | `tsx script.ts`   |
+| `.\script.ps1`                                        | `tsx ./script.ts` |
 
 ## Testing
 
 All scripts tested and working:
+
 - ✅ Python engine dev/build/test
 - ✅ .NET build scripts
 - ✅ Yak package build and publish

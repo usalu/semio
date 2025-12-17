@@ -1,7 +1,14 @@
 ---
 slug: SCHEMA-CHANGES-NAMES-AND-INTERFACES
 summary: Migration from 2025-11-20_SCHEMA-CHANGES-NAMES-AND-INTERFACES.md
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.679Z"
+commit: "0000000000000000000000000000000000000000"
+iterations: []
 ---
+
 # Schema Changes: Names and Interfaces
 
 Date: 2025-11-20
@@ -9,18 +16,21 @@ Date: 2025-11-20
 ## Overview
 
 This plan covers two major schema changes:
+
 1. Adding `name` property to `Piece`, `Port`, and `Model`
 2. Converting `Interface` from a string to a full kit artifact with its own identity
 
 ## 1. Problem Description
 
 ### Current State
+
 - `Piece`, `Port`, and `Model` lack a `name` property for user-friendly identification
 - `Port.interface` is just a string, limiting extensibility
 - `Port.compatibleInterfaces` is an array of strings
 - No central management of interface definitions
 
 ### Desired State
+
 - `Piece`, `Port`, and `Model` have optional `name` properties
 - `Interface` is a first-class kit artifact with:
   - `guid` (InterfaceId)
@@ -34,29 +44,35 @@ This plan covers two major schema changes:
 ## 2. Affected Files
 
 ### Schema Files
+
 - `sqlite/schema.sql` - Database schema
 - `jsonschema/kit.json` - JSON schema for kit serialization
 - `engineering/dataarchitecture.pu` - PlantUML architecture diagram
 - `engineering/interfacearchitecture.txt` - Interface architecture
 
 ### TypeScript/JavaScript
+
 - `js/js/semio.ts` - Core domain logic and types
 - `js/js/sketchpad/apps/*/App.tsx` - All app stores that work with these models
 - `js/js/elements/**/*.tsx` - UI components that display/edit these properties
 
 ### .NET
+
 - `net/Semio/Semio.cs` - C# domain models
 
 ### GraphQL
+
 - `graphql/schema.graphql` - GraphQL API schema
 
 ### JSON Schema
+
 - `jsonschema/design.json` - Design serialization
 - `jsonschema/type.json` - Type serialization
 
 ## 3. Implementation Plan
 
 ### Phase 1: Schema Definition
+
 1. Update `sqlite/schema.sql`
    - Add `name` column to `pieces`, `ports`, `models` tables
    - Create `interfaces` table with columns: guid, name, description, icon, attributes
@@ -76,6 +92,7 @@ This plan covers two major schema changes:
    - Update Piece, Port, Model entities
 
 ### Phase 2: TypeScript Implementation
+
 1. Update `js/js/semio.ts`
    - Add `InterfaceId` type
    - Add `Interface` model with properties
@@ -100,6 +117,7 @@ This plan covers two major schema changes:
    - Show interface compatibility visually
 
 ### Phase 3: .NET Implementation
+
 1. Update `net/Semio/Semio.cs`
    - Add `InterfaceId` struct
    - Add `Interface` class
@@ -107,12 +125,14 @@ This plan covers two major schema changes:
    - Update serialization/deserialization
 
 ### Phase 4: API Updates
+
 1. Update `graphql/schema.graphql`
    - Add Interface type
    - Update Piece, Port, Model types
    - Add interface queries and mutations
 
 ### Phase 5: Migration
+
 1. Create migration scripts for existing data
    - SQLite migration to add columns and tables
    - Data migration for existing kits (set names to null, create default interfaces)
@@ -120,6 +140,7 @@ This plan covers two major schema changes:
 ## 4. Hierarchy Updates
 
 Update the model hierarchy order in AGENTS.md:
+
 1. Attribute
 2. Coord
 3. Vec
@@ -150,7 +171,7 @@ Update the model hierarchy order in AGENTS.md:
 ## 5. Backward Compatibility
 
 - Old kits without names: `name` defaults to `undefined`
-- Old kits with string interfaces: 
+- Old kits with string interfaces:
   - Create Interface artifacts from unique interface strings
   - Map Port.interface strings to new InterfaceIds
   - Build compatibleInterfaces from old Port.compatibleInterfaces arrays

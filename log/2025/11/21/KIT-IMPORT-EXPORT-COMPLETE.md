@@ -1,7 +1,14 @@
 ---
 slug: KIT-IMPORT-EXPORT-COMPLETE
 summary: Migration from 2025-11-21_KIT-IMPORT-EXPORT-COMPLETE.md
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.683Z"
+commit: "0000000000000000000000000000000000000000"
+iterations: []
 ---
+
 # Kit Import/Export Implementation - Complete
 
 ## Summary
@@ -32,6 +39,7 @@ Successfully implemented complete kit import/export functionality with 100% data
 ### Database Schema
 
 Complete GUID-based schema (22 tables) embedded in `kitToSqlite()`:
+
 - `semio`, `kit` - Core metadata
 - `quality`, `benchmark` - Quality system
 - `interface`, `interface_compatibility` - Port compatibility
@@ -64,6 +72,7 @@ Complete GUID-based schema (22 tables) embedded in `kitToSqlite()`:
 ### Test Coverage
 
 Comprehensive roundtrip test:
+
 - Exports metabolism kit (50 types, designs with pieces/connections)
 - Imports from blob URL
 - Validates deep equality of all data
@@ -98,8 +107,9 @@ const execResult = (query: string, params?: any[]): any[] => {
 ```
 
 This enables queries like:
+
 ```typescript
-execResult("SELECT * FROM type WHERE kit_guid = ?", [kit.guid])
+execResult("SELECT * FROM type WHERE kit_guid = ?", [kit.guid]);
 ```
 
 ### Data Normalization Strategy
@@ -127,6 +137,7 @@ execResult("SELECT * FROM type WHERE kit_guid = ?", [kit.guid])
 ## Validation
 
 All 6 tests passing:
+
 - ✅ Basic kit operations
 - ✅ Roundtrip export/import with complete data preservation
 - ✅ Deep equality validation

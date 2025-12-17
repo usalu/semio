@@ -30,6 +30,7 @@ import {
   LayoutIcon,
   LocalKitIcon,
   Maximize2Icon,
+  MessageCircle as FeedbackIcon,
   Minimize2Icon,
   NavigateBackIcon,
   NavigateForwardIcon,
@@ -13052,6 +13053,31 @@ export const useRemoveFooterItem = () => {
 
 // #endregion Footer Items
 
+// #region Global Footer Items
+
+const GlobalFooterItems: FC = () => {
+  const addFooterItem = useAddFooterItem();
+  const removeFooterItem = useRemoveFooterItem();
+  const navigate = useReactNavigate();
+
+  useEffect(() => {
+    addFooterItem({
+      id: "semio.sketchpad.footer.feedback",
+      icon: <FeedbackIcon size={14} />,
+      order: 1000,
+      onClick: () => navigate("/feedback"),
+    });
+
+    return () => {
+      removeFooterItem("semio.sketchpad.footer.feedback");
+    };
+  }, [addFooterItem, removeFooterItem, navigate]);
+
+  return null;
+};
+
+// #endregion Global Footer Items
+
 // #region ConceptFilter
 
 export const ConceptFilter: FC<{ allConcepts: string[]; paramName?: string }> = ({ allConcepts, paramName = "concepts" }) => {
@@ -16122,6 +16148,7 @@ const LayoutWrapper: FC = () => {
 
   return (
     <TutorialProvider store={tutorialStore}>
+      <GlobalFooterItems />
       <DndContext
         sensors={sensors}
         collisionDetection={customCollisionDetection}

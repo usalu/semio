@@ -1,7 +1,14 @@
 ---
 slug: SQL-FILES-DEEP-EQUALITY
 summary: Migration from 2025-11-21_SQL-FILES-DEEP-EQUALITY.md
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.687Z"
+commit: "0000000000000000000000000000000000000000"
+iterations: []
 ---
+
 # Kit Import/Export - Final Implementation
 
 ## Completion Summary
@@ -17,16 +24,18 @@ Created comprehensive SQL documentation in `sql/sqlite/`:
 - **schema.sql** - Complete 22-table GUID-based schema
 
 These files serve as the single source of truth for:
+
 - .NET implementation (C#)
-- Ruby implementation  
+- Ruby implementation
 - Python implementation
 - Any future implementations
 
 Example from insert.sql:
+
 ```sql
 -- Type
 -- Parameters: guid, name, parent_guid, is_abstract, folder, stock, virtual, unit, description, icon, image, created, updated, kit_guid
-INSERT INTO type (guid, name, parent_guid, is_abstract, folder, stock, virtual, unit, description, icon, image, created, updated, kit_guid) 
+INSERT INTO type (guid, name, parent_guid, is_abstract, folder, stock, virtual, unit, description, icon, image, created, updated, kit_guid)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 ```
 
@@ -39,9 +48,10 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean
 ```
 
 Recursively compares:
+
 - **Attributes** - key, value, definition
 - **Ports** - point (x,y,z), direction (x,y,z), t, mandatory, attributes
-- **Models** - name, file, tags, attributes  
+- **Models** - name, file, tags, attributes
 - **Types** - name, description, icon, image, concepts, models, ports, attributes
 - **Pieces** - name, type, design, plane (origin, xAxis, yAxis), center, attributes
 - **Connections** - connected/connecting pieces/ports, gap, shift, rise, rotation, turn, tilt, attributes
@@ -75,6 +85,7 @@ Files are added to the zip alongside .semio/kit.db, making the export self-conta
 ### SQL as Documentation
 
 SQL files in `sql/sqlite/` are:
+
 - **Platform-agnostic** - C#, Ruby, Python can use the same queries
 - **Well-documented** - Each query has parameter list
 - **Single source of truth** - No SQL duplication
@@ -101,6 +112,7 @@ const arePortsEqual = (a?: Port[], b?: Port[]): boolean => {
 ```
 
 Benefits:
+
 - **Modular** - Easy to add new entity types
 - **Comprehensive** - Every property is checked
 - **Recursive** - Nested entities are validated
@@ -111,8 +123,7 @@ Benefits:
 Handles TypeScript ↔ SQLite type mismatches:
 
 ```typescript
-const normalizeValue = (value: any): any => 
-  (value === null || value === "" || value === undefined) ? undefined : value;
+const normalizeValue = (value: any): any => (value === null || value === "" || value === undefined ? undefined : value);
 ```
 
 Ensures `null`, `""`, and `undefined` are treated as equivalent during comparison.
@@ -120,10 +131,12 @@ Ensures `null`, `""`, and `undefined` are treated as equivalent during compariso
 ## Files Created/Modified
 
 ### Created
+
 - `sql/sqlite/insert.sql` - 24 INSERT statements
 - `sql/sqlite/select.sql` - 30+ SELECT statements
 
 ### Modified
+
 - `js/js/semio.ts`:
   - Enhanced `exportKit()` with example file handling
   - Complete rewrite of `areKitsEqual()` with deep comparison
@@ -134,6 +147,7 @@ Ensures `null`, `""`, and `undefined` are treated as equivalent during compariso
 ## Test Results
 
 ✅ All 6 tests passing:
+
 1. flattenDesign - Nakagin Capsule Tower
 2. flattenDesign - Nakagin Capsule Tower Slanted
 3. flattenDesign - Nakagin Capsule Tower Twisted

@@ -1,7 +1,14 @@
 ---
 slug: NAVBAR-PANEL-ORDER
 summary: Enforce navbar panel order Details Chat Settings
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.909Z"
+commit: "0000000000000000000000000000000000000000"
+iterations: []
 ---
+
 # Previously
 
 - Navbar panel toggles in Sketchpad apps showed Settings before Details and Chat.

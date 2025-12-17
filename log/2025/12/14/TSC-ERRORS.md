@@ -1,7 +1,14 @@
 ---
 slug: TSC-ERRORS
 summary: Fix all TypeScript errors from tsc
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.947Z"
+commit: "0000000000000000000000000000000000000000"
+iterations: []
 ---
+
 # Previously
 
 - The repo-wide TypeScript check (`npx tsx hooks/typescript.ts`) failed due to an empty root `tsconfig.json`, plus downstream type errors in `@semio/js` and `@semio/desktop`.

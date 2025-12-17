@@ -1,7 +1,14 @@
 ---
 slug: PIECE-HOVER-FIX
-summary: ''
+summary: ""
+status: finished
+author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+date:
+  created: "2025-12-16T17:06:07.763Z"
+commit: "0000000000000000000000000000000000000000"
+iterations: []
 ---
+
 ````markdown
 ---
 date: "2025-11-28T18:49:22.576Z"
