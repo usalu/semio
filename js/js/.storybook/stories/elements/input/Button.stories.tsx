@@ -45,6 +45,26 @@ export const Default: Story = {
   },
 };
 
+export const Base: Story = {
+  args: { ...Default.args, id: "button-base", level: "base" },
+};
+
+export const Window: Story = {
+  args: { ...Default.args, id: "button-window", level: "window" },
+};
+
+export const Panel: Story = {
+  args: { ...Default.args, id: "button-panel", level: "panel" },
+};
+
+export const Overlay: Story = {
+  args: { ...Default.args, id: "button-overlay", level: "overlay" },
+};
+
+export const Temporary: Story = {
+  args: { ...Default.args, id: "button-temporary", level: "temporary" },
+};
+
 // #endregion Button
 
 // #region ButtonCycle

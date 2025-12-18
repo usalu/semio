@@ -53,4 +53,29 @@ export const Default: Story = {
   ),
 };
 
+export const Base: Story = {
+  args: { ...Default.args, id: "button-group-base", level: "base" },
+  render: Default.render,
+};
+
+export const Window: Story = {
+  args: { ...Default.args, id: "button-group-window", level: "window" },
+  render: Default.render,
+};
+
+export const Panel: Story = {
+  args: { ...Default.args, id: "button-group-panel", level: "panel" },
+  render: Default.render,
+};
+
+export const Overlay: Story = {
+  args: { ...Default.args, id: "button-group-overlay", level: "overlay" },
+  render: Default.render,
+};
+
+export const Temporary: Story = {
+  args: { ...Default.args, id: "button-group-temporary", level: "temporary" },
+  render: Default.render,
+};
+
 // #endregion ButtonGroup

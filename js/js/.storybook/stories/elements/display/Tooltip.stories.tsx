@@ -21,7 +21,7 @@
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { Plus, Settings, Trash2 } from "lucide-react";
-import { Button, Tooltip, TooltipContent, TooltipTrigger } from "../../../../sketchpad/elements";
+import { Button, Level, LevelProvider, Tooltip, TooltipContent, TooltipTrigger, getLevelBgClass } from "../../../../sketchpad/elements";
 
 const TooltipExamples = () => (
   <div className="space-y-4">
@@ -88,6 +88,34 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   render: () => <TooltipExamples />,
+};
+
+const createLevelRender = (level: Level) => () => (
+  <LevelProvider level={level}>
+    <div className={`p-4 ${getLevelBgClass(level)}`}>
+      <TooltipExamples />
+    </div>
+  </LevelProvider>
+);
+
+export const Base: Story = {
+  render: createLevelRender("base"),
+};
+
+export const Window: Story = {
+  render: createLevelRender("window"),
+};
+
+export const Panel: Story = {
+  render: createLevelRender("panel"),
+};
+
+export const Overlay: Story = {
+  render: createLevelRender("overlay"),
+};
+
+export const Temporary: Story = {
+  render: createLevelRender("temporary"),
 };
 
 // #endregion Tooltip

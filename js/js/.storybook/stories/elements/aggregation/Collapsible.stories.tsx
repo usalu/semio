@@ -22,7 +22,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Box, ChevronDown } from "lucide-react";
 import { useState } from "react";
-import { Button, Collapsible, CollapsibleContent, CollapsibleTrigger } from "../../../../sketchpad/elements";
+import { Button, Collapsible, CollapsibleContent, CollapsibleTrigger, Level, LevelProvider, getLevelBgClass } from "../../../../sketchpad/elements";
 
 // #region Collapsible
 const meta = {
@@ -66,6 +66,58 @@ export const Default: Story = {
       </Collapsible>
     );
   },
+};
+
+const CollapsibleDemo: React.FC<{ level: Level }> = ({ level }) => {
+  const [isOpen, setIsOpen] = useState(true);
+  return (
+    <LevelProvider level={level}>
+      <div className={`p-4 ${getLevelBgClass(level)}`}>
+        <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-96 space-y-2">
+          <div className="flex items-center justify-between space-x-4 pb-2">
+            <div className="flex items-center gap-double">
+              <Box className="size-tiny" />
+              <h4 className="text-sm font-semibold">Capsule Variants (3)</h4>
+            </div>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost">
+                <ChevronDown className={`size-small transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                <span className="sr-only">Toggle</span>
+              </Button>
+            </CollapsibleTrigger>
+          </div>
+          <div className="border px-4 py-2 text-sm flex items-center justify-between">
+            <span>Capsule J</span>
+            <span className="text-xs text-muted-foreground">2.5m × 4.0m</span>
+          </div>
+          <CollapsibleContent className="space-y-2">
+            <div className="border px-4 py-2 text-sm">Capsule L</div>
+            <div className="border px-4 py-2 text-sm">Capsule P</div>
+          </CollapsibleContent>
+        </Collapsible>
+      </div>
+    </LevelProvider>
+  );
+};
+
+export const Base: Story = {
+  render: () => <CollapsibleDemo level="base" />,
+};
+
+export const Window: Story = {
+  render: () => <CollapsibleDemo level="window" />,
+};
+
+export const Panel: Story = {
+  render: () => <CollapsibleDemo level="panel" />,
+};
+
+export const Overlay: Story = {
+  render: () => <CollapsibleDemo level="overlay" />,
+};
+
+export const Temporary: Story = {
+  render: () => <CollapsibleDemo level="temporary" />,
 };
 
 // #endregion Collapsible

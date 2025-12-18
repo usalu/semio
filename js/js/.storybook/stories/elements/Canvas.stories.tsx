@@ -21,7 +21,7 @@
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { Canvas, HorizontalWindows } from "../../../sketchpad/Sketchpad";
-import { Window } from "../../../sketchpad/elements";
+import { Level, LevelProvider, Window, getLevelBgClass } from "../../../sketchpad/elements";
 
 // #region Canvas
 const meta = {
@@ -61,6 +61,48 @@ export const Default: Story = {
       <Canvas {...args} />
     </div>
   ),
+};
+
+const CanvasDemo = () => (
+  <HorizontalWindows>
+    <Window id="left" defaultSize={50}>
+      <WindowContent title="Left Window" color="bg-panel" />
+    </Window>
+    <Window id="right" defaultSize={50}>
+      <WindowContent title="Right Window" color="bg-base" />
+    </Window>
+  </HorizontalWindows>
+);
+
+const createLevelRender = (level: Level) => () => (
+  <LevelProvider level={level}>
+    <div className={`h-screen ${getLevelBgClass(level)}`}>
+      <Canvas>
+        <CanvasDemo />
+      </Canvas>
+    </div>
+  </LevelProvider>
+);
+
+export const Base: Story = {
+  render: createLevelRender("base"),
+};
+
+export const Window_: Story = {
+  name: "Window",
+  render: createLevelRender("window"),
+};
+
+export const Panel: Story = {
+  render: createLevelRender("panel"),
+};
+
+export const Overlay: Story = {
+  render: createLevelRender("overlay"),
+};
+
+export const Temporary: Story = {
+  render: createLevelRender("temporary"),
 };
 
 // #endregion Canvas

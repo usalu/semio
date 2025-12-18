@@ -22,7 +22,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Box, Circle, Cylinder, Settings, User } from "lucide-react";
 import { useState } from "react";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandShortcut } from "../../../sketchpad/elements";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandShortcut, Level, LevelProvider, getLevelBgClass } from "../../../sketchpad/elements";
 
 // #region Command
 const meta = {
@@ -77,6 +77,72 @@ export const Default: Story = {
       </Command>
     );
   },
+};
+
+const CommandDemo = () => {
+  const [value, setValue] = useState("");
+  return (
+    <Command className="border w-96" value={value} onValueChange={setValue}>
+      <CommandInput placeholder="Search types..." />
+      <CommandList>
+        <CommandEmpty>No types found.</CommandEmpty>
+        <CommandGroup heading="Types">
+          <CommandItem value="capsule">
+            <Box />
+            <span>Capsule</span>
+          </CommandItem>
+          <CommandItem value="base">
+            <Circle />
+            <span>Base</span>
+          </CommandItem>
+          <CommandItem value="tambour">
+            <Cylinder />
+            <span>Tambour</span>
+          </CommandItem>
+        </CommandGroup>
+        <CommandGroup heading="Settings">
+          <CommandItem value="profile">
+            <User />
+            <span>Profile</span>
+            <CommandShortcut>⌘P</CommandShortcut>
+          </CommandItem>
+          <CommandItem value="settings">
+            <Settings />
+            <span>Settings</span>
+            <CommandShortcut>⌘S</CommandShortcut>
+          </CommandItem>
+        </CommandGroup>
+      </CommandList>
+    </Command>
+  );
+};
+
+const createLevelRender = (level: Level) => () => (
+  <LevelProvider level={level}>
+    <div className={`p-4 ${getLevelBgClass(level)}`}>
+      <CommandDemo />
+    </div>
+  </LevelProvider>
+);
+
+export const Base: Story = {
+  render: createLevelRender("base"),
+};
+
+export const Window: Story = {
+  render: createLevelRender("window"),
+};
+
+export const Panel: Story = {
+  render: createLevelRender("panel"),
+};
+
+export const Overlay: Story = {
+  render: createLevelRender("overlay"),
+};
+
+export const Temporary: Story = {
+  render: createLevelRender("temporary"),
 };
 
 // #endregion Command

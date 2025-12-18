@@ -49,13 +49,37 @@ export const Default: Story = {
     onPointerUp: () => {},
     onPointerCancel: () => {},
     interactionId: "stepper-interaction",
+    level: "base",
   },
   render: (args) => {
     const [value, setValue] = useState(args.value);
-    return (
-      <Stepper {...args} value={value} onChange={setValue} />
-    );
+    return <Stepper {...args} value={value} onChange={setValue} />;
   },
+};
+
+export const Base: Story = {
+  args: { ...Default.args, id: "stepper-base", level: "base" },
+  render: Default.render,
+};
+
+export const Window: Story = {
+  args: { ...Default.args, id: "stepper-window", level: "window" },
+  render: Default.render,
+};
+
+export const Panel: Story = {
+  args: { ...Default.args, id: "stepper-panel", level: "panel" },
+  render: Default.render,
+};
+
+export const Overlay: Story = {
+  args: { ...Default.args, id: "stepper-overlay", level: "overlay" },
+  render: Default.render,
+};
+
+export const Temporary: Story = {
+  args: { ...Default.args, id: "stepper-temporary", level: "temporary" },
+  render: Default.render,
 };
 
 // #endregion Stepper

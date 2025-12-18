@@ -123,7 +123,7 @@ const useActiveInteraction = () => React.useContext(ActiveInteractionContext);
 
 // #region Level Context
 
-export type Level = "base" | "panel" | "temporary";
+export type Level = "base" | "window" | "panel" | "overlay" | "temporary";
 
 const LevelContext = React.createContext<Level>("base");
 
@@ -169,6 +169,66 @@ export const useElementLevel = (propLevel?: Level): Level => {
   return propLevel ?? contextLevel;
 };
 
+export const getLevelBgClass = (level: Level): string => {
+  switch (level) {
+    case "window":
+      return "bg-window";
+    case "panel":
+      return "bg-panel";
+    case "overlay":
+      return "bg-overlay";
+    case "temporary":
+      return "bg-temporary";
+    default:
+      return "bg-base";
+  }
+};
+
+export const getLevelHoverClass = (level: Level): string => {
+  switch (level) {
+    case "window":
+      return "hover:bg-hover-window";
+    case "panel":
+      return "hover:bg-hover-panel";
+    case "overlay":
+      return "hover:bg-hover-overlay";
+    case "temporary":
+      return "hover:bg-hover-temporary";
+    default:
+      return "hover:bg-hover-base";
+  }
+};
+
+export const getLevelActiveHoverClass = (level: Level): string => {
+  switch (level) {
+    case "window":
+      return "data-[state=active]:bg-hover-window";
+    case "panel":
+      return "data-[state=active]:bg-hover-panel";
+    case "overlay":
+      return "data-[state=active]:bg-hover-overlay";
+    case "temporary":
+      return "data-[state=active]:bg-hover-temporary";
+    default:
+      return "data-[state=active]:bg-hover-base";
+  }
+};
+
+export const getLevelZClass = (level: Level): string => {
+  switch (level) {
+    case "window":
+      return "z-window";
+    case "panel":
+      return "z-panel";
+    case "overlay":
+      return "z-overlay";
+    case "temporary":
+      return "z-temporary";
+    default:
+      return "z-base";
+  }
+};
+
 // #endregion Element
 
 // #region Root Components
@@ -211,7 +271,7 @@ function CommandDialog({
 
 function CommandInput({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.Input>) {
   return (
-    <div data-slot="command-input-wrapper" className="flex h-medium items-center gap-single border-b px-tiny">
+    <div data-slot="command-input-wrapper" className="flex h-medium items-center gap-single border-b border-element px-tiny">
       <SearchIcon className="size-small shrink-0 opacity-50" />
       <CommandPrimitive.Input data-slot="command-input" className={cn("placeholder:text-muted-foreground flex h-medium w-full bg-transparent text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50", className)} {...props} />
     </div>
@@ -290,7 +350,7 @@ export interface FooterProps {
 
 const Footer: React.FC<FooterProps> = ({ items = [], className = "", isVisible = true, level = "base" }) => {
   const sortedItems = [...items].sort((a, b) => (a.order || 0) - (b.order || 0));
-  const bgClass = level === "panel" ? "bg-panel" : level === "temporary" ? "bg-temporary" : "bg-base";
+  const bgClass = getLevelBgClass(level);
   return (
     <footer id="footer" data-slot="footer" className={cn("border-t flex items-center h-medium transition-transform duration-200", bgClass, isVisible ? "translate-y-0" : "translate-y-full", className)}>
       <div className="flex items-center h-full px-single min-w-0">
@@ -320,10 +380,11 @@ export interface LayoutProps {
   rightPanel?: RightPanelProps;
   bottomPanel?: BottomPanelProps;
   canvas: React.ReactNode;
+  toolbar?: React.ReactNode;
   className?: string;
 }
 
-const Layout: React.FC<LayoutProps> = ({ navbar, footer, leftPanel, middlePanel, rightPanel, bottomPanel, canvas, className = "" }) => (
+const Layout: React.FC<LayoutProps> = ({ navbar, footer, leftPanel, middlePanel, rightPanel, bottomPanel, canvas, toolbar, className = "" }) => (
   <div className={`flex flex-col h-screen w-screen overflow-hidden ${className}`}>
     {navbar && <div className="flex-shrink-0">{navbar}</div>}
     <div className="flex flex-1 min-h-0 relative">
@@ -331,13 +392,18 @@ const Layout: React.FC<LayoutProps> = ({ navbar, footer, leftPanel, middlePanel,
       <div className="flex flex-col flex-1 min-w-0 relative">
         <div className="flex flex-1 min-h-0 relative">
           {middlePanel && middlePanel.visible && <MiddlePanel {...middlePanel} />}
-          <div className="flex-1 min-w-0 min-h-0">{canvas}</div>
+          <div className="flex-1 min-w-0 min-h-0 relative">{canvas}</div>
           {rightPanel && rightPanel.visible && <RightPanel {...rightPanel} />}
         </div>
         {bottomPanel && bottomPanel.visible && <BottomPanel {...bottomPanel} />}
       </div>
     </div>
-    {footer && <div className="flex-shrink-0">{footer}</div>}
+    {(footer || toolbar) && (
+      <div className="flex-shrink-0 relative">
+        {toolbar && <div className="absolute bottom-[calc(100%+var(--spacing-single))] left-1/2 -translate-x-1/2 z-panel pointer-events-none">{toolbar}</div>}
+        {footer}
+      </div>
+    )}
   </div>
 );
 
@@ -1049,7 +1115,9 @@ const actionGroupItemVariants = cva(
     variants: {
       level: {
         base: "hover:bg-hover-base",
+        window: "hover:bg-hover-window",
         panel: "hover:bg-hover-panel",
+        overlay: "hover:bg-hover-overlay",
         temporary: "hover:bg-hover-temporary",
       },
     },
@@ -1071,7 +1139,12 @@ interface ActionGroupProps extends Omit<React.ComponentProps<"div">, "children">
 function ActionGroup({ className, level: propLevel, children, ...props }: ActionGroupProps) {
   const level = useElementLevel(propLevel);
   return (
-    <div data-slot="action-group" data-level={level} className={cn("group/action-group flex h-small items-center border border-element divide-x divide-element overflow-hidden", className, "[&:not(:first-child)]:border-l-[length:1px] [&:not(:first-child)]:border-l-element")} {...props}>
+    <div
+      data-slot="action-group"
+      data-level={level}
+      className={cn("group/action-group flex h-small items-center border border-element divide-x divide-element overflow-hidden", className, "[&:not(:first-child)]:border-l-[length:1px] [&:not(:first-child)]:border-l-element")}
+      {...props}
+    >
       <ActionGroupContext.Provider value={{ level }}>{children}</ActionGroupContext.Provider>
     </div>
   );
@@ -1230,7 +1303,9 @@ const buttonGroupItemVariants = cva(
     variants: {
       level: {
         base: "hover:bg-hover-base",
+        window: "hover:bg-hover-window",
         panel: "hover:bg-hover-panel",
+        overlay: "hover:bg-hover-overlay",
         temporary: "hover:bg-hover-temporary",
       },
       variant: {
@@ -1260,7 +1335,12 @@ interface ButtonGroupProps extends Omit<React.ComponentProps<"div">, "id"> {
 function ButtonGroup({ className, level: propLevel, id, showLabel, children, ...props }: ButtonGroupProps) {
   const level = useElementLevel(propLevel);
   const buttonGroupElement = (
-    <div data-slot="button-group" data-level={level} className={cn("group/button-group flex w-fit items-center border border-element divide-x divide-element overflow-hidden h-medium", className, "[&:not(:first-child)]:border-l-[length:1px] [&:not(:first-child)]:border-l-element")} {...props}>
+    <div
+      data-slot="button-group"
+      data-level={level}
+      className={cn("group/button-group flex w-fit items-center border border-element divide-x divide-element overflow-hidden h-medium", className, "[&:not(:first-child)]:border-l-[length:1px] [&:not(:first-child)]:border-l-element")}
+      {...props}
+    >
       <ButtonGroupContext.Provider value={{ level }}>{children as React.ReactNode}</ButtonGroupContext.Provider>
     </div>
   );
@@ -1674,7 +1754,7 @@ function SelectTrigger({
   id?: string;
 }) {
   const level = useElementLevel(propLevel);
-  const hoverClass = level === "panel" ? "hover:bg-hover-panel" : level === "temporary" ? "hover:bg-hover-temporary" : "hover:bg-hover-base";
+  const hoverClass = getLevelHoverClass(level);
 
   return (
     <SelectPrimitive.Trigger
@@ -2318,7 +2398,9 @@ const toggleVariants = cva(
     variants: {
       level: {
         base: "hover:bg-hover-base",
+        window: "hover:bg-hover-window",
         panel: "hover:bg-hover-panel",
+        overlay: "hover:bg-hover-overlay",
         temporary: "hover:bg-hover-temporary",
       },
     },
@@ -2395,7 +2477,13 @@ interface ToggleGroupProps extends Omit<React.ComponentProps<typeof ToggleGroupP
 function ToggleGroup({ className, id, showLabel, level: propLevel, items, kind = "single", ...restProps }: ToggleGroupProps) {
   const level = useElementLevel(propLevel);
   const toggleGroupElement = (
-    <ToggleGroupPrimitive.Root data-slot="toggle-group" id={id} type={kind} className={cn("group/toggle-group flex w-fit items-center border border-element overflow-hidden h-medium divide-x divide-element", className, "[&:not(:first-child)]:border-l-[length:1px] [&:not(:first-child)]:border-l-element")} {...(restProps as any)}>
+    <ToggleGroupPrimitive.Root
+      data-slot="toggle-group"
+      id={id}
+      type={kind}
+      className={cn("group/toggle-group flex w-fit items-center border border-element overflow-hidden h-medium divide-x divide-element", className, "[&:not(:first-child)]:border-l-[length:1px] [&:not(:first-child)]:border-l-element")}
+      {...(restProps as any)}
+    >
       <ToggleGroupContext.Provider value={{ level }}>
         {items.map((item) => (
           <ToggleGroupItem key={item.value} {...item} />
@@ -2439,12 +2527,7 @@ function ToggleGroupItem({ className, id, icon, text, action, ...props }: Toggle
       {icon as React.ReactNode}
       {text && <span className="ml-single text-xs whitespace-nowrap">{text}</span>}
       {action && (
-        <div
-          className={cn("flex items-center justify-center w-small h-small bg-base", text && "ml-single", level === "panel" && "bg-panel", level === "temporary" && "bg-temporary")}
-          onClick={(e) => e.stopPropagation()}
-          onMouseDown={(e) => e.stopPropagation()}
-          onPointerDown={(e) => e.stopPropagation()}
-        >
+        <div className={cn("flex items-center justify-center w-small h-small", getLevelBgClass(level), text && "ml-single")} onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
           {action}
         </div>
       )}
@@ -2639,7 +2722,7 @@ function Accordion({ ...props }: React.ComponentProps<typeof AccordionPrimitive.
 }
 
 function AccordionItem({ className, ...props }: React.ComponentProps<typeof AccordionPrimitive.Item>) {
-  return <AccordionPrimitive.Item data-slot="accordion-item" className={cn("border-b last:border-b-0", className)} {...props} />;
+  return <AccordionPrimitive.Item data-slot="accordion-item" className={cn("border-b border-element last:border-b-0", className)} {...props} />;
 }
 
 function AccordionTrigger({ className, children, ...props }: React.ComponentProps<typeof AccordionPrimitive.Trigger>) {
@@ -2895,7 +2978,7 @@ export interface BandProps extends ElementProps {
 
 function Band({ items, scrollable = true, className, level: propLevel, id }: BandProps) {
   const level = useElementLevel(propLevel);
-  const bgClass = level === "panel" ? "bg-panel" : level === "temporary" ? "bg-temporary" : "bg-base";
+  const bgClass = getLevelBgClass(level);
   const itemsElement = (
     <div id={id} data-slot="band" className={cn("p-single flex gap-single items-center min-w-0", scrollable ? "w-fit" : "w-full")}>
       {items.map((item, index) => (
@@ -2908,11 +2991,11 @@ function Band({ items, scrollable = true, className, level: propLevel, id }: Ban
 
   if (scrollable)
     return (
-      <Scrollable orientation="horizontal" className={cn("border-b h-large", bgClass, className)}>
+      <Scrollable orientation="horizontal" className={cn("border-b border-element h-large", bgClass, className)}>
         {itemsElement}
       </Scrollable>
     );
-  return <div className={cn("border-b h-large", bgClass, className)}>{itemsElement}</div>;
+  return <div className={cn("border-b border-element h-large", bgClass, className)}>{itemsElement}</div>;
 }
 
 export { Band as Band };
@@ -2935,7 +3018,7 @@ export interface StripProps extends ElementProps {
 
 function Strip({ items, scrollable = true, className, level: propLevel, id }: StripProps) {
   const level = useElementLevel(propLevel);
-  const bgClass = level === "panel" ? "bg-panel" : level === "temporary" ? "bg-temporary" : "bg-base";
+  const bgClass = getLevelBgClass(level);
   const itemsElement = (
     <div id={id} data-slot="strip" className={cn("p-single flex gap-single items-center min-w-0", scrollable ? "w-fit" : "w-full")}>
       {items.map((item, index) => (
@@ -2948,11 +3031,11 @@ function Strip({ items, scrollable = true, className, level: propLevel, id }: St
 
   if (scrollable)
     return (
-      <Scrollable orientation="horizontal" className={cn("border-b h-medium", bgClass, className)}>
+      <Scrollable orientation="horizontal" className={cn("border-b border-element h-medium", bgClass, className)}>
         {itemsElement}
       </Scrollable>
     );
-  return <div className={cn("border-b h-medium", bgClass, className)}>{itemsElement}</div>;
+  return <div className={cn("border-b border-element h-medium", bgClass, className)}>{itemsElement}</div>;
 }
 
 export { Strip };
@@ -2975,7 +3058,7 @@ export interface NavbarProps {
 
 function Navbar({ items, className, level: propLevel }: NavbarProps) {
   const level = useElementLevel(propLevel);
-  const bgClass = level === "panel" ? "bg-panel" : level === "temporary" ? "bg-temporary" : "bg-base";
+  const bgClass = getLevelBgClass(level);
   return (
     <nav id="navbar" data-slot="navbar" className={cn("border-b h-large z-navbar", bgClass, className)}>
       <div className="p-single flex gap-single items-center min-w-0">
@@ -3001,14 +3084,14 @@ function Tabs({ className, ...props }: React.ComponentProps<typeof TabsPrimitive
 
 function TabsList({ className, level: propLevel, ...props }: React.ComponentProps<typeof TabsPrimitive.List> & { level?: Level }) {
   const level = useElementLevel(propLevel);
-  const bgClass = level === "panel" ? "bg-panel" : level === "temporary" ? "bg-temporary" : "bg-background";
+  const bgClass = getLevelBgClass(level);
   return <TabsPrimitive.List data-slot="tabs-list" className={cn("text-muted-foreground inline-flex h-large w-fit items-center justify-center p-single", bgClass, className)} {...props} />;
 }
 
 function TabsTrigger({ className, level: propLevel, ...props }: React.ComponentProps<typeof TabsPrimitive.Trigger> & { level?: Level }) {
   const level = useElementLevel(propLevel);
-  const activeHoverClass = level === "panel" ? "data-[state=active]:bg-hover-panel" : level === "temporary" ? "data-[state=active]:bg-hover-temporary" : "data-[state=active]:bg-hover-base";
-  const hoverClass = level === "panel" ? "hover:bg-hover-panel" : level === "temporary" ? "hover:bg-hover-temporary" : "hover:bg-hover-base";
+  const activeHoverClass = getLevelActiveHoverClass(level);
+  const hoverClass = getLevelHoverClass(level);
   return (
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
@@ -4122,16 +4205,16 @@ const Panel: React.FC<PanelProps> = ({
           : isResizing || isResizeHovered
             ? "border-b-accent"
             : "border-b";
-  const containerClass = `absolute top-0 bottom-0 text-foreground border min-w-0 overflow-hidden ${showBackground ? "bg-panel" : ""} ${borderClass} ${className}`;
+  const containerClass = `absolute text-foreground border min-w-0 overflow-hidden ${showBackground ? "bg-panel" : ""} ${borderClass} ${className}`;
   const hasContent = sortedSections.length > 0 || additionalContent;
   const isHorizontal = resizeSide === "left" || resizeSide === "right";
   const positionStyle = isHorizontal
     ? resizeSide === "right"
-      ? { left: 0, width: `${size}px`, zIndex }
-      : { right: 0, width: `${size}px`, zIndex }
+      ? { left: "var(--spacing-single)", top: "var(--spacing-single)", bottom: "var(--spacing-single)", width: `${size}px`, zIndex }
+      : { right: "var(--spacing-single)", top: "var(--spacing-single)", bottom: "var(--spacing-single)", width: `${size}px`, zIndex }
     : resizeSide === "top"
-      ? { top: 0, height: `${size}px`, zIndex }
-      : { bottom: 0, height: `${size}px`, zIndex };
+      ? { top: "var(--spacing-single)", left: "var(--spacing-single)", right: "var(--spacing-single)", height: `${size}px`, zIndex }
+      : { bottom: "var(--spacing-single)", left: "var(--spacing-single)", right: "var(--spacing-single)", height: `${size}px`, zIndex };
   const resizeHandleClass = isHorizontal ? `absolute top-0 bottom-0 ${resizeSide === "left" ? "left-0" : "right-0"} w-single cursor-ew-resize` : `absolute left-0 right-0 ${resizeSide === "top" ? "top-0" : "bottom-0"} h-single cursor-ns-resize`;
   return (
     <div data-panel={panelKey} className={containerClass} style={{ ...positionStyle, opacity, transition: "opacity 150ms" }}>
@@ -4270,7 +4353,23 @@ const DefaultErrorDisplay: React.FC<{ error: Error }> = ({ error }) => (
   </div>
 );
 
-const Window: React.FC<WindowProps> = ({ id, children, kind = "canvas", onDoubleClick, className = "", isVisible = true, loading = false, error = null, skeleton, showControls = false, onOpenInNewWindow, onMaximize, onMinimize, onClose, controls }) => {
+const Window: React.FC<WindowProps> = ({
+  id,
+  children,
+  kind = "canvas",
+  onDoubleClick,
+  className = "",
+  isVisible = true,
+  loading = false,
+  error = null,
+  skeleton,
+  showControls = false,
+  onOpenInNewWindow,
+  onMaximize,
+  onMinimize,
+  onClose,
+  controls,
+}) => {
   const [isMaximized, setIsMaximized] = React.useState(false);
 
   const handleMaximize = () => {
@@ -5399,7 +5498,7 @@ const Table = <T,>({
       setDroppableRef(node);
     };
 
-    const baseRowClassName = `border-b ${rowHeightClass} ${isSelected ? "bg-active-base text-active-foreground" : isOver ? "bg-hover-base ring-2 ring-active" : "hover:bg-hover-base"}`;
+    const baseRowClassName = `border-b border-element ${rowHeightClass} ${isSelected ? "bg-active-base text-active-foreground" : isOver ? "bg-hover-base ring-2 ring-active" : "hover:bg-hover-base"}`;
     const isDragging = activeId === rowId || isDraggingHook;
 
     return (
@@ -5456,7 +5555,7 @@ const Table = <T,>({
     return (
       <Scrollable ref={scrollAreaRef} className={`h-full w-full ${className}`}>
         <table className="w-full border-collapse">
-          <thead className={`bg-base border-b ${stickyHeader ? "sticky top-0 z-panel" : ""} ${headerClassName}`}>
+          <thead className={`bg-base border-b border-element ${stickyHeader ? "sticky top-0 z-panel" : ""} ${headerClassName}`}>
             <tr className="h-large">
               {visibleColumns.map((column) => (
                 <th key={column.id} className={`text-left p-single font-medium h-large ${column.headerClassName || column.className || ""}`} style={{ width: column.width }}>
@@ -5483,7 +5582,7 @@ const Table = <T,>({
                   return <DraggableRow key={key} row={row} rowId={rowId} index={index} isSelected={isSelected} customRowClassName={customRowClassName} />;
                 }
 
-                const baseRowClassName = `border-b ${rowHeightClass} ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`;
+                const baseRowClassName = `border-b border-element ${rowHeightClass} ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`;
                 const isDragging = activeId === rowId;
 
                 return (
@@ -5535,7 +5634,7 @@ export interface TableSkeletonProps {
 export const TableSkeleton: React.FC<TableSkeletonProps> = ({ columns, rowCount = 5, className = "" }) => (
   <Scrollable className={`h-full w-full ${className}`}>
     <table className="w-full border-collapse">
-      <thead className="bg-panel border-b sticky top-0 z-panel">
+      <thead className="bg-panel border-b border-element sticky top-0 z-panel">
         <tr className="h-large">
           {columns.map((column) => (
             <th key={column.id} className={`text-left p-single text-sm font-medium h-large ${column.className || ""}`} style={{ width: column.width }}>
@@ -5546,7 +5645,7 @@ export const TableSkeleton: React.FC<TableSkeletonProps> = ({ columns, rowCount 
       </thead>
       <tbody>
         {Array.from({ length: rowCount }).map((_, index) => (
-          <tr key={index} className="border-b h-medium">
+          <tr key={index} className="border-b border-element h-medium">
             {columns.map((column) => (
               <td key={column.id} className={`h-medium px-single py-0 align-middle text-sm [&_svg:not([class*='size-'])]:size-small [&_img]:size-small ${column.className || ""}`}>
                 <div className="flex items-center h-full min-w-0">

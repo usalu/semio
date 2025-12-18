@@ -87,4 +87,54 @@ export const Default: Story = {
   ),
 };
 
+const createLevelRender = (level: string) => (args: typeof Default.args) => (
+  <Select {...args}>
+    <SelectTrigger id={`select-trigger-${level}`} size="default" level={level as "base" | "window" | "panel" | "overlay" | "temporary"} className="w-[220px]">
+      <SelectValue placeholder="Select a type" />
+    </SelectTrigger>
+    <SelectContent>
+      <SelectGroup>
+        <SelectLabel>Modular Components</SelectLabel>
+        <SelectItem value="capsule">
+          <div className="flex items-center gap-double">
+            <Box className="size-tiny" />
+            Capsule
+          </div>
+        </SelectItem>
+        <SelectItem value="base">
+          <div className="flex items-center gap-double">
+            <Circle className="size-tiny" />
+            Base
+          </div>
+        </SelectItem>
+      </SelectGroup>
+    </SelectContent>
+  </Select>
+);
+
+export const Base: Story = {
+  args: { ...Default.args, id: "select-base" },
+  render: createLevelRender("base"),
+};
+
+export const Window: Story = {
+  args: { ...Default.args, id: "select-window" },
+  render: createLevelRender("window"),
+};
+
+export const Panel: Story = {
+  args: { ...Default.args, id: "select-panel" },
+  render: createLevelRender("panel"),
+};
+
+export const Overlay: Story = {
+  args: { ...Default.args, id: "select-overlay" },
+  render: createLevelRender("overlay"),
+};
+
+export const Temporary: Story = {
+  args: { ...Default.args, id: "select-temporary" },
+  render: createLevelRender("temporary"),
+};
+
 // #endregion Select

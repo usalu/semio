@@ -3397,10 +3397,13 @@ const App: FC = () => {
 };
 
 const TypeApp: FC = () => {
+  const appType = useAppType();
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
 
-  useLayoutEffect(() => {
+  useEffect(() => {
+    if (appType !== "type") return;
+
     addSection("toolbar", {
       id: "semio.sketchpad.app.type.tools",
       specificity: 20,
@@ -3411,7 +3414,7 @@ const TypeApp: FC = () => {
     return () => {
       removeSection("toolbar", "semio.sketchpad.app.type.tools");
     };
-  }, [addSection, removeSection]);
+  }, [appType, addSection, removeSection]);
 
   useTypeAppInitialize();
 
@@ -3487,24 +3490,27 @@ export const TypeAppFooter: FC = () => {
     selectedModelTagsRef.current = selectedModelTags;
   }, [addModelTag, removeModelTag, selectedModelTags]);
 
-  // Get all unique tag guids from the type's models
-  const allModelTagGuids = useMemo(() => {
-    if (!type?.models) return [];
+  // Get all unique tag guids and names from the type's models
+  const { allModelTagGuids, tagNameMap } = useMemo(() => {
+    if (!type?.models) return { allModelTagGuids: [], tagNameMap: new Map<string, string>() };
     const tagGuids = new Set<string>();
+    const nameMap = new Map<string, string>();
     type.models.forEach((model) => {
-      model.tags?.forEach((tag) => tagGuids.add(tag.guid));
+      model.tags?.forEach((tag) => {
+        tagGuids.add(tag.guid);
+        if (tag.name && !nameMap.has(tag.guid)) {
+          nameMap.set(tag.guid, tag.name);
+        }
+      });
     });
-    return Array.from(tagGuids);
-  }, [type?.models]);
-
-  // Get tag names from kit
-  const tagNameMap = useMemo(() => {
-    const map = new Map<string, string>();
+    // Fallback to kit tags for any missing names
     tags.forEach((tag) => {
-      map.set(tag.guid, tag.name);
+      if (!nameMap.has(tag.guid)) {
+        nameMap.set(tag.guid, tag.name);
+      }
     });
-    return map;
-  }, [tags]);
+    return { allModelTagGuids: Array.from(tagGuids), tagNameMap: nameMap };
+  }, [type?.models, tags]);
 
   useEffect(() => {
     if (appType !== "type") return;

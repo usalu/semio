@@ -43,18 +43,19 @@ import {
 } from "@semio/assets";
 import { formatDistanceToNow } from "date-fns";
 import { de, enUS } from "date-fns/locale";
-import React, { FC, useEffect, useMemo, useRef, useState } from "react";
+import React, { FC, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router";
 import i18n, { useLabel } from "../i18n";
 import { generateUniqueName, guid, Guid, importKit, Kit, KitShallow } from "../semio";
 import { docsRegistry } from "./Docs";
-import { Action, Band, Input, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Spinner, Table, TableAvatar, TableColumn, Textarea, Toggle, ToggleGroup, TreeContent, TreeItem } from "./elements";
+import { Action, Input, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Spinner, Table, TableAvatar, TableColumn, Textarea, Toggle, ToggleGroup, TreeContent, TreeItem } from "./elements";
 import type { AppConfig, AppEdit, AppPlugin, PanelDefinition, PanelVisibility } from "./shared";
 import { createPanelDefinition, Expertise, Mode, PanelKind, registerAppPlugin, registerEventHandler, registerRuntimeAction, Theme } from "./shared";
 import {
+  AppWindowConfig,
   Canvas,
-  ConceptFilter,
+  LayoutCanvas,
   useAddFooterItem,
   useAddPanelSection,
   useAppType,
@@ -86,6 +87,10 @@ const useHome = useHomeApp;
 
 // #region Types
 
+export enum HomeAppWindowKind {
+  Table = "table",
+}
+
 export interface HomeSelection {
   kits?: Guid[];
 }
@@ -109,6 +114,7 @@ export interface HomeState {
   sortColumn?: HomeSortColumn;
   sortDirection?: HomeSortDirection;
   loadingKits?: LoadingKit[];
+  windowLayout?: any;
 }
 
 export interface HomeDiff {
@@ -248,6 +254,16 @@ if (typeof window !== "undefined") {
     return { homeApp: { ...context.homeApp, hover: { kits: event.kits } } };
   });
   registerRuntimeAction("homeClearHover", (context: any) => ({ homeApp: { ...context.homeApp, hover: undefined } }));
+  registerRuntimeAction("homeSetWindowLayout", (context: any, event: any) => {
+    if (event.type !== "HOME.SET_WINDOW_LAYOUT") return {};
+    return { homeApp: { ...context.homeApp, windowLayout: event.windowLayout } };
+  });
+
+  registerEventHandler("HOME.SET_WINDOW_LAYOUT", {
+    action: (context: any, event: any) => ({
+      homeApp: { ...context.homeApp, windowLayout: event.windowLayout },
+    }),
+  });
 }
 
 // #endregion Home App Plugin Registration
@@ -762,7 +778,7 @@ type TableRow = {
   concepts?: string[];
 };
 
-const Home: FC = ({}) => {
+const HomeTableContent: FC = () => {
   const navigate = useNavigate();
   const navigation = useNavigation();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -1234,22 +1250,6 @@ const Home: FC = ({}) => {
   useHotkeys("semio.sketchpad.app.home.filter.kind.local", () => toggleKind("local"));
   useHotkeys("semio.sketchpad.app.home.filter.kind.remote", () => toggleKind("remote"));
 
-  // Add toolbar section with kit kind filter toggles
-  useEffect(() => {
-    if (appType !== "home") return;
-
-    addSection("toolbar", {
-      id: "semio.sketchpad.app.home.toolbar.filters",
-      specificity: 20,
-      order: 0,
-      content: <HomeToolbarFilters />,
-    });
-
-    return () => {
-      removeSection("toolbar", "semio.sketchpad.app.home.toolbar.filters");
-    };
-  }, [appType, addSection, removeSection]);
-
   const toggleName = (name: string) => {
     const newParams = new URLSearchParams(searchParams);
     if (selectedName === name) {
@@ -1356,84 +1356,15 @@ const Home: FC = ({}) => {
 
   if (isMobile) {
     return (
-      <HomeDropZone>
-        <div
-          className="flex flex-col h-full"
-          onClick={(e: React.MouseEvent) => {
-            if (e.target === e.currentTarget) {
-              homeCommands.deselectAll("semio.sketchpad.app.home.canvas.table.deselect");
-            }
-          }}
-        >
-          <Band
-            id="semio.sketchpad.app.home.filter.band"
-            items={[
-              ...(selectedKind
-                ? [
-                    <Toggle
-                      kind="withAction"
-                      pressed={true}
-                      onPressedChange={() => toggleKind(selectedKind)}
-                      actionIcon={<AddIcon />}
-                      onActionClick={() => handleCreateKit(selectedKind)}
-                      id="semio.sketchpad.app.home.filter.kind.show"
-                      actionId="semio.sketchpad.app.home.filter.kind.create"
-                      icon={
-                        <>
-                          {selectedKind === "temporary" && <TemporaryKitIcon />}
-                          {selectedKind === "local" && <LocalKitIcon />}
-                          {selectedKind === "remote" && <RemoteKitIcon />}
-                        </>
-                      }
-                    />,
-                  ]
-                : [
-                    <Toggle
-                      kind="withAction"
-                      pressed={false}
-                      onPressedChange={() => toggleKind("temporary")}
-                      actionIcon={<AddIcon />}
-                      onActionClick={() => handleCreateKit("temporary")}
-                      id="semio.sketchpad.app.home.filter.kind.temporary"
-                      actionId="semio.sketchpad.app.home.filter.kind.createTemporary"
-                      icon={<TemporaryKitIcon />}
-                    />,
-                    <Toggle
-                      kind="withAction"
-                      pressed={false}
-                      onPressedChange={() => toggleKind("local")}
-                      actionIcon={<AddIcon />}
-                      onActionClick={() => handleCreateKit("local")}
-                      id="semio.sketchpad.app.home.filter.kind.local"
-                      actionId="semio.sketchpad.app.home.filter.kind.createLocal"
-                      icon={<LocalKitIcon />}
-                    />,
-                    <Toggle
-                      kind="withAction"
-                      pressed={false}
-                      onPressedChange={() => toggleKind("remote")}
-                      actionIcon={<AddIcon />}
-                      onActionClick={() => handleCreateKit("remote")}
-                      id="semio.sketchpad.app.home.filter.kind.remote"
-                      actionId="semio.sketchpad.app.home.filter.kind.createRemote"
-                      icon={<RemoteKitIcon />}
-                    />,
-                  ]),
-              ...(selectedName ? [<Toggle pressed={true} onPressedChange={() => toggleName(selectedName)} id="semio.sketchpad.app.home.filter.name" icon={<span className="size-small">N</span>} text={selectedName} />] : []),
-              ...(selectedVersion !== null ? [<Toggle pressed={true} onPressedChange={() => toggleVersion(selectedVersion)} id="semio.sketchpad.app.home.filter.version" icon={selectedVersion || defaultVersionLabel} />] : []),
-              ...(selectedKind && !selectedName && uniqueNames.length > 0
-                ? uniqueNames.map((name) => <Toggle key={name} id={`semio.sketchpad.app.home.filter.name.${name}`} pressed={false} onPressedChange={() => toggleName(name)} icon={<span className="size-small">N</span>} text={name} />)
-                : []),
-              ...(selectedKind && selectedName && selectedVersion === null && uniqueVersions.length > 0
-                ? uniqueVersions.map((version) => (
-                    <Toggle key={version} id={`semio.sketchpad.app.home.filter.version.${version}`} pressed={false} onPressedChange={() => toggleVersion(version)} icon={version || <span className="italic opacity-50">{defaultVersionLabel}</span>} />
-                  ))
-                : []),
-              <Input key="search" id="semio.sketchpad.app.home.search" className="flex-1 min-w-[160px]" placeholder={useLabel("semio.sketchpad.app.home.searchPlaceholder")} value={searchQuery} onChange={(e) => handleSearchChange(e.target.value)} />,
-            ].map((content) => ({ content }))}
-          />
-          <ConceptFilter allConcepts={allConcepts} />
-          <div className="flex items-center justify-between border-b px-single h-large">
+      <div
+        className="flex flex-col h-full"
+        onClick={(e: React.MouseEvent) => {
+          if (e.target === e.currentTarget) {
+            homeCommands.deselectAll("semio.sketchpad.app.home.canvas.table.deselect");
+          }
+        }}
+      >
+          <div className="flex items-center justify-between border-b border-element px-single h-large">
             <span className="font-medium">{useLabel("semio.sketchpad.app.home.name")}</span>
             <Toggle
               kind="dropdown"
@@ -1459,7 +1390,7 @@ const Home: FC = ({}) => {
                 return (
                   <div
                     key={row.id}
-                    className={`border-b p-single cursor-selectable h-medium ${isLoadingRow ? "opacity-50 pointer-events-none" : ""} ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`}
+                    className={`border-b border-element p-single cursor-selectable h-medium ${isLoadingRow ? "opacity-50 pointer-events-none" : ""} ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`}
                     role="button"
                     tabIndex={isLoadingRow ? -1 : 0}
                     onClick={(e) => {
@@ -1517,100 +1448,20 @@ const Home: FC = ({}) => {
               })}
             </div>
           </Scrollable>
-        </div>
-      </HomeDropZone>
+      </div>
     );
   }
 
   return (
-    <>
-      <HomeAppFooter />
-      <HomeDropZone>
-        <Canvas>
-          <Window id="home-table">
-            <div
-              className="flex flex-col h-full"
-              onClick={(e: React.MouseEvent) => {
-                if (e.target === e.currentTarget) {
-                  homeCommands.deselectAll("semio.sketchpad.app.home.canvas.table.deselect");
-                }
-              }}
-            >
-              <Band
-                id="semio.sketchpad.app.home.filter.band"
-                items={[
-                  ...(selectedKind
-                    ? [
-                        <Toggle
-                          kind="withAction"
-                          pressed={true}
-                          onPressedChange={() => toggleKind(selectedKind)}
-                          actionIcon={<AddIcon />}
-                          onActionClick={() => handleCreateKit(selectedKind)}
-                          id={"semio.sketchpad.app.home.hideKind"}
-                          actionId={"semio.sketchpad.app.home.createKit"}
-                          icon={
-                            <>
-                              {selectedKind === "temporary" && <TemporaryKitIcon />}
-                              {selectedKind === "local" && <LocalKitIcon />}
-                              {selectedKind === "remote" && <RemoteKitIcon />}
-                            </>
-                          }
-                        />,
-                      ]
-                    : [
-                        <Toggle
-                          kind="withAction"
-                          pressed={false}
-                          onPressedChange={() => toggleKind("temporary")}
-                          actionIcon={<AddIcon />}
-                          onActionClick={() => handleCreateKit("temporary")}
-                          id={"semio.sketchpad.app.home.showTemporary"}
-                          actionId={"semio.sketchpad.app.home.createTemporary"}
-                          icon={<TemporaryKitIcon />}
-                        />,
-                        <Toggle
-                          kind="withAction"
-                          pressed={false}
-                          onPressedChange={() => toggleKind("local")}
-                          actionIcon={<AddIcon />}
-                          onActionClick={() => handleCreateKit("local")}
-                          id={"semio.sketchpad.app.home.showLocal"}
-                          actionId={"semio.sketchpad.app.home.createLocal"}
-                          icon={<LocalKitIcon />}
-                        />,
-                        <Toggle
-                          kind="withAction"
-                          pressed={false}
-                          onPressedChange={() => toggleKind("remote")}
-                          actionIcon={<AddIcon />}
-                          onActionClick={() => handleCreateKit("remote")}
-                          id={"semio.sketchpad.app.home.showRemote"}
-                          actionId={"semio.sketchpad.app.home.createRemote"}
-                          icon={<RemoteKitIcon />}
-                        />,
-                      ]),
-                  ...(selectedName ? [<Toggle id={`semio.sketchpad.app.home.filter.name.${selectedName}`} pressed={true} onPressedChange={() => toggleName(selectedName)} icon={<span className="size-small">N</span>} text={selectedName} />] : []),
-                  ...(selectedVersion !== null ? [<Toggle id={`semio.sketchpad.app.home.filter.version.${selectedVersion}`} pressed={true} onPressedChange={() => toggleVersion(selectedVersion)} icon={selectedVersion || defaultVersionLabel} />] : []),
-                  ...(selectedKind && !selectedName && uniqueNames.length > 0
-                    ? uniqueNames.map((name) => <Toggle key={name} id={`semio.sketchpad.app.home.filter.name.${name}`} pressed={false} onPressedChange={() => toggleName(name)} icon={<span className="size-small">N</span>} text={name} />)
-                    : []),
-                  ...(selectedKind && selectedName && selectedVersion === null && uniqueVersions.length > 0
-                    ? uniqueVersions.map((version) => <Toggle key={version} id={`semio.sketchpad.app.home.filter.version.${version}`} pressed={false} onPressedChange={() => toggleVersion(version)} icon={version || defaultVersionLabel} />)
-                    : []),
-                  <Input
-                    key="search"
-                    id="semio.sketchpad.app.home.search"
-                    className="flex-1 min-w-[200px]"
-                    placeholder={useLabel("semio.sketchpad.app.home.searchPlaceholder")}
-                    value={searchQuery}
-                    onChange={(e) => handleSearchChange(e.target.value)}
-                  />,
-                ].map((content) => ({ content }))}
-              />
-              {/* Concept Filter */}
-              <ConceptFilter allConcepts={allConcepts} />
-              <Table<TableRow>
+    <div
+      className="flex flex-col h-full"
+      onClick={(e: React.MouseEvent) => {
+        if (e.target === e.currentTarget) {
+          homeCommands.deselectAll("semio.sketchpad.app.home.canvas.table.deselect");
+        }
+      }}
+    >
+      <Table<TableRow>
                 className="flex-1 min-h-0"
                 columns={[
                   ...(!selectedKind
@@ -1789,16 +1640,123 @@ const Home: FC = ({}) => {
                 onFocusComplete={() => setFocusedItemId(undefined)}
                 emptyMessage={useLabel("semio.sketchpad.app.home.noKits")}
                 stickyHeader={true}
-                headerClassName="sticky top-0 border-b"
+                headerClassName="sticky top-0 border-b border-element"
                 hierarchical={true}
-              />
-            </div>
-          </Window>
+        />
+    </div>
+  );
+};
+
+// #region Multi-Window App
+
+const TableWindow = memo(() => {
+  return <HomeTableContent />;
+});
+TableWindow.displayName = "TableWindow";
+
+const Home: FC = () => {
+  const actor = useSketchpadActor();
+  const appType = useAppType();
+  const addSection = useAddPanelSection();
+  const removeSection = useRemovePanelSection();
+  const isMobile = useIsMobile();
+
+  // Get window layout from home app state
+  const homeState = useHome() as HomeState;
+  const storedWindowLayout = homeState?.windowLayout;
+
+  // Track the last layout to prevent infinite loops
+  const lastLayoutRef = useRef<any>(null);
+
+  // Add toolbar section with kit kind filter toggles (this was previously in HomeTableContent)
+  useEffect(() => {
+    if (appType !== "home") return;
+
+    addSection("toolbar", {
+      id: "semio.sketchpad.app.home.toolbar.filters",
+      specificity: 20,
+      order: 0,
+      content: <HomeToolbarFilters />,
+    });
+
+    return () => {
+      removeSection("toolbar", "semio.sketchpad.app.home.toolbar.filters");
+    };
+  }, [appType, addSection, removeSection]);
+
+  const defaultLayout = useMemo(
+    () => ({
+      root: {
+        type: "row",
+        content: [
+          {
+            type: "stack",
+            size: "100%",
+            content: [
+              {
+                type: "component",
+                componentName: HomeAppWindowKind.Table,
+                title: "table",
+                componentState: {},
+              },
+            ],
+          },
+        ],
+      },
+    }),
+    [],
+  );
+
+  const windowLayout = useMemo(() => storedWindowLayout || defaultLayout, [storedWindowLayout, defaultLayout]);
+
+  const windowConfig: AppWindowConfig = useMemo(
+    () => ({
+      windowKinds: [
+        {
+          id: HomeAppWindowKind.Table,
+          label: "table",
+          component: () => <TableWindow />,
+        },
+      ],
+      defaultLayout,
+    }),
+    [defaultLayout],
+  );
+
+  const handleLayoutChange = useCallback(
+    (config: any) => {
+      // Prevent infinite loops by checking if layout actually changed
+      const configStr = JSON.stringify(config);
+      const lastStr = JSON.stringify(lastLayoutRef.current);
+      if (configStr === lastStr) return;
+      lastLayoutRef.current = config;
+      actor.send({ type: "HOME.SET_WINDOW_LAYOUT", windowLayout: config });
+    },
+    [actor],
+  );
+
+  // Mobile view uses simple layout without multi-window
+  if (isMobile) {
+    return (
+      <HomeDropZone>
+        <HomeTableContent />
+      </HomeDropZone>
+    );
+  }
+
+  return (
+    <>
+      <HomeAppFooter />
+      <HomeDropZone>
+        <Canvas id="semio.sketchpad.app.home.canvas">
+          <LayoutCanvas windowConfig={windowConfig} layoutState={windowLayout} onLayoutChange={handleLayoutChange} />
         </Canvas>
       </HomeDropZone>
     </>
   );
 };
+
+// #endregion Multi-Window App
 
 export default Home;
 

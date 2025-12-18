@@ -21,7 +21,7 @@
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { CalendarDays } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage, Button, HoverCard, HoverCardContent, HoverCardTrigger } from "../../../../sketchpad/elements";
+import { Avatar, AvatarFallback, AvatarImage, Button, HoverCard, HoverCardContent, HoverCardTrigger, Level, LevelProvider, getLevelBgClass } from "../../../../sketchpad/elements";
 
 const HoverCardExamples = () => (
   <div className="space-y-4">
@@ -80,6 +80,34 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   render: () => <HoverCardExamples />,
+};
+
+const createLevelRender = (level: Level) => () => (
+  <LevelProvider level={level}>
+    <div className={`p-4 ${getLevelBgClass(level)}`}>
+      <HoverCardExamples />
+    </div>
+  </LevelProvider>
+);
+
+export const Base: Story = {
+  render: createLevelRender("base"),
+};
+
+export const Window: Story = {
+  render: createLevelRender("window"),
+};
+
+export const Panel: Story = {
+  render: createLevelRender("panel"),
+};
+
+export const Overlay: Story = {
+  render: createLevelRender("overlay"),
+};
+
+export const Temporary: Story = {
+  render: createLevelRender("temporary"),
 };
 
 // #endregion HoverCard

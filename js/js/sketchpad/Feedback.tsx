@@ -22,7 +22,7 @@
 // #region Imports
 
 import { CheckIcon, ChatIcon as FeedbackIcon } from "@semio/assets";
-import { FC, useCallback, useEffect, useState } from "react";
+import { FC, useCallback, useLayoutEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import { useLabel } from "../i18n";
@@ -342,7 +342,7 @@ const FeedbackForm: FC = () => {
         />
       </div>
 
-      <div className="border-t pt-4 mt-2">
+      <div className="border-t border-element pt-4 mt-2">
         <p className="text-sm text-muted-foreground mb-4">{t("semio.sketchpad.app.feedback.optional.label.normal", "Optional contact information")}</p>
 
         <div className="flex flex-col gap-4">
@@ -403,7 +403,7 @@ const Feedback: FC = () => {
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (appType !== "feedback") return;
 
     addSection("toolbar", {

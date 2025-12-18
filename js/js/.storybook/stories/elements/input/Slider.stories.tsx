@@ -51,13 +51,37 @@ export const Default: Story = {
     onPointerCancel: () => {},
     interactionId: "slider-interaction",
     className: "w-96",
+    level: "base",
   },
   render: (args) => {
     const [value, setValue] = useState(args.value);
-    return (
-      <Slider {...args} value={value} onValueChange={setValue} />
-    );
+    return <Slider {...args} value={value} onValueChange={setValue} />;
   },
+};
+
+export const Base: Story = {
+  args: { ...Default.args, id: "slider-base", level: "base" },
+  render: Default.render,
+};
+
+export const Window: Story = {
+  args: { ...Default.args, id: "slider-window", level: "window" },
+  render: Default.render,
+};
+
+export const Panel: Story = {
+  args: { ...Default.args, id: "slider-panel", level: "panel" },
+  render: Default.render,
+};
+
+export const Overlay: Story = {
+  args: { ...Default.args, id: "slider-overlay", level: "overlay" },
+  render: Default.render,
+};
+
+export const Temporary: Story = {
+  args: { ...Default.args, id: "slider-temporary", level: "temporary" },
+  render: Default.render,
 };
 
 // #endregion Slider

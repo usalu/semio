@@ -252,6 +252,18 @@ Stats provide computed or measured performance data for entire designs using the
 
 ### Sketchpad
 
+#### Toolbar
+
+The toolbar is a floating panel positioned at the bottom center of the canvas. Each app registers toolbar sections via `addSection("toolbar", { id, specificity, order, content })`.
+
+- **Home app**: Filter toggles for kit kinds (temporary, local, remote) with action buttons to create new kits
+- **Kit app**: Filter toggles for artifact kinds (designs, types, qualities, interfaces, tags, concepts, files, folders, authors) with action buttons to create new artifacts
+- **Design app**: Selection tools (normal, additive, subtractive) and lasso tools (rectangular, freeform)
+- **Type app**: Selection tools and port creation tool
+- **Feedback app**: Send button to submit feedback form
+
+Toolbar panel visibility defaults to `true` for all apps via `panelVisibility: { toolbar: true, ... }` in default state creation.
+
 #### Borders
 
 - Element border kind (hover color)
@@ -1172,7 +1184,7 @@ The tooltip system automatically resolves i18n content from element IDs, adaptin
 - NEVER use rounded corners unless a circle.
 - NEVER use shadows.
 - Whenever a ui element can be interacted (left/right clicked with/without hold or modifier keys, dragged, …) with, ALWAYS make it visible (different hover color, different cursor, tooltip, …).
-- The ui ALWAYS consists of three layers: 1. base, 2. panel and 3. temporary. Every layer has a darker background color and is on top of the previous layer. Every ui element ALWAYS has an enum for the layer and hence ALWAYS has three different color sets.
+- The ui ALWAYS consists of five levels: 1. base, 2. window, 3. panel, 4. overlay, 5. temporary. Every level is on top of the previous one. Levels base, window, panel, and temporary have progressively darker background colors (in light mode) or lighter (in dark mode). Overlay is transparent and only affects z-index. Every ui element ALWAYS uses the level context (`useLevel()` hook, `LevelProvider`) and helper functions (`getLevelBgClass()`, `getLevelHoverClass()`, `getLevelZClass()`, `getLevelActiveHoverClass()`).
 - ALWAYS indicate on the element and the cursor when it is interactive. Clickable elements have a pointer cursor and a hover effect. Dragable elements have a grab cursor. While dragging, the cursor changes to a grabbing cursor.
 
 ### Horizontal Containers

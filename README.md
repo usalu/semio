@@ -87,6 +87,7 @@ Let me walk you through 🚶
      - [🌿 Branch](#-branch-)
      - [🗃️ Commit](#%EF%B8%8F-commit-)
 1. [🧑‍💻 Development](#-development-)
+   - [🔌 Port Numbers](#-port-numbers-)
    - [📒 Tickets and reports](#-tickets-and-reports)
    - [🪄 AI](#-ai-)
      - [🛠️ Uses-Cases](#-uses-cases-)
@@ -718,6 +719,19 @@ Then copy the actual path `...\AppData\Local\Packages\PythonSoftwareFoundation..
 
 Then you can run `npm run build` from the root to build all packages, or run `tsx ./build.ts` in the Grasshopper directory and add your full path `LOCAL_PATH\net\Semio.Grasshopper\Debug\net48` to your GrasshopperDeveloperSettings ⚙️
 
+## 🔌 Port Numbers [↑](#-development-)
+
+Overview of all ports used during development and in final packages:
+
+| Service         | Port   | Command / Package                   | Notes                                       |
+| --------------- | ------ | ----------------------------------- | ------------------------------------------- |
+| Sketchpad       | `3000` | `dev js js sketchpad`               | Vite dev server for Sketchpad               |
+| Play            | `4000` | `dev play`                          | Vite dev server for Play                    |
+| Docs            | `4321` | `dev docs`                          | Astro dev server (default)                  |
+| Storybook       | `6006` | `dev js js storybook`               | Storybook dev server (default)              |
+| Playwright      | `5173` | `npm test` (js)                     | Test server for Playwright E2E tests        |
+| Engine          | `YYMM` | `@semio/engine` package             | Port derived from release: `rYY.MM-V` → `YYMM` (e.g., `r25.07-1` → `2507`) |
+
 # 📒 Tickets and reports
 
 - Automation scripts now live in TypeScript; run them with `npx tsx <script>.ts` and keep shared helpers in `scripts/utils.ts`.
@@ -813,7 +827,7 @@ Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on macOS) → "Tasks: Run Task" and selec
 - `publish` - Publish packages
 - `dev` - Start all dev servers
 - `dev js js storybook` - Start `@semio/js` Storybook
-- `dev js js sketchpad` - Start `@semio/js` Vite Sketchpad (port `5174`)
+- `dev js js sketchpad` - Start `@semio/js` Vite Sketchpad (port `3000`)
 
 **Workspace-specific commands:**
 
@@ -1322,6 +1336,23 @@ KitStore keeps kit concepts in the `yConcepts` array as `ConceptStore` entries s
 ### UI System
 
 The UI uses a standardized unit-based sizing system for consistent spacing and sizing across all components. The system is derived from the `--spacing` CSS variable and uses Tailwind utility classes.
+
+#### UI Levels
+
+The UI consists of five hierarchical levels, each with its own z-index and background color:
+
+1. **Base** - The foundation layer for the main canvas and background
+2. **Window** - Container level for windows within the canvas
+3. **Panel** - Floating panels and sidebars
+4. **Overlay** - Transparent layer (only affects z-index, not background)
+5. **Temporary** - Tooltips, dropdowns, modals, and transient UI
+
+Each level (except overlay) has progressively darker background colors in light mode and lighter in dark mode. Components use the `LevelProvider` context and `useLevel()` hook to access the current level, with helper functions for consistent styling:
+
+- `getLevelBgClass(level)` - Returns background class (e.g., `bg-base`, `bg-window`, `bg-panel`, `bg-temporary`)
+- `getLevelHoverClass(level)` - Returns hover background class (e.g., `hover:bg-hover-base`)
+- `getLevelZClass(level)` - Returns z-index class (e.g., `z-base`, `z-window`, `z-panel`, `z-overlay`, `z-temporary`)
+- `getLevelActiveHoverClass(level)` - Returns active state hover class (e.g., `data-[state=active]:bg-hover-base`)
 
 #### Size Constants
 

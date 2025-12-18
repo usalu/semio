@@ -21,7 +21,7 @@
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { Home } from "lucide-react";
-import { Breadcrumb, BreadcrumbItemData } from "../../../../sketchpad/elements";
+import { Breadcrumb, BreadcrumbItemData, Level, LevelProvider, getLevelBgClass } from "../../../../sketchpad/elements";
 
 // #region Breadcrumb
 const meta = {
@@ -70,6 +70,64 @@ export const Default: Story = {
     ] satisfies BreadcrumbItemData[],
   },
   render: (args) => <Breadcrumb {...args} />,
+};
+
+const defaultItems: BreadcrumbItemData[] = [
+  {
+    id: "breadcrumb-link-home",
+    content: (
+      <span className="flex items-center gap-unit">
+        <Home className="size-tiny" />
+        Kits
+      </span>
+    ),
+    options: [
+      { label: "Temporary Kits", href: "/?kind=temporary" },
+      { label: "Local Kits", href: "/?kind=local" },
+      { label: "Remote Kits", href: "/?kind=remote" },
+    ],
+    onNavigate: (href) => console.log("Navigate to:", href),
+  },
+  { id: "breadcrumb-metabolism", content: "Metabolism" },
+  {
+    id: "breadcrumb-kind",
+    content: "Types",
+    options: [
+      { label: "Types", href: "/metabolism/types" },
+      { label: "Designs", href: "/metabolism/designs" },
+      { label: "Qualities", href: "/metabolism/qualities" },
+    ],
+    onNavigate: (href) => console.log("Navigate to:", href),
+  },
+  { id: "breadcrumb-page", content: "Capsule J" },
+];
+
+const createLevelRender = (level: Level) => () => (
+  <LevelProvider level={level}>
+    <div className={`p-4 ${getLevelBgClass(level)}`}>
+      <Breadcrumb items={defaultItems} />
+    </div>
+  </LevelProvider>
+);
+
+export const Base: Story = {
+  render: createLevelRender("base"),
+};
+
+export const Window: Story = {
+  render: createLevelRender("window"),
+};
+
+export const Panel: Story = {
+  render: createLevelRender("panel"),
+};
+
+export const Overlay: Story = {
+  render: createLevelRender("overlay"),
+};
+
+export const Temporary: Story = {
+  render: createLevelRender("temporary"),
 };
 
 // #endregion Breadcrumb

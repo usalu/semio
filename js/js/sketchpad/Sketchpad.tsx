@@ -2001,9 +2001,9 @@ const useAuthorScope = () => useContext(AuthorScopeContext);
 
 function useAuthorStore<T>(selector?: (store: AuthorStore) => T, guid?: string): T | AuthorStore | null {
   const kitStore = useKitStore() as KitStore | null;
-  if (!kitStore) return null;
   const authorScope = useAuthorScope();
   const authorGuid = authorScope?.guid ?? guid;
+  if (!kitStore) return null;
   if (!authorGuid) throw new Error("useAuthorStore must be called within a AuthorScopeProvider or be directly provided with a guid");
   if (!kitStore.hasAuthor(authorGuid)) throw new Error(`Author store not found for author ${authorGuid}`);
   const authorStore = kitStore.author(authorGuid);
@@ -2011,9 +2011,12 @@ function useAuthorStore<T>(selector?: (store: AuthorStore) => T, guid?: string):
 }
 
 export function useAuthor<T>(selector?: (author: Author) => T, id?: Guid, deep: boolean = false): T | Author | null {
-  const store = useAuthorStore(identitySelector, id);
+  const authorScope = useAuthorScope();
+  const authorGuid = authorScope?.guid ?? id;
+  const store = useAuthorStore(identitySelector, authorGuid ?? undefined) as AuthorStore | null;
+  const synced = useSyncOptional<Author, T>(store as any, selector ? selector : (identitySelector as any));
   if (!store) return null;
-  return useSync<Author, T>(store as AuthorStore, selector ? selector : (identitySelector as any));
+  return synced;
 }
 
 // #endregion Author
@@ -3294,9 +3297,9 @@ export const useIsInTypeScope = () => useTypeScope() !== null;
 
 function useTypeStore<T>(selector?: (store: TypeStore) => T, guid?: string): T | TypeStore | null {
   const kitStore = useKitStore() as KitStore | null;
-  if (!kitStore) return null;
   const typeScope = useTypeScope();
   const typeGuid = typeScope?.guid ?? guid;
+  if (!kitStore) return null;
   if (!typeGuid) return null;
   if (!kitStore.hasType(typeGuid)) return null;
   const typeStore = kitStore.type(typeGuid);
@@ -3307,12 +3310,10 @@ function useTypeStore<T>(selector?: (store: TypeStore) => T, guid?: string): T |
 export function useType<T>(selector?: (type: Type) => T, id?: Guid, deep: boolean = false): T | Type | null {
   const typeScope = useTypeScope();
   const typeGuid = typeScope?.guid ?? id;
-  if (!typeGuid) {
-    return null;
-  }
-  const store = useTypeStore(identitySelector, typeGuid);
-  if (!store) return null;
-  return useSync<Type, T>(store as TypeStore, selector ? selector : (identitySelector as any));
+  const store = useTypeStore(identitySelector, typeGuid ?? undefined);
+  const syncedValue = useSyncOptional<Type, T>(store as TypeStore | null, selector ? selector : (identitySelector as any));
+  if (!typeGuid || !store) return null;
+  return syncedValue;
 }
 
 type QualityScope = { guid: string };
@@ -3326,20 +3327,21 @@ export const useIsInQualityScope = () => useQualityScope() !== null;
 
 function useQualityStore<T>(selector?: (store: QualityStore) => T, guid?: string): T | QualityStore | null {
   const kitStore = useKitStore() as KitStore | null;
-  if (!kitStore) return null;
   const qualityScope = useQualityScope();
   const qualityGuid = qualityScope?.guid ?? guid;
-  if (!qualityGuid) return null;
-  if (!kitStore.hasQuality(qualityGuid)) return null;
+  if (!kitStore || !qualityGuid || !kitStore.hasQuality(qualityGuid)) return null;
   const qualityStore = kitStore.quality(qualityGuid);
   if (!qualityStore) return null;
   return selector ? selector(qualityStore) : qualityStore;
 }
 
 export function useQuality<T>(selector?: (quality: Quality) => T, id?: Guid, deep: boolean = false): T | Quality | null {
-  const store = useQualityStore(identitySelector, id);
+  const qualityScope = useQualityScope();
+  const qualityGuid = qualityScope?.guid ?? id;
+  const store = useQualityStore(identitySelector, qualityGuid ?? undefined) as QualityStore | null;
+  const synced = useSyncOptional<Quality, T>(store as any, selector ? selector : (identitySelector as any));
   if (!store) return null;
-  return useSync<Quality, T>(store as QualityStore, selector ? selector : (identitySelector as any));
+  return synced;
 }
 
 // #endregion Type
@@ -5282,11 +5284,9 @@ export const useIsInDesignScope = () => useDesignScope() !== null;
 
 function useDesignStore<T>(selector?: (store: DesignStore) => T, guid?: string): T | DesignStore | null {
   const kitStore = useKitStore() as KitStore | null;
-  if (!kitStore) return null;
   const designScope = useDesignScope();
   const designGuid = designScope?.guid ?? guid;
-  if (!designGuid) return null;
-  if (!kitStore.hasDesign(designGuid)) return null;
+  if (!kitStore || !designGuid || !kitStore.hasDesign(designGuid)) return null;
   const designStore = kitStore.design(designGuid);
   return selector ? selector(designStore) : designStore;
 }
@@ -5294,15 +5294,11 @@ function useDesignStore<T>(selector?: (store: DesignStore) => T, guid?: string):
 export function useDesign<T>(selector?: (design: DesignShallow | Design) => T, id?: Guid, deep: boolean = false): T | DesignShallow | Design | null {
   const designScope = useDesignScope();
   const designGuid = designScope?.guid ?? id;
-  if (!designGuid) {
-    return null;
-  }
-  const store = useDesignStore(identitySelector, designGuid);
-  if (!store) return null;
-  if (deep) {
-    return useSyncDeep<Design, T>(store as DesignStore, selector ? selector : (identitySelector as any));
-  }
-  return useSync<DesignShallow, T>(store as any, selector ? selector : (identitySelector as any));
+  const store = useDesignStore(identitySelector, designGuid ?? undefined) as DesignStore | null;
+  const syncedDeep = useSyncDeep<Design, T>(store, selector ? selector : (identitySelector as any));
+  const synced = useSyncOptional<DesignShallow, T>(store as any, selector ? selector : (identitySelector as any));
+  if (!designGuid || !store) return null;
+  return deep ? syncedDeep : synced;
 }
 
 const EMPTY_PIECES: Piece[] = [];
@@ -6792,12 +6788,7 @@ export function useKitStore<T>(selector?: (store: KitStore) => T, guid?: string)
   const store = useSketchpadStore();
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid ?? guid;
-  if (!kitGuid) {
-    return null;
-  }
-  if (!store.hasKit(kitGuid)) {
-    return null;
-  }
+  if (!kitGuid || !store.hasKit(kitGuid)) return null;
   const kitStore = store.kit(kitGuid);
   return selector ? selector(kitStore) : kitStore;
 }
@@ -6806,17 +6797,11 @@ export function useKit<T>(selector?: (kit: KitShallow | Kit) => T, guid?: Guid, 
   const store = useSketchpadStore();
   const kitScope = useKitScope();
   const resolvedGuid = guid ?? kitScope?.guid;
-  if (!resolvedGuid) {
-    return null;
-  }
-  const kitStore = useKitStore(identitySelector, resolvedGuid);
-  if (!kitStore) {
-    return null;
-  }
-  if (deep) {
-    return useSyncDeep<Kit, T>(kitStore as KitStore, selector ? selector : (identitySelector as any));
-  }
-  return useSync<KitShallow, T>(kitStore as any, selector ? selector : (identitySelector as any));
+  const kitStore = useKitStore(identitySelector, resolvedGuid ?? undefined) as KitStore | null;
+  const syncedDeep = useSyncDeep<Kit, T>(kitStore, selector ? selector : (identitySelector as any));
+  const synced = useSyncOptional<KitShallow, T>(kitStore as any, selector ? selector : (identitySelector as any));
+  if (!resolvedGuid || !kitStore) return null;
+  return deep ? syncedDeep : synced;
 }
 
 // useDiffedKit - moved to designAppIntegration.ts
@@ -10016,6 +10001,26 @@ export function useSync<T, TSelected = T>(store: { onChanged: (subscribe: Subscr
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
+export function useSyncOptional<T, TSelected = T>(store: { onChanged: (subscribe: Subscribe) => Disposable; snapshot: () => T } | null | undefined, selector: (value: T) => TSelected = identitySelector as any): TSelected | null {
+  const subscribe = useCallback(
+    (callback: () => void) => {
+      if (!store) return () => {};
+      return store.onChanged((cb: () => void) => {
+        cb();
+        callback();
+        return () => {};
+      });
+    },
+    [store],
+  );
+  const getSnapshot = useCallback(() => {
+    if (!store) return null as TSelected | null;
+    logStateAccess("useSyncOptional", (store as any).constructor?.name || "unknown", selector === identitySelector ? "FULL_STATE" : "selector");
+    return selector(store.snapshot());
+  }, [store, selector]);
+  return useSyncExternalStore(subscribe, getSnapshot);
+}
+
 export function useSyncDeep<T, TSelected = T>(store: { onChangedDeep: (subscribe: Subscribe) => Disposable; snapshot: () => T } | null | undefined, selector: (value: T) => TSelected = identitySelector as any, deep?: boolean): TSelected | null {
   const subscribe = useCallback(
     (callback: () => void) => {
@@ -12208,6 +12213,8 @@ export function useAppPanelVisibility(): PanelVisibility {
         return () => defaultPanelVisibility;
       case "docs":
         return () => docsPanelVisibility;
+      case "feedback":
+        return (snapshot: any) => snapshot.context.feedbackApp?.panelVisibility ?? defaultPanelVisibility;
       default:
         return () => defaultPanelVisibility;
     }
@@ -14661,11 +14668,9 @@ const PanelToggles: FC = ({}) => {
   const appType = useAppType();
   const panelConfigs = usePanelConfigs();
   const panelConfig = panelConfigs[appType];
-
-  if (!panelConfig || panelConfig.length === 0) return null;
-
   const visiblePanels = useAppPanelVisibility();
   const appCommands = useAppCommands();
+  const isMobile = useIsMobile();
 
   const commands = useMemo<Record<string, any>>(() => {
     return {
@@ -14677,9 +14682,9 @@ const PanelToggles: FC = ({}) => {
       docs: appCommands,
     };
   }, [appCommands]);
-  const isMobile = useIsMobile();
 
   const groupedPanels = useMemo(() => {
+    if (!panelConfig || panelConfig.length === 0) return { groups: {}, ungrouped: [] };
     const groups: Record<string, EnrichedPanelDefinition[]> = {};
     const ungrouped: EnrichedPanelDefinition[] = [];
 
@@ -14700,7 +14705,7 @@ const PanelToggles: FC = ({}) => {
   const workbenchConfigs = groupedPanels.groups["workbench"] || [];
   const hudConfigs = groupedPanels.groups["hud"] || [];
   const rightConfigs = groupedPanels.groups["right"] || [];
-  const toolbarConfigs = panelConfig.filter((p) => p.kind === PanelKind.TOOLBAR);
+  const toolbarConfigs = panelConfig ? panelConfig.filter((p) => p.kind === PanelKind.TOOLBAR) : [];
 
   const workbenchDefaultKey = workbenchConfigs[0]?.key || "";
   const workbenchSelectionRef = useRef<string>(workbenchDefaultKey);
@@ -14923,6 +14928,8 @@ const PanelToggles: FC = ({}) => {
 
   const activeRightConfig = rightConfigs.find((c) => c.key === activeRightPanel);
   const ActiveRightIcon = activeRightConfig?.icon;
+
+  if (!panelConfig || panelConfig.length === 0) return null;
 
   return (
     <div className="flex items-stretch border border-element overflow-hidden h-medium divide-x divide-element">
@@ -16248,22 +16255,26 @@ const LayoutWrapper: FC = () => {
                 }
               : undefined
           }
-          canvas={
-            <div className="relative h-full w-full">
-              <AppRouter />
-              {(panelVisibility.toolbar || appType === "type" || appType === "design") && (
-                <div id="semio.sketchpad.toolbar" className="absolute bottom-single left-1/2 -translate-x-1/2 z-panel pointer-events-auto">
+          toolbar={
+            panelVisibility.toolbar || appType === "type" || appType === "design" || appType === "feedback" || appType === "kit" || appType === "home" ? (
+              toolbarSections.length > 0 ? (
+                <div id="semio.sketchpad.toolbar" className="flex items-center justify-center pointer-events-auto">
                   <div className="flex items-center gap-single bg-panel border p-single">
                     <ToolbarScopeWrapper>
-                      {toolbarSections.length > 0 ? (
-                        toolbarSections.map((section) => <div key={section.id}>{typeof section.content === "function" ? section.content() : section.content}</div>)
-                      ) : (
-                        <div className="text-muted-foreground text-sm">Loading...</div>
-                      )}
+                      {toolbarSections.map((section) => (
+                        <div key={section.id}>{typeof section.content === "function" ? section.content() : section.content}</div>
+                      ))}
                     </ToolbarScopeWrapper>
                   </div>
                 </div>
-              )}
+              ) : (
+                <div id="semio.sketchpad.toolbar" className="hidden" />
+              )
+            ) : undefined
+          }
+          canvas={
+            <div className="relative h-full w-full">
+              <AppRouter />
             </div>
           }
         />

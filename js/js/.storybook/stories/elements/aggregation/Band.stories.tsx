@@ -21,7 +21,7 @@
 
 import { AddIcon, AwardIcon, DocumentIcon, FolderIcon, LayoutIcon, TypeIcon, UserIcon } from "@semio/assets";
 import type { Meta, StoryObj } from "@storybook/react";
-import { Band, Button, Input, Toggle } from "../../../../sketchpad/elements";
+import { Band, Button, Input, Level, LevelProvider, Toggle, getLevelBgClass } from "../../../../sketchpad/elements";
 
 const meta = {
   title: "Elements/Aggregation/Band",
@@ -215,4 +215,39 @@ export const OverflowingVertical: Story = {
       <Band {...args} />
     </div>
   ),
+};
+
+const createLevelRender =
+  (level: Level) =>
+  (args: typeof HorizontalWithToggles.args) => (
+    <LevelProvider level={level}>
+      <div className={`w-[600px] p-4 ${getLevelBgClass(level)}`}>
+        <Band {...args} />
+      </div>
+    </LevelProvider>
+  );
+
+export const Base: Story = {
+  args: { ...HorizontalWithToggles.args },
+  render: createLevelRender("base"),
+};
+
+export const Window: Story = {
+  args: { ...HorizontalWithToggles.args },
+  render: createLevelRender("window"),
+};
+
+export const Panel: Story = {
+  args: { ...HorizontalWithToggles.args },
+  render: createLevelRender("panel"),
+};
+
+export const Overlay: Story = {
+  args: { ...HorizontalWithToggles.args },
+  render: createLevelRender("overlay"),
+};
+
+export const Temporary: Story = {
+  args: { ...HorizontalWithToggles.args },
+  render: createLevelRender("temporary"),
 };

@@ -1,5 +1,24 @@
 # Prompt history
 
+All ui elements must work for all ui levels (base, window, panel, overlay, temporary). They use a context, provider and useLevel hook for all elements to fetch the level. Base is lighter than window, window is lighter than panel, panel is lighter than temporary. Overlay is transparent and only affects z-index.
+Extend all ui elements to work for all levels. Make sure borders, hovers and background dont collide with the background of the level.
+Extend all storybook stories for all ui elements to have after the default story a story for each level (Base, Window, Panel, Overlay, Temporary).
+
+- The kit app should have the same toolbar as the home app. The table should not have the band anymore and the filter toggles should move to the toolbar.
+- The home app should be expanded to a window-based app like the kit app.
+- The toolbar in type app is not floating ontop of the canvas but it is blocking the line between the canvas and the footer.
+
+- All toolbars are in the footer area and not on top of it. The toolbar should be central above the footer with a single spacing unit between.
+- Kit app still has no toolbar. The artifact kind toggles should also move to footer.
+- Home should also be a window-based. The toggle and search strip should dissappear
+- The design app toolbar is still broken and no tool is selectable.
+Extend every app test to test tool. Make sure all sketchpad tests comply.
+
+All panels touch the current border and navbar and footer. They should have a single unit margin towards the border and navbar and footer.
+
+Another ui level is added: window
+The hierarchy is base, window, panel, overlay, temporary (every one is on top of the previous one and has a darker background color [in light mode] or a lighter background color [in dark mode]. Overlay is an exeption because it it is transparent and only affects z-index). All ui elements need to work in all 5 levels. Work with a level context, provider and useLevel hook for all elements to fetch the level.
+
 Extend ticket api to be able to reopen a ticket. This should remove the total files and lines from the ticket (not from the individual iterations) and set the status to open.
 
 The windows dont have a border on the bottom and on the right. Make the window border dashed.
@@ -319,7 +338,7 @@ i18n script:
 - has mjs and ts file
 - is falsely classifying a lot of keys as unused
 
-The development section should be extended by a section port numbers (not semio ports but "regular" port). There should be an overview table of all ports used for dev commands (such as storybook, sketchpad, play) or final packages (such as engine that has a variable port number according release numer r25.02-1->2507).
+The development section should be extended by a section port numbers (not semio ports but "regular" port). There should be an overview table of all ports used for dev commands (such as storybook, sketchpad, play) or final packages (such as engine that has a variable port number according release numer r25.02-1->2507). The new port for sketchpad should be 3000 and for play 4000.
 
 Add a new rule that whenever a new file is created, deleted or moved, it should update the file and folder structure in the dev docs (AGENTS.md and README.md)
 

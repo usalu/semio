@@ -47,6 +47,26 @@ export const Default: Story = {
   },
 };
 
+export const Base: Story = {
+  args: { ...Default.args, id: "toggle-base", level: "base" },
+};
+
+export const Window: Story = {
+  args: { ...Default.args, id: "toggle-window", level: "window" },
+};
+
+export const Panel: Story = {
+  args: { ...Default.args, id: "toggle-panel", level: "panel" },
+};
+
+export const Overlay: Story = {
+  args: { ...Default.args, id: "toggle-overlay", level: "overlay" },
+};
+
+export const Temporary: Story = {
+  args: { ...Default.args, id: "toggle-temporary", level: "temporary" },
+};
+
 export const WithAction: Story = {
   args: {
     id: "toggle-action",
@@ -59,6 +79,26 @@ export const WithAction: Story = {
     showLabel: true,
     level: "base",
   },
+};
+
+export const WithActionBase: Story = {
+  args: { ...WithAction.args, id: "toggle-action-base", level: "base" },
+};
+
+export const WithActionWindow: Story = {
+  args: { ...WithAction.args, id: "toggle-action-window", level: "window" },
+};
+
+export const WithActionPanel: Story = {
+  args: { ...WithAction.args, id: "toggle-action-panel", level: "panel" },
+};
+
+export const WithActionOverlay: Story = {
+  args: { ...WithAction.args, id: "toggle-action-overlay", level: "overlay" },
+};
+
+export const WithActionTemporary: Story = {
+  args: { ...WithAction.args, id: "toggle-action-temporary", level: "temporary" },
 };
 
 export const Dropdown: Story = {
@@ -75,6 +115,26 @@ export const Dropdown: Story = {
     showLabel: true,
     level: "base",
   },
+};
+
+export const DropdownBase: Story = {
+  args: { ...Dropdown.args, id: "toggle-dropdown-base", level: "base" },
+};
+
+export const DropdownWindow: Story = {
+  args: { ...Dropdown.args, id: "toggle-dropdown-window", level: "window" },
+};
+
+export const DropdownPanel: Story = {
+  args: { ...Dropdown.args, id: "toggle-dropdown-panel", level: "panel" },
+};
+
+export const DropdownOverlay: Story = {
+  args: { ...Dropdown.args, id: "toggle-dropdown-overlay", level: "overlay" },
+};
+
+export const DropdownTemporary: Story = {
+  args: { ...Dropdown.args, id: "toggle-dropdown-temporary", level: "temporary" },
 };
 
 // #endregion Toggle

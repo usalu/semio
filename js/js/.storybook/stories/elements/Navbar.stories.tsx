@@ -21,7 +21,7 @@
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { Bell, ChevronDown, Home, Menu, Search, Settings, User } from "lucide-react";
-import { Navbar } from "../../../sketchpad/elements";
+import { Level, LevelProvider, Navbar, NavbarItem, getLevelBgClass } from "../../../sketchpad/elements";
 
 // #region Navbar
 const meta = {
@@ -66,6 +66,66 @@ export const Default: Story = {
       },
     ],
   },
+};
+
+const defaultItems: NavbarItem[] = [
+  { key: "menu", content: <Menu size={20} /> },
+  { key: "home", content: <Home size={20} /> },
+  { key: "title", content: <span className="font-bold ml-2">Application</span> },
+  {
+    key: "search",
+    content: (
+      <div className="flex items-center gap-double bg-panel px-3 py-1 rounded border w-full">
+        <Search size={16} />
+        <input type="text" placeholder="Search..." className="bg-transparent outline-none w-full" />
+      </div>
+    ),
+    className: "flex-1",
+  },
+  { key: "bell", content: <Bell size={20} /> },
+  { key: "settings", content: <Settings size={20} /> },
+  {
+    key: "user",
+    content: (
+      <div className="flex items-center gap-double">
+        <User size={20} />
+        <ChevronDown size={16} />
+      </div>
+    ),
+  },
+];
+
+const createLevelRender = (level: Level) => () => (
+  <LevelProvider level={level}>
+    <div className={`p-4 ${getLevelBgClass(level)}`}>
+      <Navbar items={defaultItems} />
+    </div>
+  </LevelProvider>
+);
+
+export const Base: Story = {
+  args: { items: defaultItems },
+  render: createLevelRender("base"),
+};
+
+export const Window: Story = {
+  args: { items: defaultItems },
+  render: createLevelRender("window"),
+};
+
+export const Panel: Story = {
+  args: { items: defaultItems },
+  render: createLevelRender("panel"),
+};
+
+export const Overlay: Story = {
+  args: { items: defaultItems },
+  render: createLevelRender("overlay"),
+};
+
+export const Temporary: Story = {
+  args: { items: defaultItems },
+  render: createLevelRender("temporary"),
 };
 
 // #endregion Navbar

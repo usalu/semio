@@ -21,7 +21,7 @@
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { File, Folder, Settings } from "lucide-react";
-import { Button, Input, Tree, TreeContent, TreeItem, TreeSection } from "../../../../sketchpad/elements";
+import { Button, Input, Level, LevelProvider, Tree, TreeContent, TreeItem, TreeSection, getLevelBgClass } from "../../../../sketchpad/elements";
 
 // #region Tree
 const meta = {
@@ -82,6 +82,72 @@ export const Default: Story = {
       <Tree {...args} />
     </div>
   ),
+};
+
+const TreeChildren = (
+  <>
+    <TreeSection label="Kit" icon={<Folder size={14} />}>
+      <TreeItem label="Types" icon={<Folder size={12} />}>
+        <TreeItem label="Capsules" icon={<Folder size={12} />}>
+          <TreeItem label="Variants" icon={<Folder size={12} />}>
+            <TreeItem label="Capsule J" icon={<File size={12} />} />
+            <TreeItem label="Capsule L" icon={<File size={12} />} />
+            <TreeItem label="Capsule P" icon={<File size={12} />} />
+          </TreeItem>
+          <TreeItem label="Balcony" icon={<Folder size={12} />}>
+            <TreeItem label="With Balcony J" icon={<File size={12} />} />
+            <TreeItem label="With Balcony L" icon={<File size={12} />} />
+          </TreeItem>
+        </TreeItem>
+        <TreeItem label="Bases" icon={<Folder size={12} />}>
+          <TreeItem label="Base Blob" icon={<File size={12} />} />
+        </TreeItem>
+      </TreeItem>
+      <TreeItem label="Designs" icon={<File size={12} />} />
+      <TreeItem label="Qualities" icon={<File size={12} />} />
+    </TreeSection>
+    <TreeSection label="Settings" icon={<Settings size={14} />}>
+      <TreeItem label="General">
+        <TreeContent>
+          <Input id="kit-name-input-level" value="Metabolism" />
+          <Input id="version-input-level" value="1.0.0" />
+        </TreeContent>
+      </TreeItem>
+      <TreeItem label="Advanced">
+        <TreeContent>
+          <Button>Export Kit</Button>
+        </TreeContent>
+      </TreeItem>
+    </TreeSection>
+  </>
+);
+
+const createLevelRender = (level: Level) => () => (
+  <LevelProvider level={level}>
+    <div className={`border p-4 ${getLevelBgClass(level)}`}>
+      <Tree>{TreeChildren}</Tree>
+    </div>
+  </LevelProvider>
+);
+
+export const Base: Story = {
+  render: createLevelRender("base"),
+};
+
+export const Window: Story = {
+  render: createLevelRender("window"),
+};
+
+export const Panel: Story = {
+  render: createLevelRender("panel"),
+};
+
+export const Overlay: Story = {
+  render: createLevelRender("overlay"),
+};
+
+export const Temporary: Story = {
+  render: createLevelRender("temporary"),
 };
 
 // #endregion Tree

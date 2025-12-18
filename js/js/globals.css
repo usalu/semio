@@ -293,11 +293,13 @@
     --text-9xl: 7.2rem;
     --text-9xl--line-height: 1;
     --base: var(--color-light);
+    --window: var(--color-light-8-9);
     --panel: var(--color-light-7-9);
-    --overlay: var(--color-light-6-7);
+    --overlay: transparent;
     --temporary: var(--color-light-5-7);
     --foreground: var(--color-dark);
     --z-base: 0;
+    --z-window: 5;
     --z-panel: 10;
     --z-overlay: 20;
     --z-temporary: 30;
@@ -311,8 +313,9 @@
     --accent-tertiary: var(--color-tertiary);
     --accent-foreground: var(--color-dark);
     --hover-base: var(--color-gray-700);
+    --hover-window: var(--color-light-gray);
     --hover-panel: var(--color-gray-600);
-    --hover-overlay: var(--color-gray-500);
+    --hover-overlay: var(--color-gray-600);
     --hover-temporary: var(--color-light-gray-gray);
     --active-base: var(--color-primary);
     --active-foreground: var(--color-dark);
@@ -579,7 +582,9 @@
 
 .dark {
   --base: var(--color-dark);
+  --window: var(--color-dark-8-9);
   --panel: var(--color-dark-7-9);
+  --overlay: transparent;
   --temporary: var(--color-dark-5-7);
   --foreground: var(--color-light);
   --active-base: var(--color-primary);
@@ -591,7 +596,9 @@
   --accent-tertiary: var(--color-tertiary);
   --accent-foreground: var(--color-light);
   --hover-base: var(--color-gray-300);
+  --hover-window: var(--color-dark-gray);
   --hover-panel: var(--color-gray-400);
+  --hover-overlay: var(--color-gray-400);
   --hover-temporary: var(--color-dark-dark-gray-2);
   --cursor-default: url("../../assets/cursors/cursor_dark.svg") 0 0, default;
   --cursor-pointer: url("../../assets/cursors/cursor_pointer_dark_inkscape.svg") 0 0, pointer;
@@ -691,7 +698,9 @@
 
 @theme inline {
   --color-base: var(--base);
+  --color-window: var(--window);
   --color-panel: var(--panel);
+  --color-overlay: var(--overlay);
   --color-temporary: var(--temporary);
   --color-foreground: var(--foreground);
   --color-accent: var(--accent);
@@ -699,7 +708,9 @@
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-hover-base: var(--hover-base);
+  --color-hover-window: var(--hover-window);
   --color-hover-panel: var(--hover-panel);
+  --color-hover-overlay: var(--hover-overlay);
   --color-hover-temporary: var(--hover-temporary);
   --color-active-base: var(--active-base);
   --color-active-foreground: var(--active-foreground);
@@ -713,7 +724,7 @@
   --color-popover-foreground: var(--foreground);
   --color-border: var(--border-window-color);
   --color-element: var(--border-element-color);
-  --color-window: var(--border-window-color);
+  --color-border-window: var(--border-window-color);
 }
 
 @utility gap-single {
@@ -943,6 +954,10 @@
 
 @utility z-base {
   z-index: var(--z-base);
+}
+
+@utility z-window {
+  z-index: var(--z-window);
 }
 
 @utility z-panel {

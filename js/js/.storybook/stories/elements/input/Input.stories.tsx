@@ -47,7 +47,28 @@ export const Default: Story = {
     disabled: false,
     "aria-invalid": false,
     className: "w-96",
+    level: "base",
   },
+};
+
+export const Base: Story = {
+  args: { ...Default.args, id: "input-base", level: "base" },
+};
+
+export const Window: Story = {
+  args: { ...Default.args, id: "input-window", level: "window" },
+};
+
+export const Panel: Story = {
+  args: { ...Default.args, id: "input-panel", level: "panel" },
+};
+
+export const Overlay: Story = {
+  args: { ...Default.args, id: "input-overlay", level: "overlay" },
+};
+
+export const Temporary: Story = {
+  args: { ...Default.args, id: "input-temporary", level: "temporary" },
 };
 
 // #endregion Input

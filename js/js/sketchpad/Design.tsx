@@ -1,27 +1,8 @@
 // #region Header
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // #endregion
 
 // #region Commands
-
-
 
 // #endregion Commands
 
@@ -49,8 +30,8 @@ import type {
   YStringArray,
 } from "./shared";
 import { conditionalHookResult, createPanelDefinition, Expertise, Mode, PanelKind, readonlyHookResult, registerAppPlugin, registerRuntimeAction, Theme, ToolKind } from "./shared";
-import { createDefaultDesignAppState, identitySelector, useDesignScope, useExpertise, useKitScope, useLanguage, useDevice, useMode, usePieceScope, useSketchpadActor, useSketchpadActorSafe, useTheme } from "./Sketchpad";
 import type { DesignStore as DesignEntityStore } from "./Sketchpad";
+import { createDefaultDesignAppState, identitySelector, useDesignScope, useDevice, useExpertise, useKitScope, useLanguage, useMode, usePieceScope, useSketchpadActor, useSketchpadActorSafe, useTheme } from "./Sketchpad";
 
 // #endregion Internal State Management
 
@@ -64,7 +45,6 @@ import { AddIcon, AwardIcon, CodeIcon, ConnectionIcon, DiagramIcon, DisconnectIc
 import React, { createContext, FC, memo, ReactNode, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
-import { useParams } from "react-router";
 import * as THREE from "three";
 import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
 import { useLabel } from "../i18n";
@@ -222,11 +202,6 @@ const KitSectionLazy = React.lazy(async () => {
   }
   return { default: module.KitSection };
 });
-
-
-
-
-
 
 let designAppCommands: Record<string, (context: any, ...args: any[]) => Promise<any> | any>;
 
@@ -964,8 +939,6 @@ export class DesignStore extends KitDiffAppStore<DesignAppState, DesignAppDiff, 
     let kitGuid = yMap.get("kit") as string;
     let designGuid = yMap.get("design") as string;
 
-    
-    
     if (!kitGuid) {
       kitGuid = id.kit;
       yMap.set("kit", kitGuid);
@@ -1532,13 +1505,10 @@ export function initializeDesignStore() {
 
 // #region Design App Plugin Registration
 
-
 const designAppPlugin: AppPlugin = {
   id: "design",
   namespace: "DESIGN",
   machine: {
-    
-    
     actions: {},
     guards: {},
     eventHandlers: {},
@@ -3194,25 +3164,29 @@ export const DesignAppFooter: FC = () => {
     return Array.from(typeGuids);
   }, [design?.pieces]);
 
-  const allModelTagGuids = useMemo(() => {
-    if (!types || designTypeGuids.length === 0) return [];
+  const { allModelTagGuids, tagNameMap } = useMemo(() => {
+    if (!types || designTypeGuids.length === 0) return { allModelTagGuids: [], tagNameMap: new Map<string, string>() };
     const tagGuids = new Set<string>();
+    const nameMap = new Map<string, string>();
     designTypeGuids.forEach((typeGuid) => {
       const type = types.find((t) => t.guid === typeGuid);
       type?.models?.forEach((model) => {
-        model.tags?.forEach((tag) => tagGuids.add(tag.guid));
+        model.tags?.forEach((tag) => {
+          tagGuids.add(tag.guid);
+          if (tag.name && !nameMap.has(tag.guid)) {
+            nameMap.set(tag.guid, tag.name);
+          }
+        });
       });
     });
-    return Array.from(tagGuids);
-  }, [types, designTypeGuids]);
-
-  const tagNameMap = useMemo(() => {
-    const map = new Map<string, string>();
+    // Fallback to kit tags for any missing names
     tags.forEach((tag) => {
-      map.set(tag.guid, tag.name);
+      if (!nameMap.has(tag.guid)) {
+        nameMap.set(tag.guid, tag.name);
+      }
     });
-    return map;
-  }, [tags]);
+    return { allModelTagGuids: Array.from(tagGuids), tagNameMap: nameMap };
+  }, [types, designTypeGuids, tags]);
 
   const typesRef = useRef(types);
   const designTypeGuidsRef = useRef(designTypeGuids);
@@ -3340,12 +3314,13 @@ const getDesignTools = (): ToolDefinition[] => [
 ];
 
 export const ToolsToggleGroup: FC = () => {
-  const { kit, design } = useParams();
-  const [activeTool, setActiveTool, canSetActiveTool] = useDesignAppActiveTool();
+  const kitScope = useKitScope();
+  const designScope = useDesignScope();
+  const [activeTool, setActiveTool] = useDesignAppActiveTool();
 
-  if (!kit || !design || !canSetActiveTool) return null;
+  if (!kitScope?.guid || !designScope?.guid) return null;
 
-  return <ToolGroup tools={getDesignTools()} activeTool={activeTool} onToolChange={(tool) => setActiveTool?.(tool as ToolKind)} level="panel" />;
+  return <ToolGroup tools={getDesignTools()} activeTool={activeTool ?? ToolKind.SELECTION_NORMAL} onToolChange={(tool) => setActiveTool?.(tool as ToolKind)} level="panel" />;
 };
 
 // #endregion Tools
@@ -3522,13 +3497,7 @@ const DesignSectionForm: FC = () => {
     <>
       <TreeItem>
         <TreeContent>
-          <Input
-            lazy
-            id="semio.sketchpad.app.design.panel.details.section.design.name"
-            value={design.name}
-            onLazyChange={(value) => updateDesignField({ name: value })}
-            showLabel
-          />
+          <Input lazy id="semio.sketchpad.app.design.panel.details.section.design.name" value={design.name} onLazyChange={(value) => updateDesignField({ name: value })} showLabel />
         </TreeContent>
       </TreeItem>
       <TreeItem>
@@ -3545,26 +3514,12 @@ const DesignSectionForm: FC = () => {
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Input
-            lazy
-            id="semio.sketchpad.app.design.panel.details.section.design.icon"
-            value={design.icon || ""}
-            placeholderId="semio.sketchpad.app.design.iconPlaceholder"
-            onLazyChange={(value) => updateDesignField({ icon: value })}
-            showLabel
-          />
+          <Input lazy id="semio.sketchpad.app.design.panel.details.section.design.icon" value={design.icon || ""} placeholderId="semio.sketchpad.app.design.iconPlaceholder" onLazyChange={(value) => updateDesignField({ icon: value })} showLabel />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Input
-            lazy
-            id="semio.sketchpad.app.design.panel.details.section.design.image"
-            value={design.image || ""}
-            placeholderId="semio.sketchpad.app.design.imagePlaceholder"
-            onLazyChange={(value) => updateDesignField({ image: value })}
-            showLabel
-          />
+          <Input lazy id="semio.sketchpad.app.design.panel.details.section.design.image" value={design.image || ""} placeholderId="semio.sketchpad.app.design.imagePlaceholder" onLazyChange={(value) => updateDesignField({ image: value })} showLabel />
         </TreeContent>
       </TreeItem>
       <TreeItem>
@@ -3593,13 +3548,7 @@ const DesignSectionForm: FC = () => {
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Input
-            lazy
-            id="semio.sketchpad.app.design.panel.details.section.design.unit"
-            value={design.unit || ""}
-            onLazyChange={(value) => updateDesignField({ unit: value })}
-            showLabel
-          />
+          <Input lazy id="semio.sketchpad.app.design.panel.details.section.design.unit" value={design.unit || ""} onLazyChange={(value) => updateDesignField({ unit: value })} showLabel />
         </TreeContent>
       </TreeItem>
       {design.location ? (
@@ -4285,22 +4234,12 @@ const PiecesSectionForm: FC = () => {
         <TreeItem id="semio.sketchpad.app.design.piece.center">
           <TreeItem>
             <TreeContent>
-              <Stepper
-                id="semio.sketchpad.app.design.panel.details.section.piece.center.x"
-                value={isSingle && piece ? piece.center?.u : commonCenterX}
-                onChange={handleCenterXChange}
-                step={0.1}
-              />
+              <Stepper id="semio.sketchpad.app.design.panel.details.section.piece.center.x" value={isSingle && piece ? piece.center?.u : commonCenterX} onChange={handleCenterXChange} step={0.1} />
             </TreeContent>
           </TreeItem>
           <TreeItem>
             <TreeContent>
-              <Stepper
-                id="semio.sketchpad.app.design.panel.details.section.piece.center.y"
-                value={isSingle && piece ? piece.center?.v : commonCenterY}
-                onChange={handleCenterYChange}
-                step={0.1}
-              />
+              <Stepper id="semio.sketchpad.app.design.panel.details.section.piece.center.y" value={isSingle && piece ? piece.center?.v : commonCenterY} onChange={handleCenterYChange} step={0.1} />
             </TreeContent>
           </TreeItem>
         </TreeItem>
@@ -4323,96 +4262,51 @@ const PiecesSectionForm: FC = () => {
           <TreeItem id="semio.sketchpad.app.design.piece.planeOrigin">
             <TreeItem>
               <TreeContent>
-                <Stepper
-                  id="semio.sketchpad.app.design.panel.details.section.piece.plane.origin.x"
-                  value={isSingle && piece ? piece.plane?.origin.x : commonPlaneOriginX}
-                  onChange={handlePlaneOriginXChange}
-                  step={0.1}
-                />
+                <Stepper id="semio.sketchpad.app.design.panel.details.section.piece.plane.origin.x" value={isSingle && piece ? piece.plane?.origin.x : commonPlaneOriginX} onChange={handlePlaneOriginXChange} step={0.1} />
               </TreeContent>
             </TreeItem>
             <TreeItem>
               <TreeContent>
-                <Stepper
-                  id="semio.sketchpad.app.design.panel.details.section.piece.plane.origin.y"
-                  value={isSingle && piece ? piece.plane?.origin.y : commonPlaneOriginY}
-                  onChange={handlePlaneOriginYChange}
-                  step={0.1}
-                />
+                <Stepper id="semio.sketchpad.app.design.panel.details.section.piece.plane.origin.y" value={isSingle && piece ? piece.plane?.origin.y : commonPlaneOriginY} onChange={handlePlaneOriginYChange} step={0.1} />
               </TreeContent>
             </TreeItem>
             <TreeItem>
               <TreeContent>
-                <Stepper
-                  id="semio.sketchpad.app.design.panel.details.section.piece.plane.origin.z"
-                  value={isSingle && piece ? piece.plane?.origin.z : commonPlaneOriginZ}
-                  onChange={handlePlaneOriginZChange}
-                  step={0.1}
-                />
+                <Stepper id="semio.sketchpad.app.design.panel.details.section.piece.plane.origin.z" value={isSingle && piece ? piece.plane?.origin.z : commonPlaneOriginZ} onChange={handlePlaneOriginZChange} step={0.1} />
               </TreeContent>
             </TreeItem>
           </TreeItem>
           <TreeItem id="semio.sketchpad.app.design.piece.planeXAxis">
             <TreeItem>
               <TreeContent>
-                <Stepper
-                  id="semio.sketchpad.app.design.panel.details.section.piece.plane.xaxis.x"
-                  value={isSingle && piece ? piece.plane?.xAxis.x : commonPlaneXAxisX}
-                  onChange={handlePlaneXAxisXChange}
-                  step={0.1}
-                />
+                <Stepper id="semio.sketchpad.app.design.panel.details.section.piece.plane.xaxis.x" value={isSingle && piece ? piece.plane?.xAxis.x : commonPlaneXAxisX} onChange={handlePlaneXAxisXChange} step={0.1} />
               </TreeContent>
             </TreeItem>
             <TreeItem>
               <TreeContent>
-                <Stepper
-                  id="semio.sketchpad.app.design.panel.details.section.piece.plane.xaxis.y"
-                  value={isSingle && piece ? piece.plane?.xAxis.y : commonPlaneXAxisY}
-                  onChange={handlePlaneXAxisYChange}
-                  step={0.1}
-                />
+                <Stepper id="semio.sketchpad.app.design.panel.details.section.piece.plane.xaxis.y" value={isSingle && piece ? piece.plane?.xAxis.y : commonPlaneXAxisY} onChange={handlePlaneXAxisYChange} step={0.1} />
               </TreeContent>
             </TreeItem>
             <TreeItem>
               <TreeContent>
-                <Stepper
-                  id="semio.sketchpad.app.design.panel.details.section.piece.plane.xaxis.z"
-                  value={isSingle && piece ? piece.plane?.xAxis.z : commonPlaneXAxisZ}
-                  onChange={handlePlaneXAxisZChange}
-                  step={0.1}
-                />
+                <Stepper id="semio.sketchpad.app.design.panel.details.section.piece.plane.xaxis.z" value={isSingle && piece ? piece.plane?.xAxis.z : commonPlaneXAxisZ} onChange={handlePlaneXAxisZChange} step={0.1} />
               </TreeContent>
             </TreeItem>
           </TreeItem>
           <TreeItem id="semio.sketchpad.app.design.piece.planeYAxis">
             <TreeItem>
               <TreeContent>
-                <Stepper
-                  id="semio.sketchpad.app.design.panel.details.section.piece.plane.yaxis.x"
-                  value={isSingle && piece ? piece.plane?.yAxis.x : commonPlaneYAxisX}
-                  onChange={handlePlaneYAxisXChange}
-                  step={0.1}
-                />
+                <Stepper id="semio.sketchpad.app.design.panel.details.section.piece.plane.yaxis.x" value={isSingle && piece ? piece.plane?.yAxis.x : commonPlaneYAxisX} onChange={handlePlaneYAxisXChange} step={0.1} />
               </TreeContent>
             </TreeItem>
             <TreeItem>
               <TreeContent>
-                <Stepper
-                  id="semio.sketchpad.app.design.panel.details.section.piece.plane.yaxis.y"
-                  value={isSingle && piece ? piece.plane?.yAxis.y : commonPlaneYAxisY}
-                  onChange={handlePlaneYAxisYChange}
-                  step={0.1}
-                />
+                <Stepper id="semio.sketchpad.app.design.panel.details.section.piece.plane.yaxis.y" value={isSingle && piece ? piece.plane?.yAxis.y : commonPlaneYAxisY} onChange={handlePlaneYAxisYChange} step={0.1} />
               </TreeContent>
             </TreeItem>
             <TreeItem>
               <TreeContent>
-                <Stepper
-                  id="semio.sketchpad.app.design.panel.details.section.piece.plane.yaxis.z"
-                  value={isSingle && piece ? piece.plane?.yAxis.z : commonPlaneYAxisZ}
-                  onChange={handlePlaneYAxisZChange}
-                  step={0.1}
-                />
+                <Stepper id="semio.sketchpad.app.design.panel.details.section.piece.plane.yaxis.z" value={isSingle && piece ? piece.plane?.yAxis.z : commonPlaneYAxisZ} onChange={handlePlaneYAxisZChange} step={0.1} />
               </TreeContent>
             </TreeItem>
           </TreeItem>
@@ -4493,46 +4387,24 @@ const SingleConnectionFields: FC = () => {
     <>
       <TreeItem>
         <TreeContent>
-          <Stepper
-            id="semio.sketchpad.app.design.panel.details.section.connection.gap"
-            value={gap}
-            onChange={setGap!}
-            step={0.1}
-          />
+          <Stepper id="semio.sketchpad.app.design.panel.details.section.connection.gap" value={gap} onChange={setGap!} step={0.1} />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Stepper
-            id="semio.sketchpad.app.design.panel.details.section.connection.shift"
-            value={shift}
-            onChange={setShift!}
-            step={0.1}
-          />
+          <Stepper id="semio.sketchpad.app.design.panel.details.section.connection.shift" value={shift} onChange={setShift!} step={0.1} />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Stepper
-            id="semio.sketchpad.app.design.panel.details.section.connection.rise"
-            value={rise}
-            onChange={setRise!}
-            step={0.1}
-          />
+          <Stepper id="semio.sketchpad.app.design.panel.details.section.connection.rise" value={rise} onChange={setRise!} step={0.1} />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
           <div className="flex flex-col gap-single">
             <label className="text-xs">{useLabel("semio.sketchpad.app.design.connection.rotation")}</label>
-            <Slider
-              id="semio.sketchpad.app.design.panel.details.section.connection.rotation"
-              value={[rotation]}
-              onValueChange={([value]) => setRotation!(value)}
-              min={-180}
-              max={180}
-              step={1}
-            />
+            <Slider id="semio.sketchpad.app.design.panel.details.section.connection.rotation" value={[rotation]} onValueChange={([value]) => setRotation!(value)} min={-180} max={180} step={1} />
           </div>
         </TreeContent>
       </TreeItem>
@@ -4540,14 +4412,7 @@ const SingleConnectionFields: FC = () => {
         <TreeContent>
           <div className="flex flex-col gap-single">
             <label className="text-xs">{useLabel("semio.sketchpad.app.design.connection.turn")}</label>
-            <Slider
-              id="semio.sketchpad.app.design.panel.details.section.connection.turn"
-              value={[turn]}
-              onValueChange={([value]) => setTurn!(value)}
-              min={-180}
-              max={180}
-              step={1}
-            />
+            <Slider id="semio.sketchpad.app.design.panel.details.section.connection.turn" value={[turn]} onValueChange={([value]) => setTurn!(value)} min={-180} max={180} step={1} />
           </div>
         </TreeContent>
       </TreeItem>
@@ -4555,35 +4420,18 @@ const SingleConnectionFields: FC = () => {
         <TreeContent>
           <div className="flex flex-col gap-single">
             <label className="text-xs">{useLabel("semio.sketchpad.app.design.connection.tilt")}</label>
-            <Slider
-              id="semio.sketchpad.app.design.panel.details.section.connection.tilt"
-              value={[tilt]}
-              onValueChange={([value]) => setTilt!(value)}
-              min={-180}
-              max={180}
-              step={1}
-            />
+            <Slider id="semio.sketchpad.app.design.panel.details.section.connection.tilt" value={[tilt]} onValueChange={([value]) => setTilt!(value)} min={-180} max={180} step={1} />
           </div>
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Stepper
-            id="semio.sketchpad.app.design.panel.details.section.connection.u"
-            value={u}
-            onChange={setU!}
-            step={0.1}
-          />
+          <Stepper id="semio.sketchpad.app.design.panel.details.section.connection.u" value={u} onChange={setU!} step={0.1} />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Stepper
-            id="semio.sketchpad.app.design.panel.details.section.connection.v"
-            value={v}
-            onChange={setV!}
-            step={0.1}
-          />
+          <Stepper id="semio.sketchpad.app.design.panel.details.section.connection.v" value={v} onChange={setV!} step={0.1} />
         </TreeContent>
       </TreeItem>
     </>
@@ -8671,10 +8519,13 @@ const DesignSettingsContent: FC = () => {
 const DesignApp: FC = () => {
   initializeDesignStore();
 
+  const appType = useAppType();
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
 
-  useLayoutEffect(() => {
+  useEffect(() => {
+    if (appType !== "design") return;
+
     addSection("toolbar", {
       id: "semio.sketchpad.app.design.tools",
       specificity: 20,
@@ -8685,7 +8536,7 @@ const DesignApp: FC = () => {
     return () => {
       removeSection("toolbar", "semio.sketchpad.app.design.tools");
     };
-  }, [addSection, removeSection]);
+  }, [appType, addSection, removeSection]);
 
   return (
     <DesignAppTransactionProvider>

@@ -5,7 +5,7 @@
   "version": "0.1.0",
   "description": "semio ⋅ playground",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --port 4000",
     "build": "vite build",
     "publish": "vite build && npm publish",
     "preflight": "echo \"No preflight checks configured\""

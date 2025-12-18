@@ -418,7 +418,7 @@ const createComponents = () => ({
   ),
   tbody: ({ children, ...props }: any) => <tbody {...props}>{children}</tbody>,
   tr: ({ children, ...props }: any) => (
-    <tr className="border-b border-gray-300 dark:border-gray-700" {...props}>
+    <tr className="border-b border-element" {...props}>
       {children}
     </tr>
   ),

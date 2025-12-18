@@ -52,6 +52,26 @@ export const Default: Story = {
   },
 };
 
+export const Base: Story = {
+  args: { ...Default.args, id: "toggle-group-base", level: "base" },
+};
+
+export const Window: Story = {
+  args: { ...Default.args, id: "toggle-group-window", level: "window" },
+};
+
+export const Panel: Story = {
+  args: { ...Default.args, id: "toggle-group-panel", level: "panel" },
+};
+
+export const Overlay: Story = {
+  args: { ...Default.args, id: "toggle-group-overlay", level: "overlay" },
+};
+
+export const Temporary: Story = {
+  args: { ...Default.args, id: "toggle-group-temporary", level: "temporary" },
+};
+
 export const Multiple: Story = {
   args: {
     id: "toggle-group-multiple",
@@ -68,6 +88,26 @@ export const Multiple: Story = {
       { id: "toggle-multiple-plus", value: "plus", icon: <Plus /> },
     ],
   },
+};
+
+export const MultipleBase: Story = {
+  args: { ...Multiple.args, id: "toggle-group-multiple-base", level: "base" },
+};
+
+export const MultipleWindow: Story = {
+  args: { ...Multiple.args, id: "toggle-group-multiple-window", level: "window" },
+};
+
+export const MultiplePanel: Story = {
+  args: { ...Multiple.args, id: "toggle-group-multiple-panel", level: "panel" },
+};
+
+export const MultipleOverlay: Story = {
+  args: { ...Multiple.args, id: "toggle-group-multiple-overlay", level: "overlay" },
+};
+
+export const MultipleTemporary: Story = {
+  args: { ...Multiple.args, id: "toggle-group-multiple-temporary", level: "temporary" },
 };
 
 // #endregion ToggleGroup

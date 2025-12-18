@@ -11,7 +11,7 @@
     "grepInvert": null,
     "maxFailures": 0,
     "metadata": {
-      "actualWorkers": 1
+      "actualWorkers": 2
     },
     "preserveOutput": "always",
     "reporter": [
@@ -37,7 +37,7 @@
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
-          "actualWorkers": 1
+          "actualWorkers": 2
         },
         "id": "chromium",
         "name": "chromium",
@@ -46,7 +46,7 @@
         "testMatch": [
           "**/sketchpad.test.ts"
         ],
-        "timeout": 30000
+        "timeout": 60000
       }
     ],
     "shard": null,
@@ -55,7 +55,7 @@
     "version": "1.56.1",
     "workers": 8,
     "webServer": {
-      "command": "npm run dev",
+      "command": "npm run dev:sketchpad -- --port 5173",
       "url": "http://localhost:5173",
       "reuseExistingServer": true,
       "timeout": 120000
@@ -70,18 +70,18 @@
       "specs": [],
       "suites": [
         {
-          "title": "Feedback App",
+          "title": "sketchpad",
           "file": "sketchpad.test.ts",
-          "line": 2432,
+          "line": 623,
           "column": 6,
           "specs": [
             {
-              "title": "should navigate to feedback page via footer action",
+              "title": "Home",
               "ok": false,
               "tags": [],
               "tests": [
                 {
-                  "timeout": 30000,
+                  "timeout": 60000,
                   "annotations": [],
                   "expectedStatus": "passed",
                   "projectId": "chromium",
@@ -91,52 +91,136 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 13323,
+                      "duration": 4058,
                       "error": {
-                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1')\u001b[22m\n",
-                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1')\u001b[22m\n\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:2445:33",
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:678:69",
                         "location": {
                           "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
-                          "column": 33,
-                          "line": 2445
+                          "column": 69,
+                          "line": 678
                         },
-                        "snippet": "\u001b[0m \u001b[90m 2443 |\u001b[39m\n \u001b[90m 2444 |\u001b[39m     \u001b[36mconst\u001b[39m feedbackTitle \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m\"h1\"\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 2445 |\u001b[39m     \u001b[36mawait\u001b[39m expect(feedbackTitle)\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m      |\u001b[39m                                 \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 2446 |\u001b[39m     \u001b[36mawait\u001b[39m expect(feedbackTitle)\u001b[33m.\u001b[39mtoContainText(\u001b[32m\"Feedback\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 2447 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 2448 |\u001b[39m\u001b[0m"
+                        "snippet": "\u001b[0m \u001b[90m 676 |\u001b[39m\n \u001b[90m 677 |\u001b[39m     \u001b[90m// At least one filter toggle should be visible\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 678 |\u001b[39m     expect(hasTemporaryToggle \u001b[33m||\u001b[39m hasLocalToggle \u001b[33m||\u001b[39m hasRemoteToggle)\u001b[33m.\u001b[39mtoBe(\u001b[36mtrue\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                                     \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 679 |\u001b[39m\n \u001b[90m 680 |\u001b[39m     \u001b[90m// Test clicking a filter toggle and verify URL changes\u001b[39m\n \u001b[90m 681 |\u001b[39m     \u001b[36mif\u001b[39m (hasTemporaryToggle) {\u001b[0m"
                       },
                       "errors": [
                         {
                           "location": {
                             "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
-                            "column": 33,
-                            "line": 2445
+                            "column": 69,
+                            "line": 678
                           },
-                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1')\u001b[22m\n\n\n  2443 |\n  2444 |     const feedbackTitle = page.locator(\"h1\");\n> 2445 |     await expect(feedbackTitle).toBeVisible();\n       |                                 ^\n  2446 |     await expect(feedbackTitle).toContainText(\"Feedback\");\n  2447 |   });\n  2448 |\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:2445:33"
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n\u001b[0m \u001b[90m 676 |\u001b[39m\n \u001b[90m 677 |\u001b[39m     \u001b[90m// At least one filter toggle should be visible\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 678 |\u001b[39m     expect(hasTemporaryToggle \u001b[33m||\u001b[39m hasLocalToggle \u001b[33m||\u001b[39m hasRemoteToggle)\u001b[33m.\u001b[39mtoBe(\u001b[36mtrue\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                                     \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 679 |\u001b[39m\n \u001b[90m 680 |\u001b[39m     \u001b[90m// Test clicking a filter toggle and verify URL changes\u001b[39m\n \u001b[90m 681 |\u001b[39m     \u001b[36mif\u001b[39m (hasTemporaryToggle) {\u001b[0m\n\u001b[2m    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:678:69\u001b[22m"
                         }
                       ],
-                      "stdout": [],
+                      "stdout": [
+                        {
+                          "text": "[Home] Testing Home app panel toggles\n"
+                        },
+                        {
+                          "text": "[Home] Settings toggle visible: false\n"
+                        },
+                        {
+                          "text": "[Home] Details toggle visible: true\n"
+                        },
+                        {
+                          "text": "[Home] Toggle details: initial=false, after=true, changed=true\n"
+                        },
+                        {
+                          "text": "[Home] Panel details content: 0 buttons, 0 inputs, 0 tree items (total: 0)\n"
+                        },
+                        {
+                          "text": "[Home] Panel details has 0 content items\n"
+                        },
+                        {
+                          "text": "[Home] Panel toggle verification complete: settings=false, details=true\n"
+                        },
+                        {
+                          "text": "[Home] Testing toolbar visibility and filter toggles\n"
+                        },
+                        {
+                          "text": "[Home] Toolbar visible: true\n"
+                        },
+                        {
+                          "text": "[Home] Toolbar toggle groups count: 3\n"
+                        },
+                        {
+                          "text": "[Home] Testing individual filter toggles\n"
+                        },
+                        {
+                          "text": "[Home] Temporary filter toggle visible: false\n"
+                        },
+                        {
+                          "text": "[Home] Local filter toggle visible: false\n"
+                        },
+                        {
+                          "text": "[Home] Remote filter toggle visible: false\n"
+                        }
+                      ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-17T18:16:03.999Z",
+                      "startTime": "2025-12-17T23:59:04.900Z",
                       "annotations": [],
                       "attachments": [
                         {
-                          "name": "trace",
-                          "contentType": "application/zip",
-                          "path": "C:\\git\\semio.tech\\semio\\js\\js\\test-results\\sketchpad-Feedback-App-sho-45e00-back-page-via-footer-action-chromium\\trace.zip"
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\git\\semio.tech\\semio\\js\\js\\test-results\\sketchpad-sketchpad-Home-chromium\\error-context.md"
                         }
                       ],
                       "errorLocation": {
                         "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
-                        "column": 33,
-                        "line": 2445
+                        "column": 69,
+                        "line": 678
                       }
                     }
                   ],
                   "status": "unexpected"
                 }
               ],
-              "id": "1f96767271edc4239dfa-348ca62bdfeb814aac1e",
+              "id": "1f96767271edc4239dfa-b740b36bc6e82e50ca6e",
               "file": "sketchpad.test.ts",
-              "line": 2433,
+              "line": 624,
+              "column": 3
+            },
+            {
+              "title": "Home App State - Selection",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 13802,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[Home State Test] Initial homeApp state: {\"panelVisibility\":{\"toolbar\":true,\"workbench\":false,\"details\":false,\"chat\":false,\"settings\":false},\"loadingKits\":[{\"tempGuid\":\"kit-import-019b2ec0-d741-70ee-a5ec-5f79e01f4410\",\"name\":\"metabolism\"},{\"tempGuid\":\"kit-import-019b2ec0-d79d-7168-a9b1-ae54ac1b626c\",\"name\":\"metabolism\"}]}\n"
+                        },
+                        {
+                          "text": "[Home State Test] Metabolism row visible: \u001b[33mfalse\u001b[39m\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-17T23:59:04.903Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "1f96767271edc4239dfa-19e6778a9413d2ad6c28",
+              "file": "sketchpad.test.ts",
+              "line": 1919,
               "column": 3
             }
           ]
@@ -146,9 +230,9 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2025-12-17T18:16:02.972Z",
-    "duration": 14640.82,
-    "expected": 0,
+    "startTime": "2025-12-17T23:59:03.943Z",
+    "duration": 14986.008,
+    "expected": 1,
     "skipped": 0,
     "unexpected": 1,
     "flaky": 0

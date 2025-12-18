@@ -20,128 +20,6 @@
       ]
     },
     {
-      "name": "dev engine",
-      "preLaunchTask": "dev engine",
-      // "postDebugTask": "kill dev",
-      "type": "debugpy",
-      "request": "attach",
-      "connect": {
-        "host": "localhost",
-        "port": 5678
-      },
-      "pathMappings": [
-        {
-          "localRoot": "${workspaceFolder}/py/engine",
-          "remoteRoot": "."
-        }
-      ]
-    },
-    {
-      "name": "dev js",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "run-many",
-        "-t",
-        "dev",
-        "--projects=@semio/js,@semio/docs,@semio/desktop"
-      ],
-      // "postDebugTask": "kill dev",
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "dev js js",
-      "preLaunchTask": "dev js",
-      // "postDebugTask": "kill dev",
-      "type": "chrome",
-      "request": "launch",
-      "url": "http://localhost:6006",
-      "webRoot": "${workspaceRoot}/js/js"
-    },
-    {
-      "name": "dev:storybook",
-      "preLaunchTask": "dev:storybook",
-      // "postDebugTask": "kill dev",
-      "type": "chrome",
-      "request": "launch",
-      "url": "http://localhost:6006",
-      "webRoot": "${workspaceRoot}/js/js"
-    },
-    {
-      "name": "dev js js storybook",
-      "preLaunchTask": "dev js js storybook",
-      // "postDebugTask": "kill dev",
-      "type": "chrome",
-      "request": "launch",
-      "url": "http://localhost:6006",
-      "webRoot": "${workspaceRoot}/js/js"
-    },
-    {
-      "name": "dev play",
-      "preLaunchTask": "dev play",
-      // "postDebugTask": "kill dev",
-      "type": "chrome",
-      "request": "launch",
-      "url": "http://localhost:5173",
-      "webRoot": "${workspaceRoot}/js/play"
-    },
-    {
-      "name": "dev:sketchpad",
-      "preLaunchTask": "dev:sketchpad",
-      // "postDebugTask": "kill dev",
-      "type": "chrome",
-      "request": "launch",
-      "url": "http://localhost:5174",
-      "webRoot": "${workspaceRoot}/js/js"
-    },
-    {
-      "name": "dev js js sketchpad",
-      "preLaunchTask": "dev js js sketchpad",
-      // "postDebugTask": "kill dev",
-      "type": "chrome",
-      "request": "launch",
-      "url": "http://localhost:5174",
-      "webRoot": "${workspaceRoot}/js/js"
-    },
-    {
-      "name": "dev docs",
-      "preLaunchTask": "dev docs",
-      // "postDebugTask": "kill dev",
-      "type": "chrome",
-      "request": "launch",
-      "url": "http://localhost:4321",
-      "webRoot": "${workspaceRoot}/js/docs"
-    },
-    {
-      "name": "dev vscode",
-      "type": "extensionHost",
-      "request": "launch",
-      "args": [
-        "--extensionDevelopmentPath=${workspaceFolder}/js/vscode"
-      ],
-      "outFiles": [
-        "${workspaceFolder}/js/vscode/out/**/*.js"
-      ],
-      "preLaunchTask": "dev vscode"
-    },
-    {
-      "name": "dev sketchpad",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "dev",
-        "@semio/desktop"
-      ],
-      // "postDebugTask": "kill dev",
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
       "name": "analyze",
       "type": "node",
       "request": "launch",
@@ -238,33 +116,22 @@
       "console": "integratedTerminal"
     },
     {
-      "name": "build assets",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "build",
-        "@semio/assets"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
+      "name": "dev engine",
+      "preLaunchTask": "dev engine",
+      // "postDebugTask": "kill dev",
+      "type": "debugpy",
+      "request": "attach",
+      "connect": {
+        "host": "localhost",
+        "port": 5678
+      },
+      "pathMappings": [
+        {
+          "localRoot": "${workspaceFolder}/py/engine",
+          "remoteRoot": "."
+        }
+      ]
     },
-    {
-      "name": "build icons",
-      "type": "PowerShell",
-      "request": "launch",
-      "script": "${workspaceFolder}/assets/icons/build.ps1",
-      "cwd": "${workspaceFolder}/assets/icons/"
-    },
-    // TODO: Invoke build task over nx and attach debugger to it
-    // Problem: Need to get process id or find a different way
-    // {
-    //     "name": "build icons",
-    //     "type": "PowerShell",
-    //     "request": "attach",
-    //     "preLaunchTask": "build icons"
-    // },
     {
       "name": "build engine",
       "type": "node",
@@ -275,6 +142,22 @@
         "build",
         "@semio/engine"
       ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "dev js",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "nx",
+        "run-many",
+        "-t",
+        "dev",
+        "--projects=@semio/js,@semio/docs,@semio/desktop"
+      ],
+      // "postDebugTask": "kill dev",
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
@@ -294,6 +177,15 @@
       "console": "integratedTerminal"
     },
     {
+      "name": "dev js js",
+      "preLaunchTask": "dev js",
+      // "postDebugTask": "kill dev",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:6006",
+      "webRoot": "${workspaceRoot}/js/js"
+    },
+    {
       "name": "build js js",
       "type": "node",
       "request": "launch",
@@ -305,6 +197,42 @@
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
+    },
+    {
+      "name": "dev js js storybook",
+      "preLaunchTask": "dev js js storybook",
+      // "postDebugTask": "kill dev",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:6006",
+      "webRoot": "${workspaceRoot}/js/js"
+    },
+    {
+      "name": "dev js js sketchpad",
+      "preLaunchTask": "dev js js sketchpad",
+      // "postDebugTask": "kill dev",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceRoot}/js/js"
+    },
+    {
+      "name": "dev play",
+      "preLaunchTask": "dev play",
+      // "postDebugTask": "kill dev",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:4000",
+      "webRoot": "${workspaceRoot}/js/play"
+    },
+    {
+      "name": "dev docs",
+      "preLaunchTask": "dev docs",
+      // "postDebugTask": "kill dev",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:4321",
+      "webRoot": "${workspaceRoot}/js/docs"
     },
     {
       "name": "build docs",
@@ -320,7 +248,33 @@
       "console": "integratedTerminal"
     },
     {
-      "name": "build sketchpad",
+      "name": "dev vscode",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/js/vscode"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/js/vscode/out/**/*.js"
+      ],
+      "preLaunchTask": "dev vscode"
+    },
+    {
+      "name": "dev desktop",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "nx",
+        "dev",
+        "@semio/desktop"
+      ],
+      // "postDebugTask": "kill dev",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "build desktop",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",
@@ -331,6 +285,26 @@
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
+    },
+    {
+      "name": "build assets",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "nx",
+        "build",
+        "@semio/assets"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "build icons",
+      "type": "PowerShell",
+      "request": "launch",
+      "script": "${workspaceFolder}/assets/icons/build.ps1",
+      "cwd": "${workspaceFolder}/assets/icons/"
     },
     {
       "name": "export metabolism",

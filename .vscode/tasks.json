@@ -80,32 +80,6 @@
       }
     },
     {
-      "label": "dev:storybook",
-      "type": "shell",
-      "isBackground": true,
-      "command": "npx nx dev:storybook @semio/js",
-      "problemMatcher": {
-        "owner": "custom",
-        "pattern": [
-          {
-            "regexp": ".",
-            "file": 1,
-            "location": 2,
-            "message": 3
-          }
-        ],
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": "@storybook/core",
-          "endsPattern": "http://localhost:6006/"
-        }
-      },
-      "group": "none",
-      "options": {
-        "killOnPort": 6006
-      }
-    },
-    {
       "label": "dev js js storybook",
       "type": "shell",
       "isBackground": true,
@@ -132,32 +106,6 @@
       }
     },
     {
-      "label": "dev:sketchpad",
-      "type": "shell",
-      "isBackground": true,
-      "command": "npx nx dev:sketchpad @semio/js",
-      "problemMatcher": {
-        "owner": "custom",
-        "pattern": [
-          {
-            "regexp": ".",
-            "file": 1,
-            "location": 2,
-            "message": 3
-          }
-        ],
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": "VITE",
-          "endsPattern": "http://localhost:5174/"
-        }
-      },
-      "group": "none",
-      "options": {
-        "killOnPort": 5174
-      }
-    },
-    {
       "label": "dev js js sketchpad",
       "type": "shell",
       "isBackground": true,
@@ -175,12 +123,12 @@
         "background": {
           "activeOnStart": true,
           "beginsPattern": "VITE",
-          "endsPattern": "http://localhost:5174/"
+          "endsPattern": "http://localhost:3000/"
         }
       },
       "group": "none",
       "options": {
-        "killOnPort": 5174
+        "killOnPort": 3000
       }
     },
     {
@@ -201,12 +149,12 @@
         "background": {
           "activeOnStart": true,
           "beginsPattern": "VITE", // When vite starts
-          "endsPattern": "http://localhost:5173/" // When vite is ready
+          "endsPattern": "http://localhost:4000/" // When vite is ready
         }
       },
       "group": "none",
       "options": {
-        "killOnPort": 5173
+        "killOnPort": 4000
       }
     },
     {

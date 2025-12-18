@@ -19,6 +19,7 @@
 
 // #endregion
 import type { Preview } from "@storybook/react-vite";
+import { withLevel } from "./withLevel";
 import { withTheme } from "./withTheme";
 
 import "../globals.css";
@@ -56,7 +57,7 @@ const preview: Preview = {
   initialGlobals: {
     theme: Theme.SYSTEM,
   },
-  decorators: [withTheme],
+  decorators: [withLevel, withTheme],
   tags: ["autodocs"],
 };
 
