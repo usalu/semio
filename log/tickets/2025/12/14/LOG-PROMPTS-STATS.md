@@ -1,11 +1,18 @@
 ---
 slug: LOG-PROMPTS-STATS
 summary: Extend log.ts prompts/model/stats
+prompt: >-
+  Extend the log.ts functionality. Enhance the script and documentation. Include
+  in the frontmatter: prompts an array of all the prompts provided by the user.
+  Whenever the user sends a new prompt append it to the array. log.ts must take
+  model name (of the llm) as forced input (enum). Include stats in the
+  frontmatter and add a command to update stats (affected files, total
+  added/removed lines) recomputed across multiple prompts.
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.942Z"
-commit: "0000000000000000000000000000000000000000"
+  created: '2025-12-16T17:06:07.942Z'
+commit: '0000000000000000000000000000000000000000'
 iterations:
   - prompt: >-
       Extend the log.ts functionality. Enhance the script and documentation.
@@ -15,7 +22,7 @@ iterations:
       stats in the frontmatter and add a command to update stats (affected
       files, total added/removed lines) recomputed across multiple prompts.
     date:
-      started: "2025-12-14T21:46:55.100Z"
+      started: '2025-12-14T21:46:55.100Z'
     model: gpt-5-2
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
     commit: 687798cd73468e4a7e60722f49f21a32c9a0a44f

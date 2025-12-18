@@ -1,6 +1,10 @@
 ---
 slug: WINDOW-MARGINS
 summary: Sketchpad windows have 1-unit margins and continuous borders
+prompt: >-
+  Every window should have a single unit margin between the window and the
+  border of the canvas or between windows. Every window has a continuous border
+  around it.
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:

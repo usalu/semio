@@ -40,7 +40,6 @@ import {
   UserIcon,
 } from "@semio/assets";
 import { useSelector } from "@xstate/react";
-import { ReactFlowProvider } from "@xyflow/react";
 import Fuse, { FuseResult } from "fuse.js";
 import React, { ComponentType, createContext, FC, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
@@ -132,6 +131,8 @@ import {
 } from "../semio";
 import {
   Action,
+  ActionGroup,
+  ActionGroupItem,
   Breadcrumb,
   ButtonGroup,
   ButtonGroupItem,
@@ -144,8 +145,10 @@ import {
   Footer,
   InteractionProvider,
   Layout as LayoutComponent,
+  LevelProvider,
   Navbar,
   type NavbarItem,
+  ReactFlowProvider,
   Strip,
   Toggle,
   Transaction,
@@ -159,6 +162,7 @@ import {
   AppKind,
   AppRegistration,
   AppStep,
+  AppWindowConfig,
   BaseDependency,
   CompleteState,
   CompositeFileProviderConfig,
@@ -179,6 +183,7 @@ import {
   FileProviderFactory,
   FocusItem,
   FooterItem,
+  getEventHandler,
   getValueAtPath,
   HookResult,
   KitAppId,
@@ -199,6 +204,7 @@ import {
   PanelSections,
   PanelSizes,
   PanelVisibility,
+  parseWindowLayout,
   QualityAppId,
   RemoteFileProviderConfig,
   RemoteProviders,
@@ -220,6 +226,7 @@ import {
   TypeAppId,
   Unsubscribe,
   Url,
+  WindowControl,
   WindowEvents,
   YAttributes,
   YLeafMapNumber,
@@ -940,65 +947,6 @@ export abstract class KitDiffAppStore<TState, TDiff extends AppDiff<TSelectionDi
     }
   }
 }
-
-// #region Lazy Imports
-
-let docsRegistryCache: any = null;
-let docsRegistryPromise: Promise<any> | null = null;
-
-// Define minimal DocsPage and DocsSection types for fallback
-interface DocsPageMin {
-  title: string;
-  description?: string;
-  icon?: string;
-  path: string;
-  section: string;
-  order?: number;
-  concepts?: string[];
-}
-
-interface DocsSectionMin {
-  id: string;
-  label: string;
-  icon?: React.ReactNode;
-  order?: number;
-}
-
-// Fallback registry that returns empty arrays until the real one loads
-const fallbackDocsRegistry = {
-  getAllSections: (): DocsSectionMin[] => [],
-  getAllPages: (): DocsPageMin[] => [],
-};
-
-function getDocsRegistry() {
-  // Return fallback if not loaded yet
-  if (!docsRegistryCache) {
-    return fallbackDocsRegistry;
-  }
-  return docsRegistryCache;
-}
-
-function preloadDocsRegistry(): Promise<void> {
-  if (docsRegistryCache) {
-    return Promise.resolve();
-  }
-  if (!docsRegistryPromise) {
-    docsRegistryPromise = import("./Docs").then((module) => {
-      docsRegistryCache = module.docsRegistry;
-      return docsRegistryCache;
-    });
-  }
-  return docsRegistryPromise;
-}
-
-// Preload after AppStore is defined
-if (typeof window !== "undefined") {
-  preloadDocsRegistry().catch((err) => {
-    console.error("Failed to preload docsRegistry:", err);
-  });
-}
-
-// #endregion Lazy Imports
 
 // #region File Provider
 
@@ -7617,6 +7565,24 @@ export interface HomeAppState {
   loadingKits: Array<{ tempGuid: string; name: string }>;
 }
 
+export type FeedbackKind = "bug" | "idea";
+export type FeedbackAppKind = "home" | "kit" | "design" | "type" | "quality" | "docs" | "feedback";
+export interface FeedbackFormData {
+  kind: FeedbackKind;
+  title: string;
+  description: string;
+  app?: FeedbackAppKind;
+  name?: string;
+  email?: string;
+}
+export interface FeedbackAppState {
+  panelVisibility: PanelVisibility;
+  formData: FeedbackFormData;
+  isSubmitting: boolean;
+  isSubmitted: boolean;
+  error?: string;
+}
+
 export interface KitAppSelection {
   types?: Guid[];
   designs?: Guid[];
@@ -7781,6 +7747,7 @@ export interface SketchpadContext {
   typeApps: Record<string, TypeAppState>; // key: `${kitGuid}:${typeGuid}`
   designApps: Record<string, DesignAppState>; // key: `${kitGuid}:${designGuid}`
   qualityApps: Record<string, QualityAppState>; // key: `${kitGuid}:${qualityGuid}`
+  feedbackApp: FeedbackAppState;
   tutorial: TutorialContext;
 
   // Background operations (kit imports, file uploads, etc.)
@@ -7917,7 +7884,14 @@ export type SketchpadEvent =
   | { type: "TUTORIAL.NEXT_STEP" }
   | { type: "TUTORIAL.PREV_STEP" }
   | { type: "TUTORIAL.GO_TO_STEP"; index: number }
-  | { type: "TUTORIAL.COMPLETE_STEP"; stepId: string };
+  | { type: "TUTORIAL.COMPLETE_STEP"; stepId: string }
+  // Feedback app events
+  | { type: "FEEDBACK.TOGGLE_PANEL"; panel: keyof PanelVisibility }
+  | { type: "FEEDBACK.SET_FORM_DATA"; data: Partial<FeedbackFormData> }
+  | { type: "FEEDBACK.RESET_FORM" }
+  | { type: "FEEDBACK.SET_SUBMITTING"; isSubmitting: boolean }
+  | { type: "FEEDBACK.SET_SUBMITTED"; isSubmitted: boolean }
+  | { type: "FEEDBACK.SET_ERROR"; error: string | undefined };
 
 // #endregion Types
 
@@ -8654,6 +8628,20 @@ export const sketchpadMachine = setup({
     typeApps: {},
     designApps: {},
     qualityApps: {},
+    feedbackApp: {
+      panelVisibility: { toolbar: true, workbench: false, details: false, chat: false, settings: false },
+      formData: {
+        kind: "bug" as const,
+        title: "",
+        description: "",
+        app: undefined,
+        name: undefined,
+        email: undefined,
+      },
+      isSubmitting: false,
+      isSubmitted: false,
+      error: undefined,
+    },
     tutorial: {
       activeTutorial: undefined,
       currentStepIndex: 0,
@@ -9082,7 +9070,7 @@ export function createSketchpadActor(input: SketchpadMachineInput) {
         // Extract event params (everything except type)
         const { type, ...params } = event as any;
         const hasParams = Object.keys(params).length > 0;
-        console.log(`[Machine] ${type} → ${stateValue}`, hasParams ? params : "");
+        console.log(`[DEBUG][Machine] ${type} → ${stateValue}`, hasParams ? params : "");
       }
     },
   });
@@ -11652,33 +11640,15 @@ export function useAppType(): AppKind {
   const navigation = useNavigation();
   return useMemo(() => {
     const pathParts = navigation.split("/").filter((p: string) => p);
-    if (pathParts.length === 0) return "home";
-
-    if (pathParts[0] === "kits" && pathParts.length >= 2) {
-      if (pathParts.length >= 4 && pathParts[2] === "designs") return "design";
-      if (pathParts.length >= 4 && pathParts[2] === "types") return "type";
-      if (pathParts.length >= 4 && pathParts[2] === "qualities") return "quality";
-      return "kit";
-    }
-    if (pathParts[0] === "docs") return "docs";
-    if (pathParts[0] === "feedback") return "feedback";
-    return "home";
+    const app = appRegistry.getAppForPath(pathParts);
+    return app?.id ?? "home";
   }, [navigation]);
 }
 
 export function getAppTypeFromPath(path: string): AppKind {
   const pathParts = path.split("/").filter((p) => p);
-  if (pathParts.length === 0) return "home";
-
-  if (pathParts[0] === "kits" && pathParts.length >= 2) {
-    if (pathParts.length >= 4 && pathParts[2] === "designs") return "design";
-    if (pathParts.length >= 4 && pathParts[2] === "types") return "type";
-    if (pathParts.length >= 4 && pathParts[2] === "qualities") return "quality";
-    return "kit";
-  }
-  if (pathParts[0] === "docs") return "docs";
-  if (pathParts[0] === "feedback") return "feedback";
-  return "home";
+  const app = appRegistry.getAppForPath(pathParts);
+  return app?.id ?? "home";
 }
 
 export function useTheme(): HookResult<Theme> {
@@ -11853,7 +11823,12 @@ export function useSketchpadSnapshot(): SketchpadState {
  */
 export function useSketchpadCan(event: SketchpadEvent): boolean {
   const actor = useSketchpadActor();
-  return useSelector(actor, (snapshot) => snapshot.can(event));
+  return useSelector(actor, (snapshot) => {
+    const handler = getEventHandler(event.type);
+    if (!handler) return false;
+    if (handler.guard && !handler.guard(snapshot.context as any, event as any)) return false;
+    return true;
+  });
 }
 
 /**
@@ -12808,27 +12783,18 @@ async function loadAppConfigs() {
   if (appConfigsLoadPromise) return appConfigsLoadPromise;
 
   appConfigsLoadPromise = (async () => {
-    const [homeModule, docsModule, kitModule, typeModule, designModule, qualityModule, feedbackModule] = await Promise.all([
-      import("./Home"),
-      import("./Docs"),
-      import("./Kit"),
-      import("./Type"),
-      import("./Design"),
-      import("./Quality"),
-      import("./Feedback"),
-    ]);
+    const modules = import.meta.glob<any>("./*.tsx");
+    for (const [path, importFn] of Object.entries(modules)) {
+      if (path.endsWith("/Sketchpad.tsx")) continue;
+      if (path.endsWith("/elements.tsx")) continue;
+      if (path.endsWith("/shared.ts")) continue;
+      if (path.endsWith("/Tutorials.tsx")) continue;
 
-    if (designModule.initializeDesignStore) {
-      designModule.initializeDesignStore();
+      const mod = await (importFn as any)();
+      if (mod?.config) {
+        appRegistry.register(mod.config as AppConfig);
+      }
     }
-
-    appRegistry.register(homeModule.config);
-    appRegistry.register(docsModule.config);
-    appRegistry.register(kitModule.config);
-    appRegistry.register(typeModule.config);
-    appRegistry.register(designModule.config);
-    appRegistry.register(qualityModule.config);
-    appRegistry.register(feedbackModule.config);
   })();
 
   return appConfigsLoadPromise;
@@ -13152,7 +13118,7 @@ export const ConceptFilter: FC<{ allConcepts: string[]; paramName?: string }> = 
 
 // #region ToolGroup
 
-export const ToolGroup: FC<ToolGroupProps> = ({ tools, activeTool, onToolChange, level = "panel" }) => {
+export const ToolGroup: FC<ToolGroupProps> = ({ tools, activeTool, onToolChange }) => {
   const getActiveToolDefinition = () => {
     for (const tool of tools) {
       const matchingMode = tool.modes.find((mode) => mode.id === activeTool);
@@ -13184,7 +13150,7 @@ export const ToolGroup: FC<ToolGroupProps> = ({ tools, activeTool, onToolChange,
   if (tools.length === 0) return null;
 
   return (
-    <div className="flex items-stretch border overflow-hidden h-large">
+    <div className="flex items-center gap-single">
       {tools.map((tool) => {
         const isActive = tool.modes.some((m) => m.id === activeTool);
         const activeMode = tool.modes.find((m) => m.id === activeTool) || tool.modes[0];
@@ -13262,28 +13228,10 @@ export function useHotkeys(hotkeyOrPath: string, callback: () => void, options?:
 // #endregion Hotkeys
 
 export function usePanelConfigs(): Record<string, EnrichedPanelDefinition[]> {
-  const apps = appRegistry.getAllApps();
-  const homeApp = apps.find((a) => a.id === "home");
-  const docsApp = apps.find((a) => a.id === "docs");
-  const designApp = apps.find((a) => a.id === "design");
-  const typeApp = apps.find((a) => a.id === "type");
-  const qualityApp = apps.find((a) => a.id === "quality");
-  const kitApp = apps.find((a) => a.id === "kit");
-
-  const emptyLabelFn = () => "";
-  const emptyHotkeyFn = () => "";
-  const homeConfigs = homeApp ? homeApp.getPanels(emptyLabelFn, emptyHotkeyFn) : [];
-  const designConfigs = designApp ? designApp.getPanels(emptyLabelFn, emptyHotkeyFn) : [];
-  const typeConfigs = typeApp ? typeApp.getPanels(emptyLabelFn, emptyHotkeyFn) : [];
-  const qualityConfigs = qualityApp ? qualityApp.getPanels(emptyLabelFn, emptyHotkeyFn) : [];
-  const kitConfigs = kitApp ? kitApp.getPanels(emptyLabelFn, emptyHotkeyFn) : [];
-
   const { t } = useI18nTranslation();
 
-  const docsConfigs = useMemo(() => {
-    if (!docsApp || docsApp.getPanels.length !== 2) return [];
-    const getLabelFn = () => "";
-    const getHotkeyFn = (id: string) => {
+  const getHotkeyFn = useCallback(
+    (id: string) => {
       const value = t(id as any) as any;
       if (typeof value === "object" && value?.hotkey) {
         return typeof value.hotkey === "string" ? value.hotkey : "";
@@ -13294,20 +13242,27 @@ export function usePanelConfigs(): Record<string, EnrichedPanelDefinition[]> {
         return typeof hotkeyValue.hotkey === "string" ? hotkeyValue.hotkey : "";
       }
       return "";
-    };
-    return docsApp.getPanels(getLabelFn, getHotkeyFn);
-  }, [docsApp, t]);
+    },
+    [t],
+  );
+
+  const apps = appRegistry.getAllApps();
+  const panelConfigsByApp = useMemo(() => {
+    const emptyLabelFn = () => "";
+    const configs: Record<string, PanelDefinition[]> = {};
+    for (const app of apps) {
+      configs[app.id] = app.getPanels(emptyLabelFn, getHotkeyFn);
+    }
+    return configs;
+  }, [apps, getHotkeyFn]);
 
   const allPanelIds = useMemo(() => {
     const ids: string[] = [];
-    homeConfigs.forEach((p) => ids.push(p.id));
-    docsConfigs.forEach((p) => ids.push(p.id));
-    designConfigs.forEach((p) => ids.push(p.id));
-    typeConfigs.forEach((p) => ids.push(p.id));
-    qualityConfigs.forEach((p) => ids.push(p.id));
-    kitConfigs.forEach((p) => ids.push(p.id));
+    for (const panels of Object.values(panelConfigsByApp)) {
+      panels.forEach((p) => ids.push(p.id));
+    }
     return ids;
-  }, [homeConfigs, docsConfigs, designConfigs, typeConfigs, qualityConfigs, kitConfigs]);
+  }, [panelConfigsByApp]);
 
   const hotkeysMap = useMemo(() => {
     const map = new Map<string, string | undefined>();
@@ -13339,17 +13294,13 @@ export function usePanelConfigs(): Record<string, EnrichedPanelDefinition[]> {
       });
     });
 
-  return useMemo(
-    () => ({
-      home: enrich(homeConfigs),
-      docs: enrich(docsConfigs),
-      design: enrich(designConfigs),
-      type: enrich(typeConfigs),
-      quality: enrich(qualityConfigs),
-      kit: enrich(kitConfigs),
-    }),
-    [homeConfigs, docsConfigs, designConfigs, typeConfigs, qualityConfigs, kitConfigs, hotkeysMap],
-  );
+  return useMemo(() => {
+    const result: Record<string, EnrichedPanelDefinition[]> = {};
+    for (const [appId, panels] of Object.entries(panelConfigsByApp)) {
+      result[appId] = enrich(panels);
+    }
+    return result;
+  }, [panelConfigsByApp, hotkeysMap]);
 }
 
 interface NavigationProps {
@@ -13369,15 +13320,10 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   const pathParts = navigation.split("/").filter((p) => p);
   const isUuidPattern = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
   const isKitsPath = pathParts[0] === "kits";
-  const isDocsPath = pathParts[0] === "docs";
 
   const homeKind = !isKitsPath || pathParts.length === 1 ? (searchParams.get("kind") as "temporary" | "local" | "remote" | null) : null;
   const homeName = !isKitsPath || pathParts.length === 1 ? searchParams.get("name") : null;
   const homeVersion = !isKitsPath || pathParts.length === 1 ? searchParams.get("version") : null;
-
-  const docsSection = isDocsPath && pathParts[1] ? pathParts[1] : null;
-  const docsPagePath = isDocsPath && pathParts.length > 1 ? pathParts.slice(1).join("/") : null;
-  const docsSectionsList = getDocsRegistry().getAllSections();
 
   const kitGuid = isKitsPath && pathParts[1] ? pathParts[1] : null;
 
@@ -14191,120 +14137,12 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     });
   }
 
-  if (isDocsPath) {
-    breadcrumbItems.push({
-      id: "semio.sketchpad.navbar.docs",
-      content: (
-        <a onClick={() => navigate("/docs")} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base cursor-selectable">
-          <DocumentIcon size={16} />
-        </a>
-      ),
-    });
-    if (docsSection) {
-      breadcrumbItems.push({
-        content: (
-          <a onClick={() => navigate(`/docs/${docsSection}`)} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base cursor-selectable">
-            {(() => {
-              const sectionInfo = docsSectionsList.find((s: DocsSectionMin) => s.id === docsSection);
-              if (!sectionInfo) return docsSection;
-              return (
-                <span className="flex items-center gap-single">
-                  {sectionInfo.icon && <span aria-hidden="true">{sectionInfo.icon}</span>}
-                  <span>{sectionInfo.label}</span>
-                </span>
-              );
-            })()}
-          </a>
-        ),
-      });
-    }
-    if (docsPagePath && docsSection) {
-      const pathAfterSection = docsPagePath.split("/").slice(1);
-      const sectionPages = (getDocsRegistry().getAllPages() as DocsPageMin[]).filter((page: DocsPageMin) => page.section === docsSection);
-
-      pathAfterSection.forEach((part, index) => {
-        const isLast = index === pathAfterSection.length - 1;
-        const isFirst = index === 0;
-        const partialParts = pathAfterSection.slice(0, index + 1);
-        const partialPath = `docs/${docsSection}/${partialParts.join("/")}`;
-        const parentParts = pathAfterSection.slice(0, index);
-        const siblings = sectionPages
-          .filter((page: DocsPageMin) => {
-            const segments = page.path.replace(/^docs\//, "").split("/");
-            const trimmedSegments = segments[segments.length - 1] === "index" ? segments.slice(0, -1) : segments;
-            if (trimmedSegments[0] !== docsSection) return false;
-            const relative = trimmedSegments.slice(1);
-            if (relative.length !== parentParts.length + 1) return false;
-            for (let i = 0; i < parentParts.length; i++) {
-              if (relative[i] !== parentParts[i]) return false;
-            }
-            return true;
-          })
-          .sort((a: DocsPageMin, b: DocsPageMin) => {
-            const orderDiff = (a.order ?? 999) - (b.order ?? 999);
-            if (orderDiff !== 0) return orderDiff;
-            return a.title.localeCompare(b.title);
-          });
-        const nextParts = pathAfterSection.slice(0, index + 2);
-        const nextSiblings = sectionPages
-          .filter((page: DocsPageMin) => {
-            const segments = page.path.replace(/^docs\//, "").split("/");
-            const trimmedSegments = segments[segments.length - 1] === "index" ? segments.slice(0, -1) : segments;
-            if (trimmedSegments[0] !== docsSection) return false;
-            const relative = trimmedSegments.slice(1);
-            if (relative.length !== partialParts.length + 1) return false;
-            for (let i = 0; i < partialParts.length; i++) {
-              if (relative[i] !== partialParts[i]) return false;
-            }
-            return true;
-          })
-          .sort((a: DocsPageMin, b: DocsPageMin) => {
-            const orderDiff = (a.order ?? 999) - (b.order ?? 999);
-            if (orderDiff !== 0) return orderDiff;
-            return a.title.localeCompare(b.title);
-          });
-        const separatorItems = isFirst
-          ? docsSectionsList.map((s: DocsSectionMin) => ({
-              label: (
-                <span className="flex items-center gap-single">
-                  {s.icon && <span aria-hidden="true">{s.icon}</span>}
-                  <span>{s.label}</span>
-                </span>
-              ),
-              href: `/docs/${s.id}`,
-            }))
-          : nextSiblings.map((page: DocsPageMin) => ({
-              label: page.title,
-              href: `/${page.path.replace(/\/index$/, "")}`,
-            }));
-        const normalizedPartial = `${docsSection}/${partialParts.join("/")}`;
-        const match = siblings.find((page) => page.path.replace(/^docs\//, "").replace(/\/index$/, "") === normalizedPartial) || sectionPages.find((page) => page.path.replace(/^docs\//, "").replace(/\/index$/, "") === normalizedPartial);
-        const label = match?.title
-          ? match.title
-          : part
-              .split("-")
-              .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-              .join(" ");
-
-        breadcrumbItems.push({
-          content: (
-            <a onClick={() => !isLast && navigate(`/${partialPath}`)} className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base cursor-selectable">
-              {label}
-            </a>
-          ),
-          options: !isLast || nextSiblings.length > 0 ? separatorItems : undefined,
-          onNavigate: !isLast || nextSiblings.length > 0 ? (href) => navigate(href) : undefined,
-        });
-      });
-    }
-  }
-
   return <Breadcrumb className="flex-1 min-w-0" items={breadcrumbItems} />;
 };
 
 type SearchResult = {
-  type: "kit" | "design" | "type" | "quality" | "docs" | "tutorial";
-  item: KitShallow | DesignShallow | TypeShallow | Quality | { title: string; description?: string; path: string } | { id: string; name: string; description?: string };
+  type: "kit" | "design" | "type" | "quality" | "tutorial";
+  item: KitShallow | DesignShallow | TypeShallow | Quality | { id: string; name: string; description?: string };
   kitGuid?: string;
 };
 
@@ -14313,7 +14151,6 @@ const buildSearchResultPath = (result: SearchResult): string => {
   if (result.type === "design") return `/kits/${result.kitGuid}/designs/${(result.item as DesignShallow).guid}`;
   if (result.type === "type") return `/kits/${result.kitGuid}/types/${(result.item as TypeShallow).guid}`;
   if (result.type === "quality") return `/kits/${result.kitGuid}?kind=qualities&select=${(result.item as Quality).guid}`;
-  if (result.type === "docs") return `/${(result.item as { path: string }).path}`;
   if (result.type === "tutorial") return `/?tutorial=${(result.item as { id: string }).id}`;
   return "";
 };
@@ -14354,10 +14191,6 @@ const Search: FC = ({}) => {
       (kit.qualities || []).forEach((quality) => {
         if (typeof quality === "object") results.push({ type: "quality", item: quality as Quality, kitGuid: kit.guid });
       });
-    });
-    const docsPages = getDocsRegistry().getAllPages() as DocsPageMin[];
-    docsPages.forEach((page: DocsPageMin) => {
-      results.push({ type: "docs", item: page });
     });
     tutorials.forEach((tutorial) => {
       results.push({ type: "tutorial", item: { id: tutorial.id, name: tutorial.name, description: tutorial.description } });
@@ -14408,7 +14241,6 @@ const Search: FC = ({}) => {
       designs: searchResults.filter((r: FuseResult<SearchResult>) => r.item.type === "design"),
       types: searchResults.filter((r: FuseResult<SearchResult>) => r.item.type === "type"),
       qualities: searchResults.filter((r: FuseResult<SearchResult>) => r.item.type === "quality"),
-      docs: searchResults.filter((r: FuseResult<SearchResult>) => r.item.type === "docs"),
     };
   }, [searchResults]);
 
@@ -14437,7 +14269,6 @@ const Search: FC = ({}) => {
         else if (type === "design") navigate(`/kits/${kitGuid}/designs/${(item as DesignShallow).guid}`);
         else if (type === "type") navigate(`/kits/${kitGuid}/types/${(item as TypeShallow).guid}`);
         else if (type === "quality") navigate(`/kits/${kitGuid}?kind=qualities&select=${(item as Quality).guid}`);
-        else if (type === "docs") navigate(`/${(item as { path: string }).path}`);
       }
     },
     [navigate, recentSearches, updateRecentSearches, tutorialStore],
@@ -14448,7 +14279,6 @@ const Search: FC = ({}) => {
     if (type === "design") return <LayoutIcon size={16} />;
     if (type === "type") return <TypeIcon size={16} />;
     if (type === "quality") return <AwardIcon size={16} />;
-    if (type === "docs") return <DocumentIcon size={16} />;
     if (type === "tutorial") return <TutorialIcon size={16} />;
     return null;
   };
@@ -14456,7 +14286,6 @@ const Search: FC = ({}) => {
   const getDisplayName = (result: SearchResult) => {
     const { type, item } = result;
     if (type === "quality") return (item as Quality).name;
-    if (type === "docs") return (item as { title: string }).title;
     if (type === "tutorial") return (item as Tutorial).name;
     return (item as any).name || "";
   };
@@ -14469,7 +14298,6 @@ const Search: FC = ({}) => {
   const designsLabel = useLabel("semio.sketchpad.navbar.breadcrumb.designs");
   const typesLabel = useLabel("semio.sketchpad.navbar.breadcrumb.types");
   const qualitiesLabel = useLabel("semio.sketchpad.navbar.breadcrumb.qualities");
-  const docsLabel = useLabel("semio.sketchpad.navbar.docs", "Documentation");
   const tutorialsLabel = useLabel("semio.sketchpad.navbar.tutorials");
 
   return (
@@ -14519,18 +14347,6 @@ const Search: FC = ({}) => {
             <CommandGroup heading={qualitiesLabel}>
               {groupedSearchResults.qualities.map((r: FuseResult<SearchResult>, idx: number) => (
                 <CommandItem key={`quality-${(r.item.item as Quality).guid}-${idx}`} onSelect={() => handleSelect(r.item)}>
-                  <div className="flex items-center gap-single">
-                    {getIcon(r.item.type)}
-                    <span>{getDisplayName(r.item)}</span>
-                  </div>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          )}
-          {groupedSearchResults.docs.length > 0 && (
-            <CommandGroup heading={docsLabel}>
-              {groupedSearchResults.docs.map((r: FuseResult<SearchResult>, idx: number) => (
-                <CommandItem key={`docs-${(r.item.item as { path: string }).path}-${idx}`} onSelect={() => handleSelect(r.item)}>
                   <div className="flex items-center gap-single">
                     {getIcon(r.item.type)}
                     <span>{getDisplayName(r.item)}</span>
@@ -14975,36 +14791,8 @@ const PanelToggles: FC = ({}) => {
 
 // #region Canvas
 
-export interface WindowControl {
-  kind: "toggle" | "dropdown";
-  id: string;
-  icon?: ReactNode;
-  value?: string;
-  options?: {
-    id: string;
-    value: string;
-    icon?: ReactNode;
-  }[];
-  onChange?: (value: string) => void;
-}
-
-export interface WindowKindDefinition {
-  id: string;
-  label?: string | any;
-  icon?: ReactNode;
-  component: (props: any) => ReactNode;
-  controls?: WindowControl[];
-  variants?: {
-    id: string;
-    icon?: ReactNode;
-    componentProps?: Record<string, any>;
-  }[];
-}
-
-export interface AppWindowConfig {
-  windowKinds: WindowKindDefinition[];
-  defaultLayout?: any;
-}
+export { createDefaultLayout } from "./shared";
+export type { AppWindowConfig, WindowControl, WindowKindDefinition } from "./shared";
 
 export type WindowConfig = {
   id: string;
@@ -15045,18 +14833,6 @@ export const HorizontalWindows: FC<{ children: ReactNode }> = ({ children }) => 
 export const VerticalWindows: FC<{ children: ReactNode }> = ({ children }) => {
   return <div className="flex flex-col h-full w-full gap-single">{children}</div>;
 };
-
-export function createDefaultLayout(windowIds: string[], direction: "row" | "column" = "row", sizes?: number[]): any {
-  return {
-    type: direction === "row" ? "row" : "column",
-    content: windowIds.map((id, index) => ({
-      type: "component",
-      componentName: id,
-      componentState: {},
-      ...(sizes && sizes[index] !== undefined ? { size: `${sizes[index]}%` } : {}),
-    })),
-  };
-}
 
 const WindowControlsGroup: FC<{ controls: WindowControl[] }> = ({ controls }) => {
   if (!controls || controls.length === 0) return null;
@@ -15404,7 +15180,7 @@ export const LayoutCanvas: FC<{
           return normalized;
         };
 
-        const rawConfig = layoutState || windowConfig.defaultLayout;
+        const rawConfig = parseWindowLayout(layoutState) || parseWindowLayout(windowConfig.defaultLayout);
         if (!rawConfig) {
           console.error("[LayoutCanvas] No layout config provided!");
           return;
@@ -15436,22 +15212,39 @@ export const LayoutCanvas: FC<{
             const WindowComponent = windowType.component;
 
             const WrappedComponent = () => {
+              const clickGoldenLayoutControl = (selector: string) => {
+                const stackElement = domElement.closest(".lm_item.lm_stack") as HTMLElement | null;
+                const controlElement = (stackElement?.querySelector(selector) as HTMLElement | null) ?? null;
+                if (controlElement) {
+                  controlElement.click();
+                }
+              };
               return (
                 <MemoryRouter initialEntries={[location.pathname + location.search]} initialIndex={0}>
                   <LayoutScopeWrapper>
                     <DragDropProvider>
-                      <ReactFlowProvider>
-                        <LayoutErrorBoundary
-                          windowId={windowType.id}
-                          onError={(error: Error, info: React.ErrorInfo) => {
-                            console.error("Error in window:", windowType.id, error, info);
-                          }}
+                      <LayoutErrorBoundary
+                        windowId={windowType.id}
+                        onError={(error: Error, info: React.ErrorInfo) => {
+                          console.error("Error in window:", windowType.id, error, info);
+                        }}
+                      >
+                        <Window
+                          kind="layout"
+                          id={windowType.id}
+                          isVisible={true}
+                          showControls={true}
+                          onOpenInNewWindow={() => clickGoldenLayoutControl(".lm_popout")}
+                          onMaximize={() => clickGoldenLayoutControl(".lm_maximise")}
+                          onMinimize={() => clickGoldenLayoutControl(".lm_maximise")}
+                          onClose={() => clickGoldenLayoutControl(".lm_close")}
+                          controls={windowType.controls ? <WindowControlsGroup controls={windowType.controls} /> : undefined}
                         >
-                          <Window kind="layout" id={windowType.id} isVisible={true} controls={windowType.controls ? <WindowControlsGroup controls={windowType.controls} /> : undefined}>
+                          <ReactFlowProvider>
                             <WindowComponent />
-                          </Window>
-                        </LayoutErrorBoundary>
-                      </ReactFlowProvider>
+                          </ReactFlowProvider>
+                        </Window>
+                      </LayoutErrorBoundary>
                     </DragDropProvider>
                   </LayoutScopeWrapper>
                 </MemoryRouter>
@@ -15660,40 +15453,42 @@ export const LayoutCanvas: FC<{
         {hoveredSplitter &&
           hoveredSplitter.element &&
           createPortal(
-            <div data-splitter-buttons className="pointer-events-auto absolute left-1/2 top-1/2 flex flex-row -translate-x-1/2 -translate-y-1/2 gap-single border border-element bg-temporary p-single">
-              {windowConfig.windowKinds.map((windowType) => {
-                const typeId = windowType.id;
-                const direction = hoveredSplitter.direction;
-                const splitterElement = hoveredSplitter.element;
-                if (!splitterElement) {
-                  return null;
-                }
-                return (
-                  <button
-                    key={typeId}
-                    type="button"
-                    disabled={!layoutLoaded}
-                    className="border border-element bg-panel p-single text-xs hover:bg-hover-panel disabled:opacity-50 disabled:cursor-not-allowed"
-                    onClick={(e: React.MouseEvent) => {
-                      e.stopPropagation();
-                      if (!splitterElement) {
-                        return;
-                      }
-                      if (!layoutRef.current) {
-                        return;
-                      }
-                      handleAddWindow(typeId, direction, splitterElement);
-                    }}
-                    onMouseEnter={() => {
-                      hoveredSplitterElementRef.current = splitterElement;
-                    }}
-                    title={typeof windowType.label === "string" ? windowType.label : typeId}
-                  >
-                    {typeof windowType.label === "string" ? windowType.label : typeId}
-                  </button>
-                );
-              })}
-            </div>,
+            <LevelProvider level="temporary">
+              <div data-splitter-buttons className="pointer-events-auto absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-temporary border border-element p-single">
+                <ActionGroup>
+                  {windowConfig.windowKinds.map((windowType) => {
+                    const typeId = windowType.id;
+                    const direction = hoveredSplitter.direction;
+                    const splitterElement = hoveredSplitter.element;
+                    if (!splitterElement) {
+                      return null;
+                    }
+                    return (
+                      <ActionGroupItem
+                        key={typeId}
+                        type="button"
+                        disabled={!layoutLoaded}
+                        onClick={(e: React.MouseEvent) => {
+                          e.stopPropagation();
+                          if (!splitterElement) {
+                            return;
+                          }
+                          if (!layoutRef.current) {
+                            return;
+                          }
+                          handleAddWindow(typeId, direction, splitterElement);
+                        }}
+                        onMouseEnter={() => {
+                          hoveredSplitterElementRef.current = splitterElement;
+                        }}
+                        title={typeof windowType.label === "string" ? windowType.label : typeId}
+                        text={typeof windowType.label === "string" ? windowType.label : typeId}
+                      />
+                    );
+                  })}
+                </ActionGroup>
+              </div>
+            </LevelProvider>,
             hoveredSplitter.element,
           )}
       </div>
@@ -16192,96 +15987,100 @@ const LayoutWrapper: FC = () => {
           window.dispatchEvent(customEvent);
         }}
       >
-        <LayoutComponent
-          className="bg-base text-foreground relative border"
-          navbar={<Navbar items={navbarItems} />}
-          footer={
-            !isFullscreen || isFooterExpanded ? (
-              <Footer
-                items={footerItems.map((item) => ({
-                  id: item.id,
-                  icon: item.icon,
-                  text: item.text,
-                  content: item.content,
-                  order: item.order,
-                  onClick: item.onClick,
-                }))}
-                isVisible={isFooterExpanded || !isFullscreen}
-              />
-            ) : undefined
-          }
-          leftPanel={
-            panelVisibility.workbench || panelVisibility.tools
-              ? {
-                  visible: panelVisibility.workbench || panelVisibility.tools,
-                  size: panelVisibility.workbench ? panelSizes.workbenchWidth : panelSizes.toolsWidth,
-                  onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", panelVisibility.workbench ? "workbenchWidth" : "toolsWidth", size),
-                  sections: panelVisibility.workbench ? workbenchSections : toolsSections,
-                  opacity: panelOpacity,
-                  panelKey: panelVisibility.workbench ? "workbench" : "tools",
-                }
-              : undefined
-          }
-          middlePanel={
-            panelVisibility.hud || panelVisibility.stats
-              ? {
-                  visible: panelVisibility.hud || panelVisibility.stats,
-                  size: panelVisibility.hud ? panelSizes.hudWidth : panelSizes.statsWidth,
-                  onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", panelVisibility.hud ? "hudWidth" : "statsWidth", size),
-                  sections: panelVisibility.hud ? hudSections : statsSections,
-                  panelKey: panelVisibility.hud ? "hud" : "stats",
-                }
-              : undefined
-          }
-          rightPanel={
-            panelVisibility.details || panelVisibility.chat || panelVisibility.settings
-              ? {
-                  visible: panelVisibility.details || panelVisibility.chat || panelVisibility.settings,
-                  size: panelVisibility.details ? panelSizes.detailsWidth : panelVisibility.chat ? panelSizes.chatWidth : panelSizes.settingsWidth,
-                  onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", panelVisibility.details ? "detailsWidth" : panelVisibility.chat ? "chatWidth" : "settingsWidth", size),
-                  sections: panelVisibility.details ? detailsSections : panelVisibility.chat ? chatSections : settingsSections,
-                  panelKey: panelVisibility.details ? "details" : panelVisibility.chat ? "chat" : "settings",
-                }
-              : undefined
-          }
-          bottomPanel={
-            consoleSections.length > 0
-              ? {
-                  visible: true,
-                  size: panelSizes.consoleHeight,
-                  onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "consoleHeight", size),
-                  sections: consoleSections,
-                  panelKey: "console",
-                }
-              : undefined
-          }
-          toolbar={
-            panelVisibility.toolbar || appType === "type" || appType === "design" || appType === "feedback" || appType === "kit" || appType === "home" ? (
-              toolbarSections.length > 0 ? (
-                <div id="semio.sketchpad.toolbar" className="flex items-center justify-center pointer-events-auto">
-                  <div className="flex items-center gap-single bg-panel border p-single">
-                    <ToolbarScopeWrapper>
-                      {toolbarSections.map((section) => (
-                        <div key={section.id}>{typeof section.content === "function" ? section.content() : section.content}</div>
-                      ))}
-                    </ToolbarScopeWrapper>
+        <LevelProvider level="base">
+          <LayoutComponent
+            className="bg-base text-foreground relative border"
+            navbar={<Navbar items={navbarItems} />}
+            footer={
+              !isFullscreen || isFooterExpanded ? (
+                <Footer
+                  items={footerItems.map((item) => ({
+                    id: item.id,
+                    icon: item.icon,
+                    text: item.text,
+                    content: item.content,
+                    order: item.order,
+                    onClick: item.onClick,
+                  }))}
+                  isVisible={isFooterExpanded || !isFullscreen}
+                />
+              ) : undefined
+            }
+            leftPanel={
+              panelVisibility.workbench || panelVisibility.tools
+                ? {
+                    visible: panelVisibility.workbench || panelVisibility.tools,
+                    size: panelVisibility.workbench ? panelSizes.workbenchWidth : panelSizes.toolsWidth,
+                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", panelVisibility.workbench ? "workbenchWidth" : "toolsWidth", size),
+                    sections: panelVisibility.workbench ? workbenchSections : toolsSections,
+                    opacity: panelOpacity,
+                    panelKey: panelVisibility.workbench ? "workbench" : "tools",
+                  }
+                : undefined
+            }
+            middlePanel={
+              panelVisibility.hud || panelVisibility.stats
+                ? {
+                    visible: panelVisibility.hud || panelVisibility.stats,
+                    size: panelVisibility.hud ? panelSizes.hudWidth : panelSizes.statsWidth,
+                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", panelVisibility.hud ? "hudWidth" : "statsWidth", size),
+                    sections: panelVisibility.hud ? hudSections : statsSections,
+                    panelKey: panelVisibility.hud ? "hud" : "stats",
+                  }
+                : undefined
+            }
+            rightPanel={
+              panelVisibility.details || panelVisibility.chat || panelVisibility.settings
+                ? {
+                    visible: panelVisibility.details || panelVisibility.chat || panelVisibility.settings,
+                    size: panelVisibility.details ? panelSizes.detailsWidth : panelVisibility.chat ? panelSizes.chatWidth : panelSizes.settingsWidth,
+                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", panelVisibility.details ? "detailsWidth" : panelVisibility.chat ? "chatWidth" : "settingsWidth", size),
+                    sections: panelVisibility.details ? detailsSections : panelVisibility.chat ? chatSections : settingsSections,
+                    panelKey: panelVisibility.details ? "details" : panelVisibility.chat ? "chat" : "settings",
+                  }
+                : undefined
+            }
+            bottomPanel={
+              consoleSections.length > 0
+                ? {
+                    visible: true,
+                    size: panelSizes.consoleHeight,
+                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "consoleHeight", size),
+                    sections: consoleSections,
+                    panelKey: "console",
+                  }
+                : undefined
+            }
+            toolbar={
+              panelVisibility.toolbar || appType === "type" || appType === "design" || appType === "feedback" || appType === "kit" || appType === "home" ? (
+                toolbarSections.length > 0 ? (
+                  <div id="semio.sketchpad.toolbar" className="flex items-center justify-center pointer-events-auto">
+                    <LevelProvider level="panel">
+                      <div className="bg-panel flex items-center gap-single border p-single">
+                        <ToolbarScopeWrapper>
+                          {toolbarSections.map((section) => (
+                            <div key={section.id}>{typeof section.content === "function" ? section.content() : section.content}</div>
+                          ))}
+                        </ToolbarScopeWrapper>
+                      </div>
+                    </LevelProvider>
                   </div>
-                </div>
-              ) : (
-                <div id="semio.sketchpad.toolbar" className="hidden" />
-              )
-            ) : undefined
-          }
-          canvas={
-            <div className="relative h-full w-full">
-              <AppRouter />
-            </div>
-          }
-        />
+                ) : (
+                  <div id="semio.sketchpad.toolbar" className="hidden" />
+                )
+              ) : undefined
+            }
+            canvas={
+              <div className="relative h-full w-full">
+                <AppRouter />
+              </div>
+            }
+          />
+        </LevelProvider>
         <DragOverlay>
           {activeDragId && activeDragData ? (
             <div className="cursor-grabbing">
-              <div className="bg-base border border-element rounded-full w-small h-small flex items-center justify-center shadow-lg">
+              <div className="border border-element rounded-full w-small h-small flex items-center justify-center shadow-lg">
                 <span className="text-small font-medium select-none">{getTypeOrDesignName()?.substring(0, 2).toUpperCase() || "?"}</span>
               </div>
             </div>

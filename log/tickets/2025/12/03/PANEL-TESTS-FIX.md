@@ -1,11 +1,12 @@
 ---
 slug: PANEL-TESTS-FIX
 summary: Fix broken panel code and extend sketchpad tests for all panel types
+prompt: Fix broken panel code and extend sketchpad tests for all panel types
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.845Z"
-commit: "0000000000000000000000000000000000000000"
+  created: '2025-12-16T17:06:07.845Z'
+commit: '0000000000000000000000000000000000000000'
 iterations: []
 ---
 

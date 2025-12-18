@@ -43,7 +43,8 @@ interface TicketDate {
 
 interface TicketFrontmatter {
   slug: string;
-  summary: string;
+  summary?: string;
+  prompt: string;
   status: "open" | "finished";
   author: string;
   date: TicketDate;
@@ -62,7 +63,7 @@ interface Ticket {
 
 interface TicketCreateInput {
   slug: string;
-  summary: string;
+  prompt: string;
   content?: string;
 }
 
@@ -91,31 +92,16 @@ interface SearchOptions extends ListOptions {
 
 //#region Exports
 export type {
-  Lines,
   FileEntry,
-  Files,
-  IterationDate,
-  Iteration,
-  TicketDate,
-  TicketFrontmatter,
-  Ticket,
-  TicketCreateInput,
-  IterationStartInput,
-  IterationFinishInput,
-  ListOptions,
-  SearchOptions,
+  Files, Iteration, IterationDate, IterationFinishInput, IterationStartInput, Lines, ListOptions,
+  SearchOptions, Ticket,
+  TicketCreateInput, TicketDate,
+  TicketFrontmatter
 };
 
 export {
-  createTicket,
-  readTicket,
-  startIteration,
-  finishIteration,
-  finishTicket,
-  reopenTicket,
-  deleteTicket,
-  listTickets,
-  searchTickets,
+  createTicket, deleteTicket, finishIteration,
+  finishTicket, listTickets, readTicket, reopenTicket, searchTickets, startIteration
 };
 //#endregion
 
@@ -341,11 +327,12 @@ function serializeIteration(iteration: Iteration): any {
 function serializeFrontmatter(fm: TicketFrontmatter): any {
   const result: any = {
     slug: fm.slug,
-    summary: fm.summary,
+    prompt: fm.prompt,
     status: fm.status,
     author: fm.author,
     date: fm.date,
   };
+  if (fm.summary) result.summary = fm.summary;
   if (fm.commit) result.commit = fm.commit;
   if (fm.model) result.model = fm.model;
   result.iterations = fm.iterations.map(serializeIteration);
@@ -388,10 +375,16 @@ function deserializeIteration(raw: any): Iteration {
 
 function deserializeFrontmatter(raw: any): TicketFrontmatter {
   const date: TicketDate = typeof raw.date === "string" ? { created: raw.date } : { created: raw.date?.created || new Date().toISOString(), finished: raw.date?.finished };
+  const summary = typeof raw.summary === "string" && raw.summary.trim() ? raw.summary : undefined;
+  const prompt = typeof raw.prompt === "string" ? raw.prompt : "";
+  if (!prompt.trim()) throw new Error(`Missing required ticket prompt for: ${raw.slug || "UNKNOWN"}. Add 'prompt' to the ticket frontmatter.`);
+  const status: "open" | "finished" = raw.status || "open";
+  if (status === "finished" && !summary) throw new Error(`Missing required ticket summary for finished ticket: ${raw.slug || "UNKNOWN"}.`);
   return {
     slug: raw.slug || "UNKNOWN",
-    summary: raw.summary || "",
-    status: raw.status || "open",
+    summary,
+    prompt,
+    status,
     author: raw.author || "Unknown",
     date,
     commit: raw.commit,
@@ -414,7 +407,7 @@ function createTicket(input: TicketCreateInput): Ticket {
   if (existsSync(ticketPath)) throw new Error(`Ticket already exists: ${ticketPath}`);
   const frontmatter: TicketFrontmatter = {
     slug,
-    summary: input.summary,
+    prompt: input.prompt,
     status: "open",
     author: getGitAuthor(),
     date: { created: now.toISOString() },
@@ -425,6 +418,43 @@ function createTicket(input: TicketCreateInput): Ticket {
   ensureDirectoryExists(ticketPath);
   writeFileSync(ticketPath, fileContent, "utf-8");
   return { frontmatter, content, path: ticketPath };
+}
+
+function migrateTicketPromptsFromFirstIteration(): { migrated: number; skipped: number } {
+  let migrated = 0;
+  let skipped = 0;
+  const ticketPaths = listTicketPaths();
+  for (const ticketPath of ticketPaths) {
+    const fileContent = readFileSync(ticketPath, "utf-8");
+    const parsed = matter(fileContent);
+    const data: any = parsed.data || {};
+    const currentPrompt = typeof data.prompt === "string" ? data.prompt.trim() : "";
+    if (currentPrompt) {
+      skipped++;
+      continue;
+    }
+    const iterations = Array.isArray(data.iterations) ? data.iterations : [];
+    const firstIterationPrompt = typeof iterations[0]?.prompt === "string" ? iterations[0].prompt.trim() : "";
+    const nextPrompt = firstIterationPrompt || (typeof data.summary === "string" ? data.summary.trim() : "") || (typeof data.slug === "string" ? data.slug.trim() : "") || "UNKNOWN";
+    if (!nextPrompt.trim()) throw new Error(`Cannot migrate ticket prompt (empty fallback): ${ticketPath}`);
+    const nextData: any = {
+      slug: data.slug,
+      summary: data.summary,
+      prompt: nextPrompt,
+      status: data.status,
+      author: data.author,
+      date: data.date,
+      commit: data.commit,
+      model: data.model,
+      iterations: data.iterations,
+      files: data.files,
+      lines: data.lines,
+    };
+    const rewritten = matter.stringify(parsed.content, sanitizeForMatter(nextData));
+    writeFileSync(ticketPath, rewritten, "utf-8");
+    migrated++;
+  }
+  return { migrated, skipped };
 }
 
 function readTicket(year: number, month: number, day: number, slug: string): Ticket {
@@ -487,7 +517,8 @@ function finishIteration(year: number, month: number, day: number, slug: string,
   return ticket;
 }
 
-function finishTicket(year: number, month: number, day: number, slug: string): Ticket {
+function finishTicket(year: number, month: number, day: number, slug: string, summary: string): Ticket {
+  if (!summary || !summary.trim()) throw new Error("Missing required ticket summary.");
   const ticket = readTicket(year, month, day, slug);
   const iterations = ticket.frontmatter.iterations;
   if (iterations.length === 0) throw new Error(`Cannot finish ticket without any iterations: ${slug}`);
@@ -510,6 +541,7 @@ function finishTicket(year: number, month: number, day: number, slug: string): T
   const lines = computeGitLinesForFiles(allPaths, base);
   const now = new Date().toISOString();
   ticket.frontmatter.status = "finished";
+  ticket.frontmatter.summary = summary;
   ticket.frontmatter.date.finished = now;
   ticket.frontmatter.commit = getGitHead();
   ticket.frontmatter.model = last.model;
@@ -540,6 +572,30 @@ function deleteTicket(year: number, month: number, day: number, slug: string): v
 
 function listTickets(options: ListOptions = {}): Ticket[] {
   const tickets: Ticket[] = [];
+  const invalidPaths: string[] = [];
+  const paths = listTicketPaths(options);
+  for (const path of paths) {
+    try {
+      const fileContent = readFileSync(path, "utf-8");
+      const matterParsed = matter(fileContent);
+      tickets.push({
+        frontmatter: deserializeFrontmatter(matterParsed.data),
+        content: matterParsed.content,
+        path,
+      });
+    } catch {
+      invalidPaths.push(path);
+    }
+  }
+  if (invalidPaths.length > 0) {
+    const head = invalidPaths.slice(0, 10).join("\n");
+    throw new Error(`Failed to parse ${invalidPaths.length} ticket(s). First 10:\n${head}`);
+  }
+  return tickets.sort((a, b) => new Date(b.frontmatter.date.created).getTime() - new Date(a.frontmatter.date.created).getTime());
+}
+
+function listTicketPaths(options: ListOptions = {}): string[] {
+  const paths: string[] = [];
   function walk(dir: string): void {
     if (!existsSync(dir)) return;
     const entries = readdirSync(dir);
@@ -548,29 +604,20 @@ function listTickets(options: ListOptions = {}): Ticket[] {
       const stat = statSync(fullPath);
       if (stat.isDirectory()) {
         walk(fullPath);
-      } else if (entry.endsWith(".md") && entry !== "prompts.md") {
-        const parsed = parseTicketPath(fullPath);
-        if (!parsed) continue;
-        if (options.year !== undefined && parsed.year !== options.year) continue;
-        if (options.month !== undefined && parsed.month !== options.month) continue;
-        if (options.day !== undefined && parsed.day !== options.day) continue;
-        if (options.slug !== undefined && parsed.slug !== options.slug) continue;
-        try {
-          const fileContent = readFileSync(fullPath, "utf-8");
-          const matterParsed = matter(fileContent);
-          tickets.push({
-            frontmatter: deserializeFrontmatter(matterParsed.data),
-            content: matterParsed.content,
-            path: fullPath,
-          });
-        } catch (error) {
-          console.error(`Failed to parse ticket: ${fullPath}`, error);
-        }
+        continue;
       }
+      if (!entry.endsWith(".md") || entry === "prompts.md") continue;
+      const parsed = parseTicketPath(fullPath);
+      if (!parsed) continue;
+      if (options.year !== undefined && parsed.year !== options.year) continue;
+      if (options.month !== undefined && parsed.month !== options.month) continue;
+      if (options.day !== undefined && parsed.day !== options.day) continue;
+      if (options.slug !== undefined && parsed.slug !== options.slug) continue;
+      paths.push(fullPath);
     }
   }
   walk(join(LOG_ROOT, "tickets"));
-  return tickets.sort((a, b) => new Date(b.frontmatter.date.created).getTime() - new Date(a.frontmatter.date.created).getTime());
+  return paths;
 }
 
 function searchTickets(options: SearchOptions = {}): Ticket[] {
@@ -579,7 +626,7 @@ function searchTickets(options: SearchOptions = {}): Ticket[] {
   const query = options.query.toLowerCase();
   const matchedTickets = allTickets.filter((ticket) => {
     const slugMatch = ticket.frontmatter.slug.toLowerCase().includes(query);
-    const summaryMatch = ticket.frontmatter.summary.toLowerCase().includes(query);
+    const summaryMatch = (ticket.frontmatter.summary || "").toLowerCase().includes(query);
     const contentMatch = ticket.content.toLowerCase().includes(query);
     const authorMatch = ticket.frontmatter.author.toLowerCase().includes(query);
     return slugMatch || summaryMatch || contentMatch || authorMatch;
@@ -606,13 +653,16 @@ function printUsage(): void {
 Usage: tsx scripts/log.ts <command> [options]
 
 Commands:
-  ticket create <slug> <summary>       Create a ticket (no iterations)
+  ticket create <slug>                 Create a ticket (no iterations)
+                                       Required: --prompt="..."
   ticket iteration start <slug>        Start a new iteration on a ticket
                                        Required: --model=MODEL --prompt="..." and at least one file flag
   ticket iteration finish <slug>       Finish the latest iteration
                                        Required: at least one file flag
   ticket finish <slug>                 Finish the ticket (requires latest iteration finished)
+                                       Required: --summary="..."
   ticket reopen <slug>                 Reopen a finished ticket (removes total files/lines)
+  ticket migrate prompts               Backfill missing ticket prompts from the first iteration prompt
   ticket read <year> <month> <day> <slug>     Read a ticket
   ticket delete <year> <month> <day> <slug>   Delete a ticket
   ticket list [year] [month] [day]            List tickets (optionally filtered)
@@ -626,7 +676,7 @@ File Flags:
   --file-removed=PATH      Add file to removed list
 
 Ticket Schema:
-  slug, summary, status, author, date{created, finished}, commit, model,
+  slug, summary, prompt, status, author, date{created, finished}, commit, model,
   iterations[{prompt, date{started, ended}, model, author, commit, files{...}, lines{...}}],
   files{updated[{path, lines}], created[path], removed[path]}, lines{added, removed}
 
@@ -635,20 +685,21 @@ Ticket Schema:
   - when ticket is finished: files and lines are computed from git
 
 Workflow:
-  1. Create a ticket: ticket create <slug> <summary>
+  1. Create a ticket: ticket create <slug> --prompt="..."
   2. Start iteration: ticket iteration start <slug> --model=MODEL --prompt="..." --file=...
   3. Finish iteration: ticket iteration finish <slug> --file=...
-  4. Finish ticket: ticket finish <slug>
+  4. Finish ticket: ticket finish <slug> --summary="..."
 
 Examples:
-  tsx scripts/log.ts ticket create MY-TASK "Implement new feature"
+  tsx scripts/log.ts ticket create MY-TASK --prompt="User request..."
   tsx scripts/log.ts ticket iteration start MY-TASK --model=${Model.CLAUDE_OPUS_4_5} --prompt="User request..." --file=scripts/log.ts
   tsx scripts/log.ts ticket iteration finish MY-TASK --file=scripts/log.ts --file=README.md
-  tsx scripts/log.ts ticket finish MY-TASK
+  tsx scripts/log.ts ticket finish MY-TASK --summary="Implement new feature"
   tsx scripts/log.ts ticket reopen MY-TASK
   tsx scripts/log.ts ticket read 2025 12 16 MY-TASK
   tsx scripts/log.ts ticket list 2025 12
   tsx scripts/log.ts ticket search "drag drop"
+  tsx scripts/log.ts ticket migrate prompts
   tsx scripts/log.ts models
 `);
 }
@@ -700,15 +751,31 @@ if (require.main === module) {
           process.exit(1);
         }
         if (sub === "create") {
-          const [slug, summary] = rest;
-          if (!slug || !summary) {
-            console.error("Error: Missing slug or summary");
+          const [slug, ...flags] = rest;
+          if (!slug) {
+            console.error("Error: Missing slug");
             printUsage();
             process.exit(1);
           }
-          const ticket = createTicket({ slug, summary });
+          for (const flag of flags) {
+            if (!flag.startsWith("--")) throw new Error(`Unexpected argument: ${flag}. Summary is set on ticket finish via --summary=.`);
+          }
+          const prompt = requireFlag(flags, "prompt");
+          const ticket = createTicket({ slug, prompt });
           console.log(`Created ticket: ${ticket.path}`);
-          console.log(`Summary: ${ticket.frontmatter.summary}`);
+          break;
+        }
+
+        if (sub === "migrate") {
+          const [migrationCommand] = rest;
+          if (migrationCommand === "prompts") {
+            const result = migrateTicketPromptsFromFirstIteration();
+            console.log(`Migrated ticket prompts: ${result.migrated} (skipped: ${result.skipped})`);
+            break;
+          }
+          console.error("Error: Unknown migrate command");
+          printUsage();
+          process.exit(1);
           break;
         }
         if (sub === "iteration") {
@@ -748,14 +815,18 @@ if (require.main === module) {
           break;
         }
         if (sub === "finish") {
-          const [slugArg] = rest;
+          const [slugArg, ...flags] = rest;
           if (!slugArg) {
             console.error("Error: Missing slug");
             printUsage();
             process.exit(1);
           }
+          for (const flag of flags) {
+            if (!flag.startsWith("--")) throw new Error(`Unexpected argument: ${flag}`);
+          }
+          const summary = requireFlag(flags, "summary");
           const latest = findLatestTicketBySlug(slugArg);
-          const ticket = finishTicket(latest.year, latest.month, latest.day, latest.slug);
+          const ticket = finishTicket(latest.year, latest.month, latest.day, latest.slug, summary);
           console.log(`Finished ticket: ${ticket.path}`);
           console.log(`Commit: ${ticket.frontmatter.commit}`);
           if (ticket.frontmatter.lines) console.log(`Lines: +${ticket.frontmatter.lines.added} -${ticket.frontmatter.lines.removed}`);
@@ -785,7 +856,7 @@ if (require.main === module) {
           const ticket = readTicket(parseInt(year), parseInt(month), parseInt(day), slug);
           console.log(`\nPath: ${ticket.path}`);
           console.log(`Slug: ${ticket.frontmatter.slug}`);
-          console.log(`Summary: ${ticket.frontmatter.summary}`);
+          console.log(`Summary: ${ticket.frontmatter.summary || ""}`);
           console.log(`Status: ${ticket.frontmatter.status}`);
           console.log(`Author: ${ticket.frontmatter.author}`);
           console.log(`Created: ${ticket.frontmatter.date.created}`);

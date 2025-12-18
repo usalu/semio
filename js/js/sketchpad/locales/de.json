@@ -1290,7 +1290,7 @@
             },
             "hotkey": "Ctrl+Shift+U"
           },
-          "kitApp": {
+          "toolbar": {
             "label": {
               "normal": "",
               "beginner": ""
@@ -1435,6 +1435,12 @@
               "label": {
                 "normal": "Konzepte anzeigen",
                 "beginner": "Konzepte anzeigen"
+              }
+            },
+            "filters": {
+              "label": {
+                "normal": "Filter",
+                "beginner": "Artefakte nach Typ filtern"
               }
             }
           },

@@ -1,5 +1,34 @@
 # Prompt history
 
+
+
+Every window should have a full border arount it. Currently the bottom and right border are missing.
+
+The create actions of all the rows in tables are not right aligned to the coloumn. In between the name and the action should be the strip of tags.
+
+Every app has windows and there is always one active window. Make sure that the background of the table is set to active background color.
+
+Make a refactor plan to turn every app into a multi-window system. Every app can registern window kinds. Generalize layout and remove duplicated code, etc. 
+@Design.tsx@elements.tsx@Kit.tsx@Quality.tsx@Docs.tsx@Feedback.tsx@Home.tsx@shared.ts@Sketchpad.tsx@Type.tsx 
+
+The window background color of all windows is still according base. Make sure to useLevel hook correctly and that all windows have the correct window background color.
+
+The diagram component should be generalized to be used for all diagrams (kit app, design app, quality app, etc).
+The layout is controlled over a diagram coordinate system (1 unit is equal to the diameter of the a circular nodes.)
+Everything is rexported in semio coordinate system (onNodeDrag, onNavigate, etc)
+A node can either be circular with an icon or square with a text label.
+Handles are dots on the edges of the node controlled by a parameter from 0 to 1. 9 and 1 is 12'clock position and it increases clockwise.
+elements.tsx should be the only file to import "@xyflow/react";
+Make a refactor plan for Design.tsx, Kit.tsx and Quality.tsx to move to the new diagram component.
+@Design.tsx@elements.tsx@Quality.tsx@Kit.tsx 
+
+Analyze the js/js codebase for state managment inconsistencies (hooks, context providers, state machine, commands, etc).
+Remember that every component should have a triadic hook: [STATE,SETSTATE,CANSETSTATE]=useSELECTOR()
+Every component should only use the state write state and never use the commands directly. Only the machine is allowed to use the commands.
+Use fine grained subscriptions for all kit states.
+Refactor all apps to be clean and consistent.
+Make sure all sketchpad tests pass.
+
 All ui elements must work for all ui levels (base, window, panel, overlay, temporary). They use a context, provider and useLevel hook for all elements to fetch the level. Base is lighter than window, window is lighter than panel, panel is lighter than temporary. Overlay is transparent and only affects z-index.
 Extend all ui elements to work for all levels. Make sure borders, hovers and background dont collide with the background of the level.
 Extend all storybook stories for all ui elements to have after the default story a story for each level (Base, Window, Panel, Overlay, Temporary).
@@ -41,9 +70,7 @@ A toggle group should like a button group always have vertical element borders b
 The border mechnanism of all ui elements should be more flexible. Different semantic border kinds should have different kind of styles (stroke, color, pattern, etc).
 Currently there is only one border color. All ui elements have border kind called element border (in tailwind we want to use border-element). The ui element border color should be the hover color. The second border kind is for distinguishing windows (border-window). The window border is as current normal border.
 
-The testing system is currently not clean. Right now there are spread tests for indiviudal features. The testing strategy should not be feature-based but rather component-based. For sketchpad there should be only test per app that covers all the features.
-
-Consolidate all sketchpad tests. Everything that should remain is one
+The testing system is currently not clean. Right now there are spread tests for indiviudal features. The testing strategy should not be feature-based but rather component-based. For sketchpad there should be only test per app that covers all the features. Consolidate all sketchpad tests. Dont remove any functionality from the tests.
 
 The diagram of the kit app should only show the rows of the table. This means that e.g. if a design in the able is collapsed then all child design node in the diagram are hidden. Same for types. If a folder is collapsed then all the items of the folder are not present in the diagram. In the end every visible row equals one node.
 

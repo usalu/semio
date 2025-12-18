@@ -1,11 +1,12 @@
 ---
 slug: DEV-JS-SPECIALIZED-DEV
 summary: Split @semio/js dev scripts
+prompt: Split @semio/js dev scripts
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.906Z"
-commit: "0000000000000000000000000000000000000000"
+  created: '2025-12-16T17:06:07.906Z'
+commit: '0000000000000000000000000000000000000000'
 iterations: []
 ---
 

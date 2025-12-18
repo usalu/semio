@@ -1,11 +1,12 @@
 ---
 slug: APP-STATE-DECOUPLE
-summary: "Decouple app state from Y.js, move transactions to app level"
+summary: 'Decouple app state from Y.js, move transactions to app level'
+prompt: 'Decouple app state from Y.js, move transactions to app level'
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.892Z"
-commit: "0000000000000000000000000000000000000000"
+  created: '2025-12-16T17:06:07.892Z'
+commit: '0000000000000000000000000000000000000000'
 iterations: []
 ---
 

@@ -1,11 +1,12 @@
 ---
 slug: CI-CD-COMMANDS
 summary: CI/CD automation and canonical commands
+prompt: CI/CD automation and canonical commands
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.709Z"
-commit: "0000000000000000000000000000000000000000"
+  created: '2025-12-16T17:06:07.709Z'
+commit: '0000000000000000000000000000000000000000'
 iterations: []
 ---
 

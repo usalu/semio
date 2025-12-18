@@ -1,11 +1,12 @@
 ---
 slug: PIECE-DISPLAY-METADATA
 summary: Migration from 2025-11-21_PIECE-DISPLAY-METADATA.md
+prompt: Migration from 2025-11-21_PIECE-DISPLAY-METADATA.md
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.685Z"
-commit: "0000000000000000000000000000000000000000"
+  created: '2025-12-16T17:06:07.685Z'
+commit: '0000000000000000000000000000000000000000'
 iterations: []
 ---
 

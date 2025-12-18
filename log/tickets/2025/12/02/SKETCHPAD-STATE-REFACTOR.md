@@ -3,11 +3,14 @@ slug: SKETCHPAD-STATE-REFACTOR
 summary: >-
   Refactor sketchpad state management to fix performance issues with
   overfetching
+prompt: >-
+  Refactor sketchpad state management to fix performance issues with
+  overfetching
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.824Z"
-commit: "0000000000000000000000000000000000000000"
+  created: '2025-12-16T17:06:07.824Z'
+commit: '0000000000000000000000000000000000000000'
 iterations: []
 ---
 

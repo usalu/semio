@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // #region Header
 
 // Quality.tsx
@@ -23,13 +24,13 @@
 
 import { DragEndEvent, useDraggable, useDroppable } from "@dnd-kit/core";
 import { AwardIcon, CodeIcon, HandIcon, MonitorIcon, MoonIcon, MousePointerIcon, SunIcon, TutorialIcon, UserIcon } from "@semio/assets";
-import { Connection, Edge, Node, NodeTypes, ReactFlowInstance } from "@xyflow/react";
 import React, { createContext, FC, memo, useCallback, useContext, useEffect, useMemo, useRef } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
 import * as Y from "yjs";
 import { useLabel } from "../i18n";
 import { guid, Guid, Kit, Quality, QualityDiff } from "../semio";
+import type { Connection, Edge, Node, NodeTypes, ReactFlowInstance } from "./elements";
 import {
   Diagram as BaseDiagram,
   calculateDiagramLayout,
@@ -51,7 +52,7 @@ import {
   TreeItem,
 } from "./elements";
 import type { AppWindowConfig, HookNoSetResult, HookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, QualityAppId, Transact, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
-import { AppConfig, AppPlugin, createPanelDefinition, Expertise, Mode, PanelKind, registerAppPlugin, registerRuntimeAction, Theme, ToolKind } from "./shared";
+import { AppConfig, AppPlugin, createPanelDefinition, Expertise, Mode, PanelKind, parseWindowLayout, registerAppPlugin, registerRuntimeAction, stringifyWindowLayout, Theme, ToolKind } from "./shared";
 import type { KitStore, QualityStore, SketchpadStore } from "./Sketchpad";
 import {
   Canvas,
@@ -66,11 +67,11 @@ import {
   useActiveInteraction,
   useAddPanelSection,
   useAppType,
+  useDevice,
   useExpertise,
   useKit,
   useKitScope,
   useLanguage,
-  useDevice,
   useMode,
   useQuality,
   useQualityScope,
@@ -712,15 +713,12 @@ class QualityAppStore extends KitDiffAppStore<QualityAppState, QualityAppDiff, Q
   }
 
   get windowLayout(): any {
-    const layoutStr = this.yMap.get("windowLayout") as string | undefined;
-    return layoutStr ? JSON.parse(layoutStr) : undefined;
+    return parseWindowLayout(this.yMap.get("windowLayout"));
   }
   set windowLayout(layout: any) {
-    if (layout) {
-      this.yMap.set("windowLayout", JSON.stringify(layout));
-    } else {
-      this.yMap.delete("windowLayout");
-    }
+    const value = stringifyWindowLayout(layout);
+    if (value) this.yMap.set("windowLayout", value);
+    else this.yMap.delete("windowLayout");
   }
 
   protected getSelection(): QualityAppSelection {
@@ -1417,7 +1415,7 @@ const Formula: FC = () => {
   }, [quality?.formula, formulaToLatexString]);
 
   return (
-    <div className="h-full w-full border-b border-foreground bg-base flex items-center justify-center overflow-auto">
+    <div className="h-full w-full border-b border-foreground flex items-center justify-center overflow-auto">
       <div ref={mathRef} className="text-foreground p-4" style={{ fontSize: "var(--size-medium)" }}></div>
     </div>
   );

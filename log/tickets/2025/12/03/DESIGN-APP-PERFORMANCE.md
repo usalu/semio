@@ -1,11 +1,12 @@
 ---
 slug: DESIGN-APP-PERFORMANCE
 summary: Design App Pan Performance Investigation
+prompt: Design App Pan Performance Investigation
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.834Z"
-commit: "0000000000000000000000000000000000000000"
+  created: '2025-12-16T17:06:07.834Z'
+commit: '0000000000000000000000000000000000000000'
 iterations: []
 ---
 

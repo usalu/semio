@@ -1,11 +1,12 @@
 ---
 slug: DESIGN-WINDOWS-LAYOUT
 summary: Fix design app window layout to be 50% diagram | 50% scene
+prompt: Fix design app window layout to be 50% diagram | 50% scene
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.714Z"
-commit: "0000000000000000000000000000000000000000"
+  created: '2025-12-16T17:06:07.714Z'
+commit: '0000000000000000000000000000000000000000'
 iterations: []
 ---
 

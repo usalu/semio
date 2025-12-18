@@ -1,11 +1,12 @@
 ---
 slug: TOOLBAR-TOOLS-E2E
 summary: Implement toolbar in apps and extend Type app E2E test for port tool
+prompt: Implement toolbar in apps and extend Type app E2E test for port tool
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.946Z"
-commit: "0000000000000000000000000000000000000000"
+  created: '2025-12-16T17:06:07.946Z'
+commit: '0000000000000000000000000000000000000000'
 iterations: []
 ---
 

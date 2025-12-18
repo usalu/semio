@@ -1,11 +1,12 @@
 ---
 slug: KIT-ROW-EXPAND
 summary: Fix kit table row expansion
+prompt: Fix kit table row expansion
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.908Z"
-commit: "0000000000000000000000000000000000000000"
+  created: '2025-12-16T17:06:07.908Z'
+commit: '0000000000000000000000000000000000000000'
 iterations: []
 ---
 

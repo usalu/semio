@@ -1,6 +1,7 @@
 ---
 slug: TICKET-SCHEMA-REDESIGN
 summary: Redesign ticket schema with files-only and git-derived fields
+prompt: Redesign ticket schema with nested date objects and git-derived fields
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:

@@ -26,7 +26,6 @@ import { Line, Sphere, useFBX, useGLTF } from "@react-three/drei";
 import { ThreeEvent, useLoader } from "@react-three/fiber";
 import { useSelector } from "@xstate/react";
 import React, { createContext, FC, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useParams } from "react-router";
 import * as THREE from "three";
 import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
 import { useLabel } from "../i18n";
@@ -51,6 +50,7 @@ import {
   useAddFooterItem,
   useAddPanelSection,
   useAppType,
+  useDevice,
   useExpertise,
   useFocusSafe,
   useIsInTypeScope,
@@ -62,7 +62,6 @@ import {
   useKitTags,
   useKitTransaction,
   useLanguage,
-  useDevice,
   useMode,
   useRemoveFooterItem,
   useRemovePanelSection,
@@ -101,7 +100,6 @@ const KitSectionLazy = React.lazy(async () => {
   }
   return { default: module.KitSection };
 });
-
 
 import { AddIcon, AwardIcon, CheckIcon, CodeIcon, HandIcon, MonitorIcon, MoonIcon, MousePointerIcon, PortIcon, RemoveIcon, SelectToolIcon, SunIcon, TutorialIcon, UserIcon } from "@semio/assets";
 
@@ -183,29 +181,19 @@ export interface TypeAppCommandResult {
   typeDiff?: TypeDiff;
 }
 
-
-
-
-
-
 const EMPTY_TYPE_SELECTION: TypeAppSelection = {};
 const EMPTY_PANEL_VISIBILITY: PanelVisibility = { toolbar: true, workbench: false, details: false, chat: false, settings: false };
 const EMPTY_OTHERS: TypeAppPresenceOther[] = [];
 const EMPTY_MODEL_TAG_ARRAY: string[] = [];
 
-
-
 // #endregion Internal State Management
 
 // #region Type App Plugin Registration
-
 
 const typeAppPlugin: AppPlugin = {
   id: "type",
   namespace: "TYPE",
   machine: {
-    
-    
     actions: {},
     guards: {},
     eventHandlers: {},
@@ -3107,7 +3095,7 @@ export const ToolsToggleGroup: FC = () => {
 
   if (!kit || !type || !canSetActiveTool) return null;
 
-  return <ToolGroup tools={getTypeTools()} activeTool={activeTool} onToolChange={(tool) => setActiveTool && setActiveTool(tool as ToolKind)} level="panel" />;
+  return <ToolGroup tools={getTypeTools()} activeTool={activeTool} onToolChange={(tool) => setActiveTool && setActiveTool(tool as ToolKind)} />;
 };
 
 // #endregion Tools
@@ -3498,9 +3486,6 @@ export const TypeAppFooter: FC = () => {
     type.models.forEach((model) => {
       model.tags?.forEach((tag) => {
         tagGuids.add(tag.guid);
-        if (tag.name && !nameMap.has(tag.guid)) {
-          nameMap.set(tag.guid, tag.name);
-        }
       });
     });
     // Fallback to kit tags for any missing names

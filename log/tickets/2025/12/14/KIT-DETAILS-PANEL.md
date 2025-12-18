@@ -1,11 +1,12 @@
 ---
 slug: KIT-DETAILS-PANEL
 summary: Fix Kit app details panel rendering
+prompt: Fix Kit app details panel rendering
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.927Z"
-commit: "0000000000000000000000000000000000000000"
+  created: '2025-12-16T17:06:07.927Z'
+commit: '0000000000000000000000000000000000000000'
 iterations: []
 ---
 

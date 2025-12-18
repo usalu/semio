@@ -3,11 +3,14 @@ slug: GRANULAR-SUBSCRIPTIONS
 summary: >-
   Migrate all exported hooks to granular subscriptions with [state, setState,
   canSetState] pattern
+prompt: >-
+  Migrate all exported hooks to granular subscriptions with [state, setState,
+  canSetState] pattern
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.884Z"
-commit: "0000000000000000000000000000000000000000"
+  created: '2025-12-16T17:06:07.884Z'
+commit: '0000000000000000000000000000000000000000'
 iterations: []
 ---
 

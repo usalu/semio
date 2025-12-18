@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // #region Header
 
 // #endregion
@@ -29,7 +30,7 @@ import type {
   YLeafMapString,
   YStringArray,
 } from "./shared";
-import { conditionalHookResult, createPanelDefinition, Expertise, Mode, PanelKind, readonlyHookResult, registerAppPlugin, registerRuntimeAction, Theme, ToolKind } from "./shared";
+import { conditionalHookResult, createPanelDefinition, Expertise, Mode, PanelKind, parseWindowLayout, readonlyHookResult, registerAppPlugin, registerRuntimeAction, stringifyWindowLayout, Theme, ToolKind } from "./shared";
 import type { DesignStore as DesignEntityStore } from "./Sketchpad";
 import { createDefaultDesignAppState, identitySelector, useDesignScope, useDevice, useExpertise, useKitScope, useLanguage, useMode, usePieceScope, useSketchpadActor, useSketchpadActorSafe, useTheme } from "./Sketchpad";
 
@@ -49,8 +50,6 @@ import * as THREE from "three";
 import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
 import { useLabel } from "../i18n";
 
-import type { ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, Connection as RFConnection } from "@xyflow/react";
-import { applyNodeChanges, BaseEdge, Handle, Position, ReactFlowInstance, ReactFlowProvider, useReactFlow, ViewportPortal } from "@xyflow/react";
 import {
   areDesignsInSameFamily,
   arePortsCompatible,
@@ -84,15 +83,21 @@ import {
   toThreeRotation,
   Type,
 } from "../semio";
+import type { ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, ReactFlowInstance, Connection as RFConnection } from "./elements";
 import {
+  applyNodeChanges,
   Avatar,
   AvatarFallback,
+  BaseEdge,
   Button,
   Combobox,
   Diagram,
   DraggableAvatar,
   Geometry,
+  Handle,
   Input,
+  Position,
+  ReactFlowProvider,
   Scene,
   SelectContent,
   SelectItem,
@@ -108,6 +113,8 @@ import {
   TreeContent,
   TreeItem,
   TreeSection,
+  useReactFlow,
+  ViewportPortal,
 } from "./elements";
 import { registerDesignAppStoreFactory } from "./shared";
 import {
@@ -1147,15 +1154,12 @@ export class DesignStore extends KitDiffAppStore<DesignAppState, DesignAppDiff, 
   }
 
   get windowLayout(): any {
-    const layoutStr = this.yMap.get("windowLayout") as string | undefined;
-    return layoutStr ? JSON.parse(layoutStr) : undefined;
+    return parseWindowLayout(this.yMap.get("windowLayout"));
   }
   set windowLayout(layout: any) {
-    if (layout) {
-      this.yMap.set("windowLayout", JSON.stringify(layout));
-    } else {
-      this.yMap.delete("windowLayout");
-    }
+    const value = stringifyWindowLayout(layout);
+    if (value) this.yMap.set("windowLayout", value);
+    else this.yMap.delete("windowLayout");
   }
 
   kit(): KitStore {
@@ -1424,8 +1428,8 @@ export class DesignStore extends KitDiffAppStore<DesignAppState, DesignAppDiff, 
           }
         });
       }
-      if (diff.windowLayout !== undefined) {
-        this.windowLayout = diff.windowLayout;
+      if (Object.prototype.hasOwnProperty.call(diff, "windowLayout")) {
+        this.windowLayout = (diff as any).windowLayout;
       }
     });
   };
@@ -1918,7 +1922,10 @@ export function useDesignAppActiveTool(): HookResult<ToolKind> {
   const designGuid = designScope?.guid ?? "";
   const value = state ? selectActiveTool(state as DesignAppState) : ToolKind.SELECTION_NORMAL;
   const canSetEvent = useMemo(() => ({ type: "DESIGN.SET_ACTIVE_TOOL" as const, kitGuid, designGuid, tool: ToolKind.SELECTION_NORMAL }), [kitGuid, designGuid]);
-  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
+  const canSetFromSnapshot = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
+  // XState v5 snapshot.can() doesn't return true for wildcard handlers,
+  // so we check if we have valid guids as an alternative condition
+  const canSet = canSetFromSnapshot || (kitGuid !== "" && designGuid !== "");
   const setter = useMemo(() => {
     if (!canSet) return undefined;
     return (tool: ToolKind) => actor.send({ type: "DESIGN.SET_ACTIVE_TOOL", kitGuid, designGuid, tool });
@@ -3173,9 +3180,6 @@ export const DesignAppFooter: FC = () => {
       type?.models?.forEach((model) => {
         model.tags?.forEach((tag) => {
           tagGuids.add(tag.guid);
-          if (tag.name && !nameMap.has(tag.guid)) {
-            nameMap.set(tag.guid, tag.name);
-          }
         });
       });
     });
@@ -3316,11 +3320,19 @@ const getDesignTools = (): ToolDefinition[] => [
 export const ToolsToggleGroup: FC = () => {
   const kitScope = useKitScope();
   const designScope = useDesignScope();
-  const [activeTool, setActiveTool] = useDesignAppActiveTool();
+  const [activeTool, setActiveTool, canSet] = useDesignAppActiveTool();
 
   if (!kitScope?.guid || !designScope?.guid) return null;
 
-  return <ToolGroup tools={getDesignTools()} activeTool={activeTool ?? ToolKind.SELECTION_NORMAL} onToolChange={(tool) => setActiveTool?.(tool as ToolKind)} level="panel" />;
+  return (
+    <ToolGroup
+      tools={getDesignTools()}
+      activeTool={activeTool ?? ToolKind.SELECTION_NORMAL}
+      onToolChange={(tool) => {
+        setActiveTool?.(tool as ToolKind);
+      }}
+    />
+  );
 };
 
 // #endregion Tools
@@ -4662,7 +4674,7 @@ const ClusterMenu: FC<ClusterMenuProps> = ({ nodes, edges, onCluster }) => {
           >
             <div className="absolute inset-0 border-2 border-dashed border-accent/50 rounded-md" style={{ pointerEvents: "none" }} />
             <div className="absolute -top-10 -right-2 pointer-events-auto">
-              <Button id="semio.sketchpad.app.design.diagram.clusterMenu.cluster" level="temporary" className="px-3 py-single text-sm" onClick={() => onCluster(groupPieceIds)}>
+              <Button id="semio.sketchpad.app.design.diagram.clusterMenu.cluster" className="px-3 py-single text-sm" onClick={() => onCluster(groupPieceIds)}>
                 Cluster
               </Button>
             </div>
@@ -4724,7 +4736,7 @@ const ExpandMenu: FC<ExpandMenuProps> = ({ nodes, edges, onExpand }) => {
           >
             <div className="absolute inset-0 border-2 border-dashed border-accent/50 rounded-md" style={{ pointerEvents: "none" }} />
             <div className="absolute -top-10 -right-2 pointer-events-auto">
-              <Button id="semio.sketchpad.app.design.diagram.expandMenu.expand" level="temporary" className="px-3 py-single text-sm" onClick={() => onExpand(designName)}>
+              <Button id="semio.sketchpad.app.design.diagram.expandMenu.expand" className="px-3 py-single text-sm" onClick={() => onExpand(designName)}>
                 Expand
               </Button>
             </div>

@@ -1,11 +1,12 @@
 ---
 slug: FIX-LINTING
-summary: "Fix TypeScript, C# and Python linting errors"
+summary: 'Fix TypeScript, C# and Python linting errors'
+prompt: 'Fix TypeScript, C# and Python linting errors'
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.865Z"
-commit: "0000000000000000000000000000000000000000"
+  created: '2025-12-16T17:06:07.865Z'
+commit: '0000000000000000000000000000000000000000'
 iterations: []
 ---
 

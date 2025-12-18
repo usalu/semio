@@ -1,17 +1,20 @@
 ---
 slug: PROMPTS-MD-FORMAT-EXCLUDE
 summary: Exclude prompts.md from formatting
+prompt: >-
+  prompts.md should be excluded from all kinds of formatting (such as by
+  preflight script or format on save in vscode, etc)
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.959Z"
-commit: "0000000000000000000000000000000000000000"
+  created: '2025-12-16T17:06:07.959Z'
+commit: '0000000000000000000000000000000000000000'
 iterations:
   - prompt: >-
       prompts.md should be excluded from all kinds of formatting (such as by
       preflight script or format on save in vscode, etc)
     date:
-      started: "2025-12-15T12:52:39.541Z"
+      started: '2025-12-15T12:52:39.541Z'
     model: gpt-5-2
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
     commit: 76900221ecf5cfb30a37d69fbb66abb3e0a0e45a

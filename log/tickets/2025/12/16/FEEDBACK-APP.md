@@ -1,6 +1,9 @@
 ---
 slug: FEEDBACK-APP
 summary: Create Feedback app for bug reports and feature ideas
+prompt: >-
+  Complete Feedback app implementation including German translations, global
+  footer action, documentation, and Playwright tests
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:

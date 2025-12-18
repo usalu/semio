@@ -66,7 +66,7 @@
   opacity: 1 !important;
   z-index: var(--z-panel) !important;
   position: relative !important;
-  background-color: var(--base) !important;
+  background-color: var(--window) !important;
   border-bottom: 1px solid var(--border-color) !important;
 }
 
@@ -81,7 +81,7 @@
   display: flex !important;
   visibility: visible !important;
   opacity: 1 !important;
-  background-color: var(--base) !important;
+  background-color: var(--window) !important;
   color: var(--foreground) !important;
   padding: 2px 8px !important;
   cursor: var(--cursor-pointer) !important;
@@ -91,11 +91,11 @@
 }
 
 .lm_tab:hover {
-  background-color: var(--hover-base) !important;
+  background-color: var(--hover-window) !important;
 }
 
 .lm_tab.lm_active {
-  background-color: var(--base) !important;
+  background-color: var(--window) !important;
   color: var(--foreground) !important;
 }
 
@@ -122,27 +122,14 @@
 .lm_popout,
 .lm_maximise,
 .lm_close {
-  display: inline-block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  cursor: var(--cursor-pointer) !important;
-  width: 20px !important;
-  height: 20px !important;
-  min-width: 20px !important;
-  min-height: 20px !important;
-  background-color: var(--base) !important;
-  border: 1px solid var(--border-color) !important;
-  position: relative !important;
-  margin: 0 2px !important;
-  padding: 0 !important;
-  flex-shrink: 0 !important;
+  display: none !important;
+  visibility: hidden !important;
 }
 
 .lm_popout:hover,
 .lm_maximise:hover,
 .lm_close:hover {
-  background-color: var(--hover-base) !important;
-  border-color: var(--border-color) !important;
+  background-color: transparent !important;
 }
 
 .lm_popout::before {
@@ -182,18 +169,30 @@
   font-weight: bold !important;
 }
 
-.lm_item.lm_stack,
-.lm_item.lm_component {
-  border: 1px solid var(--border-color) !important;
-  background-color: var(--base) !important;
+.lm_item.lm_stack {
+  border: none !important;
+  position: relative !important;
+  background-color: var(--window) !important;
 }
+
+.lm_item.lm_stack::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  box-shadow: inset 0 0 0 1px var(--border-color) !important;
+  z-index: var(--z-panel) !important;
+  pointer-events: none !important;
+}
+
 .lm_item.lm_component {
   border: none !important;
+  box-shadow: none !important;
+  background-color: var(--window) !important;
 }
 
 .lm_content {
   border: none !important;
-  background-color: var(--base) !important;
+  background-color: var(--window) !important;
 }
 
 .lm_items {

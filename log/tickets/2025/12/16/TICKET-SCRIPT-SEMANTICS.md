@@ -1,12 +1,20 @@
 ---
 slug: TICKET-SCRIPT-SEMANTICS
 summary: Rename log workflow to ticket+iterations
+prompt: >-
+  Improve log script semantics. Rename logs to tickets. create log becomes
+  ticket create. Then a new command is ticket iteration start Then there should
+  be ticket iteration finish finish becomes ticket finish Throw an error if an
+  iteration is unifinished for a ticket (e.g. when another iteration start or
+  ticket finish is called) Force files to be a necessary parameter to call for
+  iteration start and iteration finish. Update the file list on finish for the
+  iteration and compute stats (lines).
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T15:26:35.793Z"
-  finished: "2025-12-16T15:59:31.839Z"
-commit: "0000000000000000000000000000000000000000"
+  created: '2025-12-16T15:26:35.793Z'
+  finished: '2025-12-16T15:59:31.839Z'
+commit: '0000000000000000000000000000000000000000'
 iterations:
   - prompt: >-
       Improve log script semantics. Rename logs to tickets. create log becomes
@@ -17,8 +25,8 @@ iterations:
       parameter to call for iteration start and iteration finish. Update the
       file list on finish for the iteration and compute stats (lines).
     date:
-      started: "2025-12-16T15:26:35.793Z"
-      ended: "2025-12-16T15:59:24.768Z"
+      started: '2025-12-16T15:26:35.793Z'
+      ended: '2025-12-16T15:59:24.768Z'
     model: gpt-5-2
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
     commit: c44e5e38193be007ca56cc649aa2f58238c1ec40

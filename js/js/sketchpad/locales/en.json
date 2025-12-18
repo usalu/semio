@@ -1442,7 +1442,7 @@
             },
             "hotkey": "Ctrl+Shift+U"
           },
-          "kitApp": {
+          "toolbar": {
             "label": {
               "normal": "",
               "beginner": ""
@@ -1587,6 +1587,12 @@
               "label": {
                 "normal": "Show Concepts",
                 "beginner": "Show Concepts"
+              }
+            },
+            "filters": {
+              "label": {
+                "normal": "Filters",
+                "beginner": "Filter artifacts by type"
               }
             }
           },

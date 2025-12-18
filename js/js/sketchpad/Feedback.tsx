@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // #region Header
 
 // Feedback.tsx
@@ -22,49 +23,17 @@
 // #region Imports
 
 import { CheckIcon, ChatIcon as FeedbackIcon } from "@semio/assets";
-import { FC, useCallback, useLayoutEffect, useState } from "react";
+import { useSelector } from "@xstate/react";
+import { FC, useCallback, useLayoutEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import { useLabel } from "../i18n";
-import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Textarea, Window } from "./elements";
-import type { AppConfig, AppPlugin, PanelDefinition, PanelVisibility } from "./shared";
-import { createPanelDefinition, PanelKind, registerAppPlugin, registerEventHandler } from "./shared";
-import { Canvas, useAddPanelSection, useAppType, useRemovePanelSection } from "./Sketchpad";
+import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Textarea } from "./elements";
+import type { AppConfig, AppPlugin, HookResult, PanelDefinition } from "./shared";
+import { conditionalHookResult, createPanelDefinition, deduplicateWindowLayout, PanelKind, parseWindowLayout, registerAppPlugin, registerEventHandler, registerRuntimeAction, stringifyWindowLayout, type AppWindowConfig } from "./shared";
+import { Canvas, createDefaultLayout, FeedbackAppKind, FeedbackAppState, FeedbackFormData, FeedbackKind, LayoutCanvas, useAddPanelSection, useAppType, useRemovePanelSection, useSettings, useSketchpadActor, useSketchpadCommands } from "./Sketchpad";
 
 // #endregion Imports
-
-// #region Types
-
-export type FeedbackKind = "bug" | "idea";
-
-export type FeedbackAppKind = "home" | "kit" | "design" | "type" | "quality" | "docs" | "feedback";
-
-export interface FeedbackFormData {
-  kind: FeedbackKind;
-  title: string;
-  description: string;
-  app?: FeedbackAppKind;
-  name?: string;
-  email?: string;
-}
-
-export interface FeedbackState {
-  panelVisibility: PanelVisibility;
-  formData: FeedbackFormData;
-  isSubmitting: boolean;
-  isSubmitted: boolean;
-  error?: string;
-}
-
-export interface FeedbackDiff {
-  panelVisibility?: Partial<PanelVisibility>;
-  formData?: Partial<FeedbackFormData>;
-  isSubmitting?: boolean;
-  isSubmitted?: boolean;
-  error?: string;
-}
-
-// #endregion Types
 
 // #region Feedback App Plugin Registration
 
@@ -76,7 +45,7 @@ const feedbackAppPlugin: AppPlugin = {
     guards: {},
     eventHandlers: {},
     selectors: {},
-    createDefaultState: (): FeedbackState => ({
+    createDefaultState: (): FeedbackAppState => ({
       panelVisibility: { toolbar: true, workbench: false, details: false, chat: false, settings: false },
       formData: {
         kind: "bug",
@@ -153,9 +122,150 @@ if (typeof window !== "undefined") {
       feedbackApp: { ...context.feedbackApp, error: event.error, isSubmitting: false },
     }),
   });
+
+  registerRuntimeAction("feedbackTogglePanel", (context: any, event: any) => {
+    if (event.type !== "FEEDBACK.TOGGLE_PANEL") return {};
+    return {
+      feedbackApp: {
+        ...context.feedbackApp,
+        panelVisibility: {
+          ...context.feedbackApp.panelVisibility,
+          [event.panel]: !context.feedbackApp.panelVisibility[event.panel],
+        },
+      },
+    };
+  });
+  registerRuntimeAction("feedbackSetFormData", (context: any, event: any) => {
+    if (event.type !== "FEEDBACK.SET_FORM_DATA") return {};
+    return {
+      feedbackApp: {
+        ...context.feedbackApp,
+        formData: { ...context.feedbackApp.formData, ...event.data },
+      },
+    };
+  });
+  registerRuntimeAction("feedbackResetForm", (context: any, event: any) => {
+    if (event.type !== "FEEDBACK.RESET_FORM") return {};
+    return {
+      feedbackApp: {
+        ...context.feedbackApp,
+        formData: {
+          kind: "bug",
+          title: "",
+          description: "",
+          app: undefined,
+          name: undefined,
+          email: undefined,
+        },
+        isSubmitting: false,
+        isSubmitted: false,
+        error: undefined,
+      },
+    };
+  });
+  registerRuntimeAction("feedbackSetSubmitting", (context: any, event: any) => {
+    if (event.type !== "FEEDBACK.SET_SUBMITTING") return {};
+    return {
+      feedbackApp: { ...context.feedbackApp, isSubmitting: event.isSubmitting },
+    };
+  });
+  registerRuntimeAction("feedbackSetSubmitted", (context: any, event: any) => {
+    if (event.type !== "FEEDBACK.SET_SUBMITTED") return {};
+    return {
+      feedbackApp: { ...context.feedbackApp, isSubmitted: event.isSubmitted, isSubmitting: false },
+    };
+  });
+  registerRuntimeAction("feedbackSetError", (context: any, event: any) => {
+    if (event.type !== "FEEDBACK.SET_ERROR") return {};
+    return {
+      feedbackApp: { ...context.feedbackApp, error: event.error, isSubmitting: false },
+    };
+  });
 }
 
 // #endregion Feedback App Plugin Registration
+
+// #region Triadic Hooks
+
+const DEFAULT_FORM_DATA: FeedbackFormData = {
+  kind: "bug",
+  title: "",
+  description: "",
+  app: undefined,
+  name: undefined,
+  email: undefined,
+};
+
+export function useFeedbackFormData(): HookResult<FeedbackFormData> {
+  const actor = useSketchpadActor();
+  const value = useSelector(actor, (snapshot) => snapshot.context.feedbackApp?.formData ?? DEFAULT_FORM_DATA);
+  const canSetEvent = useMemo(() => ({ type: "FEEDBACK.SET_FORM_DATA" as const, data: {} as Partial<FeedbackFormData> }), []);
+  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
+  const setter = useMemo(() => {
+    if (!canSet) return undefined;
+    return (data: FeedbackFormData) => {
+      actor.send({ type: "FEEDBACK.SET_FORM_DATA", data });
+    };
+  }, [actor, canSet]);
+  return conditionalHookResult(canSet, value, setter);
+}
+
+export function useFeedbackIsSubmitting(): HookResult<boolean> {
+  const actor = useSketchpadActor();
+  const value = useSelector(actor, (snapshot) => snapshot.context.feedbackApp?.isSubmitting ?? false);
+  const canSetEvent = useMemo(() => ({ type: "FEEDBACK.SET_SUBMITTING" as const, isSubmitting: false }), []);
+  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
+  const setter = useMemo(() => {
+    if (!canSet) return undefined;
+    return (isSubmitting: boolean) => {
+      actor.send({ type: "FEEDBACK.SET_SUBMITTING", isSubmitting });
+    };
+  }, [actor, canSet]);
+  return conditionalHookResult(canSet, value, setter);
+}
+
+export function useFeedbackIsSubmitted(): HookResult<boolean> {
+  const actor = useSketchpadActor();
+  const value = useSelector(actor, (snapshot) => snapshot.context.feedbackApp?.isSubmitted ?? false);
+  const canSetEvent = useMemo(() => ({ type: "FEEDBACK.SET_SUBMITTED" as const, isSubmitted: false }), []);
+  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
+  const setter = useMemo(() => {
+    if (!canSet) return undefined;
+    return (isSubmitted: boolean) => {
+      actor.send({ type: "FEEDBACK.SET_SUBMITTED", isSubmitted });
+    };
+  }, [actor, canSet]);
+  return conditionalHookResult(canSet, value, setter);
+}
+
+export function useFeedbackError(): HookResult<string | undefined> {
+  const actor = useSketchpadActor();
+  const value = useSelector(actor, (snapshot) => snapshot.context.feedbackApp?.error);
+  const canSetEvent = useMemo(() => ({ type: "FEEDBACK.SET_ERROR" as const, error: "" }), []);
+  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
+  const setter = useMemo(() => {
+    if (!canSet) return undefined;
+    return (error: string | undefined) => {
+      actor.send({ type: "FEEDBACK.SET_ERROR", error });
+    };
+  }, [actor, canSet]);
+  return conditionalHookResult(canSet, value, setter);
+}
+
+export function useFeedbackReset(): [(() => void) | undefined, boolean] {
+  const actor = useSketchpadActor();
+  const canResetEvent = useMemo(() => ({ type: "FEEDBACK.RESET_FORM" as const }), []);
+  const canReset = useSelector(actor, (snapshot) => snapshot.can(canResetEvent));
+  const reset = useMemo(() => {
+    if (!canReset) return undefined;
+    return () => {
+      actor.send({ type: "FEEDBACK.RESET_FORM" });
+    };
+  }, [actor, canReset]);
+  return [reset, canReset];
+}
+
+// #endregion Triadic Hooks
 
 // #region Components
 
@@ -165,15 +275,25 @@ const FeedbackForm: FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  const [kind, setKind] = useState<FeedbackKind>("bug");
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [app, setApp] = useState<FeedbackAppKind | undefined>(undefined);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [error, setError] = useState<string | undefined>(undefined);
+  const [formData, setFormData, canSetFormData] = useFeedbackFormData();
+  const [isSubmitting, setIsSubmitting, canSetIsSubmitting] = useFeedbackIsSubmitting();
+  const [isSubmitted, setIsSubmitted, canSetIsSubmitted] = useFeedbackIsSubmitted();
+  const [error, setError, canSetError] = useFeedbackError();
+  const [reset, canReset] = useFeedbackReset();
+
+  const kind = formData.kind;
+  const title = formData.title;
+  const description = formData.description;
+  const app = formData.app;
+  const name = formData.name ?? "";
+  const email = formData.email ?? "";
+
+  const setKind = useCallback((kind: FeedbackKind) => setFormData?.({ ...formData, kind }), [formData, setFormData]);
+  const setTitle = useCallback((title: string) => setFormData?.({ ...formData, title }), [formData, setFormData]);
+  const setDescription = useCallback((description: string) => setFormData?.({ ...formData, description }), [formData, setFormData]);
+  const setApp = useCallback((app: FeedbackAppKind | undefined) => setFormData?.({ ...formData, app }), [formData, setFormData]);
+  const setName = useCallback((name: string) => setFormData?.({ ...formData, name: name || undefined }), [formData, setFormData]);
+  const setEmail = useCallback((email: string) => setFormData?.({ ...formData, email: email || undefined }), [formData, setFormData]);
 
   const kindLabel = useLabel("semio.sketchpad.app.feedback.form.kind");
   const titleLabel = useLabel("semio.sketchpad.app.feedback.form.title");
@@ -200,20 +320,20 @@ const FeedbackForm: FC = () => {
 
   const handleSubmit = useCallback(async () => {
     if (!title.trim()) {
-      setError(t("semio.sketchpad.app.feedback.error.titleRequired.label.normal", "Title is required"));
+      setError?.(t("semio.sketchpad.app.feedback.error.titleRequired.label.normal", "Title is required"));
       return;
     }
     if (!description.trim()) {
-      setError(t("semio.sketchpad.app.feedback.error.descriptionRequired.label.normal", "Description is required"));
+      setError?.(t("semio.sketchpad.app.feedback.error.descriptionRequired.label.normal", "Description is required"));
       return;
     }
     if (kind === "bug" && !app) {
-      setError(t("semio.sketchpad.app.feedback.error.appRequired.label.normal", "Please select which app the bug occurred in"));
+      setError?.(t("semio.sketchpad.app.feedback.error.appRequired.label.normal", "Please select which app the bug occurred in"));
       return;
     }
 
-    setIsSubmitting(true);
-    setError(undefined);
+    setIsSubmitting?.(true);
+    setError?.(undefined);
 
     try {
       const payload: FeedbackFormData = {
@@ -232,25 +352,17 @@ const FeedbackForm: FC = () => {
       });
 
       if (!response.ok) throw new Error("Failed to submit feedback");
-      setIsSubmitted(true);
+      setIsSubmitted?.(true);
     } catch {
-      setError(t("semio.sketchpad.app.feedback.error.submitFailed.label.normal", "Failed to submit feedback. Please try again."));
+      setError?.(t("semio.sketchpad.app.feedback.error.submitFailed.label.normal", "Failed to submit feedback. Please try again."));
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting?.(false);
     }
-  }, [kind, title, description, app, name, email, t]);
+  }, [kind, title, description, app, name, email, t, setError, setIsSubmitting, setIsSubmitted]);
 
   const handleReset = useCallback(() => {
-    setKind("bug");
-    setTitle("");
-    setDescription("");
-    setApp(undefined);
-    setName("");
-    setEmail("");
-    setIsSubmitting(false);
-    setIsSubmitted(false);
-    setError(undefined);
-  }, []);
+    reset?.();
+  }, [reset]);
 
   const handleGoHome = useCallback(() => {
     navigate("/");
@@ -402,6 +514,16 @@ const Feedback: FC = () => {
   const appType = useAppType();
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
+  const settings = useSettings();
+  const sketchpadCommands = useSketchpadCommands();
+  const feedbackWindowIds = useMemo(() => ["feedback"], []);
+  const storedWindowLayout = useMemo(() => {
+    const parsed = parseWindowLayout(settings?.apps?.feedback?.windowLayout);
+    return parsed ? deduplicateWindowLayout(parsed, feedbackWindowIds) : undefined;
+  }, [settings, feedbackWindowIds]);
+  const defaultLayout = useMemo(() => createDefaultLayout(feedbackWindowIds, "row", [100], ["feedback"]), [feedbackWindowIds]);
+  const windowLayout = useMemo(() => storedWindowLayout || defaultLayout, [storedWindowLayout, defaultLayout]);
+  const lastLayoutRef = useMemo(() => ({ current: null as any }), []);
 
   useLayoutEffect(() => {
     if (appType !== "feedback") return;
@@ -420,9 +542,37 @@ const Feedback: FC = () => {
 
   return (
     <Canvas>
-      <Window id="feedback-form" className="h-full w-full overflow-auto">
-        <FeedbackForm />
-      </Window>
+      <LayoutCanvas
+        windowConfig={
+          {
+            windowKinds: [
+              {
+                id: "feedback",
+                label: "feedback",
+                component: () => <FeedbackForm />,
+              },
+            ],
+            defaultLayout,
+          } satisfies AppWindowConfig
+        }
+        layoutState={windowLayout}
+        onLayoutChange={(layout) => {
+          const next = stringifyWindowLayout(layout);
+          if (!next) return;
+          const prev = stringifyWindowLayout(lastLayoutRef.current);
+          if (next === prev) return;
+          lastLayoutRef.current = layout;
+          sketchpadCommands.setState("semio.sketchpad.app.feedback.windowLayout", {
+            settings: {
+              apps: {
+                feedback: {
+                  windowLayout: next,
+                },
+              },
+            },
+          });
+        }}
+      />
     </Canvas>
   );
 };

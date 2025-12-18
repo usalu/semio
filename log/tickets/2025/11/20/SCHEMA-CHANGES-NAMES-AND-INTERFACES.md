@@ -1,11 +1,12 @@
 ---
 slug: SCHEMA-CHANGES-NAMES-AND-INTERFACES
 summary: Migration from 2025-11-20_SCHEMA-CHANGES-NAMES-AND-INTERFACES.md
+prompt: Migration from 2025-11-20_SCHEMA-CHANGES-NAMES-AND-INTERFACES.md
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.679Z"
-commit: "0000000000000000000000000000000000000000"
+  created: '2025-12-16T17:06:07.679Z'
+commit: '0000000000000000000000000000000000000000'
 iterations: []
 ---
 

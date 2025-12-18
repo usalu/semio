@@ -1,11 +1,12 @@
 ---
 slug: GRASSHOPPER-REFLECTION-REMOVAL
 summary: Remove reflection from Grasshopper components and hardcode inputs/outputs
+prompt: Remove reflection from Grasshopper components and hardcode inputs/outputs
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.840Z"
-commit: "0000000000000000000000000000000000000000"
+  created: '2025-12-16T17:06:07.840Z'
+commit: '0000000000000000000000000000000000000000'
 iterations: []
 ---
 

@@ -1,6 +1,7 @@
 ---
 slug: WINDOW-BORDERS-SOLID
 summary: Fix window borders and revert to solid style
+prompt: Still no bottom and right border. Remove the dashed border.
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:

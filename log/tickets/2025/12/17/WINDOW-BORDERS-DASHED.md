@@ -1,6 +1,9 @@
 ---
 slug: WINDOW-BORDERS-DASHED
 summary: Sketchpad windows have continuous dashed borders
+prompt: >-
+  The windows dont have a border on the bottom and on the right. Make the window
+  border dashed.
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // #region Header
 
 // sketchpad.ts
@@ -677,19 +678,94 @@ export interface WindowControl {
 
 export interface WindowKindDefinition {
   id: string;
+  label?: string | any;
   icon?: ReactNode;
   component: (props: any) => ReactNode;
   controls?: WindowControl[];
   variants?: {
     id: string;
     icon?: ReactNode;
-    componentProps?: any;
+    componentProps?: Record<string, any>;
   }[];
 }
 
 export interface AppWindowConfig {
   windowKinds: WindowKindDefinition[];
-  defaultLayout: any;
+  defaultLayout?: any;
+}
+
+export function parseWindowLayout(layout: unknown): any | undefined {
+  if (layout === undefined || layout === null) return undefined;
+  if (typeof layout === "string") {
+    const trimmed = layout.trim();
+    if (!trimmed) return undefined;
+    try {
+      return JSON.parse(trimmed);
+    } catch {
+      return undefined;
+    }
+  }
+  if (typeof layout === "object") return layout;
+  return undefined;
+}
+
+/**
+ * Sanitizes a GoldenLayout config to ensure only one instance of each component type exists.
+ * Removes duplicate components keeping only the first occurrence.
+ */
+export function deduplicateWindowLayout(layout: any, allowedWindowIds: string[]): any | undefined {
+  if (!layout || typeof layout !== "object") return layout;
+
+  const seenComponents = new Set<string>();
+
+  const deduplicateContent = (content: any[]): any[] => {
+    if (!Array.isArray(content)) return content;
+
+    return content
+      .map((item) => {
+        if (!item || typeof item !== "object") return item;
+
+        if (item.type === "component") {
+          const componentName = item.componentName;
+          if (seenComponents.has(componentName)) {
+            return null; // Remove duplicate
+          }
+          if (!allowedWindowIds.includes(componentName)) {
+            return null; // Remove unknown component types
+          }
+          seenComponents.add(componentName);
+          return item;
+        }
+
+        if (item.content && Array.isArray(item.content)) {
+          const deduped = deduplicateContent(item.content);
+          if (deduped.length === 0) return null;
+          return { ...item, content: deduped };
+        }
+
+        return item;
+      })
+      .filter((item) => item !== null);
+  };
+
+  const root = layout.root;
+  if (!root || typeof root !== "object") return layout;
+
+  if (root.content && Array.isArray(root.content)) {
+    const dedupedContent = deduplicateContent(root.content);
+    return { ...layout, root: { ...root, content: dedupedContent } };
+  }
+
+  return layout;
+}
+
+export function stringifyWindowLayout(layout: unknown): string | undefined {
+  if (layout === undefined || layout === null) return undefined;
+  try {
+    return JSON.stringify(layout);
+  } catch {
+    return undefined;
+  }
 }
 
 export interface AppWindowProps {
@@ -700,19 +776,21 @@ export interface AppWindowProps {
 
 export function createDefaultLayout(windowIds: string[], direction: "row" | "column" = "row", sizes?: number[], titles?: string[]): any {
   return {
-    type: direction === "row" ? "row" : "column",
-    content: windowIds.map((id, index) => ({
-      type: "stack",
-      content: [
-        {
-          type: "component",
-          componentName: id,
-          title: titles && titles[index] ? titles[index] : id,
-          componentState: {},
-        },
-      ],
-      ...(sizes && sizes[index] !== undefined ? { size: `${sizes[index]}%` } : {}),
-    })),
+    root: {
+      type: direction === "row" ? "row" : "column",
+      content: windowIds.map((id, index) => ({
+        type: "stack",
+        content: [
+          {
+            type: "component",
+            componentName: id,
+            title: titles && titles[index] ? titles[index] : id,
+            componentState: {},
+          },
+        ],
+        ...(sizes && sizes[index] !== undefined ? { size: `${sizes[index]}%` } : {}),
+      })),
+    },
   };
 }
 
@@ -747,7 +825,6 @@ export interface ToolGroupProps {
   tools: ToolDefinition[];
   activeTool: ToolKind | string;
   onToolChange: (tool: ToolKind | string) => void;
-  level?: "panel" | "toolbar";
 }
 
 // #endregion Tool
@@ -1522,6 +1599,16 @@ export function composePluginContributions(): {
   return { actions, guards, eventHandlers, selectors };
 }
 
+export function getPluginDefaultStates(): Record<string, any> {
+  const defaults: Record<string, any> = {};
+  for (const plugin of appPlugins.values()) {
+    const createDefaultState = plugin.machine.createDefaultState;
+    if (!createDefaultState) continue;
+    defaults[plugin.id] = createDefaultState();
+  }
+  return defaults;
+}
+
 // #endregion App Plugin Registry
 
 // #region Runtime Action Registry
@@ -1705,6 +1792,10 @@ export function getRegisteredNamespaces(): string[] {
     }
   }
   return Array.from(namespaces);
+}
+
+export function getRegisteredEventTypes(): string[] {
+  return Array.from(eventHandlerRegistry.keys());
 }
 
 // #endregion Dynamic Event Dispatch Registry

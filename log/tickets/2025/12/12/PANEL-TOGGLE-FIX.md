@@ -1,11 +1,12 @@
 ---
 slug: PANEL-TOGGLE-FIX
 summary: Fix panel toggle signature mismatch and investigate store issue
+prompt: Fix panel toggle signature mismatch and investigate store issue
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.913Z"
-commit: "0000000000000000000000000000000000000000"
+  created: '2025-12-16T17:06:07.913Z'
+commit: '0000000000000000000000000000000000000000'
 iterations: []
 ---
 

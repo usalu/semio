@@ -3,11 +3,14 @@ slug: EXTEND-PANEL-TESTS
 summary: >-
   Extend sketchpad tests to verify panel toggle functionality in navbar for all
   apps
+prompt: >-
+  Extend sketchpad tests to verify panel toggle functionality in navbar for all
+  apps
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.907Z"
-commit: "0000000000000000000000000000000000000000"
+  created: '2025-12-16T17:06:07.907Z'
+commit: '0000000000000000000000000000000000000000'
 iterations: []
 ---
 

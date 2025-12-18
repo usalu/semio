@@ -1,11 +1,12 @@
 ---
 slug: REFACTOR
 summary: Migration from REFACTOR.md
+prompt: Migration from REFACTOR.md
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.669Z"
-commit: "0000000000000000000000000000000000000000"
+  created: '2025-12-16T17:06:07.669Z'
+commit: '0000000000000000000000000000000000000000'
 iterations: []
 ---
 

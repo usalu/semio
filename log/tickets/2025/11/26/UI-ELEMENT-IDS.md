@@ -1,11 +1,12 @@
 ---
 slug: UI-ELEMENT-IDS
 summary: Add missing IDs to all Sketchpad UI elements
+prompt: Add missing IDs to all Sketchpad UI elements
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.721Z"
-commit: "0000000000000000000000000000000000000000"
+  created: '2025-12-16T17:06:07.721Z'
+commit: '0000000000000000000000000000000000000000'
 iterations: []
 ---
 

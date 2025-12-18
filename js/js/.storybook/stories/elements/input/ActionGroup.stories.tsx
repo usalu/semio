@@ -21,7 +21,7 @@
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { Copy, Download, ExternalLink } from "lucide-react";
-import { ActionGroup, ActionGroupItem } from "../../../../sketchpad/elements";
+import { ActionGroup, ActionGroupItem, Level, LevelProvider, getLevelBgClass } from "../../../../sketchpad/elements";
 
 // #region ActionGroup
 const meta = {
@@ -37,50 +37,50 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const ActionGroupDemo = () => (
+  <ActionGroup id="action-group-demo">
+    <ActionGroupItem id="action-group-demo-copy">
+      <Copy />
+    </ActionGroupItem>
+    <ActionGroupItem id="action-group-demo-download">
+      <Download />
+    </ActionGroupItem>
+    <ActionGroupItem id="action-group-demo-external">
+      <ExternalLink />
+    </ActionGroupItem>
+  </ActionGroup>
+);
+
 export const Default: Story = {
-  args: {
-    id: "action-group-default",
-    level: "base",
-    children: null,
-  },
-  render: (args) => (
-    <ActionGroup {...args}>
-      <ActionGroupItem id="action-group-default-copy">
-        <Copy />
-      </ActionGroupItem>
-      <ActionGroupItem id="action-group-default-download">
-        <Download />
-      </ActionGroupItem>
-      <ActionGroupItem id="action-group-default-external">
-        <ExternalLink />
-      </ActionGroupItem>
-    </ActionGroup>
-  ),
+  render: () => <ActionGroupDemo />,
 };
 
+const createLevelRender = (level: Level) => () => (
+  <LevelProvider level={level}>
+    <div className={`p-4 ${getLevelBgClass(level)}`}>
+      <ActionGroupDemo />
+    </div>
+  </LevelProvider>
+);
+
 export const Base: Story = {
-  args: { ...Default.args, id: "action-group-base", level: "base" },
-  render: Default.render,
+  render: createLevelRender("base"),
 };
 
 export const Window: Story = {
-  args: { ...Default.args, id: "action-group-window", level: "window" },
-  render: Default.render,
+  render: createLevelRender("window"),
 };
 
 export const Panel: Story = {
-  args: { ...Default.args, id: "action-group-panel", level: "panel" },
-  render: Default.render,
+  render: createLevelRender("panel"),
 };
 
 export const Overlay: Story = {
-  args: { ...Default.args, id: "action-group-overlay", level: "overlay" },
-  render: Default.render,
+  render: createLevelRender("overlay"),
 };
 
 export const Temporary: Story = {
-  args: { ...Default.args, id: "action-group-temporary", level: "temporary" },
-  render: Default.render,
+  render: createLevelRender("temporary"),
 };
 
 // #endregion ActionGroup

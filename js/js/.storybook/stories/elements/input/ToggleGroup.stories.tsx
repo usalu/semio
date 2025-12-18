@@ -21,7 +21,7 @@
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { Box, List, Lock, Network, Plus, Settings } from "lucide-react";
-import { Action, ToggleGroup, ToggleGroupItem } from "../../../../sketchpad/elements";
+import { Action, Level, LevelProvider, ToggleGroup, getLevelBgClass } from "../../../../sketchpad/elements";
 
 // #region ToggleGroup
 const meta = {
@@ -37,39 +37,62 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const defaultItems = [
+  { id: "toggle-default-standard", value: "standard", icon: <Lock /> },
+  { id: "toggle-action-settings", value: "settings", icon: <Settings />, action: <Action id="toggle-action-settings-add" icon={<Plus />} /> },
+  { id: "toggle-dropdown-box", value: "box", icon: <Box />, action: <Action id="toggle-dropdown-box-action" icon={<Network />} /> },
+];
+
+const multipleItems = [
+  { id: "toggle-multiple-standard", value: "standard", icon: <Lock /> },
+  { id: "toggle-multiple-box", value: "box", icon: <Box /> },
+  { id: "toggle-multiple-network", value: "network", icon: <Network /> },
+  { id: "toggle-multiple-list", value: "list", icon: <List /> },
+  { id: "toggle-multiple-settings", value: "settings", icon: <Settings /> },
+  { id: "toggle-multiple-plus", value: "plus", icon: <Plus /> },
+];
+
 export const Default: Story = {
   args: {
     id: "toggle-group-default",
     kind: "single",
     defaultValue: "standard",
-    level: "base",
     showLabel: true,
-    items: [
-      { id: "toggle-default-standard", value: "standard", icon: <Lock /> },
-      { id: "toggle-action-settings", value: "settings", icon: <Settings />, action: <Action id="toggle-action-settings-add" icon={<Plus />} level="base" /> },
-      { id: "toggle-dropdown-box", value: "box", icon: <Box />, action: <Action id="toggle-dropdown-box-action" icon={<Network />} level="base" /> },
-    ],
+    items: defaultItems,
   },
 };
 
+const createSingleLevelRender = (level: Level, id: string) => () => (
+  <LevelProvider level={level}>
+    <div className={`p-4 ${getLevelBgClass(level)}`}>
+      <ToggleGroup id={id} kind="single" defaultValue="standard" showLabel items={defaultItems} />
+    </div>
+  </LevelProvider>
+);
+
 export const Base: Story = {
-  args: { ...Default.args, id: "toggle-group-base", level: "base" },
+  args: { items: defaultItems },
+  render: createSingleLevelRender("base", "toggle-group-base"),
 };
 
 export const Window: Story = {
-  args: { ...Default.args, id: "toggle-group-window", level: "window" },
+  args: { items: defaultItems },
+  render: createSingleLevelRender("window", "toggle-group-window"),
 };
 
 export const Panel: Story = {
-  args: { ...Default.args, id: "toggle-group-panel", level: "panel" },
+  args: { items: defaultItems },
+  render: createSingleLevelRender("panel", "toggle-group-panel"),
 };
 
 export const Overlay: Story = {
-  args: { ...Default.args, id: "toggle-group-overlay", level: "overlay" },
+  args: { items: defaultItems },
+  render: createSingleLevelRender("overlay", "toggle-group-overlay"),
 };
 
 export const Temporary: Story = {
-  args: { ...Default.args, id: "toggle-group-temporary", level: "temporary" },
+  args: { items: defaultItems },
+  render: createSingleLevelRender("temporary", "toggle-group-temporary"),
 };
 
 export const Multiple: Story = {
@@ -77,37 +100,42 @@ export const Multiple: Story = {
     id: "toggle-group-multiple",
     kind: "multiple",
     defaultValue: ["box"],
-    level: "base",
     showLabel: true,
-    items: [
-      { id: "toggle-multiple-standard", value: "standard", icon: <Lock /> },
-      { id: "toggle-multiple-box", value: "box", icon: <Box /> },
-      { id: "toggle-multiple-network", value: "network", icon: <Network /> },
-      { id: "toggle-multiple-list", value: "list", icon: <List /> },
-      { id: "toggle-multiple-settings", value: "settings", icon: <Settings /> },
-      { id: "toggle-multiple-plus", value: "plus", icon: <Plus /> },
-    ],
+    items: multipleItems,
   },
 };
 
+const createMultipleLevelRender = (level: Level, id: string) => () => (
+  <LevelProvider level={level}>
+    <div className={`p-4 ${getLevelBgClass(level)}`}>
+      <ToggleGroup id={id} kind="multiple" defaultValue={["box"]} showLabel items={multipleItems} />
+    </div>
+  </LevelProvider>
+);
+
 export const MultipleBase: Story = {
-  args: { ...Multiple.args, id: "toggle-group-multiple-base", level: "base" },
+  args: { items: multipleItems },
+  render: createMultipleLevelRender("base", "toggle-group-multiple-base"),
 };
 
 export const MultipleWindow: Story = {
-  args: { ...Multiple.args, id: "toggle-group-multiple-window", level: "window" },
+  args: { items: multipleItems },
+  render: createMultipleLevelRender("window", "toggle-group-multiple-window"),
 };
 
 export const MultiplePanel: Story = {
-  args: { ...Multiple.args, id: "toggle-group-multiple-panel", level: "panel" },
+  args: { items: multipleItems },
+  render: createMultipleLevelRender("panel", "toggle-group-multiple-panel"),
 };
 
 export const MultipleOverlay: Story = {
-  args: { ...Multiple.args, id: "toggle-group-multiple-overlay", level: "overlay" },
+  args: { items: multipleItems },
+  render: createMultipleLevelRender("overlay", "toggle-group-multiple-overlay"),
 };
 
 export const MultipleTemporary: Story = {
-  args: { ...Multiple.args, id: "toggle-group-multiple-temporary", level: "temporary" },
+  args: { items: multipleItems },
+  render: createMultipleLevelRender("temporary", "toggle-group-multiple-temporary"),
 };
 
 // #endregion ToggleGroup

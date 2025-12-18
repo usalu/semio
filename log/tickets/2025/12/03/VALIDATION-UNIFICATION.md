@@ -1,11 +1,12 @@
 ---
 slug: VALIDATION-UNIFICATION
-summary: "Unify validation mechanism across TypeScript, Python and C#"
+summary: 'Unify validation mechanism across TypeScript, Python and C#'
+prompt: 'Unify validation mechanism across TypeScript, Python and C#'
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.863Z"
-commit: "0000000000000000000000000000000000000000"
+  created: '2025-12-16T17:06:07.863Z'
+commit: '0000000000000000000000000000000000000000'
 iterations: []
 ---
 

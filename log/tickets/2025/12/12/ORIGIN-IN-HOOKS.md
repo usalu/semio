@@ -1,11 +1,12 @@
 ---
 slug: ORIGIN-IN-HOOKS
 summary: Hooks auto-inject command origins via useOrigin
+prompt: Hooks auto-inject command origins via useOrigin
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.911Z"
-commit: "0000000000000000000000000000000000000000"
+  created: '2025-12-16T17:06:07.911Z'
+commit: '0000000000000000000000000000000000000000'
 iterations: []
 ---
 

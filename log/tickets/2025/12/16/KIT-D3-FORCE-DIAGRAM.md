@@ -3,18 +3,22 @@ slug: KIT-D3-FORCE-DIAGRAM
 summary: >-
   Implement d3-force layout for kit diagram with configurable simulation
   parameters
+prompt: >-
+  PLAN: The diagram in kit app should be a d3-force layout. The nodes should be
+  a circle with the icons. Add the parameters for the simulation to the settings
+  of the kit app.
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.969Z"
-commit: "0000000000000000000000000000000000000000"
+  created: '2025-12-16T17:06:07.969Z'
+commit: '0000000000000000000000000000000000000000'
 iterations:
   - prompt: >-
       PLAN: The diagram in kit app should be a d3-force layout. The nodes should
       be a circle with the icons. Add the parameters for the simulation to the
       settings of the kit app.
     date:
-      started: "2025-12-16T12:33:44.245Z"
+      started: '2025-12-16T12:33:44.245Z'
     model: claude-opus-4-5
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
     commit: c44e5e38193be007ca56cc649aa2f58238c1ec40
@@ -50,7 +54,7 @@ iterations:
       random initial positions, remove fitView prop, call fitView after
       simulation settles, add test for node presence
     date:
-      started: "2025-12-16T13:13:53.032Z"
+      started: '2025-12-16T13:13:53.032Z'
     model: claude-opus-4-5
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
   - prompt: >-
@@ -58,7 +62,7 @@ iterations:
       to use useInternalNode with positionAbsolute, change all edges to use
       floating type
     date:
-      started: "2025-12-16T13:27:05.937Z"
+      started: '2025-12-16T13:27:05.937Z'
     model: claude-opus-4-5
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
   - prompt: >-
@@ -67,7 +71,7 @@ iterations:
       - remove sim.alphaTarget(0.3).restart() on drag start; 3) Hovering not
       shown - add hover state visual feedback with ring styling
     date:
-      started: "2025-12-16T13:47:12.353Z"
+      started: '2025-12-16T13:47:12.353Z'
     model: claude-opus-4-5
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 ---

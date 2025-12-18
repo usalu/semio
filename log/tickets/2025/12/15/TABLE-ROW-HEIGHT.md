@@ -1,17 +1,20 @@
 ---
 slug: TABLE-ROW-HEIGHT
 summary: Normalize Sketchpad table row heights
+prompt: >-
+  Finish (currently table rows are still heigher than toggles): Table rows have
+  a fixed height...
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.962Z"
-commit: "0000000000000000000000000000000000000000"
+  created: '2025-12-16T17:06:07.962Z'
+commit: '0000000000000000000000000000000000000000'
 iterations:
   - prompt: >-
       Finish (currently table rows are still heigher than toggles): Table rows
       have a fixed height...
     date:
-      started: "2025-12-15T12:26:26.622Z"
+      started: '2025-12-15T12:26:26.622Z'
     model: gpt-5-2
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
     commit: 76900221ecf5cfb30a37d69fbb66abb3e0a0e45a

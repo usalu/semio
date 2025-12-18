@@ -3,7 +3,7 @@ This document MUST ALWAYS BE followed unless explicitly asked to do otherwise.
 IMPORTANT:
 
 - The codebase in under design and development and not used in production yet. There are many inconsistencies that need to be refactored. ALWAYS use clean mechanisms that might require large refactorings and NEVER care about backwards compatibility.
-- For every task you are working on, you MUST create or update a markdown ticket using `npx tsx scripts/log.ts ticket create SLUG "Summary"`. Tickets are stored in `log/YEAR/MONTH/DAY/SLUG.md` with YAML frontmatter and optional **iterations**. The script automatically creates three sections to be filled/updated during execution of the task: `# Previously`, `# Plan`, and `#Changes`.The purpose of the ticket is to understand the context, problem and decision making process. It is only about the process.
+- For every task you are working on, you MUST create or update a markdown ticket using `npx tsx scripts/log.ts ticket create SLUG --prompt="User prompt..."`. Tickets are stored in `log/YEAR/MONTH/DAY/SLUG.md` with YAML frontmatter and optional **iterations**. The script automatically creates three sections to be filled/updated during execution of the task: `# Previously`, `# Plan`, and `#Changes`.The purpose of the ticket is to understand the context, problem and decision making process. It is only about the process.
 - For every task you are working on, you MUST update the dev docs (`README.md` and `AGENTS.md`). Every key decision and mechanism ALWAYS needs to be documemented. Every feature, decision MUST be undocumented/uncommented in the code and MUST be documented in the dev docs (AGENTS.md and README.md). The documentation ALWAYS happens four times:
 
 1. Under `# 🛍️ Products` in README.md where it is described from user perspective [architects, designers, engineers, …] (framework-agnostic, no implementation references, etc)
@@ -33,6 +33,8 @@ Developer documentation MUST be centralized in the root `README.md` and `AGENTS.
 A `ticket` is a development artifact that tracks a task over multiple `iterations`.
 
 A `ticket` has a `status` of **open** or **finished**.
+
+A ticket MUST store a `prompt` which is the prompt used to create the ticket.
 
 A `ticket` stores an ordered list of `iterations` where each iteration records a `prompt`, `model`, `date`, optional `finished` timestamp, optional `commit`, and optional `files` lists (`updated`, `created`, `removed`).
 
@@ -269,6 +271,21 @@ Toolbar panel visibility defaults to `true` for all apps via `panelVisibility: {
 - Element border kind (hover color)
 - Window border kind (normal border color)
 - Window spacing: 1-unit gap between windows and 1-unit margin to canvas edge
+- Base canvas uses the base background surface; windows, panels, and temporary UI surfaces use their respective background levels
+- Exactly one window is active in a multi-window layout; the active window surface uses an active background tint
+- Table views use the active window surface background
+- Global Sketchpad shell is wrapped in base level so Navbar/Footer resolve base background
+- Panels are rendered under panel level so panel surfaces resolve panel background
+- Window chrome controls MUST be rendered as Action UI elements
+- Window frames use inset overlay strokes so all four edges remain visible with clipped layouts
+
+#### Windows
+
+- Sketchpad apps MUST render inside a multi-window workspace.
+- Each app MUST define a set of window kinds and a default window layout.
+- Window layouts MUST be persisted per app as JSON strings (`windowLayout`).
+- The active window MUST be tracked for focus-sensitive UI.
+- Window chrome MUST expose action controls for open-in-new-window, maximize/minimize, and close.
 
 # Monorepo
 
@@ -563,12 +580,13 @@ Example: `log/tickets/2025/11/24/VALIDATION-SYSTEM.md`
 
 #### Frontmatter Format
 
-Every ticket file MUST have YAML frontmatter with a slug and summary; iterations are optional:
+Every ticket file MUST have YAML frontmatter with a slug and prompt; summary is set when finishing a ticket; iterations are optional:
 
 ```yaml
 ---
 slug: SLUG # Upper kebab-case identifier (e.g., VALIDATION-SYSTEM)
-summary: SUMMARY # One-line description for commit messages
+prompt: "User prompt..." # Prompt used to create the ticket
+summary: SUMMARY # One-line description for commit messages (set on ticket finish)
 status: open # open | finished
 author: NAME <EMAIL> # From git config
 date:
@@ -629,7 +647,7 @@ lines: # Ticket-level totals from git diff against commit (set on ticket finish)
 **Create a new ticket:**
 
 ```bash
-npx tsx scripts/log.ts ticket create SLUG "Summary description"
+npx tsx scripts/log.ts ticket create SLUG --prompt="User prompt..."
 ```
 
 **Start a new iteration (requires files):**
@@ -648,7 +666,7 @@ npx tsx scripts/log.ts ticket iteration finish SLUG --file=updated.ts --file-cre
 **Finish a ticket (requires latest iteration finished):**
 
 ```bash
-npx tsx scripts/log.ts ticket finish SLUG
+npx tsx scripts/log.ts ticket finish SLUG --summary="Summary description"
 ```
 
 **List available models:**
@@ -693,33 +711,28 @@ npx tsx scripts/log.ts ticket delete YEAR MONTH DAY SLUG
 #### Programmatic Usage
 
 ```typescript
-import { createTicket, readTicket, startTicketIteration, finishTicketIteration, finishTicket, deleteTicket, listTickets, searchTickets, Model } from "./scripts/log";
+import { createTicket, readTicket, startIteration, finishIteration, finishTicket, deleteTicket, listTickets, searchTickets, Model } from "./scripts/log";
 
 // Create (no iterations)
 const createdTicket = createTicket({
   slug: "MY-TASK",
   summary: "Implement new feature",
+  prompt: "User prompt...",
   content: "# Task Details\n\nImplementation notes...", // Optional
-  date: new Date(), // Optional, defaults to now
-  author: "Name <email>", // Optional, defaults to git config
 });
 
 // Read
 const readBackTicket = readTicket(2025, 11, 24, "MY-TASK");
 
 // Start iteration (adds new iteration, requires files)
-startTicketIteration(2025, 11, 24, "MY-TASK", {
+startIteration(2025, 11, 24, "MY-TASK", {
   prompt: "Follow-up prompt...",
   model: Model.GPT_5_2_CODEX,
-  summary: "Updated summary", // Optional
   files: { updated: ["path/to/modified.ts"] },
 });
 
 // Finish iteration (computes git lines per file)
-finishTicketIteration(2025, 11, 24, "MY-TASK", {
-  updated: ["path/to/modified.ts"],
-  created: ["path/to/new.ts"],
-});
+finishIteration(2025, 11, 24, "MY-TASK", { files: { updated: ["path/to/modified.ts"], created: ["path/to/new.ts"] } });
 
 // List with filters
 const tickets = listTickets({ year: 2025, month: 11 });
@@ -1369,7 +1382,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ ├── Quality.tsx # quality app
 │ │ │ ├── Type.tsx # type app
 │ │ │ ├── Tutorials.tsx # consolidated tutorial system
-│ │ │ ├── elements.tsx # UI elements (Window kind, TransactionProvider, primitives)
+│ │ │ ├── elements.tsx # UI elements (Window kind, LevelProvider/useLevel, TransactionProvider, primitives)
 │ │ │ ├── locales
 │ │ │ │ ├── de.json
 │ │ │ │ └── en.json
@@ -1423,7 +1436,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ ├── components.json
 │ │ ├── constants.json
 │ │ ├── eslint.config.ts
-│ │ ├── globals.css # Tailwind utilities, sizing tokens, GoldenLayout theme overrides (window borders, 1-unit splitter gaps)
+│ │ ├── globals.css # Tailwind utilities, sizing tokens, GoldenLayout theme overrides (window surfaces use window background level, 1-unit splitter gaps, inset stack frames, Action-based window chrome controls)
 │ │ ├── i18n.ts
 │ │ ├── index.ts
 │ │ ├── package.json
@@ -1501,6 +1514,8 @@ Javascript code with shared core (@semio/js) that uses storybook and exports a h
 - NEVER use inline styling. Use tailwindcss (v4). v4 uses a `theme.css` (`@semio/js/theme.css`) for theming and not `{theme:{…}}` in `tailwindconfig`.
 - ALWAYS use colors defined in `@theme inline {…}` from `js/js/globals.css`. NEVER use direct colors such as light, gray, …, dark, primary, secondary, tertiary outside of `js/js/globals.css` and ALWAYS use semantic colors instead such as active, disabled, hover, …
 - Borders use semantic kinds via Tailwind color tokens: `border-element` (hover color) and `border-window` (normal border color).
+- GoldenLayout window chrome uses the window background token to match window content surfaces.
+- GoldenLayout stack frames use inset strokes so window borders remain continuous on all four sides.
 - ALWAYS add tooltips (normal and extensive) to all ui elements.
 - ALWAYS load icons via the semantic icon layer in `@semio/assets` and NEVER import icons directly from external libraries (lucide, heroicons, .). Only reexport placeholder assets from those libraries inside `@semio/assets` and consume them through its semantic exports.
 
@@ -2026,11 +2041,11 @@ In-app documentation viewer with MDX support.
 
 ###### Feedback App (Feedback.tsx)
 
-Bug report and feature idea submission form. Extends `AppStore` (no kit modifications).
+Bug report and feature idea submission form. State managed via XState triadic hooks.
 
 **Route:** `/feedback`
 
-**State (`FeedbackState`):**
+**State (`FeedbackAppState` in Sketchpad.tsx):**
 
 - `panelVisibility` - Panel toggle states
 - `formData` - Form data (kind, title, description, app, name, email)
@@ -2042,6 +2057,14 @@ Bug report and feature idea submission form. Extends `AppStore` (no kit modifica
 
 - `bug` - Bug report (requires app selection)
 - `idea` - Feature idea
+
+**Triadic Hooks:**
+
+- `useFeedbackFormData()` - `[formData, setFormData, canSet]`
+- `useFeedbackIsSubmitting()` - `[isSubmitting, setIsSubmitting, canSet]`
+- `useFeedbackIsSubmitted()` - `[isSubmitted, setIsSubmitted, canSet]`
+- `useFeedbackError()` - `[error, setError, canSet]`
+- `useFeedbackReset()` - `[reset, canReset]`
 
 **Events:**
 
@@ -3145,43 +3168,23 @@ Each UI element with an `id` prop automatically gets tooltip content from i18n:
 
 ### Windows
 
-Windows are the primary content areas within the canvas, supporting multiple types.
+Windows are the primary content areas within the canvas.
 
-#### Window Types
+#### Window Kind
 
-```typescript
-enum WindowType {
-  TABLE = "table", // Tabular data view
-  SCENE = "scene", // 3D scene view
-  DIAGRAM = "diagram", // 2D diagram view
-  CUSTOM = "custom", // Custom app-defined view
-}
-```
-
-#### Window Configuration
-
-Windows are configured per app via `AppWindowConfig`:
-
-```typescript
-interface AppWindowConfig {
-  type: WindowType;
-  component?: ComponentType<AppWindowProps>;
-  defaultVisible?: boolean;
-}
-```
+A window kind is an app-defined content surface identified by a stable id.
 
 #### Window Layout
 
-Window layouts are managed per app and stored in app state. Apps can define custom layouts or use defaults.
+Window layouts are persisted per app as a JSON string (`windowLayout`).
 
-#### Window Events
+#### Active Window
 
-Windows can emit events via `onWindowEvents` callback:
+The canvas tracks the active window id for focus-sensitive UI.
 
-- Window creation/destruction
-- Window focus changes
-- Window resize
-- Custom app events
+#### Window Chrome
+
+Window chrome includes action controls for open-in-new-window, maximize/minimize, and close.
 
 ### Validation
 

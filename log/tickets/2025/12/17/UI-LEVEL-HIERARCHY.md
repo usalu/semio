@@ -1,6 +1,10 @@
 ---
 slug: UI-LEVEL-HIERARCHY
 summary: Add window and overlay levels to UI hierarchy
+prompt: >-
+  Add window and overlay levels to UI hierarchy. The hierarchy is base, window,
+  panel, overlay, temporary. All ui elements need to work in all 5 levels with a
+  level context, provider and useLevel hook.
 status: open
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:

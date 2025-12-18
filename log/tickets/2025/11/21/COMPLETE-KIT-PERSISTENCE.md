@@ -1,11 +1,12 @@
 ---
 slug: COMPLETE-KIT-PERSISTENCE
 summary: Migration from 2025-11-21_COMPLETE-KIT-PERSISTENCE.md
+prompt: Migration from 2025-11-21_COMPLETE-KIT-PERSISTENCE.md
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.680Z"
-commit: "0000000000000000000000000000000000000000"
+  created: '2025-12-16T17:06:07.680Z'
+commit: '0000000000000000000000000000000000000000'
 iterations: []
 ---
 

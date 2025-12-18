@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // #region Header
 
 // App.tsx
@@ -54,8 +55,6 @@ import {
   UserIcon,
 } from "@semio/assets";
 import { useSelector } from "@xstate/react";
-import type { ConnectionLineComponentProps, Edge, EdgeProps, Node, NodeProps } from "@xyflow/react";
-import { Background, BaseEdge, getBezierPath, Handle, Position, ReactFlow, ReactFlowProvider, useInternalNode, useReactFlow } from "@xyflow/react";
 import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "d3-force";
 import { formatDistanceToNow } from "date-fns";
 import { de, enUS } from "date-fns/locale";
@@ -105,10 +104,18 @@ import {
   useTypeScope,
   Window,
 } from "./Sketchpad";
+import type { ConnectionLineComponentProps, Edge, EdgeProps, Node, NodeProps } from "./elements";
 import {
   Action,
+  Background,
+  BaseEdge,
+  getBezierPath,
+  Handle,
   Input,
   NotFound,
+  Position,
+  ReactFlow,
+  ReactFlowProvider,
   Scrollable,
   Select,
   SelectContent,
@@ -121,16 +128,15 @@ import {
   Textarea,
   Toggle,
   ToggleGroup,
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
   Transaction,
   TransactionProvider,
   TreeContent,
   TreeItem,
+  useInternalNode,
+  useReactFlow,
 } from "./elements";
 import type { Device, HookNoSetResult, HookResult, KitAppId, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
-import { AppConfig, AppPlugin, conditionalHookResult, createPanelDefinition, Expertise, Mode, PanelKind, registerAppPlugin, registerRuntimeAction, Theme } from "./shared";
+import { AppConfig, AppPlugin, conditionalHookResult, createPanelDefinition, Expertise, Mode, PanelKind, parseWindowLayout, registerAppPlugin, registerRuntimeAction, stringifyWindowLayout, Theme } from "./shared";
 
 // #endregion Imports
 
@@ -544,7 +550,16 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
   }
 
   get windowLayout(): any {
-    return this.yMap.get("windowLayout");
+    return parseWindowLayout(this.yMap.get("windowLayout"));
+  }
+
+  set windowLayout(layout: any) {
+    const value = stringifyWindowLayout(layout);
+    if (value) {
+      this.yMap.set("windowLayout", value);
+    } else {
+      this.yMap.delete("windowLayout");
+    }
   }
 
   kit(): KitDataSource {
@@ -639,8 +654,8 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
       if (diff.sortDirection !== undefined) {
         this.yMap.set("sortDirection", diff.sortDirection);
       }
-      if (diff.windowLayout !== undefined) {
-        this.yMap.set("windowLayout", diff.windowLayout);
+      if (Object.prototype.hasOwnProperty.call(diff, "windowLayout")) {
+        this.windowLayout = (diff as any).windowLayout;
       }
     });
   };
@@ -4529,11 +4544,10 @@ const AppContent: FC = () => {
                 </div>
               ),
               accessor: (row: TableRow) => (
-                <div className="flex items-center gap-single justify-between" style={{ paddingLeft: `calc(${row.level} * var(--size-small))` }}>
-                  <div className="flex items-center gap-single flex-1 min-w-0">
+                <div className="flex items-center gap-single w-full">
+                  <div className="flex items-center gap-single flex-1 min-w-0" style={{ paddingLeft: `calc(${row.level} * var(--size-small))` }}>
                     {row.hasChildren ? (
                       <Action
-                        level="base"
                         onClick={(e) => {
                           e.stopPropagation();
                           toggleRow(row.id);
@@ -4547,7 +4561,7 @@ const AppContent: FC = () => {
                     <span className="text-left min-w-0 truncate">{row.artifact}</span>
                   </div>
                   {row.concepts && row.concepts.length > 0 && (
-                    <Scrollable orientation="horizontal" className="flex-1 min-w-0 max-w-[200px]">
+                    <Scrollable orientation="horizontal" className="shrink-0 min-w-0 max-w-[200px]">
                       <div className="flex items-center gap-single px-single h-medium w-fit">
                         {row.concepts.map((concept) => (
                           <Action key={concept} onClick={() => toggleConcept(concept)} id={`semio.sketchpad.app.kit.row.concept.${concept}`} text={concept} className={selectedConcepts.includes(concept) ? "bg-active-base" : ""} />
@@ -4555,7 +4569,7 @@ const AppContent: FC = () => {
                       </div>
                     </Scrollable>
                   )}
-                  <div className="flex items-center gap-single shrink-0">
+                  <div className="flex items-center gap-single shrink-0 ml-auto">
                     {(row.kind === "designs" || row.kind === "types") && (
                       <Action
                         onClick={(e) => {
@@ -4563,7 +4577,6 @@ const AppContent: FC = () => {
                           handleCreateChildForRow(row);
                         }}
                         id="semio.sketchpad.app.kit.kitApp.createChild"
-                        level="base"
                         icon={<AddIcon />}
                       />
                     )}
@@ -4696,11 +4709,10 @@ const AppContent: FC = () => {
                 </div>
               ),
               accessor: (row: TableRow) => (
-                <div className="flex items-center gap-single justify-between" style={{ paddingLeft: `calc(${row.level} * var(--size-small))` }}>
-                  <div className="flex items-center gap-single flex-1 min-w-0">
+                <div className="flex items-center gap-single w-full">
+                  <div className="flex items-center gap-single flex-1 min-w-0" style={{ paddingLeft: `calc(${row.level} * var(--size-small))` }}>
                     {row.hasChildren ? (
                       <Action
-                        level="base"
                         onClick={(e) => {
                           e.stopPropagation();
                           toggleRow(row.id);
@@ -4714,7 +4726,7 @@ const AppContent: FC = () => {
                     <span className="text-left min-w-0 truncate">{row.artifact}</span>
                   </div>
                   {row.concepts && row.concepts.length > 0 && (
-                    <Scrollable orientation="horizontal" className="flex-1 min-w-0 max-w-[200px]">
+                    <Scrollable orientation="horizontal" className="shrink-0 min-w-0 max-w-[200px]">
                       <div className="flex items-center gap-single px-single h-medium w-fit">
                         {row.concepts.map((concept) => (
                           <Action key={concept} onClick={() => toggleConcept(concept)} id={`semio.sketchpad.app.kit.row.concept.${concept}`} text={concept} className={selectedConcepts.includes(concept) ? "bg-active-base" : ""} />
@@ -4722,7 +4734,7 @@ const AppContent: FC = () => {
                       </div>
                     </Scrollable>
                   )}
-                  <div className="flex items-center gap-single shrink-0">
+                  <div className="flex items-center gap-single shrink-0 ml-auto">
                     {(row.kind === "designs" || row.kind === "types") && (
                       <Action
                         onClick={(e) => {
@@ -4730,7 +4742,6 @@ const AppContent: FC = () => {
                           handleCreateChildForRow(row);
                         }}
                         id="semio.sketchpad.app.kit.kitApp.createChild"
-                        level="base"
                         icon={<AddIcon />}
                       />
                     )}
@@ -4986,11 +4997,6 @@ interface KitDiagramEdge {
 
 const KitArtifactNode: FC<NodeProps<Node<KitDiagramNode>>> = ({ data, selected }) => {
   const [selection] = useKitAppSelection();
-  const [setHover] = useKitAppSetHover();
-  const [clearHover] = useKitAppClearHover();
-  const kitScope = useKitScope();
-  const kitGuid = kitScope?.guid ?? "";
-  const actor = useSketchpadActor();
   const hover = useKitApp((state) => state?.hover) as KitAppHover | undefined;
 
   const isHovered = useMemo(() => {
@@ -5026,75 +5032,17 @@ const KitArtifactNode: FC<NodeProps<Node<KitDiagramNode>>> = ({ data, selected }
     }
   }, [selection, data.kind, data.guid]);
 
-  const handleClick = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      const eventTypeMap: Record<DiagramNodeKind, string> = {
-        type: "KIT.SELECT_TYPE",
-        design: "KIT.SELECT_DESIGN",
-        quality: "KIT.SELECT_QUALITY",
-        interface: "KIT.SELECT_INTERFACE",
-        tag: "KIT.SELECT_TAG",
-        concept: "KIT.SELECT_CONCEPT",
-        file: "KIT.SELECT_FILE",
-        folder: "KIT.SELECT_FOLDER",
-        author: "KIT.SELECT_AUTHOR",
-      };
-      const guidFieldMap: Record<DiagramNodeKind, string> = {
-        type: "typeGuid",
-        design: "designGuid",
-        quality: "qualityGuid",
-        interface: "interfaceGuid",
-        tag: "tagGuid",
-        concept: "conceptGuid",
-        file: "fileGuid",
-        folder: "folderGuid",
-        author: "authorGuid",
-      };
-      const eventType = eventTypeMap[data.kind];
-      const guidField = guidFieldMap[data.kind];
-      if (eventType && guidField) {
-        actor.send({
-          type: eventType,
-          kitGuid,
-          [guidField]: data.guid,
-        } as any);
-      }
-    },
-    [actor, kitGuid, data.kind, data.guid],
-  );
-
-  const handleMouseEnter = useCallback(() => {
-    if (setHover) {
-      if (data.kind === "type") setHover({ type: data.guid });
-      else if (data.kind === "design") setHover({ design: data.guid });
-    }
-  }, [setHover, data.kind, data.guid]);
-
-  const handleMouseLeave = useCallback(() => {
-    if (clearHover) clearHover();
-  }, [clearHover]);
-
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <div
-          className={`flex items-center justify-center cursor-grab active:cursor-grabbing transition-colors ${isSelected ? "ring-2 ring-active-base" : isHovered ? "ring-2 ring-hover-base" : ""}`}
-          onClick={handleClick}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
-        >
-          <Handle type="target" position={Position.Top} className="!bg-transparent !border-none !w-0 !h-0 !min-w-0 !min-h-0" />
-          <Handle type="source" position={Position.Bottom} className="!bg-transparent !border-none !w-0 !h-0 !min-w-0 !min-h-0" />
-          <Handle type="target" position={Position.Left} className="!bg-transparent !border-none !w-0 !h-0 !min-w-0 !min-h-0" />
-          <Handle type="source" position={Position.Right} className="!bg-transparent !border-none !w-0 !h-0 !min-w-0 !min-h-0" />
-          <TableAvatar name={data.name} icon={data.icon} className={isSelected ? "bg-active-base" : isHovered ? "bg-hover-base" : ""} />
-        </div>
-      </TooltipTrigger>
-      <TooltipContent>
-        <span className="text-xs">{data.name || data.guid.substring(0, 8)}</span>
-      </TooltipContent>
-    </Tooltip>
+    <div
+      className={`flex items-center justify-center cursor-grab active:cursor-grabbing transition-colors w-[220px] h-[140px] pointer-events-none ${isSelected ? "ring-2 ring-active-base" : isHovered ? "ring-2 ring-hover-base" : ""}`}
+      title={data.name || data.guid.substring(0, 8)}
+    >
+      <Handle type="target" position={Position.Top} className="!bg-transparent !border-none !w-0 !h-0 !min-w-0 !min-h-0" />
+      <Handle type="source" position={Position.Bottom} className="!bg-transparent !border-none !w-0 !h-0 !min-w-0 !min-h-0" />
+      <Handle type="target" position={Position.Left} className="!bg-transparent !border-none !w-0 !h-0 !min-w-0 !min-h-0" />
+      <Handle type="source" position={Position.Right} className="!bg-transparent !border-none !w-0 !h-0 !min-w-0 !min-h-0" />
+      <TableAvatar name={data.name} icon={data.icon} className={isSelected ? "bg-active-base" : isHovered ? "bg-hover-base" : ""} />
+    </div>
   );
 };
 
@@ -5338,6 +5286,11 @@ const KitDiagramInner: FC = () => {
   const kit = useKit() as Kit | undefined;
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const kitCommands = useKitAppCommands();
+  const [setHover] = useKitAppSetHover();
+  const [clearHover] = useKitAppClearHover();
+  const kitScope = useKitScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const actor = useSketchpadActor();
   const [diagramForce] = useKitAppDiagramForce();
   const simulationRef = useRef<Simulation<ForceNode, ForceLink> | null>(null);
   const [nodes, setNodes] = useState<Node<KitDiagramNode>[]>([]);
@@ -5541,26 +5494,30 @@ const KitDiagramInner: FC = () => {
       )
       .force("collide", forceCollide().radius(diagramForce.collideRadius))
       .force("center", forceCenter(0, 0).strength(diagramForce.centerStrength))
-      .alphaDecay(0.05)
-      .on("tick", () => {
-        setNodes(
-          nodesCopy.map((n) => ({
-            id: n.id,
-            type: "artifact",
-            position: { x: n.x ?? 0, y: n.y ?? 0 },
-            data: n.data,
-          })),
-        );
-      })
-      .on("end", () => {
-        setIsSimulating(false);
-        if (!hasFittedRef.current) {
-          hasFittedRef.current = true;
-          setTimeout(() => fitView({ padding: 0.3, duration: 200 }), 50);
-        }
-      });
-    simulationRef.current = simulation;
+      .stop();
+
     setIsSimulating(true);
+    for (let i = 0; i < 120; i++) {
+      simulation.tick();
+    }
+
+    setNodes(
+      nodesCopy.map((n) => ({
+        id: n.id,
+        type: "artifact",
+        position: { x: n.x ?? 0, y: n.y ?? 0 },
+        data: n.data,
+        style: { width: 220, height: 140 },
+      })),
+    );
+
+    setIsSimulating(false);
+    simulationRef.current = null;
+
+    if (!hasFittedRef.current) {
+      hasFittedRef.current = true;
+      setTimeout(() => fitView({ padding: 0.3, duration: 200, minZoom: 1, maxZoom: 1 }), 50);
+    }
     return () => {
       simulation.stop();
       simulationRef.current = null;
@@ -5569,46 +5526,77 @@ const KitDiagramInner: FC = () => {
 
   const handleNodeDragStart = useCallback((_: React.MouseEvent, node: Node<KitDiagramNode>) => {
     draggingNodeRef.current = node.id;
-    const sim = simulationRef.current;
-    if (sim) {
-      const forceNode = sim.nodes().find((n) => n.id === node.id);
-      if (forceNode) {
-        forceNode.fx = forceNode.x;
-        forceNode.fy = forceNode.y;
-      }
-      // Restart simulation with low alpha to allow smooth dragging
-      sim.alphaTarget(0.3).restart();
-    }
   }, []);
 
   const handleNodeDrag = useCallback((_: React.MouseEvent, node: Node<KitDiagramNode>) => {
-    const sim = simulationRef.current;
-    if (sim && draggingNodeRef.current === node.id) {
-      const forceNode = sim.nodes().find((n) => n.id === node.id);
-      if (forceNode) {
-        forceNode.fx = node.position.x;
-        forceNode.fy = node.position.y;
-      }
-    }
+    if (draggingNodeRef.current !== node.id) return;
+    setNodes((prev) => prev.map((n) => (n.id === node.id ? { ...n, position: node.position } : n)));
   }, []);
 
   const handleNodeDragStop = useCallback((_: React.MouseEvent, node: Node<KitDiagramNode>) => {
     draggingNodeRef.current = null;
-    const sim = simulationRef.current;
-    if (sim) {
-      const forceNode = sim.nodes().find((n) => n.id === node.id);
-      if (forceNode) {
-        forceNode.fx = null;
-        forceNode.fy = null;
-      }
-      // Let simulation cool down naturally
-      sim.alphaTarget(0);
-    }
+    setNodes((prev) => prev.map((n) => (n.id === node.id ? { ...n, position: node.position } : n)));
   }, []);
 
   const handlePaneClick = useCallback(() => {
     kitCommands.deselectAll?.();
   }, [kitCommands]);
+
+  const handleNodeClick = useCallback(
+    (e: React.MouseEvent, node: Node<KitDiagramNode>) => {
+      e.stopPropagation();
+      const kind = node.data?.kind;
+      const guid = node.data?.guid;
+      if (!kind || !guid) return;
+      const eventTypeMap: Record<DiagramNodeKind, string> = {
+        type: "KIT.SELECT_TYPE",
+        design: "KIT.SELECT_DESIGN",
+        quality: "KIT.SELECT_QUALITY",
+        interface: "KIT.SELECT_INTERFACE",
+        tag: "KIT.SELECT_TAG",
+        concept: "KIT.SELECT_CONCEPT",
+        file: "KIT.SELECT_FILE",
+        folder: "KIT.SELECT_FOLDER",
+        author: "KIT.SELECT_AUTHOR",
+      };
+      const guidFieldMap: Record<DiagramNodeKind, string> = {
+        type: "typeGuid",
+        design: "designGuid",
+        quality: "qualityGuid",
+        interface: "interfaceGuid",
+        tag: "tagGuid",
+        concept: "conceptGuid",
+        file: "fileGuid",
+        folder: "folderGuid",
+        author: "authorGuid",
+      };
+      const eventType = eventTypeMap[kind];
+      const guidField = guidFieldMap[kind];
+      if (!eventType || !guidField) return;
+      actor.send({
+        type: eventType,
+        kitGuid,
+        [guidField]: guid,
+      } as any);
+    },
+    [actor, kitGuid],
+  );
+
+  const handleNodeMouseEnter = useCallback(
+    (_: any, node: Node<KitDiagramNode>) => {
+      const kind = node.data?.kind;
+      const guid = node.data?.guid;
+      if (!kind || !guid) return;
+      if (!setHover) return;
+      if (kind === "type") setHover({ type: guid });
+      else if (kind === "design") setHover({ design: guid });
+    },
+    [setHover],
+  );
+
+  const handleNodeMouseLeave = useCallback(() => {
+    if (clearHover) clearHover();
+  }, [clearHover]);
 
   if (!kit) return null;
 
@@ -5630,7 +5618,15 @@ const KitDiagramInner: FC = () => {
         minZoom={0.1}
         maxZoom={4}
         defaultViewport={{ x: 0, y: 0, zoom: 1 }}
+        panOnDrag={false}
+        panOnScroll={false}
+        zoomOnScroll={false}
+        zoomOnPinch={false}
+        zoomOnDoubleClick={false}
         onPaneClick={handlePaneClick}
+        onNodeClick={handleNodeClick}
+        onNodeMouseEnter={handleNodeMouseEnter}
+        onNodeMouseLeave={handleNodeMouseLeave}
         onNodeDragStart={handleNodeDragStart}
         onNodeDrag={handleNodeDrag}
         onNodeDragStop={handleNodeDragStop}
@@ -5670,20 +5666,21 @@ const MultiWindowApp: FC = () => {
   const appType = useAppType();
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
+  const [activeWindow, setActiveWindow] = useState<string>(KitAppWindowKind.Table);
 
   // Add toolbar section with artifact kind filter toggles
   useEffect(() => {
     if (appType !== "kit") return;
 
     addSection("toolbar", {
-      id: "semio.sketchpad.app.kit.toolbar.filters",
+      id: "semio.sketchpad.app.kit.kitApp.filters",
       specificity: 20,
       order: 0,
       content: <KitToolbarFilters />,
     });
 
     return () => {
-      removeSection("toolbar", "semio.sketchpad.app.kit.toolbar.filters");
+      removeSection("toolbar", "semio.sketchpad.app.kit.kitApp.filters");
     };
   }, [appType, addSection, removeSection]);
 
@@ -5753,6 +5750,13 @@ const MultiWindowApp: FC = () => {
     }),
     [defaultLayout],
   );
+
+  useEffect(() => {
+    const isValid = windowConfig.windowKinds.some((k) => k.id === activeWindow);
+    if (!isValid) {
+      setActiveWindow(KitAppWindowKind.Table);
+    }
+  }, [activeWindow, windowConfig.windowKinds]);
 
   const handleLayoutChange = useCallback(
     (config: any) => {

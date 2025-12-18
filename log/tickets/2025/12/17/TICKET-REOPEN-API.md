@@ -1,6 +1,10 @@
 ---
 slug: TICKET-REOPEN-API
 summary: Add reopenTicket function to ticket API
+prompt: >-
+  Extend ticket api to be able to reopen a ticket. This should remove the total
+  files and lines from the ticket (not from the individual iterations) and set
+  the status to open.
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:

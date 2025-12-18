@@ -1,11 +1,12 @@
 ---
 slug: BREADCRUMB-SHIFT-ISSUE
 summary: Migration from 2025-11-18_BREADCRUMB-SHIFT-ISSUE.md
+prompt: Migration from 2025-11-18_BREADCRUMB-SHIFT-ISSUE.md
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.673Z"
-commit: "0000000000000000000000000000000000000000"
+  created: '2025-12-16T17:06:07.673Z'
+commit: '0000000000000000000000000000000000000000'
 iterations: []
 ---
 

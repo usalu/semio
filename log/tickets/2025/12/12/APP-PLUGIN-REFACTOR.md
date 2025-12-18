@@ -3,11 +3,14 @@ slug: APP-PLUGIN-REFACTOR
 summary: >-
   Refactor sketchpad apps to use open/closed plugin architecture with triadic
   hooks
+prompt: >-
+  Refactor sketchpad apps to use open/closed plugin architecture with triadic
+  hooks
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.904Z"
-commit: "0000000000000000000000000000000000000000"
+  created: '2025-12-16T17:06:07.904Z'
+commit: '0000000000000000000000000000000000000000'
 iterations: []
 ---
 

@@ -1,11 +1,12 @@
 ---
 slug: PANEL-SECTION-HIERARCHY
 summary: Migration from 2025-11-22_PANEL-SECTION-HIERARCHY.md
+prompt: Migration from 2025-11-22_PANEL-SECTION-HIERARCHY.md
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.702Z"
-commit: "0000000000000000000000000000000000000000"
+  created: '2025-12-16T17:06:07.702Z'
+commit: '0000000000000000000000000000000000000000'
 iterations: []
 ---
 

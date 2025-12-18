@@ -1,11 +1,12 @@
 ---
 slug: AGENTS-REPORTS-UPDATE
 summary: Update agents reports and docs
+prompt: Update agents reports and docs
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.709Z"
-commit: "0000000000000000000000000000000000000000"
+  created: '2025-12-16T17:06:07.709Z'
+commit: '0000000000000000000000000000000000000000'
 iterations: []
 ---
 

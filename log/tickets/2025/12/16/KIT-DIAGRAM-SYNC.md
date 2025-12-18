@@ -1,10 +1,11 @@
 ---
 slug: KIT-DIAGRAM-SYNC
-summary: "Kit diagram: sync icons, dragging, filtering, selection with table"
+summary: 'Kit diagram: sync icons, dragging, filtering, selection with table'
+prompt: 'Kit diagram: sync icons, dragging, filtering, selection with table'
 status: open
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T16:28:40.318Z"
+  created: '2025-12-16T16:28:40.318Z'
 commit: c44e5e38193be007ca56cc649aa2f58238c1ec40
 iterations: []
 ---

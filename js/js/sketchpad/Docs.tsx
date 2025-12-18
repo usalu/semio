@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // #region Header
 
 // Docs.tsx
@@ -23,14 +24,13 @@
 
 import { MDXProvider as BaseMDXProvider } from "@mdx-js/react";
 import { FC, ReactNode, Suspense, createContext, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, useParams } from "react-router";
 import * as Y from "yjs";
 import { useLabel } from "../i18n";
 import type { SketchpadStore } from "./Sketchpad";
-import { AppStore, Canvas, Window, registerDocsAppStoreFactory, useAddFooterItem, useAddPanelSection, useAppType, useFocus, useFocusSafe, useRemoveFooterItem, useRemovePanelSection } from "./Sketchpad";
+import { AppStore, Canvas, LayoutCanvas, createDefaultLayout, registerDocsAppStoreFactory, useAddFooterItem, useAddPanelSection, useAppType, useFocus, useRemoveFooterItem, useRemovePanelSection, useSettings, useSketchpadCommands } from "./Sketchpad";
 import { Aside, Tabs as BaseTabs, FileTreeNode, Page, PageFrontmatter, PageNavigation, TabsContent, TabsList, TabsTrigger, TreeItem, TreeStateProvider } from "./elements";
-import { PanelKind, createPanelDefinition, registerAppPlugin, type AppConfig, type AppEdit, type AppPlugin, type PanelVisibility } from "./shared";
+import { PanelKind, createPanelDefinition, parseWindowLayout, registerAppPlugin, stringifyWindowLayout, type AppConfig, type AppEdit, type AppPlugin, type AppWindowConfig, type PanelVisibility } from "./shared";
 
 // #endregion Imports
 
@@ -551,12 +551,12 @@ class DocsRegistry {
     const root: TreeNode = { children: new Map(), name: "root" };
     for (const page of sectionPages) {
       const pathParts = page.path.replace("docs/", "").replace(`${sectionId}/`, "").split("/");
+      let current = root;
 
       // Check if the last part is "index" - if so, assign page to parent folder
       const isIndexFile = pathParts[pathParts.length - 1] === "index";
       const partsToTraverse = isIndexFile ? pathParts.slice(0, -1) : pathParts;
 
-      let current = root;
       for (let i = 0; i < partsToTraverse.length; i++) {
         const part = partsToTraverse[i];
         if (!current.children.has(part)) {
@@ -953,23 +953,23 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
 
     pages.forEach((page) => {
       const pageParts = page.path.replace(`${section}/`, "").split("/");
-      let currentNode = root;
+      let current = root;
 
       pageParts.forEach((part, index) => {
-        if (!currentNode.children.has(part)) {
-          currentNode.children.set(part, {
+        if (!current.children.has(part)) {
+          current.children.set(part, {
             name: part,
             children: new Map(),
           });
         }
-        currentNode = currentNode.children.get(part)!;
+        current = current.children.get(part)!;
 
-        // If this is the last part and it's "index", assign to parent
+        // If this is the last part and it's "index", assign page to parent folder
         if (index === pageParts.length - 1 && part === "index") {
           const parent = pageParts.length === 1 ? root : pageParts.slice(0, -1).reduce((node, p) => node.children.get(p)!, root);
           parent.page = page;
         } else if (index === pageParts.length - 1) {
-          currentNode.page = page;
+          current.page = page;
         }
       });
     });
@@ -1136,287 +1136,6 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
 
 // #endregion Windows
 
-// #region Panels
-
-// #region Left
-
-// #region Workbench
-
-interface PageTreeNode {
-  page?: DocsPage;
-  children: Map<string, PageTreeNode>;
-  name: string;
-}
-
-function buildTree(pages: DocsPage[], sectionId: string): PageTreeNode {
-  const root: PageTreeNode = { children: new Map(), name: "root" };
-  for (const page of pages) {
-    const pathParts = page.path.replace("docs/", "").replace(`${sectionId}/`, "").split("/");
-    let current = root;
-
-    // Check if the last part is "index" - if so, assign page to parent folder
-    const isIndexFile = pathParts[pathParts.length - 1] === "index";
-    const partsToTraverse = isIndexFile ? pathParts.slice(0, -1) : pathParts;
-
-    for (let i = 0; i < partsToTraverse.length; i++) {
-      const part = partsToTraverse[i];
-      if (!current.children.has(part)) {
-        current.children.set(part, { children: new Map(), name: part });
-      }
-      current = current.children.get(part)!;
-    }
-
-    // Assign the page to the current node (either the file node or the folder node for index files)
-    current.page = page;
-  }
-  return root;
-}
-
-function renderTreeNode(node: PageTreeNode, navigate: (path: string) => void, selectPage: (section: string, page: string) => void, section: string, currentPath?: string): React.ReactElement[] {
-  const items: React.ReactElement[] = [];
-
-  // Process each child node
-  Array.from(node.children.entries()).forEach(([name, childNode]) => {
-    const hasChildren = childNode.children.size > 0;
-    const hasPage = !!childNode.page;
-
-    if (hasChildren) {
-      // This is a folder (with or without an index page)
-      const folderLabel =
-        childNode.page?.title ||
-        name
-          .split("-")
-          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-          .join(" ");
-
-      const isCurrentPage = !!(childNode.page && currentPath && childNode.page.path === `docs/${currentPath}`);
-      const folderIcon = childNode.page?.icon;
-
-      items.push(
-        <TreeItem
-          key={childNode.page?.path || name}
-          label={folderLabel}
-          icon={folderIcon ? <span className="text-sm">{folderIcon}</span> : undefined}
-          defaultOpen={false}
-          isHighlighted={isCurrentPage}
-          onClick={
-            childNode.page
-              ? () => {
-                  selectPage(section, childNode.page!.path);
-                  navigate(`/${childNode.page!.path}`);
-                }
-              : undefined
-          }
-        >
-          {renderTreeNode(childNode, navigate, selectPage, section, currentPath)}
-        </TreeItem>,
-      );
-    } else if (hasPage && childNode.page) {
-      // This is a leaf page (no children)
-      const isCurrentPage = !!(currentPath && childNode.page.path === `docs/${currentPath}`);
-      const pageIcon = childNode.page.icon;
-
-      items.push(
-        <TreeItem
-          key={childNode.page.path}
-          label={childNode.page.title}
-          icon={pageIcon ? <span className="text-sm">{pageIcon}</span> : undefined}
-          isHighlighted={isCurrentPage}
-          onClick={() => {
-            selectPage(section, childNode.page!.path);
-            navigate(`/${childNode.page!.path}`);
-          }}
-        />,
-      );
-    }
-  });
-
-  return items;
-}
-
-const Workbench: FC = () => {
-  const navigate = useNavigate();
-  const params = useParams();
-  const pathParts = params["*"]?.split("/").filter(Boolean) || [];
-  const currentPath = pathParts.join("/") || "index";
-  const sections = docsRegistry.getAllSections();
-
-  return (
-    <>
-      {sections.map((section) => {
-        const pages = docsRegistry.getPagesBySection(section.id);
-        const tree = buildTree(pages, section.id);
-        const sectionPath = `docs/${section.id}/index`;
-        const sectionPage = docsRegistry.getPage(sectionPath);
-        const isCurrentPage = !!(currentPath && sectionPath === `docs/${currentPath}`);
-        const sectionIcon = section.icon || "📁";
-
-        return (
-          <TreeItem
-            key={section.id}
-            label={section.label}
-            icon={<span className="text-sm">{sectionIcon}</span>}
-            isHighlighted={isCurrentPage}
-            onClick={
-              sectionPage
-                ? () => {
-                    navigate(`/${sectionPath}`);
-                  }
-                : undefined
-            }
-          >
-            {renderTreeNode(tree, navigate, () => {}, section.id, currentPath)}
-          </TreeItem>
-        );
-      })}
-    </>
-  );
-};
-
-// #endregion Workbench
-
-// #region Overview
-
-interface OverviewProps {}
-
-const Overview: FC<OverviewProps> = () => {
-  const { t } = useTranslation();
-  const { headings: contextHeadings } = useHeadings();
-  const focusContext = useFocusSafe();
-  const flatHeadings = contextHeadings;
-
-  if (flatHeadings.length === 0) {
-    return (
-      <div className="p-single">
-        <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.docs.noHeadings")}</p>
-      </div>
-    );
-  }
-
-  const hierarchicalHeadings = buildHeadingHierarchy(flatHeadings);
-
-  return (
-    <div className="p-single">
-      <HeadingTree headings={hierarchicalHeadings} onNavigate={undefined} triggerFocus={focusContext?.triggerFocusItem} />
-    </div>
-  );
-};
-
-// #endregion Overview
-
-// #endregion Left
-
-// #region Right
-
-// #region Details
-
-const buildHeadingHierarchy = (flatHeadings: HeadingNode[]): HeadingNode[] => {
-  const root: HeadingNode[] = [];
-  const stack: HeadingNode[] = [];
-
-  flatHeadings.forEach((heading) => {
-    const node: HeadingNode = { ...heading, children: [] };
-
-    // Find the correct parent by going up the stack
-    while (stack.length > 0 && stack[stack.length - 1].level >= node.level) {
-      stack.pop();
-    }
-
-    if (stack.length === 0) {
-      // Top-level heading
-      root.push(node);
-    } else {
-      // Add as child to the last item in stack
-      const parent = stack[stack.length - 1];
-      if (!parent.children) parent.children = [];
-      parent.children.push(node);
-    }
-
-    stack.push(node);
-  });
-
-  return root;
-};
-
-const HeadingTree: FC<{ headings: HeadingNode[]; onNavigate?: (id: string) => void; triggerFocus?: (id: string) => void }> = ({ headings, onNavigate, triggerFocus }) => {
-  return (
-    <>
-      {headings.map((heading) => (
-        <TreeItem
-          key={heading.id}
-          label={heading.text}
-          defaultOpen={heading.children && heading.children.length > 0}
-          onClick={() => {
-            if (onNavigate) {
-              onNavigate(heading.id);
-            } else if (triggerFocus) {
-              triggerFocus(heading.id);
-            } else {
-              const element = document.getElementById(heading.id);
-              element?.scrollIntoView({ behavior: "smooth" });
-            }
-          }}
-        >
-          {heading.children && heading.children.length > 0 && <HeadingTree headings={heading.children} onNavigate={onNavigate} triggerFocus={triggerFocus} />}
-        </TreeItem>
-      ))}
-    </>
-  );
-};
-
-const Details: FC = () => {
-  const { t } = useTranslation();
-  const { headings: contextHeadings } = useHeadings();
-  const focusContext = useFocusSafe();
-  const flatHeadings = contextHeadings;
-
-  if (flatHeadings.length === 0) {
-    return (
-      <div className="p-single">
-        <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.docs.noHeadings")}</p>
-      </div>
-    );
-  }
-
-  // Build hierarchical structure from flat list
-  const hierarchicalHeadings = buildHeadingHierarchy(flatHeadings);
-
-  return (
-    <div className="p-single">
-      <HeadingTree headings={hierarchicalHeadings} onNavigate={undefined} triggerFocus={focusContext?.triggerFocusItem} />
-    </div>
-  );
-};
-
-// #endregion Details
-
-// #region Chat
-
-// #endregion Chat
-
-// #region Settings
-
-interface SettingsProps {}
-
-const Settings: FC<SettingsProps> = () => {
-  return (
-    <div className="p-4">
-      <h3 className="text-sm font-semibold mb-2">Documentation Settings</h3>
-      <p className="text-xs text-muted-foreground">Settings for documentation display and preferences.</p>
-    </div>
-  );
-};
-
-// #endregion Settings
-
-// #endregion Right
-
-// #endregion Panels
-
-// #region Tools
-
-// #endregion Tools
-
 // #endregion Canvas
 
 // #region Footer
@@ -1441,19 +1160,89 @@ export const DocsAppFooter: FC = () => {
 
 // #endregion Footer
 
+const Workbench: FC = () => {
+  const navigate = useNavigate();
+  const sections = docsRegistry.getAllSections();
+  return (
+    <TreeStateProvider>
+      <div className="flex flex-col gap-single">
+        {sections.map((section) => (
+          <TreeItem key={section.id} label={section.label} icon={section.icon ? <span className="text-sm">{section.icon}</span> : undefined} onClick={() => navigate(`/docs/${section.id}`)} />
+        ))}
+      </div>
+    </TreeStateProvider>
+  );
+};
+
+const Overview: FC = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const pathParts = location.pathname.replace(/^\//, "").split("/").filter(Boolean);
+  const section = pathParts[1] || "index";
+  const pages = section === "index" ? docsRegistry.getAllPages() : docsRegistry.getPagesBySection(section);
+  return (
+    <TreeStateProvider>
+      <div className="flex flex-col gap-single">
+        {pages.map((page) => (
+          <TreeItem key={page.path} label={page.title} icon={page.icon ? <span className="text-sm">{page.icon}</span> : undefined} onClick={() => navigate(`/${page.path}`)} />
+        ))}
+      </div>
+    </TreeStateProvider>
+  );
+};
+
+const Details: FC = () => {
+  const { headings } = useHeadings();
+  const handleClick = useCallback((id: string) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
+  return (
+    <div className="flex flex-col gap-single">
+      {headings.map((h) => (
+        <button key={h.id} className="text-left text-sm px-single py-tiny hover:bg-hover-panel" onClick={() => handleClick(h.id)} style={{ paddingLeft: `${Math.max(0, (h.level - 1) * 12)}px` }}>
+          {h.text}
+        </button>
+      ))}
+    </div>
+  );
+};
+
+const Settings: FC = () => {
+  return <div className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.panel.settings.placeholder")}</div>;
+};
+
 // #region App
 
+export enum DocsAppWindowKind {
+  Page = "page",
+}
+
 const App: FC = () => {
-  const params = useParams();
-  const pathParts = params["*"]?.split("/").filter(Boolean) || [];
-  const fullPath = pathParts.join("/") || "index";
+  const { "*": routePath } = useParams();
+  const location = useLocation();
   const appType = useAppType();
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
-
+  useFocus();
+  const settings = useSettings();
+  const sketchpadCommands = useSketchpadCommands();
   const [mdxModule, setMdxModule] = useState<MDXModule | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const docsPath = useMemo(() => {
+    const raw = (routePath ?? "").trim();
+    if (raw) return raw;
+    const fromLocation = location.pathname.replace(/^\//, "").replace(/^docs\/?/, "");
+    return fromLocation.trim() || "index";
+  }, [routePath, location.pathname]);
+
+  const defaultLayout = useMemo(() => createDefaultLayout([DocsAppWindowKind.Page], "row", [100], ["page"]), []);
+  const storedWindowLayout = useMemo(() => parseWindowLayout(settings?.apps?.docs?.windowLayout), [settings]);
+  const windowLayout = useMemo(() => storedWindowLayout || defaultLayout, [storedWindowLayout, defaultLayout]);
+  const lastLayoutRef = useRef<any>(null);
 
   useEffect(() => {
     if (appType !== "docs") return;
@@ -1509,11 +1298,11 @@ const App: FC = () => {
       setLoading(true);
       setError(null);
       try {
-        const module = await loadMDXFile(fullPath);
+        const module = await loadMDXFile(docsPath);
         if (module) {
           setMdxModule(module);
         } else {
-          setError(`Failed to load ${fullPath}`);
+          setError(`Failed to load ${docsPath}`);
         }
       } catch (err) {
         setError((err as Error).message);
@@ -1523,38 +1312,50 @@ const App: FC = () => {
     };
 
     loadContent();
-  }, [fullPath, appType]);
+  }, [docsPath, appType]);
 
-  if (loading) {
-    return (
-      <HeadingsProvider>
-        <Canvas>
-          <Window id="page" className="h-full w-full">
-            <PageCanvas frontmatter={{ title: "Loading...", description: "" }} />
-          </Window>
-        </Canvas>
-      </HeadingsProvider>
-    );
-  }
+  const windowConfig: AppWindowConfig = useMemo(
+    () => ({
+      windowKinds: [
+        {
+          id: DocsAppWindowKind.Page,
+          label: "page",
+          component: () => {
+            if (loading) return <PageCanvas frontmatter={{ title: "Loading...", description: "" }} />;
+            if (error || !mdxModule) return <PageCanvas frontmatter={{ title: "Error", description: error || "Content not found" }} />;
+            return <PageCanvas MDXContent={mdxModule.default} frontmatter={mdxModule.frontmatter} />;
+          },
+        },
+      ],
+      defaultLayout,
+    }),
+    [defaultLayout, error, loading, mdxModule],
+  );
 
-  if (error || !mdxModule) {
-    return (
-      <HeadingsProvider>
-        <Canvas>
-          <Window id="page" className="h-full w-full">
-            <PageCanvas frontmatter={{ title: "Error", description: error || "Content not found" }} />
-          </Window>
-        </Canvas>
-      </HeadingsProvider>
-    );
-  }
+  const handleLayoutChange = useCallback(
+    (layout: any) => {
+      const next = stringifyWindowLayout(layout);
+      if (!next) return;
+      const prev = stringifyWindowLayout(lastLayoutRef.current);
+      if (next === prev) return;
+      lastLayoutRef.current = layout;
+      sketchpadCommands.setState("semio.sketchpad.app.docs.windowLayout", {
+        settings: {
+          apps: {
+            docs: {
+              windowLayout: next,
+            },
+          },
+        },
+      });
+    },
+    [sketchpadCommands],
+  );
 
   return (
     <HeadingsProvider>
       <Canvas>
-        <Window id="page" className="h-full w-full">
-          <PageCanvas MDXContent={mdxModule.default} frontmatter={mdxModule.frontmatter} />
-        </Window>
+        <LayoutCanvas windowConfig={windowConfig} layoutState={windowLayout} onLayoutChange={handleLayoutChange} />
       </Canvas>
     </HeadingsProvider>
   );

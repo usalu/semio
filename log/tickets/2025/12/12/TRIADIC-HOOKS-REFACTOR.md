@@ -3,11 +3,14 @@ slug: TRIADIC-HOOKS-REFACTOR
 summary: >-
   Refactor components to use triadic hooks instead of direct store/commands
   access
+prompt: >-
+  Refactor components to use triadic hooks instead of direct store/commands
+  access
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.922Z"
-commit: "0000000000000000000000000000000000000000"
+  created: '2025-12-16T17:06:07.922Z'
+commit: '0000000000000000000000000000000000000000'
 iterations: []
 ---
 

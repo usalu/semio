@@ -1,11 +1,31 @@
 ---
 slug: UI-SYSTEM-INTEGRATION
-summary: "Integrate UI system with fixed heights, bands/strips, and action text"
+summary: 'Integrate UI system with fixed heights, bands/strips, and action text'
+prompt: >-
+  The task introduced errors. Make sure to always check after every finished
+  task compile time errors (such as tsc for typescript, linters, etc). The ui
+  system needs to be more tightly integrated with itself and new components are
+  added and existing ones refactored. In general there should be as little props
+  as possible and the system needs to take the decisions. Bands should only be
+  horizontal and never vertical. Bands should be optionally scrollable. Navbar
+  should be a non-scrollable band. A new ui element should be introduced called
+  Strip. A strip is a smaller version of a band. It is also optionally
+  scrollable. Both band and strip receive an items prop which is an array of
+  compatible items. This is determined by height. Compatible for bands are items
+  with medium height. Compatible for strips are items with small height. Actions
+  should be extended by a text prop (tiny text height same as tiny icon size).
+  Either action have icon or text or both. Heights should not be variable but
+  rather defined by the system. E.g. tiny: icons within actions, tiny text size;
+  small: actions, avatars, small text size; medium: tree items, buttons toggles,
+  inputs, sliders, steppers, footer, table row, strip, …; large: band, navbar,
+  table header. Update elements and all usages in sketchpad. No need to worry
+  about breaking changes the ui elements are only used in this codebase. Just
+  refactor everything cleanly.
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.966Z"
-commit: "0000000000000000000000000000000000000000"
+  created: '2025-12-16T17:06:07.966Z'
+commit: '0000000000000000000000000000000000000000'
 iterations:
   - prompt: >-
       The task introduced errors. Make sure to always check after every finished
@@ -29,27 +49,27 @@ iterations:
       about breaking changes the ui elements are only used in this codebase.
       Just refactor everything cleanly.
     date:
-      started: "2025-12-15T00:16:53.759Z"
+      started: '2025-12-15T00:16:53.759Z'
     model: gpt-5-2
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
   - prompt: >-
       Footer and table row are still large but should be medium heigh as
       mentioned in the new system. Footer items are all actions.
     date:
-      started: "2025-12-15T01:02:28.138Z"
+      started: '2025-12-15T01:02:28.138Z'
     model: gpt-5-2
   - prompt: >-
       All table rows (e.g. in home or kit app) should be medium height and not
       large.
     date:
-      started: "2025-12-15T01:02:28.138Z"
+      started: '2025-12-15T01:02:28.138Z'
     model: gpt-5-2
   - prompt: >-
       All table rows still are large heigh. Table headers should remain large
       only the rows should be medium. All content of a row needs to be small.
       E.g. the kind icons.
     date:
-      started: "2025-12-15T01:12:45.347Z"
+      started: '2025-12-15T01:12:45.347Z'
     model: gpt-5-2
     commit: 7765b633fe739bc29cd811ac7ec884e782e2e945
     files:

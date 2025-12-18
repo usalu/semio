@@ -1,11 +1,12 @@
 ---
 slug: REPORTS-DOC
 summary: Document reports folder in AGENTS
+prompt: Document reports folder in AGENTS
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.765Z"
-commit: "0000000000000000000000000000000000000000"
+  created: '2025-12-16T17:06:07.765Z'
+commit: '0000000000000000000000000000000000000000'
 iterations: []
 ---
 

@@ -1,6 +1,5 @@
 // #region Header
-
-
+// SPDX-License-Identifier: AGPL-3.0-only
 
 
 
@@ -20,15 +19,6 @@
 // #endregion
 
 
-
-
-import "../Design";
-import "../Docs";
-import "../Feedback";
-import "../Home";
-import "../Kit";
-import "../Quality";
-import "../Type";
 
 
 export { composePluginContributions, getAppPlugin, getAppPlugins, hasAppPlugin, registerAppPlugin } from "../shared";

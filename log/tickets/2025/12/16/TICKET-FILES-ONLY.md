@@ -1,6 +1,12 @@
 ---
 slug: TICKET-FILES-ONLY
 summary: Restrict ticket files and aggregate stats
+prompt: >-
+  Only allow files to be created, updated and deleted files. Create ticket
+  shouldnt create an iteration. Iteration need files. Add author and date to
+  ticket from git. Once finished, combine all the files from all iterations and
+  add it as extra field to the ticket. Use git one last time to compute the
+  lines.
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:

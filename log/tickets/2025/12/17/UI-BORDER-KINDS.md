@@ -1,6 +1,11 @@
 ---
 slug: UI-BORDER-KINDS
 summary: Semantic border kinds (element/window)
+prompt: >-
+  The border mechanism of all UI elements should be more flexible: add semantic
+  border kinds with different styles. Introduce Tailwind classes border-element
+  (element borders use hover color) and border-window (window borders use
+  current normal border).
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:

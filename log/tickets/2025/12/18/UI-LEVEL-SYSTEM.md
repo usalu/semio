@@ -3,6 +3,9 @@ slug: UI-LEVEL-SYSTEM
 summary: >-
   Extend all UI elements to work with level system (Base, Window, Panel,
   Overlay, Temporary)
+prompt: >-
+  Extend all UI elements to work with level system (Base, Window, Panel,
+  Overlay, Temporary)
 status: open
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:

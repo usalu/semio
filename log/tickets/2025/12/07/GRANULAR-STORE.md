@@ -1,11 +1,12 @@
 ---
 slug: GRANULAR-STORE
 summary: Implement granular store architecture with YPath and DerivedStore
+prompt: Implement granular store architecture with YPath and DerivedStore
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.882Z"
-commit: "0000000000000000000000000000000000000000"
+  created: '2025-12-16T17:06:07.882Z'
+commit: '0000000000000000000000000000000000000000'
 iterations: []
 ---
 

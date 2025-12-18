@@ -1,11 +1,12 @@
 ---
 slug: TABLE-ROW-HEIGHT-FOOTER
 summary: Unify table row and footer bar height
+prompt: Unify table row and footer bar height
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.914Z"
-commit: "0000000000000000000000000000000000000000"
+  created: '2025-12-16T17:06:07.914Z'
+commit: '0000000000000000000000000000000000000000'
 iterations: []
 ---
 

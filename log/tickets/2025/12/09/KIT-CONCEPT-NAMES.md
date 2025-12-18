@@ -1,11 +1,12 @@
 ---
 slug: KIT-CONCEPT-NAMES
 summary: Display concept names in kit app rows
+prompt: Display concept names in kit app rows
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.896Z"
-commit: "0000000000000000000000000000000000000000"
+  created: '2025-12-16T17:06:07.896Z'
+commit: '0000000000000000000000000000000000000000'
 iterations: []
 ---
 
