@@ -948,6 +948,280 @@ export abstract class KitDiffAppStore<TState, TDiff extends AppDiff<TSelectionDi
   }
 }
 
+// #region Plain App Store (No YJS)
+
+export abstract class PlainAppStore<TState, TDiff, TSelectionDiff, TEdit, TCommandContext, TCommandResult> {
+  public readonly guid: Guid;
+  protected state: TState;
+  protected readonly listeners: Set<() => void> = new Set();
+  protected readonly commandRegistry: Map<string, (context: TCommandContext, ...rest: any[]) => TCommandResult> = new Map();
+  protected isTransactionActive: boolean = false;
+  protected currentTransactionStack: TEdit[] = [];
+  protected pastTransactionsStack: TEdit[] = [];
+  protected redoStack: TEdit[] = [];
+  protected lastDeletedTransactionEdit?: TEdit;
+
+  constructor(initialState: TState) {
+    this.guid = guid();
+    this.state = initialState;
+  }
+
+  snapshot(): TState {
+    return this.state;
+  }
+
+  subscribe(callback: () => void): () => void {
+    this.listeners.add(callback);
+    return () => this.listeners.delete(callback);
+  }
+
+  onChangedDeep(callback: () => void): Disposable {
+    this.listeners.add(callback);
+    return { dispose: () => this.listeners.delete(callback) };
+  }
+
+  protected notify(): void {
+    this.listeners.forEach((cb) => cb());
+  }
+
+  abstract change(diff: TDiff): void;
+
+  protected abstract applySelectionDiff(selectionDiff: TSelectionDiff): void;
+  protected abstract inverseSelectionDiff(selection: any, diff: TSelectionDiff): TSelectionDiff;
+  protected abstract getSelection(): any;
+
+  startTransaction(): void {
+    if (this.isTransactionActive) {
+      this.finalizeTransaction();
+    }
+    this.isTransactionActive = true;
+  }
+
+  abortTransaction(): void {
+    if (this.isTransactionActive) {
+      for (let i = this.currentTransactionStack.length - 1; i >= 0; i--) {
+        const edit = this.currentTransactionStack[i] as any;
+        if (edit?.undo?.selectionDiff) {
+          this.applySelectionDiff(edit.undo.selectionDiff);
+        }
+      }
+      this.currentTransactionStack = [];
+      this.isTransactionActive = false;
+      this.notify();
+    }
+  }
+
+  finalizeTransaction(): void {
+    if (this.isTransactionActive) {
+      this.redoStack = [];
+      if (this.currentTransactionStack.length > 0) {
+        const edits = this.currentTransactionStack;
+        if (edits.length === 1) {
+          this.pastTransactionsStack.push(edits[0]);
+        } else if (edits.length > 1) {
+          const firstEdit = edits[0] as any;
+          const lastEdit = edits[edits.length - 1] as any;
+          const mergedEdit = { do: lastEdit.do, undo: firstEdit.undo } as TEdit;
+          this.pastTransactionsStack.push(mergedEdit);
+        }
+        this.currentTransactionStack = [];
+      }
+      this.isTransactionActive = false;
+      this.notify();
+    }
+  }
+
+  undo(): void {
+    if (this.isTransactionActive) {
+      if (this.currentTransactionStack.length > 0) {
+        const edit = this.currentTransactionStack.pop() as any;
+        this.lastDeletedTransactionEdit = edit;
+        if (edit?.undo?.selectionDiff) {
+          this.applySelectionDiff(edit.undo.selectionDiff);
+        }
+        this.notify();
+      }
+    } else {
+      if (this.pastTransactionsStack.length > 0) {
+        const edit = this.pastTransactionsStack.pop() as any;
+        this.redoStack.push(edit);
+        if (edit?.undo?.selectionDiff) {
+          this.applySelectionDiff(edit.undo.selectionDiff);
+        }
+        this.notify();
+      }
+    }
+  }
+
+  redo(): void {
+    if (this.isTransactionActive) {
+      if (this.lastDeletedTransactionEdit) {
+        this.currentTransactionStack.push(this.lastDeletedTransactionEdit);
+        const edit = this.lastDeletedTransactionEdit as any;
+        this.lastDeletedTransactionEdit = undefined;
+        if (edit?.do?.selectionDiff) {
+          this.applySelectionDiff(edit.do.selectionDiff);
+        }
+        this.notify();
+      }
+    } else {
+      if (this.redoStack.length > 0) {
+        const edit = this.redoStack.pop() as any;
+        this.pastTransactionsStack.push(edit);
+        if (edit?.do?.selectionDiff) {
+          this.applySelectionDiff(edit.do.selectionDiff);
+        }
+        this.notify();
+      }
+    }
+  }
+
+  canUndo(): boolean {
+    if (this.isTransactionActive) return this.currentTransactionStack.length > 0;
+    return this.pastTransactionsStack.length > 0;
+  }
+
+  canRedo(): boolean {
+    if (this.isTransactionActive) return false;
+    return this.redoStack.length > 0;
+  }
+
+  protected recordEdit(result: TCommandResult): void {
+    const res = result as any;
+    if (this.isTransactionActive && res.diff) {
+      this.redoStack = [];
+      this.lastDeletedTransactionEdit = undefined;
+      const selection = this.getSelection();
+      const inversedSelectionDiff = res.diff?.selection ? this.inverseSelectionDiff(selection, res.diff.selection) : undefined;
+      const doStep = { selectionDiff: res.diff?.selection };
+      const undoStep = { selectionDiff: inversedSelectionDiff };
+      const edit = { do: doStep, undo: undoStep } as TEdit;
+      this.currentTransactionStack.push(edit);
+    }
+  }
+
+  registerCommand(command: string, callback: (context: TCommandContext, ...rest: any[]) => TCommandResult): () => void {
+    this.commandRegistry.set(command, callback);
+    return () => this.commandRegistry.delete(command);
+  }
+
+  abstract executeCommand<T>(command: string, ...rest: any[]): Promise<T>;
+}
+
+export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit, TCommandContext, TCommandResult> extends PlainAppStore<TState, TDiff, TSelectionDiff, TEdit, TCommandContext, TCommandResult> {
+  protected readonly parentStore: SketchpadStore;
+
+  constructor(parent: SketchpadStore, initialState: TState) {
+    super(initialState);
+    this.parentStore = parent;
+  }
+
+  abstract kit(): KitStore;
+
+  abortTransaction(): void {
+    if (this.isTransactionActive) {
+      for (let i = this.currentTransactionStack.length - 1; i >= 0; i--) {
+        const edit = this.currentTransactionStack[i] as any;
+        if (edit?.undo) {
+          if (edit.undo.kitDiff) {
+            this.kit().change(edit.undo.kitDiff);
+          }
+          if (edit.undo.selectionDiff) {
+            this.applySelectionDiff(edit.undo.selectionDiff);
+          }
+        }
+      }
+      this.currentTransactionStack = [];
+      this.isTransactionActive = false;
+      this.notify();
+    }
+  }
+
+  undo(): void {
+    if (this.isTransactionActive) {
+      if (this.currentTransactionStack.length > 0) {
+        const edit = this.currentTransactionStack.pop() as any;
+        this.lastDeletedTransactionEdit = edit;
+        if (edit?.undo) {
+          if (edit.undo.kitDiff) {
+            this.kit().change(edit.undo.kitDiff);
+          }
+          if (edit.undo.selectionDiff) {
+            this.applySelectionDiff(edit.undo.selectionDiff);
+          }
+        }
+        this.notify();
+      }
+    } else {
+      if (this.pastTransactionsStack.length > 0) {
+        const edit = this.pastTransactionsStack.pop() as any;
+        this.redoStack.push(edit);
+        if (edit?.undo) {
+          if (edit.undo.kitDiff) {
+            this.kit().change(edit.undo.kitDiff);
+          }
+          if (edit.undo.selectionDiff) {
+            this.applySelectionDiff(edit.undo.selectionDiff);
+          }
+        }
+        this.notify();
+      }
+    }
+  }
+
+  redo(): void {
+    if (this.isTransactionActive) {
+      if (this.lastDeletedTransactionEdit) {
+        this.currentTransactionStack.push(this.lastDeletedTransactionEdit);
+        const edit = this.lastDeletedTransactionEdit as any;
+        this.lastDeletedTransactionEdit = undefined;
+        if (edit?.do) {
+          if (edit.do.kitDiff) {
+            this.kit().change(edit.do.kitDiff);
+          }
+          if (edit.do.selectionDiff) {
+            this.applySelectionDiff(edit.do.selectionDiff);
+          }
+        }
+        this.notify();
+      }
+    } else {
+      if (this.redoStack.length > 0) {
+        const edit = this.redoStack.pop() as any;
+        this.pastTransactionsStack.push(edit);
+        if (edit?.do) {
+          if (edit.do.kitDiff) {
+            this.kit().change(edit.do.kitDiff);
+          }
+          if (edit.do.selectionDiff) {
+            this.applySelectionDiff(edit.do.selectionDiff);
+          }
+        }
+        this.notify();
+      }
+    }
+  }
+
+  protected recordEdit(result: TCommandResult): void {
+    const res = result as any;
+    if (this.isTransactionActive && (res.diff || res.kitDiff)) {
+      this.redoStack = [];
+      this.lastDeletedTransactionEdit = undefined;
+      const selection = this.getSelection();
+      const inversedSelectionDiff = res.diff?.selection ? this.inverseSelectionDiff(selection, res.diff.selection) : undefined;
+      const kitStore = this.kit();
+      const kitState = kitStore.snapshot();
+      const inversedKitDiff = res.kitDiff ? inverseKitDiff(kitState, res.kitDiff) : undefined;
+      const doStep = { kitDiff: res.kitDiff, selectionDiff: res.diff?.selection };
+      const undoStep = { kitDiff: inversedKitDiff, selectionDiff: inversedSelectionDiff };
+      const edit = { do: doStep, undo: undoStep } as TEdit;
+      this.currentTransactionStack.push(edit);
+    }
+  }
+}
+
+// #endregion Plain App Store
+
 // #region File Provider
 
 // #region Memory File Provider
@@ -7602,11 +7876,16 @@ export const defaultDiagramForceSettings: DiagramForceSettings = {
   collideRadius: 40,
   centerStrength: 0.05,
 };
+export enum KitAppFullscreenWindow {
+  None = "none",
+  Table = "table",
+  Diagram = "diagram",
+}
 export interface KitAppState {
   panelVisibility: PanelVisibility;
   selection?: KitAppSelection;
   hover?: any;
-  fullscreenWindow: any;
+  fullscreenWindow: KitAppFullscreenWindow;
   others: any[];
   filterSearch?: string;
   expandedRows: Set<string>;
@@ -7798,6 +8077,9 @@ export type SketchpadEvent =
   | { type: "KIT.CLEAR_SELECTION"; kitGuid: Guid }
   | { type: "KIT.SET_HOVER"; kitGuid: Guid; hover: any }
   | { type: "KIT.CLEAR_HOVER"; kitGuid: Guid }
+  | { type: "KIT.SET_FULLSCREEN"; kitGuid: Guid; window: KitAppFullscreenWindow }
+  | { type: "KIT.SET_WINDOW_LAYOUT"; kitGuid: Guid; windowLayout: any }
+  | { type: "KIT.SET_DIAGRAM_FORCE"; kitGuid: Guid; diagramForce: Partial<DiagramForceSettings> }
   // Type app events (scoped by kitGuid:typeGuid)
   | { type: "TYPE.INIT"; kitGuid: Guid; typeGuid: Guid; state: TypeAppState }
   | { type: "TYPE.SYNC"; kitGuid: Guid; typeGuid: Guid; state: Partial<TypeAppState> }
@@ -8091,7 +8373,7 @@ export function createDefaultKitAppState(): KitAppState {
     panelVisibility: { ...defaultPanelVisibility, toolbar: true },
     selection: undefined,
     hover: undefined,
-    fullscreenWindow: "none",
+    fullscreenWindow: KitAppFullscreenWindow.None,
     others: [],
     filterSearch: undefined,
     expandedRows: new Set<string>(),
@@ -15230,7 +15512,6 @@ export const LayoutCanvas: FC<{
                         }}
                       >
                         <Window
-                          kind="layout"
                           id={windowType.id}
                           isVisible={true}
                           showControls={true}

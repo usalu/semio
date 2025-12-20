@@ -10,27 +10,9 @@
 // #region Internal State Management
 
 import { useSelector } from "@xstate/react";
-import * as Y from "yjs";
 import { ConnectionDiff, ConnectionId, Guid, KitDiff, PieceDiff, PieceId } from "../semio";
-import type {
-  AppConfig,
-  AppPlugin,
-  AppWindowConfig,
-  DesignAppId,
-  HookResult,
-  KitCommandContext,
-  KitDiffAppEdit,
-  PanelDefinition,
-  PanelVisibility,
-  Tool,
-  ToolDefinition,
-  ToolRenderContext,
-  YAttributes,
-  YLeafMapNumber,
-  YLeafMapString,
-  YStringArray,
-} from "./shared";
-import { conditionalHookResult, createPanelDefinition, Expertise, Mode, PanelKind, parseWindowLayout, readonlyHookResult, registerAppPlugin, registerRuntimeAction, stringifyWindowLayout, Theme, ToolKind } from "./shared";
+import type { AppConfig, AppPlugin, AppWindowConfig, DesignAppId, HookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolDefinition, ToolRenderContext } from "./shared";
+import { conditionalHookResult, createPanelDefinition, Expertise, Mode, PanelKind, readonlyHookResult, registerAppPlugin, registerRuntimeAction, Theme, ToolKind } from "./shared";
 import type { DesignStore as DesignEntityStore } from "./Sketchpad";
 import { createDefaultDesignAppState, identitySelector, useDesignScope, useDevice, useExpertise, useKitScope, useLanguage, useMode, usePieceScope, useSketchpadActor, useSketchpadActorSafe, useTheme } from "./Sketchpad";
 
@@ -122,12 +104,12 @@ import {
   ConnectionScopeProvider,
   DesignScopeProvider,
   getKitAppHooks,
-  KitDiffAppStore,
   KitScopeProvider,
   KitStore,
   LayoutCanvas,
   PieceMetadata,
   PieceScopeProvider,
+  PlainKitDiffAppStore,
   SketchpadStore,
   ToolGroup,
   useAddFooterItem,
@@ -186,35 +168,8 @@ let kitAppModuleCache: any = null;
 if (typeof window !== "undefined" && (window as any).__KIT_APP_MODULE_CACHE__) {
   kitAppModuleCache = (window as any).__KIT_APP_MODULE_CACHE__.kitAppModuleCache;
 }
-const getKitAppModule = () => {
-  if (!kitAppModuleCache) {
-    if (typeof window !== "undefined" && (window as any).__KIT_APP_MODULE_CACHE__) {
-      kitAppModuleCache = (window as any).__KIT_APP_MODULE_CACHE__.kitAppModuleCache;
-    }
-    if (!kitAppModuleCache) {
-      throw new Error("Kit app module not loaded. This should not happen - ensure kit app is imported.");
-    }
-  }
-  return kitAppModuleCache;
-};
-
-const KitSectionLazy = React.lazy(async () => {
-  const module = await import("./Kit");
-  kitAppModuleCache = module;
-  if (typeof window !== "undefined") {
-    if (!(window as any).__KIT_APP_MODULE_CACHE__) {
-      (window as any).__KIT_APP_MODULE_CACHE__ = {};
-    }
-    (window as any).__KIT_APP_MODULE_CACHE__.kitAppModuleCache = module;
-  }
-  return { default: module.KitSection };
-});
 
 let designAppCommands: Record<string, (context: any, ...args: any[]) => Promise<any> | any>;
-
-type YDesignAppVal = string | number | boolean | YLeafMapString | YLeafMapNumber | Y.Map<boolean> | YAttributes | YStringArray;
-type YDesignApp = Y.Map<YDesignAppVal>;
-type YDesignApps = Y.Map<Y.Map<YDesignApp>>;
 
 export interface DesignAppSelection {
   pieces?: Guid[];
@@ -936,234 +891,38 @@ export const inverseDesignAppSelectionDiff = (selection: DesignAppSelection, dif
 export const areSameDesignApp = (designApp: DesignAppId, other: DesignAppId): boolean => designApp.kit === other.kit && designApp.design === other.design;
 export const hasSameDesignApp = (designApp: DesignAppId, others: DesignAppId[]): boolean => others.some((other) => areSameDesignApp(designApp, other));
 
-export class DesignStore extends KitDiffAppStore<DesignAppState, DesignAppDiff, DesignAppSelectionDiff, DesignAppEdit, DesignAppCommandContext, DesignAppCommandResult> {
+export class DesignStore extends PlainKitDiffAppStore<DesignAppState, DesignAppDiff, DesignAppSelectionDiff, DesignAppEdit, DesignAppCommandContext, DesignAppCommandResult> {
   private readonly kitGuid: Guid;
   private readonly designGuid: Guid;
 
-  constructor(parent: SketchpadStore, yMap: YDesignApp, transact: (fn: () => void) => void, id: DesignAppId, state?: DesignAppState) {
-    super(parent, yMap, transact);
+  constructor(parent: SketchpadStore, _yMap: any, _transact: (fn: () => void) => void, id: DesignAppId, initialState?: DesignAppState) {
+    const defaultState: DesignAppState = {
+      fullscreenWindow: initialState?.fullscreenWindow || DesignAppFullscreenWindow.None,
+      panelVisibility: initialState?.panelVisibility || { toolbar: true, workbench: false, details: false, chat: false, settings: false },
+      activeTool: initialState?.activeTool || ToolKind.SELECTION_NORMAL,
+      selection: initialState?.selection,
+      hover: initialState?.hover,
+      presence: initialState?.presence,
+      others: initialState?.others || [],
+      camera: initialState?.camera,
+      diagramCenter: initialState?.diagramCenter,
+      diagramScale: initialState?.diagramScale,
+      focusedPieceGuid: initialState?.focusedPieceGuid,
+      selectedModelTags: initialState?.selectedModelTags || {},
+      windowLayout: initialState?.windowLayout,
+    };
+    super(parent, defaultState);
 
-    let kitGuid = yMap.get("kit") as string;
-    let designGuid = yMap.get("design") as string;
-
-    if (!kitGuid) {
-      kitGuid = id.kit;
-      yMap.set("kit", kitGuid);
-    }
-    if (!designGuid) {
-      designGuid = id.design;
-      yMap.set("design", designGuid);
-    }
-
-    this.kitGuid = kitGuid;
-    this.designGuid = designGuid;
-
-    if (!yMap.has("fullscreenWindow")) {
-      yMap.set("fullscreenWindow", state?.fullscreenWindow || DesignAppFullscreenWindow.None);
-    }
-
-    if (!yMap.has("selection")) {
-      const selection = new Y.Map<any>();
-      const selectedPieces = new Y.Array<Guid>();
-      if (state?.selection?.pieces) {
-        selectedPieces.push(state.selection.pieces);
-      }
-      const selectedConnections = new Y.Array<Guid>();
-      if (state?.selection?.connections) {
-        selectedConnections.push(state.selection.connections);
-      }
-      const selectionPort = new Y.Map<any>();
-      if (state?.selection?.port) {
-        selectionPort.set("piece", state.selection.port.piece);
-        selectionPort.set("port", state.selection.port.port);
-        if (state.selection.port.designPiece) {
-          selectionPort.set("designPiece", state.selection.port.designPiece);
-        }
-      }
-      selection.set("pieces", selectedPieces);
-      selection.set("connections", selectedConnections);
-      selection.set("port", selectionPort);
-      yMap.set("selection", selection);
-    }
-
-    if (!yMap.has("isTransactionActive")) {
-      yMap.set("isTransactionActive", false);
-    }
-    if (!yMap.has("presence")) {
-      yMap.set("presence", new Y.Map<any>());
-    }
-    if (!yMap.has("others")) {
-      yMap.set("others", new Y.Array<any>());
-    }
-    if (!yMap.has("diff")) {
-      yMap.set("diff", new Y.Map<any>());
-    }
-    if (!yMap.has("currentTransactionStack")) {
-      yMap.set("currentTransactionStack", new Y.Array<any>());
-    }
-    if (!yMap.has("pastTransactionsStack")) {
-      yMap.set("pastTransactionsStack", new Y.Array<any>());
-    }
-    if (!yMap.has("panelVisibility")) {
-      const yPanelVisibility = new Y.Map<boolean>();
-      yPanelVisibility.set("toolbar", true);
-      yPanelVisibility.set("workbench", false);
-      yPanelVisibility.set("details", false);
-      yPanelVisibility.set("chat", false);
-      yPanelVisibility.set("settings", false);
-      yMap.set("panelVisibility", yPanelVisibility as any);
-    } else {
-      const yPanelVisibility = yMap.get("panelVisibility") as Y.Map<boolean>;
-      if (yPanelVisibility && yPanelVisibility.get("toolbar") !== true) {
-        yPanelVisibility.set("toolbar", true);
-      }
-    }
+    this.kitGuid = id.kit;
+    this.designGuid = id.design;
 
     Object.entries(designAppCommands).forEach(([commandId, command]) => {
       this.registerCommand(commandId, command);
     });
   }
 
-  get fullscreenWindow(): DesignAppFullscreenWindow {
-    return this.yMap.get("fullscreenWindow") as DesignAppFullscreenWindow;
-  }
-  set fullscreenWindow(panel: DesignAppFullscreenWindow) {
-    this.yMap.set("fullscreenWindow", panel);
-  }
-  get activeTool(): ToolKind {
-    return (this.yMap.get("activeTool") as ToolKind) ?? ToolKind.SELECTION_NORMAL;
-  }
-  set activeTool(tool: ToolKind) {
-    this.yMap.set("activeTool", tool);
-  }
-  get panelVisibility(): PanelVisibility {
-    const yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
-    if (!yPanelVisibility) {
-      return {
-        toolbar: true,
-        workbench: false,
-        details: false,
-        chat: false,
-        settings: false,
-      };
-    }
-    return {
-      toolbar: yPanelVisibility.get("toolbar") ?? true,
-      workbench: yPanelVisibility.get("workbench") ?? false,
-      details: yPanelVisibility.get("details") ?? false,
-      chat: yPanelVisibility.get("chat") ?? false,
-      settings: yPanelVisibility.get("settings") ?? false,
-    };
-  }
-  get selection(): DesignAppSelection {
-    const selection = this.yMap.get("selection") as Y.Map<any>;
-    if (!selection) return {};
-
-    const result: DesignAppSelection = {};
-
-    const pieces = selection.get("pieces") as Y.Array<string>;
-    if (pieces && pieces.length > 0) {
-      result.pieces = pieces.toArray();
-    }
-
-    const connections = selection.get("connections") as Y.Array<string>;
-    if (connections && connections.length > 0) {
-      result.connections = connections.toArray();
-    }
-
-    const port = selection.get("port") as Y.Map<string>;
-    if (port) {
-      const piece = port.get("piece");
-      const designPiece = port.get("designPiece");
-      const portId = port.get("port");
-
-      if (piece && portId) {
-        result.port = {
-          piece: piece,
-          designPiece: designPiece,
-          port: portId,
-        };
-      }
-    }
-
-    return result;
-  }
-  get presence(): DesignAppPresence {
-    return {
-      cursor: {
-        u: (this.yMap.get("presenceCursorX") as number) || 0,
-        v: (this.yMap.get("presenceCursorY") as number) || 0,
-      },
-    };
-  }
-  get others(): DesignAppPresenceOther[] {
-    return [];
-  }
-  get diff(): KitDiff {
-    return {};
-  }
-  get hover(): DesignAppHover | undefined {
-    const hover = this.yMap.get("hover") as Y.Map<any> | undefined;
-    if (!hover) return undefined;
-    const result: DesignAppHover = {};
-    const pieces = hover.get("pieces") as Y.Array<Guid> | undefined;
-    const connections = hover.get("connections") as Y.Array<Guid> | undefined;
-    const ports = hover.get("ports") as Y.Array<Y.Map<string>> | undefined;
-    const types = hover.get("types") as Y.Array<Guid> | undefined;
-    const designs = hover.get("designs") as Y.Array<Guid> | undefined;
-    if (pieces && pieces.length > 0) result.pieces = pieces.toArray();
-    if (connections && connections.length > 0) result.connections = connections.toArray();
-    if (ports && ports.length > 0) {
-      result.ports = ports.toArray().map((yPort) => ({
-        piece: yPort.get("piece") as Guid,
-        designPiece: yPort.get("designPiece") as Guid | undefined,
-        port: yPort.get("port") as Guid,
-      }));
-    }
-    if (types && types.length > 0) result.types = types.toArray();
-    if (designs && designs.length > 0) result.designs = designs.toArray();
-    return Object.keys(result).length > 0 ? result : undefined;
-  }
-
-  get camera(): Camera | undefined {
-    const cameraStr = this.yMap.get("camera") as string | undefined;
-    return cameraStr ? JSON.parse(cameraStr) : undefined;
-  }
-
-  get diagramCenter(): Coord | undefined {
-    const centerStr = this.yMap.get("diagramCenter") as string | undefined;
-    return centerStr ? JSON.parse(centerStr) : undefined;
-  }
-
-  get diagramScale(): number | undefined {
-    return this.yMap.get("diagramScale") as number | undefined;
-  }
-
-  get focusedPieceGuid(): Guid | undefined {
-    return this.yMap.get("focusedPieceGuid") as Guid | undefined;
-  }
-
-  get selectedModelTags(): Record<Guid, string[]> {
-    const yTagsMap = this.yMap.get("selectedModelTags") as Y.Map<Y.Array<string>> | undefined;
-    if (!yTagsMap) return {};
-    const result: Record<Guid, string[]> = {};
-    yTagsMap.forEach((yTags, typeGuid) => {
-      result[typeGuid] = yTags.toArray();
-    });
-    return result;
-  }
-
-  get windowLayout(): any {
-    return parseWindowLayout(this.yMap.get("windowLayout"));
-  }
-  set windowLayout(layout: any) {
-    const value = stringifyWindowLayout(layout);
-    if (value) this.yMap.set("windowLayout", value);
-    else this.yMap.delete("windowLayout");
-  }
-
   kit(): KitStore {
-    return this.parent.kit(this.kitGuid);
+    return this.parentStore.kit(this.kitGuid);
   }
 
   design(): DesignEntityStore {
@@ -1171,268 +930,86 @@ export class DesignStore extends KitDiffAppStore<DesignAppState, DesignAppDiff, 
   }
 
   protected getSelection(): DesignAppSelection {
-    return this.selection;
-  }
-
-  protected hash(state: DesignAppState): string {
-    return JSON.stringify(state);
-  }
-
-  protected buildSnapshot(): DesignAppState {
-    return {
-      fullscreenWindow: this.fullscreenWindow,
-      panelVisibility: this.panelVisibility,
-      activeTool: this.activeTool,
-      selection: this.selection,
-      hover: this.hover,
-      presence: this.presence,
-      others: this.others,
-      camera: this.camera,
-      diagramCenter: this.diagramCenter,
-      diagramScale: this.diagramScale,
-      focusedPieceGuid: this.focusedPieceGuid,
-      currentTransactionStackLength: this.currentTransactionStack.length,
-      selectedModelTags: this.selectedModelTags,
-      windowLayout: this.windowLayout,
-    };
-  }
-
-  getFieldSnapshot(key: string): any {
-    switch (key) {
-      case "fullscreenWindow":
-        return this.fullscreenWindow;
-      case "panelVisibility":
-        return this.panelVisibility;
-      case "activeTool":
-        return this.activeTool;
-      case "selection":
-        return this.selection;
-      case "hover":
-        return this.hover;
-      case "presence":
-        return this.presence;
-      case "others":
-        return this.others;
-      case "camera":
-        return this.camera;
-      case "diagramCenter":
-        return this.diagramCenter;
-      case "diagramScale":
-        return this.diagramScale;
-      case "focusedPieceGuid":
-        return this.focusedPieceGuid;
-      case "currentTransactionStackLength":
-        return this.currentTransactionStack.length;
-      case "selectedModelTags":
-        return this.selectedModelTags;
-      case "windowLayout":
-        return this.windowLayout;
-      default:
-        return (this.snapshot() as any)[key];
-    }
+    return this.state.selection || {};
   }
 
   protected inverseSelectionDiff(selection: DesignAppSelection, diff: DesignAppSelectionDiff): DesignAppSelectionDiff {
     return inverseDesignAppSelectionDiff(selection, diff);
   }
 
-  protected applySelectionDiff = (selectionDiff: DesignAppSelectionDiff) => {
-    let selection = this.yMap.get("selection") as Y.Map<any>;
-    if (!selection) {
-      selection = new Y.Map();
-      this.yMap.set("selection", selection);
-    }
+  protected applySelectionDiff(selectionDiff: DesignAppSelectionDiff): void {
+    const currentSelection = this.state.selection || {};
+    const newSelection: DesignAppSelection = { ...currentSelection };
 
     if (selectionDiff.pieces) {
-      let pieces = (selection.get("pieces") as Y.Array<Guid>) || new Y.Array<Guid>();
-      if (!selection.has("pieces")) {
-        selection.set("pieces", pieces);
-      }
-
+      const currentPieces = new Set(currentSelection.pieces || []);
       if (selectionDiff.pieces.added) {
-        for (const piece of selectionDiff.pieces.added) {
-          if (!pieces.toArray().includes(piece)) {
-            pieces.push([piece]);
-          }
-        }
+        selectionDiff.pieces.added.forEach((p) => currentPieces.add(p));
       }
       if (selectionDiff.pieces.removed) {
-        for (const piece of selectionDiff.pieces.removed) {
-          const index = pieces.toArray().indexOf(piece);
-          if (index !== -1) {
-            pieces.delete(index, 1);
-          }
-        }
+        selectionDiff.pieces.removed.forEach((p) => currentPieces.delete(p));
       }
+      newSelection.pieces = currentPieces.size > 0 ? Array.from(currentPieces) : undefined;
     }
 
     if (selectionDiff.connections) {
-      let connections = (selection.get("connections") as Y.Array<Guid>) || new Y.Array<Guid>();
-      if (!selection.has("connections")) {
-        selection.set("connections", connections);
-      }
-
+      const currentConnections = new Set(currentSelection.connections || []);
       if (selectionDiff.connections.added) {
-        for (const connectionGuid of selectionDiff.connections.added) {
-          if (!connections.toArray().includes(connectionGuid)) {
-            connections.push([connectionGuid]);
-          }
-        }
+        selectionDiff.connections.added.forEach((c) => currentConnections.add(c));
       }
       if (selectionDiff.connections.removed) {
-        for (const connectionGuid of selectionDiff.connections.removed) {
-          const index = connections.toArray().indexOf(connectionGuid);
-          if (index !== -1) {
-            connections.delete(index, 1);
-          }
-        }
+        selectionDiff.connections.removed.forEach((c) => currentConnections.delete(c));
       }
+      newSelection.connections = currentConnections.size > 0 ? Array.from(currentConnections) : undefined;
     }
 
     if (selectionDiff.port) {
-      const portSelection = new Y.Map();
-      if (selectionDiff.port.piece !== undefined) {
-        portSelection.set("piece", selectionDiff.port.piece);
+      if (selectionDiff.port.piece && selectionDiff.port.port) {
+        newSelection.port = {
+          piece: selectionDiff.port.piece,
+          designPiece: selectionDiff.port.designPiece,
+          port: selectionDiff.port.port,
+        };
+      } else {
+        newSelection.port = undefined;
       }
-      if (selectionDiff.port.designPiece !== undefined) {
-        portSelection.set("designPiece", selectionDiff.port.designPiece);
-      }
-      if (selectionDiff.port.port !== undefined) {
-        portSelection.set("port", selectionDiff.port.port);
-      }
-      selection.set("port", portSelection);
     }
-  };
 
-  change = (diff: DesignAppDiff) => {
-    this.transact(() => {
-      if (diff.fullscreenWindow) this.fullscreenWindow = diff.fullscreenWindow;
-      if (diff.activeTool) this.activeTool = diff.activeTool;
-      if (diff.panelVisibility !== undefined) {
-        let yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
-        if (!yPanelVisibility) {
-          yPanelVisibility = new Y.Map<boolean>();
-          this.yMap.set("panelVisibility", yPanelVisibility);
-        }
-        Object.entries(diff.panelVisibility).forEach(([key, value]) => {
-          if (value !== undefined) {
-            yPanelVisibility.set(key, value);
-          }
-        });
-      }
-      if (diff.selection) {
-        this.applySelectionDiff(diff.selection);
-      }
-      if (diff.presence) {
-      }
-      if (diff.hover) {
-        if (Object.keys(diff.hover).length === 0) {
-          this.yMap.delete("hover");
-        } else {
-          let yHover = this.yMap.get("hover") as Y.Map<any>;
-          if (!yHover) {
-            yHover = new Y.Map<any>();
-            this.yMap.set("hover", yHover);
-          }
-          if (Object.prototype.hasOwnProperty.call(diff.hover, "pieces")) {
-            const piecesValue = diff.hover.pieces;
-            if (piecesValue && piecesValue.length > 0) {
-              const yPieces = new Y.Array<Guid>();
-              yPieces.push(piecesValue);
-              yHover.set("pieces", yPieces);
-            } else {
-              yHover.delete("pieces");
-            }
-          }
-          if (Object.prototype.hasOwnProperty.call(diff.hover, "connections")) {
-            const connectionsValue = diff.hover.connections;
-            if (connectionsValue && connectionsValue.length > 0) {
-              const yConnections = new Y.Array<Guid>();
-              yConnections.push(connectionsValue);
-              yHover.set("connections", yConnections);
-            } else {
-              yHover.delete("connections");
-            }
-          }
-          if (Object.prototype.hasOwnProperty.call(diff.hover, "ports")) {
-            const portsValue = diff.hover.ports;
-            if (portsValue && portsValue.length > 0) {
-              const yPorts = new Y.Array<any>();
-              portsValue.forEach((port) => {
-                const yPort = new Y.Map<string>();
-                yPort.set("piece", port.piece);
-                if (port.designPiece) yPort.set("designPiece", port.designPiece);
-                yPort.set("port", port.port);
-                yPorts.push([yPort]);
-              });
-              yHover.set("ports", yPorts);
-            } else {
-              yHover.delete("ports");
-            }
-          }
-          if (Object.prototype.hasOwnProperty.call(diff.hover, "types")) {
-            const typesValue = diff.hover.types;
-            if (typesValue && typesValue.length > 0) {
-              const yTypes = new Y.Array<Guid>();
-              yTypes.push(typesValue);
-              yHover.set("types", yTypes);
-            } else {
-              yHover.delete("types");
-            }
-          }
-          if (Object.prototype.hasOwnProperty.call(diff.hover, "designs")) {
-            const designsValue = diff.hover.designs;
-            if (designsValue && designsValue.length > 0) {
-              const yDesigns = new Y.Array<Guid>();
-              yDesigns.push(designsValue);
-              yHover.set("designs", yDesigns);
-            } else {
-              yHover.delete("designs");
-            }
-          }
-        }
-      }
-      if (diff.camera) {
-        this.yMap.set("camera", JSON.stringify(diff.camera));
-      }
-      if (diff.diagramCenter) {
-        this.yMap.set("diagramCenter", JSON.stringify(diff.diagramCenter));
-      }
-      if (diff.diagramScale !== undefined) {
-        this.yMap.set("diagramScale", diff.diagramScale);
-      }
-      if (diff.focusedPieceGuid !== undefined) {
-        if (diff.focusedPieceGuid === null) {
-          this.yMap.delete("focusedPieceGuid");
-        } else {
-          this.yMap.set("focusedPieceGuid", diff.focusedPieceGuid);
-        }
-      }
-      if (diff.selectedModelTags !== undefined) {
-        let yTagsMap = this.yMap.get("selectedModelTags") as Y.Map<Y.Array<string>>;
-        if (!yTagsMap) {
-          yTagsMap = new Y.Map<Y.Array<string>>();
-          this.yMap.set("selectedModelTags", yTagsMap);
-        }
-        Object.entries(diff.selectedModelTags).forEach(([typeGuid, tags]) => {
-          if (tags.length === 0) {
-            yTagsMap.delete(typeGuid);
-          } else {
-            let yTags = yTagsMap.get(typeGuid) as Y.Array<string>;
-            if (!yTags) {
-              yTags = new Y.Array<string>();
-              yTagsMap.set(typeGuid, yTags);
-            }
-            yTags.delete(0, yTags.length);
-            yTags.push(tags);
-          }
-        });
-      }
-      if (Object.prototype.hasOwnProperty.call(diff, "windowLayout")) {
-        this.windowLayout = (diff as any).windowLayout;
-      }
-    });
-  };
+    this.state = { ...this.state, selection: newSelection };
+    this.notify();
+  }
+
+  change(diff: DesignAppDiff): void {
+    const newState = { ...this.state };
+
+    if (diff.fullscreenWindow !== undefined) newState.fullscreenWindow = diff.fullscreenWindow;
+    if (diff.activeTool !== undefined) newState.activeTool = diff.activeTool;
+    if (diff.panelVisibility !== undefined) {
+      newState.panelVisibility = { ...newState.panelVisibility, ...diff.panelVisibility };
+    }
+    if (diff.selection) {
+      this.applySelectionDiff(diff.selection);
+      return;
+    }
+    if (diff.hover !== undefined) {
+      newState.hover = Object.keys(diff.hover).length === 0 ? undefined : diff.hover;
+    }
+    if (diff.camera !== undefined) newState.camera = diff.camera;
+    if (diff.diagramCenter !== undefined) newState.diagramCenter = diff.diagramCenter;
+    if (diff.diagramScale !== undefined) newState.diagramScale = diff.diagramScale;
+    if (diff.focusedPieceGuid !== undefined) {
+      newState.focusedPieceGuid = diff.focusedPieceGuid === null ? undefined : diff.focusedPieceGuid;
+    }
+    if (diff.selectedModelTags !== undefined) {
+      newState.selectedModelTags = { ...(newState.selectedModelTags || {}), ...diff.selectedModelTags };
+    }
+    if (Object.prototype.hasOwnProperty.call(diff, "windowLayout")) {
+      newState.windowLayout = (diff as any).windowLayout;
+    }
+
+    this.state = newState;
+    this.notify();
+  }
 
   async executeCommand<T>(command: string, ...args: any[]): Promise<T> {
     let origin: string | undefined;
@@ -2989,42 +2566,18 @@ export function useDesignAppSelectedPort(id?: DesignAppId): DesignAppSelection["
   const subscribe = useCallback(
     (callback: () => void) => {
       if (!store) return () => {};
-
-      const selectionMap = store.yMap.get("selection") as Y.Map<any> | undefined;
-      if (!selectionMap) return () => {};
-
-      let lastPortJson = JSON.stringify(selectionMap.get("port")?.toJSON?.() ?? selectionMap.get("port") ?? null);
-
-      const handler = (event: Y.YMapEvent<any>) => {
-        if (event.keysChanged.has("port")) {
-          const newPortJson = JSON.stringify(selectionMap.get("port")?.toJSON?.() ?? selectionMap.get("port") ?? null);
-          if (newPortJson !== lastPortJson) {
-            lastPortJson = newPortJson;
-            callback();
-          }
-        }
-      };
-
-      selectionMap.observe(handler);
-      return () => selectionMap.unobserve(handler);
+      return store.subscribe(callback);
     },
     [store],
   );
 
   const getSnapshot = useCallback(() => {
     if (!store) return EMPTY_PORT;
-    const selection = store.yMap.get("selection") as Y.Map<any> | undefined;
-    if (!selection) return EMPTY_PORT;
-    const portMap = selection.get("port") as Y.Map<string> | undefined;
-    if (!portMap) return EMPTY_PORT;
+    const state = store.snapshot();
+    const port = state.selection?.port;
+    if (!port?.piece || !port?.port) return EMPTY_PORT;
 
-    const piece = portMap.get("piece") as string | undefined;
-    const port = portMap.get("port") as string | undefined;
-    const designPiece = portMap.get("designPiece") as string | undefined;
-
-    if (!piece || !port) return EMPTY_PORT;
-
-    const newValue = { piece, port, designPiece };
+    const newValue = { piece: port.piece, port: port.port, designPiece: port.designPiece };
     const newJson = JSON.stringify(newValue);
 
     if (newJson === lastPortRef.current.json) {

@@ -72,6 +72,7 @@ import {
   createDefaultKitAppState,
   defaultPanelVisibility,
   identitySelector,
+  KitAppFullscreenWindow,
   KitDiffAppStore as KitDiffStore,
   KitScopeProvider,
   LayoutCanvas,
@@ -238,11 +239,6 @@ export interface KitAppSelectionDiff {
   files?: KitAppSelectionFilesDiff;
   folders?: KitAppSelectionFoldersDiff;
   authors?: KitAppSelectionAuthorsDiff;
-}
-export enum KitAppFullscreenWindow {
-  None = "none",
-  Table = "table",
-  Diagram = "diagram",
 }
 export enum KitAppWindowKind {
   Table = "table",
@@ -1084,6 +1080,11 @@ if (typeof window !== "undefined") {
     const newForce = { ...currentForce, ...event.diagramForce };
     return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, diagramForce: newForce } } };
   });
+  registerRuntimeAction("kitSetFullscreen", (context: any, event: any) => {
+    if (event.type !== "KIT.SET_FULLSCREEN") return {};
+    const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
+    return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, fullscreenWindow: event.window } } };
+  });
 }
 
 // #endregion Kit App Plugin Registration
@@ -1167,19 +1168,20 @@ export function useKitAppSelection(): HookResult<KitAppSelection> {
   return conditionalHookResult(canSet, selection, setSelection);
 }
 
-// TODO: Add KIT.SET_FULLSCREEN event to XState machine, then migrate this hook
 export function useKitAppFullscreen(): HookResult<KitAppFullscreenWindow> {
   const kitScope = useKitScope();
-  const controller = useKitStore() as KitStore | null;
+  const kitGuid = kitScope?.guid ?? "";
+  const actor = useSketchpadActor();
   const fullscreen = useKitApp((s) => s.fullscreenWindow) as KitAppFullscreenWindow;
-  const canSet = kitScope !== null && controller !== null;
-  const setFullscreen = useCallback(
-    (value: KitAppFullscreenWindow) => {
-      if (controller) controller.execute("semio.kitApp.setFullscreen", value);
-    },
-    [controller],
-  );
-  return [fullscreen, setFullscreen, canSet];
+  const canSetEvent = useMemo(() => ({ type: "KIT.SET_FULLSCREEN" as const, kitGuid, window: KitAppFullscreenWindow.None }), [kitGuid]);
+  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
+  const setFullscreen = useMemo(() => {
+    if (!canSet) return undefined;
+    return (value: KitAppFullscreenWindow) => {
+      actor.send({ type: "KIT.SET_FULLSCREEN", kitGuid, window: value });
+    };
+  }, [actor, kitGuid, canSet]);
+  return conditionalHookResult(canSet, fullscreen, setFullscreen);
 }
 
 export function useKitAppOthers(): HookNoSetResult<KitAppPresenceOther[]> {
@@ -1191,16 +1193,17 @@ export function useKitAppOthers(): HookNoSetResult<KitAppPresenceOther[]> {
 
 export function useKitAppWindowLayout(): HookResult<any> {
   const kitScope = useKitScope();
-  const kitGuid = kitScope?.guid;
-  const controller = useKitStore() as KitStore | null;
+  const kitGuid = kitScope?.guid ?? "";
+  const actor = useSketchpadActor();
   const windowLayout = useKitApp((s) => s.windowLayout);
-  const canSet = !!kitGuid && controller !== null;
+  const canSetEvent = useMemo(() => ({ type: "KIT.SET_WINDOW_LAYOUT" as const, kitGuid, windowLayout: {} }), [kitGuid]);
+  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setWindowLayout = useMemo(() => {
-    if (!canSet || !kitGuid) return undefined;
+    if (!canSet) return undefined;
     return (value: any) => {
-      if (controller) controller.change({ windowLayout: value });
+      actor.send({ type: "KIT.SET_WINDOW_LAYOUT", kitGuid, windowLayout: value });
     };
-  }, [kitGuid, canSet, controller]);
+  }, [actor, kitGuid, canSet]);
   return conditionalHookResult(canSet, windowLayout, setWindowLayout);
 }
 

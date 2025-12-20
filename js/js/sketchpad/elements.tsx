@@ -73,6 +73,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { Command as CommandPrimitive } from "cmdk";
 import * as dagre from "dagre";
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import * as ResizablePrimitive from "react-resizable-panels";
 import { Link, useLocation, useNavigate } from "react-router";
@@ -4298,7 +4299,6 @@ export { BottomPanel };
 export interface WindowConfig {
   id: string;
   children: React.ReactNode;
-  kind?: "canvas" | "layout";
   defaultSize?: number;
   onDoubleClick?: () => void;
   className?: string;
@@ -4333,7 +4333,6 @@ const DefaultErrorDisplay: React.FC<{ error: Error }> = ({ error }) => {
 const Window: React.FC<WindowProps> = ({
   id,
   children,
-  kind = "canvas",
   onDoubleClick,
   className = "",
   isVisible = true,
@@ -4348,6 +4347,8 @@ const Window: React.FC<WindowProps> = ({
   controls,
 }) => {
   const [isMaximized, setIsMaximized] = React.useState(false);
+  const [headerElement, setHeaderElement] = React.useState<HTMLElement | null>(null);
+  const windowRef = React.useRef<HTMLDivElement>(null);
   const bgClass = "bg-window";
 
   const handleMaximize = () => {
@@ -4356,34 +4357,50 @@ const Window: React.FC<WindowProps> = ({
     else if (!isMaximized && onMaximize) onMaximize();
   };
 
+  // Find the GoldenLayout header to portal controls into (if in GoldenLayout context)
+  React.useEffect(() => {
+    if (windowRef.current) {
+      const stack = windowRef.current.closest(".lm_item.lm_stack");
+      const header = stack?.querySelector(".lm_header") as HTMLElement | null;
+      setHeaderElement(header);
+    }
+  }, []);
+
   if (!isVisible) return null;
+
+  const hasControls = showControls || controls || onOpenInNewWindow || onMaximize || onMinimize || onClose;
+
+  const controlsContent = hasControls && (
+    <div className="flex items-stretch gap-single">
+      {controls}
+      {(showControls || onOpenInNewWindow || onMaximize || onMinimize || onClose) && (
+        <ActionGroup id={`${id}-window-controls`}>
+          {onOpenInNewWindow && (
+            <ActionGroupItem id={`${id}-window-controls-external`} onClick={onOpenInNewWindow}>
+              <ExternalLinkIcon />
+            </ActionGroupItem>
+          )}
+          {(onMaximize || onMinimize) && (
+            <ActionGroupItem id={`${id}-window-controls-maximize`} onClick={handleMaximize}>
+              {isMaximized ? <Minimize2Icon /> : <Maximize2Icon />}
+            </ActionGroupItem>
+          )}
+          {onClose && (
+            <ActionGroupItem id={`${id}-window-controls-close`} onClick={onClose}>
+              <CloseIcon />
+            </ActionGroupItem>
+          )}
+        </ActionGroup>
+      )}
+    </div>
+  );
+
   return (
     <LevelProvider level="window">
-      <div id={id} className={cn("relative h-full w-full", bgClass, kind === "canvas" ? "border border-window" : undefined, className)} onDoubleClick={onDoubleClick}>
-        {(showControls || controls || onOpenInNewWindow || onMaximize || onMinimize || onClose) && (
-          <div className="absolute top-1 right-1 z-panel flex items-stretch gap-single">
-            {controls}
-            {(showControls || onOpenInNewWindow || onMaximize || onMinimize || onClose) && (
-              <ActionGroup id={`${id}-window-controls`}>
-                {onOpenInNewWindow && (
-                  <ActionGroupItem id={`${id}-window-controls-external`} onClick={onOpenInNewWindow}>
-                    <ExternalLinkIcon />
-                  </ActionGroupItem>
-                )}
-                {(onMaximize || onMinimize) && (
-                  <ActionGroupItem id={`${id}-window-controls-maximize`} onClick={handleMaximize}>
-                    {isMaximized ? <Minimize2Icon /> : <Maximize2Icon />}
-                  </ActionGroupItem>
-                )}
-                {onClose && (
-                  <ActionGroupItem id={`${id}-window-controls-close`} onClick={onClose}>
-                    <CloseIcon />
-                  </ActionGroupItem>
-                )}
-              </ActionGroup>
-            )}
-          </div>
-        )}
+      <div ref={windowRef} id={id} className={cn("relative h-full w-full", bgClass, className)} onDoubleClick={onDoubleClick}>
+        {headerElement
+          ? createPortal(<div className="absolute right-1 top-0 -bottom-px flex items-center z-panel bg-window border-t border-l border-element">{controlsContent}</div>, headerElement)
+          : hasControls && <div className="absolute top-1 right-1 z-panel flex items-stretch gap-single">{controlsContent}</div>}
         {error ? <DefaultErrorDisplay error={error} /> : loading && skeleton ? skeleton : children}
       </div>
     </LevelProvider>

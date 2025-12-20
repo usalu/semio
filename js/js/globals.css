@@ -85,9 +85,12 @@
   color: var(--foreground) !important;
   padding: 2px 8px !important;
   cursor: var(--cursor-pointer) !important;
+  border-top: 1px solid var(--border-color) !important;
   border-right: 1px solid var(--border-color) !important;
   user-select: none !important;
   -webkit-user-select: none !important;
+  margin-bottom: -1px !important;
+  padding-bottom: 3px !important;
 }
 
 .lm_tab:hover {
@@ -179,7 +182,10 @@
   content: "" !important;
   position: absolute !important;
   inset: 0 !important;
-  box-shadow: inset 0 0 0 1px var(--border-color) !important;
+  box-shadow:
+    inset 1px 0 0 0 var(--border-color),
+    inset -1px 0 0 0 var(--border-color),
+    inset 0 -1px 0 0 var(--border-color) !important;
   z-index: var(--z-panel) !important;
   pointer-events: none !important;
 }
@@ -292,10 +298,10 @@
     --text-9xl: 7.2rem;
     --text-9xl--line-height: 1;
     --base: var(--color-light);
-    --window: var(--color-light-8-9);
-    --panel: var(--color-light-7-9);
+    --window: var(--color-light-6-7);
+    --panel: var(--color-light-5-7);
     --overlay: transparent;
-    --temporary: var(--color-light-5-7);
+    --temporary: var(--color-light-4-7);
     --foreground: var(--color-dark);
     --z-base: 0;
     --z-window: 5;
@@ -318,7 +324,7 @@
     --hover-temporary: var(--color-light-gray-gray);
     --active-base: var(--color-primary);
     --active-foreground: var(--color-dark);
-    --border-window-color: var(--color-foreground);
+    --border-window-color: var(--color-gray);
     --border-element-color: var(--hover-base);
     --border-color: var(--border-window-color);
     --plaster: var(--color-gray);
@@ -584,7 +590,7 @@
   --window: var(--color-dark-8-9);
   --panel: var(--color-dark-7-9);
   --overlay: transparent;
-  --temporary: var(--color-dark-5-7);
+  --temporary: var(--color-dark-gray);
   --foreground: var(--color-light);
   --active-base: var(--color-primary);
   --active-foreground: var(--color-light);
@@ -626,6 +632,8 @@
   --destructive-bg: var(--color-dark-8-9);
   --destructive-foreground: var(--color-danger);
   --destructive-border: var(--color-danger);
+  --plaster: var(--color-gray);
+  --plaster-edge: var(--color-foreground);
 }
 
 .touch {

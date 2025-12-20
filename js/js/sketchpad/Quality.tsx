@@ -27,7 +27,6 @@ import { AwardIcon, CodeIcon, HandIcon, MonitorIcon, MoonIcon, MousePointerIcon,
 import React, { createContext, FC, memo, useCallback, useContext, useEffect, useMemo, useRef } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
-import * as Y from "yjs";
 import { useLabel } from "../i18n";
 import { guid, Guid, Kit, Quality, QualityDiff } from "../semio";
 import type { Connection, Edge, Node, NodeTypes, ReactFlowInstance } from "./elements";
@@ -51,17 +50,17 @@ import {
   TreeContent,
   TreeItem,
 } from "./elements";
-import type { AppWindowConfig, HookNoSetResult, HookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, QualityAppId, Transact, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
-import { AppConfig, AppPlugin, createPanelDefinition, Expertise, Mode, PanelKind, parseWindowLayout, registerAppPlugin, registerRuntimeAction, stringifyWindowLayout, Theme, ToolKind } from "./shared";
+import type { AppWindowConfig, HookNoSetResult, HookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, QualityAppId, Transact } from "./shared";
+import { AppConfig, AppPlugin, createPanelDefinition, Expertise, Mode, PanelKind, registerAppPlugin, registerRuntimeAction, Theme, ToolKind } from "./shared";
 import type { KitStore, QualityStore, SketchpadStore } from "./Sketchpad";
 import {
   Canvas,
   createDefaultLayout,
   createDefaultQualityAppState,
   identitySelector,
-  KitDiffAppStore,
   KitScopeProvider,
   LayoutCanvas,
+  PlainKitDiffAppStore,
   QualityScopeProvider,
   registerQualityAppStoreFactory,
   useActiveInteraction,
@@ -85,10 +84,6 @@ import {
 // #endregion
 
 // #region Types
-
-type YQualityAppVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
-type YQualityApp = Y.Map<YQualityAppVal>;
-type YQualityApps = Y.Map<YQualityApp>;
 
 export interface FormulaNode {
   id: Guid;
@@ -603,33 +598,21 @@ const qualityAppCommands = {
 
 // #region Store
 
-class QualityAppStore extends KitDiffAppStore<QualityAppState, QualityAppDiff, QualityAppSelectionDiff, QualityAppEdit, QualityAppCommandContext, QualityAppCommandResult> {
+class QualityAppStore extends PlainKitDiffAppStore<QualityAppState, QualityAppDiff, QualityAppSelectionDiff, QualityAppEdit, QualityAppCommandContext, QualityAppCommandResult> {
   private readonly Guid: QualityAppId;
 
-  constructor(parent: SketchpadStore, yMap: Y.Map<any>, transact: Transact, id: QualityAppId) {
-    super(parent, yMap, transact);
+  constructor(parent: SketchpadStore, _yMap: any, _transact: Transact, id: QualityAppId) {
+    const defaultState: QualityAppState = {
+      fullscreenWindow: QualityAppFullscreenWindow.None,
+      panelVisibility: { toolbar: false, workbench: false, details: false, chat: false, settings: false },
+      activeTool: ToolKind.SELECTION_NORMAL,
+      selection: undefined,
+      hover: undefined,
+      formulaNodes: [],
+      windowLayout: undefined,
+    };
+    super(parent, defaultState);
     this.Guid = id;
-
-    transact(() => {
-      if (!yMap.has("fullscreenWindow")) {
-        yMap.set("fullscreenWindow", QualityAppFullscreenWindow.None);
-      }
-      if (!yMap.has("activeTool")) {
-        yMap.set("activeTool", ToolKind.SELECTION_NORMAL);
-      }
-      if (!yMap.has("panelVisibility")) {
-        const yPanelVisibility = new Y.Map<boolean>();
-        yPanelVisibility.set("toolbar", false);
-        yPanelVisibility.set("workbench", false);
-        yPanelVisibility.set("details", false);
-        yPanelVisibility.set("chat", false);
-        yPanelVisibility.set("settings", false);
-        yMap.set("panelVisibility", yPanelVisibility);
-      }
-      if (!yMap.has("formulaNodes")) {
-        yMap.set("formulaNodes", new Y.Array<any>());
-      }
-    });
 
     Object.entries(qualityAppCommands).forEach(([commandId, command]) => {
       this.registerCommand(commandId, command);
@@ -637,108 +620,15 @@ class QualityAppStore extends KitDiffAppStore<QualityAppState, QualityAppDiff, Q
   }
 
   quality(): QualityStore | undefined {
-    return this.parent.kit(this.Guid.kit).quality(this.Guid.quality);
+    return this.parentStore.kit(this.Guid.kit).quality(this.Guid.quality);
   }
 
   kit(): KitStore {
-    return this.parent.kit(this.Guid.kit);
-  }
-
-  get fullscreenWindow(): QualityAppFullscreenWindow {
-    return this.yMap.get("fullscreenWindow") as QualityAppFullscreenWindow;
-  }
-
-  get activeTool(): ToolKind {
-    const value = this.yMap.get("activeTool") as ToolKind;
-    if (value === undefined) {
-      this.transact(() => {
-        this.yMap.set("activeTool", ToolKind.SELECTION_NORMAL);
-      });
-      return ToolKind.SELECTION_NORMAL;
-    }
-    return value;
-  }
-
-  get panelVisibility(): PanelVisibility {
-    const yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
-    if (!yPanelVisibility) {
-      return {
-        toolbar: false,
-        workbench: false,
-        details: false,
-        chat: false,
-        settings: false,
-      };
-    }
-    return {
-      toolbar: yPanelVisibility.get("toolbar") ?? false,
-      workbench: yPanelVisibility.get("workbench") ?? false,
-      details: yPanelVisibility.get("details") ?? false,
-      chat: yPanelVisibility.get("chat") ?? false,
-      settings: yPanelVisibility.get("settings") ?? false,
-    };
-  }
-
-  get selection(): QualityAppSelection {
-    const selection = this.yMap.get("selection") as Y.Map<any>;
-    if (!selection) return {};
-    const result: QualityAppSelection = {};
-    const formulaNodes = selection.get("formulaNodes") as Y.Array<string>;
-    if (formulaNodes && formulaNodes.length > 0) {
-      result.formulaNodes = formulaNodes.toArray();
-    }
-    return result;
-  }
-
-  get hover(): QualityAppHover | undefined {
-    const hover = this.yMap.get("hover") as Y.Map<any> | undefined;
-    if (!hover) return undefined;
-    const result: QualityAppHover = {};
-    const formulaNode = hover.get("formulaNode") as Guid | undefined;
-    if (formulaNode) result.formulaNode = formulaNode;
-    return Object.keys(result).length > 0 ? result : undefined;
-  }
-
-  get formulaNodes(): FormulaNode[] {
-    const yFormulaNodes = this.yMap.get("formulaNodes") as Y.Array<any>;
-    if (!yFormulaNodes) return [];
-    return yFormulaNodes.toArray().map((yNode: any) => ({
-      id: yNode.get("id"),
-      kind: yNode.get("kind"),
-      name: yNode.get("name"),
-      children: yNode.get("children") ? (yNode.get("children") as Y.Array<Guid>).toArray() : undefined,
-      x: yNode.get("x"),
-      y: yNode.get("y"),
-    }));
-  }
-
-  get windowLayout(): any {
-    return parseWindowLayout(this.yMap.get("windowLayout"));
-  }
-  set windowLayout(layout: any) {
-    const value = stringifyWindowLayout(layout);
-    if (value) this.yMap.set("windowLayout", value);
-    else this.yMap.delete("windowLayout");
+    return this.parentStore.kit(this.Guid.kit);
   }
 
   protected getSelection(): QualityAppSelection {
-    return this.selection;
-  }
-
-  protected hash(state: QualityAppState): string {
-    return JSON.stringify(state);
-  }
-
-  protected buildSnapshot(): QualityAppState {
-    return {
-      fullscreenWindow: this.fullscreenWindow,
-      panelVisibility: this.panelVisibility,
-      activeTool: this.activeTool,
-      selection: this.selection,
-      hover: this.hover,
-      formulaNodes: this.formulaNodes,
-      windowLayout: this.windowLayout,
-    };
+    return this.state.selection || {};
   }
 
   protected inverseSelectionDiff(selection: QualityAppSelection, diff: QualityAppSelectionDiff): QualityAppSelectionDiff {
@@ -746,95 +636,49 @@ class QualityAppStore extends KitDiffAppStore<QualityAppState, QualityAppDiff, Q
   }
 
   protected applySelectionDiff(selectionDiff: QualityAppSelectionDiff): void {
-    let selection = this.yMap.get("selection") as Y.Map<any>;
-    if (!selection) {
-      selection = new Y.Map();
-      this.yMap.set("selection", selection);
-    }
+    const currentSelection = this.state.selection || {};
+    const newSelection: QualityAppSelection = { ...currentSelection };
+
     if (selectionDiff.formulaNodes) {
-      let formulaNodes = (selection.get("formulaNodes") as Y.Array<Guid>) || new Y.Array<Guid>();
-      if (!selection.has("formulaNodes")) {
-        selection.set("formulaNodes", formulaNodes);
-      }
+      const currentNodes = new Set(currentSelection.formulaNodes || []);
       if (selectionDiff.formulaNodes.added) {
-        for (const node of selectionDiff.formulaNodes.added) {
-          if (!formulaNodes.toArray().includes(node)) {
-            formulaNodes.push([node]);
-          }
-        }
+        selectionDiff.formulaNodes.added.forEach((n) => currentNodes.add(n));
       }
       if (selectionDiff.formulaNodes.removed) {
-        for (const node of selectionDiff.formulaNodes.removed) {
-          const index = formulaNodes.toArray().indexOf(node);
-          if (index !== -1) {
-            formulaNodes.delete(index, 1);
-          }
-        }
+        selectionDiff.formulaNodes.removed.forEach((n) => currentNodes.delete(n));
       }
+      newSelection.formulaNodes = currentNodes.size > 0 ? Array.from(currentNodes) : undefined;
     }
+
+    this.state = { ...this.state, selection: newSelection };
+    this.notify();
   }
 
-  change = (diff: QualityAppDiff) => {
-    this.transact(() => {
-      if (diff.fullscreenWindow) this.yMap.set("fullscreenWindow", diff.fullscreenWindow);
-      if (diff.activeTool) this.yMap.set("activeTool", diff.activeTool);
-      if (diff.panelVisibility !== undefined) {
-        let yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
-        if (!yPanelVisibility) {
-          yPanelVisibility = new Y.Map<boolean>();
-          this.yMap.set("panelVisibility", yPanelVisibility);
-        }
-        Object.entries(diff.panelVisibility).forEach(([key, value]) => {
-          if (value !== undefined) {
-            yPanelVisibility.set(key, value);
-          }
-        });
-      }
-      if (diff.selection) {
-        this.applySelectionDiff(diff.selection);
-      }
-      if (diff.hover) {
-        if (Object.keys(diff.hover).length === 0) {
-          this.yMap.delete("hover");
-        } else {
-          let yHover = this.yMap.get("hover") as Y.Map<any>;
-          if (!yHover) {
-            yHover = new Y.Map<any>();
-            this.yMap.set("hover", yHover);
-          }
-          if (Object.prototype.hasOwnProperty.call(diff.hover, "formulaNode")) {
-            const nodeValue = diff.hover.formulaNode;
-            if (nodeValue) {
-              yHover.set("formulaNode", nodeValue);
-            } else {
-              yHover.delete("formulaNode");
-            }
-          }
-        }
-      }
-      if (diff.formulaNodes) {
-        const yFormulaNodes = new Y.Array<any>();
-        diff.formulaNodes.forEach((node) => {
-          const yNode = new Y.Map<any>();
-          yNode.set("id", node.id);
-          yNode.set("kind", node.kind);
-          yNode.set("name", node.name);
-          if (node.children) {
-            const yChildren = new Y.Array<Guid>();
-            yChildren.push(node.children);
-            yNode.set("children", yChildren);
-          }
-          if (node.x !== undefined) yNode.set("x", node.x);
-          if (node.y !== undefined) yNode.set("y", node.y);
-          yFormulaNodes.push([yNode]);
-        });
-        this.yMap.set("formulaNodes", yFormulaNodes);
-      }
-      if (diff.windowLayout !== undefined) {
-        this.windowLayout = diff.windowLayout;
-      }
-    });
-  };
+  change(diff: QualityAppDiff): void {
+    const newState = { ...this.state };
+
+    if (diff.fullscreenWindow !== undefined) newState.fullscreenWindow = diff.fullscreenWindow;
+    if (diff.activeTool !== undefined) newState.activeTool = diff.activeTool;
+    if (diff.panelVisibility !== undefined) {
+      newState.panelVisibility = { ...newState.panelVisibility, ...diff.panelVisibility };
+    }
+    if (diff.selection) {
+      this.applySelectionDiff(diff.selection);
+      return;
+    }
+    if (diff.hover !== undefined) {
+      newState.hover = Object.keys(diff.hover).length === 0 ? undefined : diff.hover;
+    }
+    if (diff.formulaNodes !== undefined) {
+      newState.formulaNodes = diff.formulaNodes;
+    }
+    if (diff.windowLayout !== undefined) {
+      newState.windowLayout = diff.windowLayout;
+    }
+
+    this.state = newState;
+    this.notify();
+  }
 
   async executeCommand<T>(command: string, ...args: any[]): Promise<T> {
     let origin: string | undefined;

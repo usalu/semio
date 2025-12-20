@@ -25,10 +25,23 @@
 import { MDXProvider as BaseMDXProvider } from "@mdx-js/react";
 import { FC, ReactNode, Suspense, createContext, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router";
-import * as Y from "yjs";
 import { useLabel } from "../i18n";
 import type { SketchpadStore } from "./Sketchpad";
-import { AppStore, Canvas, LayoutCanvas, createDefaultLayout, registerDocsAppStoreFactory, useAddFooterItem, useAddPanelSection, useAppType, useFocus, useRemoveFooterItem, useRemovePanelSection, useSettings, useSketchpadCommands } from "./Sketchpad";
+import {
+  Canvas,
+  LayoutCanvas,
+  PlainAppStore,
+  createDefaultLayout,
+  registerDocsAppStoreFactory,
+  useAddFooterItem,
+  useAddPanelSection,
+  useAppType,
+  useFocus,
+  useRemoveFooterItem,
+  useRemovePanelSection,
+  useSettings,
+  useSketchpadCommands,
+} from "./Sketchpad";
 import { Aside, Tabs as BaseTabs, FileTreeNode, Page, PageFrontmatter, PageNavigation, TabsContent, TabsList, TabsTrigger, TreeItem, TreeStateProvider } from "./elements";
 import { PanelKind, createPanelDefinition, parseWindowLayout, registerAppPlugin, stringifyWindowLayout, type AppConfig, type AppEdit, type AppPlugin, type AppWindowConfig, type PanelVisibility } from "./shared";
 
@@ -679,91 +692,21 @@ export interface DocsCommandResult {
 
 // #region Store
 
-export class DocsAppStore extends AppStore<DocsAppState, DocsAppDiff, DocsAppSelectionDiff, DocsAppEdit, DocsCommandContext, DocsCommandResult> {
-  constructor(parent: SketchpadStore, yMap: Y.Map<any>, transact: (fn: () => void) => void) {
-    super(parent, yMap, transact);
-
-    transact(() => {
-      if (!yMap.has("panelVisibility")) {
-        const yPanelVisibility = new Y.Map<boolean>();
-        yPanelVisibility.set("toolbar", false);
-        yPanelVisibility.set("workbench", false);
-        yPanelVisibility.set("details", false);
-        yPanelVisibility.set("chat", false);
-        yPanelVisibility.set("settings", false);
-        yMap.set("panelVisibility", yPanelVisibility);
-      }
-      if (!yMap.has("isTransactionActive")) {
-        yMap.set("isTransactionActive", false);
-      }
-      if (!yMap.has("currentTransactionStack")) {
-        yMap.set("currentTransactionStack", new Y.Array<any>());
-      }
-      if (!yMap.has("pastTransactionsStack")) {
-        yMap.set("pastTransactionsStack", new Y.Array<any>());
-      }
-      if (!yMap.has("redoStack")) {
-        yMap.set("redoStack", new Y.Array<any>());
-      }
-    });
-  }
-
-  get panelVisibility(): PanelVisibility {
-    const yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
-    if (!yPanelVisibility) {
-      return {
-        toolbar: false,
-        workbench: false,
-        details: false,
-        chat: false,
-        settings: false,
-      };
-    }
-    return {
-      toolbar: yPanelVisibility.get("toolbar") ?? false,
-      workbench: yPanelVisibility.get("workbench") ?? false,
-      details: yPanelVisibility.get("details") ?? false,
-      chat: yPanelVisibility.get("chat") ?? false,
-      settings: yPanelVisibility.get("settings") ?? false,
-    };
-  }
-
-  get selection(): DocsAppSelection | undefined {
-    const ySelection = this.yMap.get("selection") as Y.Map<string> | undefined;
-    if (!ySelection) return undefined;
-    return {
-      section: ySelection.get("section"),
-      page: ySelection.get("page"),
-    };
-  }
-
-  protected hash(state: DocsAppState): string {
-    return JSON.stringify(state);
-  }
-
-  protected buildSnapshot(): DocsAppState {
-    return {
-      panelVisibility: this.panelVisibility,
-      selection: this.selection,
+export class DocsAppStore extends PlainAppStore<DocsAppState, DocsAppDiff, DocsAppSelectionDiff, DocsAppEdit, DocsCommandContext, DocsCommandResult> {
+  constructor(_parent: SketchpadStore, _yMap: any, _transact: (fn: () => void) => void) {
+    const defaultState: DocsAppState = {
+      panelVisibility: { toolbar: false, workbench: false, details: false, chat: false, settings: false },
+      selection: undefined,
       sectionStates: {},
     };
+    super(defaultState);
   }
 
-  protected applySelectionDiff(selectionDiff: DocsAppSelectionDiff): void {
-    let ySelection = this.yMap.get("selection") as Y.Map<string>;
-    if (!ySelection) {
-      ySelection = new Y.Map<string>();
-      this.yMap.set("selection", ySelection);
-    }
-    if (selectionDiff.section?.next !== undefined) {
-      ySelection.set("section", selectionDiff.section.next);
-    }
-    if (selectionDiff.page?.next !== undefined) {
-      ySelection.set("page", selectionDiff.page.next);
-    }
+  protected getSelection(): DocsAppSelection | undefined {
+    return this.state.selection;
   }
 
-  protected inverseSelectionDiff(selection: DocsAppSelection, diff: DocsAppSelectionDiff): DocsAppSelectionDiff {
+  protected inverseSelectionDiff(selection: DocsAppSelection | undefined, diff: DocsAppSelectionDiff): DocsAppSelectionDiff {
     const inverseDiff: DocsAppSelectionDiff = {};
     if (diff.section) {
       inverseDiff.section = { prev: diff.section.next, next: diff.section.prev };
@@ -774,8 +717,40 @@ export class DocsAppStore extends AppStore<DocsAppState, DocsAppDiff, DocsAppSel
     return inverseDiff;
   }
 
-  protected getSelection(): DocsAppSelection | undefined {
-    return this.selection;
+  protected applySelectionDiff(selectionDiff: DocsAppSelectionDiff): void {
+    const currentSelection = this.state.selection || {};
+    const newSelection: DocsAppSelection = { ...currentSelection };
+
+    if (selectionDiff.section?.next !== undefined) {
+      newSelection.section = selectionDiff.section.next;
+    }
+    if (selectionDiff.page?.next !== undefined) {
+      newSelection.page = selectionDiff.page.next;
+    }
+
+    this.state = { ...this.state, selection: newSelection };
+    this.notify();
+  }
+
+  change(diff: DocsAppDiff): void {
+    const newState = { ...this.state };
+
+    if (diff.panelVisibility !== undefined) {
+      newState.panelVisibility = { ...newState.panelVisibility, ...diff.panelVisibility };
+    }
+    if (diff.selection) {
+      this.applySelectionDiff(diff.selection);
+      return;
+    }
+    if (diff.sectionStatesDiff) {
+      newState.sectionStates = { ...(newState.sectionStates || {}) };
+      Object.entries(diff.sectionStatesDiff).forEach(([section, stateUpdate]) => {
+        newState.sectionStates![section] = { ...(newState.sectionStates![section] || {}), ...stateUpdate };
+      });
+    }
+
+    this.state = newState;
+    this.notify();
   }
 
   async executeCommand<T>(command: string, ...args: any[]): Promise<T> {

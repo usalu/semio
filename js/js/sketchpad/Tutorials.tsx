@@ -6,7 +6,6 @@
 
 import { CloseIcon, PauseIcon, PlayIcon, RecordIcon, SkipBackIcon, SkipForwardIcon, StopIcon } from "@semio/assets";
 import { createContext, FC, ReactNode, useCallback, useContext, useEffect, useState } from "react";
-import * as Y from "yjs";
 import { guid, Guid } from "../semio";
 import { useAddFooterItem, useMode, useRemoveFooterItem } from "./Sketchpad";
 import { Button, Slider } from "./elements";
@@ -767,77 +766,36 @@ export interface TutorialDiff {
 // #region Store
 
 export class TutorialStore {
-  private readonly yMap: Y.Map<any>;
-  private readonly transact: (fn: () => void) => void;
+  private state: TutorialState;
   private readonly listeners: Set<() => void> = new Set();
   private playbackInterval?: number;
   private recordingStartTime?: number;
 
-  constructor(yMap: Y.Map<any>, transact: (fn: () => void) => void) {
-    this.yMap = yMap;
-    this.transact = transact;
-    this.initialize();
-  }
-
-  private initialize(): void {
-    this.transact(() => {
-      if (!this.yMap.has("activeTutorial")) {
-        this.yMap.set("activeTutorial", null);
-      }
-      if (!this.yMap.has("currentMilestoneIndex")) {
-        this.yMap.set("currentMilestoneIndex", 0);
-      }
-      if (!this.yMap.has("playbackState")) {
-        this.yMap.set("playbackState", TutorialPlaybackState.IDLE);
-      }
-      if (!this.yMap.has("playbackTime")) {
-        this.yMap.set("playbackTime", 0);
-      }
-      if (!this.yMap.has("recordingState")) {
-        this.yMap.set("recordingState", TutorialRecordingState.IDLE);
-      }
-      if (!this.yMap.has("activeRecording")) {
-        this.yMap.set("activeRecording", null);
-      }
-      if (!this.yMap.has("availableTutorials")) {
-        this.yMap.set("availableTutorials", []);
-      }
-    });
-  }
-
-  snapshot(): TutorialState {
-    return {
-      activeTutorial: this.yMap.get("activeTutorial"),
-      currentMilestoneIndex: this.yMap.get("currentMilestoneIndex") || 0,
-      playbackState: this.yMap.get("playbackState") || TutorialPlaybackState.IDLE,
-      playbackTime: this.yMap.get("playbackTime") || 0,
-      recordingState: this.yMap.get("recordingState") || TutorialRecordingState.IDLE,
-      activeRecording: this.yMap.get("activeRecording"),
-      availableTutorials: this.yMap.get("availableTutorials") || [],
+  constructor(_yMap?: any, _transact?: (fn: () => void) => void) {
+    this.state = {
+      activeTutorial: null,
+      currentMilestoneIndex: 0,
+      playbackState: TutorialPlaybackState.IDLE,
+      playbackTime: 0,
+      recordingState: TutorialRecordingState.IDLE,
+      activeRecording: null,
+      availableTutorials: [],
     };
   }
 
+  snapshot(): TutorialState {
+    return this.state;
+  }
+
   change(diff: TutorialDiff): void {
-    this.transact(() => {
-      if (diff.activeTutorial !== undefined) {
-        this.yMap.set("activeTutorial", diff.activeTutorial);
-      }
-      if (diff.currentMilestoneIndex !== undefined) {
-        this.yMap.set("currentMilestoneIndex", diff.currentMilestoneIndex);
-      }
-      if (diff.playbackState !== undefined) {
-        this.yMap.set("playbackState", diff.playbackState);
-      }
-      if (diff.playbackTime !== undefined) {
-        this.yMap.set("playbackTime", diff.playbackTime);
-      }
-      if (diff.recordingState !== undefined) {
-        this.yMap.set("recordingState", diff.recordingState);
-      }
-      if (diff.activeRecording !== undefined) {
-        this.yMap.set("activeRecording", diff.activeRecording);
-      }
-    });
+    const newState = { ...this.state };
+    if (diff.activeTutorial !== undefined) newState.activeTutorial = diff.activeTutorial;
+    if (diff.currentMilestoneIndex !== undefined) newState.currentMilestoneIndex = diff.currentMilestoneIndex;
+    if (diff.playbackState !== undefined) newState.playbackState = diff.playbackState;
+    if (diff.playbackTime !== undefined) newState.playbackTime = diff.playbackTime;
+    if (diff.recordingState !== undefined) newState.recordingState = diff.recordingState;
+    if (diff.activeRecording !== undefined) newState.activeRecording = diff.activeRecording;
+    this.state = newState;
     this.notify();
   }
 
@@ -988,7 +946,7 @@ export class TutorialStore {
   stopRecording(): TutorialRecording | null {
     const state = this.snapshot();
     if (!state.activeRecording) return null;
-    const recording = state.activeRecording;
+    const recording = { ...state.activeRecording };
     recording.duration = Date.now() - recording.startTime;
     this.change({
       recordingState: TutorialRecordingState.IDLE,
@@ -1016,31 +974,25 @@ export class TutorialStore {
     if (state.recordingState !== TutorialRecordingState.RECORDING || !state.activeRecording) return;
     const timestamp = this.recordingStartTime ? Date.now() - this.recordingStartTime : 0;
     const fullEvent: TutorialRecordingEvent = { timestamp, ...event };
-    this.transact(() => {
-      const recording = this.yMap.get("activeRecording");
-      if (recording) {
-        recording.events.push(fullEvent);
-        this.yMap.set("activeRecording", recording);
-      }
-    });
+    const recording = { ...state.activeRecording };
+    recording.events = [...recording.events, fullEvent];
+    this.state = { ...this.state, activeRecording: recording };
     this.notify();
   }
 
   addTutorial(tutorial: Tutorial): void {
-    this.transact(() => {
-      const tutorials = this.yMap.get("availableTutorials") || [];
-      tutorials.push(tutorial);
-      this.yMap.set("availableTutorials", tutorials);
-    });
+    this.state = {
+      ...this.state,
+      availableTutorials: [...this.state.availableTutorials, tutorial],
+    };
     this.notify();
   }
 
   removeTutorial(tutorialId: Guid): void {
-    this.transact(() => {
-      const tutorials = this.yMap.get("availableTutorials") || [];
-      const filtered = tutorials.filter((t: Tutorial) => t.id !== tutorialId);
-      this.yMap.set("availableTutorials", filtered);
-    });
+    this.state = {
+      ...this.state,
+      availableTutorials: this.state.availableTutorials.filter((t) => t.id !== tutorialId),
+    };
     this.notify();
   }
 

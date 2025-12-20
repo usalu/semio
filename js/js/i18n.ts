@@ -36,7 +36,7 @@ export function setExpertiseProvider(fn: () => Expertise) {
   getExpertiseFunction = fn;
 }
 
-export function useLabel(id: string, defaultValue?: string): string {
+export function useLabel(id: string): string | undefined {
   const { t } = useI18nTranslation();
   const expertise = getExpertiseFunction ? getExpertiseFunction() : Expertise.NORMAL;
   const value = t(id as any) as any;
@@ -65,9 +65,7 @@ export function useLabel(id: string, defaultValue?: string): string {
     }
   }
 
-  
-  const fallback = defaultValue ?? id;
-  return typeof fallback === "string" ? fallback : String(fallback);
+  return undefined;
 }
 
 export function useHotkey(id: string): string | undefined {

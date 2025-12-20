@@ -1,6 +1,11 @@
 # Prompt history
 
+All app stores are still entangled with yjs. Only the kit store should use yjs. All other stores should use the state machine for state management. Make a detailed refactor plan.
 
+The testing system is currently not clean. Right now there are spread tests for indiviudal features. The testing strategy should not be feature-based but rather component-based. Consolidate all sketchoad tests into one test per app. Make sure that all tests are covering the same functionality. Make sure that all tests are passing.
+This means only test("Home", ...), test("Kit", ...), test("Design", ...), test("Type", ...), test("Docs", ...), test("Feedback", ...) should remain. All other tests need to be integrated into the app tests.
+
+The actions of the windows of are below the window ribbon.
 
 Every window should have a full border arount it. Currently the bottom and right border are missing.
 
