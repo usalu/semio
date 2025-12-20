@@ -88,6 +88,63 @@ export function conditionalHookResult<T>(
   return [value, canSet ? setter : undefined, canSet] as const;
 }
 
+export interface Field<T> {
+  value: T;
+  canSet: boolean;
+  set: (next: T) => void;
+}
+
+export interface ActionField {
+  canExecute: boolean;
+  execute: () => void;
+}
+
+const NOOP_SETTER = () => {
+  if (process.env.NODE_ENV === "development") {
+    console.warn("[DEBUG] Attempted to set a disabled field");
+  }
+};
+
+export function createField<T>(value: T, setter: (next: T) => void, canSet: boolean): Field<T> {
+  return {
+    value,
+    canSet,
+    set: canSet ? setter : NOOP_SETTER,
+  };
+}
+
+export function createReadonlyField<T>(value: T): Field<T> {
+  return {
+    value,
+    canSet: false,
+    set: NOOP_SETTER,
+  };
+}
+
+export function createAction(execute: () => void, canExecute: boolean): ActionField {
+  return {
+    canExecute,
+    execute: canExecute ? execute : () => {
+      if (process.env.NODE_ENV === "development") {
+        console.warn("[DEBUG] Attempted to execute a disabled action");
+      }
+    },
+  };
+}
+
+export function fieldToHookResult<T>(field: Field<T>): HookResult<T> {
+  return [field.value, field.canSet ? field.set : undefined, field.canSet] as const;
+}
+
+export function hookResultToField<T>(result: HookResult<T>): Field<T> {
+  const [value, setter, canSet] = result;
+  return {
+    value,
+    canSet,
+    set: setter ?? NOOP_SETTER,
+  };
+}
+
 // #endregion Granular Hook Types
 
 export type Url = string;
@@ -1417,10 +1474,10 @@ export class DerivedStore {
 // #region Store Factory Registry
 
 // Factory types - using any to avoid circular type dependencies
-export type DesignAppStoreFactory = (parent: any, yMap: any, transact: (fn: () => void) => void, id: any, state?: any) => any;
+export type DesignAppStoreFactory = (parent: any, id: any, state?: any) => any;
 export type KitAppStoreFactory = (parent: any, yMap: any, transact: (fn: () => void) => void, id: any, state?: any) => any;
-export type TypeAppStoreFactory = (parent: any, yMap: any, transact: (fn: () => void) => void, id: any, state?: any) => any;
-export type QualityAppStoreFactory = (parent: any, yMap: any, transact: (fn: () => void) => void, id: any, state?: any) => any;
+export type TypeAppStoreFactory = (parent: any, id: any, state?: any) => any;
+export type QualityAppStoreFactory = (parent: any, id: any, state?: any) => any;
 
 // Global factory registry - lives in shared.ts to avoid circular dependencies
 let designAppStoreFactory: DesignAppStoreFactory | undefined;

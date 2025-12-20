@@ -1536,17 +1536,31 @@ Shared react components. The main component is Sketchpad. Sketchpad is used in t
 **Rules:**
 
 - Domain logic is ALWAYS in semio.ts and whenever an operation is not ui bound, it should be implemented there.
-- **State Management Architecture**: XState is the SINGLE SOURCE OF TRUTH for all UI state. Yjs is ONLY used for collaborative Kit data (types, designs, etc.). React components read state via `useSelector(actor, ...)` and send events via `actor.send({type: ...})`. NO Yjs in React components.
+- **State Management Architecture**: XState is the SINGLE SOURCE OF TRUTH for all UI state. Yjs is ONLY used for collaborative Kit data (types, designs, etc.) via `KitStore`. All other app stores (Design, Type, Quality, Docs, Home, Feedback) use `PlainAppStore` or `PlainKitDiffAppStore` base classes which do NOT use Yjs. React components read state via `useSelector(actor, ...)` and send events via `actor.send({type: ...})`. NO Yjs in React components.
   - `machines.ts` - Unified XState machine with all app state
   - `xstate-hooks.ts` - Clean React hooks using XState selectors
   - State is ALWAYS accessed over hooks. Mutation ALWAYS is via actor events. NEVER use useState for app state.
 - **Granular Hook Architecture**: All app state hooks follow the `[value, setter, canSet]` tuple pattern:
   - **Pattern**: `const [value, setValue, canSetValue] = useAppValue();`
   - **Types**: `HookResult<T>` for read-write hooks, `HookNoSetResult<T>` for read-only hooks
+  - **Field<T> Type**: Alternative object-based pattern with always-defined `set` (no-op when disabled):
+    ```typescript
+    interface Field<T> { value: T; canSet: boolean; set: (next: T) => void; }
+    const field = useDesignAppSelectionField();
+    field.set(newSelection); // Safe - no-op if canSet is false
+    ```
+  - **ActionField Type**: For action-only hooks without value:
+    ```typescript
+    interface ActionField { canExecute: boolean; execute: () => void; }
+    const action = useXStateAction(canEvent, event);
+    action.execute(); // Safe - no-op if canExecute is false
+    ```
+  - **Adapters**: Use `fieldToHookResult(field)` and `hookResultToField(result)` for interop
   - **No Parameters**: Hooks use scope providers (`useKitScope()`, `useDesignScope()`, `useTypeScope()`, `usePieceScope()`, `useConnectionScope()`, `useQualityScope()`) to get context
   - **canSet**: Boolean indicating if the action is available (scope exists and controller is valid). Use this to disable UI elements when action is unavailable.
   - **Examples**:
     - `const [selection, setSelection, canSetSelection] = useDesignAppSelection();`
+    - `const field = useDesignAppSelectionField();` // Field<T> pattern
     - `const [camera, setCamera, canSetCamera] = useTypeAppCamera();`
     - `const [isHovered, _, canReadHover] = useKitAppIsTypeHovered();` (inside TypeScopeProvider)
     - `const [loadingKits, _, canReadLoadingKits] = useHomeLoadingKits();` (read-only)
@@ -1986,6 +2000,24 @@ Design editing (pieces, connections). Extends `KitDiffAppStore`.
 - `useDesignAppActiveTool()` - Active tool
 - `useDesignAppDiagramCenter()` / `useDesignAppDiagramScale()` - Diagram view
 
+**HoverIntentContext:**
+
+Design app uses `HoverIntentContext` to manage hover/pan/drag state via refs instead of module-level variables:
+
+- `hoverClearTimeoutRef` - Timeout for clearing hover state
+- `currentHoveredPieceGuidRef` - Currently hovered piece GUID
+- `isPanningRef` - Whether user is panning the canvas
+- `isDraggingNodeRef` - Whether user is dragging a node
+
+Access via `useHoverIntent()` hook within `HoverIntentProvider` scope.
+
+**Derived State Providers:**
+
+- `TransactionPiecesProvider` - Provides `changedPieces` Set and `statusMap` Map for pieces affected by current transaction
+- `HoverPiecesProvider` - Provides `transitivelyHoveredPieces` and `transitivelyHoveredTypes` for hover highlighting
+
+Both use `useSyncExternalStore` with structural equality helpers (`areSetsEqual`, `areMapsEqual`) instead of JSON.stringify diffing.
+
 ###### Quality App (Quality.tsx)
 
 Quality/benchmark editing with formula visualization. Extends `KitDiffAppStore`.
@@ -2247,6 +2279,7 @@ Sketchpad UI elements resolve transactions via React context (not props):
 ##### Hooks and Helpers
 
 - **`useSync` / `useSyncDeep`** (from `js/js/sketchpad/Sketchpad.tsx`) wrap `useSyncExternalStore` against a store's `onChanged` / `onChangedDeep` events. Pass a selector (defaults to `identitySelector`) to scope renders to the slice you need.
+- **`useSyncField` / `useSyncFields`** subscribe to Y.js-backed store fields with optional `comparator?: (a: TSelected, b: TSelected) => boolean` parameter for custom equality checks instead of JSON.stringify. Use for Set/Map values or other complex types.
 - **`createObserver`** bridges a Y.js map or array into the store by registering either shallow or deep observers; always dispose the returned cleanup in `useEffect` finalizers.
 - **`RemoteProviders`** bundles the `yProvider` and `fileProvider` factories needed when constructing `SketchpadStore` so persistence and external file access stay aligned.
 
@@ -2752,6 +2785,52 @@ type HookNoSetResult<T> = readonly [T, undefined, boolean];
 - `readonlyHookResult(value)` - Create read-only result
 - `writableHookResult(value, setter, canSet?)` - Create writable result
 - `conditionalHookResult(canSet, value, setter)` - Create conditional result
+
+#### Field<T> Type
+
+Alternative object-based pattern with always-defined `set` function (no-op when disabled):
+
+```typescript
+interface Field<T> {
+  value: T;
+  canSet: boolean;
+  set: (next: T) => void;
+}
+
+interface ActionField {
+  canExecute: boolean;
+  execute: () => void;
+}
+```
+
+**Helper Functions:**
+
+- `createField(value, setter, canSet)` - Create writable field
+- `createReadonlyField(value)` - Create read-only field
+- `createAction(execute, canExecute)` - Create action field
+- `fieldToHookResult(field)` - Convert Field to HookResult
+- `hookResultToField(result)` - Convert HookResult to Field
+
+**XState Helpers (Sketchpad.tsx):**
+
+- `useXStateField(value, canEvent, createEvent)` - Create Field from XState selector
+- `useXStateFieldWithScope(value, canEvent, createEvent, hasScope)` - With wildcard fallback
+- `useXStateAction(canEvent, event)` - Create ActionField from XState event
+
+**App-Level Helper Pattern (Design.tsx):**
+
+```typescript
+interface UseDesignAppFieldOptions<T, TEvent> {
+  selector: (s: DesignAppState) => T;
+  fallback: T;
+  canEventType: TEvent["type"];
+  createCanEvent: (kitGuid: Guid, designGuid: Guid) => TEvent;
+  createSendEvent: (kitGuid: Guid, designGuid: Guid, value: T) => TEvent;
+  useWildcardFallback?: boolean;
+}
+
+function useDesignAppField<T, TEvent>(options: UseDesignAppFieldOptions<T, TEvent>): Field<T>;
+```
 
 #### Core Enums
 

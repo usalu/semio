@@ -50,7 +50,7 @@ import {
   TreeContent,
   TreeItem,
 } from "./elements";
-import type { AppWindowConfig, HookNoSetResult, HookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, QualityAppId, Transact } from "./shared";
+import type { AppWindowConfig, HookNoSetResult, HookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, QualityAppId } from "./shared";
 import { AppConfig, AppPlugin, createPanelDefinition, Expertise, Mode, PanelKind, registerAppPlugin, registerRuntimeAction, Theme, ToolKind } from "./shared";
 import type { KitStore, QualityStore, SketchpadStore } from "./Sketchpad";
 import {
@@ -601,7 +601,7 @@ const qualityAppCommands = {
 class QualityAppStore extends PlainKitDiffAppStore<QualityAppState, QualityAppDiff, QualityAppSelectionDiff, QualityAppEdit, QualityAppCommandContext, QualityAppCommandResult> {
   private readonly Guid: QualityAppId;
 
-  constructor(parent: SketchpadStore, _yMap: any, _transact: Transact, id: QualityAppId) {
+  constructor(parent: SketchpadStore, id: QualityAppId) {
     const defaultState: QualityAppState = {
       fullscreenWindow: QualityAppFullscreenWindow.None,
       panelVisibility: { toolbar: false, workbench: false, details: false, chat: false, settings: false },
@@ -751,7 +751,7 @@ class QualityAppStore extends PlainKitDiffAppStore<QualityAppState, QualityAppDi
 }
 
 if (typeof window !== "undefined") {
-  registerQualityAppStoreFactory((parent, yMap, transact, id, state) => new QualityAppStore(parent, yMap, transact, id));
+  registerQualityAppStoreFactory((parent, id) => new QualityAppStore(parent, id));
 }
 
 // #region Quality App Plugin Registration

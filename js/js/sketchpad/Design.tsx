@@ -11,8 +11,8 @@
 
 import { useSelector } from "@xstate/react";
 import { ConnectionDiff, ConnectionId, Guid, KitDiff, PieceDiff, PieceId } from "../semio";
-import type { AppConfig, AppPlugin, AppWindowConfig, DesignAppId, HookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolDefinition, ToolRenderContext } from "./shared";
-import { conditionalHookResult, createPanelDefinition, Expertise, Mode, PanelKind, readonlyHookResult, registerAppPlugin, registerRuntimeAction, Theme, ToolKind } from "./shared";
+import type { AppConfig, AppPlugin, AppWindowConfig, DesignAppId, Field, HookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolDefinition, ToolRenderContext } from "./shared";
+import { conditionalHookResult, createField as createFieldValue, createPanelDefinition, Expertise, fieldToHookResult, Mode, PanelKind, readonlyHookResult, registerAppPlugin, registerRuntimeAction, Theme, ToolKind } from "./shared";
 import type { DesignStore as DesignEntityStore } from "./Sketchpad";
 import { createDefaultDesignAppState, identitySelector, useDesignScope, useDevice, useExpertise, useKitScope, useLanguage, useMode, usePieceScope, useSketchpadActor, useSketchpadActorSafe, useTheme } from "./Sketchpad";
 
@@ -157,9 +157,6 @@ import {
   useSketchpad,
   useSketchpadCommands,
   useSketchpadStore,
-  useSyncField,
-  useSyncNestedArrayItemMembership,
-  useSyncSelectionItemMembership,
   useTooltip,
   useType,
 } from "./Sketchpad";
@@ -895,7 +892,7 @@ export class DesignStore extends PlainKitDiffAppStore<DesignAppState, DesignAppD
   private readonly kitGuid: Guid;
   private readonly designGuid: Guid;
 
-  constructor(parent: SketchpadStore, _yMap: any, _transact: (fn: () => void) => void, id: DesignAppId, initialState?: DesignAppState) {
+  constructor(parent: SketchpadStore, id: DesignAppId, initialState?: DesignAppState) {
     const defaultState: DesignAppState = {
       fullscreenWindow: initialState?.fullscreenWindow || DesignAppFullscreenWindow.None,
       panelVisibility: initialState?.panelVisibility || { toolbar: true, workbench: false, details: false, chat: false, settings: false },
@@ -1081,7 +1078,7 @@ let designStoreInitialized = false;
 export function initializeDesignStore() {
   if (designStoreInitialized) return;
   designStoreInitialized = true;
-  registerDesignAppStoreFactory((parent: any, yMap: any, transact: any, id: any, state: any) => new DesignStore(parent, yMap as any, transact, id, state));
+  registerDesignAppStoreFactory((parent: any, id: any, state: any) => new DesignStore(parent, id, state));
 }
 
 // #region Design App Plugin Registration
@@ -1343,21 +1340,6 @@ const DesignAppSyncComponent = ({ children }: { children: React.ReactNode }) => 
   return <>{children}</>;
 };
 
-function convertToXStateDesignAppState(state: DesignAppState): any {
-  return {
-    panelVisibility: state.panelVisibility,
-    selection: state.selection,
-    hover: state.hover,
-    focusedPiece: state.focusedPieceGuid,
-    selectedModelTags: state.selectedModelTags ?? {},
-    diagramCenter: state.diagramCenter ? { x: state.diagramCenter.u, y: state.diagramCenter.v } : undefined,
-    diagramScale: state.diagramScale,
-    camera: state.camera,
-    activeTool: state.activeTool,
-    fullscreenWindow: state.fullscreenWindow,
-  };
-}
-
 function useDesignAppInitialize() {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -1454,60 +1436,79 @@ const selectModelTags = (s: DesignAppState) => s.selectedModelTags ?? EMPTY_MODE
 const selectHover = (s: DesignAppState) => s.hover;
 const selectPanelVisibility = (s: DesignAppState) => s.panelVisibility;
 
-export function useDesignAppSelection(): HookResult<DesignAppSelection> {
+interface UseDesignAppFieldOptions<T, TEvent extends { type: string }> {
+  selector: (s: DesignAppState) => T;
+  fallback: T;
+  canEventType: TEvent["type"];
+  createCanEvent: (kitGuid: Guid, designGuid: Guid) => TEvent;
+  createSendEvent: (kitGuid: Guid, designGuid: Guid, value: T) => TEvent;
+  useWildcardFallback?: boolean;
+}
+
+function useDesignAppField<T, TEvent extends { type: string }>(
+  options: UseDesignAppFieldOptions<T, TEvent>,
+): Field<T> {
+  const { selector, fallback, createCanEvent, createSendEvent, useWildcardFallback = false } = options;
   const state = useDesignApp(identitySelector);
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const designScope = useDesignScope();
   const kitGuid = kitScope?.guid ?? "";
   const designGuid = designScope?.guid ?? "";
-  const value = state ? selectSelection(state as DesignAppState) : EMPTY_SELECTION;
-  const canSetEvent = useMemo(() => ({ type: "DESIGN.SET_SELECTION" as const, kitGuid, designGuid, selection: {} as DesignAppSelection }), [kitGuid, designGuid]);
-  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
-  const setter = useMemo(() => {
-    if (!canSet) return undefined;
-    return (selection: DesignAppSelection) => {
-      actor.send({ type: "DESIGN.SET_SELECTION", kitGuid, designGuid, selection });
-    };
-  }, [actor, kitGuid, designGuid, canSet]);
-  return conditionalHookResult(canSet, value, setter);
+  const value = state ? selector(state as DesignAppState) : fallback;
+  const canEvent = useMemo(() => createCanEvent(kitGuid, designGuid), [createCanEvent, kitGuid, designGuid]);
+  const canSetFromSnapshot = useSelector(actor, (snapshot) => snapshot.can(canEvent as Parameters<typeof snapshot.can>[0]));
+  const hasScope = kitGuid !== "" && designGuid !== "";
+  const canSet = useWildcardFallback ? (canSetFromSnapshot || hasScope) : canSetFromSnapshot;
+  const setter = useMemo(() => (next: T) => {
+    if (canSet) {
+      actor.send(createSendEvent(kitGuid, designGuid, next) as Parameters<typeof actor.send>[0]);
+    }
+  }, [actor, kitGuid, designGuid, canSet, createSendEvent]);
+  return useMemo(() => createFieldValue(value, setter, canSet), [value, setter, canSet]);
+}
+
+export function useDesignAppSelectionField(): Field<DesignAppSelection> {
+  return useDesignAppField<DesignAppSelection, { type: "DESIGN.SET_SELECTION"; kitGuid: Guid; designGuid: Guid; selection: DesignAppSelection }>({
+    selector: selectSelection,
+    fallback: EMPTY_SELECTION,
+    canEventType: "DESIGN.SET_SELECTION",
+    createCanEvent: (kitGuid, designGuid) => ({ type: "DESIGN.SET_SELECTION", kitGuid, designGuid, selection: {} as DesignAppSelection }),
+    createSendEvent: (kitGuid, designGuid, selection) => ({ type: "DESIGN.SET_SELECTION", kitGuid, designGuid, selection }),
+  });
+}
+
+export function useDesignAppSelection(): HookResult<DesignAppSelection> {
+  return fieldToHookResult(useDesignAppSelectionField());
+}
+
+export function useDesignAppFullscreenField(): Field<DesignAppFullscreenWindow> {
+  return useDesignAppField<DesignAppFullscreenWindow, { type: "DESIGN.SET_FULLSCREEN"; kitGuid: Guid; designGuid: Guid; window: DesignAppFullscreenWindow }>({
+    selector: selectFullscreen,
+    fallback: DesignAppFullscreenWindow.None,
+    canEventType: "DESIGN.SET_FULLSCREEN",
+    createCanEvent: (kitGuid, designGuid) => ({ type: "DESIGN.SET_FULLSCREEN", kitGuid, designGuid, window: DesignAppFullscreenWindow.None }),
+    createSendEvent: (kitGuid, designGuid, fullscreen) => ({ type: "DESIGN.SET_FULLSCREEN", kitGuid, designGuid, window: fullscreen }),
+  });
 }
 
 export function useDesignAppFullscreen(): HookResult<DesignAppFullscreenWindow> {
-  const state = useDesignApp(identitySelector);
-  const actor = useSketchpadActor();
-  const kitScope = useKitScope();
-  const designScope = useDesignScope();
-  const kitGuid = kitScope?.guid ?? "";
-  const designGuid = designScope?.guid ?? "";
-  const value = state ? selectFullscreen(state as DesignAppState) : DesignAppFullscreenWindow.None;
-  const canSetEvent = useMemo(() => ({ type: "DESIGN.SET_FULLSCREEN" as const, kitGuid, designGuid, window: DesignAppFullscreenWindow.None }), [kitGuid, designGuid]);
-  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
-  const setter = useMemo(() => {
-    if (!canSet) return undefined;
-    return (fullscreen: DesignAppFullscreenWindow) => actor.send({ type: "DESIGN.SET_FULLSCREEN", kitGuid, designGuid, window: fullscreen });
-  }, [actor, kitGuid, designGuid, canSet]);
-  return conditionalHookResult(canSet, value, setter);
+  return fieldToHookResult(useDesignAppFullscreenField());
+}
+
+export function useDesignAppActiveToolField(): Field<ToolKind> {
+  return useDesignAppField<ToolKind, { type: "DESIGN.SET_ACTIVE_TOOL"; kitGuid: Guid; designGuid: Guid; tool: ToolKind }>({
+    selector: selectActiveTool,
+    fallback: ToolKind.SELECTION_NORMAL,
+    canEventType: "DESIGN.SET_ACTIVE_TOOL",
+    createCanEvent: (kitGuid, designGuid) => ({ type: "DESIGN.SET_ACTIVE_TOOL", kitGuid, designGuid, tool: ToolKind.SELECTION_NORMAL }),
+    createSendEvent: (kitGuid, designGuid, tool) => ({ type: "DESIGN.SET_ACTIVE_TOOL", kitGuid, designGuid, tool }),
+    useWildcardFallback: true,
+  });
 }
 
 export function useDesignAppActiveTool(): HookResult<ToolKind> {
-  const state = useDesignApp(identitySelector);
-  const actor = useSketchpadActor();
-  const kitScope = useKitScope();
-  const designScope = useDesignScope();
-  const kitGuid = kitScope?.guid ?? "";
-  const designGuid = designScope?.guid ?? "";
-  const value = state ? selectActiveTool(state as DesignAppState) : ToolKind.SELECTION_NORMAL;
-  const canSetEvent = useMemo(() => ({ type: "DESIGN.SET_ACTIVE_TOOL" as const, kitGuid, designGuid, tool: ToolKind.SELECTION_NORMAL }), [kitGuid, designGuid]);
-  const canSetFromSnapshot = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
-  // XState v5 snapshot.can() doesn't return true for wildcard handlers,
-  // so we check if we have valid guids as an alternative condition
-  const canSet = canSetFromSnapshot || (kitGuid !== "" && designGuid !== "");
-  const setter = useMemo(() => {
-    if (!canSet) return undefined;
-    return (tool: ToolKind) => actor.send({ type: "DESIGN.SET_ACTIVE_TOOL", kitGuid, designGuid, tool });
-  }, [actor, kitGuid, designGuid, canSet]);
-  return conditionalHookResult(canSet, value, setter);
+  return fieldToHookResult(useDesignAppActiveToolField());
 }
 
 export function useDesignAppDiff(): HookResult<KitDiff | undefined> {
@@ -1520,21 +1521,18 @@ export function useDesignAppOthers(): HookResult<DesignAppPresenceOther[]> {
   return readonlyHookResult(value);
 }
 
+export function useDesignAppCameraField(): Field<Camera | undefined> {
+  return useDesignAppField<Camera | undefined, { type: "DESIGN.SET_CAMERA"; kitGuid: Guid; designGuid: Guid; camera: Camera | undefined }>({
+    selector: selectCamera,
+    fallback: undefined,
+    canEventType: "DESIGN.SET_CAMERA",
+    createCanEvent: (kitGuid, designGuid) => ({ type: "DESIGN.SET_CAMERA", kitGuid, designGuid, camera: undefined }),
+    createSendEvent: (kitGuid, designGuid, camera) => ({ type: "DESIGN.SET_CAMERA", kitGuid, designGuid, camera }),
+  });
+}
+
 export function useDesignAppCamera(): HookResult<Camera | undefined> {
-  const state = useDesignApp(identitySelector);
-  const actor = useSketchpadActor();
-  const kitScope = useKitScope();
-  const designScope = useDesignScope();
-  const kitGuid = kitScope?.guid ?? "";
-  const designGuid = designScope?.guid ?? "";
-  const value = state ? selectCamera(state as DesignAppState) : undefined;
-  const canSetEvent = useMemo(() => ({ type: "DESIGN.SET_CAMERA" as const, kitGuid, designGuid, camera: undefined }), [kitGuid, designGuid]);
-  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
-  const setter = useMemo(() => {
-    if (!canSet) return undefined;
-    return (camera: Camera | undefined) => actor.send({ type: "DESIGN.SET_CAMERA", kitGuid, designGuid, camera });
-  }, [actor, kitGuid, designGuid, canSet]);
-  return conditionalHookResult(canSet, value, setter);
+  return fieldToHookResult(useDesignAppCameraField());
 }
 
 export function useDesignAppDiagramCenter(): HookResult<Coord | undefined> {
@@ -1579,21 +1577,18 @@ export function useDesignAppDiagramScale(): HookResult<number | undefined> {
   return conditionalHookResult(canSet, value, setter);
 }
 
+export function useDesignAppFocusedPieceGuidField(): Field<Guid | undefined> {
+  return useDesignAppField<Guid | undefined, { type: "DESIGN.FOCUS_PIECE"; kitGuid: Guid; designGuid: Guid; pieceGuid: Guid | undefined }>({
+    selector: selectFocusedPiece,
+    fallback: undefined,
+    canEventType: "DESIGN.FOCUS_PIECE",
+    createCanEvent: (kitGuid, designGuid) => ({ type: "DESIGN.FOCUS_PIECE", kitGuid, designGuid, pieceGuid: undefined }),
+    createSendEvent: (kitGuid, designGuid, pieceGuid) => ({ type: "DESIGN.FOCUS_PIECE", kitGuid, designGuid, pieceGuid }),
+  });
+}
+
 export function useDesignAppFocusedPieceGuid(): HookResult<Guid | undefined> {
-  const state = useDesignApp(identitySelector);
-  const actor = useSketchpadActor();
-  const kitScope = useKitScope();
-  const designScope = useDesignScope();
-  const kitGuid = kitScope?.guid ?? "";
-  const designGuid = designScope?.guid ?? "";
-  const value = state ? selectFocusedPiece(state as DesignAppState) : undefined;
-  const canSetEvent = useMemo(() => ({ type: "DESIGN.FOCUS_PIECE" as const, kitGuid, designGuid, pieceGuid: undefined }), [kitGuid, designGuid]);
-  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
-  const setter = useMemo(() => {
-    if (!canSet) return undefined;
-    return (pieceGuid: Guid | undefined) => actor.send({ type: "DESIGN.FOCUS_PIECE", kitGuid, designGuid, pieceGuid });
-  }, [actor, kitGuid, designGuid, canSet]);
-  return conditionalHookResult(canSet, value, setter);
+  return fieldToHookResult(useDesignAppFocusedPieceGuidField());
 }
 
 export function useDesignAppSelectedModelTags(): HookResult<Record<Guid, string[]>> {
@@ -1638,21 +1633,18 @@ export function useDesignAppHover(): HookResult<DesignAppHover | undefined> {
   return conditionalHookResult(canSet, value, setter);
 }
 
+export function useDesignAppPanelVisibilityField(): Field<PanelVisibility> {
+  return useDesignAppField<PanelVisibility, { type: "DESIGN.SET_PANEL_VISIBILITY"; kitGuid: Guid; designGuid: Guid; panelVisibility: PanelVisibility }>({
+    selector: selectPanelVisibility,
+    fallback: DEFAULT_PANEL_VISIBILITY,
+    canEventType: "DESIGN.SET_PANEL_VISIBILITY",
+    createCanEvent: (kitGuid, designGuid) => ({ type: "DESIGN.SET_PANEL_VISIBILITY", kitGuid, designGuid, panelVisibility: {} as PanelVisibility }),
+    createSendEvent: (kitGuid, designGuid, panelVisibility) => ({ type: "DESIGN.SET_PANEL_VISIBILITY", kitGuid, designGuid, panelVisibility }),
+  });
+}
+
 export function useDesignAppPanelVisibility(): HookResult<PanelVisibility> {
-  const state = useDesignApp(identitySelector);
-  const actor = useSketchpadActor();
-  const kitScope = useKitScope();
-  const designScope = useDesignScope();
-  const kitGuid = kitScope?.guid ?? "";
-  const designGuid = designScope?.guid ?? "";
-  const value = state ? selectPanelVisibility(state as DesignAppState) : DEFAULT_PANEL_VISIBILITY;
-  const canSetEvent = useMemo(() => ({ type: "DESIGN.SET_PANEL_VISIBILITY" as const, kitGuid, designGuid, panelVisibility: {} as PanelVisibility }), [kitGuid, designGuid]);
-  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
-  const setter = useMemo(() => {
-    if (!canSet) return undefined;
-    return (visibility: PanelVisibility) => actor.send({ type: "DESIGN.SET_PANEL_VISIBILITY", kitGuid, designGuid, panelVisibility: visibility });
-  }, [actor, kitGuid, designGuid, canSet]);
-  return conditionalHookResult(canSet, value, setter);
+  return fieldToHookResult(useDesignAppPanelVisibilityField());
 }
 
 //#region Action Hooks
@@ -2357,26 +2349,43 @@ const EMPTY_TRANSACTION_CONTEXT: TransactionPiecesContextValue = {
 
 const TransactionPiecesContext = createContext<TransactionPiecesContextValue>(EMPTY_TRANSACTION_CONTEXT);
 
-export function TransactionPiecesProvider({ children }: { children: ReactNode }) {
-  const store = useDesignStore(identitySelector) as DesignStore;
+function areSetsEqual<T>(a: Set<T>, b: Set<T>): boolean {
+  if (a.size !== b.size) return false;
+  for (const item of a) if (!b.has(item)) return false;
+  return true;
+}
 
-  const lastValueRef = useRef<TransactionPiecesContextValue>(EMPTY_TRANSACTION_CONTEXT);
-  const lastJsonRef = useRef<string>("");
+function areMapsEqual<K, V>(a: Map<K, V>, b: Map<K, V>): boolean {
+  if (a.size !== b.size) return false;
+  for (const [key, value] of a) if (b.get(key) !== value) return false;
+  return true;
+}
 
-  const selector = useCallback(() => {
+function areTransactionContextsEqual(a: TransactionPiecesContextValue, b: TransactionPiecesContextValue): boolean {
+  return areSetsEqual(a.changedPieces, b.changedPieces) && areMapsEqual(a.statusMap, b.statusMap);
+}
+
+function TransactionPiecesProviderInner({ store, children }: { store: DesignStore; children: ReactNode }) {
+  const lastResultRef = useRef<TransactionPiecesContextValue>(EMPTY_TRANSACTION_CONTEXT);
+  const subscribe = useCallback((callback: () => void) => store.subscribe(callback), [store]);
+  const getSnapshot = useCallback(() => {
     const result = getTransactionAffectedPieces(store);
-    const newJson = JSON.stringify([...result.changedPieces].sort()) + JSON.stringify([...result.statusMap.entries()].sort());
-    if (newJson === lastJsonRef.current) {
-      return lastValueRef.current;
-    }
-    lastJsonRef.current = newJson;
-    lastValueRef.current = result;
+    if (areTransactionContextsEqual(result, lastResultRef.current)) return lastResultRef.current;
+    lastResultRef.current = result;
     return result;
   }, [store]);
-
-  const transactionData = useSyncField<DesignAppState, TransactionPiecesContextValue>(store, "currentTransactionStack", selector);
-
+  const transactionData = useSyncExternalStore(subscribe, getSnapshot);
   return <TransactionPiecesContext.Provider value={transactionData}>{children}</TransactionPiecesContext.Provider>;
+}
+
+export function TransactionPiecesProvider({ children }: { children: ReactNode }) {
+  const store = useDesignStore(identitySelector) as DesignStore | null;
+
+  if (!store) {
+    return <TransactionPiecesContext.Provider value={EMPTY_TRANSACTION_CONTEXT}>{children}</TransactionPiecesContext.Provider>;
+  }
+
+  return <TransactionPiecesProviderInner store={store}>{children}</TransactionPiecesProviderInner>;
 }
 
 export function useIsDesignPieceChangedInTransaction(id: DesignAppId | undefined, pieceId: string): boolean {
@@ -2385,8 +2394,8 @@ export function useIsDesignPieceChangedInTransaction(id: DesignAppId | undefined
 }
 
 export function useDesignAppIsPieceHovered(id: DesignAppId | undefined, pieceId: string): boolean {
-  const store = useDesignStore(identitySelector, id) as DesignStore;
-  return useSyncNestedArrayItemMembership(store, "hover", "pieces", pieceId);
+  const state = useDesignApp(identitySelector, id);
+  return (state as DesignAppState | null)?.hover?.pieces?.includes(pieceId) ?? false;
 }
 
 interface HoverPiecesContextValue {
@@ -2437,29 +2446,32 @@ function computeHoverData(store: DesignStore | null, state: DesignAppState): Hov
   return { transitivelyHoveredPieces, transitivelyHoveredTypes };
 }
 
-export function HoverPiecesProvider({ children }: { children: ReactNode }) {
-  const store = useDesignStore(identitySelector) as DesignStore;
+function areHoverContextsEqual(a: HoverPiecesContextValue, b: HoverPiecesContextValue): boolean {
+  return areSetsEqual(a.transitivelyHoveredPieces, b.transitivelyHoveredPieces) && areSetsEqual(a.transitivelyHoveredTypes, b.transitivelyHoveredTypes);
+}
 
-  const lastValueRef = useRef<HoverPiecesContextValue>(EMPTY_HOVER_CONTEXT);
-  const lastJsonRef = useRef<string>("");
-
-  const selector = useCallback(
-    (state: DesignAppState) => {
-      const result = computeHoverData(store, state);
-      const newJson = JSON.stringify([...result.transitivelyHoveredPieces].sort()) + JSON.stringify([...result.transitivelyHoveredTypes].sort());
-      if (newJson === lastJsonRef.current) {
-        return lastValueRef.current;
-      }
-      lastJsonRef.current = newJson;
-      lastValueRef.current = result;
-      return result;
-    },
-    [store],
-  );
-
-  const hoverData = useSyncField<DesignAppState, HoverPiecesContextValue>(store, "hover", selector);
-
+function HoverPiecesProviderInner({ store, children }: { store: DesignStore; children: ReactNode }) {
+  const lastResultRef = useRef<HoverPiecesContextValue>(EMPTY_HOVER_CONTEXT);
+  const subscribe = useCallback((callback: () => void) => store.subscribe(callback), [store]);
+  const getSnapshot = useCallback(() => {
+    const state = store.snapshot();
+    const result = computeHoverData(store, state);
+    if (areHoverContextsEqual(result, lastResultRef.current)) return lastResultRef.current;
+    lastResultRef.current = result;
+    return result;
+  }, [store]);
+  const hoverData = useSyncExternalStore(subscribe, getSnapshot);
   return <HoverPiecesContext.Provider value={hoverData}>{children}</HoverPiecesContext.Provider>;
+}
+
+export function HoverPiecesProvider({ children }: { children: ReactNode }) {
+  const store = useDesignStore(identitySelector) as DesignStore | null;
+
+  if (!store) {
+    return <HoverPiecesContext.Provider value={EMPTY_HOVER_CONTEXT}>{children}</HoverPiecesContext.Provider>;
+  }
+
+  return <HoverPiecesProviderInner store={store}>{children}</HoverPiecesProviderInner>;
 }
 
 export function useDesignAppIsPieceTransitiveHovered(id: DesignAppId | undefined, pieceId: string): boolean {
@@ -2478,8 +2490,8 @@ export function useDesignAppPieceStatus(id: DesignAppId | undefined, pieceId: st
 }
 
 export function useDesignAppIsPieceSelected(id: DesignAppId | undefined, pieceId: string): boolean {
-  const store = useDesignStore(identitySelector, id) as DesignStore;
-  return useSyncSelectionItemMembership(store, "pieces", pieceId);
+  const state = useDesignApp(identitySelector, id);
+  return (state as DesignAppState | null)?.selection?.pieces?.includes(pieceId) ?? false;
 }
 
 export function useDesignAppPieceColor(id: DesignAppId | undefined, pieceId: string): { fill: string; stroke: string; opacity: number } {
@@ -2540,62 +2552,33 @@ export function useDesignAppPieceColor(id: DesignAppId | undefined, pieceId: str
 }
 
 export function useDesignAppIsConnectionHovered(id: DesignAppId | undefined, connectionId: string): boolean {
-  const store = useDesignStore(identitySelector, id) as DesignStore;
-  return useSyncNestedArrayItemMembership(store, "hover", "connections", connectionId);
+  const state = useDesignApp(identitySelector, id);
+  return (state as DesignAppState | null)?.hover?.connections?.includes(connectionId) ?? false;
 }
 
 export function useDesignAppIsConnectionSelected(id: DesignAppId | undefined, connectionId: string): boolean {
-  const store = useDesignStore(identitySelector, id) as DesignStore;
-  return useSyncSelectionItemMembership(store, "connections", connectionId);
+  const state = useDesignApp(identitySelector, id);
+  return (state as DesignAppState | null)?.selection?.connections?.includes(connectionId) ?? false;
 }
 
 export function useDesignAppIsPortHovered(id: DesignAppId | undefined, pieceId: string, portId: string): boolean {
-  const store = useDesignStore(identitySelector, id) as DesignStore;
-  const selector = useCallback((state: DesignAppState) => state.hover?.ports?.some((p) => p.piece === pieceId && p.port === portId) ?? false, [pieceId, portId]);
-  if (!store) return false;
-  return useSyncField<DesignAppState, boolean>(store, "hover", selector);
+  const state = useDesignApp(identitySelector, id);
+  return (state as DesignAppState | null)?.hover?.ports?.some((p) => p.piece === pieceId && p.port === portId) ?? false;
 }
 
 const EMPTY_PORT: DesignAppSelection["port"] = undefined;
 
 export function useDesignAppSelectedPort(id?: DesignAppId): DesignAppSelection["port"] | undefined {
-  const store = useDesignStore(identitySelector, id) as DesignStore;
-
-  const lastPortRef = useRef<{ value: DesignAppSelection["port"]; json: string }>({ value: undefined, json: "" });
-
-  const subscribe = useCallback(
-    (callback: () => void) => {
-      if (!store) return () => {};
-      return store.subscribe(callback);
-    },
-    [store],
-  );
-
-  const getSnapshot = useCallback(() => {
-    if (!store) return EMPTY_PORT;
-    const state = store.snapshot();
-    const port = state.selection?.port;
-    if (!port?.piece || !port?.port) return EMPTY_PORT;
-
-    const newValue = { piece: port.piece, port: port.port, designPiece: port.designPiece };
-    const newJson = JSON.stringify(newValue);
-
-    if (newJson === lastPortRef.current.json) {
-      return lastPortRef.current.value;
-    }
-
-    lastPortRef.current = { value: newValue, json: newJson };
-    return newValue;
-  }, [store]);
-
-  return useSyncExternalStore(subscribe, getSnapshot);
+  const state = useDesignApp(identitySelector, id);
+  const port = (state as DesignAppState | null)?.selection?.port;
+  if (!port?.piece || !port?.port) return EMPTY_PORT;
+  return { piece: port.piece, port: port.port, designPiece: port.designPiece };
 }
 
 export function useDesignAppIsPiecePortSelected(pieceId: string, portId?: string): boolean {
-  const store = useDesignStore(identitySelector) as DesignStore;
-  const selector = useCallback((state: DesignAppState) => state.selection?.port?.piece === pieceId && state.selection?.port?.port === portId, [pieceId, portId]);
-  if (!store || !portId) return false;
-  return useSyncField<DesignAppState, boolean>(store, "selection", selector, false);
+  const state = useDesignApp(identitySelector);
+  if (!portId) return false;
+  return (state as DesignAppState | null)?.selection?.port?.piece === pieceId && (state as DesignAppState | null)?.selection?.port?.port === portId;
 }
 
 function getConnectionStatusFromTransactionStack(store: DesignStore | null, connectionId: string): DiffStatus {
@@ -2628,9 +2611,8 @@ function getConnectionStatusFromTransactionStack(store: DesignStore | null, conn
 }
 
 export function useDesignAppConnectionStatus(id: DesignAppId | undefined, connectionId: string): DiffStatus {
-  const store = useDesignStore(identitySelector, id) as DesignStore;
-  const selector = useCallback(() => getConnectionStatusFromTransactionStack(store, connectionId), [store, connectionId]);
-  return useSyncField<DesignAppState, DiffStatus>(store, "currentTransactionStack", selector);
+  const store = useDesignStore(identitySelector, id) as DesignStore | null;
+  return useMemo(() => getConnectionStatusFromTransactionStack(store, connectionId), [store, connectionId]);
 }
 
 export function useDesignAppConnectionColor(id: DesignAppId | undefined, connectionId: string): { fill: string; stroke: string; opacity: number } {
@@ -4124,10 +4106,41 @@ const PortSectionForm: FC<{ pieceGuid: Guid; portGuid: Guid }> = ({ pieceGuid, p
 
 // #region Canvas
 
-let globalHoverClearTimeout: NodeJS.Timeout | null = null;
-let currentHoveredPieceGuid: string | null = null;
-let isPanning: boolean = false;
-let isDraggingNode: boolean = false;
+// #region Hover Intent Context
+
+interface HoverIntentContextValue {
+  hoverClearTimeoutRef: React.MutableRefObject<NodeJS.Timeout | null>;
+  currentHoveredPieceGuidRef: React.MutableRefObject<string | null>;
+  isPanningRef: React.MutableRefObject<boolean>;
+  isDraggingNodeRef: React.MutableRefObject<boolean>;
+}
+
+const HoverIntentContext = createContext<HoverIntentContextValue | null>(null);
+
+function HoverIntentProvider({ children }: { children: ReactNode }) {
+  const hoverClearTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const currentHoveredPieceGuidRef = useRef<string | null>(null);
+  const isPanningRef = useRef<boolean>(false);
+  const isDraggingNodeRef = useRef<boolean>(false);
+  const value = useMemo(
+    () => ({
+      hoverClearTimeoutRef,
+      currentHoveredPieceGuidRef,
+      isPanningRef,
+      isDraggingNodeRef,
+    }),
+    [],
+  );
+  return <HoverIntentContext.Provider value={value}>{children}</HoverIntentContext.Provider>;
+}
+
+function useHoverIntent(): HoverIntentContextValue {
+  const context = useContext(HoverIntentContext);
+  if (!context) throw new Error("useHoverIntent must be used within HoverIntentProvider");
+  return context;
+}
+
+// #endregion Hover Intent Context
 
 type SemioConnection = Connection;
 
@@ -4442,6 +4455,7 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
   const isDesignPiece = !!piece.design;
 
   const commands = sharedCommandsRef!;
+  const { hoverClearTimeoutRef, currentHoveredPieceGuidRef, isPanningRef, isDraggingNodeRef } = useHoverIntent();
 
   const selectPiecePort = useCallback(
     (piece: Guid, port: Guid) => {
@@ -4463,35 +4477,35 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
 
   const handleMouseEnter = useCallback(
     (event: React.PointerEvent) => {
-      if (globalHoverClearTimeout) {
-        clearTimeout(globalHoverClearTimeout);
-        globalHoverClearTimeout = null;
+      if (hoverClearTimeoutRef.current) {
+        clearTimeout(hoverClearTimeoutRef.current);
+        hoverClearTimeoutRef.current = null;
       }
-      if (isPanning || isDraggingNode || event.buttons !== 0) return;
-      if (currentHoveredPieceGuid !== guid) {
-        currentHoveredPieceGuid = guid;
+      if (isPanningRef.current || isDraggingNodeRef.current || event.buttons !== 0) return;
+      if (currentHoveredPieceGuidRef.current !== guid) {
+        currentHoveredPieceGuidRef.current = guid;
         commands.hoverPiece("semio.sketchpad.app.design.canvas.diagram.pieceNode.handleMouseEnter", guid);
       }
     },
-    [guid, commands],
+    [guid, commands, hoverClearTimeoutRef, isPanningRef, isDraggingNodeRef, currentHoveredPieceGuidRef],
   );
 
   const handleMouseLeave = useCallback(
     (event: React.PointerEvent) => {
-      if (isPanning || isDraggingNode || event.buttons !== 0) return;
-      if (globalHoverClearTimeout) {
-        clearTimeout(globalHoverClearTimeout);
+      if (isPanningRef.current || isDraggingNodeRef.current || event.buttons !== 0) return;
+      if (hoverClearTimeoutRef.current) {
+        clearTimeout(hoverClearTimeoutRef.current);
       }
       const pieceGuidAtLeave = guid;
-      globalHoverClearTimeout = setTimeout(() => {
-        if (currentHoveredPieceGuid === pieceGuidAtLeave) {
+      hoverClearTimeoutRef.current = setTimeout(() => {
+        if (currentHoveredPieceGuidRef.current === pieceGuidAtLeave) {
           commands.clearHover("semio.sketchpad.app.design.canvas.diagram.pieceNode.handleMouseLeave");
-          currentHoveredPieceGuid = null;
+          currentHoveredPieceGuidRef.current = null;
         }
-        globalHoverClearTimeout = null;
+        hoverClearTimeoutRef.current = null;
       }, 50);
     },
-    [guid, commands],
+    [guid, commands, hoverClearTimeoutRef, isPanningRef, isDraggingNodeRef, currentHoveredPieceGuidRef],
   );
 
   return (
@@ -4653,6 +4667,7 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
   const [deselectPiecePortAction] = useDesignAppDeselectPiecePort();
   const [hoverPiece] = useDesignAppHoverPiece();
   const [clearHover] = useDesignAppClearHover();
+  const { hoverClearTimeoutRef, currentHoveredPieceGuidRef, isPanningRef, isDraggingNodeRef } = useHoverIntent();
 
   const selectPiecePort = useCallback(
     (piece: Guid, port: Guid) => {
@@ -4674,36 +4689,36 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
 
   const handleMouseEnter = useCallback(
     (event: React.PointerEvent) => {
-      if (globalHoverClearTimeout) {
-        clearTimeout(globalHoverClearTimeout);
-        globalHoverClearTimeout = null;
+      if (hoverClearTimeoutRef.current) {
+        clearTimeout(hoverClearTimeoutRef.current);
+        hoverClearTimeoutRef.current = null;
       }
-      if (isPanning || isDraggingNode || event.buttons !== 0) return;
-      if (currentHoveredPieceGuid !== guid) {
-        currentHoveredPieceGuid = guid;
+      if (isPanningRef.current || isDraggingNodeRef.current || event.buttons !== 0) return;
+      if (currentHoveredPieceGuidRef.current !== guid) {
+        currentHoveredPieceGuidRef.current = guid;
         if (hoverPiece) hoverPiece(guid);
       }
     },
-    [guid, hoverPiece],
+    [guid, hoverPiece, hoverClearTimeoutRef, isPanningRef, isDraggingNodeRef, currentHoveredPieceGuidRef],
   );
 
   const handleMouseLeave = useCallback(
     (event: React.PointerEvent) => {
-      if (isPanning || isDraggingNode || event.buttons !== 0) return;
-      if (globalHoverClearTimeout) {
-        clearTimeout(globalHoverClearTimeout);
+      if (isPanningRef.current || isDraggingNodeRef.current || event.buttons !== 0) return;
+      if (hoverClearTimeoutRef.current) {
+        clearTimeout(hoverClearTimeoutRef.current);
       }
 
       const pieceGuidAtLeave = guid;
-      globalHoverClearTimeout = setTimeout(() => {
-        if (currentHoveredPieceGuid === pieceGuidAtLeave) {
+      hoverClearTimeoutRef.current = setTimeout(() => {
+        if (currentHoveredPieceGuidRef.current === pieceGuidAtLeave) {
           if (clearHover) clearHover();
-          currentHoveredPieceGuid = null;
+          currentHoveredPieceGuidRef.current = null;
         }
-        globalHoverClearTimeout = null;
+        hoverClearTimeoutRef.current = null;
       }, 50);
     },
-    [guid, clearHover],
+    [guid, clearHover, hoverClearTimeoutRef, isPanningRef, isDraggingNodeRef, currentHoveredPieceGuidRef],
   );
 
   const ports: Port[] = externalConnections.map((SemioConnection, portIndex) => {
@@ -4946,6 +4961,7 @@ type ConnectionEdgeInnerProps = EdgeProps<ConnectionEdge> & { connectionGuid: Gu
 const ConnectionEdgeInner: React.FC<ConnectionEdgeInnerProps> = ({ sourceX, sourceY, targetX, targetY, data, connectionGuid }) => {
   const [hoverConnection] = useDesignAppHoverConnection();
   const [clearHover] = useDesignAppClearHover();
+  const { isPanningRef, isDraggingNodeRef } = useHoverIntent();
   const isHovered = useIsConnectionHovered();
   const isSelected = useDesignAppIsConnectionSelected(undefined, connectionGuid);
   const HANDLE_HEIGHT = 5;
@@ -5003,11 +5019,11 @@ const ConnectionEdgeInner: React.FC<ConnectionEdgeInnerProps> = ({ sourceX, sour
         stroke="transparent"
         strokeWidth={Math.max(strokeWidth, 6)}
         onPointerEnter={(e) => {
-          if (isPanning || isDraggingNode || e.buttons !== 0) return;
+          if (isPanningRef.current || isDraggingNodeRef.current || e.buttons !== 0) return;
           if (connectionGuid && hoverConnection) hoverConnection(connectionGuid);
         }}
         onPointerLeave={(e) => {
-          if (isPanning || isDraggingNode || e.buttons !== 0) return;
+          if (isPanningRef.current || isDraggingNodeRef.current || e.buttons !== 0) return;
           if (clearHover) clearHover();
         }}
       />
@@ -5339,6 +5355,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const [focusPiece] = useDesignAppFocusPiece();
   const [hoverPiece] = useDesignAppHoverPiece();
   const [clearHover] = useDesignAppClearHover();
+  const { hoverClearTimeoutRef, currentHoveredPieceGuidRef, isPanningRef, isDraggingNodeRef } = useHoverIntent();
 
   const kitCommands = useKitCommands();
   const sketchpadCommands = useSketchpadCommands();
@@ -5448,13 +5465,16 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
     setNodes(baseNodes);
   }, [baseNodes]);
 
-  const onNodesChangeReactFlow = useCallback((changes: any[]) => {
-    if (isDraggingNode || isPanning) return;
+  const onNodesChangeReactFlow = useCallback(
+    (changes: any[]) => {
+      if (isDraggingNodeRef.current || isPanningRef.current) return;
 
-    const positionChanges = changes.filter((c: any) => c.type === "position");
-    if (positionChanges.length === 0) return;
-    setNodes((nds) => applyNodeChanges(positionChanges, nds) as typeof nds);
-  }, []);
+      const positionChanges = changes.filter((c: any) => c.type === "position");
+      if (positionChanges.length === 0) return;
+      setNodes((nds) => applyNodeChanges(positionChanges, nds) as typeof nds);
+    },
+    [isDraggingNodeRef, isPanningRef],
+  );
 
   const focusContext = useFocusSafe();
   const [focusedItemId, setFocusedItemId] = useState<string | undefined>();
@@ -5511,7 +5531,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const handleDiagramPointerDown = useCallback(
     (e: PointerEvent) => {
       if (e.button === 0) {
-        isPanning = true;
+        isPanningRef.current = true;
         const nodesContainer = document.querySelector(`[data-diagram-id="${diagramId}"] .react-flow__nodes`);
         if (nodesContainer) {
           (nodesContainer as HTMLElement).style.pointerEvents = "none";
@@ -5522,7 +5542,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         }
       }
     },
-    [diagramId],
+    [diagramId, isPanningRef],
   );
 
   const handleDiagramPointerUp = useCallback(() => {
@@ -5534,8 +5554,8 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
     if (edgesContainer) {
       (edgesContainer as HTMLElement).style.pointerEvents = "";
     }
-    isPanning = false;
-  }, [diagramId]);
+    isPanningRef.current = false;
+  }, [diagramId, isPanningRef]);
 
   const setDropZoneRef = useCallback(
     (node: HTMLDivElement | null) => {
@@ -5651,16 +5671,16 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   }, [savedDiagramCenter, savedDiagramScale, reactFlowInstanceRef]);
 
   const onMoveStart = useCallback(() => {
-    isPanning = true;
+    isPanningRef.current = true;
     const diagramElement = document.querySelector(`[data-diagram-id="${diagramId}"]`);
     if (diagramElement) {
       diagramElement.setAttribute("data-panning", "true");
     }
-  }, [diagramId]);
+  }, [diagramId, isPanningRef]);
 
   const pendingMoveEndRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onMoveEnd = useCallback(() => {
-    isPanning = false;
+    isPanningRef.current = false;
     const diagramElement = document.querySelector(`[data-diagram-id="${diagramId}"]`);
     if (diagramElement) {
       diagramElement.removeAttribute("data-panning");
@@ -5676,7 +5696,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       if (setDiagramCenter) setDiagramCenter({ u: viewport.x / ICON_WIDTH, v: -viewport.y / ICON_WIDTH });
       pendingMoveEndRef.current = null;
     }, 1000);
-  }, [reactFlowInstanceRef, setDiagramCenter, diagramId]);
+  }, [reactFlowInstanceRef, setDiagramCenter, diagramId, isPanningRef]);
 
   const centerViewport = useCallback(() => {
     if (!reactFlowInstanceRef.current) return;
@@ -5782,43 +5802,43 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
   const onNodeMouseEnter = useCallback(
     (e: React.MouseEvent, node: DiagramNode) => {
-      if (isPanning || isDraggingNode || e.buttons !== 0) return;
+      if (isPanningRef.current || isDraggingNodeRef.current || e.buttons !== 0) return;
 
       const pieceId = getPieceIdFromNode(node);
 
-      if (globalHoverClearTimeout) {
-        clearTimeout(globalHoverClearTimeout);
-        globalHoverClearTimeout = null;
+      if (hoverClearTimeoutRef.current) {
+        clearTimeout(hoverClearTimeoutRef.current);
+        hoverClearTimeoutRef.current = null;
       }
 
-      if (currentHoveredPieceGuid !== pieceId) {
-        currentHoveredPieceGuid = pieceId;
+      if (currentHoveredPieceGuidRef.current !== pieceId) {
+        currentHoveredPieceGuidRef.current = pieceId;
         if (hoverPiece) hoverPiece(pieceId);
       }
     },
-    [hoverPiece],
+    [hoverPiece, isPanningRef, isDraggingNodeRef, hoverClearTimeoutRef, currentHoveredPieceGuidRef],
   );
 
   const onNodeMouseLeave = useCallback(
     (e: React.MouseEvent, node: DiagramNode) => {
-      if (isPanning || isDraggingNode || e.buttons !== 0) return;
+      if (isPanningRef.current || isDraggingNodeRef.current || e.buttons !== 0) return;
 
       const pieceId = getPieceIdFromNode(node);
 
-      if (globalHoverClearTimeout) {
-        clearTimeout(globalHoverClearTimeout);
+      if (hoverClearTimeoutRef.current) {
+        clearTimeout(hoverClearTimeoutRef.current);
       }
 
       const pieceGuidAtLeave = pieceId;
-      globalHoverClearTimeout = setTimeout(() => {
-        if (currentHoveredPieceGuid === pieceGuidAtLeave) {
+      hoverClearTimeoutRef.current = setTimeout(() => {
+        if (currentHoveredPieceGuidRef.current === pieceGuidAtLeave) {
           if (clearHover) clearHover();
-          currentHoveredPieceGuid = null;
+          currentHoveredPieceGuidRef.current = null;
         }
-        globalHoverClearTimeout = null;
+        hoverClearTimeoutRef.current = null;
       }, 50);
     },
-    [clearHover],
+    [clearHover, isPanningRef, isDraggingNodeRef, hoverClearTimeoutRef, currentHoveredPieceGuidRef],
   );
 
   const pendingSelectionRef = useRef<{ pieceId: string; action: "select" | "add" | "remove" } | null>(null);
@@ -5848,9 +5868,9 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       dragPositionRef.current = { x: node.position.x, y: node.position.y };
       pendingPieceUpdatesRef.current = [];
       isDraggingRef.current = true;
-      isDraggingNode = true;
+      isDraggingNodeRef.current = true;
     },
-    [activeTool],
+    [activeTool, isDraggingNodeRef],
   );
 
   const isDraggingRef = useRef(false);
@@ -6479,11 +6499,11 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       transaction?.finalize();
 
       isDraggingRef.current = false;
-      isDraggingNode = false;
+      isDraggingNodeRef.current = false;
       dragPositionRef.current = null;
       pendingPieceUpdatesRef.current = [];
     },
-    [transaction, updatePieces, nodes, selectPiece, addPieceToSelection, removePieceFromSelection],
+    [transaction, updatePieces, nodes, selectPiece, addPieceToSelection, removePieceFromSelection, isDraggingNodeRef],
   );
 
   const onConnect = useCallback(
@@ -6897,6 +6917,7 @@ const ModelPiece: FC<ModelPieceProps> = () => {
   const [hoverPiece] = useDesignAppHoverPiece();
   const [clearHover] = useDesignAppClearHover();
   const [focusPiece] = useDesignAppFocusPiece();
+  const { currentHoveredPieceGuidRef } = useHoverIntent();
 
   const { fill } = useDesignAppPieceColor(undefined, piece.guid);
 
@@ -6950,18 +6971,18 @@ const ModelPiece: FC<ModelPieceProps> = () => {
   );
 
   const handlePointerEnter = useCallback(() => {
-    if (currentHoveredPieceGuid !== piece.guid) {
-      currentHoveredPieceGuid = piece.guid;
+    if (currentHoveredPieceGuidRef.current !== piece.guid) {
+      currentHoveredPieceGuidRef.current = piece.guid;
       if (hoverPiece) hoverPiece(piece.guid);
     }
-  }, [piece.guid, hoverPiece]);
+  }, [piece.guid, hoverPiece, currentHoveredPieceGuidRef]);
 
   const handlePointerLeave = useCallback(() => {
-    if (currentHoveredPieceGuid === piece.guid) {
-      currentHoveredPieceGuid = null;
+    if (currentHoveredPieceGuidRef.current === piece.guid) {
+      currentHoveredPieceGuidRef.current = null;
       if (clearHover) clearHover();
     }
-  }, [piece.guid, clearHover]);
+  }, [piece.guid, clearHover, currentHoveredPieceGuidRef]);
 
   const materialColor = useMemo(() => {
     const tempDiv = document.createElement("div");
@@ -7085,7 +7106,7 @@ const ModelDesign: FC = () => {
 
   type TransformableModel = { guid: string; plane: Plane | undefined; isTransformable: boolean; isSelected: boolean };
   const selectedModels = useMemo((): TransformableModel[] => {
-    if (!selection.pieces || !flatDesign.pieces) return [];
+    if (!selection.pieces || !flatDesign?.pieces) return [];
 
     return flatDesign.pieces
       .filter((piece) => selection.pieces?.includes(piece.guid))
@@ -7095,7 +7116,7 @@ const ModelDesign: FC = () => {
         isTransformable: !piece.isLocked && piece.plane !== undefined,
         isSelected: true,
       }));
-  }, [selection.pieces, flatDesign.pieces]);
+  }, [selection.pieces, flatDesign?.pieces]);
 
   const handleMultiPlaneUpdate = useCallback(
     (updates: Array<{ modelGuid: string; newPlane: Plane }>) => {
@@ -8105,11 +8126,13 @@ const DesignApp: FC = () => {
 
   return (
     <DesignAppTransactionProvider>
-      <TransactionPiecesProvider>
-        <HoverPiecesProvider>
-          <App />
-        </HoverPiecesProvider>
-      </TransactionPiecesProvider>
+      <HoverIntentProvider>
+        <TransactionPiecesProvider>
+          <HoverPiecesProvider>
+            <App />
+          </HoverPiecesProvider>
+        </TransactionPiecesProvider>
+      </HoverIntentProvider>
     </DesignAppTransactionProvider>
   );
 };

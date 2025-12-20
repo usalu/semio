@@ -97,15 +97,16 @@ const TutorialControlsContent: FC = () => {
 export const RecordingControls: FC = () => {
   const addFooterItem = useAddFooterItem();
   const removeFooterItem = useRemoveFooterItem();
-  const store = useTutorialStore();
   const [mode] = useMode();
+  const recordingState = useRecordingState();
+  const isRecordingActive = recordingState !== TutorialRecordingState.IDLE;
+
   useEffect(() => {
     if (mode !== Mode.DEV) {
       removeFooterItem("recording-controls");
-      return () => {};
+      return;
     }
-    const state = store.snapshot();
-    if (state.recordingState !== "idle") {
+    if (isRecordingActive) {
       addFooterItem({
         id: "recording-controls",
         content: <RecordingControlsContent />,
@@ -115,32 +116,19 @@ export const RecordingControls: FC = () => {
     } else {
       removeFooterItem("recording-controls");
     }
-    const unsubscribe = store.subscribe(() => {
-      const newState = store.snapshot();
-      if (newState.recordingState !== "idle") {
-        addFooterItem({
-          id: "recording-controls",
-          content: <RecordingControlsContent />,
-          className: "aspect-auto",
-          order: 1,
-        });
-      } else {
-        removeFooterItem("recording-controls");
-      }
-    });
     return () => {
-      unsubscribe();
       removeFooterItem("recording-controls");
     };
-  }, [store, addFooterItem, removeFooterItem, mode]);
+  }, [mode, isRecordingActive, addFooterItem, removeFooterItem]);
   return null;
 };
 
 const RecordingControlsContent: FC = () => {
   const store = useTutorialStore();
-  const state = store.snapshot();
-  const isRecording = state.recordingState === "recording";
-  const isPaused = state.recordingState === "paused";
+  const recordingState = useRecordingState();
+  const activeRecording = useActiveRecording();
+  const isRecording = recordingState === TutorialRecordingState.RECORDING;
+  const isPaused = recordingState === TutorialRecordingState.PAUSED;
   const handleStop = () => {
     const recording = store.stopRecording();
     if (recording) {
@@ -170,7 +158,7 @@ const RecordingControlsContent: FC = () => {
       <Button id="semio.sketchpad.recording.controls.stop" variant="ghost" onClick={handleStop} className="size-tiny p-0">
         <StopIcon className="size-tiny" />
       </Button>
-      {state.activeRecording && <div className="text-xs text-muted">{state.activeRecording.name}</div>}
+      {activeRecording && <div className="text-xs text-muted">{activeRecording.name}</div>}
     </div>
   );
 };

@@ -23,7 +23,7 @@
 // #region Imports
 
 import { MDXProvider as BaseMDXProvider } from "@mdx-js/react";
-import { FC, ReactNode, Suspense, createContext, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { FC, ReactNode, Suspense, createContext, lazy, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useLocation, useNavigate, useParams } from "react-router";
 import { useLabel } from "../i18n";
 import type { SketchpadStore } from "./Sketchpad";
@@ -226,18 +226,11 @@ const headingsState = {
   },
 };
 
-export const useHeadings = () => {
-  const [headings, setHeadings] = useState<HeadingNode[]>(() => headingsState.getAll());
+const subscribeHeadings = (callback: () => void) => headingsState.subscribe(callback);
+const getHeadingsSnapshot = () => headingsState.getAll();
 
-  useEffect(() => {
-    const unsubscribe = headingsState.subscribe(() => {
-      setHeadings(headingsState.getAll());
-    });
-    setHeadings(headingsState.getAll());
-    return () => {
-      unsubscribe();
-    };
-  }, []);
+export const useHeadings = () => {
+  const headings = useSyncExternalStore(subscribeHeadings, getHeadingsSnapshot);
 
   const registerHeading = useCallback((heading: HeadingNode) => {
     headingsState.register(heading);
@@ -693,7 +686,7 @@ export interface DocsCommandResult {
 // #region Store
 
 export class DocsAppStore extends PlainAppStore<DocsAppState, DocsAppDiff, DocsAppSelectionDiff, DocsAppEdit, DocsCommandContext, DocsCommandResult> {
-  constructor(_parent: SketchpadStore, _yMap: any, _transact: (fn: () => void) => void) {
+  constructor(_parent: SketchpadStore) {
     const defaultState: DocsAppState = {
       panelVisibility: { toolbar: false, workbench: false, details: false, chat: false, settings: false },
       selection: undefined,
@@ -831,8 +824,8 @@ export const docsCommands = {
 };
 
 if (typeof window !== "undefined") {
-  registerDocsAppStoreFactory((parent, yMap, transact) => {
-    const store = new DocsAppStore(parent, yMap, transact);
+  registerDocsAppStoreFactory((parent) => {
+    const store = new DocsAppStore(parent);
     Object.entries(docsCommands).forEach(([commandId, command]) => {
       store.registerCommand(commandId, command as any);
     });

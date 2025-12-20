@@ -155,6 +155,7 @@ import {
   Window,
 } from "./elements";
 import {
+  ActionField,
   AppCommandResult,
   AppConfig,
   AppDiff,
@@ -167,6 +168,8 @@ import {
   CompleteState,
   CompositeFileProviderConfig,
   conditionalHookResult,
+  createAction as createActionValue,
+  createField as createFieldValue,
   createPathObserver,
   DerivedNode,
   DerivedStore,
@@ -179,6 +182,7 @@ import {
   executeRuntimeAction,
   Expertise,
   ExtendedInitialState,
+  Field,
   FileProvider,
   FileProviderFactory,
   FocusItem,
@@ -956,7 +960,7 @@ export abstract class PlainAppStore<TState, TDiff, TSelectionDiff, TEdit, TComma
   protected readonly listeners: Set<() => void> = new Set();
   protected readonly commandRegistry: Map<string, (context: TCommandContext, ...rest: any[]) => TCommandResult> = new Map();
   protected isTransactionActive: boolean = false;
-  protected currentTransactionStack: TEdit[] = [];
+  protected _currentTransactionStack: TEdit[] = [];
   protected pastTransactionsStack: TEdit[] = [];
   protected redoStack: TEdit[] = [];
   protected lastDeletedTransactionEdit?: TEdit;
@@ -964,6 +968,10 @@ export abstract class PlainAppStore<TState, TDiff, TSelectionDiff, TEdit, TComma
   constructor(initialState: TState) {
     this.guid = guid();
     this.state = initialState;
+  }
+
+  get currentTransactionStack(): TEdit[] {
+    return this._currentTransactionStack;
   }
 
   snapshot(): TState {
@@ -978,6 +986,19 @@ export abstract class PlainAppStore<TState, TDiff, TSelectionDiff, TEdit, TComma
   onChangedDeep(callback: () => void): Disposable {
     this.listeners.add(callback);
     return { dispose: () => this.listeners.delete(callback) };
+  }
+
+  onFieldChanged(key: string, subscribe: Subscribe, _deep?: boolean): Disposable {
+    const wrappedCallback = () => {
+      subscribe(() => {});
+    };
+    this.listeners.add(wrappedCallback);
+    const dispose = () => this.listeners.delete(wrappedCallback);
+    return Object.assign(dispose, { dispose });
+  }
+
+  getFieldSnapshot(key: string): any {
+    return (this.state as any)?.[key];
   }
 
   protected notify(): void {
@@ -999,13 +1020,13 @@ export abstract class PlainAppStore<TState, TDiff, TSelectionDiff, TEdit, TComma
 
   abortTransaction(): void {
     if (this.isTransactionActive) {
-      for (let i = this.currentTransactionStack.length - 1; i >= 0; i--) {
-        const edit = this.currentTransactionStack[i] as any;
+      for (let i = this._currentTransactionStack.length - 1; i >= 0; i--) {
+        const edit = this._currentTransactionStack[i] as any;
         if (edit?.undo?.selectionDiff) {
           this.applySelectionDiff(edit.undo.selectionDiff);
         }
       }
-      this.currentTransactionStack = [];
+      this._currentTransactionStack = [];
       this.isTransactionActive = false;
       this.notify();
     }
@@ -1014,8 +1035,8 @@ export abstract class PlainAppStore<TState, TDiff, TSelectionDiff, TEdit, TComma
   finalizeTransaction(): void {
     if (this.isTransactionActive) {
       this.redoStack = [];
-      if (this.currentTransactionStack.length > 0) {
-        const edits = this.currentTransactionStack;
+      if (this._currentTransactionStack.length > 0) {
+        const edits = this._currentTransactionStack;
         if (edits.length === 1) {
           this.pastTransactionsStack.push(edits[0]);
         } else if (edits.length > 1) {
@@ -1024,7 +1045,7 @@ export abstract class PlainAppStore<TState, TDiff, TSelectionDiff, TEdit, TComma
           const mergedEdit = { do: lastEdit.do, undo: firstEdit.undo } as TEdit;
           this.pastTransactionsStack.push(mergedEdit);
         }
-        this.currentTransactionStack = [];
+        this._currentTransactionStack = [];
       }
       this.isTransactionActive = false;
       this.notify();
@@ -1033,8 +1054,8 @@ export abstract class PlainAppStore<TState, TDiff, TSelectionDiff, TEdit, TComma
 
   undo(): void {
     if (this.isTransactionActive) {
-      if (this.currentTransactionStack.length > 0) {
-        const edit = this.currentTransactionStack.pop() as any;
+      if (this._currentTransactionStack.length > 0) {
+        const edit = this._currentTransactionStack.pop() as any;
         this.lastDeletedTransactionEdit = edit;
         if (edit?.undo?.selectionDiff) {
           this.applySelectionDiff(edit.undo.selectionDiff);
@@ -1056,7 +1077,7 @@ export abstract class PlainAppStore<TState, TDiff, TSelectionDiff, TEdit, TComma
   redo(): void {
     if (this.isTransactionActive) {
       if (this.lastDeletedTransactionEdit) {
-        this.currentTransactionStack.push(this.lastDeletedTransactionEdit);
+        this._currentTransactionStack.push(this.lastDeletedTransactionEdit);
         const edit = this.lastDeletedTransactionEdit as any;
         this.lastDeletedTransactionEdit = undefined;
         if (edit?.do?.selectionDiff) {
@@ -1096,7 +1117,7 @@ export abstract class PlainAppStore<TState, TDiff, TSelectionDiff, TEdit, TComma
       const doStep = { selectionDiff: res.diff?.selection };
       const undoStep = { selectionDiff: inversedSelectionDiff };
       const edit = { do: doStep, undo: undoStep } as TEdit;
-      this.currentTransactionStack.push(edit);
+      this._currentTransactionStack.push(edit);
     }
   }
 
@@ -1120,8 +1141,8 @@ export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit,
 
   abortTransaction(): void {
     if (this.isTransactionActive) {
-      for (let i = this.currentTransactionStack.length - 1; i >= 0; i--) {
-        const edit = this.currentTransactionStack[i] as any;
+      for (let i = this._currentTransactionStack.length - 1; i >= 0; i--) {
+        const edit = this._currentTransactionStack[i] as any;
         if (edit?.undo) {
           if (edit.undo.kitDiff) {
             this.kit().change(edit.undo.kitDiff);
@@ -1131,7 +1152,7 @@ export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit,
           }
         }
       }
-      this.currentTransactionStack = [];
+      this._currentTransactionStack = [];
       this.isTransactionActive = false;
       this.notify();
     }
@@ -1139,8 +1160,8 @@ export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit,
 
   undo(): void {
     if (this.isTransactionActive) {
-      if (this.currentTransactionStack.length > 0) {
-        const edit = this.currentTransactionStack.pop() as any;
+      if (this._currentTransactionStack.length > 0) {
+        const edit = this._currentTransactionStack.pop() as any;
         this.lastDeletedTransactionEdit = edit;
         if (edit?.undo) {
           if (edit.undo.kitDiff) {
@@ -1172,7 +1193,7 @@ export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit,
   redo(): void {
     if (this.isTransactionActive) {
       if (this.lastDeletedTransactionEdit) {
-        this.currentTransactionStack.push(this.lastDeletedTransactionEdit);
+        this._currentTransactionStack.push(this.lastDeletedTransactionEdit);
         const edit = this.lastDeletedTransactionEdit as any;
         this.lastDeletedTransactionEdit = undefined;
         if (edit?.do) {
@@ -1215,7 +1236,7 @@ export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit,
       const doStep = { kitDiff: res.kitDiff, selectionDiff: res.diff?.selection };
       const undoStep = { kitDiff: inversedKitDiff, selectionDiff: inversedSelectionDiff };
       const edit = { do: doStep, undo: undoStep } as TEdit;
-      this.currentTransactionStack.push(edit);
+      this._currentTransactionStack.push(edit);
     }
   }
 }
@@ -10316,6 +10337,7 @@ export function useSyncField<T, TSelected = T>(
   key: string,
   selector: (value: T) => TSelected = identitySelector as any,
   deep: boolean = true,
+  comparator?: (a: TSelected, b: TSelected) => boolean,
 ): TSelected {
   const subscribe = useCallback(
     (callback: () => void) => {
@@ -10351,6 +10373,14 @@ export function useSyncField<T, TSelected = T>(
       return newValue;
     }
 
+    if (comparator) {
+      if (lastResultRef.current.value !== undefined && comparator(lastResultRef.current.value, newValue)) {
+        return lastResultRef.current.value;
+      }
+      lastResultRef.current = { value: newValue };
+      return newValue;
+    }
+
     const newJson = JSON.stringify(newValue);
     if (newJson === lastResultRef.current.json) {
       return lastResultRef.current.value;
@@ -10358,7 +10388,7 @@ export function useSyncField<T, TSelected = T>(
 
     lastResultRef.current = { value: newValue, json: newJson };
     return newValue;
-  }, [store, selector, key]);
+  }, [store, selector, key, comparator]);
 
   return useSyncExternalStore(subscribe, getSnapshot);
 }
@@ -10368,6 +10398,7 @@ export function useSyncFields<T, TSelected = T>(
   keys: string[],
   selector: (value: T) => TSelected = identitySelector as any,
   deep: boolean = true,
+  comparator?: (a: TSelected, b: TSelected) => boolean,
 ): TSelected {
   const keysRef = useRef(keys);
   if (keys.length !== keysRef.current.length || keys.some((k, i) => k !== keysRef.current[i])) keysRef.current = keys;
@@ -10400,6 +10431,14 @@ export function useSyncFields<T, TSelected = T>(
       return newValue;
     }
 
+    if (comparator) {
+      if (lastResultRef.current.value !== undefined && comparator(lastResultRef.current.value, newValue)) {
+        return lastResultRef.current.value;
+      }
+      lastResultRef.current = { value: newValue };
+      return newValue;
+    }
+
     const newJson = JSON.stringify(newValue);
     if (newJson === lastResultRef.current.json) {
       return lastResultRef.current.value;
@@ -10407,7 +10446,7 @@ export function useSyncFields<T, TSelected = T>(
 
     lastResultRef.current = { value: newValue, json: newJson };
     return newValue;
-  }, [store, selector]);
+  }, [store, selector, comparator]);
 
   return useSyncExternalStore(subscribe, getSnapshot);
 }
@@ -10628,18 +10667,6 @@ type YKitAppVal = string | number | boolean | YLeafMapString | YLeafMapNumber | 
 type YKitApp = Y.Map<YKitAppVal>;
 type YKitApps = Y.Map<YKitApp>;
 
-type YDesignAppVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
-type YDesignApp = Y.Map<YDesignAppVal>;
-type YDesignApps = Y.Map<Y.Map<YDesignApp>>;
-
-type YTypeAppVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
-type YTypeApp = Y.Map<YTypeAppVal>;
-type YTypeApps = Y.Map<YTypeApp>;
-
-type YQualityAppVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
-type YQualityApp = Y.Map<YQualityAppVal>;
-type YQualityApps = Y.Map<YQualityApp>;
-
 type YKitMetadata = Y.Map<string | boolean>;
 type YKitMetadatas = Y.Array<YKitMetadata>;
 
@@ -10652,11 +10679,11 @@ type DocsAppStoreInstance = any;
 
 type KitAppStoreFactory = (parent: SketchpadStore, yMap: YKitApp, transact: (fn: () => void) => void, id: KitAppId, state?: KitAppState) => KitAppStoreInstance;
 // Factory types - local aliases for type checking
-type DesignAppStoreFactoryLocal = (parent: SketchpadStore, yMap: YDesignApp, transact: (fn: () => void) => void, id: DesignAppId, state?: DesignAppState) => DesignAppStoreInstance;
-type TypeAppStoreFactoryLocal = (parent: SketchpadStore, yMap: YTypeApp, transact: (fn: () => void) => void, id: TypeAppId, state?: TypeAppState) => TypeAppStoreInstance;
-type QualityAppStoreFactoryLocal = (parent: SketchpadStore, yMap: YQualityApp, transact: (fn: () => void) => void, id: QualityAppId, state?: QualityAppState) => QualityAppStoreInstance;
-type HomeStoreFactory = (parent: SketchpadStore, yMap: Y.Map<any>, transact: (fn: () => void) => void) => HomeStoreInstance;
-type DocsAppStoreFactory = (parent: SketchpadStore, yMap: Y.Map<any>, transact: (fn: () => void) => void) => DocsAppStoreInstance;
+type DesignAppStoreFactoryLocal = (parent: SketchpadStore, id: DesignAppId, state?: DesignAppState) => DesignAppStoreInstance;
+type TypeAppStoreFactoryLocal = (parent: SketchpadStore, id: TypeAppId, state?: TypeAppState) => TypeAppStoreInstance;
+type QualityAppStoreFactoryLocal = (parent: SketchpadStore, id: QualityAppId, state?: QualityAppState) => QualityAppStoreInstance;
+type HomeStoreFactory = (parent: SketchpadStore) => HomeStoreInstance;
+type DocsAppStoreFactory = (parent: SketchpadStore) => DocsAppStoreInstance;
 
 // Import factory registry from shared.ts to avoid circular dependencies
 import {
@@ -10696,7 +10723,7 @@ function resolveDocsAppStoreFactory(): DocsAppStoreFactory {
 // Re-export for backwards compatibility
 export { registerDesignAppStoreFactory, registerKitAppStoreFactory, registerQualityAppStoreFactory, registerTypeAppStoreFactory };
 
-type YSketchpadVal = string | number | boolean | YDesignApps;
+type YSketchpadVal = string | number | boolean;
 type YSketchpad = Y.Map<YSketchpadVal>;
 
 export class SketchpadStore {
@@ -10732,15 +10759,11 @@ export class SketchpadStore {
   private readonly ySketchpad: YSketchpad;
   private readonly kits: Map<string, KitStore>;
   private readonly yKits: YKitMetadatas;
-  private readonly yHome: Y.Map<any>;
   private homeStore?: HomeStoreInstance;
   private readonly yKitApps: YKitApps;
   private readonly kitApps: Map<string, KitAppStoreInstance>;
-  private readonly yTypeApps: YTypeApps;
   private readonly typeApps: Map<string, TypeAppStoreInstance>;
-  private readonly yQualityApps: YQualityApps;
   private readonly qualityApps: Map<string, QualityAppStoreInstance>;
-  private readonly yDesignApps: YDesignApps;
   private readonly designApps: Map<string, Map<string, DesignAppStoreInstance>>;
   private readonly persistence?: IndexeddbPersistence;
   private readonly commandRegistry: Map<string, (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult>;
@@ -10798,11 +10821,7 @@ export class SketchpadStore {
 
     this.ySketchpad = this.yDoc.getMap("sketchpad");
     this.yKits = this.yDoc.getArray("kits");
-    this.yHome = this.yDoc.getMap("home");
     this.yKitApps = this.yDoc.getMap("kitApps");
-    this.yTypeApps = this.yDoc.getMap("typeApps");
-    this.yQualityApps = this.yDoc.getMap("qualityApps");
-    this.yDesignApps = this.yDoc.getMap("designApps");
 
     const yTutorials = this.yDoc.getMap("tutorials");
     this.tutorialStoreInstance = new TutorialStore(yTutorials, (fn) => this.yDoc.transact(fn));
@@ -11068,27 +11087,15 @@ export class SketchpadStore {
   };
 
   createDesignApp = (kit: Guid, design: Guid) => {
-    this.yDoc.transact(() => {
-      let yKitMap = this.yDesignApps.get(kit) as Y.Map<YDesignApp>;
-      if (!yKitMap) {
-        yKitMap = new Y.Map<YDesignApp>();
-        this.yDesignApps.set(kit, yKitMap);
-      }
-      let yDesignApp = yKitMap.get(design) as Y.Map<YDesignAppVal>;
-      if (!yDesignApp) {
-        yDesignApp = new Y.Map<YDesignAppVal>();
-        yKitMap.set(design, yDesignApp);
-      }
-      const designAppFactory = resolveDesignAppStoreFactory();
-      const designApp = designAppFactory(this, yDesignApp, (fn: () => void) => this.yDoc.transact(fn), { kit, design });
+    const designAppFactory = resolveDesignAppStoreFactory();
+    const designApp = designAppFactory(this, { kit, design });
 
-      let designAppsMap = this.designApps.get(kit);
-      if (!designAppsMap) {
-        designAppsMap = new Map();
-        this.designApps.set(kit, designAppsMap);
-      }
-      designAppsMap.set(design, designApp);
-    });
+    let designAppsMap = this.designApps.get(kit);
+    if (!designAppsMap) {
+      designAppsMap = new Map();
+      this.designApps.set(kit, designAppsMap);
+    }
+    designAppsMap.set(design, designApp);
     this.designAppCreatedSubscribers.forEach((subscriber) => subscriber());
   };
 
@@ -11173,15 +11180,6 @@ export class SketchpadStore {
       if (this.designApps.get(kit)?.size === 0) {
         this.designApps.delete(kit);
       }
-      this.yDoc.transact(() => {
-        const yKitMap = this.yDesignApps.get(kit) as Y.Map<YDesignApp> | undefined;
-        if (yKitMap) {
-          yKitMap.delete(design);
-          if (yKitMap.size === 0) {
-            this.yDesignApps.delete(kit);
-          }
-        }
-      });
       this.designAppDeletedSubscribers.forEach((subscriber) => subscriber());
     }
   };
@@ -11427,10 +11425,6 @@ export class SketchpadStore {
 
       this.yKits.delete(0, this.yKits.length);
       this.yKitApps.forEach((_, key) => this.yKitApps.delete(key));
-      this.yTypeApps.forEach((_, key) => this.yTypeApps.delete(key));
-      this.yQualityApps.forEach((_, key) => this.yQualityApps.delete(key));
-      this.yDesignApps.forEach((_, key) => this.yDesignApps.delete(key));
-      this.yHome.forEach((_, key) => this.yHome.delete(key));
 
       this.ySketchpad.set("navigation", state.sketchpad.navigation);
       this.ySketchpad.set("navigationHistory", JSON.stringify(state.sketchpad.navigationHistory));
@@ -11548,7 +11542,7 @@ export class SketchpadStore {
   home(): HomeStoreInstance {
     if (!this.homeStore) {
       const homeFactory = resolveHomeStoreFactory();
-      this.homeStore = homeFactory(this, this.yHome, (fn: () => void) => this.yDoc.transact(fn));
+      this.homeStore = homeFactory(this);
     }
     return this.homeStore;
   }
@@ -11595,16 +11589,9 @@ export class SketchpadStore {
   createTypeApp = (kit: Guid, type: Guid) => {
     const id: TypeAppId = { kit, type };
     const key = `${kit}:${type}`;
-    this.yDoc.transact(() => {
-      let yTypeApp = this.yTypeApps.get(key) as Y.Map<YTypeAppVal>;
-      if (!yTypeApp) {
-        yTypeApp = new Y.Map<YTypeAppVal>();
-        this.yTypeApps.set(key, yTypeApp);
-      }
-      const typeAppFactory = resolveTypeAppStoreFactory();
-      const typeApp = typeAppFactory(this, yTypeApp, (fn: () => void) => this.yDoc.transact(fn), id);
-      this.typeApps.set(key, typeApp);
-    });
+    const typeAppFactory = resolveTypeAppStoreFactory();
+    const typeApp = typeAppFactory(this, id);
+    this.typeApps.set(key, typeApp);
     this.typeAppCreatedSubscribers.forEach((subscriber) => subscriber());
   };
 
@@ -11613,9 +11600,6 @@ export class SketchpadStore {
     const typeApp = this.typeApps.get(key);
     if (typeApp) {
       this.typeApps.delete(key);
-      this.yDoc.transact(() => {
-        this.yTypeApps.delete(key);
-      });
       this.typeAppDeletedSubscribers.forEach((subscriber) => subscriber());
     }
   };
@@ -11642,16 +11626,9 @@ export class SketchpadStore {
   createQualityApp = (kit: Guid, quality: Guid) => {
     const Guid: QualityAppId = { kit, quality };
     const key = `${kit}:${quality}`;
-    this.yDoc.transact(() => {
-      let yQualityApp = this.yQualityApps.get(key) as Y.Map<YQualityAppVal>;
-      if (!yQualityApp) {
-        yQualityApp = new Y.Map<YQualityAppVal>();
-        this.yQualityApps.set(key, yQualityApp);
-      }
-      const qualityAppFactory = resolveQualityAppStoreFactory();
-      const qualityApp = qualityAppFactory(this, yQualityApp, (fn: () => void) => this.yDoc.transact(fn), Guid);
-      this.qualityApps.set(key, qualityApp);
-    });
+    const qualityAppFactory = resolveQualityAppStoreFactory();
+    const qualityApp = qualityAppFactory(this, Guid);
+    this.qualityApps.set(key, qualityApp);
     this.qualityAppCreatedSubscribers.forEach((subscriber) => subscriber());
   };
 
@@ -11660,9 +11637,6 @@ export class SketchpadStore {
     const qualityApp = this.qualityApps.get(key);
     if (qualityApp) {
       this.qualityApps.delete(key);
-      this.yDoc.transact(() => {
-        this.yQualityApps.delete(key);
-      });
       this.qualityAppDeletedSubscribers.forEach((subscriber) => subscriber());
     }
   };
@@ -12201,6 +12175,37 @@ export function useSketchpadActions() {
     }),
     [actor],
   );
+}
+
+export function useXStateField<T, TEvent extends { type: string }>(
+  value: T,
+  canEvent: TEvent,
+  createEvent: (next: T) => TEvent,
+): Field<T> {
+  const actor = useSketchpadActor();
+  const canSet = useSelector(actor, (snapshot) => snapshot.can(canEvent as Parameters<typeof snapshot.can>[0]));
+  return useMemo(() => createFieldValue(value, (next: T) => actor.send(createEvent(next) as Parameters<typeof actor.send>[0]), canSet), [value, actor, createEvent, canSet]);
+}
+
+export function useXStateFieldWithScope<T, TEvent extends { type: string }>(
+  value: T,
+  canEvent: TEvent,
+  createEvent: (next: T) => TEvent,
+  hasScope: boolean,
+): Field<T> {
+  const actor = useSketchpadActor();
+  const canSetFromSnapshot = useSelector(actor, (snapshot) => snapshot.can(canEvent as Parameters<typeof snapshot.can>[0]));
+  const canSet = canSetFromSnapshot || hasScope;
+  return useMemo(() => createFieldValue(value, (next: T) => actor.send(createEvent(next) as Parameters<typeof actor.send>[0]), canSet), [value, actor, createEvent, canSet]);
+}
+
+export function useXStateAction<TEvent extends { type: string }>(
+  canEvent: TEvent,
+  event: TEvent,
+): ActionField {
+  const actor = useSketchpadActor();
+  const canExecute = useSelector(actor, (snapshot) => snapshot.can(canEvent as Parameters<typeof snapshot.can>[0]));
+  return useMemo(() => createActionValue(() => actor.send(event as Parameters<typeof actor.send>[0]), canExecute), [actor, event, canExecute]);
 }
 
 // #endregion XState Hooks

@@ -66,7 +66,7 @@
   opacity: 1 !important;
   z-index: var(--z-panel) !important;
   position: relative !important;
-  background-color: var(--window) !important;
+  background-color: transparent !important;
   border-bottom: 1px solid var(--border-color) !important;
 }
 
@@ -75,6 +75,7 @@
   visibility: visible !important;
   opacity: 1 !important;
   flex: 1 !important;
+  background-color: transparent !important;
 }
 
 .lm_tab {
@@ -115,6 +116,7 @@
   visibility: visible !important;
   opacity: 1 !important;
   flex-shrink: 0 !important;
+  background-color: transparent !important;
 }
 
 .lm_close_tab {
@@ -175,7 +177,7 @@
 .lm_item.lm_stack {
   border: none !important;
   position: relative !important;
-  background-color: var(--window) !important;
+  background-color: transparent !important;
 }
 
 .lm_item.lm_stack::after {
