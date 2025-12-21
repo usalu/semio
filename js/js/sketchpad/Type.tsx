@@ -37,8 +37,14 @@ import {
   Canvas,
   createDefaultLayout,
   createDefaultTypeAppState,
+  createTypeActiveToolSelector,
   createTypeAppSelector,
+  createTypeCameraSelector,
+  createTypeFocusedPortSelector,
+  createTypeFullscreenWindowSelector,
   createTypeHoverSelector,
+  createTypeOthersSelector,
+  createTypePanelVisibilitySelector,
   createTypeSelectedModelTagsSelector,
   createTypeSelectionSelector,
   KitScopeProvider,
@@ -494,13 +500,13 @@ export function useTypeApp<T>(selector?: (state: TypeAppState) => T, id?: TypeAp
 }
 
 export function useTypeAppSelection(): HookResult<TypeAppSelection> {
-  const state = useTypeApp((s) => s);
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
   const kitGuid = kitScope?.guid ?? "";
   const typeGuid = typeScope?.guid ?? "";
-  const value = state ? ((state as TypeAppState).selection ?? EMPTY_TYPE_SELECTION) : EMPTY_TYPE_SELECTION;
+  const selector = useMemo(() => createTypeSelectionSelector(kitGuid, typeGuid), [kitGuid, typeGuid]);
+  const value = useSelector(actor, selector) ?? EMPTY_TYPE_SELECTION;
   const canSetEvent = useMemo(() => ({ type: "TYPE.SET_SELECTION" as const, kitGuid, typeGuid, selection: {} as TypeAppSelection }), [kitGuid, typeGuid]);
   const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setter = useMemo(() => {
@@ -513,13 +519,13 @@ export function useTypeAppSelection(): HookResult<TypeAppSelection> {
 }
 
 export function useTypeAppPanelVisibility(): HookResult<PanelVisibility> {
-  const state = useTypeApp((s) => s);
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
   const kitGuid = kitScope?.guid ?? "";
   const typeGuid = typeScope?.guid ?? "";
-  const value = state ? ((state as TypeAppState).panelVisibility ?? EMPTY_PANEL_VISIBILITY) : EMPTY_PANEL_VISIBILITY;
+  const selector = useMemo(() => createTypePanelVisibilitySelector(kitGuid, typeGuid), [kitGuid, typeGuid]);
+  const value = useSelector(actor, selector) ?? EMPTY_PANEL_VISIBILITY;
   const canSetEvent = useMemo(() => ({ type: "TYPE.SET_PANEL_VISIBILITY" as const, kitGuid, typeGuid, panelVisibility: {} as PanelVisibility }), [kitGuid, typeGuid]);
   const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setter = useMemo(() => {
@@ -532,19 +538,24 @@ export function useTypeAppPanelVisibility(): HookResult<PanelVisibility> {
 }
 
 export function useTypeAppOthers(): HookResult<TypeAppPresenceOther[]> {
-  const state = useTypeApp((s) => s);
-  const value = state ? ((state as TypeAppState).others ?? EMPTY_OTHERS) : EMPTY_OTHERS;
-  return readonlyHookResult(value);
-}
-
-export function useTypeAppCamera(): HookResult<Camera | undefined> {
-  const state = useTypeApp((s) => s);
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
   const kitGuid = kitScope?.guid ?? "";
   const typeGuid = typeScope?.guid ?? "";
-  const value = state ? (state as TypeAppState).camera : undefined;
+  const selector = useMemo(() => createTypeOthersSelector(kitGuid, typeGuid), [kitGuid, typeGuid]);
+  const value = useSelector(actor, selector) ?? EMPTY_OTHERS;
+  return readonlyHookResult(value);
+}
+
+export function useTypeAppCamera(): HookResult<Camera | undefined> {
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const typeScope = useTypeScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const typeGuid = typeScope?.guid ?? "";
+  const selector = useMemo(() => createTypeCameraSelector(kitGuid, typeGuid), [kitGuid, typeGuid]);
+  const value = useSelector(actor, selector);
   const canSetEvent = useMemo(() => ({ type: "TYPE.SET_CAMERA" as const, kitGuid, typeGuid, camera: undefined as Camera | undefined }), [kitGuid, typeGuid]);
   const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setter = useMemo(() => {
@@ -557,13 +568,13 @@ export function useTypeAppCamera(): HookResult<Camera | undefined> {
 }
 
 export function useTypeAppFocusedPortGuid(): HookResult<Guid | undefined> {
-  const state = useTypeApp((s) => s);
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
   const kitGuid = kitScope?.guid ?? "";
   const typeGuid = typeScope?.guid ?? "";
-  const value = state ? (state as TypeAppState).focusedPortGuid : undefined;
+  const selector = useMemo(() => createTypeFocusedPortSelector(kitGuid, typeGuid), [kitGuid, typeGuid]);
+  const value = useSelector(actor, selector);
   const canSetEvent = useMemo(() => ({ type: "TYPE.FOCUS_PORT" as const, kitGuid, typeGuid, portGuid: "" }), [kitGuid, typeGuid]);
   const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setter = useMemo(() => {
@@ -580,13 +591,13 @@ export function useTypeAppFocusedPortGuid(): HookResult<Guid | undefined> {
 }
 
 export function useTypeAppHover(): HookResult<TypeAppHover | undefined> {
-  const state = useTypeApp((s) => s);
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
   const kitGuid = kitScope?.guid ?? "";
   const typeGuid = typeScope?.guid ?? "";
-  const value = state ? (state as TypeAppState).hover : undefined;
+  const selector = useMemo(() => createTypeHoverSelector(kitGuid, typeGuid), [kitGuid, typeGuid]);
+  const value = useSelector(actor, selector);
   const canSetEvent = useMemo(() => ({ type: "TYPE.SET_HOVER" as const, kitGuid, typeGuid, hover: {} as TypeAppHover }), [kitGuid, typeGuid]);
   const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setter = useMemo(() => {
@@ -605,13 +616,13 @@ export function useTypeAppHover(): HookResult<TypeAppHover | undefined> {
 }
 
 export function useTypeAppActiveTool(): HookResult<ToolKind> {
-  const state = useTypeApp((s) => s);
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
   const kitGuid = kitScope?.guid ?? "";
   const typeGuid = typeScope?.guid ?? "";
-  const value = state ? ((state as TypeAppState).activeTool ?? ToolKind.SELECTION_NORMAL) : ToolKind.SELECTION_NORMAL;
+  const selector = useMemo(() => createTypeActiveToolSelector(kitGuid, typeGuid), [kitGuid, typeGuid]);
+  const value = useSelector(actor, selector) ?? ToolKind.SELECTION_NORMAL;
   const canSetEvent = useMemo(() => ({ type: "TYPE.SET_ACTIVE_TOOL" as const, kitGuid, typeGuid, tool: ToolKind.SELECTION_NORMAL }), [kitGuid, typeGuid]);
   const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setter = useMemo(() => {

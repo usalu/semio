@@ -384,6 +384,24 @@
                 "beginner": "Anzeigen"
               }
             }
+          },
+          "leftSidePanel": {
+            "label": {
+              "normal": "Linkes Panel umschalten",
+              "beginner": "Das linke Seitenfeld mit Workbench-Tabs umschalten"
+            }
+          },
+          "rightSidePanel": {
+            "label": {
+              "normal": "Rechtes Panel umschalten",
+              "beginner": "Das rechte Seitenfeld mit Detail-Tabs umschalten"
+            }
+          },
+          "hudPanel": {
+            "label": {
+              "normal": "HUD-Panel umschalten",
+              "beginner": "Das zentrale HUD-Panel umschalten"
+            }
           }
         },
         "home": {

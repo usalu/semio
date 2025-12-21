@@ -213,6 +213,8 @@ import {
   RemoteFileProviderConfig,
   RemoteProviders,
   RouteSegment,
+  SidePanelTab,
+  HudPanelTab,
   SketchpadCommandContext,
   SketchpadCommandResult,
   SketchpadDiff,
@@ -8449,6 +8451,9 @@ function createDefaultSketchpadState(id?: string): SketchpadState {
       chatWidth: 230,
       settingsWidth: 230,
       consoleHeight: 200,
+      leftSidePanelWidth: 280,
+      rightSidePanelWidth: 280,
+      hudPanelWidth: 400,
     },
     isFullscreen: false,
     isMobile: false,
@@ -9156,6 +9161,11 @@ export const createDesignFullscreenWindowSelector = (kitGuid: Guid, designGuid: 
   return (state: { context: SketchpadContext }) => state.context.designApps[key]?.fullscreenWindow;
 };
 
+export const createDesignOthersSelector = (kitGuid: Guid, designGuid: Guid) => {
+  const key = `${kitGuid}:${designGuid}`;
+  return (state: { context: SketchpadContext }) => state.context.designApps[key]?.others ?? [];
+};
+
 // Type app selectors
 export const createTypeAppSelector = (kitGuid: Guid, typeGuid: Guid) => {
   const key = `${kitGuid}:${typeGuid}`;
@@ -9205,6 +9215,11 @@ export const createTypeFullscreenWindowSelector = (kitGuid: Guid, typeGuid: Guid
   return (state: { context: SketchpadContext }) => state.context.typeApps[key]?.fullscreenWindow ?? TypeAppFullscreenWindow.None;
 };
 
+export const createTypeOthersSelector = (kitGuid: Guid, typeGuid: Guid) => {
+  const key = `${kitGuid}:${typeGuid}`;
+  return (state: { context: SketchpadContext }) => state.context.typeApps[key]?.others ?? [];
+};
+
 // Kit app selectors
 export const createKitAppSelector = (kitGuid: Guid) => {
   return (state: { context: SketchpadContext }) => state.context.kitApps[kitGuid] ?? createDefaultKitAppState();
@@ -9228,6 +9243,30 @@ export const createKitFilterSearchSelector = (kitGuid: Guid) => {
 
 export const createKitExpandedRowsSelector = (kitGuid: Guid) => {
   return (state: { context: SketchpadContext }) => state.context.kitApps[kitGuid]?.expandedRows ?? new Set<string>();
+};
+
+export const createKitSortColumnSelector = (kitGuid: Guid) => {
+  return (state: { context: SketchpadContext }) => state.context.kitApps[kitGuid]?.sortColumn ?? "artifact";
+};
+
+export const createKitSortDirectionSelector = (kitGuid: Guid) => {
+  return (state: { context: SketchpadContext }) => state.context.kitApps[kitGuid]?.sortDirection ?? "asc";
+};
+
+export const createKitFullscreenSelector = (kitGuid: Guid) => {
+  return (state: { context: SketchpadContext }) => state.context.kitApps[kitGuid]?.fullscreenWindow ?? KitAppFullscreenWindow.None;
+};
+
+export const createKitOthersSelector = (kitGuid: Guid) => {
+  return (state: { context: SketchpadContext }) => state.context.kitApps[kitGuid]?.others ?? [];
+};
+
+export const createKitWindowLayoutSelector = (kitGuid: Guid) => {
+  return (state: { context: SketchpadContext }) => state.context.kitApps[kitGuid]?.windowLayout;
+};
+
+export const createKitDiagramForceSelector = (kitGuid: Guid) => {
+  return (state: { context: SketchpadContext }) => state.context.kitApps[kitGuid]?.diagramForce;
 };
 
 // Quality app selectors
@@ -13207,6 +13246,137 @@ export const useRemovePanelSection = () => {
 
 // #endregion Panel Sections
 
+// #region SidePanel Tabs
+
+interface SidePanelTabsState {
+  left: SidePanelTab[];
+  right: SidePanelTab[];
+}
+
+interface HudPanelTabsState {
+  tabs: HudPanelTab[];
+}
+
+interface SidePanelTabContextValue {
+  sidePanelTabs: SidePanelTabsState;
+  hudPanelTabs: HudPanelTabsState;
+  addSidePanelTab: (position: "left" | "right", tab: SidePanelTab) => void;
+  removeSidePanelTab: (position: "left" | "right", tabId: string) => void;
+  addHudPanelTab: (tab: HudPanelTab) => void;
+  removeHudPanelTab: (tabId: string) => void;
+  activeLeftTabId: string | undefined;
+  activeRightTabId: string | undefined;
+  activeHudTabId: string | undefined;
+  setActiveLeftTabId: (tabId: string) => void;
+  setActiveRightTabId: (tabId: string) => void;
+  setActiveHudTabId: (tabId: string) => void;
+}
+
+const SidePanelTabContext = createContext<SidePanelTabContextValue | null>(null);
+
+export const SidePanelTabProvider: FC<{ children: ReactNode }> = ({ children }) => {
+  const [sidePanelTabs, setSidePanelTabs] = useState<SidePanelTabsState>({ left: [], right: [] });
+  const [hudPanelTabs, setHudPanelTabs] = useState<HudPanelTabsState>({ tabs: [] });
+  const [activeLeftTabId, setActiveLeftTabId] = useState<string | undefined>(undefined);
+  const [activeRightTabId, setActiveRightTabId] = useState<string | undefined>(undefined);
+  const [activeHudTabId, setActiveHudTabId] = useState<string | undefined>(undefined);
+
+  const addSidePanelTab = useCallback((position: "left" | "right", tab: SidePanelTab) => {
+    setSidePanelTabs((prev) => {
+      const updated = { ...prev, [position]: [...prev[position].filter((t) => t.id !== tab.id), tab].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)) };
+      return updated;
+    });
+  }, []);
+
+  const removeSidePanelTab = useCallback((position: "left" | "right", tabId: string) => {
+    setSidePanelTabs((prev) => ({ ...prev, [position]: prev[position].filter((t) => t.id !== tabId) }));
+  }, []);
+
+  const addHudPanelTab = useCallback((tab: HudPanelTab) => {
+    setHudPanelTabs((prev) => ({ tabs: [...prev.tabs.filter((t) => t.id !== tab.id), tab].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)) }));
+  }, []);
+
+  const removeHudPanelTab = useCallback((tabId: string) => {
+    setHudPanelTabs((prev) => ({ tabs: prev.tabs.filter((t) => t.id !== tabId) }));
+  }, []);
+
+  const contextValue = useMemo(
+    () => ({
+      sidePanelTabs,
+      hudPanelTabs,
+      addSidePanelTab,
+      removeSidePanelTab,
+      addHudPanelTab,
+      removeHudPanelTab,
+      activeLeftTabId,
+      activeRightTabId,
+      activeHudTabId,
+      setActiveLeftTabId,
+      setActiveRightTabId,
+      setActiveHudTabId,
+    }),
+    [sidePanelTabs, hudPanelTabs, addSidePanelTab, removeSidePanelTab, addHudPanelTab, removeHudPanelTab, activeLeftTabId, activeRightTabId, activeHudTabId],
+  );
+
+  return <SidePanelTabContext.Provider value={contextValue}>{children}</SidePanelTabContext.Provider>;
+};
+
+export const useSidePanelTabs = (position: "left" | "right"): SidePanelTab[] => {
+  const context = useContext(SidePanelTabContext);
+  if (!context) throw new Error("useSidePanelTabs must be used within SidePanelTabProvider");
+  return context.sidePanelTabs[position];
+};
+
+export const useHudPanelTabs = (): HudPanelTab[] => {
+  const context = useContext(SidePanelTabContext);
+  if (!context) throw new Error("useHudPanelTabs must be used within SidePanelTabProvider");
+  return context.hudPanelTabs.tabs;
+};
+
+export const useAddSidePanelTab = () => {
+  const context = useContext(SidePanelTabContext);
+  if (!context) throw new Error("useAddSidePanelTab must be used within SidePanelTabProvider");
+  return context.addSidePanelTab;
+};
+
+export const useRemoveSidePanelTab = () => {
+  const context = useContext(SidePanelTabContext);
+  if (!context) throw new Error("useRemoveSidePanelTab must be used within SidePanelTabProvider");
+  return context.removeSidePanelTab;
+};
+
+export const useAddHudPanelTab = () => {
+  const context = useContext(SidePanelTabContext);
+  if (!context) throw new Error("useAddHudPanelTab must be used within SidePanelTabProvider");
+  return context.addHudPanelTab;
+};
+
+export const useRemoveHudPanelTab = () => {
+  const context = useContext(SidePanelTabContext);
+  if (!context) throw new Error("useRemoveHudPanelTab must be used within SidePanelTabProvider");
+  return context.removeHudPanelTab;
+};
+
+export const useActiveLeftTabId = (): [string | undefined, (tabId: string) => void] => {
+  const context = useContext(SidePanelTabContext);
+  if (!context) throw new Error("useActiveLeftTabId must be used within SidePanelTabProvider");
+  return [context.activeLeftTabId, context.setActiveLeftTabId];
+};
+
+export const useActiveRightTabId = (): [string | undefined, (tabId: string) => void] => {
+  const context = useContext(SidePanelTabContext);
+  if (!context) throw new Error("useActiveRightTabId must be used within SidePanelTabProvider");
+  return [context.activeRightTabId, context.setActiveRightTabId];
+};
+
+export const useActiveHudTabId = (): [string | undefined, (tabId: string) => void] => {
+  const context = useContext(SidePanelTabContext);
+  if (!context) throw new Error("useActiveHudTabId must be used within SidePanelTabProvider");
+  return [context.activeHudTabId, context.setActiveHudTabId];
+};
+
+// #endregion SidePanel Tabs
+
 // #region Origin
 
 type OriginStore = {
@@ -14769,308 +14939,63 @@ const Focus: FC = ({}) => {
 
 const PanelToggles: FC = ({}) => {
   const appType = useAppType();
-  const panelConfigs = usePanelConfigs();
-  const panelConfig = panelConfigs[appType];
   const visiblePanels = useAppPanelVisibility();
   const appCommands = useAppCommands();
-  const isMobile = useIsMobile();
+  const leftTabs = useSidePanelTabs("left");
+  const rightTabs = useSidePanelTabs("right");
+  const hudTabs = useHudPanelTabs();
 
-  const commands = useMemo<Record<string, any>>(() => {
-    return {
-      home: appCommands,
-      kit: appCommands,
-      design: appCommands,
-      type: appCommands,
-      quality: appCommands,
-      docs: appCommands,
-    };
-  }, [appCommands]);
+  const hasLeftTabs = leftTabs.length > 0;
+  const hasRightTabs = rightTabs.length > 0;
+  const hasHudTabs = hudTabs.length > 0;
 
-  const groupedPanels = useMemo(() => {
-    if (!panelConfig || panelConfig.length === 0) return { groups: {}, ungrouped: [] };
-    const groups: Record<string, EnrichedPanelDefinition[]> = {};
-    const ungrouped: EnrichedPanelDefinition[] = [];
+  const isLeftOpen = visiblePanels.leftSidePanel ?? false;
+  const isRightOpen = visiblePanels.rightSidePanel ?? false;
+  const isHudOpen = visiblePanels.hudPanel ?? false;
 
-    panelConfig.forEach((config) => {
-      if (config.group) {
-        if (!groups[config.group]) {
-          groups[config.group] = [];
-        }
-        groups[config.group].push(config);
-      } else {
-        ungrouped.push(config);
-      }
-    });
-
-    return { groups, ungrouped };
-  }, [panelConfig]);
-
-  const workbenchConfigs = groupedPanels.groups["workbench"] || [];
-  const hudConfigs = groupedPanels.groups["hud"] || [];
-  const rightConfigs = groupedPanels.groups["right"] || [];
-  const toolbarConfigs = panelConfig ? panelConfig.filter((p) => p.kind === PanelKind.TOOLBAR) : [];
-
-  const workbenchDefaultKey = workbenchConfigs[0]?.key || "";
-  const workbenchSelectionRef = useRef<string>(workbenchDefaultKey);
-  if (!workbenchConfigs.some((config) => config.key === workbenchSelectionRef.current)) {
-    workbenchSelectionRef.current = workbenchDefaultKey;
-  }
-  const openWorkbenchPanelKey = workbenchConfigs.find((p) => visiblePanels[p.key as keyof PanelVisibility])?.key;
-  const isAnyWorkbenchPanelOpen = Boolean(openWorkbenchPanelKey);
-  if (openWorkbenchPanelKey && workbenchSelectionRef.current !== openWorkbenchPanelKey) {
-    workbenchSelectionRef.current = openWorkbenchPanelKey;
-  }
-  const activeWorkbenchPanel = workbenchSelectionRef.current || workbenchDefaultKey;
-
-  const hudDefaultKey = hudConfigs[0]?.key || "";
-  const hudSelectionRef = useRef<string>(hudDefaultKey);
-  if (!hudConfigs.some((config) => config.key === hudSelectionRef.current)) {
-    hudSelectionRef.current = hudDefaultKey;
-  }
-  const openHudPanelKey = hudConfigs.find((p) => visiblePanels[p.key as keyof PanelVisibility])?.key;
-  const isAnyHudPanelOpen = Boolean(openHudPanelKey);
-  if (openHudPanelKey && hudSelectionRef.current !== openHudPanelKey) {
-    hudSelectionRef.current = openHudPanelKey;
-  }
-  const activeHudPanel = hudSelectionRef.current || hudDefaultKey;
-
-  const rightDefaultKey = rightConfigs[0]?.key || "";
-  const rightSelectionRef = useRef<string>(rightDefaultKey);
-  if (!rightConfigs.some((config) => config.key === rightSelectionRef.current)) {
-    rightSelectionRef.current = rightDefaultKey;
-  }
-  const openRightPanelKey = rightConfigs.find((p) => visiblePanels[p.key as keyof PanelVisibility])?.key;
-  const isAnyRightPanelOpen = Boolean(openRightPanelKey);
-  if (openRightPanelKey && rightSelectionRef.current !== openRightPanelKey) {
-    rightSelectionRef.current = openRightPanelKey;
-  }
-  const activeRightPanel = rightSelectionRef.current || rightDefaultKey;
-
-  const workbenchPanelKeys = workbenchConfigs.map((c) => c.key);
-  const hudPanelKeys = hudConfigs.map((c) => c.key);
-  const rightPanelKeys = rightConfigs.map((c) => c.key);
-
-  const panelToggleTooltip = (panelKey: string, open: boolean) => (panelKey ? `semio.sketchpad.navbar.panelToggle.${panelKey}.${open ? "hide" : "show"}` : undefined);
-  const rightDropdownAriaLabel = `semio.sketchpad.navbar.panelToggle.right.label`;
-
-  const handleToggle = useCallback(
-    (origin: string, panelKey: keyof PanelVisibility) => {
-      const togglePanel = commands[appType]?.togglePanel || (() => {});
-      const current = visiblePanels[panelKey];
-
-      if (isMobile) {
-        if (!current) {
-          (Object.keys(visiblePanels) as Array<keyof PanelVisibility>).forEach((p) => {
-            if (p !== panelKey && visiblePanels[p]) {
-              togglePanel(origin, p);
-            }
-          });
-        }
-      } else {
-        const config = panelConfig.find((c) => c.key === panelKey);
-        if (config?.group) {
-          const groupConfigs = groupedPanels.groups[config.group] || [];
-          const groupKeys = groupConfigs.map((c) => c.key);
-          if (!current) {
-            (groupKeys as Array<keyof PanelVisibility>).forEach((p) => {
-              if (p !== panelKey && visiblePanels[p]) {
-                togglePanel(origin, p);
-              }
-            });
-          }
-        }
-      }
-      togglePanel(origin, panelKey);
+  const handleLeftToggle = useCallback(
+    (pressed: boolean) => {
+      appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.leftSidePanel", "leftSidePanel");
     },
-    [appType, commands, visiblePanels, isMobile, panelConfig, groupedPanels],
+    [appCommands],
   );
 
-  const handleWorkbenchPressedChange = useCallback(
-    (origin: string, pressed: boolean) => {
-      const togglePanel = commands[appType]?.togglePanel || (() => {});
-      if (pressed) {
-        if (activeWorkbenchPanel && !visiblePanels[activeWorkbenchPanel as keyof PanelVisibility]) {
-          handleToggle(origin, activeWorkbenchPanel as keyof PanelVisibility);
-        }
-      } else {
-        const openPanel = workbenchConfigs.find((p) => visiblePanels[p.key as keyof PanelVisibility]);
-        if (openPanel) {
-          togglePanel(origin, openPanel.key as keyof PanelVisibility);
-        }
-      }
+  const handleHudToggle = useCallback(
+    (pressed: boolean) => {
+      appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.hudPanel", "hudPanel");
     },
-    [appType, commands, visiblePanels, activeWorkbenchPanel, workbenchConfigs, handleToggle],
+    [appCommands],
   );
 
-  const handleWorkbenchValueChange = useCallback(
-    (origin: string, value: string | undefined) => {
-      const togglePanel = commands[appType]?.togglePanel || (() => {});
-      if (!value) return;
-      workbenchSelectionRef.current = value;
-
-      (workbenchPanelKeys as Array<keyof PanelVisibility>).forEach((p) => {
-        const isOpen = visiblePanels[p];
-        const shouldOpen = p === value;
-
-        if (isOpen && !shouldOpen) {
-          togglePanel(origin, p);
-        } else if (!isOpen && shouldOpen) {
-          togglePanel(origin, p);
-        }
-      });
+  const handleRightToggle = useCallback(
+    (pressed: boolean) => {
+      appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.rightSidePanel", "rightSidePanel");
     },
-    [appType, commands, visiblePanels, workbenchPanelKeys],
+    [appCommands],
   );
 
-  const handleHudPressedChange = useCallback(
-    (origin: string, pressed: boolean) => {
-      const togglePanel = commands[appType]?.togglePanel || (() => {});
-      if (pressed) {
-        if (activeHudPanel && !visiblePanels[activeHudPanel as keyof PanelVisibility]) {
-          handleToggle(origin, activeHudPanel as keyof PanelVisibility);
-        }
-      } else {
-        const openPanel = hudConfigs.find((p) => visiblePanels[p.key as keyof PanelVisibility]);
-        if (openPanel) {
-          togglePanel(origin, openPanel.key as keyof PanelVisibility);
-        }
-      }
-    },
-    [appType, commands, visiblePanels, activeHudPanel, hudConfigs, handleToggle],
-  );
+  const LeftIcon = leftTabs[0]?.icon;
+  const HudIcon = hudTabs[0]?.icon;
+  const RightIcon = rightTabs[0]?.icon;
 
-  const handleHudValueChange = useCallback(
-    (origin: string, value: string | undefined) => {
-      const togglePanel = commands[appType]?.togglePanel || (() => {});
-      if (!value) return;
-      hudSelectionRef.current = value;
-
-      (hudPanelKeys as Array<keyof PanelVisibility>).forEach((p) => {
-        const isOpen = visiblePanels[p];
-        const shouldOpen = p === value;
-
-        if (isOpen && !shouldOpen) {
-          togglePanel(origin, p);
-        } else if (!isOpen && shouldOpen) {
-          togglePanel(origin, p);
-        }
-      });
-    },
-    [appType, commands, visiblePanels, hudPanelKeys],
-  );
-
-  const handleRightPressedChange = useCallback(
-    (origin: string, pressed: boolean) => {
-      const togglePanel = commands[appType]?.togglePanel || (() => {});
-      if (pressed) {
-        if (activeRightPanel && !visiblePanels[activeRightPanel as keyof PanelVisibility]) {
-          handleToggle(origin, activeRightPanel as keyof PanelVisibility);
-        }
-      } else {
-        const openPanel = rightConfigs.find((p) => visiblePanels[p.key as keyof PanelVisibility]);
-        if (openPanel) {
-          togglePanel(origin, openPanel.key as keyof PanelVisibility);
-        }
-      }
-    },
-    [appType, commands, visiblePanels, activeRightPanel, rightConfigs, handleToggle],
-  );
-
-  const handleRightValueChange = useCallback(
-    (origin: string, value: string | undefined) => {
-      const togglePanel = commands[appType]?.togglePanel || (() => {});
-      if (!value) return;
-      rightSelectionRef.current = value;
-
-      (rightPanelKeys as Array<keyof PanelVisibility>).forEach((p) => {
-        const isOpen = visiblePanels[p];
-        const shouldOpen = p === value;
-
-        if (isOpen && !shouldOpen) {
-          togglePanel(origin, p);
-        } else if (!isOpen && shouldOpen) {
-          togglePanel(origin, p);
-        }
-      });
-    },
-    [appType, commands, visiblePanels, rightPanelKeys],
-  );
-
-  const workbenchItems = workbenchConfigs.map((config) => {
-    const Icon = config.icon;
-    return {
-      value: config.key,
-      label: Icon ? <Icon size={16} /> : undefined,
-      id: `semio.sketchpad.navbar.panelToggle.${config.key}.show`,
-    };
-  });
-
-  const activeWorkbenchConfig = workbenchConfigs.find((c) => c.key === activeWorkbenchPanel);
-  const ActiveWorkbenchIcon = activeWorkbenchConfig?.icon;
-
-  const hudItems = hudConfigs.map((config) => {
-    const Icon = config.icon;
-    return {
-      value: config.key,
-      label: Icon ? <Icon size={16} /> : undefined,
-      id: `semio.sketchpad.navbar.panelToggle.${config.key}.show`,
-    };
-  });
-
-  const activeHudConfig = hudConfigs.find((c) => c.key === activeHudPanel);
-  const ActiveHudIcon = activeHudConfig?.icon;
-
-  const rightItems = rightConfigs.map((config) => {
-    const Icon = config.icon;
-    return {
-      value: config.key,
-      label: Icon ? <Icon size={16} /> : undefined,
-      id: `semio.sketchpad.navbar.panelToggle.${config.key}.show`,
-    };
-  });
-
-  const activeRightConfig = rightConfigs.find((c) => c.key === activeRightPanel);
-  const ActiveRightIcon = activeRightConfig?.icon;
-
-  if (!panelConfig || panelConfig.length === 0) return null;
+  if (!hasLeftTabs && !hasHudTabs && !hasRightTabs) return null;
 
   return (
     <div className="flex items-stretch border border-element overflow-hidden h-medium divide-x divide-element">
-      {workbenchConfigs.length > 0 && (
-        <Toggle
-          kind="dropdown"
-          id="semio.sketchpad.navbar.panelToggle.workbench"
-          items={workbenchItems}
-          value={activeWorkbenchPanel}
-          onValueChange={(value) => handleWorkbenchValueChange("semio.sketchpad.navbar.panelToggle.workbench", value)}
-          pressed={isAnyWorkbenchPanelOpen}
-          onPressedChange={(pressed) => handleWorkbenchPressedChange("semio.sketchpad.navbar.panelToggle.workbench", pressed)}
-          className="border-0"
-        />
+      {hasLeftTabs && (
+        <Toggle kind="icon" id="semio.sketchpad.navbar.panelToggle.leftSidePanel" pressed={isLeftOpen} onPressedChange={handleLeftToggle} className="border-0">
+          {LeftIcon ? <LeftIcon size={16} /> : <LayoutIcon size={16} />}
+        </Toggle>
       )}
-      {hudConfigs.length > 0 && (
-        <Toggle
-          kind="dropdown"
-          id="semio.sketchpad.navbar.panelToggle.hud"
-          items={hudItems}
-          value={activeHudPanel}
-          onValueChange={(value) => handleHudValueChange("semio.sketchpad.navbar.panelToggle.hud", value)}
-          pressed={isAnyHudPanelOpen}
-          onPressedChange={(pressed) => handleHudPressedChange("semio.sketchpad.navbar.panelToggle.hud", pressed)}
-          className="border-0"
-        />
+      {hasHudTabs && (
+        <Toggle kind="icon" id="semio.sketchpad.navbar.panelToggle.hudPanel" pressed={isHudOpen} onPressedChange={handleHudToggle} className="border-0">
+          {HudIcon ? <HudIcon size={16} /> : <FocusIcon size={16} />}
+        </Toggle>
       )}
-      {rightConfigs.length > 0 && (
-        <Toggle
-          kind="dropdown"
-          id="semio.sketchpad.navbar.panelToggle.right"
-          items={rightItems}
-          value={activeRightPanel}
-          onValueChange={(value) => handleRightValueChange("semio.sketchpad.navbar.panelToggle.right", value)}
-          pressed={isAnyRightPanelOpen}
-          onPressedChange={(pressed) => handleRightPressedChange("semio.sketchpad.navbar.panelToggle.right", pressed)}
-          className="border-0"
-        />
+      {hasRightTabs && (
+        <Toggle kind="icon" id="semio.sketchpad.navbar.panelToggle.rightSidePanel" pressed={isRightOpen} onPressedChange={handleRightToggle} className="border-0">
+          {RightIcon ? <RightIcon size={16} /> : <DocumentIcon size={16} />}
+        </Toggle>
       )}
     </div>
   );
@@ -15920,6 +15845,13 @@ const LayoutWrapper: FC = () => {
   const settingsSections = usePanelSections("settings");
   const consoleSections = usePanelSections("console");
 
+  const leftSidePanelTabs = useSidePanelTabs("left");
+  const rightSidePanelTabs = useSidePanelTabs("right");
+  const hudPanelTabs = useHudPanelTabs();
+  const [activeLeftTabId, setActiveLeftTabId] = useActiveLeftTabId();
+  const [activeRightTabId, setActiveRightTabId] = useActiveRightTabId();
+  const [activeHudTabId, setActiveHudTabId] = useActiveHudTabId();
+
   const sketchpadCommands = useSketchpadCommands();
 
   useEffect(() => {
@@ -16337,6 +16269,42 @@ const LayoutWrapper: FC = () => {
                   }
                 : undefined
             }
+            leftSidePanel={
+              leftSidePanelTabs.length > 0 && panelVisibility.leftSidePanel
+                ? {
+                    visible: true,
+                    size: panelSizes.leftSidePanelWidth,
+                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "leftSidePanelWidth", size),
+                    tabs: leftSidePanelTabs,
+                    activeTabId: activeLeftTabId,
+                    onActiveTabChange: setActiveLeftTabId,
+                  }
+                : undefined
+            }
+            rightSidePanel={
+              rightSidePanelTabs.length > 0 && panelVisibility.rightSidePanel
+                ? {
+                    visible: true,
+                    size: panelSizes.rightSidePanelWidth,
+                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "rightSidePanelWidth", size),
+                    tabs: rightSidePanelTabs,
+                    activeTabId: activeRightTabId,
+                    onActiveTabChange: setActiveRightTabId,
+                  }
+                : undefined
+            }
+            hudPanel={
+              hudPanelTabs.length > 0 && panelVisibility.hudPanel
+                ? {
+                    visible: true,
+                    size: panelSizes.hudPanelWidth,
+                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "hudPanelWidth", size),
+                    tabs: hudPanelTabs,
+                    activeTabId: activeHudTabId,
+                    onActiveTabChange: setActiveHudTabId,
+                  }
+                : undefined
+            }
             toolbar={
               panelVisibility.toolbar || appType === "type" || appType === "design" || appType === "feedback" || appType === "kit" || appType === "home" ? (
                 toolbarSections.length > 0 ? (
@@ -16446,11 +16414,13 @@ const Sketchpad: FC<{ id?: string; remote?: RemoteProviders; onWindowEvents?: Wi
           <OriginProvider>
             <FocusProvider>
               <PanelSectionProvider>
-                <FooterItemProvider>
-                  <DragDropProvider>
-                    <SketchpadContent />
-                  </DragDropProvider>
-                </FooterItemProvider>
+                <SidePanelTabProvider>
+                  <FooterItemProvider>
+                    <DragDropProvider>
+                      <SketchpadContent />
+                    </DragDropProvider>
+                  </FooterItemProvider>
+                </SidePanelTabProvider>
               </PanelSectionProvider>
             </FocusProvider>
           </OriginProvider>

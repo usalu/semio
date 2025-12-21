@@ -14,7 +14,31 @@ import { ConnectionDiff, ConnectionId, Guid, KitDiff, PieceDiff, PieceId } from 
 import type { AppConfig, AppPlugin, AppWindowConfig, DesignAppId, Field, HookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolDefinition, ToolRenderContext } from "./shared";
 import { conditionalHookResult, createField as createFieldValue, createPanelDefinition, Expertise, fieldToHookResult, Mode, PanelKind, readonlyHookResult, registerAppPlugin, registerRuntimeAction, Theme, ToolKind } from "./shared";
 import type { DesignStore as DesignEntityStore } from "./Sketchpad";
-import { createDefaultDesignAppState, identitySelector, useDesignScope, useDevice, useExpertise, useKitScope, useLanguage, useMode, usePieceScope, useSketchpadActor, useSketchpadActorSafe, useTheme } from "./Sketchpad";
+import {
+  createDefaultDesignAppState,
+  createDesignActiveToolSelector,
+  createDesignCameraSelector,
+  createDesignDiagramCenterSelector,
+  createDesignDiagramScaleSelector,
+  createDesignFocusedPieceSelector,
+  createDesignFullscreenWindowSelector,
+  createDesignHoverSelector,
+  createDesignOthersSelector,
+  createDesignPanelVisibilitySelector,
+  createDesignSelectedModelTagsSelector,
+  createDesignSelectionSelector,
+  identitySelector,
+  useDesignScope,
+  useDevice,
+  useExpertise,
+  useKitScope,
+  useLanguage,
+  useMode,
+  usePieceScope,
+  useSketchpadActor,
+  useSketchpadActorSafe,
+  useTheme,
+} from "./Sketchpad";
 
 // #endregion Internal State Management
 
@@ -1424,22 +1448,11 @@ const EMPTY_OTHERS: DesignAppPresenceOther[] = [];
 const EMPTY_MODEL_TAGS: Record<Guid, string[]> = {};
 const DEFAULT_PANEL_VISIBILITY: PanelVisibility = { toolbar: false, workbench: false, details: false, chat: false, settings: false };
 
-const selectSelection = (s: DesignAppState) => s.selection ?? EMPTY_SELECTION;
-const selectFullscreen = (s: DesignAppState) => s.fullscreenWindow;
-const selectActiveTool = (s: DesignAppState) => s.activeTool ?? ToolKind.SELECTION_NORMAL;
-const selectOthers = (s: DesignAppState) => s.others ?? EMPTY_OTHERS;
-const selectCamera = (s: DesignAppState) => s.camera;
-const selectDiagramCenter = (s: DesignAppState) => s.diagramCenter;
-const selectDiagramScale = (s: DesignAppState) => s.diagramScale;
-const selectFocusedPiece = (s: DesignAppState) => s.focusedPieceGuid;
-const selectModelTags = (s: DesignAppState) => s.selectedModelTags ?? EMPTY_MODEL_TAGS;
-const selectHover = (s: DesignAppState) => s.hover;
-const selectPanelVisibility = (s: DesignAppState) => s.panelVisibility;
+type GranularSelectorFactory<T> = (kitGuid: Guid, designGuid: Guid) => (state: any) => T;
 
 interface UseDesignAppFieldOptions<T, TEvent extends { type: string }> {
-  selector: (s: DesignAppState) => T;
+  createGranularSelector: GranularSelectorFactory<T>;
   fallback: T;
-  canEventType: TEvent["type"];
   createCanEvent: (kitGuid: Guid, designGuid: Guid) => TEvent;
   createSendEvent: (kitGuid: Guid, designGuid: Guid, value: T) => TEvent;
   useWildcardFallback?: boolean;
@@ -1448,14 +1461,15 @@ interface UseDesignAppFieldOptions<T, TEvent extends { type: string }> {
 function useDesignAppField<T, TEvent extends { type: string }>(
   options: UseDesignAppFieldOptions<T, TEvent>,
 ): Field<T> {
-  const { selector, fallback, createCanEvent, createSendEvent, useWildcardFallback = false } = options;
-  const state = useDesignApp(identitySelector);
+  const { createGranularSelector, fallback, createCanEvent, createSendEvent, useWildcardFallback = false } = options;
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const designScope = useDesignScope();
   const kitGuid = kitScope?.guid ?? "";
   const designGuid = designScope?.guid ?? "";
-  const value = state ? selector(state as DesignAppState) : fallback;
+  const granularSelector = useMemo(() => createGranularSelector(kitGuid, designGuid), [createGranularSelector, kitGuid, designGuid]);
+  const rawValue = useSelector(actor, granularSelector);
+  const value = rawValue ?? fallback;
   const canEvent = useMemo(() => createCanEvent(kitGuid, designGuid), [createCanEvent, kitGuid, designGuid]);
   const canSetFromSnapshot = useSelector(actor, (snapshot) => snapshot.can(canEvent as Parameters<typeof snapshot.can>[0]));
   const hasScope = kitGuid !== "" && designGuid !== "";
@@ -1470,9 +1484,8 @@ function useDesignAppField<T, TEvent extends { type: string }>(
 
 export function useDesignAppSelectionField(): Field<DesignAppSelection> {
   return useDesignAppField<DesignAppSelection, { type: "DESIGN.SET_SELECTION"; kitGuid: Guid; designGuid: Guid; selection: DesignAppSelection }>({
-    selector: selectSelection,
+    createGranularSelector: createDesignSelectionSelector,
     fallback: EMPTY_SELECTION,
-    canEventType: "DESIGN.SET_SELECTION",
     createCanEvent: (kitGuid, designGuid) => ({ type: "DESIGN.SET_SELECTION", kitGuid, designGuid, selection: {} as DesignAppSelection }),
     createSendEvent: (kitGuid, designGuid, selection) => ({ type: "DESIGN.SET_SELECTION", kitGuid, designGuid, selection }),
   });
@@ -1484,9 +1497,8 @@ export function useDesignAppSelection(): HookResult<DesignAppSelection> {
 
 export function useDesignAppFullscreenField(): Field<DesignAppFullscreenWindow> {
   return useDesignAppField<DesignAppFullscreenWindow, { type: "DESIGN.SET_FULLSCREEN"; kitGuid: Guid; designGuid: Guid; window: DesignAppFullscreenWindow }>({
-    selector: selectFullscreen,
+    createGranularSelector: createDesignFullscreenWindowSelector,
     fallback: DesignAppFullscreenWindow.None,
-    canEventType: "DESIGN.SET_FULLSCREEN",
     createCanEvent: (kitGuid, designGuid) => ({ type: "DESIGN.SET_FULLSCREEN", kitGuid, designGuid, window: DesignAppFullscreenWindow.None }),
     createSendEvent: (kitGuid, designGuid, fullscreen) => ({ type: "DESIGN.SET_FULLSCREEN", kitGuid, designGuid, window: fullscreen }),
   });
@@ -1498,9 +1510,8 @@ export function useDesignAppFullscreen(): HookResult<DesignAppFullscreenWindow> 
 
 export function useDesignAppActiveToolField(): Field<ToolKind> {
   return useDesignAppField<ToolKind, { type: "DESIGN.SET_ACTIVE_TOOL"; kitGuid: Guid; designGuid: Guid; tool: ToolKind }>({
-    selector: selectActiveTool,
+    createGranularSelector: createDesignActiveToolSelector,
     fallback: ToolKind.SELECTION_NORMAL,
-    canEventType: "DESIGN.SET_ACTIVE_TOOL",
     createCanEvent: (kitGuid, designGuid) => ({ type: "DESIGN.SET_ACTIVE_TOOL", kitGuid, designGuid, tool: ToolKind.SELECTION_NORMAL }),
     createSendEvent: (kitGuid, designGuid, tool) => ({ type: "DESIGN.SET_ACTIVE_TOOL", kitGuid, designGuid, tool }),
     useWildcardFallback: true,
@@ -1516,16 +1527,20 @@ export function useDesignAppDiff(): HookResult<KitDiff | undefined> {
 }
 
 export function useDesignAppOthers(): HookResult<DesignAppPresenceOther[]> {
-  const state = useDesignApp(identitySelector);
-  const value = state ? selectOthers(state as DesignAppState) : EMPTY_OTHERS;
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const designScope = useDesignScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const designGuid = designScope?.guid ?? "";
+  const selector = useMemo(() => createDesignOthersSelector(kitGuid, designGuid), [kitGuid, designGuid]);
+  const value = useSelector(actor, selector) ?? EMPTY_OTHERS;
   return readonlyHookResult(value);
 }
 
 export function useDesignAppCameraField(): Field<Camera | undefined> {
   return useDesignAppField<Camera | undefined, { type: "DESIGN.SET_CAMERA"; kitGuid: Guid; designGuid: Guid; camera: Camera | undefined }>({
-    selector: selectCamera,
+    createGranularSelector: createDesignCameraSelector,
     fallback: undefined,
-    canEventType: "DESIGN.SET_CAMERA",
     createCanEvent: (kitGuid, designGuid) => ({ type: "DESIGN.SET_CAMERA", kitGuid, designGuid, camera: undefined }),
     createSendEvent: (kitGuid, designGuid, camera) => ({ type: "DESIGN.SET_CAMERA", kitGuid, designGuid, camera }),
   });
@@ -1536,13 +1551,13 @@ export function useDesignAppCamera(): HookResult<Camera | undefined> {
 }
 
 export function useDesignAppDiagramCenter(): HookResult<Coord | undefined> {
-  const state = useDesignApp(identitySelector);
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const designScope = useDesignScope();
   const kitGuid = kitScope?.guid ?? "";
   const designGuid = designScope?.guid ?? "";
-  const value = state ? selectDiagramCenter(state as DesignAppState) : undefined;
+  const selector = useMemo(() => createDesignDiagramCenterSelector(kitGuid, designGuid), [kitGuid, designGuid]);
+  const value = useSelector(actor, selector);
   const canSetEvent = useMemo(() => ({ type: "DESIGN.SET_DIAGRAM_CENTER" as const, kitGuid, designGuid, center: { x: 0, y: 0 } }), [kitGuid, designGuid]);
   const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setter = useMemo(() => {
@@ -1557,13 +1572,13 @@ export function useDesignAppDiagramCenter(): HookResult<Coord | undefined> {
 }
 
 export function useDesignAppDiagramScale(): HookResult<number | undefined> {
-  const state = useDesignApp(identitySelector);
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const designScope = useDesignScope();
   const kitGuid = kitScope?.guid ?? "";
   const designGuid = designScope?.guid ?? "";
-  const value = state ? selectDiagramScale(state as DesignAppState) : undefined;
+  const selector = useMemo(() => createDesignDiagramScaleSelector(kitGuid, designGuid), [kitGuid, designGuid]);
+  const value = useSelector(actor, selector);
   const canSetEvent = useMemo(() => ({ type: "DESIGN.SET_DIAGRAM_SCALE" as const, kitGuid, designGuid, scale: 1 }), [kitGuid, designGuid]);
   const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setter = useMemo(() => {
@@ -1579,9 +1594,8 @@ export function useDesignAppDiagramScale(): HookResult<number | undefined> {
 
 export function useDesignAppFocusedPieceGuidField(): Field<Guid | undefined> {
   return useDesignAppField<Guid | undefined, { type: "DESIGN.FOCUS_PIECE"; kitGuid: Guid; designGuid: Guid; pieceGuid: Guid | undefined }>({
-    selector: selectFocusedPiece,
+    createGranularSelector: createDesignFocusedPieceSelector,
     fallback: undefined,
-    canEventType: "DESIGN.FOCUS_PIECE",
     createCanEvent: (kitGuid, designGuid) => ({ type: "DESIGN.FOCUS_PIECE", kitGuid, designGuid, pieceGuid: undefined }),
     createSendEvent: (kitGuid, designGuid, pieceGuid) => ({ type: "DESIGN.FOCUS_PIECE", kitGuid, designGuid, pieceGuid }),
   });
@@ -1592,13 +1606,13 @@ export function useDesignAppFocusedPieceGuid(): HookResult<Guid | undefined> {
 }
 
 export function useDesignAppSelectedModelTags(): HookResult<Record<Guid, string[]>> {
-  const state = useDesignApp(identitySelector);
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const designScope = useDesignScope();
   const kitGuid = kitScope?.guid ?? "";
   const designGuid = designScope?.guid ?? "";
-  const value = state ? selectModelTags(state as DesignAppState) : EMPTY_MODEL_TAGS;
+  const selector = useMemo(() => createDesignSelectedModelTagsSelector(kitGuid, designGuid), [kitGuid, designGuid]);
+  const value = useSelector(actor, selector) ?? EMPTY_MODEL_TAGS;
   const canSetEvent = useMemo(() => ({ type: "DESIGN.SYNC" as const, kitGuid, designGuid, state: {} }), [kitGuid, designGuid]);
   const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setter = useMemo(() => {
@@ -1611,13 +1625,13 @@ export function useDesignAppSelectedModelTags(): HookResult<Record<Guid, string[
 }
 
 export function useDesignAppHover(): HookResult<DesignAppHover | undefined> {
-  const state = useDesignApp(identitySelector);
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const designScope = useDesignScope();
   const kitGuid = kitScope?.guid ?? "";
   const designGuid = designScope?.guid ?? "";
-  const value = state ? selectHover(state as DesignAppState) : undefined;
+  const selector = useMemo(() => createDesignHoverSelector(kitGuid, designGuid), [kitGuid, designGuid]);
+  const value = useSelector(actor, selector);
   const canSetEvent = useMemo(() => ({ type: "DESIGN.SET_HOVER" as const, kitGuid, designGuid, hover: {} }), [kitGuid, designGuid]);
   const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setter = useMemo(() => {
@@ -1635,9 +1649,8 @@ export function useDesignAppHover(): HookResult<DesignAppHover | undefined> {
 
 export function useDesignAppPanelVisibilityField(): Field<PanelVisibility> {
   return useDesignAppField<PanelVisibility, { type: "DESIGN.SET_PANEL_VISIBILITY"; kitGuid: Guid; designGuid: Guid; panelVisibility: PanelVisibility }>({
-    selector: selectPanelVisibility,
+    createGranularSelector: createDesignPanelVisibilitySelector,
     fallback: DEFAULT_PANEL_VISIBILITY,
-    canEventType: "DESIGN.SET_PANEL_VISIBILITY",
     createCanEvent: (kitGuid, designGuid) => ({ type: "DESIGN.SET_PANEL_VISIBILITY", kitGuid, designGuid, panelVisibility: {} as PanelVisibility }),
     createSendEvent: (kitGuid, designGuid, panelVisibility) => ({ type: "DESIGN.SET_PANEL_VISIBILITY", kitGuid, designGuid, panelVisibility }),
   });
@@ -2394,8 +2407,14 @@ export function useIsDesignPieceChangedInTransaction(id: DesignAppId | undefined
 }
 
 export function useDesignAppIsPieceHovered(id: DesignAppId | undefined, pieceId: string): boolean {
-  const state = useDesignApp(identitySelector, id);
-  return (state as DesignAppState | null)?.hover?.pieces?.includes(pieceId) ?? false;
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const designScope = useDesignScope();
+  const kitGuid = kitScope?.guid ?? id?.kit ?? "";
+  const designGuid = designScope?.guid ?? id?.design ?? "";
+  const selector = useMemo(() => createDesignHoverSelector(kitGuid, designGuid), [kitGuid, designGuid]);
+  const hover = useSelector(actor, selector);
+  return hover?.pieces?.includes(pieceId) ?? false;
 }
 
 interface HoverPiecesContextValue {
@@ -2490,8 +2509,14 @@ export function useDesignAppPieceStatus(id: DesignAppId | undefined, pieceId: st
 }
 
 export function useDesignAppIsPieceSelected(id: DesignAppId | undefined, pieceId: string): boolean {
-  const state = useDesignApp(identitySelector, id);
-  return (state as DesignAppState | null)?.selection?.pieces?.includes(pieceId) ?? false;
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const designScope = useDesignScope();
+  const kitGuid = kitScope?.guid ?? id?.kit ?? "";
+  const designGuid = designScope?.guid ?? id?.design ?? "";
+  const selector = useMemo(() => createDesignSelectionSelector(kitGuid, designGuid), [kitGuid, designGuid]);
+  const selection = useSelector(actor, selector);
+  return selection?.pieces?.includes(pieceId) ?? false;
 }
 
 export function useDesignAppPieceColor(id: DesignAppId | undefined, pieceId: string): { fill: string; stroke: string; opacity: number } {
@@ -2552,33 +2577,63 @@ export function useDesignAppPieceColor(id: DesignAppId | undefined, pieceId: str
 }
 
 export function useDesignAppIsConnectionHovered(id: DesignAppId | undefined, connectionId: string): boolean {
-  const state = useDesignApp(identitySelector, id);
-  return (state as DesignAppState | null)?.hover?.connections?.includes(connectionId) ?? false;
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const designScope = useDesignScope();
+  const kitGuid = kitScope?.guid ?? id?.kit ?? "";
+  const designGuid = designScope?.guid ?? id?.design ?? "";
+  const selector = useMemo(() => createDesignHoverSelector(kitGuid, designGuid), [kitGuid, designGuid]);
+  const hover = useSelector(actor, selector);
+  return hover?.connections?.includes(connectionId) ?? false;
 }
 
 export function useDesignAppIsConnectionSelected(id: DesignAppId | undefined, connectionId: string): boolean {
-  const state = useDesignApp(identitySelector, id);
-  return (state as DesignAppState | null)?.selection?.connections?.includes(connectionId) ?? false;
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const designScope = useDesignScope();
+  const kitGuid = kitScope?.guid ?? id?.kit ?? "";
+  const designGuid = designScope?.guid ?? id?.design ?? "";
+  const selector = useMemo(() => createDesignSelectionSelector(kitGuid, designGuid), [kitGuid, designGuid]);
+  const selection = useSelector(actor, selector);
+  return selection?.connections?.includes(connectionId) ?? false;
 }
 
 export function useDesignAppIsPortHovered(id: DesignAppId | undefined, pieceId: string, portId: string): boolean {
-  const state = useDesignApp(identitySelector, id);
-  return (state as DesignAppState | null)?.hover?.ports?.some((p) => p.piece === pieceId && p.port === portId) ?? false;
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const designScope = useDesignScope();
+  const kitGuid = kitScope?.guid ?? id?.kit ?? "";
+  const designGuid = designScope?.guid ?? id?.design ?? "";
+  const selector = useMemo(() => createDesignHoverSelector(kitGuid, designGuid), [kitGuid, designGuid]);
+  const hover = useSelector(actor, selector);
+  return hover?.ports?.some((p) => p.piece === pieceId && p.port === portId) ?? false;
 }
 
 const EMPTY_PORT: DesignAppSelection["port"] = undefined;
 
 export function useDesignAppSelectedPort(id?: DesignAppId): DesignAppSelection["port"] | undefined {
-  const state = useDesignApp(identitySelector, id);
-  const port = (state as DesignAppState | null)?.selection?.port;
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const designScope = useDesignScope();
+  const kitGuid = kitScope?.guid ?? id?.kit ?? "";
+  const designGuid = designScope?.guid ?? id?.design ?? "";
+  const selector = useMemo(() => createDesignSelectionSelector(kitGuid, designGuid), [kitGuid, designGuid]);
+  const selection = useSelector(actor, selector);
+  const port = selection?.port;
   if (!port?.piece || !port?.port) return EMPTY_PORT;
   return { piece: port.piece, port: port.port, designPiece: port.designPiece };
 }
 
 export function useDesignAppIsPiecePortSelected(pieceId: string, portId?: string): boolean {
-  const state = useDesignApp(identitySelector);
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const designScope = useDesignScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const designGuid = designScope?.guid ?? "";
+  const selector = useMemo(() => createDesignSelectionSelector(kitGuid, designGuid), [kitGuid, designGuid]);
+  const selection = useSelector(actor, selector);
   if (!portId) return false;
-  return (state as DesignAppState | null)?.selection?.port?.piece === pieceId && (state as DesignAppState | null)?.selection?.port?.port === portId;
+  return selection?.port?.piece === pieceId && selection?.port?.port === portId;
 }
 
 function getConnectionStatusFromTransactionStack(store: DesignStore | null, connectionId: string): DiffStatus {

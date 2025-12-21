@@ -163,7 +163,11 @@ export type AppKind = string;
 
 export type Device = "desktop" | "tablet" | MobileDevice;
 
-export type PanelKey = "details" | "workbench" | "tools" | "hud" | "stats" | "console" | "chat" | "settings" | "toolbar";
+export type PanelKey = "details" | "workbench" | "tools" | "hud" | "stats" | "console" | "chat" | "settings" | "toolbar" | "leftSidePanel" | "rightSidePanel" | "hudPanel";
+
+export type SidePanelKey = "leftSidePanel" | "rightSidePanel";
+
+export type HudPanelKey = "hudPanel";
 
 export type HotkeyPath = string;
 
@@ -397,8 +401,39 @@ export const panelKindConfigs: Record<PanelKind, PanelKindConfig> = {
   },
 };
 
+export enum SidePanelPosition {
+  LEFT = "left",
+  RIGHT = "right",
+}
+
+export interface SidePanelTab {
+  id: string;
+  icon: ComponentType<{ size?: number }>;
+  order?: number;
+  content: ReactNode | (() => ReactNode);
+}
+
+export interface HudPanelTab {
+  id: string;
+  icon: ComponentType<{ size?: number }>;
+  order?: number;
+  content: ReactNode | (() => ReactNode);
+}
+
+export interface SidePanelVisibility {
+  left: boolean;
+  right: boolean;
+}
+
+export interface HudPanelVisibility {
+  visible: boolean;
+}
+
 export interface PanelVisibility {
   toolbar?: boolean;
+  leftSidePanel?: boolean;
+  rightSidePanel?: boolean;
+  hudPanel?: boolean;
   workbench?: boolean;
   tools?: boolean;
   hud?: boolean;
@@ -419,6 +454,9 @@ export interface PanelSizes {
   chatWidth: number;
   settingsWidth: number;
   consoleHeight: number;
+  leftSidePanelWidth: number;
+  rightSidePanelWidth: number;
+  hudPanelWidth: number;
 }
 
 export interface PanelSection {
@@ -437,6 +475,15 @@ export interface PanelSection {
   onDoubleClick?: () => void;
 }
 
+export interface SidePanelTabs {
+  left: SidePanelTab[];
+  right: SidePanelTab[];
+}
+
+export interface HudPanelTabs {
+  tabs: HudPanelTab[];
+}
+
 export interface PanelSections {
   details: PanelSection[];
   workbench: PanelSection[];
@@ -447,6 +494,9 @@ export interface PanelSections {
   chat: PanelSection[];
   settings: PanelSection[];
   toolbar: PanelSection[];
+  leftSidePanel: SidePanelTab[];
+  rightSidePanel: SidePanelTab[];
+  hudPanel: HudPanelTab[];
 }
 
 export interface PanelDefinition {

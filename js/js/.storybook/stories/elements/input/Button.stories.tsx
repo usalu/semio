@@ -21,6 +21,7 @@
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { Box, List, Network, Plus } from "lucide-react";
+import { useState } from "react";
 import { Button, ButtonCycle } from "../../../../sketchpad/elements";
 
 // #region Button
@@ -83,14 +84,23 @@ type CycleStory = StoryObj<typeof cycleMeta>;
 export const Cycle: CycleStory = {
   args: {
     id: "button-cycle",
-    value: "view1",
-    items: [
-      { value: "view1", label: <Box /> },
-      { value: "view2", label: <Network /> },
-      { value: "view3", label: <List /> },
-    ],
     showLabel: true,
     level: "base",
+  },
+  render: (args) => {
+    const [value, setValue] = useState("view1");
+    return (
+      <ButtonCycle
+        {...args}
+        value={value}
+        onValueChange={setValue}
+        items={[
+          { value: "view1", label: <Box /> },
+          { value: "view2", label: <Network /> },
+          { value: "view3", label: <List /> },
+        ]}
+      />
+    );
   },
 };
 

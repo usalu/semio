@@ -70,6 +70,15 @@ import {
   AppWindowConfig,
   Canvas,
   createDefaultKitAppState,
+  createKitDiagramForceSelector,
+  createKitExpandedRowsSelector,
+  createKitFilterSearchSelector,
+  createKitFullscreenSelector,
+  createKitOthersSelector,
+  createKitSelectionSelector,
+  createKitSortColumnSelector,
+  createKitSortDirectionSelector,
+  createKitWindowLayoutSelector,
   defaultPanelVisibility,
   identitySelector,
   KitAppFullscreenWindow,
@@ -1155,8 +1164,8 @@ export function useKitAppSelection(): HookResult<KitAppSelection> {
   const kitScope = useKitScope();
   const actor = useSketchpadActor();
   const kitGuid = kitScope?.guid ?? "";
-  const state = useKitApp(identitySelector);
-  const selection = (state as KitAppState).selection ?? emptyKitAppSelection;
+  const selector = useMemo(() => createKitSelectionSelector(kitGuid), [kitGuid]);
+  const selection = useSelector(actor, selector) ?? emptyKitAppSelection;
   const canSetEvent = useMemo(() => ({ type: "KIT.SET_SELECTION" as const, kitGuid, selection: {} as KitAppSelection }), [kitGuid]);
   const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setSelection = useMemo(() => {
@@ -1172,7 +1181,8 @@ export function useKitAppFullscreen(): HookResult<KitAppFullscreenWindow> {
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid ?? "";
   const actor = useSketchpadActor();
-  const fullscreen = useKitApp((s) => s.fullscreenWindow) as KitAppFullscreenWindow;
+  const selector = useMemo(() => createKitFullscreenSelector(kitGuid), [kitGuid]);
+  const fullscreen = useSelector(actor, selector) ?? KitAppFullscreenWindow.None;
   const canSetEvent = useMemo(() => ({ type: "KIT.SET_FULLSCREEN" as const, kitGuid, window: KitAppFullscreenWindow.None }), [kitGuid]);
   const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setFullscreen = useMemo(() => {
@@ -1186,7 +1196,10 @@ export function useKitAppFullscreen(): HookResult<KitAppFullscreenWindow> {
 
 export function useKitAppOthers(): HookNoSetResult<KitAppPresenceOther[]> {
   const kitScope = useKitScope();
-  const others = useKitApp((s) => s.others) as KitAppPresenceOther[];
+  const actor = useSketchpadActor();
+  const kitGuid = kitScope?.guid ?? "";
+  const selector = useMemo(() => createKitOthersSelector(kitGuid), [kitGuid]);
+  const others = useSelector(actor, selector) ?? [];
   const canRead = kitScope !== null;
   return [others, undefined, canRead];
 }
@@ -1195,7 +1208,8 @@ export function useKitAppWindowLayout(): HookResult<any> {
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid ?? "";
   const actor = useSketchpadActor();
-  const windowLayout = useKitApp((s) => s.windowLayout);
+  const selector = useMemo(() => createKitWindowLayoutSelector(kitGuid), [kitGuid]);
+  const windowLayout = useSelector(actor, selector);
   const canSetEvent = useMemo(() => ({ type: "KIT.SET_WINDOW_LAYOUT" as const, kitGuid, windowLayout: {} }), [kitGuid]);
   const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setWindowLayout = useMemo(() => {
@@ -1209,9 +1223,10 @@ export function useKitAppWindowLayout(): HookResult<any> {
 
 export function useKitAppDiagramForce(): readonly [DiagramForceSettings, ((value: Partial<DiagramForceSettings>) => void) | undefined, boolean] {
   const kitScope = useKitScope();
-  const kitGuid = kitScope?.guid;
+  const kitGuid = kitScope?.guid ?? "";
   const actor = useSketchpadActor();
-  const force = useKitApp((s) => s.diagramForce) as DiagramForceSettings | undefined;
+  const selector = useMemo(() => createKitDiagramForceSelector(kitGuid), [kitGuid]);
+  const force = useSelector(actor, selector) as DiagramForceSettings | undefined;
   const resolvedForce = force ?? defaultDiagramForceSettings;
   const canSet = !!kitGuid && !!actor;
   const setForce = useMemo(() => {
@@ -1221,6 +1236,36 @@ export function useKitAppDiagramForce(): readonly [DiagramForceSettings, ((value
     };
   }, [kitGuid, canSet, actor]);
   return [resolvedForce, canSet ? setForce : undefined, canSet] as const;
+}
+
+export function useKitAppSortColumn(): HookNoSetResult<string> {
+  const kitScope = useKitScope();
+  const actor = useSketchpadActor();
+  const kitGuid = kitScope?.guid ?? "";
+  const selector = useMemo(() => createKitSortColumnSelector(kitGuid), [kitGuid]);
+  const sortColumn = useSelector(actor, selector) ?? "artifact";
+  const canRead = kitScope !== null;
+  return [sortColumn, undefined, canRead];
+}
+
+export function useKitAppSortDirection(): HookNoSetResult<"asc" | "desc"> {
+  const kitScope = useKitScope();
+  const actor = useSketchpadActor();
+  const kitGuid = kitScope?.guid ?? "";
+  const selector = useMemo(() => createKitSortDirectionSelector(kitGuid), [kitGuid]);
+  const sortDirection = useSelector(actor, selector) ?? "asc";
+  const canRead = kitScope !== null;
+  return [sortDirection, undefined, canRead];
+}
+
+export function useKitAppExpandedRows(): HookNoSetResult<Set<string>> {
+  const kitScope = useKitScope();
+  const actor = useSketchpadActor();
+  const kitGuid = kitScope?.guid ?? "";
+  const selector = useMemo(() => createKitExpandedRowsSelector(kitGuid), [kitGuid]);
+  const expandedRows = useSelector(actor, selector) ?? new Set<string>();
+  const canRead = kitScope !== null;
+  return [expandedRows, undefined, canRead];
 }
 
 export function useKitAppTransaction(): Transaction {
@@ -2780,9 +2825,13 @@ const AppContent: FC = () => {
   const kitCommands = useKitCommands();
   const sketchpadCommands = useSketchpadCommands();
   const kitAppCommands = useKitAppCommands();
-  const kitApp = useKitApp() as KitAppState;
   const isMobile = useIsMobile();
   const orchestrator = useSketchpadStore();
+
+  const [selection] = useKitAppSelection();
+  const [expandedRowsSet] = useKitAppExpandedRows();
+  const [sortColumn] = useKitAppSortColumn();
+  const [sortDirection] = useKitAppSortDirection();
 
   const [selectTypeAction, canSelectType] = useKitAppSelectType();
   const [selectDesignAction, canSelectDesign] = useKitAppSelectDesign();
@@ -2831,19 +2880,17 @@ const AppContent: FC = () => {
 
   // Get selection parameter for auto-selecting designs/types
   const selectParam = searchParams.get("select");
-  const expandedRowsArray = kitApp?.expandedRows || [];
-  const expandedRowsArrayKey = expandedRowsArray.join(",");
-  const expandedRows = useMemo(() => new Set(expandedRowsArray), [expandedRowsArrayKey]);
+  const expandedRows = expandedRowsSet;
 
-  const selectionTypes = kitApp?.selection?.types || [];
-  const selectionDesigns = kitApp?.selection?.designs || [];
-  const selectionQualities = kitApp?.selection?.qualities || [];
-  const selectionInterfaces = kitApp?.selection?.interfaces || [];
-  const selectionTags = kitApp?.selection?.tags || [];
-  const selectionConcepts = kitApp?.selection?.concepts || [];
-  const selectionFiles = kitApp?.selection?.files || [];
-  const selectionFolders = kitApp?.selection?.folders || [];
-  const selectionAuthors = kitApp?.selection?.authors || [];
+  const selectionTypes = selection?.types || [];
+  const selectionDesigns = selection?.designs || [];
+  const selectionQualities = selection?.qualities || [];
+  const selectionInterfaces = selection?.interfaces || [];
+  const selectionTags = selection?.tags || [];
+  const selectionConcepts = selection?.concepts || [];
+  const selectionFiles = selection?.files || [];
+  const selectionFolders = selection?.folders || [];
+  const selectionAuthors = selection?.authors || [];
   const selectionTypesKey = selectionTypes.join(",");
   const selectionDesignsKey = selectionDesigns.join(",");
   const selectionQualitiesKey = selectionQualities.join(",");
@@ -2853,7 +2900,7 @@ const AppContent: FC = () => {
   const selectionFilesKey = selectionFiles.join(",");
   const selectionFoldersKey = selectionFolders.join(",");
   const selectionAuthorsKey = selectionAuthors.join(",");
-  const selection = useMemo(
+  const selectionMemo = useMemo(
     () => ({
       types: selectionTypes,
       designs: selectionDesigns,
@@ -2867,8 +2914,6 @@ const AppContent: FC = () => {
     }),
     [selectionTypesKey, selectionDesignsKey, selectionQualitiesKey, selectionInterfacesKey, selectionTagsKey, selectionConceptsKey, selectionFilesKey, selectionFoldersKey, selectionAuthorsKey],
   );
-  const sortColumn = kitApp?.sortColumn;
-  const sortDirection = kitApp?.sortDirection || "asc";
 
   const kitDesigns = kit?.designs;
   const kitTypes = kit?.types;
@@ -5303,9 +5348,11 @@ const KitDiagramInner: FC = () => {
   const hasFittedRef = useRef(false);
   const { fitView } = useReactFlow();
 
-  const kitApp = useKitApp(identitySelector) as KitAppState;
-  const filterSearch = kitApp?.filterSearch || "";
-  const expandedRowsArray = kitApp?.expandedRows || [];
+  const filterSearchSelector = useMemo(() => createKitFilterSearchSelector(kitGuid), [kitGuid]);
+  const expandedRowsSelector = useMemo(() => createKitExpandedRowsSelector(kitGuid), [kitGuid]);
+  const filterSearch = useSelector(actor, filterSearchSelector) ?? "";
+  const expandedRowsSet = useSelector(actor, expandedRowsSelector);
+  const expandedRowsArray = useMemo(() => (expandedRowsSet ? Array.from(expandedRowsSet) : []), [expandedRowsSet]);
   const expandedRowsKey = expandedRowsArray.join(",");
   const expandedRows = useMemo(() => new Set(expandedRowsArray), [expandedRowsKey]);
 
@@ -5925,8 +5972,7 @@ const KitSectionForm: FC = () => {
 };
 
 export const TypeSection: FC = () => {
-  const kitApp = useKitApp() as KitAppState;
-  const selection = kitApp?.selection;
+  const [selection] = useKitAppSelection();
   const selectedTypes = selection?.types || [];
   if (selectedTypes.length === 0) return null;
   if (selectedTypes.length === 1) return <SingleTypeSection typeGuid={selectedTypes[0]} />;
@@ -6004,8 +6050,7 @@ const MultipleTypesSection: FC<{ typeGuids: string[] }> = ({ typeGuids }) => {
 
 export const InterfaceSection: FC = () => {
   const { t } = useTranslation();
-  const kitApp = useKitApp() as KitAppState;
-  const selection = kitApp?.selection;
+  const [selection] = useKitAppSelection();
   const selectedInterfaces = selection?.interfaces || [];
   if (selectedInterfaces.length === 0) return null;
   if (selectedInterfaces.length === 1) return <SingleInterfaceSection interfaceGuid={selectedInterfaces[0]} />;
@@ -6068,8 +6113,7 @@ const MultipleInterfacesSection: FC<{ interfaceGuids: string[] }> = ({ interface
 
 export const TagSection: FC = () => {
   const { t } = useTranslation();
-  const kitApp = useKitApp() as KitAppState;
-  const selection = kitApp?.selection;
+  const [selection] = useKitAppSelection();
   const selectedTags = selection?.tags || [];
   if (selectedTags.length === 0) return null;
   if (selectedTags.length === 1) return <SingleTagSection tagGuid={selectedTags[0]} />;
@@ -6121,8 +6165,7 @@ const MultipleTagsSection: FC<{ tagGuids: string[] }> = ({ tagGuids }) => {
 
 export const ConceptSection: FC = () => {
   const { t } = useTranslation();
-  const kitApp = useKitApp() as KitAppState;
-  const selection = kitApp?.selection;
+  const [selection] = useKitAppSelection();
   const selectedConcepts = selection?.concepts || [];
   if (selectedConcepts.length === 0) return null;
   if (selectedConcepts.length === 1) return <SingleConceptSection conceptGuid={selectedConcepts[0]} />;
@@ -6173,8 +6216,7 @@ const MultipleConceptsSection: FC<{ conceptGuids: string[] }> = ({ conceptGuids 
 };
 
 export const DesignSection: FC = () => {
-  const kitApp = useKitApp() as KitAppState;
-  const selection = kitApp?.selection;
+  const [selection] = useKitAppSelection();
   const selectedDesigns = selection?.designs || [];
   if (selectedDesigns.length === 0) return null;
   if (selectedDesigns.length === 1) return <SingleDesignSection designGuid={selectedDesigns[0]} />;
@@ -6298,9 +6340,8 @@ const MultipleDesignsSection: FC<{ designGuids: string[] }> = ({ designGuids }) 
 
 export const FileSection: FC = () => {
   const { t } = useTranslation();
-  const kitApp = useKitApp() as KitAppState;
   const kit = useKit() as Kit;
-  const selection = kitApp?.selection;
+  const [selection] = useKitAppSelection();
   const selectedFiles = selection?.files || [];
 
   if (selectedFiles.length === 0) return null;
@@ -6361,10 +6402,9 @@ export const FileSection: FC = () => {
 
 export const FolderSection: FC = () => {
   const { t } = useTranslation();
-  const kitApp = useKitApp() as KitAppState;
   const kit = useKit() as Kit;
   const kitDataSource = useKitStore() as any;
-  const selection = kitApp?.selection;
+  const [selection] = useKitAppSelection();
   const selectedFolders = selection?.folders || [];
 
   if (selectedFolders.length === 0) return null;
@@ -6446,8 +6486,7 @@ export const FolderSection: FC = () => {
 
 export const MultipleArtifactsSection: FC = () => {
   const { t } = useTranslation();
-  const kitApp = useKitApp() as KitAppState;
-  const selection = kitApp?.selection;
+  const [selection] = useKitAppSelection();
   const typesCount = selection?.types?.length || 0;
   const designsCount = selection?.designs?.length || 0;
   const qualitiesCount = selection?.qualities?.length || 0;

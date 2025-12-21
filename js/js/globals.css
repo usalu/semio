@@ -264,6 +264,7 @@
     --spacing-touch: 0.275rem;
     --spacing: var(--spacing-compact);
     --spacing-single: calc(1 * var(--spacing));
+    --spacing-double: calc(2 * var(--spacing));
     --size-tiny: calc(3 * var(--spacing));
     --size-small: calc(5 * var(--spacing));
     --size-medium: calc(7 * var(--spacing));
@@ -327,7 +328,7 @@
     --active-base: var(--color-primary);
     --active-foreground: var(--color-dark);
     --border-window-color: var(--color-gray);
-    --border-element-color: var(--hover-base);
+    --border-element-color: var(--color-gray);
     --border-color: var(--border-window-color);
     --plaster: var(--color-gray);
     --plaster-edge: var(--color-foreground);
@@ -739,6 +740,9 @@
 @utility gap-single {
   gap: var(--spacing-single);
 }
+@utility gap-double {
+  gap: var(--spacing-double);
+}
 @utility gap-tiny {
   gap: var(--size-tiny);
 }
@@ -751,6 +755,9 @@
 
 @utility p-single {
   padding: var(--spacing-single);
+}
+@utility p-double {
+  padding: var(--spacing-double);
 }
 @utility p-tiny {
   padding: var(--size-tiny);
@@ -766,6 +773,10 @@
   padding-left: var(--spacing-single);
   padding-right: var(--spacing-single);
 }
+@utility px-double {
+  padding-left: var(--spacing-double);
+  padding-right: var(--spacing-double);
+}
 @utility px-tiny {
   padding-left: var(--size-tiny);
   padding-right: var(--size-tiny);
@@ -779,6 +790,10 @@
   padding-top: var(--spacing-single);
   padding-bottom: var(--spacing-single);
 }
+@utility py-double {
+  padding-top: var(--spacing-double);
+  padding-bottom: var(--spacing-double);
+}
 @utility py-tiny {
   padding-top: var(--size-tiny);
   padding-bottom: var(--size-tiny);
@@ -791,15 +806,28 @@
 @utility m-single {
   margin: var(--spacing-single);
 }
+@utility m-double {
+  margin: var(--spacing-double);
+}
 @utility mx-single {
   margin-left: var(--spacing-single);
   margin-right: var(--spacing-single);
 }
+@utility mx-double {
+  margin-left: var(--spacing-double);
+  margin-right: var(--spacing-double);
+}
 @utility ml-single {
   margin-left: var(--spacing-single);
 }
+@utility ml-double {
+  margin-left: var(--spacing-double);
+}
 @utility mr-single {
   margin-right: var(--spacing-single);
+}
+@utility mr-double {
+  margin-right: var(--spacing-double);
 }
 @utility my-single {
   margin-top: var(--spacing-single);

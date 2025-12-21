@@ -384,6 +384,24 @@
                 "beginner": "Show"
               }
             }
+          },
+          "leftSidePanel": {
+            "label": {
+              "normal": "Toggle Left Panel",
+              "beginner": "Toggle the left side panel with workbench tabs"
+            }
+          },
+          "rightSidePanel": {
+            "label": {
+              "normal": "Toggle Right Panel",
+              "beginner": "Toggle the right side panel with details tabs"
+            }
+          },
+          "hudPanel": {
+            "label": {
+              "normal": "Toggle HUD Panel",
+              "beginner": "Toggle the center HUD panel"
+            }
           }
         },
         "home": {

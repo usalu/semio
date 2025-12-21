@@ -225,6 +225,36 @@ export const getLevelZClass = (level: Level): string => {
   }
 };
 
+export const getLevelBorderElementClass = (level: Level): string => {
+  switch (level) {
+    case "window":
+      return "border-hover-window";
+    case "panel":
+      return "border-hover-panel";
+    case "overlay":
+      return "border-hover-overlay";
+    case "temporary":
+      return "border-hover-temporary";
+    default:
+      return "border-hover-base";
+  }
+};
+
+export const getLevelDivideElementClass = (level: Level): string => {
+  switch (level) {
+    case "window":
+      return "divide-hover-window";
+    case "panel":
+      return "divide-hover-panel";
+    case "overlay":
+      return "divide-hover-overlay";
+    case "temporary":
+      return "divide-hover-temporary";
+    default:
+      return "divide-hover-base";
+  }
+};
+
 // #endregion Element
 
 // #region Root Components
@@ -375,28 +405,34 @@ export interface LayoutProps {
   middlePanel?: MiddlePanelProps;
   rightPanel?: RightPanelProps;
   bottomPanel?: BottomPanelProps;
+  leftSidePanel?: SidePanelProps;
+  rightSidePanel?: SidePanelProps;
+  hudPanel?: HudPanelProps;
   canvas: React.ReactNode;
   toolbar?: React.ReactNode;
   className?: string;
 }
 
-const Layout: React.FC<LayoutProps> = ({ navbar, footer, leftPanel, middlePanel, rightPanel, bottomPanel, canvas, toolbar, className = "" }) => (
+const Layout: React.FC<LayoutProps> = ({ navbar, footer, leftPanel, middlePanel, rightPanel, bottomPanel, leftSidePanel, rightSidePanel, hudPanel, canvas, toolbar, className = "" }) => (
   <div className={`flex flex-col h-screen w-screen overflow-hidden ${className}`}>
     {navbar && <div className="flex-shrink-0">{navbar}</div>}
     <div className="flex flex-1 min-h-0 relative">
       {leftPanel && leftPanel.visible && <LeftPanel {...leftPanel} />}
+      {leftSidePanel && leftSidePanel.visible && <SidePanel {...leftSidePanel} position="left" />}
       <div className="flex flex-col flex-1 min-w-0 relative">
         <div className="flex flex-1 min-h-0 relative">
           {middlePanel && middlePanel.visible && <MiddlePanel {...middlePanel} />}
+          {hudPanel && hudPanel.visible && <HudPanel {...hudPanel} />}
           <div className="flex-1 min-w-0 min-h-0 relative">{canvas}</div>
           {rightPanel && rightPanel.visible && <RightPanel {...rightPanel} />}
+          {rightSidePanel && rightSidePanel.visible && <SidePanel {...rightSidePanel} position="right" />}
         </div>
         {bottomPanel && bottomPanel.visible && <BottomPanel {...bottomPanel} />}
       </div>
     </div>
     {(footer || toolbar) && (
       <div className="flex-shrink-0 relative">
-        {toolbar && <div className="absolute bottom-[calc(100%+var(--spacing-single))] left-1/2 -translate-x-1/2 z-panel pointer-events-none">{toolbar}</div>}
+        {toolbar && <div className="absolute bottom-[calc(100%+var(--spacing-double))] left-1/2 -translate-x-1/2 z-panel pointer-events-none">{toolbar}</div>}
         {footer}
       </div>
     )}
@@ -1131,11 +1167,13 @@ interface ActionGroupProps extends Omit<React.ComponentProps<"div">, "children">
 
 function ActionGroup({ className, children, ...props }: ActionGroupProps) {
   const level = useLevel();
+  const borderClass = getLevelBorderElementClass(level);
+  const divideClass = getLevelDivideElementClass(level);
   return (
     <div
       data-slot="action-group"
       data-level={level}
-      className={cn("group/action-group flex h-small items-center border border-element divide-x divide-element overflow-hidden", className, "[&:not(:first-child)]:border-l-[length:1px] [&:not(:first-child)]:border-l-element")}
+      className={cn("group/action-group flex h-small items-center border divide-x overflow-hidden", borderClass, divideClass, className)}
       {...props}
     >
       <ActionGroupContext.Provider value={{ level }}>{children}</ActionGroupContext.Provider>
@@ -1324,11 +1362,13 @@ interface ButtonGroupProps extends Omit<React.ComponentProps<"div">, "id"> {
 
 function ButtonGroup({ className, id, showLabel, children, ...props }: ButtonGroupProps) {
   const level = useLevel();
+  const borderClass = getLevelBorderElementClass(level);
+  const divideClass = getLevelDivideElementClass(level);
   const buttonGroupElement = (
     <div
       data-slot="button-group"
       data-level={level}
-      className={cn("group/button-group flex w-fit items-center border border-element divide-x divide-element overflow-hidden h-medium", className, "[&:not(:first-child)]:border-l-[length:1px] [&:not(:first-child)]:border-l-element")}
+      className={cn("group/button-group flex w-fit items-center border divide-x overflow-hidden h-medium", borderClass, divideClass, className)}
       {...props}
     >
       <ButtonGroupContext.Provider value={{ level }}>{children as React.ReactNode}</ButtonGroupContext.Provider>
@@ -2071,6 +2111,8 @@ interface StepperProps extends ElementProps {
 
 export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1, onChange, onPointerDown, onPointerUp, onPointerCancel, interactionId, id }) => {
   const transaction = useTransaction();
+  const level = useLevel();
+  const borderClass = getLevelBorderElementClass(level);
   const [internalValue, setInternalValue] = React.useState(value ?? defaultValue);
   const [isEditing, setIsEditing] = React.useState(false);
   const intervalRef = React.useRef<NodeJS.Timeout | null>(null);
@@ -2197,7 +2239,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
   const labelElementId = `${id.split(".").join("-")}-label`;
 
   const stepperElement = (
-    <div className="flex h-large flex-1 min-w-0 items-stretch border border-element transition-[border-color] focus-within:border-accent">
+    <div className={cn("flex h-large flex-1 min-w-0 items-stretch border transition-[border-color] focus-within:border-accent", borderClass)}>
       <button
         type="button"
         onMouseDown={handleMouseDown(-step)}
@@ -2206,7 +2248,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
         onTouchStart={handleMouseDown(-step)}
         onTouchEnd={handleMouseUp}
         disabled={!canStepDown}
-        className="flex h-full w-large cursor-pointer items-center justify-center border-r border-element hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-muted"
+        className={cn("flex h-full w-large cursor-pointer items-center justify-center border-r hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-muted", borderClass)}
       >
         <RemoveIcon className="size-tiny" />
       </button>
@@ -2270,7 +2312,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
         onTouchStart={handleMouseDown(step)}
         onTouchEnd={handleMouseUp}
         disabled={!canStepUp}
-        className="flex h-full w-large cursor-pointer items-center justify-center border-l border-element hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-muted"
+        className={cn("flex h-full w-large cursor-pointer items-center justify-center border-l hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-muted", borderClass)}
       >
         <AddIcon className="size-tiny" />
       </button>
@@ -2462,13 +2504,15 @@ interface ToggleGroupProps extends Omit<React.ComponentProps<typeof ToggleGroupP
 
 function ToggleGroup({ className, id, showLabel, items, kind = "single", ...restProps }: ToggleGroupProps) {
   const level = useLevel();
+  const borderClass = getLevelBorderElementClass(level);
+  const divideClass = getLevelDivideElementClass(level);
 
   const toggleGroupElement = (
     <ToggleGroupPrimitive.Root
       data-slot="toggle-group"
       id={id}
       type={kind}
-      className={cn("group/toggle-group flex w-fit items-center border border-element overflow-hidden h-medium divide-x divide-element", className, "[&:not(:first-child)]:border-l-[length:1px] [&:not(:first-child)]:border-l-element")}
+      className={cn("group/toggle-group flex w-fit items-center border overflow-hidden h-medium divide-x", borderClass, divideClass, className)}
       {...(restProps as any)}
     >
       <ToggleGroupContext.Provider value={{ level }}>
@@ -2962,6 +3006,7 @@ export interface BandProps {
 function Band({ items, scrollable = true, className, id }: BandProps) {
   const level = useLevel();
   const bgClass = getLevelBgClass(level);
+  const borderClass = getLevelBorderElementClass(level);
   const itemsElement = (
     <div id={id} data-slot="band" className={cn("p-single flex gap-single items-center min-w-0", scrollable ? "w-fit" : "w-full")}>
       {items.map((item, index) => (
@@ -2974,11 +3019,11 @@ function Band({ items, scrollable = true, className, id }: BandProps) {
 
   if (scrollable)
     return (
-      <Scrollable orientation="horizontal" className={cn("border-b border-element h-large", bgClass, className)}>
+      <Scrollable orientation="horizontal" className={cn("border-b h-large", borderClass, bgClass, className)}>
         {itemsElement}
       </Scrollable>
     );
-  return <div className={cn("border-b border-element h-large", bgClass, className)}>{itemsElement}</div>;
+  return <div className={cn("border-b h-large", borderClass, bgClass, className)}>{itemsElement}</div>;
 }
 
 export { Band as Band };
@@ -3003,6 +3048,7 @@ export interface StripProps {
 function Strip({ items, scrollable = true, className, id }: StripProps) {
   const level = useLevel();
   const bgClass = getLevelBgClass(level);
+  const borderClass = getLevelBorderElementClass(level);
   const itemsElement = (
     <div id={id} data-slot="strip" className={cn("p-single flex gap-single items-center min-w-0", scrollable ? "w-fit" : "w-full")}>
       {items.map((item, index) => (
@@ -3015,11 +3061,11 @@ function Strip({ items, scrollable = true, className, id }: StripProps) {
 
   if (scrollable)
     return (
-      <Scrollable orientation="horizontal" className={cn("border-b border-element h-medium", bgClass, className)}>
+      <Scrollable orientation="horizontal" className={cn("border-b h-medium", borderClass, bgClass, className)}>
         {itemsElement}
       </Scrollable>
     );
-  return <div className={cn("border-b border-element h-medium", bgClass, className)}>{itemsElement}</div>;
+  return <div className={cn("border-b h-medium", borderClass, bgClass, className)}>{itemsElement}</div>;
 }
 
 export { Strip };
@@ -3830,9 +3876,11 @@ interface BreadcrumbProps extends Omit<React.ComponentProps<"nav">, "children"> 
 
 function Breadcrumb({ className, items, ...props }: BreadcrumbProps) {
   const [openIndex, setOpenIndex] = React.useState<number | null>(null);
+  const level = useLevel();
+  const borderClass = getLevelBorderElementClass(level);
 
   return (
-    <nav aria-label="breadcrumb" data-slot="breadcrumb" className={cn("flex h-medium items-stretch border border-element", className)} {...props}>
+    <nav aria-label="breadcrumb" data-slot="breadcrumb" className={cn("flex h-medium items-stretch border", borderClass, className)} {...props}>
       <ol data-slot="breadcrumb-list" className="flex flex-wrap items-stretch text-xs break-words overflow-hidden h-full">
         {items.map((item, index) => {
           const hasOptions = !!(item.options && item.options.length > 0);
@@ -4183,11 +4231,11 @@ const Panel: React.FC<PanelProps> = ({
   const isHorizontal = resizeSide === "left" || resizeSide === "right";
   const positionStyle = isHorizontal
     ? resizeSide === "right"
-      ? { left: "var(--spacing-single)", top: "var(--spacing-single)", bottom: "var(--spacing-single)", width: `${size}px`, zIndex }
-      : { right: "var(--spacing-single)", top: "var(--spacing-single)", bottom: "var(--spacing-single)", width: `${size}px`, zIndex }
+      ? { left: "var(--spacing-double)", top: "var(--spacing-double)", bottom: "var(--spacing-double)", width: `${size}px`, zIndex }
+      : { right: "var(--spacing-double)", top: "var(--spacing-double)", bottom: "var(--spacing-double)", width: `${size}px`, zIndex }
     : resizeSide === "top"
-      ? { top: "var(--spacing-single)", left: "var(--spacing-single)", right: "var(--spacing-single)", height: `${size}px`, zIndex }
-      : { bottom: "var(--spacing-single)", left: "var(--spacing-single)", right: "var(--spacing-single)", height: `${size}px`, zIndex };
+      ? { top: "var(--spacing-double)", left: "var(--spacing-double)", right: "var(--spacing-double)", height: `${size}px`, zIndex }
+      : { bottom: "var(--spacing-double)", left: "var(--spacing-double)", right: "var(--spacing-double)", height: `${size}px`, zIndex };
   const resizeHandleClass = isHorizontal ? `absolute top-0 bottom-0 ${resizeSide === "left" ? "left-0" : "right-0"} w-single cursor-ew-resize` : `absolute left-0 right-0 ${resizeSide === "top" ? "top-0" : "bottom-0"} h-single cursor-ns-resize`;
   return (
     <LevelProvider level="panel">
@@ -4289,6 +4337,254 @@ const BottomPanel: React.FC<BottomPanelProps> = (props) => <Panel {...props} res
 export { BottomPanel };
 
 // #endregion BottomPanel
+
+// #region SidePanel
+
+export interface SidePanelTabConfig {
+  id: string;
+  icon: React.ComponentType<{ size?: number }>;
+  order?: number;
+  content: React.ReactNode | (() => React.ReactNode);
+}
+
+export interface SidePanelProps {
+  position: "left" | "right";
+  visible?: boolean;
+  size?: number;
+  onSizeChange?: (size: number) => void;
+  tabs: SidePanelTabConfig[];
+  activeTabId?: string;
+  onActiveTabChange?: (tabId: string) => void;
+  minSize?: number;
+  maxSize?: number;
+  zIndex?: 10 | 20 | 30 | 40;
+  className?: string;
+}
+
+const SidePanel: React.FC<SidePanelProps> = ({
+  position,
+  visible = true,
+  size = 300,
+  onSizeChange,
+  tabs,
+  activeTabId,
+  onActiveTabChange,
+  minSize = 200,
+  maxSize = 600,
+  zIndex = 20,
+  className = "",
+}) => {
+  const [isResizeHovered, setIsResizeHovered] = React.useState(false);
+  const [isResizing, setIsResizing] = React.useState(false);
+  const [internalActiveTab, setInternalActiveTab] = React.useState<string | undefined>(tabs[0]?.id);
+
+  const currentActiveTab = activeTabId ?? internalActiveTab;
+  const sortedTabs = [...tabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  const activeTab = sortedTabs.find((tab) => tab.id === currentActiveTab) ?? sortedTabs[0];
+
+  const handleTabChange = (tabId: string) => {
+    if (onActiveTabChange) {
+      onActiveTabChange(tabId);
+    } else {
+      setInternalActiveTab(tabId);
+    }
+  };
+
+  if (!visible || tabs.length === 0) return null;
+
+  const resizeSide = position === "left" ? "right" : "left";
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+    const startX = e.clientX;
+    const startSize = size;
+    const handleMouseMove = (e: MouseEvent) => {
+      const delta = e.clientX - startX;
+      let newSize: number;
+      if (position === "left") {
+        newSize = startSize + delta;
+      } else {
+        newSize = startSize - delta;
+      }
+      if (newSize >= minSize && newSize <= maxSize) {
+        onSizeChange?.(newSize);
+      }
+    };
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+  };
+
+  const borderClass = resizeSide === "left" ? (isResizing || isResizeHovered ? "border-l-accent" : "border-l") : isResizing || isResizeHovered ? "border-r-accent" : "border-r";
+
+  const positionStyle =
+    position === "left"
+      ? { left: "var(--spacing-double)", top: "var(--spacing-double)", bottom: "var(--spacing-double)", width: `${size}px`, zIndex }
+      : { right: "var(--spacing-double)", top: "var(--spacing-double)", bottom: "var(--spacing-double)", width: `${size}px`, zIndex };
+
+  const resizeHandleClass = `absolute top-0 bottom-0 ${resizeSide === "left" ? "left-0" : "right-0"} w-single cursor-ew-resize`;
+
+  return (
+    <LevelProvider level="panel">
+      <div data-panel={position === "left" ? "leftSidePanel" : "rightSidePanel"} className={cn("absolute text-foreground border bg-panel min-w-0 overflow-hidden flex flex-col", borderClass, className)} style={positionStyle}>
+        <div className="flex items-center h-medium border-b shrink-0 overflow-x-auto">
+          {sortedTabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = tab.id === activeTab?.id;
+            return (
+              <Tooltip key={tab.id}>
+                <TooltipTrigger asChild>
+                  <button
+                    id={tab.id}
+                    onClick={() => handleTabChange(tab.id)}
+                    className={cn("flex items-center justify-center h-full px-small border-r cursor-pointer transition-colors", isActive ? "bg-hover-panel" : "hover:bg-hover-panel")}
+                  >
+                    <Icon size={16} />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <DescriptionTooltipContent id={tab.id} />
+                </TooltipContent>
+              </Tooltip>
+            );
+          })}
+        </div>
+        <Scrollable className="flex-1 min-h-0">
+          <div className="p-single">{activeTab && (typeof activeTab.content === "function" ? activeTab.content() : activeTab.content)}</div>
+        </Scrollable>
+        {onSizeChange && <div className={resizeHandleClass} onMouseDown={handleMouseDown} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} />}
+      </div>
+    </LevelProvider>
+  );
+};
+
+export { SidePanel };
+
+// #endregion SidePanel
+
+// #region HudPanel
+
+export interface HudPanelTabConfig {
+  id: string;
+  icon: React.ComponentType<{ size?: number }>;
+  order?: number;
+  content: React.ReactNode | (() => React.ReactNode);
+}
+
+export interface HudPanelProps {
+  visible?: boolean;
+  size?: number;
+  onSizeChange?: (size: number) => void;
+  tabs: HudPanelTabConfig[];
+  activeTabId?: string;
+  onActiveTabChange?: (tabId: string) => void;
+  minSize?: number;
+  maxSize?: number;
+  zIndex?: 10 | 20 | 30 | 40;
+  className?: string;
+}
+
+const HudPanel: React.FC<HudPanelProps> = ({
+  visible = true,
+  size = 400,
+  onSizeChange,
+  tabs,
+  activeTabId,
+  onActiveTabChange,
+  minSize = 200,
+  maxSize = 800,
+  zIndex = 20,
+  className = "",
+}) => {
+  const [isResizeHovered, setIsResizeHovered] = React.useState(false);
+  const [isResizing, setIsResizing] = React.useState(false);
+  const [internalActiveTab, setInternalActiveTab] = React.useState<string | undefined>(tabs[0]?.id);
+
+  const currentActiveTab = activeTabId ?? internalActiveTab;
+  const sortedTabs = [...tabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  const activeTab = sortedTabs.find((tab) => tab.id === currentActiveTab) ?? sortedTabs[0];
+
+  const handleTabChange = (tabId: string) => {
+    if (onActiveTabChange) {
+      onActiveTabChange(tabId);
+    } else {
+      setInternalActiveTab(tabId);
+    }
+  };
+
+  if (!visible || tabs.length === 0) return null;
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+    const startX = e.clientX;
+    const startSize = size;
+    const handleMouseMove = (e: MouseEvent) => {
+      const delta = e.clientX - startX;
+      const newSize = startSize + delta;
+      if (newSize >= minSize && newSize <= maxSize) {
+        onSizeChange?.(newSize);
+      }
+    };
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+  };
+
+  const positionStyle = {
+    top: "var(--spacing-double)",
+    left: "50%",
+    transform: "translateX(-50%)",
+    width: `${size}px`,
+    zIndex,
+  };
+
+  return (
+    <LevelProvider level="panel">
+      <div data-panel="hudPanel" className={cn("absolute text-foreground border bg-panel min-w-0 overflow-hidden flex flex-col max-h-[50vh]", className)} style={positionStyle}>
+        <div className="flex items-center justify-center h-medium border-b shrink-0 overflow-x-auto">
+          {sortedTabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = tab.id === activeTab?.id;
+            return (
+              <Tooltip key={tab.id}>
+                <TooltipTrigger asChild>
+                  <button
+                    id={tab.id}
+                    onClick={() => handleTabChange(tab.id)}
+                    className={cn("flex items-center justify-center h-full px-small border-r last:border-r-0 cursor-pointer transition-colors", isActive ? "bg-hover-panel" : "hover:bg-hover-panel")}
+                  >
+                    <Icon size={16} />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <DescriptionTooltipContent id={tab.id} />
+                </TooltipContent>
+              </Tooltip>
+            );
+          })}
+        </div>
+        <Scrollable className="flex-1 min-h-0">
+          <div className="p-single">{activeTab && (typeof activeTab.content === "function" ? activeTab.content() : activeTab.content)}</div>
+        </Scrollable>
+        {onSizeChange && <div className="absolute top-0 bottom-0 right-0 w-single cursor-ew-resize" onMouseDown={handleMouseDown} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} />}
+      </div>
+    </LevelProvider>
+  );
+};
+
+export { HudPanel };
+
+// #endregion HudPanel
 
 // #endregion Panel Components
 
