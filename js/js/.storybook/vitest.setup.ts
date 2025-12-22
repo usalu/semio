@@ -1,8 +1,8 @@
 // #region Header
 
-// vitest.setup.ts
+// js/js/.storybook/vitest.setup.ts
 
-// 2025 Ueli Saluz
+// 2025 Ueli Saluz <ueli@semio-tech.com>
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as
@@ -17,13 +17,14 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion
+// #endregion Header
+
 import { setProjectAnnotations } from "@storybook/react-vite";
 import { beforeAll } from "vitest";
 import * as projectAnnotations from "./preview";
 
-// This is an important step to apply the right configuration when testing your stories.
-// More info at: https://storybook.js.org/docs/api/portable-stories/portable-stories-vitest#setprojectannotations
+
+
 const project = setProjectAnnotations([projectAnnotations]);
 
 beforeAll(project.beforeAll);

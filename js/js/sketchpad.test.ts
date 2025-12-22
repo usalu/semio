@@ -1,3 +1,24 @@
+// #region Header
+
+// js/js/sketchpad.test.ts
+
+// 2025 Ueli Saluz <ueli@semio-tech.com>
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// #endregion Header
+
 import { expect, Locator, Page, test } from "@playwright/test";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -83,13 +104,13 @@ async function expectFullyInViewport(locator: Locator, page: Page, xRange: [numb
 }
 
 async function openSettingsPanel(page: Page) {
-  // Settings is now part of the right sidepanel via tabs
-  // First check if the right sidepanel is already open
+  
+  
   const rightSidePanel = page.locator('[data-panel="rightSidePanel"]').first();
   const isRightPanelVisible = await rightSidePanel.isVisible().catch(() => false);
 
   if (!isRightPanelVisible) {
-    // Click the right sidepanel toggle to open it
+    
     const rightPanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.rightSidePanel"]');
     const hasToggle = await rightPanelToggle.isVisible({ timeout: 10000 }).catch(() => false);
     if (hasToggle) {
@@ -98,15 +119,15 @@ async function openSettingsPanel(page: Page) {
     }
   }
 
-  // Wait for the right sidepanel to appear
+  
   await expect(rightSidePanel).toBeVisible({ timeout: 10000 }).catch(() => { });
 }
 
 async function getSettingsSections(page: Page): Promise<string[]> {
-  // Wait for right sidepanel to be visible
+  
   const rightSidePanel = page.locator('[data-panel="rightSidePanel"]').first();
 
-  // Try to wait for panel with increased timeout, return empty if not found
+  
   try {
     await expect(rightSidePanel).toBeVisible({ timeout: 15000 });
   } catch {
@@ -124,13 +145,13 @@ async function getSettingsSections(page: Page): Promise<string[]> {
 }
 
 async function openDetailsPanel(page: Page) {
-  // Details is now part of the right sidepanel via tabs
-  // First check if the right sidepanel is already open
+  
+  
   const rightSidePanel = page.locator('[data-panel="rightSidePanel"]').first();
   const isRightPanelVisible = await rightSidePanel.isVisible().catch(() => false);
 
   if (!isRightPanelVisible) {
-    // Click the right sidepanel toggle to open it
+    
     const rightPanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.rightSidePanel"]');
     const hasToggle = await rightPanelToggle.isVisible({ timeout: 10000 }).catch(() => false);
     if (hasToggle) {
@@ -139,7 +160,7 @@ async function openDetailsPanel(page: Page) {
     }
   }
 
-  // Wait for the right sidepanel to appear
+  
   await expect(rightSidePanel).toBeVisible({ timeout: 10000 }).catch(() => { });
 }
 
@@ -161,7 +182,7 @@ async function getDetailsSections(page: Page): Promise<string[]> {
   return sectionIds;
 }
 
-// Panel group mapping - updated for new sidepanel mechanism
+
 const PANEL_GROUPS: Record<string, string> = {
   leftSidePanel: "leftSidePanel",
   workbench: "leftSidePanel",
@@ -175,7 +196,7 @@ const PANEL_GROUPS: Record<string, string> = {
   settings: "rightSidePanel",
 };
 
-// Helper to open a specific panel by key (now uses simple sidepanel toggles)
+
 async function openPanel(page: Page, panelKey: string): Promise<boolean> {
   const group = PANEL_GROUPS[panelKey];
   if (!group) {

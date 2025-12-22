@@ -1,5 +1,9 @@
 // #region Header
 
+// js/js/sketchpad/Sketchpad.tsx
+
+// 2025 Ueli Saluz <ueli@semio-tech.com>
+
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as
 // published by the Free Software Foundation, either version 3 of the
@@ -13,7 +17,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion
+// #endregion Header
 
 // #region Imports
 
@@ -24,9 +28,7 @@ import {
   MessageCircle as FeedbackIcon,
   FocusIcon,
   HomeIcon,
-  HudPanelIcon,
   LayoutIcon,
-  LeftSidePanelIcon,
   LocalKitIcon,
   Maximize2Icon,
   Minimize2Icon,
@@ -34,7 +36,6 @@ import {
   NavigateForwardIcon,
   NavigateUpIcon,
   RemoteKitIcon,
-  RightSidePanelIcon,
   SearchIcon,
   TemporaryKitIcon,
   TutorialIcon,
@@ -189,6 +190,7 @@ import {
   FileProviderFactory,
   FocusItem,
   FooterItem,
+  getDesignAppHooks,
   getEventHandler,
   getValueAtPath,
   HookResult,
@@ -205,8 +207,8 @@ import {
   PanelConfig,
   PanelDefinition,
   PanelKey,
-  PanelPosition,
   panelKindConfigs,
+  PanelPosition,
   PanelSection,
   PanelSections,
   PanelSizes,
@@ -244,90 +246,6 @@ import {
   YStringArray,
 } from "./shared";
 import { Tutorial, TutorialProvider, TutorialStore, useAvailableTutorials } from "./Tutorials";
-let designAppModuleCache: any = null;
-let kitAppModuleCache: any = null;
-
-const getDesignAppHooks = () => {
-  return {
-    useDesignAppCommands: (id?: { kit: string; design: string }) => {
-      if (designAppModuleCache) {
-        return designAppModuleCache.useDesignAppCommands(id);
-      }
-      return {
-        togglePanel: () => {},
-        execute: () => Promise.resolve({}),
-      };
-    },
-    useDesignAppDiff: () => {
-      if (designAppModuleCache) {
-        return designAppModuleCache.useDesignAppDiff();
-      }
-      return {};
-    },
-    useDesignAppHover: () => {
-      if (designAppModuleCache) {
-        return designAppModuleCache.useDesignAppHover();
-      }
-      return undefined;
-    },
-    useDesignAppIsPieceHovered: (id?: DesignAppId, pieceId?: string) => {
-      if (designAppModuleCache) {
-        return designAppModuleCache.useDesignAppIsPieceHovered(id, pieceId);
-      }
-      return false;
-    },
-    useDesignAppIsPieceTransitiveHovered: (id?: DesignAppId, pieceId?: string) => {
-      if (designAppModuleCache) {
-        return designAppModuleCache.useDesignAppIsPieceTransitiveHovered(id, pieceId);
-      }
-      return false;
-    },
-    useDesignAppIsConnectionHovered: (id?: DesignAppId, connectionId?: string) => {
-      if (designAppModuleCache) {
-        return designAppModuleCache.useDesignAppIsConnectionHovered(id, connectionId);
-      }
-      return false;
-    },
-    useDesignAppSelection: () => {
-      if (designAppModuleCache) {
-        return designAppModuleCache.useDesignAppSelection();
-      }
-      return {};
-    },
-    useDesignAppIsPieceSelected: (id?: DesignAppId, pieceId?: string) => {
-      if (designAppModuleCache) {
-        return designAppModuleCache.useDesignAppIsPieceSelected(id, pieceId);
-      }
-      return false;
-    },
-    useDesignAppIsConnectionSelected: (id?: DesignAppId, connectionId?: string) => {
-      if (designAppModuleCache) {
-        return designAppModuleCache.useDesignAppIsConnectionSelected(id, connectionId);
-      }
-      return false;
-    },
-    useDesignAppStore: <T,>(selector?: (store: any) => T, id?: DesignAppId) => {
-      if (designAppModuleCache) {
-        return designAppModuleCache.useDesignAppStore(selector, id);
-      }
-      return null;
-    },
-  };
-};
-
-export const getKitAppHooks = () => {
-  return {
-    useKitAppCommands: (id?: { kit: string }) => {
-      if (kitAppModuleCache) {
-        return kitAppModuleCache.useKitAppCommands(id);
-      }
-      return {
-        togglePanel: () => {},
-        execute: () => Promise.resolve({}),
-      };
-    },
-  };
-};
 
 // #endregion Imports
 
@@ -12621,7 +12539,7 @@ export function useSketchpadCommands() {
       createDesignApp: (origin: string, designAppId: DesignAppId) => store.execute("semio.sketchpad.createDesignApp", origin, designAppId),
       navigateToKit: (kit: Guid, search?: string) => {
         const path = `/kits/${kit}${search ? (search.startsWith("?") ? search : `?${search}`) : ""}`;
-        // Use global navigate function from the main BrowserRouter (works from MemoryRouter contexts)
+        
         const globalNavigate = (window as any).__SEMIO_NAVIGATE__;
         if (globalNavigate) {
           globalNavigate(path);
@@ -14869,30 +14787,65 @@ const Focus: FC = ({}) => {
 };
 
 const PanelToggles: FC = ({}) => {
+  const appType = useAppType();
   const visiblePanels = useAppPanelVisibility();
   const appCommands = useAppCommands();
-  const appType = useAppType();
-  const panelConfigs = usePanelConfigs();
-  const panels = panelConfigs[appType] ?? [];
-  const toggleablePanels = useMemo(() => panels.filter((p) => p.position !== PanelPosition.BOTTOM), [panels]);
-  const handleToggle = useCallback(
-    (panelId: string, panelKey: keyof PanelVisibility) => {
-      appCommands?.togglePanel?.(panelId, panelKey);
+  const leftTabs = useSidePanelTabs("left");
+  const rightTabs = useSidePanelTabs("right");
+  const hudTabs = useHudPanelTabs();
+
+  const hasLeftTabs = leftTabs.length > 0;
+  const hasRightTabs = rightTabs.length > 0;
+  const hasHudTabs = hudTabs.length > 0;
+
+  const isLeftOpen = visiblePanels.leftSidePanel ?? false;
+  const isRightOpen = visiblePanels.rightSidePanel ?? false;
+  const isHudOpen = visiblePanels.hudPanel ?? false;
+
+  const handleLeftToggle = useCallback(
+    (pressed: boolean) => {
+      appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.leftSidePanel", "leftSidePanel");
     },
     [appCommands],
   );
-  if (toggleablePanels.length === 0) return null;
+
+  const handleHudToggle = useCallback(
+    (pressed: boolean) => {
+      appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.hudPanel", "hudPanel");
+    },
+    [appCommands],
+  );
+
+  const handleRightToggle = useCallback(
+    (pressed: boolean) => {
+      appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.rightSidePanel", "rightSidePanel");
+    },
+    [appCommands],
+  );
+
+  const LeftIcon = leftTabs[0]?.icon;
+  const HudIcon = hudTabs[0]?.icon;
+  const RightIcon = rightTabs[0]?.icon;
+
+  if (!hasLeftTabs && !hasHudTabs && !hasRightTabs) return null;
+
   return (
     <div className="flex items-stretch border border-element overflow-hidden h-medium divide-x divide-element">
-      {toggleablePanels.map((panel) => {
-        const IconComponent = panel.icon;
-        const panelKey = panel.key as keyof PanelVisibility;
-        return (
-          <Toggle key={panel.id} kind="icon" id={panel.id} pressed={visiblePanels[panelKey] ?? false} onPressedChange={() => handleToggle(panel.id, panelKey)} className="border-0">
-            <IconComponent size={16} />
-          </Toggle>
-        );
-      })}
+      {hasLeftTabs && (
+        <Toggle kind="icon" id="semio.sketchpad.navbar.panelToggle.leftSidePanel" pressed={isLeftOpen} onPressedChange={handleLeftToggle} className="border-0">
+          {LeftIcon ? <LeftIcon size={16} /> : <LayoutIcon size={16} />}
+        </Toggle>
+      )}
+      {hasHudTabs && (
+        <Toggle kind="icon" id="semio.sketchpad.navbar.panelToggle.hudPanel" pressed={isHudOpen} onPressedChange={handleHudToggle} className="border-0">
+          {HudIcon ? <HudIcon size={16} /> : <FocusIcon size={16} />}
+        </Toggle>
+      )}
+      {hasRightTabs && (
+        <Toggle kind="icon" id="semio.sketchpad.navbar.panelToggle.rightSidePanel" pressed={isRightOpen} onPressedChange={handleRightToggle} className="border-0">
+          {RightIcon ? <RightIcon size={16} /> : <DocumentIcon size={16} />}
+        </Toggle>
+      )}
     </div>
   );
 };

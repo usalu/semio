@@ -1,23 +1,44 @@
 # region Header
 
-# test_engine.py
+# py/engine/engine.test.py
 
-# 2020-2025 Ueli Saluz
+# 2025 Ueli Saluz <ueli@semio-tech.com>
 
 # This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Affero General Public License as
+# it under the terms of the GNU Lesser General Public License as
 # published by the Free Software Foundation, either version 3 of the
 # License, or (at your option) any later version.
 
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Affero General Public License for more details.
+# GNU Lesser General Public License for more details.
 
-# You should have received a copy of the GNU Affero General Public License
+# You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # endregion Header
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # region Imports
 
@@ -132,20 +153,20 @@ def outputToInput(data: dict) -> dict:
     - Renames 'key' to 'name' for attributes
     - Extracts guid from concept/tag objects for kit-level concepts list
     """
-    # camelCase to snake_case mappings
+    
     fieldMappings = {
         "isAbstract": "is_abstract",
         "isVirtual": "is_virtual",
-        "key": "name",  # Attributes use 'name' in Input, 'key' in Output
+        "key": "name",  
     }
 
-    # Fields that are output-only and should be removed (except in folders context)
+    
     outputOnlyFields = {"createdAt", "updatedAt"}
 
-    # Fields that should be converted from {guid: "..."} to just "..." (but NOT in pieces/connections)
+    
     guidRefFields = {"parent", "interface", "file", "quality"}
 
-    # Fields that should NOT have their children converted to guid strings (they need full objects)
+    
     keepObjectFields = {"connected", "connecting", "piece", "designPiece", "port", "type", "design"}
 
     def convertValue(key: str, value, context: str = ""):
@@ -153,27 +174,27 @@ def outputToInput(data: dict) -> dict:
         if value is None:
             return value
 
-        # Handle lists
+        
         if isinstance(value, list):
-            # Special case: kit-level concepts and tags should be guid strings
+            
             if key == "concepts" and context == "":
                 return [item.get("guid") if isinstance(item, dict) else item for item in value]
             if key == "tags" and context == "":
                 return [item.get("guid") if isinstance(item, dict) else item for item in value]
             return [convertValue(key, item, context) for item in value]
 
-        # Handle object references
+        
         if isinstance(value, dict):
-            # Don't convert these to strings - they need to remain as objects
+            
             if key in keepObjectFields:
                 return convertDict(value, key)
-            # Convert specific ref fields to guid strings
+            
             if key in guidRefFields and "guid" in value:
                 return value["guid"]
-            # Convert pure {guid: "..."} refs to strings (for other refs)
+            
             if set(value.keys()) == {"guid"} and key not in keepObjectFields:
                 return value["guid"]
-            # Recursively convert nested dicts
+            
             return convertDict(value, key)
 
         return value
@@ -182,10 +203,10 @@ def outputToInput(data: dict) -> dict:
         """Convert a dict from Output to Input format."""
         result = {}
         for key, value in d.items():
-            # Skip output-only fields EXCEPT in folders context (folders require timestamps)
+            
             if key in outputOnlyFields and context != "folders" and "folder" not in context.lower():
                 continue
-            # Apply field name mapping
+            
             newKey = fieldMappings.get(key, key)
             result[newKey] = convertValue(key, value, context if context else key)
         return result
@@ -240,10 +261,10 @@ class TestPlaneFromYAxis:
 
 class TestValidation:
     def test_validationMatchesExpectedOutput(self, kitMetabolismJson: dict, kitInvalidJson: dict, expectedValidationJson: dict) -> None:
-        # Valid kit has no errors
+        
         assert not engine.validateKitDict(kitMetabolismJson).hasErrors()
 
-        # Invalid kit matches validation.json (including fixes)
+        
         result = engine.validateKitDict(kitInvalidJson)
         expected = engine.parseValidationResult(json.dumps(expectedValidationJson))
         assert engine.areValidationResultsEqual(result, expected), f"Validation mismatch. Got {len(result.issues)} issues, expected {len(expected.issues)}"
@@ -259,28 +280,28 @@ class TestKitSerialization:
 
     def test_kitJsonRoundtrip(self, kitMetabolismJson: dict) -> None:
         """Kit -> JSON -> Kit (matching semio.test.ts)"""
-        # Serialize kit to JSON string
+        
         serialized = json.dumps(kitMetabolismJson)
 
-        # Deserialize back to dict
+        
         deserialized = json.loads(serialized)
 
-        # Verify deep equality using the same logic as TypeScript test
+        
         assert engine.areKitsDictEqual(kitMetabolismJson, deserialized), "Kit -> JSON -> Kit should be identical"
 
     def test_kitParseAndDump(self, kitMetabolismJson: dict) -> None:
         """Kit.parse -> Kit.dump roundtrip."""
-        # Note: Kit.parse expects Input format, but fixtures are in Output format.
-        # This test verifies that dict serialization works correctly.
-        # Filter to proto designs only (matching TypeScript)
+        
+        
+        
         kitOriginal = copy.deepcopy(kitMetabolismJson)
         kitOriginal["designs"] = [d for d in kitOriginal.get("designs", []) if not d.get("parent")]
 
-        # For dict-based operations, we verify the areKitsDictEqual function works
+        
         kitCopy = copy.deepcopy(kitOriginal)
         assert engine.areKitsDictEqual(kitOriginal, kitCopy), "Deep copy should be equal"
 
-        # Verify structure is preserved after roundtrip through areKitsDictEqual
+        
         assert kitOriginal.get("guid") == kitCopy.get("guid"), "GUID should be preserved"
         assert len(kitOriginal.get("types", [])) == len(kitCopy.get("types", [])), "Types count should match"
         assert len(kitOriginal.get("designs", [])) == len(kitCopy.get("designs", [])), "Designs count should match"
@@ -332,15 +353,15 @@ class TestRest:
 
         Note: Uses dict-based operations since the TypeScript REST API also works with JSON dicts.
         """
-        # Filter to proto designs only (matching TypeScript test)
+        
         kitOriginal = copy.deepcopy(kitMetabolismJson)
         kitOriginal["designs"] = [d for d in kitOriginal.get("designs", []) if not d.get("parent")]
 
-        # === First assertion: Kit + Diff = DiffedKit ===
+        
         appliedDiff = engine.applyKitDiffDict(kitOriginal, diffKitMetabolismJson)
         assert engine.areKitsDictEqual(appliedDiff, kitMetabolismDiffedJson), "Applied diff should equal diffed kit"
 
-        # === Second assertion: Verify computed diff matches expected ===
+        
         computedDiff = engine.getKitDiffDict(kitOriginal, kitMetabolismDiffedJson)
         assert engine.areKitDiffsDictEqual(computedDiff, diffKitMetabolismJson), "Computed diff should match expected"
 
@@ -367,15 +388,15 @@ class TestGraphQL:
 
         Note: Uses dict-based operations since the TypeScript GraphQL API also works with JSON.
         """
-        # Filter to proto designs only (matching TypeScript test)
+        
         kitOriginal = copy.deepcopy(kitMetabolismJson)
         kitOriginal["designs"] = [d for d in kitOriginal.get("designs", []) if not d.get("parent")]
 
-        # === First assertion: DiffedKit + InverseDiff = Kit ===
+        
         appliedInverse = engine.applyKitDiffDict(kitMetabolismDiffedJson, diffKitMetabolismInvertedJson)
         assert engine.areKitsDictEqual(appliedInverse, kitOriginal), "DiffedKit + InverseDiff should equal original kit"
 
-        # === Second assertion: Verify computed inverse diff matches expected ===
+        
         computedInverse = engine.inverseKitDiffDict(kitOriginal, diffKitMetabolismJson)
         assert engine.areKitDiffsDictEqual(computedInverse, diffKitMetabolismInvertedJson), "Computed inverse diff should match expected"
 

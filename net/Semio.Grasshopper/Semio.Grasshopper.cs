@@ -1,20 +1,21 @@
 #region Header
 
-//Semio.Grasshopper.cs
-//2020-2025 Ueli Saluz
+// net/Semio.Grasshopper/Semio.Grasshopper.cs
 
-//This program is free software: you can redistribute it and/or modify
-//it under the terms of the GNU Affero General Public License as
-//published by the Free Software Foundation, either version 3 of the
-//License, or (at your option) any later version.
+// 2025 Ueli Saluz <ueli@semio-tech.com>
 
-//This program is distributed in the hope that it will be useful,
-//but WITHOUT ANY WARRANTY; without even the implied warranty of
-//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//GNU Affero General Public License for more details.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
 
-//You should have received a copy of the GNU Affero General Public License
-//along with this program.  If not, see <https://www.gnu.org/licenses/>.
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #endregion Header
 
@@ -24,14 +25,14 @@
 // TODO: Refactor EngineComponent with GetInput and GetPersitanceInput etc. Very confusing. Probably no abstracting is better.
 // TODO: GetProps and SetProps (includes children) is not consistent with the prop naming in python (does not include children).
 // TODO: Add toplevel scanning for kits wherever a directory is given
-// Maybe extension function for components. The repeated code looks something like this:
-// if (!DA.GetData(_, ref path))
-//      path = OnPingDocument().IsFilePathDefined
-//          ? Path.GetDirectoryName(OnPingDocument().FilePath)
-//          : Directory.GetCurrentDirectory();
+
+
+
+
+
 // TODO: IsInvalid is used to check null state which is not clean.
-// Think of a better way to handle this.
-// The invalid check happen twice and code is duplicated.
+
+
 // TODO: Figure out why cast from Piece to Text is not triggering the casts. ToString has somehow has precedence.
 // TODO: NameM.ToLower() doesn't work for composite names. E.g. "Coord" -> "coord".
 // TODO: Implement a status check and wait for the engine to be ready
@@ -133,24 +134,24 @@ public static class Utility
         var parentDirectionR = parentDirection.Convert();
         var revertedChildPointR = new Vector3d(childPoint.Convert());
         revertedChildPointR.Reverse();
-        //var gapDirectionR = new Vector3d(parentDirectionR);
+        
         var reverseChildDirectionR = childDirection.Convert();
         reverseChildDirectionR.Reverse();
         var rotationRad = RhinoMath.ToRadians(rotation);
         var turnRad = RhinoMath.ToRadians(turn);
         var tiltRad = RhinoMath.ToRadians(tilt);
 
-        // orient
+        
 
-        // If directions are same, then there are infinite solutions.
+        
         var areDirectionsSame = parentDirectionR.IsParallelTo(childDirection.Convert(), Semio.Constants.Tolerance) == 1;
 
-        // Rhino tends to pick the "wrong" direction when the vectors are parallel.
-        // E.g when z=0 it picks to flip the object around the y-axis instead of a rotation around the z-axis.
+        
+        
         Transform directionT;
         if (areDirectionsSame)
         {
-            // Idea taken from: // https://github.com/dfki-ric/pytransform3d/blob/143943b028fc776adfc6939b1d7c2c6edeaa2d90/pytransform3d/rotations/_utils.py#L253
+            
             if (Math.Abs(parentDirectionR.Z) < Semio.Constants.Tolerance)
                 directionT = Transform.Rotation(RhinoMath.ToRadians(180), Vector3d.ZAxis, new Point3d());
             else
@@ -183,17 +184,17 @@ public static class Utility
         orientationT = rotateT * orientationT;
         turnAxis.Transform(rotateT);
         tiltAxis.Transform(rotateT);
-        //gapDirection.Transform(rotateT);
+        
 
         var turnT = Transform.Rotation(turnRad, turnAxis, new Point3d());
         orientationT = turnT * orientationT;
-        //gapDirection.Transform(turnT);
+        
 
         var tiltT = Transform.Rotation(tiltRad, tiltAxis, new Point3d());
         orientationT = tiltT * orientationT;
-        //gapDirection.Transform(tiltT);
+        
 
-        // move
+        
 
         var centerChild = Transform.Translation(revertedChildPointR);
         var moveToParent = Transform.Translation(parentPointR);
@@ -212,7 +213,7 @@ public static class Utility
         var childPlaneR = Rhino.Geometry.Plane.WorldXY;
         childPlaneR.Transform(transform);
 
-        // to parent
+        
 
         var parentPlaneR = parentPlane.Convert();
         var parentPlaneT = Transform.PlaneToPlane(Rhino.Geometry.Plane.WorldXY, parentPlaneR);
@@ -5489,8 +5490,8 @@ public abstract class EngineComponent : Component
             var path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty,
                 "semio-engine.exe");
             var engine = Process.Start(path);
-            // lightweight way to kill child process when parent process is killed
-            // https://stackoverflow.com/questions/3342941/kill-child-process-when-parent-process-is-killed#4657392
+            
+            
             AppDomain.CurrentDomain.DomainUnload += (s, e) =>
             {
                 engine.Kill();

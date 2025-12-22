@@ -2,6 +2,7 @@ This document MUST ALWAYS BE followed unless explicitly asked to do otherwise.
 
 IMPORTANT:
 
+- Multiple agents and a developer ALWAYS work on the same codebase at the same time. NEVER use `git stash`, `git stash pop`, `git checkout`, … because it will mess up others work and worst-case delete their work.
 - The codebase in under design and development and not used in production yet. There are many inconsistencies that need to be refactored. ALWAYS use clean mechanisms that might require large refactorings and NEVER care about backwards compatibility.
 - For every task you are working on, you MUST create or update a markdown ticket using `npx tsx scripts/log.ts ticket create SLUG --prompt="User prompt..."`. Tickets are stored in `log/YEAR/MONTH/DAY/SLUG.md` with YAML frontmatter and optional **iterations**. The script automatically creates three sections to be filled/updated during execution of the task: `# Previously`, `# Plan`, and `#Changes`.The purpose of the ticket is to understand the context, problem and decision making process. It is only about the process.
 - For every task you are working on, you MUST update the dev docs (`README.md` and `AGENTS.md`). Every key decision and mechanism ALWAYS needs to be documemented. Every feature, decision MUST be undocumented/uncommented in the code and MUST be documented in the dev docs (AGENTS.md and README.md). The documentation ALWAYS happens four times:
@@ -1555,13 +1556,20 @@ Shared react components. The main component is Sketchpad. Sketchpad is used in t
   - **Types**: `HookResult<T>` for read-write hooks, `HookNoSetResult<T>` for read-only hooks
   - **Field<T> Type**: Alternative object-based pattern with always-defined `set` (no-op when disabled):
     ```typescript
-    interface Field<T> { value: T; canSet: boolean; set: (next: T) => void; }
+    interface Field<T> {
+      value: T;
+      canSet: boolean;
+      set: (next: T) => void;
+    }
     const field = useDesignAppSelectionField();
     field.set(newSelection); // Safe - no-op if canSet is false
     ```
   - **ActionField Type**: For action-only hooks without value:
     ```typescript
-    interface ActionField { canExecute: boolean; execute: () => void; }
+    interface ActionField {
+      canExecute: boolean;
+      execute: () => void;
+    }
     const action = useXStateAction(canEvent, event);
     action.execute(); // Safe - no-op if canExecute is false
     ```
@@ -1767,6 +1775,23 @@ registerEventHandler("MYAPP.TOGGLE_PANEL", {
 - **`executeEventHandler(context, event)`**: Looks up and executes the handler for the event type
 - **`dispatchAppEvent` action**: The sketchpad machine action that dispatches events dynamically
 - **Fallback**: If no handler is registered via `registerEventHandler`, falls back to legacy `registerRuntimeAction` handlers
+
+##### App Hooks Registry
+
+Apps register hooks via the registry in `shared.ts` to enable cross-app communication without direct imports:
+
+- **`registerDesignAppHooks(hooks)`**: Design.tsx registers its hooks (selection, hover, commands, etc.)
+- **`registerKitAppHooks(hooks)`**: Kit.tsx registers its hooks (commands)
+- **`registerDocsRegistry(registry)`**: Docs.tsx registers the docsRegistry
+- **`getDesignAppHooks()`**: Returns registered design hooks (fallback defaults if not registered)
+- **`getKitAppHooks()`**: Returns registered kit hooks (fallback defaults if not registered)
+- **`getDocsRegistry()`**: Returns registered docs registry (null if not registered)
+
+This pattern ensures:
+
+- Sketchpad.tsx has no app-specific caches or hook getters
+- elements.tsx has no imports from app modules
+- Apps are self-contained and register their hooks on module load
 
 **Benefits:**
 

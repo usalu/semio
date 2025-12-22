@@ -1,5 +1,9 @@
 // #region Header
 
+// js/js/sketchpad/elements.tsx
+
+// 2025 Ueli Saluz <ueli@semio-tech.com>
+
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as
 // published by the Free Software Foundation, either version 3 of the
@@ -13,7 +17,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion
+// #endregion Header
 
 // #region Imports
 
@@ -75,7 +79,7 @@ import * as React from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import * as ResizablePrimitive from "react-resizable-panels";
-import { Link, useLocation, useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import * as THREE from "three";
 import { Expertise, setExpertiseProvider, useLabel } from "../i18n";
 import { Camera, cn, Plane, Point, Vector } from "../semio";
@@ -4061,42 +4065,6 @@ const PageNavigation: React.FC<PageNavigationProps> = ({ prev, next }) => {
 export { PageNavigation };
 
 // #endregion PageNavigation
-
-// #region SectionTree
-
-export interface SectionTreeProps {
-  title?: string;
-  section?: string;
-}
-
-export const SectionTree: React.FC<SectionTreeProps> = ({ title, section }) => {
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  const getDocsRegistry = () => {
-    const docsApp = require("../apps/docs/App");
-    return docsApp.docsRegistry;
-  };
-
-  const docsRegistry = getDocsRegistry();
-
-  const currentSection =
-    section ||
-    (() => {
-      const path = location.pathname.replace(/^\/docs\//, "");
-      const parts = path.split("/");
-      return parts[0];
-    })();
-
-  const currentPath = location.pathname.replace(/^\//, "");
-  const tree = docsRegistry.getSectionTree(currentSection);
-
-  const handleNavigate = (path: string) => {
-    navigate(`/${path}`);
-  };
-
-  return <Tree.Files title={title} nodes={tree} currentPath={currentPath} onNavigate={handleNavigate} as="div" />;
-};
 
 // #endregion SectionTree
 

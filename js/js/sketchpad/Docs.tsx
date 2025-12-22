@@ -1,8 +1,8 @@
 // #region Header
 
-// Docs.tsx
+// js/js/sketchpad/Docs.tsx
 
-// 2025 Ueli Saluz
+// 2025 Ueli Saluz <ueli@semio-tech.com>
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as
@@ -17,7 +17,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion
+// #endregion Header
 
 // #region Imports
 
@@ -41,8 +41,8 @@ import {
   useSettings,
   useSketchpadCommands,
 } from "./Sketchpad";
-import { Aside, Tabs as BaseTabs, FileTreeNode, Page, PageFrontmatter, PageNavigation, TabsContent, TabsList, TabsTrigger, TreeItem, TreeStateProvider } from "./elements";
-import { PanelKind, createPanelDefinition, parseWindowLayout, registerAppPlugin, stringifyWindowLayout, type AppConfig, type AppEdit, type AppPlugin, type AppWindowConfig, type PanelVisibility } from "./shared";
+import { Aside, Tabs as BaseTabs, FileTreeNode, FileTree, Page, PageFrontmatter, PageNavigation, TabsContent, TabsList, TabsTrigger, TreeItem, TreeStateProvider } from "./elements";
+import { PanelKind, createPanelDefinition, parseWindowLayout, registerAppPlugin, registerDocsRegistry, stringifyWindowLayout, type AppConfig, type AppEdit, type AppPlugin, type AppWindowConfig, type PanelVisibility } from "./shared";
 
 // #endregion Imports
 
@@ -184,8 +184,36 @@ export function getAllSections(): SectionInfo[] {
 
 // #region MDX Provider
 
-// Lazy load SectionTree to avoid loading React Router in Storybook
-const SectionTree = lazy(() => import("./elements").then((module) => ({ default: module.SectionTree })));
+// #region SectionTree
+
+export interface SectionTreeProps {
+  title?: string;
+  section?: string;
+}
+
+export const SectionTree: React.FC<SectionTreeProps> = ({ title, section }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const currentSection =
+    section ||
+    (() => {
+      const path = location.pathname.replace(/^\/docs\//, "");
+      const parts = path.split("/");
+      return parts[0];
+    })();
+
+  const currentPath = location.pathname.replace(/^\//, "");
+  const tree = docsRegistry.getSectionTree(currentSection);
+
+  const handleNavigate = (path: string) => {
+    navigate(`/${path}`);
+  };
+
+  return <FileTree title={title} nodes={tree} currentPath={currentPath} onNavigate={handleNavigate} as="div" />;
+};
+
+// #endregion SectionTree
 
 export interface HeadingNode {
   id: string;
@@ -856,6 +884,7 @@ const docsAppPlugin: AppPlugin = {
 
 if (typeof window !== "undefined") {
   registerAppPlugin(docsAppPlugin);
+  registerDocsRegistry(docsRegistry);
 }
 
 // #endregion Docs App Plugin Registration

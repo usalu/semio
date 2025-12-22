@@ -1,5 +1,26 @@
 // #region Header
 
+// js/js/sketchpad/shared.ts
+
+// 2025 Ueli Saluz <ueli@semio-tech.com>
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// #endregion Header
+
+// #region Header
+
 // sketchpad.ts
 
 // 2025 Ueli Saluz
@@ -815,10 +836,7 @@ export function parseWindowLayout(layout: unknown): any | undefined {
   return undefined;
 }
 
-/**
- * Sanitizes a GoldenLayout config to ensure only one instance of each component type exists.
- * Removes duplicate components keeping only the first occurrence.
- */
+
 export function deduplicateWindowLayout(layout: any, allowedWindowIds: string[]): any | undefined {
   if (!layout || typeof layout !== "object") return layout;
 
@@ -834,10 +852,10 @@ export function deduplicateWindowLayout(layout: any, allowedWindowIds: string[])
         if (item.type === "component") {
           const componentName = item.componentName;
           if (seenComponents.has(componentName)) {
-            return null; // Remove duplicate
+            return null;
           }
           if (!allowedWindowIds.includes(componentName)) {
-            return null; // Remove unknown component types
+            return null;
           }
           seenComponents.add(componentName);
           return item;
@@ -1905,3 +1923,80 @@ export function getRegisteredEventTypes(): string[] {
 }
 
 // #endregion Dynamic Event Dispatch Registry
+
+// #region App Hooks Registry
+
+export interface DesignAppHooks {
+  useDesignAppCommands: (id?: { kit: string; design: string }) => any;
+  useDesignAppDiff: () => any;
+  useDesignAppHover: () => any;
+  useDesignAppIsPieceHovered: (id?: DesignAppId, pieceId?: string) => boolean;
+  useDesignAppIsPieceTransitiveHovered: (id?: DesignAppId, pieceId?: string) => boolean;
+  useDesignAppIsConnectionHovered: (id?: DesignAppId, connectionId?: string) => boolean;
+  useDesignAppSelection: () => any;
+  useDesignAppIsPieceSelected: (id?: DesignAppId, pieceId?: string) => boolean;
+  useDesignAppIsConnectionSelected: (id?: DesignAppId, connectionId?: string) => boolean;
+  useDesignAppStore: <T>(selector?: (store: any) => T, id?: DesignAppId) => T | null;
+}
+
+export interface KitAppHooks {
+  useKitAppCommands: (id?: { kit: string }) => any;
+}
+
+const defaultDesignAppHooks: DesignAppHooks = {
+  useDesignAppCommands: () => ({ togglePanel: () => { }, execute: () => Promise.resolve({}) }),
+  useDesignAppDiff: () => ({}),
+  useDesignAppHover: () => undefined,
+  useDesignAppIsPieceHovered: () => false,
+  useDesignAppIsPieceTransitiveHovered: () => false,
+  useDesignAppIsConnectionHovered: () => false,
+  useDesignAppSelection: () => ({}),
+  useDesignAppIsPieceSelected: () => false,
+  useDesignAppIsConnectionSelected: () => false,
+  useDesignAppStore: () => null,
+};
+
+const defaultKitAppHooks: KitAppHooks = {
+  useKitAppCommands: () => ({ togglePanel: () => { }, execute: () => Promise.resolve({}) }),
+};
+
+let registeredDesignAppHooks: DesignAppHooks | null = null;
+let registeredKitAppHooks: KitAppHooks | null = null;
+
+export function registerDesignAppHooks(hooks: DesignAppHooks): void {
+  registeredDesignAppHooks = hooks;
+}
+
+export function registerKitAppHooks(hooks: KitAppHooks): void {
+  registeredKitAppHooks = hooks;
+}
+
+export function getDesignAppHooks(): DesignAppHooks {
+  return registeredDesignAppHooks ?? defaultDesignAppHooks;
+}
+
+export function getKitAppHooks(): KitAppHooks {
+  return registeredKitAppHooks ?? defaultKitAppHooks;
+}
+
+// #endregion App Hooks Registry
+
+// #region App Registry Exports
+
+export interface DocsRegistryInterface {
+  getSectionTree: (section: string) => any[];
+  getAllPages: () => any[];
+  getPage?: (path: string) => any;
+}
+
+let registeredDocsRegistry: DocsRegistryInterface | null = null;
+
+export function registerDocsRegistry(registry: DocsRegistryInterface): void {
+  registeredDocsRegistry = registry;
+}
+
+export function getDocsRegistry(): DocsRegistryInterface | null {
+  return registeredDocsRegistry;
+}
+
+// #endregion App Registry Exports

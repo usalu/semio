@@ -1,5 +1,50 @@
 # Prompt history
 
+The analyze and fix code should isnt detecting multiline comments. e.g.
+/**
+ * Creates an in-memory file provider.
+Further it falsely detects strings with // in them as comments. e.g. return `memory://${key}`;
+
+Extend the analyze and fix code to check if the filepath in the header region is the same as the filepath of the file.
+
+Extend the code.ts hook to build a region tree (region tree is a tree of regions and their children regions). Sibling regions should all have different names. E.g.
+Parent
+  |-- Child
+   -- |-- Grandchild
+  |-- Sibling
+Parent
+  |-- Child
+    |-- Grandchild
+  |-- Sibling
+is not legit because Parent are siblings but have the same name. All other regions in the example are legit.
+
+Make sure that the headers of all files follow a specific scheme. Adjust analyze and fix code such as in code.ts
+- Wrapped within Header region
+- Filepath
+- List of contributors
+- License header
+e.g.
+// #region Header
+
+// FILEPATH/FILENAME.EXTENSION e.g. js/js/sketchpad/Sketchpad.tsx
+
+// CONTRIBUTIONYEARS CONTRIBUTOR e.g. 2025 Ueli Saluz <ueli@semio-tech.com>
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// #endregion
+
 The log.ts script should be extended with an flag plan that takes a markdown file path and adds it directly to the plan section of the ticket.
 
 Extend the code.ts hook to find more issues. Add two more issue kinds: forbidden imports and forbidden terminology. Forbidden imports checks if imports are structurally forbidden. Forbidden terminology checks if specific terminology is used somewhere where it shouldnt be allowed e.g. when domain-specific terminology is used in general-purpose files.
@@ -8,13 +53,14 @@ Here some rules for js/js:
 - Sketchpad.tsx and the other app files (Home.tsx, Kit.tsx, Design.tsx, Type.tsx, Quality.tsx, Docs.tsx, Feedback.tsx) should follow the open/closed principle. Sketchpad.tsx should only import from elements.tsx, semio.ts, shared.ts. The apps should only import from Sketchpad.tsx, elements.tsx, semio.ts, shared.ts. 
 If the file is deleted then sketchpad should work, if a new file is added, the new app should work. The hook should scan for all static and dynamic imports that violate the above rules. 
 
-Sketchpad.tsx, elements.tsx and APP.tsx should be refactored to follow the open/closed principle. All app specific logic should be part of the APP.tsx files. elements.tsx should not import anything from sketchpad or any app. There should be no design, type, etc logic part of Sketchpad.tsx file. If the file is deleted then sketchpad should work, if a new file is added, the new app should work.
+Sketchpad.tsx, elements.tsx and APP.tsx (Home.tsx, Kit.tsx, Design.tsx, Type.tsx, Quality.tsx, Docs.tsx, Feedback.tsx) should be refactored to follow the open/closed principle. All app specific logic should be part of the APP.tsx files. elements.tsx should not import anything from sketchpad or any app. There should be no design, type, etc logic part of Sketchpad.tsx file. If the file is deleted then sketchpad should work, if a new file is added, the new app should work.
 E.g.
 - Get rid of designAppModuleCache, kitAppModuleCache, getDesignAppHooks
 - The general SelectionTree shouldnt import from docs app in getDocsRegistry. 
+Other violations of forbidden rules and import should be inside code.json which is produced by code.ts hook.
+@Design.tsx@Docs.tsx@Feedback.tsx@Home.tsx@Kit.tsx@Quality.tsx@shared.ts@Sketchpad.tsx@Type.tsx@elements.tsx @code.ts @code.json 
 
-
-Find alle statemanagment code smells. Make sure components dont overfetch and use the correct mechnanism. Create a detailed refactor plan.
+Find all statemanagment code smells. Make sure components dont overfetch and use the correct mechnanism. Create a detailed refactor plan.
 
 As the panels are above the windows and they need to have a single unit spacing to them, they need to have double spacing to the sides, navbar and footer. Currently they only have single spacing to everything.
 

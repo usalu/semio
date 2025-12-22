@@ -1,8 +1,8 @@
 // #region Header
 
-// App.tsx
+// js/js/sketchpad/Kit.tsx
 
-// 2025 Ueli Saluz
+// 2025 Ueli Saluz <ueli@semio-tech.com>
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as
@@ -17,7 +17,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion
+// #endregion Header
 
 // #region Imports
 
@@ -144,22 +144,15 @@ import {
   useReactFlow,
 } from "./elements";
 import type { Device, HookNoSetResult, HookResult, KitAppId, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
-import { AppConfig, AppPlugin, conditionalHookResult, createPanelDefinition, Expertise, Mode, PanelKind, parseWindowLayout, registerAppPlugin, registerRuntimeAction, stringifyWindowLayout, Theme } from "./shared";
+import { AppConfig, AppPlugin, conditionalHookResult, createPanelDefinition, Expertise, Mode, PanelKind, parseWindowLayout, registerAppPlugin, registerKitAppHooks, registerRuntimeAction, stringifyWindowLayout, Theme } from "./shared";
 
 // #endregion Imports
 
 // #region Design Family Helpers
 
-/**
- * Gets all design GUIDs in a design family as a Set for efficient lookup.
- * @param kit - The kit containing the designs.
- * @param designGuid - The GUID of any design in the family.
- * @returns Set of all design GUIDs in the family tree.
- */
 const getDesignFamilyGuids = (kit: Kit, designGuid: string): Set<string> => {
   const guids = new Set<string>();
 
-  // Find the primitive (root) design
   let currentGuid = designGuid;
   let current = kit.designs?.find((d) => d.guid === currentGuid);
   while (current?.parent?.guid) {
@@ -169,7 +162,6 @@ const getDesignFamilyGuids = (kit: Kit, designGuid: string): Set<string> => {
     currentGuid = parent.guid;
   }
 
-  // Collect all descendants
   const collectDescendants = (parentGuid: string) => {
     guids.add(parentGuid);
     const children = (kit.designs || []).filter((d) => d.parent?.guid === parentGuid);
@@ -319,7 +311,6 @@ export interface KitAppCommandResult {
 export const inverseKitAppSelectionDiff = (selection: KitAppSelection, diff: KitAppSelectionDiff): KitAppSelectionDiff => {
   const inverseDiff: KitAppSelectionDiff = {};
 
-  // Inverse types diff
   if (diff.types) {
     inverseDiff.types = {};
     if (diff.types.added) {
@@ -330,7 +321,6 @@ export const inverseKitAppSelectionDiff = (selection: KitAppSelection, diff: Kit
     }
   }
 
-  // Inverse designs diff
   if (diff.designs) {
     inverseDiff.designs = {};
     if (diff.designs.added) {
@@ -341,7 +331,6 @@ export const inverseKitAppSelectionDiff = (selection: KitAppSelection, diff: Kit
     }
   }
 
-  // Inverse qualities diff
   if (diff.qualities) {
     inverseDiff.qualities = {};
     if (diff.qualities.added) {
@@ -352,7 +341,6 @@ export const inverseKitAppSelectionDiff = (selection: KitAppSelection, diff: Kit
     }
   }
 
-  // Inverse files diff
   if (diff.files) {
     inverseDiff.files = {};
     if (diff.files.added) {
@@ -363,7 +351,6 @@ export const inverseKitAppSelectionDiff = (selection: KitAppSelection, diff: Kit
     }
   }
 
-  // Inverse folders diff
   if (diff.folders) {
     inverseDiff.folders = {};
     if (diff.folders.added) {
@@ -374,7 +361,6 @@ export const inverseKitAppSelectionDiff = (selection: KitAppSelection, diff: Kit
     }
   }
 
-  // Inverse authors diff
   if (diff.authors) {
     inverseDiff.authors = {};
     if (diff.authors.added) {
@@ -452,7 +438,6 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
     });
   }
 
-  // KitApp-specific getters
   get fullscreenWindow(): KitAppFullscreenWindow {
     return this.yMap.get("fullscreenWindow") as KitAppFullscreenWindow;
   }
@@ -483,37 +468,31 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
 
     const result: KitAppSelection = {};
 
-    // Get types
     const types = selection.get("types") as Y.Array<string>;
     if (types && types.length > 0) {
       result.types = types.toArray();
     }
 
-    // Get designs
     const designs = selection.get("designs") as Y.Array<string>;
     if (designs && designs.length > 0) {
       result.designs = designs.toArray();
     }
 
-    // Get qualities
     const qualities = selection.get("qualities") as Y.Array<string>;
     if (qualities && qualities.length > 0) {
       result.qualities = qualities.toArray();
     }
 
-    // Get files
     const files = selection.get("files") as Y.Array<string>;
     if (files && files.length > 0) {
       result.files = files.toArray();
     }
 
-    // Get folders
     const folders = selection.get("folders") as Y.Array<string>;
     if (folders && folders.length > 0) {
       result.folders = folders.toArray();
     }
 
-    // Get authors
     const authors = selection.get("authors") as Y.Array<string>;
     if (authors && authors.length > 0) {
       result.authors = authors.toArray();
@@ -569,7 +548,6 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
     return this.parent.kit(this.yMap.get("kit") as string);
   }
 
-  // Implement abstract methods from App base class
   protected getSelection(): KitAppSelection {
     return this.selection;
   }
@@ -627,25 +605,23 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
           yExpandedRows = new Y.Array<string>();
           this.yMap.set("expandedRows", yExpandedRows);
         }
-        // Efficiently update only changed elements instead of replacing entire array
+
         const currentRows = yExpandedRows.toArray();
         const newRows = diff.expandedRows;
         const currentSet = new Set(currentRows);
         const newSet = new Set(newRows);
 
-        // Find rows to remove (in current but not in new)
         const toRemove: number[] = [];
         currentRows.forEach((row, index) => {
           if (!newSet.has(row)) {
             toRemove.push(index);
           }
         });
-        // Remove in reverse order to maintain indices
+
         for (let i = toRemove.length - 1; i >= 0; i--) {
           yExpandedRows.delete(toRemove[i], 1);
         }
 
-        // Find rows to add (in new but not in current)
         const toAdd = newRows.filter((row) => !currentSet.has(row));
         if (toAdd.length > 0) {
           yExpandedRows.push(toAdd);
@@ -674,7 +650,6 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
       this.yMap.set("selection", selection);
     }
 
-    // Apply types diff
     if (selectionDiff.types) {
       let types = (selection.get("types") as Y.Array<string>) || new Y.Array<string>();
       if (!selection.has("types")) {
@@ -698,7 +673,6 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
       }
     }
 
-    // Apply designs diff
     if (selectionDiff.designs) {
       let designs = (selection.get("designs") as Y.Array<string>) || new Y.Array<string>();
       if (!selection.has("designs")) {
@@ -722,7 +696,6 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
       }
     }
 
-    // Apply qualities diff
     if (selectionDiff.qualities) {
       let qualities = (selection.get("qualities") as Y.Array<string>) || new Y.Array<string>();
       if (!selection.has("qualities")) {
@@ -746,7 +719,6 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
       }
     }
 
-    // Apply files diff
     if (selectionDiff.files) {
       let files = (selection.get("files") as Y.Array<string>) || new Y.Array<string>();
       if (!selection.has("files")) {
@@ -770,7 +742,6 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
       }
     }
 
-    // Apply folders diff
     if (selectionDiff.folders) {
       let folders = (selection.get("folders") as Y.Array<string>) || new Y.Array<string>();
       if (!selection.has("folders")) {
@@ -794,7 +765,6 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
       }
     }
 
-    // Apply authors diff
     if (selectionDiff.authors) {
       let authors = (selection.get("authors") as Y.Array<string>) || new Y.Array<string>();
       if (!selection.has("authors")) {
@@ -823,8 +793,6 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
     let origin: string | undefined;
     let rest: any[];
 
-    // Origins are strings like "semio.sketchpad.app.kit.panel.details.name" (starts with semio.sketchpad)
-    // Commands are strings like "semio.kitApp.startTransaction" (starts with semio. but NOT semio.sketchpad)
     if (typeof args[0] === "string" && args[0].startsWith("semio.sketchpad.")) {
       origin = args[0];
       rest = args.slice(1);
@@ -888,10 +856,6 @@ if (typeof window !== "undefined") {
 
 // #region Kit App Plugin Registration
 
-/**
- * Kit app plugin for the sketchpad machine.
- * Provides KIT.* events, actions, and guards.
- */
 const kitAppPlugin: AppPlugin = {
   id: "kit",
   namespace: "KIT",
@@ -914,13 +878,14 @@ const kitAppPlugin: AppPlugin = {
       diagramForce: { ...defaultDiagramForceSettings },
     }),
   },
-  registerStores: () => {
-    // Store factory already registered above
-  },
+  registerStores: () => {},
 };
 
 if (typeof window !== "undefined") {
   registerAppPlugin(kitAppPlugin);
+  registerKitAppHooks({
+    useKitAppCommands,
+  });
   registerRuntimeAction("kitInit", (context: any, event: any) => {
     if (event.type !== "KIT.INIT") return {};
     return { kitApps: { ...context.kitApps, [event.kitGuid]: event.state } };
@@ -1115,15 +1080,10 @@ function useKitStore<T>(selector?: (controller: KitStore) => T, id?: KitAppId): 
   }
 }
 
-/**
- * Get Kit app state from XState.
- * This is the new XState-based hook.
- */
 export function useKitApp<T>(selector?: (state: KitAppState) => T, id?: KitAppId): T | KitAppState {
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid ?? id?.kit;
 
-  // Create a default state when no kitGuid is available
   const defaultState: KitAppState = {
     panelVisibility: { toolbar: true, workbench: false, details: false, chat: false, settings: false },
     selection: undefined,
@@ -1146,7 +1106,6 @@ export function useKitApp<T>(selector?: (state: KitAppState) => T, id?: KitAppId
 
   const xstateState = useKitAppXState(kitGuid) as any;
 
-  // Convert expandedRows Set back to array for compatibility
   const state: KitAppState = {
     ...xstateState,
     expandedRows: xstateState.expandedRows ? Array.from(xstateState.expandedRows) : [],
@@ -2773,7 +2732,6 @@ const KitDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // Zip files are now treated as regular files
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
@@ -2788,7 +2746,6 @@ const KitDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
-    // Zip files are now treated as regular files - no special handling
   };
 
   return (
@@ -2817,8 +2774,6 @@ const AppContent: FC = () => {
   const kitScope = useKitScope();
   const hasKit = useHasKit(kitScope?.guid || "");
 
-  // Use shallow subscription (deep=false) since this component primarily cares about
-  // array-level changes (adding/removing items), not deep property changes within items
   const kit = useKit(undefined, kitScope?.guid, false) as Kit;
   const kitCommands = useKitCommands();
   const sketchpadCommands = useSketchpadCommands();
@@ -2852,7 +2807,6 @@ const AppContent: FC = () => {
   const removeSection = useRemovePanelSection();
   const appType = useAppType();
 
-  // Get default names for artifact creation
   const defaultDesignName = useLabel("semio.sketchpad.app.design.defaultName");
   const defaultTypeName = useLabel("semio.sketchpad.app.type.defaultName");
   const defaultQualityName = useLabel("semio.sketchpad.app.quality.defaultName");
@@ -2862,22 +2816,18 @@ const AppContent: FC = () => {
   const defaultConceptName = useLabel("semio.sketchpad.app.concept.defaultName");
   const kitLoadingLabel = useLabel("semio.sketchpad.app.kit.loading");
 
-  // Pre-call all useLabel hooks used in JSX to avoid conditional hook calls
   const labelSearch = useLabel("semio.sketchpad.common.search");
   const labelArtifact = useLabel("semio.sketchpad.app.kit.canvas.table.header.artifact");
   const labelKind = useLabel("semio.sketchpad.app.kit.canvas.table.header.kind");
   const labelUpdatedAt = useLabel("semio.sketchpad.app.kit.canvas.table.header.updatedAt");
   const labelCreatedAt = useLabel("semio.sketchpad.app.kit.canvas.table.header.createdAt");
 
-  // Get filters from search params (?kind=&name=) - MOVED BEFORE EARLY RETURNS
   const selectedKind = searchParams.get("kind") as ArtifactKind | null;
   const selectedName = searchParams.get("name");
 
-  // Get concepts and search from search params
   const selectedConcepts = searchParams.getAll("c");
   const searchQuery = searchParams.get("q") || "";
 
-  // Get selection parameter for auto-selecting designs/types
   const selectParam = searchParams.get("select");
   const expandedRows = expandedRowsSet;
 
