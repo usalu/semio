@@ -79,33 +79,7 @@ import {
   useTypeScope,
 } from "./Sketchpad";
 
-let kitAppModuleCache: any = null;
-if (typeof window !== "undefined" && (window as any).__KIT_APP_MODULE_CACHE__) {
-  kitAppModuleCache = (window as any).__KIT_APP_MODULE_CACHE__.kitAppModuleCache;
-}
-const getKitAppModule = () => {
-  if (!kitAppModuleCache) {
-    if (typeof window !== "undefined" && (window as any).__KIT_APP_MODULE_CACHE__) {
-      kitAppModuleCache = (window as any).__KIT_APP_MODULE_CACHE__.kitAppModuleCache;
-    }
-    if (!kitAppModuleCache) {
-      throw new Error("Kit app module not loaded. This should not happen - ensure kit app is imported.");
-    }
-  }
-  return kitAppModuleCache;
-};
-
-const KitSectionLazy = React.lazy(async () => {
-  const module = await import("./Kit");
-  kitAppModuleCache = module;
-  if (typeof window !== "undefined") {
-    if (!(window as any).__KIT_APP_MODULE_CACHE__) {
-      (window as any).__KIT_APP_MODULE_CACHE__ = {};
-    }
-    (window as any).__KIT_APP_MODULE_CACHE__.kitAppModuleCache = module;
-  }
-  return { default: module.KitSection };
-});
+const KitSectionLazy = React.lazy(() => import("./Kit").then((module) => ({ default: module.KitSection })));
 
 import { AddIcon, AwardIcon, CheckIcon, CodeIcon, HandIcon, MonitorIcon, MoonIcon, MousePointerIcon, PortIcon, RemoveIcon, SelectToolIcon, SunIcon, TutorialIcon, UserIcon } from "@semio/assets";
 
@@ -3432,10 +3406,12 @@ function useTypeAppInitialize() {
   const typeScope = useTypeScope();
   const kitGuid = kitScope?.guid ?? "";
   const typeGuid = typeScope?.guid ?? "";
-  const hasInitialized = useRef(false);
+  const initializedKeyRef = useRef<string | null>(null);
 
   useLayoutEffect(() => {
-    if (hasInitialized.current || !kitGuid || !typeGuid) return;
+    if (!kitGuid || !typeGuid) return;
+    const initKey = `${kitGuid}:${typeGuid}`;
+    if (initializedKeyRef.current === initKey) return;
 
     actor.send({
       type: "TYPE.INIT",
@@ -3458,7 +3434,7 @@ function useTypeAppInitialize() {
         },
       },
     });
-    hasInitialized.current = true;
+    initializedKeyRef.current = initKey;
   }, [actor, kitGuid, typeGuid]);
 }
 
@@ -3548,10 +3524,7 @@ export const TypeAppFooter: FC = () => {
         removeFooterItem(`semio.sketchpad.app.type.footer.tag.${tagGuid}`);
       });
     };
-    // Note: Intentionally excluding addModelTag, removeModelTag, selectedModelTags from deps
-    // because they change on every render. We use refs to access current values.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appType, addFooterItem, removeFooterItem, allModelTagGuids, tagNameMap]);
+  }, [appType, addFooterItem, removeFooterItem, allModelTagGuids, tagNameMap, selectedModelTags]);
 
   return null;
 };

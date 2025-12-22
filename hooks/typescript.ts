@@ -1,5 +1,4 @@
 #!/usr/bin/env tsx
-// SPDX-License-Identifier: AGPL-3.0-only
 import { execSync } from "child_process";
 import { writeFileSync } from "fs";
 import { join } from "path";

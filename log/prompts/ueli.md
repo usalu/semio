@@ -1,5 +1,21 @@
 # Prompt history
 
+The log.ts script should be extended with an flag plan that takes a markdown file path and adds it directly to the plan section of the ticket.
+
+Extend the code.ts hook to find more issues. Add two more issue kinds: forbidden imports and forbidden terminology. Forbidden imports checks if imports are structurally forbidden. Forbidden terminology checks if specific terminology is used somewhere where it shouldnt be allowed e.g. when domain-specific terminology is used in general-purpose files.
+Here some rules for js/js:
+- elements.tsx are pure reusable ui elements library that are indepedent of semio. They should not import anything from sketchpad or any app or contain any semio domain-specific terminology (kit, design, type, port, connection, docs, feedback). elements.tsx is the only file that can import third party libraries and reexpose them as components. All other files in the js/js folder should be self-contained and dependency free from any other library outside of the js/js folder.
+- Sketchpad.tsx and the other app files (Home.tsx, Kit.tsx, Design.tsx, Type.tsx, Quality.tsx, Docs.tsx, Feedback.tsx) should follow the open/closed principle. Sketchpad.tsx should only import from elements.tsx, semio.ts, shared.ts. The apps should only import from Sketchpad.tsx, elements.tsx, semio.ts, shared.ts. 
+If the file is deleted then sketchpad should work, if a new file is added, the new app should work. The hook should scan for all static and dynamic imports that violate the above rules. 
+
+Sketchpad.tsx, elements.tsx and APP.tsx should be refactored to follow the open/closed principle. All app specific logic should be part of the APP.tsx files. elements.tsx should not import anything from sketchpad or any app. There should be no design, type, etc logic part of Sketchpad.tsx file. If the file is deleted then sketchpad should work, if a new file is added, the new app should work.
+E.g.
+- Get rid of designAppModuleCache, kitAppModuleCache, getDesignAppHooks
+- The general SelectionTree shouldnt import from docs app in getDocsRegistry. 
+
+
+Find alle statemanagment code smells. Make sure components dont overfetch and use the correct mechnanism. Create a detailed refactor plan.
+
 As the panels are above the windows and they need to have a single unit spacing to them, they need to have double spacing to the sides, navbar and footer. Currently they only have single spacing to everything.
 
 The element border color should always be equal to the hover color. This changes according level. E.g. the element border color for panels are not equal the panel hover color. This should generally not be possible.

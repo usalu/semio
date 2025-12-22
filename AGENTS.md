@@ -28,6 +28,14 @@ Region blocks MUST be properly nested and MUST be closed with a matching named e
 
 Developer documentation MUST be centralized in the root `README.md` and `AGENTS.md`; non-root `AGENTS.md` files and non-package `README.md` files are forbidden.
 
+Shared UI element libraries MUST remain domain-neutral and MUST NOT use domain-specific terminology (kit, design, type, port, connection, docs, feedback).
+
+Shared UI element libraries MUST NOT import Sketchpad shells or app modules.
+
+Only shared UI element libraries may import third-party dependencies; other JavaScript workspace sources MUST import within the workspace.
+
+Sketchpad shell and app modules MUST only import shared elements, shared utilities, and core domain modules.
+
 ### Ticket
 
 A `ticket` is a development artifact that tracks a task over multiple `iterations`.
@@ -1238,7 +1246,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ ├── i18n.ts # i18n validation hook (generates JSON report)
 │ ├── prettier.ts # Prettier formatter hook (applies formatting)
 │ ├── eslint.ts # ESLint linting hook (generates JSON report)
-│ ├── code.ts # Codebase scan hook (comments, SPDX headers, regions) (generates JSON report)
+│ ├── code.ts # Codebase scan hook (comments, SPDX headers, regions, js/js forbidden imports, js/js forbidden terminology) (generates JSON report)
 │ ├── typescript.ts # TypeScript compiler check hook (generates JSON report)
 │ └── ruff.ts # Python Ruff formatter and linter hook (applies formatting, generates JSON report)
 ├── reports # Generated validation reports (gitignored)
@@ -1540,6 +1548,8 @@ Shared react components. The main component is Sketchpad. Sketchpad is used in t
   - `machines.ts` - Unified XState machine with all app state
   - `xstate-hooks.ts` - Clean React hooks using XState selectors
   - State is ALWAYS accessed over hooks. Mutation ALWAYS is via actor events. NEVER use useState for app state.
+- **Keyed Initialization Pattern**: App initialization hooks (e.g., `useDesignAppInitialize`, `useTypeAppInitialize`, `useKitAppYjsToXStateSync`) use keyed refs to track initialization scope. Instead of boolean `hasInitialized`, use `initializedKeyRef = useRef<string | null>(null)` with composite keys like `${kitGuid}:${designGuid}` to properly reinitialize when route scope changes.
+- **Event Handler Registration**: ONLY use `registerEventHandler` for XState event handling. The legacy `registerRuntimeAction` mechanism exists but MUST NOT be duplicated with `registerEventHandler`. Each event should have exactly ONE registration.
 - **Granular Hook Architecture**: All app state hooks follow the `[value, setter, canSet]` tuple pattern:
   - **Pattern**: `const [value, setValue, canSetValue] = useAppValue();`
   - **Types**: `HookResult<T>` for read-write hooks, `HookNoSetResult<T>` for read-only hooks

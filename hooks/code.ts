@@ -1,12 +1,13 @@
 #!/usr/bin/env tsx
 // SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (C) 2025 Ueli Saluz
 import { execSync } from "child_process";
 import { existsSync, readFileSync, unlinkSync, writeFileSync } from "fs";
 import { basename, dirname, join } from "path";
 import * as ts from "typescript";
 
 type CodeLanguage = "typescript" | "python" | "csharp" | "meta";
-type CodeIssueKind = "comment" | "temporary_log" | "missing_license_header" | "extra_dev_docs" | "region_name_missing" | "region_mismatch" | "region_unclosed" | "unreadable_file";
+type CodeIssueKind = "comment" | "temporary_log" | "missing_license_header" | "extra_dev_docs" | "region_name_missing" | "region_mismatch" | "region_unclosed" | "unreadable_file" | "forbidden_import" | "forbidden_terminology";
 type CodeIssue = { path: string; language: CodeLanguage; kind: CodeIssueKind; line: number; column: number; message: string; excerpt?: string };
 type CodeReport = { timestamp: string; status: "success" | "error"; summary: { filesScanned: number; issues: number; byKind: Record<CodeIssueKind, number>; byLanguage: Record<CodeLanguage, number> }; issues: CodeIssue[] };
 
@@ -232,6 +233,94 @@ function getTypescriptStringLiteralText(node: ts.Node): string | null {
   }
   return null;
 }
+// #region JsJsRules
+// #region JsJsRuleConstants
+const jsJsRoot = "js/js/";
+const sketchpadAppNames = ["Home", "Kit", "Design", "Type", "Quality", "Docs", "Feedback"];
+const sketchpadAppPaths = new Set(sketchpadAppNames.map((name) => `js/js/sketchpad/${name}.tsx`));
+const sketchpadImportTargets = new Set(["js/js/sketchpad/elements", "js/js/sketchpad/shared", "js/js/semio"]);
+const appImportTargets = new Set(["js/js/sketchpad/Sketchpad", ...sketchpadImportTargets]);
+// #endregion JsJsRuleConstants
+// #region JsJsRuleScans
+function scanTypescriptForbiddenImports(content: string, lines: string[], path: string): CodeIssue[] {
+  const issues: CodeIssue[] = [];
+  const normalizedPath = normalizePath(path);
+  if (!normalizedPath.startsWith(jsJsRoot)) return issues;
+  const isElementsFile = normalizedPath.endsWith("/elements.tsx");
+  const isSketchpadFile = normalizedPath === "js/js/sketchpad/Sketchpad.tsx";
+  const isAppFile = sketchpadAppPaths.has(normalizedPath);
+  const sourceFile = ts.createSourceFile(path, content, ts.ScriptTarget.Latest, true, path.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
+  const addIssue = (node: ts.Node, message: string): void => {
+    const { line, character } = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
+    const lineNumber = line + 1;
+    issues.push({ path, language: "typescript", kind: "forbidden_import", line: lineNumber, column: character + 1, message, excerpt: getExcerpt(lines[lineNumber - 1] ?? "") });
+  };
+  const checkModuleText = (node: ts.Node, moduleText: string): void => {
+    if (isElementsFile && moduleText.startsWith(".")) {
+      addIssue(node, "Relative imports are forbidden in elements.tsx");
+      return;
+    }
+    if (isSketchpadFile || isAppFile) {
+      if (!moduleText.startsWith(".")) {
+        addIssue(node, "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts");
+        return;
+      }
+      const resolved = normalizePath(join(dirname(normalizedPath), moduleText)).replace(/\.[^.\/]+$/, "");
+      if ((isSketchpadFile && !sketchpadImportTargets.has(resolved)) || (isAppFile && !appImportTargets.has(resolved))) addIssue(node, "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts");
+      return;
+    }
+    if (!moduleText.startsWith(".")) {
+      if (!isElementsFile) addIssue(node, "Imports outside js/js are forbidden");
+      return;
+    }
+    if (!normalizePath(join(dirname(normalizedPath), moduleText)).startsWith(jsJsRoot)) addIssue(node, "Imports outside js/js are forbidden");
+  };
+  const visit = (node: ts.Node): void => {
+    if (ts.isImportDeclaration(node) && ts.isStringLiteralLike(node.moduleSpecifier)) checkModuleText(node.moduleSpecifier, node.moduleSpecifier.text);
+    if (ts.isExportDeclaration(node) && node.moduleSpecifier && ts.isStringLiteralLike(node.moduleSpecifier)) checkModuleText(node.moduleSpecifier, node.moduleSpecifier.text);
+    if (ts.isImportEqualsDeclaration(node) && ts.isExternalModuleReference(node.moduleReference) && ts.isStringLiteralLike(node.moduleReference.expression)) checkModuleText(node.moduleReference.expression, node.moduleReference.expression.text);
+    if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) {
+      const argText = getTypescriptStringLiteralText(node.arguments[0] ?? node);
+      if (argText !== null) checkModuleText(node.arguments[0] ?? node, argText);
+    }
+    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === "require") {
+      const argText = getTypescriptStringLiteralText(node.arguments[0] ?? node);
+      if (argText !== null) checkModuleText(node.arguments[0] ?? node, argText);
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(sourceFile);
+  return issues;
+}
+
+function scanTypescriptForbiddenTerminology(content: string, lines: string[], path: string): CodeIssue[] {
+  const issues: CodeIssue[] = [];
+  const normalizedPath = normalizePath(path);
+  if (!normalizedPath.startsWith(jsJsRoot) || !normalizedPath.endsWith("/elements.tsx")) return issues;
+  const sourceFile = ts.createSourceFile(path, content, ts.ScriptTarget.Latest, true, path.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
+  const forbiddenRegex = /\b(kit|design|type|port|connection|docs|feedback)\b/i;
+  const addIssue = (node: ts.Node, term: string): void => {
+    const { line, character } = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
+    const lineNumber = line + 1;
+    issues.push({ path, language: "typescript", kind: "forbidden_terminology", line: lineNumber, column: character + 1, message: `Forbidden terminology \"${term}\"`, excerpt: getExcerpt(lines[lineNumber - 1] ?? "") });
+  };
+  const visit = (node: ts.Node): void => {
+    if (ts.isJsxText(node)) {
+      const match = node.text.match(forbiddenRegex);
+      if (match) addIssue(node, match[0]);
+    }
+    const literalText = getTypescriptStringLiteralText(node);
+    if (literalText !== null) {
+      const match = literalText.match(forbiddenRegex);
+      if (match) addIssue(node, match[0]);
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(sourceFile);
+  return issues;
+}
+// #endregion JsJsRuleScans
+// #endregion JsJsRules
 
 function scanTypescriptTemporaryLogs(content: string, lines: string[], path: string, licenseHeaderEndLine: number): CodeIssue[] {
   const issues: CodeIssue[] = [];
@@ -1040,7 +1129,7 @@ function writeReport(report: CodeReport): void {
 function run(): void {
   const issues: CodeIssue[] = [];
   let filesScanned = 0;
-  const byKind: Record<CodeIssueKind, number> = { comment: 0, temporary_log: 0, missing_license_header: 0, extra_dev_docs: 0, region_name_missing: 0, region_mismatch: 0, region_unclosed: 0, unreadable_file: 0 };
+  const byKind: Record<CodeIssueKind, number> = { comment: 0, temporary_log: 0, missing_license_header: 0, extra_dev_docs: 0, region_name_missing: 0, region_mismatch: 0, region_unclosed: 0, unreadable_file: 0, forbidden_import: 0, forbidden_terminology: 0 };
   const byLanguage: Record<CodeLanguage, number> = { typescript: 0, python: 0, csharp: 0, meta: 0 };
   const repoFiles = getRepoFiles().filter(shouldScan);
   const packageRoots = getPackageRootDirs(repoFiles);
@@ -1119,6 +1208,18 @@ function run(): void {
     for (const issue of commentIssues) {
       issues.push(issue);
       byKind[issue.kind] += 1;
+    }
+    if (language === "typescript") {
+      const forbiddenImportIssues = scanTypescriptForbiddenImports(content, lines, path);
+      for (const issue of forbiddenImportIssues) {
+        issues.push(issue);
+        byKind[issue.kind] += 1;
+      }
+      const forbiddenTerminologyIssues = scanTypescriptForbiddenTerminology(content, lines, path);
+      for (const issue of forbiddenTerminologyIssues) {
+        issues.push(issue);
+        byKind[issue.kind] += 1;
+      }
     }
   }
   const report: CodeReport = { timestamp: new Date().toISOString(), status: issues.length === 0 ? "success" : "error", summary: { filesScanned, issues: issues.length, byKind, byLanguage }, issues };

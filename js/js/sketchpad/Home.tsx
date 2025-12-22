@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: AGPL-3.0-only
 // #region Header
 
 // App.tsx
@@ -52,7 +51,7 @@ import { generateUniqueName, guid, Guid, importKit, Kit, KitShallow } from "../s
 import { docsRegistry } from "./Docs";
 import { Action, Input, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Spinner, Table, TableAvatar, TableColumn, Textarea, Toggle, ToggleGroup, TreeContent, TreeItem } from "./elements";
 import type { AppConfig, AppEdit, AppPlugin, PanelDefinition, PanelVisibility } from "./shared";
-import { createPanelDefinition, Expertise, Mode, PanelKind, registerAppPlugin, registerEventHandler, registerRuntimeAction, Theme } from "./shared";
+import { createPanelDefinition, Expertise, Mode, PanelKind, registerAppPlugin, registerEventHandler, Theme } from "./shared";
 import {
   AppWindowConfig,
   Canvas,
@@ -215,48 +214,6 @@ if (typeof window !== "undefined") {
       return hover !== undefined && (hover.kits?.length ?? 0) > 0;
     },
     action: (context: any) => ({ homeApp: { ...context.homeApp, hover: undefined } }),
-  });
-
-  registerRuntimeAction("homeTogglePanel", (context: any, event: any) => {
-    if (event.type !== "HOME.TOGGLE_PANEL") return {};
-    return {
-      homeApp: {
-        ...context.homeApp,
-        panelVisibility: {
-          ...context.homeApp.panelVisibility,
-          [event.panel]: !context.homeApp.panelVisibility[event.panel],
-        },
-      },
-    };
-  });
-  registerRuntimeAction("homeSetPanelVisibility", (context: any, event: any) => {
-    if (event.type !== "HOME.SET_PANEL_VISIBILITY") return {};
-    return { homeApp: { ...context.homeApp, panelVisibility: event.panelVisibility } };
-  });
-  registerRuntimeAction("homeSetSort", (context: any, event: any) => {
-    if (event.type !== "HOME.SET_SORT") return {};
-    return { homeApp: { ...context.homeApp, sortColumn: event.column, sortDirection: event.direction } };
-  });
-  registerRuntimeAction("homeSelectKit", (context: any, event: any) => {
-    if (event.type !== "HOME.SELECT_KIT") return {};
-    const kits = context.homeApp.selection?.kits || [];
-    if (kits.includes(event.guid)) return {};
-    return { homeApp: { ...context.homeApp, selection: { kits: [...kits, event.guid] } } };
-  });
-  registerRuntimeAction("homeDeselectKit", (context: any, event: any) => {
-    if (event.type !== "HOME.DESELECT_KIT") return {};
-    const kits = context.homeApp.selection?.kits || [];
-    return { homeApp: { ...context.homeApp, selection: { kits: kits.filter((k: Guid) => k !== event.guid) } } };
-  });
-  registerRuntimeAction("homeClearSelection", (context: any) => ({ homeApp: { ...context.homeApp, selection: undefined } }));
-  registerRuntimeAction("homeSetHover", (context: any, event: any) => {
-    if (event.type !== "HOME.SET_HOVER") return {};
-    return { homeApp: { ...context.homeApp, hover: { kits: event.kits } } };
-  });
-  registerRuntimeAction("homeClearHover", (context: any) => ({ homeApp: { ...context.homeApp, hover: undefined } }));
-  registerRuntimeAction("homeSetWindowLayout", (context: any, event: any) => {
-    if (event.type !== "HOME.SET_WINDOW_LAYOUT") return {};
-    return { homeApp: { ...context.homeApp, windowLayout: event.windowLayout } };
   });
 
   registerEventHandler("HOME.SET_WINDOW_LAYOUT", {
@@ -1187,8 +1144,7 @@ const HomeTableContent: FC = () => {
       prevRowsRef.current = itemsKey;
       setFocusItems(items);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rows]);
+  }, [rows, setFocusItems]);
 
   useEffect(() => {
     const handleFocus = (itemId: string) => {
@@ -1196,8 +1152,7 @@ const HomeTableContent: FC = () => {
     };
     setOnFocusItem(handleFocus);
     return () => setOnFocusItem(undefined);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [setOnFocusItem]);
 
   const handleCreateKit = (type: KitKind) => {
     const existingNames = kits.map((k) => k.name);

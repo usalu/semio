@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: AGPL-3.0-only
 // #region Header
 
 // Feedback.tsx
@@ -30,7 +29,7 @@ import { useNavigate } from "react-router";
 import { useLabel } from "../i18n";
 import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Textarea } from "./elements";
 import type { AppConfig, AppPlugin, HookResult, PanelDefinition } from "./shared";
-import { conditionalHookResult, createPanelDefinition, deduplicateWindowLayout, PanelKind, parseWindowLayout, registerAppPlugin, registerEventHandler, registerRuntimeAction, stringifyWindowLayout, type AppWindowConfig } from "./shared";
+import { conditionalHookResult, createPanelDefinition, deduplicateWindowLayout, PanelKind, parseWindowLayout, registerAppPlugin, registerEventHandler, stringifyWindowLayout, type AppWindowConfig } from "./shared";
 import { Canvas, createDefaultLayout, FeedbackAppKind, FeedbackAppState, FeedbackFormData, FeedbackKind, LayoutCanvas, useAddPanelSection, useAppType, useRemovePanelSection, useSettings, useSketchpadActor, useSketchpadCommands } from "./Sketchpad";
 
 // #endregion Imports
@@ -121,65 +120,6 @@ if (typeof window !== "undefined") {
     action: (context: any, event: any) => ({
       feedbackApp: { ...context.feedbackApp, error: event.error, isSubmitting: false },
     }),
-  });
-
-  registerRuntimeAction("feedbackTogglePanel", (context: any, event: any) => {
-    if (event.type !== "FEEDBACK.TOGGLE_PANEL") return {};
-    return {
-      feedbackApp: {
-        ...context.feedbackApp,
-        panelVisibility: {
-          ...context.feedbackApp.panelVisibility,
-          [event.panel]: !context.feedbackApp.panelVisibility[event.panel],
-        },
-      },
-    };
-  });
-  registerRuntimeAction("feedbackSetFormData", (context: any, event: any) => {
-    if (event.type !== "FEEDBACK.SET_FORM_DATA") return {};
-    return {
-      feedbackApp: {
-        ...context.feedbackApp,
-        formData: { ...context.feedbackApp.formData, ...event.data },
-      },
-    };
-  });
-  registerRuntimeAction("feedbackResetForm", (context: any, event: any) => {
-    if (event.type !== "FEEDBACK.RESET_FORM") return {};
-    return {
-      feedbackApp: {
-        ...context.feedbackApp,
-        formData: {
-          kind: "bug",
-          title: "",
-          description: "",
-          app: undefined,
-          name: undefined,
-          email: undefined,
-        },
-        isSubmitting: false,
-        isSubmitted: false,
-        error: undefined,
-      },
-    };
-  });
-  registerRuntimeAction("feedbackSetSubmitting", (context: any, event: any) => {
-    if (event.type !== "FEEDBACK.SET_SUBMITTING") return {};
-    return {
-      feedbackApp: { ...context.feedbackApp, isSubmitting: event.isSubmitting },
-    };
-  });
-  registerRuntimeAction("feedbackSetSubmitted", (context: any, event: any) => {
-    if (event.type !== "FEEDBACK.SET_SUBMITTED") return {};
-    return {
-      feedbackApp: { ...context.feedbackApp, isSubmitted: event.isSubmitted, isSubmitting: false },
-    };
-  });
-  registerRuntimeAction("feedbackSetError", (context: any, event: any) => {
-    if (event.type !== "FEEDBACK.SET_ERROR") return {};
-    return {
-      feedbackApp: { ...context.feedbackApp, error: event.error, isSubmitting: false },
-    };
   });
 }
 

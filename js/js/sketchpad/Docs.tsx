@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: AGPL-3.0-only
 // #region Header
 
 // Docs.tsx
@@ -1008,7 +1007,7 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
     // Use setTimeout to wait for MDX to render
     const timer = setTimeout(extractHeadings, 100);
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- setFocusItems is stable via useCallback
   }, [MDXContent, registerHeading]);
 
   useEffect(() => {
@@ -1017,7 +1016,7 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
     };
     setOnFocusItem(handleFocus);
     return () => setOnFocusItem(undefined);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- setOnFocusItem is stable via useCallback
   }, []);
 
   // Render tree node recursively

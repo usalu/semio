@@ -564,6 +564,31 @@ function reopenTicket(year: number, month: number, day: number, slug: string): T
   return ticket;
 }
 
+function addPlanToTicket(year: number, month: number, day: number, slug: string, planFilePath: string): Ticket {
+  if (!existsSync(planFilePath)) throw new Error(`Plan file not found: ${planFilePath}`);
+  const planContent = readFileSync(planFilePath, "utf-8").trim();
+  const ticket = readTicket(year, month, day, slug);
+  const content = ticket.content;
+  const planHeaderRegex = /^# Plan\s*$/m;
+  const match = content.match(planHeaderRegex);
+  if (!match) throw new Error(`No "# Plan" section found in ticket: ${slug}`);
+  const planHeaderIndex = match.index!;
+  const afterPlanHeader = planHeaderIndex + match[0].length;
+  const nextSectionRegex = /^# /m;
+  const remainingContent = content.slice(afterPlanHeader);
+  const nextSectionMatch = remainingContent.match(nextSectionRegex);
+  let newContent: string;
+  if (nextSectionMatch) {
+    const nextSectionIndex = afterPlanHeader + nextSectionMatch.index!;
+    newContent = content.slice(0, afterPlanHeader) + "\n\n" + planContent + "\n\n" + content.slice(nextSectionIndex);
+  } else {
+    newContent = content.slice(0, afterPlanHeader) + "\n\n" + planContent + "\n";
+  }
+  ticket.content = newContent;
+  writeTicket(ticket);
+  return ticket;
+}
+
 function deleteTicket(year: number, month: number, day: number, slug: string): void {
   const ticketPath = getTicketPath(year, month, day, slug);
   if (!existsSync(ticketPath)) throw new Error(`Ticket not found: ${ticketPath}`);
@@ -662,6 +687,8 @@ Commands:
   ticket finish <slug>                 Finish the ticket (requires latest iteration finished)
                                        Required: --summary="..."
   ticket reopen <slug>                 Reopen a finished ticket (removes total files/lines)
+  ticket plan <slug>                   Add a plan to the ticket from a markdown file
+                                       Required: --plan=path/to/plan.md
   ticket migrate prompts               Backfill missing ticket prompts from the first iteration prompt
   ticket read <year> <month> <day> <slug>     Read a ticket
   ticket delete <year> <month> <day> <slug>   Delete a ticket
@@ -696,6 +723,7 @@ Examples:
   tsx scripts/log.ts ticket iteration finish MY-TASK --file=scripts/log.ts --file=README.md
   tsx scripts/log.ts ticket finish MY-TASK --summary="Implement new feature"
   tsx scripts/log.ts ticket reopen MY-TASK
+  tsx scripts/log.ts ticket plan MY-TASK --plan=docs/plan.md
   tsx scripts/log.ts ticket read 2025 12 16 MY-TASK
   tsx scripts/log.ts ticket list 2025 12
   tsx scripts/log.ts ticket search "drag drop"
@@ -844,6 +872,19 @@ if (require.main === module) {
           console.log(`Reopened ticket: ${ticket.path}`);
           console.log(`Status: ${ticket.frontmatter.status}`);
           console.log(`Iterations preserved: ${ticket.frontmatter.iterations.length}`);
+          break;
+        }
+        if (sub === "plan") {
+          const [slugArg, ...flags] = rest;
+          if (!slugArg) {
+            console.error("Error: Missing slug");
+            printUsage();
+            process.exit(1);
+          }
+          const planPath = requireFlag(flags, "plan");
+          const latest = findLatestTicketBySlug(slugArg);
+          const ticket = addPlanToTicket(latest.year, latest.month, latest.day, latest.slug, planPath);
+          console.log(`Added plan to ticket: ${ticket.path}`);
           break;
         }
         if (sub === "read") {

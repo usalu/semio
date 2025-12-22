@@ -1,5 +1,4 @@
 #!/usr/bin/env tsx
-// SPDX-License-Identifier: AGPL-3.0-only
 import { execFileSync } from "child_process";
 import { join } from "path";
 
@@ -45,7 +44,7 @@ function parseArgs(argv: string[]): ParsedArgs {
 const rootDir = join(__dirname);
 type StepResult = { ok: boolean; label: string };
 function run(command: string, args: string[] = []): void {
-  execFileSync(command, args, { stdio: "inherit", cwd: rootDir });
+  execFileSync(command, args, { stdio: "inherit", cwd: rootDir, shell: true });
 }
 function runStep(label: string, command: string, args: string[] = []): StepResult {
   try {

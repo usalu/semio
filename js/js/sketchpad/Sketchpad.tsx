@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: AGPL-3.0-only
 // #region Header
 
 // This program is free software: you can redistribute it and/or modify
@@ -25,7 +24,9 @@ import {
   MessageCircle as FeedbackIcon,
   FocusIcon,
   HomeIcon,
+  HudPanelIcon,
   LayoutIcon,
+  LeftSidePanelIcon,
   LocalKitIcon,
   Maximize2Icon,
   Minimize2Icon,
@@ -33,6 +34,7 @@ import {
   NavigateForwardIcon,
   NavigateUpIcon,
   RemoteKitIcon,
+  RightSidePanelIcon,
   SearchIcon,
   TemporaryKitIcon,
   TutorialIcon,
@@ -190,6 +192,7 @@ import {
   getEventHandler,
   getValueAtPath,
   HookResult,
+  HudPanelTab,
   KitAppId,
   KitCommandContext,
   KitCommandResult,
@@ -202,7 +205,7 @@ import {
   PanelConfig,
   PanelDefinition,
   PanelKey,
-  PanelKind,
+  PanelPosition,
   panelKindConfigs,
   PanelSection,
   PanelSections,
@@ -214,7 +217,6 @@ import {
   RemoteProviders,
   RouteSegment,
   SidePanelTab,
-  HudPanelTab,
   SketchpadCommandContext,
   SketchpadCommandResult,
   SketchpadDiff,
@@ -243,10 +245,7 @@ import {
 } from "./shared";
 import { Tutorial, TutorialProvider, TutorialStore, useAvailableTutorials } from "./Tutorials";
 let designAppModuleCache: any = null;
-let homeAppModuleCache: any = null;
 let kitAppModuleCache: any = null;
-let qualityAppModuleCache: any = null;
-let typeAppModuleCache: any = null;
 
 const getDesignAppHooks = () => {
   return {
@@ -316,61 +315,11 @@ const getDesignAppHooks = () => {
   };
 };
 
-const getHomeAppHooks = () => {
-  return {
-    useHomeCommands: () => {
-      if (homeAppModuleCache) {
-        return homeAppModuleCache.useHomeCommands();
-      }
-      return {
-        togglePanel: () => {},
-        selectKit: () => {},
-        addKitToSelection: () => {},
-        removeKitFromSelection: () => {},
-        selectKits: () => {},
-        deselectAll: () => {},
-        setSortColumn: () => {},
-        setSortDirection: () => {},
-        toggleSort: () => {},
-        execute: () => Promise.resolve({}),
-      };
-    },
-  };
-};
-
 export const getKitAppHooks = () => {
   return {
     useKitAppCommands: (id?: { kit: string }) => {
       if (kitAppModuleCache) {
         return kitAppModuleCache.useKitAppCommands(id);
-      }
-      return {
-        togglePanel: () => {},
-        execute: () => Promise.resolve({}),
-      };
-    },
-  };
-};
-
-const getQualityAppHooks = () => {
-  return {
-    useQualityAppCommands: (id?: { kit: string; quality: string }) => {
-      if (qualityAppModuleCache) {
-        return qualityAppModuleCache.useQualityAppCommands(id);
-      }
-      return {
-        togglePanel: () => {},
-        execute: () => Promise.resolve({}),
-      };
-    },
-  };
-};
-
-const getTypeAppHooks = () => {
-  return {
-    useTypeAppCommands: (id?: { kit: string; type: string }) => {
-      if (typeAppModuleCache) {
-        return typeAppModuleCache.useTypeAppCommands(id);
       }
       return {
         togglePanel: () => {},
@@ -571,9 +520,6 @@ export abstract class Store<TState> {
     };
   }
 
-  /**
-   * Get the value at a specific path in the Y.js structure.
-   */
   getPathSnapshot(path: YPath): any {
     return getValueAtPath(this.yMap, path);
   }
@@ -10780,9 +10726,6 @@ export class SketchpadStore {
       }),
       import("./Kit").then((m) => {
         kitAppModuleCache = m;
-        if (typeof window !== "undefined" && (window as any).__KIT_APP_MODULE_CACHE__) {
-          (window as any).__KIT_APP_MODULE_CACHE__.kitAppModuleCache = m;
-        }
       }),
       import("./Type").then((m) => {
         typeAppModuleCache = m;
@@ -12216,32 +12159,20 @@ export function useSketchpadActions() {
   );
 }
 
-export function useXStateField<T, TEvent extends { type: string }>(
-  value: T,
-  canEvent: TEvent,
-  createEvent: (next: T) => TEvent,
-): Field<T> {
+export function useXStateField<T, TEvent extends { type: string }>(value: T, canEvent: TEvent, createEvent: (next: T) => TEvent): Field<T> {
   const actor = useSketchpadActor();
   const canSet = useSelector(actor, (snapshot) => snapshot.can(canEvent as Parameters<typeof snapshot.can>[0]));
   return useMemo(() => createFieldValue(value, (next: T) => actor.send(createEvent(next) as Parameters<typeof actor.send>[0]), canSet), [value, actor, createEvent, canSet]);
 }
 
-export function useXStateFieldWithScope<T, TEvent extends { type: string }>(
-  value: T,
-  canEvent: TEvent,
-  createEvent: (next: T) => TEvent,
-  hasScope: boolean,
-): Field<T> {
+export function useXStateFieldWithScope<T, TEvent extends { type: string }>(value: T, canEvent: TEvent, createEvent: (next: T) => TEvent, hasScope: boolean): Field<T> {
   const actor = useSketchpadActor();
   const canSetFromSnapshot = useSelector(actor, (snapshot) => snapshot.can(canEvent as Parameters<typeof snapshot.can>[0]));
   const canSet = canSetFromSnapshot || hasScope;
   return useMemo(() => createFieldValue(value, (next: T) => actor.send(createEvent(next) as Parameters<typeof actor.send>[0]), canSet), [value, actor, createEvent, canSet]);
 }
 
-export function useXStateAction<TEvent extends { type: string }>(
-  canEvent: TEvent,
-  event: TEvent,
-): ActionField {
+export function useXStateAction<TEvent extends { type: string }>(canEvent: TEvent, event: TEvent): ActionField {
   const actor = useSketchpadActor();
   const canExecute = useSelector(actor, (snapshot) => snapshot.can(canEvent as Parameters<typeof snapshot.can>[0]));
   return useMemo(() => createActionValue(() => actor.send(event as Parameters<typeof actor.send>[0]), canExecute), [actor, event, canExecute]);
@@ -14938,65 +14869,30 @@ const Focus: FC = ({}) => {
 };
 
 const PanelToggles: FC = ({}) => {
-  const appType = useAppType();
   const visiblePanels = useAppPanelVisibility();
   const appCommands = useAppCommands();
-  const leftTabs = useSidePanelTabs("left");
-  const rightTabs = useSidePanelTabs("right");
-  const hudTabs = useHudPanelTabs();
-
-  const hasLeftTabs = leftTabs.length > 0;
-  const hasRightTabs = rightTabs.length > 0;
-  const hasHudTabs = hudTabs.length > 0;
-
-  const isLeftOpen = visiblePanels.leftSidePanel ?? false;
-  const isRightOpen = visiblePanels.rightSidePanel ?? false;
-  const isHudOpen = visiblePanels.hudPanel ?? false;
-
-  const handleLeftToggle = useCallback(
-    (pressed: boolean) => {
-      appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.leftSidePanel", "leftSidePanel");
+  const appType = useAppType();
+  const panelConfigs = usePanelConfigs();
+  const panels = panelConfigs[appType] ?? [];
+  const toggleablePanels = useMemo(() => panels.filter((p) => p.position !== PanelPosition.BOTTOM), [panels]);
+  const handleToggle = useCallback(
+    (panelId: string, panelKey: keyof PanelVisibility) => {
+      appCommands?.togglePanel?.(panelId, panelKey);
     },
     [appCommands],
   );
-
-  const handleHudToggle = useCallback(
-    (pressed: boolean) => {
-      appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.hudPanel", "hudPanel");
-    },
-    [appCommands],
-  );
-
-  const handleRightToggle = useCallback(
-    (pressed: boolean) => {
-      appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.rightSidePanel", "rightSidePanel");
-    },
-    [appCommands],
-  );
-
-  const LeftIcon = leftTabs[0]?.icon;
-  const HudIcon = hudTabs[0]?.icon;
-  const RightIcon = rightTabs[0]?.icon;
-
-  if (!hasLeftTabs && !hasHudTabs && !hasRightTabs) return null;
-
+  if (toggleablePanels.length === 0) return null;
   return (
     <div className="flex items-stretch border border-element overflow-hidden h-medium divide-x divide-element">
-      {hasLeftTabs && (
-        <Toggle kind="icon" id="semio.sketchpad.navbar.panelToggle.leftSidePanel" pressed={isLeftOpen} onPressedChange={handleLeftToggle} className="border-0">
-          {LeftIcon ? <LeftIcon size={16} /> : <LayoutIcon size={16} />}
-        </Toggle>
-      )}
-      {hasHudTabs && (
-        <Toggle kind="icon" id="semio.sketchpad.navbar.panelToggle.hudPanel" pressed={isHudOpen} onPressedChange={handleHudToggle} className="border-0">
-          {HudIcon ? <HudIcon size={16} /> : <FocusIcon size={16} />}
-        </Toggle>
-      )}
-      {hasRightTabs && (
-        <Toggle kind="icon" id="semio.sketchpad.navbar.panelToggle.rightSidePanel" pressed={isRightOpen} onPressedChange={handleRightToggle} className="border-0">
-          {RightIcon ? <RightIcon size={16} /> : <DocumentIcon size={16} />}
-        </Toggle>
-      )}
+      {toggleablePanels.map((panel) => {
+        const IconComponent = panel.icon;
+        const panelKey = panel.key as keyof PanelVisibility;
+        return (
+          <Toggle key={panel.id} kind="icon" id={panel.id} pressed={visiblePanels[panelKey] ?? false} onPressedChange={() => handleToggle(panel.id, panelKey)} className="border-0">
+            <IconComponent size={16} />
+          </Toggle>
+        );
+      })}
     </div>
   );
 };

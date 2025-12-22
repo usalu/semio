@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: AGPL-3.0-only
 // #region Header
 
 // This program is free software: you can redistribute it and/or modify
@@ -1170,12 +1169,7 @@ function ActionGroup({ className, children, ...props }: ActionGroupProps) {
   const borderClass = getLevelBorderElementClass(level);
   const divideClass = getLevelDivideElementClass(level);
   return (
-    <div
-      data-slot="action-group"
-      data-level={level}
-      className={cn("group/action-group flex h-small items-center border divide-x overflow-hidden", borderClass, divideClass, className)}
-      {...props}
-    >
+    <div data-slot="action-group" data-level={level} className={cn("group/action-group flex h-small items-center border divide-x overflow-hidden", borderClass, divideClass, className)} {...props}>
       <ActionGroupContext.Provider value={{ level }}>{children}</ActionGroupContext.Provider>
     </div>
   );
@@ -1365,12 +1359,7 @@ function ButtonGroup({ className, id, showLabel, children, ...props }: ButtonGro
   const borderClass = getLevelBorderElementClass(level);
   const divideClass = getLevelDivideElementClass(level);
   const buttonGroupElement = (
-    <div
-      data-slot="button-group"
-      data-level={level}
-      className={cn("group/button-group flex w-fit items-center border divide-x overflow-hidden h-medium", borderClass, divideClass, className)}
-      {...props}
-    >
+    <div data-slot="button-group" data-level={level} className={cn("group/button-group flex w-fit items-center border divide-x overflow-hidden h-medium", borderClass, divideClass, className)} {...props}>
       <ButtonGroupContext.Provider value={{ level }}>{children as React.ReactNode}</ButtonGroupContext.Provider>
     </div>
   );
@@ -2508,13 +2497,7 @@ function ToggleGroup({ className, id, showLabel, items, kind = "single", ...rest
   const divideClass = getLevelDivideElementClass(level);
 
   const toggleGroupElement = (
-    <ToggleGroupPrimitive.Root
-      data-slot="toggle-group"
-      id={id}
-      type={kind}
-      className={cn("group/toggle-group flex w-fit items-center border overflow-hidden h-medium divide-x", borderClass, divideClass, className)}
-      {...(restProps as any)}
-    >
+    <ToggleGroupPrimitive.Root data-slot="toggle-group" id={id} type={kind} className={cn("group/toggle-group flex w-fit items-center border overflow-hidden h-medium divide-x", borderClass, divideClass, className)} {...(restProps as any)}>
       <ToggleGroupContext.Provider value={{ level }}>
         {items.map((item) => (
           <ToggleGroupItem key={item.value} {...item} />
@@ -3089,7 +3072,7 @@ function Navbar({ items, className }: NavbarProps) {
   const level = useLevel();
   const bgClass = getLevelBgClass(level);
   return (
-    <nav id="navbar" data-slot="navbar" className={cn("border-b h-large z-navbar", bgClass, className)}>
+    <nav id="semio.sketchpad.navbar" data-slot="navbar" className={cn("border-b h-large z-navbar", bgClass, className)}>
       <div className="p-single flex gap-single items-center min-w-0">
         {items.map((item, index) => (
           <div key={item.key ?? index} className={cn("h-medium flex items-center min-w-0", item.className)}>
@@ -4178,7 +4161,6 @@ const Panel: React.FC<PanelProps> = ({
   opacity = 1,
   panelKey,
 }) => {
-  const { t } = useTranslation();
   const mode = useTooltipMode();
   const [isResizeHovered, setIsResizeHovered] = React.useState(false);
   const [isResizing, setIsResizing] = React.useState(false);
@@ -4361,19 +4343,7 @@ export interface SidePanelProps {
   className?: string;
 }
 
-const SidePanel: React.FC<SidePanelProps> = ({
-  position,
-  visible = true,
-  size = 300,
-  onSizeChange,
-  tabs,
-  activeTabId,
-  onActiveTabChange,
-  minSize = 200,
-  maxSize = 600,
-  zIndex = 20,
-  className = "",
-}) => {
+const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 300, onSizeChange, tabs, activeTabId, onActiveTabChange, minSize = 200, maxSize = 600, zIndex = 20, className = "" }) => {
   const [isResizeHovered, setIsResizeHovered] = React.useState(false);
   const [isResizing, setIsResizing] = React.useState(false);
   const [internalActiveTab, setInternalActiveTab] = React.useState<string | undefined>(tabs[0]?.id);
@@ -4439,11 +4409,7 @@ const SidePanel: React.FC<SidePanelProps> = ({
             return (
               <Tooltip key={tab.id}>
                 <TooltipTrigger asChild>
-                  <button
-                    id={tab.id}
-                    onClick={() => handleTabChange(tab.id)}
-                    className={cn("flex items-center justify-center h-full px-small border-r cursor-pointer transition-colors", isActive ? "bg-hover-panel" : "hover:bg-hover-panel")}
-                  >
+                  <button id={tab.id} onClick={() => handleTabChange(tab.id)} className={cn("flex items-center justify-center h-full px-small border-r cursor-pointer transition-colors", isActive ? "bg-hover-panel" : "hover:bg-hover-panel")}>
                     <Icon size={16} />
                   </button>
                 </TooltipTrigger>
@@ -4489,18 +4455,7 @@ export interface HudPanelProps {
   className?: string;
 }
 
-const HudPanel: React.FC<HudPanelProps> = ({
-  visible = true,
-  size = 400,
-  onSizeChange,
-  tabs,
-  activeTabId,
-  onActiveTabChange,
-  minSize = 200,
-  maxSize = 800,
-  zIndex = 20,
-  className = "",
-}) => {
+const HudPanel: React.FC<HudPanelProps> = ({ visible = true, size = 400, onSizeChange, tabs, activeTabId, onActiveTabChange, minSize = 200, maxSize = 800, zIndex = 20, className = "" }) => {
   const [isResizeHovered, setIsResizeHovered] = React.useState(false);
   const [isResizing, setIsResizing] = React.useState(false);
   const [internalActiveTab, setInternalActiveTab] = React.useState<string | undefined>(tabs[0]?.id);
@@ -4626,22 +4581,7 @@ const DefaultErrorDisplay: React.FC<{ error: Error }> = ({ error }) => {
   );
 };
 
-const Window: React.FC<WindowProps> = ({
-  id,
-  children,
-  onDoubleClick,
-  className = "",
-  isVisible = true,
-  loading = false,
-  error = null,
-  skeleton,
-  showControls = false,
-  onOpenInNewWindow,
-  onMaximize,
-  onMinimize,
-  onClose,
-  controls,
-}) => {
+const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className = "", isVisible = true, loading = false, error = null, skeleton, showControls = false, onOpenInNewWindow, onMaximize, onMinimize, onClose, controls }) => {
   const [isMaximized, setIsMaximized] = React.useState(false);
   const [headerElement, setHeaderElement] = React.useState<HTMLElement | null>(null);
   const windowRef = React.useRef<HTMLDivElement>(null);

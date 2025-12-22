@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: AGPL-3.0-only
 // #region Header
 
 // App.tsx
@@ -80,7 +79,6 @@ import {
   createKitSortDirectionSelector,
   createKitWindowLayoutSelector,
   defaultPanelVisibility,
-  identitySelector,
   KitAppFullscreenWindow,
   KitDiffAppStore as KitDiffStore,
   KitScopeProvider,
@@ -2832,6 +2830,7 @@ const AppContent: FC = () => {
   const [expandedRowsSet] = useKitAppExpandedRows();
   const [sortColumn] = useKitAppSortColumn();
   const [sortDirection] = useKitAppSortDirection();
+  const kitApp = useKitAppXState(kitScope?.guid ?? "");
 
   const [selectTypeAction, canSelectType] = useKitAppSelectType();
   const [selectDesignAction, canSelectDesign] = useKitAppSelectDesign();
@@ -2985,7 +2984,6 @@ const AppContent: FC = () => {
       return;
     }
 
-    const selection = kitApp?.selection;
     const typesCount = selection?.types?.length || 0;
     const designsCount = selection?.designs?.length || 0;
     const qualitiesCount = selection?.qualities?.length || 0;
@@ -3176,7 +3174,7 @@ const AppContent: FC = () => {
       removeSection("details", "semio.sketchpad.app.kit.folders.multipleTitle");
       removeSection("details", "semio.sketchpad.app.kit.properties");
     };
-  }, [addSection, removeSection, appType, kitApp?.selection]);
+  }, [addSection, removeSection, appType, selection]);
 
   useEffect(() => {
     if (appType !== "kit") return;
@@ -3219,8 +3217,7 @@ const AppContent: FC = () => {
         setSearchParams(newParams, { replace: true });
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectParam, selectedKind]);
+  }, [selectParam, selectedKind, kitDesigns, kitTypes, selectDesignAction, selectTypeAction, searchParams, setSearchParams]);
 
   const allRows = useMemo<TableRow[]>(() => {
     const result: TableRow[] = [];
@@ -3892,15 +3889,15 @@ const AppContent: FC = () => {
     const selectedSet = new Set<string>();
     rows.forEach((row) => {
       let isSelected = false;
-      if (row.kind === "designs") isSelected = selection.designs.includes((row.data as Design).guid);
-      else if (row.kind === "types") isSelected = selection.types.includes((row.data as Type).guid);
-      else if (row.kind === "qualities") isSelected = selection.qualities.includes((row.data as Quality).key);
-      else if (row.kind === "interfaces") isSelected = selection.interfaces?.includes((row.data as Interface).guid);
-      else if (row.kind === "tags") isSelected = selection.tags?.includes((row.data as Tag).guid);
-      else if (row.kind === "concepts") isSelected = selection.concepts?.includes((row.data as Concept).guid);
-      else if (row.kind === "files") isSelected = selection.files.includes((row.data as SemioFile).guid);
-      else if (row.kind === "folders") isSelected = selection.folders?.includes((row.data as Folder).guid);
-      else if (row.kind === "authors") isSelected = selection.authors.includes((row.data as Author).name);
+      if (row.kind === "designs") isSelected = selection.designs?.includes((row.data as Design).guid) ?? false;
+      else if (row.kind === "types") isSelected = selection.types?.includes((row.data as Type).guid) ?? false;
+      else if (row.kind === "qualities") isSelected = selection.qualities?.includes((row.data as Quality).key) ?? false;
+      else if (row.kind === "interfaces") isSelected = selection.interfaces?.includes((row.data as Interface).guid) ?? false;
+      else if (row.kind === "tags") isSelected = selection.tags?.includes((row.data as Tag).guid) ?? false;
+      else if (row.kind === "concepts") isSelected = selection.concepts?.includes((row.data as Concept).guid) ?? false;
+      else if (row.kind === "files") isSelected = selection.files?.includes((row.data as SemioFile).guid) ?? false;
+      else if (row.kind === "folders") isSelected = selection.folders?.includes((row.data as Folder).guid) ?? false;
+      else if (row.kind === "authors") isSelected = selection.authors?.includes((row.data as Author).name) ?? false;
 
       if (isSelected) {
         selectedSet.add(row.id);
@@ -3920,14 +3917,12 @@ const AppContent: FC = () => {
       label: row.artifact,
       category: row.kind.charAt(0).toUpperCase() + row.kind.slice(1),
     }));
-    // Only update if the items have actually changed
     const itemsKey = items.map((item) => `${item.id}:${item.label}`).join("|");
     if (prevRowsRef.current !== itemsKey) {
       prevRowsRef.current = itemsKey;
       setFocusItems(items);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rows]);
+  }, [rows, setFocusItems]);
 
   useEffect(() => {
     const handleFocus = (itemId: string) => {
@@ -3935,8 +3930,7 @@ const AppContent: FC = () => {
     };
     setOnFocusItem(handleFocus);
     return () => setOnFocusItem(undefined);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [setOnFocusItem]);
 
   useEffect(() => {
     if (focusedItemId && scrollAreaRef.current) {
@@ -4380,66 +4374,66 @@ const AppContent: FC = () => {
     if (e.metaKey || e.ctrlKey) {
       if (row.kind === "designs") {
         const designId = (row.data as Design).guid;
-        if (selection.designs.includes(designId)) {
+        if (selection.designs?.includes(designId)) {
           setSelectionAction?.({ ...selection, designs: selection.designs.filter((d) => d !== designId) });
         } else {
-          setSelectionAction?.({ ...selection, designs: [...selection.designs, designId] });
+          setSelectionAction?.({ ...selection, designs: [...(selection.designs || []), designId] });
         }
       } else if (row.kind === "types") {
         const typeId = (row.data as Type).guid;
-        if (selection.types.includes(typeId)) {
+        if (selection.types?.includes(typeId)) {
           setSelectionAction?.({ ...selection, types: selection.types.filter((t) => t !== typeId) });
         } else {
-          setSelectionAction?.({ ...selection, types: [...selection.types, typeId] });
+          setSelectionAction?.({ ...selection, types: [...(selection.types || []), typeId] });
         }
       } else if (row.kind === "qualities") {
         const qualityKey = (row.data as Quality).key;
-        if (selection.qualities.includes(qualityKey)) {
+        if (selection.qualities?.includes(qualityKey)) {
           setSelectionAction?.({ ...selection, qualities: selection.qualities.filter((q) => q !== qualityKey) });
         } else {
-          setSelectionAction?.({ ...selection, qualities: [...selection.qualities, qualityKey] });
+          setSelectionAction?.({ ...selection, qualities: [...(selection.qualities || []), qualityKey] });
         }
       } else if (row.kind === "interfaces") {
         const interfaceId = (row.data as Interface).guid;
-        if (selection.interfaces && selection.interfaces.includes(interfaceId)) {
+        if (selection.interfaces?.includes(interfaceId)) {
           setSelectionAction?.({ ...selection, interfaces: selection.interfaces.filter((i) => i !== interfaceId) });
         } else {
           setSelectionAction?.({ ...selection, interfaces: [...(selection.interfaces || []), interfaceId] });
         }
       } else if (row.kind === "tags") {
         const tagId = (row.data as Tag).guid;
-        if (selection.tags && selection.tags.includes(tagId)) {
+        if (selection.tags?.includes(tagId)) {
           setSelectionAction?.({ ...selection, tags: selection.tags.filter((t) => t !== tagId) });
         } else {
           setSelectionAction?.({ ...selection, tags: [...(selection.tags || []), tagId] });
         }
       } else if (row.kind === "concepts") {
         const conceptId = (row.data as Concept).guid;
-        if (selection.concepts && selection.concepts.includes(conceptId)) {
+        if (selection.concepts?.includes(conceptId)) {
           setSelectionAction?.({ ...selection, concepts: selection.concepts.filter((c) => c !== conceptId) });
         } else {
           setSelectionAction?.({ ...selection, concepts: [...(selection.concepts || []), conceptId] });
         }
       } else if (row.kind === "files") {
         const fileGuid = (row.data as SemioFile).guid;
-        if (selection.files.includes(fileGuid)) {
+        if (selection.files?.includes(fileGuid)) {
           setSelectionAction?.({ ...selection, files: selection.files.filter((f) => f !== fileGuid) });
         } else {
-          setSelectionAction?.({ ...selection, files: [...selection.files, fileGuid] });
+          setSelectionAction?.({ ...selection, files: [...(selection.files || []), fileGuid] });
         }
       } else if (row.kind === "folders") {
         const folderId = (row.data as Folder).guid;
-        if (selection.folders && selection.folders.includes(folderId)) {
+        if (selection.folders?.includes(folderId)) {
           setSelectionAction?.({ ...selection, folders: selection.folders.filter((f) => f !== folderId) });
         } else {
           setSelectionAction?.({ ...selection, folders: [...(selection.folders || []), folderId] });
         }
       } else if (row.kind === "authors") {
         const authorName = (row.data as Author).name;
-        if (selection.authors.includes(authorName)) {
+        if (selection.authors?.includes(authorName)) {
           setSelectionAction?.({ ...selection, authors: selection.authors.filter((a) => a !== authorName) });
         } else {
-          setSelectionAction?.({ ...selection, authors: [...selection.authors, authorName] });
+          setSelectionAction?.({ ...selection, authors: [...(selection.authors || []), authorName] });
         }
       }
       // Don't update lastClickedIndexRef for ctrl/cmd clicks
@@ -4911,7 +4905,7 @@ function useKitAppYjsToXStateSync() {
   const sketchpadStore = useSketchpadStore();
   const sketchpadCommands = useSketchpadCommands();
   const hasKit = useHasKit(kitGuid);
-  const hasInitialized = useRef(false);
+  const initializedKeyRef = useRef<string | null>(null);
 
   // Ensure Kit app exists before syncing
   useLayoutEffect(() => {
@@ -4926,7 +4920,9 @@ function useKitAppYjsToXStateSync() {
   // Note: hasKit is included in deps so this effect runs when hasKit changes from false to true
   // (which is when the first effect creates the kit app)
   useLayoutEffect(() => {
-    if (hasInitialized.current || !kitGuid || !hasKit) return;
+    if (!kitGuid || !hasKit) return;
+    const initKey = kitGuid;
+    if (initializedKeyRef.current === initKey) return;
 
     let xstateInitialState;
     if (sketchpadStore.hasKitApp({ kit: kitGuid })) {
@@ -4971,7 +4967,7 @@ function useKitAppYjsToXStateSync() {
       kitGuid,
       state: xstateInitialState,
     });
-    hasInitialized.current = true;
+    initializedKeyRef.current = initKey;
   }, [actor, sketchpadStore, kitGuid, hasKit]);
 
   // Continue syncing Y.js changes to XState
@@ -4979,7 +4975,7 @@ function useKitAppYjsToXStateSync() {
   const state = useSyncDeep<KitAppState, KitAppState>(store, (s: KitAppState) => s);
 
   useEffect(() => {
-    if (!state || !kitGuid || !hasInitialized.current) return;
+    if (!state || !kitGuid || initializedKeyRef.current !== kitGuid) return;
 
     // Convert expandedRows array to Set for XState
     const xstateState = {

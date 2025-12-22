@@ -226,6 +226,7 @@ A Grasshopper-based integration of [Ladybug](https://www.ladybug.tools) and semi
 ## 🧰 quality gates [↑](#%EF%B8%8F-products-)
 
 Contributor workflows include an automated code-quality report that highlights inline comments, missing license headers, and malformed region blocks before changes are shared.
+It also enforces module boundaries and domain-neutral terminology for shared UI building blocks.
 
 ## 🎫 tickets [↑](#-overview)
 
@@ -1218,7 +1219,7 @@ See [`AGENTS.md`](AGENTS.md#validation) for complete technical documentation.
 
 ## 🧾 Code Report [↑](#-components-)
 
-The repository emits a machine-readable report (`reports/code.json`) that enforces a comment-free codebase (with explicit exemptions), flags temporary `[DEBUG]` logs, auto-adds missing SPDX license headers in `npm run fix`, and validates properly nested named regions.
+The repository emits a machine-readable report (`reports/code.json`) that enforces a comment-free codebase (with explicit exemptions), flags temporary `[DEBUG]` logs, auto-adds missing SPDX license headers in `npm run fix`, validates properly nested named regions, checks that `js/js` files do not import outside the workspace unless they are the shared `elements.tsx`, and flags domain-specific terminology inside those shared elements.
 
 ## 🎫 Ticket System [↑](#-components-)
 

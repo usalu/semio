@@ -1,5 +1,4 @@
 #!/usr/bin/env tsx
-// SPDX-License-Identifier: AGPL-3.0-only
 import { execSync } from "child_process";
 import { existsSync, writeFileSync } from "fs";
 import { join } from "path";
@@ -16,19 +15,19 @@ if (!existsSync(pyEngineDir)) {
 console.log("🐍 Formatting and linting Python with Ruff...");
 
 try {
-  
+
   execSync("ruff format .", {
     cwd: pyEngineDir,
     stdio: "inherit",
   });
-  
-  
+
+
   execSync("ruff check --fix .", {
     cwd: pyEngineDir,
     stdio: "inherit",
   });
-  
-  
+
+
   try {
     const output = execSync("ruff check --output-format=json .", {
       cwd: pyEngineDir,
@@ -49,7 +48,7 @@ try {
     };
     writeFileSync(reportPath, JSON.stringify(report, null, 2));
   }
-  
+
   console.log("✅ Ruff formatting and auto-fixes applied");
   console.log(`📝 Report: ${reportPath}`);
   process.exit(0);

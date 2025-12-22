@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: AGPL-3.0-only
 // #region Header
 
 // #endregion
@@ -184,11 +183,6 @@ import {
   useTooltip,
   useType,
 } from "./Sketchpad";
-
-let kitAppModuleCache: any = null;
-if (typeof window !== "undefined" && (window as any).__KIT_APP_MODULE_CACHE__) {
-  kitAppModuleCache = (window as any).__KIT_APP_MODULE_CACHE__.kitAppModuleCache;
-}
 
 let designAppCommands: Record<string, (context: any, ...args: any[]) => Promise<any> | any>;
 
@@ -1370,10 +1364,12 @@ function useDesignAppInitialize() {
   const designScope = useDesignScope();
   const kitGuid = kitScope?.guid ?? "";
   const designGuid = designScope?.guid ?? "";
-  const hasInitialized = useRef(false);
+  const initializedKeyRef = useRef<string | null>(null);
 
   useLayoutEffect(() => {
-    if (hasInitialized.current || !kitGuid || !designGuid) return;
+    if (!kitGuid || !designGuid) return;
+    const initKey = `${kitGuid}:${designGuid}`;
+    if (initializedKeyRef.current === initKey) return;
     actor.send({
       type: "DESIGN.INIT",
       kitGuid,
@@ -1395,7 +1391,7 @@ function useDesignAppInitialize() {
         },
       },
     });
-    hasInitialized.current = true;
+    initializedKeyRef.current = initKey;
   }, [actor, kitGuid, designGuid]);
 }
 
@@ -1458,9 +1454,7 @@ interface UseDesignAppFieldOptions<T, TEvent extends { type: string }> {
   useWildcardFallback?: boolean;
 }
 
-function useDesignAppField<T, TEvent extends { type: string }>(
-  options: UseDesignAppFieldOptions<T, TEvent>,
-): Field<T> {
+function useDesignAppField<T, TEvent extends { type: string }>(options: UseDesignAppFieldOptions<T, TEvent>): Field<T> {
   const { createGranularSelector, fallback, createCanEvent, createSendEvent, useWildcardFallback = false } = options;
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -1473,12 +1467,15 @@ function useDesignAppField<T, TEvent extends { type: string }>(
   const canEvent = useMemo(() => createCanEvent(kitGuid, designGuid), [createCanEvent, kitGuid, designGuid]);
   const canSetFromSnapshot = useSelector(actor, (snapshot) => snapshot.can(canEvent as Parameters<typeof snapshot.can>[0]));
   const hasScope = kitGuid !== "" && designGuid !== "";
-  const canSet = useWildcardFallback ? (canSetFromSnapshot || hasScope) : canSetFromSnapshot;
-  const setter = useMemo(() => (next: T) => {
-    if (canSet) {
-      actor.send(createSendEvent(kitGuid, designGuid, next) as Parameters<typeof actor.send>[0]);
-    }
-  }, [actor, kitGuid, designGuid, canSet, createSendEvent]);
+  const canSet = useWildcardFallback ? canSetFromSnapshot || hasScope : canSetFromSnapshot;
+  const setter = useMemo(
+    () => (next: T) => {
+      if (canSet) {
+        actor.send(createSendEvent(kitGuid, designGuid, next) as Parameters<typeof actor.send>[0]);
+      }
+    },
+    [actor, kitGuid, designGuid, canSet, createSendEvent],
+  );
   return useMemo(() => createFieldValue(value, setter, canSet), [value, setter, canSet]);
 }
 
@@ -2846,8 +2843,7 @@ export const DesignAppFooter: FC = () => {
         removeFooterItem(`semio.sketchpad.app.design.footer.tag.${tagGuid}`);
       });
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appType, addFooterItem, removeFooterItem, allModelTagGuids, tagNameMap]);
+  }, [appType, addFooterItem, removeFooterItem, allModelTagGuids, tagNameMap, selectedModelTags, designTypeGuids]);
 
   return null;
 };
@@ -7346,12 +7342,28 @@ const DesignAppScene: FC = () => {
 export interface AppProps {}
 
 const DiagramWindow = memo<{ reactFlowInstanceRef: React.RefObject<ReactFlowInstance | null> }>(({ reactFlowInstanceRef }) => {
-  return <DesignDiagram reactFlowInstanceRef={reactFlowInstanceRef} />;
+  return (
+    <HoverIntentProvider>
+      <TransactionPiecesProvider>
+        <HoverPiecesProvider>
+          <DesignDiagram reactFlowInstanceRef={reactFlowInstanceRef} />
+        </HoverPiecesProvider>
+      </TransactionPiecesProvider>
+    </HoverIntentProvider>
+  );
 });
 DiagramWindow.displayName = "DiagramWindow";
 
 const SceneWindow = memo(() => {
-  return <DesignAppScene />;
+  return (
+    <HoverIntentProvider>
+      <TransactionPiecesProvider>
+        <HoverPiecesProvider>
+          <DesignAppScene />
+        </HoverPiecesProvider>
+      </TransactionPiecesProvider>
+    </HoverIntentProvider>
+  );
 });
 SceneWindow.displayName = "SceneWindow";
 
@@ -7981,8 +7993,7 @@ const App: FC<AppProps> = () => {
       removeSection("workbench", "semio.sketchpad.app.kit.pieces");
       removeSection("workbench", "semio.sketchpad.app.design.windows");
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appType, kitGuid, workbenchTypes?.length, workbenchDesigns?.length]);
+  }, [appType, kitGuid, workbenchTypes?.length, workbenchDesigns?.length, addSection, removeSection]);
 
   useEffect(() => {
     addSection("settings", {
@@ -8044,8 +8055,7 @@ const App: FC<AppProps> = () => {
       removeSection("settings", "semio.sketchpad.app.kit.settings");
       removeSection("settings", "semio.sketchpad.settings");
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [addSection, removeSection, appSettings.design?.proximityConnectDistance, appSettings.design?.gridSize]);
 
   return (
     <ReactFlowProvider>
