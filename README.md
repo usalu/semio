@@ -1191,7 +1191,7 @@ It treats empty regions as invalid structure and removes them automatically in f
 
 Semio includes a **domain-pure validation system** built entirely in `semio.ts` with zero JSON dependencies. All validation logic works with `Kit` objects and produces `KitDiff`-based fixes.
 
-**11 Validation Rules:**
+**11 Validation Constraints:**
 
 1. **GUID Uniqueness** - All GUIDs must be unique globally
 2. **Type Name Uniqueness** - Sibling types must have unique names

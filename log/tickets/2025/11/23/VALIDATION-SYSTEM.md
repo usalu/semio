@@ -30,9 +30,9 @@ This document describes the implementation of a clean validation architecture fo
 Pure functions working only with `Kit` and `KitDiff`:
 
 - **Validation Core Types**: `SemioValidationIssue`, `SemioKitFix`, `SemioDomainLocation`
-- **Validation Engine**: `validateSemioKit`, `SemioValidationRule`
+- **Validation Engine**: `validateSemioKit`, `SemioValidationConstraint`
 - **Fix Helper**: `semioMakeFix` (generates `KitDiff` from mutations)
-- **Default Rules**:
+- **Default Constraints**:
   - GUID uniqueness
   - Design sibling name uniqueness
   - Piece name uniqueness within design
@@ -51,18 +51,18 @@ JSON-aware linter:
 1. ✅ Add validation core types to `semio.ts`
 2. ✅ Add validation context & engine
 3. ✅ Add fix helper
-4. ✅ Implement GUID uniqueness rule
-5. ✅ Implement type name uniqueness rule
-6. ✅ Implement design name uniqueness rule
-7. ✅ Implement piece name uniqueness rule
-8. ✅ Implement quality name uniqueness rule
-9. ✅ Implement interface name uniqueness rule
-10. ✅ Implement file name uniqueness rule
-11. ✅ Implement folder name uniqueness rule
-12. ✅ Implement connector name uniqueness rule
-13. ✅ Implement model name uniqueness rule
-14. ✅ Implement layer path uniqueness rule
-15. ✅ Register all default rules
+4. ✅ Implement GUID uniqueness constraint
+5. ✅ Implement type name uniqueness constraint
+6. ✅ Implement design name uniqueness constraint
+7. ✅ Implement piece name uniqueness constraint
+8. ✅ Implement quality name uniqueness constraint
+9. ✅ Implement interface name uniqueness constraint
+10. ✅ Implement file name uniqueness constraint
+11. ✅ Implement folder name uniqueness constraint
+12. ✅ Implement connector name uniqueness constraint
+13. ✅ Implement model name uniqueness constraint
+14. ✅ Implement layer path uniqueness constraint
+15. ✅ Register all default constraints
 16. ✅ Implement VS Code extension
 17. ✅ Update extension package.json
 18. ✅ Update AGENTS.md with validation specs
@@ -70,18 +70,18 @@ JSON-aware linter:
 20. ✅ Create central VALIDATION.md
 21. ✅ Update VS Code README to reference central docs
 
-## Validation Rules Implemented
+## Validation Constraints Implemented
 
-### Name Uniqueness Rules (11 total)
+### Name Uniqueness Constraints (11 total)
 
-All implemented rules follow the same pattern:
+All implemented constraints follow the same pattern:
 
 - Collect entities by scope (global, siblings, within parent)
 - Group by name/path
 - Find duplicates
 - Generate fixes with `semioMakeFix` and `generateUniqueName`
 
-| Rule                    | Scope         | Field | Status         |
+| Constraint                    | Scope         | Field | Status         |
 | ----------------------- | ------------- | ----- | -------------- |
 | `guid-unique`           | Global        | guid  | ✅ Implemented |
 | `type-name-unique`      | Siblings      | name  | ✅ Implemented |
@@ -172,18 +172,18 @@ Added ~550 lines of pure validation logic:
 
 - **Core Types** (7 types): `SemioEntityKind`, `SemioValidationSeverity`, `SemioDomainLocation`, `SemioKitFix`, `SemioValidationIssue`, `SemioValidationResult`, `SemioValidationContext`
 - **Engine** (5 functions): `buildSemioValidationContext`, `validateSemioKit`, `semioMakeFix`, `hasSemioErrors`, `updateGuidEverywhere`
-- **Rules** (11 rules):
-  - `semioGuidUniquenessRule`
-  - `semioTypeNameUniquenessRule`
-  - `semioDesignNameUniquenessRule`
-  - `semioPieceNameUniquenessRule`
-  - `semioQualityNameUniquenessRule`
-  - `semioInterfaceNameUniquenessRule`
-  - `semioFileNameUniquenessRule`
-  - `semioFolderNameUniquenessRule`
-  - `semioPortNameUniquenessRule`
-  - `semioModelNameUniquenessRule`
-  - `semioLayerPathUniquenessRule`
+- **Constraints** (11 constraints):
+  - `semioGuidUniquenessConstraint`
+  - `semioTypeNameUniquenessConstraint`
+  - `semioDesignNameUniquenessConstraint`
+  - `semioPieceNameUniquenessConstraint`
+  - `semioQualityNameUniquenessConstraint`
+  - `semioInterfaceNameUniquenessConstraint`
+  - `semioFileNameUniquenessConstraint`
+  - `semioFolderNameUniquenessConstraint`
+  - `semioPortNameUniquenessConstraint`
+  - `semioModelNameUniquenessConstraint`
+  - `semioLayerPathUniquenessConstraint`
 
 ### VS Code Extension (`js/vscode`)
 
@@ -201,7 +201,7 @@ Added ~280 lines of JSON-aware linting:
 3. `js/vscode/package.json` - Updated metadata and added dependencies
 4. `js/vscode/README.md` - Updated with references to central documentation
 5. `VALIDATION.md` - Central validation documentation (new file)
-6. `AGENTS.md` - Added validation section with complete rule documentation
+6. `AGENTS.md` - Added validation section with complete constraint documentation
 7. `engineering/softwarearchitecture.pu` - Added validation class diagram
 8. `agents/2025-11-23_validation-system.md` - This planning document
 
@@ -226,7 +226,7 @@ To test the VS Code extension:
 - Backend API validation endpoint
 - Sketchpad validation panel
 - Auto-fix on save
-- Custom rule plugins
+- Custom constraint plugins
 - Performance optimizations (incremental validation)
 
 ## Recent Work

@@ -37,7 +37,7 @@
 // TODO: NameM.ToLower() doesn't work for composite names. E.g. "Coord" -> "coord".
 // TODO: Implement a status check and wait for the engine to be ready
 
-#endregion
+#endregion TODOs
 
 using System.Diagnostics;
 using System.Drawing;
@@ -953,7 +953,7 @@ public class DeserializeAttributeDiffComponent : DeserializeComponent<AttributeD
     public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B98");
 }
 
-#endregion
+#endregion Attribute
 
 #region Coord
 
@@ -5589,6 +5589,6 @@ public class LoadKitComponent : PersistenceComponent
     }
 }
 
-#endregion
+#endregion Persistence
 
 #endregion Engine

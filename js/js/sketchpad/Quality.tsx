@@ -80,7 +80,7 @@ import {
   useTheme,
 } from "./Sketchpad";
 
-// #endregion
+// #endregion Imports
 
 // #region Types
 
@@ -163,7 +163,7 @@ export interface FormulaFunction {
   toLatex: (...operands: string[]) => string;
 }
 
-// #endregion
+// #endregion Types
 
 // #region Functions
 
@@ -484,7 +484,7 @@ function inverseQualityAppSelectionDiff(selection: QualityAppSelection, diff: Qu
   return inverse;
 }
 
-// #endregion
+// #endregion Functions
 
 // #region Commands
 
@@ -593,7 +593,7 @@ const qualityAppCommands = {
   },
 };
 
-// #endregion
+// #endregion Commands
 
 // #region Store
 
@@ -1042,7 +1042,7 @@ export function useQualityAppToggleDiagramFullscreen(): ActionHookResult<[]> {
 
 //#endregion Action Hooks
 
-// #endregion
+// #endregion Store
 
 // #region Components
 
@@ -1592,7 +1592,7 @@ const QualityWorkbenchQualities: FC = () => {
   return <QualityTree qualities={qualities} />;
 };
 
-// #endregion
+// #endregion Components
 
 // #region App
 
@@ -1891,7 +1891,7 @@ const App: FC<AppProps> = () => {
 
 export default App;
 
-// #endregion
+// #endregion App
 
 // #region Config
 
@@ -1927,4 +1927,4 @@ export const config: AppConfig = {
   order: 40,
 };
 
-// #endregion
+// #endregion Config

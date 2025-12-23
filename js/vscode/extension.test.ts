@@ -39,14 +39,14 @@ suite("Extension Test Suite", () => {
 
     assert.ok(diagnostics.length > 0, "Should have validation errors");
 
-    const ruleIds = new Set<string>();
+    const constraintIds = new Set<string>();
     diagnostics.forEach((diag) => {
       if (diag.source === "semio" && diag.code) {
-        ruleIds.add(String(diag.code));
+        constraintIds.add(String(diag.code));
       }
     });
 
-    const expectedRules = [
+    const expectedConstraints = [
       "guid-unique",
       "type-name-unique",
       "design-name-unique",
@@ -60,11 +60,11 @@ suite("Extension Test Suite", () => {
       "layer-path-unique",
     ];
 
-    expectedRules.forEach((ruleId) => {
-      assert.ok(ruleIds.has(ruleId), `Should have validation error for rule: ${ruleId}`);
+    expectedConstraints.forEach((constraintId) => {
+      assert.ok(constraintIds.has(constraintId), `Should have validation error for constraint: ${constraintId}`);
     });
 
-    assert.strictEqual(ruleIds.size, expectedRules.length, `Should have exactly ${expectedRules.length} different validation rules triggered`);
+    assert.strictEqual(constraintIds.size, expectedConstraints.length, `Should have exactly ${expectedConstraints.length} different validation constraints triggered`);
   });
 
   test("Quick fixes apply correct diffs", async () => {

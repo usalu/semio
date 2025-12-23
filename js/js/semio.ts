@@ -405,7 +405,7 @@ export const applyCoordDiff = (base: Coord, diff: CoordDiff): Coord => {
   };
 };
 
-// #endregion Coord
+// #endregion Coord (weak entity)
 
 // #region Vec (weak entity)
 
@@ -445,7 +445,7 @@ export const applyVecDiff = (base: Vec, diff: VecDiff): Vec => {
   };
 };
 
-// #endregion Vec
+// #endregion Vec (weak entity)
 
 // #region Point (weak entity)
 
@@ -495,7 +495,7 @@ export const applyPointDiff = (base: Point, diff: PointDiff): Point => {
   };
 };
 
-// #endregion Point
+// #endregion Point (weak entity)
 
 // #region Vector (weak entity)
 
@@ -545,7 +545,7 @@ export const applyVectorDiff = (base: Vector, diff: VectorDiff): Vector => {
   };
 };
 
-// #endregion Vector
+// #endregion Vector (weak entity)
 
 // #region Plane (weak entity)
 
@@ -660,7 +660,7 @@ export const applyPlaneDiff = (base: Plane, diff: PlaneDiff): Plane => {
   };
 };
 
-// #endregion Plane
+// #endregion Plane (weak entity)
 
 // #region Camera (weak entity)
 
@@ -710,7 +710,7 @@ export const applyCameraDiff = (base: Camera, diff: CameraDiff): Camera => {
   };
 };
 
-// #endregion Camera
+// #endregion Camera (weak entity)
 
 // #region Location
 
@@ -1105,9 +1105,6 @@ const applyBenchmarksDiff = (base: Benchmark[], diff: BenchmarksDiff): Benchmark
 
 // #endregion Benchmark
 
-// #region QualityKind
-
-// #endregion QualityKind
 
 // #region Quality
 
@@ -7044,7 +7041,7 @@ export interface SemioKitFix {
 }
 
 export interface SemioValidationIssue {
-  ruleId: string;
+  constraintId: string;
   severity: SemioValidationSeverity;
   message: string;
   location: SemioDomainLocation;
@@ -7089,18 +7086,18 @@ export const buildSemioValidationContext = (kit: Kit): SemioValidationContext =>
   return { kit, typesByGuid, designsByGuid, piecesByGuid, connectorsByTypeGuid, modelsByTypeGuid };
 };
 
-export type SemioValidationRule = (ctx: SemioValidationContext) => SemioValidationIssue[];
+export type SemioValidationConstraint = (ctx: SemioValidationContext) => SemioValidationIssue[];
 
 export interface SemioValidationConfig {
-  rules?: SemioValidationRule[];
+  constraints?: SemioValidationConstraint[];
 }
 
-export let defaultSemioValidationRules: SemioValidationRule[] = [];
+export let defaultSemioValidationConstraints: SemioValidationConstraint[] = [];
 
 export const validateSemioKit = (kit: Kit, cfg: SemioValidationConfig = {}): SemioValidationResult => {
   const ctx = buildSemioValidationContext(kit);
-  const rules = cfg.rules ?? defaultSemioValidationRules;
-  return { issues: rules.flatMap((rule) => rule(ctx)) };
+  const constraints = cfg.constraints ?? defaultSemioValidationConstraints;
+  return { issues: constraints.flatMap((constraint) => constraint(ctx)) };
 };
 
 // #endregion Validation context & engine
@@ -7149,9 +7146,9 @@ const updateGuidEverywhere = (kit: Kit, oldGuid: Guid, newGuid: Guid): void => {
 
 // #endregion GUID update helper
 
-// #region Rule: GUID uniqueness
+// #region Constraint: GUID uniqueness
 
-export const semioGuidUniquenessRule: SemioValidationRule = (ctx) => {
+export const semioGuidUniquenessConstraint: SemioValidationConstraint = (ctx) => {
   const issues: SemioValidationIssue[] = [];
   const seen = new Map<Guid, SemioEntityKind>();
   const check = (entityKind: SemioEntityKind, entityGuid: Guid) => {
@@ -7161,7 +7158,7 @@ export const semioGuidUniquenessRule: SemioValidationRule = (ctx) => {
       return;
     }
     const issue: SemioValidationIssue = {
-      ruleId: "guid-unique",
+      constraintId: "guid-unique",
       severity: "error",
       message: `Duplicate GUID "${entityGuid}". First occurrence kept.`,
       location: { entityKind, entityGuid, field: "guid" },
@@ -7190,11 +7187,11 @@ export const semioGuidUniquenessRule: SemioValidationRule = (ctx) => {
   return issues;
 };
 
-// #endregion Rule: GUID uniqueness
+// #endregion Constraint: GUID uniqueness
 
-// #region Rule: Type name uniqueness
+// #region Constraint: Type name uniqueness
 
-export const semioTypeNameUniquenessRule: SemioValidationRule = (ctx) => {
+export const semioTypeNameUniquenessConstraint: SemioValidationConstraint = (ctx) => {
   const issues: SemioValidationIssue[] = [];
   const byParent = new Map<Guid | undefined, Type[]>();
   toArray(ctx.kit.types).forEach((t) => {
@@ -7221,7 +7218,7 @@ export const semioTypeNameUniquenessRule: SemioValidationRule = (ctx) => {
           ct.name = newName;
         });
         issues.push({
-          ruleId: "type-name-unique",
+          constraintId: "type-name-unique",
           severity: "error",
           message: `Duplicate type name "${name}" among siblings.`,
           location: { entityKind: "Type", entityGuid: type.guid, field: "name" },
@@ -7234,11 +7231,11 @@ export const semioTypeNameUniquenessRule: SemioValidationRule = (ctx) => {
   return issues;
 };
 
-// #endregion Rule: Type name uniqueness
+// #endregion Constraint: Type name uniqueness
 
-// #region Rule: Design name uniqueness
+// #region Constraint: Design name uniqueness
 
-export const semioDesignNameUniquenessRule: SemioValidationRule = (ctx) => {
+export const semioDesignNameUniquenessConstraint: SemioValidationConstraint = (ctx) => {
   const issues: SemioValidationIssue[] = [];
   const byParent = new Map<Guid | undefined, Design[]>();
   toArray(ctx.kit.designs).forEach((d) => {
@@ -7265,7 +7262,7 @@ export const semioDesignNameUniquenessRule: SemioValidationRule = (ctx) => {
           cd.name = newName;
         });
         issues.push({
-          ruleId: "design-name-unique",
+          constraintId: "design-name-unique",
           severity: "error",
           message: `Duplicate design name "${name}" among siblings.`,
           location: { entityKind: "Design", entityGuid: design.guid, field: "name" },
@@ -7278,11 +7275,11 @@ export const semioDesignNameUniquenessRule: SemioValidationRule = (ctx) => {
   return issues;
 };
 
-// #endregion Rule: Design name uniqueness
+// #endregion Constraint: Design name uniqueness
 
-// #region Rule: Piece name uniqueness
+// #region Constraint: Piece name uniqueness
 
-export const semioPieceNameUniquenessRule: SemioValidationRule = (ctx) => {
+export const semioPieceNameUniquenessConstraint: SemioValidationConstraint = (ctx) => {
   const issues: SemioValidationIssue[] = [];
   toArray(ctx.kit.designs).forEach((design) => {
     const pieces = toArray(design.pieces);
@@ -7307,7 +7304,7 @@ export const semioPieceNameUniquenessRule: SemioValidationRule = (ctx) => {
           cp.name = generateUniqueName(name, allNames);
         });
         issues.push({
-          ruleId: "piece-name-unique",
+          constraintId: "piece-name-unique",
           severity: "error",
           message: `Duplicate piece name "${name}" inside design "${design.name}".`,
           location: { entityKind: "Piece", entityGuid: piece.guid, field: "name" },
@@ -7320,11 +7317,11 @@ export const semioPieceNameUniquenessRule: SemioValidationRule = (ctx) => {
   return issues;
 };
 
-// #endregion Rule: Piece name uniqueness
+// #endregion Constraint: Piece name uniqueness
 
-// #region Rule: Quality name uniqueness
+// #region Constraint: Quality name uniqueness
 
-export const semioQualityNameUniquenessRule: SemioValidationRule = (ctx) => {
+export const semioQualityNameUniquenessConstraint: SemioValidationConstraint = (ctx) => {
   const issues: SemioValidationIssue[] = [];
   const qualities = toArray(ctx.kit.qualities);
   const nameMap = new Map<string, Quality[]>();
@@ -7344,7 +7341,7 @@ export const semioQualityNameUniquenessRule: SemioValidationRule = (ctx) => {
         cq.name = generateUniqueName(name, allNames);
       });
       issues.push({
-        ruleId: "quality-name-unique",
+        constraintId: "quality-name-unique",
         severity: "error",
         message: `Duplicate quality name "${name}".`,
         location: { entityKind: "Quality", entityGuid: quality.guid, field: "name" },
@@ -7356,11 +7353,11 @@ export const semioQualityNameUniquenessRule: SemioValidationRule = (ctx) => {
   return issues;
 };
 
-// #endregion Rule: Quality name uniqueness
+// #endregion Constraint: Quality name uniqueness
 
-// #region Rule: Interface name uniqueness
+// #region Constraint: Interface name uniqueness
 
-export const semioInterfaceNameUniquenessRule: SemioValidationRule = (ctx) => {
+export const semioInterfaceNameUniquenessConstraint: SemioValidationConstraint = (ctx) => {
   const issues: SemioValidationIssue[] = [];
   const interfaces = toArray(ctx.kit.interfaces);
   const nameMap = new Map<string, Interface[]>();
@@ -7380,7 +7377,7 @@ export const semioInterfaceNameUniquenessRule: SemioValidationRule = (ctx) => {
         ci.name = generateUniqueName(name, allNames);
       });
       issues.push({
-        ruleId: "interface-name-unique",
+        constraintId: "interface-name-unique",
         severity: "error",
         message: `Duplicate interface name "${name}".`,
         location: { entityKind: "Interface", entityGuid: iface.guid, field: "name" },
@@ -7392,11 +7389,11 @@ export const semioInterfaceNameUniquenessRule: SemioValidationRule = (ctx) => {
   return issues;
 };
 
-// #endregion Rule: Interface name uniqueness
+// #endregion Constraint: Interface name uniqueness
 
-// #region Rule: File name uniqueness
+// #region Constraint: File name uniqueness
 
-export const semioFileNameUniquenessRule: SemioValidationRule = (ctx) => {
+export const semioFileNameUniquenessConstraint: SemioValidationConstraint = (ctx) => {
   const issues: SemioValidationIssue[] = [];
   const files = toArray(ctx.kit.files);
   const nameMap = new Map<string, File[]>();
@@ -7416,7 +7413,7 @@ export const semioFileNameUniquenessRule: SemioValidationRule = (ctx) => {
         cf.name = generateUniqueName(name, allNames);
       });
       issues.push({
-        ruleId: "file-name-unique",
+        constraintId: "file-name-unique",
         severity: "error",
         message: `Duplicate file name "${name}".`,
         location: { entityKind: "File", entityGuid: file.guid, field: "name" },
@@ -7428,11 +7425,11 @@ export const semioFileNameUniquenessRule: SemioValidationRule = (ctx) => {
   return issues;
 };
 
-// #endregion Rule: File name uniqueness
+// #endregion Constraint: File name uniqueness
 
-// #region Rule: Folder name uniqueness
+// #region Constraint: Folder name uniqueness
 
-export const semioFolderNameUniquenessRule: SemioValidationRule = (ctx) => {
+export const semioFolderNameUniquenessConstraint: SemioValidationConstraint = (ctx) => {
   const issues: SemioValidationIssue[] = [];
   const byParent = new Map<Guid | undefined, Folder[]>();
   const folders = toArray(ctx.kit.folders);
@@ -7459,7 +7456,7 @@ export const semioFolderNameUniquenessRule: SemioValidationRule = (ctx) => {
           cf.name = generateUniqueName(name, allNames);
         });
         issues.push({
-          ruleId: "folder-name-unique",
+          constraintId: "folder-name-unique",
           severity: "error",
           message: `Duplicate folder name "${name}" among siblings.`,
           location: { entityKind: "Folder", entityGuid: folder.guid, field: "name" },
@@ -7472,11 +7469,11 @@ export const semioFolderNameUniquenessRule: SemioValidationRule = (ctx) => {
   return issues;
 };
 
-// #endregion Rule: Folder name uniqueness
+// #endregion Constraint: Folder name uniqueness
 
-// #region Rule: Connector name uniqueness within type
+// #region Constraint: Connector name uniqueness within type
 
-export const semioPortNameUniquenessRule: SemioValidationRule = (ctx) => {
+export const semioPortNameUniquenessConstraint: SemioValidationConstraint = (ctx) => {
   const issues: SemioValidationIssue[] = [];
   for (const [typeGuid, connectors] of ctx.connectorsByTypeGuid) {
     if (connectors.length === 0) continue;
@@ -7501,7 +7498,7 @@ export const semioPortNameUniquenessRule: SemioValidationRule = (ctx) => {
           cp.name = generateUniqueName(name, allNames);
         });
         issues.push({
-          ruleId: "connector-name-unique",
+          constraintId: "connector-name-unique",
           severity: "error",
           message: `Duplicate connector name "${name}" inside type "${type?.name}".`,
           location: { entityKind: "Connector", entityGuid: connector.guid, field: "name" },
@@ -7514,11 +7511,11 @@ export const semioPortNameUniquenessRule: SemioValidationRule = (ctx) => {
   return issues;
 };
 
-// #endregion Rule: Connector name uniqueness within type
+// #endregion Constraint: Connector name uniqueness within type
 
-// #region Rule: Model name uniqueness within type
+// #region Constraint: Model name uniqueness within type
 
-export const semioModelNameUniquenessRule: SemioValidationRule = (ctx) => {
+export const semioModelNameUniquenessConstraint: SemioValidationConstraint = (ctx) => {
   const issues: SemioValidationIssue[] = [];
   for (const [typeGuid, models] of ctx.modelsByTypeGuid) {
     if (models.length === 0) continue;
@@ -7543,7 +7540,7 @@ export const semioModelNameUniquenessRule: SemioValidationRule = (ctx) => {
           cm.name = generateUniqueName(name, allNames);
         });
         issues.push({
-          ruleId: "model-name-unique",
+          constraintId: "model-name-unique",
           severity: "error",
           message: `Duplicate model name "${name}" inside type "${type?.name}".`,
           location: { entityKind: "Model", entityGuid: model.guid, field: "name" },
@@ -7556,11 +7553,11 @@ export const semioModelNameUniquenessRule: SemioValidationRule = (ctx) => {
   return issues;
 };
 
-// #endregion Rule: Model name uniqueness within type
+// #endregion Constraint: Model name uniqueness within type
 
-// #region Rule: Layer path uniqueness within design
+// #region Constraint: Layer path uniqueness within design
 
-export const semioLayerPathUniquenessRule: SemioValidationRule = (ctx) => {
+export const semioLayerPathUniquenessConstraint: SemioValidationConstraint = (ctx) => {
   const issues: SemioValidationIssue[] = [];
   toArray(ctx.kit.designs).forEach((design) => {
     const layers = toArray(design.layers);
@@ -7585,7 +7582,7 @@ export const semioLayerPathUniquenessRule: SemioValidationRule = (ctx) => {
           cl.path = generateUniqueName(path, allPaths);
         });
         issues.push({
-          ruleId: "layer-path-unique",
+          constraintId: "layer-path-unique",
           severity: "error",
           message: `Duplicate layer path "${path}" inside design "${design.name}".`,
           location: { entityKind: "Layer", entityGuid: layer.guid, field: "path" },
@@ -7597,11 +7594,11 @@ export const semioLayerPathUniquenessRule: SemioValidationRule = (ctx) => {
   return issues;
 };
 
-// #endregion Rule: Layer path uniqueness within design
+// #endregion Constraint: Layer path uniqueness within design
 
-// #region Rule: Design piece same family constraint
+// #region Constraint: Design piece same family constraint
 
-export const semioDesignPieceSameFamilyRule: SemioValidationRule = (ctx) => {
+export const semioDesignPieceSameFamilyConstraint: SemioValidationConstraint = (ctx) => {
   const issues: SemioValidationIssue[] = [];
   toArray(ctx.kit.designs).forEach((design) => {
     const pieces = toArray(design.pieces);
@@ -7623,7 +7620,7 @@ export const semioDesignPieceSameFamilyRule: SemioValidationRule = (ctx) => {
             cd.connections = toArray(cd.connections).filter((c) => c.connected.piece.guid !== piece.guid && c.connecting.piece.guid !== piece.guid);
           });
           issues.push({
-            ruleId: "design-piece-same-family",
+            constraintId: "design-piece-same-family",
             severity: "error",
             message: `Design piece "${piece.name || piece.guid}" references design "${pieceDesign.name}" which is in the same design family as container design "${design.name}". A design cannot contain design pieces from the same family.`,
             location: { entityKind: "Piece", entityGuid: piece.guid, field: "design" },
@@ -7652,26 +7649,26 @@ const getPrimitiveDesignFromContext = (ctx: SemioValidationContext, designGuid: 
   return currentGuid;
 };
 
-// #endregion Rule: Design piece same family constraint
+// #endregion Constraint: Design piece same family constraint
 
-// #region Rule registration
+// #region Constraint registration
 
-defaultSemioValidationRules = [
-  semioGuidUniquenessRule,
-  semioTypeNameUniquenessRule,
-  semioDesignNameUniquenessRule,
-  semioPieceNameUniquenessRule,
-  semioQualityNameUniquenessRule,
-  semioInterfaceNameUniquenessRule,
-  semioFileNameUniquenessRule,
-  semioFolderNameUniquenessRule,
-  semioPortNameUniquenessRule,
-  semioModelNameUniquenessRule,
-  semioLayerPathUniquenessRule,
-  semioDesignPieceSameFamilyRule,
+defaultSemioValidationConstraints = [
+  semioGuidUniquenessConstraint,
+  semioTypeNameUniquenessConstraint,
+  semioDesignNameUniquenessConstraint,
+  semioPieceNameUniquenessConstraint,
+  semioQualityNameUniquenessConstraint,
+  semioInterfaceNameUniquenessConstraint,
+  semioFileNameUniquenessConstraint,
+  semioFolderNameUniquenessConstraint,
+  semioPortNameUniquenessConstraint,
+  semioModelNameUniquenessConstraint,
+  semioLayerPathUniquenessConstraint,
+  semioDesignPieceSameFamilyConstraint,
 ];
 
-// #endregion Rule registration
+// #endregion Constraint registration
 
 // #region Validation serialization
 
@@ -7681,7 +7678,7 @@ export interface SerializableValidationFix {
 }
 
 export interface SerializableValidationIssue {
-  ruleId: string;
+  constraintId: string;
   severity: "error" | "warning";
   message: string;
   entityKind: string;
@@ -7695,7 +7692,7 @@ export interface SerializableValidationResult {
 
 export const toSerializableValidationResult = (result: SemioValidationResult): SerializableValidationResult => ({
   issues: result.issues.map((issue) => ({
-    ruleId: issue.ruleId,
+    constraintId: issue.constraintId,
     severity: issue.severity,
     message: issue.message,
     entityKind: issue.location.entityKind,
@@ -7707,8 +7704,8 @@ export const toSerializableValidationResult = (result: SemioValidationResult): S
 export const serializeValidationResult = (result: SemioValidationResult): string => {
   const serializable = toSerializableValidationResult(result);
   serializable.issues.sort((a, b) => {
-    const ruleCompare = a.ruleId.localeCompare(b.ruleId);
-    if (ruleCompare !== 0) return ruleCompare;
+    const constraintCompare = a.constraintId.localeCompare(b.constraintId);
+    if (constraintCompare !== 0) return constraintCompare;
     return a.entityGuid.localeCompare(b.entityGuid);
   });
   return JSON.stringify(serializable, null, 2);
@@ -7737,15 +7734,15 @@ export const areValidationResultsEqual = (a: SerializableValidationResult, b: Se
   if (a.issues.length !== b.issues.length) return false;
   const sortIssues = (issues: SerializableValidationIssue[]) =>
     [...issues].sort((x, y) => {
-      const ruleCompare = x.ruleId.localeCompare(y.ruleId);
-      if (ruleCompare !== 0) return ruleCompare;
+      const constraintCompare = x.constraintId.localeCompare(y.constraintId);
+      if (constraintCompare !== 0) return constraintCompare;
       return x.entityGuid.localeCompare(y.entityGuid);
     });
   const sortedA = sortIssues(a.issues);
   const sortedB = sortIssues(b.issues);
   return sortedA.every((issueA, i) => {
     const issueB = sortedB[i];
-    if (issueA.ruleId !== issueB.ruleId || issueA.severity !== issueB.severity || issueA.message !== issueB.message || issueA.entityKind !== issueB.entityKind || issueA.entityGuid !== issueB.entityGuid) return false;
+    if (issueA.constraintId !== issueB.constraintId || issueA.severity !== issueB.severity || issueA.message !== issueB.message || issueA.entityKind !== issueB.entityKind || issueA.entityGuid !== issueB.entityGuid) return false;
     if (issueA.fixes.length !== issueB.fixes.length) return false;
     return issueA.fixes.every((fixA, j) => {
       const fixB = issueB.fixes[j];

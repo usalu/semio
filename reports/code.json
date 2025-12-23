@@ -1,9 +1,9 @@
 {
-  "timestamp": "2025-12-22T22:00:16.944Z",
+  "timestamp": "2025-12-23T13:43:51.876Z",
   "status": "error",
   "summary": {
-    "filesScanned": 133,
-    "issues": 276,
+    "filesScanned": 135,
+    "issues": 59,
     "byKind": {
       "comment": 2,
       "temporary_log": 3,
@@ -11,16 +11,17 @@
       "invalid_header_format": 0,
       "header_filepath_mismatch": 0,
       "extra_dev_docs": 0,
-      "region_name_missing": 98,
-      "region_mismatch": 127,
-      "region_unclosed": 3,
-      "region_duplicate_sibling": 43,
-      "unreadable_file": 0,
+      "region_name_missing": 22,
+      "region_mismatch": 24,
+      "region_unclosed": 0,
+      "region_duplicate_sibling": 4,
+      "region_empty": 0,
+      "unreadable_file": 4,
       "forbidden_import": 0,
       "forbidden_terminology": 0
     },
     "byLanguage": {
-      "typescript": 122,
+      "typescript": 124,
       "python": 3,
       "csharp": 8,
       "meta": 0
@@ -28,1948 +29,81 @@
   },
   "issues": [
     {
-      "path": "js/docs/postcss.config.ts",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 20,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/docs/postcss.config.ts",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 20,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/main.ts",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 23,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/main.ts",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 42,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/main.ts",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 42,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 23, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/preview.ts",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/preview.ts",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/preview.ts",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Canvas.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Canvas.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Canvas.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Command.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Command.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Command.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Footer.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Footer.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Footer.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Layout.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Layout.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Layout.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Navbar.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Navbar.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Navbar.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Popover.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Popover.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Popover.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Accordion.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Accordion.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Accordion.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Band.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Band.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Band.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Collapsible.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Collapsible.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Collapsible.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Dialog.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Dialog.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Dialog.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Scrollable.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Scrollable.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Scrollable.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Tabs.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Tabs.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Tabs.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Tree.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Tree.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Tree.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/display/Avatar.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/display/Avatar.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/display/Avatar.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/display/HoverCard.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/display/HoverCard.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/display/HoverCard.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/display/Icons.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/display/Icons.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 24,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/display/Icons.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 24,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/display/Tooltip.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/display/Tooltip.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/display/Tooltip.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/ActionGroup.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/ActionGroup.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/ActionGroup.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/Button.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/Button.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/Button.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/ButtonGroup.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/ButtonGroup.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/ButtonGroup.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/Combobox.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/Combobox.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/Combobox.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/Input.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/Input.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/Input.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/Select.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/Select.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/Select.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/Slider.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/Slider.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/Slider.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/Stepper.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/Stepper.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/Stepper.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/Textarea.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/Textarea.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/Textarea.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/Toggle.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/Toggle.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/Toggle.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/ToggleGroup.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/ToggleGroup.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/ToggleGroup.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/window/Table.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/window/Table.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/window/Table.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/withTheme.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/withTheme.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/withTheme.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/eslint.config.ts",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 20,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/eslint.config.ts",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 20,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/index.ts",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/index.ts",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/index.ts",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/postcss.config.ts",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 20,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/postcss.config.ts",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 20,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/semio.test.ts",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/semio.test.ts",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/semio.test.ts",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/semio.ts",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 408,
-      "column": 1,
-      "message": "Region mismatch: opened \"Coord (weak entity)\" at line 370, closed \"Coord\"",
-      "excerpt": "// #endregion Coord"
-    },
-    {
-      "path": "js/js/semio.ts",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 448,
-      "column": 1,
-      "message": "Region mismatch: opened \"Vec (weak entity)\" at line 410, closed \"Vec\"",
-      "excerpt": "// #endregion Vec"
-    },
-    {
-      "path": "js/js/semio.ts",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 498,
-      "column": 1,
-      "message": "Region mismatch: opened \"Point (weak entity)\" at line 450, closed \"Point\"",
-      "excerpt": "// #endregion Point"
-    },
-    {
-      "path": "js/js/semio.ts",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 548,
-      "column": 1,
-      "message": "Region mismatch: opened \"Vector (weak entity)\" at line 500, closed \"Vector\"",
-      "excerpt": "// #endregion Vector"
-    },
-    {
-      "path": "js/js/semio.ts",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 663,
-      "column": 1,
-      "message": "Region mismatch: opened \"Plane (weak entity)\" at line 550, closed \"Plane\"",
-      "excerpt": "// #endregion Plane"
-    },
-    {
-      "path": "js/js/semio.ts",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 713,
-      "column": 1,
-      "message": "Region mismatch: opened \"Camera (weak entity)\" at line 665, closed \"Camera\"",
-      "excerpt": "// #endregion Camera"
-    },
-    {
-      "path": "js/js/sketchpad.test.ts",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 809,
-      "column": 1,
-      "message": "Endregion without matching region",
-      "excerpt": "// #endregion Toolbar and Artifact Filter Toggles"
-    },
-    {
       "path": "js/js/sketchpad.test.ts",
       "language": "typescript",
       "kind": "region_duplicate_sibling",
-      "line": 844,
+      "line": 867,
       "column": 1,
-      "message": "Duplicate sibling region name \"Selection State\" (first occurrence at line 632)",
+      "message": "Duplicate sibling region name \"Selection State\" (first occurrence at line 649)",
+      "reason": "Sibling regions must have unique names so region structure stays unambiguous.",
+      "solution": "Rename one region or merge them into a single region.",
       "excerpt": "// #region Selection State"
     },
     {
       "path": "js/js/sketchpad.test.ts",
       "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 1651,
-      "column": 1,
-      "message": "Endregion without matching region",
-      "excerpt": "// #endregion Flat Planes Verification"
-    },
-    {
-      "path": "js/js/sketchpad.test.ts",
-      "language": "typescript",
       "kind": "region_duplicate_sibling",
-      "line": 1653,
+      "line": 1689,
       "column": 1,
-      "message": "Duplicate sibling region name \"Selection State\" (first occurrence at line 632)",
+      "message": "Duplicate sibling region name \"Selection State\" (first occurrence at line 649)",
+      "reason": "Sibling regions must have unique names so region structure stays unambiguous.",
+      "solution": "Rename one region or merge them into a single region.",
       "excerpt": "// #region Selection State"
     },
     {
-      "path": "js/js/sketchpad/Design.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 2754,
-      "column": 1,
-      "message": "Region mismatch: opened \"Imports\" at line 61, closed \"Store\"",
-      "excerpt": "// #endregion Store"
-    },
-    {
-      "path": "js/js/sketchpad/Docs.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 645,
-      "column": 1,
-      "message": "Region mismatch: opened \"Store\" at line 637, closed \"Registry\"",
-      "excerpt": "// #endregion Registry"
-    },
-    {
       "path": "js/js/sketchpad/Docs.tsx",
       "language": "typescript",
       "kind": "region_duplicate_sibling",
-      "line": 690,
+      "line": 692,
       "column": 1,
-      "message": "Duplicate sibling region name \"Store\" (first occurrence at line 637)",
+      "message": "Duplicate sibling region name \"Store\" (first occurrence at line 639)",
+      "reason": "Sibling regions must have unique names so region structure stays unambiguous.",
+      "solution": "Rename one region or merge them into a single region.",
       "excerpt": "// #region Store"
     },
     {
-      "path": "js/js/sketchpad/Home.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 234,
-      "column": 1,
-      "message": "Region mismatch: opened \"Hooks (XState-based)\" at line 228, closed \"Hooks\"",
-      "excerpt": "// #endregion Hooks"
-    },
-    {
-      "path": "js/js/sketchpad/Kit.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 1570,
-      "column": 1,
-      "message": "Region mismatch: opened \"Internal State Management\" at line 177, closed \"Kit App\"",
-      "excerpt": "// #endregion Kit App"
-    },
-    {
-      "path": "js/js/sketchpad/Kit.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 1710,
-      "column": 1,
-      "message": "Endregion without matching region",
-      "excerpt": "// #endregion Internal State Management"
-    },
-    {
-      "path": "js/js/sketchpad/Quality.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 83,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Quality.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 83,
-      "column": 1,
-      "message": "Region mismatch: opened \"Imports\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Quality.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 166,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Quality.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 166,
-      "column": 1,
-      "message": "Region mismatch: opened \"Types\" at line 85, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Quality.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 487,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Quality.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 487,
-      "column": 1,
-      "message": "Region mismatch: opened \"Functions\" at line 168, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Quality.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 596,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Quality.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 596,
-      "column": 1,
-      "message": "Region mismatch: opened \"Commands\" at line 489, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Quality.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 1045,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Quality.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 1045,
-      "column": 1,
-      "message": "Region mismatch: opened \"Store\" at line 598, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Quality.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 1595,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Quality.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 1595,
-      "column": 1,
-      "message": "Region mismatch: opened \"Components\" at line 1047, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Quality.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 1894,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Quality.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 1894,
-      "column": 1,
-      "message": "Region mismatch: opened \"App\" at line 1597, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Quality.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 1930,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Quality.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 1930,
-      "column": 1,
-      "message": "Region mismatch: opened \"Config\" at line 1896, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Sketchpad.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 445,
-      "column": 1,
-      "message": "Region mismatch: opened \"Store\" at line 252, closed \"YPath API\"",
-      "excerpt": "// #endregion YPath API"
-    },
-    {
-      "path": "js/js/sketchpad/Sketchpad.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 1110,
-      "column": 1,
-      "message": "Region mismatch: opened \"Plain App Store (No YJS)\" at line 821, closed \"Plain App Store\"",
-      "excerpt": "// #endregion Plain App Store"
-    },
-    {
-      "path": "js/js/sketchpad/Sketchpad.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 1250,
-      "column": 1,
-      "message": "Region mismatch: opened \"Local File Provider (IndexedDB)\" at line 1156, closed \"Local File Provider\"",
-      "excerpt": "// #endregion Local File Provider"
-    },
-    {
-      "path": "js/js/sketchpad/Sketchpad.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 1458,
-      "column": 1,
-      "message": "Region mismatch: opened \"Kits\" at line 1382, closed \"Attribute\"",
-      "excerpt": "// #endregion Attribute"
-    },
-    {
-      "path": "js/js/sketchpad/Sketchpad.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 7607,
-      "column": 1,
-      "message": "Endregion without matching region",
-      "excerpt": "// #endregion Store"
-    },
-    {
-      "path": "js/js/sketchpad/Sketchpad.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 12361,
-      "column": 1,
-      "message": "Region mismatch: opened \"Sketchpad\" at line 9710, closed \"Store\"",
-      "excerpt": "// #endregion Store"
-    },
-    {
-      "path": "js/js/sketchpad/Sketchpad.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 12772,
-      "column": 1,
-      "message": "Region mismatch: opened \"Navbar\" at line 12660, closed \"Panel Sections\"",
-      "excerpt": "// #endregion Panel Sections"
-    },
-    {
       "path": "js/js/sketchpad/Sketchpad.tsx",
       "language": "typescript",
       "kind": "region_duplicate_sibling",
-      "line": 15300,
+      "line": 15297,
       "column": 1,
-      "message": "Duplicate sibling region name \"Sketchpad\" (first occurrence at line 9710)",
+      "message": "Duplicate sibling region name \"Sketchpad\" (first occurrence at line 9707)",
+      "reason": "Sibling regions must have unique names so region structure stays unambiguous.",
+      "solution": "Rename one region or merge them into a single region.",
       "excerpt": "// #region Sketchpad"
     },
     {
       "path": "js/js/sketchpad/Sketchpad.tsx",
       "language": "typescript",
       "kind": "temporary_log",
-      "line": 9088,
+      "line": 9085,
       "column": 9,
       "message": "Temporary [DEBUG] console log found",
+      "reason": "Only temporary diagnostics prefixed with [DEBUG] are allowed; they must be removed to keep Sketchpad runtime output clean.",
+      "solution": "Remove the temporary log or replace it with a warning or error if it is required.",
       "excerpt": "console.log(`[DEBUG][Machine] ${type} → ${stateValue}`, hasParams ? params : \"\");"
-    },
-    {
-      "path": "js/js/sketchpad/Tutorials.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 31,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Tutorials.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 31,
-      "column": 1,
-      "message": "Region mismatch: opened \"Imports\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Tutorials.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 110,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Tutorials.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 110,
-      "column": 1,
-      "message": "Region mismatch: opened \"Tutorial Controls\" at line 35, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Tutorials.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 183,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Tutorials.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 183,
-      "column": 1,
-      "message": "Region mismatch: opened \"Recording Controls\" at line 112, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Tutorials.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 225,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Tutorials.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 225,
-      "column": 1,
-      "message": "Region mismatch: opened \"Record Button\" at line 185, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Tutorials.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 362,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Tutorials.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 362,
-      "column": 1,
-      "message": "Region mismatch: opened \"Tutorial Overlay\" at line 227, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Tutorials.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 364,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Tutorials.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 364,
-      "column": 1,
-      "message": "Region mismatch: opened \"Components\" at line 33, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Tutorials.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 499,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Tutorials.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 499,
-      "column": 1,
-      "message": "Region mismatch: opened \"Built-in Tutorials\" at line 365, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Tutorials.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 574,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Tutorials.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 574,
-      "column": 1,
-      "message": "Region mismatch: opened \"Commands\" at line 501, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Tutorials.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 596,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Tutorials.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 596,
-      "column": 1,
-      "message": "Region mismatch: opened \"Command Interceptor\" at line 576, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Tutorials.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 627,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Tutorials.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 627,
-      "column": 1,
-      "message": "Region mismatch: opened \"Hooks\" at line 598, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Tutorials.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 667,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Tutorials.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 667,
-      "column": 1,
-      "message": "Region mismatch: opened \"Context\" at line 629, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Tutorials.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 767,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Tutorials.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 767,
-      "column": 1,
-      "message": "Region mismatch: opened \"Tutorial Entities\" at line 671, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Tutorials.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 769,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Tutorials.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 769,
-      "column": 1,
-      "message": "Region mismatch: opened \"Types\" at line 669, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Tutorials.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 1034,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Tutorials.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 1034,
-      "column": 1,
-      "message": "Region mismatch: opened \"Store\" at line 771, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Type.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 957,
-      "column": 1,
-      "message": "Region mismatch: opened \"XState Hooks\" at line 455, closed \"Internal State Management\"",
-      "excerpt": "// #endregion Internal State Management"
-    },
-    {
-      "path": "js/js/sketchpad/Type.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 1709,
-      "column": 1,
-      "message": "Endregion without matching region",
-      "excerpt": "// #endregion Windows"
-    },
-    {
-      "path": "js/js/sketchpad/Type.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 3031,
-      "column": 1,
-      "message": "Endregion without matching region",
-      "excerpt": "// #endregion Canvas"
-    },
-    {
-      "path": "js/js/sketchpad/elements.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 265,
-      "column": 1,
-      "message": "Region mismatch: opened \"Root Components\" at line 263, closed \"Canvas\"",
-      "excerpt": "// #endregion Canvas"
-    },
-    {
-      "path": "js/js/sketchpad/elements.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 482,
-      "column": 1,
-      "message": "Region mismatch: opened \"Footer\" at line 356, closed \"Root Components\"",
-      "excerpt": "// #endregion Root Components"
-    },
-    {
-      "path": "js/js/sketchpad/elements.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 757,
-      "column": 1,
-      "message": "Region mismatch: opened \"Display Components\" at line 717, closed \"Tooltip\"",
-      "excerpt": "// #endregion Tooltip"
-    },
-    {
-      "path": "js/js/sketchpad/elements.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 1488,
-      "column": 1,
-      "message": "Region mismatch: opened \"Input Components\" at line 1139, closed \"ButtonGroup\"",
-      "excerpt": "// #endregion ButtonGroup"
-    },
-    {
-      "path": "js/js/sketchpad/elements.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 2717,
-      "column": 1,
-      "message": "Endregion without matching region",
-      "excerpt": "// #endregion Input Components"
-    },
-    {
-      "path": "js/js/sketchpad/elements.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 4059,
-      "column": 1,
-      "message": "Region mismatch: opened \"Breadcrumb\" at line 3841, closed \"Navigation Components\"",
-      "excerpt": "// #endregion Navigation Components"
-    },
-    {
-      "path": "js/js/sketchpad/elements.tsx",
-      "language": "typescript",
-      "kind": "region_unclosed",
-      "line": 3839,
-      "column": 1,
-      "message": "Region \"Navigation Components\" not closed",
-      "excerpt": "// #region Navigation Components"
-    },
-    {
-      "path": "js/js/sketchpad/shared.ts",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/sketchpad/shared.ts",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/shared.ts",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/shared.ts",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 51,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/shared.ts",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 51,
-      "column": 1,
-      "message": "Region mismatch: opened \"Imports\" at line 43, closed \"\"",
-      "excerpt": "// #endregion"
     },
     {
       "path": "js/js/sketchpad/shared.ts",
       "language": "typescript",
       "kind": "temporary_log",
-      "line": 97,
+      "line": 76,
       "column": 5,
       "message": "Temporary [DEBUG] console log found",
+      "reason": "Only temporary diagnostics prefixed with [DEBUG] are allowed; they must be removed to keep Sketchpad runtime output clean.",
+      "solution": "Remove the temporary log or replace it with a warning or error if it is required.",
       "excerpt": "console.warn(\"[DEBUG] Attempted to set a disabled field\");"
     },
     {
       "path": "js/js/sketchpad/shared.ts",
       "language": "typescript",
       "kind": "temporary_log",
-      "line": 124,
-      "column": 13,
+      "line": 103,
+      "column": 11,
       "message": "Temporary [DEBUG] console log found",
+      "reason": "Only temporary diagnostics prefixed with [DEBUG] are allowed; they must be removed to keep Sketchpad runtime output clean.",
+      "solution": "Remove the temporary log or replace it with a warning or error if it is required.",
       "excerpt": "console.warn(\"[DEBUG] Attempted to execute a disabled action\");"
-    },
-    {
-      "path": "js/js/tailwind.config.ts",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 20,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/tailwind.config.ts",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 20,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/vite.config.ts",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 20,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/vite.config.ts",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 20,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/play/postcss.config.ts",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 20,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/play/postcss.config.ts",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 20,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/sketchpad/postcss.config.ts",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 20,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/sketchpad/postcss.config.ts",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 20,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/vscode/eslint.config.ts",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 20,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/vscode/eslint.config.ts",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 20,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "net/Semio.Grasshopper/Semio.Grasshopper.cs",
-      "language": "csharp",
-      "kind": "region_name_missing",
-      "line": 40,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "#endregion"
-    },
-    {
-      "path": "net/Semio.Grasshopper/Semio.Grasshopper.cs",
-      "language": "csharp",
-      "kind": "region_mismatch",
-      "line": 40,
-      "column": 1,
-      "message": "Region mismatch: opened \"TODOs\" at line 22, closed \"\"",
-      "excerpt": "#endregion"
-    },
-    {
-      "path": "net/Semio.Grasshopper/Semio.Grasshopper.cs",
-      "language": "csharp",
-      "kind": "region_name_missing",
-      "line": 956,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "#endregion"
-    },
-    {
-      "path": "net/Semio.Grasshopper/Semio.Grasshopper.cs",
-      "language": "csharp",
-      "kind": "region_mismatch",
-      "line": 956,
-      "column": 1,
-      "message": "Region mismatch: opened \"Attribute\" at line 683, closed \"\"",
-      "excerpt": "#endregion"
-    },
-    {
-      "path": "net/Semio.Grasshopper/Semio.Grasshopper.cs",
-      "language": "csharp",
-      "kind": "region_name_missing",
-      "line": 5592,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "#endregion"
-    },
-    {
-      "path": "net/Semio.Grasshopper/Semio.Grasshopper.cs",
-      "language": "csharp",
-      "kind": "region_mismatch",
-      "line": 5592,
-      "column": 1,
-      "message": "Region mismatch: opened \"Persistence\" at line 5516, closed \"\"",
-      "excerpt": "#endregion"
     },
     {
       "path": "net/Semio.Grasshopper/Semio.Grasshopper.cs",
@@ -1978,160 +112,119 @@
       "line": 5471,
       "column": 64,
       "message": "Line comment found",
+      "reason": "Code is never documented inline; documentation lives exclusively in the root README.md and AGENTS.md across the four required perspectives (Products, Components, SRS Business Logic/UI/UX, Codebase).",
+      "solution": "Remove the inline comment and document the guidance in README.md under Products and Components, plus AGENTS.md under SRS Business Logic/UI/UX and Codebase.",
       "excerpt": "\"If you want, you can report this under: https://github.com/usalu/semio/issues\\n\" +"
     },
     {
-      "path": "net/Semio/Semio.cs",
-      "language": "csharp",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "#region Header"
-    },
-    {
-      "path": "net/Semio/Semio.cs",
-      "language": "csharp",
-      "kind": "region_name_missing",
-      "line": 40,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "#endregion"
-    },
-    {
-      "path": "net/Semio/Semio.cs",
-      "language": "csharp",
-      "kind": "region_mismatch",
-      "line": 40,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "#endregion"
-    },
-    {
-      "path": "net/Semio/Semio.cs",
-      "language": "csharp",
-      "kind": "region_name_missing",
-      "line": 56,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "#endregion"
-    },
-    {
-      "path": "net/Semio/Semio.cs",
-      "language": "csharp",
-      "kind": "region_mismatch",
-      "line": 56,
-      "column": 1,
-      "message": "Region mismatch: opened \"TODOs\" at line 42, closed \"\"",
-      "excerpt": "#endregion"
-    },
-    {
-      "path": "net/Semio/Semio.cs",
-      "language": "csharp",
-      "kind": "region_name_missing",
-      "line": 139,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "#endregion"
-    },
-    {
-      "path": "net/Semio/Semio.cs",
-      "language": "csharp",
-      "kind": "region_mismatch",
-      "line": 139,
-      "column": 1,
-      "message": "Region mismatch: opened \"Constants\" at line 81, closed \"\"",
-      "excerpt": "#endregion"
-    },
-    {
       "path": "preflight.ts",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 69,
+      "line": 74,
       "column": 1,
       "message": "Endregion is missing a name",
+      "reason": "Regions must be named and nested to keep file structure navigable and consistent.",
+      "solution": "Add a matching name to the region and endregion markers.",
       "excerpt": "//#endregion"
     },
     {
       "path": "preflight.ts",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 69,
+      "line": 74,
       "column": 1,
-      "message": "Region mismatch: opened \"Cli\" at line 26, closed \"\"",
+      "message": "Region mismatch: opened \"Cli\" at line 27, closed \"\"",
+      "reason": "Region blocks must be properly nested and closed with matching named end markers.",
+      "solution": "Fix the region names and nesting so each endregion matches the open region.",
       "excerpt": "//#endregion"
     },
     {
       "path": "preflight.ts",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 85,
+      "line": 91,
       "column": 1,
       "message": "Endregion is missing a name",
+      "reason": "Regions must be named and nested to keep file structure navigable and consistent.",
+      "solution": "Add a matching name to the region and endregion markers.",
       "excerpt": "//#endregion"
     },
     {
       "path": "preflight.ts",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 85,
+      "line": 91,
       "column": 1,
-      "message": "Region mismatch: opened \"Exec\" at line 71, closed \"\"",
+      "message": "Region mismatch: opened \"Exec\" at line 76, closed \"\"",
+      "reason": "Region blocks must be properly nested and closed with matching named end markers.",
+      "solution": "Fix the region names and nesting so each endregion matches the open region.",
       "excerpt": "//#endregion"
     },
     {
       "path": "preflight.ts",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 152,
+      "line": 158,
       "column": 1,
       "message": "Endregion is missing a name",
+      "reason": "Regions must be named and nested to keep file structure navigable and consistent.",
+      "solution": "Add a matching name to the region and endregion markers.",
       "excerpt": "//#endregion"
     },
     {
       "path": "preflight.ts",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 152,
+      "line": 158,
       "column": 1,
-      "message": "Region mismatch: opened \"Steps\" at line 87, closed \"\"",
+      "message": "Region mismatch: opened \"Steps\" at line 93, closed \"\"",
+      "reason": "Region blocks must be properly nested and closed with matching named end markers.",
+      "solution": "Fix the region names and nesting so each endregion matches the open region.",
       "excerpt": "//#endregion"
     },
     {
       "path": "preflight.ts",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 179,
+      "line": 185,
       "column": 1,
       "message": "Endregion is missing a name",
+      "reason": "Regions must be named and nested to keep file structure navigable and consistent.",
+      "solution": "Add a matching name to the region and endregion markers.",
       "excerpt": "//#endregion"
     },
     {
       "path": "preflight.ts",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 179,
+      "line": 185,
       "column": 1,
-      "message": "Region mismatch: opened \"Main\" at line 154, closed \"\"",
+      "message": "Region mismatch: opened \"Main\" at line 160, closed \"\"",
+      "reason": "Region blocks must be properly nested and closed with matching named end markers.",
+      "solution": "Fix the region names and nesting so each endregion matches the open region.",
       "excerpt": "//#endregion"
     },
     {
       "path": "py/engine/engine.py",
       "language": "python",
-      "kind": "region_unclosed",
-      "line": 356,
+      "kind": "region_mismatch",
+      "line": 3833,
       "column": 1,
-      "message": "Region \"Modeling\" not closed",
-      "excerpt": "# region Modeling"
+      "message": "Region mismatch: opened \"Kit\" at line 3460, closed \"Domain\"",
+      "reason": "Region blocks must be properly nested and closed with matching named end markers.",
+      "solution": "Fix the region names and nesting so each endregion matches the open region.",
+      "excerpt": "# endregion Domain"
     },
     {
       "path": "py/engine/engine.py",
       "language": "python",
-      "kind": "region_unclosed",
-      "line": 562,
+      "kind": "region_mismatch",
+      "line": 3991,
       "column": 1,
-      "message": "Region \"Domain\" not closed",
-      "excerpt": "# region Domain"
+      "message": "Region mismatch: opened \"Domain\" at line 557, closed \"Kit\"",
+      "reason": "Region blocks must be properly nested and closed with matching named end markers.",
+      "solution": "Fix the region names and nesting so each endregion matches the open region.",
+      "excerpt": "# endregion Kit"
     },
     {
       "path": "py/engine/engine.py",
@@ -2140,304 +233,357 @@
       "line": 1,
       "column": 1,
       "message": "Line comment found",
+      "reason": "Code is never documented inline; documentation lives exclusively in the root README.md and AGENTS.md across the four required perspectives (Products, Components, SRS Business Logic/UI/UX, Codebase).",
+      "solution": "Remove the inline comment and document the guidance in README.md under Products and Components, plus AGENTS.md under SRS Business Logic/UI/UX and Codebase.",
       "excerpt": "#!/usr/bin/env python"
     },
     {
-      "path": "scripts/generate-metabolism-diff.ts",
+      "path": "scripts/generate-metabolism-diff.tsx",
       "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
+      "kind": "unreadable_file",
+      "line": 1,
       "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
+      "message": "Failed to read file",
+      "reason": "Unreadable files cannot be scanned for code hygiene requirements.",
+      "solution": "Fix file permissions or encoding so the scanner can read the file."
     },
     {
-      "path": "scripts/generate-metabolism-diff.ts",
+      "path": "scripts/generate-validation.tsx",
+      "language": "typescript",
+      "kind": "unreadable_file",
+      "line": 1,
+      "column": 1,
+      "message": "Failed to read file",
+      "reason": "Unreadable files cannot be scanned for code hygiene requirements.",
+      "solution": "Fix file permissions or encoding so the scanner can read the file."
+    },
+    {
+      "path": "scripts/i18n.tsx",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 24,
+      "line": 58,
       "column": 1,
       "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
+      "reason": "Regions must be named and nested to keep file structure navigable and consistent.",
+      "solution": "Add a matching name to the region and endregion markers.",
+      "excerpt": "//#endregion"
     },
     {
-      "path": "scripts/generate-metabolism-diff.ts",
+      "path": "scripts/i18n.tsx",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 24,
+      "line": 58,
       "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
+      "message": "Region mismatch: opened \"Load Translations\" at line 48, closed \"\"",
+      "reason": "Region blocks must be properly nested and closed with matching named end markers.",
+      "solution": "Fix the region names and nesting so each endregion matches the open region.",
+      "excerpt": "//#endregion"
     },
     {
-      "path": "scripts/i18n.ts",
+      "path": "scripts/i18n.tsx",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 59,
+      "line": 97,
       "column": 1,
       "message": "Endregion is missing a name",
+      "reason": "Regions must be named and nested to keep file structure navigable and consistent.",
+      "solution": "Add a matching name to the region and endregion markers.",
       "excerpt": "//#endregion"
     },
     {
-      "path": "scripts/i18n.ts",
+      "path": "scripts/i18n.tsx",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 59,
+      "line": 97,
       "column": 1,
-      "message": "Region mismatch: opened \"Load Translations\" at line 46, closed \"\"",
+      "message": "Region mismatch: opened \"Find All IDs in Source Files\" at line 60, closed \"\"",
+      "reason": "Region blocks must be properly nested and closed with matching named end markers.",
+      "solution": "Fix the region names and nesting so each endregion matches the open region.",
       "excerpt": "//#endregion"
     },
     {
-      "path": "scripts/i18n.ts",
+      "path": "scripts/i18n.tsx",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 95,
+      "line": 706,
       "column": 1,
       "message": "Endregion is missing a name",
+      "reason": "Regions must be named and nested to keep file structure navigable and consistent.",
+      "solution": "Add a matching name to the region and endregion markers.",
       "excerpt": "//#endregion"
     },
     {
-      "path": "scripts/i18n.ts",
+      "path": "scripts/i18n.tsx",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 95,
+      "line": 706,
       "column": 1,
-      "message": "Region mismatch: opened \"Find All IDs in Source Files\" at line 61, closed \"\"",
+      "message": "Region mismatch: opened \"Validate Translations\" at line 99, closed \"\"",
+      "reason": "Region blocks must be properly nested and closed with matching named end markers.",
+      "solution": "Fix the region names and nesting so each endregion matches the open region.",
       "excerpt": "//#endregion"
     },
     {
-      "path": "scripts/i18n.ts",
+      "path": "scripts/i18n.tsx",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 629,
+      "line": 784,
       "column": 1,
       "message": "Endregion is missing a name",
+      "reason": "Regions must be named and nested to keep file structure navigable and consistent.",
+      "solution": "Add a matching name to the region and endregion markers.",
       "excerpt": "//#endregion"
     },
     {
-      "path": "scripts/i18n.ts",
+      "path": "scripts/i18n.tsx",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 629,
+      "line": 784,
       "column": 1,
-      "message": "Region mismatch: opened \"Validate Translations\" at line 97, closed \"\"",
+      "message": "Region mismatch: opened \"App Component\" at line 708, closed \"\"",
+      "reason": "Region blocks must be properly nested and closed with matching named end markers.",
+      "solution": "Fix the region names and nesting so each endregion matches the open region.",
       "excerpt": "//#endregion"
     },
     {
-      "path": "scripts/i18n.ts",
+      "path": "scripts/log.tsx",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 815,
+      "line": 115,
       "column": 1,
       "message": "Endregion is missing a name",
+      "reason": "Regions must be named and nested to keep file structure navigable and consistent.",
+      "solution": "Add a matching name to the region and endregion markers.",
       "excerpt": "//#endregion"
     },
     {
-      "path": "scripts/i18n.ts",
+      "path": "scripts/log.tsx",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 815,
+      "line": 115,
       "column": 1,
-      "message": "Region mismatch: opened \"Fix Mode\" at line 631, closed \"\"",
+      "message": "Region mismatch: opened \"Types\" at line 31, closed \"\"",
+      "reason": "Region blocks must be properly nested and closed with matching named end markers.",
+      "solution": "Fix the region names and nesting so each endregion matches the open region.",
       "excerpt": "//#endregion"
     },
     {
-      "path": "scripts/i18n.ts",
+      "path": "scripts/log.tsx",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 840,
+      "line": 121,
       "column": 1,
       "message": "Endregion is missing a name",
+      "reason": "Regions must be named and nested to keep file structure navigable and consistent.",
+      "solution": "Add a matching name to the region and endregion markers.",
       "excerpt": "//#endregion"
     },
     {
-      "path": "scripts/i18n.ts",
+      "path": "scripts/log.tsx",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 840,
+      "line": 121,
       "column": 1,
-      "message": "Region mismatch: opened \"Generate Report\" at line 817, closed \"\"",
+      "message": "Region mismatch: opened \"Exports\" at line 117, closed \"\"",
+      "reason": "Region blocks must be properly nested and closed with matching named end markers.",
+      "solution": "Fix the region names and nesting so each endregion matches the open region.",
       "excerpt": "//#endregion"
     },
     {
-      "path": "scripts/log.ts",
+      "path": "scripts/log.tsx",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 112,
+      "line": 154,
       "column": 1,
       "message": "Endregion is missing a name",
+      "reason": "Regions must be named and nested to keep file structure navigable and consistent.",
+      "solution": "Add a matching name to the region and endregion markers.",
       "excerpt": "//#endregion"
     },
     {
-      "path": "scripts/log.ts",
+      "path": "scripts/log.tsx",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 112,
+      "line": 154,
       "column": 1,
-      "message": "Region mismatch: opened \"Types\" at line 28, closed \"\"",
+      "message": "Region mismatch: opened \"Configuration\" at line 123, closed \"\"",
+      "reason": "Region blocks must be properly nested and closed with matching named end markers.",
+      "solution": "Fix the region names and nesting so each endregion matches the open region.",
       "excerpt": "//#endregion"
     },
     {
-      "path": "scripts/log.ts",
+      "path": "scripts/log.tsx",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 118,
+      "line": 179,
       "column": 1,
       "message": "Endregion is missing a name",
+      "reason": "Regions must be named and nested to keep file structure navigable and consistent.",
+      "solution": "Add a matching name to the region and endregion markers.",
       "excerpt": "//#endregion"
     },
     {
-      "path": "scripts/log.ts",
+      "path": "scripts/log.tsx",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 118,
+      "line": 179,
       "column": 1,
-      "message": "Region mismatch: opened \"Exports\" at line 114, closed \"\"",
+      "message": "Region mismatch: opened \"Path Utilities\" at line 156, closed \"\"",
+      "reason": "Region blocks must be properly nested and closed with matching named end markers.",
+      "solution": "Fix the region names and nesting so each endregion matches the open region.",
       "excerpt": "//#endregion"
     },
     {
-      "path": "scripts/log.ts",
+      "path": "scripts/log.tsx",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 150,
+      "line": 288,
       "column": 1,
       "message": "Endregion is missing a name",
+      "reason": "Regions must be named and nested to keep file structure navigable and consistent.",
+      "solution": "Add a matching name to the region and endregion markers.",
       "excerpt": "//#endregion"
     },
     {
-      "path": "scripts/log.ts",
+      "path": "scripts/log.tsx",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 150,
+      "line": 288,
       "column": 1,
-      "message": "Region mismatch: opened \"Configuration\" at line 120, closed \"\"",
+      "message": "Region mismatch: opened \"Git Stats\" at line 181, closed \"\"",
+      "reason": "Region blocks must be properly nested and closed with matching named end markers.",
+      "solution": "Fix the region names and nesting so each endregion matches the open region.",
       "excerpt": "//#endregion"
     },
     {
-      "path": "scripts/log.ts",
+      "path": "scripts/log.tsx",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 175,
+      "line": 301,
       "column": 1,
       "message": "Endregion is missing a name",
+      "reason": "Regions must be named and nested to keep file structure navigable and consistent.",
+      "solution": "Add a matching name to the region and endregion markers.",
       "excerpt": "//#endregion"
     },
     {
-      "path": "scripts/log.ts",
+      "path": "scripts/log.tsx",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 175,
+      "line": 301,
       "column": 1,
-      "message": "Region mismatch: opened \"Path Utilities\" at line 152, closed \"\"",
+      "message": "Region mismatch: opened \"Validation\" at line 290, closed \"\"",
+      "reason": "Region blocks must be properly nested and closed with matching named end markers.",
+      "solution": "Fix the region names and nesting so each endregion matches the open region.",
       "excerpt": "//#endregion"
     },
     {
-      "path": "scripts/log.ts",
+      "path": "scripts/log.tsx",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 284,
+      "line": 413,
       "column": 1,
       "message": "Endregion is missing a name",
+      "reason": "Regions must be named and nested to keep file structure navigable and consistent.",
+      "solution": "Add a matching name to the region and endregion markers.",
       "excerpt": "//#endregion"
     },
     {
-      "path": "scripts/log.ts",
+      "path": "scripts/log.tsx",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 284,
+      "line": 413,
       "column": 1,
-      "message": "Region mismatch: opened \"Git Stats\" at line 177, closed \"\"",
+      "message": "Region mismatch: opened \"Serialization\" at line 303, closed \"\"",
+      "reason": "Region blocks must be properly nested and closed with matching named end markers.",
+      "solution": "Fix the region names and nesting so each endregion matches the open region.",
       "excerpt": "//#endregion"
     },
     {
-      "path": "scripts/log.ts",
+      "path": "scripts/log.tsx",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 297,
+      "line": 677,
       "column": 1,
       "message": "Endregion is missing a name",
+      "reason": "Regions must be named and nested to keep file structure navigable and consistent.",
+      "solution": "Add a matching name to the region and endregion markers.",
       "excerpt": "//#endregion"
     },
     {
-      "path": "scripts/log.ts",
+      "path": "scripts/log.tsx",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 297,
+      "line": 677,
       "column": 1,
-      "message": "Region mismatch: opened \"Validation\" at line 286, closed \"\"",
+      "message": "Region mismatch: opened \"CRUD Operations\" at line 415, closed \"\"",
+      "reason": "Region blocks must be properly nested and closed with matching named end markers.",
+      "solution": "Fix the region names and nesting so each endregion matches the open region.",
       "excerpt": "//#endregion"
     },
     {
-      "path": "scripts/log.ts",
+      "path": "scripts/log.tsx",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 409,
+      "line": 689,
       "column": 1,
       "message": "Endregion is missing a name",
+      "reason": "Regions must be named and nested to keep file structure navigable and consistent.",
+      "solution": "Add a matching name to the region and endregion markers.",
       "excerpt": "//#endregion"
     },
     {
-      "path": "scripts/log.ts",
+      "path": "scripts/log.tsx",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 409,
+      "line": 689,
       "column": 1,
-      "message": "Region mismatch: opened \"Serialization\" at line 299, closed \"\"",
+      "message": "Region mismatch: opened \"Lookup\" at line 679, closed \"\"",
+      "reason": "Region blocks must be properly nested and closed with matching named end markers.",
+      "solution": "Fix the region names and nesting so each endregion matches the open region.",
       "excerpt": "//#endregion"
     },
     {
-      "path": "scripts/log.ts",
+      "path": "scripts/log.tsx",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 673,
+      "line": 1144,
       "column": 1,
       "message": "Endregion is missing a name",
+      "reason": "Regions must be named and nested to keep file structure navigable and consistent.",
+      "solution": "Add a matching name to the region and endregion markers.",
       "excerpt": "//#endregion"
     },
     {
-      "path": "scripts/log.ts",
+      "path": "scripts/log.tsx",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 673,
+      "line": 1144,
       "column": 1,
-      "message": "Region mismatch: opened \"CRUD Operations\" at line 411, closed \"\"",
+      "message": "Region mismatch: opened \"CLI\" at line 691, closed \"\"",
+      "reason": "Region blocks must be properly nested and closed with matching named end markers.",
+      "solution": "Fix the region names and nesting so each endregion matches the open region.",
       "excerpt": "//#endregion"
     },
     {
-      "path": "scripts/log.ts",
+      "path": "scripts/regenerate-metabolism.tsx",
       "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 685,
+      "kind": "unreadable_file",
+      "line": 1,
       "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "//#endregion"
+      "message": "Failed to read file",
+      "reason": "Unreadable files cannot be scanned for code hygiene requirements.",
+      "solution": "Fix file permissions or encoding so the scanner can read the file."
     },
     {
-      "path": "scripts/log.ts",
+      "path": "scripts/temp-migrate-capitals-tambours.tsx",
       "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 685,
+      "kind": "unreadable_file",
+      "line": 1,
       "column": 1,
-      "message": "Region mismatch: opened \"Lookup\" at line 675, closed \"\"",
-      "excerpt": "//#endregion"
-    },
-    {
-      "path": "scripts/log.ts",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 1023,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "//#endregion"
-    },
-    {
-      "path": "scripts/log.ts",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 1023,
-      "column": 1,
-      "message": "Region mismatch: opened \"CLI\" at line 687, closed \"\"",
-      "excerpt": "//#endregion"
+      "message": "Failed to read file",
+      "reason": "Unreadable files cannot be scanned for code hygiene requirements.",
+      "solution": "Fix file permissions or encoding so the scanner can read the file."
     },
     {
       "path": "scripts/utils.ts",
@@ -2446,6 +592,8 @@
       "line": 34,
       "column": 1,
       "message": "Endregion is missing a name",
+      "reason": "Regions must be named and nested to keep file structure navigable and consistent.",
+      "solution": "Add a matching name to the region and endregion markers.",
       "excerpt": "//#endregion"
     },
     {
@@ -2455,6 +603,8 @@
       "line": 34,
       "column": 1,
       "message": "Region mismatch: opened \"Image Processing\" at line 27, closed \"\"",
+      "reason": "Region blocks must be properly nested and closed with matching named end markers.",
+      "solution": "Fix the region names and nesting so each endregion matches the open region.",
       "excerpt": "//#endregion"
     },
     {
@@ -2464,6 +614,8 @@
       "line": 71,
       "column": 1,
       "message": "Endregion is missing a name",
+      "reason": "Regions must be named and nested to keep file structure navigable and consistent.",
+      "solution": "Add a matching name to the region and endregion markers.",
       "excerpt": "//#endregion"
     },
     {
@@ -2473,6 +625,8 @@
       "line": 71,
       "column": 1,
       "message": "Region mismatch: opened \"File Operations\" at line 36, closed \"\"",
+      "reason": "Region blocks must be properly nested and closed with matching named end markers.",
+      "solution": "Fix the region names and nesting so each endregion matches the open region.",
       "excerpt": "//#endregion"
     },
     {
@@ -2482,6 +636,8 @@
       "line": 110,
       "column": 1,
       "message": "Endregion is missing a name",
+      "reason": "Regions must be named and nested to keep file structure navigable and consistent.",
+      "solution": "Add a matching name to the region and endregion markers.",
       "excerpt": "//#endregion"
     },
     {
@@ -2491,6 +647,8 @@
       "line": 110,
       "column": 1,
       "message": "Region mismatch: opened \"Process Management\" at line 73, closed \"\"",
+      "reason": "Region blocks must be properly nested and closed with matching named end markers.",
+      "solution": "Fix the region names and nesting so each endregion matches the open region.",
       "excerpt": "//#endregion"
     },
     {
@@ -2500,6 +658,8 @@
       "line": 118,
       "column": 1,
       "message": "Endregion is missing a name",
+      "reason": "Regions must be named and nested to keep file structure navigable and consistent.",
+      "solution": "Add a matching name to the region and endregion markers.",
       "excerpt": "//#endregion"
     },
     {
@@ -2509,6 +669,8 @@
       "line": 118,
       "column": 1,
       "message": "Region mismatch: opened \"JSON Utilities\" at line 112, closed \"\"",
+      "reason": "Region blocks must be properly nested and closed with matching named end markers.",
+      "solution": "Fix the region names and nesting so each endregion matches the open region.",
       "excerpt": "//#endregion"
     }
   ]

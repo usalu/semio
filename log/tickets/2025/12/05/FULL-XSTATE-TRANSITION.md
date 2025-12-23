@@ -54,7 +54,7 @@ The plan below is about turning this into a **clean architecture**:
           └──────────────────────────┘
 ```
 
-Key rules:
+Key constraints:
 
 - Only **one root actor**: `createSketchpadActor({ yDoc, ySketchpad, id })` (which you already have wired into `SketchpadScopeProvider`).
 - This actor:

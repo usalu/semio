@@ -552,6 +552,8 @@ class TableEntityNode(TableNode):
 
 # endregion Graphql
 
+# endregion Modeling
+
 # region Domain
 
 # region Attribute
@@ -3828,6 +3830,7 @@ class Kit(KitNameField, KitVersionField, KitDescriptionField, KitIconField, KitI
 
     # endregion Type Family Helpers
 
+# endregion Domain
 
 # region Moved Graphene Nodes
 
@@ -4006,7 +4009,7 @@ class ValidationFix:
 
 @dataclasses.dataclass
 class ValidationIssue:
-    ruleId: str
+    constraintId: str
     severity: ValidationSeverity
     message: str
     entityKind: str
@@ -4015,7 +4018,7 @@ class ValidationIssue:
 
     def toDict(self) -> dict:
         return {
-            "ruleId": self.ruleId,
+            "constraintId": self.constraintId,
             "severity": self.severity.value,
             "message": self.message,
             "entityKind": self.entityKind,
@@ -4032,7 +4035,7 @@ class ValidationResult:
         return any(i.severity == ValidationSeverity.ERROR for i in self.issues)
 
     def toDict(self) -> dict:
-        sortedIssues = sorted(self.issues, key=lambda i: (i.ruleId, i.entityGuid))
+        sortedIssues = sorted(self.issues, key=lambda i: (i.constraintId, i.entityGuid))
         return {"issues": [i.toDict() for i in sortedIssues]}
 
     def serialize(self) -> str:
@@ -4060,10 +4063,10 @@ def _normalizeGuids(obj: typing.Any) -> typing.Any:
 def areValidationResultsEqual(a: ValidationResult, b: ValidationResult) -> bool:
     if len(a.issues) != len(b.issues):
         return False
-    sortedA = sorted(a.issues, key=lambda i: (i.ruleId, i.entityGuid))
-    sortedB = sorted(b.issues, key=lambda i: (i.ruleId, i.entityGuid))
+    sortedA = sorted(a.issues, key=lambda i: (i.constraintId, i.entityGuid))
+    sortedB = sorted(b.issues, key=lambda i: (i.constraintId, i.entityGuid))
     for ia, ib in zip(sortedA, sortedB):
-        if ia.ruleId != ib.ruleId or ia.severity != ib.severity or ia.message != ib.message or ia.entityKind != ib.entityKind or ia.entityGuid != ib.entityGuid:
+        if ia.constraintId != ib.constraintId or ia.severity != ib.severity or ia.message != ib.message or ia.entityKind != ib.entityKind or ia.entityGuid != ib.entityGuid:
             return False
         if len(ia.fixes) != len(ib.fixes):
             return False
@@ -4071,7 +4074,7 @@ def areValidationResultsEqual(a: ValidationResult, b: ValidationResult) -> bool:
             if fa.title != fb.title:
                 return False
 
-            if ia.ruleId == "guid-unique":
+            if ia.constraintId == "guid-unique":
                 continue
             if json.dumps(_normalizeGuids(fa.diff), sort_keys=True) != json.dumps(_normalizeGuids(fb.diff), sort_keys=True):
                 return False
@@ -4083,7 +4086,7 @@ def parseValidationResult(jsonStr: str) -> ValidationResult:
     issues = []
     for i in data["issues"]:
         fixes = [ValidationFix(title=f["title"], diff=f["diff"]) for f in i.get("fixes", [])]
-        issues.append(ValidationIssue(ruleId=i["ruleId"], severity=ValidationSeverity(i["severity"]), message=i["message"], entityKind=i["entityKind"], entityGuid=i["entityGuid"], fixes=fixes))
+        issues.append(ValidationIssue(constraintId=i["constraintId"], severity=ValidationSeverity(i["severity"]), message=i["message"], entityKind=i["entityKind"], entityGuid=i["entityGuid"], fixes=fixes))
     return ValidationResult(issues=issues)
 
 
@@ -4093,7 +4096,7 @@ def validateGuidUniqueness(kit: Kit) -> list[ValidationIssue]:
 
     def check(entityKind: str, entityGuid: str) -> None:
         if entityGuid in seen:
-            issues.append(ValidationIssue(ruleId="guid-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate GUID "{entityGuid}". First occurrence kept.', entityKind=entityKind, entityGuid=entityGuid))
+            issues.append(ValidationIssue(constraintId="guid-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate GUID "{entityGuid}". First occurrence kept.', entityKind=entityKind, entityGuid=entityGuid))
         else:
             seen[entityGuid] = entityKind
 
@@ -4134,7 +4137,7 @@ def validateTypeNameUniqueness(kit: Kit) -> list[ValidationIssue]:
         for name, group in names.items():
             if len(group) > 1:
                 for t in group[1:]:
-                    issues.append(ValidationIssue(ruleId="type-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate type name "{name}" among siblings.', entityKind="Type", entityGuid=t.guid))
+                    issues.append(ValidationIssue(constraintId="type-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate type name "{name}" among siblings.', entityKind="Type", entityGuid=t.guid))
     return issues
 
 
@@ -4155,7 +4158,7 @@ def validateDesignNameUniqueness(kit: Kit) -> list[ValidationIssue]:
         for name, group in names.items():
             if len(group) > 1:
                 for d in group[1:]:
-                    issues.append(ValidationIssue(ruleId="design-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate design name "{name}" among siblings.', entityKind="Design", entityGuid=d.guid))
+                    issues.append(ValidationIssue(constraintId="design-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate design name "{name}" among siblings.', entityKind="Design", entityGuid=d.guid))
     return issues
 
 
@@ -4171,7 +4174,7 @@ def validatePieceNameUniqueness(kit: Kit) -> list[ValidationIssue]:
         for name, group in names.items():
             if len(group) > 1:
                 for p in group[1:]:
-                    issues.append(ValidationIssue(ruleId="piece-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate piece name "{name}" in design.', entityKind="Piece", entityGuid=p.guid))
+                    issues.append(ValidationIssue(constraintId="piece-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate piece name "{name}" in design.', entityKind="Piece", entityGuid=p.guid))
     return issues
 
 
@@ -4187,7 +4190,7 @@ def validatePortNameUniqueness(kit: Kit) -> list[ValidationIssue]:
         for name, group in names.items():
             if len(group) > 1:
                 for connector in group[1:]:
-                    issues.append(ValidationIssue(ruleId="connector-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate connector name "{name}" in type.', entityKind="Connector", entityGuid=connector.guid))
+                    issues.append(ValidationIssue(constraintId="connector-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate connector name "{name}" in type.', entityKind="Connector", entityGuid=connector.guid))
     return issues
 
 
@@ -4203,7 +4206,7 @@ def validateModelNameUniqueness(kit: Kit) -> list[ValidationIssue]:
         for name, group in names.items():
             if len(group) > 1:
                 for model in group[1:]:
-                    issues.append(ValidationIssue(ruleId="model-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate model name "{name}" in type.', entityKind="Model", entityGuid=model.guid))
+                    issues.append(ValidationIssue(constraintId="model-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate model name "{name}" in type.', entityKind="Model", entityGuid=model.guid))
     return issues
 
 
@@ -4217,7 +4220,7 @@ def validateQualityNameUniqueness(kit: Kit) -> list[ValidationIssue]:
     for name, group in names.items():
         if len(group) > 1:
             for q in group[1:]:
-                issues.append(ValidationIssue(ruleId="quality-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate quality name "{name}".', entityKind="Quality", entityGuid=q.guid))
+                issues.append(ValidationIssue(constraintId="quality-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate quality name "{name}".', entityKind="Quality", entityGuid=q.guid))
     return issues
 
 
@@ -4231,7 +4234,7 @@ def validateFileNameUniqueness(kit: Kit) -> list[ValidationIssue]:
     for name, group in names.items():
         if len(group) > 1:
             for f in group[1:]:
-                issues.append(ValidationIssue(ruleId="file-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate file name "{name}".', entityKind="File", entityGuid=f.guid))
+                issues.append(ValidationIssue(constraintId="file-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate file name "{name}".', entityKind="File", entityGuid=f.guid))
     return issues
 
 
@@ -4252,7 +4255,7 @@ def validateFolderNameUniqueness(kit: Kit) -> list[ValidationIssue]:
         for name, group in names.items():
             if len(group) > 1:
                 for fo in group[1:]:
-                    issues.append(ValidationIssue(ruleId="folder-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate folder name "{name}" among siblings.', entityKind="Folder", entityGuid=fo.guid))
+                    issues.append(ValidationIssue(constraintId="folder-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate folder name "{name}" among siblings.', entityKind="Folder", entityGuid=fo.guid))
     return issues
 
 
@@ -4267,7 +4270,7 @@ def validateLayerPathUniqueness(kit: Kit) -> list[ValidationIssue]:
         for path, group in paths.items():
             if len(group) > 1:
                 for layer in group[1:]:
-                    issues.append(ValidationIssue(ruleId="layer-path-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate layer path "{path}" in design.', entityKind="Layer", entityGuid=layer.guid))
+                    issues.append(ValidationIssue(constraintId="layer-path-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate layer path "{path}" in design.', entityKind="Layer", entityGuid=layer.guid))
     return issues
 
 
@@ -4330,9 +4333,9 @@ def validateKitDict(kit: dict) -> ValidationResult:
             if collectionKey:
                 diff = {collectionKey: {"removed": [{"guid": entityGuid}], "added": [entityCopy]}}
                 fix = _makeFix("Regenerate GUID", diff)
-                issues.append(ValidationIssue(ruleId="guid-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate GUID "{entityGuid}". First occurrence kept.', entityKind=entityKind, entityGuid=entityGuid, fixes=[fix]))
+                issues.append(ValidationIssue(constraintId="guid-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate GUID "{entityGuid}". First occurrence kept.', entityKind=entityKind, entityGuid=entityGuid, fixes=[fix]))
             else:
-                issues.append(ValidationIssue(ruleId="guid-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate GUID "{entityGuid}". First occurrence kept.', entityKind=entityKind, entityGuid=entityGuid, fixes=[]))
+                issues.append(ValidationIssue(constraintId="guid-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate GUID "{entityGuid}". First occurrence kept.', entityKind=entityKind, entityGuid=entityGuid, fixes=[]))
         else:
             seen[entityGuid] = entityKind
             seenEntities[entityGuid] = entity
@@ -4377,7 +4380,7 @@ def validateKitDict(kit: dict) -> ValidationResult:
             if len(group) > 1:
                 for t in group[1:]:
                     fix = _makeFix(f'Rename "{name}"', {"types": {"updated": [{"type": {"guid": t.get("guid", "")}, "diff": {"name": f"{name} 2"}}]}})
-                    issues.append(ValidationIssue(ruleId="type-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate type name "{name}" among siblings.', entityKind="Type", entityGuid=t.get("guid", ""), fixes=[fix]))
+                    issues.append(ValidationIssue(constraintId="type-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate type name "{name}" among siblings.', entityKind="Type", entityGuid=t.get("guid", ""), fixes=[fix]))
     byParent = {}
     for d in kit.get("designs", []):
         parentGuid = d.get("parent", {}).get("guid") if d.get("parent") else None
@@ -4395,7 +4398,7 @@ def validateKitDict(kit: dict) -> ValidationResult:
             if len(group) > 1:
                 for d in group[1:]:
                     fix = _makeFix(f'Rename "{name}"', {"designs": {"updated": [{"design": {"guid": d.get("guid", "")}, "diff": {"name": f"{name} 2"}}]}})
-                    issues.append(ValidationIssue(ruleId="design-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate design name "{name}" among siblings.', entityKind="Design", entityGuid=d.get("guid", ""), fixes=[fix]))
+                    issues.append(ValidationIssue(constraintId="design-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate design name "{name}" among siblings.', entityKind="Design", entityGuid=d.get("guid", ""), fixes=[fix]))
     for design in kit.get("designs", []):
         designName = design.get("name", "")
         designGuid = design.get("guid", "")
@@ -4410,7 +4413,9 @@ def validateKitDict(kit: dict) -> ValidationResult:
             if len(group) > 1:
                 for p in group[1:]:
                     fix = _makeFix(f'Rename piece "{name}"', {"designs": {"updated": [{"design": {"guid": designGuid}, "diff": {"pieces": {"updated": [{"piece": {"guid": p.get("guid", "")}, "diff": {"name": f"{name} 2"}}]}}}]}})
-                    issues.append(ValidationIssue(ruleId="piece-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate piece name "{name}" inside design "{designName}".', entityKind="Piece", entityGuid=p.get("guid", ""), fixes=[fix]))
+                    issues.append(
+                        ValidationIssue(constraintId="piece-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate piece name "{name}" inside design "{designName}".', entityKind="Piece", entityGuid=p.get("guid", ""), fixes=[fix])
+                    )
     for t in kit.get("types", []):
         typeName = t.get("name", "")
         typeGuid = t.get("guid", "")
@@ -4427,7 +4432,7 @@ def validateKitDict(kit: dict) -> ValidationResult:
                     fix = _makeFix(f'Rename connector "{name}"', {"types": {"updated": [{"type": {"guid": typeGuid}, "diff": {"connectors": {"updated": [{"connector": {"guid": connector.get("guid", "")}, "diff": {"name": f"{name} 2"}}]}}}]}})
                     issues.append(
                         ValidationIssue(
-                            ruleId="connector-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate connector name "{name}" inside type "{typeName}".', entityKind="Connector", entityGuid=connector.get("guid", ""), fixes=[fix]
+                            constraintId="connector-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate connector name "{name}" inside type "{typeName}".', entityKind="Connector", entityGuid=connector.get("guid", ""), fixes=[fix]
                         )
                     )
     for t in kit.get("types", []):
@@ -4444,7 +4449,9 @@ def validateKitDict(kit: dict) -> ValidationResult:
             if len(group) > 1:
                 for model in group[1:]:
                     fix = _makeFix(f'Rename model "{name}"', {"types": {"updated": [{"type": {"guid": typeGuid}, "diff": {"models": {"updated": [{"model": {"guid": model.get("guid", "")}, "diff": {"name": f"{name} 2"}}]}}}]}})
-                    issues.append(ValidationIssue(ruleId="model-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate model name "{name}" inside type "{typeName}".', entityKind="Model", entityGuid=model.get("guid", ""), fixes=[fix]))
+                    issues.append(
+                        ValidationIssue(constraintId="model-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate model name "{name}" inside type "{typeName}".', entityKind="Model", entityGuid=model.get("guid", ""), fixes=[fix])
+                    )
     names = {}
     for q in kit.get("qualities", []):
         name = q.get("name", "")
@@ -4455,7 +4462,7 @@ def validateKitDict(kit: dict) -> ValidationResult:
         if len(group) > 1:
             for q in group[1:]:
                 fix = _makeFix(f'Rename quality "{name}"', {"qualities": {"updated": [{"quality": {"guid": q.get("guid", "")}, "diff": {"name": f"{name} 2"}}]}})
-                issues.append(ValidationIssue(ruleId="quality-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate quality name "{name}".', entityKind="Quality", entityGuid=q.get("guid", ""), fixes=[fix]))
+                issues.append(ValidationIssue(constraintId="quality-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate quality name "{name}".', entityKind="Quality", entityGuid=q.get("guid", ""), fixes=[fix]))
     names = {}
     for i in kit.get("interfaces", []):
         name = i.get("name", "")
@@ -4466,7 +4473,7 @@ def validateKitDict(kit: dict) -> ValidationResult:
         if len(group) > 1:
             for iface in group[1:]:
                 fix = _makeFix(f'Rename interface "{name}"', {"interfaces": {"updated": [{"interface": {"guid": iface.get("guid", "")}, "diff": {"name": f"{name} 2"}}]}})
-                issues.append(ValidationIssue(ruleId="interface-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate interface name "{name}".', entityKind="Interface", entityGuid=iface.get("guid", ""), fixes=[fix]))
+                issues.append(ValidationIssue(constraintId="interface-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate interface name "{name}".', entityKind="Interface", entityGuid=iface.get("guid", ""), fixes=[fix]))
     names = {}
     for f in kit.get("files", []):
         name = f.get("name", "")
@@ -4477,7 +4484,7 @@ def validateKitDict(kit: dict) -> ValidationResult:
         if len(group) > 1:
             for f in group[1:]:
                 fix = _makeFix(f'Rename file "{name}"', {"files": {"updated": [{"file": {"guid": f.get("guid", "")}, "diff": {"name": f"{name} 2"}}]}})
-                issues.append(ValidationIssue(ruleId="file-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate file name "{name}".', entityKind="File", entityGuid=f.get("guid", ""), fixes=[fix]))
+                issues.append(ValidationIssue(constraintId="file-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate file name "{name}".', entityKind="File", entityGuid=f.get("guid", ""), fixes=[fix]))
     byParent = {}
     for fo in kit.get("folders", []):
         parentGuid = fo.get("parent", {}).get("guid") if fo.get("parent") else None
@@ -4495,7 +4502,7 @@ def validateKitDict(kit: dict) -> ValidationResult:
             if len(group) > 1:
                 for fo in group[1:]:
                     fix = _makeFix(f'Rename folder "{name}"', {"folders": {"updated": [{"folder": {"guid": fo.get("guid", "")}, "diff": {"name": f"{name} 2"}}]}})
-                    issues.append(ValidationIssue(ruleId="folder-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate folder name "{name}" among siblings.', entityKind="Folder", entityGuid=fo.get("guid", ""), fixes=[fix]))
+                    issues.append(ValidationIssue(constraintId="folder-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate folder name "{name}" among siblings.', entityKind="Folder", entityGuid=fo.get("guid", ""), fixes=[fix]))
     for design in kit.get("designs", []):
         designName = design.get("name", "")
         designGuid = design.get("guid", "")
@@ -4510,7 +4517,7 @@ def validateKitDict(kit: dict) -> ValidationResult:
                 for layer in group[1:]:
                     fix = _makeFix(f'Rename layer "{path}"', {"designs": {"updated": [{"design": {"guid": designGuid}, "diff": {"layers": {"updated": [{"layer": {"guid": layer.get("guid", "")}, "diff": {"path": f"{path} 2"}}]}}}]}})
                     issues.append(
-                        ValidationIssue(ruleId="layer-path-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate layer path "{path}" inside design "{designName}".', entityKind="Layer", entityGuid=layer.get("guid", ""), fixes=[fix])
+                        ValidationIssue(constraintId="layer-path-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate layer path "{path}" inside design "{designName}".', entityKind="Layer", entityGuid=layer.get("guid", ""), fixes=[fix])
                     )
     return ValidationResult(issues=issues)
 
@@ -6850,7 +6857,7 @@ except openai.OpenAIError:
     openaiClient = None
 
 systemPrompt = """You are a kit-of-parts design assistant.
-Rules:
+Constraints:
 Every piece MUST have a type that exists. The type name and type variant MUST match.
 Two pieces are different when they have a different type name or type variant.
 Two types are different when they have a different name or different variant.

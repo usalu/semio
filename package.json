@@ -1,6 +1,7 @@
 {
   "name": "semio",
   "version": "1.0.0",
+  "type": "module",
   "description": "🧩 Design-Information-Modeling for Kit-of-Parts 🏘️",
   "workspaces": [
     "assets/logo",
@@ -22,10 +23,8 @@
   "packageManager": "npm@10.8.2",
   "scripts": {
     "dev": "npx nx run-many -t dev",
-    "dev:storybook": "npx nx dev:storybook @semio/js",
-    "dev:sketchpad": "npx nx dev:sketchpad @semio/js",
-    "dev:js:js:storybook": "npm run dev:storybook",
-    "dev:js:js:sketchpad": "npm run dev:sketchpad",
+    "dev:js:js:storybook": "npx nx dev:storybook @semio/js",
+    "dev:js:js:sketchpad": "npx nx dev:sketchpad @semio/js",
     "analyze": "npx tsx preflight.ts analyze",
     "fix": "npx tsx preflight.ts fix",
     "preflight": "npx tsx preflight.ts preflight",
@@ -37,14 +36,19 @@
     "prepare": "husky"
   },
   "devDependencies": {
+    "@esbuild-kit/esm-loader": "^2.6.5",
     "@nx/eslint-plugin": "^21.6.8",
     "@nxlv/python": "^21.2.0",
     "@types/node": "^22.10.5",
+    "@types/react": "^18.3.12",
     "csv-parse": "^5.6.0",
     "gray-matter": "^4.0.3",
     "husky": "^9.1.7",
+    "ink": "^6.6.0",
     "lint-staged": "^16.2.7",
     "nx": "^21.4.1",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
     "sharp": "^0.33.5",
     "tsx": "^4.20.6"
   },

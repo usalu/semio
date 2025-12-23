@@ -830,7 +830,6 @@ test.describe("sketchpad", () => {
     }
 
     console.log("[Kit] Toolbar and artifact filter toggles test complete");
-    // #endregion Toolbar and Artifact Filter Toggles
 
     // #region SidePanel Toggle
     console.log("[Kit] Testing sidepanel toggles again to verify they work");
@@ -1686,7 +1685,6 @@ test.describe("sketchpad", () => {
     } else {
       console.log("[Design Test] Skipping flat planes/centers verification - metadata not available via window or expected data empty");
     }
-    // #endregion Flat Planes Verification
 
     // #region Selection State
     console.log("[Design] Testing selection state");

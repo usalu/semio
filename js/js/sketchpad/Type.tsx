@@ -953,7 +953,7 @@ export const TypeAppScopeProvider = (props: { id: string; children: React.ReactN
 };
 const useTypeAppScope = () => useContext(TypeAppScopeContext);
 
-// #endregion Internal State Management
+// #endregion XState Hooks
 
 // #region Commands
 
@@ -1709,33 +1709,9 @@ const Scene: FC<{ isDragOver?: boolean }> = ({ isDragOver = false }) => {
 
 // #endregion Scene
 
-// #region Node
-
-// #endregion Node
-
-// #endregion Windows
-
 // #region Panels
 
-// #region Left
 
-// #region Workbench
-
-// #endregion Workbench
-
-// #endregion Left
-
-// #region Middle
-
-// #region Hud
-
-// #endregion Hud
-
-// #region Stats
-
-// #endregion Stats
-
-// #endregion Middle
 
 // #region Right
 
@@ -2853,13 +2829,7 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
 
 // #endregion Details
 
-// #region Params
 
-// #endregion Params
-
-// #region Chat
-
-// #endregion Chat
 
 // #region Settings
 
@@ -3034,8 +3004,6 @@ export const ToolsToggleGroup: FC = () => {
 };
 
 // #endregion Tools
-
-// #endregion Canvas
 
 // #region App
 

@@ -19,9 +19,6 @@
 
 // #endregion Header
 
-// #region Header
-
-// #endregion
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { Cursor, Level, LevelProvider, getLevelBgClass } from "../../../../sketchpad/elements";

@@ -18,7 +18,7 @@
     ],
     "removed": [
       {
-        "guid": "019aff1a-894a-74ca-858d-4b864b531ec7"
+        "guid": "019b4b71-0cfe-73a8-9259-255139c85486"
       }
     ],
     "updated": [
@@ -32,7 +32,7 @@
           "connectors": {
             "removed": [
               {
-                "guid": "019aff1a-8949-76be-8c75-ddf1e0944947"
+                "guid": "019b4b71-0cfd-731e-9fbf-61c8c4a82d44"
               }
             ]
           }
@@ -6983,7 +6983,7 @@
     ],
     "removed": [
       {
-        "guid": "019aff1a-894a-74ca-858d-560b8d8972ed"
+        "guid": "019b4b71-0cfe-73a8-9259-3277fafc1d5a"
       }
     ],
     "updated": [
@@ -6997,7 +6997,7 @@
           "pieces": {
             "removed": [
               {
-                "guid": "019aff1a-894a-74ca-858d-53e442f1b6f8"
+                "guid": "019b4b71-0cfe-73a8-9259-2fffaaf97c6a"
               }
             ]
           }
@@ -7014,7 +7014,7 @@
     ],
     "removed": [
       {
-        "guid": "019aff1a-894a-74ca-858d-5e238fc32111"
+        "guid": "019b4b71-0cfe-73a8-9259-3980e4bf2992"
       }
     ],
     "updated": [
@@ -7038,7 +7038,7 @@
     ],
     "removed": [
       {
-        "guid": "019aff1a-894a-74ca-858d-629997b83008"
+        "guid": "019b4b71-0cfe-73a8-9259-3e5537adf2ef"
       }
     ],
     "updated": [
@@ -7067,7 +7067,7 @@
     ],
     "removed": [
       {
-        "guid": "019aff1a-894a-74ca-858d-679548d84ef4"
+        "guid": "019b4b71-0cfe-73a8-9259-4289a4d64b87"
       }
     ],
     "updated": [
@@ -7097,7 +7097,7 @@
     ],
     "removed": [
       {
-        "guid": "019aff1a-894a-74ca-858d-6be9d05ec48c"
+        "guid": "019b4b71-0cfe-73a8-9259-45f4edc39f00"
       }
     ],
     "updated": [
@@ -7122,14 +7122,14 @@
     ],
     "removed": [
       {
-        "guid": "019aff1a-894a-74ca-858d-6f1852b63694"
+        "guid": "019b4b71-0cfe-73a8-9259-4a444f1b2b2c"
       }
     ]
   },
   "attributes": {
     "removed": [
       {
-        "guid": "019aff1a-894a-74ca-858d-71d3724a88da"
+        "guid": "019b4b71-0cfe-73a8-9259-4f6a2f838d2b"
       }
     ],
     "updated": [],

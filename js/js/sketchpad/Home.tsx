@@ -238,15 +238,9 @@ export { useHomeApp as useHomeAppExported, useHomeLoadingKits as useHomeLoadingK
 
 export { useHome };
 
-// #endregion Hooks
+// #endregion Hooks (XState-based)
 
-// #region Commands
 
-// #endregion Commands
-
-// #region Navbar
-
-// #endregion Navbar
 
 // #region Canvas
 
@@ -510,9 +504,6 @@ const SettingsContent: FC = () => {
 
 // #endregion Panels
 
-// #region Tools
-
-// #endregion Tools
 
 // #endregion Canvas
 

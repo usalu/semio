@@ -84,7 +84,7 @@ Concretely, the pattern:
 
 2. **canSet**:
    - Comes from **XState selectors** via `useSelector(actor, selector)` (in `xstate-hooks.ts`).
-   - Encodes app-level rules: is this design editable? is this mode active? etc.
+   - Encodes app-level constraints: is this design editable? is this mode active? etc.
 
 3. **set**:
    - Uses `useActor()` (or your existing `useSketchpadActor` helper).

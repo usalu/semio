@@ -644,7 +644,7 @@ export interface DocsSectionState {
   completedPages?: string[];
 }
 
-// #endregion Registry
+// #endregion Store
 
 // #region Types
 
@@ -866,9 +866,6 @@ if (typeof window !== "undefined") {
 
 // #endregion Commands
 
-// #region Navbar
-
-// #endregion Navbar
 
 // #region Canvas
 

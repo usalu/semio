@@ -21,13 +21,18 @@
 // #endregion Header
 
 import { execFileSync } from "child_process";
-import { join } from "path";
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
 
 //#region Cli
 type Command = "analyze" | "fix" | "preflight" | "test" | "build" | "prepublish" | "publish";
 type ParsedArgs = { command: Command; skip: Set<string>; nxArgs: string[] };
 
 function parseArgs(argv: string[]): ParsedArgs {
+  if (argv[2] === "--help" || argv[2] === "-h") {
+    console.log("Usage: npx tsx preflight.ts <command> [--skip=fix,analyze,preflight,test,build] [--nx <nxArgs...>]");
+    process.exit(0);
+  }
   const command = (argv[2] ?? "preflight") as Command;
   const skip = new Set<string>();
   const nxArgs: string[] = [];
@@ -66,9 +71,10 @@ function parseArgs(argv: string[]): ParsedArgs {
   }
   return { command, skip, nxArgs };
 }
-//#endregion
+//#endregion Cli
 
 //#region Exec
+const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = join(__dirname);
 type StepResult = { ok: boolean; label: string };
 function run(command: string, args: string[] = []): void {
@@ -82,7 +88,7 @@ function runStep(label: string, command: string, args: string[] = []): StepResul
     return { ok: false, label };
   }
 }
-//#endregion
+//#endregion Exec
 
 //#region Steps
 function runFix(skip: Set<string>): boolean {
@@ -90,9 +96,9 @@ function runFix(skip: Set<string>): boolean {
     return true;
   }
   let ok = true;
-  ok = runStep("hooks/code.ts --fix", "npx", ["tsx", "hooks/code.ts", "--fix"]).ok && ok;
-  ok = runStep("hooks/prettier.ts", "npx", ["tsx", "hooks/prettier.ts"]).ok && ok;
-  ok = runStep("hooks/ruff.ts", "npx", ["tsx", "hooks/ruff.ts"]).ok && ok;
+  ok = runStep("hooks/code.tsx --fix", "npx", ["tsx", "hooks/code.tsx", "--fix"]).ok && ok;
+  ok = runStep("hooks/prettier.tsx", "npx", ["tsx", "hooks/prettier.tsx"]).ok && ok;
+  ok = runStep("hooks/ruff.tsx", "npx", ["tsx", "hooks/ruff.tsx"]).ok && ok;
   return ok;
 }
 
@@ -101,10 +107,10 @@ function runAnalyze(skip: Set<string>, nxArgs: string[]): boolean {
     return true;
   }
   let ok = true;
-  ok = runStep("hooks/code.ts", "npx", ["tsx", "hooks/code.ts"]).ok && ok;
-  ok = runStep("hooks/i18n.ts", "npx", ["tsx", "hooks/i18n.ts"]).ok && ok;
-  ok = runStep("hooks/typescript.ts", "npx", ["tsx", "hooks/typescript.ts"]).ok && ok;
-  ok = runStep("hooks/eslint.ts", "npx", ["tsx", "hooks/eslint.ts", ...nxArgs]).ok && ok;
+  ok = runStep("hooks/code.tsx", "npx", ["tsx", "hooks/code.tsx"]).ok && ok;
+  ok = runStep("hooks/i18n.tsx", "npx", ["tsx", "hooks/i18n.tsx"]).ok && ok;
+  ok = runStep("hooks/typescript.tsx", "npx", ["tsx", "hooks/typescript.tsx"]).ok && ok;
+  ok = runStep("hooks/eslint.tsx", "npx", ["tsx", "hooks/eslint.tsx", ...nxArgs]).ok && ok;
   return ok;
 }
 
@@ -149,7 +155,7 @@ function runPublish(skip: Set<string>, nxArgs: string[]): void {
   }
   runNx("publish", nxArgs);
 }
-//#endregion
+//#endregion Steps
 
 //#region Main
 const parsed = parseArgs(process.argv);

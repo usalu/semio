@@ -261,9 +261,6 @@ export const getLevelDivideElementClass = (level: Level): string => {
 
 // #endregion Element
 
-// #region Root Components
-
-// #endregion Canvas
 
 // #region Command
 
@@ -366,8 +363,6 @@ export interface FooterItem {
   className?: string;
   disabled?: boolean;
 }
-
-// #region Footer
 
 export interface FooterProps {
   items?: FooterItem[];
@@ -479,10 +474,6 @@ function PopoverAnchor({ ...props }: React.ComponentProps<typeof PopoverPrimitiv
 export { Popover, PopoverAnchor, PopoverContent, PopoverTrigger };
 
 // #endregion Popover
-
-// #endregion Root Components
-
-// #region Display Components
 
 // #region Tooltip
 
@@ -754,8 +745,6 @@ function IdSemioTooltip({ children, id }: IdSemioTooltipProps) {
 }
 
 export { DescriptionTooltipContent, EnhancedTooltipContent, IdSemioTooltip, SemioTooltip, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger };
-
-// #endregion Tooltip
 
 // #region Aside
 
@@ -1485,8 +1474,6 @@ function ButtonCycle<T extends string = string>({ className, id, showLabel, valu
 
 export { Button, ButtonCycle, ButtonGroup, ButtonGroupItem, buttonGroupItemVariants };
 export type { ButtonCycleProps, ButtonProps };
-
-// #endregion ButtonGroup
 
 // #region Combobox
 
@@ -4005,6 +3992,8 @@ function BreadcrumbSeparatorItem({ hasOptions, isOpen, onOpenChange, id, options
 }
 
 export { Breadcrumb, BreadcrumbItem };
+
+// #endregion Breadcrumb
 
 // #region PageNavigation
 

@@ -1,7 +1,14 @@
 # Prompt history
 
-@Ink ink should be used in all executable typescript files such as scripts and hooks. Add it as a dev dependency to root package @package.json.
-Refactor the existing scripts to use ink (e.g. rename-files, etc)
+You didnt create a ticket according @AGENTS.md 
+
+Read everything from @AGENTS.md and then start the task.
+Fix all code issues and rerun until no issues remain. @reports/code.json @hooks/code.tsx .
+
+@Ink ink should be used in all executable typescript files such as scripts and hooks. Add it as a dev dependency to root package@package.json.
+Refactor the existing scripts (interactive or not) to use ink.
+Use consistent, concise output format with the most important information
+@hooks/code.ts @hooks/eslint.ts @hooks/i18n.ts @hooks/prettier.ts @hooks/ruff.ts @hooks/typescript.ts @scripts/generate-metabolism-diff.ts @scripts/i18n.ts @scripts/generate-validation.ts @scripts/i18n.mjs @scripts/log.ts @scripts/regen-metabolism.ts @scripts/rename-files.ts @scripts/schema.ts @scripts/temp-migrate-capitals-tambours.ts @scripts/utils.ts 
 
 Double clicking on type row or design row doesnt navigate anymore after hover was moved to the state machine. Instead after double click the hover command is retriggered all the time even when the mouse is not moving. The app tests should be checking this and fail. You can use playwright mcp.
 

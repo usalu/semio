@@ -19,9 +19,6 @@
 
 // #endregion Header
 
-// #region Commands
-
-// #endregion Commands
 
 // #region Internal State Management
 
@@ -2753,7 +2750,7 @@ export function useDesignAppPiecePlane(id?: DesignAppId, pieceId?: Guid): Plane 
   return finalPieceId ? metadata.get(finalPieceId)?.plane : undefined;
 }
 
-// #endregion Store
+// #endregion Imports
 
 // #region Footer
 

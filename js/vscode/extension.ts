@@ -60,7 +60,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.languages.registerCodeActionsProvider({ language: SEMIO_KIT_LANGUAGE }, new SemioCodeActionProvider(), { providedCodeActionKinds: [vscode.CodeActionKind.QuickFix] }));
 }
 
-export function deactivate() {}
+export function deactivate() { }
 
 function isSemioKitDocument(document: vscode.TextDocument): boolean {
   if (document.languageId !== SEMIO_KIT_LANGUAGE) {
@@ -77,7 +77,7 @@ function issueToDiagnostic(document: vscode.TextDocument, issue: SemioValidation
 
   const diagnostic = new vscode.Diagnostic(range, issue.message, severity);
   diagnostic.source = DIAGNOSTIC_SOURCE;
-  diagnostic.code = issue.ruleId;
+  diagnostic.code = issue.constraintId;
 
   if (issue.relatedGuids && issue.relatedGuids.length > 1) {
     diagnostic.relatedInformation = issue.relatedGuids.slice(1).map((guid) => {
@@ -222,7 +222,7 @@ class SemioCodeActionProvider implements vscode.CodeActionProvider {
         const kit = deserializeKit(text);
         const result = validateSemioKit(kit);
 
-        const issue = result.issues.find((i) => i.message === diagnostic.message && i.ruleId === diagnostic.code);
+        const issue = result.issues.find((i) => i.message === diagnostic.message && i.constraintId === diagnostic.code);
         if (!issue) {
           continue;
         }

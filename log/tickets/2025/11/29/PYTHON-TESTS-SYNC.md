@@ -22,7 +22,7 @@ iterations: []
 1. ✅ Add comprehensive Python tests that mirror JavaScript tests
 2. ✅ Use pytransform3d for spatial math operations
 3. ✅ Use networkx for graph operations (piece graph, hierarchy)
-4. ✅ Add validation tests matching semio.ts validation rules
+4. ✅ Add validation tests matching semio.ts validation constraints
 5. ✅ Add flattenDesign tests with plane validation
 6. ✅ Add Kit diff tests (apply forward, apply inverse)
 7. ⏸️ Skip engine.py import tests due to SQLAlchemy compatibility issue (known pre-existing issue)
@@ -39,7 +39,7 @@ iterations: []
   - `apply_kit_diff()` helper for applying Kit diffs to Kits
   - `test_kit_plus_diff_equals_diffed_kit` - tests forward diff application
   - `test_diffed_kit_plus_inverse_diff_equals_kit` - tests inverse diff application
-- Updated `TestValidation.test_invalid_kit_has_expected_errors` to include `guid-unique` rule
+- Updated `TestValidation.test_invalid_kit_has_expected_errors` to include `guid-unique` constraint
 - Expanded `TestFlattenDesign` with additional test cases:
   - `test_nakagin_capsule_tower_normal` - with plane validation
   - `test_nakagin_capsule_tower_slanted` - new test case

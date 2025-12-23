@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-12-04T13:48:48.009Z",
+  "timestamp": "2025-12-23T13:08:49.747Z",
   "entities": [
     {
       "name": "Id",
@@ -2258,7 +2258,7 @@
       "kind": "class",
       "fields": [
         {
-          "name": "ruleId",
+          "name": "constraintId",
           "type": "str"
         },
         {
@@ -2316,7 +2316,7 @@
       ]
     },
     {
-      "name": "SemioValidationRule",
+      "name": "SemioValidationConstraint",
       "kind": "class",
       "fields": []
     },

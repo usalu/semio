@@ -17,7 +17,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion
+// #endregion Header
 
 import mdx from "@mdx-js/rollup";
 import tailwindcss from "@tailwindcss/vite";

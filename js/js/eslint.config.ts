@@ -17,7 +17,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion
+// #endregion Header
 // import js from "@eslint/js";
 // // The following imports cause process not defined error in storybook.
 // import eslintConfigPrettier from "eslint-config-prettier";

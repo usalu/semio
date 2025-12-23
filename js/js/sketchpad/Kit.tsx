@@ -1589,7 +1589,7 @@ export function useKitAppTogglePanel(): ActionHookResult<[panel: keyof PanelVisi
 
 //#endregion Action Hooks
 
-// #endregion Kit App
+// #endregion Internal State Management
 
 // #region Types
 
@@ -1728,8 +1728,6 @@ export function useKitAppDesignColor(isSelected: boolean): HookNoSetResult<{ fil
 }
 
 // #endregion Designs
-
-// #endregion Internal State Management
 
 // #region Commands
 
@@ -2474,9 +2472,6 @@ export const commands = {
 
 // #endregion Commands
 
-// #region Navbar
-
-// #endregion Navbar
 
 // #region Canvas
 
@@ -6458,9 +6453,6 @@ export const MultipleArtifactsSection: FC = () => {
 
 // #endregion Details
 
-// #region Chat
-
-// #endregion Chat
 
 // #region Settings
 
@@ -6628,9 +6620,6 @@ const SketchpadSettingsContent: FC = () => {
 
 // #endregion Panels
 
-// #region Tools
-
-// #endregion Tools
 
 // #endregion Canvas
 
@@ -6656,9 +6645,6 @@ export const KitAppFooter: FC = () => {
 
 // #endregion Footer
 
-// #region App
-
-// #endregion App
 
 // #region Config
 

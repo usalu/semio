@@ -908,7 +908,7 @@ class SemioValidationContext {
 }
 
 class SemioValidationIssue {
-  ruleId: str
+  constraintId: str
   severity: SemioValidationSeverity
   message: str
   location: SemioDomainLocation
@@ -951,7 +951,7 @@ enum SemioEntityKind {
   Concept
 }
 
-interface SemioValidationRule {
+interface SemioValidationConstraint {
   validate(ctx: SemioValidationContext): SemioValidationIssue[]
 }
 
@@ -961,8 +961,8 @@ SemioValidationIssue *-- "1..*" SemioKitFix
 SemioKitFix --> KitDiff
 SemioDomainLocation --> SemioEntityKind
 SemioValidationIssue --> SemioValidationSeverity
-SemioValidationRule ..> SemioValidationContext
-SemioValidationRule ..> SemioValidationIssue
+SemioValidationConstraint ..> SemioValidationContext
+SemioValidationConstraint ..> SemioValidationIssue
 ' #endregion Validation
 
 @enduml

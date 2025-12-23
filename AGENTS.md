@@ -1248,7 +1248,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ └── schema-changer.md # Exclusively to change the schema (code, api, database, …)
 │ └── settings.json
 ├── .cursor
-│ ├── rules
+│ ├── constraints
 │ │ └── repo.mdc # \*_/_.\*
 ├── .github
 │ ├── chatmodes
@@ -3359,7 +3359,7 @@ interface SemioKitFix {
 }
 
 interface SemioValidationIssue {
-  ruleId: string;
+  constraintId: string;
   severity: SemioValidationSeverity;
   message: string;
   location: SemioDomainLocation;
@@ -3385,15 +3385,15 @@ interface SemioValidationContext {
 }
 ```
 
-#### Validation Rules
+#### Validation Constraints
 
-All validation rules follow the pattern:
+All validation constraints follow the pattern:
 
 ```typescript
-type SemioValidationRule = (ctx: SemioValidationContext) => SemioValidationIssue[];
+type SemioValidationConstraint = (ctx: SemioValidationContext) => SemioValidationIssue[];
 ```
 
-##### Default Rules
+##### Default Constraints
 
 #### 1. GUID Uniqueness (`guid-unique`)
 
@@ -3496,7 +3496,7 @@ Layer paths within a design must be unique.
 
 #### Uniqueness Requirements Summary
 
-| Entity     | Scope                  | Field | Rule ID               |
+| Entity     | Scope                  | Field | Constraint ID         |
 | ---------- | ---------------------- | ----- | --------------------- |
 | Kit        | Global                 | guid  | guid-unique           |
 | Type       | Siblings (same parent) | name  | type-name-unique      |
@@ -3541,28 +3541,28 @@ const fixedKit = applyKitDiff(kit, fix.diff);
 ##### Custom Validation
 
 ```typescript
-const customRule: SemioValidationRule = (ctx) => {
+const customConstraint: SemioValidationConstraint = (ctx) => {
   const issues: SemioValidationIssue[] = [];
   // Custom validation logic
   return issues;
 };
 
 const result = validateSemioKit(kit, {
-  rules: [...defaultSemioValidationRules, customRule],
+  constraints: [...defaultSemioValidationConstraints, customConstraint],
 });
 ```
 
-###### Creating New Rules
+###### Creating New Constraints
 
-1. Define the rule function following `SemioValidationRule` signature
+1. Define the constraint function following `SemioValidationConstraint` signature
 2. Use `semioMakeFix` helper to generate `KitDiff`-based fixes
-3. Add to `defaultSemioValidationRules` array
+3. Add to `defaultSemioValidationConstraints` array
 4. Document in this section
 
 Example:
 
 ```typescript
-export const semioCustomRule: SemioValidationRule = (ctx) => {
+export const semioCustomConstraint: SemioValidationConstraint = (ctx) => {
   const issues: SemioValidationIssue[] = [];
   // Validation logic
   // Use semioMakeFix to create fixes
@@ -3580,7 +3580,7 @@ All implementations (TypeScript, Python, C#) produce **identical** validation ou
 {
   "issues": [
     {
-      "ruleId": "type-name-unique",
+      "constraintId": "type-name-unique",
       "severity": "error",
       "message": "Duplicate type name \"...\" among siblings.",
       "entityKind": "Type",
@@ -3604,18 +3604,24 @@ All implementations (TypeScript, Python, C#) produce **identical** validation ou
 
 ##### Test Data
 
-- `assets/semio/kit_invalid.json` - Invalid kit with all validation rule violations
-- `assets/semio/validation.json` - Expected output (sorted by ruleId, then entityGuid)
+- `assets/semio/kit_invalid.json` - Invalid kit with all validation constraint violations
+- `assets/semio/validation.json` - Expected output (sorted by constraintId, then entityGuid)
 
-##### Generating validation.json
+##### Updating Metabolism Assets
 
 ```bash
-npx tsx scripts/generate-validation.ts
+npx tsx scripts/update-metabolism.tsx
 ```
 
-##### Validation Rules
+This script consolidates all Metabolism asset generation:
 
-| Rule ID                 | Description                                  |
+- Regenerates `metabolism.zip` with updated SQL schema and copies to all public folders
+- Generates diff files (`diff_kit_metabolism.json`, `diff_kit_metabolism_inverted.json`, `kit_metabolism_diffed.json`)
+- Generates `validation.json` from `kit_invalid.json`
+
+##### Validation Constraints
+
+| Constraint ID           | Description                                  |
 | ----------------------- | -------------------------------------------- |
 | `guid-unique`           | All GUIDs must be unique across the kit      |
 | `type-name-unique`      | Type names must be unique among siblings     |

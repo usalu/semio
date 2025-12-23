@@ -35,10 +35,10 @@ iterations: []
 
 - Added `SerializableValidationFix`, `SerializableValidationIssue`, `SerializableValidationResult` interfaces
 - Added `toSerializableValidationResult()` to convert full result to serializable format (includes fixes)
-- Added `serializeValidationResult()` for JSON serialization (sorted by ruleId, entityGuid)
+- Added `serializeValidationResult()` for JSON serialization (sorted by constraintId, entityGuid)
 - Added `parseValidationResult()` and `areValidationResultsEqual()` for testing
 - Added `areKitDiffsEqualIgnoringNewGuids()` for GUID-normalized diff comparison
-- Fixed layer-path-unique rule to include `entityGuid`
+- Fixed layer-path-unique constraint to include `entityGuid`
 
 ## TypeScript Test (js/js/semio.test.ts)
 
@@ -52,7 +52,7 @@ iterations: []
 - Added `ValidationResult.toDict()` and `ValidationResult.serialize()` methods
 - Added `areValidationResultsEqual()` with GUID normalization for fix comparison
 - Added `parseValidationResult()` for parsing validation.json
-- Added fix generation to `validateKitDict()` for all validation rules
+- Added fix generation to `validateKitDict()` for all validation constraints
 - Skips diff comparison for `guid-unique` (new GUIDs differ)
 
 ## Python Test (py/engine/engine.test.py)

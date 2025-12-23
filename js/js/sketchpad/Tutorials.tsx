@@ -28,7 +28,7 @@ import { useAddFooterItem, useMode, useRemoveFooterItem } from "./Sketchpad";
 import { Button, Slider } from "./elements";
 import { Mode } from "./shared";
 
-// #endregion
+// #endregion Imports
 
 // #region Components
 
@@ -107,7 +107,7 @@ const TutorialControlsContent: FC = () => {
   );
 };
 
-// #endregion
+// #endregion Tutorial Controls
 
 // #region Recording Controls
 
@@ -180,7 +180,7 @@ const RecordingControlsContent: FC = () => {
   );
 };
 
-// #endregion
+// #endregion Recording Controls
 
 // #region Record Button
 
@@ -222,7 +222,7 @@ export const RecordButton: FC = () => {
   return null;
 };
 
-// #endregion
+// #endregion Record Button
 
 // #region Tutorial Overlay
 
@@ -359,9 +359,9 @@ const MilestoneTooltip: FC<MilestoneTooltipProps> = ({ milestone }) => {
   );
 };
 
-// #endregion
+// #endregion Tutorial Overlay
 
-// #endregion
+// #endregion Components
 // #region Built-in Tutorials
 
 export const helloTutorial: Tutorial = {
@@ -496,7 +496,7 @@ export const sketchpadTour: Tutorial = {
   ],
 };
 
-// #endregion
+// #endregion Built-in Tutorials
 
 // #region Commands
 
@@ -571,7 +571,7 @@ export const devCommands = {
   },
 };
 
-// #endregion
+// #endregion Commands
 
 // #region Command Interceptor
 
@@ -593,7 +593,7 @@ export const useTutorialCommandInterceptor = (onCommandExecute: (command: string
   );
 };
 
-// #endregion
+// #endregion Command Interceptor
 
 // #region Hooks
 
@@ -624,7 +624,7 @@ export const useTutorialProgress = () => {
   return { current, total, percentage };
 };
 
-// #endregion
+// #endregion Hooks
 
 // #region Context
 
@@ -664,7 +664,7 @@ const useTutorialContext = () => {
   return context;
 };
 
-// #endregion
+// #endregion Context
 
 // #region Types
 
@@ -764,9 +764,9 @@ export interface TutorialDiff {
   activeRecording?: TutorialRecording | null;
 }
 
-// #endregion
+// #endregion Tutorial Entities
 
-// #endregion
+// #endregion Types
 
 // #region Store
 
@@ -1031,4 +1031,4 @@ export class TutorialStore {
   }
 }
 
-// #endregion
+// #endregion Store

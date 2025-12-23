@@ -441,7 +441,7 @@ export abstract class Store<TState> {
     return getValueAtPath(this.yMap, path);
   }
 
-  // #endregion YPath API
+  // #endregion Store
 }
 
 export abstract class AppStore<TState, TDiff extends AppDiff<TSelectionDiff>, TSelectionDiff, TEdit extends AppEdit<TSelectionDiff>, TCommandContext, TCommandResult extends AppCommandResult<TDiff>> extends Store<TState> {
@@ -1106,7 +1106,7 @@ export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit,
   }
 }
 
-// #endregion Plain App Store
+// #endregion Plain App Store (No YJS)
 
 // #region File Provider
 
@@ -1246,7 +1246,7 @@ export function createLocalFileProvider(config?: LocalFileProviderConfig): FileP
   };
 }
 
-// #endregion Local File Provider
+// #endregion Local File Provider (IndexedDB)
 
 // #region Remote File Provider
 
@@ -1454,7 +1454,7 @@ class AttributeStore {
   };
 }
 
-// #endregion Attribute
+// #endregion Kits
 
 // #region Coord
 
@@ -7603,8 +7603,6 @@ export const kitCommands = {
 
 // #endregion Commands
 
-// #endregion Store
-
 // #region Machine
 
 // #region Types
@@ -12357,7 +12355,7 @@ export function useKitCommandsById(kitGuid?: string) {
   }, [kitGuid, store]);
 }
 
-// #endregion Store
+// #endregion Sketchpad
 
 // #region Commands
 
@@ -12768,7 +12766,7 @@ export const useRemovePanelSection = () => {
   return context.removeSection;
 };
 
-// #endregion Panel Sections
+// #endregion Navbar
 
 // #region SidePanel Tabs
 
