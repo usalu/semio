@@ -181,7 +181,7 @@ MIMES = {
 ENCODED_PATH = typing.Annotated[str, fastapi.Path(pattern=ENCODING_REGEX)]
 ENCODED_NAME_AND_VARIANT_PATH = typing.Annotated[str, fastapi.Path(pattern=ENCODING_REGEX + "," + ENCODING_ALPHABET_REGEX + "*")]
 ENCODED_NAME_AND_VARIANT_AND_VIEW_PATH = typing.Annotated[str, fastapi.Path(pattern=ENCODING_REGEX + "," + ENCODING_ALPHABET_REGEX + "*" + "," + ENCODING_ALPHABET_REGEX + "*")]
-MAX_REQUEST_BODY_SIZE = 50 * 1024 * 1024  
+MAX_REQUEST_BODY_SIZE = 50 * 1024 * 1024
 dotenv.load_dotenv()
 ENVS = {key: value for key, value in os.environ.items() if key.startswith("SEMIO_")}
 
@@ -214,7 +214,6 @@ def encodeRecursiveAnyList(recursiveAnyList: RecursiveAnyList) -> str:
     if not isinstance(recursiveAnyList, list):
         return encode(str(recursiveAnyList))
     return encode(",".join([encodeRecursiveAnyList(item) for item in recursiveAnyList]))
-
 
 
 def create_id(recursiveAnyList: RecursiveAnyList) -> str:
@@ -276,9 +275,6 @@ logger = loguru.logger
 # region Exceptions
 
 
-
-
-
 class Error(Exception, abc.ABC):
     """❗ The base for all exceptions."""
 
@@ -331,7 +327,7 @@ class NoTypeOrDesignAssigned(NoParentAssigned):
 
 class NoModelOrPortOrTypeOrPieceOrConnectionOrDesignOrKitAssigned(NoParentAssigned):
     def __str__(self):
-        return "👪 The entity has no parent model, port, type, piece, connection, design, kit or folder assigned."
+        return "👪 The entity has no parent model, connector, type, piece, connection, design, kit or folder assigned."
 
 
 class AlreadyExists(SpecificationError, abc.ABC):
@@ -377,10 +373,7 @@ class Model(sqlmodel.SQLModel, abc.ABC):
         return self.model_dump()
 
 
-BaseModel = Model  
-
-
-
+BaseModel = Model
 
 
 class Field(Model, abc.ABC):
@@ -454,13 +447,13 @@ class Entity(Model, abc.ABC):
         return self.id()
 
     # TODO: Automatic emptying.
-    
+
     def empty(self) -> "Entity":
         """🪣 Empty all props and children of the entity."""
         return self.__class__()
 
     # TODO: Automatic updating based on props.
-    
+
     def update(self, other: "Entity") -> "Entity":
         """🔄 Update the props of the entity."""
         return self
@@ -564,7 +557,6 @@ class TableEntityNode(TableNode):
 # region Attribute
 
 
-
 class AttributeKeyField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
@@ -603,8 +595,8 @@ class Attribute(AttributeDefinitionField, AttributeValueField, AttributeKeyField
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
     modelPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("model_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("models.id")), default=None, exclude=True)
     model: Model = sqlmodel.Relationship(back_populates="attributes")
-    portPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("port_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("ports.id")), default=None, exclude=True)
-    port: Port = sqlmodel.Relationship(back_populates="attributes")
+    connectorPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("connector_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("connectors.id")), default=None, exclude=True)
+    connector: Connector = sqlmodel.Relationship(back_populates="attributes")
     typePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("types.id")), default=None, exclude=True)
     type: Type = sqlmodel.Relationship(back_populates="attributes")
     piecePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("piece_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("pieces.id")), default=None, exclude=True)
@@ -634,31 +626,31 @@ class Attribute(AttributeDefinitionField, AttributeValueField, AttributeKeyField
         sqlalchemy.CheckConstraint(
             """
         (
-            (model_id IS NOT NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
+            (model_id IS NOT NULL AND connector_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
         OR
-            (model_id IS NULL AND port_id IS NOT NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
+            (model_id IS NULL AND connector_id IS NOT NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
         OR
-            (model_id IS NULL AND port_id IS NULL AND type_id IS NOT NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
+            (model_id IS NULL AND connector_id IS NULL AND type_id IS NOT NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
         OR
-            (model_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NOT NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
+            (model_id IS NULL AND connector_id IS NULL AND type_id IS NULL AND piece_id IS NOT NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
         OR
-            (model_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NOT NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
+            (model_id IS NULL AND connector_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NOT NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
         OR
-            (model_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NOT NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
+            (model_id IS NULL AND connector_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NOT NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
         OR
-            (model_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NOT NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
+            (model_id IS NULL AND connector_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NOT NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
         OR
-            (model_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NOT NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
+            (model_id IS NULL AND connector_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NOT NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
         OR
-            (model_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NOT NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
+            (model_id IS NULL AND connector_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NOT NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
         OR
-            (model_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NOT NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
+            (model_id IS NULL AND connector_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NOT NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
         OR
-            (model_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NOT NULL AND benchmark_id IS NULL AND folder_id IS NULL)
+            (model_id IS NULL AND connector_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NOT NULL AND benchmark_id IS NULL AND folder_id IS NULL)
         OR
-            (model_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NOT NULL AND folder_id IS NULL)
+            (model_id IS NULL AND connector_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NOT NULL AND folder_id IS NULL)
         OR
-            (model_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NOT NULL)
+            (model_id IS NULL AND connector_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NOT NULL)
         )
         """,
             name="ck_attributes_parent_set",
@@ -666,11 +658,11 @@ class Attribute(AttributeDefinitionField, AttributeValueField, AttributeKeyField
         sqlalchemy.UniqueConstraint("name", "type_id", "design_id", name="uq_attributes_name_type_id_design_id"),
     )
 
-    def parent(self) -> typing.Union["Model", "Port", "Type", "Piece", "Connection", "Design", "Kit", "Quality", "Prop", "Author", "Location", "Benchmark", "Folder", None]:
+    def parent(self) -> typing.Union["Model", "Connector", "Type", "Piece", "Connection", "Design", "Kit", "Quality", "Prop", "Author", "Location", "Benchmark", "Folder", None]:
         if self.model is not None:
             return self.model
-        if self.port is not None:
-            return self.port
+        if self.connector is not None:
+            return self.connector
         if self.type is not None:
             return self.type
         if self.piece is not None:
@@ -718,7 +710,6 @@ class AttributeInputNode(InputNode):
 # endregion Attribute
 
 # region Tag
-
 
 
 class TagGuidField(RealField, abc.ABC):
@@ -797,7 +788,6 @@ class Concept(ConceptIconField, ConceptDescriptionField, ConceptOrderField, Conc
 # region Coord
 
 
-
 class Coord(Model):
     u: float = sqlmodel.Field()
     v: float = sqlmodel.Field()
@@ -807,23 +797,6 @@ class Coord(Model):
 
     def __repr__(self) -> str:
         return f"[{pretty(self.u)}, {pretty(self.v)}]"
-
-    
-    
-
-    
-    
-
-    
-    
-    
-    
-    
-    
-    
-
-    
-    
 
 
 class CoordInput(Coord, Input):
@@ -857,49 +830,16 @@ class CoordInputNode(InputNode):
 # region Point
 
 
-
 class Point(Model):
     x: float = sqlmodel.Field()
     y: float = sqlmodel.Field()
     z: float = sqlmodel.Field()
-
-    
-    
 
     def __str__(self) -> str:
         return f"[{pretty(self.x)}, {pretty(self.y)}, {pretty(self.z)}]"
 
     def __repr__(self) -> str:
         return f"[{pretty(self.x)}, {pretty(self.y)}, {pretty(self.z)}]"
-
-    
-    
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
-    
-    
-
-    
-    
-    
-    
-    
-    
-
-    
-    
-
-    
-    
 
 
 class PointInput(Point, Input):
@@ -933,87 +873,16 @@ class PointInputNode(InputNode):
 # region Vector
 
 
-
 class Vector(Model):
     x: float = sqlmodel.Field()
     y: float = sqlmodel.Field()
     z: float = sqlmodel.Field()
-
-    
-    
 
     def __str__(self) -> str:
         return f"[{pretty(self.x)}, {pretty(self.y)}, {pretty(self.z)}]"
 
     def __repr__(self) -> str:
         return f"[{pretty(self.x)}, {pretty(self.y)}, {pretty(self.z)}]"
-
-    
-    
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
-    
-    
-
-    
-    
-
-    
-    
-    
-
-    
-    
-
-    
-    
-
-    
-    
-    
-    
-    
-    
-
-    
-    
-    
-
-    
-    
-
-    
-    
-
-    
-    
-
-    
-    
-
-    
-    
-
-    
-    
-    
-
-    
-    
-    
-
-    
-    
-    
 
 
 class VectorInput(Vector, Input):
@@ -1045,7 +914,6 @@ class VectorInputNode(InputNode):
 # endregion Vector
 
 # region Plane
-
 
 
 class PlaneOriginField(MaskedField, abc.ABC):
@@ -1090,26 +958,6 @@ class Plane(Table, table=True):
     yAxisZ: float = sqlmodel.Field(sa_column=sqlmodel.Column("y_axis_z", sqlalchemy.Float()), exclude=True)
     piece: Piece = sqlmodel.Relationship(back_populates="plane")
 
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
     @property
     def origin(self) -> Point:
         return Point(
@@ -1152,38 +1000,6 @@ class Plane(Table, table=True):
         self.yAxisY = yAxis.y
         self.yAxisZ = yAxis.z
 
-    
-    
-    
-    
-    
-    
-
-    
-    
-
-    
-    
-
-    
-    
-    
-    
-    
-    
-    
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
     # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
     @classmethod
     def parse(cls: "Plane", input: str | dict | PlaneInput | typing.Any | None) -> "Plane":
@@ -1215,7 +1031,6 @@ class PlaneInputNode(InputNode):
 # endregion Plane
 
 # region Location
-
 
 
 class LocationGuidField(RealField, abc.ABC):
@@ -1261,7 +1076,6 @@ class LocationPrediction(LocationAltitudeField, LocationLatitudeField, LocationL
     pass
 
 
-
 class LocationNode(Node):
     class Meta:
         model = LocationOutput
@@ -1275,7 +1089,6 @@ class LocationInputNode(InputNode):
 # endregion Location
 
 # region Author
-
 
 
 class AuthorNameField(RealField, abc.ABC):
@@ -1367,7 +1180,6 @@ class ArtifactAuthor(ArtifactAuthorEmailField, TableEntity, table=True):
 # endregion ArtifactAuthor
 
 # region File
-
 
 
 class FileGuidField(RealField, abc.ABC):
@@ -1877,8 +1689,8 @@ class Prop(PropUpdatedField, PropCreatedField, PropUnitField, PropValueField, Pr
     PLURAL = "props"
     __tablename__ = "props"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
-    portPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("port_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("ports.id")), default=None, exclude=True)
-    port: Port = sqlmodel.Relationship(back_populates="props")
+    connectorPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("connector_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("connectors.id")), default=None, exclude=True)
+    connector: Connector = sqlmodel.Relationship(back_populates="props")
     typePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("types.id")), default=None, exclude=True)
     type: Type = sqlmodel.Relationship(back_populates="props")
     designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")), default=None, exclude=True)
@@ -1890,20 +1702,20 @@ class Prop(PropUpdatedField, PropCreatedField, PropUnitField, PropValueField, Pr
         sqlalchemy.CheckConstraint(
             """
         (
-            (port_id IS NOT NULL AND type_id IS NULL AND design_id IS NULL)
+            (connector_id IS NOT NULL AND type_id IS NULL AND design_id IS NULL)
         OR
-            (port_id IS NULL AND type_id IS NOT NULL AND design_id IS NULL)
+            (connector_id IS NULL AND type_id IS NOT NULL AND design_id IS NULL)
         OR
-            (port_id IS NULL AND type_id IS NULL AND design_id IS NOT NULL)
+            (connector_id IS NULL AND type_id IS NULL AND design_id IS NOT NULL)
         )
         """,
             name="ck_props_parent_set",
         ),
     )
 
-    def parent(self) -> typing.Union["Port", "Type", "Design"]:
-        if self.port is not None:
-            return self.port
+    def parent(self) -> typing.Union["Connector", "Type", "Design"]:
+        if self.connector is not None:
+            return self.connector
         if self.type is not None:
             return self.type
         if self.design is not None:
@@ -1940,7 +1752,6 @@ class PropInputNode(InputNode):
 # endregion Prop
 
 # region Model
-
 
 
 class ModelNameField(RealField, abc.ABC):
@@ -2026,9 +1837,7 @@ class Model(ModelDescriptionField, ModelNameField, ModelFileField, ModelUrlField
     def dump(self) -> "ModelOutput":
         entity = {**ModelProps.model_validate(self).model_dump()}
         #  TODO: Fix bug with tags not being dumped correctly.
-        
-        
-        
+
         entity["attributes"] = [q.dump() for q in self.attributes]
         return ModelOutput(**entity)
 
@@ -2050,7 +1859,6 @@ class ModelInputNode(InputNode):
 # endregion Model
 
 # region Interface
-
 
 
 class InterfaceNameField(RealField, abc.ABC):
@@ -2097,9 +1905,6 @@ class Interface(InterfaceIconField, InterfaceDescriptionField, InterfaceNameFiel
 # TODO: Fix InterfaceNode - was incorrectly changed to TableEntityNode in latest commit
 
 
-
-
-
 class InterfaceInputNode(InputNode):
     class Meta:
         model = InterfaceInput
@@ -2107,12 +1912,10 @@ class InterfaceInputNode(InputNode):
 
 # endregion Interface
 
-# region Port
-
+# region Connector
 
 
 # region CompatibleInterface
-
 
 
 class CompatibleInterfaceNameField(RealField, abc.ABC):
@@ -2126,70 +1929,70 @@ class CompatibleInterfaceOrderField(RealField, abc.ABC):
 class CompatibleInterface(CompatibleInterfaceOrderField, CompatibleInterfaceNameField, Table, table=True):
     __tablename__ = "compatible_interfaces"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
-    portPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("port_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("ports.id")), default=None, exclude=True)
-    port: Port = sqlmodel.Relationship(back_populates="compatibleInterfaces_")
+    connectorPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("connector_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("connectors.id")), default=None, exclude=True)
+    connector: Connector = sqlmodel.Relationship(back_populates="compatibleInterfaces_")
 
 
 # endregion CompatibleInterface
 
 
-class PortIdField(MaskedField, abc.ABC):
+class ConnectorIdField(MaskedField, abc.ABC):
     id_: str = sqlmodel.Field(default="", max_length=ID_LENGTH_LIMIT)
 
 
-class PortDescriptionField(RealField, abc.ABC):
+class ConnectorDescriptionField(RealField, abc.ABC):
     description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
-class PortMandatoryField(RealField, abc.ABC):
+class ConnectorMandatoryField(RealField, abc.ABC):
     is_mandatory: bool = sqlmodel.Field(default=False)
 
 
-class PortInterfaceField(RealField, abc.ABC):
+class ConnectorInterfaceField(RealField, abc.ABC):
     interface: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
-class PortCompatibleInterfacesField(MaskedField, abc.ABC):
+class ConnectorCompatibleInterfacesField(MaskedField, abc.ABC):
     compatibleInterfaces: list[str] = sqlmodel.Field(default_factory=list)
 
 
-class PortPointField(MaskedField, abc.ABC):
+class ConnectorPointField(MaskedField, abc.ABC):
     point: Point = sqlmodel.Field()
 
 
-class PortDirectionField(MaskedField, abc.ABC):
+class ConnectorDirectionField(MaskedField, abc.ABC):
     direction: Vector = sqlmodel.Field()
 
 
-class PortTField(RealField, abc.ABC):
+class ConnectorTField(RealField, abc.ABC):
     t: float = sqlmodel.Field(default=0.0)
 
 
-class PortId(PortIdField, Id):
+class ConnectorId(ConnectorIdField, Id):
     pass
 
 
-class PortProps(PortTField, PortCompatibleInterfacesField, PortInterfaceField, PortMandatoryField, PortDescriptionField, PortIdField, Props):
+class ConnectorProps(ConnectorTField, ConnectorCompatibleInterfacesField, ConnectorInterfaceField, ConnectorMandatoryField, ConnectorDescriptionField, ConnectorIdField, Props):
     pass
 
 
-class PortInput(PortTField, PortCompatibleInterfacesField, PortInterfaceField, PortMandatoryField, PortDescriptionField, PortIdField, Input):
+class ConnectorInput(ConnectorTField, ConnectorCompatibleInterfacesField, ConnectorInterfaceField, ConnectorMandatoryField, ConnectorDescriptionField, ConnectorIdField, Input):
     point: PointInput = sqlmodel.Field()
     direction: VectorInput = sqlmodel.Field()
     attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
 
 
-class PortContext(PortTField, PortDirectionField, PortPointField, PortCompatibleInterfacesField, PortInterfaceField, PortMandatoryField, PortDescriptionField, PortIdField, Context):
+class ConnectorContext(ConnectorTField, ConnectorDirectionField, ConnectorPointField, ConnectorCompatibleInterfacesField, ConnectorInterfaceField, ConnectorMandatoryField, ConnectorDescriptionField, ConnectorIdField, Context):
     attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
 
 
-class PortOutput(PortTField, PortDirectionField, PortPointField, PortCompatibleInterfacesField, PortInterfaceField, PortMandatoryField, PortDescriptionField, PortIdField, Output):
+class ConnectorOutput(ConnectorTField, ConnectorDirectionField, ConnectorPointField, ConnectorCompatibleInterfacesField, ConnectorInterfaceField, ConnectorMandatoryField, ConnectorDescriptionField, ConnectorIdField, Output):
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
 
 
-class Port(PortTField, PortInterfaceField, PortMandatoryField, PortDescriptionField, TableEntity, table=True):
-    PLURAL = "ports"
-    __tablename__ = "ports"
+class Connector(ConnectorTField, ConnectorInterfaceField, ConnectorMandatoryField, ConnectorDescriptionField, TableEntity, table=True):
+    PLURAL = "connectors"
+    __tablename__ = "connectors"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
 
     id_: str = sqlmodel.Field(
@@ -2197,21 +2000,21 @@ class Port(PortTField, PortInterfaceField, PortMandatoryField, PortDescriptionFi
         sa_column=sqlmodel.Column("local_id", sqlalchemy.String(ID_LENGTH_LIMIT)),
         default="",
     )
-    compatibleInterfaces_: list[CompatibleInterface] = sqlmodel.Relationship(back_populates="port", cascade_delete=True)
+    compatibleInterfaces_: list[CompatibleInterface] = sqlmodel.Relationship(back_populates="connector", cascade_delete=True)
     pointX: float = sqlmodel.Field(sa_column=sqlmodel.Column("point_x", sqlalchemy.String(ID_LENGTH_LIMIT)), exclude=True)
     pointY: float = sqlmodel.Field(sa_column=sqlmodel.Column("point_y", sqlalchemy.Float()), exclude=True)
     pointZ: float = sqlmodel.Field(sa_column=sqlmodel.Column("point_z", sqlalchemy.Float()), exclude=True)
     directionX: float = sqlmodel.Field(sa_column=sqlmodel.Column("direction_x", sqlalchemy.Float()), exclude=True)
     directionY: float = sqlmodel.Field(sa_column=sqlmodel.Column("direction_y", sqlalchemy.Float()), exclude=True)
     directionZ: float = sqlmodel.Field(sa_column=sqlmodel.Column("direction_z", sqlalchemy.Float()), exclude=True)
-    attributes: list["Attribute"] = sqlmodel.Relationship(back_populates="port", cascade_delete=True)
-    props: list["Prop"] = sqlmodel.Relationship(back_populates="port", cascade_delete=True)
+    attributes: list["Attribute"] = sqlmodel.Relationship(back_populates="connector", cascade_delete=True)
+    props: list["Prop"] = sqlmodel.Relationship(back_populates="connector", cascade_delete=True)
     typePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("types.id")), default=None, exclude=True)
-    type: Type = sqlmodel.Relationship(back_populates="ports")
-    connecteds: list["Connection"] = sqlmodel.Relationship(back_populates="connectedPort", sa_relationship_kwargs={"foreign_keys": "Connection.connectedPortPk"})
-    connectings: list["Connection"] = sqlmodel.Relationship(back_populates="connectingPort", sa_relationship_kwargs={"foreign_keys": "Connection.connectingPortPk"})
+    type: Type = sqlmodel.Relationship(back_populates="connectors")
+    connecteds: list["Connection"] = sqlmodel.Relationship(back_populates="connectedConnector", sa_relationship_kwargs={"foreign_keys": "Connection.connectedConnectorPk"})
+    connectings: list["Connection"] = sqlmodel.Relationship(back_populates="connectingConnector", sa_relationship_kwargs={"foreign_keys": "Connection.connectingConnectorPk"})
 
-    __table_args__ = (sqlalchemy.UniqueConstraint("local_id", "type_id", name="uq_ports_local_id_type_id"),)
+    __table_args__ = (sqlalchemy.UniqueConstraint("local_id", "type_id", name="uq_connectors_local_id_type_id"),)
 
     @property
     def compatibleInterfaces(self) -> list[str]:
@@ -2252,7 +2055,7 @@ class Port(PortTField, PortInterfaceField, PortMandatoryField, PortDescriptionFi
 
     # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
     @classmethod
-    def parse(cls: "Port", input: str | dict | PortInput | typing.Any | None) -> "Port":
+    def parse(cls: "Connector", input: str | dict | ConnectorInput | typing.Any | None) -> "Connector":
         if input is None:
             return cls()
         obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
@@ -2281,43 +2084,42 @@ class Port(PortTField, PortInterfaceField, PortMandatoryField, PortDescriptionFi
             pass
         return entity
 
-    def dump(self) -> "PortOutput":
-        entity = {**PortProps.model_validate(self).model_dump()}
+    def dump(self) -> "ConnectorOutput":
+        entity = {**ConnectorProps.model_validate(self).model_dump()}
         entity["point"] = self.point.dump()
         entity["direction"] = self.direction.dump()
         entity["compatibleInterfaces"] = self.compatibleInterfaces
         entity["attributes"] = [q.dump() for q in self.attributes]
-        return PortOutput(**entity)
+        return ConnectorOutput(**entity)
 
     # TODO: Automatic derive from Id model.
     def idMembers(self) -> RecursiveAnyList:
         return self.id_
 
 
-class PortNotFound(NotFound):
-    def __init__(self, parent: "Type", id: "PortId") -> None:
+class ConnectorNotFound(NotFound):
+    def __init__(self, parent: "Type", id: "ConnectorId") -> None:
         self.parent = parent
         self.id = id
 
     def __str__(self):
         variant = f", {self.parent.variant}" if self.parent.variant else ""
-        return f"🔍 Couldn't find the port ({self.id.id_}) inside the parent type ({self.parent.name}{variant})."
+        return f"🔍 Couldn't find the connector ({self.id.id_}) inside the parent type ({self.parent.name}{variant})."
 
 
-class PortInputNode(InputNode):
+class ConnectorInputNode(InputNode):
     class Meta:
-        model = PortInput
+        model = ConnectorInput
 
 
-class PortIdInputNode(InputNode):
+class ConnectorIdInputNode(InputNode):
     class Meta:
-        model = PortId
+        model = ConnectorId
 
 
-# endregion Port
+# endregion Connector
 
 # region Type
-
 
 
 class TypeNameField(RealField, abc.ABC):
@@ -2398,7 +2200,7 @@ class TypeInput(TypeUnitField, TypeVirtualField, TypeStockField, TypeVariantFiel
     folder: typing.Optional[str] = sqlmodel.Field(default=None)
     location: typing.Optional[LocationInput] = sqlmodel.Field(default=None)
     models: list[ModelInput] = sqlmodel.Field(default_factory=list)
-    ports: list[PortInput] = sqlmodel.Field(default_factory=list)
+    connectors: list[ConnectorInput] = sqlmodel.Field(default_factory=list)
     props: list[PropInput] = sqlmodel.Field(default_factory=list)
     authors: list[str] = sqlmodel.Field(default_factory=list)
     attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
@@ -2411,7 +2213,7 @@ class TypeOutput(TypeUpdatedField, TypeCreatedField, TypeUnitField, TypeVirtualF
     folder: typing.Optional[str] = sqlmodel.Field(default=None)
     location: typing.Optional[LocationOutput] = sqlmodel.Field(default=None)
     models: list[ModelOutput] = sqlmodel.Field(default_factory=list)
-    ports: list[PortOutput] = sqlmodel.Field(default_factory=list)
+    connectors: list[ConnectorOutput] = sqlmodel.Field(default_factory=list)
     props: list[PropOutput] = sqlmodel.Field(default_factory=list)
     authors: list[str] = sqlmodel.Field(default_factory=list)
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
@@ -2420,7 +2222,7 @@ class TypeOutput(TypeUpdatedField, TypeCreatedField, TypeUnitField, TypeVirtualF
 
 class TypeContext(TypeUnitField, TypeVirtualField, TypeStockField, TypeVariantField, TypeDescriptionField, TypeNameField, Context):
     location: typing.Optional[LocationContext] = sqlmodel.Field(default=None)
-    ports: list[PortContext] = sqlmodel.Field(default_factory=list)
+    connectors: list[ConnectorContext] = sqlmodel.Field(default_factory=list)
     attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
     concepts: list[str] = sqlmodel.Field(default_factory=list)
 
@@ -2454,7 +2256,7 @@ class Type(
 
     models: list[Model] = sqlmodel.Relationship(back_populates="type", cascade_delete=True)
 
-    ports: list[Port] = sqlmodel.Relationship(back_populates="type", cascade_delete=True)
+    connectors: list[Connector] = sqlmodel.Relationship(back_populates="type", cascade_delete=True)
 
     props: list["Prop"] = sqlmodel.Relationship(back_populates="type", cascade_delete=True)
 
@@ -2555,8 +2357,8 @@ class Type(
         except KeyError:
             pass
         try:
-            ports = [Port.parse(p) for p in obj["ports"]]
-            entity.ports = ports
+            connectors = [Connector.parse(p) for p in obj["connectors"]]
+            entity.connectors = connectors
         except KeyError:
             pass
         try:
@@ -2584,7 +2386,7 @@ class Type(
     def dump(self) -> "TypeOutput":
         entity = {**TypeProps.model_validate(self).model_dump()}
         entity["models"] = [r.dump() for r in self.models]
-        entity["ports"] = [p.dump() for p in self.ports]
+        entity["connectors"] = [p.dump() for p in self.connectors]
         entity["props"] = [p.dump() for p in self.props]
         entity["attributes"] = [q.dump() for q in self.attributes]
         entity["authors"] = self.authors
@@ -2627,12 +2429,12 @@ class NoTypeAssigned(NoParentAssigned):
         return "👪 The entity has no parent type assigned."
 
 
-class TypeHasNotAllUsedPorts(SpecificationError):
-    def __init__(self, missingPorts: set[str]) -> None:
-        self.missingPorts = missingPorts
+class TypeHasNotAllUsedConnectors(SpecificationError):
+    def __init__(self, missingConnectors: set[str]) -> None:
+        self.missingConnectors = missingConnectors
 
     def __str__(self) -> str:
-        return f"🚫 A design is using some ports of the type. The new type is missing the following ports: {', '.join(self.missingPorts)}."
+        return f"🚫 A design is using some connectors of the type. The new type is missing the following connectors: {', '.join(self.missingConnectors)}."
 
 
 class TypeInputNode(InputNode):
@@ -2697,7 +2499,6 @@ class Layer(LayerIsLockedField, LayerIsHiddenField, LayerColorField, LayerDescri
 # endregion Layer
 
 # region Piece
-
 
 
 class PieceIdField(MaskedField, abc.ABC):
@@ -2776,11 +2577,6 @@ class PieceOutput(PieceDesignField, PieceTypeField, PieceDescriptionField, Piece
 
 class PiecePrediction(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Prediction):
     pass
-    
-    
-    
-    
-    
 
 
 class Piece(PieceIdField, PieceHiddenField, PieceLockedField, PieceColorField, PieceScaleField, TableEntity, table=True):
@@ -2958,11 +2754,10 @@ class Group(GroupColorField, GroupDescriptionField, GroupNameField, TableEntity,
 # region Side
 
 
-
 class Side(BaseModel):
     piece: PieceId = sqlmodel.Field()
     designPiece: typing.Optional[PieceId] = sqlmodel.Field(default=None)
-    port: PortId = sqlmodel.Field()
+    connector: ConnectorId = sqlmodel.Field()
 
     # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
     @classmethod
@@ -2971,13 +2766,13 @@ class Side(BaseModel):
             return cls()
         obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
         piece = PieceId.parse(obj["piece"])
-        port = PortId.parse(obj["port"])
+        connector = ConnectorId.parse(obj["connector"])
         try:
             designPieceObj = obj["designPiece"]
             designPiece = PieceId.parse(designPieceObj) if designPieceObj is not None else None
         except KeyError:
             designPiece = None
-        return cls(piece=piece, designPiece=designPiece, port=port)
+        return cls(piece=piece, designPiece=designPiece, connector=connector)
 
 
 class SideInput(Side, Input):
@@ -3000,11 +2795,11 @@ class SideNode(Node):
     class Meta:
         model = Side
 
-    exclude_fields = ("piece", "port")
+    exclude_fields = ("piece", "connector")
 
     piece = graphene.NonNull(lambda: PieceNode)
     designPiece = graphene.Field(lambda: PieceNode)
-    port = graphene.NonNull(lambda: PortNode)
+    connector = graphene.NonNull(lambda: ConnectorNode)
 
     def resolve_piece(self, info):
         return self.piece
@@ -3012,25 +2807,24 @@ class SideNode(Node):
     def resolve_designPiece(self, info):
         return self.designPiece
 
-    def resolve_port(self, info):
-        return self.port
+    def resolve_connector(self, info):
+        return self.connector
 
 
 class SideInputNode(InputNode):
     class Meta:
         model = SideInput
 
-    exclude_fields = ("piece", "port")
+    exclude_fields = ("piece", "connector")
 
     piece = graphene.NonNull(PieceIdInputNode)
     designPiece = PieceIdInputNode()
-    port = graphene.NonNull(PortIdInputNode)
+    connector = graphene.NonNull(ConnectorIdInputNode)
 
 
 # endregion Side
 
 # region Connection
-
 
 
 class ConnectionConnectedField(MaskedField, abc.ABC):
@@ -3067,16 +2861,6 @@ class ConnectionTurnField(RealField, abc.ABC):
 
 class ConnectionTiltField(RealField, abc.ABC):
     tilt: float = sqlmodel.Field(ge=0, lt=360, default=0)
-
-
-
-
-
-
-
-
-
-
 
 
 class ConnectionUField(RealField, abc.ABC):
@@ -3130,16 +2914,16 @@ class Connection(ConnectionVField, ConnectionUField, ConnectionTiltField, Connec
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
     connectedPiecePk: typing.Optional[int] = sqlmodel.Field(alias="connectedPieceId", sa_column=sqlmodel.Column("connected_piece_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("pieces.id")), default=None, exclude=True)
     connectedPiece: Piece = sqlmodel.Relationship(sa_relationship=sqlalchemy.orm.relationship("Piece", back_populates="connecteds", foreign_keys="[Connection.connectedPiecePk]"))
-    connectedPortPk: typing.Optional[int] = sqlmodel.Field(alias="connectedPortId", sa_column=sqlmodel.Column("connected_port_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("ports.id")), default=None, exclude=True)
-    connectedPort: Port = sqlmodel.Relationship(sa_relationship=sqlalchemy.orm.relationship("Port", back_populates="connecteds", foreign_keys="[Connection.connectedPortPk]"))
+    connectedConnectorPk: typing.Optional[int] = sqlmodel.Field(alias="connectedConnectorId", sa_column=sqlmodel.Column("connected_connector_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("connectors.id")), default=None, exclude=True)
+    connectedConnector: Connector = sqlmodel.Relationship(sa_relationship=sqlalchemy.orm.relationship("Connector", back_populates="connecteds", foreign_keys="[Connection.connectedConnectorPk]"))
     connectedDesignPiecePk: typing.Optional[int] = sqlmodel.Field(
         alias="connectedDesignPieceId", sa_column=sqlmodel.Column("connected_design_piece_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("pieces.id"), nullable=True), default=None, exclude=True
     )
     connectedDesignPiece: Piece = sqlmodel.Relationship(sa_relationship=sqlalchemy.orm.relationship("Piece", foreign_keys="[Connection.connectedDesignPiecePk]"))
     connectingPiecePk: typing.Optional[int] = sqlmodel.Field(alias="connectingPieceId", sa_column=sqlmodel.Column("connecting_piece_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("pieces.id")), exclude=True, default=None)
     connectingPiece: Piece = sqlmodel.Relationship(sa_relationship=sqlalchemy.orm.relationship("Piece", back_populates="connectings", foreign_keys="[Connection.connectingPiecePk]"))
-    connectingPortPk: typing.Optional[int] = sqlmodel.Field(alias="connectingPortId", sa_column=sqlmodel.Column("connecting_port_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("ports.id")), default=None, exclude=True)
-    connectingPort: Port = sqlmodel.Relationship(sa_relationship=sqlalchemy.orm.relationship("Port", back_populates="connectings", foreign_keys="[Connection.connectingPortPk]"))
+    connectingConnectorPk: typing.Optional[int] = sqlmodel.Field(alias="connectingConnectorId", sa_column=sqlmodel.Column("connecting_connector_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("connectors.id")), default=None, exclude=True)
+    connectingConnector: Connector = sqlmodel.Relationship(sa_relationship=sqlalchemy.orm.relationship("Connector", back_populates="connectings", foreign_keys="[Connection.connectingConnectorPk]"))
     connectingDesignPiecePk: typing.Optional[int] = sqlmodel.Field(
         alias="connectingDesignPieceId", sa_column=sqlmodel.Column("connecting_design_piece_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("pieces.id"), nullable=True), default=None, exclude=True
     )
@@ -3159,7 +2943,7 @@ class Connection(ConnectionVField, ConnectionUField, ConnectionTiltField, Connec
         return Side(
             piece=self.connectedPiece,
             designPiece=(PieceId(id_=self.connectedDesignPiece.id_) if self.connectedDesignPiece is not None else None),
-            port=self.connectedPort,
+            connector=self.connectedConnector,
         )
 
     @property
@@ -3167,7 +2951,7 @@ class Connection(ConnectionVField, ConnectionUField, ConnectionTiltField, Connec
         return Side(
             piece=self.connectingPiece,
             designPiece=(PieceId(id_=self.connectingDesignPiece.id_) if self.connectingDesignPiece is not None else None),
-            port=self.connectingPort,
+            connector=self.connectingConnector,
         )
 
     def parent(self) -> "Design":
@@ -3188,32 +2972,31 @@ class Connection(ConnectionVField, ConnectionUField, ConnectionTiltField, Connec
         connectedType = connectedPiece.type
         if connectedType is None:
             raise FeatureNotYetSupported()
-        connectedPort = [p for p in connectedType.ports if p.id_ == connected.port.id_]
-        if len(connectedPort) == 0:
-            raise PortNotFound(connectedType, connected.port)
+        connectedConnector = [p for p in connectedType.connectors if p.id_ == connected.connector.id_]
+        if len(connectedConnector) == 0:
+            raise ConnectorNotFound(connectedType, connected.connector)
         else:
-            connectedPort = connectedPort[0]
+            connectedConnector = connectedConnector[0]
         connectingPiece = piecesDict[connecting.piece.id_]
         connectingType = connectingPiece.type
         if connectingType is None:
             raise FeatureNotYetSupported()
-        connectingPort = [p for p in connectingType.ports if p.id_ == connecting.port.id_]
-        if len(connectingPort) == 0:
-            raise PortNotFound(connectingType, connecting.port)
+        connectingConnector = [p for p in connectingType.connectors if p.id_ == connecting.connector.id_]
+        if len(connectingConnector) == 0:
+            raise ConnectorNotFound(connectingType, connecting.connector)
         else:
-            connectingPort = connectingPort[0]
+            connectingConnector = connectingConnector[0]
         entity = cls(
             connectedPiece=connectedPiece,
-            connectedPort=connectedPort,
+            connectedConnector=connectedConnector,
             connectingPiece=connectingPiece,
-            connectingPort=connectingPort,
+            connectingConnector=connectingConnector,
         )
         if connected.designPiece is not None:
             if connectedPiece.refDesign is None and designsById is None:
                 raise FeatureNotYetSupported()
             refDesign = connectedPiece.refDesign if connectedPiece.refDesign is not None else None
             if refDesign is None and designsById is not None:
-                
                 raise FeatureNotYetSupported()
             if refDesign is not None:
                 try:
@@ -3297,9 +3080,9 @@ class Connection(ConnectionVField, ConnectionUField, ConnectionTiltField, Connec
     def idMembers(self) -> RecursiveAnyList:
         return [
             self.connected.piece.id_,
-            self.connected.port.id_,
+            self.connected.connector.id_,
             self.connecting.piece.id_,
-            self.connecting.port.id_,
+            self.connecting.connector.id_,
         ]
 
 
@@ -3372,7 +3155,6 @@ class Stat(StatUpdatedField, StatCreatedField, StatMaxExcludedField, StatMaxFiel
 # endregion Stat
 
 # region Design
-
 
 
 class DesignNameField(RealField, abc.ABC):
@@ -3676,7 +3458,6 @@ class DesignIdInputNode(InputNode):
 # region Kit
 
 
-
 class KitUriField(RealField, abc.ABC):
     uri: str = sqlmodel.Field(max_length=URI_LENGTH_LIMIT)
 
@@ -3967,10 +3748,7 @@ class Kit(KitNameField, KitVersionField, KitDescriptionField, KitIconField, KitI
             List of pieces that reference designs in the same family.
         """
         design = self.find_design_by_guid(design_guid)
-        return [
-            p for p in design.pieces
-            if p.design and p.design.guid and self.are_designs_in_same_family(design_guid, p.design.guid)
-        ]
+        return [p for p in design.pieces if p.design and p.design.guid and self.are_designs_in_same_family(design_guid, p.design.guid)]
 
     # endregion Design Family Helpers
 
@@ -4054,8 +3832,6 @@ class Kit(KitNameField, KitVersionField, KitDescriptionField, KitIconField, KitI
 # region Moved Graphene Nodes
 
 
-
-
 class AttributeNode(TableEntityNode):
     class Meta:
         model = Attribute
@@ -4076,27 +3852,16 @@ class ModelNode(TableEntityNode):
         model = Model
         excludedFields = ("tags_",)
 
-    
 
-    
-    
-
-
-class PortNode(TableEntityNode):
+class ConnectorNode(TableEntityNode):
     class Meta:
-        model = Port
+        model = Connector
         exclude_fields = ("connecteds", "connectings")
 
-    
     localId = graphene.String()
 
     def resolve_localId(self, info):
         return getattr(self, "id_", "")
-
-    
-
-    
-    
 
 
 class TypeNode(TableEntityNode):
@@ -4109,7 +3874,6 @@ class PieceNode(TableEntityNode):
         model = Piece
         exclude_fields = ("connecteds", "connectings")
 
-    
     localId = graphene.String()
 
     def resolve_localId(self, info):
@@ -4121,9 +3885,9 @@ class ConnectionNode(TableEntityNode):
         model = Connection
         exclude_fields = (
             "connectedPiece",
-            "connectedPort",
+            "connectedConnector",
             "connectingPiece",
-            "connectingPort",
+            "connectingConnector",
         )
 
     connected = graphene.NonNull(lambda: SideNode)
@@ -4306,7 +4070,7 @@ def areValidationResultsEqual(a: ValidationResult, b: ValidationResult) -> bool:
         for fa, fb in zip(ia.fixes, ib.fixes):
             if fa.title != fb.title:
                 return False
-            
+
             if ia.ruleId == "guid-unique":
                 continue
             if json.dumps(_normalizeGuids(fa.diff), sort_keys=True) != json.dumps(_normalizeGuids(fb.diff), sort_keys=True):
@@ -4414,16 +4178,16 @@ def validatePieceNameUniqueness(kit: Kit) -> list[ValidationIssue]:
 def validatePortNameUniqueness(kit: Kit) -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     for t in kit.types:
-        names: dict[str, list[Port]] = {}
-        for port in t.ports:
-            if port.name_ and port.name_ not in names:
-                names[port.name_] = []
-            if port.name_:
-                names[port.name_].append(port)
+        names: dict[str, list[Connector]] = {}
+        for connector in t.connectors:
+            if connector.name_ and connector.name_ not in names:
+                names[connector.name_] = []
+            if connector.name_:
+                names[connector.name_].append(connector)
         for name, group in names.items():
             if len(group) > 1:
-                for port in group[1:]:
-                    issues.append(ValidationIssue(ruleId="port-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate port name "{name}" in type.', entityKind="Port", entityGuid=port.guid))
+                for connector in group[1:]:
+                    issues.append(ValidationIssue(ruleId="connector-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate connector name "{name}" in type.', entityKind="Connector", entityGuid=connector.guid))
     return issues
 
 
@@ -4546,7 +4310,6 @@ def validateKitDict(kit: dict) -> ValidationResult:
 
     def checkGuid(entityKind: str, entityGuid: str, entity: dict) -> None:
         if entityGuid in seen:
-            
             newGuid = _newGuid()
             entityCopy = _deepCopy(entity)
             entityCopy["guid"] = newGuid
@@ -4555,7 +4318,7 @@ def validateKitDict(kit: dict) -> ValidationResult:
                 "Design": "designs",
                 "Piece": "pieces",
                 "Connection": "connections",
-                "Port": "ports",
+                "Connector": "connectors",
                 "Model": "models",
                 "Quality": "qualities",
                 "Interface": "interfaces",
@@ -4577,8 +4340,8 @@ def validateKitDict(kit: dict) -> ValidationResult:
     checkGuid("Kit", kit.get("guid", ""), kit)
     for t in kit.get("types", []):
         checkGuid("Type", t.get("guid", ""), t)
-        for port in t.get("ports", []):
-            checkGuid("Port", port.get("guid", ""), port)
+        for connector in t.get("connectors", []):
+            checkGuid("Connector", connector.get("guid", ""), connector)
         for model in t.get("models", []):
             checkGuid("Model", model.get("guid", ""), model)
     for d in kit.get("designs", []):
@@ -4652,17 +4415,21 @@ def validateKitDict(kit: dict) -> ValidationResult:
         typeName = t.get("name", "")
         typeGuid = t.get("guid", "")
         names = {}
-        for port in t.get("ports", []):
-            name = port.get("name", "")
+        for connector in t.get("connectors", []):
+            name = connector.get("name", "")
             if name and name not in names:
                 names[name] = []
             if name:
-                names[name].append(port)
+                names[name].append(connector)
         for name, group in names.items():
             if len(group) > 1:
-                for port in group[1:]:
-                    fix = _makeFix(f'Rename port "{name}"', {"types": {"updated": [{"type": {"guid": typeGuid}, "diff": {"ports": {"updated": [{"port": {"guid": port.get("guid", "")}, "diff": {"name": f"{name} 2"}}]}}}]}})
-                    issues.append(ValidationIssue(ruleId="port-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate port name "{name}" inside type "{typeName}".', entityKind="Port", entityGuid=port.get("guid", ""), fixes=[fix]))
+                for connector in group[1:]:
+                    fix = _makeFix(f'Rename connector "{name}"', {"types": {"updated": [{"type": {"guid": typeGuid}, "diff": {"connectors": {"updated": [{"connector": {"guid": connector.get("guid", "")}, "diff": {"name": f"{name} 2"}}]}}}]}})
+                    issues.append(
+                        ValidationIssue(
+                            ruleId="connector-name-unique", severity=ValidationSeverity.ERROR, message=f'Duplicate connector name "{name}" inside type "{typeName}".', entityKind="Connector", entityGuid=connector.get("guid", ""), fixes=[fix]
+                        )
+                    )
     for t in kit.get("types", []):
         typeName = t.get("name", "")
         typeGuid = t.get("guid", "")
@@ -4811,32 +4578,32 @@ def getTypeByGuid(kit: dict, guid: str) -> dict | None:
     return None
 
 
-def getPortFromType(kit: dict, typeData: dict | None, portGuid: str | None) -> dict | None:
+def getConnectorFromType(kit: dict, typeData: dict | None, connectorGuid: str | None) -> dict | None:
     if typeData is None:
         return None
-    if portGuid is None:
-        ports = typeData.get("ports", [])
-        if ports:
-            return ports[0]
+    if connectorGuid is None:
+        connectors = typeData.get("connectors", [])
+        if connectors:
+            return connectors[0]
         parent = typeData.get("parent")
         if parent:
             parentType = getTypeByGuid(kit, parent.get("guid", ""))
-            return getPortFromType(kit, parentType, portGuid)
+            return getConnectorFromType(kit, parentType, connectorGuid)
         return None
-    for port in typeData.get("ports", []):
-        if port.get("guid") == portGuid:
-            return port
+    for connector in typeData.get("connectors", []):
+        if connector.get("guid") == connectorGuid:
+            return connector
     parent = typeData.get("parent")
     if parent:
         parentType = getTypeByGuid(kit, parent.get("guid", ""))
-        return getPortFromType(kit, parentType, portGuid)
-    ports = typeData.get("ports", [])
-    if ports:
-        return ports[0]
+        return getConnectorFromType(kit, parentType, connectorGuid)
+    connectors = typeData.get("connectors", [])
+    if connectors:
+        return connectors[0]
     return None
 
 
-def computeChildPlaneDict(parentPlane: dict, parentPort: dict, childPort: dict, connection: dict) -> dict:
+def computeChildPlaneDict(parentPlane: dict, parentConnector: dict, childConnector: dict, connection: dict) -> dict:
     gap = connection.get("gap", 0)
     shift = connection.get("shift", 0)
     rise = connection.get("rise", 0)
@@ -4852,10 +4619,10 @@ def computeChildPlaneDict(parentPlane: dict, parentPort: dict, childPort: dict, 
     parentMatrix[:3, 1] = pY
     parentMatrix[:3, 2] = pZ
     parentMatrix[:3, 3] = pOrigin
-    ppPoint = numpy.array([parentPort["point"]["x"], parentPort["point"]["y"], parentPort["point"]["z"]])
-    ppDir = numpy.array([parentPort["direction"]["x"], parentPort["direction"]["y"], parentPort["direction"]["z"]])
-    cpPoint = numpy.array([childPort["point"]["x"], childPort["point"]["y"], childPort["point"]["z"]])
-    cpDir = numpy.array([childPort["direction"]["x"], childPort["direction"]["y"], childPort["direction"]["z"]])
+    ppPoint = numpy.array([parentConnector["point"]["x"], parentConnector["point"]["y"], parentConnector["point"]["z"]])
+    ppDir = numpy.array([parentConnector["direction"]["x"], parentConnector["direction"]["y"], parentConnector["direction"]["z"]])
+    cpPoint = numpy.array([childConnector["point"]["x"], childConnector["point"]["y"], childConnector["point"]["z"]])
+    cpDir = numpy.array([childConnector["direction"]["x"], childConnector["direction"]["y"], childConnector["direction"]["z"]])
     ppWorld = parentMatrix[:3, :3] @ ppPoint + parentMatrix[:3, 3]
     ppDirWorld = parentMatrix[:3, :3] @ ppDir
     ppDirWorld = normalizeVector(ppDirWorld)
@@ -4938,13 +4705,13 @@ def flattenDesignDict(kit: dict, designGuid: str) -> dict:
             childType = getTypeByGuid(kit, childPiece.get("type", {}).get("guid", ""))
             parentSide = connection["connected"] if connection["connected"]["piece"]["guid"] == parentId else connection["connecting"]
             childSide = connection["connecting"] if connection["connecting"]["piece"]["guid"] == childId else connection["connected"]
-            parentPortGuid = parentSide.get("port", {}).get("guid") if parentSide.get("port") else None
-            childPortGuid = childSide.get("port", {}).get("guid") if childSide.get("port") else None
-            parentPort = getPortFromType(kit, parentType, parentPortGuid)
-            childPort = getPortFromType(kit, childType, childPortGuid)
-            if parentPort is None or childPort is None:
+            parentConnectorGuid = parentSide.get("connector", {}).get("guid") if parentSide.get("connector") else None
+            childConnectorGuid = childSide.get("connector", {}).get("guid") if childSide.get("connector") else None
+            parentConnector = getConnectorFromType(kit, parentType, parentConnectorGuid)
+            childConnector = getConnectorFromType(kit, childType, childConnectorGuid)
+            if parentConnector is None or childConnector is None:
                 continue
-            childPlane = computeChildPlaneDict(parentPlane, parentPort, childPort, connection)
+            childPlane = computeChildPlaneDict(parentPlane, parentConnector, childConnector, connection)
             piecePlanes[childId] = childPlane
     updatedPieces = []
     for piece in pieces:
@@ -5036,36 +4803,36 @@ def arePortsEqualDict(a: list | None, b: list | None, strict: bool = False) -> b
     arrB = _normalizeArray(b)
     if len(arrA) != len(arrB):
         return False
-    for portA in arrA:
-        portB = next((x for x in arrB if x.get("guid") == portA.get("guid")), None)
-        if portB is None:
+    for connectorA in arrA:
+        connectorB = next((x for x in arrB if x.get("guid") == connectorA.get("guid")), None)
+        if connectorB is None:
             return False
-        if _normalizeValue(portA.get("name")) != _normalizeValue(portB.get("name")):
+        if _normalizeValue(connectorA.get("name")) != _normalizeValue(connectorB.get("name")):
             return False
-        pointA = portA.get("point", {})
-        pointB = portB.get("point", {})
+        pointA = connectorA.get("point", {})
+        pointB = connectorB.get("point", {})
         if pointA.get("x") != pointB.get("x") or pointA.get("y") != pointB.get("y") or pointA.get("z") != pointB.get("z"):
             return False
-        dirA = portA.get("direction", {})
-        dirB = portB.get("direction", {})
+        dirA = connectorA.get("direction", {})
+        dirB = connectorB.get("direction", {})
         if dirA.get("x") != dirB.get("x") or dirA.get("y") != dirB.get("y") or dirA.get("z") != dirB.get("z"):
             return False
-        if portA.get("t") != portB.get("t"):
+        if connectorA.get("t") != connectorB.get("t"):
             return False
-        if _normalizeBoolean(portA.get("mandatory")) != _normalizeBoolean(portB.get("mandatory")):
+        if _normalizeBoolean(connectorA.get("mandatory")) != _normalizeBoolean(connectorB.get("mandatory")):
             return False
-        ifaceA = portA.get("interface", {}) if portA.get("interface") else {}
-        ifaceB = portB.get("interface", {}) if portB.get("interface") else {}
+        ifaceA = connectorA.get("interface", {}) if connectorA.get("interface") else {}
+        ifaceB = connectorB.get("interface", {}) if connectorB.get("interface") else {}
         if _normalizeValue(ifaceA.get("guid")) != _normalizeValue(ifaceB.get("guid")):
             return False
-        if not arePropsEqualDict(portA.get("props"), portB.get("props"), strict):
+        if not arePropsEqualDict(connectorA.get("props"), connectorB.get("props"), strict):
             return False
-        if not areAttributesEqualDict(portA.get("attributes"), portB.get("attributes"), strict):
+        if not areAttributesEqualDict(connectorA.get("attributes"), connectorB.get("attributes"), strict):
             return False
         if strict:
-            if portA.get("createdAt") != portB.get("createdAt"):
+            if connectorA.get("createdAt") != connectorB.get("createdAt"):
                 return False
-            if portA.get("updatedAt") != portB.get("updatedAt"):
+            if connectorA.get("updatedAt") != connectorB.get("updatedAt"):
                 return False
     return True
 
@@ -5081,7 +4848,7 @@ def areModelsEqualDict(a: list | None, b: list | None, strict: bool = False) -> 
             return False
         if _normalizeValue(modelA.get("name")) != _normalizeValue(modelB.get("name")):
             return False
-        
+
         fileA = modelA.get("file")
         fileB = modelB.get("file")
         fileGuidA = fileA.get("guid") if isinstance(fileA, dict) else fileA
@@ -5119,7 +4886,7 @@ def areTypesEqualDict(a: list | None, b: list | None, strict: bool = False) -> b
                 break
             if not parentA or not parentB:
                 continue
-            
+
             parentGuidA = parentA.get("guid") if isinstance(parentA, dict) else parentA
             parentGuidB = parentB.get("guid") if isinstance(parentB, dict) else parentB
             if parentGuidA == parentGuidB:
@@ -5149,7 +4916,7 @@ def areTypesEqualDict(a: list | None, b: list | None, strict: bool = False) -> b
         locB = typeB.get("location", {}) if typeB.get("location") else {}
         if _normalizeValue(locA.get("guid")) != _normalizeValue(locB.get("guid")):
             return False
-        
+
         conceptsA = _normalizeArray(typeA.get("concepts"))
         conceptsB = _normalizeArray(typeB.get("concepts"))
         conceptGuidsA = [c.get("guid") if isinstance(c, dict) else c for c in conceptsA]
@@ -5164,7 +4931,7 @@ def areTypesEqualDict(a: list | None, b: list | None, strict: bool = False) -> b
             return False
         if not areModelsEqualDict(typeA.get("models"), typeB.get("models"), strict):
             return False
-        if not arePortsEqualDict(typeA.get("ports"), typeB.get("ports"), strict):
+        if not arePortsEqualDict(typeA.get("connectors"), typeB.get("connectors"), strict):
             return False
         if not areAttributesEqualDict(typeA.get("attributes"), typeB.get("attributes"), strict):
             return False
@@ -5187,14 +4954,14 @@ def arePiecesEqualDict(a: list | None, b: list | None, strict: bool = False) -> 
             return False
         if _normalizeValue(pieceA.get("name")) != _normalizeValue(pieceB.get("name")):
             return False
-        
+
         typeA = pieceA.get("type")
         typeB = pieceB.get("type")
         typeGuidA = typeA.get("guid") if isinstance(typeA, dict) else typeA
         typeGuidB = typeB.get("guid") if isinstance(typeB, dict) else typeB
         if typeGuidA != typeGuidB:
             return False
-        
+
         designA = pieceA.get("design")
         designB = pieceB.get("design")
         designGuidA = designA.get("guid") if isinstance(designA, dict) else designA
@@ -5273,12 +5040,12 @@ def areConnectionsEqualDict(a: list | None, b: list | None, strict: bool = False
             return False
         connectedA = connA.get("connected", {})
         connectedB = connB.get("connected", {})
-        
+
         if _getGuidFromRef(connectedA.get("piece")) != _getGuidFromRef(connectedB.get("piece")):
             return False
         if _getGuidFromRef(connectedA.get("designPiece")) != _getGuidFromRef(connectedB.get("designPiece")):
             return False
-        if _getGuidFromRef(connectedA.get("port")) != _getGuidFromRef(connectedB.get("port")):
+        if _getGuidFromRef(connectedA.get("connector")) != _getGuidFromRef(connectedB.get("connector")):
             return False
         connectingA = connA.get("connecting", {})
         connectingB = connB.get("connecting", {})
@@ -5286,7 +5053,7 @@ def areConnectionsEqualDict(a: list | None, b: list | None, strict: bool = False
             return False
         if _getGuidFromRef(connectingA.get("designPiece")) != _getGuidFromRef(connectingB.get("designPiece")):
             return False
-        if _getGuidFromRef(connectingA.get("port")) != _getGuidFromRef(connectingB.get("port")):
+        if _getGuidFromRef(connectingA.get("connector")) != _getGuidFromRef(connectingB.get("connector")):
             return False
         if connA.get("gap") != connB.get("gap"):
             return False
@@ -5333,7 +5100,7 @@ def areDesignsEqualDict(a: list | None, b: list | None, strict: bool = False) ->
                 break
             if not parentA or not parentB:
                 continue
-            
+
             parentGuidA = _getGuidFromRef(parentA)
             parentGuidB = _getGuidFromRef(parentB)
             if parentGuidA == parentGuidB:
@@ -5349,7 +5116,7 @@ def areDesignsEqualDict(a: list | None, b: list | None, strict: bool = False) ->
             return False
         if _normalizeValue(designA.get("image")) != _normalizeValue(designB.get("image")):
             return False
-        
+
         conceptsA = _normalizeArray(designA.get("concepts"))
         conceptsB = _normalizeArray(designB.get("concepts"))
         conceptGuidsA = [_getGuidFromRef(c) for c in conceptsA]
@@ -5596,7 +5363,7 @@ def _getCollectionDiff(before: list, after: list, getItemDiff: typing.Callable[[
     diff: dict = {}
     beforeGuids = {item.get("guid") for item in before}
     afterGuids = {item.get("guid") for item in after}
-    
+
     removed = [{"guid": item.get("guid")} for item in before if item.get("guid") not in afterGuids]
     if removed:
         diff["removed"] = removed
@@ -5606,7 +5373,6 @@ def _getCollectionDiff(before: list, after: list, getItemDiff: typing.Callable[[
             afterItem = next(a for a in after if a.get("guid") == item.get("guid"))
             itemDiff = getItemDiff(item, afterItem)
             if itemDiff:
-                
                 if entityKey:
                     updated.append({entityKey: {"guid": item.get("guid")}, "diff": itemDiff})
                 else:
@@ -5632,12 +5398,10 @@ def _applyCollectionDiff(base: list, diff: dict | None, applyItemDiff: typing.Ca
         return base
     result = [dict(item) for item in base]
     if diff.get("removed"):
-        
         removedGuids = [r["guid"] if isinstance(r, dict) else r for r in diff["removed"]]
         result = [item for item in result if item.get("guid") not in removedGuids]
     if diff.get("updated"):
         for update in diff["updated"]:
-            
             updateGuid = update[entityKey]["guid"] if entityKey and entityKey in update else update.get("id", "")
             idx = next((i for i, item in enumerate(result) if item.get("guid") == updateGuid), -1)
             if idx >= 0:
@@ -5664,9 +5428,9 @@ def _getTypeDiff(before: dict, after: dict) -> dict:
         diff["isAbstract"] = after.get("isAbstract")
     if _normalizeBoolean(before.get("virtual")) != _normalizeBoolean(after.get("virtual")):
         diff["virtual"] = after.get("virtual")
-    portsDiff = _getCollectionDiff(before.get("ports", []), after.get("ports", []), _getPortDiff, "port")
-    if portsDiff:
-        diff["ports"] = portsDiff
+    connectorsDiff = _getCollectionDiff(before.get("connectors", []), after.get("connectors", []), _getConnectorDiff, "connector")
+    if connectorsDiff:
+        diff["connectors"] = connectorsDiff
     modelsDiff = _getCollectionDiff(before.get("models", []), after.get("models", []), _getModelDiff, "model")
     if modelsDiff:
         diff["models"] = modelsDiff
@@ -5679,15 +5443,15 @@ def _applyTypeDiff(base: dict, diff: dict) -> dict:
     for key in ["name", "description", "icon", "image", "unit", "isAbstract", "virtual"]:
         if key in diff:
             result[key] = diff[key]
-    if diff.get("ports"):
-        result["ports"] = _applyCollectionDiff(base.get("ports", []), diff["ports"], _applyPortDiff, "port")
+    if diff.get("connectors"):
+        result["connectors"] = _applyCollectionDiff(base.get("connectors", []), diff["connectors"], _applyConnectorDiff, "connector")
     if diff.get("models"):
         result["models"] = _applyCollectionDiff(base.get("models", []), diff["models"], _applyModelDiff, "model")
     return result
 
 
-def _getPortDiff(before: dict, after: dict) -> dict:
-    """Get diff between two port dicts."""
+def _getConnectorDiff(before: dict, after: dict) -> dict:
+    """Get diff between two connector dicts."""
     diff: dict = {}
     if _normalizeValue(before.get("name")) != _normalizeValue(after.get("name")):
         diff["name"] = after.get("name")
@@ -5698,8 +5462,8 @@ def _getPortDiff(before: dict, after: dict) -> dict:
     return diff
 
 
-def _applyPortDiff(base: dict, diff: dict) -> dict:
-    """Apply diff to a port dict."""
+def _applyConnectorDiff(base: dict, diff: dict) -> dict:
+    """Apply diff to a connector dict."""
     result = dict(base)
     for key in ["name", "t", "mandatory"]:
         if key in diff:
@@ -5953,7 +5717,7 @@ def _applyAuthorDiff(base: dict, diff: dict) -> dict:
 def _getAttributeDiff(before: dict, after: dict) -> dict:
     """Get diff between two attribute dicts - used for individual attribute update diffs."""
     diff: dict = {}
-    
+
     if _normalizeValue(before.get("value")) != _normalizeValue(after.get("value")):
         diff["value"] = after.get("value")
     if _normalizeValue(before.get("definition")) != _normalizeValue(after.get("definition")):
@@ -5975,7 +5739,7 @@ def _getAttributesDiff(before: list, after: list) -> dict:
     diff: dict = {}
     beforeGuids = {a.get("guid") for a in before}
     afterGuids = {a.get("guid") for a in after}
-    
+
     removed = [{"guid": a.get("guid")} for a in before if a.get("guid") not in afterGuids]
     if removed:
         diff["removed"] = removed
@@ -5986,7 +5750,6 @@ def _getAttributesDiff(before: list, after: list) -> dict:
             beforeAttr = next(a for a in before if a.get("guid") == guid)
             attrDiff = _getAttributeDiff(beforeAttr, afterAttr)
             if attrDiff:
-                
                 updated.append({"attribute": {"guid": guid}, "diff": attrDiff})
     if updated:
         diff["updated"] = updated
@@ -6002,12 +5765,10 @@ def _applyAttributesDiff(base: list, diff: dict | None) -> list:
         return base
     result = [dict(a) for a in base]
     if diff.get("removed"):
-        
         removedGuids = {r["guid"] if isinstance(r, dict) else r for r in diff["removed"]}
         result = [a for a in result if a.get("guid") not in removedGuids]
     if diff.get("updated"):
         for update in diff["updated"]:
-            
             updateGuid = update["attribute"]["guid"] if "attribute" in update else update.get("id", "")
             idx = next((i for i, a in enumerate(result) if a.get("guid") == updateGuid), -1)
             if idx >= 0:
@@ -6020,9 +5781,9 @@ def _applyAttributesDiff(base: list, diff: dict | None) -> list:
 def _inverseAttributesDiff(original: list, appliedDiff: dict) -> dict:
     """Compute inverse of attributes collection diff - uses GUID with EntityId format."""
     inverse: dict = {}
-    
+
     removedGuids = [r["guid"] if isinstance(r, dict) else r for r in appliedDiff.get("removed", [])]
-    
+
     updatedGuids = []
     for u in appliedDiff.get("updated", []):
         if "attribute" in u:
@@ -6031,7 +5792,6 @@ def _inverseAttributesDiff(original: list, appliedDiff: dict) -> dict:
             updatedGuids.append(u.get("id", ""))
     addedGuids = [a.get("guid") for a in appliedDiff.get("added", [])]
     if addedGuids:
-        
         inverse["removed"] = [{"guid": guid} for guid in addedGuids]
     if updatedGuids:
         inverse["updated"] = []
@@ -6039,7 +5799,6 @@ def _inverseAttributesDiff(original: list, appliedDiff: dict) -> dict:
             origAttr = next((a for a in original if a.get("guid") == guid), None)
             upd = next((u for u in appliedDiff.get("updated", []) if (u.get("attribute", {}).get("guid") if "attribute" in u else u.get("id")) == guid), None)
             if origAttr and upd:
-                
                 inverse["updated"].append({"attribute": {"guid": guid}, "diff": _inverseAttributeDiff(origAttr, upd["diff"])})
     if removedGuids:
         inverse["added"] = [a for a in original if a.get("guid") in removedGuids]
@@ -6157,16 +5916,13 @@ def _inverseCollectionDiff(original: list, appliedDiff: dict, inverseItemDiff: t
     """
     inverse: dict = {}
     if appliedDiff.get("removed"):
-        
         removedGuids = [r["guid"] if isinstance(r, dict) else r for r in appliedDiff["removed"]]
         inverse["added"] = [item for item in original if item.get("guid") in removedGuids]
     if appliedDiff.get("added"):
-        
         inverse["removed"] = [{"guid": item.get("guid")} for item in appliedDiff["added"]]
     if appliedDiff.get("updated"):
         inverse["updated"] = []
         for update in appliedDiff["updated"]:
-            
             updateGuid = update[entityKey]["guid"] if entityKey and entityKey in update else update.get("id", "")
             origItem = next((item for item in original if item.get("guid") == updateGuid), None)
             if origItem:
@@ -6183,13 +5939,13 @@ def _inverseTypeDiff(original: dict, appliedDiff: dict) -> dict:
     for key in ["name", "description", "icon", "image", "unit", "isAbstract", "virtual"]:
         if key in appliedDiff:
             inverse[key] = original.get(key)
-    if appliedDiff.get("ports"):
-        inverse["ports"] = _inverseCollectionDiff(original.get("ports", []), appliedDiff["ports"], _inversePortDiff, "port")
+    if appliedDiff.get("connectors"):
+        inverse["connectors"] = _inverseCollectionDiff(original.get("connectors", []), appliedDiff["connectors"], _inversePortDiff, "connector")
     return inverse
 
 
 def _inversePortDiff(original: dict, appliedDiff: dict) -> dict:
-    """Compute inverse of a port diff."""
+    """Compute inverse of a connector diff."""
     inverse: dict = {}
     for key in ["name", "t", "mandatory"]:
         if key in appliedDiff:
@@ -6321,7 +6077,7 @@ def areKitDiffsDictEqual(a: dict, b: dict) -> bool:
     for key in keys:
         if _normalizeValue(a.get(key)) != _normalizeValue(b.get(key)):
             return False
-    
+
     collectionConfig = [
         ("types", "type"),
         ("designs", "design"),
@@ -6335,7 +6091,7 @@ def areKitDiffsDictEqual(a: dict, b: dict) -> bool:
     for collectionKey, entityKey in collectionConfig:
         diffA = a.get(collectionKey, {})
         diffB = b.get(collectionKey, {})
-        
+
         removedA = {r["guid"] if isinstance(r, dict) else r for r in diffA.get("removed", [])}
         removedB = {r["guid"] if isinstance(r, dict) else r for r in diffB.get("removed", [])}
         if removedA != removedB:
@@ -6344,7 +6100,7 @@ def areKitDiffsDictEqual(a: dict, b: dict) -> bool:
         addedB = {item.get("guid"): item for item in diffB.get("added", [])}
         if set(addedA.keys()) != set(addedB.keys()):
             return False
-        
+
         updatedA = {_extractUpdateGuid(u, [entityKey]): u["diff"] for u in diffA.get("updated", [])}
         updatedB = {_extractUpdateGuid(u, [entityKey]): u["diff"] for u in diffB.get("updated", [])}
         if set(updatedA.keys()) != set(updatedB.keys()):
@@ -6390,7 +6146,7 @@ def planeFromYAxis(yAxis: numpy.ndarray, phiDegrees: float = 0.0, origin: numpy.
     return plane
 
 
-def computeChildPlane(parentPlane: Plane, parentPort: Port, childPort: Port, connection: Connection) -> Plane:
+def computeChildPlane(parentPlane: Plane, parentConnector: Connector, childConnector: Connector, connection: Connection) -> Plane:
     gap = connection.gap or 0
     shift = connection.shift or 0
     rise = connection.rise or 0
@@ -6406,10 +6162,10 @@ def computeChildPlane(parentPlane: Plane, parentPort: Port, childPort: Port, con
     parentMatrix[:3, 1] = pY
     parentMatrix[:3, 2] = pZ
     parentMatrix[:3, 3] = pOrigin
-    ppPoint = numpy.array([parentPort.point.x, parentPort.point.y, parentPort.point.z])
-    ppDir = numpy.array([parentPort.direction.x, parentPort.direction.y, parentPort.direction.z])
-    cpPoint = numpy.array([childPort.point.x, childPort.point.y, childPort.point.z])
-    cpDir = numpy.array([childPort.direction.x, childPort.direction.y, childPort.direction.z])
+    ppPoint = numpy.array([parentConnector.point.x, parentConnector.point.y, parentConnector.point.z])
+    ppDir = numpy.array([parentConnector.direction.x, parentConnector.direction.y, parentConnector.direction.z])
+    cpPoint = numpy.array([childConnector.point.x, childConnector.point.y, childConnector.point.z])
+    cpDir = numpy.array([childConnector.direction.x, childConnector.direction.y, childConnector.direction.z])
     ppWorld = parentMatrix[:3, :3] @ ppPoint + parentMatrix[:3, 3]
     ppDirWorld = parentMatrix[:3, :3] @ ppDir
     ppDirWorld = normalizeVector(ppDirWorld)
@@ -6466,19 +6222,6 @@ codeParser = lark.Lark(codeGrammar, start="code")
 
 
 class OperationBuilder(lark.Transformer):
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
     def code(self, children):
         if len(children) == 0:
             return {"kind": "kits"}
@@ -6507,33 +6250,6 @@ class OperationBuilder(lark.Transformer):
             "typeName": decode(children[0].value),
             "typeVariant": (decode(children[1].value) if len(children) == 2 else ""),
         }
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
-    
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
 
 
 class StoreKind(enum.Enum):
@@ -6648,10 +6364,6 @@ class DatabaseStore(Store, abc.ABC):
                 raise FeatureNotYetSupported()
 
     def put(self: "DatabaseStore", operation: dict, input: KitInput | DesignInput | TypeInput) -> typing.Any:
-        
-        
-        
-
         kitUri = operation["kitUri"]
         kind = operation["kind"]
 
@@ -6725,52 +6437,50 @@ class DatabaseStore(Store, abc.ABC):
                 )
                 try:
                     if existingTypeUnion is not None:
-                        
                         existingType = existingTypeUnion.Type
-                        existingPorts = {p.id_: p for p in existingType.ports}
-                        usedPorts = {}
-                        for port in list(existingType.ports):
-                            for connection in port.connections:
+                        existingConnectors = {p.id_: p for p in existingType.connectors}
+                        usedConnectors = {}
+                        for connector in list(existingType.connectors):
+                            for connection in connector.connections:
                                 if connection.connectedPiece.type == existingType:
-                                    usedPorts[connection.connectedPort.id_] = connection.connectedPort
+                                    usedConnectors[connection.connectedConnector.id_] = connection.connectedConnector
                                 if connection.connectingPiece.type == existingType:
-                                    usedPorts[connection.connectingPort.id_] = connection.connectingPort
-                        newPorts = {p.id_: p for p in type.ports}
-                        missingPorts = set(usedPorts.keys()) - set(newPorts.keys())
-                        if missingPorts:
-                            raise TypeHasNotAllUsedPorts(missingPorts)
-                        unusedPorts = set(existingPorts.keys()) - set(usedPorts.keys())
+                                    usedConnectors[connection.connectingConnector.id_] = connection.connectingConnector
+                        newPorts = {p.id_: p for p in type.connectors}
+                        missingConnectors = set(usedConnectors.keys()) - set(newPorts.keys())
+                        if missingConnectors:
+                            raise TypeHasNotAllUsedConnectors(missingConnectors)
+                        unusedConnectors = set(existingConnectors.keys()) - set(usedConnectors.keys())
 
-                        
                         existingType.icon = type.icon
                         existingType.image = type.image
                         existingType.description = type.description
                         existingType.unit = type.unit
                         existingType.updated = datetime.datetime.now()
-                        for usedPortId, usedPort in usedPorts.items():
-                            usedPort.point = newPorts[usedPortId].point
-                            usedPort.direction = newPorts[usedPortId].direction
+                        for usedConnectorId, usedConnector in usedConnectors.items():
+                            usedConnector.point = newPorts[usedConnectorId].point
+                            usedConnector.direction = newPorts[usedConnectorId].direction
 
-                            for attribute in list(usedPort.attributes):
+                            for attribute in list(usedConnector.attributes):
                                 self.session.delete(attribute)
-                            usedPort.attributes = []
+                            usedConnector.attributes = []
                             self.session.flush()
 
                             newAttributes = []
-                            for newAttribute in list(newPorts[usedPortId].attributes):
-                                newAttribute.port = usedPort
+                            for newAttribute in list(newPorts[usedConnectorId].attributes):
+                                newAttribute.connector = usedConnector
                                 self.session.add(newAttribute)
                                 newAttributes.append(newAttribute)
-                            usedPort.attributes = newAttributes
+                            usedConnector.attributes = newAttributes
                             self.session.flush()
 
-                        for unusedPort in list(unusedPorts):
-                            self.session.delete(existingPorts[unusedPort])
-                        existingType.ports = [p for p in existingType.ports if p.id_ not in unusedPorts]
+                        for unusedConnector in list(unusedConnectors):
+                            self.session.delete(existingConnectors[unusedConnector])
+                        existingType.connectors = [p for p in existingType.connectors if p.id_ not in unusedConnectors]
                         self.session.flush()
 
                         for newPortId, newPort in newPorts.items():
-                            if newPortId not in usedPorts:
+                            if newPortId not in usedConnectors:
                                 newPort.type = existingType
                                 self.session.add(newPort)
                         self.session.flush()
@@ -6900,12 +6610,7 @@ def cache(remoteUri: str) -> str:
                 shutil.move(os.path.join(nestedPath, nestedDirectory), path)
             os.rmdir(nestedPath)
             paths = os.listdir(path)
-        
-        
-        
-        
-        
-        
+
     return path
 
 
@@ -6924,7 +6629,7 @@ class SqliteStore(DatabaseStore):
         connectionString = f"sqlite:///{sqlitePath}"
         engine = sqlalchemy.create_engine(connectionString, echo=True)
         SessionMaker = sqlalchemy.orm.sessionmaker(bind=engine)
-        try:  
+        try:
             with SessionMaker() as session:
                 kit = session.query(Kit).first()
                 if kit:
@@ -6948,8 +6653,6 @@ class SqliteStore(DatabaseStore):
                 session.commit()
 
     def postDeleteKit(self: "SqliteStore") -> None:
-        
-        
         os.kill(os.getpid(), signal.SIGTERM)
 
 
@@ -6957,38 +6660,11 @@ class PostgresStore(DatabaseStore):
     @classmethod
     def fromUri(cls, uri: str):
         # TODO: Get connection string from environment variable.
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+
         raise FeatureNotYetSupported()
 
     def initialize(self: "DatabaseStore") -> None:
         sqlmodel.SQLModel.metadata.create_all(self.engine)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 @functools.lru_cache
@@ -7050,10 +6726,9 @@ def encodeType(type: TypeContext):
     typeClone = type.model_copy(deep=True)
     typeClone.variant = replaceDefault(typeClone.variant, "DEFAULT")
     typeClone.description = encodeForPrompt(typeClone.description) if typeClone.description != "" else "NO_DESCRIPTION"
-    for port in typeClone.ports:
-        port.id_ = replaceDefault(port.id_, "DEFAULT")
-        
-        
+    for connector in typeClone.connectors:
+        connector.id_ = replaceDefault(connector.id_, "DEFAULT")
+
     return typeClone
 
 
@@ -7075,7 +6750,7 @@ def decodeDesign(design: dict):
                     "piece": {
                         "id_": (c["connectedPieceId"] if c["connectedPieceId"] != "DEFAULT" else ""),
                     },
-                    "port": {
+                    "connector": {
                         "id_": (c["connectedPieceTypePortId"] if c["connectedPieceTypePortId"] != "DEFAULT" else ""),
                     },
                 },
@@ -7083,7 +6758,7 @@ def decodeDesign(design: dict):
                     "piece": {
                         "id_": (c["connectingPieceId"] if c["connectingPieceId"] != "DEFAULT" else ""),
                     },
-                    "port": {
+                    "connector": {
                         "id_": (c["connectingPieceTypePortId"] if c["connectingPieceTypePortId"] != "DEFAULT" else ""),
                     },
                 },
@@ -7107,17 +6782,17 @@ def healDesign(design: DesignPrediction, types: list[TypeContext]):
     """🩺 Heal a design by replacing missing type variants with the first variant."""
     designClone = design.model_copy(deep=True)
     typeD = {}
-    portD = {}
+    connectorD = {}
     pieceD = {}
     for type in types:
         if type.name not in typeD:
             typeD[type.name] = {}
-            portD[type.name] = {}
+            connectorD[type.name] = {}
         typeD[type.name][type.variant] = type
-        if type.variant not in portD[type.name]:
-            portD[type.name][type.variant] = {}
-        for port in type.ports:
-            portD[type.name][type.variant][port.id_] = port
+        if type.variant not in connectorD[type.name]:
+            connectorD[type.name][type.variant] = {}
+        for connector in type.connectors:
+            connectorD[type.name][type.variant][connector.id_] = connector
     # TODO: Try closest embedding instead of smallest Levenshtein distance.
     for piece in designClone.pieces:
         pieceD[piece.id_] = piece
@@ -7148,23 +6823,23 @@ def healDesign(design: DesignPrediction, types: list[TypeContext]):
         connectedType = typeD[pieceD[connection.connected.piece.id_].type.name][pieceD[connection.connected.piece.id_].type.variant]
         connectingType = typeD[pieceD[connection.connecting.piece.id_].type.name][pieceD[connection.connecting.piece.id_].type.variant]
 
-        if connection.connected.port.id_ not in portD[connectedType.name][connectedType.variant]:
-            connection.connected.port.id_ = difflib.get_close_matches(
-                connection.connected.port.id_,
-                portD[connectedType.name][connectedType.variant].keys(),
+        if connection.connected.connector.id_ not in connectorD[connectedType.name][connectedType.variant]:
+            connection.connected.connector.id_ = difflib.get_close_matches(
+                connection.connected.connector.id_,
+                connectorD[connectedType.name][connectedType.variant].keys(),
                 n=1,
             )[0]
-        if connection.connecting.port.id_ not in portD[connectingType.name][connectingType.variant]:
-            connection.connecting.port.id_ = difflib.get_close_matches(
-                connection.connecting.port.id_,
-                portD[connectingType.name][connectingType.variant].keys(),
+        if connection.connecting.connector.id_ not in connectorD[connectingType.name][connectingType.variant]:
+            connection.connecting.connector.id_ = difflib.get_close_matches(
+                connection.connecting.connector.id_,
+                connectorD[connectingType.name][connectingType.variant].keys(),
                 n=1,
             )[0]
         validConnections.append(connection)
     designClone.connections = validConnections
-    
+
     designClone.connections = [c for c in designClone.connections if c.connected.piece.id_ != c.connecting]
-    
+
     designClone.pieces = [p for p in designClone.pieces if any(c for c in designClone.connections if c.connected.piece.id_ == p.id_ or c.connecting.piece.id_ == p.id_)]
     return designClone
 
@@ -7180,33 +6855,33 @@ Every piece MUST have a type that exists. The type name and type variant MUST ma
 Two pieces are different when they have a different type name or type variant.
 Two types are different when they have a different name or different variant.
 Every connected and connecting piece MUST be part of the pieces of the design. The ids MUST match.
-The port of connected and connecting pieces MUST exist in the type of the piece. The ids MUST match.
-The port of connected and connecting pieces SHOULD match.
-If the ports of connected and connecting pieces have a interface, they should be compatible.
-If one port has the other port as ocompatible that's enough.
+The connector of connected and connecting pieces MUST exist in the type of the piece. The ids MUST match.
+The connector of connected and connecting pieces SHOULD match.
+If the connectors of connected and connecting pieces have a interface, they should be compatible.
+If one connector has the other connector as ocompatible that's enough.
 Every piece in the design MUST be connected to at least one other piece.
 One piece is the root piece of the design. The connections MUST form a tree.
 Ids SHOULD be abreviated and don't have to be globally unique.
 Rotation, tilt, gap, shift SHOULD NOT be added unless specifically instructed.
 The diagram is only a nice 2D model of the design and does not change the design.
 When a piece is [on, next to, above, below, ...] another piece, there SHOULD be a connected between the pieces.
-When a piece fits to a port of another piece, there SHOULD be a connecting between the pieces."""
+When a piece fits to a connector of another piece, there SHOULD be a connecting between the pieces."""
 
 
 designGenerationPromptTemplate = jinja2.Template(
     """Your task is to help to puzzle together a design.
 
-TYPE{NAME;VARIANT;DESCRIPTION;PORTS}
-PORT{ID;DESCRIPTION,FAMILY,COMPATIBLEFAMILIES}
+TYPE{NAME;VARIANT;DESCRIPTION;CONNECTORS}
+CONNECTORECTOR{ID;DESCRIPTION,FAMILY,COMPATIBLEFAMILIES}
 COMPATIBLEFAMILY{NAME}
 
 Available types:
 {% for type in types %}
 {% raw %}{{% endraw -%}
 {{ type.name }};{{ type.variant }};{{ type.description }};
-{%- for port in type.ports %}
-{%- raw %}{{% endraw -%}{{ port.id_ }};{{ port.description }};{{ port.interface }}
-{%- for compatibleInterface in port.compatibleInterfaces %}
+{%- for connector in type.connectors %}
+{%- raw %}{{% endraw -%}{{ connector.id_ }};{{ connector.description }};{{ connector.interface }}
+{%- for compatibleInterface in connector.compatibleInterfaces %}
 {%- raw %}{{% endraw -%}
 {{ compatibleInterface }}
 {%- endfor -%}
@@ -7272,7 +6947,7 @@ designResponseFormat = json.loads(
                         },
                         "gap": {
                             "type": "number",
-                            "description": "The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece. "
+                            "description": "The optional longitudinal gap (applied after rotation and tilt in connector direction) between the connected and the connecting piece. "
                         },
                         "shift": {
                             "type": "number",
@@ -7280,19 +6955,19 @@ designResponseFormat = json.loads(
                         },
                         "rise": {
                             "type": "number",
-                            "description": "The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."
+                            "description": "The optional vertical rise in connector direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."
                         },
                         "rotation": {
                             "type": "number",
-                            "description": "The optional horizontal rotation in port direction between the connected and the connecting piece in degrees."
+                            "description": "The optional horizontal rotation in connector direction between the connected and the connecting piece in degrees."
                         },
                         "turn": {
                             "type": "number",
-                            "description": "The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."
+                            "description": "The optional turn perpendicular to the connector direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."
                         },
                         "tilt": {
                             "type": "number",
-                            "description": "The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees."
+                            "description": "The optional horizontal tilt perpendicular to the connector direction (applied after rotation and the turn) between the connected and the connecting piece in degrees."
                         },
                         "x": {
                             "description": "The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
@@ -7331,8 +7006,6 @@ designResponseFormat = json.loads(
 )
 
 
-
-
 def predictDesign(description: str, types: list[TypeContext], design: DesignInput | None = None) -> DesignPrediction:
     """🔮 Predict a design based on a description, the types that should be used and an optional base design."""
     if openaiClient is None:
@@ -7342,9 +7015,7 @@ def predictDesign(description: str, types: list[TypeContext], design: DesignInpu
     logger.debug("Generated prompt: {}", prompt)
     try:
         response = openaiClient.chat.completions.create(
-            
             model="gpt-4o",
-            
             messages=[
                 {
                     "role": "system",
@@ -7369,11 +7040,6 @@ def predictDesign(description: str, types: list[TypeContext], design: DesignInpu
                 "type": "json_schema",
                 "json_schema": designResponseFormat,
             },
-            
-            
-            
-            
-            
         )
         if response.usage:
             responseDump = {
@@ -7419,7 +7085,6 @@ def predictDesign(description: str, types: list[TypeContext], design: DesignInpu
         if hasattr(design, "model_dump"):
             logger.debug("Predicted Design: {}", json.dumps(design.model_dump(), indent=4))
 
-        
         healedDesign = healDesign(typing.cast(DesignPrediction, design), types)
         logger.debug(
             "Predicted Design Healed: {}",
@@ -7457,12 +7122,12 @@ GRAPHQLTYPES = {
     "Point": graphene.NonNull(lambda: PointNode),
     "Vector": graphene.NonNull(lambda: VectorNode),
     "Plane": graphene.NonNull(lambda: PlaneNode),
-    "Port": graphene.NonNull(lambda: PortNode),
-    "PortId": graphene.NonNull(lambda: PortNode),
-    "list[Port]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: PortNode))),
-    "list[__main__.Port]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: PortNode))),
-    "list[__mp_main__.Port]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: PortNode))),
-    "list[engine.Port]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: PortNode))),
+    "Connector": graphene.NonNull(lambda: ConnectorNode),
+    "ConnectorId": graphene.NonNull(lambda: ConnectorNode),
+    "list[Connector]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ConnectorNode))),
+    "list[__main__.Connector]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ConnectorNode))),
+    "list[__mp_main__.Connector]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ConnectorNode))),
+    "list[engine.Connector]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ConnectorNode))),
     "Model": graphene.NonNull(lambda: ModelNode),
     "list[Model]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ModelNode))),
     "list[__main__.Model]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ModelNode))),
@@ -7499,17 +7164,9 @@ GRAPHQLTYPES = {
 }
 
 
-
-
-
-
-
-
-
 class Query(graphene.ObjectType):
     node = RelayNode.Field()
     kit = graphene.Field(KitNode, uri=graphene.String(required=True))
-    
 
     def resolve_kit(self, info, uri):
         return get(encode(uri))
@@ -7718,7 +7375,7 @@ def custom_openapi():
     if rest.openapi_schema:
         return rest.openapi_schema
     openapi_schema = fastapi.openapi.utils.get_openapi(title="semio REST API", version=VERSION, summary="This is the local rest API of the semio engine.", routes=rest.routes)
-    
+
     updated_paths = {}
     for path, path_item in openapi_schema["paths"].items():
         updated_paths[f"/api{path}"] = path_item
@@ -7820,8 +7477,8 @@ def generateSchemas():
 
 def start_engine():
     # TODO: Make loguru work on extra uvicorn engine process.
-    logging.basicConfig(level=logging.INFO)  
-    uvicorn.run(engine, host=HOST, port=PORT, log_level="info", access_log=False, log_config=None)
+    logging.basicConfig(level=logging.INFO)
+    uvicorn.run(engine, host=HOST, connector=PORT, log_level="info", access_log=False, log_config=None)
 
 
 def restart_engine():
@@ -7835,7 +7492,7 @@ def restart_engine():
 
 def run():
     logger.debug("Starting engine")
-    multiprocessing.freeze_support()  
+    multiprocessing.freeze_support()
 
     parser = argparse.ArgumentParser(description="semio ⋅ engine")
     parser.add_argument("-d", "--debug", help="debug mode", action="store_true")
@@ -7848,7 +7505,6 @@ def run():
     ui = PySide6.QtWidgets.QApplication(sys.argv)
     ui.setQuitOnLastWindowClosed(False)
 
-    
     if getattr(sys, "frozen", False):
         basedir = sys._MEIPASS
     else:
@@ -7880,20 +7536,13 @@ def run():
 
 def preDev():
     """Runs before dev()"""
-    
-    
-    
-    
-    
-    
-    
 
 
 def dev():
     logger.debug("Starting debugpy for semio engine")
     import debugpy
 
-    debugpy.listen(("0.0.0.0", 5678))  
+    debugpy.listen(("0.0.0.0", 5678))
     logger.debug("Waiting for debugger to attach to semio engine")
     debugpy.wait_for_client()
     preDev()

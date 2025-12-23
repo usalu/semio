@@ -38,7 +38,7 @@ The i18n validation script (`scripts/i18n.ts`) was reporting 290 errors and 237 
   - Translates identical EN/DE values using the dictionary
   - Removes extra German keys not in English
 - Validation improvements:
-  - Skip warnings for technical terms (ID, X, Y, Port, Kit, etc.)
+  - Skip warnings for technical terms (ID, X, Y, Connector, Kit, etc.)
   - Skip warnings for paths (manuals, tutorials)
   - Skip warnings for hotkeys (Ctrl+_, Alt+_, etc.)
   - Skip warnings for short values (<=2 chars)

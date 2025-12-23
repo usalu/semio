@@ -157,7 +157,7 @@ export type QualityId = { guid: Guid };
 export type InterfaceId = { guid: Guid };
 export type PropId = { guid: Guid };
 export type ModelId = { guid: Guid };
-export type PortId = { guid: Guid };
+export type ConnectorId = { guid: Guid };
 export type TypeId = { guid: Guid };
 export type LayerId = { guid: Guid };
 export type PieceId = { guid: Guid };
@@ -179,7 +179,7 @@ export const QualityIdSchema = z.object({ guid: z.string() });
 export const InterfaceIdSchema = z.object({ guid: z.string() });
 export const PropIdSchema = z.object({ guid: z.string() });
 export const ModelIdSchema = z.object({ guid: z.string() });
-export const PortIdSchema = z.object({ guid: z.string() });
+export const ConnectorIdSchema = z.object({ guid: z.string() });
 export const TypeIdSchema = z.object({ guid: z.string() });
 export const LayerIdSchema = z.object({ guid: z.string() });
 export const PieceIdSchema = z.object({ guid: z.string() });
@@ -201,7 +201,7 @@ export const createQualityId = (guid: Guid): QualityId => ({ guid });
 export const createInterfaceId = (guid: Guid): InterfaceId => ({ guid });
 export const createPropId = (guid: Guid): PropId => ({ guid });
 export const createModelId = (guid: Guid): ModelId => ({ guid });
-export const createPortId = (guid: Guid): PortId => ({ guid });
+export const createPortId = (guid: Guid): ConnectorId => ({ guid });
 export const createTypeId = (guid: Guid): TypeId => ({ guid });
 export const createLayerId = (guid: Guid): LayerId => ({ guid });
 export const createPieceId = (guid: Guid): PieceId => ({ guid });
@@ -223,7 +223,7 @@ export const areSameQualityId = (a: QualityId, b: QualityId): boolean => a.guid 
 export const areSameInterfaceId = (a: InterfaceId, b: InterfaceId): boolean => a.guid === b.guid;
 export const areSamePropId = (a: PropId, b: PropId): boolean => a.guid === b.guid;
 export const areSameModelId = (a: ModelId, b: ModelId): boolean => a.guid === b.guid;
-export const areSamePortId = (a: PortId, b: PortId): boolean => a.guid === b.guid;
+export const areSamePortId = (a: ConnectorId, b: ConnectorId): boolean => a.guid === b.guid;
 export const areSameTypeId = (a: TypeId, b: TypeId): boolean => a.guid === b.guid;
 export const areSameLayerId = (a: LayerId, b: LayerId): boolean => a.guid === b.guid;
 export const areSamePieceId = (a: PieceId, b: PieceId): boolean => a.guid === b.guid;
@@ -245,7 +245,7 @@ export const getQualityGuid = (id: QualityId): Guid => id.guid;
 export const getInterfaceGuid = (id: InterfaceId): Guid => id.guid;
 export const getPropGuid = (id: PropId): Guid => id.guid;
 export const getModelGuid = (id: ModelId): Guid => id.guid;
-export const getPortGuid = (id: PortId): Guid => id.guid;
+export const getConnectorGuid = (id: ConnectorId): Guid => id.guid;
 export const getTypeGuid = (id: TypeId): Guid => id.guid;
 export const getLayerGuid = (id: LayerId): Guid => id.guid;
 export const getPieceGuid = (id: PieceId): Guid => id.guid;
@@ -1995,9 +1995,9 @@ export const validateModelFile = (filename: string): ModelFileValidation => {
 
 // #endregion Model
 
-// #region Port
+// #region Connector
 
-export const PortSchema = z.object({
+export const ConnectorSchema = z.object({
   guid: z.string(),
   name: z.string().optional(),
   t: z.number(),
@@ -2009,19 +2009,19 @@ export const PortSchema = z.object({
   props: z.array(PropSchema).optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
-export type Port = z.infer<typeof PortSchema>;
-export const serializePort = (port: Port): string => JSON.stringify(PortSchema.parse(port));
-export const deserializePort = (json: string): Port => PortSchema.parse(JSON.parse(json));
+export type Connector = z.infer<typeof ConnectorSchema>;
+export const serializePort = (connector: Connector): string => JSON.stringify(ConnectorSchema.parse(connector));
+export const deserializePort = (json: string): Connector => ConnectorSchema.parse(JSON.parse(json));
 
-export const PortDiffSchema = PortSchema.partial().omit({ point: true, direction: true, props: true, attributes: true }).extend({
+export const ConnectorDiffSchema = ConnectorSchema.partial().omit({ point: true, direction: true, props: true, attributes: true }).extend({
   point: PointDiffSchema.optional(),
   direction: VectorDiffSchema.optional(),
   props: PropsDiffSchema.optional(),
   attributes: AttributesDiffSchema.optional(),
 });
-export type PortDiff = z.infer<typeof PortDiffSchema>;
-export const getPortDiff = (before: Port, after: Port): PortDiff => {
-  const diff: PortDiff = {};
+export type ConnectorDiff = z.infer<typeof ConnectorDiffSchema>;
+export const getConnectorDiff = (before: Connector, after: Connector): ConnectorDiff => {
+  const diff: ConnectorDiff = {};
   if (before.name !== after.name) diff.name = after.name;
   if (before.description !== after.description) diff.description = after.description;
   if (before.interface?.guid !== after.interface?.guid) diff.interface = after.interface;
@@ -2033,7 +2033,7 @@ export const getPortDiff = (before: Port, after: Port): PortDiff => {
   if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   return diff;
 };
-export const mergePortDiff = (diff1: PortDiff, diff2: PortDiff): PortDiff => {
+export const mergePortDiff = (diff1: ConnectorDiff, diff2: ConnectorDiff): ConnectorDiff => {
   return {
     ...diff1,
     ...diff2,
@@ -2043,8 +2043,8 @@ export const mergePortDiff = (diff1: PortDiff, diff2: PortDiff): PortDiff => {
     attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes),
   };
 };
-export const inversePortDiff = (original: Port, appliedDiff: PortDiff): PortDiff => {
-  const inverse: PortDiff = {};
+export const inversePortDiff = (original: Connector, appliedDiff: ConnectorDiff): ConnectorDiff => {
+  const inverse: ConnectorDiff = {};
   if (appliedDiff.name !== undefined) inverse.name = original.name;
   if (appliedDiff.description !== undefined) inverse.description = original.description;
   if (appliedDiff.interface !== undefined) inverse.interface = original.interface;
@@ -2056,11 +2056,11 @@ export const inversePortDiff = (original: Port, appliedDiff: PortDiff): PortDiff
   if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
   return inverse;
 };
-export const applyPortDiff = (base: Port, diff: PortDiff): Port => {
+export const applyConnectorDiff = (base: Connector, diff: ConnectorDiff): Connector => {
   const props = diff.props ? applyPropsDiff(base.props ?? [], diff.props) : undefined;
   const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
 
-  const result: Port = {
+  const result: Connector = {
     guid: base.guid,
     t: diff.t ?? base.t,
     point: diff.point ? applyPointDiff(base.point, diff.point) : base.point,
@@ -2077,14 +2077,14 @@ export const applyPortDiff = (base: Port, diff: PortDiff): Port => {
   return result;
 };
 
-export const PortsDiffSchema = z.object({
-  removed: z.array(PortIdSchema).optional(),
-  updated: z.array(z.object({ port: PortIdSchema, diff: PortDiffSchema })).optional(),
-  added: z.array(PortSchema).optional(),
+export const ConnectorsDiffSchema = z.object({
+  removed: z.array(ConnectorIdSchema).optional(),
+  updated: z.array(z.object({ connector: ConnectorIdSchema, diff: ConnectorDiffSchema })).optional(),
+  added: z.array(ConnectorSchema).optional(),
 });
-export type PortsDiff = z.infer<typeof PortsDiffSchema>;
+export type ConnectorsDiff = z.infer<typeof ConnectorsDiffSchema>;
 
-const getPortsDiff = (before: Port[], after: Port[]): PortsDiff => {
+const getConnectorsDiff = (before: Connector[], after: Connector[]): ConnectorsDiff => {
   const beforeGuids = new Set(before.map((p) => p.guid));
   const afterGuids = new Set(after.map((p) => p.guid));
   const removed = before.filter((p) => !afterGuids.has(p.guid)).map((p) => ({ guid: p.guid }));
@@ -2093,25 +2093,25 @@ const getPortsDiff = (before: Port[], after: Port[]): PortsDiff => {
     .filter((p) => beforeGuids.has(p.guid))
     .map((afterPort) => {
       const beforePort = before.find((p) => p.guid === afterPort.guid)!;
-      const diff = getPortDiff(beforePort, afterPort);
-      return { port: { guid: afterPort.guid }, diff };
+      const diff = getConnectorDiff(beforePort, afterPort);
+      return { connector: { guid: afterPort.guid }, diff };
     })
     .filter((update) => Object.keys(update.diff).length > 0);
-  const diff: PortsDiff = {};
+  const diff: ConnectorsDiff = {};
   if (removed.length > 0) diff.removed = removed;
   if (updated.length > 0) diff.updated = updated;
   if (added.length > 0) diff.added = added;
   return diff;
 };
 
-export const unifyPortInterfacesAndCompatibleInterfacesForTypes = (types: Type[]): TypesDiff => {
+export const unifyConnectorInterfacesAndCompatibleInterfacesForTypes = (types: Type[]): TypesDiff => {
   return { updated: [] };
   /*
   const allInterfaces = new Set<string>();
   for (const type of types) {
-    for (const port of type.ports || []) {
-      if (port.interface && port.interface !== "") allInterfaces.add(port.interface);
-      for (const compatibleInterface of port.compatibleInterfaces || []) {
+    for (const connector of type.connectors || []) {
+      if (connector.interface && connector.interface !== "") allInterfaces.add(connector.interface);
+      for (const compatibleInterface of connector.compatibleInterfaces || []) {
         if (compatibleInterface && compatibleInterface !== "") allInterfaces.add(compatibleInterface);
       }
     }
@@ -2153,17 +2153,17 @@ export const unifyPortInterfacesAndCompatibleInterfacesForTypes = (types: Type[]
     }
   };
 
-  // Build compatibility groups by examining all ports
+  // Build compatibility groups by examining all connectors
   for (const type of types) {
-    for (const port of type.ports || []) {
-      const portInterface = port.interface;
-      const compatibleInterfaces = port.compatibleInterfaces || [];
+    for (const connector of type.connectors || []) {
+      const connectorInterface = connector.interface;
+      const compatibleInterfaces = connector.compatibleInterfaces || [];
 
-      if (portInterface && portInterface !== "") {
-        // Union port's interface with all its compatible interfaces
+      if (connectorInterface && connectorInterface !== "") {
+        // Union connector's interface with all its compatible interfaces
         for (const compatibleInterface of compatibleInterfaces) {
           if (compatibleInterface && compatibleInterface !== "") {
-            union(portInterface, compatibleInterface);
+            union(connectorInterface, compatibleInterface);
           }
         }
       }
@@ -2187,19 +2187,19 @@ export const unifyPortInterfacesAndCompatibleInterfacesForTypes = (types: Type[]
     interfaceToRepresentative.set(interface_, find(interface_));
   }
 
-  // Update all types with unified port interfaces
+  // Update all types with unified connector interfaces
   const updated: { id: string; diff: TypeDiff }[] = [];
 
   for (const type of types) {
-    const updatedPorts = type.ports?.map((port) => {
-      const portInterface = port.interface;
-      const compatibleInterfaces = port.compatibleInterfaces || [];
+    const updatedConnectors = type.connectors?.map((connector) => {
+      const connectorInterface = connector.interface;
+      const compatibleInterfaces = connector.compatibleInterfaces || [];
 
-      // Determine the representative interface for this port
+      // Determine the representative interface for this connector
       let representative: string | undefined;
 
-      if (portInterface && portInterface !== "") {
-        representative = interfaceToRepresentative.get(portInterface);
+      if (connectorInterface && connectorInterface !== "") {
+        representative = interfaceToRepresentative.get(connectorInterface);
       } else if (compatibleInterfaces.length > 0) {
         // If no interface but has compatible interfaces, use the first one's representative
         const firstCompatible = compatibleInterfaces.find((f) => f && f !== "");
@@ -2210,22 +2210,22 @@ export const unifyPortInterfacesAndCompatibleInterfacesForTypes = (types: Type[]
 
       if (representative) {
         return {
-          ...port,
+          ...connector,
           interface: representative,
           compatibleInterfaces: [representative],
         };
       } else {
         // No interface information, keep as is
-        return port;
+        return connector;
       }
     });
 
-    if (updatedPorts) {
-      const portsDiff = getPortsDiff(type.ports ?? [], updatedPorts);
+    if (updatedConnectors) {
+      const connectorsDiff = getConnectorsDiff(type.connectors ?? [], updatedConnectors);
       updated.push({
         id: type.guid,
         diff: {
-          ports: portsDiff,
+          connectors: connectorsDiff,
         },
       });
     }
@@ -2235,23 +2235,23 @@ export const unifyPortInterfacesAndCompatibleInterfacesForTypes = (types: Type[]
   */
 };
 
-export const arePortsCompatible = (port: Port, otherPort: Port): boolean => {
+export const arePortsCompatible = (connector: Connector, otherPort: Connector): boolean => {
   return true;
   /*
-  const normalizedPortInterface = normalize(port.interface);
+  const normalizedConnectorInterface = normalize(connector.interface);
   const normalizedOtherPortInterface = normalize(otherPort.interface);
-  if (normalizedPortInterface === "" || normalizedOtherPortInterface === "") return true;
-  return (port.compatibleInterfaces ?? []).includes(normalizedOtherPortInterface) || (otherPort.compatibleInterfaces ?? []).includes(normalizedPortInterface);
+  if (normalizedConnectorInterface === "" || normalizedOtherPortInterface === "") return true;
+  return (connector.compatibleInterfaces ?? []).includes(normalizedOtherPortInterface) || (otherPort.compatibleInterfaces ?? []).includes(normalizedConnectorInterface);
   */
 };
 
-export const findPort = (ports: Port[], portGuid: string): Port => {
-  const port = ports.find((p) => p.guid === portGuid);
-  if (!port) throw new Error(`Port ${portGuid} not found in ports`);
-  return port;
+export const findConnector = (connectors: Connector[], connectorGuid: string): Connector => {
+  const connector = connectors.find((p) => p.guid === connectorGuid);
+  if (!connector) throw new Error(`Connector ${connectorGuid} not found in connectors`);
+  return connector;
 };
 
-// #endregion Port
+// #endregion Connector
 
 // #region Type
 
@@ -2262,7 +2262,7 @@ export const TypeSchema = z.object({
   isAbstract: z.boolean().optional(),
   folder: z.string().optional(),
   models: z.array(ModelSchema).optional(),
-  ports: z.array(PortSchema).optional(),
+  connectors: z.array(ConnectorSchema).optional(),
   props: z.array(PropSchema).optional(),
   stock: z.number().optional(),
   virtual: z.boolean().optional(),
@@ -2281,18 +2281,18 @@ export type Type = z.infer<typeof TypeSchema>;
 export const serializeType = (type: Type): string => JSON.stringify(TypeSchema.parse(type));
 export const deserializeType = (json: string): Type => TypeSchema.parse(JSON.parse(json));
 
-export const TypeShallowSchema = TypeSchema.omit({ models: true, ports: true }).extend({
+export const TypeShallowSchema = TypeSchema.omit({ models: true, connectors: true }).extend({
   models: z.array(z.string()).optional(),
-  ports: z.array(z.string()).optional(),
+  connectors: z.array(z.string()).optional(),
 });
 export type TypeShallow = z.infer<typeof TypeShallowSchema>;
 export const serializeTypeShallow = (type: TypeShallow): string => JSON.stringify(TypeShallowSchema.parse(type));
 export const deserializeTypeShallow = (json: string): TypeShallow => TypeShallowSchema.parse(JSON.parse(json));
 export const TypeDiffSchema = TypeSchema.partial()
-  .omit({ models: true, ports: true, props: true, attributes: true })
+  .omit({ models: true, connectors: true, props: true, attributes: true })
   .extend({
     models: ModelsDiffSchema.optional(),
-    ports: PortsDiffSchema.optional(),
+    connectors: ConnectorsDiffSchema.optional(),
     props: PropsDiffSchema.optional(),
     attributes: AttributesDiffSchema.optional(),
     description: z.string().nullable().optional(),
@@ -2322,8 +2322,8 @@ export const getTypeDiff = (before: Type, after: Type): TypeDiff => {
   if (!arraysEqual(before.concepts, after.concepts)) diff.concepts = after.concepts;
   const modelsDiff = getCollectionDiff("model", before.models ?? [], after.models ?? [], getModelDiff);
   if (Object.keys(modelsDiff).length > 0) diff.models = modelsDiff;
-  const portsDiff = getCollectionDiff("port", before.ports ?? [], after.ports ?? [], getPortDiff);
-  if (Object.keys(portsDiff).length > 0) diff.ports = portsDiff;
+  const connectorsDiff = getCollectionDiff("connector", before.connectors ?? [], after.connectors ?? [], getConnectorDiff);
+  if (Object.keys(connectorsDiff).length > 0) diff.connectors = connectorsDiff;
   const propsDiff = getCollectionDiff("prop", before.props ?? [], after.props ?? [], getPropDiff);
   if (Object.keys(propsDiff).length > 0) diff.props = propsDiff;
   const attributesDiff = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
@@ -2333,7 +2333,7 @@ export const getTypeDiff = (before: Type, after: Type): TypeDiff => {
 
 export const applyTypeDiff = (base: Type, diff: TypeDiff): Type => {
   const models = diff.models || base.models ? applyCollectionDiff("model", base.models ?? [], diff.models, applyModelDiff) : undefined;
-  const ports = diff.ports || base.ports ? applyCollectionDiff("port", base.ports ?? [], diff.ports, applyPortDiff) : undefined;
+  const connectors = diff.connectors || base.connectors ? applyCollectionDiff("connector", base.connectors ?? [], diff.connectors, applyConnectorDiff) : undefined;
   const props = diff.props || base.props ? applyCollectionDiff("prop", base.props ?? [], diff.props, applyPropDiff) : undefined;
   const attributes = diff.attributes || base.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes ?? {}) : undefined;
 
@@ -2358,7 +2358,7 @@ export const applyTypeDiff = (base: Type, diff: TypeDiff): Type => {
   if (diff.concepts !== undefined ? (diff.concepts ?? undefined) : base.concepts) result.concepts = diff.concepts !== undefined ? (diff.concepts ?? undefined) : base.concepts;
 
   if (models && models.length > 0) result.models = models;
-  if (ports && ports.length > 0) result.ports = ports;
+  if (connectors && connectors.length > 0) result.connectors = connectors;
   if (props && props.length > 0) result.props = props;
   if (attributes && attributes.length > 0) result.attributes = attributes;
 
@@ -2389,7 +2389,7 @@ export const inverseTypeDiff = (original: Type, appliedDiff: TypeDiff): TypeDiff
   if (appliedDiff.authors !== undefined) inverse.authors = original.authors ?? null;
   if (appliedDiff.concepts !== undefined) inverse.concepts = original.concepts ?? null;
   if (appliedDiff.models) inverse.models = inverseCollectionDiff("model", original.models ?? [], appliedDiff.models, inverseModelDiff);
-  if (appliedDiff.ports) inverse.ports = inverseCollectionDiff("port", original.ports ?? [], appliedDiff.ports, inversePortDiff);
+  if (appliedDiff.connectors) inverse.connectors = inverseCollectionDiff("connector", original.connectors ?? [], appliedDiff.connectors, inversePortDiff);
   if (appliedDiff.props) inverse.props = inverseCollectionDiff("prop", original.props ?? [], appliedDiff.props, inversePropDiff);
   if (appliedDiff.attributes) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
   return inverse;
@@ -2402,7 +2402,7 @@ export const TypesDiffSchema = z.object({
 });
 export type TypesDiff = z.infer<typeof TypesDiffSchema>;
 
-export const findPortInType = (type: Type, portGuid: string): Port => findPort(type.ports ?? [], portGuid);
+export const findConnectorInType = (type: Type, connectorGuid: string): Connector => findConnector(type.connectors ?? [], connectorGuid);
 
 // #endregion Type
 
@@ -2717,12 +2717,12 @@ export const deserializeGroup = (json: string): Group => GroupSchema.parse(JSON.
 export const SideSchema = z.object({
   piece: PieceIdSchema,
   designPiece: PieceIdSchema.optional(),
-  port: PortIdSchema.optional(),
+  connector: ConnectorIdSchema.optional(),
 });
 export type Side = z.infer<typeof SideSchema>;
 export const SideDiffSchema = SideSchema.partial();
 export type SideDiff = z.infer<typeof SideDiffSchema>;
-export const SideIdSchema = z.object({ piece: PieceIdSchema, designPiece: PieceIdSchema.optional(), port: PortIdSchema.optional() });
+export const SideIdSchema = z.object({ piece: PieceIdSchema, designPiece: PieceIdSchema.optional(), connector: ConnectorIdSchema.optional() });
 export type SideId = z.infer<typeof SideIdSchema>;
 export const SidesDiffSchema = z.object({
   removed: z.array(SideIdSchema).optional(),
@@ -2734,14 +2734,14 @@ export const getSideDiff = (before: Side, after: Side): SideDiff => {
   const diff: SideDiff = {};
   if (before.piece?.guid !== after.piece?.guid) diff.piece = after.piece;
   if (before.designPiece?.guid !== after.designPiece?.guid) diff.designPiece = after.designPiece;
-  if (before.port?.guid !== after.port?.guid) diff.port = after.port;
+  if (before.connector?.guid !== after.connector?.guid) diff.connector = after.connector;
   return diff;
 };
 export const inverseSideDiff = (original: Side, appliedDiff: SideDiff): SideDiff => {
   const inverse: SideDiff = {};
   if (appliedDiff.piece !== undefined) inverse.piece = original.piece;
   if (appliedDiff.designPiece !== undefined) inverse.designPiece = original.designPiece;
-  if (appliedDiff.port !== undefined) inverse.port = original.port;
+  if (appliedDiff.connector !== undefined) inverse.connector = original.connector;
   return inverse;
 };
 export const mergeSideDiff = (diff1: SideDiff, diff2: SideDiff): SideDiff => {
@@ -2753,13 +2753,13 @@ export const applySideDiff = (base: Side, diff: SideDiff): Side => {
   };
 
   if (diff.designPiece !== undefined || base.designPiece !== undefined) result.designPiece = diff.designPiece ?? base.designPiece;
-  if (diff.port !== undefined || base.port !== undefined) result.port = diff.port ?? base.port;
+  if (diff.connector !== undefined || base.connector !== undefined) result.connector = diff.connector ?? base.connector;
 
   return result;
 };
 export const serializeSide = (side: Side): string => JSON.stringify(SideSchema.parse(side));
 export const deserializeSide = (json: string): Side => SideSchema.parse(JSON.parse(json));
-export const areSameSide = (a: Side, b: Side): boolean => a.piece.guid === b.piece.guid && a.designPiece?.guid === b.designPiece?.guid && a.port?.guid === b.port?.guid;
+export const areSameSide = (a: Side, b: Side): boolean => a.piece.guid === b.piece.guid && a.designPiece?.guid === b.designPiece?.guid && a.connector?.guid === b.connector?.guid;
 
 // #endregion Side
 
@@ -2888,10 +2888,10 @@ export const findPieceConnections = (connections: Connection[], pieceGuid: strin
   return connections.filter((c) => c.connected.piece.guid === pieceGuid || c.connecting.piece.guid === pieceGuid);
 };
 
-export const findPortForPieceInConnection = (type: Type, connection: Connection, pieceGuid: string): Port | undefined => {
-  const portGuid = connection.connected.piece.guid === pieceGuid ? connection.connected.port?.guid : connection.connecting.port?.guid;
-  if (!portGuid) return undefined;
-  return findPortInType(type, portGuid);
+export const findConnectorForPieceInConnection = (type: Type, connection: Connection, pieceGuid: string): Connector | undefined => {
+  const connectorGuid = connection.connected.piece.guid === pieceGuid ? connection.connected.connector?.guid : connection.connecting.connector?.guid;
+  if (!connectorGuid) return undefined;
+  return findConnectorInType(type, connectorGuid);
 };
 
 // #endregion Connection
@@ -3281,12 +3281,12 @@ export const removePiecesAndConnectionsFromDesign = (kit: Kit, designId: string,
   };
 };
 
-const computeChildPlane = (parentPlane: Plane, parentPort: Port, childPort: Port, connection: Connection): Plane => {
+const computeChildPlane = (parentPlane: Plane, parentConnector: Connector, childConnector: Connector, connection: Connection): Plane => {
   const parentMatrix = planeToMatrix(parentPlane);
-  const parentPoint = vectorToThree(parentPort.point);
-  const parentDirection = vectorToThree(parentPort.direction).normalize();
-  const childPoint = vectorToThree(childPort.point);
-  const childDirection = vectorToThree(childPort.direction).normalize();
+  const parentPoint = vectorToThree(parentConnector.point);
+  const parentDirection = vectorToThree(parentConnector.direction).normalize();
+  const childPoint = vectorToThree(childConnector.point);
+  const childDirection = vectorToThree(childConnector.direction).normalize();
 
   const { gap, shift, rise, rotation, turn, tilt } = connection;
   const rotationRad = THREE.MathUtils.degToRad(rotation ?? 0);
@@ -3310,8 +3310,8 @@ const computeChildPlane = (parentPlane: Plane, parentPort: Port, childPort: Port
   const directionT = new THREE.Matrix4().makeRotationFromQuaternion(alignQuat);
 
   const yAxis = new THREE.Vector3(0, 1, 0);
-  const parentPortQuat = new THREE.Quaternion().setFromUnitVectors(yAxis, parentDirection);
-  const parentRotationT = new THREE.Matrix4().makeRotationFromQuaternion(parentPortQuat);
+  const parentConnectorQuat = new THREE.Quaternion().setFromUnitVectors(yAxis, parentDirection);
+  const parentRotationT = new THREE.Matrix4().makeRotationFromQuaternion(parentConnectorQuat);
 
   const gapDirection = new THREE.Vector3(0, 1, 0).applyMatrix4(parentRotationT);
   const shiftDirection = new THREE.Vector3(1, 0, 0).applyMatrix4(parentRotationT);
@@ -3364,34 +3364,34 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
   const getType = (typeGuid: string): Type | undefined => {
     return typesDict[typeGuid];
   };
-  const getPort = (type: Type | undefined, portGuid: string | undefined): Port | undefined => {
+  const getConnector = (type: Type | undefined, connectorGuid: string | undefined): Connector | undefined => {
     if (!type) return undefined;
 
-    if (!portGuid) {
-      if (type.ports && type.ports.length > 0) {
-        return type.ports[0];
+    if (!connectorGuid) {
+      if (type.connectors && type.connectors.length > 0) {
+        return type.connectors[0];
       }
 
       if (type.parent?.guid) {
         const parentType = getType(type.parent.guid);
-        return getPort(parentType, portGuid);
+        return getConnector(parentType, connectorGuid);
       }
       return undefined;
     }
 
-    if (type.ports && type.ports.length > 0) {
-      const port = type.ports.find((p) => p.guid === portGuid);
-      if (port) return port;
+    if (type.connectors && type.connectors.length > 0) {
+      const connector = type.connectors.find((p) => p.guid === connectorGuid);
+      if (connector) return connector;
     }
 
     if (type.parent?.guid) {
       const parentType = getType(type.parent.guid);
-      const port = getPort(parentType, portGuid);
-      if (port) return port;
+      const connector = getConnector(parentType, connectorGuid);
+      if (connector) return connector;
     }
 
-    if (type.ports && type.ports.length > 0) {
-      return type.ports[0];
+    if (type.connectors && type.connectors.length > 0) {
+      return type.connectors[0];
     }
 
     return undefined;
@@ -3527,17 +3527,17 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
         const parentType = parentPiece.type ? getType(parentPiece.type.guid) : undefined;
         const childType = childPiece.type ? getType(childPiece.type.guid) : undefined;
 
-        const parentPortGuid = parentSide.port?.guid;
-        const childPortGuid = childSide.port?.guid;
-        const parentPort = getPort(parentType, parentPortGuid);
-        const childPort = getPort(childType, childPortGuid);
+        const parentConnectorGuid = parentSide.connector?.guid;
+        const childConnectorGuid = childSide.connector?.guid;
+        const parentConnector = getConnector(parentType, parentConnectorGuid);
+        const childConnector = getConnector(childType, childConnectorGuid);
 
-        if (!parentPort || !childPort) {
-          console.error(`Error during flatten: Ports not found for connection between ${parentId} and ${childId}. Parent Port: ${parentPortGuid}, Child Port: ${childPortGuid}`);
+        if (!parentConnector || !childConnector) {
+          console.error(`Error during flatten: Connectors not found for connection between ${parentId} and ${childId}. Parent Connector: ${parentConnectorGuid}, Child Connector: ${childConnectorGuid}`);
           skipCount++;
           return;
         }
-        const childPlane = roundPlane(computeChildPlane(parentPlane, parentPort, childPort, connection));
+        const childPlane = roundPlane(computeChildPlane(parentPlane, parentConnector, childConnector, connection));
         piecePlanes[childPiece.guid] = childPlane;
 
         const radius = 2.697;
@@ -3551,11 +3551,11 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
         let childV: number;
 
         if (parentCenter.u === 0 && parentCenter.v === 0) {
-          const angle = 2 * Math.PI * parentPort.t;
+          const angle = 2 * Math.PI * parentConnector.t;
           childU = radius * Math.sin(angle);
           childV = radius * Math.cos(angle);
         } else {
-          const isVerticalConnection = Math.abs(parentPort.direction?.z ?? 0) > 0.5;
+          const isVerticalConnection = Math.abs(parentConnector.direction?.z ?? 0) > 0.5;
 
           if (isVerticalConnection) {
             childU = parentCenter.u + connectionU;
@@ -3875,11 +3875,11 @@ export const getIncludedDesigns = (design: Design): IncludedDesignInfo[] => {
   return includedDesigns;
 };
 
-export const isPortInUse = (design: Design, pieceGuid: string, portGuid: string): boolean => {
+export const isPortInUse = (design: Design, pieceGuid: string, connectorGuid: string): boolean => {
   const connections = findPieceConnectionsInDesign(design, pieceGuid);
   for (const connection of connections) {
     const isPieceConnected = connection.connected.piece.guid === pieceGuid;
-    const isPortConnected = isPieceConnected ? connection.connected.port?.guid === portGuid : connection.connecting.port?.guid === portGuid;
+    const isPortConnected = isPieceConnected ? connection.connected.connector?.guid === connectorGuid : connection.connecting.connector?.guid === connectorGuid;
     if (isPortConnected) return true;
   }
   return false;
@@ -4470,28 +4470,28 @@ export const findChildrenPiecesInDesign = (kit: Kit, designGuid: string, pieceGu
   return children;
 };
 
-export const findUsedPortsByPieceInDesign = (kit: Kit, designGuid: string, pieceGuid: string): Port[] => {
+export const findUsedConnectorsByPieceInDesign = (kit: Kit, designGuid: string, pieceGuid: string): Connector[] => {
   const design = findDesignInKit(kit, designGuid);
   const piece = findPieceInDesign(design, pieceGuid);
   if (!piece.type) return [];
   const type = findTypeInKit(kit, piece.type.guid);
   const connections = findPieceConnectionsInDesign(design, pieceGuid);
-  return connections.map((c) => findPortForPieceInConnection(type, c, pieceGuid)).filter((p): p is Port => p !== undefined);
+  return connections.map((c) => findConnectorForPieceInConnection(type, c, pieceGuid)).filter((p): p is Connector => p !== undefined);
 };
 
 export const findReplacableTypesForPieceInDesign = (kit: Kit, designGuid: string, pieceGuid: string, variants?: string[]): Type[] => {
   const design = findDesignInKit(kit, designGuid);
   const connections = findPieceConnectionsInDesign(design, pieceGuid);
-  const requiredPorts: Port[] = [];
+  const requiredConnectors: Connector[] = [];
   for (const connection of connections) {
     try {
       const otherPieceId = connection.connected.piece.guid === pieceGuid ? connection.connecting.piece.guid : connection.connected.piece.guid;
       const otherPiece = findPieceInDesign(design, otherPieceId);
       if (!otherPiece.type) continue;
       const otherType = findTypeInKit(kit, otherPiece.type.guid);
-      const otherPortId = connection.connected.piece.guid === pieceGuid ? connection.connecting.port?.guid : connection.connected.port?.guid;
-      const otherPort = findPortInType(otherType, otherPortId || "");
-      requiredPorts.push(otherPort);
+      const otherPortId = connection.connected.piece.guid === pieceGuid ? connection.connecting.connector?.guid : connection.connected.connector?.guid;
+      const otherPort = findConnectorInType(otherType, otherPortId || "");
+      requiredConnectors.push(otherPort);
     } catch (error) {
       continue;
     }
@@ -4500,9 +4500,9 @@ export const findReplacableTypesForPieceInDesign = (kit: Kit, designGuid: string
     kit.types?.filter((replacementType) => {
       if (replacementType.isAbstract) return false;
       if (variants !== undefined && !variants.includes(replacementType.parent?.guid ?? "")) return false;
-      if (!replacementType.ports || replacementType.ports.length === 0) return requiredPorts.length === 0;
-      return requiredPorts.every((requiredPort) => {
-        return replacementType.ports!.some((replacementPort) => arePortsCompatible(replacementPort, requiredPort));
+      if (!replacementType.connectors || replacementType.connectors.length === 0) return requiredConnectors.length === 0;
+      return requiredConnectors.every((requiredConnector) => {
+        return replacementType.connectors!.some((replacementConnector) => arePortsCompatible(replacementConnector, requiredConnector));
       });
     }) ?? []
   );
@@ -4513,7 +4513,7 @@ export const findReplacableTypesForPiecesInDesign = (kit: Kit, designGuid: strin
   const pieces = pieceGuids.map((id) => findPieceInDesign(design, id));
   const externalConnections: Array<{
     connection: Connection;
-    requiredPort: Port;
+    requiredConnector: Connector;
   }> = [];
   for (const piece of pieces) {
     const connections = findPieceConnectionsInDesign(design, piece.guid);
@@ -4524,9 +4524,9 @@ export const findReplacableTypesForPiecesInDesign = (kit: Kit, designGuid: strin
           const otherPiece = findPieceInDesign(design, otherPieceId);
           if (!otherPiece.type) continue;
           const otherType = findTypeInKit(kit, otherPiece.type.guid);
-          const otherPortId = connection.connected.piece.guid === piece.guid ? connection.connecting.port?.guid : connection.connected.port?.guid;
-          const otherPort = findPortInType(otherType, otherPortId || "");
-          externalConnections.push({ connection, requiredPort: otherPort });
+          const otherPortId = connection.connected.piece.guid === piece.guid ? connection.connecting.connector?.guid : connection.connected.connector?.guid;
+          const otherPort = findConnectorInType(otherType, otherPortId || "");
+          externalConnections.push({ connection, requiredConnector: otherPort });
         } catch (error) {
           continue;
         }
@@ -4537,9 +4537,9 @@ export const findReplacableTypesForPiecesInDesign = (kit: Kit, designGuid: strin
     kit.types?.filter((replacementType) => {
       if (replacementType.isAbstract) return false;
       if (variants !== undefined && !variants.includes(replacementType.parent?.guid ?? "")) return false;
-      if (!replacementType.ports || replacementType.ports.length === 0) return externalConnections.length === 0;
-      return externalConnections.every(({ requiredPort }) => {
-        return replacementType.ports!.some((replacementPort) => arePortsCompatible(replacementPort, requiredPort));
+      if (!replacementType.connectors || replacementType.connectors.length === 0) return externalConnections.length === 0;
+      return externalConnections.every(({ requiredConnector }) => {
+        return replacementType.connectors!.some((replacementConnector) => arePortsCompatible(replacementConnector, requiredConnector));
       });
     }) ?? []
   );
@@ -4581,7 +4581,7 @@ export const piecesMetadata = (
   );
 };
 
-export const findAttributeValue = (entity: Kit | Type | Design | Piece | Connection | Model | Port, name: string, defaultValue?: string | null): string | null => {
+export const findAttributeValue = (entity: Kit | Type | Design | Piece | Connection | Model | Connector, name: string, defaultValue?: string | null): string | null => {
   const attribute = entity.attributes?.find((q) => q.key === name);
   if (!attribute && defaultValue === undefined) throw new Error(`Attribute ${name} not found in ${entity}`);
   if (attribute?.value === undefined && defaultValue === null) return null;
@@ -4665,14 +4665,14 @@ export const colorPortsForTypes = (types: Type[]): TypesDiff => {
   const updated: { type: TypeId; diff: TypeDiff }[] = [];
 
   for (const type of types) {
-    const updatedPorts = (type.ports || []).map((port) => ({
-      ...port,
+    const updatedConnectors = (type.connectors || []).map((connector) => ({
+      ...connector,
       attributes: [
-        ...(port.attributes || []),
+        ...(connector.attributes || []),
         {
           guid: guid(),
           key: "semio.color",
-          value: getColorForText(port.interface?.guid),
+          value: getColorForText(connector.interface?.guid),
         },
       ],
     }));
@@ -4680,7 +4680,7 @@ export const colorPortsForTypes = (types: Type[]): TypesDiff => {
     updated.push({
       type: { guid: type.guid },
       diff: {
-        ports: { added: updatedPorts },
+        connectors: { added: updatedConnectors },
       },
     });
   }
@@ -4949,25 +4949,25 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
     return true;
   };
 
-  const arePortsEqual = (a?: Port[], b?: Port[]): boolean => {
+  const arePortsEqual = (a?: Connector[], b?: Connector[]): boolean => {
     const arrA = normalizeArray(a);
     const arrB = normalizeArray(b);
     if (arrA.length !== arrB.length) return false;
-    for (const portA of arrA) {
-      const portB = arrB.find((x) => x.guid === portA.guid);
-      if (!portB) return false;
-      if (normalizeValue(portA.name) !== normalizeValue(portB.name)) return false;
-      if (portA.point.x !== portB.point.x) return false;
-      if (portA.point.y !== portB.point.y) return false;
-      if (portA.point.z !== portB.point.z) return false;
-      if (portA.direction.x !== portB.direction.x) return false;
-      if (portA.direction.y !== portB.direction.y) return false;
-      if (portA.direction.z !== portB.direction.z) return false;
-      if (portA.t !== portB.t) return false;
-      if (normalizeBoolean(portA.mandatory) !== normalizeBoolean(portB.mandatory)) return false;
-      if (normalizeValue(portA.interface?.guid) !== normalizeValue(portB.interface?.guid)) return false;
-      if (!arePropsEqual(portA.props, portB.props)) return false;
-      if (!areAttributesEqual(portA.attributes, portB.attributes)) return false;
+    for (const connectorA of arrA) {
+      const connectorB = arrB.find((x) => x.guid === connectorA.guid);
+      if (!connectorB) return false;
+      if (normalizeValue(connectorA.name) !== normalizeValue(connectorB.name)) return false;
+      if (connectorA.point.x !== connectorB.point.x) return false;
+      if (connectorA.point.y !== connectorB.point.y) return false;
+      if (connectorA.point.z !== connectorB.point.z) return false;
+      if (connectorA.direction.x !== connectorB.direction.x) return false;
+      if (connectorA.direction.y !== connectorB.direction.y) return false;
+      if (connectorA.direction.z !== connectorB.direction.z) return false;
+      if (connectorA.t !== connectorB.t) return false;
+      if (normalizeBoolean(connectorA.mandatory) !== normalizeBoolean(connectorB.mandatory)) return false;
+      if (normalizeValue(connectorA.interface?.guid) !== normalizeValue(connectorB.interface?.guid)) return false;
+      if (!arePropsEqual(connectorA.props, connectorB.props)) return false;
+      if (!areAttributesEqual(connectorA.attributes, connectorB.attributes)) return false;
     }
     return true;
   };
@@ -5016,7 +5016,7 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
       if (!arraysEqual(normalizeArray(typeA.authors?.map((a) => a.guid)), normalizeArray(typeB.authors?.map((a) => a.guid)))) return false;
       if (!arePropsEqual(typeA.props, typeB.props)) return false;
       if (!areModelsEqual(typeA.models, typeB.models)) return false;
-      if (!arePortsEqual(typeA.ports, typeB.ports)) return false;
+      if (!arePortsEqual(typeA.connectors, typeB.connectors)) return false;
       if (!areAttributesEqual(typeA.attributes, typeB.attributes)) return false;
     }
     return true;
@@ -5084,10 +5084,10 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
       if (!connB) return false;
       if (connA.connected.piece.guid !== connB.connected.piece.guid) return false;
       if (normalizeValue(connA.connected.designPiece?.guid) !== normalizeValue(connB.connected.designPiece?.guid)) return false;
-      if (normalizeValue(connA.connected.port?.guid) !== normalizeValue(connB.connected.port?.guid)) return false;
+      if (normalizeValue(connA.connected.connector?.guid) !== normalizeValue(connB.connected.connector?.guid)) return false;
       if (connA.connecting.piece.guid !== connB.connecting.piece.guid) return false;
       if (normalizeValue(connA.connecting.designPiece?.guid) !== normalizeValue(connB.connecting.designPiece?.guid)) return false;
-      if (normalizeValue(connA.connecting.port?.guid) !== normalizeValue(connB.connecting.port?.guid)) return false;
+      if (normalizeValue(connA.connecting.connector?.guid) !== normalizeValue(connB.connecting.connector?.guid)) return false;
       if (connA.gap !== connB.gap) return false;
       if (connA.shift !== connB.shift) return false;
       if (connA.rise !== connB.rise) return false;
@@ -5334,7 +5334,7 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
     return true;
   };
 
-  const arePortsDiffsEqual = (a?: z.infer<typeof PortsDiffSchema>, b?: z.infer<typeof PortsDiffSchema>): boolean => {
+  const arePortsDiffsEqual = (a?: z.infer<typeof ConnectorsDiffSchema>, b?: z.infer<typeof ConnectorsDiffSchema>): boolean => {
     if (!a && !b) return true;
     if (!a || !b) return false;
     if (!areRemovedArraysEqual(a.removed, b.removed)) return false;
@@ -5342,7 +5342,7 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
     const updatedB = normalizeArray(b.updated);
     if (updatedA.length !== updatedB.length) return false;
     for (const ua of updatedA) {
-      const ub = updatedB.find((x) => x.port.guid === ua.port.guid);
+      const ub = updatedB.find((x) => x.connector.guid === ua.connector.guid);
       if (!ub) return false;
       if (!arePortDiffsEqual(ua.diff, ub.diff)) return false;
     }
@@ -5365,7 +5365,7 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
     return true;
   };
 
-  const arePortDiffsEqual = (a?: PortDiff, b?: PortDiff): boolean => {
+  const arePortDiffsEqual = (a?: ConnectorDiff, b?: ConnectorDiff): boolean => {
     if (!a && !b) return true;
     if (!a || !b) return false;
     if (normalizeValue(a.name) !== normalizeValue(b.name)) return false;
@@ -5472,7 +5472,7 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
       return false;
     }
     if (!areModelsDiffsEqual(a.models, b.models)) return false;
-    if (!arePortsDiffsEqual(a.ports, b.ports)) return false;
+    if (!arePortsDiffsEqual(a.connectors, b.connectors)) return false;
     if (!arePropsDiffsEqual(a.props, b.props)) return false;
     if (!areAttributesDiffsEqual(a.attributes, b.attributes)) return false;
     return true;
@@ -5875,7 +5875,7 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
   kit.types = mapOrUndefined(types, (row: any) => {
     const typeGuid = row.guid || String(row.id);
     const models = execResult("SELECT * FROM model WHERE type_guid = ?", [typeGuid]);
-    const ports = execResult("SELECT * FROM port WHERE type_guid = ?", [typeGuid]);
+    const connectors = execResult("SELECT * FROM connector WHERE type_guid = ?", [typeGuid]);
     const typeAttributes = execResult("SELECT * FROM attribute WHERE type_guid = ?", [typeGuid]);
     const typeConcepts = execResult("SELECT * FROM type_concept WHERE type_guid = ?", [typeGuid]);
     const typeAuthors = execResult("SELECT * FROM type_author WHERE type_guid = ? ORDER BY rank", [typeGuid]);
@@ -5922,23 +5922,23 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
     });
     if (models_value) type.models = models_value;
 
-    const ports_value = mapOrUndefined(ports, (p: any) => {
-      const portProps = execResult("SELECT * FROM prop WHERE port_guid = ?", [p.guid]);
-      const portAttributes = execResult("SELECT * FROM attribute WHERE port_guid = ?", [p.guid]);
+    const connectors_value = mapOrUndefined(connectors, (p: any) => {
+      const connectorProps = execResult("SELECT * FROM prop WHERE connector_guid = ?", [p.guid]);
+      const connectorAttributes = execResult("SELECT * FROM attribute WHERE connector_guid = ?", [p.guid]);
 
-      const port: any = {
+      const connector: any = {
         guid: p.guid,
         point: { x: p.point_x, y: p.point_y, z: p.point_z },
         direction: { x: p.direction_x, y: p.direction_y, z: p.direction_z },
         t: p.t,
       };
 
-      if (p.name) port.name = p.name;
-      if (p.mandatory) port.mandatory = true;
-      if (p.interface_guid) port.interface = { guid: p.interface_guid };
-      if (p.description) port.description = p.description;
+      if (p.name) connector.name = p.name;
+      if (p.mandatory) connector.mandatory = true;
+      if (p.interface_guid) connector.interface = { guid: p.interface_guid };
+      if (p.description) connector.description = p.description;
 
-      const props_value = portProps
+      const props_value = connectorProps
         .map((pr: any) => {
           const propAttributes = execResult("SELECT * FROM attribute WHERE prop_guid = ?", [pr.guid]);
           if (!pr.quality_guid) return null;
@@ -5951,14 +5951,14 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
           };
         })
         .filter((p: any): p is NonNullable<typeof p> => p !== null);
-      if (props_value && props_value.length > 0) port.props = props_value;
+      if (props_value && props_value.length > 0) connector.props = props_value;
 
-      const attributes_value = mapOrUndefined(portAttributes, buildAttribute);
-      if (attributes_value) port.attributes = attributes_value;
+      const attributes_value = mapOrUndefined(connectorAttributes, buildAttribute);
+      if (attributes_value) connector.attributes = attributes_value;
 
-      return port;
+      return connector;
     });
-    if (ports_value) type.ports = ports_value;
+    if (connectors_value) type.connectors = connectors_value;
 
     const attributes_value = mapOrUndefined(typeAttributes, buildAttribute);
     if (attributes_value) type.attributes = attributes_value;
@@ -6012,20 +6012,20 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
           plane:
             p.plane_origin_x !== null
               ? {
-                  origin: { x: p.plane_origin_x, y: p.plane_origin_y, z: p.plane_origin_z },
-                  xAxis: { x: p.plane_x_axis_x, y: p.plane_x_axis_y, z: p.plane_x_axis_z },
-                  yAxis: { x: p.plane_y_axis_x, y: p.plane_y_axis_y, z: p.plane_y_axis_z },
-                }
+                origin: { x: p.plane_origin_x, y: p.plane_origin_y, z: p.plane_origin_z },
+                xAxis: { x: p.plane_x_axis_x, y: p.plane_x_axis_y, z: p.plane_x_axis_z },
+                yAxis: { x: p.plane_y_axis_x, y: p.plane_y_axis_y, z: p.plane_y_axis_z },
+              }
               : undefined,
           center: p.center_u !== null || p.center_v !== null ? { u: p.center_u, v: p.center_v } : undefined,
           scale: p.scale !== null ? p.scale : undefined,
           mirrorPlane:
             p.mirror_plane_origin_x !== null
               ? {
-                  origin: { x: p.mirror_plane_origin_x, y: p.mirror_plane_origin_y, z: p.mirror_plane_origin_z },
-                  xAxis: { x: p.mirror_plane_x_axis_x, y: p.mirror_plane_x_axis_y, z: p.mirror_plane_x_axis_z },
-                  yAxis: { x: p.mirror_plane_y_axis_x, y: p.mirror_plane_y_axis_y, z: p.mirror_plane_y_axis_z },
-                }
+                origin: { x: p.mirror_plane_origin_x, y: p.mirror_plane_origin_y, z: p.mirror_plane_origin_z },
+                xAxis: { x: p.mirror_plane_x_axis_x, y: p.mirror_plane_x_axis_y, z: p.mirror_plane_x_axis_z },
+                yAxis: { x: p.mirror_plane_y_axis_x, y: p.mirror_plane_y_axis_y, z: p.mirror_plane_y_axis_z },
+              }
               : undefined,
           isHidden: p.is_hidden ? true : undefined,
           isLocked: p.is_locked ? true : undefined,
@@ -6057,12 +6057,12 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
           connected: {
             piece: { guid: c.connected_piece_guid },
             designPiece: c.connected_design_piece_guid ? { guid: c.connected_design_piece_guid } : undefined,
-            port: { guid: c.connected_port_guid },
+            connector: { guid: c.connected_connector_guid },
           },
           connecting: {
             piece: { guid: c.connecting_piece_guid },
             designPiece: c.connecting_design_piece_guid ? { guid: c.connecting_design_piece_guid } : undefined,
-            port: { guid: c.connecting_port_guid },
+            connector: { guid: c.connecting_connector_guid },
           },
           gap: c.gap || 0,
           shift: c.shift || 0,
@@ -6140,55 +6140,55 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
   kit.qualities =
     qualities.length > 0
       ? qualities.map((row: any) => {
-          const benchmarks = execResult("SELECT * FROM benchmark WHERE quality_guid = ?", [row.guid]);
-          const qualityAttributes = execResult("SELECT * FROM attribute WHERE quality_guid = ?", [row.guid]);
-          return {
-            guid: row.guid,
-            key: row.key,
-            name: row.name,
-            kind: row.kind,
-            defaultValue: row.default_value,
-            formula: toUndefined(row.formula),
-            defaultSiUnit: toUndefined(row.default_si_unit),
-            defaultImperialUnit: toUndefined(row.default_imperial_unit),
-            min: row.min_value,
-            minExcluded: row.min_excluded ? true : undefined,
-            max: row.max_value,
-            maxExcluded: row.max_excluded ? true : undefined,
-            canScale: row.can_scale ? true : undefined,
-            uri: toUndefined(row.definition),
-            benchmarks: benchmarks.map((b: any) => {
-              const benchmarkAttributes = execResult("SELECT * FROM attribute WHERE benchmark_guid = ?", [b.guid]);
-              return {
-                guid: b.guid,
-                name: b.name,
-                icon: toUndefined(b.icon),
-                min: b.min_value,
-                minExcluded: b.min_excluded ? true : undefined,
-                max: b.max_value,
-                maxExcluded: b.max_excluded ? true : undefined,
-                attributes: mapOrUndefined(benchmarkAttributes, buildAttribute),
-              };
-            }),
-            attributes: mapOrUndefined(qualityAttributes, buildAttribute),
-          };
-        })
+        const benchmarks = execResult("SELECT * FROM benchmark WHERE quality_guid = ?", [row.guid]);
+        const qualityAttributes = execResult("SELECT * FROM attribute WHERE quality_guid = ?", [row.guid]);
+        return {
+          guid: row.guid,
+          key: row.key,
+          name: row.name,
+          kind: row.kind,
+          defaultValue: row.default_value,
+          formula: toUndefined(row.formula),
+          defaultSiUnit: toUndefined(row.default_si_unit),
+          defaultImperialUnit: toUndefined(row.default_imperial_unit),
+          min: row.min_value,
+          minExcluded: row.min_excluded ? true : undefined,
+          max: row.max_value,
+          maxExcluded: row.max_excluded ? true : undefined,
+          canScale: row.can_scale ? true : undefined,
+          uri: toUndefined(row.definition),
+          benchmarks: benchmarks.map((b: any) => {
+            const benchmarkAttributes = execResult("SELECT * FROM attribute WHERE benchmark_guid = ?", [b.guid]);
+            return {
+              guid: b.guid,
+              name: b.name,
+              icon: toUndefined(b.icon),
+              min: b.min_value,
+              minExcluded: b.min_excluded ? true : undefined,
+              max: b.max_value,
+              maxExcluded: b.max_excluded ? true : undefined,
+              attributes: mapOrUndefined(benchmarkAttributes, buildAttribute),
+            };
+          }),
+          attributes: mapOrUndefined(qualityAttributes, buildAttribute),
+        };
+      })
       : undefined;
 
   const files = execResult("SELECT * FROM file WHERE kit_guid = ?", [kit.guid]);
   kit.files =
     files.length > 0
       ? files.map((row: any) => ({
-          guid: row.guid,
-          name: row.name,
-          mime: toUndefined(row.mime),
-          remote: toUndefined(row.remote_url),
-          folder: row.folder_guid ? { guid: row.folder_guid } : undefined,
-          size: row.size,
-          hash: row.hash,
-          createdAt: row.created,
-          updatedAt: row.updated,
-        }))
+        guid: row.guid,
+        name: row.name,
+        mime: toUndefined(row.mime),
+        remote: toUndefined(row.remote_url),
+        folder: row.folder_guid ? { guid: row.folder_guid } : undefined,
+        size: row.size,
+        hash: row.hash,
+        createdAt: row.created,
+        updatedAt: row.updated,
+      }))
       : undefined;
 
   const folders = execResult("SELECT * FROM folder WHERE kit_guid = ?", [kit.guid]);
@@ -6204,10 +6204,10 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
   kit.authors =
     authors.length > 0
       ? authors.map((row: any) => ({
-          guid: row.guid,
-          name: row.name,
-          email: toUndefined(row.email),
-        }))
+        guid: row.guid,
+        name: row.name,
+        email: toUndefined(row.email),
+      }))
       : undefined;
 
   const concepts = execResult("SELECT * FROM concept WHERE kit_guid = ?", [kit.guid]);
@@ -6401,12 +6401,12 @@ CREATE TABLE prop (
 	value FLOAT NOT NULL,
 	unit VARCHAR(64),
 	quality_guid VARCHAR(36),
-	port_guid VARCHAR(36),
+	connector_guid VARCHAR(36),
 	PRIMARY KEY (guid),
 	FOREIGN KEY(quality_guid) REFERENCES quality (guid)
 );
 
-CREATE TABLE port (
+CREATE TABLE connector (
 	guid VARCHAR(36) NOT NULL,
 	name VARCHAR(256),
 	point_x FLOAT NOT NULL,
@@ -6552,10 +6552,10 @@ CREATE TABLE connection (
 	guid VARCHAR(36) NOT NULL,
 	connected_piece_guid VARCHAR(36) NOT NULL,
 	connected_design_piece_guid VARCHAR(36),
-	connected_port_guid VARCHAR(36) NOT NULL,
+	connected_connector_guid VARCHAR(36) NOT NULL,
 	connecting_piece_guid VARCHAR(36) NOT NULL,
 	connecting_design_piece_guid VARCHAR(36),
-	connecting_port_guid VARCHAR(36) NOT NULL,
+	connecting_connector_guid VARCHAR(36) NOT NULL,
 	gap FLOAT NOT NULL DEFAULT 0,
 	shift FLOAT NOT NULL DEFAULT 0,
 	rise FLOAT NOT NULL DEFAULT 0,
@@ -6569,9 +6569,9 @@ CREATE TABLE connection (
 	PRIMARY KEY (guid),
 	CHECK (connecting_piece_guid != connected_piece_guid),
 	FOREIGN KEY(connected_piece_guid) REFERENCES piece (guid),
-	FOREIGN KEY(connected_port_guid) REFERENCES port (guid),
+	FOREIGN KEY(connected_connector_guid) REFERENCES connector (guid),
 	FOREIGN KEY(connecting_piece_guid) REFERENCES piece (guid),
-	FOREIGN KEY(connecting_port_guid) REFERENCES port (guid),
+	FOREIGN KEY(connecting_connector_guid) REFERENCES connector (guid),
 	FOREIGN KEY(design_guid) REFERENCES design (guid)
 );
 
@@ -6633,7 +6633,7 @@ CREATE TABLE attribute (
 	author_guid VARCHAR(36),
 	model_guid VARCHAR(36),
 	prop_guid VARCHAR(36),
-	port_guid VARCHAR(36),
+	connector_guid VARCHAR(36),
 	type_guid VARCHAR(36),
 	layer_guid VARCHAR(36),
 	piece_guid VARCHAR(36),
@@ -6651,7 +6651,7 @@ CREATE TABLE attribute (
 	FOREIGN KEY(author_guid) REFERENCES author (guid),
 	FOREIGN KEY(model_guid) REFERENCES model (guid),
 	FOREIGN KEY(prop_guid) REFERENCES prop (guid),
-	FOREIGN KEY(port_guid) REFERENCES port (guid),
+	FOREIGN KEY(connector_guid) REFERENCES connector (guid),
 	FOREIGN KEY(type_guid) REFERENCES type (guid),
 	FOREIGN KEY(layer_guid) REFERENCES layer (guid),
 	FOREIGN KEY(piece_guid) REFERENCES piece (guid),
@@ -6822,34 +6822,34 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
       });
     });
 
-    toArray(type.ports).forEach((port) => {
-      db.run("INSERT INTO port (guid, name, point_x, point_y, point_z, direction_x, direction_y, direction_z, t, mandatory, interface_guid, description, type_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
-        port.guid,
-        port.name || null,
-        port.point.x,
-        port.point.y,
-        port.point.z,
-        port.direction.x,
-        port.direction.y,
-        port.direction.z,
-        port.t,
-        port.mandatory ? 1 : 0,
-        port.interface?.guid || null,
-        port.description || null,
+    toArray(type.connectors).forEach((connector) => {
+      db.run("INSERT INTO connector (guid, name, point_x, point_y, point_z, direction_x, direction_y, direction_z, t, mandatory, interface_guid, description, type_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+        connector.guid,
+        connector.name || null,
+        connector.point.x,
+        connector.point.y,
+        connector.point.z,
+        connector.direction.x,
+        connector.direction.y,
+        connector.direction.z,
+        connector.t,
+        connector.mandatory ? 1 : 0,
+        connector.interface?.guid || null,
+        connector.description || null,
         type.guid,
       ]);
 
-      toArray(port.props).forEach((prop) => {
+      toArray(connector.props).forEach((prop) => {
         const quality = toArray(kit.qualities).find((q) => q.guid === prop.quality.guid);
         const propKey = quality?.key || "";
-        db.run("INSERT INTO prop (guid, key, value, unit, quality_guid, port_guid) VALUES (?, ?, ?, ?, ?, ?)", [prop.guid, propKey, prop.value, prop.unit || null, prop.quality.guid, port.guid]);
+        db.run("INSERT INTO prop (guid, key, value, unit, quality_guid, connector_guid) VALUES (?, ?, ?, ?, ?, ?)", [prop.guid, propKey, prop.value, prop.unit || null, prop.quality.guid, connector.guid]);
         toArray(prop.attributes).forEach((attr) => {
           db.run("INSERT INTO attribute (guid, key, value, definition, prop_guid) VALUES (?, ?, ?, ?, ?)", [attr.guid, attr.key, attr.value || null, attr.definition || null, prop.guid]);
         });
       });
 
-      toArray(port.attributes).forEach((attr) => {
-        db.run("INSERT INTO attribute (guid, key, value, definition, port_guid) VALUES (?, ?, ?, ?, ?)", [attr.guid, attr.key, attr.value || null, attr.definition || null, port.guid]);
+      toArray(connector.attributes).forEach((attr) => {
+        db.run("INSERT INTO attribute (guid, key, value, definition, connector_guid) VALUES (?, ?, ?, ?, ?)", [attr.guid, attr.key, attr.value || null, attr.definition || null, connector.guid]);
       });
     });
 
@@ -6969,20 +6969,20 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
     });
 
     toArray(design.connections).forEach((connection) => {
-      if (!connection.guid || !connection.connected?.piece?.guid || !connection.connecting?.piece?.guid || !connection.connected?.port?.guid || !connection.connecting?.port?.guid) {
+      if (!connection.guid || !connection.connected?.piece?.guid || !connection.connecting?.piece?.guid || !connection.connected?.connector?.guid || !connection.connecting?.connector?.guid) {
         return;
       }
 
       db.run(
-        "INSERT INTO connection (guid, connected_piece_guid, connected_design_piece_guid, connected_port_guid, connecting_piece_guid, connecting_design_piece_guid, connecting_port_guid, gap, shift, rise, rotation, turn, tilt, u, v, description, design_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO connection (guid, connected_piece_guid, connected_design_piece_guid, connected_connector_guid, connecting_piece_guid, connecting_design_piece_guid, connecting_connector_guid, gap, shift, rise, rotation, turn, tilt, u, v, description, design_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [
           connection.guid,
           connection.connected.piece.guid,
           connection.connected.designPiece?.guid || null,
-          connection.connected.port.guid,
+          connection.connected.connector.guid,
           connection.connecting.piece.guid,
           connection.connecting.designPiece?.guid || null,
-          connection.connecting.port.guid,
+          connection.connecting.connector.guid,
           connection.gap || 0,
           connection.shift || 0,
           connection.rise || 0,
@@ -7028,7 +7028,7 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
 
 // #region Validation core types
 
-export type SemioEntityKind = "Kit" | "Type" | "Design" | "Piece" | "Connection" | "Port" | "Attribute" | "File" | "Folder" | "Quality" | "Interface" | "Prop" | "Model" | "Layer" | "Group" | "Stat";
+export type SemioEntityKind = "Kit" | "Type" | "Design" | "Piece" | "Connection" | "Connector" | "Attribute" | "File" | "Folder" | "Quality" | "Interface" | "Prop" | "Model" | "Layer" | "Group" | "Stat";
 
 export type SemioValidationSeverity = "error" | "warning";
 
@@ -7067,7 +7067,7 @@ export interface SemioValidationContext {
   typesByGuid: Map<Guid, Type>;
   designsByGuid: Map<Guid, Design>;
   piecesByGuid: Map<Guid, { designGuid: Guid; piece: Piece }>;
-  portsByTypeGuid: Map<Guid, Port[]>;
+  connectorsByTypeGuid: Map<Guid, Connector[]>;
   modelsByTypeGuid: Map<Guid, Model[]>;
 }
 
@@ -7075,18 +7075,18 @@ export const buildSemioValidationContext = (kit: Kit): SemioValidationContext =>
   const typesByGuid = new Map<Guid, Type>();
   const designsByGuid = new Map<Guid, Design>();
   const piecesByGuid = new Map<Guid, { designGuid: Guid; piece: Piece }>();
-  const portsByTypeGuid = new Map<Guid, Port[]>();
+  const connectorsByTypeGuid = new Map<Guid, Connector[]>();
   const modelsByTypeGuid = new Map<Guid, Model[]>();
   toArray(kit.types).forEach((t) => {
     typesByGuid.set(t.guid, t);
-    portsByTypeGuid.set(t.guid, toArray(t.ports));
+    connectorsByTypeGuid.set(t.guid, toArray(t.connectors));
     modelsByTypeGuid.set(t.guid, toArray(t.models));
   });
   toArray(kit.designs).forEach((d) => {
     designsByGuid.set(d.guid, d);
     toArray(d.pieces).forEach((p) => piecesByGuid.set(p.guid, { designGuid: d.guid, piece: p }));
   });
-  return { kit, typesByGuid, designsByGuid, piecesByGuid, portsByTypeGuid, modelsByTypeGuid };
+  return { kit, typesByGuid, designsByGuid, piecesByGuid, connectorsByTypeGuid, modelsByTypeGuid };
 };
 
 export type SemioValidationRule = (ctx: SemioValidationContext) => SemioValidationIssue[];
@@ -7129,7 +7129,7 @@ const updateGuidEverywhere = (kit: Kit, oldGuid: Guid, newGuid: Guid): void => {
     if (obj.quality?.guid === oldGuid) obj.quality = createQualityId(newGuid);
     if (obj.piece?.guid === oldGuid) obj.piece = createPieceId(newGuid);
     if (obj.designPiece?.guid === oldGuid) obj.designPiece = createPieceId(newGuid);
-    if (obj.port?.guid === oldGuid) obj.port = createPortId(newGuid);
+    if (obj.connector?.guid === oldGuid) obj.connector = createPortId(newGuid);
     if (Array.isArray(obj.compatibleInterfaces)) {
       obj.compatibleInterfaces = obj.compatibleInterfaces.map((iid: InterfaceId) => (iid.guid === oldGuid ? createInterfaceId(newGuid) : iid));
     }
@@ -7474,14 +7474,14 @@ export const semioFolderNameUniquenessRule: SemioValidationRule = (ctx) => {
 
 // #endregion Rule: Folder name uniqueness
 
-// #region Rule: Port name uniqueness within type
+// #region Rule: Connector name uniqueness within type
 
 export const semioPortNameUniquenessRule: SemioValidationRule = (ctx) => {
   const issues: SemioValidationIssue[] = [];
-  for (const [typeGuid, ports] of ctx.portsByTypeGuid) {
-    if (ports.length === 0) continue;
-    const nameMap = new Map<string, Port[]>();
-    ports.forEach((p) => {
+  for (const [typeGuid, connectors] of ctx.connectorsByTypeGuid) {
+    if (connectors.length === 0) continue;
+    const nameMap = new Map<string, Connector[]>();
+    connectors.forEach((p) => {
       const name = p.name ?? "";
       if (!nameMap.has(name)) nameMap.set(name, []);
       nameMap.get(name)!.push(p);
@@ -7489,22 +7489,22 @@ export const semioPortNameUniquenessRule: SemioValidationRule = (ctx) => {
     for (const [name, list] of nameMap) {
       if (list.length <= 1) continue;
       const [first, ...rest] = list;
-      const allNames = ports.map((p) => p.name ?? "");
+      const allNames = connectors.map((p) => p.name ?? "");
       const type = ctx.typesByGuid.get(typeGuid);
-      rest.forEach((port) => {
-        const fix = semioMakeFix(ctx, `Rename port "${name}"`, (clone) => {
+      rest.forEach((connector) => {
+        const fix = semioMakeFix(ctx, `Rename connector "${name}"`, (clone) => {
           const ct = toArray(clone.types).find((t) => t.guid === typeGuid);
           if (!ct) return;
-          const cports = toArray(ct.ports);
-          const cp = cports.find((p) => p.guid === port.guid);
+          const cconnectors = toArray(ct.connectors);
+          const cp = cconnectors.find((p) => p.guid === connector.guid);
           if (!cp) return;
           cp.name = generateUniqueName(name, allNames);
         });
         issues.push({
-          ruleId: "port-name-unique",
+          ruleId: "connector-name-unique",
           severity: "error",
-          message: `Duplicate port name "${name}" inside type "${type?.name}".`,
-          location: { entityKind: "Port", entityGuid: port.guid, field: "name" },
+          message: `Duplicate connector name "${name}" inside type "${type?.name}".`,
+          location: { entityKind: "Connector", entityGuid: connector.guid, field: "name" },
           relatedGuids: list.map((p) => p.guid),
           fixes: [fix],
         });
@@ -7514,7 +7514,7 @@ export const semioPortNameUniquenessRule: SemioValidationRule = (ctx) => {
   return issues;
 };
 
-// #endregion Rule: Port name uniqueness within type
+// #endregion Rule: Connector name uniqueness within type
 
 // #region Rule: Model name uniqueness within type
 

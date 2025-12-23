@@ -53,7 +53,7 @@ The pan performance issue (2-3 seconds instead of <150ms) is NOT a state managem
 ## Additional Optimizations Made
 
 1. Added stable selectors for SceneContent:
-   - `selectTypePorts = (type) => type.ports`
+   - `selectTypePorts = (type) => type.connectors`
    - `selectTypeGuid = (type) => type.guid`
    - Removed `useKit()` - only used for existence check, replaced with `kitCommands !== null`
 

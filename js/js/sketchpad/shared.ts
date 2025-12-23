@@ -120,10 +120,10 @@ export function createAction(execute: () => void, canExecute: boolean): ActionFi
     execute: canExecute
       ? execute
       : () => {
-          if (process.env.NODE_ENV === "development") {
-            console.warn("[DEBUG] Attempted to execute a disabled action");
-          }
-        },
+        if (process.env.NODE_ENV === "development") {
+          console.warn("[DEBUG] Attempted to execute a disabled action");
+        }
+      },
   };
 }
 
@@ -222,7 +222,7 @@ export enum ToolKind {
   SELECTION_SUBTRACTIVE = "selection-subtractive",
   LASSO_RECTANGULAR = "lasso-rectangular",
   LASSO_FREEFORM = "lasso-freeform",
-  PORT = "port",
+  CONNECTOR = "connector",
 }
 
 export enum WindowKind {
@@ -264,7 +264,7 @@ export interface FileProvider {
   getUrl: (kitId: string, fileId: string, path: string) => string;
 }
 
-export interface MemoryFileProviderConfig {}
+export interface MemoryFileProviderConfig { }
 
 export interface LocalFileProviderConfig {
   dbName?: string;
@@ -571,7 +571,7 @@ export interface AppConfig {
   order?: number;
 }
 
-export interface AppRegistration extends AppConfig {}
+export interface AppRegistration extends AppConfig { }
 
 // #endregion App Registry
 
@@ -1202,7 +1202,7 @@ export function getValueAtPath(root: Y.Map<any> | Y.Array<any>, path: YPath): an
 
 export function createPathObserver(root: Y.Map<any>, path: YPath, subscribe: Subscribe): Disposable {
   if (path.length === 0) {
-    const callback = () => subscribe(() => {});
+    const callback = () => subscribe(() => { });
     root.observeDeep(callback);
     return () => root.unobserveDeep(callback);
   }
@@ -1214,7 +1214,7 @@ export function createPathObserver(root: Y.Map<any>, path: YPath, subscribe: Sub
     const newJson = JSON.stringify(newValue instanceof Y.Map || newValue instanceof Y.Array ? newValue.toJSON() : newValue);
     if (lastJson !== newJson) {
       lastValue = newValue;
-      subscribe(() => {});
+      subscribe(() => { });
     }
   };
   const setupObservers = (current: any, remainingPath: YPath, depth: number) => {
@@ -1305,7 +1305,7 @@ export class DerivedNode<T> {
     this.unsubscribers = this.deps.map((d) =>
       d.store.onPathChanged(d.path, () => {
         this.recompute();
-        return () => {};
+        return () => { };
       }),
     );
     this.recompute();
@@ -1686,7 +1686,7 @@ export interface KitAppHooks {
 }
 
 const defaultDesignAppHooks: DesignAppHooks = {
-  useDesignAppCommands: () => ({ togglePanel: () => {}, execute: () => Promise.resolve({}) }),
+  useDesignAppCommands: () => ({ togglePanel: () => { }, execute: () => Promise.resolve({}) }),
   useDesignAppDiff: () => ({}),
   useDesignAppHover: () => undefined,
   useDesignAppIsPieceHovered: () => false,
@@ -1699,7 +1699,7 @@ const defaultDesignAppHooks: DesignAppHooks = {
 };
 
 const defaultKitAppHooks: KitAppHooks = {
-  useKitAppCommands: () => ({ togglePanel: () => {}, execute: () => Promise.resolve({}) }),
+  useKitAppCommands: () => ({ togglePanel: () => { }, execute: () => Promise.resolve({}) }),
 };
 
 let registeredDesignAppHooks: DesignAppHooks | null = null;

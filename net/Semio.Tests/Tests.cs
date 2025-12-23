@@ -38,7 +38,7 @@ public class KitTests
         var kitOriginal = JsonConvert.DeserializeObject<Kit>(kitOriginalJson);
         Assert.NotNull(kitOriginal);
 
-        
+
         kitOriginal!.Designs = kitOriginal.Designs.Where(d => d.Parent == null).ToList();
 
         var kitDiffJson = System.IO.File.ReadAllText(Path.Combine(AssetsPath, "diff_kit_metabolism.json"));
@@ -53,19 +53,19 @@ public class KitTests
         var kitDiffed = JsonConvert.DeserializeObject<Kit>(kitDiffedJson);
         Assert.NotNull(kitDiffed);
 
-        
+
         var appliedForward = kitOriginal.ApplyDiff(kitDiff!);
         Assert.NotNull(appliedForward);
 
-        
+
         Assert.Equal(kitDiffed!.Name, appliedForward.Name);
         Assert.Equal(kitDiffed.Version, appliedForward.Version);
 
-        
+
         var appliedInverse = appliedForward.ApplyDiff(kitDiffInverted!);
         Assert.NotNull(appliedInverse);
 
-        
+
         Assert.Equal(kitOriginal.Name, appliedInverse.Name);
         Assert.Equal(kitOriginal.Version, appliedInverse.Version);
     }
@@ -90,13 +90,13 @@ public class KitTests
     [Fact]
     public void Validation_MatchesExpectedOutput()
     {
-        
+
         var validKitJson = System.IO.File.ReadAllText(Path.Combine(AssetsPath, "kit_metabolism.json"));
         var validKit = JsonConvert.DeserializeObject<Kit>(validKitJson);
         Assert.NotNull(validKit);
         Assert.False(SemioValidator.ValidateKit(validKit!).HasErrors());
 
-        
+
         var invalidKitJson = System.IO.File.ReadAllText(KitInvalidPath);
         var invalidKit = JsonConvert.DeserializeObject<Kit>(invalidKitJson);
         Assert.NotNull(invalidKit);
@@ -120,26 +120,26 @@ public class FlattenDesignTests
     private static readonly string AssetsPath = "../../../../../assets/semio";
     private const float TOLERANCE = 0.001f;
 
-    private static Plane ComputeChildPlane(Plane parentPlane, Point parentPort, Vector parentDirection,
-        Point childPort, Vector childDirection,
+    private static Plane ComputeChildPlane(Plane parentPlane, Point parentConnector, Vector parentDirection,
+        Point childConnector, Vector childDirection,
         float gap, float shift, float rise,
         float rotation, float turn, float tilt)
     {
-        
+
         var parentXVec = new float[] { parentPlane.XAxis.X, parentPlane.XAxis.Y, parentPlane.XAxis.Z };
         var parentYVec = new float[] { parentPlane.YAxis.X, parentPlane.YAxis.Y, parentPlane.YAxis.Z };
-        
+
         var parentZVec = Cross(parentXVec, parentYVec);
 
-        
-        var worldPortPos = new float[]
+
+        var worldConnectorPos = new float[]
         {
-            parentPlane.Origin.X + parentPort.X * parentXVec[0] + parentPort.Y * parentYVec[0] + parentPort.Z * parentZVec[0],
-            parentPlane.Origin.Y + parentPort.X * parentXVec[1] + parentPort.Y * parentYVec[1] + parentPort.Z * parentZVec[1],
-            parentPlane.Origin.Z + parentPort.X * parentXVec[2] + parentPort.Y * parentYVec[2] + parentPort.Z * parentZVec[2]
+            parentPlane.Origin.X + parentConnector.X * parentXVec[0] + parentConnector.Y * parentYVec[0] + parentConnector.Z * parentZVec[0],
+            parentPlane.Origin.Y + parentConnector.X * parentXVec[1] + parentConnector.Y * parentYVec[1] + parentConnector.Z * parentZVec[1],
+            parentPlane.Origin.Z + parentConnector.X * parentXVec[2] + parentConnector.Y * parentYVec[2] + parentConnector.Z * parentZVec[2]
         };
 
-        
+
         var worldDir = new float[]
         {
             parentDirection.X * parentXVec[0] + parentDirection.Y * parentYVec[0] + parentDirection.Z * parentZVec[0],
@@ -148,16 +148,16 @@ public class FlattenDesignTests
         };
         Normalize(worldDir);
 
-        
+
         var translated = new float[]
         {
-            worldPortPos[0] + gap * worldDir[0],
-            worldPortPos[1] + gap * worldDir[1],
-            worldPortPos[2] + gap * worldDir[2]
+            worldConnectorPos[0] + gap * worldDir[0],
+            worldConnectorPos[1] + gap * worldDir[1],
+            worldConnectorPos[2] + gap * worldDir[2]
         };
 
-        
-        
+
+
         return new Plane
         {
             Origin = new Point { X = translated[0], Y = translated[1], Z = translated[2] },
@@ -224,7 +224,7 @@ public class FlattenDesignTests
         var kit = JsonConvert.DeserializeObject<Kit>(kitJson);
         Assert.NotNull(kit);
 
-        
+
         Design? design = null;
         string? parentGuid = null;
 
@@ -232,12 +232,12 @@ public class FlattenDesignTests
         {
             if (parentGuid == null)
             {
-                
+
                 design = kit!.Designs.FirstOrDefault(d => d.Name == designName && d.Parent is null);
             }
             else
             {
-                
+
                 design = kit!.Designs.FirstOrDefault(d => d.Name == designName && d.Parent is not null && d.Parent.Guid == parentGuid);
             }
 

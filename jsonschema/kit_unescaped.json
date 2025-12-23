@@ -16,7 +16,10 @@
           "type": "string"
         }
       },
-      "required": ["name", "email"],
+      "required": [
+        "name",
+        "email"
+      ],
       "title": "Author",
       "type": "object"
     },
@@ -32,7 +35,7 @@
         },
         "gap": {
           "default": 0,
-          "description": "↕️ The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece. ",
+          "description": "↕️ The optional longitudinal gap (applied after rotation and tilt in connector direction) between the connected and the connecting piece. ",
           "title": "Gap",
           "type": "number"
         },
@@ -44,13 +47,13 @@
         },
         "rise": {
           "default": 0,
-          "description": "🪜 The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
+          "description": "🪜 The optional vertical rise in connector direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
           "title": "Rise",
           "type": "number"
         },
         "rotation": {
           "default": 0,
-          "description": "🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
+          "description": "🔄 The optional horizontal rotation in connector direction between the connected and the connecting piece in degrees.",
           "exclusiveMaximum": 360.0,
           "minimum": 0.0,
           "title": "Rotation",
@@ -58,7 +61,7 @@
         },
         "turn": {
           "default": 0,
-          "description": "🛞 The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
+          "description": "🛞 The optional turn perpendicular to the connector direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
           "exclusiveMaximum": 360.0,
           "minimum": 0.0,
           "title": "Turn",
@@ -66,7 +69,7 @@
         },
         "tilt": {
           "default": 0,
-          "description": "↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
+          "description": "↗️ The optional horizontal tilt perpendicular to the connector direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
           "exclusiveMaximum": 360.0,
           "minimum": 0.0,
           "title": "Tilt",
@@ -93,7 +96,10 @@
           "description": "🧲 The connecting side of the connection."
         }
       },
-      "required": ["connected", "connecting"],
+      "required": [
+        "connected",
+        "connecting"
+      ],
       "title": "Connection",
       "type": "object"
     },
@@ -189,7 +195,9 @@
           "type": "array"
         }
       },
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "title": "Design",
       "type": "object"
     },
@@ -207,7 +215,10 @@
           "type": "number"
         }
       },
-      "required": ["u", "v"],
+      "required": [
+        "u",
+        "v"
+      ],
       "title": "Coord",
       "type": "object"
     },
@@ -279,7 +290,9 @@
           "type": "array"
         }
       },
-      "required": ["type"],
+      "required": [
+        "type"
+      ],
       "title": "Piece",
       "type": "object"
     },
@@ -299,7 +312,11 @@
           "description": "➡️ The y-axis of the plane."
         }
       },
-      "required": ["origin", "xAxis", "yAxis"],
+      "required": [
+        "origin",
+        "xAxis",
+        "yAxis"
+      ],
       "title": "Plane",
       "type": "object"
     },
@@ -322,50 +339,54 @@
           "type": "number"
         }
       },
-      "required": ["x", "y", "z"],
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
       "title": "Point",
       "type": "object"
     },
-    "PortId": {
-      "description": "🪪 The props to identify the port within the parent type.",
+    "ConnectorId": {
+      "description": "🪪 The props to identify the connector within the parent type.",
       "properties": {
         "id_": {
           "default": "",
-          "description": "🆔 The id of the port.",
+          "description": "🆔 The id of the connector.",
           "maxLength": 128,
           "title": "Id",
           "type": "string"
         }
       },
-      "title": "PortId",
+      "title": "ConnectorId",
       "type": "object"
     },
-    "Port": {
-      "description": "🔌 A port is a connection point (with a direction) of a type.",
+    "Connector": {
+      "description": "🔌 A connector is a connection point (with a direction) of a type.",
       "properties": {
         "id_": {
           "default": "",
-          "description": "🆔 The id of the port.",
+          "description": "🆔 The id of the connector.",
           "maxLength": 128,
           "title": "Id",
           "type": "string"
         },
         "description": {
           "default": "",
-          "description": "💬 The optional human-readable description of the port.",
+          "description": "💬 The optional human-readable description of the connector.",
           "maxLength": 2560,
           "title": "Description",
           "type": "string"
         },
         "interface": {
           "default": "",
-          "description": "👨‍👩‍👧‍👦 The optional interface of the port. This allows to define explicit compatibility with other ports.",
+          "description": "👨‍👩‍👧‍👦 The optional interface of the connector. This allows to define explicit compatibility with other connectors.",
           "maxLength": 64,
           "title": "Interface",
           "type": "string"
         },
         "compatibleInterfaces": {
-          "description": "✅ The optional other compatible interfaces of the port. An empty list means this port is compatible with all other ports.",
+          "description": "✅ The optional other compatible interfaces of the connector. An empty list means this connector is compatible with all other connectors.",
           "items": {
             "type": "string"
           },
@@ -374,20 +395,20 @@
         },
         "point": {
           "$ref": "#/$defs/Point",
-          "description": "✖️ The connection point of the port that is attracted to another connection point."
+          "description": "✖️ The connection point of the connector that is attracted to another connection point."
         },
         "direction": {
           "$ref": "#/$defs/Vector",
-          "description": "➡️ The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned."
+          "description": "➡️ The direction of the connector. When another piece connects the direction of the other connector is flipped and then the pieces are aligned."
         },
         "t": {
           "default": 0.0,
-          "description": "💍 The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.",
+          "description": "💍 The parameter t [0,1[ where the connector will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.",
           "title": "T",
           "type": "number"
         },
         "attributes": {
-          "description": "🏷️ The attributes of the port.",
+          "description": "🏷️ The attributes of the connector.",
           "items": {
             "$ref": "#/$defs/Attribute"
           },
@@ -395,8 +416,11 @@
           "type": "array"
         }
       },
-      "required": ["point", "direction"],
-      "title": "Port",
+      "required": [
+        "point",
+        "direction"
+      ],
+      "title": "Connector",
       "type": "object"
     },
     "Attribute": {
@@ -430,7 +454,9 @@
           "type": "string"
         }
       },
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "title": "Attribute",
       "type": "object"
     },
@@ -473,7 +499,10 @@
           "type": "array"
         }
       },
-      "required": ["url", "mime"],
+      "required": [
+        "url",
+        "mime"
+      ],
       "title": "Model",
       "type": "object"
     },
@@ -483,11 +512,14 @@
         "piece": {
           "$ref": "#/$defs/PieceId"
         },
-        "port": {
-          "$ref": "#/$defs/PortId"
+        "connector": {
+          "$ref": "#/$defs/ConnectorId"
         }
       },
-      "required": ["piece", "port"],
+      "required": [
+        "piece",
+        "connector"
+      ],
       "title": "Side",
       "type": "object"
     },
@@ -508,12 +540,14 @@
           "type": "string"
         }
       },
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "title": "TypeId",
       "type": "object"
     },
     "Type": {
-      "description": "🧩 A type is a reusable element that can be connected with other types over ports.",
+      "description": "🧩 A type is a reusable element that can be connected with other types over connectors.",
       "properties": {
         "name": {
           "description": "📛 The name of the type.",
@@ -551,7 +585,7 @@
         },
         "unit": {
           "default": "",
-          "description": "Ⓜ️ The length unit of the point and the direction of the ports of the type.",
+          "description": "Ⓜ️ The length unit of the point and the direction of the connectors of the type.",
           "maxLength": 64,
           "title": "Unit",
           "type": "string"
@@ -575,11 +609,11 @@
           "title": "Models",
           "type": "array"
         },
-        "ports": {
+        "connectors": {
           "items": {
-            "$ref": "#/$defs/Port"
+            "$ref": "#/$defs/Connector"
           },
-          "title": "Ports",
+          "title": "Connectors",
           "type": "array"
         },
         "authors": {
@@ -597,7 +631,9 @@
           "type": "array"
         }
       },
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "title": "Type",
       "type": "object"
     },
@@ -620,7 +656,11 @@
           "type": "number"
         }
       },
-      "required": ["x", "y", "z"],
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
       "title": "Vector",
       "type": "object"
     }
@@ -732,7 +772,10 @@
       "type": "array"
     }
   },
-  "required": ["uri", "name"],
+  "required": [
+    "uri",
+    "name"
+  ],
   "title": "Kit",
   "type": "object"
 }

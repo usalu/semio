@@ -16,7 +16,7 @@ TypeScript compilation had ~70 errors across multiple sketchpad component files 
 
 # Plan
 
-1. [x] Fix Design.tsx errors (location, dates, ports, DiffStatus, reactFlowInstanceRef, connection coordinates)
+1. [x] Fix Design.tsx errors (location, dates, connectors, DiffStatus, reactFlowInstanceRef, connection coordinates)
 2. [x] Fix Kit.tsx errors (concept name lookups, useKitTransaction naming)
 3. [x] Fix elements.tsx errors (translation keys, ActionGroupProps, BreadcrumbItemProps, variant support)
 4. [x] Fix Home.tsx errors (concept handling in KitShallow)
@@ -32,8 +32,8 @@ TypeScript compilation had ~70 errors across multiple sketchpad component files 
 - Used string comparison (`status as string`) for DiffStatus in isSelected block
 - Added null checks and non-null assertions for `lastPostition` and `reactFlowInstanceRef.current`
 - Changed `x`, `y` to `u`, `v` in connection objects to match ConnectionSchema
-- Added optional chaining for `connection.port?.guid`
-- Fixed `port.interface` to use `.guid` property
+- Added optional chaining for `connection.connector?.guid`
+- Fixed `connector.interface` to use `.guid` property
 - Cast deprecated `compatibleInterfaces` access to `any`
 - Fixed parent comparison to use `.guid` property
 
@@ -66,8 +66,8 @@ TypeScript compilation had ~70 errors across multiple sketchpad component files 
 ## Type.tsx
 
 - Fixed `type.parent` to use `.guid` property
-- Fixed port update structure to use `{ port: { guid: id }, diff }`
-- Fixed `port.interface` to use `.guid` property
+- Fixed connector update structure to use `{ connector: { guid: id }, diff }`
+- Fixed `connector.interface` to use `.guid` property
 - Cast deprecated `compatibleInterfaces` to `any`
 
 ## Remaining Issues

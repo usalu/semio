@@ -73,7 +73,7 @@ export const Default: Story = {
         </AccordionItem>
         <AccordionItem value="item-2" disabled={false}>
           <AccordionTrigger>What is a Type?</AccordionTrigger>
-          <AccordionContent>A Type is a reusable component with models, ports, and properties that can be instantiated as pieces in a design. Types can include 3D models, metadata, and connection points for assembly.</AccordionContent>
+          <AccordionContent>A Type is a reusable component with models, connectors, and properties that can be instantiated as pieces in a design. Types can include 3D models, metadata, and connection points for assembly.</AccordionContent>
         </AccordionItem>
         <AccordionItem value="item-3" disabled={false}>
           <AccordionTrigger>What is a Connection?</AccordionTrigger>
@@ -96,7 +96,7 @@ const createLevelRender = (level: Level) => (args: typeof Default.args & { type:
         </AccordionItem>
         <AccordionItem value="item-2" disabled={false}>
           <AccordionTrigger>What is a Type?</AccordionTrigger>
-          <AccordionContent>A Type is a reusable component with models, ports, and properties that can be instantiated as pieces in a design. Types can include 3D models, metadata, and connection points for assembly.</AccordionContent>
+          <AccordionContent>A Type is a reusable component with models, connectors, and properties that can be instantiated as pieces in a design. Types can include 3D models, metadata, and connection points for assembly.</AccordionContent>
         </AccordionItem>
         <AccordionItem value="item-3" disabled={false}>
           <AccordionTrigger>What is a Connection?</AccordionTrigger>

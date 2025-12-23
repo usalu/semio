@@ -58,8 +58,8 @@ async function main() {
     if (modified.types.length > 0) {
       modified.types[0].name = modified.types[0].name + " Modified";
       modified.types[0].description = "Updated description";
-      modified.types[0].ports = modified.types[0].ports || [];
-      modified.types[0].ports.push({
+      modified.types[0].connectors = modified.types[0].connectors || [];
+      modified.types[0].connectors.push({
         guid: guid(),
         name: "new-port",
         point: { x: 1, y: 1, z: 1 },
@@ -77,7 +77,7 @@ async function main() {
       description: "A new type added for testing",
       createdAt: new Date() as any,
       updatedAt: new Date() as any,
-      ports: [
+      connectors: [
         {
           guid: guid(),
           name: "test-port",

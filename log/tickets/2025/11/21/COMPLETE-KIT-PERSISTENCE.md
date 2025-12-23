@@ -28,7 +28,7 @@ Implement 100% data persistence for Kit import/export with:
 ### 1. Complete sqliteToKit() ✅ NEXT
 
 - [x] Kit metadata + concepts + attributes
-- [x] Types + models + tags + ports + props + attributes + concepts
+- [x] Types + models + tags + connectors + props + attributes + concepts
 - [x] Designs + pieces + connections + layers + groups + stats + attributes + concepts
 - [x] Interfaces + compatibility + attributes
 - [x] Qualities + benchmarks + attributes
@@ -40,7 +40,7 @@ Implement 100% data persistence for Kit import/export with:
 - [ ] Use new schema.sql structure
 - [ ] Persist all kit properties
 - [ ] Persist all nested entities (interfaces, qualities, files, folders, authors)
-- [ ] Persist all type sub-entities (models + tags, ports + props)
+- [ ] Persist all type sub-entities (models + tags, connectors + props)
 - [ ] Persist all design sub-entities (pieces + props, connections, layers, groups, stats)
 - [ ] Persist all attributes everywhere
 

@@ -46,10 +46,10 @@ The codebase used `useDesignAppCommands()` hook to access all design app command
   - `useDesignAppAddModelTagForAllTypes`, `useDesignAppRemoveModelTagFromAllTypes`
 
 - Migrated components:
-  - `PortHandle`: Uses `useDesignAppHoverPort` instead of `commands.hoverPort`
+  - `ConnectorHandle`: Uses `useDesignAppHoverPort` instead of `commands.hoverPort`
   - `ConnectionEdgeInner`: Uses `useDesignAppHoverConnection`, `useDesignAppClearHover`
   - `ModelPiece`: Uses selection and hover action hooks
-  - `DesignNodeComponent`: Uses selection, hover, and port selection hooks
+  - `DesignNodeComponent`: Uses selection, hover, and connector selection hooks
   - `DesignDiagram`: Uses all diagram-related action hooks
   - `ModelDesign`: Uses `useDesignAppSelectPieces`
   - `DesignAppScene`: Uses fullscreen, camera, focus, and deselect hooks
@@ -86,7 +86,7 @@ The codebase used `useDesignAppCommands()` hook to access all design app command
 
 ### Action Hooks Created
 
-- Selection: `useTypeAppSelectPort`, `useTypeAppDeselectPort`, `useTypeAppDeselectAll`, `useTypeAppSelectModel`, `useTypeAppDeselectModel`
+- Selection: `useTypeAppSelectConnector`, `useTypeAppDeselectConnector`, `useTypeAppDeselectAll`, `useTypeAppSelectModel`, `useTypeAppDeselectModel`
 - Hover: `useTypeAppHoverPort`, `useTypeAppHoverModel`, `useTypeAppClearHover`
 - Focus: `useTypeAppFocusPort`, `useTypeAppClearFocus`
 - UI: `useTypeAppSetActiveTool`, `useTypeAppSetCamera`, `useTypeAppTogglePanel`
@@ -94,17 +94,17 @@ The codebase used `useDesignAppCommands()` hook to access all design app command
 
 ### UI Components Migrated
 
-- `SceneContent`: selectPort, deselectPort, hoverPort, clearHover, focusPort
+- `SceneContent`: selectConnector, deselectConnector, hoverPort, clearHover, focusPort
 - `Scene`: setCamera, deselectAll, clearFocus
 - `ModelsSectionForm`: selectModel, deselectModel, hoverModel, clearHover
-- `PortsListSectionForm`: selectPort, deselectPort, hoverPort, clearHover
+- `ConnectorsListSectionForm`: selectConnector, deselectConnector, hoverPort, clearHover
 - `ToolsToggleGroup`: setActiveTool
 - `App`: setActiveTool (keyboard handling via useHotkeys)
 - `TypeAppFooter`: addModelTag, removeModelTag
 
 ### Remaining Commands (kit mutations)
 
-- `addPort`, `updatePort`, `deletePort`
+- `addConnector`, `updatePort`, `deletePort`
 - `addModel`, `updateModel`, `deleteModel`
 - `undo`, `redo`
 

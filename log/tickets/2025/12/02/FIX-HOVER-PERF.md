@@ -18,7 +18,7 @@ Root causes identified:
 
 1. `useIsPieceHovered()` called `useDesignAppHover()` which returns the FULL hover object - any hover change caused ALL pieces to re-render
 2. `useDesignAppIsPieceTransitiveHovered()` used `useSync` subscribing to ALL store changes instead of just hover field
-3. `PortHandle` component used `useDesignAppHover()` directly - every port re-rendered on any hover change
+3. `ConnectorHandle` component used `useDesignAppHover()` directly - every connector re-rendered on any hover change
 4. `PieceNodeComponent` and `DesignNodeComponent` used `useDesignAppSelection()` for checking isSelected - all nodes re-rendered on any selection change
 
 # Plan
@@ -27,7 +27,7 @@ Root causes identified:
 2. ✅ Fix `useIsPieceHovered` to use granular subscription instead of full hover object
 3. ✅ Fix `useDesignAppIsPieceTransitiveHovered` to use `useSyncField` with "hover" key
 4. ✅ Fix `useIsPieceTransitiveHovered` and `useIsConnectionHovered` similarly
-5. ✅ Add granular hooks for port hover and port selection
+5. ✅ Add granular hooks for connector hover and connector selection
 6. ✅ Fix `PieceNodeComponent` and `DesignNodeComponent` to use granular hooks
 7. ✅ Add hover performance test to verify 100ms hover/unhover timing
 
@@ -35,16 +35,16 @@ Root causes identified:
 
 ## Design.tsx
 
-- Added `useDesignAppIsPortHovered(id, pieceId, portId)` - granular hook for port hover state
-- Added `useDesignAppSelectedPort(id)` - granular hook for selected port only
+- Added `useDesignAppIsPortHovered(id, pieceId, connectorId)` - granular hook for connector hover state
+- Added `useDesignAppSelectedConnector(id)` - granular hook for selected connector only
 - Fixed `useDesignAppIsPieceTransitiveHovered` to use `useSyncField("hover", ...)` instead of `useSync`
 - Fixed `useDesignAppIsTypeTransitiveHovered` similarly
-- Fixed `PortHandle` to use `useDesignAppIsPortHovered` instead of full hover object
+- Fixed `ConnectorHandle` to use `useDesignAppIsPortHovered` instead of full hover object
 - Fixed `PieceNodeComponent` to use:
   - `useDesignAppIsPieceSelected(undefined, guid)` for isSelected
-  - `useDesignAppSelectedPort()` instead of full selection
+  - `useDesignAppSelectedConnector()` instead of full selection
 - Fixed `DesignNodeComponent` similarly
-- Updated `PieceNodeInnerProps` and `DesignNodeInnerProps` to use `selectedPort` instead of `selection`
+- Updated `PieceNodeInnerProps` and `DesignNodeInnerProps` to use `selectedConnector` instead of `selection`
 
 ## Sketchpad.tsx
 

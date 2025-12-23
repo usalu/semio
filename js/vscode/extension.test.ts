@@ -55,7 +55,7 @@ suite("Extension Test Suite", () => {
       "interface-name-unique",
       "file-name-unique",
       "folder-name-unique",
-      "port-name-unique",
+      "connector-name-unique",
       "model-name-unique",
       "layer-path-unique",
     ];

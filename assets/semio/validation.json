@@ -155,7 +155,7 @@
                         "piece": {
                           "guid": "019ab664-4444-4444-4444-444444444444"
                         },
-                        "port": {
+                        "connector": {
                           "guid": "019ab664-AAAA-AAAA-AAAA-AAAAAAAAAAAA"
                         }
                       },
@@ -163,7 +163,7 @@
                         "piece": {
                           "guid": "019ab664-5555-5555-5555-555555555555"
                         },
-                        "port": {
+                        "connector": {
                           "guid": "019ab664-AAAA-AAAA-AAAA-AAAAAAAAAAAA"
                         }
                       }
@@ -324,14 +324,14 @@
       ]
     },
     {
-      "ruleId": "port-name-unique",
+      "ruleId": "connector-name-unique",
       "severity": "error",
-      "message": "Duplicate port name \"Duplicate Port Name\" inside type \"Duplicate Type Name\".",
-      "entityKind": "Port",
+      "message": "Duplicate connector name \"Duplicate Connector Name\" inside type \"Duplicate Type Name\".",
+      "entityKind": "Connector",
       "entityGuid": "019ab664-BBBB-BBBB-BBBB-BBBBBBBBBBBB",
       "fixes": [
         {
-          "title": "Rename port \"Duplicate Port Name\"",
+          "title": "Rename connector \"Duplicate Connector Name\"",
           "diff": {
             "types": {
               "updated": [
@@ -340,14 +340,14 @@
                     "guid": "019ab664-1111-1111-1111-111111111111"
                   },
                   "diff": {
-                    "ports": {
+                    "connectors": {
                       "updated": [
                         {
-                          "port": {
+                          "connector": {
                             "guid": "019ab664-BBBB-BBBB-BBBB-BBBBBBBBBBBB"
                           },
                           "diff": {
-                            "name": "Duplicate Port Name 2"
+                            "name": "Duplicate Connector Name 2"
                           }
                         }
                       ]

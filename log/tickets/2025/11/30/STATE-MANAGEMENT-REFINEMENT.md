@@ -42,7 +42,7 @@ Updated hooks to use granular subscriptions:
 - `useTypeAppSelection` - subscribes to "selection" field
 - `useTypeAppPanelVisibility` - subscribes to "panelVisibility" field
 - `useTypeAppCamera` - subscribes to "camera" field (shallow)
-- `useTypeAppFocusedPortGuid` - subscribes to "focusedPortGuid" field (shallow)
+- `useTypeAppFocusedConnectorGuid` - subscribes to "focusedConnectorGuid" field (shallow)
 - `useTypeAppHover` - subscribes to "hover" field
 - `useTypeAppActiveTool` - subscribes to "activeTool" field (shallow)
 - `useTypeAppIsPortSelected` - subscribes to "selection" field

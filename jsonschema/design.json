@@ -16,7 +16,10 @@
           "type": "string"
         }
       },
-      "required": ["name", "email"],
+      "required": [
+        "name",
+        "email"
+      ],
       "title": "Author",
       "type": "object"
     },
@@ -32,7 +35,7 @@
         },
         "gap": {
           "default": 0,
-          "description": "\u2195\ufe0f The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece. ",
+          "description": "\u2195\ufe0f The optional longitudinal gap (applied after rotation and tilt in connector direction) between the connected and the connecting piece. ",
           "title": "Gap",
           "type": "number"
         },
@@ -44,13 +47,13 @@
         },
         "rise": {
           "default": 0,
-          "description": "\ud83e\ude9c The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
+          "description": "\ud83e\ude9c The optional vertical rise in connector direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
           "title": "Rise",
           "type": "number"
         },
         "rotation": {
           "default": 0,
-          "description": "\ud83d\udd04 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
+          "description": "\ud83d\udd04 The optional horizontal rotation in connector direction between the connected and the connecting piece in degrees.",
           "exclusiveMaximum": 360,
           "minimum": 0,
           "title": "Rotation",
@@ -58,7 +61,7 @@
         },
         "turn": {
           "default": 0,
-          "description": "\ud83d\udede The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
+          "description": "\ud83d\udede The optional turn perpendicular to the connector direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
           "exclusiveMaximum": 360,
           "minimum": 0,
           "title": "Turn",
@@ -66,7 +69,7 @@
         },
         "tilt": {
           "default": 0,
-          "description": "\u2197\ufe0f The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
+          "description": "\u2197\ufe0f The optional horizontal tilt perpendicular to the connector direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
           "exclusiveMaximum": 360,
           "minimum": 0,
           "title": "Tilt",
@@ -93,7 +96,10 @@
           "description": "\ud83e\uddf2 The connecting side of the connection."
         }
       },
-      "required": ["connected", "connecting"],
+      "required": [
+        "connected",
+        "connecting"
+      ],
       "title": "Connection",
       "type": "object"
     },
@@ -111,7 +117,10 @@
           "type": "number"
         }
       },
-      "required": ["u", "v"],
+      "required": [
+        "u",
+        "v"
+      ],
       "title": "Coord",
       "type": "object"
     },
@@ -129,7 +138,10 @@
           "type": "number"
         }
       },
-      "required": ["longitude", "latitude"],
+      "required": [
+        "longitude",
+        "latitude"
+      ],
       "title": "Location",
       "type": "object"
     },
@@ -201,7 +213,9 @@
           "type": "array"
         }
       },
-      "required": ["type"],
+      "required": [
+        "type"
+      ],
       "title": "Piece",
       "type": "object"
     },
@@ -221,7 +235,11 @@
           "description": "\u27a1\ufe0f The y-axis of the plane."
         }
       },
-      "required": ["origin", "xAxis", "yAxis"],
+      "required": [
+        "origin",
+        "xAxis",
+        "yAxis"
+      ],
       "title": "Plane",
       "type": "object"
     },
@@ -244,22 +262,26 @@
           "type": "number"
         }
       },
-      "required": ["x", "y", "z"],
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
       "title": "Point",
       "type": "object"
     },
-    "PortId": {
-      "description": "\ud83e\udeaa The props to identify the port within the parent type.",
+    "ConnectorId": {
+      "description": "\ud83e\udeaa The props to identify the connector within the parent type.",
       "properties": {
         "id_": {
           "default": "",
-          "description": "\ud83c\udd94 The id of the port.",
+          "description": "\ud83c\udd94 The id of the connector.",
           "maxLength": 128,
           "title": "Id",
           "type": "string"
         }
       },
-      "title": "PortId",
+      "title": "ConnectorId",
       "type": "object"
     },
     "Attribute": {
@@ -293,7 +315,9 @@
           "type": "string"
         }
       },
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "title": "Attribute",
       "type": "object"
     },
@@ -303,11 +327,14 @@
         "piece": {
           "$ref": "#/$defs/PieceId"
         },
-        "port": {
-          "$ref": "#/$defs/PortId"
+        "connector": {
+          "$ref": "#/$defs/ConnectorId"
         }
       },
-      "required": ["piece", "port"],
+      "required": [
+        "piece",
+        "connector"
+      ],
       "title": "Side",
       "type": "object"
     },
@@ -328,7 +355,9 @@
           "type": "string"
         }
       },
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "title": "TypeId",
       "type": "object"
     },
@@ -351,7 +380,11 @@
           "type": "number"
         }
       },
-      "required": ["x", "y", "z"],
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
       "title": "Vector",
       "type": "object"
     }
@@ -458,7 +491,9 @@
       "type": "array"
     }
   },
-  "required": ["name"],
+  "required": [
+    "name"
+  ],
   "title": "Design",
   "type": "object"
 }

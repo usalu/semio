@@ -59,7 +59,7 @@ JSON-aware linter:
 9. ✅ Implement interface name uniqueness rule
 10. ✅ Implement file name uniqueness rule
 11. ✅ Implement folder name uniqueness rule
-12. ✅ Implement port name uniqueness rule
+12. ✅ Implement connector name uniqueness rule
 13. ✅ Implement model name uniqueness rule
 14. ✅ Implement layer path uniqueness rule
 15. ✅ Register all default rules
@@ -91,7 +91,7 @@ All implemented rules follow the same pattern:
 | `interface-name-unique` | Global        | name  | ✅ Implemented |
 | `file-name-unique`      | Global        | name  | ✅ Implemented |
 | `folder-name-unique`    | Siblings      | name  | ✅ Implemented |
-| `port-name-unique`      | Within type   | name  | ✅ Implemented |
+| `connector-name-unique` | Within type   | name  | ✅ Implemented |
 | `model-name-unique`     | Within type   | name  | ✅ Implemented |
 | `layer-path-unique`     | Within design | path  | ✅ Implemented |
 

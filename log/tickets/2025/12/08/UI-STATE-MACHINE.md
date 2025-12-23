@@ -34,7 +34,7 @@ However, the machine is "flat" - all events are handled at the root level withou
      - `interaction`: Idle → Hovered → Selected + context menu substates
      - `panels`: Manages panel visibility
      - `tool`: Active tool state (for Design/Type)
-   - Context menu substates for specific entity types (Piece, Connection, Type, Design, Port, etc.)
+   - Context menu substates for specific entity types (Piece, Connection, Type, Design, Connector, etc.)
 3. Add proper guards for state transitions
 4. Keep the existing data management (Y.js sync) in `sketchpadMachine`, this new machine focuses on UI states
 

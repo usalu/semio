@@ -43,9 +43,9 @@ Complete GUID-based schema (22 tables) embedded in `kitToSqlite()`:
 
 - `semio`, `kit` - Core metadata
 - `quality`, `benchmark` - Quality system
-- `interface`, `interface_compatibility` - Port compatibility
+- `interface`, `interface_compatibility` - Connector compatibility
 - `folder`, `file`, `author` - Assets and attribution
-- `type`, `model`, `model_tag`, `port`, `prop` - Type hierarchy
+- `type`, `model`, `model_tag`, `connector`, `prop` - Type hierarchy
 - `design`, `layer`, `piece`, `piece_prop`, `group`, `group_piece`, `connection`, `stat` - Design hierarchy
 - `concept`, `type_concept`, `design_concept`, `attribute` - Metadata
 
@@ -68,7 +68,7 @@ Complete GUID-based schema (22 tables) embedded in `kitToSqlite()`:
 
 4. **Data Format Consistency**
    - Used `toArray()` helper throughout to handle object|array|undefined
-   - Applied to authors, attributes, concepts, models, ports, pieces, connections, etc.
+   - Applied to authors, attributes, concepts, models, connectors, pieces, connections, etc.
 
 ### Test Coverage
 
@@ -131,7 +131,7 @@ execResult("SELECT * FROM type WHERE kit_guid = ?", [kit.guid]);
 
 1. ✅ Remove debug statements - DONE
 2. ✅ Convert throw to return false in areKitsEqual - DONE
-3. ⏭️ Enhance deep equality for nested entities (models, ports, pieces, connections)
+3. ⏭️ Enhance deep equality for nested entities (models, connectors, pieces, connections)
 4. ⏭️ Update kit commands in Sketchpad to use new import/export
 5. ⏭️ Add more test coverage for edge cases
 

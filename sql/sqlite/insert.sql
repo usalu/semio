@@ -50,12 +50,12 @@ INSERT INTO model (guid, file, name, description, type_guid) VALUES (?, ?, ?, ?,
 INSERT INTO model_tag (model_guid, tag) VALUES (?, ?);
 
 -- Prop
--- Parameters: guid, key, value, unit, quality_guid, port_guid
-INSERT INTO prop (guid, key, value, unit, quality_guid, port_guid) VALUES (?, ?, ?, ?, ?, ?);
+-- Parameters: guid, key, value, unit, quality_guid, connector_guid
+INSERT INTO prop (guid, key, value, unit, quality_guid, connector_guid) VALUES (?, ?, ?, ?, ?, ?);
 
--- Port
+-- Connector
 -- Parameters: guid, name, point_x, point_y, point_z, direction_x, direction_y, direction_z, t, mandatory, interface_guid, description, type_guid
-INSERT INTO port (guid, name, point_x, point_y, point_z, direction_x, direction_y, direction_z, t, mandatory, interface_guid, description, type_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT INTO connector (guid, name, point_x, point_y, point_z, direction_x, direction_y, direction_z, t, mandatory, interface_guid, description, type_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 -- Design
 -- Parameters: guid, name, parent_guid, variant, view_center_u, view_center_v, view_zoom, unit, location_guid, active_layer_guid, description, icon, image, created, updated, kit_guid
@@ -82,8 +82,8 @@ INSERT INTO "group" (guid, name, color, description, design_guid) VALUES (?, ?, 
 INSERT INTO group_piece (group_guid, piece_guid) VALUES (?, ?);
 
 -- Connection
--- Parameters: guid, connected_piece_guid, connected_design_piece_guid, connected_port_guid, connecting_piece_guid, connecting_design_piece_guid, connecting_port_guid, gap, shift, rise, rotation, turn, tilt, u, v, description, design_guid
-INSERT INTO connection (guid, connected_piece_guid, connected_design_piece_guid, connected_port_guid, connecting_piece_guid, connecting_design_piece_guid, connecting_port_guid, gap, shift, rise, rotation, turn, tilt, u, v, description, design_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+-- Parameters: guid, connected_piece_guid, connected_design_piece_guid, connected_connector_guid, connecting_piece_guid, connecting_design_piece_guid, connecting_connector_guid, gap, shift, rise, rotation, turn, tilt, u, v, description, design_guid
+INSERT INTO connection (guid, connected_piece_guid, connected_design_piece_guid, connected_connector_guid, connecting_piece_guid, connecting_design_piece_guid, connecting_connector_guid, gap, shift, rise, rotation, turn, tilt, u, v, description, design_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 -- Stat
 -- Parameters: guid, quality_guid, min_value, max_value, unit, design_guid
@@ -102,5 +102,5 @@ INSERT INTO type_concept (type_guid, concept) VALUES (?, ?);
 INSERT INTO design_concept (design_guid, concept) VALUES (?, ?);
 
 -- Attribute
--- Parameters: guid, key, value, definition, quality_guid, benchmark_guid, interface_guid, folder_guid, file_guid, author_guid, model_guid, prop_guid, port_guid, type_guid, layer_guid, piece_guid, group_guid, connection_guid, stat_guid, design_guid, kit_guid
-INSERT INTO attribute (guid, key, value, definition, quality_guid, benchmark_guid, interface_guid, folder_guid, file_guid, author_guid, model_guid, prop_guid, port_guid, type_guid, layer_guid, piece_guid, group_guid, connection_guid, stat_guid, design_guid, kit_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+-- Parameters: guid, key, value, definition, quality_guid, benchmark_guid, interface_guid, folder_guid, file_guid, author_guid, model_guid, prop_guid, connector_guid, type_guid, layer_guid, piece_guid, group_guid, connection_guid, stat_guid, design_guid, kit_guid
+INSERT INTO attribute (guid, key, value, definition, quality_guid, benchmark_guid, interface_guid, folder_guid, file_guid, author_guid, model_guid, prop_guid, connector_guid, type_guid, layer_guid, piece_guid, group_guid, connection_guid, stat_guid, design_guid, kit_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);

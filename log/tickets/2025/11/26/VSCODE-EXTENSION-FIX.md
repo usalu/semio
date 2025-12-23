@@ -16,7 +16,7 @@ The VS Code extension for semio was not showing validation errors on invalid kit
 
 Issues identified:
 
-1. The `kit_invalid.json` fixture had an outdated schema (missing required fields like `guid` for models, `t` for ports, `guid` for layers, `name` instead of `path` for files/folders, etc.)
+1. The `kit_invalid.json` fixture had an outdated schema (missing required fields like `guid` for models, `t` for connectors, `guid` for layers, `name` instead of `path` for files/folders, etc.)
 2. The VS Code extension tests were not being built - only `extension.ts` was compiled to `out/`, but `extension.test.ts` was not
 3. Missing test dependencies (`@vscode/test-cli`, `@vscode/test-electron`, `@types/mocha`)
 4. Incorrect path resolution in test file pointing to fixture
@@ -33,13 +33,13 @@ Issues identified:
 
 ## 1. Fixed `assets/semio/kit_invalid.json`
 
-- Added `t` property to ports (required)
+- Added `t` property to connectors (required)
 - Added `guid` and `file` properties to models (required)
 - Added `guid` property to layers (required)
 - Changed `path` to `name` for files and folders
 - Changed `remoteUrl` to `remote` for files
 - Changed `type` in pieces from string to object with `guid`
-- Changed `piece` and `port` in connections to objects with `guid`
+- Changed `piece` and `connector` in connections to objects with `guid`
 - Moved `connections` inside the design (where they belong)
 
 ## 2. Added validation tests to `js/js/semio.test.ts`

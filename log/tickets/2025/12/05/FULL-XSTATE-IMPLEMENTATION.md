@@ -86,7 +86,7 @@ Current state:
   - Extended `TypeAppState` with `activeTool`, `fullscreenWindow`, `selectedModelGuid`, `windowLayout`
 - Added comprehensive events for all apps:
   - Kit: `SELECT_TYPE`, `DESELECT_TYPE`, `SELECT_DESIGN`, `DESELECT_DESIGN`, `SET_SELECTION`, `CLEAR_SELECTION`, `SET_HOVER`, `CLEAR_HOVER`
-  - Type: `SET_ACTIVE_TOOL`, `SET_SELECTION`, `CLEAR_SELECTION`, `SELECT_PORT`, `DESELECT_PORT`, `SET_HOVER`, `CLEAR_HOVER`, `SET_MODEL_TAGS`
+  - Type: `SET_ACTIVE_TOOL`, `SET_SELECTION`, `CLEAR_SELECTION`, `SELECT_CONNECTOR`, `DESELECT_CONNECTOR`, `SET_HOVER`, `CLEAR_HOVER`, `SET_MODEL_TAGS`
   - Design: `SELECT_ALL`, `DELETE_SELECTED`
   - Transaction: `START`, `COMMIT`, `ABORT`, `UNDO`, `REDO`
 - Added corresponding actions for all new events
@@ -101,7 +101,7 @@ Created new file with clean React hooks that use XState selectors:
 
 - Home: `useHomeApp`, `useHomePanelVisibility`, `useHomeSelection`, `useHomeHover`, `useHomeSortColumn`, `useHomeSortDirection`, `useHomeLoadingKits`, `useHomeCommands`
 - Kit: `useKitApp`, `useKitPanelVisibility`, `useKitSelection`, `useKitHover`, `useKitFilterSearch`, `useKitExpandedRows`, `useKitAppCommands`
-- Type: `useTypeApp`, `useTypePanelVisibility`, `useTypeSelection`, `useTypeHover`, `useTypeFocusedPort`, `useTypeSelectedModelTags`, `useTypeCamera`, `useTypeActiveTool`, `useTypeFullscreenWindow`, `useTypeAppCommands`
+- Type: `useTypeApp`, `useTypePanelVisibility`, `useTypeSelection`, `useTypeHover`, `useTypeFocusedConnector`, `useTypeSelectedModelTags`, `useTypeCamera`, `useTypeActiveTool`, `useTypeFullscreenWindow`, `useTypeAppCommands`
 - Design: `useDesignApp`, `useDesignPanelVisibility`, `useDesignSelection`, `useDesignHover`, `useDesignFocusedPiece`, `useDesignSelectedModelTags`, `useDesignDiagramCenter`, `useDesignDiagramScale`, `useDesignCamera`, `useDesignActiveTool`, `useDesignFullscreenWindow`, `useDesignAppCommands`
 - Utilities: `useIsPieceSelected`, `useIsPieceHovered`, `useIsConnectionSelected`, `useIsConnectionHovered`, `useIsPortSelected`, `useIsPortHovered`
 - Exports `SketchpadActorContext` for use by Sketchpad.tsx

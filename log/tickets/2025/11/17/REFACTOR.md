@@ -432,7 +432,7 @@ if (typeof window !== "undefined") {
 | App         | Needs Tools? | Why?                                               |
 | ----------- | ------------ | -------------------------------------------------- |
 | **design**  | ✅ Yes       | Multiple interaction modes (select, connect, etc.) |
-| **type**    | ✅ Yes       | Port placement, model selection                    |
+| **type**    | ✅ Yes       | Connector placement, model selection               |
 | **kit**     | ✅ Yes       | Artifact creation/editing modes                    |
 | **quality** | ✅ Yes       | Formula editing modes                              |
 | **home**    | ❌ No        | Single interaction mode (select kits)              |

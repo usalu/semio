@@ -85,7 +85,7 @@ The sketchpad currently uses multiple diagram implementations across apps.
 - Migrate each app.
   - `Design.tsx` migration
     - Replace node drag updates with Semio `onNodeDrag` events in u/v.
-    - Replace handle definitions with `t`-based handles (port `t` mapping).
+    - Replace handle definitions with `t`-based handles (connector `t` mapping).
     - Replace reactflow portals with diagram overlay support from `elements.tsx`.
     - Preserve helper lines, clustering overlays, and presence cursor rendering.
   - `Kit.tsx` migration
@@ -116,7 +116,7 @@ The sketchpad currently uses multiple diagram implementations across apps.
     - ReactFlow-dependent components.
       - Node renderers.
         - `PieceNodeComponent` and `DesignNodeComponent` (reactflow `NodeProps` usage).
-        - `DesignNodeInner` renders ports via `PortHandle` and uses reactflow `Handle` ids for port lookup.
+        - `DesignNodeInner` renders connectors via `ConnectorHandle` and uses reactflow `Handle` ids for connector lookup.
       - Edge renderers.
         - `ConnectionEdgeComponent` / `ConnectionEdgeInner` / `ConnectionEdgeFallback` (reactflow `EdgeProps`, `BaseEdge`).
         - `ConnectionConnectionLine` (reactflow `ConnectionLineComponentProps`).
@@ -127,7 +127,7 @@ The sketchpad currently uses multiple diagram implementations across apps.
       - `reactFlowInstanceRef.current.setViewport(...)` (restore/persist viewport).
       - `reactFlowInstanceRef.current.getViewport()` (persist center/scale).
       - `reactFlowInstanceRef.current.setNodes(...)` (escape abort refresh).
-      - `reactFlowInstanceRef.current.getInternalNode(...)` and `internals.handleBounds` (drag-time port proximity and connect resolution).
+      - `reactFlowInstanceRef.current.getInternalNode(...)` and `internals.handleBounds` (drag-time connector proximity and connect resolution).
     - DOM coupling to reactflow class names to remove.
       - `querySelector(.react-flow__nodes/.react-flow__edges/.react-flow__viewport)` for pointerEvents and transform parsing.
     - Coordinate conversion currently embedded in app.

@@ -37,8 +37,8 @@ kit.field = results.length > 0 ? results.map(...) : undefined;
 Created `mapOrUndefined` helper function (line 4369) and applied to all attribute mappings:
 
 - Line 4415: model attributes
-- Line 4443: prop attributes (in ports)
-- Line 4451: port attributes
+- Line 4443: prop attributes (in connectors)
+- Line 4451: connector attributes
 - Line 4459: type attributes
 - Line 4523: prop attributes (in pieces)
 - Line 4531: piece attributes
@@ -87,30 +87,30 @@ Added `toArray` helper in `test-roundtrip.mjs` to normalize top-level kit fields
 
 ### ❌ Remaining Issues
 
-#### Port Count Mismatch (Critical)
+#### Connector Count Mismatch (Critical)
 
 **Type**: `cb448d7a-b169-4759-9b74-7ff1ba216b8b` (name: `\`)
 
-- Original JSON: 1 port
-- After import: 4 ports
+- Original JSON: 1 connector
+- After import: 4 connectors
 
-**Hypothesis**: Ports from parent types or other types being incorrectly assigned during export/import.
+**Hypothesis**: Connectors from parent types or other types being incorrectly assigned during export/import.
 
-**Evidence**: This is NOT an empty array issue - both have ports, just different counts.
+**Evidence**: This is NOT an empty array issue - both have connectors, just different counts.
 
 **Investigation needed**:
 
-1. Check if `kitToSqlite` correctly handles port insertion (no duplicates, correct type_guid)
-2. Check if `sqliteToKit` correctly filters ports by type_guid
-3. Check if type hierarchy (parent/child) is causing port inheritance issues
-4. Examine the `\` type in the metabolism JSON to see its actual port structure
+1. Check if `kitToSqlite` correctly handles connector insertion (no duplicates, correct type_guid)
+2. Check if `sqliteToKit` correctly filters connectors by type_guid
+3. Check if type hierarchy (parent/child) is causing connector inheritance issues
+4. Examine the `\` type in the metabolism JSON to see its actual connector structure
 
 ## Next Steps
 
-1. **Debug Port Assignment** - Add logging to track which ports are being inserted/loaded for this specific type
-2. **Check Type Hierarchy** - Verify if the `\` type has a parent and if parent ports are being included
-3. **Validate SQL Queries** - Ensure `SELECT * FROM port WHERE type_guid = ?` is correctly scoped
-4. **Compare JSON Structure** - Check if the original JSON for this type actually has 1 or 4 ports
+1. **Debug Connector Assignment** - Add logging to track which connectors are being inserted/loaded for this specific type
+2. **Check Type Hierarchy** - Verify if the `\` type has a parent and if parent connectors are being included
+3. **Validate SQL Queries** - Ensure `SELECT * FROM connector WHERE type_guid = ?` is correctly scoped
+4. **Compare JSON Structure** - Check if the original JSON for this type actually has 1 or 4 connectors
 
 ## Test Output
 
@@ -130,7 +130,7 @@ Imported kit:
   Qualities: undefined
 
 ✅ Top-level fields match!
-❌ Deep comparison fails on type.ports for type 'cb448d7a-b169-4759-9b74-7ff1ba216b8b'
+❌ Deep comparison fails on type.connectors for type 'cb448d7a-b169-4759-9b74-7ff1ba216b8b'
 ```
 
 ## Files Modified

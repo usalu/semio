@@ -50,7 +50,7 @@ Added to `js/js/sketchpad.test.ts`:
 ### Type Test
 
 - Checks for workbench toggle visibility
-- Verifies workbench panel has ports/models section
+- Verifies workbench panel has connectors/models section
 - Checks for settings toggle visibility
 
 ### Design Test

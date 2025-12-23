@@ -21,7 +21,7 @@ _"Take this specific mold (Type + Variant) and make a real, usable brick from it
 Each **Piece** automatically includes everything from its mold:
 
 - **Geometry (Model)** — the shape defined by the Variant’s geometry file 🧱
-- **Ports** — the snap points and their directions from the Type ⚓
+- **Connectors** — the snap points and their directions from the Type ⚓
 - **Semantic Data** — the Type name, Variant identity, and design role 🧠
 - **Metadata** — any extra info like function, material, or tags 📄
 
@@ -92,7 +92,7 @@ As shown in the image, you’ll use the **Model Piece `Pce` component** and prov
 3. 🏷️ **Type Name** → The shared name of the mold (e.g. `'Profile'`)
 
 Each row becomes a new **Piece**, named by its ID — like `Pce(Yel)` or `Pce(Red-R)` —  
-each one inherits geometry, ports, and semantic logic from its **Type** and **Variant** 🔁
+each one inherits geometry, connectors, and semantic logic from its **Type** and **Variant** 🔁
 
 🧱 Let’s start by modeling the first two Pieces from the sketch
 
@@ -113,7 +113,7 @@ Now that you've placed your **Pieces**, it's time to tell Semio how they connect
 Think of this like writing the **assembly instructions** for snapping bricks together 🧲
 
 Each **Connection** says:  
-👉 _"Connect this Port on one Piece to a Port on another Piece"_
+👉 _"Connect this Connector on one Piece to a Connector on another Piece"_
 
 <br />
 
@@ -124,26 +124,26 @@ Each **Connection** says:
 To create a connection, you need to define four values:
 
 1. 🆔 **Connected Piece ID (`CdPc`)** → the Piece you're connecting _from_
-2. ⚓ **Connected Piece Port ID (`CdPo`)** → the Port you're connecting _from_
+2. ⚓ **Connected Piece Connector ID (`CdPo`)** → the Connector you're connecting _from_
 3. 🆔 **Connecting Piece ID (`CgPc`)** → the Piece you're connecting _to_
-4. ⚓ **Connecting Piece Port ID (`CgPo`)** → the Port you're connecting _to_
+4. ⚓ **Connecting Piece Connector ID (`CgPo`)** → the Connector you're connecting _to_
 
 ---
 
 Put simply:  
-➡️ **Connect this Port on this Piece → to that Port on that Piece**
+➡️ **Connect this Connector on this Piece → to that Connector on that Piece**
 
 ---
 
 ##### 🧩 Example: Connecting Two Pieces
 
 🧱 Before snapping the full model together, let’s start small — by connecting the **first two bricks**.  
-We’ll connect Piece `Yel` to Piece `Red-T`, using their **west-facing Ports**.
+We’ll connect Piece `Yel` to Piece `Red-T`, using their **west-facing Connectors**.
 
 From the sketch, we can tell:
 
-- Use the **`w` (west)** Port of `Yel`
-- Connect it to the **`w` (west)** Port of `Red-T`
+- Use the **`w` (west)** Connector of `Yel`
+- Connect it to the **`w` (west)** Connector of `Red-T`
 
 So the connection looks like this:
 `Con(Yel:w → Red-T:w)`
@@ -151,7 +151,7 @@ So the connection looks like this:
 ![Connection Example](/assets/images/mode-connection-grasshopper.png)
 
 This tells Semio:  
-**Snap the west Port of `Yel` to the west Port of `Red-T`**
+**Snap the west Connector of `Yel` to the west Connector of `Red-T`**
 
 ![Set Connection](/assets/images/set-connection-2pcs-alpha.png)
 
@@ -162,16 +162,16 @@ Once this first connection is in place, you can continue snapping all remaining 
 🔗 This Tells Semio:
 
 1. `Con(Yel:w → w:Red-T)`  
-   👉 **Snap the west Port of `Yel`** to the **west Port of `Red-T`**
+   👉 **Snap the west Connector of `Yel`** to the **west Connector of `Red-T`**
 
 2. `Con(Red-T:e → e:Red-R)`  
-   👉 **Snap the east Port of `Red-T`** to the **east Port of `Red-R`**
+   👉 **Snap the east Connector of `Red-T`** to the **east Connector of `Red-R`**
 
 3. `Con(Red-R:n → w:Blu-T)`  
-   👉 **Snap the north Port of `Red-R`** to the **west Port of `Blu-T`**
+   👉 **Snap the north Connector of `Red-R`** to the **west Connector of `Blu-T`**
 
 4. `Con(Red-R:n → w:Blu-B)`  
-   👉 **Snap the north Port of `Red-R`** to the **west Port of `Blu-B`**
+   👉 **Snap the north Connector of `Red-R`** to the **west Connector of `Blu-B`**
 
 ---
 
@@ -179,10 +179,10 @@ Once this first connection is in place, you can continue snapping all remaining 
 
 ### 🎯 Adjust Snap _(Optional Step)_
 
-When two Pieces are connected through Ports, Semio gives you control over **how the attached geometry is positioned** —  
-without changing the Port itself.
+When two Pieces are connected through Connectors, Semio gives you control over **how the attached geometry is positioned** —  
+without changing the Connector itself.
 
-These adjustments are applied **relative to the orientation of the Port**, based on how it was defined in the mold (Type).
+These adjustments are applied **relative to the orientation of the Connector**, based on how it was defined in the mold (Type).
 
 📌 Use this when the geometry needs to be slightly offset — to float, shift, or align more precisely.
 
@@ -192,10 +192,10 @@ These adjustments are applied **relative to the orientation of the Port**, based
 
 You can move the geometry in three local directions:
 
-- **Gap** ⬅️➡️ → Creates a space between two connected elements by pushing the Piece forward or backward along the Port's axis
+- **Gap** ⬅️➡️ → Creates a space between two connected elements by pushing the Piece forward or backward along the Connector's axis
   Ideal for separating elements or creating breathing room between parts
 
-- **Shift** ↔️ → Moves the Piece side to side, across the plane of the Port  
+- **Shift** ↔️ → Moves the Piece side to side, across the plane of the Connector  
   📐 Like nudging a LEGO brick left or right to line it up with studs underneath
 
 - **Rise** ⬆️⬇️ → Lifts or lowers the Piece vertically, perpendicular to the face it connects to  
@@ -207,7 +207,7 @@ You can move the geometry in three local directions:
 
 #### 🔄 Rotating (Orientation)
 
-- **Rotate** 🔃 → Rotates the Piece flat, around the Port's main vector
+- **Rotate** 🔃 → Rotates the Piece flat, around the Connector's main vector
   🧭 Like spinning a round LEGO tile in place
 - **Turn** 🔄 → Turns the Piece sideways, rotating it horizontally
   🌀 Like twisting a LEGO hinge side to side
@@ -226,7 +226,7 @@ As we can see, the two Pieces we connected earlier don’t align exactly as show
 This is where the optional step of adjusting the snap comes in 🛠️
 
 Semio lets you fine-tune the position of a connected Piece after snapping 🧲  
-You’re not changing the Port itself ⚓  
+You’re not changing the Connector itself ⚓  
 Instead, you're offsetting the **geometry** that comes with it 📐
 
 <br />
@@ -240,7 +240,7 @@ Once `i` and `L1` are correctly aligned ➡️
 you can continue connecting the remaining Pieces one by one ➕
 
 📌 Just follow the sketch:  
-Each new Piece is snapped to the previous one using their matching **Ports** ⚓  
+Each new Piece is snapped to the previous one using their matching **Connectors** ⚓  
 — and adjusted as needed to match the layout.
 
 🌀 If a connected Piece isn’t facing the right way,  
@@ -255,7 +255,7 @@ when you move or rotate one Piece, all the connected Pieces after it will **upda
 
 ---
 
-<Aside type="note">📌 You can place Ports exactly where the geometry should land — or adjust the Piece after snapping using Gap, Shift, Rise, or Rotate. emio supports both strategies — choose what fits your design logic best 🧱✨</Aside>
+<Aside type="note">📌 You can place Connectors exactly where the geometry should land — or adjust the Piece after snapping using Gap, Shift, Rise, or Rotate. emio supports both strategies — choose what fits your design logic best 🧱✨</Aside>
 
 ---
 
@@ -289,7 +289,7 @@ You’ll provide three main inputs:
    A list of the Pieces you’ve created — each one linked to a Type, Variant, and unique ID.
 
 3. **Connections** (`Con`) 🔗  
-   A list of the snapping rules — telling Semio how the Pieces are connected through their Ports.
+   A list of the snapping rules — telling Semio how the Pieces are connected through their Connectors.
 
 ---
 
@@ -407,7 +407,7 @@ This makes it easy to fine-tune how two Pieces are connected without rebuilding 
 #### 🧱 Update a Type
 
 You can update a **Type** by feeding its `Ty` output back into the same `Model Type` component 🔁  
-This lets you modify its **Model**, **Ports**, or **metadata** — without changing anything else.
+This lets you modify its **Model**, **Connectors**, or **metadata** — without changing anything else.
 
 > _E.g. Swapping a simplified geometry file for a detailed one, or updating tags like material or category._
 

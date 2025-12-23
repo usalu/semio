@@ -21,7 +21,11 @@
               "type": "string"
             }
           },
-          "required": ["id", "typeName", "typeVariant"],
+          "required": [
+            "id",
+            "typeName",
+            "typeVariant"
+          ],
           "additionalProperties": false
         }
       },
@@ -45,7 +49,7 @@
             },
             "gap": {
               "type": "number",
-              "description": "The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece. "
+              "description": "The optional longitudinal gap (applied after rotation and tilt in connector direction) between the connected and the connecting piece. "
             },
             "shift": {
               "type": "number",
@@ -53,19 +57,19 @@
             },
             "raise": {
               "type": "number",
-              "description": "The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."
+              "description": "The optional vertical rise in connector direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."
             },
             "rotation": {
               "type": "number",
-              "description": "The optional horizontal rotation in port direction between the connected and the connecting piece in degrees."
+              "description": "The optional horizontal rotation in connector direction between the connected and the connecting piece in degrees."
             },
             "turn": {
               "type": "number",
-              "description": "The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."
+              "description": "The optional turn perpendicular to the connector direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."
             },
             "tilt": {
               "type": "number",
-              "description": "The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees."
+              "description": "The optional horizontal tilt perpendicular to the connector direction (applied after rotation and the turn) between the connected and the connecting piece in degrees."
             },
             "diagramX": {
               "description": "The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
@@ -76,12 +80,26 @@
               "type": "number"
             }
           },
-          "required": ["connectedPieceId", "connectedPieceTypePortId", "connectingPieceId", "connectingPieceTypePortId", "rotation", "tilt", "gap", "shift", "diagramX", "diagramY"],
+          "required": [
+            "connectedPieceId",
+            "connectedPieceTypePortId",
+            "connectingPieceId",
+            "connectingPieceTypePortId",
+            "rotation",
+            "tilt",
+            "gap",
+            "shift",
+            "diagramX",
+            "diagramY"
+          ],
           "additionalProperties": false
         }
       }
     },
-    "required": ["pieces", "connections"],
+    "required": [
+      "pieces",
+      "connections"
+    ],
     "additionalProperties": false
   }
 }

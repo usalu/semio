@@ -84,7 +84,7 @@ The implementation uses a GUID-based schema instead of the legacy integer-based 
 
 - Primary keys use VARCHAR(36) for GUIDs
 - Both `guid` and legacy `id` columns are maintained for compatibility
-- Composite unique constraints handle duplicate GUIDs with different parents (e.g., ports shared across types)
+- Composite unique constraints handle duplicate GUIDs with different parents (e.g., connectors shared across types)
 - AUTOINCREMENT row_id is used as the actual primary key
 
 ### Test Results

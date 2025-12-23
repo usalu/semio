@@ -337,10 +337,10 @@ public static class Utility
             return (float)results.First().ConvertedValue;
         }
 
-        
-        
-        
-        
+
+
+
+
         private class PowerToysRunUnitConverter
         {
             internal class ConvertEntity
@@ -1119,7 +1119,7 @@ public class Expression
     {
         _operators = new Dictionary<string, Func<Operator>>(StringComparer.OrdinalIgnoreCase)
         {
-            
+
             { "sum", () => new Sum() },
             { "multiply", () => new Multiply() },
             { "subtract", () => new Subtract() },
@@ -1135,24 +1135,24 @@ public class Expression
             { "round", () => new Round() },
             { "average", () => new Average() },
             { "mod", () => new Modulo() },
-            
-            
+
+
             { "and", () => new And() },
             { "or", () => new Or() },
             { "xor", () => new ExclusiveOr() },
             { "not", () => new Invert() },
-            
-            
+
+
             { "equal", () => new Equal() },
             { "greater", () => new GreaterThan() },
             { "less", () => new LessThan() },
             { "greater-equal", () => new GreaterThanOrEqual() },
             { "less-equal", () => new LessThanOrEqual() },
-            
-            
+
+
             { "if", () => new If() },
-            
-            
+
+
             { "length", () => new Length() },
             { "startswith", () => new StartsWith() },
             { "endswith", () => new EndsWith() },
@@ -1163,13 +1163,13 @@ public class Expression
             { "lower", () => new ToLower() },
             { "trim", () => new Trim() },
             { "replace", () => new Replace() },
-            
-            
+
+
             { "number", () => new ToNumber() },
             { "text", () => new ToText() },
             { "boolean", () => new ToBoolean() },
-            
-            
+
+
             { "clamp", () => new Clamp() },
             { "lerp", () => new Lerp() },
             { "sign", () => new Sign() },
@@ -1223,7 +1223,7 @@ public class Expression
         return this;
     }
 
-    
+
 
     private void SerializeTerm(Term term, StringBuilder sb)
     {
@@ -1255,7 +1255,7 @@ public class Expression
         }
     }
 
-    
+
 
     private enum TokenKind { Identifier, Number, String, UnitLiteral, LeftParenthesis, RightParenthesis }
 
@@ -1278,23 +1278,23 @@ public class Expression
         {
             char c = input[i];
 
-            
+
             if (char.IsWhiteSpace(c)) { i++; continue; }
 
             if (c == '(') { tokens.Add(new Token(TokenKind.LeftParenthesis, "(", i)); i++; continue; }
             if (c == ')') { tokens.Add(new Token(TokenKind.RightParenthesis, ")", i)); i++; continue; }
 
-            
+
             if (c == '"')
             {
                 int start = i;
-                i++; 
+                i++;
                 var sb = new StringBuilder();
                 while (i < input.Length && input[i] != '"')
                 {
                     if (input[i] == '\\' && i + 1 < input.Length)
                     {
-                        i++; 
+                        i++;
                         switch (input[i])
                         {
                             case '"': sb.Append('"'); break;
@@ -1312,22 +1312,22 @@ public class Expression
                     i++;
                 }
                 if (i >= input.Length) throw new FormatException($"Unterminated string literal starting at {start}.");
-                i++; 
+                i++;
                 tokens.Add(new Token(TokenKind.String, sb.ToString(), start));
                 continue;
             }
 
-            
+
             if (c == '\'')
             {
                 int start = i;
-                i++; 
+                i++;
                 var sb = new StringBuilder();
                 while (i < input.Length && input[i] != '\'')
                 {
                     if (input[i] == '\\' && i + 1 < input.Length)
                     {
-                        i++; 
+                        i++;
                         switch (input[i])
                         {
                             case '\'': sb.Append('\''); break;
@@ -1345,18 +1345,18 @@ public class Expression
                     i++;
                 }
                 if (i >= input.Length) throw new FormatException($"Unterminated unit literal starting at {start}.");
-                i++; 
+                i++;
                 tokens.Add(new Token(TokenKind.UnitLiteral, sb.ToString(), start));
                 continue;
             }
 
-            
+
             if (char.IsDigit(c) || (c == '.' && i + 1 < input.Length && char.IsDigit(input[i + 1])))
             {
                 int start = i;
                 i++;
                 while (i < input.Length && (char.IsDigit(input[i]) || input[i] == '.')) i++;
-                
+
                 if (i < input.Length && (input[i] == 'e' || input[i] == 'E'))
                 {
                     int ePos = i++;
@@ -1369,7 +1369,7 @@ public class Expression
                 continue;
             }
 
-            
+
             if (char.IsLetter(c) || c == '_')
             {
                 int start = i;
@@ -1384,18 +1384,18 @@ public class Expression
                 continue;
             }
 
-            
+
             throw new FormatException($"Unexpected character '{c}' at position {i}.");
         }
         return tokens;
     }
 
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
     private Term ParseExpr(List<Token> tokens, ref int index)
     {
         if (index >= tokens.Count) throw new FormatException("Unexpected end of input.");
@@ -1424,14 +1424,14 @@ public class Expression
 
             if (parts.Length == 1)
             {
-                
+
                 if (!float.TryParse(parts[0], NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out var val))
                     throw new FormatException($"Invalid number '{parts[0]}' in unit literal at {t.Position}.");
                 return new NumberConstant(val);
             }
             else
             {
-                
+
                 if (!float.TryParse(parts[0], NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out var val))
                     throw new FormatException($"Invalid number '{parts[0]}' in unit literal at {t.Position}.");
                 var unit = string.Join(" ", parts.Skip(1));
@@ -1441,28 +1441,28 @@ public class Expression
 
         if (t.Kind == TokenKind.Identifier)
         {
-            
+
             string ident = t.Text;
             int idPos = t.Position;
             index++;
 
             if (index < tokens.Count && tokens[index].Kind == TokenKind.LeftParenthesis)
             {
-                
-                index++; 
+
+                index++;
                 var args = new List<Term>();
                 while (index < tokens.Count && tokens[index].Kind != TokenKind.RightParenthesis)
                 {
-                    
+
                     args.Add(ParseExpr(tokens, ref index));
-                    
+
                 }
                 if (index >= tokens.Count || tokens[index].Kind != TokenKind.RightParenthesis)
                     throw new FormatException($"Missing closing ')' for call starting at {idPos}.");
-                index++; 
+                index++;
 
                 var op = InstantiateOperator(ident, idPos);
-                
+
                 if (op is Divide && args.Count < 2)
                     throw new FormatException("divide requires at least 2 operands.");
 
@@ -1470,19 +1470,19 @@ public class Expression
             }
             else
             {
-                
+
                 return new Variable(ident);
             }
         }
 
         if (t.Kind == TokenKind.LeftParenthesis)
         {
-            
-            index++; 
+
+            index++;
             var inner = ParseExpr(tokens, ref index);
             if (index >= tokens.Count || tokens[index].Kind != TokenKind.RightParenthesis)
                 throw new FormatException($"Missing ')' for parenthesized expression starting at {t.Position}.");
-            index++; 
+            index++;
             return inner;
         }
 
@@ -1782,7 +1782,7 @@ public class EntityValidator<T> : AbstractValidator<T> where T : Entity<T>
                     return
                         $"The {property.Name.ToLower()} must be at most {textAttribute.LengthLimit} characters long. The provided text ({preview}) has {value?.Length ?? 0} characters.";
                 });
-            
+
             if (property.GetCustomAttribute<DescriptionAttribute>() == null)
             {
                 RuleFor(entity => property.GetValue(entity) as string)
@@ -1811,8 +1811,8 @@ public class EntityValidator<T> : AbstractValidator<T> where T : Entity<T>
         }
         else if (property.PropertyType == typeof(List<string>))
         {
-            
-            
+
+
             var textAttribute = property.GetCustomAttribute<TextAttribute>();
             if (textAttribute is null) return;
             RuleForEach(list => property.GetValue(list) as List<string>)
@@ -1835,13 +1835,13 @@ public class EntityValidator<T> : AbstractValidator<T> where T : Entity<T>
         }
         else if (isPropertyEntity && !isPropertyList)
         {
-            
-            
-            
+
+
+
         }
         else if (isPropertyEntity && isPropertyList)
         {
-            
+
         }
     }
 }
@@ -1929,8 +1929,8 @@ public class SemioValidationResult
             var ib = sortedB[i];
             if (ia.RuleId != ib.RuleId || ia.Severity != ib.Severity || ia.Message != ib.Message || ia.EntityKind != ib.EntityKind || ia.EntityGuid != ib.EntityGuid)
                 return false;
-            
-            
+
+
         }
         return true;
     }
@@ -1963,7 +1963,7 @@ public static class SemioValidator
         foreach (var t in kit.Types)
         {
             CheckGuid("Type", t.Guid);
-            foreach (var port in t.Ports) CheckGuid("Port", port.Guid);
+            foreach (var connector in t.Connectors) CheckGuid("Connector", connector.Guid);
             foreach (var model in t.Models) CheckGuid("Model", model.Guid);
         }
         foreach (var d in kit.Designs)
@@ -1971,14 +1971,14 @@ public static class SemioValidator
             CheckGuid("Design", d.Guid);
             foreach (var p in d.Pieces) CheckGuid("Piece", p.Guid);
             foreach (var c in d.Connections) CheckGuid("Connection", c.Guid);
-            
+
         }
         foreach (var q in kit.Qualities) CheckGuid("Quality", q.Guid);
         foreach (var i in kit.Interfaces) CheckGuid("Interface", i.Guid);
         foreach (var f in kit.Files) CheckGuid("File", f.Guid);
         foreach (var fo in kit.Folders) CheckGuid("Folder", fo.Guid);
 
-        
+
         var typesByParent = kit.Types.GroupBy(t => t.Parent?.Guid);
         foreach (var group in typesByParent)
         {
@@ -1996,7 +1996,7 @@ public static class SemioValidator
             }
         }
 
-        
+
         var designsByParent = kit.Designs.GroupBy(d => d.Parent?.Guid);
         foreach (var group in designsByParent)
         {
@@ -2014,7 +2014,7 @@ public static class SemioValidator
             }
         }
 
-        
+
         foreach (var design in kit.Designs)
         {
             var nameGroups = design.Pieces.Where(p => !string.IsNullOrEmpty(p.Name)).GroupBy(p => p.Name);
@@ -2031,24 +2031,24 @@ public static class SemioValidator
             }
         }
 
-        
+
         foreach (var t in kit.Types)
         {
-            var nameGroups = t.Ports.Where(p => !string.IsNullOrEmpty(p.Name)).GroupBy(p => p.Name);
+            var nameGroups = t.Connectors.Where(p => !string.IsNullOrEmpty(p.Name)).GroupBy(p => p.Name);
             foreach (var nameGroup in nameGroups)
             {
                 var list = nameGroup.ToList();
                 if (list.Count > 1)
                 {
-                    foreach (var port in list.Skip(1))
+                    foreach (var connector in list.Skip(1))
                     {
-                        issues.Add(new SemioValidationIssue { RuleId = "port-name-unique", Severity = "error", Message = $"Duplicate port name \"{nameGroup.Key}\" inside type \"{t.Name}\".", EntityKind = "Port", EntityGuid = port.Guid });
+                        issues.Add(new SemioValidationIssue { RuleId = "connector-name-unique", Severity = "error", Message = $"Duplicate connector name \"{nameGroup.Key}\" inside type \"{t.Name}\".", EntityKind = "Connector", EntityGuid = connector.Guid });
                     }
                 }
             }
         }
 
-        
+
         foreach (var t in kit.Types)
         {
             var nameGroups = t.Models.Where(m => !string.IsNullOrEmpty(m.Name)).GroupBy(m => m.Name);
@@ -2065,7 +2065,7 @@ public static class SemioValidator
             }
         }
 
-        
+
         var qualityNameGroups = kit.Qualities.GroupBy(q => q.Name ?? "");
         foreach (var nameGroup in qualityNameGroups)
         {
@@ -2079,7 +2079,7 @@ public static class SemioValidator
             }
         }
 
-        
+
         var interfaceNameGroups = kit.Interfaces.GroupBy(i => i.Name ?? "");
         foreach (var nameGroup in interfaceNameGroups)
         {
@@ -2093,7 +2093,7 @@ public static class SemioValidator
             }
         }
 
-        
+
         var fileNameGroups = kit.Files.GroupBy(f => f.Name ?? "");
         foreach (var nameGroup in fileNameGroups)
         {
@@ -2107,7 +2107,7 @@ public static class SemioValidator
             }
         }
 
-        
+
         var foldersByParent = kit.Folders.GroupBy(f => f.Parent);
         foreach (var group in foldersByParent)
         {
@@ -2125,7 +2125,7 @@ public static class SemioValidator
             }
         }
 
-        
+
         foreach (var design in kit.Designs)
         {
             var pathGroups = design.Layers.GroupBy(l => l.Path ?? "");
@@ -2374,7 +2374,7 @@ public class Plane : Entity<Plane>
     [EntityProp("➡️", "YA", "YAx", "The y-axis of the plane.")]
     public Vector YAxis { get; set; } = new() { Y = 1 };
 
-    
+
     public override (bool, List<string>) Validate()
     {
         var (isValid, errors) = base.Validate();
@@ -2523,7 +2523,7 @@ public class Author : Entity<Author>
 
     public override (bool, List<string>) Validate()
     {
-        
+
         var (isValid, errors) = base.Validate();
         if (!Email.Contains("@"))
         {
@@ -2838,7 +2838,7 @@ public enum QualityKind
     Type = 2,
     Piece = 4,
     Connection = 8,
-    Port = 16,
+    Connector = 16,
 }
 
 #endregion QualityKind
@@ -3135,7 +3135,7 @@ public class InterfacesDiff : Entity<InterfacesDiff>
 
 
 
-[Entity("🔌", "If", "Ifc", "An interface defines port compatibility.")]
+[Entity("🔌", "If", "Ifc", "An interface defines connector compatibility.")]
 public class Interface : Entity<Interface>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the interface.")]
@@ -3401,15 +3401,15 @@ public class Model : Entity<Model>
 
 #endregion Model
 
-#region Port
+#region Connector
 
-[Entity("🔌", "Po", "Por", "The optional local identifier of the port within the type. No id means the default port.")]
-public class PortId : Entity<PortId>
+[Entity("🔌", "Po", "Por", "The optional local identifier of the connector within the type. No id means the default connector.")]
+public class ConnectorId : Entity<ConnectorId>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the port within the type.")]
+    [Id("🆔", "Gd", "Gui", "The guid of the connector within the type.")]
     public string Guid { get; set; } = "";
-    public static implicit operator PortId(Port port) => new() { Guid = port.Guid };
-    public static implicit operator PortId(PortDiff diff) => new() { Guid = diff.Guid ?? "" };
+    public static implicit operator ConnectorId(Connector connector) => new() { Guid = connector.Guid };
+    public static implicit operator ConnectorId(ConnectorDiff diff) => new() { Guid = diff.Guid ?? "" };
     public string ToIdString() => $"{Guid}";
     public string ToHumanIdString() => $"{ToIdString()}";
     public string ToId() => ToIdString();
@@ -3417,36 +3417,36 @@ public class PortId : Entity<PortId>
     public override string ToString() => $"Por({ToHumanIdString()})";
 }
 
-[Entity("📊", "PD", "PDf", "A diff for ports.")]
-public class PortDiff : Entity<PortDiff>
+[Entity("📊", "PD", "PDf", "A diff for connectors.")]
+public class ConnectorDiff : Entity<ConnectorDiff>
 {
-    [Id("🆔", "Gd?", "Gid", "The optional guid of the port.")]
+    [Id("🆔", "Gd?", "Gid", "The optional guid of the connector.")]
     public string? Guid { get; set; }
-    [Name("📛", "Nm?", "Name?", "The optional name of the port.")]
+    [Name("📛", "Nm?", "Name?", "The optional name of the connector.")]
     public string? Name { get; set; }
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the port.")]
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the connector.")]
     public string? Description { get; set; }
-    [EntityProp("🔌", "If?", "Ifc?", "The optional interface of the port.")]
+    [EntityProp("🔌", "If?", "Ifc?", "The optional interface of the connector.")]
     public InterfaceId? Interface { get; set; }
-    [FalseOrTrue("💯", "Ma?", "Man?", "Whether the port is mandatory.")]
+    [FalseOrTrue("💯", "Ma?", "Man?", "Whether the connector is mandatory.")]
     public bool? Mandatory { get; set; }
     [NumberProp("💍", "T?", "T?", "The optional parameter t [0,1[.")]
     public float? T { get; set; }
-    [EntityProp("✖️", "Pt?", "Pnt?", "The optional connection point of the port.", PropImportance.OPTIONAL)]
+    [EntityProp("✖️", "Pt?", "Pnt?", "The optional connection point of the connector.", PropImportance.OPTIONAL)]
     public Point? Point { get; set; }
-    [EntityProp("➡️", "Dr?", "Drn?", "The optional direction of the port.", PropImportance.OPTIONAL)]
+    [EntityProp("➡️", "Dr?", "Drn?", "The optional direction of the connector.", PropImportance.OPTIONAL)]
     public Vector? Direction { get; set; }
-    [EntityProp("🏷️", "Pp*", "Prp*", "The optional properties of the port.", PropImportance.OPTIONAL)]
+    [EntityProp("🏷️", "Pp*", "Prp*", "The optional properties of the connector.", PropImportance.OPTIONAL)]
     public List<Prop>? Props { get; set; }
-    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the port.", PropImportance.OPTIONAL)]
+    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the connector.", PropImportance.OPTIONAL)]
     public List<Attribute>? Attributes { get; set; }
 
-    public static implicit operator PortDiff(PortId id) => new() { Guid = id.Guid };
-    public static implicit operator PortDiff(Port port) => new() { Guid = port.Guid, Description = port.Description, Interface = port.Interface, Mandatory = port.Mandatory, T = port.T, Point = port.Point, Direction = port.Direction, Props = port.Props, Attributes = port.Attributes };
+    public static implicit operator ConnectorDiff(ConnectorId id) => new() { Guid = id.Guid };
+    public static implicit operator ConnectorDiff(Connector connector) => new() { Guid = connector.Guid, Description = connector.Description, Interface = connector.Interface, Mandatory = connector.Mandatory, T = connector.T, Point = connector.Point, Direction = connector.Direction, Props = connector.Props, Attributes = connector.Attributes };
 
-    public PortDiff MergeDiff(PortDiff other)
+    public ConnectorDiff MergeDiff(ConnectorDiff other)
     {
-        return new PortDiff
+        return new ConnectorDiff
         {
             Guid = other.Guid ?? Guid,
             Description = other.Description ?? Description,
@@ -3461,19 +3461,19 @@ public class PortDiff : Entity<PortDiff>
     }
 }
 
-[Entity("📊", "PsD", "PsDf", "A diff for multiple ports.")]
-public class PortsDiff : Entity<PortsDiff>
+[Entity("📊", "PsD", "PsDf", "A diff for multiple connectors.")]
+public class ConnectorsDiff : Entity<ConnectorsDiff>
 {
-    [EntityProp("➖", "Rm*", "Rem*", "The optional removed ports.", PropImportance.OPTIONAL)]
-    public List<PortId> Removed { get; set; } = new();
-    [EntityProp("➕", "Ad*", "Add*", "The optional added ports.", PropImportance.OPTIONAL)]
-    public List<Port> Added { get; set; } = new();
-    [EntityProp("✏️", "Up*", "Upd*", "The optional updated ports.", PropImportance.OPTIONAL)]
-    public List<DiffUpdate<PortDiff>> Updated { get; set; } = new();
+    [EntityProp("➖", "Rm*", "Rem*", "The optional removed connectors.", PropImportance.OPTIONAL)]
+    public List<ConnectorId> Removed { get; set; } = new();
+    [EntityProp("➕", "Ad*", "Add*", "The optional added connectors.", PropImportance.OPTIONAL)]
+    public List<Connector> Added { get; set; } = new();
+    [EntityProp("✏️", "Up*", "Upd*", "The optional updated connectors.", PropImportance.OPTIONAL)]
+    public List<DiffUpdate<ConnectorDiff>> Updated { get; set; } = new();
 
-    public PortsDiff MergeDiff(PortsDiff other)
+    public ConnectorsDiff MergeDiff(ConnectorsDiff other)
     {
-        return new PortsDiff
+        return new ConnectorsDiff
         {
             Removed = Removed.Concat(other.Removed).Distinct().ToList(),
             Added = Added.Concat(other.Added).ToList(),
@@ -3481,47 +3481,47 @@ public class PortsDiff : Entity<PortsDiff>
         };
     }
 
-    public static implicit operator PortsDiff(List<Port> ports) => new() { Updated = ports.Select(p => new DiffUpdate<PortDiff> { Id = p.Guid, Diff = (PortDiff)p }).ToList() };
+    public static implicit operator ConnectorsDiff(List<Connector> connectors) => new() { Updated = connectors.Select(p => new DiffUpdate<ConnectorDiff> { Id = p.Guid, Diff = (ConnectorDiff)p }).ToList() };
 }
 
 
 
 
-[Entity("🔌", "Po", "Por", "A port is a connection point (with a direction) of a type.")]
-public class Port : Entity<Port>
+[Entity("🔌", "Po", "Por", "A connector is a connection point (with a direction) of a type.")]
+public class Connector : Entity<Connector>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the port within the type.")]
+    [Id("🆔", "Gd", "Gui", "The guid of the connector within the type.")]
     public string Guid { get; set; } = "";
-    [Name("📛", "Nm?", "Name?", "The optional name of the port.")]
+    [Name("📛", "Nm?", "Name?", "The optional name of the connector.")]
     public string Name { get; set; } = "";
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the port.")]
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the connector.")]
     public string Description { get; set; } = "";
-    [FalseOrTrue("💯", "Ma?", "Man?", "Whether the port is mandatory. A mandatory port must be connected in a design.")]
+    [FalseOrTrue("💯", "Ma?", "Man?", "Whether the connector is mandatory. A mandatory connector must be connected in a design.")]
     public bool Mandatory { get; set; } = false;
-    [EntityProp("🔌", "If?", "Ifc?", "The optional interface of the port. This allows to define explicit compatibility with other ports.")]
+    [EntityProp("🔌", "If?", "Ifc?", "The optional interface of the connector. This allows to define explicit compatibility with other connectors.")]
     public InterfaceId? Interface { get; set; }
-    [EntityProp("✖️", "Pt", "Pnt", "The connection point of the port that is attracted to another connection point.")]
+    [EntityProp("✖️", "Pt", "Pnt", "The connection point of the connector that is attracted to another connection point.")]
     public Point? Point { get; set; } = null;
-    [EntityProp("➡️", "Dr", "Drn", "The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned.")]
+    [EntityProp("➡️", "Dr", "Drn", "The direction of the connector. When another piece connects the direction of the other connector is flipped and then the pieces are aligned.")]
     public Vector? Direction { get; set; } = null;
-    [NumberProp("💍", "T", "T", "The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.", PropImportance.REQUIRED)]
+    [NumberProp("💍", "T", "T", "The parameter t [0,1[ where the connector will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.", PropImportance.REQUIRED)]
     public float T { get; set; } = 0;
-    [EntityProp("🏷️", "Pp*", "Prp*", "The optional properties of the port.", PropImportance.OPTIONAL)]
+    [EntityProp("🏷️", "Pp*", "Prp*", "The optional properties of the connector.", PropImportance.OPTIONAL)]
     public List<Prop> Props { get; set; } = new();
-    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the port.", PropImportance.OPTIONAL)]
+    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the connector.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
     public string ToIdString() => $"{Guid}";
     public string ToHumanIdString() => $"{ToIdString()}";
     public override string ToString() => $"Por({ToHumanIdString()})";
 
-    public static implicit operator Port(PortId id) => new() { Guid = id.Guid };
-    public static implicit operator Port(PortDiff diff) => new() { Guid = diff.Guid ?? "", Name = diff.Name ?? "", Description = diff.Description ?? "", Interface = diff.Interface, Mandatory = diff.Mandatory ?? false, T = diff.T ?? 0, Point = diff.Point, Direction = diff.Direction, Attributes = diff.Attributes ?? new() };
-    public static implicit operator string(Port port) => port.Guid;
-    public static implicit operator Port(string guid) => new() { Guid = guid };
+    public static implicit operator Connector(ConnectorId id) => new() { Guid = id.Guid };
+    public static implicit operator Connector(ConnectorDiff diff) => new() { Guid = diff.Guid ?? "", Name = diff.Name ?? "", Description = diff.Description ?? "", Interface = diff.Interface, Mandatory = diff.Mandatory ?? false, T = diff.T ?? 0, Point = diff.Point, Direction = diff.Direction, Attributes = diff.Attributes ?? new() };
+    public static implicit operator string(Connector connector) => connector.Guid;
+    public static implicit operator Connector(string guid) => new() { Guid = guid };
 
-    public Port ApplyDiff(PortDiff diff)
+    public Connector ApplyDiff(ConnectorDiff diff)
     {
-        return new Port
+        return new Connector
         {
             Guid = diff.Guid ?? Guid,
             Name = diff.Name ?? Name,
@@ -3536,9 +3536,9 @@ public class Port : Entity<Port>
         };
     }
 
-    public PortDiff CreateDiff()
+    public ConnectorDiff CreateDiff()
     {
-        return new PortDiff
+        return new ConnectorDiff
         {
             Guid = Guid,
             Name = Name,
@@ -3553,9 +3553,9 @@ public class Port : Entity<Port>
         };
     }
 
-    public PortDiff InverseDiff(PortDiff appliedDiff)
+    public ConnectorDiff InverseDiff(ConnectorDiff appliedDiff)
     {
-        return new PortDiff
+        return new ConnectorDiff
         {
             Guid = !string.IsNullOrEmpty(appliedDiff.Guid) ? Guid : "",
             Name = !string.IsNullOrEmpty(appliedDiff.Name) ? Name : null,
@@ -3570,7 +3570,7 @@ public class Port : Entity<Port>
         };
     }
 
-    
+
     public override (bool, List<string>) Validate()
     {
         var (isValid, errors) = base.Validate();
@@ -3605,14 +3605,14 @@ public class Port : Entity<Port>
         return (isValid, errors);
     }
 
-    public bool IsCompatibleWith(Port otherPort)
+    public bool IsCompatibleWith(Connector otherPort)
     {
         if (Interface is null || otherPort.Interface is null) return true;
         if (Interface.Guid == otherPort.Interface.Guid) return true;
         return false;
     }
 
-    public bool IsCompatibleWith(Port otherPort, Kit kit)
+    public bool IsCompatibleWith(Connector otherPort, Kit kit)
     {
         if (Interface is null || otherPort.Interface is null) return true;
         if (Interface.Guid == otherPort.Interface.Guid) return true;
@@ -3628,7 +3628,7 @@ public class Port : Entity<Port>
                otherInterface.CompatibleInterfaces?.Any(ci => ci.Guid == Interface.Guid) == true;
     }
 
-    public bool IsSameAs(Port other)
+    public bool IsSameAs(Connector other)
     {
         return Utility.Normalize(Guid) == Utility.Normalize(other.Guid);
     }
@@ -3637,11 +3637,11 @@ public class Port : Entity<Port>
     {
         var attribute = Attributes?.FirstOrDefault(a => a.Key == name);
         if (attribute is null && defaultValue is null)
-            throw new InvalidOperationException($"Attribute {name} not found in port {Guid}");
+            throw new InvalidOperationException($"Attribute {name} not found in connector {Guid}");
         return attribute?.Value ?? defaultValue;
     }
 
-    public Port SetAttribute(Attribute attribute)
+    public Connector SetAttribute(Attribute attribute)
     {
         var attributes = new List<Attribute>(Attributes ?? new List<Attribute>());
         var existingIndex = attributes.FindIndex(a => a.Key == attribute.Key);
@@ -3651,7 +3651,7 @@ public class Port : Entity<Port>
         else
             attributes.Add(attribute);
 
-        return new Port
+        return new Connector
         {
             Guid = Guid,
             Name = Name,
@@ -3667,7 +3667,7 @@ public class Port : Entity<Port>
     }
 }
 
-#endregion Port
+#endregion Connector
 
 #region Type
 
@@ -3714,8 +3714,8 @@ public class TypeDiff : Entity<TypeDiff>
     public Location? Location { get; set; }
     [EntityProp("💾", "Md*", "Mods*", "The optional models of the type.", PropImportance.OPTIONAL)]
     public ModelsDiff? Models { get; set; }
-    [EntityProp("🔌", "Po*", "Pors*", "The optional ports of the type.", PropImportance.OPTIONAL)]
-    public PortsDiff? Ports { get; set; }
+    [EntityProp("🔌", "Po*", "Pors*", "The optional connectors of the type.", PropImportance.OPTIONAL)]
+    public ConnectorsDiff? Connectors { get; set; }
     [EntityProp("👥", "Au*", "Aut*", "The optional authors of the type.", PropImportance.OPTIONAL)]
     public List<AuthorId>? Authors { get; set; }
     [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the type.", PropImportance.OPTIONAL)]
@@ -3741,7 +3741,7 @@ public class TypeDiff : Entity<TypeDiff>
             Unit = string.IsNullOrEmpty(other.Unit) ? Unit : other.Unit,
             Location = other.Location ?? Location,
             Models = other.Models is not null ? (other.Models.MergeDiff(Models ?? new ModelsDiff())) : Models,
-            Ports = other.Ports is not null ? (other.Ports.MergeDiff(Ports ?? new PortsDiff())) : Ports,
+            Connectors = other.Connectors is not null ? (other.Connectors.MergeDiff(Connectors ?? new ConnectorsDiff())) : Connectors,
             Authors = other.Authors is not null && other.Authors.Any() ? other.Authors : Authors,
             Attributes = other.Attributes is not null && other.Attributes.Any() ? other.Attributes : Attributes,
             Concepts = other.Concepts is not null && other.Concepts.Any() ? other.Concepts : Concepts
@@ -3749,7 +3749,7 @@ public class TypeDiff : Entity<TypeDiff>
     }
 
     public static implicit operator TypeDiff(TypeId id) => new() { Guid = id.Guid };
-    public static implicit operator TypeDiff(Type type) => new() { Name = type.Name, Description = type.Description, Icon = type.Icon, Image = type.Image, Stock = type.Stock, Virtual = type.Virtual, Uri = type.Uri, Unit = type.Unit, Location = type.Location, Models = new ModelsDiff { Added = new List<Model>(), Removed = new List<ModelId>(), Updated = type.Models.Select(m => new DiffUpdate<ModelDiff> { Id = m.Guid, Diff = m.CreateDiff() }).ToList() }, Ports = new PortsDiff { Added = new List<Port>(), Removed = new List<PortId>(), Updated = type.Ports.Select(p => new DiffUpdate<PortDiff> { Id = p.Guid, Diff = p.CreateDiff() }).ToList() }, Authors = type.Authors, Attributes = type.Attributes, Concepts = type.Concepts };
+    public static implicit operator TypeDiff(Type type) => new() { Name = type.Name, Description = type.Description, Icon = type.Icon, Image = type.Image, Stock = type.Stock, Virtual = type.Virtual, Uri = type.Uri, Unit = type.Unit, Location = type.Location, Models = new ModelsDiff { Added = new List<Model>(), Removed = new List<ModelId>(), Updated = type.Models.Select(m => new DiffUpdate<ModelDiff> { Id = m.Guid, Diff = m.CreateDiff() }).ToList() }, Connectors = new ConnectorsDiff { Added = new List<Connector>(), Removed = new List<ConnectorId>(), Updated = type.Connectors.Select(p => new DiffUpdate<ConnectorDiff> { Id = p.Guid, Diff = p.CreateDiff() }).ToList() }, Authors = type.Authors, Attributes = type.Attributes, Concepts = type.Concepts };
 }
 
 [Entity("📊", "TsD", "TsDf", "A diff for multiple types.")]
@@ -3768,7 +3768,7 @@ public class TypesDiff : Entity<TypesDiff>
 
 
 
-[Entity("🧩", "Ty", "Typ", "A type is a reusable element that can be connected with other types over ports.")]
+[Entity("🧩", "Ty", "Typ", "A type is a reusable element that can be connected with other types over connectors.")]
 public class Type : Entity<Type>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the type.", PropImportance.ID)]
@@ -3795,12 +3795,12 @@ public class Type : Entity<Type>
     public string Uri { get; set; } = "";
     [EntityProp("📍", "Lo?", "Loc?", "The optional location of the type.", PropImportance.OPTIONAL)]
     public Location? Location { get; set; }
-    [Name("Ⓜ️", "Ut", "Unt", "The length unit of the point and the direction of the ports of the type.", PropImportance.REQUIRED)]
+    [Name("Ⓜ️", "Ut", "Unt", "The length unit of the point and the direction of the connectors of the type.", PropImportance.REQUIRED)]
     public string Unit { get; set; } = "";
     [EntityProp("💾", "Md*", "Mods*", "The optional models of the type.", PropImportance.OPTIONAL)]
     public List<Model> Models { get; set; } = new();
-    [EntityProp("🔌", "Po*", "Pors*", "The optional ports of the type.", PropImportance.OPTIONAL)]
-    public List<Port> Ports { get; set; } = new();
+    [EntityProp("🔌", "Po*", "Pors*", "The optional connectors of the type.", PropImportance.OPTIONAL)]
+    public List<Connector> Connectors { get; set; } = new();
     [EntityProp("🏷️", "Pp*", "Prp*", "The optional properties of the type.", PropImportance.OPTIONAL)]
     public List<Prop> Props { get; set; } = new();
     [EntityProp("👥", "Au*", "Aut*", "The optional authors of the type.", PropImportance.OPTIONAL)]
@@ -3837,7 +3837,7 @@ public class Type : Entity<Type>
         Unit = diff.Unit ?? "",
         Location = diff.Location,
         Models = diff.Models?.Added ?? new(),
-        Ports = diff.Ports?.Added ?? new(),
+        Connectors = diff.Connectors?.Added ?? new(),
         Authors = diff.Authors ?? new(),
         Attributes = diff.Attributes ?? new(),
         Concepts = diff.Concepts ?? new(),
@@ -3850,12 +3850,12 @@ public class Type : Entity<Type>
     public Type ApplyDiff(TypeDiff diff)
     {
         var models = Models;
-        var ports = Ports;
+        var connectors = Connectors;
 
         if (diff.Models is not null)
             models = ApplyModelsDiff(Models, diff.Models);
-        if (diff.Ports is not null)
-            ports = ApplyPortsDiff(Ports, diff.Ports);
+        if (diff.Connectors is not null)
+            connectors = ApplyConnectorsDiff(Connectors, diff.Connectors);
 
         return new Type
         {
@@ -3870,7 +3870,7 @@ public class Type : Entity<Type>
             Unit = string.IsNullOrEmpty(diff.Unit) ? Unit : diff.Unit,
             Location = diff.Location ?? Location,
             Models = models,
-            Ports = ports,
+            Connectors = connectors,
             Authors = diff.Authors is not null && diff.Authors.Any() ? diff.Authors : Authors,
             Attributes = diff.Attributes is not null && diff.Attributes.Any() ? diff.Attributes : Attributes,
             Concepts = diff.Concepts is not null && diff.Concepts.Any() ? diff.Concepts : Concepts,
@@ -3893,7 +3893,7 @@ public class Type : Entity<Type>
         return result;
     }
 
-    private List<Port> ApplyPortsDiff(List<Port> original, PortsDiff diff)
+    private List<Connector> ApplyConnectorsDiff(List<Connector> original, ConnectorsDiff diff)
     {
         var result = original.Where(p => !diff.Removed.Any(r => r.Guid == p.Guid)).ToList();
         foreach (var updated in diff.Updated)
@@ -3921,7 +3921,7 @@ public class Type : Entity<Type>
             Unit = Unit,
             Location = Location,
             Models = new ModelsDiff { Added = new List<Model>(), Removed = new List<ModelId>(), Updated = Models.Select(m => new DiffUpdate<ModelDiff> { Id = m.Guid, Diff = m.CreateDiff() }).ToList() },
-            Ports = new PortsDiff { Added = new List<Port>(), Removed = new List<PortId>(), Updated = Ports.Select(p => new DiffUpdate<PortDiff> { Id = p.Guid, Diff = p.CreateDiff() }).ToList() },
+            Connectors = new ConnectorsDiff { Added = new List<Connector>(), Removed = new List<ConnectorId>(), Updated = Connectors.Select(p => new DiffUpdate<ConnectorDiff> { Id = p.Guid, Diff = p.CreateDiff() }).ToList() },
             Authors = Authors,
             Attributes = Attributes,
             Concepts = Concepts
@@ -3942,21 +3942,21 @@ public class Type : Entity<Type>
             Unit = !string.IsNullOrEmpty(appliedDiff.Unit) ? Unit : "",
             Location = appliedDiff.Location is not null ? Location : null,
             Models = appliedDiff.Models is not null ? new ModelsDiff { Added = new List<Model>(), Removed = new List<ModelId>(), Updated = Models.Select(m => new DiffUpdate<ModelDiff> { Id = m.Guid, Diff = m.CreateDiff() }).ToList() } : null,
-            Ports = appliedDiff.Ports is not null ? new PortsDiff { Added = new List<Port>(), Removed = new List<PortId>(), Updated = Ports.Select(p => new DiffUpdate<PortDiff> { Id = p.Guid, Diff = p.CreateDiff() }).ToList() } : null,
+            Connectors = appliedDiff.Connectors is not null ? new ConnectorsDiff { Added = new List<Connector>(), Removed = new List<ConnectorId>(), Updated = Connectors.Select(p => new DiffUpdate<ConnectorDiff> { Id = p.Guid, Diff = p.CreateDiff() }).ToList() } : null,
             Authors = appliedDiff.Authors is not null && appliedDiff.Authors.Any() ? Authors : null,
             Attributes = appliedDiff.Attributes is not null && appliedDiff.Attributes.Any() ? Attributes : null
         };
     }
 
-    
+
     public override (bool, List<string>) Validate()
     {
         var (isValid, errors) = base.Validate();
-        foreach (var port in Ports)
+        foreach (var connector in Connectors)
         {
-            var (isValidPort, errorsPort) = port.Validate();
-            isValid = isValid && isValidPort;
-            errors.AddRange(errorsPort.Select(e => $"A port({port.ToHumanIdString()}) is invalid: " + e));
+            var (isValidConnector, errorsPort) = connector.Validate();
+            isValid = isValid && isValidConnector;
+            errors.AddRange(errorsPort.Select(e => $"A connector({connector.ToHumanIdString()}) is invalid: " + e));
         }
 
         foreach (var model in Models)
@@ -4000,11 +4000,11 @@ public class Type : Entity<Type>
         return Name == other.Name;
     }
 
-    public Port FindPort(string portId)
+    public Connector FindConnector(string connectorId)
     {
-        var port = Ports?.FirstOrDefault(p => Utility.Normalize(p.Guid) == Utility.Normalize(portId));
-        if (port is null) throw new InvalidOperationException($"Port {portId} not found in type {Name}");
-        return port;
+        var connector = Connectors?.FirstOrDefault(p => Utility.Normalize(p.Guid) == Utility.Normalize(connectorId));
+        if (connector is null) throw new InvalidOperationException($"Connector {connectorId} not found in type {Name}");
+        return connector;
     }
 
     public Model FindModel(List<string> tags)
@@ -4047,7 +4047,7 @@ public class Type : Entity<Type>
             Location = Location,
             Unit = Unit,
             Models = Models,
-            Ports = Ports,
+            Connectors = Connectors,
             Props = Props,
             Authors = Authors,
             Attributes = attributes
@@ -4306,12 +4306,12 @@ public class SideDiff : Entity<SideDiff>
     public PieceId? Piece { get; set; }
     [EntityProp("🏙️", "DP?", "DPc?", "The optional id of the piece inside the referenced design piece.", PropImportance.OPTIONAL)]
     public PieceId? DesignPiece { get; set; } = null;
-    [EntityProp("🔌", "Po?", "Por?", "The optional port of the side.", PropImportance.OPTIONAL)]
-    public PortId? Port { get; set; }
+    [EntityProp("🔌", "Po?", "Por?", "The optional connector of the side.", PropImportance.OPTIONAL)]
+    public ConnectorId? Connector { get; set; }
     [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the side.")]
     public string Description { get; set; } = "";
 
-    public static implicit operator SideDiff(Side side) => new() { Piece = side.Piece, DesignPiece = side.DesignPiece, Port = side.Port };
+    public static implicit operator SideDiff(Side side) => new() { Piece = side.Piece, DesignPiece = side.DesignPiece, Connector = side.Connector };
 
     public SideDiff MergeDiff(SideDiff other)
     {
@@ -4319,7 +4319,7 @@ public class SideDiff : Entity<SideDiff>
         {
             Piece = other.Piece ?? Piece,
             DesignPiece = other.DesignPiece ?? DesignPiece,
-            Port = other.Port ?? Port,
+            Connector = other.Connector ?? Connector,
             Description = string.IsNullOrEmpty(other.Description) ? Description : other.Description
         };
     }
@@ -4335,10 +4335,10 @@ public class Side : Entity<Side>
     public PieceId Piece { get; set; } = new();
     [EntityProp("🏙️", "DP?", "DPc?", "The optional id of the piece inside the referenced design piece.", PropImportance.OPTIONAL)]
     public PieceId? DesignPiece { get; set; } = null;
-    [EntityProp("🔌", "Po", "Por", "The local identifier of the port within the type.")]
-    public PortId Port { get; set; } = new();
+    [EntityProp("🔌", "Po", "Por", "The local identifier of the connector within the type.")]
+    public ConnectorId Connector { get; set; } = new();
 
-    public static implicit operator Side(SideDiff diff) => new() { Piece = diff.Piece ?? new(), DesignPiece = diff.DesignPiece, Port = diff.Port ?? new() };
+    public static implicit operator Side(SideDiff diff) => new() { Piece = diff.Piece ?? new(), DesignPiece = diff.DesignPiece, Connector = diff.Connector ?? new() };
 
     public Side ApplyDiff(SideDiff diff)
     {
@@ -4346,7 +4346,7 @@ public class Side : Entity<Side>
         {
             Piece = diff.Piece ?? Piece,
             DesignPiece = diff.DesignPiece ?? DesignPiece,
-            Port = diff.Port ?? Port
+            Connector = diff.Connector ?? Connector
         };
     }
 
@@ -4356,7 +4356,7 @@ public class Side : Entity<Side>
         {
             Piece = Piece,
             DesignPiece = DesignPiece,
-            Port = Port
+            Connector = Connector
         };
     }
 
@@ -4366,14 +4366,14 @@ public class Side : Entity<Side>
         {
             Piece = appliedDiff.Piece is not null ? Piece : null,
             DesignPiece = appliedDiff.DesignPiece is not null ? DesignPiece : null,
-            Port = appliedDiff.Port is not null ? Port : null
+            Connector = appliedDiff.Connector is not null ? Connector : null
         };
     }
 
     public override bool Equals(object? obj)
     {
         if (obj is not Side other) return false;
-        return Piece.Guid == other.Piece.Guid && DesignPiece?.Guid == other.DesignPiece?.Guid && Port.Guid == other.Port.Guid;
+        return Piece.Guid == other.Piece.Guid && DesignPiece?.Guid == other.DesignPiece?.Guid && Connector.Guid == other.Connector.Guid;
     }
 
     public override int GetHashCode()
@@ -4383,12 +4383,12 @@ public class Side : Entity<Side>
             var hash = 17;
             hash = hash * 31 + (Piece.Guid?.GetHashCode() ?? 0);
             hash = hash * 31 + (DesignPiece?.Guid?.GetHashCode() ?? 0);
-            hash = hash * 31 + (Port.Guid?.GetHashCode() ?? 0);
+            hash = hash * 31 + (Connector.Guid?.GetHashCode() ?? 0);
             return hash;
         }
     }
 
-    public override string ToString() => $"Sde({Piece.Guid}" + (Port.Guid != "" ? ":" + Port.Guid : "") + ")";
+    public override string ToString() => $"Sde({Piece.Guid}" + (Connector.Guid != "" ? ":" + Connector.Guid : "") + ")";
 }
 
 #endregion Side
@@ -4405,7 +4405,7 @@ public class ConnectionId : Entity<ConnectionId>
     [EntityProp("🧲", "Cg", "Cng", "The connecting side of the piece.")]
     public Side Connecting { get; set; } = new();
 
-    public string ToIdString() => $"{Connected.Piece.Guid + (Connected.Port.Guid != "" ? ":" + Connected.Port.Guid : "")}--{(Connecting.Port.Guid != "" ? Connecting.Port.Guid + ":" : "") + Connecting.Piece.Guid}";
+    public string ToIdString() => $"{Connected.Piece.Guid + (Connected.Connector.Guid != "" ? ":" + Connected.Connector.Guid : "")}--{(Connecting.Connector.Guid != "" ? Connecting.Connector.Guid + ":" : "") + Connecting.Piece.Guid}";
     public string ToHumanIdString() => $"{ToIdString()}";
     public override string ToString() => $"ConId({ToHumanIdString()})";
 
@@ -4441,7 +4441,7 @@ public class ConnectionDiff : Entity<ConnectionDiff>
     [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the connection.", PropImportance.OPTIONAL)]
     public List<Attribute>? Attributes { get; set; }
 
-    public static implicit operator ConnectionDiff(ConnectionId id) => new() { Connected = new SideDiff { Piece = id.Connected.Piece, DesignPiece = id.Connected.DesignPiece, Port = id.Connected.Port }, Connecting = new SideDiff { Piece = id.Connecting.Piece, DesignPiece = id.Connecting.DesignPiece, Port = id.Connecting.Port } };
+    public static implicit operator ConnectionDiff(ConnectionId id) => new() { Connected = new SideDiff { Piece = id.Connected.Piece, DesignPiece = id.Connected.DesignPiece, Connector = id.Connected.Connector }, Connecting = new SideDiff { Piece = id.Connecting.Piece, DesignPiece = id.Connecting.DesignPiece, Connector = id.Connecting.Connector } };
     public static implicit operator ConnectionDiff(Connection connection) => new() { Connected = connection.Connected.CreateDiff(), Connecting = connection.Connecting.CreateDiff(), Description = connection.Description, Gap = connection.Gap, Shift = connection.Shift, Rise = connection.Rise, Rotation = connection.Rotation, Turn = connection.Turn, Tilt = connection.Tilt, U = connection.U, V = connection.V, Attributes = connection.Attributes };
 
     public ConnectionDiff MergeDiff(ConnectionDiff other)
@@ -4520,7 +4520,7 @@ public class Connection : Entity<Connection>
     [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the connection.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
-    public string ToIdString() => $"{Connected.Piece.Guid + (Connected.Port.Guid != "" ? ":" + Connected.Port.Guid : "")}--{(Connecting.Port.Guid != "" ? Connecting.Port.Guid + ":" : "") + Connecting.Piece.Guid}";
+    public string ToIdString() => $"{Connected.Piece.Guid + (Connected.Connector.Guid != "" ? ":" + Connected.Connector.Guid : "")}--{(Connecting.Connector.Guid != "" ? Connecting.Connector.Guid + ":" : "") + Connecting.Piece.Guid}";
     public string ToHumanIdString() => $"{ToIdString()}";
     public override string ToString() => $"Con({ToHumanIdString()})";
 
@@ -4590,9 +4590,9 @@ public class Connection : Entity<Connection>
         if (strict)
         {
             return Connected.Piece.Guid == other.Connected.Piece.Guid &&
-                   Connected.Port.Guid == other.Connected.Port.Guid &&
+                   Connected.Connector.Guid == other.Connected.Connector.Guid &&
                    Connecting.Piece.Guid == other.Connecting.Piece.Guid &&
-                   Connecting.Port.Guid == other.Connecting.Port.Guid;
+                   Connecting.Connector.Guid == other.Connecting.Connector.Guid;
         }
         return (Connected.Piece.Guid == other.Connected.Piece.Guid && Connecting.Piece.Guid == other.Connecting.Piece.Guid) ||
                (Connected.Piece.Guid == other.Connecting.Piece.Guid && Connecting.Piece.Guid == other.Connected.Piece.Guid);
@@ -5051,13 +5051,13 @@ public class Design : Entity<Design>
     {
         if (Pieces.Count > 1 && Connections.Count > 0)
         {
-            var ports = new Dictionary<string, Dictionary<string, Port>>();
+            var connectors = new Dictionary<string, Dictionary<string, Connector>>();
             foreach (var type in types)
             {
-                if (!ports.ContainsKey(type.Guid))
-                    ports[type.Guid] = new Dictionary<string, Port>();
-                foreach (var port in type.Ports)
-                    ports[type.Guid][port.Guid] = port;
+                if (!connectors.ContainsKey(type.Guid))
+                    connectors[type.Guid] = new Dictionary<string, Connector>();
+                foreach (var connector in type.Connectors)
+                    connectors[type.Guid][connector.Guid] = connector;
             }
 
             foreach (var piece in Pieces)
@@ -5074,16 +5074,16 @@ public class Design : Entity<Design>
                 if (connectedPiece.Type is null)
                     throw new Exception($"Flatten requires all pieces to have a type. Piece ({connectedPiece.Guid}) has no type.");
                 var connectedType = types.First(t => t.Guid == connectedPiece.Type.Guid);
-                if (!ports[connectedType.Guid].ContainsKey(connection.Connected.Port.Guid))
+                if (!connectors[connectedType.Guid].ContainsKey(connection.Connected.Connector.Guid))
                     throw new Exception(
-                        $"The type {connectedType.ToHumanIdString()} of the connection {connection.ToHumanIdString()} doesn't have the port {connection.Connected.Port.Guid}.");
+                        $"The type {connectedType.ToHumanIdString()} of the connection {connection.ToHumanIdString()} doesn't have the connector {connection.Connected.Connector.Guid}.");
                 var connectingPiece = Pieces.First(p => p.Guid == connection.Connecting.Piece.Guid);
                 if (connectingPiece.Type is null)
                     throw new Exception($"Flatten requires all pieces to have a type. Piece ({connectingPiece.Guid}) has no type.");
                 var connectingType = types.First(t => t.Guid == connectingPiece.Type.Guid);
-                if (!ports[connectingType.Guid].ContainsKey(connection.Connecting.Port.Guid))
+                if (!connectors[connectingType.Guid].ContainsKey(connection.Connecting.Connector.Guid))
                     throw new Exception(
-                        $"The type {connectingType.ToHumanIdString()} of the connection {connection.ToHumanIdString()} doesn't have the port {connection.Connecting.Port.Guid}.");
+                        $"The type {connectingType.ToHumanIdString()} of the connection {connection.ToHumanIdString()} doesn't have the connector {connection.Connecting.Connector.Guid}.");
             }
 
             var onRoot = new Action<Piece>(piece =>
@@ -5096,15 +5096,15 @@ public class Design : Entity<Design>
                 var isParentConnected = connection.Connected.Piece.Guid == parent.Guid;
                 var parentPlane = parent.Plane;
                 if (parentPlane is null || parent.Type is null || child.Type is null) return;
-                var parentPort =
-                    ports[parent.Type.Guid][
-                        isParentConnected ? connection.Connected.Port.Guid : connection.Connecting.Port.Guid];
-                var childPort =
-                    ports[child.Type.Guid][
-                        isParentConnected ? connection.Connecting.Port.Guid : connection.Connected.Port.Guid];
-                if (parentPort.Point is null || parentPort.Direction is null || childPort.Point is null || childPort.Direction is null) return;
-                var childPlane = computeChildPlane(parentPlane, parentPort.Point, parentPort.Direction,
-                    childPort.Point, childPort.Direction,
+                var parentConnector =
+                    connectors[parent.Type.Guid][
+                        isParentConnected ? connection.Connected.Connector.Guid : connection.Connecting.Connector.Guid];
+                var childConnector =
+                    connectors[child.Type.Guid][
+                        isParentConnected ? connection.Connecting.Connector.Guid : connection.Connected.Connector.Guid];
+                if (parentConnector.Point is null || parentConnector.Direction is null || childConnector.Point is null || childConnector.Direction is null) return;
+                var childPlane = computeChildPlane(parentPlane, parentConnector.Point, parentConnector.Direction,
+                    childConnector.Point, childConnector.Direction,
                     connection.Gap, connection.Shift, connection.Rise,
                     connection.Rotation, connection.Turn, connection.Tilt);
                 child.Plane = childPlane;
@@ -5169,7 +5169,7 @@ public class Design : Entity<Design>
     public Piece? Piece(string guid) => Pieces.Find(piece => piece.Guid == guid);
     private Design FlatToSvgCoordinates(float iconWidth, float iconWidthMax, float margin)
     {
-        
+
         foreach (var piece in Pieces)
         {
             if (piece.Center is null) continue;
@@ -5183,7 +5183,7 @@ public class Design : Entity<Design>
             if (connection.V.HasValue) connection.V = -(connection.V * iconWidth);
         }
 
-        
+
         var maxIconOffset = iconWidthMax - iconWidth;
         var minX = Pieces.Where(p => p.Center is not null).Min(piece => piece.Center!.U) - (margin + maxIconOffset);
         var minY = Pieces.Where(p => p.Center is not null).Min(piece => piece.Center!.V) - (margin + maxIconOffset);
@@ -5201,9 +5201,9 @@ public class Design : Entity<Design>
         return this;
     }
 
-    
-    
-    
+
+
+
     public string Diagram(
         IEnumerable<Type> types,
         Func<Plane, Point, Vector, Point, Vector, float, float, float, float, float, float, Plane> computeChildPlane,
@@ -5280,7 +5280,7 @@ public class Design : Entity<Design>
             var iconKind = Utility.ParseIconKind(icon);
             if (iconKind == IconKind.Logogram)
             {
-                
+
                 var fontSize = iconWidth / 2;
                 var text = new SvgText
                 {
@@ -5288,10 +5288,10 @@ public class Design : Entity<Design>
                     FontSize = fontSize,
                     TextAnchor = SvgTextAnchor.Middle,
                     Fill = new SvgColourServer(Color.Black),
-                    
+
                     CustomAttributes =
                     {
-                        
+
                     }
                 };
                 var textTransformed = new SvgGroup
@@ -5419,7 +5419,7 @@ text {
     }
 
 
-    
+
     public override (bool, List<string>) Validate()
     {
         var (isValid, errors) = base.Validate();
@@ -6018,26 +6018,26 @@ public class Kit : Entity<Kit>
         return result;
     }
 
-    
+
     public override (bool, List<string>) Validate()
     {
         var (isValid, errors) = base.Validate();
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         foreach (var type in Types)
         {
             var (isValidType, errorsType) = type.Validate();
@@ -6219,12 +6219,12 @@ public class Kit : Entity<Kit>
 
     #region Design Family Helpers
 
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
     public Design FindDesignByGuid(string designGuid)
     {
         var design = Designs.FirstOrDefault(d => d.Guid == designGuid);
@@ -6232,12 +6232,12 @@ public class Kit : Entity<Kit>
         return design;
     }
 
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
     public Design GetPrimitiveDesign(string designGuid)
     {
         var current = FindDesignByGuid(designGuid);
@@ -6248,11 +6248,11 @@ public class Kit : Entity<Kit>
         return current;
     }
 
-    
-    
-    
-    
-    
+
+
+
+
+
     public List<Design> GetDesignFamily(string designGuid)
     {
         var primitive = GetPrimitiveDesign(designGuid);
@@ -6272,12 +6272,12 @@ public class Kit : Entity<Kit>
         }
     }
 
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
     public bool AreDesignsInSameFamily(string designGuidA, string designGuidB)
     {
         var primitiveA = GetPrimitiveDesign(designGuidA);
@@ -6285,23 +6285,23 @@ public class Kit : Entity<Kit>
         return primitiveA.Guid == primitiveB.Guid;
     }
 
-    
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
+
     public bool CanUseDesignAsPiece(string containerDesignGuid, string pieceDesignGuid)
     {
         return !AreDesignsInSameFamily(containerDesignGuid, pieceDesignGuid);
     }
 
-    
-    
-    
-    
-    
+
+
+
+
+
     public List<Piece> FindSameFamilyDesignPieces(string designGuid)
     {
         var design = FindDesignByGuid(designGuid);
@@ -6314,12 +6314,12 @@ public class Kit : Entity<Kit>
 
     #region Type Family Helpers
 
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
     public Type FindTypeByGuid(string typeGuid)
     {
         var type = Types.FirstOrDefault(t => t.Guid == typeGuid);
@@ -6327,12 +6327,12 @@ public class Kit : Entity<Kit>
         return type;
     }
 
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
     public Type GetPrimitiveType(string typeGuid)
     {
         var current = FindTypeByGuid(typeGuid);
@@ -6343,11 +6343,11 @@ public class Kit : Entity<Kit>
         return current;
     }
 
-    
-    
-    
-    
-    
+
+
+
+
+
     public List<Type> GetTypeFamily(string typeGuid)
     {
         var primitive = GetPrimitiveType(typeGuid);
@@ -6367,12 +6367,12 @@ public class Kit : Entity<Kit>
         }
     }
 
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
     public bool AreTypesInSameFamily(string typeGuidA, string typeGuidB)
     {
         var primitiveA = GetPrimitiveType(typeGuidA);
@@ -6508,39 +6508,39 @@ public class ServerException : Exception
 
 public static class Meta
 {
-    
-    
-    
+
+
+
     public static readonly ImmutableDictionary<string, System.Type> Type;
 
-    
-    
-    
+
+
+
     public static readonly ImmutableDictionary<string, EntityAttribute> Entity;
 
-    
-    
-    
+
+
+
     public static readonly ImmutableDictionary<string, ImmutableArray<PropertyInfo>> Property;
 
-    
-    
-    
+
+
+
     public static readonly ImmutableDictionary<string, ImmutableArray<PropAttribute>> Prop;
 
-    
-    
-    
+
+
+
     public static readonly ImmutableDictionary<string, ImmutableArray<bool>> IsPropertyList;
 
-    
-    
-    
+
+
+
     public static readonly ImmutableDictionary<string, ImmutableArray<System.Type>> PropertyItemType;
 
-    
-    
-    
+
+
+
     public static readonly ImmutableDictionary<string, ImmutableArray<bool>> IsPropertyEntity;
 
     static Meta()
@@ -6566,8 +6566,8 @@ public static class Meta
             propertyItemType[mt.Name] = new List<System.Type>();
             isPropertyEntity[mt.Name] = new List<bool>();
 
-            
-            
+
+
             var propertyParents = new List<PropertyInfo>();
             var propParents = new List<PropAttribute>();
             var isPropertyListParents = new List<bool>();

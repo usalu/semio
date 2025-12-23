@@ -40,5 +40,5 @@ This structure caused unnecessary test isolation and didn't reflect the app hier
   - **Home**: Settings panel hierarchy test
   - **Kit**: Imports metabolism.zip, verifies content, tests files view, performance test for expand/collapse, settings panel hierarchy
   - **Design**: Windows visibility, drag-and-drop pieces functionality, settings panel hierarchy
-  - **Type**: Toolbar visibility, selection/port tool tests, settings panel hierarchy
+  - **Type**: Toolbar visibility, selection/connector tool tests, settings panel hierarchy
   - **Docs**: Content loading, workbench panel sections, pages in sections, details panel, navigation

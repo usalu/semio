@@ -1,7 +1,7 @@
 ---
 slug: TOOLBAR-TOOLS-E2E
-summary: Implement toolbar in apps and extend Type app E2E test for port tool
-prompt: Implement toolbar in apps and extend Type app E2E test for port tool
+summary: Implement toolbar in apps and extend Type app E2E test for connector tool
+prompt: Implement toolbar in apps and extend Type app E2E test for connector tool
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
@@ -16,7 +16,7 @@ User requested:
 
 1. Get tools in apps working
 2. Implement a toolbar in the bottom middle between left and right panels
-3. Extend the Type app E2E test to test the port tool (select the tool, move cursor to geometry, click to create port)
+3. Extend the Type app E2E test to test the connector tool (select the tool, move cursor to geometry, click to create connector)
 
 The toolbar container existed but the tools inside were not rendering.
 
@@ -24,7 +24,7 @@ The toolbar container existed but the tools inside were not rendering.
 
 1. Investigate why toolbar sections are not visible
 2. Fix the rendering issue
-3. Add E2E test for port tool functionality
+3. Add E2E test for connector tool functionality
 4. Clean up test code
 
 # Changes
@@ -83,11 +83,11 @@ Added `id="semio.sketchpad.toolbar"` to the toolbar container div for testabilit
 Extended Type test to:
 
 1. Wait for toolbar to be visible
-2. Locate port and selection tool toggles
-3. Click port tool button to activate it
+2. Locate connector and selection tool toggles
+3. Click connector tool button to activate it
 4. Verify tool is activated (data-state="on")
 5. Move cursor to canvas center
-6. Click to simulate port creation
+6. Click to simulate connector creation
 7. Switch back to selection tool
 
 Note: The test found duplicate IDs (container and button share same ID) - worked around with `locator('button[role="radio"]').first()`.

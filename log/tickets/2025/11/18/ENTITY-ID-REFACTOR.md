@@ -65,12 +65,12 @@ All entities that reference other entities (in order from specs):
 13. **Quality** - self-contained
 14. **Prop** - references: `key: string` (quality key) → `quality: QualityId`
 15. **Model** - self-contained
-16. **Port** - self-contained
+16. **Connector** - self-contained
 17. **Type** - references: `authors: string[]` → `authors: AuthorId[]`, location needs `location: LocationId`
 18. **Layer** - self-contained
 19. **Piece** - references: `type: string`, `design: string` → `type: TypeId`, `design: DesignId`
 20. **Group** - references: `pieces: string[]` → `pieces: PieceId[]`
-21. **Side** - references: `piece: string`, `designPiece: string`, `port: number` → `piece: PieceId`, `designPiece: PieceId`, `port: PortId`
+21. **Side** - references: `piece: string`, `designPiece: string`, `connector: number` → `piece: PieceId`, `designPiece: PieceId`, `connector: ConnectorId`
 22. **Connection** - has `connected: Side`, `connecting: Side`
 23. **Stat** - references: `key: string` (quality key) → `quality: QualityId`
 24. **Design** - references: `authors: string[]` → `authors: AuthorId[]`, location needs `location: LocationId`
@@ -88,7 +88,7 @@ export type FolderId = { guid: Guid };
 export type BenchmarkId = { guid: Guid };
 export type QualityId = { guid: Guid };
 export type ModelId = { guid: Guid };
-export type PortId = { guid: Guid };
+export type ConnectorId = { guid: Guid };
 export type TypeId = { guid: Guid };
 export type LayerId = { guid: Guid };
 export type PieceId = { guid: Guid };
@@ -131,7 +131,7 @@ export type KitId = { guid: Guid };
 
 - `piece: string` → `piece: PieceId`
 - `designPiece?: string` → `designPiece?: PieceId`
-- `port: number` → `port: PortId`
+- `connector: number` → `connector: ConnectorId`
 
 #### Stat
 
@@ -296,12 +296,12 @@ export type KitId = { guid: Guid };
 #### Steps:
 
 1. **DesignAppStore** (`js/js/sketchpad/apps/design/App.tsx`)
-   - Update selection types (pieces, connections, ports now use IDs)
+   - Update selection types (pieces, connections, connectors now use IDs)
    - Update command contexts
    - Update all commands
 
 2. **TypeAppStore** (`js/js/sketchpad/apps/type/App.tsx`)
-   - Update port references
+   - Update connector references
    - Update model handling
    - Update commands
 
@@ -552,18 +552,18 @@ Once this refactor is complete, we enable:
   - Type (location → LocationId, authors → AuthorId[])
   - Piece (type → TypeId, design → DesignId)
   - Group (pieces → PieceId[])
-  - Side (piece, designPiece, port all → ID objects)
+  - Side (piece, designPiece, connector all → ID objects)
   - Stat (key → quality: QualityId) - **field renamed!**
   - Design (location → LocationId, authors → AuthorId[], activeLayer → LayerId)
 - ✅ All diff functions updated (getDiff, inverseDiff, applyDiff)
 - ✅ All helper functions updated to use `.guid` accessors:
-  - Connection-related functions (~30+ updates for connected/connecting.piece/port)
+  - Connection-related functions (~30+ updates for connected/connecting.piece/connector)
   - Type replacement functions (findReplacableTypesForPieceInDesign, etc.)
   - Design flattening functions
   - Cluster functions
   - File tree building
   - Model helpers
-  - Port finding helpers
+  - Connector finding helpers
   - And many more...
 - ✅ No TypeScript errors in semio.ts
 
@@ -572,9 +572,9 @@ Once this refactor is complete, we enable:
 1. All entity cross-references now use ID objects with `.guid` property
 2. Prop.key renamed to Prop.quality (with QualityId type)
 3. Stat.key renamed to Stat.quality (with QualityId type)
-4. All connection.connected/connecting accesses require `.piece.guid` or `.port.guid`
+4. All connection.connected/connecting accesses require `.piece.guid` or `.connector.guid`
 5. Group.pieces is now array of PieceId objects
-6. Side fields (piece, designPiece, port) are all ID objects
+6. Side fields (piece, designPiece, connector) are all ID objects
 7. Type/Design authors arrays now contain AuthorId objects
 8. Type/Design location fields now LocationId objects
 9. Design.activeLayer now LayerId object
@@ -589,7 +589,7 @@ All Y.js stores updated to handle ID objects:
 
 - ✅ FileStore: folder field returns FolderId in snapshot(), accepts FolderId in change()
 - ✅ FolderStore: parent field returns FolderId in snapshot(), accepts FolderId in change()
-- ✅ SideStore: piece, designPiece, port fields return ID objects in snapshot(), accept ID objects in change()
+- ✅ SideStore: piece, designPiece, connector fields return ID objects in snapshot(), accept ID objects in change()
 - ✅ PieceStore: type, design fields return ID objects in snapshot(), accept ID objects in change()
 - ✅ GroupStore: pieces array returns PieceId[] in snapshot(), accepts PieceId[] in change()
 - ✅ No TypeScript errors in App.tsx

@@ -95,7 +95,7 @@
     },
     {
       "severity": "error",
-      "entity": "Port",
+      "entity": "Connector",
       "message": "Missing entity in C#",
       "source": "net"
     },
@@ -223,7 +223,7 @@
     },
     {
       "severity": "warning",
-      "entity": "Port",
+      "entity": "Connector",
       "message": "Missing Grasshopper component",
       "source": "grasshopper"
     },

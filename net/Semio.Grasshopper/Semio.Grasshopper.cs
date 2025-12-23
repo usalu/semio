@@ -134,24 +134,24 @@ public static class Utility
         var parentDirectionR = parentDirection.Convert();
         var revertedChildPointR = new Vector3d(childPoint.Convert());
         revertedChildPointR.Reverse();
-        
+
         var reverseChildDirectionR = childDirection.Convert();
         reverseChildDirectionR.Reverse();
         var rotationRad = RhinoMath.ToRadians(rotation);
         var turnRad = RhinoMath.ToRadians(turn);
         var tiltRad = RhinoMath.ToRadians(tilt);
 
-        
 
-        
+
+
         var areDirectionsSame = parentDirectionR.IsParallelTo(childDirection.Convert(), Semio.Constants.Tolerance) == 1;
 
-        
-        
+
+
         Transform directionT;
         if (areDirectionsSame)
         {
-            
+
             if (Math.Abs(parentDirectionR.Z) < Semio.Constants.Tolerance)
                 directionT = Transform.Rotation(RhinoMath.ToRadians(180), Vector3d.ZAxis, new Point3d());
             else
@@ -184,17 +184,17 @@ public static class Utility
         orientationT = rotateT * orientationT;
         turnAxis.Transform(rotateT);
         tiltAxis.Transform(rotateT);
-        
+
 
         var turnT = Transform.Rotation(turnRad, turnAxis, new Point3d());
         orientationT = turnT * orientationT;
-        
+
 
         var tiltT = Transform.Rotation(tiltRad, tiltAxis, new Point3d());
         orientationT = tiltT * orientationT;
-        
 
-        
+
+
 
         var centerChild = Transform.Translation(revertedChildPointR);
         var moveToParent = Transform.Translation(parentPointR);
@@ -213,7 +213,7 @@ public static class Utility
         var childPlaneR = Rhino.Geometry.Plane.WorldXY;
         childPlaneR.Transform(transform);
 
-        
+
 
         var parentPlaneR = parentPlane.Convert();
         var parentPlaneT = Transform.PlaneToPlane(Rhino.Geometry.Plane.WorldXY, parentPlaneR);
@@ -2505,12 +2505,12 @@ public class DeserializeModelsDiffComponent : DeserializeComponent<ModelsDiffPar
 
 #endregion Model
 
-#region Port
+#region Connector
 
-public class PortGoo : Goo<Port>
+public class ConnectorGoo : Goo<Connector>
 {
-    public PortGoo() { }
-    public PortGoo(Port value) : base(value) { }
+    public ConnectorGoo() { }
+    public ConnectorGoo(Connector value) : base(value) { }
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
@@ -2520,14 +2520,14 @@ public class PortGoo : Goo<Port>
             target = (Q)(object)new GH_Plane(Utility.GetPlaneFromYAxis(Value.Direction.Convert(), 0, Value.Point.Convert()));
             return true;
         }
-        if (typeof(Q).IsAssignableFrom(typeof(PortIdGoo)))
+        if (typeof(Q).IsAssignableFrom(typeof(ConnectorIdGoo)))
         {
-            target = (Q)(object)new PortIdGoo(Value);
+            target = (Q)(object)new ConnectorIdGoo(Value);
             return true;
         }
-        if (typeof(Q).IsAssignableFrom(typeof(PortDiffGoo)))
+        if (typeof(Q).IsAssignableFrom(typeof(ConnectorDiffGoo)))
         {
-            target = (Q)(object)new PortDiffGoo(Value);
+            target = (Q)(object)new ConnectorDiffGoo(Value);
             return true;
         }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
@@ -2541,12 +2541,12 @@ public class PortGoo : Goo<Port>
     internal override bool CustomCastFrom(object source)
     {
         if (source is null) return false;
-        if (source is PortIdGoo idGoo)
+        if (source is ConnectorIdGoo idGoo)
         {
             Value = idGoo.Value;
             return true;
         }
-        if (source is PortDiffGoo diffGoo)
+        if (source is ConnectorDiffGoo diffGoo)
         {
             Value = diffGoo.Value;
             return true;
@@ -2560,7 +2560,7 @@ public class PortGoo : Goo<Port>
         }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            var deserialized = str.Deserialize<Port>();
+            var deserialized = str.Deserialize<Connector>();
             if (deserialized is null) return false;
             Value = deserialized;
             return true;
@@ -2569,43 +2569,43 @@ public class PortGoo : Goo<Port>
     }
 }
 
-public class PortParam : Param<PortGoo, Port>
+public class ConnectorParam : Param<ConnectorGoo, Connector>
 {
     public override Guid ComponentGuid => new("96775DC9-9079-4A22-8376-6AB8F58C8B1B");
 }
 
-public class PortComponent : PassthroughComponent<PortParam, PortGoo, Port>
+public class ConnectorComponent : PassthroughComponent<ConnectorParam, ConnectorGoo, Connector>
 {
     public override Guid ComponentGuid => new("E505C90C-71F4-413F-82FE-65559D9FFAB5");
-    protected override string ModelName => "Port";
+    protected override string ModelName => "Connector";
     protected override string ModelNickname => "Por";
-    protected override string ModelDescription => "Construct, deconstruct or modify a port.";
+    protected override string ModelDescription => "Construct, deconstruct or modify a connector.";
 
     protected override void RegisterModelInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the port.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Name", "Nm?", "The optional name of the port.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Guid", "Gd", "The guid of the connector.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Nm?", "The optional name of the connector.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Mandatory", "Ma?", "Whether the port is mandatory.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Mandatory", "Ma?", "Whether the connector is mandatory.", GH_ParamAccess.item);
         pManager.AddPointParameter("Point", "Pt", "The connection point.", GH_ParamAccess.item);
-        pManager.AddVectorParameter("Direction", "Dr", "The direction of the port.", GH_ParamAccess.item);
+        pManager.AddVectorParameter("Direction", "Dr", "The direction of the connector.", GH_ParamAccess.item);
         pManager.AddNumberParameter("T", "T", "The t parameter [0,1[.", GH_ParamAccess.item);
         pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
     }
 
     protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the port.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Name", "Nm?", "The optional name of the port.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Guid", "Gd", "The guid of the connector.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Nm?", "The optional name of the connector.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Mandatory", "Ma?", "Whether the port is mandatory.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Mandatory", "Ma?", "Whether the connector is mandatory.", GH_ParamAccess.item);
         pManager.AddPointParameter("Point", "Pt", "The connection point.", GH_ParamAccess.item);
-        pManager.AddVectorParameter("Direction", "Dr", "The direction of the port.", GH_ParamAccess.item);
+        pManager.AddVectorParameter("Direction", "Dr", "The direction of the connector.", GH_ParamAccess.item);
         pManager.AddNumberParameter("T", "T", "The t parameter [0,1[.", GH_ParamAccess.item);
         pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
     }
 
-    protected override void GetModelData(IGH_DataAccess DA, Port model)
+    protected override void GetModelData(IGH_DataAccess DA, Connector model)
     {
         string guid = "", name = "", description = "";
         bool mandatory = false;
@@ -2624,7 +2624,7 @@ public class PortComponent : PassthroughComponent<PortParam, PortGoo, Port>
         if (DA.GetDataList(9, attributes)) model.Attributes = attributes.Select(a => a.Value.DeepClone()).ToList();
     }
 
-    protected override void SetModelData(IGH_DataAccess DA, Port model)
+    protected override void SetModelData(IGH_DataAccess DA, Connector model)
     {
         DA.SetData(2, model.Guid);
         DA.SetData(3, model.Name);
@@ -2637,33 +2637,33 @@ public class PortComponent : PassthroughComponent<PortParam, PortGoo, Port>
     }
 }
 
-public class SerializePortComponent : SerializeComponent<PortParam, PortGoo, Port>
+public class SerializePortComponent : SerializeComponent<ConnectorParam, ConnectorGoo, Connector>
 {
     public SerializePortComponent() { }
     public override Guid ComponentGuid => new("1A29F6ED-464D-490F-B072-3412B467F1B5");
 }
 
-public class DeserializePortComponent : DeserializeComponent<PortParam, PortGoo, Port>
+public class DeserializePortComponent : DeserializeComponent<ConnectorParam, ConnectorGoo, Connector>
 {
     public DeserializePortComponent() { }
     public override Guid ComponentGuid => new("1A29F6ED-464D-490F-B072-3412B467F1B6");
 }
 
-public class PortIdGoo : IdGoo<PortId>
+public class ConnectorIdGoo : IdGoo<ConnectorId>
 {
-    public PortIdGoo() { }
-    public PortIdGoo(PortId value) : base(value) { }
+    public ConnectorIdGoo() { }
+    public ConnectorIdGoo(ConnectorId value) : base(value) { }
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
-        if (typeof(Q).IsAssignableFrom(typeof(PortDiffGoo)))
+        if (typeof(Q).IsAssignableFrom(typeof(ConnectorDiffGoo)))
         {
-            target = (Q)(object)new PortDiffGoo(Value);
+            target = (Q)(object)new ConnectorDiffGoo(Value);
             return true;
         }
-        if (typeof(Q).IsAssignableFrom(typeof(PortGoo)))
+        if (typeof(Q).IsAssignableFrom(typeof(ConnectorGoo)))
         {
-            target = (Q)(object)new PortGoo(Value);
+            target = (Q)(object)new ConnectorGoo(Value);
             return true;
         }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
@@ -2677,46 +2677,46 @@ public class PortIdGoo : IdGoo<PortId>
     internal override bool CustomCastFrom(object source)
     {
         if (source is null) return false;
-        if (source is PortGoo portGoo)
+        if (source is ConnectorGoo connectorGoo)
         {
-            Value = portGoo.Value;
+            Value = connectorGoo.Value;
             return true;
         }
-        if (source is PortDiffGoo diffGoo)
+        if (source is ConnectorDiffGoo diffGoo)
         {
             Value = diffGoo.Value;
             return true;
         }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new PortId { Guid = str };
+            Value = new ConnectorId { Guid = str };
             return true;
         }
         return false;
     }
 }
 
-public class PortIdParam : IdParam<PortIdGoo, PortId>
+public class ConnectorIdParam : IdParam<ConnectorIdGoo, ConnectorId>
 {
     public override Guid ComponentGuid => new("C1D2E3F4-A5B6-C7D8-E9F0-A1B2C3D4E5F6");
 }
 
 
-public class PortDiffGoo : DiffGoo<PortDiff>
+public class ConnectorDiffGoo : DiffGoo<ConnectorDiff>
 {
-    public PortDiffGoo() { }
-    public PortDiffGoo(PortDiff value) : base(value) { }
+    public ConnectorDiffGoo() { }
+    public ConnectorDiffGoo(ConnectorDiff value) : base(value) { }
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
-        if (typeof(Q).IsAssignableFrom(typeof(PortIdGoo)))
+        if (typeof(Q).IsAssignableFrom(typeof(ConnectorIdGoo)))
         {
-            target = (Q)(object)new PortIdGoo(Value);
+            target = (Q)(object)new ConnectorIdGoo(Value);
             return true;
         }
-        if (typeof(Q).IsAssignableFrom(typeof(PortGoo)))
+        if (typeof(Q).IsAssignableFrom(typeof(ConnectorGoo)))
         {
-            target = (Q)(object)new PortGoo(Value);
+            target = (Q)(object)new ConnectorGoo(Value);
             return true;
         }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
@@ -2730,21 +2730,21 @@ public class PortDiffGoo : DiffGoo<PortDiff>
     internal override bool CustomCastFrom(object source)
     {
         if (source is null) return false;
-        if (source is PortIdGoo idGoo)
+        if (source is ConnectorIdGoo idGoo)
         {
             Value = idGoo.Value;
             return true;
         }
-        if (source is PortGoo portGoo)
+        if (source is ConnectorGoo connectorGoo)
         {
-            Value = portGoo.Value;
+            Value = connectorGoo.Value;
             return true;
         }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
             try
             {
-                var deserialized = str.Deserialize<PortDiff>();
+                var deserialized = str.Deserialize<ConnectorDiff>();
                 if (deserialized is null) return false;
                 Value = deserialized;
                 return true;
@@ -2755,38 +2755,38 @@ public class PortDiffGoo : DiffGoo<PortDiff>
     }
 }
 
-public class PortDiffParam : DiffParam<PortDiffGoo, PortDiff>
+public class ConnectorDiffParam : DiffParam<ConnectorDiffGoo, ConnectorDiff>
 {
     public override Guid ComponentGuid => new("B0C1D2E3-F4A5-B6C7-D8E9-F0A1B2C3D4E5");
 }
 
-public class PortDiffComponent : DiffComponent<PortDiffParam, PortDiffGoo, PortDiff>
+public class ConnectorDiffComponent : DiffComponent<ConnectorDiffParam, ConnectorDiffGoo, ConnectorDiff>
 {
     public override Guid ComponentGuid => new("E3F4A5B6-C7D8-E9F0-A1B2-C3D4E5F6A7B8");
 }
 
-public class SerializePortDiffComponent : SerializeComponent<PortDiffParam, PortDiffGoo, PortDiff>
+public class SerializePortDiffComponent : SerializeComponent<ConnectorDiffParam, ConnectorDiffGoo, ConnectorDiff>
 {
     public SerializePortDiffComponent() { }
     public override Guid ComponentGuid => new("F4A5B6C7-D8E9-F0A1-B2C3-D4E5F6A7B8C9");
 }
 
-public class DeserializePortDiffComponent : DeserializeComponent<PortDiffParam, PortDiffGoo, PortDiff>
+public class DeserializePortDiffComponent : DeserializeComponent<ConnectorDiffParam, ConnectorDiffGoo, ConnectorDiff>
 {
     public DeserializePortDiffComponent() { }
     public override Guid ComponentGuid => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B5");
 }
 
-public class PortsDiffGoo : DiffGoo<PortsDiff>
+public class ConnectorsDiffGoo : DiffGoo<ConnectorsDiff>
 {
-    public PortsDiffGoo() { }
-    public PortsDiffGoo(PortsDiff value) : base(value) { }
+    public ConnectorsDiffGoo() { }
+    public ConnectorsDiffGoo(ConnectorsDiff value) : base(value) { }
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String("PortsDiff");
+            target = (Q)(object)new GH_String("ConnectorsDiff");
             return true;
         }
         return false;
@@ -2799,7 +2799,7 @@ public class PortsDiffGoo : DiffGoo<PortsDiff>
         {
             try
             {
-                var deserialized = str.Deserialize<PortsDiff>();
+                var deserialized = str.Deserialize<ConnectorsDiff>();
                 if (deserialized is null) return false;
                 Value = deserialized;
                 return true;
@@ -2810,29 +2810,29 @@ public class PortsDiffGoo : DiffGoo<PortsDiff>
     }
 }
 
-public class PortsDiffParam : DiffParam<PortsDiffGoo, PortsDiff>
+public class ConnectorsDiffParam : DiffParam<ConnectorsDiffGoo, ConnectorsDiff>
 {
     public override Guid ComponentGuid => new("1A29F6ED-464D-490F-B072-3412B467F1C0");
 }
 
-public class PortsDiffComponent : DiffComponent<PortsDiffParam, PortsDiffGoo, PortsDiff>
+public class ConnectorsDiffComponent : DiffComponent<ConnectorsDiffParam, ConnectorsDiffGoo, ConnectorsDiff>
 {
     public override Guid ComponentGuid => new("1A29F6ED-464D-490F-B072-3412B467F1C1");
 }
 
-public class SerializePortsDiffComponent : SerializeComponent<PortsDiffParam, PortsDiffGoo, PortsDiff>
+public class SerializePortsDiffComponent : SerializeComponent<ConnectorsDiffParam, ConnectorsDiffGoo, ConnectorsDiff>
 {
     public SerializePortsDiffComponent() { }
     public override Guid ComponentGuid => new("1A29F6ED-464D-490F-B072-3412B467F1C2");
 }
 
-public class DeserializePortsDiffComponent : DeserializeComponent<PortsDiffParam, PortsDiffGoo, PortsDiff>
+public class DeserializePortsDiffComponent : DeserializeComponent<ConnectorsDiffParam, ConnectorsDiffGoo, ConnectorsDiff>
 {
     public DeserializePortsDiffComponent() { }
     public override Guid ComponentGuid => new("1A29F6ED-464D-490F-B072-3412B467F1C3");
 }
 
-#endregion Port
+#endregion Connector
 
 #region Concept
 
@@ -3198,7 +3198,7 @@ public class TypeComponent : PassthroughComponent<TypeParam, TypeGoo, Type>
         pManager.AddBooleanParameter("Virtual", "Vi?", "Whether the type is virtual.", GH_ParamAccess.item);
         pManager.AddIntegerParameter("Stock", "St?", "The stock quantity.", GH_ParamAccess.item);
         pManager.AddParameter(new ModelParam(), "Models", "Rp*", "The optional models.", GH_ParamAccess.list);
-        pManager.AddParameter(new PortParam(), "Ports", "Po*", "The optional ports.", GH_ParamAccess.list);
+        pManager.AddParameter(new ConnectorParam(), "Connectors", "Po*", "The optional connectors.", GH_ParamAccess.list);
         pManager.AddParameter(new AuthorIdParam(), "Authors", "Au*", "The optional authors.", GH_ParamAccess.list);
         pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
     }
@@ -3214,7 +3214,7 @@ public class TypeComponent : PassthroughComponent<TypeParam, TypeGoo, Type>
         pManager.AddBooleanParameter("Virtual", "Vi?", "Whether the type is virtual.", GH_ParamAccess.item);
         pManager.AddIntegerParameter("Stock", "St?", "The stock quantity.", GH_ParamAccess.item);
         pManager.AddParameter(new ModelParam(), "Models", "Rp*", "The optional models.", GH_ParamAccess.list);
-        pManager.AddParameter(new PortParam(), "Ports", "Po*", "The optional ports.", GH_ParamAccess.list);
+        pManager.AddParameter(new ConnectorParam(), "Connectors", "Po*", "The optional connectors.", GH_ParamAccess.list);
         pManager.AddParameter(new AuthorIdParam(), "Authors", "Au*", "The optional authors.", GH_ParamAccess.list);
         pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
     }
@@ -3225,7 +3225,7 @@ public class TypeComponent : PassthroughComponent<TypeParam, TypeGoo, Type>
         bool virtual_ = false;
         int stock = 0;
         var models = new List<ModelGoo>();
-        var ports = new List<PortGoo>();
+        var connectors = new List<ConnectorGoo>();
         var authors = new List<AuthorIdGoo>();
         var attributes = new List<AttributeGoo>();
 
@@ -3238,7 +3238,7 @@ public class TypeComponent : PassthroughComponent<TypeParam, TypeGoo, Type>
         if (DA.GetData(8, ref virtual_)) model.Virtual = virtual_;
         if (DA.GetData(9, ref stock)) model.Stock = stock;
         if (DA.GetDataList(10, models)) model.Models = models.Select(m => m.Value.DeepClone()).ToList();
-        if (DA.GetDataList(11, ports)) model.Ports = ports.Select(p => p.Value.DeepClone()).ToList();
+        if (DA.GetDataList(11, connectors)) model.Connectors = connectors.Select(p => p.Value.DeepClone()).ToList();
         if (DA.GetDataList(12, authors)) model.Authors = authors.Select(a => a.Value.DeepClone()).ToList();
         if (DA.GetDataList(13, attributes)) model.Attributes = attributes.Select(a => a.Value.DeepClone()).ToList();
     }
@@ -3254,7 +3254,7 @@ public class TypeComponent : PassthroughComponent<TypeParam, TypeGoo, Type>
         DA.SetData(8, model.Virtual);
         DA.SetData(9, model.Stock);
         DA.SetDataList(10, model.Models?.Select(m => new ModelGoo(m.DeepClone())).ToList());
-        DA.SetDataList(11, model.Ports?.Select(p => new PortGoo(p.DeepClone())).ToList());
+        DA.SetDataList(11, model.Connectors?.Select(p => new ConnectorGoo(p.DeepClone())).ToList());
         DA.SetDataList(12, model.Authors?.Select(a => new AuthorIdGoo(a.DeepClone())).ToList());
         DA.SetDataList(13, model.Attributes?.Select(a => new AttributeGoo(a.DeepClone())).ToList());
     }
@@ -4048,32 +4048,32 @@ public class SideComponent : PassthroughComponent<SideParam, SideGoo, Side>
     {
         pManager.AddParameter(new PieceIdParam(), "Piece", "Pc", "The piece of the side.", GH_ParamAccess.item);
         pManager.AddParameter(new PieceIdParam(), "DesignPiece", "DP?", "The optional design piece.", GH_ParamAccess.item);
-        pManager.AddParameter(new PortIdParam(), "Port", "Po", "The port of the side.", GH_ParamAccess.item);
+        pManager.AddParameter(new ConnectorIdParam(), "Connector", "Po", "The connector of the side.", GH_ParamAccess.item);
     }
 
     protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
     {
         pManager.AddParameter(new PieceIdParam(), "Piece", "Pc", "The piece of the side.", GH_ParamAccess.item);
         pManager.AddParameter(new PieceIdParam(), "DesignPiece", "DP?", "The optional design piece.", GH_ParamAccess.item);
-        pManager.AddParameter(new PortIdParam(), "Port", "Po", "The port of the side.", GH_ParamAccess.item);
+        pManager.AddParameter(new ConnectorIdParam(), "Connector", "Po", "The connector of the side.", GH_ParamAccess.item);
     }
 
     protected override void GetModelData(IGH_DataAccess DA, Side model)
     {
         var piece = new PieceIdGoo();
         var designPiece = new PieceIdGoo();
-        var port = new PortIdGoo();
+        var connector = new ConnectorIdGoo();
 
         if (DA.GetData(2, ref piece)) model.Piece = piece.Value.DeepClone();
         if (DA.GetData(3, ref designPiece)) model.DesignPiece = designPiece.Value.DeepClone();
-        if (DA.GetData(4, ref port)) model.Port = port.Value.DeepClone();
+        if (DA.GetData(4, ref connector)) model.Connector = connector.Value.DeepClone();
     }
 
     protected override void SetModelData(IGH_DataAccess DA, Side model)
     {
         DA.SetData(2, new PieceIdGoo(model.Piece.DeepClone()));
         DA.SetData(3, model.DesignPiece is not null ? new PieceIdGoo(model.DesignPiece.DeepClone()) : null);
-        DA.SetData(4, new PortIdGoo(model.Port.DeepClone()));
+        DA.SetData(4, new ConnectorIdGoo(model.Connector.DeepClone()));
     }
 }
 
@@ -5490,8 +5490,8 @@ public abstract class EngineComponent : Component
             var path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty,
                 "semio-engine.exe");
             var engine = Process.Start(path);
-            
-            
+
+
             AppDomain.CurrentDomain.DomainUnload += (s, e) =>
             {
                 engine.Kill();

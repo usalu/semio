@@ -21,10 +21,10 @@
           }
         }
       ],
-      "ports": [
+      "connectors": [
         {
           "guid": "019ab664-AAAA-AAAA-AAAA-AAAAAAAAAAAA",
-          "name": "Duplicate Port Name",
+          "name": "Duplicate Connector Name",
           "t": 0,
           "point": {
             "x": 0,
@@ -39,7 +39,7 @@
         },
         {
           "guid": "019ab664-BBBB-BBBB-BBBB-BBBBBBBBBBBB",
-          "name": "Duplicate Port Name",
+          "name": "Duplicate Connector Name",
           "t": 0.5,
           "point": {
             "x": 1,
@@ -120,7 +120,7 @@
             "piece": {
               "guid": "019ab664-4444-4444-4444-444444444444"
             },
-            "port": {
+            "connector": {
               "guid": "019ab664-AAAA-AAAA-AAAA-AAAAAAAAAAAA"
             }
           },
@@ -128,7 +128,7 @@
             "piece": {
               "guid": "019ab664-5555-5555-5555-555555555555"
             },
-            "port": {
+            "connector": {
               "guid": "019ab664-AAAA-AAAA-AAAA-AAAAAAAAAAAA"
             }
           }

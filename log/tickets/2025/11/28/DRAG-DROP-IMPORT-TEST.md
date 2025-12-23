@@ -24,7 +24,7 @@ No previous context.
 - [x] Verify temporary kit creation after import
 - [x] Check all types are imported (11 expected types including Tambour, Cylindric Tambour)
 - [x] Check all proto-designs are imported (Nakagin Capsule Tower, Capsule Dream)
-- [x] Verify Tambour ports (10 ports with specific coordinates)
+- [x] Verify Tambour connectors (10 connectors with specific coordinates)
 - [x] Verify Nakagin Capsule Tower has 180 pieces
 - [x] Ensure .semio folder is NOT imported
 - [x] Verify representations and icons folders/files are present
@@ -47,10 +47,10 @@ Added comprehensive UI-based test `Kit Import Drag and Drop` that:
 3. **Designs Verification** (`/kits/{guid}?kind=designs`):
    - Verifies proto-designs: Nakagin Capsule Tower, Capsule Dream
 
-4. **Tambour Ports** (`/kits/{guid}/types/{tambourGuid}`):
+4. **Tambour Connectors** (`/kits/{guid}/types/{tambourGuid}`):
    - Double-clicks Tambour row to navigate to type app
    - Opens workbench panel
-   - Verifies all 10 port names: b, t, sl0_d0, sl0_d1, sl0_d2, sl0_d3, sl1_d0, sl1_d1, sl2_d0, sl2_d1
+   - Verifies all 10 connector names: b, t, sl0_d0, sl0_d1, sl0_d2, sl0_d3, sl1_d0, sl1_d1, sl2_d0, sl2_d1
 
 5. **Nakagin Capsule Tower Pieces** (`/kits/{guid}/designs/{designGuid}`):
    - Double-clicks design row to navigate to design app

@@ -381,12 +381,12 @@
       },
       {
         "name": "Normalize Type",
-        "description": "Normalize a type for this document. This converts the length unit of the type to the length unit of this document and it scales the ports by the right scaling factor. Further it sorts the models, ports, attributes by it's keys. The order of authors is not changed.",
+        "description": "Normalize a type for this document. This converts the length unit of the type to the length unit of this document and it scales the connectors by the right scaling factor. Further it sorts the models, connectors, attributes by it's keys. The order of authors is not changed.",
         "icon": "icon",
         "nickname": "\u21d2Typ",
         "inputs": [
           {
-            "description": "A type is a reusable element that can be connected with other types over ports.",
+            "description": "A type is a reusable element that can be connected with other types over connectors.",
             "name": "Type",
             "nickname": "Ty",
             "kind": "Type"
@@ -394,7 +394,7 @@
         ],
         "outputs": [
           {
-            "description": "A type is a reusable element that can be connected with other types over ports.",
+            "description": "A type is a reusable element that can be connected with other types over connectors.",
             "name": "Type",
             "nickname": "Ty",
             "kind": "Type"
@@ -706,7 +706,7 @@
         "nickname": "?Typ",
         "inputs": [
           {
-            "description": "A type is a reusable element that can be connected with other types over ports.",
+            "description": "A type is a reusable element that can be connected with other types over connectors.",
             "name": "Type",
             "nickname": "Ty",
             "kind": "Type"
@@ -726,7 +726,7 @@
         ],
         "outputs": [
           {
-            "description": "A type is a reusable element that can be connected with other types over ports.",
+            "description": "A type is a reusable element that can be connected with other types over connectors.",
             "name": "Type",
             "nickname": "Ty",
             "kind": "Type"
@@ -746,7 +746,7 @@
         "nickname": "?Typ",
         "inputs": [
           {
-            "description": "A type is a reusable element that can be connected with other types over ports.",
+            "description": "A type is a reusable element that can be connected with other types over connectors.",
             "name": "Type",
             "nickname": "Ty",
             "kind": "Type"
@@ -760,7 +760,7 @@
         ],
         "outputs": [
           {
-            "description": "A type is a reusable element that can be connected with other types over ports.",
+            "description": "A type is a reusable element that can be connected with other types over connectors.",
             "name": "Type",
             "nickname": "Ty",
             "kind": "Type"
@@ -916,19 +916,19 @@
         ]
       },
       {
-        "name": "Select Port",
-        "description": "Select a port with the id. If no port matches, null is returned.",
+        "name": "Select Connector",
+        "description": "Select a connector with the id. If no connector matches, null is returned.",
         "icon": "icon",
         "nickname": "?Por",
         "inputs": [
           {
-            "description": "A port is a connection point (with a direction) of a type.",
-            "name": "Port",
+            "description": "A connector is a connection point (with a direction) of a type.",
+            "name": "Connector",
             "nickname": "Po",
-            "kind": "Port"
+            "kind": "Connector"
           },
           {
-            "description": "The optional local identifier of the port within the type. No id means the default port.",
+            "description": "The optional local identifier of the connector within the type. No id means the default connector.",
             "name": "Id",
             "nickname": "Id?",
             "kind": "Id"
@@ -936,10 +936,10 @@
         ],
         "outputs": [
           {
-            "description": "A port is a connection point (with a direction) of a type.",
-            "name": "Port",
+            "description": "A connector is a connection point (with a direction) of a type.",
+            "name": "Connector",
             "nickname": "Po",
-            "kind": "Port"
+            "kind": "Connector"
           },
           {
             "description": "Contains a collection of integer numbers",
@@ -1126,12 +1126,12 @@
         "icon": ""
       },
       {
-        "name": "Deserialize Port",
-        "description": "Deserialize a port.",
+        "name": "Deserialize Connector",
+        "description": "Deserialize a connector.",
         "nickname": "<Por",
         "inputs": [
           {
-            "description": "Text of serialized Port.",
+            "description": "Text of serialized Connector.",
             "name": "Text",
             "nickname": "Tx",
             "kind": "Text"
@@ -1139,10 +1139,10 @@
         ],
         "outputs": [
           {
-            "description": "Deserialized Port.",
-            "name": "Port",
+            "description": "Deserialized Connector.",
+            "name": "Connector",
             "nickname": "Po",
-            "kind": "Port"
+            "kind": "Connector"
           }
         ],
         "icon": ""
@@ -1596,18 +1596,18 @@
         "icon": ""
       },
       {
-        "name": "Serialize Port",
-        "description": "Serialize a port.",
+        "name": "Serialize Connector",
+        "description": "Serialize a connector.",
         "nickname": ">Por",
         "inputs": [
           {
-            "description": "The port to serialize.",
-            "name": "Port",
+            "description": "The connector to serialize.",
+            "name": "Connector",
             "nickname": "Po",
-            "kind": "Port"
+            "kind": "Connector"
           },
           {
-            "description": "The optional indent unit for the serialized port. Empty text for no indent or spaces or tabs",
+            "description": "The optional indent unit for the serialized connector. Empty text for no indent or spaces or tabs",
             "name": "Indent",
             "nickname": "In?",
             "kind": "Indent"
@@ -1615,7 +1615,7 @@
         ],
         "outputs": [
           {
-            "description": "Text of serialized Port.",
+            "description": "Text of serialized Connector.",
             "name": "Text",
             "nickname": "Tx",
             "kind": "Text"
@@ -2189,7 +2189,7 @@
             "kind": "Location"
           },
           {
-            "description": "The length unit of the point and the direction of the ports of the type.",
+            "description": "The length unit of the point and the direction of the connectors of the type.",
             "name": "Unit",
             "nickname": "Ut",
             "kind": "Unit"
@@ -2201,10 +2201,10 @@
             "kind": "Models"
           },
           {
-            "description": "The optional ports of the type.",
-            "name": "Ports",
+            "description": "The optional connectors of the type.",
+            "name": "Connectors",
             "nickname": "Po*",
-            "kind": "Ports"
+            "kind": "Connectors"
           },
           {
             "description": "The optional authors of the type.",
@@ -2281,7 +2281,7 @@
             "kind": "Location"
           },
           {
-            "description": "The length unit of the point and the direction of the ports of the type.",
+            "description": "The length unit of the point and the direction of the connectors of the type.",
             "name": "Unit",
             "nickname": "Ut",
             "kind": "Unit"
@@ -2293,10 +2293,10 @@
             "kind": "Models"
           },
           {
-            "description": "The optional ports of the type.",
-            "name": "Ports",
+            "description": "The optional connectors of the type.",
+            "name": "Connectors",
             "nickname": "Po*",
-            "kind": "Ports"
+            "kind": "Connectors"
           },
           {
             "description": "The optional authors of the type.",
@@ -2337,10 +2337,10 @@
             "kind": "Connected Piece Id"
           },
           {
-            "description": "Optional id of the port of type of the piece. Otherwise the default port will be selected.",
-            "name": "Connected Piece Type Port Id",
+            "description": "Optional id of the connector of type of the piece. Otherwise the default connector will be selected.",
+            "name": "Connected Piece Type Connector Id",
             "nickname": "CdPo?",
-            "kind": "Connected Piece Type Port Id"
+            "kind": "Connected Piece Type Connector Id"
           },
           {
             "description": "Id of the connected piece.",
@@ -2349,10 +2349,10 @@
             "kind": "Connecting Piece Id"
           },
           {
-            "description": "Optional id of the port of type of the piece. Otherwise the default port will be selected.",
-            "name": "Connecting Piece Type Port Id",
+            "description": "Optional id of the connector of type of the piece. Otherwise the default connector will be selected.",
+            "name": "Connecting Piece Type Connector Id",
             "nickname": "CgPo?",
-            "kind": "Connecting Piece Type Port Id"
+            "kind": "Connecting Piece Type Connector Id"
           },
           {
             "description": "The optional human-readable description of the connection.",
@@ -2361,37 +2361,37 @@
             "kind": "Description"
           },
           {
-            "description": "The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece.",
+            "description": "The optional longitudinal gap (applied after rotation and tilt in connector direction) between the connected and the connecting piece.",
             "name": "Gap",
             "nickname": "Gp?",
             "kind": "Gap"
           },
           {
-            "description": "The optional lateral shift (applied after rotation and tilt in port direction) between the connected and the connecting piece.",
+            "description": "The optional lateral shift (applied after rotation and tilt in connector direction) between the connected and the connecting piece.",
             "name": "Shift",
             "nickname": "Sf?",
             "kind": "Shift"
           },
           {
-            "description": "The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
+            "description": "The optional vertical rise in connector direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
             "name": "Rise",
             "nickname": "Rs?",
             "kind": "Rise"
           },
           {
-            "description": "The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
+            "description": "The optional horizontal rotation in connector direction between the connected and the connecting piece in degrees.",
             "name": "Rotation",
             "nickname": "Rt?",
             "kind": "Rotation"
           },
           {
-            "description": "The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
+            "description": "The optional turn perpendicular to the connector direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
             "name": "Turn",
             "nickname": "Tu?",
             "kind": "Turn"
           },
           {
-            "description": "The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
+            "description": "The optional horizontal tilt perpendicular to the connector direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
             "name": "Tilt",
             "nickname": "Tl?",
             "kind": "Tilt"
@@ -2435,10 +2435,10 @@
             "kind": "Connected Piece Id"
           },
           {
-            "description": "Optional id of the port of type of the piece. Otherwise the default port will be selected.",
-            "name": "Connected Piece Type Port Id",
+            "description": "Optional id of the connector of type of the piece. Otherwise the default connector will be selected.",
+            "name": "Connected Piece Type Connector Id",
             "nickname": "CdPo?",
-            "kind": "Connected Piece Type Port Id"
+            "kind": "Connected Piece Type Connector Id"
           },
           {
             "description": "Id of the connected piece.",
@@ -2447,10 +2447,10 @@
             "kind": "Connecting Piece Id"
           },
           {
-            "description": "Optional id of the port of type of the piece. Otherwise the default port will be selected.",
-            "name": "Connecting Piece Type Port Id",
+            "description": "Optional id of the connector of type of the piece. Otherwise the default connector will be selected.",
+            "name": "Connecting Piece Type Connector Id",
             "nickname": "CgPo?",
-            "kind": "Connecting Piece Type Port Id"
+            "kind": "Connecting Piece Type Connector Id"
           },
           {
             "description": "The optional human-readable description of the connection.",
@@ -2459,37 +2459,37 @@
             "kind": "Description"
           },
           {
-            "description": "The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece.",
+            "description": "The optional longitudinal gap (applied after rotation and tilt in connector direction) between the connected and the connecting piece.",
             "name": "Gap",
             "nickname": "Gp?",
             "kind": "Gap"
           },
           {
-            "description": "The optional lateral shift (applied after rotation and tilt in port direction) between the connected and the connecting piece.",
+            "description": "The optional lateral shift (applied after rotation and tilt in connector direction) between the connected and the connecting piece.",
             "name": "Shift",
             "nickname": "Sf?",
             "kind": "Shift"
           },
           {
-            "description": "The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
+            "description": "The optional vertical rise in connector direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
             "name": "Rise",
             "nickname": "Rs?",
             "kind": "Rise"
           },
           {
-            "description": "The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
+            "description": "The optional horizontal rotation in connector direction between the connected and the connecting piece in degrees.",
             "name": "Rotation",
             "nickname": "Rt?",
             "kind": "Rotation"
           },
           {
-            "description": "The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
+            "description": "The optional turn perpendicular to the connector direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
             "name": "Turn",
             "nickname": "Tu?",
             "kind": "Turn"
           },
           {
-            "description": "The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
+            "description": "The optional horizontal tilt perpendicular to the connector direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
             "name": "Tilt",
             "nickname": "Tl?",
             "kind": "Tilt"
@@ -2658,72 +2658,72 @@
         "icon": ""
       },
       {
-        "name": "Model Port",
-        "description": "Construct, deconstruct or modify a port",
+        "name": "Model Connector",
+        "description": "Construct, deconstruct or modify a connector",
         "nickname": "~Por",
         "inputs": [
           {
-            "description": "The optional port to deconstruct or modify.",
-            "name": "Port",
+            "description": "The optional connector to deconstruct or modify.",
+            "name": "Connector",
             "nickname": "Po?",
-            "kind": "Port"
+            "kind": "Connector"
           },
           {
-            "description": "Whether the port should be validated.",
+            "description": "Whether the connector should be validated.",
             "name": "Validate",
             "nickname": "Vd?",
             "kind": "Validate"
           },
           {
-            "description": "The optional local identifier of the port within the type. No id means the default port.",
+            "description": "The optional local identifier of the connector within the type. No id means the default connector.",
             "name": "Id",
             "nickname": "Id?",
             "kind": "Id"
           },
           {
-            "description": "The optional human-readable description of the port.",
+            "description": "The optional human-readable description of the connector.",
             "name": "Description",
             "nickname": "Dc?",
             "kind": "Description"
           },
           {
-            "description": "Whether the port is mandatory. A mandatory port must be connected in a design.",
+            "description": "Whether the connector is mandatory. A mandatory connector must be connected in a design.",
             "name": "Mandatory",
             "nickname": "Ma?",
             "kind": "Mandatory"
           },
           {
-            "description": "The optional family of the port. This allows to define explicit compatibility with other ports.",
+            "description": "The optional family of the connector. This allows to define explicit compatibility with other connectors.",
             "name": "Interface",
             "nickname": "Fa?",
             "kind": "Interface"
           },
           {
-            "description": "The optional other compatible interfaces of the port. An empty list means this port is compatible with all other ports.",
+            "description": "The optional other compatible interfaces of the connector. An empty list means this connector is compatible with all other connectors.",
             "name": "CompatibleInterfaces",
             "nickname": "CF*",
             "kind": "CompatibleInterfaces"
           },
           {
-            "description": "The connection point of the port that is attracted to another connection point.",
+            "description": "The connection point of the connector that is attracted to another connection point.",
             "name": "Point",
             "nickname": "Pt",
             "kind": "Point"
           },
           {
-            "description": "The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned.",
+            "description": "The direction of the connector. When another piece connects the direction of the other connector is flipped and then the pieces are aligned.",
             "name": "Direction",
             "nickname": "Dr",
             "kind": "Direction"
           },
           {
-            "description": "The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.",
+            "description": "The parameter t [0,1[ where the connector will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.",
             "name": "T",
             "nickname": "T",
             "kind": "T"
           },
           {
-            "description": "The optional attributes of the port.",
+            "description": "The optional attributes of the connector.",
             "name": "Attributes",
             "nickname": "At*",
             "kind": "Attributes"
@@ -2731,67 +2731,67 @@
         ],
         "outputs": [
           {
-            "description": "The constructed or modified port.",
-            "name": "Port",
+            "description": "The constructed or modified connector.",
+            "name": "Connector",
             "nickname": "Po",
-            "kind": "Port"
+            "kind": "Connector"
           },
           {
-            "description": "True if the port is valid. Null if no validation was performed.",
+            "description": "True if the connector is valid. Null if no validation was performed.",
             "name": "Valid",
             "nickname": "Vd?",
             "kind": "Valid"
           },
           {
-            "description": "The optional local identifier of the port within the type. No id means the default port.",
+            "description": "The optional local identifier of the connector within the type. No id means the default connector.",
             "name": "Id",
             "nickname": "Id?",
             "kind": "Id"
           },
           {
-            "description": "The optional human-readable description of the port.",
+            "description": "The optional human-readable description of the connector.",
             "name": "Description",
             "nickname": "Dc?",
             "kind": "Description"
           },
           {
-            "description": "Whether the port is mandatory. A mandatory port must be connected in a design.",
+            "description": "Whether the connector is mandatory. A mandatory connector must be connected in a design.",
             "name": "Mandatory",
             "nickname": "Ma?",
             "kind": "Mandatory"
           },
           {
-            "description": "The optional family of the port. This allows to define explicit compatibility with other ports.",
+            "description": "The optional family of the connector. This allows to define explicit compatibility with other connectors.",
             "name": "Interface",
             "nickname": "Fa?",
             "kind": "Interface"
           },
           {
-            "description": "The optional other compatible interfaces of the port. An empty list means this port is compatible with all other ports.",
+            "description": "The optional other compatible interfaces of the connector. An empty list means this connector is compatible with all other connectors.",
             "name": "CompatibleInterfaces",
             "nickname": "CF*",
             "kind": "CompatibleInterfaces"
           },
           {
-            "description": "The connection point of the port that is attracted to another connection point.",
+            "description": "The connection point of the connector that is attracted to another connection point.",
             "name": "Point",
             "nickname": "Pt",
             "kind": "Point"
           },
           {
-            "description": "The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned.",
+            "description": "The direction of the connector. When another piece connects the direction of the other connector is flipped and then the pieces are aligned.",
             "name": "Direction",
             "nickname": "Dr",
             "kind": "Direction"
           },
           {
-            "description": "The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.",
+            "description": "The parameter t [0,1[ where the connector will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.",
             "name": "T",
             "nickname": "T",
             "kind": "T"
           },
           {
-            "description": "The optional attributes of the port.",
+            "description": "The optional attributes of the connector.",
             "name": "Attributes",
             "nickname": "At*",
             "kind": "Attributes"
@@ -3154,7 +3154,7 @@
             "kind": "Design"
           },
           {
-            "description": "A type is a reusable element that can be connected with other types over ports.",
+            "description": "A type is a reusable element that can be connected with other types over connectors.",
             "name": "Type",
             "nickname": "Ty",
             "kind": "Type"
@@ -3212,7 +3212,7 @@
             "kind": "Design"
           },
           {
-            "description": "A type is a reusable element that can be connected with other types over ports.",
+            "description": "A type is a reusable element that can be connected with other types over connectors.",
             "name": "Type",
             "nickname": "Ty",
             "kind": "Type"
@@ -3355,12 +3355,12 @@
     "3": [
       {
         "name": "Type to PART",
-        "description": "Convert a semio type to a Wasp PART. In semio connections are parametric (rotation, gap, tilt, shift) which can't be translated because Wasp CONN are statically defined by a plane. You can lock this degree of freedom by providing an additional rotation to each port. @devs If you want to debug this cluster, lock the solver (otherwise your Rhino might crash due to a Grasshopper bug) and look at the instructions inside. Password: debug",
+        "description": "Convert a semio type to a Wasp PART. In semio connections are parametric (rotation, gap, tilt, shift) which can't be translated because Wasp CONN are statically defined by a plane. You can lock this degree of freedom by providing an additional rotation to each connector. @devs If you want to debug this cluster, lock the solver (otherwise your Rhino might crash due to a Grasshopper bug) and look at the instructions inside. Password: debug",
         "icon": "icon",
         "nickname": "Typ\u2192PART",
         "inputs": [
           {
-            "description": "A type is a reusable element that can be connected with other types over ports.",
+            "description": "A type is a reusable element that can be connected with other types over connectors.",
             "name": "Type",
             "nickname": "Ty",
             "kind": "Type"
@@ -3372,7 +3372,7 @@
             "kind": "Data"
           },
           {
-            "description": "The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
+            "description": "The optional horizontal rotation in connector direction between the connected and the connecting piece in degrees.",
             "name": "Rotation",
             "nickname": "Rt?",
             "kind": "Rotation"
@@ -3446,7 +3446,7 @@
         "nickname": "AGGR\u2192Dsn",
         "inputs": [
           {
-            "description": "A type is a reusable element that can be connected with other types over ports.",
+            "description": "A type is a reusable element that can be connected with other types over connectors.",
             "name": "Type",
             "nickname": "Ty",
             "kind": "Type"
@@ -3470,7 +3470,7 @@
             "kind": "Data"
           },
           {
-            "description": "The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
+            "description": "The optional horizontal rotation in connector direction between the connected and the connecting piece in degrees.",
             "name": "Rotation",
             "nickname": "Rt?",
             "kind": "Rotation"
@@ -3498,7 +3498,7 @@
             "kind": "Design"
           },
           {
-            "description": "A type is a reusable element that can be connected with other types over ports.",
+            "description": "A type is a reusable element that can be connected with other types over connectors.",
             "name": "Type",
             "nickname": "Ty",
             "kind": "Type"
@@ -3510,7 +3510,7 @@
             "kind": "Data"
           },
           {
-            "description": "The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
+            "description": "The optional horizontal rotation in connector direction between the connected and the connecting piece in degrees.",
             "name": "Rotation",
             "nickname": "Rt?",
             "kind": "Rotation"
@@ -3558,7 +3558,7 @@
         "nickname": "\u2192Mods",
         "inputs": [
           {
-            "description": "A type is a reusable element that can be connected with other types over ports.",
+            "description": "A type is a reusable element that can be connected with other types over connectors.",
             "name": "Type",
             "nickname": "Ty+",
             "kind": "Type"
@@ -3604,7 +3604,7 @@
             "kind": "Slot"
           },
           {
-            "description": "A type is a reusable element that can be connected with other types over ports.",
+            "description": "A type is a reusable element that can be connected with other types over connectors.",
             "name": "Type",
             "nickname": "Ty",
             "kind": "Type"
@@ -3625,7 +3625,7 @@
     "1": [
       {
         "name": "Preview Connections",
-        "description": "Preview all connections of a design by visualizing the ports of the types and the connection parameters.",
+        "description": "Preview all connections of a design by visualizing the connectors of the types and the connection parameters.",
         "icon": "icon",
         "nickname": ":Con",
         "inputs": [
@@ -3636,7 +3636,7 @@
             "kind": "Design"
           },
           {
-            "description": "A type is a reusable element that can be connected with other types over ports.",
+            "description": "A type is a reusable element that can be connected with other types over connectors.",
             "name": "Type",
             "nickname": "Ty",
             "kind": "Type"
@@ -3662,7 +3662,7 @@
             "kind": "Design"
           },
           {
-            "description": "A type is a reusable element that can be connected with other types over ports.",
+            "description": "A type is a reusable element that can be connected with other types over connectors.",
             "name": "Type",
             "nickname": "Ty",
             "kind": "Type"
@@ -3720,7 +3720,7 @@
             "kind": "Design"
           },
           {
-            "description": "A type is a reusable element that can be connected with other types over ports.",
+            "description": "A type is a reusable element that can be connected with other types over connectors.",
             "name": "Type",
             "nickname": "Ty",
             "kind": "Type"
@@ -3746,16 +3746,16 @@
         ]
       },
       {
-        "name": "Preview Port",
-        "description": "Preview a port by showing the point and direction and if exists: id, family and compatible interfaces.",
+        "name": "Preview Connector",
+        "description": "Preview a connector by showing the point and direction and if exists: id, family and compatible interfaces.",
         "icon": "icon",
         "nickname": ":Prv",
         "inputs": [
           {
-            "description": "A port is a connection point (with a direction) of a type.",
-            "name": "Port",
+            "description": "A connector is a connection point (with a direction) of a type.",
+            "name": "Connector",
             "nickname": "Po",
-            "kind": "Port"
+            "kind": "Connector"
           },
           {
             "description": "Contains a collection of floating point numbers",
@@ -4222,7 +4222,7 @@
         ],
         "outputs": [
           {
-            "description": "A type is a reusable element that can be connected with other types over ports.",
+            "description": "A type is a reusable element that can be connected with other types over connectors.",
             "name": "Type",
             "nickname": "Ty",
             "kind": "Type"
@@ -4530,7 +4530,7 @@
         ],
         "outputs": [
           {
-            "description": "A type is a reusable element that can be connected with other types over ports.",
+            "description": "A type is a reusable element that can be connected with other types over connectors.",
             "name": "Type",
             "nickname": "Ty",
             "kind": "Type"
@@ -4741,7 +4741,7 @@
         "nickname": "+Typ",
         "inputs": [
           {
-            "description": "A type is a reusable element that can be connected with other types over ports.",
+            "description": "A type is a reusable element that can be connected with other types over connectors.",
             "name": "Type",
             "nickname": "Ty",
             "kind": "Type"

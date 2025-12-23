@@ -53,7 +53,7 @@ Added in new `# region Kit Diff Operations` section:
 
 - `_getCollectionDiff`, `_applyCollectionDiff`, `_inverseCollectionDiff`
 - `_getTypeDiff`, `_applyTypeDiff`, `_inverseTypeDiff`
-- `_getPortDiff`, `_applyPortDiff`, `_inversePortDiff`
+- `_getConnectorDiff`, `_applyConnectorDiff`, `_inversePortDiff`
 - `_getModelDiff`, `_applyModelDiff`
 - `_getDesignDiff`, `_applyDesignDiff`, `_inverseDesignDiff`
 - `_getPieceDiff`, `_applyPieceDiff`, `_inversePieceDiff`

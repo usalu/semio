@@ -110,7 +110,7 @@ type Type implements Node {
   created: DateTime!
   updated: DateTime!
   models(before: String, after: String, first: Int, last: Int): ModelNodeConnection
-  ports(before: String, after: String, first: Int, last: Int): PortNodeConnection
+  connectors(before: String, after: String, first: Int, last: Int): ConnectorNodeConnection
   authors_(before: String, after: String, first: Int, last: Int): AuthorNodeConnection
   attributes(before: String, after: String, first: Int, last: Int): AttributeNodeConnection
   kit: Kit
@@ -198,7 +198,7 @@ type Attribute implements Node {
   unit: String!
   definition: String!
   model: Model
-  port: Port
+  connector: Connector
   type: Type
   piece: Piece
   connection: Connection
@@ -211,7 +211,7 @@ type Attribute implements Node {
   id: ID!
 }
 
-type Port implements Node {
+type Connector implements Node {
   description: String!
   mandatory: Boolean!
   interface: String!
@@ -468,10 +468,10 @@ type Location {
 """
 type Side {
   piece: Piece!
-  port: Port!
+  connector: Connector!
 }
 
-type PortNodeConnection {
+type ConnectorNodeConnection {
   """
   Pagination data for this connection.
   """
@@ -480,17 +480,17 @@ type PortNodeConnection {
   """
   Contains the nodes in this connection.
   """
-  edges: [PortNodeEdge]!
+  edges: [ConnectorNodeEdge]!
 }
 
 """
-A Relay edge containing a `PortNode` and its cursor.
+A Relay edge containing a `ConnectorNode` and its cursor.
 """
-type PortNodeEdge {
+type ConnectorNodeEdge {
   """
   The item at the end of the edge
   """
-  node: Port
+  node: Connector
 
   """
   A cursor for use in pagination
@@ -628,12 +628,12 @@ input TypeInputNode {
   virtual: Boolean = false
 
   """
-  Ⓜ️ The length unit of the point and the direction of the ports of the type.
+  Ⓜ️ The length unit of the point and the direction of the connectors of the type.
   """
   unit: String = ""
   location: LocationInputNode = null
   models: [ModelInputNode] = null
-  ports: [PortInputNode] = null
+  connectors: [ConnectorInputNode] = null
   authors: [AuthorInputNode] = null
   attributes: [AttributeInputNode] = null
   concepts: [String] = null
@@ -695,49 +695,49 @@ input AttributeInputNode {
   definition: String = ""
 }
 
-input PortInputNode {
+input ConnectorInputNode {
   """
-  🆔 The id of the port.
+  🆔 The id of the connector.
   """
   id_: String = ""
 
   """
-  💬 The optional human-readable description of the port.
+  💬 The optional human-readable description of the connector.
   """
   description: String = ""
 
   """
-  💯 Whether the port is mandatory. A mandatory port must be connected in a design.
+  💯 Whether the connector is mandatory. A mandatory connector must be connected in a design.
   """
   mandatory: Boolean = false
 
   """
-  👨‍👩‍👧‍👦 The optional interface of the port. This allows to define explicit compatibility with other ports.
+  👨‍👩‍👧‍👦 The optional interface of the connector. This allows to define explicit compatibility with other connectors.
   """
   interface: String = ""
 
   """
-  ✅ The optional other compatible interfaces of the port. An empty list means this port is compatible with all other ports.
+  ✅ The optional other compatible interfaces of the connector. An empty list means this connector is compatible with all other connectors.
   """
   compatibleInterfaces: [String] = null
 
   """
-  💍 The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.
+  💍 The parameter t [0,1[ where the connector will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.
   """
   t: Float = 0
 
   """
-  ✖️ The connection point of the port that is attracted to another connection point.
+  ✖️ The connection point of the connector that is attracted to another connection point.
   """
   point: PointInputNode!
 
   """
-  ➡️ The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned.
+  ➡️ The direction of the connector. When another piece connects the direction of the other connector is flipped and then the pieces are aligned.
   """
   direction: VectorInputNode!
 
   """
-  🏷️ The attributes of the port.
+  🏷️ The attributes of the connector.
   """
   attributes: [AttributeInputNode] = null
 }
@@ -907,7 +907,7 @@ input ConnectionInputNode {
   description: String = ""
 
   """
-  ↕️ The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece.
+  ↕️ The optional longitudinal gap (applied after rotation and tilt in connector direction) between the connected and the connecting piece.
   """
   gap: Float = 0
 
@@ -917,22 +917,22 @@ input ConnectionInputNode {
   shift: Float = 0
 
   """
-  🪜 The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.
+  🪜 The optional vertical rise in connector direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.
   """
   rise: Float = 0
 
   """
-  🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.
+  🔄 The optional horizontal rotation in connector direction between the connected and the connecting piece in degrees.
   """
   rotation: Float = 0
 
   """
-  🛞 The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.
+  🛞 The optional turn perpendicular to the connector direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.
   """
   turn: Float = 0
 
   """
-  ↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.
+  ↗️ The optional horizontal tilt perpendicular to the connector direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.
   """
   tilt: Float = 0
 
@@ -959,7 +959,7 @@ input ConnectionInputNode {
 
 input SideInputNode {
   piece: PieceIdInputNode!
-  port: PortIdInputNode!
+  connector: ConnectorIdInputNode!
 }
 
 input PieceIdInputNode {
@@ -969,9 +969,9 @@ input PieceIdInputNode {
   id_: String = ""
 }
 
-input PortIdInputNode {
+input ConnectorIdInputNode {
   """
-  🆔 The id of the port.
+  🆔 The id of the connector.
   """
   id_: String = ""
 }

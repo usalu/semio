@@ -28,12 +28,12 @@ iterations: []
 - **Expected**: Should be `compatibleInterfaces`
 - **Status**: Fixed - now using `compatibleInterfaces`
 
-### 3. Missing Prop.key in Port Props ✅ FIXED
+### 3. Missing Prop.key in Connector Props ✅ FIXED
 
-- **Problem**: Port props don't have a `key` field in the SQL schema
-- **Current**: Prop table has `key` but port props don't use it
-- **Expected**: Port props should not require `key` field
-- **Status**: Fixed - removed key requirement for port props
+- **Problem**: Connector props don't have a `key` field in the SQL schema
+- **Current**: Prop table has `key` but connector props don't use it
+- **Expected**: Connector props should not require `key` field
+- **Status**: Fixed - removed key requirement for connector props
 
 ### 4. Design Props Missing GUID ✅ FIXED
 
@@ -82,7 +82,7 @@ The main issues are:
 1. ✅ Fix layer GUID preservation in `kitToSqlite`
 2. ✅ Fix group GUID preservation in `kitToSqlite`
 3. ✅ Fix interface compatible interfaces naming
-4. ✅ Fix prop key handling for port props
+4. ✅ Fix prop key handling for connector props
 5. ✅ Add design_prop table GUID column
 6. ⏳ Fix date serialization (keep as strings in SQL, return as strings or Date objects consistently)
 7. ⏳ Fix empty string vs undefined (preserve original format or normalize consistently)

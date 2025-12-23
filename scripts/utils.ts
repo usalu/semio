@@ -71,12 +71,12 @@ export function deleteFilesByPattern(pattern: string, rootDir: string = "."): vo
 //#endregion
 
 //#region Process Management
-export function stopProcessOnPort(port: number): void {
+export function stopProcessOnPort(connector: number): void {
   try {
     const output = execSync(`netstat -ano`, { encoding: "utf-8" });
     const lines = output.split("\n");
     for (const line of lines) {
-      if (line.includes(`:${port}`) && line.includes("LISTENING")) {
+      if (line.includes(`:${connector}`) && line.includes("LISTENING")) {
         const parts = line.trim().split(/\s+/);
         const pid = parts[parts.length - 1];
         if (pid && !isNaN(Number(pid))) {

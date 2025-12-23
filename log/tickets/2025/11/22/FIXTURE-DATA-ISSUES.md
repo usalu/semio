@@ -18,16 +18,16 @@ The MetabolismKit fixture in `assets/metabolism.json` contains invalid data that
 
 ## Issues Identified
 
-### 1. Connections with Undefined Ports (CRITICAL)
+### 1. Connections with Undefined Connectors (CRITICAL)
 
-The fixture contains ~4000+ connections where the `connected.port` and/or `connecting.port` properties are undefined. This violates the schema where ports are required.
+The fixture contains ~4000+ connections where the `connected.connector` and/or `connecting.connector` properties are undefined. This violates the schema where connectors are required.
 
 **Example validation errors:**
 
 ```
 Invalid input: expected object, received undefined at:
-- designs[0].connections[0].connected.port
-- designs[0].connections[0].connecting.port
+- designs[0].connections[0].connected.connector
+- designs[0].connections[0].connecting.connector
 - ... (4000+ similar errors)
 ```
 
@@ -53,25 +53,25 @@ Several fields have inconsistent representations between original and imported k
 **Examples from test output:**
 
 ```
-kit.types[5].ports[0].mandatory: type boolean vs undefined
-kit.types[5].ports[0].attributes[0].definition: type string vs undefined
-kit.types[5].ports[0].interface: missing in a
-kit.types[5].ports[0].props: missing in a
+kit.types[5].connectors[0].mandatory: type boolean vs undefined
+kit.types[5].connectors[0].attributes[0].definition: type string vs undefined
+kit.types[5].connectors[0].interface: missing in a
+kit.types[5].connectors[0].props: missing in a
 kit.types[5].virtual: missing in b
 kit.types[5].authors: missing in b
 ```
 
 ## Solutions Implemented
 
-### 1. Made Port Optional in SideSchema
+### 1. Made Connector Optional in SideSchema
 
-Modified `SideSchema` to allow `port` to be optional:
+Modified `SideSchema` to allow `connector` to be optional:
 
 ```typescript
 export const SideSchema = z.object({
   piece: PieceIdSchema,
   designPiece: PieceIdSchema.optional(),
-  port: PortIdSchema.optional(), // Changed from required
+  connector: ConnectorIdSchema.optional(), // Changed from required
 });
 ```
 
@@ -84,7 +84,7 @@ const originalKit: Kit = {
   ...parsedKit,
   designs: parsedKit.designs?.map((d) => ({
     ...d,
-    connections: d.connections?.filter((c) => c.connected?.port && c.connecting?.port && c.connected?.piece && c.connecting?.piece),
+    connections: d.connections?.filter((c) => c.connected?.connector && c.connecting?.connector && c.connected?.piece && c.connecting?.piece),
   })),
 };
 ```
@@ -121,7 +121,7 @@ if (row.folder) type.folder = row.folder;
 1. **Regenerate MetabolismKit Fixture**
    - The current fixture has invalid connection data
    - Need to export from a valid source (Grasshopper? Valid JSON?)
-   - Ensure all connection ports are properly defined
+   - Ensure all connection connectors are properly defined
    - Script exists: `scripts/export-metabolism-kit.mjs`
 
 2. **Complete SQL Schema**
@@ -174,7 +174,7 @@ Failing tests:
 ## Files Modified
 
 - `js/js/semio.ts`:
-  - Made `SideSchema.port` optional
+  - Made `SideSchema.connector` optional
   - Updated `sqliteToKit` to read more Type fields
   - Changed Type import to use conditional property assignment
 - `js/js/semio.test.ts`:

@@ -202,7 +202,7 @@ iterations:
           lines:
             added: 19
             removed: 7
-        - path: log/tickets/2025/11/21/PORT-LOOKUP-FIX.md
+        - path: log/tickets/2025/11/21/CONNECTOR-LOOKUP-FIX.md
           lines:
             added: 19
             removed: 7

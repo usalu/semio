@@ -29,9 +29,9 @@ The C# codebase was out of date compared to the JavaScript/TypeScript implementa
 
 2. **TypeDiff Changes**:
    - Changed `Models` from `List<Model>` to `ModelsDiff?`
-   - Changed `Ports` from `List<Port>` to `PortsDiff?`
-   - Added `MergeDiff` methods to `ModelsDiff` and `PortsDiff`
-   - Added helper methods `ApplyModelsDiff`, `ApplyPortsDiff` in Type class
+   - Changed `Connectors` from `List<Connector>` to `ConnectorsDiff?`
+   - Added `MergeDiff` methods to `ModelsDiff` and `ConnectorsDiff`
+   - Added helper methods `ApplyModelsDiff`, `ApplyConnectorsDiff` in Type class
 
 3. **KitDiff Changes**:
    - Changed `Attributes` from `List<Attribute>` to `AttributesDiff?`
@@ -50,8 +50,8 @@ The C# codebase was out of date compared to the JavaScript/TypeScript implementa
 ## Bug Fixes (Semio.cs)
 
 1. **Design.Flatten Dictionary Key Mismatch**:
-   - Fixed `ports` dictionary - was built with `type.Guid` as key but accessed with `type.Name`
-   - Changed `ports[connectedType.Name]` to `ports[connectedType.Guid]` and similar
+   - Fixed `connectors` dictionary - was built with `type.Guid` as key but accessed with `type.Name`
+   - Changed `connectors[connectedType.Name]` to `connectors[connectedType.Guid]` and similar
 
 2. **Expression.Calculate Return Type**:
    - Fixed to return `UnitValue` instead of raw `float` when `targetUnit` is specified

@@ -462,7 +462,7 @@
       "hasDiffs": false
     },
     {
-      "name": "Port",
+      "name": "Connector",
       "fields": [
         {
           "name": "guid",
@@ -1230,8 +1230,8 @@
           "optional": true
         },
         {
-          "name": "port",
-          "type": "PortId",
+          "name": "connector",
+          "type": "ConnectorId",
           "optional": false
         }
       ],
@@ -1253,7 +1253,7 @@
     "PropId",
     "ModelId",
     "InterfaceId",
-    "PortId",
+    "ConnectorId",
     "TypeId",
     "LayerId",
     "PieceId",
@@ -1263,5 +1263,11 @@
     "DesignId",
     "KitId"
   ],
-  "weakEntities": ["Coord", "Point", "Vector", "Plane", "Side"]
+  "weakEntities": [
+    "Coord",
+    "Point",
+    "Vector",
+    "Plane",
+    "Side"
+  ]
 }

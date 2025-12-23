@@ -86,37 +86,43 @@ const AGPL_LICENSE_LINES = [
 const CONTRIBUTOR = "Ueli Saluz <ueli@semio-tech.com>";
 
 function getDefaultIssueReason(kind: CodeIssueKind): string {
-  if (kind === "comment") return "Inline comments are forbidden to keep the codebase comment-free and keep documentation centralized.";
-  if (kind === "temporary_log") return "Temporary [DEBUG] logs are removable diagnostics and must be cleaned to keep runtime output clean.";
-  if (kind === "missing_license_header") return "Source files must include SPDX license headers for compliance and automated checks.";
-  if (kind === "invalid_header_format") return "Header regions must follow the standard format so automated tooling can parse them reliably.";
-  if (kind === "header_filepath_mismatch") return "Header filepaths must match the actual file path for traceability and automated audits.";
-  if (kind === "extra_dev_docs") return "Developer documentation must be centralized in the root README.md and AGENTS.md.";
-  if (kind === "region_name_missing") return "Region markers must be named to support proper nesting and navigation.";
-  if (kind === "region_mismatch") return "Region markers must be properly nested and closed with matching names.";
-  if (kind === "region_unclosed") return "Open region blocks must be closed to keep region structure intact.";
-  if (kind === "region_duplicate_sibling") return "Sibling regions must have unique names to avoid ambiguous navigation and tooling collisions.";
-  if (kind === "region_empty") return "Empty regions are forbidden so region structure reflects real code content.";
-  if (kind === "unreadable_file") return "Unreadable files cannot be analyzed reliably by the code scan.";
-  if (kind === "forbidden_import") return "Module boundaries enforce domain-neutral shared UI and keep Sketchpad scaffolding decoupled from app internals.";
+  if (kind === "comment")
+    return "Code is never documented inline; documentation lives exclusively in the root README.md and AGENTS.md across the four required perspectives (Products, Components, SRS Business Logic/UI/UX, Codebase).";
+  if (kind === "temporary_log") return "Only temporary diagnostics prefixed with [DEBUG] are allowed; they must be removed to keep Sketchpad runtime output clean.";
+  if (kind === "missing_license_header") return "Every source file must include an SPDX license header and header region per code hygiene requirements.";
+  if (kind === "invalid_header_format")
+    return "Header regions must follow the required format so tooling can verify file path, contributor, and license consistently.";
+  if (kind === "header_filepath_mismatch") return "Header filepaths must match the actual file path for traceability across the repo.";
+  if (kind === "extra_dev_docs") return "Developer documentation is centralized in the root README.md and AGENTS.md; extra docs are forbidden.";
+  if (kind === "region_name_missing") return "Regions must be named and nested to keep file structure navigable and consistent.";
+  if (kind === "region_mismatch") return "Region blocks must be properly nested and closed with matching named end markers.";
+  if (kind === "region_unclosed") return "Every opened region must be closed with a matching named end marker.";
+  if (kind === "region_duplicate_sibling") return "Sibling regions must have unique names so region structure stays unambiguous.";
+  if (kind === "region_empty") return "Empty regions are forbidden so regions always represent real code content.";
+  if (kind === "unreadable_file") return "Unreadable files cannot be scanned for code hygiene requirements.";
+  if (kind === "forbidden_import")
+    return "Shared UI elements stay domain-neutral, only elements.tsx may reexport third-party dependencies, and Sketchpad scaffolding must remain decoupled from app internals.";
   return "Shared UI elements must remain domain-neutral and avoid app-specific terminology.";
 }
 
 function getDefaultIssueSolution(kind: CodeIssueKind): string {
-  if (kind === "comment") return "Remove the inline comment and move guidance to README.md or AGENTS.md.";
+  if (kind === "comment")
+    return "Remove the inline comment and document the guidance in README.md under Products and Components, plus AGENTS.md under SRS Business Logic/UI/UX and Codebase.";
   if (kind === "temporary_log") return "Remove the temporary log or replace it with a warning or error if it is required.";
   if (kind === "missing_license_header") return "Add the SPDX header and header region using the code fix hook.";
   if (kind === "invalid_header_format") return "Regenerate the header with the fix hook to match the required format.";
   if (kind === "header_filepath_mismatch") return "Update the header filepath or regenerate the header to match the file location.";
-  if (kind === "extra_dev_docs") return "Remove the extra document and move the content into root README.md or AGENTS.md.";
+  if (kind === "extra_dev_docs")
+    return "Move the content into root README.md and AGENTS.md in the required four documentation sections, then remove the extra file.";
   if (kind === "region_name_missing") return "Add a matching name to the region and endregion markers.";
   if (kind === "region_mismatch") return "Fix the region names and nesting so each endregion matches the open region.";
   if (kind === "region_unclosed") return "Add the matching endregion marker with the same name.";
   if (kind === "region_duplicate_sibling") return "Rename one region or merge them into a single region.";
   if (kind === "region_empty") return "Remove the empty region or move relevant code into it.";
   if (kind === "unreadable_file") return "Fix file permissions or encoding so the scanner can read the file.";
-  if (kind === "forbidden_import") return "Move shared functionality into allowed modules and update the import to an approved path.";
-  return "Replace domain terms with neutral wording or move the text to app-level modules.";
+  if (kind === "forbidden_import")
+    return "Move shared logic into elements/shared/semio or app-specific modules, then update the import to the allowed path.";
+  return "Replace domain terms with neutral wording or move the string into app-specific modules.";
 }
 
 function createIssue(params: { path: string; language: CodeLanguage; kind: CodeIssueKind; line: number; column: number; message: string; excerpt?: string; reason?: string; solution?: string }): CodeIssue {
@@ -572,7 +578,12 @@ function scanTypescriptForbiddenImports(content: string, lines: string[], path: 
     if (isElementsFile && moduleText.startsWith(".")) {
       const resolved = normalizePath(join(dirname(normalizedPath), moduleText)).replace(/\.[^.\/]+$/, "");
       if (!elementsAllowedTargets.has(resolved)) {
-        addIssue(node, "Relative imports in elements.tsx must target i18n.ts or semio.ts", "elements.tsx is the domain-neutral shared UI library and may only import i18n.ts or semio.ts; it is the only file allowed to import third-party libraries for reexport.", "Move shared functionality into elements.tsx or into js/js/i18n.ts or js/js/semio.ts, then import from the approved path.");
+        addIssue(
+          node,
+          "Relative imports in elements.tsx must target i18n.ts or semio.ts",
+          "elements.tsx is the domain-neutral shared UI library and the only js/js file allowed to import third-party dependencies; it may only import js/js/i18n.ts or js/js/semio.ts.",
+          "Move shared functionality into elements.tsx or into js/js/i18n.ts or js/js/semio.ts, then import from the approved path."
+        );
       }
       return;
     }
@@ -580,7 +591,12 @@ function scanTypescriptForbiddenImports(content: string, lines: string[], path: 
       if (!moduleText.startsWith(".")) return;
       const resolved = normalizePath(join(dirname(normalizedPath), moduleText)).replace(/\.[^.\/]+$/, "");
       if ((isSketchpadFile && !sketchpadImportTargets.has(resolved)) || (isAppFile && !appImportTargets.has(resolved)))
-        addIssue(node, "Relative imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts", "Sketchpad.tsx provides scaffolding and stays independent from app internals, while apps may only import shared elements, shared utilities, and core domain modules.", "Move shared logic into shared modules (elements/shared/semio) and update the import so Sketchpad.tsx and apps remain decoupled.");
+        addIssue(
+          node,
+          "Relative imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
+          "Sketchpad.tsx provides scaffolding and must remain independent of app internals; apps import only shared elements, shared utilities, and core domain modules.",
+          "Move shared logic into shared modules (elements/shared/semio) and update the import so Sketchpad.tsx and apps remain decoupled."
+        );
       return;
     }
   };
@@ -609,7 +625,7 @@ function scanTypescriptForbiddenTerminology(content: string, lines: string[], pa
   const normalizedPath = normalizePath(path);
   if (!normalizedPath.startsWith(jsJsRoot) || !normalizedPath.endsWith("/elements.tsx")) return issues;
   const sourceFile = ts.createSourceFile(path, content, ts.ScriptTarget.Latest, true, path.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
-  const forbiddenRegex = /\b(kit|design|type|port|connection|docs|feedback)\b/i;
+  const forbiddenRegex = /\b(kit|design|type|connector|connection|docs|feedback)\b/i;
   const allowedPatterns = [/@dnd-kit/, /\/docs\//, /semio\.sketchpad\.docs\./, /^type$/, /^id$/];
   const isAllowed = (text: string): boolean => allowedPatterns.some((p) => p.test(text));
   const addIssue = (node: ts.Node, term: string): void => {

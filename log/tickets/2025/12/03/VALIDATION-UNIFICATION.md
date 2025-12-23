@@ -21,7 +21,7 @@ iterations: []
 
 # Plan
 
-1. Define a common portable validation result format (without fixes) for cross-platform serialization
+1. Define a common connectorable validation result format (without fixes) for cross-platform serialization
 2. Add `PortableValidationResult` interface and `serializeValidationResult` function to TypeScript
 3. Add `serialize_validation_result` function to Python matching the same JSON format
 4. Add C# `SemioValidationResult` class and serialization matching the same format

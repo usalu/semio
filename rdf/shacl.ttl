@@ -133,7 +133,7 @@ se:Side
   a sh:NodeShape ;
   sh:targetClass se:Side ;
   sh:name "Side"@en ;
-  sh:description "A side is a port of the type of a piece and the a piece."@en ;
+  sh:description "A side is a connector of the type of a piece and the a piece."@en ;
   sh:property
     [
       sh:path se:piece ;
@@ -144,19 +144,19 @@ se:Side
       sh:class se:Piece ;
     ] ,
     [
-      sh:path se:port ;
-      sh:name "port"@en ;
-      sh:description "The port of the type of the piece of the side."@en ;
+      sh:path se:connector ;
+      sh:name "connector"@en ;
+      sh:description "The connector of the type of the piece of the side."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
-      sh:class se:Port ;
+      sh:class se:Connector ;
     ] ;
 .
 se:Type
   a sh:NodeShape ;
   sh:targetClass se:Type ;
   sh:name "type"@en ;
-  sh:description "A type is like a LEGO piece type. It has ports to connect with other types and it consits of many pieces of indesign in different formats. In CAD lingo a type is a block (definition)."@en ;
+  sh:description "A type is like a LEGO piece type. It has connectors to connect with other types and it consits of many pieces of indesign in different formats. In CAD lingo a type is a block (definition)."@en ;
   sh:property
     [
       sh:path se:name ;
@@ -231,23 +231,23 @@ se:Type
       )
     ] ,
     [
-      sh:path se:port ;
-      sh:name "port"@en ;
-      sh:description "A port of the type."@en ;
+      sh:path se:connector ;
+      sh:name "connector"@en ;
+      sh:description "A connector of the type."@en ;
       sh:minCount 1 ;
-      sh:class se:Port ;
+      sh:class se:Connector ;
     ] ;
 .
-se:Port
+se:Connector
   a sh:NodeShape ;
-  sh:targetClass se:Port ;
-  sh:name "port"@en ;
-  sh:description "A port is a 3d interface."@en ;
+  sh:targetClass se:Connector ;
+  sh:name "connector"@en ;
+  sh:description "A connector is a 3d interface."@en ;
   sh:property
     [
       sh:path se:plane ;
       sh:name "plane"@en ;
-      sh:description "The plane of the port."@en ;
+      sh:description "The plane of the connector."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:class se:Plane ;
@@ -255,57 +255,57 @@ se:Port
     [
       sh:path se:attribute ;
       sh:name "attribute"@en ;
-      sh:description "A attribute for the port."@en ;
+      sh:description "A attribute for the connector."@en ;
       sh:or (
         [
           sh:class se:DecimalAttribute ;
           sh:name "decimal attribute"@en ;
-          sh:description "A decimal attribute of the port."@en ;
+          sh:description "A decimal attribute of the connector."@en ;
         ]
         [
           sh:class se:IntegerAttribute ;
           sh:name "integer attribute"@en ;
-          sh:description "A integer attribute of the port."@en ;
+          sh:description "A integer attribute of the connector."@en ;
         ]
         [
           sh:class se:NaturalAttribute ;
           sh:name "natural attribute"@en ;
-          sh:description "A natural attribute of the port."@en ;
+          sh:description "A natural attribute of the connector."@en ;
         ]
         [
           sh:class se:BooleanAttribute ;
           sh:name "boolean attribute"@en ;
-          sh:description "A boolean attribute of the port."@en ;
+          sh:description "A boolean attribute of the connector."@en ;
         ]
         [
           sh:class se:FuzzyAttribute ;
           sh:name "fuzzy attribute"@en ;
-          sh:description "A fuzzy attribute of the port."@en ;
+          sh:description "A fuzzy attribute of the connector."@en ;
         ]
         [
           sh:class se:ChoiceAttribute ;
           sh:name "choice attribute"@en ;
-          sh:description "A choice attribute of the port."@en ;
+          sh:description "A choice attribute of the connector."@en ;
         ]
         [
           sh:class se:BlobAttribute ;
           sh:name "blob attribute"@en ;
-          sh:description "A blob attribute of the port."@en ;
+          sh:description "A blob attribute of the connector."@en ;
         ]
         [
           sh:class se:PointAttribute ;
           sh:name "point attribute"@en ;
-          sh:description "A point attribute of the port."@en ;
+          sh:description "A point attribute of the connector."@en ;
         ]
         [
           sh:class se:VectorAttribute ;
           sh:name "vector attribute"@en ;
-          sh:description "A vector attribute of the port."@en ;
+          sh:description "A vector attribute of the connector."@en ;
         ]
         [
           sh:class se:PlaneAttribute ;
           sh:name "plane attribute"@en ;
-          sh:description "A plane attribute of the port."@en ;
+          sh:description "A plane attribute of the connector."@en ;
         ]
       )
     ] ;

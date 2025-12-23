@@ -50,7 +50,7 @@ iterations: []
 5. Fixed boolean field handling for NOT NULL DEFAULT 0 fields:
    - type.virtual: use 0 instead of null
    - type.isAbstract: use 0 instead of null
-   - port.mandatory: use 0 instead of null
+   - connector.mandatory: use 0 instead of null
 6. Fixed Quality import to use `defaultValue` instead of `default`
 7. Fixed boolean import to return undefined instead of false for nullable booleans
 

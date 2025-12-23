@@ -16,7 +16,7 @@ C# codebase was out of date with JS schema. Key issues:
 
 - `Type.Parent` and `Design.Parent` were `string?` but JSON uses `{ guid: "..." }` objects
 - `Connection.X/Y` should be `U/V` (lowercase, nullable float)
-- `Port.CompatibleInterfaces` was obsolete (only valid on `Interface` class)
+- `Connector.CompatibleInterfaces` was obsolete (only valid on `Interface` class)
 - JS unit tests in `semio.test.ts` use fixtures from `assets/semio/` folder
 
 # Plan
@@ -25,7 +25,7 @@ C# codebase was out of date with JS schema. Key issues:
 2. ✅ Identify JSON fixtures in `assets/semio/`
 3. ✅ Fix C# schema: Parent fields → TypeId?/DesignId?
 4. ✅ Fix Connection/ConnectionDiff: X/Y → U/V (float?)
-5. ✅ Remove obsolete CompatibleInterfaces from Port/PortDiff
+5. ✅ Remove obsolete CompatibleInterfaces from Connector/ConnectorDiff
 6. ✅ Add HashCode polyfill for .NET Framework 4.8 compatibility
 7. ✅ Rewrite C# Tests.cs matching JS test structure
 8. ✅ Verify all tests pass on net7.0
@@ -41,8 +41,8 @@ C# codebase was out of date with JS schema. Key issues:
 - Changed `DesignDiff.Parent` from `string?` to `DesignId?`
 - Renamed `Connection.X` → `Connection.U`, `Connection.Y` → `Connection.V` (changed type from `float` to `float?`)
 - Renamed `ConnectionDiff.X` → `ConnectionDiff.U`, `ConnectionDiff.Y` → `ConnectionDiff.V`
-- Removed `CompatibleInterfaces` property from `Port` class
-- Removed `CompatibleInterfaces` property from `PortDiff` class
+- Removed `CompatibleInterfaces` property from `Connector` class
+- Removed `CompatibleInterfaces` property from `ConnectorDiff` class
 - Added `HashCode` polyfill struct (conditional compilation for NET48)
 
 ## `net/Semio/Semio.csproj`

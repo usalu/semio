@@ -67,6 +67,8 @@ import {
   ConceptDiff,
   Connection,
   ConnectionDiff,
+  Connector,
+  ConnectorDiff,
   Coord,
   CoordDiff,
   Design,
@@ -109,8 +111,6 @@ import {
   PlaneDiff,
   Point,
   PointDiff,
-  Port,
-  PortDiff,
   Prop,
   PropDiff,
   Quality,
@@ -208,7 +208,6 @@ import {
   PanelDefinition,
   PanelKey,
   panelKindConfigs,
-  PanelPosition,
   PanelSection,
   PanelSections,
   PanelSizes,
@@ -2823,86 +2822,86 @@ class ModelStore {
 
 // #endregion Model
 
-// #region Port
+// #region Connector
 
-type YPortVal = string | number | boolean | YAttributes | Y.Array<string> | YPoint | YVector | YProps;
-type YPort = Y.Map<YPortVal>;
-type YPorts = Y.Array<YPort>;
+type YConnectorVal = string | number | boolean | YAttributes | Y.Array<string> | YPoint | YVector | YProps;
+type YConnector = Y.Map<YConnectorVal>;
+type YConnectors = Y.Array<YConnector>;
 
-class PortStore {
-  private yPort: YPort;
+class ConnectorStore {
+  private yConnector: YConnector;
   private yPoint: YPoint;
   private point: YPointStore;
   private yDirection: YVector;
   private direction: YVectorStore;
-  private cache?: Port;
+  private cache?: Connector;
   private cacheHash?: string;
 
-  constructor(yPort: YPort, port: Port) {
-    this.yPort = yPort;
-    this.guid = port.guid;
-    this.localId = port.name;
-    this.description = port.description;
-    this.interface = port.interface?.guid;
-    this.mandatory = port.mandatory;
-    this.t = port.t;
+  constructor(yConnector: YConnector, connector: Connector) {
+    this.yConnector = yConnector;
+    this.guid = connector.guid;
+    this.localId = connector.name;
+    this.description = connector.description;
+    this.interface = connector.interface?.guid;
+    this.mandatory = connector.mandatory;
+    this.t = connector.t;
 
     this.yPoint = new Y.Map();
-    this.yPort.set("point", this.yPoint);
-    this.point = new YPointStore(this.yPoint, port.point);
+    this.yConnector.set("point", this.yPoint);
+    this.point = new YPointStore(this.yPoint, connector.point);
 
     this.yDirection = new Y.Map();
-    this.yPort.set("direction", this.yDirection);
-    this.direction = new YVectorStore(this.yDirection, port.direction);
+    this.yConnector.set("direction", this.yDirection);
+    this.direction = new YVectorStore(this.yDirection, connector.direction);
   }
 
   get guid(): string {
-    return this.yPort.get("guid") as string;
+    return this.yConnector.get("guid") as string;
   }
   set guid(guid: string) {
-    this.yPort.set("guid", guid);
+    this.yConnector.set("guid", guid);
   }
 
   get localId(): string | undefined {
-    return this.yPort.get("id_") as string | undefined;
+    return this.yConnector.get("id_") as string | undefined;
   }
   set localId(id_: string | undefined) {
-    this.yPort.set("id_", id_ || "");
+    this.yConnector.set("id_", id_ || "");
   }
 
   get description(): string | undefined {
-    return this.yPort.get("description") as string | undefined;
+    return this.yConnector.get("description") as string | undefined;
   }
   set description(description: string | undefined) {
-    this.yPort.set("description", description || "");
+    this.yConnector.set("description", description || "");
   }
 
   get interface(): string | undefined {
-    return this.yPort.get("interface") as string | undefined;
+    return this.yConnector.get("interface") as string | undefined;
   }
   set interface(interface_: string | undefined) {
-    this.yPort.set("interface", interface_ || "");
+    this.yConnector.set("interface", interface_ || "");
   }
 
   get mandatory(): boolean | undefined {
-    return this.yPort.get("mandatory") as boolean | undefined;
+    return this.yConnector.get("mandatory") as boolean | undefined;
   }
   set mandatory(mandatory: boolean | undefined) {
-    if (mandatory !== undefined) this.yPort.set("mandatory", mandatory);
+    if (mandatory !== undefined) this.yConnector.set("mandatory", mandatory);
   }
 
   get t(): number {
-    return this.yPort.get("t") as number;
+    return this.yConnector.get("t") as number;
   }
   set t(t: number) {
-    this.yPort.set("t", t);
+    this.yConnector.set("t", t);
   }
 
-  hash = (port: Port): string => {
-    return JSON.stringify(port);
+  hash = (connector: Connector): string => {
+    return JSON.stringify(connector);
   };
 
-  snapshot = (): Port => {
+  snapshot = (): Connector => {
     const currentData = {
       guid: this.guid,
       name: this.localId,
@@ -2923,7 +2922,7 @@ class PortStore {
     return this.cache;
   };
 
-  apply(diff: PortDiff): void {
+  apply(diff: ConnectorDiff): void {
     if (diff.guid !== undefined) this.guid = diff.guid;
     if (diff.description !== undefined) this.description = diff.description;
     if (diff.interface !== undefined) this.interface = diff.interface?.guid;
@@ -2931,26 +2930,26 @@ class PortStore {
     if (diff.t !== undefined) this.t = diff.t;
   }
 
-  change = (diff: PortDiff) => {
+  change = (diff: ConnectorDiff) => {
     this.apply(diff);
     if (diff.point !== undefined) this.point.change(diff.point);
     if (diff.direction !== undefined) this.direction.change(diff.direction);
   };
 
   onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.yPort, subscribe);
+    return createObserver(this.yConnector, subscribe);
   };
 
   onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.yPort, subscribe, true);
+    return createObserver(this.yConnector, subscribe, true);
   };
 }
 
-// #endregion Port
+// #endregion Connector
 
 // #region Type
 
-type YTypeVal = string | number | boolean | YAuthorUuids | YAttributes | YModels | YPorts | YProps | YLocation;
+type YTypeVal = string | number | boolean | YAuthorUuids | YAttributes | YModels | YConnectors | YProps | YLocation;
 type YType = Y.Map<YTypeVal>;
 type YTypes = Y.Array<YType>;
 
@@ -2962,9 +2961,9 @@ export class TypeStore {
   private yAuthors: YAuthorUuids;
   private authors: Map<string, AuthorStore>;
   private yModels: YModels;
-  private yPorts: YPorts;
+  private yConnectors: YConnectors;
   public models: Map<string, ModelStore>;
-  public ports: Map<string, PortStore>;
+  public connectors: Map<string, ConnectorStore>;
   private cache?: Type;
   private cacheHash?: string;
 
@@ -2972,7 +2971,7 @@ export class TypeStore {
     this.parent = parent;
     this.yType = yType;
     this.models = new Map();
-    this.ports = new Map();
+    this.connectors = new Map();
 
     this.guid = type.guid;
     this.name = type.name;
@@ -3016,12 +3015,12 @@ export class TypeStore {
       type.models.forEach((model) => this.createModel(model));
     }
 
-    const yTypePorts = new Y.Array<YPort>();
-    this.yType.set("ports", yTypePorts);
-    this.yPorts = yTypePorts;
-    if (type.ports) {
-      for (const port of type.ports) {
-        this.createPort(port);
+    const yTypePorts = new Y.Array<YConnector>();
+    this.yType.set("connectors", yTypePorts);
+    this.yConnectors = yTypePorts;
+    if (type.connectors) {
+      for (const connector of type.connectors) {
+        this.createPort(connector);
       }
     }
 
@@ -3168,20 +3167,20 @@ export class TypeStore {
   }
 
   hasPort(guid: string): boolean {
-    return this.ports.has(guid);
+    return this.connectors.has(guid);
   }
 
-  createPort(port: Port): void {
-    if (this.hasPort(port.guid)) throw new Error(`Port (${port.guid}) already exists.`);
-    const yPort = new Y.Map<YPortVal>();
-    this.yPorts.push([yPort]);
-    const yPortStore = new PortStore(yPort, port);
-    this.ports.set(port.guid, yPortStore);
+  createPort(connector: Connector): void {
+    if (this.hasPort(connector.guid)) throw new Error(`Connector (${connector.guid}) already exists.`);
+    const yConnector = new Y.Map<YConnectorVal>();
+    this.yConnectors.push([yConnector]);
+    const yConnectorStore = new ConnectorStore(yConnector, connector);
+    this.connectors.set(connector.guid, yConnectorStore);
   }
 
-  port(guid: string): PortStore {
-    const p = this.ports.get(guid);
-    if (!p) throw new Error(`Port store not found for guid ${guid}`);
+  connector(guid: string): ConnectorStore {
+    const p = this.connectors.get(guid);
+    if (!p) throw new Error(`Connector store not found for guid ${guid}`);
     return p;
   }
 
@@ -3208,7 +3207,7 @@ export class TypeStore {
       authors: Array.from(this.authors.values()).map((a) => ({ guid: a.guid })),
       attributes: Array.from(this.attributes.values()).map((attribute) => attribute.snapshot()),
       models: Array.from(this.models.values()).map((rep) => rep.snapshot()),
-      ports: Array.from(this.ports.values()).map((port) => port.snapshot()),
+      connectors: Array.from(this.connectors.values()).map((connector) => connector.snapshot()),
       createdAt: this.createdAt?.toISOString(),
       updatedAt: this.updatedAt?.toISOString(),
     };
@@ -3281,26 +3280,26 @@ export class TypeStore {
         }
       }
 
-      if (diff.ports) {
-        if (diff.ports.removed) {
-          diff.ports.removed.forEach((portId) => {
-            const guid = portId.guid;
-            const index = Array.from(this.ports.keys()).indexOf(guid);
+      if (diff.connectors) {
+        if (diff.connectors.removed) {
+          diff.connectors.removed.forEach((connectorId) => {
+            const guid = connectorId.guid;
+            const index = Array.from(this.connectors.keys()).indexOf(guid);
             if (index !== -1) {
-              this.yPorts.delete(index, 1);
-              this.ports.delete(guid);
+              this.yConnectors.delete(index, 1);
+              this.connectors.delete(guid);
             }
           });
         }
-        if (diff.ports.added) {
-          diff.ports.added.forEach((port) => {
-            this.createPort(port);
+        if (diff.connectors.added) {
+          diff.connectors.added.forEach((connector) => {
+            this.createPort(connector);
           });
         }
-        if (diff.ports.updated) {
-          diff.ports.updated.forEach(({ port, diff: portDiff }) => {
-            const p = this.ports.get(port.guid);
-            if (p) p.change(portDiff);
+        if (diff.connectors.updated) {
+          diff.connectors.updated.forEach(({ connector, diff: connectorDiff }) => {
+            const p = this.connectors.get(connector.guid);
+            if (p) p.change(connectorDiff);
           });
         }
       }
@@ -4086,14 +4085,14 @@ class SideStore {
       }
     }
 
-    if (pieceStore && side.port) {
+    if (pieceStore && side.connector) {
       const typeGuid = pieceStore.type;
       if (typeGuid) {
         const typeStore = this.parent.parent.type(typeGuid);
         if (typeStore) {
-          const portStore = typeStore.ports.get(side.port.guid);
-          if (portStore) {
-            this.ySide.set("port", portStore.guid);
+          const connectorStore = typeStore.connectors.get(side.connector.guid);
+          if (connectorStore) {
+            this.ySide.set("connector", connectorStore.guid);
           }
         }
       }
@@ -4130,30 +4129,30 @@ class SideStore {
     }
   }
 
-  get port(): Guid {
-    const portUuid = this.ySide.get("port") as string;
+  get connector(): Guid {
+    const connectorUuid = this.ySide.get("connector") as string;
     const pieceUuid = this.ySide.get("piece") as string;
     const pieceStore = this.parent.piece(pieceUuid);
     const typeGuid = pieceStore.type;
     if (typeGuid) {
       const typeStore = this.parent.parent.type(typeGuid);
       if (typeStore) {
-        const portStore = typeStore.port(portUuid);
-        return portStore.guid;
+        const connectorStore = typeStore.connector(connectorUuid);
+        return connectorStore.guid;
       }
     }
-    return portUuid;
+    return connectorUuid;
   }
-  set port(port: Guid) {
+  set connector(connector: Guid) {
     const pieceUuid = this.ySide.get("piece") as string;
     const pieceStore = this.parent.piece(pieceUuid);
     const typeGuid = pieceStore.type;
     if (typeGuid) {
       const typeStore = this.parent.parent.type(typeGuid);
       if (typeStore) {
-        const portStore = typeStore.ports.get(port);
-        if (portStore) {
-          this.ySide.set("port", portStore.guid);
+        const connectorStore = typeStore.connectors.get(connector);
+        if (connectorStore) {
+          this.ySide.set("connector", connectorStore.guid);
         }
       }
     }
@@ -4167,7 +4166,7 @@ class SideStore {
     const currentData = {
       piece: { guid: this.piece },
       designPiece: this.designPiece ? { guid: this.designPiece } : undefined,
-      port: this.port ? { guid: this.port } : undefined,
+      connector: this.connector ? { guid: this.connector } : undefined,
     };
     const currentHash = this.hash(currentData);
 
@@ -4186,7 +4185,7 @@ class SideStore {
   change = (diff: SideDiff) => {
     if (diff.piece !== undefined) this.piece = diff.piece.guid;
     if (diff.designPiece !== undefined) this.designPiece = diff.designPiece?.guid;
-    if (diff.port !== undefined && diff.port !== null) this.port = diff.port.guid;
+    if (diff.connector !== undefined && diff.connector !== null) this.connector = diff.connector.guid;
   };
 
   onChanged = (subscribe: Subscribe) => {
@@ -7074,7 +7073,7 @@ export function useDesignFromKit(designGuid: Guid, kitGuid?: Guid): Design | und
   return useMemo(() => kitDesigns?.find((d) => d.guid === designGuid), [kitDesigns, designGuid]);
 }
 
-export function useKitPortCompatibility(kitGuid?: Guid): { interfaces: Interface[] } {
+export function useKitConnectorCompatibility(kitGuid?: Guid): { interfaces: Interface[] } {
   const interfaces = useKitInterfaces(kitGuid);
   return useMemo(() => ({ interfaces }), [interfaces]);
 }
@@ -7690,11 +7689,11 @@ export interface KitAppState {
 }
 
 export interface TypeAppSelection {
-  ports?: Guid[];
+  connectors?: Guid[];
   models?: Guid[];
 }
 export interface TypeAppHover {
-  port?: Guid;
+  connector?: Guid;
   model?: Guid;
 }
 export enum TypeAppFullscreenWindow {
@@ -7715,7 +7714,7 @@ export interface TypeAppState {
   fullscreenWindow: TypeAppFullscreenWindow;
   selection?: TypeAppSelection;
   hover?: TypeAppHover;
-  focusedPort?: Guid;
+  focusedConnector?: Guid;
   selectedModelTags: Guid[];
   selectedModelGuid?: Guid;
   camera?: { position: { x: number; y: number; z: number }; target: { x: number; y: number; z: number } };
@@ -7727,12 +7726,12 @@ export interface TypeAppState {
 export interface DesignAppSelection {
   pieces?: Guid[];
   connections?: Guid[];
-  ports?: Array<{ piece: Guid; port: Guid }>;
+  connectors?: Array<{ piece: Guid; connector: Guid }>;
 }
 export interface DesignAppHover {
   pieces?: Guid[];
   connections?: Guid[];
-  ports?: Array<{ piece: Guid; port: Guid }>;
+  connectors?: Array<{ piece: Guid; connector: Guid }>;
   types?: Guid[];
   designs?: Guid[];
 }
@@ -7863,11 +7862,11 @@ export type SketchpadEvent =
   | { type: "TYPE.SET_FULLSCREEN_WINDOW"; kitGuid: Guid; typeGuid: Guid; window: TypeAppFullscreenWindow }
   | { type: "TYPE.SET_SELECTION"; kitGuid: Guid; typeGuid: Guid; selection: TypeAppSelection }
   | { type: "TYPE.CLEAR_SELECTION"; kitGuid: Guid; typeGuid: Guid }
-  | { type: "TYPE.SELECT_PORT"; kitGuid: Guid; typeGuid: Guid; portGuid: Guid }
-  | { type: "TYPE.DESELECT_PORT"; kitGuid: Guid; typeGuid: Guid; portGuid: Guid }
-  | { type: "TYPE.SET_HOVER"; kitGuid: Guid; typeGuid: Guid; hover: { port?: Guid; model?: Guid } }
+  | { type: "TYPE.SELECT_CONNECTOR"; kitGuid: Guid; typeGuid: Guid; connectorGuid: Guid }
+  | { type: "TYPE.DESELECT_CONNECTOR"; kitGuid: Guid; typeGuid: Guid; connectorGuid: Guid }
+  | { type: "TYPE.SET_HOVER"; kitGuid: Guid; typeGuid: Guid; hover: { connector?: Guid; model?: Guid } }
   | { type: "TYPE.CLEAR_HOVER"; kitGuid: Guid; typeGuid: Guid }
-  | { type: "TYPE.FOCUS_PORT"; kitGuid: Guid; typeGuid: Guid; portGuid?: Guid }
+  | { type: "TYPE.FOCUS_CONNECTOR"; kitGuid: Guid; typeGuid: Guid; connectorGuid?: Guid }
   | { type: "TYPE.SELECT_MODEL_TAG"; kitGuid: Guid; typeGuid: Guid; tagGuid: Guid }
   | { type: "TYPE.DESELECT_MODEL_TAG"; kitGuid: Guid; typeGuid: Guid; tagGuid: Guid }
   | { type: "TYPE.SET_MODEL_TAGS"; kitGuid: Guid; typeGuid: Guid; tags: Guid[] }
@@ -7877,7 +7876,7 @@ export type SketchpadEvent =
   | { type: "TYPE.CLEAR_FOCUS"; kitGuid: Guid; typeGuid: Guid }
   | { type: "TYPE.SELECT_MODEL"; kitGuid: Guid; typeGuid: Guid; modelGuid: Guid }
   | { type: "TYPE.DESELECT_MODEL"; kitGuid: Guid; typeGuid: Guid; modelGuid: Guid }
-  | { type: "TYPE.HOVER_PORT"; kitGuid: Guid; typeGuid: Guid; portGuid: Guid }
+  | { type: "TYPE.HOVER_CONNECTOR"; kitGuid: Guid; typeGuid: Guid; connectorGuid: Guid }
   | { type: "TYPE.HOVER_MODEL"; kitGuid: Guid; typeGuid: Guid; modelGuid: Guid }
   | { type: "TYPE.SET_SELECTED_MODEL"; kitGuid: Guid; typeGuid: Guid; modelGuid: Guid }
   | { type: "TYPE.ADD_MODEL_TAG"; kitGuid: Guid; typeGuid: Guid; tag: string }
@@ -8112,7 +8111,7 @@ export function createDefaultTypeAppState(): TypeAppState {
     fullscreenWindow: TypeAppFullscreenWindow.None,
     selection: undefined,
     hover: undefined,
-    focusedPort: undefined,
+    focusedConnector: undefined,
     selectedModelTags: [],
     selectedModelGuid: undefined,
     camera: undefined,
@@ -8300,7 +8299,7 @@ export const sketchpadMachine = setup({
       const key = `${kitGuid}:${designGuid}`;
       const app = context.designApps[key];
       if (!app?.hover) return false;
-      return (app.hover.pieces?.length ?? 0) > 0 || (app.hover.connections?.length ?? 0) > 0 || (app.hover.ports?.length ?? 0) > 0 || (app.hover.types?.length ?? 0) > 0 || (app.hover.designs?.length ?? 0) > 0;
+      return (app.hover.pieces?.length ?? 0) > 0 || (app.hover.connections?.length ?? 0) > 0 || (app.hover.connectors?.length ?? 0) > 0 || (app.hover.types?.length ?? 0) > 0 || (app.hover.designs?.length ?? 0) > 0;
     },
 
     hasTypeHover: ({ context, event }) => {
@@ -8308,7 +8307,7 @@ export const sketchpadMachine = setup({
       const key = `${kitGuid}:${typeGuid}`;
       const app = context.typeApps[key];
       if (!app?.hover) return false;
-      return app.hover.port !== undefined || app.hover.model !== undefined;
+      return app.hover.connector !== undefined || app.hover.model !== undefined;
     },
 
     hasKitHover: ({ context, event }) => {
@@ -8322,14 +8321,14 @@ export const sketchpadMachine = setup({
       const key = `${kitGuid}:${designGuid}`;
       const app = context.designApps[key];
       if (!app?.selection) return false;
-      return (app.selection.pieces?.length ?? 0) > 0 || (app.selection.connections?.length ?? 0) > 0 || (app.selection.ports?.length ?? 0) > 0;
+      return (app.selection.pieces?.length ?? 0) > 0 || (app.selection.connections?.length ?? 0) > 0 || (app.selection.connectors?.length ?? 0) > 0;
     },
     hasTypeSelection: ({ context, event }) => {
       const { kitGuid, typeGuid } = event as any;
       const key = `${kitGuid}:${typeGuid}`;
       const app = context.typeApps[key];
       if (!app?.selection) return false;
-      return (app.selection.ports?.length ?? 0) > 0 || (app.selection.models?.length ?? 0) > 0;
+      return (app.selection.connectors?.length ?? 0) > 0 || (app.selection.models?.length ?? 0) > 0;
     },
 
     designAppExists: ({ context, event }) => {
@@ -8460,8 +8459,8 @@ export const sketchpadMachine = setup({
     typeSetActiveTool: assign(({ context, event }) => executeRuntimeAction("typeSetActiveTool", context, event)),
     typeSetSelection: assign(({ context, event }) => executeRuntimeAction("typeSetSelection", context, event)),
     typeClearSelection: assign(({ context, event }) => executeRuntimeAction("typeClearSelection", context, event)),
-    typeSelectPort: assign(({ context, event }) => executeRuntimeAction("typeSelectPort", context, event)),
-    typeDeselectPort: assign(({ context, event }) => executeRuntimeAction("typeDeselectPort", context, event)),
+    typeSelectConnector: assign(({ context, event }) => executeRuntimeAction("typeSelectConnector", context, event)),
+    typeDeselectConnector: assign(({ context, event }) => executeRuntimeAction("typeDeselectConnector", context, event)),
     typeSetHover: assign(({ context, event }) => executeRuntimeAction("typeSetHover", context, event)),
     typeClearHover: assign(({ context, event }) => executeRuntimeAction("typeClearHover", context, event)),
     typeSetModelTags: assign(({ context, event }) => executeRuntimeAction("typeSetModelTags", context, event)),
@@ -8875,9 +8874,9 @@ export const createTypeSelectionSelector = (kitGuid: Guid, typeGuid: Guid) => {
   return (state: { context: SketchpadContext }) => state.context.typeApps[key]?.selection;
 };
 
-export const createTypeFocusedPortSelector = (kitGuid: Guid, typeGuid: Guid) => {
+export const createTypeFocusedConnectorSelector = (kitGuid: Guid, typeGuid: Guid) => {
   const key = `${kitGuid}:${typeGuid}`;
-  return (state: { context: SketchpadContext }) => state.context.typeApps[key]?.focusedPort;
+  return (state: { context: SketchpadContext }) => state.context.typeApps[key]?.focusedConnector;
 };
 
 export const createTypeSelectedModelTagsSelector = (kitGuid: Guid, typeGuid: Guid) => {
@@ -9043,7 +9042,7 @@ export const createTransactionCanRedoSelector = (appKey: string) => (state: { co
 
 // #endregion Sketchpad Machine
 
-export type UiEntityKind = "kit" | "type" | "design" | "piece" | "connection" | "port" | "model" | "quality" | "benchmark" | "file" | "folder" | "author" | "interface" | "tag" | "concept";
+export type UiEntityKind = "kit" | "type" | "design" | "piece" | "connection" | "connector" | "model" | "quality" | "benchmark" | "file" | "folder" | "author" | "interface" | "tag" | "concept";
 
 export const selectUiActiveKitGuid = (state: { context: SketchpadContext }) => {
   const path = state.context.sketchpad?.navigation || "/";
@@ -9633,13 +9632,13 @@ export function useDiffedKit(): Kit {
 export function usePortColoredTypes(): Type[] {
   const diffedKit = useDiffedKit();
   const kitTypes = useKitTypes();
-  const typesWithColoredPorts = useMemo(() => {
+  const typesWithColoredConnectors = useMemo(() => {
     if (!diffedKit.types || !kitTypes) return [];
     const colorDiff = colorPortsForTypes(diffedKit.types);
     const updatedIds = colorDiff.updated?.map((u) => u.type.guid) || [];
     return kitTypes.filter((t) => updatedIds.includes(t.guid));
   }, [diffedKit.types, kitTypes]);
-  return typesWithColoredPorts;
+  return typesWithColoredConnectors;
 }
 
 export function usePieceWithDiff(): { original: Piece; diffed: Piece | null; hasDiff: boolean } {
@@ -11905,8 +11904,8 @@ export function useHomeCommands() {
       removeKitFromSelection: (origin: string, kitGuid: Guid) => actor.send({ type: "HOME.DESELECT_KIT", guid: kitGuid } as any),
       clearSelection: () => actor.send({ type: "HOME.CLEAR_SELECTION" } as any),
       deselectAll: (origin: string) => actor.send({ type: "HOME.CLEAR_SELECTION" } as any),
-        hoverKit: (origin: string, kitGuid: Guid) => actor.send({ type: "HOME.SET_HOVER", kits: [kitGuid] } as any),
-        clearHover: (origin: string) => actor.send({ type: "HOME.CLEAR_HOVER", origin } as any),
+      hoverKit: (origin: string, kitGuid: Guid) => actor.send({ type: "HOME.SET_HOVER", kits: [kitGuid] } as any),
+      clearHover: (origin: string) => actor.send({ type: "HOME.CLEAR_HOVER", origin } as any),
       setSortColumn: (origin: string, column: string) => actor.send({ type: "HOME.SET_SORT_COLUMN", column } as any),
       setSortDirection: (origin: string, direction: "asc" | "desc") => actor.send({ type: "HOME.SET_SORT_DIRECTION", direction } as any),
       toggleSort: (origin: string, column: string) => {
@@ -13431,7 +13430,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
       const guid = crypto.randomUUID();
       const existingNames = allTypes.map((t) => t.name);
       const uniqueName = name || generateUniqueName(defaultTypeName, existingNames);
-      kitCommands.createType(origin, { guid, name: uniqueName, parent: parent ? { guid: parent } : undefined, ports: [] });
+      kitCommands.createType(origin, { guid, name: uniqueName, parent: parent ? { guid: parent } : undefined, connectors: [] });
       sketchpadCommands.navigateToType(kitGuid, guid);
     },
     [kitCommands, kitGuid, sketchpadCommands, allTypes, defaultTypeName],
@@ -13461,7 +13460,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
           guid,
           name: uniqueName,
           parent: { guid: typeObj.guid },
-          ports: [],
+          connectors: [],
         });
         navigate(`/kits/${kitGuid}/types/${guid}`);
       }

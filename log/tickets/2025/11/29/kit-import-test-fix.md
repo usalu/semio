@@ -30,7 +30,7 @@ The Kit Import Playwright test was failing due to multiple issues:
 
 - **Fixed critical Y.Map.set() bug**: `Y.Map.set()` returns the Y.Map itself, not the value. Fixed all occurrences where class properties were incorrectly set:
   - `ModelStore`: Fixed `yTags` and `yAttributes`
-  - `TypeStore`: Fixed `yAttributes`, `yAuthors`, `yModels`, `yPorts`
+  - `TypeStore`: Fixed `yAttributes`, `yAuthors`, `yModels`, `yConnectors`
   - `PieceStore`: Fixed `yAttributes`
   - `ConnectionStore`: Fixed `yConnected`, `yConnecting`, `yAttributes`
   - `DesignStore`: Fixed `yPieces`, `yConnections`, `yAttributes`, `yStats`, `yProps`, `yLayers`, `yGroups`, `yConcepts`, `yAuthors`

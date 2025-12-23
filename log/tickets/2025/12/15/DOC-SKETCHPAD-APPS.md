@@ -70,13 +70,13 @@ The AGENTS.md documentation had architecture-level documentation for the Sketchp
 
 **Type App (Type.tsx):**
 
-- TypeAppState: panelVisibility, activeTool, selection (ports/models), hover, camera, focusedPortGuid, selectedModelGuid
+- TypeAppState: panelVisibility, activeTool, selection (connectors/models), hover, camera, focusedConnectorGuid, selectedModelGuid
 - Events: TYPE.TOGGLE*PANEL, TYPE.SET_TOOL, TYPE.SELECT*\_/DESELECT\_\_, TYPE.SET_HOVER, TYPE.SET_CAMERA
 - Hooks: useTypeApp(), useTypeAppSelection(), useTypeAppHover(), useTypeAppCamera(), useTypeAppActiveTool()
 
 **Design App (Design.tsx):**
 
-- DesignAppState: panelVisibility, activeTool, selection (pieces/connections/port), hover, camera, diagram state
+- DesignAppState: panelVisibility, activeTool, selection (pieces/connections/connector), hover, camera, diagram state
 - Commands: semio.designApp.selectAll, semio.designApp.deselectAll, semio.designApp.deleteSelected
 - Events: DESIGN.TOGGLE*PANEL, DESIGN.SET_TOOL, DESIGN.SELECT*\_/DESELECT\_\_, DESIGN.DELETE_SELECTED
 - Hooks: useDesignApp(), useDesignAppSelection(), useDesignAppHover(), useDesignAppCamera(), useDesignAppActiveTool()

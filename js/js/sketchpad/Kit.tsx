@@ -72,6 +72,7 @@ import {
   createKitExpandedRowsSelector,
   createKitFilterSearchSelector,
   createKitFullscreenSelector,
+  createKitHoverSelector,
   createKitOthersSelector,
   createKitSelectionSelector,
   createKitSortColumnSelector,
@@ -1537,6 +1538,16 @@ export function useKitAppToggleSort(): ActionHookResult<[column: KitAppSortColum
   return [action, canAct];
 }
 
+export function useKitAppHover(): HookNoSetResult<KitAppHover | undefined> {
+  const kitScope = useKitScope();
+  const actor = useSketchpadActor();
+  const kitGuid = kitScope?.guid ?? "";
+  const selector = useMemo(() => createKitHoverSelector(kitGuid), [kitGuid]);
+  const hover = useSelector(actor, selector);
+  const canRead = kitScope !== null;
+  return [hover, undefined, canRead];
+}
+
 export function useKitAppSetHover(): ActionHookResult<[hover: KitAppHover]> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -2515,7 +2526,7 @@ const KitToolbarFilters: FC = () => {
       case "types": {
         const existingNames = (kit.types || []).map((t: Type) => t.name);
         const uniqueName = generateUniqueName(defaultTypeName, existingNames);
-        const newType: Type = { guid: guid(), name: uniqueName, ports: [] };
+        const newType: Type = { guid: guid(), name: uniqueName, connectors: [] };
         kitCommands.createType(newType);
         sketchpadCommands.navigateToType(kit.guid, newType.guid);
         break;
@@ -2792,23 +2803,23 @@ const AppContent: FC = () => {
   const isMobile = useIsMobile();
   const orchestrator = useSketchpadStore();
 
-    const [selection] = useKitAppSelection();
-    const [expandedRowsSet] = useKitAppExpandedRows();
-    const [sortColumn] = useKitAppSortColumn();
-    const [sortDirection] = useKitAppSortDirection();
-    const kitApp = useKitAppXState(kitScope?.guid ?? "");
-    const hover = useKitApp((state) => state?.hover) as KitAppHover | undefined;
+  const [selection] = useKitAppSelection();
+  const [expandedRowsSet] = useKitAppExpandedRows();
+  const [sortColumn] = useKitAppSortColumn();
+  const [sortDirection] = useKitAppSortDirection();
+  const kitApp = useKitAppXState(kitScope?.guid ?? "");
+  const [hover] = useKitAppHover();
 
   const [selectTypeAction, canSelectType] = useKitAppSelectType();
   const [selectDesignAction, canSelectDesign] = useKitAppSelectDesign();
   const [setSelectionAction, canSetSelection] = useKitAppSetSelection();
   const [clearSelectionAction, canClearSelection] = useKitAppClearSelection();
   const [setFilterAction, canSetFilter] = useKitAppSetFilter();
-    const [toggleRowAction] = useKitAppToggleRow();
-    const [setSortAction, canSetSort] = useKitAppSetSort();
-    const [toggleSortAction, canToggleSort] = useKitAppToggleSort();
-    const [setHover] = useKitAppSetHover();
-    const [clearHover] = useKitAppClearHover();
+  const [toggleRowAction] = useKitAppToggleRow();
+  const [setSortAction, canSetSort] = useKitAppSetSort();
+  const [toggleSortAction, canToggleSort] = useKitAppToggleSort();
+  const [setHover] = useKitAppSetHover();
+  const [clearHover] = useKitAppClearHover();
 
   const [isDragOver, setIsDragOver] = React.useState(false);
   const [showZipWarning, setShowZipWarning] = React.useState(false);
@@ -3820,35 +3831,60 @@ const AppContent: FC = () => {
     });
     return selectedSet;
   }, [rows, selection]);
-  const rowHoverClassName = (row: TableRow) => {
-    if (selectedRows.has(row.id)) return "";
-    if (!hover) return "";
-    if (row.kind === "designs") return hover.design === (row.data as Design).guid ? "bg-hover-base" : "";
-    if (row.kind === "types") return hover.type === (row.data as Type).guid ? "bg-hover-base" : "";
-    if (row.kind === "qualities") return hover.quality === (row.data as Quality).guid ? "bg-hover-base" : "";
-    if (row.kind === "interfaces") return hover.interface === (row.data as Interface).guid ? "bg-hover-base" : "";
-    if (row.kind === "tags") return hover.tag === (row.data as Tag).guid ? "bg-hover-base" : "";
-    if (row.kind === "concepts") return hover.concept === (row.data as Concept).guid ? "bg-hover-base" : "";
-    if (row.kind === "files") return hover.file === (row.data as SemioFile).guid ? "bg-hover-base" : "";
-    if (row.kind === "folders") return hover.folder === (row.data as Folder).guid ? "bg-hover-base" : "";
-    if (row.kind === "authors") return hover.author === (row.data as Author).guid ? "bg-hover-base" : "";
-    return "";
-  };
-  const handleRowMouseEnter = (row: TableRow) => {
-    if (!setHover) return;
-    if (row.kind === "designs") setHover({ design: (row.data as Design).guid });
-    else if (row.kind === "types") setHover({ type: (row.data as Type).guid });
-    else if (row.kind === "qualities") setHover({ quality: (row.data as Quality).guid });
-    else if (row.kind === "interfaces") setHover({ interface: (row.data as Interface).guid });
-    else if (row.kind === "tags") setHover({ tag: (row.data as Tag).guid });
-    else if (row.kind === "concepts") setHover({ concept: (row.data as Concept).guid });
-    else if (row.kind === "files") setHover({ file: (row.data as SemioFile).guid });
-    else if (row.kind === "folders") setHover({ folder: (row.data as Folder).guid });
-    else if (row.kind === "authors") setHover({ author: (row.data as Author).guid });
-  };
-  const handleRowMouseLeave = () => {
+  const rowHoverClassName = useCallback(
+    (row: TableRow) => {
+      if (selectedRows.has(row.id)) return "";
+      if (!hover) return "";
+      if (row.kind === "designs") return hover.design === (row.data as Design).guid ? "bg-hover-base" : "";
+      if (row.kind === "types") return hover.type === (row.data as Type).guid ? "bg-hover-base" : "";
+      if (row.kind === "qualities") return hover.quality === (row.data as Quality).guid ? "bg-hover-base" : "";
+      if (row.kind === "interfaces") return hover.interface === (row.data as Interface).guid ? "bg-hover-base" : "";
+      if (row.kind === "tags") return hover.tag === (row.data as Tag).guid ? "bg-hover-base" : "";
+      if (row.kind === "concepts") return hover.concept === (row.data as Concept).guid ? "bg-hover-base" : "";
+      if (row.kind === "files") return hover.file === (row.data as SemioFile).guid ? "bg-hover-base" : "";
+      if (row.kind === "folders") return hover.folder === (row.data as Folder).guid ? "bg-hover-base" : "";
+      if (row.kind === "authors") return hover.author === (row.data as Author).guid ? "bg-hover-base" : "";
+      return "";
+    },
+    [selectedRows, hover],
+  );
+  const handleRowMouseEnter = useCallback(
+    (row: TableRow) => {
+      if (!setHover) return;
+      if (row.kind === "designs") {
+        const guid = (row.data as Design).guid;
+        if (hover?.design !== guid) setHover({ design: guid });
+      } else if (row.kind === "types") {
+        const guid = (row.data as Type).guid;
+        if (hover?.type !== guid) setHover({ type: guid });
+      } else if (row.kind === "qualities") {
+        const guid = (row.data as Quality).guid;
+        if (hover?.quality !== guid) setHover({ quality: guid });
+      } else if (row.kind === "interfaces") {
+        const guid = (row.data as Interface).guid;
+        if (hover?.interface !== guid) setHover({ interface: guid });
+      } else if (row.kind === "tags") {
+        const guid = (row.data as Tag).guid;
+        if (hover?.tag !== guid) setHover({ tag: guid });
+      } else if (row.kind === "concepts") {
+        const guid = (row.data as Concept).guid;
+        if (hover?.concept !== guid) setHover({ concept: guid });
+      } else if (row.kind === "files") {
+        const guid = (row.data as SemioFile).guid;
+        if (hover?.file !== guid) setHover({ file: guid });
+      } else if (row.kind === "folders") {
+        const guid = (row.data as Folder).guid;
+        if (hover?.folder !== guid) setHover({ folder: guid });
+      } else if (row.kind === "authors") {
+        const guid = (row.data as Author).guid;
+        if (hover?.author !== guid) setHover({ author: guid });
+      }
+    },
+    [setHover, hover],
+  );
+  const handleRowMouseLeave = useCallback(() => {
     if (clearHover) clearHover();
-  };
+  }, [clearHover]);
 
   const { setFocusItems, setOnFocusItem } = useFocus();
   const [focusedItemId, setFocusedItemId] = useState<string | undefined>();
@@ -4071,7 +4107,7 @@ const AppContent: FC = () => {
         const newType: Type = {
           guid: guid(),
           name: uniqueName,
-          ports: [],
+          connectors: [],
         };
         if (kitCommands) kitCommands.createType(newType);
         sketchpadCommands.navigateToType(kit.guid, newType.guid);
@@ -4172,7 +4208,7 @@ const AppContent: FC = () => {
         guid: guid(),
         name: uniqueName,
         parent: { guid: type.guid },
-        ports: [],
+        connectors: [],
       };
       if (kitCommands) kitCommands.createType(newType);
       sketchpadCommands.navigateToType(kit.guid, newType.guid);
@@ -4231,188 +4267,190 @@ const AppContent: FC = () => {
     setSearchParams(newParams);
   };
 
-  const handleRowClick = (row: TableRow, index: number, e: React.MouseEvent) => {
-    if (clickTimerRef.current) {
-      clearTimeout(clickTimerRef.current);
-      clickTimerRef.current = null;
-    }
+  const handleRowClick = useCallback(
+    (row: TableRow, index: number, e: React.MouseEvent) => {
+      if (clickTimerRef.current) {
+        clearTimeout(clickTimerRef.current);
+        clickTimerRef.current = null;
+      }
 
-    if (e.detail > 1) {
-      lastDoubleClickRef.current = { rowId: row.id, at: Date.now() };
-      if (row.kind === "designs") {
-        sketchpadCommands.navigateToDesign(kit.guid, (row.data as Design).guid);
+      if (e.detail > 1) {
+        lastDoubleClickRef.current = { rowId: row.id, at: Date.now() };
+        if (row.kind === "designs") {
+          sketchpadCommands.navigateToDesign(kit.guid, (row.data as Design).guid);
+          return;
+        }
+        if (row.kind === "types") {
+          sketchpadCommands.navigateToType(kit.guid, (row.data as Type).guid);
+          return;
+        }
+        if (row.kind === "qualities") {
+          sketchpadCommands.navigateToQuality(kit.guid, (row.data as Quality).key);
+          return;
+        }
         return;
       }
-      if (row.kind === "types") {
-        sketchpadCommands.navigateToType(kit.guid, (row.data as Type).guid);
+
+      if (e.shiftKey && lastClickedIndexRef.current !== -1) {
+        const start = Math.min(lastClickedIndexRef.current, index);
+        const end = Math.max(lastClickedIndexRef.current, index);
+        const rangeRows = rows.slice(start, end + 1);
+
+        const selectedByKind: {
+          types: Guid[];
+          designs: Guid[];
+          qualities: string[];
+          interfaces: Guid[];
+          tags: Guid[];
+          concepts: Guid[];
+          files: string[];
+          folders: Guid[];
+          authors: string[];
+        } = {
+          types: [],
+          designs: [],
+          qualities: [],
+          interfaces: [],
+          tags: [],
+          concepts: [],
+          files: [],
+          folders: [],
+          authors: [],
+        };
+
+        rangeRows.forEach((r) => {
+          if (r.kind === "types") selectedByKind.types.push((r.data as Type).guid);
+          else if (r.kind === "designs") selectedByKind.designs.push((r.data as Design).guid);
+          else if (r.kind === "qualities") selectedByKind.qualities.push((r.data as Quality).key);
+          else if (r.kind === "interfaces") selectedByKind.interfaces.push((r.data as Interface).guid);
+          else if (r.kind === "tags") selectedByKind.tags.push((r.data as Tag).guid);
+          else if (r.kind === "concepts") selectedByKind.concepts.push((r.data as Concept).guid);
+          else if (r.kind === "files") selectedByKind.files.push((r.data as SemioFile).guid);
+          else if (r.kind === "folders") selectedByKind.folders.push((r.data as Folder).guid);
+          else if (r.kind === "authors") selectedByKind.authors.push((r.data as Author).name);
+        });
+
+        setSelectionAction?.(selectedByKind);
+
         return;
       }
-      if (row.kind === "qualities") {
-        sketchpadCommands.navigateToQuality(kit.guid, (row.data as Quality).key);
+
+      if (e.metaKey || e.ctrlKey) {
+        if (row.kind === "designs") {
+          const designId = (row.data as Design).guid;
+          if (selection.designs?.includes(designId)) {
+            setSelectionAction?.({ ...selection, designs: selection.designs.filter((d) => d !== designId) });
+          } else {
+            setSelectionAction?.({ ...selection, designs: [...(selection.designs || []), designId] });
+          }
+        } else if (row.kind === "types") {
+          const typeId = (row.data as Type).guid;
+          if (selection.types?.includes(typeId)) {
+            setSelectionAction?.({ ...selection, types: selection.types.filter((t) => t !== typeId) });
+          } else {
+            setSelectionAction?.({ ...selection, types: [...(selection.types || []), typeId] });
+          }
+        } else if (row.kind === "qualities") {
+          const qualityKey = (row.data as Quality).key;
+          if (selection.qualities?.includes(qualityKey)) {
+            setSelectionAction?.({ ...selection, qualities: selection.qualities.filter((q) => q !== qualityKey) });
+          } else {
+            setSelectionAction?.({ ...selection, qualities: [...(selection.qualities || []), qualityKey] });
+          }
+        } else if (row.kind === "interfaces") {
+          const interfaceId = (row.data as Interface).guid;
+          if (selection.interfaces?.includes(interfaceId)) {
+            setSelectionAction?.({ ...selection, interfaces: selection.interfaces.filter((i) => i !== interfaceId) });
+          } else {
+            setSelectionAction?.({ ...selection, interfaces: [...(selection.interfaces || []), interfaceId] });
+          }
+        } else if (row.kind === "tags") {
+          const tagId = (row.data as Tag).guid;
+          if (selection.tags?.includes(tagId)) {
+            setSelectionAction?.({ ...selection, tags: selection.tags.filter((t) => t !== tagId) });
+          } else {
+            setSelectionAction?.({ ...selection, tags: [...(selection.tags || []), tagId] });
+          }
+        } else if (row.kind === "concepts") {
+          const conceptId = (row.data as Concept).guid;
+          if (selection.concepts?.includes(conceptId)) {
+            setSelectionAction?.({ ...selection, concepts: selection.concepts.filter((c) => c !== conceptId) });
+          } else {
+            setSelectionAction?.({ ...selection, concepts: [...(selection.concepts || []), conceptId] });
+          }
+        } else if (row.kind === "files") {
+          const fileGuid = (row.data as SemioFile).guid;
+          if (selection.files?.includes(fileGuid)) {
+            setSelectionAction?.({ ...selection, files: selection.files.filter((f) => f !== fileGuid) });
+          } else {
+            setSelectionAction?.({ ...selection, files: [...(selection.files || []), fileGuid] });
+          }
+        } else if (row.kind === "folders") {
+          const folderId = (row.data as Folder).guid;
+          if (selection.folders?.includes(folderId)) {
+            setSelectionAction?.({ ...selection, folders: selection.folders.filter((f) => f !== folderId) });
+          } else {
+            setSelectionAction?.({ ...selection, folders: [...(selection.folders || []), folderId] });
+          }
+        } else if (row.kind === "authors") {
+          const authorName = (row.data as Author).name;
+          if (selection.authors?.includes(authorName)) {
+            setSelectionAction?.({ ...selection, authors: selection.authors.filter((a) => a !== authorName) });
+          } else {
+            setSelectionAction?.({ ...selection, authors: [...(selection.authors || []), authorName] });
+          }
+        }
+
         return;
       }
-      return;
-    }
 
-    if (e.shiftKey && lastClickedIndexRef.current !== -1) {
-      const start = Math.min(lastClickedIndexRef.current, index);
-      const end = Math.max(lastClickedIndexRef.current, index);
-      const rangeRows = rows.slice(start, end + 1);
+      clickTimerRef.current = setTimeout(() => {
+        if (row.kind === "designs") {
+          setSelectionAction?.({ designs: [(row.data as Design).guid] });
+        } else if (row.kind === "types") {
+          setSelectionAction?.({ types: [(row.data as Type).guid] });
+        } else if (row.kind === "qualities") {
+          setSelectionAction?.({ qualities: [(row.data as Quality).key] });
+        } else if (row.kind === "interfaces") {
+          setSelectionAction?.({ interfaces: [(row.data as Interface).guid] });
+        } else if (row.kind === "tags") {
+          setSelectionAction?.({ tags: [(row.data as Tag).guid] });
+        } else if (row.kind === "concepts") {
+          setSelectionAction?.({ concepts: [(row.data as Concept).guid] });
+        } else if (row.kind === "files") {
+          setSelectionAction?.({ files: [(row.data as SemioFile).guid] });
+        } else if (row.kind === "folders") {
+          setSelectionAction?.({ folders: [(row.data as Folder).guid] });
+        } else if (row.kind === "authors") {
+          setSelectionAction?.({ authors: [(row.data as Author).name] });
+        }
+        clickTimerRef.current = null;
+      }, 200);
 
-      const selectedByKind: {
-        types: Guid[];
-        designs: Guid[];
-        qualities: string[];
-        interfaces: Guid[];
-        tags: Guid[];
-        concepts: Guid[];
-        files: string[];
-        folders: Guid[];
-        authors: string[];
-      } = {
-        types: [],
-        designs: [],
-        qualities: [],
-        interfaces: [],
-        tags: [],
-        concepts: [],
-        files: [],
-        folders: [],
-        authors: [],
-      };
+      lastClickedIndexRef.current = index;
+    },
+    [kit.guid, sketchpadCommands, setSelectionAction, selection, rows],
+  );
 
-      rangeRows.forEach((r) => {
-        if (r.kind === "types") selectedByKind.types.push((r.data as Type).guid);
-        else if (r.kind === "designs") selectedByKind.designs.push((r.data as Design).guid);
-        else if (r.kind === "qualities") selectedByKind.qualities.push((r.data as Quality).key);
-        else if (r.kind === "interfaces") selectedByKind.interfaces.push((r.data as Interface).guid);
-        else if (r.kind === "tags") selectedByKind.tags.push((r.data as Tag).guid);
-        else if (r.kind === "concepts") selectedByKind.concepts.push((r.data as Concept).guid);
-        else if (r.kind === "files") selectedByKind.files.push((r.data as SemioFile).guid);
-        else if (r.kind === "folders") selectedByKind.folders.push((r.data as Folder).guid);
-        else if (r.kind === "authors") selectedByKind.authors.push((r.data as Author).name);
-      });
-
-      setSelectionAction?.(selectedByKind);
-
-      return;
-    }
-
-    if (e.metaKey || e.ctrlKey) {
-      if (row.kind === "designs") {
-        const designId = (row.data as Design).guid;
-        if (selection.designs?.includes(designId)) {
-          setSelectionAction?.({ ...selection, designs: selection.designs.filter((d) => d !== designId) });
-        } else {
-          setSelectionAction?.({ ...selection, designs: [...(selection.designs || []), designId] });
-        }
-      } else if (row.kind === "types") {
-        const typeId = (row.data as Type).guid;
-        if (selection.types?.includes(typeId)) {
-          setSelectionAction?.({ ...selection, types: selection.types.filter((t) => t !== typeId) });
-        } else {
-          setSelectionAction?.({ ...selection, types: [...(selection.types || []), typeId] });
-        }
-      } else if (row.kind === "qualities") {
-        const qualityKey = (row.data as Quality).key;
-        if (selection.qualities?.includes(qualityKey)) {
-          setSelectionAction?.({ ...selection, qualities: selection.qualities.filter((q) => q !== qualityKey) });
-        } else {
-          setSelectionAction?.({ ...selection, qualities: [...(selection.qualities || []), qualityKey] });
-        }
-      } else if (row.kind === "interfaces") {
-        const interfaceId = (row.data as Interface).guid;
-        if (selection.interfaces?.includes(interfaceId)) {
-          setSelectionAction?.({ ...selection, interfaces: selection.interfaces.filter((i) => i !== interfaceId) });
-        } else {
-          setSelectionAction?.({ ...selection, interfaces: [...(selection.interfaces || []), interfaceId] });
-        }
-      } else if (row.kind === "tags") {
-        const tagId = (row.data as Tag).guid;
-        if (selection.tags?.includes(tagId)) {
-          setSelectionAction?.({ ...selection, tags: selection.tags.filter((t) => t !== tagId) });
-        } else {
-          setSelectionAction?.({ ...selection, tags: [...(selection.tags || []), tagId] });
-        }
-      } else if (row.kind === "concepts") {
-        const conceptId = (row.data as Concept).guid;
-        if (selection.concepts?.includes(conceptId)) {
-          setSelectionAction?.({ ...selection, concepts: selection.concepts.filter((c) => c !== conceptId) });
-        } else {
-          setSelectionAction?.({ ...selection, concepts: [...(selection.concepts || []), conceptId] });
-        }
-      } else if (row.kind === "files") {
-        const fileGuid = (row.data as SemioFile).guid;
-        if (selection.files?.includes(fileGuid)) {
-          setSelectionAction?.({ ...selection, files: selection.files.filter((f) => f !== fileGuid) });
-        } else {
-          setSelectionAction?.({ ...selection, files: [...(selection.files || []), fileGuid] });
-        }
-      } else if (row.kind === "folders") {
-        const folderId = (row.data as Folder).guid;
-        if (selection.folders?.includes(folderId)) {
-          setSelectionAction?.({ ...selection, folders: selection.folders.filter((f) => f !== folderId) });
-        } else {
-          setSelectionAction?.({ ...selection, folders: [...(selection.folders || []), folderId] });
-        }
-      } else if (row.kind === "authors") {
-        const authorName = (row.data as Author).name;
-        if (selection.authors?.includes(authorName)) {
-          setSelectionAction?.({ ...selection, authors: selection.authors.filter((a) => a !== authorName) });
-        } else {
-          setSelectionAction?.({ ...selection, authors: [...(selection.authors || []), authorName] });
-        }
+  const handleRowDoubleClick = useCallback(
+    (row: TableRow, index: number) => {
+      const now = Date.now();
+      if (lastDoubleClickRef.current.rowId === row.id && now - lastDoubleClickRef.current.at < 400) {
+        lastDoubleClickRef.current = { rowId: null, at: 0 };
+        return;
       }
 
-      return;
-    }
-
-    clickTimerRef.current = setTimeout(() => {
-      if (row.kind === "designs") {
-        setSelectionAction?.({ designs: [(row.data as Design).guid] });
-      } else if (row.kind === "types") {
-        setSelectionAction?.({ types: [(row.data as Type).guid] });
-      } else if (row.kind === "qualities") {
-        setSelectionAction?.({ qualities: [(row.data as Quality).key] });
-      } else if (row.kind === "interfaces") {
-        setSelectionAction?.({ interfaces: [(row.data as Interface).guid] });
-      } else if (row.kind === "tags") {
-        setSelectionAction?.({ tags: [(row.data as Tag).guid] });
-      } else if (row.kind === "concepts") {
-        setSelectionAction?.({ concepts: [(row.data as Concept).guid] });
-      } else if (row.kind === "files") {
-        setSelectionAction?.({ files: [(row.data as SemioFile).guid] });
-      } else if (row.kind === "folders") {
-        setSelectionAction?.({ folders: [(row.data as Folder).guid] });
-      } else if (row.kind === "authors") {
-        setSelectionAction?.({ authors: [(row.data as Author).name] });
+      if (clickTimerRef.current) {
+        clearTimeout(clickTimerRef.current);
+        clickTimerRef.current = null;
       }
-      clickTimerRef.current = null;
-    }, 200);
 
-    lastClickedIndexRef.current = index;
-  };
-
-  const handleRowDoubleClick = (row: TableRow, index: number) => {
-    const now = Date.now();
-    if (lastDoubleClickRef.current.rowId === row.id && now - lastDoubleClickRef.current.at < 400) {
-      lastDoubleClickRef.current = { rowId: null, at: 0 };
-      return;
-    }
-
-    if (clickTimerRef.current) {
-      clearTimeout(clickTimerRef.current);
-      clickTimerRef.current = null;
-    }
-
-    if (row.kind === "designs") {
-      sketchpadCommands.navigateToDesign(kit.guid, (row.data as Design).guid);
-    } else if (row.kind === "types") {
-      sketchpadCommands.navigateToType(kit.guid, (row.data as Type).guid);
-    } else if (row.kind === "qualities") {
-      sketchpadCommands.navigateToQuality(kit.guid, (row.data as Quality).key);
-    }
-  };
+      if (row.kind === "designs") sketchpadCommands.navigateToDesign(kit.guid, (row.data as Design).guid);
+      else if (row.kind === "types") sketchpadCommands.navigateToType(kit.guid, (row.data as Type).guid);
+      else if (row.kind === "qualities") sketchpadCommands.navigateToQuality(kit.guid, (row.data as Quality).key);
+    },
+    [kit.guid, sketchpadCommands],
+  );
 
   const handleSortClick = (column: "artifact" | "kind" | "authors" | "updatedAt" | "createdAt") => {
     kitAppCommands.toggleSort(column);
@@ -4488,9 +4526,9 @@ const AppContent: FC = () => {
         }}
       >
         {/* Mobile table using general Table component */}
-          <Table
-            className="flex-1 min-h-0"
-            columns={[
+        <Table
+          className="flex-1 min-h-0"
+          columns={[
             {
               id: "artifact",
               header: (
@@ -4553,17 +4591,17 @@ const AppContent: FC = () => {
                 </div>
               ),
             },
-            ]}
-            rowClassName={rowHoverClassName}
-            data={rows}
-            getRowId={(row) => row.id}
-            selectedRows={selectedRows}
-            onRowClick={handleRowClick}
-            onRowDoubleClick={handleRowDoubleClick}
-            onRowMouseEnter={handleRowMouseEnter}
-            onRowMouseLeave={handleRowMouseLeave}
-            dragDrop={{
-              enabled: true,
+          ]}
+          rowClassName={rowHoverClassName}
+          data={rows}
+          getRowId={(row) => row.id}
+          selectedRows={selectedRows}
+          onRowClick={handleRowClick}
+          onRowDoubleClick={handleRowDoubleClick}
+          onRowMouseEnter={handleRowMouseEnter}
+          onRowMouseLeave={handleRowMouseLeave}
+          dragDrop={{
+            enabled: true,
             onDragStart: (rowId) => setActiveId(rowId),
             onDragEnd: (event) => {
               const activeRow = rows.find((r) => r.id === event.active);
@@ -4963,7 +5001,7 @@ interface KitDiagramEdge {
 
 const KitArtifactNode: FC<NodeProps<Node<KitDiagramNode>>> = ({ data, selected }) => {
   const [selection] = useKitAppSelection();
-  const hover = useKitApp((state) => state?.hover) as KitAppHover | undefined;
+  const [hover] = useKitAppHover();
 
   const isHovered = useMemo(() => {
     if (!hover) return false;
@@ -5535,24 +5573,24 @@ const KitDiagramInner: FC = () => {
     [actor, kitGuid],
   );
 
-    const handleNodeMouseEnter = useCallback(
-      (_: any, node: Node<KitDiagramNode>) => {
-        const kind = node.data?.kind;
-        const guid = node.data?.guid;
-        if (!kind || !guid) return;
-        if (!setHover) return;
-        if (kind === "type") setHover({ type: guid });
-        else if (kind === "design") setHover({ design: guid });
-        else if (kind === "quality") setHover({ quality: guid });
-        else if (kind === "interface") setHover({ interface: guid });
-        else if (kind === "tag") setHover({ tag: guid });
-        else if (kind === "concept") setHover({ concept: guid });
-        else if (kind === "file") setHover({ file: guid });
-        else if (kind === "folder") setHover({ folder: guid });
-        else if (kind === "author") setHover({ author: guid });
-      },
-      [setHover],
-    );
+  const handleNodeMouseEnter = useCallback(
+    (_: any, node: Node<KitDiagramNode>) => {
+      const kind = node.data?.kind;
+      const guid = node.data?.guid;
+      if (!kind || !guid) return;
+      if (!setHover) return;
+      if (kind === "type") setHover({ type: guid });
+      else if (kind === "design") setHover({ design: guid });
+      else if (kind === "quality") setHover({ quality: guid });
+      else if (kind === "interface") setHover({ interface: guid });
+      else if (kind === "tag") setHover({ tag: guid });
+      else if (kind === "concept") setHover({ concept: guid });
+      else if (kind === "file") setHover({ file: guid });
+      else if (kind === "folder") setHover({ folder: guid });
+      else if (kind === "author") setHover({ author: guid });
+    },
+    [setHover],
+  );
 
   const handleNodeMouseLeave = useCallback(() => {
     if (clearHover) clearHover();

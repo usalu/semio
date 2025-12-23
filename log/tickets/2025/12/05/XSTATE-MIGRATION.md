@@ -195,7 +195,7 @@ on: {
 
 ## **3.3 Preserve Y.js Entity Stores**
 
-Keep TypeStore, DesignStore, PortStore, etc.
+Keep TypeStore, DesignStore, ConnectorStore, etc.
 Access through machine selectors.
 
 ---

@@ -954,7 +954,7 @@
       ]
     },
     {
-      "name": "Port",
+      "name": "Connector",
       "kind": "class",
       "fields": [
         {
@@ -996,7 +996,7 @@
       ]
     },
     {
-      "name": "PortId",
+      "name": "ConnectorId",
       "kind": "class",
       "fields": [
         {
@@ -1006,7 +1006,7 @@
       ]
     },
     {
-      "name": "PortDiff",
+      "name": "ConnectorDiff",
       "kind": "class",
       "fields": [
         {
@@ -1048,20 +1048,20 @@
       ]
     },
     {
-      "name": "PortsDiff",
+      "name": "ConnectorsDiff",
       "kind": "class",
       "fields": [
         {
           "name": "removed",
-          "type": "list[PortId]"
+          "type": "list[ConnectorId]"
         },
         {
           "name": "updated",
-          "type": "list[PortDiff]"
+          "type": "list[ConnectorDiff]"
         },
         {
           "name": "added",
-          "type": "list[Port]"
+          "type": "list[Connector]"
         }
       ]
     },
@@ -1082,8 +1082,8 @@
           "type": "list[Model]"
         },
         {
-          "name": "ports",
-          "type": "list[Port]"
+          "name": "connectors",
+          "type": "list[Connector]"
         },
         {
           "name": "props",
@@ -1178,8 +1178,8 @@
           "type": "ModelsDiff"
         },
         {
-          "name": "ports",
-          "type": "PortsDiff"
+          "name": "connectors",
+          "type": "ConnectorsDiff"
         },
         {
           "name": "props",
@@ -1590,8 +1590,8 @@
           "type": "PieceId"
         },
         {
-          "name": "port",
-          "type": "PortId"
+          "name": "connector",
+          "type": "ConnectorId"
         }
       ]
     },
@@ -2244,7 +2244,7 @@
           "type": "Map<Guid,"
         },
         {
-          "name": "portsByTypeGuid",
+          "name": "connectorsByTypeGuid",
           "type": "Map<Guid,"
         },
         {
@@ -2324,7 +2324,14 @@
       "name": "QualityKind",
       "kind": "enum",
       "fields": [],
-      "enumValues": ["General", "Design", "Type", "Piece", "Connection", "Port"]
+      "enumValues": [
+        "General",
+        "Design",
+        "Type",
+        "Piece",
+        "Connection",
+        "Connector"
+      ]
     }
   ],
   "relationships": [
@@ -2414,7 +2421,7 @@
     },
     {
       "from": "Type",
-      "to": "Port",
+      "to": "Connector",
       "type": "composition",
       "cardinality": "0..*"
     },
@@ -2467,31 +2474,31 @@
       "cardinality": "1"
     },
     {
-      "from": "Port",
+      "from": "Connector",
       "to": "Attribute",
       "type": "composition",
       "cardinality": "0..*"
     },
     {
-      "from": "Port",
+      "from": "Connector",
       "to": "Point",
       "type": "composition",
       "cardinality": "1"
     },
     {
-      "from": "Port",
+      "from": "Connector",
       "to": "Vector",
       "type": "composition",
       "cardinality": "1"
     },
     {
-      "from": "Port",
+      "from": "Connector",
       "to": "Interface",
       "type": "composition",
       "cardinality": "1"
     },
     {
-      "from": "Port",
+      "from": "Connector",
       "to": "Interface",
       "type": "composition",
       "cardinality": "0..*"
@@ -2558,7 +2565,7 @@
     },
     {
       "from": "Side",
-      "to": "Port",
+      "to": "Connector",
       "type": "aggregation",
       "cardinality": "1"
     },

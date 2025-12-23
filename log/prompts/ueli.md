@@ -1,5 +1,28 @@
 # Prompt history
 
+@Ink ink should be used in all executable typescript files such as scripts and hooks. Add it as a dev dependency to root package @package.json.
+Refactor the existing scripts to use ink (e.g. rename-files, etc)
+
+Double clicking on type row or design row doesnt navigate anymore after hover was moved to the state machine. Instead after double click the hover command is retriggered all the time even when the mouse is not moving. The app tests should be checking this and fail. You can use playwright mcp.
+
+Add a rule to README.md that every section must start with a symbol.
+
+The code analysis and fixing system should be extended.
+In general rules are introduced to the codebase. Every rule has a name, a reason, a severity (error, warning, info) and a solution. There are repo-wide, ecosystem-wide, project-wide, component-wide rules.
+Rules can be specializations of other rules. E.g. Missing Filepath in Header Region is a specialization of Header Region Format.
+Every rule has an id e.g. "semio.rule.header-format.missing-filepath"
+E.g. repo-wide rule:
+- Undocumented Code
+- Header Region Format
+- Missing Filepath in Header Region (Header Region Format)
+- Missing Contributor in Header Region (Header Region Format)
+- Missing License in Header Region (Header Region Format)
+E.g. ecosystem-wide rule:
+
+Rules are always documented in the dev-docs (README.md and AGENTS.md). They always are one section below the containing section. E.g. Javascript ecosystem-wide rules are documented under `# /` in README.md and AGENTS.md.
+
+
+
 Extend the code.ts hook to that all AGENTS.md headers under # Codebase meaning ## PATH are actual files and folders, all have the proper prefix (📁 or 📄), are sorted alphabetically and none appear twice. Create issues for all individual violations.
 
 Make the reasons and solutions specific to the codebase and the files. Read the devs docs to understand the reasons.
@@ -84,7 +107,7 @@ The log.ts script should be extended with an flag plan that takes a markdown fil
 
 Extend the code.ts hook to find more issues. Add two more issue kinds: forbidden imports and forbidden terminology. Forbidden imports checks if imports are structurally forbidden. Forbidden terminology checks if specific terminology is used somewhere where it shouldnt be allowed e.g. when domain-specific terminology is used in general-purpose files.
 Here some rules for js/js:
-- elements.tsx are pure reusable ui elements library that are indepedent of semio. They should not import anything from sketchpad or any app or contain any semio domain-specific terminology (kit, design, type, port, connection, docs, feedback). elements.tsx is the only file that can import third party libraries and reexpose them as components. All other files in the js/js folder should be self-contained and dependency free from any other library outside of the js/js folder.
+- elements.tsx are pure reusable ui elements library that are indepedent of semio. They should not import anything from sketchpad or any app or contain any semio domain-specific terminology (kit, design, type, connector, connection, docs, feedback). elements.tsx is the only file that can import third party libraries and reexpose them as components. All other files in the js/js folder should be self-contained and dependency free from any other library outside of the js/js folder.
 - Sketchpad.tsx and the other app files (Home.tsx, Kit.tsx, Design.tsx, Type.tsx, Quality.tsx, Docs.tsx, Feedback.tsx) should follow the open/closed principle. Sketchpad.tsx should only import from elements.tsx, semio.ts, shared.ts. The apps should only import from Sketchpad.tsx, elements.tsx, semio.ts, shared.ts. 
 If the file is deleted then sketchpad should work, if a new file is added, the new app should work. The hook should scan for all static and dynamic imports that violate the above rules. 
 
@@ -480,7 +503,7 @@ i18n script:
 - has mjs and ts file
 - is falsely classifying a lot of keys as unused
 
-The development section should be extended by a section port numbers (not semio ports but "regular" port). There should be an overview table of all ports used for dev commands (such as storybook, sketchpad, play) or final packages (such as engine that has a variable port number according release numer r25.02-1->2507). The new port for sketchpad should be 3000 and for play 4000.
+The development section should be extended by a section connector numbers (not semio connectors but "regular" connector). There should be an overview table of all connectors used for dev commands (such as storybook, sketchpad, play) or final packages (such as engine that has a variable connector number according release numer r25.02-1->2507). The new connector for sketchpad should be 3000 and for play 4000.
 
 Add a new rule that whenever a new file is created, deleted or moved, it should update the file and folder structure in the dev docs (AGENTS.md and README.md)
 
@@ -707,7 +730,7 @@ AUTOMATE Clean
 Take a very close look at how to overcome the hover issues. With larger kits it becomes unusable depsite it only being design app state.
 
 semio and threejs have different coordinate systems.
-ports in type app are not displayed correctly.
+connectors in type app are not displayed correctly.
 geometry with plane (such as as pieces is not correctly rendered).
 pieces should be displayed at the flat planes (the flat
 
@@ -918,7 +941,7 @@ Still failing:
 ⦁ Dropping piece after panning (holding left mouse and moving) and zooming (mousewheel) diagram leads to wrong centers.
 Dont forget that every piece must be immediately hovered afterwards. This only happens if the center or plane are correct.
 
-Create a test for drag and drop that drops the kit assets/semio/metabolism.zip into canvas. After this check that every type and design are present and imported. Check for the tambour ports that they are all present and have correct values. Check for nakagin capsule tower design that all pieces are present. Make sure there is no .semio folder imported. Check that all folders/subfolders/files etc are present.
+Create a test for drag and drop that drops the kit assets/semio/metabolism.zip into canvas. After this check that every type and design are present and imported. Check for the tambour connectors that they are all present and have correct values. Check for nakagin capsule tower design that all pieces are present. Make sure there is no .semio folder imported. Check that all folders/subfolders/files etc are present.
 
 Extend/refactor and adjust until test is implemented and code fixed:
 ⦁ Extend the test to not only drop into the middle but also near all four corners. Every time the hover needs to happen to check if the plane or center is correct. Repeat the process after panning and zooming in the diagram and scene. This time only drop somewhere in the middle.
@@ -1103,13 +1126,13 @@ When hovering over the options from the dropdown panel toggle in navbar the desc
 PLAN and IMPLEMENT
 There are several schema changes:
 
-- Piece, Port and Model receive a name.
+- Piece, Connector and Model receive a name.
 - Interface becomes a separate kit artifact (with guid, name, description, icon, compatibleInteraces [InterfaceId with guid]).
 
 - Refactor all commands to not have side effects. (e.g. setLanguage)
 
 - The guid of the types match but the guid of the designs are not aligned.
-- The port guid for connections are missing. The port guid must match and exist on the type of the piece.
+- The connector guid for connections are missing. The connector guid must match and exist on the type of the piece.
 
 Fix the i18n script because it is missing e.g.
 semio.sketchpad.navbar.breadcrumb.temporary.hotkey
@@ -1517,7 +1540,7 @@ Refactor the canvas/window system
 - Add to footer of
 
 - Generalize Tools to not only work on app level but also on canvas level.
-  E.g. Selection for scene works both for design app (on piece models) and for type app (on port models)
+  E.g. Selection for scene works both for design app (on piece models) and for type app (on connector models)
 - Make selection tool gneral to work only on the base scene
 - Introduce a general tool
 
@@ -1589,7 +1612,7 @@ details:
 
 - Tutorials should be avaible in search
 - Recording button should be on the left of footer.
-- The first tutorial is sketchpad tour (some introduction, create temporary kit, crete type, drag and drop file into type app, create two port, create design, drop two pieces of the type, connect both pieces)
+- The first tutorial is sketchpad tour (some introduction, create temporary kit, crete type, drag and drop file into type app, create two connector, create design, drop two pieces of the type, connect both pieces)
 
 Not all ui elements are conistently styled:
 
@@ -1684,13 +1707,13 @@ tooltip formatting issue: Manual, Tutorial and Hotkey are all optional. It shoul
 
 - Assigning label, tooltips (label, manual, tutorial) currently happens in code directly. It should be refactored that every ui element receives an i18n string key id prop and everything is moved into the locales json files (even the paths)
   e.g.
-  <Stepper i18n="semio.type.panel.details.port.direction.y" >
+  <Stepper i18n="semio.type.panel.details.connector.direction.y" >
 
-"semio.type.panel.details.port.direction.y.label": "Y",
-"semio.type.panel.details.port.direction.y.description": "Y coord(inate)",
-"semio.type.panel.details.port.direction.y.description.beginner": "Y diagram coord(inate) of center of the piece.",
-"semio.type.panel.details.port.direction.y.manual": "semio/design/diagram/coord#y",
-"semio.type.panel.details.port.direction.y.tutorial": "metabolism/thinking-about-the-diagram",
+"semio.type.panel.details.connector.direction.y.label": "Y",
+"semio.type.panel.details.connector.direction.y.description": "Y coord(inate)",
+"semio.type.panel.details.connector.direction.y.description.beginner": "Y diagram coord(inate) of center of the piece.",
+"semio.type.panel.details.connector.direction.y.manual": "semio/design/diagram/coord#y",
+"semio.type.panel.details.connector.direction.y.tutorial": "metabolism/thinking-about-the-diagram",
 
 - All ui elements in details should show a hover effect and a tooltip with a short description of what the field is about, manual and tutorial path. const { t } = useTranslation(); shouldnt exist afterwards.
 
@@ -1752,12 +1775,12 @@ tooltip formatting issue: Manual, Tutorial and Hotkey are all optional. It shoul
 - kit editor and home still have no panel toggle for details
 - Plenty of i18n keys and translations are missing
 - Multiple section of multiple pieces in design editor is showing type under a redundant multiple piece tree item.
-- Multiple section of multiple ports is showing in type editor
+- Multiple section of multiple connectors is showing in type editor
 - All tree items with no children should not never have > for folding/unfolding on an empty list (e.g. authors, representations, etc)
 
 - kit editor and home still have no panel toggle for details
 - the kit section has a tree item kit which shouldnt be there as intermediate (e.g. in design editor or type editor)
-- The type editor has too many sections (ports, representations, etc.) which should all be tree items under type section
+- The type editor has too many sections (connectors, representations, etc.) which should all be tree items under type section
 - When selecting multiple piece in design editor it shows Pieces > Multiple Pieces but should only show multiple pieces with the nesting.
 - All plurals should always show in the section name Multiple to make it more explicit.
 - E.g. Locatin is showing no > when not existant but Authors and Attributes are showing it even when the collection is empty. Only show the > for non empty children.
@@ -1767,7 +1790,7 @@ tooltip formatting issue: Manual, Tutorial and Hotkey are all optional. It shoul
   In home there should be a kit section if a kit is selected.
   In kit editor there should be on the bottom always the kit section. If a design is selected then the additional design section is above the kit section. If only multiple types are selected then multiple types section is above kit. If different artifact kinds are selected (e.g. designs and types) then multiple artifacts section is above the multiple designs section which is above multiple types sections which is above the kit section.
   In design editor there should always be kit section on the bottom then design section above it. If a piece is selected then the piece section is above the design section.
-  In type editor the same with kit and type then with added sections for selections (port)
+  In type editor the same with kit and type then with added sections for selections (connector)
 
 design editor scene:
 
@@ -1775,8 +1798,8 @@ design editor scene:
 
 - Details should always change according to the selection.
   When nothing is selected then show general details inside a section called like the editor. All props are nested tree items. E.g. in type editor the section is called Type.
-  For every kind of selected entity add another section. This section changes for singular and multiple. E.g. in type editor port and ports; in design editor piece and pieces, connection and connections.
-- Ports detail should have parameter t slider
+  For every kind of selected entity add another section. This section changes for singular and multiple. E.g. in type editor connector and connectors; in design editor piece and pieces, connection and connections.
+- Connectors detail should have parameter t slider
 
 - Table rows should be scrolable
 - Header of pages are rendered correctly (e.g. in docs editor)
@@ -1785,7 +1808,7 @@ design editor scene:
 - All editors should provide a way to scroll/zoom towards indivdual element called focus.
   In sketchpad you can press ctrl + f to open the focus. It works like the search. There is an icon in the navbar and then the dialog opens where the user can type something in. Then a list with the closest items appear. Once pressed the editor zooms/scrolls towards the element.
   All state is stored in the fragment portion of the url.
-  The kind of interaction is editor specific. E.g. diagram has nodes and edges (e.g. design editor: pieces and connections) to zoom towards; page has headings to scroll towards (e.g. in docs editor); scene has models (e.g. type editor: ports; design editor: pieces) to zoom to; tables have rows to scroll to (e.g. home: kits; kit editor: artifacts).
+  The kind of interaction is editor specific. E.g. diagram has nodes and edges (e.g. design editor: pieces and connections) to zoom towards; page has headings to scroll towards (e.g. in docs editor); scene has models (e.g. type editor: connectors; design editor: pieces) to zoom to; tables have rows to scroll to (e.g. home: kits; kit editor: artifacts).
   Make sure to implement the functionality on the general components (scene, diagram, table) and not on the specific (design editor, type editor, kit editor, home, docs editor)
 
 - Tooltips and translations should be generalized. A tooltip should be a component. A tooltip can have a key (for i18n) for the label, a path to the manual, a path to a tutorial and a hotkey. All are optional. Navigation, rendering, etc is all done by the component.
@@ -1914,7 +1937,7 @@ Make sure to add all functions
 
 - The tool mechanism should be generalized.
   Every active tool has a render function where the state of the editor and the kit is passed similar to command context. The tool can contribute children to the different kind of windows. E.g. a type editor tool can contribute r3f-compatible children to the canvas. A design editor tool can contribute nodes and edges to the diagram, and r3f-compatible children to the canvas.
-  All tool related code should be completly within the tool. E.g. The port tool currently has logic spread around Canvas.
+  All tool related code should be completly within the tool. E.g. The connector tool currently has logic spread around Canvas.
 
 - design editor and type editor are both kit diff editors. The current kit diff should be displayed in every editor. For every hook like usePiece introduce a new hook useDiffedPiece. E.g. When a piece has center diff then the original node should be shown with muted border and the diffed piece should have a changed background color. In scene the original piece should only have edges and the diffed piece should have the changed mesh color.
 
@@ -1923,7 +1946,7 @@ Make sure to add all functions
 - Add descriptions only to tooltips and never to labels.
 - Dropdown toggles should never show the current selected option.
 
-- When selecting a port (or ports) the first element should be a slider for t [0 to 1]. It is interactive hence when moved all panels should turn transparent but the slider. Same as when drag and dropping avatars in design editor workbench
+- When selecting a connector (or connectors) the first element should be a slider for t [0 to 1]. It is interactive hence when moved all panels should turn transparent but the slider. Same as when drag and dropping avatars in design editor workbench
 
 - When a new piece is created without any connections that connects it, then plane should always be set to the default plane (origin:0,0,0 xAxis:1,0,0 yAxis:0,1,0)
 
@@ -1933,19 +1956,19 @@ Make sure to add tooltips for all toggles for normal, extensive, different langu
 - The tool mechanism should be generalized.
   Every editor has tools and always one can be active.
   A new panel type is introduced called tools. Normally (not on mobile where there is only one panel group) it is part of left panel group.
-  Every tool has an id e.g. "semio.typeEditor.port", a name e.g. "Port", a description e.g. "Create a port on the surface of geometry with the normal direction of the surface." and an icon.
+  Every tool has an id e.g. "semio.typeEditor.connector", a name e.g. "Connector", a description e.g. "Create a connector on the surface of geometry with the normal direction of the surface." and an icon.
   Tools from the
 
 - When clicking in the empty threejs canvas then deselect everything
-- When adding a port with the port tool, it shouldnt be added to the selection
+- When adding a connector with the connector tool, it shouldnt be added to the selection
 - The details panel should just have one Type section and the other sections are just tree items
 
 - When inside the design editor and new design, variants or views should create a new design and navigate to it. Note that when creating a new variant then the name of the design is from the parent. A new view inherits the name and variant from the parent. E.g. when inside design editor clicking + variant should create New Variant and New Variant 2 if a variant with this name already exists, etc
 
-- The type editor should have a hover and selection for representations and ports.
-- The type editor should receive a new tool: Port tool
-  When the port tool is active then the cursor in the scene is mapping to the mesh previewing the port (a point on the mesh and the normal direction). When clicked then the port is created. Click& hold should still do usual orbit etc. Only the preview and the click are different on the port tool.
-- The port tool should show in the toolbar (all tools should automatically show in the toolbar of the respective editor)
+- The type editor should have a hover and selection for representations and connectors.
+- The type editor should receive a new tool: Connector tool
+  When the connector tool is active then the cursor in the scene is mapping to the mesh previewing the connector (a point on the mesh and the normal direction). When clicked then the connector is created. Click& hold should still do usual orbit etc. Only the preview and the click are different on the connector tool.
+- The connector tool should show in the toolbar (all tools should automatically show in the toolbar of the respective editor)
 
 The state managment has recently changed. Previously all entities have been directly passed as props (kit, design, type, …). The store has now hooks (useKit, useDesign, useType, …). Further all referenceable enties have a guid. Refactor the code to make sure that the state is only accessed over hooks and references only use guids.
 
@@ -1987,7 +2010,7 @@ All react hooks should start with use and be named as concise as possible.
 - When clicking on the navbar automaitcally the right search params should be set e.g. clicking on VIEW in the design editor HOME > KIND > KIT > Designs > NAME > VARIANT > VIEW should go to kit editor with the right path and ?name=NAME&variant=VARIANT&view=VIEW
 
 - This still doesnt work: Each design editor should store its own camera of the model.
-- Rename tooltips to be consistent and explicit. E.g. View all kinds should be Click to expand all kit kinds, Temporary to Click to see all temporary kits, View all artifacts to Clieck to see all artifacts that are port of the kit
+- Rename tooltips to be consistent and explicit. E.g. View all kinds should be Click to expand all kit kinds, Temporary to Click to see all temporary kits, View all artifacts to Clieck to see all artifacts that are connector of the kit
 - The type rows are not displayed same as the designs in kit editor. They work the same but without the view.
 
 - This still doesnt work: Each design editor should store its own camera of the model. The diagram point of the center of the diagram is remembered but starts flickering and never stopping once navigated.
@@ -2268,7 +2291,7 @@ Further:
 
 - Navigating up should
 
-- Design editor should not only have a selection but also hover effects. Either a piece or a connection or a port can be hovered over. The hover effect should show everywhere. E.g. workbench avatars, diagram nodes, 3d mesh material
+- Design editor should not only have a selection but also hover effects. Either a piece or a connection or a connector can be hovered over. The hover effect should show everywhere. E.g. workbench avatars, diagram nodes, 3d mesh material
 
 - Use the same solid colors (and not just borders) for pieces hovers and selection (=active) as for toggles, breadcrumb, etc
 
@@ -2302,9 +2325,9 @@ Further:
 
 - Introduce a new hook which returns
 
-- The hover currently is either piece, connection, port, type, design. Everything should be pluralized. E.g. hovering over the tree item of a type name should set the hover to all types with that name (which are all the avatars in that list). At the same time all the pieces of those types are by transitivity also highlighted in the diagram and scene.
+- The hover currently is either piece, connection, connector, type, design. Everything should be pluralized. E.g. hovering over the tree item of a type name should set the hover to all types with that name (which are all the avatars in that list). At the same time all the pieces of those types are by transitivity also highlighted in the diagram and scene.
 
-- The hover currently is either pieces, connections, ports, types, designs. Everything should be composable and not exclusive. Currently there is no mixed kind ui element but it will soon come. For now e.g. hovering over the tree item of types should set the hover to all types with that name (which are all the avatars in that list). At the same time all the pieces of those types are by transitivity also highlighted in the diagram and scene.
+- The hover currently is either pieces, connections, connectors, types, designs. Everything should be composable and not exclusive. Currently there is no mixed kind ui element but it will soon come. For now e.g. hovering over the tree item of types should set the hover to all types with that name (which are all the avatars in that list). At the same time all the pieces of those types are by transitivity also highlighted in the diagram and scene.
 
 - All actions should have the same color as the context. E.g. the + of tree section label should be the same gray, tree item + on e.g. design editor details section should be same foreground, The dropdown toggle action the same as the icon in the toggle, etc
 - The toolbar panel toggle should be renamed and generalized to tools. The tools toggle is responsible for toggeling all tools (e.g. toolbar but also when in full screen and all the tool elements such as e.g. in design editor: in diagram the minimap, the fit controlors, in scene gizmo)
@@ -2325,7 +2348,7 @@ Further:
 - The store should be split up into smaller files. The store
 
 - Make sure that every editor has their own tools, their own active tool state, etc
-- The toolbar should use a toggle group with toggles for single mode tools (such port creator) and dropdown toggles for multimode tools (such as selection)
+- The toolbar should use a toggle group with toggles for single mode tools (such connector creator) and dropdown toggles for multimode tools (such as selection)
 
 - Sketchpad is currently only for editing kits. It should be expanded to include the docs.
 
@@ -2334,9 +2357,9 @@ Further:
 
 - The breadcrumb navigation by default works in single line mode. When
 
-- Hovering and selecting ports should be possible either over the tree item in the details or in the scene. (Similar to how pieces are hovered but without the transitive part in design editor)
+- Hovering and selecting connectors should be possible either over the tree item in the details or in the scene. (Similar to how pieces are hovered but without the transitive part in design editor)
 
-- removing ports over the details in type editor doesnt work
+- removing connectors over the details in type editor doesnt work
 
 - Design editor: Make sure that when selection tool is active and shift is holded it switches to additive mode and when shift is no longer holded it goes back to normal mode. Same for ctrl with subtractive mode.
 - Leave cursor for normal selection and replace additive with + and subtractive with - icon
@@ -2361,13 +2384,13 @@ Further:
 
 - Select should be default tool in type editor
 
-- New ports created with the port tool should
+- New connectors created with the connector tool should
 
 Details:
 type editor:
 
 - Adding and removing attributes doesnt work
-- Updating port properties doesnt work
+- Updating connector properties doesnt work
 
 type editor:
 
@@ -2379,7 +2402,7 @@ type editor:
 
 - The canvas with with windows logic should be generalized to a composable canvas and window component where a canvas has window children (e.g. a window can be fullscreen). Make sure to extract all shared logic and refactor all individual windows (tables, scenes, diagram, …) and place them into the canvas.
 
-- The details panel of type editor is not deep subscribed and hence doesnt update properly e.g. when representation, ports, etc are updating.
+- The details panel of type editor is not deep subscribed and hence doesnt update properly e.g. when representation, connectors, etc are updating.
 
 - Generalize Store, EditorStore (abstract) and KitDiffEditorStore (e.g. kit editor, design edito, type editor)
   Store holds data for any component.

@@ -1,7 +1,7 @@
 ---
 slug: TYPE-APP-TOOLBAR-FIX
-summary: Add missing toolbar rendering and test for port tool
-prompt: Add missing toolbar rendering and test for port tool
+summary: Add missing toolbar rendering and test for connector tool
+prompt: Add missing toolbar rendering and test for connector tool
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:

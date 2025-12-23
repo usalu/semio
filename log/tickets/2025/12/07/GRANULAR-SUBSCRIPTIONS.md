@@ -127,8 +127,8 @@ const [originX, setOriginX, canSetOriginX] = usePiecePlaneOriginX();
 - `useTypeAppPanelVisibility()` → `[visibility, setVisibility, canSet]`
 - `useTypeAppHover()` → `[hover, setHover, canSet]`
 - `useTypeAppOthers()` → `[others, undefined, canRead]` (read-only)
-- `useTypeAppIsPortSelected()` → `[isSelected, undefined, canRead]` (read-only, uses PortScope)
-- `useTypeAppIsPortHovered()` → `[isHovered, undefined, canRead]` (read-only, uses PortScope)
+- `useTypeAppIsPortSelected()` → `[isSelected, undefined, canRead]` (read-only, uses ConnectorScope)
+- `useTypeAppIsPortHovered()` → `[isHovered, undefined, canRead]` (read-only, uses ConnectorScope)
 - `useTypeAppSelectedModelGuid()` → `[guid, setGuid, canSet]`
 - `useTypeAppSelectedModelTags()` → `[tags, setTags, canSet]`
 

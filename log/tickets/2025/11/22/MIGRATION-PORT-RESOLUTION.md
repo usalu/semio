@@ -10,7 +10,7 @@ commit: "0000000000000000000000000000000000000000"
 iterations: []
 ---
 
-# Migration Script Port Resolution Issue
+# Migration Script Connector Resolution Issue
 
 ## Current Status
 
@@ -59,7 +59,7 @@ git show HEAD~30:assets/semio/kit_metabolism.json
 
 - **flattenDesign tests**: ALL FAILING (6/6)
 - **Root cause**: Pieces have no type references
-- **Impact**: Without types, cannot lookup ports for plane computation
+- **Impact**: Without types, cannot lookup connectors for plane computation
 
 ### Key Files
 
@@ -74,7 +74,7 @@ git show HEAD~30:assets/semio/kit_metabolism.json
 3. Connection sides have no GUIDs (completed)
 4. Always reset assets from 30 commits ago (completed)
 
-# Migration Script Port Resolution - Final Status
+# Migration Script Connector Resolution - Final Status
 
 ## Completed
 
@@ -118,7 +118,7 @@ Properly handle parent names as strings before GUID conversion, avoiding PowerSh
 
 - **Kit migration**: SUCCESS
 - **Pieces have types**: YES
-- **Connections have ports**: PARTIAL (some ports missing from original data)
+- **Connections have connectors**: PARTIAL (some connectors missing from original data)
 - **flattenDesign tests**: STILL FAILING
 
 ## Remaining Issues

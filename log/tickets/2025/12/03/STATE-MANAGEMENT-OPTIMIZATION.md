@@ -56,7 +56,7 @@ const selectTypeAppSelection = (s: TypeAppState) => s.selection ?? EMPTY_TYPE_SE
 const selectTypeAppPanelVisibility = (s: TypeAppState) => s.panelVisibility;
 const selectTypeAppOthers = (s: TypeAppState) => s.others;
 const selectTypeAppCamera = (s: TypeAppState) => s.camera;
-const selectTypeAppFocusedPortGuid = (s: TypeAppState) => s.focusedPortGuid;
+const selectTypeAppFocusedConnectorGuid = (s: TypeAppState) => s.focusedConnectorGuid;
 const selectTypeAppHover = (s: TypeAppState) => s.hover;
 const selectTypeAppActiveTool = (s: TypeAppState) => s.activeTool ?? ToolKind.SELECTION_NORMAL;
 const selectSelectedModelGuid = (s: TypeAppState) => s.selectedModelGuid;
@@ -134,8 +134,8 @@ const selectDesignAppActiveTool = (s: DesignAppState) => s.activeTool ?? ToolKin
 
 Wrapped parameter-dependent selectors with `useCallback`:
 
-- `useDesignAppIsPortHovered` - memoized selector depending on pieceId/portId
-- `useDesignAppIsPiecePortSelected` - memoized selector depending on pieceId/portId
+- `useDesignAppIsPortHovered` - memoized selector depending on pieceId/connectorId
+- `useDesignAppIsPiecePortSelected` - memoized selector depending on pieceId/connectorId
 - `useDesignAppConnectionStatus` - memoized selector depending on store/connectionId
 - `TransactionPiecesProvider` - memoized selector for transaction data
 - `HoverPiecesProvider` - memoized selector for hover data

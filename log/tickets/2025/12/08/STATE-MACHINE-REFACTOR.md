@@ -123,8 +123,8 @@ All Type app triadic hooks now use `actor.send()` instead of Y.js store:
 - `useTypeAppSelection()` - Uses `TYPE.SET_SELECTION` event
 - `useTypeAppPanelVisibility()` - Uses `TYPE.TOGGLE_PANEL` event
 - `useTypeAppCamera()` - Uses `TYPE.SET_CAMERA` event
-- `useTypeAppFocusedPortGuid()` - Uses `TYPE.FOCUS_PORT` / `TYPE.CLEAR_FOCUS` events
-- `useTypeAppHover()` - Uses `TYPE.HOVER_PORT` / `TYPE.HOVER_MODEL` / `TYPE.CLEAR_HOVER` events
+- `useTypeAppFocusedConnectorGuid()` - Uses `TYPE.FOCUS_CONNECTOR` / `TYPE.CLEAR_FOCUS` events
+- `useTypeAppHover()` - Uses `TYPE.HOVER_CONNECTOR` / `TYPE.HOVER_MODEL` / `TYPE.CLEAR_HOVER` events
 - `useTypeAppActiveTool()` - Uses `TYPE.SET_ACTIVE_TOOL` event
 - `useTypeAppFullscreen()` - Uses `TYPE.SET_FULLSCREEN` event
 - `useTypeAppSelectedModelTags()` - Uses `TYPE.ADD_MODEL_TAG` / `TYPE.REMOVE_MODEL_TAG` events
@@ -228,7 +228,7 @@ const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
 - `useTypeAppSelection()`
 - `useTypeAppPanelVisibility()`
 - `useTypeAppCamera()`
-- `useTypeAppFocusedPortGuid()`
+- `useTypeAppFocusedConnectorGuid()`
 - `useTypeAppHover()`
 - `useTypeAppActiveTool()`
 - `useTypeAppIsPortSelected()`

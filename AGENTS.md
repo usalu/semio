@@ -33,7 +33,7 @@ Region blocks MUST NOT be empty.
 
 Developer documentation MUST be centralized in the root `README.md` and `AGENTS.md`; non-root `AGENTS.md` files and non-package `README.md` files are forbidden.
 
-Shared UI element libraries MUST remain domain-neutral and MUST NOT use domain-specific terminology (kit, design, type, port, connection, docs, feedback).
+Shared UI element libraries MUST remain domain-neutral and MUST NOT use domain-specific terminology (kit, design, type, connector, connection, docs, feedback).
 
 Shared UI element libraries MUST NOT import Sketchpad shells or app modules.
 
@@ -93,7 +93,7 @@ Additional `connections` which where not used in the _placement_ can be used to 
 
 ### Type
 
-A `type` is a reusable component with different `models`, `ports`, `attributes`, `concepts`, and `authors`.
+A `type` is a reusable component with different `models`, `connectors`, `attributes`, `concepts`, and `authors`.
 
 The `type` is _proto_ (a _prototype_) when it has no _parent_.
 
@@ -123,19 +123,19 @@ A group of _connected_ `pieces` is called a _component_.
 
 The _hierarchy_ of a `piece` is the length of the shortest path to the next _fixed_ `piece`.
 
-### Port
+### Connector
 
-A `port` is a conceptual connection **point** with an outwards **direction**, **id**, optional **name**, optional **description**, and **t** value for diagram ring positioning.
+A `connector` is a conceptual connection **point** with an outwards **direction**, **id**, optional **name**, optional **description**, and **t** value for diagram ring positioning.
 
-A `port` can be marked as **mandatory** in which case it is required to be connected to a `piece`.
+A `connector` can be marked as **mandatory** in which case it is required to be connected to a `piece`.
 
-A `port` can reference an **interface** (InterfaceId) for explicit compatibility control. The interface defines which other interfaces it is compatible with.
+A `connector` can reference an **interface** (InterfaceId) for explicit compatibility control. The interface defines which other interfaces it is compatible with.
 
-No **interface** means the _default_ interface which is compatible with all other ports.
+No **interface** means the _default_ interface which is compatible with all other connectors.
 
-Port compatibility is determined by the `interface` definitions at the kit level.
+Connector compatibility is determined by the `interface` definitions at the kit level.
 
-A `port` can have `props` that define measurable characteristics and `attributes` for additional metadata.
+A `connector` can have `props` that define measurable characteristics and `attributes` for additional metadata.
 
 ### Model
 
@@ -206,7 +206,7 @@ A _relative_ `url` is a `/`-normalized path to a file in the `.zip` file and is 
 
 ### Quality
 
-A `quality` is a measurement definition with a **key**, **name**, **description**, **kind** (General, Design, Type, Piece, Connection, Port), **unit information** (SI and Imperial), **range constraints** (min/max with exclusion flags), **default value**, and optional **formula**.
+A `quality` is a measurement definition with a **key**, **name**, **description**, **kind** (General, Design, Type, Piece, Connection, Connector), **unit information** (SI and Imperial), **range constraints** (min/max with exclusion flags), **default value**, and optional **formula**.
 
 A `quality` can be **scalable** (adjusts with piece scaling) and have multiple **benchmarks** for performance evaluation.
 
@@ -220,13 +220,13 @@ Benchmarks provide reference points for evaluating quality measurements against 
 
 ### Interface
 
-An `interface` is a port compatibility definition with **name**, optional **description**, optional **icon**, optional list of **compatible interfaces** (InterfaceId references), and `attributes`.
+An `interface` is a connector compatibility definition with **name**, optional **description**, optional **icon**, optional list of **compatible interfaces** (InterfaceId references), and `attributes`.
 
-The `interface` is defined at the kit level and referenced by `ports` via InterfaceId.
+The `interface` is defined at the kit level and referenced by `connectors` via InterfaceId.
 
 An empty **compatible interfaces** list means the interface is compatible with all other interfaces.
 
-Two ports are compatible if:
+Two connectors are compatible if:
 
 - Both have no interface specified (default compatibility)
 - They reference the same interface
@@ -259,9 +259,9 @@ Groups enable semantic clustering of pieces that belong together functionally or
 
 ### Prop
 
-A `prop` is a **key-value** pair on a `port` that references a `quality` with a specific **value** and optional **unit**.
+A `prop` is a **key-value** pair on a `connector` that references a `quality` with a specific **value** and optional **unit**.
 
-Props define measurable characteristics of ports using the quality system for standardized measurement.
+Props define measurable characteristics of connectors using the quality system for standardized measurement.
 
 ### Stat
 
@@ -280,7 +280,7 @@ The toolbar is a floating panel positioned at the bottom center of the canvas. E
 - **Home app**: Filter toggles for kit kinds (temporary, local, remote) with action buttons to create new kits
 - **Kit app**: Filter toggles for artifact kinds (designs, types, qualities, interfaces, tags, concepts, files, folders, authors) with action buttons to create new artifacts
 - **Design app**: Selection tools (normal, additive, subtractive) and lasso tools (rectangular, freeform)
-- **Type app**: Selection tools and port creation tool
+- **Type app**: Selection tools and connector creation tool
 - **Feedback app**: Send button to submit feedback form
 
 Toolbar panel visibility defaults to `true` for all apps via `panelVisibility: { toolbar: true, ... }` in default state creation.
@@ -1971,16 +1971,16 @@ Kit artifact management with multi-window layout. Extends `KitDiffAppStore` (mod
 
 ###### Type App (Type.tsx)
 
-Type editing (ports, models). Extends `KitDiffAppStore`.
+Type editing (connectors, models). Extends `KitDiffAppStore`.
 
 **State (`TypeAppState`):**
 
 - `panelVisibility` - Panel toggle states
 - `activeTool` - Current tool (selection, etc.)
-- `selection` - Selected ports/models
-- `hover` - Hovered port/model
+- `selection` - Selected connectors/models
+- `hover` - Hovered connector/model
 - `camera` - 3D camera state
-- `focusedPortGuid` - Port being edited
+- `focusedConnectorGuid` - Connector being edited
 - `selectedModelGuid` - Active model
 - `selectedModelTags` - Tags for model selection
 - `fullscreenWindow` - Fullscreen mode
@@ -1990,7 +1990,7 @@ Type editing (ports, models). Extends `KitDiffAppStore`.
 
 - `TYPE.TOGGLE_PANEL` - Toggle panel visibility
 - `TYPE.SET_TOOL` - Change active tool
-- `TYPE.SELECT_PORT` / `TYPE.DESELECT_PORT` - Port selection
+- `TYPE.SELECT_CONNECTOR` / `TYPE.DESELECT_CONNECTOR` - Connector selection
 - `TYPE.SELECT_MODEL` / `TYPE.DESELECT_MODEL` - Model selection
 - `TYPE.SET_HOVER` - Set hover state
 - `TYPE.SET_CAMERA` - Update camera
@@ -2012,8 +2012,8 @@ Design editing (pieces, connections). Extends `KitDiffAppStore`.
 
 - `panelVisibility` - Panel toggle states
 - `activeTool` - Current tool (selection, connection, etc.)
-- `selection` - Selected pieces/connections/port
-- `hover` - Hovered pieces/connections/ports/types/designs
+- `selection` - Selected pieces/connections/connector
+- `hover` - Hovered pieces/connections/connectors/types/designs
 - `camera` - 3D camera state
 - `diagramCenter` / `diagramScale` - 2D diagram view
 - `focusedPieceGuid` - Piece being edited
@@ -2021,7 +2021,7 @@ Design editing (pieces, connections). Extends `KitDiffAppStore`.
 - `fullscreenWindow` - Fullscreen mode
 - `windowLayout` - Window arrangement
 
-**Selection Types:** Pieces, connections, port (single port selection for connection)
+**Selection Types:** Pieces, connections, connector (single connector selection for connection)
 
 **Events:**
 
@@ -2420,7 +2420,7 @@ Extends AppStore undo/redo to also:
 Use this for apps that modify kits:
 
 - **DesignAppStore** - Edit designs (pieces, connections)
-- **TypeAppStore** - Edit types (ports, models)
+- **TypeAppStore** - Edit types (connectors, models)
 - **KitAppStore** - Edit kits (types, designs, qualities, files, authors)
 
 #### Concrete Implementations
@@ -2429,7 +2429,7 @@ Use this for apps that modify kits:
 
 Edits design content:
 
-- Selection: pieces, connections, ports
+- Selection: pieces, connections, connectors
 - Kit diffs: piece changes, connection changes
 - Transaction support for complex multi-step operations
 
@@ -2437,8 +2437,8 @@ Edits design content:
 
 Edits type definitions:
 
-- Selection: ports, models
-- Kit diffs: port changes, model changes
+- Selection: connectors, models
+- Kit diffs: connector changes, model changes
 - Transaction support for type modifications
 
 ##### KitAppStore
@@ -2545,7 +2545,7 @@ App-specific events are only available in their respective navigation states:
 - **home**: `HOME.TOGGLE_PANEL`, `HOME.SET_HOVER`, `HOME.SELECT_KIT`, etc.
 - **kit**: `KIT.SYNC`, `KIT.TOGGLE_PANEL`, `KIT.SET_FILTER`, `KIT.SELECT_TYPE`, etc.
 - **design**: `DESIGN.SYNC`, `DESIGN.SET_HOVER`, `DESIGN.SELECT_PIECE`, `DESIGN.DELETE_SELECTED`, etc.
-- **type**: `TYPE.SYNC`, `TYPE.SET_HOVER`, `TYPE.SELECT_PORT`, `TYPE.HOVER_MODEL`, etc.
+- **type**: `TYPE.SYNC`, `TYPE.SET_HOVER`, `TYPE.SELECT_CONNECTOR`, `TYPE.HOVER_MODEL`, etc.
 - **quality**: `QUALITY.TOGGLE_PANEL`, `QUALITY.TOGGLE_BENCHMARK`
 
 **Global Events (always available):**
@@ -2911,7 +2911,7 @@ enum ToolKind {
   SELECTION_SUBTRACTIVE,
   LASSO_RECTANGULAR,
   LASSO_FREEFORM,
-  PORT,
+  CONNECTOR,
 }
 enum WindowKind {
   TABLE = "table",
@@ -3344,7 +3344,7 @@ Each platform provides its own thin wrapper:
 ##### Core Types
 
 ```typescript
-type SemioEntityKind = "Kit" | "Type" | "Design" | "Piece" | "Connection" | "Port" | "Attribute" | "File" | "Folder" | "Quality" | "Interface" | "Prop" | "Model" | "Layer" | "Group" | "Stat";
+type SemioEntityKind = "Kit" | "Type" | "Design" | "Piece" | "Connection" | "Connector" | "Attribute" | "File" | "Folder" | "Quality" | "Interface" | "Prop" | "Model" | "Layer" | "Group" | "Stat";
 type SemioValidationSeverity = "error" | "warning";
 
 interface SemioDomainLocation {
@@ -3380,7 +3380,7 @@ interface SemioValidationContext {
   typesByGuid: Map<Guid, Type>;
   designsByGuid: Map<Guid, Design>;
   piecesByGuid: Map<Guid, { designGuid: Guid; piece: Piece }>;
-  portsByTypeGuid: Map<Guid, Port[]>;
+  connectorsByTypeGuid: Map<Guid, Connector[]>;
   modelsByTypeGuid: Map<Guid, Model[]>;
 }
 ```
@@ -3470,13 +3470,13 @@ Folders with the same parent must have unique names.
 
 **Fix:** Renames the folder with a unique suffix.
 
-#### 9. Port Name Uniqueness (`port-name-unique`)
+#### 9. Connector Name Uniqueness (`connector-name-unique`)
 
 **Severity:** Error
 
-Ports within a type must have unique names.
+Connectors within a type must have unique names.
 
-**Fix:** Renames the port with a unique suffix.
+**Fix:** Renames the connector with a unique suffix.
 
 #### 10. Model Name Uniqueness (`model-name-unique`)
 
@@ -3506,7 +3506,7 @@ Layer paths within a design must be unique.
 | Piece      | Within design          | name  | piece-name-unique     |
 | Piece      | Global                 | guid  | guid-unique           |
 | Connection | Global                 | guid  | guid-unique           |
-| Port       | Within type            | name  | port-name-unique      |
+| Connector  | Within type            | name  | connector-name-unique |
 | Model      | Within type            | name  | model-name-unique     |
 | Quality    | Global                 | name  | quality-name-unique   |
 | Quality    | Global                 | guid  | guid-unique           |
@@ -3570,7 +3570,7 @@ export const semioCustomRule: SemioValidationRule = (ctx) => {
 };
 ```
 
-#### Cross-Platform Portable Validation
+#### Cross-Platform Connectorable Validation
 
 All implementations (TypeScript, Python, C#) produce **identical** validation output for cross-platform compatibility. Issues include fixes with `KitDiff` structures.
 
@@ -3615,19 +3615,19 @@ npx tsx scripts/generate-validation.ts
 
 ##### Validation Rules
 
-| Rule ID                 | Description                                |
-| ----------------------- | ------------------------------------------ |
-| `guid-unique`           | All GUIDs must be unique across the kit    |
-| `type-name-unique`      | Type names must be unique among siblings   |
-| `design-name-unique`    | Design names must be unique among siblings |
-| `piece-name-unique`     | Piece names must be unique within a design |
-| `port-name-unique`      | Port names must be unique within a type    |
-| `model-name-unique`     | Model names must be unique within a type   |
-| `quality-name-unique`   | Quality names must be unique               |
-| `interface-name-unique` | Interface names must be unique             |
-| `file-name-unique`      | File names must be unique                  |
-| `folder-name-unique`    | Folder names must be unique among siblings |
-| `layer-path-unique`     | Layer paths must be unique within a design |
+| Rule ID                 | Description                                  |
+| ----------------------- | -------------------------------------------- |
+| `guid-unique`           | All GUIDs must be unique across the kit      |
+| `type-name-unique`      | Type names must be unique among siblings     |
+| `design-name-unique`    | Design names must be unique among siblings   |
+| `piece-name-unique`     | Piece names must be unique within a design   |
+| `connector-name-unique` | Connector names must be unique within a type |
+| `model-name-unique`     | Model names must be unique within a type     |
+| `quality-name-unique`   | Quality names must be unique                 |
+| `interface-name-unique` | Interface names must be unique               |
+| `file-name-unique`      | File names must be unique                    |
+| `folder-name-unique`    | Folder names must be unique among siblings   |
+| `layer-path-unique`     | Layer paths must be unique within a design   |
 
 ##### Fix Comparison Notes
 
@@ -3772,7 +3772,7 @@ Use this hierarchy for code organization (order of appearance of regions, classe
 14. Interface
 15. Prop
 16. Model
-17. Port
+17. Connector
 18. Type
 19. Layer
 20. Piece
@@ -3875,7 +3875,7 @@ Use this hierarchy for code organization (order of appearance of regions, classe
 3. Design
 4. Piece
 5. Connection
-6. Port
+6. Connector
 
 ### Quality
 
@@ -3918,7 +3918,7 @@ Use this hierarchy for code organization (order of appearance of regions, classe
 4. Description
 5. Attributes
 
-### Port
+### Connector
 
 1. Id
 2. Name
@@ -3935,7 +3935,7 @@ Use this hierarchy for code organization (order of appearance of regions, classe
 1. Name
 2. Variant
 3. Models
-4. Ports
+4. Connectors
 5. Props
 6. IsVirtual
 7. CanScale
@@ -3988,7 +3988,7 @@ Use this hierarchy for code organization (order of appearance of regions, classe
 
 1. Piece
 2. DesignPiece
-3. Port
+3. Connector
 
 ### Connection
 

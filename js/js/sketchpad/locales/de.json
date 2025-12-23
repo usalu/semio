@@ -2392,10 +2392,10 @@
                       "beginner": "Connecting Piece"
                     }
                   },
-                  "connectingPortId": {
+                  "connectingConnectorId": {
                     "label": {
-                      "normal": "Connecting Port",
-                      "beginner": "Connecting Port"
+                      "normal": "Connecting Connector",
+                      "beginner": "Connecting Connector"
                     }
                   },
                   "connectingDesignPieceId": {
@@ -2410,10 +2410,10 @@
                       "beginner": "Connected Piece"
                     }
                   },
-                  "connectedPortId": {
+                  "connectedConnectorId": {
                     "label": {
-                      "normal": "Connected Port",
-                      "beginner": "Connected Port"
+                      "normal": "Connected Connector",
+                      "beginner": "Connected Connector"
                     }
                   },
                   "connectedDesignPieceId": {
@@ -2483,57 +2483,57 @@
                     }
                   }
                 },
-                "port": {
+                "connector": {
                   "label": {
                     "normal": "",
                     "beginner": ""
                   },
                   "id": {
                     "label": {
-                      "normal": "Port-ID",
-                      "beginner": "Die eindeutige Kennung des Ports"
+                      "normal": "Connector-ID",
+                      "beginner": "Die eindeutige Kennung des Connectors"
                     }
                   },
                   "position": {
                     "label": {
                       "normal": "Position",
-                      "beginner": "Die Position des Ports"
+                      "beginner": "Die Position des Connectors"
                     }
                   },
                   "direction": {
                     "label": {
                       "normal": "Richtung",
-                      "beginner": "Der Richtungsvektor des Ports"
+                      "beginner": "Der Richtungsvektor des Connectors"
                     }
                   },
                   "mandatory": {
                     "label": {
                       "normal": "Erforderlich",
-                      "beginner": "Ob dieser Port verbunden sein muss"
+                      "beginner": "Ob dieser Connector verbunden sein muss"
                     }
                   },
                   "interface": {
                     "label": {
                       "normal": "Familie",
-                      "beginner": "Die Portfamilie für Kompatibilitätsprüfung"
+                      "beginner": "Die Connectorfamilie für Kompatibilitätsprüfung"
                     }
                   },
                   "compatibleInterface": {
                     "label": {
                       "normal": "Kompatible Familie",
-                      "beginner": "Die Familien, mit denen dieser Port kompatibel ist"
+                      "beginner": "Die Familien, mit denen dieser Connector kompatibel ist"
                     }
                   },
                   "description": {
                     "label": {
                       "normal": "Beschreibung",
-                      "beginner": "Eine Beschreibung des Ports"
+                      "beginner": "Eine Beschreibung des Connectors"
                     }
                   },
                   "attribute": {
                     "label": {
                       "normal": "Attribut",
-                      "beginner": "Benutzerdefinierte Attribute des Ports"
+                      "beginner": "Benutzerdefinierte Attribute des Connectors"
                     }
                   },
                   "notFound": {
@@ -2968,18 +2968,18 @@
               }
             }
           },
-          "ports": {
+          "connectors": {
             "label": {
-              "normal": "Ports",
-              "beginner": "Verbindungsports fuer diesen Typ verwalten. Ports definieren, wo und wie Bauteile verbunden werden koennen."
+              "normal": "Connectors",
+              "beginner": "Verbindungsports fuer diesen Typ verwalten. Connectors definieren, wo und wie Bauteile verbunden werden koennen."
             },
-            "manual": "type#ports",
-            "tutorial": "hello-semio/model-brick-set#ports"
+            "manual": "type#connectors",
+            "tutorial": "hello-semio/model-brick-set#connectors"
           },
-          "port": {
+          "connector": {
             "label": {
-              "normal": "Port",
-              "beginner": "Port"
+              "normal": "Connector",
+              "beginner": "Connector"
             },
             "title": {
               "label": {
@@ -2988,7 +2988,7 @@
               }
             }
           },
-          "portInterfacePlaceholder": {
+          "connectorInterfacePlaceholder": {
             "label": {
               "label": {
                 "normal": "z.B. elektrisch, mechanisch",
@@ -2996,31 +2996,31 @@
               }
             }
           },
-          "portDescriptionPlaceholder": {
+          "connectorDescriptionPlaceholder": {
             "label": {
               "label": {
-                "normal": "Beschreiben Sie diesen Port...",
-                "beginner": "Beschreiben Sie diesen Port..."
+                "normal": "Beschreiben Sie diesen Connector...",
+                "beginner": "Beschreiben Sie diesen Connector..."
               }
             }
           },
-          "portPoint": {
+          "connectorPoint": {
             "label": {
               "normal": "Punkt",
-              "beginner": "Die 3D-Position des Ports in lokalen Koordinaten."
+              "beginner": "Die 3D-Position des Connectors in lokalen Koordinaten."
             },
-            "manual": "type#ports",
-            "tutorial": "hello-semio/model-brick-set#ports"
+            "manual": "type#connectors",
+            "tutorial": "hello-semio/model-brick-set#connectors"
           },
-          "portDirection": {
+          "connectorDirection": {
             "label": {
               "normal": "Richtung",
-              "beginner": "Der Auswaerts-Richtungsvektor des Ports in lokalen Koordinaten."
+              "beginner": "Der Auswaerts-Richtungsvektor des Connectors in lokalen Koordinaten."
             },
-            "manual": "type#ports",
-            "tutorial": "hello-semio/model-brick-set#ports"
+            "manual": "type#connectors",
+            "tutorial": "hello-semio/model-brick-set#connectors"
           },
-          "portCompatibleInterfacesPlaceholder": {
+          "connectorCompatibleInterfacesPlaceholder": {
             "label": {
               "label": {
                 "normal": "familie1, familie2",
@@ -3028,16 +3028,16 @@
               }
             }
           },
-          "portNotFound": {
+          "connectorNotFound": {
             "label": {
-              "normal": "Port nicht gefunden",
-              "beginner": "Port nicht gefunden"
+              "normal": "Connector nicht gefunden",
+              "beginner": "Connector nicht gefunden"
             }
           },
-          "portsNotFound": {
+          "connectorsNotFound": {
             "label": {
-              "normal": "Keine Ports gefunden",
-              "beginner": "Keine Ports gefunden"
+              "normal": "Keine Connectors gefunden",
+              "beginner": "Keine Connectors gefunden"
             }
           },
           "authors": {
@@ -3183,7 +3183,7 @@
                     "tutorial": "hello-semio/model-brick-set"
                   }
                 },
-                "ports": {
+                "connectors": {
                   "label": {
                     "normal": "",
                     "beginner": ""
@@ -3191,33 +3191,33 @@
                   "interface": {
                     "label": {
                       "normal": "Familie",
-                      "beginner": "Port-Familienname. Ports derselben Familie koennen miteinander verbunden werden."
+                      "beginner": "Connector-Familienname. Connectors derselben Familie koennen miteinander verbunden werden."
                     },
-                    "manual": "type#ports",
+                    "manual": "type#connectors",
                     "tutorial": "hello-semio/model-brick-set"
                   },
                   "compatibleInterfaces": {
                     "label": {
                       "normal": "Kompatible Familien",
-                      "beginner": "Liste anderer Port-Familien, mit denen dieser Port verbunden werden kann. Leer lassen, um alle Familien zuzulassen."
+                      "beginner": "Liste anderer Connector-Familien, mit denen dieser Connector verbunden werden kann. Leer lassen, um alle Familien zuzulassen."
                     },
-                    "manual": "type#ports",
+                    "manual": "type#connectors",
                     "tutorial": "hello-semio/model-brick-set"
                   },
                   "description": {
                     "label": {
                       "normal": "Beschreibung",
-                      "beginner": "Eine Beschreibung dessen, was dieser Port darstellt und wie er fuer Verbindungen verwendet werden sollte."
+                      "beginner": "Eine Beschreibung dessen, was dieser Connector darstellt und wie er fuer Verbindungen verwendet werden sollte."
                     },
-                    "manual": "type#ports",
+                    "manual": "type#connectors",
                     "tutorial": "hello-semio/model-brick-set"
                   },
                   "t": {
                     "label": {
                       "normal": "T",
-                      "beginner": "Position auf dem Diagrammring (0-1). Steuert, wo der Port in der 2D-Diagrammansicht erscheint."
+                      "beginner": "Position auf dem Diagrammring (0-1). Steuert, wo der Connector in der 2D-Diagrammansicht erscheint."
                     },
-                    "manual": "type#ports",
+                    "manual": "type#connectors",
                     "tutorial": "hello-semio/model-brick-set"
                   },
                   "direction": {
@@ -3228,25 +3228,25 @@
                     "x": {
                       "label": {
                         "normal": "X",
-                        "beginner": "X-Koordinate des Port-Richtungsvektors. Dies definiert, in welche Richtung der Port im 3D-Raum zeigt."
+                        "beginner": "X-Koordinate des Connector-Richtungsvektors. Dies definiert, in welche Richtung der Connector im 3D-Raum zeigt."
                       },
-                      "manual": "type#ports",
+                      "manual": "type#connectors",
                       "tutorial": "hello-semio/model-brick-set"
                     },
                     "y": {
                       "label": {
                         "normal": "Y",
-                        "beginner": "Y-Koordinate des Port-Richtungsvektors. Dies definiert, in welche Richtung der Port im 3D-Raum zeigt."
+                        "beginner": "Y-Koordinate des Connector-Richtungsvektors. Dies definiert, in welche Richtung der Connector im 3D-Raum zeigt."
                       },
-                      "manual": "type#ports",
+                      "manual": "type#connectors",
                       "tutorial": "hello-semio/model-brick-set"
                     },
                     "z": {
                       "label": {
                         "normal": "Z",
-                        "beginner": "Z-Koordinate des Port-Richtungsvektors. Dies definiert, in welche Richtung der Port im 3D-Raum zeigt."
+                        "beginner": "Z-Koordinate des Connector-Richtungsvektors. Dies definiert, in welche Richtung der Connector im 3D-Raum zeigt."
                       },
-                      "manual": "type#ports",
+                      "manual": "type#connectors",
                       "tutorial": "hello-semio/model-brick-set"
                     }
                   },
@@ -3258,25 +3258,25 @@
                     "x": {
                       "label": {
                         "normal": "X",
-                        "beginner": "X-Position des Ports im 3D-Raum relativ zum Ursprung des Typs."
+                        "beginner": "X-Position des Connectors im 3D-Raum relativ zum Ursprung des Typs."
                       },
-                      "manual": "type#ports",
+                      "manual": "type#connectors",
                       "tutorial": "hello-semio/model-brick-set"
                     },
                     "y": {
                       "label": {
                         "normal": "Y",
-                        "beginner": "Y-Position des Ports im 3D-Raum relativ zum Ursprung des Typs."
+                        "beginner": "Y-Position des Connectors im 3D-Raum relativ zum Ursprung des Typs."
                       },
-                      "manual": "type#ports",
+                      "manual": "type#connectors",
                       "tutorial": "hello-semio/model-brick-set"
                     },
                     "z": {
                       "label": {
                         "normal": "Z",
-                        "beginner": "Z-Position des Ports im 3D-Raum relativ zum Ursprung des Typs."
+                        "beginner": "Z-Position des Connectors im 3D-Raum relativ zum Ursprung des Typs."
                       },
-                      "manual": "type#ports",
+                      "manual": "type#connectors",
                       "tutorial": "hello-semio/model-brick-set"
                     }
                   }

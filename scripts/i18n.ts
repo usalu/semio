@@ -201,10 +201,10 @@ const germanTranslations: Record<string, string> = {
   "Y Axis": "Y-Achse",
 
   "Connecting Piece ID": "Verbindendes Bauteil-ID",
-  "Connecting Port ID": "Verbindender Port-ID",
+  "Connecting Connector ID": "Verbindender Connector-ID",
   "Connecting Design Piece ID": "Verbindendes Design-Bauteil-ID",
   "Connected Piece ID": "Verbundenes Bauteil-ID",
-  "Connected Port ID": "Verbundener Port-ID",
+  "Connected Connector ID": "Verbundener Connector-ID",
   "Connected Design Piece ID": "Verbundenes Design-Bauteil-ID",
   Gap: "Abstand",
   Shift: "Verschiebung",
@@ -370,8 +370,8 @@ const germanTranslations: Record<string, string> = {
 
   Model: "Modell",
   Models: "Modelle",
-  Port: "Port",
-  Ports: "Ports",
+  Connector: "Connector",
+  Connectors: "Connectors",
   Properties: "Eigenschaften",
   T: "T",
 
@@ -483,7 +483,7 @@ const germanTranslations: Record<string, string> = {
   "The 3D placement plane for this piece. Defines position and orientation in 3D space.": "Die 3D-Platzierungsebene für dieses Bauteil. Definiert Position und Ausrichtung im 3D-Raum.",
   "A detailed description of what this design represents and how it should be used.": "Eine detaillierte Beschreibung dessen, was dieser Entwurf darstellt und wie er verwendet werden sollte.",
   "A detailed description of what this type represents and how it should be used.": "Eine detaillierte Beschreibung dessen, was dieser Typ darstellt und wie er verwendet werden sollte.",
-  "A description of the port": "Eine Beschreibung des Ports",
+  "A description of the connector": "Eine Beschreibung des Connectors",
   "Select the user interface mode: Expert (minimal tooltips), Normal (standard), or Beginner (detailed help)": "Wählen Sie den Benutzeroberflächenmodus: Experte (minimale Tooltips), Normal (Standard) oder Anfänger (detaillierte Hilfe)",
 };
 
@@ -549,7 +549,7 @@ for (const key of enKeys) {
       "Normal",
       "Desktop",
       "Tablet",
-      "Port",
+      "Connector",
       "Chat",
       "Kit",
       "Design",
@@ -650,7 +650,7 @@ if (FIX_MODE) {
     const enValue = getNestedValue(en, key);
     const deValue = getNestedValue(de, key);
     if (typeof enValue === "string" && typeof deValue === "string" && enValue === deValue && enValue !== "") {
-      const technicalTerms = ["ID", "X", "Y", "Z", "U", "V", "T", "HUD", "URL", "Email", "System", "Layout", "Normal", "Desktop", "Tablet", "Port", "Chat", "Kit", "Design", "Tutorial"];
+      const technicalTerms = ["ID", "X", "Y", "Z", "U", "V", "T", "HUD", "URL", "Email", "System", "Layout", "Normal", "Desktop", "Tablet", "Connector", "Chat", "Kit", "Design", "Tutorial"];
       if (!technicalTerms.includes(enValue)) {
         const germanValue = translateToGerman(enValue);
         if (germanValue !== enValue) {
@@ -747,7 +747,7 @@ if (FIX_MODE) {
         "Normal",
         "Desktop",
         "Tablet",
-        "Port",
+        "Connector",
         "Chat",
         "Kit",
         "Design",

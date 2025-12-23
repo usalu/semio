@@ -63,7 +63,7 @@ Let me walk you through 🚶
    - [🏠 Type](#-type-)
    - [🔗 Connection](#-connection-)
    - [⭕ Piece](#-piece-)
-   - [⚓ Port](#-port-)
+   - [⚓ Connector](#-port-)
    - [💾 Model](#-model-)
    - [🏷️ Attribute](#%EF%B8%8F-attribute-)
    - [🏷️ Tag](#%EF%B8%8F-tag-)
@@ -87,7 +87,7 @@ Let me walk you through 🚶
      - [🌿 Branch](#-branch-)
      - [🗃️ Commit](#%EF%B8%8F-commit-)
 1. [🧑‍💻 Development](#-development-)
-   - [🔌 Port Numbers](#-port-numbers-)
+   - [🔌 Connector Numbers](#-port-numbers-)
    - [📒 Tickets and reports](#-tickets-and-reports)
    - [🪄 AI](#-ai-)
      - [🛠️ Uses-Cases](#-uses-cases-)
@@ -265,7 +265,7 @@ Additional [`connections`](#-connection-) which where not used in the _placement
 
 ## 🏠 Type [↑](#-specs-)
 
-A [`type`](#-type-) is a reusable component with different [`models`](#-model-), [`ports`](#-port-), [`attributes`](#%EF%B8%8F-attribute-), [`concepts`](#%EF%B8%8F-concept-), and [`authors`](#-author-) 🧱
+A [`type`](#-type-) is a reusable component with different [`models`](#-model-), [`connectors`](#-port-), [`attributes`](#%EF%B8%8F-attribute-), [`concepts`](#%EF%B8%8F-concept-), and [`authors`](#-author-) 🧱
 
 A [`type`](#-type-) is _proto_ (a _prototype_) when it has no _parent_.
 
@@ -295,19 +295,19 @@ A group of _connected_ [`pieces`](#-piece-) is called a _component_ 🌿
 
 The _hierarchy_ of a [`piece`](#-piece-) is the length of the shortest path to the next _fixed_ [`piece`](#-piece-) 👣
 
-## ⚓ Port [↑](#-specs-)
+## ⚓ Connector [↑](#-specs-)
 
-A [`port`](#-port-) is a conceptual connection **point** with an outwards **direction**, **id**, optional **description**, and **t** value for diagram ring positioning 🤝
+A [`connector`](#-port-) is a conceptual connection **point** with an outwards **direction**, **id**, optional **description**, and **t** value for diagram ring positioning 🤝
 
-A [`port`](#-port-) can be marked as **mandatory** in which case it is required to be connected to a [`piece`](#-piece-) 💯
+A [`connector`](#-port-) can be marked as **mandatory** in which case it is required to be connected to a [`piece`](#-piece-) 💯
 
-A [`port`](#-port-) can have a port **interface** and a list of **compatible interfaces** for explicit compatibility control 👨‍👩‍👧‍👦
+A [`connector`](#-port-) can have a connector **interface** and a list of **compatible interfaces** for explicit compatibility control 👨‍👩‍👧‍👦
 
-No **interface** means the _default_ interface and no **compatible interfaces** means the port is compatible with all other ports 🔑
+No **interface** means the _default_ interface and no **compatible interfaces** means the connector is compatible with all other connectors 🔑
 
-It is enough for one [`port`](#-port-) to be compatible with another [`port`](#-port-) to be compatible with each other ↔️
+It is enough for one [`connector`](#-port-) to be compatible with another [`connector`](#-port-) to be compatible with each other ↔️
 
-A [`port`](#-port-) can have [`props`](#️-prop-) that define measurable characteristics and [`attributes`](#%EF%B8%8F-attribute-) for additional metadata 📏
+A [`connector`](#-port-) can have [`props`](#️-prop-) that define measurable characteristics and [`attributes`](#%EF%B8%8F-attribute-) for additional metadata 📏
 
 ## 💾 Model [↑](#-specs-)
 
@@ -360,7 +360,7 @@ A _relative_ [`url`](#-url-) is a `/`-normalized path to a file in the `.zip` fi
 
 ## 🔢 Quality [↑](#-specs-)
 
-A [`quality`](#-quality-) is a measurement definition with a **key**, **name**, **description**, **kind** (General, Design, Type, Piece, Connection, Port), **unit information** (SI and Imperial), **range constraints** (min/max with exclusion flags), **default value**, and optional **formula** 📏
+A [`quality`](#-quality-) is a measurement definition with a **key**, **name**, **description**, **kind** (General, Design, Type, Piece, Connection, Connector), **unit information** (SI and Imperial), **range constraints** (min/max with exclusion flags), **default value**, and optional **formula** 📏
 
 A [`quality`](#-quality-) can be **scalable** (adjusts with piece scaling) and have multiple **benchmarks** for performance evaluation 🎯
 
@@ -398,9 +398,9 @@ Groups enable semantic clustering of pieces that belong together functionally or
 
 ## ⚙️ Prop [↑](#-specs-)
 
-A [`prop`](#️-prop-) is a **key-value** pair on a [`port`](#-port-) that references a [`quality`](#-quality-) with a specific **value** and optional **unit** 🔧
+A [`prop`](#️-prop-) is a **key-value** pair on a [`connector`](#-port-) that references a [`quality`](#-quality-) with a specific **value** and optional **unit** 🔧
 
-Props define measurable characteristics of ports using the quality system for standardized measurement 📐
+Props define measurable characteristics of connectors using the quality system for standardized measurement 📐
 
 ## 📈 Stat [↑](#-specs-)
 
@@ -731,18 +731,18 @@ Then copy the actual path `...\AppData\Local\Packages\PythonSoftwareFoundation..
 
 Then you can run `npm run build` from the root to build all packages, or run `tsx ./build.ts` in the Grasshopper directory and add your full path `LOCAL_PATH\net\Semio.Grasshopper\Debug\net48` to your GrasshopperDeveloperSettings ⚙️
 
-## 🔌 Port Numbers [↑](#-development-)
+## 🔌 Connector Numbers [↑](#-development-)
 
-Overview of all ports used during development and in final packages:
+Overview of all connectors used during development and in final packages:
 
-| Service    | Port   | Command / Package       | Notes                                                                      |
-| ---------- | ------ | ----------------------- | -------------------------------------------------------------------------- |
-| Sketchpad  | `3000` | `dev js js sketchpad`   | Vite dev server for Sketchpad                                              |
-| Play       | `4000` | `dev play`              | Vite dev server for Play                                                   |
-| Docs       | `4321` | `dev docs`              | Astro dev server (default)                                                 |
-| Storybook  | `6006` | `dev js js storybook`   | Storybook dev server (default)                                             |
-| Playwright | `5173` | `npm test` (js)         | Test server for Playwright E2E tests                                       |
-| Engine     | `YYMM` | `@semio/engine` package | Port derived from release: `rYY.MM-V` → `YYMM` (e.g., `r25.07-1` → `2507`) |
+| Service    | Connector | Command / Package       | Notes                                                                           |
+| ---------- | --------- | ----------------------- | ------------------------------------------------------------------------------- |
+| Sketchpad  | `3000`    | `dev js js sketchpad`   | Vite dev server for Sketchpad                                                   |
+| Play       | `4000`    | `dev play`              | Vite dev server for Play                                                        |
+| Docs       | `4321`    | `dev docs`              | Astro dev server (default)                                                      |
+| Storybook  | `6006`    | `dev js js storybook`   | Storybook dev server (default)                                                  |
+| Playwright | `5173`    | `npm test` (js)         | Test server for Playwright E2E tests                                            |
+| Engine     | `YYMM`    | `@semio/engine` package | Connector derived from release: `rYY.MM-V` → `YYMM` (e.g., `r25.07-1` → `2507`) |
 
 # 📒 Tickets and reports
 
@@ -841,7 +841,7 @@ Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on macOS) → "Tasks: Run Task" and selec
 - `publish` - Publish packages
 - `dev` - Start all dev servers
 - `dev js js storybook` - Start `@semio/js` Storybook
-- `dev js js sketchpad` - Start `@semio/js` Vite Sketchpad (port `3000`)
+- `dev js js sketchpad` - Start `@semio/js` Vite Sketchpad (connector `3000`)
 
 **Workspace-specific commands:**
 
@@ -1201,7 +1201,7 @@ Semio includes a **domain-pure validation system** built entirely in `semio.ts` 
 6. **Interface Name Uniqueness** - All interfaces must have unique names
 7. **File Name Uniqueness** - All files must have unique names
 8. **Folder Name Uniqueness** - Sibling folders must have unique names
-9. **Port Name Uniqueness** - Ports in a type must have unique names
+9. **Connector Name Uniqueness** - Connectors in a type must have unique names
 10. **Model Name Uniqueness** - Models in a type must have unique names
 11. **Layer Path Uniqueness** - Layers in a design must have unique paths
 

@@ -18,21 +18,21 @@ Date: 2025-11-20
 
 This plan covers two major schema changes:
 
-1. Adding `name` property to `Piece`, `Port`, and `Model`
+1. Adding `name` property to `Piece`, `Connector`, and `Model`
 2. Converting `Interface` from a string to a full kit artifact with its own identity
 
 ## 1. Problem Description
 
 ### Current State
 
-- `Piece`, `Port`, and `Model` lack a `name` property for user-friendly identification
-- `Port.interface` is just a string, limiting extensibility
-- `Port.compatibleInterfaces` is an array of strings
+- `Piece`, `Connector`, and `Model` lack a `name` property for user-friendly identification
+- `Connector.interface` is just a string, limiting extensibility
+- `Connector.compatibleInterfaces` is an array of strings
 - No central management of interface definitions
 
 ### Desired State
 
-- `Piece`, `Port`, and `Model` have optional `name` properties
+- `Piece`, `Connector`, and `Model` have optional `name` properties
 - `Interface` is a first-class kit artifact with:
   - `guid` (InterfaceId)
   - `name`
@@ -40,7 +40,7 @@ This plan covers two major schema changes:
   - `icon`
   - `compatibleInterfaces` (array of InterfaceId references)
 - Kit contains an `interfaces` collection
-- Port references interfaces by InterfaceId instead of string
+- Connector references interfaces by InterfaceId instead of string
 
 ## 2. Affected Files
 
@@ -75,22 +75,22 @@ This plan covers two major schema changes:
 ### Phase 1: Schema Definition
 
 1. Update `sqlite/schema.sql`
-   - Add `name` column to `pieces`, `ports`, `models` tables
+   - Add `name` column to `pieces`, `connectors`, `models` tables
    - Create `interfaces` table with columns: guid, name, description, icon, attributes
    - Create `interface_compatibilities` junction table
-   - Update `ports` table: change `interface` to `interface_id` (foreign key)
-   - Remove `compatible_interfaces` column from `ports` (now in Interface definition)
+   - Update `connectors` table: change `interface` to `interface_id` (foreign key)
+   - Remove `compatible_interfaces` column from `connectors` (now in Interface definition)
 
 2. Update `jsonschema/kit.json`
    - Add Interface definition with properties
    - Add `interfaces` array to Kit
-   - Update Piece, Port, Model to include `name`
-   - Update Port to reference InterfaceId instead of string
+   - Update Piece, Connector, Model to include `name`
+   - Update Connector to reference InterfaceId instead of string
 
 3. Update `engineering/dataarchitecture.pu`
    - Add Interface entity
    - Add relationships
-   - Update Piece, Port, Model entities
+   - Update Piece, Connector, Model entities
 
 ### Phase 2: TypeScript Implementation
 
@@ -98,8 +98,8 @@ This plan covers two major schema changes:
    - Add `InterfaceId` type
    - Add `Interface` model with properties
    - Add `InterfaceInput`, `InterfaceDiff`, etc.
-   - Update `Piece`, `Port`, `Model` to include `name?: string`
-   - Update `Port` to use `interfaceId?: InterfaceId` and remove `compatibleInterfaces`
+   - Update `Piece`, `Connector`, `Model` to include `name?: string`
+   - Update `Connector` to use `interfaceId?: InterfaceId` and remove `compatibleInterfaces`
    - Update `Kit` to include `interfaces: Interface[]`
    - Add interface-related helper functions
    - Update all getDiff, applyDiff, inverseDiff functions
@@ -112,9 +112,9 @@ This plan covers two major schema changes:
    - Update selection and diff types
 
 3. Update UI components
-   - Add name inputs for Piece, Port, Model
+   - Add name inputs for Piece, Connector, Model
    - Add Interface management UI
-   - Update Port interface selection to use Interface picker
+   - Update Connector interface selection to use Interface picker
    - Show interface compatibility visually
 
 ### Phase 3: .NET Implementation
@@ -122,14 +122,14 @@ This plan covers two major schema changes:
 1. Update `net/Semio/Semio.cs`
    - Add `InterfaceId` struct
    - Add `Interface` class
-   - Update `Piece`, `Port`, `Model` classes
+   - Update `Piece`, `Connector`, `Model` classes
    - Update serialization/deserialization
 
 ### Phase 4: API Updates
 
 1. Update `graphql/schema.graphql`
    - Add Interface type
-   - Update Piece, Port, Model types
+   - Update Piece, Connector, Model types
    - Add interface queries and mutations
 
 ### Phase 5: Migration
@@ -158,7 +158,7 @@ Update the model hierarchy order in AGENTS.md:
 14. **Interface** (NEW - before Prop)
 15. Prop
 16. Model
-17. Port
+17. Connector
 18. Type
 19. Layer
 20. Piece
@@ -174,14 +174,14 @@ Update the model hierarchy order in AGENTS.md:
 - Old kits without names: `name` defaults to `undefined`
 - Old kits with string interfaces:
   - Create Interface artifacts from unique interface strings
-  - Map Port.interface strings to new InterfaceIds
-  - Build compatibleInterfaces from old Port.compatibleInterfaces arrays
+  - Map Connector.interface strings to new InterfaceIds
+  - Build compatibleInterfaces from old Connector.compatibleInterfaces arrays
 
 ## 6. Testing Considerations
 
-- Test piece/port/model creation with and without names
+- Test piece/connector/model creation with and without names
 - Test interface creation and compatibility resolution
-- Test port connections with compatible interfaces
+- Test connector connections with compatible interfaces
 - Test serialization/deserialization with new schema
 - Test migration of old kits
 

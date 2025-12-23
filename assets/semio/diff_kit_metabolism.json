@@ -20,7 +20,7 @@
         "diff": {
           "name": "Ellipsoid Modified",
           "description": "Updated description",
-          "ports": {
+          "connectors": {
             "added": [
               {
                 "guid": "019aff1a-8949-76be-8c75-ddf1e0944947",
@@ -52,7 +52,7 @@
         "description": "A new type added for testing",
         "createdAt": "2025-12-08T17:55:20.522Z",
         "updatedAt": "2025-12-08T17:55:20.522Z",
-        "ports": [
+        "connectors": [
           {
             "guid": "019aff1a-894a-74ca-858d-4d586397b06e",
             "name": "test-port",

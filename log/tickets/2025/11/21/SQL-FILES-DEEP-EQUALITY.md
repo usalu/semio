@@ -51,11 +51,11 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean
 Recursively compares:
 
 - **Attributes** - key, value, definition
-- **Ports** - point (x,y,z), direction (x,y,z), t, mandatory, attributes
+- **Connectors** - point (x,y,z), direction (x,y,z), t, mandatory, attributes
 - **Models** - name, file, tags, attributes
-- **Types** - name, description, icon, image, concepts, models, ports, attributes
+- **Types** - name, description, icon, image, concepts, models, connectors, attributes
 - **Pieces** - name, type, design, plane (origin, xAxis, yAxis), center, attributes
-- **Connections** - connected/connecting pieces/ports, gap, shift, rise, rotation, turn, tilt, attributes
+- **Connections** - connected/connecting pieces/connectors, gap, shift, rise, rotation, turn, tilt, attributes
 - **Layers** - path, isHidden, isLocked, color, description, attributes
 - **Groups** - pieces, name, color, description, attributes
 - **Stats** - quality, min, max, unit, attributes
@@ -104,7 +104,7 @@ const areAttributesEqual = (a?: Attribute[], b?: Attribute[]): boolean => {
   // Return true only if all match
 };
 
-const arePortsEqual = (a?: Port[], b?: Port[]): boolean => {
+const arePortsEqual = (a?: Connector[], b?: Connector[]): boolean => {
   // Same pattern but compares point, direction, t, mandatory
   // Also recursively compares attributes
 };

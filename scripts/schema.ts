@@ -150,7 +150,7 @@ interface SoftwareReport {
 
 // #endregion Types
 
-const MAIN_ENTITIES = ["Attribute", "Location", "Author", "File", "Folder", "Benchmark", "Quality", "Interface", "Prop", "Model", "Port", "Tag", "Concept", "Type", "Layer", "Piece", "Group", "Connection", "Stat", "Design", "Kit"];
+const MAIN_ENTITIES = ["Attribute", "Location", "Author", "File", "Folder", "Benchmark", "Quality", "Interface", "Prop", "Model", "Connector", "Tag", "Concept", "Type", "Layer", "Piece", "Group", "Connection", "Stat", "Design", "Kit"];
 
 const WEAK_ENTITIES = ["Coord", "Vec", "Point", "Vector", "Plane", "Range", "Side"];
 
@@ -714,7 +714,7 @@ const FIELD_MAPPINGS: Record<string, Record<string, string[]>> = {
     isHidden: ["is_hidden", "hidden", "IsHidden"],
     isLocked: ["is_locked", "locked", "IsLocked"],
   },
-  Port: {
+  Connector: {
     mandatory: ["is_mandatory", "mandatory", "Mandatory"],
     name: ["id_", "name", "Name"], // TS 'name' = PY 'id_'
   },
@@ -752,10 +752,10 @@ const RELATIONSHIP_FIELDS: Record<string, string[]> = {
   Interface: ["compatibleInterfaces", "attributes"],
   Prop: ["attributes"],
   Model: ["tags", "attributes"],
-  Port: ["props", "attributes"],
+  Connector: ["props", "attributes"],
   Tag: ["attributes"],
   Concept: ["attributes"],
-  Type: ["models", "ports", "props", "authors", "concepts", "attributes"],
+  Type: ["models", "connectors", "props", "authors", "concepts", "attributes"],
   Layer: ["attributes"],
   Piece: ["props", "attributes"],
   Group: ["pieces", "attributes"],

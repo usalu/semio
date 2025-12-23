@@ -239,7 +239,7 @@ class QualityKind {
   Type
   Piece
   Connection
-  Port
+  Connector
 }
 ' #endregion QualityKind
 
@@ -412,8 +412,8 @@ class ModelsDiff {
 }
 ' #endregion Model
 
-' #region Port
-class Port {
+' #region Connector
+class Connector {
   id: str
   point: Point
   direction: Vector
@@ -424,22 +424,22 @@ class Port {
   description: str
   attributes: list[Attribute]
   --
-  context Port inv optionalFieldsCanBeEmpty:
+  context Connector inv optionalFieldsCanBeEmpty:
     description->notEmpty() or description->isEmpty() and
     interface->notEmpty() or interface->isEmpty()
-  context Port inv tInValidRange:
+  context Connector inv tInValidRange:
     t >= 0 and t < 1
-  context Port inv directionIsUnitVector:
+  context Connector inv directionIsUnitVector:
     direction.x * direction.x + direction.y * direction.y + direction.z * direction.z = 1
-  context Port inv compatibleInterfacesIncludesOwnInterface:
+  context Connector inv compatibleInterfacesIncludesOwnInterface:
     interface->notEmpty() implies compatibleInterfaces->includes(interface)
 }
 
-class PortId {
+class ConnectorId {
   id: str
 }
 
-class PortDiff {
+class ConnectorDiff {
   id?: str
   point?: Point
   direction?: Vector
@@ -451,19 +451,19 @@ class PortDiff {
   attributes?: AttributesDiff
 }
 
-class PortsDiff {
-  removed?: list[PortId]
-  updated?: list[PortDiff]
-  added?: list[Port]
+class ConnectorsDiff {
+  removed?: list[ConnectorId]
+  updated?: list[ConnectorDiff]
+  added?: list[Connector]
 }
-' #endregion Port
+' #endregion Connector
 
 ' #region Type
 class Type {
   name: str
   variant: str
   models: list[Model]
-  ports: list[Port]
+  connectors: list[Connector]
   props: list[Prop]
   isVirtual: bool
   canScale: bool
@@ -490,7 +490,7 @@ class TypeDiff {
   name?: str
   variant?: str
   models?: ModelsDiff
-  ports?: PortsDiff
+  connectors?: ConnectorsDiff
   props?: PropsDiff
   isVirtual?: bool
   canScale?: bool
@@ -622,7 +622,7 @@ class GroupsDiff {
 class Side {
   piece: PieceId
   designPiece: PieceId
-  port: PortId
+  connector: ConnectorId
 }
 ' #endregion Side
 
@@ -835,7 +835,7 @@ Prop *-- "0..*" Attribute : has >
 Stat o-- "1" Quality : references >
 
 Type *-- "0..*" Model : has >
-Type *-- "0..*" Port : has >
+Type *-- "0..*" Connector : has >
 Type *-- "0..*" Attribute : has >
 Type *-- "0..*" Prop : has >
 Type *-- "1" Location : located at >
@@ -846,11 +846,11 @@ Model *-- "0..*" Attribute : has >
 Model o-- "0..*" Tag : tagged with >
 Model o-- "1" File : references >
 
-Port *-- "0..*" Attribute : has >
-Port *-- "1" Point : at >
-Port *-- "1" Vector : oriented by >
-Port *-- "1" Interface : has >
-Port *-- "0..*" Interface : compatible with >
+Connector *-- "0..*" Attribute : has >
+Connector *-- "1" Point : at >
+Connector *-- "1" Vector : oriented by >
+Connector *-- "1" Interface : has >
+Connector *-- "0..*" Interface : compatible with >
 
 Layer *-- "0..*" Attribute : has >
 
@@ -865,7 +865,7 @@ Group *-- "0..*" Piece : contains >
 Group *-- "0..*" Attribute : has >
 
 Side o-- "1" Piece : refers to >
-Side o-- "1" Port : refers to >
+Side o-- "1" Connector : refers to >
 
 Connection *-- "0..*" Attribute : has >
 Connection o-- "1" Side : connected >
@@ -903,7 +903,7 @@ class SemioValidationContext {
   typesByGuid: Map<Guid, Type>
   designsByGuid: Map<Guid, Design>
   piecesByGuid: Map<Guid, Piece>
-  portsByTypeGuid: Map<Guid, Port[]>
+  connectorsByTypeGuid: Map<Guid, Connector[]>
   modelsByTypeGuid: Map<Guid, Model[]>
 }
 
@@ -938,7 +938,7 @@ enum SemioEntityKind {
   Design
   Piece
   Connection
-  Port
+  Connector
   Quality
   Interface
   File

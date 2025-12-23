@@ -34,9 +34,9 @@ namespace Semio.Grasshopper
 {
     using System;
 
-    
-    
-    
+
+
+
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
@@ -48,17 +48,17 @@ namespace Semio.Grasshopper
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         internal Resources() { }
 
-        
-        
-        
+
+
+
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
         internal static global::System.Resources.ResourceManager ResourceManager =>
             resourceMan ??= new global::System.Resources.ResourceManager("Semio.Grasshopper.Resources", typeof(Resources).Assembly);
 
-        
-        
-        
-        
+
+
+
+
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
         internal static global::System.Globalization.CultureInfo Culture
         {
@@ -183,17 +183,17 @@ namespace Semio.Grasshopper
         internal static System.Drawing.Bitmap piece_serialize_24x24 =>
             (System.Drawing.Bitmap)ResourceManager.GetObject("piece_serialize_24x24", resourceCulture);
 
-        internal static System.Drawing.Bitmap port_24x24 =>
-            (System.Drawing.Bitmap)ResourceManager.GetObject("port_24x24", resourceCulture);
+        internal static System.Drawing.Bitmap connector_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("connector_24x24", resourceCulture);
 
-        internal static System.Drawing.Bitmap port_deserialize_24x24 =>
-            (System.Drawing.Bitmap)ResourceManager.GetObject("port_deserialize_24x24", resourceCulture);
+        internal static System.Drawing.Bitmap connector_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("connector_deserialize_24x24", resourceCulture);
 
-        internal static System.Drawing.Bitmap port_modify_24x24 =>
-            (System.Drawing.Bitmap)ResourceManager.GetObject("port_modify_24x24", resourceCulture);
+        internal static System.Drawing.Bitmap connector_modify_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("connector_modify_24x24", resourceCulture);
 
-        internal static System.Drawing.Bitmap port_serialize_24x24 =>
-            (System.Drawing.Bitmap)ResourceManager.GetObject("port_serialize_24x24", resourceCulture);
+        internal static System.Drawing.Bitmap connector_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("connector_serialize_24x24", resourceCulture);
 
         internal static System.Drawing.Bitmap attribute_24x24 =>
             (System.Drawing.Bitmap)ResourceManager.GetObject("attribute_24x24", resourceCulture);
@@ -339,23 +339,23 @@ namespace Semio.Grasshopper
         internal static System.Drawing.Bitmap file_id_deserialize_24x24 =>
             (System.Drawing.Bitmap)ResourceManager.GetObject("file_id_deserialize_24x24", resourceCulture);
 
-        internal static System.Drawing.Bitmap port_diff_deserialize_24x24 =>
-            (System.Drawing.Bitmap)ResourceManager.GetObject("port_diff_deserialize_24x24", resourceCulture);
+        internal static System.Drawing.Bitmap connector_diff_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("connector_diff_deserialize_24x24", resourceCulture);
 
-        internal static System.Drawing.Bitmap port_diff_serialize_24x24 =>
-            (System.Drawing.Bitmap)ResourceManager.GetObject("port_diff_serialize_24x24", resourceCulture);
+        internal static System.Drawing.Bitmap connector_diff_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("connector_diff_serialize_24x24", resourceCulture);
 
-        internal static System.Drawing.Bitmap ports_diff_deserialize_24x24 =>
-            (System.Drawing.Bitmap)ResourceManager.GetObject("ports_diff_deserialize_24x24", resourceCulture);
+        internal static System.Drawing.Bitmap connectors_diff_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("connectors_diff_deserialize_24x24", resourceCulture);
 
-        internal static System.Drawing.Bitmap ports_diff_serialize_24x24 =>
-            (System.Drawing.Bitmap)ResourceManager.GetObject("ports_diff_serialize_24x24", resourceCulture);
+        internal static System.Drawing.Bitmap connectors_diff_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("connectors_diff_serialize_24x24", resourceCulture);
 
-        internal static System.Drawing.Bitmap port_id_serialize_24x24 =>
-            (System.Drawing.Bitmap)ResourceManager.GetObject("port_id_serialize_24x24", resourceCulture);
+        internal static System.Drawing.Bitmap connector_id_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("connector_id_serialize_24x24", resourceCulture);
 
-        internal static System.Drawing.Bitmap port_id_deserialize_24x24 =>
-            (System.Drawing.Bitmap)ResourceManager.GetObject("port_id_deserialize_24x24", resourceCulture);
+        internal static System.Drawing.Bitmap connector_id_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("connector_id_deserialize_24x24", resourceCulture);
 
         internal static System.Drawing.Bitmap author_id_serialize_24x24 =>
             (System.Drawing.Bitmap)ResourceManager.GetObject("author_id_serialize_24x24", resourceCulture);
@@ -555,8 +555,8 @@ namespace Semio.Grasshopper
         internal static System.Drawing.Bitmap piece_id_modify_24x24 =>
             (System.Drawing.Bitmap)ResourceManager.GetObject("piece_id_modify_24x24", resourceCulture);
 
-        internal static System.Drawing.Bitmap port_id_modify_24x24 =>
-            (System.Drawing.Bitmap)ResourceManager.GetObject("port_id_modify_24x24", resourceCulture);
+        internal static System.Drawing.Bitmap connector_id_modify_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("connector_id_modify_24x24", resourceCulture);
 
         internal static System.Drawing.Bitmap model_id_modify_24x24 =>
             (System.Drawing.Bitmap)ResourceManager.GetObject("model_id_modify_24x24", resourceCulture);
@@ -810,8 +810,8 @@ namespace Semio.Grasshopper
         internal static System.Drawing.Bitmap piece_id_24x24 =>
             (System.Drawing.Bitmap)ResourceManager.GetObject("piece_id_24x24", resourceCulture);
 
-        internal static System.Drawing.Bitmap port_id_24x24 =>
-            (System.Drawing.Bitmap)ResourceManager.GetObject("port_id_24x24", resourceCulture);
+        internal static System.Drawing.Bitmap connector_id_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("connector_id_24x24", resourceCulture);
 
         internal static System.Drawing.Bitmap quality_id_24x24 =>
             (System.Drawing.Bitmap)ResourceManager.GetObject("quality_id_24x24", resourceCulture);
@@ -852,11 +852,11 @@ namespace Semio.Grasshopper
         internal static System.Drawing.Bitmap pieces_diff_24x24 =>
             (System.Drawing.Bitmap)ResourceManager.GetObject("pieces_diff_24x24", resourceCulture);
 
-        internal static System.Drawing.Bitmap port_diff_24x24 =>
-            (System.Drawing.Bitmap)ResourceManager.GetObject("port_diff_24x24", resourceCulture);
+        internal static System.Drawing.Bitmap connector_diff_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("connector_diff_24x24", resourceCulture);
 
-        internal static System.Drawing.Bitmap ports_diff_24x24 =>
-            (System.Drawing.Bitmap)ResourceManager.GetObject("ports_diff_24x24", resourceCulture);
+        internal static System.Drawing.Bitmap connectors_diff_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("connectors_diff_24x24", resourceCulture);
 
         internal static System.Drawing.Bitmap model_diff_24x24 =>
             (System.Drawing.Bitmap)ResourceManager.GetObject("model_diff_24x24", resourceCulture);

@@ -31,7 +31,7 @@ The Grasshopper components in `Semio.Grasshopper.cs` were missing several entity
 
 - **Folder** (after File region): FolderGoo, FolderParam, FolderComponent, FolderIdGoo, FolderIdParam, FolderDiffGoo, FolderDiffParam, FolderDiffComponent, FoldersDiffGoo, FoldersDiffParam, FoldersDiffComponent, Serialize/Deserialize components
 - **Tag** (after Quality region): TagGoo, TagParam, TagComponent, TagIdGoo, TagIdParam, Serialize/Deserialize components
-- **Concept** (after Port region): ConceptGoo, ConceptParam, ConceptComponent, ConceptIdGoo, ConceptIdParam, Serialize/Deserialize components
+- **Concept** (after Connector region): ConceptGoo, ConceptParam, ConceptComponent, ConceptIdGoo, ConceptIdParam, Serialize/Deserialize components
 - **Interface** (after Concept region): InterfaceGoo, InterfaceParam, InterfaceComponent, InterfaceIdGoo, InterfaceIdParam, Serialize/Deserialize components
 
 ### Updated Components

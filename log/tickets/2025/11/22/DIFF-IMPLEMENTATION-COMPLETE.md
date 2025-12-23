@@ -66,7 +66,7 @@ Replaced all reference equality checks (`!==`) with `deepEqual()` for complex ob
 **Affected Functions:**
 
 - `getLocationDiff`
-- `getPortDiff`
+- `getConnectorDiff`
 - `getPieceDiff`
 - All other entity diff functions using attributes/props/benchmarks
 
@@ -169,7 +169,7 @@ This preserves the distinction between `undefined` and empty arrays for proper s
 ### Known Issues
 
 - Kit Diff apply tests (steps 3-4) - likely fixture data issues
-- Kit Import/Export - NOT NULL constraint on port.mandatory (schema issue)
+- Kit Import/Export - NOT NULL constraint on connector.mandatory (schema issue)
 
 ## Architecture Impact
 

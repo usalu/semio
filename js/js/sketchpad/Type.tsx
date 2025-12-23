@@ -29,7 +29,7 @@ import React, { createContext, FC, Suspense, useCallback, useContext, useEffect,
 import * as THREE from "three";
 import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
 import { useLabel } from "../i18n";
-import { Author, AuthorId, Camera, Coord, findModel, guid, Guid, Kit, Model, Point, Port, selectBestModel, File as SemioFile, toSemioRotation, toThreeRotation, Type, TypeDiff, Vector } from "../semio";
+import { Author, AuthorId, Camera, Connector, Coord, findModel, guid, Guid, Kit, Model, Point, selectBestModel, File as SemioFile, toSemioRotation, toThreeRotation, Type, TypeDiff, Vector } from "../semio";
 import { Geometry, Input, Scene as SceneComponent, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider, SortableTreeItems, Stepper, Textarea, Toggle, ToggleGroup, TransactionProvider, TreeContent, TreeItem } from "./elements";
 import type { AppWindowConfig, HookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolDefinition, ToolRenderContext, TypeAppId } from "./shared";
 import { AppConfig, AppPlugin, conditionalHookResult, createPanelDefinition, Expertise, Mode, PanelKind, readonlyHookResult, registerAppPlugin, registerRuntimeAction, Theme, ToolKind } from "./shared";
@@ -40,8 +40,7 @@ import {
   createTypeActiveToolSelector,
   createTypeAppSelector,
   createTypeCameraSelector,
-  createTypeFocusedPortSelector,
-  createTypeFullscreenWindowSelector,
+  createTypeFocusedConnectorSelector,
   createTypeHoverSelector,
   createTypeOthersSelector,
   createTypePanelVisibilitySelector,
@@ -81,14 +80,14 @@ import {
 
 const KitSectionLazy = React.lazy(() => import("./Kit").then((module) => ({ default: module.KitSection })));
 
-import { AddIcon, AwardIcon, CheckIcon, CodeIcon, HandIcon, MonitorIcon, MoonIcon, MousePointerIcon, PortIcon, RemoveIcon, SelectToolIcon, SunIcon, TutorialIcon, UserIcon } from "@semio/assets";
+import { AddIcon, AwardIcon, CheckIcon, CodeIcon, ConnectorIcon, HandIcon, MonitorIcon, MoonIcon, MousePointerIcon, RemoveIcon, SelectToolIcon, SunIcon, TutorialIcon, UserIcon } from "@semio/assets";
 
 // #endregion Imports
 
 // #region Internal State Management
 
 export interface TypeAppSelection {
-  ports?: Guid[];
+  connectors?: Guid[];
   models?: Guid[];
 }
 export interface TypeAppSelectionPortsDiff {
@@ -100,12 +99,12 @@ export interface TypeAppSelectionModelsDiff {
   removed?: Guid[];
 }
 export interface TypeAppSelectionDiff {
-  ports?: TypeAppSelectionPortsDiff;
+  connectors?: TypeAppSelectionPortsDiff;
   models?: TypeAppSelectionModelsDiff;
 }
 export enum TypeAppFullscreenWindow {
   None = "none",
-  Ports = "ports",
+  Connectors = "connectors",
   Models = "models",
 }
 
@@ -117,7 +116,7 @@ export interface TypeAppPresence {
   camera?: Camera;
 }
 export interface TypeAppHover {
-  port?: Guid;
+  connector?: Guid;
   model?: Guid;
 }
 export interface TypeAppPresenceOther extends TypeAppPresence {
@@ -131,7 +130,7 @@ export interface TypeAppDiff {
   panelVisibility?: Partial<PanelVisibility>;
   activeTool?: ToolKind;
   camera?: Camera;
-  focusedPortGuid?: Guid | null;
+  focusedConnectorGuid?: Guid | null;
   selectedModelGuid?: Guid | null;
   selectedModelTags?: string[];
   windowLayout?: any;
@@ -146,7 +145,7 @@ export interface TypeAppState {
   presence?: TypeAppPresence;
   others: TypeAppPresenceOther[];
   camera?: Camera;
-  focusedPortGuid?: Guid;
+  focusedConnectorGuid?: Guid;
   selectedModelGuid?: Guid;
   selectedModelTags?: string[];
   windowLayout?: any;
@@ -187,7 +186,7 @@ const typeAppPlugin: AppPlugin = {
       presence: undefined,
       others: [],
       camera: undefined,
-      focusedPortGuid: undefined,
+      focusedConnectorGuid: undefined,
       selectedModelGuid: undefined,
       selectedModelTags: [],
       windowLayout: undefined,
@@ -227,10 +226,10 @@ if (typeof window !== "undefined") {
     return { typeApps: { ...context.typeApps, [key]: { ...app, fullscreenWindow: event.window } } };
   });
   registerRuntimeAction("typeFocusPort", (context: any, event: any) => {
-    if (event.type !== "TYPE.FOCUS_PORT") return {};
+    if (event.type !== "TYPE.FOCUS_CONNECTOR") return {};
     const key = `${event.kitGuid}:${event.typeGuid}`;
     const app = context.typeApps[key] || createDefaultTypeAppState();
-    return { typeApps: { ...context.typeApps, [key]: { ...app, focusedPort: event.portGuid } } };
+    return { typeApps: { ...context.typeApps, [key]: { ...app, focusedConnector: event.connectorGuid } } };
   });
   registerRuntimeAction("typeSelectModelTag", (context: any, event: any) => {
     if (event.type !== "TYPE.SELECT_MODEL_TAG") return {};
@@ -271,20 +270,20 @@ if (typeof window !== "undefined") {
     const app = context.typeApps[key] || createDefaultTypeAppState();
     return { typeApps: { ...context.typeApps, [key]: { ...app, selection: undefined } } };
   });
-  registerRuntimeAction("typeSelectPort", (context: any, event: any) => {
-    if (event.type !== "TYPE.SELECT_PORT") return {};
+  registerRuntimeAction("typeSelectConnector", (context: any, event: any) => {
+    if (event.type !== "TYPE.SELECT_CONNECTOR") return {};
     const key = `${event.kitGuid}:${event.typeGuid}`;
     const app = context.typeApps[key] || createDefaultTypeAppState();
-    const ports = [...(app.selection?.ports || [])];
-    if (!ports.includes(event.portGuid)) ports.push(event.portGuid);
-    return { typeApps: { ...context.typeApps, [key]: { ...app, selection: { ...app.selection, ports } } } };
+    const connectors = [...(app.selection?.connectors || [])];
+    if (!connectors.includes(event.connectorGuid)) connectors.push(event.connectorGuid);
+    return { typeApps: { ...context.typeApps, [key]: { ...app, selection: { ...app.selection, connectors } } } };
   });
-  registerRuntimeAction("typeDeselectPort", (context: any, event: any) => {
-    if (event.type !== "TYPE.DESELECT_PORT") return {};
+  registerRuntimeAction("typeDeselectConnector", (context: any, event: any) => {
+    if (event.type !== "TYPE.DESELECT_CONNECTOR") return {};
     const key = `${event.kitGuid}:${event.typeGuid}`;
     const app = context.typeApps[key] || createDefaultTypeAppState();
-    const ports = (app.selection?.ports || []).filter((p: Guid) => p !== event.portGuid);
-    return { typeApps: { ...context.typeApps, [key]: { ...app, selection: { ...app.selection, ports } } } };
+    const connectors = (app.selection?.connectors || []).filter((p: Guid) => p !== event.connectorGuid);
+    return { typeApps: { ...context.typeApps, [key]: { ...app, selection: { ...app.selection, connectors } } } };
   });
   registerRuntimeAction("typeSetHover", (context: any, event: any) => {
     if (event.type !== "TYPE.SET_HOVER") return {};
@@ -308,7 +307,7 @@ if (typeof window !== "undefined") {
     if (event.type !== "TYPE.SELECT_ALL") return {};
     const key = `${event.kitGuid}:${event.typeGuid}`;
     const app = context.typeApps[key] || createDefaultTypeAppState();
-    return { typeApps: { ...context.typeApps, [key]: { ...app, selection: { ports: [], models: [] } } } };
+    return { typeApps: { ...context.typeApps, [key]: { ...app, selection: { connectors: [], models: [] } } } };
   });
   registerRuntimeAction("typeDeselectAll", (context: any, event: any) => {
     if (event.type !== "TYPE.DESELECT_ALL") return {};
@@ -320,7 +319,7 @@ if (typeof window !== "undefined") {
     if (event.type !== "TYPE.CLEAR_FOCUS") return {};
     const key = `${event.kitGuid}:${event.typeGuid}`;
     const app = context.typeApps[key] || createDefaultTypeAppState();
-    return { typeApps: { ...context.typeApps, [key]: { ...app, focusedPort: undefined } } };
+    return { typeApps: { ...context.typeApps, [key]: { ...app, focusedConnector: undefined } } };
   });
   registerRuntimeAction("typeSelectModel", (context: any, event: any) => {
     if (event.type !== "TYPE.SELECT_MODEL") return {};
@@ -338,10 +337,10 @@ if (typeof window !== "undefined") {
     return { typeApps: { ...context.typeApps, [key]: { ...app, selection: { ...app.selection, models } } } };
   });
   registerRuntimeAction("typeHoverPort", (context: any, event: any) => {
-    if (event.type !== "TYPE.HOVER_PORT") return {};
+    if (event.type !== "TYPE.HOVER_CONNECTOR") return {};
     const key = `${event.kitGuid}:${event.typeGuid}`;
     const app = context.typeApps[key] || createDefaultTypeAppState();
-    return { typeApps: { ...context.typeApps, [key]: { ...app, hover: { port: event.portGuid } } } };
+    return { typeApps: { ...context.typeApps, [key]: { ...app, hover: { connector: event.connectorGuid } } } };
   });
   registerRuntimeAction("typeHoverModel", (context: any, event: any) => {
     if (event.type !== "TYPE.HOVER_MODEL") return {};
@@ -537,21 +536,21 @@ export function useTypeAppCamera(): HookResult<Camera | undefined> {
   return conditionalHookResult(canSet, value, setter);
 }
 
-export function useTypeAppFocusedPortGuid(): HookResult<Guid | undefined> {
+export function useTypeAppFocusedConnectorGuid(): HookResult<Guid | undefined> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
   const kitGuid = kitScope?.guid ?? "";
   const typeGuid = typeScope?.guid ?? "";
-  const selector = useMemo(() => createTypeFocusedPortSelector(kitGuid, typeGuid), [kitGuid, typeGuid]);
+  const selector = useMemo(() => createTypeFocusedConnectorSelector(kitGuid, typeGuid), [kitGuid, typeGuid]);
   const value = useSelector(actor, selector);
-  const canSetEvent = useMemo(() => ({ type: "TYPE.FOCUS_PORT" as const, kitGuid, typeGuid, portGuid: "" }), [kitGuid, typeGuid]);
+  const canSetEvent = useMemo(() => ({ type: "TYPE.FOCUS_CONNECTOR" as const, kitGuid, typeGuid, connectorGuid: "" }), [kitGuid, typeGuid]);
   const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setter = useMemo(() => {
     if (!canSet) return undefined;
-    return (portGuid: Guid | undefined) => {
-      if (portGuid) {
-        actor.send({ type: "TYPE.FOCUS_PORT", kitGuid, typeGuid, portGuid });
+    return (connectorGuid: Guid | undefined) => {
+      if (connectorGuid) {
+        actor.send({ type: "TYPE.FOCUS_CONNECTOR", kitGuid, typeGuid, connectorGuid });
       } else {
         actor.send({ type: "TYPE.CLEAR_FOCUS", kitGuid, typeGuid });
       }
@@ -573,8 +572,8 @@ export function useTypeAppHover(): HookResult<TypeAppHover | undefined> {
   const setter = useMemo(() => {
     if (!canSet) return undefined;
     return (hover: TypeAppHover | undefined) => {
-      if (hover?.port) {
-        actor.send({ type: "TYPE.HOVER_PORT", kitGuid, typeGuid, portGuid: hover.port });
+      if (hover?.connector) {
+        actor.send({ type: "TYPE.HOVER_CONNECTOR", kitGuid, typeGuid, connectorGuid: hover.connector });
       } else if (hover?.model) {
         actor.send({ type: "TYPE.HOVER_MODEL", kitGuid, typeGuid, modelGuid: hover.model });
       } else {
@@ -642,8 +641,8 @@ export function useTypeAppCommands(id?: TypeAppId) {
         focusPort: noOp,
         clearFocus: noOp,
         setActiveTool: noOp,
-        selectPort: noOp,
-        deselectPort: noOp,
+        selectConnector: noOp,
+        deselectConnector: noOp,
         selectModel: noOp,
         deselectModel: noOp,
         hoverPort: noOp,
@@ -668,14 +667,14 @@ export function useTypeAppCommands(id?: TypeAppId) {
       deselectAll: () => actor.send({ type: "TYPE.DESELECT_ALL", kitGuid, typeGuid }),
       togglePanel: (_origin: string, panelKey: keyof PanelVisibility) => actor.send({ type: "TYPE.TOGGLE_PANEL", kitGuid, typeGuid, panel: panelKey }),
       setCamera: (camera: Camera) => actor.send({ type: "TYPE.SET_CAMERA", kitGuid, typeGuid, camera }),
-      focusPort: (portGuid: Guid) => actor.send({ type: "TYPE.FOCUS_PORT", kitGuid, typeGuid, portGuid }),
+      focusPort: (connectorGuid: Guid) => actor.send({ type: "TYPE.FOCUS_CONNECTOR", kitGuid, typeGuid, connectorGuid }),
       clearFocus: () => actor.send({ type: "TYPE.CLEAR_FOCUS", kitGuid, typeGuid }),
       setActiveTool: (tool: ToolKind) => actor.send({ type: "TYPE.SET_ACTIVE_TOOL", kitGuid, typeGuid, tool }),
-      selectPort: (portGuid: Guid) => actor.send({ type: "TYPE.SELECT_PORT", kitGuid, typeGuid, portGuid }),
-      deselectPort: (portGuid: Guid) => actor.send({ type: "TYPE.DESELECT_PORT", kitGuid, typeGuid, portGuid }),
+      selectConnector: (connectorGuid: Guid) => actor.send({ type: "TYPE.SELECT_CONNECTOR", kitGuid, typeGuid, connectorGuid }),
+      deselectConnector: (connectorGuid: Guid) => actor.send({ type: "TYPE.DESELECT_CONNECTOR", kitGuid, typeGuid, connectorGuid }),
       selectModel: (modelGuid: Guid) => actor.send({ type: "TYPE.SELECT_MODEL", kitGuid, typeGuid, modelGuid }),
       deselectModel: (modelGuid: Guid) => actor.send({ type: "TYPE.DESELECT_MODEL", kitGuid, typeGuid, modelGuid }),
-      hoverPort: (portGuid: Guid) => actor.send({ type: "TYPE.HOVER_PORT", kitGuid, typeGuid, portGuid }),
+      hoverPort: (connectorGuid: Guid) => actor.send({ type: "TYPE.HOVER_CONNECTOR", kitGuid, typeGuid, connectorGuid }),
       hoverModel: (modelGuid: Guid) => actor.send({ type: "TYPE.HOVER_MODEL", kitGuid, typeGuid, modelGuid }),
       clearHover: () => actor.send({ type: "TYPE.CLEAR_HOVER", kitGuid, typeGuid }),
       setSelectedModel: (modelGuid: Guid) => actor.send({ type: "TYPE.SET_SELECTED_MODEL", kitGuid, typeGuid, modelGuid }),
@@ -690,7 +689,7 @@ export function useTypeAppCommands(id?: TypeAppId) {
   }, [actor, kitGuid, typeGuid]);
 }
 
-export function useTypeAppIsPortSelected(portId: string): HookResult<boolean> {
+export function useTypeAppIsPortSelected(connectorId: string): HookResult<boolean> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
@@ -698,23 +697,23 @@ export function useTypeAppIsPortSelected(portId: string): HookResult<boolean> {
   const typeGuid = typeScope?.guid ?? "";
   const selector = useMemo(() => createTypeSelectionSelector(kitGuid, typeGuid), [kitGuid, typeGuid]);
   const selection = useSelector(actor, selector);
-  const value = selection?.ports?.includes(portId) ?? false;
-  const canSetEvent = useMemo(() => ({ type: "TYPE.SELECT_PORT" as const, kitGuid, typeGuid, portGuid: portId }), [kitGuid, typeGuid, portId]);
+  const value = selection?.connectors?.includes(connectorId) ?? false;
+  const canSetEvent = useMemo(() => ({ type: "TYPE.SELECT_CONNECTOR" as const, kitGuid, typeGuid, connectorGuid: connectorId }), [kitGuid, typeGuid, connectorId]);
   const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setter = useMemo(() => {
     if (!canSet) return undefined;
     return (isSelected: boolean) => {
       if (isSelected) {
-        actor.send({ type: "TYPE.SELECT_PORT", kitGuid, typeGuid, portGuid: portId });
+        actor.send({ type: "TYPE.SELECT_CONNECTOR", kitGuid, typeGuid, connectorGuid: connectorId });
       } else {
-        actor.send({ type: "TYPE.DESELECT_PORT", kitGuid, typeGuid, portGuid: portId });
+        actor.send({ type: "TYPE.DESELECT_CONNECTOR", kitGuid, typeGuid, connectorGuid: connectorId });
       }
     };
-  }, [actor, kitGuid, typeGuid, portId, canSet]);
+  }, [actor, kitGuid, typeGuid, connectorId, canSet]);
   return conditionalHookResult(canSet, value, setter);
 }
 
-export function useTypeAppIsPortHovered(portId: string): HookResult<boolean> {
+export function useTypeAppIsPortHovered(connectorId: string): HookResult<boolean> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
@@ -722,19 +721,19 @@ export function useTypeAppIsPortHovered(portId: string): HookResult<boolean> {
   const typeGuid = typeScope?.guid ?? "";
   const selector = useMemo(() => createTypeHoverSelector(kitGuid, typeGuid), [kitGuid, typeGuid]);
   const hover = useSelector(actor, selector);
-  const value = hover?.port === portId;
-  const canSetEvent = useMemo(() => ({ type: "TYPE.HOVER_PORT" as const, kitGuid, typeGuid, portGuid: portId }), [kitGuid, typeGuid, portId]);
+  const value = hover?.connector === connectorId;
+  const canSetEvent = useMemo(() => ({ type: "TYPE.HOVER_CONNECTOR" as const, kitGuid, typeGuid, connectorGuid: connectorId }), [kitGuid, typeGuid, connectorId]);
   const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setter = useMemo(() => {
     if (!canSet) return undefined;
     return (isHovered: boolean) => {
       if (isHovered) {
-        actor.send({ type: "TYPE.HOVER_PORT", kitGuid, typeGuid, portGuid: portId });
+        actor.send({ type: "TYPE.HOVER_CONNECTOR", kitGuid, typeGuid, connectorGuid: connectorId });
       } else {
         actor.send({ type: "TYPE.CLEAR_HOVER", kitGuid, typeGuid });
       }
     };
-  }, [actor, kitGuid, typeGuid, portId, canSet]);
+  }, [actor, kitGuid, typeGuid, connectorId, canSet]);
   return conditionalHookResult(canSet, value, setter);
 }
 
@@ -783,34 +782,34 @@ export function useTypeAppSelectedModelTags(): HookResult<string[]> {
 
 export type ActionHookResult<TArgs extends any[]> = readonly [action: ((...args: TArgs) => void) | undefined, canAct: boolean];
 
-export function useTypeAppSelectPort(): ActionHookResult<[portGuid: string]> {
+export function useTypeAppSelectConnector(): ActionHookResult<[connectorGuid: string]> {
   const [, setSelection, canSetSelection] = useTypeAppSelection();
   const [selection] = useTypeAppSelection();
   const action = useMemo(() => {
     if (!canSetSelection || !setSelection) return undefined;
-    return (portGuid: string) => setSelection({ ...selection, ports: [portGuid], models: [] });
+    return (connectorGuid: string) => setSelection({ ...selection, connectors: [connectorGuid], models: [] });
   }, [setSelection, canSetSelection, selection]);
   return [action, canSetSelection];
 }
 
-export function useTypeAppDeselectPort(): ActionHookResult<[portGuid: string]> {
+export function useTypeAppDeselectConnector(): ActionHookResult<[connectorGuid: string]> {
   const [, setSelection, canSetSelection] = useTypeAppSelection();
   const [selection] = useTypeAppSelection();
   const action = useMemo(() => {
     if (!canSetSelection || !setSelection) return undefined;
-    return (portGuid: string) => {
-      const currentPorts = selection?.ports ?? [];
-      setSelection({ ...selection, ports: currentPorts.filter((p) => p !== portGuid) });
+    return (connectorGuid: string) => {
+      const currentConnectors = selection?.connectors ?? [];
+      setSelection({ ...selection, connectors: currentConnectors.filter((p) => p !== connectorGuid) });
     };
   }, [setSelection, canSetSelection, selection]);
   return [action, canSetSelection];
 }
 
-export function useTypeAppHoverPort(): ActionHookResult<[portGuid: string]> {
+export function useTypeAppHoverPort(): ActionHookResult<[connectorGuid: string]> {
   const [, setHover, canSetHover] = useTypeAppHover();
   const action = useMemo(() => {
     if (!canSetHover || !setHover) return undefined;
-    return (portGuid: string) => setHover({ port: portGuid });
+    return (connectorGuid: string) => setHover({ connector: connectorGuid });
   }, [setHover, canSetHover]);
   return [action, canSetHover];
 }
@@ -833,29 +832,29 @@ export function useTypeAppClearHover(): ActionHookResult<[]> {
   return [action, canSetHover];
 }
 
-export function useTypeAppFocusPort(): ActionHookResult<[portGuid: string]> {
-  const [, setFocusedPortGuid, canSetFocusedPortGuid] = useTypeAppFocusedPortGuid();
+export function useTypeAppFocusPort(): ActionHookResult<[connectorGuid: string]> {
+  const [, setFocusedConnectorGuid, canSetFocusedConnectorGuid] = useTypeAppFocusedConnectorGuid();
   const action = useMemo(() => {
-    if (!canSetFocusedPortGuid || !setFocusedPortGuid) return undefined;
-    return (portGuid: string) => setFocusedPortGuid(portGuid);
-  }, [setFocusedPortGuid, canSetFocusedPortGuid]);
-  return [action, canSetFocusedPortGuid];
+    if (!canSetFocusedConnectorGuid || !setFocusedConnectorGuid) return undefined;
+    return (connectorGuid: string) => setFocusedConnectorGuid(connectorGuid);
+  }, [setFocusedConnectorGuid, canSetFocusedConnectorGuid]);
+  return [action, canSetFocusedConnectorGuid];
 }
 
 export function useTypeAppClearFocus(): ActionHookResult<[]> {
-  const [, setFocusedPortGuid, canSetFocusedPortGuid] = useTypeAppFocusedPortGuid();
+  const [, setFocusedConnectorGuid, canSetFocusedConnectorGuid] = useTypeAppFocusedConnectorGuid();
   const action = useMemo(() => {
-    if (!canSetFocusedPortGuid || !setFocusedPortGuid) return undefined;
-    return () => setFocusedPortGuid(undefined);
-  }, [setFocusedPortGuid, canSetFocusedPortGuid]);
-  return [action, canSetFocusedPortGuid];
+    if (!canSetFocusedConnectorGuid || !setFocusedConnectorGuid) return undefined;
+    return () => setFocusedConnectorGuid(undefined);
+  }, [setFocusedConnectorGuid, canSetFocusedConnectorGuid]);
+  return [action, canSetFocusedConnectorGuid];
 }
 
 export function useTypeAppDeselectAll(): ActionHookResult<[]> {
   const [, setSelection, canSetSelection] = useTypeAppSelection();
   const action = useMemo(() => {
     if (!canSetSelection || !setSelection) return undefined;
-    return () => setSelection({ ports: [], models: [] });
+    return () => setSelection({ connectors: [], models: [] });
   }, [setSelection, canSetSelection]);
   return [action, canSetSelection];
 }
@@ -865,7 +864,7 @@ export function useTypeAppSelectModel(): ActionHookResult<[modelGuid: string]> {
   const [selection] = useTypeAppSelection();
   const action = useMemo(() => {
     if (!canSetSelection || !setSelection) return undefined;
-    return (modelGuid: string) => setSelection({ ...selection, models: [modelGuid], ports: [] });
+    return (modelGuid: string) => setSelection({ ...selection, models: [modelGuid], connectors: [] });
   }, [setSelection, canSetSelection, selection]);
   return [action, canSetSelection];
 }
@@ -959,21 +958,21 @@ const useTypeAppScope = () => useContext(TypeAppScopeContext);
 // #region Commands
 
 export const commands = {
-  "semio.typeApp.selectPort": (context: TypeAppCommandContext, portGuid: Guid): TypeAppCommandResult => {
-    const currentPorts = context.typeApp.selection?.ports || [];
+  "semio.typeApp.selectConnector": (context: TypeAppCommandContext, connectorGuid: Guid): TypeAppCommandResult => {
+    const currentConnectors = context.typeApp.selection?.connectors || [];
     return {
       diff: {
         selection: {
-          ports: { added: [portGuid], removed: [] },
+          connectors: { added: [connectorGuid], removed: [] },
         },
       },
     };
   },
-  "semio.typeApp.deselectPort": (context: TypeAppCommandContext, portGuid: Guid): TypeAppCommandResult => {
+  "semio.typeApp.deselectConnector": (context: TypeAppCommandContext, connectorGuid: Guid): TypeAppCommandResult => {
     return {
       diff: {
         selection: {
-          ports: { added: [], removed: [portGuid] },
+          connectors: { added: [], removed: [connectorGuid] },
         },
       },
     };
@@ -996,10 +995,10 @@ export const commands = {
       },
     };
   },
-  "semio.typeApp.hoverPort": (context: TypeAppCommandContext, portGuid: Guid): TypeAppCommandResult => {
+  "semio.typeApp.hoverPort": (context: TypeAppCommandContext, connectorGuid: Guid): TypeAppCommandResult => {
     return {
       diff: {
-        hover: { port: portGuid },
+        hover: { connector: connectorGuid },
       },
     };
   },
@@ -1024,17 +1023,17 @@ export const commands = {
       },
     };
   },
-  "semio.typeApp.focusPort": (context: TypeAppCommandContext, portGuid: Guid): TypeAppCommandResult => {
+  "semio.typeApp.focusPort": (context: TypeAppCommandContext, connectorGuid: Guid): TypeAppCommandResult => {
     return {
       diff: {
-        focusedPortGuid: portGuid,
+        focusedConnectorGuid: connectorGuid,
       },
     };
   },
   "semio.typeApp.clearFocus": (context: TypeAppCommandContext): TypeAppCommandResult => {
     return {
       diff: {
-        focusedPortGuid: null,
+        focusedConnectorGuid: null,
       },
     };
   },
@@ -1058,7 +1057,7 @@ export const commands = {
     return {
       diff: {
         selection: {
-          ports: { removed: context.typeApp.selection?.ports || [] },
+          connectors: { removed: context.typeApp.selection?.connectors || [] },
           models: { removed: context.typeApp.selection?.models || [] },
         },
       },
@@ -1066,12 +1065,12 @@ export const commands = {
   },
   "semio.typeApp.selectAll": (context: TypeAppCommandContext): TypeAppCommandResult => {
     const type = context.kit.types?.find((t) => t.guid === context.Guid);
-    const allPorts = type?.ports?.map((p) => p.guid) || [];
+    const allConnectors = type?.connectors?.map((p) => p.guid) || [];
     const allModels = type?.models?.map((r) => r.guid) || [];
     return {
       diff: {
         selection: {
-          ports: { added: allPorts },
+          connectors: { added: allConnectors },
           models: { added: allModels },
         },
       },
@@ -1116,18 +1115,26 @@ export const commands = {
 
 // #region Scene
 
-const PortVisual: FC<{ port: Port; isSelected: boolean; isHovered: boolean; onHover: () => void; onLeave: () => void; onClick: () => void; onDoubleClick: () => void }> = ({ port, isSelected, isHovered, onHover, onLeave, onClick, onDoubleClick }) => {
+const ConnectorVisual: FC<{ connector: Connector; isSelected: boolean; isHovered: boolean; onHover: () => void; onLeave: () => void; onClick: () => void; onDoubleClick: () => void }> = ({
+  connector,
+  isSelected,
+  isHovered,
+  onHover,
+  onLeave,
+  onClick,
+  onDoubleClick,
+}) => {
   const position = useMemo(() => {
-    const semioPos = new THREE.Vector3(port.point.x, port.point.y, port.point.z);
+    const semioPos = new THREE.Vector3(connector.point.x, connector.point.y, connector.point.z);
     const threePos = semioPos.applyMatrix4(toThreeRotation());
     return [threePos.x, threePos.y, threePos.z] as [number, number, number];
-  }, [port.point]);
+  }, [connector.point]);
 
   const direction = useMemo(() => {
-    const semioDir = new THREE.Vector3(port.direction.x, port.direction.y, port.direction.z);
+    const semioDir = new THREE.Vector3(connector.direction.x, connector.direction.y, connector.direction.z);
     const threeDir = semioDir.applyMatrix4(toThreeRotation()).normalize();
     return [threeDir.x, threeDir.y, threeDir.z] as [number, number, number];
-  }, [port.direction]);
+  }, [connector.direction]);
 
   const getComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
   const selectedColor = useMemo(() => getComputedColor("--active-base"), []);
@@ -1140,7 +1147,7 @@ const PortVisual: FC<{ port: Port; isSelected: boolean; isHovered: boolean; onHo
   const endPoint = useMemo(() => [position[0] + direction[0] * arrowLength, position[1] + direction[1] * arrowLength, position[2] + direction[2] * arrowLength] as [number, number, number], [position, direction]);
   const points = useMemo(() => [position, endPoint], [position, endPoint]);
 
-  const userData = useMemo(() => ({ id: port.guid }), [port.guid]);
+  const userData = useMemo(() => ({ id: connector.guid }), [connector.guid]);
 
   const handleClick = useCallback(
     (e: ThreeEvent<MouseEvent>) => {
@@ -1189,7 +1196,7 @@ const PortVisual: FC<{ port: Port; isSelected: boolean; isHovered: boolean; onHo
   );
 };
 
-const PortPreview: FC<{ position: THREE.Vector3; normal: THREE.Vector3 }> = ({ position, normal }) => {
+const ConnectorPreview: FC<{ position: THREE.Vector3; normal: THREE.Vector3 }> = ({ position, normal }) => {
   const previewColor = "#00ff00";
 
   const arrowLength = 0.5;
@@ -1445,7 +1452,7 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
 
   const handlePointerDown = useCallback(
     (event: ThreeEvent<PointerEvent>) => {
-      if (activeTool === ToolKind.PORT) {
+      if (activeTool === ToolKind.CONNECTOR) {
         setIsPointerDown(true);
         pointerDownTimeRef.current = Date.now();
         pointerDownPositionRef.current = { x: event.clientX, y: event.clientY };
@@ -1456,7 +1463,7 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
 
   const handlePointerUp = useCallback(
     (event: ThreeEvent<PointerEvent>) => {
-      if (activeTool === ToolKind.PORT && isPointerDown) {
+      if (activeTool === ToolKind.CONNECTOR && isPointerDown) {
         const timeDiff = Date.now() - pointerDownTimeRef.current;
         const distance = Math.sqrt(Math.pow(event.clientX - pointerDownPositionRef.current.x, 2) + Math.pow(event.clientY - pointerDownPositionRef.current.y, 2));
 
@@ -1476,7 +1483,7 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
 
   const handlePointerMove = useCallback(
     (event: ThreeEvent<PointerEvent>) => {
-      if (activeTool === ToolKind.PORT && event.face && !isPointerDown) {
+      if (activeTool === ToolKind.CONNECTOR && event.face && !isPointerDown) {
         event.stopPropagation();
         const position = new THREE.Vector3().copy(event.point);
         const normal = event.face.normal.clone();
@@ -1490,7 +1497,7 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
 
   const handlePointerOut = useCallback(
     (event: ThreeEvent<PointerEvent>) => {
-      if (activeTool === ToolKind.PORT) {
+      if (activeTool === ToolKind.CONNECTOR) {
         onClearPreview();
         setIsPointerDown(false);
       }
@@ -1512,34 +1519,34 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
   );
 };
 
-const selectTypePorts = (type: Type) => type.ports;
+const selectTypePorts = (type: Type) => type.connectors;
 const selectTypeGuid = (type: Type) => type.guid;
 
 const SceneContent: FC = React.memo(() => {
   const [activeTool] = useTypeAppActiveTool();
 
-  const typePorts = useType(selectTypePorts) as Port[] | undefined;
+  const typePorts = useType(selectTypePorts) as Connector[] | undefined;
   const typeGuid = useType(selectTypeGuid) as string | undefined;
 
   const kitCommands = useKitCommands();
   const [selection] = useTypeAppSelection();
   const [hover] = useTypeAppHover();
 
-  const [selectPort] = useTypeAppSelectPort();
-  const [deselectPort] = useTypeAppDeselectPort();
+  const [selectConnector] = useTypeAppSelectConnector();
+  const [deselectConnector] = useTypeAppDeselectConnector();
   const [hoverPort] = useTypeAppHoverPort();
   const [clearHover] = useTypeAppClearHover();
   const [focusPort] = useTypeAppFocusPort();
-  const [portPreview, setPortPreview] = useState<{ position: THREE.Vector3; normal: THREE.Vector3 } | null>(null);
+  const [connectorPreview, setConnectorPreview] = useState<{ position: THREE.Vector3; normal: THREE.Vector3 } | null>(null);
   const focusContext = useFocusSafe();
   const prevItemsRef = useRef<string>("");
 
   useEffect(() => {
     if (!focusContext || !typePorts) return;
-    const items = typePorts.map((port) => ({
-      id: port.guid,
-      label: port.description || `Port ${port.guid.substring(0, 8)}`,
-      category: "Ports",
+    const items = typePorts.map((connector) => ({
+      id: connector.guid,
+      label: connector.description || `Connector ${connector.guid.substring(0, 8)}`,
+      category: "Connectors",
     }));
     const itemsKey = items.map((item) => `${item.id}:${item.label}`).join("|");
     if (prevItemsRef.current !== itemsKey) {
@@ -1560,7 +1567,7 @@ const SceneContent: FC = React.memo(() => {
   }, [focusContext, focusPort]);
 
   const handlePortPreview = useCallback((position: THREE.Vector3, normal: THREE.Vector3) => {
-    setPortPreview({ position, normal });
+    setConnectorPreview({ position, normal });
   }, []);
 
   const handlePortCreate = useCallback(
@@ -1569,7 +1576,7 @@ const SceneContent: FC = React.memo(() => {
         const semioPosition = position.clone().applyMatrix4(toSemioRotation());
         const semioNormal = normal.clone().applyMatrix4(toSemioRotation()).normalize();
 
-        const newPort: Port = {
+        const newPort: Connector = {
           guid: guid(),
           point: {
             x: semioPosition.x,
@@ -1586,7 +1593,7 @@ const SceneContent: FC = React.memo(() => {
         };
 
         kitCommands.updateType(typeGuid, {
-          ports: {
+          connectors: {
             added: [newPort],
           },
         });
@@ -1596,33 +1603,33 @@ const SceneContent: FC = React.memo(() => {
   );
 
   const handleClearPreview = useCallback(() => {
-    setPortPreview(null);
+    setConnectorPreview(null);
     if (clearHover) clearHover();
   }, [clearHover]);
 
   const handlePortClick = useCallback(
-    (portId: string) => {
-      const isSelected = selection?.ports?.includes(portId) || false;
+    (connectorId: string) => {
+      const isSelected = selection?.connectors?.includes(connectorId) || false;
       if (activeTool === ToolKind.SELECTION_ADDITIVE) {
-        if (!isSelected && selectPort) selectPort(portId);
+        if (!isSelected && selectConnector) selectConnector(connectorId);
       } else if (activeTool === ToolKind.SELECTION_SUBTRACTIVE) {
-        if (isSelected && deselectPort) deselectPort(portId);
+        if (isSelected && deselectConnector) deselectConnector(connectorId);
       } else {
-        const currentPorts = selection?.ports ?? [];
-        if (currentPorts.length > 0) {
-          currentPorts.forEach((id) => deselectPort && deselectPort(id));
+        const currentConnectors = selection?.connectors ?? [];
+        if (currentConnectors.length > 0) {
+          currentConnectors.forEach((id) => deselectConnector && deselectConnector(id));
         }
-        if (!isSelected || currentPorts.length > 1) {
-          if (selectPort) selectPort(portId);
+        if (!isSelected || currentConnectors.length > 1) {
+          if (selectConnector) selectConnector(connectorId);
         }
       }
     },
-    [selection, selectPort, deselectPort, activeTool],
+    [selection, selectConnector, deselectConnector, activeTool],
   );
 
   const handlePortHover = useCallback(
-    (portId: string) => {
-      if (hoverPort) hoverPort(portId);
+    (connectorId: string) => {
+      if (hoverPort) hoverPort(connectorId);
     },
     [hoverPort],
   );
@@ -1632,8 +1639,8 @@ const SceneContent: FC = React.memo(() => {
   }, [clearHover]);
 
   const handlePortDoubleClick = useCallback(
-    (portId: string) => {
-      if (focusPort) focusPort(portId);
+    (connectorId: string) => {
+      if (focusPort) focusPort(connectorId);
     },
     [focusPort],
   );
@@ -1641,23 +1648,23 @@ const SceneContent: FC = React.memo(() => {
   return (
     <>
       <TypeMesh activeTool={activeTool} onPortPreview={handlePortPreview} onPortCreate={handlePortCreate} onClearPreview={handleClearPreview} />
-      {typePorts?.map((port) => {
-        const isSelected = selection?.ports?.includes(port.guid) || false;
-        const isHovered = hover?.port === port.guid;
+      {typePorts?.map((connector) => {
+        const isSelected = selection?.connectors?.includes(connector.guid) || false;
+        const isHovered = hover?.connector === connector.guid;
         return (
-          <PortVisual
-            key={port.guid}
-            port={port}
+          <ConnectorVisual
+            key={connector.guid}
+            connector={connector}
             isSelected={isSelected}
             isHovered={isHovered}
-            onHover={() => handlePortHover(port.guid)}
+            onHover={() => handlePortHover(connector.guid)}
             onLeave={handlePortLeave}
-            onClick={() => handlePortClick(port.guid)}
-            onDoubleClick={() => handlePortDoubleClick(port.guid)}
+            onClick={() => handlePortClick(connector.guid)}
+            onDoubleClick={() => handlePortDoubleClick(connector.guid)}
           />
         );
       })}
-      {portPreview && <PortPreview position={portPreview.position} normal={portPreview.normal} />}
+      {connectorPreview && <ConnectorPreview position={connectorPreview.position} normal={connectorPreview.normal} />}
     </>
   );
 });
@@ -1667,7 +1674,7 @@ const Scene: FC<{ isDragOver?: boolean }> = ({ isDragOver = false }) => {
   const [deselectAll] = useTypeAppDeselectAll();
   const [clearFocus] = useTypeAppClearFocus();
   const [camera] = useTypeAppCamera();
-  const [focusedPortGuid] = useTypeAppFocusedPortGuid();
+  const [focusedConnectorGuid] = useTypeAppFocusedConnectorGuid();
 
   const onCameraChange = useCallback(
     (newCamera: Camera) => {
@@ -1688,7 +1695,7 @@ const Scene: FC<{ isDragOver?: boolean }> = ({ isDragOver = false }) => {
   }, [clearFocus]);
 
   return (
-    <SceneComponent camera={camera} onCameraChange={onCameraChange} onPointerMissed={onPointerMissed} focusedItemId={focusedPortGuid} onFocusComplete={onFocusComplete}>
+    <SceneComponent camera={camera} onCameraChange={onCameraChange} onPointerMissed={onPointerMissed} focusedItemId={focusedConnectorGuid} onFocusComplete={onFocusComplete}>
       <SceneContent />
       {isDragOver && (
         <mesh position={[0, 0, 0]}>
@@ -1960,16 +1967,16 @@ const ModelsSectionForm: FC = () => {
   );
 };
 
-export const PortsListSection: FC = () => {
+export const ConnectorsListSection: FC = () => {
   const isInTypeScope = useIsInTypeScope();
   if (!isInTypeScope) return null;
-  return <PortsListSectionForm />;
+  return <ConnectorsListSectionForm />;
 };
 
-const PortsListSectionForm: FC = () => {
+const ConnectorsListSectionForm: FC = () => {
   const tooltip = useTooltip();
-  const [selectPort] = useTypeAppSelectPort();
-  const [deselectPort] = useTypeAppDeselectPort();
+  const [selectConnector] = useTypeAppSelectConnector();
+  const [deselectConnector] = useTypeAppDeselectConnector();
   const [hoverPort] = useTypeAppHoverPort();
   const [clearHover] = useTypeAppClearHover();
   const kitCommands = useKitCommands();
@@ -1981,43 +1988,43 @@ const PortsListSectionForm: FC = () => {
     kitCommands?.updateType(type.guid, diff);
   };
 
-  const updatePort = (id: string, portDiff: any) => {
-    const port = type.ports?.find((existingPort) => existingPort.guid === id);
-    const diff: any = { ...portDiff };
-    if (port) {
-      if (portDiff.point) {
+  const updatePort = (id: string, connectorDiff: any) => {
+    const connector = type.connectors?.find((existingConnector) => existingConnector.guid === id);
+    const diff: any = { ...connectorDiff };
+    if (connector) {
+      if (connectorDiff.point) {
         diff.point = {};
-        if (portDiff.point.x !== undefined) diff.point.x = portDiff.point.x - port.point.x;
-        if (portDiff.point.y !== undefined) diff.point.y = portDiff.point.y - port.point.y;
-        if (portDiff.point.z !== undefined) diff.point.z = portDiff.point.z - port.point.z;
+        if (connectorDiff.point.x !== undefined) diff.point.x = connectorDiff.point.x - connector.point.x;
+        if (connectorDiff.point.y !== undefined) diff.point.y = connectorDiff.point.y - connector.point.y;
+        if (connectorDiff.point.z !== undefined) diff.point.z = connectorDiff.point.z - connector.point.z;
       }
-      if (portDiff.direction) {
+      if (connectorDiff.direction) {
         diff.direction = {};
-        if (portDiff.direction.x !== undefined) diff.direction.x = portDiff.direction.x - port.direction.x;
-        if (portDiff.direction.y !== undefined) diff.direction.y = portDiff.direction.y - port.direction.y;
-        if (portDiff.direction.z !== undefined) diff.direction.z = portDiff.direction.z - port.direction.z;
+        if (connectorDiff.direction.x !== undefined) diff.direction.x = connectorDiff.direction.x - connector.direction.x;
+        if (connectorDiff.direction.y !== undefined) diff.direction.y = connectorDiff.direction.y - connector.direction.y;
+        if (connectorDiff.direction.z !== undefined) diff.direction.z = connectorDiff.direction.z - connector.direction.z;
       }
     }
     applyDiff({
-      ports: {
+      connectors: {
         updated: [{ id, diff }],
       },
     });
   };
 
-  const hasPorts = type.ports && type.ports.length > 0;
+  const hasPorts = type.connectors && type.connectors.length > 0;
 
   return (
     <>
       <TreeItem
-        id="semio.sketchpad.app.type.ports"
+        id="semio.sketchpad.app.type.connectors"
         actions={[
           {
             icon: <AddIcon />,
             onClick: () => {
-              const origin = "semio.sketchpad.app.type.panel.details.ports.add";
+              const origin = "semio.sketchpad.app.type.panel.details.connectors.add";
               applyDiff({
-                ports: {
+                connectors: {
                   added: [
                     {
                       guid: guid(),
@@ -2035,36 +2042,36 @@ const PortsListSectionForm: FC = () => {
       >
         {hasPorts && (
           <SortableTreeItems
-            items={(type.ports || []).map((port: any, index: number) => ({
-              ...port,
-              id: `port-${index}`,
+            items={(type.connectors || []).map((connector: any, index: number) => ({
+              ...connector,
+              id: `connector-${index}`,
               index,
             }))}
             onReorder={(oldIndex, newIndex) => {
-              if (!type.ports) return;
-              const origin = "semio.sketchpad.app.type.panel.details.ports.reorder";
+              if (!type.connectors) return;
+              const origin = "semio.sketchpad.app.type.panel.details.connectors.reorder";
               applyDiff({
-                ports: {
-                  removed: type.ports.map((existingPort: any) => existingPort.guid),
-                  added: arrayMove(type.ports, oldIndex, newIndex),
+                connectors: {
+                  removed: type.connectors.map((existingConnector: any) => existingConnector.guid),
+                  added: arrayMove(type.connectors, oldIndex, newIndex),
                 },
               });
             }}
           >
-            {(port, index) => {
-              const isSelected = selection?.ports?.includes(port.guid) || false;
-              const isHovered = hover?.port === port.guid;
+            {(connector, index) => {
+              const isSelected = selection?.connectors?.includes(connector.guid) || false;
+              const isHovered = hover?.connector === connector.guid;
               const handleClick = (event: React.MouseEvent) => {
                 event.stopPropagation();
                 if (isSelected) {
-                  if (deselectPort) deselectPort(port.guid);
+                  if (deselectConnector) deselectConnector(connector.guid);
                 } else {
-                  if (selectPort) selectPort(port.guid);
+                  if (selectConnector) selectConnector(connector.guid);
                 }
               };
 
               const handleHover = () => {
-                if (hoverPort) hoverPort(port.guid);
+                if (hoverPort) hoverPort(connector.guid);
               };
 
               const handleLeave = () => {
@@ -2074,21 +2081,21 @@ const PortsListSectionForm: FC = () => {
               return (
                 <div onPointerEnter={handleHover} onPointerLeave={handleLeave} onClick={handleClick}>
                   <TreeItem
-                    key={`port-${index}`}
-                    id="semio.sketchpad.app.type.port"
-                    label={port.interface}
+                    key={`connector-${index}`}
+                    id="semio.sketchpad.app.type.connector"
+                    label={connector.interface}
                     sortable={true}
-                    sortableId={`port-${index}`}
+                    sortableId={`connector-${index}`}
                     isDragHandle={true}
                     className={`cursor-selectable ${isSelected ? "ring-1 ring-[color:var(--active-base)]" : ""} ${isHovered ? "bg-[color:var(--hover-base)]" : ""}`}
                     actions={[
                       {
                         icon: <RemoveIcon />,
                         onClick: () => {
-                          const origin = "semio.sketchpad.app.type.panel.details.ports.remove";
+                          const origin = "semio.sketchpad.app.type.panel.details.connectors.remove";
                           applyDiff({
-                            ports: {
-                              removed: [port.guid],
+                            connectors: {
+                              removed: [connector.guid],
                             },
                           });
                         },
@@ -2100,11 +2107,11 @@ const PortsListSectionForm: FC = () => {
                       <TreeContent>
                         <Input
                           lazy
-                          id="semio.sketchpad.app.type.panel.details.section.ports.interface"
-                          value={port.interface || ""}
-                          placeholderId="semio.sketchpad.app.type.portInterfacePlaceholder.label"
+                          id="semio.sketchpad.app.type.panel.details.section.connectors.interface"
+                          value={connector.interface || ""}
+                          placeholderId="semio.sketchpad.app.type.connectorInterfacePlaceholder.label"
                           onLazyChange={(value: string) => {
-                            updatePort(port.guid, { interface: value });
+                            updatePort(connector.guid, { interface: value });
                           }}
                           showLabel
                         />
@@ -2114,11 +2121,11 @@ const PortsListSectionForm: FC = () => {
                       <TreeContent>
                         <Textarea
                           lazy
-                          id="semio.sketchpad.app.type.panel.details.section.ports.description"
-                          value={port.description || ""}
-                          placeholderId="semio.sketchpad.app.type.portDescriptionPlaceholder.label"
+                          id="semio.sketchpad.app.type.panel.details.section.connectors.description"
+                          value={connector.description || ""}
+                          placeholderId="semio.sketchpad.app.type.connectorDescriptionPlaceholder.label"
                           onLazyChange={(value: string) => {
-                            updatePort(port.guid, { description: value });
+                            updatePort(connector.guid, { description: value });
                           }}
                           showLabel
                         />
@@ -2127,10 +2134,10 @@ const PortsListSectionForm: FC = () => {
                     <TreeItem>
                       <TreeContent>
                         <Slider
-                          id="semio.sketchpad.app.type.panel.details.section.ports.t"
-                          value={[port.t ?? 0]}
+                          id="semio.sketchpad.app.type.panel.details.section.connectors.t"
+                          value={[connector.t ?? 0]}
                           onValueChange={([value]) => {
-                            updatePort(port.guid, { t: value });
+                            updatePort(connector.guid, { t: value });
                           }}
                           min={0}
                           max={1}
@@ -2139,14 +2146,14 @@ const PortsListSectionForm: FC = () => {
                         />
                       </TreeContent>
                     </TreeItem>
-                    <TreeItem id="semio.sketchpad.app.type.portPoint">
+                    <TreeItem id="semio.sketchpad.app.type.connectorPoint">
                       <TreeItem>
                         <TreeContent>
                           <Stepper
-                            id="semio.sketchpad.app.type.panel.details.section.ports.point.x"
-                            value={port.point.x}
+                            id="semio.sketchpad.app.type.panel.details.section.connectors.point.x"
+                            value={connector.point.x}
                             onChange={(value: number) => {
-                              updatePort(port.guid, { point: { x: value } });
+                              updatePort(connector.guid, { point: { x: value } });
                             }}
                             step={0.1}
                           />
@@ -2155,10 +2162,10 @@ const PortsListSectionForm: FC = () => {
                       <TreeItem>
                         <TreeContent>
                           <Stepper
-                            id="semio.sketchpad.app.type.panel.details.section.ports.point.y"
-                            value={port.point.y}
+                            id="semio.sketchpad.app.type.panel.details.section.connectors.point.y"
+                            value={connector.point.y}
                             onChange={(value: number) => {
-                              updatePort(port.guid, { point: { y: value } });
+                              updatePort(connector.guid, { point: { y: value } });
                             }}
                             step={0.1}
                           />
@@ -2167,24 +2174,24 @@ const PortsListSectionForm: FC = () => {
                       <TreeItem>
                         <TreeContent>
                           <Stepper
-                            id="semio.sketchpad.app.type.panel.details.section.ports.point.z"
-                            value={port.point.z}
+                            id="semio.sketchpad.app.type.panel.details.section.connectors.point.z"
+                            value={connector.point.z}
                             onChange={(value: number) => {
-                              updatePort(port.guid, { point: { z: value } });
+                              updatePort(connector.guid, { point: { z: value } });
                             }}
                             step={0.1}
                           />
                         </TreeContent>
                       </TreeItem>
                     </TreeItem>
-                    <TreeItem id="semio.sketchpad.app.type.portDirection">
+                    <TreeItem id="semio.sketchpad.app.type.connectorDirection">
                       <TreeItem>
                         <TreeContent>
                           <Stepper
-                            id="semio.sketchpad.app.type.panel.details.section.ports.direction.x"
-                            value={port.direction.x}
+                            id="semio.sketchpad.app.type.panel.details.section.connectors.direction.x"
+                            value={connector.direction.x}
                             onChange={(value: number) => {
-                              updatePort(port.guid, { direction: { x: value } });
+                              updatePort(connector.guid, { direction: { x: value } });
                             }}
                             step={0.1}
                           />
@@ -2193,10 +2200,10 @@ const PortsListSectionForm: FC = () => {
                       <TreeItem>
                         <TreeContent>
                           <Stepper
-                            id="semio.sketchpad.app.type.panel.details.section.ports.direction.y"
-                            value={port.direction.y}
+                            id="semio.sketchpad.app.type.panel.details.section.connectors.direction.y"
+                            value={connector.direction.y}
                             onChange={(value: number) => {
-                              updatePort(port.guid, { direction: { y: value } });
+                              updatePort(connector.guid, { direction: { y: value } });
                             }}
                             step={0.1}
                           />
@@ -2205,10 +2212,10 @@ const PortsListSectionForm: FC = () => {
                       <TreeItem>
                         <TreeContent>
                           <Stepper
-                            id="semio.sketchpad.app.type.panel.details.section.ports.direction.z"
-                            value={port.direction.z}
+                            id="semio.sketchpad.app.type.panel.details.section.connectors.direction.z"
+                            value={connector.direction.z}
                             onChange={(value: number) => {
-                              updatePort(port.guid, { direction: { z: value } });
+                              updatePort(connector.guid, { direction: { z: value } });
                             }}
                             step={0.1}
                           />
@@ -2219,11 +2226,11 @@ const PortsListSectionForm: FC = () => {
                       <TreeContent>
                         <Input
                           lazy
-                          id="semio.sketchpad.app.type.panel.details.section.ports.compatibleInterfaces"
-                          value={(port.compatibleInterfaces || []).join(", ")}
-                          placeholderId="semio.sketchpad.app.type.portCompatibleInterfacesPlaceholder.label"
+                          id="semio.sketchpad.app.type.panel.details.section.connectors.compatibleInterfaces"
+                          value={(connector.compatibleInterfaces || []).join(", ")}
+                          placeholderId="semio.sketchpad.app.type.connectorCompatibleInterfacesPlaceholder.label"
                           onLazyChange={(value: string) => {
-                            updatePort(port.guid, {
+                            updatePort(connector.guid, {
                               compatibleInterfaces: value
                                 .split(",")
                                 .map((interface_) => interface_.trim())
@@ -2482,49 +2489,49 @@ const AttributesSectionForm: FC = () => {
   );
 };
 
-export const PortSection: FC<{ portGuid: Guid }> = ({ portGuid }) => {
+export const ConnectorSection: FC<{ connectorGuid: Guid }> = ({ connectorGuid }) => {
   const isInTypeScope = useIsInTypeScope();
   if (!isInTypeScope) return null;
-  return <PortSectionForm portGuid={portGuid} />;
+  return <ConnectorSectionForm connectorGuid={connectorGuid} />;
 };
 
-const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
+const ConnectorSectionForm: FC<{ connectorGuid: Guid }> = ({ connectorGuid }) => {
   const tooltip = useTooltip();
   const kitCommands = useKitCommands();
   const type = useType(undefined, undefined, true) as Type;
 
-  const port = type.ports?.find((p) => p.guid === portGuid);
+  const connector = type.connectors?.find((p) => p.guid === connectorGuid);
 
-  if (!port) {
+  if (!connector) {
     return (
       <TreeItem>
         <TreeContent>
-          <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.type.portNotFound")}</p>
+          <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.type.connectorNotFound")}</p>
         </TreeContent>
       </TreeItem>
     );
   }
 
-  const updatePort = (id: string, portDiff: any) => {
-    const port = type.ports?.find((existingPort) => existingPort.guid === id);
-    const diff: any = { ...portDiff };
-    if (port) {
-      if (portDiff.point) {
+  const updatePort = (id: string, connectorDiff: any) => {
+    const connector = type.connectors?.find((existingConnector) => existingConnector.guid === id);
+    const diff: any = { ...connectorDiff };
+    if (connector) {
+      if (connectorDiff.point) {
         diff.point = {};
-        if (portDiff.point.x !== undefined) diff.point.x = portDiff.point.x - port.point.x;
-        if (portDiff.point.y !== undefined) diff.point.y = portDiff.point.y - port.point.y;
-        if (portDiff.point.z !== undefined) diff.point.z = portDiff.point.z - port.point.z;
+        if (connectorDiff.point.x !== undefined) diff.point.x = connectorDiff.point.x - connector.point.x;
+        if (connectorDiff.point.y !== undefined) diff.point.y = connectorDiff.point.y - connector.point.y;
+        if (connectorDiff.point.z !== undefined) diff.point.z = connectorDiff.point.z - connector.point.z;
       }
-      if (portDiff.direction) {
+      if (connectorDiff.direction) {
         diff.direction = {};
-        if (portDiff.direction.x !== undefined) diff.direction.x = portDiff.direction.x - port.direction.x;
-        if (portDiff.direction.y !== undefined) diff.direction.y = portDiff.direction.y - port.direction.y;
-        if (portDiff.direction.z !== undefined) diff.direction.z = portDiff.direction.z - port.direction.z;
+        if (connectorDiff.direction.x !== undefined) diff.direction.x = connectorDiff.direction.x - connector.direction.x;
+        if (connectorDiff.direction.y !== undefined) diff.direction.y = connectorDiff.direction.y - connector.direction.y;
+        if (connectorDiff.direction.z !== undefined) diff.direction.z = connectorDiff.direction.z - connector.direction.z;
       }
     }
     kitCommands?.updateType(type.guid, {
-      ports: {
-        updated: [{ port: { guid: id }, diff }],
+      connectors: {
+        updated: [{ connector: { guid: id }, diff }],
       },
     });
   };
@@ -2535,11 +2542,11 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
         <TreeContent>
           <Input
             lazy
-            id="semio.sketchpad.app.type.panel.details.section.ports.interface"
-            value={port.interface?.guid || ""}
-            placeholderId="semio.sketchpad.app.type.portInterfacePlaceholder.label"
+            id="semio.sketchpad.app.type.panel.details.section.connectors.interface"
+            value={connector.interface?.guid || ""}
+            placeholderId="semio.sketchpad.app.type.connectorInterfacePlaceholder.label"
             onLazyChange={(value: string) => {
-              updatePort(port.guid, { interface: value ? { guid: value } : undefined });
+              updatePort(connector.guid, { interface: value ? { guid: value } : undefined });
             }}
             showLabel
           />
@@ -2549,11 +2556,11 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
         <TreeContent>
           <Textarea
             lazy
-            id="semio.sketchpad.app.type.panel.details.section.ports.description"
-            value={port.description || ""}
-            placeholderId="semio.sketchpad.app.type.portDescriptionPlaceholder.label"
+            id="semio.sketchpad.app.type.panel.details.section.connectors.description"
+            value={connector.description || ""}
+            placeholderId="semio.sketchpad.app.type.connectorDescriptionPlaceholder.label"
             onLazyChange={(value: string) => {
-              updatePort(port.guid, { description: value });
+              updatePort(connector.guid, { description: value });
             }}
             showLabel
           />
@@ -2562,10 +2569,10 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
       <TreeItem>
         <TreeContent>
           <Slider
-            id="semio.sketchpad.app.type.panel.details.section.ports.t"
-            value={[port.t ?? 0]}
+            id="semio.sketchpad.app.type.panel.details.section.connectors.t"
+            value={[connector.t ?? 0]}
             onValueChange={([value]) => {
-              updatePort(port.guid, { t: value });
+              updatePort(connector.guid, { t: value });
             }}
             min={0}
             max={1}
@@ -2574,14 +2581,14 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
           />
         </TreeContent>
       </TreeItem>
-      <TreeItem id="semio.sketchpad.app.type.portPoint">
+      <TreeItem id="semio.sketchpad.app.type.connectorPoint">
         <TreeItem>
           <TreeContent>
             <Stepper
-              id="semio.sketchpad.app.type.panel.details.section.ports.point.x"
-              value={port.point.x}
+              id="semio.sketchpad.app.type.panel.details.section.connectors.point.x"
+              value={connector.point.x}
               onChange={(value: number) => {
-                updatePort(port.guid, { point: { x: value } });
+                updatePort(connector.guid, { point: { x: value } });
               }}
               step={0.1}
             />
@@ -2590,10 +2597,10 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
         <TreeItem>
           <TreeContent>
             <Stepper
-              id="semio.sketchpad.app.type.panel.details.section.ports.point.y"
-              value={port.point.y}
+              id="semio.sketchpad.app.type.panel.details.section.connectors.point.y"
+              value={connector.point.y}
               onChange={(value: number) => {
-                updatePort(port.guid, { point: { y: value } });
+                updatePort(connector.guid, { point: { y: value } });
               }}
               step={0.1}
             />
@@ -2602,24 +2609,24 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
         <TreeItem>
           <TreeContent>
             <Stepper
-              id="semio.sketchpad.app.type.panel.details.section.ports.point.z"
-              value={port.point.z}
+              id="semio.sketchpad.app.type.panel.details.section.connectors.point.z"
+              value={connector.point.z}
               onChange={(value: number) => {
-                updatePort(port.guid, { point: { z: value } });
+                updatePort(connector.guid, { point: { z: value } });
               }}
               step={0.1}
             />
           </TreeContent>
         </TreeItem>
       </TreeItem>
-      <TreeItem id="semio.sketchpad.app.type.portDirection">
+      <TreeItem id="semio.sketchpad.app.type.connectorDirection">
         <TreeItem>
           <TreeContent>
             <Stepper
-              id="semio.sketchpad.app.type.panel.details.section.ports.direction.x"
-              value={port.direction.x}
+              id="semio.sketchpad.app.type.panel.details.section.connectors.direction.x"
+              value={connector.direction.x}
               onChange={(value: number) => {
-                updatePort(port.guid, { direction: { x: value } });
+                updatePort(connector.guid, { direction: { x: value } });
               }}
               step={0.1}
             />
@@ -2628,10 +2635,10 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
         <TreeItem>
           <TreeContent>
             <Stepper
-              id="semio.sketchpad.app.type.panel.details.section.ports.direction.y"
-              value={port.direction.y}
+              id="semio.sketchpad.app.type.panel.details.section.connectors.direction.y"
+              value={connector.direction.y}
               onChange={(value: number) => {
-                updatePort(port.guid, { direction: { y: value } });
+                updatePort(connector.guid, { direction: { y: value } });
               }}
               step={0.1}
             />
@@ -2640,10 +2647,10 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
         <TreeItem>
           <TreeContent>
             <Stepper
-              id="semio.sketchpad.app.type.panel.details.section.ports.direction.z"
-              value={port.direction.z}
+              id="semio.sketchpad.app.type.panel.details.section.connectors.direction.z"
+              value={connector.direction.z}
               onChange={(value: number) => {
-                updatePort(port.guid, { direction: { z: value } });
+                updatePort(connector.guid, { direction: { z: value } });
               }}
               step={0.1}
             />
@@ -2654,11 +2661,11 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
         <TreeContent>
           <Input
             lazy
-            id="semio.sketchpad.app.type.panel.details.section.ports.compatibleInterfaces"
-            value={((port as any).compatibleInterfaces || []).join(", ")}
-            placeholderId="semio.sketchpad.app.type.portCompatibleInterfacesPlaceholder.label"
+            id="semio.sketchpad.app.type.panel.details.section.connectors.compatibleInterfaces"
+            value={((connector as any).compatibleInterfaces || []).join(", ")}
+            placeholderId="semio.sketchpad.app.type.connectorCompatibleInterfacesPlaceholder.label"
             onLazyChange={(value: string) => {
-              updatePort(port.guid, {
+              updatePort(connector.guid, {
                 compatibleInterfaces: value
                   .split(",")
                   .map((interface_) => interface_.trim())
@@ -2673,54 +2680,54 @@ const PortSectionForm: FC<{ portGuid: Guid }> = ({ portGuid }) => {
   );
 };
 
-export const PortsMultipleSection: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
+export const ConnectorsMultipleSection: FC<{ connectorGuids: Guid[] }> = ({ connectorGuids }) => {
   const isInTypeScope = useIsInTypeScope();
   if (!isInTypeScope) return null;
-  return <PortsMultipleSectionForm portGuids={portGuids} />;
+  return <ConnectorsMultipleSectionForm connectorGuids={connectorGuids} />;
 };
 
-const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
+const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connectorGuids }) => {
   const tooltip = useTooltip();
   const kitCommands = useKitCommands();
   const type = useType(undefined, undefined, true) as Type;
 
-  const ports = type.ports?.filter((p) => portGuids.includes(p.guid)) || [];
+  const connectors = type.connectors?.filter((p) => connectorGuids.includes(p.guid)) || [];
 
-  if (ports.length === 0) {
+  if (connectors.length === 0) {
     return (
       <TreeItem>
         <TreeContent>
-          <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.type.portsNotFound")}</p>
+          <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.type.connectorsNotFound")}</p>
         </TreeContent>
       </TreeItem>
     );
   }
 
-  const getCommonValue = <T,>(getter: (port: any) => T | undefined): T | undefined => {
-    const values = ports.map(getter).filter((v) => v !== undefined);
+  const getCommonValue = <T,>(getter: (connector: any) => T | undefined): T | undefined => {
+    const values = connectors.map(getter).filter((v) => v !== undefined);
     if (values.length === 0) return undefined;
     const firstValue = values[0];
     return values.every((v) => JSON.stringify(v) === JSON.stringify(firstValue)) ? firstValue : undefined;
   };
 
-  const updatePorts = (origin: string, portDiff: any) => {
-    ports.forEach((port) => {
-      const diff: any = { ...portDiff };
-      if (portDiff.point) {
+  const updatePorts = (origin: string, connectorDiff: any) => {
+    connectors.forEach((connector) => {
+      const diff: any = { ...connectorDiff };
+      if (connectorDiff.point) {
         diff.point = {};
-        if (portDiff.point.x !== undefined) diff.point.x = portDiff.point.x - port.point.x;
-        if (portDiff.point.y !== undefined) diff.point.y = portDiff.point.y - port.point.y;
-        if (portDiff.point.z !== undefined) diff.point.z = portDiff.point.z - port.point.z;
+        if (connectorDiff.point.x !== undefined) diff.point.x = connectorDiff.point.x - connector.point.x;
+        if (connectorDiff.point.y !== undefined) diff.point.y = connectorDiff.point.y - connector.point.y;
+        if (connectorDiff.point.z !== undefined) diff.point.z = connectorDiff.point.z - connector.point.z;
       }
-      if (portDiff.direction) {
+      if (connectorDiff.direction) {
         diff.direction = {};
-        if (portDiff.direction.x !== undefined) diff.direction.x = portDiff.direction.x - port.direction.x;
-        if (portDiff.direction.y !== undefined) diff.direction.y = portDiff.direction.y - port.direction.y;
-        if (portDiff.direction.z !== undefined) diff.direction.z = portDiff.direction.z - port.direction.z;
+        if (connectorDiff.direction.x !== undefined) diff.direction.x = connectorDiff.direction.x - connector.direction.x;
+        if (connectorDiff.direction.y !== undefined) diff.direction.y = connectorDiff.direction.y - connector.direction.y;
+        if (connectorDiff.direction.z !== undefined) diff.direction.z = connectorDiff.direction.z - connector.direction.z;
       }
       kitCommands?.updateType(type.guid, {
-        ports: {
-          updated: [{ port: { guid: port.guid }, diff }],
+        connectors: {
+          updated: [{ connector: { guid: connector.guid }, diff }],
         },
       });
     });
@@ -2741,10 +2748,10 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
         <TreeContent>
           <Input
             lazy
-            id="semio.sketchpad.app.type.panel.details.section.ports.interface"
+            id="semio.sketchpad.app.type.panel.details.section.connectors.interface"
             value={commonInterface || ""}
-            placeholderId={commonInterface === undefined ? "semio.sketchpad.common.mixedValues" : "semio.sketchpad.app.type.portInterfacePlaceholder.label"}
-            onLazyChange={(value) => updatePorts("semio.sketchpad.app.type.panel.details.section.ports.interface", { interface: value })}
+            placeholderId={commonInterface === undefined ? "semio.sketchpad.common.mixedValues" : "semio.sketchpad.app.type.connectorInterfacePlaceholder.label"}
+            onLazyChange={(value) => updatePorts("semio.sketchpad.app.type.panel.details.section.connectors.interface", { interface: value })}
             showLabel
           />
         </TreeContent>
@@ -2752,10 +2759,10 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
       <TreeItem>
         <TreeContent>
           <Slider
-            id="semio.sketchpad.app.type.panel.details.section.ports.t"
+            id="semio.sketchpad.app.type.panel.details.section.connectors.t"
             value={[commonT ?? 0]}
             onValueChange={([value]) => {
-              updatePorts("semio.sketchpad.app.type.panel.details.section.ports.t", { t: value });
+              updatePorts("semio.sketchpad.app.type.panel.details.section.connectors.t", { t: value });
             }}
             min={0}
             max={1}
@@ -2764,14 +2771,14 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
           />
         </TreeContent>
       </TreeItem>
-      <TreeItem id="semio.sketchpad.app.type.portPoint">
+      <TreeItem id="semio.sketchpad.app.type.connectorPoint">
         <TreeItem>
           <TreeContent>
             <Stepper
-              id="semio.sketchpad.app.type.panel.details.section.ports.point.x"
+              id="semio.sketchpad.app.type.panel.details.section.connectors.point.x"
               value={commonPointX}
               onChange={(value: number) => {
-                updatePorts("semio.sketchpad.app.type.panel.details.section.ports.point.x", { point: { x: value } });
+                updatePorts("semio.sketchpad.app.type.panel.details.section.connectors.point.x", { point: { x: value } });
               }}
               step={0.1}
             />
@@ -2780,10 +2787,10 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
         <TreeItem>
           <TreeContent>
             <Stepper
-              id="semio.sketchpad.app.type.panel.details.section.ports.point.y"
+              id="semio.sketchpad.app.type.panel.details.section.connectors.point.y"
               value={commonPointY}
               onChange={(value: number) => {
-                updatePorts("semio.sketchpad.app.type.panel.details.section.ports.point.y", { point: { y: value } });
+                updatePorts("semio.sketchpad.app.type.panel.details.section.connectors.point.y", { point: { y: value } });
               }}
               step={0.1}
             />
@@ -2792,24 +2799,24 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
         <TreeItem>
           <TreeContent>
             <Stepper
-              id="semio.sketchpad.app.type.panel.details.section.ports.point.z"
+              id="semio.sketchpad.app.type.panel.details.section.connectors.point.z"
               value={commonPointZ}
               onChange={(value: number) => {
-                updatePorts("semio.sketchpad.app.type.panel.details.section.ports.point.z", { point: { z: value } });
+                updatePorts("semio.sketchpad.app.type.panel.details.section.connectors.point.z", { point: { z: value } });
               }}
               step={0.1}
             />
           </TreeContent>
         </TreeItem>
       </TreeItem>
-      <TreeItem id="semio.sketchpad.app.type.portDirection">
+      <TreeItem id="semio.sketchpad.app.type.connectorDirection">
         <TreeItem>
           <TreeContent>
             <Stepper
-              id="semio.sketchpad.app.type.panel.details.section.ports.direction.x"
+              id="semio.sketchpad.app.type.panel.details.section.connectors.direction.x"
               value={commonDirectionX}
               onChange={(value: number) => {
-                updatePorts("semio.sketchpad.app.type.panel.details.section.ports.direction.x", { direction: { x: value } });
+                updatePorts("semio.sketchpad.app.type.panel.details.section.connectors.direction.x", { direction: { x: value } });
               }}
               step={0.1}
             />
@@ -2818,10 +2825,10 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
         <TreeItem>
           <TreeContent>
             <Stepper
-              id="semio.sketchpad.app.type.panel.details.section.ports.direction.y"
+              id="semio.sketchpad.app.type.panel.details.section.connectors.direction.y"
               value={commonDirectionY}
               onChange={(value: number) => {
-                updatePorts("semio.sketchpad.app.type.panel.details.section.ports.direction.y", { direction: { y: value } });
+                updatePorts("semio.sketchpad.app.type.panel.details.section.connectors.direction.y", { direction: { y: value } });
               }}
               step={0.1}
             />
@@ -2830,10 +2837,10 @@ const PortsMultipleSectionForm: FC<{ portGuids: Guid[] }> = ({ portGuids }) => {
         <TreeItem>
           <TreeContent>
             <Stepper
-              id="semio.sketchpad.app.type.panel.details.section.ports.direction.z"
+              id="semio.sketchpad.app.type.panel.details.section.connectors.direction.z"
               value={commonDirectionZ}
               onChange={(value: number) => {
-                updatePorts("semio.sketchpad.app.type.panel.details.section.ports.direction.z", { direction: { z: value } });
+                updatePorts("semio.sketchpad.app.type.panel.details.section.connectors.direction.z", { direction: { z: value } });
               }}
               step={0.1}
             />
@@ -2962,15 +2969,15 @@ const TypeSettingsContent: FC = () => {
 
 const toolModules = import.meta.glob<Record<string, Tool<TypeAppState>>>("./*Tool.tsx", { eager: true });
 
-const PortToolContent: FC<ToolRenderContext<TypeAppState>> = () => {
+const ConnectorToolContent: FC<ToolRenderContext<TypeAppState>> = () => {
   return null;
 };
 
-export const PortTool: Tool<TypeAppState> = {
-  id: ToolKind.PORT,
-  icon: <PortIcon className="size-tiny" />,
+export const ConnectorTool: Tool<TypeAppState> = {
+  id: ToolKind.CONNECTOR,
+  icon: <ConnectorIcon className="size-tiny" />,
   render: (context: ToolRenderContext<TypeAppState>) => ({
-    scene: <PortToolContent {...context} />,
+    scene: <ConnectorToolContent {...context} />,
   }),
 };
 
@@ -2992,7 +2999,7 @@ export const SelectionSubtractiveTool: Tool<TypeAppState> = {
   render: (context: ToolRenderContext<TypeAppState>) => ({}),
 };
 
-export const TypeAppTools: Tool<TypeAppState>[] = [SelectionNormalTool, SelectionAdditiveTool, SelectionSubtractiveTool, PortTool];
+export const TypeAppTools: Tool<TypeAppState>[] = [SelectionNormalTool, SelectionAdditiveTool, SelectionSubtractiveTool, ConnectorTool];
 
 const getTypeTools = (): ToolDefinition[] => [
   {
@@ -3004,9 +3011,9 @@ const getTypeTools = (): ToolDefinition[] => [
     })),
   },
   {
-    id: "port",
-    defaultMode: ToolKind.PORT,
-    modes: TypeAppTools.filter((tool) => tool.id === ToolKind.PORT).map((tool) => ({
+    id: "connector",
+    defaultMode: ToolKind.CONNECTOR,
+    modes: TypeAppTools.filter((tool) => tool.id === ToolKind.CONNECTOR).map((tool) => ({
       id: tool.id,
       icon: tool.icon,
     })),
@@ -3070,30 +3077,30 @@ const App: FC = () => {
   useEffect(() => {
     if (appType !== "type") return;
 
-    const hasPorts = selection?.ports && selection.ports.length > 0;
-    const hasMultiplePorts = selection?.ports && selection.ports.length > 1;
-    const hasSinglePort = selection?.ports && selection.ports.length === 1;
+    const hasPorts = selection?.connectors && selection.connectors.length > 0;
+    const hasMultiplePorts = selection?.connectors && selection.connectors.length > 1;
+    const hasSinglePort = selection?.connectors && selection.connectors.length === 1;
 
-    const portsMultipleId = "semio.sketchpad.app.type.panel.details.section.ports.multipleTitle";
+    const connectorsMultipleId = "semio.sketchpad.app.type.panel.details.section.connectors.multipleTitle";
 
     removeSection("details", "semio.sketchpad.app.type.properties");
-    removeSection("details", "semio.sketchpad.app.type.port.properties");
-    removeSection("details", portsMultipleId);
+    removeSection("details", "semio.sketchpad.app.type.connector.properties");
+    removeSection("details", connectorsMultipleId);
     removeSection("details", "semio.sketchpad.app.kit.properties");
 
     if (hasSinglePort) {
       addSection("details", {
-        id: "semio.sketchpad.app.type.port.properties",
+        id: "semio.sketchpad.app.type.connector.properties",
         specificity: 30,
         order: 0,
-        content: () => <PortSection portGuid={selection.ports![0]} />,
+        content: () => <ConnectorSection connectorGuid={selection.connectors![0]} />,
       });
     } else if (hasMultiplePorts) {
       addSection("details", {
-        id: portsMultipleId,
+        id: connectorsMultipleId,
         specificity: 30,
         order: 0,
-        content: () => <PortsMultipleSection portGuids={selection.ports!} />,
+        content: () => <ConnectorsMultipleSection connectorGuids={selection.connectors!} />,
       });
     }
 
@@ -3105,7 +3112,7 @@ const App: FC = () => {
         <>
           <TypeDetails />
           <ModelsSection />
-          <PortsListSection />
+          <ConnectorsListSection />
           <AuthorsSection />
           <AttributesSection />
         </>
@@ -3125,8 +3132,8 @@ const App: FC = () => {
 
     return () => {
       removeSection("details", "semio.sketchpad.app.type.properties");
-      removeSection("details", "semio.sketchpad.app.type.port.properties");
-      removeSection("details", portsMultipleId);
+      removeSection("details", "semio.sketchpad.app.type.connector.properties");
+      removeSection("details", connectorsMultipleId);
       removeSection("details", "semio.sketchpad.app.kit.properties");
     };
   }, [addSection, removeSection, appType, selection]);
@@ -3342,7 +3349,7 @@ function useTypeAppInitialize() {
         panelVisibility: { toolbar: true, workbench: false, details: false, chat: false, settings: false },
         selection: undefined,
         hover: undefined,
-        focusedPort: undefined,
+        focusedConnector: undefined,
         camera: undefined,
         activeTool: ToolKind.SELECTION_NORMAL,
         fullscreenWindow: SketchpadTypeAppFullscreenWindow.None,

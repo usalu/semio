@@ -102,8 +102,8 @@
           "optional": true
         },
         {
-          "name": "Port",
-          "type": "PortId",
+          "name": "Connector",
+          "type": "ConnectorId",
           "optional": false
         }
       ],
@@ -125,7 +125,7 @@
     "InterfaceId",
     "PropId",
     "ModelId",
-    "PortId",
+    "ConnectorId",
     "TypeId",
     "LayerId",
     "GroupId",
@@ -135,5 +135,11 @@
     "DesignId",
     "KitId"
   ],
-  "weakEntities": ["Coord", "Point", "Vector", "Plane", "Side"]
+  "weakEntities": [
+    "Coord",
+    "Point",
+    "Vector",
+    "Plane",
+    "Side"
+  ]
 }

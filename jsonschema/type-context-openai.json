@@ -1,6 +1,6 @@
 {
   "type": "object",
-  "description": "A type is a reusable element that can be connected with other types over ports.",
+  "description": "A type is a reusable element that can be connected with other types over connectors.",
   "properties": {
     "name": {
       "type": "string"
@@ -12,11 +12,11 @@
       "type": "string",
       "description": "The optional variant of the type. No variant means the default variant."
     },
-    "ports": {
+    "connectors": {
       "type": "array",
       "items": {
         "type": "object",
-        "description": "A port is a connection point (with a direction) of a type.",
+        "description": "A connector is a connection point (with a direction) of a type.",
         "properties": {
           "id": {
             "type": "string"
@@ -25,7 +25,7 @@
             "type": "array",
             "items": {
               "type": "object",
-              "description": "A locator is meta-data for grouping ports.",
+              "description": "A locator is meta-data for grouping connectors.",
               "properties": {
                 "group": {
                   "type": "string"

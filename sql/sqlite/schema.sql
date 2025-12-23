@@ -172,12 +172,12 @@ CREATE TABLE prop (
 	value FLOAT NOT NULL,
 	unit VARCHAR(64),
 	quality_guid VARCHAR(36),
-	port_guid VARCHAR(36),
+	connector_guid VARCHAR(36),
 	PRIMARY KEY (guid),
 	FOREIGN KEY(quality_guid) REFERENCES quality (guid)
 );
 
-CREATE TABLE port (
+CREATE TABLE connector (
 	guid VARCHAR(36) NOT NULL,
 	name VARCHAR(256),
 	point_x FLOAT NOT NULL,
@@ -322,10 +322,10 @@ CREATE TABLE connection (
 	guid VARCHAR(36) NOT NULL,
 	connected_piece_guid VARCHAR(36) NOT NULL,
 	connected_design_piece_guid VARCHAR(36),
-	connected_port_guid VARCHAR(36) NOT NULL,
+	connected_connector_guid VARCHAR(36) NOT NULL,
 	connecting_piece_guid VARCHAR(36) NOT NULL,
 	connecting_design_piece_guid VARCHAR(36),
-	connecting_port_guid VARCHAR(36) NOT NULL,
+	connecting_connector_guid VARCHAR(36) NOT NULL,
 	gap FLOAT NOT NULL DEFAULT 0,
 	shift FLOAT NOT NULL DEFAULT 0,
 	rise FLOAT NOT NULL DEFAULT 0,
@@ -339,9 +339,9 @@ CREATE TABLE connection (
 	PRIMARY KEY (guid),
 	CHECK (connecting_piece_guid != connected_piece_guid),
 	FOREIGN KEY(connected_piece_guid) REFERENCES piece (guid),
-	FOREIGN KEY(connected_port_guid) REFERENCES port (guid),
+	FOREIGN KEY(connected_connector_guid) REFERENCES connector (guid),
 	FOREIGN KEY(connecting_piece_guid) REFERENCES piece (guid),
-	FOREIGN KEY(connecting_port_guid) REFERENCES port (guid),
+	FOREIGN KEY(connecting_connector_guid) REFERENCES connector (guid),
 	FOREIGN KEY(design_guid) REFERENCES design (guid)
 );
 
@@ -409,7 +409,7 @@ CREATE TABLE attribute (
 	author_guid VARCHAR(36),
 	model_guid VARCHAR(36),
 	prop_guid VARCHAR(36),
-	port_guid VARCHAR(36),
+	connector_guid VARCHAR(36),
 	type_guid VARCHAR(36),
 	layer_guid VARCHAR(36),
 	piece_guid VARCHAR(36),
@@ -429,7 +429,7 @@ CREATE TABLE attribute (
 	FOREIGN KEY(author_guid) REFERENCES author (guid),
 	FOREIGN KEY(model_guid) REFERENCES model (guid),
 	FOREIGN KEY(prop_guid) REFERENCES prop (guid),
-	FOREIGN KEY(port_guid) REFERENCES port (guid),
+	FOREIGN KEY(connector_guid) REFERENCES connector (guid),
 	FOREIGN KEY(type_guid) REFERENCES type (guid),
 	FOREIGN KEY(layer_guid) REFERENCES layer (guid),
 	FOREIGN KEY(piece_guid) REFERENCES piece (guid),

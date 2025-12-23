@@ -770,12 +770,12 @@ Cool, let’s do the Type app next. I’ll mirror the Design plan, but tailored 
 From your code:
 
 - **Yjs-backed `TypeAppStore`** in `Type.tsx`
-  - Holds `fullscreenWindow`, `panelVisibility`, `activeTool`, `selection`, `hover`, `presence`, `others`, `camera`, `focusedPortGuid`, `selectedModelGuid`, `selectedModelTags`, `windowLayout`, etc.
+  - Holds `fullscreenWindow`, `panelVisibility`, `activeTool`, `selection`, `hover`, `presence`, `others`, `camera`, `focusedConnectorGuid`, `selectedModelGuid`, `selectedModelTags`, `windowLayout`, etc.
   - Initializes defaults in the constructor (toolbar always visible, clearing corrupt `windowLayout`, etc.).
   - Runs commands (`semio.typeApp.*`) via `registerCommand` and applies `TypeDiff` + `TypeAppDiff`.
 
 - **React hooks** are all Yjs-based:
-  - `useTypeApp`, `useTypeAppSelection`, `useTypeAppPanelVisibility`, `useTypeAppOthers`, `useTypeAppCamera`, `useTypeAppFocusedPortGuid`, `useTypeAppHover`, `useTypeAppSelectedModelGuid`, `useTypeAppSelectedModelTags`, etc.
+  - `useTypeApp`, `useTypeAppSelection`, `useTypeAppPanelVisibility`, `useTypeAppOthers`, `useTypeAppCamera`, `useTypeAppFocusedConnectorGuid`, `useTypeAppHover`, `useTypeAppSelectedModelGuid`, `useTypeAppSelectedModelTags`, etc.
   - These use `useTypeAppStore` + `useSyncDeep` / `useSyncField`.
 
 - **Command hook**:
@@ -783,9 +783,9 @@ From your code:
 
 In `machines.ts` you already have:
 
-- A **simplified `TypeAppState`** (panelVisibility, selection, hover, focusedPort, selectedModelTags, camera).
+- A **simplified `TypeAppState`** (panelVisibility, selection, hover, focusedConnector, selectedModelTags, camera).
 - `context.typeApps: Record<string, TypeAppState>` keyed by `${kitGuid}:${typeGuid}`.
-- Events: `TYPE.INIT`, `TYPE.SYNC`, `TYPE.TOGGLE_PANEL`, `TYPE.FOCUS_PORT`, `TYPE.SELECT_MODEL_TAG`, `TYPE.DESELECT_MODEL_TAG`, `TYPE.SET_CAMERA`.
+- Events: `TYPE.INIT`, `TYPE.SYNC`, `TYPE.TOGGLE_PANEL`, `TYPE.FOCUS_CONNECTOR`, `TYPE.SELECT_MODEL_TAG`, `TYPE.DESELECT_MODEL_TAG`, `TYPE.SET_CAMERA`.
 - Actions: `typeInit`, `typeSync`, `typeTogglePanel`, `typeFocusPort`, `typeSelectModelTag`, `typeDeselectModelTag`, `typeSetCamera`.
 
 But **nothing in `Type.tsx` actually dispatches `TYPE.*` events yet**, and your hooks still talk straight to the Yjs store.
@@ -826,7 +826,7 @@ export interface TypeAppState {
   others: TypeAppPresenceOther[];
 
   camera?: Camera;
-  focusedPortGuid?: Guid;
+  focusedConnectorGuid?: Guid;
   selectedModelGuid?: Guid;
   selectedModelTags?: string[];
 
@@ -866,7 +866,7 @@ Write this decision down once so you can refer back during implementation.
 
 ## 2. Expand Type-related events & actions in the machine
 
-You already have a basic set of Type events (`TYPE.INIT`, `TYPE.SYNC`, `TYPE.TOGGLE_PANEL`, `TYPE.FOCUS_PORT`, `TYPE.SELECT_MODEL_TAG`, `TYPE.DESELECT_MODEL_TAG`, `TYPE.SET_CAMERA`) and the corresponding actions.
+You already have a basic set of Type events (`TYPE.INIT`, `TYPE.SYNC`, `TYPE.TOGGLE_PANEL`, `TYPE.FOCUS_CONNECTOR`, `TYPE.SELECT_MODEL_TAG`, `TYPE.DESELECT_MODEL_TAG`, `TYPE.SET_CAMERA`) and the corresponding actions.
 
 Now extend this to cover all the pieces you actually use in the Type UI.
 
@@ -1061,7 +1061,7 @@ export function useTypeAppSelectionXState(id?: TypeAppId): TypeAppSelection {
   return useSelector(actor, createTypeSelectionSelector(kitGuid, typeGuid));
 }
 
-// repeat for panel visibility, hover, camera, focusedPortGuid, activeTool, selectedModelGuid, tags
+// repeat for panel visibility, hover, camera, focusedConnectorGuid, activeTool, selectedModelGuid, tags
 ```
 
 Then **flip your existing hooks** to use these instead of Yjs:
@@ -1086,7 +1086,7 @@ Same for:
 - `useTypeAppPanelVisibility`
 - `useTypeAppOthers` (if you keep presence in TypeAppState, or add a separate presence selector)
 - `useTypeAppCamera`
-- `useTypeAppFocusedPortGuid`
+- `useTypeAppFocusedConnectorGuid`
 - `useTypeAppHover`
 - `useTypeAppSelectedModelGuid`
 - `useTypeAppSelectedModelTags`
@@ -1127,8 +1127,8 @@ export function useTypeAppCommands(id?: TypeAppId) {
       focusPort: noOp,
       clearFocus: noOp,
       setActiveTool: noOp,
-      selectPort: noOp,
-      deselectPort: noOp,
+      selectConnector: noOp,
+      deselectConnector: noOp,
       selectAll: noOp,
       deselectAll: noOp,
       setHover: noOp,
@@ -1158,20 +1158,20 @@ export function useTypeAppCommands(id?: TypeAppId) {
       actor.send({ type: "TYPE.SET_CAMERA", kitGuid, typeGuid, camera });
     },
 
-    focusPort: (origin: string, portGuid: Guid) => {
-      actor.send({ type: "TYPE.FOCUS_PORT", kitGuid, typeGuid, portGuid });
+    focusPort: (origin: string, connectorGuid: Guid) => {
+      actor.send({ type: "TYPE.FOCUS_CONNECTOR", kitGuid, typeGuid, connectorGuid });
     },
 
     clearFocus: (origin: string) => {
-      actor.send({ type: "TYPE.FOCUS_PORT", kitGuid, typeGuid, portGuid: undefined });
+      actor.send({ type: "TYPE.FOCUS_CONNECTOR", kitGuid, typeGuid, connectorGuid: undefined });
     },
 
     setActiveTool: (origin: string, tool: ToolKind) => {
       actor.send({ type: "TYPE.SET_ACTIVE_TOOL", kitGuid, typeGuid, tool });
     },
 
-    selectPort: (origin: string, portId: Guid) => {
-      // Compose the new selection based on current context, or later via a TYPE.SELECT_PORT event
+    selectConnector: (origin: string, connectorId: Guid) => {
+      // Compose the new selection based on current context, or later via a TYPE.SELECT_CONNECTOR event
       // For now, get current selection via a selector and send TYPE.SET_SELECTION
     },
 
@@ -1182,7 +1182,7 @@ export function useTypeAppCommands(id?: TypeAppId) {
 
 In the **first iteration**, you can:
 
-- Keep complex selection logic (`selectPort`, `deselectPort`, `selectAll`, `deselectAll`) inside the store (commands), and simply send a generic `TYPE.SYNC` when the store changes.
+- Keep complex selection logic (`selectConnector`, `deselectConnector`, `selectAll`, `deselectAll`) inside the store (commands), and simply send a generic `TYPE.SYNC` when the store changes.
 - Or, better, mirror what you plan for Design: add a `TYPE.EXECUTE_CMD` event that takes command name + args and uses the returned `TypeAppDiff` to update the XState context.
 
 ### 5.2. Bridge existing commands (optional transitional step)

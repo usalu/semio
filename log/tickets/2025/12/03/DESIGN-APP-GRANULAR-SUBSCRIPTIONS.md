@@ -48,7 +48,7 @@ Store was overfetching and overrendering due to:
 - Memoized `useDesignAppCommands` to prevent unnecessary re-renders
 - Added `isPanning` flag and `onMoveStart`/`onMoveEnd` handlers to skip hover during pan
 - Added throttling (50ms) to `onNodeDrag` for expensive helper line calculations
-- Added `useDesignAppIsPiecePortSelected` granular hook for port selection
+- Added `useDesignAppIsPiecePortSelected` granular hook for connector selection
 
 ## elements.tsx
 

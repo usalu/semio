@@ -52,7 +52,7 @@ Before we start building, let’s go over the essential elements that define a *
 
 - 🏷️ **Name** → A unique name to identify your Type and reuse it in different designs
 - 🧱 **Geometry (Model)** → The 3D shape attached to the Type — it gives the piece its visual form ✨
-- 🧲 **Connection Points (Ports)** → The snap points where the piece connects to others in the system 🔗
+- 🧲 **Connection Points (Connectors)** → The snap points where the piece connects to others in the system 🔗
 
 Now let's take a closer look at how these elements come together — and start modeling our first **brick mold** 🛠️
 
@@ -238,7 +238,7 @@ Here’s why that matters:
 - ⚙️ If your geometry is dynamic or parametric, it still needs to be **exported to a file**
 - 🔗 Semio connects to that file — not the live Grasshopper preview
 
-> 💡 This keeps geometry **modular**, **portable**, and easy to reuse  
+> 💡 This keeps geometry **modular**, **connectorable**, and easy to reuse  
 > 🧱 It also supports **chunking** — breaking down large designs into smaller, manageable parts  
 > 🌐 And it allows smooth transition between **Grasshopper** and **Semio Sketchpad**
 
@@ -350,7 +350,7 @@ Best for:
 Even though these two Models **look very different**  
 They both belong to the **same Type** ✅
 
-The **Name**, **Variant**, **Ports**, and **logic** stay exactly the same  
+The **Name**, **Variant**, **Connectors**, and **logic** stay exactly the same  
 Only the appearance changes 🎭
 
 This means you can **design and assemble** everything using lightweight placeholders 🧩  
@@ -363,22 +363,22 @@ From early concept to detailed design to collaborative development 🤝
 
 <li>
 
-### ⚓ Add Snapping Points ([Ports](/think-in-semio/#port) - Po)
+### ⚓ Add Snapping Points ([Connectors](/think-in-semio/#connector) - Po)
 
 Once your brick mold has a visual shape — its **Model** —  
 the next step is to define **how it connects to other bricks**
 
-That’s what **Ports** are for 🧲  
+That’s what **Connectors** are for 🧲  
 They act as snap points that tell Semio where and how a brick can attach to others
 
 ---
 
-##### 🧩 What Do You Need to Define a Port?
+##### 🧩 What Do You Need to Define a Connector?
 
-In the Semio Grasshopper plugin, each Port is defined with three main inputs:
+In the Semio Grasshopper plugin, each Connector is defined with three main inputs:
 
-- 🏷️ **Port ID** ( `Id` )  
-  A unique name for the Port — like a tag or label used to connect it later  
+- 🏷️ **Connector ID** ( `Id` )  
+  A unique name for the Connector — like a tag or label used to connect it later  
   Examples: `"n"`, `"bottom"`, `"hingePoint"`
 
 - 📍 **Point** ( `Pt` )  
@@ -386,74 +386,74 @@ In the Semio Grasshopper plugin, each Port is defined with three main inputs:
   You place this carefully on your geometry, right where the snapping should occur
 
 - ➡️ **Vector** ( `Dr` )  
-  The direction the Port faces — telling Semio which way the brick will connect 🔁  
+  The direction the Connector faces — telling Semio which way the brick will connect 🔁  
   It’s what lets Semio rotate and align the bricks correctly when snapping them together
 
-![📁 Ports](/assets/images/model-port-alpha.png)
+![📁 Connectors](/assets/images/model-port-alpha.png)
 
 ---
 
-#### 📍 Port Location (`Pt`)
+#### 📍 Connector Location (`Pt`)
 
-When modeling Ports, it’s not just about **where** pieces touch —  
+When modeling Connectors, it’s not just about **where** pieces touch —  
 it’s about building a **clear and reusable logic** that works across all Variants 🧠🔁
 
 ---
 
-Here’s how to define your Ports effectively:
+Here’s how to define your Connectors effectively:
 
 - 🧱 **Choose stable, meaningful locations**  
   Choose positions that are geometrically logical — like the **center of a face**, an **edge midpoint**, or a **corner** 🧩  
   Avoid placing them randomly — symmetry and regular patterns help your logic stay clean ♻️
 
 - 📐 **Keep positions consistent across Variants**  
-  Even if your bricks differ in size or shape, place Ports in the **same relative location** 🔄  
+  Even if your bricks differ in size or shape, place Connectors in the **same relative location** 🔄  
   This way, your connection rules stay valid across all versions of a Type 🧰
 
 - 🎯 **Don’t worry about perfect alignment**  
-  Ports don’t need to be _exactly_ placed.  
+  Connectors don’t need to be _exactly_ placed.  
   Semio lets you adjust each Piece’s **position and rotation** _after_ snapping 🛠️  
   So prioritize clear logic over micrometer precision 😌
 
 ---
 
-There’s no strict rule for how many Ports to add — it depends on how much flexibility your system requires:
+There’s no strict rule for how many Connectors to add — it depends on how much flexibility your system requires:
 
-- 🔒 **Fewer Ports** → simpler, more controlled snapping
-- 🔓 **More Ports** → more layout options and greater orientation flexibility
-- 🧠 **Plan ahead** → add Ports you might need later, even if they’re not used right away
+- 🔒 **Fewer Connectors** → simpler, more controlled snapping
+- 🔓 **More Connectors** → more layout options and greater orientation flexibility
+- 🧠 **Plan ahead** → add Connectors you might need later, even if they’re not used right away
 
-👉 _In our example, we place four Ports — one at the center of each edge of a four-sided profile_ 🧱
+👉 _In our example, we place four Connectors — one at the center of each edge of a four-sided profile_ 🧱
 
 ---
 
-#### 💡 Port Direction (Dr)
+#### 💡 Connector Direction (Dr)
 
-Every Port needs a **direction** — a vector that tells Semio which way the connection should face 🧭  
+Every Connector needs a **direction** — a vector that tells Semio which way the connection should face 🧭  
 This is how Semio knows how to align and snap your Pieces together correctly 🧲
 
-Here’s how to define Port directions clearly:
+Here’s how to define Connector directions clearly:
 
 - 📏 **Use clean, simple vectors**  
-  Stick to basic axes like **X, Y, or Z** relative to the face the Port sits on. It makes snapping easier and logic more readable 🧠  
+  Stick to basic axes like **X, Y, or Z** relative to the face the Connector sits on. It makes snapping easier and logic more readable 🧠  
   Avoid random or diagonal directions unless needed
 
 - ♻️ **Be consistent across Variants**  
-  Ports don’t need to be perfectly precise — but they **must stay consistent**  
+  Connectors don’t need to be perfectly precise — but they **must stay consistent**  
   This ensures all your bricks connect correctly no matter the shape or version 🔧
 
-👉 _In our example, each Port faces straight out — perpendicular to the edge it’s placed on_ 🚀
+👉 _In our example, each Connector faces straight out — perpendicular to the edge it’s placed on_ 🚀
 
 ---
 
-#### 🏷️ Port ID (Id)
+#### 🏷️ Connector ID (Id)
 
-A **Port ID** is the name you give to each Port 🏷️  
-This name is how Semio knows **which Port to connect** when snapping Pieces together
+A **Connector ID** is the name you give to each Connector 🏷️  
+This name is how Semio knows **which Connector to connect** when snapping Pieces together
 
 For example, you might say:
 
-> "Connect the `top` Port of Piece A to the `bottom` Port of Piece B"
+> "Connect the `top` Connector of Piece A to the `bottom` Connector of Piece B"
 
 You can use **any naming system** — as long as it’s clear and consistent:
 
@@ -465,13 +465,13 @@ It helps you stay organized and makes teamwork or AI assistance much easier 🤝
 
 ---
 
-Together with the **Pt** (position) and **Dr** (direction), the **Id** completes each Port definition:  
-Each row in the three lists defines one Port — so all lists must be the **same length** to stay in sync 🧩
+Together with the **Pt** (position) and **Dr** (direction), the **Id** completes each Connector definition:  
+Each row in the three lists defines one Connector — so all lists must be the **same length** to stay in sync 🧩
 
 ---
 
-Now you can see how the three inputs — Id, Pt, and Dr — work together to create Ports.
-Each Port is defined by one entry from each list, so the lists must be the same length.
+Now you can see how the three inputs — Id, Pt, and Dr — work together to create Connectors.
+Each Connector is defined by one entry from each list, so the lists must be the same length.
 This ensures that every snapping point has a matching ID, position, and direction
 
 </li>
@@ -481,14 +481,14 @@ This ensures that every snapping point has a matching ID, position, and directio
 ### 🧱 Assemble the Mold (Model [Type](/think-in-semio/#type))
 
 Once you’ve defined all parts of your brick mold  
-the **Name**, **Variant**, **Ports**, and **Model**  
+the **Name**, **Variant**, **Connectors**, and **Model**  
 you can assemble them using the `Model Type` component (`Typ`) 🧰
 
 Here's what you plug in:
 
 - 🏷️ **Name** — the shared identity of the mold (e.g. `"Profile"`)
 - 🔢 **Variant** — the specific version number (e.g. `"2"`)
-- 🧲 **Ports** — the snapping points and directions (e.g. `n`, `s`, `e`, `w`)
+- 🧲 **Connectors** — the snapping points and directions (e.g. `n`, `s`, `e`, `w`)
 - 🧊 **Model** — the geometry that defines the brick's shape
 
 ![📁 Model Type](/assets/images/model-type.png)  
@@ -539,7 +539,7 @@ Examples from our sketch:
 
 - 🔢 **Variant name** — a unique label like `2`, `4`, or `5` to distinguish the version
 - 🧊 **Model** — new geometry that reflects the Variant’s shape or size
-- 🧲 **Ports** — same logic, but positioned relative to the new shape
+- 🧲 **Connectors** — same logic, but positioned relative to the new shape
 
 ---
 
@@ -548,12 +548,12 @@ Examples from our sketch:
 1. 🏷️ Set the **Type name** (same as the original mold)
 2. 🔢 Assign a new **Variant name**
 3. 🧊 Attach the **Model** — the geometry for this Variant
-4. 🧲 Add the **Ports** — positioned consistently
+4. 🧲 Add the **Connectors** — positioned consistently
 5. 🧱 Use the `Model Type` component to combine everything into a complete Variant
 
 ---
 
-<Aside type="note">Keep Port positions consistent across all Variants — it ensures easier snapping and logic reuse</Aside>
+<Aside type="note">Keep Connector positions consistent across all Variants — it ensures easier snapping and logic reuse</Aside>
 
 ✅ That’s it — same mold, new shape, fully ready for modular design
 
@@ -585,7 +585,7 @@ You define the full logic:
 
 - 🧊 Generate and export geometry
 - 📎 Link the exported file via `Model Model`
-- 🧲 Place Ports using `Model Port`
+- 🧲 Place Connectors using `Model Connector`
 - 🧱 Create the Variant using `Model Type`
 
 ![📁 Cluster](/assets/images/cluster-type-inside-ALpha.png)
@@ -611,7 +611,7 @@ You only feed in the changing inputs:
 You define the full modeling logic directly, without saving external files:
 
 - 🧊 Generate geometry
-- 🧲 Place Ports using `Model Port`
+- 🧲 Place Connectors using `Model Connector`
 - 🧱 Create the Variant using `Model Type`
 
 ![📁 Cluster](/assets/images/cluster-type-inside-direct.rfrc.png)

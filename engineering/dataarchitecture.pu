@@ -15,22 +15,22 @@ entity attributes {
     *definition : string
     ..
     model_id : int <<FK>>
-    port_id : int <<FK>>
+    connector_id : int <<FK>>
     type_id : int <<FK>>
     piece_id : int <<FK>>
     connection_id : int <<FK>>
     design_id : int <<FK>>
     kit_id : int <<FK>>
     --
-    CHECK (( (model_id IS NOT NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL)
-        OR (model_id IS NULL AND port_id IS NOT NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL)
-        OR (model_id IS NULL AND port_id IS NULL AND type_id IS NOT NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL)
-        OR (model_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NOT NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL)
-        OR (model_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NOT NULL AND design_id IS NULL AND kit_id IS NULL)
-        OR (model_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NOT NULL AND kit_id IS NULL)
-        OR (model_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NOT NULL)
+    CHECK (( (model_id IS NOT NULL AND connector_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL)
+        OR (model_id IS NULL AND connector_id IS NOT NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL)
+        OR (model_id IS NULL AND connector_id IS NULL AND type_id IS NOT NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL)
+        OR (model_id IS NULL AND connector_id IS NULL AND type_id IS NULL AND piece_id IS NOT NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL)
+        OR (model_id IS NULL AND connector_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NOT NULL AND design_id IS NULL AND kit_id IS NULL)
+        OR (model_id IS NULL AND connector_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NOT NULL AND kit_id IS NULL)
+        OR (model_id IS NULL AND connector_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NOT NULL)
         ))
-    UNIQUE (key,model_id, port_id, type_id, piece_id, connection_id, design_id, kit_id)
+    UNIQUE (key,model_id, connector_id, type_id, piece_id, connection_id, design_id, kit_id)
 }
 
 entity files {
@@ -94,21 +94,21 @@ entity props {
     *updated_at : datetime
     ..
     model_id : int <<FK>>
-    port_id : int <<FK>>
+    connector_id : int <<FK>>
     type_id : int <<FK>>
     piece_id : int <<FK>>
     connection_id : int <<FK>>
     design_id : int <<FK>>
     --
-    CHECK (( (model_id IS NOT NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL)
-        OR (model_id IS NULL AND port_id IS NOT NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL)
-        OR (model_id IS NULL AND port_id IS NULL AND type_id IS NOT NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL)
-        OR (model_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NOT NULL AND connection_id IS NULL AND design_id IS NULL)
-        OR (model_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NOT NULL AND design_id IS NULL)
-        OR (model_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NOT NULL)
-        OR (model_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL)
+    CHECK (( (model_id IS NOT NULL AND connector_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL)
+        OR (model_id IS NULL AND connector_id IS NOT NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL)
+        OR (model_id IS NULL AND connector_id IS NULL AND type_id IS NOT NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL)
+        OR (model_id IS NULL AND connector_id IS NULL AND type_id IS NULL AND piece_id IS NOT NULL AND connection_id IS NULL AND design_id IS NULL)
+        OR (model_id IS NULL AND connector_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NOT NULL AND design_id IS NULL)
+        OR (model_id IS NULL AND connector_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NOT NULL)
+        OR (model_id IS NULL AND connector_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL)
         ))
-    UNIQUE (key, model_id, port_id, type_id, piece_id, connection_id, design_id)
+    UNIQUE (key, model_id, connector_id, type_id, piece_id, connection_id, design_id)
 }
 
 entity stats {
@@ -183,12 +183,12 @@ entity compatible_interfaces {
   *name : string
   *order : int
   ..
-  port_id : int <<FK>>
+  connector_id : int <<FK>>
 }
 
-entity ports {
+entity connectors {
     *id : int <<PK,generated>>
-    *port_id : string
+    *connector_id : string
     *description : string
     *interface : string
     *is_mandatory : boolean
@@ -206,7 +206,7 @@ entity ports {
     CHECK ((type_id IS NOT NULL AND design_id IS NULL) OR
            (type_id IS NULL AND design_id IS NOT NULL))
     CHECK (t >= 0 AND t < 1)
-    UNIQUE (port_id, type_id, design_id)
+    UNIQUE (connector_id, type_id, design_id)
 }
 
 entity authors {
@@ -279,10 +279,10 @@ entity connections {
     *id : int <<PK,generated>>
     *connected_piece_id : int <<FK>>
     *connected_design_piece_id : int <<FK>>
-    *connected_port_id : int <<FK>>
+    *connected_connector_id : int <<FK>>
     *connecting_piece_id : int <<FK>>
     *connecting_design_piece_id : int <<FK>>
-    *connecting_port_id : int <<FK>>
+    *connecting_connector_id : int <<FK>>
     *description : string
     *gap : float
     *shift : float
@@ -379,9 +379,9 @@ model_tags -- tags : "references" >
 models ||--o{ attributes : "has" >
 models -- files : "might reference" >
 
-ports ||--o{ compatible_interfaces : "has" >
-ports ||--o{ attributes : "has" >
-ports ||--o{ props : "has" >
+connectors ||--o{ compatible_interfaces : "has" >
+connectors ||--o{ attributes : "has" >
+connectors ||--o{ props : "has" >
 
 types ||--o{ locations : "has" >
 entity type_concepts {
@@ -412,7 +412,7 @@ kit_concepts -- kits : "links" >
 kit_concepts -- concepts : "references" >
 
 types ||--o{ models : "has" >
-types ||--o{ ports : "has" >
+types ||--o{ connectors : "has" >
 types ||--o{ authors : "has" >
 types ||--o{ attributes : "has" >
 types ||--o{ concepts : "has" >
@@ -428,8 +428,8 @@ group_pieces -- pieces : "references" >
 connections ||--o{ attributes : "has" >
 connections -- pieces : "connected" >
 connections -- pieces : "connecting" >
-connections -- ports : "connected" >
-connections -- ports : "connecting" >
+connections -- connectors : "connected" >
+connections -- connectors : "connecting" >
 
 designs ||--o{ pieces
 designs ||--o{ connections

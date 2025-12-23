@@ -12,7 +12,7 @@ kit : !Kit{
             description : ?String
             attributes : *Attribute[]
         ]
-        ports : +Port[
+        connectors : +Connector[
             id : !String // empty is default
             point : !Point{
                 x : !Float
@@ -149,12 +149,12 @@ kit : !Kit{
             connected : !Side{
                 piece : !PieceId{ id : !String }
                 designPiece : ?PieceId{ id : !String }
-                port : !PortId{ id : !String }
+                connector : !ConnectorId{ id : !String }
             }
             connecting : !Side{
                 piece : !PieceId{ id : !String }
                 designPiece : ?PieceId{ id : !String }
-                port : !PortId{ id : !String }
+                connector : !ConnectorId{ id : !String }
             }
             gap : ?Float
             shift : ?Float
@@ -223,7 +223,7 @@ kit : !Kit{
     qualities : *Quality[
         key : !String
         name : !String
-        kind : !QualityKind // enum: General, Design, Type, Piece, Connection, Port
+        kind : !QualityKind // enum: General, Design, Type, Piece, Connection, Connector
         default : ?Float
         formula : ?String
         defaultSiUnit : ?String

@@ -43,22 +43,22 @@ All changes have been successfully implemented across TypeScript, C#, and suppor
 
 - Currently NO side table exists
 - Connection table has embedded side fields:
-  - `connected_piece_guid`, `connected_design_piece_guid`, `connected_port_guid`
-  - `connecting_piece_guid`, `connecting_design_piece_guid`, `connecting_port_guid`
+  - `connected_piece_guid`, `connected_design_piece_guid`, `connected_connector_guid`
+  - `connecting_piece_guid`, `connecting_design_piece_guid`, `connecting_connector_guid`
 
 ### Target State
 
 `Side` should be a **weak entity** without its own GUID:
 
-- A side is identified by its composite key: `(piece, designPiece?, port)`
+- A side is identified by its composite key: `(piece, designPiece?, connector)`
 - A side only exists as part of a connection
-- Two sides with the same piece and port are the SAME side (value object semantics)
+- Two sides with the same piece and connector are the SAME side (value object semantics)
 
 ### Reasoning
 
 1. **Database Already Correct**: The SQL schema already embeds side data in the connection table without a separate side table or side_guid
 2. **Value Object Semantics**: A side is not an independent entity but a value that describes one end of a connection
-3. **Identity**: A side's identity comes from its components (piece + port), not from an arbitrary GUID
+3. **Identity**: A side's identity comes from its components (piece + connector), not from an arbitrary GUID
 4. **Consistency**: Making the code match the database schema
 
 ## Implementation Plan
@@ -76,11 +76,11 @@ All changes have been successfully implemented across TypeScript, C#, and suppor
 #### Update Side Schema
 
 - Remove `guid` field from `SideSchema`
-- Keep only: `piece`, `designPiece?`, `port`
+- Keep only: `piece`, `designPiece?`, `connector`
 
 #### Update SidesDiff Schema
 
-- Change `removed` to identify by composite key `{ piece, designPiece?, port }`
+- Change `removed` to identify by composite key `{ piece, designPiece?, connector }`
 - Change `updated.id` to use composite key
 - Keep `added` with full Side objects
 
@@ -90,15 +90,15 @@ All changes have been successfully implemented across TypeScript, C#, and suppor
 - `inverseSideDiff`: Remove guid handling
 - `mergeSideDiff`: Keep as-is (merges diffs)
 - `applySideDiff`: Keep as-is (applies diff)
-- Add `areSameSide(a: Side, b: Side): boolean` - compare by piece+port
+- Add `areSameSide(a: Side, b: Side): boolean` - compare by piece+connector
 
 ### 2. C# (net/Semio/Semio.cs)
 
 #### Update Side Class
 
 - Remove `Guid` property
-- Keep only: `Piece`, `DesignPiece?`, `Port`
-- Implement value equality (override Equals/GetHashCode based on Piece+Port)
+- Keep only: `Piece`, `DesignPiece?`, `Connector`
+- Implement value equality (override Equals/GetHashCode based on Piece+Connector)
 
 #### Update Side Methods
 
@@ -111,7 +111,7 @@ All changes have been successfully implemented across TypeScript, C#, and suppor
 #### Update Side Model
 
 - Remove `id`/`guid` field
-- Keep only: `piece`, `design_piece`, `port`
+- Keep only: `piece`, `design_piece`, `connector`
 - May need to adjust if Side is a SQLModel table (likely not)
 
 #### Update Side Methods
@@ -136,7 +136,7 @@ The connection table already embeds side data without side guids.
 
 #### Update Patterns
 
-- Replace `side.guid` with composite key `(side.piece.guid, side.designPiece?.guid, side.port.guid)`
+- Replace `side.guid` with composite key `(side.piece.guid, side.designPiece?.guid, side.connector.guid)`
 - Replace `createSideId(guid)` with direct Side object construction
 - Replace `areSameSideId(a, b)` with `areSameSide(a, b)` (new function)
 
@@ -164,7 +164,7 @@ The connection table already embeds side data without side guids.
 
 1. **API**: Side no longer has a `guid` field - clients must identify by composite key
 2. **Storage**: Any stored data with side GUIDs needs migration (but SQL already correct)
-3. **Comparison**: Side equality now based on piece+port, not GUID
+3. **Comparison**: Side equality now based on piece+connector, not GUID
 4. **References**: Cannot reference a side by ID, only by its components
 
 ## Migration Notes
@@ -181,7 +181,7 @@ After implementation:
 1. ✅ All tests pass (no Side-specific type errors)
 2. ✅ Kit import/export works (migration code removed from test-roundtrip.mjs)
 3. ✅ Connection creation/editing works (Side has proper equality comparison)
-4. ✅ Side comparison logic correct (areSameSide compares by piece+port composite key)
+4. ✅ Side comparison logic correct (areSameSide compares by piece+connector composite key)
 5. ✅ No side.guid references remain in codebase
 
 ## Implementation Summary
@@ -196,18 +196,18 @@ After implementation:
 - ✅ Removed `areSameSideId` function
 - ✅ Removed `getSideGuid` function
 - ✅ Removed `guid` field from `SideSchema`
-- ✅ Updated `SidesDiffSchema` to use composite key `{ piece, designPiece?, port }` for identification
+- ✅ Updated `SidesDiffSchema` to use composite key `{ piece, designPiece?, connector }` for identification
 - ✅ Added `areSameSide(a: Side, b: Side): boolean` function for value equality comparison
 
 #### 2. C# (net/Semio/Semio.cs) ✅
 
-- ✅ Added `Equals` override to compare by composite key (piece.guid, designPiece?.guid, port.guid)
+- ✅ Added `Equals` override to compare by composite key (piece.guid, designPiece?.guid, connector.guid)
 - ✅ Added `GetHashCode` override for proper dictionary/set usage
 - ✅ Side methods (ApplyDiff, CreateDiff, InverseDiff) remain unchanged (already guid-agnostic)
 
 #### 3. Migration Code (js/js/test-roundtrip.mjs) ✅
 
-- ✅ Removed old schema migration code that handled `side.guid` → `port.guid` fallback
+- ✅ Removed old schema migration code that handled `side.guid` → `connector.guid` fallback
 - ✅ Connections now use sides directly without transformation
 
 #### 4. SQL Schema (sql/sqlite/schema.sql) ✅

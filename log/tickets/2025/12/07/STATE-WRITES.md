@@ -150,7 +150,7 @@ For any design app write (e.g. delete selection, move piece, change plane compon
 
 Same idea:
 
-- Add events like `"KIT.RENAME_TYPE"`, `"TYPE.SET_PORT_LABEL"`, etc.
+- Add events like `"KIT.RENAME_TYPE"`, `"TYPE.SET_CONNECTOR_LABEL"`, etc.
 - Actions locate the right app controller / kit store and call `execute(...)` with the right command IDs.
 - Local state (panels, selection, hover) is updated in machine context.
 
@@ -359,7 +359,7 @@ Implemented triadic hooks for each app following the pattern `[value, setValue, 
 
 **Design App Hooks:**
 
-- `useDesignAppSelection()` - Selection state (pieces, connections, ports)
+- `useDesignAppSelection()` - Selection state (pieces, connections, connectors)
 - `useDesignAppHover()` - Hover state
 - `useDesignAppDiagramScale()` - Diagram zoom scale
 - `useDesignAppDiagramCenter()` - Diagram pan center
@@ -372,11 +372,11 @@ Implemented triadic hooks for each app following the pattern `[value, setValue, 
 
 **Type App Hooks:**
 
-- `useTypeAppSelection()` - Selection state (ports, models)
+- `useTypeAppSelection()` - Selection state (connectors, models)
 - `useTypeAppHover()` - Hover state
 - `useTypeAppCamera()` - 3D camera state
 - `useTypeAppActiveTool()` - Current tool selection
-- `useTypeAppFocusedPort()` - Currently focused port
+- `useTypeAppFocusedConnector()` - Currently focused connector
 - `useTypeAppPanelVisibility()` - Panel open/closed state
 - `useTypeAppFullscreenWindow()` - Fullscreen window state
 - `useTypeAppSelectedModelTags()` - Selected model tags

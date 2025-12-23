@@ -20,26 +20,6 @@
 # endregion Header
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # region Imports
 
 from __future__ import annotations
@@ -153,48 +133,41 @@ def outputToInput(data: dict) -> dict:
     - Renames 'key' to 'name' for attributes
     - Extracts guid from concept/tag objects for kit-level concepts list
     """
-    
+
     fieldMappings = {
         "isAbstract": "is_abstract",
         "isVirtual": "is_virtual",
-        "key": "name",  
+        "key": "name",
     }
 
-    
     outputOnlyFields = {"createdAt", "updatedAt"}
 
-    
     guidRefFields = {"parent", "interface", "file", "quality"}
 
-    
-    keepObjectFields = {"connected", "connecting", "piece", "designPiece", "port", "type", "design"}
+    keepObjectFields = {"connected", "connecting", "piece", "designPiece", "connector", "type", "design"}
 
     def convertValue(key: str, value, context: str = ""):
         """Convert a single value, handling refs and nested structures."""
         if value is None:
             return value
 
-        
         if isinstance(value, list):
-            
             if key == "concepts" and context == "":
                 return [item.get("guid") if isinstance(item, dict) else item for item in value]
             if key == "tags" and context == "":
                 return [item.get("guid") if isinstance(item, dict) else item for item in value]
             return [convertValue(key, item, context) for item in value]
 
-        
         if isinstance(value, dict):
-            
             if key in keepObjectFields:
                 return convertDict(value, key)
-            
+
             if key in guidRefFields and "guid" in value:
                 return value["guid"]
-            
+
             if set(value.keys()) == {"guid"} and key not in keepObjectFields:
                 return value["guid"]
-            
+
             return convertDict(value, key)
 
         return value
@@ -203,10 +176,9 @@ def outputToInput(data: dict) -> dict:
         """Convert a dict from Output to Input format."""
         result = {}
         for key, value in d.items():
-            
             if key in outputOnlyFields and context != "folders" and "folder" not in context.lower():
                 continue
-            
+
             newKey = fieldMappings.get(key, key)
             result[newKey] = convertValue(key, value, context if context else key)
         return result
@@ -261,10 +233,8 @@ class TestPlaneFromYAxis:
 
 class TestValidation:
     def test_validationMatchesExpectedOutput(self, kitMetabolismJson: dict, kitInvalidJson: dict, expectedValidationJson: dict) -> None:
-        
         assert not engine.validateKitDict(kitMetabolismJson).hasErrors()
 
-        
         result = engine.validateKitDict(kitInvalidJson)
         expected = engine.parseValidationResult(json.dumps(expectedValidationJson))
         assert engine.areValidationResultsEqual(result, expected), f"Validation mismatch. Got {len(result.issues)} issues, expected {len(expected.issues)}"
@@ -280,28 +250,22 @@ class TestKitSerialization:
 
     def test_kitJsonRoundtrip(self, kitMetabolismJson: dict) -> None:
         """Kit -> JSON -> Kit (matching semio.test.ts)"""
-        
+
         serialized = json.dumps(kitMetabolismJson)
 
-        
         deserialized = json.loads(serialized)
 
-        
         assert engine.areKitsDictEqual(kitMetabolismJson, deserialized), "Kit -> JSON -> Kit should be identical"
 
     def test_kitParseAndDump(self, kitMetabolismJson: dict) -> None:
         """Kit.parse -> Kit.dump roundtrip."""
-        
-        
-        
+
         kitOriginal = copy.deepcopy(kitMetabolismJson)
         kitOriginal["designs"] = [d for d in kitOriginal.get("designs", []) if not d.get("parent")]
 
-        
         kitCopy = copy.deepcopy(kitOriginal)
         assert engine.areKitsDictEqual(kitOriginal, kitCopy), "Deep copy should be equal"
 
-        
         assert kitOriginal.get("guid") == kitCopy.get("guid"), "GUID should be preserved"
         assert len(kitOriginal.get("types", [])) == len(kitCopy.get("types", [])), "Types count should match"
         assert len(kitOriginal.get("designs", [])) == len(kitCopy.get("designs", [])), "Designs count should match"
@@ -353,15 +317,13 @@ class TestRest:
 
         Note: Uses dict-based operations since the TypeScript REST API also works with JSON dicts.
         """
-        
+
         kitOriginal = copy.deepcopy(kitMetabolismJson)
         kitOriginal["designs"] = [d for d in kitOriginal.get("designs", []) if not d.get("parent")]
 
-        
         appliedDiff = engine.applyKitDiffDict(kitOriginal, diffKitMetabolismJson)
         assert engine.areKitsDictEqual(appliedDiff, kitMetabolismDiffedJson), "Applied diff should equal diffed kit"
 
-        
         computedDiff = engine.getKitDiffDict(kitOriginal, kitMetabolismDiffedJson)
         assert engine.areKitDiffsDictEqual(computedDiff, diffKitMetabolismJson), "Computed diff should match expected"
 
@@ -388,15 +350,13 @@ class TestGraphQL:
 
         Note: Uses dict-based operations since the TypeScript GraphQL API also works with JSON.
         """
-        
+
         kitOriginal = copy.deepcopy(kitMetabolismJson)
         kitOriginal["designs"] = [d for d in kitOriginal.get("designs", []) if not d.get("parent")]
 
-        
         appliedInverse = engine.applyKitDiffDict(kitMetabolismDiffedJson, diffKitMetabolismInvertedJson)
         assert engine.areKitsDictEqual(appliedInverse, kitOriginal), "DiffedKit + InverseDiff should equal original kit"
 
-        
         computedInverse = engine.inverseKitDiffDict(kitOriginal, diffKitMetabolismJson)
         assert engine.areKitDiffsDictEqual(computedInverse, diffKitMetabolismInvertedJson), "Computed inverse diff should match expected"
 

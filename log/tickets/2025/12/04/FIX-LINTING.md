@@ -48,7 +48,7 @@ Linting errors across multiple languages:
 
 - Added missing imports: icons, UI components, types, hooks
 - Fixed `createDefaultLayout` call
-- Fixed port update diff key
+- Fixed connector update diff key
 
 ### Kit.tsx
 
@@ -112,6 +112,6 @@ Linting errors across multiple languages:
 The remaining errors require larger refactoring:
 
 1. **Store classes in Sketchpad.tsx** (159 errors): All Store classes need systematic updates for Date->string and string->{ guid } conversions
-2. **Design.tsx** (30 errors): Port interface, connection side issues
+2. **Design.tsx** (30 errors): Connector interface, connection side issues
 3. **elements.tsx** (18 errors): Type definition issues
-4. **Type.tsx** (4 errors): Port interface property access
+4. **Type.tsx** (4 errors): Connector interface property access

@@ -1,7 +1,7 @@
 ---
 slug: COORDINATE-SYSTEM-FIX
-summary: Fix coordinate system transformation for ports and geometry
-prompt: Fix coordinate system transformation for ports and geometry
+summary: Fix coordinate system transformation for connectors and geometry
+prompt: Fix coordinate system transformation for connectors and geometry
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
@@ -13,7 +13,7 @@ iterations: []
 # Coordinate System Transformation Fix
 
 **Date:** 2025-12-03
-**Issue:** Semio and Three.js coordinate systems mismatch causing incorrect rendering of ports and geometry
+**Issue:** Semio and Three.js coordinate systems mismatch causing incorrect rendering of connectors and geometry
 
 ## Problem
 
@@ -24,8 +24,8 @@ The application uses two different coordinate systems:
 
 This mismatch was causing:
 
-1. Ports in the Type app to be displayed at incorrect positions
-2. Port directions to point incorrectly
+1. Connectors in the Type app to be displayed at incorrect positions
+2. Connector directions to point incorrectly
 3. Potential issues with plane-based geometry rendering
 
 ## Transformation
@@ -42,7 +42,7 @@ This transformation is implemented in [semio.ts](../../js/js/semio.ts#L139-L151)
 
 ## Changes Made
 
-### 1. Port Rendering ([Type.tsx](../../js/js/sketchpad/Type.tsx))
+### 1. Connector Rendering ([Type.tsx](../../js/js/sketchpad/Type.tsx))
 
 **Import coordinate transformation functions:**
 
@@ -50,31 +50,31 @@ This transformation is implemented in [semio.ts](../../js/js/semio.ts#L139-L151)
 import { toThreeRotation, toSemioRotation } from "../semio";
 ```
 
-**PortVisual component (lines 1169-1181):**
+**ConnectorVisual component (lines 1169-1181):**
 
-- Added coordinate transformation when rendering ports
-- Port positions are now transformed from Semio to Three.js coordinates
-- Port directions are now transformed and normalized correctly
+- Added coordinate transformation when rendering connectors
+- Connector positions are now transformed from Semio to Three.js coordinates
+- Connector directions are now transformed and normalized correctly
 
 ```typescript
-// Transform port position from Semio coordinate system to Three.js coordinate system
+// Transform connector position from Semio coordinate system to Three.js coordinate system
 const position = useMemo(() => {
-  const semioPos = new THREE.Vector3(port.point.x, port.point.y, port.point.z);
+  const semioPos = new THREE.Vector3(connector.point.x, connector.point.y, connector.point.z);
   const threePos = semioPos.applyMatrix4(toThreeRotation());
   return [threePos.x, threePos.y, threePos.z] as [number, number, number];
-}, [port.point]);
+}, [connector.point]);
 
-// Transform port direction from Semio coordinate system to Three.js coordinate system
+// Transform connector direction from Semio coordinate system to Three.js coordinate system
 const direction = useMemo(() => {
-  const semioDir = new THREE.Vector3(port.direction.x, port.direction.y, port.direction.z);
+  const semioDir = new THREE.Vector3(connector.direction.x, connector.direction.y, connector.direction.z);
   const threeDir = semioDir.applyMatrix4(toThreeRotation()).normalize();
   return [threeDir.x, threeDir.y, threeDir.z] as [number, number, number];
-}, [port.direction]);
+}, [connector.direction]);
 ```
 
-**Port creation (lines 1600-1632):**
+**Connector creation (lines 1600-1632):**
 
-- When users click on the mesh to create a port, the position and normal from Three.js raycasting are now converted back to Semio coordinates before being stored
+- When users click on the mesh to create a connector, the position and normal from Three.js raycasting are now converted back to Semio coordinates before being stored
 
 ```typescript
 // Convert position and normal from Three.js coordinate system back to Semio coordinate system
@@ -104,21 +104,21 @@ This shows users the Semio coordinate system even though the rendering is in Thr
 
 The changes ensure that:
 
-- ✅ Ports are displayed at correct positions in the 3D scene
-- ✅ Port direction arrows point correctly
-- ✅ Newly created ports are stored with correct Semio coordinates
+- ✅ Connectors are displayed at correct positions in the 3D scene
+- ✅ Connector direction arrows point correctly
+- ✅ Newly created connectors are stored with correct Semio coordinates
 - ✅ Pieces continue to render correctly with their plane transformations
 - ✅ The gizmo shows the correct coordinate system labels
 
 ## Impact
 
-- **Type App**: Port rendering and creation now work correctly
+- **Type App**: Connector rendering and creation now work correctly
 - **Design App**: No changes needed (already working correctly)
 - **Coordinate System**: Clear separation between internal (Semio) and rendering (Three.js) coordinate systems
 
 ## Related Files
 
 - [js/js/semio.ts](../../js/js/semio.ts) - Coordinate transformation definitions
-- [js/js/sketchpad/Type.tsx](../../js/js/sketchpad/Type.tsx) - Port rendering and creation (MODIFIED)
+- [js/js/sketchpad/Type.tsx](../../js/js/sketchpad/Type.tsx) - Connector rendering and creation (MODIFIED)
 - [js/js/sketchpad/Design.tsx](../../js/js/sketchpad/Design.tsx) - Piece rendering (already correct)
 - [js/js/sketchpad/elements.tsx](../../js/js/sketchpad/elements.tsx) - Gizmo configuration

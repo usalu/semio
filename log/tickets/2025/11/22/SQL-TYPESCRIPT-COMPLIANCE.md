@@ -55,7 +55,7 @@ Make SQL schema and import/export code 100% compliant with TypeScript schemas as
 {
   piece: PieceId,                 // ✅ piece.guid reference
   designPiece?: PieceId,          // ✅ designPiece.guid reference
-  port: PortId,                   // ✅ port.guid reference
+  connector: ConnectorId,                   // ✅ connector.guid reference
 }
 ```
 
@@ -141,7 +141,7 @@ connected: {
   guid: guid(),  // ❌ WRONG - Side doesn't have guid
   piece: { guid: c.connected_piece_guid },
   designPiece: c.connected_design_piece_guid ? { guid: c.connected_design_piece_guid } : undefined,
-  port: { guid: c.connected_port_guid },
+  connector: { guid: c.connected_connector_guid },
 },
 ```
 
@@ -151,7 +151,7 @@ connected: {
 connected: {
   piece: { guid: c.connected_piece_guid },
   designPiece: c.connected_design_piece_guid ? { guid: c.connected_design_piece_guid } : undefined,
-  port: { guid: c.connected_port_guid },
+  connector: { guid: c.connected_connector_guid },
 },
 ```
 

@@ -16,13 +16,13 @@ SELECT * FROM model WHERE type_guid = ?;
 -- Parameters: model_guid
 SELECT tag FROM model_tag WHERE model_guid = ?;
 
--- Select ports by type_guid
+-- Select connectors by type_guid
 -- Parameters: type_guid
-SELECT * FROM port WHERE type_guid = ?;
+SELECT * FROM connector WHERE type_guid = ?;
 
--- Select props by port_guid
--- Parameters: port_guid
-SELECT * FROM prop WHERE port_guid = ?;
+-- Select props by connector_guid
+-- Parameters: connector_guid
+SELECT * FROM prop WHERE connector_guid = ?;
 
 -- Select designs by kit_guid
 -- Parameters: kit_guid
@@ -112,9 +112,9 @@ SELECT * FROM attribute WHERE design_guid = ?;
 -- Parameters: model_guid
 SELECT * FROM attribute WHERE model_guid = ?;
 
--- Select attributes by port_guid
--- Parameters: port_guid
-SELECT * FROM attribute WHERE port_guid = ?;
+-- Select attributes by connector_guid
+-- Parameters: connector_guid
+SELECT * FROM attribute WHERE connector_guid = ?;
 
 -- Select attributes by piece_guid
 -- Parameters: piece_guid

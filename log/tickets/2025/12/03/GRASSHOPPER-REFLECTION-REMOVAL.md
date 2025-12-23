@@ -73,12 +73,12 @@ All main model components were updated with hardcoded inputs/outputs:
 - **AuthorIdComponent**: Email
 - **FileComponent**: Guid, Name, Remote?, Folder?
 - **ModelComponent** (semio Model): Guid, Name?, File, Description?, Tags*, Attributes*
-- **PortComponent**: Guid, Name?, Description?, Mandatory?, Point, Direction, T, Attributes\*
-- **TypeComponent**: Guid, Name, Description?, Icon?, Image?, Unit, Virtual?, Stock?, Models*, Ports*, Authors*, Attributes*
+- **ConnectorComponent**: Guid, Name?, Description?, Mandatory?, Point, Direction, T, Attributes\*
+- **TypeComponent**: Guid, Name, Description?, Icon?, Image?, Unit, Virtual?, Stock?, Models*, Connectors*, Authors*, Attributes*
 - **LayerComponent**: Name, Description?, Color?
 - **GroupComponent**: Name?, Description?, Pieces*, Color?, Attributes*
 - **PieceComponent**: Guid, Name?, Description?, Type?, Plane?, Center?, Attributes\*
-- **SideComponent**: Piece, DesignPiece?, Port
+- **SideComponent**: Piece, DesignPiece?, Connector
 - **ConnectionComponent**: Guid, Connected, Connecting, Description?, Gap, Shift, Rise, Rotation, Turn, Tilt, Attributes\*
 - **StatComponent**: Key, Unit?, Min?, MinExcluded?, Max?, MaxExcluded?
 - **DesignComponent**: Guid, Name, Description?, Icon?, Image?, Unit, Pieces*, Connections*, Authors*, Attributes*

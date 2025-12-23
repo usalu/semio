@@ -419,7 +419,7 @@ Because everything is expressed in:
 you can subscribe to **any** path like:
 
 - `designStore` path: `["pieces", byGuid(pieceGuid), "plane", "xAxis", "y"]`
-- `kitStore` path: `["types", byGuid(typeGuid), "ports", arrayIndex(i), "compatibleInterfaces", arrayIndex(j)]`
+- `kitStore` path: `["types", byGuid(typeGuid), "connectors", arrayIndex(i), "compatibleInterfaces", arrayIndex(j)]`
 
 and any composition/derivation on top is just another `DerivedNode`.
 

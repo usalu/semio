@@ -16,7 +16,10 @@
           "type": "string"
         }
       },
-      "required": ["name", "email"],
+      "required": [
+        "name",
+        "email"
+      ],
       "title": "Author",
       "type": "object"
     },
@@ -34,7 +37,10 @@
           "type": "number"
         }
       },
-      "required": ["longitude", "latitude"],
+      "required": [
+        "longitude",
+        "latitude"
+      ],
       "title": "Location",
       "type": "object"
     },
@@ -57,42 +63,46 @@
           "type": "number"
         }
       },
-      "required": ["x", "y", "z"],
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
       "title": "Point",
       "type": "object"
     },
-    "Port": {
-      "description": "\ud83d\udd0c A port is a connection point (with a direction) of a type.",
+    "Connector": {
+      "description": "\ud83d\udd0c A connector is a connection point (with a direction) of a type.",
       "properties": {
         "id_": {
           "default": "",
-          "description": "\ud83c\udd94 The id of the port.",
+          "description": "\ud83c\udd94 The id of the connector.",
           "maxLength": 128,
           "title": "Id",
           "type": "string"
         },
         "description": {
           "default": "",
-          "description": "\ud83d\udcac The optional human-readable description of the port.",
+          "description": "\ud83d\udcac The optional human-readable description of the connector.",
           "maxLength": 512,
           "title": "Description",
           "type": "string"
         },
         "mandatory": {
           "default": false,
-          "description": "\ud83d\udcaf Whether the port is mandatory. A mandatory port must be connected in a design.",
+          "description": "\ud83d\udcaf Whether the connector is mandatory. A mandatory connector must be connected in a design.",
           "title": "Mandatory",
           "type": "boolean"
         },
         "interface": {
           "default": "",
-          "description": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66 The optional interface of the port. This allows to define explicit compatibility with other ports.",
+          "description": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66 The optional interface of the connector. This allows to define explicit compatibility with other connectors.",
           "maxLength": 64,
           "title": "Interface",
           "type": "string"
         },
         "compatibleInterfaces": {
-          "description": "\u2705 The optional other compatible interfaces of the port. An empty list means this port is compatible with all other ports.",
+          "description": "\u2705 The optional other compatible interfaces of the connector. An empty list means this connector is compatible with all other connectors.",
           "items": {
             "type": "string"
           },
@@ -101,20 +111,20 @@
         },
         "point": {
           "$ref": "#/$defs/Point",
-          "description": "\u2716\ufe0f The connection point of the port that is attracted to another connection point."
+          "description": "\u2716\ufe0f The connection point of the connector that is attracted to another connection point."
         },
         "direction": {
           "$ref": "#/$defs/Vector",
-          "description": "\u27a1\ufe0f The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned."
+          "description": "\u27a1\ufe0f The direction of the connector. When another piece connects the direction of the other connector is flipped and then the pieces are aligned."
         },
         "t": {
           "default": 0.0,
-          "description": "\ud83d\udc8d The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.",
+          "description": "\ud83d\udc8d The parameter t [0,1[ where the connector will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.",
           "title": "T",
           "type": "number"
         },
         "attributes": {
-          "description": "\ud83d\udccf The attributes of the port.",
+          "description": "\ud83d\udccf The attributes of the connector.",
           "items": {
             "$ref": "#/$defs/Attribute"
           },
@@ -122,8 +132,11 @@
           "type": "array"
         }
       },
-      "required": ["point", "direction"],
-      "title": "Port",
+      "required": [
+        "point",
+        "direction"
+      ],
+      "title": "Connector",
       "type": "object"
     },
     "Attribute": {
@@ -157,7 +170,9 @@
           "type": "string"
         }
       },
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "title": "Attribute",
       "type": "object"
     },
@@ -194,7 +209,9 @@
           "type": "array"
         }
       },
-      "required": ["url"],
+      "required": [
+        "url"
+      ],
       "title": "Model",
       "type": "object"
     },
@@ -217,12 +234,16 @@
           "type": "number"
         }
       },
-      "required": ["x", "y", "z"],
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
       "title": "Vector",
       "type": "object"
     }
   },
-  "description": "\ud83e\udde9 A type is a reusable element that can be connected with other types over ports.",
+  "description": "\ud83e\udde9 A type is a reusable element that can be connected with other types over connectors.",
   "properties": {
     "name": {
       "description": "\ud83d\udcdb The name of the type.",
@@ -272,7 +293,7 @@
     },
     "unit": {
       "default": "",
-      "description": "\u24c2\ufe0f The length unit of the point and the direction of the ports of the type.",
+      "description": "\u24c2\ufe0f The length unit of the point and the direction of the connectors of the type.",
       "maxLength": 64,
       "title": "Unit",
       "type": "string"
@@ -307,11 +328,11 @@
       "title": "Models",
       "type": "array"
     },
-    "ports": {
+    "connectors": {
       "items": {
-        "$ref": "#/$defs/Port"
+        "$ref": "#/$defs/Connector"
       },
-      "title": "Ports",
+      "title": "Connectors",
       "type": "array"
     },
     "authors": {
@@ -329,7 +350,9 @@
       "type": "array"
     }
   },
-  "required": ["name"],
+  "required": [
+    "name"
+  ],
   "title": "Type",
   "type": "object"
 }

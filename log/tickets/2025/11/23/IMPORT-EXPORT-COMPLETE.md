@@ -43,7 +43,7 @@ Create `scripts/generate-metabolism-diff.ts` to:
    - Add/remove/update interfaces
    - Add/remove/update files
    - Add/remove/update authors
-   - Modify nested properties (ports, pieces, connections, etc.)
+   - Modify nested properties (connectors, pieces, connections, etc.)
 3. Compute inverse diff
 4. Apply forward diff to get diffed kit
 5. Write all three assets to `assets/semio/`

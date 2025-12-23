@@ -70,13 +70,13 @@ type Connection {
     connected: Side;
     # 🧲 The connecting side of the connection.
     connecting: Side;
-    # ↕️ The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece.
+    # ↕️ The optional longitudinal gap (applied after rotation and tilt in connector direction) between the connected and the connecting piece.
     gap?: number;
-    # 🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.
+    # 🔄 The optional horizontal rotation in connector direction between the connected and the connecting piece in degrees.
     rotation?: number;
     # ↔️ The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece..
     shift?: number;
-    # ↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.
+    # ↗️ The optional horizontal tilt perpendicular to the connector direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.
     tilt?: number;
     # ➡️ The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.
     x?: number;
@@ -87,7 +87,7 @@ type Connection {
 # 🧱 A side of a piece in a connection.
 type Side {
     piece: PieceId;
-    port: PortId;
+    connector: ConnectorId;
 }
 
 # 🪪 The props to identify the piece within the parent design.
@@ -96,9 +96,9 @@ type PieceId {
     id_?: string;
 }
 
-# 🪪 The props to identify the port within the parent type.
-type PortId {
-    # 🆔 The id of the port.
+# 🪪 The props to identify the connector within the parent type.
+type ConnectorId {
+    # 🆔 The id of the connector.
     id_?: string;
 }
 
@@ -172,7 +172,7 @@ type Attribute {
     value?: string;
 }
 
-# 🧩 A type is a reusable element that can be connected with other types over ports.
+# 🧩 A type is a reusable element that can be connected with other types over connectors.
 type Type {
     authors?: Author[];
     # 🕒 The creation string of the type.
@@ -187,30 +187,30 @@ type Type {
     lastUpstringAt?: string;
     # 📛 The name of the type.
     name: string;
-    ports?: Port[];
+    connectors?: Connector[];
     attributes?: Attribute[];
     models?: Model[];
-    # Ⓜ️ The length unit of the point and the direction of the ports of the type.
+    # Ⓜ️ The length unit of the point and the direction of the connectors of the type.
     unit?: string;
     # 🔀 The optional variant of the type. No variant means the default variant.
     variant?: string;
 }
 
-# 🔌 A port is a connection point (with a direction) of a type.
-type Port {
-    # 💬 The optional human-readable description of the port.
+# 🔌 A connector is a connection point (with a direction) of a type.
+type Connector {
+    # 💬 The optional human-readable description of the connector.
     description?: string;
-    # ➡️ The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned.
+    # ➡️ The direction of the connector. When another piece connects the direction of the other connector is flipped and then the pieces are aligned.
     direction: Vector;
-    # 🆔 The id of the port.
+    # 🆔 The id of the connector.
     id_?: string;
-    # 🗺️ The locators of the port.
+    # 🗺️ The locators of the connector.
     locators?: Locator[];
-    # ✖️ The connection point of the port that is attracted to another connection point.
+    # ✖️ The connection point of the connector that is attracted to another connection point.
     point: Point;
 }
 
-# 🗺️ A locator is meta-data for grouping ports.
+# 🗺️ A locator is meta-data for grouping connectors.
 type Locator {
     # 👪 The group of the locator.
     group: string;

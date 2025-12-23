@@ -35,7 +35,7 @@ The migration from name-based references to GUID-based ID objects is complete. A
 
 ### 3. Connection Side Structure
 
-**Solution:** Verified connections have complete side structures: `{ guid, piece: { guid }, port: { guid } }`.
+**Solution:** Verified connections have complete side structures: `{ guid, piece: { guid }, connector: { guid } }`.
 
 ### 4. Kit.authors Collection
 
@@ -66,22 +66,22 @@ The migration from name-based references to GUID-based ID objects is complete. A
 
 **Solution:** Created `normalize-json.ps1` script that recursively sorts all JSON keys alphabetically for consistent formatting and easier diffing.
 
-### 9. Type and Port GUID Consistency Between Kit and Standalone Files ✅
+### 9. Type and Connector GUID Consistency Between Kit and Standalone Files ✅
 
-**Problem:** Type GUIDs referenced in design files must exist in BOTH the kit and standalone type files for data integrity. Same requirement applies to port GUIDs.
+**Problem:** Type GUIDs referenced in design files must exist in BOTH the kit and standalone type files for data integrity. Same requirement applies to connector GUIDs.
 
 **Solution:**
 
 - **Kit is the authoritative source**: Kit file is always migrated first to establish canonical GUIDs
 - **Standalone type files load from kit**: When migrating standalone `type_*.json` files, they pre-load type GUIDs from `kit_metabolism.json` and reuse them
-- **Standalone design files load from kit**: When migrating standalone `design_*.json` files, they pre-load both type and port GUIDs from the kit
+- **Standalone design files load from kit**: When migrating standalone `design_*.json` files, they pre-load both type and connector GUIDs from the kit
 - **Abstract parent types**: Types created as abstract parents (e.g., "Capsule") exist only in the kit, not as standalone files (expected behavior)
 
 **Verification Results:**
 
 - ✅ All non-abstract type GUIDs exist in BOTH kit and standalone type files
 - ✅ Abstract parent types (e.g., "Capsule", "Box", "Ellipsoid") exist in kit only
-- ✅ All port GUIDs from kit types are preserved in standalone type files
+- ✅ All connector GUIDs from kit types are preserved in standalone type files
 
 ## Migration Statistics
 
@@ -98,14 +98,14 @@ The migration from name-based references to GUID-based ID objects is complete. A
 1. ✅ All TypeScript compiles
 2. ✅ Fixed TypeScript schema (TypeSchema.parent, TypeSchema.location, DesignSchema.parent, DesignSchema.location)
 3. ✅ All pieces have type references with proper `{ guid }` structure
-4. ✅ All connections have complete side structures with `piece`, `port`, and side `guid`
+4. ✅ All connections have complete side structures with `piece`, `connector`, and side `guid`
 5. ✅ Kit.authors properly collects unique Author objects with `name` and `email`
 6. ✅ Standalone designs have type references (loaded from type files in same directory)
 7. ✅ All 56 files migrated successfully
 8. ✅ **GUID consistency across all assets** - Kit processed first to establish authoritative GUIDs
 9. ✅ **Deprecated `view` field removed** from all design files
 10. ✅ **All JSON normalized** with alphabetically sorted keys recursively
-11. ✅ **Type/Port GUIDs verified** - All non-abstract type GUIDs exist in BOTH kit and standalone files
+11. ✅ **Type/Connector GUIDs verified** - All non-abstract type GUIDs exist in BOTH kit and standalone files
 
 ## Schema Changes Completed
 
@@ -114,7 +114,7 @@ All entity references converted from strings to ID objects:
 - `Piece.type`: `string` → `TypeId` (`{ guid: string }`)
 - `Piece.design`: `string` → `DesignId` (`{ guid: string }`)
 - `Side.piece`: `string` → `PieceId` (`{ guid: string }`)
-- `Side.port`: `string` → `PortId` (`{ guid: string }`)
+- `Side.connector`: `string` → `ConnectorId` (`{ guid: string }`)
 - `Side.designPiece`: `string?` → `PieceId?` (`{ guid: string }`)
 - `Group.pieces`: `string[]` → `PieceId[]` (`{ guid: string }[]`)
 - `Type.authors`: `string[]` → `AuthorId[]` (`{ guid: string }[]`)

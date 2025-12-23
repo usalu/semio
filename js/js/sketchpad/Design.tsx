@@ -80,15 +80,16 @@ import {
   areSameConnection,
   Camera,
   Connection,
+  Connector,
   Coord,
   Design,
   DiffStatus,
   findAttributeValue,
   findConnectionsInDesign,
+  findConnectorInType,
   findDesignInKit,
   findModel,
   findPieceInDesign,
-  findPortInType,
   findTypeInKit,
   generateUniqueName,
   getIncludedDesigns,
@@ -100,7 +101,6 @@ import {
   Piece,
   Plane,
   planeToMatrix,
-  Port,
   selectBestModel,
   TOLERANCE,
   toSemioRotation,
@@ -207,7 +207,7 @@ let designAppCommands: Record<string, (context: any, ...args: any[]) => Promise<
 export interface DesignAppSelection {
   pieces?: Guid[];
   connections?: Guid[];
-  port?: { piece: Guid; designPiece?: Guid; port: Guid };
+  connector?: { piece: Guid; designPiece?: Guid; connector: Guid };
 }
 export interface DesignAppSelectionPiecesDiff {
   added?: Guid[];
@@ -220,12 +220,12 @@ export interface DesignAppSelectionConnectionsDiff {
 export interface DesignAppSelectionPortDiff {
   piece?: Guid;
   designPiece?: Guid;
-  port?: Guid;
+  connector?: Guid;
 }
 export interface DesignAppSelectionDiff {
   pieces?: DesignAppSelectionPiecesDiff;
   connections?: DesignAppSelectionConnectionsDiff;
-  port?: DesignAppSelectionPortDiff;
+  connector?: DesignAppSelectionPortDiff;
 }
 export enum DesignAppFullscreenWindow {
   None = "none",
@@ -245,7 +245,7 @@ export interface DesignAppPresence {
 export interface DesignAppHover {
   pieces?: Guid[];
   connections?: Guid[];
-  ports?: { piece: Guid; designPiece?: Guid; port: Guid }[];
+  connectors?: { piece: Guid; designPiece?: Guid; connector: Guid }[];
   types?: Guid[];
   designs?: Guid[];
 }
@@ -324,7 +324,7 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
           connections: {
             removed: currentConnections,
           },
-          port: {},
+          connector: {},
         },
       },
     };
@@ -399,11 +399,11 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
       },
     };
   },
-  "semio.designApp.hoverPort": (context: DesignAppCommandContext, pieceGuid: Guid, portGuid: Guid, designPieceGuid?: Guid): DesignAppCommandResult => {
+  "semio.designApp.hoverPort": (context: DesignAppCommandContext, pieceGuid: Guid, connectorGuid: Guid, designPieceGuid?: Guid): DesignAppCommandResult => {
     return {
       diff: {
         hover: {
-          ports: [{ piece: pieceGuid, designPiece: designPieceGuid, port: portGuid }],
+          connectors: [{ piece: pieceGuid, designPiece: designPieceGuid, connector: connectorGuid }],
         },
       },
     };
@@ -522,7 +522,7 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
           connections: {
             removed: currentSelection.connections || [],
           },
-          port: {},
+          connector: {},
         },
       },
     };
@@ -540,7 +540,7 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
           connections: {
             removed: currentSelection.connections || [],
           },
-          port: {},
+          connector: {},
         },
       },
     };
@@ -590,7 +590,7 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
             removed: currentConnections,
             added: [connectionGuid],
           },
-          port: {},
+          connector: {},
         },
       },
     };
@@ -627,7 +627,7 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
       },
     };
   },
-  "semio.designApp.selectPiecePort": (context: DesignAppCommandContext, piece: Guid, port: Guid, designPiece?: Guid): DesignAppCommandResult => {
+  "semio.designApp.selectPiecePort": (context: DesignAppCommandContext, piece: Guid, connector: Guid, designPiece?: Guid): DesignAppCommandResult => {
     return {
       diff: {
         selection: {
@@ -637,9 +637,9 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
           connections: {
             removed: context.designApp.selection?.connections || [],
           },
-          port: {
+          connector: {
             piece,
-            port,
+            connector,
             designPiece,
           },
         },
@@ -650,7 +650,7 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
     return {
       diff: {
         selection: {
-          port: {},
+          connector: {},
         },
       },
     };
@@ -911,11 +911,11 @@ export const inverseDesignAppSelectionDiff = (selection: DesignAppSelection, dif
     }
   }
 
-  if (diff.port) {
-    inverseDiff.port = {
-      piece: selection.port?.piece,
-      designPiece: selection.port?.designPiece,
-      port: selection.port?.port,
+  if (diff.connector) {
+    inverseDiff.connector = {
+      piece: selection.connector?.piece,
+      designPiece: selection.connector?.designPiece,
+      connector: selection.connector?.connector,
     };
   }
 
@@ -996,15 +996,15 @@ export class DesignStore extends PlainKitDiffAppStore<DesignAppState, DesignAppD
       newSelection.connections = currentConnections.size > 0 ? Array.from(currentConnections) : undefined;
     }
 
-    if (selectionDiff.port) {
-      if (selectionDiff.port.piece && selectionDiff.port.port) {
-        newSelection.port = {
-          piece: selectionDiff.port.piece,
-          designPiece: selectionDiff.port.designPiece,
-          port: selectionDiff.port.port,
+    if (selectionDiff.connector) {
+      if (selectionDiff.connector.piece && selectionDiff.connector.connector) {
+        newSelection.connector = {
+          piece: selectionDiff.connector.piece,
+          designPiece: selectionDiff.connector.designPiece,
+          connector: selectionDiff.connector.connector,
         };
       } else {
-        newSelection.port = undefined;
+        newSelection.connector = undefined;
       }
     }
 
@@ -1716,11 +1716,11 @@ export function useDesignAppHoverConnection(): ActionHookResult<[connectionGuid:
   return [action, canSetHover];
 }
 
-export function useDesignAppHoverPort(): ActionHookResult<[pieceGuid: string, portGuid: string]> {
+export function useDesignAppHoverPort(): ActionHookResult<[pieceGuid: string, connectorGuid: string]> {
   const [, setHover, canSetHover] = useDesignAppHover();
   const action = useMemo(() => {
     if (!canSetHover || !setHover) return undefined;
-    return (pieceGuid: string, portGuid: string) => setHover({ ports: [{ piece: pieceGuid, port: portGuid }] });
+    return (pieceGuid: string, connectorGuid: string) => setHover({ connectors: [{ piece: pieceGuid, connector: connectorGuid }] });
   }, [setHover, canSetHover]);
   return [action, canSetHover];
 }
@@ -1831,12 +1831,12 @@ export function useDesignAppRemoveConnectionFromSelection(): ActionHookResult<[c
   return [action, canSetSelection];
 }
 
-export function useDesignAppSelectPiecePort(): ActionHookResult<[pieceGuid: string, portGuid: string, designPieceGuid?: string]> {
+export function useDesignAppSelectPiecePort(): ActionHookResult<[pieceGuid: string, connectorGuid: string, designPieceGuid?: string]> {
   const [selection, setSelection, canSetSelection] = useDesignAppSelection();
   const action = useMemo(() => {
     if (!canSetSelection || !setSelection) return undefined;
-    return (pieceGuid: string, portGuid: string, designPieceGuid?: string) => {
-      setSelection({ ...selection, port: { piece: pieceGuid, port: portGuid, designPiece: designPieceGuid } });
+    return (pieceGuid: string, connectorGuid: string, designPieceGuid?: string) => {
+      setSelection({ ...selection, connector: { piece: pieceGuid, connector: connectorGuid, designPiece: designPieceGuid } });
     };
   }, [selection, setSelection, canSetSelection]);
   return [action, canSetSelection];
@@ -1847,7 +1847,7 @@ export function useDesignAppDeselectPiecePort(): ActionHookResult<[]> {
   const action = useMemo(() => {
     if (!canSetSelection || !setSelection) return undefined;
     return () => {
-      const { port: _, ...rest } = selection ?? {};
+      const { connector: _, ...rest } = selection ?? {};
       setSelection(rest);
     };
   }, [selection, setSelection, canSetSelection]);
@@ -2226,13 +2226,13 @@ export function useDesignAppCommands(id?: DesignAppId) {
       selectConnection: (_origin: string, connectionGuid: Guid) => actor.send({ type: "DESIGN.SELECT_CONNECTION", kitGuid, designGuid, connectionGuid }),
       addConnectionToSelection: (_origin: string, connectionGuid: Guid) => actor.send({ type: "DESIGN.SELECT_CONNECTION", kitGuid, designGuid, connectionGuid }),
       removeConnectionFromSelection: (_origin: string, connectionGuid: Guid) => actor.send({ type: "DESIGN.DESELECT_CONNECTION", kitGuid, designGuid, connectionGuid }),
-      selectPiecePort: (_origin: string, piece: Guid, port: Guid) => {
+      selectPiecePort: (_origin: string, piece: Guid, connector: Guid) => {
         const current = store.snapshot().selection || {};
-        actor.send({ type: "DESIGN.SET_SELECTION", kitGuid, designGuid, selection: { pieces: current.pieces, connections: current.connections, ports: [{ piece, port }] } });
+        actor.send({ type: "DESIGN.SET_SELECTION", kitGuid, designGuid, selection: { pieces: current.pieces, connections: current.connections, connectors: [{ piece, connector }] } });
       },
       deselectPiecePort: (_origin: string) => {
         const current = store.snapshot().selection || {};
-        actor.send({ type: "DESIGN.SET_SELECTION", kitGuid, designGuid, selection: { pieces: current.pieces, connections: current.connections, ports: undefined } });
+        actor.send({ type: "DESIGN.SET_SELECTION", kitGuid, designGuid, selection: { pieces: current.pieces, connections: current.connections, connectors: undefined } });
       },
       deleteSelected: (origin: string) => store.execute("semio.designApp.deleteSelected", origin),
       toggleDiagramFullscreen: (_origin: string) => {
@@ -2265,7 +2265,7 @@ export function useDesignAppCommands(id?: DesignAppId) {
       hoverPieces: (_origin: string, guids: Guid[]) => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover: { pieces: guids } }),
       hoverConnection: (_origin: string, guid: Guid) => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover: { connections: [guid] } }),
       hoverConnections: (_origin: string, guids: Guid[]) => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover: { connections: guids } }),
-      hoverPort: (_origin: string, pieceGuid: Guid, portGuid: Guid) => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover: { ports: [{ piece: pieceGuid, port: portGuid }] } }),
+      hoverPort: (_origin: string, pieceGuid: Guid, connectorGuid: Guid) => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover: { connectors: [{ piece: pieceGuid, connector: connectorGuid }] } }),
       hoverType: (_origin: string, guid: Guid) => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover: { types: [guid] } }),
       hoverTypes: (_origin: string, guids: Guid[]) => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover: { types: guids } }),
       hoverDesign: (_origin: string, guid: Guid) => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover: { designs: [guid] } }),
@@ -2616,7 +2616,7 @@ export function useDesignAppIsConnectionSelected(id: DesignAppId | undefined, co
   return selection?.connections?.includes(connectionId) ?? false;
 }
 
-export function useDesignAppIsPortHovered(id: DesignAppId | undefined, pieceId: string, portId: string): boolean {
+export function useDesignAppIsPortHovered(id: DesignAppId | undefined, pieceId: string, connectorId: string): boolean {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const designScope = useDesignScope();
@@ -2624,12 +2624,12 @@ export function useDesignAppIsPortHovered(id: DesignAppId | undefined, pieceId: 
   const designGuid = designScope?.guid ?? id?.design ?? "";
   const selector = useMemo(() => createDesignHoverSelector(kitGuid, designGuid), [kitGuid, designGuid]);
   const hover = useSelector(actor, selector);
-  return hover?.ports?.some((p) => p.piece === pieceId && p.port === portId) ?? false;
+  return hover?.connectors?.some((p) => p.piece === pieceId && p.connector === connectorId) ?? false;
 }
 
-const EMPTY_PORT: DesignAppSelection["port"] = undefined;
+const EMPTY_CONNECTOR: DesignAppSelection["connector"] = undefined;
 
-export function useDesignAppSelectedPort(id?: DesignAppId): DesignAppSelection["port"] | undefined {
+export function useDesignAppSelectedConnector(id?: DesignAppId): DesignAppSelection["connector"] | undefined {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const designScope = useDesignScope();
@@ -2637,12 +2637,12 @@ export function useDesignAppSelectedPort(id?: DesignAppId): DesignAppSelection["
   const designGuid = designScope?.guid ?? id?.design ?? "";
   const selector = useMemo(() => createDesignSelectionSelector(kitGuid, designGuid), [kitGuid, designGuid]);
   const selection = useSelector(actor, selector);
-  const port = selection?.port;
-  if (!port?.piece || !port?.port) return EMPTY_PORT;
-  return { piece: port.piece, port: port.port, designPiece: port.designPiece };
+  const connector = selection?.connector;
+  if (!connector?.piece || !connector?.connector) return EMPTY_CONNECTOR;
+  return { piece: connector.piece, connector: connector.connector, designPiece: connector.designPiece };
 }
 
-export function useDesignAppIsPiecePortSelected(pieceId: string, portId?: string): boolean {
+export function useDesignAppIsPiecePortSelected(pieceId: string, connectorId?: string): boolean {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const designScope = useDesignScope();
@@ -2650,8 +2650,8 @@ export function useDesignAppIsPiecePortSelected(pieceId: string, portId?: string
   const designGuid = designScope?.guid ?? "";
   const selector = useMemo(() => createDesignSelectionSelector(kitGuid, designGuid), [kitGuid, designGuid]);
   const selection = useSelector(actor, selector);
-  if (!portId) return false;
-  return selection?.port?.piece === pieceId && selection?.port?.port === portId;
+  if (!connectorId) return false;
+  return selection?.connector?.piece === pieceId && selection?.connector?.connector === connectorId;
 }
 
 function getConnectionStatusFromTransactionStack(store: DesignStore | null, connectionId: string): DiffStatus {
@@ -3962,7 +3962,7 @@ const SingleConnectionInfo: FC = () => {
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectingPortId" value={connection.connecting.port?.guid ?? ""} disabled showLabel />
+          <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectingConnectorId" value={connection.connecting.connector?.guid ?? ""} disabled showLabel />
         </TreeContent>
       </TreeItem>
       {connection.connecting.designPiece && (
@@ -3979,7 +3979,7 @@ const SingleConnectionInfo: FC = () => {
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectedPortId" value={connection.connected.port?.guid ?? ""} disabled showLabel />
+          <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectedConnectorId" value={connection.connected.connector?.guid ?? ""} disabled showLabel />
         </TreeContent>
       </TreeItem>
       {connection.connected.designPiece && (
@@ -4082,13 +4082,13 @@ const ConnectionsSectionForm: FC<{
   );
 };
 
-export const PortSection: FC<{ pieceGuid: Guid; portGuid: Guid }> = ({ pieceGuid, portGuid }) => {
+export const ConnectorSection: FC<{ pieceGuid: Guid; connectorGuid: Guid }> = ({ pieceGuid, connectorGuid }) => {
   const isInDesignScope = useIsInDesignScope();
   if (!isInDesignScope) return null;
-  return <PortSectionForm pieceGuid={pieceGuid} portGuid={portGuid} />;
+  return <ConnectorSectionForm pieceGuid={pieceGuid} connectorGuid={connectorGuid} />;
 };
 
-const PortSectionForm: FC<{ pieceGuid: Guid; portGuid: Guid }> = ({ pieceGuid, portGuid }) => {
+const ConnectorSectionForm: FC<{ pieceGuid: Guid; connectorGuid: Guid }> = ({ pieceGuid, connectorGuid }) => {
   const { t } = useTranslation();
   const design = useDesign() as Design;
   const kit = useKit() as Kit;
@@ -4102,13 +4102,13 @@ const PortSectionForm: FC<{ pieceGuid: Guid; portGuid: Guid }> = ({ pieceGuid, p
   })();
 
   const type = piece?.type ? findTypeInKit(kit, piece.type.guid) : null;
-  const port = type?.ports?.find((p) => p.guid === portGuid);
+  const connector = type?.connectors?.find((p) => p.guid === connectorGuid);
 
-  if (!piece || !type || !port) {
+  if (!piece || !type || !connector) {
     return (
       <TreeItem>
         <TreeContent>
-          <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.design.panel.details.section.port.notFound")}</p>
+          <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.design.panel.details.section.connector.notFound")}</p>
         </TreeContent>
       </TreeItem>
     );
@@ -4118,53 +4118,53 @@ const PortSectionForm: FC<{ pieceGuid: Guid; portGuid: Guid }> = ({ pieceGuid, p
     <>
       <TreeItem>
         <TreeContent>
-          <Input id="semio.sketchpad.app.design.panel.details.section.port.id" value={port.guid || "~default~"} disabled showLabel />
+          <Input id="semio.sketchpad.app.design.panel.details.section.connector.id" value={connector.guid || "~default~"} disabled showLabel />
         </TreeContent>
       </TreeItem>
-      {port.description && (
+      {connector.description && (
         <TreeItem>
           <TreeContent>
-            <Textarea id="semio.sketchpad.app.design.panel.details.section.port.description" value={port.description} disabled showLabel />
+            <Textarea id="semio.sketchpad.app.design.panel.details.section.connector.description" value={connector.description} disabled showLabel />
           </TreeContent>
         </TreeItem>
       )}
-      {port.interface && (
+      {connector.interface && (
         <TreeItem>
           <TreeContent>
-            <Input id="semio.sketchpad.app.design.panel.details.section.port.interface" value={port.interface.guid} disabled showLabel />
+            <Input id="semio.sketchpad.app.design.panel.details.section.connector.interface" value={connector.interface.guid} disabled showLabel />
           </TreeContent>
         </TreeItem>
       )}
-      {port.mandatory !== undefined && (
+      {connector.mandatory !== undefined && (
         <TreeItem>
           <TreeContent>
-            <Input id="semio.sketchpad.app.design.panel.details.section.port.mandatory" value={port.mandatory ? useLabel("semio.sketchpad.common.yes") : useLabel("semio.sketchpad.common.no")} disabled showLabel />
+            <Input id="semio.sketchpad.app.design.panel.details.section.connector.mandatory" value={connector.mandatory ? useLabel("semio.sketchpad.common.yes") : useLabel("semio.sketchpad.common.no")} disabled showLabel />
           </TreeContent>
         </TreeItem>
       )}
       <TreeItem>
         <TreeContent>
-          <Input id="semio.sketchpad.app.design.panel.details.section.port.position" value={`(${port.point.x.toFixed(2)}, ${port.point.y.toFixed(2)}, ${port.point.z.toFixed(2)})`} disabled showLabel />
+          <Input id="semio.sketchpad.app.design.panel.details.section.connector.position" value={`(${connector.point.x.toFixed(2)}, ${connector.point.y.toFixed(2)}, ${connector.point.z.toFixed(2)})`} disabled showLabel />
         </TreeContent>
       </TreeItem>
       <TreeItem>
         <TreeContent>
-          <Input id="semio.sketchpad.app.design.panel.details.section.port.direction" value={`(${port.direction.x.toFixed(2)}, ${port.direction.y.toFixed(2)}, ${port.direction.z.toFixed(2)})`} disabled showLabel />
+          <Input id="semio.sketchpad.app.design.panel.details.section.connector.direction" value={`(${connector.direction.x.toFixed(2)}, ${connector.direction.y.toFixed(2)}, ${connector.direction.z.toFixed(2)})`} disabled showLabel />
         </TreeContent>
       </TreeItem>
-      {(port as any).compatibleInterfaces &&
-        (port as any).compatibleInterfaces.map((interface_: string, index: number) => (
+      {(connector as any).compatibleInterfaces &&
+        (connector as any).compatibleInterfaces.map((interface_: string, index: number) => (
           <TreeItem key={`compatible-interface-${index}`}>
             <TreeContent>
-              <Input id="semio.sketchpad.app.design.panel.details.section.port.compatibleInterface" value={interface_} disabled showLabel />
+              <Input id="semio.sketchpad.app.design.panel.details.section.connector.compatibleInterface" value={interface_} disabled showLabel />
             </TreeContent>
           </TreeItem>
         ))}
-      {port.attributes &&
-        port.attributes.map((attribute: any, index: number) => (
-          <TreeItem key={`port-attribute-${index}`}>
+      {connector.attributes &&
+        connector.attributes.map((attribute: any, index: number) => (
+          <TreeItem key={`connector-attribute-${index}`}>
             <TreeContent>
-              <Input id="semio.sketchpad.app.design.panel.details.section.port.attribute" value={`${attribute.key}: ${attribute.value || "N/A"} ${attribute.unit && `(${attribute.unit})`}`} disabled showLabel />
+              <Input id="semio.sketchpad.app.design.panel.details.section.connector.attribute" value={`${attribute.key}: ${attribute.value || "N/A"} ${attribute.unit && `(${attribute.unit})`}`} disabled showLabel />
             </TreeContent>
           </TreeItem>
         ))}
@@ -4435,15 +4435,15 @@ type DiagramNode = PieceNode | DesignNode;
 type ConnectionEdge = Edge<{ SemioConnection: SemioConnection; isParentConnection?: boolean }, "SemioConnection">;
 type DiagramEdge = ConnectionEdge;
 
-type PortHandleProps = {
-  port: Port;
+type ConnectorHandleProps = {
+  connector: Connector;
   pieceId: string;
   selected?: boolean;
-  onPortClick: (port: Port) => void;
+  onPortClick: (connector: Connector) => void;
 };
 
-const getPortPositionStyle = (port: Port): { x: number; y: number } => {
-  const { t } = port;
+const getConnectorPositionStyle = (connector: Connector): { x: number; y: number } => {
+  const { t } = connector;
   if (t === undefined) {
     return { x: 0, y: 0 };
   }
@@ -4455,27 +4455,27 @@ const getPortPositionStyle = (port: Port): { x: number; y: number } => {
   };
 };
 
-const PortHandle: React.FC<PortHandleProps> = ({ port, pieceId, selected = false, onPortClick }) => {
-  const { x, y } = getPortPositionStyle(port);
-  const portColor = findAttributeValue(port, "semio.color", "var(--foreground)")!;
+const ConnectorHandle: React.FC<ConnectorHandleProps> = ({ connector, pieceId, selected = false, onPortClick }) => {
+  const { x, y } = getConnectorPositionStyle(connector);
+  const connectorColor = findAttributeValue(connector, "semio.color", "var(--foreground)")!;
   const [hoverPort] = useDesignAppHoverPort();
 
-  const isHovered = useDesignAppIsPortHovered(undefined, pieceId, port.guid ?? "");
+  const isHovered = useDesignAppIsPortHovered(undefined, pieceId, connector.guid ?? "");
 
   const onClick = (event: React.MouseEvent) => {
     event.stopPropagation();
-    onPortClick(port);
+    onPortClick(connector);
   };
 
   return (
     <Handle
-      id={port.guid ?? ""}
+      id={connector.guid ?? ""}
       type="source"
       className="left-1/2 top-0 cursor-selectable"
       style={{
         left: x + ICON_WIDTH / 2,
         top: y,
-        backgroundColor: selected ? "var(--active-base)" : isHovered ? "var(--hover-base)" : portColor,
+        backgroundColor: selected ? "var(--active-base)" : isHovered ? "var(--hover-base)" : connectorColor,
         border: selected || isHovered ? "2px solid var(--border-element-color)" : "0",
         zIndex: selected || isHovered ? 20 : 10,
       }}
@@ -4483,7 +4483,7 @@ const PortHandle: React.FC<PortHandleProps> = ({ port, pieceId, selected = false
       role="button"
       onClick={onClick}
       onPointerEnter={() => {
-        if (port.guid && hoverPort) hoverPort(pieceId, port.guid);
+        if (connector.guid && hoverPort) hoverPort(pieceId, connector.guid);
       }}
       onPointerLeave={() => {
         // Do nothing - let parent handle hover clear
@@ -4516,12 +4516,12 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
     piece: { guid, attributes },
     type,
   } = data as PieceNodeProps & { diffStatus: DiffStatus };
-  const ports = type.ports;
+  const connectors = type.connectors;
 
   const renderData = usePieceRenderData(guid);
   const isSelected = renderData.isSelected;
 
-  const selectedPort = useContext(SelectedPortContext);
+  const selectedConnector = useContext(SelectedConnectorContext);
 
   const diff = (attributes?.find((q) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
   const isDesignPiece = !!piece.design;
@@ -4530,8 +4530,8 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
   const { hoverClearTimeoutRef, currentHoveredPieceGuidRef, isPanningRef, isDraggingNodeRef } = useHoverIntent();
 
   const selectPiecePort = useCallback(
-    (piece: Guid, port: Guid) => {
-      commands.selectPiecePort("semio.sketchpad.app.design.canvas.diagram.pieceNode", piece, port);
+    (piece: Guid, connector: Guid) => {
+      commands.selectPiecePort("semio.sketchpad.app.design.canvas.diagram.pieceNode", piece, connector);
     },
     [commands],
   );
@@ -4585,11 +4585,11 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
       id={id}
       piece={piece}
       type={type}
-      ports={ports}
+      connectors={connectors}
       isSelected={isSelected}
       diff={diff}
       isDesignPiece={isDesignPiece}
-      selectedPort={selectedPort}
+      selectedConnector={selectedConnector}
       selectPiecePort={selectPiecePort}
       deselectPiecePort={deselectPiecePort}
       addConnection={addConnection}
@@ -4599,25 +4599,25 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
   );
 }, pieceNodeAreEqual);
 
-const SelectedPortContext = createContext<DesignAppSelection["port"] | undefined>(undefined);
+const SelectedConnectorContext = createContext<DesignAppSelection["connector"] | undefined>(undefined);
 
 type PieceNodeInnerProps = {
   id: string;
   piece: Piece;
   type: Type;
-  ports: Port[] | undefined;
+  connectors: Connector[] | undefined;
   isSelected: boolean;
   diff: DiffStatus;
   isDesignPiece: boolean;
-  selectedPort: DesignAppSelection["port"] | undefined;
-  selectPiecePort: (piece: Guid, port: Guid) => void;
+  selectedConnector: DesignAppSelection["connector"] | undefined;
+  selectPiecePort: (piece: Guid, connector: Guid) => void;
   deselectPiecePort: () => void;
   addConnection: (SemioConnection: any) => void;
   onMouseEnter: (event: React.PointerEvent) => void;
   onMouseLeave: (event: React.PointerEvent) => void;
 };
 
-const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, type, ports, isSelected, diff, isDesignPiece, selectedPort, selectPiecePort, deselectPiecePort, addConnection, onMouseEnter, onMouseLeave }) => {
+const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, type, connectors, isSelected, diff, isDesignPiece, selectedConnector, selectPiecePort, deselectPiecePort, addConnection, onMouseEnter, onMouseLeave }) => {
   const renderData = usePieceRenderData(piece.guid);
   const { fill, stroke, opacity: colorOpacity, isHovered } = renderData;
 
@@ -4635,19 +4635,19 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, type, ports,
   const ringClass = isSelected ? "ring-1 ring-[color:var(--active-base)]" : isHovered ? "ring-1 ring-[color:var(--hover-base)]" : "";
   const fallbackStyle = backgroundColor ? { backgroundColor, color: textColor } : { color: textColor };
 
-  const onPortClick = (port: Port) => {
-    const currentSelectedPort = selectedPort;
+  const onPortClick = (connector: Connector) => {
+    const currentSelectedConnector = selectedConnector;
 
-    if (!port.guid || !piece.guid) {
-      console.error("[ORIGIN] Port or piece guid is undefined", { portGuid: port.guid, pieceGuid: piece.guid });
+    if (!connector.guid || !piece.guid) {
+      console.error("[ORIGIN] Connector or piece guid is undefined", { connectorGuid: connector.guid, pieceGuid: piece.guid });
       return;
     }
 
-    if (currentSelectedPort && (currentSelectedPort.piece !== piece.guid || currentSelectedPort.port !== port.guid)) {
-      if (!currentSelectedPort.piece || !currentSelectedPort.port) {
-        console.error("[ORIGIN] Selected port has undefined piece or port guid", {
-          selectedPiece: currentSelectedPort.piece,
-          selectedPort: currentSelectedPort.port,
+    if (currentSelectedConnector && (currentSelectedConnector.piece !== piece.guid || currentSelectedConnector.connector !== connector.guid)) {
+      if (!currentSelectedConnector.piece || !currentSelectedConnector.connector) {
+        console.error("[ORIGIN] Selected connector has undefined piece or connector guid", {
+          selectedPiece: currentSelectedConnector.piece,
+          selectedConnector: currentSelectedConnector.connector,
         });
         return;
       }
@@ -4655,17 +4655,17 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, type, ports,
       const SemioConnection: SemioConnection = {
         guid: crypto.randomUUID(),
         connecting: {
-          piece: { guid: currentSelectedPort.piece },
-          port: { guid: currentSelectedPort.port },
+          piece: { guid: currentSelectedConnector.piece },
+          connector: { guid: currentSelectedConnector.connector },
         },
-        connected: { piece: { guid: piece.guid }, port: { guid: port.guid } },
+        connected: { piece: { guid: piece.guid }, connector: { guid: connector.guid } },
       };
       addConnection(SemioConnection);
       deselectPiecePort();
-    } else if (currentSelectedPort && currentSelectedPort.piece === piece.guid && currentSelectedPort.port === port.guid) {
+    } else if (currentSelectedConnector && currentSelectedConnector.piece === piece.guid && currentSelectedConnector.connector === connector.guid) {
       deselectPiecePort();
     } else {
-      selectPiecePort(piece.guid, port.guid);
+      selectPiecePort(piece.guid, connector.guid);
     }
   };
 
@@ -4717,8 +4717,14 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, type, ports,
           <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 6} className="stroke-[var(--foreground)] stroke-2 fill-transparent" />
         </svg>
       )}
-      {ports?.map((port: Port, portIndex: number) => (
-        <PortHandle key={`${id}-port-${portIndex}-${port.guid}`} port={port} pieceId={piece.guid} selected={selectedPort?.piece === piece.guid && selectedPort?.port === port.guid} onPortClick={onPortClick} />
+      {connectors?.map((connector: Connector, connectorIndex: number) => (
+        <ConnectorHandle
+          key={`${id}-port-${connectorIndex}-${connector.guid}`}
+          connector={connector}
+          pieceId={piece.guid}
+          selected={selectedConnector?.piece === piece.guid && selectedConnector?.connector === connector.guid}
+          onPortClick={onPortClick}
+        />
       ))}
     </div>
   );
@@ -4732,7 +4738,7 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
   } = data as DesignNodeProps & { diffStatus: DiffStatus };
   const [addConnectionAction] = useDesignAppAddConnection();
   const isSelected = useDesignAppIsPieceSelected(undefined, guid);
-  const selectedPort = useDesignAppSelectedPort();
+  const selectedConnector = useDesignAppSelectedConnector();
   const diff = (attributes?.find((q) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
 
   const [selectPiecePortAction] = useDesignAppSelectPiecePort();
@@ -4742,8 +4748,8 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
   const { hoverClearTimeoutRef, currentHoveredPieceGuidRef, isPanningRef, isDraggingNodeRef } = useHoverIntent();
 
   const selectPiecePort = useCallback(
-    (piece: Guid, port: Guid) => {
-      if (selectPiecePortAction) selectPiecePortAction(piece, port);
+    (piece: Guid, connector: Guid) => {
+      if (selectPiecePortAction) selectPiecePortAction(piece, connector);
     },
     [selectPiecePortAction],
   );
@@ -4793,34 +4799,34 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
     [guid, clearHover, hoverClearTimeoutRef, isPanningRef, isDraggingNodeRef, currentHoveredPieceGuidRef],
   );
 
-  const ports: Port[] = externalConnections.map((SemioConnection, portIndex) => {
+  const connectors: Connector[] = externalConnections.map((SemioConnection, connectorIndex) => {
     const connectedIsDesignPiece = SemioConnection.connected.piece.guid === piece.guid || SemioConnection.connected.designPiece?.guid === piece.guid;
     const connectingIsDesignPiece = SemioConnection.connecting.piece.guid === piece.guid || SemioConnection.connecting.designPiece?.guid === piece.guid;
 
     const designSide = connectedIsDesignPiece ? SemioConnection.connected : SemioConnection.connecting;
     const originalSide = connectedIsDesignPiece ? SemioConnection.connecting : SemioConnection.connected;
 
-    const totalPorts = externalConnections.length;
-    const t = portIndex / totalPorts;
+    const totalConnectors = externalConnections.length;
+    const t = connectorIndex / totalConnectors;
 
     const angle = t * 2 * Math.PI;
     const radius = 0.5;
 
-    const portX = radius * Math.sin(angle);
-    const portY = radius * Math.cos(angle);
-    const portZ = 0;
+    const connectorX = radius * Math.sin(angle);
+    const connectorY = radius * Math.cos(angle);
+    const connectorZ = 0;
 
     const directionX = Math.sin(angle);
     const directionY = Math.cos(angle);
     const directionZ = 0;
 
     return {
-      guid: `port-${portIndex}`,
-      description: `Port for SemioConnection to ${originalSide.piece.guid}:${originalSide.port?.guid ?? ""}`,
+      guid: `connector-${connectorIndex}`,
+      description: `Connector for SemioConnection to ${originalSide.piece.guid}:${originalSide.connector?.guid ?? ""}`,
       interface: { guid: "default" },
       mandatory: false,
       t: t,
-      point: { x: portX, y: portY, z: portZ },
+      point: { x: connectorX, y: connectorY, z: connectorZ },
       direction: { x: directionX, y: directionY, z: directionZ },
       attributes: [
         {
@@ -4830,8 +4836,8 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
         },
         {
           guid: crypto.randomUUID(),
-          key: "semio.originalPortId",
-          value: designSide.port?.guid || "",
+          key: "semio.originalConnectorId",
+          value: designSide.connector?.guid || "",
         },
         {
           guid: crypto.randomUUID(),
@@ -4840,8 +4846,8 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
         },
         {
           guid: crypto.randomUUID(),
-          key: "semio.externalPortId",
-          value: originalSide.port?.guid || "",
+          key: "semio.externalConnectorId",
+          value: originalSide.connector?.guid || "",
         },
       ],
     };
@@ -4852,10 +4858,10 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
       <DesignNodeInner
         id={id}
         piece={piece}
-        ports={ports}
+        connectors={connectors}
         isSelected={isSelected}
         diff={diff}
-        selectedPort={selectedPort}
+        selectedConnector={selectedConnector}
         selectPiecePort={selectPiecePort}
         deselectPiecePort={deselectPiecePort}
         addConnection={addConnection}
@@ -4869,33 +4875,33 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
 type DesignNodeInnerProps = {
   id: string;
   piece: Piece;
-  ports: Port[] | undefined;
+  connectors: Connector[] | undefined;
   isSelected: boolean;
   diff: DiffStatus;
-  selectedPort: DesignAppSelection["port"] | undefined;
-  selectPiecePort: (piece: Guid, port: Guid) => void;
+  selectedConnector: DesignAppSelection["connector"] | undefined;
+  selectPiecePort: (piece: Guid, connector: Guid) => void;
   deselectPiecePort: () => void;
   addConnection: (SemioConnection: any) => void;
   onMouseEnter: (event: React.PointerEvent) => void;
   onMouseLeave: (event: React.PointerEvent) => void;
 };
 
-const DesignNodeInner: React.FC<DesignNodeInnerProps> = ({ id, piece, ports, isSelected, diff, selectedPort, selectPiecePort, deselectPiecePort, addConnection, onMouseEnter, onMouseLeave }) => {
+const DesignNodeInner: React.FC<DesignNodeInnerProps> = ({ id, piece, connectors, isSelected, diff, selectedConnector, selectPiecePort, deselectPiecePort, addConnection, onMouseEnter, onMouseLeave }) => {
   const isHovered = useIsPieceHovered();
 
-  const onPortClick = (port: Port) => {
-    const currentSelectedPort = selectedPort;
+  const onPortClick = (connector: Connector) => {
+    const currentSelectedConnector = selectedConnector;
 
-    if (!port.guid || !piece.guid) {
-      console.error("[ORIGIN] Port or piece guid is undefined in DesignNode", { portGuid: port.guid, pieceGuid: piece.guid });
+    if (!connector.guid || !piece.guid) {
+      console.error("[ORIGIN] Connector or piece guid is undefined in DesignNode", { connectorGuid: connector.guid, pieceGuid: piece.guid });
       return;
     }
 
-    if (currentSelectedPort && (currentSelectedPort.piece !== piece.guid || currentSelectedPort.port !== port.guid)) {
-      if (!currentSelectedPort.piece || !currentSelectedPort.port) {
-        console.error("[ORIGIN] Selected port has undefined piece or port guid in DesignNode", {
-          selectedPiece: currentSelectedPort.piece,
-          selectedPort: currentSelectedPort.port,
+    if (currentSelectedConnector && (currentSelectedConnector.piece !== piece.guid || currentSelectedConnector.connector !== connector.guid)) {
+      if (!currentSelectedConnector.piece || !currentSelectedConnector.connector) {
+        console.error("[ORIGIN] Selected connector has undefined piece or connector guid in DesignNode", {
+          selectedPiece: currentSelectedConnector.piece,
+          selectedConnector: currentSelectedConnector.connector,
         });
         return;
       }
@@ -4903,17 +4909,17 @@ const DesignNodeInner: React.FC<DesignNodeInnerProps> = ({ id, piece, ports, isS
       const SemioConnection: SemioConnection = {
         guid: crypto.randomUUID(),
         connecting: {
-          piece: { guid: currentSelectedPort.piece },
-          port: { guid: currentSelectedPort.port },
+          piece: { guid: currentSelectedConnector.piece },
+          connector: { guid: currentSelectedConnector.connector },
         },
-        connected: { piece: { guid: piece.guid }, port: { guid: port.guid } },
+        connected: { piece: { guid: piece.guid }, connector: { guid: connector.guid } },
       };
       addConnection(SemioConnection);
       deselectPiecePort();
-    } else if (currentSelectedPort && currentSelectedPort.piece === piece.guid && currentSelectedPort.port === port.guid) {
+    } else if (currentSelectedConnector && currentSelectedConnector.piece === piece.guid && currentSelectedConnector.connector === connector.guid) {
       deselectPiecePort();
     } else {
-      selectPiecePort(piece.guid, port.guid);
+      selectPiecePort(piece.guid, connector.guid);
     }
   };
 
@@ -4963,8 +4969,14 @@ const DesignNodeInner: React.FC<DesignNodeInnerProps> = ({ id, piece, ports, isS
           {piece.guid}
         </text>
       </svg>
-      {ports?.map((port: Port, portIndex: number) => (
-        <PortHandle key={`${id}-port-${portIndex}-${port.guid}`} port={port} pieceId={piece.guid} selected={selectedPort?.piece === piece.guid && selectedPort?.port === port.guid} onPortClick={onPortClick} />
+      {connectors?.map((connector: Connector, connectorIndex: number) => (
+        <ConnectorHandle
+          key={`${id}-port-${connectorIndex}-${connector.guid}`}
+          connector={connector}
+          pieceId={piece.guid}
+          selected={selectedConnector?.piece === piece.guid && selectedConnector?.connector === connector.guid}
+          onPortClick={onPortClick}
+        />
       ))}
     </div>
   );
@@ -5203,8 +5215,8 @@ const connectionToEdge = (
 ): ConnectionEdge => {
   let sourcePieceId = SemioConnection.connecting.piece;
   let targetPieceId = SemioConnection.connected.piece;
-  let sourcePortId = SemioConnection.connecting.port ?? "undefined";
-  let targetPortId = SemioConnection.connected.port ?? "undefined";
+  let sourcePortId = SemioConnection.connecting.connector ?? "undefined";
+  let targetConnectorId = SemioConnection.connected.connector ?? "undefined";
 
   if (SemioConnection.connecting.designPiece && allConnections) {
     const designPieceId = SemioConnection.connecting.designPiece;
@@ -5216,11 +5228,14 @@ const connectionToEdge = (
       return connectedToDesign || connectingToDesign;
     });
 
-    const portIndex = externalConnections.findIndex(
+    const connectorIndex = externalConnections.findIndex(
       (conn) =>
-        conn.connected.piece === SemioConnection.connected.piece && conn.connecting.piece === SemioConnection.connecting.piece && conn.connected.port === SemioConnection.connected.port && conn.connecting.port === SemioConnection.connecting.port,
+        conn.connected.piece === SemioConnection.connected.piece &&
+        conn.connecting.piece === SemioConnection.connecting.piece &&
+        conn.connected.connector === SemioConnection.connected.connector &&
+        conn.connecting.connector === SemioConnection.connecting.connector,
     );
-    sourcePortId = portIndex >= 0 ? { guid: `port-${portIndex}` } : { guid: "port-0" };
+    sourcePortId = connectorIndex >= 0 ? { guid: `connector-${connectorIndex}` } : { guid: "connector-0" };
   }
 
   if (SemioConnection.connected.designPiece && allConnections) {
@@ -5233,11 +5248,14 @@ const connectionToEdge = (
       return connectedToDesign || connectingToDesign;
     });
 
-    const portIndex = externalConnections.findIndex(
+    const connectorIndex = externalConnections.findIndex(
       (conn) =>
-        conn.connected.piece === SemioConnection.connected.piece && conn.connecting.piece === SemioConnection.connecting.piece && conn.connected.port === SemioConnection.connected.port && conn.connecting.port === SemioConnection.connecting.port,
+        conn.connected.piece === SemioConnection.connected.piece &&
+        conn.connecting.piece === SemioConnection.connecting.piece &&
+        conn.connected.connector === SemioConnection.connected.connector &&
+        conn.connecting.connector === SemioConnection.connecting.connector,
     );
-    targetPortId = portIndex >= 0 ? { guid: `port-${portIndex}` } : { guid: "port-0" };
+    targetConnectorId = connectorIndex >= 0 ? { guid: `connector-${connectorIndex}` } : { guid: "connector-0" };
   }
 
   const sourceIndex = pieceIndexMap.get(sourcePieceId.guid) ?? 0;
@@ -5251,7 +5269,7 @@ const connectionToEdge = (
     source: sourceNodeId,
     sourceHandle: typeof sourcePortId === "string" ? sourcePortId : sourcePortId.guid,
     target: targetNodeId,
-    targetHandle: typeof targetPortId === "string" ? targetPortId : targetPortId.guid,
+    targetHandle: typeof targetConnectorId === "string" ? targetConnectorId : targetConnectorId.guid,
     data: { SemioConnection, isParentConnection },
     selected,
   };
@@ -5280,7 +5298,7 @@ const designToNodesAndEdges = (design: Design, metadata: Map<string, PieceMetada
               name: `Unknown-${piece.design}`,
               unit: "m",
               description: `Missing design: ${piece.design}`,
-              ports: [],
+              connectors: [],
               models: [],
             };
             return pieceToNode(piece, fallbackType, center, i);
@@ -5290,7 +5308,7 @@ const designToNodesAndEdges = (design: Design, metadata: Map<string, PieceMetada
             name: design.name,
             unit: design.unit || "m",
             description: design.description,
-            ports: [],
+            connectors: [],
             models: [],
           };
           return pieceToNode(piece, designAsType, center, i);
@@ -5307,7 +5325,7 @@ const designToNodesAndEdges = (design: Design, metadata: Map<string, PieceMetada
             name: `Unknown-${piece.type}`,
             unit: "m",
             description: `Missing type: ${piece.type}`,
-            ports: [],
+            connectors: [],
             models: [],
           };
           return pieceToNode(piece, fallbackType, center, i);
@@ -5522,7 +5540,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
     return map;
   }, [design?.pieces, selection?.pieces, transitivelyHoveredPieces, transactionStatusMap]);
 
-  const selectedPort = selection?.port;
+  const selectedConnector = selection?.connector;
 
   const { baseNodes, edges } = useMemo(() => {
     if (!design) return { baseNodes: [], edges: [] };
@@ -6436,8 +6454,8 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
             const existingConnection = design?.connections?.find((c) =>
               areSameConnection(c, {
                 guid: "",
-                connected: { guid: "", piece: { guid: selectedNode.data.piece.guid }, port: { guid: "" } },
-                connecting: { guid: "", piece: { guid: otherNode.data.piece.guid }, port: { guid: "" } },
+                connected: { guid: "", piece: { guid: selectedNode.data.piece.guid }, connector: { guid: "" } },
+                connecting: { guid: "", piece: { guid: otherNode.data.piece.guid }, connector: { guid: "" } },
               } as SemioConnection),
             );
             if (existingConnection) continue;
@@ -6448,9 +6466,9 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
                 console.error("[ORIGIN] onNodeDrag: handle.id is undefined", { handle, selectedNode });
                 continue;
               }
-              const port = findPortInType(type, handle.id!);
-              if (!port || !port.guid) {
-                console.error("[ORIGIN] onNodeDrag: port or port.guid is undefined", { port, handleId: handle.id, type });
+              const connector = findConnectorInType(type, handle.id!);
+              if (!connector || !connector.guid) {
+                console.error("[ORIGIN] onNodeDrag: connector or connector.guid is undefined", { connector, handleId: handle.id, type });
                 continue;
               }
               for (const otherHandle of otherInternalNode.internals.handleBounds?.source ?? []) {
@@ -6458,7 +6476,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
                   console.error("[ORIGIN] onNodeDrag: otherHandle.id is undefined", { otherHandle, otherNode });
                   continue;
                 }
-                const otherPort = findPortInType((otherNode as PieceNode).data.type, otherHandle.id!);
+                const otherPort = findConnectorInType((otherNode as PieceNode).data.type, otherHandle.id!);
                 if (!otherPort || !otherPort.guid) {
                   console.error("[ORIGIN] onNodeDrag: otherPort or otherPort.guid is undefined", { otherPort, otherHandleId: otherHandle.id, otherNode });
                   continue;
@@ -6472,7 +6490,8 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
                   continue;
                 }
                 const haveSameFixedPiece = fixedPieceId && fixedPieceId === metadata.get(otherNode.data.piece.guid)?.fixedPieceId;
-                if (haveSameFixedPiece || !arePortsCompatible(port, otherPort) || (design && isPortInUse(design as Design, piece.guid, port.guid)) || (design && isPortInUse(design as Design, otherNode.data.piece.guid, otherPort.guid))) continue;
+                if (haveSameFixedPiece || !arePortsCompatible(connector, otherPort) || (design && isPortInUse(design as Design, piece.guid, connector.guid)) || (design && isPortInUse(design as Design, otherNode.data.piece.guid, otherPort.guid)))
+                  continue;
                 const dx = selectedInternalNode.internals.positionAbsolute.x + handle.x - (otherInternalNode.internals.positionAbsolute.x + otherHandle.x);
                 const dy = selectedInternalNode.internals.positionAbsolute.y + handle.y - (otherInternalNode.internals.positionAbsolute.y + otherHandle.y);
                 const distance = Math.sqrt(dx * dx + dy * dy);
@@ -6481,11 +6500,11 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
                     guid: crypto.randomUUID(),
                     connected: {
                       piece: { guid: otherNode.data.piece.guid },
-                      port: { guid: otherHandle.id! },
+                      connector: { guid: otherHandle.id! },
                     },
                     connecting: {
                       piece: { guid: selectedNode.data.piece.guid },
-                      port: { guid: handle.id! },
+                      connector: { guid: handle.id! },
                     },
                     u: (selectedInternalNode.internals.positionAbsolute.x + handle.x - (otherInternalNode.internals.positionAbsolute.x + otherHandle.x)) / ICON_WIDTH,
                     v: -((selectedInternalNode.internals.positionAbsolute.y + handle.y - (otherInternalNode.internals.positionAbsolute.y + otherHandle.y)) / ICON_WIDTH),
@@ -6614,11 +6633,11 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         guid: crypto.randomUUID(),
         connected: {
           piece: sourcePieceId,
-          port: { guid: params.sourceHandle },
+          connector: { guid: params.sourceHandle },
         },
         connecting: {
           piece: targetPieceId,
-          port: { guid: params.targetHandle },
+          connector: { guid: params.targetHandle },
         },
         u: (sourceInternalNode.internals.positionAbsolute.x + sourceHandle.x - (targetInternalNode.internals.positionAbsolute.x + targetHandle.x)) / ICON_WIDTH,
         v: -((sourceInternalNode.internals.positionAbsolute.y + sourceHandle.y - (targetInternalNode.internals.positionAbsolute.y + targetHandle.y)) / ICON_WIDTH),
@@ -6633,7 +6652,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
   return (
     <PieceRenderDataContext.Provider value={pieceRenderDataMap}>
-      <SelectedPortContext.Provider value={selectedPort}>
+      <SelectedConnectorContext.Provider value={selectedConnector}>
         <div id="semio.sketchpad.app.design.canvas.diagram" data-diagram-id={diagramId} className="h-full w-full relative" ref={setDropZoneRef}>
           <style>{`
             [data-diagram-id="${diagramId}"][data-panning="true"] .react-flow__node,
@@ -6712,7 +6731,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
           {/* <ClusterMenu nodes={nodes} edges={edges} onCluster={onCluster} /> */}
           {/* <ExpandMenu nodes={nodes} edges={edges} onExpand={onExpand} /> */}
         </div>
-      </SelectedPortContext.Provider>
+      </SelectedConnectorContext.Provider>
     </PieceRenderDataContext.Provider>
   );
 };
@@ -7585,7 +7604,7 @@ const App: FC<AppProps> = () => {
 
     const hasPieces = (selection.pieces || []).length > 0;
     const hasConnections = (selection.connections || []).length > 0;
-    const hasPortSelected = selection.port !== undefined;
+    const hasPortSelected = selection.connector !== undefined;
     const hasSelection = hasPieces || hasConnections || hasPortSelected;
 
     const pieceSingleId = "semio.sketchpad.app.design.panel.details.section.piece.properties";
@@ -7595,7 +7614,7 @@ const App: FC<AppProps> = () => {
     const selectionMultipleId = "semio.sketchpad.app.design.panel.details.section.selection.multipleTitle";
 
     removeSection("details", "semio.sketchpad.app.design.properties");
-    removeSection("details", "semio.sketchpad.app.type.port.properties");
+    removeSection("details", "semio.sketchpad.app.type.connector.properties");
     removeSection("details", pieceSingleId);
     removeSection("details", pieceMultipleId);
     removeSection("details", connectionSingleId);
@@ -7616,13 +7635,13 @@ const App: FC<AppProps> = () => {
           ) : null,
       });
     } else if (hasPortSelected) {
-      const portPieceId = selection.port!.piece;
-      const portId = selection.port!.port;
+      const connectorPieceId = selection.connector!.piece;
+      const connectorId = selection.connector!.connector;
       addSection("details", {
-        id: "semio.sketchpad.app.type.port.properties",
+        id: "semio.sketchpad.app.type.connector.properties",
         specificity: 30,
         order: 0,
-        content: () => <PortSection pieceGuid={portPieceId} portGuid={portId} />,
+        content: () => <ConnectorSection pieceGuid={connectorPieceId} connectorGuid={connectorId} />,
       });
       addSection("details", {
         id: "semio.sketchpad.app.design.properties",
@@ -7700,7 +7719,7 @@ const App: FC<AppProps> = () => {
 
     return () => {
       removeSection("details", "semio.sketchpad.app.design.properties");
-      removeSection("details", "semio.sketchpad.app.type.port.properties");
+      removeSection("details", "semio.sketchpad.app.type.connector.properties");
       removeSection("details", pieceSingleId);
       removeSection("details", pieceMultipleId);
       removeSection("details", connectionSingleId);

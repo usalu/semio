@@ -108,7 +108,7 @@ Root cause: The app is likely throwing an error before rendering, or the actor c
 
 **Type Events**:
 
-- `TYPE.HOVER_PORT` → `typeHoverPort`
+- `TYPE.HOVER_CONNECTOR` → `typeHoverPort`
 - `TYPE.HOVER_MODEL` → `typeHoverModel`
 - `TYPE.SET_SELECTED_MODEL` → `typeSetSelectedModel`
 - `TYPE.ADD_MODEL_TAG` → `typeAddModelTag`

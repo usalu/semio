@@ -81,7 +81,7 @@ Tags were simple strings on models, and concepts were simple strings on types/de
 
 - Fixed `applyLocationDiff` - added required `guid` property to result
 - Fixed `applyPropDiff` - added required `value` property to result
-- Fixed `applyPortDiff` - added required `t` property to result
+- Fixed `applyConnectorDiff` - added required `t` property to result
 
 ## Pending
 

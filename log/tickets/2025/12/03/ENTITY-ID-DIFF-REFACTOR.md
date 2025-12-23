@@ -35,7 +35,7 @@ This made it unclear which entity was being referenced and was inconsistent with
 
 - Updated all `*DiffSchema` definitions to use `EntityIdSchema` in `removed` and `updated` arrays
 - Changed `updated` arrays from `{ id: string, diff }` to `{ <entity>: EntityId, diff }` format
-- Added `PortsDiff` type export (was missing)
+- Added `ConnectorsDiff` type export (was missing)
 - Added `SideIdSchema` for composite Side entity identification
 - Updated generic collection diff functions to use `entityKey` parameter
 - Updated all entity-specific diff functions

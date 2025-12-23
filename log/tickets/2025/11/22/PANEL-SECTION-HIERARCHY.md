@@ -30,7 +30,7 @@ The panel system should order sections by specificity:
 
 #### Details Panel
 
-- **Top (most specific)**: Selection details (pieces, connections, ports selected)
+- **Top (most specific)**: Selection details (pieces, connections, connectors selected)
 - **Middle**: Design details (current design metadata)
 - **Bottom**: Kit details (kit metadata)
 
@@ -112,7 +112,7 @@ enum SectionSpecificity {
 5. ✅ Update Home App sections (SKETCHPAD = 0)
 6. ✅ Update Kit App sections (KIT = 10, SELECTION = 30 for artifacts)
 7. ✅ Update Design App sections (DESIGN = 20, SELECTION = 30)
-8. ✅ Update Type App sections (TYPE = 20, SELECTION = 30 for ports)
+8. ✅ Update Type App sections (TYPE = 20, SELECTION = 30 for connectors)
 9. ✅ Update Quality App sections (QUALITY = 20)
 10. ✅ Update Docs App sections (DOCS = 20)
 
@@ -120,7 +120,7 @@ enum SectionSpecificity {
 
 All sections now include `specificity` field and will be ordered correctly:
 
-- **Specificity 30** (most specific, top): Selected items (ports, pieces, connections, artifacts)
+- **Specificity 30** (most specific, top): Selected items (connectors, pieces, connections, artifacts)
 - **Specificity 20**: App-level details (Design, Type, Quality, Docs)
 - **Specificity 10**: Kit-level details
 - **Specificity 0** (least specific, bottom): Sketchpad-level (settings, general)

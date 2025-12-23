@@ -23,7 +23,7 @@ Migrated the entire codebase from PowerShell-based CI/CD scripting to TypeScript
 
 - **Consistency**: Use a single scripting language (TypeScript) across the entire codebase
 - **Type Safety**: Leverage TypeScript's type system for safer scripts
-- **Cross-Platform**: TypeScript/Node.js is more portable than PowerShell
+- **Cross-Platform**: TypeScript/Node.js is more connectorable than PowerShell
 - **Developer Experience**: Better IDE support and integration with existing TS tooling
 - **Maintainability**: Easier for JavaScript/TypeScript developers to contribute
 

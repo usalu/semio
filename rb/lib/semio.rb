@@ -21,8 +21,8 @@ module Semio
   # 🪪 Identifier for a piece within a design.
   PieceId = Struct.new(:id_, keyword_init: true)
 
-  # 🪪 Identifier for a port within a type.
-  PortId = Struct.new(:id_, keyword_init: true)
+  # 🪪 Identifier for a connector within a type.
+  ConnectorId = Struct.new(:id_, keyword_init: true)
 
   # 🏷️ Represents a attribute, a named property with an optional value, unit, and definition.
   Attribute = Struct.new(:name, :value, :unit, :definition, keyword_init: true)
@@ -36,8 +36,8 @@ module Semio
   # ◳ A plane defined by an origin point and two axes vectors.
   Plane = Struct.new(:origin, :x_axis, :y_axis, keyword_init: true)
 
-  # 🔌 A port is a connection point on a type, defined by a point and direction.
-  Port = Struct.new(
+  # 🔌 A connector is a connection point on a type, defined by a point and direction.
+  Connector = Struct.new(
     :id_,
     :description,
     :interface,
@@ -53,8 +53,8 @@ module Semio
   # ⭕ A piece is a 3D instance of a type within a design.
   Piece = Struct.new(:id_, :description, :type, :plane, :center, :attributes, keyword_init: true)
 
-  # 🧱 A side of a piece in a connection, identifying a specific port on a specific piece.
-  Side = Struct.new(:piece, :port, keyword_init: true)
+  # 🧱 A side of a piece in a connection, identifying a specific connector on a specific piece.
+  Side = Struct.new(:piece, :connector, keyword_init: true)
 
   # 🖇️ A bidirectional connection between two pieces of a design.
   Connection = Struct.new(
@@ -73,7 +73,7 @@ module Semio
     keyword_init: true
   )
 
-  # 🧩 A type is a reusable element blueprint with ports for connection.
+  # 🧩 A type is a reusable element blueprint with connectors for connection.
   Type = Struct.new(
     :name,
     :description,
@@ -87,7 +87,7 @@ module Semio
     :updated,
     :location,
     :models,
-    :ports,
+    :connectors,
     :authors,
     :attributes,
     keyword_init: true
