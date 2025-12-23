@@ -54,7 +54,6 @@ import {
   UserIcon,
 } from "@semio/assets";
 import { useSelector } from "@xstate/react";
-import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "d3-force";
 import { formatDistanceToNow } from "date-fns";
 import { de, enUS } from "date-fns/locale";
 import React, { FC, memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -112,11 +111,16 @@ import {
   useTypeScope,
   Window,
 } from "./Sketchpad";
-import type { ConnectionLineComponentProps, Edge, EdgeProps, Node, NodeProps } from "./elements";
+import type { ConnectionLineComponentProps, Edge, EdgeProps, Node, NodeProps, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "./elements";
 import {
   Action,
   Background,
   BaseEdge,
+  forceCenter,
+  forceCollide,
+  forceLink,
+  forceManyBody,
+  forceSimulation,
   getBezierPath,
   Handle,
   Input,
@@ -250,6 +254,13 @@ export interface KitAppPresence {
 export interface KitAppHover {
   type?: Guid;
   design?: Guid;
+  quality?: Guid;
+  interface?: Guid;
+  tag?: Guid;
+  concept?: Guid;
+  file?: Guid;
+  folder?: Guid;
+  author?: Guid;
 }
 export interface KitAppPresenceOther extends KitAppPresence {
   name: string;
@@ -1526,15 +1537,15 @@ export function useKitAppToggleSort(): ActionHookResult<[column: KitAppSortColum
   return [action, canAct];
 }
 
-export function useKitAppSetHover(): ActionHookResult<[hover: { type?: Guid; design?: Guid }]> {
+export function useKitAppSetHover(): ActionHookResult<[hover: KitAppHover]> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid ?? "";
-  const canActEvent = useMemo(() => ({ type: "KIT.SET_HOVER" as const, kitGuid, hover: {} }), [kitGuid]);
+  const canActEvent = useMemo(() => ({ type: "KIT.SET_HOVER" as const, kitGuid, hover: {} as KitAppHover }), [kitGuid]);
   const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
   const action = useMemo(() => {
     if (!canAct) return undefined;
-    return (hover: { type?: Guid; design?: Guid }) => actor.send({ type: "KIT.SET_HOVER", kitGuid, hover });
+    return (hover: KitAppHover) => actor.send({ type: "KIT.SET_HOVER", kitGuid, hover });
   }, [actor, kitGuid, canAct]);
   return [action, canAct];
 }
@@ -2781,20 +2792,23 @@ const AppContent: FC = () => {
   const isMobile = useIsMobile();
   const orchestrator = useSketchpadStore();
 
-  const [selection] = useKitAppSelection();
-  const [expandedRowsSet] = useKitAppExpandedRows();
-  const [sortColumn] = useKitAppSortColumn();
-  const [sortDirection] = useKitAppSortDirection();
-  const kitApp = useKitAppXState(kitScope?.guid ?? "");
+    const [selection] = useKitAppSelection();
+    const [expandedRowsSet] = useKitAppExpandedRows();
+    const [sortColumn] = useKitAppSortColumn();
+    const [sortDirection] = useKitAppSortDirection();
+    const kitApp = useKitAppXState(kitScope?.guid ?? "");
+    const hover = useKitApp((state) => state?.hover) as KitAppHover | undefined;
 
   const [selectTypeAction, canSelectType] = useKitAppSelectType();
   const [selectDesignAction, canSelectDesign] = useKitAppSelectDesign();
   const [setSelectionAction, canSetSelection] = useKitAppSetSelection();
   const [clearSelectionAction, canClearSelection] = useKitAppClearSelection();
   const [setFilterAction, canSetFilter] = useKitAppSetFilter();
-  const [toggleRowAction] = useKitAppToggleRow();
-  const [setSortAction, canSetSort] = useKitAppSetSort();
-  const [toggleSortAction, canToggleSort] = useKitAppToggleSort();
+    const [toggleRowAction] = useKitAppToggleRow();
+    const [setSortAction, canSetSort] = useKitAppSetSort();
+    const [toggleSortAction, canToggleSort] = useKitAppToggleSort();
+    const [setHover] = useKitAppSetHover();
+    const [clearHover] = useKitAppClearHover();
 
   const [isDragOver, setIsDragOver] = React.useState(false);
   const [showZipWarning, setShowZipWarning] = React.useState(false);
@@ -2802,6 +2816,7 @@ const AppContent: FC = () => {
   const [overId, setOverId] = React.useState<string | null>(null);
   const lastClickedIndexRef = React.useRef<number>(-1);
   const clickTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+  const lastDoubleClickRef = React.useRef<{ rowId: string | null; at: number }>({ rowId: null, at: 0 });
 
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
@@ -2894,21 +2909,16 @@ const AppContent: FC = () => {
     return Array.from(conceptSet).sort();
   }, [kitDesignsKey, kitConcepts]);
 
-  // Collect unique names for the selected kind (or unified when no kind selected)
-  // Names are shown hierarchically based on selectedName filter
   const uniqueNames = useMemo(() => {
     const nameSet = new Set<string>();
 
-    // Helper to get visible names from a hierarchy
     const collectVisibleNames = <T extends { guid: string; name: string; parent?: { guid: string } }>(entities: T[] | undefined) => {
       if (!entities) return;
 
       if (!selectedName) {
-        // No name selected - show all root entity names
         const rootEntities = entities.filter((e) => !e.parent);
         rootEntities.forEach((e) => nameSet.add(e.name));
       } else {
-        // Name is selected - show children names of all entities with that name
         const matchingEntities = entities.filter((e) => e.name === selectedName);
         matchingEntities.forEach((parent) => {
           const children = entities.filter((e) => e.parent?.guid === parent.guid);
@@ -2926,8 +2936,6 @@ const AppContent: FC = () => {
 
     return Array.from(nameSet).sort();
   }, [kitDesignsKey, kitTypesKey, selectedKind, selectedName]);
-
-  // Kit app creation is now handled by useKitAppYjsToXStateSync hook
 
   useEffect(() => {
     if (appType !== "kit") {
@@ -3146,7 +3154,6 @@ const AppContent: FC = () => {
     };
   }, [appType, addSection, removeSection]);
 
-  // Auto-select design/type when select parameter is present
   useEffect(() => {
     if (!selectParam) return;
 
@@ -3179,7 +3186,6 @@ const AppContent: FC = () => {
       return formatDistanceToNow(parsedDate, { addSuffix: true, locale });
     };
 
-    // Pre-build lookup maps for O(1) child lookups instead of O(n) filter operations
     const designsByParent = new Map<string | undefined, Design[]>();
     const typesByParent = new Map<string | undefined, Type[]>();
     const foldersByParent = new Map<string | undefined, Folder[]>();
@@ -3236,24 +3242,20 @@ const AppContent: FC = () => {
         designGroups.get(key)!.push(design);
       });
 
-      // Helper function to recursively build design hierarchy
       const buildDesignHierarchy = (designs: Design[], parentGuid: string | undefined, level: number, parentRowId?: string): void => {
         const childDesigns = designsByParent.get(parentGuid) || [];
 
         childDesigns.forEach((design) => {
-          // Skip designs not in the input set (for filtered views)
           if (!designs.includes(design)) return;
           if (selectedConcepts.length > 0 && !design.concepts?.some((c) => selectedConcepts.includes(c.guid))) return;
           if (searchQuery && !design.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
-          // Skip root designs that are in folders when not viewing the folders kind
-          // Only filter at root level (parentGuid === undefined), not children
+
           if (!selectedKind && parentGuid === undefined && design.folder) return;
 
           const rowId = `design-${design.guid}`;
           const children = designsByParent.get(design.guid) || [];
           const hasChildren = children.length > 0;
 
-          // Resolve concept GUIDs to names
           const designConceptNames = design.concepts?.map((c) => kitConcepts?.find((kc) => kc.guid === c.guid)?.name).filter((name): name is string => name !== undefined) || [];
 
           result.push({
@@ -3277,13 +3279,10 @@ const AppContent: FC = () => {
         });
       };
 
-      // Apply name filter - if selectedName is set, only include designs with that name and their descendants
       const allDesignsArray = kitDesigns || [];
       if (selectedName) {
-        // Find all designs with the selected name
         const matchingDesignGuids = new Set(allDesignsArray.filter((d) => d.name === selectedName).map((d) => d.guid));
 
-        // Collect all descendants of matching designs
         const includeGuids = new Set(matchingDesignGuids);
         const collectDescendants = (parentGuid: string) => {
           const children = designsByParent.get(parentGuid) || [];
@@ -3294,28 +3293,22 @@ const AppContent: FC = () => {
         };
         matchingDesignGuids.forEach((guid) => collectDescendants(guid));
 
-        // Filter to only included designs
         const filteredDesigns = allDesignsArray.filter((d) => includeGuids.has(d.guid));
 
-        // Build hierarchy starting from matching designs (as roots)
         buildDesignHierarchy(filteredDesigns, undefined, 0);
       } else {
-        // No name filter - start with root designs (no parent)
         buildDesignHierarchy(allDesignsArray, undefined, 0);
       }
     }
 
     if (!selectedKind || selectedKind === "types") {
-      // Helper function to recursively build type hierarchy
       const buildTypeHierarchy = (types: Type[], parentGuid: string | undefined, level: number, parentRowId?: string): void => {
         const childTypes = typesByParent.get(parentGuid) || [];
 
         childTypes.forEach((type) => {
-          // Skip types not in the input set (for filtered views)
           if (!types.includes(type)) return;
           if (searchQuery && !type.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
-          // Skip root types that are in folders when not viewing the folders kind
-          // Only filter at root level (parentGuid === undefined), not children
+
           if (!selectedKind && parentGuid === undefined && type.folder) return;
 
           const rowId = `type-${type.guid}`;
@@ -3342,13 +3335,10 @@ const AppContent: FC = () => {
         });
       };
 
-      // Apply name filter - if selectedName is set, only include types with that name and their descendants
       const allTypesArray = kitTypes || [];
       if (selectedName) {
-        // Find all types with the selected name
         const matchingTypeGuids = new Set(allTypesArray.filter((t) => t.name === selectedName).map((t) => t.guid));
 
-        // Collect all descendants of matching types
         const includeGuids = new Set(matchingTypeGuids);
         const collectDescendants = (parentGuid: string) => {
           const children = typesByParent.get(parentGuid) || [];
@@ -3359,13 +3349,10 @@ const AppContent: FC = () => {
         };
         matchingTypeGuids.forEach((guid) => collectDescendants(guid));
 
-        // Filter to only included types
         const filteredTypes = allTypesArray.filter((t) => includeGuids.has(t.guid));
 
-        // Build hierarchy starting from matching types (as roots)
         buildTypeHierarchy(filteredTypes, undefined, 0);
       } else {
-        // No name filter - start with root types (no parent)
         buildTypeHierarchy(allTypesArray, undefined, 0);
       }
     }
@@ -3373,7 +3360,7 @@ const AppContent: FC = () => {
     if (!selectedKind || selectedKind === "qualities") {
       kitQualities?.forEach((quality: Quality) => {
         if (searchQuery && !quality.name.toLowerCase().includes(searchQuery.toLowerCase()) && !quality.key.toLowerCase().includes(searchQuery.toLowerCase())) return;
-        // Skip qualities that are in folders when not viewing the folders kind
+
         if (!selectedKind && quality.folder) return;
         result.push({
           id: `quality-${quality.guid}`,
@@ -3445,7 +3432,6 @@ const AppContent: FC = () => {
     }
 
     if (selectedKind === "files") {
-      // Build file tree from files - only when specifically viewing files kind
       const fileTree = buildFileTree(kitFolders || [], kitFiles || []);
       const flatTree = flattenFileTree(fileTree, 0, expandedRows);
 
@@ -3469,7 +3455,6 @@ const AppContent: FC = () => {
     }
 
     if (!selectedKind || selectedKind === "folders") {
-      // Helper function to recursively build folder hierarchy
       const buildFolderHierarchy = (parentFolder: Folder | null, level: number, parentRowId?: string): void => {
         const parentGuid = parentFolder?.guid;
         const childFolders = foldersByParent.get(parentGuid) || [];
@@ -3477,7 +3462,6 @@ const AppContent: FC = () => {
         childFolders.forEach((folder: Folder) => {
           if (searchQuery && !folder.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
 
-          // Get artifacts in this folder using pre-built lookup maps
           const folderedDesigns = designsByFolder.get(folder.guid) || [];
           const folderedTypes = typesByFolder.get(folder.guid) || [];
           const folderedQualities = qualitiesByFolder.get(folder.guid) || [];
@@ -3501,9 +3485,7 @@ const AppContent: FC = () => {
             parentId: parentRowId,
           });
 
-          // Add child artifacts (always build, visibility computed later)
           if (folderedArtifacts > 0) {
-            // Add designs in folder with their full hierarchy
             const rootFolderedDesigns = folderedDesigns.filter((d: Design) => !d.parent);
             rootFolderedDesigns.forEach((design: Design) => {
               if (!design.guid) return;
@@ -3526,7 +3508,6 @@ const AppContent: FC = () => {
                 parentId: folderId,
               });
 
-              // Recursively add design children (always build, visibility computed later)
               if (hasChildren) {
                 const buildDesignChildrenInFolder = (parentDesignGuid: string, childLevel: number, parentRowId: string): void => {
                   const childDesigns = designsByParent.get(parentDesignGuid) || [];
@@ -3559,7 +3540,6 @@ const AppContent: FC = () => {
               }
             });
 
-            // Add types in folder with their full hierarchy
             const rootFolderedTypes = folderedTypes.filter((t: Type) => !t.parent);
             rootFolderedTypes.forEach((type: Type) => {
               if (!type.guid) return;
@@ -3582,7 +3562,6 @@ const AppContent: FC = () => {
                 parentId: folderId,
               });
 
-              // Recursively add type children (always build, visibility computed later)
               if (hasChildren) {
                 const buildTypeChildrenInFolder = (parentTypeGuid: string, childLevel: number, parentRowId: string): void => {
                   const childTypes = typesByParent.get(parentTypeGuid) || [];
@@ -3615,7 +3594,6 @@ const AppContent: FC = () => {
               }
             });
 
-            // Add qualities in folder
             folderedQualities.forEach((quality: Quality) => {
               result.push({
                 id: `quality-${quality.guid}`,
@@ -3633,7 +3611,6 @@ const AppContent: FC = () => {
               });
             });
 
-            // Add files in folder
             folderedFiles.forEach((file: SemioFile) => {
               result.push({
                 id: `file-${file.guid}`,
@@ -3651,13 +3628,11 @@ const AppContent: FC = () => {
               });
             });
 
-            // Recursively add child folders
             buildFolderHierarchy(folder, level + 1, folderId);
           }
         });
       };
 
-      // Start with root folders (no parent)
       buildFolderHierarchy(null, 0);
     }
 
@@ -3787,31 +3762,23 @@ const AppContent: FC = () => {
     sortDirection,
   ]);
 
-  // Compute visible rows: filter allRows based on expandedRows (fast O(n) operation)
   const rows = useMemo<TableRow[]>(() => {
-    // Build a Set of all visible row IDs:
-    // A row is visible if all its ancestors are expanded
     const visibleRowIds = new Set<string>();
     const rowById = new Map<string, TableRow>();
 
-    // First pass: index all rows by ID
     allRows.forEach((row) => rowById.set(row.id, row));
 
-    // Second pass: determine visibility by checking ancestor chain
     allRows.forEach((row) => {
       let isVisible = true;
       let currentRow = row;
 
-      // Walk up the parent chain to check if all ancestors are expanded
       while (currentRow.parentId) {
         const parent = rowById.get(currentRow.parentId);
         if (!parent) {
-          // Parent not found, row is not visible
           isVisible = false;
           break;
         }
         if (!expandedRows.has(parent.id)) {
-          // Parent is collapsed, row is not visible
           isVisible = false;
           break;
         }
@@ -3823,7 +3790,6 @@ const AppContent: FC = () => {
       }
     });
 
-    // Filter to visible rows and set isExpanded
     const result = allRows
       .filter((row) => visibleRowIds.has(row.id))
       .map((row) => ({
@@ -3834,7 +3800,6 @@ const AppContent: FC = () => {
     return result;
   }, [allRows, expandedRows]);
 
-  // Compute selected row IDs for the Table component
   const selectedRows = useMemo(() => {
     const selectedSet = new Set<string>();
     rows.forEach((row) => {
@@ -3855,6 +3820,35 @@ const AppContent: FC = () => {
     });
     return selectedSet;
   }, [rows, selection]);
+  const rowHoverClassName = (row: TableRow) => {
+    if (selectedRows.has(row.id)) return "";
+    if (!hover) return "";
+    if (row.kind === "designs") return hover.design === (row.data as Design).guid ? "bg-hover-base" : "";
+    if (row.kind === "types") return hover.type === (row.data as Type).guid ? "bg-hover-base" : "";
+    if (row.kind === "qualities") return hover.quality === (row.data as Quality).guid ? "bg-hover-base" : "";
+    if (row.kind === "interfaces") return hover.interface === (row.data as Interface).guid ? "bg-hover-base" : "";
+    if (row.kind === "tags") return hover.tag === (row.data as Tag).guid ? "bg-hover-base" : "";
+    if (row.kind === "concepts") return hover.concept === (row.data as Concept).guid ? "bg-hover-base" : "";
+    if (row.kind === "files") return hover.file === (row.data as SemioFile).guid ? "bg-hover-base" : "";
+    if (row.kind === "folders") return hover.folder === (row.data as Folder).guid ? "bg-hover-base" : "";
+    if (row.kind === "authors") return hover.author === (row.data as Author).guid ? "bg-hover-base" : "";
+    return "";
+  };
+  const handleRowMouseEnter = (row: TableRow) => {
+    if (!setHover) return;
+    if (row.kind === "designs") setHover({ design: (row.data as Design).guid });
+    else if (row.kind === "types") setHover({ type: (row.data as Type).guid });
+    else if (row.kind === "qualities") setHover({ quality: (row.data as Quality).guid });
+    else if (row.kind === "interfaces") setHover({ interface: (row.data as Interface).guid });
+    else if (row.kind === "tags") setHover({ tag: (row.data as Tag).guid });
+    else if (row.kind === "concepts") setHover({ concept: (row.data as Concept).guid });
+    else if (row.kind === "files") setHover({ file: (row.data as SemioFile).guid });
+    else if (row.kind === "folders") setHover({ folder: (row.data as Folder).guid });
+    else if (row.kind === "authors") setHover({ author: (row.data as Author).guid });
+  };
+  const handleRowMouseLeave = () => {
+    if (clearHover) clearHover();
+  };
 
   const { setFocusItems, setOnFocusItem } = useFocus();
   const [focusedItemId, setFocusedItemId] = useState<string | undefined>();
@@ -3921,7 +3915,6 @@ const AppContent: FC = () => {
     const draggedRow = rows.find((r) => r.id === active.id);
     if (!draggedRow) return;
 
-    // Prevent dropping a folder onto itself
     if (draggedRow.kind === "folders" && over && over.id === active.id) {
       return;
     }
@@ -3932,52 +3925,40 @@ const AppContent: FC = () => {
     let shouldExpandParent = false;
 
     if (over) {
-      // Check if dropped on canvas root (empty space in the table)
       if (over.id === "canvas-root") {
-        // Dropped on canvas background - move to root (unset folder/parent)
         targetFolderId = undefined;
         targetParentId = undefined;
       } else {
-        // Dropped on a row
         const targetRow = rows.find((r) => r.id === over.id);
         if (targetRow) {
           if (targetRow.kind === "folders") {
-            // Dropped directly on a folder
             const folder = targetRow.data as Folder;
             targetFolderId = folder.guid;
             shouldExpandFolder = true;
           } else if (targetRow.kind === "designs" && draggedRow.kind === "designs") {
-            // Dropped design onto another design - set as parent
             const targetDesign = targetRow.data as Design;
             targetParentId = targetDesign.guid;
             shouldExpandParent = true;
           } else if (targetRow.kind === "types" && draggedRow.kind === "types") {
-            // Dropped type onto another type - set as parent
             const targetType = targetRow.data as Type;
             targetParentId = targetType.guid;
             shouldExpandParent = true;
           } else if (targetRow.folderId) {
-            // Dropped on a non-folder child of a folder - move to parent folder
             targetFolderId = targetRow.folderId;
           } else {
-            // Dropped on root-level row that's not a folder/same-kind - move to root (unset folder/parent)
             targetFolderId = undefined;
             targetParentId = undefined;
           }
         } else {
-          // No target row found - move to root
           targetFolderId = undefined;
           targetParentId = undefined;
         }
       }
     } else {
-      // Dropped outside all droppable areas - move to root (unset folder/parent)
       targetFolderId = undefined;
       targetParentId = undefined;
     }
 
-    // Don't move if already in the target location
-    // For designs and types, check the actual folder property from the data
     let currentFolderId: string | undefined = undefined;
     let hasParent = false;
 
@@ -3997,9 +3978,6 @@ const AppContent: FC = () => {
       currentFolderId = (draggedRow.data as Folder).parent?.guid;
     }
 
-    // If dropped on root and item has parent, allow (to unparent)
-    // If dropped on root and item has no parent and no folder, skip (already at root)
-    // Otherwise check if target is same as current location
     if (targetFolderId === undefined && targetParentId === undefined && !hasParent && !currentFolderId) {
       return;
     }
@@ -4010,12 +3988,8 @@ const AppContent: FC = () => {
     if (draggedRow.kind === "designs" && kitCommands) {
       const design = draggedRow.data as Design;
 
-      // Handle parent reassignment
       if (targetParentId !== undefined) {
-        // Dropped onto another design - set as parent
         if (design.parent?.guid !== targetParentId) {
-          // Check if reparenting would violate the same-family constraint for design pieces
-          // A design cannot have design pieces that reference designs in the same family
           const designPieces = (design.pieces || []).filter((p) => p.design?.guid);
           const targetFamily = kit ? getDesignFamilyGuids(kit, targetParentId) : new Set<string>();
           const wouldViolateConstraint = designPieces.some((p) => p.design?.guid && targetFamily.has(p.design.guid));
@@ -4028,32 +4002,26 @@ const AppContent: FC = () => {
           kitCommands.updateDesign(design.guid, { parent: { guid: targetParentId } });
         }
       } else if (targetFolderId === undefined && (design.parent || design.folder)) {
-        // Dropped on root - unparent and remove from folder
         kitCommands.updateDesign(design.guid, { parent: undefined });
         if (design.folder) {
           kitCommands.moveToFolder("design", design.guid, null);
         }
       } else if (!design.parent) {
-        // Root design (protodesign) - can be moved to folders or root
         kitCommands.moveToFolder("design", design.guid, targetFolderId ?? null);
       }
     } else if (draggedRow.kind === "types" && kitCommands) {
       const type = draggedRow.data as Type;
 
-      // Handle parent reassignment
       if (targetParentId !== undefined) {
-        // Dropped onto another type - set as parent
         if (type.parent?.guid !== targetParentId) {
           kitCommands.updateType(type.guid, { parent: { guid: targetParentId } });
         }
       } else if (targetFolderId === undefined && (type.parent || type.folder)) {
-        // Dropped on root - unparent and remove from folder
         kitCommands.updateType(type.guid, { parent: undefined });
         if (type.folder) {
           kitCommands.moveToFolder("type", type.guid, null);
         }
       } else if (!type.parent) {
-        // Root type (prototype) - can be moved to folders or root
         kitCommands.moveToFolder("type", type.guid, targetFolderId ?? null);
       }
     } else if (draggedRow.kind === "qualities" && kitCommands) {
@@ -4067,7 +4035,6 @@ const AppContent: FC = () => {
       kitCommands.moveToFolder("folder", folder.guid, targetFolderId ?? null);
     }
 
-    // Expand the target folder if moving into a folder
     if (shouldExpandFolder && targetFolderId) {
       const folderId = `folder-${targetFolderId}`;
       if (!expandedRows.has(folderId)) {
@@ -4075,7 +4042,6 @@ const AppContent: FC = () => {
       }
     }
 
-    // Expand the target parent if setting a parent
     if (shouldExpandParent && targetParentId) {
       const parentRowId = draggedRow.kind === "designs" ? `design-${targetParentId}` : `type-${targetParentId}`;
       if (!expandedRows.has(parentRowId)) {
@@ -4266,19 +4232,33 @@ const AppContent: FC = () => {
   };
 
   const handleRowClick = (row: TableRow, index: number, e: React.MouseEvent) => {
-    // Clear any pending click timer to prevent double execution on double-click
     if (clickTimerRef.current) {
       clearTimeout(clickTimerRef.current);
       clickTimerRef.current = null;
     }
 
-    // Handle shift-click range selection (cross-kind)
+    if (e.detail > 1) {
+      lastDoubleClickRef.current = { rowId: row.id, at: Date.now() };
+      if (row.kind === "designs") {
+        sketchpadCommands.navigateToDesign(kit.guid, (row.data as Design).guid);
+        return;
+      }
+      if (row.kind === "types") {
+        sketchpadCommands.navigateToType(kit.guid, (row.data as Type).guid);
+        return;
+      }
+      if (row.kind === "qualities") {
+        sketchpadCommands.navigateToQuality(kit.guid, (row.data as Quality).key);
+        return;
+      }
+      return;
+    }
+
     if (e.shiftKey && lastClickedIndexRef.current !== -1) {
       const start = Math.min(lastClickedIndexRef.current, index);
       const end = Math.max(lastClickedIndexRef.current, index);
       const rangeRows = rows.slice(start, end + 1);
 
-      // Group selected items by kind
       const selectedByKind: {
         types: Guid[];
         designs: Guid[];
@@ -4313,14 +4293,11 @@ const AppContent: FC = () => {
         else if (r.kind === "authors") selectedByKind.authors.push((r.data as Author).name);
       });
 
-      // Select all items at once via XState
       setSelectionAction?.(selectedByKind);
 
-      // Don't update lastClickedIndexRef for shift-clicks - keep the anchor stable
       return;
     }
 
-    // Handle ctrl/cmd multi-select
     if (e.metaKey || e.ctrlKey) {
       if (row.kind === "designs") {
         const designId = (row.data as Design).guid;
@@ -4386,11 +4363,10 @@ const AppContent: FC = () => {
           setSelectionAction?.({ ...selection, authors: [...(selection.authors || []), authorName] });
         }
       }
-      // Don't update lastClickedIndexRef for ctrl/cmd clicks
+
       return;
     }
 
-    // Handle normal single selection with delay to detect double-click
     clickTimerRef.current = setTimeout(() => {
       if (row.kind === "designs") {
         setSelectionAction?.({ designs: [(row.data as Design).guid] });
@@ -4414,12 +4390,16 @@ const AppContent: FC = () => {
       clickTimerRef.current = null;
     }, 200);
 
-    // Update last clicked index for shift-selection
     lastClickedIndexRef.current = index;
   };
 
   const handleRowDoubleClick = (row: TableRow, index: number) => {
-    // Clear the click timer to prevent single-click selection
+    const now = Date.now();
+    if (lastDoubleClickRef.current.rowId === row.id && now - lastDoubleClickRef.current.at < 400) {
+      lastDoubleClickRef.current = { rowId: null, at: 0 };
+      return;
+    }
+
     if (clickTimerRef.current) {
       clearTimeout(clickTimerRef.current);
       clickTimerRef.current = null;
@@ -4460,16 +4440,14 @@ const AppContent: FC = () => {
     const files = Array.from(e.dataTransfer.files);
     if (files.length === 0) return;
 
-    // Check if any file is a zip file
     const hasZipFile = files.some((file) => file.name.toLowerCase().endsWith(".zip"));
     if (hasZipFile) {
       setShowZipWarning(true);
-      // Auto-dismiss warning after 8 seconds
+
       setTimeout(() => setShowZipWarning(false), 8000);
     }
 
     for (const file of files) {
-      // Treat all files (including zip files) as regular files
       const newFile: SemioFile = {
         guid: guid(),
         name: file.name,
@@ -4487,7 +4465,6 @@ const AppContent: FC = () => {
     }
   };
 
-  // Early return checks after all hooks have been called
   if (!hasKit || !kit) {
     return <NotFound title={t("semio.sketchpad.app.kit.notFound.label.normal")} description={t("semio.sketchpad.app.kit.notFound.description.normal")} parentPath="/" parentLabel={t("semio.sketchpad.app.home.title")} />;
   }
@@ -4511,9 +4488,9 @@ const AppContent: FC = () => {
         }}
       >
         {/* Mobile table using general Table component */}
-        <Table
-          className="flex-1 min-h-0"
-          columns={[
+          <Table
+            className="flex-1 min-h-0"
+            columns={[
             {
               id: "artifact",
               header: (
@@ -4576,14 +4553,17 @@ const AppContent: FC = () => {
                 </div>
               ),
             },
-          ]}
-          data={rows}
-          getRowId={(row) => row.id}
-          selectedRows={selectedRows}
-          onRowClick={handleRowClick}
-          onRowDoubleClick={handleRowDoubleClick}
-          dragDrop={{
-            enabled: true,
+            ]}
+            rowClassName={rowHoverClassName}
+            data={rows}
+            getRowId={(row) => row.id}
+            selectedRows={selectedRows}
+            onRowClick={handleRowClick}
+            onRowDoubleClick={handleRowDoubleClick}
+            onRowMouseEnter={handleRowMouseEnter}
+            onRowMouseLeave={handleRowMouseLeave}
+            dragDrop={{
+              enabled: true,
             onDragStart: (rowId) => setActiveId(rowId),
             onDragEnd: (event) => {
               const activeRow = rows.find((r) => r.id === event.active);
@@ -4790,11 +4770,14 @@ const AppContent: FC = () => {
               width: "w-1/4",
             },
           ]}
+          rowClassName={rowHoverClassName}
           data={rows}
           getRowId={(row) => row.id}
           selectedRows={selectedRows}
           onRowClick={handleRowClick}
           onRowDoubleClick={handleRowDoubleClick}
+          onRowMouseEnter={handleRowMouseEnter}
+          onRowMouseLeave={handleRowMouseLeave}
           dragDrop={{
             enabled: true,
             onDragStart: (rowId) => setActiveId(rowId),
@@ -4847,7 +4830,6 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode; fallbac
   }
 }
 
-// Sync hook to keep Y.js controller state in sync with XState
 function useKitAppYjsToXStateSync() {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -4857,7 +4839,6 @@ function useKitAppYjsToXStateSync() {
   const hasKit = useHasKit(kitGuid);
   const initializedKeyRef = useRef<string | null>(null);
 
-  // Ensure Kit app exists before syncing
   useLayoutEffect(() => {
     if (!kitGuid || !hasKit) return;
 
@@ -4866,9 +4847,6 @@ function useKitAppYjsToXStateSync() {
     }
   }, [kitGuid, hasKit, sketchpadStore, sketchpadCommands]);
 
-  // Initialize XState with Y.js state synchronously (before paint)
-  // Note: hasKit is included in deps so this effect runs when hasKit changes from false to true
-  // (which is when the first effect creates the kit app)
   useLayoutEffect(() => {
     if (!kitGuid || !hasKit) return;
     const initKey = kitGuid;
@@ -4878,7 +4856,7 @@ function useKitAppYjsToXStateSync() {
     if (sketchpadStore.hasKitApp({ kit: kitGuid })) {
       const store = sketchpadStore.kitApp(kitGuid);
       const initialState = store.snapshot();
-      // Convert expandedRows array to Set for XState and add transaction state
+
       xstateInitialState = {
         ...initialState,
         expandedRows: new Set(initialState.expandedRows || []),
@@ -4890,8 +4868,6 @@ function useKitAppYjsToXStateSync() {
         },
       };
     } else {
-      // Use default state when Y.js store isn't ready yet
-      // This ensures the machine transitions to 'kit' state for panel toggles
       xstateInitialState = {
         panelVisibility: defaultPanelVisibility,
         selection: undefined,
@@ -4911,7 +4887,6 @@ function useKitAppYjsToXStateSync() {
       };
     }
 
-    // Initialize XState with current Y.js state (or default)
     actor.send({
       type: "KIT.INIT",
       kitGuid,
@@ -4920,14 +4895,12 @@ function useKitAppYjsToXStateSync() {
     initializedKeyRef.current = initKey;
   }, [actor, sketchpadStore, kitGuid, hasKit]);
 
-  // Continue syncing Y.js changes to XState
   const store = kitGuid && sketchpadStore.hasKitApp({ kit: kitGuid }) ? sketchpadStore.kitApp(kitGuid) : null;
   const state = useSyncDeep<KitAppState, KitAppState>(store, (s: KitAppState) => s);
 
   useEffect(() => {
     if (!state || !kitGuid || initializedKeyRef.current !== kitGuid) return;
 
-    // Convert expandedRows array to Set for XState
     const xstateState = {
       ...state,
       expandedRows: new Set(state.expandedRows || []),
@@ -4942,7 +4915,6 @@ function useKitAppYjsToXStateSync() {
 }
 
 const App: FC = () => {
-  // Sync Y.js state to XState
   useKitAppYjsToXStateSync();
   const transaction = useKitAppTransaction();
 
@@ -4997,6 +4969,13 @@ const KitArtifactNode: FC<NodeProps<Node<KitDiagramNode>>> = ({ data, selected }
     if (!hover) return false;
     if (data.kind === "type") return hover.type === data.guid;
     if (data.kind === "design") return hover.design === data.guid;
+    if (data.kind === "quality") return hover.quality === data.guid;
+    if (data.kind === "interface") return hover.interface === data.guid;
+    if (data.kind === "tag") return hover.tag === data.guid;
+    if (data.kind === "concept") return hover.concept === data.guid;
+    if (data.kind === "file") return hover.file === data.guid;
+    if (data.kind === "folder") return hover.folder === data.guid;
+    if (data.kind === "author") return hover.author === data.guid;
     return false;
   }, [hover, data.kind, data.guid]);
 
@@ -5049,8 +5028,6 @@ const edgeStyle = {
   reference: { stroke: "var(--foreground)", strokeWidth: 1, strokeDasharray: "5,5" },
 };
 
-// Floating edges utility functions
-// Nodes are circular with size-small (40px), so radius is 20px
 const NODE_RADIUS = 20;
 
 function getNodeIntersection(intersectionNode: Node, targetNode: Node): { x: number; y: number } {
@@ -5065,7 +5042,6 @@ function getNodeIntersection(intersectionNode: Node, targetNode: Node): { x: num
     return { x, y };
   }
 
-  // Calculate intersection point on circle boundary
   const ratio = NODE_RADIUS / distance;
   return {
     x: x + dx * ratio,
@@ -5077,7 +5053,6 @@ function getEdgePosition(node: Node, intersectionPoint: { x: number; y: number }
   const dx = intersectionPoint.x - node.position.x;
   const dy = intersectionPoint.y - node.position.y;
 
-  // For circular nodes, determine position based on angle
   const angle = Math.atan2(dy, dx);
   const absAngle = Math.abs(angle);
 
@@ -5104,7 +5079,6 @@ function getEdgeParams(source: Node, target: Node) {
   };
 }
 
-// FloatingEdge component
 const FloatingEdge: FC<EdgeProps> = ({ id, source, target, markerEnd, style }) => {
   const sourceNode = useInternalNode(source);
   const targetNode = useInternalNode(target);
@@ -5113,8 +5087,6 @@ const FloatingEdge: FC<EdgeProps> = ({ id, source, target, markerEnd, style }) =
     return null;
   }
 
-  // Convert internal node format to position format
-  // positionAbsolute is top-left corner, add NODE_RADIUS to get center
   const sourcePos = sourceNode.internals?.positionAbsolute ?? { x: 0, y: 0 };
   const targetPos = targetNode.internals?.positionAbsolute ?? { x: 0, y: 0 };
 
@@ -5135,7 +5107,6 @@ const FloatingEdge: FC<EdgeProps> = ({ id, source, target, markerEnd, style }) =
   return <BaseEdge id={id} path={edgePath} markerEnd={markerEnd} style={style} />;
 };
 
-// FloatingConnectionLine component
 const FloatingConnectionLine: FC<ConnectionLineComponentProps> = ({ fromX, fromY, toX, toY }) => {
   const edgePath = getBezierPath({
     sourceX: fromX,
@@ -5302,30 +5273,26 @@ const KitDiagramInner: FC = () => {
   const expandedRowsKey = expandedRowsArray.join(",");
   const expandedRows = useMemo(() => new Set(expandedRowsArray), [expandedRowsKey]);
 
-  // Compute visible GUIDs based on table row visibility (expanded/collapsed state)
   const visibleGuids = useMemo(() => {
     if (!kit) return new Set<string>();
     const guids = new Set<string>();
     const searchLower = filterSearch.toLowerCase();
 
-    // Build lookup maps for hierarchy
     const designByGuid = new Map((kit.designs ?? []).map((d) => [d.guid, d]));
     const typeByGuid = new Map((kit.types ?? []).map((t) => [t.guid, t]));
     const folderByGuid = new Map((kit.folders ?? []).map((f) => [f.guid, f]));
 
-    // Helper to check if a row's ancestors are all expanded
     const isAncestorChainExpanded = (rowId: string, parentRowId: string | undefined): boolean => {
-      if (!parentRowId) return true; // No parent, always visible
-      if (!expandedRows.has(parentRowId)) return false; // Parent is collapsed
-      // Check parent's parent recursively by extracting info from parentRowId
-      // Format: "design-{guid}", "type-{guid}", "folder-{guid}"
+      if (!parentRowId) return true;
+      if (!expandedRows.has(parentRowId)) return false;
+
       const [kind, guid] = parentRowId.split("-", 2);
       if (kind === "design") {
         const parentDesign = designByGuid.get(guid);
         if (parentDesign?.parent?.guid) {
           return isAncestorChainExpanded(parentRowId, `design-${parentDesign.parent.guid}`);
         }
-        // Check if design is in a folder (folder is a string guid)
+
         if (parentDesign?.folder) {
           return isAncestorChainExpanded(parentRowId, `folder-${parentDesign.folder}`);
         }
@@ -5334,7 +5301,7 @@ const KitDiagramInner: FC = () => {
         if (parentType?.parent?.guid) {
           return isAncestorChainExpanded(parentRowId, `type-${parentType.parent.guid}`);
         }
-        // Check if type is in a folder (folder is a string guid)
+
         if (parentType?.folder) {
           return isAncestorChainExpanded(parentRowId, `folder-${parentType.folder}`);
         }
@@ -5347,13 +5314,11 @@ const KitDiagramInner: FC = () => {
       return true;
     };
 
-    // Helper to check if an entity's row is visible in the table
     const isRowVisible = (rowId: string, parentRowId: string | undefined, name: string): boolean => {
       if (searchLower && !name.toLowerCase().includes(searchLower)) return false;
       return isAncestorChainExpanded(rowId, parentRowId);
     };
 
-    // Designs - check hierarchy (parent is { guid }, folder is string)
     (kit.designs ?? []).forEach((d) => {
       const rowId = `design-${d.guid}`;
       let parentRowId: string | undefined;
@@ -5367,7 +5332,6 @@ const KitDiagramInner: FC = () => {
       }
     });
 
-    // Types - check hierarchy (parent is { guid }, folder is string)
     (kit.types ?? []).forEach((t) => {
       const rowId = `type-${t.guid}`;
       let parentRowId: string | undefined;
@@ -5381,7 +5345,6 @@ const KitDiagramInner: FC = () => {
       }
     });
 
-    // Qualities - check folder (folder is string)
     (kit.qualities ?? []).forEach((q) => {
       const rowId = `quality-${q.guid}`;
       const parentRowId = q.folder ? `folder-${q.folder}` : undefined;
@@ -5390,28 +5353,24 @@ const KitDiagramInner: FC = () => {
       }
     });
 
-    // Interfaces - no hierarchy
     (kit.interfaces ?? []).forEach((i) => {
       if (!searchLower || i.name.toLowerCase().includes(searchLower)) {
         guids.add(i.guid);
       }
     });
 
-    // Tags - no hierarchy
     (kit.tags ?? []).forEach((t) => {
       if (!searchLower || t.name.toLowerCase().includes(searchLower)) {
         guids.add(t.guid);
       }
     });
 
-    // Concepts - no hierarchy
     (kit.concepts ?? []).forEach((c) => {
       if (!searchLower || c.name.toLowerCase().includes(searchLower)) {
         guids.add(c.guid);
       }
     });
 
-    // Files - check folder (folder is { guid })
     (kit.files ?? []).forEach((f) => {
       const rowId = `file-${f.guid}`;
       const parentRowId = f.folder?.guid ? `folder-${f.folder.guid}` : undefined;
@@ -5420,7 +5379,6 @@ const KitDiagramInner: FC = () => {
       }
     });
 
-    // Folders - check hierarchy (parent is { guid })
     (kit.folders ?? []).forEach((f) => {
       const rowId = `folder-${f.guid}`;
       const parentRowId = f.parent?.guid ? `folder-${f.parent.guid}` : undefined;
@@ -5429,7 +5387,6 @@ const KitDiagramInner: FC = () => {
       }
     });
 
-    // Authors - no hierarchy
     (kit.authors ?? []).forEach((a) => {
       if (!searchLower || a.name.toLowerCase().includes(searchLower)) {
         guids.add(a.guid);
@@ -5578,17 +5535,24 @@ const KitDiagramInner: FC = () => {
     [actor, kitGuid],
   );
 
-  const handleNodeMouseEnter = useCallback(
-    (_: any, node: Node<KitDiagramNode>) => {
-      const kind = node.data?.kind;
-      const guid = node.data?.guid;
-      if (!kind || !guid) return;
-      if (!setHover) return;
-      if (kind === "type") setHover({ type: guid });
-      else if (kind === "design") setHover({ design: guid });
-    },
-    [setHover],
-  );
+    const handleNodeMouseEnter = useCallback(
+      (_: any, node: Node<KitDiagramNode>) => {
+        const kind = node.data?.kind;
+        const guid = node.data?.guid;
+        if (!kind || !guid) return;
+        if (!setHover) return;
+        if (kind === "type") setHover({ type: guid });
+        else if (kind === "design") setHover({ design: guid });
+        else if (kind === "quality") setHover({ quality: guid });
+        else if (kind === "interface") setHover({ interface: guid });
+        else if (kind === "tag") setHover({ tag: guid });
+        else if (kind === "concept") setHover({ concept: guid });
+        else if (kind === "file") setHover({ file: guid });
+        else if (kind === "folder") setHover({ folder: guid });
+        else if (kind === "author") setHover({ author: guid });
+      },
+      [setHover],
+    );
 
   const handleNodeMouseLeave = useCallback(() => {
     if (clearHover) clearHover();
@@ -5664,7 +5628,6 @@ const MultiWindowApp: FC = () => {
   const removeSection = useRemovePanelSection();
   const [activeWindow, setActiveWindow] = useState<string>(KitAppWindowKind.Table);
 
-  // Add toolbar section with artifact kind filter toggles
   useEffect(() => {
     if (appType !== "kit") return;
 
@@ -5680,8 +5643,6 @@ const MultiWindowApp: FC = () => {
     };
   }, [appType, addSection, removeSection]);
 
-  // Wait for kit to be available before rendering GoldenLayout
-  // This prevents a race condition where GoldenLayout renders before the kit is loaded
   const hasKit = useHasKit(kitGuid || "");
 
   const store = useMemo(() => {
@@ -5763,9 +5724,6 @@ const MultiWindowApp: FC = () => {
     [store],
   );
 
-  // Wait for kit to be available before rendering GoldenLayout
-  // This prevents a race condition where GoldenLayout windows render and show NotFound
-  // before the kit is loaded into the store
   if (!hasKit) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -6362,7 +6320,7 @@ export const FolderSection: FC = () => {
     .filter(Boolean);
 
   if (folders.length === 0) return null;
-  if (folders.length > 1) return null; // Show only single folder
+  if (folders.length > 1) return null;
 
   const folder = folders[0]!;
 
@@ -6661,8 +6619,6 @@ export const KitAppFooter: FC = () => {
 // #endregion Footer
 
 // #region App
-
-// Main app export is in the Table section above
 
 // #endregion App
 

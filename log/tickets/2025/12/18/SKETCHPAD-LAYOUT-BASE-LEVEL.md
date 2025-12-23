@@ -6,8 +6,8 @@ prompt: >-
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: '2025-12-18T16:15:40.759Z'
-  finished: '2025-12-18T16:18:19.098Z'
+  created: "2025-12-18T16:15:40.759Z"
+  finished: "2025-12-18T16:18:19.098Z"
 summary: Wrap global Sketchpad layout in base LevelProvider
 commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
 model: gpt-5.2-codex
@@ -16,8 +16,8 @@ iterations:
       Wrap global Sketchpad Layout in LevelProvider(base) so Navbar/Footer use
       bg-base instead of inheriting overlay/window level.
     date:
-      started: '2025-12-18T16:16:25.304Z'
-      ended: '2025-12-18T16:18:09.794Z'
+      started: "2025-12-18T16:16:25.304Z"
+      ended: "2025-12-18T16:18:09.794Z"
     model: gpt-5.2-codex
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
     commit: 20a57039fec48f8c991d98769aa31e15cbd6859c

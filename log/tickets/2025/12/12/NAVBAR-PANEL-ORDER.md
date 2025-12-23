@@ -5,8 +5,8 @@ prompt: Enforce navbar panel order Details Chat Settings
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: '2025-12-16T17:06:07.909Z'
-commit: '0000000000000000000000000000000000000000'
+  created: "2025-12-16T17:06:07.909Z"
+commit: "0000000000000000000000000000000000000000"
 iterations: []
 ---
 

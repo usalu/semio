@@ -24,7 +24,6 @@ import started from "electron-squirrel-startup";
 import path from "node:path";
 import os from "os";
 
-
 if (started) {
   app.quit();
 }
@@ -62,15 +61,12 @@ app.on("window-all-closed", () => {
 });
 
 app.on("activate", () => {
-  // On OS X it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
   }
 });
 
 app.whenReady().then(() => {
-  // Set app user model id for windows
   app.setAppUserModelId("com.electron");
 
   ipcMain.handle("minimize-window", (event) => {

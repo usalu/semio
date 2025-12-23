@@ -28,9 +28,23 @@ import { basename, dirname, join } from "path";
 import * as ts from "typescript";
 
 type CodeLanguage = "typescript" | "python" | "csharp" | "meta";
-type CodeIssueKind = "comment" | "temporary_log" | "missing_license_header" | "invalid_header_format" | "header_filepath_mismatch" | "extra_dev_docs" | "region_name_missing" | "region_mismatch" | "region_unclosed" | "region_duplicate_sibling" | "unreadable_file" | "forbidden_import" | "forbidden_terminology";
+type CodeIssueKind =
+  | "comment"
+  | "temporary_log"
+  | "missing_license_header"
+  | "invalid_header_format"
+  | "header_filepath_mismatch"
+  | "extra_dev_docs"
+  | "region_name_missing"
+  | "region_mismatch"
+  | "region_unclosed"
+  | "region_duplicate_sibling"
+  | "region_empty"
+  | "unreadable_file"
+  | "forbidden_import"
+  | "forbidden_terminology";
 type RegionNode = { name: string; line: number; children: RegionNode[] };
-type CodeIssue = { path: string; language: CodeLanguage; kind: CodeIssueKind; line: number; column: number; message: string; excerpt?: string };
+type CodeIssue = { path: string; language: CodeLanguage; kind: CodeIssueKind; line: number; column: number; message: string; reason: string; solution: string; excerpt?: string };
 type CodeReport = { timestamp: string; status: "success" | "error"; summary: { filesScanned: number; issues: number; byKind: Record<CodeIssueKind, number>; byLanguage: Record<CodeLanguage, number> }; issues: CodeIssue[] };
 
 const rootDir = join(__dirname, "..");
@@ -71,6 +85,54 @@ const AGPL_LICENSE_LINES = [
 
 const CONTRIBUTOR = "Ueli Saluz <ueli@semio-tech.com>";
 
+function getDefaultIssueReason(kind: CodeIssueKind): string {
+  if (kind === "comment") return "Inline comments are forbidden to keep the codebase comment-free and keep documentation centralized.";
+  if (kind === "temporary_log") return "Temporary [DEBUG] logs are removable diagnostics and must be cleaned to keep runtime output clean.";
+  if (kind === "missing_license_header") return "Source files must include SPDX license headers for compliance and automated checks.";
+  if (kind === "invalid_header_format") return "Header regions must follow the standard format so automated tooling can parse them reliably.";
+  if (kind === "header_filepath_mismatch") return "Header filepaths must match the actual file path for traceability and automated audits.";
+  if (kind === "extra_dev_docs") return "Developer documentation must be centralized in the root README.md and AGENTS.md.";
+  if (kind === "region_name_missing") return "Region markers must be named to support proper nesting and navigation.";
+  if (kind === "region_mismatch") return "Region markers must be properly nested and closed with matching names.";
+  if (kind === "region_unclosed") return "Open region blocks must be closed to keep region structure intact.";
+  if (kind === "region_duplicate_sibling") return "Sibling regions must have unique names to avoid ambiguous navigation and tooling collisions.";
+  if (kind === "region_empty") return "Empty regions are forbidden so region structure reflects real code content.";
+  if (kind === "unreadable_file") return "Unreadable files cannot be analyzed reliably by the code scan.";
+  if (kind === "forbidden_import") return "Module boundaries enforce domain-neutral shared UI and keep Sketchpad scaffolding decoupled from app internals.";
+  return "Shared UI elements must remain domain-neutral and avoid app-specific terminology.";
+}
+
+function getDefaultIssueSolution(kind: CodeIssueKind): string {
+  if (kind === "comment") return "Remove the inline comment and move guidance to README.md or AGENTS.md.";
+  if (kind === "temporary_log") return "Remove the temporary log or replace it with a warning or error if it is required.";
+  if (kind === "missing_license_header") return "Add the SPDX header and header region using the code fix hook.";
+  if (kind === "invalid_header_format") return "Regenerate the header with the fix hook to match the required format.";
+  if (kind === "header_filepath_mismatch") return "Update the header filepath or regenerate the header to match the file location.";
+  if (kind === "extra_dev_docs") return "Remove the extra document and move the content into root README.md or AGENTS.md.";
+  if (kind === "region_name_missing") return "Add a matching name to the region and endregion markers.";
+  if (kind === "region_mismatch") return "Fix the region names and nesting so each endregion matches the open region.";
+  if (kind === "region_unclosed") return "Add the matching endregion marker with the same name.";
+  if (kind === "region_duplicate_sibling") return "Rename one region or merge them into a single region.";
+  if (kind === "region_empty") return "Remove the empty region or move relevant code into it.";
+  if (kind === "unreadable_file") return "Fix file permissions or encoding so the scanner can read the file.";
+  if (kind === "forbidden_import") return "Move shared functionality into allowed modules and update the import to an approved path.";
+  return "Replace domain terms with neutral wording or move the text to app-level modules.";
+}
+
+function createIssue(params: { path: string; language: CodeLanguage; kind: CodeIssueKind; line: number; column: number; message: string; excerpt?: string; reason?: string; solution?: string }): CodeIssue {
+  return {
+    path: params.path,
+    language: params.language,
+    kind: params.kind,
+    line: params.line,
+    column: params.column,
+    message: params.message,
+    reason: params.reason ?? getDefaultIssueReason(params.kind),
+    solution: params.solution ?? getDefaultIssueSolution(params.kind),
+    excerpt: params.excerpt,
+  };
+}
+
 function getLicenseType(filepath: string): LicenseType {
   const normalized = filepath.replace(/\\/g, "/");
   if (normalized.startsWith("js/js/")) return "LGPL";
@@ -94,17 +156,7 @@ function generateHeader(filepath: string, year: number, language: CodeLanguage):
   const regionEnd = language === "csharp" ? "#endregion Header" : language === "python" ? "# endregion Header" : "// #endregion Header";
   const licenseType = getLicenseType(filepath);
   const licenseLines = getLicenseLines(licenseType);
-  return [
-    regionStart,
-    "",
-    `${prefix}${filepath}`,
-    "",
-    `${prefix}${year} ${CONTRIBUTOR}`,
-    "",
-    ...licenseLines.map((line) => (line ? `${prefix}${line}` : "")),
-    "",
-    regionEnd,
-  ];
+  return [regionStart, "", `${prefix}${filepath}`, "", `${prefix}${year} ${CONTRIBUTOR}`, "", ...licenseLines.map((line) => (line ? `${prefix}${line}` : "")), "", regionEnd];
 }
 
 function parseExistingHeader(lines: string[], language: CodeLanguage, filepath: string): { hasHeaderRegion: boolean; headerEndIndex: number; isValidFormat: boolean; existingFilepath: string | null; existingYear: number | null } {
@@ -180,11 +232,20 @@ function normalizePath(path: string): string {
 }
 
 function getTrackedFiles(): string[] {
-  return execSync("git ls-files", { cwd: rootDir, encoding: "utf-8" }).split(/\r?\n/g).map((line) => line.trim()).filter(Boolean);
+  return execSync("git ls-files", { cwd: rootDir, encoding: "utf-8" })
+    .split(/\r?\n/g)
+    .map((line) => line.trim())
+    .filter(Boolean);
 }
 
 function getUntrackedFiles(): string[] {
-  return execSync("git status --porcelain -uall", { cwd: rootDir, encoding: "utf-8" }).split(/\r?\n/g).map((line) => line.trim()).filter(Boolean).filter((line) => line.startsWith("?? ")).map((line) => line.slice("?? ".length).trim()).filter(Boolean);
+  return execSync("git status --porcelain -uall", { cwd: rootDir, encoding: "utf-8" })
+    .split(/\r?\n/g)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .filter((line) => line.startsWith("?? "))
+    .map((line) => line.slice("?? ".length).trim())
+    .filter(Boolean);
 }
 
 function getRepoFiles(): string[] {
@@ -209,6 +270,17 @@ function isConfigFile(path: string): boolean {
   if (base === "playwright.config.ts" || base === "playwright.config.tsx") return true;
   if (base === "tailwind.config.ts" || base === "tailwind.config.tsx") return true;
   if (base === "postcss.config.ts" || base === "postcss.config.tsx") return true;
+  return false;
+}
+
+function isExcludedFromImportRules(path: string): boolean {
+  const normalized = normalizePath(path);
+  if (normalized.includes(".storybook/")) return true;
+  if (normalized.includes(".stories.")) return true;
+  if (normalized.endsWith(".test.ts") || normalized.endsWith(".test.tsx")) return true;
+  if (isConfigFile(path)) return true;
+  if (normalized.endsWith("/dev.ts")) return true;
+  if (normalized.endsWith("/site.tsx")) return true;
   return false;
 }
 
@@ -299,11 +371,11 @@ function parseRegions(lines: string[], language: CodeLanguage, path: string): Co
     const regionMatch = line.match(regionRegex);
     if (regionMatch) {
       const name = (regionMatch[1] ?? "").trim();
-      if (!name) issues.push({ path, language, kind: "region_name_missing", line: lineNumber, column: 1, message: "Region is missing a name", excerpt: getExcerpt(line) });
+      if (!name) issues.push(createIssue({ path, language, kind: "region_name_missing", line: lineNumber, column: 1, message: "Region is missing a name", excerpt: getExcerpt(line) }));
       const node: RegionNode = { name, line: lineNumber, children: [] };
       const siblings = stack.length > 0 ? (stack[stack.length - 1] as RegionNode).children : rootChildren;
       const duplicate = name !== "" ? siblings.find((s) => s.name === name) : undefined;
-      if (duplicate) issues.push({ path, language, kind: "region_duplicate_sibling", line: lineNumber, column: 1, message: `Duplicate sibling region name "${name}" (first occurrence at line ${duplicate.line})`, excerpt: getExcerpt(line) });
+      if (duplicate) issues.push(createIssue({ path, language, kind: "region_duplicate_sibling", line: lineNumber, column: 1, message: `Duplicate sibling region name "${name}" (first occurrence at line ${duplicate.line})`, excerpt: getExcerpt(line) }));
       siblings.push(node);
       stack.push(node);
       continue;
@@ -311,20 +383,58 @@ function parseRegions(lines: string[], language: CodeLanguage, path: string): Co
     const endMatch = line.match(endRegionRegex);
     if (endMatch) {
       const name = (endMatch[1] ?? "").trim();
-      if (!name) issues.push({ path, language, kind: "region_name_missing", line: lineNumber, column: 1, message: "Endregion is missing a name", excerpt: getExcerpt(line) });
+      if (!name) issues.push(createIssue({ path, language, kind: "region_name_missing", line: lineNumber, column: 1, message: "Endregion is missing a name", excerpt: getExcerpt(line) }));
       const current = stack.pop();
       if (!current) {
-        issues.push({ path, language, kind: "region_mismatch", line: lineNumber, column: 1, message: "Endregion without matching region", excerpt: getExcerpt(line) });
+        issues.push(createIssue({ path, language, kind: "region_mismatch", line: lineNumber, column: 1, message: "Endregion without matching region", excerpt: getExcerpt(line) }));
         continue;
       }
-      if (current.name !== name) issues.push({ path, language, kind: "region_mismatch", line: lineNumber, column: 1, message: `Region mismatch: opened \"${current.name}\" at line ${current.line}, closed \"${name}\"`, excerpt: getExcerpt(line) });
+      if (current.name !== name) issues.push(createIssue({ path, language, kind: "region_mismatch", line: lineNumber, column: 1, message: `Region mismatch: opened \"${current.name}\" at line ${current.line}, closed \"${name}\"`, excerpt: getExcerpt(line) }));
     }
   }
   for (const open of stack) {
-    issues.push({ path, language, kind: "region_unclosed", line: open.line, column: 1, message: `Region \"${open.name}\" not closed`, excerpt: getExcerpt(lines[open.line - 1] ?? "") });
+    issues.push(createIssue({ path, language, kind: "region_unclosed", line: open.line, column: 1, message: `Region \"${open.name}\" not closed`, excerpt: getExcerpt(lines[open.line - 1] ?? "") }));
   }
   return issues;
 }
+
+// #region EmptyRegions
+
+function getEmptyRegions(lines: string[], language: CodeLanguage): { regions: { name: string; start: number; end: number }[]; linesToRemove: Set<number> } {
+  const regions: { name: string; start: number; end: number }[] = [];
+  const linesToRemove = new Set<number>();
+  const regionRegex = language === "csharp" ? /^\s*#\s*region\b(.*)$/ : language === "python" ? /^\s*#\s*region\b(.*)$/ : /^\s*\/\/\s*#region\b(.*)$/;
+  const endRegionRegex = language === "csharp" ? /^\s*#\s*endregion\b(.*)$/ : language === "python" ? /^\s*#\s*endregion\b(.*)$/ : /^\s*\/\/\s*#endregion\b(.*)$/;
+  const stack: { name: string; start: number; hasContent: boolean }[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    const lineNumber = i + 1;
+    const line = lines[i] ?? "";
+    const regionMatch = line.match(regionRegex);
+    if (regionMatch) {
+      const name = (regionMatch[1] ?? "").trim();
+      stack.push({ name, start: lineNumber, hasContent: false });
+      continue;
+    }
+    if (endRegionRegex.test(line)) {
+      const current = stack.pop();
+      if (!current) continue;
+      if (!current.hasContent) {
+        regions.push({ name: current.name, start: current.start, end: lineNumber });
+        for (let lineIndex = current.start; lineIndex <= lineNumber; lineIndex++) {
+          linesToRemove.add(lineIndex);
+        }
+      }
+      continue;
+    }
+    if (line.trim() === "") continue;
+    for (const entry of stack) {
+      entry.hasContent = true;
+    }
+  }
+  return { regions, linesToRemove };
+}
+
+// #endregion EmptyRegions
 
 function getHeaderRegionLines(lines: string[], language: CodeLanguage): Set<number> {
   const set = new Set<number>();
@@ -361,29 +471,34 @@ function isTsRegionLineText(textAfterSlashes: string): boolean {
 function collectTypescriptComments(content: string, sourceFile: ts.SourceFile): ts.CommentRange[] {
   const seenRanges = new Set<string>();
   const allComments: ts.CommentRange[] = [];
+  const addRange = (range: ts.CommentRange): void => {
+    const key = `${range.pos}-${range.end}`;
+    if (!seenRanges.has(key)) {
+      seenRanges.add(key);
+      allComments.push(range);
+    }
+  };
   const collectAt = (pos: number): void => {
     const leading = ts.getLeadingCommentRanges(content, pos);
     if (leading) {
       for (const range of leading) {
-        const key = `${range.pos}-${range.end}`;
-        if (!seenRanges.has(key)) {
-          seenRanges.add(key);
-          allComments.push(range);
-        }
+        addRange(range);
       }
     }
   };
   collectAt(0);
   const visit = (node: ts.Node): void => {
     collectAt(node.getFullStart());
+    const jsDoc = (node as ts.JSDocContainer).jsDoc;
+    if (jsDoc) {
+      for (const doc of jsDoc) {
+        addRange({ pos: doc.pos, end: doc.end, kind: ts.SyntaxKind.MultiLineCommentTrivia });
+      }
+    }
     const trailing = ts.getTrailingCommentRanges(content, node.getEnd());
     if (trailing) {
       for (const range of trailing) {
-        const key = `${range.pos}-${range.end}`;
-        if (!seenRanges.has(key)) {
-          seenRanges.add(key);
-          allComments.push(range);
-        }
+        addRange(range);
       }
     }
     ts.forEachChild(node, visit);
@@ -413,7 +528,7 @@ function scanTypescriptComments(content: string, lines: string[], path: string, 
       const after = lineText.slice(Math.max(0, lineText.indexOf("//") + 2));
       if (isTsRegionLineText(after)) continue;
     }
-    issues.push({ path, language: "typescript", kind: "comment", line: lineNumber, column, message: comment.kind === ts.SyntaxKind.SingleLineCommentTrivia ? "Line comment found" : "Block comment found", excerpt: getExcerpt(lineText) });
+    issues.push(createIssue({ path, language: "typescript", kind: "comment", line: lineNumber, column, message: comment.kind === ts.SyntaxKind.SingleLineCommentTrivia ? "Line comment found" : "Block comment found", excerpt: getExcerpt(lineText) }));
   }
   return issues;
 }
@@ -434,7 +549,7 @@ function getTypescriptStringLiteralText(node: ts.Node): string | null {
 const jsJsRoot = "js/js/";
 const sketchpadAppNames = ["Home", "Kit", "Design", "Type", "Quality", "Docs", "Feedback"];
 const sketchpadAppPaths = new Set(sketchpadAppNames.map((name) => `js/js/sketchpad/${name}.tsx`));
-const sketchpadImportTargets = new Set(["js/js/sketchpad/elements", "js/js/sketchpad/shared", "js/js/semio"]);
+const sketchpadImportTargets = new Set(["js/js/sketchpad/elements", "js/js/sketchpad/shared", "js/js/sketchpad/Tutorials", "js/js/semio", "js/js/i18n", ...sketchpadAppNames.map((name) => `js/js/sketchpad/${name}`)]);
 const appImportTargets = new Set(["js/js/sketchpad/Sketchpad", ...sketchpadImportTargets]);
 // #endregion JsJsRuleConstants
 // #region JsJsRuleScans
@@ -442,42 +557,42 @@ function scanTypescriptForbiddenImports(content: string, lines: string[], path: 
   const issues: CodeIssue[] = [];
   const normalizedPath = normalizePath(path);
   if (!normalizedPath.startsWith(jsJsRoot)) return issues;
+  if (isExcludedFromImportRules(path)) return issues;
   const isElementsFile = normalizedPath.endsWith("/elements.tsx");
   const isSketchpadFile = normalizedPath === "js/js/sketchpad/Sketchpad.tsx";
   const isAppFile = sketchpadAppPaths.has(normalizedPath);
   const sourceFile = ts.createSourceFile(path, content, ts.ScriptTarget.Latest, true, path.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
-  const addIssue = (node: ts.Node, message: string): void => {
+  const addIssue = (node: ts.Node, message: string, reason: string, solution: string): void => {
     const { line, character } = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
     const lineNumber = line + 1;
-    issues.push({ path, language: "typescript", kind: "forbidden_import", line: lineNumber, column: character + 1, message, excerpt: getExcerpt(lines[lineNumber - 1] ?? "") });
+    issues.push(createIssue({ path, language: "typescript", kind: "forbidden_import", line: lineNumber, column: character + 1, message, reason, solution, excerpt: getExcerpt(lines[lineNumber - 1] ?? "") }));
   };
+  const elementsAllowedTargets = new Set(["js/js/i18n", "js/js/semio"]);
   const checkModuleText = (node: ts.Node, moduleText: string): void => {
     if (isElementsFile && moduleText.startsWith(".")) {
-      addIssue(node, "Relative imports are forbidden in elements.tsx");
+      const resolved = normalizePath(join(dirname(normalizedPath), moduleText)).replace(/\.[^.\/]+$/, "");
+      if (!elementsAllowedTargets.has(resolved)) {
+        addIssue(node, "Relative imports in elements.tsx must target i18n.ts or semio.ts", "elements.tsx is the domain-neutral shared UI library and may only import i18n.ts or semio.ts; it is the only file allowed to import third-party libraries for reexport.", "Move shared functionality into elements.tsx or into js/js/i18n.ts or js/js/semio.ts, then import from the approved path.");
+      }
       return;
     }
     if (isSketchpadFile || isAppFile) {
-      if (!moduleText.startsWith(".")) {
-        addIssue(node, "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts");
-        return;
-      }
+      if (!moduleText.startsWith(".")) return;
       const resolved = normalizePath(join(dirname(normalizedPath), moduleText)).replace(/\.[^.\/]+$/, "");
-      if ((isSketchpadFile && !sketchpadImportTargets.has(resolved)) || (isAppFile && !appImportTargets.has(resolved))) addIssue(node, "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts");
+      if ((isSketchpadFile && !sketchpadImportTargets.has(resolved)) || (isAppFile && !appImportTargets.has(resolved)))
+        addIssue(node, "Relative imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts", "Sketchpad.tsx provides scaffolding and stays independent from app internals, while apps may only import shared elements, shared utilities, and core domain modules.", "Move shared logic into shared modules (elements/shared/semio) and update the import so Sketchpad.tsx and apps remain decoupled.");
       return;
     }
-    if (!moduleText.startsWith(".")) {
-      if (!isElementsFile) addIssue(node, "Imports outside js/js are forbidden");
-      return;
-    }
-    if (!normalizePath(join(dirname(normalizedPath), moduleText)).startsWith(jsJsRoot)) addIssue(node, "Imports outside js/js are forbidden");
   };
   const visit = (node: ts.Node): void => {
     if (ts.isImportDeclaration(node) && ts.isStringLiteralLike(node.moduleSpecifier)) checkModuleText(node.moduleSpecifier, node.moduleSpecifier.text);
     if (ts.isExportDeclaration(node) && node.moduleSpecifier && ts.isStringLiteralLike(node.moduleSpecifier)) checkModuleText(node.moduleSpecifier, node.moduleSpecifier.text);
     if (ts.isImportEqualsDeclaration(node) && ts.isExternalModuleReference(node.moduleReference) && ts.isStringLiteralLike(node.moduleReference.expression)) checkModuleText(node.moduleReference.expression, node.moduleReference.expression.text);
     if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) {
-      const argText = getTypescriptStringLiteralText(node.arguments[0] ?? node);
-      if (argText !== null) checkModuleText(node.arguments[0] ?? node, argText);
+      const arg = node.arguments[0];
+      if (arg && ts.isTemplateExpression(arg)) return;
+      const argText = getTypescriptStringLiteralText(arg ?? node);
+      if (argText !== null) checkModuleText(arg ?? node, argText);
     }
     if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === "require") {
       const argText = getTypescriptStringLiteralText(node.arguments[0] ?? node);
@@ -495,20 +610,22 @@ function scanTypescriptForbiddenTerminology(content: string, lines: string[], pa
   if (!normalizedPath.startsWith(jsJsRoot) || !normalizedPath.endsWith("/elements.tsx")) return issues;
   const sourceFile = ts.createSourceFile(path, content, ts.ScriptTarget.Latest, true, path.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
   const forbiddenRegex = /\b(kit|design|type|port|connection|docs|feedback)\b/i;
+  const allowedPatterns = [/@dnd-kit/, /\/docs\//, /semio\.sketchpad\.docs\./, /^type$/, /^id$/];
+  const isAllowed = (text: string): boolean => allowedPatterns.some((p) => p.test(text));
   const addIssue = (node: ts.Node, term: string): void => {
     const { line, character } = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
     const lineNumber = line + 1;
-    issues.push({ path, language: "typescript", kind: "forbidden_terminology", line: lineNumber, column: character + 1, message: `Forbidden terminology \"${term}\"`, excerpt: getExcerpt(lines[lineNumber - 1] ?? "") });
+    issues.push(createIssue({ path, language: "typescript", kind: "forbidden_terminology", line: lineNumber, column: character + 1, message: `Forbidden terminology \"${term}\"`, reason: "Shared UI elements must stay domain-neutral and avoid app-specific terminology.", solution: "Replace the term with neutral wording or move the string into app-specific modules.", excerpt: getExcerpt(lines[lineNumber - 1] ?? "") }));
   };
   const visit = (node: ts.Node): void => {
     if (ts.isJsxText(node)) {
       const match = node.text.match(forbiddenRegex);
-      if (match) addIssue(node, match[0]);
+      if (match && !isAllowed(node.text)) addIssue(node, match[0]);
     }
     const literalText = getTypescriptStringLiteralText(node);
     if (literalText !== null) {
       const match = literalText.match(forbiddenRegex);
-      if (match) addIssue(node, match[0]);
+      if (match && !isAllowed(literalText)) addIssue(node, match[0]);
     }
     ts.forEachChild(node, visit);
   };
@@ -526,11 +643,15 @@ function scanTypescriptTemporaryLogs(content: string, lines: string[], path: str
     if (ts.isCallExpression(node)) {
       const expression = node.expression;
       if (ts.isPropertyAccessExpression(expression) && ts.isIdentifier(expression.expression) && expression.expression.text === "console" && methods.has(expression.name.text)) {
-        const debugArg = node.arguments.map((arg) => getTypescriptStringLiteralText(arg)).filter((text): text is string => text !== null).some((text) => text.includes("[DEBUG]"));
+        const debugArg = node.arguments
+          .map((arg) => getTypescriptStringLiteralText(arg))
+          .filter((text): text is string => text !== null)
+          .some((text) => text.includes("[DEBUG]"));
         if (debugArg) {
           const { line, character } = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
           const lineNumber = line + 1;
-          if (lineNumber > licenseHeaderEndLine) issues.push({ path, language: "typescript", kind: "temporary_log", line: lineNumber, column: character + 1, message: "Temporary [DEBUG] console log found", excerpt: getExcerpt(lines[lineNumber - 1] ?? "") });
+          if (lineNumber > licenseHeaderEndLine)
+            issues.push(createIssue({ path, language: "typescript", kind: "temporary_log", line: lineNumber, column: character + 1, message: "Temporary [DEBUG] console log found", excerpt: getExcerpt(lines[lineNumber - 1] ?? "") }));
         }
       }
     }
@@ -560,8 +681,8 @@ function stripTypescriptComments(content: string, lines: string[], path: string,
       if (isTsRegionLineText(after)) continue;
       if (tokenText.startsWith("///") && /<\s*reference\b/i.test(tokenText)) continue;
     }
-    const prev = comment.pos > 0 ? content[comment.pos - 1] ?? "" : "";
-    const next = comment.end < content.length ? content[comment.end] ?? "" : "";
+    const prev = comment.pos > 0 ? (content[comment.pos - 1] ?? "") : "";
+    const next = comment.end < content.length ? (content[comment.end] ?? "") : "";
     const insertSpace = /[A-Za-z0-9_$]/.test(prev) && /[A-Za-z0-9_$]/.test(next);
     removals.push({ start: comment.pos, end: comment.end, insertSpace });
   }
@@ -619,7 +740,7 @@ function scanTsOrCsharpComments(content: string, lines: string[], language: Code
       col += 1;
       continue;
     }
-    if (!inSingle && !inTemplate && ch === "\"" && !inDouble) {
+    if (!inSingle && !inTemplate && ch === '"' && !inDouble) {
       inDouble = true;
       col += 1;
       continue;
@@ -630,7 +751,7 @@ function scanTsOrCsharpComments(content: string, lines: string[], language: Code
         col += 2;
         continue;
       }
-      if (ch === "\"") inDouble = false;
+      if (ch === '"') inDouble = false;
       col += 1;
       continue;
     }
@@ -664,7 +785,7 @@ function scanTsOrCsharpComments(content: string, lines: string[], language: Code
         col += 2;
         continue;
       }
-      issues.push({ path, language, kind: "comment", line, column: col, message: "Line comment found", excerpt: getExcerpt(lineText) });
+      issues.push(createIssue({ path, language, kind: "comment", line, column: col, message: "Line comment found", excerpt: getExcerpt(lineText) }));
       while (i < content.length && (content[i] ?? "") !== "\n") i += 1;
       line += 1;
       col = 1;
@@ -678,7 +799,7 @@ function scanTsOrCsharpComments(content: string, lines: string[], language: Code
         continue;
       }
       const lineText = lines[line - 1] ?? "";
-      issues.push({ path, language, kind: "comment", line, column: col, message: "Block comment found", excerpt: getExcerpt(lineText) });
+      issues.push(createIssue({ path, language, kind: "comment", line, column: col, message: "Block comment found", excerpt: getExcerpt(lineText) }));
       inBlockComment = true;
       i += 1;
       col += 2;
@@ -723,7 +844,7 @@ function scanPythonComments(content: string, lines: string[], path: string, lice
       continue;
     }
     if (inTripleDouble) {
-      if (ch === "\"" && next === "\"" && next2 === "\"") {
+      if (ch === '"' && next === '"' && next2 === '"') {
         inTripleDouble = false;
         i += 2;
         col += 3;
@@ -748,7 +869,7 @@ function scanPythonComments(content: string, lines: string[], path: string, lice
         col += 2;
         continue;
       }
-      if (ch === "\"") inDouble = false;
+      if (ch === '"') inDouble = false;
       col += 1;
       continue;
     }
@@ -758,7 +879,7 @@ function scanPythonComments(content: string, lines: string[], path: string, lice
       col += 3;
       continue;
     }
-    if (ch === "\"" && next === "\"" && next2 === "\"") {
+    if (ch === '"' && next === '"' && next2 === '"') {
       inTripleDouble = true;
       i += 2;
       col += 3;
@@ -769,7 +890,7 @@ function scanPythonComments(content: string, lines: string[], path: string, lice
       col += 1;
       continue;
     }
-    if (ch === "\"") {
+    if (ch === '"') {
       inDouble = true;
       col += 1;
       continue;
@@ -797,7 +918,7 @@ function scanPythonComments(content: string, lines: string[], path: string, lice
         col += 1;
         continue;
       }
-      issues.push({ path, language: "python", kind: "comment", line, column: col, message: "Line comment found", excerpt: getExcerpt(lineText) });
+      issues.push(createIssue({ path, language: "python", kind: "comment", line, column: col, message: "Line comment found", excerpt: getExcerpt(lineText) }));
       while (i < content.length && (content[i] ?? "") !== "\n") i += 1;
       line += 1;
       col = 1;
@@ -816,7 +937,7 @@ function scanPythonTemporaryLogs(lines: string[], path: string, licenseHeaderEnd
     const lineText = lines[i] ?? "";
     if (!lineText.includes("[DEBUG]")) continue;
     if (!/\b(print|logging\.(debug|info|warning|error)|logger\.(debug|info|warning|error))\s*\(/.test(lineText)) continue;
-    issues.push({ path, language: "python", kind: "temporary_log", line: lineNumber, column: 1, message: "Temporary [DEBUG] log found", excerpt: getExcerpt(lineText) });
+    issues.push(createIssue({ path, language: "python", kind: "temporary_log", line: lineNumber, column: 1, message: "Temporary [DEBUG] log found", excerpt: getExcerpt(lineText) }));
   }
   return issues;
 }
@@ -861,12 +982,12 @@ function scanCsharpComments(content: string, lines: string[], path: string, lice
       continue;
     }
     if (inVerbatimString) {
-      if (ch === "\"" && next === "\"") {
+      if (ch === '"' && next === '"') {
         i += 1;
         col += 2;
         continue;
       }
-      if (ch === "\"") inVerbatimString = false;
+      if (ch === '"') inVerbatimString = false;
       col += 1;
       continue;
     }
@@ -876,7 +997,7 @@ function scanCsharpComments(content: string, lines: string[], path: string, lice
         col += 2;
         continue;
       }
-      if (ch === "\"") inString = false;
+      if (ch === '"') inString = false;
       col += 1;
       continue;
     }
@@ -885,31 +1006,31 @@ function scanCsharpComments(content: string, lines: string[], path: string, lice
       col += 1;
       continue;
     }
-    if (ch === "$" && next === "@" && next2 === "\"") {
+    if (ch === "$" && next === "@" && next2 === '"') {
       inVerbatimString = true;
       i += 2;
       col += 3;
       continue;
     }
-    if (ch === "@" && next === "$" && next2 === "\"") {
+    if (ch === "@" && next === "$" && next2 === '"') {
       inVerbatimString = true;
       i += 2;
       col += 3;
       continue;
     }
-    if (ch === "@" && next === "\"") {
+    if (ch === "@" && next === '"') {
       inVerbatimString = true;
       i += 1;
       col += 2;
       continue;
     }
-    if (ch === "$" && next === "\"") {
+    if (ch === "$" && next === '"') {
       inString = true;
       i += 1;
       col += 2;
       continue;
     }
-    if (ch === "\"") {
+    if (ch === '"') {
       inString = true;
       col += 1;
       continue;
@@ -928,7 +1049,7 @@ function scanCsharpComments(content: string, lines: string[], path: string, lice
         col += 2;
         continue;
       }
-      issues.push({ path, language: "csharp", kind: "comment", line, column: col, message: "Line comment found", excerpt: getExcerpt(lineText) });
+      issues.push(createIssue({ path, language: "csharp", kind: "comment", line, column: col, message: "Line comment found", excerpt: getExcerpt(lineText) }));
       while (i < content.length && (content[i] ?? "") !== "\n") i += 1;
       line += 1;
       col = 1;
@@ -950,7 +1071,7 @@ function scanCsharpComments(content: string, lines: string[], path: string, lice
         col += 2;
         continue;
       }
-      issues.push({ path, language: "csharp", kind: "comment", line, column: col, message: "Block comment found", excerpt: getExcerpt(lineText) });
+      issues.push(createIssue({ path, language: "csharp", kind: "comment", line, column: col, message: "Block comment found", excerpt: getExcerpt(lineText) }));
       inBlockComment = true;
       i += 1;
       col += 2;
@@ -970,7 +1091,7 @@ function scanCsharpTemporaryLogs(lines: string[], path: string, licenseHeaderEnd
     const lineText = lines[i] ?? "";
     if (!regex.test(lineText)) continue;
     if (!lineText.includes("[DEBUG]")) continue;
-    issues.push({ path, language: "csharp", kind: "temporary_log", line: lineNumber, column: 1, message: "Temporary [DEBUG] console log found", excerpt: getExcerpt(lineText) });
+    issues.push(createIssue({ path, language: "csharp", kind: "temporary_log", line: lineNumber, column: 1, message: "Temporary [DEBUG] console log found", excerpt: getExcerpt(lineText) }));
   }
   return issues;
 }
@@ -1021,12 +1142,12 @@ function stripCsharpComments(content: string, lines: string[], licenseHeaderEndL
     }
     if (inVerbatimString) {
       out += ch;
-      if (ch === "\"" && next === "\"") {
-        out += "\"";
+      if (ch === '"' && next === '"') {
+        out += '"';
         i += 1;
         continue;
       }
-      if (ch === "\"") inVerbatimString = false;
+      if (ch === '"') inVerbatimString = false;
       continue;
     }
     if (inString) {
@@ -1036,7 +1157,7 @@ function stripCsharpComments(content: string, lines: string[], licenseHeaderEndL
         i += 1;
         continue;
       }
-      if (ch === "\"") inString = false;
+      if (ch === '"') inString = false;
       continue;
     }
     if (ch === "'") {
@@ -1044,32 +1165,32 @@ function stripCsharpComments(content: string, lines: string[], licenseHeaderEndL
       out += ch;
       continue;
     }
-    if (ch === "$" && next === "@" && next2 === "\"") {
-      out += "$@\"";
+    if (ch === "$" && next === "@" && next2 === '"') {
+      out += '$@"';
       i += 2;
       inVerbatimString = true;
       continue;
     }
-    if (ch === "@" && next === "$" && next2 === "\"") {
-      out += "@$\"";
+    if (ch === "@" && next === "$" && next2 === '"') {
+      out += '@$"';
       i += 2;
       inVerbatimString = true;
       continue;
     }
-    if (ch === "@" && next === "\"") {
-      out += "@\"";
+    if (ch === "@" && next === '"') {
+      out += '@"';
       i += 1;
       inVerbatimString = true;
       continue;
     }
-    if (ch === "$" && next === "\"") {
-      out += "$\"";
+    if (ch === "$" && next === '"') {
+      out += '$"';
       i += 1;
       inString = true;
       continue;
     }
-    if (ch === "\"") {
-      out += "\"";
+    if (ch === '"') {
+      out += '"';
       inString = true;
       continue;
     }
@@ -1156,7 +1277,7 @@ function stripTsOrCsharpComments(content: string, lines: string[], language: Cod
       if (ch === "'") inSingle = false;
       continue;
     }
-    if (!inSingle && !inTemplate && ch === "\"" && !inDouble) {
+    if (!inSingle && !inTemplate && ch === '"' && !inDouble) {
       inDouble = true;
       out += ch;
       continue;
@@ -1168,7 +1289,7 @@ function stripTsOrCsharpComments(content: string, lines: string[], language: Cod
         i += 1;
         continue;
       }
-      if (ch === "\"") inDouble = false;
+      if (ch === '"') inDouble = false;
       continue;
     }
     if (language === "typescript" && !inSingle && !inDouble && ch === "`" && !inTemplate) {
@@ -1245,8 +1366,8 @@ function stripPythonComments(content: string, lines: string[], licenseHeaderEndL
     }
     if (inTripleDouble) {
       out += ch;
-      if (ch === "\"" && next === "\"" && next2 === "\"") {
-        out += "\"\"";
+      if (ch === '"' && next === '"' && next2 === '"') {
+        out += '""';
         i += 2;
         inTripleDouble = false;
       }
@@ -1269,7 +1390,7 @@ function stripPythonComments(content: string, lines: string[], licenseHeaderEndL
         i += 1;
         continue;
       }
-      if (ch === "\"") inDouble = false;
+      if (ch === '"') inDouble = false;
       continue;
     }
     if (ch === "'" && next === "'" && next2 === "'") {
@@ -1278,8 +1399,8 @@ function stripPythonComments(content: string, lines: string[], licenseHeaderEndL
       inTripleSingle = true;
       continue;
     }
-    if (ch === "\"" && next === "\"" && next2 === "\"") {
-      out += "\"\"\"";
+    if (ch === '"' && next === '"' && next2 === '"') {
+      out += '"""';
       i += 2;
       inTripleDouble = true;
       continue;
@@ -1289,7 +1410,7 @@ function stripPythonComments(content: string, lines: string[], licenseHeaderEndL
       out += ch;
       continue;
     }
-    if (ch === "\"") {
+    if (ch === '"') {
       inDouble = true;
       out += ch;
       continue;
@@ -1321,7 +1442,22 @@ function writeReport(report: CodeReport): void {
 function run(): void {
   const issues: CodeIssue[] = [];
   let filesScanned = 0;
-  const byKind: Record<CodeIssueKind, number> = { comment: 0, temporary_log: 0, missing_license_header: 0, invalid_header_format: 0, header_filepath_mismatch: 0, extra_dev_docs: 0, region_name_missing: 0, region_mismatch: 0, region_unclosed: 0, region_duplicate_sibling: 0, unreadable_file: 0, forbidden_import: 0, forbidden_terminology: 0 };
+  const byKind: Record<CodeIssueKind, number> = {
+    comment: 0,
+    temporary_log: 0,
+    missing_license_header: 0,
+    invalid_header_format: 0,
+    header_filepath_mismatch: 0,
+    extra_dev_docs: 0,
+    region_name_missing: 0,
+    region_mismatch: 0,
+    region_unclosed: 0,
+    region_duplicate_sibling: 0,
+    region_empty: 0,
+    unreadable_file: 0,
+    forbidden_import: 0,
+    forbidden_terminology: 0,
+  };
   const byLanguage: Record<CodeLanguage, number> = { typescript: 0, python: 0, csharp: 0, meta: 0 };
   const repoFiles = getRepoFiles().filter(shouldScan);
   const packageRoots = getPackageRootDirs(repoFiles);
@@ -1331,13 +1467,13 @@ function run(): void {
       try {
         if (existsSync(absolute)) unlinkSync(absolute);
       } catch {
-        issues.push({ path: docPath, language: "meta", kind: "extra_dev_docs", line: 1, column: 1, message: "Extra dev doc detected but could not be deleted" });
+        issues.push(createIssue({ path: docPath, language: "meta", kind: "extra_dev_docs", line: 1, column: 1, message: "Extra dev doc detected but could not be deleted" }));
         byKind.extra_dev_docs += 1;
         byLanguage.meta += 1;
       }
       continue;
     }
-    issues.push({ path: docPath, language: "meta", kind: "extra_dev_docs", line: 1, column: 1, message: "Extra README.md/AGENTS.md outside repo root" });
+    issues.push(createIssue({ path: docPath, language: "meta", kind: "extra_dev_docs", line: 1, column: 1, message: "Extra README.md/AGENTS.md outside repo root" }));
     byKind.extra_dev_docs += 1;
     byLanguage.meta += 1;
   }
@@ -1351,7 +1487,7 @@ function run(): void {
     try {
       content = readFileSync(absolute, "utf-8");
     } catch {
-      const issue: CodeIssue = { path, language, kind: "unreadable_file", line: 1, column: 1, message: "Failed to read file" };
+      const issue = createIssue({ path, language, kind: "unreadable_file", line: 1, column: 1, message: "Failed to read file" });
       issues.push(issue);
       byKind[issue.kind] += 1;
       continue;
@@ -1368,7 +1504,12 @@ function run(): void {
     }
     let license = getLicenseHeaderEndLine(lines, language);
     if (fix && !isConfigFile(path)) {
-      const updated = language === "python" ? stripPythonComments(content, lines, license.headerEndLine) : language === "typescript" ? stripTypescriptComments(content, lines, path, license.headerEndLine) : stripCsharpComments(content, lines, license.headerEndLine);
+      const updated =
+        language === "python"
+          ? stripPythonComments(content, lines, license.headerEndLine)
+          : language === "typescript"
+            ? stripTypescriptComments(content, lines, path, license.headerEndLine)
+            : stripCsharpComments(content, lines, license.headerEndLine);
       if (updated !== content) {
         writeFileSync(absolute, updated, "utf-8");
         content = updated;
@@ -1380,25 +1521,52 @@ function run(): void {
       const updatedHeaderInfo = parseExistingHeader(lines, language, path);
       const expectedLicense = getLicenseType(path) === "LGPL" ? "LGPL-3.0" : "AGPL-3.0";
       if (!updatedHeaderInfo.isValidFormat) {
-        const issue: CodeIssue = { path, language, kind: "invalid_header_format", line: 1, column: 1, message: `Header does not follow the required format (#region Header, filepath, contributor, ${expectedLicense})` };
+        const issue = createIssue({ path, language, kind: "invalid_header_format", line: 1, column: 1, message: `Header does not follow the required format (#region Header, filepath, contributor, ${expectedLicense})` });
         issues.push(issue);
         byKind[issue.kind] += 1;
       } else if (updatedHeaderInfo.existingFilepath !== path) {
-        const issue: CodeIssue = { path, language, kind: "header_filepath_mismatch", line: 1, column: 1, message: `Header filepath mismatch: expected "${path}", found "${updatedHeaderInfo.existingFilepath}"` };
+        const issue = createIssue({ path, language, kind: "header_filepath_mismatch", line: 1, column: 1, message: `Header filepath mismatch: expected "${path}", found "${updatedHeaderInfo.existingFilepath}"` });
         issues.push(issue);
         byKind[issue.kind] += 1;
       }
     }
+    // #region EmptyRegions
+    let emptyRegions = getEmptyRegions(lines, language);
+    if (fix && !isConfigFile(path) && emptyRegions.regions.length > 0) {
+      const updatedLines = lines.filter((_, index) => !emptyRegions.linesToRemove.has(index + 1));
+      const updatedContent = updatedLines.join("\n");
+      writeFileSync(absolute, updatedContent, "utf-8");
+      content = updatedContent;
+      lines = updatedLines;
+      license = getLicenseHeaderEndLine(lines, language);
+      emptyRegions = getEmptyRegions(lines, language);
+    }
+    for (const region of emptyRegions.regions) {
+      const issue = createIssue({ path, language, kind: "region_empty", line: region.start, column: 1, message: `Empty region "${region.name}"`, excerpt: getExcerpt(lines[region.start - 1] ?? "") });
+      issues.push(issue);
+      byKind[issue.kind] += 1;
+    }
+    // #endregion EmptyRegions
     for (const issue of parseRegions(lines, language, path)) {
       issues.push(issue);
       byKind[issue.kind] += 1;
     }
-    const tempLogIssues = language === "python" ? scanPythonTemporaryLogs(lines, path, license.headerEndLine) : language === "typescript" ? scanTypescriptTemporaryLogs(content, lines, path, license.headerEndLine) : scanCsharpTemporaryLogs(lines, path, license.headerEndLine);
+    const tempLogIssues =
+      language === "python"
+        ? scanPythonTemporaryLogs(lines, path, license.headerEndLine)
+        : language === "typescript"
+          ? scanTypescriptTemporaryLogs(content, lines, path, license.headerEndLine)
+          : scanCsharpTemporaryLogs(lines, path, license.headerEndLine);
     for (const issue of tempLogIssues) {
       issues.push(issue);
       byKind[issue.kind] += 1;
     }
-    const commentIssues = language === "python" ? scanPythonComments(content, lines, path, license.headerEndLine) : language === "typescript" ? scanTypescriptComments(content, lines, path, license.headerEndLine) : scanCsharpComments(content, lines, path, license.headerEndLine);
+    const commentIssues =
+      language === "python"
+        ? scanPythonComments(content, lines, path, license.headerEndLine)
+        : language === "typescript"
+          ? scanTypescriptComments(content, lines, path, license.headerEndLine)
+          : scanCsharpComments(content, lines, path, license.headerEndLine);
     for (const issue of commentIssues) {
       issues.push(issue);
       byKind[issue.kind] += 1;

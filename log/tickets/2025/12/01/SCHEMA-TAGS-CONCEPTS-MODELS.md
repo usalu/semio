@@ -1,12 +1,12 @@
 ---
 slug: SCHEMA-TAGS-CONCEPTS-MODELS
-summary: 'Tags, Concepts become kit entities; Models link to files with guid'
-prompt: 'Tags, Concepts become kit entities; Models link to files with guid'
+summary: "Tags, Concepts become kit entities; Models link to files with guid"
+prompt: "Tags, Concepts become kit entities; Models link to files with guid"
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: '2025-12-16T17:06:07.796Z'
-commit: '0000000000000000000000000000000000000000'
+  created: "2025-12-16T17:06:07.796Z"
+commit: "0000000000000000000000000000000000000000"
 iterations: []
 ---
 

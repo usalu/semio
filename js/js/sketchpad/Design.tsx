@@ -72,6 +72,8 @@ import * as THREE from "three";
 import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
 import { useLabel } from "../i18n";
 
+const KitSectionLazy = React.lazy(() => import("./Kit").then((module) => ({ default: module.KitSection })));
+
 import {
   areDesignsInSameFamily,
   arePortsCompatible,
@@ -1455,10 +1457,8 @@ export function useDesignApp<T>(selector?: (state: DesignAppState) => T, id?: De
   const kitGuid = kitScope?.guid ?? id?.kit ?? "";
   const designGuid = designScope?.guid ?? id?.design ?? "";
 
-  // Always call hooks unconditionally to satisfy Rules of Hooks
   const state = useDesignAppXState(kitGuid, designGuid);
 
-  // Return null if we don't have valid guids
   if (!kitGuid || !designGuid) return null;
 
   if (selector) {
@@ -2299,11 +2299,6 @@ export function useDesignAppCommands(id?: DesignAppId) {
   }, [store, actor, kitGuid, designGuid]);
 }
 
-/**
- * Hook to sync Y.js store state to XState machine.
- * Call this in a component that wraps Design app to ensure XState has the state.
- * This enables XState selectors to work while Y.js remains the source of truth.
- */
 export function useDesignAppYjsToXStateSync(id?: DesignAppId) {
   const actor = useSketchpadActorSafe();
   const kitScope = useKitScope();
@@ -2311,13 +2306,11 @@ export function useDesignAppYjsToXStateSync(id?: DesignAppId) {
   const kitGuid = kitScope?.guid ?? id?.kit ?? "";
   const designGuid = designScope?.guid ?? id?.design ?? "";
 
-  // Watch Y.js state and sync to XState
   const state = useDesignApp((s) => s, id);
 
   useEffect(() => {
     if (!actor || !state || !kitGuid || !designGuid) return;
 
-    // Sync Y.js state to XState
     actor.send({
       type: "DESIGN.SYNC",
       kitGuid,
@@ -2798,7 +2791,7 @@ export const DesignAppFooter: FC = () => {
         });
       });
     });
-    // Fallback to kit tags for any missing names
+
     tags.forEach((tag) => {
       if (!nameMap.has(tag.guid)) {
         nameMap.set(tag.guid, tag.name);
@@ -4466,7 +4459,7 @@ const PortHandle: React.FC<PortHandleProps> = ({ port, pieceId, selected = false
   const { x, y } = getPortPositionStyle(port);
   const portColor = findAttributeValue(port, "semio.color", "var(--foreground)")!;
   const [hoverPort] = useDesignAppHoverPort();
-  // Use granular hook that only re-renders when this specific port's hover state changes
+
   const isHovered = useDesignAppIsPortHovered(undefined, pieceId, port.guid ?? "");
 
   const onClick = (event: React.MouseEvent) => {
@@ -6962,8 +6955,7 @@ const PieceMesh: FC<{ highlightColor: string | null }> = ({ highlightColor }) =>
         console.error("[PieceMesh] Failed to get blob URL:", error);
       }
     })();
-    // Note: We do NOT revoke the blob URL here because it's owned by KitStore's regularFiles cache.
-    // The KitStore revokes blob URLs when files are removed from the kit.
+
     return () => {
       cancelled = true;
     };
@@ -7779,8 +7771,7 @@ const App: FC<AppProps> = () => {
     const renderDesignTree = (designs: Design[]): ReactNode[] => {
       return designs.map((workbenchDesign) => {
         const children = workbenchDesigns?.filter((child) => (typeof child.parent === "object" ? child.parent?.guid === workbenchDesign.guid : child.parent === workbenchDesign.guid)) || [];
-        // Disable designs that are in the same family as the current design being edited
-        // This prevents circular references when adding design pieces
+
         const isDisabled = design && kit ? areDesignsInSameFamily(kit, design.guid, workbenchDesign.guid) : false;
         return (
           <div

@@ -1,12 +1,12 @@
 ---
 slug: STATE-MANAGEMENT-REFINEMENT
-summary: 'Refine state management: granular Yjs subscriptions for selectors'
-prompt: 'Refine state management: granular Yjs subscriptions for selectors'
+summary: "Refine state management: granular Yjs subscriptions for selectors"
+prompt: "Refine state management: granular Yjs subscriptions for selectors"
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: '2025-12-16T17:06:07.787Z'
-commit: '0000000000000000000000000000000000000000'
+  created: "2025-12-16T17:06:07.787Z"
+commit: "0000000000000000000000000000000000000000"
 iterations: []
 ---
 

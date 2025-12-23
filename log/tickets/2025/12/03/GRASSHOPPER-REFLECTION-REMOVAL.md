@@ -5,8 +5,8 @@ prompt: Remove reflection from Grasshopper components and hardcode inputs/output
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: '2025-12-16T17:06:07.840Z'
-commit: '0000000000000000000000000000000000000000'
+  created: "2025-12-16T17:06:07.840Z"
+commit: "0000000000000000000000000000000000000000"
 iterations: []
 ---
 

@@ -1,12 +1,12 @@
 ---
 slug: UI-STATE-MACHINE
-summary: 'Finish the UI state machine with proper states, guards, menus, and context'
-prompt: 'Finish the UI state machine with proper states, guards, menus, and context'
+summary: "Finish the UI state machine with proper states, guards, menus, and context"
+prompt: "Finish the UI state machine with proper states, guards, menus, and context"
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: '2025-12-16T17:06:07.891Z'
-commit: '0000000000000000000000000000000000000000'
+  created: "2025-12-16T17:06:07.891Z"
+commit: "0000000000000000000000000000000000000000"
 iterations: []
 ---
 

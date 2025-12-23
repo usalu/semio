@@ -22,7 +22,7 @@
 // #region Imports
 
 import { MDXProvider as BaseMDXProvider } from "@mdx-js/react";
-import { FC, ReactNode, Suspense, createContext, lazy, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { FC, ReactNode, Suspense, createContext, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useLocation, useNavigate, useParams } from "react-router";
 import { useLabel } from "../i18n";
 import type { SketchpadStore } from "./Sketchpad";
@@ -41,7 +41,7 @@ import {
   useSettings,
   useSketchpadCommands,
 } from "./Sketchpad";
-import { Aside, Tabs as BaseTabs, FileTreeNode, FileTree, Page, PageFrontmatter, PageNavigation, TabsContent, TabsList, TabsTrigger, TreeItem, TreeStateProvider } from "./elements";
+import { Aside, Tabs as BaseTabs, FileTree, FileTreeNode, Page, PageFrontmatter, PageNavigation, TabsContent, TabsList, TabsTrigger, TreeItem, TreeStateProvider } from "./elements";
 import { PanelKind, createPanelDefinition, parseWindowLayout, registerAppPlugin, registerDocsRegistry, stringifyWindowLayout, type AppConfig, type AppEdit, type AppPlugin, type AppWindowConfig, type PanelVisibility } from "./shared";
 
 // #endregion Imports
@@ -222,17 +222,16 @@ export interface HeadingNode {
   children?: HeadingNode[];
 }
 
-// Global headings state with event-based updates
-// This allows the MDX content and the Details panel to share heading state
-// even though they're rendered in different parts of the component tree
 const headingsState = {
   headings: new Map<string, HeadingNode>(),
   listeners: new Set<() => void>(),
+  cachedArray: [] as HeadingNode[],
   subscribe(listener: () => void) {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
   },
   notify() {
+    this.cachedArray = Array.from(this.headings.values());
     this.listeners.forEach((listener) => listener());
   },
   register(heading: HeadingNode) {
@@ -249,7 +248,7 @@ const headingsState = {
     }
   },
   getAll() {
-    return Array.from(this.headings.values());
+    return this.cachedArray;
   },
 };
 
@@ -522,20 +521,15 @@ class DocsRegistry {
     return this.getAllSections().find((s) => s.id === id);
   }
 
-  /**
-   * Get all pages ordered by section order then page order
-   */
   private getOrderedPages(): DocsPage[] {
     const sections = this.getAllSections();
     const pages: DocsPage[] = [];
 
-    // Add root/index page first if it exists
     const rootPage = this.getAllPages().find((p) => p.path === "docs/index");
     if (rootPage) {
       pages.push(rootPage);
     }
 
-    // Add pages from each section in order
     sections.forEach((section) => {
       const sectionPages = this.getPagesBySection(section.id);
       pages.push(...sectionPages);
@@ -544,9 +538,6 @@ class DocsRegistry {
     return pages;
   }
 
-  /**
-   * Get the previous page in the documentation navigation order
-   */
   getPreviousPage(currentPath: string): DocsPage | undefined {
     const orderedPages = this.getOrderedPages();
     const currentIndex = orderedPages.findIndex((p) => p.path === currentPath);
@@ -556,9 +547,6 @@ class DocsRegistry {
     return undefined;
   }
 
-  /**
-   * Get the next page in the documentation navigation order
-   */
   getNextPage(currentPath: string): DocsPage | undefined {
     const orderedPages = this.getOrderedPages();
     const currentIndex = orderedPages.findIndex((p) => p.path === currentPath);
@@ -568,9 +556,6 @@ class DocsRegistry {
     return undefined;
   }
 
-  /**
-   * Build a tree structure for a section showing all pages and subsections
-   */
   getSectionTree(sectionId: string): FileTreeNode[] {
     const sectionPages = this.getPagesBySection(sectionId);
 
@@ -580,13 +565,11 @@ class DocsRegistry {
       name: string;
     }
 
-    // Build tree structure
     const root: TreeNode = { children: new Map(), name: "root" };
     for (const page of sectionPages) {
       const pathParts = page.path.replace("docs/", "").replace(`${sectionId}/`, "").split("/");
       let current = root;
 
-      // Check if the last part is "index" - if so, assign page to parent folder
       const isIndexFile = pathParts[pathParts.length - 1] === "index";
       const partsToTraverse = isIndexFile ? pathParts.slice(0, -1) : pathParts;
 
@@ -601,7 +584,6 @@ class DocsRegistry {
       current.page = page;
     }
 
-    // Convert to FileTreeNode structure
     const convertToFileTree = (node: TreeNode): FileTreeNode[] => {
       const items: FileTreeNode[] = [];
 
@@ -610,7 +592,6 @@ class DocsRegistry {
         const hasPage = !!childNode.page;
 
         if (hasChildren) {
-          // Folder (with or without index page)
           const folderLabel = childNode.page?.title || this.pathPartToTitle(name);
           const folderPath = childNode.page?.path || `docs/${sectionId}/${name}`;
           const folderIcon = childNode.page?.icon;
@@ -623,7 +604,6 @@ class DocsRegistry {
             children: convertToFileTree(childNode),
           });
         } else if (hasPage && childNode.page) {
-          // Leaf page
           items.push({
             title: childNode.page.title,
             path: childNode.page.path,
@@ -634,7 +614,6 @@ class DocsRegistry {
         }
       });
 
-      // Sort by order
       return items.sort((a, b) => {
         const pageA = sectionPages.find((p) => p.path === a.path);
         const pageB = sectionPages.find((p) => p.path === b.path);
@@ -862,10 +841,6 @@ if (typeof window !== "undefined") {
 
 // #region Docs App Plugin Registration
 
-/**
- * Docs app plugin for the sketchpad machine.
- * Provides DOCS.* events, actions, and guards.
- */
 const docsAppPlugin: AppPlugin = {
   id: "docs",
   namespace: "DOCS",
@@ -921,18 +896,15 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const prevItemsRef = useRef<string>("");
 
-  // Get current page path (remove leading slash and "docs/" prefix if present)
   const currentPath = useMemo(() => {
     const path = location.pathname.replace(/^\//, "");
     return path;
   }, [location.pathname]);
 
-  // Detect if this is an index page (folder page)
   const isIndexPage = useMemo(() => {
     return currentPath.endsWith("/index") || currentPath.split("/").pop() === currentPath.split("/")[0];
   }, [currentPath]);
 
-  // Build tree structure for current section/folder
   const treeData = useMemo(() => {
     if (!isIndexPage) return null;
 
@@ -940,11 +912,9 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
     const parts = path.split("/").filter(Boolean);
     const section = parts[0];
 
-    // Get all pages in this section
     const pages = docsRegistry.getPagesBySection(section);
     if (pages.length === 0) return null;
 
-    // Build tree structure
     const root: TreeNode = { name: "root", children: new Map() };
 
     pages.forEach((page) => {
@@ -960,7 +930,6 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
         }
         current = current.children.get(part)!;
 
-        // If this is the last part and it's "index", assign page to parent folder
         if (index === pageParts.length - 1 && part === "index") {
           const parent = pageParts.length === 1 ? root : pageParts.slice(0, -1).reduce((node, p) => node.children.get(p)!, root);
           parent.page = page;
@@ -973,7 +942,6 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
     return root.children.size > 0 ? root : null;
   }, [isIndexPage, location.pathname]);
 
-  // Get navigation links
   const navigation = useMemo(() => {
     const prev = docsRegistry.getPreviousPage(currentPath);
     const next = docsRegistry.getNextPage(currentPath);
@@ -995,7 +963,6 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
     };
   }, [currentPath]);
 
-  // Clear headings when MDXContent changes
   useEffect(() => {
     clearHeadings();
   }, [MDXContent, clearHeadings]);
@@ -1012,14 +979,12 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
             category: heading.tagName,
           }));
 
-          // Update focus items
           const itemsKey = items.map((item) => `${item.id}:${item.label}`).join("|");
           if (prevItemsRef.current !== itemsKey) {
             prevItemsRef.current = itemsKey;
             setFocusItems(items);
           }
 
-          // Register all headings with HeadingsProvider
           const headingNodes = items.map((item) => ({
             id: item.id,
             text: item.label,
@@ -1033,7 +998,6 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
       }
     };
 
-    // Use setTimeout to wait for MDX to render
     const timer = setTimeout(extractHeadings, 100);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- setFocusItems is stable via useCallback
@@ -1048,7 +1012,6 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- setOnFocusItem is stable via useCallback
   }, []);
 
-  // Render tree node recursively
   const renderTreeNode = (node: TreeNode): React.ReactNode[] => {
     const items: React.ReactNode[] = [];
 
@@ -1057,7 +1020,6 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
       const hasPage = !!childNode.page;
 
       if (hasChildren) {
-        // Folder with possible index page
         const folderLabel =
           childNode.page?.title ||
           name
@@ -1086,7 +1048,6 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
           </TreeItem>,
         );
       } else if (hasPage && childNode.page) {
-        // Leaf page
         const isCurrentPage = !!(currentPath && childNode.page.path === currentPath);
         const pageIcon = childNode.page.icon;
 

@@ -6,15 +6,15 @@ prompt: >-
 status: open
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: '2025-12-18T07:25:30.399Z'
+  created: "2025-12-18T07:25:30.399Z"
 summary: Refactor js/js state management to triadic hooks pattern
 iterations:
   - prompt: >-
       Analyze js/js codebase for state management inconsistencies and refactor
       to triadic hooks pattern
     date:
-      started: '2025-12-18T07:25:30.399Z'
-      ended: '2025-12-18T16:05:57.155Z'
+      started: "2025-12-18T07:25:30.399Z"
+      ended: "2025-12-18T16:05:57.155Z"
     model: claude-sonnet-4-20250514
     author: Unknown
     commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
@@ -53,7 +53,7 @@ iterations:
       Refactor Sketchpad.tsx to obey open/closed: remove all app-specific logic
       from core; apps must be addable/removable by adding/removing their module.
     date:
-      started: '2025-12-18T16:06:08.806Z'
+      started: "2025-12-18T16:06:08.806Z"
     model: gpt-5.2-codex
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
     files:

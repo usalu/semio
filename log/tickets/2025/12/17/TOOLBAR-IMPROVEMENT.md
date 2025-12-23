@@ -5,11 +5,11 @@ prompt: Improve and extend toolbar mechanism across all sketchpad apps
 status: open
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: '2025-12-17T18:39:17.532Z'
+  created: "2025-12-17T18:39:17.532Z"
 iterations:
   - prompt: Improve and extend toolbar mechanism across all sketchpad apps
     model: claude-sonnet-4-20250514
-    date: '2025-12-17T18:39:17.532Z'
+    date: "2025-12-17T18:39:17.532Z"
     files:
       updated:
         - js/js/sketchpad/Home.tsx

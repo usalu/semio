@@ -6,8 +6,8 @@ prompt: >-
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: '2025-12-18T15:40:32.088Z'
-  finished: '2025-12-18T16:01:54.858Z'
+  created: "2025-12-18T15:40:32.088Z"
+  finished: "2025-12-18T16:01:54.858Z"
 summary: Fix missing bottom/right window borders
 commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
 model: gpt-5.2-codex
@@ -16,8 +16,8 @@ iterations:
       Every window should have a full border around it. Currently the bottom and
       right border are missing.
     date:
-      started: '2025-12-18T15:40:50.516Z'
-      ended: '2025-12-18T15:44:21.803Z'
+      started: "2025-12-18T15:40:50.516Z"
+      ended: "2025-12-18T15:44:21.803Z"
     model: gpt-5.2-codex
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
     commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
@@ -46,8 +46,8 @@ iterations:
       removed: 36
   - prompt: The windows have no border now.
     date:
-      started: '2025-12-18T15:51:19.817Z'
-      ended: '2025-12-18T15:52:19.552Z'
+      started: "2025-12-18T15:51:19.817Z"
+      ended: "2025-12-18T15:52:19.552Z"
     model: gpt-5.2-codex
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
     commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
@@ -76,8 +76,8 @@ iterations:
       removed: 40
   - prompt: The windows have no border now.
     date:
-      started: '2025-12-18T15:53:28.711Z'
-      ended: '2025-12-18T15:57:38.721Z'
+      started: "2025-12-18T15:53:28.711Z"
+      ended: "2025-12-18T15:57:38.721Z"
     model: gpt-5.2-codex
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
     commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
@@ -100,8 +100,8 @@ iterations:
       Fix GoldenLayout borders disappearing due to invalid CSS and record final
       ticket updates.
     date:
-      started: '2025-12-18T15:58:55.376Z'
-      ended: '2025-12-18T16:01:06.676Z'
+      started: "2025-12-18T15:58:55.376Z"
+      ended: "2025-12-18T16:01:06.676Z"
     model: gpt-5.2-codex
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
     commit: 20a57039fec48f8c991d98769aa31e15cbd6859c

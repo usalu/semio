@@ -454,10 +454,6 @@ if (typeof window !== "undefined") {
 
 // #region XState Hooks
 
-/**
- * Get Type app state from XState.
- * This is the new XState-based hook.
- */
 export function useTypeApp<T>(selector?: (state: TypeAppState) => T, id?: TypeAppId): T | TypeAppState | null {
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
@@ -1120,28 +1116,13 @@ export const commands = {
 
 // #region Scene
 
-/**
- * PortVisual component - renders a Port as a SceneModel.
- *
- * Implements the unified SceneModel abstraction:
- * - Hoverable: changes color on pointer enter/leave
- * - Clickable: handles selection with tool-specific behavior
- * - Focusable: sets userData.id to port.guid for camera zoom
- * - Has a semio plane: derived from Port.point and Port.direction
- *
- * Unlike Pieces which have an explicit Plane property, Ports are defined by
- * a point and direction vector. The SceneModel abstraction allows both to be
- * focusable through the unified focus behavior in Scene.tsx.
- */
 const PortVisual: FC<{ port: Port; isSelected: boolean; isHovered: boolean; onHover: () => void; onLeave: () => void; onClick: () => void; onDoubleClick: () => void }> = ({ port, isSelected, isHovered, onHover, onLeave, onClick, onDoubleClick }) => {
-  // Transform port position from Semio coordinate system to Three.js coordinate system
   const position = useMemo(() => {
     const semioPos = new THREE.Vector3(port.point.x, port.point.y, port.point.z);
     const threePos = semioPos.applyMatrix4(toThreeRotation());
     return [threePos.x, threePos.y, threePos.z] as [number, number, number];
   }, [port.point]);
 
-  // Transform port direction from Semio coordinate system to Three.js coordinate system
   const direction = useMemo(() => {
     const semioDir = new THREE.Vector3(port.direction.x, port.direction.y, port.direction.z);
     const threeDir = semioDir.applyMatrix4(toThreeRotation()).normalize();
@@ -1155,12 +1136,10 @@ const PortVisual: FC<{ port: Port; isSelected: boolean; isHovered: boolean; onHo
 
   const color = isSelected ? selectedColor : isHovered ? hoverColor : defaultColor;
 
-  // Calculate arrow points for line
   const arrowLength = 0.5;
   const endPoint = useMemo(() => [position[0] + direction[0] * arrowLength, position[1] + direction[1] * arrowLength, position[2] + direction[2] * arrowLength] as [number, number, number], [position, direction]);
   const points = useMemo(() => [position, endPoint], [position, endPoint]);
 
-  // userData for making the port focusable by guid
   const userData = useMemo(() => ({ id: port.guid }), [port.guid]);
 
   const handleClick = useCallback(
@@ -1213,8 +1192,6 @@ const PortVisual: FC<{ port: Port; isSelected: boolean; isHovered: boolean; onHo
 const PortPreview: FC<{ position: THREE.Vector3; normal: THREE.Vector3 }> = ({ position, normal }) => {
   const previewColor = "#00ff00";
 
-  // Calculate arrow points for line
-  // Note: position and normal are already in Three.js coordinates from the mesh raycasting
   const arrowLength = 0.5;
   const posArray = useMemo(() => [position.x, position.y, position.z] as [number, number, number], [position]);
   const direction = useMemo(() => {
@@ -1234,7 +1211,6 @@ const PortPreview: FC<{ position: THREE.Vector3; normal: THREE.Vector3 }> = ({ p
   );
 };
 
-// Separate components for each loader type to avoid conditional hook calls
 const getComputedColorForMesh = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
 
 const GLTFMesh: FC<{ url: string; onPointerDown: any; onPointerUp: any; onPointerMove: any; onPointerOut: any }> = ({ url, onPointerDown, onPointerUp, onPointerMove, onPointerOut }) => {
@@ -1343,7 +1319,6 @@ const LoadedTypeMesh: FC<{
 }> = ({ url, fileExtension, onPointerDown, onPointerUp, onPointerMove, onPointerOut }) => {
   const ext = fileExtension.toLowerCase();
 
-  // Use separate components to avoid conditional hook calls
   if (ext === "glb" || ext === "gltf") {
     return <GLTFMesh url={url} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerMove={onPointerMove} onPointerOut={onPointerOut} />;
   } else if (ext === "fbx") {
@@ -1351,12 +1326,10 @@ const LoadedTypeMesh: FC<{
   } else if (ext === "obj") {
     return <OBJMesh url={url} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerMove={onPointerMove} onPointerOut={onPointerOut} />;
   } else {
-    // Default to GLTF for unknown types
     return <GLTFMesh url={url} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerMove={onPointerMove} onPointerOut={onPointerOut} />;
   }
 };
 
-// PERF: Stable selectors for TypeMesh - return existing references from Type
 const selectTypeModels = (type: Type) => type.models;
 const selectTypeConcepts = (type: Type) => type.concepts;
 const selectTypeMeshGuid = (type: Type) => type.guid;
@@ -1367,12 +1340,10 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
   onPortCreate,
   onClearPreview,
 }) => {
-  // PERF: Use targeted selectors instead of full type subscription
-  // Each selector returns an existing reference from the Type object
   const typeModels = useType(selectTypeModels) as Model[] | undefined;
   const typeConcepts = useType(selectTypeConcepts) as any[] | undefined;
   const typeGuid = useType(selectTypeMeshGuid) as string | undefined;
-  // Use targeted hook instead of deep kit subscription - we only need files
+
   const files = useKitFiles();
   const kitDataSource = useKitStore() as KitStore;
   const [selectedModelGuid] = useTypeAppSelectedModelGuid();
@@ -1380,7 +1351,7 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
   const [isPointerDown, setIsPointerDown] = useState(false);
   const pointerDownTimeRef = useRef<number>(0);
   const pointerDownPositionRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  // Track previous model guid to avoid redundant logging
+
   const prevModelGuidRef = useRef<string | null>(null);
 
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
@@ -1394,23 +1365,17 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
     let reason = "";
 
     if (selectedModelGuid) {
-      // Use explicitly selected model GUID
       model = typeModels.find((r) => r.guid === selectedModelGuid);
       reason = "explicit-guid";
     } else if (selectedModelTags.length > 0) {
-      // Use manually selected tags with strict filtering
       model = selectBestModel(typeModels, selectedModelTags);
       reason = "manual-tags";
     } else {
-      // Use type's concepts as default tags for jaccard-based selection
       const conceptGuids = typeConcepts?.map((c) => c.guid) ?? [];
       if (conceptGuids.length > 0) {
-        // Use findModel directly (jaccard) instead of selectBestModel (which filters first)
-        // This finds the model with highest jaccard similarity to the type's concepts
         model = findModel(typeModels, conceptGuids);
         reason = "type-concepts";
       } else {
-        // Fallback to default model (one with no tags) or first model
         const defaultRep = typeModels.find((r) => !r.tags || r.tags.length === 0);
         model = defaultRep ?? typeModels[0];
         reason = "default/first";
@@ -1429,13 +1394,11 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
 
     const ext = file.name?.split(".").pop() || "";
 
-    // Try to get URL (for remote files or file provider)
     const url = kitDataSource.getFileUrl(file.guid);
     if (url) {
       return { modelUrl: url, fileExtension: ext, fileGuid: file.guid, modelGuid: model.guid, selectionReason: reason };
     }
 
-    // No direct URL - will try blob URL in useEffect
     return { modelUrl: null, fileExtension: ext, fileGuid: file.guid, modelGuid: model.guid, selectionReason: reason };
   }, [typeModels, typeConcepts, files, kitDataSource, selectedModelGuid, selectedModelTags]);
 
@@ -1452,7 +1415,6 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
     }
   }, [modelGuid, selectionReason, typeGuid, typeModels]);
 
-  // Convert file provider URLs to blob URLs that Three.js can load
   useEffect(() => {
     if (!fileGuid) {
       setBlobUrl(null);
@@ -1469,7 +1431,6 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
           currentBlobUrl = url;
           setBlobUrl(url);
         } else if (!cancelled && !url) {
-          // Only warn if blob URL also fails
           console.warn("[TypeMesh] No URL available for file:", fileGuid);
         }
       } catch (error) {
@@ -1477,9 +1438,6 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
       }
     })();
 
-    // Cleanup on unmount or when fileGuid changes
-    // Note: We do NOT revoke the blob URL here because it's owned by KitStore's regularFiles cache.
-    // The KitStore revokes blob URLs when files are removed from the kit.
     return () => {
       cancelled = true;
     };
@@ -1554,24 +1512,19 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
   );
 };
 
-// PERF: Stable selectors for SceneContent - only fetch the specific fields needed
-// These return existing array/object references from the Type, not new objects
 const selectTypePorts = (type: Type) => type.ports;
 const selectTypeGuid = (type: Type) => type.guid;
 
-// PERF: SceneContent is memoized to prevent re-renders when Scene re-renders due to camera changes
 const SceneContent: FC = React.memo(() => {
   const [activeTool] = useTypeAppActiveTool();
-  // PERF: Use targeted selectors instead of fetching full type/kit
-  // Only subscribe to the specific fields we actually need
+
   const typePorts = useType(selectTypePorts) as Port[] | undefined;
   const typeGuid = useType(selectTypeGuid) as string | undefined;
-  // PERF: useKit was only used to check existence - kitCommands being non-null serves same purpose
+
   const kitCommands = useKitCommands();
   const [selection] = useTypeAppSelection();
   const [hover] = useTypeAppHover();
-  // PERF: Removed useTypeApp((s) => s) - was causing full re-renders on every state change
-  // Tools (SelectionNormalTool, PortTool, etc.) return null/empty scene content anyway
+
   const [selectPort] = useTypeAppSelectPort();
   const [deselectPort] = useTypeAppDeselectPort();
   const [hoverPort] = useTypeAppHoverPort();
@@ -1581,7 +1534,6 @@ const SceneContent: FC = React.memo(() => {
   const focusContext = useFocusSafe();
   const prevItemsRef = useRef<string>("");
 
-  // Set focus items for navbar
   useEffect(() => {
     if (!focusContext || !typePorts) return;
     const items = typePorts.map((port) => ({
@@ -1596,7 +1548,6 @@ const SceneContent: FC = React.memo(() => {
     }
   }, [focusContext, typePorts]);
 
-  // Register focus handler for navbar focus
   useEffect(() => {
     if (!focusContext) return;
     const handleFocus = (itemId: string) => {
@@ -1608,18 +1559,13 @@ const SceneContent: FC = React.memo(() => {
     };
   }, [focusContext, focusPort]);
 
-  // PERF: Removed tool contribution computation - tools return null/empty scene content
-  // The actual tool behavior is handled by activeTool-specific logic in TypeMesh and SceneContent
-
   const handlePortPreview = useCallback((position: THREE.Vector3, normal: THREE.Vector3) => {
     setPortPreview({ position, normal });
   }, []);
 
   const handlePortCreate = useCallback(
     (position: THREE.Vector3, normal: THREE.Vector3) => {
-      // PERF: Check typeGuid and kitCommands instead of full type/kit objects
       if (typeGuid && kitCommands) {
-        // Convert position and normal from Three.js coordinate system back to Semio coordinate system
         const semioPosition = position.clone().applyMatrix4(toSemioRotation());
         const semioNormal = normal.clone().applyMatrix4(toSemioRotation()).normalize();
 
@@ -3014,7 +2960,6 @@ const TypeSettingsContent: FC = () => {
 
 // #region Tools
 
-// Tools Registry
 const toolModules = import.meta.glob<Record<string, Tool<TypeAppState>>>("./*Tool.tsx", { eager: true });
 
 const PortToolContent: FC<ToolRenderContext<TypeAppState>> = () => {
@@ -3029,7 +2974,6 @@ export const PortTool: Tool<TypeAppState> = {
   }),
 };
 
-// Selection Tool
 export const SelectionNormalTool: Tool<TypeAppState> = {
   id: ToolKind.SELECTION_NORMAL,
   icon: <SelectToolIcon className="size-tiny" />,
@@ -3050,7 +2994,6 @@ export const SelectionSubtractiveTool: Tool<TypeAppState> = {
 
 export const TypeAppTools: Tool<TypeAppState>[] = [SelectionNormalTool, SelectionAdditiveTool, SelectionSubtractiveTool, PortTool];
 
-// Tools Toggle Group
 const getTypeTools = (): ToolDefinition[] => [
   {
     id: "selection",
@@ -3094,7 +3037,7 @@ const App: FC = () => {
   const removeSection = useRemovePanelSection();
   const appType = useAppType();
   const [setActiveTool] = useTypeAppSetActiveTool();
-  // PERF: Use targeted hook instead of full state subscription
+
   const [activeTool] = useTypeAppActiveTool();
   const [selection] = useTypeAppSelection();
   const [isDragOver, setIsDragOver] = useState(false);
@@ -3124,9 +3067,6 @@ const App: FC = () => {
     };
   }, [activeTool, setActiveTool]);
 
-  // Toolbar section is now registered in TypeApp component for earlier initialization
-
-  // Dynamic details panel based on selection
   useEffect(() => {
     if (appType !== "type") return;
 
@@ -3134,7 +3074,6 @@ const App: FC = () => {
     const hasMultiplePorts = selection?.ports && selection.ports.length > 1;
     const hasSinglePort = selection?.ports && selection.ports.length === 1;
 
-    // Remove all previous sections
     const portsMultipleId = "semio.sketchpad.app.type.panel.details.section.ports.multipleTitle";
 
     removeSection("details", "semio.sketchpad.app.type.properties");
@@ -3143,7 +3082,6 @@ const App: FC = () => {
     removeSection("details", "semio.sketchpad.app.kit.properties");
 
     if (hasSinglePort) {
-      // Single port selected: show Port section then Type section
       addSection("details", {
         id: "semio.sketchpad.app.type.port.properties",
         specificity: 30,
@@ -3151,7 +3089,6 @@ const App: FC = () => {
         content: () => <PortSection portGuid={selection.ports![0]} />,
       });
     } else if (hasMultiplePorts) {
-      // Multiple ports selected: show Ports section then Type section
       addSection("details", {
         id: portsMultipleId,
         specificity: 30,
@@ -3160,7 +3097,6 @@ const App: FC = () => {
       });
     }
 
-    // Always show Type section (with all subsections)
     addSection("details", {
       id: "semio.sketchpad.app.type.properties",
       specificity: 20,
@@ -3176,7 +3112,6 @@ const App: FC = () => {
       ),
     });
 
-    // Always add Kit section at the bottom
     addSection("details", {
       id: "semio.sketchpad.app.kit.properties",
       specificity: 10,
@@ -3200,11 +3135,9 @@ const App: FC = () => {
   const kitCommands = useKitCommands();
   const [setSelectedModel] = useTypeAppSetSelectedModel();
 
-  // Add settings sections
   useEffect(() => {
     if (appType !== "type") return;
 
-    // Add Type-specific settings (most specific)
     addSection("settings", {
       id: "semio.sketchpad.app.type.settings",
       specificity: 30,
@@ -3212,7 +3145,6 @@ const App: FC = () => {
       content: () => <>{/* Type-specific settings can be added here in the future */}</>,
     });
 
-    // Add Kit settings (middle specificity)
     addSection("settings", {
       id: "semio.sketchpad.app.kit.settings",
       specificity: 10,
@@ -3220,7 +3152,6 @@ const App: FC = () => {
       content: () => <TypeSettingsContent />,
     });
 
-    // Add global Sketchpad settings (least specific)
     addSection("settings", {
       id: "semio.sketchpad.settings",
       specificity: 0,
@@ -3235,7 +3166,6 @@ const App: FC = () => {
     };
   }, [appType, addSection, removeSection]);
 
-  // Handle file drops
   useEffect(() => {
     if (appType !== "type") return;
 
@@ -3250,7 +3180,6 @@ const App: FC = () => {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
 
-        // Create File object
         const newFileGuid = guid();
         const newFile: SemioFile = {
           guid: newFileGuid,
@@ -3260,7 +3189,6 @@ const App: FC = () => {
           updatedAt: new Date().toISOString(),
         };
 
-        // Create Model that references the file
         const newModelGuid = guid();
         const newModel: Model = {
           guid: newModelGuid,
@@ -3268,17 +3196,14 @@ const App: FC = () => {
           description: file.name,
         };
 
-        // Add file to kit with blob
         await kitCommands.addFile(newFile, file);
 
-        // Add model to type
         await kitCommands.updateType(type.guid, {
           models: {
             added: [newModel],
           },
         });
 
-        // Select the new model
         setSelectedModel(newModelGuid);
       }
     };
@@ -3294,7 +3219,7 @@ const App: FC = () => {
     const handleDragLeave = (event: DragEvent) => {
       event.preventDefault();
       event.stopPropagation();
-      // Only set to false if we're leaving the document entirely
+
       if (event.relatedTarget === null) {
         setIsDragOver(false);
       }
@@ -3311,18 +3236,15 @@ const App: FC = () => {
     };
   }, [appType, type, kitCommands, setSelectedModel]);
 
-  // Window layout is managed by XState - persistedWindowLayout comes from the machine
   const persistedWindowLayout = useTypeApp((s) => s?.windowLayout);
 
   const defaultLayout = useMemo(() => {
     return createDefaultLayout([TypeAppWindowKind.Scene], "row", undefined);
   }, []);
 
-  // PERF: Validate persisted layout - if corrupted with multiple windows, reset to default
-  // This prevents accumulated windows from causing massive performance issues
   const windowLayout = useMemo(() => {
     if (!persistedWindowLayout) return undefined;
-    // Count windows in layout - Type app should only have 1 Scene window
+
     const countWindows = (node: any): number => {
       if (!node) return 0;
       if (node.type === "component") return 1;
@@ -3332,7 +3254,7 @@ const App: FC = () => {
       return 0;
     };
     const windowCount = countWindows(persistedWindowLayout);
-    // If more than 1 window, layout is corrupted - use default
+
     if (windowCount > 1) {
       console.warn(`[TypeApp] Corrupted layout detected (${windowCount} windows), resetting to default`);
       return undefined;
@@ -3399,7 +3321,6 @@ const TypeApp: FC = () => {
   );
 };
 
-// Initialize Type app state in XState when entering the app
 function useTypeAppInitialize() {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -3454,7 +3375,6 @@ export const TypeAppFooter: FC = () => {
   const [addModelTag] = useTypeAppAddModelTag();
   const [removeModelTag] = useTypeAppRemoveModelTag();
 
-  // Controller refs for callbacks to avoid recreating them in useEffect
   const addModelTagRef = useRef(addModelTag);
   const removeModelTagRef = useRef(removeModelTag);
   const selectedModelTagsRef = useRef(selectedModelTags);
@@ -3465,7 +3385,6 @@ export const TypeAppFooter: FC = () => {
     selectedModelTagsRef.current = selectedModelTags;
   }, [addModelTag, removeModelTag, selectedModelTags]);
 
-  // Get all unique tag guids and names from the type's models
   const { allModelTagGuids, tagNameMap } = useMemo(() => {
     if (!type?.models) return { allModelTagGuids: [], tagNameMap: new Map<string, string>() };
     const tagGuids = new Set<string>();
@@ -3475,7 +3394,7 @@ export const TypeAppFooter: FC = () => {
         tagGuids.add(tag.guid);
       });
     });
-    // Fallback to kit tags for any missing names
+
     tags.forEach((tag) => {
       if (!nameMap.has(tag.guid)) {
         nameMap.set(tag.guid, tag.name);
@@ -3487,17 +3406,14 @@ export const TypeAppFooter: FC = () => {
   useEffect(() => {
     if (appType !== "type") return;
 
-    // Helper function using ref to check selection at click time
     const isTagSelected = (tagGuid: string): boolean => {
       return selectedModelTagsRef.current.includes(tagGuid);
     };
 
-    // Remove previous tag items
     allModelTagGuids.forEach((tagGuid) => {
       removeFooterItem(`semio.sketchpad.app.type.footer.tag.${tagGuid}`);
     });
 
-    // Add footer items for each tag
     allModelTagGuids.forEach((tagGuid, index) => {
       const tagName = tagNameMap.get(tagGuid) || tagGuid.slice(0, 8);
       const isSelected = selectedModelTags.includes(tagGuid);
@@ -3507,7 +3423,6 @@ export const TypeAppFooter: FC = () => {
         text: tagName,
         className: isSelected ? "bg-active-base text-active-foreground" : "text-muted-foreground hover:text-foreground",
         onClick: () => {
-          // Use refs in onClick to get current values at click time
           const currentSelected = isTagSelected(tagGuid);
           if (currentSelected) {
             if (removeModelTagRef.current) removeModelTagRef.current(tagGuid);

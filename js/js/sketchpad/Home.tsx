@@ -65,6 +65,7 @@ import {
   useGetKitKind,
   useHomeApp,
   useHomeCommands,
+  useHomeHover,
   useHotkeys,
   useIsMobile,
   useKits,
@@ -99,6 +100,10 @@ export interface HomeSelectionDiff {
   removed?: Guid[];
 }
 
+export interface HomeHover {
+  kits?: Guid[];
+}
+
 export type HomeSortColumn = "name" | "type" | "updatedAt" | "createdAt";
 export type HomeSortDirection = "asc" | "desc";
 
@@ -110,6 +115,7 @@ export interface LoadingKit {
 export interface HomeState {
   panelVisibility: PanelVisibility;
   selection?: HomeSelection;
+  hover?: HomeHover;
   sortColumn?: HomeSortColumn;
   sortDirection?: HomeSortDirection;
   loadingKits?: LoadingKit[];
@@ -149,6 +155,7 @@ const homeAppPlugin: AppPlugin = {
     createDefaultState: (): HomeState => ({
       panelVisibility: { toolbar: true, workbench: false, details: false, chat: false, settings: false },
       selection: undefined,
+      hover: undefined,
       sortColumn: undefined,
       sortDirection: undefined,
       loadingKits: [],
@@ -578,13 +585,12 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
       const operationId = `kit-import-${guid()}`;
       const kitName = zipFile.name.replace(/\.(semio\.)?zip$/, "");
       startKitImport(operationId, kitName);
-      // Allow React to render loading state before starting CPU-intensive import
-      // Double rAF ensures the browser has painted the loading row
+
       await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       try {
         const { kit, files: importedFiles } = await importKit(zipFile);
         await createKit("semio.sketchpad.app.home.dropzone", kit, false, false);
-        // Store blobs for existing kit files BEFORE navigating (kit already has file definitions from SQLite)
+
         await storeKitFileBlobs(kit.guid, importedFiles);
         completeKitImport(operationId);
         // Don't auto-navigate - let user click the now-enabled row
@@ -602,13 +608,12 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
       const operationId = `kit-import-${guid()}`;
       const kitName = file.name.replace(/\.(semio\.)?zip$/, "");
       startKitImport(operationId, kitName);
-      // Allow React to render loading state before starting CPU-intensive import
-      // Double rAF ensures the browser has painted the loading row
+
       await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       try {
         const { kit, files: importedFiles } = await importKit(file);
         await createKit("semio.sketchpad.app.home.fileInput", kit, false, false);
-        // Store blobs for existing kit files BEFORE navigating (kit already has file definitions from SQLite)
+
         await storeKitFileBlobs(kit.guid, importedFiles);
         completeKitImport(operationId);
         // Don't auto-navigate - let user click the now-enabled row
@@ -752,13 +757,13 @@ const HomeTableContent: FC = () => {
   const tooltip = useTooltip();
 
   const selection = homeState?.selection?.kits || [];
+  const hover = useHomeHover();
   const lastClickedIdRef = React.useRef<string | null>(null);
 
   const defaultKitName = useLabel("semio.sketchpad.app.kit.defaultName");
   const newVersionLabel = useLabel("semio.sketchpad.app.kit.newVersion");
   const defaultVersionLabel = useLabel("semio.sketchpad.app.kit.defaultVersion");
 
-  // Dynamic details panel based on selection
   useEffect(() => {
     if (appType !== "home") return;
 
@@ -766,11 +771,9 @@ const HomeTableContent: FC = () => {
     const hasSingleKit = selection.length === 1;
     const hasMultipleKits = selection.length > 1;
 
-    // Remove previous section
     removeSection("details", "semio.sketchpad.app.kit.properties");
     removeSection("details", "semio.sketchpad.app.home.kits.multiple");
 
-    // Only show section if something is selected
     if (hasKits) {
       const sectionId = hasSingleKit ? "semio.sketchpad.app.kit.properties" : "semio.sketchpad.app.home.kits.multiple";
       addSection("details", {
@@ -789,7 +792,6 @@ const HomeTableContent: FC = () => {
     };
   }, [appType, addSection, removeSection, selection.length]);
 
-  // Add chat panel section
   useEffect(() => {
     if (appType !== "home") return;
 
@@ -807,13 +809,11 @@ const HomeTableContent: FC = () => {
     };
   }, [appType, addSection, removeSection]);
 
-  // Add settings panel sections
   useEffect(() => {
     if (appType !== "home") {
       return;
     }
 
-    // Add Home-specific settings (most specific)
     addSection("settings", {
       id: "semio.sketchpad.app.home.settings",
       specificity: 20,
@@ -823,7 +823,6 @@ const HomeTableContent: FC = () => {
       },
     });
 
-    // Add global Sketchpad settings (least specific)
     addSection("settings", {
       id: "semio.sketchpad.settings",
       specificity: 0,
@@ -839,22 +838,18 @@ const HomeTableContent: FC = () => {
     };
   }, [appType, addSection, removeSection]);
 
-  // Get filters from search params (?kind=&name=&version=)
   const selectedKind = searchParams.get("kind") as KitKind | null;
   const selectedName = searchParams.get("name");
   const selectedVersion = searchParams.get("version");
 
-  // Get search query from URL search params
   const searchQuery = searchParams.get("q") || "";
 
-  // Get expanded rows from search params
   const expandedRowsParam = searchParams.getAll("e");
   const expandedRows = new Set(expandedRowsParam);
 
   const sortColumn = homeState?.sortColumn;
   const sortDirection = homeState?.sortDirection || "asc";
 
-  // Collect unique names
   const uniqueNames = useMemo(() => {
     const nameSet = new Set<string>();
     kits.forEach((kit) => {
@@ -866,7 +861,6 @@ const HomeTableContent: FC = () => {
     return Array.from(nameSet).sort();
   }, [kits, getKitKind, selectedKind]);
 
-  // Collect unique versions for the selected name
   const uniqueVersions = useMemo(() => {
     if (!selectedName) return [];
     const versionSet = new Set<string>();
@@ -878,16 +872,12 @@ const HomeTableContent: FC = () => {
     return Array.from(versionSet).sort();
   }, [kits, selectedName]);
 
-  // Collect all unique concepts from kits
-  // Note: In KitShallow, concepts are string[] (GUIDs), so we need to resolve them to names
   const allConcepts = useMemo(() => {
     const conceptSet = new Set<string>();
     kits.forEach((kitShallow) => {
-      // Get full kit data to access Concept objects with names
       const fullKit = getKitSnapshot(kitShallow.guid);
       if (!fullKit) return;
 
-      // Map concept GUIDs to their names
       kitShallow.concepts?.forEach((conceptEntry) => {
         const conceptGuid = typeof conceptEntry === "string" ? conceptEntry : (conceptEntry as any).guid;
         const concept = fullKit.concepts?.find((c) => c.guid === conceptGuid);
@@ -897,7 +887,6 @@ const HomeTableContent: FC = () => {
     return Array.from(conceptSet).sort();
   }, [kits, getKitSnapshot]);
 
-  // Get selected concepts from search params
   const selectedConcepts = useMemo(() => {
     const conceptsParam = searchParams.get("concepts");
     return conceptsParam ? conceptsParam.split(",").filter(Boolean) : [];
@@ -913,7 +902,6 @@ const HomeTableContent: FC = () => {
       return formatDistanceToNow(parsedDate, { addSuffix: true, locale });
     };
 
-    // Add Docs section at the top
     const allDocsPages = docsRegistry.getAllPages();
     const allDocsSections = docsRegistry.getAllSections();
 
@@ -972,7 +960,6 @@ const HomeTableContent: FC = () => {
       });
     }
 
-    // Add loading kits at the top (after docs)
     const loadingKits = homeState?.loadingKits || [];
     loadingKits.forEach((loadingKit: LoadingKit) => {
       result.push({
@@ -999,7 +986,6 @@ const HomeTableContent: FC = () => {
       if (selectedName && kit.name !== selectedName) return;
       if (selectedVersion && (kit.version || "") !== selectedVersion) return;
 
-      // Filter by concepts: resolve GUIDs to names first
       if (selectedConcepts.length > 0) {
         const fullKit = getKitSnapshot(kit.guid);
         if (!fullKit) return;
@@ -1019,7 +1005,6 @@ const HomeTableContent: FC = () => {
       kitGroups.get(key)!.push(kit);
     });
 
-    // Helper to resolve concept GUIDs to names
     const resolveKitConcepts = (kit: KitShallow): string[] => {
       const fullKit = getKitSnapshot(kit.guid);
       if (!fullKit) return [];
@@ -1138,7 +1123,7 @@ const HomeTableContent: FC = () => {
       label: row.name,
       category: row.level === 0 ? "Kits" : "Versions",
     }));
-    // Only update if the items have actually changed
+
     const itemsKey = items.map((item) => `${item.id}:${item.label}`).join("|");
     if (prevRowsRef.current !== itemsKey) {
       prevRowsRef.current = itemsKey;
@@ -1200,7 +1185,6 @@ const HomeTableContent: FC = () => {
     setSearchParams(newParams);
   };
 
-  // Register hotkeys for filter toggles
   useHotkeys("semio.sketchpad.app.home.filter.kind.temporary", () => toggleKind("temporary"));
   useHotkeys("semio.sketchpad.app.home.filter.kind.local", () => toggleKind("local"));
   useHotkeys("semio.sketchpad.app.home.filter.kind.remote", () => toggleKind("remote"));
@@ -1248,18 +1232,14 @@ const HomeTableContent: FC = () => {
     const currentRows = currentUrl.searchParams.getAll("e");
 
     if (currentRows.includes(rowId)) {
-      // Remove row
       currentUrl.searchParams.delete("e");
       currentRows.filter((r) => r !== rowId).forEach((r) => currentUrl.searchParams.append("e", r));
     } else {
-      // Add row
       currentUrl.searchParams.append("e", rowId);
     }
 
-    // Use native History API to preserve forward/back navigation
-    // Preserve the existing history state to avoid breaking React Router
     window.history.replaceState(window.history.state, "", currentUrl);
-    // Trigger popstate to notify React Router of the URL change
+
     window.dispatchEvent(new PopStateEvent("popstate", { state: window.history.state }));
   };
 
@@ -1337,34 +1317,45 @@ const HomeTableContent: FC = () => {
           />
         </div>
         <Scrollable className="flex-1">
-          <div className="flex flex-col">
-            {rows.map((row) => {
-              const isSelected = row.kit ? selection.includes(row.kit.guid) : false;
-              const isDocsRow = row.type === "docs";
-              const isLoadingRow = row.isLoading;
-              return (
-                <div
-                  key={row.id}
-                  className={`border-b border-element p-single cursor-selectable h-medium ${isLoadingRow ? "opacity-50 pointer-events-none" : ""} ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`}
-                  role="button"
-                  tabIndex={isLoadingRow ? -1 : 0}
-                  onClick={(e) => {
+            <div className="flex flex-col">
+              {rows.map((row) => {
+                const isSelected = row.kit ? selection.includes(row.kit.guid) : false;
+                const isDocsRow = row.type === "docs";
+                const isLoadingRow = row.isLoading;
+                const isHovered = row.kit ? hover?.kits?.includes(row.kit.guid) : false;
+                return (
+                  <div
+                    key={row.id}
+                    className={`border-b border-element p-single cursor-selectable h-medium ${isLoadingRow ? "opacity-50 pointer-events-none" : ""} ${isSelected ? "bg-active-base text-active-foreground" : isHovered ? "bg-hover-base" : "hover:bg-hover-base"}`}
+                    role="button"
+                    tabIndex={isLoadingRow ? -1 : 0}
+                    onClick={(e) => {
                     if (isLoadingRow) return;
                     if (isDocsRow && row.docsPath) {
                       navigate(`/${row.docsPath}`);
                     } else if (row.kit) {
                       handleRowClick(row.kit.guid, e);
-                    }
-                  }}
-                  onDoubleClick={() => {
-                    if (isLoadingRow) return;
-                    if (isDocsRow && row.docsPath) {
-                      navigate(`/${row.docsPath}`);
-                    } else if (row.kit) {
-                      navigateToKit(row.kit.guid);
-                    }
-                  }}
-                >
+                      }
+                    }}
+                    onDoubleClick={() => {
+                      if (isLoadingRow) return;
+                      if (isDocsRow && row.docsPath) {
+                        navigate(`/${row.docsPath}`);
+                      } else if (row.kit) {
+                        navigateToKit(row.kit.guid);
+                      }
+                    }}
+                    onMouseEnter={() => {
+                      if (!row.kit) {
+                        homeCommands.clearHover("semio.sketchpad.app.home.canvas.table.clearHover");
+                        return;
+                      }
+                      homeCommands.hoverKit("semio.sketchpad.app.home.canvas.table.hover", row.kit.guid);
+                    }}
+                    onMouseLeave={() => {
+                      homeCommands.clearHover("semio.sketchpad.app.home.canvas.table.clearHover");
+                    }}
+                  >
                   <div className="flex items-center gap-single w-full" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center gap-single flex-1 min-w-0" style={{ paddingLeft: `calc(${row.level} * var(--size-small))` }}>
                       {row.hasChildren ? (
@@ -1575,8 +1566,23 @@ const HomeTableContent: FC = () => {
             accessor: (row) => row.createdAt,
             headerClassName: "relative group",
           },
-        ]}
-        data={rows}
+          ]}
+          rowClassName={(row) => {
+            if (!row.kit) return "";
+            if (selection.includes(row.kit.guid)) return "";
+            return hover?.kits?.includes(row.kit.guid) ? "bg-hover-base" : "";
+          }}
+          onRowMouseEnter={(row) => {
+              if (!row.kit) {
+                homeCommands.clearHover("semio.sketchpad.app.home.canvas.table.clearHover");
+              return;
+            }
+            homeCommands.hoverKit("semio.sketchpad.app.home.canvas.table.hover", row.kit.guid);
+          }}
+            onRowMouseLeave={() => {
+              homeCommands.clearHover("semio.sketchpad.app.home.canvas.table.clearHover");
+            }}
+          data={rows}
         onRowClick={(row, _, e) => {
           const isDocsRow = row.type === "docs";
           if (isDocsRow && row.docsPath) {
@@ -1621,14 +1627,11 @@ const Home: FC = () => {
   const removeSection = useRemovePanelSection();
   const isMobile = useIsMobile();
 
-  // Get window layout from home app state
   const homeState = useHome() as HomeState;
   const storedWindowLayout = homeState?.windowLayout;
 
-  // Track the last layout to prevent infinite loops
   const lastLayoutRef = useRef<any>(null);
 
-  // Add toolbar section with kit kind filter toggles (this was previously in HomeTableContent)
   useEffect(() => {
     if (appType !== "home") return;
 
@@ -1694,7 +1697,6 @@ const Home: FC = () => {
     [actor],
   );
 
-  // Mobile view uses simple layout without multi-window
   if (isMobile) {
     return (
       <HomeDropZone>

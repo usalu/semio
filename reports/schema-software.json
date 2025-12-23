@@ -2324,14 +2324,7 @@
       "name": "QualityKind",
       "kind": "enum",
       "fields": [],
-      "enumValues": [
-        "General",
-        "Design",
-        "Type",
-        "Piece",
-        "Connection",
-        "Port"
-      ]
+      "enumValues": ["General", "Design", "Type", "Piece", "Connection", "Port"]
     }
   ],
   "relationships": [

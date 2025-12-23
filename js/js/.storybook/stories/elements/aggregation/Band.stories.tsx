@@ -238,15 +238,13 @@ export const OverflowingVertical: Story = {
   ),
 };
 
-const createLevelRender =
-  (level: Level) =>
-  (args: typeof HorizontalWithToggles.args) => (
-    <LevelProvider level={level}>
-      <div className={`w-[600px] p-4 ${getLevelBgClass(level)}`}>
-        <Band {...args} />
-      </div>
-    </LevelProvider>
-  );
+const createLevelRender = (level: Level) => (args: typeof HorizontalWithToggles.args) => (
+  <LevelProvider level={level}>
+    <div className={`w-[600px] p-4 ${getLevelBgClass(level)}`}>
+      <Band {...args} />
+    </div>
+  </LevelProvider>
+);
 
 export const Base: Story = {
   args: { ...HorizontalWithToggles.args },

@@ -21,23 +21,6 @@
 
 // #region Header
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // #endregion
 
 import type { Meta, StoryObj } from "@storybook/react";

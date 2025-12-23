@@ -26,7 +26,6 @@ import { join } from "path";
 
 const cwd = join(__dirname, "dist");
 
-
 const manifestContent = readFileSync(join(cwd, "manifest.yml"), "utf-8");
 const versionMatch = manifestContent.match(/version:\s*(.+)/);
 if (!versionMatch) {

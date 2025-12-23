@@ -40,13 +40,20 @@ function parseArgs(argv: string[]): ParsedArgs {
     if (arg === "--skip") {
       const value = argv[i + 1] ?? "";
       i++;
-      for (const part of value.split(",").map((item) => item.trim()).filter(Boolean)) {
+      for (const part of value
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean)) {
         skip.add(part);
       }
       continue;
     }
     if (arg.startsWith("--skip=")) {
-      for (const part of arg.slice("--skip=".length).split(",").map((item) => item.trim()).filter(Boolean)) {
+      for (const part of arg
+        .slice("--skip=".length)
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean)) {
         skip.add(part);
       }
       continue;

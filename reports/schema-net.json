@@ -135,11 +135,5 @@
     "DesignId",
     "KitId"
   ],
-  "weakEntities": [
-    "Coord",
-    "Point",
-    "Vector",
-    "Plane",
-    "Side"
-  ]
+  "weakEntities": ["Coord", "Point", "Vector", "Plane", "Side"]
 }

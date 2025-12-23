@@ -755,10 +755,6 @@ if (typeof window !== "undefined") {
 
 // #region Quality App Plugin Registration
 
-/**
- * Quality app plugin for the sketchpad machine.
- * Provides QUALITY.* events, actions, and guards.
- */
 const qualityAppPlugin: AppPlugin = {
   id: "quality",
   namespace: "QUALITY",
@@ -1628,7 +1624,6 @@ const App: FC<AppProps> = () => {
   useHotkeys("ctrl+y", () => redo("semio.sketchpad.app.quality.hotkey"));
   useHotkeys("ctrl+shift+z", () => redo("semio.sketchpad.app.quality.hotkey"));
 
-  // Add settings section
   useEffect(() => {
     if (appType !== "quality") return;
 

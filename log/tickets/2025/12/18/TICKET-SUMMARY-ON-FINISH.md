@@ -4,8 +4,8 @@ prompt: The summary flag should be only available and forced when closing a tick
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: '2025-12-18T15:51:06.030Z'
-  finished: '2025-12-18T15:52:32.230Z'
+  created: "2025-12-18T15:51:06.030Z"
+  finished: "2025-12-18T15:52:32.230Z"
 summary: Require summary only when finishing tickets
 commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
 model: claude-opus-4-5
@@ -14,8 +14,8 @@ iterations:
       Move ticket summary capture to ticket finish and require --summary only
       when closing.
     date:
-      started: '2025-12-18T15:52:10.403Z'
-      ended: '2025-12-18T15:52:21.179Z'
+      started: "2025-12-18T15:52:10.403Z"
+      ended: "2025-12-18T15:52:21.179Z"
     model: claude-opus-4-5
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
     commit: 20a57039fec48f8c991d98769aa31e15cbd6859c

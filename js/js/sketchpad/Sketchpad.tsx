@@ -1113,11 +1113,6 @@ export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit,
 
 // #region Memory File Provider
 
-/**
- * Creates an in-memory file provider.
- * Files are stored in memory using Map and will be lost on page reload.
- * Used for temporary kits.
- */
 export function createMemoryFileProvider(config?: MemoryFileProviderConfig): FileProviderFactory {
   const storage = new Map<string, Blob>();
 
@@ -1160,11 +1155,6 @@ export function createMemoryFileProvider(config?: MemoryFileProviderConfig): Fil
 
 // #region Local File Provider (IndexedDB)
 
-/**
- * Creates a local file provider using IndexedDB.
- * Files are persisted locally in the browser.
- * Used for local kits.
- */
 export function createLocalFileProvider(config?: LocalFileProviderConfig): FileProviderFactory {
   const dbName = config?.dbName || "semio-files";
   const storeName = config?.storeName || "files";
@@ -1261,11 +1251,6 @@ export function createLocalFileProvider(config?: LocalFileProviderConfig): FileP
 
 // #region Remote File Provider
 
-/**
- * Creates a remote file provider using HTTP/REST API.
- * Files are synchronized with a remote server.
- * Used for remote kits.
- */
 export function createRemoteFileProvider(config: RemoteFileProviderConfig): FileProviderFactory {
   return async (kitId: string): Promise<FileProvider> => {
     const getUrl = (kitId: string, fileId: string, path: string): string => {
@@ -1331,29 +1316,6 @@ export function createRemoteFileProvider(config: RemoteFileProviderConfig): File
 
 // #region Composite File Provider
 
-/**
- * Creates a composite file provider that combines memory, local, and remote storage.
- * This is the recommended way to create file providers.
- *
- * Behavior:
- * - memory only: Files in memory, lost on reload (temporary kits)
- * - memory + local: Files persisted locally (local kits)
- * - memory + local + remote: Files synced to remote, persisted locally (remote kits)
- *
- * @example
- * // Temporary kit
- * createCompositeFileProvider({ memory: true })
- *
- * // Local kit
- * createCompositeFileProvider({ memory: true, local: true })
- *
- * // Remote kit
- * createCompositeFileProvider({
- *   memory: true,
- *   local: true,
- *   remote: { baseUrl: 'https://api.example.com' }
- * })
- */
 export function createCompositeFileProvider(config: CompositeFileProviderConfig): FileProviderFactory {
   return async (kitId: string): Promise<FileProvider> => {
     const providers: FileProvider[] = [];
@@ -2051,7 +2013,7 @@ class AuthorStore {
   createAttribute(attribute: Attribute): void {
     if (this.hasAttribute(attribute.guid)) throw new Error(`Attribute (${attribute.key}) already exists.`);
     const yAttribute = new Y.Map<YAttributeVal>();
-    // Populate the Y.Map before adding to document to avoid Yjs access errors
+
     yAttribute.set("guid", attribute.guid);
     yAttribute.set("key", attribute.key);
     yAttribute.set("value", attribute.value || "");
@@ -2757,13 +2719,13 @@ class ModelStore {
   constructor(yModel: YModel, model: Model) {
     this.yModel = yModel;
     this.guid = model.guid;
-    // Store the file guid string (file is FileId: { guid: string })
+
     this.yModel.set("file", typeof model.file === "string" ? model.file : model.file.guid);
     this.description = model.description;
     const yTags = new Y.Array<string>();
     this.yModel.set("tags", yTags);
     this.yTags = yTags;
-    // Store tag guids as strings (tags is TagId[]: { guid: string }[])
+
     if (model.tags) this.yTags.push(model.tags.map((t) => (typeof t === "string" ? t : t.guid)));
     this.attributes = new Map();
     const yAttributes = new Y.Array<YAttribute>();
@@ -2772,7 +2734,7 @@ class ModelStore {
     if (model.attributes) {
       for (const attribute of model.attributes) {
         const yAttribute = new Y.Map<YAttributeVal>();
-        // Populate the Y.Map before adding to document to avoid Yjs access errors
+
         yAttribute.set("guid", attribute.guid);
         yAttribute.set("key", attribute.key);
         yAttribute.set("value", attribute.value || "");
@@ -2811,7 +2773,6 @@ class ModelStore {
   };
 
   snapshot(): Model {
-    // Convert stored tag guids back to TagId objects
     const tags: TagId[] = this.yTags.toArray().map((guid) => ({ guid }));
     const currentHash = this.hash({
       guid: this.guid,
@@ -2842,7 +2803,6 @@ class ModelStore {
     if (diff.tags !== undefined) {
       this.yTags.delete(0, this.yTags.length);
       if (diff.tags.length > 0) {
-        // Store tag guids as strings
         this.yTags.push(diff.tags.map((t) => (typeof t === "string" ? t : t.guid)));
       }
     }
@@ -3029,11 +2989,7 @@ export class TypeStore {
     const yTypeAttributes = new Y.Array<YAttribute>();
     this.yType.set("attributes", yTypeAttributes);
     this.yAttributes = yTypeAttributes;
-    // if (type.attributes) {
-    //   for (const attribute of type.attributes) {
-    //     this.createAttribute(attribute);
-    //   }
-    // }
+
     if (type.attributes) {
       type.attributes.forEach((attribute) => this.createAttribute(attribute));
     }
@@ -3055,11 +3011,7 @@ export class TypeStore {
     const yTypeModels = new Y.Array<YModel>();
     this.yType.set("models", yTypeModels);
     this.yModels = yTypeModels;
-    // if (type.models) {
-    //   for (const model of type.models) {
-    //     this.createModel(model);
-    //   }
-    // }
+
     if (type.models) {
       type.models.forEach((model) => this.createModel(model));
     }
@@ -3166,7 +3118,7 @@ export class TypeStore {
     if (!attribute.guid) throw new Error("Attribute guid is required.");
     if (this.hasAttribute(attribute.guid)) throw new Error(`Attribute (${attribute.key}) already exists.`);
     const yAttribute = new Y.Map<YAttributeVal>();
-    // Populate the Y.Map before adding to document to avoid Yjs access errors
+
     yAttribute.set("guid", attribute.guid);
     yAttribute.set("key", attribute.key);
     yAttribute.set("value", attribute.value || "");
@@ -3732,7 +3684,7 @@ class PieceStore {
   createAttribute(attribute: Attribute): void {
     if (this.hasAttribute(attribute.guid)) throw new Error(`Attribute (${attribute.key}) already exists.`);
     const yAttribute = new Y.Map<YAttributeVal>();
-    // Populate the Y.Map before adding to document to avoid Yjs access errors
+
     yAttribute.set("guid", attribute.guid);
     yAttribute.set("key", attribute.key);
     yAttribute.set("value", attribute.value || "");
@@ -3888,13 +3840,10 @@ export function usePiece<T>(selector?: (piece: Piece) => T, id?: Guid, deep: boo
   return useSync<Piece, T>(usePieceStore(identitySelector, id) as PieceStore, selector ? selector : (identitySelector as any));
 }
 
-// useIsPieceSelected, useIsPieceHovered, useIsPieceTransitiveHovered - moved to designAppIntegration.ts
-
 export function useCurrentPiecePlane(): Plane {
   const plane = usePiece((p) => p.plane) as Plane | undefined;
 
   if (!plane) {
-    // Return default flat piece plane (XY plane at origin)
     return {
       origin: { x: 0, y: 0, z: 0 },
       xAxis: { x: 1, y: 0, z: 0 },
@@ -3997,8 +3946,6 @@ export function usePieceParentConnection(id?: Guid): Connection | null {
 
   return useSyncExternalStore(subscribe, getSnapshot);
 }
-
-// usePieceStatus and useDiffedPiece - moved to designAppIntegration.ts
 
 // #endregion Piece
 
@@ -4127,13 +4074,11 @@ class SideStore {
     this.parent = parent;
     this.ySide = ySide;
 
-    // Store piece UUID
     const pieceStore = this.parent.piece(side.piece.guid);
     if (pieceStore) {
       this.ySide.set("piece", pieceStore.guid);
     }
 
-    // Store designPiece UUID if present
     if (side.designPiece) {
       const designPieceStore = this.parent.piece(side.designPiece.guid);
       if (designPieceStore) {
@@ -4141,7 +4086,6 @@ class SideStore {
       }
     }
 
-    // Store port UUID - need to find it through the piece's type
     if (pieceStore && side.port) {
       const typeGuid = pieceStore.type;
       if (typeGuid) {
@@ -4201,7 +4145,6 @@ class SideStore {
     return portUuid;
   }
   set port(port: Guid) {
-    // Find the port through the piece's type
     const pieceUuid = this.ySide.get("piece") as string;
     const pieceStore = this.parent.piece(pieceUuid);
     const typeGuid = pieceStore.type;
@@ -4418,7 +4361,7 @@ class ConnectionStore {
   createAttribute(attribute: Attribute): void {
     if (this.hasAttribute(attribute.guid)) throw new Error(`Attribute (${attribute.key}) already exists.`);
     const yAttribute = new Y.Map<YAttributeVal>();
-    // Populate the Y.Map before adding to document to avoid Yjs access errors
+
     yAttribute.set("guid", attribute.guid);
     yAttribute.set("key", attribute.key);
     yAttribute.set("value", attribute.value || "");
@@ -4472,8 +4415,6 @@ function useConnectionStore<T>(selector?: (store: ConnectionStore) => T, guid?: 
 export function useConnection<T>(selector?: (connection: Connection) => T, id?: Guid, deep: boolean = false): T | Connection | null {
   return useSync<Connection, T>(useConnectionStore(identitySelector, id) as ConnectionStore, selector ? selector : (identitySelector as any));
 }
-
-// useIsConnectionSelected, useIsConnectionHovered, useConnectionStatus - moved to designAppIntegration.ts
 
 // #endregion Connection
 
@@ -4874,7 +4815,7 @@ export class DesignStore {
 
   createAttribute(attribute: Attribute): void {
     const yAttribute = new Y.Map<YAttributeVal>();
-    // Populate the Y.Map before adding to document to avoid Yjs access errors
+
     yAttribute.set("guid", attribute.guid);
     yAttribute.set("key", attribute.key);
     yAttribute.set("value", attribute.value || "");
@@ -5003,7 +4944,6 @@ export class DesignStore {
 
     if (diff.pieces !== undefined) {
       if (typeof diff.pieces === "object" && !Array.isArray(diff.pieces)) {
-        // Handle incremental updates
         if (diff.pieces.added) {
           diff.pieces.added.forEach((piece) => this.createPiece(piece));
         }
@@ -5029,7 +4969,6 @@ export class DesignStore {
           });
         }
       } else {
-        // Handle complete replacement (legacy behavior)
         this.pieces.clear();
         this.yPieces!.delete(0, this.yPieces!.length);
 
@@ -5043,7 +4982,6 @@ export class DesignStore {
 
     if (diff.connections !== undefined) {
       if (typeof diff.connections === "object" && !Array.isArray(diff.connections)) {
-        // Handle incremental updates
         if (diff.connections.added) {
           diff.connections.added.forEach((connection) => this.createConnection(connection));
         }
@@ -5070,7 +5008,6 @@ export class DesignStore {
           });
         }
       } else {
-        // Handle complete replacement (legacy behavior)
         this.connections.clear();
         this.yConnections.delete(0, this.yConnections.length);
 
@@ -5237,7 +5174,6 @@ export class DesignStore {
 
     if ("attributes" in diff) {
       if (diff.attributes && typeof diff.attributes === "object" && ("added" in diff.attributes || "removed" in diff.attributes || "updated" in diff.attributes)) {
-        // Handle incremental updates
         if (diff.attributes.removed) {
           diff.attributes.removed.forEach((attrId) => {
             const guid = attrId.guid;
@@ -5266,7 +5202,6 @@ export class DesignStore {
           diff.attributes.added.forEach((attribute) => this.createAttribute(attribute));
         }
       } else {
-        // Handle complete replacement (array format)
         this.attributes.clear();
         this.yAttributes.delete(0, this.yAttributes.length);
 
@@ -5310,10 +5245,9 @@ export class DesignStore {
     return this._connectionsCache;
   };
 
-  // Field-level observers for targeted subscriptions (avoids overfetching)
   onPiecesChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
-      this._piecesCache = undefined; // Invalidate cache
+      this._piecesCache = undefined;
       subscribe(() => {});
     };
     if (deep) {
@@ -5326,7 +5260,7 @@ export class DesignStore {
 
   onConnectionsChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
-      this._connectionsCache = undefined; // Invalidate cache
+      this._connectionsCache = undefined;
       subscribe(() => {});
     };
     if (deep) {
@@ -6110,26 +6044,22 @@ export class KitStore {
     if (!fileStore) return "";
     const file = fileStore.snapshot();
 
-    // First, check if we have it in memory (regularFiles)
-    // regularFiles uses storage path as key, not guid
     const storagePath = this.getFileStoragePath(file);
     const memoryUrl = this.regularFiles.get(storagePath);
     if (memoryUrl) {
       return memoryUrl;
     }
 
-    // If there's a remote URL (http/https), use it directly
     if (file.remote && (file.remote.startsWith("http://") || file.remote.startsWith("https://"))) {
       return file.remote;
     }
 
-    // If we have a file provider, download the blob and create a blob URL
     if (this.fileProvider) {
       try {
         const blob = await this.fileProvider.download(this.guid, fileGuid, storagePath);
         if (blob) {
           const blobUrl = URL.createObjectURL(blob);
-          // Cache it in memory for future use (using storage path as key)
+
           this.regularFiles.set(storagePath, blobUrl);
           return blobUrl;
         }
@@ -6141,10 +6071,6 @@ export class KitStore {
     return "";
   }
 
-  /**
-   * Build a map from storage path to file GUID for all files in the kit.
-   * Used for matching imported file blobs to existing kit file definitions.
-   */
   buildFilePathMap(): Map<string, string> {
     const pathMap = new Map<string, string>();
     for (const [fileGuid, fileStore] of this.files) {
@@ -6155,10 +6081,6 @@ export class KitStore {
     return pathMap;
   }
 
-  /**
-   * Store file blobs for existing kit files by matching their storage paths.
-   * This is used during import to associate extracted blobs with existing file definitions.
-   */
   async storeFileBlobs(blobs: Map<string, Blob>): Promise<void> {
     const pathMap = this.buildFilePathMap();
 
@@ -6168,7 +6090,6 @@ export class KitStore {
         const objectUrl = URL.createObjectURL(blob);
         this.regularFiles.set(path, objectUrl);
 
-        // Also upload to file provider if available
         if (this.fileProvider) {
           try {
             const remoteUrl = await this.fileProvider.upload(this.guid, fileGuid, path, blob);
@@ -6239,7 +6160,7 @@ export class KitStore {
   createAttribute(attribute: Attribute): void {
     if (this.hasAttribute(attribute.guid)) throw new Error(`Attribute (${attribute.key}) already exists.`);
     const yAttribute = new Y.Map() as YAttribute;
-    // Populate the Y.Map before adding to document to avoid Yjs access errors
+
     yAttribute.set("guid", attribute.guid);
     yAttribute.set("key", attribute.key);
     yAttribute.set("value", attribute.value || "");
@@ -6392,7 +6313,7 @@ export class KitStore {
             const authorGuid = authorId.guid;
             if (this.authors.has(authorGuid)) {
               this.authors.delete(authorGuid);
-              // Find and delete from Y.Array
+
               const index = Array.from(this.yAuthors).findIndex((yAuthor: any) => {
                 const yMap = yAuthor[0] as Y.Map<any>;
                 return yMap.get("guid") === authorGuid;
@@ -6421,7 +6342,7 @@ export class KitStore {
             const guid = typeId.guid;
             if (this.types.has(guid)) {
               this.types.delete(guid);
-              // Find and delete from Y.Array
+
               const index = Array.from(this.yTypes).findIndex((yType: any) => {
                 const yMap = yType[0] as Y.Map<any>;
                 return yMap.get("guid") === guid;
@@ -6450,7 +6371,7 @@ export class KitStore {
             const guid = designId.guid;
             if (this.designs.has(guid)) {
               this.designs.delete(guid);
-              // Find and delete from Y.Array
+
               const index = Array.from(this.yDesigns).findIndex((yDesign: any) => {
                 const yMap = yDesign[0] as Y.Map<any>;
                 return yMap.get("guid") === guid;
@@ -6479,7 +6400,7 @@ export class KitStore {
             const guid = fileId.guid;
             if (this.files.has(guid)) {
               this.files.delete(guid);
-              // Find and delete from Y.Array
+
               const index = Array.from(this.yFiles).findIndex((yFile: any) => {
                 const yMap = yFile[0] as Y.Map<any>;
                 return yMap.get("guid") === guid;
@@ -6508,7 +6429,7 @@ export class KitStore {
             const guid = folderId.guid;
             if (this.folders.has(guid)) {
               this.folders.delete(guid);
-              // Find and delete from Y.Array
+
               const index = Array.from(this.yFolders).findIndex((yFolder: any) => {
                 const yMap = yFolder[0] as Y.Map<any>;
                 return yMap.get("guid") === guid;
@@ -6537,7 +6458,7 @@ export class KitStore {
             const guid = qualityId.guid;
             if (this.qualities.has(guid)) {
               this.qualities.delete(guid);
-              // Find and delete from Y.Array
+
               const index = Array.from(this.yQualities).findIndex((yQuality: any) => {
                 const yMap = yQuality[0] as Y.Map<any>;
                 return yMap.get("guid") === guid;
@@ -6675,7 +6596,6 @@ export class KitStore {
     return this._foldersCache;
   };
 
-  // Field-level observers for targeted subscriptions (avoids overfetching)
   onConceptsChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._conceptsCache = undefined;
@@ -6691,7 +6611,7 @@ export class KitStore {
 
   onTypesChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
-      this._typesCache = undefined; // Invalidate cache
+      this._typesCache = undefined;
       subscribe(() => {});
     };
     if (deep) {
@@ -6704,7 +6624,7 @@ export class KitStore {
 
   onFilesChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
-      this._filesCache = undefined; // Invalidate cache
+      this._filesCache = undefined;
       subscribe(() => {});
     };
     if (deep) {
@@ -6717,7 +6637,7 @@ export class KitStore {
 
   onDesignsChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
-      this._designsCache = undefined; // Invalidate cache
+      this._designsCache = undefined;
       subscribe(() => {});
     };
     if (deep) {
@@ -6730,7 +6650,7 @@ export class KitStore {
 
   onQualitiesChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
-      this._qualitiesCache = undefined; // Invalidate cache
+      this._qualitiesCache = undefined;
       subscribe(() => {});
     };
     if (deep) {
@@ -6743,7 +6663,7 @@ export class KitStore {
 
   onAuthorsChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
-      this._authorsCache = undefined; // Invalidate cache
+      this._authorsCache = undefined;
       subscribe(() => {});
     };
     if (deep) {
@@ -6756,7 +6676,7 @@ export class KitStore {
 
   onFoldersChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
-      this._foldersCache = undefined; // Invalidate cache
+      this._foldersCache = undefined;
       subscribe(() => {});
     };
     if (deep) {
@@ -6767,7 +6687,6 @@ export class KitStore {
     return () => this.yFolders.unobserve(notifySubscriber);
   };
 
-  // Scalar field observer (for name, description, etc.)
   onScalarFieldChanged = (key: string, subscribe: Subscribe): Disposable => {
     return createFieldObserver(this.yKit, key, subscribe, false);
   };
@@ -6776,8 +6695,6 @@ export class KitStore {
     let origin: string | undefined;
     let rest: any[];
 
-    // Origins are strings like "semio.sketchpad.app.type.panel.details.name" (starts with semio.sketchpad)
-    // Commands are strings like "semio.kit.updateDesign" (starts with semio. but NOT semio.sketchpad)
     if (typeof args[0] === "string" && args[0].startsWith("semio.sketchpad.")) {
       origin = args[0];
       rest = args.slice(1);
@@ -6797,9 +6714,7 @@ export class KitStore {
     if (result.diff) {
       this.change(result.diff);
 
-      // Handle file operations
       if (result.diff.files) {
-        // Add new files
         if (result.diff.files.added && result.files) {
           for (let i = 0; i < result.diff.files.added.length; i++) {
             const file = result.diff.files.added[i];
@@ -6822,7 +6737,6 @@ export class KitStore {
           }
         }
 
-        // Delete removed files
         if (result.diff.files.removed) {
           for (const fileId of result.diff.files.removed) {
             const guid = fileId.guid;
@@ -6850,7 +6764,6 @@ export class KitStore {
       }
     }
 
-    // Handle local files (in-memory or blob URLs)
     if (result.files) {
       result.files.forEach((file) => {
         const objectUrl = URL.createObjectURL(file);
@@ -6913,13 +6826,8 @@ export function useKit<T>(selector?: (kit: KitShallow | Kit) => T, guid?: Guid, 
   return deep ? syncedDeep : synced;
 }
 
-// useDiffedKit - moved to designAppIntegration.ts
-
 // #region Targeted Kit Hooks
-// These hooks use selectors with useKit for targeted data access.
-// IMPORTANT: Selectors must be stable references to avoid infinite loops with useSyncExternalStore.
 
-// Stable empty array fallbacks - MUST use stable references to avoid infinite loop in useSyncExternalStore
 const EMPTY_TYPES: Type[] = [];
 const EMPTY_AUTHORS: Author[] = [];
 const EMPTY_FILES: SemioFile[] = [];
@@ -7115,7 +7023,6 @@ export function useKitDesigns(guid?: Guid): Design[] {
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
-// Legacy alias
 export function useDesigns(): Design[] {
   return useKitDesigns();
 }
@@ -7703,7 +7610,6 @@ export const kitCommands = {
 
 // #region Types
 
-// Default panel visibility
 export const defaultPanelVisibility: PanelVisibility = {
   toolbar: false,
   workbench: false,
@@ -7779,7 +7685,7 @@ export interface KitAppState {
   sortColumn?: string;
   sortDirection?: "asc" | "desc";
   diagramForce?: DiagramForceSettings;
-  // Transaction state for undo/redo
+
   transaction: AppTransactionState;
 }
 
@@ -7795,10 +7701,7 @@ export enum TypeAppFullscreenWindow {
   None = "none",
   Scene = "scene",
 }
-/**
- * Transaction state for undo/redo support within an app.
- * Each app manages its own transaction stack independently.
- */
+
 export interface AppTransactionState<TEdit = any> {
   isTransactionActive: boolean;
   currentTransactionStack: TEdit[];
@@ -7817,7 +7720,7 @@ export interface TypeAppState {
   selectedModelGuid?: Guid;
   camera?: { position: { x: number; y: number; z: number }; target: { x: number; y: number; z: number } };
   windowLayout?: any;
-  // Transaction state for undo/redo
+
   transaction: AppTransactionState;
 }
 
@@ -7849,7 +7752,7 @@ export interface DesignAppState {
   camera?: any;
   activeTool?: ToolKind;
   fullscreenWindow?: DesignAppFullscreenWindow;
-  // Transaction state for undo/redo
+
   transaction: AppTransactionState;
 }
 
@@ -7861,11 +7764,10 @@ export interface QualityAppState {
   selection?: QualityAppSelection;
   hover?: any;
   expandedBenchmarks: Set<string>;
-  // Transaction state for undo/redo
+
   transaction: AppTransactionState;
 }
 
-// Tutorial types
 export interface TutorialStep {
   id: string;
   title: string;
@@ -7887,44 +7789,29 @@ export interface TutorialContext {
 
 // #endregion App State Types
 
-/**
- * Input for creating the sketchpad machine
- */
 export interface SketchpadMachineInput {
   id?: string;
   initialState?: Partial<SketchpadState>;
 }
 
-/**
- * Unified context for the sketchpad machine.
- * Contains all app state in XState.
- */
 export interface SketchpadContext {
   id?: string;
   sketchpad: SketchpadState;
 
-  // Kit actors for Y.js data sync
   kits: Record<Guid, AnyActorRef>;
 
-  // All app state is pure in-memory XState (no Y.js dependencies)
-  // Transaction state is now embedded in each app's state interface
   homeApp: HomeAppState;
   kitApps: Record<Guid, KitAppState>;
-  typeApps: Record<string, TypeAppState>; // key: `${kitGuid}:${typeGuid}`
-  designApps: Record<string, DesignAppState>; // key: `${kitGuid}:${designGuid}`
-  qualityApps: Record<string, QualityAppState>; // key: `${kitGuid}:${qualityGuid}`
+  typeApps: Record<string, TypeAppState>;
+  designApps: Record<string, DesignAppState>;
+  qualityApps: Record<string, QualityAppState>;
   feedbackApp: FeedbackAppState;
   tutorial: TutorialContext;
 
-  // Background operations (kit imports, file uploads, etc.)
   backgroundOperations: Record<string, { type: string; status: "pending" | "running" | "completed" | "failed"; error?: string }>;
 }
 
-/**
- * Events for the sketchpad machine - unified event type for all app state
- */
 export type SketchpadEvent =
-  // Global sketchpad events
   | { type: "NAVIGATE"; path: string }
   | { type: "NAVIGATE_BACK" }
   | { type: "NAVIGATE_FORWARD" }
@@ -8066,9 +7953,6 @@ export type SketchpadEvent =
 
 // #region Helpers
 
-/**
- * Path migration helper - migrates old paths to new format
- */
 function migratePath(path: string): string {
   if (path.match(/^\/kit\/([^/]+)\/design\/([^/]+)/)) {
     return path.replace(/^\/kit\/([^/]+)\/design\/([^/]+)/, "/kits/$1/designs/$2");
@@ -8085,9 +7969,6 @@ function migratePath(path: string): string {
   return path;
 }
 
-/**
- * Build snapshot from Y.js data
- */
 function buildSnapshot(ySketchpad: Y.Map<any>): SketchpadState {
   const settingsStr = ySketchpad.get("settings") as string;
   const settings = settingsStr
@@ -8152,9 +8033,6 @@ function buildSnapshot(ySketchpad: Y.Map<any>): SketchpadState {
   };
 }
 
-/**
- * Apply diff to Y.js sketchpad map
- */
 function applyDiff(yDoc: Y.Doc, ySketchpad: Y.Map<any>, diff: SketchpadDiff): void {
   yDoc.transact(() => {
     if (diff.navigationHistory !== undefined) {
@@ -8202,9 +8080,6 @@ function applyDiff(yDoc: Y.Doc, ySketchpad: Y.Map<any>, diff: SketchpadDiff): vo
   });
 }
 
-/**
- * Create default transaction state for an app
- */
 export function createDefaultTransactionState(): AppTransactionState {
   return {
     isTransactionActive: false,
@@ -8214,9 +8089,6 @@ export function createDefaultTransactionState(): AppTransactionState {
   };
 }
 
-/**
- * Create default design app state
- */
 export function createDefaultDesignAppState(): DesignAppState {
   return {
     panelVisibility: { ...defaultPanelVisibility, toolbar: true },
@@ -8233,9 +8105,6 @@ export function createDefaultDesignAppState(): DesignAppState {
   };
 }
 
-/**
- * Create default type app state
- */
 export function createDefaultTypeAppState(): TypeAppState {
   return {
     panelVisibility: { ...defaultPanelVisibility, toolbar: true },
@@ -8252,9 +8121,6 @@ export function createDefaultTypeAppState(): TypeAppState {
   };
 }
 
-/**
- * Create default kit app state
- */
 export function createDefaultKitAppState(): KitAppState {
   return {
     panelVisibility: { ...defaultPanelVisibility, toolbar: true },
@@ -8271,9 +8137,6 @@ export function createDefaultKitAppState(): KitAppState {
   };
 }
 
-/**
- * Create default quality app state
- */
 export function createDefaultQualityAppState(): QualityAppState {
   return {
     panelVisibility: { ...defaultPanelVisibility, toolbar: true },
@@ -8413,18 +8276,6 @@ function applySketchpadDiffToState(state: SketchpadState, diff: SketchpadDiff): 
 
 // #region Sketchpad Machine
 
-/**
- * XState machine for the Sketchpad root store.
- *
- * This machine:
- * - Handles navigation, theme, and settings changes
- * - Spawns kit actors for each kit
- *
- * This machine provides:
- * - Structured event handling
- * - State machine logic
- * - React integration via @xstate/react
- */
 export const sketchpadMachine = setup({
   types: {
     context: {} as SketchpadContext,
@@ -8432,19 +8283,18 @@ export const sketchpadMachine = setup({
     input: {} as SketchpadMachineInput,
   },
   guards: {
-    // Navigation guards
     canNavigateBack: ({ context }) => {
       return context.sketchpad.navigationHistoryIndex > 0;
     },
     canNavigateForward: ({ context }) => {
       return context.sketchpad.navigationHistoryIndex < context.sketchpad.navigationHistory.length - 1;
     },
-    // Home hover guards
+
     hasHomeHover: ({ context }) => {
       const hover = context.homeApp.hover;
       return hover !== undefined && (hover.kits?.length ?? 0) > 0;
     },
-    // Design app hover guards
+
     hasDesignHover: ({ context, event }) => {
       const { kitGuid, designGuid } = event as any;
       const key = `${kitGuid}:${designGuid}`;
@@ -8452,7 +8302,7 @@ export const sketchpadMachine = setup({
       if (!app?.hover) return false;
       return (app.hover.pieces?.length ?? 0) > 0 || (app.hover.connections?.length ?? 0) > 0 || (app.hover.ports?.length ?? 0) > 0 || (app.hover.types?.length ?? 0) > 0 || (app.hover.designs?.length ?? 0) > 0;
     },
-    // Type app hover guards
+
     hasTypeHover: ({ context, event }) => {
       const { kitGuid, typeGuid } = event as any;
       const key = `${kitGuid}:${typeGuid}`;
@@ -8460,13 +8310,13 @@ export const sketchpadMachine = setup({
       if (!app?.hover) return false;
       return app.hover.port !== undefined || app.hover.model !== undefined;
     },
-    // Kit app hover guards
+
     hasKitHover: ({ context, event }) => {
       const { kitGuid } = event as any;
       const app = context.kitApps[kitGuid];
       return app?.hover !== undefined;
     },
-    // Selection guards
+
     hasDesignSelection: ({ context, event }) => {
       const { kitGuid, designGuid } = event as any;
       const key = `${kitGuid}:${designGuid}`;
@@ -8481,7 +8331,7 @@ export const sketchpadMachine = setup({
       if (!app?.selection) return false;
       return (app.selection.ports?.length ?? 0) > 0 || (app.selection.models?.length ?? 0) > 0;
     },
-    // App initialized guards - used by triadic hooks to check canSetState
+
     designAppExists: ({ context, event }) => {
       const { kitGuid, designGuid } = event as any;
       const key = `${kitGuid}:${designGuid}`;
@@ -8554,19 +8404,15 @@ export const sketchpadMachine = setup({
       return { sketchpad: applySketchpadDiffToState(context.sketchpad, event.diff) };
     }),
     markDirty: () => {},
-    // Generic app event dispatcher - uses dynamic event handler registry
-    // Apps register handlers via registerEventHandler() which are looked up by event.type
+
     dispatchAppEvent: assign(({ context, event }) => {
-      // Try new event handler registry first, then fall back to runtime action registry
       const result = executeEventHandler(context, event);
       if (Object.keys(result).length > 0) return result;
-      // Fallback: derive action name from event type (e.g., "HOME.TOGGLE_PANEL" -> "homeTogglePanel")
-      // Split by "." to get namespace and action parts, then convert SCREAMING_SNAKE_CASE to camelCase
+
       const parts = event.type.split(".");
       if (parts.length >= 2) {
         const namespace = parts[0].toLowerCase();
-        // Convert action parts from SCREAMING_SNAKE_CASE to camelCase
-        // e.g., "TOGGLE_PANEL" -> "togglePanel", "SET_PANEL_VISIBILITY" -> "setPanelVisibility"
+
         const actionParts = parts.slice(1).join("_").split("_");
         const action = actionParts.map((p: string, i: number) => (i === 0 ? p.toLowerCase() : p.charAt(0).toUpperCase() + p.slice(1).toLowerCase())).join("");
         const actionName = namespace + action.charAt(0).toUpperCase() + action.slice(1);
@@ -8574,7 +8420,7 @@ export const sketchpadMachine = setup({
       }
       return {};
     }),
-    // Home app actions (delegated to runtime action registry)
+
     homeTogglePanel: assign(({ context, event }) => executeRuntimeAction("homeTogglePanel", context, event)),
     homeSetPanelVisibility: assign(({ context, event }) => executeRuntimeAction("homeSetPanelVisibility", context, event)),
     homeSetSort: assign(({ context, event }) => executeRuntimeAction("homeSetSort", context, event)),
@@ -8583,10 +8429,10 @@ export const sketchpadMachine = setup({
     homeClearSelection: assign(({ context, event }) => executeRuntimeAction("homeClearSelection", context, event)),
     homeSetHover: assign(({ context, event }) => executeRuntimeAction("homeSetHover", context, event)),
     homeClearHover: assign(({ context, event }) => executeRuntimeAction("homeClearHover", context, event)),
-    // Type app actions (delegated to runtime action registry)
+
     typeInit: assign(({ context, event }) => executeRuntimeAction("typeInit", context, event)),
     typeSync: assign(({ context, event }) => executeRuntimeAction("typeSync", context, event)),
-    // Design app actions (delegated to runtime action registry)
+
     designInit: assign(({ context, event }) => executeRuntimeAction("designInit", context, event)),
     designSync: assign(({ context, event }) => executeRuntimeAction("designSync", context, event)),
     designSetActiveTool: assign(({ context, event }) => executeRuntimeAction("designSetActiveTool", context, event)),
@@ -8603,7 +8449,7 @@ export const sketchpadMachine = setup({
     designSetCamera: assign(({ context, event }) => executeRuntimeAction("designSetCamera", context, event)),
     designSelectModelTag: assign(({ context, event }) => executeRuntimeAction("designSelectModelTag", context, event)),
     designDeselectModelTag: assign(({ context, event }) => executeRuntimeAction("designDeselectModelTag", context, event)),
-    // Type app actions (delegated to runtime action registry)
+
     typeTogglePanel: assign(({ context, event }) => executeRuntimeAction("typeTogglePanel", context, event)),
     typeSetPanelVisibility: assign(({ context, event }) => executeRuntimeAction("typeSetPanelVisibility", context, event)),
     typeSetFullscreenWindow: assign(({ context, event }) => executeRuntimeAction("typeSetFullscreenWindow", context, event)),
@@ -8630,10 +8476,10 @@ export const sketchpadMachine = setup({
     typeAddModelTag: assign(({ context, event }) => executeRuntimeAction("typeAddModelTag", context, event)),
     typeRemoveModelTag: assign(({ context, event }) => executeRuntimeAction("typeRemoveModelTag", context, event)),
     typeClearModelTags: assign(({ context, event }) => executeRuntimeAction("typeClearModelTags", context, event)),
-    // Kit app INIT/SYNC actions
+
     kitInit: assign(({ context, event }) => executeRuntimeAction("kitInit", context, event)),
     kitSync: assign(({ context, event }) => executeRuntimeAction("kitSync", context, event)),
-    // Kit app actions (delegated to runtime action registry)
+
     kitTogglePanel: assign(({ context, event }) => executeRuntimeAction("kitTogglePanel", context, event)),
     kitSetPanelVisibility: assign(({ context, event }) => executeRuntimeAction("kitSetPanelVisibility", context, event)),
     kitSetFilter: assign(({ context, event }) => executeRuntimeAction("kitSetFilter", context, event)),
@@ -8648,10 +8494,10 @@ export const sketchpadMachine = setup({
     kitClearSelection: assign(({ context, event }) => executeRuntimeAction("kitClearSelection", context, event)),
     kitSetHover: assign(({ context, event }) => executeRuntimeAction("kitSetHover", context, event)),
     kitClearHover: assign(({ context, event }) => executeRuntimeAction("kitClearHover", context, event)),
-    // Quality app actions (delegated to runtime action registry)
+
     qualityTogglePanel: assign(({ context, event }) => executeRuntimeAction("qualityTogglePanel", context, event)),
     qualityToggleBenchmark: assign(({ context, event }) => executeRuntimeAction("qualityToggleBenchmark", context, event)),
-    // Tutorial actions
+
     tutorialStart: assign(({ context, event }) => {
       if (event.type !== "TUTORIAL.START") return {};
       return {
@@ -8700,8 +8546,7 @@ export const sketchpadMachine = setup({
         tutorial: { ...context.tutorial, completedSteps: completed },
       };
     }),
-    // Transaction actions
-    // Background operation actions
+
     backgroundStart: assign(({ context, event }) => {
       if (event.type !== "BACKGROUND.START") return {};
       const updates: Partial<SketchpadContext> = {
@@ -8710,7 +8555,7 @@ export const sketchpadMachine = setup({
           [event.operationId]: { type: event.operationType, status: "running" as const },
         },
       };
-      // If this is a kit import, add to loadingKits
+
       if (event.operationType.startsWith("kit-import:")) {
         const kitName = event.operationType.replace("kit-import:", "");
         updates.homeApp = {
@@ -8725,7 +8570,7 @@ export const sketchpadMachine = setup({
       const operation = context.backgroundOperations[event.operationId];
       const { [event.operationId]: _, ...rest } = context.backgroundOperations;
       const updates: Partial<SketchpadContext> = { backgroundOperations: rest };
-      // If this was a kit import, remove from loadingKits
+
       if (operation?.type.startsWith("kit-import:")) {
         updates.homeApp = {
           ...context.homeApp,
@@ -8743,7 +8588,7 @@ export const sketchpadMachine = setup({
           [event.operationId]: { ...context.backgroundOperations[event.operationId], status: "failed" as const, error: event.error },
         },
       };
-      // If this was a kit import, remove from loadingKits
+
       if (operation?.type.startsWith("kit-import:")) {
         updates.homeApp = {
           ...context.homeApp,
@@ -8752,28 +8597,28 @@ export const sketchpadMachine = setup({
       }
       return updates;
     }),
-    // Design transaction actions (delegated to runtime action registry)
+
     designTransactionStart: assign(({ context, event }) => executeRuntimeAction("designTransactionStart", context, event)),
     designTransactionCommit: assign(({ context, event }) => executeRuntimeAction("designTransactionCommit", context, event)),
     designTransactionAbort: assign(({ context, event }) => executeRuntimeAction("designTransactionAbort", context, event)),
     designTransactionUndo: assign(({ context, event }) => executeRuntimeAction("designTransactionUndo", context, event)),
     designTransactionRedo: assign(({ context, event }) => executeRuntimeAction("designTransactionRedo", context, event)),
     designTransactionRecordEdit: assign(({ context, event }) => executeRuntimeAction("designTransactionRecordEdit", context, event)),
-    // Type transaction actions (delegated to runtime action registry)
+
     typeTransactionStart: assign(({ context, event }) => executeRuntimeAction("typeTransactionStart", context, event)),
     typeTransactionCommit: assign(({ context, event }) => executeRuntimeAction("typeTransactionCommit", context, event)),
     typeTransactionAbort: assign(({ context, event }) => executeRuntimeAction("typeTransactionAbort", context, event)),
     typeTransactionUndo: assign(({ context, event }) => executeRuntimeAction("typeTransactionUndo", context, event)),
     typeTransactionRedo: assign(({ context, event }) => executeRuntimeAction("typeTransactionRedo", context, event)),
     typeTransactionRecordEdit: assign(({ context, event }) => executeRuntimeAction("typeTransactionRecordEdit", context, event)),
-    // Kit transaction actions (delegated to runtime action registry)
+
     kitTransactionStart: assign(({ context, event }) => executeRuntimeAction("kitTransactionStart", context, event)),
     kitTransactionCommit: assign(({ context, event }) => executeRuntimeAction("kitTransactionCommit", context, event)),
     kitTransactionAbort: assign(({ context, event }) => executeRuntimeAction("kitTransactionAbort", context, event)),
     kitTransactionUndo: assign(({ context, event }) => executeRuntimeAction("kitTransactionUndo", context, event)),
     kitTransactionRedo: assign(({ context, event }) => executeRuntimeAction("kitTransactionRedo", context, event)),
     kitTransactionRecordEdit: assign(({ context, event }) => executeRuntimeAction("kitTransactionRecordEdit", context, event)),
-    // Design app piece/connection selection actions
+
     designSelectPiece: assign(({ context, event }) => executeRuntimeAction("designSelectPiece", context, event)),
     designDeselectPiece: assign(({ context, event }) => executeRuntimeAction("designDeselectPiece", context, event)),
     designSelectConnection: assign(({ context, event }) => executeRuntimeAction("designSelectConnection", context, event)),
@@ -8823,12 +8668,10 @@ export const sketchpadMachine = setup({
       recordingState: "idle" as const,
       recordedEvents: [],
     },
-    // Transaction state is now in each app's state
-    // Background operations track async tasks that continue when navigating away
+
     backgroundOperations: {},
   }),
   on: {
-    // Navigation events
     NAVIGATE: {
       actions: ["navigate", "navigateImpl"],
     },
@@ -8840,8 +8683,7 @@ export const sketchpadMachine = setup({
       guard: "canNavigateForward",
       actions: ["navigateForward"],
     },
-    // App INIT events - available globally for direct URL navigation
-    // These transition to the appropriate navigation state and initialize app data
+
     "KIT.INIT": {
       target: ".navigation.kit",
       actions: "kitInit",
@@ -8854,7 +8696,7 @@ export const sketchpadMachine = setup({
       target: ".navigation.type",
       actions: "typeInit",
     },
-    // Settings events - always available
+
     SET_THEME: {
       actions: ["setTheme"],
     },
@@ -8879,39 +8721,34 @@ export const sketchpadMachine = setup({
     CHANGE: {
       actions: ["applyChange"],
     },
-    // Tutorial events - always available
+
     "TUTORIAL.START": { actions: "tutorialStart" },
     "TUTORIAL.END": { actions: "tutorialEnd" },
     "TUTORIAL.NEXT_STEP": { actions: "tutorialNextStep" },
     "TUTORIAL.PREV_STEP": { actions: "tutorialPrevStep" },
     "TUTORIAL.GO_TO_STEP": { actions: "tutorialGoToStep" },
     "TUTORIAL.COMPLETE_STEP": { actions: "tutorialCompleteStep" },
-    // Background operation events - always available (for kit import, file upload, etc.)
-    // These operations continue even when navigating away
+
     "BACKGROUND.START": { actions: "backgroundStart" },
     "BACKGROUND.COMPLETE": { actions: "backgroundComplete" },
     "BACKGROUND.FAIL": { actions: "backgroundFail" },
-    // Wildcard handler at root level to catch all app-specific events
-    // This ensures events like HOME.*, KIT.*, DESIGN.*, TYPE.*, QUALITY.* are dispatched
-    // Apps register handlers via registerEventHandler() which are looked up by event.type
+
     "*": { actions: "dispatchAppEvent" },
   },
   states: {
-    // Navigation state - hierarchical states for app navigation
     navigation: {
       initial: "home",
       states: {
-        // Home state - kit selection and global settings
         home: {},
-        // Kit state - browsing types, designs, files within a kit
+
         kit: {},
-        // Design state - editing a design with pieces and connections
+
         design: {},
-        // Type state - editing a type with ports and models
+
         type: {},
-        // Quality state - editing a quality with benchmarks
+
         quality: {},
-        // Docs state - viewing documentation
+
         docs: {},
       },
     },
@@ -8920,12 +8757,6 @@ export const sketchpadMachine = setup({
 
 // #region Sketchpad Selectors
 
-/**
- * Selectors for accessing unified state from the sketchpadMachine.
- * Use these with useSelector(actor, selector) in React components.
- */
-
-// Navigation state selectors - check which app navigation state is active
 export type NavigationState = "home" | "kit" | "design" | "type" | "quality" | "docs";
 export const selectNavigationState = (state: { value: any }): NavigationState => {
   const value = state.value;
@@ -8933,7 +8764,6 @@ export const selectNavigationState = (state: { value: any }): NavigationState =>
     const nav = value.navigation;
     if (typeof nav === "string") return nav as NavigationState;
     if (typeof nav === "object") {
-      // Parallel states have object values
       return Object.keys(nav)[0] as NavigationState;
     }
   }
@@ -8946,7 +8776,6 @@ export const selectIsInType = (state: { value: any }): boolean => selectNavigati
 export const selectIsInQuality = (state: { value: any }): boolean => selectNavigationState(state) === "quality";
 export const selectIsInDocs = (state: { value: any }): boolean => selectNavigationState(state) === "docs";
 
-// Home app selectors
 export const selectHomeApp = (state: { context: SketchpadContext }) => state.context.homeApp;
 export const selectHomePanelVisibility = (state: { context: SketchpadContext }) => state.context.homeApp.panelVisibility;
 export const selectHomeSelection = (state: { context: SketchpadContext }) => state.context.homeApp.selection;
@@ -8955,7 +8784,6 @@ export const selectHomeSortColumn = (state: { context: SketchpadContext }) => st
 export const selectHomeSortDirection = (state: { context: SketchpadContext }) => state.context.homeApp.sortDirection;
 export const selectHomeLoadingKits = (state: { context: SketchpadContext }) => state.context.homeApp.loadingKits;
 
-// Background operations selectors
 export const selectBackgroundOperations = (state: { context: SketchpadContext }) => state.context.backgroundOperations;
 export const selectKitImportOperations = (state: { context: SketchpadContext }) => {
   const ops = state.context.backgroundOperations;
@@ -8969,7 +8797,6 @@ export const selectKitImportOperations = (state: { context: SketchpadContext }) 
     }));
 };
 
-// Design app selectors (take kitGuid and designGuid as curried parameters)
 export const createDesignAppSelector = (kitGuid: Guid, designGuid: Guid) => {
   const key = `${kitGuid}:${designGuid}`;
   return (state: { context: SketchpadContext }) => state.context.designApps[key] || createDefaultDesignAppState();
@@ -9030,7 +8857,6 @@ export const createDesignOthersSelector = (kitGuid: Guid, designGuid: Guid) => {
   return (state: { context: SketchpadContext }) => state.context.designApps[key]?.others ?? [];
 };
 
-// Type app selectors
 export const createTypeAppSelector = (kitGuid: Guid, typeGuid: Guid) => {
   const key = `${kitGuid}:${typeGuid}`;
   return (state: { context: SketchpadContext }) => {
@@ -9084,7 +8910,6 @@ export const createTypeOthersSelector = (kitGuid: Guid, typeGuid: Guid) => {
   return (state: { context: SketchpadContext }) => state.context.typeApps[key]?.others ?? [];
 };
 
-// Kit app selectors
 export const createKitAppSelector = (kitGuid: Guid) => {
   return (state: { context: SketchpadContext }) => state.context.kitApps[kitGuid] ?? createDefaultKitAppState();
 };
@@ -9133,7 +8958,6 @@ export const createKitDiagramForceSelector = (kitGuid: Guid) => {
   return (state: { context: SketchpadContext }) => state.context.kitApps[kitGuid]?.diagramForce;
 };
 
-// Quality app selectors
 export const createQualityAppSelector = (kitGuid: Guid, qualityGuid: Guid) => {
   const key = `${kitGuid}:${qualityGuid}`;
   return (state: { context: SketchpadContext }) => {
@@ -9155,18 +8979,15 @@ export const createQualityPanelVisibilitySelector = (kitGuid: Guid, qualityGuid:
   return (state: { context: SketchpadContext }) => state.context.qualityApps[key]?.panelVisibility ?? defaultPanelVisibility;
 };
 
-// Tutorial selectors
 export const selectTutorial = (state: { context: SketchpadContext }) => state.context.tutorial;
 export const selectActiveTutorial = (state: { context: SketchpadContext }) => state.context.tutorial.activeTutorial;
 export const selectTutorialCurrentStep = (state: { context: SketchpadContext }) => state.context.tutorial.currentStepIndex;
 export const selectTutorialSteps = (state: { context: SketchpadContext }) => state.context.tutorial.steps;
 
-// Sketchpad global selectors
 export const selectSketchpadKits = (state: { context: SketchpadContext }) => state.context.kits;
 
 export const selectSketchpadState = (state: { context: SketchpadContext }) => state.context.sketchpad;
 
-// Sketchpad state selectors (read from XState context)
 export const selectSketchpadNavigation = (state: { context: SketchpadContext }) => migratePath(state.context.sketchpad.navigation || "/");
 export const selectSketchpadTheme = (state: { context: SketchpadContext }) => state.context.sketchpad.theme;
 export const selectSketchpadLanguage = (state: { context: SketchpadContext }) => state.context.sketchpad.language || "en";
@@ -9179,8 +9000,6 @@ export const selectSketchpadNavigationHistory = (state: { context: SketchpadCont
 export const selectSketchpadNavigationHistoryIndex = (state: { context: SketchpadContext }) => state.context.sketchpad.navigationHistoryIndex ?? 0;
 export const selectSketchpadSettings = (state: { context: SketchpadContext }) => state.context.sketchpad.settings || createDefaultSketchpadState().settings;
 
-// Transaction selectors - now per-app (transactions embedded in each app's state)
-// Helper to get transaction state from an app key (format: "design-{kitGuid}-{designGuid}", "type-{kitGuid}-{typeGuid}", "kit-{kitGuid}")
 const getAppTransaction = (context: SketchpadContext, appKey: string): AppTransactionState | undefined => {
   const parts = appKey.split("-");
   if (parts[0] === "design" && parts.length >= 3) {
@@ -9224,13 +9043,8 @@ export const createTransactionCanRedoSelector = (appKey: string) => (state: { co
 
 // #endregion Sketchpad Machine
 
-// NOTE: uiMachine has been removed and consolidated into sketchpadMachine
-// All UI state is now managed by the single sketchpadMachine
-
-// Legacy type export for backwards compatibility during migration
 export type UiEntityKind = "kit" | "type" | "design" | "piece" | "connection" | "port" | "model" | "quality" | "benchmark" | "file" | "folder" | "author" | "interface" | "tag" | "concept";
 
-// Legacy selectors pointing to sketchpad equivalents (derive from navigation path)
 export const selectUiActiveKitGuid = (state: { context: SketchpadContext }) => {
   const path = state.context.sketchpad?.navigation || "/";
   const match = path.match(/\/kit\/([^/]+)/);
@@ -9260,20 +9074,15 @@ export const selectUiIsInDocs = selectIsInDocs;
 
 // #region Factory
 
-/**
- * Create a sketchpad actor - the single unified actor for all app state.
- * All old separate machines have been consolidated into this single machine.
- */
 export function createSketchpadActor(input: SketchpadMachineInput) {
   return createActor(sketchpadMachine, {
     input,
     inspect: (inspectionEvent) => {
       if (inspectionEvent.type === "@xstate.snapshot") {
-        // Log state transitions with source and target
         const { snapshot, event, actorRef } = inspectionEvent;
-        if (event.type === "xstate.init") return; // Skip initial event
+        if (event.type === "xstate.init") return;
         const stateValue = "value" in (snapshot as any) ? (typeof (snapshot as any).value === "object" ? JSON.stringify((snapshot as any).value) : (snapshot as any).value) : JSON.stringify(snapshot);
-        // Extract event params (everything except type)
+
         const { type, ...params } = event as any;
         const hasParams = Object.keys(params).length > 0;
         console.log(`[DEBUG][Machine] ${type} → ${stateValue}`, hasParams ? params : "");
@@ -9285,8 +9094,6 @@ export function createSketchpadActor(input: SketchpadMachineInput) {
 // #endregion Factory
 
 // #region Legacy Type Exports
-
-// These types are kept for backwards compatibility with code that imports them.
 
 export interface TransactionContext<TEdit = any> {
   isTransactionActive: boolean;
@@ -9340,7 +9147,6 @@ export type KitEvent =
   | { type: "Y_UPDATE"; data: any }
   | { type: "MARK_DIRTY" };
 
-// Legacy selectors
 function buildKitSnapshot(yKit: Y.Map<any>): Partial<Kit> {
   return {
     guid: yKit.get("guid") as string,
@@ -9411,26 +9217,12 @@ export function selectKitSnapshot(context: KitContext): Partial<Kit> {
 
 // #region Actor Types
 
-/**
- * Type for the sketchpad actor ref.
- * Use this to type the actor in React components.
- */
 export type SketchpadActorRef = ActorRefFrom<typeof sketchpadMachine>;
 
-/**
- * Type for the sketchpad snapshot.
- * Use this to type state in selectors.
- */
 export type SketchpadSnapshot = SnapshotFrom<typeof sketchpadMachine>;
 
-/**
- * Helper type for state parameter in selectors.
- */
 export type SketchpadState$ = { context: SketchpadContext };
 
-/**
- * Context for providing the XState actor to child components.
- */
 export const SketchpadActorContext = createContext<SketchpadActorRef | null>(null);
 
 // #endregion Actor Types
@@ -9444,21 +9236,21 @@ export const SketchpadActorContext = createContext<SketchpadActorRef | null>(nul
 export function useIsPieceSelected(): boolean {
   const piece = usePieceScope();
   const { useDesignAppIsPieceSelected } = getDesignAppHooks();
-  // Use granular hook that only re-renders when this specific piece's selection state changes
+
   return useDesignAppIsPieceSelected(undefined, piece?.guid ?? "");
 }
 
 export function useIsPieceHovered(): boolean {
   const pieceScope = usePieceScope();
   const { useDesignAppIsPieceHovered } = getDesignAppHooks();
-  // Use granular hook that only re-renders when this specific piece's hover state changes
+
   return useDesignAppIsPieceHovered(undefined, pieceScope?.guid ?? "");
 }
 
 export function useIsPieceTransitiveHovered(): boolean {
   const pieceScope = usePieceScope();
   const { useDesignAppIsPieceTransitiveHovered } = getDesignAppHooks();
-  // Hook must be called unconditionally to follow React's rules of hooks
+
   const isHovered = useDesignAppIsPieceTransitiveHovered(undefined, pieceScope?.guid ?? "");
   if (!pieceScope) return false;
   return isHovered;
@@ -9658,14 +9450,14 @@ export function usePieceName(): HookResult<string | undefined> {
 export function useIsConnectionSelected(): boolean {
   const connectionScope = useConnectionScope();
   const { useDesignAppIsConnectionSelected } = getDesignAppHooks();
-  // Use granular hook that only re-renders when this specific connection's selection state changes
+
   return useDesignAppIsConnectionSelected(undefined, connectionScope?.guid ?? "");
 }
 
 export function useIsConnectionHovered(): boolean {
   const connectionScope = useConnectionScope();
   const { useDesignAppIsConnectionHovered } = getDesignAppHooks();
-  // Use granular hook that only re-renders when this specific connection's hover state changes
+
   return useDesignAppIsConnectionHovered(undefined, connectionScope?.guid ?? "");
 }
 
@@ -10383,7 +10175,7 @@ export function useSyncSelectionItemMembership(store: { yMap: Y.Map<any> } | nul
   const subscribe = useCallback(
     (callback: () => void) => {
       if (!store) return () => {};
-      // Selection is stored as yMap.get("selection").get("pieces") or yMap.get("selection").get("connections")
+
       return createNestedArrayItemMembershipObserver(store.yMap, "selection", arrayKey, itemId, (cb: () => void) => {
         cb();
         callback();
@@ -10581,14 +10373,13 @@ type HomeStoreInstance = any;
 type DocsAppStoreInstance = any;
 
 type KitAppStoreFactory = (parent: SketchpadStore, yMap: YKitApp, transact: (fn: () => void) => void, id: KitAppId, state?: KitAppState) => KitAppStoreInstance;
-// Factory types - local aliases for type checking
+
 type DesignAppStoreFactoryLocal = (parent: SketchpadStore, id: DesignAppId, state?: DesignAppState) => DesignAppStoreInstance;
 type TypeAppStoreFactoryLocal = (parent: SketchpadStore, id: TypeAppId, state?: TypeAppState) => TypeAppStoreInstance;
 type QualityAppStoreFactoryLocal = (parent: SketchpadStore, id: QualityAppId, state?: QualityAppState) => QualityAppStoreInstance;
 type HomeStoreFactory = (parent: SketchpadStore) => HomeStoreInstance;
 type DocsAppStoreFactory = (parent: SketchpadStore) => DocsAppStoreInstance;
 
-// Import factory registry from shared.ts to avoid circular dependencies
 import {
   registerDesignAppStoreFactory,
   registerKitAppStoreFactory,
@@ -10600,11 +10391,9 @@ import {
   getTypeAppStoreFactory as resolveTypeAppStoreFactory,
 } from "./shared";
 
-// Keep local factories for Home and Docs (they don't have circular dependency issues)
 let homeStoreFactory: HomeStoreFactory | undefined;
 let docsAppStoreFactory: DocsAppStoreFactory | undefined;
 
-// ... (rest of the code remains the same)
 export function registerHomeStoreFactory(factory: HomeStoreFactory) {
   homeStoreFactory = factory;
 }
@@ -10623,14 +10412,12 @@ function resolveDocsAppStoreFactory(): DocsAppStoreFactory {
   return docsAppStoreFactory;
 }
 
-// Re-export for backwards compatibility
 export { registerDesignAppStoreFactory, registerKitAppStoreFactory, registerQualityAppStoreFactory, registerTypeAppStoreFactory };
 
 type YSketchpadVal = string | number | boolean;
 type YSketchpad = Y.Map<YSketchpadVal>;
 
 export class SketchpadStore {
-  // Eagerly load modules after SketchpadStore class is defined
   private static _modulesLoaded = false;
   public static _loadModules() {
     if (SketchpadStore._modulesLoaded) return;
@@ -11701,7 +11488,6 @@ if (import.meta.hot?.data.stores) {
   }
 }
 
-// XState actors for state management (parallel to existing stores during migration)
 let actors: Map<Guid, SketchpadActorRef>;
 if (import.meta.hot?.data.actors) {
   actors = import.meta.hot.data.actors;
@@ -11718,7 +11504,6 @@ export const SketchpadScopeProvider = (props: { id?: string; remote?: RemoteProv
   const id = useMemo(() => props.id || guid(), [props.id]);
   const [configsReady, setConfigsReady] = useState(false);
 
-  // Load app configs on mount
   useEffect(() => {
     loadAppConfigs().then(() => setConfigsReady(true));
   }, []);
@@ -11727,7 +11512,6 @@ export const SketchpadScopeProvider = (props: { id?: string; remote?: RemoteProv
     const store = new SketchpadStore(id, props?.remote, props?.initialState);
     stores.set(id, store);
 
-    // Create XState actor alongside the store
     const actor = createSketchpadActor({ id, initialState: mergeSketchpadState(mergeSketchpadState(store.snapshot(), readSketchpadStateFromLocalStorage(id)), toSketchpadInitialState(props?.initialState)) });
     actor.start();
     actors.set(id, actor);
@@ -11743,7 +11527,6 @@ export const SketchpadScopeProvider = (props: { id?: string; remote?: RemoteProv
   const actor = actors.get(id)!;
   const store = stores.get(id)!;
 
-  // Auto-import kits from URLs when configs are ready
   useEffect(() => {
     if (!configsReady || !props.importKitUrls || props.importKitUrls.length === 0) return;
 
@@ -11751,9 +11534,9 @@ export const SketchpadScopeProvider = (props: { id?: string; remote?: RemoteProv
       for (const url of props.importKitUrls!) {
         try {
           const { kit, files: importedFiles } = await importKit(url);
-          // Create the kit in the store
+
           await store.execute("semio.sketchpad.createKit", "semio.sketchpad.importKitUrls", kit, false, false);
-          // Store file blobs if the kit was created successfully
+
           if (store.hasKit(kit.guid)) {
             const kitStore = store.kit(kit.guid);
             await kitStore.storeFileBlobs(importedFiles);
@@ -11767,8 +11550,6 @@ export const SketchpadScopeProvider = (props: { id?: string; remote?: RemoteProv
     doImportKits();
   }, [configsReady, props.importKitUrls, store]);
 
-  // Always provide the context, but render loading state until configs are ready
-  // This prevents context-related errors when components try to use hooks during loading
   return React.createElement(SketchpadScopeContext.Provider, { value: { id, remote: props.remote, onWindowEvents: props.onWindowEvents } }, React.createElement(SketchpadActorContext.Provider, { value: actor }, configsReady ? props.children : null));
 };
 
@@ -11928,10 +11709,6 @@ export function useNavigationHistory(): {
 
 // #region XState Hooks
 
-/**
- * Get the XState actor ref for the sketchpad.
- * This allows components to send events to the state machine.
- */
 export function useSketchpadActor(): SketchpadActorRef {
   const actor = useContext(SketchpadActorContext);
   if (!actor) {
@@ -11940,43 +11717,20 @@ export function useSketchpadActor(): SketchpadActorRef {
   return actor;
 }
 
-/**
- * Safe version of useSketchpadActor that returns null instead of throwing.
- * Useful for sync hooks that may run during edge cases.
- */
 export function useSketchpadActorSafe(): SketchpadActorRef | null {
   return useContext(SketchpadActorContext);
 }
 
-/**
- * XState-based hook for selecting sketchpad state.
- * Uses @xstate/react's useSelector for optimal performance.
- *
- * @param selector - Function to select part of the state
- * @returns The selected state
- */
 export function useSketchpadSelector<T>(selector: (snapshot: ReturnType<SketchpadActorRef["getSnapshot"]>) => T): T {
   const actor = useSketchpadActor();
   return useSelector(actor, selector);
 }
 
-/**
- * XState-based hook to get the full sketchpad snapshot.
- * Prefer using useSketchpadSelector with a specific selector for better performance.
- */
 export function useSketchpadSnapshot(): SketchpadState {
   const actor = useSketchpadActor();
   return useSelector(actor, (snapshot) => selectSnapshot(snapshot.context));
 }
 
-/**
- * Check if an event can be sent to the sketchpad state machine.
- * Uses the XState can() method to check if the event would be handled
- * in the current state (passes all guards).
- *
- * @param event - The event to check (type and payload)
- * @returns Whether the event can be sent
- */
 export function useSketchpadCan(event: SketchpadEvent): boolean {
   const actor = useSketchpadActor();
   return useSelector(actor, (snapshot) => {
@@ -11987,75 +11741,46 @@ export function useSketchpadCan(event: SketchpadEvent): boolean {
   });
 }
 
-/**
- * XState-based hook for navigation (read-only).
- * For navigation actions, use useSketchpadCommands().
- */
 export function useNavigationXState(): string {
   const actor = useSketchpadActor();
   return useSelector(actor, (snapshot) => selectNavigation(snapshot.context));
 }
 
-/**
- * XState-based hook for theme.
- */
 export function useThemeXState(): Theme {
   const actor = useSketchpadActor();
   return useSelector(actor, (snapshot) => selectTheme(snapshot.context));
 }
 
-/**
- * XState-based hook for language.
- */
 export function useLanguageXState(): string {
   const actor = useSketchpadActor();
   return useSelector(actor, (snapshot) => selectLanguage(snapshot.context));
 }
 
-/**
- * XState-based hook for expertise level.
- */
 export function useExpertiseXState(): Expertise {
   const actor = useSketchpadActor();
   return useSelector(actor, (snapshot) => selectExpertise(snapshot.context));
 }
 
-/**
- * XState-based hook for mode.
- */
 export function useModeXState(): Mode {
   const actor = useSketchpadActor();
   return useSelector(actor, (snapshot) => selectMode(snapshot.context));
 }
 
-/**
- * XState-based hook for device.
- */
 export function useDeviceXState(): Device {
   const actor = useSketchpadActor();
   return useSelector(actor, (snapshot) => selectDevice(snapshot.context));
 }
 
-/**
- * XState-based hook for fullscreen state.
- */
 export function useIsFullscreenXState(): boolean {
   const actor = useSketchpadActor();
   return useSelector(actor, (snapshot) => selectIsFullscreen(snapshot.context));
 }
 
-/**
- * XState-based hook for panel sizes.
- */
 export function usePanelSizesXState(): PanelSizes {
   const actor = useSketchpadActor();
   return useSelector(actor, (snapshot) => selectPanelSizes(snapshot.context));
 }
 
-/**
- * Hook to send events to the sketchpad actor.
- * Returns functions that send XState events.
- */
 export function useSketchpadActions() {
   const actor = useSketchpadActor();
 
@@ -12098,97 +11823,59 @@ export function useXStateAction<TEvent extends { type: string }>(canEvent: TEven
 
 // #endregion XState Hooks
 
-/**
- * XState-based hook for design app state.
- * Uses the XState selector infrastructure for optimal performance.
- */
 export function useDesignAppXState(kitGuid: Guid, designGuid: Guid): DesignAppState {
   const actor = useSketchpadActor();
   const selector = useMemo(() => createDesignAppSelector(kitGuid, designGuid), [kitGuid, designGuid]);
   return useSelector(actor, selector);
 }
 
-/**
- * XState-based hook for type app state.
- * Uses the XState selector infrastructure for optimal performance.
- */
 export function useTypeAppXState(kitGuid: Guid, typeGuid: Guid): TypeAppState {
   const actor = useSketchpadActor();
   const selector = useMemo(() => createTypeAppSelector(kitGuid, typeGuid), [kitGuid, typeGuid]);
   return useSelector(actor, selector);
 }
 
-/**
- * XState-based hook for kit app state.
- * Uses the XState selector infrastructure for optimal performance.
- */
 export function useKitAppXState(kitGuid: Guid): KitAppState {
   const actor = useSketchpadActor();
   const selector = useMemo(() => createKitAppSelector(kitGuid), [kitGuid]);
   return useSelector(actor, selector);
 }
 
-/**
- * XState-based hook for home app state.
- */
 export function useHomeApp(): HomeAppState {
   const actor = useSketchpadActor();
   return useSelector(actor, selectHomeApp);
 }
 
-/**
- * XState-based hook for home panel visibility.
- */
 export function useHomePanelVisibility(): PanelVisibility {
   const actor = useSketchpadActor();
   return useSelector(actor, selectHomePanelVisibility);
 }
 
-/**
- * XState-based hook for home selection.
- */
 export function useHomeSelection(): HomeAppSelection | undefined {
   const actor = useSketchpadActor();
   return useSelector(actor, selectHomeSelection);
 }
 
-/**
- * XState-based hook for home hover state.
- */
 export function useHomeHover(): { kits?: Guid[] } | undefined {
   const actor = useSketchpadActor();
   return useSelector(actor, selectHomeHover);
 }
 
-/**
- * XState-based hook for home sort column.
- */
 export function useHomeSortColumn(): string | undefined {
   const actor = useSketchpadActor();
   return useSelector(actor, selectHomeSortColumn);
 }
 
-/**
- * XState-based hook for home sort direction.
- */
 export function useHomeSortDirection(): "asc" | "desc" | undefined {
   const actor = useSketchpadActor();
   return useSelector(actor, selectHomeSortDirection);
 }
 
-/**
- * XState-based hook for home loading kits.
- */
 export function useHomeLoadingKits(): Array<{ tempGuid: string; name: string }> {
   const actor = useSketchpadActor();
   return useSelector(actor, selectHomeLoadingKits);
 }
 
-/**
- * XState-based hook for kit import operations.
- * Returns all kit import operations tracked in background operations.
- * These operations continue even when navigating away from Home.
- */
 export function useKitImportOperations(): Array<{
   operationId: string;
   kitName: string;
@@ -12199,10 +11886,6 @@ export function useKitImportOperations(): Array<{
   return useSelector(actor, selectKitImportOperations);
 }
 
-/**
- * XState-based hook for home app commands.
- * Note: These events may not be fully implemented in the state machine yet.
- */
 export function useHomeCommands() {
   const actor = useSketchpadActor();
   return useMemo(
@@ -12222,8 +11905,8 @@ export function useHomeCommands() {
       removeKitFromSelection: (origin: string, kitGuid: Guid) => actor.send({ type: "HOME.DESELECT_KIT", guid: kitGuid } as any),
       clearSelection: () => actor.send({ type: "HOME.CLEAR_SELECTION" } as any),
       deselectAll: (origin: string) => actor.send({ type: "HOME.CLEAR_SELECTION" } as any),
-      hoverKit: (origin: string, kitGuid: Guid) => actor.send({ type: "HOME.HOVER_KIT", guid: kitGuid } as any),
-      clearHover: () => actor.send({ type: "HOME.CLEAR_HOVER" } as any),
+        hoverKit: (origin: string, kitGuid: Guid) => actor.send({ type: "HOME.SET_HOVER", kits: [kitGuid] } as any),
+        clearHover: (origin: string) => actor.send({ type: "HOME.CLEAR_HOVER", origin } as any),
       setSortColumn: (origin: string, column: string) => actor.send({ type: "HOME.SET_SORT_COLUMN", column } as any),
       setSortDirection: (origin: string, direction: "asc" | "desc") => actor.send({ type: "HOME.SET_SORT_DIRECTION", direction } as any),
       toggleSort: (origin: string, column: string) => {
@@ -12539,7 +12222,7 @@ export function useSketchpadCommands() {
       createDesignApp: (origin: string, designAppId: DesignAppId) => store.execute("semio.sketchpad.createDesignApp", origin, designAppId),
       navigateToKit: (kit: Guid, search?: string) => {
         const path = `/kits/${kit}${search ? (search.startsWith("?") ? search : `?${search}`) : ""}`;
-        
+
         const globalNavigate = (window as any).__SEMIO_NAVIGATE__;
         if (globalNavigate) {
           globalNavigate(path);
@@ -12549,7 +12232,7 @@ export function useSketchpadCommands() {
       },
       navigateToDesign: (kit: Guid, design: Guid) => {
         const path = `/kits/${kit}/designs/${design}`;
-        // Use global navigate function from the main BrowserRouter (works from MemoryRouter contexts)
+
         const globalNavigate = (window as any).__SEMIO_NAVIGATE__;
         if (globalNavigate) {
           globalNavigate(path);
@@ -12559,7 +12242,7 @@ export function useSketchpadCommands() {
       },
       navigateToType: (kit: Guid, type: Guid) => {
         const path = `/kits/${kit}/types/${type}`;
-        // Use global navigate function from the main BrowserRouter (works from MemoryRouter contexts)
+
         const globalNavigate = (window as any).__SEMIO_NAVIGATE__;
         if (globalNavigate) {
           globalNavigate(path);
@@ -12569,7 +12252,7 @@ export function useSketchpadCommands() {
       },
       navigateToQuality: (kit: Guid, quality: Guid) => {
         const path = `/kits/${kit}/qualities/${quality}`;
-        // Use global navigate function from the main BrowserRouter (works from MemoryRouter contexts)
+
         const globalNavigate = (window as any).__SEMIO_NAVIGATE__;
         if (globalNavigate) {
           globalNavigate(path);
@@ -12858,11 +12541,9 @@ export const commands = {
 
 export const devCommands = {
   "semio.sketchpad.freeze": (context: SketchpadCommandContext): SketchpadCommandResult => {
-    // This command needs access to the store, which will be passed via special handling
     return {};
   },
   "semio.sketchpad.timetravel": (context: SketchpadCommandContext): SketchpadCommandResult => {
-    // This command needs access to the store, which will be passed via special handling
     return {};
   },
 };
@@ -12948,11 +12629,8 @@ class AppRegistry {
 
 const appRegistry = new AppRegistry();
 
-// Import xstate outside the circular dependency
 import { ActorRefFrom, AnyActorRef, assign, createActor, setup, SnapshotFrom } from "xstate";
 
-// Lazy-load app configs to avoid circular dependency issues
-// These modules import KitDiffAppStore from this file, so we need to defer loading
 let appConfigsLoadPromise: Promise<void> | null = null;
 async function loadAppConfigs() {
   if (appConfigsLoadPromise) return appConfigsLoadPromise;
@@ -13008,11 +12686,9 @@ export const FocusProvider: FC<{ children: ReactNode }> = ({ children }) => {
     }
   }, []);
 
-  // Separate the stable functions from the changing state
-  // This prevents unnecessary re-renders of components that only use the functions
   const contextValue = useMemo(
     () => ({ focusItems, setFocusItems: setFocusItemsStable, setOnFocusItem, triggerFocusItem }),
-    // Only include focusItems, as the functions are already stable
+
     [focusItems],
   );
 
@@ -13819,17 +13495,14 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     [kit, filteredKind, kitCommands, handleCreateDesign, handleCreateType],
   );
 
-  // Find current design or type or quality
   const design = designFromScope || (isDesignApp ? allDesigns.find((d) => d.guid === itemGuid) : undefined);
   const type = typeFromScope || (isTypeApp ? allTypes.find((t) => t.guid === itemGuid) : undefined);
   const quality = isQualityApp ? allQualities.find((q) => q.guid === itemGuid) : undefined;
 
-  // Build folder chain for design (find root design's folder even if this is a child)
   const designFolderChain = useMemo(() => {
     if (!design || typeof design !== "object" || !("parent" in design)) return [];
     const designObj = design as Design;
 
-    // Find the root design (traverse up the parent chain)
     let rootDesign = designObj;
     while (rootDesign.parent) {
       const parent = allDesigns.find((d) => d.guid === rootDesign.parent?.guid);
@@ -13837,10 +13510,8 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
       rootDesign = parent;
     }
 
-    // If root design has no folder, return empty
     if (!rootDesign.folder) return [];
 
-    // Build folder chain from root's folder
     const chain: Folder[] = [];
     let currentFolderId: string | undefined = rootDesign.folder;
     while (currentFolderId) {
@@ -13852,12 +13523,10 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     return chain;
   }, [design, allDesigns, allFolders]);
 
-  // Build folder chain for type (find root type's folder even if this is a child)
   const typeFolderChain = useMemo(() => {
     if (!type || typeof type !== "object" || !("parent" in type)) return [];
     const typeObj = type as Type;
 
-    // Find the root type (traverse up the parent chain)
     let rootType = typeObj;
     while (rootType.parent) {
       const parent = allTypes.find((t) => t.guid === rootType.parent?.guid);
@@ -13865,10 +13534,8 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
       rootType = parent;
     }
 
-    // If root type has no folder, return empty
     if (!rootType.folder) return [];
 
-    // Build folder chain from root's folder
     const chain: Folder[] = [];
     let currentFolderId: string | undefined = rootType.folder;
     while (currentFolderId) {
@@ -13880,7 +13547,6 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     return chain;
   }, [type, allTypes, allFolders]);
 
-  // Build parent chain for designs
   const designParentChain = useMemo(() => {
     if (!design || typeof design !== "object" || !("parent" in design)) return [];
     const designObj = design as Design;
@@ -13897,7 +13563,6 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     return chain;
   }, [design, allDesigns]);
 
-  // Build parent chain for types
   const typeParentChain = useMemo(() => {
     if (!type || typeof type !== "object" || !("parent" in type)) return [];
     const typeObj = type as Type;
@@ -14288,7 +13953,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
         },
       });
     });
-    // Then, push the current design last
+
     breadcrumbItems.push({
       id: "semio.sketchpad.navbar.design",
       content: (
@@ -14317,7 +13982,6 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   }
 
   if (isTypeApp && type) {
-    // Update KITVERSION to have artifact kind options
     const versionIndex = breadcrumbItems.findIndex((item) => item.id === "semio.sketchpad.navbar.kitVersion");
     if (versionIndex !== -1) {
       breadcrumbItems[versionIndex] = {
@@ -14350,7 +14014,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
         ),
       });
     });
-    // First, push all parents in order (from root to current)
+
     typeParentChain.forEach((parent, index) => {
       const childItems = typeParentChildItems.find((s) => s.parentGuid === parent.guid)?.items || [];
       breadcrumbItems.push({
@@ -14378,7 +14042,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
         },
       });
     });
-    // Then, push the current type last
+
     breadcrumbItems.push({
       id: "semio.sketchpad.navbar.type",
       content: (
@@ -14407,7 +14071,6 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   }
 
   if (isQualityApp && quality) {
-    // Update KITVERSION to have artifact kind options
     const versionIndex = breadcrumbItems.findIndex((item) => item.id === "semio.sketchpad.navbar.kitVersion");
     if (versionIndex !== -1) {
       breadcrumbItems[versionIndex] = {
@@ -14535,7 +14198,7 @@ const Search: FC = ({}) => {
 
   const searchResults = useMemo(() => {
     if (query.trim()) return fuse.search(query).slice(0, 20);
-    // Show all recent results without limit, or fallback to first 20 if no recent results
+
     const base = recentResults.length > 0 ? recentResults : searchData.slice(0, 20);
     return base.map((item, idx) => ({ item, refIndex: idx }) as FuseResult<SearchResult>);
   }, [fuse, query, recentResults, searchData]);
@@ -14726,7 +14389,7 @@ const Focus: FC = ({}) => {
 
   const focusResults = useMemo(() => {
     if (query.trim()) return fuse.search(query).slice(0, 20);
-    // Show all recent focus items without limit, or fallback to first 20 if no recent items
+
     const base = recentFocusItems.length > 0 ? recentFocusItems : focusItems.slice(0, 20);
     return base.map((item, idx) => ({ item, refIndex: idx }));
   }, [fuse, query, recentFocusItems, focusItems]);
@@ -15993,21 +15656,18 @@ const LayoutWrapper: FC = () => {
   );
 
   const customCollisionDetection = useCallback((args: any) => {
-    // Try pointer-based collision first (most accurate for drop zones)
     const pointerCollisions = pointerWithin(args);
 
     if (pointerCollisions.length > 0) {
       return pointerCollisions;
     }
 
-    // Fall back to rectangle intersection
     const rectCollisions = rectIntersection(args);
 
     if (rectCollisions.length > 0) {
       return rectCollisions;
     }
 
-    // Last resort: closest center (returns array of collisions)
     const centerCollisions = closestCenter(args);
 
     if (centerCollisions && centerCollisions.length > 0) {
@@ -16041,15 +15701,15 @@ const LayoutWrapper: FC = () => {
         onDragStart={(event) => {
           setActiveDragId(event.active.id as string);
           setActiveDragData(event.active.data.current);
-          // Set active interaction to make panels fade
+
           sketchpadCommands.setActiveInteraction("semio.sketchpad.drag", "dragging");
         }}
         onDragEnd={(event) => {
           setActiveDragId(null);
           setActiveDragData(null);
-          // Clear active interaction
+
           sketchpadCommands.setActiveInteraction("semio.sketchpad.drag", undefined);
-          // Dispatch custom event that apps can listen to
+
           const customEvent = new CustomEvent("design-drag-end", { detail: event });
           window.dispatchEvent(customEvent);
         }}
@@ -16214,11 +15874,6 @@ const SketchpadInteractionBridge: FC<{ children: React.ReactNode }> = ({ childre
   );
 };
 
-/**
- * Component that exposes React Router's navigate function to the global window object.
- * This enables navigation from MemoryRouter contexts (like GoldenLayout windows)
- * while still updating the browser URL properly.
- */
 const GlobalNavigationBridge: FC<{ children: React.ReactNode }> = ({ children }) => {
   const reactNavigate = useReactNavigate();
 

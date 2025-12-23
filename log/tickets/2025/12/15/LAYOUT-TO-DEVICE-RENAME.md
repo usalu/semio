@@ -1,27 +1,27 @@
 ---
 slug: LAYOUT-TO-DEVICE-RENAME
-summary: 'Rename layout to device in hooks, types, and enums'
+summary: "Rename layout to device in hooks, types, and enums"
 prompt: >-
   Rename layout in useLayout to device and useDevice, etc. All types enums etc.
   Not the Layout component.
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: '2025-12-16T17:06:07.957Z'
-commit: '0000000000000000000000000000000000000000'
+  created: "2025-12-16T17:06:07.957Z"
+commit: "0000000000000000000000000000000000000000"
 iterations:
   - prompt: >-
       Rename layout in useLayout to device and useDevice, etc. All types enums
       etc. Not the Layout component.
     date:
-      started: '2025-12-15T13:32:41.372Z'
+      started: "2025-12-15T13:32:41.372Z"
     model: claude-opus-4-5
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
   - prompt: >-
       FINISH Rename layout in useLayout to device and useDevice, etc. All types
       enums etc. Not the Layout component.
     date:
-      started: '2025-12-15T14:00:17.150Z'
+      started: "2025-12-15T14:00:17.150Z"
     model: claude-opus-4-5
     commit: 76900221ecf5cfb30a37d69fbb66abb3e0a0e45a
     files:

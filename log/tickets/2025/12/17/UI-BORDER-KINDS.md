@@ -9,8 +9,8 @@ prompt: >-
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: '2025-12-17T15:50:11.288Z'
-  finished: '2025-12-17T16:10:02.845Z'
+  created: "2025-12-17T15:50:11.288Z"
+  finished: "2025-12-17T16:10:02.845Z"
 commit: 7c4820638369104ae259b238d9240f08e429e67e
 model: gpt-5.2-codex
 iterations:
@@ -20,8 +20,8 @@ iterations:
       border-element (element borders use hover color) and border-window (window
       borders use current normal border).
     date:
-      started: '2025-12-17T15:51:12.049Z'
-      ended: '2025-12-17T16:09:50.461Z'
+      started: "2025-12-17T15:51:12.049Z"
+      ended: "2025-12-17T16:09:50.461Z"
     model: gpt-5.2-codex
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
     commit: 7c4820638369104ae259b238d9240f08e429e67e
@@ -104,6 +104,7 @@ lines:
   added: 76
   removed: 50
 ---
+
 # Previously
 
 - UI borders used a single border color token for both interactive elements and window frames.

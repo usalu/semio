@@ -1,22 +1,23 @@
 {
-  "timestamp": "2025-12-22T21:01:59.579Z",
+  "timestamp": "2025-12-22T22:00:16.944Z",
   "status": "error",
   "summary": {
     "filesScanned": 133,
-    "issues": 497,
+    "issues": 276,
     "byKind": {
       "comment": 2,
       "temporary_log": 3,
       "missing_license_header": 0,
       "invalid_header_format": 0,
+      "header_filepath_mismatch": 0,
       "extra_dev_docs": 0,
       "region_name_missing": 98,
-      "region_mismatch": 130,
-      "region_unclosed": 2,
+      "region_mismatch": 127,
+      "region_unclosed": 3,
       "region_duplicate_sibling": 43,
       "unreadable_file": 0,
-      "forbidden_import": 206,
-      "forbidden_terminology": 13
+      "forbidden_import": 0,
+      "forbidden_terminology": 0
     },
     "byLanguage": {
       "typescript": 122,
@@ -48,863 +49,503 @@
       "path": "js/js/.storybook/main.ts",
       "language": "typescript",
       "kind": "region_duplicate_sibling",
+      "line": 23,
+      "column": 1,
+      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
+      "excerpt": "// #region Header"
+    },
+    {
+      "path": "js/js/.storybook/main.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 42,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/main.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 42,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 23, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/preview.ts",
+      "language": "typescript",
+      "kind": "region_duplicate_sibling",
+      "line": 22,
+      "column": 1,
+      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
+      "excerpt": "// #region Header"
+    },
+    {
+      "path": "js/js/.storybook/preview.ts",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 41,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/preview.ts",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 41,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/Canvas.stories.tsx",
+      "language": "typescript",
+      "kind": "region_duplicate_sibling",
+      "line": 22,
+      "column": 1,
+      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
+      "excerpt": "// #region Header"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/Canvas.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 41,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/Canvas.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 41,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/Command.stories.tsx",
+      "language": "typescript",
+      "kind": "region_duplicate_sibling",
+      "line": 22,
+      "column": 1,
+      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
+      "excerpt": "// #region Header"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/Command.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 41,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/Command.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 41,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/Footer.stories.tsx",
+      "language": "typescript",
+      "kind": "region_duplicate_sibling",
+      "line": 22,
+      "column": 1,
+      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
+      "excerpt": "// #region Header"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/Footer.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 41,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/Footer.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 41,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/Layout.stories.tsx",
+      "language": "typescript",
+      "kind": "region_duplicate_sibling",
+      "line": 22,
+      "column": 1,
+      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
+      "excerpt": "// #region Header"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/Layout.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 41,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/Layout.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 41,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/Navbar.stories.tsx",
+      "language": "typescript",
+      "kind": "region_duplicate_sibling",
+      "line": 22,
+      "column": 1,
+      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
+      "excerpt": "// #region Header"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/Navbar.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 41,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/Navbar.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 41,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/Popover.stories.tsx",
+      "language": "typescript",
+      "kind": "region_duplicate_sibling",
+      "line": 22,
+      "column": 1,
+      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
+      "excerpt": "// #region Header"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/Popover.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 41,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/Popover.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 41,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Accordion.stories.tsx",
+      "language": "typescript",
+      "kind": "region_duplicate_sibling",
+      "line": 22,
+      "column": 1,
+      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
+      "excerpt": "// #region Header"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Accordion.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 41,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Accordion.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 41,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Band.stories.tsx",
+      "language": "typescript",
+      "kind": "region_duplicate_sibling",
+      "line": 22,
+      "column": 1,
+      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
+      "excerpt": "// #region Header"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Band.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 41,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Band.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 41,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Collapsible.stories.tsx",
+      "language": "typescript",
+      "kind": "region_duplicate_sibling",
+      "line": 22,
+      "column": 1,
+      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
+      "excerpt": "// #region Header"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Collapsible.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 41,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Collapsible.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 41,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Dialog.stories.tsx",
+      "language": "typescript",
+      "kind": "region_duplicate_sibling",
+      "line": 22,
+      "column": 1,
+      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
+      "excerpt": "// #region Header"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Dialog.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 41,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Dialog.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 41,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx",
+      "language": "typescript",
+      "kind": "region_duplicate_sibling",
+      "line": 22,
+      "column": 1,
+      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
+      "excerpt": "// #region Header"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 41,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 41,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Scrollable.stories.tsx",
+      "language": "typescript",
+      "kind": "region_duplicate_sibling",
+      "line": 22,
+      "column": 1,
+      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
+      "excerpt": "// #region Header"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Scrollable.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 41,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Scrollable.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 41,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Tabs.stories.tsx",
+      "language": "typescript",
+      "kind": "region_duplicate_sibling",
+      "line": 22,
+      "column": 1,
+      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
+      "excerpt": "// #region Header"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Tabs.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 41,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Tabs.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 41,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Tree.stories.tsx",
+      "language": "typescript",
+      "kind": "region_duplicate_sibling",
+      "line": 22,
+      "column": 1,
+      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
+      "excerpt": "// #region Header"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Tree.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 41,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/aggregation/Tree.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 41,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/display/Avatar.stories.tsx",
+      "language": "typescript",
+      "kind": "region_duplicate_sibling",
+      "line": 22,
+      "column": 1,
+      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
+      "excerpt": "// #region Header"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/display/Avatar.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 41,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/display/Avatar.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 41,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/display/HoverCard.stories.tsx",
+      "language": "typescript",
+      "kind": "region_duplicate_sibling",
+      "line": 22,
+      "column": 1,
+      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
+      "excerpt": "// #region Header"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/display/HoverCard.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
+      "line": 41,
+      "column": 1,
+      "message": "Endregion is missing a name",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/display/HoverCard.stories.tsx",
+      "language": "typescript",
+      "kind": "region_mismatch",
+      "line": 41,
+      "column": 1,
+      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
+      "excerpt": "// #endregion"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/display/Icons.stories.tsx",
+      "language": "typescript",
+      "kind": "region_duplicate_sibling",
+      "line": 22,
+      "column": 1,
+      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
+      "excerpt": "// #region Header"
+    },
+    {
+      "path": "js/js/.storybook/stories/elements/display/Icons.stories.tsx",
+      "language": "typescript",
+      "kind": "region_name_missing",
       "line": 24,
       "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/main.ts",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 43,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/main.ts",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 43,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 24, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/main.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 23,
-      "column": 31,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { createRequire } from \"node:module\";"
-    },
-    {
-      "path": "js/js/.storybook/main.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 45,
-      "column": 38,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import type { StorybookConfig } from \"@storybook/react-vite\";"
-    },
-    {
-      "path": "js/js/.storybook/main.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 46,
-      "column": 36,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import rehypeAutolinkHeadings from \"rehype-autolink-headings\";"
-    },
-    {
-      "path": "js/js/.storybook/main.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 47,
-      "column": 24,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import rehypeSlug from \"rehype-slug\";"
-    },
-    {
-      "path": "js/js/.storybook/main.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 48,
-      "column": 31,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import remarkFrontmatter from \"remark-frontmatter\";"
-    },
-    {
-      "path": "js/js/.storybook/main.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 49,
-      "column": 34,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import remarkMdxFrontmatter from \"remark-mdx-frontmatter\";"
-    },
-    {
-      "path": "js/js/.storybook/main.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 50,
-      "column": 23,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import remarkGfm from \"remark-gfm\";"
-    },
-    {
-      "path": "js/js/.storybook/main.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 52,
-      "column": 31,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { dirname, join } from \"path\";"
-    },
-    {
-      "path": "js/js/.storybook/main.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 122,
-      "column": 30,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "const mdx = await import(\"@mdx-js/rollup\");"
-    },
-    {
-      "path": "js/js/.storybook/preview.ts",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/preview.ts",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/preview.ts",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/preview.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 42,
-      "column": 30,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import type { Preview } from \"@storybook/react-vite\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Canvas.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Canvas.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Canvas.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Canvas.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 43,
-      "column": 37,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import type { Meta, StoryObj } from \"@storybook/react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Command.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Command.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Command.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Command.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 43,
-      "column": 37,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import type { Meta, StoryObj } from \"@storybook/react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Command.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 44,
-      "column": 55,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { Box, Circle, Cylinder, Settings, User } from \"lucide-react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Command.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 45,
-      "column": 26,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { useState } from \"react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Footer.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Footer.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Footer.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Footer.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 43,
-      "column": 37,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import type { Meta, StoryObj } from \"@storybook/react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Footer.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 44,
-      "column": 30,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { CheckCircle2 } from \"lucide-react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Layout.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Layout.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Layout.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Layout.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 43,
-      "column": 37,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import type { Meta, StoryObj } from \"@storybook/react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Layout.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 44,
-      "column": 38,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { Home, Settings, User } from \"lucide-react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Layout.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 45,
-      "column": 26,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { useState } from \"react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Navbar.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Navbar.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Navbar.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Navbar.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 43,
-      "column": 37,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import type { Meta, StoryObj } from \"@storybook/react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Navbar.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 44,
-      "column": 71,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { Bell, ChevronDown, Home, Menu, Search, Settings, User } from \"lucide-react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Popover.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Popover.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Popover.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Popover.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 43,
-      "column": 37,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import type { Meta, StoryObj } from \"@storybook/react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Popover.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 44,
-      "column": 26,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { Settings } from \"lucide-react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/Popover.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 45,
-      "column": 19,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import React from \"react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Accordion.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Accordion.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Accordion.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Accordion.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 43,
-      "column": 37,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import type { Meta, StoryObj } from \"@storybook/react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Band.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Band.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Band.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Band.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 43,
-      "column": 94,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { AddIcon, AwardIcon, DocumentIcon, FolderIcon, LayoutIcon, TypeIcon, UserIcon } from \"@semio/assets\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Band.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 44,
-      "column": 37,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import type { Meta, StoryObj } from \"@storybook/react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Collapsible.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Collapsible.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Collapsible.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Collapsible.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 43,
-      "column": 37,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import type { Meta, StoryObj } from \"@storybook/react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Collapsible.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 44,
-      "column": 34,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { Box, ChevronDown } from \"lucide-react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Collapsible.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 45,
-      "column": 26,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { useState } from \"react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Dialog.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Dialog.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Dialog.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Dialog.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 43,
-      "column": 37,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import type { Meta, StoryObj } from \"@storybook/react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Dialog.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 44,
-      "column": 26,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { useState } from \"react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 43,
-      "column": 37,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import type { Meta, StoryObj } from \"@storybook/react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Scrollable.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Scrollable.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Scrollable.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Scrollable.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 43,
-      "column": 37,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import type { Meta, StoryObj } from \"@storybook/react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Tabs.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Tabs.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Tabs.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Tabs.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 43,
-      "column": 37,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import type { Meta, StoryObj } from \"@storybook/react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Tree.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Tree.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Tree.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Tree.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 43,
-      "column": 37,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import type { Meta, StoryObj } from \"@storybook/react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/aggregation/Tree.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 44,
-      "column": 40,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { File, Folder, Settings } from \"lucide-react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/display/Avatar.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/display/Avatar.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/display/Avatar.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/display/Avatar.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 43,
-      "column": 37,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import type { Meta, StoryObj } from \"@storybook/react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/display/HoverCard.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/display/HoverCard.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
-      "message": "Endregion is missing a name",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/display/HoverCard.stories.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 41,
-      "column": 1,
-      "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
-      "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/display/HoverCard.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 43,
-      "column": 37,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import type { Meta, StoryObj } from \"@storybook/react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/display/HoverCard.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 44,
-      "column": 30,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { CalendarDays } from \"lucide-react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/display/Icons.stories.tsx",
-      "language": "typescript",
-      "kind": "region_duplicate_sibling",
-      "line": 22,
-      "column": 1,
-      "message": "Duplicate sibling region name \"Header\" (first occurrence at line 1)",
-      "excerpt": "// #region Header"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/display/Icons.stories.tsx",
-      "language": "typescript",
-      "kind": "region_name_missing",
-      "line": 41,
-      "column": 1,
       "message": "Endregion is missing a name",
       "excerpt": "// #endregion"
     },
@@ -912,19 +553,10 @@
       "path": "js/js/.storybook/stories/elements/display/Icons.stories.tsx",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 41,
+      "line": 24,
       "column": 1,
       "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
       "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/display/Icons.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 43,
-      "column": 37,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import type { Meta, StoryObj } from \"@storybook/react\";"
     },
     {
       "path": "js/js/.storybook/stories/elements/display/Tooltip.stories.tsx",
@@ -954,24 +586,6 @@
       "excerpt": "// #endregion"
     },
     {
-      "path": "js/js/.storybook/stories/elements/display/Tooltip.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 43,
-      "column": 37,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import type { Meta, StoryObj } from \"@storybook/react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/display/Tooltip.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 44,
-      "column": 40,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { Plus, Settings, Trash2 } from \"lucide-react\";"
-    },
-    {
       "path": "js/js/.storybook/stories/elements/input/ActionGroup.stories.tsx",
       "language": "typescript",
       "kind": "region_duplicate_sibling",
@@ -997,24 +611,6 @@
       "column": 1,
       "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
       "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/ActionGroup.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 43,
-      "column": 37,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import type { Meta, StoryObj } from \"@storybook/react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/ActionGroup.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 44,
-      "column": 46,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { Copy, Download, ExternalLink } from \"lucide-react\";"
     },
     {
       "path": "js/js/.storybook/stories/elements/input/Button.stories.tsx",
@@ -1044,33 +640,6 @@
       "excerpt": "// #endregion"
     },
     {
-      "path": "js/js/.storybook/stories/elements/input/Button.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 43,
-      "column": 37,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import type { Meta, StoryObj } from \"@storybook/react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/Button.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 44,
-      "column": 42,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { Box, List, Network, Plus } from \"lucide-react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/Button.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 45,
-      "column": 26,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { useState } from \"react\";"
-    },
-    {
       "path": "js/js/.storybook/stories/elements/input/ButtonGroup.stories.tsx",
       "language": "typescript",
       "kind": "region_duplicate_sibling",
@@ -1098,24 +667,6 @@
       "excerpt": "// #endregion"
     },
     {
-      "path": "js/js/.storybook/stories/elements/input/ButtonGroup.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 43,
-      "column": 37,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import type { Meta, StoryObj } from \"@storybook/react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/ButtonGroup.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 44,
-      "column": 36,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { Box, List, Network } from \"lucide-react\";"
-    },
-    {
       "path": "js/js/.storybook/stories/elements/input/Combobox.stories.tsx",
       "language": "typescript",
       "kind": "region_duplicate_sibling",
@@ -1141,24 +692,6 @@
       "column": 1,
       "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
       "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/Combobox.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 43,
-      "column": 37,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import type { Meta, StoryObj } from \"@storybook/react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/Combobox.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 44,
-      "column": 26,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { useState } from \"react\";"
     },
     {
       "path": "js/js/.storybook/stories/elements/input/Input.stories.tsx",
@@ -1188,15 +721,6 @@
       "excerpt": "// #endregion"
     },
     {
-      "path": "js/js/.storybook/stories/elements/input/Input.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 43,
-      "column": 37,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import type { Meta, StoryObj } from \"@storybook/react\";"
-    },
-    {
       "path": "js/js/.storybook/stories/elements/input/Select.stories.tsx",
       "language": "typescript",
       "kind": "region_duplicate_sibling",
@@ -1222,24 +746,6 @@
       "column": 1,
       "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
       "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/Select.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 43,
-      "column": 37,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import type { Meta, StoryObj } from \"@storybook/react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/Select.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 44,
-      "column": 48,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { Box, Circle, Cylinder, Hexagon } from \"lucide-react\";"
     },
     {
       "path": "js/js/.storybook/stories/elements/input/Slider.stories.tsx",
@@ -1269,24 +775,6 @@
       "excerpt": "// #endregion"
     },
     {
-      "path": "js/js/.storybook/stories/elements/input/Slider.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 43,
-      "column": 37,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import type { Meta, StoryObj } from \"@storybook/react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/Slider.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 44,
-      "column": 26,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { useState } from \"react\";"
-    },
-    {
       "path": "js/js/.storybook/stories/elements/input/Stepper.stories.tsx",
       "language": "typescript",
       "kind": "region_duplicate_sibling",
@@ -1312,24 +800,6 @@
       "column": 1,
       "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
       "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/Stepper.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 43,
-      "column": 37,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import type { Meta, StoryObj } from \"@storybook/react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/Stepper.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 44,
-      "column": 26,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { useState } from \"react\";"
     },
     {
       "path": "js/js/.storybook/stories/elements/input/Textarea.stories.tsx",
@@ -1359,15 +829,6 @@
       "excerpt": "// #endregion"
     },
     {
-      "path": "js/js/.storybook/stories/elements/input/Textarea.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 43,
-      "column": 37,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import type { Meta, StoryObj } from \"@storybook/react\";"
-    },
-    {
       "path": "js/js/.storybook/stories/elements/input/Toggle.stories.tsx",
       "language": "typescript",
       "kind": "region_duplicate_sibling",
@@ -1393,24 +854,6 @@
       "column": 1,
       "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
       "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/Toggle.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 43,
-      "column": 37,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import type { Meta, StoryObj } from \"@storybook/react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/Toggle.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 44,
-      "column": 58,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { Box, List, Lock, Network, Plus, Settings } from \"lucide-react\";"
     },
     {
       "path": "js/js/.storybook/stories/elements/input/ToggleGroup.stories.tsx",
@@ -1440,24 +883,6 @@
       "excerpt": "// #endregion"
     },
     {
-      "path": "js/js/.storybook/stories/elements/input/ToggleGroup.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 43,
-      "column": 37,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import type { Meta, StoryObj } from \"@storybook/react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/input/ToggleGroup.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 44,
-      "column": 58,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { Box, List, Lock, Network, Plus, Settings } from \"lucide-react\";"
-    },
-    {
       "path": "js/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx",
       "language": "typescript",
       "kind": "region_duplicate_sibling",
@@ -1483,24 +908,6 @@
       "column": 1,
       "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
       "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 43,
-      "column": 37,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import type { Meta, StoryObj } from \"@storybook/react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 44,
-      "column": 22,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { Home } from \"lucide-react\";"
     },
     {
       "path": "js/js/.storybook/stories/elements/window/Table.stories.tsx",
@@ -1530,60 +937,6 @@
       "excerpt": "// #endregion"
     },
     {
-      "path": "js/js/.storybook/stories/elements/window/Table.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 43,
-      "column": 37,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import type { Meta, StoryObj } from \"@storybook/react\";"
-    },
-    {
-      "path": "js/js/.storybook/stories/elements/window/Table.stories.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 44,
-      "column": 49,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { FileCode, FileImage, FolderIcon } from \"lucide-react\";"
-    },
-    {
-      "path": "js/js/.storybook/vitest.setup.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 22,
-      "column": 39,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { setProjectAnnotations } from \"@storybook/react-vite\";"
-    },
-    {
-      "path": "js/js/.storybook/vitest.setup.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 23,
-      "column": 27,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { beforeAll } from \"vitest\";"
-    },
-    {
-      "path": "js/js/.storybook/withLevel.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 22,
-      "column": 32,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import type { Decorator } from \"@storybook/react\";"
-    },
-    {
-      "path": "js/js/.storybook/withLevel.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 23,
-      "column": 19,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import React from \"react\";"
-    },
-    {
       "path": "js/js/.storybook/withTheme.tsx",
       "language": "typescript",
       "kind": "region_duplicate_sibling",
@@ -1609,33 +962,6 @@
       "column": 1,
       "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
       "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/.storybook/withTheme.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 42,
-      "column": 32,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import type { Decorator } from \"@storybook/react\";"
-    },
-    {
-      "path": "js/js/.storybook/withTheme.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 43,
-      "column": 27,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { useEffect } from \"react\";"
-    },
-    {
-      "path": "js/js/dev.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 22,
-      "column": 23,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { spawn } from \"child_process\";"
     },
     {
       "path": "js/js/eslint.config.ts",
@@ -1656,33 +982,6 @@
       "excerpt": "// #endregion"
     },
     {
-      "path": "js/js/i18n.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 22,
-      "column": 18,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import i18n from \"i18next\";"
-    },
-    {
-      "path": "js/js/i18n.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 23,
-      "column": 30,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import LanguageDetector from \"i18next-browser-languagedetector\";"
-    },
-    {
-      "path": "js/js/i18n.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 24,
-      "column": 72,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { initReactI18next, useTranslation as useI18nTranslation } from \"react-i18next\";"
-    },
-    {
       "path": "js/js/index.ts",
       "language": "typescript",
       "kind": "region_duplicate_sibling",
@@ -1708,15 +1007,6 @@
       "column": 1,
       "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
       "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/playwright.config.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 1,
-      "column": 39,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { defineConfig, devices } from \"@playwright/test\";"
     },
     {
       "path": "js/js/postcss.config.ts",
@@ -1737,15 +1027,6 @@
       "excerpt": "// #endregion"
     },
     {
-      "path": "js/js/postcss.config.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 21,
-      "column": 24,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { Config } from \"postcss-load-config\";"
-    },
-    {
       "path": "js/js/semio.test.ts",
       "language": "typescript",
       "kind": "region_duplicate_sibling",
@@ -1771,219 +1052,66 @@
       "column": 1,
       "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
       "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/semio.test.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 43,
-      "column": 132,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted } from \"@semio/assets\";"
-    },
-    {
-      "path": "js/js/semio.test.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 44,
-      "column": 38,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { describe, expect, it } from \"vitest\";"
     },
     {
       "path": "js/js/semio.ts",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 417,
+      "line": 408,
       "column": 1,
-      "message": "Region mismatch: opened \"Coord (weak entity)\" at line 378, closed \"Coord\"",
+      "message": "Region mismatch: opened \"Coord (weak entity)\" at line 370, closed \"Coord\"",
       "excerpt": "// #endregion Coord"
     },
     {
       "path": "js/js/semio.ts",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 458,
+      "line": 448,
       "column": 1,
-      "message": "Region mismatch: opened \"Vec (weak entity)\" at line 419, closed \"Vec\"",
+      "message": "Region mismatch: opened \"Vec (weak entity)\" at line 410, closed \"Vec\"",
       "excerpt": "// #endregion Vec"
     },
     {
       "path": "js/js/semio.ts",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 509,
+      "line": 498,
       "column": 1,
-      "message": "Region mismatch: opened \"Point (weak entity)\" at line 460, closed \"Point\"",
+      "message": "Region mismatch: opened \"Point (weak entity)\" at line 450, closed \"Point\"",
       "excerpt": "// #endregion Point"
     },
     {
       "path": "js/js/semio.ts",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 560,
+      "line": 548,
       "column": 1,
-      "message": "Region mismatch: opened \"Vector (weak entity)\" at line 511, closed \"Vector\"",
+      "message": "Region mismatch: opened \"Vector (weak entity)\" at line 500, closed \"Vector\"",
       "excerpt": "// #endregion Vector"
     },
     {
       "path": "js/js/semio.ts",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 683,
+      "line": 663,
       "column": 1,
-      "message": "Region mismatch: opened \"Plane (weak entity)\" at line 562, closed \"Plane\"",
+      "message": "Region mismatch: opened \"Plane (weak entity)\" at line 550, closed \"Plane\"",
       "excerpt": "// #endregion Plane"
     },
     {
       "path": "js/js/semio.ts",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 734,
+      "line": 713,
       "column": 1,
-      "message": "Region mismatch: opened \"Camera (weak entity)\" at line 685, closed \"Camera\"",
+      "message": "Region mismatch: opened \"Camera (weak entity)\" at line 665, closed \"Camera\"",
       "excerpt": "// #endregion Camera"
-    },
-    {
-      "path": "js/js/semio.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 29,
-      "column": 39,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { default as adjectives } from \"@semio/assets/lists/adjectives.json\";"
-    },
-    {
-      "path": "js/js/semio.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 30,
-      "column": 36,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { default as animals } from \"@semio/assets/lists/animals.json\";"
-    },
-    {
-      "path": "js/js/semio.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 31,
-      "column": 34,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { ClassValue, clsx } from \"clsx\";"
-    },
-    {
-      "path": "js/js/semio.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 32,
-      "column": 23,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import cytoscape from \"cytoscape\";"
-    },
-    {
-      "path": "js/js/semio.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 33,
-      "column": 25,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { twMerge } from \"tailwind-merge\";"
-    },
-    {
-      "path": "js/js/semio.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 34,
-      "column": 24,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import * as THREE from \"three\";"
-    },
-    {
-      "path": "js/js/semio.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 35,
-      "column": 30,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { v7 as uuidv7 } from \"uuid\";"
-    },
-    {
-      "path": "js/js/semio.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 36,
-      "column": 19,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { z } from \"zod\";"
-    },
-    {
-      "path": "js/js/semio.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 5054,
-      "column": 37,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "const initSqlJs = (await import(\"sql.js\")).default;"
-    },
-    {
-      "path": "js/js/semio.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 5058,
-      "column": 35,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "const path = await import(\"path\");"
-    },
-    {
-      "path": "js/js/semio.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 5059,
-      "column": 34,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "const url = await import(\"url\");"
-    },
-    {
-      "path": "js/js/semio.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 5082,
-      "column": 31,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "const JSZip = (await import(\"jszip\")).default;"
-    },
-    {
-      "path": "js/js/semio.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 5139,
-      "column": 31,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "const JSZip = (await import(\"jszip\")).default;"
-    },
-    {
-      "path": "js/js/site.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 22,
-      "column": 27,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { Sketchpad } from \"@semio/js\";"
-    },
-    {
-      "path": "js/js/site.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 23,
-      "column": 28,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { createRoot } from \"react-dom/client\";"
     },
     {
       "path": "js/js/sketchpad.test.ts",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 841,
+      "line": 809,
       "column": 1,
       "message": "Endregion without matching region",
       "excerpt": "// #endregion Toolbar and Artifact Filter Toggles"
@@ -1992,16 +1120,16 @@
       "path": "js/js/sketchpad.test.ts",
       "language": "typescript",
       "kind": "region_duplicate_sibling",
-      "line": 876,
+      "line": 844,
       "column": 1,
-      "message": "Duplicate sibling region name \"Selection State\" (first occurrence at line 664)",
+      "message": "Duplicate sibling region name \"Selection State\" (first occurrence at line 632)",
       "excerpt": "// #region Selection State"
     },
     {
       "path": "js/js/sketchpad.test.ts",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 1692,
+      "line": 1651,
       "column": 1,
       "message": "Endregion without matching region",
       "excerpt": "// #endregion Flat Planes Verification"
@@ -2010,271 +1138,37 @@
       "path": "js/js/sketchpad.test.ts",
       "language": "typescript",
       "kind": "region_duplicate_sibling",
-      "line": 1694,
+      "line": 1653,
       "column": 1,
-      "message": "Duplicate sibling region name \"Selection State\" (first occurrence at line 664)",
+      "message": "Duplicate sibling region name \"Selection State\" (first occurrence at line 632)",
       "excerpt": "// #region Selection State"
-    },
-    {
-      "path": "js/js/sketchpad.test.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 22,
-      "column": 45,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { expect, Locator, Page, test } from \"@playwright/test\";"
-    },
-    {
-      "path": "js/js/sketchpad.test.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 23,
-      "column": 18,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import path from \"node:path\";"
-    },
-    {
-      "path": "js/js/sketchpad.test.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 24,
-      "column": 31,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { fileURLToPath } from \"node:url\";"
-    },
-    {
-      "path": "js/js/sketchpad.test.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 25,
-      "column": 31,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import MetabolismKitData from \"../../assets/semio/kit_metabolism.json\" with { type: \"json\" };"
     },
     {
       "path": "js/js/sketchpad/Design.tsx",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 2763,
+      "line": 2754,
       "column": 1,
       "message": "Region mismatch: opened \"Imports\" at line 61, closed \"Store\"",
       "excerpt": "// #endregion Store"
     },
     {
-      "path": "js/js/sketchpad/Design.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 28,
-      "column": 29,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { useSelector } from \"@xstate/react\";"
-    },
-    {
-      "path": "js/js/sketchpad/Design.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 63,
-      "column": 44,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { DragEndEvent, useDraggable } from \"@dnd-kit/core\";"
-    },
-    {
-      "path": "js/js/sketchpad/Design.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 64,
-      "column": 27,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { arrayMove } from \"@dnd-kit/sortable\";"
-    },
-    {
-      "path": "js/js/sketchpad/Design.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 65,
-      "column": 54,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { Edges, Line, Select, useFBX, useGLTF } from \"@react-three/drei\";"
-    },
-    {
-      "path": "js/js/sketchpad/Design.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 66,
-      "column": 39,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { ThreeEvent, useLoader } from \"@react-three/fiber\";"
-    },
-    {
-      "path": "js/js/sketchpad/Design.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 67,
-      "column": 229,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { AddIcon, AwardIcon, CodeIcon, ConnectionIcon, DiagramIcon, DisconnectIcon, HandIcon, MonitorIcon, MoonIcon, MousePointerIcon, RemoveIcon, SceneIcon, Se..."
-    },
-    {
-      "path": "js/js/sketchpad/Design.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 68,
-      "column": 171,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import React, { createContext, FC, memo, ReactNode, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalSto..."
-    },
-    {
-      "path": "js/js/sketchpad/Design.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 69,
-      "column": 28,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { useHotkeys } from \"react-hotkeys-hook\";"
-    },
-    {
-      "path": "js/js/sketchpad/Design.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 70,
-      "column": 32,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { useTranslation } from \"react-i18next\";"
-    },
-    {
-      "path": "js/js/sketchpad/Design.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 71,
-      "column": 24,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import * as THREE from \"three\";"
-    },
-    {
-      "path": "js/js/sketchpad/Design.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 72,
-      "column": 27,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { OBJLoader } from \"three/addons/loaders/OBJLoader.js\";"
-    },
-    {
-      "path": "js/js/sketchpad/Design.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 73,
-      "column": 26,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { useLabel } from \"../i18n\";"
-    },
-    {
       "path": "js/js/sketchpad/Docs.tsx",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 668,
+      "line": 645,
       "column": 1,
-      "message": "Region mismatch: opened \"Store\" at line 660, closed \"Registry\"",
+      "message": "Region mismatch: opened \"Store\" at line 637, closed \"Registry\"",
       "excerpt": "// #endregion Registry"
     },
     {
       "path": "js/js/sketchpad/Docs.tsx",
       "language": "typescript",
       "kind": "region_duplicate_sibling",
-      "line": 713,
+      "line": 690,
       "column": 1,
-      "message": "Duplicate sibling region name \"Store\" (first occurrence at line 660)",
+      "message": "Duplicate sibling region name \"Store\" (first occurrence at line 637)",
       "excerpt": "// #region Store"
-    },
-    {
-      "path": "js/js/sketchpad/Docs.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 24,
-      "column": 48,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { MDXProvider as BaseMDXProvider } from \"@mdx-js/react\";"
-    },
-    {
-      "path": "js/js/sketchpad/Docs.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 25,
-      "column": 135,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { FC, ReactNode, Suspense, createContext, lazy, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from \"react\";"
-    },
-    {
-      "path": "js/js/sketchpad/Docs.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 26,
-      "column": 53,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { useLocation, useNavigate, useParams } from \"react-router\";"
-    },
-    {
-      "path": "js/js/sketchpad/Docs.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 27,
-      "column": 26,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { useLabel } from \"../i18n\";"
-    },
-    {
-      "path": "js/js/sketchpad/Feedback.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 24,
-      "column": 53,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { CheckIcon, ChatIcon as FeedbackIcon } from \"@semio/assets\";"
-    },
-    {
-      "path": "js/js/sketchpad/Feedback.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 25,
-      "column": 29,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { useSelector } from \"@xstate/react\";"
-    },
-    {
-      "path": "js/js/sketchpad/Feedback.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 26,
-      "column": 59,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { FC, useCallback, useLayoutEffect, useMemo } from \"react\";"
-    },
-    {
-      "path": "js/js/sketchpad/Feedback.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 27,
-      "column": 32,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { useTranslation } from \"react-i18next\";"
-    },
-    {
-      "path": "js/js/sketchpad/Feedback.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 28,
-      "column": 29,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { useNavigate } from \"react-router\";"
-    },
-    {
-      "path": "js/js/sketchpad/Feedback.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 29,
-      "column": 26,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { useLabel } from \"../i18n\";"
     },
     {
       "path": "js/js/sketchpad/Home.tsx",
@@ -2284,78 +1178,6 @@
       "column": 1,
       "message": "Region mismatch: opened \"Hooks (XState-based)\" at line 228, closed \"Hooks\"",
       "excerpt": "// #endregion Hooks"
-    },
-    {
-      "path": "js/js/sketchpad/Home.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 43,
-      "column": 8,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "} from \"@semio/assets\";"
-    },
-    {
-      "path": "js/js/sketchpad/Home.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 44,
-      "column": 37,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { formatDistanceToNow } from \"date-fns\";"
-    },
-    {
-      "path": "js/js/sketchpad/Home.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 45,
-      "column": 26,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { de, enUS } from \"date-fns/locale\";"
-    },
-    {
-      "path": "js/js/sketchpad/Home.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 46,
-      "column": 84,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import React, { FC, memo, useCallback, useEffect, useMemo, useRef, useState } from \"react\";"
-    },
-    {
-      "path": "js/js/sketchpad/Home.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 47,
-      "column": 32,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { useTranslation } from \"react-i18next\";"
-    },
-    {
-      "path": "js/js/sketchpad/Home.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 48,
-      "column": 46,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { useNavigate, useSearchParams } from \"react-router\";"
-    },
-    {
-      "path": "js/js/sketchpad/Home.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 49,
-      "column": 32,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import i18n, { useLabel } from \"../i18n\";"
-    },
-    {
-      "path": "js/js/sketchpad/Home.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 51,
-      "column": 30,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { docsRegistry } from \"./Docs\";"
     },
     {
       "path": "js/js/sketchpad/Kit.tsx",
@@ -2374,114 +1196,6 @@
       "column": 1,
       "message": "Endregion without matching region",
       "excerpt": "// #endregion Internal State Management"
-    },
-    {
-      "path": "js/js/sketchpad/Kit.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 24,
-      "column": 75,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { DragEndEvent, DragOverEvent, DragStartEvent, useDroppable } from \"@dnd-kit/core\";"
-    },
-    {
-      "path": "js/js/sketchpad/Kit.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 55,
-      "column": 8,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "} from \"@semio/assets\";"
-    },
-    {
-      "path": "js/js/sketchpad/Kit.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 56,
-      "column": 29,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { useSelector } from \"@xstate/react\";"
-    },
-    {
-      "path": "js/js/sketchpad/Kit.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 57,
-      "column": 140,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, Simulation, SimulationLinkDatum, SimulationNodeDatum } from \"d3-force\";"
-    },
-    {
-      "path": "js/js/sketchpad/Kit.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 58,
-      "column": 37,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { formatDistanceToNow } from \"date-fns\";"
-    },
-    {
-      "path": "js/js/sketchpad/Kit.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 59,
-      "column": 26,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { de, enUS } from \"date-fns/locale\";"
-    },
-    {
-      "path": "js/js/sketchpad/Kit.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 60,
-      "column": 101,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import React, { FC, memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from \"react\";"
-    },
-    {
-      "path": "js/js/sketchpad/Kit.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 61,
-      "column": 32,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { useTranslation } from \"react-i18next\";"
-    },
-    {
-      "path": "js/js/sketchpad/Kit.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 62,
-      "column": 57,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { useNavigate, useParams, useSearchParams } from \"react-router\";"
-    },
-    {
-      "path": "js/js/sketchpad/Kit.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 63,
-      "column": 24,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { Camera } from \"three\";"
-    },
-    {
-      "path": "js/js/sketchpad/Kit.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 64,
-      "column": 20,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import * as Y from \"yjs\";"
-    },
-    {
-      "path": "js/js/sketchpad/Kit.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 65,
-      "column": 32,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import i18n, { useLabel } from \"../i18n\";"
     },
     {
       "path": "js/js/sketchpad/Quality.tsx",
@@ -2559,7 +1273,7 @@
       "path": "js/js/sketchpad/Quality.tsx",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 1049,
+      "line": 1045,
       "column": 1,
       "message": "Endregion is missing a name",
       "excerpt": "// #endregion"
@@ -2568,7 +1282,7 @@
       "path": "js/js/sketchpad/Quality.tsx",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 1049,
+      "line": 1045,
       "column": 1,
       "message": "Region mismatch: opened \"Store\" at line 598, closed \"\"",
       "excerpt": "// #endregion"
@@ -2577,7 +1291,7 @@
       "path": "js/js/sketchpad/Quality.tsx",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 1599,
+      "line": 1595,
       "column": 1,
       "message": "Endregion is missing a name",
       "excerpt": "// #endregion"
@@ -2586,16 +1300,16 @@
       "path": "js/js/sketchpad/Quality.tsx",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 1599,
+      "line": 1595,
       "column": 1,
-      "message": "Region mismatch: opened \"Components\" at line 1051, closed \"\"",
+      "message": "Region mismatch: opened \"Components\" at line 1047, closed \"\"",
       "excerpt": "// #endregion"
     },
     {
       "path": "js/js/sketchpad/Quality.tsx",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 1899,
+      "line": 1894,
       "column": 1,
       "message": "Endregion is missing a name",
       "excerpt": "// #endregion"
@@ -2604,16 +1318,16 @@
       "path": "js/js/sketchpad/Quality.tsx",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 1899,
+      "line": 1894,
       "column": 1,
-      "message": "Region mismatch: opened \"App\" at line 1601, closed \"\"",
+      "message": "Region mismatch: opened \"App\" at line 1597, closed \"\"",
       "excerpt": "// #endregion"
     },
     {
       "path": "js/js/sketchpad/Quality.tsx",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 1935,
+      "line": 1930,
       "column": 1,
       "message": "Endregion is missing a name",
       "excerpt": "// #endregion"
@@ -2622,64 +1336,10 @@
       "path": "js/js/sketchpad/Quality.tsx",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 1935,
+      "line": 1930,
       "column": 1,
-      "message": "Region mismatch: opened \"Config\" at line 1901, closed \"\"",
+      "message": "Region mismatch: opened \"Config\" at line 1896, closed \"\"",
       "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/sketchpad/Quality.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 24,
-      "column": 58,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { DragEndEvent, useDraggable, useDroppable } from \"@dnd-kit/core\";"
-    },
-    {
-      "path": "js/js/sketchpad/Quality.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 25,
-      "column": 121,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { AwardIcon, CodeIcon, HandIcon, MonitorIcon, MoonIcon, MousePointerIcon, SunIcon, TutorialIcon, UserIcon } from \"@semio/assets\";"
-    },
-    {
-      "path": "js/js/sketchpad/Quality.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 26,
-      "column": 101,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import React, { createContext, FC, memo, useCallback, useContext, useEffect, useMemo, useRef } from \"react\";"
-    },
-    {
-      "path": "js/js/sketchpad/Quality.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 27,
-      "column": 28,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { useHotkeys } from \"react-hotkeys-hook\";"
-    },
-    {
-      "path": "js/js/sketchpad/Quality.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 28,
-      "column": 32,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { useTranslation } from \"react-i18next\";"
-    },
-    {
-      "path": "js/js/sketchpad/Quality.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 29,
-      "column": 26,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { useLabel } from \"../i18n\";"
     },
     {
       "path": "js/js/sketchpad/Sketchpad.tsx",
@@ -2703,25 +1363,25 @@
       "path": "js/js/sketchpad/Sketchpad.tsx",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 1256,
+      "line": 1250,
       "column": 1,
-      "message": "Region mismatch: opened \"Local File Provider (IndexedDB)\" at line 1161, closed \"Local File Provider\"",
+      "message": "Region mismatch: opened \"Local File Provider (IndexedDB)\" at line 1156, closed \"Local File Provider\"",
       "excerpt": "// #endregion Local File Provider"
     },
     {
       "path": "js/js/sketchpad/Sketchpad.tsx",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 1488,
+      "line": 1458,
       "column": 1,
-      "message": "Region mismatch: opened \"Kits\" at line 1412, closed \"Attribute\"",
+      "message": "Region mismatch: opened \"Kits\" at line 1382, closed \"Attribute\"",
       "excerpt": "// #endregion Attribute"
     },
     {
       "path": "js/js/sketchpad/Sketchpad.tsx",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 7692,
+      "line": 7607,
       "column": 1,
       "message": "Endregion without matching region",
       "excerpt": "// #endregion Store"
@@ -2730,244 +1390,37 @@
       "path": "js/js/sketchpad/Sketchpad.tsx",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 12670,
+      "line": 12361,
       "column": 1,
-      "message": "Region mismatch: opened \"Sketchpad\" at line 9910, closed \"Store\"",
+      "message": "Region mismatch: opened \"Sketchpad\" at line 9710, closed \"Store\"",
       "excerpt": "// #endregion Store"
     },
     {
       "path": "js/js/sketchpad/Sketchpad.tsx",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 13088,
+      "line": 12772,
       "column": 1,
-      "message": "Region mismatch: opened \"Navbar\" at line 12974, closed \"Panel Sections\"",
+      "message": "Region mismatch: opened \"Navbar\" at line 12660, closed \"Panel Sections\"",
       "excerpt": "// #endregion Panel Sections"
     },
     {
       "path": "js/js/sketchpad/Sketchpad.tsx",
       "language": "typescript",
       "kind": "region_duplicate_sibling",
-      "line": 15594,
+      "line": 15300,
       "column": 1,
-      "message": "Duplicate sibling region name \"Sketchpad\" (first occurrence at line 9910)",
+      "message": "Duplicate sibling region name \"Sketchpad\" (first occurrence at line 9710)",
       "excerpt": "// #region Sketchpad"
     },
     {
       "path": "js/js/sketchpad/Sketchpad.tsx",
       "language": "typescript",
       "kind": "temporary_log",
-      "line": 9271,
+      "line": 9088,
       "column": 9,
       "message": "Temporary [DEBUG] console log found",
       "excerpt": "console.log(`[DEBUG][Machine] ${type} → ${stateValue}`, hasParams ? params : \"\");"
-    },
-    {
-      "path": "js/js/sketchpad/Sketchpad.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 24,
-      "column": 127,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { closestCenter, DndContext, DragOverlay, PointerSensor, pointerWithin, rectIntersection, useSensor, useSensors } from \"@dnd-kit/core\";"
-    },
-    {
-      "path": "js/js/sketchpad/Sketchpad.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 44,
-      "column": 8,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "} from \"@semio/assets\";"
-    },
-    {
-      "path": "js/js/sketchpad/Sketchpad.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 45,
-      "column": 29,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { useSelector } from \"@xstate/react\";"
-    },
-    {
-      "path": "js/js/sketchpad/Sketchpad.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 46,
-      "column": 34,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import Fuse, { FuseResult } from \"fuse.js\";"
-    },
-    {
-      "path": "js/js/sketchpad/Sketchpad.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 47,
-      "column": 153,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import React, { ComponentType, createContext, FC, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from \"react\";"
-    },
-    {
-      "path": "js/js/sketchpad/Sketchpad.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 48,
-      "column": 30,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { createPortal } from \"react-dom\";"
-    },
-    {
-      "path": "js/js/sketchpad/Sketchpad.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 49,
-      "column": 28,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { createRoot } from \"react-dom/client\";"
-    },
-    {
-      "path": "js/js/sketchpad/Sketchpad.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 50,
-      "column": 47,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { useHotkeys as useReactHotkeys } from \"react-hotkeys-hook\";"
-    },
-    {
-      "path": "js/js/sketchpad/Sketchpad.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 51,
-      "column": 54,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { useTranslation as useI18nTranslation } from \"react-i18next\";"
-    },
-    {
-      "path": "js/js/sketchpad/Sketchpad.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 52,
-      "column": 142,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { BrowserRouter, MemoryRouter, Outlet, Route, Routes, useLocation, useParams, useNavigate as useReactNavigate, useSearchParams } from \"react-router\";"
-    },
-    {
-      "path": "js/js/sketchpad/Sketchpad.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 53,
-      "column": 38,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { IndexeddbPersistence } from \"y-indexeddb\";"
-    },
-    {
-      "path": "js/js/sketchpad/Sketchpad.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 54,
-      "column": 20,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import * as Y from \"yjs\";"
-    },
-    {
-      "path": "js/js/sketchpad/Sketchpad.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 55,
-      "column": 43,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import i18n, { useHotkey, useLabel } from \"../i18n\";"
-    },
-    {
-      "path": "js/js/sketchpad/Sketchpad.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 248,
-      "column": 82,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { Tutorial, TutorialProvider, TutorialStore, useAvailableTutorials } from \"./Tutorials\";"
-    },
-    {
-      "path": "js/js/sketchpad/Sketchpad.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 10631,
-      "column": 14,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import(\"./Design\").then((m) => {"
-    },
-    {
-      "path": "js/js/sketchpad/Sketchpad.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 10634,
-      "column": 14,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import(\"./Home\").then((m) => {"
-    },
-    {
-      "path": "js/js/sketchpad/Sketchpad.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 10637,
-      "column": 14,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import(\"./Kit\").then((m) => {"
-    },
-    {
-      "path": "js/js/sketchpad/Sketchpad.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 10640,
-      "column": 14,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import(\"./Type\").then((m) => {"
-    },
-    {
-      "path": "js/js/sketchpad/Sketchpad.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 10643,
-      "column": 14,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import(\"./Quality\").then((m) => {"
-    },
-    {
-      "path": "js/js/sketchpad/Sketchpad.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 10940,
-      "column": 35,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "const JSZip = (await import(\"jszip\")).default;"
-    },
-    {
-      "path": "js/js/sketchpad/Sketchpad.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 12868,
-      "column": 33,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "const module = await import(`./apps/${appId}/panels.ts`);"
-    },
-    {
-      "path": "js/js/sketchpad/Sketchpad.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 12944,
-      "column": 85,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { ActorRefFrom, AnyActorRef, assign, createActor, setup, SnapshotFrom } from \"xstate\";"
-    },
-    {
-      "path": "js/js/sketchpad/Sketchpad.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 15139,
-      "column": 49,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "const goldenLayoutModule = await import(\"golden-layout\");"
     },
     {
       "path": "js/js/sketchpad/Tutorials.tsx",
@@ -3222,28 +1675,10 @@
       "excerpt": "// #endregion"
     },
     {
-      "path": "js/js/sketchpad/Tutorials.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 24,
-      "column": 101,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { CloseIcon, PauseIcon, PlayIcon, RecordIcon, SkipBackIcon, SkipForwardIcon, StopIcon } from \"@semio/assets\";"
-    },
-    {
-      "path": "js/js/sketchpad/Tutorials.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 25,
-      "column": 92,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { createContext, FC, ReactNode, useCallback, useContext, useEffect, useState } from \"react\";"
-    },
-    {
       "path": "js/js/sketchpad/Type.tsx",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 961,
+      "line": 957,
       "column": 1,
       "message": "Region mismatch: opened \"XState Hooks\" at line 455, closed \"Internal State Management\"",
       "excerpt": "// #endregion Internal State Management"
@@ -3252,7 +1687,7 @@
       "path": "js/js/sketchpad/Type.tsx",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 1763,
+      "line": 1709,
       "column": 1,
       "message": "Endregion without matching region",
       "excerpt": "// #endregion Windows"
@@ -3261,100 +1696,10 @@
       "path": "js/js/sketchpad/Type.tsx",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 3088,
+      "line": 3031,
       "column": 1,
       "message": "Endregion without matching region",
       "excerpt": "// #endregion Canvas"
-    },
-    {
-      "path": "js/js/sketchpad/Type.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 24,
-      "column": 27,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { arrayMove } from \"@dnd-kit/sortable\";"
-    },
-    {
-      "path": "js/js/sketchpad/Type.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 25,
-      "column": 47,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { Line, Sphere, useFBX, useGLTF } from \"@react-three/drei\";"
-    },
-    {
-      "path": "js/js/sketchpad/Type.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 26,
-      "column": 39,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { ThreeEvent, useLoader } from \"@react-three/fiber\";"
-    },
-    {
-      "path": "js/js/sketchpad/Type.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 27,
-      "column": 29,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { useSelector } from \"@xstate/react\";"
-    },
-    {
-      "path": "js/js/sketchpad/Type.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 28,
-      "column": 132,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import React, { createContext, FC, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from \"react\";"
-    },
-    {
-      "path": "js/js/sketchpad/Type.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 29,
-      "column": 24,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import * as THREE from \"three\";"
-    },
-    {
-      "path": "js/js/sketchpad/Type.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 30,
-      "column": 27,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { OBJLoader } from \"three/addons/loaders/OBJLoader.js\";"
-    },
-    {
-      "path": "js/js/sketchpad/Type.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 31,
-      "column": 26,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { useLabel } from \"../i18n\";"
-    },
-    {
-      "path": "js/js/sketchpad/Type.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 82,
-      "column": 48,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "const KitSectionLazy = React.lazy(() => import(\"./Kit\").then((module) => ({ default: module.KitSection })));"
-    },
-    {
-      "path": "js/js/sketchpad/Type.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 84,
-      "column": 179,
-      "message": "Imports must target elements.tsx, Sketchpad.tsx, semio.ts, or shared.ts",
-      "excerpt": "import { AddIcon, AwardIcon, CheckIcon, CodeIcon, HandIcon, MonitorIcon, MoonIcon, MousePointerIcon, PortIcon, RemoveIcon, SelectToolIcon, SunIcon, TutorialIcon..."
     },
     {
       "path": "js/js/sketchpad/elements.tsx",
@@ -3369,208 +1714,55 @@
       "path": "js/js/sketchpad/elements.tsx",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 484,
+      "line": 482,
       "column": 1,
-      "message": "Region mismatch: opened \"Footer\" at line 358, closed \"Root Components\"",
+      "message": "Region mismatch: opened \"Footer\" at line 356, closed \"Root Components\"",
       "excerpt": "// #endregion Root Components"
     },
     {
       "path": "js/js/sketchpad/elements.tsx",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 759,
+      "line": 757,
       "column": 1,
-      "message": "Region mismatch: opened \"Display Components\" at line 719, closed \"Tooltip\"",
+      "message": "Region mismatch: opened \"Display Components\" at line 717, closed \"Tooltip\"",
       "excerpt": "// #endregion Tooltip"
     },
     {
       "path": "js/js/sketchpad/elements.tsx",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 1325,
+      "line": 1488,
       "column": 1,
-      "message": "Region mismatch: opened \"ActionGroup\" at line 1143, closed \"ActionGroupup\"",
-      "excerpt": "// #endregion ActionGroupup"
-    },
-    {
-      "path": "js/js/sketchpad/elements.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 1490,
-      "column": 1,
-      "message": "Region mismatch: opened \"Input Components\" at line 1141, closed \"ButtonGroup\"",
+      "message": "Region mismatch: opened \"Input Components\" at line 1139, closed \"ButtonGroup\"",
       "excerpt": "// #endregion ButtonGroup"
     },
     {
       "path": "js/js/sketchpad/elements.tsx",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 2727,
+      "line": 2717,
       "column": 1,
-      "message": "Region mismatch: opened \"Footer\" at line 356, closed \"Input Components\"",
+      "message": "Endregion without matching region",
       "excerpt": "// #endregion Input Components"
     },
     {
       "path": "js/js/sketchpad/elements.tsx",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 4069,
+      "line": 4059,
       "column": 1,
-      "message": "Region mismatch: opened \"Breadcrumb\" at line 3851, closed \"SectionTree\"",
-      "excerpt": "// #endregion SectionTree"
-    },
-    {
-      "path": "js/js/sketchpad/elements.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 4071,
-      "column": 1,
-      "message": "Region mismatch: opened \"Navigation Components\" at line 3849, closed \"Breadcrumb\"",
-      "excerpt": "// #endregion Breadcrumb"
-    },
-    {
-      "path": "js/js/sketchpad/elements.tsx",
-      "language": "typescript",
-      "kind": "region_mismatch",
-      "line": 4073,
-      "column": 1,
-      "message": "Endregion without matching region",
+      "message": "Region mismatch: opened \"Breadcrumb\" at line 3841, closed \"Navigation Components\"",
       "excerpt": "// #endregion Navigation Components"
     },
     {
       "path": "js/js/sketchpad/elements.tsx",
       "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 84,
-      "column": 59,
-      "message": "Relative imports are forbidden in elements.tsx",
-      "excerpt": "import { Expertise, setExpertiseProvider, useLabel } from \"../i18n\";"
-    },
-    {
-      "path": "js/js/sketchpad/elements.tsx",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 85,
-      "column": 50,
-      "message": "Relative imports are forbidden in elements.tsx",
-      "excerpt": "import { Camera, cn, Plane, Point, Vector } from \"../semio\";"
-    },
-    {
-      "path": "js/js/sketchpad/elements.tsx",
-      "language": "typescript",
-      "kind": "forbidden_terminology",
-      "line": 24,
-      "column": 123,
-      "message": "Forbidden terminology \"kit\"",
-      "excerpt": "import { closestCenter, DndContext, DragEndEvent, PointerSensor, useDraggable, useDroppable, useSensor, useSensors } from \"@dnd-kit/core\";"
-    },
-    {
-      "path": "js/js/sketchpad/elements.tsx",
-      "language": "typescript",
-      "kind": "forbidden_terminology",
-      "line": 25,
-      "column": 75,
-      "message": "Forbidden terminology \"kit\"",
-      "excerpt": "import { SortableContext, useSortable, verticalListSortingStrategy } from \"@dnd-kit/sortable\";"
-    },
-    {
-      "path": "js/js/sketchpad/elements.tsx",
-      "language": "typescript",
-      "kind": "forbidden_terminology",
-      "line": 26,
-      "column": 21,
-      "message": "Forbidden terminology \"kit\"",
-      "excerpt": "import { CSS } from \"@dnd-kit/utilities\";"
-    },
-    {
-      "path": "js/js/sketchpad/elements.tsx",
-      "language": "typescript",
-      "kind": "forbidden_terminology",
-      "line": 568,
-      "column": 39,
-      "message": "Forbidden terminology \"docs\"",
-      "excerpt": "const fullManualPath = manualPath ? `/docs/manual/${manualPath}` : undefined;"
-    },
-    {
-      "path": "js/js/sketchpad/elements.tsx",
-      "language": "typescript",
-      "kind": "forbidden_terminology",
-      "line": 569,
-      "column": 43,
-      "message": "Forbidden terminology \"docs\"",
-      "excerpt": "const fullTutorialPath = tutorialPath ? `/docs/tutorials/${tutorialPath}` : undefined;"
-    },
-    {
-      "path": "js/js/sketchpad/elements.tsx",
-      "language": "typescript",
-      "kind": "forbidden_terminology",
-      "line": 646,
-      "column": 39,
-      "message": "Forbidden terminology \"docs\"",
-      "excerpt": "const fullManualPath = manualPath ? `/docs/manual/${manualPath}` : undefined;"
-    },
-    {
-      "path": "js/js/sketchpad/elements.tsx",
-      "language": "typescript",
-      "kind": "forbidden_terminology",
-      "line": 647,
-      "column": 43,
-      "message": "Forbidden terminology \"docs\"",
-      "excerpt": "const fullTutorialPath = tutorialPath ? `/docs/tutorials/${tutorialPath}` : undefined;"
-    },
-    {
-      "path": "js/js/sketchpad/elements.tsx",
-      "language": "typescript",
-      "kind": "forbidden_terminology",
-      "line": 2442,
-      "column": 95,
-      "message": "Forbidden terminology \"type\"",
-      "excerpt": "interface ToggleStandardProps extends Omit<React.ComponentProps<typeof TogglePrimitive.Root>, \"type\" | \"id\">, ElementProps {"
-    },
-    {
-      "path": "js/js/sketchpad/elements.tsx",
-      "language": "typescript",
-      "kind": "forbidden_terminology",
-      "line": 2450,
-      "column": 97,
-      "message": "Forbidden terminology \"type\"",
-      "excerpt": "interface ToggleWithActionProps extends Omit<React.ComponentProps<typeof TogglePrimitive.Root>, \"type\" | \"id\">, ElementProps {"
-    },
-    {
-      "path": "js/js/sketchpad/elements.tsx",
-      "language": "typescript",
-      "kind": "forbidden_terminology",
-      "line": 2460,
-      "column": 113,
-      "message": "Forbidden terminology \"type\"",
-      "excerpt": "interface ToggleDropdownProps<T extends string> extends Omit<React.ComponentProps<typeof TogglePrimitive.Root>, \"type\" | \"id\">, ElementProps {"
-    },
-    {
-      "path": "js/js/sketchpad/elements.tsx",
-      "language": "typescript",
-      "kind": "forbidden_terminology",
-      "line": 2491,
-      "column": 110,
-      "message": "Forbidden terminology \"type\"",
-      "excerpt": "interface ToggleGroupProps extends Omit<React.ComponentProps<typeof ToggleGroupPrimitive.Root>, \"children\" | \"type\" | \"id\"> {"
-    },
-    {
-      "path": "js/js/sketchpad/elements.tsx",
-      "language": "typescript",
-      "kind": "forbidden_terminology",
-      "line": 4040,
-      "column": 20,
-      "message": "Forbidden terminology \"docs\"",
-      "excerpt": "<Button id=\"semio.sketchpad.docs.navigation.previous\" onClick={() => navigate(`/${prev.path}`)} className=\"flex items-center gap-single\">"
-    },
-    {
-      "path": "js/js/sketchpad/elements.tsx",
-      "language": "typescript",
-      "kind": "forbidden_terminology",
-      "line": 4051,
-      "column": 20,
-      "message": "Forbidden terminology \"docs\"",
-      "excerpt": "<Button id=\"semio.sketchpad.docs.navigation.next\" onClick={() => navigate(`/${next.path}`)} className=\"flex items-center gap-single\">"
+      "kind": "region_unclosed",
+      "line": 3839,
+      "column": 1,
+      "message": "Region \"Navigation Components\" not closed",
+      "excerpt": "// #region Navigation Components"
     },
     {
       "path": "js/js/sketchpad/shared.ts",
@@ -3621,7 +1813,7 @@
       "path": "js/js/sketchpad/shared.ts",
       "language": "typescript",
       "kind": "temporary_log",
-      "line": 124,
+      "line": 97,
       "column": 5,
       "message": "Temporary [DEBUG] console log found",
       "excerpt": "console.warn(\"[DEBUG] Attempted to set a disabled field\");"
@@ -3630,48 +1822,12 @@
       "path": "js/js/sketchpad/shared.ts",
       "language": "typescript",
       "kind": "temporary_log",
-      "line": 149,
-      "column": 9,
+      "line": 124,
+      "column": 13,
       "message": "Temporary [DEBUG] console log found",
       "excerpt": "console.warn(\"[DEBUG] Attempted to execute a disabled action\");"
     },
     {
-      "path": "js/js/sketchpad/shared.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 45,
-      "column": 112,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { ChatIcon, DetailsIcon, HudIcon, SettingsIcon, StatsIcon, ToolbarIcon, ToolsIcon, WorkbenchIcon } from \"@semio/assets\";"
-    },
-    {
-      "path": "js/js/sketchpad/shared.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 46,
-      "column": 42,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { ComponentType, ReactNode } from \"react\";"
-    },
-    {
-      "path": "js/js/sketchpad/shared.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 47,
-      "column": 51,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { AnyActorRef, assign, fromCallback } from \"xstate\";"
-    },
-    {
-      "path": "js/js/sketchpad/shared.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 48,
-      "column": 20,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import * as Y from \"yjs\";"
-    },
-    {
       "path": "js/js/tailwind.config.ts",
       "language": "typescript",
       "kind": "region_name_missing",
@@ -3690,24 +1846,6 @@
       "excerpt": "// #endregion"
     },
     {
-      "path": "js/js/tailwind.config.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 21,
-      "column": 24,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import typography from \"@tailwindcss/typography\";"
-    },
-    {
-      "path": "js/js/tailwind.config.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 22,
-      "column": 29,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import type { Config } from \"tailwindcss\";"
-    },
-    {
       "path": "js/js/vite.config.ts",
       "language": "typescript",
       "kind": "region_name_missing",
@@ -3724,132 +1862,6 @@
       "column": 1,
       "message": "Region mismatch: opened \"Header\" at line 1, closed \"\"",
       "excerpt": "// #endregion"
-    },
-    {
-      "path": "js/js/vite.config.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 22,
-      "column": 17,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import mdx from \"@mdx-js/rollup\";"
-    },
-    {
-      "path": "js/js/vite.config.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 23,
-      "column": 25,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import tailwindcss from \"@tailwindcss/vite\";"
-    },
-    {
-      "path": "js/js/vite.config.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 24,
-      "column": 19,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import react from \"@vitejs/plugin-react\";"
-    },
-    {
-      "path": "js/js/vite.config.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 25,
-      "column": 16,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import fs from \"node:fs\";"
-    },
-    {
-      "path": "js/js/vite.config.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 26,
-      "column": 18,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import path from \"node:path\";"
-    },
-    {
-      "path": "js/js/vite.config.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 27,
-      "column": 31,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { fileURLToPath } from \"node:url\";"
-    },
-    {
-      "path": "js/js/vite.config.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 28,
-      "column": 36,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import rehypeAutolinkHeadings from \"rehype-autolink-headings\";"
-    },
-    {
-      "path": "js/js/vite.config.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 29,
-      "column": 24,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import rehypeSlug from \"rehype-slug\";"
-    },
-    {
-      "path": "js/js/vite.config.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 30,
-      "column": 31,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import remarkFrontmatter from \"remark-frontmatter\";"
-    },
-    {
-      "path": "js/js/vite.config.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 31,
-      "column": 23,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import remarkGfm from \"remark-gfm\";"
-    },
-    {
-      "path": "js/js/vite.config.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 32,
-      "column": 34,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import remarkMdxFrontmatter from \"remark-mdx-frontmatter\";"
-    },
-    {
-      "path": "js/js/vite.config.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 33,
-      "column": 27,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import topLevelAwait from \"vite-plugin-top-level-await\";"
-    },
-    {
-      "path": "js/js/vite.config.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 34,
-      "column": 18,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import wasm from \"vite-plugin-wasm\";"
-    },
-    {
-      "path": "js/js/vite.config.ts",
-      "language": "typescript",
-      "kind": "forbidden_import",
-      "line": 35,
-      "column": 30,
-      "message": "Imports outside js/js are forbidden",
-      "excerpt": "import { defineConfig } from \"vitest/config\";"
     },
     {
       "path": "js/play/postcss.config.ts",
@@ -4035,7 +2047,7 @@
       "path": "preflight.ts",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 62,
+      "line": 69,
       "column": 1,
       "message": "Endregion is missing a name",
       "excerpt": "//#endregion"
@@ -4044,7 +2056,7 @@
       "path": "preflight.ts",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 62,
+      "line": 69,
       "column": 1,
       "message": "Region mismatch: opened \"Cli\" at line 26, closed \"\"",
       "excerpt": "//#endregion"
@@ -4053,7 +2065,7 @@
       "path": "preflight.ts",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 78,
+      "line": 85,
       "column": 1,
       "message": "Endregion is missing a name",
       "excerpt": "//#endregion"
@@ -4062,16 +2074,16 @@
       "path": "preflight.ts",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 78,
+      "line": 85,
       "column": 1,
-      "message": "Region mismatch: opened \"Exec\" at line 64, closed \"\"",
+      "message": "Region mismatch: opened \"Exec\" at line 71, closed \"\"",
       "excerpt": "//#endregion"
     },
     {
       "path": "preflight.ts",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 145,
+      "line": 152,
       "column": 1,
       "message": "Endregion is missing a name",
       "excerpt": "//#endregion"
@@ -4080,16 +2092,16 @@
       "path": "preflight.ts",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 145,
+      "line": 152,
       "column": 1,
-      "message": "Region mismatch: opened \"Steps\" at line 80, closed \"\"",
+      "message": "Region mismatch: opened \"Steps\" at line 87, closed \"\"",
       "excerpt": "//#endregion"
     },
     {
       "path": "preflight.ts",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 172,
+      "line": 179,
       "column": 1,
       "message": "Endregion is missing a name",
       "excerpt": "//#endregion"
@@ -4098,16 +2110,16 @@
       "path": "preflight.ts",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 172,
+      "line": 179,
       "column": 1,
-      "message": "Region mismatch: opened \"Main\" at line 147, closed \"\"",
+      "message": "Region mismatch: opened \"Main\" at line 154, closed \"\"",
       "excerpt": "//#endregion"
     },
     {
       "path": "py/engine/engine.py",
       "language": "python",
       "kind": "region_unclosed",
-      "line": 377,
+      "line": 356,
       "column": 1,
       "message": "Region \"Modeling\" not closed",
       "excerpt": "# region Modeling"
@@ -4116,7 +2128,7 @@
       "path": "py/engine/engine.py",
       "language": "python",
       "kind": "region_unclosed",
-      "line": 583,
+      "line": 562,
       "column": 1,
       "message": "Region \"Domain\" not closed",
       "excerpt": "# region Domain"
@@ -4143,7 +2155,7 @@
       "path": "scripts/generate-metabolism-diff.ts",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 41,
+      "line": 24,
       "column": 1,
       "message": "Endregion is missing a name",
       "excerpt": "// #endregion"
@@ -4152,7 +2164,7 @@
       "path": "scripts/generate-metabolism-diff.ts",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 41,
+      "line": 24,
       "column": 1,
       "message": "Region mismatch: opened \"Header\" at line 22, closed \"\"",
       "excerpt": "// #endregion"
@@ -4179,7 +2191,7 @@
       "path": "scripts/i18n.ts",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 96,
+      "line": 95,
       "column": 1,
       "message": "Endregion is missing a name",
       "excerpt": "//#endregion"
@@ -4188,7 +2200,7 @@
       "path": "scripts/i18n.ts",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 96,
+      "line": 95,
       "column": 1,
       "message": "Region mismatch: opened \"Find All IDs in Source Files\" at line 61, closed \"\"",
       "excerpt": "//#endregion"
@@ -4197,7 +2209,7 @@
       "path": "scripts/i18n.ts",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 622,
+      "line": 629,
       "column": 1,
       "message": "Endregion is missing a name",
       "excerpt": "//#endregion"
@@ -4206,16 +2218,16 @@
       "path": "scripts/i18n.ts",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 622,
+      "line": 629,
       "column": 1,
-      "message": "Region mismatch: opened \"Validate Translations\" at line 98, closed \"\"",
+      "message": "Region mismatch: opened \"Validate Translations\" at line 97, closed \"\"",
       "excerpt": "//#endregion"
     },
     {
       "path": "scripts/i18n.ts",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 778,
+      "line": 815,
       "column": 1,
       "message": "Endregion is missing a name",
       "excerpt": "//#endregion"
@@ -4224,16 +2236,16 @@
       "path": "scripts/i18n.ts",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 778,
+      "line": 815,
       "column": 1,
-      "message": "Region mismatch: opened \"Fix Mode\" at line 624, closed \"\"",
+      "message": "Region mismatch: opened \"Fix Mode\" at line 631, closed \"\"",
       "excerpt": "//#endregion"
     },
     {
       "path": "scripts/i18n.ts",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 803,
+      "line": 840,
       "column": 1,
       "message": "Endregion is missing a name",
       "excerpt": "//#endregion"
@@ -4242,9 +2254,9 @@
       "path": "scripts/i18n.ts",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 803,
+      "line": 840,
       "column": 1,
-      "message": "Region mismatch: opened \"Generate Report\" at line 780, closed \"\"",
+      "message": "Region mismatch: opened \"Generate Report\" at line 817, closed \"\"",
       "excerpt": "//#endregion"
     },
     {
@@ -4269,7 +2281,7 @@
       "path": "scripts/log.ts",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 127,
+      "line": 118,
       "column": 1,
       "message": "Endregion is missing a name",
       "excerpt": "//#endregion"
@@ -4278,7 +2290,7 @@
       "path": "scripts/log.ts",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 127,
+      "line": 118,
       "column": 1,
       "message": "Region mismatch: opened \"Exports\" at line 114, closed \"\"",
       "excerpt": "//#endregion"
@@ -4287,7 +2299,7 @@
       "path": "scripts/log.ts",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 159,
+      "line": 150,
       "column": 1,
       "message": "Endregion is missing a name",
       "excerpt": "//#endregion"
@@ -4296,16 +2308,16 @@
       "path": "scripts/log.ts",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 159,
+      "line": 150,
       "column": 1,
-      "message": "Region mismatch: opened \"Configuration\" at line 129, closed \"\"",
+      "message": "Region mismatch: opened \"Configuration\" at line 120, closed \"\"",
       "excerpt": "//#endregion"
     },
     {
       "path": "scripts/log.ts",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 184,
+      "line": 175,
       "column": 1,
       "message": "Endregion is missing a name",
       "excerpt": "//#endregion"
@@ -4314,16 +2326,16 @@
       "path": "scripts/log.ts",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 184,
+      "line": 175,
       "column": 1,
-      "message": "Region mismatch: opened \"Path Utilities\" at line 161, closed \"\"",
+      "message": "Region mismatch: opened \"Path Utilities\" at line 152, closed \"\"",
       "excerpt": "//#endregion"
     },
     {
       "path": "scripts/log.ts",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 293,
+      "line": 284,
       "column": 1,
       "message": "Endregion is missing a name",
       "excerpt": "//#endregion"
@@ -4332,16 +2344,16 @@
       "path": "scripts/log.ts",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 293,
+      "line": 284,
       "column": 1,
-      "message": "Region mismatch: opened \"Git Stats\" at line 186, closed \"\"",
+      "message": "Region mismatch: opened \"Git Stats\" at line 177, closed \"\"",
       "excerpt": "//#endregion"
     },
     {
       "path": "scripts/log.ts",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 306,
+      "line": 297,
       "column": 1,
       "message": "Endregion is missing a name",
       "excerpt": "//#endregion"
@@ -4350,16 +2362,16 @@
       "path": "scripts/log.ts",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 306,
+      "line": 297,
       "column": 1,
-      "message": "Region mismatch: opened \"Validation\" at line 295, closed \"\"",
+      "message": "Region mismatch: opened \"Validation\" at line 286, closed \"\"",
       "excerpt": "//#endregion"
     },
     {
       "path": "scripts/log.ts",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 418,
+      "line": 409,
       "column": 1,
       "message": "Endregion is missing a name",
       "excerpt": "//#endregion"
@@ -4368,16 +2380,16 @@
       "path": "scripts/log.ts",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 418,
+      "line": 409,
       "column": 1,
-      "message": "Region mismatch: opened \"Serialization\" at line 308, closed \"\"",
+      "message": "Region mismatch: opened \"Serialization\" at line 299, closed \"\"",
       "excerpt": "//#endregion"
     },
     {
       "path": "scripts/log.ts",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 682,
+      "line": 673,
       "column": 1,
       "message": "Endregion is missing a name",
       "excerpt": "//#endregion"
@@ -4386,16 +2398,16 @@
       "path": "scripts/log.ts",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 682,
+      "line": 673,
       "column": 1,
-      "message": "Region mismatch: opened \"CRUD Operations\" at line 420, closed \"\"",
+      "message": "Region mismatch: opened \"CRUD Operations\" at line 411, closed \"\"",
       "excerpt": "//#endregion"
     },
     {
       "path": "scripts/log.ts",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 694,
+      "line": 685,
       "column": 1,
       "message": "Endregion is missing a name",
       "excerpt": "//#endregion"
@@ -4404,16 +2416,16 @@
       "path": "scripts/log.ts",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 694,
+      "line": 685,
       "column": 1,
-      "message": "Region mismatch: opened \"Lookup\" at line 684, closed \"\"",
+      "message": "Region mismatch: opened \"Lookup\" at line 675, closed \"\"",
       "excerpt": "//#endregion"
     },
     {
       "path": "scripts/log.ts",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 1032,
+      "line": 1023,
       "column": 1,
       "message": "Endregion is missing a name",
       "excerpt": "//#endregion"
@@ -4422,16 +2434,16 @@
       "path": "scripts/log.ts",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 1032,
+      "line": 1023,
       "column": 1,
-      "message": "Region mismatch: opened \"CLI\" at line 696, closed \"\"",
+      "message": "Region mismatch: opened \"CLI\" at line 687, closed \"\"",
       "excerpt": "//#endregion"
     },
     {
       "path": "scripts/utils.ts",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 41,
+      "line": 34,
       "column": 1,
       "message": "Endregion is missing a name",
       "excerpt": "//#endregion"
@@ -4440,7 +2452,7 @@
       "path": "scripts/utils.ts",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 41,
+      "line": 34,
       "column": 1,
       "message": "Region mismatch: opened \"Image Processing\" at line 27, closed \"\"",
       "excerpt": "//#endregion"
@@ -4449,7 +2461,7 @@
       "path": "scripts/utils.ts",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 78,
+      "line": 71,
       "column": 1,
       "message": "Endregion is missing a name",
       "excerpt": "//#endregion"
@@ -4458,16 +2470,16 @@
       "path": "scripts/utils.ts",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 78,
+      "line": 71,
       "column": 1,
-      "message": "Region mismatch: opened \"File Operations\" at line 43, closed \"\"",
+      "message": "Region mismatch: opened \"File Operations\" at line 36, closed \"\"",
       "excerpt": "//#endregion"
     },
     {
       "path": "scripts/utils.ts",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 121,
+      "line": 110,
       "column": 1,
       "message": "Endregion is missing a name",
       "excerpt": "//#endregion"
@@ -4476,16 +2488,16 @@
       "path": "scripts/utils.ts",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 121,
+      "line": 110,
       "column": 1,
-      "message": "Region mismatch: opened \"Process Management\" at line 80, closed \"\"",
+      "message": "Region mismatch: opened \"Process Management\" at line 73, closed \"\"",
       "excerpt": "//#endregion"
     },
     {
       "path": "scripts/utils.ts",
       "language": "typescript",
       "kind": "region_name_missing",
-      "line": 129,
+      "line": 118,
       "column": 1,
       "message": "Endregion is missing a name",
       "excerpt": "//#endregion"
@@ -4494,9 +2506,9 @@
       "path": "scripts/utils.ts",
       "language": "typescript",
       "kind": "region_mismatch",
-      "line": 129,
+      "line": 118,
       "column": 1,
-      "message": "Region mismatch: opened \"JSON Utilities\" at line 123, closed \"\"",
+      "message": "Region mismatch: opened \"JSON Utilities\" at line 112, closed \"\"",
       "excerpt": "//#endregion"
     }
   ]

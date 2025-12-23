@@ -27,7 +27,6 @@ import { join } from "path";
 const cwd = __dirname;
 const distDir = join(cwd, "dist");
 
-
 if (existsSync(join(distDir, "semio_512x512.png"))) {
   rmSync(join(distDir, "semio_512x512.png"));
 }
@@ -35,21 +34,12 @@ if (existsSync(join(distDir, "manifest.yml"))) {
   rmSync(join(distDir, "manifest.yml"));
 }
 
-
 if (!existsSync(distDir)) {
   mkdirSync(distDir);
 }
 
-
-copyFileSync(
-  join(cwd, "..", "assets", "icons", "semio_512x512.png"),
-  join(distDir, "semio_512x512.png")
-);
-copyFileSync(
-  join(cwd, "manifest.yml"),
-  join(distDir, "manifest.yml")
-);
-
+copyFileSync(join(cwd, "..", "assets", "icons", "semio_512x512.png"), join(distDir, "semio_512x512.png"));
+copyFileSync(join(cwd, "manifest.yml"), join(distDir, "manifest.yml"));
 
 const yak = "C:\\Program Files\\Rhino 8\\System\\Yak.exe";
 execSync(`"${yak}" build --platform win`, { cwd: distDir, stdio: "inherit" });

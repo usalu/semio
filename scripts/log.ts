@@ -112,18 +112,9 @@ interface SearchOptions extends ListOptions {
 //#endregion
 
 //#region Exports
-export type {
-  FileEntry,
-  Files, Iteration, IterationDate, IterationFinishInput, IterationStartInput, Lines, ListOptions,
-  SearchOptions, Ticket,
-  TicketCreateInput, TicketDate,
-  TicketFrontmatter
-};
+export type { FileEntry, Files, Iteration, IterationDate, IterationFinishInput, IterationStartInput, Lines, ListOptions, SearchOptions, Ticket, TicketCreateInput, TicketDate, TicketFrontmatter };
 
-export {
-  createTicket, deleteTicket, finishIteration,
-  finishTicket, listTickets, readTicket, reopenTicket, searchTickets, startIteration
-};
+export { createTicket, deleteTicket, finishIteration, finishTicket, listTickets, readTicket, reopenTicket, searchTickets, startIteration };
 //#endregion
 
 //#region Configuration
@@ -191,7 +182,7 @@ function getGitStatusPorcelain(): string {
 function parseGitPath(rawPath: string): string {
   const trimmed = rawPath.trim();
   if (!trimmed) return "";
-  if (trimmed.startsWith("\"") && trimmed.endsWith("\"")) {
+  if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
     try {
       return JSON.parse(trimmed);
     } catch {
@@ -212,7 +203,7 @@ function getUntrackedFiles(): Set<string> {
 }
 
 function quoteGitPath(path: string): string {
-  return "\"" + path.replaceAll("\"", "\\\"") + "\"";
+  return '"' + path.replaceAll('"', '\\"') + '"';
 }
 
 function parseGitNumstatOutput(output: string): Lines {

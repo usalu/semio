@@ -23,9 +23,13 @@ Source files MUST include an SPDX license header.
 
 Source files MUST NOT include inline comments except for license headers and region markers.
 
+Block and JSDoc comments are treated as inline comments.
+
 Temporary diagnostic logs MUST include the `[DEBUG]` prefix and are considered removable.
 
 Region blocks MUST be properly nested and MUST be closed with a matching named end marker.
+
+Region blocks MUST NOT be empty.
 
 Developer documentation MUST be centralized in the root `README.md` and `AGENTS.md`; non-root `AGENTS.md` files and non-package `README.md` files are forbidden.
 
@@ -36,6 +40,12 @@ Shared UI element libraries MUST NOT import Sketchpad shells or app modules.
 Only shared UI element libraries may import third-party dependencies; other JavaScript workspace sources MUST import within the workspace.
 
 Sketchpad shell and app modules MUST only import shared elements, shared utilities, and core domain modules.
+
+Code analysis issues MUST include reason and solution text.
+
+### State Management
+
+App hover and selection state MUST be managed by the Sketchpad state machine.
 
 ### Ticket
 
@@ -275,6 +285,11 @@ The toolbar is a floating panel positioned at the bottom center of the canvas. E
 
 Toolbar panel visibility defaults to `true` for all apps via `panelVisibility: { toolbar: true, ... }` in default state creation.
 
+#### Interaction State
+
+- Hover and selection feedback across Home, Kit, Design, Type, Quality, Docs, and Feedback is driven by the app state machine.
+- Hover and selection highlights MUST be consistent across tables, lists, and diagrams.
+
 #### Borders
 
 - Element border kind (hover color)
@@ -402,7 +417,7 @@ npm install  # Husky will auto-install via prepare script
 1. **i18n Validation** - Validates translation keys and completeness
 2. **TypeScript** - Type checking
 3. **ESLint** - JavaScript/TypeScript linting
-4. **Code** - Codebase scan (comments, license headers, regions)
+4. **Code** - Codebase scan (comments, license headers, regions, empty regions)
 
 ### Reports
 
@@ -1247,13 +1262,13 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ ├── i18n.ts # i18n validation hook (generates JSON report)
 │ ├── prettier.ts # Prettier formatter hook (applies formatting)
 │ ├── eslint.ts # ESLint linting hook (generates JSON report)
-│ ├── code.ts # Codebase scan hook (comments, SPDX headers, regions, js/js forbidden imports, js/js forbidden terminology) (generates JSON report)
+│ ├── code.ts # Codebase scan hook (comments incl. block/JSDoc, SPDX headers, regions + empty region removal, js/js forbidden imports, js/js forbidden terminology, reason/solution issue metadata) (generates JSON report)
 │ ├── typescript.ts # TypeScript compiler check hook (generates JSON report)
 │ └── ruff.ts # Python Ruff formatter and linter hook (applies formatting, generates JSON report)
 ├── reports # Generated validation reports (gitignored)
 │ ├── i18n.json # i18n validation report
 │ ├── eslint.json # ESLint linting report
-│ ├── code.json # Codebase code-quality report
+│ ├── code.json # Codebase code-quality report with reason/solution metadata
 │ ├── typescript.json # TypeScript compiler report
 │ └── ruff.json # Python Ruff linter report
 ├── .vscode
@@ -1391,7 +1406,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ ├── Quality.tsx # quality app
 │ │ │ ├── Type.tsx # type app
 │ │ │ ├── Tutorials.tsx # consolidated tutorial system
-│ │ │ ├── elements.tsx # UI elements (Window kind, LevelProvider/useLevel, TransactionProvider, primitives)
+│ │ │ ├── elements.tsx # UI elements (Window kind, LevelProvider/useLevel, TransactionProvider, primitives, Diagram with d3-force layout, DIAGRAM_UNIT=48px coordinate system)
 │ │ │ ├── locales
 │ │ │ │ ├── de.json
 │ │ │ │ └── en.json
@@ -1514,7 +1529,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 
 In general, if the user talks about an old file, then probably there is the same file with the suffix `*.old` that is the original state.
 
-## js/
+## 📁 js/
 
 Javascript code with shared core (@semio/js) that uses storybook and exports a handful of React components (Sketchpad, Diagram, Model) for both web-based and desktop-based environments, a documentation (@semio/docs) that uses astro with starlight and mdx, and desktop (@semio/desktop) that runs in electron.
 
@@ -1533,7 +1548,7 @@ Javascript code with shared core (@semio/js) that uses storybook and exports a h
 - The ui consists of a three horizontal strips: navbar, canvas and footer. A canvas consists of windows. On top of the canvas are panels which can toggled on and off.
 - Navbar panel toggles always order panels as Details, Chat, then Settings for every app.
 
-## js/js/
+## 📁 js/js/
 
 Shared react components. The main component is Sketchpad. Sketchpad is used in three different szenarios:
 
@@ -3620,15 +3635,35 @@ npx tsx scripts/generate-validation.ts
 - Fix diffs are normalized (GUIDs replaced with `<GUID>`) before comparison
 - C# fix generation is pending; comparison skips fix diff for now
 
-## net
+## 📁 js/js/sketchpad/
+
+Sketchpad app modules, state machine wiring, and shared app surfaces for Home, Kit, Design, Type, Quality, Docs, and Feedback.
+
+## 📄 js/js/sketchpad/elements.tsx
+
+`Table` supports row-level hover callbacks for app hover state dispatch.
+
+## 📄 js/js/sketchpad/Home.tsx
+
+Home app hover state is stored in the Sketchpad state machine and updated via hover commands for table rows.
+
+## 📄 js/js/sketchpad/Kit.tsx
+
+Kit app hover state covers all artifact kinds and is updated via table and diagram hover dispatch.
+
+## 📄 js/js/sketchpad/Sketchpad.tsx
+
+Home command hooks forward hover events, including clear, into the Sketchpad state machine.
+
+## 📁net/
 
 C# code with the core library (`Semio.cs`) and Grasshopper plugin (`Semio.Grasshopper.cs`).
 
-## net/Semio.cs
+## 📄net/Semio.cs
 
 Core library containing all model definitions, validation, serialization, and the Meta class for reflection-based metadata.
 
-## net/Semio.Grasshopper.cs
+## 📄net/Semio.Grasshopper.cs
 
 Grasshopper plugin providing components for constructing, deconstructing, and modifying Semio models.
 
@@ -3661,11 +3696,11 @@ Components use virtual methods to define their inputs/outputs:
 
 Components can override these to hardcode their parameter structure, ensuring stable input/output definitions across schema changes.
 
-## py/
+## 📁py/
 
 Python code with the engine (@semio/engine) for schema generation and validation.
 
-## py/engine/
+## 📁py/engine/
 
 Python engine providing schema generation, validation, and backend functionality.
 
@@ -3674,15 +3709,15 @@ Python engine providing schema generation, validation, and backend functionality
 - `generate-schemas.ts` - Generates GraphQL, JSON, and SQL schemas from TypeScript definitions
 - `sqliteschema.ts` - SQLite schema generation utilities
 
-## net/
+## 📁net/
 
 C# code with the core library (`Semio.cs`) and Grasshopper plugin (`Semio.Grasshopper.cs`).
 
-## net/Semio/Semio.cs
+## 📄net/Semio/Semio.cs
 
 Core library containing all model definitions, validation, serialization, and the Meta class for reflection-based metadata.
 
-## net/Semio.Grasshopper/Semio.Grasshopper.cs
+## 📄net/Semio.Grasshopper/Semio.Grasshopper.cs
 
 Grasshopper plugin providing components for constructing, deconstructing, and modifying Semio models.
 

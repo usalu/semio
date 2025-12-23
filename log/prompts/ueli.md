@@ -1,5 +1,40 @@
 # Prompt history
 
+Extend the code.ts hook to that all AGENTS.md headers under # Codebase meaning ## PATH are actual files and folders, all have the proper prefix (📁 or 📄), are sorted alphabetically and none appear twice. Create issues for all individual violations.
+
+Make the reasons and solutions specific to the codebase and the files. Read the devs docs to understand the reasons.
+E.g. when explaining why comments are removed, explain that code is never documented and instead everything is documented multiple times in the devdocs. 1. Under `# 🛍️ Products` in README.md where it is described from user perspective [architects, designers, engineers, …] (framework-agnostic, no implementation references, etc)
+2. Under `# 📦 Components` in README.md where it is described from junior-developer perspective (mechanism explanation and reasoning behind the decision, how theory links to implementation, etc).
+3. Under `# Software Requirements Specification` in AGENTS.md where it is described from human-interface-designer perspective (concise technical terms without explanation, framework-agnostic, no implementation references). There are two sections: `# Business Logic` and `# UI/UX`.
+4. Under `# Codebase` in AGENTS.md where it is described from senior-developer perspective (framework-mechanisms, consice technical terms without explanation, implementation details, etc). The section has the same header structure as the files and folders. All files and folders are flat with `## PATH` e.g. `## js/js/sketchpad/` or `## net/Semio.cs`
+The purpose of the dev docs is to understand the codebase. NEVER add reasoning or process related (such as what changed, why, how, … - this is part of the log) to the dev docs.
+
+
+Extend the code analysis hook. Make sure that every issue has a reason text field and a solution text field. E.g. A solution for duplicate paths is to merge them or remove one if one is clearly outdated.
+More examples for a reason for forbidden imports:
+elements.tsx is a general-purpose ui library and should not import anything from sketchpad or any app. It is the only file that can import third party libraries and reexpose them as components. All other files in the js/js folder should be self-contained and dependency free from any other library outside of the js/js folder.
+Sketchpad.tsx offers scaffolding to apps but is independent of app internals. Importing from app files violates the open/closed principle. Adding an app should not require modifying Sketchpad.tsx and just mean to add a file. Removing an app should not require modifying Sketchpad.tsx and just mean to remove a file.
+Provide reasons and solutions to all code issues.
+
+
+Hovering over entities in kit app doesnt call any state machine hover. All state managment including hover and selection of apps (Home.tsx, Kit.tsx, Design.tsx, Type.tsx, Quality.tsx, Docs.tsx, Feedback.tsx) should be done via the state machine.
+
+Diagrams should be generalized to be used for all diagrams (kit app, design app, quality app). Diagrams only work in controlled mode (state managment is done by the parent component). None of the apps (Kit.tsx, Design.tsx, Quality.tsx) should import react-flow directly or use any react-flow specific api. Elements.tsx should be the only file to import "@xyflow/react"; and reexport the components as Diagram, Node, Edge, Handle, etc. All diagrams use the same coordinate system (one unit is equal to the diameter of the a circular nodes.). 
+Optionally forced layout configs can be passed which every 50ms bulk updates all centers of the nodes through a d3-force layout.
+@Design.tsx@elements.tsx@Kit.tsx@Quality.tsx@shared.ts 
+
+The code analysis and fixing hook doesnt identify and delete multi-line comments. Extend them. E.g.
+/**
+ * Calculate the average plane from multiple planes.
+ * This is useful for multi-selection transforms where we need a single reference plane.
+ */
+
+Currently the base store depends on yjs. Make sure that Store and AppStore only use the state machine for state management and not yjs. Only the KitDiffAppStore uses the yjs-based Kit store. yMap, yArray etc should not appear anywhere in Store, AppStore, etc.
+
+Extend the analyze and fix code to check and remove empty regions.
+
+Use the code.json report to detect structural issues. Do all large refactor necessary to make sure the code issues dissapear. Rerun preflight and edit until all issues are gone.@code.ts@code.json  
+
 The analyze and fix code should isnt detecting multiline comments. e.g.
 /**
  * Creates an in-memory file provider.

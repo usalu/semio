@@ -29,15 +29,10 @@ const vite = spawn(npmCmd, ["run", "dev:sketchpad"], {
   shell: true,
 });
 
-const storybook = spawn(
-  npmCmd,
-  ["run", "dev:storybook"],
-  {
-    stdio: "inherit",
-    shell: true,
-  }
-);
-
+const storybook = spawn(npmCmd, ["run", "dev:storybook"], {
+  stdio: "inherit",
+  shell: true,
+});
 
 process.on("SIGINT", () => {
   vite.kill();

@@ -8,8 +8,8 @@ prompt: >-
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: '2025-12-18T15:11:24.199Z'
-  finished: '2025-12-18T15:29:35.275Z'
+  created: "2025-12-18T15:11:24.199Z"
+  finished: "2025-12-18T15:29:35.275Z"
 commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
 model: gpt-5.2-codex
 iterations:
@@ -18,8 +18,8 @@ iterations:
       level=window and uses bg-window; GoldenLayout chrome uses var(--window)
       instead of var(--base).
     date:
-      started: '2025-12-18T15:22:03.609Z'
-      ended: '2025-12-18T15:29:19.399Z'
+      started: "2025-12-18T15:22:03.609Z"
+      ended: "2025-12-18T15:29:19.399Z"
     model: gpt-5.2-codex
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
     commit: 20a57039fec48f8c991d98769aa31e15cbd6859c

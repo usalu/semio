@@ -1,6 +1,6 @@
 ---
 slug: UI-REFACTOR-HEIGHT-BAND-STRIP
-summary: 'Refactor UI system with standardized heights, Band/Strip components'
+summary: "Refactor UI system with standardized heights, Band/Strip components"
 prompt: >-
   The ui system needs to be more tightly integrated with itself. Bands
   horizontal only, optionally scrollable. New Strip component. Standardized
@@ -8,15 +8,15 @@ prompt: >-
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: '2025-12-16T17:06:07.963Z'
-commit: '0000000000000000000000000000000000000000'
+  created: "2025-12-16T17:06:07.963Z"
+commit: "0000000000000000000000000000000000000000"
 iterations:
   - prompt: >-
       The ui system needs to be more tightly integrated with itself. Bands
       horizontal only, optionally scrollable. New Strip component. Standardized
       heights: tiny/small/medium/large.
     date:
-      started: '2025-12-15T00:03:10.564Z'
+      started: "2025-12-15T00:03:10.564Z"
     model: claude-opus-4-5
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
     commit: 7765b633fe739bc29cd811ac7ec884e782e2e945

@@ -20,76 +20,66 @@
 
 // #endregion Header
 
-
-
-
 import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 import { Kit } from "../js/js/semio";
 
 async function main() {
-    console.log("Loading kit_metabolism.json...");
-    const kitPath = join(__dirname, "..", "assets", "semio", "kit_metabolism.json");
-    const kitJson = readFileSync(kitPath, "utf-8");
-    const kit: Kit = JSON.parse(kitJson);
+  console.log("Loading kit_metabolism.json...");
+  const kitPath = join(__dirname, "..", "assets", "semio", "kit_metabolism.json");
+  const kitJson = readFileSync(kitPath, "utf-8");
+  const kit: Kit = JSON.parse(kitJson);
 
-    console.log("Finding entities...");
+  console.log("Finding entities...");
 
-    
-    const capital = kit.types?.find(t => t.name === "Capital" && !t.parent);
-    const tambour = kit.types?.find(t => t.name === "Tambour" && !t.parent);
+  const capital = kit.types?.find((t) => t.name === "Capital" && !t.parent);
+  const tambour = kit.types?.find((t) => t.name === "Tambour" && !t.parent);
 
-    
-    const cylindricCapital = kit.types?.find(t => t.name === "Cylindric Capital");
-    const cylindricTambour = kit.types?.find(t => t.name === "Cylindric Tambour");
+  const cylindricCapital = kit.types?.find((t) => t.name === "Cylindric Capital");
+  const cylindricTambour = kit.types?.find((t) => t.name === "Cylindric Tambour");
 
-    if (!capital) {
-        throw new Error("Could not find 'Capital' type");
-    }
-    if (!tambour) {
-        throw new Error("Could not find 'Tambour' type");
-    }
-    if (!cylindricCapital) {
-        throw new Error("Could not find 'Cylindric Capital' type");
-    }
-    if (!cylindricTambour) {
-        throw new Error("Could not find 'Cylindric Tambour' type");
-    }
+  if (!capital) {
+    throw new Error("Could not find 'Capital' type");
+  }
+  if (!tambour) {
+    throw new Error("Could not find 'Tambour' type");
+  }
+  if (!cylindricCapital) {
+    throw new Error("Could not find 'Cylindric Capital' type");
+  }
+  if (!cylindricTambour) {
+    throw new Error("Could not find 'Cylindric Tambour' type");
+  }
 
-    console.log("\nFound entities:");
-    console.log(`  Capital: ${capital.guid}`);
-    console.log(`  Tambour: ${tambour.guid}`);
-    console.log(`  Cylindric Capital: ${cylindricCapital.guid}`);
-    console.log(`  Cylindric Tambour: ${cylindricTambour.guid}`);
+  console.log("\nFound entities:");
+  console.log(`  Capital: ${capital.guid}`);
+  console.log(`  Tambour: ${tambour.guid}`);
+  console.log(`  Cylindric Capital: ${cylindricCapital.guid}`);
+  console.log(`  Cylindric Tambour: ${cylindricTambour.guid}`);
 
-    // Check current parent status
-    console.log("\nCurrent parent status:");
-    console.log(`  Cylindric Capital parent: ${cylindricCapital.parent?.guid ?? 'none'}`);
-    console.log(`  Cylindric Tambour parent: ${cylindricTambour.parent?.guid ?? 'none'}`);
+  console.log("\nCurrent parent status:");
+  console.log(`  Cylindric Capital parent: ${cylindricCapital.parent?.guid ?? "none"}`);
+  console.log(`  Cylindric Tambour parent: ${cylindricTambour.parent?.guid ?? "none"}`);
 
-    // Apply migrations
-    console.log("\nApplying migrations...");
+  console.log("\nApplying migrations...");
 
-    // Set Cylindric Capital as child of Capital
-    cylindricCapital.parent = { guid: capital.guid };
-    console.log(`  ✓ Set Cylindric Capital parent to Capital`);
+  cylindricCapital.parent = { guid: capital.guid };
+  console.log(`  ✓ Set Cylindric Capital parent to Capital`);
 
-    // Set Cylindric Tambour as child of Tambour
-    cylindricTambour.parent = { guid: tambour.guid };
-    console.log(`  ✓ Set Cylindric Tambour parent to Tambour`);
+  cylindricTambour.parent = { guid: tambour.guid };
+  console.log(`  ✓ Set Cylindric Tambour parent to Tambour`);
 
-    // Save the updated kit
-    console.log("\nSaving updated kit...");
-    const updatedJson = JSON.stringify(kit, null, 2);
-    writeFileSync(kitPath, updatedJson, "utf-8");
+  console.log("\nSaving updated kit...");
+  const updatedJson = JSON.stringify(kit, null, 2);
+  writeFileSync(kitPath, updatedJson, "utf-8");
 
-    console.log("✓ Migration complete!");
-    console.log("\nNew parent status:");
-    console.log(`  Cylindric Capital parent: ${cylindricCapital.parent.guid}`);
-    console.log(`  Cylindric Tambour parent: ${cylindricTambour.parent.guid}`);
+  console.log("✓ Migration complete!");
+  console.log("\nNew parent status:");
+  console.log(`  Cylindric Capital parent: ${cylindricCapital.parent.guid}`);
+  console.log(`  Cylindric Tambour parent: ${cylindricTambour.parent.guid}`);
 }
 
 main().catch((error) => {
-    console.error("Migration failed:", error);
-    process.exit(1);
+  console.error("Migration failed:", error);
+  process.exit(1);
 });

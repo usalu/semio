@@ -4,8 +4,8 @@ prompt: Sketchpad needs to have base background
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: '2025-12-18T16:07:06.312Z'
-  finished: '2025-12-18T16:13:28.263Z'
+  created: "2025-12-18T16:07:06.312Z"
+  finished: "2025-12-18T16:13:28.263Z"
 summary: Restore base background for Sketchpad canvas
 commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
 model: gpt-5.2-codex
@@ -14,8 +14,8 @@ iterations:
       Restore base background on the Sketchpad canvas and align docs with
       background levels.
     date:
-      started: '2025-12-18T16:11:07.823Z'
-      ended: '2025-12-18T16:13:13.878Z'
+      started: "2025-12-18T16:11:07.823Z"
+      ended: "2025-12-18T16:13:13.878Z"
     model: gpt-5.2-codex
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
     commit: 20a57039fec48f8c991d98769aa31e15cbd6859c

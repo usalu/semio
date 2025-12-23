@@ -12,8 +12,8 @@ prompt: >-
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: '2025-12-16T17:06:07.950Z'
-commit: '0000000000000000000000000000000000000000'
+  created: "2025-12-16T17:06:07.950Z"
+commit: "0000000000000000000000000000000000000000"
 iterations:
   - prompt: >-
       The ci/cd system should be improved. The individual commands should work
@@ -25,7 +25,7 @@ iterations:
       Adding a command always means updating all hooks, nx configs, .vscode
       tasks, launch.json, etc.
     date:
-      started: '2025-12-15T08:58:34.318Z'
+      started: "2025-12-15T08:58:34.318Z"
     model: gpt-5-2
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
   - prompt: >-
@@ -33,7 +33,7 @@ iterations:
       (every child). The order is DEV, ANALYZE, FIX, PREFLIGHT, TEST, BUILD,
       PREPUBLISH, PUBLISH, UPDATE, COMMANDS
     date:
-      started: '2025-12-15T09:27:27.418Z'
+      started: "2025-12-15T09:27:27.418Z"
     model: gpt-5-2
     commit: 67126961d64c89450f396abedd5d477670f1ad4d
     files:

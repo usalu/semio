@@ -134,9 +134,9 @@ async function scanSourceFiles() {
   const globResult = glob(CONFIG.sourceGlob, { cwd: path.join(__dirname, ".."), absolute: true });
   const files = await new Promise((resolve, reject) => {
     const matches = [];
-    globResult.on('match', (match) => matches.push(match));
-    globResult.on('end', () => resolve(matches));
-    globResult.on('error', reject);
+    globResult.on("match", (match) => matches.push(match));
+    globResult.on("end", () => resolve(matches));
+    globResult.on("error", reject);
   });
   const foundIds = new Map();
 

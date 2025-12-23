@@ -63,7 +63,6 @@ function findIdsInFile(filePath: string): Set<string> {
   const content = readFileSync(filePath, "utf-8");
   const ids = new Set<string>();
 
-  // Match id="..." or id='...' or id={...}
   const idPattern = /id\s*=\s*["'`{]([^"'`}]+)["'`}]/g;
   let match;
   while ((match = idPattern.exec(content)) !== null) {
@@ -89,9 +88,9 @@ function walkDir(dir: string, callback: (filePath: string) => void): void {
 }
 
 const usedIds = new Set<string>();
-walkDir(sketchpadDir, filePath => {
+walkDir(sketchpadDir, (filePath) => {
   const ids = findIdsInFile(filePath);
-  ids.forEach(id => usedIds.add(id));
+  ids.forEach((id) => usedIds.add(id));
 });
 //#endregion
 
@@ -148,113 +147,104 @@ function deleteNestedValue(obj: Translation, path: string): void {
   delete current[parts[parts.length - 1]];
 }
 
-// German translations for common terms
 const germanTranslations: Record<string, string> = {
-  // Settings
-  "Theme": "Design",
-  "Light": "Hell",
-  "Dark": "Dunkel",
-  "System": "System",
-  "Layout": "Layout",
-  "Desktop": "Desktop",
-  "Tablet": "Tablet",
-  "Mobile": "Mobil",
-  "Mode": "Modus",
-  "Developer": "Entwickler",
-  "User": "Benutzer",
-  "Expertise": "Erfahrung",
-  "Beginner": "Anfänger",
-  "Normal": "Normal",
-  "Expert": "Experte",
-  "Settings": "Einstellungen",
-  "Language": "Sprache",
+  Theme: "Design",
+  Light: "Hell",
+  Dark: "Dunkel",
+  System: "System",
+  Layout: "Layout",
+  Desktop: "Desktop",
+  Tablet: "Tablet",
+  Mobile: "Mobil",
+  Mode: "Modus",
+  Developer: "Entwickler",
+  User: "Benutzer",
+  Expertise: "Erfahrung",
+  Beginner: "Anfänger",
+  Normal: "Normal",
+  Expert: "Experte",
+  Settings: "Einstellungen",
+  Language: "Sprache",
 
-  // General UI
-  "Search": "Suche",
-  "Name": "Name",
-  "Description": "Beschreibung",
-  "Icon": "Symbol",
-  "Image": "Bild",
-  "Variant": "Variante",
-  "View": "Ansicht",
-  "Unit": "Einheit",
-  "Location": "Standort",
-  "Longitude": "Längengrad",
-  "Latitude": "Breitengrad",
-  "Authors": "Autoren",
-  "Email": "E-Mail",
-  "Attributes": "Attribute",
-  "Value": "Wert",
-  "Definition": "Definition",
+  Search: "Suche",
+  Name: "Name",
+  Description: "Beschreibung",
+  Icon: "Symbol",
+  Image: "Bild",
+  Variant: "Variante",
+  View: "Ansicht",
+  Unit: "Einheit",
+  Location: "Standort",
+  Longitude: "Längengrad",
+  Latitude: "Breitengrad",
+  Authors: "Autoren",
+  Email: "E-Mail",
+  Attributes: "Attribute",
+  Value: "Wert",
+  Definition: "Definition",
   "Created At": "Erstellt am",
   "Updated At": "Aktualisiert am",
-  "ID": "ID",
-  "Type": "Typ",
-  "Center": "Zentrum",
-  "X": "X",
-  "Y": "Y",
-  "Z": "Z",
+  ID: "ID",
+  Type: "Typ",
+  Center: "Zentrum",
+  X: "X",
+  Y: "Y",
+  Z: "Z",
 
-  // Pieces & Planes
   "Fix Piece": "Bauteil fixieren",
-  "Plane": "Ebene",
+  Plane: "Ebene",
   "Plane Origin": "Ebenenursprung",
   "Plane X Axis": "Ebene X-Achse",
   "Plane Y Axis": "Ebene Y-Achse",
-  "Origin": "Ursprung",
+  Origin: "Ursprung",
   "X Axis": "X-Achse",
   "Y Axis": "Y-Achse",
 
-  // Connections
   "Connecting Piece ID": "Verbindendes Bauteil-ID",
   "Connecting Port ID": "Verbindender Port-ID",
   "Connecting Design Piece ID": "Verbindendes Design-Bauteil-ID",
   "Connected Piece ID": "Verbundenes Bauteil-ID",
   "Connected Port ID": "Verbundener Port-ID",
   "Connected Design Piece ID": "Verbundenes Design-Bauteil-ID",
-  "Gap": "Abstand",
-  "Shift": "Verschiebung",
-  "Rise": "Anstieg",
-  "Rotation": "Rotation",
-  "Turn": "Drehung",
-  "Tilt": "Neigung",
-  "U": "U",
-  "V": "V",
+  Gap: "Abstand",
+  Shift: "Verschiebung",
+  Rise: "Anstieg",
+  Rotation: "Rotation",
+  Turn: "Drehung",
+  Tilt: "Neigung",
+  U: "U",
+  V: "V",
 
-  // Ports
-  "Interface": "Schnittstelle",
-  "Mandatory": "Pflicht",
-  "Position": "Position",
-  "Direction": "Richtung",
+  Interface: "Schnittstelle",
+  Mandatory: "Pflicht",
+  Position: "Position",
+  Direction: "Richtung",
   "Compatible Interface": "Kompatible Schnittstelle",
-  "Attribute": "Attribut",
+  Attribute: "Attribut",
 
-  // Diagram
-  "Cluster": "Gruppieren",
-  "Expand": "Erweitern",
-  "Diagram": "Diagramm",
-  "Scene": "Szene",
-  "Table": "Tabelle",
+  Cluster: "Gruppieren",
+  Expand: "Erweitern",
+  Diagram: "Diagramm",
+  Scene: "Szene",
+  Table: "Tabelle",
 
-  // Kit items
-  "Types": "Typen",
-  "Designs": "Entwürfe",
-  "Canvas": "Leinwand",
-  "Remove": "Entfernen",
-  "Add": "Hinzufügen",
+  Types: "Typen",
+  Designs: "Entwürfe",
+  Canvas: "Leinwand",
+  Remove: "Entfernen",
+  Add: "Hinzufügen",
   "Add Type": "Typ hinzufügen",
   "Add Design": "Entwurf hinzufügen",
   "Add Child": "Kind hinzufügen",
-  "Pieces": "Bauteile",
-  "Windows": "Fenster",
-  "Tools": "Werkzeuge",
+  Pieces: "Bauteile",
+  Windows: "Fenster",
+  Tools: "Werkzeuge",
 
-  // Selection
   "Select Design": "Entwurf auswählen",
   "Select Variant": "Variante auswählen",
   "Select View": "Ansicht auswählen",
   "Select Type": "Typ auswählen",
-  "Author": "Autor",
+  Author: "Autor",
   "Mixed Selection Message": "Gemischte Auswahl",
   "Mixed Values": "Gemischte Werte",
   "Connected Piece Info": "Verbundenes Bauteil Info",
@@ -262,41 +252,37 @@ const germanTranslations: Record<string, string> = {
   "Parent Connections": "Elternverbindungen",
   "Multiple Editing": "Mehrfachbearbeitung",
   "Not Found": "Nicht gefunden",
-  "Yes": "Ja",
-  "No": "Nein",
+  Yes: "Ja",
+  No: "Nein",
   "Select Only Pieces Or Connections": "Nur Bauteile oder Verbindungen auswählen",
 
-  // Languages
-  "English": "Englisch",
-  "German": "Deutsch",
+  English: "Englisch",
+  German: "Deutsch",
   "Select language...": "Sprache auswählen...",
 
-  // Settings values
   "Proximity Connect Distance": "Näherungsverbindungs-Abstand",
   "Grid Size": "Rastergröße",
 
-  // Panels
-  "Show": "Anzeigen",
-  "Workbench": "Werkbank",
-  "HUD": "HUD",
-  "Stats": "Statistiken",
-  "Details": "Details",
-  "Chat": "Chat",
-  "Toolbar": "Werkzeugleiste",
-  "Docs": "Dokumentation",
-  "Overview": "Übersicht",
-  "Page": "Seite",
+  Show: "Anzeigen",
+  Workbench: "Werkbank",
+  HUD: "HUD",
+  Stats: "Statistiken",
+  Details: "Details",
+  Chat: "Chat",
+  Toolbar: "Werkzeugleiste",
+  Docs: "Dokumentation",
+  Overview: "Übersicht",
+  Page: "Seite",
   "No Headings": "Keine Überschriften",
-  "Manual": "Handbuch",
-  "Tutorial": "Tutorial",
+  Manual: "Handbuch",
+  Tutorial: "Tutorial",
 
-  // Filters
-  "Version": "Version",
-  "Filter": "Filter",
-  "Kind": "Art",
-  "Temporary": "Temporär",
-  "Local": "Lokal",
-  "Remote": "Remote",
+  Version: "Version",
+  Filter: "Filter",
+  Kind: "Art",
+  Temporary: "Temporär",
+  Local: "Lokal",
+  Remote: "Remote",
   "Sort by Name": "Nach Name sortieren",
   "Toggle Row": "Zeile umschalten",
   "Create Version": "Version erstellen",
@@ -307,37 +293,33 @@ const germanTranslations: Record<string, string> = {
   "Sort by Type": "Nach Typ sortieren",
   "Sort by Updated At": "Nach Aktualisierung sortieren",
   "Sort by Created At": "Nach Erstellung sortieren",
-  "Ascending": "Aufsteigend",
-  "Descending": "Absteigend",
+  Ascending: "Aufsteigend",
+  Descending: "Absteigend",
 
-  // Create actions
-  "Create": "Erstellen",
+  Create: "Erstellen",
   "Create Temporary": "Temporär erstellen",
   "Create Local": "Lokal erstellen",
   "Create Remote": "Remote erstellen",
   "Create Kit": "Kit erstellen",
   "Drop here...": "Hier ablegen...",
   "Drag and drop files": "Dateien ziehen und ablegen",
-  "Placeholder": "Platzhalter",
+  Placeholder: "Platzhalter",
 
-  // Interfaces
   "All Compatible": "Alle kompatibel",
   "Compatible Interfaces": "Kompatible Schnittstellen",
   "Multiple Selected": "Mehrere ausgewählt",
 
-  // Defaults
   "Default Name": "Standardname",
   "New Version": "Neue Version",
   "Default Version": "Standardversion",
   "Last Updated": "Zuletzt aktualisiert",
-  "Created": "Erstellt",
+  Created: "Erstellt",
   "No Kits": "Keine Kits",
-  "Loading": "Laden",
-  "Artifact": "Artefakt",
+  Loading: "Laden",
+  Artifact: "Artefakt",
   "Not Available": "Nicht verfügbar",
 
-  // Kit app
-  "Band": "Leiste",
+  Band: "Leiste",
   "Show Designs": "Entwürfe anzeigen",
   "Show Types": "Typen anzeigen",
   "Show Qualities": "Qualitäten anzeigen",
@@ -345,13 +327,13 @@ const germanTranslations: Record<string, string> = {
   "Show Files": "Dateien anzeigen",
   "Show Folders": "Ordner anzeigen",
   "Show Authors": "Autoren anzeigen",
-  "Hide": "Ausblenden",
+  Hide: "Ausblenden",
   "Sort by Artifact": "Nach Artefakt sortieren",
   "Create Child": "Kind erstellen",
   "Sort by Kind": "Nach Art sortieren",
-  "Homepage": "Homepage",
-  "License": "Lizenz",
-  "Compatible": "Kompatibel",
+  Homepage: "Homepage",
+  License: "Lizenz",
+  Compatible: "Kompatibel",
   "Create Artifact": "Artefakt erstellen",
   "Create Design": "Entwurf erstellen",
   "Create Type": "Typ erstellen",
@@ -360,67 +342,62 @@ const germanTranslations: Record<string, string> = {
   "Create File": "Datei erstellen",
   "Create Folder": "Ordner erstellen",
   "Create Author": "Autor erstellen",
-  "Folder": "Ordner",
+  Folder: "Ordner",
 
-  // Quality app
-  "Key": "Schlüssel",
-  "Formula": "Formel",
+  Key: "Schlüssel",
+  Formula: "Formel",
   "Default SI Unit": "Standard-SI-Einheit",
   "Default Imperial Unit": "Standard-Imperiale-Einheit",
   "Can Scale": "Skalierbar",
   "Default Value": "Standardwert",
-  "Min": "Min",
+  Min: "Min",
   "Is Min Excluded": "Min ausgeschlossen",
-  "Max": "Max",
+  Max: "Max",
   "Is Max Excluded": "Max ausgeschlossen",
   "Numeric Functions": "Numerische Funktionen",
   "Branching Functions": "Verzweigungsfunktionen",
   "Data Structures": "Datenstrukturen",
-  "Title": "Titel",
-  "Functions": "Funktionen",
-  "Qualities": "Qualitäten",
+  Title: "Titel",
+  Functions: "Funktionen",
+  Qualities: "Qualitäten",
   "Add (math)": "Addieren",
-  "Subtract": "Subtrahieren",
-  "Multiply": "Multiplizieren",
-  "Divide": "Dividieren",
-  "If": "Wenn",
-  "Switch": "Schalter",
-  "List": "Liste",
+  Subtract: "Subtrahieren",
+  Multiply: "Multiplizieren",
+  Divide: "Dividieren",
+  If: "Wenn",
+  Switch: "Schalter",
+  List: "Liste",
 
-  // Type app
-  "Model": "Modell",
-  "Models": "Modelle",
-  "Port": "Port",
-  "Ports": "Ports",
-  "Properties": "Eigenschaften",
-  "T": "T",
+  Model: "Modell",
+  Models: "Modelle",
+  Port: "Port",
+  Ports: "Ports",
+  Properties: "Eigenschaften",
+  T: "T",
 
-  // Navigation
-  "Back": "Zurück",
-  "Forward": "Vorwärts",
-  "Up": "Hoch",
-  "Navigation": "Navigation",
-  "Focus": "Fokus",
+  Back: "Zurück",
+  Forward: "Vorwärts",
+  Up: "Hoch",
+  Navigation: "Navigation",
+  Focus: "Fokus",
   "Focus Mode": "Fokusmodus",
   "Panel Toggles": "Panel-Umschalter",
-  "Fullscreen": "Vollbild",
+  Fullscreen: "Vollbild",
   "Exit Fullscreen": "Vollbild beenden",
-  "Open": "Öffnen",
-  "Input": "Eingabe",
-  "Right": "Rechts",
+  Open: "Öffnen",
+  Input: "Eingabe",
+  Right: "Rechts",
   "Search Input": "Sucheingabe",
   "Navigation Buttons": "Navigationsschaltflächen",
 
-  // Tags & Concepts
-  "Tags": "Tags",
-  "Concepts": "Konzepte",
+  Tags: "Tags",
+  Concepts: "Konzepte",
   "Show Tags": "Tags anzeigen",
   "Show Concepts": "Konzepte anzeigen",
   "Create Tag": "Tag erstellen",
   "Create Concept": "Konzept erstellen",
-  "Point": "Punkt",
+  Point: "Punkt",
 
-  // Long descriptions
   "Choose the color theme for the application": "Wählen Sie das Farbschema für die Anwendung",
   "Choose the color theme": "Farbschema wählen",
   "Use dark color scheme": "Dunkles Farbschema verwenden",
@@ -444,33 +421,27 @@ const germanTranslations: Record<string, string> = {
   "Expertise Level": "Erfahrungsstufe",
   "Choose the layout mode": "Layoutmodus wählen",
 
-  // Specific terms from warnings
   "Color scheme for the interface": "Farbschema für die Oberfläche",
   "Layout mode for the interface": "Layoutmodus für die Oberfläche",
   "Interface mode": "Oberflächenmodus",
   "Your expertise level": "Ihre Erfahrungsstufe",
   "Show detailed help and tutorials": "Detaillierte Hilfe und Tutorials anzeigen",
 
-  // Generated camelCase names
   "Import Kit": "Kit importieren",
 
-  // More UI terms
   "Window Library": "Fensterbibliothek",
   "Cluster Menu": "Gruppierungsmenü",
   "Expand Menu": "Erweiterungsmenü",
 
-  // App names
   "Home App": "Startseite",
   "Kit App": "Kit-App",
   "Design App": "Entwurf-App",
   "Type App": "Typ-App",
   "Quality App": "Qualität-App",
 
-  // Panel names
   "Panel Toggle": "Panel-Umschalter",
   "Panel Visibility": "Panel-Sichtbarkeit",
 
-  // More placeholders
   "e.g., 1.0.0": "z.B. 1.0.0",
   "e.g., MIT, GPL-3.0, Apache-2.0": "z.B. MIT, GPL-3.0, Apache-2.0",
   "e.g., small, medium, large": "z.B. klein, mittel, groß",
@@ -521,17 +492,14 @@ function translateToGerman(english: string): string {
 }
 
 function extractReadableName(key: string): string {
-  // Get the last part of the key and convert to readable format
   const parts = key.split(".");
   let lastPart = parts[parts.length - 1];
 
-  // Remove common suffixes
   lastPart = lastPart.replace(/^(label|normal|beginner)$/, "");
   if (!lastPart && parts.length > 1) {
     lastPart = parts[parts.length - 2];
   }
 
-  // Convert camelCase to Title Case
   return lastPart
     .replace(/([A-Z])/g, " $1")
     .replace(/^./, (str) => str.toUpperCase())
@@ -541,7 +509,6 @@ function extractReadableName(key: string): string {
 const enKeys = flattenKeys(en);
 const deKeys = flattenKeys(de);
 
-// Check for missing keys in German
 for (const key of enKeys) {
   if (!deKeys.includes(key)) {
     issues.push({
@@ -552,7 +519,6 @@ for (const key of enKeys) {
   }
 }
 
-// Check for extra keys in German
 for (const key of deKeys) {
   if (!enKeys.includes(key)) {
     issues.push({
@@ -563,26 +529,69 @@ for (const key of deKeys) {
   }
 }
 
-// Check for incomplete translations (same as English)
 for (const key of enKeys) {
   const enValue = getNestedValue(en, key);
   const deValue = getNestedValue(de, key);
   if (typeof enValue === "string" && typeof deValue === "string" && enValue === deValue && enValue !== "") {
-    // Skip warnings for technical terms that are the same in both languages
-    const technicalTerms = ["ID", "X", "Y", "Z", "U", "V", "T", "HUD", "URL", "Email", "System", "Layout", "Normal", "Desktop", "Tablet", "Port", "Chat", "Kit", "Design", "Tutorial", "Remote", "Name", "Version", "Homepage", "Label", "Min", "Max", "Tags", "Tag", "Concept", "Interface", "Position", "Rotation", "Definition", "Id", "???", "??", "Beginner", "Expert", "Developer", "User", "Mobile", "Tablet", "Desktop"];
-    // Skip warnings for paths (manuals, tutorials)
+    const technicalTerms = [
+      "ID",
+      "X",
+      "Y",
+      "Z",
+      "U",
+      "V",
+      "T",
+      "HUD",
+      "URL",
+      "Email",
+      "System",
+      "Layout",
+      "Normal",
+      "Desktop",
+      "Tablet",
+      "Port",
+      "Chat",
+      "Kit",
+      "Design",
+      "Tutorial",
+      "Remote",
+      "Name",
+      "Version",
+      "Homepage",
+      "Label",
+      "Min",
+      "Max",
+      "Tags",
+      "Tag",
+      "Concept",
+      "Interface",
+      "Position",
+      "Rotation",
+      "Definition",
+      "Id",
+      "???",
+      "??",
+      "Beginner",
+      "Expert",
+      "Developer",
+      "User",
+      "Mobile",
+      "Tablet",
+      "Desktop",
+    ];
+
     if (enValue.includes("/") || enValue.includes("\\")) continue;
-    // Skip warnings for hotkeys
+
     if (enValue.includes("Ctrl") || enValue.includes("Alt") || enValue.includes("Shift") || enValue.includes("Meta")) continue;
-    // Skip warnings for empty or very short values
+
     if (enValue.length <= 2) continue;
-    // Skip warnings for generated camelCase patterns that are acceptable
+
     if (/^[A-Z][a-z]+( [A-Z][a-z]+)*( Id)?$/.test(enValue)) continue;
-    // Skip warnings for manual keys (documentation paths)
+
     if (key.endsWith(".manual")) continue;
-    // Skip warnings for placeholder patterns
+
     if (enValue.includes("tag1") || enValue.includes("e.g.") || enValue.includes("...")) continue;
-    // Skip warnings for keys outside semio.sketchpad namespace
+
     if (!key.startsWith("semio.sketchpad.")) continue;
     if (!technicalTerms.includes(enValue)) {
       issues.push({
@@ -594,7 +603,6 @@ for (const key of enKeys) {
   }
 }
 
-// Check for unused keys
 for (const key of enKeys) {
   const baseId = key.replace(/\.(label|beginner|manual|tutorial|hotkey)$/, "");
   if (!usedIds.has(baseId) && !key.includes(".")) {
@@ -606,11 +614,10 @@ for (const key of enKeys) {
   }
 }
 
-// Check for missing translations for used IDs
-Array.from(usedIds).forEach(id => {
+Array.from(usedIds).forEach((id) => {
   const labelKey = `${id}.label`;
   const labelKeyNormal = `${id}.label.normal`;
-  // Check if either .label or .label.normal exists
+
   if (!enKeys.includes(labelKey) && !enKeys.includes(labelKeyNormal)) {
     issues.push({
       severity: "error",
@@ -628,7 +635,6 @@ if (FIX_MODE) {
   let enFixed = 0;
   let deFixed = 0;
 
-  // Fix missing German translations by copying from English
   for (const key of enKeys) {
     if (!deKeys.includes(key)) {
       const enValue = getNestedValue(en, key);
@@ -640,7 +646,6 @@ if (FIX_MODE) {
     }
   }
 
-  // Fix incomplete translations (same as English) by translating them
   for (const key of enKeys) {
     const enValue = getNestedValue(en, key);
     const deValue = getNestedValue(de, key);
@@ -656,12 +661,10 @@ if (FIX_MODE) {
     }
   }
 
-  // Fix missing English translations for used IDs
-  Array.from(usedIds).forEach(id => {
+  Array.from(usedIds).forEach((id) => {
     const labelKeyNormal = `${id}.label.normal`;
     const labelKeyBeginner = `${id}.label.beginner`;
 
-    // Check if we need to add label.normal
     if (!enKeys.includes(labelKeyNormal)) {
       const readable = extractReadableName(id);
       setNestedValue(en, labelKeyNormal, readable);
@@ -670,7 +673,6 @@ if (FIX_MODE) {
       deFixed++;
     }
 
-    // Check if we need to add label.beginner
     if (!enKeys.includes(labelKeyBeginner)) {
       const readable = extractReadableName(id);
       setNestedValue(en, labelKeyBeginner, readable);
@@ -680,10 +682,8 @@ if (FIX_MODE) {
     }
   });
 
-  // Remove extra German keys not in English
   for (const key of deKeys) {
     if (!enKeys.includes(key)) {
-      // Only delete if it's a leaf node (string value)
       const deValue = getNestedValue(de, key);
       if (typeof deValue === "string") {
         deleteNestedValue(de, key);
@@ -692,7 +692,6 @@ if (FIX_MODE) {
     }
   }
 
-  // Save translations
   saveTranslations("en", en);
   saveTranslations("de", de);
 
@@ -700,17 +699,14 @@ if (FIX_MODE) {
   console.log(`✅ Fixed ${deFixed} German entries`);
   console.log("\n📝 Running validation again to check results...\n");
 
-  // Reload and re-validate
   en = loadTranslations("en");
   de = loadTranslations("de");
 
-  // Clear issues and re-validate
   issues.length = 0;
 
   const newEnKeys = flattenKeys(en);
   const newDeKeys = flattenKeys(de);
 
-  // Re-check for missing keys in German
   for (const key of newEnKeys) {
     if (!newDeKeys.includes(key)) {
       issues.push({
@@ -721,7 +717,6 @@ if (FIX_MODE) {
     }
   }
 
-  // Re-check for extra keys in German
   for (const key of newDeKeys) {
     if (!newEnKeys.includes(key)) {
       issues.push({
@@ -732,26 +727,69 @@ if (FIX_MODE) {
     }
   }
 
-  // Re-check for incomplete translations
   for (const key of newEnKeys) {
     const enValue = getNestedValue(en, key);
     const deValue = getNestedValue(de, key);
     if (typeof enValue === "string" && typeof deValue === "string" && enValue === deValue && enValue !== "") {
-      // Skip warnings for technical terms that are the same in both languages
-      const technicalTerms = ["ID", "X", "Y", "Z", "U", "V", "T", "HUD", "URL", "Email", "System", "Layout", "Normal", "Desktop", "Tablet", "Port", "Chat", "Kit", "Design", "Tutorial", "Remote", "Name", "Version", "Homepage", "Label", "Min", "Max", "Tags", "Tag", "Concept", "Interface", "Position", "Rotation", "Definition", "Id", "???", "??", "Beginner", "Expert", "Developer", "User", "Mobile", "Tablet", "Desktop"];
-      // Skip warnings for paths (manuals, tutorials)
+      const technicalTerms = [
+        "ID",
+        "X",
+        "Y",
+        "Z",
+        "U",
+        "V",
+        "T",
+        "HUD",
+        "URL",
+        "Email",
+        "System",
+        "Layout",
+        "Normal",
+        "Desktop",
+        "Tablet",
+        "Port",
+        "Chat",
+        "Kit",
+        "Design",
+        "Tutorial",
+        "Remote",
+        "Name",
+        "Version",
+        "Homepage",
+        "Label",
+        "Min",
+        "Max",
+        "Tags",
+        "Tag",
+        "Concept",
+        "Interface",
+        "Position",
+        "Rotation",
+        "Definition",
+        "Id",
+        "???",
+        "??",
+        "Beginner",
+        "Expert",
+        "Developer",
+        "User",
+        "Mobile",
+        "Tablet",
+        "Desktop",
+      ];
+
       if (enValue.includes("/") || enValue.includes("\\")) continue;
-      // Skip warnings for hotkeys
+
       if (enValue.includes("Ctrl") || enValue.includes("Alt") || enValue.includes("Shift") || enValue.includes("Meta")) continue;
-      // Skip warnings for empty or very short values
+
       if (enValue.length <= 2) continue;
-      // Skip warnings for generated camelCase patterns that are acceptable
+
       if (/^[A-Z][a-z]+( [A-Z][a-z]+)*( Id)?$/.test(enValue)) continue;
-      // Skip warnings for manual keys (documentation paths)
+
       if (key.endsWith(".manual")) continue;
-      // Skip warnings for placeholder patterns
+
       if (enValue.includes("tag1") || enValue.includes("e.g.") || enValue.includes("...")) continue;
-      // Skip warnings for keys outside semio.sketchpad namespace
+
       if (!key.startsWith("semio.sketchpad.")) continue;
       if (!technicalTerms.includes(enValue)) {
         issues.push({
@@ -763,8 +801,7 @@ if (FIX_MODE) {
     }
   }
 
-  // Re-check for missing translations for used IDs
-  Array.from(usedIds).forEach(id => {
+  Array.from(usedIds).forEach((id) => {
     const labelKey = `${id}.label`;
     if (!newEnKeys.includes(labelKey) && !newEnKeys.includes(`${id}.label.normal`)) {
       issues.push({
@@ -778,8 +815,8 @@ if (FIX_MODE) {
 //#endregion
 
 //#region Generate Report
-const errors = issues.filter(i => i.severity === "error");
-const warnings = issues.filter(i => i.severity === "warning");
+const errors = issues.filter((i) => i.severity === "error");
+const warnings = issues.filter((i) => i.severity === "warning");
 
 const report = {
   timestamp: new Date().toISOString(),

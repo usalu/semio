@@ -5,8 +5,8 @@ prompt: Fix infinite loop and missing navbar/footer in Design/Type apps after im
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: '2025-12-16T17:06:07.843Z'
-commit: '0000000000000000000000000000000000000000'
+  created: "2025-12-16T17:06:07.843Z"
+commit: "0000000000000000000000000000000000000000"
 iterations: []
 ---
 

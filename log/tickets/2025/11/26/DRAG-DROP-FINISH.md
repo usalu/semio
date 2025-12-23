@@ -5,8 +5,8 @@ prompt: Finish drag and drop functionality for pieces in diagram and scene
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: '2025-12-16T17:06:07.718Z'
-commit: '0000000000000000000000000000000000000000'
+  created: "2025-12-16T17:06:07.718Z"
+commit: "0000000000000000000000000000000000000000"
 iterations: []
 ---
 

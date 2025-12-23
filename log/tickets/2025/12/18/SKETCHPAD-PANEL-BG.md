@@ -4,8 +4,8 @@ prompt: The panel base needs to have panel background color
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: '2025-12-18T16:20:06.035Z'
-  finished: '2025-12-18T16:22:19.556Z'
+  created: "2025-12-18T16:20:06.035Z"
+  finished: "2025-12-18T16:22:19.556Z"
 summary: Ensure panels use panel background and panel level context
 commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
 model: gpt-5.2-codex
@@ -14,8 +14,8 @@ iterations:
       Ensure panel base containers render with panel background (bg-panel) and
       panel level context so they don't inherit base background.
     date:
-      started: '2025-12-18T16:20:54.781Z'
-      ended: '2025-12-18T16:22:08.587Z'
+      started: "2025-12-18T16:20:54.781Z"
+      ended: "2025-12-18T16:22:08.587Z"
     model: gpt-5.2-codex
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
     commit: 20a57039fec48f8c991d98769aa31e15cbd6859c

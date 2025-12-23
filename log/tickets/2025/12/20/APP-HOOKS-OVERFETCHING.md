@@ -9,13 +9,13 @@ prompt: >-
 status: open
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: '2025-12-20T15:27:20.159Z'
+  created: "2025-12-20T15:27:20.159Z"
 iterations:
   - prompt: >-
       Refactor all app hooks to use granular XState selectors instead of
       fetching entire app state
     date:
-      started: '2025-12-20T15:27:39.808Z'
+      started: "2025-12-20T15:27:39.808Z"
     model: claude-opus-4-5
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
     files:
@@ -58,6 +58,7 @@ iterations:
       added: 0
       removed: 0
 ---
+
 # Previously
 
 # Plan

@@ -8,17 +8,17 @@ prompt: >-
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: '2025-12-16T15:59:29.029Z'
-  finished: '2025-12-16T15:59:42.528Z'
-commit: '0000000000000000000000000000000000000000'
+  created: "2025-12-16T15:59:29.029Z"
+  finished: "2025-12-16T15:59:42.528Z"
+commit: "0000000000000000000000000000000000000000"
 iterations:
   - prompt: >-
       Fix Kit app settings panel being empty. There should be two sections
       appearing: kit editor and sketchpad. Extend kit app test to check for the
       panel and at least one item per section.
     date:
-      started: '2025-12-16T15:59:29.029Z'
-      ended: '2025-12-16T15:59:36.445Z'
+      started: "2025-12-16T15:59:29.029Z"
+      ended: "2025-12-16T15:59:36.445Z"
     model: claude-opus-4-5
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
     commit: c44e5e38193be007ca56cc649aa2f58238c1ec40

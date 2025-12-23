@@ -36,18 +36,15 @@ if (!existsSync(pyEngineDir)) {
 console.log("🐍 Formatting and linting Python with Ruff...");
 
 try {
-
   execSync("ruff format .", {
     cwd: pyEngineDir,
     stdio: "inherit",
   });
 
-
   execSync("ruff check --fix .", {
     cwd: pyEngineDir,
     stdio: "inherit",
   });
-
 
   try {
     const output = execSync("ruff check --output-format=json .", {

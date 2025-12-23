@@ -6,12 +6,12 @@ prompt: >-
 status: open
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: '2025-12-19T22:05:57.199Z'
+  created: "2025-12-19T22:05:57.199Z"
 iterations:
   - prompt: Implement the refactor plan to remove Yjs from all app stores
     date:
-      started: '2025-12-19T22:06:13.245Z'
-      ended: '2025-12-19T22:14:07.374Z'
+      started: "2025-12-19T22:06:13.245Z"
+      ended: "2025-12-19T22:14:07.374Z"
     model: claude-opus-4-5
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
     commit: 2ac49129091a7cee4b05f2fe08423415f179ea77
@@ -34,8 +34,8 @@ iterations:
       Make sure 100% of yjs disappears and no yMap are left in any app store but
       only in kit app. All other apps should use exclusively the state machine.
     date:
-      started: '2025-12-19T22:18:36.753Z'
-      ended: '2025-12-19T23:08:20.382Z'
+      started: "2025-12-19T22:18:36.753Z"
+      ended: "2025-12-19T23:08:20.382Z"
     model: claude-opus-4-5
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
     commit: 2ac49129091a7cee4b05f2fe08423415f179ea77
@@ -62,8 +62,8 @@ iterations:
       Remove Y.js from Design.tsx, Quality.tsx, Docs.tsx, and Tutorials.tsx by
       removing legacy store classes and switching all hooks to use XState
     date:
-      started: '2025-12-19T23:15:09.367Z'
-      ended: '2025-12-20T00:12:27.853Z'
+      started: "2025-12-19T23:15:09.367Z"
+      ended: "2025-12-20T00:12:27.853Z"
     model: claude-opus-4-5
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
     commit: 2ac49129091a7cee4b05f2fe08423415f179ea77
@@ -95,6 +95,7 @@ iterations:
       added: 510
       removed: 905
 ---
+
 # Previously
 
 # Plan

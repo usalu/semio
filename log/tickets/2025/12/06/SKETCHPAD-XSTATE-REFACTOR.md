@@ -5,8 +5,8 @@ prompt: Refactor sketchpad to use pure XState machines with no Y.js in app state
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: '2025-12-16T17:06:07.878Z'
-commit: '0000000000000000000000000000000000000000'
+  created: "2025-12-16T17:06:07.878Z"
+commit: "0000000000000000000000000000000000000000"
 iterations: []
 ---
 

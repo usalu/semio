@@ -25,17 +25,10 @@ import { join } from "path";
 import sharp from "sharp";
 
 //#region Image Processing
-export async function resizeImage(
-  sourcePath: string,
-  targetPathBase: string,
-  targetResolutions: number[]
-): Promise<void> {
+export async function resizeImage(sourcePath: string, targetPathBase: string, targetResolutions: number[]): Promise<void> {
   for (const resolution of targetResolutions) {
     const targetPath = `${targetPathBase}_${resolution}x${resolution}.png`;
-    await sharp(sourcePath)
-      .resize(resolution, resolution)
-      .png()
-      .toFile(targetPath);
+    await sharp(sourcePath).resize(resolution, resolution).png().toFile(targetPath);
   }
 }
 //#endregion
@@ -97,11 +90,7 @@ export function stopProcessOnPort(port: number): void {
   }
 }
 
-export function runProcess(
-  command: string,
-  args: string[],
-  options?: { cwd?: string; onExit?: () => void }
-): ChildProcess {
+export function runProcess(command: string, args: string[], options?: { cwd?: string; onExit?: () => void }): ChildProcess {
   const proc = spawn(command, args, {
     cwd: options?.cwd,
     stdio: "inherit",

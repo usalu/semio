@@ -38,19 +38,17 @@ export const MetabolismKitAuthors = MetabolismKitData.authors ?? [];
 export const MetabolismKitTags = MetabolismKitData.tags ?? [];
 export const MetabolismKitConcepts = MetabolismKitData.concepts ?? [];
 export const MetabolismKitAttributes = (MetabolismKitData as { attributes?: unknown[] }).attributes ?? [];
-export const MetabolismKitNakaginCapsuleTowerDesigns = MetabolismKitDesigns.filter(
-    (design) => design.name === "Nakagin Capsule Tower",
-) ?? [];
+export const MetabolismKitNakaginCapsuleTowerDesigns = MetabolismKitDesigns.filter((design) => design.name === "Nakagin Capsule Tower") ?? [];
 
 const buildLookup = (items: any[] = []) => {
-    const byGuid: Record<string, any> = {};
-    const byName: Record<string, any> = {};
-    items.forEach((item) => {
-        if (!item) return;
-        if (item.guid) byGuid[item.guid] = item;
-        if (item.name) byName[item.name] = item;
-    });
-    return { byGuid, byName };
+  const byGuid: Record<string, any> = {};
+  const byName: Record<string, any> = {};
+  items.forEach((item) => {
+    if (!item) return;
+    if (item.guid) byGuid[item.guid] = item;
+    if (item.name) byName[item.name] = item;
+  });
+  return { byGuid, byName };
 };
 
 const typeLookup = buildLookup(MetabolismKitTypes);
@@ -65,12 +63,10 @@ export const MetabolismKitInterfacesByGuid = interfaceLookup.byGuid;
 export const MetabolismKitInterfacesByName = interfaceLookup.byName;
 
 const nakaginCapsuleTowerDesign = MetabolismKitDesigns.find((d) => d.name === "Nakagin Capsule Tower");
-const nakaginCapsuleTowerFlatDesign = MetabolismKitDesigns.find(
-    (d) => d.name === "Flat" && d.parent?.guid === nakaginCapsuleTowerDesign?.guid,
-);
+const nakaginCapsuleTowerFlatDesign = MetabolismKitDesigns.find((d) => d.name === "Flat" && d.parent?.guid === nakaginCapsuleTowerDesign?.guid);
 export const MetabolismKitNakaginCapsuleTowerFlatPieces =
-    nakaginCapsuleTowerFlatDesign?.pieces?.map((p) => ({
-        name: p.name,
-        plane: p.plane,
-        center: p.center,
-    })) ?? [];
+  nakaginCapsuleTowerFlatDesign?.pieces?.map((p) => ({
+    name: p.name,
+    plane: p.plane,
+    center: p.center,
+  })) ?? [];

@@ -5,8 +5,8 @@ prompt: Extend sketchpad tests for type app and design app panels
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: '2025-12-16T17:06:07.798Z'
-commit: '0000000000000000000000000000000000000000'
+  created: "2025-12-16T17:06:07.798Z"
+commit: "0000000000000000000000000000000000000000"
 iterations: []
 ---
 

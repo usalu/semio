@@ -4,8 +4,8 @@ prompt: Remove per-element backgrounds so only Window surfaces have a background
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: '2025-12-18T15:34:29.349Z'
-  finished: '2025-12-18T15:55:58.196Z'
+  created: "2025-12-18T15:34:29.349Z"
+  finished: "2025-12-18T15:55:58.196Z"
 summary: Make UI elements transparent; only windows paint background
 commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
 model: gpt-5.2-codex
@@ -15,8 +15,8 @@ iterations:
       background; make panels and layout chrome transparent; keep temporary
       surfaces readable.
     date:
-      started: '2025-12-18T15:39:08.907Z'
-      ended: '2025-12-18T15:55:14.385Z'
+      started: "2025-12-18T15:39:08.907Z"
+      ended: "2025-12-18T15:55:14.385Z"
     model: gpt-5.2-codex
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
     commit: 20a57039fec48f8c991d98769aa31e15cbd6859c

@@ -5,8 +5,8 @@ prompt: Fix all i18n errors and warnings
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: '2025-12-16T17:06:07.866Z'
-commit: '0000000000000000000000000000000000000000'
+  created: "2025-12-16T17:06:07.866Z"
+commit: "0000000000000000000000000000000000000000"
 iterations: []
 ---
 

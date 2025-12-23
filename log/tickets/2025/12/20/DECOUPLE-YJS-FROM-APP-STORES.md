@@ -7,8 +7,8 @@ prompt: >-
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: '2025-12-20T11:52:27.669Z'
-  finished: '2025-12-20T11:54:12.570Z'
+  created: "2025-12-20T11:52:27.669Z"
+  finished: "2025-12-20T11:54:12.570Z"
 summary: >-
   Decoupled yjs from all app stores except Kit. Only KitStore uses yjs for state
   persistence. Design, Type, Quality, Docs, Home, and Feedback apps use
@@ -16,10 +16,10 @@ summary: >-
 commit: 4ff6fd77dee713af972c27bd3761939be4302c80
 model: claude-sonnet-4-5
 iterations:
-  - prompt: 'Removed yjs (yMap, yArray) from all app stores except Kit'
+  - prompt: "Removed yjs (yMap, yArray) from all app stores except Kit"
     date:
-      started: '2025-12-20T11:52:36.998Z'
-      ended: '2025-12-20T11:52:47.415Z'
+      started: "2025-12-20T11:52:36.998Z"
+      ended: "2025-12-20T11:52:47.415Z"
     model: claude-sonnet-4-5
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
     commit: 4ff6fd77dee713af972c27bd3761939be4302c80

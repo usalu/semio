@@ -22,8 +22,8 @@
 
 import { runProcess, stopProcessOnPort } from "../../scripts/utils";
 
-stopProcessOnPort(2507); 
-stopProcessOnPort(5678); 
+stopProcessOnPort(2507);
+stopProcessOnPort(5678);
 
 const proc = runProcess("uv", ["run", "engine.py"], {
   cwd: __dirname,
@@ -32,7 +32,6 @@ const proc = runProcess("uv", ["run", "engine.py"], {
     process.exit(0);
   },
 });
-
 
 proc.on("exit", (code) => {
   process.exit(code ?? 0);

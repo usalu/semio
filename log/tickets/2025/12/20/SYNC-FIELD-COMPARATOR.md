@@ -6,8 +6,8 @@ prompt: >-
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: '2025-12-20T13:30:21.713Z'
-  finished: '2025-12-20T13:30:40.966Z'
+  created: "2025-12-20T13:30:21.713Z"
+  finished: "2025-12-20T13:30:40.966Z"
 summary: >-
   Add optional comparator parameter to useSyncField and useSyncFields for custom
   equality checks
@@ -16,8 +16,8 @@ model: claude-opus-4-5
 iterations:
   - prompt: Add optional comparator parameter to useSyncField and useSyncFields
     date:
-      started: '2025-12-20T13:30:28.411Z'
-      ended: '2025-12-20T13:30:33.648Z'
+      started: "2025-12-20T13:30:28.411Z"
+      ended: "2025-12-20T13:30:33.648Z"
     model: claude-opus-4-5
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
     commit: 4ff6fd77dee713af972c27bd3761939be4302c80
@@ -44,6 +44,7 @@ lines:
   added: 89
   removed: 88
 ---
+
 # Previously
 
 # Plan

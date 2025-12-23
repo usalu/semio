@@ -70,10 +70,11 @@ import {
   TutorialIcon,
 } from "@semio/assets";
 import type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, ReactFlowInstance } from "@xyflow/react";
-import { applyNodeChanges, Background, BackgroundVariant, BaseEdge, getBezierPath, Handle, MiniMap, Position, ReactFlow, ReactFlowProvider, useEdgesState, useInternalNode, useNodesState, useReactFlow, ViewportPortal } from "@xyflow/react";
+import { applyNodeChanges, Background, BackgroundVariant, BaseEdge, ConnectionMode, getBezierPath, Handle, MiniMap, Position, ReactFlow, ReactFlowProvider, useInternalNode, useReactFlow, ViewportPortal } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Command as CommandPrimitive } from "cmdk";
+import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "d3-force";
 import * as dagre from "dagre";
 import * as React from "react";
 import { createPortal } from "react-dom";
@@ -352,8 +353,6 @@ function CommandShortcut({ className, ...props }: React.ComponentProps<"span">) 
 // #endregion Command
 
 export { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandShortcut };
-
-// #region Footer
 
 // #region Footer
 
@@ -1322,7 +1321,7 @@ function Action({ className, id, icon, text, as = "button", ...props }: ActionPr
 export { Action, ActionDropdown, ActionGroup, ActionGroupItem, actionGroupItemVariants };
 export type { ActionDropdownOption, ActionDropdownProps, ActionProps };
 
-// #endregion ActionGroupup
+// #endregion ActionGroup
 
 const buttonGroupItemVariants = cva(
   "text-foreground inline-flex items-center justify-center gap-single text-sm font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none transition-[color,box-shadow] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap h-medium aspect-square p-single overflow-hidden",
@@ -2549,8 +2548,6 @@ function ToggleGroupItem({ className, id, icon, text, action, ...props }: Toggle
   );
 
   if (id) {
-    // Wrap in a span to separate Tooltip's data-state from Toggle's data-state
-    // The span receives the tooltip state while the button keeps its toggle state
     return (
       <Tooltip>
         <TooltipTrigger asChild>
@@ -2566,11 +2563,10 @@ function ToggleGroupItem({ className, id, icon, text, action, ...props }: Toggle
   return toggleGroupItemElement;
 }
 
-// Helper to add size-small class to icon elements
 const addIconSize = (element: React.ReactNode): React.ReactNode => {
   if (React.isValidElement(element)) {
     const existingClassName = (element.props as any).className || "";
-    // Only add size-small if no size class is already present
+
     if (!existingClassName.includes("size-")) {
       return React.cloneElement(element, {
         ...(element.props as object),
@@ -2625,8 +2621,6 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     };
 
     const handleToggleGroupValueChange = (toggleValue: string) => {
-      // If the value is the selectedItem.value, it means the toggle is being pressed "on"
-      // If the value is empty/undefined, it means the toggle is being pressed "off"
       const isPressed = toggleValue === selectedItem.value;
       if (onPressedChange) {
         onPressedChange(isPressed);
@@ -2635,7 +2629,6 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
 
     const availableItems = items.filter((item) => item.value !== value);
 
-    // Original Popover-based dropdown action
     const dropdownAction = (
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
@@ -2668,7 +2661,6 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
       </Popover>
     );
 
-    // Determine if the toggle pressed state is controlled
     const isPressedControlled = pressed !== undefined;
     const toggleGroupProps: any = {
       id,
@@ -2682,13 +2674,12 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
           icon: addIconSize(selectedItem.label),
           text: selectedItem.text,
           action: dropdownAction,
-          // Pass the selected item's id if available for test accessibility
+
           id: selectedItem.id,
         },
       ],
     };
 
-    // Only pass value OR defaultValue, never both
     if (isPressedControlled) {
       toggleGroupProps.value = pressed ? selectedItem.value : "";
     } else if (defaultPressed !== undefined) {
@@ -4066,10 +4057,6 @@ export { PageNavigation };
 
 // #endregion PageNavigation
 
-// #endregion SectionTree
-
-// #endregion Breadcrumb
-
 // #endregion Navigation Components
 
 // #region Panel Components
@@ -4216,7 +4203,7 @@ const Panel: React.FC<PanelProps> = ({
 };
 
 const PanelSectionWrapper: React.FC<{ section: PanelSection; defaultOpen: boolean; children: React.ReactNode }> = ({ section, defaultOpen, children }) => {
-  const sectionLabel = useLabel(section.id, section.id);
+  const sectionLabel = useLabel(section.id) ?? section.id;
   return (
     <TreeSection label={sectionLabel} id={section.id} defaultOpen={defaultOpen} actions={section.actions} onPointerEnter={section.onPointerEnter} onPointerLeave={section.onPointerLeave} onDoubleClick={section.onDoubleClick}>
       {children}
@@ -4561,7 +4548,6 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
     else if (!isMaximized && onMaximize) onMaximize();
   };
 
-  // Find the GoldenLayout header to portal controls into (if in GoldenLayout context)
   React.useEffect(() => {
     if (windowRef.current) {
       const stack = windowRef.current.closest(".lm_item.lm_stack");
@@ -4615,7 +4601,6 @@ export { Window };
 
 // #endregion Window
 
-// ...
 // #region Page
 
 export interface PageFrontmatter {
@@ -4665,8 +4650,10 @@ export const Page: React.FC<PageProps> = ({ frontmatter, focusedItemId, onFocusC
 
 // #region Diagram
 
-export { applyNodeChanges, Background, BackgroundVariant, BaseEdge, getBezierPath, Handle, MiniMap, Position, ReactFlow, ReactFlowProvider, useInternalNode, useReactFlow, ViewportPortal };
-export type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, ReactFlowInstance };
+export { applyNodeChanges, Background, BackgroundVariant, BaseEdge, forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, getBezierPath, Handle, Position, ReactFlow, ReactFlowProvider, useInternalNode, useReactFlow, ViewportPortal };
+export type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, ReactFlowInstance, Simulation, SimulationLinkDatum, SimulationNodeDatum };
+
+export const DIAGRAM_UNIT = 48;
 
 export type DiagramLayoutDirection = "TB" | "BT" | "LR" | "RL";
 
@@ -4679,7 +4666,7 @@ export interface DiagramLayoutOptions {
 }
 
 export function calculateDiagramLayout(nodes: Node[], edges: Edge[], options: DiagramLayoutOptions = {}): { nodes: Node[]; edges: Edge[] } {
-  const { direction = "TB", nodeWidth = 48, nodeHeight = 48, rankSep = 80, nodeSep = 50 } = options;
+  const { direction = "TB", nodeWidth = DIAGRAM_UNIT, nodeHeight = DIAGRAM_UNIT, rankSep = DIAGRAM_UNIT * 1.67, nodeSep = DIAGRAM_UNIT * 1.04 } = options;
 
   const dagreGraph = new dagre.graphlib.Graph();
   dagreGraph.setDefaultEdgeLabel(() => ({}));
@@ -4709,6 +4696,24 @@ export function calculateDiagramLayout(nodes: Node[], edges: Edge[], options: Di
   return { nodes: layoutedNodes, edges };
 }
 
+export interface DiagramForceConfig {
+  enabled: boolean;
+  chargeStrength?: number;
+  linkDistance?: number;
+  collideRadius?: number;
+  centerStrength?: number;
+  updateIntervalMs?: number;
+}
+
+export const defaultDiagramForceConfig: DiagramForceConfig = {
+  enabled: false,
+  chargeStrength: -DIAGRAM_UNIT * 1.67,
+  linkDistance: DIAGRAM_UNIT * 1.25,
+  collideRadius: DIAGRAM_UNIT * 0.625,
+  centerStrength: 0.15,
+  updateIntervalMs: 50,
+};
+
 export interface DiagramProps {
   nodeTypes: NodeTypes;
   edgeTypes?: EdgeTypes;
@@ -4733,7 +4738,6 @@ export interface DiagramProps {
   onEdgeMouseLeave?: (event: React.MouseEvent, edge: Edge) => void;
   onPaneClick?: (event: React.MouseEvent) => void;
   onPaneDoubleClick?: (event: React.MouseEvent) => void;
-  // PERF: onMoveStart/onMoveEnd for tracking pan state to skip hover updates
   onMoveStart?: () => void;
   onMoveEnd?: () => void;
   reactFlowInstanceRef?: React.RefObject<ReactFlowInstance | null>;
@@ -4819,18 +4823,46 @@ const DiagramInner: React.FC<DiagramProps> = ({
 }) => {
   const isControlled = controlledNodes !== undefined && controlledEdges !== undefined;
 
-  const [internalNodes, setInternalNodes, onInternalNodesChange] = useNodesState(initialNodes);
-  const [internalEdges, setInternalEdges, onInternalEdgesChange] = useEdgesState(initialEdges);
+  const [internalNodes, setInternalNodes] = React.useState<Node[]>(initialNodes);
+  const [internalEdges, setInternalEdges] = React.useState<Edge[]>(initialEdges);
 
   const finalNodes = isControlled ? controlledNodes : internalNodes;
   const finalEdges = isControlled ? controlledEdges : internalEdges;
-  const finalOnNodesChange = isControlled ? onNodesChangeReactFlow : onInternalNodesChange;
-  const finalOnEdgesChange = isControlled ? onEdgesChangeReactFlow : onInternalEdgesChange;
+
+  const handleNodesChange = React.useCallback(
+    (changes: any[]) => {
+      if (onNodesChangeReactFlow) {
+        onNodesChangeReactFlow(changes);
+      }
+      if (!isControlled) {
+        setInternalNodes((nds) => applyNodeChanges(changes, nds));
+      }
+    },
+    [onNodesChangeReactFlow, isControlled],
+  );
+
+  const handleEdgesChange = React.useCallback(
+    (changes: any[]) => {
+      if (!isControlled) {
+        setInternalEdges((eds) => {
+          const updated = [...eds];
+          for (const change of changes) {
+            if (change.type === "remove") {
+              const idx = updated.findIndex((e) => e.id === change.id);
+              if (idx !== -1) updated.splice(idx, 1);
+            }
+          }
+          return updated;
+        });
+      }
+    },
+    [isControlled],
+  );
 
   const handleInit = React.useCallback(
     (instance: ReactFlowInstance) => {
       if (reactFlowInstanceRef) {
-        reactFlowInstanceRef.current = instance;
+        (reactFlowInstanceRef as any).current = instance;
       }
       if (onInitProp) {
         onInitProp(instance);
@@ -4874,7 +4906,7 @@ const DiagramInner: React.FC<DiagramProps> = ({
       setInternalNodes(initialNodes);
       setInternalEdges(initialEdges);
     }
-  }, [initialNodes, initialEdges, isControlled, setInternalNodes, setInternalEdges]);
+  }, [initialNodes, initialEdges, isControlled]);
 
   React.useEffect(() => {
     if (!isControlled && onNodesChangeProp) {
@@ -4889,12 +4921,12 @@ const DiagramInner: React.FC<DiagramProps> = ({
   }, [internalEdges, onEdgesChangeProp, isControlled]);
 
   return (
-    <div ref={wrapperRef} className={`relative w-full h-full ${className}`}>
+    <div ref={wrapperRef as any} className={`relative w-full h-full ${className}`}>
       <ReactFlow
         nodes={finalNodes}
         edges={finalEdges}
-        onNodesChange={finalOnNodesChange}
-        onEdgesChange={finalOnEdgesChange}
+        onNodesChange={handleNodesChange}
+        onEdgesChange={handleEdgesChange}
         onConnect={onConnect}
         onInit={handleInit}
         onNodeClick={onNodeClick}
@@ -4917,7 +4949,7 @@ const DiagramInner: React.FC<DiagramProps> = ({
         fitView={fitView}
         minZoom={minZoom}
         maxZoom={maxZoom}
-        connectionMode={connectionMode as any}
+        connectionMode={connectionMode === "loose" ? ConnectionMode.Loose : ConnectionMode.Strict}
         deleteKeyCode={deleteKeyCode}
         panOnDrag={panOnDrag}
         selectionOnDrag={selectionOnDrag}
@@ -5568,6 +5600,8 @@ export interface TableProps<T = unknown> {
   data: T[];
   onRowClick?: (row: T, index: number, event: React.MouseEvent) => void;
   onRowDoubleClick?: (row: T, index: number) => void;
+  onRowMouseEnter?: (row: T, index: number) => void;
+  onRowMouseLeave?: (row: T, index: number) => void;
   rowClassName?: (row: T, index: number) => string;
   rowKey?: (row: T, index: number) => string;
   emptyMessage?: string;
@@ -5596,6 +5630,8 @@ const Table = <T,>({
   data,
   onRowClick,
   onRowDoubleClick,
+  onRowMouseEnter,
+  onRowMouseLeave,
   rowClassName,
   rowKey,
   emptyMessage = "No data",
@@ -5630,7 +5666,6 @@ const Table = <T,>({
     temporary: "bg-temporary",
   }[level];
 
-  // Configure sensors with activation constraint to allow clicks
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -5722,6 +5757,8 @@ const Table = <T,>({
         {...(canDragRow ? { ...attributes, ...listeners } : {})}
         onClick={(e) => onRowClick?.(row, index, e)}
         onDoubleClick={() => onRowDoubleClick?.(row, index)}
+        onMouseEnter={() => onRowMouseEnter?.(row, index)}
+        onMouseLeave={() => onRowMouseLeave?.(row, index)}
         role={onRowClick ? "button" : undefined}
         tabIndex={onRowClick ? 0 : undefined}
         data-row-id={rowId}
@@ -5748,7 +5785,7 @@ const Table = <T,>({
                 const rowId = getRowId ? getRowId(row) : key;
                 const isSelected = selectedSet.has(rowId);
                 return (
-                  <div key={key} data-row>
+                  <div key={key} data-row onMouseEnter={() => onRowMouseEnter?.(row, index)} onMouseLeave={() => onRowMouseLeave?.(row, index)}>
                     {renderMobileRow(
                       row,
                       index,
@@ -5804,6 +5841,8 @@ const Table = <T,>({
                     className={`${baseRowClassName} ${customRowClassName} ${isDragging ? "opacity-50" : ""} ${onRowClick ? "cursor-selectable" : ""}`}
                     onClick={(e) => onRowClick?.(row, index, e)}
                     onDoubleClick={() => onRowDoubleClick?.(row, index)}
+                    onMouseEnter={() => onRowMouseEnter?.(row, index)}
+                    onMouseLeave={() => onRowMouseLeave?.(row, index)}
                     role={onRowClick ? "button" : undefined}
                     tabIndex={onRowClick ? 0 : undefined}
                     data-row-id={rowId}

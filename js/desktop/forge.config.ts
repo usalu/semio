@@ -15,11 +15,8 @@ const config: ForgeConfig = {
   makers: [new MakerSquirrel({}), new MakerZIP({}, ["darwin"]), new MakerRpm({}), new MakerDeb({})],
   plugins: [
     new VitePlugin({
-      
-      
       build: [
         {
-          
           entry: "main.ts",
           config: "vite.main.config.ts",
           target: "main",
@@ -37,8 +34,7 @@ const config: ForgeConfig = {
         },
       ],
     }),
-    
-    
+
     new FusesPlugin({
       version: FuseVersion.V1,
       [FuseV1Options.RunAsNode]: false,

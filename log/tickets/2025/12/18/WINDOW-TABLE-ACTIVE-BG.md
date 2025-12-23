@@ -6,8 +6,8 @@ prompt: >-
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: '2025-12-18T15:34:11.986Z'
-  finished: '2025-12-18T16:32:26.549Z'
+  created: "2025-12-18T15:34:11.986Z"
+  finished: "2025-12-18T16:32:26.549Z"
 summary: Use active window background for table
 commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
 model: gpt-5.2-codex
@@ -16,8 +16,8 @@ iterations:
       Every app has windows and there is always one active window. Make sure
       that the background of the table is set to active background color.
     date:
-      started: '2025-12-18T16:02:05.033Z'
-      ended: '2025-12-18T16:32:16.412Z'
+      started: "2025-12-18T16:02:05.033Z"
+      ended: "2025-12-18T16:32:16.412Z"
     model: gpt-5.2-codex
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
     commit: 20a57039fec48f8c991d98769aa31e15cbd6859c

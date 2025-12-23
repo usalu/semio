@@ -7,8 +7,8 @@ prompt: >-
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: '2025-12-18T18:16:24.765Z'
-  finished: '2025-12-18T18:18:43.801Z'
+  created: "2025-12-18T18:16:24.765Z"
+  finished: "2025-12-18T18:18:43.801Z"
 summary: Ensure all panels paint panel background
 commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
 model: gpt-5.2-codex
@@ -17,8 +17,8 @@ iterations:
       Ensure all panels paint bg-panel, including toolbar; enforce panel level
       context globally for Panel and toolbar surfaces.
     date:
-      started: '2025-12-18T18:16:49.866Z'
-      ended: '2025-12-18T18:18:33.484Z'
+      started: "2025-12-18T18:16:49.866Z"
+      ended: "2025-12-18T18:18:33.484Z"
     model: gpt-5.2-codex
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
     commit: 20a57039fec48f8c991d98769aa31e15cbd6859c

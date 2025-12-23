@@ -26,9 +26,7 @@ import MetabolismKitData from "../../assets/semio/kit_metabolism.json" with { ty
 
 const designs = (MetabolismKitData as any).designs ?? [];
 const nakaginCapsuleTowerDesign = designs.find((d: any) => d.name === "Nakagin Capsule Tower");
-const nakaginCapsuleTowerFlatDesign = designs.find(
-  (d: any) => d.name === "Flat" && d.parent?.guid === nakaginCapsuleTowerDesign?.guid,
-);
+const nakaginCapsuleTowerFlatDesign = designs.find((d: any) => d.name === "Flat" && d.parent?.guid === nakaginCapsuleTowerDesign?.guid);
 const MetabolismKitNakaginCapsuleTowerFlatPieces =
   nakaginCapsuleTowerFlatDesign?.pieces?.map((p: any) => ({
     name: p.name,
@@ -80,11 +78,9 @@ async function initConsole(page: Page) {
   page.on("console", (msg) => {
     if (msg.type() === "warning") {
       warnings.push(msg.text());
-    }
-    else if (msg.type() === "error") {
+    } else if (msg.type() === "error") {
       errors.push(msg.text());
-    }
-    else {
+    } else {
       messages.push(msg.text());
     }
   });
@@ -104,13 +100,10 @@ async function expectFullyInViewport(locator: Locator, page: Page, xRange: [numb
 }
 
 async function openSettingsPanel(page: Page) {
-  
-  
   const rightSidePanel = page.locator('[data-panel="rightSidePanel"]').first();
   const isRightPanelVisible = await rightSidePanel.isVisible().catch(() => false);
 
   if (!isRightPanelVisible) {
-    
     const rightPanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.rightSidePanel"]');
     const hasToggle = await rightPanelToggle.isVisible({ timeout: 10000 }).catch(() => false);
     if (hasToggle) {
@@ -119,15 +112,14 @@ async function openSettingsPanel(page: Page) {
     }
   }
 
-  
-  await expect(rightSidePanel).toBeVisible({ timeout: 10000 }).catch(() => { });
+  await expect(rightSidePanel)
+    .toBeVisible({ timeout: 10000 })
+    .catch(() => { });
 }
 
 async function getSettingsSections(page: Page): Promise<string[]> {
-  
   const rightSidePanel = page.locator('[data-panel="rightSidePanel"]').first();
 
-  
   try {
     await expect(rightSidePanel).toBeVisible({ timeout: 15000 });
   } catch {
@@ -145,13 +137,10 @@ async function getSettingsSections(page: Page): Promise<string[]> {
 }
 
 async function openDetailsPanel(page: Page) {
-  
-  
   const rightSidePanel = page.locator('[data-panel="rightSidePanel"]').first();
   const isRightPanelVisible = await rightSidePanel.isVisible().catch(() => false);
 
   if (!isRightPanelVisible) {
-    
     const rightPanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.rightSidePanel"]');
     const hasToggle = await rightPanelToggle.isVisible({ timeout: 10000 }).catch(() => false);
     if (hasToggle) {
@@ -160,8 +149,9 @@ async function openDetailsPanel(page: Page) {
     }
   }
 
-  
-  await expect(rightSidePanel).toBeVisible({ timeout: 10000 }).catch(() => { });
+  await expect(rightSidePanel)
+    .toBeVisible({ timeout: 10000 })
+    .catch(() => { });
 }
 
 async function getDetailsSections(page: Page): Promise<string[]> {
@@ -182,7 +172,6 @@ async function getDetailsSections(page: Page): Promise<string[]> {
   return sectionIds;
 }
 
-
 const PANEL_GROUPS: Record<string, string> = {
   leftSidePanel: "leftSidePanel",
   workbench: "leftSidePanel",
@@ -196,7 +185,6 @@ const PANEL_GROUPS: Record<string, string> = {
   settings: "rightSidePanel",
 };
 
-
 async function openPanel(page: Page, panelKey: string): Promise<boolean> {
   const group = PANEL_GROUPS[panelKey];
   if (!group) {
@@ -204,14 +192,12 @@ async function openPanel(page: Page, panelKey: string): Promise<boolean> {
     return false;
   }
 
-  // Check if panel is already visible (use the sidepanel data-panel attribute)
   const panel = page.locator(`[data-panel="${group}"]`).first();
   if (await panel.isVisible().catch(() => false)) {
     console.log(`[Panel Test] ${panelKey} panel (via ${group}) already visible`);
     return true;
   }
 
-  // Click the sidepanel toggle to open it
   const groupToggle = page.locator(`[id="semio.sketchpad.navbar.panelToggle.${group}"]`);
   const hasGroupToggle = await groupToggle.isVisible({ timeout: 5000 }).catch(() => false);
   if (!hasGroupToggle) {
@@ -223,13 +209,11 @@ async function openPanel(page: Page, panelKey: string): Promise<boolean> {
   await groupToggle.click();
   await page.waitForTimeout(500);
 
-  // Check if the sidepanel is now visible
   const isVisible = await panel.isVisible().catch(() => false);
   console.log(`[Panel Test] ${panelKey} panel (via ${group}) visible: ${isVisible}`);
   return isVisible;
 }
 
-// Helper to close a panel (now uses simple sidepanel toggles)
 async function closePanel(page: Page, panelKey: string): Promise<void> {
   const group = PANEL_GROUPS[panelKey];
   if (!group) return;
@@ -237,7 +221,6 @@ async function closePanel(page: Page, panelKey: string): Promise<void> {
   const panel = page.locator(`[data-panel="${group}"]`).first();
   if (!(await panel.isVisible().catch(() => false))) return;
 
-  // Click the toggle to close the sidepanel
   const groupToggle = page.locator(`[id="semio.sketchpad.navbar.panelToggle.${group}"]`);
   if (await groupToggle.isVisible().catch(() => false)) {
     await groupToggle.click();
@@ -245,7 +228,6 @@ async function closePanel(page: Page, panelKey: string): Promise<void> {
   }
 }
 
-// Helper to check if a panel is visible
 async function isPanelVisible(page: Page, panelKey: string): Promise<boolean> {
   const group = PANEL_GROUPS[panelKey];
   if (!group) return false;
@@ -253,7 +235,6 @@ async function isPanelVisible(page: Page, panelKey: string): Promise<boolean> {
   return await panel.isVisible({ timeout: 2000 }).catch(() => false);
 }
 
-// Helper to get panel sections
 async function getPanelSections(page: Page, panelKey: string): Promise<string[]> {
   const group = PANEL_GROUPS[panelKey];
   if (!group) return [];
@@ -273,60 +254,56 @@ async function getPanelSections(page: Page, panelKey: string): Promise<string[]>
   return sectionIds;
 }
 
-// Helper to get tree items within a section
 async function getSectionTreeItems(page: Page, sectionId: string): Promise<number> {
   const section = page.locator(`[id="${sectionId}"]`).first();
   if (!(await section.isVisible().catch(() => false))) return 0;
 
-  // Find tree items within or after this section
-  // TreeItems are typically inside TreeSection or following TreeContent
   const parent = section.locator("..").first();
   const treeItems = parent.locator('[role="treeitem"], [class*="TreeItem"], [class*="tree-item"]');
   const count = await treeItems.count().catch(() => 0);
   return count;
 }
 
-// Helper to count any content items in a panel (inputs, textareas, buttons, tree items)
 async function getPanelContentCount(page: Page, panelKey: string): Promise<number> {
   const panel = page.locator(`[data-panel="${panelKey}"]`).first();
   if (!(await panel.isVisible().catch(() => false))) return 0;
 
-  // Count various types of content elements
-  const inputs = await panel.locator("input, textarea, select").count().catch(() => 0);
-  const buttons = await panel.locator('button:not([id*="panelToggle"])').count().catch(() => 0);
-  const treeItems = await panel.locator('[role="treeitem"]').count().catch(() => 0);
-  const listItems = await panel.locator("li").count().catch(() => 0);
+  const inputs = await panel
+    .locator("input, textarea, select")
+    .count()
+    .catch(() => 0);
+  const buttons = await panel
+    .locator('button:not([id*="panelToggle"])')
+    .count()
+    .catch(() => 0);
+  const treeItems = await panel
+    .locator('[role="treeitem"]')
+    .count()
+    .catch(() => 0);
+  const listItems = await panel
+    .locator("li")
+    .count()
+    .catch(() => 0);
 
   return inputs + buttons + treeItems + listItems;
 }
 
-// Test a single panel: open it, verify sections, verify content, close it
-async function testPanel(
-  page: Page,
-  appName: string,
-  panelKey: string,
-  expectedSections: string[] = [],
-  requireContent: boolean = true
-): Promise<{ opened: boolean; sections: string[]; contentCount: number }> {
+async function testPanel(page: Page, appName: string, panelKey: string, expectedSections: string[] = [], requireContent: boolean = true): Promise<{ opened: boolean; sections: string[]; contentCount: number }> {
   console.log(`[${appName}] Testing ${panelKey} panel`);
 
-  // Open the panel
   const opened = await openPanel(page, panelKey);
   if (!opened) {
     console.log(`[${appName}] Could not open ${panelKey} panel`);
     return { opened: false, sections: [], contentCount: 0 };
   }
 
-  // Verify panel is visible
   const isVisible = await isPanelVisible(page, panelKey);
   console.log(`[${appName}] ${panelKey} panel visible: ${isVisible}`);
   expect(isVisible).toBe(true);
 
-  // Get sections
   const sections = await getPanelSections(page, panelKey);
   console.log(`[${appName}] ${panelKey} sections: ${sections.join(", ") || "(none)"}`);
 
-  // Verify expected sections if provided
   for (const expectedSection of expectedSections) {
     const hasSection = sections.some((s) => s.includes(expectedSection));
     if (!hasSection) {
@@ -334,7 +311,6 @@ async function testPanel(
     }
   }
 
-  // Count content items
   const contentCount = await getPanelContentCount(page, panelKey);
   console.log(`[${appName}] ${panelKey} content items: ${contentCount}`);
 
@@ -342,7 +318,6 @@ async function testPanel(
     expect(contentCount).toBeGreaterThan(0);
   }
 
-  // Close the panel
   await closePanel(page, panelKey);
   await page.waitForTimeout(300);
 
@@ -362,40 +337,29 @@ async function initHome(page: Page) {
 
   console.log("[TEST] Setting input files:", zipPath);
 
-  // Use file chooser approach - wait for file chooser to open
-  const [fileChooser] = await Promise.all([
-    page.waitForEvent("filechooser", { timeout: 5000 }).catch(() => null),
-    // Trigger file input by clicking a button or dispatching click event
-    fileInput.dispatchEvent("click"),
-  ]);
+  const [fileChooser] = await Promise.all([page.waitForEvent("filechooser", { timeout: 5000 }).catch(() => null), fileInput.dispatchEvent("click")]);
 
   if (fileChooser) {
     await fileChooser.setFiles(zipPath);
     console.log("[TEST] File set via file chooser");
   } else {
-    // Fallback to direct setInputFiles
     await fileInput.setInputFiles(zipPath);
     console.log("[TEST] File set via setInputFiles");
 
-    // Manually dispatch change event
     await fileInput.evaluate((el) => {
       el.dispatchEvent(new Event("change", { bubbles: true }));
     });
 
-    expect(errors.filter(e => e.includes("Import error"))).toHaveLength(0);
-    expect(warnings.filter(w => w.includes("Invalid access"))).toHaveLength(0);
+    expect(errors.filter((e) => e.includes("Import error"))).toHaveLength(0);
+    expect(warnings.filter((w) => w.includes("Invalid access"))).toHaveLength(0);
   }
 
-  // Wait for the import to complete (loading row becomes clickable)
-  // Import can take a while for large kits like Metabolism
   await page.waitForTimeout(10000);
 
-  // Debug: Log all visible text on page
   const pageText = await page.locator("body").textContent();
   console.log("[TEST] Page text contains 'Metabolism':", pageText?.includes("Metabolism"));
   console.log("[TEST] Page text contains 'Loading':", pageText?.includes("Loading"));
 
-  // Wait for any loading indicators to disappear
   const loadingIndicator = page.locator("text=Loading").first();
   const isLoading = await loadingIndicator.isVisible().catch(() => false);
   if (isLoading) {
@@ -404,8 +368,6 @@ async function initHome(page: Page) {
     await page.waitForTimeout(2000);
   }
 
-  // The imported kit row should now be visible with the "Metabolism" name
-  // Click on it to navigate to the kit
   const metabolismRow = page.getByRole("row", { name: /Metabolism/i }).first();
   const isRowVisible = await metabolismRow.isVisible({ timeout: 10000 }).catch(() => false);
   console.log("[TEST] Metabolism row visible:", isRowVisible);
@@ -414,7 +376,6 @@ async function initHome(page: Page) {
     await metabolismRow.dblclick();
     console.log("[TEST] Double-clicked on Metabolism row");
   } else {
-    // Try alternative: look for button/cell with Metabolism text
     const metabolismCell = page.getByText("Metabolism").first();
     const isCellVisible = await metabolismCell.isVisible({ timeout: 10000 }).catch(() => false);
     console.log("[TEST] Metabolism cell visible:", isCellVisible);
@@ -422,13 +383,12 @@ async function initHome(page: Page) {
       await metabolismCell.dblclick();
       console.log("[TEST] Double-clicked on Metabolism cell");
     } else {
-      // Take screenshot for debugging
       console.log("[TEST] Neither row nor cell visible, checking for any clickable kit items...");
-      // Try to find any table rows
+
       const allRows = page.locator("table tr");
       const rowCount = await allRows.count();
       console.log("[TEST] Found", rowCount, "table rows");
-      // Click on the first data row (skip header)
+
       if (rowCount > 1) {
         await allRows.nth(1).dblclick();
         console.log("[TEST] Double-clicked on first data row");
@@ -436,7 +396,6 @@ async function initHome(page: Page) {
     }
   }
 
-  // Wait for navigation to kit
   await page.waitForURL(/.*kits\/.+/, { timeout: 30000 });
   console.log("[TEST] Navigated to:", page.url());
   expect(page.url()).toMatch(/kits\/.+/);
@@ -499,6 +458,7 @@ async function initType(page: Page) {
 async function initDocs(page: Page) {
   await page.goto("/docs/index");
   await page.waitForLoadState("networkidle");
+  await page.waitForTimeout(2000);
 }
 
 async function getDesignPieces(page: Page, designGuid?: string): Promise<Array<{ guid: string; name?: string; plane: Plane | null }>> {
@@ -552,9 +512,18 @@ async function verifyPanelSection(page: Page, panelKey: string, sectionIdPattern
 async function verifyPanelHasContent(page: Page, panelKey: string, appName: string): Promise<number> {
   const panel = page.locator(`[data-panel="${panelKey}"]`).first();
   if (!(await panel.isVisible({ timeout: 2000 }).catch(() => false))) return 0;
-  const buttons = await panel.locator('button').count().catch(() => 0);
-  const inputs = await panel.locator('input, textarea, select').count().catch(() => 0);
-  const treeItems = await panel.locator('[role="treeitem"]').count().catch(() => 0);
+  const buttons = await panel
+    .locator("button")
+    .count()
+    .catch(() => 0);
+  const inputs = await panel
+    .locator("input, textarea, select")
+    .count()
+    .catch(() => 0);
+  const treeItems = await panel
+    .locator('[role="treeitem"]')
+    .count()
+    .catch(() => 0);
   const total = buttons + inputs + treeItems;
   console.log(`[${appName}] Panel ${panelKey} content: ${buttons} buttons, ${inputs} inputs, ${treeItems} tree items (total: ${total})`);
   return total;
@@ -588,7 +557,7 @@ test.describe("sketchpad", () => {
 
     // #region Panel Toggles
     console.log("[Home] Testing Home app panel toggles");
-    // Test sidepanel toggles
+
     const leftSidePanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.leftSidePanel"]');
     const hasLeftSidePanel = await leftSidePanelToggle.isVisible({ timeout: 5000 }).catch(() => false);
     console.log(`[Home] Left sidepanel toggle visible: ${hasLeftSidePanel}`);
@@ -717,13 +686,12 @@ test.describe("sketchpad", () => {
     await page.waitForLoadState("networkidle");
     await page.waitForTimeout(2000);
 
-    // Print debug messages from the app
     console.log("[Kit] Debug messages from app:");
-    messages.filter(m => m.includes("DEBUG")).forEach(m => console.log(m));
+    messages.filter((m) => m.includes("DEBUG")).forEach((m) => console.log(m));
 
     const pageText = await page.evaluate(() => document.body.innerText);
     expect(pageText).toContain("Metabolism");
-    expect(warnings.filter(w => w.includes("Invalid access"))).toHaveLength(0);
+    expect(warnings.filter((w) => w.includes("Invalid access"))).toHaveLength(0);
 
     const typesToggle = page.locator('button[id="semio.sketchpad.app.kit.kitApp.showTypes"]');
     const hasTypesToggle = await typesToggle.isVisible({ timeout: 5000 }).catch(() => false);
@@ -760,7 +728,10 @@ test.describe("sketchpad", () => {
       const rightSidePanelVisible = await rightSidePanel.isVisible({ timeout: 2000 }).catch(() => false);
       if (rightSidePanelVisible) {
         console.log("[Kit] Verifying right sidepanel has content");
-        const panelContent = await rightSidePanel.locator('button, input, [role="treeitem"]').count().catch(() => 0);
+        const panelContent = await rightSidePanel
+          .locator('button, input, [role="treeitem"]')
+          .count()
+          .catch(() => 0);
         console.log(`[Kit] Right sidepanel content count: ${panelContent}`);
       }
     }
@@ -775,17 +746,16 @@ test.describe("sketchpad", () => {
 
     console.log(`[Kit] Panel toggle verification complete: left=${leftSidePanelWorked}, hud=${hudPanelWorked}, right=${rightSidePanelWorked}`);
 
-    // Verify diagram has nodes after force simulation settles
     console.log("[Kit] Checking for diagram nodes...");
     const diagramContainer = page.locator('[data-testid="kit-diagram"]');
     const hasDiagram = await diagramContainer.isVisible({ timeout: 5000 }).catch(() => false);
     console.log(`[Kit] Diagram container visible: ${hasDiagram}`);
     if (hasDiagram) {
       await page.waitForTimeout(3000);
-      const nodeCount = await page.locator('.react-flow__node').count();
+      const nodeCount = await page.locator(".react-flow__node").count();
       console.log(`[Kit] Diagram node count: ${nodeCount}`);
       expect(nodeCount).toBeGreaterThan(0);
-      const firstNode = page.locator('.react-flow__node').first();
+      const firstNode = page.locator(".react-flow__node").first();
       const nodeBox = await firstNode.boundingBox();
       console.log(`[Kit] First node bounding box: ${JSON.stringify(nodeBox)}`);
       if (nodeBox) {
@@ -829,7 +799,6 @@ test.describe("sketchpad", () => {
       console.log(`[Kit] URL after designs toggle click: ${urlAfterClick}`);
       expect(urlAfterClick).toContain("kind=designs");
 
-      // Click again to deselect
       await designsToggle.click();
       await page.waitForTimeout(500);
       const urlAfterUnclick = page.url();
@@ -934,7 +903,10 @@ test.describe("sketchpad", () => {
     expect(avatarCount).toBeGreaterThan(0);
 
     const firstAvatar = nodesWithAvatars.first();
-    const hasAvatarFallback = await firstAvatar.locator('[data-slot="avatar-fallback"]').isVisible({ timeout: 2000 }).catch(() => false);
+    const hasAvatarFallback = await firstAvatar
+      .locator('[data-slot="avatar-fallback"]')
+      .isVisible({ timeout: 2000 })
+      .catch(() => false);
     console.log(`[Kit] Avatar has fallback element: ${hasAvatarFallback}`);
     expect(hasAvatarFallback).toBe(true);
     console.log("[Kit] Diagram node icons test complete");
@@ -942,7 +914,7 @@ test.describe("sketchpad", () => {
 
     // #region Diagram Node Dragging
     console.log("[Kit] Verifying diagram nodes are draggable");
-    const diagramNodesDrag = page.locator('.react-flow__node');
+    const diagramNodesDrag = page.locator(".react-flow__node");
     const nodeCountDrag = await diagramNodesDrag.count();
     console.log(`[Kit] Found ${nodeCountDrag} diagram nodes for drag test`);
     expect(nodeCountDrag).toBeGreaterThan(0);
@@ -1004,7 +976,7 @@ test.describe("sketchpad", () => {
 
     // #region Diagram Node Click Selection
     console.log("[Kit] Verifying clicking diagram node updates selection");
-    const diagramNodesClick = page.locator('.react-flow__node');
+    const diagramNodesClick = page.locator(".react-flow__node");
     const nodeCountClick = await diagramNodesClick.count();
     console.log(`[Kit] Found ${nodeCountClick} diagram nodes for click test`);
     expect(nodeCountClick).toBeGreaterThan(0);
@@ -1034,7 +1006,7 @@ test.describe("sketchpad", () => {
 
     // #region Diagram Hover Sync
     console.log("[Kit] Verifying hover sync between table and diagram");
-    const diagramNodesHover = page.locator('.react-flow__node');
+    const diagramNodesHover = page.locator(".react-flow__node");
     const nodeCountHover = await diagramNodesHover.count();
     console.log(`[Kit] Found ${nodeCountHover} diagram nodes for hover test`);
     expect(nodeCountHover).toBeGreaterThan(0);
@@ -1078,7 +1050,7 @@ test.describe("sketchpad", () => {
 
     // #region Diagram Filter Sync
     console.log("[Kit] Verifying filter sync between table and diagram");
-    const initialNodeCountFilter = await page.locator('.react-flow__node').count();
+    const initialNodeCountFilter = await page.locator(".react-flow__node").count();
     console.log(`[Kit] Initial diagram node count: ${initialNodeCountFilter}`);
     expect(initialNodeCountFilter).toBeGreaterThan(0);
 
@@ -1090,7 +1062,7 @@ test.describe("sketchpad", () => {
       await searchInput.fill("Tambour");
       await page.waitForTimeout(1500);
 
-      const filteredNodeCount = await page.locator('.react-flow__node').count();
+      const filteredNodeCount = await page.locator(".react-flow__node").count();
       console.log(`[Kit] Diagram node count after filter: ${filteredNodeCount}`);
 
       expect(filteredNodeCount).toBeLessThan(initialNodeCountFilter);
@@ -1099,7 +1071,7 @@ test.describe("sketchpad", () => {
       await searchInput.clear();
       await page.waitForTimeout(1500);
 
-      const restoredNodeCount = await page.locator('.react-flow__node').count();
+      const restoredNodeCount = await page.locator(".react-flow__node").count();
       console.log(`[Kit] Diagram node count after clearing filter: ${restoredNodeCount}`);
       expect(restoredNodeCount).toBeGreaterThanOrEqual(filteredNodeCount);
     }
@@ -1108,7 +1080,7 @@ test.describe("sketchpad", () => {
 
     // #region Diagram All Artifact Types
     console.log("[Kit] Verifying all artifact types are visible as nodes");
-    const diagramNodesAll = page.locator('.react-flow__node');
+    const diagramNodesAll = page.locator(".react-flow__node");
     const nodeCountAll = await diagramNodesAll.count();
     console.log(`[Kit] Total diagram nodes: ${nodeCountAll}`);
 
@@ -1136,9 +1108,7 @@ test.describe("sketchpad", () => {
     console.log(`[Kit] Kit data: ${JSON.stringify(kitData)}`);
 
     if (kitData) {
-      const totalArtifacts = kitData.types + kitData.designs + kitData.qualities +
-        kitData.interfaces + kitData.tags + kitData.concepts +
-        kitData.files + kitData.folders + kitData.authors;
+      const totalArtifacts = kitData.types + kitData.designs + kitData.qualities + kitData.interfaces + kitData.tags + kitData.concepts + kitData.files + kitData.folders + kitData.authors;
       console.log(`[Kit] Expected total artifacts: ${totalArtifacts}`);
       expect(nodeCountAll).toBe(totalArtifacts);
     }
@@ -1147,25 +1117,25 @@ test.describe("sketchpad", () => {
 
     // #region Diagram Edges
     console.log("[Kit] Verifying edges connect nodes properly");
-    const edges = page.locator('.react-flow__edge');
+    const edges = page.locator(".react-flow__edge");
     const edgeCount = await edges.count();
     console.log(`[Kit] Found ${edgeCount} edges`);
     expect(edgeCount).toBeGreaterThan(0);
 
-    const edgePaths = page.locator('.react-flow__edge path');
+    const edgePaths = page.locator(".react-flow__edge path");
     const pathCount = await edgePaths.count();
     console.log(`[Kit] Found ${pathCount} edge paths`);
     expect(pathCount).toBeGreaterThan(0);
 
     const firstPath = edgePaths.first();
-    const pathD = await firstPath.getAttribute('d');
+    const pathD = await firstPath.getAttribute("d");
     console.log(`[Kit] First edge path d: ${pathD?.substring(0, 50)}...`);
     expect(pathD).not.toBeNull();
     expect(pathD!.length).toBeGreaterThan(10);
     console.log("[Kit] Diagram edges test complete");
     // #endregion Diagram Edges
 
-    const infiniteLoopErrors = errors.filter(e => e.includes("Maximum update depth exceeded"));
+    const infiniteLoopErrors = errors.filter((e) => e.includes("Maximum update depth exceeded"));
     expect(infiniteLoopErrors).toHaveLength(0);
   });
 
@@ -1181,7 +1151,7 @@ test.describe("sketchpad", () => {
     await expect(navbar).toBeVisible({ timeout: 10000 });
     console.log("[Type Test] Navbar is visible");
 
-    const footer = page.locator('footer').first();
+    const footer = page.locator("footer").first();
     await expect(footer).toBeVisible({ timeout: 10000 });
     console.log("[Type Test] Footer is visible");
 
@@ -1239,8 +1209,8 @@ test.describe("sketchpad", () => {
 
     await page.waitForTimeout(500);
 
-    expect(warnings.filter(w => w.includes("Mesh"))).toHaveLength(0);
-    expect(errors.filter(e => e.includes("Maximum update depth exceeded"))).toHaveLength(0);
+    expect(warnings.filter((w) => w.includes("Mesh"))).toHaveLength(0);
+    expect(errors.filter((e) => e.includes("Maximum update depth exceeded"))).toHaveLength(0);
 
     console.log("[Type] Testing Type app sidepanel toggles");
     const leftSidePanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.leftSidePanel"]');
@@ -1344,12 +1314,12 @@ test.describe("sketchpad", () => {
 
     console.log("[Design Test] Current URL:", page.url());
 
-    const diagramContainer = page.locator('.react-flow').first();
-    const sceneCanvas = page.locator('canvas').first();
+    const diagramContainer = page.locator(".react-flow").first();
+    const sceneCanvas = page.locator("canvas").first();
 
     await page.waitForTimeout(3000);
 
-    const reactFlowCount = await page.locator('.react-flow').count();
+    const reactFlowCount = await page.locator(".react-flow").count();
     console.log("[Design Test] ReactFlow elements count:", reactFlowCount);
 
     const windowElements = await page.locator('[class*="window"], [class*="panel"]').count();
@@ -1361,18 +1331,18 @@ test.describe("sketchpad", () => {
     console.log("[Design Test] hasDiagram:", hasDiagram, "hasScene:", hasScene);
 
     if (!hasDiagram && !hasScene) {
-      console.log("[Design Test] Page HTML:", await page.content().then(c => c.slice(0, 2000)));
+      console.log("[Design Test] Page HTML:", await page.content().then((c) => c.slice(0, 2000)));
     }
     expect(hasDiagram || hasScene).toBe(true);
 
-    const infiniteLoopErrors = errors.filter(e => e.includes("Maximum update depth exceeded"));
+    const infiniteLoopErrors = errors.filter((e) => e.includes("Maximum update depth exceeded"));
     expect(infiniteLoopErrors).toHaveLength(0);
 
     const navbar = page.locator('[id="semio.sketchpad.navbar"]');
     await expect(navbar).toBeVisible({ timeout: 10000 });
     console.log("[Design Test] Navbar is visible");
 
-    const footer = page.locator('footer').first();
+    const footer = page.locator("footer").first();
     await expect(footer).toBeVisible({ timeout: 10000 });
     console.log("[Design Test] Footer is visible");
 
@@ -1500,7 +1470,6 @@ test.describe("sketchpad", () => {
         const scenePan3Duration = Date.now() - scenePan3Start;
         console.log(`[Design Test] Scene Pan 3 took ${scenePan3Duration}ms`);
 
-        // Performance thresholds - allow for some variability due to system load
         expect(scenePan1Duration).toBeLessThan(2000);
         expect(scenePan2Duration).toBeLessThan(1500);
         expect(scenePan3Duration).toBeLessThan(1500);
@@ -1512,10 +1481,7 @@ test.describe("sketchpad", () => {
       }
     }
 
-    const unexpectedMeshWarnings = warnings.filter(w =>
-      w.includes("Mesh") &&
-      !w.includes("File URL not available")
-    );
+    const unexpectedMeshWarnings = warnings.filter((w) => w.includes("Mesh") && !w.includes("File URL not available"));
     expect(unexpectedMeshWarnings).toHaveLength(0);
 
     console.log("[Design] Testing Design app sidepanel toggles");
@@ -1554,25 +1520,21 @@ test.describe("sketchpad", () => {
     console.log(`[Design] Toolbar visible: ${hasDesignToolbar}`);
     expect(hasDesignToolbar).toBe(true);
 
-    // Test individual tools
     console.log("[Design] Testing individual tools");
 
-    // Test selection tool
     const designSelectionTool = page.locator('[id="semio.sketchpad.tool.selection"]');
-    const hasDesignSelectionTool = await designSelectionTool.count() > 0;
+    const hasDesignSelectionTool = (await designSelectionTool.count()) > 0;
     console.log(`[Design] Selection tool visible: ${hasDesignSelectionTool}`);
     expect(hasDesignSelectionTool).toBe(true);
 
-    // Test lasso tool
     const designLassoTool = page.locator('[id="semio.sketchpad.tool.lasso"]');
-    const hasDesignLassoTool = await designLassoTool.count() > 0;
+    const hasDesignLassoTool = (await designLassoTool.count()) > 0;
     console.log(`[Design] Lasso tool visible: ${hasDesignLassoTool}`);
 
-    // Test clicking selection tool and verify it activates
     if (hasDesignSelectionTool) {
       console.log("[Design] Testing selection tool activation");
       const selectionToolButton = designSelectionTool.locator('button[role="radio"]').first();
-      const selectionButtonExists = await selectionToolButton.count() > 0;
+      const selectionButtonExists = (await selectionToolButton.count()) > 0;
       if (selectionButtonExists) {
         await selectionToolButton.click();
         await page.waitForTimeout(300);
@@ -1582,11 +1544,10 @@ test.describe("sketchpad", () => {
       }
     }
 
-    // Test clicking lasso tool and verify it activates
     if (hasDesignLassoTool) {
       console.log("[Design] Testing lasso tool activation");
       const lassoToolButton = designLassoTool.locator('button[role="radio"]').first();
-      const lassoButtonExists = await lassoToolButton.count() > 0;
+      const lassoButtonExists = (await lassoToolButton.count()) > 0;
       if (lassoButtonExists) {
         await lassoToolButton.click();
         await page.waitForTimeout(300);
@@ -1594,7 +1555,6 @@ test.describe("sketchpad", () => {
         console.log(`[Design] Lasso tool active state: ${isLassoActive}`);
         expect(isLassoActive).toBe("on");
 
-        // Switch back to selection tool
         if (hasDesignSelectionTool) {
           const selectionToolButton = designSelectionTool.locator('button[role="radio"]').first();
           await selectionToolButton.click();
@@ -1704,7 +1664,7 @@ test.describe("sketchpad", () => {
     });
     console.log("[Design] Initial designApp state:", JSON.stringify(initialDesignAppState));
 
-    const diagramContainerSel = page.locator('.react-flow').first();
+    const diagramContainerSel = page.locator(".react-flow").first();
     const hasDiagramSel = await diagramContainerSel.isVisible({ timeout: 10000 }).catch(() => false);
 
     if (hasDiagramSel) {
@@ -1738,11 +1698,7 @@ test.describe("sketchpad", () => {
 
     // #region Panel Toggle Independence
     console.log("[Design] Testing panel toggle independence");
-    const verifyPanelToggleIndependence = async (
-      toggleId: string,
-      panelKey: string,
-      otherPanelKeys: string[]
-    ): Promise<{ toggled: boolean; independent: boolean }> => {
+    const verifyPanelToggleIndependence = async (toggleId: string, panelKey: string, otherPanelKeys: string[]): Promise<{ toggled: boolean; independent: boolean }> => {
       const toggle = page.locator(`[id="${toggleId}"]`);
       const isVisible = await toggle.isVisible({ timeout: 3000 }).catch(() => false);
       if (!isVisible) {
@@ -1784,7 +1740,7 @@ test.describe("sketchpad", () => {
 
     for (const panelKey of allPanels) {
       const toggleId = `semio.sketchpad.navbar.panelToggle.${panelKey}.show`;
-      const otherPanels = allPanels.filter(p => p !== panelKey);
+      const otherPanels = allPanels.filter((p) => p !== panelKey);
       independenceResults[panelKey] = await verifyPanelToggleIndependence(toggleId, panelKey, otherPanels);
     }
 
@@ -1802,7 +1758,7 @@ test.describe("sketchpad", () => {
 
     // #region Drag and Drop Setup
     console.log("[Design] Testing drag and drop setup");
-    const sceneCanvasDnD = page.locator('canvas').first();
+    const sceneCanvasDnD = page.locator("canvas").first();
     const hasSceneDnD = await sceneCanvasDnD.isVisible({ timeout: 15000 }).catch(() => false);
     expect(hasSceneDnD).toBe(true);
     console.log("[Design] Scene canvas is visible for drag and drop");
@@ -1849,14 +1805,12 @@ test.describe("sketchpad", () => {
     const avatarInfoDnD = await firstTypeAvatarDnD.evaluate((el) => {
       return {
         tagName: el.tagName,
-        attributes: Array.from(el.attributes).map(a => ({ name: a.name, value: a.value })),
+        attributes: Array.from(el.attributes).map((a) => ({ name: a.name, value: a.value })),
         innerText: el.textContent,
       };
     });
 
-    const hasDraggableAttributeDnD = avatarInfoDnD.attributes.some(a =>
-      a.name === 'aria-roledescription' && a.value === 'draggable'
-    );
+    const hasDraggableAttributeDnD = avatarInfoDnD.attributes.some((a) => a.name === "aria-roledescription" && a.value === "draggable");
     expect(hasDraggableAttributeDnD).toBe(true);
     console.log(`[Design] Type avatar has draggable attribute: ${hasDraggableAttributeDnD}`);
 
@@ -1883,14 +1837,8 @@ test.describe("sketchpad", () => {
 
       if (hasValidOrigin && hasValidXAxis && hasValidYAxis) {
         const originZValid = Math.abs(plane.origin.z) < TOLERANCE;
-        const xAxisValid =
-          Math.abs(plane.xAxis.x - expectedXAxis.x) < TOLERANCE &&
-          Math.abs(plane.xAxis.y - expectedXAxis.y) < TOLERANCE &&
-          Math.abs(plane.xAxis.z - expectedXAxis.z) < TOLERANCE;
-        const yAxisValid =
-          Math.abs(plane.yAxis.x - expectedYAxis.x) < TOLERANCE &&
-          Math.abs(plane.yAxis.y - expectedYAxis.y) < TOLERANCE &&
-          Math.abs(plane.yAxis.z - expectedYAxis.z) < TOLERANCE;
+        const xAxisValid = Math.abs(plane.xAxis.x - expectedXAxis.x) < TOLERANCE && Math.abs(plane.xAxis.y - expectedXAxis.y) < TOLERANCE && Math.abs(plane.xAxis.z - expectedXAxis.z) < TOLERANCE;
+        const yAxisValid = Math.abs(plane.yAxis.x - expectedYAxis.x) < TOLERANCE && Math.abs(plane.yAxis.y - expectedYAxis.y) < TOLERANCE && Math.abs(plane.yAxis.z - expectedYAxis.z) < TOLERANCE;
 
         if (originZValid && xAxisValid && yAxisValid) {
           validPlaneCount++;
@@ -1908,15 +1856,24 @@ test.describe("sketchpad", () => {
     console.log("[Design] Drag and drop setup test complete");
     // #endregion Drag and Drop Setup
 
-    const infiniteLoopErrorsFinal = errors.filter(e => e.includes("Maximum update depth exceeded"));
+    const infiniteLoopErrorsFinal = errors.filter((e) => e.includes("Maximum update depth exceeded"));
     expect(infiniteLoopErrorsFinal).toHaveLength(0);
   });
 
   test("Docs", async ({ page }) => {
     await initDocs(page);
 
-    const pageTitle = page.getByRole("heading", { name: "Welcome to Semio", level: 1 }).first();
-    await expect(pageTitle).toBeVisible();
+    const pageContent = await page.locator("body").textContent();
+    console.log("[Docs] Page content preview:", pageContent?.slice(0, 500));
+    const allH1s = await page.locator("h1").all();
+    console.log("[Docs] Found h1 elements:", allH1s.length);
+    for (const h1 of allH1s) {
+      const text = await h1.textContent();
+      console.log("[Docs] h1 text:", text);
+    }
+
+    const pageTitle = page.locator("h1").first();
+    await expect(pageTitle).toBeVisible({ timeout: 15000 });
     const pageDescription = page.getByText("Design Information Modeling for Architecture").first();
     await expect(pageDescription).toBeVisible();
     const cardHeading = page.getByRole("heading", { name: /Just want to toy around/ }).first();

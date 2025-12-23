@@ -7,14 +7,14 @@ prompt: >-
 status: open
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: '2025-12-18T15:09:08.033Z'
+  created: "2025-12-18T15:09:08.033Z"
 iterations:
   - prompt: >-
       Implement generalized diagram component and migrate Design/Kit/Quality;
       ensure only elements.tsx imports @xyflow/react; ensure sketchpad tests
       pass.
     date:
-      started: '2025-12-18T15:32:19.612Z'
+      started: "2025-12-18T15:32:19.612Z"
     model: claude-opus-4-5
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
     files:

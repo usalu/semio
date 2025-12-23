@@ -54,12 +54,7 @@ import { Guid, Kit, KitDiff } from "../semio";
 
 // #region YPath Types
 
-
-export type YPathSegment =
-  | { kind: "mapKey"; key: string }
-  | { kind: "arrayIndex"; index: number }
-  | { kind: "arrayItemById"; id: string; idKey: string };
-
+export type YPathSegment = { kind: "mapKey"; key: string } | { kind: "arrayIndex"; index: number } | { kind: "arrayItemById"; id: string; idKey: string };
 
 export type YPath = YPathSegment[];
 
@@ -67,44 +62,22 @@ export type YPath = YPathSegment[];
 
 // #region Granular Hook Types
 
+export type HookResult<T> = readonly [T, ((value: T) => void) | undefined, boolean];
 
-export type HookResult<T> = readonly [
-  T,
-  ((value: T) => void) | undefined,
-  boolean
-];
-
-
-export type HookNoSetResult<T> = readonly [
-  T,
-  undefined,
-  boolean
-];
-
+export type HookNoSetResult<T> = readonly [T, undefined, boolean];
 
 export const READONLY_SETTER = undefined as undefined;
 export const READONLY_CAN = false;
-
 
 export function readonlyHookResult<T>(value: T): HookResult<T> {
   return [value, READONLY_SETTER, READONLY_CAN] as const;
 }
 
-
-export function writableHookResult<T>(
-  value: T,
-  setter: (value: T) => void,
-  canSet: boolean = true
-): HookResult<T> {
+export function writableHookResult<T>(value: T, setter: (value: T) => void, canSet: boolean = true): HookResult<T> {
   return [value, canSet ? setter : undefined, canSet] as const;
 }
 
-
-export function conditionalHookResult<T>(
-  canSet: boolean,
-  value: T,
-  setter: ((value: T) => void) | undefined
-): HookResult<T> {
+export function conditionalHookResult<T>(canSet: boolean, value: T, setter: ((value: T) => void) | undefined): HookResult<T> {
   return [value, canSet ? setter : undefined, canSet] as const;
 }
 
@@ -144,11 +117,13 @@ export function createReadonlyField<T>(value: T): Field<T> {
 export function createAction(execute: () => void, canExecute: boolean): ActionField {
   return {
     canExecute,
-    execute: canExecute ? execute : () => {
-      if (process.env.NODE_ENV === "development") {
-        console.warn("[DEBUG] Attempted to execute a disabled action");
-      }
-    },
+    execute: canExecute
+      ? execute
+      : () => {
+          if (process.env.NODE_ENV === "development") {
+            console.warn("[DEBUG] Attempted to execute a disabled action");
+          }
+        },
   };
 }
 
@@ -289,7 +264,7 @@ export interface FileProvider {
   getUrl: (kitId: string, fileId: string, path: string) => string;
 }
 
-export interface MemoryFileProviderConfig { }
+export interface MemoryFileProviderConfig {}
 
 export interface LocalFileProviderConfig {
   dbName?: string;
@@ -596,7 +571,7 @@ export interface AppConfig {
   order?: number;
 }
 
-export interface AppRegistration extends AppConfig { }
+export interface AppRegistration extends AppConfig {}
 
 // #endregion App Registry
 
@@ -836,7 +811,6 @@ export function parseWindowLayout(layout: unknown): any | undefined {
   return undefined;
 }
 
-
 export function deduplicateWindowLayout(layout: any, allowedWindowIds: string[]): any | undefined {
   if (!layout || typeof layout !== "object") return layout;
 
@@ -995,19 +969,12 @@ export interface ResizablePanelProps {
 
 // #region XState Types
 
-/**
- * Base context for all XState machines that sync with Y.js
- */
 export interface YjsSyncContext {
-  /** Whether the Y.js data has changed since last snapshot */
   dirty: boolean;
-  /** Cached snapshot of the Y.js data */
+
   cache?: any;
 }
 
-/**
- * Context for the root Sketchpad machine
- */
 export interface SketchpadMachineContext extends YjsSyncContext {
   navigation: string;
   navigationHistory: string[];
@@ -1028,17 +995,14 @@ export interface SketchpadMachineContext extends YjsSyncContext {
   activeInteraction?: string;
   hotkeyOverrides?: Record<string, string>;
   activeHotkeySetting?: string;
-  /** Map of kit guids to their actor refs */
+
   kits: Record<Guid, AnyActorRef>;
-  /** Home app actor ref */
+
   homeRef?: AnyActorRef;
-  /** Docs app actor ref */
+
   docsRef?: AnyActorRef;
 }
 
-/**
- * Events for the Sketchpad machine
- */
 export type SketchpadMachineEvent =
   | { type: "NAVIGATE"; path: string }
   | { type: "NAVIGATE_BACK" }
@@ -1055,27 +1019,21 @@ export type SketchpadMachineEvent =
   | { type: "Y_UPDATE"; data: any }
   | { type: "Y_FIELD_UPDATE"; field: string; value: any };
 
-/**
- * Context for Kit machines (spawned actors)
- */
 export interface KitMachineContext extends YjsSyncContext {
   guid: Guid;
   kit: Kit;
-  /** Map of type guids to their stores */
+
   types: Record<Guid, any>;
-  /** Map of design guids to their stores */
+
   designs: Record<Guid, any>;
-  /** File URL cache */
+
   fileUrls: Map<string, string>;
-  /** Whether this kit is local */
+
   local: boolean;
-  /** Whether this kit is remote */
+
   remote: boolean;
 }
 
-/**
- * Events for Kit machines
- */
 export type KitMachineEvent =
   | { type: "LOAD" }
   | { type: "CHANGE"; diff: KitDiff }
@@ -1087,25 +1045,19 @@ export type KitMachineEvent =
   | { type: "DELETE_DESIGN"; guid: Guid }
   | { type: "Y_UPDATE"; data: any };
 
-/**
- * Generic App machine context
- */
 export interface AppMachineContext<TSelection = any> extends YjsSyncContext {
   panelVisibility: PanelVisibility;
   selection?: TSelection;
   hover?: any;
   presence?: any;
   others: any[];
-  /** Transaction state */
+
   isTransactionActive: boolean;
   currentTransactionStack: any[];
   pastTransactionsStack: any[];
   redoStack: any[];
 }
 
-/**
- * Generic App machine events
- */
 export type AppMachineEvent<TSelectionDiff = any, TDiff = any> =
   | { type: "START_TRANSACTION" }
   | { type: "FINALIZE_TRANSACTION" }
@@ -1120,9 +1072,6 @@ export type AppMachineEvent<TSelectionDiff = any, TDiff = any> =
   | { type: "CHANGE"; diff: TDiff }
   | { type: "Y_UPDATE"; data: any };
 
-/**
- * KitDiff App machine context (for apps that can modify kits)
- */
 export interface KitDiffAppMachineContext<TSelection = any> extends AppMachineContext<TSelection> {
   kitGuid: Guid;
 }
@@ -1131,53 +1080,22 @@ export interface KitDiffAppMachineContext<TSelection = any> extends AppMachineCo
 
 // #region Y.js-XState Bridge
 
-/**
- * Creates an XState actor that observes a Y.js Map and sends Y_UPDATE events
- * when the data changes. This is the core bridge between Y.js and XState.
- * 
- * @param yMap - The Y.js Map to observe
- * @returns An actor logic that can be invoked in a machine
- * 
- * @example
- * ```ts
- * const machine = createMachine({
- *   invoke: {
- *     id: 'yjsSync',
- *     src: createYjsSyncActor(yMap)
- *   },
- *   on: {
- *     Y_UPDATE: { actions: 'handleYjsUpdate' }
- *   }
- * });
- * ```
- */
 export function createYjsSyncActor(yMap: Y.Map<any>) {
   return fromCallback<{ type: "Y_UPDATE"; data: any }>(({ sendBack }: { sendBack: (event: { type: "Y_UPDATE"; data: any }) => void }) => {
     const observer = () => {
       sendBack({ type: "Y_UPDATE", data: yMap.toJSON() });
     };
 
-    // Send initial state
     observer();
 
-    // Observe deep changes
     yMap.observeDeep(observer);
 
-    // Return cleanup function
     return () => {
       yMap.unobserveDeep(observer);
     };
   });
 }
 
-/**
- * Creates an XState actor that observes a specific field in a Y.js Map
- * and sends Y_FIELD_UPDATE events when that field changes.
- * 
- * @param yMap - The Y.js Map to observe
- * @param field - The field name to observe
- * @returns An actor logic that can be invoked in a machine
- */
 export function createYjsFieldSyncActor(yMap: Y.Map<any>, field: string) {
   return fromCallback<{ type: "Y_FIELD_UPDATE"; field: string; value: any }>(({ sendBack }: { sendBack: (event: { type: "Y_FIELD_UPDATE"; field: string; value: any }) => void }) => {
     const observer = (events: Y.YMapEvent<any>[]) => {
@@ -1188,37 +1106,20 @@ export function createYjsFieldSyncActor(yMap: Y.Map<any>, field: string) {
       }
     };
 
-    // Send initial state
     sendBack({ type: "Y_FIELD_UPDATE", field, value: yMap.get(field) });
 
-    // Observe changes
     yMap.observe(observer as any);
 
-    // Return cleanup function
     return () => {
       yMap.unobserve(observer as any);
     };
   });
 }
 
-/**
- * Wraps a Y.js transaction in a function that can be called from XState actions.
- * This ensures Y.js changes are atomic and can be properly synced.
- * 
- * @param yDoc - The Y.js document
- * @param fn - The function to execute within the transaction
- * @param origin - Optional origin string for the transaction
- */
 export function yTransact(yDoc: Y.Doc, fn: () => void, origin?: string): void {
   yDoc.transact(fn, origin);
 }
 
-/**
- * Creates an assign action that updates Y.js data and marks cache as dirty.
- * This is used to handle Y_UPDATE events in XState machines.
- * 
- * @returns An assign action configuration
- */
 export function createYjsUpdateAssign() {
   return assign({
     dirty: () => true,
@@ -1226,16 +1127,7 @@ export function createYjsUpdateAssign() {
   });
 }
 
-/**
- * Helper to create a selector that accesses cached Y.js data with dirty checking.
- * If dirty, rebuilds the cache; otherwise returns cached data.
- * 
- * @param buildSnapshot - Function to build snapshot from Y.js data
- * @returns A function that returns the snapshot
- */
-export function createYjsSelector<TContext extends YjsSyncContext, TSnapshot>(
-  buildSnapshot: (context: TContext) => TSnapshot
-): (context: TContext) => TSnapshot {
+export function createYjsSelector<TContext extends YjsSyncContext, TSnapshot>(buildSnapshot: (context: TContext) => TSnapshot): (context: TContext) => TSnapshot {
   return (context: TContext): TSnapshot => {
     if (!context.dirty && context.cache) {
       return context.cache as TSnapshot;
@@ -1248,32 +1140,22 @@ export function createYjsSelector<TContext extends YjsSyncContext, TSnapshot>(
 
 // #region Machine Factories
 
-/**
- * Input type for creating app machines
- */
 export interface AppMachineInput {
   yMap: Y.Map<any>;
   transact: Transact;
 }
 
-/**
- * Input type for creating kit-diff app machines
- */
 export interface KitDiffAppMachineInput extends AppMachineInput {
   kitGuid: Guid;
 }
 
-/**
- * Configuration for transaction machine
- */
 export interface TransactionMachineConfig<TEdit = any> {
-  /** Function to apply an edit's selection diff */
   applySelectionDiff: (selectionDiff: any) => void;
-  /** Function to compute inverse of a selection diff */
+
   inverseSelectionDiff: (selection: any, diff: any) => any;
-  /** Optional function to apply kit diff (for KitDiff apps) */
+
   applyKitDiff?: (kitDiff: KitDiff) => void;
-  /** Optional function to compute inverse of kit diff */
+
   inverseKitDiff?: (kit: Kit, diff: KitDiff) => KitDiff;
 }
 
@@ -1283,31 +1165,18 @@ export interface TransactionMachineConfig<TEdit = any> {
 
 // #region YPath Helpers
 
-/**
- * Creates a YPath segment for accessing a map key.
- */
 export function yPathMapKey(key: string): YPathSegment {
   return { kind: "mapKey", key };
 }
 
-/**
- * Creates a YPath segment for accessing an array index.
- */
 export function yPathArrayIndex(index: number): YPathSegment {
   return { kind: "arrayIndex", index };
 }
 
-/**
- * Creates a YPath segment for finding an item in an array by its id.
- */
 export function yPathArrayItemById(id: string, idKey: string = "guid"): YPathSegment {
   return { kind: "arrayItemById", id, idKey };
 }
 
-/**
- * Gets the value at a path in a Y.js structure.
- * Returns undefined if the path doesn't exist.
- */
 export function getValueAtPath(root: Y.Map<any> | Y.Array<any>, path: YPath): any {
   let current: any = root;
   for (const segment of path) {
@@ -1331,13 +1200,9 @@ export function getValueAtPath(root: Y.Map<any> | Y.Array<any>, path: YPath): an
   return current;
 }
 
-/**
- * Creates an observer for a specific path in a Y.js structure.
- * Only fires when the value at the path changes.
- */
 export function createPathObserver(root: Y.Map<any>, path: YPath, subscribe: Subscribe): Disposable {
   if (path.length === 0) {
-    const callback = () => subscribe(() => { });
+    const callback = () => subscribe(() => {});
     root.observeDeep(callback);
     return () => root.unobserveDeep(callback);
   }
@@ -1349,7 +1214,7 @@ export function createPathObserver(root: Y.Map<any>, path: YPath, subscribe: Sub
     const newJson = JSON.stringify(newValue instanceof Y.Map || newValue instanceof Y.Array ? newValue.toJSON() : newValue);
     if (lastJson !== newJson) {
       lastValue = newValue;
-      subscribe(() => { });
+      subscribe(() => {});
     }
   };
   const setupObservers = (current: any, remainingPath: YPath, depth: number) => {
@@ -1415,18 +1280,11 @@ export function createPathObserver(root: Y.Map<any>, path: YPath, subscribe: Sub
 
 // #region Derived Store
 
-/**
- * A base dependency for a derived node - a path in a specific store.
- */
 export interface BaseDependency {
   store: { onPathChanged: (path: YPath, subscribe: Subscribe) => Disposable; getPathSnapshot: (path: YPath) => any };
   path: YPath;
 }
 
-/**
- * A node in the derived dependency graph.
- * Caches computed values and only recomputes when dependencies change.
- */
 export class DerivedNode<T> {
   private deps: BaseDependency[];
   private compute: () => T;
@@ -1447,7 +1305,7 @@ export class DerivedNode<T> {
     this.unsubscribers = this.deps.map((d) =>
       d.store.onPathChanged(d.path, () => {
         this.recompute();
-        return () => { };
+        return () => {};
       }),
     );
     this.recompute();
@@ -1494,10 +1352,6 @@ export class DerivedNode<T> {
   }
 }
 
-/**
- * A store for managing derived nodes.
- * Provides caching and lazy initialization of computed values.
- */
 export class DerivedStore {
   private nodes = new Map<string, DerivedNode<any>>();
 
@@ -1540,13 +1394,11 @@ export class DerivedStore {
 
 // #region Store Factory Registry
 
-// Factory types - using any to avoid circular type dependencies
 export type DesignAppStoreFactory = (parent: any, id: any, state?: any) => any;
 export type KitAppStoreFactory = (parent: any, yMap: any, transact: (fn: () => void) => void, id: any, state?: any) => any;
 export type TypeAppStoreFactory = (parent: any, id: any, state?: any) => any;
 export type QualityAppStoreFactory = (parent: any, id: any, state?: any) => any;
 
-// Global factory registry - lives in shared.ts to avoid circular dependencies
 let designAppStoreFactory: DesignAppStoreFactory | undefined;
 let kitAppStoreFactory: KitAppStoreFactory | undefined;
 let typeAppStoreFactory: TypeAppStoreFactory | undefined;
@@ -1592,91 +1444,61 @@ export function getQualityAppStoreFactory(): QualityAppStoreFactory {
 
 // #region App Plugin Registry
 
-/**
- * Machine contribution from an app plugin.
- * Apps provide their own events, actions, guards, and selectors.
- */
 export interface AppMachineContribution {
-  /** Event type definitions (for TypeScript union type) */
   eventTypes?: Record<string, any>;
-  /** Action implementations keyed by action name */
+
   actions?: Record<string, (context: any, event: any) => any>;
-  /** Guard implementations keyed by guard name */
+
   guards?: Record<string, (context: any, event: any) => boolean>;
-  /** Event-to-action/guard mappings for the machine's `on` config */
+
   eventHandlers?: Record<string, { guard?: string; actions?: string | string[] }>;
-  /** Selector functions for reading app state */
+
   selectors?: Record<string, (context: any, ...args: any[]) => any>;
-  /** Default state factory for this app */
+
   createDefaultState?: () => any;
 }
 
-/**
- * App plugin that contributes to the sketchpad machine.
- * Each app registers a plugin on module import to provide its machine contributions.
- */
 export interface AppPlugin {
-  /** Unique identifier for the app (e.g., "home", "kit", "type", "design") */
   id: string;
-  /** Event namespace prefix (e.g., "HOME", "KIT", "TYPE", "DESIGN") */
+
   namespace: string;
-  /** Machine contributions (events, actions, guards) */
+
   machine: AppMachineContribution;
-  /** Optional store factory registration */
+
   registerStores?: () => void;
-  /** Optional initialization hook called when plugin is registered */
+
   onRegister?: () => void;
 }
 
-// Global plugin registry
 const appPlugins: Map<string, AppPlugin> = new Map();
 
-/**
- * Register an app plugin.
- * Should be called as a side-effect when the app module is imported.
- */
 export function registerAppPlugin(plugin: AppPlugin): void {
   if (appPlugins.has(plugin.id)) {
     console.warn(`App plugin "${plugin.id}" already registered, replacing...`);
   }
   appPlugins.set(plugin.id, plugin);
 
-  // Call store registration if provided
   if (plugin.registerStores) {
     plugin.registerStores();
   }
 
-  // Call initialization hook if provided
   if (plugin.onRegister) {
     plugin.onRegister();
   }
 }
 
-/**
- * Get all registered app plugins.
- */
 export function getAppPlugins(): AppPlugin[] {
   return Array.from(appPlugins.values());
 }
 
-/**
- * Get a specific app plugin by ID.
- */
 export function getAppPlugin(id: string): AppPlugin | undefined {
   return appPlugins.get(id);
 }
 
-/**
- * Check if an app plugin is registered.
- */
 export function hasAppPlugin(id: string): boolean {
   return appPlugins.has(id);
 }
 
-/**
- * Compose all machine contributions from registered plugins.
- * Returns merged actions, guards, and event handlers.
- */
 export function composePluginContributions(): {
   actions: Record<string, (context: any, event: any) => any>;
   guards: Record<string, (context: any, event: any) => boolean>;
@@ -1691,28 +1513,24 @@ export function composePluginContributions(): {
   for (const plugin of appPlugins.values()) {
     const contribution = plugin.machine;
 
-    // Merge actions with namespace prefix
     if (contribution.actions) {
       for (const [name, fn] of Object.entries(contribution.actions)) {
         actions[name] = fn;
       }
     }
 
-    // Merge guards with namespace prefix
     if (contribution.guards) {
       for (const [name, fn] of Object.entries(contribution.guards)) {
         guards[name] = fn;
       }
     }
 
-    // Merge event handlers
     if (contribution.eventHandlers) {
       for (const [eventType, handler] of Object.entries(contribution.eventHandlers)) {
         eventHandlers[eventType] = handler;
       }
     }
 
-    // Merge selectors with namespace prefix
     if (contribution.selectors) {
       for (const [name, fn] of Object.entries(contribution.selectors)) {
         selectors[`${plugin.id}.${name}`] = fn;
@@ -1767,88 +1585,36 @@ export function executeRuntimeAction<TContext = any, TEvent = any>(actionName: s
 
 // #region Dynamic Event Dispatch Registry
 
-/**
- * Event handler configuration for dynamic dispatch.
- * Apps register handlers that are invoked when events matching their namespace are received.
- */
 export interface EventHandlerConfig<TContext = any, TEvent = any> {
-  /** Guard function - returns true if the event should be handled */
   guard?: (context: TContext, event: TEvent) => boolean;
-  /** Action function - returns partial context updates */
+
   action: (context: TContext, event: TEvent) => Partial<TContext>;
 }
 
-/**
- * Registry mapping event types to their handlers.
- * Key is the full event type (e.g., "HOME.TOGGLE_PANEL", "DESIGN.SET_HOVER")
- */
 const eventHandlerRegistry: Map<string, EventHandlerConfig> = new Map();
 
-/**
- * Registry mapping guard names to guard functions.
- * Used by the sketchpad machine for dynamic guard lookup.
- */
 const guardRegistry: Map<string, (context: any, event: any) => boolean> = new Map();
 
-/**
- * Register an event handler for a specific event type.
- * Called by app modules to register their event handlers.
- * 
- * @example
- * ```ts
- * registerEventHandler("HOME.TOGGLE_PANEL", {
- *   action: (context, event) => {
- *     const { panel } = event;
- *     return {
- *       homeApp: {
- *         ...context.homeApp,
- *         panelVisibility: { ...context.homeApp.panelVisibility, [panel]: !context.homeApp.panelVisibility[panel] }
- *       }
- *     };
- *   }
- * });
- * ```
- */
-export function registerEventHandler<TContext = any, TEvent = any>(
-  eventType: string,
-  config: EventHandlerConfig<TContext, TEvent>
-): void {
+export function registerEventHandler<TContext = any, TEvent = any>(eventType: string, config: EventHandlerConfig<TContext, TEvent>): void {
   eventHandlerRegistry.set(eventType, config as EventHandlerConfig);
 }
 
-/**
- * Unregister an event handler.
- */
 export function unregisterEventHandler(eventType: string): void {
   eventHandlerRegistry.delete(eventType);
 }
 
-/**
- * Check if an event handler is registered.
- */
 export function hasEventHandler(eventType: string): boolean {
   return eventHandlerRegistry.has(eventType);
 }
 
-/**
- * Get an event handler configuration.
- */
 export function getEventHandler(eventType: string): EventHandlerConfig | undefined {
   return eventHandlerRegistry.get(eventType);
 }
 
-/**
- * Execute a registered event handler.
- * Returns empty object if no handler is registered for the event type.
- */
-export function executeEventHandler<TContext = any, TEvent extends { type: string } = any>(
-  context: TContext,
-  event: TEvent
-): Partial<TContext> {
+export function executeEventHandler<TContext = any, TEvent extends { type: string } = any>(context: TContext, event: TEvent): Partial<TContext> {
   const handler = eventHandlerRegistry.get(event.type);
   if (!handler) return {};
 
-  // Check guard if present
   if (handler.guard && !handler.guard(context, event)) {
     return {};
   }
@@ -1856,57 +1622,33 @@ export function executeEventHandler<TContext = any, TEvent extends { type: strin
   return handler.action(context, event);
 }
 
-/**
- * Register a guard function.
- * Guards are used by the sketchpad machine to conditionally handle events.
- */
 export function registerGuard(name: string, guard: (context: any, event: any) => boolean): void {
   guardRegistry.set(name, guard);
 }
 
-/**
- * Unregister a guard function.
- */
 export function unregisterGuard(name: string): void {
   guardRegistry.delete(name);
 }
 
-/**
- * Get a guard function by name.
- */
 export function getGuard(name: string): ((context: any, event: any) => boolean) | undefined {
   return guardRegistry.get(name);
 }
 
-/**
- * Check if a guard is registered.
- */
 export function hasGuard(name: string): boolean {
   return guardRegistry.has(name);
 }
 
-/**
- * Execute a guard by name.
- * Returns false if guard is not found.
- */
 export function executeGuard(name: string, context: any, event: any): boolean {
   const guard = guardRegistry.get(name);
   if (!guard) return false;
   return guard(context, event);
 }
 
-/**
- * Get all registered event types for a namespace.
- * Useful for debugging and documentation.
- */
 export function getEventTypesForNamespace(namespace: string): string[] {
   const prefix = `${namespace}.`;
-  return Array.from(eventHandlerRegistry.keys()).filter(key => key.startsWith(prefix));
+  return Array.from(eventHandlerRegistry.keys()).filter((key) => key.startsWith(prefix));
 }
 
-/**
- * Get all registered namespaces.
- */
 export function getRegisteredNamespaces(): string[] {
   const namespaces = new Set<string>();
   for (const eventType of eventHandlerRegistry.keys()) {
@@ -1944,7 +1686,7 @@ export interface KitAppHooks {
 }
 
 const defaultDesignAppHooks: DesignAppHooks = {
-  useDesignAppCommands: () => ({ togglePanel: () => { }, execute: () => Promise.resolve({}) }),
+  useDesignAppCommands: () => ({ togglePanel: () => {}, execute: () => Promise.resolve({}) }),
   useDesignAppDiff: () => ({}),
   useDesignAppHover: () => undefined,
   useDesignAppIsPieceHovered: () => false,
@@ -1957,7 +1699,7 @@ const defaultDesignAppHooks: DesignAppHooks = {
 };
 
 const defaultKitAppHooks: KitAppHooks = {
-  useKitAppCommands: () => ({ togglePanel: () => { }, execute: () => Promise.resolve({}) }),
+  useKitAppCommands: () => ({ togglePanel: () => {}, execute: () => Promise.resolve({}) }),
 };
 
 let registeredDesignAppHooks: DesignAppHooks | null = null;

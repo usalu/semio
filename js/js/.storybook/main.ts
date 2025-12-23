@@ -19,7 +19,6 @@
 
 // #endregion Header
 
-
 import { createRequire } from "node:module";
 // #region Header
 
@@ -53,23 +52,12 @@ import { dirname, join } from "path";
 
 const require = createRequire(import.meta.url);
 
-
 function getAbsolutePath(value: string): any {
   return dirname(require.resolve(join(value, "package.json")));
 }
 const config: StorybookConfig = {
-  stories: [
-    "./stories/elements/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)",
-    "../sketchpad/stories/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)",
-    "../sketchpad/panels/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)",
-    
-  ],
-  addons: [
-    
-    
-    getAbsolutePath("@storybook/addon-vitest"),
-    getAbsolutePath("@storybook/addon-docs"),
-  ],
+  stories: ["./stories/elements/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)", "../sketchpad/stories/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)", "../sketchpad/panels/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)"],
+  addons: [getAbsolutePath("@storybook/addon-vitest"), getAbsolutePath("@storybook/addon-docs")],
 
   framework: {
     name: getAbsolutePath("@storybook/react-vite"),
@@ -88,37 +76,30 @@ const config: StorybookConfig = {
   async viteFinal(config) {
     config.plugins = config.plugins || [];
 
-    
     const indicesToRemove: number[] = [];
 
     for (let i = 0; i < config.plugins.length; i++) {
       const plugin: any = config.plugins[i];
 
-      
       if (plugin === "@mdx-js/rollup" || (plugin && typeof plugin === "object" && plugin.name === "@mdx-js/rollup")) {
         indicesToRemove.push(i);
         continue;
       }
 
-      
       if (plugin instanceof Promise) {
         try {
           const resolved: any = await plugin;
           if (resolved && typeof resolved === "object" && resolved.name === "storybook:mdx-plugin") {
             indicesToRemove.push(i);
           }
-        } catch (e) {
-          
-        }
+        } catch (e) {}
       }
     }
 
-    
     for (let i = indicesToRemove.length - 1; i >= 0; i--) {
       config.plugins.splice(indicesToRemove[i], 1);
     }
 
-    
     const mdx = await import("@mdx-js/rollup");
     config.plugins.push(
       mdx.default({
@@ -127,7 +108,6 @@ const config: StorybookConfig = {
       }),
     );
 
-    
     config.optimizeDeps = config.optimizeDeps || {};
     config.optimizeDeps.include = [...(config.optimizeDeps.include || []), "golden-layout"];
     config.optimizeDeps.esbuildOptions = {
@@ -135,7 +115,6 @@ const config: StorybookConfig = {
       target: "es2020",
     };
 
-    
     config.mode = "development";
     config.define = {
       ...config.define,

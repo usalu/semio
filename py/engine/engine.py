@@ -1,29 +1,22 @@
 #!/usr/bin/env python
-
 # region Header
 
-# engine.py
+# py/engine/engine.py
 
-# 2020-2025 Ueli Saluz
+# 2025 Ueli Saluz <ueli@semio-tech.com>
 
 # This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Affero General Public License as
+# it under the terms of the GNU Lesser General Public License as
 # published by the Free Software Foundation, either version 3 of the
 # License, or (at your option) any later version.
 
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Affero General Public License for more details.
+# GNU Lesser General Public License for more details.
 
-# You should have received a copy of the GNU Affero General Public License
+# You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-"""
-engine.py
-"""
-
-from __future__ import annotations
 
 # endregion Header
 # region TODOs
@@ -188,7 +181,7 @@ MIMES = {
 ENCODED_PATH = typing.Annotated[str, fastapi.Path(pattern=ENCODING_REGEX)]
 ENCODED_NAME_AND_VARIANT_PATH = typing.Annotated[str, fastapi.Path(pattern=ENCODING_REGEX + "," + ENCODING_ALPHABET_REGEX + "*")]
 ENCODED_NAME_AND_VARIANT_AND_VIEW_PATH = typing.Annotated[str, fastapi.Path(pattern=ENCODING_REGEX + "," + ENCODING_ALPHABET_REGEX + "*" + "," + ENCODING_ALPHABET_REGEX + "*")]
-MAX_REQUEST_BODY_SIZE = 50 * 1024 * 1024  # 50MB
+MAX_REQUEST_BODY_SIZE = 50 * 1024 * 1024  
 dotenv.load_dotenv()
 ENVS = {key: value for key, value in os.environ.items() if key.startswith("SEMIO_")}
 
@@ -223,7 +216,7 @@ def encodeRecursiveAnyList(recursiveAnyList: RecursiveAnyList) -> str:
     return encode(",".join([encodeRecursiveAnyList(item) for item in recursiveAnyList]))
 
 
-# I would just have to prove Applicative <=>. I miss you Haskell (。﹏。)
+
 def create_id(recursiveAnyList: RecursiveAnyList) -> str:
     """🆔 Turn any into `encoded(str(any))` or a recursive list into a flat comma [,] separated encoded list."""
     if not isinstance(recursiveAnyList, list):
@@ -283,7 +276,7 @@ logger = loguru.logger
 # region Exceptions
 
 
-# All exceptions define __str__ as a message for the user.
+
 
 
 class Error(Exception, abc.ABC):
@@ -384,10 +377,10 @@ class Model(sqlmodel.SQLModel, abc.ABC):
         return self.model_dump()
 
 
-BaseModel = Model  # Alias to preserve reference after table Model shadows it
+BaseModel = Model  
 
 
-# Composition over inheritance. Literally.
+
 
 
 class Field(Model, abc.ABC):
@@ -461,13 +454,13 @@ class Entity(Model, abc.ABC):
         return self.id()
 
     # TODO: Automatic emptying.
-    # @abc.abstractmethod
+    
     def empty(self) -> "Entity":
         """🪣 Empty all props and children of the entity."""
         return self.__class__()
 
     # TODO: Automatic updating based on props.
-    # @abc.abstractmethod
+    
     def update(self, other: "Entity") -> "Entity":
         """🔄 Update the props of the entity."""
         return self
@@ -569,7 +562,7 @@ class TableEntityNode(TableNode):
 # region Domain
 
 # region Attribute
-# https://github.com/usalu/semio-attribute-
+
 
 
 class AttributeKeyField(RealField, abc.ABC):
@@ -725,7 +718,7 @@ class AttributeInputNode(InputNode):
 # endregion Attribute
 
 # region Tag
-# https://github.com/usalu/semio-tag-
+
 
 
 class TagGuidField(RealField, abc.ABC):
@@ -802,7 +795,7 @@ class Concept(ConceptIconField, ConceptDescriptionField, ConceptOrderField, Conc
 # endregion Concept
 
 # region Coord
-# https://github.com/usalu/semio-coord-
+
 
 
 class Coord(Model):
@@ -815,22 +808,22 @@ class Coord(Model):
     def __repr__(self) -> str:
         return f"[{pretty(self.u)}, {pretty(self.v)}]"
 
-    # def __init__(self, u: int = 0, v: int = 0):
-    #     super().__init__(u=u, v=v)
+    
+    
 
-    # def __len__(self):
-    #     return 2
+    
+    
 
-    # def __getitem__(self, key):
-    #     if key == 0:
-    #         return self.u
-    #     elif key == 1:
-    #         return self.v
-    #     else:
-    #         raise IndexError("Index out of range")
+    
+    
+    
+    
+    
+    
+    
 
-    # def __iter__(self):
-    #     return iter((self.u, self.v))
+    
+    
 
 
 class CoordInput(Coord, Input):
@@ -862,7 +855,7 @@ class CoordInputNode(InputNode):
 # endregion Coord
 
 # region Point
-# https://github.com/usalu/semio-point-
+
 
 
 class Point(Model):
@@ -870,8 +863,8 @@ class Point(Model):
     y: float = sqlmodel.Field()
     z: float = sqlmodel.Field()
 
-    # def __init__(self, x: float = 0.0, y: float = 0.0, z: float = 0.0):
-    #     super().__init__(x=x, y=y, z=z)
+    
+    
 
     def __str__(self) -> str:
         return f"[{pretty(self.x)}, {pretty(self.y)}, {pretty(self.z)}]"
@@ -879,34 +872,34 @@ class Point(Model):
     def __repr__(self) -> str:
         return f"[{pretty(self.x)}, {pretty(self.y)}, {pretty(self.z)}]"
 
-    # def __len__(self):
-    #     return 3
+    
+    
 
-    # def __getitem__(self, key):
-    #     if key == 0:
-    #         return self.x
-    #     elif key == 1:
-    #         return self.y
-    #     elif key == 2:
-    #         return self.z
-    #     else:
-    #         raise IndexError("Index out of range")
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
-    # def __iter__(self):
-    #     return iter((self.x, self.y, self.z))
+    
+    
 
-    # def isCloseTo(self, other: "Point", tol: float = TOLERANCE) -> bool:
-    #     return (
-    #         abs(self.x - other.x) < tol
-    #         and abs(self.y - other.y) < tol
-    #         and abs(self.z - other.z) < tol
-    #     )
+    
+    
+    
+    
+    
+    
 
-    # def transform(self, transform: "Transform") -> "Point":
-    #     return Transform.transformPoint(transform, self)
+    
+    
 
-    # def toVector(self) -> "Vector":
-    #     return Vector(self.x, self.y, self.z)
+    
+    
 
 
 class PointInput(Point, Input):
@@ -938,7 +931,7 @@ class PointInputNode(InputNode):
 # endregion Point
 
 # region Vector
-# https://github.com/usalu/semio-vector-
+
 
 
 class Vector(Model):
@@ -946,8 +939,8 @@ class Vector(Model):
     y: float = sqlmodel.Field()
     z: float = sqlmodel.Field()
 
-    # def __init__(self, x: float = 0.0, y: float = 0.0, z: float = 0.0):
-    #     super().__init__(x=x, y=y, z=z)
+    
+    
 
     def __str__(self) -> str:
         return f"[{pretty(self.x)}, {pretty(self.y)}, {pretty(self.z)}]"
@@ -955,72 +948,72 @@ class Vector(Model):
     def __repr__(self) -> str:
         return f"[{pretty(self.x)}, {pretty(self.y)}, {pretty(self.z)}]"
 
-    # def __len__(self):
-    #     return 3
+    
+    
 
-    # def __getitem__(self, key):
-    #     if key == 0:
-    #         return self.x
-    #     elif key == 1:
-    #         return self.y
-    #     elif key == 2:
-    #         return self.z
-    #     else:
-    #         raise IndexError("Index out of range")
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
-    # def __iter__(self):
-    #     return iter((self.x, self.y, self.z))
+    
+    
 
-    # def __add__(self, other):
-    #     return Vector(self.x + other.x, self.y + other.y, self.z + other.z)
+    
+    
 
-    # @property
-    # def length(self) -> float:
-    #     return (self.x**2 + self.y**2 + self.z**2) ** 0.5
+    
+    
+    
 
-    # def revert(self) -> "Vector":
-    #     return Vector(-self.x, -self.y, -self.z)
+    
+    
 
-    # def amplify(self, factor: float) -> "Vector":
-    #     return Vector(self.x * factor, self.y * factor, self.z * factor)
+    
+    
 
-    # def isCloseTo(self, other: "Vector", tol: float = TOLERANCE) -> bool:
-    #     return (
-    #         abs(self.x - other.x) < tol
-    #         and abs(self.y - other.y) < tol
-    #         and abs(self.z - other.z) < tol
-    #     )
+    
+    
+    
+    
+    
+    
 
-    # def normalize(self) -> "Vector":
-    #     length = self.length
-    #     return Vector(x=self.x / length, y=self.y / length, z=self.z / length)
+    
+    
+    
 
-    # def dot(self, other: "Vector") -> float:
-    #     return numpy.dot(self, other)
+    
+    
 
-    # def cross(self, other: "Vector") -> "Vector":
-    #     return Vector(*numpy.cross(self, other))
+    
+    
 
-    # def transform(self, transform: "Transform") -> "Vector":
-    #     return Transform.transformVector(transform, self)
+    
+    
 
-    # def toPoint(self) -> "Point":
-    #     return Point(self.x, self.y, self.z)
+    
+    
 
-    # def toTransform(self) -> "Transform":
-    #     return Transform.fromTranslation(self)
+    
+    
 
-    # @staticmethod
-    # def X() -> "Vector":
-    #     return Vector(x=1)
+    
+    
+    
 
-    # @staticmethod
-    # def Y() -> "Vector":
-    #     return Vector(y=1)
+    
+    
+    
 
-    # @staticmethod
-    # def Z() -> "Vector":
-    #     return Vector(z=1)
+    
+    
+    
 
 
 class VectorInput(Vector, Input):
@@ -1052,7 +1045,7 @@ class VectorInputNode(InputNode):
 # endregion Vector
 
 # region Plane
-# https://github.com/usalu/semio-plane-
+
 
 
 class PlaneOriginField(MaskedField, abc.ABC):
@@ -1097,25 +1090,25 @@ class Plane(Table, table=True):
     yAxisZ: float = sqlmodel.Field(sa_column=sqlmodel.Column("y_axis_z", sqlalchemy.Float()), exclude=True)
     piece: Piece = sqlmodel.Relationship(back_populates="plane")
 
-    # def __init__(
-    #     self, origin: Point = None, xAxis: Vector = None, yAxis: Vector = None
-    # ):
-    #     if origin is None:
-    #         origin = Point()
-    #     if xAxis is None and yAxis is None:
-    #         xAxis = Vector.X()
-    #         yAxis = Vector.Y()
-    #     if xAxis is None:
-    #         xAxis = Vector()
-    #     if yAxis is None:
-    #         yAxis = Vector()
-    #     if abs(xAxis.length - 1) > TOLERANCE:
-    #         raise ValidationError("The x-axis must be normalized.")
-    #     if abs(yAxis.length - 1) > TOLERANCE:
-    #         raise ValidationError("The y-axis must be normalized.")
-    #     if abs(xAxis.dot(yAxis)) > TOLERANCE:
-    #         raise ValidationError("The x-axis and y-axis must be orthogonal.")
-    #     super().__init__(origin=origin, xAxis=xAxis, yAxis=yAxis)
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
     @property
     def origin(self) -> Point:
@@ -1159,37 +1152,37 @@ class Plane(Table, table=True):
         self.yAxisY = yAxis.y
         self.yAxisZ = yAxis.z
 
-    # def isCloseTo(self, other: "Plane", tol: float = TOLERANCE) -> bool:
-    #     return (
-    #         self.origin.isCloseTo(other.origin, tol)
-    #         and self.xAxis.isCloseTo(other.xAxis, tol)
-    #         and self.yAxis.isCloseTo(other.yAxis, tol)
-    #     )
+    
+    
+    
+    
+    
+    
 
-    # def transform(self, transform: "Transform") -> "Plane":
-    #     return Transform.transformPlane(transform, self)
+    
+    
 
-    # def toTransform(self) -> "Transform":
-    #     return Transform.fromPlane(self)
+    
+    
 
-    # @staticmethod
-    # def XY() -> "Plane":
-    #     return Plane(
-    #         origin=Point(),
-    #         xAxis=Vector.X(),
-    #         yAxis=Vector.Y(),
-    #     )
+    
+    
+    
+    
+    
+    
+    
 
-    # @staticmethod
-    # def fromYAxis(yAxis: Vector, theta: float = 0.0, origin: Point = None) -> "Plane":
-    #     if abs(yAxis.length - 1) > TOLERANCE:
-    #         raise SpecificationError("The yAxis must be normalized.")
-    #     if origin is None:
-    #         origin = Point()
-    #     orientation = Transform.fromDirections(Vector.Y(), yAxis)
-    #     rotation = Transform.fromAngle(yAxis, theta)
-    #     xAxis = Vector.X().transform(rotation.after(orientation))
-    #     return Plane(origin=origin, xAxis=xAxis, yAxis=yAxis)
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
     # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
     @classmethod
@@ -1222,7 +1215,7 @@ class PlaneInputNode(InputNode):
 # endregion Plane
 
 # region Location
-# https://github.com/usalu/semio-location-
+
 
 
 class LocationGuidField(RealField, abc.ABC):
@@ -1268,7 +1261,7 @@ class LocationPrediction(LocationAltitudeField, LocationLatitudeField, LocationL
     pass
 
 
-# Use LocationOutput instead of Location to avoid SQLModel Relationship field issues
+
 class LocationNode(Node):
     class Meta:
         model = LocationOutput
@@ -1282,7 +1275,7 @@ class LocationInputNode(InputNode):
 # endregion Location
 
 # region Author
-# https://github.com/usalu/semio-author-
+
 
 
 class AuthorNameField(RealField, abc.ABC):
@@ -1374,7 +1367,7 @@ class ArtifactAuthor(ArtifactAuthorEmailField, TableEntity, table=True):
 # endregion ArtifactAuthor
 
 # region File
-# https://github.com/usalu/semio-file-
+
 
 
 class FileGuidField(RealField, abc.ABC):
@@ -1947,7 +1940,7 @@ class PropInputNode(InputNode):
 # endregion Prop
 
 # region Model
-# https://github.com/usalu/semio-model-
+
 
 
 class ModelNameField(RealField, abc.ABC):
@@ -2033,9 +2026,9 @@ class Model(ModelDescriptionField, ModelNameField, ModelFileField, ModelUrlField
     def dump(self) -> "ModelOutput":
         entity = {**ModelProps.model_validate(self).model_dump()}
         #  TODO: Fix bug with tags not being dumped correctly.
-        # Probably some sqlmodel issue with transient objects that are never written to the database.
-        # 'str' object has no attribute 'order'
-        # entity["tags"] = self.tags
+        
+        
+        
         entity["attributes"] = [q.dump() for q in self.attributes]
         return ModelOutput(**entity)
 
@@ -2057,7 +2050,7 @@ class ModelInputNode(InputNode):
 # endregion Model
 
 # region Interface
-# https://github.com/usalu/semio#-interface-
+
 
 
 class InterfaceNameField(RealField, abc.ABC):
@@ -2102,9 +2095,9 @@ class Interface(InterfaceIconField, InterfaceDescriptionField, InterfaceNameFiel
 
 
 # TODO: Fix InterfaceNode - was incorrectly changed to TableEntityNode in latest commit
-# class InterfaceNode(TableEntityNode):
-#     class Meta:
-#         model = Interface
+
+
+
 
 
 class InterfaceInputNode(InputNode):
@@ -2115,11 +2108,11 @@ class InterfaceInputNode(InputNode):
 # endregion Interface
 
 # region Port
-# https://github.com/usalu/semio-port-
+
 
 
 # region CompatibleInterface
-# https://github.com/usalu/semio-compatibleinterface-
+
 
 
 class CompatibleInterfaceNameField(RealField, abc.ABC):
@@ -2324,7 +2317,7 @@ class PortIdInputNode(InputNode):
 # endregion Port
 
 # region Type
-# https://github.com/usalu/semio-type-
+
 
 
 class TypeNameField(RealField, abc.ABC):
@@ -2704,7 +2697,7 @@ class Layer(LayerIsLockedField, LayerIsHiddenField, LayerColorField, LayerDescri
 # endregion Layer
 
 # region Piece
-# https://github.com/usalu/semio-piece-
+
 
 
 class PieceIdField(MaskedField, abc.ABC):
@@ -2783,11 +2776,11 @@ class PieceOutput(PieceDesignField, PieceTypeField, PieceDescriptionField, Piece
 
 class PiecePrediction(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Prediction):
     pass
-    # center: typing.Optional[CoordPrediction] = sqlmodel.Field(
-    #     default=None,
-    #     ,
-    # )
-    # """📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."""
+    
+    
+    
+    
+    
 
 
 class Piece(PieceIdField, PieceHiddenField, PieceLockedField, PieceColorField, PieceScaleField, TableEntity, table=True):
@@ -2963,7 +2956,7 @@ class Group(GroupColorField, GroupDescriptionField, GroupNameField, TableEntity,
 # endregion Group
 
 # region Side
-# https://github.com/usalu/semio-side-
+
 
 
 class Side(BaseModel):
@@ -3037,7 +3030,7 @@ class SideInputNode(InputNode):
 # endregion Side
 
 # region Connection
-# https://github.com/usalu/semio-connection-
+
 
 
 class ConnectionConnectedField(MaskedField, abc.ABC):
@@ -3076,14 +3069,14 @@ class ConnectionTiltField(RealField, abc.ABC):
     tilt: float = sqlmodel.Field(ge=0, lt=360, default=0)
 
 
-# class ConnectionOrientationFirstField(RealField, abc.ABC):
-#     """🥇 Wheather the orientation (rotation, turn, tilt) is applied before the translation (gap, shift, raise). By default the translation happens before the orientation."""
 
-#     orientationFirst: bool = sqlmodel.Field(
-#         default=False,
-#         ,
-#     )
-#     """🥇 Wheather the orientation (rotation, turn, tilt) is applied before the translation (gap, shift, raise). By default the translation happens before the orientation."""
+
+
+
+
+
+
+
 
 
 class ConnectionUField(RealField, abc.ABC):
@@ -3220,7 +3213,7 @@ class Connection(ConnectionVField, ConnectionUField, ConnectionTiltField, Connec
                 raise FeatureNotYetSupported()
             refDesign = connectedPiece.refDesign if connectedPiece.refDesign is not None else None
             if refDesign is None and designsById is not None:
-                # best-effort lookup by connected piece's type/design is not possible; require refDesign
+                
                 raise FeatureNotYetSupported()
             if refDesign is not None:
                 try:
@@ -3379,7 +3372,7 @@ class Stat(StatUpdatedField, StatCreatedField, StatMaxExcludedField, StatMaxFiel
 # endregion Stat
 
 # region Design
-# https://github.com/usalu/semio-design-
+
 
 
 class DesignNameField(RealField, abc.ABC):
@@ -3681,7 +3674,7 @@ class DesignIdInputNode(InputNode):
 # endregion Design
 
 # region Kit
-# https://github.com/usalu/semio-kit-
+
 
 
 class KitUriField(RealField, abc.ABC):
@@ -4059,8 +4052,8 @@ class Kit(KitNameField, KitVersionField, KitDescriptionField, KitIconField, KitI
 
 
 # region Moved Graphene Nodes
-# These classes were moved here to ensure all SQLModel table classes are defined
-# before graphene-sqlalchemy triggers mapper configuration.
+
+
 
 
 class AttributeNode(TableEntityNode):
@@ -4083,10 +4076,10 @@ class ModelNode(TableEntityNode):
         model = Model
         excludedFields = ("tags_",)
 
-    # attributes = graphene.List(graphene.NonNull(lambda: AttributeNode))
+    
 
-    # def resolve_attributes(self, info):
-    #     return self.attributes
+    
+    
 
 
 class PortNode(TableEntityNode):
@@ -4094,16 +4087,16 @@ class PortNode(TableEntityNode):
         model = Port
         exclude_fields = ("connecteds", "connectings")
 
-    # Add localId field to follow GraphQL naming conventions instead of id_
+    
     localId = graphene.String()
 
     def resolve_localId(self, info):
         return getattr(self, "id_", "")
 
-    # attributes = graphene.List(graphene.NonNull(lambda: AttributeNode))
+    
 
-    # def resolve_attributes(self, info):
-    #     return self.attributes
+    
+    
 
 
 class TypeNode(TableEntityNode):
@@ -4116,7 +4109,7 @@ class PieceNode(TableEntityNode):
         model = Piece
         exclude_fields = ("connecteds", "connectings")
 
-    # Add localId field to follow GraphQL naming conventions instead of id_
+    
     localId = graphene.String()
 
     def resolve_localId(self, info):
@@ -4313,7 +4306,7 @@ def areValidationResultsEqual(a: ValidationResult, b: ValidationResult) -> bool:
         for fa, fb in zip(ia.fixes, ib.fixes):
             if fa.title != fb.title:
                 return False
-            # For guid-unique, new GUIDs differ and fix structure may vary
+            
             if ia.ruleId == "guid-unique":
                 continue
             if json.dumps(_normalizeGuids(fa.diff), sort_keys=True) != json.dumps(_normalizeGuids(fb.diff), sort_keys=True):
@@ -4553,7 +4546,7 @@ def validateKitDict(kit: dict) -> ValidationResult:
 
     def checkGuid(entityKind: str, entityGuid: str, entity: dict) -> None:
         if entityGuid in seen:
-            # Create fix: regenerate GUID by removing and re-adding with new GUID
+            
             newGuid = _newGuid()
             entityCopy = _deepCopy(entity)
             entityCopy["guid"] = newGuid
@@ -5088,7 +5081,7 @@ def areModelsEqualDict(a: list | None, b: list | None, strict: bool = False) -> 
             return False
         if _normalizeValue(modelA.get("name")) != _normalizeValue(modelB.get("name")):
             return False
-        # Handle both Input format (file as string) and Output format (file as {guid: ...})
+        
         fileA = modelA.get("file")
         fileB = modelB.get("file")
         fileGuidA = fileA.get("guid") if isinstance(fileA, dict) else fileA
@@ -5126,7 +5119,7 @@ def areTypesEqualDict(a: list | None, b: list | None, strict: bool = False) -> b
                 break
             if not parentA or not parentB:
                 continue
-            # Handle both Input format (parent as string) and Output format (parent as {guid: ...})
+            
             parentGuidA = parentA.get("guid") if isinstance(parentA, dict) else parentA
             parentGuidB = parentB.get("guid") if isinstance(parentB, dict) else parentB
             if parentGuidA == parentGuidB:
@@ -5156,7 +5149,7 @@ def areTypesEqualDict(a: list | None, b: list | None, strict: bool = False) -> b
         locB = typeB.get("location", {}) if typeB.get("location") else {}
         if _normalizeValue(locA.get("guid")) != _normalizeValue(locB.get("guid")):
             return False
-        # Handle concepts - normalize to guid list for comparison
+        
         conceptsA = _normalizeArray(typeA.get("concepts"))
         conceptsB = _normalizeArray(typeB.get("concepts"))
         conceptGuidsA = [c.get("guid") if isinstance(c, dict) else c for c in conceptsA]
@@ -5194,14 +5187,14 @@ def arePiecesEqualDict(a: list | None, b: list | None, strict: bool = False) -> 
             return False
         if _normalizeValue(pieceA.get("name")) != _normalizeValue(pieceB.get("name")):
             return False
-        # Handle both Input format (type as string) and Output format (type as {guid: ...})
+        
         typeA = pieceA.get("type")
         typeB = pieceB.get("type")
         typeGuidA = typeA.get("guid") if isinstance(typeA, dict) else typeA
         typeGuidB = typeB.get("guid") if isinstance(typeB, dict) else typeB
         if typeGuidA != typeGuidB:
             return False
-        # Handle both Input format (design as string) and Output format (design as {guid: ...})
+        
         designA = pieceA.get("design")
         designB = pieceB.get("design")
         designGuidA = designA.get("guid") if isinstance(designA, dict) else designA
@@ -5280,7 +5273,7 @@ def areConnectionsEqualDict(a: list | None, b: list | None, strict: bool = False
             return False
         connectedA = connA.get("connected", {})
         connectedB = connB.get("connected", {})
-        # Handle both Input/Output format for piece reference
+        
         if _getGuidFromRef(connectedA.get("piece")) != _getGuidFromRef(connectedB.get("piece")):
             return False
         if _getGuidFromRef(connectedA.get("designPiece")) != _getGuidFromRef(connectedB.get("designPiece")):
@@ -5340,7 +5333,7 @@ def areDesignsEqualDict(a: list | None, b: list | None, strict: bool = False) ->
                 break
             if not parentA or not parentB:
                 continue
-            # Handle both Input format (parent as string) and Output format (parent as {guid: ...})
+            
             parentGuidA = _getGuidFromRef(parentA)
             parentGuidB = _getGuidFromRef(parentB)
             if parentGuidA == parentGuidB:
@@ -5356,7 +5349,7 @@ def areDesignsEqualDict(a: list | None, b: list | None, strict: bool = False) ->
             return False
         if _normalizeValue(designA.get("image")) != _normalizeValue(designB.get("image")):
             return False
-        # Handle concepts - normalize to guid list for comparison
+        
         conceptsA = _normalizeArray(designA.get("concepts"))
         conceptsB = _normalizeArray(designB.get("concepts"))
         conceptGuidsA = [_getGuidFromRef(c) for c in conceptsA]
@@ -5603,7 +5596,7 @@ def _getCollectionDiff(before: list, after: list, getItemDiff: typing.Callable[[
     diff: dict = {}
     beforeGuids = {item.get("guid") for item in before}
     afterGuids = {item.get("guid") for item in after}
-    # EntityId format: removed is [{"guid": ...}]
+    
     removed = [{"guid": item.get("guid")} for item in before if item.get("guid") not in afterGuids]
     if removed:
         diff["removed"] = removed
@@ -5613,7 +5606,7 @@ def _getCollectionDiff(before: list, after: list, getItemDiff: typing.Callable[[
             afterItem = next(a for a in after if a.get("guid") == item.get("guid"))
             itemDiff = getItemDiff(item, afterItem)
             if itemDiff:
-                # EntityId format: updated is [{entityKey: {"guid": ...}, "diff": ...}]
+                
                 if entityKey:
                     updated.append({entityKey: {"guid": item.get("guid")}, "diff": itemDiff})
                 else:
@@ -5639,12 +5632,12 @@ def _applyCollectionDiff(base: list, diff: dict | None, applyItemDiff: typing.Ca
         return base
     result = [dict(item) for item in base]
     if diff.get("removed"):
-        # EntityId format: removed is now [{"guid": ...}, ...] instead of ["...", ...]
+        
         removedGuids = [r["guid"] if isinstance(r, dict) else r for r in diff["removed"]]
         result = [item for item in result if item.get("guid") not in removedGuids]
     if diff.get("updated"):
         for update in diff["updated"]:
-            # EntityId format: update is now {"<entity>": {"guid": ...}, "diff": ...} instead of {"id": ..., "diff": ...}
+            
             updateGuid = update[entityKey]["guid"] if entityKey and entityKey in update else update.get("id", "")
             idx = next((i for i, item in enumerate(result) if item.get("guid") == updateGuid), -1)
             if idx >= 0:
@@ -5960,7 +5953,7 @@ def _applyAuthorDiff(base: dict, diff: dict) -> dict:
 def _getAttributeDiff(before: dict, after: dict) -> dict:
     """Get diff between two attribute dicts - used for individual attribute update diffs."""
     diff: dict = {}
-    # Note: key is used for identification, not changed in diffs
+    
     if _normalizeValue(before.get("value")) != _normalizeValue(after.get("value")):
         diff["value"] = after.get("value")
     if _normalizeValue(before.get("definition")) != _normalizeValue(after.get("definition")):
@@ -5982,7 +5975,7 @@ def _getAttributesDiff(before: list, after: list) -> dict:
     diff: dict = {}
     beforeGuids = {a.get("guid") for a in before}
     afterGuids = {a.get("guid") for a in after}
-    # EntityId format: removed is [{"guid": ...}]
+    
     removed = [{"guid": a.get("guid")} for a in before if a.get("guid") not in afterGuids]
     if removed:
         diff["removed"] = removed
@@ -5993,7 +5986,7 @@ def _getAttributesDiff(before: list, after: list) -> dict:
             beforeAttr = next(a for a in before if a.get("guid") == guid)
             attrDiff = _getAttributeDiff(beforeAttr, afterAttr)
             if attrDiff:
-                # EntityId format: updated is [{"attribute": {"guid": ...}, "diff": ...}]
+                
                 updated.append({"attribute": {"guid": guid}, "diff": attrDiff})
     if updated:
         diff["updated"] = updated
@@ -6009,12 +6002,12 @@ def _applyAttributesDiff(base: list, diff: dict | None) -> list:
         return base
     result = [dict(a) for a in base]
     if diff.get("removed"):
-        # EntityId format: removed is [{"guid": ...}]
+        
         removedGuids = {r["guid"] if isinstance(r, dict) else r for r in diff["removed"]}
         result = [a for a in result if a.get("guid") not in removedGuids]
     if diff.get("updated"):
         for update in diff["updated"]:
-            # EntityId format: updated is [{"attribute": {"guid": ...}, "diff": ...}]
+            
             updateGuid = update["attribute"]["guid"] if "attribute" in update else update.get("id", "")
             idx = next((i for i, a in enumerate(result) if a.get("guid") == updateGuid), -1)
             if idx >= 0:
@@ -6027,9 +6020,9 @@ def _applyAttributesDiff(base: list, diff: dict | None) -> list:
 def _inverseAttributesDiff(original: list, appliedDiff: dict) -> dict:
     """Compute inverse of attributes collection diff - uses GUID with EntityId format."""
     inverse: dict = {}
-    # EntityId format: removed is [{"guid": ...}]
+    
     removedGuids = [r["guid"] if isinstance(r, dict) else r for r in appliedDiff.get("removed", [])]
-    # Extract guids from updated entries
+    
     updatedGuids = []
     for u in appliedDiff.get("updated", []):
         if "attribute" in u:
@@ -6038,7 +6031,7 @@ def _inverseAttributesDiff(original: list, appliedDiff: dict) -> dict:
             updatedGuids.append(u.get("id", ""))
     addedGuids = [a.get("guid") for a in appliedDiff.get("added", [])]
     if addedGuids:
-        # EntityId format: removed is [{"guid": ...}]
+        
         inverse["removed"] = [{"guid": guid} for guid in addedGuids]
     if updatedGuids:
         inverse["updated"] = []
@@ -6046,7 +6039,7 @@ def _inverseAttributesDiff(original: list, appliedDiff: dict) -> dict:
             origAttr = next((a for a in original if a.get("guid") == guid), None)
             upd = next((u for u in appliedDiff.get("updated", []) if (u.get("attribute", {}).get("guid") if "attribute" in u else u.get("id")) == guid), None)
             if origAttr and upd:
-                # EntityId format: updated is [{"attribute": {"guid": ...}, "diff": ...}]
+                
                 inverse["updated"].append({"attribute": {"guid": guid}, "diff": _inverseAttributeDiff(origAttr, upd["diff"])})
     if removedGuids:
         inverse["added"] = [a for a in original if a.get("guid") in removedGuids]
@@ -6164,16 +6157,16 @@ def _inverseCollectionDiff(original: list, appliedDiff: dict, inverseItemDiff: t
     """
     inverse: dict = {}
     if appliedDiff.get("removed"):
-        # EntityId format: removed is [{"guid": ...}]
+        
         removedGuids = [r["guid"] if isinstance(r, dict) else r for r in appliedDiff["removed"]]
         inverse["added"] = [item for item in original if item.get("guid") in removedGuids]
     if appliedDiff.get("added"):
-        # EntityId format: removed should be [{"guid": ...}]
+        
         inverse["removed"] = [{"guid": item.get("guid")} for item in appliedDiff["added"]]
     if appliedDiff.get("updated"):
         inverse["updated"] = []
         for update in appliedDiff["updated"]:
-            # EntityId format: update is {"<entity>": {"guid": ...}, "diff": ...}
+            
             updateGuid = update[entityKey]["guid"] if entityKey and entityKey in update else update.get("id", "")
             origItem = next((item for item in original if item.get("guid") == updateGuid), None)
             if origItem:
@@ -6328,7 +6321,7 @@ def areKitDiffsDictEqual(a: dict, b: dict) -> bool:
     for key in keys:
         if _normalizeValue(a.get(key)) != _normalizeValue(b.get(key)):
             return False
-    # Collection keys with their entity names for EntityId format
+    
     collectionConfig = [
         ("types", "type"),
         ("designs", "design"),
@@ -6342,7 +6335,7 @@ def areKitDiffsDictEqual(a: dict, b: dict) -> bool:
     for collectionKey, entityKey in collectionConfig:
         diffA = a.get(collectionKey, {})
         diffB = b.get(collectionKey, {})
-        # EntityId format: removed is [{"guid": ...}]
+        
         removedA = {r["guid"] if isinstance(r, dict) else r for r in diffA.get("removed", [])}
         removedB = {r["guid"] if isinstance(r, dict) else r for r in diffB.get("removed", [])}
         if removedA != removedB:
@@ -6351,7 +6344,7 @@ def areKitDiffsDictEqual(a: dict, b: dict) -> bool:
         addedB = {item.get("guid"): item for item in diffB.get("added", [])}
         if set(addedA.keys()) != set(addedB.keys()):
             return False
-        # EntityId format: updated is [{"<entity>": {"guid": ...}, "diff": ...}]
+        
         updatedA = {_extractUpdateGuid(u, [entityKey]): u["diff"] for u in diffA.get("updated", [])}
         updatedB = {_extractUpdateGuid(u, [entityKey]): u["diff"] for u in diffB.get("updated", [])}
         if set(updatedA.keys()) != set(updatedB.keys()):
@@ -6473,18 +6466,18 @@ codeParser = lark.Lark(codeGrammar, start="code")
 
 
 class OperationBuilder(lark.Transformer):
-    # E.g:
-    # QzpcZ2l0XHNlbWlvXGV4YW1wbGVzXG1ldGFib2xpc20=
-    # QzpcZ2l0XHNlbWlvXGV4YW1wbGVzXG1ldGFib2xpc20=/types
-    # QzpcZ2l0XHNlbWlvXGV4YW1wbGVzXG1ldGFib2xpc20=/types/Q2Fwc3VsZQ==,
-    # QzpcZ2l0XHNlbWlvXGV4YW1wbGVzXG1ldGFib2xpc20=/types/Q2Fwc3VsZQ==,/models
-    # QzpcZ2l0XHNlbWlvXGV4YW1wbGVzXG1ldGFib2xpc20=/types/Q2Fwc3VsZQ==,/models/aHR0cHM6Ly9hcHAuc3BlY2tsZS5zeXN0ZW1zL3Byb2plY3RzL2U3ZGUxYTJmOGYvbW9kZWxzL2IzYzIwZGI5NzA=
-    # C:\git\semio\examples\metabolism/types/Capsule,/models/https://app.speckle.systems/projects/e7de1a2f8f/models/b3c20db970
-    # uri: C:\git\semio\examples\metabolism
-    # kind: type
-    # typeName: Capsule
-    # typeVariant: ""
-    # modelUrl: https://app.speckle.systems/projects/e7de1a2f8f/models/b3c20db970
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
     def code(self, children):
         if len(children) == 0:
@@ -6515,32 +6508,32 @@ class OperationBuilder(lark.Transformer):
             "typeVariant": (decode(children[1].value) if len(children) == 2 else ""),
         }
 
-    # def model(self, children):
-    #     type = children[0]
-    #     code = {
-    #         "typeName": type["typeName"],
-    #         "typeVariant": type["typeVariant"],
-    #     }
-    #     if len(children) == 1:
-    #         code["kind"] = "models"
-    #     else:
-    #         code["kind"] = "model"
-    #         code["modelUrl"] = decode(children[1].value)
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
-    #     return code
+    
 
-    # def port(self, children):
-    #     type = children[0]
-    #     code = {
-    #         "typeName": type["typeName"],
-    #         "typeVariant": type["typeVariant"],
-    #     }
-    #     if len(children) == 1:
-    #         code["kind"] = "ports"
-    #     else:
-    #         code["kind"] = "port"
-    #         code["portUrl"] = decode(children[1].value)
-    #     return code
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
 
 class StoreKind(enum.Enum):
@@ -6655,9 +6648,9 @@ class DatabaseStore(Store, abc.ABC):
                 raise FeatureNotYetSupported()
 
     def put(self: "DatabaseStore", operation: dict, input: KitInput | DesignInput | TypeInput) -> typing.Any:
-        # General:
-        # - Wrap iteration over relationships in list() to avoid iterator bugs
-        # - When deleting relationships, set property = [] after deleting all items and then add the new ones
+        
+        
+        
 
         kitUri = operation["kitUri"]
         kind = operation["kind"]
@@ -6732,7 +6725,7 @@ class DatabaseStore(Store, abc.ABC):
                 )
                 try:
                     if existingTypeUnion is not None:
-                        # gather
+                        
                         existingType = existingTypeUnion.Type
                         existingPorts = {p.id_: p for p in existingType.ports}
                         usedPorts = {}
@@ -6748,7 +6741,7 @@ class DatabaseStore(Store, abc.ABC):
                             raise TypeHasNotAllUsedPorts(missingPorts)
                         unusedPorts = set(existingPorts.keys()) - set(usedPorts.keys())
 
-                        # update
+                        
                         existingType.icon = type.icon
                         existingType.image = type.image
                         existingType.description = type.description
@@ -6907,12 +6900,12 @@ def cache(remoteUri: str) -> str:
                 shutil.move(os.path.join(nestedPath, nestedDirectory), path)
             os.rmdir(nestedPath)
             paths = os.listdir(path)
-        # for directory in paths:
-        #     if directory != ".semio":
-        #         if os.path.isfile(os.path.join(path, directory)):
-        #             os.remove(os.path.join(path, directory))
-        #         else:
-        #             shutil.rmtree(os.path.join(path, directory))
+        
+        
+        
+        
+        
+        
     return path
 
 
@@ -6931,7 +6924,7 @@ class SqliteStore(DatabaseStore):
         connectionString = f"sqlite:///{sqlitePath}"
         engine = sqlalchemy.create_engine(connectionString, echo=True)
         SessionMaker = sqlalchemy.orm.sessionmaker(bind=engine)
-        try:  # change uri if local kit is already created
+        try:  
             with SessionMaker() as session:
                 kit = session.query(Kit).first()
                 if kit:
@@ -6955,8 +6948,8 @@ class SqliteStore(DatabaseStore):
                 session.commit()
 
     def postDeleteKit(self: "SqliteStore") -> None:
-        # sqlachemy can't maintain the connection to the database after the file is deleted.
-        # Therefore, the process is terminated and will be restarted by the client.
+        
+        
         os.kill(os.getpid(), signal.SIGTERM)
 
 
@@ -6964,40 +6957,40 @@ class PostgresStore(DatabaseStore):
     @classmethod
     def fromUri(cls, uri: str):
         # TODO: Get connection string from environment variable.
-        # dbAliases = {key: value for key, value in ENVS.items() if key.contains("_POSTGRES_ALIAS_")}
-        # uris = {key: value for key, value in dbAliases.items() if key.endswith("_URI")}
-        # connection_string = sqlalchemy.URL.create(
-        #     "postgresql+psycopg",
-        #     username=parsedUri.username,
-        #     password=parsedUri.password,
-        #     host=parsedUri.hostname,
-        #     database=parsedUri.path[1:],  # Remove the leading '/'
-        # )
-        # engine = sqlalchemy.create_engine(
-        #     connection_string,
-        #     connect_args={"sslmode": parsedUri.query.get("sslmode", SSLMode.REQUIRE)},
-        # )
-        # return PostgresStore(uri, engine)
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         raise FeatureNotYetSupported()
 
     def initialize(self: "DatabaseStore") -> None:
         sqlmodel.SQLModel.metadata.create_all(self.engine)
 
 
-# class ApiStore(Store, abc.ABC):
-# pass
 
 
-# class RestStore(ApiStore):
-# pass
 
 
-# class GraphqlStore(Store):
-# pass
 
 
-# The cache is necessary to persist the session!
-# An other option would be to eager load the relationships.
+
+
+
+
+
+
+
+
 @functools.lru_cache
 def StoreFactory(uri: str) -> Store:
     """🏭 Get a store from the uri. This store doesn't need to exist yet as long as it can be created."""
@@ -7059,8 +7052,8 @@ def encodeType(type: TypeContext):
     typeClone.description = encodeForPrompt(typeClone.description) if typeClone.description != "" else "NO_DESCRIPTION"
     for port in typeClone.ports:
         port.id_ = replaceDefault(port.id_, "DEFAULT")
-        # for attribute in port.attributes:
-        #     attribute.value = replaceDefault(attribute.value, "TRUE")
+        
+        
     return typeClone
 
 
@@ -7169,9 +7162,9 @@ def healDesign(design: DesignPrediction, types: list[TypeContext]):
             )[0]
         validConnections.append(connection)
     designClone.connections = validConnections
-    # remove invalid connections
+    
     designClone.connections = [c for c in designClone.connections if c.connected.piece.id_ != c.connecting]
-    # remove pieces with no connections
+    
     designClone.pieces = [p for p in designClone.pieces if any(c for c in designClone.connections if c.connected.piece.id_ == p.id_ or c.connecting.piece.id_ == p.id_)]
     return designClone
 
@@ -7198,7 +7191,7 @@ Rotation, tilt, gap, shift SHOULD NOT be added unless specifically instructed.
 The diagram is only a nice 2D model of the design and does not change the design.
 When a piece is [on, next to, above, below, ...] another piece, there SHOULD be a connected between the pieces.
 When a piece fits to a port of another piece, there SHOULD be a connecting between the pieces."""
-# logger.debug("System prompt: {}", systemPrompt)
+
 
 designGenerationPromptTemplate = jinja2.Template(
     """Your task is to help to puzzle together a design.
@@ -7336,8 +7329,8 @@ designResponseFormat = json.loads(
     }
 }"""
 )
-# with open("../../jsonschema/design-prediction-openai.json", "r") as f:
-#     designResponseFormat = json.load(f)
+
+
 
 
 def predictDesign(description: str, types: list[TypeContext], design: DesignInput | None = None) -> DesignPrediction:
@@ -7349,9 +7342,9 @@ def predictDesign(description: str, types: list[TypeContext], design: DesignInpu
     logger.debug("Generated prompt: {}", prompt)
     try:
         response = openaiClient.chat.completions.create(
-            # model="o1-mini",
+            
             model="gpt-4o",
-            # model="gpt-4o-mini",
+            
             messages=[
                 {
                     "role": "system",
@@ -7376,11 +7369,11 @@ def predictDesign(description: str, types: list[TypeContext], design: DesignInpu
                 "type": "json_schema",
                 "json_schema": designResponseFormat,
             },
-            # temperature=1,
-            # max_completion_tokens=16383,
-            # top_p=1,
-            # frequency_penalty=0,
-            # presence_penalty=0,
+            
+            
+            
+            
+            
         )
         if response.usage:
             responseDump = {
@@ -7426,7 +7419,7 @@ def predictDesign(description: str, types: list[TypeContext], design: DesignInpu
         if hasattr(design, "model_dump"):
             logger.debug("Predicted Design: {}", json.dumps(design.model_dump(), indent=4))
 
-        # piece healing of variants that do not exist
+        
         healedDesign = healDesign(typing.cast(DesignPrediction, design), types)
         logger.debug(
             "Predicted Design Healed: {}",
@@ -7506,17 +7499,17 @@ GRAPHQLTYPES = {
 }
 
 
-# # Can't use SQLAlchemyConnectionField because only supports one database.
-# # https://github.com/graphql-python/graphene-sqlalchemy/issues/180
-# class KitConnection(graphene.relay.Connection):
-#     class Meta:
-#         node = KitNode
+
+
+
+
+
 
 
 class Query(graphene.ObjectType):
     node = RelayNode.Field()
     kit = graphene.Field(KitNode, uri=graphene.String(required=True))
-    # kits = graphene.relay.ConnectionField(KitConnection)
+    
 
     def resolve_kit(self, info, uri):
         return get(encode(uri))
@@ -7725,7 +7718,7 @@ def custom_openapi():
     if rest.openapi_schema:
         return rest.openapi_schema
     openapi_schema = fastapi.openapi.utils.get_openapi(title="semio REST API", version=VERSION, summary="This is the local rest API of the semio engine.", routes=rest.routes)
-    # Prepend `/api` to all paths in the OpenAPI schema
+    
     updated_paths = {}
     for path, path_item in openapi_schema["paths"].items():
         updated_paths[f"/api{path}"] = path_item
@@ -7827,7 +7820,7 @@ def generateSchemas():
 
 def start_engine():
     # TODO: Make loguru work on extra uvicorn engine process.
-    logging.basicConfig(level=logging.INFO)  # for uvicorn in pyinstaller
+    logging.basicConfig(level=logging.INFO)  
     uvicorn.run(engine, host=HOST, port=PORT, log_level="info", access_log=False, log_config=None)
 
 
@@ -7842,7 +7835,7 @@ def restart_engine():
 
 def run():
     logger.debug("Starting engine")
-    multiprocessing.freeze_support()  # needed for pyinstaller on Windows
+    multiprocessing.freeze_support()  
 
     parser = argparse.ArgumentParser(description="semio ⋅ engine")
     parser.add_argument("-d", "--debug", help="debug mode", action="store_true")
@@ -7855,7 +7848,7 @@ def run():
     ui = PySide6.QtWidgets.QApplication(sys.argv)
     ui.setQuitOnLastWindowClosed(False)
 
-    # Final location of assets when bundled with PyInstaller
+    
     if getattr(sys, "frozen", False):
         basedir = sys._MEIPASS
     else:
@@ -7887,20 +7880,20 @@ def run():
 
 def preDev():
     """Runs before dev()"""
-    # testCaseDict = json.load(open("temp/test-case.json", "r"))
-    # testCaseDict["uri"] = "test-case"
-    # kit = Kit.parse(testCaseDict)
-    # dumpedKit = kit.dump()
-    # testDesign = DesignContext(**dumpedKit.designs[0].model_dump())
-    # with open("temp/test-case-cleaned.json", "w") as f:
-    #     json.dump(testDesign.model_dump(), f)
+    
+    
+    
+    
+    
+    
+    
 
 
 def dev():
     logger.debug("Starting debugpy for semio engine")
     import debugpy
 
-    debugpy.listen(("0.0.0.0", 5678))  # Start debug server
+    debugpy.listen(("0.0.0.0", 5678))  
     logger.debug("Waiting for debugger to attach to semio engine")
     debugpy.wait_for_client()
     preDev()

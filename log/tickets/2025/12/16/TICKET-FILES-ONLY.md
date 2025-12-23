@@ -10,8 +10,8 @@ prompt: >-
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: '2025-12-16T16:09:53.578Z'
-  finished: '2025-12-16T16:25:36.733Z'
+  created: "2025-12-16T16:09:53.578Z"
+  finished: "2025-12-16T16:25:36.733Z"
 commit: c44e5e38193be007ca56cc649aa2f58238c1ec40
 iterations:
   - prompt: >-
@@ -21,8 +21,8 @@ iterations:
       and add it as extra field to the ticket. Use git one last time to compute
       the lines.
     date:
-      started: '2025-12-16T16:09:53.578Z'
-      ended: '2025-12-16T16:25:23.282Z'
+      started: "2025-12-16T16:09:53.578Z"
+      ended: "2025-12-16T16:25:23.282Z"
     model: gpt-5.2-codex
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
     commit: c44e5e38193be007ca56cc649aa2f58238c1ec40
@@ -61,6 +61,7 @@ lines:
   added: 888
   removed: 321
 ---
+
 # Previously
 
 - Ticket creation wrote an initial iteration and allowed `read` file tracking.
