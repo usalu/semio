@@ -19,8 +19,8 @@
       "inputs": ["{projectRoot}/**/*", "{projectRoot}/.env*"],
       "cache": true
     },
-    "prepublish": {
-      "dependsOn": ["^prepublish"],
+    "publish:test": {
+      "dependsOn": ["^publish:test"],
       "inputs": ["{projectRoot}/**/*", "{projectRoot}/.env*"],
       "cache": true
     },

@@ -21,11 +21,7 @@
               "type": "string"
             }
           },
-          "required": [
-            "id",
-            "typeName",
-            "typeVariant"
-          ],
+          "required": ["id", "typeName", "typeVariant"],
           "additionalProperties": false
         }
       },
@@ -80,26 +76,12 @@
               "type": "number"
             }
           },
-          "required": [
-            "connectedPieceId",
-            "connectedPieceTypePortId",
-            "connectingPieceId",
-            "connectingPieceTypePortId",
-            "rotation",
-            "tilt",
-            "gap",
-            "shift",
-            "diagramX",
-            "diagramY"
-          ],
+          "required": ["connectedPieceId", "connectedPieceTypePortId", "connectingPieceId", "connectingPieceTypePortId", "rotation", "tilt", "gap", "shift", "diagramX", "diagramY"],
           "additionalProperties": false
         }
       }
     },
-    "required": [
-      "pieces",
-      "connections"
-    ],
+    "required": ["pieces", "connections"],
     "additionalProperties": false
   }
 }

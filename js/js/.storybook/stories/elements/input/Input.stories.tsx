@@ -20,7 +20,7 @@
 // #endregion Header
 
 import type { Meta, StoryObj } from "@storybook/react";
-import { Input } from "../../../../sketchpad/elements";
+import { Input, Level, LevelProvider, getLevelBgClass } from "../../../../sketchpad/elements";
 
 // #region Input
 const meta = {
@@ -36,41 +36,53 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: {
-    id: "input-default",
-    placeholder: "e.g., Nakagin Tower Configuration",
-    defaultValue: "Metabolism Kit - Capsule Cluster",
-    type: "text",
-    lazy: true,
-    showLabel: true,
-    disabled: false,
-    "aria-invalid": false,
-    className: "w-96",
-    level: "base",
-  },
+const defaultArgs = {
+  id: "input-default",
+  placeholder: "e.g., Nakagin Tower Configuration",
+  defaultValue: "Metabolism Kit - Capsule Cluster",
+  type: "text" as const,
+  lazy: true,
+  showLabel: true,
+  disabled: false,
+  "aria-invalid": false,
+  className: "w-96",
 };
 
+export const Default: Story = {
+  args: defaultArgs,
+};
+
+const createLevelRender = (level: Level, id: string) => () => (
+  <LevelProvider level={level}>
+    <div className={`p-4 ${getLevelBgClass(level)}`}>
+      <Input {...defaultArgs} id={id} />
+    </div>
+  </LevelProvider>
+);
+
 export const Base: Story = {
-  args: { ...Default.args, id: "input-base", level: "base" },
+  args: { ...defaultArgs, id: "input-base" },
+  render: createLevelRender("base", "input-base"),
 };
 
 export const Window: Story = {
-  args: { ...Default.args, id: "input-window", level: "window" },
+  args: { ...defaultArgs, id: "input-window" },
+  render: createLevelRender("window", "input-window"),
 };
 
 export const Panel: Story = {
-  args: { ...Default.args, id: "input-panel", level: "panel" },
+  args: { ...defaultArgs, id: "input-panel" },
+  render: createLevelRender("panel", "input-panel"),
 };
 
 export const Overlay: Story = {
-  args: { ...Default.args, id: "input-overlay", level: "overlay" },
+  args: { ...defaultArgs, id: "input-overlay" },
+  render: createLevelRender("overlay", "input-overlay"),
 };
 
 export const Temporary: Story = {
-  args: { ...Default.args, id: "input-temporary", level: "temporary" },
+  args: { ...defaultArgs, id: "input-temporary" },
+  render: createLevelRender("temporary", "input-temporary"),
 };
 
 // #endregion Input
-
-

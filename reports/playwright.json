@@ -15,10 +15,7 @@
     },
     "preserveOutput": "always",
     "reporter": [
-      [
-        "list",
-        null
-      ],
+      ["list", null],
       [
         "json",
         {
@@ -43,9 +40,7 @@
         "name": "chromium",
         "testDir": "C:/git/semio.tech/semio/js/js",
         "testIgnore": [],
-        "testMatch": [
-          "**/sketchpad.test.ts"
-        ],
+        "testMatch": ["**/sketchpad.test.ts"],
         "timeout": 30000
       }
     ],

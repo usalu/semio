@@ -60,7 +60,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.languages.registerCodeActionsProvider({ language: SEMIO_KIT_LANGUAGE }, new SemioCodeActionProvider(), { providedCodeActionKinds: [vscode.CodeActionKind.QuickFix] }));
 }
 
-export function deactivate() { }
+export function deactivate() {}
 
 function isSemioKitDocument(document: vscode.TextDocument): boolean {
   if (document.languageId !== SEMIO_KIT_LANGUAGE) {

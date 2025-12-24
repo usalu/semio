@@ -227,26 +227,29 @@ const createLevelRender = (level: Level) => () => (
 );
 
 export const Base: Story = {
+  args: { canvas: null },
   render: createLevelRender("base"),
 };
 
 export const Window_: Story = {
   name: "Window",
+  args: { canvas: null },
   render: createLevelRender("window"),
 };
 
 export const Panel: Story = {
+  args: { canvas: null },
   render: createLevelRender("panel"),
 };
 
 export const Overlay: Story = {
+  args: { canvas: null },
   render: createLevelRender("overlay"),
 };
 
 export const Temporary: Story = {
+  args: { canvas: null },
   render: createLevelRender("temporary"),
 };
 
 // #endregion Layout
-
-

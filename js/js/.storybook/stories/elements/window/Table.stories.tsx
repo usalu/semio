@@ -297,5 +297,3 @@ export const Temporary: Story = {
 };
 
 // #endregion Table
-
-

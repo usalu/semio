@@ -355,7 +355,7 @@ function parseCSharpSchema(): SchemaReport {
   }
 
   for (const entityName of MAIN_ENTITIES) {
-    const classRegex = new RegExp(`\\[Model\\([^\\]]+\\)\\]\\s*public\\s+class\\s+${entityName}\\s*:[^{]*\\{`, "m");
+    const classRegex = new RegExp(`\\[Entity\\([^\\]]+\\)\\]\\s*public\\s+class\\s+${entityName}\\s*:[^{]*\\{`, "m");
     const classStart = content.match(classRegex);
 
     if (classStart && classStart.index !== undefined) {

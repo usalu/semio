@@ -19,7 +19,6 @@
 
 // #endregion Header
 
-
 // #region Internal State Management
 
 import { useSelector } from "@xstate/react";
@@ -204,6 +203,7 @@ let designAppCommands: Record<string, (context: any, ...args: any[]) => Promise<
 export interface DesignAppSelection {
   pieces?: Guid[];
   connections?: Guid[];
+  connectors?: Array<{ piece: Guid; connector: Guid }>;
   connector?: { piece: Guid; designPiece?: Guid; connector: Guid };
 }
 export interface DesignAppSelectionPiecesDiff {
@@ -1469,7 +1469,7 @@ const EMPTY_OTHERS: DesignAppPresenceOther[] = [];
 const EMPTY_MODEL_TAGS: Record<Guid, string[]> = {};
 const DEFAULT_PANEL_VISIBILITY: PanelVisibility = { toolbar: false, workbench: false, details: false, chat: false, settings: false };
 
-type GranularSelectorFactory<T> = (kitGuid: Guid, designGuid: Guid) => (state: any) => T;
+type GranularSelectorFactory<T> = (kitGuid: Guid, designGuid: Guid) => (state: any) => T | undefined;
 
 interface UseDesignAppFieldOptions<T, TEvent extends { type: string }> {
   createGranularSelector: GranularSelectorFactory<T>;
@@ -1579,7 +1579,8 @@ export function useDesignAppDiagramCenter(): HookResult<Coord | undefined> {
   const kitGuid = kitScope?.guid ?? "";
   const designGuid = designScope?.guid ?? "";
   const selector = useMemo(() => createDesignDiagramCenterSelector(kitGuid, designGuid), [kitGuid, designGuid]);
-  const value = useSelector(actor, selector);
+  const rawValue = useSelector(actor, selector);
+  const value = useMemo(() => (rawValue ? { u: rawValue.x, v: rawValue.y } : undefined), [rawValue]);
   const canSetEvent = useMemo(() => ({ type: "DESIGN.SET_DIAGRAM_CENTER" as const, kitGuid, designGuid, center: { x: 0, y: 0 } }), [kitGuid, designGuid]);
   const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setter = useMemo(() => {
@@ -2421,7 +2422,7 @@ export function useIsDesignPieceChangedInTransaction(id: DesignAppId | undefined
   return changedPieces.has(pieceId);
 }
 
-export function useDesignAppIsPieceHovered(id: DesignAppId | undefined, pieceId: string): boolean {
+export function useDesignAppIsPieceHovered(id?: DesignAppId, pieceId?: string): boolean {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const designScope = useDesignScope();
@@ -2429,6 +2430,7 @@ export function useDesignAppIsPieceHovered(id: DesignAppId | undefined, pieceId:
   const designGuid = designScope?.guid ?? id?.design ?? "";
   const selector = useMemo(() => createDesignHoverSelector(kitGuid, designGuid), [kitGuid, designGuid]);
   const hover = useSelector(actor, selector);
+  if (!pieceId) return false;
   return hover?.pieces?.includes(pieceId) ?? false;
 }
 
@@ -2508,8 +2510,9 @@ export function HoverPiecesProvider({ children }: { children: ReactNode }) {
   return <HoverPiecesProviderInner store={store}>{children}</HoverPiecesProviderInner>;
 }
 
-export function useDesignAppIsPieceTransitiveHovered(id: DesignAppId | undefined, pieceId: string): boolean {
+export function useDesignAppIsPieceTransitiveHovered(id?: DesignAppId, pieceId?: string): boolean {
   const { transitivelyHoveredPieces } = useContext(HoverPiecesContext);
+  if (!pieceId) return false;
   return transitivelyHoveredPieces.has(pieceId);
 }
 
@@ -2523,7 +2526,7 @@ export function useDesignAppPieceStatus(id: DesignAppId | undefined, pieceId: st
   return statusMap.get(pieceId) ?? DiffStatus.Unchanged;
 }
 
-export function useDesignAppIsPieceSelected(id: DesignAppId | undefined, pieceId: string): boolean {
+export function useDesignAppIsPieceSelected(id?: DesignAppId, pieceId?: string): boolean {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const designScope = useDesignScope();
@@ -2531,6 +2534,7 @@ export function useDesignAppIsPieceSelected(id: DesignAppId | undefined, pieceId
   const designGuid = designScope?.guid ?? id?.design ?? "";
   const selector = useMemo(() => createDesignSelectionSelector(kitGuid, designGuid), [kitGuid, designGuid]);
   const selection = useSelector(actor, selector);
+  if (!pieceId) return false;
   return selection?.pieces?.includes(pieceId) ?? false;
 }
 
@@ -2591,7 +2595,7 @@ export function useDesignAppPieceColor(id: DesignAppId | undefined, pieceId: str
   return { fill, stroke, opacity };
 }
 
-export function useDesignAppIsConnectionHovered(id: DesignAppId | undefined, connectionId: string): boolean {
+export function useDesignAppIsConnectionHovered(id?: DesignAppId, connectionId?: string): boolean {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const designScope = useDesignScope();
@@ -2599,10 +2603,11 @@ export function useDesignAppIsConnectionHovered(id: DesignAppId | undefined, con
   const designGuid = designScope?.guid ?? id?.design ?? "";
   const selector = useMemo(() => createDesignHoverSelector(kitGuid, designGuid), [kitGuid, designGuid]);
   const hover = useSelector(actor, selector);
+  if (!connectionId) return false;
   return hover?.connections?.includes(connectionId) ?? false;
 }
 
-export function useDesignAppIsConnectionSelected(id: DesignAppId | undefined, connectionId: string): boolean {
+export function useDesignAppIsConnectionSelected(id?: DesignAppId, connectionId?: string): boolean {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const designScope = useDesignScope();
@@ -2610,6 +2615,7 @@ export function useDesignAppIsConnectionSelected(id: DesignAppId | undefined, co
   const designGuid = designScope?.guid ?? id?.design ?? "";
   const selector = useMemo(() => createDesignSelectionSelector(kitGuid, designGuid), [kitGuid, designGuid]);
   const selection = useSelector(actor, selector);
+  if (!connectionId) return false;
   return selection?.connections?.includes(connectionId) ?? false;
 }
 
@@ -2624,9 +2630,10 @@ export function useDesignAppIsPortHovered(id: DesignAppId | undefined, pieceId: 
   return hover?.connectors?.some((p) => p.piece === pieceId && p.connector === connectorId) ?? false;
 }
 
-const EMPTY_CONNECTOR: DesignAppSelection["connector"] = undefined;
+type SelectedConnector = { piece: Guid; connector: Guid } | undefined;
+const EMPTY_CONNECTOR: SelectedConnector = undefined;
 
-export function useDesignAppSelectedConnector(id?: DesignAppId): DesignAppSelection["connector"] | undefined {
+export function useDesignAppSelectedConnector(id?: DesignAppId): SelectedConnector {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const designScope = useDesignScope();
@@ -2634,9 +2641,9 @@ export function useDesignAppSelectedConnector(id?: DesignAppId): DesignAppSelect
   const designGuid = designScope?.guid ?? id?.design ?? "";
   const selector = useMemo(() => createDesignSelectionSelector(kitGuid, designGuid), [kitGuid, designGuid]);
   const selection = useSelector(actor, selector);
-  const connector = selection?.connector;
+  const connector = selection?.connectors?.[0];
   if (!connector?.piece || !connector?.connector) return EMPTY_CONNECTOR;
-  return { piece: connector.piece, connector: connector.connector, designPiece: connector.designPiece };
+  return { piece: connector.piece, connector: connector.connector };
 }
 
 export function useDesignAppIsPiecePortSelected(pieceId: string, connectorId?: string): boolean {
@@ -2648,7 +2655,7 @@ export function useDesignAppIsPiecePortSelected(pieceId: string, connectorId?: s
   const selector = useMemo(() => createDesignSelectionSelector(kitGuid, designGuid), [kitGuid, designGuid]);
   const selection = useSelector(actor, selector);
   if (!connectorId) return false;
-  return selection?.connector?.piece === pieceId && selection?.connector?.connector === connectorId;
+  return selection?.connectors?.some((c) => c.piece === pieceId && c.connector === connectorId) ?? false;
 }
 
 function getConnectionStatusFromTransactionStack(store: DesignStore | null, connectionId: string): DiffStatus {

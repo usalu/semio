@@ -333,7 +333,7 @@ Toolbar panel visibility defaults to `true` for all apps via `panelVisibility: {
 - ALWAYS finish the task.
 - ALWAYS make the choice directly! If you have several options, don't ask in between, be opionionated and just go for it. Try to do as much as you can.
 - ALWAYS toolfriendly over intuitive.
-- ALWAYS expose the canonical CI/CD scripts `dev`, `build`, `test`, `update`, `prepublish`, and `publish` only at the root (which forwards them through `npx nx run-many -t <target>`). Do not add missing commands to workspace packages; keep only the scripts they already define, treat `dev` as the only long-running watch mode, and make sure the remaining commands exit so CI runners and agents can finish reliably.
+- ALWAYS expose the canonical CI/CD scripts `dev`, `build`, `test`, `update`, `publish:test`, and `publish` only at the root (which forwards them through `npx nx run-many -t <target>`). Do not add missing commands to workspace packages; keep only the scripts they already define, treat `dev` as the only long-running watch mode, and make sure the remaining commands exit so CI runners and agents can finish reliably.
 - When multiple long-running dev processes exist for a single workspace, use hierarchical naming for VS Code tasks/launch configs (e.g. `dev js js storybook`, `dev js js sketchpad`) and use `dev:<...>` for root `package.json` scripts when spaces are not possible.
 - NEVER create new files when not explicitly asked. ALWAYS add code to existing files using regions and subregions for structuring. Regions organize code into collapsible sections (e.g., `#region RegionName` / `#endregion` in C#, or `//#region RegionName` / `//#endregion` in JavaScript/TypeScript). Use subregions within regions for hierarchical organization. This keeps related code together and maintains a single source of truth per logical unit.
 - NEVER create new `README.md` files. Documentation is centralized in the dev-docs (`README.md` and `AGENTS.md`).
@@ -390,7 +390,7 @@ Whenever a keyword is used, ALWAYS directly proceed with the task and NEVER ask 
 - `npm run preflight` runs `fix` and `analyze` (in that order).
 - `npm run test` runs `preflight` and then `nx run-many -t test`.
 - `npm run build` runs `test` and then `nx run-many -t build`.
-- `npm run prepublish` and `npm run publish` run `build` first.
+- `npm run publish:test` and `npm run publish` run `build` first.
 
 ### Skip Mechanism
 

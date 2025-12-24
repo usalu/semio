@@ -19,7 +19,6 @@
 
 // #endregion Header
 
-
 import type { Meta, StoryObj } from "@storybook/react";
 import { Cursor, Level, LevelProvider, getLevelBgClass } from "../../../../sketchpad/elements";
 
@@ -81,22 +80,27 @@ const createLevelRender = (level: Level) => () => (
 );
 
 export const Base: Story = {
+  args: { color: "#000000" },
   render: createLevelRender("base"),
 };
 
 export const Window: Story = {
+  args: { color: "#000000" },
   render: createLevelRender("window"),
 };
 
 export const Panel: Story = {
+  args: { color: "#000000" },
   render: createLevelRender("panel"),
 };
 
 export const Overlay: Story = {
+  args: { color: "#000000" },
   render: createLevelRender("overlay"),
 };
 
 export const Temporary: Story = {
+  args: { color: "#000000" },
   render: createLevelRender("temporary"),
 };
 

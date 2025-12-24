@@ -495,11 +495,9 @@ function collectTypescriptComments(content: string, sourceFile: ts.SourceFile): 
   collectAt(0);
   const visit = (node: ts.Node): void => {
     collectAt(node.getFullStart());
-    const jsDoc = (node as ts.JSDocContainer).jsDoc;
-    if (jsDoc) {
-      for (const doc of jsDoc) {
-        addRange({ pos: doc.pos, end: doc.end, kind: ts.SyntaxKind.MultiLineCommentTrivia });
-      }
+    const jsDocNodes = ts.getJSDocCommentsAndTags(node);
+    for (const doc of jsDocNodes) {
+      addRange({ pos: doc.pos, end: doc.end, kind: ts.SyntaxKind.MultiLineCommentTrivia });
     }
     const trailing = ts.getTrailingCommentRanges(content, node.getEnd());
     if (trailing) {

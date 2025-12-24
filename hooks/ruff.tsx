@@ -91,7 +91,9 @@ function App() {
           <Text>🐍 Formatting and linting Python with Ruff...</Text>
           {status !== "running" && (
             <>
-              <Text>{status === "success" ? "✅" : "❌"} Ruff formatting {status === "success" ? "complete" : "failed"}</Text>
+              <Text>
+                {status === "success" ? "✅" : "❌"} Ruff formatting {status === "success" ? "complete" : "failed"}
+              </Text>
               <Text dimColor>📝 Report: {reportPath}</Text>
             </>
           )}

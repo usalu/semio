@@ -129,5 +129,3 @@ export const Temporary: Story = {
 };
 
 // #endregion Navbar
-
-

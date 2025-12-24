@@ -73,7 +73,9 @@ function App() {
       <Text>🔍 Running ESLint...</Text>
       {status !== "running" && (
         <>
-          <Text>{status === "success" ? "✅" : "❌"} ESLint check {status === "success" ? "passed" : "failed"}</Text>
+          <Text>
+            {status === "success" ? "✅" : "❌"} ESLint check {status === "success" ? "passed" : "failed"}
+          </Text>
           <Text dimColor>📝 Report: {reportPath}</Text>
         </>
       )}

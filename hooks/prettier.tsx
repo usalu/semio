@@ -50,7 +50,9 @@ function App() {
     <Box flexDirection="column">
       <Text>🎨 Formatting with Prettier...</Text>
       {status !== "running" && (
-        <Text>{status === "success" ? "✅" : "❌"} Prettier formatting {status === "success" ? "complete" : "failed"}</Text>
+        <Text>
+          {status === "success" ? "✅" : "❌"} Prettier formatting {status === "success" ? "complete" : "failed"}
+        </Text>
       )}
     </Box>
   );

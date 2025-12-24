@@ -111,25 +111,28 @@ const createLevelRender = (level: Level) => () => (
 );
 
 export const Base: Story = {
+  args: { items: defaultItems },
   render: createLevelRender("base"),
 };
 
 export const Window: Story = {
+  args: { items: defaultItems },
   render: createLevelRender("window"),
 };
 
 export const Panel: Story = {
+  args: { items: defaultItems },
   render: createLevelRender("panel"),
 };
 
 export const Overlay: Story = {
+  args: { items: defaultItems },
   render: createLevelRender("overlay"),
 };
 
 export const Temporary: Story = {
+  args: { items: defaultItems },
   render: createLevelRender("temporary"),
 };
 
 // #endregion Breadcrumb
-
-

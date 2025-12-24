@@ -137,5 +137,3 @@ export const Temporary: Story = {
 };
 
 // #endregion Scrollable
-
-

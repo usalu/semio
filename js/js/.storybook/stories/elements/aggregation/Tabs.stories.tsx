@@ -149,5 +149,3 @@ export const Temporary: Story = {
 };
 
 // #endregion Tabs
-
-

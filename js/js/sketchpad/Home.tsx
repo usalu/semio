@@ -240,8 +240,6 @@ export { useHome };
 
 // #endregion Hooks (XState-based)
 
-
-
 // #region Canvas
 
 // #region Windows
@@ -503,7 +501,6 @@ const SettingsContent: FC = () => {
 // #endregion Right
 
 // #endregion Panels
-
 
 // #endregion Canvas
 
@@ -1308,45 +1305,45 @@ const HomeTableContent: FC = () => {
           />
         </div>
         <Scrollable className="flex-1">
-            <div className="flex flex-col">
-              {rows.map((row) => {
-                const isSelected = row.kit ? selection.includes(row.kit.guid) : false;
-                const isDocsRow = row.type === "docs";
-                const isLoadingRow = row.isLoading;
-                const isHovered = row.kit ? hover?.kits?.includes(row.kit.guid) : false;
-                return (
-                  <div
-                    key={row.id}
-                    className={`border-b border-element p-single cursor-selectable h-medium ${isLoadingRow ? "opacity-50 pointer-events-none" : ""} ${isSelected ? "bg-active-base text-active-foreground" : isHovered ? "bg-hover-base" : "hover:bg-hover-base"}`}
-                    role="button"
-                    tabIndex={isLoadingRow ? -1 : 0}
-                    onClick={(e) => {
+          <div className="flex flex-col">
+            {rows.map((row) => {
+              const isSelected = row.kit ? selection.includes(row.kit.guid) : false;
+              const isDocsRow = row.type === "docs";
+              const isLoadingRow = row.isLoading;
+              const isHovered = row.kit ? hover?.kits?.includes(row.kit.guid) : false;
+              return (
+                <div
+                  key={row.id}
+                  className={`border-b border-element p-single cursor-selectable h-medium ${isLoadingRow ? "opacity-50 pointer-events-none" : ""} ${isSelected ? "bg-active-base text-active-foreground" : isHovered ? "bg-hover-base" : "hover:bg-hover-base"}`}
+                  role="button"
+                  tabIndex={isLoadingRow ? -1 : 0}
+                  onClick={(e) => {
                     if (isLoadingRow) return;
                     if (isDocsRow && row.docsPath) {
                       navigate(`/${row.docsPath}`);
                     } else if (row.kit) {
                       handleRowClick(row.kit.guid, e);
-                      }
-                    }}
-                    onDoubleClick={() => {
-                      if (isLoadingRow) return;
-                      if (isDocsRow && row.docsPath) {
-                        navigate(`/${row.docsPath}`);
-                      } else if (row.kit) {
-                        navigateToKit(row.kit.guid);
-                      }
-                    }}
-                    onMouseEnter={() => {
-                      if (!row.kit) {
-                        homeCommands.clearHover("semio.sketchpad.app.home.canvas.table.clearHover");
-                        return;
-                      }
-                      homeCommands.hoverKit("semio.sketchpad.app.home.canvas.table.hover", row.kit.guid);
-                    }}
-                    onMouseLeave={() => {
+                    }
+                  }}
+                  onDoubleClick={() => {
+                    if (isLoadingRow) return;
+                    if (isDocsRow && row.docsPath) {
+                      navigate(`/${row.docsPath}`);
+                    } else if (row.kit) {
+                      navigateToKit(row.kit.guid);
+                    }
+                  }}
+                  onMouseEnter={() => {
+                    if (!row.kit) {
                       homeCommands.clearHover("semio.sketchpad.app.home.canvas.table.clearHover");
-                    }}
-                  >
+                      return;
+                    }
+                    homeCommands.hoverKit("semio.sketchpad.app.home.canvas.table.hover", row.kit.guid);
+                  }}
+                  onMouseLeave={() => {
+                    homeCommands.clearHover("semio.sketchpad.app.home.canvas.table.clearHover");
+                  }}
+                >
                   <div className="flex items-center gap-single w-full" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center gap-single flex-1 min-w-0" style={{ paddingLeft: `calc(${row.level} * var(--size-small))` }}>
                       {row.hasChildren ? (
@@ -1557,23 +1554,23 @@ const HomeTableContent: FC = () => {
             accessor: (row) => row.createdAt,
             headerClassName: "relative group",
           },
-          ]}
-          rowClassName={(row) => {
-            if (!row.kit) return "";
-            if (selection.includes(row.kit.guid)) return "";
-            return hover?.kits?.includes(row.kit.guid) ? "bg-hover-base" : "";
-          }}
-          onRowMouseEnter={(row) => {
-              if (!row.kit) {
-                homeCommands.clearHover("semio.sketchpad.app.home.canvas.table.clearHover");
-              return;
-            }
-            homeCommands.hoverKit("semio.sketchpad.app.home.canvas.table.hover", row.kit.guid);
-          }}
-            onRowMouseLeave={() => {
-              homeCommands.clearHover("semio.sketchpad.app.home.canvas.table.clearHover");
-            }}
-          data={rows}
+        ]}
+        rowClassName={(row) => {
+          if (!row.kit) return "";
+          if (selection.includes(row.kit.guid)) return "";
+          return hover?.kits?.includes(row.kit.guid) ? "bg-hover-base" : "";
+        }}
+        onRowMouseEnter={(row) => {
+          if (!row.kit) {
+            homeCommands.clearHover("semio.sketchpad.app.home.canvas.table.clearHover");
+            return;
+          }
+          homeCommands.hoverKit("semio.sketchpad.app.home.canvas.table.hover", row.kit.guid);
+        }}
+        onRowMouseLeave={() => {
+          homeCommands.clearHover("semio.sketchpad.app.home.canvas.table.clearHover");
+        }}
+        data={rows}
         onRowClick={(row, _, e) => {
           const isDocsRow = row.type === "docs";
           if (isDocsRow && row.docsPath) {

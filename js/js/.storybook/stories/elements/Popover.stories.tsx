@@ -123,5 +123,3 @@ export const Temporary: Story = {
 };
 
 // #endregion Popover
-
-

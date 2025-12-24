@@ -21,7 +21,7 @@
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
-import { Combobox } from "../../../../sketchpad/elements";
+import { Combobox, Level, LevelProvider, getLevelBgClass } from "../../../../sketchpad/elements";
 
 // #region Combobox
 const meta = {
@@ -45,51 +45,63 @@ const types = [
   { value: "cluster", label: "Cluster" },
 ];
 
+const defaultArgs = {
+  id: "combobox-default",
+  options: types,
+  value: "capsule",
+  onValueChange: () => {},
+  placeholder: "Select type...",
+  placeholderId: "combobox.placeholder",
+  emptyMessage: "No types match your search.",
+  allowClear: true,
+  showLabel: true,
+  className: "w-96",
+};
+
 export const Default: Story = {
-  args: {
-    id: "combobox-default",
-    options: types,
-    value: "capsule",
-    onValueChange: () => {},
-    placeholder: "Select type...",
-    placeholderId: "combobox.placeholder",
-    emptyMessage: "No types match your search.",
-    allowClear: true,
-    showLabel: true,
-    className: "w-96",
-    level: "base",
-  },
+  args: defaultArgs,
   render: (args) => {
     const [value, setValue] = useState(args.value);
     return <Combobox {...args} value={value} onValueChange={setValue} />;
   },
 };
 
+const ComboboxDemo = ({ id }: { id: string }) => {
+  const [value, setValue] = useState("capsule");
+  return <Combobox {...defaultArgs} id={id} value={value} onValueChange={setValue} />;
+};
+
+const createLevelRender = (level: Level, id: string) => () => (
+  <LevelProvider level={level}>
+    <div className={`p-4 ${getLevelBgClass(level)}`}>
+      <ComboboxDemo id={id} />
+    </div>
+  </LevelProvider>
+);
+
 export const Base: Story = {
-  args: { ...Default.args, id: "combobox-base", level: "base" },
-  render: Default.render,
+  args: { ...defaultArgs, id: "combobox-base" },
+  render: createLevelRender("base", "combobox-base"),
 };
 
 export const Window: Story = {
-  args: { ...Default.args, id: "combobox-window", level: "window" },
-  render: Default.render,
+  args: { ...defaultArgs, id: "combobox-window" },
+  render: createLevelRender("window", "combobox-window"),
 };
 
 export const Panel: Story = {
-  args: { ...Default.args, id: "combobox-panel", level: "panel" },
-  render: Default.render,
+  args: { ...defaultArgs, id: "combobox-panel" },
+  render: createLevelRender("panel", "combobox-panel"),
 };
 
 export const Overlay: Story = {
-  args: { ...Default.args, id: "combobox-overlay", level: "overlay" },
-  render: Default.render,
+  args: { ...defaultArgs, id: "combobox-overlay" },
+  render: createLevelRender("overlay", "combobox-overlay"),
 };
 
 export const Temporary: Story = {
-  args: { ...Default.args, id: "combobox-temporary", level: "temporary" },
-  render: Default.render,
+  args: { ...defaultArgs, id: "combobox-temporary" },
+  render: createLevelRender("temporary", "combobox-temporary"),
 };
 
 // #endregion Combobox
-
-

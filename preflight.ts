@@ -25,7 +25,7 @@ import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 
 //#region Cli
-type Command = "analyze" | "fix" | "preflight" | "test" | "build" | "prepublish" | "publish";
+type Command = "analyze" | "fix" | "preflight" | "test" | "build" | "publish:test" | "publish";
 type ParsedArgs = { command: Command; skip: Set<string>; nxArgs: string[] };
 
 function parseArgs(argv: string[]): ParsedArgs {
@@ -142,11 +142,11 @@ function runBuild(skip: Set<string>, nxArgs: string[]): void {
   runNx("build", nxArgs);
 }
 
-function runPrepublish(skip: Set<string>, nxArgs: string[]): void {
+function runPublishTest(skip: Set<string>, nxArgs: string[]): void {
   if (!skip.has("build")) {
     runBuild(skip, nxArgs);
   }
-  runNx("prepublish", nxArgs);
+  runNx("publish:test", nxArgs);
 }
 
 function runPublish(skip: Set<string>, nxArgs: string[]): void {
@@ -175,11 +175,11 @@ if (parsed.command === "fix") {
   runTest(parsed.skip, parsed.nxArgs);
 } else if (parsed.command === "build") {
   runBuild(parsed.skip, parsed.nxArgs);
-} else if (parsed.command === "prepublish") {
-  runPrepublish(parsed.skip, parsed.nxArgs);
+} else if (parsed.command === "publish:test") {
+  runPublishTest(parsed.skip, parsed.nxArgs);
 } else if (parsed.command === "publish") {
   runPublish(parsed.skip, parsed.nxArgs);
 } else {
   throw new Error(`Unknown command: ${parsed.command}`);
 }
-//#endregion
+//#endregion Main

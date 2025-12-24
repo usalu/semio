@@ -1711,8 +1711,6 @@ const Scene: FC<{ isDragOver?: boolean }> = ({ isDragOver = false }) => {
 
 // #region Panels
 
-
-
 // #region Right
 
 // #region Details
@@ -2828,8 +2826,6 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
 };
 
 // #endregion Details
-
-
 
 // #region Settings
 

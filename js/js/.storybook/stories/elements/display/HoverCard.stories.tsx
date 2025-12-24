@@ -111,5 +111,3 @@ export const Temporary: Story = {
 };
 
 // #endregion HoverCard
-
-

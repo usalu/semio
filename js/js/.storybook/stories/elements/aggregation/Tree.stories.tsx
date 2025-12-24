@@ -131,25 +131,28 @@ const createLevelRender = (level: Level) => () => (
 );
 
 export const Base: Story = {
+  args: { children: TreeChildren },
   render: createLevelRender("base"),
 };
 
 export const Window: Story = {
+  args: { children: TreeChildren },
   render: createLevelRender("window"),
 };
 
 export const Panel: Story = {
+  args: { children: TreeChildren },
   render: createLevelRender("panel"),
 };
 
 export const Overlay: Story = {
+  args: { children: TreeChildren },
   render: createLevelRender("overlay"),
 };
 
 export const Temporary: Story = {
+  args: { children: TreeChildren },
   render: createLevelRender("temporary"),
 };
 
 // #endregion Tree
-
-

@@ -689,7 +689,7 @@ export interface DocsCommandResult {
 
 // #endregion Types
 
-// #region Store
+// #region Docs App Store
 
 export class DocsAppStore extends PlainAppStore<DocsAppState, DocsAppDiff, DocsAppSelectionDiff, DocsAppEdit, DocsCommandContext, DocsCommandResult> {
   constructor(_parent: SketchpadStore) {
@@ -779,7 +779,7 @@ export class DocsAppStore extends PlainAppStore<DocsAppState, DocsAppDiff, DocsA
   }
 }
 
-// #endregion Store
+// #endregion Docs App Store
 
 // #region Commands
 
@@ -865,7 +865,6 @@ if (typeof window !== "undefined") {
 // #endregion Docs App Plugin Registration
 
 // #endregion Commands
-
 
 // #region Canvas
 

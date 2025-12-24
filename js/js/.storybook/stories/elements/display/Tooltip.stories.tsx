@@ -119,5 +119,3 @@ export const Temporary: Story = {
 };
 
 // #endregion Tooltip
-
-

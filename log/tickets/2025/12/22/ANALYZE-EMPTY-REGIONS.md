@@ -4,9 +4,10 @@ prompt: Extend the analyze and fix code hook to check and remove empty regions.
 status: open
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: '2025-12-22T22:16:35.062Z'
+  created: "2025-12-22T22:16:35.062Z"
 iterations: []
 ---
+
 # Previously
 
 No existing empty-region checks in the code hook.

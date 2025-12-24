@@ -7,8 +7,8 @@ prompt: >-
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: '2025-12-23T13:39:57.342Z'
-  finished: '2025-12-23T13:42:09.548Z'
+  created: "2025-12-23T13:39:57.342Z"
+  finished: "2025-12-23T13:42:09.548Z"
 summary: Consolidate three Metabolism scripts into single update-metabolism.tsx
 commit: b41e500849192cc526ed0ce105fff7e2a478e3f0
 model: composer-1
@@ -18,8 +18,8 @@ iterations:
       scripts/generate-validation.tsx scripts/regenerate-metabolism.tsx to
       update-metabolism.tsx
     date:
-      started: '2025-12-23T13:41:28.996Z'
-      ended: '2025-12-23T13:41:44.819Z'
+      started: "2025-12-23T13:41:28.996Z"
+      ended: "2025-12-23T13:41:44.819Z"
     model: composer-1
     author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
     commit: b41e500849192cc526ed0ce105fff7e2a478e3f0
@@ -60,9 +60,11 @@ lines:
   added: 525
   removed: 20
 ---
+
 # Previously
 
 Three separate scripts handled Metabolism asset generation:
+
 - `scripts/generate-metabolism-diff.tsx` - Generated diff files for testing (`diff_kit_metabolism.json`, `diff_kit_metabolism_inverted.json`, `kit_metabolism_diffed.json`)
 - `scripts/generate-validation.tsx` - Generated `validation.json` from `kit_invalid.json`
 - `scripts/regenerate-metabolism.tsx` - Regenerated `metabolism.zip` and copied to public folders
@@ -87,6 +89,7 @@ Created `scripts/update-metabolism.tsx` that performs all three operations in se
 3. **Generate Validation**: Generates `validation.json` from `kit_invalid.json`
 
 The script uses regions to organize code:
+
 - `#region File Collection` - Shared file collection logic
 - `#region Regenerate Zip` - Zip generation and copying
 - `#region Generate Diff` - Diff file generation
@@ -104,6 +107,7 @@ Updated `AGENTS.md` to reference the new consolidated script instead of the old 
 ## Removed Old Scripts
 
 Deleted the three separate scripts:
+
 - `scripts/generate-metabolism-diff.tsx`
 - `scripts/generate-validation.tsx`
 - `scripts/regenerate-metabolism.tsx`

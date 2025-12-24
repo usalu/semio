@@ -81,7 +81,7 @@ All implemented constraints follow the same pattern:
 - Find duplicates
 - Generate fixes with `semioMakeFix` and `generateUniqueName`
 
-| Constraint                    | Scope         | Field | Status         |
+| Constraint              | Scope         | Field | Status         |
 | ----------------------- | ------------- | ----- | -------------- |
 | `guid-unique`           | Global        | guid  | ✅ Implemented |
 | `type-name-unique`      | Siblings      | name  | ✅ Implemented |

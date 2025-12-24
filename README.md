@@ -793,7 +793,7 @@ npm run analyze
 
 Prettier uses `.prettierignore` (via `hooks/prettier.ts` `--ignore-path`, includes `**/prompts.md`).
 
-`test` runs `preflight` and then `nx run-many -t test`. `build` runs `test` and then `nx run-many -t build`. `prepublish` and `publish` run `build` first.
+`test` runs `preflight` and then `nx run-many -t test`. `build` runs `test` and then `nx run-many -t build`. `publish:test` and `publish` run `build` first.
 
 ### Skip Mechanism
 
@@ -801,7 +801,7 @@ All pipeline commands support skipping earlier steps:
 
 - Skip `preflight` when running tests: `npm run test -- --skip=preflight`
 - Skip `test` when running a build: `npm run build -- --skip=test`
-- Skip `build` when running `prepublish`/`publish`: `npm run publish -- --skip=build`
+- Skip `build` when running `publish:test`/`publish`: `npm run publish -- --skip=build`
 
 To scope Nx-powered steps (e.g. `test`, `build`, ESLint) to specific projects, pass Nx args after `--nx`:
 
@@ -837,7 +837,7 @@ Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on macOS) → "Tasks: Run Task" and selec
 - `analyze` - Run non-mutating checks
 - `preflight` - Run all preflight checks (default build task)
 - `update` - Update dependencies
-- `prepublish` - Prepare for publishing
+- `publish:test` - Publish to test servers
 - `publish` - Publish packages
 - `dev` - Start all dev servers
 - `dev js js storybook` - Start `@semio/js` Storybook
@@ -881,7 +881,7 @@ Press `F5` or use the Run and Debug panel to launch:
 
 **Publishing:**
 
-- `update` / `prepublish` / `publish` - Root-level publishing commands
+- `update` / `publish:test` / `publish` - Root-level publishing commands
 
 ### Manual Hook Execution (Advanced)
 
@@ -1048,7 +1048,7 @@ The default model for agent work is **Claude Opus 4.5**, with **GPT-5.2 Codex** 
 
 </details>
 
-All automation, CI runs, and agent workflows are controlled through the canonical root commands `dev`, `fix`, `analyze`, `preflight`, `test`, `build`, `update`, `prepublish`, and `publish`. Only `dev` is allowed to stay live for watch mode, while the remaining commands must exit so CI and agents can finish reliably. `prepublish` and `publish` always run a full `build` first.
+All automation, CI runs, and agent workflows are controlled through the canonical root commands `dev`, `fix`, `analyze`, `preflight`, `test`, `build`, `update`, `publish:test`, and `publish`. Only `dev` is allowed to stay live for watch mode, while the remaining commands must exit so CI and agents can finish reliably. `publish:test` and `publish` always run a full `build` first.
 The root `package.json` uses `preflight.ts` to orchestrate the command pipeline, and delegates project builds/tests/publishing to Nx (`npx nx run-many -t <target>`).
 
 # ♻️ Ecosystems [↑](#-overview)

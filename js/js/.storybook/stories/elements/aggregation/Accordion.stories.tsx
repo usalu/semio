@@ -112,5 +112,3 @@ export const Temporary: Story = {
 };
 
 // #endregion Accordion
-
-

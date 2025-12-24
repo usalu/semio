@@ -114,7 +114,7 @@ async function openSettingsPanel(page: Page) {
 
   await expect(rightSidePanel)
     .toBeVisible({ timeout: 10000 })
-    .catch(() => { });
+    .catch(() => {});
 }
 
 async function getSettingsSections(page: Page): Promise<string[]> {
@@ -151,7 +151,7 @@ async function openDetailsPanel(page: Page) {
 
   await expect(rightSidePanel)
     .toBeVisible({ timeout: 10000 })
-    .catch(() => { });
+    .catch(() => {});
 }
 
 async function getDetailsSections(page: Page): Promise<string[]> {
@@ -434,7 +434,7 @@ async function initDesign(page: Page) {
   const dblClickedDesign = await page.evaluate(() => {
     const row = document.querySelector('[data-row-id^="design-"]');
     if (row) {
-      const event = new MouseEvent('dblclick', { bubbles: true, cancelable: true, view: window });
+      const event = new MouseEvent("dblclick", { bubbles: true, cancelable: true, view: window });
       row.dispatchEvent(event);
       return true;
     }
@@ -459,7 +459,7 @@ async function initType(page: Page) {
   const dblClickedType = await page.evaluate(() => {
     const row = document.querySelector('[data-row-id^="type-"][data-row-id*="cc3cbc26"]');
     if (row) {
-      const event = new MouseEvent('dblclick', { bubbles: true, cancelable: true, view: window });
+      const event = new MouseEvent("dblclick", { bubbles: true, cancelable: true, view: window });
       row.dispatchEvent(event);
       return true;
     }
@@ -646,7 +646,7 @@ test.describe("sketchpad", () => {
     console.log("[Home] Toolbar and filter toggles test complete");
     // #endregion Toolbar and Filter Toggles
 
-    // #region Selection State
+    // #region Home Selection State
     console.log("[Home] Testing selection state");
     const zipPath = path.resolve(__dirname, "../../assets/semio/metabolism.zip");
     const fileInput = page.locator('[id="semio.sketchpad.app.home.importKit"]');
@@ -690,7 +690,7 @@ test.describe("sketchpad", () => {
       expect(selectionKits.length).toBeGreaterThanOrEqual(0);
     }
     console.log("[Home] Selection state test complete");
-    // #endregion Selection State
+    // #endregion Home Selection State
   });
 
   test("Kit", async ({ page }) => {
@@ -864,7 +864,7 @@ test.describe("sketchpad", () => {
     console.log("[Kit] SidePanel toggle test complete");
     // #endregion SidePanel Toggle
 
-    // #region Selection State
+    // #region Kit Selection State
     console.log("[Kit] Testing selection state");
     const initialKitAppState = await page.evaluate(() => {
       const actor = (window as any).__SEMIO_ACTOR__;
@@ -908,7 +908,7 @@ test.describe("sketchpad", () => {
       expect(selectionTypes.length).toBeGreaterThanOrEqual(0);
     }
     console.log("[Kit] Selection state test complete");
-    // #endregion Selection State
+    // #endregion Kit Selection State
 
     // #region Diagram Node Icons
     console.log("[Kit] Verifying diagram node icons match table avatars");
@@ -1686,7 +1686,7 @@ test.describe("sketchpad", () => {
       console.log("[Design Test] Skipping flat planes/centers verification - metadata not available via window or expected data empty");
     }
 
-    // #region Selection State
+    // #region Design Selection State
     console.log("[Design] Testing selection state");
     const initialDesignAppState = await page.evaluate(() => {
       const actor = (window as any).__SEMIO_ACTOR__;
@@ -1709,7 +1709,7 @@ test.describe("sketchpad", () => {
 
       if (pieceCountSel > 0) {
         await page.evaluate(() => {
-          const node = document.querySelector('.react-flow__node');
+          const node = document.querySelector(".react-flow__node");
           if (node) (node as HTMLElement).click();
         });
         await page.waitForTimeout(500);
@@ -1731,7 +1731,7 @@ test.describe("sketchpad", () => {
       }
     }
     console.log("[Design] Selection state test complete");
-    // #endregion Selection State
+    // #endregion Design Selection State
 
     // #region Panel Toggle Independence
     console.log("[Design] Testing panel toggle independence");

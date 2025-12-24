@@ -73,10 +73,7 @@
           "description": "\ud83e\uddf2 The connecting side of the connection."
         }
       },
-      "required": [
-        "connected",
-        "connecting"
-      ],
+      "required": ["connected", "connecting"],
       "title": "Connection",
       "type": "object"
     },
@@ -116,9 +113,7 @@
           "description": "\ud83e\udde9 The type of the piece."
         }
       },
-      "required": [
-        "type"
-      ],
+      "required": ["type"],
       "title": "Piece",
       "type": "object"
     },
@@ -146,10 +141,7 @@
           "$ref": "#/$defs/ConnectorId"
         }
       },
-      "required": [
-        "piece",
-        "connector"
-      ],
+      "required": ["piece", "connector"],
       "title": "Side",
       "type": "object"
     },
@@ -170,9 +162,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "name"
-      ],
+      "required": ["name"],
       "title": "TypeId",
       "type": "object"
     }

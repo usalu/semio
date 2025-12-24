@@ -261,7 +261,6 @@ export const getLevelDivideElementClass = (level: Level): string => {
 
 // #endregion Element
 
-
 // #region Command
 
 function Command({ className, ...props }: React.ComponentProps<typeof CommandPrimitive>) {

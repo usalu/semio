@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # region Header
 
 # py/engine/engine.py
@@ -3830,7 +3829,7 @@ class Kit(KitNameField, KitVersionField, KitDescriptionField, KitIconField, KitI
 
     # endregion Type Family Helpers
 
-# endregion Domain
+# endregion Kit
 
 # region Moved Graphene Nodes
 
@@ -3988,7 +3987,7 @@ class KitNode(TableEntityNode):
         model = Kit
 
 
-# endregion Kit
+# endregion Domain
 
 # region Validation
 

@@ -686,81 +686,81 @@
       "problemMatcher": []
     },
     {
-      "label": "prepublish",
+      "label": "publish:test",
       "type": "shell",
-      "command": "npm run prepublish",
+      "command": "npm run publish:test",
       "problemMatcher": []
     },
     {
-      "label": "prepublish js",
+      "label": "publish:test js",
       "type": "shell",
-      "command": "npm run prepublish -- --nx --projects=@semio/js",
+      "command": "npm run publish:test -- --nx --projects=@semio/js",
       "problemMatcher": []
     },
     {
-      "label": "prepublish engine",
+      "label": "publish:test engine",
       "type": "shell",
-      "command": "npm run prepublish -- --nx --projects=@semio/engine",
+      "command": "npm run publish:test -- --nx --projects=@semio/engine",
       "problemMatcher": []
     },
     {
-      "label": "prepublish vscode",
+      "label": "publish:test vscode",
       "type": "shell",
-      "command": "npm run prepublish -- --nx --projects=@semio/vscode",
+      "command": "npm run publish:test -- --nx --projects=@semio/vscode",
       "problemMatcher": []
     },
     {
-      "label": "prepublish docs",
+      "label": "publish:test docs",
       "type": "shell",
-      "command": "npm run prepublish -- --nx --projects=@semio/docs",
+      "command": "npm run publish:test -- --nx --projects=@semio/docs",
       "problemMatcher": []
     },
     {
-      "label": "prepublish play",
+      "label": "publish:test play",
       "type": "shell",
-      "command": "npm run prepublish -- --nx --projects=@semio/play",
+      "command": "npm run publish:test -- --nx --projects=@semio/play",
       "problemMatcher": []
     },
     {
-      "label": "prepublish desktop",
+      "label": "publish:test desktop",
       "type": "shell",
-      "command": "npm run prepublish -- --nx --projects=@semio/desktop",
+      "command": "npm run publish:test -- --nx --projects=@semio/desktop",
       "problemMatcher": []
     },
     {
-      "label": "prepublish assets",
+      "label": "publish:test assets",
       "type": "shell",
-      "command": "npm run prepublish -- --nx --projects=@semio/assets",
+      "command": "npm run publish:test -- --nx --projects=@semio/assets",
       "problemMatcher": []
     },
     {
-      "label": "prepublish icons",
+      "label": "publish:test icons",
       "type": "shell",
-      "command": "npm run prepublish -- --nx --projects=@semio/icons",
+      "command": "npm run publish:test -- --nx --projects=@semio/icons",
       "problemMatcher": []
     },
     {
-      "label": "prepublish logo",
+      "label": "publish:test logo",
       "type": "shell",
-      "command": "npm run prepublish -- --nx --projects=@semio/logo",
+      "command": "npm run publish:test -- --nx --projects=@semio/logo",
       "problemMatcher": []
     },
     {
-      "label": "prepublish net",
+      "label": "publish:test net",
       "type": "shell",
-      "command": "npm run prepublish -- --nx --projects=@semio/net",
+      "command": "npm run publish:test -- --nx --projects=@semio/net",
       "problemMatcher": []
     },
     {
-      "label": "prepublish grasshopper",
+      "label": "publish:test grasshopper",
       "type": "shell",
-      "command": "npm run prepublish -- --nx --projects=@semio/grasshopper",
+      "command": "npm run publish:test -- --nx --projects=@semio/grasshopper",
       "problemMatcher": []
     },
     {
-      "label": "prepublish yak",
+      "label": "publish:test yak",
       "type": "shell",
-      "command": "npm run prepublish -- --nx --projects=@semio/yak",
+      "command": "npm run publish:test -- --nx --projects=@semio/yak",
       "problemMatcher": []
     },
     {

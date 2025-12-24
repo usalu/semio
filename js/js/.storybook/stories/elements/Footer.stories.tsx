@@ -105,5 +105,3 @@ export const Temporary: Story = {
 };
 
 // #endregion Footer
-
-

@@ -68,7 +68,9 @@ function App() {
       <Text>🔍 Running TypeScript compiler check...</Text>
       {status !== "running" && (
         <>
-          <Text>{status === "success" ? "✅" : "❌"} TypeScript check {status === "success" ? "passed" : "failed"}</Text>
+          <Text>
+            {status === "success" ? "✅" : "❌"} TypeScript check {status === "success" ? "passed" : "failed"}
+          </Text>
           <Text dimColor>📝 Report: {reportPath}</Text>
         </>
       )}

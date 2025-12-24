@@ -31,7 +31,7 @@ export async function resizeImage(sourcePath: string, targetPathBase: string, ta
     await sharp(sourcePath).resize(resolution, resolution).png().toFile(targetPath);
   }
 }
-//#endregion
+//#endregion Image Processing
 
 //#region File Operations
 export function renameFilesByPattern(pattern: RegExp, replacement: string, rootDir: string = "."): void {
@@ -68,7 +68,7 @@ export function deleteFilesByPattern(pattern: string, rootDir: string = "."): vo
   }
   walk(rootDir);
 }
-//#endregion
+//#endregion File Operations
 
 //#region Process Management
 export function stopProcessOnPort(connector: number): void {
@@ -107,7 +107,7 @@ export function runProcess(command: string, args: string[], options?: { cwd?: st
 
   return proc;
 }
-//#endregion
+//#endregion Process Management
 
 //#region JSON Utilities
 export function unescapeJson(inputPath: string, outputPath: string): void {
@@ -115,4 +115,4 @@ export function unescapeJson(inputPath: string, outputPath: string): void {
   const unescaped = content.replace(/\\(.)/g, "$1");
   writeFileSync(outputPath, unescaped, "utf-8");
 }
-//#endregion
+//#endregion JSON Utilities

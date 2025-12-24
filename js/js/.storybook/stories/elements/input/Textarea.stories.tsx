@@ -20,7 +20,7 @@
 // #endregion Header
 
 import type { Meta, StoryObj } from "@storybook/react";
-import { Textarea } from "../../../../sketchpad/elements";
+import { Level, LevelProvider, Textarea, getLevelBgClass } from "../../../../sketchpad/elements";
 
 // #region Textarea
 const meta = {
@@ -36,42 +36,54 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: {
-    id: "textarea-default",
-    placeholder: "Describe the design configuration, spatial relationships, and architectural intent...",
-    placeholderId: "textarea.placeholder",
-    defaultValue: "The Nakagin Capsule Tower features 140 prefabricated capsules attached to two concrete cores. Each capsule is a self-contained living unit with standardized connection points.",
-    rows: 4,
-    lazy: true,
-    showLabel: true,
-    disabled: false,
-    "aria-invalid": false,
-    className: "w-96",
-    level: "base",
-  },
+const defaultArgs = {
+  id: "textarea-default",
+  placeholder: "Describe the design configuration, spatial relationships, and architectural intent...",
+  placeholderId: "textarea.placeholder",
+  defaultValue: "The Nakagin Capsule Tower features 140 prefabricated capsules attached to two concrete cores. Each capsule is a self-contained living unit with standardized connection points.",
+  rows: 4,
+  lazy: true,
+  showLabel: true,
+  disabled: false,
+  "aria-invalid": false,
+  className: "w-96",
 };
 
+export const Default: Story = {
+  args: defaultArgs,
+};
+
+const createLevelRender = (level: Level, id: string) => () => (
+  <LevelProvider level={level}>
+    <div className={`p-4 ${getLevelBgClass(level)}`}>
+      <Textarea {...defaultArgs} id={id} />
+    </div>
+  </LevelProvider>
+);
+
 export const Base: Story = {
-  args: { ...Default.args, id: "textarea-base", level: "base" },
+  args: { ...defaultArgs, id: "textarea-base" },
+  render: createLevelRender("base", "textarea-base"),
 };
 
 export const Window: Story = {
-  args: { ...Default.args, id: "textarea-window", level: "window" },
+  args: { ...defaultArgs, id: "textarea-window" },
+  render: createLevelRender("window", "textarea-window"),
 };
 
 export const Panel: Story = {
-  args: { ...Default.args, id: "textarea-panel", level: "panel" },
+  args: { ...defaultArgs, id: "textarea-panel" },
+  render: createLevelRender("panel", "textarea-panel"),
 };
 
 export const Overlay: Story = {
-  args: { ...Default.args, id: "textarea-overlay", level: "overlay" },
+  args: { ...defaultArgs, id: "textarea-overlay" },
+  render: createLevelRender("overlay", "textarea-overlay"),
 };
 
 export const Temporary: Story = {
-  args: { ...Default.args, id: "textarea-temporary", level: "temporary" },
+  args: { ...defaultArgs, id: "textarea-temporary" },
+  render: createLevelRender("temporary", "textarea-temporary"),
 };
 
 // #endregion Textarea
-
-

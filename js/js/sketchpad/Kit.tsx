@@ -2472,7 +2472,6 @@ export const commands = {
 
 // #endregion Commands
 
-
 // #region Canvas
 
 // #region Windows
@@ -6453,7 +6452,6 @@ export const MultipleArtifactsSection: FC = () => {
 
 // #endregion Details
 
-
 // #region Settings
 
 const KitEditorSettingsContent: FC = () => {
@@ -6620,7 +6618,6 @@ const SketchpadSettingsContent: FC = () => {
 
 // #endregion Panels
 
-
 // #endregion Canvas
 
 // #region Footer
@@ -6644,7 +6641,6 @@ export const KitAppFooter: FC = () => {
 };
 
 // #endregion Footer
-
 
 // #region Config
 

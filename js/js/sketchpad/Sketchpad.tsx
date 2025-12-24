@@ -9079,10 +9079,6 @@ export function createSketchpadActor(input: SketchpadMachineInput) {
         const { snapshot, event, actorRef } = inspectionEvent;
         if (event.type === "xstate.init") return;
         const stateValue = "value" in (snapshot as any) ? (typeof (snapshot as any).value === "object" ? JSON.stringify((snapshot as any).value) : (snapshot as any).value) : JSON.stringify(snapshot);
-
-        const { type, ...params } = event as any;
-        const hasParams = Object.keys(params).length > 0;
-        console.log(`[DEBUG][Machine] ${type} → ${stateValue}`, hasParams ? params : "");
       }
     },
   });
@@ -15294,7 +15290,7 @@ const AppRouter: FC = () => {
 
 // #endregion App Router
 
-// #region Sketchpad
+// #region Sketchpad Components
 
 const ToolbarScopeWrapper: FC<{ children: ReactNode }> = ({ children }) => {
   const location = useLocation();
@@ -15892,14 +15888,21 @@ const SketchpadContent: FC = () => {
   return <LayoutWrapper />;
 };
 
-const Sketchpad: FC<{ id?: string; remote?: RemoteProviders; onWindowEvents?: WindowEvents; initialState?: ExtendedInitialState; importKitUrls?: string[]; embedded?: boolean }> = ({
+const Sketchpad = ({
   id,
   remote,
   onWindowEvents,
   initialState,
   importKitUrls,
   embedded,
-}) => {
+}: {
+  id?: string;
+  remote?: RemoteProviders;
+  onWindowEvents?: WindowEvents;
+  initialState?: ExtendedInitialState;
+  importKitUrls?: string[];
+  embedded?: boolean;
+}): JSX.Element => {
   const initialEntries = useMemo(() => {
     if (!embedded) return undefined;
     if (typeof window !== "undefined" && window.location) {
@@ -15937,7 +15940,7 @@ const Sketchpad: FC<{ id?: string; remote?: RemoteProviders; onWindowEvents?: Wi
   return <BrowserRouter>{routerContent}</BrowserRouter>;
 };
 
-// #endregion Sketchpad
+// #endregion Sketchpad Components
 
 export { SectionSpecificity, Window } from "./elements";
 

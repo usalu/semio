@@ -139,5 +139,3 @@ export const MultipleTemporary: Story = {
 };
 
 // #endregion ToggleGroup
-
-

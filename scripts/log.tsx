@@ -22,11 +22,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { execSync } from "child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from "fs";
-import { dirname, join } from "path";
-import { fileURLToPath } from "url";
-import React from "react";
-import { render, Text, Box } from "ink";
 import matter from "gray-matter";
+import { Box, render, Text } from "ink";
+import { dirname, join } from "path";
 
 //#region Types
 interface Lines {
@@ -112,13 +110,13 @@ interface SearchOptions extends ListOptions {
   query?: string;
   limit?: number;
 }
-//#endregion
+//#endregion Types
 
 //#region Exports
 export type { FileEntry, Files, Iteration, IterationDate, IterationFinishInput, IterationStartInput, Lines, ListOptions, SearchOptions, Ticket, TicketCreateInput, TicketDate, TicketFrontmatter };
 
 export { createTicket, deleteTicket, finishIteration, finishTicket, listTickets, readTicket, reopenTicket, searchTickets, startIteration };
-//#endregion
+//#endregion Exports
 
 //#region Configuration
 const LOG_ROOT = join(process.cwd(), "log");
@@ -151,7 +149,7 @@ function getGitAuthor(): string {
 function getGitHead(): string {
   return execSync("git rev-parse HEAD", { encoding: "utf-8" }).trim();
 }
-//#endregion
+//#endregion Configuration
 
 //#region Path Utilities
 function getTicketPath(year: number, month: number, day: number, slug: string): string {
@@ -176,7 +174,7 @@ function ensureDirectoryExists(filePath: string): void {
   const dir = dirname(filePath);
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
 }
-//#endregion
+//#endregion Path Utilities
 
 //#region Git Stats
 function getGitStatusPorcelain(): string {
@@ -285,7 +283,7 @@ function computeTotalLines(files: Files): Lines {
   }
   return { added, removed };
 }
-//#endregion
+//#endregion Git Stats
 
 //#region Validation
 function requireFiles(files: { updated?: string[]; created?: string[]; removed?: string[] }): void {
@@ -298,7 +296,7 @@ function validateModel(model: string): string {
   if (!values.includes(model as any)) throw new Error(`Unknown model: ${model}. Add it to the Model enum in scripts/log.ts.`);
   return model;
 }
-//#endregion
+//#endregion Validation
 
 //#region Serialization
 function sanitizeForMatter(value: any): any {
@@ -410,7 +408,7 @@ function deserializeFrontmatter(raw: any): TicketFrontmatter {
     lines: raw.lines,
   };
 }
-//#endregion
+//#endregion Serialization
 
 //#region CRUD Operations
 function createTicket(input: TicketCreateInput): Ticket {
@@ -674,7 +672,7 @@ function searchTickets(options: SearchOptions = {}): Ticket[] {
   });
   return options.limit ? matchedTickets.slice(0, options.limit) : matchedTickets;
 }
-//#endregion
+//#endregion CRUD Operations
 
 //#region Lookup
 function findLatestTicketBySlug(slug: string): { year: number; month: number; day: number; slug: string } {
@@ -686,7 +684,7 @@ function findLatestTicketBySlug(slug: string): { year: number; month: number; da
   if (!parsed) throw new Error(`Failed to parse ticket path: ${latest.path}`);
   return parsed;
 }
-//#endregion
+//#endregion Lookup
 
 //#region CLI
 function printUsage(): void {
@@ -749,7 +747,7 @@ Examples:
   render(
     <Box flexDirection="column">
       <Text>{usage}</Text>
-    </Box>
+    </Box>,
   );
 }
 
@@ -791,354 +789,384 @@ const args = process.argv.slice(2);
 const command = args[0];
 try {
   switch (command) {
-      case "ticket": {
-        const [, sub, ...rest] = args;
-        if (!sub) {
+    case "ticket": {
+      const [, sub, ...rest] = args;
+      if (!sub) {
+        render(
+          <Box flexDirection="column">
+            <Text color="red">Error: Missing ticket command</Text>
+          </Box>,
+        );
+        printUsage();
+        process.exit(1);
+      }
+      if (sub === "create") {
+        const [slug, ...flags] = rest;
+        if (!slug) {
           render(
             <Box flexDirection="column">
-              <Text color="red">Error: Missing ticket command</Text>
-            </Box>
+              <Text color="red">Error: Missing slug</Text>
+            </Box>,
           );
           printUsage();
           process.exit(1);
         }
-        if (sub === "create") {
-          const [slug, ...flags] = rest;
-          if (!slug) {
-            render(
-              <Box flexDirection="column">
-                <Text color="red">Error: Missing slug</Text>
-              </Box>
-            );
-            printUsage();
-            process.exit(1);
-          }
-          for (const flag of flags) {
-            if (!flag.startsWith("--")) throw new Error(`Unexpected argument: ${flag}. Summary is set on ticket finish via --summary=.`);
-          }
-          const prompt = requireFlag(flags, "prompt");
-          const ticket = createTicket({ slug, prompt });
-          render(
-            <Box flexDirection="column">
-              <Text>✅ Created ticket: {ticket.path}</Text>
-            </Box>
-          );
-          break;
+        for (const flag of flags) {
+          if (!flag.startsWith("--")) throw new Error(`Unexpected argument: ${flag}. Summary is set on ticket finish via --summary=.`);
         }
+        const prompt = requireFlag(flags, "prompt");
+        const ticket = createTicket({ slug, prompt });
+        render(
+          <Box flexDirection="column">
+            <Text>✅ Created ticket: {ticket.path}</Text>
+          </Box>,
+        );
+        break;
+      }
 
-        if (sub === "migrate") {
-          const [migrationCommand] = rest;
-          if (migrationCommand === "prompts") {
-            const result = migrateTicketPromptsFromFirstIteration();
-            render(
-              <Box flexDirection="column">
-                <Text>✅ Migrated ticket prompts: {result.migrated} (skipped: {result.skipped})</Text>
-              </Box>
-            );
-            break;
-          }
+      if (sub === "migrate") {
+        const [migrationCommand] = rest;
+        if (migrationCommand === "prompts") {
+          const result = migrateTicketPromptsFromFirstIteration();
           render(
             <Box flexDirection="column">
-              <Text color="red">Error: Unknown migrate command</Text>
-            </Box>
-          );
-          printUsage();
-          process.exit(1);
-          break;
-        }
-        if (sub === "iteration") {
-          const [iterationCommand, slugArg, ...flags] = rest;
-          if (iterationCommand === "start") {
-            if (!slugArg) {
-              render(
-                <Box flexDirection="column">
-                  <Text color="red">Error: Missing slug</Text>
-                </Box>
-              );
-              printUsage();
-              process.exit(1);
-            }
-            const model = validateModel(requireFlag(flags, "model"));
-            const prompt = requireFlag(flags, "prompt");
-            const files = parseFilesFromFlags(flags);
-            const latest = findLatestTicketBySlug(slugArg);
-            const ticket = startIteration(latest.year, latest.month, latest.day, latest.slug, { prompt, model, files });
-            render(
-              <Box flexDirection="column">
-                <Text>✅ Started iteration {ticket.frontmatter.iterations.length} for ticket: {ticket.path}</Text>
-              </Box>
-            );
-            break;
-          }
-          if (iterationCommand === "finish") {
-            if (!slugArg) {
-              render(
-                <Box flexDirection="column">
-                  <Text color="red">Error: Missing slug</Text>
-                </Box>
-              );
-              printUsage();
-              process.exit(1);
-            }
-            const files = parseFilesFromFlags(flags);
-            const latest = findLatestTicketBySlug(slugArg);
-            const ticket = finishIteration(latest.year, latest.month, latest.day, latest.slug, { files });
-            const lastIteration = ticket.frontmatter.iterations[ticket.frontmatter.iterations.length - 1];
-            render(
-              <Box flexDirection="column">
-                <Text>✅ Finished iteration for ticket: {ticket.path}</Text>
-                <Text dimColor>Commit: {lastIteration.commit || "none"}</Text>
-                <Text dimColor>Lines: +{lastIteration.lines.added} -{lastIteration.lines.removed}</Text>
-              </Box>
-            );
-            break;
-          }
-          render(
-            <Box flexDirection="column">
-              <Text color="red">Error: Unknown iteration command</Text>
-            </Box>
-          );
-          printUsage();
-          process.exit(1);
-          break;
-        }
-        if (sub === "finish") {
-          const [slugArg, ...flags] = rest;
-          if (!slugArg) {
-            console.error("Error: Missing slug");
-            printUsage();
-            process.exit(1);
-          }
-          for (const flag of flags) {
-            if (!flag.startsWith("--")) throw new Error(`Unexpected argument: ${flag}`);
-          }
-          const summary = requireFlag(flags, "summary");
-          const latest = findLatestTicketBySlug(slugArg);
-          const ticket = finishTicket(latest.year, latest.month, latest.day, latest.slug, summary);
-          render(
-            <Box flexDirection="column">
-              <Text>✅ Finished ticket: {ticket.path}</Text>
-              <Text dimColor>Commit: {ticket.frontmatter.commit}</Text>
-              {ticket.frontmatter.lines && (
-                <Text dimColor>Lines: +{ticket.frontmatter.lines.added} -{ticket.frontmatter.lines.removed}</Text>
-              )}
-            </Box>
-          );
-          break;
-        }
-        if (sub === "reopen") {
-          const [slugArg] = rest;
-          if (!slugArg) {
-            render(
-              <Box flexDirection="column">
-                <Text color="red">Error: Missing slug</Text>
-              </Box>
-            );
-            printUsage();
-            process.exit(1);
-          }
-          const latest = findLatestTicketBySlug(slugArg);
-          const ticket = reopenTicket(latest.year, latest.month, latest.day, latest.slug);
-          render(
-            <Box flexDirection="column">
-              <Text>✅ Reopened ticket: {ticket.path}</Text>
-              <Text dimColor>Status: {ticket.frontmatter.status}</Text>
-              <Text dimColor>Iterations preserved: {ticket.frontmatter.iterations.length}</Text>
-            </Box>
-          );
-          break;
-        }
-        if (sub === "plan") {
-          const [slugArg, ...flags] = rest;
-          if (!slugArg) {
-            render(
-              <Box flexDirection="column">
-                <Text color="red">Error: Missing slug</Text>
-              </Box>
-            );
-            printUsage();
-            process.exit(1);
-          }
-          const planPath = requireFlag(flags, "plan");
-          const latest = findLatestTicketBySlug(slugArg);
-          const ticket = addPlanToTicket(latest.year, latest.month, latest.day, latest.slug, planPath);
-          render(
-            <Box flexDirection="column">
-              <Text>✅ Added plan to ticket: {ticket.path}</Text>
-            </Box>
-          );
-          break;
-        }
-        if (sub === "read") {
-          const [year, month, day, slug] = rest;
-          if (!year || !month || !day || !slug) {
-            render(
-              <Box flexDirection="column">
-                <Text color="red">Error: Missing year, month, day, or slug</Text>
-              </Box>
-            );
-            printUsage();
-            process.exit(1);
-          }
-          const ticket = readTicket(parseInt(year), parseInt(month), parseInt(day), slug);
-          render(
-            <Box flexDirection="column">
-              <Text>📄 Path: {ticket.path}</Text>
-              <Text>Slug: {ticket.frontmatter.slug}</Text>
-              <Text>Summary: {ticket.frontmatter.summary || ""}</Text>
-              <Text>Status: {ticket.frontmatter.status}</Text>
-              <Text>Author: {ticket.frontmatter.author}</Text>
-              <Text>Created: {ticket.frontmatter.date.created}</Text>
-              {ticket.frontmatter.date.finished && <Text>Finished: {ticket.frontmatter.date.finished}</Text>}
-              {ticket.frontmatter.commit && <Text>Commit: {ticket.frontmatter.commit}</Text>}
-              {ticket.frontmatter.model && <Text>Model: {ticket.frontmatter.model}</Text>}
-              <Text>Iterations: {ticket.frontmatter.iterations.length}</Text>
-              {ticket.frontmatter.iterations.map((it, i) => {
-                const totalFiles = it.files.updated.length + it.files.created.length + it.files.removed.length;
-                return (
-                  <Box key={i} flexDirection="column" marginTop={1}>
-                    <Text dimColor>  [{i + 1}] {it.date.started}</Text>
-                    <Text dimColor>      Model: {it.model}</Text>
-                    <Text dimColor>      Author: {it.author}</Text>
-                    {it.date.ended && <Text dimColor>      Ended: {it.date.ended}</Text>}
-                    {it.commit && <Text dimColor>      Commit: {it.commit.substring(0, 8)}</Text>}
-                    <Text dimColor>      Lines: +{it.lines.added} -{it.lines.removed}</Text>
-                    <Text dimColor>      Files: {totalFiles} ({it.files.updated.length} updated, {it.files.created.length} created, {it.files.removed.length} removed)</Text>
-                    <Text dimColor>      Prompt: {it.prompt.substring(0, 80)}{it.prompt.length > 80 ? "..." : ""}</Text>
-                  </Box>
-                );
-              })}
-              {ticket.frontmatter.files && (
-                <Text marginTop={1}>
-                  Total Files: {ticket.frontmatter.files.updated.length + ticket.frontmatter.files.created.length + ticket.frontmatter.files.removed.length}
-                </Text>
-              )}
-              {ticket.frontmatter.lines && (
-                <Text>Total Lines: +{ticket.frontmatter.lines.added} -{ticket.frontmatter.lines.removed}</Text>
-              )}
-              <Text marginTop={1}>Content:</Text>
-              <Text dimColor>{ticket.content}</Text>
-            </Box>
-          );
-          break;
-        }
-        if (sub === "delete") {
-          const [year, month, day, slug] = rest;
-          if (!year || !month || !day || !slug) {
-            render(
-              <Box flexDirection="column">
-                <Text color="red">Error: Missing year, month, day, or slug</Text>
-              </Box>
-            );
-            printUsage();
-            process.exit(1);
-          }
-          deleteTicket(parseInt(year), parseInt(month), parseInt(day), slug);
-          render(
-            <Box flexDirection="column">
-              <Text>✅ Deleted ticket: {year}/{month}/{day}/{slug}</Text>
-            </Box>
-          );
-          break;
-        }
-        if (sub === "list") {
-          const [year, month, day] = rest;
-          const options: ListOptions = {};
-          if (year) options.year = parseInt(year);
-          if (month) options.month = parseInt(month);
-          if (day) options.day = parseInt(day);
-          const tickets = listTickets(options);
-          render(
-            <Box flexDirection="column">
-              <Text>Found {tickets.length} ticket(s):</Text>
-              {tickets.map((ticket) => {
-                const parsed = parseTicketPath(ticket.path);
-                if (!parsed) return null;
-                return (
-                  <Box key={ticket.path} flexDirection="column" marginTop={1}>
-                    <Text>
-                      {parsed.year}-{String(parsed.month).padStart(2, "0")}-{String(parsed.day).padStart(2, "0")} {parsed.slug}
-                    </Text>
-                    <Text dimColor>  Summary: {ticket.frontmatter.summary}</Text>
-                    <Text dimColor>  Status: {ticket.frontmatter.status}</Text>
-                    <Text dimColor>  Author: {ticket.frontmatter.author}</Text>
-                    {ticket.frontmatter.model && <Text dimColor>  Model: {ticket.frontmatter.model}</Text>}
-                    <Text dimColor>  Iterations: {ticket.frontmatter.iterations.length}</Text>
-                  </Box>
-                );
-              })}
-            </Box>
-          );
-          break;
-        }
-        if (sub === "search") {
-          const options: SearchOptions = {};
-          let query = "";
-          for (const arg of rest) {
-            if (arg.startsWith("--year=")) options.year = parseInt(arg.split("=")[1]);
-            else if (arg.startsWith("--month=")) options.month = parseInt(arg.split("=")[1]);
-            else if (arg.startsWith("--day=")) options.day = parseInt(arg.split("=")[1]);
-            else if (arg.startsWith("--limit=")) options.limit = parseInt(arg.split("=")[1]);
-            else if (!arg.startsWith("--")) query = arg;
-          }
-          if (query) options.query = query;
-          const tickets = searchTickets(options);
-          const limitText = options.limit ? ` (showing first ${options.limit})` : "";
-          render(
-            <Box flexDirection="column">
-              <Text>Found {tickets.length} ticket(s){limitText}:</Text>
-              {tickets.map((ticket) => {
-                const parsed = parseTicketPath(ticket.path);
-                if (!parsed) return null;
-                return (
-                  <Box key={ticket.path} flexDirection="column" marginTop={1}>
-                    <Text>
-                      {parsed.year}-{String(parsed.month).padStart(2, "0")}-{String(parsed.day).padStart(2, "0")} {parsed.slug}
-                    </Text>
-                    <Text dimColor>  Summary: {ticket.frontmatter.summary}</Text>
-                    <Text dimColor>  Status: {ticket.frontmatter.status}</Text>
-                    <Text dimColor>  Author: {ticket.frontmatter.author}</Text>
-                    {ticket.frontmatter.model && <Text dimColor>  Model: {ticket.frontmatter.model}</Text>}
-                    {options.query && (
-                      <Text dimColor>  Preview: {ticket.content.substring(0, 200).replace(/\n/g, " ")}...</Text>
-                    )}
-                  </Box>
-                );
-              })}
-            </Box>
+              <Text>
+                ✅ Migrated ticket prompts: {result.migrated} (skipped: {result.skipped})
+              </Text>
+            </Box>,
           );
           break;
         }
         render(
           <Box flexDirection="column">
-            <Text color="red">Error: Unknown ticket command</Text>
-          </Box>
+            <Text color="red">Error: Unknown migrate command</Text>
+          </Box>,
         );
         printUsage();
         process.exit(1);
         break;
       }
-      case "models": {
+      if (sub === "iteration") {
+        const [iterationCommand, slugArg, ...flags] = rest;
+        if (iterationCommand === "start") {
+          if (!slugArg) {
+            render(
+              <Box flexDirection="column">
+                <Text color="red">Error: Missing slug</Text>
+              </Box>,
+            );
+            printUsage();
+            process.exit(1);
+          }
+          const model = validateModel(requireFlag(flags, "model"));
+          const prompt = requireFlag(flags, "prompt");
+          const files = parseFilesFromFlags(flags);
+          const latest = findLatestTicketBySlug(slugArg);
+          const ticket = startIteration(latest.year, latest.month, latest.day, latest.slug, { prompt, model, files });
+          render(
+            <Box flexDirection="column">
+              <Text>
+                ✅ Started iteration {ticket.frontmatter.iterations.length} for ticket: {ticket.path}
+              </Text>
+            </Box>,
+          );
+          break;
+        }
+        if (iterationCommand === "finish") {
+          if (!slugArg) {
+            render(
+              <Box flexDirection="column">
+                <Text color="red">Error: Missing slug</Text>
+              </Box>,
+            );
+            printUsage();
+            process.exit(1);
+          }
+          const files = parseFilesFromFlags(flags);
+          const latest = findLatestTicketBySlug(slugArg);
+          const ticket = finishIteration(latest.year, latest.month, latest.day, latest.slug, { files });
+          const lastIteration = ticket.frontmatter.iterations[ticket.frontmatter.iterations.length - 1];
+          render(
+            <Box flexDirection="column">
+              <Text>✅ Finished iteration for ticket: {ticket.path}</Text>
+              <Text dimColor>Commit: {lastIteration.commit || "none"}</Text>
+              <Text dimColor>
+                Lines: +{lastIteration.lines.added} -{lastIteration.lines.removed}
+              </Text>
+            </Box>,
+          );
+          break;
+        }
         render(
           <Box flexDirection="column">
-            <Text>Available models:</Text>
-            {Object.values(Model).map((model) => (
-              <Text key={model} dimColor>  {model}</Text>
-            ))}
-          </Box>
+            <Text color="red">Error: Unknown iteration command</Text>
+          </Box>,
+        );
+        printUsage();
+        process.exit(1);
+        break;
+      }
+      if (sub === "finish") {
+        const [slugArg, ...flags] = rest;
+        if (!slugArg) {
+          console.error("Error: Missing slug");
+          printUsage();
+          process.exit(1);
+        }
+        for (const flag of flags) {
+          if (!flag.startsWith("--")) throw new Error(`Unexpected argument: ${flag}`);
+        }
+        const summary = requireFlag(flags, "summary");
+        const latest = findLatestTicketBySlug(slugArg);
+        const ticket = finishTicket(latest.year, latest.month, latest.day, latest.slug, summary);
+        render(
+          <Box flexDirection="column">
+            <Text>✅ Finished ticket: {ticket.path}</Text>
+            <Text dimColor>Commit: {ticket.frontmatter.commit}</Text>
+            {ticket.frontmatter.lines && (
+              <Text dimColor>
+                Lines: +{ticket.frontmatter.lines.added} -{ticket.frontmatter.lines.removed}
+              </Text>
+            )}
+          </Box>,
         );
         break;
       }
-      default:
-        printUsage();
-        process.exit(1);
+      if (sub === "reopen") {
+        const [slugArg] = rest;
+        if (!slugArg) {
+          render(
+            <Box flexDirection="column">
+              <Text color="red">Error: Missing slug</Text>
+            </Box>,
+          );
+          printUsage();
+          process.exit(1);
+        }
+        const latest = findLatestTicketBySlug(slugArg);
+        const ticket = reopenTicket(latest.year, latest.month, latest.day, latest.slug);
+        render(
+          <Box flexDirection="column">
+            <Text>✅ Reopened ticket: {ticket.path}</Text>
+            <Text dimColor>Status: {ticket.frontmatter.status}</Text>
+            <Text dimColor>Iterations preserved: {ticket.frontmatter.iterations.length}</Text>
+          </Box>,
+        );
+        break;
+      }
+      if (sub === "plan") {
+        const [slugArg, ...flags] = rest;
+        if (!slugArg) {
+          render(
+            <Box flexDirection="column">
+              <Text color="red">Error: Missing slug</Text>
+            </Box>,
+          );
+          printUsage();
+          process.exit(1);
+        }
+        const planPath = requireFlag(flags, "plan");
+        const latest = findLatestTicketBySlug(slugArg);
+        const ticket = addPlanToTicket(latest.year, latest.month, latest.day, latest.slug, planPath);
+        render(
+          <Box flexDirection="column">
+            <Text>✅ Added plan to ticket: {ticket.path}</Text>
+          </Box>,
+        );
+        break;
+      }
+      if (sub === "read") {
+        const [year, month, day, slug] = rest;
+        if (!year || !month || !day || !slug) {
+          render(
+            <Box flexDirection="column">
+              <Text color="red">Error: Missing year, month, day, or slug</Text>
+            </Box>,
+          );
+          printUsage();
+          process.exit(1);
+        }
+        const ticket = readTicket(parseInt(year), parseInt(month), parseInt(day), slug);
+        render(
+          <Box flexDirection="column">
+            <Text>📄 Path: {ticket.path}</Text>
+            <Text>Slug: {ticket.frontmatter.slug}</Text>
+            <Text>Summary: {ticket.frontmatter.summary || ""}</Text>
+            <Text>Status: {ticket.frontmatter.status}</Text>
+            <Text>Author: {ticket.frontmatter.author}</Text>
+            <Text>Created: {ticket.frontmatter.date.created}</Text>
+            {ticket.frontmatter.date.finished && <Text>Finished: {ticket.frontmatter.date.finished}</Text>}
+            {ticket.frontmatter.commit && <Text>Commit: {ticket.frontmatter.commit}</Text>}
+            {ticket.frontmatter.model && <Text>Model: {ticket.frontmatter.model}</Text>}
+            <Text>Iterations: {ticket.frontmatter.iterations.length}</Text>
+            {ticket.frontmatter.iterations.map((it, i) => {
+              const totalFiles = it.files.updated.length + it.files.created.length + it.files.removed.length;
+              return (
+                <Box key={i} flexDirection="column" marginTop={1}>
+                  <Text dimColor>
+                    {" "}
+                    [{i + 1}] {it.date.started}
+                  </Text>
+                  <Text dimColor> Model: {it.model}</Text>
+                  <Text dimColor> Author: {it.author}</Text>
+                  {it.date.ended && <Text dimColor> Ended: {it.date.ended}</Text>}
+                  {it.commit && <Text dimColor> Commit: {it.commit.substring(0, 8)}</Text>}
+                  <Text dimColor>
+                    {" "}
+                    Lines: +{it.lines.added} -{it.lines.removed}
+                  </Text>
+                  <Text dimColor>
+                    {" "}
+                    Files: {totalFiles} ({it.files.updated.length} updated, {it.files.created.length} created, {it.files.removed.length} removed)
+                  </Text>
+                  <Text dimColor>
+                    {" "}
+                    Prompt: {it.prompt.substring(0, 80)}
+                    {it.prompt.length > 80 ? "..." : ""}
+                  </Text>
+                </Box>
+              );
+            })}
+            {ticket.frontmatter.files && (
+              <Box marginTop={1}>
+                <Text>Total Files: {ticket.frontmatter.files.updated.length + ticket.frontmatter.files.created.length + ticket.frontmatter.files.removed.length}</Text>
+              </Box>
+            )}
+            {ticket.frontmatter.lines && (
+              <Text>
+                Total Lines: +{ticket.frontmatter.lines.added} -{ticket.frontmatter.lines.removed}
+              </Text>
+            )}
+            <Box marginTop={1}>
+              <Text>Content:</Text>
+            </Box>
+            <Text dimColor>{ticket.content}</Text>
+          </Box>,
+        );
+        break;
+      }
+      if (sub === "delete") {
+        const [year, month, day, slug] = rest;
+        if (!year || !month || !day || !slug) {
+          render(
+            <Box flexDirection="column">
+              <Text color="red">Error: Missing year, month, day, or slug</Text>
+            </Box>,
+          );
+          printUsage();
+          process.exit(1);
+        }
+        deleteTicket(parseInt(year), parseInt(month), parseInt(day), slug);
+        render(
+          <Box flexDirection="column">
+            <Text>
+              ✅ Deleted ticket: {year}/{month}/{day}/{slug}
+            </Text>
+          </Box>,
+        );
+        break;
+      }
+      if (sub === "list") {
+        const [year, month, day] = rest;
+        const options: ListOptions = {};
+        if (year) options.year = parseInt(year);
+        if (month) options.month = parseInt(month);
+        if (day) options.day = parseInt(day);
+        const tickets = listTickets(options);
+        render(
+          <Box flexDirection="column">
+            <Text>Found {tickets.length} ticket(s):</Text>
+            {tickets.map((ticket) => {
+              const parsed = parseTicketPath(ticket.path);
+              if (!parsed) return null;
+              return (
+                <Box key={ticket.path} flexDirection="column" marginTop={1}>
+                  <Text>
+                    {parsed.year}-{String(parsed.month).padStart(2, "0")}-{String(parsed.day).padStart(2, "0")} {parsed.slug}
+                  </Text>
+                  <Text dimColor> Summary: {ticket.frontmatter.summary}</Text>
+                  <Text dimColor> Status: {ticket.frontmatter.status}</Text>
+                  <Text dimColor> Author: {ticket.frontmatter.author}</Text>
+                  {ticket.frontmatter.model && <Text dimColor> Model: {ticket.frontmatter.model}</Text>}
+                  <Text dimColor> Iterations: {ticket.frontmatter.iterations.length}</Text>
+                </Box>
+              );
+            })}
+          </Box>,
+        );
+        break;
+      }
+      if (sub === "search") {
+        const options: SearchOptions = {};
+        let query = "";
+        for (const arg of rest) {
+          if (arg.startsWith("--year=")) options.year = parseInt(arg.split("=")[1]);
+          else if (arg.startsWith("--month=")) options.month = parseInt(arg.split("=")[1]);
+          else if (arg.startsWith("--day=")) options.day = parseInt(arg.split("=")[1]);
+          else if (arg.startsWith("--limit=")) options.limit = parseInt(arg.split("=")[1]);
+          else if (!arg.startsWith("--")) query = arg;
+        }
+        if (query) options.query = query;
+        const tickets = searchTickets(options);
+        const limitText = options.limit ? ` (showing first ${options.limit})` : "";
+        render(
+          <Box flexDirection="column">
+            <Text>
+              Found {tickets.length} ticket(s){limitText}:
+            </Text>
+            {tickets.map((ticket) => {
+              const parsed = parseTicketPath(ticket.path);
+              if (!parsed) return null;
+              return (
+                <Box key={ticket.path} flexDirection="column" marginTop={1}>
+                  <Text>
+                    {parsed.year}-{String(parsed.month).padStart(2, "0")}-{String(parsed.day).padStart(2, "0")} {parsed.slug}
+                  </Text>
+                  <Text dimColor> Summary: {ticket.frontmatter.summary}</Text>
+                  <Text dimColor> Status: {ticket.frontmatter.status}</Text>
+                  <Text dimColor> Author: {ticket.frontmatter.author}</Text>
+                  {ticket.frontmatter.model && <Text dimColor> Model: {ticket.frontmatter.model}</Text>}
+                  {options.query && <Text dimColor> Preview: {ticket.content.substring(0, 200).replace(/\n/g, " ")}...</Text>}
+                </Box>
+              );
+            })}
+          </Box>,
+        );
+        break;
+      }
+      render(
+        <Box flexDirection="column">
+          <Text color="red">Error: Unknown ticket command</Text>
+        </Box>,
+      );
+      printUsage();
+      process.exit(1);
+      break;
     }
-  } catch (error) {
-    render(
-      <Box flexDirection="column">
-        <Text color="red">Error: {error instanceof Error ? error.message : String(error)}</Text>
-      </Box>
-    );
-    process.exit(1);
+    case "models": {
+      render(
+        <Box flexDirection="column">
+          <Text>Available models:</Text>
+          {Object.values(Model).map((model) => (
+            <Text key={model} dimColor>
+              {" "}
+              {model}
+            </Text>
+          ))}
+        </Box>,
+      );
+      break;
+    }
+    default:
+      printUsage();
+      process.exit(1);
   }
-//#endregion
+} catch (error) {
+  render(
+    <Box flexDirection="column">
+      <Text color="red">Error: {error instanceof Error ? error.message : String(error)}</Text>
+    </Box>,
+  );
+  process.exit(1);
+}
+//#endregion CLI

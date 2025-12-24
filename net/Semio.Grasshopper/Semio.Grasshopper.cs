@@ -5468,7 +5468,6 @@ public abstract class EngineComponent : Component
             string serializedInput = input != null ? Semio.Utility.Serialize(input) : "";
             AddRuntimeMessage(GH_RuntimeMessageLevel.Error,
                 "The engine didn't like it ¯\\_(ツ)_/¯\n" +
-                "If you want, you can report this under: https://github.com/usalu/semio/issues\n" +
                 $"Or write me an email: {Semio.Constants.Email}\n\n" +
                 "ServerError: " + e.Message + "\n" +
                 "Semio.Release: " + Semio.Constants.Release + "\n" +

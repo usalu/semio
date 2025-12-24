@@ -150,5 +150,3 @@ export const Temporary: Story = {
 };
 
 // #endregion Resizable
-
-

@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-12-23T13:08:49.739Z",
+  "timestamp": "2025-12-23T14:11:39.045Z",
   "entities": [
     {
       "name": "Attribute",
@@ -1263,11 +1263,5 @@
     "DesignId",
     "KitId"
   ],
-  "weakEntities": [
-    "Coord",
-    "Point",
-    "Vector",
-    "Plane",
-    "Side"
-  ]
+  "weakEntities": ["Coord", "Point", "Vector", "Plane", "Side"]
 }

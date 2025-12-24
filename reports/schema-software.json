@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-12-23T13:08:49.747Z",
+  "timestamp": "2025-12-23T14:11:39.058Z",
   "entities": [
     {
       "name": "Id",
@@ -2324,14 +2324,7 @@
       "name": "QualityKind",
       "kind": "enum",
       "fields": [],
-      "enumValues": [
-        "General",
-        "Design",
-        "Type",
-        "Piece",
-        "Connection",
-        "Connector"
-      ]
+      "enumValues": ["General", "Design", "Type", "Piece", "Connection", "Connector"]
     }
   ],
   "relationships": [

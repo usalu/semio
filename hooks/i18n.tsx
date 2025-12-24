@@ -52,7 +52,9 @@ function App() {
       <Text>🔍 Running i18n validation...</Text>
       {status !== "running" && (
         <>
-          <Text>{status === "success" ? "✅" : "❌"} i18n validation {status === "success" ? "passed" : "failed"}</Text>
+          <Text>
+            {status === "success" ? "✅" : "❌"} i18n validation {status === "success" ? "passed" : "failed"}
+          </Text>
           <Text dimColor>📝 Report: {reportDir}/i18n.json</Text>
         </>
       )}

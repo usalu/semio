@@ -21,7 +21,7 @@
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { Box, List, Network } from "lucide-react";
-import { ButtonGroup, ButtonGroupItem } from "../../../../sketchpad/elements";
+import { ButtonGroup, ButtonGroupItem, Level, LevelProvider, getLevelBgClass } from "../../../../sketchpad/elements";
 
 // #region ButtonGroup
 const meta = {
@@ -37,10 +37,17 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const ButtonGroupDemo = ({ id }: { id: string }) => (
+  <ButtonGroup id={id} showLabel>
+    <ButtonGroupItem id={`${id}-model`} icon={<Box />} onClick={() => {}} />
+    <ButtonGroupItem id={`${id}-diagram`} icon={<Network />} onClick={() => {}} />
+    <ButtonGroupItem id={`${id}-details`} icon={<List />} onClick={() => {}} />
+  </ButtonGroup>
+);
+
 export const Default: Story = {
   args: {
     id: "button-group-default",
-    level: "base",
     showLabel: true,
     children: null,
   },
@@ -53,31 +60,37 @@ export const Default: Story = {
   ),
 };
 
+const createLevelRender = (level: Level, id: string) => () => (
+  <LevelProvider level={level}>
+    <div className={`p-4 ${getLevelBgClass(level)}`}>
+      <ButtonGroupDemo id={id} />
+    </div>
+  </LevelProvider>
+);
+
 export const Base: Story = {
-  args: { ...Default.args, id: "button-group-base", level: "base" },
-  render: Default.render,
+  args: { id: "button-group-base", showLabel: true, children: null },
+  render: createLevelRender("base", "button-group-base"),
 };
 
 export const Window: Story = {
-  args: { ...Default.args, id: "button-group-window", level: "window" },
-  render: Default.render,
+  args: { id: "button-group-window", showLabel: true, children: null },
+  render: createLevelRender("window", "button-group-window"),
 };
 
 export const Panel: Story = {
-  args: { ...Default.args, id: "button-group-panel", level: "panel" },
-  render: Default.render,
+  args: { id: "button-group-panel", showLabel: true, children: null },
+  render: createLevelRender("panel", "button-group-panel"),
 };
 
 export const Overlay: Story = {
-  args: { ...Default.args, id: "button-group-overlay", level: "overlay" },
-  render: Default.render,
+  args: { id: "button-group-overlay", showLabel: true, children: null },
+  render: createLevelRender("overlay", "button-group-overlay"),
 };
 
 export const Temporary: Story = {
-  args: { ...Default.args, id: "button-group-temporary", level: "temporary" },
-  render: Default.render,
+  args: { id: "button-group-temporary", showLabel: true, children: null },
+  render: createLevelRender("temporary", "button-group-temporary"),
 };
 
 // #endregion ButtonGroup
-
-

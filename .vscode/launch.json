@@ -65,11 +65,11 @@
       "console": "integratedTerminal"
     },
     {
-      "name": "prepublish",
+      "name": "publish:test",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "prepublish"],
+      "runtimeArgs": ["run", "publish:test"],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },

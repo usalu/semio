@@ -249,5 +249,3 @@ export const Temporary: Story = {
   args: { ...HorizontalWithToggles.args },
   render: createLevelRender("temporary"),
 };
-
-

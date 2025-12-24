@@ -121,5 +121,3 @@ export const Temporary: Story = {
 };
 
 // #endregion Collapsible
-
-

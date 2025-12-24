@@ -21,7 +21,7 @@
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { Box, Circle, Cylinder, Hexagon } from "lucide-react";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectScrollDownButton, SelectScrollUpButton, SelectSeparator, SelectTrigger, SelectValue } from "../../../../sketchpad/elements";
+import { Level, LevelProvider, Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectScrollDownButton, SelectScrollUpButton, SelectSeparator, SelectTrigger, SelectValue, getLevelBgClass } from "../../../../sketchpad/elements";
 
 // #region Select
 const meta = {
@@ -37,15 +37,17 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const defaultArgs = {
+  id: "select-default",
+  showLabel: true,
+  defaultValue: "capsule",
+};
+
 export const Default: Story = {
-  args: {
-    id: "select-default",
-    showLabel: true,
-    defaultValue: "capsule",
-  },
+  args: defaultArgs,
   render: (args) => (
     <Select {...args}>
-      <SelectTrigger id="select-trigger-default" size="default" level="base" className="w-[220px]">
+      <SelectTrigger id="select-trigger-default" size="default" className="w-[220px]">
         <SelectValue placeholder="Select a type" />
       </SelectTrigger>
       <SelectContent>
@@ -87,9 +89,9 @@ export const Default: Story = {
   ),
 };
 
-const createLevelRender = (level: string) => (args: typeof Default.args) => (
-  <Select {...args}>
-    <SelectTrigger id={`select-trigger-${level}`} size="default" level={level as "base" | "window" | "panel" | "overlay" | "temporary"} className="w-[220px]">
+const SelectDemo = ({ id }: { id: string }) => (
+  <Select {...defaultArgs} id={id}>
+    <SelectTrigger id={`select-trigger-${id}`} size="default" className="w-[220px]">
       <SelectValue placeholder="Select a type" />
     </SelectTrigger>
     <SelectContent>
@@ -112,31 +114,37 @@ const createLevelRender = (level: string) => (args: typeof Default.args) => (
   </Select>
 );
 
+const createLevelRender = (level: Level, id: string) => () => (
+  <LevelProvider level={level}>
+    <div className={`p-4 ${getLevelBgClass(level)}`}>
+      <SelectDemo id={id} />
+    </div>
+  </LevelProvider>
+);
+
 export const Base: Story = {
-  args: { ...Default.args, id: "select-base" },
-  render: createLevelRender("base"),
+  args: { ...defaultArgs, id: "select-base" },
+  render: createLevelRender("base", "select-base"),
 };
 
 export const Window: Story = {
-  args: { ...Default.args, id: "select-window" },
-  render: createLevelRender("window"),
+  args: { ...defaultArgs, id: "select-window" },
+  render: createLevelRender("window", "select-window"),
 };
 
 export const Panel: Story = {
-  args: { ...Default.args, id: "select-panel" },
-  render: createLevelRender("panel"),
+  args: { ...defaultArgs, id: "select-panel" },
+  render: createLevelRender("panel", "select-panel"),
 };
 
 export const Overlay: Story = {
-  args: { ...Default.args, id: "select-overlay" },
-  render: createLevelRender("overlay"),
+  args: { ...defaultArgs, id: "select-overlay" },
+  render: createLevelRender("overlay", "select-overlay"),
 };
 
 export const Temporary: Story = {
-  args: { ...Default.args, id: "select-temporary" },
-  render: createLevelRender("temporary"),
+  args: { ...defaultArgs, id: "select-temporary" },
+  render: createLevelRender("temporary", "select-temporary"),
 };
 
 // #endregion Select
-
-

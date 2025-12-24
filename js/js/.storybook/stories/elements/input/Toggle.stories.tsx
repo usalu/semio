@@ -21,7 +21,7 @@
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { Box, List, Lock, Network, Plus, Settings } from "lucide-react";
-import { Toggle } from "../../../../sketchpad/elements";
+import { Level, LevelProvider, Toggle, getLevelBgClass } from "../../../../sketchpad/elements";
 
 // #region Toggle
 const meta = {
@@ -37,106 +37,146 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: {
-    id: "toggle-default",
-    defaultPressed: true,
-    icon: <Lock />,
-    showLabel: true,
-    level: "base",
-  },
+const defaultArgs = {
+  id: "toggle-default",
+  defaultPressed: true,
+  icon: <Lock />,
+  showLabel: true,
 };
 
+export const Default: Story = {
+  args: defaultArgs,
+};
+
+const createLevelRender = (level: Level, id: string) => () => (
+  <LevelProvider level={level}>
+    <div className={`p-4 ${getLevelBgClass(level)}`}>
+      <Toggle {...defaultArgs} id={id} />
+    </div>
+  </LevelProvider>
+);
+
 export const Base: Story = {
-  args: { ...Default.args, id: "toggle-base", level: "base" },
+  args: { ...defaultArgs, id: "toggle-base" },
+  render: createLevelRender("base", "toggle-base"),
 };
 
 export const Window: Story = {
-  args: { ...Default.args, id: "toggle-window", level: "window" },
+  args: { ...defaultArgs, id: "toggle-window" },
+  render: createLevelRender("window", "toggle-window"),
 };
 
 export const Panel: Story = {
-  args: { ...Default.args, id: "toggle-panel", level: "panel" },
+  args: { ...defaultArgs, id: "toggle-panel" },
+  render: createLevelRender("panel", "toggle-panel"),
 };
 
 export const Overlay: Story = {
-  args: { ...Default.args, id: "toggle-overlay", level: "overlay" },
+  args: { ...defaultArgs, id: "toggle-overlay" },
+  render: createLevelRender("overlay", "toggle-overlay"),
 };
 
 export const Temporary: Story = {
-  args: { ...Default.args, id: "toggle-temporary", level: "temporary" },
+  args: { ...defaultArgs, id: "toggle-temporary" },
+  render: createLevelRender("temporary", "toggle-temporary"),
+};
+
+const withActionArgs = {
+  id: "toggle-action",
+  kind: "withAction" as const,
+  defaultPressed: false,
+  icon: <Settings />,
+  actionIcon: <Plus />,
+  onActionClick: () => console.log("Action clicked"),
+  actionId: "toggle-action-button",
+  showLabel: true,
 };
 
 export const WithAction: Story = {
-  args: {
-    id: "toggle-action",
-    kind: "withAction",
-    defaultPressed: false,
-    icon: <Settings />,
-    actionIcon: <Plus />,
-    onActionClick: () => console.log("Action clicked"),
-    actionId: "toggle-action-button",
-    showLabel: true,
-    level: "base",
-  },
+  args: withActionArgs,
 };
 
+const createWithActionLevelRender = (level: Level, id: string) => () => (
+  <LevelProvider level={level}>
+    <div className={`p-4 ${getLevelBgClass(level)}`}>
+      <Toggle {...withActionArgs} id={id} />
+    </div>
+  </LevelProvider>
+);
+
 export const WithActionBase: Story = {
-  args: { ...WithAction.args, id: "toggle-action-base", level: "base" },
+  args: { ...withActionArgs, id: "toggle-action-base" },
+  render: createWithActionLevelRender("base", "toggle-action-base"),
 };
 
 export const WithActionWindow: Story = {
-  args: { ...WithAction.args, id: "toggle-action-window", level: "window" },
+  args: { ...withActionArgs, id: "toggle-action-window" },
+  render: createWithActionLevelRender("window", "toggle-action-window"),
 };
 
 export const WithActionPanel: Story = {
-  args: { ...WithAction.args, id: "toggle-action-panel", level: "panel" },
+  args: { ...withActionArgs, id: "toggle-action-panel" },
+  render: createWithActionLevelRender("panel", "toggle-action-panel"),
 };
 
 export const WithActionOverlay: Story = {
-  args: { ...WithAction.args, id: "toggle-action-overlay", level: "overlay" },
+  args: { ...withActionArgs, id: "toggle-action-overlay" },
+  render: createWithActionLevelRender("overlay", "toggle-action-overlay"),
 };
 
 export const WithActionTemporary: Story = {
-  args: { ...WithAction.args, id: "toggle-action-temporary", level: "temporary" },
+  args: { ...withActionArgs, id: "toggle-action-temporary" },
+  render: createWithActionLevelRender("temporary", "toggle-action-temporary"),
+};
+
+const dropdownArgs = {
+  id: "toggle-dropdown",
+  kind: "dropdown" as const,
+  defaultValue: "option1",
+  items: [
+    { value: "option1", label: <Box /> },
+    { value: "option2", label: <Network /> },
+    { value: "option3", label: <List /> },
+  ],
+  dropdownId: "toggle-dropdown-action",
+  showLabel: true,
 };
 
 export const Dropdown: Story = {
-  args: {
-    id: "toggle-dropdown",
-    kind: "dropdown",
-    defaultValue: "option1",
-    items: [
-      { value: "option1", label: <Box /> },
-      { value: "option2", label: <Network /> },
-      { value: "option3", label: <List /> },
-    ],
-    dropdownId: "toggle-dropdown-action",
-    showLabel: true,
-    level: "base",
-  },
+  args: dropdownArgs,
 };
 
+const createDropdownLevelRender = (level: Level, id: string) => () => (
+  <LevelProvider level={level}>
+    <div className={`p-4 ${getLevelBgClass(level)}`}>
+      <Toggle {...dropdownArgs} id={id} />
+    </div>
+  </LevelProvider>
+);
+
 export const DropdownBase: Story = {
-  args: { ...Dropdown.args, id: "toggle-dropdown-base", level: "base" },
+  args: { ...dropdownArgs, id: "toggle-dropdown-base" },
+  render: createDropdownLevelRender("base", "toggle-dropdown-base"),
 };
 
 export const DropdownWindow: Story = {
-  args: { ...Dropdown.args, id: "toggle-dropdown-window", level: "window" },
+  args: { ...dropdownArgs, id: "toggle-dropdown-window" },
+  render: createDropdownLevelRender("window", "toggle-dropdown-window"),
 };
 
 export const DropdownPanel: Story = {
-  args: { ...Dropdown.args, id: "toggle-dropdown-panel", level: "panel" },
+  args: { ...dropdownArgs, id: "toggle-dropdown-panel" },
+  render: createDropdownLevelRender("panel", "toggle-dropdown-panel"),
 };
 
 export const DropdownOverlay: Story = {
-  args: { ...Dropdown.args, id: "toggle-dropdown-overlay", level: "overlay" },
+  args: { ...dropdownArgs, id: "toggle-dropdown-overlay" },
+  render: createDropdownLevelRender("overlay", "toggle-dropdown-overlay"),
 };
 
 export const DropdownTemporary: Story = {
-  args: { ...Dropdown.args, id: "toggle-dropdown-temporary", level: "temporary" },
+  args: { ...dropdownArgs, id: "toggle-dropdown-temporary" },
+  render: createDropdownLevelRender("temporary", "toggle-dropdown-temporary"),
 };
 
 // #endregion Toggle
-
-

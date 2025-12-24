@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-12-23T13:08:49.752Z",
+  "timestamp": "2025-12-23T14:11:39.065Z",
   "summary": {
     "typescript": {
       "entities": 27,
@@ -10,7 +10,7 @@
       "idTypes": 21
     },
     "csharp": {
-      "entities": 5,
+      "entities": 26,
       "idTypes": 21
     },
     "grasshopper": {
@@ -29,137 +29,10 @@
       "entities": 96,
       "relationships": 64
     },
-    "errors": 21,
+    "errors": 0,
     "warnings": 21
   },
-  "errors": [
-    {
-      "severity": "error",
-      "entity": "Attribute",
-      "message": "Missing entity in C#",
-      "source": "net"
-    },
-    {
-      "severity": "error",
-      "entity": "Location",
-      "message": "Missing entity in C#",
-      "source": "net"
-    },
-    {
-      "severity": "error",
-      "entity": "Author",
-      "message": "Missing entity in C#",
-      "source": "net"
-    },
-    {
-      "severity": "error",
-      "entity": "File",
-      "message": "Missing entity in C#",
-      "source": "net"
-    },
-    {
-      "severity": "error",
-      "entity": "Folder",
-      "message": "Missing entity in C#",
-      "source": "net"
-    },
-    {
-      "severity": "error",
-      "entity": "Benchmark",
-      "message": "Missing entity in C#",
-      "source": "net"
-    },
-    {
-      "severity": "error",
-      "entity": "Quality",
-      "message": "Missing entity in C#",
-      "source": "net"
-    },
-    {
-      "severity": "error",
-      "entity": "Interface",
-      "message": "Missing entity in C#",
-      "source": "net"
-    },
-    {
-      "severity": "error",
-      "entity": "Prop",
-      "message": "Missing entity in C#",
-      "source": "net"
-    },
-    {
-      "severity": "error",
-      "entity": "Model",
-      "message": "Missing entity in C#",
-      "source": "net"
-    },
-    {
-      "severity": "error",
-      "entity": "Connector",
-      "message": "Missing entity in C#",
-      "source": "net"
-    },
-    {
-      "severity": "error",
-      "entity": "Tag",
-      "message": "Missing entity in C#",
-      "source": "net"
-    },
-    {
-      "severity": "error",
-      "entity": "Concept",
-      "message": "Missing entity in C#",
-      "source": "net"
-    },
-    {
-      "severity": "error",
-      "entity": "Type",
-      "message": "Missing entity in C#",
-      "source": "net"
-    },
-    {
-      "severity": "error",
-      "entity": "Layer",
-      "message": "Missing entity in C#",
-      "source": "net"
-    },
-    {
-      "severity": "error",
-      "entity": "Piece",
-      "message": "Missing entity in C#",
-      "source": "net"
-    },
-    {
-      "severity": "error",
-      "entity": "Group",
-      "message": "Missing entity in C#",
-      "source": "net"
-    },
-    {
-      "severity": "error",
-      "entity": "Connection",
-      "message": "Missing entity in C#",
-      "source": "net"
-    },
-    {
-      "severity": "error",
-      "entity": "Stat",
-      "message": "Missing entity in C#",
-      "source": "net"
-    },
-    {
-      "severity": "error",
-      "entity": "Design",
-      "message": "Missing entity in C#",
-      "source": "net"
-    },
-    {
-      "severity": "error",
-      "entity": "Kit",
-      "message": "Missing entity in C#",
-      "source": "net"
-    }
-  ],
+  "errors": [],
   "warnings": [
     {
       "severity": "warning",
@@ -288,5 +161,5 @@
       "source": "grasshopper"
     }
   ],
-  "status": "error"
+  "status": "warning"
 }

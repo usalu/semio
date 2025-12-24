@@ -52,6 +52,7 @@ const ActionGroupDemo = () => (
 );
 
 export const Default: Story = {
+  args: { children: null },
   render: () => <ActionGroupDemo />,
 };
 
@@ -64,25 +65,28 @@ const createLevelRender = (level: Level) => () => (
 );
 
 export const Base: Story = {
+  args: { children: null },
   render: createLevelRender("base"),
 };
 
 export const Window: Story = {
+  args: { children: null },
   render: createLevelRender("window"),
 };
 
 export const Panel: Story = {
+  args: { children: null },
   render: createLevelRender("panel"),
 };
 
 export const Overlay: Story = {
+  args: { children: null },
   render: createLevelRender("overlay"),
 };
 
 export const Temporary: Story = {
+  args: { children: null },
   render: createLevelRender("temporary"),
 };
 
 // #endregion ActionGroup
-
-

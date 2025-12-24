@@ -85,26 +85,29 @@ const createLevelRender = (level: Level) => () => (
 );
 
 export const Base: Story = {
+  args: { children: <CanvasDemo /> },
   render: createLevelRender("base"),
 };
 
 export const Window_: Story = {
   name: "Window",
+  args: { children: <CanvasDemo /> },
   render: createLevelRender("window"),
 };
 
 export const Panel: Story = {
+  args: { children: <CanvasDemo /> },
   render: createLevelRender("panel"),
 };
 
 export const Overlay: Story = {
+  args: { children: <CanvasDemo /> },
   render: createLevelRender("overlay"),
 };
 
 export const Temporary: Story = {
+  args: { children: <CanvasDemo /> },
   render: createLevelRender("temporary"),
 };
 
 // #endregion Canvas
-
-

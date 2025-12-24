@@ -31,7 +31,7 @@
     "test": "npx tsx preflight.ts test",
     "build": "npx tsx preflight.ts build",
     "update": "npx nx run-many -t update",
-    "prepublish": "npx tsx preflight.ts prepublish",
+    "publish:test": "npx tsx preflight.ts publish:test",
     "publish": "npx tsx preflight.ts publish",
     "prepare": "husky"
   },
@@ -40,7 +40,7 @@
     "@nx/eslint-plugin": "^21.6.8",
     "@nxlv/python": "^21.2.0",
     "@types/node": "^22.10.5",
-    "@types/react": "^18.3.12",
+    "@types/react": "^19.0.0",
     "csv-parse": "^5.6.0",
     "gray-matter": "^4.0.3",
     "husky": "^9.1.7",

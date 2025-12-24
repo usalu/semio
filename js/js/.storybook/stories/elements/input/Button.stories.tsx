@@ -22,7 +22,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Box, List, Network, Plus } from "lucide-react";
 import { useState } from "react";
-import { Button, ButtonCycle } from "../../../../sketchpad/elements";
+import { Button, ButtonCycle, Level, LevelProvider, getLevelBgClass } from "../../../../sketchpad/elements";
 
 // #region Button
 const meta = {
@@ -42,28 +42,40 @@ export const Default: Story = {
   args: {
     id: "button-default",
     icon: <Plus />,
-    level: "base",
   },
 };
 
+const createLevelRender = (level: Level) => () => (
+  <LevelProvider level={level}>
+    <div className={`p-4 ${getLevelBgClass(level)}`}>
+      <Button id={`button-${level}`} icon={<Plus />} />
+    </div>
+  </LevelProvider>
+);
+
 export const Base: Story = {
-  args: { ...Default.args, id: "button-base", level: "base" },
+  args: { id: "button-base", icon: <Plus /> },
+  render: createLevelRender("base"),
 };
 
 export const Window: Story = {
-  args: { ...Default.args, id: "button-window", level: "window" },
+  args: { id: "button-window", icon: <Plus /> },
+  render: createLevelRender("window"),
 };
 
 export const Panel: Story = {
-  args: { ...Default.args, id: "button-panel", level: "panel" },
+  args: { id: "button-panel", icon: <Plus /> },
+  render: createLevelRender("panel"),
 };
 
 export const Overlay: Story = {
-  args: { ...Default.args, id: "button-overlay", level: "overlay" },
+  args: { id: "button-overlay", icon: <Plus /> },
+  render: createLevelRender("overlay"),
 };
 
 export const Temporary: Story = {
-  args: { ...Default.args, id: "button-temporary", level: "temporary" },
+  args: { id: "button-temporary", icon: <Plus /> },
+  render: createLevelRender("temporary"),
 };
 
 // #endregion Button
@@ -85,7 +97,7 @@ export const Cycle: CycleStory = {
   args: {
     id: "button-cycle",
     showLabel: true,
-    level: "base",
+    items: [],
   },
   render: (args) => {
     const [value, setValue] = useState("view1");
@@ -105,5 +117,3 @@ export const Cycle: CycleStory = {
 };
 
 // #endregion ButtonCycle
-
-

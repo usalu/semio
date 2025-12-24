@@ -21,7 +21,7 @@
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
-import { Slider } from "../../../../sketchpad/elements";
+import { Level, LevelProvider, Slider, getLevelBgClass } from "../../../../sketchpad/elements";
 
 // #region Slider
 const meta = {
@@ -37,53 +37,65 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const defaultArgs = {
+  id: "slider-default",
+  value: [75] as number[],
+  onValueChange: () => {},
+  min: 50,
+  max: 150,
+  step: 5,
+  showLabel: true,
+  onPointerDown: () => {},
+  onPointerUp: () => {},
+  onPointerCancel: () => {},
+  interactionId: "slider-interaction",
+  className: "w-96",
+};
+
 export const Default: Story = {
-  args: {
-    id: "slider-default",
-    value: [75],
-    onValueChange: () => {},
-    min: 50,
-    max: 150,
-    step: 5,
-    showLabel: true,
-    onPointerDown: () => {},
-    onPointerUp: () => {},
-    onPointerCancel: () => {},
-    interactionId: "slider-interaction",
-    className: "w-96",
-    level: "base",
-  },
+  args: defaultArgs,
   render: (args) => {
     const [value, setValue] = useState(args.value);
     return <Slider {...args} value={value} onValueChange={setValue} />;
   },
 };
 
+const SliderDemo = ({ id }: { id: string }) => {
+  const [value, setValue] = useState([75]);
+  return <Slider {...defaultArgs} id={id} value={value} onValueChange={setValue} />;
+};
+
+const createLevelRender = (level: Level, id: string) => () => (
+  <LevelProvider level={level}>
+    <div className={`p-4 ${getLevelBgClass(level)}`}>
+      <SliderDemo id={id} />
+    </div>
+  </LevelProvider>
+);
+
 export const Base: Story = {
-  args: { ...Default.args, id: "slider-base", level: "base" },
-  render: Default.render,
+  args: { ...defaultArgs, id: "slider-base" },
+  render: createLevelRender("base", "slider-base"),
 };
 
 export const Window: Story = {
-  args: { ...Default.args, id: "slider-window", level: "window" },
-  render: Default.render,
+  args: { ...defaultArgs, id: "slider-window" },
+  render: createLevelRender("window", "slider-window"),
 };
 
 export const Panel: Story = {
-  args: { ...Default.args, id: "slider-panel", level: "panel" },
-  render: Default.render,
+  args: { ...defaultArgs, id: "slider-panel" },
+  render: createLevelRender("panel", "slider-panel"),
 };
 
 export const Overlay: Story = {
-  args: { ...Default.args, id: "slider-overlay", level: "overlay" },
-  render: Default.render,
+  args: { ...defaultArgs, id: "slider-overlay" },
+  render: createLevelRender("overlay", "slider-overlay"),
 };
 
 export const Temporary: Story = {
-  args: { ...Default.args, id: "slider-temporary", level: "temporary" },
-  render: Default.render,
+  args: { ...defaultArgs, id: "slider-temporary" },
+  render: createLevelRender("temporary", "slider-temporary"),
 };
 
 // #endregion Slider
-
-
