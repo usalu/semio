@@ -3558,8 +3558,8 @@
           },
           "subtitle": {
             "label": {
-              "normal": "Help us improve Semio by reporting bugs or sharing ideas.",
-              "beginner": "Help us improve Semio by reporting bugs or sharing ideas."
+              "normal": "Help us improve semio by reporting bugs or sharing ideas.",
+              "beginner": "Help us improve semio by reporting bugs or sharing ideas."
             }
           },
           "form": {

@@ -331,7 +331,7 @@ const FeedbackForm: FC = () => {
   return (
     <div className="flex flex-col gap-4 p-8 max-w-md mx-auto">
       <h1 className="text-2xl font-bold">{t("semio.sketchpad.app.feedback.title.label.normal", "Feedback")}</h1>
-      <p className="text-muted-foreground">{t("semio.sketchpad.app.feedback.subtitle.label.normal", "Help us improve Semio by reporting bugs or sharing ideas.")}</p>
+      <p className="text-muted-foreground">{t("semio.sketchpad.app.feedback.subtitle.label.normal", "Help us improve semio by reporting bugs or sharing ideas.")}</p>
 
       <div className="flex flex-col gap-1">
         <label htmlFor="semio.sketchpad.app.feedback.form.kind" className="text-sm font-medium">

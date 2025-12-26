@@ -1189,7 +1189,7 @@ It treats empty regions as invalid structure and removes them automatically in f
 
 ## ✅ Validation System [↑](#-components-)
 
-Semio includes a **domain-pure validation system** built entirely in `semio.ts` with zero JSON dependencies. All validation logic works with `Kit` objects and produces `KitDiff`-based fixes.
+semio includes a **domain-pure validation system** built entirely in `semio.ts` with zero JSON dependencies. All validation logic works with `Kit` objects and produces `KitDiff`-based fixes.
 
 **11 Validation Constraints:**
 

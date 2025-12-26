@@ -14,7 +14,7 @@ iterations: []
 
 ## App Hierarchy
 
-The Semio Sketchpad application has a hierarchical structure where child apps inherit and extend functionality from their parent apps:
+The semio Sketchpad application has a hierarchical structure where child apps inherit and extend functionality from their parent apps:
 
 ```
 Sketchpad (root)

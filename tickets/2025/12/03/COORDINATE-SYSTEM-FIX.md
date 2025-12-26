@@ -13,7 +13,7 @@ iterations: []
 # Coordinate System Transformation Fix
 
 **Date:** 2025-12-03
-**Issue:** Semio and Three.js coordinate systems mismatch causing incorrect rendering of connectors and geometry
+**Issue:** semio and Three.js coordinate systems mismatch causing incorrect rendering of connectors and geometry
 
 ## Problem
 
@@ -32,12 +32,12 @@ This mismatch was causing:
 
 The coordinate transformation between the two systems is:
 
-- **Semio (x, y, z) → Three.js (x, -z, y)**
-- **Three.js (x, y, z) → Semio (x, z, -y)**
+- **semio (x, y, z) → Three.js (x, -z, y)**
+- **Three.js (x, y, z) → semio (x, z, -y)**
 
 This transformation is implemented in [semio.ts](../../js/js/semio.ts#L139-L151):
 
-- `toThreeRotation()` - matrix for Semio → Three.js
+- `toThreeRotation()` - matrix for semio → Three.js
 - `toSemioRotation()` - matrix for Three.js → Semio
 
 ## Changes Made
@@ -53,18 +53,18 @@ import { toThreeRotation, toSemioRotation } from "../semio";
 **ConnectorVisual component (lines 1169-1181):**
 
 - Added coordinate transformation when rendering connectors
-- Connector positions are now transformed from Semio to Three.js coordinates
+- Connector positions are now transformed from semio to Three.js coordinates
 - Connector directions are now transformed and normalized correctly
 
 ```typescript
-// Transform connector position from Semio coordinate system to Three.js coordinate system
+// Transform connector position from semio coordinate system to Three.js coordinate system
 const position = useMemo(() => {
   const semioPos = new THREE.Vector3(connector.point.x, connector.point.y, connector.point.z);
   const threePos = semioPos.applyMatrix4(toThreeRotation());
   return [threePos.x, threePos.y, threePos.z] as [number, number, number];
 }, [connector.point]);
 
-// Transform connector direction from Semio coordinate system to Three.js coordinate system
+// Transform connector direction from semio coordinate system to Three.js coordinate system
 const direction = useMemo(() => {
   const semioDir = new THREE.Vector3(connector.direction.x, connector.direction.y, connector.direction.z);
   const threeDir = semioDir.applyMatrix4(toThreeRotation()).normalize();
@@ -74,10 +74,10 @@ const direction = useMemo(() => {
 
 **Connector creation (lines 1600-1632):**
 
-- When users click on the mesh to create a connector, the position and normal from Three.js raycasting are now converted back to Semio coordinates before being stored
+- When users click on the mesh to create a connector, the position and normal from Three.js raycasting are now converted back to semio coordinates before being stored
 
 ```typescript
-// Convert position and normal from Three.js coordinate system back to Semio coordinate system
+// Convert position and normal from Three.js coordinate system back to semio coordinate system
 const semioPosition = position.clone().applyMatrix4(toSemioRotation());
 const semioNormal = normal.clone().applyMatrix4(toSemioRotation()).normalize();
 ```
@@ -92,13 +92,13 @@ const threeMatrix = new THREE.Matrix4().multiplyMatrices(toThreeRotation(), plan
 
 ### 3. Gizmo Labels (Already Correct)
 
-The coordinate gizmo labels at [elements.tsx:4854](../../js/js/sketchpad/elements.tsx#L4854) correctly display the Semio coordinate system axes:
+The coordinate gizmo labels at [elements.tsx:4854](../../js/js/sketchpad/elements.tsx#L4854) correctly display the semio coordinate system axes:
 
 ```typescript
 const labels = ["X", "Z", "-Y"];
 ```
 
-This shows users the Semio coordinate system even though the rendering is in Three.js.
+This shows users the semio coordinate system even though the rendering is in Three.js.
 
 ## Testing
 
@@ -106,7 +106,7 @@ The changes ensure that:
 
 - ✅ Connectors are displayed at correct positions in the 3D scene
 - ✅ Connector direction arrows point correctly
-- ✅ Newly created connectors are stored with correct Semio coordinates
+- ✅ Newly created connectors are stored with correct semio coordinates
 - ✅ Pieces continue to render correctly with their plane transformations
 - ✅ The gizmo shows the correct coordinate system labels
 

@@ -10,7 +10,7 @@ commit: "0000000000000000000000000000000000000000"
 iterations: []
 ---
 
-# Semio Validation & Diff-Based Fix System
+# semio Validation & Diff-Based Fix System
 
 **Date:** 2025-11-23  
 **Status:** ✅ Complete

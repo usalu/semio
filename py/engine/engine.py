@@ -6653,7 +6653,7 @@ class SqliteStore(DatabaseStore):
         sqlmodel.SQLModel.metadata.create_all(self.engine)
         SessionMaker = sqlalchemy.orm.sessionmaker(bind=self.engine)
         with SessionMaker() as session:
-            existingSemio = session.query(Semio).one_or_none()
+            existingsemio = session.query(Semio).one_or_none()
             if not existingSemio:
                 session.add(Semio())
                 session.commit()

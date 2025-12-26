@@ -366,8 +366,8 @@ const MilestoneTooltip: FC<MilestoneTooltipProps> = ({ milestone }) => {
 
 export const helloTutorial: Tutorial = {
   id: guid(),
-  name: "Hello Semio Tutorial",
-  description: "Learn the basics of Semio by creating your first design",
+  name: "Hello semio Tutorial",
+  description: "Learn the basics of semio by creating your first design",
   totalDuration: 300,
   icon: "??",
   image: "/tutorials/hello-semio.png",
@@ -431,7 +431,7 @@ export const helloTutorial: Tutorial = {
     {
       id: guid(),
       title: "Tutorial Complete!",
-      description: "Congratulations! You've completed your first Semio tutorial.",
+      description: "Congratulations! You've completed your first semio tutorial.",
       canSkip: false,
       order: 4,
       duration: 3,

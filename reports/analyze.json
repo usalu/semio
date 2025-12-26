@@ -1,0 +1,19 @@
+{
+  "timestamp": "2025-12-26T02:49:07.805Z",
+  "status": "success",
+  "scope": "@semio",
+  "summary": {
+    "total": 0,
+    "byPriority": {
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "bySeverity": {
+      "error": 0,
+      "warning": 0
+    },
+    "byKind": {}
+  },
+  "issues": []
+}

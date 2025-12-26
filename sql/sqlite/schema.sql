@@ -1,5 +1,5 @@
--- Semio Kit Database Schema (GUID-based)
--- This schema supports the complete Semio data model with GUIDs as primary identifiers
+-- semio Kit Database Schema (GUID-based)
+-- This schema supports the complete semio data model with GUIDs as primary identifiers
 
 CREATE TABLE semio (
 	release VARCHAR NOT NULL,

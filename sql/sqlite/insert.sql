@@ -1,7 +1,7 @@
--- Insert Statements for Semio Kit Database
+-- Insert Statements for semio Kit Database
 -- All statements use parameterized queries (?) for security and reusability
 
--- Semio metadata
+-- semio metadata
 -- Parameters: release, engine, created
 INSERT INTO semio (release, engine, created) VALUES (?, ?, ?);
 

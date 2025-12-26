@@ -17,7 +17,7 @@ iterations: []
 
 ## Overview
 
-The Semio Sketchpad UI system uses a comprehensive ID-based architecture where every interactive UI component has a unique identifier following the pattern `semio.sketchpad.*`. This ID serves as the central integration point for multiple subsystems.
+The semio Sketchpad UI system uses a comprehensive ID-based architecture where every interactive UI component has a unique identifier following the pattern `semio.sketchpad.*`. This ID serves as the central integration point for multiple subsystems.
 
 ## ID Pattern
 
@@ -739,7 +739,7 @@ export function MyComponent({ id, ...props }: MyComponentProps) {
 
 ## Conclusion
 
-The Semio Sketchpad UI ID system is a well-architected solution for integrating multiple subsystems (i18n, tooltips, hotkeys, commands, recording, testing, analytics) through a single identifier.
+The semio Sketchpad UI ID system is a well-architected solution for integrating multiple subsystems (i18n, tooltips, hotkeys, commands, recording, testing, analytics) through a single identifier.
 
 **Strengths:**
 

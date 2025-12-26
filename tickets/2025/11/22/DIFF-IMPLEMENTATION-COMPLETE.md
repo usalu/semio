@@ -14,7 +14,7 @@ iterations: []
 
 ## Summary
 
-Successfully implemented the complete diff system for the Semio kit architecture. All diff functions now properly compute, apply, inverse, and merge diffs for Type, Design, Group, Stat, and all nested entities.
+Successfully implemented the complete diff system for the semio kit architecture. All diff functions now properly compute, apply, inverse, and merge diffs for Type, Design, Group, Stat, and all nested entities.
 
 ## Changes Made
 

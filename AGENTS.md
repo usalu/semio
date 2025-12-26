@@ -4,7 +4,7 @@ IMPORTANT:
 
 - Multiple agents and a developer ALWAYS work on the same codebase at the same time. NEVER use `git stash`, `git stash pop`, `git checkout`, … because it will mess up others work and worst-case delete their work.
 - The codebase in under design and development and not used in production yet. There are many inconsistencies that need to be refactored. ALWAYS use clean mechanisms that might require large refactorings and NEVER care about backwards compatibility.
-- For every task you are working on, you MUST create or update a markdown ticket using `npx tsx scripts/log.ts ticket create SLUG --prompt="User prompt..."`. Tickets are stored in `log/YEAR/MONTH/DAY/SLUG.md` with YAML frontmatter and optional **iterations**. The script automatically creates three sections to be filled/updated during execution of the task: `# Previously`, `# Plan`, and `#Changes`.The purpose of the ticket is to understand the context, problem and decision making process. It is only about the process.
+- For every task you are working on, you MUST create or update a markdown ticket using `npx tsx repo.tsx ticket new SLUG --prompt="User prompt..."`. Tickets are stored in `tickets/YEAR/MONTH/DAY/SLUG.md` with YAML frontmatter and optional **iterations**. The script automatically creates three sections to be filled/updated during execution of the task: `# Previously`, `# Plan`, and `#Changes`.The purpose of the ticket is to understand the context, problem and decision making process. It is only about the process.
 - For every task you are working on, you MUST update the dev docs (`README.md` and `AGENTS.md`). Every key decision and mechanism ALWAYS needs to be documemented. Every feature, decision MUST be undocumented/uncommented in the code and MUST be documented in the dev docs (AGENTS.md and README.md). The documentation ALWAYS happens four times:
 
 1. Under `# 🛍️ Products` in README.md where it is described from user perspective [architects, designers, engineers, …] (framework-agnostic, no implementation references, etc)
@@ -333,7 +333,7 @@ Toolbar panel visibility defaults to `true` for all apps via `panelVisibility: {
 - ALWAYS finish the task.
 - ALWAYS make the choice directly! If you have several options, don't ask in between, be opionionated and just go for it. Try to do as much as you can.
 - ALWAYS toolfriendly over intuitive.
-- ALWAYS expose the canonical CI/CD scripts `dev`, `build`, `test`, `update`, `publish:test`, and `publish` only at the root (which forwards them through `npx nx run-many -t <target>`). Do not add missing commands to workspace packages; keep only the scripts they already define, treat `dev` as the only long-running watch mode, and make sure the remaining commands exit so CI runners and agents can finish reliably.
+- ALWAYS expose the canonical CI/CD scripts `dev`, `build`, `test`, `update`, `prepublish`, and `publish` only at the root (which forwards them through `npx nx run-many -t <target>`). Do not add missing commands to workspace packages; keep only the scripts they already define, treat `dev` as the only long-running watch mode, and make sure the remaining commands exit so CI runners and agents can finish reliably.
 - When multiple long-running dev processes exist for a single workspace, use hierarchical naming for VS Code tasks/launch configs (e.g. `dev js js storybook`, `dev js js sketchpad`) and use `dev:<...>` for root `package.json` scripts when spaces are not possible.
 - NEVER create new files when not explicitly asked. ALWAYS add code to existing files using regions and subregions for structuring. Regions organize code into collapsible sections (e.g., `#region RegionName` / `#endregion` in C#, or `//#region RegionName` / `//#endregion` in JavaScript/TypeScript). Use subregions within regions for hierarchical organization. This keeps related code together and maintains a single source of truth per logical unit.
 - NEVER create new `README.md` files. Documentation is centralized in the dev-docs (`README.md` and `AGENTS.md`).
@@ -377,7 +377,7 @@ Whenever a keyword is used, ALWAYS directly proceed with the task and NEVER ask 
 
 - `AUTOMATE`: Create a `*.ts` script to automate a task (use `scripts/utils.ts` for reusable code). Create a run configuration in `package.json`, create a task in `.vscode/tasks.json` and create a `.vscode/launch.json` along with the script. Call the script from the `preflight.ts` script.
 
-- `FINISH`: Finish a task that was started but not completed. ALWAYS first search for recent tickets using `npx tsx scripts/log.ts ticket search [query] --limit=10` and analyze with git staged and unstaged changes that are related to the task.
+- `FINISH`: Finish a task that was started but not completed. ALWAYS first search for recent tickets using `npx tsx repo.tsx ticket list` and analyze with git staged and unstaged changes that are related to the task.
 
 - `SCHEMA`: Extend the schema for `semio.ts` then run `tsx scripts/schema.ts` to regenerate `reports/schema.json`; Fix all reported schema issues, add missing fields, update incomplete entries, remove unused fields, and rerun until the report is clean. Rerun the script until the report is clean.
 
@@ -390,7 +390,7 @@ Whenever a keyword is used, ALWAYS directly proceed with the task and NEVER ask 
 - `npm run preflight` runs `fix` and `analyze` (in that order).
 - `npm run test` runs `preflight` and then `nx run-many -t test`.
 - `npm run build` runs `test` and then `nx run-many -t build`.
-- `npm run publish:test` and `npm run publish` run `build` first.
+- `npm run prepublish` and `npm run publish` run `build` first.
 
 ### Skip Mechanism
 
@@ -464,11 +464,76 @@ npx tsx hooks/eslint.ts      # ESLint check
 - **Config**: `.husky/pre-commit` - Husky pre-commit hook
 - **Reports**: `reports/*.json` - Generated reports (gitignored)
 
+### Repo CLI
+
+The central `repo.tsx` CLI provides unified access to all monorepo operations through a single-file Ink + TypeScript implementation.
+
+**Usage:**
+
+```bash
+npx tsx repo.tsx <command> [subcommand] [options]
+```
+
+**Commands:**
+
+| Command                    | Description                         |
+| -------------------------- | ----------------------------------- |
+| `help`                     | Show help message                   |
+| `analyze [--scope=...]`    | Analyze codebase for issues         |
+| `fix [--scope=...]`        | Apply autofixes for issues          |
+| `rule list`                | List all registered rules           |
+| `rule run <id>`            | Run a specific rule                 |
+| `ticket new <slug>`        | Create a new ticket                 |
+| `ticket list [year/month]` | List tickets                        |
+| `ticket read <path>`       | Read a ticket                       |
+| `ticket iterate <path>`    | Run rules and sync issues to ticket |
+| `ticket close <path>`      | Close a ticket (if valid)           |
+| `project list`             | List Nx projects                    |
+| `project tree`             | Show project dependency tree        |
+| `folder tree [path]`       | Show folder structure               |
+| `file list [scope]`        | List files in scope                 |
+| `region tree <file>`       | Show region structure of a file     |
+| `definition list <file>`   | List definitions in a file          |
+| `tool <name> [args...]`    | Run an Nx target (e.g., lint, test) |
+
+**Scope Syntax:**
+
+- `@semio` - Repo scope (all files)
+- `@semio/js` - Project scope (Nx project)
+- `js/js/sketchpad/` - Folder scope
+- `js/js/sketchpad/App.tsx` - File scope
+- `file.tsx#Region` - Region scope
+- `file.tsx§Function` - Definition scope
+
+**Options:**
+
+- `--scope=<scope>` - Limit operation to scope
+- `--json` - Output as JSON
+- `--dry-run` - Preview without making changes
+
+**Built-in Rules:**
+
+- `header-region` - Checks SPDX license header in Header region
+- `empty-region` - Warns on empty regions
+- `inline-comment` - Warns on inline comments (except license headers)
+
+**Examples:**
+
+```bash
+npx tsx repo.tsx analyze js/js/semio.ts           # Analyze single file
+npx tsx repo.tsx region tree repo.tsx             # Show region structure
+npx tsx repo.tsx definition list js/js/semio.ts   # List all definitions
+npx tsx repo.tsx project list                     # List all Nx projects
+npx tsx repo.tsx folder tree js/js --depth=2      # Show folder tree
+npx tsx repo.tsx ticket new MY-TASK --prompt="..." # Create ticket
+npx tsx repo.tsx tool build --scope=@semio/js     # Run Nx build target
+```
+
 ## Testing
 
 ### Overview
 
-Semio uses a multi-layered testing approach:
+semio uses a multi-layered testing approach:
 
 1. **Unit Tests** (`.test.ts`) - Domain logic testing next to modules
 2. **E2E Tests** (Playwright) - Hierarchical integration testing
@@ -592,15 +657,14 @@ All development tasks are tracked via markdown tickets with YAML frontmatter sto
 #### Directory Structure
 
 ```
-log/
-  tickets/
-    YEAR/
-      MONTH/
-        DAY/
-          SLUG.md
+tickets/
+  YEAR/
+    MONTH/
+      DAY/
+        SLUG.md
 ```
 
-Example: `log/tickets/2025/11/24/VALIDATION-SYSTEM.md`
+Example: `tickets/2025/11/24/VALIDATION-SYSTEM.md`
 
 #### Frontmatter Format
 
@@ -1474,11 +1538,6 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ └── play
 ├── jsonschema # autogenerated from `py/engine/generate-schemas.ts`
 ├── liveblocks
-├── log # All logs of development tasks by and for agents organized by date
-│ ├── YEAR
-│ │ ├── MONTH
-│ │ │ ├── DAY
-│ │ │ │ └── SLUG.md # Log file with YAML frontmatter
 ├── meta
 ├── net
 │ ├── Semio
@@ -1508,12 +1567,17 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 ├── rdf
 ├── scripts
 │ ├── i18n.ts # Checks that all i18n keys are up to date and produces report under `reports/i18n.json`
-│ ├── log.ts # Ticket CLI and frontmatter utilities for `log/{year}/{month}/{day}/{slug}.md` (ticket create, ticket iteration start/finish, ticket finish)
+│ ├── log.ts # Ticket CLI and frontmatter utilities for `tickets/{year}/{month}/{day}/{slug}.md` (ticket create, ticket iteration start/finish, ticket finish)
 │ ├── utils.ts # General TypeScript utilities for scripts
 │ └── schema.ts # Checks that all schemas are up to date and produces report under `reports/schema.json`
 ├── sql
 │ ├── sqlite
 │ │ └── schema.sql # autogenerated from `py/engine/generate-schemas.ts`
+├── tickets # Development task tickets organized by date
+│ ├── YEAR
+│ │ ├── MONTH
+│ │ │ ├── DAY
+│ │ │ │ └── SLUG.md # Ticket file with YAML frontmatter
 ├── yak
 ├── .gitignore
 ├── .gitmodules
@@ -1525,6 +1589,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 ├── nx.json # Nx targets and plugin configs
 ├── package-lock.json # All javascript dependencies
 ├── package.json # Monorepo and workspace setup
+├── repo.tsx # Monorepo CLI (Ink + TypeScript): analyze, fix, ticket, project, folder, file, region, definition, tool commands
 ├── README.md # GFM dev docs
 
 In general, if the user talks about an old file, then probably there is the same file with the suffix `*.old` that is the original state.
@@ -2241,7 +2306,7 @@ The shared `Footer` component has a fixed `h-medium` height.
 
 ##### Store Architecture
 
-This document describes the generalized store hierarchy for the Semio application.
+This document describes the generalized store hierarchy for the semio application.
 
 #### Overview
 
@@ -3235,9 +3300,9 @@ Y.js transactions batch operations:
 
 ### Coordinate System
 
-Semio uses a left-handed coordinate system that differs from Three.js.
+semio uses a left-handed coordinate system that differs from Three.js.
 
-#### Semio Coordinate System
+#### semio Coordinate System
 
 - **X-axis**: Right (thumb points right)
 - **Y-axis**: Forward (index finger forward)
@@ -3251,9 +3316,9 @@ Semio uses a left-handed coordinate system that differs from Three.js.
 
 #### Conversion Functions
 
-- `toThreeRotation()` - Matrix4 for Semio → Three.js rotation
-- `toSemioRotation()` - Matrix4 for Three.js → Semio rotation
-- `toThreeQuaternion()` - Quaternion for Semio → Three.js
+- `toThreeRotation()` - Matrix4 for semio → Three.js rotation
+- `toSemioRotation()` - Matrix4 for Three.js → semio rotation
+- `toThreeQuaternion()` - Quaternion for semio → Three.js
 - `toSemioQuaternion()` - Quaternion for Three.js → Semio
 - `vectorToThree(v)` - Convert Point/Vector to THREE.Vector3
 
@@ -3319,7 +3384,7 @@ Window chrome includes action controls for open-in-new-window, maximize/minimize
 
 #### Overview
 
-Semio includes a **domain-pure validation system** built entirely in `semio.ts` with **zero JSON dependencies**. All validation logic works with `Kit` objects and produces `KitDiff`-based fixes.
+semio includes a **domain-pure validation system** built entirely in `semio.ts` with **zero JSON dependencies**. All validation logic works with `Kit` objects and produces `KitDiff`-based fixes.
 
 #### Architecture
 
@@ -3671,7 +3736,7 @@ Core library containing all model definitions, validation, serialization, and th
 
 ## 📄net/Semio.Grasshopper.cs
 
-Grasshopper plugin providing components for constructing, deconstructing, and modifying Semio models.
+Grasshopper plugin providing components for constructing, deconstructing, and modifying semio models.
 
 #### Architecture
 
@@ -3725,7 +3790,7 @@ Core library containing all model definitions, validation, serialization, and th
 
 ## 📄net/Semio.Grasshopper/Semio.Grasshopper.cs
 
-Grasshopper plugin providing components for constructing, deconstructing, and modifying Semio models.
+Grasshopper plugin providing components for constructing, deconstructing, and modifying semio models.
 
 ### Architecture
 

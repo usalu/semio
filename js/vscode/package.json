@@ -18,10 +18,64 @@
     "Linters"
   ],
   "activationEvents": [
-    "onLanguage:json"
+    "onLanguage:json",
+    "onLanguage:typescript",
+    "onLanguage:javascript",
+    "workspaceContains:**/repo.tsx"
   ],
   "main": "./out/extension.js",
-  "contributes": {},
+  "contributes": {
+    "commands": [
+      {
+        "command": "semio.analyze",
+        "title": "Semio: Analyze Codebase"
+      },
+      {
+        "command": "semio.analyzeFile",
+        "title": "Semio: Analyze Current File"
+      },
+      {
+        "command": "semio.fix",
+        "title": "Semio: Fix Codebase Issues"
+      },
+      {
+        "command": "semio.fixFile",
+        "title": "Semio: Fix Current File Issues"
+      },
+      {
+        "command": "semio.ruleList",
+        "title": "Semio: List Rules"
+      },
+      {
+        "command": "semio.ticketNew",
+        "title": "Semio: Create New Ticket"
+      },
+      {
+        "command": "semio.ticketList",
+        "title": "Semio: List Tickets"
+      },
+      {
+        "command": "semio.projectList",
+        "title": "Semio: List Projects"
+      },
+      {
+        "command": "semio.regionTree",
+        "title": "Semio: Show Region Tree"
+      },
+      {
+        "command": "semio.definitionList",
+        "title": "Semio: List Definitions"
+      },
+      {
+        "command": "semio.folderTree",
+        "title": "Semio: Show Folder Tree"
+      },
+      {
+        "command": "semio.refreshDiagnostics",
+        "title": "Semio: Refresh Diagnostics"
+      }
+    ]
+  },
   "scripts": {
     "build": "vite build && vite build --config vite.test.config.ts",
     "dev": "vite build --watch",

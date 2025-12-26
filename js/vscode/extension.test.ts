@@ -41,7 +41,7 @@ suite("Extension Test Suite", () => {
 
     const constraintIds = new Set<string>();
     diagnostics.forEach((diag) => {
-      if (diag.source === "semio" && diag.code) {
+      if (diag.source === "semio-kit" && diag.code) {
         constraintIds.add(String(diag.code));
       }
     });

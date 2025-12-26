@@ -12,7 +12,7 @@ iterations: []
 
 # Previously
 
-The Grasshopper components were tightly coupled with the Semio.cs schema via reflection. A `Meta` class in `Semio.Grasshopper.cs` dynamically generated input/output parameters by reflecting on Semio model types. This meant:
+The Grasshopper components were tightly coupled with the Semio.cs schema via reflection. A `Meta` class in `Semio.Grasshopper.cs` dynamically generated input/output parameters by reflecting on semio model types. This meant:
 
 - Any schema change in `Semio.cs` would break existing Grasshopper definitions
 - Input/output structures were not stable across versions

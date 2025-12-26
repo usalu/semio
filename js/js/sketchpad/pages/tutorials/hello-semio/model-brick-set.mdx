@@ -36,7 +36,7 @@ For example:
 👉 You say "connect the **door** to the **living room**" 🛋️🚪  
 👉 Or in LEGO terms: "🪟 **snap the window brick onto the top of the wall**" 🧱
 
-This is what gives Semio its strength — you’re not just building shapes,  
+This is what gives semio its strength — you’re not just building shapes,  
 you’re building a **semantic system** that adapts, scales, and speaks your design language 🎯🗣️
 
 ---
@@ -62,7 +62,7 @@ Now let's take a closer look at how these elements come together — and start m
 
 ### 🏷️ Name Your Mold ([Type](/think-in-semio/#type) Name - Na)
 
-Clear, consistent names in Semio make everything easier down the line ✅  
+Clear, consistent names in semio make everything easier down the line ✅  
 Especially when your project grows and you're working with many **Types**, **Variants**, and **Pieces** 🔄
 
 Good names help you:
@@ -113,7 +113,7 @@ There are two simple steps to create a **Model**:
   Model the physical form of your brick — the shape that will appear in your design
 
 - 📎 **Link it to the Type**  
-  Connect the geometry to a specific Type, so Semio knows how to display and use it in your design space
+  Connect the geometry to a specific Type, so semio knows how to display and use it in your design space
 
 Let’s take a closer look at the **brick mold** in our example 👀  
 It always follows the **same basic shape** 🧱  
@@ -198,7 +198,7 @@ Another `Concat` merges directory + file name:
 ##### 📐 Prepare the Geometry
 
 > 🛠️ You've already modeled the geometry earlier in your Grasshopper definition.  
-> Now it's time to **export** it — so Semio can use it as a **referenced Model** 💾
+> Now it's time to **export** it — so semio can use it as a **referenced Model** 💾
 
 - ✅ Convert the geometry into the required format (e.g. **Mesh** for `.glb`)
 - 📤 Pass it into the `iGeo` component to export it as a `.glb` file
@@ -216,7 +216,7 @@ Your file directory should now look like this:
 #### 🔗 Referencing the Exported File
 
 The exported file (e.g. `profile_2.glb`) is linked to the **`Ur` input** of the **Model Model** component (`~Rep`)  
-This tells Semio **where to find the geometry** that represents your Type.
+This tells semio **where to find the geometry** that represents your Type.
 
 - 🧩 The **`~Rep` (Model Model)** component takes the `Ur` file path and creates a Model:  
   → `Rep(model/gltf-binary)`
@@ -230,17 +230,17 @@ This tells Semio **where to find the geometry** that represents your Type.
 
 ### 🔁 Why Use File-Based Referencing?
 
-Even inside Grasshopper, Semio requires a **file-based snapshot** of your geometry —  
+Even inside Grasshopper, semio requires a **file-based snapshot** of your geometry —  
 a static file that captures what your brick mold looks like at a specific moment.
 
 Here’s why that matters:
 
 - ⚙️ If your geometry is dynamic or parametric, it still needs to be **exported to a file**
-- 🔗 Semio connects to that file — not the live Grasshopper preview
+- 🔗 semio connects to that file — not the live Grasshopper preview
 
 > 💡 This keeps geometry **modular**, **connectorable**, and easy to reuse  
 > 🧱 It also supports **chunking** — breaking down large designs into smaller, manageable parts  
-> 🌐 And it allows smooth transition between **Grasshopper** and **Semio Sketchpad**
+> 🌐 And it allows smooth transition between **Grasshopper** and **semio Sketchpad**
 
 </TabsContent>
 
@@ -276,7 +276,7 @@ This flexibility is especially useful when working across **different levels of 
 
 Just like architects might use **blocky volumes** for urban massing 🏙️  
 and **detailed profiles** for close-ups or fabrication 🪟  
-Semio lets you swap the **look** without changing the **logic** 🔄  
+semio lets you swap the **look** without changing the **logic** 🔄  
 Same brick — different shell 💡
 
 ##### 🎬 One Brick, various Models
@@ -356,7 +356,7 @@ Only the appearance changes 🎭
 This means you can **design and assemble** everything using lightweight placeholders 🧩  
 Then **swap in the detailed version** when you're ready for presentation, communication, or fabrication 🧰
 
-This separation of **logic and form** is what makes Semio workflows flexible, scalable, and robust 🔄  
+This separation of **logic and form** is what makes semio workflows flexible, scalable, and robust 🔄  
 From early concept to detailed design to collaborative development 🤝
 
 </li>
@@ -369,13 +369,13 @@ Once your brick mold has a visual shape — its **Model** —
 the next step is to define **how it connects to other bricks**
 
 That’s what **Connectors** are for 🧲  
-They act as snap points that tell Semio where and how a brick can attach to others
+They act as snap points that tell semio where and how a brick can attach to others
 
 ---
 
 ##### 🧩 What Do You Need to Define a Connector?
 
-In the Semio Grasshopper plugin, each Connector is defined with three main inputs:
+In the semio Grasshopper plugin, each Connector is defined with three main inputs:
 
 - 🏷️ **Connector ID** ( `Id` )  
   A unique name for the Connector — like a tag or label used to connect it later  
@@ -386,8 +386,8 @@ In the Semio Grasshopper plugin, each Connector is defined with three main input
   You place this carefully on your geometry, right where the snapping should occur
 
 - ➡️ **Vector** ( `Dr` )  
-  The direction the Connector faces — telling Semio which way the brick will connect 🔁  
-  It’s what lets Semio rotate and align the bricks correctly when snapping them together
+  The direction the Connector faces — telling semio which way the brick will connect 🔁  
+  It’s what lets semio rotate and align the bricks correctly when snapping them together
 
 ![📁 Connectors](/assets/images/model-port-alpha.png)
 
@@ -412,7 +412,7 @@ Here’s how to define your Connectors effectively:
 
 - 🎯 **Don’t worry about perfect alignment**  
   Connectors don’t need to be _exactly_ placed.  
-  Semio lets you adjust each Piece’s **position and rotation** _after_ snapping 🛠️  
+  semio lets you adjust each Piece’s **position and rotation** _after_ snapping 🛠️  
   So prioritize clear logic over micrometer precision 😌
 
 ---
@@ -429,8 +429,8 @@ There’s no strict rule for how many Connectors to add — it depends on how mu
 
 #### 💡 Connector Direction (Dr)
 
-Every Connector needs a **direction** — a vector that tells Semio which way the connection should face 🧭  
-This is how Semio knows how to align and snap your Pieces together correctly 🧲
+Every Connector needs a **direction** — a vector that tells semio which way the connection should face 🧭  
+This is how semio knows how to align and snap your Pieces together correctly 🧲
 
 Here’s how to define Connector directions clearly:
 
@@ -449,7 +449,7 @@ Here’s how to define Connector directions clearly:
 #### 🏷️ Connector ID (Id)
 
 A **Connector ID** is the name you give to each Connector 🏷️  
-This name is how Semio knows **which Connector to connect** when snapping Pieces together
+This name is how semio knows **which Connector to connect** when snapping Pieces together
 
 For example, you might say:
 

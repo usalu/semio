@@ -1,4 +1,4 @@
--- Select Statements for Semio Kit Database
+-- Select Statements for semio Kit Database
 -- All statements use parameterized queries (?) for security and reusability
 
 -- Select all from kit (typically LIMIT 1)
