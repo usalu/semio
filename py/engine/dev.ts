@@ -20,7 +20,7 @@
 
 // #endregion Header
 
-import { runProcess, stopProcessOnPort } from "../../scripts/utils";
+import { runProcess, stopProcessOnPort } from "../../tools/utils";
 
 stopProcessOnPort(2507);
 stopProcessOnPort(5678);

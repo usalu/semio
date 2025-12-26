@@ -1,6 +1,6 @@
 # Prompt history
 
-You didnt create a ticket according @AGENTS.md 
+You didnt create a ticket according @AGENTS.md
 
 Read everything from @AGENTS.md and then start the task.
 Fix all code issues and rerun until no issues remain. @reports/code.json @hooks/code.tsx .
@@ -8,37 +8,123 @@ Fix all code issues and rerun until no issues remain. @reports/code.json @hooks/
 @Ink ink should be used in all executable typescript files such as scripts and hooks. Add it as a dev dependency to root package@package.json.
 Refactor the existing scripts (interactive or not) to use ink.
 Use consistent, concise output format with the most important information
-@hooks/code.ts @hooks/eslint.ts @hooks/i18n.ts @hooks/prettier.ts @hooks/ruff.ts @hooks/typescript.ts @scripts/generate-metabolism-diff.ts @scripts/i18n.ts @scripts/generate-validation.ts @scripts/i18n.mjs @scripts/log.ts @scripts/regen-metabolism.ts @scripts/rename-files.ts @scripts/schema.ts @scripts/temp-migrate-capitals-tambours.ts @scripts/utils.ts 
+@hooks/code.ts @hooks/eslint.ts @hooks/i18n.ts @hooks/prettier.ts @hooks/ruff.ts @hooks/typescript.ts @scripts/generate-metabolism-diff.ts @scripts/i18n.ts @scripts/generate-validation.ts @scripts/i18n.mjs @scripts/log.ts @scripts/regen-metabolism.ts @scripts/rename-files.ts @scripts/schema.ts @scripts/temp-migrate-capitals-tambours.ts @scripts/utils.ts
 
 Double clicking on type row or design row doesnt navigate anymore after hover was moved to the state machine. Instead after double click the hover command is retriggered all the time even when the mouse is not moving. The app tests should be checking this and fail. You can use playwright mcp.
 
 Add a rule to README.md that every section must start with a symbol.
 
+**Why?**
+Prompting is the new of developing. In the old world devs should always write literate code, in the new world they should write literate prompts. In fact, we believe that docs shouldnt be part of the code anymore (but instead inside `AGENTS.md` and `README.md`). As such prompts (and the process and the output) should be first class citizen in the source code. Similar to how both `package.json`and `package-lock.json` are checked into the repository.
+
+- Agents produce plenty of documentation `*.md` files that are ususally deleted. We shouldn't throw away condensed ticket information. Instead we should augment it to create even better changelogs, stats, etc.
+- Agents have a hard time to keep on with an open ticket from anothe (because you have hit the token-limit, you accidentally hit the cancel button, etc)
+
+Write a detailed mardown plan to download.
+
+The idea is to create a general purpose cli node.js program (with ink and tree-sitter) `repo.tsx` for agents and developers to interact with a monorepo. It should use nx as much as possible.
+The rule mechanism and the ticket mechanism should be integrated. E.g. Once an iteration is finished then all rules that were affected by the ticket should be re-analyzed and all issues should be automatically added to the # Issues section of the ticket. A ticket can only be closed once the issue section is empty (and the plan and changes section are not empty).
+
+Features:
+- `repo rule …` all rule commands.
+- `repo ticket …` all ticket commands.
+- `repo project …` all project commands (e.g. create, delete, move, tree)
+- `repo folder …` all folder commands (e.g. create, delete, move, tree)
+- `repo file …` all file commands (e.g. create, delete, move, tree)
+- `repo region …` all region commands (e.g. create, delete, move, tree)
+- `repo definition …` all definition commands.
+- `repo TOOL …` run a tool (e.g. update-metabolism)
+- `repo analyze` analyzes the repo and produces reports.
+- `repo fix` fixes everything that is autofixable.
+
+├── reports
+│ └── REPORT.json
+├── rules
+│ └── RULE.tsx
+├── tickets
+│ └── YEAR
+│ │ └── MONTH
+│ │ │ └── DAY
+│ │ │ │ └── TICKET.md
+└── repo.tsx
+
+Write a plan for
+
+1. a watchable node.js program `.repo/ that watches a folder and produces a reports to a json file. It should use tree-sitter
+2. Extend an existing vscode extension to show the report as linter errors along with autofixes.
+
 The code analysis and fixing system should be extended.
-In general rules are introduced to the codebase. Every rule has a name, a reason, a severity (error, warning, info) and a solution. There are repo-wide, ecosystem-wide, project-wide, component-wide rules.
-Rules can be specializations of other rules. E.g. Missing Filepath in Header Region is a specialization of Header Region Format.
+A general rule/issue system should be introduced to the codebase. The system should run on any file/folder change but not on keystrokes. The main purpose is to provide details for agents and developers when repo-specific implementation contracts are broken (forbidden imports, forbidden hooks, etc). Mostly those are contracts between different parts of the codebase and they can rarely be autofixed. The result is a report with issues. A vscode extension should show the report when e.g. a file has an issue
+Every rule has a name, a reason and scopes (repo-wide, project-wide, folder-wide, file-wide, region-wide, definition-wide).
+A definition can be a class, a function, a variable, an enum, etc.
+A rule is checked whenever the scope changes.
+Scopes have native glob support.
+Examples:
+
+- "@semio" is repo scope.
+- "js" is a folder scope.
+- "@semio/js" is a project scope.
+- "js/js/sketchpad/Sketchpad.tsx" is a file scope.
+- "js/js/sketchpad/Sketchpad.tsx#Header" is a region scope.
+- "js/js/sketchpad/Sketchpad.tsx#State Managment#Store" is a sub-region scope.
+- "js/js/sketchpad/Sketchpad.tsx§Sketchpad" is a definition scope.
+  Rules are typescript functions that produce different kind of issues. Rules can provide an autofix for every kind of issue. The fix script autofixes all autofixable issues.
+  Issue have a summary, kind, priority (high, medium, low), autofixable flag and a solution text.
+  E.g. Rule
+- Name: "Header Region"
+  Id: "semio.rule.header-region"
+  Scopes: ["**/*.(ts|tsx|py|cs)"]
+  Reason: "All source code must have a header region with a filepath, contributor and license."
+  Issues: [
+  {
+  Kind: "semio.issue.header-region.missing-filepath",
+  Priority: "low",
+  Autofixable: true,
+  }
+  ]
+  Here some example issues that could be produced by the rule:
+  Issues: Header Region rule can produce the following issues:
+- Summary: "Missing filepath in the header region of `js/js/sketchpad/Sketchpad.tsx`."
+  Kind: "semio.issue.header-region.missing-filepath"
+  Scopes: ["js/js/sketchpad/Sketchpad.tsx"]
+  Priority: "low"
+  Autofixable: true
+  Solution: "Add the filepath to the header region."
+- Summary: "Wrong filepath in the header region in `js/js/sketchpad/Sketchpad.tsx`."
+  Kind: "semio.issue.header-region.wrong-filepath"
+  Scopes: ["js/js/sketchpad/Sketchpad.tsx"]
+  Priority: "low"
+  Autofixable: true
+  Solution: "Update the filepath in the header region to the actual filepath of the file."
+- Summary: "js/js/sketchpad/Sketchpad.tsx is missing a contributor in the header region."
+  Kind: "semio.issue.header-region.missing-contributor"
+  Scopes: ["js/js/sketchpad/Sketchpad.tsx"]
+  Priority: "low"
+  Autofixable: true
+  Solution: "Add the contributor to the header region."
+- Summary: "js/js/sketchpad/Sketchpad.tsx is missing a license in the header region."
+  Kind: "semio.issue.header-region.missing-license"
+  Priority: "low"
+  Autofixable: true
+  Solution: "Add the license to the header region."
+
 Every rule has an id e.g. "semio.rule.header-format.missing-filepath"
 E.g. repo-wide rule:
+
 - Undocumented Code
 - Header Region Format
 - Missing Filepath in Header Region (Header Region Format)
 - Missing Contributor in Header Region (Header Region Format)
 - Missing License in Header Region (Header Region Format)
-E.g. ecosystem-wide rule:
+  E.g. ecosystem-wide rule:
 
 Rules are always documented in the dev-docs (README.md and AGENTS.md). They always are one section below the containing section. E.g. Javascript ecosystem-wide rules are documented under `# /` in README.md and AGENTS.md.
-
-
 
 Extend the code.ts hook to that all AGENTS.md headers under # Codebase meaning ## PATH are actual files and folders, all have the proper prefix (📁 or 📄), are sorted alphabetically and none appear twice. Create issues for all individual violations.
 
 Make the reasons and solutions specific to the codebase and the files. Read the devs docs to understand the reasons.
-E.g. when explaining why comments are removed, explain that code is never documented and instead everything is documented multiple times in the devdocs. 1. Under `# 🛍️ Products` in README.md where it is described from user perspective [architects, designers, engineers, …] (framework-agnostic, no implementation references, etc)
-2. Under `# 📦 Components` in README.md where it is described from junior-developer perspective (mechanism explanation and reasoning behind the decision, how theory links to implementation, etc).
-3. Under `# Software Requirements Specification` in AGENTS.md where it is described from human-interface-designer perspective (concise technical terms without explanation, framework-agnostic, no implementation references). There are two sections: `# Business Logic` and `# UI/UX`.
-4. Under `# Codebase` in AGENTS.md where it is described from senior-developer perspective (framework-mechanisms, consice technical terms without explanation, implementation details, etc). The section has the same header structure as the files and folders. All files and folders are flat with `## PATH` e.g. `## js/js/sketchpad/` or `## net/Semio.cs`
+E.g. when explaining why comments are removed, explain that code is never documented and instead everything is documented multiple times in the devdocs. 1. Under `# 🛍️ Products` in README.md where it is described from user perspective [architects, designers, engineers, …] (framework-agnostic, no implementation references, etc) 2. Under `# 📦 Components` in README.md where it is described from junior-developer perspective (mechanism explanation and reasoning behind the decision, how theory links to implementation, etc). 3. Under `# Software Requirements Specification` in AGENTS.md where it is described from human-interface-designer perspective (concise technical terms without explanation, framework-agnostic, no implementation references). There are two sections: `# Business Logic` and `# UI/UX`. 4. Under `# Codebase` in AGENTS.md where it is described from senior-developer perspective (framework-mechanisms, consice technical terms without explanation, implementation details, etc). The section has the same header structure as the files and folders. All files and folders are flat with `## PATH` e.g. `## js/js/sketchpad/` or `## net/Semio.cs`
 The purpose of the dev docs is to understand the codebase. NEVER add reasoning or process related (such as what changed, why, how, … - this is part of the log) to the dev docs.
-
 
 Extend the code analysis hook. Make sure that every issue has a reason text field and a solution text field. E.g. A solution for duplicate paths is to merge them or remove one if one is clearly outdated.
 More examples for a reason for forbidden imports:
@@ -46,50 +132,54 @@ elements.tsx is a general-purpose ui library and should not import anything from
 Sketchpad.tsx offers scaffolding to apps but is independent of app internals. Importing from app files violates the open/closed principle. Adding an app should not require modifying Sketchpad.tsx and just mean to add a file. Removing an app should not require modifying Sketchpad.tsx and just mean to remove a file.
 Provide reasons and solutions to all code issues.
 
+Diagrams
 
 Hovering over entities in kit app doesnt call any state machine hover. All state managment including hover and selection of apps (Home.tsx, Kit.tsx, Design.tsx, Type.tsx, Quality.tsx, Docs.tsx, Feedback.tsx) should be done via the state machine.
 
-Diagrams should be generalized to be used for all diagrams (kit app, design app, quality app). Diagrams only work in controlled mode (state managment is done by the parent component). None of the apps (Kit.tsx, Design.tsx, Quality.tsx) should import react-flow directly or use any react-flow specific api. Elements.tsx should be the only file to import "@xyflow/react"; and reexport the components as Diagram, Node, Edge, Handle, etc. All diagrams use the same coordinate system (one unit is equal to the diameter of the a circular nodes.). 
+Diagrams should be generalized to be used for all diagrams (kit app, design app, quality app). Diagrams only work in controlled mode (state managment is done by the parent component). None of the apps (Kit.tsx, Design.tsx, Quality.tsx) should import react-flow directly or use any react-flow specific api. Elements.tsx should be the only file to import "@xyflow/react"; and reexport the components as Diagram, Node, Edge, Handle, etc. All diagrams use the same coordinate system (one unit is equal to the diameter of the a circular nodes.).
 Optionally forced layout configs can be passed which every 50ms bulk updates all centers of the nodes through a d3-force layout.
-@Design.tsx@elements.tsx@Kit.tsx@Quality.tsx@shared.ts 
+@Design.tsx@elements.tsx@Kit.tsx@Quality.tsx@shared.ts
 
 The code analysis and fixing hook doesnt identify and delete multi-line comments. Extend them. E.g.
-/**
- * Calculate the average plane from multiple planes.
- * This is useful for multi-selection transforms where we need a single reference plane.
- */
+/\*\*
+
+- Calculate the average plane from multiple planes.
+- This is useful for multi-selection transforms where we need a single reference plane.
+  \*/
 
 Currently the base store depends on yjs. Make sure that Store and AppStore only use the state machine for state management and not yjs. Only the KitDiffAppStore uses the yjs-based Kit store. yMap, yArray etc should not appear anywhere in Store, AppStore, etc.
 
 Extend the analyze and fix code to check and remove empty regions.
 
-Use the code.json report to detect structural issues. Do all large refactor necessary to make sure the code issues dissapear. Rerun preflight and edit until all issues are gone.@code.ts@code.json  
+Use the code.json report to detect structural issues. Do all large refactor necessary to make sure the code issues dissapear. Rerun preflight and edit until all issues are gone.@code.ts@code.json
 
 The analyze and fix code should isnt detecting multiline comments. e.g.
-/**
- * Creates an in-memory file provider.
-Further it falsely detects strings with // in them as comments. e.g. return `memory://${key}`;
+/\*\*
+
+- Creates an in-memory file provider.
+  Further it falsely detects strings with // in them as comments. e.g. return `memory://${key}`;
 
 Extend the analyze and fix code to check if the filepath in the header region is the same as the filepath of the file.
 
 Extend the code.ts hook to build a region tree (region tree is a tree of regions and their children regions). Sibling regions should all have different names. E.g.
 Parent
-  |-- Child
-   -- |-- Grandchild
-  |-- Sibling
+|-- Child
+-- |-- Grandchild
+|-- Sibling
 Parent
-  |-- Child
-    |-- Grandchild
-  |-- Sibling
+|-- Child
+|-- Grandchild
+|-- Sibling
 is not legit because Parent are siblings but have the same name. All other regions in the example are legit.
 
 Make sure that the headers of all files follow a specific scheme. Adjust analyze and fix code such as in code.ts
+
 - Wrapped within Header region
 - Filepath
 - List of contributors
 - License header
-e.g.
-// #region Header
+  e.g.
+  // #region Header
 
 // FILEPATH/FILENAME.EXTENSION e.g. js/js/sketchpad/Sketchpad.tsx
 
@@ -102,11 +192,11 @@ e.g.
 
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 
 // You should have received a copy of the GNU Lesser General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion
 
@@ -114,16 +204,18 @@ The log.ts script should be extended with an flag plan that takes a markdown fil
 
 Extend the code.ts hook to find more issues. Add two more issue kinds: forbidden imports and forbidden terminology. Forbidden imports checks if imports are structurally forbidden. Forbidden terminology checks if specific terminology is used somewhere where it shouldnt be allowed e.g. when domain-specific terminology is used in general-purpose files.
 Here some rules for js/js:
+
 - elements.tsx are pure reusable ui elements library that are indepedent of semio. They should not import anything from sketchpad or any app or contain any semio domain-specific terminology (kit, design, type, connector, connection, docs, feedback). elements.tsx is the only file that can import third party libraries and reexpose them as components. All other files in the js/js folder should be self-contained and dependency free from any other library outside of the js/js folder.
-- Sketchpad.tsx and the other app files (Home.tsx, Kit.tsx, Design.tsx, Type.tsx, Quality.tsx, Docs.tsx, Feedback.tsx) should follow the open/closed principle. Sketchpad.tsx should only import from elements.tsx, semio.ts, shared.ts. The apps should only import from Sketchpad.tsx, elements.tsx, semio.ts, shared.ts. 
-If the file is deleted then sketchpad should work, if a new file is added, the new app should work. The hook should scan for all static and dynamic imports that violate the above rules. 
+- Sketchpad.tsx and the other app files (Home.tsx, Kit.tsx, Design.tsx, Type.tsx, Quality.tsx, Docs.tsx, Feedback.tsx) should follow the open/closed principle. Sketchpad.tsx should only import from elements.tsx, semio.ts, shared.ts. The apps should only import from Sketchpad.tsx, elements.tsx, semio.ts, shared.ts.
+  If the file is deleted then sketchpad should work, if a new file is added, the new app should work. The hook should scan for all static and dynamic imports that violate the above rules.
 
 Sketchpad.tsx, elements.tsx and APP.tsx (Home.tsx, Kit.tsx, Design.tsx, Type.tsx, Quality.tsx, Docs.tsx, Feedback.tsx) should be refactored to follow the open/closed principle. All app specific logic should be part of the APP.tsx files. elements.tsx should not import anything from sketchpad or any app. There should be no design, type, etc logic part of Sketchpad.tsx file. If the file is deleted then sketchpad should work, if a new file is added, the new app should work.
 E.g.
+
 - Get rid of designAppModuleCache, kitAppModuleCache, getDesignAppHooks
-- The general SelectionTree shouldnt import from docs app in getDocsRegistry. 
-Other violations of forbidden rules and import should be inside code.json which is produced by code.ts hook.
-@Design.tsx@Docs.tsx@Feedback.tsx@Home.tsx@Kit.tsx@Quality.tsx@shared.ts@Sketchpad.tsx@Type.tsx@elements.tsx @code.ts @code.json 
+- The general SelectionTree shouldnt import from docs app in getDocsRegistry.
+  Other violations of forbidden rules and import should be inside code.json which is produced by code.ts hook.
+  @Design.tsx@Docs.tsx@Feedback.tsx@Home.tsx@Kit.tsx@Quality.tsx@shared.ts@Sketchpad.tsx@Type.tsx@elements.tsx @code.ts @code.json
 
 Find all statemanagment code smells. Make sure components dont overfetch and use the correct mechnanism. Create a detailed refactor plan.
 
@@ -153,8 +245,8 @@ The create actions of all the rows in tables are not right aligned to the coloum
 
 Every app has windows and there is always one active window. Make sure that the background of the table is set to active background color.
 
-Make a refactor plan to turn every app into a multi-window system. Every app can registern window kinds. Generalize layout and remove duplicated code, etc. 
-@Design.tsx@elements.tsx@Kit.tsx@Quality.tsx@Docs.tsx@Feedback.tsx@Home.tsx@shared.ts@Sketchpad.tsx@Type.tsx 
+Make a refactor plan to turn every app into a multi-window system. Every app can registern window kinds. Generalize layout and remove duplicated code, etc.
+@Design.tsx@elements.tsx@Kit.tsx@Quality.tsx@Docs.tsx@Feedback.tsx@Home.tsx@shared.ts@Sketchpad.tsx@Type.tsx
 
 The window background color of all windows is still according base. Make sure to useLevel hook correctly and that all windows have the correct window background color.
 
@@ -165,7 +257,7 @@ A node can either be circular with an icon or square with a text label.
 Handles are dots on the edges of the node controlled by a parameter from 0 to 1. 9 and 1 is 12'clock position and it increases clockwise.
 elements.tsx should be the only file to import "@xyflow/react";
 Make a refactor plan for Design.tsx, Kit.tsx and Quality.tsx to move to the new diagram component.
-@Design.tsx@elements.tsx@Quality.tsx@Kit.tsx 
+@Design.tsx@elements.tsx@Quality.tsx@Kit.tsx
 
 Analyze the js/js codebase for state managment inconsistencies (hooks, context providers, state machine, commands, etc).
 Remember that every component should have a triadic hook: [STATE,SETSTATE,CANSETSTATE]=useSELECTOR()
@@ -186,7 +278,7 @@ Extend all storybook stories for all ui elements to have after the default story
 - Kit app still has no toolbar. The artifact kind toggles should also move to footer.
 - Home should also be a window-based. The toggle and search strip should dissappear
 - The design app toolbar is still broken and no tool is selectable.
-Extend every app test to test tool. Make sure all sketchpad tests comply.
+  Extend every app test to test tool. Make sure all sketchpad tests comply.
 
 All panels touch the current border and navbar and footer. They should have a single unit margin towards the border and navbar and footer.
 
@@ -204,7 +296,7 @@ The feedback app should have send in the toolbar.
 The design app selection should be identical to the type app selection.
 Extend each app test to test each tool.
 Use playwright mcp.
-Make sure all sketchpad app tests comply. Dont remove functionality from the tests.@Design.tsx@Feedback.tsx@Home.tsx@Kit.tsx@shared.ts@Sketchpad.tsx@Type.tsx @sketchpad.test.ts 
+Make sure all sketchpad app tests comply. Dont remove functionality from the tests.@Design.tsx@Feedback.tsx@Home.tsx@Kit.tsx@shared.ts@Sketchpad.tsx@Type.tsx @sketchpad.test.ts
 
 The panel toggles in the navbar still have no vertical borders. This shouldnt be possible. Dont override on the specific group but make sure that all toggle groups always have this.
 
@@ -220,79 +312,78 @@ The testing system is currently not clean. Right now there are spread tests for 
 The diagram of the kit app should only show the rows of the table. This means that e.g. if a design in the able is collapsed then all child design node in the diagram are hidden. Same for types. If a folder is collapsed then all the items of the folder are not present in the diagram. In the end every visible row equals one node.
 
 - Not only top level rows should be displayed as node but all of the rows.
-- Many nodes are missing (folders, authors,  tags, etc)
+- Many nodes are missing (folders, authors, tags, etc)
 - When dragging nothing happens. Not even Machine logs.
 - Edges are still wrong and not around the node
-Extend kit app test to test all features (all nodes are visible, etc)
-Use playwright mcp.
+  Extend kit app test to test all features (all nodes are visible, etc)
+  Use playwright mcp.
 
 log.ts and all logs should change:
 Every ticket should have
 {slug, summary, status, author, date{created,finished}, commit, model,iterations{prompt,date,model,commit,files{updated[PATH{lines{added,removed}}],created[PATH],removed[PATH]},lines{added,removed}}}
 , files{updated[PATH{lines{added,removed}}],created[PATH],removed[PATH]}, lines{added,removed}
 E.g.
+
 ---
+
 slug: TICKET-FILES-ONLY
 summary: Restrict ticket files and aggregate stats
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: '2025-12-16T16:09:53.578Z'
-  finished: '2025-12-16T16:25:36.733Z'
+created: '2025-12-16T16:09:53.578Z'
+finished: '2025-12-16T16:25:36.733Z'
 commit: c44e5e38193be007ca56cc649aa2f58238c1ec40
 model: claude-opus-4-5
 iterations:
-  - prompt: >-
-      Only allow files to be created, updated and deleted files. Create ticket
-      shouldnt create an iteration. Iteration need files. Add author and date to
-      ticket from git. Once finished, combine all the files from all iterations
-      and add it as extra field to the ticket. Use git one last time to compute
-      the lines.
-    date:
-      started: '2025-12-16T16:09:53.578Z'
-      ended: '2025-12-16T16:25:23.282Z'
-    model: gpt-5.2-codex
-    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-    commit: c44e5e38193be007ca56cc649aa2f58238c1ec40
-    files:
-      updated:
-        - scripts/log.ts
-          lines:
-            added: 701
-            removed: 253
-        - README.md:
-          lines:
-            added: 18
-            removed: 9
-        - AGENTS.md:
-          lines:
-            added: 113
-            removed: 59
-      created: []
-      removed: []
-    lines:
-      added: 888
-      removed: 321
-files:
-  updated:
-    - AGENTS.md:
-      lines:
-        added: 72
-        removed: 5
-    - README.md:
-      lines:
-        added: 95
-        removed: 10
-    - scripts/log.ts:
-      lines:
-        added: 701
-        removed: 253
+
+- prompt: >-
+  Only allow files to be created, updated and deleted files. Create ticket
+  shouldnt create an iteration. Iteration need files. Add author and date to
+  ticket from git. Once finished, combine all the files from all iterations
+  and add it as extra field to the ticket. Use git one last time to compute
+  the lines.
+  date:
+  started: '2025-12-16T16:09:53.578Z'
+  ended: '2025-12-16T16:25:23.282Z'
+  model: gpt-5.2-codex
+  author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+  commit: c44e5e38193be007ca56cc649aa2f58238c1ec40
+  files:
+  updated: - scripts/log.ts
+  lines:
+  added: 701
+  removed: 253 - README.md:
+  lines:
+  added: 18
+  removed: 9 - AGENTS.md:
+  lines:
+  added: 113
+  removed: 59
   created: []
   removed: []
-lines:
+  lines:
   added: 888
   removed: 321
+  files:
+  updated: - AGENTS.md:
+  lines:
+  added: 72
+  removed: 5 - README.md:
+  lines:
+  added: 95
+  removed: 10 - scripts/log.ts:
+  lines:
+  added: 701
+  removed: 253
+  created: []
+  removed: []
+  lines:
+  added: 888
+  removed: 321
+
 ---
+
 Author, commit, lines and date should be taken from git and is forbidden to set manually.
 Files and model must be set manually.
 When the ticket is finished, the files and lines should be computed from git.
@@ -308,12 +399,13 @@ The feature idea has a title and a description what it is about.
 All forms have an optional name, an optional field for email and a submit button.
 
 The kit app is not finished.
-- The icons should be the same avatars as the ones in the table window. The edges of the node have somehow a bigger circle than the circle of the nodes. 
+
+- The icons should be the same avatars as the ones in the table window. The edges of the node have somehow a bigger circle than the circle of the nodes.
 - Nodes are currently not draggable.
 - The states of the table and the diagram should be completly shared. When something is filtered in the table it should also be filtered in the diagram. When something is not expanded and hence no row exists in the table it should also not exist in the diagram. Only rows that are in the table should be nodes in the diagram. When hovering over something in the table it should also show in the diagram. The selection already works.
 - Selection on the node fires the events but nothing happens.
-Make sure to extend the kit app tests to check for all features.
-You can use playwright mcp.
+  Make sure to extend the kit app tests to check for all features.
+  You can use playwright mcp.
 
 - Only allow files to be created, updated and deleted files.
 - Create ticket shouldnt create an iteration. Iteration need files. Add author and date to ticket from git.
@@ -340,47 +432,58 @@ Ignore all package READMEs such as net/Semio/README.md
 - Table window is empty.
 - All nodes should just be circle as all other nodes of the other diagrams with the icon of the artifact.
 - The layout is not a draggable forced layout. Add force slider to diagram settings of kit app.
-Migrate the existing kit app tests and make sure they pass.
+  Migrate the existing kit app tests and make sure they pass.
 
 The kit app should be extended to a multi-window app like the design app. It should have two window kinds: table and diagram. The table window is the current canvas. The diagram window should show a forced layout graph of all the artifacts of the kits and their relationships. There are two different kind of relationships: part of (children of parents, artifacts inside folders) and references (such as between a type and a design if there is a piece inside of the design with that type). Hover and selection of artefacts are again shared among the windows.
 
 The analyze script should be extended to create a report for the codebase producing `code.json` (for typescript, python, c#). It should check for:
+
 - Comments in the code. Code needs to undocumented/uncommented.
 - Missing License headers.
 - Regions that dont close (every `#region REGIONNAME` needs to have a corresponding `#endregion REGIONNAME`).
 
 design app:
+
 - Hover is not showing in piece nodes background and piece geometry material.
 - Selection is not showing in piece geometry material.
 
 Updated logs in log.ts should NEVER take the updated files from the git commit and only take lines from it. files can only be added to the list (added, updated or removed) over the cli explicitly. The reason is that multiple agents work in one commit hence the files list would be cluttered. But they usually work on different files hence the lines are ok.
 
 The refactor is far from done.
+
 - There are still 2 createMachine calls (ui should be consolidated into sketchpad)
 - You are still not following the open/closed principle. Sketchpad should be independed of the apps and the apps should be self-contained. E.g. all design app events in Sketchpad.tsx dont belong there. Same for type app events, etc. Adding/removing an another app to sketchpad should just be to add or remove a file without having to modify the internals of Sketchpad.tsx
 
 The way that code and documentation are written should be improved.
 Every feature, decision should be undocumented/uncommented in the code and documented in the dev docs (AGENTS.md and README.md). The documentation ALWAYS happens four times:
+
 1. Under products in README.md where it is described from user perspective [architects, designers, engineers, …] (framework-agnostic, no implementation references, etc)
 2. Under components in README.md where it is described from junior-developer perspective (mechanism explanation and reasoning behind the decision, how theory links to implementation, etc).
 3. Under Software Requirements Specification in AGENTS.md where it is described from human-interface-designer perspective (concise technical terms without explanation, framework-agnostic, no implementation references).
 4. Under Codebase in AGENTS.md where it is described from senior-developer perspective (framework-mechanisms, consice technical terms without explanation, implementation details, etc).
-The AGENTS.md `# Codebase` section has the same header structure as the files and folders. All files and folders are flat with `## PATH` e.g. `## js/js/sketchpad/` or `## net/Semio.cs`
-The README.md structure is more human friendly according ecosystem and components.
-Migrate all existing docs and code to the new structure. Update outdated docs.
-Example
-1. User
+   The AGENTS.md `# Codebase` section has the same header structure as the files and folders. All files and folders are flat with `## PATH` e.g. `## js/js/sketchpad/` or `## net/Semio.cs`
+   The README.md structure is more human friendly according ecosystem and components.
+   Migrate all existing docs and code to the new structure. Update outdated docs.
+   Example
+5. User
+
 ```markdown
 # 🛍️ Products [↑](#-overview)
+
 ## ✏️ sketchpad [↑](#%EF%B8%8F-products-)
+
 [sketchpad](#%EF%B8%8F-sketchpad-) is a simple-to-use, accessible and browser-based user interface for semio🖱️
 It is the digital pencil for sketching plans and digital scalpel for building models in semio ✍️
 ![sketchpad demo](/assets/images/sketchpad-demo.gif)
 ```
+
 2. Junior-Developer
+
 ```markdown
 # 🛍️ Products [↑](#-overview)
+
 ## 🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/js) [↑](#-components-)
+
 <details>
 <summary><strong>📚 Resources:</strong></summary>
 - [React](https://www.npmjs.com/package/react) - `npm`
@@ -445,11 +548,16 @@ It is the digital pencil for sketching plans and digital scalpel for building mo
 </details>
 The core which is shared in the [semio JavaScript ecosystem](#-javascript-) 🥜
 ```
+
 3. Human-Interface-Design
+
 ```markdown
 # Software Requirements Specification
+
 ## UI/UX
+
 ### sketchpad
+
 - canvas-based (navbar, canvas, panels on top of the canvas, footer)
 - multi-app (home, kit, design, type, quality, docs)
 - multi-window (every app has its own window kinds)
@@ -460,29 +568,39 @@ The core which is shared in the [semio JavaScript ecosystem](#-javascript-) 🥜
 - multi-expertise (beginner, intermediate, advanced)
 - consistent ui (tables, diagrams, scenes)
 - local-first (by default all data is stored locally in the browser and only synced to the server when the user wants to share it)
+
 #### Apps
+
 ##### Home
+
 - canvas (filter band, concept strip, table)
 ```
+
 4. Senior-Developer
+
 ```markdown
 # Codebase
+
 ## js
+
 ## js/js
+
 ## js/js/sketchpad
+
 ## js/js/sketchpad/Sketchpad.tsx
+
 ### State managment
 
 - ui components access and modify state only via triadic hooks `[STATE,SETSTATE,CANSETSTATE] = useSELECTOR()`
 - one global sketchpad `createMachine` is used for app state
 - apps register their state machine contributions to the global sketchpad machine
 - kits have specialized stores that use Y.Doc and use `observe` in conjunction with `useSyncExternalStore` to sync the kit data.
-The kit hooks use the kit store for STATE and the global state machine for SETSTATE and CANSETSTATE.
+  The kit hooks use the kit store for STATE and the global state machine for SETSTATE and CANSETSTATE.
 ```
 
 Consolidate all useHOOKXState into useHOOK. There should never be double hooks but just the useHOOK that internally uses xstate to write (setState) and check if the transition can be taken (canSetState).
 
-Rename layout in useLayout to device and useDevice, etc. All types enums etc. Not the Layout component. 
+Rename layout in useLayout to device and useDevice, etc. All types enums etc. Not the Layout component.
 
 When holding shift and selecting rows then the last selected row shouldnt update. E.g.
 A
@@ -497,15 +615,18 @@ The scroll bar is just a line that is one spacing unit away from the edge of the
 
 Refactor the state machines:
 -Currently there are two machines being used (createMachine). There should be only one global sketchpad machine.
+
 - All app specfic logic should be part of the APP.tsx files. There should be no design, type, etc logic part of Sketchpad.tsx file. All should follow open/closed principle. If the file is deleted then sketchpad should work, if a new file is added, the new app should work.
   Make sure all tests pass after the refactor.
 - Add comment detector and fixer.
 
 design app:
+
 - The piece nodes dont show hover color when hovering over the piece in diagram.
 - The piece geometry material is not showing hover or select color.
 
 i18n script:
+
 - has hardcoded german translations (should only use locales files)
 - has mjs and ts file
 - is falsely classifying a lot of keys as unused
@@ -1037,6 +1158,7 @@ sketchpad -> docs
 ⦁ Never use browser API directly because sketchpad also runs in different context such as desktop through electron. Use only sketchpad ui elements.
 
 vscode:
+
 - add test for invalid kit. Complete the invalid kit for all other validation rules. The invalid kit should be max invalid.
 - Remove VALIDATION.md and integrate into README.md and AGENTS.md
   Generalize
