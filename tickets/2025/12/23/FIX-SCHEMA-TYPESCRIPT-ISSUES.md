@@ -69,7 +69,7 @@ Schema validation reported 21 errors for missing C# entities. TypeScript compila
 - All storybook stories: Removed invalid `level` props, added required `args` properties, wrapped level-specific renders with `LevelProvider`
 - `scripts/log.tsx`: Fixed marginTop prop by wrapping Text in Box
 
-## Remaining Issues (Require External Actions)
+## Remaining Problems (Require External Actions)
 
 ### Requires `npm install` in js/js directory:
 
@@ -80,7 +80,7 @@ Schema validation reported 21 errors for missing C# entities. TypeScript compila
 - React FC type issues with `bigint` not assignable to `ReactNode` (React 18/19 type definition conflict)
 - ReactI18NextChildren type compatibility issues
 
-### Requires interface/code refactoring:
+### Requires port/code refactoring:
 
 - Missing properties on state types (`others` on DesignAppState, `windowLayout` on KitAppState)
 - Undefined variable references (`designAppModuleCache`, `homeAppModuleCache`, etc.)

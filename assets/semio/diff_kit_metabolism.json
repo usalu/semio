@@ -207,7 +207,7 @@
       }
     ]
   },
-  "interfaces": {
+  "ports": {
     "removed": [
       {
         "guid": "019ab243-21f3-7380-93c6-994a9a023448"
@@ -215,12 +215,12 @@
     ],
     "updated": [
       {
-        "interface": {
+        "port": {
           "guid": "019ab243-21f3-7380-93c6-9e678ad2f321"
         },
         "diff": {
           "name": "core circular top Modified",
-          "description": "Updated interface description"
+          "description": "Updated port description"
         }
       }
     ],
@@ -228,7 +228,7 @@
       {
         "guid": "019b4b71-0cfe-73a8-9259-4289a4d64b87",
         "name": "New Test Interface",
-        "description": "A new interface for testing",
+        "description": "A new port for testing",
         "icon": "test-interface-icon.svg"
       }
     ]

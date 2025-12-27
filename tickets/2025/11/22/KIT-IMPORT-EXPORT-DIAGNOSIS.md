@@ -12,7 +12,7 @@ iterations: []
 
 # Kit Import/Export Diagnosis
 
-## Issues Found
+## Problems Found
 
 ### 1. Layer and Group GUID Generation ✅ FIXED
 
@@ -42,7 +42,7 @@ iterations: []
 - **Expected**: Need to store and retrieve design prop GUIDs
 - **Status**: Fixed - added guid column to design_prop table
 
-### 5. Date Serialization Issues
+### 5. Date Serialization Problems
 
 - **Problem**: Dates are stored as ISO strings but returned as Date objects
 - **Current**: `new Date(row.created)` creates Date objects
@@ -58,14 +58,14 @@ iterations: []
 
 ### 7. Optional Properties Appearing as Undefined
 
-- **Problem**: Properties like `interface`, `props`, `attributes`, `models`, `concepts`, `authors`, `parent` are undefined in original but being read from SQL
+- **Problem**: Properties like `port`, `props`, `attributes`, `models`, `concepts`, `authors`, `parent` are undefined in original but being read from SQL
 - **Current**: Using `mapOrUndefined` which returns undefined for empty arrays
 - **Expected**: These should NOT be set at all if they're empty/null in SQL
 - **Impact**: Comparison fails because original doesn't have the property, but imported has it as undefined
 
 ### 8. Missing Top-Level Kit Properties
 
-- **Problem**: `preview`, `interfaces`, `qualities`, `files`, `folders`, `concepts`, `attributes` missing from original
+- **Problem**: `preview`, `ports`, `qualities`, `files`, `folders`, `concepts`, `attributes` missing from original
 - **Likely**: These are optional and the original kit doesn't have them set
 - **Expected**: Import should also leave them undefined if not in SQL
 
@@ -81,7 +81,7 @@ The main issues are:
 
 1. ✅ Fix layer GUID preservation in `kitToSqlite`
 2. ✅ Fix group GUID preservation in `kitToSqlite`
-3. ✅ Fix interface compatible interfaces naming
+3. ✅ Fix port compatible ports naming
 4. ✅ Fix prop key handling for connector props
 5. ✅ Add design_prop table GUID column
 6. ⏳ Fix date serialization (keep as strings in SQL, return as strings or Date objects consistently)

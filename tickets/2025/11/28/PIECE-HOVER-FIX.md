@@ -21,7 +21,7 @@ model: claude-sonnet-4.5
 
 # Previously
 
-Issue: React Flow's `ViewportPortal` component creates a wrapper div with class `react-flow__viewport-portal` that was intercepting all pointer events, preventing hover and click interactions from reaching the piece nodes in the diagram.
+Problem: React Flow's `ViewportPortal` component creates a wrapper div with class `react-flow__viewport-portal` that was intercepting all pointer events, preventing hover and click interactions from reaching the piece nodes in the diagram.
 
 # Plan
 

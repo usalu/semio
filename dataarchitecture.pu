@@ -178,7 +178,7 @@ entity planes {
     *y_axis_z : float
 }
 
-entity compatible_interfaces {
+entity compatible_ports {
   *id : int <<PK,generated>>
   *name : string
   *order : int
@@ -190,7 +190,7 @@ entity connectors {
     *id : int <<PK,generated>>
     *connector_id : string
     *description : string
-    *interface : string
+    *port : string
     *is_mandatory : boolean
     *point_x : float
     *point_y : float
@@ -379,7 +379,7 @@ model_tags -- tags : "references" >
 models ||--o{ attributes : "has" >
 models -- files : "might reference" >
 
-connectors ||--o{ compatible_interfaces : "has" >
+connectors ||--o{ compatible_ports : "has" >
 connectors ||--o{ attributes : "has" >
 connectors ||--o{ props : "has" >
 

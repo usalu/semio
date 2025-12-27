@@ -75,7 +75,7 @@ This made it unclear which entity was being referenced and was inconsistent with
 
 ## Python (`py/engine/engine.py`)
 
-- Fixed missing `interfaces` relationship in `Kit` model
+- Fixed missing `ports` relationship in `Kit` model
 - Updated `_getCollectionDiff` to use EntityId format (`removed: [{"guid": ...}]`, `updated: [{entityKey: {"guid": ...}, "diff": ...}]`)
 - Updated `_applyCollectionDiff` to support new EntityId format with entity key parameter
 - Updated `_inverseCollectionDiff` to generate/parse new EntityId format

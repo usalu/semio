@@ -16,7 +16,10 @@
           "type": "string"
         }
       },
-      "required": ["name", "email"],
+      "required": [
+        "name",
+        "email"
+      ],
       "title": "Author",
       "type": "object"
     },
@@ -93,7 +96,10 @@
           "description": "🧲 The connecting side of the connection."
         }
       },
-      "required": ["connected", "connecting"],
+      "required": [
+        "connected",
+        "connecting"
+      ],
       "title": "Connection",
       "type": "object"
     },
@@ -189,7 +195,9 @@
           "type": "array"
         }
       },
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "title": "Design",
       "type": "object"
     },
@@ -207,7 +215,10 @@
           "type": "number"
         }
       },
-      "required": ["u", "v"],
+      "required": [
+        "u",
+        "v"
+      ],
       "title": "Coord",
       "type": "object"
     },
@@ -279,7 +290,9 @@
           "type": "array"
         }
       },
-      "required": ["type"],
+      "required": [
+        "type"
+      ],
       "title": "Piece",
       "type": "object"
     },
@@ -299,7 +312,11 @@
           "description": "➡️ The y-axis of the plane."
         }
       },
-      "required": ["origin", "xAxis", "yAxis"],
+      "required": [
+        "origin",
+        "xAxis",
+        "yAxis"
+      ],
       "title": "Plane",
       "type": "object"
     },
@@ -322,7 +339,11 @@
           "type": "number"
         }
       },
-      "required": ["x", "y", "z"],
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
       "title": "Point",
       "type": "object"
     },
@@ -357,19 +378,19 @@
           "title": "Description",
           "type": "string"
         },
-        "interface": {
+        "port": {
           "default": "",
-          "description": "👨‍👩‍👧‍👦 The optional interface of the connector. This allows to define explicit compatibility with other connectors.",
+          "description": "👨‍👩‍👧‍👦 The optional port of the connector. This allows to define explicit compatibility with other connectors.",
           "maxLength": 64,
           "title": "Interface",
           "type": "string"
         },
         "compatibleInterfaces": {
-          "description": "✅ The optional other compatible interfaces of the connector. An empty list means this connector is compatible with all other connectors.",
+          "description": "✅ The optional other compatible ports of the connector. An empty list means this connector is compatible with all other connectors.",
           "items": {
             "type": "string"
           },
-          "title": "Compatibleinterfaces",
+          "title": "Compatibleports",
           "type": "array"
         },
         "point": {
@@ -395,7 +416,10 @@
           "type": "array"
         }
       },
-      "required": ["point", "direction"],
+      "required": [
+        "point",
+        "direction"
+      ],
       "title": "Connector",
       "type": "object"
     },
@@ -430,7 +454,9 @@
           "type": "string"
         }
       },
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "title": "Attribute",
       "type": "object"
     },
@@ -473,7 +499,10 @@
           "type": "array"
         }
       },
-      "required": ["url", "mime"],
+      "required": [
+        "url",
+        "mime"
+      ],
       "title": "Model",
       "type": "object"
     },
@@ -487,7 +516,10 @@
           "$ref": "#/$defs/ConnectorId"
         }
       },
-      "required": ["piece", "connector"],
+      "required": [
+        "piece",
+        "connector"
+      ],
       "title": "Side",
       "type": "object"
     },
@@ -508,7 +540,9 @@
           "type": "string"
         }
       },
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "title": "TypeId",
       "type": "object"
     },
@@ -597,7 +631,9 @@
           "type": "array"
         }
       },
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "title": "Type",
       "type": "object"
     },
@@ -620,7 +656,11 @@
           "type": "number"
         }
       },
-      "required": ["x", "y", "z"],
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
       "title": "Vector",
       "type": "object"
     }
@@ -732,7 +772,10 @@
       "type": "array"
     }
   },
-  "required": ["uri", "name"],
+  "required": [
+    "uri",
+    "name"
+  ],
   "title": "Kit",
   "type": "object"
 }

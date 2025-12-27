@@ -14,13 +14,13 @@ iterations: []
 
 ## Summary
 
-Successfully unified all transaction patterns to use a single `Transaction` object interface throughout the codebase. This eliminates the dual pattern problem and simplifies the API.
+Successfully unified all transaction patterns to use a single `Transaction` object port throughout the codebase. This eliminates the dual pattern problem and simplifies the API.
 
 ## Changes Implemented
 
 ### 1. Core Transaction Interface (elements.tsx)
 
-- Kept `Transaction` interface with `start`, `finalize`, `abort` methods
+- Kept `Transaction` port with `start`, `finalize`, `abort` methods
 - Removed individual `startTransaction`, `finalizeTransaction`, `abortTransaction` props from:
   - `InputProps`
   - `TextareaProps`
@@ -50,7 +50,7 @@ Successfully unified all transaction patterns to use a single `Transaction` obje
 
 ✅ **Single Pattern**: One consistent way to handle transactions
 ✅ **Cleaner Components**: No prop ambiguity or fallback logic
-✅ **Better Type Safety**: Single `Transaction` interface
+✅ **Better Type Safety**: Single `Transaction` port
 ✅ **Easier to Use**: Just call the hook with an origin ID
 ✅ **More Maintainable**: Less code, clearer intent
 

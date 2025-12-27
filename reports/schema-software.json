@@ -978,7 +978,7 @@
           "type": "bool"
         },
         {
-          "name": "interface",
+          "name": "port",
           "type": "str"
         },
         {
@@ -1030,7 +1030,7 @@
           "type": "bool"
         },
         {
-          "name": "interface",
+          "name": "port",
           "type": "str"
         },
         {
@@ -2254,7 +2254,7 @@
       ]
     },
     {
-      "name": "Issue",
+      "name": "Problem",
       "kind": "class",
       "fields": [
         {
@@ -2714,7 +2714,7 @@
       "cardinality": "0..*"
     },
     {
-      "from": "Issue",
+      "from": "Problem",
       "to": "Fix",
       "type": "composition",
       "cardinality": "1..*"

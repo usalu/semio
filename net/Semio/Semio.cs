@@ -1843,7 +1843,6 @@ public class SemioValidationFix
 public class Issue
 {
     public string ConstraintId { get; set; } = "";
-    public string Severity { get; set; } = "error";
     public string Message { get; set; } = "";
     public string EntityKind { get; set; } = "";
     public string EntityGuid { get; set; } = "";
@@ -1857,12 +1856,12 @@ public class ValidationResult
 {
     public List<Issue> Issues { get; set; } = new();
 
-    public bool HasErrors() => Issues.Any(i => i.Severity == "error");
+    public bool HasErrors() => Issues.Count > 0;
 
     public string Serialize()
     {
         var sorted = Issues.OrderBy(i => i.ConstraintId).ThenBy(i => i.EntityGuid).ToList();
-        var result = new { issues = sorted.Select(i => new { constraintId = i.ConstraintId, severity = i.Severity, message = i.Message, entityKind = i.EntityKind, entityGuid = i.EntityGuid, fixes = i.Fixes.Select(f => new { title = f.Title, diff = f.Diff }) }) };
+        var result = new { issues = sorted.Select(i => new { constraintId = i.ConstraintId, message = i.Message, entityKind = i.EntityKind, entityGuid = i.EntityGuid, fixes = i.Fixes.Select(f => new { title = f.Title, diff = f.Diff }) }) };
         return JsonConvert.SerializeObject(result, Formatting.Indented, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
     }
 
@@ -1883,7 +1882,6 @@ public class ValidationResult
             result.Issues.Add(new Issue
             {
                 ConstraintId = (string)issue.constraintId,
-                Severity = (string)issue.severity,
                 Message = (string)issue.message,
                 EntityKind = (string)issue.entityKind,
                 EntityGuid = (string)issue.entityGuid,
@@ -1907,7 +1905,7 @@ public class ValidationResult
         {
             var ia = sortedA[i];
             var ib = sortedB[i];
-            if (ia.ConstraintId != ib.ConstraintId || ia.Severity != ib.Severity || ia.Message != ib.Message || ia.EntityKind != ib.EntityKind || ia.EntityGuid != ib.EntityGuid)
+            if (ia.ConstraintId != ib.ConstraintId || ia.Message != ib.Message || ia.EntityKind != ib.EntityKind || ia.EntityGuid != ib.EntityGuid)
                 return false;
 
 
@@ -1931,7 +1929,7 @@ public static class SemioValidator
         {
             if (seen.ContainsKey(entityGuid))
             {
-                issues.Add(new Issue { ConstraintId = "guid-unique", Severity = "error", Message = $"Duplicate GUID \"{entityGuid}\". First occurrence kept.", EntityKind = entityKind, EntityGuid = entityGuid });
+                issues.Add(new Issue { ConstraintId = "guid-unique", Message = $"Duplicate GUID \"{entityGuid}\". First occurrence kept.", EntityKind = entityKind, EntityGuid = entityGuid });
             }
             else
             {
@@ -1970,7 +1968,7 @@ public static class SemioValidator
                 {
                     foreach (var t in list.Skip(1))
                     {
-                        issues.Add(new Issue { ConstraintId = "type-name-unique", Severity = "error", Message = $"Duplicate type name \"{nameGroup.Key}\" among siblings.", EntityKind = "Type", EntityGuid = t.Guid });
+                        issues.Add(new Issue { ConstraintId = "type-name-unique", Message = $"Duplicate type name \"{nameGroup.Key}\" among siblings.", EntityKind = "Type", EntityGuid = t.Guid });
                     }
                 }
             }
@@ -1988,7 +1986,7 @@ public static class SemioValidator
                 {
                     foreach (var d in list.Skip(1))
                     {
-                        issues.Add(new Issue { ConstraintId = "design-name-unique", Severity = "error", Message = $"Duplicate design name \"{nameGroup.Key}\" among siblings.", EntityKind = "Design", EntityGuid = d.Guid });
+                        issues.Add(new Issue { ConstraintId = "design-name-unique", Message = $"Duplicate design name \"{nameGroup.Key}\" among siblings.", EntityKind = "Design", EntityGuid = d.Guid });
                     }
                 }
             }
@@ -2005,7 +2003,7 @@ public static class SemioValidator
                 {
                     foreach (var p in list.Skip(1))
                     {
-                        issues.Add(new Issue { ConstraintId = "piece-name-unique", Severity = "error", Message = $"Duplicate piece name \"{nameGroup.Key}\" inside design \"{design.Name}\".", EntityKind = "Piece", EntityGuid = p.Guid });
+                        issues.Add(new Issue { ConstraintId = "piece-name-unique", Message = $"Duplicate piece name \"{nameGroup.Key}\" inside design \"{design.Name}\".", EntityKind = "Piece", EntityGuid = p.Guid });
                     }
                 }
             }
@@ -2022,7 +2020,7 @@ public static class SemioValidator
                 {
                     foreach (var connector in list.Skip(1))
                     {
-                        issues.Add(new Issue { ConstraintId = "connector-name-unique", Severity = "error", Message = $"Duplicate connector name \"{nameGroup.Key}\" inside type \"{t.Name}\".", EntityKind = "Connector", EntityGuid = connector.Guid });
+                        issues.Add(new Issue { ConstraintId = "connector-name-unique", Message = $"Duplicate connector name \"{nameGroup.Key}\" inside type \"{t.Name}\".", EntityKind = "Connector", EntityGuid = connector.Guid });
                     }
                 }
             }
@@ -2039,7 +2037,7 @@ public static class SemioValidator
                 {
                     foreach (var entity in list.Skip(1))
                     {
-                        issues.Add(new Issue { ConstraintId = "model-name-unique", Severity = "error", Message = $"Duplicate model name \"{nameGroup.Key}\" inside type \"{t.Name}\".", EntityKind = "Model", EntityGuid = entity.Guid });
+                        issues.Add(new Issue { ConstraintId = "model-name-unique", Message = $"Duplicate model name \"{nameGroup.Key}\" inside type \"{t.Name}\".", EntityKind = "Model", EntityGuid = entity.Guid });
                     }
                 }
             }
@@ -2054,21 +2052,21 @@ public static class SemioValidator
             {
                 foreach (var q in list.Skip(1))
                 {
-                    issues.Add(new Issue { ConstraintId = "quality-name-unique", Severity = "error", Message = $"Duplicate quality name \"{nameGroup.Key}\".", EntityKind = "Quality", EntityGuid = q.Guid });
+                    issues.Add(new Issue { ConstraintId = "quality-name-unique", Message = $"Duplicate quality name \"{nameGroup.Key}\".", EntityKind = "Quality", EntityGuid = q.Guid });
                 }
             }
         }
 
 
-        var interfaceNameGroups = kit.Interfaces.GroupBy(i => i.Name ?? "");
-        foreach (var nameGroup in interfaceNameGroups)
+        var portNameGroups = kit.Interfaces.GroupBy(i => i.Name ?? "");
+        foreach (var nameGroup in portNameGroups)
         {
             var list = nameGroup.ToList();
             if (list.Count > 1)
             {
                 foreach (var iface in list.Skip(1))
                 {
-                    issues.Add(new Issue { ConstraintId = "interface-name-unique", Severity = "error", Message = $"Duplicate interface name \"{nameGroup.Key}\".", EntityKind = "Interface", EntityGuid = iface.Guid });
+                    issues.Add(new Issue { ConstraintId = "port-name-unique", Message = $"Duplicate port name \"{nameGroup.Key}\".", EntityKind = "Interface", EntityGuid = iface.Guid });
                 }
             }
         }
@@ -2082,7 +2080,7 @@ public static class SemioValidator
             {
                 foreach (var f in list.Skip(1))
                 {
-                    issues.Add(new Issue { ConstraintId = "file-name-unique", Severity = "error", Message = $"Duplicate file name \"{nameGroup.Key}\".", EntityKind = "File", EntityGuid = f.Guid });
+                    issues.Add(new Issue { ConstraintId = "file-name-unique", Message = $"Duplicate file name \"{nameGroup.Key}\".", EntityKind = "File", EntityGuid = f.Guid });
                 }
             }
         }
@@ -2099,7 +2097,7 @@ public static class SemioValidator
                 {
                     foreach (var fo in list.Skip(1))
                     {
-                        issues.Add(new Issue { ConstraintId = "folder-name-unique", Severity = "error", Message = $"Duplicate folder name \"{nameGroup.Key}\" among siblings.", EntityKind = "Folder", EntityGuid = fo.Guid });
+                        issues.Add(new Issue { ConstraintId = "folder-name-unique", Message = $"Duplicate folder name \"{nameGroup.Key}\" among siblings.", EntityKind = "Folder", EntityGuid = fo.Guid });
                     }
                 }
             }
@@ -2116,7 +2114,7 @@ public static class SemioValidator
                 {
                     foreach (var layer in list.Skip(1))
                     {
-                        issues.Add(new Issue { ConstraintId = "layer-path-unique", Severity = "error", Message = $"Duplicate layer path \"{pathGroup.Key}\" inside design \"{design.Name}\".", EntityKind = "Layer", EntityGuid = layer.Guid });
+                        issues.Add(new Issue { ConstraintId = "layer-path-unique", Message = $"Duplicate layer path \"{pathGroup.Key}\" inside design \"{design.Name}\".", EntityKind = "Layer", EntityGuid = layer.Guid });
                     }
                 }
             }
@@ -3069,66 +3067,66 @@ public class ConceptsDiff : Entity<ConceptsDiff>
 
 
 
-[Entity("🔑", "If", "Ifc", "An interface id is a guid for an interface.")]
+[Entity("🔑", "If", "Ifc", "An port id is a guid for an port.")]
 public class InterfaceId : Entity<InterfaceId>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the interface.")]
+    [Id("🆔", "Gd", "Gui", "The guid of the port.")]
     public string Guid { get; set; } = "";
 
     public static implicit operator InterfaceId(Interface iface) => new() { Guid = iface.Guid };
     public static implicit operator InterfaceId(InterfaceDiff diff) => new() { Guid = diff.Guid };
 }
 
-[Entity("📊", "IfD", "IfDf", "A diff for interfaces.")]
+[Entity("📊", "IfD", "IfDf", "A diff for ports.")]
 public class InterfaceDiff : Entity<InterfaceDiff>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the interface.")]
+    [Id("🆔", "Gd", "Gui", "The guid of the port.")]
     public string Guid { get; set; } = "";
-    [Name("📛", "Nm?", "Name?", "The optional name of the interface.")]
+    [Name("📛", "Nm?", "Name?", "The optional name of the port.")]
     public string? Name { get; set; }
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the interface.")]
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the port.")]
     public string? Description { get; set; }
-    [Url("🪙", "Ic?", "Ico?", "The optional icon [ emoji | logogram | url ] of the interface.")]
+    [Url("🪙", "Ic?", "Ico?", "The optional icon [ emoji | logogram | url ] of the port.")]
     public string? Icon { get; set; }
-    [EntityProp("✅", "CF*", "CFas*", "The optional other compatible interfaces. An empty list means this interface is compatible with all other interfaces.")]
+    [EntityProp("✅", "CF*", "CFas*", "The optional other compatible ports. An empty list means this port is compatible with all other ports.")]
     public List<InterfaceId>? CompatibleInterfaces { get; set; }
-    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the interface.", PropImportance.OPTIONAL)]
+    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the port.", PropImportance.OPTIONAL)]
     public List<Attribute>? Attributes { get; set; }
 
     public static implicit operator InterfaceDiff(InterfaceId id) => new() { Guid = id.Guid };
     public static implicit operator InterfaceDiff(Interface iface) => new() { Guid = iface.Guid, Name = iface.Name, Description = iface.Description, Icon = iface.Icon, CompatibleInterfaces = iface.CompatibleInterfaces?.Select(i => (InterfaceId)i).ToList(), Attributes = iface.Attributes };
 }
 
-[Entity("📊", "IfsD", "IfsDf", "A diff for multiple interfaces.")]
+[Entity("📊", "IfsD", "IfsDf", "A diff for multiple ports.")]
 public class InterfacesDiff : Entity<InterfacesDiff>
 {
-    [EntityProp("➖", "Rm*", "Rem*", "The optional removed interfaces.", PropImportance.OPTIONAL)]
+    [EntityProp("➖", "Rm*", "Rem*", "The optional removed ports.", PropImportance.OPTIONAL)]
     public List<InterfaceId> Removed { get; set; } = new();
-    [EntityProp("➕", "Ad*", "Add*", "The optional added interfaces.", PropImportance.OPTIONAL)]
+    [EntityProp("➕", "Ad*", "Add*", "The optional added ports.", PropImportance.OPTIONAL)]
     public List<Interface> Added { get; set; } = new();
-    [EntityProp("✏️", "Up*", "Upd*", "The optional updated interfaces.", PropImportance.OPTIONAL)]
+    [EntityProp("✏️", "Up*", "Upd*", "The optional updated ports.", PropImportance.OPTIONAL)]
     public List<DiffUpdate<InterfaceDiff>> Updated { get; set; } = new();
 
-    public static implicit operator InterfacesDiff(List<Interface> interfaces) => new() { Updated = interfaces.Select(i => new DiffUpdate<InterfaceDiff> { Id = i.Guid, Diff = (InterfaceDiff)i }).ToList() };
+    public static implicit operator InterfacesDiff(List<Interface> ports) => new() { Updated = ports.Select(i => new DiffUpdate<InterfaceDiff> { Id = i.Guid, Diff = (InterfaceDiff)i }).ToList() };
 }
 
 
 
 
-[Entity("🔌", "If", "Ifc", "An interface defines connector compatibility.")]
+[Entity("🔌", "If", "Ifc", "An port defines connector compatibility.")]
 public class Interface : Entity<Interface>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the interface.")]
+    [Id("🆔", "Gd", "Gui", "The guid of the port.")]
     public string Guid { get; set; } = "";
-    [Name("📛", "Nm", "Name", "The name of the interface.", PropImportance.REQUIRED)]
+    [Name("📛", "Nm", "Name", "The name of the port.", PropImportance.REQUIRED)]
     public string Name { get; set; } = "";
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the interface.")]
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the port.")]
     public string Description { get; set; } = "";
-    [Url("🪙", "Ic?", "Ico?", "The optional icon [ emoji | logogram | url ] of the interface.")]
+    [Url("🪙", "Ic?", "Ico?", "The optional icon [ emoji | logogram | url ] of the port.")]
     public string Icon { get; set; } = "";
-    [EntityProp("✅", "CF*", "CFas*", "The optional other compatible interfaces. An empty list means this interface is compatible with all other interfaces.")]
+    [EntityProp("✅", "CF*", "CFas*", "The optional other compatible ports. An empty list means this port is compatible with all other ports.")]
     public List<InterfaceId> CompatibleInterfaces { get; set; } = new();
-    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the interface.", PropImportance.OPTIONAL)]
+    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the port.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
     public static implicit operator Interface(InterfaceId id) => new() { Guid = id.Guid };
@@ -3406,7 +3404,7 @@ public class ConnectorDiff : Entity<ConnectorDiff>
     public string? Name { get; set; }
     [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the connector.")]
     public string? Description { get; set; }
-    [EntityProp("🔌", "If?", "Ifc?", "The optional interface of the connector.")]
+    [EntityProp("🔌", "If?", "Ifc?", "The optional port of the connector.")]
     public InterfaceId? Interface { get; set; }
     [FalseOrTrue("💯", "Ma?", "Man?", "Whether the connector is mandatory.")]
     public bool? Mandatory { get; set; }
@@ -3478,7 +3476,7 @@ public class Connector : Entity<Connector>
     public string Description { get; set; } = "";
     [FalseOrTrue("💯", "Ma?", "Man?", "Whether the connector is mandatory. A mandatory connector must be connected in a design.")]
     public bool Mandatory { get; set; } = false;
-    [EntityProp("🔌", "If?", "Ifc?", "The optional interface of the connector. This allows to define explicit compatibility with other connectors.")]
+    [EntityProp("🔌", "If?", "Ifc?", "The optional port of the connector. This allows to define explicit compatibility with other connectors.")]
     public InterfaceId? Interface { get; set; }
     [EntityProp("✖️", "Pt", "Pnt", "The connection point of the connector that is attracted to another connection point.")]
     public Point? Point { get; set; } = null;
@@ -5663,7 +5661,7 @@ public class KitDiff : Entity<KitDiff>
     public FilesDiff? Files { get; set; }
     [EntityProp("📁", "Fo*", "Fol*", "The optional folders diff for the kit.", PropImportance.OPTIONAL)]
     public FoldersDiff? Folders { get; set; }
-    [EntityProp("🔗", "In*", "Int*", "The optional interfaces diff for the kit.", PropImportance.OPTIONAL)]
+    [EntityProp("🔗", "In*", "Int*", "The optional ports diff for the kit.", PropImportance.OPTIONAL)]
     public InterfacesDiff? Interfaces { get; set; }
     [EntityProp("👥", "Au*", "Aut*", "The optional authors diff for the kit.", PropImportance.OPTIONAL)]
     public AuthorsDiff? Authors { get; set; }
@@ -5793,7 +5791,7 @@ public class Kit : Entity<Kit>
     public string Preview { get; set; } = "";
     [EntityProp("📃", "Ql*", "Qal*", "The optional qualities of the kit.", PropImportance.OPTIONAL)]
     public List<Quality> Qualities { get; set; } = new();
-    [EntityProp("🔌", "If*", "Ifc*", "The optional interfaces of the kit.", PropImportance.OPTIONAL)]
+    [EntityProp("🔌", "If*", "Ifc*", "The optional ports of the kit.", PropImportance.OPTIONAL)]
     public List<Interface> Interfaces { get; set; } = new();
     [EntityProp("📄", "Fl*", "Fil*", "The optional files of the kit.", PropImportance.OPTIONAL)]
     public List<File> Files { get; set; } = new();
@@ -6367,36 +6365,44 @@ public class Kit : Entity<Kit>
 
 #region Api
 
-public class PredictDesignBody { public string? Description { get; set; } public Type[]? Types { get; set; } public Design? Design { get; set; } }
-
-public interface IApi
+public class PredictDesignBody
 {
-    [Get("/api/kits/{encodedKitUri}")]
-    Task<ApiResponse<Kit>> GetKit(string encodedKitUri);
+    public string? Description { get; set; }
+    public Type[]? Types { get; set; }
+    public Design? Design { get; set; } }
 
-    [Put("/api/kits/{encodedKitUri}")]
-    Task<ApiResponse<bool>> CreateKit(string encodedKitUri, [Body] Kit input);
+public port IApi
+    {
+        [Get("/api/kits/{encodedKitUri}")]
+        Task<ApiResponse<Kit>> GetKit(string encodedKitUri);
 
-    [Delete("/api/kits/{encodedKitUri}")]
-    Task<ApiResponse<bool>> DeleteKit(string encodedKitUri);
+        [Put("/api/kits/{encodedKitUri}")]
+        Task<ApiResponse<bool>> CreateKit(string encodedKitUri, [Body]
+        Kit input);
+
+        [Delete("/api/kits/{encodedKitUri}")]
+        Task<ApiResponse<bool>> DeleteKit(string encodedKitUri);
 
 
-    [Put("/api/kits/{encodedKitUri}/types/{encodedTypeName}")]
-    Task<ApiResponse<bool>> PutType(string encodedKitUri, string encodedTypeName, [Body] Type input);
+        [Put("/api/kits/{encodedKitUri}/types/{encodedTypeName}")]
+        Task<ApiResponse<bool>> PutType(string encodedKitUri, string encodedTypeName, [Body]
+        Type input);
 
-    [Delete("/api/kits/{encodedKitUri}/types/{encodedTypeName}")]
-    Task<ApiResponse<bool>> RemoveType(string encodedKitUri, string encodedTypeName);
+        [Delete("/api/kits/{encodedKitUri}/types/{encodedTypeName}")]
+        Task<ApiResponse<bool>> RemoveType(string encodedKitUri, string encodedTypeName);
 
-    [Put("/api/kits/{encodedKitUri}/designs/{encodedDesignName}")]
-    Task<ApiResponse<bool>> PutDesign(string encodedKitUri, string encodedDesignName,
-        [Body] Design input);
+        [Put("/api/kits/{encodedKitUri}/designs/{encodedDesignName}")]
+        Task<ApiResponse<bool>> PutDesign(string encodedKitUri, string encodedDesignName,
+        [Body]
+        Design input);
 
-    [Delete("/api/kits/{encodedKitUri}/designs/{encodedDesignName}")]
-    Task<ApiResponse<bool>> RemoveDesign(string encodedKitUri, string encodedDesignName);
+        [Delete("/api/kits/{encodedKitUri}/designs/{encodedDesignName}")]
+        Task<ApiResponse<bool>> RemoveDesign(string encodedKitUri, string encodedDesignName);
 
-    [Get("/api/assistant/predictDesign")]
-    Task<ApiResponse<Design>> PredictDesign([Body] PredictDesignBody body);
-}
+        [Get("/api/assistant/predictDesign")]
+        Task<ApiResponse<Design>> PredictDesign([Body]
+        PredictDesignBody body);
+    }
 
 public static class Api
 {

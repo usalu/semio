@@ -10,7 +10,7 @@ commit: "0000000000000000000000000000000000000000"
 iterations: []
 ---
 
-# Migration Issues
+# Migration Problems
 
 **Date:** 2025-01-18  
 **Status:** Migration Complete - All Assets Fully Compliant
@@ -23,7 +23,7 @@ The migration from name-based references to GUID-based ID objects is complete. A
 - Clean Schema: Deprecated `view` field removed from all designs
 - Normalized JSON: All JSON files have alphabetically sorted keys recursively
 
-## Issues Resolved
+## Problems Resolved
 
 ### 1. Duplicate Type Names
 
@@ -91,7 +91,7 @@ The migration from name-based references to GUID-based ID objects is complete. A
   - Kits: 1
 - **Files Migrated:** 56 (100%)
 - **Compilation Errors:** 0
-- **Data Quality Issues:** See above
+- **Data Quality Problems:** See above
 
 ## Completed Steps
 

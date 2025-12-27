@@ -114,7 +114,7 @@ async function openSettingsPanel(page: Page) {
 
   await expect(rightSidePanel)
     .toBeVisible({ timeout: 10000 })
-    .catch(() => {});
+    .catch(() => { });
 }
 
 async function getSettingsSections(page: Page): Promise<string[]> {
@@ -151,7 +151,7 @@ async function openDetailsPanel(page: Page) {
 
   await expect(rightSidePanel)
     .toBeVisible({ timeout: 10000 })
-    .catch(() => {});
+    .catch(() => { });
 }
 
 async function getDetailsSections(page: Page): Promise<string[]> {
@@ -1123,7 +1123,7 @@ test.describe("sketchpad", () => {
             types: kit.types?.length || 0,
             designs: kit.designs?.length || 0,
             qualities: kit.qualities?.length || 0,
-            interfaces: kit.interfaces?.length || 0,
+            ports: kit.ports?.length || 0,
             tags: kit.tags?.length || 0,
             concepts: kit.concepts?.length || 0,
             files: kit.files?.length || 0,
@@ -1134,7 +1134,7 @@ test.describe("sketchpad", () => {
         console.log(`[Kit] Kit data: ${JSON.stringify(kitData)}`);
 
         if (kitData) {
-          const totalArtifacts = kitData.types + kitData.designs + kitData.qualities + kitData.interfaces + kitData.tags + kitData.concepts + kitData.files + kitData.folders + kitData.authors;
+          const totalArtifacts = kitData.types + kitData.designs + kitData.qualities + kitData.ports + kitData.tags + kitData.concepts + kitData.files + kitData.folders + kitData.authors;
           console.log(`[Kit] Expected total artifacts: ${totalArtifacts}`);
           expect(nodeCountAll).toBe(totalArtifacts);
         }

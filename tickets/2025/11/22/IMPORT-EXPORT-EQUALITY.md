@@ -46,7 +46,7 @@ Created `mapOrUndefined` helper function (line 4369) and applied to all attribut
 - Line 4581: layer attributes
 - Line 4598: group attributes
 - Line 4613: design attributes
-- Line 4634: interface attributes
+- Line 4634: port attributes
 - Line 4673: benchmark attributes
 - Line 4681: quality attributes
 
@@ -85,7 +85,7 @@ Added `toArray` helper in `test-roundtrip.mjs` to normalize top-level kit fields
 - Attribute collections use `mapOrUndefined` consistently
 - Single objects in JSON are normalized to arrays for comparison
 
-### ❌ Remaining Issues
+### ❌ Remaining Problems
 
 #### Connector Count Mismatch (Critical)
 

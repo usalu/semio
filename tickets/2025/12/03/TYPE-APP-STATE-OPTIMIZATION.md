@@ -37,7 +37,7 @@ The Type app was suffering from overfetching and overrendering issues:
 4. Wrapped SceneContent in `React.memo()` to prevent re-renders from parent Scene component
 5. Added `findModel` and `useKitTransaction` to imports
 
-## Analysis of Pan Performance Issue
+## Analysis of Pan Performance Problem
 
 The pan performance issue (2-3 seconds instead of <150ms) is NOT a state management issue. The root cause is in `SceneInner` (elements.tsx):
 
@@ -75,7 +75,7 @@ The Type app test now passes these assertions:
 - `consoleErrors.filter(e => e.includes("Maximum update depth exceeded")).toHaveLength(0)`
 - `consoleWarnings.filter(w => w.includes("Mesh")).toHaveLength(0)`
 
-## Remaining Issue: Multiple Scene Windows
+## Remaining Problem: Multiple Scene Windows
 
 The page snapshot shows **4 scene windows** instead of 1. This is likely from persisted layout state and could explain 4x rendering overhead. The `createDefaultLayout` call has wrong number of arguments (4 instead of 3).
 

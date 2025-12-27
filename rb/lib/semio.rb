@@ -40,10 +40,10 @@ module Semio
   Connector = Struct.new(
     :id_,
     :description,
-    :interface,
+    :port,
     :mandatory,
     :t,
-    :compatible_interfaces,
+    :compatible_ports,
     :point,
     :direction,
     :attributes,

@@ -64,7 +64,7 @@ The AGENTS.md documentation had architecture-level documentation for the Sketchp
 **Kit App (Kit.tsx):**
 
 - KitAppState: panelVisibility, selection (9 artifact types), hover, filterSearch, expandedRows, sorting
-- Selection Types: types, designs, qualities, interfaces, tags, concepts, files, folders, authors
+- Selection Types: types, designs, qualities, ports, tags, concepts, files, folders, authors
 - Events: KIT.TOGGLE*PANEL, KIT.SELECT*\_/DESELECT\_\_, KIT.SET*HOVER, KIT.SET_FILTER_SEARCH, KIT.CREATE*\*
 - Hooks: useKitApp(), useKitAppSelection(), useKitAppHover(), useKitAppFilterSearch()
 

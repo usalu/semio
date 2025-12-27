@@ -29,7 +29,7 @@ This document describes the implementation of a clean validation architecture fo
 
 Pure functions working only with `Kit` and `KitDiff`:
 
-- **Validation Core Types**: `Issue`, `Fix`, `SemioDomainLocation`
+- **Validation Core Types**: `Problem`, `Fix`, `SemioDomainLocation`
 - **Validation Engine**: `validateSemioKit`, `Constraint`
 - **Fix Helper**: `semioMakeFix` (generates `KitDiff` from mutations)
 - **Default Constraints**:
@@ -56,7 +56,7 @@ JSON-aware linter:
 6. ✅ Implement design name uniqueness constraint
 7. ✅ Implement piece name uniqueness constraint
 8. ✅ Implement quality name uniqueness constraint
-9. ✅ Implement interface name uniqueness constraint
+9. ✅ Implement port name uniqueness constraint
 10. ✅ Implement file name uniqueness constraint
 11. ✅ Implement folder name uniqueness constraint
 12. ✅ Implement connector name uniqueness constraint
@@ -88,7 +88,7 @@ All implemented constraints follow the same pattern:
 | `design-name-unique`    | Siblings      | name  | ✅ Implemented |
 | `piece-name-unique`     | Within design | name  | ✅ Implemented |
 | `quality-name-unique`   | Global        | name  | ✅ Implemented |
-| `interface-name-unique` | Global        | name  | ✅ Implemented |
+| `port-name-unique`      | Global        | name  | ✅ Implemented |
 | `file-name-unique`      | Global        | name  | ✅ Implemented |
 | `folder-name-unique`    | Siblings      | name  | ✅ Implemented |
 | `connector-name-unique` | Within type   | name  | ✅ Implemented |
@@ -139,9 +139,9 @@ The VS Code extension translates this to JSON ranges.
 
 ```typescript
 const result = validateSemioKit(currentKit);
-showIssues(result.issues);
+showProblems(result.issues);
 
-function applyFix(issue: Issue, fix: Fix) {
+function applyFix(issue: Problem, fix: Fix) {
   const newKit = applyKitDiff(currentKit, fix.diff);
   setCurrentKit(newKit);
 }
@@ -170,7 +170,7 @@ const codeActions = result.issues.flatMap(issueToCodeActions);
 
 Added ~550 lines of pure validation logic:
 
-- **Core Types** (7 types): `SemioEntityKind`, `Severity`, `SemioDomainLocation`, `Fix`, `Issue`, `ValidationResult`, `ValidationContext`
+- **Core Types** (7 types): `SemioEntityKind`, `Severity`, `SemioDomainLocation`, `Fix`, `Problem`, `ValidationResult`, `ValidationContext`
 - **Engine** (5 functions): `buildValidationContext`, `validateSemioKit`, `semioMakeFix`, `hasSemioErrors`, `updateGuidEverywhere`
 - **Constraints** (11 constraints):
   - `semioGuidUniquenessConstraint`
@@ -190,7 +190,7 @@ Added ~550 lines of pure validation logic:
 Added ~280 lines of JSON-aware linting:
 
 - **Validation**: Auto-validates on open/change/save
-- **Diagnostics**: Converts `Issue` → VS Code `Diagnostic`
+- **Diagnostics**: Converts `Problem` → VS Code `Diagnostic`
 - **Quick Fixes**: Applies `KitDiff` and replaces entire document
 - **JSON Mapping**: Uses `jsonc-parser` to map domain locations → ranges
 

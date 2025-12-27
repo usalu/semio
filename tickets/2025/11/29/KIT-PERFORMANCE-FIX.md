@@ -84,7 +84,7 @@ This ensures the expensive rows computation only runs when the actual content of
 
 Fixed and refactored Python engine tests to work with dict-based domain functions:
 
-### Issues with `Kit.parse()`
+### Problems with `Kit.parse()`
 
 SQLAlchemy relationships cannot be set outside of a database session. The original tests worked on raw JSON dicts, not on `Kit.parse()` result. The functions for graph operations, validation, and flatten were defined in the test file.
 

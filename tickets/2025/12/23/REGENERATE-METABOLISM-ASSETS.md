@@ -64,7 +64,7 @@ The `metabolism.zip` asset contained SQL tables with the old "port" naming conve
 
 # Changes
 
-## Fixed Import Issue
+## Fixed Import Problem
 
 Changed from importing `MetabolismKit` from `@semio/assets` (which had module resolution issues) to reading the JSON file directly:
 

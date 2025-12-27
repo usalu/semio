@@ -538,7 +538,7 @@
           "mode": {
             "label": {
               "normal": "Mode",
-              "beginner": "Select the user interface mode: Expert (minimal tooltips), Normal (standard), or Beginner (detailed help)"
+              "beginner": "Select the user port mode: Expert (minimal tooltips), Normal (standard), or Beginner (detailed help)"
             },
             "dev": {
               "label": {
@@ -556,7 +556,7 @@
           "expertise": {
             "label": {
               "normal": "Expertise",
-              "beginner": "Select your expertise level to adjust the interface complexity"
+              "beginner": "Select your expertise level to adjust the port complexity"
             },
             "beginner": {
               "label": {
@@ -630,7 +630,7 @@
           "mode": {
             "label": {
               "normal": "Mode",
-              "beginner": "Choose the interface mode"
+              "beginner": "Choose the port mode"
             }
           },
           "expertise": {
@@ -703,7 +703,7 @@
         "theme": {
           "label": {
             "normal": "Theme",
-            "beginner": "Color scheme for the interface"
+            "beginner": "Color scheme for the port"
           },
           "system": {
             "label": {
@@ -727,7 +727,7 @@
         "device": {
           "label": {
             "normal": "Device",
-            "beginner": "Device mode for the interface"
+            "beginner": "Device mode for the port"
           },
           "desktop": {
             "label": {
@@ -787,12 +787,12 @@
         "language": {
           "label": {
             "normal": "Language",
-            "beginner": "Select the language for the application interface"
+            "beginner": "Select the language for the application port"
           },
           "placeholder": {
             "label": {
               "normal": "Select language...",
-              "beginner": "Select the interface language"
+              "beginner": "Select the port language"
             }
           },
           "de": {
@@ -976,19 +976,19 @@
             "language": {
               "label": {
                 "normal": "Language",
-                "beginner": "Select the language for the application interface"
+                "beginner": "Select the language for the application port"
               },
               "placeholder": {
                 "label": {
                   "normal": "Select language...",
-                  "beginner": "Select the interface language"
+                  "beginner": "Select the port language"
                 }
               }
             },
             "mode": {
               "label": {
                 "normal": "Mode",
-                "beginner": "Select the user interface mode"
+                "beginner": "Select the user port mode"
               }
             },
             "expertise": {
@@ -1516,18 +1516,18 @@
             "showInterfaces": {
               "label": {
                 "normal": "Show Interfaces",
-                "beginner": "Click to show all interfaces in this kit"
+                "beginner": "Click to show all ports in this kit"
               },
-              "manual": "manuals/semio/kit#interfaces",
-              "tutorial": "getting-started/intro#interface"
+              "manual": "manuals/semio/kit#ports",
+              "tutorial": "getting-started/intro#port"
             },
             "createInterface": {
               "label": {
                 "normal": "Create Interface",
-                "beginner": "Click to create a new interface definition in this kit"
+                "beginner": "Click to create a new port definition in this kit"
               },
-              "manual": "manuals/semio/kit#interfaces",
-              "tutorial": "getting-started/intro#interface"
+              "manual": "manuals/semio/kit#ports",
+              "tutorial": "getting-started/intro#port"
             },
             "showFiles": {
               "label": {
@@ -1768,7 +1768,7 @@
                     "tutorial": "hello-semio/save-kit"
                   }
                 },
-                "interface": {
+                "port": {
                   "compatible": {
                     "label": {
                       "normal": "Compatible",
@@ -1881,7 +1881,7 @@
               }
             }
           },
-          "interface": {
+          "port": {
             "allCompatible": {
               "label": {
                 "normal": "All Compatible",
@@ -1903,7 +1903,7 @@
               }
             }
           },
-          "interfaces": {
+          "ports": {
             "multipleSelected": {
               "label": {
                 "normal": "Multiple Selected",
@@ -1942,7 +1942,7 @@
             }
           }
         },
-        "interface": {
+        "port": {
           "label": {
             "normal": "Interface",
             "beginner": "Interface"
@@ -2623,16 +2623,16 @@
                       "beginner": "Whether this connector must be connected"
                     }
                   },
-                  "interface": {
+                  "port": {
                     "label": {
                       "normal": "Interface",
-                      "beginner": "The connector interface for compatibility checking"
+                      "beginner": "The connector port for compatibility checking"
                     }
                   },
                   "compatibleInterface": {
                     "label": {
                       "normal": "Compatible Interface",
-                      "beginner": "The interfaces this connector is compatible with"
+                      "beginner": "The ports this connector is compatible with"
                     }
                   },
                   "description": {
@@ -2898,8 +2898,8 @@
           "connectorCompatibleInterfacesPlaceholder": {
             "label": {
               "label": {
-                "normal": "interface1, interface2",
-                "beginner": "interface1, interface2"
+                "normal": "port1, port2",
+                "beginner": "port1, port2"
               }
             }
           },
@@ -3063,10 +3063,10 @@
                     "normal": "",
                     "beginner": ""
                   },
-                  "interface": {
+                  "port": {
                     "label": {
                       "normal": "Interface",
-                      "beginner": "Connector interface name. Connectors of the same interface can connect to each other."
+                      "beginner": "Connector port name. Connectors of the same port can connect to each other."
                     },
                     "manual": "type#connectors",
                     "tutorial": "hello-semio/model-brick-set"
@@ -3074,7 +3074,7 @@
                   "compatibleInterfaces": {
                     "label": {
                       "normal": "Compatible Interfaces",
-                      "beginner": "List of other connector interfaces this connector can connect to. Leave empty to allow all interfaces."
+                      "beginner": "List of other connector ports this connector can connect to. Leave empty to allow all ports."
                     },
                     "manual": "type#connectors",
                     "tutorial": "hello-semio/model-brick-set"
@@ -3584,7 +3584,7 @@
             "description": {
               "label": {
                 "normal": "Description",
-                "beginner": "Detailed description of the issue or idea"
+                "beginner": "Detailed description of the problem or idea"
               }
             },
             "bugDescriptionPlaceholder": {
@@ -3871,7 +3871,7 @@
       "user": {
         "label": {
           "normal": "User mode",
-          "beginner": "Show standard user interface."
+          "beginner": "Show standard user port."
         }
       },
       "beginner": {

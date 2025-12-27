@@ -90,7 +90,7 @@ Tests are failing because:
 2. **Y.js Kit data sync** - Kit data (types, designs) is stored in Y.js and needs to be accessible
 3. **XState UI state vs Y.js Kit data** - We migrated UI state (selection, hover, panels) to XState, but Kit **data** (types, designs, pieces) stays in Y.js
 
-## The Issue
+## The Problem
 
 The migration correctly moved **UI state** to XState, but the tests expect **Kit data** (types, designs) to be available. This data comes from Y.js and is read by the Kit/Type/Design components through `useKit()`, `useType()`, `useDesign()` hooks which access the Y.js document directly.
 

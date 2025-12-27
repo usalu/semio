@@ -2842,7 +2842,7 @@ class ConnectorStore {
     this.guid = connector.guid;
     this.localId = connector.name;
     this.description = connector.description;
-    this.interface = connector.interface?.guid;
+    this.port = connector.port?.guid;
     this.mandatory = connector.mandatory;
     this.t = connector.t;
 
@@ -2876,11 +2876,11 @@ class ConnectorStore {
     this.yConnector.set("description", description || "");
   }
 
-  get interface(): string | undefined {
-    return this.yConnector.get("interface") as string | undefined;
+  get port(): string | undefined {
+    return this.yConnector.get("port") as string | undefined;
   }
-  set interface(interface_: string | undefined) {
-    this.yConnector.set("interface", interface_ || "");
+  set port(port_: string | undefined) {
+    this.yConnector.set("port", port_ || "");
   }
 
   get mandatory(): boolean | undefined {
@@ -2906,7 +2906,7 @@ class ConnectorStore {
       guid: this.guid,
       name: this.localId,
       description: this.description,
-      interface: this.interface ? { guid: this.interface } : undefined,
+      port: this.port ? { guid: this.port } : undefined,
       mandatory: this.mandatory,
       t: this.t,
       point: this.point.snapshot(),
@@ -2925,7 +2925,7 @@ class ConnectorStore {
   apply(diff: ConnectorDiff): void {
     if (diff.guid !== undefined) this.guid = diff.guid;
     if (diff.description !== undefined) this.description = diff.description;
-    if (diff.interface !== undefined) this.interface = diff.interface?.guid;
+    if (diff.port !== undefined) this.port = diff.port?.guid;
     if (diff.mandatory !== undefined) this.mandatory = diff.mandatory;
     if (diff.t !== undefined) this.t = diff.t;
   }
@@ -6845,7 +6845,7 @@ const selectFiles = (k: KitShallow | Kit) => k.files ?? EMPTY_FILES;
 const selectQualities = (k: KitShallow | Kit) => k.qualities ?? EMPTY_QUALITIES;
 const selectDesigns = (k: KitShallow | Kit) => k.designs ?? EMPTY_DESIGNS;
 const selectFolders = (k: KitShallow | Kit) => k.folders ?? EMPTY_FOLDERS;
-const selectInterfaces = (k: KitShallow | Kit) => k.interfaces ?? EMPTY_INTERFACES;
+const selectInterfaces = (k: KitShallow | Kit) => k.ports ?? EMPTY_INTERFACES;
 const selectTags = (k: KitShallow | Kit) => k.tags ?? EMPTY_TAGS;
 const selectConcepts = (k: KitShallow | Kit) => k.concepts ?? EMPTY_CONCEPTS;
 
@@ -7073,9 +7073,9 @@ export function useDesignFromKit(designGuid: Guid, kitGuid?: Guid): Design | und
   return useMemo(() => kitDesigns?.find((d) => d.guid === designGuid), [kitDesigns, designGuid]);
 }
 
-export function useKitConnectorCompatibility(kitGuid?: Guid): { interfaces: Interface[] } {
-  const interfaces = useKitInterfaces(kitGuid);
-  return useMemo(() => ({ interfaces }), [interfaces]);
+export function useKitConnectorCompatibility(kitGuid?: Guid): { ports: Interface[] } {
+  const ports = useKitInterfaces(kitGuid);
+  return useMemo(() => ({ ports }), [ports]);
 }
 
 // #endregion Targeted Kit Hooks
@@ -7231,17 +7231,17 @@ export const kitCommands = {
   },
   "semio.kit.createInterface": (context: KitCommandContext, iface: Interface): KitCommandResult => {
     return {
-      diff: { interfaces: { added: [iface] } },
+      diff: { ports: { added: [iface] } },
     };
   },
   "semio.kit.updateInterface": (context: KitCommandContext, guid: Guid, diff: InterfaceDiff): KitCommandResult => {
     return {
-      diff: { interfaces: { updated: [{ interface: { guid }, diff }] } },
+      diff: { ports: { updated: [{ port: { guid }, diff }] } },
     };
   },
   "semio.kit.deleteInterface": (context: KitCommandContext, guid: Guid): KitCommandResult => {
     return {
-      diff: { interfaces: { removed: [{ guid }] } },
+      diff: { ports: { removed: [{ guid }] } },
     };
   },
   "semio.kit.createTag": (context: KitCommandContext, tag: Tag): KitCommandResult => {
@@ -9040,7 +9040,7 @@ export const createTransactionCanRedoSelector = (appKey: string) => (state: { co
 
 // #endregion Sketchpad Machine
 
-export type UiEntityKind = "kit" | "type" | "design" | "piece" | "connection" | "connector" | "model" | "quality" | "benchmark" | "file" | "folder" | "author" | "interface" | "tag" | "concept";
+export type UiEntityKind = "kit" | "type" | "design" | "piece" | "connection" | "connector" | "model" | "quality" | "benchmark" | "file" | "folder" | "author" | "port" | "tag" | "concept";
 
 export const selectUiActiveKitGuid = (state: { context: SketchpadContext }) => {
   const path = state.context.sketchpad?.navigation || "/";

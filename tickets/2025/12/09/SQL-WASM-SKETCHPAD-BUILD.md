@@ -46,7 +46,7 @@ Added `postinstall` script to `js/sketchpad/package.json`:
 
 This ensures `sql-wasm.wasm` is copied to `js/sketchpad/public/` which then gets included in the production build at `dist/sql-wasm.wasm`.
 
-## Second Issue: GitHub Pages Jekyll Processing
+## Second Problem: GitHub Pages Jekyll Processing
 
 After deploying with the wasm file, a new error appeared:
 

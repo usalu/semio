@@ -485,7 +485,7 @@
           "optional": false
         },
         {
-          "name": "interface",
+          "name": "port",
           "type": "string",
           "optional": false
         },
@@ -1263,5 +1263,11 @@
     "DesignId",
     "KitId"
   ],
-  "weakEntities": ["Coord", "Point", "Vector", "Plane", "Side"]
+  "weakEntities": [
+    "Coord",
+    "Point",
+    "Vector",
+    "Plane",
+    "Side"
+  ]
 }

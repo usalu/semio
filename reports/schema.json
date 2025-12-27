@@ -22,7 +22,7 @@
       "entities": 27,
       "relationships": 13
     },
-    "interface": {
+    "port": {
       "topLevelFields": 18
     },
     "software": {

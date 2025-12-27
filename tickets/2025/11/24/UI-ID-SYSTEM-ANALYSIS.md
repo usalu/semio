@@ -486,7 +486,7 @@ interface BaseInputProps {
 
 ### 1. Incomplete ID Coverage
 
-**Issue:** Not all interactive elements have IDs
+**Problem:** Not all interactive elements have IDs
 
 **Examples:**
 
@@ -502,7 +502,7 @@ interface BaseInputProps {
 
 ### 2. Inconsistent Origin Passing
 
-**Issue:** Commands called without origin parameter
+**Problem:** Commands called without origin parameter
 
 **Pattern Found:**
 
@@ -522,7 +522,7 @@ executeCommand("semio.kitApp.addType", "semio.sketchpad.app.kit.toolbar.addType"
 
 ### 3. Label vs ID Mismatch
 
-**Issue:** Component has `id` but doesn't use i18n
+**Problem:** Component has `id` but doesn't use i18n
 
 **Pattern Found:**
 
@@ -543,7 +543,7 @@ executeCommand("semio.kitApp.addType", "semio.sketchpad.app.kit.toolbar.addType"
 
 ### 4. Tooltip Inconsistency
 
-**Issue:** Mixed use of manual tooltips vs ID-based tooltips
+**Problem:** Mixed use of manual tooltips vs ID-based tooltips
 
 **Found:**
 
@@ -559,7 +559,7 @@ executeCommand("semio.kitApp.addType", "semio.sketchpad.app.kit.toolbar.addType"
 
 ### 5. Missing i18n Entries
 
-**Issue:** IDs used in code but missing in `locales/*.json`
+**Problem:** IDs used in code but missing in `locales/*.json`
 
 **Detection:** Run `tsx scripts/i18n.ts` to generate report
 

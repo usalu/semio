@@ -19,11 +19,11 @@ INSERT INTO benchmark (guid, name, icon, min_value, min_excluded, max_value, max
 
 -- Interface
 -- Parameters: guid, name, description, icon, kit_guid
-INSERT INTO interface (guid, name, description, icon, kit_guid) VALUES (?, ?, ?, ?, ?);
+INSERT INTO port (guid, name, description, icon, kit_guid) VALUES (?, ?, ?, ?, ?);
 
 -- Interface Compatibility
--- Parameters: interface_guid, compatible_interface_guid
-INSERT INTO interface_compatibility (interface_guid, compatible_interface_guid) VALUES (?, ?);
+-- Parameters: port_guid, compatible_port_guid
+INSERT INTO port_compatibility (port_guid, compatible_port_guid) VALUES (?, ?);
 
 -- Folder
 -- Parameters: guid, name, parent_guid, created, updated, kit_guid
@@ -54,8 +54,8 @@ INSERT INTO model_tag (model_guid, tag) VALUES (?, ?);
 INSERT INTO prop (guid, key, value, unit, quality_guid, connector_guid) VALUES (?, ?, ?, ?, ?, ?);
 
 -- Connector
--- Parameters: guid, name, point_x, point_y, point_z, direction_x, direction_y, direction_z, t, mandatory, interface_guid, description, type_guid
-INSERT INTO connector (guid, name, point_x, point_y, point_z, direction_x, direction_y, direction_z, t, mandatory, interface_guid, description, type_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+-- Parameters: guid, name, point_x, point_y, point_z, direction_x, direction_y, direction_z, t, mandatory, port_guid, description, type_guid
+INSERT INTO connector (guid, name, point_x, point_y, point_z, direction_x, direction_y, direction_z, t, mandatory, port_guid, description, type_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 -- Design
 -- Parameters: guid, name, parent_guid, variant, view_center_u, view_center_v, view_zoom, unit, location_guid, active_layer_guid, description, icon, image, created, updated, kit_guid
@@ -102,5 +102,5 @@ INSERT INTO type_concept (type_guid, concept) VALUES (?, ?);
 INSERT INTO design_concept (design_guid, concept) VALUES (?, ?);
 
 -- Attribute
--- Parameters: guid, key, value, definition, quality_guid, benchmark_guid, interface_guid, folder_guid, file_guid, author_guid, model_guid, prop_guid, connector_guid, type_guid, layer_guid, piece_guid, group_guid, connection_guid, stat_guid, design_guid, kit_guid
-INSERT INTO attribute (guid, key, value, definition, quality_guid, benchmark_guid, interface_guid, folder_guid, file_guid, author_guid, model_guid, prop_guid, connector_guid, type_guid, layer_guid, piece_guid, group_guid, connection_guid, stat_guid, design_guid, kit_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+-- Parameters: guid, key, value, definition, quality_guid, benchmark_guid, port_guid, folder_guid, file_guid, author_guid, model_guid, prop_guid, connector_guid, type_guid, layer_guid, piece_guid, group_guid, connection_guid, stat_guid, design_guid, kit_guid
+INSERT INTO attribute (guid, key, value, definition, quality_guid, benchmark_guid, port_guid, folder_guid, file_guid, author_guid, model_guid, prop_guid, connector_guid, type_guid, layer_guid, piece_guid, group_guid, connection_guid, stat_guid, design_guid, kit_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);

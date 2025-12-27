@@ -338,7 +338,7 @@ useLayoutEffect(() => {
 ### Phase 2 — subscription narrowing (medium risk)
 
 - [ ] Replace `useKit()` calls with narrow hooks.
-- [ ] Add missing narrow hooks (authors, folders, interfaces, concepts, etc).
+- [ ] Add missing narrow hooks (authors, folders, ports, concepts, etc).
 - [ ] Refactor Yjs → XState sync to field-level events.
 
 ### Phase 3 — lazy loading (medium/high value)

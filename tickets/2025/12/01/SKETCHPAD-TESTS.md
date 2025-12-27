@@ -90,7 +90,7 @@ The remaining failures are related to async Y.js store initialization timing:
 - Added fallback toolbar visibility for Type/Design apps (`appType === "type" || appType === "design"`)
 - Added "Loading..." placeholder when toolbar sections are empty
 
-## Remaining Issue Analysis
+## Remaining Problem Analysis
 
 The tests still fail because:
 

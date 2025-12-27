@@ -3,7 +3,7 @@
   "status": "success",
   "summary": {
     "filesScanned": 132,
-    "issues": 0,
+    "problems": 0,
     "byKind": {
       "comment": 0,
       "temporary_log": 0,
@@ -27,5 +27,5 @@
       "meta": 0
     }
   },
-  "issues": []
+  "problems": []
 }

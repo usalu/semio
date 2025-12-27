@@ -20,7 +20,7 @@ The panel system should order sections by specificity:
 - **Less specific**: App-level sections (e.g., Kit App settings)
 - **Least specific** (bottom): Sketchpad-level sections (e.g., general settings)
 
-### Current Implementation Issues
+### Current Implementation Problems
 
 1. **No inheritance mechanism**: Child apps don't automatically inherit parent sections
 2. **No ordering by specificity**: Sections are ordered by registration order, not specificity

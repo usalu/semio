@@ -214,7 +214,7 @@ type Attribute implements Node {
 type Connector implements Node {
   description: String!
   mandatory: Boolean!
-  interface: String!
+  port: String!
   t: Float!
   id_: String
   attributes(before: String, after: String, first: Int, last: Int): AttributeNodeConnection
@@ -712,12 +712,12 @@ input ConnectorInputNode {
   mandatory: Boolean = false
 
   """
-  👨‍👩‍👧‍👦 The optional interface of the connector. This allows to define explicit compatibility with other connectors.
+  👨‍👩‍👧‍👦 The optional port of the connector. This allows to define explicit compatibility with other connectors.
   """
-  interface: String = ""
+  port: String = ""
 
   """
-  ✅ The optional other compatible interfaces of the connector. An empty list means this connector is compatible with all other connectors.
+  ✅ The optional other compatible ports of the connector. An empty list means this connector is compatible with all other connectors.
   """
   compatibleInterfaces: [String] = null
 

@@ -26,7 +26,7 @@ kit : !Kit{
             }
             t : !Float // [0,1[ for diagram ring position
             mandatory : ?Boolean // default false
-            interface : ?String // For explicit compatibility
+            port : ?String // For explicit compatibility
             compatibleInterfaces : *String[] // Empty list means compatible with all
             description : ?String
             attributes : *Attribute[]

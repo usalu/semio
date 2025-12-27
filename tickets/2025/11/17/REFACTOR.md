@@ -972,7 +972,7 @@ This refactoring proposal addresses systematic inconsistencies in the Sketchpad 
 
 ### A.1 Design App (6,751 lines)
 
-**Current Issues:**
+**Current Problems:**
 
 - Store region BEFORE Imports region (reversed)
 - Extremely large file (needs internal subregions)
@@ -989,7 +989,7 @@ This refactoring proposal addresses systematic inconsistencies in the Sketchpad 
 
 ### A.2 Type App (3,184 lines)
 
-**Current Issues:**
+**Current Problems:**
 
 - Lazy loading pattern needs centralization
 - Scope provider in app file (correct but inconsistent with design)
@@ -1004,7 +1004,7 @@ This refactoring proposal addresses systematic inconsistencies in the Sketchpad 
 
 ### A.3 Kit App (4,299 lines)
 
-**Current Issues:**
+**Current Problems:**
 
 - Store region BEFORE Imports region (reversed)
 - Empty Tools region (should have tools?)
@@ -1021,7 +1021,7 @@ This refactoring proposal addresses systematic inconsistencies in the Sketchpad 
 
 ### A.4 Quality App (1,781 lines)
 
-**Current Issues:**
+**Current Problems:**
 
 - Regions not in standard order (Commands before Store)
 - Missing some component subregions
@@ -1036,7 +1036,7 @@ This refactoring proposal addresses systematic inconsistencies in the Sketchpad 
 
 ### A.5 Home App (1,652 lines)
 
-**Current Issues:**
+**Current Problems:**
 
 - HomeStore doesn't extend AppStore (major architectural issue)
 - No transaction support
@@ -1055,7 +1055,7 @@ This refactoring proposal addresses systematic inconsistencies in the Sketchpad 
 
 ### A.6 Docs App (1,500 lines)
 
-**Current Issues:**
+**Current Problems:**
 
 - DocsAppStore is placeholder (no functionality)
 - Mixed region organization

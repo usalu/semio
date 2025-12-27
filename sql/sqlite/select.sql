@@ -56,13 +56,13 @@ SELECT piece_guid FROM group_piece WHERE group_guid = ?;
 -- Parameters: design_guid
 SELECT * FROM stat WHERE design_guid = ?;
 
--- Select interfaces by kit_guid
+-- Select ports by kit_guid
 -- Parameters: kit_guid
-SELECT * FROM interface WHERE kit_guid = ?;
+SELECT * FROM port WHERE kit_guid = ?;
 
--- Select compatible interfaces by interface_guid
--- Parameters: interface_guid
-SELECT compatible_interface_guid FROM interface_compatibility WHERE interface_guid = ?;
+-- Select compatible ports by port_guid
+-- Parameters: port_guid
+SELECT compatible_port_guid FROM port_compatibility WHERE port_guid = ?;
 
 -- Select qualities by kit_guid
 -- Parameters: kit_guid
@@ -144,9 +144,9 @@ SELECT * FROM attribute WHERE quality_guid = ?;
 -- Parameters: benchmark_guid
 SELECT * FROM attribute WHERE benchmark_guid = ?;
 
--- Select attributes by interface_guid
--- Parameters: interface_guid
-SELECT * FROM attribute WHERE interface_guid = ?;
+-- Select attributes by port_guid
+-- Parameters: port_guid
+SELECT * FROM attribute WHERE port_guid = ?;
 
 -- Select attributes by folder_guid
 -- Parameters: folder_guid

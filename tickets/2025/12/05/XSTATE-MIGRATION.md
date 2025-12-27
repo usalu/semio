@@ -955,7 +955,7 @@ All 5 Playwright tests pass:
 Attempted to remove Y.js stores from Design app hooks and use XState selectors directly.
 **Result: Tests fail** because XState isn't initialized before React's first render.
 
-### Technical Issue
+### Technical Problem
 
 1. Hooks like `useDesignAppSelection()` are called during React render
 2. They try to read from XState via `useSelector(actor, selector)`

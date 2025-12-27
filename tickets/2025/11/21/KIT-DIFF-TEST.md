@@ -70,11 +70,11 @@ Created reusable helper functions:
 ### Kit Diff Logic
 
 - Handles all kit metadata fields (name, version, description, etc.)
-- Processes all collection diffs (types, designs, qualities, interfaces, files, folders, authors, attributes)
-- Uses existing specific diff functions where available (interfaces, attributes)
+- Processes all collection diffs (types, designs, qualities, ports, files, folders, authors, attributes)
+- Uses existing specific diff functions where available (ports, attributes)
 - Uses generic helpers for remaining collections
 
-## Known Issue
+## Known Problem
 
 Vitest configuration issue in `js/js/` prevents test execution. All test files fail with "No test suite found". This is a separate infrastructure issue unrelated to the implementation.
 

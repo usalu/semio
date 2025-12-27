@@ -1,7 +1,7 @@
 ---
 slug: CREATE-INTERFACE-TAG-CLICK
-summary: Fix create interface/tag buttons doing nothing
-prompt: Fix create interface/tag buttons doing nothing
+summary: Fix create port/tag buttons doing nothing
+prompt: Fix create port/tag buttons doing nothing
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
@@ -20,4 +20,4 @@ Trace UI `actionId` → `onActionClick` → kit command wiring, then make create
 
 # Changes
 
-Updated Kit app create actions for interfaces/tags (and aligned concepts/folders) to set the current kind filter and selection to the newly created entity, and moved default names to i18n-backed labels.
+Updated Kit app create actions for ports/tags (and aligned concepts/folders) to set the current kind filter and selection to the newly created entity, and moved default names to i18n-backed labels.

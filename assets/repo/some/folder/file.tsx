@@ -19,6 +19,8 @@
 
 // #endregion Header
 
+import { JSX } from "react";
+
 // #region Types
 
 interface TestType {

@@ -40,7 +40,7 @@ Create `scripts/generate-metabolism-diff.ts` to:
    - Add/remove/update types
    - Add/remove/update designs
    - Add/remove/update qualities
-   - Add/remove/update interfaces
+   - Add/remove/update ports
    - Add/remove/update files
    - Add/remove/update authors
    - Modify nested properties (connectors, pieces, connections, etc.)
@@ -48,7 +48,7 @@ Create `scripts/generate-metabolism-diff.ts` to:
 4. Apply forward diff to get diffed kit
 5. Write all three assets to `assets/semio/`
 
-### 2. Fix Schema/Import/Export Issues
+### 2. Fix Schema/Import/Export Problems
 
 Based on test failures, identify and fix:
 

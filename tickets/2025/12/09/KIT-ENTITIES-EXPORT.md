@@ -17,7 +17,7 @@ iterations: []
 
 # Plan
 
-- Import the Metabolism kit fixture locally and expose each kit collection (types, designs, interfaces, qualities, files, folders, authors, tags, concepts, attributes) plus the Nakagin design helper.
+- Import the Metabolism kit fixture locally and expose each kit collection (types, designs, ports, qualities, files, folders, authors, tags, concepts, attributes) plus the Nakagin design helper.
 - Document the new exports in `README.md` and `AGENTS.md` so the dev docs reflect the current asset entry point.
 
 # Changes

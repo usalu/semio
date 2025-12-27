@@ -58,7 +58,7 @@ CREATE TABLE benchmark (
 	FOREIGN KEY(quality_guid) REFERENCES quality (guid)
 );
 
-CREATE TABLE interface (
+CREATE TABLE port (
 	guid VARCHAR(36) NOT NULL,
 	name VARCHAR(256) NOT NULL,
 	description TEXT,
@@ -68,12 +68,12 @@ CREATE TABLE interface (
 	FOREIGN KEY(kit_guid) REFERENCES kit (guid)
 );
 
-CREATE TABLE interface_compatibility (
-	interface_guid VARCHAR(36) NOT NULL,
-	compatible_interface_guid VARCHAR(36) NOT NULL,
-	PRIMARY KEY (interface_guid, compatible_interface_guid),
-	FOREIGN KEY(interface_guid) REFERENCES interface (guid),
-	FOREIGN KEY(compatible_interface_guid) REFERENCES interface (guid)
+CREATE TABLE port_compatibility (
+	port_guid VARCHAR(36) NOT NULL,
+	compatible_port_guid VARCHAR(36) NOT NULL,
+	PRIMARY KEY (port_guid, compatible_port_guid),
+	FOREIGN KEY(port_guid) REFERENCES port (guid),
+	FOREIGN KEY(compatible_port_guid) REFERENCES port (guid)
 );
 
 CREATE TABLE folder (
@@ -188,12 +188,12 @@ CREATE TABLE connector (
 	direction_z FLOAT NOT NULL,
 	t FLOAT NOT NULL,
 	mandatory BOOLEAN NOT NULL DEFAULT 0,
-	interface_guid VARCHAR(36),
+	port_guid VARCHAR(36),
 	description TEXT,
 	type_guid VARCHAR(36) NOT NULL,
 	row_id INTEGER PRIMARY KEY AUTOINCREMENT,
 	UNIQUE (guid, type_guid),
-	FOREIGN KEY(interface_guid) REFERENCES interface (guid),
+	FOREIGN KEY(port_guid) REFERENCES port (guid),
 	FOREIGN KEY(type_guid) REFERENCES type (guid)
 );
 
@@ -401,7 +401,7 @@ CREATE TABLE attribute (
 	definition TEXT,
 	quality_guid VARCHAR(36),
 	benchmark_guid VARCHAR(36),
-	interface_guid VARCHAR(36),
+	port_guid VARCHAR(36),
 	tag_guid VARCHAR(36),
 	concept_guid VARCHAR(36),
 	folder_guid VARCHAR(36),
@@ -421,7 +421,7 @@ CREATE TABLE attribute (
 	PRIMARY KEY (guid),
 	FOREIGN KEY(quality_guid) REFERENCES quality (guid),
 	FOREIGN KEY(benchmark_guid) REFERENCES benchmark (guid),
-	FOREIGN KEY(interface_guid) REFERENCES interface (guid),
+	FOREIGN KEY(port_guid) REFERENCES port (guid),
 	FOREIGN KEY(tag_guid) REFERENCES tag (guid),
 	FOREIGN KEY(concept_guid) REFERENCES concept (guid),
 	FOREIGN KEY(folder_guid) REFERENCES folder (guid),

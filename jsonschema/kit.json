@@ -16,7 +16,10 @@
           "type": "string"
         }
       },
-      "required": ["name", "email"],
+      "required": [
+        "name",
+        "email"
+      ],
       "title": "Author",
       "type": "object"
     },
@@ -93,7 +96,10 @@
           "description": "\ud83e\uddf2 The connecting side of the connection."
         }
       },
-      "required": ["connected", "connecting"],
+      "required": [
+        "connected",
+        "connecting"
+      ],
       "title": "Connection",
       "type": "object"
     },
@@ -199,7 +205,9 @@
           "type": "array"
         }
       },
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "title": "Design",
       "type": "object"
     },
@@ -217,7 +225,10 @@
           "type": "number"
         }
       },
-      "required": ["u", "v"],
+      "required": [
+        "u",
+        "v"
+      ],
       "title": "Coord",
       "type": "object"
     },
@@ -235,7 +246,10 @@
           "type": "number"
         }
       },
-      "required": ["longitude", "latitude"],
+      "required": [
+        "longitude",
+        "latitude"
+      ],
       "title": "Location",
       "type": "object"
     },
@@ -314,7 +328,9 @@
           "type": "array"
         }
       },
-      "required": ["type"],
+      "required": [
+        "type"
+      ],
       "title": "Piece",
       "type": "object"
     },
@@ -334,7 +350,11 @@
           "description": "\u27a1\ufe0f The y-axis of the plane."
         }
       },
-      "required": ["origin", "xAxis", "yAxis"],
+      "required": [
+        "origin",
+        "xAxis",
+        "yAxis"
+      ],
       "title": "Plane",
       "type": "object"
     },
@@ -357,7 +377,11 @@
           "type": "number"
         }
       },
-      "required": ["x", "y", "z"],
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
       "title": "Point",
       "type": "object"
     },
@@ -405,7 +429,7 @@
           "title": "Mandatory",
           "type": "boolean"
         },
-        "interface": {
+        "port": {
           "anyOf": [
             {
               "$ref": "#/$defs/InterfaceId"
@@ -415,7 +439,7 @@
             }
           ],
           "default": null,
-          "description": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66 The optional interface of the connector. This allows to define explicit compatibility with other connectors."
+          "description": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66 The optional port of the connector. This allows to define explicit compatibility with other connectors."
         },
         "point": {
           "$ref": "#/$defs/Point",
@@ -440,7 +464,10 @@
           "type": "array"
         }
       },
-      "required": ["point", "direction"],
+      "required": [
+        "point",
+        "direction"
+      ],
       "title": "Connector",
       "type": "object"
     },
@@ -475,63 +502,67 @@
           "type": "string"
         }
       },
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "title": "Attribute",
       "type": "object"
     },
     "InterfaceId": {
-      "description": "\ud83e\udeaa The props to identify the interface.",
+      "description": "\ud83e\udeaa The props to identify the port.",
       "properties": {
         "guid": {
-          "description": "\ud83c\udd94 The guid of the interface.",
+          "description": "\ud83c\udd94 The guid of the port.",
           "maxLength": 128,
           "title": "Guid",
           "type": "string"
         }
       },
-      "required": ["guid"],
+      "required": [
+        "guid"
+      ],
       "title": "InterfaceId",
       "type": "object"
     },
     "Interface": {
-      "description": "\ud83d\udd0c An interface defines connector compatibility.",
+      "description": "\ud83d\udd0c An port defines connector compatibility.",
       "properties": {
         "guid": {
-          "description": "\ud83c\udd94 The guid of the interface.",
+          "description": "\ud83c\udd94 The guid of the port.",
           "maxLength": 128,
           "title": "Guid",
           "type": "string"
         },
         "name": {
-          "description": "\ud83d\udcdb The name of the interface.",
+          "description": "\ud83d\udcdb The name of the port.",
           "maxLength": 64,
           "title": "Name",
           "type": "string"
         },
         "description": {
           "default": "",
-          "description": "\ud83d\udcac The optional human-readable description of the interface.",
+          "description": "\ud83d\udcac The optional human-readable description of the port.",
           "maxLength": 512,
           "title": "Description",
           "type": "string"
         },
         "icon": {
           "default": "",
-          "description": "\ud83e\ude99 The optional icon [ emoji | logogram | url ] of the interface.",
+          "description": "\ud83e\ude99 The optional icon [ emoji | logogram | url ] of the port.",
           "maxLength": 1024,
           "title": "Icon",
           "type": "string"
         },
         "compatibleInterfaces": {
-          "description": "\u2705 The optional other compatible interfaces. An empty list means this interface is compatible with all other interfaces.",
+          "description": "\u2705 The optional other compatible ports. An empty list means this port is compatible with all other ports.",
           "items": {
             "$ref": "#/$defs/InterfaceId"
           },
-          "title": "Compatibleinterfaces",
+          "title": "Compatibleports",
           "type": "array"
         },
         "attributes": {
-          "description": "\ud83d\udccf The attributes of the interface.",
+          "description": "\ud83d\udccf The attributes of the port.",
           "items": {
             "$ref": "#/$defs/Attribute"
           },
@@ -539,63 +570,68 @@
           "type": "array"
         }
       },
-      "required": ["guid", "name"],
+      "required": [
+        "guid",
+        "name"
+      ],
       "title": "Interface",
       "type": "object"
     },
     "InterfaceId": {
-      "description": "\ud83e\udeaa The props to identify the interface.",
+      "description": "\ud83e\udeaa The props to identify the port.",
       "properties": {
         "guid": {
-          "description": "\ud83c\udd94 The guid of the interface.",
+          "description": "\ud83c\udd94 The guid of the port.",
           "maxLength": 128,
           "title": "Guid",
           "type": "string"
         }
       },
-      "required": ["guid"],
+      "required": [
+        "guid"
+      ],
       "title": "InterfaceId",
       "type": "object"
     },
     "Interface": {
-      "description": "\ud83d\udd0c An interface defines connector compatibility.",
+      "description": "\ud83d\udd0c An port defines connector compatibility.",
       "properties": {
         "guid": {
-          "description": "\ud83c\udd94 The guid of the interface.",
+          "description": "\ud83c\udd94 The guid of the port.",
           "maxLength": 128,
           "title": "Guid",
           "type": "string"
         },
         "name": {
-          "description": "\ud83d\udcdb The name of the interface.",
+          "description": "\ud83d\udcdb The name of the port.",
           "maxLength": 64,
           "title": "Name",
           "type": "string"
         },
         "description": {
           "default": "",
-          "description": "\ud83d\udcac The optional human-readable description of the interface.",
+          "description": "\ud83d\udcac The optional human-readable description of the port.",
           "maxLength": 512,
           "title": "Description",
           "type": "string"
         },
         "icon": {
           "default": "",
-          "description": "\ud83e\ude99 The optional icon [ emoji | logogram | url ] of the interface.",
+          "description": "\ud83e\ude99 The optional icon [ emoji | logogram | url ] of the port.",
           "maxLength": 1024,
           "title": "Icon",
           "type": "string"
         },
         "compatibleInterfaces": {
-          "description": "\u2705 The optional other compatible interfaces. An empty list means this interface is compatible with all other interfaces.",
+          "description": "\u2705 The optional other compatible ports. An empty list means this port is compatible with all other ports.",
           "items": {
             "$ref": "#/$defs/InterfaceId"
           },
-          "title": "Compatibleinterfaces",
+          "title": "Compatibleports",
           "type": "array"
         },
         "attributes": {
-          "description": "\ud83d\udccf The attributes of the interface.",
+          "description": "\ud83d\udccf The attributes of the port.",
           "items": {
             "$ref": "#/$defs/Attribute"
           },
@@ -603,7 +639,10 @@
           "type": "array"
         }
       },
-      "required": ["guid", "name"],
+      "required": [
+        "guid",
+        "name"
+      ],
       "title": "Interface",
       "type": "object"
     },
@@ -647,7 +686,9 @@
           "type": "array"
         }
       },
-      "required": ["url"],
+      "required": [
+        "url"
+      ],
       "title": "Model",
       "type": "object"
     },
@@ -661,7 +702,10 @@
           "$ref": "#/$defs/ConnectorId"
         }
       },
-      "required": ["piece", "connector"],
+      "required": [
+        "piece",
+        "connector"
+      ],
       "title": "Side",
       "type": "object"
     },
@@ -682,7 +726,9 @@
           "type": "string"
         }
       },
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "title": "TypeId",
       "type": "object"
     },
@@ -800,7 +846,9 @@
           "type": "array"
         }
       },
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "title": "Type",
       "type": "object"
     },
@@ -823,7 +871,11 @@
           "type": "number"
         }
       },
-      "required": ["x", "y", "z"],
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
       "title": "Vector",
       "type": "object"
     }
@@ -926,8 +978,8 @@
       "title": "Designs",
       "type": "array"
     },
-    "interfaces": {
-      "description": "\ud83d\udd0c The interfaces of the kit.",
+    "ports": {
+      "description": "\ud83d\udd0c The ports of the kit.",
       "items": {
         "$ref": "#/$defs/Interface"
       },
@@ -943,7 +995,10 @@
       "type": "array"
     }
   },
-  "required": ["uri", "name"],
+  "required": [
+    "uri",
+    "name"
+  ],
   "title": "Kit",
   "type": "object"
 }

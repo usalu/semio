@@ -41,7 +41,7 @@ Only shared UI element libraries may import third-party dependencies; other Java
 
 Sketchpad shell and app modules MUST only import shared elements, shared utilities, and core domain modules.
 
-Code analysis issues MUST include reason and solution text.
+Code analysis problems MUST include reason and solution text.
 
 ### State Management
 
@@ -129,11 +129,11 @@ A `connector` is a conceptual connection **point** with an outwards **direction*
 
 A `connector` can be marked as **mandatory** in which case it is required to be connected to a `piece`.
 
-A `connector` can reference an **interface** (InterfaceId) for explicit compatibility control. The interface defines which other interfaces it is compatible with.
+A `connector` can reference an **port** (InterfaceId) for explicit compatibility control. The port defines which other ports it is compatible with.
 
-No **interface** means the _default_ interface which is compatible with all other connectors.
+No **port** means the _default_ port which is compatible with all other connectors.
 
-Connector compatibility is determined by the `interface` definitions at the kit level.
+Connector compatibility is determined by the `port` definitions at the kit level.
 
 A `connector` can have `props` that define measurable characteristics and `attributes` for additional metadata.
 
@@ -220,18 +220,18 @@ Benchmarks provide reference points for evaluating quality measurements against 
 
 ### Interface
 
-An `interface` is a connector compatibility definition with **name**, optional **description**, optional **icon**, optional list of **compatible interfaces** (InterfaceId references), and `attributes`.
+An `port` is a connector compatibility definition with **name**, optional **description**, optional **icon**, optional list of **compatible ports** (InterfaceId references), and `attributes`.
 
-The `interface` is defined at the kit level and referenced by `connectors` via InterfaceId.
+The `port` is defined at the kit level and referenced by `connectors` via InterfaceId.
 
-An empty **compatible interfaces** list means the interface is compatible with all other interfaces.
+An empty **compatible ports** list means the port is compatible with all other ports.
 
 Two connectors are compatible if:
 
-- Both have no interface specified (default compatibility)
-- They reference the same interface
-- One interface's compatible list includes the other interface's guid
-- Either interface has an empty compatible list and the other explicitly allows it
+- Both have no port specified (default compatibility)
+- They reference the same port
+- One port's compatible list includes the other port's guid
+- Either port has an empty compatible list and the other explicitly allows it
 
 ### Concept
 
@@ -278,7 +278,7 @@ Stats provide computed or measured performance data for entire designs using the
 The toolbar is a floating panel positioned at the bottom center of the canvas. Each app registers toolbar sections via `addSection("toolbar", { id, specificity, order, content })`.
 
 - **Home app**: Filter toggles for kit kinds (temporary, local, remote) with action buttons to create new kits
-- **Kit app**: Filter toggles for artifact kinds (designs, types, qualities, interfaces, tags, concepts, files, folders, authors) with action buttons to create new artifacts
+- **Kit app**: Filter toggles for artifact kinds (designs, types, qualities, ports, tags, concepts, files, folders, authors) with action buttons to create new artifacts
 - **Design app**: Selection tools (normal, additive, subtractive) and lasso tools (rectangular, freeform)
 - **Type app**: Selection tools and connector creation tool
 - **Feedback app**: Send button to submit feedback form
@@ -354,8 +354,8 @@ Toolbar panel visibility defaults to `true` for all apps via `panelVisibility: {
 - Keep Sketchpad runtime console output clean: avoid persistent `console.log` usage and rely on warnings/errors plus removable `[DEBUG]` diagnostics only when investigating.
 - NEVER build or run the code.
 - NEVER care about backwards compatibility unless explicitly asked to. Even on schema changes ALWAYS refactor to clean code and introduce breaking changes.
-- NEVER use `type` for naming enums, interfaces, or types. ALWAYS use `kind` instead to avoid confusion with the native `type` concept in Semio. Examples: `ArtifactType` → `ArtifactKind`, `WindowType` → `WindowKind`, etc.
-- When fixing issues, ALWAYS update the existing file and NEVER create new fixed, updated, migrated, etc. files next to the old one.
+- NEVER use `type` for naming enums, ports, or types. ALWAYS use `kind` instead to avoid confusion with the native `type` concept in Semio. Examples: `ArtifactType` → `ArtifactKind`, `WindowType` → `WindowKind`, etc.
+- When fixing problems, ALWAYS update the existing file and NEVER create new fixed, updated, migrated, etc. files next to the old one.
 - NEVER change (e.g. simplify/remove functionality) or skip any test to pass. ALWAYS adjust implementation to pass the tests.
 - NEVER create additional scripts, tests, fixtures, assets, …
 - NEVER create scripts outside the `scripts` folder. Not even when debugging or diagnosing a library problem.
@@ -373,13 +373,13 @@ Whenever a keyword is used, ALWAYS directly proceed with the task and NEVER ask 
 
 - `CLEAN`: Clean up everything intermediate such as diagnostic console logs, comments, and temporary code.
 
-- `I18N`: Run `tsx scripts/i18n.ts` to regenerate `reports/i18n.md`; fix all reported translation issues, add missing keys, update incomplete entries, remove unused keys, and rerun the report and loop until all errors/warnings are gone and the report is clean.
+- `I18N`: Run `tsx scripts/i18n.ts` to regenerate `reports/i18n.md`; fix all reported translation problems, add missing keys, update incomplete entries, remove unused keys, and rerun the report and loop until all errors/warnings are gone and the report is clean.
 
 - `AUTOMATE`: Create a `*.ts` script to automate a task (use `scripts/utils.ts` for reusable code). Create a run configuration in `package.json`, create a task in `.vscode/tasks.json` and create a `.vscode/launch.json` along with the script. Call the script from the `preflight.ts` script.
 
 - `FINISH`: Finish a task that was started but not completed. ALWAYS first search for recent tickets using `npx tsx repo.tsx ticket list` and analyze with git staged and unstaged changes that are related to the task.
 
-- `SCHEMA`: Extend the schema for `semio.ts` then run `tsx scripts/schema.ts` to regenerate `reports/schema.json`; Fix all reported schema issues, add missing fields, update incomplete entries, remove unused fields, and rerun until the report is clean. Rerun the script until the report is clean.
+- `SCHEMA`: Extend the schema for `semio.ts` then run `tsx scripts/schema.ts` to regenerate `reports/schema.json`; Fix all reported schema problems, add missing fields, update incomplete entries, remove unused fields, and rerun until the report is clean. Rerun the script until the report is clean.
 
 ## CI/CD
 
@@ -410,7 +410,7 @@ npm install  # Husky will auto-install via prepare script
 
 1. **Prettier** - Formats JavaScript/TypeScript/JSON/YAML/Markdown (uses `.prettierignore` via `--ignore-path`, including `**/prompts.md`)
 2. **Ruff Format** - Formats Python code
-3. **Ruff Fix** - Auto-fixes Python linting issues
+3. **Ruff Fix** - Auto-fixes Python linting problems
 
 **Linters** (generate JSON reports):
 
@@ -424,10 +424,10 @@ npm install  # Husky will auto-install via prepare script
 Linters generate JSON reports in `reports/`:
 
 - `reports/i18n.json` - i18n translation validation
-- `reports/eslint.json` - ESLint linting issues
-- `reports/code.json` - Codebase code-quality issues
+- `reports/eslint.json` - ESLint linting problems
+- `reports/code.json` - Codebase code-quality problems
 - `reports/typescript.json` - TypeScript compiler errors
-- `reports/ruff.json` - Python Ruff linting issues
+- `reports/ruff.json` - Python Ruff linting problems
 
 Reports are gitignored (except README) and regenerated on each commit.
 
@@ -476,25 +476,25 @@ npx tsx repo.tsx <command> [subcommand] [options]
 
 **Commands:**
 
-| Command                    | Description                         |
-| -------------------------- | ----------------------------------- |
-| `help`                     | Show help message                   |
-| `analyze [--scope=...]`    | Analyze codebase for issues         |
-| `fix [--scope=...]`        | Apply autofixes for issues          |
-| `rule list`                | List all registered rules           |
-| `rule run <id>`            | Run a specific rule                 |
-| `ticket new <slug>`        | Create a new ticket                 |
-| `ticket list [year/month]` | List tickets                        |
-| `ticket read <path>`       | Read a ticket                       |
-| `ticket iterate <path>`    | Run rules and sync issues to ticket |
-| `ticket close <path>`      | Close a ticket (if valid)           |
-| `project list`             | List Nx projects                    |
-| `project tree`             | Show project dependency tree        |
-| `folder tree [path]`       | Show folder structure               |
-| `file list [scope]`        | List files in scope                 |
-| `region tree <file>`       | Show region structure of a file     |
-| `definition list <file>`   | List definitions in a file          |
-| `tool <name> [args...]`    | Run an Nx target (e.g., lint, test) |
+| Command                    | Description                           |
+| -------------------------- | ------------------------------------- |
+| `help`                     | Show help message                     |
+| `analyze [--scope=...]`    | Analyze codebase for problems         |
+| `fix [--scope=...]`        | Apply autofixes for problems          |
+| `rule list`                | List all registered rules             |
+| `rule run <id>`            | Run a specific rule                   |
+| `ticket new <slug>`        | Create a new ticket                   |
+| `ticket list [year/month]` | List tickets                          |
+| `ticket read <path>`       | Read a ticket                         |
+| `ticket iterate <path>`    | Run rules and sync problems to ticket |
+| `ticket close <path>`      | Close a ticket (if valid)             |
+| `project list`             | List Nx projects                      |
+| `project tree`             | Show project dependency tree          |
+| `folder tree [path]`       | Show folder structure                 |
+| `file list [scope]`        | List files in scope                   |
+| `region tree <file>`       | Show region structure of a file       |
+| `definition list <file>`   | List definitions in a file            |
+| `tool <name> [args...]`    | Run an Nx target (e.g., lint, test)   |
 
 **Scope Syntax:**
 
@@ -646,7 +646,7 @@ dnd-kit's `PointerSensor` requires native browser `PointerEvent` objects. Playwr
 - Test Quick Fixes apply correct diffs
 - Verify diagnostics appear at correct locations
 
-- `I18N`: Run `tsx scripts/i18n.ts` to regenerate `reports/i18n.md`; fix all reported translation issues, add missing keys, update incomplete entries, remove unused keys, and rerun until the report is clean.
+- `I18N`: Run `tsx scripts/i18n.ts` to regenerate `reports/i18n.md`; fix all reported translation problems, add missing keys, update incomplete entries, remove unused keys, and rerun until the report is clean.
 
 - `AUTOMATE`: Create a script to automate a task. `*.ts` for all automation tasks (use `scripts/utils.ts` for reusable code). `*.py` for python related tasks (use `@semio/engine` for reusable code).
 
@@ -1232,7 +1232,7 @@ tsx scripts/i18n.ts
 # 2. Check report
 cat reports/i18n.md
 
-# 3. Fix issues in locale files
+# 3. Fix problems in locale files
 
 # 4. Re-run validation
 tsx scripts/i18n.ts
@@ -1326,7 +1326,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ ├── i18n.ts # i18n validation hook (generates JSON report)
 │ ├── prettier.ts # Prettier formatter hook (applies formatting)
 │ ├── eslint.ts # ESLint linting hook (generates JSON report)
-│ ├── code.ts # Codebase scan hook (comments incl. block/JSDoc, SPDX headers, regions + empty region removal, js/js forbidden imports, js/js forbidden terminology, reason/solution issue metadata) (generates JSON report)
+│ ├── code.ts # Codebase scan hook (comments incl. block/JSDoc, SPDX headers, regions + empty region removal, js/js forbidden imports, js/js forbidden terminology, reason/solution problem metadata) (generates JSON report)
 │ ├── typescript.ts # TypeScript compiler check hook (generates JSON report)
 │ └── ruff.ts # Python Ruff formatter and linter hook (applies formatting, generates JSON report)
 ├── reports # Generated validation reports (gitignored)
@@ -1646,7 +1646,7 @@ Shared react components. The main component is Sketchpad. Sketchpad is used in t
     ```
   - **ActionField Type**: For action-only hooks without value:
     ```typescript
-    interface ActionField {
+    port ActionField {
       canExecute: boolean;
       execute: () => void;
     }
@@ -1681,7 +1681,7 @@ Shared react components. The main component is Sketchpad. Sketchpad is used in t
   - `useKitQualities(guid?)` - returns qualities array
   - `useKitAuthors(guid?)` - returns authors array
   - `useKitFolders(guid?)` - returns folders array
-  - `useKitInterfaces(guid?)` - returns interfaces array
+  - `useKitInterfaces(guid?)` - returns ports array
   - `useKitTags(guid?)` - returns tags array
   - `useKitConcepts(guid?)` - returns concepts array
   - `useKitName(guid?)` - returns kit name
@@ -1758,7 +1758,7 @@ Each app plugin provides:
 
 ```
 js/js/sketchpad/
-  shared.ts          # AppPlugin interface, registry functions
+  shared.ts          # AppPlugin port, registry functions
   apps/
     index.ts         # Single import point for all app plugins
   Home.tsx           # Home app + homeAppPlugin
@@ -2007,14 +2007,14 @@ Kit artifact management with multi-window layout. Extends `KitDiffAppStore` (mod
 **State (`KitAppState`):**
 
 - `panelVisibility` - Panel toggle states
-- `selection` - Selected artifacts (types, designs, qualities, interfaces, tags, concepts, files, folders, authors)
+- `selection` - Selected artifacts (types, designs, qualities, ports, tags, concepts, files, folders, authors)
 - `hover` - Hovered artifact
 - `filterSearch` - Search filter string
 - `expandedRows` - Expanded table rows
 - `sortColumn` / `sortDirection` - Sorting preferences
 - `windowLayout` - Multi-window layout configuration
 
-**Selection Types:** Types, designs, qualities, interfaces, tags, concepts, files, folders, authors
+**Selection Types:** Types, designs, qualities, ports, tags, concepts, files, folders, authors
 
 **Events:**
 
@@ -2571,8 +2571,8 @@ executeCommand<T>(command: string, ...args): Promise<T>
 
 #### Kit app artifact creation
 
-- `js/js/sketchpad/Kit.tsx` create actions for `interfaces`, `tags`, `concepts`, and `folders` set the active `kind` filter and selection to the newly created entity.
-- Default names are resolved via i18n labels: `semio.sketchpad.app.interface.defaultName`, `semio.sketchpad.app.tag.defaultName`, `semio.sketchpad.app.concept.defaultName`.
+- `js/js/sketchpad/Kit.tsx` create actions for `ports`, `tags`, `concepts`, and `folders` set the active `kind` filter and selection to the newly created entity.
+- Default names are resolved via i18n labels: `semio.sketchpad.app.port.defaultName`, `semio.sketchpad.app.tag.defaultName`, `semio.sketchpad.app.concept.defaultName`.
 
 #### XState State Machines
 
@@ -2623,7 +2623,7 @@ App-specific events are only available in their respective navigation states:
 
 **Per-App Transaction Events (scoped to navigation state):**
 
-Transaction management is per-app, not global. Each app (Design, Type, Kit) has its own transaction state embedded in its app state interface.
+Transaction management is per-app, not global. Each app (Design, Type, Kit) has its own transaction state embedded in its app state port.
 
 - **design**: `DESIGN.TRANSACTION.START`, `DESIGN.TRANSACTION.COMMIT`, `DESIGN.TRANSACTION.ABORT`, `DESIGN.TRANSACTION.UNDO`, `DESIGN.TRANSACTION.REDO`, `DESIGN.TRANSACTION.RECORD_EDIT`
 - **type**: `TYPE.TRANSACTION.START`, `TYPE.TRANSACTION.COMMIT`, `TYPE.TRANSACTION.ABORT`, `TYPE.TRANSACTION.UNDO`, `TYPE.TRANSACTION.REDO`, `TYPE.TRANSACTION.RECORD_EDIT`
@@ -2681,7 +2681,7 @@ Separate hierarchical UI state machine (kept for reference, functionality merged
 
 #### Transaction State Management
 
-Transaction state is embedded in each app's state interface via `AppTransactionState`:
+Transaction state is embedded in each app's state port via `AppTransactionState`:
 
 ```typescript
 interface AppTransactionState<TEdit = any> {
@@ -2720,7 +2720,7 @@ These continue even when navigating away from the originating app.
 
 #### Command System
 
-All state mutations are executed through commands. Commands provide a consistent interface for operations and enable undo/redo, logging, and origin tracking.
+All state mutations are executed through commands. Commands provide a consistent port for operations and enable undo/redo, logging, and origin tracking.
 
 #### Command Registry
 
@@ -2884,7 +2884,7 @@ Users can override default hotkeys via `hotkeyOverrides` in SketchpadStore. Over
 
 ### Core Types (shared.ts)
 
-The `shared.ts` module exports all core types, enums, and interfaces used across the Sketchpad.
+The `shared.ts` module exports all core types, enums, and ports used across the Sketchpad.
 
 #### Hook Result Types
 
@@ -3423,7 +3423,7 @@ interface Fix {
   diff: KitDiff;
 }
 
-interface Issue {
+interface Problem {
   constraintId: string;
   severity: Severity;
   message: string;
@@ -3433,7 +3433,7 @@ interface Issue {
 }
 
 interface ValidationResult {
-  issues: Issue[];
+  problems: Problem[];
 }
 ```
 
@@ -3455,7 +3455,7 @@ interface ValidationContext {
 All validation constraints follow the pattern:
 
 ```typescript
-type Constraint = (ctx: ValidationContext) => Issue[];
+type Constraint = (ctx: ValidationContext) => Problem[];
 ```
 
 ##### Default Constraints
@@ -3511,13 +3511,13 @@ All qualities within a kit must have unique names.
 
 **Fix:** Renames the quality with a unique suffix.
 
-#### 6. Interface Name Uniqueness (`interface-name-unique`)
+#### 6. Interface Name Uniqueness (`port-name-unique`)
 
 **Severity:** Error
 
-All interfaces within a kit must have unique names.
+All ports within a kit must have unique names.
 
-**Fix:** Renames the interface with a unique suffix.
+**Fix:** Renames the port with a unique suffix.
 
 #### 7. File Name Uniqueness (`file-name-unique`)
 
@@ -3575,7 +3575,7 @@ Layer paths within a design must be unique.
 | Model      | Within type            | name  | model-name-unique     |
 | Quality    | Global                 | name  | quality-name-unique   |
 | Quality    | Global                 | guid  | guid-unique           |
-| Interface  | Global                 | name  | interface-name-unique |
+| Interface  | Global                 | name  | port-name-unique      |
 | Interface  | Global                 | guid  | guid-unique           |
 | File       | Global                 | name  | file-name-unique      |
 | File       | Global                 | guid  | guid-unique           |
@@ -3591,15 +3591,15 @@ Layer paths within a design must be unique.
 ```typescript
 const result = validateSemioKit(kit);
 if (hasSemioErrors(result)) {
-  console.error("Validation errors found:", result.issues);
+  console.error("Validation errors found:", result.problems);
 }
 ```
 
 ##### Applying Fixes
 
 ```typescript
-const issue = result.issues[0];
-const fix = issue.fixes[0];
+const problem = result.problems[0];
+const fix = problem.fixes[0];
 const fixedKit = applyKitDiff(kit, fix.diff);
 ```
 
@@ -3607,9 +3607,9 @@ const fixedKit = applyKitDiff(kit, fix.diff);
 
 ```typescript
 const customConstraint: Constraint = (ctx) => {
-  const issues: Issue[] = [];
+  const problems: Problem[] = [];
   // Custom validation logic
-  return issues;
+  return problems;
 };
 
 const result = validateSemioKit(kit, {
@@ -3628,22 +3628,22 @@ Example:
 
 ```typescript
 export const semioCustomConstraint: Constraint = (ctx) => {
-  const issues: Issue[] = [];
+  const problems: Problem[] = [];
   // Validation logic
   // Use semioMakeFix to create fixes
-  return issues;
+  return problems;
 };
 ```
 
 #### Cross-Platform Connectorable Validation
 
-All implementations (TypeScript, Python, C#) produce **identical** validation output for cross-platform compatibility. Issues include fixes with `KitDiff` structures.
+All implementations (TypeScript, Python, C#) produce **identical** validation output for cross-platform compatibility. Problems include fixes with `KitDiff` structures.
 
 ##### Format
 
 ```json
 {
-  "issues": [
+  "problems": [
     {
       "constraintId": "type-name-unique",
       "severity": "error",
@@ -3695,7 +3695,7 @@ This script consolidates all Metabolism asset generation:
 | `connector-name-unique` | Connector names must be unique within a type |
 | `model-name-unique`     | Model names must be unique within a type     |
 | `quality-name-unique`   | Quality names must be unique                 |
-| `interface-name-unique` | Interface names must be unique               |
+| `port-name-unique`      | Interface names must be unique               |
 | `file-name-unique`      | File names must be unique                    |
 | `folder-name-unique`    | Folder names must be unique among siblings   |
 | `layer-path-unique`     | Layer paths must be unique within a design   |

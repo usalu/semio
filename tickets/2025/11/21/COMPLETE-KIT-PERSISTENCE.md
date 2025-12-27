@@ -39,7 +39,7 @@ Implement 100% data persistence for Kit import/export with:
 
 - [ ] Use new schema.sql structure
 - [ ] Persist all kit properties
-- [ ] Persist all nested entities (interfaces, qualities, files, folders, authors)
+- [ ] Persist all nested entities (ports, qualities, files, folders, authors)
 - [ ] Persist all type sub-entities (models + tags, connectors + props)
 - [ ] Persist all design sub-entities (pieces + props, connections, layers, groups, stats)
 - [ ] Persist all attributes everywhere
@@ -87,7 +87,7 @@ Implement 100% data persistence for Kit import/export with:
 - ALL nested entities must persist
 - ALL attributes must persist everywhere they exist
 
-## Current Issues
+## Current Problems
 
 1. **Incomplete Persistence** - Only types and designs are partially persisted
 2. **No Deep Equality** - Comparison functions are shallow

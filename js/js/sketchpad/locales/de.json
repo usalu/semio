@@ -1366,16 +1366,16 @@
                 "normal": "Schnittstellen anzeigen",
                 "beginner": "Klicken, um alle Schnittstellen in diesem Kit anzuzeigen"
               },
-              "manual": "manuals/semio/kit#interfaces",
-              "tutorial": "getting-started/intro#interface"
+              "manual": "manuals/semio/kit#ports",
+              "tutorial": "getting-started/intro#port"
             },
             "createInterface": {
               "label": {
                 "normal": "Schnittstelle erstellen",
                 "beginner": "Klicken, um eine neue Schnittstellendefinition in diesem Kit zu erstellen"
               },
-              "manual": "manuals/semio/kit#interfaces",
-              "tutorial": "getting-started/intro#interface"
+              "manual": "manuals/semio/kit#ports",
+              "tutorial": "getting-started/intro#port"
             },
             "showFiles": {
               "label": {
@@ -1616,7 +1616,7 @@
                     "tutorial": "hello-semio/save-kit"
                   }
                 },
-                "interface": {
+                "port": {
                   "compatible": {
                     "label": {
                       "normal": "Kompatibel",
@@ -1735,7 +1735,7 @@
               }
             }
           },
-          "interface": {
+          "port": {
             "allCompatible": {
               "label": {
                 "normal": "Alle kompatibel",
@@ -1757,7 +1757,7 @@
               }
             }
           },
-          "interfaces": {
+          "ports": {
             "multipleSelected": {
               "label": {
                 "normal": "Mehrere ausgewählt",
@@ -1810,7 +1810,7 @@
             }
           }
         },
-        "interface": {
+        "port": {
           "label": {
             "normal": "Schnittstelle",
             "beginner": "Schnittstelle"
@@ -2512,7 +2512,7 @@
                       "beginner": "Ob dieser Connector verbunden sein muss"
                     }
                   },
-                  "interface": {
+                  "port": {
                     "label": {
                       "normal": "Familie",
                       "beginner": "Die Connectorfamilie für Kompatibilitätsprüfung"
@@ -3188,7 +3188,7 @@
                     "normal": "",
                     "beginner": ""
                   },
-                  "interface": {
+                  "port": {
                     "label": {
                       "normal": "Familie",
                       "beginner": "Connector-Familienname. Connectors derselben Familie koennen miteinander verbunden werden."
@@ -3884,7 +3884,7 @@
       "user": {
         "label": {
           "normal": "User mode",
-          "beginner": "Show standard user interface."
+          "beginner": "Show standard user port."
         }
       },
       "beginner": {

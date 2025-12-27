@@ -27,8 +27,8 @@ The kit data has **severe type/connector mismatches**:
 ### Example 1: Base Type Mismatch
 
 - Piece `4b51bc5d-2fc2-40d6-9908-a2cee7911799` has type `c4bf196e-84dd-4af4-9a01-8f4f961d8932` (Base)
-- Connection parent connector: `b1da11ce-75b2-4d60-9eaf-1f43e3100c2c` (interface: "core circular bottom") - belongs to Blob type (child of Base)
-- Connection child connector: `e0fc8147-34ce-4d7c-85c3-2858654167fc` (interface: "core circular top") - belongs to type `d31a1b54-194e-4969-8efc-24146f138909` (Single Storey, child of Cylindric Tambour)
+- Connection parent connector: `b1da11ce-75b2-4d60-9eaf-1f43e3100c2c` (port: "core circular bottom") - belongs to Blob type (child of Base)
+- Connection child connector: `e0fc8147-34ce-4d7c-85c3-2858654167fc` (port: "core circular top") - belongs to type `d31a1b54-194e-4969-8efc-24146f138909` (Single Storey, child of Cylindric Tambour)
 
 ### The Problem
 
@@ -56,10 +56,10 @@ The **kit JSON files must be corrected**:
 
 ### Option 2: Workaround - Connector Interface Matching (NOT RECOMMENDED)
 
-Match connectors by interface instead of GUID:
+Match connectors by port instead of GUID:
 
-- Find a connector with compatible interface in piece type
-- Risky - may connect incompatible connectors with same interface
+- Find a connector with compatible port in piece type
+- Risky - may connect incompatible connectors with same port
 
 ### Option 3: Skip Invalid Connections (TEMP WORKAROUND)
 

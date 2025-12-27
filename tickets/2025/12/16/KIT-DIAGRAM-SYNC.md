@@ -37,7 +37,7 @@ Kit diagram had several issues:
 - **KitArtifactNode**: Changed Handle components from `!w-2 !h-2 !opacity-0` to `!w-0 !h-0 !bg-transparent !border-none` to completely hide edge connection points
 - **KitArtifactNode**: Added `useKitAppClearHover` hook for proper hover state cleanup on mouse leave
 - **KitArtifactNode**: Updated container styling to use `cursor-grab active:cursor-grabbing` for drag indication
-- **KitDiagramInner**: Updated `visibleGuids` to include ALL artifact types (types, designs, qualities, interfaces, tags, concepts, files, folders, authors) instead of just types/designs
+- **KitDiagramInner**: Updated `visibleGuids` to include ALL artifact types (types, designs, qualities, ports, tags, concepts, files, folders, authors) instead of just types/designs
 - **KitDiagramInner**: Removed parent expansion filtering - all nodes are now visible regardless of table row expansion state
 - **KitDiagramInner**: Modified node/edge building to filter based on visible GUIDs from search filter only
 - **KitDiagramInner**: Added `visibleGuids` to effect dependency for resetting fit view on filter changes
@@ -52,6 +52,6 @@ Kit diagram had several issues:
 - Added "Kit Diagram - Node Click Selection" test: verifies clicking diagram nodes updates selection
 - Added "Kit Diagram - Hover Sync" test: verifies hover state sync between table and diagram
 - Added "Kit Diagram - Filter Sync" test: verifies search filter reduces diagram node count
-- Added "Kit Diagram - All Artifact Types Visible" test: verifies all artifact types (types, designs, qualities, interfaces, tags, concepts, files, folders, authors) are rendered as nodes
+- Added "Kit Diagram - All Artifact Types Visible" test: verifies all artifact types (types, designs, qualities, ports, tags, concepts, files, folders, authors) are rendered as nodes
 - Added "Kit Diagram - Edges Connect Nodes" test: verifies edges exist and have valid SVG paths
 - Added "Kit Diagram - Node Dragging Updates Position" test: verifies ReactFlow receives drag events

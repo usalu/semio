@@ -1,10 +1,12 @@
 # Prompt history
 
+Remove severity from all rules and violations.
+
 Add a test for every single command.
 For a mocked repo use the assets/repo for a toy repo to check all commands and the assets/repo/reports/violations.json. Ignore this folder in normal repo checking.
 Mostly do unit tests. In the vscode extension just test the ui.
 
-comment inline and block issue are autofixable by simply removing it. The have low priority.
+comment inline and block problem are autofixable by simply removing it. The have low priority.
 
 PLAN and IMPLEMENT new ticket according AGENTS.md:
 Rules should be created according scope and produce a set of related violations. Generalize and extend the existing rules.
@@ -15,7 +17,7 @@ E.g. generalize inline-comment to comment (violations: forbidden inline comment,
 You didnt create a ticket according @AGENTS.md
 
 Read everything from @AGENTS.md and then start the task.
-Fix all code issues and rerun until no issues remain. @reports/code.json @hooks/code.tsx .
+Fix all code violations and rerun until no violations remain. @reports/code.json @hooks/code.tsx .
 
 @Ink ink should be used in all executable typescript files such as scripts and hooks. Add it as a dev dependency to root package@package.json.
 Refactor the existing scripts (interactive or not) to use ink.
@@ -35,7 +37,7 @@ Prompting is the new of developing. In the old world devs should always write li
 Write a detailed mardown plan to download.
 
 The idea is to create a general purpose cli node.js program (with ink and tree-sitter) `repo.tsx` for agents and developers to interact with a monorepo. It should use nx as much as possible.
-The rule mechanism and the ticket mechanism should be integrated. E.g. Once an iteration is finished then all rules that were affected by the ticket should be re-analyzed and all issues should be automatically added to the # Issues section of the ticket. A ticket can only be closed once the issue section is empty (and the plan and changes section are not empty).
+The rule mechanism and the ticket mechanism should be integrated. E.g. Once an iteration is finished then all rules that were affected by the ticket should be re-analyzed and all violations should be automatically added to the # Violations section of the ticket. A ticket can only be closed once the violation section is empty (and the plan and changes section are not empty).
 
 Features:
 - `repo rule …` all rule commands.
@@ -66,7 +68,7 @@ Write a plan for
 2. Extend an existing vscode extension to show the report as linter errors along with autofixes.
 
 The code analysis and fixing system should be extended.
-A general rule/issue system should be introduced to the codebase. The system should run on any file/folder change but not on keystrokes. The main purpose is to provide details for agents and developers when repo-specific implementation contracts are broken (forbidden imports, forbidden hooks, etc). Mostly those are contracts between different parts of the codebase and they can rarely be autofixed. The result is a report with issues. A vscode extension should show the report when e.g. a file has an issue
+A general rule/violation system should be introduced to the codebase. The system should run on any file/folder change but not on keystrokes. The main purpose is to provide details for agents and developers when repo-specific implementation contracts are broken (forbidden imports, forbidden hooks, etc). Mostly those are contracts between different parts of the codebase and they can rarely be autofixed. The result is a report with violations. A vscode extension should show the report when e.g. a file has an violation
 Every rule has a name, a reason and scopes (repo-wide, project-wide, folder-wide, file-wide, region-wide, definition-wide).
 A definition can be a class, a function, a variable, an enum, etc.
 A rule is checked whenever the scope changes.
@@ -80,42 +82,42 @@ Examples:
 - "js/js/sketchpad/Sketchpad.tsx#Header" is a region scope.
 - "js/js/sketchpad/Sketchpad.tsx#State Managment#Store" is a sub-region scope.
 - "js/js/sketchpad/Sketchpad.tsx§Sketchpad" is a definition scope.
-  Rules are typescript functions that produce different kind of issues. Rules can provide an autofix for every kind of issue. The fix script autofixes all autofixable issues.
-  Issue have a summary, kind, priority (high, medium, low), autofixable flag and a solution text.
+  Rules are typescript functions that produce different kind of violations. Rules can provide an autofix for every kind of violation. The fix script autofixes all autofixable violations.
+  Violation have a summary, kind, priority (high, medium, low), autofixable flag and a solution text.
   E.g. Rule
 - Name: "Header Region"
   Id: "semio.rule.header-region"
   Scopes: ["**/*.(ts|tsx|py|cs)"]
   Reason: "All source code must have a header region with a filepath, contributor and license."
-  Issues: [
+  Violations: [
   {
-  Kind: "semio.issue.header-region.missing-filepath",
+  Kind: "semio.violation.header-region.missing-filepath",
   Priority: "low",
   Autofixable: true,
   }
   ]
-  Here some example issues that could be produced by the rule:
-  Issues: Header Region rule can produce the following issues:
+  Here some example violations that could be produced by the rule:
+  Violations: Header Region rule can produce the following violations:
 - Summary: "Missing filepath in the header region of `js/js/sketchpad/Sketchpad.tsx`."
-  Kind: "semio.issue.header-region.missing-filepath"
+  Kind: "semio.violation.header-region.missing-filepath"
   Scopes: ["js/js/sketchpad/Sketchpad.tsx"]
   Priority: "low"
   Autofixable: true
   Solution: "Add the filepath to the header region."
 - Summary: "Wrong filepath in the header region in `js/js/sketchpad/Sketchpad.tsx`."
-  Kind: "semio.issue.header-region.wrong-filepath"
+  Kind: "semio.violation.header-region.wrong-filepath"
   Scopes: ["js/js/sketchpad/Sketchpad.tsx"]
   Priority: "low"
   Autofixable: true
   Solution: "Update the filepath in the header region to the actual filepath of the file."
 - Summary: "js/js/sketchpad/Sketchpad.tsx is missing a contributor in the header region."
-  Kind: "semio.issue.header-region.missing-contributor"
+  Kind: "semio.violation.header-region.missing-contributor"
   Scopes: ["js/js/sketchpad/Sketchpad.tsx"]
   Priority: "low"
   Autofixable: true
   Solution: "Add the contributor to the header region."
 - Summary: "js/js/sketchpad/Sketchpad.tsx is missing a license in the header region."
-  Kind: "semio.issue.header-region.missing-license"
+  Kind: "semio.violation.header-region.missing-license"
   Priority: "low"
   Autofixable: true
   Solution: "Add the license to the header region."
@@ -132,17 +134,17 @@ E.g. repo-wide rule:
 
 Rules are always documented in the dev-docs (README.md and AGENTS.md). They always are one section below the containing section. E.g. Javascript ecosystem-wide rules are documented under `# /` in README.md and AGENTS.md.
 
-Extend the code.ts hook to that all AGENTS.md headers under # Codebase meaning ## PATH are actual files and folders, all have the proper prefix (📁 or 📄), are sorted alphabetically and none appear twice. Create issues for all individual violations.
+Extend the code.ts hook to that all AGENTS.md headers under # Codebase meaning ## PATH are actual files and folders, all have the proper prefix (📁 or 📄), are sorted alphabetically and none appear twice. Create violations for all individual violations.
 
 Make the reasons and solutions specific to the codebase and the files. Read the devs docs to understand the reasons.
 E.g. when explaining why comments are removed, explain that code is never documented and instead everything is documented multiple times in the devdocs. 1. Under `# 🛍️ Products` in README.md where it is described from user perspective [architects, designers, engineers, …] (framework-agnostic, no implementation references, etc) 2. Under `# 📦 Components` in README.md where it is described from junior-developer perspective (mechanism explanation and reasoning behind the decision, how theory links to implementation, etc). 3. Under `# Software Requirements Specification` in AGENTS.md where it is described from human-interface-designer perspective (concise technical terms without explanation, framework-agnostic, no implementation references). There are two sections: `# Business Logic` and `# UI/UX`. 4. Under `# Codebase` in AGENTS.md where it is described from senior-developer perspective (framework-mechanisms, consice technical terms without explanation, implementation details, etc). The section has the same header structure as the files and folders. All files and folders are flat with `## PATH` e.g. `## js/js/sketchpad/` or `## net/Semio.cs`
 The purpose of the dev docs is to understand the codebase. NEVER add reasoning or process related (such as what changed, why, how, … - this is part of the log) to the dev docs.
 
-Extend the code analysis hook. Make sure that every issue has a reason text field and a solution text field. E.g. A solution for duplicate paths is to merge them or remove one if one is clearly outdated.
+Extend the code analysis hook. Make sure that every violation has a reason text field and a solution text field. E.g. A solution for duplicate paths is to merge them or remove one if one is clearly outdated.
 More examples for a reason for forbidden imports:
 elements.tsx is a general-purpose ui library and should not import anything from sketchpad or any app. It is the only file that can import third party libraries and reexpose them as components. All other files in the js/js folder should be self-contained and dependency free from any other library outside of the js/js folder.
 Sketchpad.tsx offers scaffolding to apps but is independent of app internals. Importing from app files violates the open/closed principle. Adding an app should not require modifying Sketchpad.tsx and just mean to add a file. Removing an app should not require modifying Sketchpad.tsx and just mean to remove a file.
-Provide reasons and solutions to all code issues.
+Provide reasons and solutions to all code violations.
 
 Diagrams
 
@@ -163,7 +165,7 @@ Currently the base store depends on yjs. Make sure that Store and AppStore only 
 
 Extend the analyze and fix code to check and remove empty regions.
 
-Use the code.json report to detect structural issues. Do all large refactor necessary to make sure the code issues dissapear. Rerun preflight and edit until all issues are gone.@code.ts@code.json
+Use the code.json report to detect structural violations. Do all large refactor necessary to make sure the code violations dissapear. Rerun preflight and edit until all violations are gone.@code.ts@code.json
 
 The analyze and fix code should isnt detecting multiline comments. e.g.
 /\*\*
@@ -214,7 +216,7 @@ Make sure that the headers of all files follow a specific scheme. Adjust analyze
 
 The log.ts script should be extended with an flag plan that takes a markdown file path and adds it directly to the plan section of the ticket.
 
-Extend the code.ts hook to find more issues. Add two more issue kinds: forbidden imports and forbidden terminology. Forbidden imports checks if imports are structurally forbidden. Forbidden terminology checks if specific terminology is used somewhere where it shouldnt be allowed e.g. when domain-specific terminology is used in general-purpose files.
+Extend the code.ts hook to find more violations. Add two more violation kinds: forbidden imports and forbidden terminology. Forbidden imports checks if imports are structurally forbidden. Forbidden terminology checks if specific terminology is used somewhere where it shouldnt be allowed e.g. when domain-specific terminology is used in general-purpose files.
 Here some rules for js/js:
 
 - elements.tsx are pure reusable ui elements library that are indepedent of semio. They should not import anything from sketchpad or any app or contain any semio domain-specific terminology (kit, design, type, connector, connection, docs, feedback). elements.tsx is the only file that can import third party libraries and reexpose them as components. All other files in the js/js folder should be self-contained and dependency free from any other library outside of the js/js folder.
@@ -886,7 +888,7 @@ Write a temporary script to:
 ⦁ Migrate Cylindric Capital to be a child of Capital
 ⦁ Migrate Cyclindric Tambour to be a child of Tambour
 
-⦁ Not all Model ENTITY components have the right inputs/outputs (e.g. diff and diffs components have nothing). Some entities are missing entirely (such as folders, concepts, tags, interfaces, etc). Every Entity (exception weak entities such as side) has as first three params: ENTITIY?, Vd?, Gd
+⦁ Not all Model ENTITY components have the right inputs/outputs (e.g. diff and diffs components have nothing). Some entities are missing entirely (such as folders, concepts, tags, ports, etc). Every Entity (exception weak entities such as side) has as first three params: ENTITIY?, Vd?, Gd
 Check the semio.ts schema throughly.
 ⦁ Model ENTITYId components are no longer required because every entity has a guid. Keep The ENITITYId Params with casts, etc.
 ⦁ Almost all Params are missing
@@ -954,7 +956,7 @@ Fix/adjust/refactor the code to pass the type app test.
 
 There is an infinite loop in type app.
 
-The interfaces and tags are missing
+The ports and tags are missing
 
 Problem is still there. Make sure to not believe but actually check the logs in the design app test and the type app test.
 Uncaught Error: Maximum update depth exceeded. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. React limits the number of nested updates to prevent infinite loops.
@@ -985,11 +987,11 @@ Rules:
 
 Extend/fix the tests:
 ⦁ You removed plenty of functionality which you should not do. E.g. drag and drop of pieces into diagram and scene. 5 times for diagram and 5 times for scene in the middle and near each corner of the winow. See old code.
-⦁ Kit app should check for concept, interface and tag rows (see fixture).
+⦁ Kit app should check for concept, port and tag rows (see fixture).
 Extend/fix the code:
 ⦁ Test is failing because Tambour still shows messages that the type has no model.
 ⦁ Details in type app are not showing two sections type and kit with items (name, description, etc). They are collapsible individually.
-⦁ Kit app shows no concept, interface and tag rows.
+⦁ Kit app shows no concept, port and tag rows.
 
 Extend/fix the tests and the code.
 type app:
@@ -1821,13 +1823,13 @@ Refactor the hotkey system. The new hotkey system should be derived from the lan
 
 - 8.10 Email von Lucie Leder an Kinan mit Aufforderung der Unterlagen 12.10. Antwort von Kinan
 
-i18n issues:
+i18n violations:
 
 - tooltip.manual and tooltip.tutorial are not showing
 - home app: temporary kit, local kit and remote kit toggle have no tooltips. all sort toggles have no tooltips
 - kit app: all filter toggles (designm, type, quality, file) have no tooltips. all sort toggles have no tooltips
 
-tooltip formatting issue: Manual, Tutorial and Hotkey are all optional. It should always fill the line with equal spacing.
+tooltip formatting violation: Manual, Tutorial and Hotkey are all optional. It should always fill the line with equal spacing.
 
 - Type editor should have a dropdown in the footer for selecting a representation. The scene then uses the representation of this file to show the model.
 - Files from system should be droppable into type app. When this happens then a new file is created, a new representation that references this file and the representation is selected in the type app.

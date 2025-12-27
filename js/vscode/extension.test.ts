@@ -49,7 +49,7 @@ suite("Validation Test Suite", function () {
     semioDiagnostics.forEach((diag) => {
       if (diag.code) constraintIds.add(String(diag.code));
     });
-    const expectedConstraints = ["guid-unique", "type-name-unique", "design-name-unique", "piece-name-unique", "quality-name-unique", "interface-name-unique", "file-name-unique", "folder-name-unique", "connector-name-unique", "model-name-unique", "layer-path-unique"];
+    const expectedConstraints = ["guid-unique", "type-name-unique", "design-name-unique", "piece-name-unique", "quality-name-unique", "port-name-unique", "file-name-unique", "folder-name-unique", "connector-name-unique", "model-name-unique", "layer-path-unique"];
     expectedConstraints.forEach((constraintId) => {
       assert.ok(constraintIds.has(constraintId), `Should have validation error for constraint: ${constraintId}`);
     });

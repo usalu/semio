@@ -2995,9 +2995,9 @@ public class InterfaceGoo : Goo<Interface>
     internal override bool CustomCastFrom(object source)
     {
         if (source is null) return false;
-        if (source is InterfaceIdGoo interfaceIdGoo)
+        if (source is InterfaceIdGoo portIdGoo)
         {
-            Value = interfaceIdGoo.Value;
+            Value = portIdGoo.Value;
             return true;
         }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
@@ -3019,25 +3019,25 @@ public class InterfaceComponent : PassthroughComponent<InterfaceParam, Interface
     public override Guid ComponentGuid => new("A0B8C9D0-E1F2-A3B4-C5D6-E7F8A9B0C1D3");
     protected override string ModelName => "Interface";
     protected override string ModelNickname => "Ifc";
-    protected override string ModelDescription => "Construct, deconstruct or modify an interface.";
+    protected override string ModelDescription => "Construct, deconstruct or modify an port.";
 
     protected override void RegisterModelInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the interface.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Name", "Nm", "The name of the interface.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Guid", "Gd", "The guid of the port.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Nm", "The name of the port.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
         pManager.AddTextParameter("Icon", "Ic?", "The optional icon.", GH_ParamAccess.item);
-        pManager.AddParameter(new InterfaceIdParam() { Access = GH_ParamAccess.list }, "CompatibleInterfaces", "CF*", "The optional compatible interfaces.", GH_ParamAccess.list);
+        pManager.AddParameter(new InterfaceIdParam() { Access = GH_ParamAccess.list }, "CompatibleInterfaces", "CF*", "The optional compatible ports.", GH_ParamAccess.list);
         pManager.AddParameter(new AttributeParam() { Access = GH_ParamAccess.list }, "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
     }
 
     protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the interface.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Name", "Nm", "The name of the interface.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Guid", "Gd", "The guid of the port.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Nm", "The name of the port.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
         pManager.AddTextParameter("Icon", "Ic?", "The optional icon.", GH_ParamAccess.item);
-        pManager.AddParameter(new InterfaceIdParam() { Access = GH_ParamAccess.list }, "CompatibleInterfaces", "CF*", "The optional compatible interfaces.", GH_ParamAccess.list);
+        pManager.AddParameter(new InterfaceIdParam() { Access = GH_ParamAccess.list }, "CompatibleInterfaces", "CF*", "The optional compatible ports.", GH_ParamAccess.list);
         pManager.AddParameter(new AttributeParam() { Access = GH_ParamAccess.list }, "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
     }
 

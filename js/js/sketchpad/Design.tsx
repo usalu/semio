@@ -4132,10 +4132,10 @@ const ConnectorSectionForm: FC<{ pieceGuid: Guid; connectorGuid: Guid }> = ({ pi
           </TreeContent>
         </TreeItem>
       )}
-      {connector.interface && (
+      {connector.port && (
         <TreeItem>
           <TreeContent>
-            <Input id="semio.sketchpad.app.design.panel.details.section.connector.interface" value={connector.interface.guid} disabled showLabel />
+            <Input id="semio.sketchpad.app.design.panel.details.section.connector.port" value={connector.port.guid} disabled showLabel />
           </TreeContent>
         </TreeItem>
       )}
@@ -4157,10 +4157,10 @@ const ConnectorSectionForm: FC<{ pieceGuid: Guid; connectorGuid: Guid }> = ({ pi
         </TreeContent>
       </TreeItem>
       {(connector as any).compatibleInterfaces &&
-        (connector as any).compatibleInterfaces.map((interface_: string, index: number) => (
+        (connector as any).compatibleInterfaces.map((port_: string, index: number) => (
           <TreeItem key={`compatible-interface-${index}`}>
             <TreeContent>
-              <Input id="semio.sketchpad.app.design.panel.details.section.connector.compatibleInterface" value={interface_} disabled showLabel />
+              <Input id="semio.sketchpad.app.design.panel.details.section.connector.compatibleInterface" value={port_} disabled showLabel />
             </TreeContent>
           </TreeItem>
         ))}
@@ -4827,7 +4827,7 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
     return {
       guid: `connector-${connectorIndex}`,
       description: `Connector for SemioConnection to ${originalSide.piece.guid}:${originalSide.connector?.guid ?? ""}`,
-      interface: { guid: "default" },
+      port: { guid: "default" },
       mandatory: false,
       t: t,
       point: { x: connectorX, y: connectorY, z: connectorZ },

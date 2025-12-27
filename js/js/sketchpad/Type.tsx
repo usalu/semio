@@ -2057,7 +2057,7 @@ const ConnectorsListSectionForm: FC = () => {
                   <TreeItem
                     key={`connector-${index}`}
                     id="semio.sketchpad.app.type.connector"
-                    label={connector.interface}
+                    label={connector.port}
                     sortable={true}
                     sortableId={`connector-${index}`}
                     isDragHandle={true}
@@ -2081,11 +2081,11 @@ const ConnectorsListSectionForm: FC = () => {
                       <TreeContent>
                         <Input
                           lazy
-                          id="semio.sketchpad.app.type.panel.details.section.connectors.interface"
-                          value={connector.interface || ""}
+                          id="semio.sketchpad.app.type.panel.details.section.connectors.port"
+                          value={connector.port || ""}
                           placeholderId="semio.sketchpad.app.type.connectorInterfacePlaceholder.label"
                           onLazyChange={(value: string) => {
-                            updatePort(connector.guid, { interface: value });
+                            updatePort(connector.guid, { port: value });
                           }}
                           showLabel
                         />
@@ -2207,8 +2207,8 @@ const ConnectorsListSectionForm: FC = () => {
                             updatePort(connector.guid, {
                               compatibleInterfaces: value
                                 .split(",")
-                                .map((interface_) => interface_.trim())
-                                .filter((interface_) => interface_),
+                                .map((port_) => port_.trim())
+                                .filter((port_) => port_),
                             });
                           }}
                           showLabel
@@ -2516,11 +2516,11 @@ const ConnectorSectionForm: FC<{ connectorGuid: Guid }> = ({ connectorGuid }) =>
         <TreeContent>
           <Input
             lazy
-            id="semio.sketchpad.app.type.panel.details.section.connectors.interface"
-            value={connector.interface?.guid || ""}
+            id="semio.sketchpad.app.type.panel.details.section.connectors.port"
+            value={connector.port?.guid || ""}
             placeholderId="semio.sketchpad.app.type.connectorInterfacePlaceholder.label"
             onLazyChange={(value: string) => {
-              updatePort(connector.guid, { interface: value ? { guid: value } : undefined });
+              updatePort(connector.guid, { port: value ? { guid: value } : undefined });
             }}
             showLabel
           />
@@ -2642,8 +2642,8 @@ const ConnectorSectionForm: FC<{ connectorGuid: Guid }> = ({ connectorGuid }) =>
               updatePort(connector.guid, {
                 compatibleInterfaces: value
                   .split(",")
-                  .map((interface_) => interface_.trim())
-                  .filter((interface_) => interface_),
+                  .map((port_) => port_.trim())
+                  .filter((port_) => port_),
               } as any);
             }}
             showLabel
@@ -2707,7 +2707,7 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
     });
   };
 
-  const commonInterface = getCommonValue((p) => p.interface);
+  const commonInterface = getCommonValue((p) => p.port);
   const commonT = getCommonValue((p) => p.t);
   const commonPointX = getCommonValue((p) => p.point?.x);
   const commonPointY = getCommonValue((p) => p.point?.y);
@@ -2722,10 +2722,10 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
         <TreeContent>
           <Input
             lazy
-            id="semio.sketchpad.app.type.panel.details.section.connectors.interface"
+            id="semio.sketchpad.app.type.panel.details.section.connectors.port"
             value={commonInterface || ""}
             placeholderId={commonInterface === undefined ? "semio.sketchpad.common.mixedValues" : "semio.sketchpad.app.type.connectorInterfacePlaceholder.label"}
-            onLazyChange={(value) => updatePorts("semio.sketchpad.app.type.panel.details.section.connectors.interface", { interface: value })}
+            onLazyChange={(value) => updatePorts("semio.sketchpad.app.type.panel.details.section.connectors.port", { port: value })}
             showLabel
           />
         </TreeContent>

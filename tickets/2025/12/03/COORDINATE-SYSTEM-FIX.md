@@ -13,7 +13,7 @@ iterations: []
 # Coordinate System Transformation Fix
 
 **Date:** 2025-12-03
-**Issue:** semio and Three.js coordinate systems mismatch causing incorrect rendering of connectors and geometry
+**Problem:** semio and Three.js coordinate systems mismatch causing incorrect rendering of connectors and geometry
 
 ## Problem
 

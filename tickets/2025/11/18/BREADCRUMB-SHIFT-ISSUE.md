@@ -10,7 +10,7 @@ commit: "0000000000000000000000000000000000000000"
 iterations: []
 ---
 
-# Diagnosis: Breadcrumb Shift Issue - RESOLVED
+# Diagnosis: Breadcrumb Shift Problem - RESOLVED
 
 ## Solution
 
@@ -55,7 +55,7 @@ HOME > TEMPORARY KITNAME > KITVERSION > > | | >
 HOME > TEMPORARY KITNAME > KITVERSION > > DESIGN > DESIGNNAME > CHILDDESIGNNAME >
 ```
 
-Issues:
+Problems:
 
 1. Missing visual separator between TEMPORARY and KITNAME (they appear merged as "TEMPORARY KITNAME")
 2. KITVERSION is visible but seems shifted

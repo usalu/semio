@@ -10,13 +10,13 @@ commit: "0000000000000000000000000000000000000000"
 iterations: []
 ---
 
-# Metabolism Kit Fixture Data Issues
+# Metabolism Kit Fixture Data Problems
 
 ## Overview
 
 The MetabolismKit fixture in `assets/metabolism.json` contains invalid data that prevents proper roundtrip testing of kit export/import functionality.
 
-## Issues Identified
+## Problems Identified
 
 ### 1. Connections with Undefined Connectors (CRITICAL)
 
@@ -42,20 +42,20 @@ The SQL schema in `sql/sqlite/schema.sql` is missing tables/fields for:
 
 **Impact:** Type `authors` and `props` fields are lost during export/import roundtrip.
 
-### 3. Field Normalization Issues
+### 3. Field Normalization Problems
 
 Several fields have inconsistent representations between original and imported kits:
 
 - Boolean fields: `true` vs `undefined` (should be equivalent)
 - Empty string fields: `""` vs `undefined` (should be equivalent)
-- Missing properties: properties like `interface`, `props` appear in one but not the other
+- Missing properties: properties like `port`, `props` appear in one but not the other
 
 **Examples from test output:**
 
 ```
 kit.types[5].connectors[0].mandatory: type boolean vs undefined
 kit.types[5].connectors[0].attributes[0].definition: type string vs undefined
-kit.types[5].connectors[0].interface: missing in a
+kit.types[5].connectors[0].port: missing in a
 kit.types[5].connectors[0].props: missing in a
 kit.types[5].virtual: missing in b
 kit.types[5].authors: missing in b
@@ -114,7 +114,7 @@ if (row.folder) type.folder = row.folder;
 // ... etc
 ```
 
-## Remaining Issues
+## Remaining Problems
 
 ### High Priority
 

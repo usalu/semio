@@ -10,7 +10,7 @@ commit: "0000000000000000000000000000000000000000"
 iterations: []
 ---
 
-# Migration Script Connector Resolution Issue
+# Migration Script Connector Resolution Problem
 
 ## Current Status
 
@@ -19,7 +19,7 @@ iterations: []
 - Migration runs in 3 phases: Types -> Kit -> Designs
 - Phase 4 removed (was incorrectly loading unmigrated connections)
 
-## Critical Issue
+## Critical Problem
 
 **Pieces in migrated kit designs have NO type references**, causing flatten tests to fail.
 
@@ -121,6 +121,6 @@ Properly handle parent names as strings before GUID conversion, avoiding PowerSh
 - **Connections have connectors**: PARTIAL (some connectors missing from original data)
 - **flattenDesign tests**: STILL FAILING
 
-## Remaining Issues
+## Remaining Problems
 
 ###

@@ -14,9 +14,9 @@ iterations: []
 
 ## Summary
 
-Fixed major issues with layer/group GUIDs, interface naming, prop handling, and design_prop GUIDs. The import/export now works but comparison fails due to data normalization differences.
+Fixed major issues with layer/group GUIDs, port naming, prop handling, and design_prop GUIDs. The import/export now works but comparison fails due to data normalization differences.
 
-## Remaining Issues
+## Remaining Problems
 
 ### 1. Date Type Consistency
 
@@ -32,7 +32,7 @@ Fixed major issues with layer/group GUIDs, interface naming, prop handling, and 
 
 ### 3. Optional Property Handling
 
-- **Problem**: Original kit doesn't have properties like `interface`, `props`, but imported kit has them as `undefined`
+- **Problem**: Original kit doesn't have properties like `port`, `props`, but imported kit has them as `undefined`
 - **Solution**: Don't set properties to undefined if they're null/empty in SQL - omit them entirely
 - **Change needed**: Change `mapOrUndefined` usage to only set property if result exists
 

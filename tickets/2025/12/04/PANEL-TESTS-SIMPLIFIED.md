@@ -41,7 +41,7 @@ All app tests now verify panel toggles exist rather than trying to open panels:
 The `openPanel`, `closePanel`, `testPanel`, `isPanelVisible`, `getPanelSections`,
 `getPanelContentCount` helpers are retained for future use when the toggle click bug is fixed.
 
-### Known Issue
+### Known Problem
 
 Panel toggle clicks don't actually toggle panel visibility in tests. The `data-state`
 attribute remains "off" after clicking. This appears to be a bug in either:

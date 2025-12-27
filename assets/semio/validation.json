@@ -1,5 +1,5 @@
 {
-  "issues": [
+  "problems": [
     {
       "constraintId": "connector-name-unique",
       "severity": "error",
@@ -224,19 +224,19 @@
       ]
     },
     {
-      "constraintId": "interface-name-unique",
+      "constraintId": "port-name-unique",
       "severity": "error",
-      "message": "Duplicate interface name \"Duplicate Interface Name\".",
+      "message": "Duplicate port name \"Duplicate Interface Name\".",
       "entityKind": "Interface",
       "entityGuid": "019ab664-AAAA-AAAA-AAAA-AAAAAAAA0000",
       "fixes": [
         {
-          "title": "Rename interface \"Duplicate Interface Name\"",
+          "title": "Rename port \"Duplicate Interface Name\"",
           "diff": {
-            "interfaces": {
+            "ports": {
               "updated": [
                 {
-                  "interface": {
+                  "port": {
                     "guid": "019ab664-AAAA-AAAA-AAAA-AAAAAAAA0000"
                   },
                   "diff": {

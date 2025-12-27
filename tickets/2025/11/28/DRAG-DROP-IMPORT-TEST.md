@@ -14,7 +14,7 @@ iterations: []
 
 No previous context.
 
-## Issues Discovered
+## Problems Discovered
 
 **Bug Found**: KitStore.createKit fails when importing kits with types - `TypeError: Cannot read properties of undefined (reading 'guid')` in TypeStore constructor. The reactive Sketchpad store doesn't properly handle kit data imported via `importKit()`. Unit tests pass because they use simpler JSON-based import/export that doesn't go through the full reactive store creation.
 

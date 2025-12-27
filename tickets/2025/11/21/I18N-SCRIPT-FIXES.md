@@ -12,7 +12,7 @@ iterations: []
 
 # i18n Script Fixes - 2025-11-21
 
-## Issues Fixed
+## Problems Fixed
 
 ### Missing ID Detection
 

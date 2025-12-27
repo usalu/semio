@@ -48,7 +48,7 @@ Successfully implemented the complete diff system for the semio kit architecture
 - `inverseStatDiff`: Reverses stat changes
 - `mergeStatDiff`: Simple spread merge (newly created)
 
-### 2. Fixed Reference Equality Issues
+### 2. Fixed Reference Equality Problems
 
 Replaced all reference equality checks (`!==`) with `deepEqual()` for complex objects:
 
@@ -166,7 +166,7 @@ This preserves the distinction between `undefined` and empty arrays for proper s
 - Diff computation (step 1 of Kit Diff test)
 - Inverse diff computation (step 2 of Kit Diff test)
 
-### Known Issues
+### Known Problems
 
 - Kit Diff apply tests (steps 3-4) - likely fixture data issues
 - Kit Import/Export - NOT NULL constraint on connector.mandatory (schema issue)

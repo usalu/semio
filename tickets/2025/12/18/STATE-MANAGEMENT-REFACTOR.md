@@ -107,7 +107,7 @@ Analysis of js/js/sketchpad state management revealed:
 - Custom headings state with own observer pattern (not XState)
 - `HeadingsProvider` manages state outside machine
 
-### General Issues
+### General Problems
 
 - Some components call commands directly instead of using state setters
 - Not all kit state uses fine-grained subscriptions

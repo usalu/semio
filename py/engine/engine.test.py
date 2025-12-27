@@ -142,7 +142,7 @@ def outputToInput(data: dict) -> dict:
 
     outputOnlyFields = {"createdAt", "updatedAt"}
 
-    guidRefFields = {"parent", "interface", "file", "quality"}
+    guidRefFields = {"parent", "port", "file", "quality"}
 
     keepObjectFields = {"connected", "connecting", "piece", "designPiece", "connector", "type", "design"}
 
@@ -237,7 +237,7 @@ class TestValidation:
 
         result = engine.validateKitDict(kitInvalidJson)
         expected = engine.parseValidationResult(json.dumps(expectedValidationJson))
-        assert engine.areValidationResultsEqual(result, expected), f"Validation mismatch. Got {len(result.issues)} issues, expected {len(expected.issues)}"
+        assert engine.areValidationResultsEqual(result, expected), f"Validation mismatch. Got {len(result.problems)} problems, expected {len(expected.problems)}"
 
 
 # endregion Validation Tests

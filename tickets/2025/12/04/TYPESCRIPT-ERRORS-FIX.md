@@ -21,7 +21,7 @@ TypeScript compilation had ~70 errors across multiple sketchpad component files 
 3. [x] Fix elements.tsx errors (translation keys, ActionGroupProps, BreadcrumbItemProps, variant support)
 4. [x] Fix Home.tsx errors (concept handling in KitShallow)
 5. [x] Fix Docs.tsx errors (useEffect cleanup, command registration)
-6. [x] Fix Type.tsx errors (parent guid, interface guid, compatibleInterfaces)
+6. [x] Fix Type.tsx errors (parent guid, port guid, compatibleInterfaces)
 7. [x] Fix Tutorials.tsx errors (Button variant prop support)
 
 # Changes
@@ -33,7 +33,7 @@ TypeScript compilation had ~70 errors across multiple sketchpad component files 
 - Added null checks and non-null assertions for `lastPostition` and `reactFlowInstanceRef.current`
 - Changed `x`, `y` to `u`, `v` in connection objects to match ConnectionSchema
 - Added optional chaining for `connection.connector?.guid`
-- Fixed `connector.interface` to use `.guid` property
+- Fixed `connector.port` to use `.guid` property
 - Cast deprecated `compatibleInterfaces` access to `any`
 - Fixed parent comparison to use `.guid` property
 
@@ -67,10 +67,10 @@ TypeScript compilation had ~70 errors across multiple sketchpad component files 
 
 - Fixed `type.parent` to use `.guid` property
 - Fixed connector update structure to use `{ connector: { guid: id }, diff }`
-- Fixed `connector.interface` to use `.guid` property
+- Fixed `connector.port` to use `.guid` property
 - Cast deprecated `compatibleInterfaces` to `any`
 
-## Remaining Issues
+## Remaining Problems
 
 13 TypeScript errors remain, all in node_modules:
 

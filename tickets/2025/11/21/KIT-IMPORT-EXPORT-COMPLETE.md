@@ -43,7 +43,7 @@ Complete GUID-based schema (22 tables) embedded in `kitToSqlite()`:
 
 - `semio`, `kit` - Core metadata
 - `quality`, `benchmark` - Quality system
-- `interface`, `interface_compatibility` - Connector compatibility
+- `port`, `port_compatibility` - Connector compatibility
 - `folder`, `file`, `author` - Assets and attribution
 - `type`, `model`, `model_tag`, `connector`, `prop` - Type hierarchy
 - `design`, `layer`, `piece`, `piece_prop`, `group`, `group_piece`, `connection`, `stat` - Design hierarchy

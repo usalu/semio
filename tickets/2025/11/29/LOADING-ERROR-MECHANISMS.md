@@ -36,7 +36,7 @@ Initial implementation of loading and error mechanisms for the Sketchpad app.
 
 ## js/js/sketchpad/Home.tsx
 
-- Added `LoadingKit` interface for tracking kits being imported
+- Added `LoadingKit` port for tracking kits being imported
 - Added `loadingKits` to `HomeState` to track importing kits
 - Added `addLoadingKit` and `removeLoadingKit` methods to `HomeStore`
 - Updated `HomeDropZone` to add/remove loading kit entries during import

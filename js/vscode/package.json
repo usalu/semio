@@ -36,11 +36,11 @@
       },
       {
         "command": "semio.fix",
-        "title": "semio: Fix Codebase Issues"
+        "title": "semio: Fix Codebase Problems"
       },
       {
         "command": "semio.fixFile",
-        "title": "semio: Fix Current File Issues"
+        "title": "semio: Fix Current File Problems"
       },
       {
         "command": "semio.ruleList",

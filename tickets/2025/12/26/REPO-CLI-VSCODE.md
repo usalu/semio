@@ -28,8 +28,8 @@ Added 12 commands to contributes.commands:
 
 - semio.analyze - Analyze Codebase
 - semio.analyzeFile - Analyze Current File
-- semio.fix - Fix Codebase Issues
-- semio.fixFile - Fix Current File Issues
+- semio.fix - Fix Codebase Problems
+- semio.fixFile - Fix Current File Problems
 - semio.ruleList - List Rules
 - semio.ticketNew - Create New Ticket
 - semio.ticketList - List Tickets
@@ -47,7 +47,7 @@ Reorganized into regions:
 
 - Imports: Added fs, path modules
 - Constants: Added DIAGNOSTIC_SOURCE_KIT, DIAGNOSTIC_SOURCE_REPO, ANALYZE_REPORT_PATH
-- Types: Added RepoIssue and AnalyzeReport interfaces
+- Types: Added RepoProblem and AnalyzeReport interfaces
 - Utilities: Added getWorkspaceRoot(), getRepoTsxPath()
 - Repo Diagnostics: Added loadAnalyzeReport(), extractFilePathFromScope(), updateRepoDiagnostics(), watchAnalyzeReport()
 - Kit Validation: Renamed DIAGNOSTIC_SOURCE to DIAGNOSTIC_SOURCE_KIT, extracted validateKitDocument(), renamed class to SemioKitCodeActionProvider

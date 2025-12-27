@@ -28,7 +28,7 @@ Root cause: The schema changed. `concepts` in Kit is now `Concept[]` (array of o
 
 - Added `Tag` and `Concept` imports
 - Changed `concepts` assignment from string array to proper `Concept[]` objects
-- Enhanced comprehensive diff coverage for all entity types: types, designs, tags, concepts, interfaces, qualities, files, folders, authors, attributes
+- Enhanced comprehensive diff coverage for all entity types: types, designs, tags, concepts, ports, qualities, files, folders, authors, attributes
 - Each entity type now tests: add, remove, update operations
 
 ## `semio.ts`

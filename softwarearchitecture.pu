@@ -419,20 +419,20 @@ class Connector {
   direction: Vector
   t: float
   mandatory: bool
-  interface: str
+  port: str
   compatibleInterfaces: list[str]
   description: str
   attributes: list[Attribute]
   --
   context Connector inv optionalFieldsCanBeEmpty:
     description->notEmpty() or description->isEmpty() and
-    interface->notEmpty() or interface->isEmpty()
+    port->notEmpty() or port->isEmpty()
   context Connector inv tInValidRange:
     t >= 0 and t < 1
   context Connector inv directionIsUnitVector:
     direction.x * direction.x + direction.y * direction.y + direction.z * direction.z = 1
   context Connector inv compatibleInterfacesIncludesOwnInterface:
-    interface->notEmpty() implies compatibleInterfaces->includes(interface)
+    port->notEmpty() implies compatibleInterfaces->includes(port)
 }
 
 class ConnectorId {
@@ -445,7 +445,7 @@ class ConnectorDiff {
   direction?: Vector
   t?: float
   mandatory?: bool
-  interface?: str
+  port?: str
   compatibleInterfaces?: list[str]
   description?: str
   attributes?: AttributesDiff
@@ -907,7 +907,7 @@ class ValidationContext {
   modelsByTypeGuid: Map<Guid, Model[]>
 }
 
-class Issue {
+class Problem {
   constraintId: str
   severity: Severity
   message: str
@@ -952,17 +952,17 @@ enum SemioEntityKind {
 }
 
 interface Constraint {
-  validate(ctx: ValidationContext): Issue[]
+  validate(ctx: ValidationContext): Problem[]
 }
 
 ValidationContext --> Kit
-Issue *-- SemioDomainLocation
-Issue *-- "1..*" Fix
+Problem *-- SemioDomainLocation
+Problem *-- "1..*" Fix
 Fix --> KitDiff
 SemioDomainLocation --> SemioEntityKind
-Issue --> Severity
+Problem --> Severity
 Constraint ..> ValidationContext
-Constraint ..> Issue
+Constraint ..> Problem
 ' #endregion Validation
 
 @enduml

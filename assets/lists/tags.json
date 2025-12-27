@@ -50,7 +50,7 @@
   "port-based-knowledge": {
     "name": "Port Based Knowledge",
     "abbreviation": "PBK",
-    "description": "Port-based knowledge refers to a design methodology that uses ports as interfaces for components in a system. This approach allows for modularity and reusability, enabling designers to create complex systems by connecting simpler components through well-defined interfaces.",
+    "description": "Port-based knowledge refers to a design methodology that uses ports as ports for components in a system. This approach allows for modularity and reusability, enabling designers to create complex systems by connecting simpler components through well-defined ports.",
     "reference": ""
   },
   "shape-grammar": {

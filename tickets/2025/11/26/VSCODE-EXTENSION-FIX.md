@@ -14,7 +14,7 @@ iterations: []
 
 The VS Code extension for semio was not showing validation errors on invalid kit JSON files. The test infrastructure was also not properly set up.
 
-Issues identified:
+Problems identified:
 
 1. The `kit_invalid.json` fixture had an outdated schema (missing required fields like `guid` for models, `t` for connectors, `guid` for layers, `name` instead of `path` for files/folders, etc.)
 2. The VS Code extension tests were not being built - only `extension.ts` was compiled to `out/`, but `extension.test.ts` was not

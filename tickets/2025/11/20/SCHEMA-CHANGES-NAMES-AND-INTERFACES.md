@@ -26,9 +26,9 @@ This plan covers two major schema changes:
 ### Current State
 
 - `Piece`, `Connector`, and `Model` lack a `name` property for user-friendly identification
-- `Connector.interface` is just a string, limiting extensibility
+- `Connector.port` is just a string, limiting extensibility
 - `Connector.compatibleInterfaces` is an array of strings
-- No central management of interface definitions
+- No central management of port definitions
 
 ### Desired State
 
@@ -39,8 +39,8 @@ This plan covers two major schema changes:
   - `description`
   - `icon`
   - `compatibleInterfaces` (array of InterfaceId references)
-- Kit contains an `interfaces` collection
-- Connector references interfaces by InterfaceId instead of string
+- Kit contains an `ports` collection
+- Connector references ports by InterfaceId instead of string
 
 ## 2. Affected Files
 
@@ -76,14 +76,14 @@ This plan covers two major schema changes:
 
 1. Update `sqlite/schema.sql`
    - Add `name` column to `pieces`, `connectors`, `models` tables
-   - Create `interfaces` table with columns: guid, name, description, icon, attributes
-   - Create `interface_compatibilities` junction table
-   - Update `connectors` table: change `interface` to `interface_id` (foreign key)
-   - Remove `compatible_interfaces` column from `connectors` (now in Interface definition)
+   - Create `ports` table with columns: guid, name, description, icon, attributes
+   - Create `port_compatibilities` junction table
+   - Update `connectors` table: change `port` to `port_id` (foreign key)
+   - Remove `compatible_ports` column from `connectors` (now in Interface definition)
 
 2. Update `jsonschema/kit.json`
    - Add Interface definition with properties
-   - Add `interfaces` array to Kit
+   - Add `ports` array to Kit
    - Update Piece, Connector, Model to include `name`
    - Update Connector to reference InterfaceId instead of string
 
@@ -99,23 +99,23 @@ This plan covers two major schema changes:
    - Add `Interface` model with properties
    - Add `InterfaceInput`, `InterfaceDiff`, etc.
    - Update `Piece`, `Connector`, `Model` to include `name?: string`
-   - Update `Connector` to use `interfaceId?: InterfaceId` and remove `compatibleInterfaces`
-   - Update `Kit` to include `interfaces: Interface[]`
-   - Add interface-related helper functions
+   - Update `Connector` to use `portId?: InterfaceId` and remove `compatibleInterfaces`
+   - Update `Kit` to include `ports: Interface[]`
+   - Add port-related helper functions
    - Update all getDiff, applyDiff, inverseDiff functions
-   - Add getters for interface compatibility resolution
+   - Add getters for port compatibility resolution
 
 2. Update stores in `js/js/sketchpad/App.tsx` and app files
-   - Update KitStore to manage interfaces
-   - Add interface-related commands
+   - Update KitStore to manage ports
+   - Add port-related commands
    - Update DesignAppStore, TypeAppStore to handle new properties
    - Update selection and diff types
 
 3. Update UI components
    - Add name inputs for Piece, Connector, Model
    - Add Interface management UI
-   - Update Connector interface selection to use Interface picker
-   - Show interface compatibility visually
+   - Update Connector port selection to use Interface picker
+   - Show port compatibility visually
 
 ### Phase 3: .NET Implementation
 
@@ -130,13 +130,13 @@ This plan covers two major schema changes:
 1. Update `graphql/schema.graphql`
    - Add Interface type
    - Update Piece, Connector, Model types
-   - Add interface queries and mutations
+   - Add port queries and mutations
 
 ### Phase 5: Migration
 
 1. Create migration scripts for existing data
    - SQLite migration to add columns and tables
-   - Data migration for existing kits (set names to null, create default interfaces)
+   - Data migration for existing kits (set names to null, create default ports)
 
 ## 4. Hierarchy Updates
 
@@ -172,16 +172,16 @@ Update the model hierarchy order in AGENTS.md:
 ## 5. Backward Compatibility
 
 - Old kits without names: `name` defaults to `undefined`
-- Old kits with string interfaces:
-  - Create Interface artifacts from unique interface strings
-  - Map Connector.interface strings to new InterfaceIds
+- Old kits with string ports:
+  - Create Interface artifacts from unique port strings
+  - Map Connector.port strings to new InterfaceIds
   - Build compatibleInterfaces from old Connector.compatibleInterfaces arrays
 
 ## 6. Testing Considerations
 
 - Test piece/connector/model creation with and without names
-- Test interface creation and compatibility resolution
-- Test connector connections with compatible interfaces
+- Test port creation and compatibility resolution
+- Test connector connections with compatible ports
 - Test serialization/deserialization with new schema
 - Test migration of old kits
 

@@ -495,7 +495,7 @@
           "optional": true
         },
         {
-          "name": "interface",
+          "name": "port",
           "type": "InterfaceId",
           "optional": true
         },
@@ -1135,7 +1135,7 @@
           "optional": true
         },
         {
-          "name": "interfaces",
+          "name": "ports",
           "type": "Interface[]",
           "optional": true
         },
@@ -1356,5 +1356,12 @@
     "TagId",
     "ConceptId"
   ],
-  "weakEntities": ["Coord", "Vec", "Point", "Vector", "Plane", "Side"]
+  "weakEntities": [
+    "Coord",
+    "Vec",
+    "Point",
+    "Vector",
+    "Plane",
+    "Side"
+  ]
 }

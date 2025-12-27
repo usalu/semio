@@ -12,8 +12,8 @@ iterations: []
 
 # Previously
 
-- TypeScript has `validateSemioKit()` returning `ValidationResult` with `issues: Issue[]`
-- Python has `validateKitDict()` returning `ValidationResult` with `issues: list[ValidationIssue]`
+- TypeScript has `validateSemioKit()` returning `ValidationResult` with `issues: Problem[]`
+- Python has `validateKitDict()` returning `ValidationResult` with `issues: list[ValidationProblem]`
 - C# has per-model `Validate()` returning `(bool, List<string>)` - different format, needs new implementation
 - TypeScript has `fixes` with `KitDiff`, Python and C# don't have fixes
 - `kit_invalid.json` contains test data with duplicate names for types, designs, pieces, etc.
@@ -33,7 +33,7 @@ iterations: []
 
 ## TypeScript (js/js/semio.ts)
 
-- Added `SerializableValidationFix`, `SerializableValidationIssue`, `SerializableValidationResult` interfaces
+- Added `SerializableValidationFix`, `SerializableValidationProblem`, `SerializableValidationResult` interfaces
 - Added `toSerializableValidationResult()` to convert full result to serializable format (includes fixes)
 - Added `serializeValidationResult()` for JSON serialization (sorted by constraintId, entityGuid)
 - Added `parseValidationResult()` and `areValidationResultsEqual()` for testing
@@ -48,7 +48,7 @@ iterations: []
 ## Python (py/engine/engine.py)
 
 - Added `ValidationFix` dataclass with `title` and `diff`
-- Updated `ValidationIssue` to include `fixes: list[ValidationFix]`
+- Updated `ValidationProblem` to include `fixes: list[ValidationFix]`
 - Added `ValidationResult.toDict()` and `ValidationResult.serialize()` methods
 - Added `areValidationResultsEqual()` with GUID normalization for fix comparison
 - Added `parseValidationResult()` for parsing validation.json
@@ -62,7 +62,7 @@ iterations: []
 ## C# (net/Semio/Semio.cs)
 
 - Added `SemioValidationFix` class with `Title` and `Diff`
-- Updated `Issue` to include `Fixes` list
+- Updated `Problem` to include `Fixes` list
 - Added `ValidationResult.Parse()` to handle fixes from JSON
 - Updated `ValidationResult.AreEqual()` to skip fix comparison (pending fix generation)
 - Updated `Layer` class to match TypeScript schema (added `Guid`, `Path`, `IsHidden`, `IsLocked`, `Attributes`)

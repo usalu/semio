@@ -97,10 +97,10 @@ All 5 tests pass:
 
 - Verifies types table is visible
 - Tests settings panel sections (kit, sketchpad)
-- Added checks for concepts/interfaces/tags toggles in filter strip
+- Added checks for concepts/ports/tags toggles in filter strip
 - Uses hideKind toggle to show all artifact kind toggles
 
-## Issues discovered
+## Problems discovered
 
 1. **Model loading**: The metabolism kit types may not have models properly configured. Console warnings show "No models available" for types.
 
@@ -108,4 +108,4 @@ All 5 tests pass:
 
 3. **Drag-and-drop timing**: Mouse operations time out in automated tests. This appears to be a fundamental Playwright/browser interaction issue.
 
-4. **Kit toggles**: concepts/interfaces/tags toggles are in the filter strip but may require scrolling or specific conditions to be visible.
+4. **Kit toggles**: concepts/ports/tags toggles are in the filter strip but may require scrolling or specific conditions to be visible.

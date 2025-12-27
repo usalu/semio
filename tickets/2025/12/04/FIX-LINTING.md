@@ -97,7 +97,7 @@ Linting errors across multiple languages:
 ### Kit.tsx
 
 - Added `useKitTransaction` import
-- Added `interfaces`, `tags`, `concepts` to selection object
+- Added `ports`, `tags`, `concepts` to selection object
 - Fixed `removeType`, `removeTypes`, `removeDesign`, `removeDesigns` to use `{ guid }` objects
 - Fixed `formatDate` functions to accept `Date | string`
 - Fixed `FolderSection` to use `transaction` prop instead of `startTransaction`/`finalizeTransaction`/`abortTransaction`
@@ -107,11 +107,11 @@ Linting errors across multiple languages:
 - Fixed `TypeStore.snapshot()` to convert dates and parent to proper format
 - Fixed `TypeStore.change()` to handle `diff.parent.guid` and dates as strings
 
-## Remaining Issues (245 errors)
+## Remaining Problems (245 errors)
 
 The remaining errors require larger refactoring:
 
 1. **Store classes in Sketchpad.tsx** (159 errors): All Store classes need systematic updates for Date->string and string->{ guid } conversions
-2. **Design.tsx** (30 errors): Connector interface, connection side issues
+2. **Design.tsx** (30 errors): Connector port, connection side issues
 3. **elements.tsx** (18 errors): Type definition issues
-4. **Type.tsx** (4 errors): Connector interface property access
+4. **Type.tsx** (4 errors): Connector port property access

@@ -162,7 +162,7 @@
       "key": "duplicate-quality-2"
     }
   ],
-  "interfaces": [
+  "ports": [
     {
       "guid": "019ab664-9999-9999-9999-999999999999",
       "name": "Duplicate Interface Name"

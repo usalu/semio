@@ -2699,7 +2699,7 @@
             "kind": "Interface"
           },
           {
-            "description": "The optional other compatible interfaces of the connector. An empty list means this connector is compatible with all other connectors.",
+            "description": "The optional other compatible ports of the connector. An empty list means this connector is compatible with all other connectors.",
             "name": "CompatibleInterfaces",
             "nickname": "CF*",
             "kind": "CompatibleInterfaces"
@@ -2767,7 +2767,7 @@
             "kind": "Interface"
           },
           {
-            "description": "The optional other compatible interfaces of the connector. An empty list means this connector is compatible with all other connectors.",
+            "description": "The optional other compatible ports of the connector. An empty list means this connector is compatible with all other connectors.",
             "name": "CompatibleInterfaces",
             "nickname": "CF*",
             "kind": "CompatibleInterfaces"
@@ -3747,7 +3747,7 @@
       },
       {
         "name": "Preview Connector",
-        "description": "Preview a connector by showing the point and direction and if exists: id, family and compatible interfaces.",
+        "description": "Preview a connector by showing the point and direction and if exists: id, family and compatible ports.",
         "icon": "icon",
         "nickname": ":Prv",
         "inputs": [

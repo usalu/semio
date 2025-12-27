@@ -21,7 +21,7 @@
 
 // #region Imports
 
-import { applyKitDiff, deserializeKit, Fix, Issue, Kit, SemioDomainLocation, serializeKit, validateSemioKit } from "@semio/js/semio";
+import { applyKitDiff, deserializeKit, Fix, Kit, Problem, SemioDomainLocation, serializeKit, validateSemioKit } from "@semio/js/semio";
 import * as fs from "fs";
 import * as jsonc from "jsonc-parser";
 import * as path from "path";
@@ -40,12 +40,11 @@ const ANALYZE_REPORT_PATH = "reports/rules.json";
 
 // #region Types
 
-interface RepoIssue {
+interface RepoProblem {
   id: string;
   summary: string;
   kind: string;
   priority: "high" | "medium" | "low";
-  severity: "error" | "warning";
   autofixable: boolean;
   solution: string;
   reason: string;
@@ -62,10 +61,9 @@ interface AnalyzeReport {
   summary: {
     total: number;
     byPriority: Record<string, number>;
-    bySeverity: Record<string, number>;
     byKind: Record<string, number>;
   };
-  issues: RepoIssue[];
+  problems: RepoProblem[];
 }
 
 // #endregion Types
@@ -112,22 +110,21 @@ function extractFilePathFromScope(scope: string): string | undefined {
 function updateRepoDiagnostics(): void {
   repoDiagnosticCollection.clear();
   const report = loadAnalyzeReport();
-  if (!report || report.issues.length === 0) return;
+  if (!report || report.problems.length === 0) return;
   const root = getWorkspaceRoot();
   if (!root) return;
   const diagnosticsByFile = new Map<string, vscode.Diagnostic[]>();
-  for (const issue of report.issues) {
-    const filePath = extractFilePathFromScope(issue.scope);
+  for (const problem of report.problems) {
+    const filePath = extractFilePathFromScope(problem.scope);
     if (!filePath) continue;
     const absPath = path.join(root, filePath);
     const uri = vscode.Uri.file(absPath);
-    const line = Math.max(0, (issue.line ?? 1) - 1);
-    const column = Math.max(0, (issue.column ?? 1) - 1);
+    const line = Math.max(0, (problem.line ?? 1) - 1);
+    const column = Math.max(0, (problem.column ?? 1) - 1);
     const range = new vscode.Range(line, column, line, column + 1);
-    const severity = issue.severity === "error" ? vscode.DiagnosticSeverity.Error : vscode.DiagnosticSeverity.Warning;
-    const diagnostic = new vscode.Diagnostic(range, `${issue.summary}\n\nReason: ${issue.reason}\nSolution: ${issue.solution}`, severity);
+    const diagnostic = new vscode.Diagnostic(range, `${problem.summary}\n\nReason: ${problem.reason}\nSolution: ${problem.solution}`, vscode.DiagnosticSeverity.Error);
     diagnostic.source = DIAGNOSTIC_SOURCE_REPO;
-    diagnostic.code = issue.id;
+    diagnostic.code = problem.id;
     if (!diagnosticsByFile.has(uri.toString())) {
       diagnosticsByFile.set(uri.toString(), []);
     }
@@ -160,14 +157,13 @@ function isSemioKitDocument(document: vscode.TextDocument): boolean {
   return basename.startsWith("kit_") || basename.includes("_kit") || basename === "kit.json";
 }
 
-function issueToDiagnostic(document: vscode.TextDocument, issue: Issue): vscode.Diagnostic {
-  const range = locationToRange(document, issue.location);
-  const severity = issue.severity === "error" ? vscode.DiagnosticSeverity.Error : vscode.DiagnosticSeverity.Warning;
-  const diagnostic = new vscode.Diagnostic(range, issue.message, severity);
+function problemToDiagnostic(document: vscode.TextDocument, problem: Problem): vscode.Diagnostic {
+  const range = locationToRange(document, problem.location);
+  const diagnostic = new vscode.Diagnostic(range, problem.message, vscode.DiagnosticSeverity.Error);
   diagnostic.source = DIAGNOSTIC_SOURCE_KIT;
-  diagnostic.code = issue.constraintId;
-  if (issue.relatedGuids && issue.relatedGuids.length > 1) {
-    diagnostic.relatedInformation = issue.relatedGuids.slice(1).map((guid) => {
+  diagnostic.code = problem.constraintId;
+  if (problem.relatedGuids && problem.relatedGuids.length > 1) {
+    diagnostic.relatedInformation = problem.relatedGuids.slice(1).map((guid) => {
       const relatedRange = findGuidRange(document, guid);
       return new vscode.DiagnosticRelatedInformation(new vscode.Location(document.uri, relatedRange), `Related entity: ${guid}`);
     });
@@ -192,7 +188,7 @@ function findEntityNode(tree: jsonc.Node, location: SemioDomainLocation): jsonc.
     Type: "types",
     Design: "designs",
     Quality: "quality",
-    Interface: "interfaces",
+    Interface: "ports",
     File: "files",
     Folder: "folders",
     Piece: "pieces",
@@ -267,7 +263,7 @@ function validateKitDocument(document: vscode.TextDocument): void {
     const text = document.getText();
     const kit = deserializeKit(text);
     const result = validateSemioKit(kit);
-    const diagnostics = result.issues.map((issue) => issueToDiagnostic(document, issue));
+    const diagnostics = result.problems.map((problem) => problemToDiagnostic(document, problem));
     kitDiagnosticCollection.set(document.uri, diagnostics);
   } catch (error) {
     console.error("Failed to validate semio kit:", error);
@@ -285,9 +281,9 @@ class SemioKitCodeActionProvider implements vscode.CodeActionProvider {
         const text = document.getText();
         const kit = deserializeKit(text);
         const result = validateSemioKit(kit);
-        const issue = result.issues.find((i) => i.message === diagnostic.message && i.constraintId === diagnostic.code);
-        if (!issue) continue;
-        for (const fix of issue.fixes) {
+        const problem = result.problems.find((i) => i.message === diagnostic.message && i.constraintId === diagnostic.code);
+        if (!problem) continue;
+        for (const fix of problem.fixes) {
           const action = createKitCodeAction(document, diagnostic, fix, kit);
           if (action) actions.push(action);
         }

@@ -53,7 +53,7 @@ Requirements:
 - ✅ Memoized selectors to avoid re-renders
 - ✅ Commands dispatch events to actor
 
-### Issues to Fix:
+### Problems to Fix:
 
 1. Apps don't initialize state (no INIT events sent)
 2. Need to ensure actor is available in context
