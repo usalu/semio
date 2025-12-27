@@ -12,7 +12,7 @@ iterations: []
 
 # Previously
 
-- TypeScript has `validateSemioKit()` returning `SemioValidationResult` with `issues: SemioValidationIssue[]`
+- TypeScript has `validateSemioKit()` returning `ValidationResult` with `issues: Issue[]`
 - Python has `validateKitDict()` returning `ValidationResult` with `issues: list[ValidationIssue]`
 - C# has per-model `Validate()` returning `(bool, List<string>)` - different format, needs new implementation
 - TypeScript has `fixes` with `KitDiff`, Python and C# don't have fixes
@@ -24,7 +24,7 @@ iterations: []
 1. Define a common connectorable validation result format (without fixes) for cross-platform serialization
 2. Add `PortableValidationResult` interface and `serializeValidationResult` function to TypeScript
 3. Add `serialize_validation_result` function to Python matching the same JSON format
-4. Add C# `SemioValidationResult` class and serialization matching the same format
+4. Add C# `ValidationResult` class and serialization matching the same format
 5. Generate `validation.json` from `kit_invalid.json` using TypeScript
 6. Add validation tests to all three implementations comparing output to `validation.json`
 7. Export `ValidationResult` from assets/index.ts
@@ -62,9 +62,9 @@ iterations: []
 ## C# (net/Semio/Semio.cs)
 
 - Added `SemioValidationFix` class with `Title` and `Diff`
-- Updated `SemioValidationIssue` to include `Fixes` list
-- Added `SemioValidationResult.Parse()` to handle fixes from JSON
-- Updated `SemioValidationResult.AreEqual()` to skip fix comparison (pending fix generation)
+- Updated `Issue` to include `Fixes` list
+- Added `ValidationResult.Parse()` to handle fixes from JSON
+- Updated `ValidationResult.AreEqual()` to skip fix comparison (pending fix generation)
 - Updated `Layer` class to match TypeScript schema (added `Guid`, `Path`, `IsHidden`, `IsLocked`, `Attributes`)
 
 ## C# Test (net/Semio.Tests/Tests.cs)

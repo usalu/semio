@@ -29,6 +29,7 @@
     "fix": "npx tsx preflight.ts fix",
     "preflight": "npx tsx preflight.ts preflight",
     "test": "npx tsx preflight.ts test",
+    "test:repo": "vitest run repo.tests.ts",
     "build": "npx tsx preflight.ts build",
     "update": "npx nx run-many -t update",
     "publish:test": "npx tsx preflight.ts publish:test",
@@ -50,7 +51,9 @@
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "sharp": "^0.33.5",
-    "tsx": "^4.20.6"
+    "tsx": "^4.20.6",
+    "typescript": "^5.6.3",
+    "vitest": "^3.0.8"
   },
   "keywords": [
     "kit-of-parts",

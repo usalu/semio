@@ -1840,7 +1840,7 @@ public class SemioValidationFix
 
 
 
-public class SemioValidationIssue
+public class Issue
 {
     public string ConstraintId { get; set; } = "";
     public string Severity { get; set; } = "error";
@@ -1853,9 +1853,9 @@ public class SemioValidationIssue
 
 
 
-public class SemioValidationResult
+public class ValidationResult
 {
-    public List<SemioValidationIssue> Issues { get; set; } = new();
+    public List<Issue> Issues { get; set; } = new();
 
     public bool HasErrors() => Issues.Any(i => i.Severity == "error");
 
@@ -1866,10 +1866,10 @@ public class SemioValidationResult
         return JsonConvert.SerializeObject(result, Formatting.Indented, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
     }
 
-    public static SemioValidationResult Parse(string json)
+    public static ValidationResult Parse(string json)
     {
         var data = JsonConvert.DeserializeObject<dynamic>(json);
-        var result = new SemioValidationResult();
+        var result = new ValidationResult();
         foreach (var issue in data!.issues)
         {
             var fixes = new List<SemioValidationFix>();
@@ -1880,7 +1880,7 @@ public class SemioValidationResult
                     fixes.Add(new SemioValidationFix { Title = (string)fix.title, Diff = fix.diff });
                 }
             }
-            result.Issues.Add(new SemioValidationIssue
+            result.Issues.Add(new Issue
             {
                 ConstraintId = (string)issue.constraintId,
                 Severity = (string)issue.severity,
@@ -1898,7 +1898,7 @@ public class SemioValidationResult
         return System.Text.RegularExpressions.Regex.Replace(json, @"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", "<GUID>", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
     }
 
-    public static bool AreEqual(SemioValidationResult a, SemioValidationResult b)
+    public static bool AreEqual(ValidationResult a, ValidationResult b)
     {
         if (a.Issues.Count != b.Issues.Count) return false;
         var sortedA = a.Issues.OrderBy(i => i.ConstraintId).ThenBy(i => i.EntityGuid).ToList();
@@ -1922,16 +1922,16 @@ public class SemioValidationResult
 
 public static class SemioValidator
 {
-    public static SemioValidationResult ValidateKit(Kit kit)
+    public static ValidationResult ValidateKit(Kit kit)
     {
-        var issues = new List<SemioValidationIssue>();
+        var issues = new List<Issue>();
         var seen = new Dictionary<string, string>();
 
         void CheckGuid(string entityKind, string entityGuid)
         {
             if (seen.ContainsKey(entityGuid))
             {
-                issues.Add(new SemioValidationIssue { ConstraintId = "guid-unique", Severity = "error", Message = $"Duplicate GUID \"{entityGuid}\". First occurrence kept.", EntityKind = entityKind, EntityGuid = entityGuid });
+                issues.Add(new Issue { ConstraintId = "guid-unique", Severity = "error", Message = $"Duplicate GUID \"{entityGuid}\". First occurrence kept.", EntityKind = entityKind, EntityGuid = entityGuid });
             }
             else
             {
@@ -1970,7 +1970,7 @@ public static class SemioValidator
                 {
                     foreach (var t in list.Skip(1))
                     {
-                        issues.Add(new SemioValidationIssue { ConstraintId = "type-name-unique", Severity = "error", Message = $"Duplicate type name \"{nameGroup.Key}\" among siblings.", EntityKind = "Type", EntityGuid = t.Guid });
+                        issues.Add(new Issue { ConstraintId = "type-name-unique", Severity = "error", Message = $"Duplicate type name \"{nameGroup.Key}\" among siblings.", EntityKind = "Type", EntityGuid = t.Guid });
                     }
                 }
             }
@@ -1988,7 +1988,7 @@ public static class SemioValidator
                 {
                     foreach (var d in list.Skip(1))
                     {
-                        issues.Add(new SemioValidationIssue { ConstraintId = "design-name-unique", Severity = "error", Message = $"Duplicate design name \"{nameGroup.Key}\" among siblings.", EntityKind = "Design", EntityGuid = d.Guid });
+                        issues.Add(new Issue { ConstraintId = "design-name-unique", Severity = "error", Message = $"Duplicate design name \"{nameGroup.Key}\" among siblings.", EntityKind = "Design", EntityGuid = d.Guid });
                     }
                 }
             }
@@ -2005,7 +2005,7 @@ public static class SemioValidator
                 {
                     foreach (var p in list.Skip(1))
                     {
-                        issues.Add(new SemioValidationIssue { ConstraintId = "piece-name-unique", Severity = "error", Message = $"Duplicate piece name \"{nameGroup.Key}\" inside design \"{design.Name}\".", EntityKind = "Piece", EntityGuid = p.Guid });
+                        issues.Add(new Issue { ConstraintId = "piece-name-unique", Severity = "error", Message = $"Duplicate piece name \"{nameGroup.Key}\" inside design \"{design.Name}\".", EntityKind = "Piece", EntityGuid = p.Guid });
                     }
                 }
             }
@@ -2022,7 +2022,7 @@ public static class SemioValidator
                 {
                     foreach (var connector in list.Skip(1))
                     {
-                        issues.Add(new SemioValidationIssue { ConstraintId = "connector-name-unique", Severity = "error", Message = $"Duplicate connector name \"{nameGroup.Key}\" inside type \"{t.Name}\".", EntityKind = "Connector", EntityGuid = connector.Guid });
+                        issues.Add(new Issue { ConstraintId = "connector-name-unique", Severity = "error", Message = $"Duplicate connector name \"{nameGroup.Key}\" inside type \"{t.Name}\".", EntityKind = "Connector", EntityGuid = connector.Guid });
                     }
                 }
             }
@@ -2039,7 +2039,7 @@ public static class SemioValidator
                 {
                     foreach (var entity in list.Skip(1))
                     {
-                        issues.Add(new SemioValidationIssue { ConstraintId = "model-name-unique", Severity = "error", Message = $"Duplicate model name \"{nameGroup.Key}\" inside type \"{t.Name}\".", EntityKind = "Model", EntityGuid = entity.Guid });
+                        issues.Add(new Issue { ConstraintId = "model-name-unique", Severity = "error", Message = $"Duplicate model name \"{nameGroup.Key}\" inside type \"{t.Name}\".", EntityKind = "Model", EntityGuid = entity.Guid });
                     }
                 }
             }
@@ -2054,7 +2054,7 @@ public static class SemioValidator
             {
                 foreach (var q in list.Skip(1))
                 {
-                    issues.Add(new SemioValidationIssue { ConstraintId = "quality-name-unique", Severity = "error", Message = $"Duplicate quality name \"{nameGroup.Key}\".", EntityKind = "Quality", EntityGuid = q.Guid });
+                    issues.Add(new Issue { ConstraintId = "quality-name-unique", Severity = "error", Message = $"Duplicate quality name \"{nameGroup.Key}\".", EntityKind = "Quality", EntityGuid = q.Guid });
                 }
             }
         }
@@ -2068,7 +2068,7 @@ public static class SemioValidator
             {
                 foreach (var iface in list.Skip(1))
                 {
-                    issues.Add(new SemioValidationIssue { ConstraintId = "interface-name-unique", Severity = "error", Message = $"Duplicate interface name \"{nameGroup.Key}\".", EntityKind = "Interface", EntityGuid = iface.Guid });
+                    issues.Add(new Issue { ConstraintId = "interface-name-unique", Severity = "error", Message = $"Duplicate interface name \"{nameGroup.Key}\".", EntityKind = "Interface", EntityGuid = iface.Guid });
                 }
             }
         }
@@ -2082,7 +2082,7 @@ public static class SemioValidator
             {
                 foreach (var f in list.Skip(1))
                 {
-                    issues.Add(new SemioValidationIssue { ConstraintId = "file-name-unique", Severity = "error", Message = $"Duplicate file name \"{nameGroup.Key}\".", EntityKind = "File", EntityGuid = f.Guid });
+                    issues.Add(new Issue { ConstraintId = "file-name-unique", Severity = "error", Message = $"Duplicate file name \"{nameGroup.Key}\".", EntityKind = "File", EntityGuid = f.Guid });
                 }
             }
         }
@@ -2099,7 +2099,7 @@ public static class SemioValidator
                 {
                     foreach (var fo in list.Skip(1))
                     {
-                        issues.Add(new SemioValidationIssue { ConstraintId = "folder-name-unique", Severity = "error", Message = $"Duplicate folder name \"{nameGroup.Key}\" among siblings.", EntityKind = "Folder", EntityGuid = fo.Guid });
+                        issues.Add(new Issue { ConstraintId = "folder-name-unique", Severity = "error", Message = $"Duplicate folder name \"{nameGroup.Key}\" among siblings.", EntityKind = "Folder", EntityGuid = fo.Guid });
                     }
                 }
             }
@@ -2116,13 +2116,13 @@ public static class SemioValidator
                 {
                     foreach (var layer in list.Skip(1))
                     {
-                        issues.Add(new SemioValidationIssue { ConstraintId = "layer-path-unique", Severity = "error", Message = $"Duplicate layer path \"{pathGroup.Key}\" inside design \"{design.Name}\".", EntityKind = "Layer", EntityGuid = layer.Guid });
+                        issues.Add(new Issue { ConstraintId = "layer-path-unique", Severity = "error", Message = $"Duplicate layer path \"{pathGroup.Key}\" inside design \"{design.Name}\".", EntityKind = "Layer", EntityGuid = layer.Guid });
                     }
                 }
             }
         }
 
-        return new SemioValidationResult { Issues = issues };
+        return new ValidationResult { Issues = issues };
     }
 }
 

@@ -513,9 +513,9 @@ npx tsx repo.tsx <command> [subcommand] [options]
 
 **Built-in Rules:**
 
-- `header-region` - Checks SPDX license header in Header region
-- `empty-region` - Warns on empty regions
-- `inline-comment` - Warns on inline comments (except license headers)
+- `header` - Validates header region (violations: `header:missing-region`, `header:missing-filename`, `header:missing-contributors`, `header:missing-license`, `header:wrong-license`)
+- `region` - Validates region blocks (violations: `region:empty`, `region:missing-start-name`, `region:missing-end-name`, `region:name-mismatch`)
+- `comment` - Detects forbidden comments (violations: `comment:inline`, `comment:block`, `comment:jsdoc`)
 
 **Examples:**
 
@@ -3410,7 +3410,7 @@ Each platform provides its own thin wrapper:
 
 ```typescript
 type SemioEntityKind = "Kit" | "Type" | "Design" | "Piece" | "Connection" | "Connector" | "Attribute" | "File" | "Folder" | "Quality" | "Interface" | "Prop" | "Model" | "Layer" | "Group" | "Stat";
-type SemioValidationSeverity = "error" | "warning";
+type Severity = "error" | "warning";
 
 interface SemioDomainLocation {
   entityKind: SemioEntityKind;
@@ -3418,29 +3418,29 @@ interface SemioDomainLocation {
   field?: string;
 }
 
-interface SemioKitFix {
+interface Fix {
   title: string;
   diff: KitDiff;
 }
 
-interface SemioValidationIssue {
+interface Issue {
   constraintId: string;
-  severity: SemioValidationSeverity;
+  severity: Severity;
   message: string;
   location: SemioDomainLocation;
   relatedGuids?: Guid[];
-  fixes: SemioKitFix[];
+  fixes: Fix[];
 }
 
-interface SemioValidationResult {
-  issues: SemioValidationIssue[];
+interface ValidationResult {
+  issues: Issue[];
 }
 ```
 
 ##### Validation Context
 
 ```typescript
-interface SemioValidationContext {
+interface ValidationContext {
   kit: Kit;
   typesByGuid: Map<Guid, Type>;
   designsByGuid: Map<Guid, Design>;
@@ -3455,7 +3455,7 @@ interface SemioValidationContext {
 All validation constraints follow the pattern:
 
 ```typescript
-type SemioValidationConstraint = (ctx: SemioValidationContext) => SemioValidationIssue[];
+type Constraint = (ctx: ValidationContext) => Issue[];
 ```
 
 ##### Default Constraints
@@ -3606,29 +3606,29 @@ const fixedKit = applyKitDiff(kit, fix.diff);
 ##### Custom Validation
 
 ```typescript
-const customConstraint: SemioValidationConstraint = (ctx) => {
-  const issues: SemioValidationIssue[] = [];
+const customConstraint: Constraint = (ctx) => {
+  const issues: Issue[] = [];
   // Custom validation logic
   return issues;
 };
 
 const result = validateSemioKit(kit, {
-  constraints: [...defaultSemioValidationConstraints, customConstraint],
+  constraints: [...defaultConstraints, customConstraint],
 });
 ```
 
 ###### Creating New Constraints
 
-1. Define the constraint function following `SemioValidationConstraint` signature
+1. Define the constraint function following `Constraint` signature
 2. Use `semioMakeFix` helper to generate `KitDiff`-based fixes
-3. Add to `defaultSemioValidationConstraints` array
+3. Add to `defaultConstraints` array
 4. Document in this section
 
 Example:
 
 ```typescript
-export const semioCustomConstraint: SemioValidationConstraint = (ctx) => {
-  const issues: SemioValidationIssue[] = [];
+export const semioCustomConstraint: Constraint = (ctx) => {
+  const issues: Issue[] = [];
   // Validation logic
   // Use semioMakeFix to create fixes
   return issues;
@@ -3665,7 +3665,7 @@ All implementations (TypeScript, Python, C#) produce **identical** validation ou
 
 - **TypeScript**: `toSerializableValidationResult()`, `serializeValidationResult()`, `areValidationResultsEqual()`
 - **Python**: `ValidationResult.toDict()`, `ValidationResult.serialize()`, `areValidationResultsEqual()`
-- **C#**: `SemioValidator.ValidateKit()`, `SemioValidationResult.Serialize()`, `SemioValidationResult.AreEqual()` (fix comparison pending)
+- **C#**: `SemioValidator.ValidateKit()`, `ValidationResult.Serialize()`, `ValidationResult.AreEqual()` (fix comparison pending)
 
 ##### Test Data
 

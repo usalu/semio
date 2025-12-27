@@ -1,7 +1,7 @@
 {
-  "timestamp": "2025-12-26T02:49:07.805Z",
+  "timestamp": "2025-12-27T00:50:00.152Z",
   "status": "success",
-  "scope": "@semio",
+  "scope": "assets/repo/some/folder/file_invalid.tsx",
   "summary": {
     "total": 0,
     "byPriority": {
@@ -15,5 +15,5 @@
     },
     "byKind": {}
   },
-  "issues": []
+  "violations": []
 }

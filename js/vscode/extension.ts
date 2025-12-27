@@ -21,7 +21,7 @@
 
 // #region Imports
 
-import { applyKitDiff, deserializeKit, Kit, SemioDomainLocation, SemioKitFix, SemioValidationIssue, serializeKit, validateSemioKit } from "@semio/js/semio";
+import { applyKitDiff, deserializeKit, Fix, Issue, Kit, SemioDomainLocation, serializeKit, validateSemioKit } from "@semio/js/semio";
 import * as fs from "fs";
 import * as jsonc from "jsonc-parser";
 import * as path from "path";
@@ -34,7 +34,7 @@ import * as vscode from "vscode";
 const SEMIO_KIT_LANGUAGE = "json";
 const DIAGNOSTIC_SOURCE_KIT = "semio-kit";
 const DIAGNOSTIC_SOURCE_REPO = "semio-repo";
-const ANALYZE_REPORT_PATH = "reports/analyze.json";
+const ANALYZE_REPORT_PATH = "reports/rules.json";
 
 // #endregion Constants
 
@@ -160,7 +160,7 @@ function isSemioKitDocument(document: vscode.TextDocument): boolean {
   return basename.startsWith("kit_") || basename.includes("_kit") || basename === "kit.json";
 }
 
-function issueToDiagnostic(document: vscode.TextDocument, issue: SemioValidationIssue): vscode.Diagnostic {
+function issueToDiagnostic(document: vscode.TextDocument, issue: Issue): vscode.Diagnostic {
   const range = locationToRange(document, issue.location);
   const severity = issue.severity === "error" ? vscode.DiagnosticSeverity.Error : vscode.DiagnosticSeverity.Warning;
   const diagnostic = new vscode.Diagnostic(range, issue.message, severity);
@@ -299,7 +299,7 @@ class SemioKitCodeActionProvider implements vscode.CodeActionProvider {
   }
 }
 
-function createKitCodeAction(document: vscode.TextDocument, diagnostic: vscode.Diagnostic, fix: SemioKitFix, kit: Kit): vscode.CodeAction | undefined {
+function createKitCodeAction(document: vscode.TextDocument, diagnostic: vscode.Diagnostic, fix: Fix, kit: Kit): vscode.CodeAction | undefined {
   try {
     const fixedKit = applyKitDiff(kit, fix.diff);
     const fixedJson = serializeKit(fixedKit);

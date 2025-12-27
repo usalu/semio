@@ -29,8 +29,8 @@ This document describes the implementation of a clean validation architecture fo
 
 Pure functions working only with `Kit` and `KitDiff`:
 
-- **Validation Core Types**: `SemioValidationIssue`, `SemioKitFix`, `SemioDomainLocation`
-- **Validation Engine**: `validateSemioKit`, `SemioValidationConstraint`
+- **Validation Core Types**: `Issue`, `Fix`, `SemioDomainLocation`
+- **Validation Engine**: `validateSemioKit`, `Constraint`
 - **Fix Helper**: `semioMakeFix` (generates `KitDiff` from mutations)
 - **Default Constraints**:
   - GUID uniqueness
@@ -141,7 +141,7 @@ The VS Code extension translates this to JSON ranges.
 const result = validateSemioKit(currentKit);
 showIssues(result.issues);
 
-function applyFix(issue: SemioValidationIssue, fix: SemioKitFix) {
+function applyFix(issue: Issue, fix: Fix) {
   const newKit = applyKitDiff(currentKit, fix.diff);
   setCurrentKit(newKit);
 }
@@ -170,8 +170,8 @@ const codeActions = result.issues.flatMap(issueToCodeActions);
 
 Added ~550 lines of pure validation logic:
 
-- **Core Types** (7 types): `SemioEntityKind`, `SemioValidationSeverity`, `SemioDomainLocation`, `SemioKitFix`, `SemioValidationIssue`, `SemioValidationResult`, `SemioValidationContext`
-- **Engine** (5 functions): `buildSemioValidationContext`, `validateSemioKit`, `semioMakeFix`, `hasSemioErrors`, `updateGuidEverywhere`
+- **Core Types** (7 types): `SemioEntityKind`, `Severity`, `SemioDomainLocation`, `Fix`, `Issue`, `ValidationResult`, `ValidationContext`
+- **Engine** (5 functions): `buildValidationContext`, `validateSemioKit`, `semioMakeFix`, `hasSemioErrors`, `updateGuidEverywhere`
 - **Constraints** (11 constraints):
   - `semioGuidUniquenessConstraint`
   - `semioTypeNameUniquenessConstraint`
@@ -190,7 +190,7 @@ Added ~550 lines of pure validation logic:
 Added ~280 lines of JSON-aware linting:
 
 - **Validation**: Auto-validates on open/change/save
-- **Diagnostics**: Converts `SemioValidationIssue` → VS Code `Diagnostic`
+- **Diagnostics**: Converts `Issue` → VS Code `Diagnostic`
 - **Quick Fixes**: Applies `KitDiff` and replaces entire document
 - **JSON Mapping**: Uses `jsonc-parser` to map domain locations → ranges
 

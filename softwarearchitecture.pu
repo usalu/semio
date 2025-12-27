@@ -898,7 +898,7 @@ Concept *-- "0..*" Attribute : has >
 ' #endregion Relationships
 
 ' #region Validation
-class SemioValidationContext {
+class ValidationContext {
   kit: Kit
   typesByGuid: Map<Guid, Type>
   designsByGuid: Map<Guid, Design>
@@ -907,16 +907,16 @@ class SemioValidationContext {
   modelsByTypeGuid: Map<Guid, Model[]>
 }
 
-class SemioValidationIssue {
+class Issue {
   constraintId: str
-  severity: SemioValidationSeverity
+  severity: Severity
   message: str
   location: SemioDomainLocation
   relatedGuids: Guid[]
-  fixes: SemioKitFix[]
+  fixes: Fix[]
 }
 
-class SemioKitFix {
+class Fix {
   title: str
   diff: KitDiff
 }
@@ -927,7 +927,7 @@ class SemioDomainLocation {
   field: str
 }
 
-enum SemioValidationSeverity {
+enum Severity {
   error
   warning
 }
@@ -951,18 +951,18 @@ enum SemioEntityKind {
   Concept
 }
 
-interface SemioValidationConstraint {
-  validate(ctx: SemioValidationContext): SemioValidationIssue[]
+interface Constraint {
+  validate(ctx: ValidationContext): Issue[]
 }
 
-SemioValidationContext --> Kit
-SemioValidationIssue *-- SemioDomainLocation
-SemioValidationIssue *-- "1..*" SemioKitFix
-SemioKitFix --> KitDiff
+ValidationContext --> Kit
+Issue *-- SemioDomainLocation
+Issue *-- "1..*" Fix
+Fix --> KitDiff
 SemioDomainLocation --> SemioEntityKind
-SemioValidationIssue --> SemioValidationSeverity
-SemioValidationConstraint ..> SemioValidationContext
-SemioValidationConstraint ..> SemioValidationIssue
+Issue --> Severity
+Constraint ..> ValidationContext
+Constraint ..> Issue
 ' #endregion Validation
 
 @enduml

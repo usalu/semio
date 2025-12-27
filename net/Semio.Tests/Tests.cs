@@ -103,9 +103,9 @@ public class KitTests
 
         var result = SemioValidator.ValidateKit(invalidKit!);
         var expectedJson = System.IO.File.ReadAllText(ValidationPath);
-        var expected = SemioValidationResult.Parse(expectedJson);
+        var expected = ValidationResult.Parse(expectedJson);
 
-        Assert.True(SemioValidationResult.AreEqual(result, expected),
+        Assert.True(ValidationResult.AreEqual(result, expected),
             $"Validation mismatch. Got {result.Issues.Count} issues, expected {expected.Issues.Count}. " +
             $"Result: {result.Serialize()}");
     }

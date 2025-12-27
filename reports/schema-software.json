@@ -2224,7 +2224,7 @@
       ]
     },
     {
-      "name": "SemioValidationContext",
+      "name": "ValidationContext",
       "kind": "class",
       "fields": [
         {
@@ -2254,7 +2254,7 @@
       ]
     },
     {
-      "name": "SemioValidationIssue",
+      "name": "Issue",
       "kind": "class",
       "fields": [
         {
@@ -2263,7 +2263,7 @@
         },
         {
           "name": "severity",
-          "type": "SemioValidationSeverity"
+          "type": "Severity"
         },
         {
           "name": "message",
@@ -2279,12 +2279,12 @@
         },
         {
           "name": "fixes",
-          "type": "SemioKitFix[]"
+          "type": "Fix[]"
         }
       ]
     },
     {
-      "name": "SemioKitFix",
+      "name": "Fix",
       "kind": "class",
       "fields": [
         {
@@ -2316,7 +2316,7 @@
       ]
     },
     {
-      "name": "SemioValidationConstraint",
+      "name": "Constraint",
       "kind": "class",
       "fields": []
     },
@@ -2324,7 +2324,14 @@
       "name": "QualityKind",
       "kind": "enum",
       "fields": [],
-      "enumValues": ["General", "Design", "Type", "Piece", "Connection", "Connector"]
+      "enumValues": [
+        "General",
+        "Design",
+        "Type",
+        "Piece",
+        "Connection",
+        "Connector"
+      ]
     }
   ],
   "relationships": [
@@ -2707,8 +2714,8 @@
       "cardinality": "0..*"
     },
     {
-      "from": "SemioValidationIssue",
-      "to": "SemioKitFix",
+      "from": "Issue",
+      "to": "Fix",
       "type": "composition",
       "cardinality": "1..*"
     }

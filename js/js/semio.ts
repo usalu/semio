@@ -6008,20 +6008,20 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
           plane:
             p.plane_origin_x !== null
               ? {
-                  origin: { x: p.plane_origin_x, y: p.plane_origin_y, z: p.plane_origin_z },
-                  xAxis: { x: p.plane_x_axis_x, y: p.plane_x_axis_y, z: p.plane_x_axis_z },
-                  yAxis: { x: p.plane_y_axis_x, y: p.plane_y_axis_y, z: p.plane_y_axis_z },
-                }
+                origin: { x: p.plane_origin_x, y: p.plane_origin_y, z: p.plane_origin_z },
+                xAxis: { x: p.plane_x_axis_x, y: p.plane_x_axis_y, z: p.plane_x_axis_z },
+                yAxis: { x: p.plane_y_axis_x, y: p.plane_y_axis_y, z: p.plane_y_axis_z },
+              }
               : undefined,
           center: p.center_u !== null || p.center_v !== null ? { u: p.center_u, v: p.center_v } : undefined,
           scale: p.scale !== null ? p.scale : undefined,
           mirrorPlane:
             p.mirror_plane_origin_x !== null
               ? {
-                  origin: { x: p.mirror_plane_origin_x, y: p.mirror_plane_origin_y, z: p.mirror_plane_origin_z },
-                  xAxis: { x: p.mirror_plane_x_axis_x, y: p.mirror_plane_x_axis_y, z: p.mirror_plane_x_axis_z },
-                  yAxis: { x: p.mirror_plane_y_axis_x, y: p.mirror_plane_y_axis_y, z: p.mirror_plane_y_axis_z },
-                }
+                origin: { x: p.mirror_plane_origin_x, y: p.mirror_plane_origin_y, z: p.mirror_plane_origin_z },
+                xAxis: { x: p.mirror_plane_x_axis_x, y: p.mirror_plane_x_axis_y, z: p.mirror_plane_x_axis_z },
+                yAxis: { x: p.mirror_plane_y_axis_x, y: p.mirror_plane_y_axis_y, z: p.mirror_plane_y_axis_z },
+              }
               : undefined,
           isHidden: p.is_hidden ? true : undefined,
           isLocked: p.is_locked ? true : undefined,
@@ -6136,55 +6136,55 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
   kit.qualities =
     qualities.length > 0
       ? qualities.map((row: any) => {
-          const benchmarks = execResult("SELECT * FROM benchmark WHERE quality_guid = ?", [row.guid]);
-          const qualityAttributes = execResult("SELECT * FROM attribute WHERE quality_guid = ?", [row.guid]);
-          return {
-            guid: row.guid,
-            key: row.key,
-            name: row.name,
-            kind: row.kind,
-            defaultValue: row.default_value,
-            formula: toUndefined(row.formula),
-            defaultSiUnit: toUndefined(row.default_si_unit),
-            defaultImperialUnit: toUndefined(row.default_imperial_unit),
-            min: row.min_value,
-            minExcluded: row.min_excluded ? true : undefined,
-            max: row.max_value,
-            maxExcluded: row.max_excluded ? true : undefined,
-            canScale: row.can_scale ? true : undefined,
-            uri: toUndefined(row.definition),
-            benchmarks: benchmarks.map((b: any) => {
-              const benchmarkAttributes = execResult("SELECT * FROM attribute WHERE benchmark_guid = ?", [b.guid]);
-              return {
-                guid: b.guid,
-                name: b.name,
-                icon: toUndefined(b.icon),
-                min: b.min_value,
-                minExcluded: b.min_excluded ? true : undefined,
-                max: b.max_value,
-                maxExcluded: b.max_excluded ? true : undefined,
-                attributes: mapOrUndefined(benchmarkAttributes, buildAttribute),
-              };
-            }),
-            attributes: mapOrUndefined(qualityAttributes, buildAttribute),
-          };
-        })
+        const benchmarks = execResult("SELECT * FROM benchmark WHERE quality_guid = ?", [row.guid]);
+        const qualityAttributes = execResult("SELECT * FROM attribute WHERE quality_guid = ?", [row.guid]);
+        return {
+          guid: row.guid,
+          key: row.key,
+          name: row.name,
+          kind: row.kind,
+          defaultValue: row.default_value,
+          formula: toUndefined(row.formula),
+          defaultSiUnit: toUndefined(row.default_si_unit),
+          defaultImperialUnit: toUndefined(row.default_imperial_unit),
+          min: row.min_value,
+          minExcluded: row.min_excluded ? true : undefined,
+          max: row.max_value,
+          maxExcluded: row.max_excluded ? true : undefined,
+          canScale: row.can_scale ? true : undefined,
+          uri: toUndefined(row.definition),
+          benchmarks: benchmarks.map((b: any) => {
+            const benchmarkAttributes = execResult("SELECT * FROM attribute WHERE benchmark_guid = ?", [b.guid]);
+            return {
+              guid: b.guid,
+              name: b.name,
+              icon: toUndefined(b.icon),
+              min: b.min_value,
+              minExcluded: b.min_excluded ? true : undefined,
+              max: b.max_value,
+              maxExcluded: b.max_excluded ? true : undefined,
+              attributes: mapOrUndefined(benchmarkAttributes, buildAttribute),
+            };
+          }),
+          attributes: mapOrUndefined(qualityAttributes, buildAttribute),
+        };
+      })
       : undefined;
 
   const files = execResult("SELECT * FROM file WHERE kit_guid = ?", [kit.guid]);
   kit.files =
     files.length > 0
       ? files.map((row: any) => ({
-          guid: row.guid,
-          name: row.name,
-          mime: toUndefined(row.mime),
-          remote: toUndefined(row.remote_url),
-          folder: row.folder_guid ? { guid: row.folder_guid } : undefined,
-          size: row.size,
-          hash: row.hash,
-          createdAt: row.created,
-          updatedAt: row.updated,
-        }))
+        guid: row.guid,
+        name: row.name,
+        mime: toUndefined(row.mime),
+        remote: toUndefined(row.remote_url),
+        folder: row.folder_guid ? { guid: row.folder_guid } : undefined,
+        size: row.size,
+        hash: row.hash,
+        createdAt: row.created,
+        updatedAt: row.updated,
+      }))
       : undefined;
 
   const folders = execResult("SELECT * FROM folder WHERE kit_guid = ?", [kit.guid]);
@@ -6200,10 +6200,10 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
   kit.authors =
     authors.length > 0
       ? authors.map((row: any) => ({
-          guid: row.guid,
-          name: row.name,
-          email: toUndefined(row.email),
-        }))
+        guid: row.guid,
+        name: row.name,
+        email: toUndefined(row.email),
+      }))
       : undefined;
 
   const concepts = execResult("SELECT * FROM concept WHERE kit_guid = ?", [kit.guid]);
@@ -7026,7 +7026,7 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
 
 export type SemioEntityKind = "Kit" | "Type" | "Design" | "Piece" | "Connection" | "Connector" | "Attribute" | "File" | "Folder" | "Quality" | "Interface" | "Prop" | "Model" | "Layer" | "Group" | "Stat";
 
-export type SemioValidationSeverity = "error" | "warning";
+export type Severity = "error" | "warning";
 
 export interface SemioDomainLocation {
   entityKind: SemioEntityKind;
@@ -7034,31 +7034,31 @@ export interface SemioDomainLocation {
   field?: string;
 }
 
-export interface SemioKitFix {
+export interface Fix {
   title: string;
   diff: KitDiff;
 }
 
-export interface SemioValidationIssue {
+export interface Issue {
   constraintId: string;
-  severity: SemioValidationSeverity;
+  severity: Severity;
   message: string;
   location: SemioDomainLocation;
   relatedGuids?: Guid[];
-  fixes: SemioKitFix[];
+  fixes: Fix[];
 }
 
-export interface SemioValidationResult {
-  issues: SemioValidationIssue[];
+export interface ValidationResult {
+  issues: Issue[];
 }
 
-export const hasSemioErrors = (res: SemioValidationResult) => res.issues.some((i) => i.severity === "error");
+export const hasSemioErrors = (res: ValidationResult) => res.issues.some((i) => i.severity === "error");
 
 // #endregion Validation core types
 
 // #region Validation context & engine
 
-export interface SemioValidationContext {
+export interface ValidationContext {
   kit: Kit;
   typesByGuid: Map<Guid, Type>;
   designsByGuid: Map<Guid, Design>;
@@ -7067,7 +7067,7 @@ export interface SemioValidationContext {
   modelsByTypeGuid: Map<Guid, Model[]>;
 }
 
-export const buildSemioValidationContext = (kit: Kit): SemioValidationContext => {
+export const buildValidationContext = (kit: Kit): ValidationContext => {
   const typesByGuid = new Map<Guid, Type>();
   const designsByGuid = new Map<Guid, Design>();
   const piecesByGuid = new Map<Guid, { designGuid: Guid; piece: Piece }>();
@@ -7085,17 +7085,17 @@ export const buildSemioValidationContext = (kit: Kit): SemioValidationContext =>
   return { kit, typesByGuid, designsByGuid, piecesByGuid, connectorsByTypeGuid, modelsByTypeGuid };
 };
 
-export type SemioValidationConstraint = (ctx: SemioValidationContext) => SemioValidationIssue[];
+export type Constraint = (ctx: ValidationContext) => Issue[];
 
 export interface SemioValidationConfig {
-  constraints?: SemioValidationConstraint[];
+  constraints?: Constraint[];
 }
 
-export let defaultSemioValidationConstraints: SemioValidationConstraint[] = [];
+export let defaultConstraints: Constraint[] = [];
 
-export const validateSemioKit = (kit: Kit, cfg: SemioValidationConfig = {}): SemioValidationResult => {
-  const ctx = buildSemioValidationContext(kit);
-  const constraints = cfg.constraints ?? defaultSemioValidationConstraints;
+export const validateSemioKit = (kit: Kit, cfg: SemioValidationConfig = {}): ValidationResult => {
+  const ctx = buildValidationContext(kit);
+  const constraints = cfg.constraints ?? defaultConstraints;
   return { issues: constraints.flatMap((constraint) => constraint(ctx)) };
 };
 
@@ -7103,7 +7103,7 @@ export const validateSemioKit = (kit: Kit, cfg: SemioValidationConfig = {}): Sem
 
 // #region Fix helper
 
-export const semioMakeFix = (ctx: SemioValidationContext, title: string, mutate: (clone: Kit) => void): SemioKitFix => {
+export const semioMakeFix = (ctx: ValidationContext, title: string, mutate: (clone: Kit) => void): Fix => {
   const clone = JSON.parse(serializeKit(ctx.kit)) as Kit;
   mutate(clone);
   const diff = getKitDiff(ctx.kit, clone);
@@ -7147,8 +7147,8 @@ const updateGuidEverywhere = (kit: Kit, oldGuid: Guid, newGuid: Guid): void => {
 
 // #region Constraint: GUID uniqueness
 
-export const semioGuidUniquenessConstraint: SemioValidationConstraint = (ctx) => {
-  const issues: SemioValidationIssue[] = [];
+export const semioGuidUniquenessConstraint: Constraint = (ctx) => {
+  const issues: Issue[] = [];
   const seen = new Map<Guid, SemioEntityKind>();
   const check = (entityKind: SemioEntityKind, entityGuid: Guid) => {
     const existing = seen.get(entityGuid);
@@ -7156,7 +7156,7 @@ export const semioGuidUniquenessConstraint: SemioValidationConstraint = (ctx) =>
       seen.set(entityGuid, entityKind);
       return;
     }
-    const issue: SemioValidationIssue = {
+    const issue: Issue = {
       constraintId: "guid-unique",
       severity: "error",
       message: `Duplicate GUID "${entityGuid}". First occurrence kept.`,
@@ -7190,8 +7190,8 @@ export const semioGuidUniquenessConstraint: SemioValidationConstraint = (ctx) =>
 
 // #region Constraint: Type name uniqueness
 
-export const semioTypeNameUniquenessConstraint: SemioValidationConstraint = (ctx) => {
-  const issues: SemioValidationIssue[] = [];
+export const semioTypeNameUniquenessConstraint: Constraint = (ctx) => {
+  const issues: Issue[] = [];
   const byParent = new Map<Guid | undefined, Type[]>();
   toArray(ctx.kit.types).forEach((t) => {
     const pid = t.parent?.guid as Guid | undefined;
@@ -7234,8 +7234,8 @@ export const semioTypeNameUniquenessConstraint: SemioValidationConstraint = (ctx
 
 // #region Constraint: Design name uniqueness
 
-export const semioDesignNameUniquenessConstraint: SemioValidationConstraint = (ctx) => {
-  const issues: SemioValidationIssue[] = [];
+export const semioDesignNameUniquenessConstraint: Constraint = (ctx) => {
+  const issues: Issue[] = [];
   const byParent = new Map<Guid | undefined, Design[]>();
   toArray(ctx.kit.designs).forEach((d) => {
     const pid = d.parent?.guid as Guid | undefined;
@@ -7278,8 +7278,8 @@ export const semioDesignNameUniquenessConstraint: SemioValidationConstraint = (c
 
 // #region Constraint: Piece name uniqueness
 
-export const semioPieceNameUniquenessConstraint: SemioValidationConstraint = (ctx) => {
-  const issues: SemioValidationIssue[] = [];
+export const semioPieceNameUniquenessConstraint: Constraint = (ctx) => {
+  const issues: Issue[] = [];
   toArray(ctx.kit.designs).forEach((design) => {
     const pieces = toArray(design.pieces);
     if (pieces.length === 0) return;
@@ -7320,8 +7320,8 @@ export const semioPieceNameUniquenessConstraint: SemioValidationConstraint = (ct
 
 // #region Constraint: Quality name uniqueness
 
-export const semioQualityNameUniquenessConstraint: SemioValidationConstraint = (ctx) => {
-  const issues: SemioValidationIssue[] = [];
+export const semioQualityNameUniquenessConstraint: Constraint = (ctx) => {
+  const issues: Issue[] = [];
   const qualities = toArray(ctx.kit.qualities);
   const nameMap = new Map<string, Quality[]>();
   qualities.forEach((q) => {
@@ -7356,8 +7356,8 @@ export const semioQualityNameUniquenessConstraint: SemioValidationConstraint = (
 
 // #region Constraint: Interface name uniqueness
 
-export const semioInterfaceNameUniquenessConstraint: SemioValidationConstraint = (ctx) => {
-  const issues: SemioValidationIssue[] = [];
+export const semioInterfaceNameUniquenessConstraint: Constraint = (ctx) => {
+  const issues: Issue[] = [];
   const interfaces = toArray(ctx.kit.interfaces);
   const nameMap = new Map<string, Interface[]>();
   interfaces.forEach((i) => {
@@ -7392,8 +7392,8 @@ export const semioInterfaceNameUniquenessConstraint: SemioValidationConstraint =
 
 // #region Constraint: File name uniqueness
 
-export const semioFileNameUniquenessConstraint: SemioValidationConstraint = (ctx) => {
-  const issues: SemioValidationIssue[] = [];
+export const semioFileNameUniquenessConstraint: Constraint = (ctx) => {
+  const issues: Issue[] = [];
   const files = toArray(ctx.kit.files);
   const nameMap = new Map<string, File[]>();
   files.forEach((f) => {
@@ -7428,8 +7428,8 @@ export const semioFileNameUniquenessConstraint: SemioValidationConstraint = (ctx
 
 // #region Constraint: Folder name uniqueness
 
-export const semioFolderNameUniquenessConstraint: SemioValidationConstraint = (ctx) => {
-  const issues: SemioValidationIssue[] = [];
+export const semioFolderNameUniquenessConstraint: Constraint = (ctx) => {
+  const issues: Issue[] = [];
   const byParent = new Map<Guid | undefined, Folder[]>();
   const folders = toArray(ctx.kit.folders);
   folders.forEach((f) => {
@@ -7472,8 +7472,8 @@ export const semioFolderNameUniquenessConstraint: SemioValidationConstraint = (c
 
 // #region Constraint: Connector name uniqueness within type
 
-export const semioPortNameUniquenessConstraint: SemioValidationConstraint = (ctx) => {
-  const issues: SemioValidationIssue[] = [];
+export const semioPortNameUniquenessConstraint: Constraint = (ctx) => {
+  const issues: Issue[] = [];
   for (const [typeGuid, connectors] of ctx.connectorsByTypeGuid) {
     if (connectors.length === 0) continue;
     const nameMap = new Map<string, Connector[]>();
@@ -7514,8 +7514,8 @@ export const semioPortNameUniquenessConstraint: SemioValidationConstraint = (ctx
 
 // #region Constraint: Model name uniqueness within type
 
-export const semioModelNameUniquenessConstraint: SemioValidationConstraint = (ctx) => {
-  const issues: SemioValidationIssue[] = [];
+export const semioModelNameUniquenessConstraint: Constraint = (ctx) => {
+  const issues: Issue[] = [];
   for (const [typeGuid, models] of ctx.modelsByTypeGuid) {
     if (models.length === 0) continue;
     const nameMap = new Map<string, Model[]>();
@@ -7556,8 +7556,8 @@ export const semioModelNameUniquenessConstraint: SemioValidationConstraint = (ct
 
 // #region Constraint: Layer path uniqueness within design
 
-export const semioLayerPathUniquenessConstraint: SemioValidationConstraint = (ctx) => {
-  const issues: SemioValidationIssue[] = [];
+export const semioLayerPathUniquenessConstraint: Constraint = (ctx) => {
+  const issues: Issue[] = [];
   toArray(ctx.kit.designs).forEach((design) => {
     const layers = toArray(design.layers);
     if (layers.length === 0) return;
@@ -7597,8 +7597,8 @@ export const semioLayerPathUniquenessConstraint: SemioValidationConstraint = (ct
 
 // #region Constraint: Design piece same family constraint
 
-export const semioDesignPieceSameFamilyConstraint: SemioValidationConstraint = (ctx) => {
-  const issues: SemioValidationIssue[] = [];
+export const semioDesignPieceSameFamilyConstraint: Constraint = (ctx) => {
+  const issues: Issue[] = [];
   toArray(ctx.kit.designs).forEach((design) => {
     const pieces = toArray(design.pieces);
     pieces.forEach((piece) => {
@@ -7635,7 +7635,7 @@ export const semioDesignPieceSameFamilyConstraint: SemioValidationConstraint = (
   return issues;
 };
 
-const getPrimitiveDesignFromContext = (ctx: SemioValidationContext, designGuid: string): string => {
+const getPrimitiveDesignFromContext = (ctx: ValidationContext, designGuid: string): string => {
   let currentGuid = designGuid;
   let iterations = 0;
   const maxIterations = 1000;
@@ -7652,7 +7652,7 @@ const getPrimitiveDesignFromContext = (ctx: SemioValidationContext, designGuid: 
 
 // #region Constraint registration
 
-defaultSemioValidationConstraints = [
+defaultConstraints = [
   semioGuidUniquenessConstraint,
   semioTypeNameUniquenessConstraint,
   semioDesignNameUniquenessConstraint,
@@ -7689,7 +7689,7 @@ export interface SerializableValidationResult {
   issues: SerializableValidationIssue[];
 }
 
-export const toSerializableValidationResult = (result: SemioValidationResult): SerializableValidationResult => ({
+export const toSerializableValidationResult = (result: ValidationResult): SerializableValidationResult => ({
   issues: result.issues.map((issue) => ({
     constraintId: issue.constraintId,
     severity: issue.severity,
@@ -7700,7 +7700,7 @@ export const toSerializableValidationResult = (result: SemioValidationResult): S
   })),
 });
 
-export const serializeValidationResult = (result: SemioValidationResult): string => {
+export const serializeValidationResult = (result: ValidationResult): string => {
   const serializable = toSerializableValidationResult(result);
   serializable.issues.sort((a, b) => {
     const constraintCompare = a.constraintId.localeCompare(b.constraintId);

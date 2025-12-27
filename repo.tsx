@@ -26,7 +26,7 @@ import { execSync, spawnSync } from "child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "fs";
 import matter from "gray-matter";
 import { Box, render, Text, useApp } from "ink";
-import { dirname, join, relative, sep } from "path";
+import { dirname, join, relative } from "path";
 import React from "react";
 import * as ts from "typescript";
 import { fileURLToPath } from "url";
@@ -48,16 +48,16 @@ interface Scope {
 }
 //#endregion Scope
 
-//#region Issue
-type IssuePriority = "high" | "medium" | "low";
-type IssueSeverity = "error" | "warning";
+//#region Violation
+type ViolationPriority = "high" | "medium" | "low";
+type ViolationSeverity = "error" | "warning";
 
-interface Issue {
+interface Violation {
   id: string;
   summary: string;
   kind: string;
-  priority: IssuePriority;
-  severity: IssueSeverity;
+  priority: ViolationPriority;
+  severity: ViolationSeverity;
   autofixable: boolean;
   solution: string;
   reason: string;
@@ -67,7 +67,7 @@ interface Issue {
   excerpt?: string;
   autofix?: Fix;
 }
-//#endregion Issue
+//#endregion Violation
 
 //#region Fix
 interface TextEdit {
@@ -158,7 +158,7 @@ interface RuleMeta {
   name: string;
   description: string;
   scopes: string[];
-  priority: IssuePriority;
+  priority: ViolationPriority;
   autofixable: boolean;
 }
 
@@ -171,11 +171,11 @@ interface RuleContext {
   readText: (filePath: string) => string;
   regions: (filePath: string) => RegionInfo[];
   definitions: (filePath: string) => DefinitionInfo[];
-  createIssue: (partial: Omit<Issue, "id" | "priority" | "autofixable">) => Issue;
+  createViolation: (partial: Omit<Violation, "id" | "priority" | "autofixable">) => Violation;
   createFix: (description: string, edits: Map<string, TextEdit[]>) => Fix;
 }
 
-type RuleFn = (ctx: RuleContext) => Promise<Issue[]>;
+type RuleFn = (ctx: RuleContext) => Promise<Violation[]>;
 
 interface RegisteredRule {
   meta: RuleMeta;
@@ -188,8 +188,8 @@ interface AnalyzeReport {
   timestamp: string;
   status: "success" | "error" | "warning";
   scope: string;
-  summary: { total: number; byPriority: Record<IssuePriority, number>; bySeverity: Record<IssueSeverity, number>; byKind: Record<string, number> };
-  issues: Issue[];
+  summary: { total: number; byPriority: Record<ViolationPriority, number>; bySeverity: Record<ViolationSeverity, number>; byKind: Record<string, number> };
+  violations: Violation[];
 }
 //#endregion Report
 
@@ -221,14 +221,14 @@ Usage: npx tsx repo.tsx <command> [subcommand] [options]
 
 Commands:
   help                     Show this help message
-  analyze [--scope=...]    Analyze codebase for issues
-  fix [--scope=...]        Apply autofixes for issues
+  analyze [--scope=...]    Analyze codebase for violations
+  fix [--scope=...]        Apply autofixes for violations
   rule list                List all registered rules
   rule run <id>            Run a specific rule
   ticket new <title>       Create a new ticket
   ticket list [year/month] List tickets
   ticket read <path>       Read a ticket
-  ticket iterate <path>    Run rules and sync issues to ticket
+  ticket iterate <path>    Run rules and sync violations to ticket
   ticket close <path>      Close a ticket (if valid)
   project list             List Nx projects
   project tree             Show project dependency tree
@@ -403,15 +403,15 @@ function parseScope(raw: string): Scope {
 
 function scopeToFiles(scope: Scope, projects: NxProject[]): string[] {
   if (scope.kind === "repo") {
-    return simpleGlob("**/*.{ts,tsx,py,cs}", { cwd: ROOT_DIR, ignore: ["node_modules/**", "**/node_modules/**", "**/.venv/**"] });
+    return simpleGlob("**/*.{ts,tsx,py,cs}", { cwd: ROOT_DIR, ignore: ["node_modules/**", "**/node_modules/**", "**/.venv/**", "assets/repo/**"] });
   }
   if (scope.kind === "project") {
     const project = projects.find((p) => p.name === scope.projectName);
     if (!project) return [];
-    return simpleGlob(`${project.root}/**/*.{ts,tsx,py,cs}`, { cwd: ROOT_DIR, ignore: ["**/node_modules/**", "**/.venv/**"] });
+    return simpleGlob(`${project.root}/**/*.{ts,tsx,py,cs}`, { cwd: ROOT_DIR, ignore: ["**/node_modules/**", "**/.venv/**", "assets/repo/**"] });
   }
   if (scope.kind === "folder" && scope.filePath) {
-    return simpleGlob(`${scope.filePath}**/*.{ts,tsx,py,cs}`, { cwd: ROOT_DIR, ignore: ["**/node_modules/**", "**/.venv/**"] });
+    return simpleGlob(`${scope.filePath}**/*.{ts,tsx,py,cs}`, { cwd: ROOT_DIR, ignore: ["**/node_modules/**", "**/.venv/**", "assets/repo/**"] });
   }
   if ((scope.kind === "file" || scope.kind === "region" || scope.kind === "definition") && scope.filePath) {
     return [scope.filePath];
@@ -425,6 +425,7 @@ function matchesScope(ruleScopes: string[], targetScope: Scope): boolean {
     if (pattern.startsWith("@semio")) {
       if (targetScope.kind === "repo" || (targetScope.kind === "project" && targetScope.projectName?.startsWith(pattern))) return true;
     }
+    if (targetScope.kind === "repo" && pattern.startsWith("**/*.")) return true;
     if (targetScope.filePath) {
       const normalizedTarget = normalizePathSeparators(targetScope.filePath);
       const normalizedPattern = normalizePathSeparators(pattern);
@@ -594,7 +595,7 @@ function createRuleContext(scope: Scope, projects: NxProject[]): RuleContext {
     projects: () => projects,
     project: (name: string) => projects.find((p) => p.name === name),
     files: (pattern?: string) => {
-      if (pattern) return simpleGlob(pattern, { cwd: ROOT_DIR, ignore: ["**/node_modules/**", "**/.venv/**"] });
+      if (pattern) return simpleGlob(pattern, { cwd: ROOT_DIR, ignore: ["**/node_modules/**", "**/.venv/**", "assets/repo/**"] });
       return scopeToFiles(scope, projects);
     },
     readText: (filePath: string) => {
@@ -619,103 +620,372 @@ function createRuleContext(scope: Scope, projects: NxProject[]): RuleContext {
       }
       return definitionCache.get(filePath)!;
     },
-    createIssue: (partial) => ({ ...partial, id: `${partial.kind}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, priority: RULES.find((r) => r.meta.id === partial.kind)?.meta.priority ?? "medium", autofixable: RULES.find((r) => r.meta.id === partial.kind)?.meta.autofixable ?? false }),
+    createViolation: (partial) => ({
+      ...partial,
+      id: `${partial.kind}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      priority: RULES.find((r) => r.meta.id === partial.kind)?.meta.priority ?? "medium",
+      autofixable: RULES.find((r) => r.meta.id === partial.kind)?.meta.autofixable ?? false,
+    }),
     createFix: (description, edits) => ({ description, edits }),
   };
 }
 
-async function runRules(scope: Scope, ruleIds?: string[]): Promise<Issue[]> {
+async function runRules(scope: Scope, ruleIds?: string[]): Promise<Violation[]> {
   const projects = getNxProjects();
-  const issues: Issue[] = [];
+  const violations: Violation[] = [];
   const rulesToRun = ruleIds ? RULES.filter((r) => ruleIds.includes(r.meta.id)) : RULES.filter((r) => matchesScope(r.meta.scopes, scope));
   for (const rule of rulesToRun) {
     const ctx = createRuleContext(scope, projects);
-    const ruleIssues = await rule.run(ctx);
-    issues.push(...ruleIssues);
+    const ruleViolations = await rule.run(ctx);
+    violations.push(...ruleViolations);
   }
-  return issues;
+  return violations;
 }
 
 // #endregion Rule Engine
 
 // #region Built-in Rules
 
-//#region Header Region Rule
-registerRule(
-  { id: "header-region", name: "Header Region", description: "Ensures source files have a proper header region with SPDX license", scopes: ["**/*.{ts,tsx,py,cs}"], priority: "high", autofixable: true },
-  async (ctx) => {
-    const issues: Issue[] = [];
-    const files = ctx.files();
-    for (const file of files) {
-      const content = ctx.readText(file);
-      if (!content) continue;
-      const lang = getLanguageFromPath(file);
-      if (!lang) continue;
-      const regions = ctx.regions(file);
-      const headerRegion = regions.find((r) => r.name.toLowerCase() === "header");
-      if (!headerRegion) {
-        issues.push(ctx.createIssue({ summary: `Missing header region in ${file}`, kind: "header-region", severity: "error", solution: "Add a header region with SPDX license information", reason: "Every source file must include an SPDX license header", scope: file }));
+//#region Header Rule
+registerRule({ id: "header", name: "Header", description: "Validates source file header region with filename, contributors, and AGPL-3.0 license", scopes: ["**/*.{ts,tsx,py,cs}"], priority: "high", autofixable: true }, async (ctx) => {
+  const violations: Violation[] = [];
+  const files = ctx.files();
+  const agplMarkers = ["GNU Affero General Public License", "AGPL", "https://www.gnu.org/licenses/"];
+  for (const file of files) {
+    const content = ctx.readText(file);
+    if (!content) continue;
+    const lang = getLanguageFromPath(file);
+    if (!lang) continue;
+    const regions = ctx.regions(file);
+    const headerRegion = regions.find((r) => r.name.toLowerCase() === "header");
+    if (!headerRegion) {
+      violations.push(
+        ctx.createViolation({
+          summary: `Missing header region in ${file}`,
+          kind: "header:missing-region",
+          severity: "error",
+          solution: "Add a #region Header with filename, contributors, and AGPL-3.0 license",
+          reason: "Every source file must include a header region",
+          scope: file,
+        }),
+      );
+      continue;
+    }
+    const headerContent = content.slice(headerRegion.startIndex, headerRegion.endIndex);
+    const headerLines = headerContent.split("\n");
+    const filename = file.split("/").pop() ?? file;
+    const hasFilename = headerLines.some((l) => l.includes(filename));
+    if (!hasFilename) {
+      violations.push(
+        ctx.createViolation({
+          summary: `Missing filename in header of ${file}`,
+          kind: "header:missing-filename",
+          severity: "error",
+          solution: `Add the filename "${filename}" to the header region`,
+          reason: "Header must include the source file name",
+          scope: `${file}#Header`,
+          line: headerRegion.startLine,
+        }),
+      );
+    }
+    const contributorPattern = /\d{4}\s+[\w\s]+<[\w.@-]+>/;
+    const hasContributors = headerLines.some((l) => contributorPattern.test(l));
+    if (!hasContributors) {
+      violations.push(
+        ctx.createViolation({
+          summary: `Missing contributors in header of ${file}`,
+          kind: "header:missing-contributors",
+          severity: "error",
+          solution: "Add contributor line in format: YEAR Name <email>",
+          reason: "Header must include at least one contributor",
+          scope: `${file}#Header`,
+          line: headerRegion.startLine,
+        }),
+      );
+    }
+    const hasLicense = agplMarkers.some((marker) => headerContent.includes(marker));
+    if (!hasLicense) {
+      violations.push(
+        ctx.createViolation({
+          summary: `Missing license in header of ${file}`,
+          kind: "header:missing-license",
+          severity: "error",
+          solution: "Add AGPL-3.0 license text to the header region",
+          reason: "Header must include AGPL-3.0 license",
+          scope: `${file}#Header`,
+          line: headerRegion.startLine,
+        }),
+      );
+    } else {
+      const hasWrongLicense = headerContent.includes("MIT") || headerContent.includes("Apache") || headerContent.includes("BSD") || (headerContent.includes("GPL") && !headerContent.includes("AGPL"));
+      if (hasWrongLicense) {
+        violations.push(
+          ctx.createViolation({
+            summary: `Wrong license in header of ${file}`,
+            kind: "header:wrong-license",
+            severity: "error",
+            solution: "Replace with AGPL-3.0 license text",
+            reason: "Project uses AGPL-3.0, not other licenses",
+            scope: `${file}#Header`,
+            line: headerRegion.startLine,
+          }),
+        );
       }
     }
-    return issues;
   }
-);
-//#endregion Header Region Rule
+  return violations;
+});
+//#endregion Header Rule
 
-//#region Empty Region Rule
-registerRule(
-  { id: "empty-region", name: "Empty Region", description: "Detects empty region blocks", scopes: ["**/*.{ts,tsx,py,cs}"], priority: "low", autofixable: true },
-  async (ctx) => {
-    const issues: Issue[] = [];
-    const files = ctx.files();
-    function checkRegion(file: string, region: RegionInfo, content: string): void {
-      const regionContent = content.slice(region.startIndex, region.endIndex);
-      const lines = regionContent.split("\n").slice(1, -1);
-      const nonEmptyLines = lines.filter((l) => l.trim() && !l.trim().startsWith("//") && !l.trim().startsWith("#"));
-      if (nonEmptyLines.length === 0 && region.children.length === 0) {
-        issues.push(ctx.createIssue({ summary: `Empty region "${region.name}" in ${file}`, kind: "empty-region", severity: "warning", solution: "Remove the empty region or add content to it", reason: "Empty regions add noise without providing value", scope: `${file}#${region.name}`, line: region.startLine }));
-      }
-      for (const child of region.children) {
-        checkRegion(file, child, content);
-      }
+//#region Region Rule
+registerRule({ id: "region", name: "Region", description: "Validates region blocks for proper naming and content", scopes: ["**/*.{ts,tsx,py,cs}"], priority: "low", autofixable: true }, async (ctx) => {
+  const violations: Violation[] = [];
+  const files = ctx.files();
+  const regionPatterns: Record<string, { start: RegExp; end: RegExp }> = {
+    typescript: { start: /^\s*\/\/\s*#region(?:\s+(\S.*?))?\s*$/i, end: /^\s*\/\/\s*#endregion(?:\s+(\S.*?))?\s*$/i },
+    python: { start: /^\s*#\s*region(?:\s+(\S.*?))?\s*$/i, end: /^\s*#\s*endregion(?:\s+(\S.*?))?\s*$/i },
+    csharp: { start: /^\s*#region(?:\s+(\S.*?))?\s*$/i, end: /^\s*#endregion(?:\s+(\S.*?))?\s*$/i },
+  };
+  function checkRegion(file: string, region: RegionInfo, content: string): void {
+    const regionContent = content.slice(region.startIndex, region.endIndex);
+    const lines = regionContent.split("\n").slice(1, -1);
+    const nonEmptyLines = lines.filter((l) => l.trim() && !l.trim().startsWith("//") && !l.trim().startsWith("#"));
+    if (nonEmptyLines.length === 0 && region.children.length === 0) {
+      violations.push(
+        ctx.createViolation({
+          summary: `Empty region "${region.name}" in ${file}`,
+          kind: "region:empty",
+          severity: "warning",
+          solution: "Remove the empty region or add content to it",
+          reason: "Empty regions add noise without providing value",
+          scope: `${file}#${region.name}`,
+          line: region.startLine,
+        }),
+      );
     }
-    for (const file of files) {
-      const content = ctx.readText(file);
-      const regions = ctx.regions(file);
-      for (const region of regions) {
-        checkRegion(file, region, content);
-      }
+    for (const child of region.children) {
+      checkRegion(file, child, content);
     }
-    return issues;
   }
-);
-//#endregion Empty Region Rule
+  for (const file of files) {
+    const content = ctx.readText(file);
+    if (!content) continue;
+    const lang = getLanguageFromPath(file);
+    if (!lang) continue;
+    const patterns = regionPatterns[lang];
+    const lines = content.split("\n");
+    const regionStack: { name: string; line: number }[] = [];
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].replace(/\r$/, "");
+      const lineNum = i + 1;
+      const startMatch = line.match(patterns.start);
+      if (startMatch) {
+        const name = startMatch[1]?.trim() ?? "";
+        if (!name) {
+          violations.push(
+            ctx.createViolation({
+              summary: `Missing region name at ${file}:${lineNum}`,
+              kind: "region:missing-start-name",
+              severity: "warning",
+              solution: "Add a name after #region",
+              reason: "Region blocks should have descriptive names",
+              scope: file,
+              line: lineNum,
+              excerpt: line.trim(),
+            }),
+          );
+        }
+        regionStack.push({ name, line: lineNum });
+        continue;
+      }
+      const endMatch = line.match(patterns.end);
+      if (endMatch) {
+        const endName = endMatch[1]?.trim() ?? "";
+        const openRegion = regionStack.pop();
+        if (openRegion && openRegion.name) {
+          if (!endName) {
+            violations.push(
+              ctx.createViolation({
+                summary: `Missing end region name at ${file}:${lineNum}`,
+                kind: "region:missing-end-name",
+                severity: "warning",
+                solution: `Add the region name "${openRegion.name}" after #endregion`,
+                reason: "End region should match start region name for clarity",
+                scope: file,
+                line: lineNum,
+                excerpt: line.trim(),
+              }),
+            );
+          } else if (endName !== openRegion.name) {
+            violations.push(
+              ctx.createViolation({
+                summary: `Region name mismatch at ${file}:${lineNum}`,
+                kind: "region:name-mismatch",
+                severity: "warning",
+                solution: `Change end name from "${endName}" to "${openRegion.name}"`,
+                reason: "Start and end region names must match",
+                scope: file,
+                line: lineNum,
+                excerpt: `Start: "${openRegion.name}" at line ${openRegion.line}, End: "${endName}"`,
+              }),
+            );
+          }
+        }
+        continue;
+      }
+    }
+    const regions = ctx.regions(file);
+    for (const region of regions) {
+      checkRegion(file, region, content);
+    }
+  }
+  return violations;
+});
+//#endregion Region Rule
 
 //#region Comment Rule
-registerRule(
-  { id: "inline-comment", name: "Inline Comment", description: "Detects inline comments (documentation should be in README.md and AGENTS.md)", scopes: ["**/*.{ts,tsx}"], priority: "medium", autofixable: false },
-  async (ctx) => {
-    const issues: Issue[] = [];
-    const files = ctx.files();
-    for (const file of files) {
-      const content = ctx.readText(file);
-      if (!content) continue;
-      const lines = content.split("\n");
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-        const trimmed = line.trim();
-        if (trimmed.startsWith("// #region") || trimmed.startsWith("// #endregion") || trimmed.startsWith("//#region") || trimmed.startsWith("//#endregion")) continue;
-        if (trimmed.startsWith("// SPDX") || trimmed.includes("Copyright") || trimmed.includes("License")) continue;
-        if (trimmed.startsWith("[DEBUG]") || trimmed.includes("[DEBUG]")) continue;
-        const commentMatch = line.match(/\/\/(?!\s*#region|\s*#endregion)/);
-        if (commentMatch && !trimmed.startsWith("//") && !line.includes("://")) {
-          issues.push(ctx.createIssue({ summary: `Inline comment in ${file}:${i + 1}`, kind: "inline-comment", severity: "warning", solution: "Remove the comment and document in README.md or AGENTS.md", reason: "Code is never documented inline", scope: file, line: i + 1, excerpt: trimmed.slice(0, 80) }));
+registerRule({ id: "comment", name: "Comment", description: "Detects forbidden comments (inline, block, JSDoc) - documentation belongs in README.md and AGENTS.md", scopes: ["**/*.{ts,tsx}"], priority: "low", autofixable: true }, async (ctx) => {
+  const violations: Violation[] = [];
+  const files = ctx.files();
+  for (const file of files) {
+    const content = ctx.readText(file);
+    if (!content) continue;
+    const lines = content.split("\n");
+    let charIndex = 0;
+    const lineOffsets: number[] = [];
+    for (const line of lines) {
+      lineOffsets.push(charIndex);
+      charIndex += line.length + 1;
+    }
+    let inBlockComment = false;
+    let blockCommentStartLine = 0;
+    let blockCommentStartIndex = 0;
+    let inJsDoc = false;
+    let jsDocStartLine = 0;
+    let jsDocStartIndex = 0;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const trimmed = line.trim();
+      const lineNum = i + 1;
+      const lineStart = lineOffsets[i];
+      const lineEnd = lineStart + line.length + 1;
+      if (trimmed.startsWith("/**") && !trimmed.endsWith("*/")) {
+        inJsDoc = true;
+        jsDocStartLine = lineNum;
+        jsDocStartIndex = lineStart;
+        continue;
+      }
+      if (inJsDoc) {
+        if (trimmed.endsWith("*/")) {
+          const edits = new Map<string, TextEdit[]>();
+          edits.set(file, [{ start: jsDocStartIndex, end: lineEnd, newText: "" }]);
+          violations.push(
+            ctx.createViolation({
+              summary: `JSDoc comment in ${file}:${jsDocStartLine}`,
+              kind: "comment:jsdoc",
+              severity: "warning",
+              solution: "Remove JSDoc and document in README.md or AGENTS.md",
+              reason: "Documentation is centralized, not inline",
+              scope: file,
+              line: jsDocStartLine,
+              autofix: ctx.createFix("Remove JSDoc comment", edits),
+            }),
+          );
+          inJsDoc = false;
+        }
+        continue;
+      }
+      if (trimmed.startsWith("/*") && !trimmed.startsWith("/**") && !trimmed.endsWith("*/")) {
+        inBlockComment = true;
+        blockCommentStartLine = lineNum;
+        blockCommentStartIndex = lineStart;
+        continue;
+      }
+      if (inBlockComment) {
+        if (trimmed.endsWith("*/")) {
+          const edits = new Map<string, TextEdit[]>();
+          edits.set(file, [{ start: blockCommentStartIndex, end: lineEnd, newText: "" }]);
+          violations.push(
+            ctx.createViolation({
+              summary: `Block comment in ${file}:${blockCommentStartLine}`,
+              kind: "comment:block",
+              severity: "warning",
+              solution: "Remove block comment and document in README.md or AGENTS.md",
+              reason: "Documentation is centralized, not inline",
+              scope: file,
+              line: blockCommentStartLine,
+              autofix: ctx.createFix("Remove block comment", edits),
+            }),
+          );
+          inBlockComment = false;
+        }
+        continue;
+      }
+      if (trimmed.startsWith("/*") && trimmed.endsWith("*/")) {
+        const edits = new Map<string, TextEdit[]>();
+        edits.set(file, [{ start: lineStart, end: lineEnd, newText: "" }]);
+        if (trimmed.startsWith("/**")) {
+          violations.push(
+            ctx.createViolation({
+              summary: `JSDoc comment in ${file}:${lineNum}`,
+              kind: "comment:jsdoc",
+              severity: "warning",
+              solution: "Remove JSDoc and document in README.md or AGENTS.md",
+              reason: "Documentation is centralized, not inline",
+              scope: file,
+              line: lineNum,
+              excerpt: trimmed.slice(0, 80),
+              autofix: ctx.createFix("Remove JSDoc comment", edits),
+            }),
+          );
+        } else {
+          violations.push(
+            ctx.createViolation({
+              summary: `Block comment in ${file}:${lineNum}`,
+              kind: "comment:block",
+              severity: "warning",
+              solution: "Remove block comment and document in README.md or AGENTS.md",
+              reason: "Documentation is centralized, not inline",
+              scope: file,
+              line: lineNum,
+              excerpt: trimmed.slice(0, 80),
+              autofix: ctx.createFix("Remove block comment", edits),
+            }),
+          );
+        }
+        continue;
+      }
+      if (trimmed.startsWith("// #region") || trimmed.startsWith("// #endregion") || trimmed.startsWith("//#region") || trimmed.startsWith("//#endregion")) continue;
+      if (trimmed.includes("[DEBUG]")) continue;
+      const isHeaderLine = trimmed.includes("Copyright") || trimmed.includes("License") || trimmed.includes("SPDX") || trimmed.includes("GNU") || trimmed.includes("AGPL") || /^\d{4}\s+[\w\s]+<[\w.@-]+>/.test(trimmed.replace(/^\/\/\s*/, ""));
+      if (isHeaderLine) continue;
+      if (trimmed.startsWith("//")) continue;
+      const inlineMatch = line.match(/^(.+?)\s*(\/\/(?!\s*#region|\s*#endregion).*)$/);
+      if (inlineMatch && !line.includes("://") && !line.includes("/*")) {
+        const codePart = inlineMatch[1].trim();
+        if (codePart.length > 0) {
+          const commentStart = lineStart + inlineMatch[1].length;
+          const edits = new Map<string, TextEdit[]>();
+          edits.set(file, [{ start: commentStart, end: lineStart + line.length, newText: "" }]);
+          violations.push(
+            ctx.createViolation({
+              summary: `Inline comment in ${file}:${lineNum}`,
+              kind: "comment:inline",
+              severity: "warning",
+              solution: "Remove inline comment and document in README.md or AGENTS.md",
+              reason: "Code is never documented inline",
+              scope: file,
+              line: lineNum,
+              excerpt: trimmed.slice(0, 80),
+              autofix: ctx.createFix("Remove inline comment", edits),
+            }),
+          );
         }
       }
     }
-    return issues;
   }
-);
+  return violations;
+});
 //#endregion Comment Rule
 
 // #endregion Built-in Rules
@@ -791,24 +1061,24 @@ function listTickets(year?: number, month?: number, day?: number): Ticket[] {
   return tickets;
 }
 
-function updateTicketIssues(ticket: Ticket, issues: Issue[]): void {
-  let issuesSection = "## Issues\n\n";
-  if (issues.length === 0) {
-    issuesSection += "(No issues)\n";
+function updateTicketViolations(ticket: Ticket, violations: Violation[]): void {
+  let violationsSection = "## Violations\n\n";
+  if (violations.length === 0) {
+    violationsSection += "(No violations)\n";
   } else {
-    for (const issue of issues) {
-      const checkbox = issue.autofixable ? "[ ]" : "[x]";
-      issuesSection += `- ${checkbox} (${issue.priority}) \`${issue.kind}\` in \`${issue.scope}\`\n`;
-      issuesSection += `  - Summary: ${issue.summary}\n`;
-      issuesSection += `  - Solution: ${issue.solution}\n`;
+    for (const violation of violations) {
+      const checkbox = violation.autofixable ? "[ ]" : "[x]";
+      violationsSection += `- ${checkbox} (${violation.priority}) \`${violation.kind}\` in \`${violation.scope}\`\n`;
+      violationsSection += `  - Summary: ${violation.summary}\n`;
+      violationsSection += `  - Solution: ${violation.solution}\n`;
     }
   }
   let newContent = ticket.content;
-  const issuesRegex = /## Issues[\s\S]*?(?=\n## |$)/;
-  if (issuesRegex.test(newContent)) {
-    newContent = newContent.replace(issuesRegex, issuesSection);
+  const violationsRegex = /## Violations[\s\S]*?(?=\n## |$)/;
+  if (violationsRegex.test(newContent)) {
+    newContent = newContent.replace(violationsRegex, violationsSection);
   } else {
-    newContent += "\n\n" + issuesSection;
+    newContent += "\n\n" + violationsSection;
   }
   const fileContent = matter.stringify(newContent, ticket.frontmatter as any);
   writeTextFile(ticket.filePath, fileContent);
@@ -817,11 +1087,11 @@ function updateTicketIssues(ticket: Ticket, issues: Issue[]): void {
 function canCloseTicket(ticket: Ticket): { canClose: boolean; reasons: string[] } {
   const reasons: string[] = [];
   const content = ticket.content;
-  const issuesMatch = content.match(/## Issues[\s\S]*?(?=\n## |$)/);
-  if (issuesMatch) {
-    const issuesContent = issuesMatch[0];
-    if (!issuesContent.includes("(No issues)") && issuesContent.includes("- [")) {
-      reasons.push("Issues section is not empty");
+  const violationsMatch = content.match(/## Violations[\s\S]*?(?=\n## |$)/);
+  if (violationsMatch) {
+    const violationsContent = violationsMatch[0];
+    if (!violationsContent.includes("(No violations)") && violationsContent.includes("- [")) {
+      reasons.push("Violations section is not empty");
     }
   }
   const planMatch = content.match(/# Plan[\s\S]*?(?=\n# |$)/);
@@ -882,55 +1152,55 @@ function parseCommand(argv: string[]): ParsedCommand {
 // #region Command Handlers
 
 async function handleAnalyze(cmd: ParsedCommand): Promise<void> {
-  const scopeRaw = (cmd.options.scope as string) || "@semio";
+  const scopeRaw = cmd.args[0] || (cmd.options.scope as string) || "@semio";
   const scope = parseScope(scopeRaw);
-  const issues = await runRules(scope);
+  const violations = await runRules(scope);
   const report: AnalyzeReport = {
     timestamp: isoTimestamp(),
-    status: issues.some((i) => i.severity === "error") ? "error" : issues.length > 0 ? "warning" : "success",
+    status: violations.some((i) => i.severity === "error") ? "error" : violations.length > 0 ? "warning" : "success",
     scope: scopeRaw,
     summary: {
-      total: issues.length,
-      byPriority: { high: issues.filter((i) => i.priority === "high").length, medium: issues.filter((i) => i.priority === "medium").length, low: issues.filter((i) => i.priority === "low").length },
-      bySeverity: { error: issues.filter((i) => i.severity === "error").length, warning: issues.filter((i) => i.severity === "warning").length },
-      byKind: issues.reduce(
+      total: violations.length,
+      byPriority: { high: violations.filter((i) => i.priority === "high").length, medium: violations.filter((i) => i.priority === "medium").length, low: violations.filter((i) => i.priority === "low").length },
+      bySeverity: { error: violations.filter((i) => i.severity === "error").length, warning: violations.filter((i) => i.severity === "warning").length },
+      byKind: violations.reduce(
         (acc, i) => {
           acc[i.kind] = (acc[i.kind] || 0) + 1;
           return acc;
         },
-        {} as Record<string, number>
+        {} as Record<string, number>,
       ),
     },
-    issues,
+    violations,
   };
   ensureDir(REPORTS_DIR);
-  writeJsonFile(join(REPORTS_DIR, "analyze.json"), report);
+  writeJsonFile(join(REPORTS_DIR, "rules.json"), report);
   if (cmd.options.json) {
     console.log(JSON.stringify(report, null, 2));
   } else {
-    console.log(`\n📊 Analysis complete: ${issues.length} issues found`);
+    console.log(`\n📊 Analysis complete: ${violations.length} violations found`);
     console.log(`   Errors: ${report.summary.bySeverity.error}, Warnings: ${report.summary.bySeverity.warning}`);
-    console.log(`   Report: ${join(REPORTS_DIR, "analyze.json")}`);
+    console.log(`   Report: ${join(REPORTS_DIR, "rules.json")}`);
   }
   process.exit(report.status === "error" ? 1 : 0);
 }
 
 async function handleFix(cmd: ParsedCommand): Promise<void> {
-  const scopeRaw = (cmd.options.scope as string) || "@semio";
+  const scopeRaw = cmd.args[0] || (cmd.options.scope as string) || "@semio";
   const scope = parseScope(scopeRaw);
   const dryRun = !!cmd.options["dry-run"];
-  const issues = await runRules(scope);
-  const fixable = issues.filter((i) => i.autofixable && i.autofix);
+  const violations = await runRules(scope);
+  const fixable = violations.filter((i) => i.autofixable && i.autofix);
   if (dryRun) {
-    console.log(`\n🔧 Dry run: ${fixable.length} fixable issues found`);
-    for (const issue of fixable) {
-      console.log(`   - ${issue.kind}: ${issue.summary}`);
+    console.log(`\n🔧 Dry run: ${fixable.length} fixable violations found`);
+    for (const violation of fixable) {
+      console.log(`   - ${violation.kind}: ${violation.summary}`);
     }
   } else {
     let fixed = 0;
-    for (const issue of fixable) {
-      if (issue.autofix) {
-        for (const [filePath, edits] of issue.autofix.edits) {
+    for (const violation of fixable) {
+      if (violation.autofix) {
+        for (const [filePath, edits] of violation.autofix.edits) {
           const absPath = join(ROOT_DIR, filePath);
           let content = readTextFile(absPath);
           const sortedEdits = [...edits].sort((a, b) => b.start - a.start);
@@ -942,7 +1212,7 @@ async function handleFix(cmd: ParsedCommand): Promise<void> {
         fixed++;
       }
     }
-    console.log(`\n✅ Fixed ${fixed} issues`);
+    console.log(`\n✅ Fixed ${fixed} violations`);
   }
   process.exit(0);
 }
@@ -964,13 +1234,13 @@ async function handleRule(cmd: ParsedCommand): Promise<void> {
     }
     const scopeRaw = (cmd.options.scope as string) || "@semio";
     const scope = parseScope(scopeRaw);
-    const issues = await runRules(scope, [ruleId]);
-    console.log(`\n📊 Rule "${ruleId}" found ${issues.length} issues`);
-    for (const issue of issues.slice(0, 10)) {
-      console.log(`   - ${issue.summary}`);
+    const violations = await runRules(scope, [ruleId]);
+    console.log(`\n📊 Rule "${ruleId}" found ${violations.length} violations`);
+    for (const violation of violations.slice(0, 10)) {
+      console.log(`   - ${violation.summary}`);
     }
-    if (issues.length > 10) {
-      console.log(`   ... and ${issues.length - 10} more`);
+    if (violations.length > 10) {
+      console.log(`   ... and ${violations.length - 10} more`);
     }
   } else {
     console.log("Usage: repo rule <list|run> [id]");
@@ -1028,9 +1298,9 @@ async function handleTicket(cmd: ParsedCommand): Promise<void> {
     }
     const scopeRaw = (cmd.options.scope as string) || "@semio";
     const scope = parseScope(scopeRaw);
-    const issues = await runRules(scope);
-    updateTicketIssues(ticket, issues);
-    console.log(`\n🔄 Updated ticket issues: ${issues.length} issues found`);
+    const violations = await runRules(scope);
+    updateTicketViolations(ticket, violations);
+    console.log(`\n🔄 Updated ticket violations: ${violations.length} violations found`);
   } else if (cmd.subcommand === "close") {
     const pathParts = cmd.args[0]?.split("/") || [];
     if (pathParts.length < 4) {
@@ -1284,4 +1554,4 @@ if (command.name === "help") {
 }
 render(<App command={command} />);
 
-// #endregion Main
+// #endregion

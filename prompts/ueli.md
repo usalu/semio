@@ -1,5 +1,17 @@
 # Prompt history
 
+Add a test for every single command.
+For a mocked repo use the assets/repo for a toy repo to check all commands and the assets/repo/reports/violations.json. Ignore this folder in normal repo checking.
+Mostly do unit tests. In the vscode extension just test the ui.
+
+comment inline and block issue are autofixable by simply removing it. The have low priority.
+
+PLAN and IMPLEMENT new ticket according AGENTS.md:
+Rules should be created according scope and produce a set of related violations. Generalize and extend the existing rules.
+E.g. generalize the header-region to the header rule (violations: missing region, missing contributors, missing license, wrong license, etc)
+E.g. generalize the empty-region to region rule (violations: empty region, missing start region name, missing end region name, unmatching region start and end name, etc)
+E.g. generalize inline-comment to comment (violations: forbidden inline comment, forbidden block comment, etc)
+
 You didnt create a ticket according @AGENTS.md
 
 Read everything from @AGENTS.md and then start the task.
