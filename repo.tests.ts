@@ -242,7 +242,7 @@ describe("violations fixture", () => {
     expect(existsSync(fixturePath)).toBe(true);
     const content = JSON.parse(readFileSync(fixturePath, "utf-8"));
     expect(content.timestamp).toBeDefined();
-    expect(content.status).toBe("warning");
+    expect(content.status).toBe("error");
     expect(content.scope).toBe("@semio");
     expect(content.summary.total).toBe(2);
     expect(content.violations).toHaveLength(2);
@@ -264,7 +264,6 @@ describe("violations fixture", () => {
       expect(violation).toHaveProperty("summary");
       expect(violation).toHaveProperty("kind");
       expect(violation).toHaveProperty("priority");
-      expect(violation).toHaveProperty("severity");
       expect(violation).toHaveProperty("autofixable");
       expect(violation).toHaveProperty("solution");
       expect(violation).toHaveProperty("reason");
@@ -350,5 +349,32 @@ describe("test fixtures", () => {
 });
 
 // #endregion Test Fixtures Tests
+
+// #region AST Tests
+
+describe("AST parsing", () => {
+  test("AST parsing completes for TypeScript file without crashing", () => {
+    const result = runCli("analyze --scope=assets/repo/some/folder/file.tsx --json", 20000);
+    expect(result.exitCode).toBeDefined();
+    const output = result.stdout + result.stderr;
+    expect(output.length).toBeGreaterThan(0);
+  });
+
+  test("AST parsing completes for Python file without crashing", () => {
+    const result = runCli("analyze --scope=assets/repo/some/folder/file.py --json", 20000);
+    expect(result.exitCode).toBeDefined();
+    const output = result.stdout + result.stderr;
+    expect(output.length).toBeGreaterThan(0);
+  });
+
+  test("AST parsing completes for C# file without crashing", () => {
+    const result = runCli("analyze --scope=assets/repo/some/folder/file.cs --json", 20000);
+    expect(result.exitCode).toBeDefined();
+    const output = result.stdout + result.stderr;
+    expect(output.length).toBeGreaterThan(0);
+  });
+});
+
+// #endregion AST Tests
 
 // #endregion

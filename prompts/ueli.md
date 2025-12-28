@@ -1,5 +1,52 @@
 # Prompt history
 
+The repo.tsx scipt should be extended/refactored and the api streamlined. Plenty of existing commands should me refactored and a lot of commands are missing. repo.tsx is the main interaction script for agents and devs (projects, files, folders, regions should only be created by the tool and not manually). The script takes care to also update the dev-docs etc.
+Here is a draft for the new api:
+Commands:
+  help                     Show this help message
+  analyze [--scope=<scope>]    Analyze codebase for violations (multiple scopes are supported)
+  fix [--scope=<scope>]        Apply autofixes for violations (multiple scopes are supported)
+  rule list [--id=<id-pattern>] [--scope=<scope>]  List all registered rules (multiple scopes are supported)
+  rule run [--scope=<scope>] [--id=<id>]            Run specific rules
+  ticket create <slug> <description> <prompt> <model> [--plan=<path>]       Create a new ticket
+  ticket iterate start <year> <month> <day> <slug>    Run rules and sync violations to ticket
+  ticket iteration end <year> <month> <day> <slug>      End a ticket iteration
+  ticket finish <year> <month> <day> <slug>      Finish a ticket
+  ticket list [--year=<year-pattern>] [--month=<month-pattern>] [--day=<day-pattern>] List tickets (multiple years, months, days are supported)
+  ticket read <year> <month> <day> <slug>       Read a ticket
+  project list [--scope=<scope>]            List Nx projects
+  project tree [--scope=<scope>]            Show project dependency tree
+  folder create <folder-path>       Create a folder
+  folder move <folder-path> <new-folder-path>       Move a folder
+  folder delete <folder-path-pattern>       Delete a folder
+  folder list [--scope=<scope>]            List folders in scope
+  folder tree [--scope=<scope>]       Show folder structure
+  file create <file-path>       Create a file
+  file move <file-path> <new-file-path>       Move a file
+  file delete <file-path-pattern>       Delete a file
+  file list [--scope=<scope>]        List files in scope
+  file tree [--scope=<scope>]       Show file structure
+  region create <file> <region-path>       Create a region in a file
+  region move <file> <region-path> <new-region-path>       Move a region in a file
+  region delete <file> <region-path>       Delete a region in a file
+  region list [--scope=<scope>]      List regions in a file
+  region tree [--scope=<scope>]      Show region structure of a file
+  definition list [--scope=<scope>]   List definitions in a file
+  definition tree [--scope=<scope>]   Show definition structure
+  tool <name> [args...]    Run a tool (e.g., i18n,update-metabolism)
+Scope syntax:
+((@semio)|(@semio/PROJECTPATTERN))?(FOLDERPATTERN)?(FILEPATTERN)?(REGIONPATTERN)?(DEFINITIONPATTERN)?
+  @semio                   Repo scope
+  @semio/js                Project scope
+  js/js/sketchpad/         Folder scope
+  js/js/sketchpad/App.tsx  File scope
+  file.tsx#Region          Region scope
+  file.tsx§Function        Definition scope
+---
+Adjust all implementation and get all tests running.
+
+Change the repo analyze api not not accept a scope flag but after the command name all arguments are interpreted as scope array. e.g. `repo analyze js/js/semio.ts @semio/desktop net/*.* py`
+
 Remove severity from all rules and violations.
 
 Add a test for every single command.

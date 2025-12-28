@@ -7656,24 +7656,24 @@ defaultConstraints = [
 
 // #region Validation serialization
 
-export interface SerializableValidationFix {
+export interface ValidationFix {
   title: string;
   diff: KitDiff;
 }
 
-export interface SerializableValidationProblem {
+export interface Problem {
   constraintId: string;
   message: string;
   entityKind: string;
   entityGuid: string;
-  fixes: SerializableValidationFix[];
+  fixes: ValidationFix[];
 }
 
-export interface SerializableValidationResult {
-  problems: SerializableValidationProblem[];
+export interface ValidationResult {
+  problems: Problem[];
 }
 
-export const toSerializableValidationResult = (result: ValidationResult): SerializableValidationResult => ({
+export const toValidationResult = (result: ValidationResult): ValidationResult => ({
   problems: result.problems.map((problem) => ({
     constraintId: problem.constraintId,
     message: problem.message,
@@ -7684,7 +7684,7 @@ export const toSerializableValidationResult = (result: ValidationResult): Serial
 });
 
 export const serializeValidationResult = (result: ValidationResult): string => {
-  const serializable = toSerializableValidationResult(result);
+  const serializable = toValidationResult(result);
   serializable.problems.sort((a, b) => {
     const constraintCompare = a.constraintId.localeCompare(b.constraintId);
     if (constraintCompare !== 0) return constraintCompare;
@@ -7693,7 +7693,7 @@ export const serializeValidationResult = (result: ValidationResult): string => {
   return JSON.stringify(serializable, null, 2);
 };
 
-export const parseValidationResult = (json: string): SerializableValidationResult => JSON.parse(json);
+export const parseValidationResult = (json: string): ValidationResult => JSON.parse(json);
 
 const isGuid = (s: string): boolean => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
 
@@ -7712,9 +7712,9 @@ export const areKitDiffsEqualIgnoringNewGuids = (a: KitDiff, b: KitDiff): boolea
   return JSON.stringify(normalize(a)) === JSON.stringify(normalize(b));
 };
 
-export const areValidationResultsEqual = (a: SerializableValidationResult, b: SerializableValidationResult): boolean => {
+export const areValidationResultsEqual = (a: ValidationResult, b: ValidationResult): boolean => {
   if (a.problems.length !== b.problems.length) return false;
-  const sortProblems = (problems: SerializableValidationProblem[]) =>
+  const sortProblems = (problems: Problem[]) =>
     [...problems].sort((x, y) => {
       const constraintCompare = x.constraintId.localeCompare(y.constraintId);
       if (constraintCompare !== 0) return constraintCompare;

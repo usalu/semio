@@ -35,127 +35,106 @@
   "errors": [],
   "warnings": [
     {
-      "severity": "warning",
       "entity": "Attribute",
       "message": "Missing Grasshopper component",
       "source": "grasshopper"
     },
     {
-      "severity": "warning",
       "entity": "Location",
       "message": "Missing Grasshopper component",
       "source": "grasshopper"
     },
     {
-      "severity": "warning",
       "entity": "Author",
       "message": "Missing Grasshopper component",
       "source": "grasshopper"
     },
     {
-      "severity": "warning",
       "entity": "File",
       "message": "Missing Grasshopper component",
       "source": "grasshopper"
     },
     {
-      "severity": "warning",
       "entity": "Folder",
       "message": "Missing Grasshopper component",
       "source": "grasshopper"
     },
     {
-      "severity": "warning",
       "entity": "Benchmark",
       "message": "Missing Grasshopper component",
       "source": "grasshopper"
     },
     {
-      "severity": "warning",
       "entity": "Quality",
       "message": "Missing Grasshopper component",
       "source": "grasshopper"
     },
     {
-      "severity": "warning",
       "entity": "Interface",
       "message": "Missing Grasshopper component",
       "source": "grasshopper"
     },
     {
-      "severity": "warning",
       "entity": "Prop",
       "message": "Missing Grasshopper component",
       "source": "grasshopper"
     },
     {
-      "severity": "warning",
       "entity": "Model",
       "message": "Missing Grasshopper component",
       "source": "grasshopper"
     },
     {
-      "severity": "warning",
       "entity": "Connector",
       "message": "Missing Grasshopper component",
       "source": "grasshopper"
     },
     {
-      "severity": "warning",
       "entity": "Tag",
       "message": "Missing Grasshopper component",
       "source": "grasshopper"
     },
     {
-      "severity": "warning",
       "entity": "Concept",
       "message": "Missing Grasshopper component",
       "source": "grasshopper"
     },
     {
-      "severity": "warning",
       "entity": "Type",
       "message": "Missing Grasshopper component",
       "source": "grasshopper"
     },
     {
-      "severity": "warning",
       "entity": "Layer",
       "message": "Missing Grasshopper component",
       "source": "grasshopper"
     },
     {
-      "severity": "warning",
       "entity": "Piece",
       "message": "Missing Grasshopper component",
       "source": "grasshopper"
     },
     {
-      "severity": "warning",
       "entity": "Group",
       "message": "Missing Grasshopper component",
       "source": "grasshopper"
     },
     {
-      "severity": "warning",
       "entity": "Connection",
       "message": "Missing Grasshopper component",
       "source": "grasshopper"
     },
     {
-      "severity": "warning",
       "entity": "Stat",
       "message": "Missing Grasshopper component",
       "source": "grasshopper"
     },
     {
-      "severity": "warning",
       "entity": "Design",
       "message": "Missing Grasshopper component",
       "source": "grasshopper"
     },
     {
-      "severity": "warning",
       "entity": "Kit",
       "message": "Missing Grasshopper component",
       "source": "grasshopper"

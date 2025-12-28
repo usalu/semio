@@ -40,7 +40,7 @@ const ANALYZE_REPORT_PATH = "reports/rules.json";
 
 // #region Types
 
-interface RepoProblem {
+interface Violation {
   id: string;
   summary: string;
   kind: string;
@@ -63,7 +63,7 @@ interface AnalyzeReport {
     byPriority: Record<string, number>;
     byKind: Record<string, number>;
   };
-  problems: RepoProblem[];
+  violations: Violation[];
 }
 
 // #endregion Types
@@ -110,21 +110,21 @@ function extractFilePathFromScope(scope: string): string | undefined {
 function updateRepoDiagnostics(): void {
   repoDiagnosticCollection.clear();
   const report = loadAnalyzeReport();
-  if (!report || report.problems.length === 0) return;
+  if (!report || report.violations.length === 0) return;
   const root = getWorkspaceRoot();
   if (!root) return;
   const diagnosticsByFile = new Map<string, vscode.Diagnostic[]>();
-  for (const problem of report.problems) {
-    const filePath = extractFilePathFromScope(problem.scope);
+  for (const violation of report.violations) {
+    const filePath = extractFilePathFromScope(violation.scope);
     if (!filePath) continue;
     const absPath = path.join(root, filePath);
     const uri = vscode.Uri.file(absPath);
-    const line = Math.max(0, (problem.line ?? 1) - 1);
-    const column = Math.max(0, (problem.column ?? 1) - 1);
+    const line = Math.max(0, (violation.line ?? 1) - 1);
+    const column = Math.max(0, (violation.column ?? 1) - 1);
     const range = new vscode.Range(line, column, line, column + 1);
-    const diagnostic = new vscode.Diagnostic(range, `${problem.summary}\n\nReason: ${problem.reason}\nSolution: ${problem.solution}`, vscode.DiagnosticSeverity.Error);
+    const diagnostic = new vscode.Diagnostic(range, `${violation.summary}\n\nReason: ${violation.reason}\nSolution: ${violation.solution}`, vscode.DiagnosticSeverity.Error);
     diagnostic.source = DIAGNOSTIC_SOURCE_REPO;
-    diagnostic.code = problem.id;
+    diagnostic.code = violation.id;
     if (!diagnosticsByFile.has(uri.toString())) {
       diagnosticsByFile.set(uri.toString(), []);
     }

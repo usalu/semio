@@ -3663,7 +3663,7 @@ All implementations (TypeScript, Python, C#) produce **identical** validation ou
 
 ##### Implementation
 
-- **TypeScript**: `toSerializableValidationResult()`, `serializeValidationResult()`, `areValidationResultsEqual()`
+- **TypeScript**: `toValidationResult()`, `serializeValidationResult()`, `areValidationResultsEqual()`
 - **Python**: `ValidationResult.toDict()`, `ValidationResult.serialize()`, `areValidationResultsEqual()`
 - **C#**: `SemioValidator.ValidateKit()`, `ValidationResult.Serialize()`, `ValidationResult.AreEqual()` (fix comparison pending)
 

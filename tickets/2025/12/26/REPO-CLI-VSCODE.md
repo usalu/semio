@@ -47,7 +47,7 @@ Reorganized into regions:
 
 - Imports: Added fs, path modules
 - Constants: Added DIAGNOSTIC_SOURCE_KIT, DIAGNOSTIC_SOURCE_REPO, ANALYZE_REPORT_PATH
-- Types: Added RepoProblem and AnalyzeReport interfaces
+- Types: Added Problem and AnalyzeReport interfaces
 - Utilities: Added getWorkspaceRoot(), getRepoTsxPath()
 - Repo Diagnostics: Added loadAnalyzeReport(), extractFilePathFromScope(), updateRepoDiagnostics(), watchAnalyzeReport()
 - Kit Validation: Renamed DIAGNOSTIC_SOURCE to DIAGNOSTIC_SOURCE_KIT, extracted validateKitDocument(), renamed class to SemioKitCodeActionProvider

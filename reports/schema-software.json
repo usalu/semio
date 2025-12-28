@@ -2262,10 +2262,6 @@
           "type": "str"
         },
         {
-          "name": "severity",
-          "type": "Severity"
-        },
-        {
           "name": "message",
           "type": "str"
         },

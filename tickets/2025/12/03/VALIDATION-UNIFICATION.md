@@ -13,7 +13,7 @@ iterations: []
 # Previously
 
 - TypeScript has `validateSemioKit()` returning `ValidationResult` with `issues: Problem[]`
-- Python has `validateKitDict()` returning `ValidationResult` with `issues: list[ValidationProblem]`
+- Python has `validateKitDict()` returning `ValidationResult` with `issues: list[Problem]`
 - C# has per-model `Validate()` returning `(bool, List<string>)` - different format, needs new implementation
 - TypeScript has `fixes` with `KitDiff`, Python and C# don't have fixes
 - `kit_invalid.json` contains test data with duplicate names for types, designs, pieces, etc.
@@ -33,8 +33,8 @@ iterations: []
 
 ## TypeScript (js/js/semio.ts)
 
-- Added `SerializableValidationFix`, `SerializableValidationProblem`, `SerializableValidationResult` interfaces
-- Added `toSerializableValidationResult()` to convert full result to serializable format (includes fixes)
+- Added `ValidationFix`, `Problem`, `ValidationResult` interfaces
+- Added `toValidationResult()` to convert full result to serializable format (includes fixes)
 - Added `serializeValidationResult()` for JSON serialization (sorted by constraintId, entityGuid)
 - Added `parseValidationResult()` and `areValidationResultsEqual()` for testing
 - Added `areKitDiffsEqualIgnoringNewGuids()` for GUID-normalized diff comparison
@@ -48,7 +48,7 @@ iterations: []
 ## Python (py/engine/engine.py)
 
 - Added `ValidationFix` dataclass with `title` and `diff`
-- Updated `ValidationProblem` to include `fixes: list[ValidationFix]`
+- Updated `Problem` to include `fixes: list[ValidationFix]`
 - Added `ValidationResult.toDict()` and `ValidationResult.serialize()` methods
 - Added `areValidationResultsEqual()` with GUID normalization for fix comparison
 - Added `parseValidationResult()` for parsing validation.json

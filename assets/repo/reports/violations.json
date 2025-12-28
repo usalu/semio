@@ -1,11 +1,10 @@
 {
   "timestamp": "2025-12-26T12:00:00.000Z",
-  "status": "warning",
+  "status": "error",
   "scope": "@semio",
   "summary": {
     "total": 2,
     "byPriority": { "high": 1, "medium": 0, "low": 1 },
-    "bySeverity": { "error": 1, "warning": 1 },
     "byKind": { "header:missing-region": 1, "region:empty": 1 }
   },
   "violations": [
@@ -14,7 +13,6 @@
       "summary": "Missing header region in assets/repo/some/folder/file.cs",
       "kind": "header:missing-region",
       "priority": "high",
-      "severity": "error",
       "autofixable": true,
       "solution": "Add a #region Header with filename, contributors, and AGPL-3.0 license",
       "reason": "Every source file must include a header region",
@@ -26,7 +24,6 @@
       "summary": "Empty region \"Header\" in assets/repo/some/folder/file.cs",
       "kind": "region:empty",
       "priority": "low",
-      "severity": "warning",
       "autofixable": true,
       "solution": "Remove the empty region or add content to it",
       "reason": "Empty regions add noise without providing value",

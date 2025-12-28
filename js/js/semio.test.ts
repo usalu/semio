@@ -36,10 +36,10 @@ import {
   inverseKitDiff,
   Kit,
   Plane,
-  SerializableValidationResult,
   serializeKit,
-  toSerializableValidationResult,
+  toValidationResult,
   validateSemioKit,
+  ValidationResult,
 } from "./semio";
 
 const TOLERANCE = 0.001;
@@ -201,8 +201,8 @@ describe("Validation", () => {
     expect(hasSemioErrors(validateSemioKit(validKit))).toBe(false);
 
     const invalidKit = InvalidKit as unknown as Kit;
-    const result = toSerializableValidationResult(validateSemioKit(invalidKit));
-    const expected = InvalidKitValidation as SerializableValidationResult;
+    const result = toValidationResult(validateSemioKit(invalidKit));
+    const expected = InvalidKitValidation as ValidationResult;
     expect(areValidationResultsEqual(result, expected)).toBe(true);
   });
 });
