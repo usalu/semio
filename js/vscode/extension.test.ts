@@ -108,9 +108,9 @@ suite("Command Registration Test Suite", () => {
     assert.ok(commands.includes("semio.ruleList"), "semio.ruleList command should be registered");
   });
 
-  test("semio.ticketNew command is registered", async () => {
+  test("semio.ticketCreate command is registered", async () => {
     const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("semio.ticketNew"), "semio.ticketNew command should be registered");
+    assert.ok(commands.includes("semio.ticketCreate"), "semio.ticketCreate command should be registered");
   });
 
   test("semio.ticketList command is registered", async () => {
@@ -123,9 +123,9 @@ suite("Command Registration Test Suite", () => {
     assert.ok(commands.includes("semio.projectList"), "semio.projectList command should be registered");
   });
 
-  test("semio.regionTree command is registered", async () => {
+  test("semio.sectionTree command is registered", async () => {
     const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("semio.regionTree"), "semio.regionTree command should be registered");
+    assert.ok(commands.includes("semio.sectionTree"), "semio.sectionTree command should be registered");
   });
 
   test("semio.definitionList command is registered", async () => {
@@ -141,6 +141,111 @@ suite("Command Registration Test Suite", () => {
   test("semio.refreshDiagnostics command is registered", async () => {
     const commands = await vscode.commands.getCommands(true);
     assert.ok(commands.includes("semio.refreshDiagnostics"), "semio.refreshDiagnostics command should be registered");
+  });
+
+  test("semio.ruleRun command is registered", async () => {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.ruleRun"), "semio.ruleRun command should be registered");
+  });
+
+  test("semio.ticketIterateStart command is registered", async () => {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.ticketIterateStart"), "semio.ticketIterateStart command should be registered");
+  });
+
+  test("semio.ticketIterateEnd command is registered", async () => {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.ticketIterateEnd"), "semio.ticketIterateEnd command should be registered");
+  });
+
+  test("semio.ticketFinish command is registered", async () => {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.ticketFinish"), "semio.ticketFinish command should be registered");
+  });
+
+  test("semio.ticketRead command is registered", async () => {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.ticketRead"), "semio.ticketRead command should be registered");
+  });
+
+  test("semio.projectTree command is registered", async () => {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.projectTree"), "semio.projectTree command should be registered");
+  });
+
+  test("semio.folderCreate command is registered", async () => {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.folderCreate"), "semio.folderCreate command should be registered");
+  });
+
+  test("semio.folderMove command is registered", async () => {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.folderMove"), "semio.folderMove command should be registered");
+  });
+
+  test("semio.folderDelete command is registered", async () => {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.folderDelete"), "semio.folderDelete command should be registered");
+  });
+
+  test("semio.folderList command is registered", async () => {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.folderList"), "semio.folderList command should be registered");
+  });
+
+  test("semio.fileCreate command is registered", async () => {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.fileCreate"), "semio.fileCreate command should be registered");
+  });
+
+  test("semio.fileMove command is registered", async () => {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.fileMove"), "semio.fileMove command should be registered");
+  });
+
+  test("semio.fileDelete command is registered", async () => {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.fileDelete"), "semio.fileDelete command should be registered");
+  });
+
+  test("semio.fileList command is registered", async () => {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.fileList"), "semio.fileList command should be registered");
+  });
+
+  test("semio.fileTree command is registered", async () => {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.fileTree"), "semio.fileTree command should be registered");
+  });
+
+  test("semio.sectionCreate command is registered", async () => {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.sectionCreate"), "semio.sectionCreate command should be registered");
+  });
+
+  test("semio.sectionMove command is registered", async () => {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.sectionMove"), "semio.sectionMove command should be registered");
+  });
+
+  test("semio.sectionDelete command is registered", async () => {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.sectionDelete"), "semio.sectionDelete command should be registered");
+  });
+
+  test("semio.sectionList command is registered", async () => {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.sectionList"), "semio.sectionList command should be registered");
+  });
+
+  test("semio.definitionTree command is registered", async () => {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.definitionTree"), "semio.definitionTree command should be registered");
+  });
+
+  test("semio.toolRun command is registered", async () => {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.toolRun"), "semio.toolRun command should be registered");
   });
 });
 
@@ -185,13 +290,13 @@ suite("Command Execution Test Suite", () => {
     }
   });
 
-  test("semio.regionTree with active editor executes", async () => {
+  test("semio.sectionTree with active editor executes", async () => {
     const fixturePath = path.join(__dirname, "../../../../assets/repo/some/folder/file.tsx");
     const fixtureUri = vscode.Uri.file(fixturePath);
     const document = await vscode.workspace.openTextDocument(fixtureUri);
     await vscode.window.showTextDocument(document);
     try {
-      await vscode.commands.executeCommand("semio.regionTree");
+      await vscode.commands.executeCommand("semio.sectionTree");
       assert.ok(true, "Command executed successfully");
     } catch (error) {
       assert.fail(`Command should not throw: ${error}`);

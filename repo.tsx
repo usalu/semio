@@ -25,7 +25,7 @@
 import { execSync, spawnSync } from "child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "fs";
 import matter from "gray-matter";
-import { Box, render, Text, useApp } from "ink";
+import { Box, render, Text } from "ink";
 import { dirname, join, relative } from "path";
 import React from "react";
 import Parser from "tree-sitter";
@@ -41,14 +41,14 @@ import { fileURLToPath } from "url";
 // #region Types
 
 //#region Scope
-type ScopeKind = "repo" | "project" | "folder" | "file" | "region" | "definition";
+type ScopeKind = "repo" | "project" | "folder" | "file" | "section" | "definition";
 
 interface Scope {
   raw: string;
   kind: ScopeKind;
   projectName?: string;
   filePath?: string;
-  regionPath?: string[];
+  sectionPath?: string[];
   definitionName?: string;
 }
 //#endregion Scope
@@ -95,16 +95,16 @@ interface NxProject {
 }
 //#endregion Project
 
-//#region Region
-interface RegionInfo {
+//#region Section
+interface SectionInfo {
   name: string;
   startLine: number;
   endLine: number;
   startIndex: number;
   endIndex: number;
-  children: RegionInfo[];
+  children: SectionInfo[];
 }
-//#endregion Region
+//#endregion Section
 
 //#region Definition
 interface DefinitionInfo {
@@ -191,7 +191,7 @@ interface RuleContext {
   project: (name: string) => NxProject | undefined;
   files: (pattern?: string) => string[];
   readText: (filePath: string) => string;
-  regions: (filePath: string) => RegionInfo[];
+  sections: (filePath: string) => SectionInfo[];
   definitions: (filePath: string) => DefinitionInfo[];
   parseAST: (filePath: string) => ASTFile | null;
   getASTNode: (filePath: string, startIndex: number, endIndex: number) => ASTNode | null;
@@ -219,7 +219,7 @@ interface AnalyzeReport {
 //#endregion Report
 
 //#region Command
-type CommandName = "help" | "analyze" | "fix" | "rule" | "ticket" | "project" | "folder" | "file" | "region" | "definition" | "tool";
+type CommandName = "help" | "analyze" | "fix" | "rule" | "ticket" | "project" | "folder" | "file" | "section" | "definition" | "tool";
 
 interface ParsedCommand {
   name: CommandName;
@@ -229,6 +229,49 @@ interface ParsedCommand {
   options: Record<string, string | boolean>;
 }
 //#endregion Command
+
+//#region Output
+type OutputType = "info" | "success" | "error" | "warn" | "plain";
+
+interface OutputLine {
+  type: OutputType;
+  text: string;
+}
+
+interface CommandOutput {
+  lines: OutputLine[];
+  exitCode: number;
+}
+
+function createOutput(): CommandOutput {
+  return { lines: [], exitCode: 0 };
+}
+
+function addLine(output: CommandOutput, type: OutputType, text: string): void {
+  output.lines.push({ type, text });
+}
+
+function info(output: CommandOutput, text: string): void {
+  addLine(output, "info", text);
+}
+
+function success(output: CommandOutput, text: string): void {
+  addLine(output, "success", text);
+}
+
+function error(output: CommandOutput, text: string): void {
+  addLine(output, "error", text);
+  output.exitCode = 1;
+}
+
+function warn(output: CommandOutput, text: string): void {
+  addLine(output, "warn", text);
+}
+
+function plain(output: CommandOutput, text: string): void {
+  addLine(output, "plain", text);
+}
+//#endregion Output
 
 // #endregion Types
 
@@ -269,11 +312,11 @@ Commands:
   file delete <file-path>                       Delete a file
   file list [--scope=<scope>]                   List files in scope
   file tree [--scope=<scope>]                   Show file structure
-  region create <file-path> <region-path>       Create a region in a file
-  region move <file-path> <region-path> <new-region-path>  Move a region in a file
-  region delete <file-path> <region-path>       Delete a region in a file
-  region list [--scope=<scope>]                 List regions in a file
-  region tree [--scope=<scope>]                 Show region structure of a file
+  section create <file-path> <section-path>     Create a section in a file
+  section move <file-path> <section-path> <new-section-path>  Move a section in a file
+  section delete <file-path> <section-path>     Delete a section in a file
+  section list [--scope=<scope>]                List sections in a file
+  section tree [--scope=<scope>]                Show section structure of a file
   definition list [--scope=<scope>]             List definitions in a file
   definition tree [--scope=<scope>]             Show definition structure
   tool <name> [args...]                         Run a tool (e.g., i18n, update-metabolism)
@@ -290,7 +333,7 @@ Scope syntax:
   @semio/js                Project scope (Nx project)
   js/js/sketchpad/         Folder scope
   js/js/sketchpad/App.tsx  File scope
-  file.tsx#Region          Region scope
+  file.tsx#Section         Section scope (regions in code, headers in markdown)
   file.tsx§Function        Definition scope
 `;
 
@@ -425,8 +468,8 @@ function parseScope(raw: string): Scope {
     return { raw, kind: "definition", filePath: filePart, definitionName: defName };
   }
   if (raw.includes("#")) {
-    const [filePart, ...regionParts] = raw.split("#");
-    return { raw, kind: "region", filePath: filePart, regionPath: regionParts };
+    const [filePart, ...sectionParts] = raw.split("#");
+    return { raw, kind: "section", filePath: filePart, sectionPath: sectionParts };
   }
   if (raw.startsWith("@semio/")) {
     return { raw, kind: "project", projectName: raw };
@@ -444,17 +487,17 @@ function parseScope(raw: string): Scope {
 
 function scopeToFiles(scope: Scope, projects: NxProject[]): string[] {
   if (scope.kind === "repo") {
-    return simpleGlob("**/*.{ts,tsx,py,cs}", { cwd: ROOT_DIR, ignore: ["node_modules/**", "**/node_modules/**", "**/.venv/**", "assets/repo/**"] });
+    return simpleGlob("**/*.{ts,tsx,py,cs}", { cwd: ROOT_DIR, ignore: ["node_modules/**", "**/node_modules/**", "**/.venv/**"] });
   }
   if (scope.kind === "project") {
     const project = projects.find((p) => p.name === scope.projectName);
     if (!project) return [];
-    return simpleGlob(`${project.root}/**/*.{ts,tsx,py,cs}`, { cwd: ROOT_DIR, ignore: ["**/node_modules/**", "**/.venv/**", "assets/repo/**"] });
+    return simpleGlob(`${project.root}/**/*.{ts,tsx,py,cs}`, { cwd: ROOT_DIR, ignore: ["**/node_modules/**", "**/.venv/**"] });
   }
   if (scope.kind === "folder" && scope.filePath) {
-    return simpleGlob(`${scope.filePath}**/*.{ts,tsx,py,cs}`, { cwd: ROOT_DIR, ignore: ["**/node_modules/**", "**/.venv/**", "assets/repo/**"] });
+    return simpleGlob(`${scope.filePath}**/*.{ts,tsx,py,cs}`, { cwd: ROOT_DIR, ignore: ["**/node_modules/**", "**/.venv/**"] });
   }
-  if ((scope.kind === "file" || scope.kind === "region" || scope.kind === "definition") && scope.filePath) {
+  if ((scope.kind === "file" || scope.kind === "section" || scope.kind === "definition") && scope.filePath) {
     return [scope.filePath];
   }
   return [];
@@ -470,7 +513,9 @@ function matchesScope(ruleScopes: string[], targetScope: Scope): boolean {
     if (targetScope.filePath) {
       const normalizedTarget = normalizePathSeparators(targetScope.filePath);
       const normalizedPattern = normalizePathSeparators(pattern);
-      if (normalizedTarget.includes(normalizedPattern) || normalizedTarget.match(new RegExp(normalizedPattern.replace(/\*/g, ".*")))) return true;
+      if (normalizedTarget.includes(normalizedPattern)) return true;
+      const regexPattern = normalizedPattern.replace(/\{([^}]+)\}/g, (_, group) => `(${group.replace(/,/g, "|")})`).replace(/\./g, "\\.").replace(/\*\*/g, "\0").replace(/\*/g, "[^/]*").replace(/\0/g, ".*");
+      if (normalizedTarget.match(new RegExp(`^${regexPattern}$`))) return true;
     }
   }
   return false;
@@ -480,34 +525,47 @@ function matchesScope(ruleScopes: string[], targetScope: Scope): boolean {
 
 // #region Nx Adapter
 
-let cachedProjects: NxProject[] | null = null;
+let cachedProjectNames: string[] | null = null;
+const cachedProjectDetails: Map<string, NxProject> = new Map();
 
-function getNxProjects(): NxProject[] {
-  if (cachedProjects) return cachedProjects;
+function getNxProjectNames(): string[] {
+  if (cachedProjectNames) return cachedProjectNames;
   try {
     const result = execCommand("npx", ["nx", "show", "projects", "--json"]);
     if (result.exitCode !== 0) {
-      cachedProjects = [];
-      return cachedProjects;
+      cachedProjectNames = [];
+      return cachedProjectNames;
     }
-    const projectNames: string[] = JSON.parse(result.stdout);
-    cachedProjects = projectNames.map((name) => {
-      const configResult = execCommand("npx", ["nx", "show", "project", name, "--json"]);
-      if (configResult.exitCode === 0) {
-        try {
-          const config = JSON.parse(configResult.stdout);
-          return { name, root: config.root ?? "", sourceRoot: config.sourceRoot, projectType: config.projectType, tags: config.tags };
-        } catch {
-          return { name, root: "" };
-        }
-      }
-      return { name, root: "" };
-    });
-    return cachedProjects;
+    cachedProjectNames = JSON.parse(result.stdout);
+    return cachedProjectNames;
   } catch {
-    cachedProjects = [];
-    return cachedProjects;
+    cachedProjectNames = [];
+    return cachedProjectNames;
   }
+}
+
+function getNxProjectDetails(name: string): NxProject {
+  if (cachedProjectDetails.has(name)) return cachedProjectDetails.get(name)!;
+  const configResult = execCommand("npx", ["nx", "show", "project", name, "--json"]);
+  if (configResult.exitCode === 0) {
+    try {
+      const config = JSON.parse(configResult.stdout);
+      const project = { name, root: config.root ?? "", sourceRoot: config.sourceRoot, projectType: config.projectType, tags: config.tags };
+      cachedProjectDetails.set(name, project);
+      return project;
+    } catch {
+      const project = { name, root: "" };
+      cachedProjectDetails.set(name, project);
+      return project;
+    }
+  }
+  const project = { name, root: "" };
+  cachedProjectDetails.set(name, project);
+  return project;
+}
+
+function getNxProjects(): NxProject[] {
+  return getNxProjectNames().map((name) => getNxProjectDetails(name));
 }
 
 function runNxTarget(target: string, projects?: string[], extraArgs: string[] = []): { success: boolean; output: string } {
@@ -525,39 +583,89 @@ function runNxTarget(target: string, projects?: string[], extraArgs: string[] = 
 
 // #endregion Nx Adapter
 
-// #region Region Parser
+// #region Section Parser
 
-function parseRegions(content: string, language: "typescript" | "python" | "csharp"): RegionInfo[] {
+function parseCodeSections(content: string, language: "typescript" | "python" | "csharp"): SectionInfo[] {
   const lines = content.split("\n");
-  const stack: RegionInfo[] = [];
-  const roots: RegionInfo[] = [];
-  const regionStartPatterns: Record<string, RegExp> = { typescript: /^\s*\/\/\s*#region\s+(.+?)\r?$/i, python: /^\s*#\s*region\s+(.+?)\r?$/i, csharp: /^\s*#region\s+(.+?)\r?$/i };
-  const regionEndPatterns: Record<string, RegExp> = { typescript: /^\s*\/\/\s*#endregion/i, python: /^\s*#\s*endregion/i, csharp: /^\s*#endregion/i };
-  const startPattern = regionStartPatterns[language];
-  const endPattern = regionEndPatterns[language];
+  const stack: SectionInfo[] = [];
+  const roots: SectionInfo[] = [];
+  const sectionStartPatterns: Record<string, RegExp> = { typescript: /^\s*\/\/\s*#region\s+(.+?)\r?$/i, python: /^\s*#\s*region\s+(.+?)\r?$/i, csharp: /^\s*#region\s+(.+?)\r?$/i };
+  const sectionEndPatterns: Record<string, RegExp> = { typescript: /^\s*\/\/\s*#endregion/i, python: /^\s*#\s*endregion/i, csharp: /^\s*#endregion/i };
+  const startPattern = sectionStartPatterns[language];
+  const endPattern = sectionEndPatterns[language];
   let charIndex = 0;
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const lineStart = charIndex;
     const startMatch = line.match(startPattern);
     if (startMatch) {
-      const region: RegionInfo = { name: startMatch[1].trim(), startLine: i + 1, endLine: -1, startIndex: lineStart, endIndex: -1, children: [] };
+      const section: SectionInfo = { name: startMatch[1].trim(), startLine: i + 1, endLine: -1, startIndex: lineStart, endIndex: -1, children: [] };
       if (stack.length > 0) {
-        stack[stack.length - 1].children.push(region);
+        stack[stack.length - 1].children.push(section);
       } else {
-        roots.push(region);
+        roots.push(section);
       }
-      stack.push(region);
+      stack.push(section);
     } else if (endPattern.test(line)) {
-      const region = stack.pop();
-      if (region) {
-        region.endLine = i + 1;
-        region.endIndex = charIndex + line.length;
+      const section = stack.pop();
+      if (section) {
+        section.endLine = i + 1;
+        section.endIndex = charIndex + line.length;
       }
     }
     charIndex += line.length + 1;
   }
   return roots;
+}
+
+function parseMarkdownSections(content: string): SectionInfo[] {
+  const parsed = matter(content);
+  const bodyContent = parsed.content;
+  const frontmatterLines = content.slice(0, content.indexOf(bodyContent)).split("\n").length - 1;
+  const lines = bodyContent.split("\n");
+  const sections: SectionInfo[] = [];
+  const stack: { level: number; section: SectionInfo }[] = [];
+  let charIndex = content.indexOf(bodyContent);
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const lineStart = charIndex;
+    const headerMatch = line.match(/^(#{1,6})\s+(.+?)\r?$/);
+    if (headerMatch) {
+      const level = headerMatch[1].length;
+      const name = headerMatch[2].trim();
+      while (stack.length > 0 && stack[stack.length - 1].level >= level) {
+        const popped = stack.pop()!;
+        popped.section.endLine = frontmatterLines + i;
+        popped.section.endIndex = lineStart - 1;
+      }
+      const section: SectionInfo = { name, startLine: frontmatterLines + i + 1, endLine: -1, startIndex: lineStart, endIndex: -1, children: [] };
+      if (stack.length > 0) {
+        stack[stack.length - 1].section.children.push(section);
+      } else {
+        sections.push(section);
+      }
+      stack.push({ level, section });
+    }
+    charIndex += line.length + 1;
+  }
+  while (stack.length > 0) {
+    const popped = stack.pop()!;
+    popped.section.endLine = frontmatterLines + lines.length;
+    popped.section.endIndex = content.length;
+  }
+  return sections;
+}
+
+function parseSections(content: string, filePath: string): SectionInfo[] {
+  const ext = filePath.split(".").pop()?.toLowerCase();
+  if (ext === "md" || ext === "mdx") {
+    return parseMarkdownSections(content);
+  }
+  const lang = getLanguageFromPath(filePath);
+  if (lang) {
+    return parseCodeSections(content, lang);
+  }
+  return [];
 }
 
 function getLanguageFromPath(filePath: string): "typescript" | "python" | "csharp" | null {
@@ -568,7 +676,7 @@ function getLanguageFromPath(filePath: string): "typescript" | "python" | "cshar
   return null;
 }
 
-// #endregion Region Parser
+// #endregion Section Parser
 
 // #region Definition Parser
 
@@ -760,7 +868,7 @@ function registerRule(meta: RuleMeta, run: RuleFn): void {
 
 function createRuleContext(scope: Scope, projects: NxProject[]): RuleContext {
   const fileCache = new Map<string, string>();
-  const regionCache = new Map<string, RegionInfo[]>();
+  const sectionCache = new Map<string, SectionInfo[]>();
   const definitionCache = new Map<string, DefinitionInfo[]>();
   const astCache = new Map<string, ASTFile | null>();
   return {
@@ -769,7 +877,7 @@ function createRuleContext(scope: Scope, projects: NxProject[]): RuleContext {
     projects: () => projects,
     project: (name: string) => projects.find((p) => p.name === name),
     files: (pattern?: string) => {
-      if (pattern) return simpleGlob(pattern, { cwd: ROOT_DIR, ignore: ["**/node_modules/**", "**/.venv/**", "assets/repo/**"] });
+      if (pattern) return simpleGlob(pattern, { cwd: ROOT_DIR, ignore: ["**/node_modules/**", "**/.venv/**"] });
       return scopeToFiles(scope, projects);
     },
     readText: (filePath: string) => {
@@ -779,13 +887,12 @@ function createRuleContext(scope: Scope, projects: NxProject[]): RuleContext {
       }
       return fileCache.get(absPath)!;
     },
-    regions: (filePath: string) => {
-      if (!regionCache.has(filePath)) {
+    sections: (filePath: string) => {
+      if (!sectionCache.has(filePath)) {
         const content = existsSync(join(ROOT_DIR, filePath)) ? readTextFile(join(ROOT_DIR, filePath)) : "";
-        const lang = getLanguageFromPath(filePath);
-        regionCache.set(filePath, lang ? parseRegions(content, lang) : []);
+        sectionCache.set(filePath, parseSections(content, filePath));
       }
-      return regionCache.get(filePath)!;
+      return sectionCache.get(filePath)!;
     },
     definitions: (filePath: string) => {
       if (!definitionCache.has(filePath)) {
@@ -834,7 +941,8 @@ function createRuleContext(scope: Scope, projects: NxProject[]): RuleContext {
 }
 
 async function runRules(scope: Scope, ruleIds?: string[]): Promise<Violation[]> {
-  const projects = getNxProjects();
+  const needsProjects = scope.kind === "repo" || scope.kind === "project";
+  const projects = needsProjects ? getNxProjects() : [];
   const violations: Violation[] = [];
   const rulesToRun = ruleIds ? RULES.filter((r) => ruleIds.includes(r.meta.id)) : RULES.filter((r) => matchesScope(r.meta.scopes, scope));
   for (const rule of rulesToRun) {
@@ -850,7 +958,7 @@ async function runRules(scope: Scope, ruleIds?: string[]): Promise<Violation[]> 
 // #region Built-in Rules
 
 //#region Header Rule
-registerRule({ id: "header", name: "Header", description: "Validates source file header region with filename, contributors, and AGPL-3.0 license", scopes: ["**/*.{ts,tsx,py,cs}"], priority: "high", autofixable: true }, async (ctx) => {
+registerRule({ id: "header", name: "Header", description: "Validates source file header section with filename, contributors, and AGPL-3.0 license", scopes: ["**/*.{ts,tsx,py,cs}"], priority: "high", autofixable: true }, async (ctx) => {
   const violations: Violation[] = [];
   const files = ctx.files();
   const agplMarkers = ["GNU Affero General Public License", "AGPL", "https://www.gnu.org/licenses/"];
@@ -859,21 +967,21 @@ registerRule({ id: "header", name: "Header", description: "Validates source file
     if (!content) continue;
     const lang = getLanguageFromPath(file);
     if (!lang) continue;
-    const regions = ctx.regions(file);
-    const headerRegion = regions.find((r) => r.name.toLowerCase() === "header");
-    if (!headerRegion) {
+    const sections = ctx.sections(file);
+    const headerSection = sections.find((r) => r.name.toLowerCase() === "header");
+    if (!headerSection) {
       violations.push(
         ctx.createViolation({
-          summary: `Missing header region in ${file}`,
-          kind: "header:missing-region",
+          summary: `Missing header section in ${file}`,
+          kind: "header:missing-section",
           solution: "Add a #region Header with filename, contributors, and AGPL-3.0 license",
-          reason: "Every source file must include a header region",
+          reason: "Every source file must include a header section",
           scope: file,
         }),
       );
       continue;
     }
-    const headerContent = content.slice(headerRegion.startIndex, headerRegion.endIndex);
+    const headerContent = content.slice(headerSection.startIndex, headerSection.endIndex);
     const headerLines = headerContent.split("\n");
     const filename = file.split("/").pop() ?? file;
     const hasFilename = headerLines.some((l) => l.includes(filename));
@@ -882,10 +990,10 @@ registerRule({ id: "header", name: "Header", description: "Validates source file
         ctx.createViolation({
           summary: `Missing filename in header of ${file}`,
           kind: "header:missing-filename",
-          solution: `Add the filename "${filename}" to the header region`,
+          solution: `Add the filename "${filename}" to the header section`,
           reason: "Header must include the source file name",
           scope: `${file}#Header`,
-          line: headerRegion.startLine,
+          line: headerSection.startLine,
         }),
       );
     }
@@ -899,7 +1007,7 @@ registerRule({ id: "header", name: "Header", description: "Validates source file
           solution: "Add contributor line in format: YEAR Name <email>",
           reason: "Header must include at least one contributor",
           scope: `${file}#Header`,
-          line: headerRegion.startLine,
+          line: headerSection.startLine,
         }),
       );
     }
@@ -909,10 +1017,10 @@ registerRule({ id: "header", name: "Header", description: "Validates source file
         ctx.createViolation({
           summary: `Missing license in header of ${file}`,
           kind: "header:missing-license",
-          solution: "Add AGPL-3.0 license text to the header region",
+          solution: "Add AGPL-3.0 license text to the header section",
           reason: "Header must include AGPL-3.0 license",
           scope: `${file}#Header`,
-          line: headerRegion.startLine,
+          line: headerSection.startLine,
         }),
       );
     } else {
@@ -925,7 +1033,7 @@ registerRule({ id: "header", name: "Header", description: "Validates source file
             solution: "Replace with AGPL-3.0 license text",
             reason: "Project uses AGPL-3.0, not other licenses",
             scope: `${file}#Header`,
-            line: headerRegion.startLine,
+            line: headerSection.startLine,
           }),
         );
       }
@@ -935,33 +1043,33 @@ registerRule({ id: "header", name: "Header", description: "Validates source file
 });
 //#endregion Header Rule
 
-//#region Region Rule
-registerRule({ id: "region", name: "Region", description: "Validates region blocks for proper naming and content", scopes: ["**/*.{ts,tsx,py,cs}"], priority: "low", autofixable: true }, async (ctx) => {
+//#region Section Rule
+registerRule({ id: "section", name: "Section", description: "Validates section blocks for proper naming and content", scopes: ["**/*.{ts,tsx,py,cs}"], priority: "low", autofixable: true }, async (ctx) => {
   const violations: Violation[] = [];
   const files = ctx.files();
-  const regionPatterns: Record<string, { start: RegExp; end: RegExp }> = {
+  const sectionPatterns: Record<string, { start: RegExp; end: RegExp }> = {
     typescript: { start: /^\s*\/\/\s*#region(?:\s+(\S.*?))?\s*$/i, end: /^\s*\/\/\s*#endregion(?:\s+(\S.*?))?\s*$/i },
     python: { start: /^\s*#\s*region(?:\s+(\S.*?))?\s*$/i, end: /^\s*#\s*endregion(?:\s+(\S.*?))?\s*$/i },
     csharp: { start: /^\s*#region(?:\s+(\S.*?))?\s*$/i, end: /^\s*#endregion(?:\s+(\S.*?))?\s*$/i },
   };
-  function checkRegion(file: string, region: RegionInfo, content: string): void {
-    const regionContent = content.slice(region.startIndex, region.endIndex);
-    const lines = regionContent.split("\n").slice(1, -1);
+  function checkSection(file: string, section: SectionInfo, content: string): void {
+    const sectionContent = content.slice(section.startIndex, section.endIndex);
+    const lines = sectionContent.split("\n").slice(1, -1);
     const nonEmptyLines = lines.filter((l) => l.trim() && !l.trim().startsWith("//") && !l.trim().startsWith("#"));
-    if (nonEmptyLines.length === 0 && region.children.length === 0) {
+    if (nonEmptyLines.length === 0 && section.children.length === 0) {
       violations.push(
         ctx.createViolation({
-          summary: `Empty region "${region.name}" in ${file}`,
-          kind: "region:empty",
-          solution: "Remove the empty region or add content to it",
-          reason: "Empty regions add noise without providing value",
-          scope: `${file}#${region.name}`,
-          line: region.startLine,
+          summary: `Empty section "${section.name}" in ${file}`,
+          kind: "section:empty",
+          solution: "Remove the empty section or add content to it",
+          reason: "Empty sections add noise without providing value",
+          scope: `${file}#${section.name}`,
+          line: section.startLine,
         }),
       );
     }
-    for (const child of region.children) {
-      checkRegion(file, child, content);
+    for (const child of section.children) {
+      checkSection(file, child, content);
     }
   }
   for (const file of files) {
@@ -969,9 +1077,9 @@ registerRule({ id: "region", name: "Region", description: "Validates region bloc
     if (!content) continue;
     const lang = getLanguageFromPath(file);
     if (!lang) continue;
-    const patterns = regionPatterns[lang];
+    const patterns = sectionPatterns[lang];
     const lines = content.split("\n");
-    const regionStack: { name: string; line: number }[] = [];
+    const sectionStack: { name: string; line: number }[] = [];
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].replace(/\r$/, "");
       const lineNum = i + 1;
@@ -981,46 +1089,46 @@ registerRule({ id: "region", name: "Region", description: "Validates region bloc
         if (!name) {
           violations.push(
             ctx.createViolation({
-              summary: `Missing region name at ${file}:${lineNum}`,
-              kind: "region:missing-start-name",
+              summary: `Missing section name at ${file}:${lineNum}`,
+              kind: "section:missing-start-name",
               solution: "Add a name after #region",
-              reason: "Region blocks should have descriptive names",
+              reason: "Section blocks should have descriptive names",
               scope: file,
               line: lineNum,
               excerpt: line.trim(),
             }),
           );
         }
-        regionStack.push({ name, line: lineNum });
+        sectionStack.push({ name, line: lineNum });
         continue;
       }
       const endMatch = line.match(patterns.end);
       if (endMatch) {
         const endName = endMatch[1]?.trim() ?? "";
-        const openRegion = regionStack.pop();
-        if (openRegion && openRegion.name) {
+        const openSection = sectionStack.pop();
+        if (openSection && openSection.name) {
           if (!endName) {
             violations.push(
               ctx.createViolation({
-                summary: `Missing end region name at ${file}:${lineNum}`,
-                kind: "region:missing-end-name",
-                solution: `Add the region name "${openRegion.name}" after #endregion`,
-                reason: "End region should match start region name for clarity",
+                summary: `Missing end section name at ${file}:${lineNum}`,
+                kind: "section:missing-end-name",
+                solution: `Add the section name "${openSection.name}" after #endregion`,
+                reason: "End section should match start section name for clarity",
                 scope: file,
                 line: lineNum,
                 excerpt: line.trim(),
               }),
             );
-          } else if (endName !== openRegion.name) {
+          } else if (endName !== openSection.name) {
             violations.push(
               ctx.createViolation({
-                summary: `Region name mismatch at ${file}:${lineNum}`,
-                kind: "region:name-mismatch",
-                solution: `Change end name from "${endName}" to "${openRegion.name}"`,
-                reason: "Start and end region names must match",
+                summary: `Section name mismatch at ${file}:${lineNum}`,
+                kind: "section:name-mismatch",
+                solution: `Change end name from "${endName}" to "${openSection.name}"`,
+                reason: "Start and end section names must match",
                 scope: file,
                 line: lineNum,
-                excerpt: `Start: "${openRegion.name}" at line ${openRegion.line}, End: "${endName}"`,
+                excerpt: `Start: "${openSection.name}" at line ${openSection.line}, End: "${endName}"`,
               }),
             );
           }
@@ -1028,14 +1136,14 @@ registerRule({ id: "region", name: "Region", description: "Validates region bloc
         continue;
       }
     }
-    const regions = ctx.regions(file);
-    for (const region of regions) {
-      checkRegion(file, region, content);
+    const sections = ctx.sections(file);
+    for (const section of sections) {
+      checkSection(file, section, content);
     }
   }
   return violations;
 });
-//#endregion Region Rule
+//#endregion Section Rule
 
 //#region Comment Rule
 registerRule({ id: "comment", name: "Comment", description: "Detects forbidden comments (inline, block, JSDoc) - documentation belongs in README.md and AGENTS.md", scopes: ["**/*.{ts,tsx}"], priority: "low", autofixable: true }, async (ctx) => {
@@ -1270,35 +1378,33 @@ function startIteration(ticket: Ticket, prompt: string, model?: string): void {
   saveTicket(ticket);
 }
 
-function endIteration(ticket: Ticket): void {
+function endIteration(ticket: Ticket): { success: boolean; error?: string } {
   if (!ticket.frontmatter.iterations || ticket.frontmatter.iterations.length === 0) {
-    console.error("Error: No active iteration to end");
-    return;
+    return { success: false, error: "Error: No active iteration to end" };
   }
   const lastIteration = ticket.frontmatter.iterations[ticket.frontmatter.iterations.length - 1];
   if (lastIteration.date.ended) {
-    console.error("Error: Last iteration already ended");
-    return;
+    return { success: false, error: "Error: Last iteration already ended" };
   }
   lastIteration.date.ended = isoTimestamp();
   try {
     lastIteration.commit = execSync("git rev-parse HEAD", { encoding: "utf-8" }).trim();
   } catch {}
   saveTicket(ticket);
+  return { success: true };
 }
 
-function finishTicket(ticket: Ticket): boolean {
+function finishTicket(ticket: Ticket): { success: boolean; error?: string } {
   if (ticket.frontmatter.iterations && ticket.frontmatter.iterations.length > 0) {
     const lastIteration = ticket.frontmatter.iterations[ticket.frontmatter.iterations.length - 1];
     if (!lastIteration.date.ended) {
-      console.error("Error: Cannot finish ticket with unfinished iteration");
-      return false;
+      return { success: false, error: "Error: Cannot finish ticket with unfinished iteration" };
     }
   }
   ticket.frontmatter.status = "closed";
   ticket.frontmatter.date.finished = isoTimestamp();
   saveTicket(ticket);
-  return true;
+  return { success: true };
 }
 
 function updateTicketViolations(ticket: Ticket, violations: Violation[]): void {
@@ -1345,16 +1451,15 @@ function canCloseTicket(ticket: Ticket): { canClose: boolean; reasons: string[] 
   return { canClose: reasons.length === 0, reasons };
 }
 
-function closeTicket(ticket: Ticket): boolean {
+function closeTicket(ticket: Ticket): { success: boolean; error?: string } {
   const { canClose, reasons } = canCloseTicket(ticket);
   if (!canClose) {
-    console.error("Cannot close ticket:", reasons.join(", "));
-    return false;
+    return { success: false, error: `Cannot close ticket: ${reasons.join(", ")}` };
   }
   ticket.frontmatter.status = "closed";
   ticket.frontmatter.date.finished = isoTimestamp();
   saveTicket(ticket);
-  return true;
+  return { success: true };
 }
 
 // #endregion Ticket Engine
@@ -1401,8 +1506,16 @@ function parseCommand(argv: string[]): ParsedCommand {
 
 // #region Command Handlers
 
-async function handleAnalyze(cmd: ParsedCommand): Promise<void> {
-  const scopeRaws = cmd.args.length > 0 ? cmd.args : ["@semio"];
+async function handleAnalyze(cmd: ParsedCommand): Promise<CommandOutput> {
+  const output = createOutput();
+  let scopeRaws: string[];
+  if (cmd.options.scope && typeof cmd.options.scope === "string") {
+    scopeRaws = [cmd.options.scope];
+  } else if (cmd.args.length > 0) {
+    scopeRaws = cmd.args;
+  } else {
+    scopeRaws = ["@semio"];
+  }
   const violations: Violation[] = [];
   for (const scopeRaw of scopeRaws) {
     const scope = parseScope(scopeRaw);
@@ -1429,24 +1542,26 @@ async function handleAnalyze(cmd: ParsedCommand): Promise<void> {
   ensureDir(REPORTS_DIR);
   writeJsonFile(join(REPORTS_DIR, "rules.json"), report);
   if (cmd.options.json) {
-    console.log(JSON.stringify(report, null, 2));
+    plain(output, JSON.stringify(report, null, 2));
   } else {
-    console.log(`\n📊 Analysis complete: ${violations.length} violations found`);
-    console.log(`   Report: ${join(REPORTS_DIR, "rules.json")}`);
+    success(output, `\n📊 Analysis complete: ${violations.length} violations found`);
+    info(output, `   Report: ${join(REPORTS_DIR, "rules.json")}`);
   }
-  process.exit(report.status === "error" ? 1 : 0);
+  if (report.status === "error") output.exitCode = 1;
+  return output;
 }
 
-async function handleFix(cmd: ParsedCommand): Promise<void> {
-  const scopeRaw = cmd.args[0] || (cmd.options.scope as string) || "@semio";
+async function handleFix(cmd: ParsedCommand): Promise<CommandOutput> {
+  const output = createOutput();
+  const scopeRaw = (typeof cmd.options.scope === "string" ? cmd.options.scope : null) || cmd.args[0] || "@semio";
   const scope = parseScope(scopeRaw);
   const dryRun = !!cmd.options["dry-run"];
   const violations = await runRules(scope);
   const fixable = violations.filter((i) => i.autofixable && i.autofix);
   if (dryRun) {
-    console.log(`\n🔧 Dry run: ${fixable.length} fixable violations found`);
+    info(output, `\n🔧 Dry run: ${fixable.length} fixable violations found`);
     for (const violation of fixable) {
-      console.log(`   - ${violation.kind}: ${violation.summary}`);
+      plain(output, `   - ${violation.kind}: ${violation.summary}`);
     }
   } else {
     let fixed = 0;
@@ -1464,217 +1579,226 @@ async function handleFix(cmd: ParsedCommand): Promise<void> {
         fixed++;
       }
     }
-    console.log(`\n✅ Fixed ${fixed} violations`);
+    success(output, `\n✅ Fixed ${fixed} violations`);
   }
-  process.exit(0);
+  return output;
 }
 
-async function handleRule(cmd: ParsedCommand): Promise<void> {
+async function handleRule(cmd: ParsedCommand): Promise<CommandOutput> {
+  const output = createOutput();
   if (cmd.subcommand === "list") {
-    console.log("\n📜 Registered rules:\n");
+    info(output, "\n📜 Registered rules:\n");
     for (const rule of RULES) {
-      console.log(`   ${rule.meta.id}`);
-      console.log(`      ${rule.meta.name}: ${rule.meta.description}`);
-      console.log(`      Priority: ${rule.meta.priority}, Autofixable: ${rule.meta.autofixable}`);
-      console.log("");
+      plain(output, `   ${rule.meta.id}`);
+      plain(output, `      ${rule.meta.name}: ${rule.meta.description}`);
+      plain(output, `      Priority: ${rule.meta.priority}, Autofixable: ${rule.meta.autofixable}`);
+      plain(output, "");
     }
   } else if (cmd.subcommand === "run") {
     const ruleId = cmd.args[0];
     if (!ruleId) {
-      console.error("Error: Rule ID required");
-      process.exit(1);
+      error(output, "Error: Rule ID required");
+      return output;
     }
     const scopeRaw = (cmd.options.scope as string) || "@semio";
     const scope = parseScope(scopeRaw);
     const violations = await runRules(scope, [ruleId]);
-    console.log(`\n📊 Rule "${ruleId}" found ${violations.length} violations`);
+    info(output, `\n📊 Rule "${ruleId}" found ${violations.length} violations`);
     for (const violation of violations.slice(0, 10)) {
-      console.log(`   - ${violation.summary}`);
+      plain(output, `   - ${violation.summary}`);
     }
     if (violations.length > 10) {
-      console.log(`   ... and ${violations.length - 10} more`);
+      plain(output, `   ... and ${violations.length - 10} more`);
     }
   } else {
-    console.log("Usage: repo rule <list|run> [id]");
+    info(output, "Usage: repo rule <list|run> [id]");
   }
-  process.exit(0);
+  return output;
 }
 
-async function handleTicket(cmd: ParsedCommand): Promise<void> {
+async function handleTicket(cmd: ParsedCommand): Promise<CommandOutput> {
+  const output = createOutput();
   if (cmd.subcommand === "create") {
     const slug = cmd.args[0];
     if (!slug) {
-      console.error("Error: Ticket slug required");
-      process.exit(1);
+      error(output, "Error: Ticket slug required");
+      return output;
     }
     const prompt = (cmd.options.prompt as string) || slug;
     const model = cmd.options.model as string | undefined;
     const ticket = createTicket(slug, prompt, model);
-    console.log(`\n🎫 Created ticket: ${ticket.slug}`);
-    console.log(`   Path: ${ticket.filePath}`);
+    success(output, `\n🎫 Created ticket: ${ticket.slug}`);
+    info(output, `   Path: ${ticket.filePath}`);
   } else if (cmd.subcommand === "iterate") {
     if (cmd.subsubcommand === "start") {
       const [year, month, day, slug] = cmd.args;
       if (!year || !month || !day || !slug) {
-        console.error("Error: Format: ticket iterate start <year> <month> <day> <slug>");
-        process.exit(1);
+        error(output, "Error: Format: ticket iterate start <year> <month> <day> <slug>");
+        return output;
       }
       const ticket = readTicket(parseInt(year), parseInt(month), parseInt(day), slug);
       if (!ticket) {
-        console.error("Error: Ticket not found");
-        process.exit(1);
+        error(output, "Error: Ticket not found");
+        return output;
       }
       const prompt = (cmd.options.prompt as string) || "";
       const model = cmd.options.model as string | undefined;
       startIteration(ticket, prompt, model);
-      console.log(`\n🔄 Started iteration on ticket: ${ticket.slug}`);
+      success(output, `\n🔄 Started iteration on ticket: ${ticket.slug}`);
     } else if (cmd.subsubcommand === "end") {
       const [year, month, day, slug] = cmd.args;
       if (!year || !month || !day || !slug) {
-        console.error("Error: Format: ticket iterate end <year> <month> <day> <slug>");
-        process.exit(1);
+        error(output, "Error: Format: ticket iterate end <year> <month> <day> <slug>");
+        return output;
       }
       const ticket = readTicket(parseInt(year), parseInt(month), parseInt(day), slug);
       if (!ticket) {
-        console.error("Error: Ticket not found");
-        process.exit(1);
+        error(output, "Error: Ticket not found");
+        return output;
       }
-      endIteration(ticket);
-      console.log(`\n✅ Ended iteration on ticket: ${ticket.slug}`);
+      const endResult = endIteration(ticket);
+      if (!endResult.success) {
+        error(output, endResult.error!);
+        return output;
+      }
+      success(output, `\n✅ Ended iteration on ticket: ${ticket.slug}`);
     } else {
-      console.log("Usage: repo ticket iterate <start|end> <year> <month> <day> <slug>");
+      info(output, "Usage: repo ticket iterate <start|end> <year> <month> <day> <slug>");
     }
   } else if (cmd.subcommand === "finish") {
     const [year, month, day, slug] = cmd.args;
     if (!year || !month || !day || !slug) {
-      console.error("Error: Format: ticket finish <year> <month> <day> <slug>");
-      process.exit(1);
+      error(output, "Error: Format: ticket finish <year> <month> <day> <slug>");
+      return output;
     }
     const ticket = readTicket(parseInt(year), parseInt(month), parseInt(day), slug);
     if (!ticket) {
-      console.error("Error: Ticket not found");
-      process.exit(1);
+      error(output, "Error: Ticket not found");
+      return output;
     }
-    if (finishTicket(ticket)) {
-      console.log(`\n✅ Ticket finished: ${ticket.slug}`);
+    const finishResult = finishTicket(ticket);
+    if (finishResult.success) {
+      success(output, `\n✅ Ticket finished: ${ticket.slug}`);
     } else {
-      process.exit(1);
+      error(output, finishResult.error!);
     }
   } else if (cmd.subcommand === "list") {
     const year = cmd.options.year ? parseInt(cmd.options.year as string) : undefined;
     const month = cmd.options.month ? parseInt(cmd.options.month as string) : undefined;
     const day = cmd.options.day ? parseInt(cmd.options.day as string) : undefined;
     const tickets = listTickets(year, month, day);
-    console.log(`\n🎫 Found ${tickets.length} tickets:\n`);
+    info(output, `\n🎫 Found ${tickets.length} tickets:\n`);
     for (const ticket of tickets) {
       const status = ticket.frontmatter.status === "open" ? "🟢" : "✅";
-      console.log(`   ${status} ${ticket.year}/${padNumber(ticket.month)}/${padNumber(ticket.day)}/${ticket.slug}`);
+      plain(output, `   ${status} ${ticket.year}/${padNumber(ticket.month)}/${padNumber(ticket.day)}/${ticket.slug}`);
       if (ticket.frontmatter.summary) {
-        console.log(`      ${ticket.frontmatter.summary}`);
+        plain(output, `      ${ticket.frontmatter.summary}`);
       }
     }
   } else if (cmd.subcommand === "read") {
     const [year, month, day, slug] = cmd.args;
     if (!year || !month || !day || !slug) {
-      console.error("Error: Format: ticket read <year> <month> <day> <slug>");
-      process.exit(1);
+      error(output, "Error: Format: ticket read <year> <month> <day> <slug>");
+      return output;
     }
     const ticket = readTicket(parseInt(year), parseInt(month), parseInt(day), slug);
     if (!ticket) {
-      console.error("Error: Ticket not found");
-      process.exit(1);
+      error(output, "Error: Ticket not found");
+      return output;
     }
-    console.log(`\n🎫 Ticket: ${ticket.slug}`);
-    console.log(`   Status: ${ticket.frontmatter.status}`);
-    console.log(`   Created: ${ticket.frontmatter.date.created}`);
-    console.log(`   Prompt: ${ticket.frontmatter.prompt}`);
+    info(output, `\n🎫 Ticket: ${ticket.slug}`);
+    plain(output, `   Status: ${ticket.frontmatter.status}`);
+    plain(output, `   Created: ${ticket.frontmatter.date.created}`);
+    plain(output, `   Prompt: ${ticket.frontmatter.prompt}`);
     if (ticket.frontmatter.model) {
-      console.log(`   Model: ${ticket.frontmatter.model}`);
+      plain(output, `   Model: ${ticket.frontmatter.model}`);
     }
-    console.log(`\n${ticket.content}`);
+    plain(output, `\n${ticket.content}`);
   } else {
-    console.log("Usage: repo ticket <create|iterate|finish|list|read> [args]");
+    info(output, "Usage: repo ticket <create|iterate|finish|list|read> [args]");
   }
-  process.exit(0);
+  return output;
 }
 
-async function handleProject(cmd: ParsedCommand): Promise<void> {
+async function handleProject(cmd: ParsedCommand): Promise<CommandOutput> {
+  const output = createOutput();
   const projects = getNxProjects();
   if (cmd.subcommand === "list") {
-    console.log(`\n📦 Found ${projects.length} projects:\n`);
+    info(output, `\n📦 Found ${projects.length} projects:\n`);
     for (const project of projects) {
-      console.log(`   ${project.name}`);
-      console.log(`      Root: ${project.root}`);
+      plain(output, `   ${project.name}`);
+      plain(output, `      Root: ${project.root}`);
       if (project.tags?.length) {
-        console.log(`      Tags: ${project.tags.join(", ")}`);
+        plain(output, `      Tags: ${project.tags.join(", ")}`);
       }
     }
   } else if (cmd.subcommand === "tree") {
-    console.log("\n📦 Project tree:\n");
+    info(output, "\n📦 Project tree:\n");
     for (const project of projects) {
-      console.log(`   └── ${project.name} (${project.root})`);
+      plain(output, `   └── ${project.name} (${project.root})`);
     }
   } else {
-    console.log("Usage: repo project <list|tree>");
+    info(output, "Usage: repo project <list|tree>");
   }
-  process.exit(0);
+  return output;
 }
 
-async function handleFolder(cmd: ParsedCommand): Promise<void> {
+async function handleFolder(cmd: ParsedCommand): Promise<CommandOutput> {
+  const output = createOutput();
   if (cmd.subcommand === "create") {
     const folderPath = cmd.args[0];
     if (!folderPath) {
-      console.error("Error: Folder path required");
-      process.exit(1);
+      error(output, "Error: Folder path required");
+      return output;
     }
     const absPath = join(ROOT_DIR, folderPath);
     if (existsSync(absPath)) {
-      console.error(`Error: Folder already exists: ${folderPath}`);
-      process.exit(1);
+      error(output, `Error: Folder already exists: ${folderPath}`);
+      return output;
     }
     ensureDir(absPath);
-    console.log(`\n📁 Created folder: ${folderPath}`);
+    success(output, `\n📁 Created folder: ${folderPath}`);
   } else if (cmd.subcommand === "move") {
     const sourcePath = cmd.args[0];
     const targetPath = cmd.args[1];
     if (!sourcePath || !targetPath) {
-      console.error("Error: Source and target paths required");
-      process.exit(1);
+      error(output, "Error: Source and target paths required");
+      return output;
     }
     const absSource = join(ROOT_DIR, sourcePath);
     const absTarget = join(ROOT_DIR, targetPath);
     if (!existsSync(absSource)) {
-      console.error(`Error: Source folder not found: ${sourcePath}`);
-      process.exit(1);
+      error(output, `Error: Source folder not found: ${sourcePath}`);
+      return output;
     }
     if (existsSync(absTarget)) {
-      console.error(`Error: Target folder already exists: ${targetPath}`);
-      process.exit(1);
+      error(output, `Error: Target folder already exists: ${targetPath}`);
+      return output;
     }
     const { renameSync } = await import("fs");
     ensureDir(dirname(absTarget));
     renameSync(absSource, absTarget);
-    console.log(`\n📁 Moved folder: ${sourcePath} → ${targetPath}`);
+    success(output, `\n📁 Moved folder: ${sourcePath} → ${targetPath}`);
   } else if (cmd.subcommand === "delete") {
     const folderPath = cmd.args[0];
     if (!folderPath) {
-      console.error("Error: Folder path required");
-      process.exit(1);
+      error(output, "Error: Folder path required");
+      return output;
     }
     const absPath = join(ROOT_DIR, folderPath);
     if (!existsSync(absPath)) {
-      console.error(`Error: Folder not found: ${folderPath}`);
-      process.exit(1);
+      error(output, `Error: Folder not found: ${folderPath}`);
+      return output;
     }
     const { rmSync } = await import("fs");
     rmSync(absPath, { recursive: true });
-    console.log(`\n🗑️ Deleted folder: ${folderPath}`);
+    success(output, `\n🗑️ Deleted folder: ${folderPath}`);
   } else if (cmd.subcommand === "list") {
     const scopeRaw = cmd.args[0] || (cmd.options.scope as string) || ".";
     const absPath = join(ROOT_DIR, scopeRaw.replace(/\/$/, ""));
     if (!existsSync(absPath)) {
-      console.error(`Error: Folder not found: ${scopeRaw}`);
-      process.exit(1);
+      error(output, `Error: Folder not found: ${scopeRaw}`);
+      return output;
     }
     const allItems = readdirSync(absPath, { withFileTypes: true }).filter((f) => !f.name.startsWith(".") && f.isDirectory());
     const relativePaths = allItems.map((item) => getRelativePath(join(absPath, item.name)));
@@ -1683,18 +1807,18 @@ async function handleFolder(cmd: ParsedCommand): Promise<void> {
       const relPath = normalizePathSeparators(getRelativePath(join(absPath, item.name)));
       return !ignoredSet.has(relPath) && !ignoredSet.has(relPath + "/");
     });
-    console.log(`\n📁 Found ${folders.length} folders in ${scopeRaw}:\n`);
+    info(output, `\n📁 Found ${folders.length} folders in ${scopeRaw}:\n`);
     for (const folder of folders) {
-      console.log(`   ${folder.name}/`);
+      plain(output, `   ${folder.name}/`);
     }
   } else if (cmd.subcommand === "tree") {
     const scopeRaw = cmd.args[0] || (cmd.options.scope as string) || ".";
     const absPath = join(ROOT_DIR, scopeRaw.replace(/\/$/, ""));
     if (!existsSync(absPath)) {
-      console.error(`Error: Folder not found: ${scopeRaw}`);
-      process.exit(1);
+      error(output, `Error: Folder not found: ${scopeRaw}`);
+      return output;
     }
-    console.log(`\n📁 Folder tree: ${scopeRaw}\n`);
+    info(output, `\n📁 Folder tree: ${scopeRaw}\n`);
     function printTree(dir: string, prefix: string = ""): void {
       const allItems = readdirSync(dir).filter((f) => !f.startsWith("."));
       const relativePaths = allItems.map((item) => getRelativePath(join(dir, item)));
@@ -1707,7 +1831,7 @@ async function handleFolder(cmd: ParsedCommand): Promise<void> {
         const isLast = index === items.length - 1;
         const fullPath = join(dir, item);
         const isDir = statSync(fullPath).isDirectory();
-        console.log(`${prefix}${isLast ? "└── " : "├── "}${item}${isDir ? "/" : ""}`);
+        plain(output, `${prefix}${isLast ? "└── " : "├── "}${item}${isDir ? "/" : ""}`);
         if (isDir) {
           printTree(fullPath, prefix + (isLast ? "    " : "│   "));
         }
@@ -1715,27 +1839,27 @@ async function handleFolder(cmd: ParsedCommand): Promise<void> {
     }
     printTree(absPath);
   } else {
-    console.log("Usage: repo folder <create|move|delete|list|tree> [args]");
+    info(output, "Usage: repo folder <create|move|delete|list|tree> [args]");
   }
-  process.exit(0);
+  return output;
 }
 
-async function handleFile(cmd: ParsedCommand): Promise<void> {
+async function handleFile(cmd: ParsedCommand): Promise<CommandOutput> {
+  const output = createOutput();
   if (cmd.subcommand === "create") {
     const filePath = cmd.args[0];
     if (!filePath) {
-      console.error("Error: File path required");
-      process.exit(1);
+      error(output, "Error: File path required");
+      return output;
     }
     const absPath = join(ROOT_DIR, filePath);
     if (existsSync(absPath)) {
-      console.error(`Error: File already exists: ${filePath}`);
-      process.exit(1);
+      error(output, `Error: File already exists: ${filePath}`);
+      return output;
     }
     const lang = getLanguageFromPath(filePath);
     let content = "";
     if (lang) {
-      const filename = filePath.split("/").pop() ?? filePath;
       const year = new Date().getFullYear();
       let gitAuthor = "";
       try {
@@ -1811,62 +1935,62 @@ async function handleFile(cmd: ParsedCommand): Promise<void> {
       }
     }
     writeTextFile(absPath, content);
-    console.log(`\n📄 Created file: ${filePath}`);
+    success(output, `\n📄 Created file: ${filePath}`);
   } else if (cmd.subcommand === "move") {
     const sourcePath = cmd.args[0];
     const targetPath = cmd.args[1];
     if (!sourcePath || !targetPath) {
-      console.error("Error: Source and target paths required");
-      process.exit(1);
+      error(output, "Error: Source and target paths required");
+      return output;
     }
     const absSource = join(ROOT_DIR, sourcePath);
     const absTarget = join(ROOT_DIR, targetPath);
     if (!existsSync(absSource)) {
-      console.error(`Error: Source file not found: ${sourcePath}`);
-      process.exit(1);
+      error(output, `Error: Source file not found: ${sourcePath}`);
+      return output;
     }
     if (existsSync(absTarget)) {
-      console.error(`Error: Target file already exists: ${targetPath}`);
-      process.exit(1);
+      error(output, `Error: Target file already exists: ${targetPath}`);
+      return output;
     }
     const { renameSync } = await import("fs");
     ensureDir(dirname(absTarget));
     renameSync(absSource, absTarget);
-    console.log(`\n📄 Moved file: ${sourcePath} → ${targetPath}`);
+    success(output, `\n📄 Moved file: ${sourcePath} → ${targetPath}`);
   } else if (cmd.subcommand === "delete") {
     const filePath = cmd.args[0];
     if (!filePath) {
-      console.error("Error: File path required");
-      process.exit(1);
+      error(output, "Error: File path required");
+      return output;
     }
     const absPath = join(ROOT_DIR, filePath);
     if (!existsSync(absPath)) {
-      console.error(`Error: File not found: ${filePath}`);
-      process.exit(1);
+      error(output, `Error: File not found: ${filePath}`);
+      return output;
     }
     const { unlinkSync } = await import("fs");
     unlinkSync(absPath);
-    console.log(`\n🗑️ Deleted file: ${filePath}`);
+    success(output, `\n🗑️ Deleted file: ${filePath}`);
   } else if (cmd.subcommand === "list" || !cmd.subcommand) {
     const scopeRaw = cmd.args[0] || (cmd.options.scope as string) || "@semio";
     const scope = parseScope(scopeRaw);
     const projects = getNxProjects();
     const files = scopeToFiles(scope, projects);
-    console.log(`\n📄 Found ${files.length} files in scope "${scopeRaw}":\n`);
+    info(output, `\n📄 Found ${files.length} files in scope "${scopeRaw}":\n`);
     for (const file of files.slice(0, 50)) {
-      console.log(`   ${file}`);
+      plain(output, `   ${file}`);
     }
     if (files.length > 50) {
-      console.log(`   ... and ${files.length - 50} more`);
+      plain(output, `   ... and ${files.length - 50} more`);
     }
   } else if (cmd.subcommand === "tree") {
     const scopeRaw = cmd.args[0] || (cmd.options.scope as string) || ".";
     const absPath = join(ROOT_DIR, scopeRaw.replace(/\/$/, ""));
     if (!existsSync(absPath)) {
-      console.error(`Error: Path not found: ${scopeRaw}`);
-      process.exit(1);
+      error(output, `Error: Path not found: ${scopeRaw}`);
+      return output;
     }
-    console.log(`\n📄 File tree: ${scopeRaw}\n`);
+    info(output, `\n📄 File tree: ${scopeRaw}\n`);
     function printTree(dir: string, prefix: string = ""): void {
       const allItems = readdirSync(dir).filter((f) => !f.startsWith("."));
       const relativePaths = allItems.map((item) => getRelativePath(join(dir, item)));
@@ -1882,7 +2006,7 @@ async function handleFile(cmd: ParsedCommand): Promise<void> {
         const isLast = index === sortedItems.length - 1;
         const fullPath = join(dir, item);
         const isDir = statSync(fullPath).isDirectory();
-        console.log(`${prefix}${isLast ? "└── " : "├── "}${item}${isDir ? "/" : ""}`);
+        plain(output, `${prefix}${isLast ? "└── " : "├── "}${item}${isDir ? "/" : ""}`);
         if (isDir) {
           printTree(fullPath, prefix + (isLast ? "    " : "│   "));
         }
@@ -1890,223 +2014,224 @@ async function handleFile(cmd: ParsedCommand): Promise<void> {
     }
     printTree(absPath);
   } else {
-    console.log("Usage: repo file <create|move|delete|list|tree> [args]");
+    info(output, "Usage: repo file <create|move|delete|list|tree> [args]");
   }
-  process.exit(0);
+  return output;
 }
 
-async function handleRegion(cmd: ParsedCommand): Promise<void> {
+async function handleSection(cmd: ParsedCommand): Promise<CommandOutput> {
+  const output = createOutput();
+  const ext = (filePath: string) => filePath.split(".").pop()?.toLowerCase();
+  const isMarkdown = (filePath: string) => ext(filePath) === "md" || ext(filePath) === "mdx";
   if (cmd.subcommand === "create") {
     const filePath = cmd.args[0];
-    const regionPath = cmd.args[1];
-    if (!filePath || !regionPath) {
-      console.error("Error: File path and region path required");
-      process.exit(1);
+    const sectionPath = cmd.args[1];
+    if (!filePath || !sectionPath) {
+      error(output, "Error: File path and section path required");
+      return output;
     }
     const absPath = join(ROOT_DIR, filePath);
     if (!existsSync(absPath)) {
-      console.error(`Error: File not found: ${filePath}`);
-      process.exit(1);
+      error(output, `Error: File not found: ${filePath}`);
+      return output;
     }
     const content = readTextFile(absPath);
-    const lang = getLanguageFromPath(filePath);
-    if (!lang) {
-      console.error("Error: Unsupported file type");
-      process.exit(1);
+    const sectionName = sectionPath.split("#").pop() ?? sectionPath;
+    let newSection = "";
+    if (isMarkdown(filePath)) {
+      newSection = `\n## ${sectionName}\n\n`;
+    } else {
+      const lang = getLanguageFromPath(filePath);
+      if (!lang) {
+        error(output, "Error: Unsupported file type");
+        return output;
+      }
+      if (lang === "typescript") {
+        newSection = `\n// #region ${sectionName}\n\n// #endregion ${sectionName}\n`;
+      } else if (lang === "python") {
+        newSection = `\n# region ${sectionName}\n\n# endregion ${sectionName}\n`;
+      } else if (lang === "csharp") {
+        newSection = `\n#region ${sectionName}\n\n#endregion ${sectionName}\n`;
+      }
     }
-    const regionName = regionPath.split("#").pop() ?? regionPath;
-    let newRegion = "";
-    if (lang === "typescript") {
-      newRegion = `\n// #region ${regionName}\n\n// #endregion ${regionName}\n`;
-    } else if (lang === "python") {
-      newRegion = `\n# region ${regionName}\n\n# endregion ${regionName}\n`;
-    } else if (lang === "csharp") {
-      newRegion = `\n#region ${regionName}\n\n#endregion ${regionName}\n`;
-    }
-    writeTextFile(absPath, content + newRegion);
-    console.log(`\n🏷️ Created region "${regionName}" in ${filePath}`);
+    writeTextFile(absPath, content + newSection);
+    success(output, `\n🏷️ Created section "${sectionName}" in ${filePath}`);
   } else if (cmd.subcommand === "move") {
     const filePath = cmd.args[0];
-    const oldRegionPath = cmd.args[1];
-    const newRegionPath = cmd.args[2];
-    if (!filePath || !oldRegionPath || !newRegionPath) {
-      console.error("Error: File path, old region path, and new region path required");
-      process.exit(1);
+    const oldSectionPath = cmd.args[1];
+    const newSectionPath = cmd.args[2];
+    if (!filePath || !oldSectionPath || !newSectionPath) {
+      error(output, "Error: File path, old section path, and new section path required");
+      return output;
     }
     const absPath = join(ROOT_DIR, filePath);
     if (!existsSync(absPath)) {
-      console.error(`Error: File not found: ${filePath}`);
-      process.exit(1);
+      error(output, `Error: File not found: ${filePath}`);
+      return output;
     }
     let content = readTextFile(absPath);
-    const lang = getLanguageFromPath(filePath);
-    if (!lang) {
-      console.error("Error: Unsupported file type");
-      process.exit(1);
-    }
-    const oldName = oldRegionPath.split("#").pop() ?? oldRegionPath;
-    const newName = newRegionPath.split("#").pop() ?? newRegionPath;
-    if (lang === "typescript") {
-      content = content.replace(new RegExp(`(//\\s*#region\\s+)${oldName}(\\s*)`, "gi"), `$1${newName}$2`);
-      content = content.replace(new RegExp(`(//\\s*#endregion\\s*)${oldName}(\\s*)`, "gi"), `$1${newName}$2`);
-    } else if (lang === "python") {
-      content = content.replace(new RegExp(`(#\\s*region\\s+)${oldName}(\\s*)`, "gi"), `$1${newName}$2`);
-      content = content.replace(new RegExp(`(#\\s*endregion\\s*)${oldName}(\\s*)`, "gi"), `$1${newName}$2`);
-    } else if (lang === "csharp") {
-      content = content.replace(new RegExp(`(#region\\s+)${oldName}(\\s*)`, "gi"), `$1${newName}$2`);
-      content = content.replace(new RegExp(`(#endregion\\s*)${oldName}(\\s*)`, "gi"), `$1${newName}$2`);
+    const oldName = oldSectionPath.split("#").pop() ?? oldSectionPath;
+    const newName = newSectionPath.split("#").pop() ?? newSectionPath;
+    if (isMarkdown(filePath)) {
+      content = content.replace(new RegExp(`^(#{1,6})\\s+${oldName}\\s*$`, "gim"), `$1 ${newName}`);
+    } else {
+      const lang = getLanguageFromPath(filePath);
+      if (!lang) {
+        error(output, "Error: Unsupported file type");
+        return output;
+      }
+      if (lang === "typescript") {
+        content = content.replace(new RegExp(`(//\\s*#region\\s+)${oldName}(\\s*)`, "gi"), `$1${newName}$2`);
+        content = content.replace(new RegExp(`(//\\s*#endregion\\s*)${oldName}(\\s*)`, "gi"), `$1${newName}$2`);
+      } else if (lang === "python") {
+        content = content.replace(new RegExp(`(#\\s*region\\s+)${oldName}(\\s*)`, "gi"), `$1${newName}$2`);
+        content = content.replace(new RegExp(`(#\\s*endregion\\s*)${oldName}(\\s*)`, "gi"), `$1${newName}$2`);
+      } else if (lang === "csharp") {
+        content = content.replace(new RegExp(`(#region\\s+)${oldName}(\\s*)`, "gi"), `$1${newName}$2`);
+        content = content.replace(new RegExp(`(#endregion\\s*)${oldName}(\\s*)`, "gi"), `$1${newName}$2`);
+      }
     }
     writeTextFile(absPath, content);
-    console.log(`\n🏷️ Renamed region "${oldName}" to "${newName}" in ${filePath}`);
+    success(output, `\n🏷️ Renamed section "${oldName}" to "${newName}" in ${filePath}`);
   } else if (cmd.subcommand === "delete") {
     const filePath = cmd.args[0];
-    const regionPath = cmd.args[1];
-    if (!filePath || !regionPath) {
-      console.error("Error: File path and region path required");
-      process.exit(1);
+    const sectionPath = cmd.args[1];
+    if (!filePath || !sectionPath) {
+      error(output, "Error: File path and section path required");
+      return output;
     }
     const absPath = join(ROOT_DIR, filePath);
     if (!existsSync(absPath)) {
-      console.error(`Error: File not found: ${filePath}`);
-      process.exit(1);
+      error(output, `Error: File not found: ${filePath}`);
+      return output;
     }
     const content = readTextFile(absPath);
-    const lang = getLanguageFromPath(filePath);
-    if (!lang) {
-      console.error("Error: Unsupported file type");
-      process.exit(1);
-    }
-    const regions = parseRegions(content, lang);
-    const regionName = regionPath.split("#").pop() ?? regionPath;
-    function findRegion(regionList: RegionInfo[], name: string): RegionInfo | null {
-      for (const r of regionList) {
-        if (r.name === name) return r;
-        const found = findRegion(r.children, name);
+    const sections = parseSections(content, filePath);
+    const sectionName = sectionPath.split("#").pop() ?? sectionPath;
+    function findSection(sectionList: SectionInfo[], name: string): SectionInfo | null {
+      for (const s of sectionList) {
+        if (s.name === name) return s;
+        const found = findSection(s.children, name);
         if (found) return found;
       }
       return null;
     }
-    const region = findRegion(regions, regionName);
-    if (!region) {
-      console.error(`Error: Region not found: ${regionName}`);
-      process.exit(1);
+    const section = findSection(sections, sectionName);
+    if (!section) {
+      error(output, `Error: Section not found: ${sectionName}`);
+      return output;
     }
     const lines = content.split("\n");
-    const newLines = lines.filter((_, i) => i + 1 < region.startLine || i + 1 > region.endLine);
+    const newLines = lines.filter((_, i) => i + 1 < section.startLine || i + 1 > section.endLine);
     writeTextFile(absPath, newLines.join("\n"));
-    console.log(`\n🗑️ Deleted region "${regionName}" from ${filePath}`);
+    success(output, `\n🗑️ Deleted section "${sectionName}" from ${filePath}`);
   } else if (cmd.subcommand === "list") {
     const scopeRaw = cmd.args[0] || (cmd.options.scope as string);
     if (!scopeRaw) {
-      console.error("Error: Scope or file path required");
-      process.exit(1);
+      error(output, "Error: Scope or file path required");
+      return output;
     }
     const scope = parseScope(scopeRaw);
-    if (scope.kind !== "file" && scope.kind !== "region") {
-      console.error("Error: Scope must be a file or region");
-      process.exit(1);
+    if (scope.kind !== "file" && scope.kind !== "section") {
+      error(output, "Error: Scope must be a file or section");
+      return output;
     }
     const filePath = scope.filePath!;
     const absPath = join(ROOT_DIR, filePath);
     if (!existsSync(absPath)) {
-      console.error(`Error: File not found: ${filePath}`);
-      process.exit(1);
+      error(output, `Error: File not found: ${filePath}`);
+      return output;
     }
     const content = readTextFile(absPath);
-    const lang = getLanguageFromPath(filePath);
-    if (!lang) {
-      console.error("Error: Unsupported file type");
-      process.exit(1);
-    }
-    const regions = parseRegions(content, lang);
-    console.log(`\n🏷️ Regions in ${filePath}:\n`);
-    function printRegion(region: RegionInfo, indent: string = ""): void {
-      console.log(`${indent}${region.name} (lines ${region.startLine}-${region.endLine})`);
-      for (const child of region.children) {
-        printRegion(child, indent + "  ");
+    const sections = parseSections(content, filePath);
+    info(output, `\n🏷️ Sections in ${filePath}:\n`);
+    function printSection(section: SectionInfo, indent: string = ""): void {
+      plain(output, `${indent}${section.name} (lines ${section.startLine}-${section.endLine})`);
+      for (const child of section.children) {
+        printSection(child, indent + "  ");
       }
     }
-    for (const region of regions) {
-      printRegion(region);
+    for (const section of sections) {
+      printSection(section);
     }
-    if (regions.length === 0) {
-      console.log("   (no regions found)");
+    if (sections.length === 0) {
+      plain(output, "   (no sections found)");
     }
   } else if (cmd.subcommand === "tree" || !cmd.subcommand) {
     const scopeRaw = cmd.args[0] || (cmd.options.scope as string);
     if (!scopeRaw) {
-      console.error("Error: File path required");
-      process.exit(1);
+      error(output, "Error: File path required");
+      return output;
     }
     const filePath = scopeRaw.split("#")[0];
     const absPath = join(ROOT_DIR, filePath);
     if (!existsSync(absPath)) {
-      console.error(`Error: File not found: ${filePath}`);
-      process.exit(1);
+      error(output, `Error: File not found: ${filePath}`);
+      return output;
     }
     const content = readTextFile(absPath);
-    const lang = getLanguageFromPath(filePath);
-    if (!lang) {
-      console.error("Error: Unsupported file type");
-      process.exit(1);
-    }
-    const regions = parseRegions(content, lang);
-    console.log(`\n🏷️ Regions in ${filePath}:\n`);
-    function printRegion(region: RegionInfo, prefix: string = ""): void {
-      console.log(`${prefix}└── ${region.name} (lines ${region.startLine}-${region.endLine})`);
-      for (const child of region.children) {
-        printRegion(child, prefix + "    ");
+    const sections = parseSections(content, filePath);
+    info(output, `\n🏷️ Sections in ${filePath}:\n`);
+    function printSection(section: SectionInfo, prefix: string = ""): void {
+      plain(output, `${prefix}└── ${section.name} (lines ${section.startLine}-${section.endLine})`);
+      for (const child of section.children) {
+        printSection(child, prefix + "    ");
       }
     }
-    for (const region of regions) {
-      printRegion(region);
+    for (const section of sections) {
+      printSection(section);
     }
-    if (regions.length === 0) {
-      console.log("   (no regions found)");
+    if (sections.length === 0) {
+      plain(output, "   (no sections found)");
     }
   } else {
-    console.log("Usage: repo region <create|move|delete|list|tree> [args]");
+    info(output, "Usage: repo section <create|move|delete|list|tree> [args]");
   }
-  process.exit(0);
+  return output;
 }
 
-async function handleDefinition(cmd: ParsedCommand): Promise<void> {
+async function handleDefinition(cmd: ParsedCommand): Promise<CommandOutput> {
+  const output = createOutput();
   const filePath = cmd.args[0];
   if (!filePath) {
-    console.error("Error: File path required");
-    process.exit(1);
+    error(output, "Error: File path required");
+    return output;
   }
   const absPath = join(ROOT_DIR, filePath);
   if (!existsSync(absPath)) {
-    console.error(`Error: File not found: ${filePath}`);
-    process.exit(1);
+    error(output, `Error: File not found: ${filePath}`);
+    return output;
   }
   const content = readTextFile(absPath);
   const definitions = parseDefinitions(content, filePath);
   if (cmd.subcommand === "list" || !cmd.subcommand) {
-    console.log(`\n📋 Definitions in ${filePath}:\n`);
+    info(output, `\n📋 Definitions in ${filePath}:\n`);
     for (const def of definitions) {
-      console.log(`   ${def.kind}: ${def.name} (lines ${def.startLine}-${def.endLine})`);
+      plain(output, `   ${def.kind}: ${def.name} (lines ${def.startLine}-${def.endLine})`);
     }
     if (definitions.length === 0) {
-      console.log("   (no definitions found)");
+      plain(output, "   (no definitions found)");
     }
   }
-  process.exit(0);
+  return output;
 }
 
-async function handleTool(cmd: ParsedCommand): Promise<void> {
+async function handleTool(cmd: ParsedCommand): Promise<CommandOutput> {
+  const output = createOutput();
   const target = cmd.args[0];
   if (!target) {
-    console.error("Error: Tool/target name required");
-    process.exit(1);
+    error(output, "Error: Tool/target name required");
+    return output;
   }
   const projectScope = cmd.options.scope as string | undefined;
   const projects = projectScope ? [projectScope] : undefined;
   const extraArgs = cmd.args.slice(1);
-  console.log(`\n🔧 Running Nx target: ${target}`);
+  info(output, `\n🔧 Running Nx target: ${target}`);
   const result = runNxTarget(target, projects, extraArgs);
-  process.exit(result.success ? 0 : 1);
+  if (!result.success) {
+    output.exitCode = 1;
+  }
+  return output;
 }
 
 // #endregion Command Handlers
@@ -2117,68 +2242,87 @@ interface AppProps {
   command: ParsedCommand;
 }
 
+function OutputLineComponent({ line }: { line: OutputLine }) {
+  switch (line.type) {
+    case "success":
+      return <Text color="green">{line.text}</Text>;
+    case "error":
+      return <Text color="red">{line.text}</Text>;
+    case "warn":
+      return <Text color="yellow">{line.text}</Text>;
+    case "info":
+      return <Text color="cyan">{line.text}</Text>;
+    default:
+      return <Text>{line.text}</Text>;
+  }
+}
+
 function App({ command }: AppProps) {
-  const { exit } = useApp();
-  const [status, setStatus] = React.useState<"running" | "done">("running");
-  const [message, setMessage] = React.useState<string>("Initializing...");
+  const [output, setOutput] = React.useState<CommandOutput | null>(null);
 
   React.useEffect(() => {
     (async () => {
       try {
-        switch (command.name) {
-          case "help":
-            console.log(HELP_TEXT);
-            break;
-          case "analyze":
-            await handleAnalyze(command);
-            break;
-          case "fix":
-            await handleFix(command);
-            break;
-          case "rule":
-            await handleRule(command);
-            break;
-          case "ticket":
-            await handleTicket(command);
-            break;
-          case "project":
-            await handleProject(command);
-            break;
-          case "folder":
-            await handleFolder(command);
-            break;
-          case "file":
-            await handleFile(command);
-            break;
-          case "region":
-            await handleRegion(command);
-            break;
-          case "definition":
-            await handleDefinition(command);
-            break;
-          case "tool":
-            await handleTool(command);
-            break;
-          default:
-            console.log(HELP_TEXT);
-        }
-        setStatus("done");
-        exit();
-      } catch (error) {
-        setMessage(`Error: ${error instanceof Error ? error.message : String(error)}`);
-        setStatus("done");
-        exit();
+        const result = await runCommand(command);
+        setOutput(result);
+        setTimeout(() => {
+          process.exit(result.exitCode);
+        }, 0);
+      } catch (err) {
+        const result = createOutput();
+        error(result, `Error: ${err instanceof Error ? err.message : String(err)}`);
+        setOutput(result);
+        setTimeout(() => {
+          process.exit(1);
+        }, 0);
       }
     })();
-  }, [command, exit]);
+  }, [command]);
 
-  if (status === "done") return null;
+  if (!output) return null;
 
   return (
     <Box flexDirection="column">
-      <Text>🔄 {message}</Text>
+      {output.lines.map((line, i) => (
+        <OutputLineComponent key={i} line={line} />
+      ))}
     </Box>
   );
+}
+
+async function runCommand(command: ParsedCommand): Promise<CommandOutput> {
+  switch (command.name) {
+    case "help": {
+      const result = createOutput();
+      plain(result, HELP_TEXT);
+      return result;
+    }
+    case "analyze":
+      return await handleAnalyze(command);
+    case "fix":
+      return await handleFix(command);
+    case "rule":
+      return await handleRule(command);
+    case "ticket":
+      return await handleTicket(command);
+    case "project":
+      return await handleProject(command);
+    case "folder":
+      return await handleFolder(command);
+    case "file":
+      return await handleFile(command);
+    case "section":
+      return await handleSection(command);
+    case "definition":
+      return await handleDefinition(command);
+    case "tool":
+      return await handleTool(command);
+    default: {
+      const result = createOutput();
+      plain(result, HELP_TEXT);
+      return result;
+    }
+  }
 }
 
 // #endregion Ink App
@@ -2186,10 +2330,27 @@ function App({ command }: AppProps) {
 // #region Main
 
 const command = parseCommand(process.argv);
-if (command.name === "help") {
-  console.log(HELP_TEXT);
-  process.exit(0);
+const isTTY = process.stdout.isTTY;
+
+if (!isTTY) {
+  (async () => {
+    try {
+      const result = await runCommand(command);
+      for (const line of result.lines) {
+        process.stdout.write(line.text + "\n");
+      }
+      process.exit(result.exitCode);
+    } catch (err) {
+      process.stderr.write(`Error: ${err instanceof Error ? err.message : String(err)}\n`);
+      process.exit(1);
+    }
+  })();
+} else {
+  if (command.name === "help") {
+    process.stdout.write(HELP_TEXT + "\n");
+    process.exit(0);
+  }
+  render(<App command={command} />);
 }
-render(<App command={command} />);
 
 // #endregion

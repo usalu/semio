@@ -47,28 +47,112 @@
         "title": "semio: List Rules"
       },
       {
-        "command": "semio.ticketNew",
-        "title": "semio: Create New Ticket"
+        "command": "semio.ruleRun",
+        "title": "semio: Run Rule"
+      },
+      {
+        "command": "semio.ticketCreate",
+        "title": "semio: Create Ticket"
       },
       {
         "command": "semio.ticketList",
         "title": "semio: List Tickets"
       },
       {
+        "command": "semio.ticketIterateStart",
+        "title": "semio: Start Ticket Iteration"
+      },
+      {
+        "command": "semio.ticketIterateEnd",
+        "title": "semio: End Ticket Iteration"
+      },
+      {
+        "command": "semio.ticketFinish",
+        "title": "semio: Finish Ticket"
+      },
+      {
+        "command": "semio.ticketRead",
+        "title": "semio: Read Ticket"
+      },
+      {
         "command": "semio.projectList",
         "title": "semio: List Projects"
       },
       {
-        "command": "semio.regionTree",
-        "title": "semio: Show Region Tree"
+        "command": "semio.projectTree",
+        "title": "semio: Show Project Tree"
+      },
+      {
+        "command": "semio.folderTree",
+        "title": "semio: Show Folder Tree"
+      },
+      {
+        "command": "semio.folderCreate",
+        "title": "semio: Create Folder"
+      },
+      {
+        "command": "semio.folderMove",
+        "title": "semio: Move Folder"
+      },
+      {
+        "command": "semio.folderDelete",
+        "title": "semio: Delete Folder"
+      },
+      {
+        "command": "semio.folderList",
+        "title": "semio: List Folders"
+      },
+      {
+        "command": "semio.fileCreate",
+        "title": "semio: Create File"
+      },
+      {
+        "command": "semio.fileMove",
+        "title": "semio: Move File"
+      },
+      {
+        "command": "semio.fileDelete",
+        "title": "semio: Delete File"
+      },
+      {
+        "command": "semio.fileList",
+        "title": "semio: List Files"
+      },
+      {
+        "command": "semio.fileTree",
+        "title": "semio: Show File Tree"
+      },
+      {
+        "command": "semio.sectionTree",
+        "title": "semio: Show Section Tree"
+      },
+      {
+        "command": "semio.sectionCreate",
+        "title": "semio: Create Section"
+      },
+      {
+        "command": "semio.sectionMove",
+        "title": "semio: Move Section"
+      },
+      {
+        "command": "semio.sectionDelete",
+        "title": "semio: Delete Section"
+      },
+      {
+        "command": "semio.sectionList",
+        "title": "semio: List Sections"
       },
       {
         "command": "semio.definitionList",
         "title": "semio: List Definitions"
       },
       {
-        "command": "semio.folderTree",
-        "title": "semio: Show Folder Tree"
+        "command": "semio.definitionTree",
+        "title": "semio: Show Definition Tree"
+      },
+      {
+        "command": "semio.toolRun",
+        "title": "semio: Run Tool"
       },
       {
         "command": "semio.refreshDiagnostics",

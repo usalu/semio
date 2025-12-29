@@ -1968,10 +1968,10 @@ export const isSupportedModelExtension = (filename: string): boolean => {
   return SUPPORTED_3D_EXTENSIONS.includes(ext as Supported3DExtension);
 };
 
-export port ModelFileValidation {
+export interface ModelFileValidation {
   isValid: boolean;
-  warning ?: string;
-  extension ?: string;
+  warning?: string;
+  extension?: string;
 }
 
 export const validateModelFile = (filename: string): ModelFileValidation => {

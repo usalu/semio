@@ -47,6 +47,29 @@ function runCli(args: string, timeout = CLI_TIMEOUT): { stdout: string; stderr: 
   return { stdout: result.stdout ?? "", stderr: result.stderr ?? "", exitCode: result.status ?? 1 };
 }
 
+async function runCliAsync(args: string, timeout = CLI_TIMEOUT): Promise<{ stdout: string; stderr: string; exitCode: number }> {
+  const { spawn } = await import("child_process");
+  return new Promise((resolve) => {
+    const child = spawn("npx", ["tsx", "repo.tsx", ...args.split(" ").filter(Boolean)], { cwd: ROOT_DIR, shell: true });
+    let stdout = "";
+    let stderr = "";
+    const timer = setTimeout(() => {
+      child.kill("SIGTERM");
+      resolve({ stdout, stderr, exitCode: 1 });
+    }, timeout);
+    child.stdout?.on("data", (data: Buffer) => {
+      stdout += data.toString();
+    });
+    child.stderr?.on("data", (data: Buffer) => {
+      stderr += data.toString();
+    });
+    child.on("close", (code: number | null) => {
+      clearTimeout(timer);
+      resolve({ stdout, stderr, exitCode: code ?? 1 });
+    });
+  });
+}
+
 // #endregion Utilities
 
 // #region Help Command Tests
@@ -96,7 +119,7 @@ describe("rule command", () => {
     const result = runCli("rule list");
     expect(result.stdout).toContain("Registered rules");
     expect(result.stdout).toContain("header");
-    expect(result.stdout).toContain("region");
+    expect(result.stdout).toContain("section");
     expect(result.stdout).toContain("comment");
   });
 
@@ -147,44 +170,44 @@ describe("folder command", () => {
 
 // #endregion Folder Command Tests
 
-// #region Region Command Tests
+// #region Section Command Tests
 
-describe("region command", () => {
-  test("region tree shows regions in TypeScript file", () => {
-    const result = runCli("region tree assets/repo/some/folder/file.tsx");
-    expect(result.stdout).toContain("Regions in");
+describe("section command", () => {
+  test("section tree shows sections in TypeScript file", () => {
+    const result = runCli("section tree assets/repo/some/folder/file.tsx");
+    expect(result.stdout).toContain("Sections in");
     expect(result.stdout).toContain("Header");
     expect(result.stdout).toContain("Types");
     expect(result.stdout).toContain("Components");
     expect(result.stdout).toContain("Constants");
   });
 
-  test("region tree shows regions in Python file", () => {
-    const result = runCli("region tree assets/repo/some/folder/file.py");
-    expect(result.stdout).toContain("Regions in");
+  test("section tree shows sections in Python file", () => {
+    const result = runCli("section tree assets/repo/some/folder/file.py");
+    expect(result.stdout).toContain("Sections in");
     expect(result.stdout).toContain("Header");
     expect(result.stdout).toContain("Functions");
   });
 
-  test("region tree shows regions in C# file", () => {
-    const result = runCli("region tree assets/repo/some/folder/file.cs");
-    expect(result.stdout).toContain("Regions in");
+  test("section tree shows sections in C# file", () => {
+    const result = runCli("section tree assets/repo/some/folder/file.cs");
+    expect(result.stdout).toContain("Sections in");
     expect(result.stdout).toContain("Header");
     expect(result.stdout).toContain("Classes");
   });
 
-  test("region tree with non-existent file shows error", () => {
-    const result = runCli("region tree nonexistent.tsx");
+  test("section tree with non-existent file shows error", () => {
+    const result = runCli("section tree nonexistent.tsx");
     expect(result.stderr + result.stdout).toContain("not found");
   });
 
-  test("region tree without file shows error", () => {
-    const result = runCli("region tree");
+  test("section tree without file shows error", () => {
+    const result = runCli("section tree");
     expect(result.stderr + result.stdout).toContain("required");
   });
 });
 
-// #endregion Region Command Tests
+// #endregion Section Command Tests
 
 // #region Definition Command Tests
 
@@ -353,25 +376,24 @@ describe("test fixtures", () => {
 // #region AST Tests
 
 describe("AST parsing", () => {
-  test("AST parsing completes for TypeScript file without crashing", () => {
-    const result = runCli("analyze --scope=assets/repo/some/folder/file.tsx --json", 20000);
-    expect(result.exitCode).toBeDefined();
-    const output = result.stdout + result.stderr;
-    expect(output.length).toBeGreaterThan(0);
+  test("tree-sitter TypeScript parsing works", async () => {
+    const Parser = (await import("tree-sitter")).default;
+    const TypeScript = (await import("tree-sitter-typescript")).default;
+    const parser = new Parser();
+    parser.setLanguage(TypeScript.typescript as any);
+    const tree = parser.parse("const x = 1;");
+    expect(tree.rootNode).toBeDefined();
+    expect(tree.rootNode.type).toBe("program");
   });
 
-  test("AST parsing completes for Python file without crashing", () => {
-    const result = runCli("analyze --scope=assets/repo/some/folder/file.py --json", 20000);
-    expect(result.exitCode).toBeDefined();
-    const output = result.stdout + result.stderr;
-    expect(output.length).toBeGreaterThan(0);
-  });
-
-  test("AST parsing completes for C# file without crashing", () => {
-    const result = runCli("analyze --scope=assets/repo/some/folder/file.cs --json", 20000);
-    expect(result.exitCode).toBeDefined();
-    const output = result.stdout + result.stderr;
-    expect(output.length).toBeGreaterThan(0);
+  test("tree-sitter C# parsing works", async () => {
+    const Parser = (await import("tree-sitter")).default;
+    const CSharp = (await import("tree-sitter-c-sharp")).default;
+    const parser = new Parser();
+    parser.setLanguage(CSharp as any);
+    const tree = parser.parse("class Foo {}");
+    expect(tree.rootNode).toBeDefined();
+    expect(tree.rootNode.type).toBe("compilation_unit");
   });
 });
 

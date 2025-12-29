@@ -1,5 +1,33 @@
 # Prompt history
 
+npx tsx repo.tsx analyze --scope=assets/repo/some/folder/file_invalid.tsx --json
+Produces the right report but it is not visible in the vscode extension.
+The vscode extension should not use reports/rules.json but instead use the json output of the repo analyze command with the file as scope. On every open file. When an open file is saved the analyze command should be rerun.
+
+npx tsx repo.tsx analyze --scope=assets/repo/some/folder/file_invalid.tsx --json
+takes increadibly long. Find out why.
+
+npx tsx repo.tsx analyze --scope=assets/repo/some/folder/file_invalid.tsx --json
+is running analyze on the complete repo and not just on the scope
+
+The vscode extension previouly used reports/rules.json for linting. Instead when opening a file or when saving a file the repo analyze command with the file as scope with json output and display them as linter with suggest fix when autofixable and call the repo fix command for the specific violation with the file as scope when autofixable.
+
+@/c:/git/semio.tech/semio/assets/repo/some/folder/file_invalid.tsx 
+@/c:/git/semio.tech/semio/assets/semio/kit_invalid.json 
+arent producing any problems with fixing suggestions in vscode
+
+The current repo script has as terms: repo, project, folder, file, region, definition. Region should be renamed to section. In code files sections use regions but e.g. in markdown files section use headers. All section commands should support aswell markdown files (mdx with frontmatter, etc)
+
+The vscode extension should run when opening a file or when saving a file the repo analyze command with json output and display them as linter with suggest fix when autofixable
+
+- Never use console log but use exclusively ink.
+- Commands in vscode extension dont work (e.g. creating a new ticket)
+- Almost all commands are missing in vscode extension. Every cli command should be in vscode aswell.
+- Add a test for every command. Use the example repo asset folder for a test repo.
+Make sure all tests pass.
+
+- Every command has two modes: 1. non-interactive (default) where every information that is needed is passed before execution; 2. interactive (-i) where the user has more options along the process using inks/ui (e.g. when rename files is called the list of renamed files can be all selected/deselected) - Every command has absolute pure minimal tui output. The process is not kept, only showed while execution and the final output is either the output or a summary.
+
 The repo.tsx scipt should be extended/refactored and the api streamlined. Plenty of existing commands should me refactored and a lot of commands are missing. repo.tsx is the main interaction script for agents and devs (projects, files, folders, regions should only be created by the tool and not manually). The script takes care to also update the dev-docs etc.
 Here is a draft for the new api:
 Commands:
