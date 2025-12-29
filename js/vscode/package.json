@@ -43,12 +43,12 @@
         "title": "semio: Fix Current File Problems"
       },
       {
-        "command": "semio.ruleList",
-        "title": "semio: List Rules"
+        "command": "semio.policyList",
+        "title": "semio: List Policies"
       },
       {
-        "command": "semio.ruleRun",
-        "title": "semio: Run Rule"
+        "command": "semio.policyRun",
+        "title": "semio: Run Policy"
       },
       {
         "command": "semio.ticketCreate",

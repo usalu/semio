@@ -1895,6 +1895,104 @@ test.describe("sketchpad", () => {
     console.log("[Design] Drag and drop setup test complete");
     // #endregion Drag and Drop Setup
 
+    // #region Diagram Node Drag
+    console.log("[Design] Testing diagram node drag to update piece center");
+
+    if (hasDiagram) {
+      const getPieceCenters = async (): Promise<Map<string, { u: number; v: number } | null>> => {
+        return await page.evaluate(() => {
+          const store = (window as any).__SEMIO_STORE__;
+          if (!store) return new Map();
+          const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
+          if (kitGuids.length === 0) return new Map();
+          const kitStore = store.kit(kitGuids[0]);
+          if (!kitStore) return new Map();
+          const kit = kitStore.snapshot();
+          const url = window.location.pathname;
+          const designGuidMatch = url.match(/\/designs\/([^/]+)/);
+          const designGuid = designGuidMatch?.[1];
+          const design = designGuid ? kit.designs?.find((d: any) => d.guid === designGuid) : kit.designs?.[kit.designs.length - 1];
+          if (!design) return new Map();
+          const result = new Map<string, { u: number; v: number } | null>();
+          for (const piece of design.pieces ?? []) {
+            result.set(piece.guid, piece.center ?? null);
+          }
+          return Object.fromEntries(result);
+        });
+      };
+
+      const pieceNodesDrag = diagramContainer.locator(".react-flow__node");
+      const pieceNodeCountDrag = await pieceNodesDrag.count();
+      console.log(`[Design] Found ${pieceNodeCountDrag} piece nodes for drag test`);
+
+      if (pieceNodeCountDrag > 0) {
+        const firstPieceNodeDrag = pieceNodesDrag.first();
+        const pieceNodeBoxDrag = await firstPieceNodeDrag.boundingBox();
+
+        if (pieceNodeBoxDrag) {
+          const pieceGuidDrag = await firstPieceNodeDrag.getAttribute("data-id");
+          console.log(`[Design] Testing drag on piece node: ${pieceGuidDrag}`);
+
+          const centersBeforeDrag = await getPieceCenters();
+          const pieceGuidFromData = pieceGuidDrag?.replace("piece-", "") ?? "";
+          const centerBeforeDrag = centersBeforeDrag[pieceGuidFromData];
+          console.log(`[Design] Piece center before drag: u=${centerBeforeDrag?.u}, v=${centerBeforeDrag?.v}`);
+
+          const nodeCenterXDrag = pieceNodeBoxDrag.x + pieceNodeBoxDrag.width / 2;
+          const nodeCenterYDrag = pieceNodeBoxDrag.y + pieceNodeBoxDrag.height / 2;
+          const dragOffsetX = 100;
+          const dragOffsetY = 50;
+          const targetXDrag = nodeCenterXDrag + dragOffsetX;
+          const targetYDrag = nodeCenterYDrag + dragOffsetY;
+
+          console.log(`[Design] Dragging piece node from (${nodeCenterXDrag}, ${nodeCenterYDrag}) to (${targetXDrag}, ${targetYDrag})`);
+
+          await page.mouse.move(nodeCenterXDrag, nodeCenterYDrag);
+          await page.waitForTimeout(50);
+          await page.mouse.down();
+          await page.waitForTimeout(50);
+          await page.mouse.move(nodeCenterXDrag + dragOffsetX / 2, nodeCenterYDrag + dragOffsetY / 2, { steps: 5 });
+          await page.waitForTimeout(50);
+          await page.mouse.move(targetXDrag, targetYDrag, { steps: 5 });
+          await page.waitForTimeout(100);
+          await page.mouse.up();
+          await page.waitForTimeout(500);
+
+          const centersAfterDrag = await getPieceCenters();
+          const centerAfterDrag = centersAfterDrag[pieceGuidFromData];
+          console.log(`[Design] Piece center after drag: u=${centerAfterDrag?.u}, v=${centerAfterDrag?.v}`);
+
+          if (centerBeforeDrag && centerAfterDrag) {
+            const ICON_WIDTH = 50;
+            const expectedDeltaU = dragOffsetX / ICON_WIDTH;
+            const expectedDeltaV = -dragOffsetY / ICON_WIDTH;
+
+            const actualDeltaU = centerAfterDrag.u - centerBeforeDrag.u;
+            const actualDeltaV = centerAfterDrag.v - centerBeforeDrag.v;
+
+            console.log(`[Design] Expected delta: u=${expectedDeltaU}, v=${expectedDeltaV}`);
+            console.log(`[Design] Actual delta: u=${actualDeltaU}, v=${actualDeltaV}`);
+
+            const centerChanged = Math.abs(actualDeltaU) > 0.1 || Math.abs(actualDeltaV) > 0.1;
+            console.log(`[Design] Piece center changed after drag: ${centerChanged}`);
+
+            expect(centerChanged).toBe(true);
+          } else {
+            console.log("[Design] Could not compare centers - centerBeforeDrag or centerAfterDrag is null/undefined");
+          }
+        } else {
+          console.log("[Design] Could not get bounding box for first piece node");
+        }
+      } else {
+        console.log("[Design] No piece nodes available for drag test");
+      }
+    } else {
+      console.log("[Design] Diagram not visible, skipping diagram node drag test");
+    }
+
+    console.log("[Design] Diagram node drag test complete");
+    // #endregion Diagram Node Drag
+
     const infiniteLoopErrorsFinal = errors.filter((e) => e.includes("Maximum update depth exceeded"));
     expect(infiniteLoopErrorsFinal).toHaveLength(0);
   });

@@ -1,8 +1,25 @@
 # Prompt history
 
+vscode extension:
+Every linter message should be one line and never have new lines or repeat the file path
+The code should should not be the id but the violation kind
+[{
+	"resource": "/c:/git/semio.tech/semio/assets/repo/some/folder/file_invalid.tsx",
+	"owner": "semio-repo",
+	"code": "header:missing-section-1767006050632-xwe287",
+	"severity": 4,
+	"message": "Missing header section in assets/repo/some/folder/file_invalid.tsx\n\nReason: Every source file must include a header section\nSolution: Add a #region Header with filename, contributors, and AGPL-3.0 license",
+	"source": "semio-repo",
+	"startLineNumber": 1,
+	"startColumn": 1,
+	"endLineNumber": 1,
+	"endColumn": 2,
+	"origin": "extHost1"
+}]
+
 npx tsx repo.tsx analyze --scope=assets/repo/some/folder/file_invalid.tsx --json
 Produces the right report but it is not visible in the vscode extension.
-The vscode extension should not use reports/rules.json but instead use the json output of the repo analyze command with the file as scope. On every open file. When an open file is saved the analyze command should be rerun.
+The vscode extension should not use reports/policies.json but instead use the json output of the repo analyze command with the file as scope. On every open file. When an open file is saved the analyze command should be rerun.
 
 npx tsx repo.tsx analyze --scope=assets/repo/some/folder/file_invalid.tsx --json
 takes increadibly long. Find out why.
@@ -10,7 +27,7 @@ takes increadibly long. Find out why.
 npx tsx repo.tsx analyze --scope=assets/repo/some/folder/file_invalid.tsx --json
 is running analyze on the complete repo and not just on the scope
 
-The vscode extension previouly used reports/rules.json for linting. Instead when opening a file or when saving a file the repo analyze command with the file as scope with json output and display them as linter with suggest fix when autofixable and call the repo fix command for the specific violation with the file as scope when autofixable.
+The vscode extension previouly used reports/policies.json for linting. Instead when opening a file or when saving a file the repo analyze command with the file as scope with json output and display them as linter with suggest fix when autofixable and call the repo fix command for the specific violation with the file as scope when autofixable.
 
 @/c:/git/semio.tech/semio/assets/repo/some/folder/file_invalid.tsx 
 @/c:/git/semio.tech/semio/assets/semio/kit_invalid.json 
@@ -34,10 +51,10 @@ Commands:
   help                     Show this help message
   analyze [--scope=<scope>]    Analyze codebase for violations (multiple scopes are supported)
   fix [--scope=<scope>]        Apply autofixes for violations (multiple scopes are supported)
-  rule list [--id=<id-pattern>] [--scope=<scope>]  List all registered rules (multiple scopes are supported)
-  rule run [--scope=<scope>] [--id=<id>]            Run specific rules
+  policy list [--id=<id-pattern>] [--scope=<scope>]  List all registered policies (multiple scopes are supported)
+  policy run [--scope=<scope>] [--id=<id>]            Run specific policies
   ticket create <slug> <description> <prompt> <model> [--plan=<path>]       Create a new ticket
-  ticket iterate start <year> <month> <day> <slug>    Run rules and sync violations to ticket
+  ticket iterate start <year> <month> <day> <slug>    Run policies and sync violations to ticket
   ticket iteration end <year> <month> <day> <slug>      End a ticket iteration
   ticket finish <year> <month> <day> <slug>      Finish a ticket
   ticket list [--year=<year-pattern>] [--month=<month-pattern>] [--day=<day-pattern>] List tickets (multiple years, months, days are supported)
@@ -75,7 +92,7 @@ Adjust all implementation and get all tests running.
 
 Change the repo analyze api not not accept a scope flag but after the command name all arguments are interpreted as scope array. e.g. `repo analyze js/js/semio.ts @semio/desktop net/*.* py`
 
-Remove severity from all rules and violations.
+Remove severity from all policies and violations.
 
 Add a test for every single command.
 For a mocked repo use the assets/repo for a toy repo to check all commands and the assets/repo/reports/violations.json. Ignore this folder in normal repo checking.
@@ -84,9 +101,9 @@ Mostly do unit tests. In the vscode extension just test the ui.
 comment inline and block problem are autofixable by simply removing it. The have low priority.
 
 PLAN and IMPLEMENT new ticket according AGENTS.md:
-Rules should be created according scope and produce a set of related violations. Generalize and extend the existing rules.
-E.g. generalize the header-region to the header rule (violations: missing region, missing contributors, missing license, wrong license, etc)
-E.g. generalize the empty-region to region rule (violations: empty region, missing start region name, missing end region name, unmatching region start and end name, etc)
+Policies should be created according scope and produce a set of related violations. Generalize and extend the existing policies.
+E.g. generalize the header-region to the header policy (violations: missing region, missing contributors, missing license, wrong license, etc)
+E.g. generalize the empty-region to region policy (violations: empty region, missing start region name, missing end region name, unmatching region start and end name, etc)
 E.g. generalize inline-comment to comment (violations: forbidden inline comment, forbidden block comment, etc)
 
 You didnt create a ticket according @AGENTS.md
@@ -101,7 +118,7 @@ Use consistent, concise output format with the most important information
 
 Double clicking on type row or design row doesnt navigate anymore after hover was moved to the state machine. Instead after double click the hover command is retriggered all the time even when the mouse is not moving. The app tests should be checking this and fail. You can use playwright mcp.
 
-Add a rule to README.md that every section must start with a symbol.
+Add a policy to README.md that every section must start with a symbol.
 
 **Why?**
 Prompting is the new of developing. In the old world devs should always write literate code, in the new world they should write literate prompts. In fact, we believe that docs shouldnt be part of the code anymore (but instead inside `AGENTS.md` and `README.md`). As such prompts (and the process and the output) should be first class citizen in the source code. Similar to how both `package.json`and `package-lock.json` are checked into the repository.
@@ -112,10 +129,10 @@ Prompting is the new of developing. In the old world devs should always write li
 Write a detailed mardown plan to download.
 
 The idea is to create a general purpose cli node.js program (with ink and tree-sitter) `repo.tsx` for agents and developers to interact with a monorepo. It should use nx as much as possible.
-The rule mechanism and the ticket mechanism should be integrated. E.g. Once an iteration is finished then all rules that were affected by the ticket should be re-analyzed and all violations should be automatically added to the # Violations section of the ticket. A ticket can only be closed once the violation section is empty (and the plan and changes section are not empty).
+The policy mechanism and the ticket mechanism should be integrated. E.g. Once an iteration is finished then all policies that were affected by the ticket should be re-analyzed and all violations should be automatically added to the # Violations section of the ticket. A ticket can only be closed once the violation section is empty (and the plan and changes section are not empty).
 
 Features:
-- `repo rule …` all rule commands.
+- `repo policy …` all policy commands.
 - `repo ticket …` all ticket commands.
 - `repo project …` all project commands (e.g. create, delete, move, tree)
 - `repo folder …` all folder commands (e.g. create, delete, move, tree)
@@ -128,7 +145,7 @@ Features:
 
 ├── reports
 │ └── REPORT.json
-├── rules
+├── policies
 │ └── RULE.tsx
 ├── tickets
 │ └── YEAR
@@ -143,10 +160,10 @@ Write a plan for
 2. Extend an existing vscode extension to show the report as linter errors along with autofixes.
 
 The code analysis and fixing system should be extended.
-A general rule/violation system should be introduced to the codebase. The system should run on any file/folder change but not on keystrokes. The main purpose is to provide details for agents and developers when repo-specific implementation contracts are broken (forbidden imports, forbidden hooks, etc). Mostly those are contracts between different parts of the codebase and they can rarely be autofixed. The result is a report with violations. A vscode extension should show the report when e.g. a file has an violation
-Every rule has a name, a reason and scopes (repo-wide, project-wide, folder-wide, file-wide, region-wide, definition-wide).
+A general policy/violation system should be introduced to the codebase. The system should run on any file/folder change but not on keystrokes. The main purpose is to provide details for agents and developers when repo-specific implementation contracts are broken (forbidden imports, forbidden hooks, etc). Mostly those are contracts between different parts of the codebase and they can rarely be autofixed. The result is a report with violations. A vscode extension should show the report when e.g. a file has an violation
+Every policy has a name, a reason and scopes (repo-wide, project-wide, folder-wide, file-wide, region-wide, definition-wide).
 A definition can be a class, a function, a variable, an enum, etc.
-A rule is checked whenever the scope changes.
+A policy is checked whenever the scope changes.
 Scopes have native glob support.
 Examples:
 
@@ -157,11 +174,11 @@ Examples:
 - "js/js/sketchpad/Sketchpad.tsx#Header" is a region scope.
 - "js/js/sketchpad/Sketchpad.tsx#State Managment#Store" is a sub-region scope.
 - "js/js/sketchpad/Sketchpad.tsx§Sketchpad" is a definition scope.
-  Rules are typescript functions that produce different kind of violations. Rules can provide an autofix for every kind of violation. The fix script autofixes all autofixable violations.
+  Policies are typescript functions that produce different kind of violations. Policies can provide an autofix for every kind of violation. The fix script autofixes all autofixable violations.
   Violation have a summary, kind, priority (high, medium, low), autofixable flag and a solution text.
-  E.g. Rule
+  E.g. Policy
 - Name: "Header Region"
-  Id: "semio.rule.header-region"
+  Id: "semio.policy.header-region"
   Scopes: ["**/*.(ts|tsx|py|cs)"]
   Reason: "All source code must have a header region with a filepath, contributor and license."
   Violations: [
@@ -171,8 +188,8 @@ Examples:
   Autofixable: true,
   }
   ]
-  Here some example violations that could be produced by the rule:
-  Violations: Header Region rule can produce the following violations:
+  Here some example violations that could be produced by the policy:
+  Violations: Header Region policy can produce the following violations:
 - Summary: "Missing filepath in the header region of `js/js/sketchpad/Sketchpad.tsx`."
   Kind: "semio.violation.header-region.missing-filepath"
   Scopes: ["js/js/sketchpad/Sketchpad.tsx"]
@@ -197,17 +214,17 @@ Examples:
   Autofixable: true
   Solution: "Add the license to the header region."
 
-Every rule has an id e.g. "semio.rule.header-format.missing-filepath"
-E.g. repo-wide rule:
+Every policy has an id e.g. "semio.policy.header-format.missing-filepath"
+E.g. repo-wide policy:
 
 - Undocumented Code
 - Header Region Format
 - Missing Filepath in Header Region (Header Region Format)
 - Missing Contributor in Header Region (Header Region Format)
 - Missing License in Header Region (Header Region Format)
-  E.g. ecosystem-wide rule:
+  E.g. ecosystem-wide policy:
 
-Rules are always documented in the dev-docs (README.md and AGENTS.md). They always are one section below the containing section. E.g. Javascript ecosystem-wide rules are documented under `# /` in README.md and AGENTS.md.
+Policies are always documented in the dev-docs (README.md and AGENTS.md). They always are one section below the containing section. E.g. Javascript ecosystem-wide policies are documented under `# /` in README.md and AGENTS.md.
 
 Extend the code.ts hook to that all AGENTS.md headers under # Codebase meaning ## PATH are actual files and folders, all have the proper prefix (📁 or 📄), are sorted alphabetically and none appear twice. Create violations for all individual violations.
 
@@ -292,18 +309,18 @@ Make sure that the headers of all files follow a specific scheme. Adjust analyze
 The log.ts script should be extended with an flag plan that takes a markdown file path and adds it directly to the plan section of the ticket.
 
 Extend the code.ts hook to find more violations. Add two more violation kinds: forbidden imports and forbidden terminology. Forbidden imports checks if imports are structurally forbidden. Forbidden terminology checks if specific terminology is used somewhere where it shouldnt be allowed e.g. when domain-specific terminology is used in general-purpose files.
-Here some rules for js/js:
+Here some policies for js/js:
 
 - elements.tsx are pure reusable ui elements library that are indepedent of semio. They should not import anything from sketchpad or any app or contain any semio domain-specific terminology (kit, design, type, connector, connection, docs, feedback). elements.tsx is the only file that can import third party libraries and reexpose them as components. All other files in the js/js folder should be self-contained and dependency free from any other library outside of the js/js folder.
 - Sketchpad.tsx and the other app files (Home.tsx, Kit.tsx, Design.tsx, Type.tsx, Quality.tsx, Docs.tsx, Feedback.tsx) should follow the open/closed principle. Sketchpad.tsx should only import from elements.tsx, semio.ts, shared.ts. The apps should only import from Sketchpad.tsx, elements.tsx, semio.ts, shared.ts.
-  If the file is deleted then sketchpad should work, if a new file is added, the new app should work. The hook should scan for all static and dynamic imports that violate the above rules.
+  If the file is deleted then sketchpad should work, if a new file is added, the new app should work. The hook should scan for all static and dynamic imports that violate the above policies.
 
 Sketchpad.tsx, elements.tsx and APP.tsx (Home.tsx, Kit.tsx, Design.tsx, Type.tsx, Quality.tsx, Docs.tsx, Feedback.tsx) should be refactored to follow the open/closed principle. All app specific logic should be part of the APP.tsx files. elements.tsx should not import anything from sketchpad or any app. There should be no design, type, etc logic part of Sketchpad.tsx file. If the file is deleted then sketchpad should work, if a new file is added, the new app should work.
 E.g.
 
 - Get rid of designAppModuleCache, kitAppModuleCache, getDesignAppHooks
 - The general SelectionTree shouldnt import from docs app in getDocsRegistry.
-  Other violations of forbidden rules and import should be inside code.json which is produced by code.ts hook.
+  Other violations of forbidden policies and import should be inside code.json which is produced by code.ts hook.
   @Design.tsx@Docs.tsx@Feedback.tsx@Home.tsx@Kit.tsx@Quality.tsx@shared.ts@Sketchpad.tsx@Type.tsx@elements.tsx @code.ts @code.json
 
 Find all statemanagment code smells. Make sure components dont overfetch and use the correct mechnanism. Create a detailed refactor plan.
@@ -722,7 +739,7 @@ i18n script:
 
 The development section should be extended by a section connector numbers (not semio connectors but "regular" connector). There should be an overview table of all connectors used for dev commands (such as storybook, sketchpad, play) or final packages (such as engine that has a variable connector number according release numer r25.02-1->2507). The new connector for sketchpad should be 3000 and for play 4000.
 
-Add a new rule that whenever a new file is created, deleted or moved, it should update the file and folder structure in the dev docs (AGENTS.md and README.md)
+Add a new policy that whenever a new file is created, deleted or moved, it should update the file and folder structure in the dev docs (AGENTS.md and README.md)
 
 Concepts shouldnt use toggles but actions (active when part of filter). The concept band should be a concept strip. The concepts next to the name should be wrapped into a strip that when there is not enough space only the strip is scrollable.
 
@@ -802,7 +819,7 @@ Replace all elements to use useTransaction and add a transaction provider for ev
 
 The codebase should follow the open/closed principle. Everything related to an app should be inside that file. But every app contributes to the state machine.
 Plan a refactor that moves all app specific logic into the app files.
-Here a few rules:
+Here a few policies:
 ⦁ Every ui component uses a triadic hook: [STATE,SETSTATE,CANSETSTATE]=useSELECTOR()
 ⦁ Ui components never use the store (neither for read, write or canWrite)
 ⦁ Hooks never use the commands to write and only the state machine.
@@ -1053,7 +1070,7 @@ The state managment of sketchpad needs to be completly refactored.
 Add systematic logging to understand where data is overfetched. Currently often hooks are nested or use only selectors instead of subscribing and hence syncing with the yjs map/array.
 Use playwright MCP to get access to the ui. Work with the imported metabolism kit. You will see huge performance issues when navigating or using the ui. Simple ui actions or navigation can take up to seconds.
 
-Rules:
+Policies:
 ⦁ Components should never use general hooks (such as useKit) and then filter locally but instead only use targeted hooks that only update on changes. The hooks are in the sketchpad store region.
 ⦁ Every change in state works over commands. Commands have no side effects and only the store is applying the diffs.
 
@@ -1096,7 +1113,7 @@ The scenes in design app and type app still use geometry placeholders (boxes) in
 Every type has multiple models. Each model with the highest jaccard index is displayed in the scene.
 
 The scenes in design app and type app still use geometry placeholders (boxes) instead of loading models.
-Every type has multiple models. Each model is a file with metadata (such as tags for filtering). Add a validation rule that gives a warning if the file extension is not a common 3d file (take the list from supported three.js importers). Types and pieces then use a model to display geometry in the scene. In the footer of design app and type app should be all names of tags. Then tags can be selected. Each model with the highest jaccard index is displayed in the scene.
+Every type has multiple models. Each model is a file with metadata (such as tags for filtering). Add a validation policy that gives a warning if the file extension is not a common 3d file (take the list from supported three.js importers). Types and pieces then use a model to display geometry in the scene. In the footer of design app and type app should be all names of tags. Then tags can be selected. Each model with the highest jaccard index is displayed in the scene.
 
 Consolidate all tests. The checked features should be the same but the tests shouldnt be split. There should only remain one test per component.
 
@@ -1239,7 +1256,7 @@ unit test are directly next to the module with .test.ts extension.
 
 sketchpad:
 e2e:
-Rules:
+Policies:
 ⦁ There is a neested seeding according app hierarchy. Seed include only the bear minimum to get the subtests working.
 sketchpad -> kit -> design | type | quality)
 sketchpad -> docs
@@ -1248,12 +1265,12 @@ sketchpad -> docs
 
 vscode:
 
-- add test for invalid kit. Complete the invalid kit for all other validation rules. The invalid kit should be max invalid.
+- add test for invalid kit. Complete the invalid kit for all other validation policies. The invalid kit should be max invalid.
 - Remove VALIDATION.md and integrate into README.md and AGENTS.md
   Generalize
 
 The current sketchpad ui system is not sufficiently consistent and documented.
-Rules:
+Policies:
 ⦁ Every ui component has an id. Only the final dom element receives the id. The id is used for i18n, hotkey, command logs, recording, testing, …
 
 The log system should be expanded. Every task is associated with a log.
@@ -1541,11 +1558,11 @@ Actions should have small size with and icon prop where the icon is automaticall
 
 Update README and AGENTS with console logging based problem solving.
 
-Update README naming and AGENTS rules with the notice to never use `type` and instead always use `kind` to not be confused with the native type in semio. E.g. ArtifactType is ArtifactKind, WindowType is WindowKind, etc
+Update README naming and AGENTS policies with the notice to never use `type` and instead always use `kind` to not be confused with the native type in semio. E.g. ArtifactType is ArtifactKind, WindowType is WindowKind, etc
 
 There should be a general panel kind enum (workbench, details, chat, settings, hud, stats, params, etc). Then there should be a general config (e.g. workbench is left, details, chat, settings are right, and so on). Icons and all other things are derived from that.
 
-Update README.md and AGENTS.md rules for @semio/js that the code runs in different environments (different browsers and even on electron, mobile/desktop/tablet). Hence everything that is platform specific needs to be generalized and provided as a prop to Sketchpad.
+Update README.md and AGENTS.md policies for @semio/js that the code runs in different environments (different browsers and even on electron, mobile/desktop/tablet). Hence everything that is platform specific needs to be generalized and provided as a prop to Sketchpad.
 
 Most icons are not semantic yet. E.g. Box is used for Scene, Wrench for Workbench, etc. Those are just leftovers of the temporary lucide icons. All icons should exactly describe what they are.
 

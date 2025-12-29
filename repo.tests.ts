@@ -25,8 +25,8 @@
 import { spawnSync } from "child_process";
 import { existsSync, readFileSync } from "fs";
 import { dirname, join } from "path";
-import { describe, expect, test } from "vitest";
 import { fileURLToPath } from "url";
+import { describe, expect, test } from "vitest";
 
 // #endregion Imports
 
@@ -81,7 +81,7 @@ describe("help command", () => {
     expect(result.stdout).toContain("Commands:");
     expect(result.stdout).toContain("analyze");
     expect(result.stdout).toContain("fix");
-    expect(result.stdout).toContain("rule");
+    expect(result.stdout).toContain("policy");
     expect(result.stdout).toContain("ticket");
     expect(result.stdout).toContain("project");
     expect(result.stdout).toContain("folder");
@@ -112,24 +112,24 @@ describe("help command", () => {
 
 // #endregion Help Command Tests
 
-// #region Rule Command Tests
+// #region Policy Command Tests
 
-describe("rule command", () => {
-  test("rule list shows all rules", () => {
-    const result = runCli("rule list");
-    expect(result.stdout).toContain("Registered rules");
+describe("policy command", () => {
+  test("policy list shows all policies", () => {
+    const result = runCli("policy list");
+    expect(result.stdout).toContain("Registered policies");
     expect(result.stdout).toContain("header");
     expect(result.stdout).toContain("section");
     expect(result.stdout).toContain("comment");
   });
 
-  test("rule usage shown without subcommand", () => {
-    const result = runCli("rule");
+  test("policy usage shown without subcommand", () => {
+    const result = runCli("policy");
     expect(result.stdout).toContain("Usage:");
   });
 });
 
-// #endregion Rule Command Tests
+// #endregion Policy Command Tests
 
 // #region Ticket Command Tests
 

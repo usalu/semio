@@ -1,28 +1,15 @@
 {
-  "timestamp": "2025-12-29T11:01:28.286Z",
-  "status": "error",
-  "scope": "assets/repo/some/folder/file_invalid.tsx",
+  "timestamp": "2025-12-29T15:29:30.619Z",
+  "status": "success",
+  "scope": "reports/policies.json",
   "summary": {
-    "total": 1,
+    "total": 0,
     "byPriority": {
       "high": 0,
-      "medium": 1,
+      "medium": 0,
       "low": 0
     },
-    "byKind": {
-      "header:missing-section": 1
-    }
+    "byKind": {}
   },
-  "violations": [
-    {
-      "summary": "Missing header section in assets/repo/some/folder/file_invalid.tsx",
-      "kind": "header:missing-section",
-      "solution": "Add a #region Header with filename, contributors, and AGPL-3.0 license",
-      "reason": "Every source file must include a header section",
-      "scope": "assets/repo/some/folder/file_invalid.tsx",
-      "id": "header:missing-section-1767006088284-oz4gwp",
-      "priority": "medium",
-      "autofixable": false
-    }
-  ]
+  "violations": []
 }

@@ -3584,10 +3584,10 @@
             "kind": "Module"
           },
           {
-            "description": "Contains a collection of Monoceros Rules.",
-            "name": "Rule",
+            "description": "Contains a collection of Monoceros Policies.",
+            "name": "Policy",
             "nickname": "R",
-            "kind": "Rule"
+            "kind": "Policy"
           }
         ]
       },

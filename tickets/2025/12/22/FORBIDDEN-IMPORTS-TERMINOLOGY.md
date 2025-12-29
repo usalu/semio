@@ -207,7 +207,7 @@ useLayoutEffect(() => {
 4. **Fix misleading hook APIs**
    - `useType(deep?: boolean)` / `useQuality(deep?: boolean)` currently expose a `deep` param but don’t use it. Either implement deep or remove the param.
 5. **Add guardrails**
-   - Add an ESLint rule / custom lint check: disallow `useKit()` without selector in UI components.
+   - Add an ESLint policy / custom lint check: disallow `useKit()` without selector in UI components.
    - Disallow new `exhaustive-deps` disables without an explicit comment tag.
 
 **Acceptance criteria**

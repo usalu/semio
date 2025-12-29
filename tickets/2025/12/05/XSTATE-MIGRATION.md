@@ -965,7 +965,7 @@ Attempted to remove Y.js stores from Design app hooks and use XState selectors d
 
 ### Attempted Solutions
 
-1. **Synchronous initialization during render** - Violates React rules (side effects in render)
+1. **Synchronous initialization during render** - Violates React policies (side effects in render)
 2. **useLayoutEffect for INIT** - Still runs after first render, too late
 3. **Y.js fallback** - Works but doesn't eliminate stores
 

@@ -174,8 +174,8 @@ interface Ticket {
 }
 //#endregion Ticket
 
-//#region Rule
-interface RuleMeta {
+//#region Policy
+interface PolicyMeta {
   id: string;
   name: string;
   description: string;
@@ -184,7 +184,7 @@ interface RuleMeta {
   autofixable: boolean;
 }
 
-interface RuleContext {
+interface PolicyContext {
   scope: Scope;
   rootDir: string;
   projects: () => NxProject[];
@@ -200,13 +200,13 @@ interface RuleContext {
   createFix: (description: string, edits: Map<string, TextEdit[]>) => Fix;
 }
 
-type RuleFn = (ctx: RuleContext) => Promise<Violation[]>;
+type PolicyFn = (ctx: PolicyContext) => Promise<Violation[]>;
 
-interface RegisteredRule {
-  meta: RuleMeta;
-  run: RuleFn;
+interface RegisteredPolicy {
+  meta: PolicyMeta;
+  run: PolicyFn;
 }
-//#endregion Rule
+//#endregion Policy
 
 //#region Report
 interface AnalyzeReport {
@@ -219,7 +219,7 @@ interface AnalyzeReport {
 //#endregion Report
 
 //#region Command
-type CommandName = "help" | "analyze" | "fix" | "rule" | "ticket" | "project" | "folder" | "file" | "section" | "definition" | "tool";
+type CommandName = "help" | "analyze" | "fix" | "policy" | "ticket" | "project" | "folder" | "file" | "section" | "definition" | "tool";
 
 interface ParsedCommand {
   name: CommandName;
@@ -292,8 +292,8 @@ Commands:
   help                                          Show this help message
   analyze [--scope=<scope>]                     Analyze codebase for violations (multiple scopes supported)
   fix [--scope=<scope>]                         Apply autofixes for violations (multiple scopes supported)
-  rule list [--id=<id-pattern>] [--scope=<scope>]  List all registered rules
-  rule run [--scope=<scope>] [--id=<id>]        Run specific rules
+  policy list [--id=<id-pattern>] [--scope=<scope>]  List all registered policies
+  policy run [--scope=<scope>] [--id=<id>]        Run specific policies
   ticket create <slug> [--prompt=<prompt>] [--model=<model>]  Create a new ticket
   ticket iterate start <year> <month> <day> <slug>  Start a ticket iteration
   ticket iterate end <year> <month> <day> <slug>    End a ticket iteration
@@ -323,7 +323,7 @@ Commands:
 
 Options:
   --scope=<scope>          Limit operation to scope
-  --id=<id>                Filter by rule ID or pattern
+  --id=<id>                Filter by policy ID or pattern
   --json                   Output as JSON
   --dry-run                Preview without making changes
   --help, -h               Show help for command
@@ -503,8 +503,8 @@ function scopeToFiles(scope: Scope, projects: NxProject[]): string[] {
   return [];
 }
 
-function matchesScope(ruleScopes: string[], targetScope: Scope): boolean {
-  for (const pattern of ruleScopes) {
+function matchesScope(policyScopes: string[], targetScope: Scope): boolean {
+  for (const pattern of policyScopes) {
     if (pattern === "*" || pattern === "**/*") return true;
     if (pattern.startsWith("@semio")) {
       if (targetScope.kind === "repo" || (targetScope.kind === "project" && targetScope.projectName?.startsWith(pattern))) return true;
@@ -514,7 +514,12 @@ function matchesScope(ruleScopes: string[], targetScope: Scope): boolean {
       const normalizedTarget = normalizePathSeparators(targetScope.filePath);
       const normalizedPattern = normalizePathSeparators(pattern);
       if (normalizedTarget.includes(normalizedPattern)) return true;
-      const regexPattern = normalizedPattern.replace(/\{([^}]+)\}/g, (_, group) => `(${group.replace(/,/g, "|")})`).replace(/\./g, "\\.").replace(/\*\*/g, "\0").replace(/\*/g, "[^/]*").replace(/\0/g, ".*");
+      const regexPattern = normalizedPattern
+        .replace(/\{([^}]+)\}/g, (_, group) => `(${group.replace(/,/g, "|")})`)
+        .replace(/\./g, "\\.")
+        .replace(/\*\*/g, "\0")
+        .replace(/\*/g, "[^/]*")
+        .replace(/\0/g, ".*");
       if (normalizedTarget.match(new RegExp(`^${regexPattern}$`))) return true;
     }
   }
@@ -858,15 +863,15 @@ function queryAST(astFile: ASTFile, queryString: string): Array<{ node: ASTNode;
 
 // #endregion AST Parser
 
-// #region Rule Engine
+// #region Policy Engine
 
-const RULES: RegisteredRule[] = [];
+const RULES: RegisteredPolicy[] = [];
 
-function registerRule(meta: RuleMeta, run: RuleFn): void {
+function registerPolicy(meta: PolicyMeta, run: PolicyFn): void {
   RULES.push({ meta, run });
 }
 
-function createRuleContext(scope: Scope, projects: NxProject[]): RuleContext {
+function createPolicyContext(scope: Scope, projects: NxProject[]): PolicyContext {
   const fileCache = new Map<string, string>();
   const sectionCache = new Map<string, SectionInfo[]>();
   const definitionCache = new Map<string, DefinitionInfo[]>();
@@ -940,25 +945,25 @@ function createRuleContext(scope: Scope, projects: NxProject[]): RuleContext {
   };
 }
 
-async function runRules(scope: Scope, ruleIds?: string[]): Promise<Violation[]> {
+async function runPolicies(scope: Scope, policyIds?: string[]): Promise<Violation[]> {
   const needsProjects = scope.kind === "repo" || scope.kind === "project";
   const projects = needsProjects ? getNxProjects() : [];
   const violations: Violation[] = [];
-  const rulesToRun = ruleIds ? RULES.filter((r) => ruleIds.includes(r.meta.id)) : RULES.filter((r) => matchesScope(r.meta.scopes, scope));
-  for (const rule of rulesToRun) {
-    const ctx = createRuleContext(scope, projects);
-    const ruleViolations = await rule.run(ctx);
-    violations.push(...ruleViolations);
+  const policiesToRun = policyIds ? RULES.filter((r) => policyIds.includes(r.meta.id)) : RULES.filter((r) => matchesScope(r.meta.scopes, scope));
+  for (const policy of policiesToRun) {
+    const ctx = createPolicyContext(scope, projects);
+    const policyViolations = await policy.run(ctx);
+    violations.push(...policyViolations);
   }
   return violations;
 }
 
-// #endregion Rule Engine
+// #endregion Policy Engine
 
-// #region Built-in Rules
+// #region Built-in Policies
 
-//#region Header Rule
-registerRule({ id: "header", name: "Header", description: "Validates source file header section with filename, contributors, and AGPL-3.0 license", scopes: ["**/*.{ts,tsx,py,cs}"], priority: "high", autofixable: true }, async (ctx) => {
+//#region Header Policy
+registerPolicy({ id: "header", name: "Header", description: "Validates source file header section with filename, contributors, and AGPL-3.0 license", scopes: ["**/*.{ts,tsx,py,cs}"], priority: "high", autofixable: true }, async (ctx) => {
   const violations: Violation[] = [];
   const files = ctx.files();
   const agplMarkers = ["GNU Affero General Public License", "AGPL", "https://www.gnu.org/licenses/"];
@@ -1041,10 +1046,10 @@ registerRule({ id: "header", name: "Header", description: "Validates source file
   }
   return violations;
 });
-//#endregion Header Rule
+//#endregion Header Policy
 
-//#region Section Rule
-registerRule({ id: "section", name: "Section", description: "Validates section blocks for proper naming and content", scopes: ["**/*.{ts,tsx,py,cs}"], priority: "low", autofixable: true }, async (ctx) => {
+//#region Section Policy
+registerPolicy({ id: "section", name: "Section", description: "Validates section blocks for proper naming and content", scopes: ["**/*.{ts,tsx,py,cs}"], priority: "low", autofixable: true }, async (ctx) => {
   const violations: Violation[] = [];
   const files = ctx.files();
   const sectionPatterns: Record<string, { start: RegExp; end: RegExp }> = {
@@ -1143,10 +1148,10 @@ registerRule({ id: "section", name: "Section", description: "Validates section b
   }
   return violations;
 });
-//#endregion Section Rule
+//#endregion Section Policy
 
-//#region Comment Rule
-registerRule({ id: "comment", name: "Comment", description: "Detects forbidden comments (inline, block, JSDoc) - documentation belongs in README.md and AGENTS.md", scopes: ["**/*.{ts,tsx}"], priority: "low", autofixable: true }, async (ctx) => {
+//#region Comment Policy
+registerPolicy({ id: "comment", name: "Comment", description: "Detects forbidden comments (inline, block, JSDoc) - documentation belongs in README.md and AGENTS.md", scopes: ["**/*.{ts,tsx}"], priority: "low", autofixable: true }, async (ctx) => {
   const violations: Violation[] = [];
   const files = ctx.files();
   for (const file of files) {
@@ -1283,9 +1288,9 @@ registerRule({ id: "comment", name: "Comment", description: "Detects forbidden c
   }
   return violations;
 });
-//#endregion Comment Rule
+//#endregion Comment Policy
 
-// #endregion Built-in Rules
+// #endregion Built-in Policies
 
 // #region Ticket Engine
 
@@ -1519,7 +1524,7 @@ async function handleAnalyze(cmd: ParsedCommand): Promise<CommandOutput> {
   const violations: Violation[] = [];
   for (const scopeRaw of scopeRaws) {
     const scope = parseScope(scopeRaw);
-    const scopeViolations = await runRules(scope);
+    const scopeViolations = await runPolicies(scope);
     violations.push(...scopeViolations);
   }
   const report: AnalyzeReport = {
@@ -1540,12 +1545,12 @@ async function handleAnalyze(cmd: ParsedCommand): Promise<CommandOutput> {
     violations,
   };
   ensureDir(REPORTS_DIR);
-  writeJsonFile(join(REPORTS_DIR, "rules.json"), report);
+  writeJsonFile(join(REPORTS_DIR, "policies.json"), report);
   if (cmd.options.json) {
     plain(output, JSON.stringify(report, null, 2));
   } else {
     success(output, `\n📊 Analysis complete: ${violations.length} violations found`);
-    info(output, `   Report: ${join(REPORTS_DIR, "rules.json")}`);
+    info(output, `   Report: ${join(REPORTS_DIR, "policies.json")}`);
   }
   if (report.status === "error") output.exitCode = 1;
   return output;
@@ -1556,7 +1561,7 @@ async function handleFix(cmd: ParsedCommand): Promise<CommandOutput> {
   const scopeRaw = (typeof cmd.options.scope === "string" ? cmd.options.scope : null) || cmd.args[0] || "@semio";
   const scope = parseScope(scopeRaw);
   const dryRun = !!cmd.options["dry-run"];
-  const violations = await runRules(scope);
+  const violations = await runPolicies(scope);
   const fixable = violations.filter((i) => i.autofixable && i.autofix);
   if (dryRun) {
     info(output, `\n🔧 Dry run: ${fixable.length} fixable violations found`);
@@ -1584,26 +1589,26 @@ async function handleFix(cmd: ParsedCommand): Promise<CommandOutput> {
   return output;
 }
 
-async function handleRule(cmd: ParsedCommand): Promise<CommandOutput> {
+async function handlePolicy(cmd: ParsedCommand): Promise<CommandOutput> {
   const output = createOutput();
   if (cmd.subcommand === "list") {
-    info(output, "\n📜 Registered rules:\n");
-    for (const rule of RULES) {
-      plain(output, `   ${rule.meta.id}`);
-      plain(output, `      ${rule.meta.name}: ${rule.meta.description}`);
-      plain(output, `      Priority: ${rule.meta.priority}, Autofixable: ${rule.meta.autofixable}`);
+    info(output, "\n📜 Registered policies:\n");
+    for (const policy of RULES) {
+      plain(output, `   ${policy.meta.id}`);
+      plain(output, `      ${policy.meta.name}: ${policy.meta.description}`);
+      plain(output, `      Priority: ${policy.meta.priority}, Autofixable: ${policy.meta.autofixable}`);
       plain(output, "");
     }
   } else if (cmd.subcommand === "run") {
-    const ruleId = cmd.args[0];
-    if (!ruleId) {
-      error(output, "Error: Rule ID required");
+    const policyId = cmd.args[0];
+    if (!policyId) {
+      error(output, "Error: Policy ID required");
       return output;
     }
     const scopeRaw = (cmd.options.scope as string) || "@semio";
     const scope = parseScope(scopeRaw);
-    const violations = await runRules(scope, [ruleId]);
-    info(output, `\n📊 Rule "${ruleId}" found ${violations.length} violations`);
+    const violations = await runPolicies(scope, [policyId]);
+    info(output, `\n📊 Policy "${policyId}" found ${violations.length} violations`);
     for (const violation of violations.slice(0, 10)) {
       plain(output, `   - ${violation.summary}`);
     }
@@ -1611,7 +1616,7 @@ async function handleRule(cmd: ParsedCommand): Promise<CommandOutput> {
       plain(output, `   ... and ${violations.length - 10} more`);
     }
   } else {
-    info(output, "Usage: repo rule <list|run> [id]");
+    info(output, "Usage: repo policy <list|run> [id]");
   }
   return output;
 }
@@ -2301,8 +2306,8 @@ async function runCommand(command: ParsedCommand): Promise<CommandOutput> {
       return await handleAnalyze(command);
     case "fix":
       return await handleFix(command);
-    case "rule":
-      return await handleRule(command);
+    case "policy":
+      return await handlePolicy(command);
     case "ticket":
       return await handleTicket(command);
     case "project":

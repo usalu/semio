@@ -98,7 +98,7 @@ The AGENTS.md documentation had architecture-level documentation for the Sketchp
 
 - Hook Result Types: HookResult<T>, HookNoSetResult<T>, helper functions
 - Core Enums: Theme, Expertise, Mode, StoreStatus, ToolKind, WindowKind, PanelPosition, PanelKind
-- Panel System: PanelKindConfig, PanelVisibility, PanelSection with positioning rules
+- Panel System: PanelKindConfig, PanelVisibility, PanelSection with positioning policies
 - Tool System: Tool<TState>, ToolMode, ToolDefinition interfaces
 - App IDs: KitAppId, TypeAppId, DesignAppId, QualityAppId
 

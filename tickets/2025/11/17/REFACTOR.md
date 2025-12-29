@@ -202,7 +202,7 @@ But scope providers are defined inconsistently:
 **Impact:**
 
 - Design app is too large (4x larger than docs)
-- Violates "NEVER create new files" rule but makes navigation difficult
+- Violates "NEVER create new files" policy but makes navigation difficult
 - Suggests design app needs internal reorganization
 
 #### 12. **Missing Features**
@@ -281,7 +281,7 @@ export class DocsAppStore extends AppStore<DocsState, DocsDiff, DocsSelectionDif
 
 #### 1.3. Standardize Store Base Classes
 
-**Rule:** All app stores MUST extend one of:
+**Policy:** All app stores MUST extend one of:
 
 1. **`AppStore`** - For apps without kit modification (home, docs)
 2. **`KitDiffAppStore`** - For apps that modify kits (design, type, kit, quality)
@@ -388,7 +388,7 @@ export class DocsAppStore extends AppStore<DocsState, DocsDiff, DocsSelectionDif
 
 #### 3.1. Unified Registration Pattern
 
-**Rule:** All stores MUST use the same registration pattern:
+**Policy:** All stores MUST use the same registration pattern:
 
 ```typescript
 // #region Store
@@ -419,9 +419,9 @@ if (typeof window !== "undefined") {
 
 ### Phase 4: Tool System Standardization
 
-#### 4.1. Define Tool System Rules
+#### 4.1. Define Tool System Policies
 
-**Rule:** An app MUST have a Tools region if ANY of the following are true:
+**Policy:** An app MUST have a Tools region if ANY of the following are true:
 
 1. App has multiple ways to interact with canvas/diagram
 2. App has mode-switching behavior (select, add, edit, etc.)
@@ -446,7 +446,7 @@ if (typeof window !== "undefined") {
 
 #### 4.2. Standardize Tool File Naming
 
-**Rule:** Tool files MUST follow the pattern `*Tool.tsx`:
+**Policy:** Tool files MUST follow the pattern `*Tool.tsx`:
 
 ```
 apps/
@@ -536,7 +536,7 @@ const KitSectionLazy = React.lazy(async () => {
 
 #### 6.1. Unified Scope Provider Pattern
 
-**Rule:** All scope providers MUST be defined in the app file, not App.tsx:
+**Policy:** All scope providers MUST be defined in the app file, not App.tsx:
 
 ```typescript
 // apps/[app]/App.tsx
@@ -569,7 +569,7 @@ export const use[App]Scope = () => useContext([App]ScopeContext);
 
 #### 7.1. Mandatory Command Structure
 
-**Rule:** ALL apps (even home and docs) MUST define commands in Commands region:
+**Policy:** ALL apps (even home and docs) MUST define commands in Commands region:
 
 ```typescript
 // #region Commands
@@ -660,7 +660,7 @@ const DetailsSection: FC = () => {
 // #endregion Components
 ```
 
-**Rule:**
+**Policy:**
 
 - **Panel definition** (chrome): `config.getPanels()`
 - **Section registration** (content): `useAddPanelSection()` in useEffect
@@ -905,7 +905,7 @@ apps/
 
 **Cons:**
 
-- Violates "NEVER create new files" rule in AGENTS.md
+- Violates "NEVER create new files" policy in AGENTS.md
 - More files to manage
 - Import boilerplate increases
 

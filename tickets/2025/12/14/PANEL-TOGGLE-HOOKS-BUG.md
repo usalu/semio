@@ -25,7 +25,7 @@ Uncaught Error: Rendered more hooks than during the previous render.
 # Plan
 
 1. Investigate Panel component in elements.tsx to understand section rendering
-2. Trace the hooks error to identify which component violates Rules of Hooks
+2. Trace the hooks error to identify which component violates Policies of Hooks
 3. Fix the pattern in all affected apps (Kit.tsx, Type.tsx, Design.tsx)
 4. Add expanded panel test to verify fixes
 
@@ -33,7 +33,7 @@ Uncaught Error: Rendered more hooks than during the previous render.
 
 ## Root Cause
 
-Found that `SettingsContent` components were defined **inside** `useEffect` hooks in Kit.tsx, Type.tsx, and Design.tsx. This violates React's Rules of Hooks because:
+Found that `SettingsContent` components were defined **inside** `useEffect` hooks in Kit.tsx, Type.tsx, and Design.tsx. This violates React's Policies of Hooks because:
 
 1. When panel switches from "details" to "settings", the `content()` function renders a different component
 2. The `SettingsContent` function defined inline uses hooks (`useTheme`, `useLanguage`, etc.)

@@ -2,7 +2,7 @@
 slug: CODE-ANALYSIS-REASONS
 prompt: >-
   Extend the code analysis hook to require reason/solution text for each issue
-  and document the rules.
+  and document the policies.
 status: open
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:

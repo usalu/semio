@@ -34,7 +34,7 @@ semio.sketchpad.<context>.<feature>.<component>
 - `semio.sketchpad.app.kit.kitApp.createType`
 - `semio.sketchpad.app.home.createTemporary`
 
-### Rules
+### Policies
 
 1. **All IDs start with `semio.sketchpad.`**
 2. **Kebab-case** for multi-word segments
@@ -573,12 +573,12 @@ executeCommand("semio.kitApp.addType", "semio.sketchpad.app.kit.toolbar.addType"
 
 ### 1. Enforce ID Requirement
 
-**Rule:** Every interactive component MUST have an `id` prop
+**Policy:** Every interactive component MUST have an `id` prop
 
 **Implementation:**
 
 - TypeScript: Make `id` required in component props
-- Lint rule: Warn on missing `id` for interactive components
+- Lint policy: Warn on missing `id` for interactive components
 - Code review: Check for ID in new components
 
 ```tsx
@@ -597,7 +597,7 @@ interface ButtonProps {
 
 ### 2. Standardize Origin Passing
 
-**Rule:** All `executeCommand` calls MUST include origin as first argument
+**Policy:** All `executeCommand` calls MUST include origin as first argument
 
 **Pattern:**
 
@@ -757,6 +757,6 @@ The semio Sketchpad UI ID system is a well-architected solution for integrating 
 
 1. Document the system in AGENTS.md (this analysis)
 2. Create component authoring template
-3. Add lint rules for ID requirement
+3. Add lint policies for ID requirement
 4. Complete i18n coverage
 5. Expand E2E test coverage

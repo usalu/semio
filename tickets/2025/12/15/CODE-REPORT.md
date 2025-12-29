@@ -137,4 +137,4 @@ iterations:
 
 # Extended `hooks/code.ts` to flag temporary `[DEBUG]` logs (TypeScript `console.*`, Python `print`/`logging.*`, C# `Console.Write*`).
 
-# Extended `hooks/code.ts` to flag and (on `--fix`) delete any non-root `README.md`/`AGENTS.md` files; the rule applies to tracked and untracked files.
+# Extended `hooks/code.ts` to flag and (on `--fix`) delete any non-root `README.md`/`AGENTS.md` files; the policy applies to tracked and untracked files.

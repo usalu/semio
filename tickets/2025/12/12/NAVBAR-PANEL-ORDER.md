@@ -23,4 +23,4 @@ iterations: []
 # Changes
 
 - Reordered navbar panel definitions in Home, Kit, Design, and Type apps to Details → Chat → Settings.
-- Documented the navbar panel ordering rule in README.md and AGENTS.md.
+- Documented the navbar panel ordering policy in README.md and AGENTS.md.

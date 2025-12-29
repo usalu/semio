@@ -319,7 +319,7 @@ Toolbar panel visibility defaults to `true` for all apps via `panelVisibility: {
 - If a release receives updates after `main` already progressed, create a parallel `release/rYY.MM-V` branch for that release and keep it compressed as well.
 - Commit messages follow `MAIN-TASK-SYMBOL SUMMARY WORK-SYMBOL` where `WORK-SYMBOL` is one of `🪛` < `🔨` < `🛠️` < `🏗️`.
 
-**Rules:**
+**Policies:**
 
 - ALWAYS document mechanisms technicallly in `AGENTS.md` and in `README.md`. Those documents NEVER keep a log and ALWAYS show the current state of the codebase.
 - ALWAYS finish everything without asking in between.
@@ -476,25 +476,25 @@ npx tsx repo.tsx <command> [subcommand] [options]
 
 **Commands:**
 
-| Command                    | Description                           |
-| -------------------------- | ------------------------------------- |
-| `help`                     | Show help message                     |
-| `analyze [--scope=...]`    | Analyze codebase for problems         |
-| `fix [--scope=...]`        | Apply autofixes for problems          |
-| `rule list`                | List all registered rules             |
-| `rule run <id>`            | Run a specific rule                   |
-| `ticket new <slug>`        | Create a new ticket                   |
-| `ticket list [year/month]` | List tickets                          |
-| `ticket read <path>`       | Read a ticket                         |
-| `ticket iterate <path>`    | Run rules and sync problems to ticket |
-| `ticket close <path>`      | Close a ticket (if valid)             |
-| `project list`             | List Nx projects                      |
-| `project tree`             | Show project dependency tree          |
-| `folder tree [path]`       | Show folder structure                 |
-| `file list [scope]`        | List files in scope                   |
-| `region tree <file>`       | Show region structure of a file       |
-| `definition list <file>`   | List definitions in a file            |
-| `tool <name> [args...]`    | Run an Nx target (e.g., lint, test)   |
+| Command                    | Description                              |
+| -------------------------- | ---------------------------------------- |
+| `help`                     | Show help message                        |
+| `analyze [--scope=...]`    | Analyze codebase for problems            |
+| `fix [--scope=...]`        | Apply autofixes for problems             |
+| `policy list`              | List all registered policies             |
+| `policy run <id>`          | Run a specific policy                    |
+| `ticket new <slug>`        | Create a new ticket                      |
+| `ticket list [year/month]` | List tickets                             |
+| `ticket read <path>`       | Read a ticket                            |
+| `ticket iterate <path>`    | Run policies and sync problems to ticket |
+| `ticket close <path>`      | Close a ticket (if valid)                |
+| `project list`             | List Nx projects                         |
+| `project tree`             | Show project dependency tree             |
+| `folder tree [path]`       | Show folder structure                    |
+| `file list [scope]`        | List files in scope                      |
+| `region tree <file>`       | Show region structure of a file          |
+| `definition list <file>`   | List definitions in a file               |
+| `tool <name> [args...]`    | Run an Nx target (e.g., lint, test)      |
 
 **Scope Syntax:**
 
@@ -511,7 +511,7 @@ npx tsx repo.tsx <command> [subcommand] [options]
 - `--json` - Output as JSON
 - `--dry-run` - Preview without making changes
 
-**Built-in Rules:**
+**Built-in Policies:**
 
 - `header` - Validates header region (violations: `header:missing-region`, `header:missing-filename`, `header:missing-contributors`, `header:missing-license`, `header:wrong-license`)
 - `region` - Validates region blocks (violations: `region:empty`, `region:missing-start-name`, `region:missing-end-name`, `region:name-mismatch`)
@@ -545,7 +545,7 @@ semio uses a multi-layered testing approach:
 
 **Example:** `semio.test.ts` tests `semio.ts` domain logic
 
-**Rules:**
+**Policies:**
 
 - Test domain logic in isolation
 - Use vitest framework
@@ -581,7 +581,7 @@ playwright/
 - Seeds run sequentially to build required state
 - Feature tests depend on their app's seed completing first
 
-**Rules:**
+**Policies:**
 
 1. **ID Locators Only**: `page.locator('[id="semio.sketchpad.navbar.back"]')`
    - NEVER use text selectors, CSS classes, or other brittle selectors
@@ -639,7 +639,7 @@ dnd-kit's `PointerSensor` requires native browser `PointerEvent` objects. Playwr
 
 **Framework:** VS Code Test Runner
 
-**Rules:**
+**Policies:**
 
 - Test validation against real VS Code API
 - Use fixture files from `assets/semio/`
@@ -866,7 +866,7 @@ Every interactive UI component MUST have a unique `id` prop following the patter
 semio.sketchpad.<context>.<feature>.<component>
 ```
 
-**Rules:**
+**Policies:**
 
 1. All IDs MUST start with `semio.sketchpad.`
 2. Use kebab-case for multi-word segments
@@ -1598,7 +1598,7 @@ In general, if the user talks about an old file, then probably there is the same
 
 Javascript code with shared core (@semio/js) that uses storybook and exports a handful of React components (Sketchpad, Diagram, Model) for both web-based and desktop-based environments, a documentation (@semio/docs) that uses astro with starlight and mdx, and desktop (@semio/desktop) that runs in electron.
 
-### Rules
+### Policies
 
 - NEVER use inline styling. Use tailwindcss (v4). v4 uses a `theme.css` (`@semio/js/theme.css`) for theming and not `{theme:{…}}` in `tailwindconfig`.
 - ALWAYS use colors defined in `@theme inline {…}` from `js/js/globals.css`. NEVER use direct colors such as light, gray, …, dark, primary, secondary, tertiary outside of `js/js/globals.css` and ALWAYS use semantic colors instead such as active, disabled, hover, …
@@ -1622,7 +1622,7 @@ Shared react components. The main component is Sketchpad. Sketchpad is used in t
 3. As user mode in a desktop app (electron).
    Sketchpad has a local store in yjs which syncs with indexeddb and the backend provider.
 
-**Rules:**
+**Policies:**
 
 - Domain logic is ALWAYS in semio.ts and whenever an operation is not ui bound, it should be implemented there.
 - **State Management Architecture**: XState is the SINGLE SOURCE OF TRUTH for all UI state. Yjs is ONLY used for collaborative Kit data (types, designs, etc.) via `KitStore`. All other app stores (Design, Type, Quality, Docs, Home, Feedback) use `PlainAppStore` or `PlainKitDiffAppStore` base classes which do NOT use Yjs. React components read state via `useSelector(actor, ...)` and send events via `actor.send({type: ...})`. NO Yjs in React components.
@@ -2263,7 +2263,7 @@ useEffect(() => {
 }, [appType, addSection, removeSection]);
 ```
 
-Rules:
+Policies:
 
 1. When a section id is conditional (for example `"properties"` vs `"multipleTitle"`), always `removeSection` for all possible ids before adding the currently active one.
 2. Always `removeSection` for every id you `addSection` (including conditional variants) in the effect cleanup.

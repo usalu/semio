@@ -87,7 +87,7 @@ Symbol,Code,Abbreviation,Name,Description
 🍾,Re,Rel,Release,"The release of the engine that created this database."
 ☁️,Rm?,Rmt?,Remote,"The optional Unique Resource Locator (URL) where to fetch the kit remotely."
 💾,Rp,Rep,Model,"A model is a link to a resource that describes a type for a certain level of detail and tags."
-📜,Rl*,Rul*,Rules,"A collection of monoceros rules that define how modules can be combined with other modules."
+📜,Rl*,Rul*,Policies,"A collection of monoceros policies that define how modules can be combined with other modules."
 🔄,Rt?,Rot?,Rotation,"The optional horizontal rotation in connector direction between the connected and the connecting piece in degrees."
 🏃‍♂️,Ru,Run,Run Component,"If true run the component."
 ?,?Co,?Con,Select Connection,"Select a connection with the connected id and the connecting id. The connections are symetric, so if the conected is the connecting and vice versa it will still selct them."

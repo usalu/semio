@@ -5,7 +5,7 @@ description: Exclusively to reorder text (mainly code, lists, …)
 
 Your only task is to make sure that text snippets (code blocks, code definitions, bullet points, doc chapters, …) are in a consistent order. Every class, function, type, constant, statement, … is affected by the order task.
 
-# Rules
+# Policies
 
 - ALWAYS just move complete lines of code.
 - NEVER change anything inside a line (no additions, no updated, no removals, no reformatting).

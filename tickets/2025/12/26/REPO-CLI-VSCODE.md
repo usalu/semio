@@ -17,7 +17,7 @@ repo.tsx CLI was fully implemented in a previous session with analyze, fix, tick
 # Plan
 
 1. Add repo CLI commands to VS Code extension (Ctrl+Shift+P)
-2. Watch reports/rules.json and show issues as diagnostics
+2. Watch reports/policies.json and show issues as diagnostics
 3. Test extension functionality
 
 # Changes
@@ -30,7 +30,7 @@ Added 12 commands to contributes.commands:
 - semio.analyzeFile - Analyze Current File
 - semio.fix - Fix Codebase Problems
 - semio.fixFile - Fix Current File Problems
-- semio.ruleList - List Rules
+- semio.policyList - List Policies
 - semio.ticketNew - Create New Ticket
 - semio.ticketList - List Tickets
 - semio.projectList - List Projects

@@ -16,7 +16,7 @@ The design and type apps were rendering placeholder geometry (boxes) instead of 
 
 # Plan
 
-1. Add validation rule for 3D file extensions in semio.ts
+1. Add validation policy for 3D file extensions in semio.ts
 2. Add footer component for tag selection in Type app
 3. Add footer component for tag selection in Design app
 4. Update documentation

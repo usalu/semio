@@ -94,7 +94,7 @@ Added comprehensive "Log System" section covering:
 
 Updated file structure documentation to show new hierarchy.
 
-Updated general rules to reference new log creation command.
+Updated general policies to reference new log creation command.
 
 #### `.gitignore`
 
@@ -150,7 +150,7 @@ const logs = listLogs({ year: 2025, month: 11 });
 ## Files Changed
 
 - Created: `scripts/log.ts`
-- Modified: `AGENTS.md` (log system documentation, file structure, general rules)
+- Modified: `AGENTS.md` (log system documentation, file structure, general policies)
 - Modified: `.gitignore` (allow log directory, ignore \*.log files)
 - Migrated: 31 log files to new structure
 - Added: `package.json` dependency on `gray-matter`

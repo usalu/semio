@@ -36,8 +36,7 @@ const execAsync = promisify(exec);
 // #region Constants
 
 const SEMIO_KIT_LANGUAGE = "json";
-const DIAGNOSTIC_SOURCE_KIT = "semio-kit";
-const DIAGNOSTIC_SOURCE_REPO = "semio-repo";
+const DIAGNOSTIC_SOURCE = "semio";
 
 // #endregion Constants
 
@@ -141,6 +140,19 @@ async function analyzeFile(document: vscode.TextDocument): Promise<void> {
   }
 }
 
+function getPolicyLineNumber(root: string, kind: string): number | undefined {
+  const repoPath = path.join(root, "repo.tsx");
+  if (!fs.existsSync(repoPath)) return undefined;
+  const policyPrefix = kind.split(":")[0];
+  const policyName = policyPrefix.charAt(0).toUpperCase() + policyPrefix.slice(1);
+  const content = fs.readFileSync(repoPath, "utf-8");
+  const lines = content.split("\n");
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].includes(`#region ${policyName} Policy`)) return i + 1;
+  }
+  return undefined;
+}
+
 function updateFileDiagnostics(document: vscode.TextDocument, violations: Violation[]): void {
   const root = getWorkspaceRoot();
   if (!root) return;
@@ -155,10 +167,16 @@ function updateFileDiagnostics(document: vscode.TextDocument, violations: Violat
     const endColumn = violation.excerpt ? column + violation.excerpt.length : column + 1;
     const range = new vscode.Range(line, column, line, endColumn);
     const severity = violation.priority === "high" ? vscode.DiagnosticSeverity.Error : violation.priority === "medium" ? vscode.DiagnosticSeverity.Warning : vscode.DiagnosticSeverity.Information;
-    const message = `${violation.summary}\n\nReason: ${violation.reason}\nSolution: ${violation.solution}`;
+    const message = `${violation.kind}: ${violation.summary} (${violation.reason}. ${violation.solution})`;
     const diagnostic = new vscode.Diagnostic(range, message, severity);
-    diagnostic.source = DIAGNOSTIC_SOURCE_REPO;
-    diagnostic.code = violation.id;
+    diagnostic.source = DIAGNOSTIC_SOURCE;
+    const policyLine = getPolicyLineNumber(root, violation.kind);
+    if (policyLine) {
+      const repoUri = vscode.Uri.file(path.join(root, "repo.tsx")).with({ fragment: `L${policyLine}` });
+      diagnostic.code = { value: violation.kind, target: repoUri };
+    } else {
+      diagnostic.code = violation.kind;
+    }
     if (violation.autofixable) {
       diagnostic.tags = [];
     }
@@ -169,12 +187,14 @@ function updateFileDiagnostics(document: vscode.TextDocument, violations: Violat
 
 class SemioRepoCodeActionProvider implements vscode.CodeActionProvider {
   provideCodeActions(document: vscode.TextDocument, range: vscode.Range | vscode.Selection, context: vscode.CodeActionContext): vscode.CodeAction[] | undefined {
-    const repoDiagnostics = context.diagnostics.filter((d) => d.source === DIAGNOSTIC_SOURCE_REPO);
+    const repoDiagnostics = context.diagnostics.filter((d) => d.source === DIAGNOSTIC_SOURCE);
     if (repoDiagnostics.length === 0) return undefined;
     const violations = fileViolationsMap.get(document.uri.toString()) || [];
     const actions: vscode.CodeAction[] = [];
     for (const diagnostic of repoDiagnostics) {
-      const violation = violations.find((v) => v.id === diagnostic.code && v.autofixable);
+      const diagnosticLine = diagnostic.range.start.line + 1;
+      const codeValue = typeof diagnostic.code === "object" && diagnostic.code !== null ? (diagnostic.code as { value: string }).value : diagnostic.code;
+      const violation = violations.find((v) => v.kind === codeValue && v.autofixable && (v.line ?? 1) === diagnosticLine);
       if (!violation) continue;
       const action = createRepoCodeAction(document, diagnostic, violation);
       if (action) actions.push(action);
@@ -230,7 +250,7 @@ function isSemioKitDocument(document: vscode.TextDocument): boolean {
 function problemToDiagnostic(document: vscode.TextDocument, problem: Problem): vscode.Diagnostic {
   const range = locationToRange(document, problem.location);
   const diagnostic = new vscode.Diagnostic(range, problem.message, vscode.DiagnosticSeverity.Error);
-  diagnostic.source = DIAGNOSTIC_SOURCE_KIT;
+  diagnostic.source = DIAGNOSTIC_SOURCE;
   diagnostic.code = problem.constraintId;
   if (problem.relatedGuids && problem.relatedGuids.length > 1) {
     diagnostic.relatedInformation = problem.relatedGuids.slice(1).map((guid) => {
@@ -366,7 +386,7 @@ function validateKitDocument(document: vscode.TextDocument): void {
 
 class SemioKitCodeActionProvider implements vscode.CodeActionProvider {
   provideCodeActions(document: vscode.TextDocument, range: vscode.Range | vscode.Selection, context: vscode.CodeActionContext): vscode.CodeAction[] | undefined {
-    const kitDiagnostics = context.diagnostics.filter((d) => d.source === DIAGNOSTIC_SOURCE_KIT);
+    const kitDiagnostics = context.diagnostics.filter((d) => d.source === DIAGNOSTIC_SOURCE);
     if (kitDiagnostics.length === 0) return undefined;
     const actions: vscode.CodeAction[] = [];
     for (const diagnostic of kitDiagnostics) {
@@ -463,14 +483,14 @@ function registerCommands(context: vscode.ExtensionContext): void {
       terminal.show();
       terminal.sendText(`npx tsx repo.tsx fix ${relativePath}`);
     }),
-    vscode.commands.registerCommand("semio.ruleList", async () => {
+    vscode.commands.registerCommand("semio.policyList", async () => {
       if (!getRepoTsxPath()) {
         vscode.window.showErrorMessage("repo.tsx not found in workspace");
         return;
       }
-      const terminal = vscode.window.createTerminal("semio Rules");
+      const terminal = vscode.window.createTerminal("semio Policies");
       terminal.show();
-      terminal.sendText("npx tsx repo.tsx rule list");
+      terminal.sendText("npx tsx repo.tsx policy list");
     }),
     vscode.commands.registerCommand("semio.ticketCreate", async () => {
       if (!getRepoTsxPath()) {
@@ -898,19 +918,19 @@ function registerCommands(context: vscode.ExtensionContext): void {
       terminal.show();
       terminal.sendText("npx tsx repo.tsx project tree");
     }),
-    vscode.commands.registerCommand("semio.ruleRun", async () => {
+    vscode.commands.registerCommand("semio.policyRun", async () => {
       if (!getRepoTsxPath()) {
         vscode.window.showErrorMessage("repo.tsx not found in workspace");
         return;
       }
-      const ruleId = await vscode.window.showInputBox({
-        prompt: "Enter rule ID to run (leave empty for all)",
+      const policyId = await vscode.window.showInputBox({
+        prompt: "Enter policy ID to run (leave empty for all)",
         placeHolder: "header",
       });
-      const terminal = vscode.window.createTerminal("semio Rules");
+      const terminal = vscode.window.createTerminal("semio Policies");
       terminal.show();
-      const idArg = ruleId ? ` --id=${ruleId}` : "";
-      terminal.sendText(`npx tsx repo.tsx rule run${idArg}`);
+      const idArg = policyId ? ` --id=${policyId}` : "";
+      terminal.sendText(`npx tsx repo.tsx policy run${idArg}`);
     }),
     vscode.commands.registerCommand("semio.toolRun", async () => {
       if (!getRepoTsxPath()) {
@@ -940,8 +960,8 @@ function registerCommands(context: vscode.ExtensionContext): void {
 
 export function activate(context: vscode.ExtensionContext) {
   console.log("semio extension activated");
-  kitDiagnosticCollection = vscode.languages.createDiagnosticCollection(DIAGNOSTIC_SOURCE_KIT);
-  repoDiagnosticCollection = vscode.languages.createDiagnosticCollection(DIAGNOSTIC_SOURCE_REPO);
+  kitDiagnosticCollection = vscode.languages.createDiagnosticCollection(DIAGNOSTIC_SOURCE);
+  repoDiagnosticCollection = vscode.languages.createDiagnosticCollection(DIAGNOSTIC_SOURCE);
   context.subscriptions.push(kitDiagnosticCollection, repoDiagnosticCollection);
   context.subscriptions.push(
     vscode.workspace.onDidOpenTextDocument(validateKitDocument),

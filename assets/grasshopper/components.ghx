@@ -24634,9 +24634,9 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                         </chunk>
                         <chunk name="OutputParam" index="1">
                           <items count="6">
-                            <item name="Description" type_name="gh_string" type_code="10">Contains a collection of Monoceros Rules.</item>
+                            <item name="Description" type_name="gh_string" type_code="10">Contains a collection of Monoceros Policies.</item>
                             <item name="InstanceGuid" type_name="gh_guid" type_code="9">1efd9b4c-9a0a-4fa9-b34e-59c731bd6261</item>
-                            <item name="Name" type_name="gh_string" type_code="10">Rule</item>
+                            <item name="Name" type_name="gh_string" type_code="10">Policy</item>
                             <item name="NickName" type_name="gh_string" type_code="10">R</item>
                             <item name="Optional" type_name="gh_bool" type_code="1">false</item>
                             <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>

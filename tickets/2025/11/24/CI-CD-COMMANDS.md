@@ -21,7 +21,7 @@ iterations: []
 
 1. Added the missing `update` command to the root scripts so `npx nx run-many -t update` is available alongside the other targets and respects the existing Nx dependency graph.
 2. Reverted workspace packages to their original scripts instead of forcing every project to adopt every command, respecting the instruction to leave a package's command set untouched when a command didn't exist.
-3. Documented the contract and the "no new per-package scripts" rule in `README.md` and `AGENTS.md`.
+3. Documented the contract and the "no new per-package scripts" policy in `README.md` and `AGENTS.md`.
 
 ## Notes
 

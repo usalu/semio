@@ -103,9 +103,9 @@ suite("Command Registration Test Suite", () => {
     assert.ok(commands.includes("semio.fixFile"), "semio.fixFile command should be registered");
   });
 
-  test("semio.ruleList command is registered", async () => {
+  test("semio.policyList command is registered", async () => {
     const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("semio.ruleList"), "semio.ruleList command should be registered");
+    assert.ok(commands.includes("semio.policyList"), "semio.policyList command should be registered");
   });
 
   test("semio.ticketCreate command is registered", async () => {
@@ -143,9 +143,9 @@ suite("Command Registration Test Suite", () => {
     assert.ok(commands.includes("semio.refreshDiagnostics"), "semio.refreshDiagnostics command should be registered");
   });
 
-  test("semio.ruleRun command is registered", async () => {
+  test("semio.policyRun command is registered", async () => {
     const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("semio.ruleRun"), "semio.ruleRun command should be registered");
+    assert.ok(commands.includes("semio.policyRun"), "semio.policyRun command should be registered");
   });
 
   test("semio.ticketIterateStart command is registered", async () => {
@@ -263,9 +263,9 @@ suite("Command Execution Test Suite", () => {
     }
   });
 
-  test("semio.ruleList executes and shows output", async () => {
+  test("semio.policyList executes and shows output", async () => {
     try {
-      await vscode.commands.executeCommand("semio.ruleList");
+      await vscode.commands.executeCommand("semio.policyList");
       assert.ok(true, "Command executed successfully");
     } catch (error) {
       assert.fail(`Command should not throw: ${error}`);

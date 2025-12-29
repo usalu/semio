@@ -25,7 +25,7 @@ Problem: React Flow's `ViewportPortal` component creates a wrapper div with clas
 
 # Plan
 
-1. ~~Add CSS rule to make `react-flow__viewport-portal` have `pointer-events: none`~~
+1. ~~Add CSS policy to make `react-flow__viewport-portal` have `pointer-events: none`~~
 2. ~~Create Playwright test to verify piece hover and selection works~~
 3. ~~Clean up debug logging~~
 
@@ -35,7 +35,7 @@ Problem: React Flow's `ViewportPortal` component creates a wrapper div with clas
 
 **File:** `js/js/globals.css`
 
-Added CSS rule to disable pointer events on React Flow's viewport portal container:
+Added CSS policy to disable pointer events on React Flow's viewport portal container:
 
 ```css
 .react-flow__viewport-portal {

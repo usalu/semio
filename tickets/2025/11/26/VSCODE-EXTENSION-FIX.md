@@ -47,7 +47,7 @@ Problems identified:
 - Added import for `InvalidKit`, `validateSemioKit`, `hasSemioErrors`
 - Added "Validation" test suite with 3 tests:
   - "Valid kit has no errors" - validates MetabolismKit has no errors
-  - "Invalid kit has all expected errors" - validates InvalidKit triggers all 11 validation rules
+  - "Invalid kit has all expected errors" - validates InvalidKit triggers all 11 validation policies
   - "Fixes can be applied to resolve issues" - validates fixes work correctly
 
 ## 3. Updated `js/vscode/package.json`

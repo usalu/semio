@@ -5974,10 +5974,10 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
   const onNodeDrag = useCallback(
     (event: any, node: DiagramNode) => {
-      dragPositionRef.current = { x: node.position.x, y: node.position.y };
-      return;
-
-      if (!isDraggingRef.current || !dragPositionRef.current || !reactFlowInstanceRef.current) return;
+      if (!isDraggingRef.current || !dragPositionRef.current || !reactFlowInstanceRef.current) {
+        dragPositionRef.current = { x: node.position.x, y: node.position.y };
+        return;
+      }
 
       if (!event.altKey) {
         dragPositionRef.current = { x: node.position.x, y: node.position.y };
