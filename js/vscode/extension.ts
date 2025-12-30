@@ -88,11 +88,48 @@ function getWorkspaceRoot(): string | undefined {
   return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
 }
 
+function getRepoBinaryPath(): string | undefined {
+  const root = getWorkspaceRoot();
+  if (!root) return undefined;
+  const isWindows = process.platform === "win32";
+  const binaryName = isWindows ? "repo.exe" : "repo";
+  const binaryPath = path.join(root, "go", "repo", binaryName);
+  if (fs.existsSync(binaryPath)) return binaryPath;
+  const builtPath = path.join(root, "go", "bin", binaryName);
+  if (fs.existsSync(builtPath)) return builtPath;
+  return undefined;
+}
+
+function getRepoCommand(): { command: string; useGo: boolean } {
+  const binaryPath = getRepoBinaryPath();
+  if (binaryPath) {
+    return { command: binaryPath, useGo: true };
+  }
+  const root = getWorkspaceRoot();
+  if (root && fs.existsSync(path.join(root, "repo.tsx"))) {
+    return { command: "npx tsx repo.tsx", useGo: false };
+  }
+  return { command: "", useGo: false };
+}
+
 function getRepoTsxPath(): string | undefined {
   const root = getWorkspaceRoot();
   if (!root) return undefined;
   const repoPath = path.join(root, "repo.tsx");
   return fs.existsSync(repoPath) ? repoPath : undefined;
+}
+
+function hasRepoAccess(): boolean {
+  const { command } = getRepoCommand();
+  return command !== "";
+}
+
+function runRepoCommand(args: string): void {
+  const { command } = getRepoCommand();
+  if (!command) return;
+  const terminal = vscode.window.createTerminal("semio");
+  terminal.show();
+  terminal.sendText(`${command} ${args}`);
 }
 
 // #endregion Utilities
@@ -118,19 +155,24 @@ async function analyzeFile(document: vscode.TextDocument): Promise<void> {
   if (!shouldAnalyzeFile(document)) return;
   const root = getWorkspaceRoot();
   if (!root) return;
-  if (!getRepoTsxPath()) return;
+  if (!hasRepoAccess()) return;
+  const { command, useGo } = getRepoCommand();
   const relativePath = vscode.workspace.asRelativePath(document.uri);
   try {
-    const { stdout } = await execAsync(`npx tsx repo.tsx analyze --scope=${relativePath} --json`, { cwd: root, timeout: 30000 });
-    const report: AnalyzeReport = JSON.parse(stdout);
-    fileViolationsMap.set(document.uri.toString(), report.violations);
-    updateFileDiagnostics(document, report.violations);
+    const cmd = useGo ? `${command} analyze --scope=${relativePath} --json` : `${command} analyze --scope=${relativePath} --json`;
+    const { stdout } = await execAsync(cmd, { cwd: root, timeout: 30000 });
+    const parsed = JSON.parse(stdout);
+    const report: AnalyzeReport = useGo ? parsed.output ? { ...parsed, violations: parsed.data?.violations || [] } : parsed : parsed;
+    fileViolationsMap.set(document.uri.toString(), report.violations || []);
+    updateFileDiagnostics(document, report.violations || []);
   } catch (error) {
     if (error instanceof Error && "stdout" in error) {
       try {
-        const report: AnalyzeReport = JSON.parse((error as { stdout: string }).stdout);
-        fileViolationsMap.set(document.uri.toString(), report.violations);
-        updateFileDiagnostics(document, report.violations);
+        const stdout = (error as { stdout: string }).stdout;
+        const parsed = JSON.parse(stdout);
+        const report: AnalyzeReport = parsed.data || parsed;
+        fileViolationsMap.set(document.uri.toString(), report.violations || []);
+        updateFileDiagnostics(document, report.violations || []);
       } catch {
         console.error("Failed to parse analyze output:", error);
       }
@@ -216,13 +258,14 @@ function createRepoCodeAction(document: vscode.TextDocument, diagnostic: vscode.
 async function fixViolation(relativePath: string): Promise<void> {
   const root = getWorkspaceRoot();
   if (!root) return;
-  if (!getRepoTsxPath()) {
-    vscode.window.showErrorMessage("repo.tsx not found in workspace");
+  if (!hasRepoAccess()) {
+    vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
     return;
   }
+  const { command } = getRepoCommand();
   try {
     await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: "Fixing violation..." }, async () => {
-      const { stdout, stderr } = await execAsync(`npx tsx repo.tsx fix ${relativePath}`, { cwd: root, timeout: 30000 });
+      const { stdout, stderr } = await execAsync(`${command} fix ${relativePath}`, { cwd: root, timeout: 30000 });
       if (stderr) console.log("Fix stderr:", stderr);
       if (stdout) console.log("Fix stdout:", stdout);
       const absPath = path.join(root, relativePath);
@@ -440,16 +483,20 @@ function createKitCodeAction(document: vscode.TextDocument, diagnostic: vscode.D
 // #region Commands
 
 function registerCommands(context: vscode.ExtensionContext): void {
+  const runRepoCommand = (args: string): void => {
+    const { command, useGo } = getRepoCommand();
+    const terminal = vscode.window.createTerminal("semio");
+    terminal.show();
+    terminal.sendText(`${command} ${args}`);
+  };
   context.subscriptions.push(
     vscode.commands.registerCommand("semio.fixViolation", fixViolation),
     vscode.commands.registerCommand("semio.analyze", async () => {
-      if (!getRepoTsxPath()) {
-        vscode.window.showErrorMessage("repo.tsx not found in workspace");
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
-      const terminal = vscode.window.createTerminal("semio Analyze");
-      terminal.show();
-      terminal.sendText("npx tsx repo.tsx analyze --json");
+      runRepoCommand("analyze --json");
       vscode.window.showInformationMessage("Running semio analyze...");
     }),
     vscode.commands.registerCommand("semio.analyzeFile", async () => {
@@ -458,23 +505,19 @@ function registerCommands(context: vscode.ExtensionContext): void {
         vscode.window.showErrorMessage("No active file");
         return;
       }
-      if (!getRepoTsxPath()) {
-        vscode.window.showErrorMessage("repo.tsx not found in workspace");
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
       const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
-      const terminal = vscode.window.createTerminal("semio Analyze");
-      terminal.show();
-      terminal.sendText(`npx tsx repo.tsx analyze --scope=${relativePath} --json`);
+      runRepoCommand(`analyze --scope=${relativePath} --json`);
     }),
     vscode.commands.registerCommand("semio.fix", async () => {
-      if (!getRepoTsxPath()) {
-        vscode.window.showErrorMessage("repo.tsx not found in workspace");
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
-      const terminal = vscode.window.createTerminal("semio Fix");
-      terminal.show();
-      terminal.sendText("npx tsx repo.tsx fix");
+      runRepoCommand("fix");
       vscode.window.showInformationMessage("Running semio fix...");
     }),
     vscode.commands.registerCommand("semio.fixFile", async () => {
@@ -483,27 +526,23 @@ function registerCommands(context: vscode.ExtensionContext): void {
         vscode.window.showErrorMessage("No active file");
         return;
       }
-      if (!getRepoTsxPath()) {
-        vscode.window.showErrorMessage("repo.tsx not found in workspace");
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
       const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
-      const terminal = vscode.window.createTerminal("semio Fix");
-      terminal.show();
-      terminal.sendText(`npx tsx repo.tsx fix ${relativePath}`);
+      runRepoCommand(`fix ${relativePath}`);
     }),
     vscode.commands.registerCommand("semio.policyList", async () => {
-      if (!getRepoTsxPath()) {
-        vscode.window.showErrorMessage("repo.tsx not found in workspace");
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
-      const terminal = vscode.window.createTerminal("semio Policies");
-      terminal.show();
-      terminal.sendText("npx tsx repo.tsx policy list");
+      runRepoCommand("policy list");
     }),
     vscode.commands.registerCommand("semio.ticketCreate", async () => {
-      if (!getRepoTsxPath()) {
-        vscode.window.showErrorMessage("repo.tsx not found in workspace");
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
       const slug = await vscode.window.showInputBox({
@@ -516,22 +555,18 @@ function registerCommands(context: vscode.ExtensionContext): void {
         placeHolder: "What needs to be done?",
       });
       if (!prompt) return;
-      const terminal = vscode.window.createTerminal("semio Ticket");
-      terminal.show();
-      terminal.sendText(`npx tsx repo.tsx ticket create ${slug} --prompt="${prompt.replace(/"/g, '\\"')}"`);
+      runRepoCommand(`ticket create ${slug} --prompt="${prompt.replace(/"/g, '\\"')}"`);
     }),
     vscode.commands.registerCommand("semio.ticketList", async () => {
-      if (!getRepoTsxPath()) {
-        vscode.window.showErrorMessage("repo.tsx not found in workspace");
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
-      const terminal = vscode.window.createTerminal("semio Tickets");
-      terminal.show();
-      terminal.sendText("npx tsx repo.tsx ticket list");
+      runRepoCommand("ticket list");
     }),
     vscode.commands.registerCommand("semio.ticketIterateStart", async () => {
-      if (!getRepoTsxPath()) {
-        vscode.window.showErrorMessage("repo.tsx not found in workspace");
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
       const dateInput = await vscode.window.showInputBox({
@@ -549,13 +584,11 @@ function registerCommands(context: vscode.ExtensionContext): void {
         placeHolder: "TICKET-SLUG",
       });
       if (!slug) return;
-      const terminal = vscode.window.createTerminal("semio Ticket");
-      terminal.show();
-      terminal.sendText(`npx tsx repo.tsx ticket iterate start ${dateParts[0]} ${dateParts[1]} ${dateParts[2]} ${slug}`);
+      runRepoCommand(`ticket iterate start ${dateParts[0]} ${dateParts[1]} ${dateParts[2]} ${slug}`);
     }),
     vscode.commands.registerCommand("semio.ticketIterateEnd", async () => {
-      if (!getRepoTsxPath()) {
-        vscode.window.showErrorMessage("repo.tsx not found in workspace");
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
       const dateInput = await vscode.window.showInputBox({
@@ -573,13 +606,11 @@ function registerCommands(context: vscode.ExtensionContext): void {
         placeHolder: "TICKET-SLUG",
       });
       if (!slug) return;
-      const terminal = vscode.window.createTerminal("semio Ticket");
-      terminal.show();
-      terminal.sendText(`npx tsx repo.tsx ticket iterate end ${dateParts[0]} ${dateParts[1]} ${dateParts[2]} ${slug}`);
+      runRepoCommand(`ticket iterate end ${dateParts[0]} ${dateParts[1]} ${dateParts[2]} ${slug}`);
     }),
     vscode.commands.registerCommand("semio.ticketFinish", async () => {
-      if (!getRepoTsxPath()) {
-        vscode.window.showErrorMessage("repo.tsx not found in workspace");
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
       const dateInput = await vscode.window.showInputBox({
@@ -597,13 +628,11 @@ function registerCommands(context: vscode.ExtensionContext): void {
         placeHolder: "TICKET-SLUG",
       });
       if (!slug) return;
-      const terminal = vscode.window.createTerminal("semio Ticket");
-      terminal.show();
-      terminal.sendText(`npx tsx repo.tsx ticket finish ${dateParts[0]} ${dateParts[1]} ${dateParts[2]} ${slug}`);
+      runRepoCommand(`ticket finish ${dateParts[0]} ${dateParts[1]} ${dateParts[2]} ${slug}`);
     }),
     vscode.commands.registerCommand("semio.ticketRead", async () => {
-      if (!getRepoTsxPath()) {
-        vscode.window.showErrorMessage("repo.tsx not found in workspace");
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
       const dateInput = await vscode.window.showInputBox({
@@ -621,18 +650,14 @@ function registerCommands(context: vscode.ExtensionContext): void {
         placeHolder: "TICKET-SLUG",
       });
       if (!slug) return;
-      const terminal = vscode.window.createTerminal("semio Ticket");
-      terminal.show();
-      terminal.sendText(`npx tsx repo.tsx ticket read ${dateParts[0]} ${dateParts[1]} ${dateParts[2]} ${slug}`);
+      runRepoCommand(`ticket read ${dateParts[0]} ${dateParts[1]} ${dateParts[2]} ${slug}`);
     }),
     vscode.commands.registerCommand("semio.projectList", async () => {
-      if (!getRepoTsxPath()) {
-        vscode.window.showErrorMessage("repo.tsx not found in workspace");
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
-      const terminal = vscode.window.createTerminal("semio Projects");
-      terminal.show();
-      terminal.sendText("npx tsx repo.tsx project list");
+      runRepoCommand("project list");
     }),
     vscode.commands.registerCommand("semio.sectionTree", async () => {
       const editor = vscode.window.activeTextEditor;
@@ -640,14 +665,12 @@ function registerCommands(context: vscode.ExtensionContext): void {
         vscode.window.showErrorMessage("No active file");
         return;
       }
-      if (!getRepoTsxPath()) {
-        vscode.window.showErrorMessage("repo.tsx not found in workspace");
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
       const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
-      const terminal = vscode.window.createTerminal("semio Sections");
-      terminal.show();
-      terminal.sendText(`npx tsx repo.tsx section tree ${relativePath}`);
+      runRepoCommand(`section tree ${relativePath}`);
     }),
     vscode.commands.registerCommand("semio.definitionList", async () => {
       const editor = vscode.window.activeTextEditor;
@@ -655,18 +678,16 @@ function registerCommands(context: vscode.ExtensionContext): void {
         vscode.window.showErrorMessage("No active file");
         return;
       }
-      if (!getRepoTsxPath()) {
-        vscode.window.showErrorMessage("repo.tsx not found in workspace");
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
       const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
-      const terminal = vscode.window.createTerminal("semio Definitions");
-      terminal.show();
-      terminal.sendText(`npx tsx repo.tsx definition list ${relativePath}`);
+      runRepoCommand(`definition list ${relativePath}`);
     }),
     vscode.commands.registerCommand("semio.folderTree", async () => {
-      if (!getRepoTsxPath()) {
-        vscode.window.showErrorMessage("repo.tsx not found in workspace");
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
       const folderPath = await vscode.window.showInputBox({
@@ -675,18 +696,11 @@ function registerCommands(context: vscode.ExtensionContext): void {
         value: ".",
       });
       if (!folderPath) return;
-      const depth = await vscode.window.showInputBox({
-        prompt: "Enter depth (leave empty for unlimited)",
-        placeHolder: "2",
-      });
-      const terminal = vscode.window.createTerminal("semio Folder");
-      terminal.show();
-      const depthArg = depth ? ` --depth=${depth}` : "";
-      terminal.sendText(`npx tsx repo.tsx folder tree ${folderPath}${depthArg}`);
+      runRepoCommand(`folder tree ${folderPath}`);
     }),
     vscode.commands.registerCommand("semio.folderCreate", async () => {
-      if (!getRepoTsxPath()) {
-        vscode.window.showErrorMessage("repo.tsx not found in workspace");
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
       const folderPath = await vscode.window.showInputBox({
@@ -694,13 +708,11 @@ function registerCommands(context: vscode.ExtensionContext): void {
         placeHolder: "js/js/new-folder",
       });
       if (!folderPath) return;
-      const terminal = vscode.window.createTerminal("semio Folder");
-      terminal.show();
-      terminal.sendText(`npx tsx repo.tsx folder create ${folderPath}`);
+      runRepoCommand(`folder create ${folderPath}`);
     }),
     vscode.commands.registerCommand("semio.folderMove", async () => {
-      if (!getRepoTsxPath()) {
-        vscode.window.showErrorMessage("repo.tsx not found in workspace");
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
       const sourcePath = await vscode.window.showInputBox({
@@ -713,13 +725,11 @@ function registerCommands(context: vscode.ExtensionContext): void {
         placeHolder: "js/js/new-folder",
       });
       if (!targetPath) return;
-      const terminal = vscode.window.createTerminal("semio Folder");
-      terminal.show();
-      terminal.sendText(`npx tsx repo.tsx folder move ${sourcePath} ${targetPath}`);
+      runRepoCommand(`folder move ${sourcePath} ${targetPath}`);
     }),
     vscode.commands.registerCommand("semio.folderDelete", async () => {
-      if (!getRepoTsxPath()) {
-        vscode.window.showErrorMessage("repo.tsx not found in workspace");
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
       const folderPath = await vscode.window.showInputBox({
@@ -727,13 +737,11 @@ function registerCommands(context: vscode.ExtensionContext): void {
         placeHolder: "js/js/folder-to-delete",
       });
       if (!folderPath) return;
-      const terminal = vscode.window.createTerminal("semio Folder");
-      terminal.show();
-      terminal.sendText(`npx tsx repo.tsx folder delete ${folderPath}`);
+      runRepoCommand(`folder delete ${folderPath}`);
     }),
     vscode.commands.registerCommand("semio.folderList", async () => {
-      if (!getRepoTsxPath()) {
-        vscode.window.showErrorMessage("repo.tsx not found in workspace");
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
       const folderPath = await vscode.window.showInputBox({
@@ -742,13 +750,11 @@ function registerCommands(context: vscode.ExtensionContext): void {
         value: ".",
       });
       if (!folderPath) return;
-      const terminal = vscode.window.createTerminal("semio Folder");
-      terminal.show();
-      terminal.sendText(`npx tsx repo.tsx folder list --scope=${folderPath}`);
+      runRepoCommand(`folder list ${folderPath}`);
     }),
     vscode.commands.registerCommand("semio.fileCreate", async () => {
-      if (!getRepoTsxPath()) {
-        vscode.window.showErrorMessage("repo.tsx not found in workspace");
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
       const filePath = await vscode.window.showInputBox({
@@ -756,13 +762,11 @@ function registerCommands(context: vscode.ExtensionContext): void {
         placeHolder: "js/js/new-file.ts",
       });
       if (!filePath) return;
-      const terminal = vscode.window.createTerminal("semio File");
-      terminal.show();
-      terminal.sendText(`npx tsx repo.tsx file create ${filePath}`);
+      runRepoCommand(`file create ${filePath}`);
     }),
     vscode.commands.registerCommand("semio.fileMove", async () => {
-      if (!getRepoTsxPath()) {
-        vscode.window.showErrorMessage("repo.tsx not found in workspace");
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
       const sourcePath = await vscode.window.showInputBox({
@@ -775,13 +779,11 @@ function registerCommands(context: vscode.ExtensionContext): void {
         placeHolder: "js/js/new-file.ts",
       });
       if (!targetPath) return;
-      const terminal = vscode.window.createTerminal("semio File");
-      terminal.show();
-      terminal.sendText(`npx tsx repo.tsx file move ${sourcePath} ${targetPath}`);
+      runRepoCommand(`file move ${sourcePath} ${targetPath}`);
     }),
     vscode.commands.registerCommand("semio.fileDelete", async () => {
-      if (!getRepoTsxPath()) {
-        vscode.window.showErrorMessage("repo.tsx not found in workspace");
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
       const filePath = await vscode.window.showInputBox({
@@ -789,13 +791,11 @@ function registerCommands(context: vscode.ExtensionContext): void {
         placeHolder: "js/js/file-to-delete.ts",
       });
       if (!filePath) return;
-      const terminal = vscode.window.createTerminal("semio File");
-      terminal.show();
-      terminal.sendText(`npx tsx repo.tsx file delete ${filePath}`);
+      runRepoCommand(`file delete ${filePath}`);
     }),
     vscode.commands.registerCommand("semio.fileList", async () => {
-      if (!getRepoTsxPath()) {
-        vscode.window.showErrorMessage("repo.tsx not found in workspace");
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
       const folderPath = await vscode.window.showInputBox({
@@ -804,13 +804,11 @@ function registerCommands(context: vscode.ExtensionContext): void {
         value: ".",
       });
       if (!folderPath) return;
-      const terminal = vscode.window.createTerminal("semio File");
-      terminal.show();
-      terminal.sendText(`npx tsx repo.tsx file list --scope=${folderPath}`);
+      runRepoCommand(`file list --scope=${folderPath}`);
     }),
     vscode.commands.registerCommand("semio.fileTree", async () => {
-      if (!getRepoTsxPath()) {
-        vscode.window.showErrorMessage("repo.tsx not found in workspace");
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
       const folderPath = await vscode.window.showInputBox({
@@ -819,9 +817,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
         value: ".",
       });
       if (!folderPath) return;
-      const terminal = vscode.window.createTerminal("semio File");
-      terminal.show();
-      terminal.sendText(`npx tsx repo.tsx file tree --scope=${folderPath}`);
+      runRepoCommand(`file tree ${folderPath}`);
     }),
     vscode.commands.registerCommand("semio.sectionCreate", async () => {
       const editor = vscode.window.activeTextEditor;
@@ -829,8 +825,8 @@ function registerCommands(context: vscode.ExtensionContext): void {
         vscode.window.showErrorMessage("No active file");
         return;
       }
-      if (!getRepoTsxPath()) {
-        vscode.window.showErrorMessage("repo.tsx not found in workspace");
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
       const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
@@ -839,9 +835,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
         placeHolder: "MySection",
       });
       if (!sectionPath) return;
-      const terminal = vscode.window.createTerminal("semio Section");
-      terminal.show();
-      terminal.sendText(`npx tsx repo.tsx section create ${relativePath} ${sectionPath}`);
+      runRepoCommand(`section create ${relativePath} ${sectionPath}`);
     }),
     vscode.commands.registerCommand("semio.sectionMove", async () => {
       const editor = vscode.window.activeTextEditor;
@@ -849,8 +843,8 @@ function registerCommands(context: vscode.ExtensionContext): void {
         vscode.window.showErrorMessage("No active file");
         return;
       }
-      if (!getRepoTsxPath()) {
-        vscode.window.showErrorMessage("repo.tsx not found in workspace");
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
       const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
@@ -864,9 +858,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
         placeHolder: "NewSection",
       });
       if (!targetPath) return;
-      const terminal = vscode.window.createTerminal("semio Section");
-      terminal.show();
-      terminal.sendText(`npx tsx repo.tsx section move ${relativePath} ${sourcePath} ${targetPath}`);
+      runRepoCommand(`section move ${relativePath} ${sourcePath} ${targetPath}`);
     }),
     vscode.commands.registerCommand("semio.sectionDelete", async () => {
       const editor = vscode.window.activeTextEditor;
@@ -874,8 +866,8 @@ function registerCommands(context: vscode.ExtensionContext): void {
         vscode.window.showErrorMessage("No active file");
         return;
       }
-      if (!getRepoTsxPath()) {
-        vscode.window.showErrorMessage("repo.tsx not found in workspace");
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
       const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
@@ -884,9 +876,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
         placeHolder: "SectionToDelete",
       });
       if (!sectionPath) return;
-      const terminal = vscode.window.createTerminal("semio Section");
-      terminal.show();
-      terminal.sendText(`npx tsx repo.tsx section delete ${relativePath} ${sectionPath}`);
+      runRepoCommand(`section delete ${relativePath} ${sectionPath}`);
     }),
     vscode.commands.registerCommand("semio.sectionList", async () => {
       const editor = vscode.window.activeTextEditor;
@@ -894,14 +884,12 @@ function registerCommands(context: vscode.ExtensionContext): void {
         vscode.window.showErrorMessage("No active file");
         return;
       }
-      if (!getRepoTsxPath()) {
-        vscode.window.showErrorMessage("repo.tsx not found in workspace");
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
       const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
-      const terminal = vscode.window.createTerminal("semio Sections");
-      terminal.show();
-      terminal.sendText(`npx tsx repo.tsx section list ${relativePath}`);
+      runRepoCommand(`section list ${relativePath}`);
     }),
     vscode.commands.registerCommand("semio.definitionTree", async () => {
       const editor = vscode.window.activeTextEditor;
@@ -909,41 +897,35 @@ function registerCommands(context: vscode.ExtensionContext): void {
         vscode.window.showErrorMessage("No active file");
         return;
       }
-      if (!getRepoTsxPath()) {
-        vscode.window.showErrorMessage("repo.tsx not found in workspace");
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
       const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
-      const terminal = vscode.window.createTerminal("semio Definitions");
-      terminal.show();
-      terminal.sendText(`npx tsx repo.tsx definition tree ${relativePath}`);
+      runRepoCommand(`definition tree ${relativePath}`);
     }),
     vscode.commands.registerCommand("semio.projectTree", async () => {
-      if (!getRepoTsxPath()) {
-        vscode.window.showErrorMessage("repo.tsx not found in workspace");
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
-      const terminal = vscode.window.createTerminal("semio Projects");
-      terminal.show();
-      terminal.sendText("npx tsx repo.tsx project tree");
+      runRepoCommand("project tree");
     }),
     vscode.commands.registerCommand("semio.policyRun", async () => {
-      if (!getRepoTsxPath()) {
-        vscode.window.showErrorMessage("repo.tsx not found in workspace");
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
       const policyId = await vscode.window.showInputBox({
         prompt: "Enter policy ID to run (leave empty for all)",
         placeHolder: "header",
       });
-      const terminal = vscode.window.createTerminal("semio Policies");
-      terminal.show();
-      const idArg = policyId ? ` --id=${policyId}` : "";
-      terminal.sendText(`npx tsx repo.tsx policy run${idArg}`);
+      const idArg = policyId ? ` run ${policyId}` : " run";
+      runRepoCommand(`policy${idArg}`);
     }),
     vscode.commands.registerCommand("semio.toolRun", async () => {
-      if (!getRepoTsxPath()) {
-        vscode.window.showErrorMessage("repo.tsx not found in workspace");
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
       const toolName = await vscode.window.showInputBox({
@@ -951,9 +933,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
         placeHolder: "i18n",
       });
       if (!toolName) return;
-      const terminal = vscode.window.createTerminal("semio Tool");
-      terminal.show();
-      terminal.sendText(`npx tsx repo.tsx tool ${toolName}`);
+      runRepoCommand(`tool ${toolName}`);
     }),
     vscode.commands.registerCommand("semio.refreshDiagnostics", async () => {
       vscode.workspace.textDocuments.forEach(validateKitDocument);

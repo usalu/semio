@@ -4,7 +4,7 @@ IMPORTANT:
 
 - Multiple agents and a developer ALWAYS work on the same codebase at the same time. NEVER use `git stash`, `git stash pop`, `git checkout`, … because it will mess up others work and worst-case delete their work.
 - The codebase in under design and development and not used in production yet. There are many inconsistencies that need to be refactored. ALWAYS use clean mechanisms that might require large refactorings and NEVER care about backwards compatibility.
-- For every task you are working on, you MUST create or update a markdown ticket using `npx tsx repo.tsx ticket new SLUG --prompt="User prompt..."`. Tickets are stored in `tickets/YEAR/MONTH/DAY/SLUG.md` with YAML frontmatter and optional **iterations**. The script automatically creates three sections to be filled/updated during execution of the task: `# Previously`, `# Plan`, and `#Changes`.The purpose of the ticket is to understand the context, problem and decision making process. It is only about the process.
+- For every task you are working on, you MUST create or update a markdown ticket using `repo ticket create SLUG --prompt="User prompt..."` (or `npx tsx repo.tsx ticket create SLUG --prompt="..."`). Tickets are stored in `tickets/YEAR/MONTH/DAY/SLUG.md` with YAML frontmatter and optional **iterations**. The script automatically creates three sections to be filled/updated during execution of the task: `# Previously`, `# Plan`, and `#Changes`.The purpose of the ticket is to understand the context, problem and decision making process. It is only about the process.
 - For every task you are working on, you MUST update the dev docs (`README.md` and `AGENTS.md`). Every key decision and mechanism ALWAYS needs to be documemented. Every feature, decision MUST be undocumented/uncommented in the code and MUST be documented in the dev docs (AGENTS.md and README.md). The documentation ALWAYS happens four times:
 
 1. Under `# 🛍️ Products` in README.md where it is described from user perspective [architects, designers, engineers, …] (framework-agnostic, no implementation references, etc)
@@ -377,7 +377,7 @@ Whenever a keyword is used, ALWAYS directly proceed with the task and NEVER ask 
 
 - `AUTOMATE`: Create a `*.ts` script to automate a task (use `scripts/utils.ts` for reusable code). Create a run configuration in `package.json`, create a task in `.vscode/tasks.json` and create a `.vscode/launch.json` along with the script. Call the script from the `preflight.ts` script.
 
-- `FINISH`: Finish a task that was started but not completed. ALWAYS first search for recent tickets using `npx tsx repo.tsx ticket list` and analyze with git staged and unstaged changes that are related to the task.
+- `FINISH`: Finish a task that was started but not completed. ALWAYS first search for recent tickets using `repo ticket list` and analyze with git staged and unstaged changes that are related to the task.
 
 - `SCHEMA`: Extend the schema for `semio.ts` then run `tsx scripts/schema.ts` to regenerate `reports/schema.json`; Fix all reported schema problems, add missing fields, update incomplete entries, remove unused fields, and rerun until the report is clean. Rerun the script until the report is clean.
 
@@ -466,35 +466,62 @@ npx tsx hooks/eslint.ts      # ESLint check
 
 ### Repo CLI
 
-The central `repo.tsx` CLI provides unified access to all monorepo operations through a single-file Ink + TypeScript implementation.
+The `repo` CLI provides unified access to all monorepo operations. It is implemented in Go (`go/repo`) with the TypeScript fallback (`repo.tsx`) for backwards compatibility.
+
+**Architecture:**
+
+```
+go/
+├── repo/     # Go CLI binary (primary)
+│   ├── main.go
+│   └── tools/ # Tool implementations
+└── mcp/      # MCP server exposing repo tools to LLMs
+```
 
 **Usage:**
 
 ```bash
+# Using Go binary (preferred)
+go/repo/repo <command> [subcommand] [options]
+
+# Using TypeScript fallback
 npx tsx repo.tsx <command> [subcommand] [options]
 ```
 
 **Commands:**
 
-| Command                    | Description                              |
-| -------------------------- | ---------------------------------------- |
-| `help`                     | Show help message                        |
-| `analyze [--scope=...]`    | Analyze codebase for problems            |
-| `fix [--scope=...]`        | Apply autofixes for problems             |
-| `policy list`              | List all registered policies             |
-| `policy run <id>`          | Run a specific policy                    |
-| `ticket new <slug>`        | Create a new ticket                      |
-| `ticket list [year/month]` | List tickets                             |
-| `ticket read <path>`       | Read a ticket                            |
-| `ticket iterate <path>`    | Run policies and sync problems to ticket |
-| `ticket close <path>`      | Close a ticket (if valid)                |
-| `project list`             | List Nx projects                         |
-| `project tree`             | Show project dependency tree             |
-| `folder tree [path]`       | Show folder structure                    |
-| `file list [scope]`        | List files in scope                      |
-| `region tree <file>`       | Show region structure of a file          |
-| `definition list <file>`   | List definitions in a file               |
-| `tool <name> [args...]`    | Run an Nx target (e.g., lint, test)      |
+| Command                    | Description                         |
+| -------------------------- | ----------------------------------- |
+| `help`                     | Show help message                   |
+| `analyze [--scope=...]`    | Analyze codebase for problems       |
+| `fix [--scope=...]`        | Apply autofixes for problems        |
+| `policy list`              | List all registered policies        |
+| `policy run <id>`          | Run a specific policy               |
+| `ticket create <slug>`     | Create a new ticket                 |
+| `ticket list [year/month]` | List tickets                        |
+| `ticket read <path>`       | Read a ticket                       |
+| `ticket iterate start`     | Start iteration on a ticket         |
+| `ticket iterate end`       | End iteration on a ticket           |
+| `ticket finish`            | Finish a ticket                     |
+| `project list`             | List Nx projects                    |
+| `project tree`             | Show project dependency tree        |
+| `folder tree [path]`       | Show folder structure               |
+| `folder create <path>`     | Create a folder                     |
+| `folder move <src> <dst>`  | Move/rename a folder                |
+| `folder delete <path>`     | Delete a folder                     |
+| `folder list [path]`       | List folders                        |
+| `file tree [path]`         | Show file tree                      |
+| `file create <path>`       | Create a file                       |
+| `file move <src> <dst>`    | Move/rename a file                  |
+| `file delete <path>`       | Delete a file                       |
+| `file list [scope]`        | List files in scope                 |
+| `section tree <file>`      | Show section structure of a file    |
+| `section create <file>`    | Create a section                    |
+| `section move <file>`      | Move/rename a section               |
+| `section delete <file>`    | Delete a section                    |
+| `section list <file>`      | List sections                       |
+| `definition list <file>`   | List definitions in a file          |
+| `tool <name> [args...]`    | Run an Nx target (e.g., lint, test) |
 
 **Scope Syntax:**
 
@@ -502,7 +529,7 @@ npx tsx repo.tsx <command> [subcommand] [options]
 - `@semio/js` - Project scope (Nx project)
 - `js/js/sketchpad/` - Folder scope
 - `js/js/sketchpad/App.tsx` - File scope
-- `file.tsx#Region` - Region scope
+- `file.tsx#Region` - Section scope
 - `file.tsx§Function` - Definition scope
 
 **Options:**
@@ -514,20 +541,64 @@ npx tsx repo.tsx <command> [subcommand] [options]
 **Built-in Policies:**
 
 - `header` - Validates header region (violations: `header:missing-region`, `header:missing-filename`, `header:missing-contributors`, `header:missing-license`, `header:wrong-license`)
-- `region` - Validates region blocks (violations: `region:empty`, `region:missing-start-name`, `region:missing-end-name`, `region:name-mismatch`)
+- `section` - Validates section blocks (violations: `section:empty`, `section:missing-start-name`, `section:missing-end-name`, `section:name-mismatch`)
 - `comment` - Detects forbidden comments (violations: `comment:inline`, `comment:block`, `comment:jsdoc`)
 
 **Examples:**
 
 ```bash
-npx tsx repo.tsx analyze js/js/semio.ts           # Analyze single file
-npx tsx repo.tsx region tree repo.tsx             # Show region structure
-npx tsx repo.tsx definition list js/js/semio.ts   # List all definitions
-npx tsx repo.tsx project list                     # List all Nx projects
-npx tsx repo.tsx folder tree js/js --depth=2      # Show folder tree
-npx tsx repo.tsx ticket new MY-TASK --prompt="..." # Create ticket
-npx tsx repo.tsx tool build --scope=@semio/js     # Run Nx build target
+repo analyze js/js/semio.ts           # Analyze single file
+repo section tree repo.tsx            # Show section structure
+repo definition list js/js/semio.ts   # List all definitions
+repo project list                     # List all Nx projects
+repo folder tree js/js                # Show folder tree
+repo ticket create MY-TASK --prompt="..." # Create ticket
+repo tool build --scope=@semio/js     # Run Nx build target
 ```
+
+### MCP Server
+
+The MCP server (`go/mcp`) exposes the repo CLI tools via the Model Context Protocol for LLM integration.
+
+**Building:**
+
+```bash
+cd go/mcp && go build -o mcp .
+```
+
+**Usage:**
+
+The MCP server communicates via stdio and exposes all repo tools as MCP tools. Configure it in your MCP client (e.g., Claude Desktop, Cursor) by adding to `mcp_settings.json`:
+
+```json
+{
+  "mcpServers": {
+    "semio-repo": {
+      "command": "go/mcp/mcp"
+    }
+  }
+}
+```
+
+**Available MCP Tools:**
+
+- `analyze` - Analyze codebase for policy violations
+- `fix` - Apply autofixes for violations
+- `policy_list` - List all registered policies
+- `policy_run` - Run a specific policy
+- `ticket_create` - Create a new ticket
+- `ticket_list` - List tickets
+- `ticket_read` - Read a ticket
+- `ticket_iterate_start` - Start iteration
+- `ticket_iterate_end` - End iteration
+- `ticket_finish` - Finish a ticket
+- `project_list` - List Nx projects
+- `project_tree` - Show project tree
+- `folder_create`, `folder_move`, `folder_delete`, `folder_list`, `folder_tree` - Folder operations
+- `file_create`, `file_move`, `file_delete`, `file_list`, `file_tree` - File operations
+- `section_create`, `section_move`, `section_delete`, `section_list`, `section_tree` - Section operations
+- `definition_list` - List definitions
+- `tool_run` - Run Nx tool
 
 ## Testing
 
@@ -1586,10 +1657,27 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 ├── AGENTS.md # All general ai information
 ├── CITATION.cff
 ├── CLAUDE.md # Claude specific
+├── go
+│ ├── go.work # Go workspace file
+│ ├── mcp # MCP server exposing repo tools to LLMs
+│ │ ├── go.mod
+│ │ └── main.go
+│ └── repo # Go CLI binary
+│ ├── go.mod
+│ ├── main.go
+│ └── tools # Tool implementations
+│ ├── commands.go
+│ ├── definitions.go
+│ ├── nx.go
+│ ├── policies.go
+│ ├── sections.go
+│ ├── tickets.go
+│ ├── types.go
+│ └── utils.go
 ├── nx.json # Nx targets and plugin configs
 ├── package-lock.json # All javascript dependencies
 ├── package.json # Monorepo and workspace setup
-├── repo.tsx # Monorepo CLI (Ink + TypeScript): analyze, fix, ticket, project, folder, file, region, definition, tool commands
+├── repo.tsx # TypeScript fallback CLI (Ink + TypeScript)
 ├── README.md # GFM dev docs
 
 In general, if the user talks about an old file, then probably there is the same file with the suffix `*.old` that is the original state.

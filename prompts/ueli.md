@@ -1,10 +1,20 @@
 # Prompt history
 
+@mcp-go 
+The repo.tsx script should be rewritten with go.
+The new architecture should be:
+├─ go
+│ ├─ mcp # mcp server that exposes the repo for llms
+│ └─ repo # binary that exposes commands
+├─ js
+│ └─ vscode # extension that exposes the repo as commands and mcp server
+
+The repo binary should expose tools. Those tools are rexposed in mcp and vscode.
 
 The repo script should be extended/refactored by: tools, actions and hooks
-Tools are the new way to interact with the repo. Every tool is a typescript function. Tools receive a context(codebase[collection of callbacks to read/create/update/delete projects, folders, files [string or ast], sections [string or ast], definitions [string or ast]], ui[collection of callbacks to update tui], options[interactive, dry-run], args[tool specific arguments]). Tools have no scope and are imperative. They produce side-effects.
+Tools are the new way to interact with the repo. Every tool is a go function. Tools receive a context(codebase[collection of callbacks to read/create/update/delete projects, folders, files [string or ast], sections [string or ast], definitions [string or ast]], tools[other tools], ui[collection of callbacks to update tui], options[interactive, dry-run], args[tool specific arguments]). Tools have no scope and are imperative. They produce side-effects. They can call other tools.
 An action has the information to execute a tool with args.
-Hooks are typescript functions that produce actions. They receive a codebase context and return actions. Hooks are side-effect free and pure functions. Hooks can be registered to run automatically when a scope changes.
+Hooks are go functions that produce actions. They receive a codebase context and return actions. Hooks are side-effect free and pure functions. Hooks can be registered to run automatically when a scope changes.
 {
   "actions": [
     {
@@ -17,8 +27,8 @@ Hooks are typescript functions that produce actions. They receive a codebase con
     {
       "tool": "text.replace",
       "args": {
-        "scope": "js/js/sketchpad/Sketchpad.tsx#",
-        "find": "(?<![xXpPeEmMsSoOwW])port(?!ion)(?!al)",
+        "scope": "js/js/sketchpad/Sketchpad.tsx#State Managment",
+        "regex": "(?<![xXpPeEmMsSoOwW])port(?!ion)(?!al)",
         "replace": "connector"
       }
     },
