@@ -40,9 +40,9 @@ suite("Validation Test Suite", function () {
     await vscode.window.showTextDocument(document);
     await new Promise((resolve) => setTimeout(resolve, 5000));
     const diagnostics = vscode.languages.getDiagnostics(fixtureUri);
-    const semioDiagnostics = diagnostics.filter((d) => d.source === "semio-kit");
+    const semioDiagnostics = diagnostics.filter((d) => d.source === "semio");
     if (semioDiagnostics.length === 0) {
-      console.log("No semio-kit diagnostics found (validation may be disabled due to bundling issues)");
+      console.log("No semio diagnostics found (validation may be disabled due to bundling issues)");
       return;
     }
     const constraintIds = new Set<string>();
@@ -64,9 +64,9 @@ suite("Validation Test Suite", function () {
     await vscode.window.showTextDocument(document);
     await new Promise((resolve) => setTimeout(resolve, 5000));
     const diagnostics = vscode.languages.getDiagnostics(fixtureUri);
-    const semioDiagnostics = diagnostics.filter((d) => d.source === "semio-kit");
+    const semioDiagnostics = diagnostics.filter((d) => d.source === "semio");
     if (semioDiagnostics.length === 0) {
-      console.log("No semio-kit diagnostics found (validation may be disabled due to bundling issues)");
+      console.log("No semio diagnostics found (validation may be disabled due to bundling issues)");
       return;
     }
     const firstDiagnostic = semioDiagnostics[0];
@@ -247,6 +247,11 @@ suite("Command Registration Test Suite", () => {
     const commands = await vscode.commands.getCommands(true);
     assert.ok(commands.includes("semio.toolRun"), "semio.toolRun command should be registered");
   });
+
+  test("semio.fixViolation command is registered", async () => {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.fixViolation"), "semio.fixViolation command should be registered");
+  });
 });
 
 // #endregion Command Registration Tests
@@ -332,7 +337,7 @@ suite("Diagnostics Test Suite", function () {
     await vscode.window.showTextDocument(document);
     await new Promise((resolve) => setTimeout(resolve, 5000));
     const diagnostics = vscode.languages.getDiagnostics(fixtureUri);
-    const semioDiagnostics = diagnostics.filter((d) => d.source === "semio-kit");
+    const semioDiagnostics = diagnostics.filter((d) => d.source === "semio");
     assert.strictEqual(semioDiagnostics.length, 0, "Valid kit should have no validation errors");
   });
 
@@ -344,17 +349,17 @@ suite("Diagnostics Test Suite", function () {
     await vscode.window.showTextDocument(document);
     await new Promise((resolve) => setTimeout(resolve, 5000));
     const diagnostics = vscode.languages.getDiagnostics(fixtureUri);
-    const semioDiagnostics = diagnostics.filter((d) => d.source === "semio-kit");
+    const semioDiagnostics = diagnostics.filter((d) => d.source === "semio");
     if (semioDiagnostics.length === 0) {
-      console.log("No semio-kit diagnostics found (validation may be disabled due to bundling issues)");
+      console.log("No semio diagnostics found (validation may be disabled due to bundling issues)");
       return;
     }
     semioDiagnostics.forEach((diag) => {
-      assert.ok(diag.severity === vscode.DiagnosticSeverity.Error || diag.severity === vscode.DiagnosticSeverity.Warning, "Diagnostics should have Error or Warning severity");
+      assert.ok(diag.severity === vscode.DiagnosticSeverity.Error || diag.severity === vscode.DiagnosticSeverity.Warning || diag.severity === vscode.DiagnosticSeverity.Information, "Diagnostics should have Error, Warning or Information severity");
     });
   });
 
-  test("Diagnostics have source set to semio-kit", async function () {
+  test("Diagnostics have source set to semio", async function () {
     this.timeout(10000);
     const fixturePath = path.join(__dirname, "../../../../assets/semio/kit_invalid.json");
     const fixtureUri = vscode.Uri.file(fixturePath);
@@ -362,15 +367,103 @@ suite("Diagnostics Test Suite", function () {
     await vscode.window.showTextDocument(document);
     await new Promise((resolve) => setTimeout(resolve, 5000));
     const diagnostics = vscode.languages.getDiagnostics(fixtureUri);
-    const semioDiagnostics = diagnostics.filter((d) => d.source === "semio-kit");
+    const semioDiagnostics = diagnostics.filter((d) => d.source === "semio");
     if (semioDiagnostics.length === 0) {
-      console.log("No semio-kit diagnostics found (validation may be disabled due to bundling issues)");
+      console.log("No semio diagnostics found (validation may be disabled due to bundling issues)");
       return;
     }
     semioDiagnostics.forEach((diag) => {
-      assert.strictEqual(diag.source, "semio-kit", "Source should be semio-kit");
+      assert.strictEqual(diag.source, "semio", "Source should be semio");
     });
   });
 });
 
 // #endregion Diagnostics Tests
+
+// #region Repo Diagnostics Tests
+
+suite("Repo Diagnostics Test Suite", function () {
+  this.timeout(30000);
+
+  test("Invalid repo file has diagnostics", async function () {
+    this.timeout(30000);
+    const fixturePath = path.join(__dirname, "../../../../assets/repo/some/folder/file_invalid.tsx");
+    const fixtureUri = vscode.Uri.file(fixturePath);
+    const document = await vscode.workspace.openTextDocument(fixtureUri);
+    await vscode.window.showTextDocument(document);
+    await new Promise((resolve) => setTimeout(resolve, 10000));
+    const diagnostics = vscode.languages.getDiagnostics(fixtureUri);
+    const semioDiagnostics = diagnostics.filter((d) => d.source === "semio");
+    if (semioDiagnostics.length === 0) {
+      console.log("No semio diagnostics found (repo.tsx analyze may not be available)");
+      return;
+    }
+    assert.ok(semioDiagnostics.length > 0, "Invalid repo file should have diagnostics");
+  });
+
+  test("Repo diagnostics have code actions", async function () {
+    this.timeout(30000);
+    const fixturePath = path.join(__dirname, "../../../../assets/repo/some/folder/file_invalid.tsx");
+    const fixtureUri = vscode.Uri.file(fixturePath);
+    const document = await vscode.workspace.openTextDocument(fixtureUri);
+    await vscode.window.showTextDocument(document);
+    await new Promise((resolve) => setTimeout(resolve, 10000));
+    const diagnostics = vscode.languages.getDiagnostics(fixtureUri);
+    const semioDiagnostics = diagnostics.filter((d) => d.source === "semio");
+    if (semioDiagnostics.length === 0) {
+      console.log("No semio diagnostics found (repo.tsx analyze may not be available)");
+      return;
+    }
+    const firstDiagnostic = semioDiagnostics[0];
+    const codeActions = await vscode.commands.executeCommand<vscode.CodeAction[]>("vscode.executeCodeActionProvider", fixtureUri, firstDiagnostic.range);
+    assert.ok(codeActions && codeActions.length > 0, "Should have code actions available for repo diagnostics");
+    const fixAction = codeActions.find((action) => action.kind?.value === vscode.CodeActionKind.QuickFix.value);
+    assert.ok(fixAction, "Should have at least one quick fix action");
+  });
+
+  test("Repo diagnostic message is violation name", async function () {
+    this.timeout(30000);
+    const fixturePath = path.join(__dirname, "../../../../assets/repo/some/folder/file_invalid.tsx");
+    const fixtureUri = vscode.Uri.file(fixturePath);
+    const document = await vscode.workspace.openTextDocument(fixtureUri);
+    await vscode.window.showTextDocument(document);
+    await new Promise((resolve) => setTimeout(resolve, 10000));
+    const diagnostics = vscode.languages.getDiagnostics(fixtureUri);
+    const semioDiagnostics = diagnostics.filter((d) => d.source === "semio");
+    if (semioDiagnostics.length === 0) {
+      console.log("No semio diagnostics found (repo.tsx analyze may not be available)");
+      return;
+    }
+    semioDiagnostics.forEach((diag) => {
+      assert.ok(!diag.message.includes("\n"), "Diagnostic message should not contain newlines");
+      assert.ok(!diag.message.includes("file_invalid.tsx"), "Diagnostic message should not contain file path");
+      assert.ok(!diag.message.includes(":"), "Diagnostic message should be violation name without policy prefix");
+    });
+  });
+
+  test("Repo diagnostic code is policy ID linking to policy region", async function () {
+    this.timeout(30000);
+    const fixturePath = path.join(__dirname, "../../../../assets/repo/some/folder/file_invalid.tsx");
+    const fixtureUri = vscode.Uri.file(fixturePath);
+    const document = await vscode.workspace.openTextDocument(fixtureUri);
+    await vscode.window.showTextDocument(document);
+    await new Promise((resolve) => setTimeout(resolve, 10000));
+    const diagnostics = vscode.languages.getDiagnostics(fixtureUri);
+    const semioDiagnostics = diagnostics.filter((d) => d.source === "semio");
+    if (semioDiagnostics.length === 0) {
+      console.log("No semio diagnostics found (repo.tsx analyze may not be available)");
+      return;
+    }
+    const diagWithLink = semioDiagnostics.find((d) => typeof d.code === "object" && d.code !== null);
+    if (diagWithLink && typeof diagWithLink.code === "object") {
+      const codeObj = diagWithLink.code as { value: string; target: vscode.Uri };
+      assert.ok(codeObj.value, "Code should have a policy ID");
+      assert.ok(!codeObj.value.includes(":"), "Code should be policy ID without violation name");
+      assert.ok(codeObj.target, "Code should have a target URI");
+      assert.ok(codeObj.target.fsPath.includes("repo.tsx"), "Target should point to repo.tsx");
+      assert.ok(codeObj.target.fragment.startsWith("L"), "Target should have line fragment");
+    }
+  });
+});
+
+// #endregion Repo Diagnostics Tests

@@ -167,18 +167,15 @@ function updateFileDiagnostics(document: vscode.TextDocument, violations: Violat
     const endColumn = violation.excerpt ? column + violation.excerpt.length : column + 1;
     const range = new vscode.Range(line, column, line, endColumn);
     const severity = violation.priority === "high" ? vscode.DiagnosticSeverity.Error : violation.priority === "medium" ? vscode.DiagnosticSeverity.Warning : vscode.DiagnosticSeverity.Information;
-    const message = `${violation.kind}: ${violation.summary} (${violation.reason}. ${violation.solution})`;
-    const diagnostic = new vscode.Diagnostic(range, message, severity);
+    const [policyId, violationName] = violation.kind.split(":");
+    const diagnostic = new vscode.Diagnostic(range, violationName || violation.kind, severity);
     diagnostic.source = DIAGNOSTIC_SOURCE;
     const policyLine = getPolicyLineNumber(root, violation.kind);
     if (policyLine) {
       const repoUri = vscode.Uri.file(path.join(root, "repo.tsx")).with({ fragment: `L${policyLine}` });
-      diagnostic.code = { value: violation.kind, target: repoUri };
+      diagnostic.code = { value: policyId, target: repoUri };
     } else {
-      diagnostic.code = violation.kind;
-    }
-    if (violation.autofixable) {
-      diagnostic.tags = [];
+      diagnostic.code = policyId;
     }
     diagnostics.push(diagnostic);
   }
@@ -193,8 +190,8 @@ class SemioRepoCodeActionProvider implements vscode.CodeActionProvider {
     const actions: vscode.CodeAction[] = [];
     for (const diagnostic of repoDiagnostics) {
       const diagnosticLine = diagnostic.range.start.line + 1;
-      const codeValue = typeof diagnostic.code === "object" && diagnostic.code !== null ? (diagnostic.code as { value: string }).value : diagnostic.code;
-      const violation = violations.find((v) => v.kind === codeValue && v.autofixable && (v.line ?? 1) === diagnosticLine);
+      const policyId = typeof diagnostic.code === "object" && diagnostic.code !== null ? (diagnostic.code as { value: string }).value : diagnostic.code;
+      const violation = violations.find((v) => v.kind.startsWith(`${policyId}:`) && (v.line ?? 1) === diagnosticLine);
       if (!violation) continue;
       const action = createRepoCodeAction(document, diagnostic, violation);
       if (action) actions.push(action);
@@ -224,11 +221,23 @@ async function fixViolation(relativePath: string): Promise<void> {
     return;
   }
   try {
-    await execAsync(`npx tsx repo.tsx fix ${relativePath}`, { cwd: root, timeout: 30000 });
-    const document = vscode.workspace.textDocuments.find((d) => vscode.workspace.asRelativePath(d.uri) === relativePath);
-    if (document) {
-      await analyzeFile(document);
-    }
+    await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: "Fixing violation..." }, async () => {
+      const { stdout, stderr } = await execAsync(`npx tsx repo.tsx fix ${relativePath}`, { cwd: root, timeout: 30000 });
+      if (stderr) console.log("Fix stderr:", stderr);
+      if (stdout) console.log("Fix stdout:", stdout);
+      const absPath = path.join(root, relativePath);
+      const uri = vscode.Uri.file(absPath);
+      const openDoc = vscode.workspace.textDocuments.find((d) => d.uri.fsPath === absPath);
+      if (openDoc) {
+        const newContent = fs.readFileSync(absPath, "utf-8");
+        const edit = new vscode.WorkspaceEdit();
+        const fullRange = new vscode.Range(openDoc.positionAt(0), openDoc.positionAt(openDoc.getText().length));
+        edit.replace(uri, fullRange, newContent);
+        await vscode.workspace.applyEdit(edit);
+        await analyzeFile(openDoc);
+      }
+    });
+    vscode.window.showInformationMessage(`Fixed: ${relativePath}`);
   } catch (error) {
     console.error("Failed to run fix:", error);
     vscode.window.showErrorMessage(`Failed to fix violation: ${error}`);

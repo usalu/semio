@@ -243,11 +243,11 @@
       "cwd": "${workspaceFolder}/assets/icons/"
     },
     {
-      "name": "export metabolism",
+      "name": "update metabolism",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["tsx", "${workspaceFolder}/js/js/export-metabolism.ts"],
+      "runtimeArgs": ["tsx", "${workspaceFolder}/repo.tsx", "tool", "update-metabolism"],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },

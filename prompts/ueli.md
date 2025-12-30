@@ -1,5 +1,55 @@
 # Prompt history
 
+
+The repo script should be extended/refactored by: tools, actions and hooks
+Tools are the new way to interact with the repo. Every tool is a typescript function. Tools receive a context(codebase[collection of callbacks to read/create/update/delete projects, folders, files [string or ast], sections [string or ast], definitions [string or ast]], ui[collection of callbacks to update tui], options[interactive, dry-run], args[tool specific arguments]). Tools have no scope and are imperative. They produce side-effects.
+An action has the information to execute a tool with args.
+Hooks are typescript functions that produce actions. They receive a codebase context and return actions. Hooks are side-effect free and pure functions. Hooks can be registered to run automatically when a scope changes.
+{
+  "actions": [
+    {
+      "tool": "file.create",
+      "args": {
+        "scope":"js/js/sketchpad/Quality.tsx",
+        "content":"import { Quality } from './Quality';"
+      }
+    },
+    {
+      "tool": "text.replace",
+      "args": {
+        "scope": "js/js/sketchpad/Sketchpad.tsx#",
+        "find": "(?<![xXpPeEmMsSoOwW])port(?!ion)(?!al)",
+        "replace": "connector"
+      }
+    },
+    {
+      "tool": "section.move",
+      "args": {
+        "scope":"README.md#Tickets",
+        "newScope":"README.md#Tickets and reports",
+      }
+    }
+  ]
+}
+E.g. a violation of a policy can have a hook that auto fixes the violation.
+E.g. hooks can be registered to run automatically when a scope changes.
+The repo should have a dev command that automatically executes all hooks when the scope changes and 
+
+
+Add a new policy: dev-docs
+The dev-docs (README.md and AGENTS.md) should be checked for violations.
+AGENTs.md:
+- All sections inside the Codebase section should be files and folders. Every file section name is `## 📄 PATH` and every folder section name is `## 📁 PATH`. The order of the sections should be alphabetical (same as the file system). Violation kinds: missing-file, missing-folder, wrong-file-path, wrong-folder-path, wrong-file-name, wrong-folder-name, wrong-file-order, wrong-folder-order. All are autofixable.
+README.md:
+- All package.json workspaces correspond to a component. Violation kinds: missing-component, wrong-component-name, wrong-component-order. All are autofixable.
+
+- The code should be the id of the policy.
+- The message the name of the violation kind.
+- The link should not just be to the repo.tsx file but to the region (subsection under Policies)
+
+- The message should always be compact e.g. Missing header section
+- Missing header section is autofixable. No fix is presented
+
 vscode extension:
 Every linter message should be one line and never have new lines or repeat the file path
 The code should should not be the id but the violation kind

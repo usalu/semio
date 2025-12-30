@@ -404,7 +404,7 @@ This git repo has <strong>everything</strong> that exists in the open semio ecos
 
 ## ⚖️ Principles [↑](#-repo-)
 
-Let's start with the policy of thumbs that this codebase was built with 🫰
+Let's start with the rules of thumbs that this codebase was built with 🫰
 
 <details>
 <summary><strong>💾 If something can be written in a single file, then it probably should ✅</strong></summary>

@@ -22,8 +22,11 @@
 
 // #region Imports
 
+import { exportKit, importKit, Kit } from "@semio/js/semio";
 import { execSync, spawnSync } from "child_process";
+import fg from "fast-glob";
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "fs";
+import Ignore from "ignore";
 import matter from "gray-matter";
 import { Box, render, Text } from "ink";
 import { dirname, join, relative } from "path";
@@ -40,7 +43,7 @@ import { fileURLToPath } from "url";
 
 // #region Types
 
-//#region Scope
+// #region Scope
 type ScopeKind = "repo" | "project" | "folder" | "file" | "section" | "definition";
 
 interface Scope {
@@ -51,9 +54,9 @@ interface Scope {
   sectionPath?: string[];
   definitionName?: string;
 }
-//#endregion Scope
+// #endregion Scope
 
-//#region Violation
+// #region Violation
 type ViolationPriority = "high" | "medium" | "low";
 
 interface Violation {
@@ -70,9 +73,9 @@ interface Violation {
   excerpt?: string;
   autofix?: Fix;
 }
-//#endregion Violation
+// #endregion Violation
 
-//#region Fix
+// #region Fix
 interface TextEdit {
   start: number;
   end: number;
@@ -83,9 +86,9 @@ interface Fix {
   description: string;
   edits: Map<string, TextEdit[]>;
 }
-//#endregion Fix
+// #endregion Fix
 
-//#region Project
+// #region Project
 interface NxProject {
   name: string;
   root: string;
@@ -93,9 +96,9 @@ interface NxProject {
   projectType?: "library" | "application";
   tags?: string[];
 }
-//#endregion Project
+// #endregion Project
 
-//#region Section
+// #region Section
 interface SectionInfo {
   name: string;
   startLine: number;
@@ -104,9 +107,9 @@ interface SectionInfo {
   endIndex: number;
   children: SectionInfo[];
 }
-//#endregion Section
+// #endregion Section
 
-//#region Definition
+// #region Definition
 interface DefinitionInfo {
   name: string;
   kind: "function" | "class" | "variable" | "interface" | "type" | "enum" | "method" | "property";
@@ -115,9 +118,9 @@ interface DefinitionInfo {
   startIndex: number;
   endIndex: number;
 }
-//#endregion Definition
+// #endregion Definition
 
-//#region AST
+// #region AST
 interface ASTNode {
   type: string;
   text: string;
@@ -134,9 +137,9 @@ interface ASTFile {
   root: ASTNode | null;
   language: string | null;
 }
-//#endregion AST
+// #endregion AST
 
-//#region Ticket
+// #region Ticket
 type TicketStatus = "open" | "closed";
 
 interface TicketIteration {
@@ -172,16 +175,15 @@ interface Ticket {
   content: string;
   filePath: string;
 }
-//#endregion Ticket
+// #endregion Ticket
 
-//#region Policy
+// #region Policy
 interface PolicyMeta {
   id: string;
   name: string;
   description: string;
   scopes: string[];
   priority: ViolationPriority;
-  autofixable: boolean;
 }
 
 interface PolicyContext {
@@ -206,9 +208,9 @@ interface RegisteredPolicy {
   meta: PolicyMeta;
   run: PolicyFn;
 }
-//#endregion Policy
+// #endregion Policy
 
-//#region Report
+// #region Report
 interface AnalyzeReport {
   timestamp: string;
   status: "success" | "error" | "warning";
@@ -216,9 +218,9 @@ interface AnalyzeReport {
   summary: { total: number; byPriority: Record<ViolationPriority, number>; byKind: Record<string, number> };
   violations: Violation[];
 }
-//#endregion Report
+// #endregion Report
 
-//#region Command
+// #region Command
 type CommandName = "help" | "analyze" | "fix" | "policy" | "ticket" | "project" | "folder" | "file" | "section" | "definition" | "tool";
 
 interface ParsedCommand {
@@ -228,9 +230,9 @@ interface ParsedCommand {
   args: string[];
   options: Record<string, string | boolean>;
 }
-//#endregion Command
+// #endregion Command
 
-//#region Output
+// #region Output
 type OutputType = "info" | "success" | "error" | "warn" | "plain";
 
 interface OutputLine {
@@ -271,7 +273,7 @@ function warn(output: CommandOutput, text: string): void {
 function plain(output: CommandOutput, text: string): void {
   addLine(output, "plain", text);
 }
-//#endregion Output
+// #endregion Output
 
 // #endregion Types
 
@@ -341,7 +343,7 @@ Scope syntax:
 
 // #region Utilities
 
-//#region Path Utilities
+// #region Path Utilities
 function normalizePathSeparators(p: string): string {
   return p.replace(/\\/g, "/");
 }
@@ -355,9 +357,9 @@ function ensureDir(dirPath: string): void {
 function getRelativePath(filePath: string): string {
   return normalizePathSeparators(relative(ROOT_DIR, filePath));
 }
-//#endregion Path Utilities
+// #endregion Path Utilities
 
-//#region File Operations
+// #region File Operations
 function readTextFile(filePath: string): string {
   return readFileSync(filePath, "utf-8");
 }
@@ -375,48 +377,36 @@ function readJsonFile<T>(filePath: string): T {
   return JSON.parse(readTextFile(filePath)) as T;
 }
 
+function loadGitignore(cwd: string): ReturnType<typeof Ignore> {
+  const ig = Ignore();
+  const gitignorePath = join(cwd, ".gitignore");
+  if (existsSync(gitignorePath)) {
+    const content = readFileSync(gitignorePath, "utf-8");
+    ig.add(content);
+  }
+  return ig;
+}
+
 function simpleGlob(pattern: string, options: { cwd?: string; ignore?: string[]; respectGitignore?: boolean } = {}): string[] {
   const cwd = options.cwd ?? ROOT_DIR;
-  const ignore = options.ignore ?? [];
+  const ignorePatterns = options.ignore ?? [];
   const respectGitignore = options.respectGitignore ?? true;
-  const results: string[] = [];
-  const extensions = pattern.match(/\{([^}]+)\}/)?.[1]?.split(",") ?? [];
-  const basePath = pattern.replace(/\*\*\/\*\.\{[^}]+\}$/, "").replace(/\*\*\/\*\.[a-z]+$/, "");
-  function shouldIgnore(p: string): boolean {
-    const normalized = normalizePathSeparators(p);
-    return ignore.some((ig) => {
-      const normalizedIg = normalizePathSeparators(ig.replace(/\*\*/g, "").replace(/\*/g, ""));
-      return normalized.includes(normalizedIg);
-    });
+  const gitignoreFilter = respectGitignore ? loadGitignore(cwd) : null;
+  const files = fg.sync(pattern, {
+    cwd,
+    ignore: ignorePatterns,
+    dot: false,
+    onlyFiles: true,
+    absolute: false,
+  });
+  if (gitignoreFilter) {
+    return files.filter((f) => !gitignoreFilter.ignores(f));
   }
-  function walkDir(dir: string): void {
-    if (!existsSync(dir)) return;
-    const entries = readdirSync(dir, { withFileTypes: true });
-    const entryPaths = entries.map((e) => normalizePathSeparators(relative(cwd, join(dir, e.name))));
-    const gitIgnoredSet = respectGitignore ? getGitIgnoredSet(entryPaths) : new Set<string>();
-    for (const entry of entries) {
-      const fullPath = join(dir, entry.name);
-      const relPath = relative(cwd, fullPath);
-      const normalizedRelPath = normalizePathSeparators(relPath);
-      if (shouldIgnore(relPath)) continue;
-      if (gitIgnoredSet.has(normalizedRelPath) || gitIgnoredSet.has(normalizedRelPath + "/")) continue;
-      if (entry.isDirectory()) {
-        walkDir(fullPath);
-      } else if (entry.isFile()) {
-        const ext = entry.name.split(".").pop()?.toLowerCase() ?? "";
-        if (extensions.length === 0 || extensions.includes(ext)) {
-          results.push(normalizedRelPath);
-        }
-      }
-    }
-  }
-  const startDir = basePath ? join(cwd, basePath) : cwd;
-  walkDir(startDir);
-  return results;
+  return files;
 }
-//#endregion File Operations
+// #endregion File Operations
 
-//#region Date Utilities
+// #region Date Utilities
 function formatDate(date: Date): { year: number; month: number; day: number } {
   return { year: date.getFullYear(), month: date.getMonth() + 1, day: date.getDate() };
 }
@@ -428,32 +418,32 @@ function padNumber(n: number, width: number = 2): string {
 function isoTimestamp(): string {
   return new Date().toISOString();
 }
-//#endregion Date Utilities
+// #endregion Date Utilities
 
-//#region String Utilities
+// #region String Utilities
 function slugify(text: string): string {
   return text
     .toUpperCase()
     .replace(/[^A-Z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
 }
-//#endregion String Utilities
+// #endregion String Utilities
 
-//#region Process Management
+// #region Process Management
 function execCommand(command: string, args: string[] = [], options?: { cwd?: string }): { stdout: string; stderr: string; exitCode: number } {
   const result = spawnSync(command, args, { cwd: options?.cwd ?? ROOT_DIR, encoding: "utf-8", shell: true });
   return { stdout: result.stdout ?? "", stderr: result.stderr ?? "", exitCode: result.status ?? 1 };
 }
-//#endregion Process Management
+// #endregion Process Management
 
-//#region Git Utilities
+// #region Git Utilities
 function getGitIgnoredSet(paths: string[]): Set<string> {
   if (paths.length === 0) return new Set();
   const result = spawnSync("git", ["check-ignore", ...paths.map(normalizePathSeparators)], { cwd: ROOT_DIR, encoding: "utf-8", shell: true });
   if (result.status === null || result.stdout === null) return new Set();
   return new Set(result.stdout.split("\n").filter(Boolean).map(normalizePathSeparators));
 }
-//#endregion Git Utilities
+// #endregion Git Utilities
 
 // #endregion Utilities
 
@@ -938,8 +928,8 @@ function createPolicyContext(scope: Scope, projects: NxProject[]): PolicyContext
     createViolation: (partial) => ({
       ...partial,
       id: `${partial.kind}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      priority: RULES.find((r) => r.meta.id === partial.kind)?.meta.priority ?? "medium",
-      autofixable: RULES.find((r) => r.meta.id === partial.kind)?.meta.autofixable ?? false,
+      priority: RULES.find((r) => partial.kind === r.meta.id || partial.kind.startsWith(r.meta.id + ":"))?.meta.priority ?? "medium",
+      autofixable: !!partial.autofix,
     }),
     createFix: (description, edits) => ({ description, edits }),
   };
@@ -960,10 +950,10 @@ async function runPolicies(scope: Scope, policyIds?: string[]): Promise<Violatio
 
 // #endregion Policy Engine
 
-// #region Built-in Policies
+// #region Policies
 
-//#region Header Policy
-registerPolicy({ id: "header", name: "Header", description: "Validates source file header section with filename, contributors, and AGPL-3.0 license", scopes: ["**/*.{ts,tsx,py,cs}"], priority: "high", autofixable: true }, async (ctx) => {
+// #region Header
+registerPolicy({ id: "header", name: "Header", description: "Validates source file header section with filename, contributors, and license", scopes: ["**/*.{ts,tsx,py,cs}"], priority: "low" }, async (ctx) => {
   const violations: Violation[] = [];
   const files = ctx.files();
   const agplMarkers = ["GNU Affero General Public License", "AGPL", "https://www.gnu.org/licenses/"];
@@ -975,13 +965,149 @@ registerPolicy({ id: "header", name: "Header", description: "Validates source fi
     const sections = ctx.sections(file);
     const headerSection = sections.find((r) => r.name.toLowerCase() === "header");
     if (!headerSection) {
+      const filename = file.split("/").pop() ?? file;
+      const year = new Date().getFullYear();
+      let gitAuthor = "";
+      try {
+        const name = execSync("git config --get user.name", { encoding: "utf-8" }).trim();
+        const email = execSync("git config --get user.email", { encoding: "utf-8" }).trim();
+        gitAuthor = email ? `${name} <${email}>` : name;
+      } catch {}
+      const projects = ctx.projects();
+      const project = projects.find((p) => file.startsWith(p.root + "/") || file.startsWith(p.root));
+      let licenseType: "agpl" | "lgpl" | "mit" | "cc0" | "cc-by-nd" = "agpl";
+      if (file.includes("/examples/") || file.startsWith("examples/")) {
+        licenseType = "mit";
+      } else if (file.includes("/templates/") || file.startsWith("templates/")) {
+        licenseType = "cc0";
+      } else if (file.includes("/assets/") || file.startsWith("assets/")) {
+        licenseType = "cc-by-nd";
+      } else if (project?.projectType === "library") {
+        licenseType = "lgpl";
+      } else if (project?.projectType === "application") {
+        licenseType = "agpl";
+      }
+      const licenseTexts: Record<typeof licenseType, { text: string; url: string }> = {
+        agpl: {
+          text: `This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.`,
+          url: "https://www.gnu.org/licenses/agpl-3.0.en.html",
+        },
+        lgpl: {
+          text: `This library is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with this library.  If not, see <https://www.gnu.org/licenses/>.`,
+          url: "https://www.gnu.org/licenses/lgpl-3.0.en.html",
+        },
+        mit: {
+          text: `Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.`,
+          url: "https://mit-license.org",
+        },
+        cc0: {
+          text: `To the extent possible under law, the author(s) have dedicated all copyright
+and related and neighboring rights to this software to the public domain
+worldwide. This software is distributed without any warranty.
+
+See <https://creativecommons.org/publicdomain/zero/1.0/>.`,
+          url: "https://creativecommons.org/publicdomain/zero/1.0/",
+        },
+        "cc-by-nd": {
+          text: `This work is licensed under the Creative Commons Attribution-NoDerivatives
+4.0 International License. To view a copy of this license, visit
+<https://creativecommons.org/licenses/by-nd/4.0/>.`,
+          url: "https://creativecommons.org/licenses/by-nd/4.0/",
+        },
+      };
+      const license = licenseTexts[licenseType];
+      const formatLicenseForLang = (text: string, commentPrefix: string): string => {
+        return text
+          .split("\n")
+          .map((line) => (line ? `${commentPrefix} ${line}` : commentPrefix))
+          .join("\n");
+      };
+      let headerContent = "";
+      if (lang === "typescript") {
+        headerContent = `// #region Header
+
+// ${filename}
+
+// ${year} ${gitAuthor}
+
+${formatLicenseForLang(license.text, "//")}
+
+// #endregion Header
+
+`;
+      } else if (lang === "python") {
+        headerContent = `# region Header
+
+# ${filename}
+
+# ${year} ${gitAuthor}
+
+${formatLicenseForLang(license.text, "#")}
+
+# endregion Header
+
+`;
+      } else if (lang === "csharp") {
+        headerContent = `#region Header
+
+// ${filename}
+
+// ${year} ${gitAuthor}
+
+${formatLicenseForLang(license.text, "//")}
+
+#endregion Header
+
+`;
+      }
+      const edits = new Map<string, TextEdit[]>();
+      edits.set(file, [{ start: 0, end: 0, newText: headerContent }]);
       violations.push(
         ctx.createViolation({
           summary: `Missing header section in ${file}`,
           kind: "header:missing-section",
-          solution: "Add a #region Header with filename, contributors, and AGPL-3.0 license",
+          solution: "Add a #region Header with filename, contributors, and appropriate license",
           reason: "Every source file must include a header section",
           scope: file,
+          autofix: ctx.createFix("Add header section", edits),
         }),
       );
       continue;
@@ -1046,10 +1172,10 @@ registerPolicy({ id: "header", name: "Header", description: "Validates source fi
   }
   return violations;
 });
-//#endregion Header Policy
+// #endregion Header
 
-//#region Section Policy
-registerPolicy({ id: "section", name: "Section", description: "Validates section blocks for proper naming and content", scopes: ["**/*.{ts,tsx,py,cs}"], priority: "low", autofixable: true }, async (ctx) => {
+// #region Section
+registerPolicy({ id: "section", name: "Section", description: "Validates section blocks for proper naming and content", scopes: ["**/*.{ts,tsx,py,cs}"], priority: "low" }, async (ctx) => {
   const violations: Violation[] = [];
   const files = ctx.files();
   const sectionPatterns: Record<string, { start: RegExp; end: RegExp }> = {
@@ -1148,10 +1274,10 @@ registerPolicy({ id: "section", name: "Section", description: "Validates section
   }
   return violations;
 });
-//#endregion Section Policy
+// #endregion Section
 
-//#region Comment Policy
-registerPolicy({ id: "comment", name: "Comment", description: "Detects forbidden comments (inline, block, JSDoc) - documentation belongs in README.md and AGENTS.md", scopes: ["**/*.{ts,tsx}"], priority: "low", autofixable: true }, async (ctx) => {
+// #region Comment
+registerPolicy({ id: "comment", name: "Comment", description: "Detects forbidden comments (inline, block, JSDoc) - documentation belongs in README.md and AGENTS.md", scopes: ["**/*.{ts,tsx}"], priority: "low" }, async (ctx) => {
   const violations: Violation[] = [];
   const files = ctx.files();
   for (const file of files) {
@@ -1258,7 +1384,7 @@ registerPolicy({ id: "comment", name: "Comment", description: "Detects forbidden
         }
         continue;
       }
-      if (trimmed.startsWith("// #region") || trimmed.startsWith("// #endregion") || trimmed.startsWith("//#region") || trimmed.startsWith("//#endregion")) continue;
+      if (trimmed.startsWith("// #region") || trimmed.startsWith("// #endregion") || trimmed.startsWith("// #region") || trimmed.startsWith("// #endregion")) continue;
       if (trimmed.includes("[DEBUG]")) continue;
       const isHeaderLine = trimmed.includes("Copyright") || trimmed.includes("License") || trimmed.includes("SPDX") || trimmed.includes("GNU") || trimmed.includes("AGPL") || /^\d{4}\s+[\w\s]+<[\w.@-]+>/.test(trimmed.replace(/^\/\/\s*/, ""));
       if (isHeaderLine) continue;
@@ -1288,9 +1414,9 @@ registerPolicy({ id: "comment", name: "Comment", description: "Detects forbidden
   }
   return violations;
 });
-//#endregion Comment Policy
+// #endregion Comment
 
-// #endregion Built-in Policies
+// #endregion Policies
 
 // #region Ticket Engine
 
@@ -1596,7 +1722,7 @@ async function handlePolicy(cmd: ParsedCommand): Promise<CommandOutput> {
     for (const policy of RULES) {
       plain(output, `   ${policy.meta.id}`);
       plain(output, `      ${policy.meta.name}: ${policy.meta.description}`);
-      plain(output, `      Priority: ${policy.meta.priority}, Autofixable: ${policy.meta.autofixable}`);
+      plain(output, `      Priority: ${policy.meta.priority}`);
       plain(output, "");
     }
   } else if (cmd.subcommand === "run") {
@@ -2221,6 +2347,84 @@ async function handleDefinition(cmd: ParsedCommand): Promise<CommandOutput> {
   return output;
 }
 
+// #region Update Metabolism Tool
+
+const METABOLISM_INCLUDE_FOLDERS = ["representations", "icons", "images"];
+
+function collectMetabolismFiles(dir: string, basePath: string = ""): Map<string, Blob> {
+  const files = new Map<string, Blob>();
+  const entries = readdirSync(dir, { withFileTypes: true });
+
+  for (const entry of entries) {
+    const fullPath = join(dir, entry.name);
+    const relativePath = basePath ? `${basePath}/${entry.name}` : entry.name;
+
+    if (entry.isDirectory()) {
+      if (entry.name === ".semio" || entry.name === ".git") continue;
+      if (!basePath && !METABOLISM_INCLUDE_FOLDERS.includes(entry.name)) continue;
+
+      const subFiles = collectMetabolismFiles(fullPath, relativePath);
+      Array.from(subFiles.entries()).forEach(([path, blob]) => {
+        files.set(path, blob);
+      });
+    } else {
+      if (!basePath) continue;
+
+      const buffer = readFileSync(fullPath);
+      const blob = new Blob([buffer]);
+      files.set(relativePath, blob);
+    }
+  }
+
+  return files;
+}
+
+async function updateMetabolism(output: CommandOutput): Promise<void> {
+  info(output, "\n🔄 Updating metabolism assets...");
+
+  const kitPath = join(ROOT_DIR, "assets", "semio", "kit_metabolism.json");
+  info(output, `   Reading kit from ${relative(ROOT_DIR, kitPath)}`);
+  const kitJson = readFileSync(kitPath, "utf-8");
+  const kit = JSON.parse(kitJson) as Kit;
+
+  const metabolismDir = join(ROOT_DIR, "examples", "metabolism");
+  info(output, `   Collecting files from ${relative(ROOT_DIR, metabolismDir)}`);
+  const files = collectMetabolismFiles(metabolismDir);
+  const fileCount = files.size;
+  info(output, `   Found ${fileCount} files`);
+
+  info(output, "   Exporting kit to zip...");
+  const zipBlob = await exportKit(kit, files);
+  const buffer = Buffer.from(await zipBlob.arrayBuffer());
+
+  const outputPath = join(ROOT_DIR, "assets", "semio", "metabolism.zip");
+  writeFileSync(outputPath, buffer);
+  const size = (buffer.length / 1024).toFixed(2);
+  success(output, `   ✅ Written ${relative(ROOT_DIR, outputPath)} (${size} KB)`);
+
+  info(output, "   Copying to public folders...");
+  const publicPaths = [join(ROOT_DIR, "js", "js", "public", "metabolism.zip"), join(ROOT_DIR, "js", "play", "public", "metabolism.zip")];
+
+  for (const publicPath of publicPaths) {
+    const publicDir = dirname(publicPath);
+    if (!existsSync(publicDir)) {
+      mkdirSync(publicDir, { recursive: true });
+    }
+    writeFileSync(publicPath, buffer);
+    success(output, `   ✅ Copied to ${relative(ROOT_DIR, publicPath)}`);
+  }
+
+  info(output, "   Validating import...");
+  const { kit: imported } = await importKit(buffer);
+  const typeCount = imported.types?.length ?? 0;
+  const designCount = imported.designs?.length ?? 0;
+  success(output, `   ✅ Validated: ${typeCount} types, ${designCount} designs`);
+
+  success(output, "\n✅ Metabolism assets updated successfully!");
+}
+
+// #endregion Update Metabolism Tool
+
 async function handleTool(cmd: ParsedCommand): Promise<CommandOutput> {
   const output = createOutput();
   const target = cmd.args[0];
@@ -2228,6 +2432,19 @@ async function handleTool(cmd: ParsedCommand): Promise<CommandOutput> {
     error(output, "Error: Tool/target name required");
     return output;
   }
+
+  // Handle built-in tools
+  if (target === "update-metabolism") {
+    try {
+      await updateMetabolism(output);
+    } catch (err) {
+      error(output, `Error: ${err instanceof Error ? err.message : String(err)}`);
+      output.exitCode = 1;
+    }
+    return output;
+  }
+
+  // Fall back to Nx targets
   const projectScope = cmd.options.scope as string | undefined;
   const projects = projectScope ? [projectScope] : undefined;
   const extraArgs = cmd.args.slice(1);
