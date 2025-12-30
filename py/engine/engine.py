@@ -18,6 +18,9 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # endregion Header
+
+from __future__ import annotations
+
 # region TODOs
 # TODO: Make loguru work on extra uvicorn engine process.
 # TODO: Replace prototype healing with one that makes more for every single property.
@@ -35,6 +38,7 @@
 # region Imports
 import abc
 import argparse
+import contextlib
 import dataclasses
 import datetime
 import difflib
@@ -114,6 +118,7 @@ import sqlmodel
 import starlette
 import starlette_graphene3
 import uvicorn
+from mcp.server.fastmcp import FastMCP
 
 # endregion Imports
 
@@ -595,33 +600,33 @@ class Attribute(AttributeDefinitionField, AttributeValueField, AttributeKeyField
     __tablename__ = "attributes"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
     modelPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("model_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("models.id")), default=None, exclude=True)
-    model: Model = sqlmodel.Relationship(back_populates="attributes")
+    model: "Model" = sqlmodel.Relationship(back_populates="attributes")
     connectorPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("connector_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("connectors.id")), default=None, exclude=True)
-    connector: Connector = sqlmodel.Relationship(back_populates="attributes")
+    connector: "Connector" = sqlmodel.Relationship(back_populates="attributes")
     typePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("types.id")), default=None, exclude=True)
-    type: Type = sqlmodel.Relationship(back_populates="attributes")
+    type: "Type" = sqlmodel.Relationship(back_populates="attributes")
     piecePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("piece_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("pieces.id")), default=None, exclude=True)
-    piece: Piece = sqlmodel.Relationship(back_populates="attributes")
+    piece: "Piece" = sqlmodel.Relationship(back_populates="attributes")
     connectionPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("connection_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("connections.id")), default=None, exclude=True)
-    connection: Connection = sqlmodel.Relationship(back_populates="attributes")
+    connection: "Connection" = sqlmodel.Relationship(back_populates="attributes")
     designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")), default=None, exclude=True)
-    design: Design = sqlmodel.Relationship(back_populates="attributes")
+    design: "Design" = sqlmodel.Relationship(back_populates="attributes")
     kitPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")), default=None, exclude=True)
-    kit: Kit = sqlmodel.Relationship(back_populates="attributes")
+    kit: "Kit" = sqlmodel.Relationship(back_populates="attributes")
     qualityPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("quality_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("qualities.id")), default=None, exclude=True)
-    quality: Quality = sqlmodel.Relationship(back_populates="attributes")
+    quality: "Quality" = sqlmodel.Relationship(back_populates="attributes")
     propPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("prop_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("props.id")), default=None, exclude=True)
-    prop: Prop = sqlmodel.Relationship(back_populates="attributes")
+    prop: "Prop" = sqlmodel.Relationship(back_populates="attributes")
     authorPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("author_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("authors.id")), default=None, exclude=True)
-    author: Author = sqlmodel.Relationship(back_populates="attributes")
+    author: "Author" = sqlmodel.Relationship(back_populates="attributes")
     locationPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("location_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("locations.id")), default=None, exclude=True)
-    location: Location = sqlmodel.Relationship(back_populates="attributes")
+    location: "Location" = sqlmodel.Relationship(back_populates="attributes")
     benchmarkPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("benchmark_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("benchmarks.id")), default=None, exclude=True)
-    benchmark: Benchmark = sqlmodel.Relationship(back_populates="attributes")
+    benchmark: "Benchmark" = sqlmodel.Relationship(back_populates="attributes")
     folderPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("folder_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("folders.id")), default=None, exclude=True)
-    folder: Folder = sqlmodel.Relationship(back_populates="attributes")
+    folder: "Folder" = sqlmodel.Relationship(back_populates="attributes")
     portPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("port_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("ports.id")), default=None, exclude=True)
-    port_: Interface = sqlmodel.Relationship(back_populates="attributes")
+    port_: "Interface" = sqlmodel.Relationship(back_populates="attributes")
 
     __table_args__ = (
         sqlalchemy.CheckConstraint(
@@ -7382,14 +7387,190 @@ rest.openapi = custom_openapi
 
 # endregion Rest
 
+# region Mcp
+
+mcp = FastMCP("semio", stateless_http=True, json_response=True)
+
+
+@mcp.tool()
+def get_kit(uri: str) -> dict:
+    """Get a kit from a URI. The URI can be a file path or a URL."""
+    try:
+        result = get(encode(uri))
+        return result.model_dump() if hasattr(result, "model_dump") else result
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def put_kit(uri: str, kit: dict) -> dict:
+    """Put a kit at a URI. Creates or updates the kit."""
+    try:
+        kitInput = KitInput.model_validate(kit)
+        put(encode(uri), kitInput)
+        return {"success": True}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def delete_kit(uri: str) -> dict:
+    """Delete a kit at a URI."""
+    try:
+        delete(encode(uri))
+        return {"success": True}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def get_type_from_kit(uri: str, name: str, variant: str = "") -> dict:
+    """Get a type from a kit by name and variant."""
+    try:
+        code = encode(uri) + "/types/" + encode(f"{name}~{variant}" if variant else name)
+        result = get(code)
+        return result.model_dump() if hasattr(result, "model_dump") else result
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def put_type_in_kit(uri: str, name: str, variant: str, type_data: dict) -> dict:
+    """Put a type in a kit."""
+    try:
+        code = encode(uri) + "/types/" + encode(f"{name}~{variant}" if variant else name)
+        typeInput = TypeInput.model_validate(type_data)
+        put(code, typeInput)
+        return {"success": True}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def delete_type_from_kit(uri: str, name: str, variant: str = "") -> dict:
+    """Delete a type from a kit."""
+    try:
+        code = encode(uri) + "/types/" + encode(f"{name}~{variant}" if variant else name)
+        delete(code)
+        return {"success": True}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def get_design_from_kit(uri: str, name: str, variant: str = "", view: str = "") -> dict:
+    """Get a design from a kit by name, variant, and view."""
+    try:
+        nameVariantView = name
+        if variant:
+            nameVariantView += f"~{variant}"
+        if view:
+            nameVariantView += f"@{view}"
+        code = encode(uri) + "/designs/" + encode(nameVariantView)
+        result = get(code)
+        return result.model_dump() if hasattr(result, "model_dump") else result
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def put_design_in_kit(uri: str, name: str, variant: str, view: str, design_data: dict) -> dict:
+    """Put a design in a kit."""
+    try:
+        nameVariantView = name
+        if variant:
+            nameVariantView += f"~{variant}"
+        if view:
+            nameVariantView += f"@{view}"
+        code = encode(uri) + "/designs/" + encode(nameVariantView)
+        designInput = DesignInput.model_validate(design_data)
+        put(code, designInput)
+        return {"success": True}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def delete_design_from_kit(uri: str, name: str, variant: str = "", view: str = "") -> dict:
+    """Delete a design from a kit."""
+    try:
+        nameVariantView = name
+        if variant:
+            nameVariantView += f"~{variant}"
+        if view:
+            nameVariantView += f"@{view}"
+        code = encode(uri) + "/designs/" + encode(nameVariantView)
+        delete(code)
+        return {"success": True}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def validate_kit(kit: dict) -> dict:
+    """Validate a kit and return any validation problems."""
+    try:
+        result = validateKitDict(kit)
+        return result.model_dump() if hasattr(result, "model_dump") else {"problems": []}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def flatten_design(kit: dict, design_guid: str) -> dict:
+    """Flatten a design by computing absolute planes for all pieces."""
+    try:
+        return flattenDesignDict(kit, design_guid)
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def get_kit_diff(before: dict, after: dict) -> dict:
+    """Get the diff between two kit states."""
+    try:
+        return getKitDiffDict(before, after)
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def apply_kit_diff(base: dict, diff: dict) -> dict:
+    """Apply a diff to a kit."""
+    try:
+        return applyKitDiffDict(base, diff)
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def inverse_kit_diff(original: dict, applied_diff: dict) -> dict:
+    """Get the inverse of a diff (for undo operations)."""
+    try:
+        return inverseKitDiffDict(original, applied_diff)
+    except Exception as e:
+        return {"error": str(e)}
+
+
+# endregion Mcp
+
 # region Engine
 
-engine = starlette.applications.Starlette()
+
+@contextlib.asynccontextmanager
+async def engineLifespan(app):
+    async with mcp.session_manager.run():
+        yield
+
+
+mcp.settings.streamable_http_path = "/"
+engine = starlette.applications.Starlette(lifespan=engineLifespan)
 engine.mount("/api", rest)
 engine.mount(
     "/graphql",
     starlette_graphene3.GraphQLApp(graphqlSchema, on_get=starlette_graphene3.make_graphiql_handler()),
 )
+engine.mount("/mcp", mcp.streamable_http_app())
 
 
 def generateSchemas():

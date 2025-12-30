@@ -466,16 +466,15 @@ npx tsx hooks/eslint.ts      # ESLint check
 
 ### Repo CLI
 
-The `repo` CLI provides unified access to all monorepo operations. It is implemented in Go (`go/repo`) with the TypeScript fallback (`repo.tsx`) for backwards compatibility.
+The `repo` CLI provides unified access to all monorepo operations. It is implemented in Go (`go/repo`). All commands output JSON for programmatic consumption. Interactive wizards are provided via the VSCode extension.
 
 **Architecture:**
 
 ```
 go/
-├── repo/     # Go CLI binary (primary)
-│   ├── main.go
-│   └── tools/ # Tool implementations
-└── mcp/      # MCP server exposing repo tools to LLMs
+├── repo/     # Go CLI binary - non-interactive, JSON output
+│   └── main.go
+└── mcp/      # MCP server - calls repo binary, exposes tools to LLMs
 ```
 
 **Usage:**
@@ -490,38 +489,38 @@ npx tsx repo.tsx <command> [subcommand] [options]
 
 **Commands:**
 
-| Command                    | Description                         |
-| -------------------------- | ----------------------------------- |
-| `help`                     | Show help message                   |
-| `analyze [--scope=...]`    | Analyze codebase for problems       |
-| `fix [--scope=...]`        | Apply autofixes for problems        |
-| `policy list`              | List all registered policies        |
-| `policy run <id>`          | Run a specific policy               |
-| `ticket create <slug>`     | Create a new ticket                 |
-| `ticket list [year/month]` | List tickets                        |
-| `ticket read <path>`       | Read a ticket                       |
-| `ticket iterate start`     | Start iteration on a ticket         |
-| `ticket iterate end`       | End iteration on a ticket           |
-| `ticket finish`            | Finish a ticket                     |
-| `project list`             | List Nx projects                    |
-| `project tree`             | Show project dependency tree        |
-| `folder tree [path]`       | Show folder structure               |
-| `folder create <path>`     | Create a folder                     |
-| `folder move <src> <dst>`  | Move/rename a folder                |
-| `folder delete <path>`     | Delete a folder                     |
-| `folder list [path]`       | List folders                        |
-| `file tree [path]`         | Show file tree                      |
-| `file create <path>`       | Create a file                       |
-| `file move <src> <dst>`    | Move/rename a file                  |
-| `file delete <path>`       | Delete a file                       |
-| `file list [scope]`        | List files in scope                 |
-| `section tree <file>`      | Show section structure of a file    |
-| `section create <file>`    | Create a section                    |
-| `section move <file>`      | Move/rename a section               |
-| `section delete <file>`    | Delete a section                    |
-| `section list <file>`      | List sections                       |
-| `definition list <file>`   | List definitions in a file          |
-| `tool <name> [args...]`    | Run an Nx target (e.g., lint, test) |
+| Command                                   | Description                         |
+| ----------------------------------------- | ----------------------------------- |
+| `help`                                    | Show help message                   |
+| `analyze [scope]`                         | Analyze codebase for problems       |
+| `fix [scope]`                             | Apply autofixes for problems        |
+| `policy list`                             | List all registered policies        |
+| `policy run <id>`                         | Run a specific policy               |
+| `ticket create <slug>`                    | Create a new ticket                 |
+| `ticket list [year] [month] [day]`        | List tickets                        |
+| `ticket read <year> <month> <day> <slug>` | Read a ticket                       |
+| `ticket iterate start`                    | Start iteration on a ticket         |
+| `ticket iterate end`                      | End iteration on a ticket           |
+| `ticket finish`                           | Finish a ticket                     |
+| `project list`                            | List Nx projects                    |
+| `project tree`                            | Show project dependency tree        |
+| `folder tree [path]`                      | Show folder structure               |
+| `folder create <path>`                    | Create a folder                     |
+| `folder move <src> <dst>`                 | Move/rename a folder                |
+| `folder delete <path>`                    | Delete a folder                     |
+| `folder list [path]`                      | List folders                        |
+| `file tree [path]`                        | Show file tree                      |
+| `file create <path>`                      | Create a file                       |
+| `file move <src> <dst>`                   | Move/rename a file                  |
+| `file delete <path>`                      | Delete a file                       |
+| `file list [scope]`                       | List files in scope                 |
+| `section tree <file>`                     | Show section structure of a file    |
+| `section create <file>`                   | Create a section                    |
+| `section move <file>`                     | Move/rename a section               |
+| `section delete <file>`                   | Delete a section                    |
+| `section list <file>`                     | List sections                       |
+| `definition list <file>`                  | List definitions in a file          |
+| `tool <name> [args...]`                   | Run an Nx target (e.g., lint, test) |
 
 **Scope Syntax:**
 
@@ -532,11 +531,17 @@ npx tsx repo.tsx <command> [subcommand] [options]
 - `file.tsx#Region` - Section scope
 - `file.tsx§Function` - Definition scope
 
-**Options:**
+**Output:**
 
-- `--scope=<scope>` - Limit operation to scope
-- `--json` - Output as JSON
-- `--dry-run` - Preview without making changes
+All commands output JSON with structure:
+
+```json
+{
+  "output": { "lines": [...], "exitCode": 0 },
+  "data": { ... },
+  "error": "..."
+}
+```
 
 **Built-in Policies:**
 
@@ -553,7 +558,9 @@ repo definition list js/js/semio.ts   # List all definitions
 repo project list                     # List all Nx projects
 repo folder tree js/js                # Show folder tree
 repo ticket create MY-TASK --prompt="..." # Create ticket
-repo tool build --scope=@semio/js     # Run Nx build target
+repo ticket list 2025                 # List tickets from 2025
+repo ticket read 2025 12 30 MY-TASK   # Read specific ticket
+repo tool build                       # Run Nx build target
 ```
 
 ### MCP Server

@@ -1,0 +1,18 @@
+{
+	"servers": {
+		"playwright-test": {
+			"type": "stdio",
+			"command": "npx",
+			"args": [
+				"playwright",
+				"run-test-mcp-server"
+			]
+		},
+		"semio": {
+			"type": "stdio",
+			"command": "bin/mcp.exe",
+			"args": []
+		}
+	},
+	"inputs": []
+}

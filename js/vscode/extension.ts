@@ -132,6 +132,72 @@ function runRepoCommand(args: string): void {
   terminal.sendText(`${command} ${args}`);
 }
 
+async function runRepoCommandJson<T>(args: string): Promise<T | null> {
+  const root = getWorkspaceRoot();
+  if (!root) return null;
+  const { command } = getRepoCommand();
+  if (!command) return null;
+  try {
+    const { stdout } = await execAsync(`${command} ${args}`, { cwd: root, timeout: 30000 });
+    return JSON.parse(stdout) as T;
+  } catch {
+    return null;
+  }
+}
+
+interface ToolResult<T = unknown> {
+  output: { lines: { type: string; text: string }[]; exitCode: number };
+  data?: T;
+  error?: string;
+}
+
+interface TicketData {
+  year: number;
+  month: number;
+  day: number;
+  slug: string;
+  frontmatter: { status: string; prompt: string; summary?: string };
+  filePath: string;
+}
+
+interface PolicyData {
+  id: string;
+  name: string;
+  description: string;
+}
+
+async function pickTicket(): Promise<TicketData | undefined> {
+  const result = await runRepoCommandJson<ToolResult<TicketData[]>>("ticket list");
+  if (!result?.data || result.data.length === 0) {
+    vscode.window.showWarningMessage("No tickets found");
+    return undefined;
+  }
+  const items = result.data.map((t) => ({
+    label: `${t.year}/${String(t.month).padStart(2, "0")}/${String(t.day).padStart(2, "0")}/${t.slug}`,
+    description: t.frontmatter.status === "closed" ? "✅" : "🟢",
+    detail: t.frontmatter.summary || t.frontmatter.prompt,
+    ticket: t,
+  }));
+  const picked = await vscode.window.showQuickPick(items, { placeHolder: "Select a ticket" });
+  return picked?.ticket;
+}
+
+async function pickPolicy(): Promise<PolicyData | undefined> {
+  const result = await runRepoCommandJson<ToolResult<PolicyData[]>>("policy list");
+  if (!result?.data || result.data.length === 0) {
+    vscode.window.showWarningMessage("No policies found");
+    return undefined;
+  }
+  const items = result.data.map((p) => ({
+    label: p.id,
+    description: p.name,
+    detail: p.description,
+    policy: p,
+  }));
+  const picked = await vscode.window.showQuickPick(items, { placeHolder: "Select a policy" });
+  return picked?.policy;
+}
+
 // #endregion Utilities
 
 // #region File Analysis
@@ -483,12 +549,6 @@ function createKitCodeAction(document: vscode.TextDocument, diagnostic: vscode.D
 // #region Commands
 
 function registerCommands(context: vscode.ExtensionContext): void {
-  const runRepoCommand = (args: string): void => {
-    const { command, useGo } = getRepoCommand();
-    const terminal = vscode.window.createTerminal("semio");
-    terminal.show();
-    terminal.sendText(`${command} ${args}`);
-  };
   context.subscriptions.push(
     vscode.commands.registerCommand("semio.fixViolation", fixViolation),
     vscode.commands.registerCommand("semio.analyze", async () => {
@@ -496,7 +556,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
         vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
-      runRepoCommand("analyze --json");
+      runRepoCommand("analyze @semio");
       vscode.window.showInformationMessage("Running semio analyze...");
     }),
     vscode.commands.registerCommand("semio.analyzeFile", async () => {
@@ -510,14 +570,14 @@ function registerCommands(context: vscode.ExtensionContext): void {
         return;
       }
       const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
-      runRepoCommand(`analyze --scope=${relativePath} --json`);
+      runRepoCommand(`analyze ${relativePath}`);
     }),
     vscode.commands.registerCommand("semio.fix", async () => {
       if (!hasRepoAccess()) {
         vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
-      runRepoCommand("fix");
+      runRepoCommand("fix @semio");
       vscode.window.showInformationMessage("Running semio fix...");
     }),
     vscode.commands.registerCommand("semio.fixFile", async () => {
@@ -569,88 +629,51 @@ function registerCommands(context: vscode.ExtensionContext): void {
         vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
-      const dateInput = await vscode.window.showInputBox({
-        prompt: "Enter ticket date (YYYY/MM/DD or YYYY MM DD)",
-        placeHolder: "2025 01 15",
-      });
-      if (!dateInput) return;
-      const dateParts = dateInput.split(/[\s/]+/);
-      if (dateParts.length !== 3) {
-        vscode.window.showErrorMessage("Invalid date format. Use YYYY/MM/DD or YYYY MM DD");
-        return;
-      }
-      const slug = await vscode.window.showInputBox({
-        prompt: "Enter ticket slug",
-        placeHolder: "TICKET-SLUG",
-      });
-      if (!slug) return;
-      runRepoCommand(`ticket iterate start ${dateParts[0]} ${dateParts[1]} ${dateParts[2]} ${slug}`);
+      const ticket = await pickTicket();
+      if (!ticket) return;
+      const prompt = await vscode.window.showInputBox({ prompt: "Enter iteration prompt (optional)", placeHolder: "What will be done in this iteration?" });
+      const promptArg = prompt ? ` --prompt="${prompt.replace(/"/g, '\\"')}"` : "";
+      runRepoCommand(`ticket iterate start ${ticket.year} ${ticket.month} ${ticket.day} ${ticket.slug}${promptArg}`);
     }),
     vscode.commands.registerCommand("semio.ticketIterateEnd", async () => {
       if (!hasRepoAccess()) {
         vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
-      const dateInput = await vscode.window.showInputBox({
-        prompt: "Enter ticket date (YYYY/MM/DD or YYYY MM DD)",
-        placeHolder: "2025 01 15",
-      });
-      if (!dateInput) return;
-      const dateParts = dateInput.split(/[\s/]+/);
-      if (dateParts.length !== 3) {
-        vscode.window.showErrorMessage("Invalid date format. Use YYYY/MM/DD or YYYY MM DD");
-        return;
-      }
-      const slug = await vscode.window.showInputBox({
-        prompt: "Enter ticket slug",
-        placeHolder: "TICKET-SLUG",
-      });
-      if (!slug) return;
-      runRepoCommand(`ticket iterate end ${dateParts[0]} ${dateParts[1]} ${dateParts[2]} ${slug}`);
+      const ticket = await pickTicket();
+      if (!ticket) return;
+      runRepoCommand(`ticket iterate end ${ticket.year} ${ticket.month} ${ticket.day} ${ticket.slug}`);
     }),
     vscode.commands.registerCommand("semio.ticketFinish", async () => {
       if (!hasRepoAccess()) {
         vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
-      const dateInput = await vscode.window.showInputBox({
-        prompt: "Enter ticket date (YYYY/MM/DD or YYYY MM DD)",
-        placeHolder: "2025 01 15",
-      });
-      if (!dateInput) return;
-      const dateParts = dateInput.split(/[\s/]+/);
-      if (dateParts.length !== 3) {
-        vscode.window.showErrorMessage("Invalid date format. Use YYYY/MM/DD or YYYY MM DD");
-        return;
-      }
-      const slug = await vscode.window.showInputBox({
-        prompt: "Enter ticket slug",
-        placeHolder: "TICKET-SLUG",
-      });
-      if (!slug) return;
-      runRepoCommand(`ticket finish ${dateParts[0]} ${dateParts[1]} ${dateParts[2]} ${slug}`);
+      const ticket = await pickTicket();
+      if (!ticket) return;
+      runRepoCommand(`ticket finish ${ticket.year} ${ticket.month} ${ticket.day} ${ticket.slug}`);
     }),
     vscode.commands.registerCommand("semio.ticketRead", async () => {
       if (!hasRepoAccess()) {
         vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
-      const dateInput = await vscode.window.showInputBox({
-        prompt: "Enter ticket date (YYYY/MM/DD or YYYY MM DD)",
-        placeHolder: "2025 01 15",
-      });
-      if (!dateInput) return;
-      const dateParts = dateInput.split(/[\s/]+/);
-      if (dateParts.length !== 3) {
-        vscode.window.showErrorMessage("Invalid date format. Use YYYY/MM/DD or YYYY MM DD");
+      const ticket = await pickTicket();
+      if (!ticket) return;
+      runRepoCommand(`ticket read ${ticket.year} ${ticket.month} ${ticket.day} ${ticket.slug}`);
+    }),
+    vscode.commands.registerCommand("semio.ticketOpen", async () => {
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
-      const slug = await vscode.window.showInputBox({
-        prompt: "Enter ticket slug",
-        placeHolder: "TICKET-SLUG",
-      });
-      if (!slug) return;
-      runRepoCommand(`ticket read ${dateParts[0]} ${dateParts[1]} ${dateParts[2]} ${slug}`);
+      const ticket = await pickTicket();
+      if (!ticket) return;
+      const root = getWorkspaceRoot();
+      if (!root) return;
+      const ticketUri = vscode.Uri.file(path.join(root, ticket.filePath));
+      const doc = await vscode.workspace.openTextDocument(ticketUri);
+      await vscode.window.showTextDocument(doc);
     }),
     vscode.commands.registerCommand("semio.projectList", async () => {
       if (!hasRepoAccess()) {
@@ -804,7 +827,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
         value: ".",
       });
       if (!folderPath) return;
-      runRepoCommand(`file list --scope=${folderPath}`);
+      runRepoCommand(`file list ${folderPath}`);
     }),
     vscode.commands.registerCommand("semio.fileTree", async () => {
       if (!hasRepoAccess()) {
@@ -916,12 +939,9 @@ function registerCommands(context: vscode.ExtensionContext): void {
         vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
         return;
       }
-      const policyId = await vscode.window.showInputBox({
-        prompt: "Enter policy ID to run (leave empty for all)",
-        placeHolder: "header",
-      });
-      const idArg = policyId ? ` run ${policyId}` : " run";
-      runRepoCommand(`policy${idArg}`);
+      const policy = await pickPolicy();
+      if (!policy) return;
+      runRepoCommand(`policy run ${policy.id}`);
     }),
     vscode.commands.registerCommand("semio.toolRun", async () => {
       if (!hasRepoAccess()) {

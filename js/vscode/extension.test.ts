@@ -168,6 +168,11 @@ suite("Command Registration Test Suite", () => {
     assert.ok(commands.includes("semio.ticketRead"), "semio.ticketRead command should be registered");
   });
 
+  test("semio.ticketOpen command is registered", async () => {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.ticketOpen"), "semio.ticketOpen command should be registered");
+  });
+
   test("semio.projectTree command is registered", async () => {
     const commands = await vscode.commands.getCommands(true);
     assert.ok(commands.includes("semio.projectTree"), "semio.projectTree command should be registered");

@@ -1,5 +1,13 @@
 # Prompt history
 
+The engine should be a running graphql server, rest endpoint and mcp server (use the official python mcp sdk). Get it running and test that it works. semio.ts is the single source of truth for the engine. All CRUD operations from semio.ts should be exposed as tools in the mcp server.
+
+The repo script should be refactored. The architecture should be simplified.
+The repo module should only expose commands. Tools etc should all become non-interactive commands. Remove interactive, dry-run or json mode.
+All commands are given to the user in vscode along with interactive wizards to collect interactively the input paramters (e.g. instead of asking for a year, month, day, slug for identifying a ticket, the user should just select the ticket from the ticket list).
+
+The ticket system should be extended to instead of a single markdown file for each ticket, a folder should be created for each ticket. The folder should contain the ticket file and all temporary temporary scripts.
+
 @mcp-go 
 The repo.tsx script should be rewritten with go.
 The new architecture should be:

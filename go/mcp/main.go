@@ -19,13 +19,48 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strconv"
+	"strings"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
-	"github.com/usalu/semio/go/repo/tools"
 )
+
+var repoPath string
+
+func init() {
+	wd, _ := os.Getwd()
+	repoPath = findRepoBinary(wd)
+}
+
+func findRepoBinary(start string) string {
+	dir := start
+	for {
+		binPath := filepath.Join(dir, "go", "repo", "repo")
+		if _, err := os.Stat(binPath); err == nil {
+			return binPath
+		}
+		binPath = filepath.Join(dir, "go", "repo", "repo.exe")
+		if _, err := os.Stat(binPath); err == nil {
+			return binPath
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			return "repo"
+		}
+		dir = parent
+	}
+}
+
+func runRepo(args ...string) string {
+	cmd := exec.Command(repoPath, args...)
+	out, _ := cmd.Output()
+	return string(out)
+}
 
 func main() {
 	s := server.NewMCPServer(
@@ -44,7 +79,6 @@ func main() {
 		mcp.NewTool("fix",
 			mcp.WithDescription("Apply autofixes for policy violations"),
 			mcp.WithString("scope", mcp.Description("Scope to fix"), mcp.DefaultString("@semio")),
-			mcp.WithBoolean("dry_run", mcp.Description("Preview without making changes")),
 		),
 		fixHandler,
 	)
@@ -256,18 +290,12 @@ func main() {
 		mcp.NewTool("tool_run",
 			mcp.WithDescription("Run a tool or Nx target"),
 			mcp.WithString("name", mcp.Required(), mcp.Description("Tool/target name")),
-			mcp.WithString("scope", mcp.Description("Project scope for Nx targets")),
 		),
 		toolRunHandler,
 	)
 	if err := server.ServeStdio(s); err != nil {
 		fmt.Printf("Server error: %v\n", err)
 	}
-}
-
-func toJSON(v interface{}) string {
-	b, _ := json.MarshalIndent(v, "", "  ")
-	return string(b)
 }
 
 func textResult(text string) *mcp.CallToolResult {
@@ -287,29 +315,30 @@ func analyzeHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.Call
 	if scope == "" {
 		scope = "@semio"
 	}
-	result := tools.ToolAnalyze(scope, nil)
-	return textResult(toJSON(result)), nil
+	return textResult(runRepo("analyze", scope)), nil
 }
 
 func fixHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	scope, _ := args["scope"].(string)
-	dryRun, _ := args["dry_run"].(bool)
-	result := tools.ToolFix(scope, dryRun)
-	return textResult(toJSON(result)), nil
+	if scope == "" {
+		scope = "@semio"
+	}
+	return textResult(runRepo("fix", scope)), nil
 }
 
 func policyListHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	result := tools.ToolPolicyList()
-	return textResult(toJSON(result)), nil
+	return textResult(runRepo("policy", "list")), nil
 }
 
 func policyRunHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	id, _ := args["id"].(string)
 	scope, _ := args["scope"].(string)
-	result := tools.ToolPolicyRun(id, scope)
-	return textResult(toJSON(result)), nil
+	if scope == "" {
+		return textResult(runRepo("policy", "run", id)), nil
+	}
+	return textResult(runRepo("policy", "run", id, scope)), nil
 }
 
 func ticketCreateHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -317,101 +346,101 @@ func ticketCreateHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp
 	slug, _ := args["slug"].(string)
 	prompt, _ := args["prompt"].(string)
 	model, _ := args["model"].(string)
-	result := tools.ToolTicketCreate(slug, prompt, model)
-	return textResult(toJSON(result)), nil
+	cmdArgs := []string{"ticket", "create", slug}
+	if prompt != "" {
+		cmdArgs = append(cmdArgs, "--prompt="+prompt)
+	}
+	if model != "" {
+		cmdArgs = append(cmdArgs, "--model="+model)
+	}
+	return textResult(runRepo(cmdArgs...)), nil
 }
 
 func ticketListHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	var year, month, day *int
+	cmdArgs := []string{"ticket", "list"}
 	if y, ok := args["year"].(float64); ok {
-		yi := int(y)
-		year = &yi
+		cmdArgs = append(cmdArgs, strconv.Itoa(int(y)))
+		if m, ok := args["month"].(float64); ok {
+			cmdArgs = append(cmdArgs, strconv.Itoa(int(m)))
+			if d, ok := args["day"].(float64); ok {
+				cmdArgs = append(cmdArgs, strconv.Itoa(int(d)))
+			}
+		}
 	}
-	if m, ok := args["month"].(float64); ok {
-		mi := int(m)
-		month = &mi
-	}
-	if d, ok := args["day"].(float64); ok {
-		di := int(d)
-		day = &di
-	}
-	result := tools.ToolTicketList(year, month, day)
-	return textResult(toJSON(result)), nil
+	return textResult(runRepo(cmdArgs...)), nil
 }
 
 func ticketReadHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	year := int(args["year"].(float64))
-	month := int(args["month"].(float64))
-	day := int(args["day"].(float64))
+	year := strconv.Itoa(int(args["year"].(float64)))
+	month := strconv.Itoa(int(args["month"].(float64)))
+	day := strconv.Itoa(int(args["day"].(float64)))
 	slug, _ := args["slug"].(string)
-	result := tools.ToolTicketRead(year, month, day, slug)
-	return textResult(toJSON(result)), nil
+	return textResult(runRepo("ticket", "read", year, month, day, slug)), nil
 }
 
 func ticketIterateStartHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	year := int(args["year"].(float64))
-	month := int(args["month"].(float64))
-	day := int(args["day"].(float64))
+	year := strconv.Itoa(int(args["year"].(float64)))
+	month := strconv.Itoa(int(args["month"].(float64)))
+	day := strconv.Itoa(int(args["day"].(float64)))
 	slug, _ := args["slug"].(string)
 	prompt, _ := args["prompt"].(string)
 	model, _ := args["model"].(string)
-	result := tools.ToolTicketIterateStart(year, month, day, slug, prompt, model)
-	return textResult(toJSON(result)), nil
+	cmdArgs := []string{"ticket", "iterate", "start", year, month, day, slug}
+	if prompt != "" {
+		cmdArgs = append(cmdArgs, "--prompt="+prompt)
+	}
+	if model != "" {
+		cmdArgs = append(cmdArgs, "--model="+model)
+	}
+	return textResult(runRepo(cmdArgs...)), nil
 }
 
 func ticketIterateEndHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	year := int(args["year"].(float64))
-	month := int(args["month"].(float64))
-	day := int(args["day"].(float64))
+	year := strconv.Itoa(int(args["year"].(float64)))
+	month := strconv.Itoa(int(args["month"].(float64)))
+	day := strconv.Itoa(int(args["day"].(float64)))
 	slug, _ := args["slug"].(string)
-	result := tools.ToolTicketIterateEnd(year, month, day, slug)
-	return textResult(toJSON(result)), nil
+	return textResult(runRepo("ticket", "iterate", "end", year, month, day, slug)), nil
 }
 
 func ticketFinishHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	year := int(args["year"].(float64))
-	month := int(args["month"].(float64))
-	day := int(args["day"].(float64))
+	year := strconv.Itoa(int(args["year"].(float64)))
+	month := strconv.Itoa(int(args["month"].(float64)))
+	day := strconv.Itoa(int(args["day"].(float64)))
 	slug, _ := args["slug"].(string)
-	result := tools.ToolTicketFinish(year, month, day, slug)
-	return textResult(toJSON(result)), nil
+	return textResult(runRepo("ticket", "finish", year, month, day, slug)), nil
 }
 
 func projectListHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	result := tools.ToolProjectList()
-	return textResult(toJSON(result)), nil
+	return textResult(runRepo("project", "list")), nil
 }
 
 func projectTreeHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	result := tools.ToolProjectTree()
-	return textResult(toJSON(result)), nil
+	return textResult(runRepo("project", "tree")), nil
 }
 
 func folderCreateHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	path, _ := args["path"].(string)
-	result := tools.ToolFolderCreate(path)
-	return textResult(toJSON(result)), nil
+	return textResult(runRepo("folder", "create", path)), nil
 }
 
 func folderMoveHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	source, _ := args["source"].(string)
 	target, _ := args["target"].(string)
-	result := tools.ToolFolderMove(source, target)
-	return textResult(toJSON(result)), nil
+	return textResult(runRepo("folder", "move", source, target)), nil
 }
 
 func folderDeleteHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	path, _ := args["path"].(string)
-	result := tools.ToolFolderDelete(path)
-	return textResult(toJSON(result)), nil
+	return textResult(runRepo("folder", "delete", path)), nil
 }
 
 func folderListHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -420,8 +449,7 @@ func folderListHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.C
 	if path == "" {
 		path = "."
 	}
-	result := tools.ToolFolderList(path)
-	return textResult(toJSON(result)), nil
+	return textResult(runRepo("folder", "list", path)), nil
 }
 
 func folderTreeHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -430,30 +458,26 @@ func folderTreeHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.C
 	if path == "" {
 		path = "."
 	}
-	result := tools.ToolFolderTree(path)
-	return textResult(toJSON(result)), nil
+	return textResult(runRepo("folder", "tree", path)), nil
 }
 
 func fileCreateHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	path, _ := args["path"].(string)
-	result := tools.ToolFileCreate(path)
-	return textResult(toJSON(result)), nil
+	return textResult(runRepo("file", "create", path)), nil
 }
 
 func fileMoveHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	source, _ := args["source"].(string)
 	target, _ := args["target"].(string)
-	result := tools.ToolFileMove(source, target)
-	return textResult(toJSON(result)), nil
+	return textResult(runRepo("file", "move", source, target)), nil
 }
 
 func fileDeleteHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	path, _ := args["path"].(string)
-	result := tools.ToolFileDelete(path)
-	return textResult(toJSON(result)), nil
+	return textResult(runRepo("file", "delete", path)), nil
 }
 
 func fileListHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -462,8 +486,7 @@ func fileListHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.Cal
 	if scope == "" {
 		scope = "@semio"
 	}
-	result := tools.ToolFileList(scope)
-	return textResult(toJSON(result)), nil
+	return textResult(runRepo("file", "list", scope)), nil
 }
 
 func fileTreeHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -472,16 +495,14 @@ func fileTreeHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.Cal
 	if path == "" {
 		path = "."
 	}
-	result := tools.ToolFileTree(path)
-	return textResult(toJSON(result)), nil
+	return textResult(runRepo("file", "tree", path)), nil
 }
 
 func sectionCreateHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	file, _ := args["file"].(string)
 	section, _ := args["section"].(string)
-	result := tools.ToolSectionCreate(file, section)
-	return textResult(toJSON(result)), nil
+	return textResult(runRepo("section", "create", file, section)), nil
 }
 
 func sectionMoveHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -489,43 +510,39 @@ func sectionMoveHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.
 	file, _ := args["file"].(string)
 	oldName, _ := args["old_name"].(string)
 	newName, _ := args["new_name"].(string)
-	result := tools.ToolSectionMove(file, oldName, newName)
-	return textResult(toJSON(result)), nil
+	return textResult(runRepo("section", "move", file, oldName, newName)), nil
 }
 
 func sectionDeleteHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	file, _ := args["file"].(string)
 	section, _ := args["section"].(string)
-	result := tools.ToolSectionDelete(file, section)
-	return textResult(toJSON(result)), nil
+	return textResult(runRepo("section", "delete", file, section)), nil
 }
 
 func sectionListHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	file, _ := args["file"].(string)
-	result := tools.ToolSectionList(file)
-	return textResult(toJSON(result)), nil
+	return textResult(runRepo("section", "list", file)), nil
 }
 
 func sectionTreeHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	file, _ := args["file"].(string)
-	result := tools.ToolSectionTree(file)
-	return textResult(toJSON(result)), nil
+	return textResult(runRepo("section", "tree", file)), nil
 }
 
 func definitionListHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	file, _ := args["file"].(string)
-	result := tools.ToolDefinitionList(file)
-	return textResult(toJSON(result)), nil
+	return textResult(runRepo("definition", "list", file)), nil
 }
 
 func toolRunHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	name, _ := args["name"].(string)
-	result := tools.ToolRunTool(name, nil)
-	return textResult(toJSON(result)), nil
+	return textResult(runRepo("tool", name)), nil
 }
+
+var _ = strings.TrimSpace
 
