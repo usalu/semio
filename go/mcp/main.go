@@ -101,7 +101,7 @@ func main() {
 			mcp.WithDescription("Create a new development ticket"),
 			mcp.WithString("slug", mcp.Required(), mcp.Description("Ticket slug (will be uppercased and kebab-cased)")),
 			mcp.WithString("prompt", mcp.Description("Ticket prompt/description")),
-			mcp.WithString("model", mcp.Description("Model used for this ticket")),
+			mcp.WithString("model", mcp.Required(), mcp.Description("Large-Language-Model (LLM) used for this ticket")),
 		),
 		ticketCreateHandler,
 	)
@@ -132,7 +132,7 @@ func main() {
 			mcp.WithNumber("day", mcp.Required(), mcp.Description("Ticket day")),
 			mcp.WithString("slug", mcp.Required(), mcp.Description("Ticket slug")),
 			mcp.WithString("prompt", mcp.Description("Iteration prompt")),
-			mcp.WithString("model", mcp.Description("Model used")),
+			mcp.WithString("model", mcp.Required(), mcp.Description("Large-Language-Model (LLM) used")),
 		),
 		ticketIterateStartHandler,
 	)

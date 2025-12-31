@@ -29,12 +29,27 @@ import { useNavigate } from "react-router";
 import { useLabel } from "../i18n";
 import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Textarea } from "./elements";
 import type { AppConfig, AppPlugin, HookResult, PanelDefinition } from "./shared";
-import { conditionalHookResult, createPanelDefinition, deduplicateWindowLayout, PanelKind, parseWindowLayout, registerAppPlugin, registerEventHandler, stringifyWindowLayout, type AppWindowConfig } from "./shared";
+import { conditionalHookResult, createPanelDefinition, deduplicateWindowLayout, EMPTY_PANEL_VISIBILITY, PanelKind, parseWindowLayout, registerAppPlugin, registerEventHandler, stringifyWindowLayout, type AppWindowConfig } from "./shared";
 import { Canvas, createDefaultLayout, FeedbackAppKind, FeedbackAppState, FeedbackFormData, FeedbackKind, LayoutCanvas, useAddPanelSection, useAppType, useRemovePanelSection, useSettings, useSketchpadActor, useSketchpadCommands } from "./Sketchpad";
 
 // #endregion Imports
 
 // #region Feedback App Plugin Registration
+
+const createDefaultFeedbackState = (): FeedbackAppState => ({
+  panelVisibility: { ...EMPTY_PANEL_VISIBILITY },
+  formData: {
+    kind: "bug",
+    title: "",
+    description: "",
+    app: undefined,
+    name: undefined,
+    email: undefined,
+  },
+  isSubmitting: false,
+  isSubmitted: false,
+  error: undefined,
+});
 
 const feedbackAppPlugin: AppPlugin = {
   id: "feedback",
@@ -44,20 +59,7 @@ const feedbackAppPlugin: AppPlugin = {
     guards: {},
     eventHandlers: {},
     selectors: {},
-    createDefaultState: (): FeedbackAppState => ({
-      panelVisibility: { toolbar: true, workbench: false, details: false, chat: false, settings: false },
-      formData: {
-        kind: "bug",
-        title: "",
-        description: "",
-        app: undefined,
-        name: undefined,
-        email: undefined,
-      },
-      isSubmitting: false,
-      isSubmitted: false,
-      error: undefined,
-    }),
+    createDefaultState: createDefaultFeedbackState,
   },
 };
 

@@ -51,7 +51,7 @@ import { generateUniqueName, guid, Guid, importKit, Kit, KitShallow } from "../s
 import { docsRegistry } from "./Docs";
 import { Action, Input, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Spinner, Table, TableAvatar, TableColumn, Textarea, Toggle, ToggleGroup, TreeContent, TreeItem } from "./elements";
 import type { AppConfig, AppEdit, AppPlugin, PanelDefinition, PanelVisibility } from "./shared";
-import { createPanelDefinition, Expertise, Mode, PanelKind, registerAppPlugin, registerEventHandler, Theme } from "./shared";
+import { createPanelDefinition, EMPTY_PANEL_VISIBILITY, Expertise, Mode, PanelKind, registerAppPlugin, registerEventHandler, registerStandardAppEventHandlers, Theme } from "./shared";
 import {
   AppWindowConfig,
   Canvas,
@@ -144,6 +144,15 @@ export interface HomeCommandResult {
 
 // #region Home App Plugin Registration
 
+const createDefaultHomeState = (): HomeState => ({
+  panelVisibility: { ...EMPTY_PANEL_VISIBILITY },
+  selection: undefined,
+  hover: undefined,
+  sortColumn: undefined,
+  sortDirection: undefined,
+  loadingKits: [],
+});
+
 const homeAppPlugin: AppPlugin = {
   id: "home",
   namespace: "HOME",
@@ -152,37 +161,17 @@ const homeAppPlugin: AppPlugin = {
     guards: {},
     eventHandlers: {},
     selectors: {},
-    createDefaultState: (): HomeState => ({
-      panelVisibility: { toolbar: true, workbench: false, details: false, chat: false, settings: false },
-      selection: undefined,
-      hover: undefined,
-      sortColumn: undefined,
-      sortDirection: undefined,
-      loadingKits: [],
-    }),
+    createDefaultState: createDefaultHomeState,
   },
 };
 
 if (typeof window !== "undefined") {
   registerAppPlugin(homeAppPlugin);
 
-  registerEventHandler("HOME.TOGGLE_PANEL", {
-    action: (context: any, event: any) => ({
-      homeApp: {
-        ...context.homeApp,
-        panelVisibility: {
-          ...context.homeApp.panelVisibility,
-          [event.panel]: !context.homeApp.panelVisibility[event.panel],
-        },
-      },
-    }),
-  });
-
-  registerEventHandler("HOME.SET_PANEL_VISIBILITY", {
-    action: (context: any, event: any) => ({
-      homeApp: { ...context.homeApp, panelVisibility: event.panelVisibility },
-    }),
-  });
+  registerStandardAppEventHandlers(
+    { namespace: "HOME", appKey: "homeApp", createDefaultState: createDefaultHomeState },
+    (event) => ({ kits: event.kits }),
+  );
 
   registerEventHandler("HOME.SET_SORT", {
     action: (context: any, event: any) => ({
@@ -203,30 +192,6 @@ if (typeof window !== "undefined") {
       const kits = context.homeApp.selection?.kits || [];
       return { homeApp: { ...context.homeApp, selection: { kits: kits.filter((k: Guid) => k !== event.guid) } } };
     },
-  });
-
-  registerEventHandler("HOME.CLEAR_SELECTION", {
-    action: (context: any) => ({ homeApp: { ...context.homeApp, selection: undefined } }),
-  });
-
-  registerEventHandler("HOME.SET_HOVER", {
-    action: (context: any, event: any) => ({
-      homeApp: { ...context.homeApp, hover: { kits: event.kits } },
-    }),
-  });
-
-  registerEventHandler("HOME.CLEAR_HOVER", {
-    guard: (context: any) => {
-      const hover = context.homeApp.hover;
-      return hover !== undefined && (hover.kits?.length ?? 0) > 0;
-    },
-    action: (context: any) => ({ homeApp: { ...context.homeApp, hover: undefined } }),
-  });
-
-  registerEventHandler("HOME.SET_WINDOW_LAYOUT", {
-    action: (context: any, event: any) => ({
-      homeApp: { ...context.homeApp, windowLayout: event.windowLayout },
-    }),
   });
 }
 

@@ -149,7 +149,7 @@ import {
   useReactFlow,
 } from "./elements";
 import type { Device, HookNoSetResult, HookResult, KitAppId, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
-import { AppConfig, AppPlugin, conditionalHookResult, createPanelDefinition, Expertise, Mode, PanelKind, parseWindowLayout, registerAppPlugin, registerKitAppHooks, registerRuntimeAction, stringifyWindowLayout, Theme } from "./shared";
+import { AppConfig, AppPlugin, conditionalHookResult, createPanelDefinition, createSingleKeyTransactionHandlers, Expertise, Mode, PanelKind, parseWindowLayout, registerAppPlugin, registerEventHandler, registerKitAppHooks, registerSingleKeyAppEventHandlers, stringifyWindowLayout, Theme } from "./shared";
 
 // #endregion Imports
 
@@ -196,7 +196,7 @@ export interface KitAppSelection {
   folders?: Guid[];
   authors?: string[];
 }
-const emptyKitAppSelection: KitAppSelection = {};
+const EMPTY_KIT_SELECTION: KitAppSelection = {};
 export interface KitAppSelectionTypesDiff {
   added?: Guid[];
   removed?: Guid[];
@@ -898,176 +898,84 @@ if (typeof window !== "undefined") {
   registerKitAppHooks({
     useKitAppCommands,
   });
-  registerRuntimeAction("kitInit", (context: any, event: any) => {
-    if (event.type !== "KIT.INIT") return {};
-    return { kitApps: { ...context.kitApps, [event.kitGuid]: event.state } };
+  const kitAppEventConfig = {
+    namespace: "KIT" as const,
+    appKey: "kitApps" as const,
+    keyField: "kitGuid",
+    createDefaultState: createDefaultKitAppState,
+  };
+  registerSingleKeyAppEventHandlers(kitAppEventConfig);
+  registerEventHandler("KIT.SET_FILTER", {
+    action: (context: any, event: any) => {
+      const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
+      return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, filterSearch: event.search } } };
+    },
   });
-  registerRuntimeAction("kitSync", (context: any, event: any) => {
-    if (event.type !== "KIT.SYNC") return {};
-    const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
-    return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, ...event.state } } };
+  registerEventHandler("KIT.TOGGLE_ROW", {
+    action: (context: any, event: any) => {
+      const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
+      const expanded = new Set(app.expandedRows);
+      if (expanded.has(event.rowId)) expanded.delete(event.rowId);
+      else expanded.add(event.rowId);
+      return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, expandedRows: expanded } } };
+    },
   });
-  registerRuntimeAction("kitTogglePanel", (context: any, event: any) => {
-    if (event.type !== "KIT.TOGGLE_PANEL") return {};
-    const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
-    return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, panelVisibility: { ...app.panelVisibility, [event.panel]: !app.panelVisibility[event.panel] } } } };
+  registerEventHandler("KIT.SET_EXPANDED_ROWS", {
+    action: (context: any, event: any) => {
+      const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
+      return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, expandedRows: event.expandedRows } } };
+    },
   });
-  registerRuntimeAction("kitSetPanelVisibility", (context: any, event: any) => {
-    if (event.type !== "KIT.SET_PANEL_VISIBILITY") return {};
-    const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
-    return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, panelVisibility: event.panelVisibility } } };
+  registerEventHandler("KIT.SET_SORT", {
+    action: (context: any, event: any) => {
+      const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
+      return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, sortColumn: event.column, sortDirection: event.direction } } };
+    },
   });
-  registerRuntimeAction("kitSetFilter", (context: any, event: any) => {
-    if (event.type !== "KIT.SET_FILTER") return {};
-    const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
-    return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, filterSearch: event.search } } };
+  registerEventHandler("KIT.SELECT_TYPE", {
+    action: (context: any, event: any) => {
+      const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
+      const types = [...(app.selection?.types || [])];
+      if (!types.includes(event.typeGuid)) types.push(event.typeGuid);
+      return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, selection: { ...app.selection, types } } } };
+    },
   });
-  registerRuntimeAction("kitToggleRow", (context: any, event: any) => {
-    if (event.type !== "KIT.TOGGLE_ROW") return {};
-    const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
-    const expanded = new Set(app.expandedRows);
-    if (expanded.has(event.rowId)) expanded.delete(event.rowId);
-    else expanded.add(event.rowId);
-    return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, expandedRows: expanded } } };
+  registerEventHandler("KIT.DESELECT_TYPE", {
+    action: (context: any, event: any) => {
+      const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
+      const types = (app.selection?.types || []).filter((t: Guid) => t !== event.typeGuid);
+      return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, selection: { ...app.selection, types } } } };
+    },
   });
-  registerRuntimeAction("kitSetExpandedRows", (context: any, event: any) => {
-    if (event.type !== "KIT.SET_EXPANDED_ROWS") return {};
-    const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
-    return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, expandedRows: event.expandedRows } } };
+  registerEventHandler("KIT.SELECT_DESIGN", {
+    action: (context: any, event: any) => {
+      const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
+      const designs = [...(app.selection?.designs || [])];
+      if (!designs.includes(event.designGuid)) designs.push(event.designGuid);
+      return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, selection: { ...app.selection, designs } } } };
+    },
   });
-  registerRuntimeAction("kitSetSort", (context: any, event: any) => {
-    if (event.type !== "KIT.SET_SORT") return {};
-    const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
-    return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, sortColumn: event.column, sortDirection: event.direction } } };
+  registerEventHandler("KIT.DESELECT_DESIGN", {
+    action: (context: any, event: any) => {
+      const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
+      const designs = (app.selection?.designs || []).filter((d: Guid) => d !== event.designGuid);
+      return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, selection: { ...app.selection, designs } } } };
+    },
   });
-  registerRuntimeAction("kitSelectType", (context: any, event: any) => {
-    if (event.type !== "KIT.SELECT_TYPE") return {};
-    const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
-    const types = [...(app.selection?.types || [])];
-    if (!types.includes(event.typeGuid)) types.push(event.typeGuid);
-    return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, selection: { ...app.selection, types } } } };
+  registerEventHandler("KIT.SET_DIAGRAM_FORCE", {
+    action: (context: any, event: any) => {
+      const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
+      const currentForce = app.diagramForce || { ...defaultDiagramForceSettings };
+      const newForce = { ...currentForce, ...event.diagramForce };
+      return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, diagramForce: newForce } } };
+    },
   });
-  registerRuntimeAction("kitDeselectType", (context: any, event: any) => {
-    if (event.type !== "KIT.DESELECT_TYPE") return {};
-    const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
-    const types = (app.selection?.types || []).filter((t: Guid) => t !== event.typeGuid);
-    return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, selection: { ...app.selection, types } } } };
-  });
-  registerRuntimeAction("kitSelectDesign", (context: any, event: any) => {
-    if (event.type !== "KIT.SELECT_DESIGN") return {};
-    const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
-    const designs = [...(app.selection?.designs || [])];
-    if (!designs.includes(event.designGuid)) designs.push(event.designGuid);
-    return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, selection: { ...app.selection, designs } } } };
-  });
-  registerRuntimeAction("kitDeselectDesign", (context: any, event: any) => {
-    if (event.type !== "KIT.DESELECT_DESIGN") return {};
-    const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
-    const designs = (app.selection?.designs || []).filter((d: Guid) => d !== event.designGuid);
-    return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, selection: { ...app.selection, designs } } } };
-  });
-  registerRuntimeAction("kitSetSelection", (context: any, event: any) => {
-    if (event.type !== "KIT.SET_SELECTION") return {};
-    const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
-    return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, selection: event.selection } } };
-  });
-  registerRuntimeAction("kitClearSelection", (context: any, event: any) => {
-    if (event.type !== "KIT.CLEAR_SELECTION") return {};
-    const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
-    return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, selection: undefined } } };
-  });
-  registerRuntimeAction("kitSetHover", (context: any, event: any) => {
-    if (event.type !== "KIT.SET_HOVER") return {};
-    const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
-    return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, hover: event.hover } } };
-  });
-  registerRuntimeAction("kitClearHover", (context: any, event: any) => {
-    if (event.type !== "KIT.CLEAR_HOVER") return {};
-    const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
-    return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, hover: undefined } } };
-  });
-  registerRuntimeAction("kitTransactionStart", (context: any, event: any) => {
-    if (event.type !== "KIT.TRANSACTION.START") return {};
-    const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
-    const tx = app.transaction;
-    if (tx.isTransactionActive) {
-      const pastStack = [...tx.pastTransactionStack];
-      if (tx.currentTransactionStack.length > 0) {
-        const merged = tx.currentTransactionStack.length === 1 ? tx.currentTransactionStack[0] : { do: tx.currentTransactionStack[tx.currentTransactionStack.length - 1].do, undo: tx.currentTransactionStack[0].undo };
-        pastStack.push(merged);
-      }
-      return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, transaction: { isTransactionActive: true, currentTransactionStack: [], pastTransactionStack: pastStack, redoStack: [] } } } };
-    }
-    return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, transaction: { ...tx, isTransactionActive: true, currentTransactionStack: [], redoStack: [] } } } };
-  });
-  registerRuntimeAction("kitTransactionCommit", (context: any, event: any) => {
-    if (event.type !== "KIT.TRANSACTION.COMMIT") return {};
-    const app = context.kitApps[event.kitGuid];
-    if (!app || !app.transaction.isTransactionActive) return {};
-    const tx = app.transaction;
-    const pastStack = [...tx.pastTransactionStack];
-    if (tx.currentTransactionStack.length > 0) {
-      const merged = tx.currentTransactionStack.length === 1 ? tx.currentTransactionStack[0] : { do: tx.currentTransactionStack[tx.currentTransactionStack.length - 1].do, undo: tx.currentTransactionStack[0].undo };
-      pastStack.push(merged);
-    }
-    return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, transaction: { isTransactionActive: false, currentTransactionStack: [], pastTransactionStack: pastStack, redoStack: [] } } } };
-  });
-  registerRuntimeAction("kitTransactionAbort", (context: any, event: any) => {
-    if (event.type !== "KIT.TRANSACTION.ABORT") return {};
-    const app = context.kitApps[event.kitGuid];
-    if (!app || !app.transaction.isTransactionActive) return {};
-    return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, transaction: { ...app.transaction, isTransactionActive: false, currentTransactionStack: [] } } } };
-  });
-  registerRuntimeAction("kitTransactionUndo", (context: any, event: any) => {
-    if (event.type !== "KIT.TRANSACTION.UNDO") return {};
-    const app = context.kitApps[event.kitGuid];
-    if (!app) return {};
-    const tx = app.transaction;
-    if (tx.isTransactionActive && tx.currentTransactionStack.length > 0) {
-      const currentStack = [...tx.currentTransactionStack];
-      currentStack.pop();
-      return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, transaction: { ...tx, currentTransactionStack: currentStack } } } };
-    } else if (!tx.isTransactionActive && tx.pastTransactionStack.length > 0) {
-      const pastStack = [...tx.pastTransactionStack];
-      const edit = pastStack.pop()!;
-      const redoStack = [...tx.redoStack, edit];
-      return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, transaction: { ...tx, pastTransactionStack: pastStack, redoStack } } } };
-    }
-    return {};
-  });
-  registerRuntimeAction("kitTransactionRedo", (context: any, event: any) => {
-    if (event.type !== "KIT.TRANSACTION.REDO") return {};
-    const app = context.kitApps[event.kitGuid];
-    if (!app || app.transaction.isTransactionActive || app.transaction.redoStack.length === 0) return {};
-    const tx = app.transaction;
-    const redoStack = [...tx.redoStack];
-    const edit = redoStack.pop()!;
-    const pastStack = [...tx.pastTransactionStack, edit];
-    return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, transaction: { ...tx, pastTransactionStack: pastStack, redoStack } } } };
-  });
-  registerRuntimeAction("kitTransactionRecordEdit", (context: any, event: any) => {
-    if (event.type !== "KIT.TRANSACTION.RECORD_EDIT") return {};
-    const app = context.kitApps[event.kitGuid];
-    if (!app || !app.transaction.isTransactionActive) return {};
-    const currentStack = [...app.transaction.currentTransactionStack, event.edit];
-    return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, transaction: { ...app.transaction, currentTransactionStack: currentStack, redoStack: [] } } } };
-  });
-  registerRuntimeAction("kitSetWindowLayout", (context: any, event: any) => {
-    if (event.type !== "KIT.SET_WINDOW_LAYOUT") return {};
-    const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
-    return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, windowLayout: event.windowLayout } } };
-  });
-  registerRuntimeAction("kitSetDiagramForce", (context: any, event: any) => {
-    if (event.type !== "KIT.SET_DIAGRAM_FORCE") return {};
-    const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
-    const currentForce = app.diagramForce || { ...defaultDiagramForceSettings };
-    const newForce = { ...currentForce, ...event.diagramForce };
-    return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, diagramForce: newForce } } };
-  });
-  registerRuntimeAction("kitSetFullscreen", (context: any, event: any) => {
-    if (event.type !== "KIT.SET_FULLSCREEN") return {};
-    const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
-    return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, fullscreenWindow: event.window } } };
+
+  createSingleKeyTransactionHandlers({
+    namespace: "KIT",
+    appKey: "kitApps",
+    keyField: "kitGuid",
+    createDefaultState: createDefaultKitAppState,
   });
 }
 
@@ -1134,7 +1042,7 @@ export function useKitAppSelection(): HookResult<KitAppSelection> {
   const actor = useSketchpadActor();
   const kitGuid = kitScope?.guid ?? "";
   const selector = useMemo(() => createKitSelectionSelector(kitGuid), [kitGuid]);
-  const selection = useSelector(actor, selector) ?? emptyKitAppSelection;
+  const selection = useSelector(actor, selector) ?? EMPTY_KIT_SELECTION;
   const canSetEvent = useMemo(() => ({ type: "KIT.SET_SELECTION" as const, kitGuid, selection: {} as KitAppSelection }), [kitGuid]);
   const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setSelection = useMemo(() => {

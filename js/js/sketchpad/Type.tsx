@@ -32,7 +32,7 @@ import { useLabel } from "../i18n";
 import { Author, AuthorId, Camera, Connector, Coord, findModel, guid, Guid, Kit, Model, Point, selectBestModel, File as SemioFile, toSemioRotation, toThreeRotation, Type, TypeDiff, Vector } from "../semio";
 import { Geometry, Input, Scene as SceneComponent, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider, SortableTreeItems, Stepper, Textarea, Toggle, ToggleGroup, TransactionProvider, TreeContent, TreeItem } from "./elements";
 import type { AppWindowConfig, HookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolDefinition, ToolRenderContext, TypeAppId } from "./shared";
-import { AppConfig, AppPlugin, conditionalHookResult, createPanelDefinition, Expertise, Mode, PanelKind, readonlyHookResult, registerAppPlugin, registerRuntimeAction, Theme, ToolKind } from "./shared";
+import { AppConfig, AppPlugin, conditionalHookResult, createKeyedTransactionHandlers, createPanelDefinition, EMPTY_PANEL_VISIBILITY, Expertise, Mode, PanelKind, readonlyHookResult, registerAppPlugin, registerEventHandler, registerKeyedAppEventHandlers, Theme, ToolKind } from "./shared";
 import {
   Canvas,
   createDefaultLayout,
@@ -161,7 +161,6 @@ export interface TypeAppCommandResult {
 }
 
 const EMPTY_TYPE_SELECTION: TypeAppSelection = {};
-const EMPTY_PANEL_VISIBILITY: PanelVisibility = { toolbar: true, workbench: false, details: false, chat: false, settings: false };
 const EMPTY_OTHERS: TypeAppPresenceOther[] = [];
 const EMPTY_MODEL_TAG_ARRAY: string[] = [];
 
@@ -194,258 +193,188 @@ const typeAppPlugin: AppPlugin = {
   },
 };
 
+const typeAppEventConfig = {
+  namespace: "TYPE",
+  appKey: "typeApps" as const,
+  getKey: (event: any) => `${event.kitGuid}:${event.typeGuid}`,
+  createDefaultState: createDefaultTypeAppState,
+};
+
 if (typeof window !== "undefined") {
   registerAppPlugin(typeAppPlugin);
-  registerRuntimeAction("typeInit", (context: any, event: any) => {
-    if (event.type !== "TYPE.INIT") return {};
-    const key = `${event.kitGuid}:${event.typeGuid}`;
-    return { typeApps: { ...context.typeApps, [key]: event.state } };
+
+  registerKeyedAppEventHandlers(typeAppEventConfig, (event) => event.hover);
+
+  registerEventHandler("TYPE.FOCUS_CONNECTOR", {
+    action: (context: any, event: any) => {
+      const key = typeAppEventConfig.getKey(event);
+      const apps = context.typeApps || {};
+      const app = apps[key] || createDefaultTypeAppState();
+      return { typeApps: { ...apps, [key]: { ...app, focusedConnector: event.connectorGuid } } };
+    },
   });
-  registerRuntimeAction("typeSync", (context: any, event: any) => {
-    if (event.type !== "TYPE.SYNC") return {};
-    const key = `${event.kitGuid}:${event.typeGuid}`;
-    const app = context.typeApps[key] || createDefaultTypeAppState();
-    return { typeApps: { ...context.typeApps, [key]: { ...app, ...event.state } } };
+
+  registerEventHandler("TYPE.CLEAR_FOCUS", {
+    action: (context: any, event: any) => {
+      const key = typeAppEventConfig.getKey(event);
+      const apps = context.typeApps || {};
+      const app = apps[key] || createDefaultTypeAppState();
+      return { typeApps: { ...apps, [key]: { ...app, focusedConnector: undefined } } };
+    },
   });
-  registerRuntimeAction("typeTogglePanel", (context: any, event: any) => {
-    if (event.type !== "TYPE.TOGGLE_PANEL") return {};
-    const key = `${event.kitGuid}:${event.typeGuid}`;
-    const app = context.typeApps[key] || createDefaultTypeAppState();
-    return { typeApps: { ...context.typeApps, [key]: { ...app, panelVisibility: { ...app.panelVisibility, [event.panel]: !app.panelVisibility[event.panel] } } } };
+
+  registerEventHandler("TYPE.SELECT_CONNECTOR", {
+    action: (context: any, event: any) => {
+      const key = typeAppEventConfig.getKey(event);
+      const apps = context.typeApps || {};
+      const app = apps[key] || createDefaultTypeAppState();
+      const connectors = [...(app.selection?.connectors || [])];
+      if (!connectors.includes(event.connectorGuid)) connectors.push(event.connectorGuid);
+      return { typeApps: { ...apps, [key]: { ...app, selection: { ...app.selection, connectors } } } };
+    },
   });
-  registerRuntimeAction("typeSetPanelVisibility", (context: any, event: any) => {
-    if (event.type !== "TYPE.SET_PANEL_VISIBILITY") return {};
-    const key = `${event.kitGuid}:${event.typeGuid}`;
-    const app = context.typeApps[key] || createDefaultTypeAppState();
-    return { typeApps: { ...context.typeApps, [key]: { ...app, panelVisibility: event.panelVisibility } } };
+
+  registerEventHandler("TYPE.DESELECT_CONNECTOR", {
+    action: (context: any, event: any) => {
+      const key = typeAppEventConfig.getKey(event);
+      const apps = context.typeApps || {};
+      const app = apps[key] || createDefaultTypeAppState();
+      const connectors = (app.selection?.connectors || []).filter((p: Guid) => p !== event.connectorGuid);
+      return { typeApps: { ...apps, [key]: { ...app, selection: { ...app.selection, connectors } } } };
+    },
   });
-  registerRuntimeAction("typeSetFullscreenWindow", (context: any, event: any) => {
-    if (event.type !== "TYPE.SET_FULLSCREEN_WINDOW") return {};
-    const key = `${event.kitGuid}:${event.typeGuid}`;
-    const app = context.typeApps[key] || createDefaultTypeAppState();
-    return { typeApps: { ...context.typeApps, [key]: { ...app, fullscreenWindow: event.window } } };
+
+  registerEventHandler("TYPE.SELECT_MODEL", {
+    action: (context: any, event: any) => {
+      const key = typeAppEventConfig.getKey(event);
+      const apps = context.typeApps || {};
+      const app = apps[key] || createDefaultTypeAppState();
+      const models = [...(app.selection?.models || [])];
+      if (!models.includes(event.modelGuid)) models.push(event.modelGuid);
+      return { typeApps: { ...apps, [key]: { ...app, selection: { ...app.selection, models } } } };
+    },
   });
-  registerRuntimeAction("typeFocusPort", (context: any, event: any) => {
-    if (event.type !== "TYPE.FOCUS_CONNECTOR") return {};
-    const key = `${event.kitGuid}:${event.typeGuid}`;
-    const app = context.typeApps[key] || createDefaultTypeAppState();
-    return { typeApps: { ...context.typeApps, [key]: { ...app, focusedConnector: event.connectorGuid } } };
+
+  registerEventHandler("TYPE.DESELECT_MODEL", {
+    action: (context: any, event: any) => {
+      const key = typeAppEventConfig.getKey(event);
+      const apps = context.typeApps || {};
+      const app = apps[key] || createDefaultTypeAppState();
+      const models = (app.selection?.models || []).filter((m: Guid) => m !== event.modelGuid);
+      return { typeApps: { ...apps, [key]: { ...app, selection: { ...app.selection, models } } } };
+    },
   });
-  registerRuntimeAction("typeSelectModelTag", (context: any, event: any) => {
-    if (event.type !== "TYPE.SELECT_MODEL_TAG") return {};
-    const key = `${event.kitGuid}:${event.typeGuid}`;
-    const app = context.typeApps[key] || createDefaultTypeAppState();
-    const tags = app.selectedModelTags || [];
-    if (tags.includes(event.tagGuid)) return {};
-    return { typeApps: { ...context.typeApps, [key]: { ...app, selectedModelTags: [...tags, event.tagGuid] } } };
+
+  registerEventHandler("TYPE.HOVER_CONNECTOR", {
+    action: (context: any, event: any) => {
+      const key = typeAppEventConfig.getKey(event);
+      const apps = context.typeApps || {};
+      const app = apps[key] || createDefaultTypeAppState();
+      return { typeApps: { ...apps, [key]: { ...app, hover: { connector: event.connectorGuid } } } };
+    },
   });
-  registerRuntimeAction("typeDeselectModelTag", (context: any, event: any) => {
-    if (event.type !== "TYPE.DESELECT_MODEL_TAG") return {};
-    const key = `${event.kitGuid}:${event.typeGuid}`;
-    const app = context.typeApps[key] || createDefaultTypeAppState();
-    const tags = app.selectedModelTags || [];
-    return { typeApps: { ...context.typeApps, [key]: { ...app, selectedModelTags: tags.filter((g: Guid) => g !== event.tagGuid) } } };
+
+  registerEventHandler("TYPE.HOVER_MODEL", {
+    action: (context: any, event: any) => {
+      const key = typeAppEventConfig.getKey(event);
+      const apps = context.typeApps || {};
+      const app = apps[key] || createDefaultTypeAppState();
+      return { typeApps: { ...apps, [key]: { ...app, hover: { model: event.modelGuid } } } };
+    },
   });
-  registerRuntimeAction("typeSetCamera", (context: any, event: any) => {
-    if (event.type !== "TYPE.SET_CAMERA") return {};
-    const key = `${event.kitGuid}:${event.typeGuid}`;
-    const app = context.typeApps[key] || createDefaultTypeAppState();
-    return { typeApps: { ...context.typeApps, [key]: { ...app, camera: event.camera } } };
+
+  registerEventHandler("TYPE.SET_SELECTED_MODEL", {
+    action: (context: any, event: any) => {
+      const key = typeAppEventConfig.getKey(event);
+      const apps = context.typeApps || {};
+      const app = apps[key] || createDefaultTypeAppState();
+      return { typeApps: { ...apps, [key]: { ...app, selectedModelGuid: event.modelGuid } } };
+    },
   });
-  registerRuntimeAction("typeSetActiveTool", (context: any, event: any) => {
-    if (event.type !== "TYPE.SET_ACTIVE_TOOL") return {};
-    const key = `${event.kitGuid}:${event.typeGuid}`;
-    const app = context.typeApps[key] || createDefaultTypeAppState();
-    return { typeApps: { ...context.typeApps, [key]: { ...app, activeTool: event.tool } } };
+
+  registerEventHandler("TYPE.SET_MODEL_TAGS", {
+    action: (context: any, event: any) => {
+      const key = typeAppEventConfig.getKey(event);
+      const apps = context.typeApps || {};
+      const app = apps[key] || createDefaultTypeAppState();
+      return { typeApps: { ...apps, [key]: { ...app, selectedModelTags: event.tags } } };
+    },
   });
-  registerRuntimeAction("typeSetSelection", (context: any, event: any) => {
-    if (event.type !== "TYPE.SET_SELECTION") return {};
-    const key = `${event.kitGuid}:${event.typeGuid}`;
-    const app = context.typeApps[key] || createDefaultTypeAppState();
-    return { typeApps: { ...context.typeApps, [key]: { ...app, selection: event.selection } } };
+
+  registerEventHandler("TYPE.ADD_MODEL_TAG", {
+    action: (context: any, event: any) => {
+      const key = typeAppEventConfig.getKey(event);
+      const apps = context.typeApps || {};
+      const app = apps[key] || createDefaultTypeAppState();
+      const tags = [...(app.selectedModelTags || [])];
+      if (!tags.includes(event.tag)) tags.push(event.tag);
+      return { typeApps: { ...apps, [key]: { ...app, selectedModelTags: tags } } };
+    },
   });
-  registerRuntimeAction("typeClearSelection", (context: any, event: any) => {
-    if (event.type !== "TYPE.CLEAR_SELECTION") return {};
-    const key = `${event.kitGuid}:${event.typeGuid}`;
-    const app = context.typeApps[key] || createDefaultTypeAppState();
-    return { typeApps: { ...context.typeApps, [key]: { ...app, selection: undefined } } };
+
+  registerEventHandler("TYPE.REMOVE_MODEL_TAG", {
+    action: (context: any, event: any) => {
+      const key = typeAppEventConfig.getKey(event);
+      const apps = context.typeApps || {};
+      const app = apps[key] || createDefaultTypeAppState();
+      const tags = (app.selectedModelTags || []).filter((t: string) => t !== event.tag);
+      return { typeApps: { ...apps, [key]: { ...app, selectedModelTags: tags } } };
+    },
   });
-  registerRuntimeAction("typeSelectConnector", (context: any, event: any) => {
-    if (event.type !== "TYPE.SELECT_CONNECTOR") return {};
-    const key = `${event.kitGuid}:${event.typeGuid}`;
-    const app = context.typeApps[key] || createDefaultTypeAppState();
-    const connectors = [...(app.selection?.connectors || [])];
-    if (!connectors.includes(event.connectorGuid)) connectors.push(event.connectorGuid);
-    return { typeApps: { ...context.typeApps, [key]: { ...app, selection: { ...app.selection, connectors } } } };
+
+  registerEventHandler("TYPE.CLEAR_MODEL_TAGS", {
+    action: (context: any, event: any) => {
+      const key = typeAppEventConfig.getKey(event);
+      const apps = context.typeApps || {};
+      const app = apps[key] || createDefaultTypeAppState();
+      return { typeApps: { ...apps, [key]: { ...app, selectedModelTags: [] } } };
+    },
   });
-  registerRuntimeAction("typeDeselectConnector", (context: any, event: any) => {
-    if (event.type !== "TYPE.DESELECT_CONNECTOR") return {};
-    const key = `${event.kitGuid}:${event.typeGuid}`;
-    const app = context.typeApps[key] || createDefaultTypeAppState();
-    const connectors = (app.selection?.connectors || []).filter((p: Guid) => p !== event.connectorGuid);
-    return { typeApps: { ...context.typeApps, [key]: { ...app, selection: { ...app.selection, connectors } } } };
+
+  registerEventHandler("TYPE.SELECT_MODEL_TAG", {
+    action: (context: any, event: any) => {
+      const key = typeAppEventConfig.getKey(event);
+      const apps = context.typeApps || {};
+      const app = apps[key] || createDefaultTypeAppState();
+      const tags = app.selectedModelTags || [];
+      if (tags.includes(event.tagGuid)) return {};
+      return { typeApps: { ...apps, [key]: { ...app, selectedModelTags: [...tags, event.tagGuid] } } };
+    },
   });
-  registerRuntimeAction("typeSetHover", (context: any, event: any) => {
-    if (event.type !== "TYPE.SET_HOVER") return {};
-    const key = `${event.kitGuid}:${event.typeGuid}`;
-    const app = context.typeApps[key] || createDefaultTypeAppState();
-    return { typeApps: { ...context.typeApps, [key]: { ...app, hover: event.hover } } };
+
+  registerEventHandler("TYPE.DESELECT_MODEL_TAG", {
+    action: (context: any, event: any) => {
+      const key = typeAppEventConfig.getKey(event);
+      const apps = context.typeApps || {};
+      const app = apps[key] || createDefaultTypeAppState();
+      const tags = app.selectedModelTags || [];
+      return { typeApps: { ...apps, [key]: { ...app, selectedModelTags: tags.filter((g: Guid) => g !== event.tagGuid) } } };
+    },
   });
-  registerRuntimeAction("typeClearHover", (context: any, event: any) => {
-    if (event.type !== "TYPE.CLEAR_HOVER") return {};
-    const key = `${event.kitGuid}:${event.typeGuid}`;
-    const app = context.typeApps[key] || createDefaultTypeAppState();
-    return { typeApps: { ...context.typeApps, [key]: { ...app, hover: undefined } } };
+
+  registerEventHandler("TYPE.SELECT_ALL", {
+    action: (context: any, event: any) => {
+      const key = typeAppEventConfig.getKey(event);
+      const apps = context.typeApps || {};
+      const app = apps[key] || createDefaultTypeAppState();
+      return { typeApps: { ...apps, [key]: { ...app, selection: { connectors: [], models: [] } } } };
+    },
   });
-  registerRuntimeAction("typeSetModelTags", (context: any, event: any) => {
-    if (event.type !== "TYPE.SET_MODEL_TAGS") return {};
-    const key = `${event.kitGuid}:${event.typeGuid}`;
-    const app = context.typeApps[key] || createDefaultTypeAppState();
-    return { typeApps: { ...context.typeApps, [key]: { ...app, selectedModelTags: event.tags } } };
+
+  registerEventHandler("TYPE.DESELECT_ALL", {
+    action: (context: any, event: any) => {
+      const key = typeAppEventConfig.getKey(event);
+      const apps = context.typeApps || {};
+      const app = apps[key] || createDefaultTypeAppState();
+      return { typeApps: { ...apps, [key]: { ...app, selection: undefined } } };
+    },
   });
-  registerRuntimeAction("typeSelectAll", (context: any, event: any) => {
-    if (event.type !== "TYPE.SELECT_ALL") return {};
-    const key = `${event.kitGuid}:${event.typeGuid}`;
-    const app = context.typeApps[key] || createDefaultTypeAppState();
-    return { typeApps: { ...context.typeApps, [key]: { ...app, selection: { connectors: [], models: [] } } } };
-  });
-  registerRuntimeAction("typeDeselectAll", (context: any, event: any) => {
-    if (event.type !== "TYPE.DESELECT_ALL") return {};
-    const key = `${event.kitGuid}:${event.typeGuid}`;
-    const app = context.typeApps[key] || createDefaultTypeAppState();
-    return { typeApps: { ...context.typeApps, [key]: { ...app, selection: undefined } } };
-  });
-  registerRuntimeAction("typeClearFocus", (context: any, event: any) => {
-    if (event.type !== "TYPE.CLEAR_FOCUS") return {};
-    const key = `${event.kitGuid}:${event.typeGuid}`;
-    const app = context.typeApps[key] || createDefaultTypeAppState();
-    return { typeApps: { ...context.typeApps, [key]: { ...app, focusedConnector: undefined } } };
-  });
-  registerRuntimeAction("typeSelectModel", (context: any, event: any) => {
-    if (event.type !== "TYPE.SELECT_MODEL") return {};
-    const key = `${event.kitGuid}:${event.typeGuid}`;
-    const app = context.typeApps[key] || createDefaultTypeAppState();
-    const models = [...(app.selection?.models || [])];
-    if (!models.includes(event.modelGuid)) models.push(event.modelGuid);
-    return { typeApps: { ...context.typeApps, [key]: { ...app, selection: { ...app.selection, models } } } };
-  });
-  registerRuntimeAction("typeDeselectModel", (context: any, event: any) => {
-    if (event.type !== "TYPE.DESELECT_MODEL") return {};
-    const key = `${event.kitGuid}:${event.typeGuid}`;
-    const app = context.typeApps[key] || createDefaultTypeAppState();
-    const models = (app.selection?.models || []).filter((m: Guid) => m !== event.modelGuid);
-    return { typeApps: { ...context.typeApps, [key]: { ...app, selection: { ...app.selection, models } } } };
-  });
-  registerRuntimeAction("typeHoverPort", (context: any, event: any) => {
-    if (event.type !== "TYPE.HOVER_CONNECTOR") return {};
-    const key = `${event.kitGuid}:${event.typeGuid}`;
-    const app = context.typeApps[key] || createDefaultTypeAppState();
-    return { typeApps: { ...context.typeApps, [key]: { ...app, hover: { connector: event.connectorGuid } } } };
-  });
-  registerRuntimeAction("typeHoverModel", (context: any, event: any) => {
-    if (event.type !== "TYPE.HOVER_MODEL") return {};
-    const key = `${event.kitGuid}:${event.typeGuid}`;
-    const app = context.typeApps[key] || createDefaultTypeAppState();
-    return { typeApps: { ...context.typeApps, [key]: { ...app, hover: { model: event.modelGuid } } } };
-  });
-  registerRuntimeAction("typeSetSelectedModel", (context: any, event: any) => {
-    if (event.type !== "TYPE.SET_SELECTED_MODEL") return {};
-    const key = `${event.kitGuid}:${event.typeGuid}`;
-    const app = context.typeApps[key] || createDefaultTypeAppState();
-    return { typeApps: { ...context.typeApps, [key]: { ...app, selectedModelGuid: event.modelGuid } } };
-  });
-  registerRuntimeAction("typeAddModelTag", (context: any, event: any) => {
-    if (event.type !== "TYPE.ADD_MODEL_TAG") return {};
-    const key = `${event.kitGuid}:${event.typeGuid}`;
-    const app = context.typeApps[key] || createDefaultTypeAppState();
-    const tags = [...(app.selectedModelTags || [])];
-    if (!tags.includes(event.tag)) tags.push(event.tag);
-    return { typeApps: { ...context.typeApps, [key]: { ...app, selectedModelTags: tags } } };
-  });
-  registerRuntimeAction("typeRemoveModelTag", (context: any, event: any) => {
-    if (event.type !== "TYPE.REMOVE_MODEL_TAG") return {};
-    const key = `${event.kitGuid}:${event.typeGuid}`;
-    const app = context.typeApps[key] || createDefaultTypeAppState();
-    const tags = (app.selectedModelTags || []).filter((t: string) => t !== event.tag);
-    return { typeApps: { ...context.typeApps, [key]: { ...app, selectedModelTags: tags } } };
-  });
-  registerRuntimeAction("typeClearModelTags", (context: any, event: any) => {
-    if (event.type !== "TYPE.CLEAR_MODEL_TAGS") return {};
-    const key = `${event.kitGuid}:${event.typeGuid}`;
-    const app = context.typeApps[key] || createDefaultTypeAppState();
-    return { typeApps: { ...context.typeApps, [key]: { ...app, selectedModelTags: [] } } };
-  });
-  registerRuntimeAction("typeTransactionStart", (context: any, event: any) => {
-    if (event.type !== "TYPE.TRANSACTION.START") return {};
-    const key = `${event.kitGuid}:${event.typeGuid}`;
-    const app = context.typeApps[key] || createDefaultTypeAppState();
-    const tx = app.transaction;
-    if (tx.isTransactionActive) {
-      const pastStack = [...tx.pastTransactionStack];
-      if (tx.currentTransactionStack.length > 0) {
-        const merged = tx.currentTransactionStack.length === 1 ? tx.currentTransactionStack[0] : { do: tx.currentTransactionStack[tx.currentTransactionStack.length - 1].do, undo: tx.currentTransactionStack[0].undo };
-        pastStack.push(merged);
-      }
-      return { typeApps: { ...context.typeApps, [key]: { ...app, transaction: { isTransactionActive: true, currentTransactionStack: [], pastTransactionStack: pastStack, redoStack: [] } } } };
-    }
-    return { typeApps: { ...context.typeApps, [key]: { ...app, transaction: { ...tx, isTransactionActive: true, currentTransactionStack: [], redoStack: [] } } } };
-  });
-  registerRuntimeAction("typeTransactionCommit", (context: any, event: any) => {
-    if (event.type !== "TYPE.TRANSACTION.COMMIT") return {};
-    const key = `${event.kitGuid}:${event.typeGuid}`;
-    const app = context.typeApps[key];
-    if (!app || !app.transaction.isTransactionActive) return {};
-    const tx = app.transaction;
-    const pastStack = [...tx.pastTransactionStack];
-    if (tx.currentTransactionStack.length > 0) {
-      const merged = tx.currentTransactionStack.length === 1 ? tx.currentTransactionStack[0] : { do: tx.currentTransactionStack[tx.currentTransactionStack.length - 1].do, undo: tx.currentTransactionStack[0].undo };
-      pastStack.push(merged);
-    }
-    return { typeApps: { ...context.typeApps, [key]: { ...app, transaction: { isTransactionActive: false, currentTransactionStack: [], pastTransactionStack: pastStack, redoStack: [] } } } };
-  });
-  registerRuntimeAction("typeTransactionAbort", (context: any, event: any) => {
-    if (event.type !== "TYPE.TRANSACTION.ABORT") return {};
-    const key = `${event.kitGuid}:${event.typeGuid}`;
-    const app = context.typeApps[key];
-    if (!app || !app.transaction.isTransactionActive) return {};
-    return { typeApps: { ...context.typeApps, [key]: { ...app, transaction: { ...app.transaction, isTransactionActive: false, currentTransactionStack: [] } } } };
-  });
-  registerRuntimeAction("typeTransactionUndo", (context: any, event: any) => {
-    if (event.type !== "TYPE.TRANSACTION.UNDO") return {};
-    const key = `${event.kitGuid}:${event.typeGuid}`;
-    const app = context.typeApps[key];
-    if (!app) return {};
-    const tx = app.transaction;
-    if (tx.isTransactionActive && tx.currentTransactionStack.length > 0) {
-      const currentStack = [...tx.currentTransactionStack];
-      currentStack.pop();
-      return { typeApps: { ...context.typeApps, [key]: { ...app, transaction: { ...tx, currentTransactionStack: currentStack } } } };
-    } else if (!tx.isTransactionActive && tx.pastTransactionStack.length > 0) {
-      const pastStack = [...tx.pastTransactionStack];
-      const edit = pastStack.pop()!;
-      const redoStack = [...tx.redoStack, edit];
-      return { typeApps: { ...context.typeApps, [key]: { ...app, transaction: { ...tx, pastTransactionStack: pastStack, redoStack } } } };
-    }
-    return {};
-  });
-  registerRuntimeAction("typeTransactionRedo", (context: any, event: any) => {
-    if (event.type !== "TYPE.TRANSACTION.REDO") return {};
-    const key = `${event.kitGuid}:${event.typeGuid}`;
-    const app = context.typeApps[key];
-    if (!app || app.transaction.isTransactionActive || app.transaction.redoStack.length === 0) return {};
-    const tx = app.transaction;
-    const redoStack = [...tx.redoStack];
-    const edit = redoStack.pop()!;
-    const pastStack = [...tx.pastTransactionStack, edit];
-    return { typeApps: { ...context.typeApps, [key]: { ...app, transaction: { ...tx, pastTransactionStack: pastStack, redoStack } } } };
-  });
-  registerRuntimeAction("typeTransactionRecordEdit", (context: any, event: any) => {
-    if (event.type !== "TYPE.TRANSACTION.RECORD_EDIT") return {};
-    const key = `${event.kitGuid}:${event.typeGuid}`;
-    const app = context.typeApps[key];
-    if (!app || !app.transaction.isTransactionActive) return {};
-    const currentStack = [...app.transaction.currentTransactionStack, event.edit];
-    return { typeApps: { ...context.typeApps, [key]: { ...app, transaction: { ...app.transaction, currentTransactionStack: currentStack, redoStack: [] } } } };
+
+  createKeyedTransactionHandlers({
+    namespace: "TYPE",
+    appKey: "typeApps",
+    keyFields: ["kitGuid", "typeGuid"],
+    createDefaultState: createDefaultTypeAppState,
   });
 }
 

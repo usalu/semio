@@ -50,7 +50,7 @@ import {
   TreeItem,
 } from "./elements";
 import type { AppWindowConfig, HookNoSetResult, HookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, QualityAppId } from "./shared";
-import { AppConfig, AppPlugin, createPanelDefinition, Expertise, Mode, PanelKind, registerAppPlugin, registerRuntimeAction, Theme, ToolKind } from "./shared";
+import { AppConfig, AppPlugin, createPanelDefinition, Expertise, Mode, PanelKind, registerAppPlugin, registerEventHandler, Theme, ToolKind } from "./shared";
 import type { KitStore, QualityStore, SketchpadStore } from "./Sketchpad";
 import {
   Canvas,
@@ -780,20 +780,22 @@ const qualityAppPlugin: AppPlugin = {
 
 if (typeof window !== "undefined") {
   registerAppPlugin(qualityAppPlugin);
-  registerRuntimeAction("qualityTogglePanel", (context: any, event: any) => {
-    if (event.type !== "QUALITY.TOGGLE_PANEL") return {};
-    const key = `${event.kitGuid}:${event.qualityGuid}`;
-    const app = context.qualityApps[key] || createDefaultQualityAppState();
-    return { qualityApps: { ...context.qualityApps, [key]: { ...app, panelVisibility: { ...app.panelVisibility, [event.panel]: !app.panelVisibility[event.panel] } } } };
+  registerEventHandler("QUALITY.TOGGLE_PANEL", {
+    action: (context: any, event: any) => {
+      const key = `${event.kitGuid}:${event.qualityGuid}`;
+      const app = context.qualityApps[key] || createDefaultQualityAppState();
+      return { qualityApps: { ...context.qualityApps, [key]: { ...app, panelVisibility: { ...app.panelVisibility, [event.panel]: !app.panelVisibility[event.panel] } } } };
+    },
   });
-  registerRuntimeAction("qualityToggleBenchmark", (context: any, event: any) => {
-    if (event.type !== "QUALITY.TOGGLE_BENCHMARK") return {};
-    const key = `${event.kitGuid}:${event.qualityGuid}`;
-    const app = context.qualityApps[key] || createDefaultQualityAppState();
-    const expanded = new Set(app.expandedBenchmarks);
-    if (expanded.has(event.benchmarkGuid)) expanded.delete(event.benchmarkGuid);
-    else expanded.add(event.benchmarkGuid);
-    return { qualityApps: { ...context.qualityApps, [key]: { ...app, expandedBenchmarks: expanded } } };
+  registerEventHandler("QUALITY.TOGGLE_BENCHMARK", {
+    action: (context: any, event: any) => {
+      const key = `${event.kitGuid}:${event.qualityGuid}`;
+      const app = context.qualityApps[key] || createDefaultQualityAppState();
+      const expanded = new Set(app.expandedBenchmarks);
+      if (expanded.has(event.benchmarkGuid)) expanded.delete(event.benchmarkGuid);
+      else expanded.add(event.benchmarkGuid);
+      return { qualityApps: { ...context.qualityApps, [key]: { ...app, expandedBenchmarks: expanded } } };
+    },
   });
 }
 

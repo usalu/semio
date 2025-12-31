@@ -182,7 +182,6 @@ import {
   EnrichedPanelDefinition,
   enrichPanelDefinition,
   executeEventHandler,
-  executeRuntimeAction,
   Expertise,
   ExtendedInitialState,
   Field,
@@ -8402,98 +8401,13 @@ export const sketchpadMachine = setup({
     }),
     markDirty: () => {},
 
-    dispatchAppEvent: assign(({ context, event }) => {
-      const result = executeEventHandler(context, event);
-      if (Object.keys(result).length > 0) return result;
+    dispatchAppEvent: assign(({ context, event }) => executeEventHandler(context, event)),
 
-      const parts = event.type.split(".");
-      if (parts.length >= 2) {
-        const namespace = parts[0].toLowerCase();
+    typeInit: assign(({ context, event }) => executeEventHandler(context, event)),
 
-        const actionParts = parts.slice(1).join("_").split("_");
-        const action = actionParts.map((p: string, i: number) => (i === 0 ? p.toLowerCase() : p.charAt(0).toUpperCase() + p.slice(1).toLowerCase())).join("");
-        const actionName = namespace + action.charAt(0).toUpperCase() + action.slice(1);
-        return executeRuntimeAction(actionName, context, event);
-      }
-      return {};
-    }),
+    designInit: assign(({ context, event }) => executeEventHandler(context, event)),
 
-    homeTogglePanel: assign(({ context, event }) => executeRuntimeAction("homeTogglePanel", context, event)),
-    homeSetPanelVisibility: assign(({ context, event }) => executeRuntimeAction("homeSetPanelVisibility", context, event)),
-    homeSetSort: assign(({ context, event }) => executeRuntimeAction("homeSetSort", context, event)),
-    homeSelectKit: assign(({ context, event }) => executeRuntimeAction("homeSelectKit", context, event)),
-    homeDeselectKit: assign(({ context, event }) => executeRuntimeAction("homeDeselectKit", context, event)),
-    homeClearSelection: assign(({ context, event }) => executeRuntimeAction("homeClearSelection", context, event)),
-    homeSetHover: assign(({ context, event }) => executeRuntimeAction("homeSetHover", context, event)),
-    homeClearHover: assign(({ context, event }) => executeRuntimeAction("homeClearHover", context, event)),
-
-    typeInit: assign(({ context, event }) => executeRuntimeAction("typeInit", context, event)),
-    typeSync: assign(({ context, event }) => executeRuntimeAction("typeSync", context, event)),
-
-    designInit: assign(({ context, event }) => executeRuntimeAction("designInit", context, event)),
-    designSync: assign(({ context, event }) => executeRuntimeAction("designSync", context, event)),
-    designSetActiveTool: assign(({ context, event }) => executeRuntimeAction("designSetActiveTool", context, event)),
-    designSetFullscreen: assign(({ context, event }) => executeRuntimeAction("designSetFullscreen", context, event)),
-    designTogglePanel: assign(({ context, event }) => executeRuntimeAction("designTogglePanel", context, event)),
-    designSetPanelVisibility: assign(({ context, event }) => executeRuntimeAction("designSetPanelVisibility", context, event)),
-    designSetSelection: assign(({ context, event }) => executeRuntimeAction("designSetSelection", context, event)),
-    designClearSelection: assign(({ context, event }) => executeRuntimeAction("designClearSelection", context, event)),
-    designSetHover: assign(({ context, event }) => executeRuntimeAction("designSetHover", context, event)),
-    designClearHover: assign(({ context, event }) => executeRuntimeAction("designClearHover", context, event)),
-    designFocusPiece: assign(({ context, event }) => executeRuntimeAction("designFocusPiece", context, event)),
-    designSetDiagramCenter: assign(({ context, event }) => executeRuntimeAction("designSetDiagramCenter", context, event)),
-    designSetDiagramScale: assign(({ context, event }) => executeRuntimeAction("designSetDiagramScale", context, event)),
-    designSetCamera: assign(({ context, event }) => executeRuntimeAction("designSetCamera", context, event)),
-    designSelectModelTag: assign(({ context, event }) => executeRuntimeAction("designSelectModelTag", context, event)),
-    designDeselectModelTag: assign(({ context, event }) => executeRuntimeAction("designDeselectModelTag", context, event)),
-
-    typeTogglePanel: assign(({ context, event }) => executeRuntimeAction("typeTogglePanel", context, event)),
-    typeSetPanelVisibility: assign(({ context, event }) => executeRuntimeAction("typeSetPanelVisibility", context, event)),
-    typeSetFullscreenWindow: assign(({ context, event }) => executeRuntimeAction("typeSetFullscreenWindow", context, event)),
-    typeFocusPort: assign(({ context, event }) => executeRuntimeAction("typeFocusPort", context, event)),
-    typeSelectModelTag: assign(({ context, event }) => executeRuntimeAction("typeSelectModelTag", context, event)),
-    typeDeselectModelTag: assign(({ context, event }) => executeRuntimeAction("typeDeselectModelTag", context, event)),
-    typeSetCamera: assign(({ context, event }) => executeRuntimeAction("typeSetCamera", context, event)),
-    typeSetActiveTool: assign(({ context, event }) => executeRuntimeAction("typeSetActiveTool", context, event)),
-    typeSetSelection: assign(({ context, event }) => executeRuntimeAction("typeSetSelection", context, event)),
-    typeClearSelection: assign(({ context, event }) => executeRuntimeAction("typeClearSelection", context, event)),
-    typeSelectConnector: assign(({ context, event }) => executeRuntimeAction("typeSelectConnector", context, event)),
-    typeDeselectConnector: assign(({ context, event }) => executeRuntimeAction("typeDeselectConnector", context, event)),
-    typeSetHover: assign(({ context, event }) => executeRuntimeAction("typeSetHover", context, event)),
-    typeClearHover: assign(({ context, event }) => executeRuntimeAction("typeClearHover", context, event)),
-    typeSetModelTags: assign(({ context, event }) => executeRuntimeAction("typeSetModelTags", context, event)),
-    typeSelectAll: assign(({ context, event }) => executeRuntimeAction("typeSelectAll", context, event)),
-    typeDeselectAll: assign(({ context, event }) => executeRuntimeAction("typeDeselectAll", context, event)),
-    typeClearFocus: assign(({ context, event }) => executeRuntimeAction("typeClearFocus", context, event)),
-    typeSelectModel: assign(({ context, event }) => executeRuntimeAction("typeSelectModel", context, event)),
-    typeDeselectModel: assign(({ context, event }) => executeRuntimeAction("typeDeselectModel", context, event)),
-    typeHoverPort: assign(({ context, event }) => executeRuntimeAction("typeHoverPort", context, event)),
-    typeHoverModel: assign(({ context, event }) => executeRuntimeAction("typeHoverModel", context, event)),
-    typeSetSelectedModel: assign(({ context, event }) => executeRuntimeAction("typeSetSelectedModel", context, event)),
-    typeAddModelTag: assign(({ context, event }) => executeRuntimeAction("typeAddModelTag", context, event)),
-    typeRemoveModelTag: assign(({ context, event }) => executeRuntimeAction("typeRemoveModelTag", context, event)),
-    typeClearModelTags: assign(({ context, event }) => executeRuntimeAction("typeClearModelTags", context, event)),
-
-    kitInit: assign(({ context, event }) => executeRuntimeAction("kitInit", context, event)),
-    kitSync: assign(({ context, event }) => executeRuntimeAction("kitSync", context, event)),
-
-    kitTogglePanel: assign(({ context, event }) => executeRuntimeAction("kitTogglePanel", context, event)),
-    kitSetPanelVisibility: assign(({ context, event }) => executeRuntimeAction("kitSetPanelVisibility", context, event)),
-    kitSetFilter: assign(({ context, event }) => executeRuntimeAction("kitSetFilter", context, event)),
-    kitToggleRow: assign(({ context, event }) => executeRuntimeAction("kitToggleRow", context, event)),
-    kitSetExpandedRows: assign(({ context, event }) => executeRuntimeAction("kitSetExpandedRows", context, event)),
-    kitSetSort: assign(({ context, event }) => executeRuntimeAction("kitSetSort", context, event)),
-    kitSelectType: assign(({ context, event }) => executeRuntimeAction("kitSelectType", context, event)),
-    kitDeselectType: assign(({ context, event }) => executeRuntimeAction("kitDeselectType", context, event)),
-    kitSelectDesign: assign(({ context, event }) => executeRuntimeAction("kitSelectDesign", context, event)),
-    kitDeselectDesign: assign(({ context, event }) => executeRuntimeAction("kitDeselectDesign", context, event)),
-    kitSetSelection: assign(({ context, event }) => executeRuntimeAction("kitSetSelection", context, event)),
-    kitClearSelection: assign(({ context, event }) => executeRuntimeAction("kitClearSelection", context, event)),
-    kitSetHover: assign(({ context, event }) => executeRuntimeAction("kitSetHover", context, event)),
-    kitClearHover: assign(({ context, event }) => executeRuntimeAction("kitClearHover", context, event)),
-
-    qualityTogglePanel: assign(({ context, event }) => executeRuntimeAction("qualityTogglePanel", context, event)),
-    qualityToggleBenchmark: assign(({ context, event }) => executeRuntimeAction("qualityToggleBenchmark", context, event)),
+    kitInit: assign(({ context, event }) => executeEventHandler(context, event)),
 
     tutorialStart: assign(({ context, event }) => {
       if (event.type !== "TUTORIAL.START") return {};
@@ -8594,34 +8508,6 @@ export const sketchpadMachine = setup({
       }
       return updates;
     }),
-
-    designTransactionStart: assign(({ context, event }) => executeRuntimeAction("designTransactionStart", context, event)),
-    designTransactionCommit: assign(({ context, event }) => executeRuntimeAction("designTransactionCommit", context, event)),
-    designTransactionAbort: assign(({ context, event }) => executeRuntimeAction("designTransactionAbort", context, event)),
-    designTransactionUndo: assign(({ context, event }) => executeRuntimeAction("designTransactionUndo", context, event)),
-    designTransactionRedo: assign(({ context, event }) => executeRuntimeAction("designTransactionRedo", context, event)),
-    designTransactionRecordEdit: assign(({ context, event }) => executeRuntimeAction("designTransactionRecordEdit", context, event)),
-
-    typeTransactionStart: assign(({ context, event }) => executeRuntimeAction("typeTransactionStart", context, event)),
-    typeTransactionCommit: assign(({ context, event }) => executeRuntimeAction("typeTransactionCommit", context, event)),
-    typeTransactionAbort: assign(({ context, event }) => executeRuntimeAction("typeTransactionAbort", context, event)),
-    typeTransactionUndo: assign(({ context, event }) => executeRuntimeAction("typeTransactionUndo", context, event)),
-    typeTransactionRedo: assign(({ context, event }) => executeRuntimeAction("typeTransactionRedo", context, event)),
-    typeTransactionRecordEdit: assign(({ context, event }) => executeRuntimeAction("typeTransactionRecordEdit", context, event)),
-
-    kitTransactionStart: assign(({ context, event }) => executeRuntimeAction("kitTransactionStart", context, event)),
-    kitTransactionCommit: assign(({ context, event }) => executeRuntimeAction("kitTransactionCommit", context, event)),
-    kitTransactionAbort: assign(({ context, event }) => executeRuntimeAction("kitTransactionAbort", context, event)),
-    kitTransactionUndo: assign(({ context, event }) => executeRuntimeAction("kitTransactionUndo", context, event)),
-    kitTransactionRedo: assign(({ context, event }) => executeRuntimeAction("kitTransactionRedo", context, event)),
-    kitTransactionRecordEdit: assign(({ context, event }) => executeRuntimeAction("kitTransactionRecordEdit", context, event)),
-
-    designSelectPiece: assign(({ context, event }) => executeRuntimeAction("designSelectPiece", context, event)),
-    designDeselectPiece: assign(({ context, event }) => executeRuntimeAction("designDeselectPiece", context, event)),
-    designSelectConnection: assign(({ context, event }) => executeRuntimeAction("designSelectConnection", context, event)),
-    designDeselectConnection: assign(({ context, event }) => executeRuntimeAction("designDeselectConnection", context, event)),
-    designSelectAll: assign(({ context, event }) => executeRuntimeAction("designSelectAll", context, event)),
-    designDeleteSelected: assign(({ context, event }) => executeRuntimeAction("designDeleteSelected", context, event)),
   },
 }).createMachine({
   id: "sketchpad",

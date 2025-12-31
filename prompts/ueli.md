@@ -1,5 +1,66 @@
 # Prompt history
 
+- There must be a foundational issue (either repo or vscode extension) because no tickets are show or created with the new ticket command.
+- Add a general section search that filters simultaneusly tree items in all sections (Tickets, Policies, Contributors)
+- Policy should not have literally POLICYNAME - POLICYID but the POLICYID is the description. 
+- Add violation kinds to policies.
+├─ Policies
+│ └─ POLICYNAME - POLICYID
+│ │ └─ VIOLATIONKINDNAME - VIOLATIONKINDID
+- The policy navigation should be to the go function (e.g. func headerPolicy for header policy)
+- Clicking on the the command should not call the command but open the command function same as policies
+
+Update AGENTS.md to only use createFile and createFolder over semio mcp.
+
+Create a ticket for SKETCHPAD-REFACTOR from existing plan 
+
+The repo system should be extended with: plans
+Extend commands to create, list, delete plans.
+A new ticket can be be created from a plan. If the plan flag is provided with the plan slug then the plan is moved to plan.md
+├─ plans
+│ └─ PLANSLUG.md
+
+Update description to be explicitly Large-Language-Model (LLM)
+
+Passing a model should be required for every ticket creation and iteration start. @repo @vscode
+
+vscode extension:
+- Tickets still dont show
+- Contributors should show additional information
+- All sections (Tickets, Policies, Contributors) should have a + to create a new item (call vscode command)
+- Move contributor section to the bottom of the sideview
+- Add more information to the contributors
+- Add a general search ontop that filters everything (show only tickets, policies and contributors that are kind of matching the search)
+- All tree item should be clickable and navigate to the code (ticket should open the ticket file, contributor should open the contributor.json file, policy should open the repo file with the policy line number where it is defined)
+├─SEARCH
+├─ Tickets
+│ └─ YEAR
+│ │ └─ MONTH
+│ │ │ └─ DAY
+│ │ │ │ └─ SLUG
+│ │ │ │ │ └─ AUTHOR
+├─ Policies
+│ └─ POLICYNAME - POLICYID
+│ │ └─ VIOLATIONKINDNAME - VIOLATIONKINDID
+├─ Contributors
+│ └─ NAME - GITHUBUSERNAME
+│ │ ├─ emails
+│ │ │ └─ EMAIL
+│ │ ├─ links
+│ │ │ └─ KIND
+│ │ ├─ avatar-round-90x90.png
+│ └─ Contributions
+│ │ ├─ projects
+│ │ │ └─ PROJECTSLUG
+│ │ ├─ files
+│ │ │ └─ FILESLUG
+│ │ ├─ commits
+│ │ │ └─ COMMITTITLE - COMMITSHA
+
+Creating a new ticket over vscode extension doesnt work.
+
+Create a detailed refactor plan markdown document for everything related to sketchpad. Dont plan to modify the files (such as creating new ones). It is only about the code. Analyze everything excactly from top to bottom.
+
 asset/contributors shouldnt exist anymore afterwards. Make sure the vscode extension and everything is using the new path. All existing contributors should be with the new format.
 
 repo script should not use asset/contributors but contributors folder. Migrate and adjust code.

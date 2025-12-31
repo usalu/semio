@@ -24,7 +24,7 @@
 import { useSelector } from "@xstate/react";
 import { ConnectionDiff, ConnectionId, Guid, KitDiff, PieceDiff, PieceId } from "../semio";
 import type { AppConfig, AppPlugin, AppWindowConfig, DesignAppId, Field, HookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolDefinition, ToolRenderContext } from "./shared";
-import { conditionalHookResult, createField as createFieldValue, createPanelDefinition, Expertise, fieldToHookResult, Mode, PanelKind, readonlyHookResult, registerAppPlugin, registerRuntimeAction, Theme, ToolKind } from "./shared";
+import { conditionalHookResult, createField as createFieldValue, createKeyedTransactionHandlers, createPanelDefinition, Expertise, fieldToHookResult, Mode, PanelKind, readonlyHookResult, registerAppPlugin, registerEventHandler, registerKeyedAppEventHandlers, Theme, ToolKind } from "./shared";
 import type { DesignStore as DesignEntityStore } from "./Sketchpad";
 import {
   createDefaultDesignAppState,
@@ -1159,217 +1159,105 @@ if (typeof window !== "undefined") {
     useDesignAppIsConnectionSelected,
     useDesignAppStore: useDesignStore,
   });
-  registerRuntimeAction("designInit", (context: any, event: any) => {
-    if (event.type !== "DESIGN.INIT") return {};
-    const key = `${event.kitGuid}:${event.designGuid}`;
-    return { designApps: { ...context.designApps, [key]: event.state } };
+  const designAppEventConfig = {
+    namespace: "DESIGN" as const,
+    appKey: "designApps" as const,
+    getKey: (event: any) => `${event.kitGuid}:${event.designGuid}`,
+    createDefaultState: createDefaultDesignAppState,
+  };
+  registerKeyedAppEventHandlers(designAppEventConfig);
+  registerEventHandler("DESIGN.FOCUS_PIECE", {
+    action: (context: any, event: any) => {
+      const key = `${event.kitGuid}:${event.designGuid}`;
+      const app = context.designApps[key] || createDefaultDesignAppState();
+      return { designApps: { ...context.designApps, [key]: { ...app, focusedPiece: event.pieceGuid } } };
+    },
   });
-  registerRuntimeAction("designSync", (context: any, event: any) => {
-    if (event.type !== "DESIGN.SYNC") return {};
-    const key = `${event.kitGuid}:${event.designGuid}`;
-    const app = context.designApps[key] || createDefaultDesignAppState();
-    return { designApps: { ...context.designApps, [key]: { ...app, ...event.state } } };
+  registerEventHandler("DESIGN.SET_DIAGRAM_CENTER", {
+    action: (context: any, event: any) => {
+      const key = `${event.kitGuid}:${event.designGuid}`;
+      const app = context.designApps[key] || createDefaultDesignAppState();
+      return { designApps: { ...context.designApps, [key]: { ...app, diagramCenter: event.center } } };
+    },
   });
-  registerRuntimeAction("designSetActiveTool", (context: any, event: any) => {
-    if (event.type !== "DESIGN.SET_ACTIVE_TOOL") return {};
-    const key = `${event.kitGuid}:${event.designGuid}`;
-    const app = context.designApps[key] || createDefaultDesignAppState();
-    return { designApps: { ...context.designApps, [key]: { ...app, activeTool: event.tool } } };
+  registerEventHandler("DESIGN.SET_DIAGRAM_SCALE", {
+    action: (context: any, event: any) => {
+      const key = `${event.kitGuid}:${event.designGuid}`;
+      const app = context.designApps[key] || createDefaultDesignAppState();
+      return { designApps: { ...context.designApps, [key]: { ...app, diagramScale: event.scale } } };
+    },
   });
-  registerRuntimeAction("designSetFullscreen", (context: any, event: any) => {
-    if (event.type !== "DESIGN.SET_FULLSCREEN") return {};
-    const key = `${event.kitGuid}:${event.designGuid}`;
-    const app = context.designApps[key] || createDefaultDesignAppState();
-    return { designApps: { ...context.designApps, [key]: { ...app, fullscreenWindow: event.window } } };
+  registerEventHandler("DESIGN.SELECT_MODEL_TAG", {
+    action: (context: any, event: any) => {
+      const key = `${event.kitGuid}:${event.designGuid}`;
+      const app = context.designApps[key] || createDefaultDesignAppState();
+      const tags = app.selectedModelTags[event.typeGuid] || [];
+      if (tags.includes(event.tagGuid)) return {};
+      return { designApps: { ...context.designApps, [key]: { ...app, selectedModelTags: { ...app.selectedModelTags, [event.typeGuid]: [...tags, event.tagGuid] } } } };
+    },
   });
-  registerRuntimeAction("designTogglePanel", (context: any, event: any) => {
-    if (event.type !== "DESIGN.TOGGLE_PANEL") return {};
-    const key = `${event.kitGuid}:${event.designGuid}`;
-    const app = context.designApps[key] || createDefaultDesignAppState();
-    return { designApps: { ...context.designApps, [key]: { ...app, panelVisibility: { ...app.panelVisibility, [event.panel]: !app.panelVisibility[event.panel] } } } };
+  registerEventHandler("DESIGN.DESELECT_MODEL_TAG", {
+    action: (context: any, event: any) => {
+      const key = `${event.kitGuid}:${event.designGuid}`;
+      const app = context.designApps[key] || createDefaultDesignAppState();
+      const tags = app.selectedModelTags[event.typeGuid] || [];
+      return { designApps: { ...context.designApps, [key]: { ...app, selectedModelTags: { ...app.selectedModelTags, [event.typeGuid]: tags.filter((g: Guid) => g !== event.tagGuid) } } } };
+    },
   });
-  registerRuntimeAction("designSetPanelVisibility", (context: any, event: any) => {
-    if (event.type !== "DESIGN.SET_PANEL_VISIBILITY") return {};
-    const key = `${event.kitGuid}:${event.designGuid}`;
-    const app = context.designApps[key] || createDefaultDesignAppState();
-    return { designApps: { ...context.designApps, [key]: { ...app, panelVisibility: event.panelVisibility } } };
+  registerEventHandler("DESIGN.SELECT_PIECE", {
+    action: (context: any, event: any) => {
+      const key = `${event.kitGuid}:${event.designGuid}`;
+      const app = context.designApps[key] || createDefaultDesignAppState();
+      const pieces = [...(app.selection?.pieces || [])];
+      if (!pieces.includes(event.pieceGuid)) pieces.push(event.pieceGuid);
+      return { designApps: { ...context.designApps, [key]: { ...app, selection: { ...app.selection, pieces } } } };
+    },
   });
-  registerRuntimeAction("designSetSelection", (context: any, event: any) => {
-    if (event.type !== "DESIGN.SET_SELECTION") return {};
-    const key = `${event.kitGuid}:${event.designGuid}`;
-    const app = context.designApps[key] || createDefaultDesignAppState();
-    return { designApps: { ...context.designApps, [key]: { ...app, selection: event.selection } } };
+  registerEventHandler("DESIGN.DESELECT_PIECE", {
+    action: (context: any, event: any) => {
+      const key = `${event.kitGuid}:${event.designGuid}`;
+      const app = context.designApps[key] || createDefaultDesignAppState();
+      const pieces = (app.selection?.pieces || []).filter((p: Guid) => p !== event.pieceGuid);
+      return { designApps: { ...context.designApps, [key]: { ...app, selection: { ...app.selection, pieces } } } };
+    },
   });
-  registerRuntimeAction("designClearSelection", (context: any, event: any) => {
-    if (event.type !== "DESIGN.CLEAR_SELECTION") return {};
-    const key = `${event.kitGuid}:${event.designGuid}`;
-    const app = context.designApps[key] || createDefaultDesignAppState();
-    return { designApps: { ...context.designApps, [key]: { ...app, selection: undefined } } };
+  registerEventHandler("DESIGN.SELECT_CONNECTION", {
+    action: (context: any, event: any) => {
+      const key = `${event.kitGuid}:${event.designGuid}`;
+      const app = context.designApps[key] || createDefaultDesignAppState();
+      const connections = [...(app.selection?.connections || [])];
+      if (!connections.includes(event.connectionGuid)) connections.push(event.connectionGuid);
+      return { designApps: { ...context.designApps, [key]: { ...app, selection: { ...app.selection, connections } } } };
+    },
   });
-  registerRuntimeAction("designSetHover", (context: any, event: any) => {
-    if (event.type !== "DESIGN.SET_HOVER") return {};
-    const key = `${event.kitGuid}:${event.designGuid}`;
-    const app = context.designApps[key] || createDefaultDesignAppState();
-    return { designApps: { ...context.designApps, [key]: { ...app, hover: event.hover } } };
+  registerEventHandler("DESIGN.DESELECT_CONNECTION", {
+    action: (context: any, event: any) => {
+      const key = `${event.kitGuid}:${event.designGuid}`;
+      const app = context.designApps[key] || createDefaultDesignAppState();
+      const connections = (app.selection?.connections || []).filter((c: Guid) => c !== event.connectionGuid);
+      return { designApps: { ...context.designApps, [key]: { ...app, selection: { ...app.selection, connections } } } };
+    },
   });
-  registerRuntimeAction("designClearHover", (context: any, event: any) => {
-    if (event.type !== "DESIGN.CLEAR_HOVER") return {};
-    const key = `${event.kitGuid}:${event.designGuid}`;
-    const app = context.designApps[key] || createDefaultDesignAppState();
-    return { designApps: { ...context.designApps, [key]: { ...app, hover: undefined } } };
+  registerEventHandler("DESIGN.SELECT_ALL", {
+    action: (context: any, event: any) => {
+      const key = `${event.kitGuid}:${event.designGuid}`;
+      const app = context.designApps[key] || createDefaultDesignAppState();
+      return { designApps: { ...context.designApps, [key]: { ...app, selection: { pieces: [], connections: [] } } } };
+    },
   });
-  registerRuntimeAction("designFocusPiece", (context: any, event: any) => {
-    if (event.type !== "DESIGN.FOCUS_PIECE") return {};
-    const key = `${event.kitGuid}:${event.designGuid}`;
-    const app = context.designApps[key] || createDefaultDesignAppState();
-    return { designApps: { ...context.designApps, [key]: { ...app, focusedPiece: event.pieceGuid } } };
+  registerEventHandler("DESIGN.DELETE_SELECTED", {
+    action: (context: any, event: any) => {
+      const key = `${event.kitGuid}:${event.designGuid}`;
+      const app = context.designApps[key] || createDefaultDesignAppState();
+      return { designApps: { ...context.designApps, [key]: { ...app, selection: undefined } } };
+    },
   });
-  registerRuntimeAction("designSetDiagramCenter", (context: any, event: any) => {
-    if (event.type !== "DESIGN.SET_DIAGRAM_CENTER") return {};
-    const key = `${event.kitGuid}:${event.designGuid}`;
-    const app = context.designApps[key] || createDefaultDesignAppState();
-    return { designApps: { ...context.designApps, [key]: { ...app, diagramCenter: event.center } } };
-  });
-  registerRuntimeAction("designSetDiagramScale", (context: any, event: any) => {
-    if (event.type !== "DESIGN.SET_DIAGRAM_SCALE") return {};
-    const key = `${event.kitGuid}:${event.designGuid}`;
-    const app = context.designApps[key] || createDefaultDesignAppState();
-    return { designApps: { ...context.designApps, [key]: { ...app, diagramScale: event.scale } } };
-  });
-  registerRuntimeAction("designSetCamera", (context: any, event: any) => {
-    if (event.type !== "DESIGN.SET_CAMERA") return {};
-    const key = `${event.kitGuid}:${event.designGuid}`;
-    const app = context.designApps[key] || createDefaultDesignAppState();
-    return { designApps: { ...context.designApps, [key]: { ...app, camera: event.camera } } };
-  });
-  registerRuntimeAction("designSelectModelTag", (context: any, event: any) => {
-    if (event.type !== "DESIGN.SELECT_MODEL_TAG") return {};
-    const key = `${event.kitGuid}:${event.designGuid}`;
-    const app = context.designApps[key] || createDefaultDesignAppState();
-    const tags = app.selectedModelTags[event.typeGuid] || [];
-    if (tags.includes(event.tagGuid)) return {};
-    return { designApps: { ...context.designApps, [key]: { ...app, selectedModelTags: { ...app.selectedModelTags, [event.typeGuid]: [...tags, event.tagGuid] } } } };
-  });
-  registerRuntimeAction("designDeselectModelTag", (context: any, event: any) => {
-    if (event.type !== "DESIGN.DESELECT_MODEL_TAG") return {};
-    const key = `${event.kitGuid}:${event.designGuid}`;
-    const app = context.designApps[key] || createDefaultDesignAppState();
-    const tags = app.selectedModelTags[event.typeGuid] || [];
-    return { designApps: { ...context.designApps, [key]: { ...app, selectedModelTags: { ...app.selectedModelTags, [event.typeGuid]: tags.filter((g: Guid) => g !== event.tagGuid) } } } };
-  });
-  registerRuntimeAction("designSelectPiece", (context: any, event: any) => {
-    if (event.type !== "DESIGN.SELECT_PIECE") return {};
-    const key = `${event.kitGuid}:${event.designGuid}`;
-    const app = context.designApps[key] || createDefaultDesignAppState();
-    const pieces = [...(app.selection?.pieces || [])];
-    if (!pieces.includes(event.pieceGuid)) pieces.push(event.pieceGuid);
-    return { designApps: { ...context.designApps, [key]: { ...app, selection: { ...app.selection, pieces } } } };
-  });
-  registerRuntimeAction("designDeselectPiece", (context: any, event: any) => {
-    if (event.type !== "DESIGN.DESELECT_PIECE") return {};
-    const key = `${event.kitGuid}:${event.designGuid}`;
-    const app = context.designApps[key] || createDefaultDesignAppState();
-    const pieces = (app.selection?.pieces || []).filter((p: Guid) => p !== event.pieceGuid);
-    return { designApps: { ...context.designApps, [key]: { ...app, selection: { ...app.selection, pieces } } } };
-  });
-  registerRuntimeAction("designSelectConnection", (context: any, event: any) => {
-    if (event.type !== "DESIGN.SELECT_CONNECTION") return {};
-    const key = `${event.kitGuid}:${event.designGuid}`;
-    const app = context.designApps[key] || createDefaultDesignAppState();
-    const connections = [...(app.selection?.connections || [])];
-    if (!connections.includes(event.connectionGuid)) connections.push(event.connectionGuid);
-    return { designApps: { ...context.designApps, [key]: { ...app, selection: { ...app.selection, connections } } } };
-  });
-  registerRuntimeAction("designDeselectConnection", (context: any, event: any) => {
-    if (event.type !== "DESIGN.DESELECT_CONNECTION") return {};
-    const key = `${event.kitGuid}:${event.designGuid}`;
-    const app = context.designApps[key] || createDefaultDesignAppState();
-    const connections = (app.selection?.connections || []).filter((c: Guid) => c !== event.connectionGuid);
-    return { designApps: { ...context.designApps, [key]: { ...app, selection: { ...app.selection, connections } } } };
-  });
-  registerRuntimeAction("designSelectAll", (context: any, event: any) => {
-    if (event.type !== "DESIGN.SELECT_ALL") return {};
-    const key = `${event.kitGuid}:${event.designGuid}`;
-    const app = context.designApps[key] || createDefaultDesignAppState();
-    return { designApps: { ...context.designApps, [key]: { ...app, selection: { pieces: [], connections: [] } } } };
-  });
-  registerRuntimeAction("designDeleteSelected", (context: any, event: any) => {
-    if (event.type !== "DESIGN.DELETE_SELECTED") return {};
-    const key = `${event.kitGuid}:${event.designGuid}`;
-    const app = context.designApps[key] || createDefaultDesignAppState();
-    return { designApps: { ...context.designApps, [key]: { ...app, selection: undefined } } };
-  });
-  registerRuntimeAction("designTransactionStart", (context: any, event: any) => {
-    if (event.type !== "DESIGN.TRANSACTION.START") return {};
-    const key = `${event.kitGuid}:${event.designGuid}`;
-    const app = context.designApps[key] || createDefaultDesignAppState();
-    const tx = app.transaction;
-    if (tx.isTransactionActive) {
-      const pastStack = [...tx.pastTransactionStack];
-      if (tx.currentTransactionStack.length > 0) {
-        const merged = tx.currentTransactionStack.length === 1 ? tx.currentTransactionStack[0] : { do: tx.currentTransactionStack[tx.currentTransactionStack.length - 1].do, undo: tx.currentTransactionStack[0].undo };
-        pastStack.push(merged);
-      }
-      return { designApps: { ...context.designApps, [key]: { ...app, transaction: { isTransactionActive: true, currentTransactionStack: [], pastTransactionStack: pastStack, redoStack: [] } } } };
-    }
-    return { designApps: { ...context.designApps, [key]: { ...app, transaction: { ...tx, isTransactionActive: true, currentTransactionStack: [], redoStack: [] } } } };
-  });
-  registerRuntimeAction("designTransactionCommit", (context: any, event: any) => {
-    if (event.type !== "DESIGN.TRANSACTION.COMMIT") return {};
-    const key = `${event.kitGuid}:${event.designGuid}`;
-    const app = context.designApps[key];
-    if (!app || !app.transaction.isTransactionActive) return {};
-    const tx = app.transaction;
-    const pastStack = [...tx.pastTransactionStack];
-    if (tx.currentTransactionStack.length > 0) {
-      const merged = tx.currentTransactionStack.length === 1 ? tx.currentTransactionStack[0] : { do: tx.currentTransactionStack[tx.currentTransactionStack.length - 1].do, undo: tx.currentTransactionStack[0].undo };
-      pastStack.push(merged);
-    }
-    return { designApps: { ...context.designApps, [key]: { ...app, transaction: { isTransactionActive: false, currentTransactionStack: [], pastTransactionStack: pastStack, redoStack: [] } } } };
-  });
-  registerRuntimeAction("designTransactionAbort", (context: any, event: any) => {
-    if (event.type !== "DESIGN.TRANSACTION.ABORT") return {};
-    const key = `${event.kitGuid}:${event.designGuid}`;
-    const app = context.designApps[key];
-    if (!app || !app.transaction.isTransactionActive) return {};
-    return { designApps: { ...context.designApps, [key]: { ...app, transaction: { ...app.transaction, isTransactionActive: false, currentTransactionStack: [] } } } };
-  });
-  registerRuntimeAction("designTransactionUndo", (context: any, event: any) => {
-    if (event.type !== "DESIGN.TRANSACTION.UNDO") return {};
-    const key = `${event.kitGuid}:${event.designGuid}`;
-    const app = context.designApps[key];
-    if (!app) return {};
-    const tx = app.transaction;
-    if (tx.isTransactionActive && tx.currentTransactionStack.length > 0) {
-      const currentStack = [...tx.currentTransactionStack];
-      currentStack.pop();
-      return { designApps: { ...context.designApps, [key]: { ...app, transaction: { ...tx, currentTransactionStack: currentStack } } } };
-    } else if (!tx.isTransactionActive && tx.pastTransactionStack.length > 0) {
-      const pastStack = [...tx.pastTransactionStack];
-      const edit = pastStack.pop()!;
-      const redoStack = [...tx.redoStack, edit];
-      return { designApps: { ...context.designApps, [key]: { ...app, transaction: { ...tx, pastTransactionStack: pastStack, redoStack } } } };
-    }
-    return {};
-  });
-  registerRuntimeAction("designTransactionRedo", (context: any, event: any) => {
-    if (event.type !== "DESIGN.TRANSACTION.REDO") return {};
-    const key = `${event.kitGuid}:${event.designGuid}`;
-    const app = context.designApps[key];
-    if (!app || app.transaction.isTransactionActive || app.transaction.redoStack.length === 0) return {};
-    const tx = app.transaction;
-    const redoStack = [...tx.redoStack];
-    const edit = redoStack.pop()!;
-    const pastStack = [...tx.pastTransactionStack, edit];
-    return { designApps: { ...context.designApps, [key]: { ...app, transaction: { ...tx, pastTransactionStack: pastStack, redoStack } } } };
-  });
-  registerRuntimeAction("designTransactionRecordEdit", (context: any, event: any) => {
-    if (event.type !== "DESIGN.TRANSACTION.RECORD_EDIT") return {};
-    const key = `${event.kitGuid}:${event.designGuid}`;
-    const app = context.designApps[key];
-    if (!app || !app.transaction.isTransactionActive) return {};
-    const currentStack = [...app.transaction.currentTransactionStack, event.edit];
-    return { designApps: { ...context.designApps, [key]: { ...app, transaction: { ...app.transaction, currentTransactionStack: currentStack, redoStack: [] } } } };
+
+  createKeyedTransactionHandlers({
+    namespace: "DESIGN",
+    appKey: "designApps",
+    keyFields: ["kitGuid", "designGuid"],
+    createDefaultState: createDefaultDesignAppState,
   });
 }
 

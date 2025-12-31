@@ -41,16 +41,16 @@
           "name": "Tickets"
         },
         {
-          "id": "semio.contributors",
-          "name": "Contributors"
-        },
-        {
           "id": "semio.policies",
           "name": "Policies"
         },
         {
           "id": "semio.commands",
           "name": "Commands"
+        },
+        {
+          "id": "semio.contributors",
+          "name": "Contributors"
         }
       ]
     },
@@ -230,29 +230,87 @@
       {
         "command": "semio.runCommand",
         "title": "Run Command"
+      },
+      {
+        "command": "semio.search",
+        "title": "Search",
+        "icon": "$(search)"
+      },
+      {
+        "command": "semio.clearSearch",
+        "title": "Clear Search",
+        "icon": "$(close)"
+      },
+      {
+        "command": "semio.createTicket",
+        "title": "Create Ticket",
+        "icon": "$(add)"
+      },
+      {
+        "command": "semio.createPolicy",
+        "title": "Create Policy",
+        "icon": "$(add)"
+      },
+      {
+        "command": "semio.createContributor",
+        "title": "Add Contributor",
+        "icon": "$(add)"
+      },
+      {
+        "command": "semio.openPolicy",
+        "title": "Open Policy"
+      },
+      {
+        "command": "semio.openContributor",
+        "title": "Open Contributor"
       }
     ],
     "menus": {
       "view/title": [
         {
+          "command": "semio.search",
+          "when": "view == semio.tickets || view == semio.policies || view == semio.contributors",
+          "group": "navigation@1"
+        },
+        {
+          "command": "semio.clearSearch",
+          "when": "view == semio.tickets || view == semio.policies || view == semio.contributors",
+          "group": "navigation@2"
+        },
+        {
+          "command": "semio.createTicket",
+          "when": "view == semio.tickets",
+          "group": "navigation@3"
+        },
+        {
           "command": "semio.refreshTickets",
           "when": "view == semio.tickets",
-          "group": "navigation"
+          "group": "navigation@4"
         },
         {
           "command": "semio.toggleTicketFilter",
           "when": "view == semio.tickets",
-          "group": "navigation"
+          "group": "navigation@5"
+        },
+        {
+          "command": "semio.createPolicy",
+          "when": "view == semio.policies",
+          "group": "navigation@3"
         },
         {
           "command": "semio.refreshPolicies",
           "when": "view == semio.policies",
-          "group": "navigation"
+          "group": "navigation@4"
+        },
+        {
+          "command": "semio.createContributor",
+          "when": "view == semio.contributors",
+          "group": "navigation@3"
         },
         {
           "command": "semio.refreshContributors",
           "when": "view == semio.contributors",
-          "group": "navigation"
+          "group": "navigation@4"
         }
       ],
       "view/item/context": [
