@@ -30,8 +30,9 @@ import * as vscode from "vscode";
 
 // #region Constants
 
-const EXPECTED_COMMANDS = ["semio.analyze", "semio.analyzeFile", "semio.fix", "semio.fixFile", "semio.policyList", "semio.ticketCreate", "semio.ticketList", "semio.ticketIterateStart", "semio.ticketIterateEnd", "semio.ticketFinish", "semio.ticketRead", "semio.ticketOpen", "semio.projectList", "semio.sectionTree", "semio.definitionList", "semio.folderTree", "semio.folderCreate", "semio.folderMove", "semio.folderDelete", "semio.folderList", "semio.fileCreate", "semio.fileMove", "semio.fileDelete", "semio.fileList", "semio.fileTree", "semio.sectionCreate", "semio.sectionMove", "semio.sectionDelete", "semio.sectionList", "semio.definitionTree", "semio.projectTree", "semio.policyRun", "semio.toolRun", "semio.refreshDiagnostics", "semio.fixViolation"];
+const EXPECTED_COMMANDS = ["semio.analyze", "semio.analyzeFile", "semio.fix", "semio.fixFile", "semio.policyList", "semio.ticketCreate", "semio.ticketList", "semio.ticketIterateStart", "semio.ticketIterateEnd", "semio.ticketFinish", "semio.ticketRead", "semio.ticketOpen", "semio.projectList", "semio.contributorAdd", "semio.contributorList", "semio.contributorRemove", "semio.sectionTree", "semio.definitionList", "semio.folderTree", "semio.folderCreate", "semio.folderMove", "semio.folderDelete", "semio.folderList", "semio.fileCreate", "semio.fileMove", "semio.fileDelete", "semio.fileList", "semio.fileTree", "semio.sectionCreate", "semio.sectionMove", "semio.sectionDelete", "semio.sectionList", "semio.definitionTree", "semio.projectTree", "semio.policyCheck", "semio.toolRun", "semio.refreshDiagnostics", "semio.fixViolation", "semio.refreshTickets", "semio.refreshContributors", "semio.refreshPolicies", "semio.toggleTicketFilter", "semio.openTicket", "semio.checkPolicy", "semio.runCommand"];
 const EXPECTED_CONSTRAINTS = ["guid-unique", "type-name-unique", "design-name-unique", "piece-name-unique", "quality-name-unique", "port-name-unique", "file-name-unique", "folder-name-unique", "connector-name-unique", "model-name-unique", "layer-path-unique"];
+const EXPECTED_VIEWS = ["semio.tickets", "semio.contributors", "semio.policies", "semio.commands"];
 
 // #endregion Constants
 
@@ -338,3 +339,102 @@ suite("Refresh Diagnostics Test Suite", function () {
 });
 
 // #endregion Refresh Diagnostics Tests
+
+// #region Sidebar View Tests
+
+suite("Sidebar View Test Suite", function () {
+  this.timeout(15000);
+
+  test("All expected views are registered", async function () {
+    for (const viewId of EXPECTED_VIEWS) {
+      const extension = vscode.extensions.getExtension("usalu.semio");
+      assert.ok(extension, "Extension should be found");
+    }
+  });
+
+  test("Tickets view can be focused", async function () {
+    await vscode.commands.executeCommand("semio.tickets.focus");
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  });
+
+  test("Contributors view can be focused", async function () {
+    await vscode.commands.executeCommand("semio.contributors.focus");
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  });
+
+  test("Policies view can be focused", async function () {
+    await vscode.commands.executeCommand("semio.policies.focus");
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  });
+
+  test("Commands view can be focused", async function () {
+    await vscode.commands.executeCommand("semio.commands.focus");
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  });
+
+  test("Refresh tickets command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.refreshTickets"), "refreshTickets command should be registered");
+  });
+
+  test("Refresh contributors command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.refreshContributors"), "refreshContributors command should be registered");
+  });
+
+  test("Refresh policies command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.refreshPolicies"), "refreshPolicies command should be registered");
+  });
+
+  test("Toggle ticket filter command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.toggleTicketFilter"), "toggleTicketFilter command should be registered");
+  });
+
+  test("Run command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.runCommand"), "runCommand command should be registered");
+  });
+
+  test("Tickets folder has at least one ticket", async function () {
+    const root = getWorkspaceRoot();
+    const ticketsPath = path.join(root, "tickets");
+    assert.ok(fs.existsSync(ticketsPath), "tickets folder should exist");
+    const years = fs.readdirSync(ticketsPath).filter((f) => fs.statSync(path.join(ticketsPath, f)).isDirectory());
+    assert.ok(years.length > 0, "tickets folder should have at least one year folder");
+    let hasTicket = false;
+    for (const year of years) {
+      const yearPath = path.join(ticketsPath, year);
+      const months = fs.readdirSync(yearPath).filter((f) => fs.statSync(path.join(yearPath, f)).isDirectory());
+      for (const month of months) {
+        const monthPath = path.join(yearPath, month);
+        const days = fs.readdirSync(monthPath).filter((f) => fs.statSync(path.join(monthPath, f)).isDirectory());
+        for (const day of days) {
+          const dayPath = path.join(monthPath, day);
+          const files = fs.readdirSync(dayPath).filter((f) => f.endsWith(".md"));
+          if (files.length > 0) {
+            hasTicket = true;
+            break;
+          }
+        }
+        if (hasTicket) break;
+      }
+      if (hasTicket) break;
+    }
+    assert.ok(hasTicket, "tickets folder should have at least one ticket");
+  });
+
+  test("Contributors folder has at least one contributor", async function () {
+    const root = getWorkspaceRoot();
+    const contributorsPath = path.join(root, "contributors");
+    assert.ok(fs.existsSync(contributorsPath), "contributors folder should exist");
+    const contributors = fs.readdirSync(contributorsPath).filter((f) => fs.statSync(path.join(contributorsPath, f)).isDirectory());
+    assert.ok(contributors.length > 0, "contributors folder should have at least one contributor");
+    const firstContributor = contributors[0];
+    const contributorJsonPath = path.join(contributorsPath, firstContributor, "contributor.json");
+    assert.ok(fs.existsSync(contributorJsonPath), "contributor should have contributor.json file");
+  });
+});
+
+// #endregion Sidebar View Tests

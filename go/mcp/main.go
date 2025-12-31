@@ -89,12 +89,12 @@ func main() {
 		policyListHandler,
 	)
 	s.AddTool(
-		mcp.NewTool("policy_run",
-			mcp.WithDescription("Run a specific policy"),
-			mcp.WithString("id", mcp.Required(), mcp.Description("Policy ID to run")),
+		mcp.NewTool("policy_check",
+			mcp.WithDescription("Check a specific policy"),
+			mcp.WithString("id", mcp.Required(), mcp.Description("Policy ID to check")),
 			mcp.WithString("scope", mcp.Description("Scope to analyze"), mcp.DefaultString("@semio")),
 		),
-		policyRunHandler,
+		policyCheckHandler,
 	)
 	s.AddTool(
 		mcp.NewTool("ticket_create",
@@ -155,6 +155,26 @@ func main() {
 			mcp.WithString("slug", mcp.Required(), mcp.Description("Ticket slug")),
 		),
 		ticketFinishHandler,
+	)
+	s.AddTool(
+		mcp.NewTool("contributor_add",
+			mcp.WithDescription("Add a contributor by GitHub username"),
+			mcp.WithString("github", mcp.Required(), mcp.Description("GitHub username")),
+		),
+		contributorAddHandler,
+	)
+	s.AddTool(
+		mcp.NewTool("contributor_list",
+			mcp.WithDescription("List all contributors"),
+		),
+		contributorListHandler,
+	)
+	s.AddTool(
+		mcp.NewTool("contributor_remove",
+			mcp.WithDescription("Remove a contributor"),
+			mcp.WithString("github", mcp.Required(), mcp.Description("GitHub username")),
+		),
+		contributorRemoveHandler,
 	)
 	s.AddTool(
 		mcp.NewTool("project_list",
@@ -331,14 +351,14 @@ func policyListHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.C
 	return textResult(runRepo("policy", "list")), nil
 }
 
-func policyRunHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func policyCheckHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	id, _ := args["id"].(string)
 	scope, _ := args["scope"].(string)
 	if scope == "" {
-		return textResult(runRepo("policy", "run", id)), nil
+		return textResult(runRepo("policy", "check", id)), nil
 	}
-	return textResult(runRepo("policy", "run", id, scope)), nil
+	return textResult(runRepo("policy", "check", id, scope)), nil
 }
 
 func ticketCreateHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -414,6 +434,22 @@ func ticketFinishHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp
 	day := strconv.Itoa(int(args["day"].(float64)))
 	slug, _ := args["slug"].(string)
 	return textResult(runRepo("ticket", "finish", year, month, day, slug)), nil
+}
+
+func contributorAddHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
+	github, _ := args["github"].(string)
+	return textResult(runRepo("contributor", "add", github)), nil
+}
+
+func contributorListHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	return textResult(runRepo("contributor", "list")), nil
+}
+
+func contributorRemoveHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
+	github, _ := args["github"].(string)
+	return textResult(runRepo("contributor", "remove", github)), nil
 }
 
 func projectListHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {

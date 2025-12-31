@@ -495,7 +495,7 @@ npx tsx repo.tsx <command> [subcommand] [options]
 | `analyze [scope]`                         | Analyze codebase for problems       |
 | `fix [scope]`                             | Apply autofixes for problems        |
 | `policy list`                             | List all registered policies        |
-| `policy run <id>`                         | Run a specific policy               |
+| `policy check <id>`                       | Check a specific policy             |
 | `ticket create <slug>`                    | Create a new ticket                 |
 | `ticket list [year] [month] [day]`        | List tickets                        |
 | `ticket read <year> <month> <day> <slug>` | Read a ticket                       |
@@ -592,7 +592,7 @@ The MCP server communicates via stdio and exposes all repo tools as MCP tools. C
 - `analyze` - Analyze codebase for policy violations
 - `fix` - Apply autofixes for violations
 - `policy_list` - List all registered policies
-- `policy_run` - Run a specific policy
+- `policy_check` - Check a specific policy
 - `ticket_create` - Create a new ticket
 - `ticket_list` - List tickets
 - `ticket_read` - Read a ticket

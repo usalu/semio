@@ -1,0 +1,13 @@
+{
+  "github": "drymuzzle",
+  "name": "drymuzzle",
+  "links": {
+    "github": "https://github.com/drymuzzle"
+  },
+  "contributions": {
+    "projects": [
+      "@semio/grasshopper",
+      "@semio/ladybug"
+    ]
+  }
+}

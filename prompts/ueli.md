@@ -1,5 +1,79 @@
 # Prompt history
 
+asset/contributors shouldnt exist anymore afterwards. Make sure the vscode extension and everything is using the new path. All existing contributors should be with the new format.
+
+repo script should not use asset/contributors but contributors folder. Migrate and adjust code.
+
+Rename run policy to check policy everywhere.
+
+vscode extension:
+- No tickets are shown (Make sure the tests check for at least one ticket)
+- Add a section contributors (Make sure the tests check for at least one contributor)
+
+- No Tickets show. Tickets should be shown inside YEAR > MONTH > DAY > SLUG
+- Extend the repo with contributors. The contributors are stored in the contributors folder. The contributor.json file contains the contributor information. The avatar.png and avatar-round-90x90.png (e.g. the README.md uses this) are the avatar images. The avatar.png is the original image and the avatar-round-90x90.png is the rounded image. Add commands for repo contributor add, list, remove. The commands should create the folder, download the avatar.png from github and create the contributor.json file. The contributions should be automatically updated when a new ticket is created (use the git email to identify the contributor)
+├─ contributors
+│ └─ GITHUBUSERNAME
+│ │ ├─ avatar.png
+│ │ ├─ avatar-round-90x90.png
+│ │ └─ contributor.json
+{
+  "github": "usalu",
+  "name": "Ueli Saluz",
+  "emails": [
+    "ueli@semio-tech.com"
+  ],
+  "links": {
+    "github": "https://github.com/usalu"
+  },
+  "contributions": {
+    "projects": [
+      "@semio/js",
+      "@semio/net",
+      "@semio/desktop",
+      "@semio/engine",
+      "@semio/assistant",
+      "@semio/play",
+      "@semio/docs",
+      "@semio/assets"
+    ],
+    "folders": [
+      "js/js/sketchpad",
+      "js/js/semio",
+      "js/js/semio/engine",
+      "js/js/semio/assistant",
+      "js/js/semio/play",
+      "js/js/semio/docs",
+      "js/js/semio/assets"
+    ],
+    "files": [
+      "js/js/sketchpad/Sketchpad.tsx",
+      "js/js/semio/engine/Engine.tsx",
+      "js/js/semio/assistant/Assistant.tsx",
+      "js/js/semio/play/Play.tsx",
+      "js/js/semio/docs/Docs.tsx",
+      "js/js/semio/assets/Assets.tsx"
+    ],
+    "regions": [
+      "js/js/sketchpad/Sketchpad.tsx#Header",
+      "js/js/semio/engine/Engine.tsx#Header",
+      "js/js/semio/assistant/Assistant.tsx#Header",
+      "js/js/semio/play/Play.tsx#Header",
+      "js/js/semio/docs/Docs.tsx#Header",
+      "js/js/semio/assets/Assets.tsx#Header"
+    ],
+    "definitions": [
+      "js/js/sketchpad/Sketchpad.tsx§Sketchpad",
+      "js/js/semio/engine/Engine.tsx§Engine",
+      "js/js/semio/assistant/Assistant.tsx§Assistant",
+      "js/js/semio/play/Play.tsx§Play",
+      "js/js/semio/docs/Docs.tsx§Docs",
+      "js/js/semio/assets/Assets.tsx§Assets"
+    ]
+  }
+}
+-Remove Projects from sideview
+
 add the go modules to the nx workspace and migrate makefile to build.tsx. add all vscode launch and tasks.
 
 The violations shouldnt be registered at runtime but a fixed array at compile time.
@@ -133,7 +207,7 @@ Commands:
   analyze [--scope=<scope>]    Analyze codebase for violations (multiple scopes are supported)
   fix [--scope=<scope>]        Apply autofixes for violations (multiple scopes are supported)
   policy list [--id=<id-pattern>] [--scope=<scope>]  List all registered policies (multiple scopes are supported)
-  policy run [--scope=<scope>] [--id=<id>]            Run specific policies
+  policy check [--scope=<scope>] [--id=<id>]          Check specific policies
   ticket create <slug> <description> <prompt> <model> [--plan=<path>]       Create a new ticket
   ticket iterate start <year> <month> <day> <slug>    Run policies and sync violations to ticket
   ticket iteration end <year> <month> <day> <slug>      End a ticket iteration

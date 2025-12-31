@@ -575,6 +575,259 @@ function createKitCodeAction(document: vscode.TextDocument, diagnostic: vscode.D
 
 // #endregion Kit Validation
 
+// #region Sidebar Views
+
+type TicketFilter = "all" | "open" | "closed";
+
+type TicketTreeItem = TicketYearItem | TicketMonthItem | TicketDayItem | TicketItem;
+
+class TicketYearItem extends vscode.TreeItem {
+  constructor(public readonly year: number) {
+    super(String(year), vscode.TreeItemCollapsibleState.Expanded);
+    this.iconPath = new vscode.ThemeIcon("calendar");
+    this.contextValue = "ticketYear";
+  }
+}
+
+class TicketMonthItem extends vscode.TreeItem {
+  constructor(
+    public readonly year: number,
+    public readonly month: number,
+  ) {
+    super(String(month).padStart(2, "0"), vscode.TreeItemCollapsibleState.Expanded);
+    this.iconPath = new vscode.ThemeIcon("calendar");
+    this.contextValue = "ticketMonth";
+  }
+}
+
+class TicketDayItem extends vscode.TreeItem {
+  constructor(
+    public readonly year: number,
+    public readonly month: number,
+    public readonly day: number,
+  ) {
+    super(String(day).padStart(2, "0"), vscode.TreeItemCollapsibleState.Expanded);
+    this.iconPath = new vscode.ThemeIcon("calendar");
+    this.contextValue = "ticketDay";
+  }
+}
+
+class TicketItem extends vscode.TreeItem {
+  constructor(public readonly ticket: TicketData) {
+    super(ticket.slug, vscode.TreeItemCollapsibleState.None);
+    this.tooltip = `${ticket.slug}\n${ticket.frontmatter.summary || ticket.frontmatter.prompt}`;
+    this.description = ticket.frontmatter.status === "open" ? "🟢" : "✅";
+    this.iconPath = new vscode.ThemeIcon(ticket.frontmatter.status === "open" ? "issue-opened" : "issue-closed");
+    this.contextValue = "ticket";
+    this.command = { command: "semio.openTicket", title: "Open Ticket", arguments: [ticket] };
+  }
+}
+
+class TicketsProvider implements vscode.TreeDataProvider<TicketTreeItem> {
+  private _onDidChangeTreeData = new vscode.EventEmitter<TicketTreeItem | undefined | null | void>();
+  readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
+  private filter: TicketFilter = "all";
+  private cachedTickets: TicketData[] = [];
+
+  refresh(): void {
+    this.cachedTickets = [];
+    this._onDidChangeTreeData.fire();
+  }
+
+  toggleFilter(): void {
+    const filters: TicketFilter[] = ["all", "open", "closed"];
+    const currentIndex = filters.indexOf(this.filter);
+    this.filter = filters[(currentIndex + 1) % filters.length];
+    this.refresh();
+    vscode.window.showInformationMessage(`Ticket filter: ${this.filter}`);
+  }
+
+  getFilter(): TicketFilter {
+    return this.filter;
+  }
+
+  getTreeItem(element: TicketTreeItem): vscode.TreeItem {
+    return element;
+  }
+
+  async getChildren(element?: TicketTreeItem): Promise<TicketTreeItem[]> {
+    if (this.cachedTickets.length === 0) {
+      const result = await runRepoCommandJson<ToolResult<TicketData[]>>("ticket list");
+      if (!result?.data) return [];
+      this.cachedTickets = result.data;
+    }
+    let tickets = this.cachedTickets;
+    if (this.filter === "open") tickets = tickets.filter((t) => t.frontmatter.status === "open");
+    else if (this.filter === "closed") tickets = tickets.filter((t) => t.frontmatter.status === "closed");
+    if (!element) {
+      const years = [...new Set(tickets.map((t) => t.year))].sort((a, b) => b - a);
+      return years.map((year) => new TicketYearItem(year));
+    }
+    if (element instanceof TicketYearItem) {
+      const yearTickets = tickets.filter((t) => t.year === element.year);
+      const months = [...new Set(yearTickets.map((t) => t.month))].sort((a, b) => b - a);
+      return months.map((month) => new TicketMonthItem(element.year, month));
+    }
+    if (element instanceof TicketMonthItem) {
+      const monthTickets = tickets.filter((t) => t.year === element.year && t.month === element.month);
+      const days = [...new Set(monthTickets.map((t) => t.day))].sort((a, b) => b - a);
+      return days.map((day) => new TicketDayItem(element.year, element.month, day));
+    }
+    if (element instanceof TicketDayItem) {
+      const dayTickets = tickets.filter((t) => t.year === element.year && t.month === element.month && t.day === element.day);
+      return dayTickets.map((ticket) => new TicketItem(ticket));
+    }
+    return [];
+  }
+}
+
+class PolicyItem extends vscode.TreeItem {
+  constructor(public readonly policy: PolicyData) {
+    super(policy.id, vscode.TreeItemCollapsibleState.None);
+    this.tooltip = `${policy.id}\n${policy.name}\n${policy.description}`;
+    this.description = policy.name;
+    this.iconPath = new vscode.ThemeIcon("shield");
+    this.contextValue = "policy";
+  }
+}
+
+class PoliciesProvider implements vscode.TreeDataProvider<PolicyItem> {
+  private _onDidChangeTreeData = new vscode.EventEmitter<PolicyItem | undefined | null | void>();
+  readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
+
+  refresh(): void {
+    this._onDidChangeTreeData.fire();
+  }
+
+  getTreeItem(element: PolicyItem): vscode.TreeItem {
+    return element;
+  }
+
+  async getChildren(): Promise<PolicyItem[]> {
+    const result = await runRepoCommandJson<ToolResult<PolicyData[]>>("policy list");
+    if (!result?.data) return [];
+    return result.data.map((policy) => new PolicyItem(policy));
+  }
+}
+
+interface ContributorData {
+  github: string;
+}
+
+class ContributorItem extends vscode.TreeItem {
+  constructor(public readonly contributor: ContributorData) {
+    super(contributor.github, vscode.TreeItemCollapsibleState.None);
+    this.tooltip = `@${contributor.github}`;
+    this.description = `@${contributor.github}`;
+    this.iconPath = new vscode.ThemeIcon("person");
+    this.contextValue = "contributor";
+  }
+}
+
+class ContributorsProvider implements vscode.TreeDataProvider<ContributorItem> {
+  private _onDidChangeTreeData = new vscode.EventEmitter<ContributorItem | undefined | null | void>();
+  readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
+
+  refresh(): void {
+    this._onDidChangeTreeData.fire();
+  }
+
+  getTreeItem(element: ContributorItem): vscode.TreeItem {
+    return element;
+  }
+
+  async getChildren(): Promise<ContributorItem[]> {
+    const result = await runRepoCommandJson<ToolResult<ContributorData[]>>("contributor list");
+    if (!result?.data) return [];
+    return result.data.map((contributor) => new ContributorItem(contributor));
+  }
+}
+
+interface CommandInfo {
+  id: string;
+  title: string;
+}
+
+class CommandItem extends vscode.TreeItem {
+  constructor(public readonly cmd: CommandInfo) {
+    super(cmd.title.replace("semio: ", ""), vscode.TreeItemCollapsibleState.None);
+    this.tooltip = cmd.id;
+    this.description = cmd.id;
+    this.iconPath = new vscode.ThemeIcon("terminal");
+    this.contextValue = "command";
+    this.command = { command: "semio.runCommand", title: "Run Command", arguments: [cmd.id] };
+  }
+}
+
+const SIDEBAR_COMMANDS: CommandInfo[] = [
+  { id: "semio.analyze", title: "Analyze Codebase" },
+  { id: "semio.analyzeFile", title: "Analyze Current File" },
+  { id: "semio.fix", title: "Fix Codebase Problems" },
+  { id: "semio.fixFile", title: "Fix Current File Problems" },
+  { id: "semio.ticketCreate", title: "Create Ticket" },
+  { id: "semio.ticketIterateStart", title: "Start Ticket Iteration" },
+  { id: "semio.ticketIterateEnd", title: "End Ticket Iteration" },
+  { id: "semio.ticketFinish", title: "Finish Ticket" },
+  { id: "semio.folderTree", title: "Show Folder Tree" },
+  { id: "semio.folderCreate", title: "Create Folder" },
+  { id: "semio.fileCreate", title: "Create File" },
+  { id: "semio.sectionTree", title: "Show Section Tree" },
+  { id: "semio.definitionList", title: "List Definitions" },
+  { id: "semio.toolRun", title: "Run Tool" },
+  { id: "semio.refreshDiagnostics", title: "Refresh Diagnostics" },
+];
+
+class CommandsProvider implements vscode.TreeDataProvider<CommandItem> {
+  private _onDidChangeTreeData = new vscode.EventEmitter<CommandItem | undefined | null | void>();
+  readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
+
+  getTreeItem(element: CommandItem): vscode.TreeItem {
+    return element;
+  }
+
+  getChildren(): CommandItem[] {
+    return SIDEBAR_COMMANDS.map((cmd) => new CommandItem(cmd));
+  }
+}
+
+let ticketsProvider: TicketsProvider;
+let contributorsProvider: ContributorsProvider;
+let policiesProvider: PoliciesProvider;
+let commandsProvider: CommandsProvider;
+
+function registerSidebarViews(context: vscode.ExtensionContext): void {
+  ticketsProvider = new TicketsProvider();
+  contributorsProvider = new ContributorsProvider();
+  policiesProvider = new PoliciesProvider();
+  commandsProvider = new CommandsProvider();
+  context.subscriptions.push(vscode.window.registerTreeDataProvider("semio.tickets", ticketsProvider), vscode.window.registerTreeDataProvider("semio.contributors", contributorsProvider), vscode.window.registerTreeDataProvider("semio.policies", policiesProvider), vscode.window.registerTreeDataProvider("semio.commands", commandsProvider));
+  context.subscriptions.push(
+    vscode.commands.registerCommand("semio.refreshTickets", () => ticketsProvider.refresh()),
+    vscode.commands.registerCommand("semio.refreshContributors", () => contributorsProvider.refresh()),
+    vscode.commands.registerCommand("semio.refreshPolicies", () => policiesProvider.refresh()),
+    vscode.commands.registerCommand("semio.toggleTicketFilter", () => ticketsProvider.toggleFilter()),
+    vscode.commands.registerCommand("semio.openTicket", async (ticket: TicketData) => {
+      if (!ticket?.filePath) return;
+      const uri = vscode.Uri.file(ticket.filePath);
+      await vscode.window.showTextDocument(uri);
+    }),
+    vscode.commands.registerCommand("semio.checkPolicy", async (policy: PolicyItem) => {
+      if (!policy?.policy?.id) return;
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary not found in bin/");
+        return;
+      }
+      runRepoCommand(`policy check ${policy.policy.id}`);
+    }),
+    vscode.commands.registerCommand("semio.runCommand", async (commandId: string) => {
+      if (!commandId) return;
+      await vscode.commands.executeCommand(commandId);
+    }),
+  );
+}
+
+// #endregion Sidebar Views
+
 // #region Commands
 
 function registerCommands(context: vscode.ExtensionContext): void {
@@ -710,6 +963,31 @@ function registerCommands(context: vscode.ExtensionContext): void {
         return;
       }
       runRepoCommand("project list");
+    }),
+    vscode.commands.registerCommand("semio.contributorAdd", async () => {
+      const github = await vscode.window.showInputBox({ prompt: "GitHub username" });
+      if (!github) return;
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary not found in bin/");
+        return;
+      }
+      runRepoCommand(`contributor add ${github}`);
+    }),
+    vscode.commands.registerCommand("semio.contributorList", async () => {
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary not found in bin/");
+        return;
+      }
+      runRepoCommand("contributor list");
+    }),
+    vscode.commands.registerCommand("semio.contributorRemove", async () => {
+      const github = await vscode.window.showInputBox({ prompt: "GitHub username to remove" });
+      if (!github) return;
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary not found in bin/");
+        return;
+      }
+      runRepoCommand(`contributor remove ${github}`);
     }),
     vscode.commands.registerCommand("semio.sectionTree", async () => {
       const editor = vscode.window.activeTextEditor;
@@ -963,14 +1241,14 @@ function registerCommands(context: vscode.ExtensionContext): void {
       }
       runRepoCommand("project tree");
     }),
-    vscode.commands.registerCommand("semio.policyRun", async () => {
+    vscode.commands.registerCommand("semio.policyCheck", async () => {
       if (!hasRepoAccess()) {
         vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
       const policy = await pickPolicy();
       if (!policy) return;
-      runRepoCommand(`policy run ${policy.id}`);
+      runRepoCommand(`policy check ${policy.id}`);
     }),
     vscode.commands.registerCommand("semio.toolRun", async () => {
       if (!hasRepoAccess()) {
@@ -1024,6 +1302,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
   vscode.workspace.textDocuments.forEach(loadDiagnosticsFromCache);
   context.subscriptions.push(vscode.languages.registerCodeActionsProvider("*", new SemioRepoCodeActionProvider(), { providedCodeActionKinds: [vscode.CodeActionKind.QuickFix] }));
+  registerSidebarViews(context);
   registerCommands(context);
 }
 

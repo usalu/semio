@@ -48,7 +48,7 @@ The repo CLI had multiple output modes (--json, plain text), dry-run support, an
 - Added `pickPolicy()` - interactive QuickPick for policy selection
 - Added `semio.ticketOpen` command to open ticket file in editor
 - Updated ticket commands to use picker instead of manual date/slug input
-- Updated policy run command to use picker
+- Updated policy check command to use picker
 
 ## js/vscode/extension.test.ts
 

@@ -25,6 +25,35 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "semio-repo",
+          "title": "semio-repo",
+          "icon": "$(tools)"
+        }
+      ]
+    },
+    "views": {
+      "semio-repo": [
+        {
+          "id": "semio.tickets",
+          "name": "Tickets"
+        },
+        {
+          "id": "semio.contributors",
+          "name": "Contributors"
+        },
+        {
+          "id": "semio.policies",
+          "name": "Policies"
+        },
+        {
+          "id": "semio.commands",
+          "name": "Commands"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "semio.analyze",
@@ -47,8 +76,8 @@
         "title": "semio: List Policies"
       },
       {
-        "command": "semio.policyRun",
-        "title": "semio: Run Policy"
+        "command": "semio.policyCheck",
+        "title": "semio: Check Policy"
       },
       {
         "command": "semio.ticketCreate",
@@ -81,6 +110,18 @@
       {
         "command": "semio.projectTree",
         "title": "semio: Show Project Tree"
+      },
+      {
+        "command": "semio.contributorAdd",
+        "title": "semio: Add Contributor"
+      },
+      {
+        "command": "semio.contributorList",
+        "title": "semio: List Contributors"
+      },
+      {
+        "command": "semio.contributorRemove",
+        "title": "semio: Remove Contributor"
       },
       {
         "command": "semio.folderTree",
@@ -157,8 +198,81 @@
       {
         "command": "semio.refreshDiagnostics",
         "title": "semio: Refresh Diagnostics"
+      },
+      {
+        "command": "semio.refreshTickets",
+        "title": "Refresh Tickets",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "semio.refreshPolicies",
+        "title": "Refresh Policies",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "semio.refreshContributors",
+        "title": "Refresh Contributors",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "semio.toggleTicketFilter",
+        "title": "Toggle Ticket Filter",
+        "icon": "$(filter)"
+      },
+      {
+        "command": "semio.openTicket",
+        "title": "Open Ticket"
+      },
+      {
+        "command": "semio.checkPolicy",
+        "title": "Check Policy"
+      },
+      {
+        "command": "semio.runCommand",
+        "title": "Run Command"
       }
-    ]
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "semio.refreshTickets",
+          "when": "view == semio.tickets",
+          "group": "navigation"
+        },
+        {
+          "command": "semio.toggleTicketFilter",
+          "when": "view == semio.tickets",
+          "group": "navigation"
+        },
+        {
+          "command": "semio.refreshPolicies",
+          "when": "view == semio.policies",
+          "group": "navigation"
+        },
+        {
+          "command": "semio.refreshContributors",
+          "when": "view == semio.contributors",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "semio.openTicket",
+          "when": "view == semio.tickets && viewItem == ticket",
+          "group": "inline"
+        },
+        {
+          "command": "semio.checkPolicy",
+          "when": "view == semio.policies && viewItem == policy",
+          "group": "inline"
+        },
+        {
+          "command": "semio.runCommand",
+          "when": "view == semio.commands && viewItem == command",
+          "group": "inline"
+        }
+      ]
+    }
   },
   "scripts": {
     "build": "vite build && vite build --config vite.test.config.ts",

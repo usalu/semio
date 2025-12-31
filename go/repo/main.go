@@ -259,6 +259,22 @@ type ToolResult struct {
 	Error    string        `json:"error,omitempty"`
 }
 
+type Contributor struct {
+	Github        string                   `json:"github"`
+	Name          string                   `json:"name,omitempty"`
+	Emails        []string                 `json:"emails,omitempty"`
+	Links         map[string]string        `json:"links,omitempty"`
+	Contributions ContributorContributions `json:"contributions,omitempty"`
+}
+
+type ContributorContributions struct {
+	Projects    []string `json:"projects,omitempty"`
+	Folders     []string `json:"folders,omitempty"`
+	Files       []string `json:"files,omitempty"`
+	Regions     []string `json:"regions,omitempty"`
+	Definitions []string `json:"definitions,omitempty"`
+}
+
 // #endregion
 
 // #region Utils
@@ -1612,6 +1628,137 @@ func CanCloseTicket(ticket *Ticket) (bool, []string) {
 
 // #endregion Tickets
 
+// #region Contributors
+
+func GetContributorsDir() string {
+	return filepath.Join(rootDir, "contributors")
+}
+
+func GetContributorPath(github string) string {
+	return filepath.Join(GetContributorsDir(), github)
+}
+
+func GetContributorJsonPath(github string) string {
+	return filepath.Join(GetContributorPath(github), "contributor.json")
+}
+
+func GetContributorAvatarPath(github string) string {
+	return filepath.Join(GetContributorPath(github), "avatar.png")
+}
+
+func GetContributorAvatarRoundPath(github string) string {
+	return filepath.Join(GetContributorPath(github), "avatar-round-90x90.png")
+}
+
+func ContributorExists(github string) bool {
+	return FileExists(GetContributorJsonPath(github))
+}
+
+func CreateContributor(github string) (*Contributor, error) {
+	if ContributorExists(github) {
+		return ReadContributor(github)
+	}
+	contributorDir := GetContributorPath(github)
+	if err := EnsureDir(contributorDir); err != nil {
+		return nil, err
+	}
+	if err := DownloadGitHubAvatar(github, contributorDir); err != nil {
+		return nil, err
+	}
+	contributor := &Contributor{
+		Github:        github,
+		Links:         map[string]string{"github": fmt.Sprintf("https://github.com/%s", github)},
+		Contributions: ContributorContributions{},
+	}
+	if err := SaveContributor(contributor); err != nil {
+		return nil, err
+	}
+	return contributor, nil
+}
+
+func ReadContributor(github string) (*Contributor, error) {
+	jsonPath := GetContributorJsonPath(github)
+	if !FileExists(jsonPath) {
+		return nil, fmt.Errorf("contributor not found: %s", github)
+	}
+	raw, err := ReadTextFile(jsonPath)
+	if err != nil {
+		return nil, err
+	}
+	var contributor Contributor
+	if err := json.Unmarshal([]byte(raw), &contributor); err != nil {
+		return nil, err
+	}
+	return &contributor, nil
+}
+
+func SaveContributor(contributor *Contributor) error {
+	jsonPath := GetContributorJsonPath(contributor.Github)
+	jsonBytes, err := json.MarshalIndent(contributor, "", "  ")
+	if err != nil {
+		return err
+	}
+	return WriteTextFile(jsonPath, string(jsonBytes))
+}
+
+func ListContributors() ([]Contributor, error) {
+	dir := GetContributorsDir()
+	if !FileExists(dir) {
+		return nil, nil
+	}
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+	var contributors []Contributor
+	for _, e := range entries {
+		if e.IsDir() {
+			contributor, err := ReadContributor(e.Name())
+			if err == nil {
+				contributors = append(contributors, *contributor)
+			}
+		}
+	}
+	return contributors, nil
+}
+
+func RemoveContributor(github string) error {
+	path := GetContributorPath(github)
+	if !FileExists(path) {
+		return fmt.Errorf("contributor not found: %s", github)
+	}
+	return os.RemoveAll(path)
+}
+
+func DownloadGitHubAvatar(github, targetDir string) error {
+	avatarUrl := fmt.Sprintf("https://github.com/%s.png", github)
+	avatarPath := filepath.Join(targetDir, "avatar.png")
+	stdout, _, exitCode := ExecCommand("curl", []string{"-s", "-L", "-o", avatarPath, avatarUrl}, "")
+	if exitCode != 0 {
+		return fmt.Errorf("failed to download avatar: %s", stdout)
+	}
+	return nil
+}
+
+func AddContributorProject(github string, project string) error {
+	contributor, err := ReadContributor(github)
+	if err != nil {
+		contributor, err = CreateContributor(github)
+		if err != nil {
+			return err
+		}
+	}
+	for _, p := range contributor.Contributions.Projects {
+		if p == project {
+			return nil
+		}
+	}
+	contributor.Contributions.Projects = append(contributor.Contributions.Projects, project)
+	return SaveContributor(contributor)
+}
+
+// #endregion Contributors
+
 // #region Nx
 
 var (
@@ -1764,6 +1911,7 @@ func init() {
 	rootCmd.AddCommand(fixCmd)
 	rootCmd.AddCommand(policyCmd)
 	rootCmd.AddCommand(ticketCmd)
+	rootCmd.AddCommand(contributorCmd)
 	rootCmd.AddCommand(projectCmd)
 	rootCmd.AddCommand(folderCmd)
 	rootCmd.AddCommand(fileCmd)
@@ -1812,23 +1960,23 @@ var policyListCmd = &cobra.Command{
 	},
 }
 
-var policyRunCmd = &cobra.Command{
-	Use:   "run <id> [scope]",
-	Short: "Run a specific policy",
+var policyCheckCmd = &cobra.Command{
+	Use:   "check <id> [scope]",
+	Short: "Check a specific policy",
 	Args:  cobra.RangeArgs(1, 2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		scope := "@semio"
 		if len(args) > 1 {
 			scope = args[1]
 		}
-		result := ToolPolicyRun(args[0], scope)
+		result := ToolPolicyCheck(args[0], scope)
 		return outputResult(result)
 	},
 }
 
 func init() {
 	policyCmd.AddCommand(policyListCmd)
-	policyCmd.AddCommand(policyRunCmd)
+	policyCmd.AddCommand(policyCheckCmd)
 }
 
 var ticketCmd = &cobra.Command{
@@ -1941,6 +2089,46 @@ func init() {
 	ticketCmd.AddCommand(ticketReadCmd)
 	ticketCmd.AddCommand(ticketIterateCmd)
 	ticketCmd.AddCommand(ticketFinishCmd)
+}
+
+var contributorCmd = &cobra.Command{
+	Use:   "contributor",
+	Short: "Contributor management commands",
+}
+
+var contributorAddCmd = &cobra.Command{
+	Use:   "add <github>",
+	Short: "Add a contributor",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		result := ToolContributorAdd(args[0])
+		return outputResult(result)
+	},
+}
+
+var contributorListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List contributors",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		result := ToolContributorList()
+		return outputResult(result)
+	},
+}
+
+var contributorRemoveCmd = &cobra.Command{
+	Use:   "remove <github>",
+	Short: "Remove a contributor",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		result := ToolContributorRemove(args[0])
+		return outputResult(result)
+	},
+}
+
+func init() {
+	contributorCmd.AddCommand(contributorAddCmd)
+	contributorCmd.AddCommand(contributorListCmd)
+	contributorCmd.AddCommand(contributorRemoveCmd)
 }
 
 var projectCmd = &cobra.Command{
@@ -2376,7 +2564,7 @@ func ToolPolicyList() ToolResult {
 	return ToolResult{Output: *output, Data: policies}
 }
 
-func ToolPolicyRun(policyID, scopeRaw string) ToolResult {
+func ToolPolicyCheck(policyID, scopeRaw string) ToolResult {
 	output := NewOutput()
 	if scopeRaw == "" {
 		scopeRaw = "@semio"
@@ -2496,6 +2684,50 @@ func ToolTicketFinish(year, month, day int, slug string) ToolResult {
 	}
 	output.Success(fmt.Sprintf("\n✅ Ticket finished: %s", ticket.Slug))
 	return ToolResult{Output: *output, Data: ticket}
+}
+
+func ToolContributorAdd(github string) ToolResult {
+	output := NewOutput()
+	contributor, err := CreateContributor(github)
+	if err != nil {
+		output.Error(fmt.Sprintf("Error: %v", err))
+		return ToolResult{Output: *output, Error: err.Error()}
+	}
+	output.Success(fmt.Sprintf("\n👤 Added contributor: %s", contributor.Github))
+	output.Info(fmt.Sprintf("   Path: %s", GetContributorPath(github)))
+	return ToolResult{Output: *output, Data: contributor}
+}
+
+func ToolContributorList() ToolResult {
+	output := NewOutput()
+	contributors, err := ListContributors()
+	if err != nil {
+		output.Error(fmt.Sprintf("Error: %v", err))
+		return ToolResult{Output: *output, Error: err.Error()}
+	}
+	output.Info(fmt.Sprintf("\n👥 Found %d contributors:\n", len(contributors)))
+	for _, c := range contributors {
+		name := c.Name
+		if name == "" {
+			name = c.Github
+		}
+		output.Plain(fmt.Sprintf("   %s (@%s)", name, c.Github))
+		projectCount := len(c.Contributions.Projects)
+		if projectCount > 0 {
+			output.Plain(fmt.Sprintf("      Projects: %d", projectCount))
+		}
+	}
+	return ToolResult{Output: *output, Data: contributors}
+}
+
+func ToolContributorRemove(github string) ToolResult {
+	output := NewOutput()
+	if err := RemoveContributor(github); err != nil {
+		output.Error(fmt.Sprintf("Error: %v", err))
+		return ToolResult{Output: *output, Error: err.Error()}
+	}
+	output.Success(fmt.Sprintf("\n🗑️ Removed contributor: %s", github))
+	return ToolResult{Output: *output}
 }
 
 func ToolProjectList() ToolResult {
