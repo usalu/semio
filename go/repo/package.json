@@ -1,0 +1,16 @@
+{
+  "name": "@semio/repo",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "go/repo",
+  "projectType": "application",
+  "scripts": {
+    "build": "go build -o ../../bin/repo.exe .",
+    "test": "go test -v ./...",
+    "preflight": "go vet ./..."
+  },
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.com",
+    "url": "https://github.com/usalu"
+  }
+}

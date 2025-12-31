@@ -1,0 +1,15 @@
+{
+  "name": "@semio/mcp",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "go/mcp",
+  "projectType": "application",
+  "scripts": {
+    "build": "go build -o ../../bin/mcp.exe .",
+    "preflight": "go vet ./..."
+  },
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.com",
+    "url": "https://github.com/usalu"
+  }
+}

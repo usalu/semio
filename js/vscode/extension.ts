@@ -35,8 +35,11 @@ const execAsync = promisify(exec);
 
 // #region Constants
 
+const runningProcesses = new Map<string, AbortController>();
+
 const SEMIO_KIT_LANGUAGE = "json";
 const DIAGNOSTIC_SOURCE = "semio";
+const CACHE_DIR = ".semio-repo/cache/analyze";
 
 // #endregion Constants
 
@@ -68,6 +71,13 @@ interface Violation {
   autofix?: AutoFix;
 }
 
+interface FileCache {
+  filePath: string;
+  hash: string;
+  timestamp: string;
+  violations: Violation[];
+}
+
 interface AnalyzeReport {
   timestamp: string;
   status: string;
@@ -93,39 +103,47 @@ function getRepoBinaryPath(): string | undefined {
   if (!root) return undefined;
   const isWindows = process.platform === "win32";
   const binaryName = isWindows ? "repo.exe" : "repo";
-  const binaryPath = path.join(root, "go", "repo", binaryName);
+  const binaryPath = path.join(root, "bin", binaryName);
+  console.log("getRepoBinaryPath:", binaryPath, "exists:", fs.existsSync(binaryPath));
   if (fs.existsSync(binaryPath)) return binaryPath;
-  const builtPath = path.join(root, "go", "bin", binaryName);
-  if (fs.existsSync(builtPath)) return builtPath;
   return undefined;
 }
 
-function getRepoCommand(): { command: string; useGo: boolean } {
+function getRepoCommand(): string {
   const binaryPath = getRepoBinaryPath();
-  if (binaryPath) {
-    return { command: binaryPath, useGo: true };
-  }
-  const root = getWorkspaceRoot();
-  if (root && fs.existsSync(path.join(root, "repo.tsx"))) {
-    return { command: "npx tsx repo.tsx", useGo: false };
-  }
-  return { command: "", useGo: false };
-}
-
-function getRepoTsxPath(): string | undefined {
-  const root = getWorkspaceRoot();
-  if (!root) return undefined;
-  const repoPath = path.join(root, "repo.tsx");
-  return fs.existsSync(repoPath) ? repoPath : undefined;
+  return binaryPath ?? "";
 }
 
 function hasRepoAccess(): boolean {
-  const { command } = getRepoCommand();
-  return command !== "";
+  return getRepoCommand() !== "";
+}
+
+function hashString(s: string): string {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) {
+    h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  }
+  return h.toString(16).padStart(8, "0");
+}
+
+function getFileCachePath(root: string, relativePath: string): string {
+  const hash = hashString(relativePath);
+  return path.join(root, CACHE_DIR, `${hash}.json`);
+}
+
+function readFileCache(root: string, relativePath: string): FileCache | null {
+  const cachePath = getFileCachePath(root, relativePath);
+  if (!fs.existsSync(cachePath)) return null;
+  try {
+    const content = fs.readFileSync(cachePath, "utf-8");
+    return JSON.parse(content) as FileCache;
+  } catch {
+    return null;
+  }
 }
 
 function runRepoCommand(args: string): void {
-  const { command } = getRepoCommand();
+  const command = getRepoCommand();
   if (!command) return;
   const terminal = vscode.window.createTerminal("semio");
   terminal.show();
@@ -134,13 +152,23 @@ function runRepoCommand(args: string): void {
 
 async function runRepoCommandJson<T>(args: string): Promise<T | null> {
   const root = getWorkspaceRoot();
-  if (!root) return null;
-  const { command } = getRepoCommand();
-  if (!command) return null;
+  if (!root) {
+    console.error("runRepoCommandJson: no workspace root");
+    return null;
+  }
+  const command = getRepoCommand();
+  if (!command) {
+    console.error("runRepoCommandJson: no repo command found");
+    return null;
+  }
+  const fullCommand = `"${command}" ${args}`;
+  console.log("runRepoCommandJson:", fullCommand, "cwd:", root);
   try {
-    const { stdout } = await execAsync(`${command} ${args}`, { cwd: root, timeout: 30000 });
+    const { stdout } = await execAsync(fullCommand, { cwd: root, timeout: 60000 });
+    console.log("runRepoCommandJson stdout length:", stdout.length);
     return JSON.parse(stdout) as T;
-  } catch {
+  } catch (error) {
+    console.error("runRepoCommandJson error:", error);
     return null;
   }
 }
@@ -166,13 +194,26 @@ interface PolicyData {
   description: string;
 }
 
-async function pickTicket(): Promise<TicketData | undefined> {
+async function pickTicket(statusFilter?: "open" | "closed"): Promise<TicketData | undefined> {
   const result = await runRepoCommandJson<ToolResult<TicketData[]>>("ticket list");
-  if (!result?.data || result.data.length === 0) {
+  console.log("pickTicket result:", result ? `data length: ${result.data?.length}` : "null");
+  if (!result) {
+    vscode.window.showWarningMessage("Failed to run ticket list command");
+    return undefined;
+  }
+  if (!result.data || result.data.length === 0) {
     vscode.window.showWarningMessage("No tickets found");
     return undefined;
   }
-  const items = result.data.map((t) => ({
+  let tickets = result.data;
+  if (statusFilter) {
+    tickets = tickets.filter((t) => t.frontmatter.status === statusFilter);
+    if (tickets.length === 0) {
+      vscode.window.showWarningMessage(`No ${statusFilter} tickets found`);
+      return undefined;
+    }
+  }
+  const items = tickets.map((t) => ({
     label: `${t.year}/${String(t.month).padStart(2, "0")}/${String(t.day).padStart(2, "0")}/${t.slug}`,
     description: t.frontmatter.status === "closed" ? "✅" : "🟢",
     detail: t.frontmatter.summary || t.frontmatter.prompt,
@@ -206,14 +247,14 @@ let repoDiagnosticCollection: vscode.DiagnosticCollection;
 const fileViolationsMap = new Map<string, Violation[]>();
 
 function extractFilePathFromScope(scope: string): string | undefined {
-  if (scope.endsWith(".ts") || scope.endsWith(".tsx") || scope.endsWith(".js") || scope.endsWith(".json") || scope.endsWith(".py") || scope.endsWith(".cs")) {
+  if (scope.endsWith(".ts") || scope.endsWith(".tsx") || scope.endsWith(".js") || scope.endsWith(".json") || scope.endsWith(".py") || scope.endsWith(".cs") || scope.endsWith(".go")) {
     return scope.split("#")[0].split("§")[0];
   }
   return undefined;
 }
 
 function shouldAnalyzeFile(document: vscode.TextDocument): boolean {
-  const supportedLanguages = ["typescript", "javascript", "typescriptreact", "javascriptreact", "json", "python", "csharp"];
+  const supportedLanguages = ["typescript", "javascript", "typescriptreact", "javascriptreact", "json", "python", "csharp", "go"];
   return supportedLanguages.includes(document.languageId);
 }
 
@@ -222,43 +263,37 @@ async function analyzeFile(document: vscode.TextDocument): Promise<void> {
   const root = getWorkspaceRoot();
   if (!root) return;
   if (!hasRepoAccess()) return;
-  const { command, useGo } = getRepoCommand();
-  const relativePath = vscode.workspace.asRelativePath(document.uri);
-  try {
-    const cmd = useGo ? `${command} analyze --scope=${relativePath} --json` : `${command} analyze --scope=${relativePath} --json`;
-    const { stdout } = await execAsync(cmd, { cwd: root, timeout: 30000 });
-    const parsed = JSON.parse(stdout);
-    const report: AnalyzeReport = useGo ? parsed.output ? { ...parsed, violations: parsed.data?.violations || [] } : parsed : parsed;
-    fileViolationsMap.set(document.uri.toString(), report.violations || []);
-    updateFileDiagnostics(document, report.violations || []);
-  } catch (error) {
-    if (error instanceof Error && "stdout" in error) {
-      try {
-        const stdout = (error as { stdout: string }).stdout;
-        const parsed = JSON.parse(stdout);
-        const report: AnalyzeReport = parsed.data || parsed;
-        fileViolationsMap.set(document.uri.toString(), report.violations || []);
-        updateFileDiagnostics(document, report.violations || []);
-      } catch {
-        console.error("Failed to parse analyze output:", error);
-      }
-    } else {
-      console.error("Failed to run analyze:", error);
-    }
+  const command = getRepoCommand();
+  const relativePath = vscode.workspace.asRelativePath(document.uri).replace(/\\/g, "/");
+  const processKey = document.uri.toString();
+  const existingController = runningProcesses.get(processKey);
+  if (existingController) {
+    existingController.abort();
+    runningProcesses.delete(processKey);
   }
+  const controller = new AbortController();
+  runningProcesses.set(processKey, controller);
+  try {
+    await execAsync(`${command} analyze ${relativePath}`, { cwd: root, timeout: 30000, signal: controller.signal });
+  } catch {
+  } finally {
+    runningProcesses.delete(processKey);
+  }
+  const cache = readFileCache(root, relativePath);
+  const violations = cache?.violations || [];
+  fileViolationsMap.set(document.uri.toString(), violations);
+  updateFileDiagnostics(document, violations);
 }
 
-function getPolicyLineNumber(root: string, kind: string): number | undefined {
-  const repoPath = path.join(root, "repo.tsx");
-  if (!fs.existsSync(repoPath)) return undefined;
-  const policyPrefix = kind.split(":")[0];
-  const policyName = policyPrefix.charAt(0).toUpperCase() + policyPrefix.slice(1);
-  const content = fs.readFileSync(repoPath, "utf-8");
-  const lines = content.split("\n");
-  for (let i = 0; i < lines.length; i++) {
-    if (lines[i].includes(`#region ${policyName} Policy`)) return i + 1;
-  }
-  return undefined;
+function loadDiagnosticsFromCache(document: vscode.TextDocument): void {
+  if (!shouldAnalyzeFile(document)) return;
+  const root = getWorkspaceRoot();
+  if (!root) return;
+  const relativePath = vscode.workspace.asRelativePath(document.uri).replace(/\\/g, "/");
+  const cache = readFileCache(root, relativePath);
+  const violations = cache?.violations || [];
+  fileViolationsMap.set(document.uri.toString(), violations);
+  updateFileDiagnostics(document, violations);
 }
 
 function updateFileDiagnostics(document: vscode.TextDocument, violations: Violation[]): void {
@@ -278,13 +313,7 @@ function updateFileDiagnostics(document: vscode.TextDocument, violations: Violat
     const [policyId, violationName] = violation.kind.split(":");
     const diagnostic = new vscode.Diagnostic(range, violationName || violation.kind, severity);
     diagnostic.source = DIAGNOSTIC_SOURCE;
-    const policyLine = getPolicyLineNumber(root, violation.kind);
-    if (policyLine) {
-      const repoUri = vscode.Uri.file(path.join(root, "repo.tsx")).with({ fragment: `L${policyLine}` });
-      diagnostic.code = { value: policyId, target: repoUri };
-    } else {
-      diagnostic.code = policyId;
-    }
+    diagnostic.code = policyId;
     diagnostics.push(diagnostic);
   }
   repoDiagnosticCollection.set(document.uri, diagnostics);
@@ -325,10 +354,10 @@ async function fixViolation(relativePath: string): Promise<void> {
   const root = getWorkspaceRoot();
   if (!root) return;
   if (!hasRepoAccess()) {
-    vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
+    vscode.window.showErrorMessage("repo binary not found in bin/");
     return;
   }
-  const { command } = getRepoCommand();
+  const command = getRepoCommand();
   try {
     await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: "Fixing violation..." }, async () => {
       const { stdout, stderr } = await execAsync(`${command} fix ${relativePath}`, { cwd: root, timeout: 30000 });
@@ -553,7 +582,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand("semio.fixViolation", fixViolation),
     vscode.commands.registerCommand("semio.analyze", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
+        vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
       runRepoCommand("analyze @semio");
@@ -566,7 +595,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
         return;
       }
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
+        vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
       const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
@@ -574,7 +603,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.fix", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
+        vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
       runRepoCommand("fix @semio");
@@ -587,7 +616,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
         return;
       }
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
+        vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
       const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
@@ -595,14 +624,14 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.policyList", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
+        vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
       runRepoCommand("policy list");
     }),
     vscode.commands.registerCommand("semio.ticketCreate", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
+        vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
       const slug = await vscode.window.showInputBox({
@@ -619,14 +648,14 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.ticketList", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
+        vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
       runRepoCommand("ticket list");
     }),
     vscode.commands.registerCommand("semio.ticketIterateStart", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
+        vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
       const ticket = await pickTicket();
@@ -637,7 +666,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.ticketIterateEnd", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
+        vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
       const ticket = await pickTicket();
@@ -646,16 +675,16 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.ticketFinish", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
+        vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
-      const ticket = await pickTicket();
+      const ticket = await pickTicket("open");
       if (!ticket) return;
       runRepoCommand(`ticket finish ${ticket.year} ${ticket.month} ${ticket.day} ${ticket.slug}`);
     }),
     vscode.commands.registerCommand("semio.ticketRead", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
+        vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
       const ticket = await pickTicket();
@@ -664,7 +693,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.ticketOpen", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
+        vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
       const ticket = await pickTicket();
@@ -677,7 +706,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.projectList", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
+        vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
       runRepoCommand("project list");
@@ -689,7 +718,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
         return;
       }
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
+        vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
       const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
@@ -702,7 +731,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
         return;
       }
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
+        vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
       const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
@@ -710,7 +739,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.folderTree", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
+        vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
       const folderPath = await vscode.window.showInputBox({
@@ -723,7 +752,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.folderCreate", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
+        vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
       const folderPath = await vscode.window.showInputBox({
@@ -735,7 +764,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.folderMove", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
+        vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
       const sourcePath = await vscode.window.showInputBox({
@@ -752,7 +781,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.folderDelete", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
+        vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
       const folderPath = await vscode.window.showInputBox({
@@ -764,7 +793,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.folderList", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
+        vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
       const folderPath = await vscode.window.showInputBox({
@@ -777,7 +806,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.fileCreate", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
+        vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
       const filePath = await vscode.window.showInputBox({
@@ -789,7 +818,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.fileMove", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
+        vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
       const sourcePath = await vscode.window.showInputBox({
@@ -806,7 +835,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.fileDelete", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
+        vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
       const filePath = await vscode.window.showInputBox({
@@ -818,7 +847,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.fileList", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
+        vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
       const folderPath = await vscode.window.showInputBox({
@@ -831,7 +860,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.fileTree", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
+        vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
       const folderPath = await vscode.window.showInputBox({
@@ -849,7 +878,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
         return;
       }
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
+        vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
       const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
@@ -867,7 +896,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
         return;
       }
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
+        vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
       const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
@@ -890,7 +919,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
         return;
       }
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
+        vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
       const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
@@ -908,7 +937,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
         return;
       }
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
+        vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
       const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
@@ -921,7 +950,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
         return;
       }
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
+        vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
       const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
@@ -929,14 +958,14 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.projectTree", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
+        vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
       runRepoCommand("project tree");
     }),
     vscode.commands.registerCommand("semio.policyRun", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
+        vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
       const policy = await pickPolicy();
@@ -945,7 +974,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.toolRun", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary or repo.tsx not found in workspace");
+        vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
       const toolName = await vscode.window.showInputBox({
@@ -980,18 +1009,29 @@ export function activate(context: vscode.ExtensionContext) {
   vscode.workspace.textDocuments.forEach(validateKitDocument);
   context.subscriptions.push(vscode.languages.registerCodeActionsProvider({ language: SEMIO_KIT_LANGUAGE }, new SemioKitCodeActionProvider(), { providedCodeActionKinds: [vscode.CodeActionKind.QuickFix] }));
   context.subscriptions.push(
-    vscode.workspace.onDidOpenTextDocument(analyzeFile),
+    vscode.workspace.onDidOpenTextDocument(loadDiagnosticsFromCache),
     vscode.workspace.onDidSaveTextDocument(analyzeFile),
     vscode.workspace.onDidCloseTextDocument((doc) => {
-      fileViolationsMap.delete(doc.uri.toString());
+      const processKey = doc.uri.toString();
+      const controller = runningProcesses.get(processKey);
+      if (controller) {
+        controller.abort();
+        runningProcesses.delete(processKey);
+      }
+      fileViolationsMap.delete(processKey);
       repoDiagnosticCollection.delete(doc.uri);
     }),
   );
-  vscode.workspace.textDocuments.forEach(analyzeFile);
+  vscode.workspace.textDocuments.forEach(loadDiagnosticsFromCache);
   context.subscriptions.push(vscode.languages.registerCodeActionsProvider("*", new SemioRepoCodeActionProvider(), { providedCodeActionKinds: [vscode.CodeActionKind.QuickFix] }));
   registerCommands(context);
 }
 
-export function deactivate() { }
+export function deactivate() {
+  for (const controller of runningProcesses.values()) {
+    controller.abort();
+  }
+  runningProcesses.clear();
+}
 
 // #endregion Activation

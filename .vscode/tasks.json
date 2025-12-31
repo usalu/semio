@@ -920,6 +920,211 @@
       "problemMatcher": []
     },
     {
+      "label": "analyze go",
+      "type": "shell",
+      "command": "npm run analyze -- --nx --projects=@semio/go,@semio/repo,@semio/mcp",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "analyze go semio",
+      "type": "shell",
+      "command": "npm run analyze -- --nx --projects=@semio/go",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "analyze go repo",
+      "type": "shell",
+      "command": "npm run analyze -- --nx --projects=@semio/repo",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "analyze go mcp",
+      "type": "shell",
+      "command": "npm run analyze -- --nx --projects=@semio/mcp",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "fix go",
+      "type": "shell",
+      "command": "npm run fix -- --nx --projects=@semio/go,@semio/repo,@semio/mcp",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "fix go semio",
+      "type": "shell",
+      "command": "npm run fix -- --nx --projects=@semio/go",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "fix go repo",
+      "type": "shell",
+      "command": "npm run fix -- --nx --projects=@semio/repo",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "fix go mcp",
+      "type": "shell",
+      "command": "npm run fix -- --nx --projects=@semio/mcp",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "preflight go",
+      "type": "shell",
+      "command": "npm run preflight -- --nx --projects=@semio/go,@semio/repo,@semio/mcp",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "preflight go semio",
+      "type": "shell",
+      "command": "npm run preflight -- --nx --projects=@semio/go",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "preflight go repo",
+      "type": "shell",
+      "command": "npm run preflight -- --nx --projects=@semio/repo",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "preflight go mcp",
+      "type": "shell",
+      "command": "npm run preflight -- --nx --projects=@semio/mcp",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "test go",
+      "type": "shell",
+      "command": "npm run test -- --nx --projects=@semio/go,@semio/repo",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "test go semio",
+      "type": "shell",
+      "command": "npm run test -- --nx --projects=@semio/go",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "test go repo",
+      "type": "shell",
+      "command": "npm run test -- --nx --projects=@semio/repo",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "build go",
+      "type": "shell",
+      "command": "npm run build -- --nx --projects=@semio/go,@semio/repo,@semio/mcp",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "build go semio",
+      "type": "shell",
+      "command": "npm run build -- --nx --projects=@semio/go",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "build go repo",
+      "type": "shell",
+      "command": "npm run build -- --nx --projects=@semio/repo",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "build go mcp",
+      "type": "shell",
+      "command": "npm run build -- --nx --projects=@semio/mcp",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "publish:test go",
+      "type": "shell",
+      "command": "npm run publish:test -- --nx --projects=@semio/go,@semio/repo,@semio/mcp",
+      "problemMatcher": []
+    },
+    {
+      "label": "publish:test go semio",
+      "type": "shell",
+      "command": "npm run publish:test -- --nx --projects=@semio/go",
+      "problemMatcher": []
+    },
+    {
+      "label": "publish:test go repo",
+      "type": "shell",
+      "command": "npm run publish:test -- --nx --projects=@semio/repo",
+      "problemMatcher": []
+    },
+    {
+      "label": "publish:test go mcp",
+      "type": "shell",
+      "command": "npm run publish:test -- --nx --projects=@semio/mcp",
+      "problemMatcher": []
+    },
+    {
+      "label": "publish go",
+      "type": "shell",
+      "command": "npm run publish -- --nx --projects=@semio/go,@semio/repo,@semio/mcp",
+      "problemMatcher": []
+    },
+    {
+      "label": "publish go semio",
+      "type": "shell",
+      "command": "npm run publish -- --nx --projects=@semio/go",
+      "problemMatcher": []
+    },
+    {
+      "label": "publish go repo",
+      "type": "shell",
+      "command": "npm run publish -- --nx --projects=@semio/repo",
+      "problemMatcher": []
+    },
+    {
+      "label": "publish go mcp",
+      "type": "shell",
+      "command": "npm run publish -- --nx --projects=@semio/mcp",
+      "problemMatcher": []
+    },
+    {
+      "label": "update go",
+      "type": "shell",
+      "command": "npm run update -- --projects=@semio/go,@semio/repo,@semio/mcp",
+      "problemMatcher": []
+    },
+    {
+      "label": "update go semio",
+      "type": "shell",
+      "command": "npm run update -- --projects=@semio/go",
+      "problemMatcher": []
+    },
+    {
+      "label": "update go repo",
+      "type": "shell",
+      "command": "npm run update -- --projects=@semio/repo",
+      "problemMatcher": []
+    },
+    {
+      "label": "update go mcp",
+      "type": "shell",
+      "command": "npm run update -- --projects=@semio/mcp",
+      "problemMatcher": []
+    },
+    {
       "label": "kill dev",
       "type": "shell",
       "windows": {

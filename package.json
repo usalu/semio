@@ -15,6 +15,9 @@
     "js/vscode",
     "net/Semio",
     "net/Semio.Grasshopper",
+    "go/semio",
+    "go/repo",
+    "go/mcp",
     "yak"
   ],
   "engines": {

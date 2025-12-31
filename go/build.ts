@@ -1,0 +1,47 @@
+#!/usr/bin/env tsx
+// #region Header
+
+// go/build.ts
+
+// 2025 Ueli Saluz <ueli@semio-tech.com>
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// #endregion Header
+
+import { execSync } from "child_process";
+import { existsSync, mkdirSync } from "fs";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const binDir = join(__dirname, "..", "bin");
+const goDir = __dirname;
+
+if (!existsSync(binDir)) {
+  mkdirSync(binDir, { recursive: true });
+}
+
+const modules = ["mcp", "repo"];
+
+for (const mod of modules) {
+  console.log(`🔨 Building ${mod}...`);
+  execSync(`go build -o ${join(binDir, `${mod}.exe`)} .`, {
+    cwd: join(goDir, mod),
+    stdio: "inherit",
+  });
+}
+
+console.log("✅ Go build complete");

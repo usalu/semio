@@ -1,5 +1,18 @@
 # Prompt history
 
+add the go modules to the nx workspace and migrate makefile to build.tsx. add all vscode launch and tasks.
+
+The violations shouldnt be registered at runtime but a fixed array at compile time.
+
+The vscode commands should not ask for the same input such as year, month, day, slug for identifying a ticket, the user should just select the ticket from the ticket list.
+
+Remove all json modes from all tools. Instead use a new analyze mechanism. Use the .semio-repo folder for caching the results. Make sure that analyzing individual scopes doesnt is possible and not blocked by single file read/write. The vscode extension should update on file save of open files and when opening a file the analyze command should be run.
+
+All tests should be identical (validation, import/export, flatten). Extend the go test. Then finish the go library to comply the tests. Add libraries (like gonum) to implement thissing features. Do whatever is necessary. Use semio.ts as the single source of truth. 
+@semio_test.go@semio.go @semio.ts@semio.test.ts @Tests.cs 
+
+The repo.tsx should be completly independant of the old script. Everything should be rewritten with go. Use semio.ts as blueprint for semio/main.go
+
 The engine should be a running graphql server, rest endpoint and mcp server (use the official python mcp sdk). Get it running and test that it works. semio.ts is the single source of truth for the engine. All CRUD operations from semio.ts should be exposed as tools in the mcp server.
 
 The repo script should be refactored. The architecture should be simplified.

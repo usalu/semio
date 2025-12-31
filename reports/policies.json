@@ -1,40 +1,38 @@
 {
-  "timestamp": "2025-12-30T16:10:07.926Z",
+  "timestamp": "2025-12-31T01:01:21Z",
   "status": "error",
-  "scope": "py/engine/engine.py",
+  "scope": "assets/repo/some/folder/file_invalid.tsx",
   "summary": {
-    "total": 2,
+    "total": 1,
     "byPriority": {
-      "high": 0,
-      "medium": 0,
-      "low": 2
+      "low": 1
     },
     "byKind": {
-      "section:empty": 2
+      "header:missing-section": 1
     }
   },
   "violations": [
     {
-      "summary": "Empty section \"Header\" in py/engine/engine.py",
-      "kind": "section:empty",
-      "solution": "Remove the empty section or add content to it",
-      "reason": "Empty sections add noise without providing value",
-      "scope": "py/engine/engine.py#Header",
-      "line": 1,
-      "id": "section:empty-1767111007924-ybk08j",
+      "id": "header:missing-section-1767142881778826300-7ft4lv",
+      "summary": "Missing header section in assets/repo/some/folder/file_invalid.tsx",
+      "kind": "header:missing-section",
       "priority": "low",
-      "autofixable": false
-    },
-    {
-      "summary": "Empty section \"TODOs\" in py/engine/engine.py",
-      "kind": "section:empty",
-      "solution": "Remove the empty section or add content to it",
-      "reason": "Empty sections add noise without providing value",
-      "scope": "py/engine/engine.py#TODOs",
-      "line": 21,
-      "id": "section:empty-1767111007924-okyx0b",
-      "priority": "low",
-      "autofixable": false
+      "autofixable": true,
+      "solution": "Add a #region Header with filename, contributors, and appropriate license",
+      "reason": "Every source file must include a header section",
+      "scope": "assets/repo/some/folder/file_invalid.tsx",
+      "autofix": {
+        "description": "Add header section",
+        "edits": {
+          "assets/repo/some/folder/file_invalid.tsx": [
+            {
+              "start": 0,
+              "end": 0,
+              "newText": "// #region Header\n\n// assets/repo/some/folder/file_invalid.tsx\n\n// 2025 Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e\n\n// This program is free software: you can redistribute it and/or modify\n// it under the terms of the GNU Affero General Public License as\n// published by the Free Software Foundation, either version 3 of the\n// License, or (at your option) any later version.\n//\n// This program is distributed in the hope that it will be useful,\n// but WITHOUT ANY WARRANTY; without even the implied warranty of\n// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n// GNU Affero General Public License for more details.\n//\n// You should have received a copy of the GNU Affero General Public License\n// along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n\n// #endregion Header\n\n"
+            }
+          ]
+        }
+      }
     }
   ]
 }

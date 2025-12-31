@@ -226,6 +226,13 @@ type Summary struct {
 	ByKind     map[string]int `json:"byKind"`
 }
 
+type FileCache struct {
+	FilePath   string      `json:"filePath"`
+	Hash       string      `json:"hash"`
+	Timestamp  string      `json:"timestamp"`
+	Violations []Violation `json:"violations"`
+}
+
 type OutputType string
 
 const (
@@ -252,7 +259,7 @@ type ToolResult struct {
 	Error    string        `json:"error,omitempty"`
 }
 
-// #endregion Types
+// #endregion
 
 // #region Utils
 
@@ -289,6 +296,65 @@ func GetRootDir() string {
 
 func SetRootDir(dir string) {
 	rootDir = dir
+}
+
+func GetCacheDir() string {
+	return filepath.Join(rootDir, ".semio-repo", "cache")
+}
+
+func GetFileCachePath(filePath string) string {
+	hash := hashString(filePath)
+	return filepath.Join(GetCacheDir(), "analyze", hash+".json")
+}
+
+func hashString(s string) string {
+	h := uint32(0)
+	for _, c := range s {
+		h = h*31 + uint32(c)
+	}
+	return fmt.Sprintf("%08x", h)
+}
+
+func hashFileContent(content string) string {
+	h := uint32(0)
+	for _, c := range content {
+		h = h*31 + uint32(c)
+	}
+	return fmt.Sprintf("%08x", h)
+}
+
+func ReadFileCache(filePath string) (*FileCache, error) {
+	cachePath := GetFileCachePath(filePath)
+	if !FileExists(cachePath) {
+		return nil, nil
+	}
+	var cache FileCache
+	if err := ReadJSONFile(cachePath, &cache); err != nil {
+		return nil, err
+	}
+	return &cache, nil
+}
+
+func WriteFileCache(filePath string, violations []Violation, contentHash string) error {
+	cachePath := GetFileCachePath(filePath)
+	if err := EnsureDir(filepath.Dir(cachePath)); err != nil {
+		return err
+	}
+	cache := FileCache{
+		FilePath:   filePath,
+		Hash:       contentHash,
+		Timestamp:  ISOTimestamp(),
+		Violations: violations,
+	}
+	return WriteJSONFile(cachePath, cache)
+}
+
+func IsCacheValid(filePath string, currentContentHash string) bool {
+	cache, err := ReadFileCache(filePath)
+	if err != nil || cache == nil {
+		return false
+	}
+	return cache.Hash == currentContentHash
 }
 
 func NormalizePath(p string) string {
@@ -485,6 +551,8 @@ func GetLanguageFromPath(filePath string) string {
 	switch ext {
 	case ".ts", ".tsx", ".js", ".jsx":
 		return "typescript"
+	case ".go":
+		return "go"
 	case ".py":
 		return "python"
 	case ".cs":
@@ -582,7 +650,7 @@ func ParseScope(raw string) Scope {
 		return Scope{Raw: raw, Kind: ScopeFolder, FilePath: raw}
 	}
 	ext := strings.ToLower(filepath.Ext(raw))
-	codeExtensions := map[string]bool{".ts": true, ".tsx": true, ".js": true, ".jsx": true, ".py": true, ".cs": true, ".json": true, ".md": true, ".yaml": true, ".yml": true, ".sql": true, ".graphql": true}
+	codeExtensions := map[string]bool{".ts": true, ".tsx": true, ".js": true, ".jsx": true, ".py": true, ".cs": true, ".go": true, ".json": true, ".md": true, ".yaml": true, ".yml": true, ".sql": true, ".graphql": true}
 	if codeExtensions[ext] {
 		return Scope{Raw: raw, Kind: ScopeFile, FilePath: raw}
 	}
@@ -763,18 +831,48 @@ type RegisteredPolicy struct {
 	Run  PolicyFunc
 }
 
-var registeredPolicies []RegisteredPolicy
+var policyMetas = []PolicyMeta{
+	{
+		ID:          "header",
+		Name:        "Header",
+		Description: "Validates source file header section with filename, contributors, and license",
+		Scopes:      []string{"**/*.{ts,tsx,py,cs,go}"},
+		Priority:    PriorityLow,
+	},
+	{
+		ID:          "section",
+		Name:        "Section",
+		Description: "Validates section blocks for proper naming and content",
+		Scopes:      []string{"**/*.{ts,tsx,py,cs,go}"},
+		Priority:    PriorityLow,
+	},
+	{
+		ID:          "comment",
+		Name:        "Comment",
+		Description: "Detects forbidden comments (inline, block, JSDoc) - documentation belongs in README.md and AGENTS.md",
+		Scopes:      []string{"**/*.{ts,tsx}"},
+		Priority:    PriorityLow,
+	},
+}
 
-func RegisterPolicy(meta PolicyMeta, run PolicyFunc) {
-	registeredPolicies = append(registeredPolicies, RegisteredPolicy{Meta: meta, Run: run})
+var policyFuncs = map[string]PolicyFunc{
+	"header":  headerPolicy,
+	"section": sectionPolicy,
+	"comment": commentPolicy,
+}
+
+func getRegisteredPolicies() []RegisteredPolicy {
+	var policies []RegisteredPolicy
+	for _, meta := range policyMetas {
+		if fn, ok := policyFuncs[meta.ID]; ok {
+			policies = append(policies, RegisteredPolicy{Meta: meta, Run: fn})
+		}
+	}
+	return policies
 }
 
 func GetRegisteredPolicies() []PolicyMeta {
-	var metas []PolicyMeta
-	for _, p := range registeredPolicies {
-		metas = append(metas, p.Meta)
-	}
-	return metas
+	return policyMetas
 }
 
 type PolicyContext struct {
@@ -828,9 +926,9 @@ func (ctx *PolicyContext) Sections(filePath string) []SectionInfo {
 
 func (ctx *PolicyContext) CreateViolation(summary, kind, solution, reason, scope string, line int, excerpt string, autofix *Fix) Violation {
 	priority := PriorityMedium
-	for _, p := range registeredPolicies {
-		if kind == p.Meta.ID || strings.HasPrefix(kind, p.Meta.ID+":") {
-			priority = p.Meta.Priority
+	for _, p := range policyMetas {
+		if kind == p.ID || strings.HasPrefix(kind, p.ID+":") {
+			priority = p.Priority
 			break
 		}
 	}
@@ -862,8 +960,9 @@ func RunPolicies(scope Scope, projects []NxProject, policyIDs []string) ([]Viola
 	ctx := NewPolicyContext(scope, projects)
 	var violations []Violation
 	var policiesToRun []RegisteredPolicy
+	allPolicies := getRegisteredPolicies()
 	if len(policyIDs) > 0 {
-		for _, p := range registeredPolicies {
+		for _, p := range allPolicies {
 			for _, id := range policyIDs {
 				if p.Meta.ID == id {
 					policiesToRun = append(policiesToRun, p)
@@ -872,7 +971,7 @@ func RunPolicies(scope Scope, projects []NxProject, policyIDs []string) ([]Viola
 			}
 		}
 	} else {
-		for _, p := range registeredPolicies {
+		for _, p := range allPolicies {
 			if matchesScope(p.Meta.Scopes, scope) {
 				policiesToRun = append(policiesToRun, p)
 			}
@@ -901,36 +1000,12 @@ func matchesScope(policyScopes []string, targetScope Scope) bool {
 		if targetScope.FilePath != "" {
 			normalizedTarget := NormalizePath(targetScope.FilePath)
 			normalizedPattern := NormalizePath(pattern)
-			if strings.Contains(normalizedTarget, normalizedPattern) {
+			if matched, _ := doublestar.Match(normalizedPattern, normalizedTarget); matched {
 				return true
 			}
 		}
 	}
 	return false
-}
-
-func init() {
-	RegisterPolicy(PolicyMeta{
-		ID:          "header",
-		Name:        "Header",
-		Description: "Validates source file header section with filename, contributors, and license",
-		Scopes:      []string{"**/*.{ts,tsx,py,cs}"},
-		Priority:    PriorityLow,
-	}, headerPolicy)
-	RegisterPolicy(PolicyMeta{
-		ID:          "section",
-		Name:        "Section",
-		Description: "Validates section blocks for proper naming and content",
-		Scopes:      []string{"**/*.{ts,tsx,py,cs}"},
-		Priority:    PriorityLow,
-	}, sectionPolicy)
-	RegisterPolicy(PolicyMeta{
-		ID:          "comment",
-		Name:        "Comment",
-		Description: "Detects forbidden comments (inline, block, JSDoc) - documentation belongs in README.md and AGENTS.md",
-		Scopes:      []string{"**/*.{ts,tsx}"},
-		Priority:    PriorityLow,
-	}, commentPolicy)
 }
 
 func headerPolicy(ctx *PolicyContext) []Violation {
@@ -958,12 +1033,28 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 			}
 		}
 		if headerSection == nil {
-			violations = append(violations, ctx.CreateViolation(
-				fmt.Sprintf("Missing header section in %s", file),
-				"header:missing-section",
-				"Add a #region Header with filename, contributors, and appropriate license",
-				"Every source file must include a header section",
-				file, 0, "", nil))
+			headerContent := generateFileHeader(file, lang)
+			if headerContent != "" {
+				autofix := &Fix{
+					Description: "Add header section",
+					Edits: map[string][]TextEdit{
+						file: {{Start: 0, End: 0, NewText: headerContent + "\n"}},
+					},
+				}
+				violations = append(violations, ctx.CreateViolation(
+					fmt.Sprintf("Missing header section in %s", file),
+					"header:missing-section",
+					"Add a #region Header with filename, contributors, and appropriate license",
+					"Every source file must include a header section",
+					file, 0, "", autofix))
+			} else {
+				violations = append(violations, ctx.CreateViolation(
+					fmt.Sprintf("Missing header section in %s", file),
+					"header:missing-section",
+					"Add a #region Header with filename, contributors, and appropriate license",
+					"Every source file must include a header section",
+					file, 0, "", nil))
+			}
 			continue
 		}
 		headerContent := content[headerSection.StartIndex:headerSection.EndIndex]
@@ -1047,6 +1138,10 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 	}
 	sectionPatterns := map[string]struct{ start, end *regexp.Regexp }{
 		"typescript": {
+			start: regexp.MustCompile(`(?i)^\s*//\s*#region(?:\s+(\S.*?))?\s*$`),
+			end:   regexp.MustCompile(`(?i)^\s*//\s*#endregion(?:\s+(\S.*?))?\s*$`),
+		},
+		"go": {
 			start: regexp.MustCompile(`(?i)^\s*//\s*#region(?:\s+(\S.*?))?\s*$`),
 			end:   regexp.MustCompile(`(?i)^\s*//\s*#endregion(?:\s+(\S.*?))?\s*$`),
 		},
@@ -1607,31 +1702,47 @@ func RunNxTarget(target string, projects []string, extraArgs []string) (success 
 	return exitCode == 0, stdout + stderr
 }
 
+func filterGitIgnored(files []string) []string {
+	if len(files) == 0 {
+		return files
+	}
+	ignored := GetGitIgnoredSet(files)
+	var filtered []string
+	for _, f := range files {
+		if !ignored[f] {
+			filtered = append(filtered, f)
+		}
+	}
+	return filtered
+}
+
 func ScopeToFiles(scope Scope, projects []NxProject) ([]string, error) {
 	ignorePatterns := []string{"**/node_modules/**", "**/.venv/**"}
+	var files []string
+	var err error
 	switch scope.Kind {
 	case ScopeRepo:
-		return SimpleGlob("**/*.{ts,tsx,py,cs}", rootDir, ignorePatterns, true)
+		files, err = SimpleGlob("**/*.{ts,tsx,py,cs,go}", rootDir, ignorePatterns, true)
 	case ScopeProject:
 		for _, proj := range projects {
 			if proj.Name == scope.ProjectName {
-				return SimpleGlob(proj.Root+"/**/*.{ts,tsx,py,cs}", rootDir, ignorePatterns, true)
+				files, err = SimpleGlob(proj.Root+"/**/*.{ts,tsx,py,cs,go}", rootDir, ignorePatterns, true)
+				break
 			}
 		}
-		return nil, nil
 	case ScopeFolder:
 		if scope.FilePath != "" {
-			return SimpleGlob(scope.FilePath+"**/*.{ts,tsx,py,cs}", rootDir, ignorePatterns, true)
+			files, err = SimpleGlob(scope.FilePath+"**/*.{ts,tsx,py,cs,go}", rootDir, ignorePatterns, true)
 		}
-		return nil, nil
 	case ScopeFile, ScopeSection, ScopeDefinition:
 		if scope.FilePath != "" {
 			return []string{scope.FilePath}, nil
 		}
-		return nil, nil
-	default:
-		return nil, nil
 	}
+	if err != nil {
+		return nil, err
+	}
+	return filterGitIgnored(files), nil
 }
 
 // #endregion Nx
@@ -1658,7 +1769,7 @@ func init() {
 	rootCmd.AddCommand(fileCmd)
 	rootCmd.AddCommand(sectionCmd)
 	rootCmd.AddCommand(definitionCmd)
-	rootCmd.AddCommand(toolCmd)
+	rootCmd.AddCommand(updateMetabolismCmd)
 }
 
 var analyzeCmd = &cobra.Command{
@@ -2091,13 +2202,19 @@ func init() {
 	definitionCmd.AddCommand(definitionTreeCmd)
 }
 
-var toolCmd = &cobra.Command{
-	Use:   "tool <name> [args...]",
-	Short: "Run a tool (e.g., i18n, update-metabolism)",
-	Args:  cobra.MinimumNArgs(1),
+var updateMetabolismCmd = &cobra.Command{
+	Use:   "update-metabolism",
+	Short: "Update metabolism assets (exports kit to zip and copies to public folders)",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		result := ToolRunTool(args[0], args[1:])
-		return outputResult(result)
+		output := NewOutput()
+		output.Info("\n🔄 Running update-metabolism via npx tsx...")
+		stdout, stderr, exitCode := ExecCommand("npx", []string{"tsx", "scripts/update-metabolism.tsx"}, "")
+		if exitCode != 0 {
+			output.Error(fmt.Sprintf("Error: %s%s", stdout, stderr))
+			return outputResult(ToolResult{Output: *output, Error: "update-metabolism failed"})
+		}
+		output.Success(stdout)
+		return outputResult(ToolResult{Output: *output})
 	},
 }
 
@@ -2105,6 +2222,28 @@ func outputResult(result ToolResult) error {
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetIndent("", "  ")
 	return enc.Encode(result)
+}
+
+func AnalyzeFileAndCache(filePath string, projects []NxProject) ([]Violation, error) {
+	absPath := filepath.Join(rootDir, filePath)
+	content, err := ReadTextFile(absPath)
+	if err != nil {
+		return nil, err
+	}
+	contentHash := hashFileContent(content)
+	if IsCacheValid(filePath, contentHash) {
+		cache, _ := ReadFileCache(filePath)
+		if cache != nil {
+			return cache.Violations, nil
+		}
+	}
+	scope := ParseScope(filePath)
+	violations, err := RunPolicies(scope, projects, nil)
+	if err != nil {
+		return nil, err
+	}
+	WriteFileCache(filePath, violations, contentHash)
+	return violations, nil
 }
 
 func ToolAnalyze(scope string, scopes []string) ToolResult {
@@ -2121,12 +2260,27 @@ func ToolAnalyze(scope string, scopes []string) ToolResult {
 	projects := GetNxProjects()
 	for _, scopeRaw := range scopeRaws {
 		s := ParseScope(scopeRaw)
-		violations, err := RunPolicies(s, projects, nil)
+		files, err := ScopeToFiles(s, projects)
 		if err != nil {
-			output.Error(fmt.Sprintf("Error running policies: %v", err))
+			output.Error(fmt.Sprintf("Error getting files: %v", err))
 			return ToolResult{Output: *output, Error: err.Error()}
 		}
-		allViolations = append(allViolations, violations...)
+		if s.Kind == ScopeFile {
+			violations, err := AnalyzeFileAndCache(s.FilePath, projects)
+			if err != nil {
+				output.Error(fmt.Sprintf("Error analyzing file: %v", err))
+				return ToolResult{Output: *output, Error: err.Error()}
+			}
+			allViolations = append(allViolations, violations...)
+		} else {
+			for _, file := range files {
+				violations, err := AnalyzeFileAndCache(file, projects)
+				if err != nil {
+					continue
+				}
+				allViolations = append(allViolations, violations...)
+			}
+		}
 	}
 	report := AnalyzeReport{
 		Timestamp: ISOTimestamp(),
@@ -2146,12 +2300,8 @@ func ToolAnalyze(scope string, scopes []string) ToolResult {
 		report.Summary.ByPriority[string(v.Priority)]++
 		report.Summary.ByKind[v.Kind]++
 	}
-	reportsDir := filepath.Join(rootDir, "reports")
-	if err := EnsureDir(reportsDir); err == nil {
-		WriteJSONFile(filepath.Join(reportsDir, "policies.json"), report)
-	}
 	output.Success(fmt.Sprintf("\n📊 Analysis complete: %d violations found", len(allViolations)))
-	output.Info(fmt.Sprintf("   Report: %s", filepath.Join(reportsDir, "policies.json")))
+	output.Info(fmt.Sprintf("   Cache: %s", GetCacheDir()))
 	if report.Status == "error" {
 		output.ExitCode = 1
 	}
@@ -2165,17 +2315,22 @@ func ToolFix(scopeRaw string) ToolResult {
 	}
 	scope := ParseScope(scopeRaw)
 	projects := GetNxProjects()
-	violations, err := RunPolicies(scope, projects, nil)
-	if err != nil {
-		output.Error(fmt.Sprintf("Error running policies: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+	files, _ := ScopeToFiles(scope, projects)
+	var allViolations []Violation
+	for _, file := range files {
+		violations, err := AnalyzeFileAndCache(file, projects)
+		if err != nil {
+			continue
+		}
+		allViolations = append(allViolations, violations...)
 	}
 	var fixable []Violation
-	for _, v := range violations {
+	for _, v := range allViolations {
 		if v.Autofixable && v.Autofix != nil {
 			fixable = append(fixable, v)
 		}
 	}
+	fixedFiles := make(map[string]bool)
 	fixed := 0
 	for _, v := range fixable {
 		if v.Autofix != nil {
@@ -2190,12 +2345,22 @@ func ToolFix(scopeRaw string) ToolResult {
 					content = content[:edit.Start] + edit.NewText + content[edit.End:]
 				}
 				WriteTextFile(absPath, content)
+				fixedFiles[filePath] = true
 			}
 			fixed++
 		}
 	}
+	for filePath := range fixedFiles {
+		InvalidateFileCache(filePath)
+		AnalyzeFileAndCache(filePath, projects)
+	}
 	output.Success(fmt.Sprintf("\n✅ Fixed %d violations", fixed))
 	return ToolResult{Output: *output}
+}
+
+func InvalidateFileCache(filePath string) {
+	cachePath := GetFileCachePath(filePath)
+	os.Remove(cachePath)
 }
 
 func ToolPolicyList() ToolResult {
@@ -2564,6 +2729,17 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.`
 
 #endregion Header
 `, path, year, gitAuthor, formatLicenseLines(license, "//"))
+	case "go":
+		return fmt.Sprintf(`// region Header
+
+// %s
+
+// %s %s
+
+%s
+
+// endregion Header
+`, path, year, gitAuthor, formatLicenseLines(license, "//"))
 	default:
 		return ""
 	}
@@ -2844,29 +3020,6 @@ func ToolDefinitionList(filePath string) ToolResult {
 
 func ToolDefinitionTree(filePath string) ToolResult {
 	return ToolDefinitionList(filePath)
-}
-
-func ToolRunTool(name string, args []string) ToolResult {
-	output := NewOutput()
-	switch name {
-	case "update-metabolism":
-		output.Info("\n🔄 Running update-metabolism via npx tsx...")
-		stdout, stderr, exitCode := ExecCommand("npx", []string{"tsx", "scripts/update-metabolism.tsx"}, "")
-		if exitCode != 0 {
-			output.Error(fmt.Sprintf("Error: %s%s", stdout, stderr))
-			return ToolResult{Output: *output, Error: "tool failed"}
-		}
-		output.Success(stdout)
-	default:
-		output.Info(fmt.Sprintf("\n🔧 Running Nx target: %s", name))
-		success, out := RunNxTarget(name, nil, args)
-		if !success {
-			output.Error(out)
-			return ToolResult{Output: *output, Error: "nx target failed"}
-		}
-		output.Plain(out)
-	}
-	return ToolResult{Output: *output}
 }
 
 // #endregion Commands
