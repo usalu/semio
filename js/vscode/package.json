@@ -18,10 +18,7 @@
     "Linters"
   ],
   "activationEvents": [
-    "onLanguage:json",
-    "onLanguage:typescript",
-    "onLanguage:javascript",
-    "workspaceContains:**/repo.tsx"
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -30,7 +27,7 @@
         {
           "id": "semio-repo",
           "title": "semio-repo",
-          "icon": "$(tools)"
+          "icon": "../../assets/icons/semio_codeicon.svg"
         }
       ]
     },
@@ -190,10 +187,6 @@
       {
         "command": "semio.definitionTree",
         "title": "semio: Show Definition Tree"
-      },
-      {
-        "command": "semio.toolRun",
-        "title": "semio: Run Tool"
       },
       {
         "command": "semio.refreshDiagnostics",

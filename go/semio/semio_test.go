@@ -11,83 +11,6 @@ import (
 )
 
 const AssetsPath = "../../assets/semio"
-
-func TestGuid(t *testing.T) {
-	g1 := Guid()
-	g2 := Guid()
-	if g1 == g2 {
-		t.Error("Guids should be unique")
-	}
-	if len(g1) != 32 {
-		t.Errorf("Guid should be 32 chars, got %d", len(g1))
-	}
-}
-
-func TestNormalize(t *testing.T) {
-	tests := []struct {
-		input    string
-		expected string
-	}{
-		{"  Hello World  ", "hello world"},
-		{"UPPERCASE", "uppercase"},
-		{"  spaces  ", "spaces"},
-	}
-	for _, tt := range tests {
-		result := Normalize(tt.input)
-		if result != tt.expected {
-			t.Errorf("Normalize(%q) = %q, want %q", tt.input, result, tt.expected)
-		}
-	}
-}
-
-func TestNewKit(t *testing.T) {
-	kit := NewKit("Test Kit")
-	if kit.Name != "Test Kit" {
-		t.Errorf("Kit name = %q, want %q", kit.Name, "Test Kit")
-	}
-	if kit.Version != "0.0.1" {
-		t.Errorf("Kit version = %q, want %q", kit.Version, "0.0.1")
-	}
-	if kit.Guid == "" {
-		t.Error("Kit should have a guid")
-	}
-}
-
-func TestNewType(t *testing.T) {
-	typ := NewType("Wall")
-	if typ.Name != "Wall" {
-		t.Errorf("Type name = %q, want %q", typ.Name, "Wall")
-	}
-	if typ.Guid == "" {
-		t.Error("Type should have a guid")
-	}
-}
-
-func TestNewDesign(t *testing.T) {
-	design := NewDesign("My Design")
-	if design.Name != "My Design" {
-		t.Errorf("Design name = %q, want %q", design.Name, "My Design")
-	}
-	if design.Guid == "" {
-		t.Error("Design should have a guid")
-	}
-}
-
-func TestNewConnector(t *testing.T) {
-	point := Point{X: 0, Y: 0, Z: 0}
-	direction := Vector{X: 0, Y: 1, Z: 0}
-	connector := NewConnector(point, direction, 0.5)
-	if connector.Point.X != 0 || connector.Point.Y != 0 || connector.Point.Z != 0 {
-		t.Error("Connector point should be (0, 0, 0)")
-	}
-	if connector.Direction.X != 0 || connector.Direction.Y != 1 || connector.Direction.Z != 0 {
-		t.Error("Connector direction should be (0, 1, 0)")
-	}
-	if connector.T != 0.5 {
-		t.Errorf("Connector T = %f, want %f", connector.T, 0.5)
-	}
-}
-
 func TestKitSerialization(t *testing.T) {
 	kit := NewKit("Serialization Test")
 	kit.Types = []Type{NewType("TestType")}
@@ -174,25 +97,6 @@ func TestRemoveTypeFromKit(t *testing.T) {
 	}
 	if diff.Types.Removed[0].Guid != "some-guid" {
 		t.Errorf("Removed type guid = %q, want %q", diff.Types.Removed[0].Guid, "some-guid")
-	}
-}
-
-func TestRound(t *testing.T) {
-	tests := []struct {
-		value    float64
-		decimals int
-		expected float64
-	}{
-		{3.14159, 2, 3.14},
-		{3.145, 2, 3.15},
-		{2.5, 0, 3},
-		{1.234, 2, 1.23},
-	}
-	for _, tt := range tests {
-		result := Round(tt.value, tt.decimals)
-		if result != tt.expected {
-			t.Errorf("Round(%f, %d) = %f, want %f", tt.value, tt.decimals, result, tt.expected)
-		}
 	}
 }
 

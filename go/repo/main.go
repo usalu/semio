@@ -204,12 +204,30 @@ type Ticket struct {
 	FilePath    string            `json:"filePath"`
 }
 
+type ViolationKind string
+
+const (
+	ViolationHeaderMissingRegion       ViolationKind = "header:missing-region"
+	ViolationHeaderMissingFilename     ViolationKind = "header:missing-filename"
+	ViolationHeaderMissingContributors ViolationKind = "header:missing-contributors"
+	ViolationHeaderMissingLicense      ViolationKind = "header:missing-license"
+	ViolationHeaderWrongLicense        ViolationKind = "header:wrong-license"
+	ViolationSectionEmpty              ViolationKind = "section:empty"
+	ViolationSectionMissingStartName   ViolationKind = "section:missing-start-name"
+	ViolationSectionMissingEndName     ViolationKind = "section:missing-end-name"
+	ViolationSectionNameMismatch       ViolationKind = "section:name-mismatch"
+	ViolationCommentInline             ViolationKind = "comment:inline"
+	ViolationCommentBlock              ViolationKind = "comment:block"
+	ViolationCommentJSDoc              ViolationKind = "comment:jsdoc"
+)
+
 type PolicyMeta struct {
-	ID          string            `json:"id"`
-	Name        string            `json:"name"`
-	Description string            `json:"description"`
-	Scopes      []string          `json:"scopes"`
-	Priority    ViolationPriority `json:"priority"`
+	ID             string            `json:"id"`
+	Name           string            `json:"name"`
+	Description    string            `json:"description"`
+	Scopes         []string          `json:"scopes"`
+	Priority       ViolationPriority `json:"priority"`
+	ViolationKinds []string          `json:"violationKinds"`
 }
 
 type AnalyzeReport struct {
@@ -854,6 +872,13 @@ var policyMetas = []PolicyMeta{
 		Description: "Validates source file header section with filename, contributors, and license",
 		Scopes:      []string{"**/*.{ts,tsx,py,cs,go}"},
 		Priority:    PriorityLow,
+		ViolationKinds: []string{
+			string(ViolationHeaderMissingRegion),
+			string(ViolationHeaderMissingFilename),
+			string(ViolationHeaderMissingContributors),
+			string(ViolationHeaderMissingLicense),
+			string(ViolationHeaderWrongLicense),
+		},
 	},
 	{
 		ID:          "section",
@@ -861,6 +886,12 @@ var policyMetas = []PolicyMeta{
 		Description: "Validates section blocks for proper naming and content",
 		Scopes:      []string{"**/*.{ts,tsx,py,cs,go}"},
 		Priority:    PriorityLow,
+		ViolationKinds: []string{
+			string(ViolationSectionEmpty),
+			string(ViolationSectionMissingStartName),
+			string(ViolationSectionMissingEndName),
+			string(ViolationSectionNameMismatch),
+		},
 	},
 	{
 		ID:          "comment",
@@ -868,6 +899,11 @@ var policyMetas = []PolicyMeta{
 		Description: "Detects forbidden comments (inline, block, JSDoc) - documentation belongs in README.md and AGENTS.md",
 		Scopes:      []string{"**/*.{ts,tsx}"},
 		Priority:    PriorityLow,
+		ViolationKinds: []string{
+			string(ViolationCommentInline),
+			string(ViolationCommentBlock),
+			string(ViolationCommentJSDoc),
+		},
 	},
 }
 
@@ -1974,9 +2010,26 @@ var policyCheckCmd = &cobra.Command{
 	},
 }
 
+var policyViolationCmd = &cobra.Command{
+	Use:   "violation",
+	Short: "Policy violation commands",
+}
+
+var policyViolationListCmd = &cobra.Command{
+	Use:   "list <policyId>",
+	Short: "List violation kinds for a policy",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		result := ToolPolicyViolationList(args[0])
+		return outputResult(result)
+	},
+}
+
 func init() {
 	policyCmd.AddCommand(policyListCmd)
 	policyCmd.AddCommand(policyCheckCmd)
+	policyCmd.AddCommand(policyViolationCmd)
+	policyViolationCmd.AddCommand(policyViolationListCmd)
 }
 
 var ticketCmd = &cobra.Command{
@@ -2578,13 +2631,29 @@ func ToolPolicyCheck(policyID, scopeRaw string) ToolResult {
 	}
 	output.Info(fmt.Sprintf("\n📊 Policy \"%s\" found %d violations", policyID, len(violations)))
 	for i, v := range violations {
-		if i >= 10 {
-			output.Plain(fmt.Sprintf("   ... and %d more", len(violations)-10))
+		output.Plain(fmt.Sprintf("   %d. %s", i+1, v.Summary))
+	}
+	return ToolResult{Output: *output, Data: map[string]interface{}{"violations": violations}}
+}
+
+func ToolPolicyViolationList(policyID string) ToolResult {
+	output := NewOutput()
+	var foundPolicy *PolicyMeta
+	for _, p := range policyMetas {
+		if p.ID == policyID {
+			foundPolicy = &p
 			break
 		}
-		output.Plain(fmt.Sprintf("   - %s", v.Summary))
 	}
-	return ToolResult{Output: *output, Data: violations}
+	if foundPolicy == nil {
+		output.Error(fmt.Sprintf("Policy '%s' not found", policyID))
+		return ToolResult{Output: *output, Error: fmt.Sprintf("Policy '%s' not found", policyID)}
+	}
+	output.Info(fmt.Sprintf("\n📋 Violation kinds for policy '%s':", policyID))
+	for _, kind := range foundPolicy.ViolationKinds {
+		output.Plain(fmt.Sprintf("   - %s", kind))
+	}
+	return ToolResult{Output: *output, Data: foundPolicy.ViolationKinds}
 }
 
 func ToolTicketCreate(slug, prompt, model string) ToolResult {

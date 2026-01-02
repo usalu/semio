@@ -73,20 +73,20 @@ func main() {
 			mcp.WithDescription("Analyze codebase for policy violations"),
 			mcp.WithString("scope", mcp.Description("Scope to analyze (e.g., @semio, @semio/js, path/to/file.ts)"), mcp.DefaultString("@semio")),
 		),
-		analyzeHandler,
+		analyze,
 	)
 	s.AddTool(
 		mcp.NewTool("fix",
 			mcp.WithDescription("Apply autofixes for policy violations"),
 			mcp.WithString("scope", mcp.Description("Scope to fix"), mcp.DefaultString("@semio")),
 		),
-		fixHandler,
+		fix,
 	)
 	s.AddTool(
 		mcp.NewTool("policy_list",
 			mcp.WithDescription("List all registered policies"),
 		),
-		policyListHandler,
+		policyList,
 	)
 	s.AddTool(
 		mcp.NewTool("policy_check",
@@ -94,7 +94,7 @@ func main() {
 			mcp.WithString("id", mcp.Required(), mcp.Description("Policy ID to check")),
 			mcp.WithString("scope", mcp.Description("Scope to analyze"), mcp.DefaultString("@semio")),
 		),
-		policyCheckHandler,
+		policyCheck,
 	)
 	s.AddTool(
 		mcp.NewTool("ticket_create",
@@ -103,7 +103,7 @@ func main() {
 			mcp.WithString("prompt", mcp.Description("Ticket prompt/description")),
 			mcp.WithString("model", mcp.Required(), mcp.Description("Large-Language-Model (LLM) used for this ticket")),
 		),
-		ticketCreateHandler,
+		ticketCreate,
 	)
 	s.AddTool(
 		mcp.NewTool("ticket_list",
@@ -112,7 +112,7 @@ func main() {
 			mcp.WithNumber("month", mcp.Description("Filter by month")),
 			mcp.WithNumber("day", mcp.Description("Filter by day")),
 		),
-		ticketListHandler,
+		ticketList,
 	)
 	s.AddTool(
 		mcp.NewTool("ticket_read",
@@ -122,7 +122,7 @@ func main() {
 			mcp.WithNumber("day", mcp.Required(), mcp.Description("Ticket day")),
 			mcp.WithString("slug", mcp.Required(), mcp.Description("Ticket slug")),
 		),
-		ticketReadHandler,
+		ticketRead,
 	)
 	s.AddTool(
 		mcp.NewTool("ticket_iterate_start",
@@ -134,7 +134,7 @@ func main() {
 			mcp.WithString("prompt", mcp.Description("Iteration prompt")),
 			mcp.WithString("model", mcp.Required(), mcp.Description("Large-Language-Model (LLM) used")),
 		),
-		ticketIterateStartHandler,
+		ticketIterateStart,
 	)
 	s.AddTool(
 		mcp.NewTool("ticket_iterate_end",
@@ -144,7 +144,7 @@ func main() {
 			mcp.WithNumber("day", mcp.Required(), mcp.Description("Ticket day")),
 			mcp.WithString("slug", mcp.Required(), mcp.Description("Ticket slug")),
 		),
-		ticketIterateEndHandler,
+		ticketIterateEnd,
 	)
 	s.AddTool(
 		mcp.NewTool("ticket_finish",
@@ -154,46 +154,46 @@ func main() {
 			mcp.WithNumber("day", mcp.Required(), mcp.Description("Ticket day")),
 			mcp.WithString("slug", mcp.Required(), mcp.Description("Ticket slug")),
 		),
-		ticketFinishHandler,
+		ticketFinish,
 	)
 	s.AddTool(
 		mcp.NewTool("contributor_add",
 			mcp.WithDescription("Add a contributor by GitHub username"),
 			mcp.WithString("github", mcp.Required(), mcp.Description("GitHub username")),
 		),
-		contributorAddHandler,
+		contributorAdd,
 	)
 	s.AddTool(
 		mcp.NewTool("contributor_list",
 			mcp.WithDescription("List all contributors"),
 		),
-		contributorListHandler,
+		contributorList,
 	)
 	s.AddTool(
 		mcp.NewTool("contributor_remove",
 			mcp.WithDescription("Remove a contributor"),
 			mcp.WithString("github", mcp.Required(), mcp.Description("GitHub username")),
 		),
-		contributorRemoveHandler,
+		contributorRemove,
 	)
 	s.AddTool(
 		mcp.NewTool("project_list",
 			mcp.WithDescription("List Nx projects in the monorepo"),
 		),
-		projectListHandler,
+		projectList,
 	)
 	s.AddTool(
 		mcp.NewTool("project_tree",
 			mcp.WithDescription("Show project dependency tree"),
 		),
-		projectTreeHandler,
+		projectTree,
 	)
 	s.AddTool(
 		mcp.NewTool("folder_create",
 			mcp.WithDescription("Create a folder"),
 			mcp.WithString("path", mcp.Required(), mcp.Description("Folder path to create")),
 		),
-		folderCreateHandler,
+		folderCreate,
 	)
 	s.AddTool(
 		mcp.NewTool("folder_move",
@@ -201,35 +201,35 @@ func main() {
 			mcp.WithString("source", mcp.Required(), mcp.Description("Source folder path")),
 			mcp.WithString("target", mcp.Required(), mcp.Description("Target folder path")),
 		),
-		folderMoveHandler,
+		folderMove,
 	)
 	s.AddTool(
 		mcp.NewTool("folder_delete",
 			mcp.WithDescription("Delete a folder"),
 			mcp.WithString("path", mcp.Required(), mcp.Description("Folder path to delete")),
 		),
-		folderDeleteHandler,
+		folderDelete,
 	)
 	s.AddTool(
 		mcp.NewTool("folder_list",
 			mcp.WithDescription("List folders in a path"),
 			mcp.WithString("path", mcp.Description("Path to list folders from"), mcp.DefaultString(".")),
 		),
-		folderListHandler,
+		folderList,
 	)
 	s.AddTool(
 		mcp.NewTool("folder_tree",
 			mcp.WithDescription("Show folder tree structure"),
 			mcp.WithString("path", mcp.Description("Path to show tree from"), mcp.DefaultString(".")),
 		),
-		folderTreeHandler,
+		folderTree,
 	)
 	s.AddTool(
 		mcp.NewTool("file_create",
 			mcp.WithDescription("Create a file with appropriate header"),
 			mcp.WithString("path", mcp.Required(), mcp.Description("File path to create")),
 		),
-		fileCreateHandler,
+		fileCreate,
 	)
 	s.AddTool(
 		mcp.NewTool("file_move",
@@ -237,28 +237,28 @@ func main() {
 			mcp.WithString("source", mcp.Required(), mcp.Description("Source file path")),
 			mcp.WithString("target", mcp.Required(), mcp.Description("Target file path")),
 		),
-		fileMoveHandler,
+		fileMove,
 	)
 	s.AddTool(
 		mcp.NewTool("file_delete",
 			mcp.WithDescription("Delete a file"),
 			mcp.WithString("path", mcp.Required(), mcp.Description("File path to delete")),
 		),
-		fileDeleteHandler,
+		fileDelete,
 	)
 	s.AddTool(
 		mcp.NewTool("file_list",
 			mcp.WithDescription("List files in scope"),
 			mcp.WithString("scope", mcp.Description("Scope to list files from"), mcp.DefaultString("@semio")),
 		),
-		fileListHandler,
+		fileList,
 	)
 	s.AddTool(
 		mcp.NewTool("file_tree",
 			mcp.WithDescription("Show file tree structure"),
 			mcp.WithString("path", mcp.Description("Path to show tree from"), mcp.DefaultString(".")),
 		),
-		fileTreeHandler,
+		fileTree,
 	)
 	s.AddTool(
 		mcp.NewTool("section_create",
@@ -266,7 +266,7 @@ func main() {
 			mcp.WithString("file", mcp.Required(), mcp.Description("File path")),
 			mcp.WithString("section", mcp.Required(), mcp.Description("Section name")),
 		),
-		sectionCreateHandler,
+		sectionCreate,
 	)
 	s.AddTool(
 		mcp.NewTool("section_move",
@@ -275,7 +275,7 @@ func main() {
 			mcp.WithString("old_name", mcp.Required(), mcp.Description("Old section name")),
 			mcp.WithString("new_name", mcp.Required(), mcp.Description("New section name")),
 		),
-		sectionMoveHandler,
+		sectionMove,
 	)
 	s.AddTool(
 		mcp.NewTool("section_delete",
@@ -283,35 +283,28 @@ func main() {
 			mcp.WithString("file", mcp.Required(), mcp.Description("File path")),
 			mcp.WithString("section", mcp.Required(), mcp.Description("Section name")),
 		),
-		sectionDeleteHandler,
+		sectionDelete,
 	)
 	s.AddTool(
 		mcp.NewTool("section_list",
 			mcp.WithDescription("List sections in a file"),
 			mcp.WithString("file", mcp.Required(), mcp.Description("File path")),
 		),
-		sectionListHandler,
+		sectionList,
 	)
 	s.AddTool(
 		mcp.NewTool("section_tree",
 			mcp.WithDescription("Show section tree in a file"),
 			mcp.WithString("file", mcp.Required(), mcp.Description("File path")),
 		),
-		sectionTreeHandler,
+		sectionTree,
 	)
 	s.AddTool(
 		mcp.NewTool("definition_list",
 			mcp.WithDescription("List definitions in a file"),
 			mcp.WithString("file", mcp.Required(), mcp.Description("File path")),
 		),
-		definitionListHandler,
-	)
-	s.AddTool(
-		mcp.NewTool("tool_run",
-			mcp.WithDescription("Run a tool or Nx target"),
-			mcp.WithString("name", mcp.Required(), mcp.Description("Tool/target name")),
-		),
-		toolRunHandler,
+		definitionList,
 	)
 	if err := server.ServeStdio(s); err != nil {
 		fmt.Printf("Server error: %v\n", err)
@@ -329,7 +322,7 @@ func getArgs(request mcp.CallToolRequest) map[string]interface{} {
 	return make(map[string]interface{})
 }
 
-func analyzeHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func analyze(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	scope, _ := args["scope"].(string)
 	if scope == "" {
@@ -338,7 +331,7 @@ func analyzeHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.Call
 	return textResult(runRepo("analyze", scope)), nil
 }
 
-func fixHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func fix(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	scope, _ := args["scope"].(string)
 	if scope == "" {
@@ -347,11 +340,11 @@ func fixHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	return textResult(runRepo("fix", scope)), nil
 }
 
-func policyListHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func policyList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	return textResult(runRepo("policy", "list")), nil
 }
 
-func policyCheckHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func policyCheck(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	id, _ := args["id"].(string)
 	scope, _ := args["scope"].(string)
@@ -361,7 +354,7 @@ func policyCheckHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.
 	return textResult(runRepo("policy", "check", id, scope)), nil
 }
 
-func ticketCreateHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func ticketCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	slug, _ := args["slug"].(string)
 	prompt, _ := args["prompt"].(string)
@@ -376,7 +369,7 @@ func ticketCreateHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp
 	return textResult(runRepo(cmdArgs...)), nil
 }
 
-func ticketListHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func ticketList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	cmdArgs := []string{"ticket", "list"}
 	if y, ok := args["year"].(float64); ok {
@@ -391,7 +384,7 @@ func ticketListHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.C
 	return textResult(runRepo(cmdArgs...)), nil
 }
 
-func ticketReadHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func ticketRead(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	year := strconv.Itoa(int(args["year"].(float64)))
 	month := strconv.Itoa(int(args["month"].(float64)))
@@ -400,7 +393,7 @@ func ticketReadHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.C
 	return textResult(runRepo("ticket", "read", year, month, day, slug)), nil
 }
 
-func ticketIterateStartHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func ticketIterateStart(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	year := strconv.Itoa(int(args["year"].(float64)))
 	month := strconv.Itoa(int(args["month"].(float64)))
@@ -418,7 +411,7 @@ func ticketIterateStartHandler(ctx context.Context, request mcp.CallToolRequest)
 	return textResult(runRepo(cmdArgs...)), nil
 }
 
-func ticketIterateEndHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func ticketIterateEnd(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	year := strconv.Itoa(int(args["year"].(float64)))
 	month := strconv.Itoa(int(args["month"].(float64)))
@@ -427,7 +420,7 @@ func ticketIterateEndHandler(ctx context.Context, request mcp.CallToolRequest) (
 	return textResult(runRepo("ticket", "iterate", "end", year, month, day, slug)), nil
 }
 
-func ticketFinishHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func ticketFinish(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	year := strconv.Itoa(int(args["year"].(float64)))
 	month := strconv.Itoa(int(args["month"].(float64)))
@@ -436,50 +429,50 @@ func ticketFinishHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp
 	return textResult(runRepo("ticket", "finish", year, month, day, slug)), nil
 }
 
-func contributorAddHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func contributorAdd(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	github, _ := args["github"].(string)
 	return textResult(runRepo("contributor", "add", github)), nil
 }
 
-func contributorListHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func contributorList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	return textResult(runRepo("contributor", "list")), nil
 }
 
-func contributorRemoveHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func contributorRemove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	github, _ := args["github"].(string)
 	return textResult(runRepo("contributor", "remove", github)), nil
 }
 
-func projectListHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func projectList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	return textResult(runRepo("project", "list")), nil
 }
 
-func projectTreeHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func projectTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	return textResult(runRepo("project", "tree")), nil
 }
 
-func folderCreateHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func folderCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	path, _ := args["path"].(string)
 	return textResult(runRepo("folder", "create", path)), nil
 }
 
-func folderMoveHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func folderMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	source, _ := args["source"].(string)
 	target, _ := args["target"].(string)
 	return textResult(runRepo("folder", "move", source, target)), nil
 }
 
-func folderDeleteHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func folderDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	path, _ := args["path"].(string)
 	return textResult(runRepo("folder", "delete", path)), nil
 }
 
-func folderListHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func folderList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	path, _ := args["path"].(string)
 	if path == "" {
@@ -488,7 +481,7 @@ func folderListHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.C
 	return textResult(runRepo("folder", "list", path)), nil
 }
 
-func folderTreeHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func folderTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	path, _ := args["path"].(string)
 	if path == "" {
@@ -497,26 +490,26 @@ func folderTreeHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.C
 	return textResult(runRepo("folder", "tree", path)), nil
 }
 
-func fileCreateHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func fileCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	path, _ := args["path"].(string)
 	return textResult(runRepo("file", "create", path)), nil
 }
 
-func fileMoveHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func fileMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	source, _ := args["source"].(string)
 	target, _ := args["target"].(string)
 	return textResult(runRepo("file", "move", source, target)), nil
 }
 
-func fileDeleteHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func fileDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	path, _ := args["path"].(string)
 	return textResult(runRepo("file", "delete", path)), nil
 }
 
-func fileListHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func fileList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	scope, _ := args["scope"].(string)
 	if scope == "" {
@@ -525,7 +518,7 @@ func fileListHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.Cal
 	return textResult(runRepo("file", "list", scope)), nil
 }
 
-func fileTreeHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func fileTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	path, _ := args["path"].(string)
 	if path == "" {
@@ -534,14 +527,14 @@ func fileTreeHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.Cal
 	return textResult(runRepo("file", "tree", path)), nil
 }
 
-func sectionCreateHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func sectionCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	file, _ := args["file"].(string)
 	section, _ := args["section"].(string)
 	return textResult(runRepo("section", "create", file, section)), nil
 }
 
-func sectionMoveHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func sectionMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	file, _ := args["file"].(string)
 	oldName, _ := args["old_name"].(string)
@@ -549,35 +542,29 @@ func sectionMoveHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.
 	return textResult(runRepo("section", "move", file, oldName, newName)), nil
 }
 
-func sectionDeleteHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func sectionDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	file, _ := args["file"].(string)
 	section, _ := args["section"].(string)
 	return textResult(runRepo("section", "delete", file, section)), nil
 }
 
-func sectionListHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func sectionList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	file, _ := args["file"].(string)
 	return textResult(runRepo("section", "list", file)), nil
 }
 
-func sectionTreeHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func sectionTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	file, _ := args["file"].(string)
 	return textResult(runRepo("section", "tree", file)), nil
 }
 
-func definitionListHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func definitionList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	file, _ := args["file"].(string)
 	return textResult(runRepo("definition", "list", file)), nil
-}
-
-func toolRunHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	args := getArgs(request)
-	name, _ := args["name"].(string)
-	return textResult(runRepo("tool", name)), nil
 }
 
 var _ = strings.TrimSpace

@@ -104,7 +104,7 @@ function getRepoBinaryPath(): string | undefined {
   const isWindows = process.platform === "win32";
   const binaryName = isWindows ? "repo.exe" : "repo";
   const binaryPath = path.join(root, "bin", binaryName);
-  console.log("getRepoBinaryPath:", binaryPath, "exists:", fs.existsSync(binaryPath));
+  log("getRepoBinaryPath:", binaryPath, "exists:", fs.existsSync(binaryPath));
   if (fs.existsSync(binaryPath)) return binaryPath;
   return undefined;
 }
@@ -154,7 +154,7 @@ function runRepoCommand(args: string): void {
     return;
   }
   const fullCommand = `"${command}" ${args}`;
-  console.log("runRepoCommand:", fullCommand, "cwd:", root);
+  log("runRepoCommand:", fullCommand, "cwd:", root);
   const terminal = vscode.window.createTerminal({ name: "semio", cwd: root });
   terminal.show();
   terminal.sendText(fullCommand);
@@ -163,22 +163,37 @@ function runRepoCommand(args: string): void {
 async function runRepoCommandJson<T>(args: string): Promise<T | null> {
   const root = getWorkspaceRoot();
   if (!root) {
-    console.error("runRepoCommandJson: no workspace root");
+    logError("[runRepoCommandJson] no workspace root");
     return null;
   }
   const command = getRepoCommand();
   if (!command) {
-    console.error("runRepoCommandJson: no repo command found");
+    logError("[runRepoCommandJson] no repo command found");
     return null;
   }
   const fullCommand = `"${command}" ${args}`;
-  console.log("runRepoCommandJson:", fullCommand, "cwd:", root);
+  log("[runRepoCommandJson] executing:", fullCommand, "cwd:", root);
   try {
-    const { stdout } = await execAsync(fullCommand, { cwd: root, timeout: 60000 });
-    console.log("runRepoCommandJson stdout length:", stdout.length);
-    return JSON.parse(stdout) as T;
+    const { stdout, stderr } = await execAsync(fullCommand, { cwd: root, timeout: 60000, maxBuffer: 10 * 1024 * 1024 });
+    log("[runRepoCommandJson] stdout length:", stdout.length);
+    log("[runRepoCommandJson] stderr length:", stderr.length);
+    if (stderr) {
+      log("[runRepoCommandJson] stderr:", stderr.substring(0, 500));
+    }
+    if (stdout.length === 0) {
+      logError("[runRepoCommandJson] stdout is empty!");
+      return null;
+    }
+    log("[runRepoCommandJson] stdout first 500 chars:", stdout.substring(0, 500));
+    const parsed = JSON.parse(stdout) as T;
+    log("[runRepoCommandJson] parsed JSON keys:", Object.keys(parsed as object));
+    return parsed;
   } catch (error) {
-    console.error("runRepoCommandJson error:", error);
+    logError("[runRepoCommandJson] error:", error);
+    if (error instanceof Error) {
+      logError("[runRepoCommandJson] error message:", error.message);
+      logError("[runRepoCommandJson] error stack:", error.stack);
+    }
     return null;
   }
 }
@@ -206,7 +221,7 @@ interface PolicyData {
 
 async function pickTicket(statusFilter?: "open" | "closed"): Promise<TicketData | undefined> {
   const result = await runRepoCommandJson<ToolResult<TicketData[]>>("ticket list");
-  console.log("pickTicket result:", result ? `data length: ${result.data?.length}` : "null");
+  log("pickTicket result:", result ? `data length: ${result.data?.length}` : "null");
   if (!result) {
     vscode.window.showWarningMessage("Failed to run ticket list command");
     return undefined;
@@ -371,8 +386,8 @@ async function fixViolation(relativePath: string): Promise<void> {
   try {
     await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: "Fixing violation..." }, async () => {
       const { stdout, stderr } = await execAsync(`${command} fix ${relativePath}`, { cwd: root, timeout: 30000 });
-      if (stderr) console.log("Fix stderr:", stderr);
-      if (stdout) console.log("Fix stdout:", stdout);
+      if (stderr) log("Fix stderr:", stderr);
+      if (stdout) log("Fix stdout:", stdout);
       const absPath = path.join(root, relativePath);
       const uri = vscode.Uri.file(absPath);
       const openDoc = vscode.workspace.textDocuments.find((d) => d.uri.fsPath === absPath);
@@ -387,7 +402,7 @@ async function fixViolation(relativePath: string): Promise<void> {
     });
     vscode.window.showInformationMessage(`Fixed: ${relativePath}`);
   } catch (error) {
-    console.error("Failed to run fix:", error);
+    logError("Failed to run fix:", error);
     vscode.window.showErrorMessage(`Failed to fix violation: ${error}`);
   }
 }
@@ -536,7 +551,7 @@ function validateKitDocument(document: vscode.TextDocument): void {
     const diagnostics = result.problems.map((problem) => problemToDiagnostic(document, problem));
     kitDiagnosticCollection.set(document.uri, diagnostics);
   } catch (error) {
-    console.error("Failed to validate semio kit:", error);
+    logError("Failed to validate semio kit:", error);
     kitDiagnosticCollection.delete(document.uri);
   }
 }
@@ -558,7 +573,7 @@ class SemioKitCodeActionProvider implements vscode.CodeActionProvider {
           if (action) actions.push(action);
         }
       } catch (error) {
-        console.error("Failed to generate code actions:", error);
+        logError("Failed to generate code actions:", error);
       }
     }
     return actions;
@@ -578,7 +593,7 @@ function createKitCodeAction(document: vscode.TextDocument, diagnostic: vscode.D
     action.edit = edit;
     return action;
   } catch (error) {
-    console.error("Failed to create code action:", error);
+    logError("Failed to create code action:", error);
     return undefined;
   }
 }
@@ -681,17 +696,39 @@ class TicketsProvider implements vscode.TreeDataProvider<TicketTreeItem> {
   }
 
   async getChildren(element?: TicketTreeItem): Promise<TicketTreeItem[]> {
+    log("[TicketsProvider.getChildren] called, element:", element?.constructor.name ?? "root");
+    log("[TicketsProvider.getChildren] cachedTickets.length:", this.cachedTickets.length);
+    
     if (this.cachedTickets.length === 0) {
+      log("[TicketsProvider.getChildren] cache empty, fetching tickets...");
       const result = await runRepoCommandJson<ToolResult<TicketData[]>>("ticket list");
+      log("[TicketsProvider.getChildren] result:", result ? "not null" : "null");
+      if (result) {
+        log("[TicketsProvider.getChildren] result.data:", result.data ? `array of ${result.data.length}` : "undefined");
+      }
       this.cachedTickets = result?.data ?? [];
+      log("[TicketsProvider.getChildren] cachedTickets.length after fetch:", this.cachedTickets.length);
     }
+    
     let tickets = this.cachedTickets;
+    log("[TicketsProvider.getChildren] tickets before filter:", tickets.length);
+    
     if (this.filter === "open") tickets = tickets.filter((t) => t.frontmatter.status === "open");
     else if (this.filter === "closed") tickets = tickets.filter((t) => t.frontmatter.status === "closed");
+    
+    log("[TicketsProvider.getChildren] tickets after status filter:", tickets.length);
+    
     tickets = tickets.filter((t) => this.matchesSearch(t));
+    
+    log("[TicketsProvider.getChildren] tickets after search filter:", tickets.length);
+    
     if (!element) {
-      if (tickets.length === 0) return [];
+      if (tickets.length === 0) {
+        log("[TicketsProvider.getChildren] no tickets, returning empty array");
+        return [];
+      }
       const years = [...new Set(tickets.map((t) => t.year))].sort((a, b) => b - a);
+      log("[TicketsProvider.getChildren] returning", years.length, "year items");
       return years.map((year) => new TicketYearItem(year));
     }
     if (element instanceof TicketYearItem) {
@@ -719,19 +756,32 @@ class TicketsProvider implements vscode.TreeDataProvider<TicketTreeItem> {
   }
 }
 
-type PolicyTreeItem = PolicyItem;
+type PolicyTreeItem = PolicyItem | ViolationKindItem;
 
 class PolicyItem extends vscode.TreeItem {
   constructor(
     public readonly policy: PolicyData,
     public readonly lineNumber?: number,
   ) {
-    super(`${policy.name} - ${policy.id}`, vscode.TreeItemCollapsibleState.None);
+    super(`${policy.name} - ${policy.description}`, vscode.TreeItemCollapsibleState.Collapsed);
     this.tooltip = `${policy.id}\n${policy.name}\n${policy.description}`;
-    this.description = policy.description;
     this.iconPath = new vscode.ThemeIcon("shield");
     this.contextValue = "policy";
     this.command = { command: "semio.openPolicy", title: "Open Policy", arguments: [policy, lineNumber] };
+  }
+}
+
+class ViolationKindItem extends vscode.TreeItem {
+  constructor(
+    public readonly kind: string,
+    public readonly policyId: string,
+  ) {
+    const [_, kindName] = kind.split(":");
+    super(kindName || kind, vscode.TreeItemCollapsibleState.None);
+    this.description = kind;
+    this.tooltip = `Violation kind: ${kind}`;
+    this.iconPath = new vscode.ThemeIcon("warning");
+    this.contextValue = "violationKind";
   }
 }
 
@@ -755,12 +805,20 @@ class PoliciesProvider implements vscode.TreeDataProvider<PolicyTreeItem> {
     return element;
   }
 
-  async getChildren(): Promise<PolicyTreeItem[]> {
-    if (this.cachedPolicies.length === 0) {
-      const result = await runRepoCommandJson<ToolResult<PolicyData[]>>("policy list");
-      this.cachedPolicies = result?.data ?? [];
+  async getChildren(element?: PolicyTreeItem): Promise<PolicyTreeItem[]> {
+    if (!element) {
+      if (this.cachedPolicies.length === 0) {
+        const result = await runRepoCommandJson<ToolResult<PolicyData[]>>("policy list");
+        this.cachedPolicies = result?.data ?? [];
+      }
+      return this.cachedPolicies.filter((p) => this.matchesSearch(p)).map((policy) => new PolicyItem(policy));
     }
-    return this.cachedPolicies.filter((p) => this.matchesSearch(p)).map((policy) => new PolicyItem(policy));
+    if (element instanceof PolicyItem) {
+      const result = await runRepoCommandJson<ToolResult<string[]>>(`policy violation list ${element.policy.id}`);
+      if (!result?.data) return [];
+      return result.data.map((kind) => new ViolationKindItem(kind, element.policy.id));
+    }
+    return [];
   }
 }
 
@@ -775,11 +833,18 @@ interface ContributorData {
 type ContributorTreeItem = ContributorItem | ContributorEmailsItem | ContributorEmailItem | ContributorLinksItem | ContributorLinkItem | ContributorAvatarItem | ContributorContributionsItem | ContributorProjectsItem | ContributorProjectItem | ContributorFilesItem | ContributorFileItem | ContributorCommitsItem | ContributorCommitItem;
 
 class ContributorItem extends vscode.TreeItem {
-  constructor(public readonly contributor: ContributorData) {
+  constructor(
+    public readonly contributor: ContributorData,
+    avatarPath?: string,
+  ) {
     const displayName = contributor.name ? `${contributor.name} - @${contributor.github}` : `@${contributor.github}`;
     super(displayName, vscode.TreeItemCollapsibleState.Collapsed);
     this.tooltip = `@${contributor.github}${contributor.contributions?.projects ? `\nProjects: ${contributor.contributions.projects.join(", ")}` : ""}`;
-    this.iconPath = new vscode.ThemeIcon("person");
+    if (avatarPath && fs.existsSync(avatarPath)) {
+      this.iconPath = vscode.Uri.file(avatarPath);
+    } else {
+      this.iconPath = new vscode.ThemeIcon("person");
+    }
     this.contextValue = "contributor";
     this.command = { command: "semio.openContributor", title: "Open Contributor", arguments: [contributor] };
   }
@@ -921,7 +986,11 @@ class ContributorsProvider implements vscode.TreeDataProvider<ContributorTreeIte
         const result = await runRepoCommandJson<ToolResult<ContributorData[]>>("contributor list");
         this.cachedContributors = result?.data ?? [];
       }
-      return this.cachedContributors.filter((c) => this.matchesSearch(c)).map((contributor) => new ContributorItem(contributor));
+      const root = getWorkspaceRoot();
+      return this.cachedContributors.filter((c) => this.matchesSearch(c)).map((contributor) => {
+        const avatarPath = root ? path.join(root, "contributors", contributor.github, "avatar-round-90x90.png") : undefined;
+        return new ContributorItem(contributor, avatarPath);
+      });
     }
     if (element instanceof ContributorItem) {
       const children: ContributorTreeItem[] = [];
@@ -977,7 +1046,7 @@ class CommandItem extends vscode.TreeItem {
     this.description = cmd.id;
     this.iconPath = new vscode.ThemeIcon("terminal");
     this.contextValue = "command";
-    this.command = { command: "semio.runCommand", title: "Run Command", arguments: [cmd.id] };
+    this.command = { command: "semio.openCommand", title: "Open Command", arguments: [cmd.id] };
   }
 }
 
@@ -995,7 +1064,6 @@ const SIDEBAR_COMMANDS: CommandInfo[] = [
   { id: "semio.fileCreate", title: "Create File" },
   { id: "semio.sectionTree", title: "Show Section Tree" },
   { id: "semio.definitionList", title: "List Definitions" },
-  { id: "semio.toolRun", title: "Run Tool" },
   { id: "semio.refreshDiagnostics", title: "Refresh Diagnostics" },
 ];
 
@@ -1060,8 +1128,8 @@ function registerSidebarViews(context: vscode.ExtensionContext): void {
         const uri = vscode.Uri.file(repoFilePath);
         const doc = await vscode.workspace.openTextDocument(uri);
         const content = doc.getText();
-        const policyIdPattern = new RegExp(`ID:\\s*"${policy.id}"`, "i");
-        const match = content.match(policyIdPattern);
+        const functionPattern = new RegExp(`^func ${policy.id}Policy\\(`, "m");
+        const match = functionPattern.exec(content);
         if (match && match.index !== undefined) {
           const position = doc.positionAt(match.index);
           await vscode.window.showTextDocument(doc, { selection: new vscode.Range(position, position) });
@@ -1078,6 +1146,22 @@ function registerSidebarViews(context: vscode.ExtensionContext): void {
       if (fs.existsSync(contributorPath)) {
         const uri = vscode.Uri.file(contributorPath);
         await vscode.window.showTextDocument(uri);
+      }
+    }),
+    vscode.commands.registerCommand("semio.openCommand", async (commandId: string) => {
+      const root = getWorkspaceRoot();
+      if (!root) return;
+      const extensionPath = path.join(root, "js", "vscode", "extension.ts");
+      if (!fs.existsSync(extensionPath)) return;
+      const doc = await vscode.workspace.openTextDocument(extensionPath);
+      const content = doc.getText();
+      const commandPattern = new RegExp(`vscode\\.commands\\.registerCommand\\("${commandId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`, "m");
+      const match = commandPattern.exec(content);
+      if (match && match.index !== undefined) {
+        const position = doc.positionAt(match.index);
+        await vscode.window.showTextDocument(doc, { selection: new vscode.Range(position, position) });
+      } else {
+        await vscode.window.showTextDocument(doc);
       }
     }),
     vscode.commands.registerCommand("semio.createTicket", async () => {
@@ -1543,18 +1627,6 @@ function registerCommands(context: vscode.ExtensionContext): void {
       if (!policy) return;
       runRepoCommand(`policy check ${policy.id}`);
     }),
-    vscode.commands.registerCommand("semio.toolRun", async () => {
-      if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
-        return;
-      }
-      const toolName = await vscode.window.showInputBox({
-        prompt: "Enter tool name",
-        placeHolder: "i18n",
-      });
-      if (!toolName) return;
-      runRepoCommand(`tool ${toolName}`);
-    }),
     vscode.commands.registerCommand("semio.refreshDiagnostics", async () => {
       vscode.workspace.textDocuments.forEach(validateKitDocument);
       await Promise.all(vscode.workspace.textDocuments.map(analyzeFile));
@@ -1567,8 +1639,26 @@ function registerCommands(context: vscode.ExtensionContext): void {
 
 // #region Activation
 
+let outputChannel: vscode.OutputChannel;
+
+function log(...args: any[]): void {
+  if (!outputChannel) return;
+  const message = args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ');
+  outputChannel.appendLine(message);
+}
+
+function logError(...args: any[]): void {
+  if (!outputChannel) return;
+  const message = args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ');
+  outputChannel.appendLine('[ERROR] ' + message);
+}
+
 export function activate(context: vscode.ExtensionContext) {
-  console.log("semio extension activated");
+  outputChannel = vscode.window.createOutputChannel("semio");
+  context.subscriptions.push(outputChannel);
+  
+  log("[ACTIVATION] semio extension activated");
+  outputChannel.show(true);
   kitDiagnosticCollection = vscode.languages.createDiagnosticCollection(DIAGNOSTIC_SOURCE);
   repoDiagnosticCollection = vscode.languages.createDiagnosticCollection(DIAGNOSTIC_SOURCE);
   context.subscriptions.push(kitDiagnosticCollection, repoDiagnosticCollection);

@@ -11,11 +11,14 @@
     "grepInvert": null,
     "maxFailures": 0,
     "metadata": {
-      "actualWorkers": 1
+      "actualWorkers": 6
     },
     "preserveOutput": "always",
     "reporter": [
-      ["list", null],
+      [
+        "list",
+        null
+      ],
       [
         "json",
         {
@@ -34,13 +37,15 @@
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
-          "actualWorkers": 1
+          "actualWorkers": 6
         },
         "id": "chromium",
         "name": "chromium",
         "testDir": "C:/git/semio.tech/semio/js/js",
         "testIgnore": [],
-        "testMatch": ["**/sketchpad.test.ts"],
+        "testMatch": [
+          "**/sketchpad.test.ts"
+        ],
         "timeout": 30000
       }
     ],
@@ -71,7 +76,272 @@
           "column": 6,
           "specs": [
             {
-              "title": "Design",
+              "title": "Home",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 28427,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[Home] Testing Home app panel toggles\n"
+                        },
+                        {
+                          "text": "[Home] Left sidepanel toggle visible: false\n"
+                        },
+                        {
+                          "text": "[Home] Right sidepanel toggle visible: false\n"
+                        },
+                        {
+                          "text": "[Home] HUD panel toggle visible: false\n"
+                        },
+                        {
+                          "text": "[Home] Panel toggle verification complete: left=false, hud=false, right=false\n"
+                        },
+                        {
+                          "text": "[Home] Testing toolbar visibility and filter toggles\n"
+                        },
+                        {
+                          "text": "[Home] Toolbar visible: true\n"
+                        },
+                        {
+                          "text": "[Home] Toolbar toggle groups count: 3\n"
+                        },
+                        {
+                          "text": "[Home] Testing individual filter toggles\n"
+                        },
+                        {
+                          "text": "[Home] Temporary filter toggle visible: true\n"
+                        },
+                        {
+                          "text": "[Home] Local filter toggle visible: true\n"
+                        },
+                        {
+                          "text": "[Home] Remote filter toggle visible: true\n"
+                        },
+                        {
+                          "text": "[Home] Testing temporary filter toggle click\n"
+                        },
+                        {
+                          "text": "[Home] URL after temporary toggle click: http://localhost:5173/?kind=temporary\n"
+                        },
+                        {
+                          "text": "[Home] URL after temporary toggle unclick: http://localhost:5173/\n"
+                        },
+                        {
+                          "text": "[Home] Toolbar and filter toggles test complete\n"
+                        },
+                        {
+                          "text": "[Home] Testing selection state\n"
+                        },
+                        {
+                          "text": "[Home] Initial homeApp state: {\"panelVisibility\":{\"toolbar\":true,\"workbench\":false,\"details\":false,\"chat\":false,\"settings\":false},\"loadingKits\":[{\"tempGuid\":\"kit-import-019b75ed-6f33-768a-acb9-cf8eed8fa248\",\"name\":\"metabolism\"},{\"tempGuid\":\"kit-import-019b75ed-7038-71fa-a50b-f2173270411d\",\"name\":\"metabolism\"}],\"windowLayout\":{\"root\":{\"type\":\"row\",\"content\":[{\"type\":\"stack\",\"content\":[{\"type\":\"component\",\"content\":[],\"size\":1,\"sizeUnit\":\"fr\",\"minSize\":1,\"minSizeUnit\":\"px\",\"id\":\"\",\"maximised\":false,\"isClosable\":true,\"reorderEnabled\":true,\"title\":\"table\",\"componentType\":\"table\",\"componentState\":{}}],\"size\":100,\"sizeUnit\":\"%\",\"minSize\":1,\"minSizeUnit\":\"px\",\"id\":\"\",\"isClosable\":true,\"maximised\":false,\"activeItemIndex\":0}],\"size\":1,\"sizeUnit\":\"fr\",\"minSize\":1,\"minSizeUnit\":\"px\",\"id\":\"\",\"isClosable\":true},\"openPopouts\":[],\"settings\":{\"constrainDragToContainer\":true,\"reorderEnabled\":true,\"popoutWholeStack\":false,\"blockedPopoutsThrowError\":true,\"closePopoutsOnUnload\":true,\"responsiveMode\":\"none\",\"tabOverlapAllowance\":0,\"reorderOnTabMenuClick\":true,\"tabControlOffset\":10,\"popInOnClose\":false},\"dimensions\":{\"borderWidth\":5,\"borderGrabWidth\":5,\"defaultMinItemHeight\":0,\"defaultMinItemHeightUnit\":\"px\",\"defaultMinItemWidth\":10,\"defaultMinItemWidthUnit\":\"px\",\"headerHeight\":20,\"dragProxyWidth\":300,\"dragProxyHeight\":200},\"header\":{\"show\":\"top\",\"popout\":\"open in new window\",\"dock\":\"dock\",\"close\":\"close\",\"maximise\":\"maximise\",\"minimise\":\"minimise\",\"tabDropdown\":\"additional tabs\"},\"resolved\":true}}\n"
+                        },
+                        {
+                          "text": "[Home] Metabolism row visible: \u001b[33mfalse\u001b[39m\n"
+                        },
+                        {
+                          "text": "[Home] Selection state test complete\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T19:40:36.561Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "1f96767271edc4239dfa-b740b36bc6e82e50ca6e",
+              "file": "sketchpad.test.ts",
+              "line": 568,
+              "column": 3
+            },
+            {
+              "title": "Kit",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 39000,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[TEST] Setting input files: C:\\git\\semio.tech\\semio\\assets\\semio\\metabolism.zip\n"
+                        },
+                        {
+                          "text": "[TEST] File set via file chooser\n"
+                        },
+                        {
+                          "text": "[TEST] Page text contains 'Metabolism': \u001b[33mtrue\u001b[39m\n"
+                        },
+                        {
+                          "text": "[TEST] Page text contains 'Loading': \u001b[33mfalse\u001b[39m\n"
+                        },
+                        {
+                          "text": "[TEST] Metabolism row visible: \u001b[33mfalse\u001b[39m\n"
+                        },
+                        {
+                          "text": "[TEST] Metabolism cell visible: \u001b[33mtrue\u001b[39m\n"
+                        },
+                        {
+                          "text": "[TEST] Double-clicked on Metabolism cell\n"
+                        },
+                        {
+                          "text": "[TEST] Navigated to: http://localhost:5173/kits/f042c2a4-3ba5-44b0-b22c-0ae8f568aacc\n"
+                        },
+                        {
+                          "text": "[Kit] Debug messages from app:\n"
+                        },
+                        {
+                          "text": "[Kit] Tambour row clicked via JS: false\n"
+                        },
+                        {
+                          "text": "[Kit] Testing Kit app sidepanel toggles\n"
+                        },
+                        {
+                          "text": "[Kit] Left sidepanel toggle visible: false\n"
+                        },
+                        {
+                          "text": "[Kit] Right sidepanel toggle visible: false\n"
+                        },
+                        {
+                          "text": "[Kit] HUD panel toggle visible: false\n"
+                        },
+                        {
+                          "text": "[Kit] Panel toggle verification complete: left=false, hud=false, right=false\n"
+                        },
+                        {
+                          "text": "[Kit] Checking for diagram nodes...\n"
+                        },
+                        {
+                          "text": "[Kit] Diagram container visible: true\n"
+                        },
+                        {
+                          "text": "[Kit] Diagram node count: 70\n"
+                        },
+                        {
+                          "text": "[Kit] First node bounding box: {\"x\":1077.134033203125,\"y\":233.06942749023438,\"width\":220,\"height\":140}\n"
+                        },
+                        {
+                          "text": "[Kit] Testing toolbar visibility and artifact filter toggles\n"
+                        },
+                        {
+                          "text": "[Kit] Toolbar visible: true\n"
+                        },
+                        {
+                          "text": "[Kit] Toolbar toggle groups count: 9\n"
+                        },
+                        {
+                          "text": "[Kit] Testing individual artifact filter toggles\n"
+                        },
+                        {
+                          "text": "[Kit] Designs filter toggle visible: true\n"
+                        },
+                        {
+                          "text": "[Kit] Types filter toggle visible: true\n"
+                        },
+                        {
+                          "text": "[Kit] Qualities filter toggle visible: true\n"
+                        },
+                        {
+                          "text": "[Kit] Testing designs filter toggle click\n"
+                        },
+                        {
+                          "text": "[Kit] URL after designs toggle click: http://localhost:5173/kits/f042c2a4-3ba5-44b0-b22c-0ae8f568aacc?kind=designs\n"
+                        },
+                        {
+                          "text": "[Kit] URL after designs toggle unclick: http://localhost:5173/kits/f042c2a4-3ba5-44b0-b22c-0ae8f568aacc\n"
+                        },
+                        {
+                          "text": "[Kit] Toolbar and artifact filter toggles test complete\n"
+                        },
+                        {
+                          "text": "[Kit] Testing sidepanel toggles again to verify they work\n"
+                        },
+                        {
+                          "text": "[Kit] Left sidepanel toggle visible: false\n"
+                        },
+                        {
+                          "text": "[Kit] Right sidepanel toggle visible: false\n"
+                        },
+                        {
+                          "text": "[Kit] SidePanel toggle test complete\n"
+                        },
+                        {
+                          "text": "[Kit] Testing selection state\n"
+                        },
+                        {
+                          "text": "[Kit] Initial kitApp state: {\"kitApp\":{\"panelVisibility\":{\"toolbar\":false,\"workbench\":false,\"details\":false,\"chat\":false,\"settings\":false},\"fullscreenWindow\":\"none\",\"others\":[],\"expandedRows\":{},\"transaction\":{\"isTransactionActive\":false,\"currentTransactionStack\":[],\"pastTransactionStack\":[],\"redoStack\":[]}},\"kitGuid\":\"f042c2a4-3ba5-44b0-b22c-0ae8f568aacc\"}\n"
+                        },
+                        {
+                          "text": "[Kit] Tambour type visible: \u001b[33mfalse\u001b[39m\n"
+                        },
+                        {
+                          "text": "[Kit] Selection state test complete\n"
+                        },
+                        {
+                          "text": "[Kit] Verifying diagram node icons match table avatars\n"
+                        },
+                        {
+                          "text": "[Kit] Diagram container visible for icons test: false\n"
+                        },
+                        {
+                          "text": "[Kit] Diagram not visible, skipping icon verification\n"
+                        },
+                        {
+                          "text": "[Kit] Diagram node icons test complete\n"
+                        },
+                        {
+                          "text": "[Kit] Verifying diagram nodes are draggable\n"
+                        },
+                        {
+                          "text": "[Kit] Found 0 diagram nodes for drag test\n"
+                        },
+                        {
+                          "text": "[Kit] No diagram nodes found, skipping drag test\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T19:40:36.560Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "1f96767271edc4239dfa-8ea0390a28d2fa06fd58",
+              "file": "sketchpad.test.ts",
+              "line": 696,
+              "column": 3
+            },
+            {
+              "title": "Type",
               "ok": false,
               "tags": [],
               "tests": [
@@ -83,30 +353,112 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
                       "status": "failed",
-                      "duration": 73605,
+                      "duration": 37724,
                       "error": {
-                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m",
-                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:1896:38",
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:1177:23",
                         "location": {
                           "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
-                          "column": 38,
-                          "line": 1896
+                          "column": 23,
+                          "line": 1177
                         },
-                        "snippet": "\u001b[0m \u001b[90m 1894 |\u001b[39m     console\u001b[33m.\u001b[39mlog(\u001b[32m`[Design] Plane validation: ${validPlaneCount} valid, ${invalidPlaneCount} non-standard, ${noPlanePieces} without plane`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 1895 |\u001b[39m     console\u001b[33m.\u001b[39mlog(\u001b[32m`[Design] Note: The Nakagin Capsule Tower has rotated capsules, so most pieces have non-standard plane orientation - this is expected.`\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 1896 |\u001b[39m     expect(existingPiecesDnD\u001b[33m.\u001b[39mlength)\u001b[33m.\u001b[39mtoBeGreaterThan(\u001b[35m0\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m      |\u001b[39m                                      \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 1897 |\u001b[39m     console\u001b[33m.\u001b[39mlog(\u001b[32m\"[Design] Drag and drop setup test complete\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 1898 |\u001b[39m     \u001b[90m// #endregion Drag and Drop Setup\u001b[39m\n \u001b[90m 1899 |\u001b[39m\u001b[0m"
+                        "snippet": "\u001b[0m \u001b[90m 1175 |\u001b[39m     \u001b[36mconst\u001b[39m isTypeUrl \u001b[33m=\u001b[39m currentUrl\u001b[33m.\u001b[39mincludes(\u001b[32m\"/types/\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 1176 |\u001b[39m     console\u001b[33m.\u001b[39mlog(\u001b[32m`[Type] Is type URL: ${isTypeUrl}`\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 1177 |\u001b[39m     expect(isTypeUrl)\u001b[33m.\u001b[39mtoBe(\u001b[36mtrue\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m      |\u001b[39m                       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 1178 |\u001b[39m     \u001b[36mconst\u001b[39m canvas \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m\"canvas\"\u001b[39m)\u001b[33m.\u001b[39mfirst()\u001b[33m;\u001b[39m\n \u001b[90m 1179 |\u001b[39m     \u001b[36mconst\u001b[39m hasCanvas \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m canvas\u001b[33m.\u001b[39misVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m15000\u001b[39m })\u001b[33m.\u001b[39m\u001b[36mcatch\u001b[39m(() \u001b[33m=>\u001b[39m \u001b[36mfalse\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 1180 |\u001b[39m     console\u001b[33m.\u001b[39mlog(\u001b[32m`[Type] Canvas visible: ${hasCanvas}`\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
                       },
                       "errors": [
                         {
                           "location": {
                             "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
-                            "column": 38,
-                            "line": 1896
+                            "column": 23,
+                            "line": 1177
                           },
-                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n\n\u001b[0m \u001b[90m 1894 |\u001b[39m     console\u001b[33m.\u001b[39mlog(\u001b[32m`[Design] Plane validation: ${validPlaneCount} valid, ${invalidPlaneCount} non-standard, ${noPlanePieces} without plane`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 1895 |\u001b[39m     console\u001b[33m.\u001b[39mlog(\u001b[32m`[Design] Note: The Nakagin Capsule Tower has rotated capsules, so most pieces have non-standard plane orientation - this is expected.`\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 1896 |\u001b[39m     expect(existingPiecesDnD\u001b[33m.\u001b[39mlength)\u001b[33m.\u001b[39mtoBeGreaterThan(\u001b[35m0\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m      |\u001b[39m                                      \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 1897 |\u001b[39m     console\u001b[33m.\u001b[39mlog(\u001b[32m\"[Design] Drag and drop setup test complete\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 1898 |\u001b[39m     \u001b[90m// #endregion Drag and Drop Setup\u001b[39m\n \u001b[90m 1899 |\u001b[39m\u001b[0m\n\u001b[2m    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:1896:38\u001b[22m"
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n\u001b[0m \u001b[90m 1175 |\u001b[39m     \u001b[36mconst\u001b[39m isTypeUrl \u001b[33m=\u001b[39m currentUrl\u001b[33m.\u001b[39mincludes(\u001b[32m\"/types/\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 1176 |\u001b[39m     console\u001b[33m.\u001b[39mlog(\u001b[32m`[Type] Is type URL: ${isTypeUrl}`\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 1177 |\u001b[39m     expect(isTypeUrl)\u001b[33m.\u001b[39mtoBe(\u001b[36mtrue\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m      |\u001b[39m                       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 1178 |\u001b[39m     \u001b[36mconst\u001b[39m canvas \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m\"canvas\"\u001b[39m)\u001b[33m.\u001b[39mfirst()\u001b[33m;\u001b[39m\n \u001b[90m 1179 |\u001b[39m     \u001b[36mconst\u001b[39m hasCanvas \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m canvas\u001b[33m.\u001b[39misVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m15000\u001b[39m })\u001b[33m.\u001b[39m\u001b[36mcatch\u001b[39m(() \u001b[33m=>\u001b[39m \u001b[36mfalse\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 1180 |\u001b[39m     console\u001b[33m.\u001b[39mlog(\u001b[32m`[Type] Canvas visible: ${hasCanvas}`\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts:1177:23\u001b[22m"
                         }
                       ],
+                      "stdout": [
+                        {
+                          "text": "[TEST] Setting input files: C:\\git\\semio.tech\\semio\\assets\\semio\\metabolism.zip\n"
+                        },
+                        {
+                          "text": "[TEST] File set via file chooser\n"
+                        },
+                        {
+                          "text": "[TEST] Page text contains 'Metabolism': \u001b[33mtrue\u001b[39m\n"
+                        },
+                        {
+                          "text": "[TEST] Page text contains 'Loading': \u001b[33mfalse\u001b[39m\n"
+                        },
+                        {
+                          "text": "[TEST] Metabolism row visible: \u001b[33mfalse\u001b[39m\n"
+                        },
+                        {
+                          "text": "[TEST] Metabolism cell visible: \u001b[33mtrue\u001b[39m\n"
+                        },
+                        {
+                          "text": "[TEST] Double-clicked on Metabolism cell\n"
+                        },
+                        {
+                          "text": "[TEST] Navigated to: http://localhost:5173/kits/f042c2a4-3ba5-44b0-b22c-0ae8f568aacc\n"
+                        },
+                        {
+                          "text": "[initType] About to double-click on type via JS\n"
+                        },
+                        {
+                          "text": "[initType] Double-clicked on type via JS: false\n"
+                        },
+                        {
+                          "text": "[Type] Current URL after initType: http://localhost:5173/kits/f042c2a4-3ba5-44b0-b22c-0ae8f568aacc\n"
+                        },
+                        {
+                          "text": "[Type] Is type URL: false\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T19:40:36.569Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\git\\semio.tech\\semio\\js\\js\\test-results\\sketchpad-sketchpad-Type-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
+                        "column": 23,
+                        "line": 1177
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "1f96767271edc4239dfa-99d988a262cf65a431a0",
+              "file": "sketchpad.test.ts",
+              "line": 1170,
+              "column": 3
+            },
+            {
+              "title": "Design",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 85960,
+                      "errors": [],
                       "stdout": [
                         {
                           "text": "[TEST] Setting input files: C:\\git\\semio.tech\\semio\\assets\\semio\\metabolism.zip\n"
@@ -166,37 +518,37 @@
                           "text": "[Design Test] Piece count: \u001b[33m2880\u001b[39m\n"
                         },
                         {
-                          "text": "[Design Test] Pan 1 took 26ms\n"
+                          "text": "[Design Test] Pan 1 took 31ms\n"
                         },
                         {
-                          "text": "[Design Test] Pan 2 took 49ms\n"
+                          "text": "[Design Test] Pan 2 took 27ms\n"
                         },
                         {
-                          "text": "[Design Test] Hover (mouse enter) took 1402ms\n"
+                          "text": "[Design Test] Hover (mouse enter) took 887ms\n"
                         },
                         {
-                          "text": "[Design Test] Unhover (mouse leave) took 2698ms\n"
+                          "text": "[Design Test] Unhover (mouse leave) took 1017ms\n"
                         },
                         {
-                          "text": "[Design Test] Hover timing: hover=1402ms, unhover=2698ms\n"
+                          "text": "[Design Test] Hover timing: hover=887ms, unhover=1017ms\n"
                         },
                         {
-                          "text": "[Design Test] Hover cycle times: 2958, 29, 53ms\n"
+                          "text": "[Design Test] Hover cycle times: 1483, 11, 13ms\n"
                         },
                         {
                           "text": "[Design Test] Starting scene pan operations on three.js canvas\n"
                         },
                         {
-                          "text": "[Design Test] Scene Pan 1 took 10ms\n"
+                          "text": "[Design Test] Scene Pan 1 took 231ms\n"
                         },
                         {
-                          "text": "[Design Test] Scene Pan 2 took 24ms\n"
+                          "text": "[Design Test] Scene Pan 2 took 738ms\n"
                         },
                         {
-                          "text": "[Design Test] Scene Pan 3 took 22ms\n"
+                          "text": "[Design Test] Scene Pan 3 took 270ms\n"
                         },
                         {
-                          "text": "[Design Test] Average subsequent scene pan time: 23ms\n"
+                          "text": "[Design Test] Average subsequent scene pan time: 504ms\n"
                         },
                         {
                           "text": "[Design] Testing Design app sidepanel toggles\n"
@@ -253,13 +605,25 @@
                           "text": "[Design Test] Verifying flat planes and centers match expected asset data\n"
                         },
                         {
-                          "text": "[Design Test] Skipping flat planes/centers verification - metadata not available via window or expected data empty\n"
+                          "text": "[Design Test] Comparing 180 computed pieces with 180 expected flat pieces\n"
+                        },
+                        {
+                          "text": "[Design Test] Flat planes/centers verification: 180 matches, 0 mismatches\n"
                         },
                         {
                           "text": "[Design] Testing selection state\n"
                         },
                         {
                           "text": "[Design] Initial designApp state: {\"designGuid\":\"37ba7ec4-9023-4be7-9ab6-e0ebc80007f8\"}\n"
+                        },
+                        {
+                          "text": "[Design] Piece count for selection: \u001b[33m2880\u001b[39m\n"
+                        },
+                        {
+                          "text": "[Design] After click designApp state: {\"designGuid\":\"37ba7ec4-9023-4be7-9ab6-e0ebc80007f8\"}\n"
+                        },
+                        {
+                          "text": "[Design] Selection pieces: []\n"
                         },
                         {
                           "text": "[Design] Selection state test complete\n"
@@ -298,10 +662,7 @@
                           "text": "[Design] Testing drag and drop setup\n"
                         },
                         {
-                          "text": "[Design] Scene canvas visible for drag and drop: false\n"
-                        },
-                        {
-                          "text": "[Design] Scene canvas not visible, skipping drag and drop tests\n"
+                          "text": "[Design] Scene canvas visible for drag and drop: true\n"
                         },
                         {
                           "text": "[Design] Left sidepanel toggle clicked for drag and drop\n"
@@ -328,39 +689,215 @@
                           "text": "[Design] No type avatars found, skipping drag and drop verification\n"
                         },
                         {
-                          "text": "[Design] Design has 0 existing pieces\n"
+                          "text": "[Design] Design has 180 existing pieces\n"
                         },
                         {
-                          "text": "[Design] Plane validation: 0 valid, 0 non-standard, 0 without plane\n"
+                          "text": "[Design] Plane validation: 1 valid, 179 non-standard, 0 without plane\n"
                         },
                         {
                           "text": "[Design] Note: The Nakagin Capsule Tower has rotated capsules, so most pieces have non-standard plane orientation - this is expected.\n"
+                        },
+                        {
+                          "text": "[Design] Drag and drop setup test complete\n"
+                        },
+                        {
+                          "text": "[Design] Testing diagram node drag to update piece center\n"
+                        },
+                        {
+                          "text": "[Design] Found 2880 piece nodes for drag test\n"
+                        },
+                        {
+                          "text": "[Design] Testing drag on piece node: piece-0-739c5e32-217f-4d03-b7b6-78b9c0cda46a\n"
+                        },
+                        {
+                          "text": "[Design] Piece center before drag: u=undefined, v=undefined\n"
+                        },
+                        {
+                          "text": "[Design] Dragging piece node from (346.1875, 397.984375) to (446.1875, 447.984375)\n"
+                        },
+                        {
+                          "text": "[Design] Piece center after drag: u=undefined, v=undefined\n"
+                        },
+                        {
+                          "text": "[Design] Could not compare centers - centerBeforeDrag or centerAfterDrag is null/undefined\n"
+                        },
+                        {
+                          "text": "[Design] Diagram node drag test complete\n"
                         }
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-12-23T00:07:40.970Z",
+                      "startTime": "2025-12-31T19:40:36.617Z",
                       "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "C:\\git\\semio.tech\\semio\\js\\js\\test-results\\sketchpad-sketchpad-Design-chromium\\error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "C:\\git\\semio.tech\\semio\\js\\js\\sketchpad.test.ts",
-                        "column": 38,
-                        "line": 1896
-                      }
+                      "attachments": []
                     }
                   ],
-                  "status": "unexpected"
+                  "status": "expected"
                 }
               ],
               "id": "1f96767271edc4239dfa-04d6a37c53e07d4a2f57",
               "file": "sketchpad.test.ts",
-              "line": 1344,
+              "line": 1343,
+              "column": 3
+            },
+            {
+              "title": "Docs",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 4,
+                      "status": "passed",
+                      "duration": 19577,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[Docs] Page content preview: \n    SearchSearch for kits, designs, types, and moreFocusFocus on an element in the current viewpage[data-radix-scroll-area-viewport]{scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch;}[data-radix-scroll-area-viewport]::-webkit-scrollbar{display:none}ErrorContent not foundNo content availablepageNavigation.nextIntropage[data-radix-scroll-area-viewport]{scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch;}[data-radix-scroll-area-viewport]::-we\n"
+                        },
+                        {
+                          "text": "[Docs] Found h1 elements: \u001b[33m3\u001b[39m\n"
+                        },
+                        {
+                          "text": "[Docs] h1 text: Error\n"
+                        },
+                        {
+                          "text": "[Docs] h1 text: Welcome to Semio\n"
+                        },
+                        {
+                          "text": "[Docs] h1 text: Welcome to Semio\n"
+                        },
+                        {
+                          "text": "[Docs] Testing Docs app sidepanel toggles\n"
+                        },
+                        {
+                          "text": "[Docs] Left sidepanel toggle visible: false\n"
+                        },
+                        {
+                          "text": "[Docs] Right sidepanel toggle visible: false\n"
+                        },
+                        {
+                          "text": "[Docs] HUD panel toggle visible: false\n"
+                        },
+                        {
+                          "text": "[Docs] Panel toggle verification complete: left=false, hud=false, right=false\n"
+                        },
+                        {
+                          "text": "[Docs] Intro button visible: true\n"
+                        },
+                        {
+                          "text": "[Docs] URL after click: http://localhost:5173/docs/index\n"
+                        },
+                        {
+                          "text": "[Docs] Docs test complete\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T19:40:36.708Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "1f96767271edc4239dfa-5a4f50354005f7ed4484",
+              "file": "sketchpad.test.ts",
+              "line": 2000,
+              "column": 3
+            },
+            {
+              "title": "Feedback",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 5,
+                      "status": "passed",
+                      "duration": 20762,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[Feedback] Testing navigation to feedback page\n"
+                        },
+                        {
+                          "text": "[Feedback] Navigation test complete\n"
+                        },
+                        {
+                          "text": "[Feedback] Testing bug report form\n"
+                        },
+                        {
+                          "text": "[Feedback] Bug report form test complete\n"
+                        },
+                        {
+                          "text": "[Feedback] Testing idea form switch\n"
+                        },
+                        {
+                          "text": "[Feedback] Idea form switch test complete\n"
+                        },
+                        {
+                          "text": "[Feedback] Testing toolbar and send button\n"
+                        },
+                        {
+                          "text": "[Feedback] Send button visible: true\n"
+                        },
+                        {
+                          "text": "[Feedback] Toolbar test complete\n"
+                        },
+                        {
+                          "text": "[Feedback] Testing validation\n"
+                        },
+                        {
+                          "text": "[Feedback] Validation test complete\n"
+                        },
+                        {
+                          "text": "[Feedback] Testing fill bug report\n"
+                        },
+                        {
+                          "text": "[Feedback] Fill bug report test complete\n"
+                        },
+                        {
+                          "text": "[Feedback] Testing fill feature idea\n"
+                        },
+                        {
+                          "text": "[Feedback] Fill feature idea test complete\n"
+                        },
+                        {
+                          "text": "[Feedback] Testing footer action visibility\n"
+                        },
+                        {
+                          "text": "[Feedback] Footer action visibility test complete\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T19:40:36.669Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "1f96767271edc4239dfa-c91433a16bd28ae89fd9",
+              "file": "sketchpad.test.ts",
+              "line": 2077,
               "column": 3
             }
           ]
@@ -370,9 +907,9 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2025-12-23T00:07:38.702Z",
-    "duration": 76546.13900000043,
-    "expected": 0,
+    "startTime": "2025-12-31T19:40:33.977Z",
+    "duration": 89445.80700000003,
+    "expected": 5,
     "skipped": 0,
     "unexpected": 1,
     "flaky": 0

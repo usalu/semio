@@ -1482,17 +1482,12 @@ public class Expression
 
 #endregion Utility
 
-#region Entitying
+#region Metadata
 
 public abstract class MetaAttribute : System.Attribute
 {
     public MetaAttribute(string emoji, string code, string abbreviation, string description)
-    {
-        Emoji = emoji;
-        Code = code;
-        Abbreviation = abbreviation;
-        Description = description;
-    }
+        => (Emoji, Code, Abbreviation, Description) = (emoji, code, abbreviation, description);
 
     public string Emoji { get; set; }
     public string Code { get; set; }
@@ -1500,22 +1495,9 @@ public abstract class MetaAttribute : System.Attribute
     public string Description { get; set; }
 }
 
-[AttributeUsage(AttributeTargets.Class)]
-public class EntityAttribute : MetaAttribute
-{
-    public EntityAttribute(string emoji, string code, string abbreviation, string description)
-        : base(emoji, code,
-            abbreviation, description)
-    { }
-}
+#endregion Metadata
 
-[AttributeUsage(AttributeTargets.Enum)]
-public class EnumAttribute : MetaAttribute
-{
-    public EnumAttribute(string emoji, string code, string abbreviation, string description)
-        : base(emoji, code, abbreviation, description)
-    { }
-}
+#region Entitying
 
 public enum PropImportance
 {
@@ -1651,7 +1633,6 @@ public abstract class Entity<T> where T : Entity<T>
 {
     public override string ToString()
     {
-        var entityAttribute = GetType().GetCustomAttribute<EntityAttribute>();
         var nonEmptyIdProperties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .Where(p => p.GetCustomAttribute<PropAttribute>()?.Importance == PropImportance.ID &&
                         (p.GetValue(this) as string ?? "") != "")
@@ -1660,14 +1641,14 @@ public abstract class Entity<T> where T : Entity<T>
             .Where(v => v != null)
             .Select(v => v!.ToString()).ToList();
         if (nonEmptyIdPropertiesValues.Count != 0)
-            return $"{entityAttribute?.Abbreviation ?? ""}({string.Join(",", nonEmptyIdPropertiesValues)})";
+            return $"({string.Join(",", nonEmptyIdPropertiesValues)})";
         var requiredProperties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .Where(p => p.GetCustomAttribute<PropAttribute>()?.Importance == PropImportance.REQUIRED)
             .Select(p => p.Name);
         var requiredPropertiesValues = requiredProperties.Select(p => GetType().GetProperty(p)?.GetValue(this))
             .Where(v => v != null)
             .Select(v => v!.ToString()).ToList();
-        return $"{entityAttribute?.Abbreviation ?? ""}({string.Join(",", requiredPropertiesValues)})";
+        return $"({string.Join(",", requiredPropertiesValues)})";
     }
 
     public override bool Equals(object? obj)
@@ -1715,114 +1696,6 @@ public class EntityValidator<T> : AbstractValidator<T> where T : Entity<T>
 {
     public EntityValidator()
     {
-        var entityTypeName = typeof(T).Name;
-        var properties = Meta.Property[entityTypeName];
-        for (var i = 0; i < properties.Length; i++)
-        {
-            var property = properties[i];
-            var isPropertyList = Meta.IsPropertyList[entityTypeName][i];
-            var isPropertyEntity = Meta.IsPropertyEntity[entityTypeName][i];
-            ValidateProperty(property, isPropertyList, isPropertyEntity);
-        }
-    }
-
-    private void ValidateProperty(PropertyInfo property, bool isPropertyList, bool isPropertyEntity)
-    {
-        var propAttribute = property.GetCustomAttribute<PropAttribute>();
-        if (propAttribute?.SkipValidation == true) return;
-        if (isPropertyList)
-            ConstraintFor(entity => property.GetValue(entity))
-                .NotEmpty()
-                .WithMessage($"The {property.Name.ToLower()} must have at least one.")
-                .When(m => propAttribute?.Importance != PropImportance.OPTIONAL);
-        if (property.PropertyType == typeof(float))
-        {
-            var numberAttribute = property.GetCustomAttribute<NumberPropAttribute>();
-            var isAngle = property.GetCustomAttribute<AnglePropAttribute>() != null;
-            if (isAngle)
-                ConstraintFor(entity => property.GetValue(entity) as float?)
-                    .GreaterThanOrEqualTo(0)
-                    .WithMessage($"The {property.Name.ToLower()} must be at least 0 degrees.")
-                    .LessThan(360)
-                    .WithMessage($"The {property.Name.ToLower()} must be less than 360 degrees.");
-        }
-        else if (property.PropertyType == typeof(string))
-        {
-            var textAttribute = property.GetCustomAttribute<TextAttribute>();
-            if (textAttribute is null) return;
-            ConstraintFor(entity => property.GetValue(entity) as string)
-                .NotEmpty()
-                .When(m => !(textAttribute.Importance == PropImportance.OPTIONAL || textAttribute.IsDefaultValid))
-                .WithMessage($"The {property.Name.ToLower()} must not be empty.")
-                .MaximumLength(textAttribute.LengthLimit)
-                .WithMessage(entity =>
-                {
-                    var value = property.GetValue(entity) as string;
-                    var preview = value?.Length > 10 ? value!.Substring(0, 10) + "..." : value ?? "";
-                    return
-                        $"The {property.Name.ToLower()} must be at most {textAttribute.LengthLimit} characters long. The provided text ({preview}) has {value?.Length ?? 0} characters.";
-                });
-
-            if (property.GetCustomAttribute<DescriptionAttribute>() == null)
-            {
-                ConstraintFor(entity => property.GetValue(entity) as string)
-                    .Matches(@"^\S.*$")
-                    .When(m => (property.GetValue(m) as string ?? "") != "")
-                    .WithMessage($"The {property.Name.ToLower()} must not start with a space.")
-                    .Matches(@"^.*\S$")
-                    .When(m => (property.GetValue(m) as string ?? "") != "")
-                    .WithMessage($"The {property.Name.ToLower()} must not end with a space.")
-                    .Matches(@"^[^\r\n]*$")
-                    .When(m => (property.GetValue(m) as string ?? "") != "")
-                    .WithMessage($"The {property.Name.ToLower()} must not contain newlines.");
-            }
-
-            if (property.GetCustomAttribute<NameAttribute>() != null)
-            { }
-            else if (property.GetCustomAttribute<IdAttribute>() != null)
-            { }
-            else if (property.GetCustomAttribute<EmailAttribute>() != null)
-            {
-                ConstraintFor(entity => property.GetValue(entity) as string)
-                    .EmailAddress().WithMessage($"The {property.Name.ToLower()} is not a valid email address.");
-            }
-            else if (property.GetCustomAttribute<UrlAttribute>() != null)
-            { }
-        }
-        else if (property.PropertyType == typeof(List<string>))
-        {
-
-
-            var textAttribute = property.GetCustomAttribute<TextAttribute>();
-            if (textAttribute is null) return;
-            ConstraintForEach(list => property.GetValue(list) as List<string>)
-                .NotEmpty()
-                .When(m => !textAttribute.IsDefaultValid)
-                .WithMessage(item =>
-                {
-                    var singularPropertyName = property.Name.ToLower().TrimEnd('s');
-                    return $"A {singularPropertyName} must not be empty.";
-                })
-                .MaximumLength(textAttribute.LengthLimit)
-                .WithMessage((list, item) =>
-                {
-                    var preview = item?.Length > 10 ? item.Substring(0, 10) + "..." : item ?? "";
-                    var singularPropertyName = property.Name.ToLower().TrimEnd('s');
-                    return
-                        $"A {singularPropertyName} must be at most {textAttribute.LengthLimit} characters long. The provided {singularPropertyName} ({preview}) has {item?.Length ?? 0} characters.";
-                })
-                .OverridePropertyName(property.Name);
-        }
-        else if (isPropertyEntity && !isPropertyList)
-        {
-
-
-
-        }
-        else if (isPropertyEntity && isPropertyList)
-        {
-
-        }
     }
 }
 
@@ -2134,7 +2007,7 @@ public class DiffUpdate<T>
 
 #region Attribute
 
-[Entity("🔐", "AI", "AtI", "The ID of the attribute.")]
+
 public class AttributeId : Entity<AttributeId>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the attribute.", PropImportance.ID)]
@@ -2144,7 +2017,7 @@ public class AttributeId : Entity<AttributeId>
     public static implicit operator AttributeId(AttributeDiff diff) => new() { Guid = diff.Guid ?? "" };
 }
 
-[Entity("🔐", "AD", "ADf", "A diff for attributes.")]
+
 public class AttributeDiff : Entity<AttributeDiff>
 {
     [Id("🆔", "Gd?", "Gid", "The optional guid of the attribute.")]
@@ -2171,7 +2044,7 @@ public class AttributeDiff : Entity<AttributeDiff>
     }
 }
 
-[Entity("📊", "AtD", "AtsDf", "A diff for multiple attributes.")]
+
 public class AttributesDiff : Entity<AttributesDiff>
 {
     [EntityProp("➖", "Rm*", "Rem*", "The optional removed attributes.", PropImportance.OPTIONAL)]
@@ -2197,7 +2070,7 @@ public class AttributesDiff : Entity<AttributesDiff>
 
 
 
-[Entity("🏷️", "At", "Atr", "A attribute is a key value pair with an an optional definition.")]
+
 public class Attribute : Entity<Attribute>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the attribute.", PropImportance.ID)]
@@ -2258,7 +2131,7 @@ public class Attribute : Entity<Attribute>
 
 
 
-[Entity("📺", "DP", "DPt", "A 2d-point (uv) of floats in the diagram. One unit is equal the width of a piece icon.")]
+
 public class Coord : Entity<Coord>
 {
     [NumberProp("🎚️", "U", "U", "The u-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.", PropImportance.REQUIRED)]
@@ -2281,7 +2154,7 @@ public class Coord : Entity<Coord>
 
 
 
-[Entity("✖️", "Pt", "Pnt", "A 3-point (xyz) of floating point numbers.")]
+
 public class Point : Entity<Point>
 {
     [NumberProp("🎚️", "X", "X", "The x-coordinate of the point.", PropImportance.REQUIRED)]
@@ -2299,7 +2172,7 @@ public class Point : Entity<Point>
 
 
 
-[Entity("➡️", "Vc", "Vec", "A 3d-vector (xyz) of floating point numbers.")]
+
 public class Vector : Entity<Vector>
 {
     [NumberProp("🎚️", "X", "X", "The x-coordinate of the vector.", PropImportance.REQUIRED)]
@@ -2340,7 +2213,7 @@ public class Vector : Entity<Vector>
 
 
 
-[Entity("◳", "Pn", "Pln", "A plane is an origin (point) and an orientation (x-axis and y-axis).")]
+
 public class Plane : Entity<Plane>
 {
     [EntityProp("⌱", "Og", "Org", "The origin of the plane.")]
@@ -2379,7 +2252,7 @@ public class Plane : Entity<Plane>
 
 #region Location
 
-[Entity("📍", "LI", "LocI", "The ID of a location.")]
+
 public class LocationId : Entity<LocationId>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the location.", PropImportance.ID)]
@@ -2390,7 +2263,7 @@ public class LocationId : Entity<LocationId>
     public override string ToString() => $"LocI({ToHumanIdString()})";
 }
 
-[Entity("📍", "Lc", "Loc", "A location on the earth surface (longitude, latitude).")]
+
 public class Location : Entity<Location>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the location.", PropImportance.ID)]
@@ -2412,7 +2285,7 @@ public class Location : Entity<Location>
 
 #region Author
 
-[Entity("👤", "Au", "Aut", "The id of the author.")]
+
 public class AuthorId : Entity<AuthorId>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the author.", PropImportance.ID)]
@@ -2423,7 +2296,7 @@ public class AuthorId : Entity<AuthorId>
     public override string ToString() => $"Aut({ToHumanIdString()})";
 }
 
-[Entity("🔗", "AA", "ArtAuth", "A many-to-many relationship between authors and artifacts (types/designs).")]
+
 public class ArtifactAuthor : Entity<ArtifactAuthor>
 {
     [Email("📧", "AEm", "AEml", "The email of the author.", PropImportance.ID)]
@@ -2456,7 +2329,7 @@ public class ArtifactAuthor : Entity<ArtifactAuthor>
     }
 }
 
-[Entity("👤", "AuD", "AuDf", "A diff for an author.")]
+
 public class AuthorDiff : Entity<AuthorDiff>
 {
     [Id("🆔", "Gd?", "Gid", "The optional guid of the author.")]
@@ -2482,7 +2355,7 @@ public class AuthorDiff : Entity<AuthorDiff>
     }
 }
 
-[Entity("", "Au", "Aut", "The information about the author.")]
+
 public class Author : Entity<Author>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the author.", PropImportance.ID)]
@@ -2513,7 +2386,7 @@ public class Author : Entity<Author>
     }
 }
 
-[Entity("👥", "AuD", "AusDf", "A diff for multiple authors.")]
+
 public class AuthorsDiff : Entity<AuthorsDiff>
 {
     [EntityProp("➖", "Rm*", "Rem*", "The optional removed authors.", PropImportance.OPTIONAL)]
@@ -2540,7 +2413,7 @@ public class AuthorsDiff : Entity<AuthorsDiff>
 
 #region File
 
-[Entity("📄", "Fl", "Fil", "The identifier of a file.")]
+
 public class FileId : Entity<FileId>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the file.", PropImportance.ID)]
@@ -2555,7 +2428,7 @@ public class FileId : Entity<FileId>
     public static implicit operator FileId(FileDiff diff) => new() { Guid = diff.Guid ?? "" };
 }
 
-[Entity("📄", "FD", "FDf", "A diff for files.")]
+
 public class FileDiff : Entity<FileDiff>
 {
     [Id("🆔", "Gd?", "Gid", "The optional guid of the file.")]
@@ -2597,7 +2470,7 @@ public class FileDiff : Entity<FileDiff>
     }
 }
 
-[Entity("📊", "FsD", "FsDf", "A diff for multiple files.")]
+
 public class FilesDiff : Entity<FilesDiff>
 {
     [EntityProp("➖", "Rm*", "Rem*", "The optional removed files.", PropImportance.OPTIONAL)]
@@ -2610,7 +2483,7 @@ public class FilesDiff : Entity<FilesDiff>
     public static implicit operator FilesDiff(List<File> files) => new() { Updated = files.Select(f => new DiffUpdate<FileDiff> { Id = f.Guid, Diff = (FileDiff)f }).ToList() };
 }
 
-[Entity("📄", "Fl", "Fil", "A file with content.")]
+
 public class File : Entity<File>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the file.", PropImportance.ID)]
@@ -2649,7 +2522,7 @@ public class File : Entity<File>
 
 #region Folder
 
-[Entity("�", "FId", "FolId", "The identifier for a folder.")]
+
 public class FolderId : Entity<FolderId>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the folder.", PropImportance.ID)]
@@ -2662,7 +2535,7 @@ public class FolderId : Entity<FolderId>
     public static implicit operator FolderId(FolderDiff diff) => new() { Guid = diff.Guid ?? "" };
 }
 
-[Entity("📁", "FD", "FolDf", "A diff for folders.")]
+
 public class FolderDiff : Entity<FolderDiff>
 {
     [Id("🆔", "Gd?", "Gid", "The optional guid of the folder.")]
@@ -2701,7 +2574,7 @@ public class FolderDiff : Entity<FolderDiff>
     }
 }
 
-[Entity("📁", "FsD", "FolsDf", "A diff for multiple folders.")]
+
 public class FoldersDiff : Entity<FoldersDiff>
 {
     [EntityProp("➖", "Rm*", "Rem*", "The optional removed folders.", PropImportance.OPTIONAL)]
@@ -2714,7 +2587,7 @@ public class FoldersDiff : Entity<FoldersDiff>
     public static implicit operator FoldersDiff(List<Folder> folders) => new() { Updated = folders.Select(f => new DiffUpdate<FolderDiff> { Id = f.Guid, Diff = (FolderDiff)f }).ToList() };
 }
 
-[Entity("📁", "Fol", "Folder", "A folder is an organizational container.")]
+
 public class Folder : Entity<Folder>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the folder.", PropImportance.ID)]
@@ -2765,7 +2638,7 @@ public class Folder : Entity<Folder>
 
 #region Benchmark
 
-[Entity("🔢", "BI", "BmI", "The identifier for a benchmark.")]
+
 public class BenchmarkId : Entity<BenchmarkId>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the benchmark.", PropImportance.ID)]
@@ -2779,7 +2652,7 @@ public class BenchmarkId : Entity<BenchmarkId>
 
 
 
-[Entity("🔢", "Bm", "Bmk", "A benchmark is a value with an optional unit for a quality.")]
+
 public class Benchmark : Entity<Benchmark>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the benchmark.", PropImportance.ID)]
@@ -2808,7 +2681,6 @@ public class Benchmark : Entity<Benchmark>
 #region QualityKind
 
 [Flags]
-[Enum("🏷️", "QK", "QlK", "The kind of quality indicating its scope and applicability.")]
 public enum QualityKind
 {
     General = 0,
@@ -2826,7 +2698,7 @@ public enum QualityKind
 
 
 
-[Entity("🔑", "Ql", "Qal", "A quality id is a guid for a quality.")]
+
 public class QualityId : Entity<QualityId>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the quality.")]
@@ -2836,7 +2708,7 @@ public class QualityId : Entity<QualityId>
     public static implicit operator QualityId(QualityDiff diff) => new() { Guid = diff.Guid ?? "" };
 }
 
-[Entity("📊", "QD", "QDf", "A diff for qualities.")]
+
 public class QualityDiff : Entity<QualityDiff>
 {
     [Id("🆔", "Gd?", "Gid", "The optional guid of the quality.")]
@@ -2882,7 +2754,7 @@ public class QualityDiff : Entity<QualityDiff>
 
 
 
-[Entity("📃", "Ql", "Qal", "A quality is numeric metadata used for stats and benchmarks.")]
+
 public class Quality : Entity<Quality>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the quality.", PropImportance.ID)]
@@ -2959,7 +2831,7 @@ public class Quality : Entity<Quality>
 
 
 
-[Entity("🏷️", "Tg", "Tag", "A tag id is a guid for a tag.")]
+
 public class TagId : Entity<TagId>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the tag.")]
@@ -2971,7 +2843,7 @@ public class TagId : Entity<TagId>
 
 
 
-[Entity("🏷️", "Tg", "Tag", "A tag is a label for categorizing entitys.")]
+
 public class Tag : Entity<Tag>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the tag.", PropImportance.ID)]
@@ -2995,7 +2867,7 @@ public class Tag : Entity<Tag>
 
 
 
-[Entity("💡", "Cp", "Con", "A concept id is a guid for a concept.")]
+
 public class ConceptId : Entity<ConceptId>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the concept.")]
@@ -3007,7 +2879,7 @@ public class ConceptId : Entity<ConceptId>
 
 
 
-[Entity("💡", "Cp", "Con", "A concept is a semantic grouping for types or designs.")]
+
 public class Concept : Entity<Concept>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the concept.", PropImportance.ID)]
@@ -3024,7 +2896,7 @@ public class Concept : Entity<Concept>
     public static implicit operator Concept(ConceptId id) => new() { Guid = id.Guid };
 }
 
-[Entity("💡", "CpD", "CoDf", "A diff for a concept.")]
+
 public class ConceptDiff : Entity<ConceptDiff>
 {
     [Id("🆔", "Gd?", "Gid", "The optional guid of the concept.")]
@@ -3039,7 +2911,7 @@ public class ConceptDiff : Entity<ConceptDiff>
     public AttributesDiff? Attributes { get; set; }
 }
 
-[Entity("💡", "CsD", "CsDf", "A diff for multiple concepts.")]
+
 public class ConceptsDiff : Entity<ConceptsDiff>
 {
     [EntityProp("➖", "Rm*", "Rem*", "The optional removed concepts.", PropImportance.OPTIONAL)]
@@ -3067,7 +2939,7 @@ public class ConceptsDiff : Entity<ConceptsDiff>
 
 
 
-[Entity("🔑", "If", "Ifc", "An port id is a guid for an port.")]
+
 public class InterfaceId : Entity<InterfaceId>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the port.")]
@@ -3077,7 +2949,7 @@ public class InterfaceId : Entity<InterfaceId>
     public static implicit operator InterfaceId(InterfaceDiff diff) => new() { Guid = diff.Guid };
 }
 
-[Entity("📊", "IfD", "IfDf", "A diff for ports.")]
+
 public class InterfaceDiff : Entity<InterfaceDiff>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the port.")]
@@ -3097,7 +2969,7 @@ public class InterfaceDiff : Entity<InterfaceDiff>
     public static implicit operator InterfaceDiff(Interface iface) => new() { Guid = iface.Guid, Name = iface.Name, Description = iface.Description, Icon = iface.Icon, CompatibleInterfaces = iface.CompatibleInterfaces?.Select(i => (InterfaceId)i).ToList(), Attributes = iface.Attributes };
 }
 
-[Entity("📊", "IfsD", "IfsDf", "A diff for multiple ports.")]
+
 public class InterfacesDiff : Entity<InterfacesDiff>
 {
     [EntityProp("➖", "Rm*", "Rem*", "The optional removed ports.", PropImportance.OPTIONAL)]
@@ -3113,7 +2985,7 @@ public class InterfacesDiff : Entity<InterfacesDiff>
 
 
 
-[Entity("🔌", "If", "Ifc", "An port defines connector compatibility.")]
+
 public class Interface : Entity<Interface>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the port.")]
@@ -3184,7 +3056,7 @@ public class Interface : Entity<Interface>
 
 #region Prop
 
-[Entity("🏷️", "PI", "PrpI", "The identifier for a property.")]
+
 public class PropId : Entity<PropId>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the property.", PropImportance.ID)]
@@ -3198,7 +3070,7 @@ public class PropId : Entity<PropId>
 
 
 
-[Entity("🏷️", "Pp", "Prp", "A property is a value with an optional unit for a quality.")]
+
 public class Prop : Entity<Prop>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the property.", PropImportance.ID)]
@@ -3221,7 +3093,7 @@ public class Prop : Entity<Prop>
 
 #region Model
 
-[Entity("💾", "Md", "Mod", "The identifier of a model.")]
+
 public class ModelId : Entity<ModelId>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the entity.", PropImportance.ID)]
@@ -3233,7 +3105,7 @@ public class ModelId : Entity<ModelId>
     public override string ToString() => $"Rep({ToHumanIdString()})";
 }
 
-[Entity("📊", "RD", "RDf", "A diff for entitys.")]
+
 public class ModelDiff : Entity<ModelDiff>
 {
     [Id("🆔", "Gd?", "Gid", "The optional guid of the entity.")]
@@ -3266,7 +3138,7 @@ public class ModelDiff : Entity<ModelDiff>
     }
 }
 
-[Entity("📊", "RsD", "RsDf", "A diff for multiple entitys.")]
+
 public class ModelsDiff : Entity<ModelsDiff>
 {
     [EntityProp("➖", "Rm*", "Rem*", "The optional removed entitys.", PropImportance.OPTIONAL)]
@@ -3292,8 +3164,6 @@ public class ModelsDiff : Entity<ModelsDiff>
 
 
 
-[Entity("💾", "Md", "Mod",
-    "A model is a link to a resource that describes a type for a certain level of detail and tags.")]
 public class Model : Entity<Model>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the model.", PropImportance.ID)]
@@ -3381,7 +3251,7 @@ public class Model : Entity<Model>
 
 #region Connector
 
-[Entity("🔌", "Po", "Por", "The optional local identifier of the connector within the type. No id means the default connector.")]
+
 public class ConnectorId : Entity<ConnectorId>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the connector within the type.")]
@@ -3395,7 +3265,7 @@ public class ConnectorId : Entity<ConnectorId>
     public override string ToString() => $"Por({ToHumanIdString()})";
 }
 
-[Entity("📊", "PD", "PDf", "A diff for connectors.")]
+
 public class ConnectorDiff : Entity<ConnectorDiff>
 {
     [Id("🆔", "Gd?", "Gid", "The optional guid of the connector.")]
@@ -3439,7 +3309,7 @@ public class ConnectorDiff : Entity<ConnectorDiff>
     }
 }
 
-[Entity("📊", "PsD", "PsDf", "A diff for multiple connectors.")]
+
 public class ConnectorsDiff : Entity<ConnectorsDiff>
 {
     [EntityProp("➖", "Rm*", "Rem*", "The optional removed connectors.", PropImportance.OPTIONAL)]
@@ -3465,7 +3335,7 @@ public class ConnectorsDiff : Entity<ConnectorsDiff>
 
 
 
-[Entity("🔌", "Po", "Por", "A connector is a connection point (with a direction) of a type.")]
+
 public class Connector : Entity<Connector>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the connector within the type.")]
@@ -3649,7 +3519,7 @@ public class Connector : Entity<Connector>
 
 #region Type
 
-[Entity("🧩", "Ty", "Typ", "The identifier of the type within the kit.")]
+
 public class TypeId : Entity<TypeId>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the type.", PropImportance.ID)]
@@ -3661,7 +3531,7 @@ public class TypeId : Entity<TypeId>
     public static implicit operator TypeId(TypeDiff diff) => new() { Guid = diff.Guid ?? "" };
 }
 
-[Entity("🧩", "TD", "TDf", "A diff for types.")]
+
 public class TypeDiff : Entity<TypeDiff>
 {
     [Id("🆔", "Gd?", "Gid", "The optional guid of the type.")]
@@ -3730,7 +3600,7 @@ public class TypeDiff : Entity<TypeDiff>
     public static implicit operator TypeDiff(Type type) => new() { Name = type.Name, Description = type.Description, Icon = type.Icon, Image = type.Image, Stock = type.Stock, Virtual = type.Virtual, Uri = type.Uri, Unit = type.Unit, Location = type.Location, Models = new ModelsDiff { Added = new List<Model>(), Removed = new List<ModelId>(), Updated = type.Models.Select(m => new DiffUpdate<ModelDiff> { Id = m.Guid, Diff = m.CreateDiff() }).ToList() }, Connectors = new ConnectorsDiff { Added = new List<Connector>(), Removed = new List<ConnectorId>(), Updated = type.Connectors.Select(p => new DiffUpdate<ConnectorDiff> { Id = p.Guid, Diff = p.CreateDiff() }).ToList() }, Authors = type.Authors, Attributes = type.Attributes, Concepts = type.Concepts };
 }
 
-[Entity("📊", "TsD", "TsDf", "A diff for multiple types.")]
+
 public class TypesDiff : Entity<TypesDiff>
 {
     [EntityProp("➖", "Rm*", "Rem*", "The optional removed types.", PropImportance.OPTIONAL)]
@@ -3746,7 +3616,7 @@ public class TypesDiff : Entity<TypesDiff>
 
 
 
-[Entity("🧩", "Ty", "Typ", "A type is a reusable element that can be connected with other types over connectors.")]
+
 public class Type : Entity<Type>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the type.", PropImportance.ID)]
@@ -4037,7 +3907,7 @@ public class Type : Entity<Type>
 
 #region Layer
 
-[Entity("📄", "LI", "LyrI", "The identifier for a layer.")]
+
 public class LayerId : Entity<LayerId>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the layer.", PropImportance.ID)]
@@ -4051,7 +3921,7 @@ public class LayerId : Entity<LayerId>
 
 
 
-[Entity("📄", "Ly", "Lyr", "A layer for organizing design elements.")]
+
 public class Layer : Entity<Layer>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the layer.", PropImportance.ID)]
@@ -4078,7 +3948,7 @@ public class Layer : Entity<Layer>
 
 #region Group
 
-[Entity("📁", "GI", "GrpI", "The identifier for a group.")]
+
 public class GroupId : Entity<GroupId>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the group.", PropImportance.ID)]
@@ -4092,7 +3962,7 @@ public class GroupId : Entity<GroupId>
 
 
 
-[Entity("📁", "Gr", "Grp", "A group for organizing design elements.")]
+
 public class Group : Entity<Group>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the group.", PropImportance.ID)]
@@ -4117,7 +3987,7 @@ public class Group : Entity<Group>
 
 #region Piece
 
-[Entity("⭕", "Pc", "Pce", "The optional local identifier of the piece within the design. No id means the default piece.")]
+
 public class PieceId : Entity<PieceId>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the piece.", PropImportance.ID)]
@@ -4130,7 +4000,7 @@ public class PieceId : Entity<PieceId>
     public static implicit operator PieceId(Piece piece) => new() { Guid = piece.Guid };
 }
 
-[Entity("📊", "PD", "PDf", "A diff for pieces.")]
+
 public class PiecesDiff : Entity<PiecesDiff>
 {
     [EntityProp("➖", "Rm*", "Rem*", "The optional removed pieces.", PropImportance.OPTIONAL)]
@@ -4153,7 +4023,7 @@ public class PiecesDiff : Entity<PiecesDiff>
     public static implicit operator PiecesDiff(List<Piece> pieces) => new() { Updated = pieces.Select(p => new DiffUpdate<PieceDiff> { Id = p.Guid, Diff = p.CreateDiff() }).ToList() };
 }
 
-[Entity("📊", "PcD", "PcDf", "A diff for a piece.")]
+
 public class PieceDiff : Entity<PieceDiff>
 {
     [Id("🆔", "Gd?", "Gid", "The optional guid of the piece.")]
@@ -4192,7 +4062,7 @@ public class PieceDiff : Entity<PieceDiff>
 
 
 
-[Entity("⭕", "Pc", "Pce", "A piece is an instance of either a type or a design.")]
+
 public class Piece : Entity<Piece>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the piece.", PropImportance.ID)]
@@ -4277,7 +4147,7 @@ public class Piece : Entity<Piece>
 #endregion Piece
 #region Side
 
-[Entity("📊", "SD", "SDf", "A diff for sides.")]
+
 public class SideDiff : Entity<SideDiff>
 {
     [EntityProp("⭕", "Pc?", "Pce?", "The optional piece of the side.", PropImportance.OPTIONAL)]
@@ -4306,7 +4176,7 @@ public class SideDiff : Entity<SideDiff>
 
 
 
-[Entity("🧱", "Sd", "Sde", "A side of a piece in a connection.")]
+
 public class Side : Entity<Side>
 {
     [EntityProp("⭕", "Pc", "Pce", "The piece-related information of the side.")]
@@ -4373,7 +4243,7 @@ public class Side : Entity<Side>
 
 #region Connection
 
-[Entity("🧲", "Cn", "ConId", "The local identifier of the connection within the design.")]
+
 public class ConnectionId : Entity<ConnectionId>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the connection.", PropImportance.ID)]
@@ -4391,7 +4261,7 @@ public class ConnectionId : Entity<ConnectionId>
     public static implicit operator ConnectionId(ConnectionDiff diff) => new() { Connected = diff.Connected ?? new(), Connecting = diff.Connecting ?? new() };
 }
 
-[Entity("🔗", "CD", "CDf", "A diff for connections.")]
+
 public class ConnectionDiff : Entity<ConnectionDiff>
 {
     [EntityProp("🧲", "Cd?", "Cnd?", "The optional connected side of the piece.", PropImportance.OPTIONAL)]
@@ -4442,7 +4312,7 @@ public class ConnectionDiff : Entity<ConnectionDiff>
     }
 }
 
-[Entity("🔗", "CsD", "ConsDf", "A diff for multiple connections.")]
+
 public class ConnectionsDiff : Entity<ConnectionsDiff>
 {
     [EntityProp("➖", "Rm*", "Rem*", "The optional removed connections.", PropImportance.OPTIONAL)]
@@ -4468,7 +4338,7 @@ public class ConnectionsDiff : Entity<ConnectionsDiff>
 
 
 
-[Entity("🔗", "Cn", "Con", "A connection between two pieces.")]
+
 public class Connection : Entity<Connection>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the connection.", PropImportance.ID)]
@@ -4608,7 +4478,7 @@ public class Connection : Entity<Connection>
 
 #region Stat
 
-[Entity("🔢", "SI", "SttI", "The identifier for a stat.")]
+
 public class StatId : Entity<StatId>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the stat.", PropImportance.ID)]
@@ -4622,7 +4492,7 @@ public class StatId : Entity<StatId>
 
 
 
-[Entity("🔢", "St", "Stt", "A stat about a quality on a design which is optionally bounded.")]
+
 public class Stat : Entity<Stat>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the stat.", PropImportance.ID)]
@@ -4649,7 +4519,7 @@ public class Stat : Entity<Stat>
 
 #region Design
 
-[Entity("📊", "DsD", "DsDf", "A diff for multiple designs.")]
+
 public class DesignsDiff : Entity<DesignsDiff>
 {
     [EntityProp("➖", "Rm*", "Rem*", "The optional removed designs.", PropImportance.OPTIONAL)]
@@ -4662,7 +4532,7 @@ public class DesignsDiff : Entity<DesignsDiff>
     public static implicit operator DesignsDiff(List<Design> designs) => new() { Updated = designs.Select(d => new DiffUpdate<DesignDiff> { Id = d.Guid, Diff = (DesignDiff)d }).ToList() };
 }
 
-[Entity("🏙️", "Dn", "Dsn", "The local identifier of the design within the kit.")]
+
 public class DesignDiff : Entity<DesignDiff>
 {
     [Id("🆔", "Gd?", "Gid", "The optional guid of the design.")]
@@ -4749,7 +4619,7 @@ public class DesignDiff : Entity<DesignDiff>
     }
 }
 
-[Entity("🏙️", "Dn", "Dsn", "The local identifier of the design within the kit.")]
+
 public class DesignId : Entity<DesignId>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the design.", PropImportance.ID)]
@@ -4767,7 +4637,7 @@ public class DesignId : Entity<DesignId>
 
 
 
-[Entity("🏙️", "Dn", "Dsn", "A design is a collection of pieces that are connected.")]
+
 public class Design : Entity<Design>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the design.", PropImportance.ID)]
@@ -5630,7 +5500,7 @@ text {
 
 #region Kit
 
-[Entity("🗃️", "KD", "KDf", "A diff for kits.")]
+
 public class KitDiff : Entity<KitDiff>
 {
     [Id("🆔", "Gd?", "Gid", "The optional guid of the kit.")]
@@ -5719,7 +5589,7 @@ public class KitDiff : Entity<KitDiff>
     };
 }
 
-[Entity("🗃️", "KId", "KitId", "The local identifier of the kit.")]
+
 public class KitId : Entity<KitId>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the kit.", PropImportance.ID)]
@@ -5732,7 +5602,7 @@ public class KitId : Entity<KitId>
     public static implicit operator KitId(KitDiff diff) => new() { Guid = diff.Guid ?? "" };
 }
 
-[Entity("📦", "KsD", "KsDf", "A diff for multiple kits.")]
+
 public class KitsDiff : Entity<KitsDiff>
 {
     [EntityProp("➖", "Rm*", "Rem*", "The optional removed kits.", PropImportance.OPTIONAL)]
@@ -5748,7 +5618,7 @@ public class KitsDiff : Entity<KitsDiff>
 
 
 
-[Entity("🗃️", "Kt", "Kit", "A kit is a collection of types and designs.")]
+
 public class Kit : Entity<Kit>
 {
     [Id("🆔", "Gd", "Gui", "The guid of the kit.", PropImportance.ID)]
@@ -6369,9 +6239,10 @@ public class PredictDesignBody
 {
     public string? Description { get; set; }
     public Type[]? Types { get; set; }
-    public Design? Design { get; set; } }
+    public Design? Design { get; set; }
+}
 
-public port IApi
+public interface IApi
     {
         [Get("/api/kits/{encodedKitUri}")]
         Task<ApiResponse<Kit>> GetKit(string encodedKitUri);
@@ -6489,126 +6360,6 @@ public class ServerException : Exception
 }
 
 #endregion Api
-
-#region Meta
-
-public static class Meta
-{
-
-
-
-    public static readonly ImmutableDictionary<string, System.Type> Type;
-
-
-
-
-    public static readonly ImmutableDictionary<string, EntityAttribute> Entity;
-
-
-
-
-    public static readonly ImmutableDictionary<string, ImmutableArray<PropertyInfo>> Property;
-
-
-
-
-    public static readonly ImmutableDictionary<string, ImmutableArray<PropAttribute>> Prop;
-
-
-
-
-    public static readonly ImmutableDictionary<string, ImmutableArray<bool>> IsPropertyList;
-
-
-
-
-    public static readonly ImmutableDictionary<string, ImmutableArray<System.Type>> PropertyItemType;
-
-
-
-
-    public static readonly ImmutableDictionary<string, ImmutableArray<bool>> IsPropertyEntity;
-
-    static Meta()
-    {
-        var type = new Dictionary<string, System.Type>();
-        var entity = new Dictionary<string, EntityAttribute>();
-        var property = new Dictionary<string, List<PropertyInfo>>();
-        var prop = new Dictionary<string, List<PropAttribute>>();
-        var isPropertyList = new Dictionary<string, List<bool>>();
-        var propertyItemType = new Dictionary<string, List<System.Type>>();
-        var isPropertyEntity = new Dictionary<string, List<bool>>();
-
-        var entityTypes = Assembly.GetExecutingAssembly()
-            .GetTypes()
-            .Where(t => t.GetCustomAttribute<EntityAttribute>() != null);
-        foreach (var mt in entityTypes)
-        {
-            type[mt.Name] = mt;
-            entity[mt.Name] = mt.GetCustomAttribute<EntityAttribute>()!;
-            property[mt.Name] = new List<PropertyInfo>();
-            prop[mt.Name] = new List<PropAttribute>();
-            isPropertyList[mt.Name] = new List<bool>();
-            propertyItemType[mt.Name] = new List<System.Type>();
-            isPropertyEntity[mt.Name] = new List<bool>();
-
-
-
-            var propertyParents = new List<PropertyInfo>();
-            var propParents = new List<PropAttribute>();
-            var isPropertyListParents = new List<bool>();
-            var propertyItemTypeParents = new List<System.Type>();
-            var isPropertyEntityParents = new List<bool>();
-            foreach (var mtp in mt.GetProperties()
-                         .Where(mtp => mtp.GetCustomAttribute<PropAttribute>() != null))
-            {
-                var mtpProp = mtp.GetCustomAttribute<PropAttribute>();
-                var imtpl = mtp.PropertyType.IsGenericType &&
-                            mtp.PropertyType.GetGenericTypeDefinition() == typeof(List<>);
-                var mtpPropertyItemType = imtpl ? mtp.PropertyType.GetGenericArguments()[0] : mtp.PropertyType;
-                var mtpIsPropertyEntity = mtp.GetCustomAttribute<EntityPropAttribute>() != null;
-
-                if (mtp.DeclaringType?.FullName != mt.FullName)
-                {
-                    propertyParents.Add(mtp);
-                    if (mtpProp is not null) propParents.Add(mtpProp);
-                    isPropertyListParents.Add(imtpl);
-                    propertyItemTypeParents.Add(mtpPropertyItemType);
-                    isPropertyEntityParents.Add(mtpIsPropertyEntity);
-                }
-                else
-                {
-                    property[mt.Name].Add(mtp);
-                    if (mtpProp is not null) prop[mt.Name].Add(mtpProp);
-                    isPropertyList[mt.Name].Add(imtpl);
-                    propertyItemType[mt.Name].Add(mtpPropertyItemType);
-                    isPropertyEntity[mt.Name].Add(mtpIsPropertyEntity);
-                }
-            }
-
-            property[mt.Name].InsertRange(0, propertyParents);
-            prop[mt.Name].InsertRange(0, propParents);
-            isPropertyList[mt.Name].InsertRange(0, isPropertyListParents);
-            propertyItemType[mt.Name].InsertRange(0, propertyItemTypeParents);
-            isPropertyEntity[mt.Name].InsertRange(0, isPropertyEntityParents);
-        }
-
-        Type = type.ToImmutableDictionary();
-        Entity = entity.ToImmutableDictionary();
-        Property = property.ToImmutableDictionary(
-            kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
-        Prop = prop.ToImmutableDictionary(
-            kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
-        IsPropertyList = isPropertyList.ToImmutableDictionary(
-            kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
-        PropertyItemType = propertyItemType.ToImmutableDictionary(
-            kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
-        IsPropertyEntity = isPropertyEntity.ToImmutableDictionary(
-            kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
-    }
-}
-
-#endregion Meta
 
 #endregion Entitying
 

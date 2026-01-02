@@ -90,6 +90,576 @@ public class SemioCategoryIcon : GH_AssemblyPriority
 
 #endregion Constants
 
+#region Metadata
+
+public class EntityMetadata
+{
+    public string Name { get; set; } = "";
+    public string Description { get; set; } = "";
+    public string IconResourceName { get; set; } = "";
+    public string Nickname { get; set; } = "";
+    public string IdIconResourceName { get; set; } = "";
+}
+
+public static class EntityMetadataRegistry
+{
+    private static readonly Dictionary<System.Type, EntityMetadata> _metadata = new()
+    {
+        [typeof(Semio.Attribute)] = new()
+        {
+            Name = "Attribute",
+            Description = "Key-value metadata with optional unit and definition",
+            IconResourceName = "attribute_24x24",
+            Nickname = "Att",
+            IdIconResourceName = "attribute_id_24x24"
+        },
+        [typeof(AttributeId)] = new()
+        {
+            Name = "AttributeId",
+            Description = "The ID of an attribute",
+            IconResourceName = "attribute_id_24x24",
+            Nickname = "AtI"
+        },
+        [typeof(AttributeDiff)] = new()
+        {
+            Name = "AttributeDiff",
+            Description = "A diff for attributes",
+            IconResourceName = "attribute_diff_24x24",
+            Nickname = "ADf"
+        },
+        [typeof(AttributesDiff)] = new()
+        {
+            Name = "AttributesDiff",
+            Description = "A diff for multiple attributes",
+            IconResourceName = "attribute_diff_24x24",
+            Nickname = "AtD"
+        },
+        [typeof(Coord)] = new()
+        {
+            Name = "Coord",
+            Description = "2D coordinate with U and V components",
+            IconResourceName = "coord_24x24",
+            Nickname = "Crd",
+            IdIconResourceName = "coord_id_24x24"
+        },
+        [typeof(Point)] = new()
+        {
+            Name = "Point",
+            Description = "3D point with X, Y, Z coordinates",
+            IconResourceName = "point_24x24",
+            Nickname = "Pt"
+        },
+        [typeof(Vector)] = new()
+        {
+            Name = "Vector",
+            Description = "3D vector with X, Y, Z components",
+            IconResourceName = "vector_24x24",
+            Nickname = "Vec"
+        },
+        [typeof(Plane)] = new()
+        {
+            Name = "Plane",
+            Description = "3D plane with origin and orientation",
+            IconResourceName = "plane_24x24",
+            Nickname = "Pln"
+        },
+        [typeof(Location)] = new()
+        {
+            Name = "Location",
+            Description = "Geographic location with coordinates and attributes",
+            IconResourceName = "location_24x24",
+            Nickname = "Loc",
+            IdIconResourceName = "location_id_24x24"
+        },
+        [typeof(LocationId)] = new()
+        {
+            Name = "LocationId",
+            Description = "The ID of a location",
+            IconResourceName = "location_id_24x24",
+            Nickname = "LcI"
+        },
+        [typeof(Author)] = new()
+        {
+            Name = "Author",
+            Description = "Kit contributor with name, email, and rank",
+            IconResourceName = "author_24x24",
+            Nickname = "Aut",
+            IdIconResourceName = "author_id_24x24"
+        },
+        [typeof(AuthorId)] = new()
+        {
+            Name = "AuthorId",
+            Description = "The ID of an author",
+            IconResourceName = "author_id_24x24",
+            Nickname = "AuI"
+        },
+        [typeof(AuthorDiff)] = new()
+        {
+            Name = "AuthorDiff",
+            Description = "A diff for an author",
+            IconResourceName = "author_diff_24x24",
+            Nickname = "AuD"
+        },
+        [typeof(AuthorsDiff)] = new()
+        {
+            Name = "AuthorsDiff",
+            Description = "A diff for multiple authors",
+            IconResourceName = "author_diff_24x24",
+            Nickname = "AuD"
+        },
+        [typeof(Semio.File)] = new()
+        {
+            Name = "File",
+            Description = "Kit file with path, remote URL, and metadata",
+            IconResourceName = "file_24x24",
+            Nickname = "Fil",
+            IdIconResourceName = "file_id_24x24"
+        },
+        [typeof(FileId)] = new()
+        {
+            Name = "FileId",
+            Description = "The ID of a file",
+            IconResourceName = "file_id_24x24",
+            Nickname = "FlI"
+        },
+        [typeof(FileDiff)] = new()
+        {
+            Name = "FileDiff",
+            Description = "A diff for files",
+            IconResourceName = "file_diff_24x24",
+            Nickname = "FDf"
+        },
+        [typeof(FilesDiff)] = new()
+        {
+            Name = "FilesDiff",
+            Description = "A diff for multiple files",
+            IconResourceName = "file_diff_24x24",
+            Nickname = "FsD"
+        },
+        [typeof(Folder)] = new()
+        {
+            Name = "Folder",
+            Description = "Kit folder with path and metadata",
+            IconResourceName = "folder_24x24",
+            Nickname = "Fld",
+            IdIconResourceName = "folder_id_24x24"
+        },
+        [typeof(FolderId)] = new()
+        {
+            Name = "FolderId",
+            Description = "The ID of a folder",
+            IconResourceName = "folder_id_24x24",
+            Nickname = "FdI"
+        },
+        [typeof(FolderDiff)] = new()
+        {
+            Name = "FolderDiff",
+            Description = "A diff for folders",
+            IconResourceName = "folder_diff_24x24",
+            Nickname = "FoD"
+        },
+        [typeof(FoldersDiff)] = new()
+        {
+            Name = "FoldersDiff",
+            Description = "A diff for multiple folders",
+            IconResourceName = "folder_diff_24x24",
+            Nickname = "FsD"
+        },
+        [typeof(Benchmark)] = new()
+        {
+            Name = "Benchmark",
+            Description = "Performance standard with name, range, and icon",
+            IconResourceName = "benchmark_24x24",
+            Nickname = "Bmk"
+        },
+        [typeof(Quality)] = new()
+        {
+            Name = "Quality",
+            Description = "Measurement definition with formula and constraints",
+            IconResourceName = "quality_24x24",
+            Nickname = "Qlt",
+            IdIconResourceName = "quality_id_24x24"
+        },
+        [typeof(QualityId)] = new()
+        {
+            Name = "QualityId",
+            Description = "The ID of a quality",
+            IconResourceName = "quality_id_24x24",
+            Nickname = "QlI"
+        },
+        [typeof(QualityDiff)] = new()
+        {
+            Name = "QualityDiff",
+            Description = "A diff for a quality",
+            IconResourceName = "quality_diff_24x24",
+            Nickname = "QlD"
+        },
+        [typeof(QualitiesDiff)] = new()
+        {
+            Name = "QualitiesDiff",
+            Description = "A diff for multiple qualities",
+            IconResourceName = "quality_diff_24x24",
+            Nickname = "QsD"
+        },
+        [typeof(Tag)] = new()
+        {
+            Name = "Tag",
+            Description = "Model categorization tag with name and icon",
+            IconResourceName = "tag_24x24",
+            Nickname = "Tag",
+            IdIconResourceName = "tag_id_24x24"
+        },
+        [typeof(TagId)] = new()
+        {
+            Name = "TagId",
+            Description = "The ID of a tag",
+            IconResourceName = "tag_id_24x24",
+            Nickname = "TgI"
+        },
+        [typeof(TagDiff)] = new()
+        {
+            Name = "TagDiff",
+            Description = "A diff for a tag",
+            IconResourceName = "tag_diff_24x24",
+            Nickname = "TgD"
+        },
+        [typeof(TagsDiff)] = new()
+        {
+            Name = "TagsDiff",
+            Description = "A diff for multiple tags",
+            IconResourceName = "tag_diff_24x24",
+            Nickname = "TsD"
+        },
+        [typeof(Concept)] = new()
+        {
+            Name = "Concept",
+            Description = "Semantic grouping with name and order",
+            IconResourceName = "concept_24x24",
+            Nickname = "Cnc",
+            IdIconResourceName = "concept_id_24x24"
+        },
+        [typeof(ConceptId)] = new()
+        {
+            Name = "ConceptId",
+            Description = "The ID of a concept",
+            IconResourceName = "concept_id_24x24",
+            Nickname = "CnI"
+        },
+        [typeof(ConceptDiff)] = new()
+        {
+            Name = "ConceptDiff",
+            Description = "A diff for a concept",
+            IconResourceName = "concept_diff_24x24",
+            Nickname = "CnD"
+        },
+        [typeof(ConceptsDiff)] = new()
+        {
+            Name = "ConceptsDiff",
+            Description = "A diff for multiple concepts",
+            IconResourceName = "concept_diff_24x24",
+            Nickname = "CsD"
+        },
+        [typeof(Semio.Interface)] = new()
+        {
+            Name = "Interface",
+            Description = "Connector compatibility definition",
+            IconResourceName = "interface_24x24",
+            Nickname = "Int",
+            IdIconResourceName = "interface_id_24x24"
+        },
+        [typeof(InterfaceId)] = new()
+        {
+            Name = "InterfaceId",
+            Description = "The ID of an interface",
+            IconResourceName = "interface_id_24x24",
+            Nickname = "IfI"
+        },
+        [typeof(InterfaceDiff)] = new()
+        {
+            Name = "InterfaceDiff",
+            Description = "A diff for an interface",
+            IconResourceName = "interface_diff_24x24",
+            Nickname = "IfD"
+        },
+        [typeof(InterfacesDiff)] = new()
+        {
+            Name = "InterfacesDiff",
+            Description = "A diff for multiple interfaces",
+            IconResourceName = "interface_diff_24x24",
+            Nickname = "IsD"
+        },
+        [typeof(Prop)] = new()
+        {
+            Name = "Prop",
+            Description = "Connector property with quality reference",
+            IconResourceName = "prop_24x24",
+            Nickname = "Prp"
+        },
+        [typeof(Model)] = new()
+        {
+            Name = "Model",
+            Description = "3D model with tags and file reference",
+            IconResourceName = "model_24x24",
+            Nickname = "Mdl",
+            IdIconResourceName = "model_id_24x24"
+        },
+        [typeof(ModelId)] = new()
+        {
+            Name = "ModelId",
+            Description = "The ID of a model",
+            IconResourceName = "model_id_24x24",
+            Nickname = "MdI"
+        },
+        [typeof(ModelDiff)] = new()
+        {
+            Name = "ModelDiff",
+            Description = "A diff for a model",
+            IconResourceName = "model_diff_24x24",
+            Nickname = "MdD"
+        },
+        [typeof(ModelsDiff)] = new()
+        {
+            Name = "ModelsDiff",
+            Description = "A diff for multiple models",
+            IconResourceName = "model_diff_24x24",
+            Nickname = "MsD"
+        },
+        [typeof(Connector)] = new()
+        {
+            Name = "Connector",
+            Description = "Type connection point with direction and interface",
+            IconResourceName = "connector_24x24",
+            Nickname = "Con",
+            IdIconResourceName = "connector_id_24x24"
+        },
+        [typeof(ConnectorId)] = new()
+        {
+            Name = "ConnectorId",
+            Description = "The ID of a connector",
+            IconResourceName = "connector_id_24x24",
+            Nickname = "CnI"
+        },
+        [typeof(ConnectorDiff)] = new()
+        {
+            Name = "ConnectorDiff",
+            Description = "A diff for a connector",
+            IconResourceName = "connector_diff_24x24",
+            Nickname = "CnD"
+        },
+        [typeof(ConnectorsDiff)] = new()
+        {
+            Name = "ConnectorsDiff",
+            Description = "A diff for multiple connectors",
+            IconResourceName = "connector_diff_24x24",
+            Nickname = "CsD"
+        },
+        [typeof(Semio.Type)] = new()
+        {
+            Name = "Type",
+            Description = "Reusable component with models and connectors",
+            IconResourceName = "type_24x24",
+            Nickname = "Typ",
+            IdIconResourceName = "type_id_24x24"
+        },
+        [typeof(TypeId)] = new()
+        {
+            Name = "TypeId",
+            Description = "The ID of a type",
+            IconResourceName = "type_id_24x24",
+            Nickname = "TyI"
+        },
+        [typeof(TypeDiff)] = new()
+        {
+            Name = "TypeDiff",
+            Description = "A diff for a type",
+            IconResourceName = "type_diff_24x24",
+            Nickname = "TyD"
+        },
+        [typeof(TypesDiff)] = new()
+        {
+            Name = "TypesDiff",
+            Description = "A diff for multiple types",
+            IconResourceName = "type_diff_24x24",
+            Nickname = "TsD"
+        },
+        [typeof(Layer)] = new()
+        {
+            Name = "Layer",
+            Description = "Design organizational layer with visibility and color",
+            IconResourceName = "layer_24x24",
+            Nickname = "Lyr"
+        },
+        [typeof(Group)] = new()
+        {
+            Name = "Group",
+            Description = "Design piece grouping with name and color",
+            IconResourceName = "group_24x24",
+            Nickname = "Grp",
+            IdIconResourceName = "group_id_24x24"
+        },
+        [typeof(GroupId)] = new()
+        {
+            Name = "GroupId",
+            Description = "The ID of a group",
+            IconResourceName = "group_id_24x24",
+            Nickname = "GrI"
+        },
+        [typeof(Piece)] = new()
+        {
+            Name = "Piece",
+            Description = "Type or design instance with placement and properties",
+            IconResourceName = "piece_24x24",
+            Nickname = "Pce",
+            IdIconResourceName = "piece_id_24x24"
+        },
+        [typeof(PieceId)] = new()
+        {
+            Name = "PieceId",
+            Description = "The ID of a piece",
+            IconResourceName = "piece_id_24x24",
+            Nickname = "PcI"
+        },
+        [typeof(PieceDiff)] = new()
+        {
+            Name = "PieceDiff",
+            Description = "A diff for a piece",
+            IconResourceName = "piece_diff_24x24",
+            Nickname = "PcD"
+        },
+        [typeof(PiecesDiff)] = new()
+        {
+            Name = "PiecesDiff",
+            Description = "A diff for multiple pieces",
+            IconResourceName = "piece_diff_24x24",
+            Nickname = "PsD"
+        },
+        [typeof(Side)] = new()
+        {
+            Name = "Side",
+            Description = "Connection side with piece and connector reference",
+            IconResourceName = "side_24x24",
+            Nickname = "Sid"
+        },
+        [typeof(Connection)] = new()
+        {
+            Name = "Connection",
+            Description = "Link between two pieces with transform parameters",
+            IconResourceName = "connection_24x24",
+            Nickname = "Con",
+            IdIconResourceName = "connection_id_24x24"
+        },
+        [typeof(ConnectionId)] = new()
+        {
+            Name = "ConnectionId",
+            Description = "The ID of a connection",
+            IconResourceName = "connection_id_24x24",
+            Nickname = "CnI"
+        },
+        [typeof(ConnectionDiff)] = new()
+        {
+            Name = "ConnectionDiff",
+            Description = "A diff for a connection",
+            IconResourceName = "connection_diff_24x24",
+            Nickname = "CnD"
+        },
+        [typeof(ConnectionsDiff)] = new()
+        {
+            Name = "ConnectionsDiff",
+            Description = "A diff for multiple connections",
+            IconResourceName = "connection_diff_24x24",
+            Nickname = "CsD"
+        },
+        [typeof(Stat)] = new()
+        {
+            Name = "Stat",
+            Description = "Design performance measurement",
+            IconResourceName = "stat_24x24",
+            Nickname = "Sta",
+            IdIconResourceName = "stat_id_24x24"
+        },
+        [typeof(StatId)] = new()
+        {
+            Name = "StatId",
+            Description = "The ID of a stat",
+            IconResourceName = "stat_id_24x24",
+            Nickname = "StI"
+        },
+        [typeof(Design)] = new()
+        {
+            Name = "Design",
+            Description = "Assembly of pieces and connections",
+            IconResourceName = "design_24x24",
+            Nickname = "Des",
+            IdIconResourceName = "design_id_24x24"
+        },
+        [typeof(DesignId)] = new()
+        {
+            Name = "DesignId",
+            Description = "The ID of a design",
+            IconResourceName = "design_id_24x24",
+            Nickname = "DsI"
+        },
+        [typeof(DesignDiff)] = new()
+        {
+            Name = "DesignDiff",
+            Description = "A diff for a design",
+            IconResourceName = "design_diff_24x24",
+            Nickname = "DsD"
+        },
+        [typeof(DesignsDiff)] = new()
+        {
+            Name = "DesignsDiff",
+            Description = "A diff for multiple designs",
+            IconResourceName = "design_diff_24x24",
+            Nickname = "DsD"
+        },
+        [typeof(Kit)] = new()
+        {
+            Name = "Kit",
+            Description = "Collection of types, designs, and metadata",
+            IconResourceName = "kit_24x24",
+            Nickname = "Kit",
+            IdIconResourceName = "kit_id_24x24"
+        },
+        [typeof(KitId)] = new()
+        {
+            Name = "KitId",
+            Description = "The ID of a kit",
+            IconResourceName = "kit_id_24x24",
+            Nickname = "KtI"
+        },
+        [typeof(KitDiff)] = new()
+        {
+            Name = "KitDiff",
+            Description = "A diff for a kit",
+            IconResourceName = "kit_diff_24x24",
+            Nickname = "KtD"
+        }
+    };
+    
+    public static EntityMetadata Get(System.Type type)
+    {
+        return _metadata.TryGetValue(type, out var metadata) 
+            ? metadata 
+            : new EntityMetadata 
+            { 
+                Name = type.Name, 
+                Description = type.Name,
+                IconResourceName = $"{type.Name.ToLower()}_24x24",
+                Nickname = type.Name.Substring(0, Math.Min(3, type.Name.Length)),
+                IdIconResourceName = $"{type.Name.ToLower()}_id_24x24"
+            };
+    }
+    
+    public static string GetName<T>() => Get(typeof(T)).Name;
+    public static string GetDescription<T>() => Get(typeof(T)).Description;
+    public static string GetIconResourceName<T>() => Get(typeof(T)).IconResourceName;
+    public static string GetNickname<T>() => Get(typeof(T)).Nickname;
+    public static string GetIdIconResourceName<T>() => Get(typeof(T)).IdIconResourceName;
+}
+
+#endregion Metadata
+
 #region Utility
 
 public static class Utility
@@ -258,8 +828,8 @@ public abstract class Goo<TEntity> : GH_Goo<TEntity> where TEntity : Entity<TEnt
     public Goo() { Value = new TEntity(); }
     public Goo(TEntity value) { Value = value; }
     public override bool IsValid => true;
-    public override string TypeName => typeof(TEntity).Name;
-    public override string TypeDescription => ((EntityAttribute)System.Attribute.GetCustomAttribute(typeof(TEntity), typeof(EntityAttribute))).Description;
+    public override string TypeName => EntityMetadataRegistry.GetName<TEntity>();
+    public override string TypeDescription => EntityMetadataRegistry.GetDescription<TEntity>();
     public override IGH_Goo Duplicate()
     {
         var duplicate = (Goo<TEntity>)(Activator.CreateInstance(GetType()) ?? throw new InvalidOperationException($"Could not create instance of {GetType()}"));
@@ -303,12 +873,12 @@ public abstract class Goo<TEntity> : GH_Goo<TEntity> where TEntity : Entity<TEnt
 
 public abstract class Param<TGoo, TModel> : GH_PersistentParam<TGoo> where TGoo : Goo<TModel> where TModel : Entity<TModel>, new()
 {
-    internal Param() : base(typeof(TModel).Name,
-        ((EntityAttribute)System.Attribute.GetCustomAttribute(typeof(TModel), typeof(EntityAttribute))).Code,
-        ((EntityAttribute)System.Attribute.GetCustomAttribute(typeof(TModel), typeof(EntityAttribute))).Description,
+    internal Param() : base(EntityMetadataRegistry.GetName<TModel>(),
+        EntityMetadataRegistry.GetNickname<TModel>(),
+        EntityMetadataRegistry.GetDescription<TModel>(),
         Constants.Category, "Params")
     { }
-    protected override Bitmap Icon => (Bitmap)(Resources.ResourceManager.GetObject($"{typeof(TModel).Name.ToLower()}_24x24") ?? throw new InvalidOperationException($"Resource {typeof(TModel).Name.ToLower()}_24x24 not found"));
+    protected override Bitmap Icon => (Bitmap)(Resources.ResourceManager.GetObject(EntityMetadataRegistry.GetIconResourceName<TModel>()) ?? throw new InvalidOperationException($"Resource {EntityMetadataRegistry.GetIconResourceName<TModel>()} not found"));
 
     protected override GH_GetterResult Prompt_Singular(ref TGoo value) => throw new NotImplementedException();
     protected override GH_GetterResult Prompt_Plural(ref List<TGoo> values) => throw new NotImplementedException();
@@ -359,9 +929,9 @@ public abstract class Component : GH_Component
 public abstract class PassthroughComponent<TParam, TGoo, TModel> : Component
     where TParam : Param<TGoo, TModel>, new() where TGoo : Goo<TModel>, new() where TModel : Entity<TModel>, new()
 {
-    protected virtual string ModelName => typeof(TModel).Name;
-    protected virtual string ModelNickname => typeof(TModel).Name.Substring(0, 3);
-    protected virtual string ModelDescription => $"Passthrough (either construct, deconstruct or modify) a {typeof(TModel).Name.ToLower()}.";
+    protected virtual string ModelName => EntityMetadataRegistry.GetName<TModel>();
+    protected virtual string ModelNickname => EntityMetadataRegistry.GetNickname<TModel>();
+    protected virtual string ModelDescription => $"Passthrough (either construct, deconstruct or modify) a {EntityMetadataRegistry.GetName<TModel>().ToLower()}.";
 
     protected PassthroughComponent() : base("", "", "", "Data") { }
 
@@ -370,7 +940,7 @@ public abstract class PassthroughComponent<TParam, TGoo, TModel> : Component
     public override string Description => ModelDescription;
 
     protected override Bitmap Icon =>
-        (Bitmap)Resources.ResourceManager.GetObject($"{typeof(TModel).Name.ToLower()}_modify_24x24");
+        (Bitmap)Resources.ResourceManager.GetObject($"{EntityMetadataRegistry.GetIconResourceName<TModel>().Replace("_24x24", "")}_modify_24x24");
 
     public override GH_Exposure Exposure => GH_Exposure.primary;
 
@@ -434,7 +1004,7 @@ public abstract class IdGoo<TModel> : Goo<TModel> where TModel : Entity<TModel>,
 public abstract class IdParam<TGoo, TModel> : Param<TGoo, TModel> where TGoo : IdGoo<TModel> where TModel : Entity<TModel>, new()
 {
     internal IdParam() : base() { }
-    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{typeof(TModel).Name.ToLower().Substring(0, typeof(TModel).Name.Length - 2)}_id_24x24");
+    protected override Bitmap Icon => (Bitmap)(Resources.ResourceManager.GetObject(EntityMetadataRegistry.GetIdIconResourceName<TModel>()) ?? Resources.ResourceManager.GetObject(EntityMetadataRegistry.GetIconResourceName<TModel>()));
     public override GH_Exposure Exposure => GH_Exposure.secondary;
 }
 

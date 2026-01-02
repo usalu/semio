@@ -29,7 +29,7 @@
 
 
 
-namespace semio
+namespace Semio
 {
     using System;
 

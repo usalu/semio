@@ -1,14 +1,28 @@
 # Prompt history
 
-- There must be a foundational issue (either repo or vscode extension) because no tickets are show or created with the new ticket command.
-- Add a general section search that filters simultaneusly tree items in all sections (Tickets, Policies, Contributors)
-- Policy should not have literally POLICYNAME - POLICYID but the POLICYID is the description. 
-- Add violation kinds to policies.
+ViolationKinds should be first-class citizens with priority, etc
+
+When loading header violation kinds under policies it takes very long to load them. Dont dynamically discover them with analyze but use `policy violation list` for it.
+
+The vscode extension should not contain any repo or business logic. It is only a ui for the repo binary. As such dont mirror the arguments for the 
+
+Use the semio output for logging everything in the vscode extension.
+
+No, you mixed policies (and violations) with constraints (and problems). Policies only affect the repo. Constrains only affect kits. They are not the same thing.
+Refactor the complete extension to exclusively use the repo binary. The vscode extension is just a ui and not buissness or repo logic is part of it.
+
+When clicking on the commands it should not navigate to the vscode command but the go function that defined the command (e.g. func ticketCreate for ticket create command)
+
+There must be a foundational issue (either repo or vscode extension) because no tickets are show or created with the new ticket command.
+Add a general section search that filters simultaneusly tree items in all sections (Tickets, Policies, Contributors)
+Policy should not have literally POLICYNAME - POLICYID but the POLICYID is the description. 
+Add violation kinds to policies.
 ├─ Policies
 │ └─ POLICYNAME - POLICYID
 │ │ └─ VIOLATIONKINDNAME - VIOLATIONKINDID
-- The policy navigation should be to the go function (e.g. func headerPolicy for header policy)
-- Clicking on the the command should not call the command but open the command function same as policies
+The policy navigation should be to the go function (e.g. func headerPolicy for header policy)
+Clicking on the the command should not call the command but open the command function same as policies
+The contributor icon should be the round avatar.
 
 Update AGENTS.md to only use createFile and createFolder over semio mcp.
 
@@ -58,6 +72,8 @@ vscode extension:
 │ │ │ └─ COMMITTITLE - COMMITSHA
 
 Creating a new ticket over vscode extension doesnt work.
+
+Create a detailed refactor plan markdown document for everything related to Semio.cs and Semio.Grasshopper.cs. In particular get rid of the attribute system which uses reflection. Just replace it with plain validation. Remove all metadata (such as icon, symbol, description, etc) and only add it on the ui in Grasshopper. Dont plan to modify the files (such as creating new ones). It is only about the code. Analyze everything excactly from top to bottom.
 
 Create a detailed refactor plan markdown document for everything related to sketchpad. Dont plan to modify the files (such as creating new ones). It is only about the code. Analyze everything excactly from top to bottom.
 
