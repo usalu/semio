@@ -21,7 +21,7 @@
 
 // #region Imports
 
-import { applyKitDiff, deserializeKit, Fix, Kit, Problem, SemioDomainLocation, serializeKit, validateSemioKit } from "@semio/js/semio";
+import { applyKitDiff, deserializeKit, DomainLocation, Fix, Kit, Problem, serializeKit, validateKit } from "@semio/js/semio";
 import { exec } from "child_process";
 import * as fs from "fs";
 import * as jsonc from "jsonc-parser";
@@ -39,7 +39,6 @@ const runningProcesses = new Map<string, AbortController>();
 
 const SEMIO_KIT_LANGUAGE = "json";
 const DIAGNOSTIC_SOURCE = "semio";
-const CACHE_DIR = ".semio-repo/cache/analyze";
 
 // #endregion Constants
 
@@ -60,10 +59,6 @@ interface Violation {
   id: string;
   summary: string;
   kind: string;
-  priority: "high" | "medium" | "low";
-  autofixable: boolean;
-  solution: string;
-  reason: string;
   scope: string;
   line?: number;
   column?: number;
@@ -71,22 +66,9 @@ interface Violation {
   autofix?: AutoFix;
 }
 
-interface FileCache {
-  filePath: string;
-  hash: string;
-  timestamp: string;
-  violations: Violation[];
-}
-
 interface AnalyzeReport {
   timestamp: string;
-  status: string;
   scope: string;
-  summary: {
-    total: number;
-    byPriority: Record<string, number>;
-    byKind: Record<string, number>;
-  };
   violations: Violation[];
 }
 
@@ -116,30 +98,6 @@ function getRepoCommand(): string {
 
 function hasRepoAccess(): boolean {
   return getRepoCommand() !== "";
-}
-
-function hashString(s: string): string {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) {
-    h = (h * 31 + s.charCodeAt(i)) >>> 0;
-  }
-  return h.toString(16).padStart(8, "0");
-}
-
-function getFileCachePath(root: string, relativePath: string): string {
-  const hash = hashString(relativePath);
-  return path.join(root, CACHE_DIR, `${hash}.json`);
-}
-
-function readFileCache(root: string, relativePath: string): FileCache | null {
-  const cachePath = getFileCachePath(root, relativePath);
-  if (!fs.existsSync(cachePath)) return null;
-  try {
-    const content = fs.readFileSync(cachePath, "utf-8");
-    return JSON.parse(content) as FileCache;
-  } catch {
-    return null;
-  }
 }
 
 function runRepoCommand(args: string): void {
@@ -175,8 +133,6 @@ async function runRepoCommandJson<T>(args: string): Promise<T | null> {
   log("[runRepoCommandJson] executing:", fullCommand, "cwd:", root);
   try {
     const { stdout, stderr } = await execAsync(fullCommand, { cwd: root, timeout: 60000, maxBuffer: 10 * 1024 * 1024 });
-    log("[runRepoCommandJson] stdout length:", stdout.length);
-    log("[runRepoCommandJson] stderr length:", stderr.length);
     if (stderr) {
       log("[runRepoCommandJson] stderr:", stderr.substring(0, 500));
     }
@@ -184,9 +140,7 @@ async function runRepoCommandJson<T>(args: string): Promise<T | null> {
       logError("[runRepoCommandJson] stdout is empty!");
       return null;
     }
-    log("[runRepoCommandJson] stdout first 500 chars:", stdout.substring(0, 500));
     const parsed = JSON.parse(stdout) as T;
-    log("[runRepoCommandJson] parsed JSON keys:", Object.keys(parsed as object));
     return parsed;
   } catch (error) {
     logError("[runRepoCommandJson] error:", error);
@@ -204,12 +158,25 @@ interface ToolResult<T = unknown> {
   error?: string;
 }
 
+interface TicketIteration {
+  commit?: string;
+}
+
+interface TicketFrontmatter {
+  status: string;
+  prompt: string;
+  summary?: string;
+  author?: string;
+  commit?: string;
+  iterations?: TicketIteration[];
+}
+
 interface TicketData {
   year: number;
   month: number;
   day: number;
   slug: string;
-  frontmatter: { status: string; prompt: string; summary?: string; author?: string };
+  frontmatter: TicketFrontmatter;
   filePath: string;
 }
 
@@ -240,7 +207,7 @@ async function pickTicket(statusFilter?: "open" | "closed"): Promise<TicketData 
   }
   const items = tickets.map((t) => ({
     label: `${t.year}/${String(t.month).padStart(2, "0")}/${String(t.day).padStart(2, "0")}/${t.slug}`,
-    description: t.frontmatter.status === "closed" ? "✅" : "🟢",
+    description: t.frontmatter.status,
     detail: t.frontmatter.summary || t.frontmatter.prompt,
     ticket: t,
   }));
@@ -262,6 +229,30 @@ async function pickPolicy(): Promise<PolicyData | undefined> {
   }));
   const picked = await vscode.window.showQuickPick(items, { placeHolder: "Select a policy" });
   return picked?.policy;
+}
+
+async function pickFiles(preselectedFiles?: string[]): Promise<string[] | undefined> {
+  const root = getWorkspaceRoot();
+  if (!root) {
+    vscode.window.showErrorMessage("No workspace folder open");
+    return undefined;
+  }
+  const files = await vscode.window.showOpenDialog({
+    canSelectFiles: true,
+    canSelectFolders: false,
+    canSelectMany: true,
+    defaultUri: preselectedFiles?.length ? vscode.Uri.file(path.join(root, preselectedFiles[0])) : vscode.Uri.file(root),
+    openLabel: "Select Files",
+    title: "Select files to include in ticket (at least one required)",
+  });
+  if (!files || files.length === 0) return undefined;
+  return files.map((f) => vscode.workspace.asRelativePath(f));
+}
+
+function getActiveFileRelativePath(): string | undefined {
+  const editor = vscode.window.activeTextEditor;
+  if (!editor) return undefined;
+  return vscode.workspace.asRelativePath(editor.document.uri);
 }
 
 // #endregion Utilities
@@ -287,38 +278,40 @@ async function analyzeFile(document: vscode.TextDocument): Promise<void> {
   if (!shouldAnalyzeFile(document)) return;
   const root = getWorkspaceRoot();
   if (!root) return;
-  if (!hasRepoAccess()) return;
-  const command = getRepoCommand();
-  const relativePath = vscode.workspace.asRelativePath(document.uri).replace(/\\/g, "/");
-  const processKey = document.uri.toString();
-  const existingController = runningProcesses.get(processKey);
-  if (existingController) {
-    existingController.abort();
+
+  const relativePath = path.relative(root, document.uri.fsPath).replace(/\\/g, "/");
+  const processKey = `analyze:${relativePath}`;
+
+  if (runningProcesses.has(processKey)) {
+    runningProcesses.get(processKey)?.abort();
     runningProcesses.delete(processKey);
   }
+
   const controller = new AbortController();
   runningProcesses.set(processKey, controller);
+
   try {
-    await execAsync(`${command} analyze ${relativePath}`, { cwd: root, timeout: 30000, signal: controller.signal });
-  } catch {
+    const result = await runRepoCommandJson<ToolResult<AnalyzeReport>>(`analyze "${relativePath}"`);
+    if (controller.signal.aborted) return;
+
+    log("[analyzeFile] result for", relativePath, ":", result ? `data: ${result.data ? "present" : "missing"}` : "null");
+
+    if (result?.data?.violations) {
+      log("[analyzeFile] found", result.data.violations.length, "violations");
+      fileViolationsMap.set(document.uri.toString(), result.data.violations);
+      updateFileDiagnostics(document, result.data.violations);
+    } else {
+      log("[analyzeFile] no violations found or result format unexpected");
+      // Clear any existing diagnostics if no violations
+      repoDiagnosticCollection.delete(document.uri);
+    }
+  } catch (error) {
+    if (!controller.signal.aborted) {
+      logError("Error analyzing file:", error);
+    }
   } finally {
     runningProcesses.delete(processKey);
   }
-  const cache = readFileCache(root, relativePath);
-  const violations = cache?.violations || [];
-  fileViolationsMap.set(document.uri.toString(), violations);
-  updateFileDiagnostics(document, violations);
-}
-
-function loadDiagnosticsFromCache(document: vscode.TextDocument): void {
-  if (!shouldAnalyzeFile(document)) return;
-  const root = getWorkspaceRoot();
-  if (!root) return;
-  const relativePath = vscode.workspace.asRelativePath(document.uri).replace(/\\/g, "/");
-  const cache = readFileCache(root, relativePath);
-  const violations = cache?.violations || [];
-  fileViolationsMap.set(document.uri.toString(), violations);
-  updateFileDiagnostics(document, violations);
 }
 
 function updateFileDiagnostics(document: vscode.TextDocument, violations: Violation[]): void {
@@ -334,7 +327,8 @@ function updateFileDiagnostics(document: vscode.TextDocument, violations: Violat
     const column = Math.max(0, (violation.column ?? 1) - 1);
     const endColumn = violation.excerpt ? column + violation.excerpt.length : column + 1;
     const range = new vscode.Range(line, column, line, endColumn);
-    const severity = violation.priority === "high" ? vscode.DiagnosticSeverity.Error : violation.priority === "medium" ? vscode.DiagnosticSeverity.Warning : vscode.DiagnosticSeverity.Information;
+    // Default to Warning severity for all violations (priority info not included in JSON output)
+    const severity = vscode.DiagnosticSeverity.Warning;
     const [policyId, violationName] = violation.kind.split(":");
     const diagnostic = new vscode.Diagnostic(range, violationName || violation.kind, severity);
     diagnostic.source = DIAGNOSTIC_SOURCE;
@@ -344,7 +338,7 @@ function updateFileDiagnostics(document: vscode.TextDocument, violations: Violat
   repoDiagnosticCollection.set(document.uri, diagnostics);
 }
 
-class SemioRepoCodeActionProvider implements vscode.CodeActionProvider {
+class RepoCodeActionProvider implements vscode.CodeActionProvider {
   provideCodeActions(document: vscode.TextDocument, range: vscode.Range | vscode.Selection, context: vscode.CodeActionContext): vscode.CodeAction[] | undefined {
     const repoDiagnostics = context.diagnostics.filter((d) => d.source === DIAGNOSTIC_SOURCE);
     if (repoDiagnostics.length === 0) return undefined;
@@ -364,7 +358,8 @@ class SemioRepoCodeActionProvider implements vscode.CodeActionProvider {
 
 function createRepoCodeAction(document: vscode.TextDocument, diagnostic: vscode.Diagnostic, violation: Violation): vscode.CodeAction | undefined {
   const relativePath = vscode.workspace.asRelativePath(document.uri);
-  const action = new vscode.CodeAction(`Fix: ${violation.solution}`, vscode.CodeActionKind.QuickFix);
+  const [, violationName] = violation.kind.split(":");
+  const action = new vscode.CodeAction(`Fix: ${violationName || violation.kind}`, vscode.CodeActionKind.QuickFix);
   action.diagnostics = [diagnostic];
   action.isPreferred = true;
   action.command = {
@@ -385,9 +380,8 @@ async function fixViolation(relativePath: string): Promise<void> {
   const command = getRepoCommand();
   try {
     await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: "Fixing violation..." }, async () => {
-      const { stdout, stderr } = await execAsync(`${command} fix ${relativePath}`, { cwd: root, timeout: 30000 });
+      const { stderr } = await execAsync(`${command} fix ${relativePath}`, { cwd: root, timeout: 30000 });
       if (stderr) log("Fix stderr:", stderr);
-      if (stdout) log("Fix stdout:", stdout);
       const absPath = path.join(root, relativePath);
       const uri = vscode.Uri.file(absPath);
       const openDoc = vscode.workspace.textDocuments.find((d) => d.uri.fsPath === absPath);
@@ -413,7 +407,7 @@ async function fixViolation(relativePath: string): Promise<void> {
 
 let kitDiagnosticCollection: vscode.DiagnosticCollection;
 
-function isSemioKitDocument(document: vscode.TextDocument): boolean {
+function isKitDocument(document: vscode.TextDocument): boolean {
   if (document.languageId !== SEMIO_KIT_LANGUAGE) return false;
   const basename = document.uri.path.split("/").pop()?.toLowerCase() || "";
   return basename.startsWith("kit_") || basename.includes("_kit") || basename === "kit.json";
@@ -433,7 +427,7 @@ function problemToDiagnostic(document: vscode.TextDocument, problem: Problem): v
   return diagnostic;
 }
 
-function locationToRange(document: vscode.TextDocument, location: SemioDomainLocation): vscode.Range {
+function locationToRange(document: vscode.TextDocument, location: DomainLocation): vscode.Range {
   if (!location.entityGuid) return new vscode.Range(0, 0, 0, 0);
   const text = document.getText();
   const tree = jsonc.parseTree(text);
@@ -445,7 +439,7 @@ function locationToRange(document: vscode.TextDocument, location: SemioDomainLoc
   return new vscode.Range(startPos, endPos);
 }
 
-function findEntityNode(tree: jsonc.Node, location: SemioDomainLocation): jsonc.Node | undefined {
+function findEntityNode(tree: jsonc.Node, location: DomainLocation): jsonc.Node | undefined {
   const entityKindToArrayName: Record<string, string> = {
     Type: "types",
     Design: "designs",
@@ -543,11 +537,11 @@ function findNodeByGuid(node: jsonc.Node, guid: string): jsonc.Node | undefined 
 }
 
 function validateKitDocument(document: vscode.TextDocument): void {
-  if (!isSemioKitDocument(document)) return;
+  if (!isKitDocument(document)) return;
   try {
     const text = document.getText();
     const kit = deserializeKit(text);
-    const result = validateSemioKit(kit);
+    const result = validateKit(kit);
     const diagnostics = result.problems.map((problem) => problemToDiagnostic(document, problem));
     kitDiagnosticCollection.set(document.uri, diagnostics);
   } catch (error) {
@@ -556,7 +550,7 @@ function validateKitDocument(document: vscode.TextDocument): void {
   }
 }
 
-class SemioKitCodeActionProvider implements vscode.CodeActionProvider {
+class KitCodeActionProvider implements vscode.CodeActionProvider {
   provideCodeActions(document: vscode.TextDocument, range: vscode.Range | vscode.Selection, context: vscode.CodeActionContext): vscode.CodeAction[] | undefined {
     const kitDiagnostics = context.diagnostics.filter((d) => d.source === DIAGNOSTIC_SOURCE);
     if (kitDiagnostics.length === 0) return undefined;
@@ -565,7 +559,7 @@ class SemioKitCodeActionProvider implements vscode.CodeActionProvider {
       try {
         const text = document.getText();
         const kit = deserializeKit(text);
-        const result = validateSemioKit(kit);
+        const result = validateKit(kit);
         const problem = result.problems.find((i) => i.message === diagnostic.message && i.constraintId === diagnostic.code);
         if (!problem) continue;
         for (const fix of problem.fixes) {
@@ -603,10 +597,155 @@ function createKitCodeAction(document: vscode.TextDocument, diagnostic: vscode.D
 // #region Sidebar Views
 
 let globalSearchQuery = "";
+let globalMatchCase = false;
+let globalMatchWholeWord = false;
+let globalUseRegex = false;
+
+function matchesSearchText(text: string): boolean {
+  if (!globalSearchQuery) return true;
+  try {
+    if (globalUseRegex) {
+      const flags = globalMatchCase ? "" : "i";
+      const pattern = globalMatchWholeWord ? `\\b${globalSearchQuery}\\b` : globalSearchQuery;
+      const regex = new RegExp(pattern, flags);
+      return regex.test(text);
+    } else {
+      const query = globalMatchCase ? globalSearchQuery : globalSearchQuery.toLowerCase();
+      const target = globalMatchCase ? text : text.toLowerCase();
+      if (globalMatchWholeWord) {
+        const wordRegex = new RegExp(`\\b${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, globalMatchCase ? "" : "i");
+        return wordRegex.test(text);
+      }
+      return target.includes(query);
+    }
+  } catch {
+    return text.toLowerCase().includes(globalSearchQuery.toLowerCase());
+  }
+}
+
+class SearchViewProvider implements vscode.WebviewViewProvider {
+  public static readonly viewType = "semio.search";
+  private _view?: vscode.WebviewView;
+
+  constructor(private readonly _extensionUri: vscode.Uri) {}
+
+  public resolveWebviewView(webviewView: vscode.WebviewView): void {
+    this._view = webviewView;
+    webviewView.webview.options = { enableScripts: true };
+    webviewView.webview.html = this._getHtmlForWebview();
+    webviewView.webview.onDidReceiveMessage((data) => {
+      switch (data.type) {
+        case "search":
+          globalSearchQuery = data.query;
+          globalMatchCase = data.matchCase;
+          globalMatchWholeWord = data.matchWholeWord;
+          globalUseRegex = data.useRegex;
+          ticketsProvider.refresh();
+          policiesProvider.refresh();
+          contributorsProvider.refresh();
+          commandsProvider.refresh();
+          break;
+      }
+    });
+  }
+
+  private _getHtmlForWebview(): string {
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { padding: 8px; font-family: var(--vscode-font-family); font-size: var(--vscode-font-size); }
+    .search-box {
+      display: flex;
+      align-items: center;
+      background: var(--vscode-input-background);
+      border: 1px solid var(--vscode-input-border, transparent);
+      border-radius: 2px;
+    }
+    .search-box:focus-within { border-color: var(--vscode-focusBorder); }
+    input[type="text"] {
+      flex: 1;
+      min-width: 0;
+      padding: 3px 4px 3px 6px;
+      border: none;
+      background: transparent;
+      color: var(--vscode-input-foreground);
+      outline: none;
+      font-size: 13px;
+      line-height: 18px;
+    }
+    input[type="text"]::placeholder { color: var(--vscode-input-placeholderForeground); }
+    .toggles { display: flex; padding: 0 2px; gap: 1px; }
+    .toggle-btn {
+      width: 20px;
+      height: 20px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--vscode-foreground);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.7;
+      border-radius: 3px;
+      margin: 2px 0;
+    }
+    .toggle-btn:hover { background: var(--vscode-inputOption-hoverBackground, rgba(90, 93, 94, 0.31)); opacity: 1; }
+    .toggle-btn.active {
+      background: var(--vscode-inputOption-activeBackground, rgba(0, 127, 212, 0.4));
+      border-color: var(--vscode-inputOption-activeBorder, var(--vscode-focusBorder));
+      color: var(--vscode-inputOption-activeForeground, #fff);
+      opacity: 1;
+    }
+    .toggle-btn svg { width: 14px; height: 14px; fill: currentColor; }
+  </style>
+</head>
+<body>
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="Search" />
+    <div class="toggles">
+      <button class="toggle-btn" id="matchCase" title="Match Case (Alt+C)">
+        <svg viewBox="0 0 16 16"><path d="M8.854 11.702h-1l-.816-2.159H3.772l-.768 2.16H2L5.086 4h.822l2.946 7.702zm-2.242-2.91L5.364 5.055l-1.26 3.737h2.508zm4.673-5.001h.723v.682h.012c.238-.46.792-.769 1.373-.769.859 0 1.393.453 1.393 1.208v4.79h-.723V5.49c0-.578-.338-.918-.937-.918-.665 0-1.118.498-1.118 1.197v3.933h-.723V3.791z"/></svg>
+      </button>
+      <button class="toggle-btn" id="matchWholeWord" title="Match Whole Word (Alt+W)">
+        <svg viewBox="0 0 16 16"><path fill-rule="evenodd" clip-rule="evenodd" d="M0 11H1V13H15V11H16V14H15H1H0V11Z"/><path d="M6.84048 11H5.95963V10.1406H5.93814C5.555 10.7995 4.99104 11.1289 4.24625 11.1289C3.69839 11.1289 3.26871 10.9839 2.95718 10.6938C2.64924 10.4038 2.49527 10.0189 2.49527 9.53906C2.49527 8.51139 3.10041 7.91341 4.3107 7.74512L5.95963 7.51855C5.95963 6.91341 5.5903 6.61084 4.85163 6.61084C4.22476 6.61084 3.65003 6.81104 3.12741 7.21143V6.30371C3.71895 5.99577 4.36606 5.8418 5.06861 5.8418C6.24119 5.8418 6.84048 6.40592 6.84048 7.53418V11ZM5.95963 8.21631L4.63297 8.40625C4.22022 8.46224 3.9183 8.55794 3.72721 8.69336C3.53613 8.82878 3.44059 9.0485 3.44059 9.35254C3.44059 9.58073 3.52555 9.76986 3.69548 9.91992C3.869 10.0664 4.09864 10.1396 4.38444 10.1396C4.78076 10.1396 5.1048 10.0007 5.35656 9.72266C5.60832 9.44108 5.73421 9.08073 5.73421 8.64258V8.21631H5.95963Z"/><path d="M9.3475 10.2051H9.32601V11H8.44515V2.85742H9.32601V6.4668H9.3475C9.78076 5.72559 10.4146 5.35498 11.2489 5.35498C11.9264 5.35498 12.4674 5.61198 12.8708 6.12598C13.2743 6.63997 13.476 7.32389 13.476 8.17773C13.476 9.13818 13.2429 9.89616 12.7768 10.4517C12.3107 11.0073 11.6883 11.2852 10.9098 11.2852C10.2004 11.2852 9.67057 10.9254 9.3475 10.2051ZM9.32601 8.07129V8.64258C9.32601 9.09831 9.46683 9.4834 9.74847 9.79785C10.0337 10.1087 10.3988 10.2642 10.8438 10.2642C11.3559 10.2642 11.7521 10.0605 12.0319 9.65332C12.3153 9.24609 12.457 8.68376 12.457 7.96631C12.457 7.35059 12.3224 6.86914 12.0533 6.52197C11.7878 6.1748 11.4191 6.00122 10.9473 6.00122C10.4541 6.00122 10.0625 6.17969 9.77274 6.53662C9.48299 6.89355 9.33455 7.34473 9.32601 7.89014V8.07129Z"/></svg>
+      </button>
+      <button class="toggle-btn" id="useRegex" title="Use Regular Expression (Alt+R)">
+        <svg viewBox="0 0 16 16"><path fill-rule="evenodd" clip-rule="evenodd" d="M10.012 2H11.012V4.219L12.963 2.994L13.463 3.863L11.512 5.088L13.463 6.314L12.963 7.182L11.012 5.957V8.176H10.012V5.957L8.061 7.182L7.561 6.314L9.512 5.088L7.561 3.863L8.061 2.994L10.012 4.219V2ZM2 10H6V14H2V10Z"/></svg>
+      </button>
+    </div>
+  </div>
+  <script>
+    const vscode = acquireVsCodeApi();
+    const searchInput = document.getElementById('searchInput');
+    const matchCaseBtn = document.getElementById('matchCase');
+    const matchWholeWordBtn = document.getElementById('matchWholeWord');
+    const useRegexBtn = document.getElementById('useRegex');
+    let matchCase = false, matchWholeWord = false, useRegex = false;
+    function sendSearch() {
+      vscode.postMessage({ type: 'search', query: searchInput.value, matchCase, matchWholeWord, useRegex });
+    }
+    searchInput.addEventListener('input', sendSearch);
+    matchCaseBtn.addEventListener('click', () => { matchCase = !matchCase; matchCaseBtn.classList.toggle('active', matchCase); sendSearch(); });
+    matchWholeWordBtn.addEventListener('click', () => { matchWholeWord = !matchWholeWord; matchWholeWordBtn.classList.toggle('active', matchWholeWord); sendSearch(); });
+    useRegexBtn.addEventListener('click', () => { useRegex = !useRegex; useRegexBtn.classList.toggle('active', useRegex); sendSearch(); });
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.altKey && e.key === 'c') { matchCase = !matchCase; matchCaseBtn.classList.toggle('active', matchCase); sendSearch(); e.preventDefault(); }
+      if (e.altKey && e.key === 'w') { matchWholeWord = !matchWholeWord; matchWholeWordBtn.classList.toggle('active', matchWholeWord); sendSearch(); e.preventDefault(); }
+      if (e.altKey && e.key === 'r') { useRegex = !useRegex; useRegexBtn.classList.toggle('active', useRegex); sendSearch(); e.preventDefault(); }
+    });
+  </script>
+</body>
+</html>`;
+  }
+}
 
 type TicketFilter = "all" | "open" | "closed";
 
-type TicketTreeItem = TicketYearItem | TicketMonthItem | TicketDayItem | TicketItem | TicketAuthorItem;
+type TicketTreeItem = TicketYearItem | TicketMonthItem | TicketDayItem | TicketItem | TicketAuthorItem | TicketCommitsItem | TicketCommitItem;
 
 class TicketYearItem extends vscode.TreeItem {
   constructor(public readonly year: number) {
@@ -642,10 +781,10 @@ class TicketDayItem extends vscode.TreeItem {
 class TicketItem extends vscode.TreeItem {
   constructor(public readonly ticket: TicketData) {
     super(ticket.slug, vscode.TreeItemCollapsibleState.Collapsed);
-    this.tooltip = `${ticket.slug}\n${ticket.frontmatter.summary || ticket.frontmatter.prompt}`;
-    this.description = ticket.frontmatter.status === "open" ? "🟢" : "✅";
+    this.tooltip = ticket.frontmatter.summary || ticket.frontmatter.prompt;
+    this.description = ticket.frontmatter.status;
     this.iconPath = new vscode.ThemeIcon(ticket.frontmatter.status === "open" ? "issue-opened" : "issue-closed");
-    this.contextValue = "ticket";
+    this.contextValue = ticket.frontmatter.status === "open" ? "ticketOpen" : "ticketClosed";
     this.command = { command: "semio.openTicket", title: "Open Ticket", arguments: [ticket] };
   }
 }
@@ -659,6 +798,24 @@ class TicketAuthorItem extends vscode.TreeItem {
     this.iconPath = new vscode.ThemeIcon("person");
     this.contextValue = "ticketAuthor";
     this.description = "author";
+  }
+}
+
+class TicketCommitsItem extends vscode.TreeItem {
+  constructor(public readonly commits: string[]) {
+    super("commits", vscode.TreeItemCollapsibleState.Collapsed);
+    this.iconPath = new vscode.ThemeIcon("git-commit");
+    this.contextValue = "ticketCommits";
+  }
+}
+
+class TicketCommitItem extends vscode.TreeItem {
+  constructor(public readonly commit: string) {
+    super(commit.substring(0, 7), vscode.TreeItemCollapsibleState.None);
+    this.description = commit;
+    this.tooltip = commit;
+    this.iconPath = new vscode.ThemeIcon("git-commit");
+    this.contextValue = "ticketCommit";
   }
 }
 
@@ -691,14 +848,14 @@ class TicketsProvider implements vscode.TreeDataProvider<TicketTreeItem> {
 
   private matchesSearch(ticket: TicketData): boolean {
     if (!globalSearchQuery) return true;
-    const query = globalSearchQuery.toLowerCase();
-    return ticket.slug.toLowerCase().includes(query) || (ticket.frontmatter.summary || "").toLowerCase().includes(query) || (ticket.frontmatter.prompt || "").toLowerCase().includes(query) || (ticket.frontmatter.author || "").toLowerCase().includes(query);
+    const searchable = [ticket.slug, ticket.frontmatter.summary || "", ticket.frontmatter.prompt || "", ticket.frontmatter.author || ""].join(" ");
+    return matchesSearchText(searchable);
   }
 
   async getChildren(element?: TicketTreeItem): Promise<TicketTreeItem[]> {
     log("[TicketsProvider.getChildren] called, element:", element?.constructor.name ?? "root");
     log("[TicketsProvider.getChildren] cachedTickets.length:", this.cachedTickets.length);
-    
+
     if (this.cachedTickets.length === 0) {
       log("[TicketsProvider.getChildren] cache empty, fetching tickets...");
       const result = await runRepoCommandJson<ToolResult<TicketData[]>>("ticket list");
@@ -709,19 +866,19 @@ class TicketsProvider implements vscode.TreeDataProvider<TicketTreeItem> {
       this.cachedTickets = result?.data ?? [];
       log("[TicketsProvider.getChildren] cachedTickets.length after fetch:", this.cachedTickets.length);
     }
-    
+
     let tickets = this.cachedTickets;
     log("[TicketsProvider.getChildren] tickets before filter:", tickets.length);
-    
+
     if (this.filter === "open") tickets = tickets.filter((t) => t.frontmatter.status === "open");
     else if (this.filter === "closed") tickets = tickets.filter((t) => t.frontmatter.status === "closed");
-    
+
     log("[TicketsProvider.getChildren] tickets after status filter:", tickets.length);
-    
+
     tickets = tickets.filter((t) => this.matchesSearch(t));
-    
+
     log("[TicketsProvider.getChildren] tickets after search filter:", tickets.length);
-    
+
     if (!element) {
       if (tickets.length === 0) {
         log("[TicketsProvider.getChildren] no tickets, returning empty array");
@@ -747,10 +904,27 @@ class TicketsProvider implements vscode.TreeDataProvider<TicketTreeItem> {
     }
     if (element instanceof TicketItem) {
       const children: TicketTreeItem[] = [];
+      const commits: string[] = [];
+      if (element.ticket.frontmatter.commit) {
+        commits.push(element.ticket.frontmatter.commit);
+      }
+      if (element.ticket.frontmatter.iterations) {
+        for (const iteration of element.ticket.frontmatter.iterations) {
+          if (iteration.commit && !commits.includes(iteration.commit)) {
+            commits.push(iteration.commit);
+          }
+        }
+      }
       if (element.ticket.frontmatter.author) {
         children.push(new TicketAuthorItem(element.ticket.frontmatter.author, element.ticket));
       }
+      if (commits.length > 0) {
+        children.push(new TicketCommitsItem(commits));
+      }
       return children;
+    }
+    if (element instanceof TicketCommitsItem) {
+      return element.commits.map((commit) => new TicketCommitItem(commit));
     }
     return [];
   }
@@ -789,16 +963,29 @@ class PoliciesProvider implements vscode.TreeDataProvider<PolicyTreeItem> {
   private _onDidChangeTreeData = new vscode.EventEmitter<PolicyTreeItem | undefined | null | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
   private cachedPolicies: PolicyData[] = [];
+  private cachedViolationKinds = new Map<string, string[]>();
 
   refresh(): void {
     this.cachedPolicies = [];
+    this.cachedViolationKinds.clear();
     this._onDidChangeTreeData.fire();
   }
 
-  private matchesSearch(policy: PolicyData): boolean {
-    if (!globalSearchQuery) return true;
-    const query = globalSearchQuery.toLowerCase();
-    return policy.id.toLowerCase().includes(query) || policy.name.toLowerCase().includes(query) || policy.description.toLowerCase().includes(query);
+  private matchesPolicySearch(policy: PolicyData): boolean {
+    const searchable = [policy.id, policy.name, policy.description].join(" ");
+    return matchesSearchText(searchable);
+  }
+
+  private matchesViolationKindSearch(kind: string): boolean {
+    return matchesSearchText(kind);
+  }
+
+  private async getViolationKinds(policyId: string): Promise<string[]> {
+    if (!this.cachedViolationKinds.has(policyId)) {
+      const result = await runRepoCommandJson<ToolResult<string[]>>(`policy violation list ${policyId}`);
+      this.cachedViolationKinds.set(policyId, result?.data ?? []);
+    }
+    return this.cachedViolationKinds.get(policyId) ?? [];
   }
 
   getTreeItem(element: PolicyTreeItem): vscode.TreeItem {
@@ -811,12 +998,28 @@ class PoliciesProvider implements vscode.TreeDataProvider<PolicyTreeItem> {
         const result = await runRepoCommandJson<ToolResult<PolicyData[]>>("policy list");
         this.cachedPolicies = result?.data ?? [];
       }
-      return this.cachedPolicies.filter((p) => this.matchesSearch(p)).map((policy) => new PolicyItem(policy));
+      if (!globalSearchQuery) {
+        return this.cachedPolicies.map((policy) => new PolicyItem(policy));
+      }
+      const matchingPolicies: PolicyItem[] = [];
+      for (const policy of this.cachedPolicies) {
+        if (this.matchesPolicySearch(policy)) {
+          matchingPolicies.push(new PolicyItem(policy));
+        } else {
+          const kinds = await this.getViolationKinds(policy.id);
+          if (kinds.some((k) => this.matchesViolationKindSearch(k))) {
+            matchingPolicies.push(new PolicyItem(policy));
+          }
+        }
+      }
+      return matchingPolicies;
     }
     if (element instanceof PolicyItem) {
-      const result = await runRepoCommandJson<ToolResult<string[]>>(`policy violation list ${element.policy.id}`);
-      if (!result?.data) return [];
-      return result.data.map((kind) => new ViolationKindItem(kind, element.policy.id));
+      const kinds = await this.getViolationKinds(element.policy.id);
+      if (!globalSearchQuery) {
+        return kinds.map((kind) => new ViolationKindItem(kind, element.policy.id));
+      }
+      return kinds.filter((k) => this.matchesViolationKindSearch(k) || this.matchesPolicySearch(element.policy)).map((kind) => new ViolationKindItem(kind, element.policy.id));
     }
     return [];
   }
@@ -830,7 +1033,7 @@ interface ContributorData {
   contributions?: { projects?: string[]; folders?: string[]; files?: string[]; regions?: string[]; definitions?: string[]; commits?: { title: string; sha: string }[] };
 }
 
-type ContributorTreeItem = ContributorItem | ContributorEmailsItem | ContributorEmailItem | ContributorLinksItem | ContributorLinkItem | ContributorAvatarItem | ContributorContributionsItem | ContributorProjectsItem | ContributorProjectItem | ContributorFilesItem | ContributorFileItem | ContributorCommitsItem | ContributorCommitItem;
+type ContributorTreeItem = ContributorItem | ContributorEmailsItem | ContributorEmailItem | ContributorLinksItem | ContributorLinkItem | ContributorContributionsItem | ContributorProjectsItem | ContributorProjectItem | ContributorFilesItem | ContributorFileItem | ContributorCommitsItem | ContributorCommitItem;
 
 class ContributorItem extends vscode.TreeItem {
   constructor(
@@ -884,18 +1087,6 @@ class ContributorLinkItem extends vscode.TreeItem {
     this.iconPath = new vscode.ThemeIcon("link-external");
     this.contextValue = "contributorLink";
     this.command = { command: "vscode.open", title: "Open Link", arguments: [vscode.Uri.parse(url)] };
-  }
-}
-
-class ContributorAvatarItem extends vscode.TreeItem {
-  constructor(
-    public readonly contributor: ContributorData,
-    public readonly avatarPath: string,
-  ) {
-    super("avatar-round-90x90.png", vscode.TreeItemCollapsibleState.None);
-    this.iconPath = new vscode.ThemeIcon("file-media");
-    this.contextValue = "contributorAvatar";
-    this.command = { command: "vscode.open", title: "Open Avatar", arguments: [vscode.Uri.file(avatarPath)] };
   }
 }
 
@@ -972,8 +1163,8 @@ class ContributorsProvider implements vscode.TreeDataProvider<ContributorTreeIte
 
   private matchesSearch(contributor: ContributorData): boolean {
     if (!globalSearchQuery) return true;
-    const query = globalSearchQuery.toLowerCase();
-    return contributor.github.toLowerCase().includes(query) || (contributor.name || "").toLowerCase().includes(query) || (contributor.emails || []).some((e) => e.toLowerCase().includes(query));
+    const searchable = [contributor.github, contributor.name || "", ...(contributor.emails || [])].join(" ");
+    return matchesSearchText(searchable);
   }
 
   getTreeItem(element: ContributorTreeItem): vscode.TreeItem {
@@ -997,11 +1188,6 @@ class ContributorsProvider implements vscode.TreeDataProvider<ContributorTreeIte
       const c = element.contributor;
       if (c.emails && c.emails.length > 0) children.push(new ContributorEmailsItem(c));
       if (c.links && Object.keys(c.links).length > 0) children.push(new ContributorLinksItem(c));
-      const root = getWorkspaceRoot();
-      if (root) {
-        const avatarPath = path.join(root, "contributors", c.github, "avatar-round-90x90.png");
-        if (fs.existsSync(avatarPath)) children.push(new ContributorAvatarItem(c, avatarPath));
-      }
       if (c.contributions && (c.contributions.projects?.length || c.contributions.files?.length || c.contributions.commits?.length)) {
         children.push(new ContributorContributionsItem(c));
       }
@@ -1071,12 +1257,22 @@ class CommandsProvider implements vscode.TreeDataProvider<CommandItem> {
   private _onDidChangeTreeData = new vscode.EventEmitter<CommandItem | undefined | null | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
+  refresh(): void {
+    this._onDidChangeTreeData.fire();
+  }
+
+  private matchesSearch(cmd: CommandInfo): boolean {
+    if (!globalSearchQuery) return true;
+    const searchable = [cmd.id, cmd.title].join(" ");
+    return matchesSearchText(searchable);
+  }
+
   getTreeItem(element: CommandItem): vscode.TreeItem {
     return element;
   }
 
   getChildren(): CommandItem[] {
-    return SIDEBAR_COMMANDS.map((cmd) => new CommandItem(cmd));
+    return SIDEBAR_COMMANDS.filter((cmd) => this.matchesSearch(cmd)).map((cmd) => new CommandItem(cmd));
   }
 }
 
@@ -1086,37 +1282,29 @@ let policiesProvider: PoliciesProvider;
 let commandsProvider: CommandsProvider;
 
 function registerSidebarViews(context: vscode.ExtensionContext): void {
+  const searchProvider = new SearchViewProvider(context.extensionUri);
   ticketsProvider = new TicketsProvider();
   contributorsProvider = new ContributorsProvider();
   policiesProvider = new PoliciesProvider();
   commandsProvider = new CommandsProvider();
-  context.subscriptions.push(vscode.window.registerTreeDataProvider("semio.tickets", ticketsProvider), vscode.window.registerTreeDataProvider("semio.contributors", contributorsProvider), vscode.window.registerTreeDataProvider("semio.policies", policiesProvider), vscode.window.registerTreeDataProvider("semio.commands", commandsProvider));
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider(SearchViewProvider.viewType, searchProvider),
+    vscode.window.registerTreeDataProvider("semio.tickets", ticketsProvider),
+    vscode.window.registerTreeDataProvider("semio.contributors", contributorsProvider),
+    vscode.window.registerTreeDataProvider("semio.policies", policiesProvider),
+    vscode.window.registerTreeDataProvider("semio.commands", commandsProvider),
+  );
   context.subscriptions.push(
     vscode.commands.registerCommand("semio.refreshTickets", () => ticketsProvider.refresh()),
     vscode.commands.registerCommand("semio.refreshContributors", () => contributorsProvider.refresh()),
     vscode.commands.registerCommand("semio.refreshPolicies", () => policiesProvider.refresh()),
     vscode.commands.registerCommand("semio.toggleTicketFilter", () => ticketsProvider.toggleFilter()),
-    vscode.commands.registerCommand("semio.search", async () => {
-      const query = await vscode.window.showInputBox({ prompt: "Search tickets, policies, and contributors", placeHolder: "Enter search query...", value: globalSearchQuery });
-      if (query !== undefined) {
-        globalSearchQuery = query;
-        ticketsProvider.refresh();
-        policiesProvider.refresh();
-        contributorsProvider.refresh();
-      }
-    }),
-    vscode.commands.registerCommand("semio.clearSearch", () => {
-      globalSearchQuery = "";
-      ticketsProvider.refresh();
-      policiesProvider.refresh();
-      contributorsProvider.refresh();
-      vscode.window.showInformationMessage("Search cleared");
-    }),
     vscode.commands.registerCommand("semio.openTicket", async (ticket: TicketData) => {
       if (!ticket?.filePath) return;
       const root = getWorkspaceRoot();
       if (!root) return;
-      const uri = vscode.Uri.file(path.join(root, ticket.filePath));
+      const filePath = path.isAbsolute(ticket.filePath) ? ticket.filePath : path.join(root, ticket.filePath);
+      const uri = vscode.Uri.file(filePath);
       await vscode.window.showTextDocument(uri);
     }),
     vscode.commands.registerCommand("semio.openPolicy", async (policy: PolicyData, lineNumber?: number) => {
@@ -1264,17 +1452,24 @@ function registerCommands(context: vscode.ExtensionContext): void {
         vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
-      const slug = await vscode.window.showInputBox({
-        prompt: "Enter ticket slug (e.g., MY-FEATURE)",
-        placeHolder: "TICKET-SLUG",
+      const title = await vscode.window.showInputBox({
+        prompt: "Enter ticket title",
+        placeHolder: "Fix login bug",
       });
-      if (!slug) return;
-      const prompt = await vscode.window.showInputBox({
-        prompt: "Enter ticket description",
-        placeHolder: "What needs to be done?",
-      });
-      if (!prompt) return;
-      runRepoCommand(`ticket create ${slug} --prompt="${prompt.replace(/"/g, '\\"')}"`);
+      if (!title) return;
+      const activeFile = getActiveFileRelativePath();
+      const files = await pickFiles(activeFile ? [activeFile] : undefined);
+      if (!files || files.length === 0) {
+        vscode.window.showWarningMessage("At least one file is required to create a ticket");
+        return;
+      }
+      const slug = title
+        .toUpperCase()
+        .replace(/[^A-Z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .substring(0, 50);
+      const fileArgs = files.map((f) => `--file="${f}"`).join(" ");
+      runRepoCommand(`ticket create ${slug} --prompt="${title.replace(/"/g, '\\"')}" ${fileArgs}`);
     }),
     vscode.commands.registerCommand("semio.ticketList", async () => {
       if (!hasRepoAccess()) {
@@ -1291,8 +1486,15 @@ function registerCommands(context: vscode.ExtensionContext): void {
       const ticket = await pickTicket();
       if (!ticket) return;
       const prompt = await vscode.window.showInputBox({ prompt: "Enter iteration prompt (optional)", placeHolder: "What will be done in this iteration?" });
+      const activeFile = getActiveFileRelativePath();
+      const files = await pickFiles(activeFile ? [activeFile] : undefined);
+      if (!files || files.length === 0) {
+        vscode.window.showWarningMessage("At least one file is required to start an iteration");
+        return;
+      }
       const promptArg = prompt ? ` --prompt="${prompt.replace(/"/g, '\\"')}"` : "";
-      runRepoCommand(`ticket iterate start ${ticket.year} ${ticket.month} ${ticket.day} ${ticket.slug}${promptArg}`);
+      const fileArgs = files.map((f) => `--file="${f}"`).join(" ");
+      runRepoCommand(`ticket iterate start ${ticket.year} ${ticket.month} ${ticket.day} ${ticket.slug}${promptArg} ${fileArgs}`);
     }),
     vscode.commands.registerCommand("semio.ticketIterateEnd", async () => {
       if (!hasRepoAccess()) {
@@ -1311,6 +1513,15 @@ function registerCommands(context: vscode.ExtensionContext): void {
       const ticket = await pickTicket("open");
       if (!ticket) return;
       runRepoCommand(`ticket finish ${ticket.year} ${ticket.month} ${ticket.day} ${ticket.slug}`);
+    }),
+    vscode.commands.registerCommand("semio.ticketReopen", async () => {
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary not found in bin/");
+        return;
+      }
+      const ticket = await pickTicket("closed");
+      if (!ticket) return;
+      runRepoCommand(`ticket reopen ${ticket.year} ${ticket.month} ${ticket.day} ${ticket.slug}`);
     }),
     vscode.commands.registerCommand("semio.ticketRead", async () => {
       if (!hasRepoAccess()) {
@@ -1656,7 +1867,7 @@ function logError(...args: any[]): void {
 export function activate(context: vscode.ExtensionContext) {
   outputChannel = vscode.window.createOutputChannel("semio");
   context.subscriptions.push(outputChannel);
-  
+
   log("[ACTIVATION] semio extension activated");
   outputChannel.show(true);
   kitDiagnosticCollection = vscode.languages.createDiagnosticCollection(DIAGNOSTIC_SOURCE);
@@ -1668,23 +1879,46 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.workspace.onDidCloseTextDocument((doc) => kitDiagnosticCollection.delete(doc.uri)),
   );
   vscode.workspace.textDocuments.forEach(validateKitDocument);
-  context.subscriptions.push(vscode.languages.registerCodeActionsProvider({ language: SEMIO_KIT_LANGUAGE }, new SemioKitCodeActionProvider(), { providedCodeActionKinds: [vscode.CodeActionKind.QuickFix] }));
+  context.subscriptions.push(vscode.languages.registerCodeActionsProvider({ language: SEMIO_KIT_LANGUAGE }, new KitCodeActionProvider(), { providedCodeActionKinds: [vscode.CodeActionKind.QuickFix] }));
   context.subscriptions.push(
-    vscode.workspace.onDidOpenTextDocument(loadDiagnosticsFromCache),
-    vscode.workspace.onDidSaveTextDocument(analyzeFile),
+    vscode.workspace.onDidOpenTextDocument((document) => {
+      if (shouldAnalyzeFile(document)) {
+        analyzeFile(document);
+      }
+      if (isKitDocument(document)) {
+        validateKitDocument(document);
+      }
+    }),
+    vscode.workspace.onDidSaveTextDocument((document) => {
+      if (shouldAnalyzeFile(document)) {
+        analyzeFile(document);
+      }
+      if (isKitDocument(document)) {
+        validateKitDocument(document);
+      }
+    }),
     vscode.workspace.onDidCloseTextDocument((doc) => {
-      const processKey = doc.uri.toString();
+      const relativePath = getWorkspaceRoot() ? path.relative(getWorkspaceRoot()!, doc.uri.fsPath).replace(/\\/g, "/") : "";
+      const processKey = `analyze:${relativePath}`;
       const controller = runningProcesses.get(processKey);
       if (controller) {
         controller.abort();
         runningProcesses.delete(processKey);
       }
-      fileViolationsMap.delete(processKey);
+      fileViolationsMap.delete(doc.uri.toString());
       repoDiagnosticCollection.delete(doc.uri);
+      kitDiagnosticCollection.delete(doc.uri);
     }),
   );
-  vscode.workspace.textDocuments.forEach(loadDiagnosticsFromCache);
-  context.subscriptions.push(vscode.languages.registerCodeActionsProvider("*", new SemioRepoCodeActionProvider(), { providedCodeActionKinds: [vscode.CodeActionKind.QuickFix] }));
+  vscode.workspace.textDocuments.forEach((document) => {
+    if (shouldAnalyzeFile(document)) {
+      analyzeFile(document);
+    }
+    if (isKitDocument(document)) {
+      validateKitDocument(document);
+    }
+  });
+  context.subscriptions.push(vscode.languages.registerCodeActionsProvider("*", new RepoCodeActionProvider(), { providedCodeActionKinds: [vscode.CodeActionKind.QuickFix] }));
   registerSidebarViews(context);
   registerCommands(context);
 }

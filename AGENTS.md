@@ -1,10 +1,12 @@
+ALWAYS create a ticket with semio-repo mcp tool for every task you are working on. The purpose of the ticket is to understand the context, problem and decision making process. It is only about the process.
+
 This document MUST ALWAYS BE followed unless explicitly asked to do otherwise.
 
 IMPORTANT:
 
+- AlWAYS create a new iteration for every TODO you are working on.
 - Multiple agents and a developer ALWAYS work on the same codebase at the same time. NEVER use `git stash`, `git stash pop`, `git checkout`, … because it will mess up others work and worst-case delete their work.
 - The codebase in under design and development and not used in production yet. There are many inconsistencies that need to be refactored. ALWAYS use clean mechanisms that might require large refactorings and NEVER care about backwards compatibility.
-- For every task you are working on, you MUST create or update a markdown ticket using `repo ticket create SLUG --prompt="User prompt..."` (or `npx tsx repo.tsx ticket create SLUG --prompt="..."`). Tickets are stored in `tickets/YEAR/MONTH/DAY/SLUG.md` with YAML frontmatter and optional **iterations**. The script automatically creates three sections to be filled/updated during execution of the task: `# Previously`, `# Plan`, and `#Changes`.The purpose of the ticket is to understand the context, problem and decision making process. It is only about the process.
 - For every task you are working on, you MUST update the dev docs (`README.md` and `AGENTS.md`). Every key decision and mechanism ALWAYS needs to be documemented. Every feature, decision MUST be undocumented/uncommented in the code and MUST be documented in the dev docs (AGENTS.md and README.md). The documentation ALWAYS happens four times:
 
 1. Under `# 🛍️ Products` in README.md where it is described from user perspective [architects, designers, engineers, …] (framework-agnostic, no implementation references, etc)
@@ -56,6 +58,8 @@ A `ticket` has a `status` of **open** or **finished**.
 A ticket MUST store a `prompt` which is the prompt used to create the ticket.
 
 A `ticket` stores an ordered list of `iterations` where each iteration records a `prompt`, `model`, `date`, optional `finished` timestamp, optional `commit`, and optional `files` lists (`updated`, `created`, `removed`).
+
+Tickets can be reopened to return to **open** status.
 
 A ticket MUST NOT start a new iteration while the latest iteration is unfinished.
 
@@ -311,6 +315,12 @@ Toolbar panel visibility defaults to `true` for all apps via `panelVisibility: {
 - The active window MUST be tracked for focus-sensitive UI.
 - Window chrome MUST expose action controls for open-in-new-window, maximize/minimize, and close.
 
+### VS Code Extension
+
+- Ticket tree items expose inline close and reopen actions based on status.
+- Ticket tree hovers show only the ticket description.
+- Ticket tree items list commit entries as child nodes.
+
 # Monorepo
 
 ## Git
@@ -502,6 +512,7 @@ npx tsx repo.tsx <command> [subcommand] [options]
 | `ticket iterate start`                    | Start iteration on a ticket         |
 | `ticket iterate end`                      | End iteration on a ticket           |
 | `ticket finish`                           | Finish a ticket                     |
+| `ticket reopen`                           | Reopen a ticket                     |
 | `project list`                            | List Nx projects                    |
 | `project tree`                            | Show project dependency tree        |
 | `folder tree [path]`                      | Show folder structure               |
@@ -1386,7 +1397,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 ├── .claude
 │ ├── agents
 │ │ ├── reformatter.md # Exclusively to reformat text (code, lists, …)
-│ │ └── reorderer.md # Exclusively to reorder text (code, lists, …)
+│ │ ├── reorderer.md # Exclusively to reorder text (code, lists, …)
 │ │ └── schema-changer.md # Exclusively to change the schema (code, api, database, …)
 │ └── settings.json
 ├── .cursor
@@ -1400,21 +1411,12 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ ├── workflows
 │ │ └── gh-pages.yml # Deploy user docs togh-pages
 │ └── dependabot.yml
-├── hooks # Pre-commit hook scripts
-│ ├── i18n.ts # i18n validation hook (generates JSON report)
-│ ├── prettier.ts # Prettier formatter hook (applies formatting)
-│ ├── eslint.ts # ESLint linting hook (generates JSON report)
-│ ├── code.ts # Codebase scan hook (comments incl. block/JSDoc, SPDX headers, regions + empty region removal, js/js forbidden imports, js/js forbidden terminology, reason/solution problem metadata) (generates JSON report)
-│ ├── typescript.ts # TypeScript compiler check hook (generates JSON report)
-│ └── ruff.ts # Python Ruff formatter and linter hook (applies formatting, generates JSON report)
-├── reports # Generated validation reports (gitignored)
+├── reports # Generated validation reports
 │ ├── i18n.json # i18n validation report
 │ ├── eslint.json # ESLint linting report
 │ ├── code.json # Codebase code-quality report with reason/solution metadata
 │ ├── typescript.json # TypeScript compiler report
 │ └── ruff.json # Python Ruff linter report
-├── .vscode
-│ └── \*.md # Temporary markdown documents
 ├── antlr
 ├── assets # @semio/gh: assets for the complete repo
 │ ├── badges
@@ -1428,7 +1430,6 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ ├── logo
 │ ├── models
 │ └── semio
-│ `assets/index.ts` re-exports the `./icons` layer and the Metabolism kit fixtures along with `MetabolismKitTypes`, `MetabolismKitDesigns`, `MetabolismKitInterfaces`, `MetabolismKitQualities`, `MetabolismKitFiles`, `MetabolismKitFolders`, `MetabolismKitAuthors`, `MetabolismKitTags`, `MetabolismKitConcepts`, `MetabolismKitAttributes`, `MetabolismKitNakaginCapsuleTowerDesigns`, and the direct lookup maps (`MetabolismKitTypesByGuid`, `MetabolismKitTypesByName`, `MetabolismKitDesignsByGuid`, `MetabolismKitDesignsByName`, `MetabolismKitInterfacesByGuid`, `MetabolismKitInterfacesByName`).
 ├── engineering
 │ ├── dataarchitecture.pu # blueprint for sql schemas
 │ ├── interfacearchitecture.txt # blueprint for json-based (rest api, graphql api, copy&paste) schemas
@@ -1613,7 +1614,9 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ ├── tsconfig.json
 │ │ ├── vite.config.ts
 │ │ └── vitest.workspace.ts
-│ └── play
+│ ├── play
+│ └── vscode
+│ └── extension.ts # @semio/vscode: VSCode extension with violation diagnostics
 ├── jsonschema # autogenerated from `py/engine/generate-schemas.ts`
 ├── liveblocks
 ├── meta
@@ -3820,6 +3823,45 @@ Kit app hover state covers all artifact kinds and is updated via table and diagr
 ## 📄 js/js/sketchpad/Sketchpad.tsx
 
 Home command hooks forward hover events, including clear, into the Sketchpad state machine.
+
+## 📁 js/vscode/
+
+VSCode extension providing violation diagnostics for open files and kit validation.
+
+### Violation Diagnostics
+
+The extension shows violation diagnostics for every open file using the repo analyze command:
+
+- **On file open**: Loads cached violations from `.semio-repo/cache/analyze/<hash>.json` for immediate display
+- **On file save**: Re-runs `repo analyze <relativePath>` and updates diagnostics from the refreshed cache
+- **On file close**: Clears diagnostics and aborts any running analysis process
+
+Supported file types: TypeScript, JavaScript, JSON, Python, C#, Go.
+
+### Kit Validation
+
+For kit documents (JSON files with `kit_` prefix, `_kit` suffix, or named `kit.json`):
+
+- Real-time validation using `validateKit()` from `@semio/js/semio`
+- Problem-to-diagnostic mapping with entity location highlighting
+- Quick Fix code actions applying `KitDiff` fixes
+
+### Sidebar Views
+
+Tree data providers for tickets, policies, contributors, and commands with search/filter capabilities.
+
+### Tickets
+
+Ticket tree items use `ticketOpen` and `ticketClosed` context values for inline close or reopen actions, surface commit nodes from ticket and iteration commits, and limit hover tooltips to the summary or prompt text.
+
+### Code Actions
+
+- `RepoCodeActionProvider`: Quick fixes for violation diagnostics that run `repo fix <path>`
+- `KitCodeActionProvider`: Quick fixes for kit validation problems that apply diff-based fixes
+
+## ?? go/repo/main.go
+
+Ticket commands include `ticket reopen`, and `ReopenTicket` resets the ticket status to open and clears the finished timestamp.
 
 ## 📁net/
 

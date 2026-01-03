@@ -1,0 +1,1331 @@
+{
+  "timestamp": "2026-01-02T22:45:30Z",
+  "status": "error",
+  "scope": "@semio",
+  "summary": {
+    "total": 156,
+    "byPriority": {
+      "low": 156
+    },
+    "byKind": {
+      "comment:block": 4,
+      "comment:jsdoc": 2,
+      "header:missing-contributors": 9,
+      "header:missing-filename": 1,
+      "header:missing-license": 1,
+      "header:missing-region": 19,
+      "section:empty": 118,
+      "section:missing-end-name": 1,
+      "section:name-mismatch": 1
+    }
+  },
+  "violations": [
+    {
+      "id": "section:empty-1767393929259265800-p0ar8s",
+      "summary": "Empty section \"Header\" in assets/grasshopper/build.py",
+      "kind": "section:empty",
+      "scope": "assets/grasshopper/build.py#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929259265800-lb4n4x",
+      "summary": "Empty section \"Header\" in assets/icons.ts",
+      "kind": "section:empty",
+      "scope": "assets/icons.ts#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929259785900-2f8uyw",
+      "summary": "Empty section \"Header\" in assets/index.ts",
+      "kind": "section:empty",
+      "scope": "assets/index.ts#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929260301700-banjca",
+      "summary": "Empty section \"Header\" in assets/logo/logo.ts",
+      "kind": "section:empty",
+      "scope": "assets/logo/logo.ts#Header",
+      "line": 2
+    },
+    {
+      "id": "header:missing-filename-1767393929260301700-pzq5q2",
+      "summary": "Missing filename in header of assets/repo/some/folder/file.cs",
+      "kind": "header:missing-filename",
+      "scope": "assets/repo/some/folder/file.cs#Header",
+      "line": 18
+    },
+    {
+      "id": "header:missing-contributors-1767393929260301700-dcr6a6",
+      "summary": "Missing contributors in header of assets/repo/some/folder/file.cs",
+      "kind": "header:missing-contributors",
+      "scope": "assets/repo/some/folder/file.cs#Header",
+      "line": 18
+    },
+    {
+      "id": "header:missing-license-1767393929260301700-9mtele",
+      "summary": "Missing license in header of assets/repo/some/folder/file.cs",
+      "kind": "header:missing-license",
+      "scope": "assets/repo/some/folder/file.cs#Header",
+      "line": 18
+    },
+    {
+      "id": "section:empty-1767393929260818000-2l84n0",
+      "summary": "Empty section \"Header\" in assets/repo/some/folder/file.cs",
+      "kind": "section:empty",
+      "scope": "assets/repo/some/folder/file.cs#Header",
+      "line": 18
+    },
+    {
+      "id": "section:empty-1767393929260818000-gjn94i",
+      "summary": "Empty section \"Header\" in assets/repo/some/folder/file.py",
+      "kind": "section:empty",
+      "scope": "assets/repo/some/folder/file.py#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929260818000-24ibks",
+      "summary": "Empty section \"Header\" in assets/repo/some/folder/file.tsx",
+      "kind": "section:empty",
+      "scope": "assets/repo/some/folder/file.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929261335300-pt1qnp",
+      "summary": "Empty section \"Header\" in assets/repo/some/folder/file_empty_region.tsx",
+      "kind": "section:empty",
+      "scope": "assets/repo/some/folder/file_empty_region.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929261335300-nbqh27",
+      "summary": "Empty section \"Empty\" in assets/repo/some/folder/file_empty_region.tsx",
+      "kind": "section:empty",
+      "scope": "assets/repo/some/folder/file_empty_region.tsx#Empty",
+      "line": 22
+    },
+    {
+      "id": "header:missing-region-1767393929315063800-rbsbvj",
+      "summary": "Missing header section in assets/repo/some/folder/file_invalid.tsx",
+      "kind": "header:missing-region",
+      "scope": "assets/repo/some/folder/file_invalid.tsx",
+      "autofix": {
+        "description": "Add header section",
+        "edits": {
+          "assets/repo/some/folder/file_invalid.tsx": [
+            {
+              "start": 0,
+              "end": 0,
+              "newText": "// #region Header\n\n// assets/repo/some/folder/file_invalid.tsx\n\n// 2026 Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e\n\n// This program is free software: you can redistribute it and/or modify\n// it under the terms of the GNU Affero General Public License as\n// published by the Free Software Foundation, either version 3 of the\n// License, or (at your option) any later version.\n//\n// This program is distributed in the hope that it will be useful,\n// but WITHOUT ANY WARRANTY; without even the implied warranty of\n// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n// GNU Affero General Public License for more details.\n//\n// You should have received a copy of the GNU Affero General Public License\n// along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n\n// #endregion Header\n\n"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "section:empty-1767393929315588000-1x0fch",
+      "summary": "Empty section \"Header\" in go/build.ts",
+      "kind": "section:empty",
+      "scope": "go/build.ts#Header",
+      "line": 2
+    },
+    {
+      "id": "header:missing-region-1767393929373292900-pj6yc6",
+      "summary": "Missing header section in go/mcp/main.go",
+      "kind": "header:missing-region",
+      "scope": "go/mcp/main.go",
+      "autofix": {
+        "description": "Add header section",
+        "edits": {
+          "go/mcp/main.go": [
+            {
+              "start": 0,
+              "end": 0,
+              "newText": "// region Header\n\n// go/mcp/main.go\n\n// 2026 Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e\n\n// This program is free software: you can redistribute it and/or modify\n// it under the terms of the GNU Affero General Public License as\n// published by the Free Software Foundation, either version 3 of the\n// License, or (at your option) any later version.\n//\n// This program is distributed in the hope that it will be useful,\n// but WITHOUT ANY WARRANTY; without even the implied warranty of\n// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n// GNU Affero General Public License for more details.\n//\n// You should have received a copy of the GNU Affero General Public License\n// along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n\n// endregion Header\n\n"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "header:missing-region-1767393929435029000-jv6rt4",
+      "summary": "Missing header section in go/repo/main.go",
+      "kind": "header:missing-region",
+      "scope": "go/repo/main.go",
+      "autofix": {
+        "description": "Add header section",
+        "edits": {
+          "go/repo/main.go": [
+            {
+              "start": 0,
+              "end": 0,
+              "newText": "// region Header\n\n// go/repo/main.go\n\n// 2026 Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e\n\n// This program is free software: you can redistribute it and/or modify\n// it under the terms of the GNU Affero General Public License as\n// published by the Free Software Foundation, either version 3 of the\n// License, or (at your option) any later version.\n//\n// This program is distributed in the hope that it will be useful,\n// but WITHOUT ANY WARRANTY; without even the implied warranty of\n// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n// GNU Affero General Public License for more details.\n//\n// You should have received a copy of the GNU Affero General Public License\n// along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n\n// endregion Header\n\n"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "section:missing-end-name-1767393929435533900-qulblp",
+      "summary": "Missing end section name at go/repo/main.go:488",
+      "kind": "section:missing-end-name",
+      "scope": "go/repo/main.go",
+      "line": 488,
+      "excerpt": "// #endregion"
+    },
+    {
+      "id": "section:name-mismatch-1767393929436061200-7pfvl5",
+      "summary": "Section name mismatch at go/repo/main.go:3243",
+      "kind": "section:name-mismatch",
+      "scope": "go/repo/main.go",
+      "line": 3243,
+      "excerpt": "Start: \"Commands\" at line 2170, End: \"Header\""
+    },
+    {
+      "id": "header:missing-region-1767393929494113800-mo4jdl",
+      "summary": "Missing header section in go/semio/semio.go",
+      "kind": "header:missing-region",
+      "scope": "go/semio/semio.go",
+      "autofix": {
+        "description": "Add header section",
+        "edits": {
+          "go/semio/semio.go": [
+            {
+              "start": 0,
+              "end": 0,
+              "newText": "// region Header\n\n// go/semio/semio.go\n\n// 2026 Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e\n\n// This program is free software: you can redistribute it and/or modify\n// it under the terms of the GNU Affero General Public License as\n// published by the Free Software Foundation, either version 3 of the\n// License, or (at your option) any later version.\n//\n// This program is distributed in the hope that it will be useful,\n// but WITHOUT ANY WARRANTY; without even the implied warranty of\n// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n// GNU Affero General Public License for more details.\n//\n// You should have received a copy of the GNU Affero General Public License\n// along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n\n// endregion Header\n\n"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "header:missing-region-1767393929553155500-lzqweg",
+      "summary": "Missing header section in go/semio/semio_test.go",
+      "kind": "header:missing-region",
+      "scope": "go/semio/semio_test.go",
+      "autofix": {
+        "description": "Add header section",
+        "edits": {
+          "go/semio/semio_test.go": [
+            {
+              "start": 0,
+              "end": 0,
+              "newText": "// region Header\n\n// go/semio/semio_test.go\n\n// 2026 Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e\n\n// This program is free software: you can redistribute it and/or modify\n// it under the terms of the GNU Affero General Public License as\n// published by the Free Software Foundation, either version 3 of the\n// License, or (at your option) any later version.\n//\n// This program is distributed in the hope that it will be useful,\n// but WITHOUT ANY WARRANTY; without even the implied warranty of\n// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n// GNU Affero General Public License for more details.\n//\n// You should have received a copy of the GNU Affero General Public License\n// along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n\n// endregion Header\n\n"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "header:missing-region-1767393929612094100-ouive8",
+      "summary": "Missing header section in js/desktop/forge.config.ts",
+      "kind": "header:missing-region",
+      "scope": "js/desktop/forge.config.ts",
+      "autofix": {
+        "description": "Add header section",
+        "edits": {
+          "js/desktop/forge.config.ts": [
+            {
+              "start": 0,
+              "end": 0,
+              "newText": "// #region Header\n\n// js/desktop/forge.config.ts\n\n// 2026 Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e\n\n// This program is free software: you can redistribute it and/or modify\n// it under the terms of the GNU Affero General Public License as\n// published by the Free Software Foundation, either version 3 of the\n// License, or (at your option) any later version.\n//\n// This program is distributed in the hope that it will be useful,\n// but WITHOUT ANY WARRANTY; without even the implied warranty of\n// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n// GNU Affero General Public License for more details.\n//\n// You should have received a copy of the GNU Affero General Public License\n// along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n\n// #endregion Header\n\n"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "section:empty-1767393929613164800-wutdje",
+      "summary": "Empty section \"Header\" in js/desktop/forge.env.d.ts",
+      "kind": "section:empty",
+      "scope": "js/desktop/forge.env.d.ts#Header",
+      "line": 2
+    },
+    {
+      "id": "section:empty-1767393929613164800-3qlx1k",
+      "summary": "Empty section \"Header\" in js/desktop/main.ts",
+      "kind": "section:empty",
+      "scope": "js/desktop/main.ts#Header",
+      "line": 1
+    },
+    {
+      "id": "header:missing-region-1767393929671823900-pwjozh",
+      "summary": "Missing header section in js/desktop/postcss.config.ts",
+      "kind": "header:missing-region",
+      "scope": "js/desktop/postcss.config.ts",
+      "autofix": {
+        "description": "Add header section",
+        "edits": {
+          "js/desktop/postcss.config.ts": [
+            {
+              "start": 0,
+              "end": 0,
+              "newText": "// #region Header\n\n// js/desktop/postcss.config.ts\n\n// 2026 Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e\n\n// This program is free software: you can redistribute it and/or modify\n// it under the terms of the GNU Affero General Public License as\n// published by the Free Software Foundation, either version 3 of the\n// License, or (at your option) any later version.\n//\n// This program is distributed in the hope that it will be useful,\n// but WITHOUT ANY WARRANTY; without even the implied warranty of\n// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n// GNU Affero General Public License for more details.\n//\n// You should have received a copy of the GNU Affero General Public License\n// along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n\n// #endregion Header\n\n"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "section:empty-1767393929672330200-lclbhv",
+      "summary": "Empty section \"Header\" in js/desktop/preload.ts",
+      "kind": "section:empty",
+      "scope": "js/desktop/preload.ts#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929672884500-yt49ip",
+      "summary": "Empty section \"Header\" in js/desktop/renderer.tsx",
+      "kind": "section:empty",
+      "scope": "js/desktop/renderer.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "header:missing-region-1767393929730439300-6wzy2a",
+      "summary": "Missing header section in js/desktop/tailwind.config.ts",
+      "kind": "header:missing-region",
+      "scope": "js/desktop/tailwind.config.ts",
+      "autofix": {
+        "description": "Add header section",
+        "edits": {
+          "js/desktop/tailwind.config.ts": [
+            {
+              "start": 0,
+              "end": 0,
+              "newText": "// #region Header\n\n// js/desktop/tailwind.config.ts\n\n// 2026 Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e\n\n// This program is free software: you can redistribute it and/or modify\n// it under the terms of the GNU Affero General Public License as\n// published by the Free Software Foundation, either version 3 of the\n// License, or (at your option) any later version.\n//\n// This program is distributed in the hope that it will be useful,\n// but WITHOUT ANY WARRANTY; without even the implied warranty of\n// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n// GNU Affero General Public License for more details.\n//\n// You should have received a copy of the GNU Affero General Public License\n// along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n\n// #endregion Header\n\n"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "header:missing-region-1767393929792281100-lddle5",
+      "summary": "Missing header section in js/desktop/vite.main.config.ts",
+      "kind": "header:missing-region",
+      "scope": "js/desktop/vite.main.config.ts",
+      "autofix": {
+        "description": "Add header section",
+        "edits": {
+          "js/desktop/vite.main.config.ts": [
+            {
+              "start": 0,
+              "end": 0,
+              "newText": "// #region Header\n\n// js/desktop/vite.main.config.ts\n\n// 2026 Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e\n\n// This program is free software: you can redistribute it and/or modify\n// it under the terms of the GNU Affero General Public License as\n// published by the Free Software Foundation, either version 3 of the\n// License, or (at your option) any later version.\n//\n// This program is distributed in the hope that it will be useful,\n// but WITHOUT ANY WARRANTY; without even the implied warranty of\n// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n// GNU Affero General Public License for more details.\n//\n// You should have received a copy of the GNU Affero General Public License\n// along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n\n// #endregion Header\n\n"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "header:missing-region-1767393929852649400-mhkn5t",
+      "summary": "Missing header section in js/desktop/vite.preload.config.ts",
+      "kind": "header:missing-region",
+      "scope": "js/desktop/vite.preload.config.ts",
+      "autofix": {
+        "description": "Add header section",
+        "edits": {
+          "js/desktop/vite.preload.config.ts": [
+            {
+              "start": 0,
+              "end": 0,
+              "newText": "// #region Header\n\n// js/desktop/vite.preload.config.ts\n\n// 2026 Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e\n\n// This program is free software: you can redistribute it and/or modify\n// it under the terms of the GNU Affero General Public License as\n// published by the Free Software Foundation, either version 3 of the\n// License, or (at your option) any later version.\n//\n// This program is distributed in the hope that it will be useful,\n// but WITHOUT ANY WARRANTY; without even the implied warranty of\n// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n// GNU Affero General Public License for more details.\n//\n// You should have received a copy of the GNU Affero General Public License\n// along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n\n// #endregion Header\n\n"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "header:missing-region-1767393929910772300-828jok",
+      "summary": "Missing header section in js/desktop/vite.renderer.config.ts",
+      "kind": "header:missing-region",
+      "scope": "js/desktop/vite.renderer.config.ts",
+      "autofix": {
+        "description": "Add header section",
+        "edits": {
+          "js/desktop/vite.renderer.config.ts": [
+            {
+              "start": 0,
+              "end": 0,
+              "newText": "// #region Header\n\n// js/desktop/vite.renderer.config.ts\n\n// 2026 Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e\n\n// This program is free software: you can redistribute it and/or modify\n// it under the terms of the GNU Affero General Public License as\n// published by the Free Software Foundation, either version 3 of the\n// License, or (at your option) any later version.\n//\n// This program is distributed in the hope that it will be useful,\n// but WITHOUT ANY WARRANTY; without even the implied warranty of\n// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n// GNU Affero General Public License for more details.\n//\n// You should have received a copy of the GNU Affero General Public License\n// along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n\n// #endregion Header\n\n"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "section:empty-1767393929911278500-xa5gsb",
+      "summary": "Empty section \"Header\" in js/docs/index.tsx",
+      "kind": "section:empty",
+      "scope": "js/docs/index.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "header:missing-contributors-1767393929911826800-1vaci5",
+      "summary": "Missing contributors in header of js/docs/postcss.config.ts",
+      "kind": "header:missing-contributors",
+      "scope": "js/docs/postcss.config.ts#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929911826800-hnm0h3",
+      "summary": "Empty section \"Header\" in js/docs/postcss.config.ts",
+      "kind": "section:empty",
+      "scope": "js/docs/postcss.config.ts#Header",
+      "line": 1
+    },
+    {
+      "id": "header:missing-region-1767393929969266000-jnz9im",
+      "summary": "Missing header section in js/docs/tailwind.config.ts",
+      "kind": "header:missing-region",
+      "scope": "js/docs/tailwind.config.ts",
+      "autofix": {
+        "description": "Add header section",
+        "edits": {
+          "js/docs/tailwind.config.ts": [
+            {
+              "start": 0,
+              "end": 0,
+              "newText": "// #region Header\n\n// js/docs/tailwind.config.ts\n\n// 2026 Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e\n\n// This program is free software: you can redistribute it and/or modify\n// it under the terms of the GNU Affero General Public License as\n// published by the Free Software Foundation, either version 3 of the\n// License, or (at your option) any later version.\n//\n// This program is distributed in the hope that it will be useful,\n// but WITHOUT ANY WARRANTY; without even the implied warranty of\n// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n// GNU Affero General Public License for more details.\n//\n// You should have received a copy of the GNU Affero General Public License\n// along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n\n// #endregion Header\n\n"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "section:empty-1767393929969773700-kmrcdk",
+      "summary": "Empty section \"Header\" in js/js/.storybook/main.ts",
+      "kind": "section:empty",
+      "scope": "js/js/.storybook/main.ts#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929970322200-0jg0rp",
+      "summary": "Empty section \"Header\" in js/js/.storybook/preview.ts",
+      "kind": "section:empty",
+      "scope": "js/js/.storybook/preview.ts#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929970322200-ed7nsm",
+      "summary": "Empty section \"Header\" in js/js/.storybook/stories/elements/Canvas.stories.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/.storybook/stories/elements/Canvas.stories.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929971367400-kwino8",
+      "summary": "Empty section \"Header\" in js/js/.storybook/stories/elements/Command.stories.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/.storybook/stories/elements/Command.stories.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929971367400-rwkiwf",
+      "summary": "Empty section \"Header\" in js/js/.storybook/stories/elements/Footer.stories.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/.storybook/stories/elements/Footer.stories.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929971886400-vnij1s",
+      "summary": "Empty section \"Header\" in js/js/.storybook/stories/elements/Layout.stories.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/.storybook/stories/elements/Layout.stories.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929972412100-ho6buz",
+      "summary": "Empty section \"Header\" in js/js/.storybook/stories/elements/Navbar.stories.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/.storybook/stories/elements/Navbar.stories.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929972931800-ptw28k",
+      "summary": "Empty section \"Header\" in js/js/.storybook/stories/elements/Popover.stories.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/.storybook/stories/elements/Popover.stories.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929972931800-jpp98r",
+      "summary": "Empty section \"Header\" in js/js/.storybook/stories/elements/aggregation/Accordion.stories.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/.storybook/stories/elements/aggregation/Accordion.stories.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929973449700-x92v52",
+      "summary": "Empty section \"Header\" in js/js/.storybook/stories/elements/aggregation/Band.stories.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/.storybook/stories/elements/aggregation/Band.stories.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929973967400-fqj986",
+      "summary": "Empty section \"Header\" in js/js/.storybook/stories/elements/aggregation/Collapsible.stories.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/.storybook/stories/elements/aggregation/Collapsible.stories.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929973967400-9y5vs6",
+      "summary": "Empty section \"Header\" in js/js/.storybook/stories/elements/aggregation/Dialog.stories.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/.storybook/stories/elements/aggregation/Dialog.stories.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929974485200-f27eaj",
+      "summary": "Empty section \"Header\" in js/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929975003400-t4oe5h",
+      "summary": "Empty section \"Header\" in js/js/.storybook/stories/elements/aggregation/Scrollable.stories.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/.storybook/stories/elements/aggregation/Scrollable.stories.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929975521200-h00bf4",
+      "summary": "Empty section \"Header\" in js/js/.storybook/stories/elements/aggregation/Tabs.stories.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/.storybook/stories/elements/aggregation/Tabs.stories.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929975521200-26omem",
+      "summary": "Empty section \"Header\" in js/js/.storybook/stories/elements/aggregation/Tree.stories.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/.storybook/stories/elements/aggregation/Tree.stories.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929976072000-mg2zwo",
+      "summary": "Empty section \"Header\" in js/js/.storybook/stories/elements/display/Avatar.stories.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/.storybook/stories/elements/display/Avatar.stories.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929976595900-7nomvm",
+      "summary": "Empty section \"Header\" in js/js/.storybook/stories/elements/display/HoverCard.stories.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/.storybook/stories/elements/display/HoverCard.stories.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929976595900-a90q5q",
+      "summary": "Empty section \"Header\" in js/js/.storybook/stories/elements/display/Icons.stories.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/.storybook/stories/elements/display/Icons.stories.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929977117100-f058z0",
+      "summary": "Empty section \"Header\" in js/js/.storybook/stories/elements/display/Tooltip.stories.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/.storybook/stories/elements/display/Tooltip.stories.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929977117100-6vsgg0",
+      "summary": "Empty section \"Header\" in js/js/.storybook/stories/elements/input/ActionGroup.stories.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/.storybook/stories/elements/input/ActionGroup.stories.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929977626600-q9pidx",
+      "summary": "Empty section \"Header\" in js/js/.storybook/stories/elements/input/Button.stories.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/.storybook/stories/elements/input/Button.stories.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929978150300-1vlwuf",
+      "summary": "Empty section \"Header\" in js/js/.storybook/stories/elements/input/ButtonGroup.stories.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/.storybook/stories/elements/input/ButtonGroup.stories.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929978150300-yzn8dg",
+      "summary": "Empty section \"Header\" in js/js/.storybook/stories/elements/input/Combobox.stories.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/.storybook/stories/elements/input/Combobox.stories.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929978675200-37xau7",
+      "summary": "Empty section \"Header\" in js/js/.storybook/stories/elements/input/Input.stories.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/.storybook/stories/elements/input/Input.stories.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929978675200-hrfpwa",
+      "summary": "Empty section \"Header\" in js/js/.storybook/stories/elements/input/Select.stories.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/.storybook/stories/elements/input/Select.stories.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929979193900-cpyys0",
+      "summary": "Empty section \"Header\" in js/js/.storybook/stories/elements/input/Slider.stories.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/.storybook/stories/elements/input/Slider.stories.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929979714300-u8vsnj",
+      "summary": "Empty section \"Header\" in js/js/.storybook/stories/elements/input/Stepper.stories.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/.storybook/stories/elements/input/Stepper.stories.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929980238500-jh4jhr",
+      "summary": "Empty section \"Header\" in js/js/.storybook/stories/elements/input/Textarea.stories.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/.storybook/stories/elements/input/Textarea.stories.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929980238500-it6id4",
+      "summary": "Empty section \"Header\" in js/js/.storybook/stories/elements/input/Toggle.stories.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/.storybook/stories/elements/input/Toggle.stories.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929980763800-nd8ugp",
+      "summary": "Empty section \"Header\" in js/js/.storybook/stories/elements/input/ToggleGroup.stories.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/.storybook/stories/elements/input/ToggleGroup.stories.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929981285500-hagq9h",
+      "summary": "Empty section \"Header\" in js/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929981285500-31biaf",
+      "summary": "Empty section \"Header\" in js/js/.storybook/stories/elements/window/Table.stories.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/.storybook/stories/elements/window/Table.stories.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929981804000-wq0tmo",
+      "summary": "Empty section \"Header\" in js/js/.storybook/vitest.setup.ts",
+      "kind": "section:empty",
+      "scope": "js/js/.storybook/vitest.setup.ts#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929981804000-9xozlf",
+      "summary": "Empty section \"Header\" in js/js/.storybook/withLevel.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/.storybook/withLevel.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929982322100-6tom33",
+      "summary": "Empty section \"Header\" in js/js/.storybook/withTheme.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/.storybook/withTheme.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929982322100-eb1p0e",
+      "summary": "Empty section \"Header\" in js/js/dev.ts",
+      "kind": "section:empty",
+      "scope": "js/js/dev.ts#Header",
+      "line": 1
+    },
+    {
+      "id": "header:missing-contributors-1767393929982840400-fva1h2",
+      "summary": "Missing contributors in header of js/js/eslint.config.ts",
+      "kind": "header:missing-contributors",
+      "scope": "js/js/eslint.config.ts#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929982840400-muyz74",
+      "summary": "Empty section \"Header\" in js/js/eslint.config.ts",
+      "kind": "section:empty",
+      "scope": "js/js/eslint.config.ts#Header",
+      "line": 1
+    },
+    {
+      "id": "comment:jsdoc-1767393929982840400-7nqwj4",
+      "summary": "JSDoc comment in js/js/eslint.config.ts:77",
+      "kind": "comment:jsdoc",
+      "scope": "js/js/eslint.config.ts",
+      "line": 77,
+      "excerpt": "/** @type {import('eslint').Linter.Config[]} */"
+    },
+    {
+      "id": "section:empty-1767393929983358700-v8fzop",
+      "summary": "Empty section \"Header\" in js/js/global.d.ts",
+      "kind": "section:empty",
+      "scope": "js/js/global.d.ts#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929983358700-da1mvg",
+      "summary": "Empty section \"Header\" in js/js/i18n.ts",
+      "kind": "section:empty",
+      "scope": "js/js/i18n.ts#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393929983877000-da3vok",
+      "summary": "Empty section \"Header\" in js/js/index.ts",
+      "kind": "section:empty",
+      "scope": "js/js/index.ts#Header",
+      "line": 1
+    },
+    {
+      "id": "header:missing-region-1767393930046603700-x9smy8",
+      "summary": "Missing header section in js/js/playwright.config.ts",
+      "kind": "header:missing-region",
+      "scope": "js/js/playwright.config.ts",
+      "autofix": {
+        "description": "Add header section",
+        "edits": {
+          "js/js/playwright.config.ts": [
+            {
+              "start": 0,
+              "end": 0,
+              "newText": "// #region Header\n\n// js/js/playwright.config.ts\n\n// 2026 Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e\n\n// This program is free software: you can redistribute it and/or modify\n// it under the terms of the GNU Affero General Public License as\n// published by the Free Software Foundation, either version 3 of the\n// License, or (at your option) any later version.\n//\n// This program is distributed in the hope that it will be useful,\n// but WITHOUT ANY WARRANTY; without even the implied warranty of\n// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n// GNU Affero General Public License for more details.\n//\n// You should have received a copy of the GNU Affero General Public License\n// along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n\n// #endregion Header\n\n"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "comment:block-1767393930046657600-om8n97",
+      "summary": "Block comment in js/js/playwright.config.ts:40",
+      "kind": "comment:block",
+      "scope": "js/js/playwright.config.ts",
+      "line": 40,
+      "excerpt": "/* Test against mobile viewports. */"
+    },
+    {
+      "id": "comment:block-1767393930046657600-sa6fya",
+      "summary": "Block comment in js/js/playwright.config.ts:50",
+      "kind": "comment:block",
+      "scope": "js/js/playwright.config.ts",
+      "line": 50,
+      "excerpt": "/* Test against branded browsers. */"
+    },
+    {
+      "id": "header:missing-contributors-1767393930046657600-ucf338",
+      "summary": "Missing contributors in header of js/js/postcss.config.ts",
+      "kind": "header:missing-contributors",
+      "scope": "js/js/postcss.config.ts#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393930046657600-l40zdp",
+      "summary": "Empty section \"Header\" in js/js/postcss.config.ts",
+      "kind": "section:empty",
+      "scope": "js/js/postcss.config.ts#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393930047679500-ah5iru",
+      "summary": "Empty section \"Header\" in js/js/semio.test.ts",
+      "kind": "section:empty",
+      "scope": "js/js/semio.test.ts#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393930052316700-rffuxg",
+      "summary": "Empty section \"Header\" in js/js/semio.ts",
+      "kind": "section:empty",
+      "scope": "js/js/semio.ts#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393930052316700-dnckk9",
+      "summary": "Empty section \"TODOs\" in js/js/semio.ts",
+      "kind": "section:empty",
+      "scope": "js/js/semio.ts#TODOs",
+      "line": 22
+    },
+    {
+      "id": "comment:block-1767393930052831600-d4d3ea",
+      "summary": "Block comment in js/js/semio.ts:2105",
+      "kind": "comment:block",
+      "scope": "js/js/semio.ts",
+      "line": 2105
+    },
+    {
+      "id": "comment:block-1767393930052831600-gv88yr",
+      "summary": "Block comment in js/js/semio.ts:2236",
+      "kind": "comment:block",
+      "scope": "js/js/semio.ts",
+      "line": 2236
+    },
+    {
+      "id": "section:empty-1767393930053346100-01f5wz",
+      "summary": "Empty section \"Header\" in js/js/site.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/site.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393930055442300-6ni1zw",
+      "summary": "Empty section \"Header\" in js/js/sketchpad.test.ts",
+      "kind": "section:empty",
+      "scope": "js/js/sketchpad.test.ts#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393930062147000-8wwhnx",
+      "summary": "Empty section \"Header\" in js/js/sketchpad/Design.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/sketchpad/Design.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393930063679500-i1j57a",
+      "summary": "Empty section \"Header\" in js/js/sketchpad/Docs.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/sketchpad/Docs.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393930064195900-ezcmt3",
+      "summary": "Empty section \"Header\" in js/js/sketchpad/Feedback.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/sketchpad/Feedback.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393930065740700-rifb8c",
+      "summary": "Empty section \"Header\" in js/js/sketchpad/Home.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/sketchpad/Home.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393930070427100-g1bmqh",
+      "summary": "Empty section \"Header\" in js/js/sketchpad/Kit.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/sketchpad/Kit.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393930072322400-ll0t0f",
+      "summary": "Empty section \"Header\" in js/js/sketchpad/Quality.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/sketchpad/Quality.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393930080959000-i5bewz",
+      "summary": "Empty section \"Header\" in js/js/sketchpad/Sketchpad.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/sketchpad/Sketchpad.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393930082990200-aj4qlx",
+      "summary": "Empty section \"Header\" in js/js/sketchpad/Tutorials.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/sketchpad/Tutorials.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393930086150500-j2sdvj",
+      "summary": "Empty section \"Header\" in js/js/sketchpad/Type.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/sketchpad/Type.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393930086150500-jndhty",
+      "summary": "Empty section \"Header\" in js/js/sketchpad/apps/index.ts",
+      "kind": "section:empty",
+      "scope": "js/js/sketchpad/apps/index.ts#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393930089657000-nkooub",
+      "summary": "Empty section \"Header\" in js/js/sketchpad/elements.tsx",
+      "kind": "section:empty",
+      "scope": "js/js/sketchpad/elements.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393930091687300-768y9c",
+      "summary": "Empty section \"Header\" in js/js/sketchpad/shared.ts",
+      "kind": "section:empty",
+      "scope": "js/js/sketchpad/shared.ts#Header",
+      "line": 1
+    },
+    {
+      "id": "header:missing-contributors-1767393930091687300-ltcrni",
+      "summary": "Missing contributors in header of js/js/tailwind.config.ts",
+      "kind": "header:missing-contributors",
+      "scope": "js/js/tailwind.config.ts#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393930091687300-emeqhz",
+      "summary": "Empty section \"Header\" in js/js/tailwind.config.ts",
+      "kind": "section:empty",
+      "scope": "js/js/tailwind.config.ts#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393930092693000-ha8l3v",
+      "summary": "Empty section \"Header\" in js/js/vite-env.d.ts",
+      "kind": "section:empty",
+      "scope": "js/js/vite-env.d.ts#Header",
+      "line": 3
+    },
+    {
+      "id": "header:missing-contributors-1767393930092693000-55jbwc",
+      "summary": "Missing contributors in header of js/js/vite.config.ts",
+      "kind": "header:missing-contributors",
+      "scope": "js/js/vite.config.ts#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393930092693000-4f80s3",
+      "summary": "Empty section \"Header\" in js/js/vite.config.ts",
+      "kind": "section:empty",
+      "scope": "js/js/vite.config.ts#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393930092693000-dclrbl",
+      "summary": "Empty section \"Header\" in js/play/index.tsx",
+      "kind": "section:empty",
+      "scope": "js/play/index.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "header:missing-contributors-1767393930093692800-lpwiuy",
+      "summary": "Missing contributors in header of js/play/postcss.config.ts",
+      "kind": "header:missing-contributors",
+      "scope": "js/play/postcss.config.ts#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393930093692800-w2s9zk",
+      "summary": "Empty section \"Header\" in js/play/postcss.config.ts",
+      "kind": "section:empty",
+      "scope": "js/play/postcss.config.ts#Header",
+      "line": 1
+    },
+    {
+      "id": "header:missing-region-1767393930143350200-6dbfp8",
+      "summary": "Missing header section in js/play/tailwind.config.ts",
+      "kind": "header:missing-region",
+      "scope": "js/play/tailwind.config.ts",
+      "autofix": {
+        "description": "Add header section",
+        "edits": {
+          "js/play/tailwind.config.ts": [
+            {
+              "start": 0,
+              "end": 0,
+              "newText": "// #region Header\n\n// js/play/tailwind.config.ts\n\n// 2026 Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e\n\n// This program is free software: you can redistribute it and/or modify\n// it under the terms of the GNU Affero General Public License as\n// published by the Free Software Foundation, either version 3 of the\n// License, or (at your option) any later version.\n//\n// This program is distributed in the hope that it will be useful,\n// but WITHOUT ANY WARRANTY; without even the implied warranty of\n// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n// GNU Affero General Public License for more details.\n//\n// You should have received a copy of the GNU Affero General Public License\n// along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n\n// #endregion Header\n\n"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "header:missing-region-1767393930190778900-0kkoig",
+      "summary": "Missing header section in js/play/vite.config.ts",
+      "kind": "header:missing-region",
+      "scope": "js/play/vite.config.ts",
+      "autofix": {
+        "description": "Add header section",
+        "edits": {
+          "js/play/vite.config.ts": [
+            {
+              "start": 0,
+              "end": 0,
+              "newText": "// #region Header\n\n// js/play/vite.config.ts\n\n// 2026 Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e\n\n// This program is free software: you can redistribute it and/or modify\n// it under the terms of the GNU Affero General Public License as\n// published by the Free Software Foundation, either version 3 of the\n// License, or (at your option) any later version.\n//\n// This program is distributed in the hope that it will be useful,\n// but WITHOUT ANY WARRANTY; without even the implied warranty of\n// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n// GNU Affero General Public License for more details.\n//\n// You should have received a copy of the GNU Affero General Public License\n// along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n\n// #endregion Header\n\n"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "section:empty-1767393930191282100-u20szr",
+      "summary": "Empty section \"Header\" in js/sketchpad/index.tsx",
+      "kind": "section:empty",
+      "scope": "js/sketchpad/index.tsx#Header",
+      "line": 1
+    },
+    {
+      "id": "header:missing-contributors-1767393930191282100-7lq3u6",
+      "summary": "Missing contributors in header of js/sketchpad/postcss.config.ts",
+      "kind": "header:missing-contributors",
+      "scope": "js/sketchpad/postcss.config.ts#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393930191282100-b5bzoa",
+      "summary": "Empty section \"Header\" in js/sketchpad/postcss.config.ts",
+      "kind": "section:empty",
+      "scope": "js/sketchpad/postcss.config.ts#Header",
+      "line": 1
+    },
+    {
+      "id": "header:missing-region-1767393930236649700-6et0nx",
+      "summary": "Missing header section in js/sketchpad/tailwind.config.ts",
+      "kind": "header:missing-region",
+      "scope": "js/sketchpad/tailwind.config.ts",
+      "autofix": {
+        "description": "Add header section",
+        "edits": {
+          "js/sketchpad/tailwind.config.ts": [
+            {
+              "start": 0,
+              "end": 0,
+              "newText": "// #region Header\n\n// js/sketchpad/tailwind.config.ts\n\n// 2026 Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e\n\n// This program is free software: you can redistribute it and/or modify\n// it under the terms of the GNU Affero General Public License as\n// published by the Free Software Foundation, either version 3 of the\n// License, or (at your option) any later version.\n//\n// This program is distributed in the hope that it will be useful,\n// but WITHOUT ANY WARRANTY; without even the implied warranty of\n// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n// GNU Affero General Public License for more details.\n//\n// You should have received a copy of the GNU Affero General Public License\n// along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n\n// #endregion Header\n\n"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "header:missing-region-1767393930282757600-orx4dp",
+      "summary": "Missing header section in js/sketchpad/vite.config.ts",
+      "kind": "header:missing-region",
+      "scope": "js/sketchpad/vite.config.ts",
+      "autofix": {
+        "description": "Add header section",
+        "edits": {
+          "js/sketchpad/vite.config.ts": [
+            {
+              "start": 0,
+              "end": 0,
+              "newText": "// #region Header\n\n// js/sketchpad/vite.config.ts\n\n// 2026 Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e\n\n// This program is free software: you can redistribute it and/or modify\n// it under the terms of the GNU Affero General Public License as\n// published by the Free Software Foundation, either version 3 of the\n// License, or (at your option) any later version.\n//\n// This program is distributed in the hope that it will be useful,\n// but WITHOUT ANY WARRANTY; without even the implied warranty of\n// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n// GNU Affero General Public License for more details.\n//\n// You should have received a copy of the GNU Affero General Public License\n// along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n\n// #endregion Header\n\n"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "header:missing-contributors-1767393930283264600-xgg27k",
+      "summary": "Missing contributors in header of js/vscode/eslint.config.ts",
+      "kind": "header:missing-contributors",
+      "scope": "js/vscode/eslint.config.ts#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393930283264600-52662x",
+      "summary": "Empty section \"Header\" in js/vscode/eslint.config.ts",
+      "kind": "section:empty",
+      "scope": "js/vscode/eslint.config.ts#Header",
+      "line": 1
+    },
+    {
+      "id": "comment:jsdoc-1767393930283264600-x4n8o1",
+      "summary": "JSDoc comment in js/vscode/eslint.config.ts:22",
+      "kind": "comment:jsdoc",
+      "scope": "js/vscode/eslint.config.ts",
+      "line": 22,
+      "excerpt": "/** @type {import('eslint').Linter.Config[]} */"
+    },
+    {
+      "id": "section:empty-1767393930283811900-v26zss",
+      "summary": "Empty section \"Header\" in js/vscode/extension.test.ts",
+      "kind": "section:empty",
+      "scope": "js/vscode/extension.test.ts#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393930284843700-k3o6jd",
+      "summary": "Empty section \"Header\" in js/vscode/extension.ts",
+      "kind": "section:empty",
+      "scope": "js/vscode/extension.ts#Header",
+      "line": 1
+    },
+    {
+      "id": "header:missing-region-1767393930330353800-05kj03",
+      "summary": "Missing header section in js/vscode/vite.config.ts",
+      "kind": "header:missing-region",
+      "scope": "js/vscode/vite.config.ts",
+      "autofix": {
+        "description": "Add header section",
+        "edits": {
+          "js/vscode/vite.config.ts": [
+            {
+              "start": 0,
+              "end": 0,
+              "newText": "// #region Header\n\n// js/vscode/vite.config.ts\n\n// 2026 Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e\n\n// This program is free software: you can redistribute it and/or modify\n// it under the terms of the GNU Affero General Public License as\n// published by the Free Software Foundation, either version 3 of the\n// License, or (at your option) any later version.\n//\n// This program is distributed in the hope that it will be useful,\n// but WITHOUT ANY WARRANTY; without even the implied warranty of\n// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n// GNU Affero General Public License for more details.\n//\n// You should have received a copy of the GNU Affero General Public License\n// along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n\n// #endregion Header\n\n"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "header:missing-region-1767393930375419200-ym31j2",
+      "summary": "Missing header section in js/vscode/vite.test.config.ts",
+      "kind": "header:missing-region",
+      "scope": "js/vscode/vite.test.config.ts",
+      "autofix": {
+        "description": "Add header section",
+        "edits": {
+          "js/vscode/vite.test.config.ts": [
+            {
+              "start": 0,
+              "end": 0,
+              "newText": "// #region Header\n\n// js/vscode/vite.test.config.ts\n\n// 2026 Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e\n\n// This program is free software: you can redistribute it and/or modify\n// it under the terms of the GNU Affero General Public License as\n// published by the Free Software Foundation, either version 3 of the\n// License, or (at your option) any later version.\n//\n// This program is distributed in the hope that it will be useful,\n// but WITHOUT ANY WARRANTY; without even the implied warranty of\n// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n// GNU Affero General Public License for more details.\n//\n// You should have received a copy of the GNU Affero General Public License\n// along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n\n// #endregion Header\n\n"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "section:empty-1767393930375922700-1kn2ep",
+      "summary": "Empty section \"Header\" in jsonschema/build.ts",
+      "kind": "section:empty",
+      "scope": "jsonschema/build.ts#Header",
+      "line": 2
+    },
+    {
+      "id": "section:empty-1767393930376443000-5phx4v",
+      "summary": "Empty section \"Header\" in net/Semio.Grasshopper.Tests/Tests.cs",
+      "kind": "section:empty",
+      "scope": "net/Semio.Grasshopper.Tests/Tests.cs#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393930376443000-fknolt",
+      "summary": "Empty section \"Header\" in net/Semio.Grasshopper.Tests/Usings.cs",
+      "kind": "section:empty",
+      "scope": "net/Semio.Grasshopper.Tests/Usings.cs#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393930376960500-lfkvej",
+      "summary": "Empty section \"Header\" in net/Semio.Grasshopper/Resources.Designer.cs",
+      "kind": "section:empty",
+      "scope": "net/Semio.Grasshopper/Resources.Designer.cs#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393930380564700-akubup",
+      "summary": "Empty section \"Header\" in net/Semio.Grasshopper/Semio.Grasshopper.cs",
+      "kind": "section:empty",
+      "scope": "net/Semio.Grasshopper/Semio.Grasshopper.cs#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393930380564700-nudb4n",
+      "summary": "Empty section \"TODOs\" in net/Semio.Grasshopper/Semio.Grasshopper.cs",
+      "kind": "section:empty",
+      "scope": "net/Semio.Grasshopper/Semio.Grasshopper.cs#TODOs",
+      "line": 22
+    },
+    {
+      "id": "section:empty-1767393930380564700-7xaoyl",
+      "summary": "Empty section \"Metadata\" in net/Semio.Grasshopper/Semio.Grasshopper.cs",
+      "kind": "section:empty",
+      "scope": "net/Semio.Grasshopper/Semio.Grasshopper.cs#Metadata",
+      "line": 93
+    },
+    {
+      "id": "section:empty-1767393930380564700-ls5455",
+      "summary": "Empty section \"Header\" in net/Semio.Grasshopper/build-value-lists.ts",
+      "kind": "section:empty",
+      "scope": "net/Semio.Grasshopper/build-value-lists.ts#Header",
+      "line": 2
+    },
+    {
+      "id": "section:empty-1767393930381080800-aq7lxo",
+      "summary": "Empty section \"Header\" in net/Semio.Grasshopper/build.ts",
+      "kind": "section:empty",
+      "scope": "net/Semio.Grasshopper/build.ts#Header",
+      "line": 2
+    },
+    {
+      "id": "section:empty-1767393930381080800-wq0pgz",
+      "summary": "Empty section \"Header\" in net/Semio.Tests/Tests.cs",
+      "kind": "section:empty",
+      "scope": "net/Semio.Tests/Tests.cs#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393930381597200-ro623m",
+      "summary": "Empty section \"Header\" in net/Semio.Tests/Usings.cs",
+      "kind": "section:empty",
+      "scope": "net/Semio.Tests/Usings.cs#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393930381597200-h0lrn2",
+      "summary": "Empty section \"Header\" in net/Semio/Resources.Designer.cs",
+      "kind": "section:empty",
+      "scope": "net/Semio/Resources.Designer.cs#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393930385758600-sghddn",
+      "summary": "Empty section \"Header\" in net/Semio/Semio.cs",
+      "kind": "section:empty",
+      "scope": "net/Semio/Semio.cs#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393930385758600-jtz29c",
+      "summary": "Empty section \"TODOs\" in net/Semio/Semio.cs",
+      "kind": "section:empty",
+      "scope": "net/Semio/Semio.cs#TODOs",
+      "line": 22
+    },
+    {
+      "id": "section:empty-1767393930386790300-nc92ht",
+      "summary": "Empty section \"Header\" in net/Semio/build.ts",
+      "kind": "section:empty",
+      "scope": "net/Semio/build.ts#Header",
+      "line": 2
+    },
+    {
+      "id": "section:empty-1767393930387310800-ud0s9y",
+      "summary": "Empty section \"Header\" in preflight.ts",
+      "kind": "section:empty",
+      "scope": "preflight.ts#Header",
+      "line": 2
+    },
+    {
+      "id": "section:empty-1767393930387310800-sj26dp",
+      "summary": "Empty section \"Header\" in py/engine/build.ts",
+      "kind": "section:empty",
+      "scope": "py/engine/build.ts#Header",
+      "line": 2
+    },
+    {
+      "id": "section:empty-1767393930387310800-sj5pff",
+      "summary": "Empty section \"Header\" in py/engine/dev.ts",
+      "kind": "section:empty",
+      "scope": "py/engine/dev.ts#Header",
+      "line": 2
+    },
+    {
+      "id": "section:empty-1767393930391954500-ezocuq",
+      "summary": "Empty section \"Header\" in py/engine/engine.py",
+      "kind": "section:empty",
+      "scope": "py/engine/engine.py#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393930391954500-ezndft",
+      "summary": "Empty section \"TODOs\" in py/engine/engine.py",
+      "kind": "section:empty",
+      "scope": "py/engine/engine.py#TODOs",
+      "line": 24
+    },
+    {
+      "id": "section:empty-1767393930392977800-278o1w",
+      "summary": "Empty section \"Header\" in py/engine/engine.test.py",
+      "kind": "section:empty",
+      "scope": "py/engine/engine.test.py#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393930392977800-6kdu1w",
+      "summary": "Empty section \"Header\" in py/engine/generate-schemas.ts",
+      "kind": "section:empty",
+      "scope": "py/engine/generate-schemas.ts#Header",
+      "line": 2
+    },
+    {
+      "id": "section:empty-1767393930393486200-b6xylo",
+      "summary": "Empty section \"Header\" in py/engine/post-build.ts",
+      "kind": "section:empty",
+      "scope": "py/engine/post-build.ts#Header",
+      "line": 2
+    },
+    {
+      "id": "section:empty-1767393930393486200-jsmq6y",
+      "summary": "Empty section \"Header\" in py/engine/sqliteschema.ts",
+      "kind": "section:empty",
+      "scope": "py/engine/sqliteschema.ts#Header",
+      "line": 2
+    },
+    {
+      "id": "section:empty-1767393930393486200-2ra5sb",
+      "summary": "Empty section \"Header\" in py/engine/test.ts",
+      "kind": "section:empty",
+      "scope": "py/engine/test.ts#Header",
+      "line": 2
+    },
+    {
+      "id": "section:empty-1767393930394005300-0r54w0",
+      "summary": "Empty section \"Header\" in vitest.config.ts",
+      "kind": "section:empty",
+      "scope": "vitest.config.ts#Header",
+      "line": 1
+    },
+    {
+      "id": "section:empty-1767393930394005300-fsgik1",
+      "summary": "Empty section \"Header\" in yak/build.ts",
+      "kind": "section:empty",
+      "scope": "yak/build.ts#Header",
+      "line": 2
+    },
+    {
+      "id": "section:empty-1767393930394523000-zf10b6",
+      "summary": "Empty section \"Header\" in yak/login.ts",
+      "kind": "section:empty",
+      "scope": "yak/login.ts#Header",
+      "line": 2
+    },
+    {
+      "id": "section:empty-1767393930394523000-dfmth9",
+      "summary": "Empty section \"Header\" in yak/publish.ts",
+      "kind": "section:empty",
+      "scope": "yak/publish.ts#Header",
+      "line": 2
+    },
+    {
+      "id": "section:empty-1767393930395038700-wrcinz",
+      "summary": "Empty section \"Header\" in yak/test-push.ts",
+      "kind": "section:empty",
+      "scope": "yak/test-push.ts#Header",
+      "line": 2
+    },
+    {
+      "id": "section:empty-1767393930395038700-b0ja23",
+      "summary": "Empty section \"Header\" in yak/test-search.ts",
+      "kind": "section:empty",
+      "scope": "yak/test-search.ts#Header",
+      "line": 2
+    },
+    {
+      "id": "section:empty-1767393930395038700-r4z146",
+      "summary": "Empty section \"Header\" in yak/unyank.ts",
+      "kind": "section:empty",
+      "scope": "yak/unyank.ts#Header",
+      "line": 2
+    },
+    {
+      "id": "section:empty-1767393930395555100-uaprck",
+      "summary": "Empty section \"Header\" in yak/yank.ts",
+      "kind": "section:empty",
+      "scope": "yak/yank.ts#Header",
+      "line": 2
+    }
+  ]
+}

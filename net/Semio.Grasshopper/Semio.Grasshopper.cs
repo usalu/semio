@@ -92,572 +92,6 @@ public class SemioCategoryIcon : GH_AssemblyPriority
 
 #region Metadata
 
-public class EntityMetadata
-{
-    public string Name { get; set; } = "";
-    public string Description { get; set; } = "";
-    public string IconResourceName { get; set; } = "";
-    public string Nickname { get; set; } = "";
-    public string IdIconResourceName { get; set; } = "";
-}
-
-public static class EntityMetadataRegistry
-{
-    private static readonly Dictionary<System.Type, EntityMetadata> _metadata = new()
-    {
-        [typeof(Semio.Attribute)] = new()
-        {
-            Name = "Attribute",
-            Description = "Key-value metadata with optional unit and definition",
-            IconResourceName = "attribute_24x24",
-            Nickname = "Att",
-            IdIconResourceName = "attribute_id_24x24"
-        },
-        [typeof(AttributeId)] = new()
-        {
-            Name = "AttributeId",
-            Description = "The ID of an attribute",
-            IconResourceName = "attribute_id_24x24",
-            Nickname = "AtI"
-        },
-        [typeof(AttributeDiff)] = new()
-        {
-            Name = "AttributeDiff",
-            Description = "A diff for attributes",
-            IconResourceName = "attribute_diff_24x24",
-            Nickname = "ADf"
-        },
-        [typeof(AttributesDiff)] = new()
-        {
-            Name = "AttributesDiff",
-            Description = "A diff for multiple attributes",
-            IconResourceName = "attribute_diff_24x24",
-            Nickname = "AtD"
-        },
-        [typeof(Coord)] = new()
-        {
-            Name = "Coord",
-            Description = "2D coordinate with U and V components",
-            IconResourceName = "coord_24x24",
-            Nickname = "Crd",
-            IdIconResourceName = "coord_id_24x24"
-        },
-        [typeof(Point)] = new()
-        {
-            Name = "Point",
-            Description = "3D point with X, Y, Z coordinates",
-            IconResourceName = "point_24x24",
-            Nickname = "Pt"
-        },
-        [typeof(Vector)] = new()
-        {
-            Name = "Vector",
-            Description = "3D vector with X, Y, Z components",
-            IconResourceName = "vector_24x24",
-            Nickname = "Vec"
-        },
-        [typeof(Plane)] = new()
-        {
-            Name = "Plane",
-            Description = "3D plane with origin and orientation",
-            IconResourceName = "plane_24x24",
-            Nickname = "Pln"
-        },
-        [typeof(Location)] = new()
-        {
-            Name = "Location",
-            Description = "Geographic location with coordinates and attributes",
-            IconResourceName = "location_24x24",
-            Nickname = "Loc",
-            IdIconResourceName = "location_id_24x24"
-        },
-        [typeof(LocationId)] = new()
-        {
-            Name = "LocationId",
-            Description = "The ID of a location",
-            IconResourceName = "location_id_24x24",
-            Nickname = "LcI"
-        },
-        [typeof(Author)] = new()
-        {
-            Name = "Author",
-            Description = "Kit contributor with name, email, and rank",
-            IconResourceName = "author_24x24",
-            Nickname = "Aut",
-            IdIconResourceName = "author_id_24x24"
-        },
-        [typeof(AuthorId)] = new()
-        {
-            Name = "AuthorId",
-            Description = "The ID of an author",
-            IconResourceName = "author_id_24x24",
-            Nickname = "AuI"
-        },
-        [typeof(AuthorDiff)] = new()
-        {
-            Name = "AuthorDiff",
-            Description = "A diff for an author",
-            IconResourceName = "author_diff_24x24",
-            Nickname = "AuD"
-        },
-        [typeof(AuthorsDiff)] = new()
-        {
-            Name = "AuthorsDiff",
-            Description = "A diff for multiple authors",
-            IconResourceName = "author_diff_24x24",
-            Nickname = "AuD"
-        },
-        [typeof(Semio.File)] = new()
-        {
-            Name = "File",
-            Description = "Kit file with path, remote URL, and metadata",
-            IconResourceName = "file_24x24",
-            Nickname = "Fil",
-            IdIconResourceName = "file_id_24x24"
-        },
-        [typeof(FileId)] = new()
-        {
-            Name = "FileId",
-            Description = "The ID of a file",
-            IconResourceName = "file_id_24x24",
-            Nickname = "FlI"
-        },
-        [typeof(FileDiff)] = new()
-        {
-            Name = "FileDiff",
-            Description = "A diff for files",
-            IconResourceName = "file_diff_24x24",
-            Nickname = "FDf"
-        },
-        [typeof(FilesDiff)] = new()
-        {
-            Name = "FilesDiff",
-            Description = "A diff for multiple files",
-            IconResourceName = "file_diff_24x24",
-            Nickname = "FsD"
-        },
-        [typeof(Folder)] = new()
-        {
-            Name = "Folder",
-            Description = "Kit folder with path and metadata",
-            IconResourceName = "folder_24x24",
-            Nickname = "Fld",
-            IdIconResourceName = "folder_id_24x24"
-        },
-        [typeof(FolderId)] = new()
-        {
-            Name = "FolderId",
-            Description = "The ID of a folder",
-            IconResourceName = "folder_id_24x24",
-            Nickname = "FdI"
-        },
-        [typeof(FolderDiff)] = new()
-        {
-            Name = "FolderDiff",
-            Description = "A diff for folders",
-            IconResourceName = "folder_diff_24x24",
-            Nickname = "FoD"
-        },
-        [typeof(FoldersDiff)] = new()
-        {
-            Name = "FoldersDiff",
-            Description = "A diff for multiple folders",
-            IconResourceName = "folder_diff_24x24",
-            Nickname = "FsD"
-        },
-        [typeof(Benchmark)] = new()
-        {
-            Name = "Benchmark",
-            Description = "Performance standard with name, range, and icon",
-            IconResourceName = "benchmark_24x24",
-            Nickname = "Bmk"
-        },
-        [typeof(Quality)] = new()
-        {
-            Name = "Quality",
-            Description = "Measurement definition with formula and constraints",
-            IconResourceName = "quality_24x24",
-            Nickname = "Qlt",
-            IdIconResourceName = "quality_id_24x24"
-        },
-        [typeof(QualityId)] = new()
-        {
-            Name = "QualityId",
-            Description = "The ID of a quality",
-            IconResourceName = "quality_id_24x24",
-            Nickname = "QlI"
-        },
-        [typeof(QualityDiff)] = new()
-        {
-            Name = "QualityDiff",
-            Description = "A diff for a quality",
-            IconResourceName = "quality_diff_24x24",
-            Nickname = "QlD"
-        },
-        [typeof(QualitiesDiff)] = new()
-        {
-            Name = "QualitiesDiff",
-            Description = "A diff for multiple qualities",
-            IconResourceName = "quality_diff_24x24",
-            Nickname = "QsD"
-        },
-        [typeof(Tag)] = new()
-        {
-            Name = "Tag",
-            Description = "Model categorization tag with name and icon",
-            IconResourceName = "tag_24x24",
-            Nickname = "Tag",
-            IdIconResourceName = "tag_id_24x24"
-        },
-        [typeof(TagId)] = new()
-        {
-            Name = "TagId",
-            Description = "The ID of a tag",
-            IconResourceName = "tag_id_24x24",
-            Nickname = "TgI"
-        },
-        [typeof(TagDiff)] = new()
-        {
-            Name = "TagDiff",
-            Description = "A diff for a tag",
-            IconResourceName = "tag_diff_24x24",
-            Nickname = "TgD"
-        },
-        [typeof(TagsDiff)] = new()
-        {
-            Name = "TagsDiff",
-            Description = "A diff for multiple tags",
-            IconResourceName = "tag_diff_24x24",
-            Nickname = "TsD"
-        },
-        [typeof(Concept)] = new()
-        {
-            Name = "Concept",
-            Description = "Semantic grouping with name and order",
-            IconResourceName = "concept_24x24",
-            Nickname = "Cnc",
-            IdIconResourceName = "concept_id_24x24"
-        },
-        [typeof(ConceptId)] = new()
-        {
-            Name = "ConceptId",
-            Description = "The ID of a concept",
-            IconResourceName = "concept_id_24x24",
-            Nickname = "CnI"
-        },
-        [typeof(ConceptDiff)] = new()
-        {
-            Name = "ConceptDiff",
-            Description = "A diff for a concept",
-            IconResourceName = "concept_diff_24x24",
-            Nickname = "CnD"
-        },
-        [typeof(ConceptsDiff)] = new()
-        {
-            Name = "ConceptsDiff",
-            Description = "A diff for multiple concepts",
-            IconResourceName = "concept_diff_24x24",
-            Nickname = "CsD"
-        },
-        [typeof(Semio.Interface)] = new()
-        {
-            Name = "Interface",
-            Description = "Connector compatibility definition",
-            IconResourceName = "interface_24x24",
-            Nickname = "Int",
-            IdIconResourceName = "interface_id_24x24"
-        },
-        [typeof(InterfaceId)] = new()
-        {
-            Name = "InterfaceId",
-            Description = "The ID of an interface",
-            IconResourceName = "interface_id_24x24",
-            Nickname = "IfI"
-        },
-        [typeof(InterfaceDiff)] = new()
-        {
-            Name = "InterfaceDiff",
-            Description = "A diff for an interface",
-            IconResourceName = "interface_diff_24x24",
-            Nickname = "IfD"
-        },
-        [typeof(InterfacesDiff)] = new()
-        {
-            Name = "InterfacesDiff",
-            Description = "A diff for multiple interfaces",
-            IconResourceName = "interface_diff_24x24",
-            Nickname = "IsD"
-        },
-        [typeof(Prop)] = new()
-        {
-            Name = "Prop",
-            Description = "Connector property with quality reference",
-            IconResourceName = "prop_24x24",
-            Nickname = "Prp"
-        },
-        [typeof(Model)] = new()
-        {
-            Name = "Model",
-            Description = "3D model with tags and file reference",
-            IconResourceName = "model_24x24",
-            Nickname = "Mdl",
-            IdIconResourceName = "model_id_24x24"
-        },
-        [typeof(ModelId)] = new()
-        {
-            Name = "ModelId",
-            Description = "The ID of a model",
-            IconResourceName = "model_id_24x24",
-            Nickname = "MdI"
-        },
-        [typeof(ModelDiff)] = new()
-        {
-            Name = "ModelDiff",
-            Description = "A diff for a model",
-            IconResourceName = "model_diff_24x24",
-            Nickname = "MdD"
-        },
-        [typeof(ModelsDiff)] = new()
-        {
-            Name = "ModelsDiff",
-            Description = "A diff for multiple models",
-            IconResourceName = "model_diff_24x24",
-            Nickname = "MsD"
-        },
-        [typeof(Connector)] = new()
-        {
-            Name = "Connector",
-            Description = "Type connection point with direction and interface",
-            IconResourceName = "connector_24x24",
-            Nickname = "Con",
-            IdIconResourceName = "connector_id_24x24"
-        },
-        [typeof(ConnectorId)] = new()
-        {
-            Name = "ConnectorId",
-            Description = "The ID of a connector",
-            IconResourceName = "connector_id_24x24",
-            Nickname = "CnI"
-        },
-        [typeof(ConnectorDiff)] = new()
-        {
-            Name = "ConnectorDiff",
-            Description = "A diff for a connector",
-            IconResourceName = "connector_diff_24x24",
-            Nickname = "CnD"
-        },
-        [typeof(ConnectorsDiff)] = new()
-        {
-            Name = "ConnectorsDiff",
-            Description = "A diff for multiple connectors",
-            IconResourceName = "connector_diff_24x24",
-            Nickname = "CsD"
-        },
-        [typeof(Semio.Type)] = new()
-        {
-            Name = "Type",
-            Description = "Reusable component with models and connectors",
-            IconResourceName = "type_24x24",
-            Nickname = "Typ",
-            IdIconResourceName = "type_id_24x24"
-        },
-        [typeof(TypeId)] = new()
-        {
-            Name = "TypeId",
-            Description = "The ID of a type",
-            IconResourceName = "type_id_24x24",
-            Nickname = "TyI"
-        },
-        [typeof(TypeDiff)] = new()
-        {
-            Name = "TypeDiff",
-            Description = "A diff for a type",
-            IconResourceName = "type_diff_24x24",
-            Nickname = "TyD"
-        },
-        [typeof(TypesDiff)] = new()
-        {
-            Name = "TypesDiff",
-            Description = "A diff for multiple types",
-            IconResourceName = "type_diff_24x24",
-            Nickname = "TsD"
-        },
-        [typeof(Layer)] = new()
-        {
-            Name = "Layer",
-            Description = "Design organizational layer with visibility and color",
-            IconResourceName = "layer_24x24",
-            Nickname = "Lyr"
-        },
-        [typeof(Group)] = new()
-        {
-            Name = "Group",
-            Description = "Design piece grouping with name and color",
-            IconResourceName = "group_24x24",
-            Nickname = "Grp",
-            IdIconResourceName = "group_id_24x24"
-        },
-        [typeof(GroupId)] = new()
-        {
-            Name = "GroupId",
-            Description = "The ID of a group",
-            IconResourceName = "group_id_24x24",
-            Nickname = "GrI"
-        },
-        [typeof(Piece)] = new()
-        {
-            Name = "Piece",
-            Description = "Type or design instance with placement and properties",
-            IconResourceName = "piece_24x24",
-            Nickname = "Pce",
-            IdIconResourceName = "piece_id_24x24"
-        },
-        [typeof(PieceId)] = new()
-        {
-            Name = "PieceId",
-            Description = "The ID of a piece",
-            IconResourceName = "piece_id_24x24",
-            Nickname = "PcI"
-        },
-        [typeof(PieceDiff)] = new()
-        {
-            Name = "PieceDiff",
-            Description = "A diff for a piece",
-            IconResourceName = "piece_diff_24x24",
-            Nickname = "PcD"
-        },
-        [typeof(PiecesDiff)] = new()
-        {
-            Name = "PiecesDiff",
-            Description = "A diff for multiple pieces",
-            IconResourceName = "piece_diff_24x24",
-            Nickname = "PsD"
-        },
-        [typeof(Side)] = new()
-        {
-            Name = "Side",
-            Description = "Connection side with piece and connector reference",
-            IconResourceName = "side_24x24",
-            Nickname = "Sid"
-        },
-        [typeof(Connection)] = new()
-        {
-            Name = "Connection",
-            Description = "Link between two pieces with transform parameters",
-            IconResourceName = "connection_24x24",
-            Nickname = "Con",
-            IdIconResourceName = "connection_id_24x24"
-        },
-        [typeof(ConnectionId)] = new()
-        {
-            Name = "ConnectionId",
-            Description = "The ID of a connection",
-            IconResourceName = "connection_id_24x24",
-            Nickname = "CnI"
-        },
-        [typeof(ConnectionDiff)] = new()
-        {
-            Name = "ConnectionDiff",
-            Description = "A diff for a connection",
-            IconResourceName = "connection_diff_24x24",
-            Nickname = "CnD"
-        },
-        [typeof(ConnectionsDiff)] = new()
-        {
-            Name = "ConnectionsDiff",
-            Description = "A diff for multiple connections",
-            IconResourceName = "connection_diff_24x24",
-            Nickname = "CsD"
-        },
-        [typeof(Stat)] = new()
-        {
-            Name = "Stat",
-            Description = "Design performance measurement",
-            IconResourceName = "stat_24x24",
-            Nickname = "Sta",
-            IdIconResourceName = "stat_id_24x24"
-        },
-        [typeof(StatId)] = new()
-        {
-            Name = "StatId",
-            Description = "The ID of a stat",
-            IconResourceName = "stat_id_24x24",
-            Nickname = "StI"
-        },
-        [typeof(Design)] = new()
-        {
-            Name = "Design",
-            Description = "Assembly of pieces and connections",
-            IconResourceName = "design_24x24",
-            Nickname = "Des",
-            IdIconResourceName = "design_id_24x24"
-        },
-        [typeof(DesignId)] = new()
-        {
-            Name = "DesignId",
-            Description = "The ID of a design",
-            IconResourceName = "design_id_24x24",
-            Nickname = "DsI"
-        },
-        [typeof(DesignDiff)] = new()
-        {
-            Name = "DesignDiff",
-            Description = "A diff for a design",
-            IconResourceName = "design_diff_24x24",
-            Nickname = "DsD"
-        },
-        [typeof(DesignsDiff)] = new()
-        {
-            Name = "DesignsDiff",
-            Description = "A diff for multiple designs",
-            IconResourceName = "design_diff_24x24",
-            Nickname = "DsD"
-        },
-        [typeof(Kit)] = new()
-        {
-            Name = "Kit",
-            Description = "Collection of types, designs, and metadata",
-            IconResourceName = "kit_24x24",
-            Nickname = "Kit",
-            IdIconResourceName = "kit_id_24x24"
-        },
-        [typeof(KitId)] = new()
-        {
-            Name = "KitId",
-            Description = "The ID of a kit",
-            IconResourceName = "kit_id_24x24",
-            Nickname = "KtI"
-        },
-        [typeof(KitDiff)] = new()
-        {
-            Name = "KitDiff",
-            Description = "A diff for a kit",
-            IconResourceName = "kit_diff_24x24",
-            Nickname = "KtD"
-        }
-    };
-    
-    public static EntityMetadata Get(System.Type type)
-    {
-        return _metadata.TryGetValue(type, out var metadata) 
-            ? metadata 
-            : new EntityMetadata 
-            { 
-                Name = type.Name, 
-                Description = type.Name,
-                IconResourceName = $"{type.Name.ToLower()}_24x24",
-                Nickname = type.Name.Substring(0, Math.Min(3, type.Name.Length)),
-                IdIconResourceName = $"{type.Name.ToLower()}_id_24x24"
-            };
-    }
-    
-    public static string GetName<T>() => Get(typeof(T)).Name;
-    public static string GetDescription<T>() => Get(typeof(T)).Description;
-    public static string GetIconResourceName<T>() => Get(typeof(T)).IconResourceName;
-    public static string GetNickname<T>() => Get(typeof(T)).Nickname;
-    public static string GetIdIconResourceName<T>() => Get(typeof(T)).IdIconResourceName;
-}
-
 #endregion Metadata
 
 #region Utility
@@ -828,8 +262,8 @@ public abstract class Goo<TEntity> : GH_Goo<TEntity> where TEntity : Entity<TEnt
     public Goo() { Value = new TEntity(); }
     public Goo(TEntity value) { Value = value; }
     public override bool IsValid => true;
-    public override string TypeName => EntityMetadataRegistry.GetName<TEntity>();
-    public override string TypeDescription => EntityMetadataRegistry.GetDescription<TEntity>();
+    public override string TypeName => typeof(TEntity).Name;
+    public override string TypeDescription => typeof(TEntity).Name;
     public override IGH_Goo Duplicate()
     {
         var duplicate = (Goo<TEntity>)(Activator.CreateInstance(GetType()) ?? throw new InvalidOperationException($"Could not create instance of {GetType()}"));
@@ -873,12 +307,15 @@ public abstract class Goo<TEntity> : GH_Goo<TEntity> where TEntity : Entity<TEnt
 
 public abstract class Param<TGoo, TModel> : GH_PersistentParam<TGoo> where TGoo : Goo<TModel> where TModel : Entity<TModel>, new()
 {
-    internal Param() : base(EntityMetadataRegistry.GetName<TModel>(),
-        EntityMetadataRegistry.GetNickname<TModel>(),
-        EntityMetadataRegistry.GetDescription<TModel>(),
-        Constants.Category, "Params")
-    { }
-    protected override Bitmap Icon => (Bitmap)(Resources.ResourceManager.GetObject(EntityMetadataRegistry.GetIconResourceName<TModel>()) ?? throw new InvalidOperationException($"Resource {EntityMetadataRegistry.GetIconResourceName<TModel>()} not found"));
+    protected abstract string ModelName { get; }
+    protected abstract string ModelNickname { get; }
+    protected abstract string ModelDescription { get; }
+    protected abstract string IconResourceName { get; }
+    protected Param() : base("", "", "", Constants.Category, "Params") { }
+    public override string Name => ModelName;
+    public override string NickName => ModelNickname;
+    public override string Description => ModelDescription;
+    protected override Bitmap Icon => (Bitmap)(Resources.ResourceManager.GetObject(IconResourceName) ?? throw new InvalidOperationException($"Resource {IconResourceName} not found"));
 
     protected override GH_GetterResult Prompt_Singular(ref TGoo value) => throw new NotImplementedException();
     protected override GH_GetterResult Prompt_Plural(ref List<TGoo> values) => throw new NotImplementedException();
@@ -929,9 +366,10 @@ public abstract class Component : GH_Component
 public abstract class PassthroughComponent<TParam, TGoo, TModel> : Component
     where TParam : Param<TGoo, TModel>, new() where TGoo : Goo<TModel>, new() where TModel : Entity<TModel>, new()
 {
-    protected virtual string ModelName => EntityMetadataRegistry.GetName<TModel>();
-    protected virtual string ModelNickname => EntityMetadataRegistry.GetNickname<TModel>();
-    protected virtual string ModelDescription => $"Passthrough (either construct, deconstruct or modify) a {EntityMetadataRegistry.GetName<TModel>().ToLower()}.";
+    protected abstract string ModelName { get; }
+    protected abstract string ModelNickname { get; }
+    protected abstract string ModelDescription { get; }
+    protected abstract string IconResourceName { get; }
 
     protected PassthroughComponent() : base("", "", "", "Data") { }
 
@@ -940,7 +378,7 @@ public abstract class PassthroughComponent<TParam, TGoo, TModel> : Component
     public override string Description => ModelDescription;
 
     protected override Bitmap Icon =>
-        (Bitmap)Resources.ResourceManager.GetObject($"{EntityMetadataRegistry.GetIconResourceName<TModel>().Replace("_24x24", "")}_modify_24x24");
+        (Bitmap)Resources.ResourceManager.GetObject($"{IconResourceName.Replace("_24x24", "")}_modify_24x24");
 
     public override GH_Exposure Exposure => GH_Exposure.primary;
 
@@ -1003,8 +441,9 @@ public abstract class IdGoo<TModel> : Goo<TModel> where TModel : Entity<TModel>,
 
 public abstract class IdParam<TGoo, TModel> : Param<TGoo, TModel> where TGoo : IdGoo<TModel> where TModel : Entity<TModel>, new()
 {
-    internal IdParam() : base() { }
-    protected override Bitmap Icon => (Bitmap)(Resources.ResourceManager.GetObject(EntityMetadataRegistry.GetIdIconResourceName<TModel>()) ?? Resources.ResourceManager.GetObject(EntityMetadataRegistry.GetIconResourceName<TModel>()));
+    protected IdParam() : base() { }
+    protected abstract string IdIconResourceName { get; }
+    protected override Bitmap Icon => (Bitmap)(Resources.ResourceManager.GetObject(IdIconResourceName) ?? Resources.ResourceManager.GetObject(IconResourceName));
     public override GH_Exposure Exposure => GH_Exposure.secondary;
 }
 
@@ -1023,8 +462,7 @@ public abstract class DiffGoo<TModel> : Goo<TModel> where TModel : Entity<TModel
 
 public abstract class DiffParam<TGoo, TModel> : Param<TGoo, TModel> where TGoo : DiffGoo<TModel> where TModel : Entity<TModel>, new()
 {
-    internal DiffParam() : base() { }
-    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{typeof(TModel).Name.ToLower().Substring(0, typeof(TModel).Name.Length - 5)}_diff_24x24");
+    protected DiffParam() : base() { }
     public override GH_Exposure Exposure => GH_Exposure.tertiary;
 }
 
@@ -1179,7 +617,7 @@ public abstract class EntityParam<TGoo, TEntity, TEntityDiff, TEntityId> : Param
     where TEntityDiff : Entity<TEntityDiff>, new()
     where TEntityId : Entity<TEntityId>, new()
 {
-    internal EntityParam() : base() { }
+    protected EntityParam() : base() { }
 }
 
 public abstract class EntityComponent<TParam, TGoo, TEntity, TEntityDiff, TEntityId> : PassthroughComponent<TParam, TGoo, TEntity>
@@ -1207,7 +645,7 @@ public abstract class EntityIdParam<TIdGoo, TEntity, TEntityDiff, TEntityId> : I
     where TEntityDiff : Entity<TEntityDiff>, new()
     where TEntityId : Entity<TEntityId>, new()
 {
-    internal EntityIdParam() : base() { }
+    protected EntityIdParam() : base() { }
 }
 
 public abstract class EntityIdComponent<TIdParam, TIdGoo, TEntity, TEntityDiff, TEntityId> : IdComponent<TIdParam, TIdGoo, TEntityId>
@@ -1235,7 +673,7 @@ public abstract class EntityDiffParam<TDiffGoo, TEntity, TEntityDiff, TEntityId>
     where TEntityDiff : Entity<TEntityDiff>, new()
     where TEntityId : Entity<TEntityId>, new()
 {
-    internal EntityDiffParam() : base() { }
+    protected EntityDiffParam() : base() { }
 }
 
 public abstract class EntityDiffComponent<TDiffParam, TDiffGoo, TEntity, TEntityDiff, TEntityId> : DiffComponent<TDiffParam, TDiffGoo, TEntityDiff>
@@ -1301,6 +739,10 @@ public class AttributeGoo : Goo<Attribute>
 
 public class AttributeParam : Param<AttributeGoo, Attribute>
 {
+    protected override string ModelName => "Attribute";
+    protected override string ModelNickname => "Atr";
+    protected override string ModelDescription => "Key-value metadata";
+    protected override string IconResourceName => "attribute_24x24";
     public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B94");
 }
 
@@ -1310,6 +752,7 @@ public class AttributeComponent : PassthroughComponent<AttributeParam, Attribute
     protected override string ModelName => "Attribute";
     protected override string ModelNickname => "Atr";
     protected override string ModelDescription => "Construct, deconstruct or modify an attribute.";
+    protected override string IconResourceName => "attribute_24x24";
 
     protected override void RegisterModelInputParams(GH_InputParamManager pManager)
     {
@@ -1378,7 +821,7 @@ public class AttributeIdGoo : IdGoo<AttributeId>
         }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Key);
+            target = (Q)(object)new GH_String(Value.Guid);
             return true;
         }
         return false;
@@ -1399,7 +842,7 @@ public class AttributeIdGoo : IdGoo<AttributeId>
         }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new AttributeId { Key = str };
+            Value = new AttributeId { Guid = str };
             return true;
         }
         return false;
@@ -1408,6 +851,11 @@ public class AttributeIdGoo : IdGoo<AttributeId>
 
 public class AttributeIdParam : IdParam<AttributeIdGoo, AttributeId>
 {
+    protected override string ModelName => "AttributeId";
+    protected override string ModelNickname => "AId";
+    protected override string ModelDescription => "Attribute identifier";
+    protected override string IconResourceName => "attribute_24x24";
+    protected override string IdIconResourceName => "attributeid_24x24";
     public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B93");
 }
 
@@ -1467,6 +915,10 @@ public class AttributeDiffGoo : DiffGoo<AttributeDiff>
 
 public class AttributeDiffParam : DiffParam<AttributeDiffGoo, AttributeDiff>
 {
+    protected override string ModelName => "AttributeDiff";
+    protected override string ModelNickname => "ADf";
+    protected override string ModelDescription => "Attribute differences";
+    protected override string IconResourceName => "attributediff_24x24";
     public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B95");
 }
 
@@ -1476,6 +928,8 @@ public class AttributeDiffComponent : DiffComponent<AttributeDiffParam, Attribut
     protected override string ModelName => "AttributeDiff";
     protected override string ModelNickname => "ADf";
     protected override string ModelDescription => "Construct, deconstruct or modify an attribute diff.";
+
+    protected override string IconResourceName => "file_24x24";
 
     protected override void RegisterModelInputParams(GH_InputParamManager pManager)
     {
@@ -1557,6 +1011,10 @@ public class CoordGoo : Goo<Coord>
 
 public class CoordParam : Param<CoordGoo, Coord>
 {
+    protected override string ModelName => "Coord";
+    protected override string ModelNickname => "DPt";
+    protected override string ModelDescription => "2D coordinate";
+    protected override string IconResourceName => "coord_24x24";
     public override Guid ComponentGuid => new("4685CCE8-C629-4638-8DF6-F76A17571841");
 }
 
@@ -1566,6 +1024,7 @@ public class CoordComponent : PassthroughComponent<CoordParam, CoordGoo, Coord>
     protected override string ModelName => "Coord";
     protected override string ModelNickname => "DPt";
     protected override string ModelDescription => "Construct, deconstruct or modify a 2d coordinate.";
+    protected override string IconResourceName => "coord_24x24";
 
     protected override void RegisterModelInputParams(GH_InputParamManager pManager)
     {
@@ -1637,6 +1096,10 @@ public class LocationGoo : Goo<Location>
 
 public class LocationParam : Param<LocationGoo, Location>
 {
+    protected override string ModelName => "Location";
+    protected override string ModelNickname => "Loc";
+    protected override string ModelDescription => "Geographic location";
+    protected override string IconResourceName => "location_24x24";
     public override Guid ComponentGuid => new("CA9DA889-398E-469B-BF1B-AD2BDFCA7957");
 }
 
@@ -1646,6 +1109,7 @@ public class LocationComponent : PassthroughComponent<LocationParam, LocationGoo
     protected override string ModelName => "Location";
     protected override string ModelNickname => "Loc";
     protected override string ModelDescription => "Construct, deconstruct or modify a location.";
+    protected override string IconResourceName => "location_24x24";
 
     protected override void RegisterModelInputParams(GH_InputParamManager pManager)
     {
@@ -1721,6 +1185,10 @@ public class AuthorGoo : Goo<Author>
 
 public class AuthorParam : Param<AuthorGoo, Author>
 {
+    protected override string ModelName => "Author";
+    protected override string ModelNickname => "Aut";
+    protected override string ModelDescription => "Author information";
+    protected override string IconResourceName => "author_24x24";
     public override Guid ComponentGuid => new("9F52380B-1812-42F7-9DAD-952C2F7A635A");
 }
 
@@ -1730,6 +1198,7 @@ public class AuthorComponent : PassthroughComponent<AuthorParam, AuthorGoo, Auth
     protected override string ModelName => "Author";
     protected override string ModelNickname => "Aut";
     protected override string ModelDescription => "Construct, deconstruct or modify an author.";
+    protected override string IconResourceName => "author_24x24";
 
     protected override void RegisterModelInputParams(GH_InputParamManager pManager)
     {
@@ -1787,7 +1256,7 @@ public class AuthorIdGoo : IdGoo<AuthorId>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Email);
+            target = (Q)(object)new GH_String(Value.Guid);
             return true;
         }
         return false;
@@ -1798,7 +1267,7 @@ public class AuthorIdGoo : IdGoo<AuthorId>
         if (source is null) return false;
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new AuthorId { Email = str };
+            Value = new AuthorId { Guid = str };
             return true;
         }
         return false;
@@ -1807,6 +1276,11 @@ public class AuthorIdGoo : IdGoo<AuthorId>
 
 public class AuthorIdParam : IdParam<AuthorIdGoo, AuthorId>
 {
+    protected override string ModelName => "AuthorId";
+    protected override string ModelNickname => "AuI";
+    protected override string ModelDescription => "Author identifier";
+    protected override string IconResourceName => "author_24x24";
+    protected override string IdIconResourceName => "authorid_24x24";
     public override Guid ComponentGuid => new("96775DC9-9079-4A22-8376-6AB8F58C8B1C");
 }
 
@@ -1844,6 +1318,10 @@ public class FileGoo : Goo<File>
 
 public class FileParam : Param<FileGoo, File>
 {
+    protected override string ModelName => "File";
+    protected override string ModelNickname => "Fil";
+    protected override string ModelDescription => "File reference";
+    protected override string IconResourceName => "file_24x24";
     public override Guid ComponentGuid => new("60D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7F8");
 }
 
@@ -1853,6 +1331,8 @@ public class FileComponent : PassthroughComponent<FileParam, FileGoo, File>
     protected override string ModelName => "File";
     protected override string ModelNickname => "Fil";
     protected override string ModelDescription => "Construct, deconstruct or modify a file.";
+
+    protected override string IconResourceName => "file_24x24";
 
     protected override void RegisterModelInputParams(GH_InputParamManager pManager)
     {
@@ -1929,6 +1409,11 @@ public class FileIdGoo : IdGoo<FileId>
 
 public class FileIdParam : IdParam<FileIdGoo, FileId>
 {
+    protected override string ModelName => "FileId";
+    protected override string ModelNickname => "FId";
+    protected override string ModelDescription => "File identifier";
+    protected override string IconResourceName => "file_24x24";
+    protected override string IdIconResourceName => "fileid_24x24";
     public override Guid ComponentGuid => new("50C3D4E5-F6A7-B8C9-D0E1-F2A3B4C5D6E7");
 }
 
@@ -1968,12 +1453,20 @@ public class FileDiffGoo : DiffGoo<FileDiff>
 
 public class FileDiffParam : DiffParam<FileDiffGoo, FileDiff>
 {
+    protected override string ModelName => "FileDiff";
+    protected override string ModelNickname => "FD";
+    protected override string ModelDescription => "File diff";
+    protected override string IconResourceName => "filediff_24x24";
     public override Guid ComponentGuid => new("20D6E7F8-A9B0-C1D2-E3F4-A5B6C7D8E9F0");
 }
 
 public class FileDiffComponent : DiffComponent<FileDiffParam, FileDiffGoo, FileDiff>
 {
     public override Guid ComponentGuid => new("20D6E7F8-A9B0-C1D2-E3F4-A5B6C7D8E9F1");
+    protected override string ModelName => "FileDiff";
+    protected override string ModelNickname => "FD";
+    protected override string ModelDescription => "Construct, deconstruct or modify a file diff.";
+    protected override string IconResourceName => "filediff_24x24";
 }
 
 public class SerializeFileDiffComponent : SerializeComponent<FileDiffParam, FileDiffGoo, FileDiff>
@@ -2023,12 +1516,20 @@ public class FilesDiffGoo : DiffGoo<FilesDiff>
 
 public class FilesDiffParam : DiffParam<FilesDiffGoo, FilesDiff>
 {
+    protected override string ModelName => "FilesDiff";
+    protected override string ModelNickname => "FDs";
+    protected override string ModelDescription => "File collection diff";
+    protected override string IconResourceName => "filesdiff_24x24";
     public override Guid ComponentGuid => new("30E7F8A9-B0C1-D2E3-F4A5-B6C7D8E9F0A1");
 }
 
 public class FilesDiffComponent : DiffComponent<FilesDiffParam, FilesDiffGoo, FilesDiff>
 {
     public override Guid ComponentGuid => new("30E7F8A9-B0C1-D2E3-F4A5-B6C7D8E9F0A2");
+    protected override string ModelName => "FilesDiff";
+    protected override string ModelNickname => "FDs";
+    protected override string ModelDescription => "Construct, deconstruct or modify a collection of file diffs.";
+    protected override string IconResourceName => "filesdiff_24x24";
 }
 
 public class SerializeFilesDiffComponent : SerializeComponent<FilesDiffParam, FilesDiffGoo, FilesDiff>
@@ -2096,6 +1597,10 @@ public class FolderGoo : Goo<Folder>
 
 public class FolderParam : Param<FolderGoo, Folder>
 {
+    protected override string ModelName => "Folder";
+    protected override string ModelNickname => "Fld";
+    protected override string ModelDescription => "Folder container";
+    protected override string IconResourceName => "folder_24x24";
     public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8A0");
 }
 
@@ -2105,6 +1610,8 @@ public class FolderComponent : PassthroughComponent<FolderParam, FolderGoo, Fold
     protected override string ModelName => "Folder";
     protected override string ModelNickname => "Fol";
     protected override string ModelDescription => "Construct, deconstruct or modify a folder.";
+
+    protected override string IconResourceName => "file_24x24";
 
     protected override void RegisterModelInputParams(GH_InputParamManager pManager)
     {
@@ -2186,6 +1693,11 @@ public class FolderIdGoo : IdGoo<FolderId>
 
 public class FolderIdParam : IdParam<FolderIdGoo, FolderId>
 {
+    protected override string ModelName => "FolderId";
+    protected override string ModelNickname => "FlI";
+    protected override string ModelDescription => "Folder identifier";
+    protected override string IconResourceName => "folder_24x24";
+    protected override string IdIconResourceName => "folderid_24x24";
     public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8A4");
 }
 
@@ -2224,12 +1736,20 @@ public class FolderDiffGoo : DiffGoo<FolderDiff>
 
 public class FolderDiffParam : DiffParam<FolderDiffGoo, FolderDiff>
 {
+    protected override string ModelName => "FolderDiff";
+    protected override string ModelNickname => "FD";
+    protected override string ModelDescription => "Folder diff";
+    protected override string IconResourceName => "folderdiff_24x24";
     public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8A5");
 }
 
 public class FolderDiffComponent : DiffComponent<FolderDiffParam, FolderDiffGoo, FolderDiff>
 {
     public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8A6");
+    protected override string ModelName => "FolderDiff";
+    protected override string ModelNickname => "FD";
+    protected override string ModelDescription => "Construct, deconstruct or modify a folder diff.";
+    protected override string IconResourceName => "folderdiff_24x24";
 }
 
 public class SerializeFolderDiffComponent : SerializeComponent<FolderDiffParam, FolderDiffGoo, FolderDiff>
@@ -2279,12 +1799,20 @@ public class FoldersDiffGoo : DiffGoo<FoldersDiff>
 
 public class FoldersDiffParam : DiffParam<FoldersDiffGoo, FoldersDiff>
 {
+    protected override string ModelName => "FoldersDiff";
+    protected override string ModelNickname => "FDs";
+    protected override string ModelDescription => "Folder collection diff";
+    protected override string IconResourceName => "foldersdiff_24x24";
     public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8A9");
 }
 
 public class FoldersDiffComponent : DiffComponent<FoldersDiffParam, FoldersDiffGoo, FoldersDiff>
 {
     public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AA");
+    protected override string ModelName => "FoldersDiff";
+    protected override string ModelNickname => "FDs";
+    protected override string ModelDescription => "Construct, deconstruct or modify a collection of folder diffs.";
+    protected override string IconResourceName => "foldersdiff_24x24";
 }
 
 public class SerializeFoldersDiffComponent : SerializeComponent<FoldersDiffParam, FoldersDiffGoo, FoldersDiff>
@@ -2332,6 +1860,10 @@ public class BenchmarkGoo : Goo<Benchmark>
 
 public class BenchmarkParam : Param<BenchmarkGoo, Benchmark>
 {
+    protected override string ModelName => "Benchmark";
+    protected override string ModelNickname => "Bmk";
+    protected override string ModelDescription => "Performance benchmark";
+    protected override string IconResourceName => "benchmark_24x24";
     public override Guid ComponentGuid => new("60A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C4");
 }
 
@@ -2341,6 +1873,7 @@ public class BenchmarkComponent : PassthroughComponent<BenchmarkParam, Benchmark
     protected override string ModelName => "Benchmark";
     protected override string ModelNickname => "Bmk";
     protected override string ModelDescription => "Construct, deconstruct or modify a benchmark.";
+    protected override string IconResourceName => "benchmark_24x24";
 }
 
 public class SerializeBenchmarkComponent : SerializeComponent<BenchmarkParam, BenchmarkGoo, Benchmark>
@@ -2432,6 +1965,10 @@ public class QualityGoo : Goo<Quality>
 
 public class QualityParam : Param<QualityGoo, Quality>
 {
+    protected override string ModelName => "Quality";
+    protected override string ModelNickname => "Qal";
+    protected override string ModelDescription => "Quality measurement";
+    protected override string IconResourceName => "quality_24x24";
     public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C6");
 }
 
@@ -2441,6 +1978,7 @@ public class QualityComponent : PassthroughComponent<QualityParam, QualityGoo, Q
     protected override string ModelName => "Quality";
     protected override string ModelNickname => "Qal";
     protected override string ModelDescription => "Construct, deconstruct or modify a quality.";
+    protected override string IconResourceName => "quality_24x24";
 }
 
 public class SerializeQualityComponent : SerializeComponent<QualityParam, QualityGoo, Quality>
@@ -2513,6 +2051,11 @@ public class QualityIdGoo : IdGoo<QualityId>
 
 public class QualityIdParam : IdParam<QualityIdGoo, QualityId>
 {
+    protected override string ModelName => "QualityId";
+    protected override string ModelNickname => "QId";
+    protected override string ModelDescription => "Quality identifier";
+    protected override string IconResourceName => "quality_24x24";
+    protected override string IdIconResourceName => "qualityid_24x24";
     public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C4");
 }
 
@@ -2589,12 +2132,20 @@ public class QualityDiffGoo : DiffGoo<QualityDiff>
 
 public class QualityDiffParam : DiffParam<QualityDiffGoo, QualityDiff>
 {
+    protected override string ModelName => "QualityDiff";
+    protected override string ModelNickname => "QD";
+    protected override string ModelDescription => "Quality diff";
+    protected override string IconResourceName => "qualitydiff_24x24";
     public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4DA");
 }
 
 public class QualityDiffComponent : DiffComponent<QualityDiffParam, QualityDiffGoo, QualityDiff>
 {
     public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4DB");
+    protected override string ModelName => "QualityDiff";
+    protected override string ModelNickname => "QD";
+    protected override string ModelDescription => "Construct, deconstruct or modify a quality diff.";
+    protected override string IconResourceName => "qualitydiff_24x24";
 }
 
 public class SerializeQualityDiffComponent : SerializeComponent<QualityDiffParam, QualityDiffGoo, QualityDiff>
@@ -2652,6 +2203,10 @@ public class TagGoo : Goo<Tag>
 
 public class TagParam : Param<TagGoo, Tag>
 {
+    protected override string ModelName => "Tag";
+    protected override string ModelNickname => "Tag";
+    protected override string ModelDescription => "Model tag";
+    protected override string IconResourceName => "tag_24x24";
     public override Guid ComponentGuid => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B0");
 }
 
@@ -2661,6 +2216,8 @@ public class TagComponent : PassthroughComponent<TagParam, TagGoo, Tag>
     protected override string ModelName => "Tag";
     protected override string ModelNickname => "Tag";
     protected override string ModelDescription => "Construct, deconstruct or modify a tag.";
+
+    protected override string IconResourceName => "file_24x24";
 
     protected override void RegisterModelInputParams(GH_InputParamManager pManager)
     {
@@ -2742,6 +2299,11 @@ public class TagIdGoo : IdGoo<TagId>
 
 public class TagIdParam : IdParam<TagIdGoo, TagId>
 {
+    protected override string ModelName => "TagId";
+    protected override string ModelNickname => "TId";
+    protected override string ModelDescription => "Tag identifier";
+    protected override string IconResourceName => "tag_24x24";
+    protected override string IdIconResourceName => "tagid_24x24";
     public override Guid ComponentGuid => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B4");
 }
 
@@ -2784,6 +2346,10 @@ public class PropGoo : Goo<Prop>
 
 public class PropParam : Param<PropGoo, Prop>
 {
+    protected override string ModelName => "Prop";
+    protected override string ModelNickname => "Prp";
+    protected override string ModelDescription => "Connector property";
+    protected override string IconResourceName => "prop_24x24";
     public override Guid ComponentGuid => new("70A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C4");
 }
 
@@ -2793,6 +2359,7 @@ public class PropComponent : PassthroughComponent<PropParam, PropGoo, Prop>
     protected override string ModelName => "Prop";
     protected override string ModelNickname => "Prp";
     protected override string ModelDescription => "Construct, deconstruct or modify a prop.";
+    protected override string IconResourceName => "prop_24x24";
 }
 
 public class SerializePropComponent : SerializeComponent<PropParam, PropGoo, Prop>
@@ -2838,6 +2405,10 @@ public class ModelGoo : Goo<Model>
 
 public class ModelParam : Param<ModelGoo, Model>
 {
+    protected override string ModelName => "Model";
+    protected override string ModelNickname => "Mdl";
+    protected override string ModelDescription => "3D model";
+    protected override string IconResourceName => "model_24x24";
     public override Guid ComponentGuid => new("895BBC91-851A-4DFC-9C83-92DFE90029E8");
 }
 
@@ -2847,6 +2418,8 @@ public class ModelComponent : PassthroughComponent<ModelParam, ModelGoo, Model>
     protected override string ModelName => "Model";
     protected override string ModelNickname => "Rep";
     protected override string ModelDescription => "Construct, deconstruct or modify a model.";
+
+    protected override string IconResourceName => "file_24x24";
 
     protected override void RegisterModelInputParams(GH_InputParamManager pManager)
     {
@@ -2959,6 +2532,11 @@ public class ModelIdGoo : IdGoo<ModelId>
 
 public class ModelIdParam : IdParam<ModelIdGoo, ModelId>
 {
+    protected override string ModelName => "ModelId";
+    protected override string ModelNickname => "MId";
+    protected override string ModelDescription => "Model identifier";
+    protected override string IconResourceName => "model_24x24";
+    protected override string IdIconResourceName => "modelid_24x24";
     public override Guid ComponentGuid => new("30A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
 }
 
@@ -2998,12 +2576,20 @@ public class ModelDiffGoo : DiffGoo<ModelDiff>
 
 public class ModelDiffParam : DiffParam<ModelDiffGoo, ModelDiff>
 {
+    protected override string ModelName => "ModelDiff";
+    protected override string ModelNickname => "MD";
+    protected override string ModelDescription => "Model diff";
+    protected override string IconResourceName => "modeldiff_24x24";
     public override Guid ComponentGuid => new("7C8E9FA0-B1C2-D3E4-F5A6-B7C8D9E0F1A2");
 }
 
 public class ModelDiffComponent : DiffComponent<ModelDiffParam, ModelDiffGoo, ModelDiff>
 {
     public override Guid ComponentGuid => new("8D9FA0B1-C2D3-E4F5-A6B7-C8D9E0F1A2B3");
+    protected override string ModelName => "ModelDiff";
+    protected override string ModelNickname => "MD";
+    protected override string ModelDescription => "Construct, deconstruct or modify a model diff.";
+    protected override string IconResourceName => "modeldiff_24x24";
 }
 
 public class SerializeModelDiffComponent : SerializeComponent<ModelDiffParam, ModelDiffGoo, ModelDiff>
@@ -3053,12 +2639,20 @@ public class ModelsDiffGoo : DiffGoo<ModelsDiff>
 
 public class ModelsDiffParam : DiffParam<ModelsDiffGoo, ModelsDiff>
 {
+    protected override string ModelName => "ModelsDiff";
+    protected override string ModelNickname => "MDs";
+    protected override string ModelDescription => "Model collection diff";
+    protected override string IconResourceName => "modelsdiff_24x24";
     public override Guid ComponentGuid => new("9EA0B1C2-D3E4-F5A6-B7C8-D9E0F1A2B3C4");
 }
 
 public class ModelsDiffComponent : DiffComponent<ModelsDiffParam, ModelsDiffGoo, ModelsDiff>
 {
     public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AD");
+    protected override string ModelName => "ModelsDiff";
+    protected override string ModelNickname => "MDs";
+    protected override string ModelDescription => "Construct, deconstruct or modify a collection of model diffs.";
+    protected override string IconResourceName => "modelsdiff_24x24";
 }
 
 public class SerializeModelsDiffComponent : SerializeComponent<ModelsDiffParam, ModelsDiffGoo, ModelsDiff>
@@ -3141,6 +2735,10 @@ public class ConnectorGoo : Goo<Connector>
 
 public class ConnectorParam : Param<ConnectorGoo, Connector>
 {
+    protected override string ModelName => "Connector";
+    protected override string ModelNickname => "Con";
+    protected override string ModelDescription => "Connection point";
+    protected override string IconResourceName => "connector_24x24";
     public override Guid ComponentGuid => new("96775DC9-9079-4A22-8376-6AB8F58C8B1B");
 }
 
@@ -3150,6 +2748,8 @@ public class ConnectorComponent : PassthroughComponent<ConnectorParam, Connector
     protected override string ModelName => "Connector";
     protected override string ModelNickname => "Por";
     protected override string ModelDescription => "Construct, deconstruct or modify a connector.";
+
+    protected override string IconResourceName => "file_24x24";
 
     protected override void RegisterModelInputParams(GH_InputParamManager pManager)
     {
@@ -3268,6 +2868,11 @@ public class ConnectorIdGoo : IdGoo<ConnectorId>
 
 public class ConnectorIdParam : IdParam<ConnectorIdGoo, ConnectorId>
 {
+    protected override string ModelName => "ConnectorId";
+    protected override string ModelNickname => "CId";
+    protected override string ModelDescription => "Connector identifier";
+    protected override string IconResourceName => "connector_24x24";
+    protected override string IdIconResourceName => "connectorid_24x24";
     public override Guid ComponentGuid => new("C1D2E3F4-A5B6-C7D8-E9F0-A1B2C3D4E5F6");
 }
 
@@ -3327,12 +2932,20 @@ public class ConnectorDiffGoo : DiffGoo<ConnectorDiff>
 
 public class ConnectorDiffParam : DiffParam<ConnectorDiffGoo, ConnectorDiff>
 {
+    protected override string ModelName => "ConnectorDiff";
+    protected override string ModelNickname => "CD";
+    protected override string ModelDescription => "Connector diff";
+    protected override string IconResourceName => "connectordiff_24x24";
     public override Guid ComponentGuid => new("B0C1D2E3-F4A5-B6C7-D8E9-F0A1B2C3D4E5");
 }
 
 public class ConnectorDiffComponent : DiffComponent<ConnectorDiffParam, ConnectorDiffGoo, ConnectorDiff>
 {
     public override Guid ComponentGuid => new("E3F4A5B6-C7D8-E9F0-A1B2-C3D4E5F6A7B8");
+    protected override string ModelName => "ConnectorDiff";
+    protected override string ModelNickname => "CD";
+    protected override string ModelDescription => "Construct, deconstruct or modify a connector diff.";
+    protected override string IconResourceName => "connectordiff_24x24";
 }
 
 public class SerializePortDiffComponent : SerializeComponent<ConnectorDiffParam, ConnectorDiffGoo, ConnectorDiff>
@@ -3382,12 +2995,20 @@ public class ConnectorsDiffGoo : DiffGoo<ConnectorsDiff>
 
 public class ConnectorsDiffParam : DiffParam<ConnectorsDiffGoo, ConnectorsDiff>
 {
+    protected override string ModelName => "ConnectorsDiff";
+    protected override string ModelNickname => "CDs";
+    protected override string ModelDescription => "Connector collection diff";
+    protected override string IconResourceName => "connectorsdiff_24x24";
     public override Guid ComponentGuid => new("1A29F6ED-464D-490F-B072-3412B467F1C0");
 }
 
 public class ConnectorsDiffComponent : DiffComponent<ConnectorsDiffParam, ConnectorsDiffGoo, ConnectorsDiff>
 {
     public override Guid ComponentGuid => new("1A29F6ED-464D-490F-B072-3412B467F1C1");
+    protected override string ModelName => "ConnectorsDiff";
+    protected override string ModelNickname => "CDs";
+    protected override string ModelDescription => "Construct, deconstruct or modify a collection of connector diffs.";
+    protected override string IconResourceName => "connectorsdiff_24x24";
 }
 
 public class SerializePortsDiffComponent : SerializeComponent<ConnectorsDiffParam, ConnectorsDiffGoo, ConnectorsDiff>
@@ -3445,6 +3066,10 @@ public class ConceptGoo : Goo<Concept>
 
 public class ConceptParam : Param<ConceptGoo, Concept>
 {
+    protected override string ModelName => "Concept";
+    protected override string ModelNickname => "Cpt";
+    protected override string ModelDescription => "Semantic concept";
+    protected override string IconResourceName => "concept_24x24";
     public override Guid ComponentGuid => new("90A7B8C9-D0E1-F2A3-B4C5-D6E7F8A9B0C1");
 }
 
@@ -3454,6 +3079,8 @@ public class ConceptComponent : PassthroughComponent<ConceptParam, ConceptGoo, C
     protected override string ModelName => "Concept";
     protected override string ModelNickname => "Con";
     protected override string ModelDescription => "Construct, deconstruct or modify a concept.";
+
+    protected override string IconResourceName => "file_24x24";
 
     protected override void RegisterModelInputParams(GH_InputParamManager pManager)
     {
@@ -3535,6 +3162,11 @@ public class ConceptIdGoo : IdGoo<ConceptId>
 
 public class ConceptIdParam : IdParam<ConceptIdGoo, ConceptId>
 {
+    protected override string ModelName => "ConceptId";
+    protected override string ModelNickname => "CId";
+    protected override string ModelDescription => "Concept identifier";
+    protected override string IconResourceName => "concept_24x24";
+    protected override string IdIconResourceName => "conceptid_24x24";
     public override Guid ComponentGuid => new("90A7B8C9-D0E1-F2A3-B4C5-D6E7F8A9B0C5");
 }
 
@@ -3581,6 +3213,10 @@ public class InterfaceGoo : Goo<Interface>
 
 public class InterfaceParam : Param<InterfaceGoo, Interface>
 {
+    protected override string ModelName => "Interface";
+    protected override string ModelNickname => "Ifc";
+    protected override string ModelDescription => "Connector compatibility";
+    protected override string IconResourceName => "interface_24x24";
     public override Guid ComponentGuid => new("A0B8C9D0-E1F2-A3B4-C5D6-E7F8A9B0C1D2");
 }
 
@@ -3590,6 +3226,8 @@ public class InterfaceComponent : PassthroughComponent<InterfaceParam, Interface
     protected override string ModelName => "Interface";
     protected override string ModelNickname => "Ifc";
     protected override string ModelDescription => "Construct, deconstruct or modify an port.";
+
+    protected override string IconResourceName => "file_24x24";
 
     protected override void RegisterModelInputParams(GH_InputParamManager pManager)
     {
@@ -3676,6 +3314,11 @@ public class InterfaceIdGoo : IdGoo<InterfaceId>
 
 public class InterfaceIdParam : IdParam<InterfaceIdGoo, InterfaceId>
 {
+    protected override string ModelName => "InterfaceId";
+    protected override string ModelNickname => "IId";
+    protected override string ModelDescription => "Interface identifier";
+    protected override string IconResourceName => "interface_24x24";
+    protected override string IdIconResourceName => "interfaceid_24x24";
     public override Guid ComponentGuid => new("78187B1A-F476-44D9-A382-DE2C47019DB8");
 }
 
@@ -3747,6 +3390,10 @@ public class TypeGoo : Goo<Type>
 
 public class TypeParam : Param<TypeGoo, Type>
 {
+    protected override string ModelName => "Type";
+    protected override string ModelNickname => "Typ";
+    protected override string ModelDescription => "Reusable component";
+    protected override string IconResourceName => "type_24x24";
     public override Guid ComponentGuid => new("301FCFFA-2160-4ACA-994F-E067C4673D45");
 }
 
@@ -3756,6 +3403,8 @@ public class TypeComponent : PassthroughComponent<TypeParam, TypeGoo, Type>
     protected override string ModelName => "Type";
     protected override string ModelNickname => "Typ";
     protected override string ModelDescription => "Construct, deconstruct or modify a type.";
+
+    protected override string IconResourceName => "file_24x24";
 
     protected override void RegisterModelInputParams(GH_InputParamManager pManager)
     {
@@ -3902,6 +3551,11 @@ public class TypeIdGoo : IdGoo<TypeId>
 
 public class TypeIdParam : IdParam<TypeIdGoo, TypeId>
 {
+    protected override string ModelName => "TypeId";
+    protected override string ModelNickname => "TId";
+    protected override string ModelDescription => "Type identifier";
+    protected override string IconResourceName => "type_24x24";
+    protected override string IdIconResourceName => "typeid_24x24";
     public override Guid ComponentGuid => new("A1B2C3D4-E5F6-A7B8-C9D0-E1F2A3B4C5D6");
 }
 
@@ -3961,12 +3615,20 @@ public class TypeDiffGoo : DiffGoo<TypeDiff>
 
 public class TypeDiffParam : DiffParam<TypeDiffGoo, TypeDiff>
 {
+    protected override string ModelName => "TypeDiff";
+    protected override string ModelNickname => "TD";
+    protected override string ModelDescription => "Type diff";
+    protected override string IconResourceName => "typediff_24x24";
     public override Guid ComponentGuid => new("C3D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7F8");
 }
 
 public class TypeDiffComponent : DiffComponent<TypeDiffParam, TypeDiffGoo, TypeDiff>
 {
     public override Guid ComponentGuid => new("D4E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8A9");
+    protected override string ModelName => "TypeDiff";
+    protected override string ModelNickname => "TD";
+    protected override string ModelDescription => "Construct, deconstruct or modify a type diff.";
+    protected override string IconResourceName => "typediff_24x24";
 }
 
 public class SerializeTypeDiffComponent : SerializeComponent<TypeDiffParam, TypeDiffGoo, TypeDiff>
@@ -4016,12 +3678,20 @@ public class TypesDiffGoo : DiffGoo<TypesDiff>
 
 public class TypesDiffParam : DiffParam<TypesDiffGoo, TypesDiff>
 {
+    protected override string ModelName => "TypesDiff";
+    protected override string ModelNickname => "TDs";
+    protected override string ModelDescription => "Type collection diff";
+    protected override string IconResourceName => "typesdiff_24x24";
     public override Guid ComponentGuid => new("E0F2A3B4-C5D6-E7F8-A9B0-C1D2E3F4A5B6");
 }
 
 public class TypesDiffComponent : DiffComponent<TypesDiffParam, TypesDiffGoo, TypesDiff>
 {
     public override Guid ComponentGuid => new("E0F2A3B4-C5D6-E7F8-A9B0-C1D2E3F4A5B7");
+    protected override string ModelName => "TypesDiff";
+    protected override string ModelNickname => "TDs";
+    protected override string ModelDescription => "Construct, deconstruct or modify a collection of type diffs.";
+    protected override string IconResourceName => "typesdiff_24x24";
 }
 
 public class SerializeTypesDiffComponent : SerializeComponent<TypesDiffParam, TypesDiffGoo, TypesDiff>
@@ -4075,6 +3745,10 @@ public class LayerGoo : Goo<Layer>
 
 public class LayerParam : Param<LayerGoo, Layer>
 {
+    protected override string ModelName => "Layer";
+    protected override string ModelNickname => "Lyr";
+    protected override string ModelDescription => "Design layer";
+    protected override string IconResourceName => "layer_24x24";
     public override Guid ComponentGuid => new("90A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C4");
 }
 
@@ -4084,6 +3758,8 @@ public class LayerComponent : PassthroughComponent<LayerParam, LayerGoo, Layer>
     protected override string ModelName => "Layer";
     protected override string ModelNickname => "Lyr";
     protected override string ModelDescription => "Construct, deconstruct or modify a layer.";
+
+    protected override string IconResourceName => "file_24x24";
 
     protected override void RegisterModelInputParams(GH_InputParamManager pManager)
     {
@@ -4184,6 +3860,10 @@ public class GroupGoo : Goo<Group>
 
 public class GroupParam : Param<GroupGoo, Group>
 {
+    protected override string ModelName => "Group";
+    protected override string ModelNickname => "Grp";
+    protected override string ModelDescription => "Piece grouping";
+    protected override string IconResourceName => "group_24x24";
     public override Guid ComponentGuid => new("A0A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C4");
 }
 
@@ -4193,6 +3873,8 @@ public class GroupComponent : PassthroughComponent<GroupParam, GroupGoo, Group>
     protected override string ModelName => "Group";
     protected override string ModelNickname => "Grp";
     protected override string ModelDescription => "Construct, deconstruct or modify a group.";
+
+    protected override string IconResourceName => "file_24x24";
 
     protected override void RegisterModelInputParams(GH_InputParamManager pManager)
     {
@@ -4315,6 +3997,10 @@ public class PieceGoo : Goo<Piece>
 
 public class PieceParam : Param<PieceGoo, Piece>
 {
+    protected override string ModelName => "Piece";
+    protected override string ModelNickname => "Pce";
+    protected override string ModelDescription => "Design instance";
+    protected override string IconResourceName => "piece_24x24";
     public override Guid ComponentGuid => new("76F583DC-4142-4346-B1E1-6C241AF26086");
 }
 
@@ -4324,6 +4010,8 @@ public class PieceComponent : PassthroughComponent<PieceParam, PieceGoo, Piece>
     protected override string ModelName => "Piece";
     protected override string ModelNickname => "Pce";
     protected override string ModelDescription => "Construct, deconstruct or modify a piece.";
+
+    protected override string IconResourceName => "file_24x24";
 
     protected override void RegisterModelInputParams(GH_InputParamManager pManager)
     {
@@ -4437,6 +4125,11 @@ public class PieceIdGoo : IdGoo<PieceId>
 
 public class PieceIdParam : IdParam<PieceIdGoo, PieceId>
 {
+    protected override string ModelName => "PieceId";
+    protected override string ModelNickname => "PId";
+    protected override string ModelDescription => "Piece identifier";
+    protected override string IconResourceName => "piece_24x24";
+    protected override string IdIconResourceName => "pieceid_24x24";
     public override Guid ComponentGuid => new("F6A7B8C9-D0E1-F2A3-B4C5-D6E7F8A9B0C1");
 }
 
@@ -4496,12 +4189,20 @@ public class PieceDiffGoo : DiffGoo<PieceDiff>
 
 public class PieceDiffParam : DiffParam<PieceDiffGoo, PieceDiff>
 {
+    protected override string ModelName => "PieceDiff";
+    protected override string ModelNickname => "PD";
+    protected override string ModelDescription => "Piece diff";
+    protected override string IconResourceName => "piecediff_24x24";
     public override Guid ComponentGuid => new("B8C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E3");
 }
 
 public class PieceDiffComponent : DiffComponent<PieceDiffParam, PieceDiffGoo, PieceDiff>
 {
     public override Guid ComponentGuid => new("C9D0E1F2-A3B4-C5D6-E7F8-A9B0C1D2E3F4");
+    protected override string ModelName => "PieceDiff";
+    protected override string ModelNickname => "PD";
+    protected override string ModelDescription => "Construct, deconstruct or modify a piece diff.";
+    protected override string IconResourceName => "piecediff_24x24";
 }
 
 public class SerializePieceDiffComponent : SerializeComponent<PieceDiffParam, PieceDiffGoo, PieceDiff>
@@ -4551,12 +4252,20 @@ public class PiecesDiffGoo : DiffGoo<PiecesDiff>
 
 public class PiecesDiffParam : DiffParam<PiecesDiffGoo, PiecesDiff>
 {
+    protected override string ModelName => "PiecesDiff";
+    protected override string ModelNickname => "PDs";
+    protected override string ModelDescription => "Piece collection diff";
+    protected override string IconResourceName => "piecesdiff_24x24";
     public override Guid ComponentGuid => new("F0A3B4C5-D6E7-F8A9-B0C1-D2E3F4A5B6C7");
 }
 
 public class PiecesDiffComponent : DiffComponent<PiecesDiffParam, PiecesDiffGoo, PiecesDiff>
 {
     public override Guid ComponentGuid => new("F0A3B4C5-D6E7-F8A9-B0C1-D2E3F4A5B6C8");
+    protected override string ModelName => "PiecesDiff";
+    protected override string ModelNickname => "PDs";
+    protected override string ModelDescription => "Construct, deconstruct or modify a collection of piece diffs.";
+    protected override string IconResourceName => "piecesdiff_24x24";
 }
 
 public class SerializePiecesDiffComponent : SerializeComponent<PiecesDiffParam, PiecesDiffGoo, PiecesDiff>
@@ -4604,6 +4313,10 @@ public class SideGoo : Goo<Side>
 
 public class SideParam : Param<SideGoo, Side>
 {
+    protected override string ModelName => "Side";
+    protected override string ModelNickname => "Sid";
+    protected override string ModelDescription => "Connection side";
+    protected override string IconResourceName => "side_24x24";
     public override Guid ComponentGuid => new("B0C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E5");
 }
 
@@ -4613,6 +4326,8 @@ public class SideComponent : PassthroughComponent<SideParam, SideGoo, Side>
     protected override string ModelName => "Side";
     protected override string ModelNickname => "Sde";
     protected override string ModelDescription => "Construct, deconstruct or modify a side.";
+
+    protected override string IconResourceName => "file_24x24";
 
     protected override void RegisterModelInputParams(GH_InputParamManager pManager)
     {
@@ -4694,12 +4409,20 @@ public class SideDiffGoo : DiffGoo<SideDiff>
 
 public class SideDiffParam : DiffParam<SideDiffGoo, SideDiff>
 {
+    protected override string ModelName => "SideDiff";
+    protected override string ModelNickname => "SD";
+    protected override string ModelDescription => "Side diff";
+    protected override string IconResourceName => "sidediff_24x24";
     public override Guid ComponentGuid => new("B0C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E3");
 }
 
 public class SideDiffComponent : DiffComponent<SideDiffParam, SideDiffGoo, SideDiff>
 {
     public override Guid ComponentGuid => new("B0C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E4");
+    protected override string ModelName => "SideDiff";
+    protected override string ModelNickname => "SD";
+    protected override string ModelDescription => "Construct, deconstruct or modify a side diff.";
+    protected override string IconResourceName => "sidediff_24x24";
 }
 
 public class SerializeSideDiffComponent : SerializeComponent<SideDiffParam, SideDiffGoo, SideDiff>
@@ -4778,6 +4501,10 @@ public class ConnectionGoo : Goo<Connection>
 
 public class ConnectionParam : Param<ConnectionGoo, Connection>
 {
+    protected override string ModelName => "Connection";
+    protected override string ModelNickname => "Cnx";
+    protected override string ModelDescription => "Piece connection";
+    protected override string IconResourceName => "connection_24x24";
     public override Guid ComponentGuid => new("8B78CE81-27D6-4A07-9BF3-D862796B2FA4");
 }
 
@@ -4787,6 +4514,8 @@ public class ConnectionComponent : PassthroughComponent<ConnectionParam, Connect
     protected override string ModelName => "Connection";
     protected override string ModelNickname => "Con";
     protected override string ModelDescription => "Construct, deconstruct or modify a connection.";
+
+    protected override string IconResourceName => "file_24x24";
 
     protected override void RegisterModelInputParams(GH_InputParamManager pManager)
     {
@@ -4927,6 +4656,11 @@ public class ConnectionIdGoo : IdGoo<ConnectionId>
 
 public class ConnectionIdParam : IdParam<ConnectionIdGoo, ConnectionId>
 {
+    protected override string ModelName => "ConnectionId";
+    protected override string ModelNickname => "CId";
+    protected override string ModelDescription => "Connection identifier";
+    protected override string IconResourceName => "connection_24x24";
+    protected override string IdIconResourceName => "connectionid_24x24";
     public override Guid ComponentGuid => new("40B2C3D4-E5F6-A7B8-C9D0-E1F2A3B4C5D6");
 }
 
@@ -4986,12 +4720,20 @@ public class ConnectionDiffGoo : DiffGoo<ConnectionDiff>
 
 public class ConnectionDiffParam : DiffParam<ConnectionDiffGoo, ConnectionDiff>
 {
+    protected override string ModelName => "ConnectionDiff";
+    protected override string ModelNickname => "CD";
+    protected override string ModelDescription => "Connection diff";
+    protected override string IconResourceName => "connectiondiff_24x24";
     public override Guid ComponentGuid => new("C0D0E1F2-A3B4-C5D6-E7F8-A9B0C1D2E3F4");
 }
 
 public class ConnectionDiffComponent : DiffComponent<ConnectionDiffParam, ConnectionDiffGoo, ConnectionDiff>
 {
     public override Guid ComponentGuid => new("C0D0E1F2-A3B4-C5D6-E7F8-A9B0C1D2E3F5");
+    protected override string ModelName => "ConnectionDiff";
+    protected override string ModelNickname => "CD";
+    protected override string ModelDescription => "Construct, deconstruct or modify a connection diff.";
+    protected override string IconResourceName => "connectiondiff_24x24";
 }
 
 public class SerializeConnectionDiffComponent : SerializeComponent<ConnectionDiffParam, ConnectionDiffGoo, ConnectionDiff>
@@ -5041,12 +4783,20 @@ public class ConnectionsDiffGoo : DiffGoo<ConnectionsDiff>
 
 public class ConnectionsDiffParam : DiffParam<ConnectionsDiffGoo, ConnectionsDiff>
 {
+    protected override string ModelName => "ConnectionsDiff";
+    protected override string ModelNickname => "CDs";
+    protected override string ModelDescription => "Connection collection diff";
+    protected override string IconResourceName => "connectionsdiff_24x24";
     public override Guid ComponentGuid => new("00B4C5D6-E7F8-A9B0-C1D2-E3F4A5B6C7D8");
 }
 
 public class ConnectionsDiffComponent : DiffComponent<ConnectionsDiffParam, ConnectionsDiffGoo, ConnectionsDiff>
 {
     public override Guid ComponentGuid => new("00B4C5D6-E7F8-A9B0-C1D2-E3F4A5B6C7D9");
+    protected override string ModelName => "ConnectionsDiff";
+    protected override string ModelNickname => "CDs";
+    protected override string ModelDescription => "Construct, deconstruct or modify a collection of connection diffs.";
+    protected override string IconResourceName => "connectionsdiff_24x24";
 }
 
 public class SerializeConnectionsDiffComponent : SerializeComponent<ConnectionsDiffParam, ConnectionsDiffGoo, ConnectionsDiff>
@@ -5100,6 +4850,10 @@ public class StatGoo : Goo<Stat>
 
 public class StatParam : Param<StatGoo, Stat>
 {
+    protected override string ModelName => "Stat";
+    protected override string ModelNickname => "Sta";
+    protected override string ModelDescription => "Design statistic";
+    protected override string IconResourceName => "stat_24x24";
     public override Guid ComponentGuid => new("80A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C4");
 }
 
@@ -5109,6 +4863,8 @@ public class StatComponent : PassthroughComponent<StatParam, StatGoo, Stat>
     protected override string ModelName => "Stat";
     protected override string ModelNickname => "Stt";
     protected override string ModelDescription => "Construct, deconstruct or modify a stat.";
+
+    protected override string IconResourceName => "file_24x24";
 
     protected override void RegisterModelInputParams(GH_InputParamManager pManager)
     {
@@ -5221,6 +4977,10 @@ public class DesignGoo : Goo<Design>
 
 public class DesignParam : Param<DesignGoo, Design>
 {
+    protected override string ModelName => "Design";
+    protected override string ModelNickname => "Des";
+    protected override string ModelDescription => "Assembly design";
+    protected override string IconResourceName => "design_24x24";
     public override Guid ComponentGuid => new("1FB90496-93F2-43DE-A558-A7D6A9FE3596");
 }
 
@@ -5230,6 +4990,8 @@ public class DesignComponent : PassthroughComponent<DesignParam, DesignGoo, Desi
     protected override string ModelName => "Design";
     protected override string ModelNickname => "Dsn";
     protected override string ModelDescription => "Construct, deconstruct or modify a design.";
+
+    protected override string IconResourceName => "file_24x24";
 
     protected override void RegisterModelInputParams(GH_InputParamManager pManager)
     {
@@ -5365,6 +5127,11 @@ public class DesignIdGoo : IdGoo<DesignId>
 
 public class DesignIdParam : IdParam<DesignIdGoo, DesignId>
 {
+    protected override string ModelName => "DesignId";
+    protected override string ModelNickname => "DId";
+    protected override string ModelDescription => "Design identifier";
+    protected override string IconResourceName => "design_24x24";
+    protected override string IdIconResourceName => "designid_24x24";
     public override Guid ComponentGuid => new("D0E1F2A3-B4C5-D6E7-F8A9-B0C1D2E3F4A6");
 }
 
@@ -5424,12 +5191,20 @@ public class DesignDiffGoo : DiffGoo<DesignDiff>
 
 public class DesignDiffParam : DiffParam<DesignDiffGoo, DesignDiff>
 {
+    protected override string ModelName => "DesignDiff";
+    protected override string ModelNickname => "DD";
+    protected override string ModelDescription => "Design diff";
+    protected override string IconResourceName => "designdiff_24x24";
     public override Guid ComponentGuid => new("D0E1F2A3-B4C5-D6E7-F8A9-B0C1D2E3F4A5");
 }
 
 public class DesignDiffComponent : DiffComponent<DesignDiffParam, DesignDiffGoo, DesignDiff>
 {
     public override Guid ComponentGuid => new("D0E1F2A3-B4C5-D6E7-F8A9-B0C1D2E3F4A8");
+    protected override string ModelName => "DesignDiff";
+    protected override string ModelNickname => "DD";
+    protected override string ModelDescription => "Construct, deconstruct or modify a design diff.";
+    protected override string IconResourceName => "designdiff_24x24";
 }
 
 public class SerializeDesignDiffComponent : SerializeComponent<DesignDiffParam, DesignDiffGoo, DesignDiff>
@@ -5479,12 +5254,20 @@ public class DesignsDiffGoo : DiffGoo<DesignsDiff>
 
 public class DesignsDiffParam : DiffParam<DesignsDiffGoo, DesignsDiff>
 {
+    protected override string ModelName => "DesignsDiff";
+    protected override string ModelNickname => "DDs";
+    protected override string ModelDescription => "Design collection diff";
+    protected override string IconResourceName => "designsdiff_24x24";
     public override Guid ComponentGuid => new("10C5D6E7-F8A9-B0C1-D2E3-F4A5B6C7D8E9");
 }
 
 public class DesignsDiffComponent : DiffComponent<DesignsDiffParam, DesignsDiffGoo, DesignsDiff>
 {
     public override Guid ComponentGuid => new("10C5D6E7-F8A9-B0C1-D2E3-F4A5B6C7D8EA");
+    protected override string ModelName => "DesignsDiff";
+    protected override string ModelNickname => "DDs";
+    protected override string ModelDescription => "Construct, deconstruct or modify a collection of design diffs.";
+    protected override string IconResourceName => "designsdiff_24x24";
 }
 
 public class SerializeDesignsDiffComponent : SerializeComponent<DesignsDiffParam, DesignsDiffGoo, DesignsDiff>
@@ -5542,6 +5325,10 @@ public class KitGoo : Goo<Kit>
 
 public class KitParam : Param<KitGoo, Kit>
 {
+    protected override string ModelName => "Kit";
+    protected override string ModelNickname => "Kit";
+    protected override string ModelDescription => "Component library";
+    protected override string IconResourceName => "kit_24x24";
     public override Guid ComponentGuid => new("BA9F161E-AFE3-41D5-8644-964DD20B887B");
 }
 
@@ -5551,6 +5338,8 @@ public class KitComponent : PassthroughComponent<KitParam, KitGoo, Kit>
     protected override string ModelName => "Kit";
     protected override string ModelNickname => "Kit";
     protected override string ModelDescription => "Construct, deconstruct or modify a kit.";
+
+    protected override string IconResourceName => "file_24x24";
 
     protected override void RegisterModelInputParams(GH_InputParamManager pManager)
     {
@@ -5686,6 +5475,11 @@ public class KitIdGoo : IdGoo<KitId>
 
 public class KitIdParam : IdParam<KitIdGoo, KitId>
 {
+    protected override string ModelName => "KitId";
+    protected override string ModelNickname => "KId";
+    protected override string ModelDescription => "Kit identifier";
+    protected override string IconResourceName => "kit_24x24";
+    protected override string IdIconResourceName => "kitid_24x24";
     public override Guid ComponentGuid => new("40F8A9B0-C1D2-E3F4-A5B6-C7D8E9F0A1B0");
 }
 
@@ -5735,12 +5529,20 @@ public class KitDiffGoo : DiffGoo<KitDiff>
 
 public class KitDiffParam : DiffParam<KitDiffGoo, KitDiff>
 {
+    protected override string ModelName => "KitDiff";
+    protected override string ModelNickname => "KD";
+    protected override string ModelDescription => "Kit diff";
+    protected override string IconResourceName => "kitdiff_24x24";
     public override Guid ComponentGuid => new("40F8A9B0-C1D2-E3F4-A5B6-C7D8E9F0A1B2");
 }
 
 public class KitDiffComponent : DiffComponent<KitDiffParam, KitDiffGoo, KitDiff>
 {
     public override Guid ComponentGuid => new("40F8A9B0-C1D2-E3F4-A5B6-C7D8E9F0A1B3");
+    protected override string ModelName => "KitDiff";
+    protected override string ModelNickname => "KD";
+    protected override string ModelDescription => "Construct, deconstruct or modify a kit diff.";
+    protected override string IconResourceName => "kitdiff_24x24";
 }
 
 public class SerializeKitDiffComponent : SerializeComponent<KitDiffParam, KitDiffGoo, KitDiff>
@@ -5790,12 +5592,20 @@ public class KitsDiffGoo : DiffGoo<KitsDiff>
 
 public class KitsDiffParam : DiffParam<KitsDiffGoo, KitsDiff>
 {
+    protected override string ModelName => "KitsDiff";
+    protected override string ModelNickname => "KDs";
+    protected override string ModelDescription => "Kit collection diff";
+    protected override string IconResourceName => "kitsdiff_24x24";
     public override Guid ComponentGuid => new("50A9B0C1-D2E3-F4A5-B6C7-D8E9F0A1B2C3");
 }
 
 public class KitsDiffComponent : DiffComponent<KitsDiffParam, KitsDiffGoo, KitsDiff>
 {
     public override Guid ComponentGuid => new("50A9B0C1-D2E3-F4A5-B6C7-D8E9F0A1B2C4");
+    protected override string ModelName => "KitsDiff";
+    protected override string ModelNickname => "KDs";
+    protected override string ModelDescription => "Construct, deconstruct or modify a collection of kit diffs.";
+    protected override string IconResourceName => "kitsdiff_24x24";
 }
 
 public class SerializeKitsDiffComponent : SerializeComponent<KitsDiffParam, KitsDiffGoo, KitsDiff>
@@ -6161,3 +5971,7 @@ public class LoadKitComponent : PersistenceComponent
 #endregion Persistence
 
 #endregion Engine
+
+
+
+

@@ -1482,174 +1482,11 @@ public class Expression
 
 #endregion Utility
 
-#region Metadata
-
-public abstract class MetaAttribute : System.Attribute
-{
-    public MetaAttribute(string emoji, string code, string abbreviation, string description)
-        => (Emoji, Code, Abbreviation, Description) = (emoji, code, abbreviation, description);
-
-    public string Emoji { get; set; }
-    public string Code { get; set; }
-    public string Abbreviation { get; set; }
-    public string Description { get; set; }
-}
-
-#endregion Metadata
-
 #region Entitying
-
-public enum PropImportance
-{
-    OPTIONAL,
-    REQUIRED,
-    ID
-}
-
-[AttributeUsage(AttributeTargets.Property)]
-public abstract class PropAttribute : MetaAttribute
-{
-    public PropAttribute(string emoji, string code, string abbreviation, string description, PropImportance importance, bool isDefaultValid, bool skipValidation) : base(emoji, code, abbreviation, description)
-        => (Importance, IsDefaultValid, SkipValidation) = (importance, isDefaultValid, skipValidation);
-    public PropImportance Importance { get; set; }
-    public bool IsDefaultValid { get; set; }
-    public bool SkipValidation { get; set; }
-}
-
-public abstract class TextAttribute : PropAttribute
-{
-    public TextAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance, bool isDefaultValid, bool skipValidation, int lengthLimit) : base(emoji, code,
-        abbreviation, description, importance, isDefaultValid, skipValidation)
-        => LengthLimit = lengthLimit;
-    public int LengthLimit { get; set; }
-}
-
-public class NameAttribute : TextAttribute
-{
-    public NameAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = false, bool skipValidation = false) :
-        base(emoji, code, abbreviation, description, importance, isDefaultValid, skipValidation, Constants.NameLengthLimit)
-    { }
-}
-
-public class IdAttribute : TextAttribute
-{
-    public IdAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance = PropImportance.ID, bool isDefaultValid = false, bool skipValidation = false) : base(
-        emoji, code, abbreviation, description, importance, isDefaultValid, skipValidation, Constants.IdLengthLimit)
-    { }
-}
-
-public class EmailAttribute : TextAttribute
-{
-    public EmailAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = false, bool skipValidation = false) :
-        base(emoji, code, abbreviation, description, importance, isDefaultValid, skipValidation, Constants.IdLengthLimit)
-    { }
-}
-
-public class UrlAttribute : TextAttribute
-{
-    public UrlAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = false, bool skipValidation = false) :
-        base(emoji, code, abbreviation, description, importance, isDefaultValid, skipValidation, Constants.UrlLengthLimit)
-    { }
-}
-
-public class ColorAttribute : TextAttribute
-{
-    public ColorAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = true, bool skipValidation = false) :
-        base(emoji, code, abbreviation, description, importance, isDefaultValid, skipValidation, 7)
-    { }
-}
-
-public class DescriptionAttribute : TextAttribute
-{
-    public DescriptionAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = true, bool skipValidation = false) :
-        base(emoji, code, abbreviation, description, importance, isDefaultValid, skipValidation, Constants.DescriptionLengthLimit)
-    { }
-}
-
-public class ValueAttribute : TextAttribute
-{
-    public ValueAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = true, bool skipValidation = false) :
-        base(emoji, code, abbreviation, description, importance, isDefaultValid, skipValidation, Constants.ValueLengthLimit)
-    { }
-}
-
-public class ExpressionAttribute : TextAttribute
-{
-    public ExpressionAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = false, bool skipValidation = false) :
-        base(emoji, code, abbreviation, description, importance, isDefaultValid, skipValidation, Constants.ExpressionLengthLimit)
-    { }
-}
-
-public class FalseOrTrueAttribute : PropAttribute
-{
-    public FalseOrTrueAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = true, bool skipValidation = false) :
-        base(emoji, code, abbreviation, description, importance, isDefaultValid, skipValidation)
-    { }
-}
-
-public class IntPropAttribute : PropAttribute
-{
-    public IntPropAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = true, bool skipValidation = false) :
-        base(emoji, code, abbreviation, description, importance, isDefaultValid, skipValidation)
-    { }
-}
-
-public class NumberPropAttribute : PropAttribute
-{
-    public NumberPropAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = true, bool skipValidation = false) :
-        base(emoji, code, abbreviation, description, importance, isDefaultValid, skipValidation)
-    { }
-}
-
-public class AnglePropAttribute : NumberPropAttribute
-{
-    public AnglePropAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = true, bool skipValidation = false) :
-        base(emoji, code, abbreviation, description, importance, isDefaultValid, skipValidation)
-    { }
-}
-
-public class EntityPropAttribute : PropAttribute
-{
-    public EntityPropAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance = PropImportance.REQUIRED, bool isDefaultValid = true, bool skipValidation = false) :
-        base(emoji, code, abbreviation, description, importance, isDefaultValid, skipValidation)
-    { }
-}
 
 public abstract class Entity<T> where T : Entity<T>
 {
-    public override string ToString()
-    {
-        var nonEmptyIdProperties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Where(p => p.GetCustomAttribute<PropAttribute>()?.Importance == PropImportance.ID &&
-                        (p.GetValue(this) as string ?? "") != "")
-            .Select(p => p.Name);
-        var nonEmptyIdPropertiesValues = nonEmptyIdProperties.Select(p => GetType().GetProperty(p)?.GetValue(this))
-            .Where(v => v != null)
-            .Select(v => v!.ToString()).ToList();
-        if (nonEmptyIdPropertiesValues.Count != 0)
-            return $"({string.Join(",", nonEmptyIdPropertiesValues)})";
-        var requiredProperties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Where(p => p.GetCustomAttribute<PropAttribute>()?.Importance == PropImportance.REQUIRED)
-            .Select(p => p.Name);
-        var requiredPropertiesValues = requiredProperties.Select(p => GetType().GetProperty(p)?.GetValue(this))
-            .Where(v => v != null)
-            .Select(v => v!.ToString()).ToList();
-        return $"({string.Join(",", requiredPropertiesValues)})";
-    }
+    public override string ToString() => GetType().Name;
 
     public override bool Equals(object? obj)
     {
@@ -1742,7 +1579,8 @@ public class ValidationResult
     {
         var data = JsonConvert.DeserializeObject<dynamic>(json);
         var result = new ValidationResult();
-        foreach (var issue in data!.issues)
+        var problems = data!.problems ?? data!.issues;
+        foreach (var issue in problems)
         {
             var fixes = new List<SemioValidationFix>();
             if (issue.fixes != null)
@@ -2010,7 +1848,6 @@ public class DiffUpdate<T>
 
 public class AttributeId : Entity<AttributeId>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the attribute.", PropImportance.ID)]
     public string Guid { get; set; } = "";
 
     public static implicit operator AttributeId(Attribute attribute) => new() { Guid = attribute.Guid };
@@ -2020,13 +1857,9 @@ public class AttributeId : Entity<AttributeId>
 
 public class AttributeDiff : Entity<AttributeDiff>
 {
-    [Id("🆔", "Gd?", "Gid", "The optional guid of the attribute.")]
     public string? Guid { get; set; }
-    [Name("🔑", "Ke?", "Key?", "The optional key of the attribute.")]
     public string Key { get; set; } = "";
-    [Description("🔢", "Vl?", "Val?", "The optional value of the attribute.")]
     public string Value { get; set; } = "";
-    [Description("📖", "Df?", "Def?", "The optional definition of the attribute.")]
     public string Definition { get; set; } = "";
 
     public static implicit operator AttributeDiff(AttributeId id) => new() { Guid = id.Guid };
@@ -2047,11 +1880,8 @@ public class AttributeDiff : Entity<AttributeDiff>
 
 public class AttributesDiff : Entity<AttributesDiff>
 {
-    [EntityProp("➖", "Rm*", "Rem*", "The optional removed attributes.", PropImportance.OPTIONAL)]
     public List<AttributeId> Removed { get; set; } = new();
-    [EntityProp("➕", "Ad*", "Add*", "The optional added attributes.", PropImportance.OPTIONAL)]
     public List<Attribute> Added { get; set; } = new();
-    [EntityProp("✏️", "Up*", "Upd*", "The optional updated attributes.", PropImportance.OPTIONAL)]
     public List<DiffUpdate<AttributeDiff>> Updated { get; set; } = new();
 
     public AttributesDiff MergeDiff(AttributesDiff other)
@@ -2073,16 +1903,9 @@ public class AttributesDiff : Entity<AttributesDiff>
 
 public class Attribute : Entity<Attribute>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the attribute.", PropImportance.ID)]
     public string Guid { get; set; } = "";
-
-    [Name("🔑", "Ke", "Key", "The key of the attribute.", PropImportance.ID)]
     public string Key { get; set; } = "";
-
-    [Description("🔢", "Vl?", "Val?", "The optional value [ text | url ] of the attribute. No value is equivalent to true.")]
     public string Value { get; set; } = "";
-
-    [Description("📖", "Df?", "Def?", "The optional definition [ text | uri ] of the attribute.")]
     public string Definition { get; set; } = "";
 
     public static implicit operator Attribute(AttributeId id) => new() { Guid = id.Guid };
@@ -2134,10 +1957,7 @@ public class Attribute : Entity<Attribute>
 
 public class Coord : Entity<Coord>
 {
-    [NumberProp("🎚️", "U", "U", "The u-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.", PropImportance.REQUIRED)]
     public float U { get; set; }
-
-    [NumberProp("🎚️", "V", "V", "The v-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.", PropImportance.REQUIRED)]
     public float V { get; set; }
 
     public Coord Normalize()
@@ -2157,11 +1977,8 @@ public class Coord : Entity<Coord>
 
 public class Point : Entity<Point>
 {
-    [NumberProp("🎚️", "X", "X", "The x-coordinate of the point.", PropImportance.REQUIRED)]
     public float X { get; set; } = 0;
-    [NumberProp("🎚️", "Y", "Y", "The y-coordinate of the point.", PropImportance.REQUIRED)]
     public float Y { get; set; } = 0;
-    [NumberProp("🎚️", "Z", "Z", "The z-coordinate of the point.", PropImportance.REQUIRED)]
     public float Z { get; set; } = 0;
 }
 
@@ -2175,12 +1992,8 @@ public class Point : Entity<Point>
 
 public class Vector : Entity<Vector>
 {
-    [NumberProp("🎚️", "X", "X", "The x-coordinate of the vector.", PropImportance.REQUIRED)]
     public float X { get; set; } = 1;
-    [NumberProp("🎚️", "Y", "Y", "The y-coordinate of the vector.", PropImportance.REQUIRED)]
     public float Y { get; set; }
-
-    [NumberProp("🎚️", "Z", "Z", "The z-coordinate of the vector.", PropImportance.REQUIRED)]
     public float Z { get; set; } = 0;
 
     public static float DotProduct(Vector a, Vector b) => a.X * b.X + a.Y * b.Y + a.Z * b.Z;
@@ -2216,13 +2029,8 @@ public class Vector : Entity<Vector>
 
 public class Plane : Entity<Plane>
 {
-    [EntityProp("⌱", "Og", "Org", "The origin of the plane.")]
     public Point Origin { get; set; } = new();
-
-    [EntityProp("➡️", "XA", "XAx", "The x-axis of the plane.")]
     public Vector XAxis { get; set; } = new();
-
-    [EntityProp("➡️", "YA", "YAx", "The y-axis of the plane.")]
     public Vector YAxis { get; set; } = new() { Y = 1 };
 
 
@@ -2255,7 +2063,6 @@ public class Plane : Entity<Plane>
 
 public class LocationId : Entity<LocationId>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the location.", PropImportance.ID)]
     public string Guid { get; set; } = "";
     public static implicit operator LocationId(Location location) => new() { Guid = location.Guid };
     public string ToIdString() => $"{Guid}";
@@ -2266,15 +2073,10 @@ public class LocationId : Entity<LocationId>
 
 public class Location : Entity<Location>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the location.", PropImportance.ID)]
     public string Guid { get; set; } = "";
-    [NumberProp("↔️", "Lo", "Lon", "The longitude of the location in degrees.", PropImportance.REQUIRED)]
     public float Longitude { get; set; }
-    [NumberProp("↕️", "La", "Lat", "The latitude of the location in degrees.", PropImportance.REQUIRED)]
     public float Latitude { get; set; }
-    [NumberProp("⬆️", "Al?", "Alt?", "The optional altitude of the location in meters.")]
     public float? Altitude { get; set; }
-    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the location.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
     public string ToIdString() => $"{Guid}";
     public string ToHumanIdString() => $"{ToIdString()}";
@@ -2288,7 +2090,6 @@ public class Location : Entity<Location>
 
 public class AuthorId : Entity<AuthorId>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the author.", PropImportance.ID)]
     public string Guid { get; set; } = "";
     public static implicit operator AuthorId(Author author) => new() { Guid = author.Guid };
     public string ToIdString() => $"{Guid}";
@@ -2299,11 +2100,8 @@ public class AuthorId : Entity<AuthorId>
 
 public class ArtifactAuthor : Entity<ArtifactAuthor>
 {
-    [Email("📧", "AEm", "AEml", "The email of the author.", PropImportance.ID)]
     public string AuthorEmail { get; set; } = "";
-    [Id("🧩", "TId?", "TyId?", "The optional type ID if this author is for a type.", isDefaultValid: true)]
     public TypeId? TypeId { get; set; }
-    [Id("🏙️", "DId?", "DsId?", "The optional design ID if this author is for a design.", isDefaultValid: true)]
     public DesignId? DesignId { get; set; }
 
     public string ToIdString() => $"{AuthorEmail}#{(TypeId?.ToIdString() ?? DesignId?.ToIdString() ?? "")}";
@@ -2332,13 +2130,9 @@ public class ArtifactAuthor : Entity<ArtifactAuthor>
 
 public class AuthorDiff : Entity<AuthorDiff>
 {
-    [Id("🆔", "Gd?", "Gid", "The optional guid of the author.")]
     public string? Guid { get; set; }
-    [Name("📛", "Na?", "Nam?", "The optional name of the author.")]
     public string? Name { get; set; }
-    [Email("📧", "Em?", "Eml?", "The optional email of the author.")]
     public string? Email { get; set; }
-    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the author.", PropImportance.OPTIONAL)]
     public List<Attribute>? Attributes { get; set; }
 
     public static implicit operator AuthorDiff(Author author) => new() { Guid = author.Guid, Name = author.Name, Email = author.Email, Attributes = author.Attributes };
@@ -2358,13 +2152,9 @@ public class AuthorDiff : Entity<AuthorDiff>
 
 public class Author : Entity<Author>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the author.", PropImportance.ID)]
     public string Guid { get; set; } = "";
-    [Name("📛", "Na", "Nam", "The name of the author.", PropImportance.REQUIRED)]
     public string Name { get; set; } = "";
-    [Email("📧", "Em", "Eml", "The email of the author.", PropImportance.ID)]
     public string Email { get; set; } = "";
-    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the author.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
     public string ToIdString() => $"{Email}";
     public string ToHumanIdString() => $"{ToIdString()}";
@@ -2389,11 +2179,8 @@ public class Author : Entity<Author>
 
 public class AuthorsDiff : Entity<AuthorsDiff>
 {
-    [EntityProp("➖", "Rm*", "Rem*", "The optional removed authors.", PropImportance.OPTIONAL)]
     public List<AuthorId> Removed { get; set; } = new();
-    [EntityProp("➕", "Ad*", "Add*", "The optional added authors.", PropImportance.OPTIONAL)]
     public List<Author> Added { get; set; } = new();
-    [EntityProp("✏️", "Up*", "Upd*", "The optional updated authors.", PropImportance.OPTIONAL)]
     public List<DiffUpdate<AuthorDiff>> Updated { get; set; } = new();
 
     public AuthorsDiff MergeDiff(AuthorsDiff other)
@@ -2416,7 +2203,6 @@ public class AuthorsDiff : Entity<AuthorsDiff>
 
 public class FileId : Entity<FileId>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the file.", PropImportance.ID)]
     public string Guid { get; set; } = "";
     public string ToIdString() => $"{Guid}";
     public string ToHumanIdString() => $"{ToIdString()}";
@@ -2431,25 +2217,15 @@ public class FileId : Entity<FileId>
 
 public class FileDiff : Entity<FileDiff>
 {
-    [Id("🆔", "Gd?", "Gid", "The optional guid of the file.")]
     public string? Guid { get; set; }
-    [Name("📛", "Nm?", "Nam?", "The optional name of the file.")]
     public string? Name { get; set; }
-    [Url("🔗", "Rm?", "Rem?", "The optional remote url of the file.")]
     public string? Remote { get; set; }
-    [EntityProp("📁", "Fo?", "Fol?", "The optional folder reference of the file.")]
     public FolderId? Folder { get; set; }
-    [NumberProp("📏", "Sz?", "Siz?", "The optional size of the file in bytes.")]
     public int? Size { get; set; }
-    [Name("🔐", "Hs?", "Has?", "The optional hash of the file.")]
     public string? Hash { get; set; }
-    [Name("📅", "CA?", "CrA?", "The optional created at timestamp of the file.")]
     public DateTime? CreatedAt { get; set; }
-    [Id("👤", "CB?", "CrB?", "The optional created by user guid of the file.")]
     public string? CreatedBy { get; set; }
-    [Name("📅", "UA?", "UpA?", "The optional updated at timestamp of the file.")]
     public DateTime? UpdatedAt { get; set; }
-    [Id("👤", "UB?", "UpB?", "The optional updated by user guid of the file.")]
     public string? UpdatedBy { get; set; }
 
     public FileDiff MergeDiff(FileDiff other)
@@ -2473,11 +2249,8 @@ public class FileDiff : Entity<FileDiff>
 
 public class FilesDiff : Entity<FilesDiff>
 {
-    [EntityProp("➖", "Rm*", "Rem*", "The optional removed files.", PropImportance.OPTIONAL)]
     public List<FileId> Removed { get; set; } = new();
-    [EntityProp("✏️", "Up*", "Upd*", "The optional updated files.", PropImportance.OPTIONAL)]
     public List<DiffUpdate<FileDiff>> Updated { get; set; } = new();
-    [EntityProp("➕", "Ad*", "Add*", "The optional added files.", PropImportance.OPTIONAL)]
     public List<File> Added { get; set; } = new();
 
     public static implicit operator FilesDiff(List<File> files) => new() { Updated = files.Select(f => new DiffUpdate<FileDiff> { Id = f.Guid, Diff = (FileDiff)f }).ToList() };
@@ -2486,27 +2259,16 @@ public class FilesDiff : Entity<FilesDiff>
 
 public class File : Entity<File>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the file.", PropImportance.ID)]
     public string Guid { get; set; } = "";
-    [Name("📛", "Nm", "Nam", "The name of the file.", PropImportance.REQUIRED)]
     public string Name { get; set; } = "";
-    [Name("📝", "Mi?", "Mim?", "The optional MIME type of the file.")]
     public string? Mime { get; set; }
-    [Url("🔗", "Rm?", "Rem?", "The optional remote url of the file.")]
     public string? Remote { get; set; }
-    [EntityProp("📁", "Fo?", "Fol?", "The optional folder reference of the file.")]
     public FolderId? Folder { get; set; }
-    [NumberProp("📏", "Sz?", "Siz?", "The optional size of the file in bytes.")]
     public int? Size { get; set; }
-    [Name("🔐", "Hs?", "Has?", "The optional hash of the file.")]
     public string? Hash { get; set; }
-    [Name("📅", "CA", "CrA", "The created at timestamp of the file.", PropImportance.REQUIRED)]
     public DateTime CreatedAt { get; set; }
-    [Id("👤", "CB?", "CrB?", "The optional created by user guid of the file.")]
     public string? CreatedBy { get; set; }
-    [Name("📅", "UA", "UpA", "The updated at timestamp of the file.", PropImportance.REQUIRED)]
     public DateTime UpdatedAt { get; set; }
-    [Id("👤", "UB?", "UpB?", "The optional updated by user guid of the file.")]
     public string? UpdatedBy { get; set; }
     public string ToIdString() => $"{Guid}";
     public string ToHumanIdString() => $"{Name}";
@@ -2525,7 +2287,6 @@ public class File : Entity<File>
 
 public class FolderId : Entity<FolderId>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the folder.", PropImportance.ID)]
     public string Guid { get; set; } = "";
     public string ToIdString() => $"{Guid}";
     public string ToHumanIdString() => $"{ToIdString()}";
@@ -2538,23 +2299,14 @@ public class FolderId : Entity<FolderId>
 
 public class FolderDiff : Entity<FolderDiff>
 {
-    [Id("🆔", "Gd?", "Gid", "The optional guid of the folder.")]
     public string? Guid { get; set; }
-    [Name("📛", "Na?", "Nam?", "The optional name of the folder.")]
     public string? Name { get; set; }
-    [Id("📁", "Pa?", "Par?", "The optional parent folder guid.")]
     public string? Parent { get; set; }
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the folder.")]
     public string? Description { get; set; }
-    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the folder.", PropImportance.OPTIONAL)]
     public List<Attribute>? Attributes { get; set; }
-    [Name("📅", "CA?", "CrA?", "The optional creation date.")]
     public string? CreatedAt { get; set; }
-    [Name("👤", "CB?", "CrB?", "The optional user who created the folder.")]
     public string? CreatedBy { get; set; }
-    [Name("📝", "UA?", "UpA?", "The optional last update date.")]
     public string? UpdatedAt { get; set; }
-    [Name("👤", "UB?", "UpB?", "The optional user who last updated the folder.")]
     public string? UpdatedBy { get; set; }
 
     public FolderDiff MergeDiff(FolderDiff other)
@@ -2577,11 +2329,8 @@ public class FolderDiff : Entity<FolderDiff>
 
 public class FoldersDiff : Entity<FoldersDiff>
 {
-    [EntityProp("➖", "Rm*", "Rem*", "The optional removed folders.", PropImportance.OPTIONAL)]
     public List<FolderId> Removed { get; set; } = new();
-    [EntityProp("✏️", "Up*", "Upd*", "The optional updated folders.", PropImportance.OPTIONAL)]
     public List<DiffUpdate<FolderDiff>> Updated { get; set; } = new();
-    [EntityProp("➕", "Ad*", "Add*", "The optional added folders.", PropImportance.OPTIONAL)]
     public List<Folder> Added { get; set; } = new();
 
     public static implicit operator FoldersDiff(List<Folder> folders) => new() { Updated = folders.Select(f => new DiffUpdate<FolderDiff> { Id = f.Guid, Diff = (FolderDiff)f }).ToList() };
@@ -2590,23 +2339,14 @@ public class FoldersDiff : Entity<FoldersDiff>
 
 public class Folder : Entity<Folder>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the folder.", PropImportance.ID)]
     public string Guid { get; set; } = "";
-    [Name("📛", "Na", "Nam", "The name of the folder.")]
     public string Name { get; set; } = "";
-    [Id("📁", "Pa?", "Par?", "The optional parent folder guid.")]
     public string? Parent { get; set; }
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the folder.")]
     public string Description { get; set; } = "";
-    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the folder.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
-    [Name("📅", "CA", "CrA", "The creation date of the folder.")]
     public string CreatedAt { get; set; } = "";
-    [Name("👤", "CB?", "CrB?", "The optional user who created the folder.")]
     public string? CreatedBy { get; set; }
-    [Name("📝", "UA", "UpA", "The last update date of the folder.")]
     public string UpdatedAt { get; set; } = "";
-    [Name("👤", "UB?", "UpB?", "The optional user who last updated the folder.")]
     public string? UpdatedBy { get; set; }
 
     public string ToIdString() => $"{Guid}";
@@ -2641,7 +2381,6 @@ public class Folder : Entity<Folder>
 
 public class BenchmarkId : Entity<BenchmarkId>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the benchmark.", PropImportance.ID)]
     public string Guid { get; set; } = "";
     public static implicit operator BenchmarkId(Benchmark benchmark) => new() { Guid = benchmark.Guid };
     public string ToIdString() => $"{Guid}";
@@ -2655,21 +2394,13 @@ public class BenchmarkId : Entity<BenchmarkId>
 
 public class Benchmark : Entity<Benchmark>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the benchmark.", PropImportance.ID)]
     public string Guid { get; set; } = "";
-    [Name("📛", "Nm", "Name", "The name of the benchmark.", PropImportance.REQUIRED)]
     public string Name { get; set; } = "";
-    [Url("🖼️", "Ic?", "Ico?", "The optional icon [ emoji | url ] of the benchmark.")]
     public string? Icon { get; set; }
-    [NumberProp("⬇️", "Mi?", "Min?", "The optional minimum value of the benchmark.")]
     public float? Min { get; set; }
-    [FalseOrTrue("⬇️", "MiE?", "MiE?", "Whether the minimum value is excluded from the range.")]
     public bool? MinExcluded { get; set; }
-    [NumberProp("⬆️", "Mx?", "Max?", "The optional maximum value of the benchmark.")]
     public float? Max { get; set; }
-    [FalseOrTrue("⬆️", "MxE?", "MxE?", "Whether the maximum value is excluded from the range.")]
     public bool? MaxExcluded { get; set; }
-    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the benchmark.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
     public string ToIdString() => $"{Guid}";
     public string ToHumanIdString() => $"{Name}";
@@ -2701,7 +2432,6 @@ public enum QualityKind
 
 public class QualityId : Entity<QualityId>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the quality.")]
     public string Guid { get; set; } = "";
 
     public static implicit operator QualityId(Quality quality) => new() { Guid = quality.Guid };
@@ -2711,39 +2441,22 @@ public class QualityId : Entity<QualityId>
 
 public class QualityDiff : Entity<QualityDiff>
 {
-    [Id("🆔", "Gd?", "Gid", "The optional guid of the quality.")]
     public string? Guid { get; set; }
-    [Id("🔑", "Ke", "Key", "The key of the quality.")]
     public string Key { get; set; } = "";
-    [Name("📛", "Nm", "Name", "The name of the quality.", PropImportance.REQUIRED)]
     public string Name { get; set; } = "";
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the quality.")]
     public string Description { get; set; } = "";
-    [Url("🔗", "Ur?", "Uri?", "The Unique Resource Identifier (URI) of the quality.")]
     public string Uri { get; set; } = "";
-    [FalseOrTrue("🔢", "Sc?", "Sc?", "Whether the quality is scalable.")]
     public bool Scalable { get; set; } = false;
-    [Name("🔢", "Kd", "Kn", "The kind of the quality.")]
     public QualityKind Kind { get; set; } = QualityKind.General;
-    [Name("Ⓜ️", "SI?", "SI?", "The optional default SI unit of the quality.")]
     public string SI { get; set; } = "";
-    [Name("🦶", "Im?", "Imp?", "The optional default imperial unit of the quality.")]
     public string Imperial { get; set; } = "";
-    [NumberProp("⬇️", "Mi?", "Min?", "The optional minimum value of the quality.")]
     public float Min { get; set; } = 0;
-    [FalseOrTrue("⬇️", "MiE?", "MiE?", "Whether the minimum value is excluded from the range.")]
     public bool MinExcluded { get; set; } = true;
-    [NumberProp("⬆️", "Mx?", "Max?", "The optional maximum value of the quality.")]
     public float Max { get; set; } = 0;
-    [FalseOrTrue("⬆️", "MxE?", "MxE?", "Whether the maximum value is excluded from the range.")]
     public bool MaxExcluded { get; set; } = true;
-    [NumberProp("Ⓜ️", "Dl?", "Dfl?", "The optional default value of the quality. Either a default value or a formula can be set.")]
     public float Default { get; set; } = 0;
-    [EntityProp("🟰", "Fo?", "For?", "The optional formula of the quality.")]
     public string Formula { get; set; } = "";
-    [EntityProp("🔢", "Bm*", "Bmk*", "The optional benchmarks of the quality.", PropImportance.OPTIONAL)]
     public List<Benchmark> Benchmarks { get; set; } = new();
-    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the quality.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
     public static implicit operator QualityDiff(QualityId id) => new() { Guid = id.Guid };
@@ -2757,47 +2470,26 @@ public class QualityDiff : Entity<QualityDiff>
 
 public class Quality : Entity<Quality>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the quality.", PropImportance.ID)]
     public string Guid { get; set; } = "";
-    [Id("🔑", "Ke", "Key", "The key of the quality.")]
     public string Key { get; set; } = "";
-    [Name("📛", "Nm", "Name", "The name of the quality.", PropImportance.REQUIRED)]
     public string Name { get; set; } = "";
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the quality.")]
     public string Description { get; set; } = "";
-    [Url("🔗", "Ur?", "Uri?", "The Unique Resource Identifier (URI) of the quality.")]
     public string Uri { get; set; } = "";
-    [Name("📁", "Fl?", "Fld?", "The optional folder path of the quality.")]
     public string? Folder { get; set; }
-    [FalseOrTrue("🔢", "Sc?", "Sc?", "Whether the quality is scalable.")]
     public bool Scalable { get; set; } = false;
-    [Name("🔢", "Kd", "Kn", "The kind of the quality.")]
     public QualityKind Kind { get; set; } = QualityKind.General;
-    [Name("Ⓜ️", "SI?", "SI?", "The optional default SI unit of the quality.")]
     public string SI { get; set; } = "";
-    [Name("🦶", "Im?", "Imp?", "The optional default imperial unit of the quality.")]
     public string Imperial { get; set; } = "";
-    [NumberProp("⬇️", "Mi?", "Min?", "The optional minimum value of the quality.")]
     public float Min { get; set; } = 0;
-    [FalseOrTrue("⬇️", "MiE?", "MiE?", "Whether the minimum value is excluded from the range.")]
     public bool MinExcluded { get; set; } = true;
-    [NumberProp("⬆️", "Mx?", "Max?", "The optional maximum value of the quality.")]
     public float Max { get; set; } = 0;
-    [FalseOrTrue("⬆️", "MxE?", "MxE?", "Whether the maximum value is excluded from the range.")]
     public bool MaxExcluded { get; set; } = true;
-    [NumberProp("Ⓜ️", "Dl?", "Dfl?", "The optional default value of the quality. Either a default value or a formula can be set.")]
     public float Default { get; set; } = 0;
-    [EntityProp("🟰", "Fo?", "For?", "The optional formula of the quality.")]
     public string Formula { get; set; } = "";
-    [Url("🖼️", "Ic?", "Ico?", "The optional icon [ emoji | url ] of the quality.")]
     public string? Icon { get; set; }
-    [Url("🖼️", "Ig?", "Img?", "The optional image url of the quality.")]
     public string? Image { get; set; }
-    [Name("📏", "Un?", "Unt?", "The optional display unit of the quality.")]
     public string? Unit { get; set; }
-    [EntityProp("🔢", "Bm*", "Bmk*", "The optional benchmarks of the quality.", PropImportance.OPTIONAL)]
     public List<Benchmark> Benchmarks { get; set; } = new();
-    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the quality.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
     public static implicit operator Quality(QualityId id) => new() { Guid = id.Guid };
@@ -2834,7 +2526,6 @@ public class Quality : Entity<Quality>
 
 public class TagId : Entity<TagId>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the tag.")]
     public string Guid { get; set; } = "";
 
     public static implicit operator TagId(Tag tag) => new() { Guid = tag.Guid };
@@ -2846,15 +2537,10 @@ public class TagId : Entity<TagId>
 
 public class Tag : Entity<Tag>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the tag.", PropImportance.ID)]
     public string Guid { get; set; } = "";
-    [Name("📛", "Na", "Nam", "The name of the tag.", PropImportance.REQUIRED)]
     public string Name { get; set; } = "";
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the tag.")]
     public string Description { get; set; } = "";
-    [Url("🪙", "Ic?", "Ico?", "The optional icon [ emoji | logogram | url ] of the tag.")]
     public string Icon { get; set; } = "";
-    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the tag.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
     public static implicit operator Tag(TagId id) => new() { Guid = id.Guid };
@@ -2870,7 +2556,6 @@ public class Tag : Entity<Tag>
 
 public class ConceptId : Entity<ConceptId>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the concept.")]
     public string Guid { get; set; } = "";
 
     public static implicit operator ConceptId(Concept concept) => new() { Guid = concept.Guid };
@@ -2882,15 +2567,10 @@ public class ConceptId : Entity<ConceptId>
 
 public class Concept : Entity<Concept>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the concept.", PropImportance.ID)]
     public string Guid { get; set; } = "";
-    [Name("📛", "Na", "Nam", "The name of the concept.", PropImportance.REQUIRED)]
     public string Name { get; set; } = "";
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the concept.")]
     public string Description { get; set; } = "";
-    [Url("🪙", "Ic?", "Ico?", "The optional icon [ emoji | logogram | url ] of the concept.")]
     public string Icon { get; set; } = "";
-    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the concept.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
     public static implicit operator Concept(ConceptId id) => new() { Guid = id.Guid };
@@ -2899,26 +2579,18 @@ public class Concept : Entity<Concept>
 
 public class ConceptDiff : Entity<ConceptDiff>
 {
-    [Id("🆔", "Gd?", "Gid", "The optional guid of the concept.")]
     public string? Guid { get; set; }
-    [Name("📛", "Na?", "Nam?", "The optional name of the concept.")]
     public string? Name { get; set; }
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the concept.")]
     public string? Description { get; set; }
-    [Url("🪙", "Ic?", "Ico?", "The optional icon [ emoji | logogram | url ] of the concept.")]
     public string? Icon { get; set; }
-    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the concept.", PropImportance.OPTIONAL)]
     public AttributesDiff? Attributes { get; set; }
 }
 
 
 public class ConceptsDiff : Entity<ConceptsDiff>
 {
-    [EntityProp("➖", "Rm*", "Rem*", "The optional removed concepts.", PropImportance.OPTIONAL)]
     public List<ConceptId> Removed { get; set; } = new();
-    [EntityProp("➕", "Ad*", "Add*", "The optional added concepts.", PropImportance.OPTIONAL)]
     public List<Concept> Added { get; set; } = new();
-    [EntityProp("✏️", "Up*", "Upd*", "The optional updated concepts.", PropImportance.OPTIONAL)]
     public List<DiffUpdate<ConceptDiff>> Updated { get; set; } = new();
 
     public ConceptsDiff MergeDiff(ConceptsDiff other)
@@ -2942,7 +2614,6 @@ public class ConceptsDiff : Entity<ConceptsDiff>
 
 public class InterfaceId : Entity<InterfaceId>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the port.")]
     public string Guid { get; set; } = "";
 
     public static implicit operator InterfaceId(Interface iface) => new() { Guid = iface.Guid };
@@ -2952,17 +2623,11 @@ public class InterfaceId : Entity<InterfaceId>
 
 public class InterfaceDiff : Entity<InterfaceDiff>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the port.")]
     public string Guid { get; set; } = "";
-    [Name("📛", "Nm?", "Name?", "The optional name of the port.")]
     public string? Name { get; set; }
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the port.")]
     public string? Description { get; set; }
-    [Url("🪙", "Ic?", "Ico?", "The optional icon [ emoji | logogram | url ] of the port.")]
     public string? Icon { get; set; }
-    [EntityProp("✅", "CF*", "CFas*", "The optional other compatible ports. An empty list means this port is compatible with all other ports.")]
     public List<InterfaceId>? CompatibleInterfaces { get; set; }
-    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the port.", PropImportance.OPTIONAL)]
     public List<Attribute>? Attributes { get; set; }
 
     public static implicit operator InterfaceDiff(InterfaceId id) => new() { Guid = id.Guid };
@@ -2972,11 +2637,8 @@ public class InterfaceDiff : Entity<InterfaceDiff>
 
 public class InterfacesDiff : Entity<InterfacesDiff>
 {
-    [EntityProp("➖", "Rm*", "Rem*", "The optional removed ports.", PropImportance.OPTIONAL)]
     public List<InterfaceId> Removed { get; set; } = new();
-    [EntityProp("➕", "Ad*", "Add*", "The optional added ports.", PropImportance.OPTIONAL)]
     public List<Interface> Added { get; set; } = new();
-    [EntityProp("✏️", "Up*", "Upd*", "The optional updated ports.", PropImportance.OPTIONAL)]
     public List<DiffUpdate<InterfaceDiff>> Updated { get; set; } = new();
 
     public static implicit operator InterfacesDiff(List<Interface> ports) => new() { Updated = ports.Select(i => new DiffUpdate<InterfaceDiff> { Id = i.Guid, Diff = (InterfaceDiff)i }).ToList() };
@@ -2988,17 +2650,11 @@ public class InterfacesDiff : Entity<InterfacesDiff>
 
 public class Interface : Entity<Interface>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the port.")]
     public string Guid { get; set; } = "";
-    [Name("📛", "Nm", "Name", "The name of the port.", PropImportance.REQUIRED)]
     public string Name { get; set; } = "";
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the port.")]
     public string Description { get; set; } = "";
-    [Url("🪙", "Ic?", "Ico?", "The optional icon [ emoji | logogram | url ] of the port.")]
     public string Icon { get; set; } = "";
-    [EntityProp("✅", "CF*", "CFas*", "The optional other compatible ports. An empty list means this port is compatible with all other ports.")]
     public List<InterfaceId> CompatibleInterfaces { get; set; } = new();
-    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the port.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
     public static implicit operator Interface(InterfaceId id) => new() { Guid = id.Guid };
@@ -3059,7 +2715,6 @@ public class Interface : Entity<Interface>
 
 public class PropId : Entity<PropId>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the property.", PropImportance.ID)]
     public string Guid { get; set; } = "";
     public static implicit operator PropId(Prop prop) => new() { Guid = prop.Guid };
     public string ToIdString() => $"{Guid}";
@@ -3073,15 +2728,10 @@ public class PropId : Entity<PropId>
 
 public class Prop : Entity<Prop>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the property.", PropImportance.ID)]
     public string Guid { get; set; } = "";
-    [EntityProp("🔑", "Ql", "Qal", "The quality of the property.", PropImportance.REQUIRED)]
     public QualityId Quality { get; set; } = new();
-    [Value("🔢", "Vl", "Val", "The value [ number | text ] of the property.")]
     public string Value { get; set; } = "";
-    [Name("Ⓜ️", "Ut?", "Unt?", "The optional unit of the property.")]
     public string Unit { get; set; } = "";
-    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the property.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
     public string ToIdString() => $"{Guid}";
@@ -3096,7 +2746,6 @@ public class Prop : Entity<Prop>
 
 public class ModelId : Entity<ModelId>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the entity.", PropImportance.ID)]
     public string Guid { get; set; } = "";
     public static implicit operator ModelId(Model model) => new() { Guid = model.Guid };
     public static implicit operator ModelId(ModelDiff diff) => new() { Guid = diff.Guid ?? "" };
@@ -3108,17 +2757,11 @@ public class ModelId : Entity<ModelId>
 
 public class ModelDiff : Entity<ModelDiff>
 {
-    [Id("🆔", "Gd?", "Gid", "The optional guid of the entity.")]
     public string? Guid { get; set; }
-    [Name("📛", "Nm?", "Name?", "The optional name of the entity.")]
     public string? Name { get; set; }
-    [EntityProp("📄", "Fl?", "Fil?", "The optional file reference of the entity.")]
     public FileId? File { get; set; }
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the entity.")]
     public string Description { get; set; } = "";
-    [EntityProp("🏷️", "Tg*", "Tags*", "The optional tags to group entitys.", PropImportance.OPTIONAL)]
     public List<TagId> Tags { get; set; } = new();
-    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the entity.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
     public static implicit operator ModelDiff(ModelId id) => new() { Guid = id.Guid };
@@ -3141,11 +2784,8 @@ public class ModelDiff : Entity<ModelDiff>
 
 public class ModelsDiff : Entity<ModelsDiff>
 {
-    [EntityProp("➖", "Rm*", "Rem*", "The optional removed entitys.", PropImportance.OPTIONAL)]
     public List<ModelId> Removed { get; set; } = new();
-    [EntityProp("➕", "Ad*", "Add*", "The optional added entitys.", PropImportance.OPTIONAL)]
     public List<Model> Added { get; set; } = new();
-    [EntityProp("✏️", "Up*", "Upd*", "The optional updated entitys.", PropImportance.OPTIONAL)]
     public List<DiffUpdate<ModelDiff>> Updated { get; set; } = new();
 
     public ModelsDiff MergeDiff(ModelsDiff other)
@@ -3166,20 +2806,11 @@ public class ModelsDiff : Entity<ModelsDiff>
 
 public class Model : Entity<Model>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the model.", PropImportance.ID)]
     public string Guid { get; set; } = "";
-    [Name("📛", "Nm?", "Name?", "The optional name of the model.")]
     public string Name { get; set; } = "";
-    [EntityProp("📄", "Fl", "Fil", "The file reference of the model.", PropImportance.REQUIRED)]
     public FileId File { get; set; } = new();
-
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the model.")]
     public string Description { get; set; } = "";
-
-    [EntityProp("🏷️", "Tg*", "Tags*", "The optional tags to group models. No tags means default.", PropImportance.OPTIONAL, skipValidation: true)]
     public List<TagId> Tags { get; set; } = new();
-
-    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the model.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
     public static implicit operator Model(ModelId id) => new() { Guid = id.Guid };
@@ -3254,7 +2885,6 @@ public class Model : Entity<Model>
 
 public class ConnectorId : Entity<ConnectorId>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the connector within the type.")]
     public string Guid { get; set; } = "";
     public static implicit operator ConnectorId(Connector connector) => new() { Guid = connector.Guid };
     public static implicit operator ConnectorId(ConnectorDiff diff) => new() { Guid = diff.Guid ?? "" };
@@ -3268,25 +2898,15 @@ public class ConnectorId : Entity<ConnectorId>
 
 public class ConnectorDiff : Entity<ConnectorDiff>
 {
-    [Id("🆔", "Gd?", "Gid", "The optional guid of the connector.")]
     public string? Guid { get; set; }
-    [Name("📛", "Nm?", "Name?", "The optional name of the connector.")]
     public string? Name { get; set; }
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the connector.")]
     public string? Description { get; set; }
-    [EntityProp("🔌", "If?", "Ifc?", "The optional port of the connector.")]
     public InterfaceId? Interface { get; set; }
-    [FalseOrTrue("💯", "Ma?", "Man?", "Whether the connector is mandatory.")]
     public bool? Mandatory { get; set; }
-    [NumberProp("💍", "T?", "T?", "The optional parameter t [0,1[.")]
     public float? T { get; set; }
-    [EntityProp("✖️", "Pt?", "Pnt?", "The optional connection point of the connector.", PropImportance.OPTIONAL)]
     public Point? Point { get; set; }
-    [EntityProp("➡️", "Dr?", "Drn?", "The optional direction of the connector.", PropImportance.OPTIONAL)]
     public Vector? Direction { get; set; }
-    [EntityProp("🏷️", "Pp*", "Prp*", "The optional properties of the connector.", PropImportance.OPTIONAL)]
     public List<Prop>? Props { get; set; }
-    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the connector.", PropImportance.OPTIONAL)]
     public List<Attribute>? Attributes { get; set; }
 
     public static implicit operator ConnectorDiff(ConnectorId id) => new() { Guid = id.Guid };
@@ -3312,11 +2932,8 @@ public class ConnectorDiff : Entity<ConnectorDiff>
 
 public class ConnectorsDiff : Entity<ConnectorsDiff>
 {
-    [EntityProp("➖", "Rm*", "Rem*", "The optional removed connectors.", PropImportance.OPTIONAL)]
     public List<ConnectorId> Removed { get; set; } = new();
-    [EntityProp("➕", "Ad*", "Add*", "The optional added connectors.", PropImportance.OPTIONAL)]
     public List<Connector> Added { get; set; } = new();
-    [EntityProp("✏️", "Up*", "Upd*", "The optional updated connectors.", PropImportance.OPTIONAL)]
     public List<DiffUpdate<ConnectorDiff>> Updated { get; set; } = new();
 
     public ConnectorsDiff MergeDiff(ConnectorsDiff other)
@@ -3338,25 +2955,15 @@ public class ConnectorsDiff : Entity<ConnectorsDiff>
 
 public class Connector : Entity<Connector>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the connector within the type.")]
     public string Guid { get; set; } = "";
-    [Name("📛", "Nm?", "Name?", "The optional name of the connector.")]
     public string Name { get; set; } = "";
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the connector.")]
     public string Description { get; set; } = "";
-    [FalseOrTrue("💯", "Ma?", "Man?", "Whether the connector is mandatory. A mandatory connector must be connected in a design.")]
     public bool Mandatory { get; set; } = false;
-    [EntityProp("🔌", "If?", "Ifc?", "The optional port of the connector. This allows to define explicit compatibility with other connectors.")]
     public InterfaceId? Interface { get; set; }
-    [EntityProp("✖️", "Pt", "Pnt", "The connection point of the connector that is attracted to another connection point.")]
     public Point? Point { get; set; } = null;
-    [EntityProp("➡️", "Dr", "Drn", "The direction of the connector. When another piece connects the direction of the other connector is flipped and then the pieces are aligned.")]
     public Vector? Direction { get; set; } = null;
-    [NumberProp("💍", "T", "T", "The parameter t [0,1[ where the connector will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.", PropImportance.REQUIRED)]
     public float T { get; set; } = 0;
-    [EntityProp("🏷️", "Pp*", "Prp*", "The optional properties of the connector.", PropImportance.OPTIONAL)]
     public List<Prop> Props { get; set; } = new();
-    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the connector.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
     public string ToIdString() => $"{Guid}";
     public string ToHumanIdString() => $"{ToIdString()}";
@@ -3522,7 +3129,6 @@ public class Connector : Entity<Connector>
 
 public class TypeId : Entity<TypeId>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the type.", PropImportance.ID)]
     public string Guid { get; set; } = "";
     public string ToIdString() => $"{Guid}";
     public string ToHumanIdString() => $"{Guid}";
@@ -3534,45 +3140,25 @@ public class TypeId : Entity<TypeId>
 
 public class TypeDiff : Entity<TypeDiff>
 {
-    [Id("🆔", "Gd?", "Gid", "The optional guid of the type.")]
     public string? Guid { get; set; }
-    [Name("📛", "Na?", "Nam?", "The optional name of the type.")]
     public string? Name { get; set; }
-    [EntityProp("📁", "Pa?", "Par?", "The optional parent type.", PropImportance.OPTIONAL)]
     public TypeId? Parent { get; set; }
-    [FalseOrTrue("👻", "IA?", "IsA?", "Whether the type is abstract.")]
     public bool? IsAbstract { get; set; }
-    [Id("📁", "Fo?", "Fol?", "The optional folder guid.")]
     public string? Folder { get; set; }
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the type.")]
     public string? Description { get; set; }
-    [Url("🪙", "Ic?", "Ico?", "The optional icon of the type.")]
     public string? Icon { get; set; }
-    [Url("🖼️", "Im?", "Img?", "The optional url to the image of the type.")]
     public string? Image { get; set; }
-    [IntProp("📦", "St?", "Stk?", "The optional number of items in stock.")]
     public int? Stock { get; set; }
-    [FalseOrTrue("👻", "Vi?", "Vir?", "Whether the type is virtual.")]
     public bool? Virtual { get; set; }
-    [Url("🔗", "Ur?", "Uri?", "The optional Unique Resource Identifier (URI) of the type.")]
     public string Uri { get; set; } = "";
-    [Name("Ⓜ️", "Ut?", "Unt?", "The optional length unit of the type.")]
     public string Unit { get; set; } = "";
-    [EntityProp("📍", "Lo?", "Loc?", "The optional location of the type.", PropImportance.OPTIONAL)]
     public Location? Location { get; set; }
-    [EntityProp("💾", "Md*", "Mods*", "The optional models of the type.", PropImportance.OPTIONAL)]
     public ModelsDiff? Models { get; set; }
-    [EntityProp("🔌", "Po*", "Pors*", "The optional connectors of the type.", PropImportance.OPTIONAL)]
     public ConnectorsDiff? Connectors { get; set; }
-    [EntityProp("👥", "Au*", "Aut*", "The optional authors of the type.", PropImportance.OPTIONAL)]
     public List<AuthorId>? Authors { get; set; }
-    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the type.", PropImportance.OPTIONAL)]
     public List<Attribute>? Attributes { get; set; }
-    [EntityProp("💡", "Co*", "Con*", "The optional concepts of the type.", PropImportance.OPTIONAL)]
     public List<ConceptId>? Concepts { get; set; }
-    [Name("📅", "CA?", "CrA?", "The optional created at timestamp of the type.")]
     public DateTime? CreatedAt { get; set; }
-    [Name("📅", "UA?", "UpA?", "The optional updated at timestamp of the type.")]
     public DateTime? UpdatedAt { get; set; }
 
     public TypeDiff MergeDiff(TypeDiff other)
@@ -3603,11 +3189,8 @@ public class TypeDiff : Entity<TypeDiff>
 
 public class TypesDiff : Entity<TypesDiff>
 {
-    [EntityProp("➖", "Rm*", "Rem*", "The optional removed types.", PropImportance.OPTIONAL)]
     public List<TypeId> Removed { get; set; } = new();
-    [EntityProp("➕", "Ad*", "Add*", "The optional added types.", PropImportance.OPTIONAL)]
     public List<Type> Added { get; set; } = new();
-    [EntityProp("✏️", "Up*", "Upd*", "The optional updated types.", PropImportance.OPTIONAL)]
     public List<DiffUpdate<TypeDiff>> Updated { get; set; } = new();
 
     public static implicit operator TypesDiff(List<Type> types) => new() { Updated = types.Select(t => new DiffUpdate<TypeDiff> { Id = t.Guid, Diff = (TypeDiff)t }).ToList() };
@@ -3619,47 +3202,26 @@ public class TypesDiff : Entity<TypesDiff>
 
 public class Type : Entity<Type>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the type.", PropImportance.ID)]
     public string Guid { get; set; } = "";
-    [Name("📛", "Na", "Nam", "The name of the type.", PropImportance.REQUIRED)]
     public string Name { get; set; } = "";
-    [EntityProp("📁", "Pa?", "Par?", "The optional parent type.", PropImportance.OPTIONAL)]
     public TypeId? Parent { get; set; }
-    [FalseOrTrue("👻", "IA?", "IsA?", "Whether the type is abstract.")]
     public bool? IsAbstract { get; set; }
-    [Id("📁", "Fo?", "Fol?", "The optional folder guid.")]
     public string? Folder { get; set; }
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the type.")]
     public string Description { get; set; } = "";
-    [Url("🪙", "Ic?", "Ico?", "The optional icon [ emoji | logogram | url ] of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.")]
     public string Icon { get; set; } = "";
-    [Url("🖼️", "Im?", "Img?", "The optional url to the image of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.")]
     public string Image { get; set; } = "";
-    [IntProp("📦", "St?", "Stk?", "The optional number of items in stock. 2147483647 (=2^31-1) means infinite stock.")]
     public int Stock { get; set; } = 2147483647;
-    [FalseOrTrue("👻", "Vi?", "Vir?", "Whether the type is virtual. A virtual type is not physically present but is used in conjunction with other virtual types to form a larger physical type.")]
     public bool Virtual { get; set; } = false;
-    [Url("🔗", "Ur?", "Uri?", "The optional Unique Resource Identifier (URI) of the type.")]
     public string Uri { get; set; } = "";
-    [EntityProp("📍", "Lo?", "Loc?", "The optional location of the type.", PropImportance.OPTIONAL)]
     public Location? Location { get; set; }
-    [Name("Ⓜ️", "Ut", "Unt", "The length unit of the point and the direction of the connectors of the type.", PropImportance.REQUIRED)]
     public string Unit { get; set; } = "";
-    [EntityProp("💾", "Md*", "Mods*", "The optional models of the type.", PropImportance.OPTIONAL)]
     public List<Model> Models { get; set; } = new();
-    [EntityProp("🔌", "Po*", "Pors*", "The optional connectors of the type.", PropImportance.OPTIONAL)]
     public List<Connector> Connectors { get; set; } = new();
-    [EntityProp("🏷️", "Pp*", "Prp*", "The optional properties of the type.", PropImportance.OPTIONAL)]
     public List<Prop> Props { get; set; } = new();
-    [EntityProp("👥", "Au*", "Aut*", "The optional authors of the type.", PropImportance.OPTIONAL)]
     public List<AuthorId> Authors { get; set; } = new();
-    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the type.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
-    [EntityProp("💡", "Co*", "Con*", "The optional concepts of the type.", PropImportance.OPTIONAL)]
     public List<ConceptId> Concepts { get; set; } = new();
-    [Name("📅", "CA", "CrA", "The created at timestamp of the type.", PropImportance.REQUIRED)]
     public DateTime CreatedAt { get; set; }
-    [Name("📅", "UA", "UpA", "The updated at timestamp of the type.", PropImportance.REQUIRED)]
     public DateTime UpdatedAt { get; set; }
 
     public string ToIdString() => $"{Guid}";
@@ -3910,7 +3472,6 @@ public class Type : Entity<Type>
 
 public class LayerId : Entity<LayerId>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the layer.", PropImportance.ID)]
     public string Guid { get; set; } = "";
     public static implicit operator LayerId(Layer layer) => new() { Guid = layer.Guid };
     public string ToIdString() => $"{Guid}";
@@ -3924,19 +3485,12 @@ public class LayerId : Entity<LayerId>
 
 public class Layer : Entity<Layer>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the layer.", PropImportance.ID)]
     public string Guid { get; set; } = "";
-    [Name("📛", "Pa", "Pth", "The path of the layer.", PropImportance.REQUIRED)]
     public string Path { get; set; } = "";
-    [FalseOrTrue("👁️", "Hd?", "Hid?", "Whether the layer is hidden.")]
     public bool IsHidden { get; set; } = false;
-    [FalseOrTrue("🔒", "Lk?", "Lck?", "Whether the layer is locked.")]
     public bool IsLocked { get; set; } = false;
-    [Color("🎨", "Cl?", "Col?", "The hex color of the layer.")]
     public string Color { get; set; } = "";
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the layer.")]
     public string Description { get; set; } = "";
-    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the layer.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
     public string ToIdString() => $"{Guid}";
@@ -3951,7 +3505,6 @@ public class Layer : Entity<Layer>
 
 public class GroupId : Entity<GroupId>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the group.", PropImportance.ID)]
     public string Guid { get; set; } = "";
     public static implicit operator GroupId(Group group) => new() { Guid = group.Guid };
     public string ToIdString() => $"{Guid}";
@@ -3965,17 +3518,11 @@ public class GroupId : Entity<GroupId>
 
 public class Group : Entity<Group>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the group.", PropImportance.ID)]
     public string Guid { get; set; } = "";
-    [Name("📛", "Nm?", "Nam?", "The optional name of the group.")]
     public string? Name { get; set; }
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the group.")]
     public string? Description { get; set; }
-    [EntityProp("⭕", "Pc*", "Pcs*", "The pieces in the group.", PropImportance.REQUIRED)]
     public List<PieceId> Pieces { get; set; } = new();
-    [Color("🎨", "Cl?", "Col?", "The optional hex color of the group.")]
     public string? Color { get; set; }
-    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the group.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
     public string ToIdString() => $"{Guid}";
@@ -3990,7 +3537,6 @@ public class Group : Entity<Group>
 
 public class PieceId : Entity<PieceId>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the piece.", PropImportance.ID)]
     public string Guid { get; set; } = "";
     public string ToIdString() => $"{Guid}";
     public string ToHumanIdString() => $"{ToIdString()}";
@@ -4003,11 +3549,8 @@ public class PieceId : Entity<PieceId>
 
 public class PiecesDiff : Entity<PiecesDiff>
 {
-    [EntityProp("➖", "Rm*", "Rem*", "The optional removed pieces.", PropImportance.OPTIONAL)]
     public List<PieceId> Removed { get; set; } = new();
-    [EntityProp("✏️", "Up*", "Upd*", "The optional updated pieces.", PropImportance.OPTIONAL)]
     public List<DiffUpdate<PieceDiff>> Updated { get; set; } = new();
-    [EntityProp("➕", "Ad*", "Add*", "The optional added pieces.", PropImportance.OPTIONAL)]
     public List<Piece> Added { get; set; } = new();
 
     public PiecesDiff MergeDiff(PiecesDiff other)
@@ -4026,33 +3569,19 @@ public class PiecesDiff : Entity<PiecesDiff>
 
 public class PieceDiff : Entity<PieceDiff>
 {
-    [Id("🆔", "Gd?", "Gid", "The optional guid of the piece.")]
     public string? Guid { get; set; }
-    [Name("📛", "Nm?", "Name?", "The optional name of the piece.")]
     public string? Name { get; set; }
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the piece.")]
     public string? Description { get; set; }
-    [EntityProp("🧩", "Ty?", "Typ?", "The optional type of the piece.", PropImportance.OPTIONAL)]
     public TypeId? Type { get; set; }
-    [EntityProp("🏙️", "Ds?", "Dsn?", "The optional design of the piece.", PropImportance.OPTIONAL)]
     public DesignId? Design { get; set; }
-    [EntityProp("📺", "Pl?", "Pln?", "The optional plane of the piece.", PropImportance.OPTIONAL)]
     public Plane? Plane { get; set; }
-    [EntityProp("📺", "Ce?", "Cnt?", "The optional center of the piece.", PropImportance.OPTIONAL)]
     public Coord? Center { get; set; }
-    [NumberProp("📏", "Sc?", "Scl?", "The optional scale of the piece.")]
     public float? Scale { get; set; }
-    [EntityProp("🪞", "Mp?", "Mir?", "The optional mirror plane of the piece.", PropImportance.OPTIONAL)]
     public Plane? MirrorPlane { get; set; }
-    [FalseOrTrue("👁️", "Hd?", "Hid?", "Whether the piece is hidden.")]
     public bool? IsHidden { get; set; }
-    [FalseOrTrue("🔒", "Lk?", "Lck?", "Whether the piece is locked.")]
     public bool? IsLocked { get; set; }
-    [Color("🎨", "Cl?", "Col?", "The optional hex color of the piece.")]
     public string? Color { get; set; }
-    [EntityProp("📊", "Pr*", "Prp*", "The optional props of the piece.", PropImportance.OPTIONAL)]
     public List<Prop>? Props { get; set; }
-    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the piece.", PropImportance.OPTIONAL)]
     public List<Attribute>? Attributes { get; set; }
 
     public static implicit operator PieceDiff(PieceId id) => new() { Guid = id.Guid };
@@ -4065,33 +3594,19 @@ public class PieceDiff : Entity<PieceDiff>
 
 public class Piece : Entity<Piece>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the piece.", PropImportance.ID)]
     public string Guid { get; set; } = "";
-    [Name("📛", "Nm?", "Name?", "The optional name of the piece.")]
     public string Name { get; set; } = "";
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the piece.")]
     public string Description { get; set; } = "";
-    [EntityProp("🧩", "Ty?", "Typ?", "The optional type of the piece.", PropImportance.OPTIONAL)]
     public TypeId? Type { get; set; }
-    [EntityProp("🏙️", "Ds?", "Dsn?", "The optional design of the piece (for nested designs).", PropImportance.OPTIONAL)]
     public DesignId? Design { get; set; }
-    [EntityProp("📺", "Pl?", "Pln?", "The optional plane of the piece.", PropImportance.OPTIONAL)]
     public Plane? Plane { get; set; }
-    [EntityProp("📺", "Ce?", "Cnt?", "The optional center of the piece.", PropImportance.OPTIONAL)]
     public Coord? Center { get; set; }
-    [NumberProp("📏", "Sc?", "Scl?", "The optional scale of the piece.")]
     public float? Scale { get; set; }
-    [EntityProp("🪞", "Mp?", "Mir?", "The optional mirror plane of the piece.", PropImportance.OPTIONAL)]
     public Plane? MirrorPlane { get; set; }
-    [FalseOrTrue("👁️", "Hd?", "Hid?", "Whether the piece is hidden.")]
     public bool? IsHidden { get; set; }
-    [FalseOrTrue("🔒", "Lk?", "Lck?", "Whether the piece is locked.")]
     public bool? IsLocked { get; set; }
-    [Color("🎨", "Cl?", "Col?", "The optional hex color of the piece.")]
     public string? Color { get; set; }
-    [EntityProp("📊", "Pr*", "Prp*", "The optional props of the piece.", PropImportance.OPTIONAL)]
     public List<Prop>? Props { get; set; }
-    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the piece.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
     public string ToIdString() => $"{Guid}";
@@ -4150,13 +3665,9 @@ public class Piece : Entity<Piece>
 
 public class SideDiff : Entity<SideDiff>
 {
-    [EntityProp("⭕", "Pc?", "Pce?", "The optional piece of the side.", PropImportance.OPTIONAL)]
     public PieceId? Piece { get; set; }
-    [EntityProp("🏙️", "DP?", "DPc?", "The optional id of the piece inside the referenced design piece.", PropImportance.OPTIONAL)]
     public PieceId? DesignPiece { get; set; } = null;
-    [EntityProp("🔌", "Po?", "Por?", "The optional connector of the side.", PropImportance.OPTIONAL)]
     public ConnectorId? Connector { get; set; }
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the side.")]
     public string Description { get; set; } = "";
 
     public static implicit operator SideDiff(Side side) => new() { Piece = side.Piece, DesignPiece = side.DesignPiece, Connector = side.Connector };
@@ -4179,11 +3690,8 @@ public class SideDiff : Entity<SideDiff>
 
 public class Side : Entity<Side>
 {
-    [EntityProp("⭕", "Pc", "Pce", "The piece-related information of the side.")]
     public PieceId Piece { get; set; } = new();
-    [EntityProp("🏙️", "DP?", "DPc?", "The optional id of the piece inside the referenced design piece.", PropImportance.OPTIONAL)]
     public PieceId? DesignPiece { get; set; } = null;
-    [EntityProp("🔌", "Po", "Por", "The local identifier of the connector within the type.")]
     public ConnectorId Connector { get; set; } = new();
 
     public static implicit operator Side(SideDiff diff) => new() { Piece = diff.Piece ?? new(), DesignPiece = diff.DesignPiece, Connector = diff.Connector ?? new() };
@@ -4246,11 +3754,8 @@ public class Side : Entity<Side>
 
 public class ConnectionId : Entity<ConnectionId>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the connection.", PropImportance.ID)]
     public string Guid { get; set; } = "";
-    [EntityProp("🧲", "Cd", "Cnd", "The connected side of the piece.")]
     public Side Connected { get; set; } = new();
-    [EntityProp("🧲", "Cg", "Cng", "The connecting side of the piece.")]
     public Side Connecting { get; set; } = new();
 
     public string ToIdString() => $"{Connected.Piece.Guid + (Connected.Connector.Guid != "" ? ":" + Connected.Connector.Guid : "")}--{(Connecting.Connector.Guid != "" ? Connecting.Connector.Guid + ":" : "") + Connecting.Piece.Guid}";
@@ -4264,29 +3769,17 @@ public class ConnectionId : Entity<ConnectionId>
 
 public class ConnectionDiff : Entity<ConnectionDiff>
 {
-    [EntityProp("🧲", "Cd?", "Cnd?", "The optional connected side of the piece.", PropImportance.OPTIONAL)]
     public SideDiff? Connected { get; set; }
-    [EntityProp("🧲", "Cg?", "Cng?", "The optional connecting side of the piece.", PropImportance.OPTIONAL)]
     public SideDiff? Connecting { get; set; }
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the connection.")]
     public string Description { get; set; } = "";
-    [NumberProp("↕️", "Gp?", "Gap?", "The optional longitudinal gap.")]
     public float? Gap { get; set; }
-    [NumberProp("↔️", "Sf?", "Shf?", "The optional lateral shift.")]
     public float? Shift { get; set; }
-    [NumberProp("⬆️", "Rs?", "Rse?", "The optional vertical rise.")]
     public float? Rise { get; set; }
-    [NumberProp("🔄", "Rt?", "Rot?", "The optional rotation around the y-axis.")]
     public float? Rotation { get; set; }
-    [NumberProp("🔄", "Tn?", "Trn?", "The optional turn around the z-axis.")]
     public float? Turn { get; set; }
-    [NumberProp("🔄", "Tl?", "Tlt?", "The optional tilt around the x-axis.")]
     public float? Tilt { get; set; }
-    [NumberProp("↔️", "U?", "U?", "The optional u offset for diagram positioning.")]
     public float? U { get; set; }
-    [NumberProp("↕️", "V?", "V?", "The optional v offset for diagram positioning.")]
     public float? V { get; set; }
-    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the connection.", PropImportance.OPTIONAL)]
     public List<Attribute>? Attributes { get; set; }
 
     public static implicit operator ConnectionDiff(ConnectionId id) => new() { Connected = new SideDiff { Piece = id.Connected.Piece, DesignPiece = id.Connected.DesignPiece, Connector = id.Connected.Connector }, Connecting = new SideDiff { Piece = id.Connecting.Piece, DesignPiece = id.Connecting.DesignPiece, Connector = id.Connecting.Connector } };
@@ -4315,11 +3808,8 @@ public class ConnectionDiff : Entity<ConnectionDiff>
 
 public class ConnectionsDiff : Entity<ConnectionsDiff>
 {
-    [EntityProp("➖", "Rm*", "Rem*", "The optional removed connections.", PropImportance.OPTIONAL)]
     public List<ConnectionId> Removed { get; set; } = new();
-    [EntityProp("✏️", "Up*", "Upd*", "The optional updated connections.", PropImportance.OPTIONAL)]
     public List<DiffUpdate<ConnectionDiff>> Updated { get; set; } = new();
-    [EntityProp("➕", "Ad*", "Add*", "The optional added connections.", PropImportance.OPTIONAL)]
     public List<Connection> Added { get; set; } = new();
 
     public static implicit operator ConnectionsDiff(List<Connection> connections) => new() { Updated = connections.Select(c => new DiffUpdate<ConnectionDiff> { Id = c.Guid, Diff = (ConnectionDiff)c }).ToList() };
@@ -4341,31 +3831,18 @@ public class ConnectionsDiff : Entity<ConnectionsDiff>
 
 public class Connection : Entity<Connection>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the connection.", PropImportance.ID)]
     public string Guid { get; set; } = "";
-    [EntityProp("🧲", "Cd", "Cnd", "The connected side of the piece.")]
     public Side Connected { get; set; } = new();
-    [EntityProp("🧲", "Cg", "Cng", "The connecting side of the piece.")]
     public Side Connecting { get; set; } = new();
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the connection.")]
     public string Description { get; set; } = "";
-    [NumberProp("↕️", "Gp", "Gap", "The longitudinal gap.")]
     public float Gap { get; set; } = 0;
-    [NumberProp("↔️", "Sf", "Shf", "The lateral shift.")]
     public float Shift { get; set; } = 0;
-    [NumberProp("⬆️", "Rs", "Rse", "The vertical rise.")]
     public float Rise { get; set; } = 0;
-    [NumberProp("🔄", "Rt", "Rot", "The rotation around the y-axis.")]
     public float Rotation { get; set; } = 0;
-    [NumberProp("🔄", "Tn", "Trn", "The turn around the z-axis.")]
     public float Turn { get; set; } = 0;
-    [NumberProp("🔄", "Tl", "Tlt", "The tilt around the x-axis.")]
     public float Tilt { get; set; } = 0;
-    [NumberProp("↔️", "U?", "U?", "The optional u offset for diagram positioning.")]
     public float? U { get; set; }
-    [NumberProp("↕️", "V?", "V?", "The optional v offset for diagram positioning.")]
     public float? V { get; set; }
-    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the connection.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
     public string ToIdString() => $"{Connected.Piece.Guid + (Connected.Connector.Guid != "" ? ":" + Connected.Connector.Guid : "")}--{(Connecting.Connector.Guid != "" ? Connecting.Connector.Guid + ":" : "") + Connecting.Piece.Guid}";
@@ -4481,7 +3958,6 @@ public class Connection : Entity<Connection>
 
 public class StatId : Entity<StatId>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the stat.", PropImportance.ID)]
     public string Guid { get; set; } = "";
     public static implicit operator StatId(Stat stat) => new() { Guid = stat.Guid };
     public string ToIdString() => $"{Guid}";
@@ -4495,19 +3971,12 @@ public class StatId : Entity<StatId>
 
 public class Stat : Entity<Stat>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the stat.", PropImportance.ID)]
     public string Guid { get; set; } = "";
-    [EntityProp("📃", "Ql", "Qal", "The quality reference of the stat.", PropImportance.REQUIRED)]
     public QualityId Quality { get; set; } = new();
-    [Name("Ⓜ️", "Ut?", "Unt?", "The optional unit of the stat.")]
     public string? Unit { get; set; }
-    [NumberProp("⬇️", "Mi?", "Min?", "The optional minimum value of the stat.")]
     public float? Min { get; set; }
-    [FalseOrTrue("⬇️", "MiE?", "MiE?", "Whether the minimum value is excluded from the range.")]
     public bool? MinExcluded { get; set; }
-    [NumberProp("⬆️", "Mx?", "Max?", "The optional maximum value of the stat.")]
     public float? Max { get; set; }
-    [FalseOrTrue("⬆️", "MxE?", "MxE?", "Whether the maximum value is excluded from the range.")]
     public bool? MaxExcluded { get; set; }
 
     public string ToIdString() => $"{Guid}";
@@ -4522,11 +3991,8 @@ public class Stat : Entity<Stat>
 
 public class DesignsDiff : Entity<DesignsDiff>
 {
-    [EntityProp("➖", "Rm*", "Rem*", "The optional removed designs.", PropImportance.OPTIONAL)]
     public List<DesignId> Removed { get; set; } = new();
-    [EntityProp("✏️", "Up*", "Upd*", "The optional updated designs.", PropImportance.OPTIONAL)]
     public List<DiffUpdate<DesignDiff>> Updated { get; set; } = new();
-    [EntityProp("➕", "Ad*", "Add*", "The optional added designs.", PropImportance.OPTIONAL)]
     public List<Design> Added { get; set; } = new();
 
     public static implicit operator DesignsDiff(List<Design> designs) => new() { Updated = designs.Select(d => new DiffUpdate<DesignDiff> { Id = d.Guid, Diff = (DesignDiff)d }).ToList() };
@@ -4535,53 +4001,29 @@ public class DesignsDiff : Entity<DesignsDiff>
 
 public class DesignDiff : Entity<DesignDiff>
 {
-    [Id("🆔", "Gd?", "Gid", "The optional guid of the design.")]
     public string? Guid { get; set; }
-    [Name("📛", "Na?", "Nam?", "The optional name of the design.")]
     public string? Name { get; set; }
-    [EntityProp("📁", "Pa?", "Par?", "The optional parent design.", PropImportance.OPTIONAL)]
     public DesignId? Parent { get; set; }
-    [FalseOrTrue("👻", "IA?", "IsA?", "Whether the design is abstract.")]
     public bool? IsAbstract { get; set; }
-    [Id("📁", "Fo?", "Fol?", "The optional folder guid.")]
     public string? Folder { get; set; }
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the design.")]
     public string? Description { get; set; }
-    [Url("🪙", "Ic?", "Ico?", "The optional icon [ emoji | logogram | url ] of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.")]
     public string? Icon { get; set; }
-    [Url("🖼️", "Im?", "Img?", "The optional url to the image of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.")]
     public string? Image { get; set; }
-    [EntityProp("📍", "Lo?", "Loc?", "The optional location of the design.", PropImportance.OPTIONAL)]
     public Location? Location { get; set; }
-    [Name("Ⓜ️", "Ut?", "Unt?", "The optional length unit for all distance-related information of the design.")]
     public string? Unit { get; set; }
-    [FalseOrTrue("⚖️", "CS?", "CanS?", "Whether the design can be scaled.")]
     public bool? CanScale { get; set; }
-    [FalseOrTrue("🪞", "CM?", "CanM?", "Whether the design can be mirrored.")]
     public bool? CanMirror { get; set; }
-    [Id("🔖", "AL?", "ActL?", "The optional active layer guid.")]
     public string? ActiveLayer { get; set; }
-    [EntityProp("⭕", "Pc*", "Pcs*", "The optional pieces of the design.", PropImportance.OPTIONAL)]
     public PiecesDiff? Pieces { get; set; }
-    [EntityProp("🔗", "Co*", "Cons*", "The optional connections of the design.", PropImportance.OPTIONAL)]
     public ConnectionsDiff? Connections { get; set; }
-    [EntityProp("🏷️", "Pp*", "Prp*", "The optional properties of the design.", PropImportance.OPTIONAL)]
     public List<Prop>? Props { get; set; }
-    [EntityProp("🔢", "St*", "Stt*", "The optional stats of the design.", PropImportance.OPTIONAL)]
     public List<Stat>? Stats { get; set; }
-    [EntityProp("🔗", "Ly*", "Lyr*", "The optional layers of the design.", PropImportance.OPTIONAL)]
     public List<Layer>? Layers { get; set; }
-    [EntityProp("🗂️", "Gr*", "Grp*", "The optional groups of the design.", PropImportance.OPTIONAL)]
     public List<Group>? Groups { get; set; }
-    [EntityProp("👥", "Au*", "Aut*", "The optional authors of the design.", PropImportance.OPTIONAL)]
     public List<AuthorId>? Authors { get; set; }
-    [EntityProp("💡", "Co*", "Con*", "The optional concepts of the design.", PropImportance.OPTIONAL)]
     public List<ConceptId>? Concepts { get; set; }
-    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the design.", PropImportance.OPTIONAL)]
     public List<Attribute>? Attributes { get; set; }
-    [Name("📅", "CA?", "CrA?", "The optional created at timestamp of the design.")]
     public DateTime? CreatedAt { get; set; }
-    [Name("📅", "UA?", "UpA?", "The optional updated at timestamp of the design.")]
     public DateTime? UpdatedAt { get; set; }
 
     public static implicit operator DesignDiff(DesignId id) => new() { Guid = id.Guid };
@@ -4622,7 +4064,6 @@ public class DesignDiff : Entity<DesignDiff>
 
 public class DesignId : Entity<DesignId>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the design.", PropImportance.ID)]
     public string Guid { get; set; } = "";
     public static implicit operator DesignId(Design design) => new() { Guid = design.Guid };
     public static implicit operator DesignId(DesignDiff diff) => new() { Guid = diff.Guid ?? "" };
@@ -4640,53 +4081,29 @@ public class DesignId : Entity<DesignId>
 
 public class Design : Entity<Design>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the design.", PropImportance.ID)]
     public string Guid { get; set; } = "";
-    [Name("📛", "Na", "Nam", "The name of the design.", PropImportance.REQUIRED)]
     public string Name { get; set; } = "";
-    [EntityProp("📁", "Pa?", "Par?", "The optional parent design.", PropImportance.OPTIONAL)]
     public DesignId? Parent { get; set; }
-    [FalseOrTrue("👻", "IA?", "IsA?", "Whether the design is abstract.")]
     public bool? IsAbstract { get; set; }
-    [Id("📁", "Fo?", "Fol?", "The optional folder guid.")]
     public string? Folder { get; set; }
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the design.")]
     public string Description { get; set; } = "";
-    [Url("🪙", "Ic?", "Ico?", "The optional icon [ emoji | logogram | url ] of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.")]
     public string Icon { get; set; } = "";
-    [Url("🖼️", "Im?", "Img?", "The optional url to the image of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.")]
     public string Image { get; set; } = "";
-    [EntityProp("💡", "Co*", "Con*", "The optional concepts of the design.", PropImportance.OPTIONAL)]
     public List<ConceptId> Concepts { get; set; } = new();
-    [EntityProp("👥", "Au*", "Aut*", "The optional authors of the design.", PropImportance.OPTIONAL)]
     public List<AuthorId> Authors { get; set; } = new();
-    [EntityProp("📍", "Lo?", "Loc?", "The optional location of the design.", PropImportance.OPTIONAL)]
     public Location? Location { get; set; }
-    [Name("Ⓜ️", "Ut", "Unt", "The length unit for all distance-related information of the design.", PropImportance.REQUIRED)]
     public string Unit { get; set; } = "";
-    [FalseOrTrue("⚖️", "CS?", "CanS?", "Whether the design can be scaled.")]
     public bool? CanScale { get; set; }
-    [FalseOrTrue("🪞", "CM?", "CanM?", "Whether the design can be mirrored.")]
     public bool? CanMirror { get; set; }
-    [EntityProp("🔗", "Ly*", "Lyr*", "The optional layers of the design.", PropImportance.OPTIONAL)]
     public List<Layer> Layers { get; set; } = new();
-    [Id("🔖", "AL?", "ActL?", "The optional active layer guid.")]
     public string? ActiveLayer { get; set; }
-    [EntityProp("⭕", "Pc*", "Pcs*", "The optional pieces of the design.", PropImportance.OPTIONAL)]
     public List<Piece> Pieces { get; set; } = new();
-    [EntityProp("🗂️", "Gr*", "Grp*", "The optional groups of the design.", PropImportance.OPTIONAL)]
     public List<Group> Groups { get; set; } = new();
-    [EntityProp("🔗", "Co*", "Cons*", "The optional connections of the design.", PropImportance.OPTIONAL)]
     public List<Connection> Connections { get; set; } = new();
-    [EntityProp("🏷️", "Pp*", "Prp*", "The optional properties of the design.", PropImportance.OPTIONAL)]
     public List<Prop> Props { get; set; } = new();
-    [EntityProp("🔢", "St*", "Stt*", "The optional stats of the design.", PropImportance.OPTIONAL)]
     public List<Stat> Stats { get; set; } = new();
-    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the design.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
-    [Name("📅", "CA", "CrA", "The created at timestamp of the design.", PropImportance.REQUIRED)]
     public DateTime CreatedAt { get; set; }
-    [Name("📅", "UA", "UpA", "The updated at timestamp of the design.", PropImportance.REQUIRED)]
     public DateTime UpdatedAt { get; set; }
 
     public string ToIdString() => $"{Guid}";
@@ -5503,45 +4920,25 @@ text {
 
 public class KitDiff : Entity<KitDiff>
 {
-    [Id("🆔", "Gd?", "Gid", "The optional guid of the kit.")]
     public string? Guid { get; set; }
-    [Name("📛", "Na?", "Nam?", "The optional name of the kit.")]
     public string? Name { get; set; }
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the kit.")]
     public string? Description { get; set; }
-    [Url("🪙", "Ic?", "Ico?", "The optional icon of the kit.")]
     public string? Icon { get; set; }
-    [Url("🖼️", "Im?", "Img?", "The optional url to the image of the kit.")]
     public string? Image { get; set; }
-    [Url("🔮", "Pv?", "Prv?", "The optional url of the preview image of the kit.")]
     public string? Preview { get; set; }
-    [Name("🔀", "Vr?", "Ver?", "The optional version of the kit.")]
     public string? Version { get; set; }
-    [Url("☁️", "Rm?", "Rmt?", "The optional URL where to fetch the kit remotely.")]
     public string? Remote { get; set; }
-    [Url("🏠", "Hp?", "Hmp?", "The optional URL of the homepage of the kit.")]
     public string? Homepage { get; set; }
-    [Url("⚖️", "Li?", "Lic?", "The optional license of the kit.")]
     public string? License { get; set; }
-    [EntityProp("🧩", "Ty*", "Typ*", "The optional types diff for the kit.", PropImportance.OPTIONAL)]
     public TypesDiff? Types { get; set; }
-    [EntityProp("🏙️", "Dn*", "Dsn*", "The optional designs diff for the kit.", PropImportance.OPTIONAL)]
     public DesignsDiff? Designs { get; set; }
-    [EntityProp("📄", "Fl*", "Fil*", "The optional files diff for the kit.", PropImportance.OPTIONAL)]
     public FilesDiff? Files { get; set; }
-    [EntityProp("📁", "Fo*", "Fol*", "The optional folders diff for the kit.", PropImportance.OPTIONAL)]
     public FoldersDiff? Folders { get; set; }
-    [EntityProp("🔗", "In*", "Int*", "The optional ports diff for the kit.", PropImportance.OPTIONAL)]
     public InterfacesDiff? Interfaces { get; set; }
-    [EntityProp("👥", "Au*", "Aut*", "The optional authors diff for the kit.", PropImportance.OPTIONAL)]
     public AuthorsDiff? Authors { get; set; }
-    [EntityProp("🔐", "At*", "Atr*", "The optional attributes diff for the kit.", PropImportance.OPTIONAL)]
     public AttributesDiff? Attributes { get; set; }
-    [EntityProp("💡", "Co*", "Con*", "The optional concepts diff for the kit.", PropImportance.OPTIONAL)]
     public ConceptsDiff? Concepts { get; set; }
-    [Name("📅", "CA?", "CrA?", "The optional creation date.")]
     public string? CreatedAt { get; set; }
-    [Name("📝", "UA?", "UpA?", "The optional last update date.")]
     public string? UpdatedAt { get; set; }
 
     public KitDiff MergeDiff(KitDiff other)
@@ -5592,7 +4989,6 @@ public class KitDiff : Entity<KitDiff>
 
 public class KitId : Entity<KitId>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the kit.", PropImportance.ID)]
     public string Guid { get; set; } = "";
     public string ToIdString() => $"{Guid}";
     public string ToHumanIdString() => $"{ToIdString()}";
@@ -5605,11 +5001,8 @@ public class KitId : Entity<KitId>
 
 public class KitsDiff : Entity<KitsDiff>
 {
-    [EntityProp("➖", "Rm*", "Rem*", "The optional removed kits.", PropImportance.OPTIONAL)]
     public List<KitId> Removed { get; set; } = new();
-    [EntityProp("✏️", "Up*", "Upd*", "The optional updated kits.", PropImportance.OPTIONAL)]
     public List<DiffUpdate<KitDiff>> Updated { get; set; } = new();
-    [EntityProp("➕", "Ad*", "Add*", "The optional added kits.", PropImportance.OPTIONAL)]
     public List<Kit> Added { get; set; } = new();
 
     public static implicit operator KitsDiff(List<Kit> kits) => new() { Updated = kits.Select(k => new DiffUpdate<KitDiff> { Id = k.Guid, Diff = (KitDiff)k }).ToList() };
@@ -5621,59 +5014,33 @@ public class KitsDiff : Entity<KitsDiff>
 
 public class Kit : Entity<Kit>
 {
-    [Id("🆔", "Gd", "Gui", "The guid of the kit.", PropImportance.ID)]
     public string Guid { get; set; } = "";
-    [Name("📛", "Na", "Nam", "The name of the kit.", PropImportance.ID)]
     public string Name { get; set; } = "";
-    [Name("🔀", "Vr?", "Ver?", "The optional version of the kit. No version means the latest version.", PropImportance.ID, true)]
     public string Version { get; set; } = "";
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the kit.")]
     public string Description { get; set; } = "";
-    [Url("🪙", "Ic?", "Ico?", "The optional icon [ emoji | logogram | url ] of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.")]
     public string Icon { get; set; } = "";
-    [Url("🖼️", "Im?", "Img?", "The optional url to the image of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.")]
     public string Image { get; set; } = "";
-    [EntityProp("💡", "Cp*", "Cnp*", "The optional concepts of the kit.", PropImportance.OPTIONAL)]
     public List<Concept> Concepts { get; set; } = new();
-    [EntityProp("🏷️", "Tg*", "Tag*", "The optional tags of the kit.", PropImportance.OPTIONAL)]
     public List<Tag> Tags { get; set; } = new();
-    [Url("☁️", "Rm?", "Rmt?", "The optional Unique Resource Locator (URL) where to fetch the kit remotely.")]
     public string Remote { get; set; } = "";
-    [Url("🏠", "Hp?", "Hmp?", "The optional Unique Resource Locator (URL) of the homepage of the kit.")]
     public string Homepage { get; set; } = "";
-    [Url("⚖️", "Li?", "Lic?", "The optional license [ spdx id | url ] of the kit.")]
     public string License { get; set; } = "";
-    [EntityProp("👥", "Au*", "Aut*", "The optional authors of the kit.", PropImportance.OPTIONAL)]
     public List<Author> Authors { get; set; } = new();
-    [EntityProp("⭕", "Pc*", "Pcs*", "The optional pieces of the kit.", PropImportance.OPTIONAL)]
     public List<Piece> Pieces { get; set; } = new();
-    [EntityProp("🗂️", "Gr*", "Grp*", "The optional groups of the kit.", PropImportance.OPTIONAL)]
     public List<Group> Groups { get; set; } = new();
-    [EntityProp("🔗", "Co*", "Cons*", "The optional connections of the kit.", PropImportance.OPTIONAL)]
     public List<Connection> Connections { get; set; } = new();
-    [EntityProp("🏷️", "Pp*", "Prp*", "The optional properties of the kit.", PropImportance.OPTIONAL)]
     public List<Prop> Props { get; set; } = new();
-    [EntityProp("🔢", "St*", "Stt*", "The optional stats of the kit.", PropImportance.OPTIONAL)]
     public List<Stat> Stats { get; set; } = new();
-    [EntityProp("🔐", "At*", "Atr*", "The optional attributes of the kit.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
-    [Url("🔮", "Pv?", "Prv?", "The optional url of the preview image of the kit. The url must point to a landscape image [ png | jpg | svg ] which will be cropped by a 2x1 rectangle. The image must be at least 1920x960 pixels and smaller than 15 MB.")]
     public string Preview { get; set; } = "";
-    [EntityProp("📃", "Ql*", "Qal*", "The optional qualities of the kit.", PropImportance.OPTIONAL)]
     public List<Quality> Qualities { get; set; } = new();
-    [EntityProp("🔌", "If*", "Ifc*", "The optional ports of the kit.", PropImportance.OPTIONAL)]
+    [JsonProperty("ports")]
     public List<Interface> Interfaces { get; set; } = new();
-    [EntityProp("📄", "Fl*", "Fil*", "The optional files of the kit.", PropImportance.OPTIONAL)]
     public List<File> Files { get; set; } = new();
-    [EntityProp("📁", "Fo*", "Fol*", "The optional folders of the kit.", PropImportance.OPTIONAL)]
     public List<Folder> Folders { get; set; } = new();
-    [EntityProp("🧩", "Ty*", "Typ*", "The optional types of the kit.", PropImportance.OPTIONAL)]
     public List<Type> Types { get; set; } = new();
-    [EntityProp("🏙️", "Dn*", "Dsn*", "The optional designs of the kit.", PropImportance.OPTIONAL)]
     public List<Design> Designs { get; set; } = new();
-    [Name("📅", "CA", "CrA", "The creation date of the kit.")]
     public string CreatedAt { get; set; } = "";
-    [Name("📝", "UA", "UpA", "The last update date of the kit.")]
     public string UpdatedAt { get; set; } = "";
 
     public static implicit operator Kit(KitDiff diff) => new() { Name = diff.Name ?? "", Description = diff.Description ?? "", Icon = diff.Icon ?? "", Image = diff.Image ?? "", Preview = diff.Preview ?? "", Version = diff.Version ?? "", Remote = diff.Remote ?? "", Homepage = diff.Homepage ?? "", License = diff.License ?? "", Files = diff.Files?.Added ?? new(), Attributes = diff.Attributes?.Added ?? new() };

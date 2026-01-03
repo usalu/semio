@@ -102,6 +102,7 @@ func main() {
 			mcp.WithString("slug", mcp.Required(), mcp.Description("Ticket slug (will be uppercased and kebab-cased)")),
 			mcp.WithString("prompt", mcp.Description("Ticket prompt/description")),
 			mcp.WithString("model", mcp.Required(), mcp.Description("Large-Language-Model (LLM) used for this ticket")),
+			mcp.WithArray("files", mcp.Required(), mcp.Description("Files to include (at least one required)")),
 		),
 		ticketCreate,
 	)
@@ -133,6 +134,7 @@ func main() {
 			mcp.WithString("slug", mcp.Required(), mcp.Description("Ticket slug")),
 			mcp.WithString("prompt", mcp.Description("Iteration prompt")),
 			mcp.WithString("model", mcp.Required(), mcp.Description("Large-Language-Model (LLM) used")),
+			mcp.WithArray("files", mcp.Required(), mcp.Description("Files to include (at least one required)")),
 		),
 		ticketIterateStart,
 	)
@@ -359,12 +361,18 @@ func ticketCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 	slug, _ := args["slug"].(string)
 	prompt, _ := args["prompt"].(string)
 	model, _ := args["model"].(string)
+	filesRaw, _ := args["files"].([]interface{})
 	cmdArgs := []string{"ticket", "create", slug}
 	if prompt != "" {
 		cmdArgs = append(cmdArgs, "--prompt="+prompt)
 	}
 	if model != "" {
 		cmdArgs = append(cmdArgs, "--model="+model)
+	}
+	for _, f := range filesRaw {
+		if file, ok := f.(string); ok {
+			cmdArgs = append(cmdArgs, "--file="+file)
+		}
 	}
 	return textResult(runRepo(cmdArgs...)), nil
 }
@@ -401,12 +409,18 @@ func ticketIterateStart(ctx context.Context, request mcp.CallToolRequest) (*mcp.
 	slug, _ := args["slug"].(string)
 	prompt, _ := args["prompt"].(string)
 	model, _ := args["model"].(string)
+	filesRaw, _ := args["files"].([]interface{})
 	cmdArgs := []string{"ticket", "iterate", "start", year, month, day, slug}
 	if prompt != "" {
 		cmdArgs = append(cmdArgs, "--prompt="+prompt)
 	}
 	if model != "" {
 		cmdArgs = append(cmdArgs, "--model="+model)
+	}
+	for _, f := range filesRaw {
+		if file, ok := f.(string); ok {
+			cmdArgs = append(cmdArgs, "--file="+file)
+		}
 	}
 	return textResult(runRepo(cmdArgs...)), nil
 }

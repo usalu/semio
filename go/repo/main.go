@@ -78,21 +78,17 @@ type Fix struct {
 }
 
 type Violation struct {
-	ID          string            `json:"id"`
-	Summary     string            `json:"summary"`
-	Kind        string            `json:"kind"`
-	Priority    ViolationPriority `json:"priority"`
-	Autofixable bool              `json:"autofixable"`
-	Solution    string            `json:"solution"`
-	Reason      string            `json:"reason"`
-	Scope       string            `json:"scope"`
-	Line        int               `json:"line,omitempty"`
-	Column      int               `json:"column,omitempty"`
-	Excerpt     string            `json:"excerpt,omitempty"`
-	Autofix     *Fix              `json:"autofix,omitempty"`
+	ID      string        `json:"id"`
+	Summary string        `json:"summary"`
+	Kind    ViolationKind `json:"kind"`
+	Scope   string        `json:"scope"`
+	Line    int           `json:"line,omitempty"`
+	Column  int           `json:"column,omitempty"`
+	Excerpt string        `json:"excerpt,omitempty"`
+	Autofix *Fix          `json:"autofix,omitempty"`
 }
 
-type NxProject struct {
+type Project struct {
 	Name        string   `json:"name"`
 	Root        string   `json:"root"`
 	SourceRoot  string   `json:"sourceRoot,omitempty"`
@@ -219,7 +215,203 @@ const (
 	ViolationCommentInline             ViolationKind = "comment:inline"
 	ViolationCommentBlock              ViolationKind = "comment:block"
 	ViolationCommentJSDoc              ViolationKind = "comment:jsdoc"
+	ViolationDevDocsMissingFile        ViolationKind = "dev-docs:missing-file"
+	ViolationDevDocsMissingFolder      ViolationKind = "dev-docs:missing-folder"
+	ViolationDevDocsWrongFilePath      ViolationKind = "dev-docs:wrong-file-path"
+	ViolationDevDocsWrongFolderPath    ViolationKind = "dev-docs:wrong-folder-path"
+	ViolationDevDocsWrongFileName      ViolationKind = "dev-docs:wrong-file-name"
+	ViolationDevDocsWrongFolderName    ViolationKind = "dev-docs:wrong-folder-name"
+	ViolationDevDocsWrongFileOrder     ViolationKind = "dev-docs:wrong-file-order"
+	ViolationDevDocsWrongFolderOrder   ViolationKind = "dev-docs:wrong-folder-order"
+	ViolationDevDocsMissingComponent   ViolationKind = "dev-docs:missing-component"
+	ViolationDevDocsWrongComponentName ViolationKind = "dev-docs:wrong-component-name"
+	ViolationDevDocsWrongComponentOrder ViolationKind = "dev-docs:wrong-component-order"
 )
+
+type ViolationKindMeta struct {
+	Kind        ViolationKind     `json:"kind"`
+	Priority    ViolationPriority `json:"priority"`
+	Reason      string            `json:"reason"`
+	Solution    string            `json:"solution"`
+	Autofixable bool              `json:"autofixable"`
+}
+
+var violationKindMetas = map[ViolationKind]ViolationKindMeta{
+	ViolationHeaderMissingRegion: {
+		Kind:        ViolationHeaderMissingRegion,
+		Priority:    PriorityLow,
+		Reason:      "Header region with license, filename, and contributors is required",
+		Solution:    "Add header region with SPDX license, filename, and contributors",
+		Autofixable: false,
+	},
+	ViolationHeaderMissingFilename: {
+		Kind:        ViolationHeaderMissingFilename,
+		Priority:    PriorityLow,
+		Reason:      "Filename must be documented in header",
+		Solution:    "Add filename comment in header region",
+		Autofixable: false,
+	},
+	ViolationHeaderMissingContributors: {
+		Kind:        ViolationHeaderMissingContributors,
+		Priority:    PriorityLow,
+		Reason:      "Contributors must be documented in header",
+		Solution:    "Add contributor line in header region",
+		Autofixable: false,
+	},
+	ViolationHeaderMissingLicense: {
+		Kind:        ViolationHeaderMissingLicense,
+		Priority:    PriorityLow,
+		Reason:      "SPDX license identifier is required",
+		Solution:    "Add SPDX license header comment",
+		Autofixable: false,
+	},
+	ViolationHeaderWrongLicense: {
+		Kind:        ViolationHeaderWrongLicense,
+		Priority:    PriorityLow,
+		Reason:      "License must be AGPL-3.0-or-later",
+		Solution:    "Update license to AGPL-3.0-or-later",
+		Autofixable: false,
+	},
+	ViolationSectionEmpty: {
+		Kind:        ViolationSectionEmpty,
+		Priority:    PriorityLow,
+		Reason:      "Empty sections should be removed",
+		Solution:    "Remove empty section or add content",
+		Autofixable: true,
+	},
+	ViolationSectionMissingStartName: {
+		Kind:        ViolationSectionMissingStartName,
+		Priority:    PriorityLow,
+		Reason:      "Section start marker must have a name",
+		Solution:    "Add name to section start marker",
+		Autofixable: false,
+	},
+	ViolationSectionMissingEndName: {
+		Kind:        ViolationSectionMissingEndName,
+		Priority:    PriorityLow,
+		Reason:      "Section end marker should have matching name",
+		Solution:    "Add matching name to section end marker",
+		Autofixable: true,
+	},
+	ViolationSectionNameMismatch: {
+		Kind:        ViolationSectionNameMismatch,
+		Priority:    PriorityLow,
+		Reason:      "Section start and end names must match",
+		Solution:    "Fix section end name to match start name",
+		Autofixable: true,
+	},
+	ViolationCommentInline: {
+		Kind:        ViolationCommentInline,
+		Priority:    PriorityLow,
+		Reason:      "Inline comments are forbidden - documentation belongs in README.md and AGENTS.md",
+		Solution:    "Remove inline comment and document in README.md or AGENTS.md",
+		Autofixable: false,
+	},
+	ViolationCommentBlock: {
+		Kind:        ViolationCommentBlock,
+		Priority:    PriorityLow,
+		Reason:      "Block comments are forbidden - documentation belongs in README.md and AGENTS.md",
+		Solution:    "Remove block comment and document in README.md or AGENTS.md",
+		Autofixable: false,
+	},
+	ViolationCommentJSDoc: {
+		Kind:        ViolationCommentJSDoc,
+		Priority:    PriorityLow,
+		Reason:      "JSDoc comments are forbidden - documentation belongs in README.md and AGENTS.md",
+		Solution:    "Remove JSDoc comment and document in README.md or AGENTS.md",
+		Autofixable: false,
+	},
+	ViolationDevDocsMissingFile: {
+		Kind:        ViolationDevDocsMissingFile,
+		Priority:    PriorityLow,
+		Reason:      "File exists but has no section in AGENTS.md Codebase",
+		Solution:    "Add ## 📄 PATH section in AGENTS.md",
+		Autofixable: true,
+	},
+	ViolationDevDocsMissingFolder: {
+		Kind:        ViolationDevDocsMissingFolder,
+		Priority:    PriorityLow,
+		Reason:      "Folder exists but has no section in AGENTS.md Codebase",
+		Solution:    "Add ## 📁 PATH section in AGENTS.md",
+		Autofixable: true,
+	},
+	ViolationDevDocsWrongFilePath: {
+		Kind:        ViolationDevDocsWrongFilePath,
+		Priority:    PriorityLow,
+		Reason:      "File section path does not match actual file path",
+		Solution:    "Update file section path to match actual path",
+		Autofixable: true,
+	},
+	ViolationDevDocsWrongFolderPath: {
+		Kind:        ViolationDevDocsWrongFolderPath,
+		Priority:    PriorityLow,
+		Reason:      "Folder section path does not match actual folder path",
+		Solution:    "Update folder section path to match actual path",
+		Autofixable: true,
+	},
+	ViolationDevDocsWrongFileName: {
+		Kind:        ViolationDevDocsWrongFileName,
+		Priority:    PriorityLow,
+		Reason:      "File section name format is incorrect (should be ## 📄 PATH)",
+		Solution:    "Rename section to ## 📄 PATH",
+		Autofixable: true,
+	},
+	ViolationDevDocsWrongFolderName: {
+		Kind:        ViolationDevDocsWrongFolderName,
+		Priority:    PriorityLow,
+		Reason:      "Folder section name format is incorrect (should be ## 📁 PATH/)",
+		Solution:    "Rename section to ## 📁 PATH/",
+		Autofixable: true,
+	},
+	ViolationDevDocsWrongFileOrder: {
+		Kind:        ViolationDevDocsWrongFileOrder,
+		Priority:    PriorityLow,
+		Reason:      "File sections are not in alphabetical order",
+		Solution:    "Reorder file sections alphabetically",
+		Autofixable: true,
+	},
+	ViolationDevDocsWrongFolderOrder: {
+		Kind:        ViolationDevDocsWrongFolderOrder,
+		Priority:    PriorityLow,
+		Reason:      "Folder sections are not in alphabetical order",
+		Solution:    "Reorder folder sections alphabetically",
+		Autofixable: true,
+	},
+	ViolationDevDocsMissingComponent: {
+		Kind:        ViolationDevDocsMissingComponent,
+		Priority:    PriorityLow,
+		Reason:      "Package.json workspace has no corresponding component in README.md",
+		Solution:    "Add component section in README.md Components",
+		Autofixable: true,
+	},
+	ViolationDevDocsWrongComponentName: {
+		Kind:        ViolationDevDocsWrongComponentName,
+		Priority:    PriorityLow,
+		Reason:      "Component section name does not match workspace name",
+		Solution:    "Rename component section to match workspace",
+		Autofixable: true,
+	},
+	ViolationDevDocsWrongComponentOrder: {
+		Kind:        ViolationDevDocsWrongComponentOrder,
+		Priority:    PriorityLow,
+		Reason:      "Component sections are not in package.json workspaces order",
+		Solution:    "Reorder components to match package.json workspaces",
+		Autofixable: true,
+	},
+}
+
+func GetViolationKindMeta(kind ViolationKind) ViolationKindMeta {
+	if meta, ok := violationKindMetas[kind]; ok {
+		return meta
+	}
+	return ViolationKindMeta{
+		Kind:        kind,
+		Priority:    PriorityLow,
+		Reason:      "Unknown violation",
+		Solution:    "Fix the violation",
+		Autofixable: false,
+	}
+}
 
 type PolicyMeta struct {
 	ID             string            `json:"id"`
@@ -324,71 +516,78 @@ func findRepoRoot(start string) string {
 	}
 }
 
+var (
+	cachedGitignorePatterns []string
+	gitignoreLoaded         bool
+	gitignoreMutex          sync.Mutex
+)
+
+func getGitignorePatterns() []string {
+	gitignoreMutex.Lock()
+	defer gitignoreMutex.Unlock()
+	if gitignoreLoaded {
+		return cachedGitignorePatterns
+	}
+	gitignorePath := filepath.Join(rootDir, ".gitignore")
+	content, err := os.ReadFile(gitignorePath)
+	if err != nil {
+		gitignoreLoaded = true
+		return nil
+	}
+	for _, line := range strings.Split(string(content), "\n") {
+		line = strings.TrimSpace(line)
+		if line != "" && !strings.HasPrefix(line, "#") {
+			if !strings.Contains(line, "/") {
+				line = "**/" + line
+			}
+			cachedGitignorePatterns = append(cachedGitignorePatterns, line)
+		}
+	}
+	gitignoreLoaded = true
+	return cachedGitignorePatterns
+}
+
+func isGitIgnored(filePath string) bool {
+	relPath, err := filepath.Rel(rootDir, filePath)
+	if err != nil {
+		return false
+	}
+	relPath = NormalizePath(relPath)
+	for _, pattern := range getGitignorePatterns() {
+		if matched, _ := doublestar.Match(pattern, relPath); matched {
+			return true
+		}
+	}
+	return false
+}
+
+func policyAppliesToScope(policyID string, scope Scope) bool {
+	switch policyID {
+	case "header":
+		return scope.Kind == ScopeFile && isSourceFile(scope.FilePath)
+	case "section":
+		return scope.Kind == ScopeFile && isSourceFile(scope.FilePath)
+	case "comment":
+		return scope.Kind == ScopeFile && isSourceFile(scope.FilePath)
+	case "dev-docs":
+		return scope.Kind == ScopeRepo || scope.Kind == ScopeFolder || scope.Kind == ScopeFile
+	default:
+		return true
+	}
+}
+
+func isSourceFile(filePath string) bool {
+	ext := filepath.Ext(filePath)
+	return ext == ".ts" || ext == ".tsx" || ext == ".js" || ext == ".jsx" ||
+		ext == ".py" || ext == ".go" || ext == ".cs"
+}
+
 func GetRootDir() string {
 	return rootDir
 }
 
 func SetRootDir(dir string) {
 	rootDir = dir
-}
-
-func GetCacheDir() string {
-	return filepath.Join(rootDir, ".semio-repo", "cache")
-}
-
-func GetFileCachePath(filePath string) string {
-	hash := hashString(filePath)
-	return filepath.Join(GetCacheDir(), "analyze", hash+".json")
-}
-
-func hashString(s string) string {
-	h := uint32(0)
-	for _, c := range s {
-		h = h*31 + uint32(c)
-	}
-	return fmt.Sprintf("%08x", h)
-}
-
-func hashFileContent(content string) string {
-	h := uint32(0)
-	for _, c := range content {
-		h = h*31 + uint32(c)
-	}
-	return fmt.Sprintf("%08x", h)
-}
-
-func ReadFileCache(filePath string) (*FileCache, error) {
-	cachePath := GetFileCachePath(filePath)
-	if !FileExists(cachePath) {
-		return nil, nil
-	}
-	var cache FileCache
-	if err := ReadJSONFile(cachePath, &cache); err != nil {
-		return nil, err
-	}
-	return &cache, nil
-}
-
-func WriteFileCache(filePath string, violations []Violation, contentHash string) error {
-	cachePath := GetFileCachePath(filePath)
-	if err := EnsureDir(filepath.Dir(cachePath)); err != nil {
-		return err
-	}
-	cache := FileCache{
-		FilePath:   filePath,
-		Hash:       contentHash,
-		Timestamp:  ISOTimestamp(),
-		Violations: violations,
-	}
-	return WriteJSONFile(cachePath, cache)
-}
-
-func IsCacheValid(filePath string, currentContentHash string) bool {
-	cache, err := ReadFileCache(filePath)
-	if err != nil || cache == nil {
-		return false
-	}
-	return cache.Hash == currentContentHash
 }
 
 func NormalizePath(p string) string {
@@ -905,12 +1104,33 @@ var policyMetas = []PolicyMeta{
 			string(ViolationCommentJSDoc),
 		},
 	},
+	{
+		ID:          "dev-docs",
+		Name:        "DevDocs",
+		Description: "Validates README.md and AGENTS.md documentation structure",
+		Scopes:      []string{"README.md", "AGENTS.md"},
+		Priority:    PriorityLow,
+		ViolationKinds: []string{
+			string(ViolationDevDocsMissingFile),
+			string(ViolationDevDocsMissingFolder),
+			string(ViolationDevDocsWrongFilePath),
+			string(ViolationDevDocsWrongFolderPath),
+			string(ViolationDevDocsWrongFileName),
+			string(ViolationDevDocsWrongFolderName),
+			string(ViolationDevDocsWrongFileOrder),
+			string(ViolationDevDocsWrongFolderOrder),
+			string(ViolationDevDocsMissingComponent),
+			string(ViolationDevDocsWrongComponentName),
+			string(ViolationDevDocsWrongComponentOrder),
+		},
+	},
 }
 
 var policyFuncs = map[string]PolicyFunc{
-	"header":  headerPolicy,
-	"section": sectionPolicy,
-	"comment": commentPolicy,
+	"header":   headerPolicy,
+	"section":  sectionPolicy,
+	"comment":  commentPolicy,
+	"dev-docs": devDocsPolicy,
 }
 
 func getRegisteredPolicies() []RegisteredPolicy {
@@ -930,12 +1150,12 @@ func GetRegisteredPolicies() []PolicyMeta {
 type PolicyContext struct {
 	Scope    Scope
 	RootDir  string
-	Projects []NxProject
+	Projects []Project
 	fileCache     map[string]string
 	sectionCache  map[string][]SectionInfo
 }
 
-func NewPolicyContext(scope Scope, projects []NxProject) *PolicyContext {
+func NewPolicyContext(scope Scope, projects []Project) *PolicyContext {
 	return &PolicyContext{
 		Scope:        scope,
 		RootDir:      rootDir,
@@ -945,10 +1165,7 @@ func NewPolicyContext(scope Scope, projects []NxProject) *PolicyContext {
 	}
 }
 
-func (ctx *PolicyContext) Files(pattern string) ([]string, error) {
-	if pattern != "" {
-		return SimpleGlob(pattern, rootDir, []string{"**/node_modules/**", "**/.venv/**"}, true)
-	}
+func (ctx *PolicyContext) Files() ([]string, error) {
 	return ScopeToFiles(ctx.Scope, ctx.Projects)
 }
 
@@ -976,26 +1193,15 @@ func (ctx *PolicyContext) Sections(filePath string) []SectionInfo {
 	return sections
 }
 
-func (ctx *PolicyContext) CreateViolation(summary, kind, solution, reason, scope string, line int, excerpt string, autofix *Fix) Violation {
-	priority := PriorityMedium
-	for _, p := range policyMetas {
-		if kind == p.ID || strings.HasPrefix(kind, p.ID+":") {
-			priority = p.Priority
-			break
-		}
-	}
+func (ctx *PolicyContext) CreateViolation(summary string, kind ViolationKind, scope string, line int, excerpt string, autofix *Fix) Violation {
 	return Violation{
-		ID:          fmt.Sprintf("%s-%d-%s", kind, time.Now().UnixNano(), randomString(6)),
-		Summary:     summary,
-		Kind:        kind,
-		Priority:    priority,
-		Autofixable: autofix != nil,
-		Solution:    solution,
-		Reason:      reason,
-		Scope:       scope,
-		Line:        line,
-		Excerpt:     excerpt,
-		Autofix:     autofix,
+		ID:      fmt.Sprintf("%s-%d-%s", kind, time.Now().UnixNano(), randomString(6)),
+		Summary: summary,
+		Kind:    kind,
+		Scope:   scope,
+		Line:    line,
+		Excerpt: excerpt,
+		Autofix: autofix,
 	}
 }
 
@@ -1008,7 +1214,7 @@ func randomString(n int) string {
 	return string(b)
 }
 
-func RunPolicies(scope Scope, projects []NxProject, policyIDs []string) ([]Violation, error) {
+func CheckPolicies(scope Scope, projects []Project, policyIDs []string) ([]Violation, error) {
 	ctx := NewPolicyContext(scope, projects)
 	var violations []Violation
 	var policiesToRun []RegisteredPolicy
@@ -1062,7 +1268,7 @@ func matchesScope(policyScopes []string, targetScope Scope) bool {
 
 func headerPolicy(ctx *PolicyContext) []Violation {
 	var violations []Violation
-	files, err := ctx.Files("")
+	files, err := ctx.Files()
 	if err != nil {
 		return violations
 	}
@@ -1095,17 +1301,13 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 				}
 				violations = append(violations, ctx.CreateViolation(
 					fmt.Sprintf("Missing header section in %s", file),
-					"header:missing-section",
-					"Add a #region Header with filename, contributors, and appropriate license",
-					"Every source file must include a header section",
-					file, 0, "", autofix))
+					ViolationHeaderMissingRegion,
+file, 0, "", autofix))
 			} else {
 				violations = append(violations, ctx.CreateViolation(
 					fmt.Sprintf("Missing header section in %s", file),
-					"header:missing-section",
-					"Add a #region Header with filename, contributors, and appropriate license",
-					"Every source file must include a header section",
-					file, 0, "", nil))
+					ViolationHeaderMissingRegion,
+file, 0, "", nil))
 			}
 			continue
 		}
@@ -1122,10 +1324,8 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 		if !hasFilename {
 			violations = append(violations, ctx.CreateViolation(
 				fmt.Sprintf("Missing filename in header of %s", file),
-				"header:missing-filename",
-				fmt.Sprintf("Add the filename \"%s\" to the header section", filename),
-				"Header must include the source file name",
-				fmt.Sprintf("%s#Header", file), headerSection.StartLine, "", nil))
+				ViolationHeaderMissingFilename,
+			fmt.Sprintf("%s#Header", file), headerSection.StartLine, "", nil))
 		}
 		contributorPattern := regexp.MustCompile(`\d{4}\s+[\w\s]+<[\w.@-]+>`)
 		hasContributors := false
@@ -1138,10 +1338,8 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 		if !hasContributors {
 			violations = append(violations, ctx.CreateViolation(
 				fmt.Sprintf("Missing contributors in header of %s", file),
-				"header:missing-contributors",
-				"Add contributor line in format: YEAR Name <email>",
-				"Header must include at least one contributor",
-				fmt.Sprintf("%s#Header", file), headerSection.StartLine, "", nil))
+				ViolationHeaderMissingContributors,
+fmt.Sprintf("%s#Header", file), headerSection.StartLine, "", nil))
 		}
 		hasLicense := false
 		for _, marker := range agplMarkers {
@@ -1153,10 +1351,8 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 		if !hasLicense {
 			violations = append(violations, ctx.CreateViolation(
 				fmt.Sprintf("Missing license in header of %s", file),
-				"header:missing-license",
-				"Add AGPL-3.0 license text to the header section",
-				"Header must include AGPL-3.0 license",
-				fmt.Sprintf("%s#Header", file), headerSection.StartLine, "", nil))
+				ViolationHeaderMissingLicense,
+fmt.Sprintf("%s#Header", file), headerSection.StartLine, "", nil))
 		} else {
 			wrongLicenses := []string{"MIT", "Apache", "BSD"}
 			hasWrongLicense := false
@@ -1172,10 +1368,8 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 			if hasWrongLicense {
 				violations = append(violations, ctx.CreateViolation(
 					fmt.Sprintf("Wrong license in header of %s", file),
-					"header:wrong-license",
-					"Replace with AGPL-3.0 license text",
-					"Project uses AGPL-3.0, not other licenses",
-					fmt.Sprintf("%s#Header", file), headerSection.StartLine, "", nil))
+					ViolationHeaderWrongLicense,
+fmt.Sprintf("%s#Header", file), headerSection.StartLine, "", nil))
 			}
 		}
 	}
@@ -1184,7 +1378,7 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 
 func sectionPolicy(ctx *PolicyContext) []Violation {
 	var violations []Violation
-	files, err := ctx.Files("")
+	files, err := ctx.Files()
 	if err != nil {
 		return violations
 	}
@@ -1236,10 +1430,8 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 				if name == "" {
 					violations = append(violations, ctx.CreateViolation(
 						fmt.Sprintf("Missing section name at %s:%d", file, lineNum),
-						"section:missing-start-name",
-						"Add a name after #region",
-						"Section blocks should have descriptive names",
-						file, lineNum, strings.TrimSpace(line), nil))
+						ViolationSectionMissingStartName,
+file, lineNum, strings.TrimSpace(line), nil))
 				}
 				stack = append(stack, stackItem{name: name, line: lineNum})
 				continue
@@ -1256,17 +1448,13 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 						if endName == "" {
 							violations = append(violations, ctx.CreateViolation(
 								fmt.Sprintf("Missing end section name at %s:%d", file, lineNum),
-								"section:missing-end-name",
-								fmt.Sprintf("Add the section name \"%s\" after #endregion", open.name),
-								"End section should match start section name for clarity",
-								file, lineNum, strings.TrimSpace(line), nil))
+								ViolationSectionMissingEndName,
+					file, lineNum, strings.TrimSpace(line), nil))
 						} else if endName != open.name {
 							violations = append(violations, ctx.CreateViolation(
 								fmt.Sprintf("Section name mismatch at %s:%d", file, lineNum),
-								"section:name-mismatch",
-								fmt.Sprintf("Change end name from \"%s\" to \"%s\"", endName, open.name),
-								"Start and end section names must match",
-								file, lineNum, fmt.Sprintf("Start: \"%s\" at line %d, End: \"%s\"", open.name, open.line, endName), nil))
+								ViolationSectionNameMismatch,
+					file, lineNum, fmt.Sprintf("Start: \"%s\" at line %d, End: \"%s\"", open.name, open.line, endName), nil))
 						}
 					}
 				}
@@ -1287,10 +1475,8 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 			if nonEmpty == 0 && len(s.Children) == 0 {
 				violations = append(violations, ctx.CreateViolation(
 					fmt.Sprintf("Empty section \"%s\" in %s", s.Name, file),
-					"section:empty",
-					"Remove the empty section or add content to it",
-					"Empty sections add noise without providing value",
-					fmt.Sprintf("%s#%s", file, s.Name), s.StartLine, "", nil))
+					ViolationSectionEmpty,
+fmt.Sprintf("%s#%s", file, s.Name), s.StartLine, "", nil))
 			}
 			for _, child := range s.Children {
 				checkSection(child)
@@ -1305,7 +1491,7 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 
 func commentPolicy(ctx *PolicyContext) []Violation {
 	var violations []Violation
-	files, err := ctx.Files("")
+	files, err := ctx.Files()
 	if err != nil {
 		return violations
 	}
@@ -1342,10 +1528,8 @@ func commentPolicy(ctx *PolicyContext) []Violation {
 				if strings.HasSuffix(trimmed, "*/") {
 					violations = append(violations, ctx.CreateViolation(
 						fmt.Sprintf("JSDoc comment in %s:%d", file, jsDocStartLine),
-						"comment:jsdoc",
-						"Remove JSDoc and document in README.md or AGENTS.md",
-						"Documentation is centralized, not inline",
-						file, jsDocStartLine, "", nil))
+						ViolationCommentJSDoc,
+file, jsDocStartLine, "", nil))
 					inJsDoc = false
 				}
 				charIndex = lineEnd
@@ -1362,10 +1546,8 @@ func commentPolicy(ctx *PolicyContext) []Violation {
 				if strings.HasSuffix(trimmed, "*/") {
 					violations = append(violations, ctx.CreateViolation(
 						fmt.Sprintf("Block comment in %s:%d", file, blockCommentStartLine),
-						"comment:block",
-						"Remove block comment and document in README.md or AGENTS.md",
-						"Documentation is centralized, not inline",
-						file, blockCommentStartLine, "", nil))
+						ViolationCommentBlock,
+file, blockCommentStartLine, "", nil))
 					inBlockComment = false
 				}
 				charIndex = lineEnd
@@ -1375,17 +1557,13 @@ func commentPolicy(ctx *PolicyContext) []Violation {
 				if strings.HasPrefix(trimmed, "/**") {
 					violations = append(violations, ctx.CreateViolation(
 						fmt.Sprintf("JSDoc comment in %s:%d", file, lineNum),
-						"comment:jsdoc",
-						"Remove JSDoc and document in README.md or AGENTS.md",
-						"Documentation is centralized, not inline",
-						file, lineNum, truncate(trimmed, 80), nil))
+						ViolationCommentJSDoc,
+file, lineNum, truncate(trimmed, 80), nil))
 				} else {
 					violations = append(violations, ctx.CreateViolation(
 						fmt.Sprintf("Block comment in %s:%d", file, lineNum),
-						"comment:block",
-						"Remove block comment and document in README.md or AGENTS.md",
-						"Documentation is centralized, not inline",
-						file, lineNum, truncate(trimmed, 80), nil))
+						ViolationCommentBlock,
+file, lineNum, truncate(trimmed, 80), nil))
 				}
 				charIndex = lineEnd
 				continue
@@ -1422,6 +1600,72 @@ func truncate(s string, maxLen int) string {
 	return s[:maxLen]
 }
 
+func devDocsPolicy(ctx *PolicyContext) []Violation {
+	var violations []Violation
+	agentsContent := ctx.ReadText("AGENTS.md")
+	if agentsContent == "" {
+		return violations
+	}
+	codebaseStart := strings.Index(agentsContent, "\n# Codebase")
+	if codebaseStart == -1 {
+		return violations
+	}
+	codebaseContent := agentsContent[codebaseStart:]
+	nextH1 := strings.Index(codebaseContent[1:], "\n# ")
+	if nextH1 != -1 {
+		codebaseContent = codebaseContent[:nextH1+1]
+	}
+	fileSectionRegex := regexp.MustCompile(`(?m)^## 📄\s*(.+?)\s*$`)
+	folderSectionRegex := regexp.MustCompile(`(?m)^## 📁\s*(.+?)\s*$`)
+	fileMatches := fileSectionRegex.FindAllStringSubmatchIndex(codebaseContent, -1)
+	folderMatches := folderSectionRegex.FindAllStringSubmatchIndex(codebaseContent, -1)
+	var fileSections []struct {
+		path string
+		line int
+		pos  int
+	}
+	var folderSections []struct {
+		path string
+		line int
+		pos  int
+	}
+	for _, match := range fileMatches {
+		path := codebaseContent[match[2]:match[3]]
+		lineNum := strings.Count(agentsContent[:codebaseStart+match[0]], "\n") + 1
+		fileSections = append(fileSections, struct {
+			path string
+			line int
+			pos  int
+		}{path: path, line: lineNum, pos: match[0]})
+	}
+	for _, match := range folderMatches {
+		path := codebaseContent[match[2]:match[3]]
+		lineNum := strings.Count(agentsContent[:codebaseStart+match[0]], "\n") + 1
+		folderSections = append(folderSections, struct {
+			path string
+			line int
+			pos  int
+		}{path: path, line: lineNum, pos: match[0]})
+	}
+	for i := 0; i < len(fileSections)-1; i++ {
+		if fileSections[i].path > fileSections[i+1].path {
+			violations = append(violations, ctx.CreateViolation(
+				fmt.Sprintf("File section '%s' should come after '%s' (alphabetical order)", fileSections[i].path, fileSections[i+1].path),
+				ViolationDevDocsWrongFileOrder,
+				"AGENTS.md", fileSections[i+1].line, "", nil))
+		}
+	}
+	for i := 0; i < len(folderSections)-1; i++ {
+		if folderSections[i].path > folderSections[i+1].path {
+			violations = append(violations, ctx.CreateViolation(
+				fmt.Sprintf("Folder section '%s' should come after '%s' (alphabetical order)", folderSections[i].path, folderSections[i+1].path),
+				ViolationDevDocsWrongFolderOrder,
+				"AGENTS.md", folderSections[i+1].line, "", nil))
+		}
+	}
+	return violations
+}
+
 // #endregion Policies
 
 // #region Tickets
@@ -1434,21 +1678,39 @@ func GetTicketPath(year, month, day int, slug string) string {
 	return filepath.Join(GetTicketsDir(), strconv.Itoa(year), PadNumber(month, 2), PadNumber(day, 2), slug+".md")
 }
 
-func CreateTicket(slug, prompt, model string) (*Ticket, error) {
+func CreateTicket(slug, prompt, model string, files []string) (*Ticket, error) {
+	if len(files) == 0 {
+		return nil, fmt.Errorf("at least one file is required to create a ticket")
+	}
 	now := time.Now()
 	year, month, day := FormatDate(now)
 	normalizedSlug := Slugify(slug)
 	filePath := GetTicketPath(year, month, day, normalizedSlug)
 	gitAuthor := GetGitAuthor()
 	gitCommit := GetGitCommit()
-	frontmatter := TicketFrontmatter{
-		Slug:   normalizedSlug,
+	var iterationFiles *TicketIterationFiles
+	if len(files) > 0 {
+		iterationFiles = &TicketIterationFiles{}
+		for _, f := range files {
+			iterationFiles.Updated = append(iterationFiles.Updated, FileLineStats{Path: f})
+		}
+	}
+	firstIteration := TicketIteration{
 		Prompt: prompt,
-		Status: TicketOpen,
-		Author: gitAuthor,
-		Date:   TicketDateCreated{Created: ISOTimestamp()},
-		Commit: gitCommit,
 		Model:  model,
+		Date:   TicketDate{Started: ISOTimestamp()},
+		Author: gitAuthor,
+		Files:  iterationFiles,
+	}
+	frontmatter := TicketFrontmatter{
+		Slug:       normalizedSlug,
+		Prompt:     prompt,
+		Status:     TicketOpen,
+		Author:     gitAuthor,
+		Date:       TicketDateCreated{Created: ISOTimestamp()},
+		Commit:     gitCommit,
+		Model:      model,
+		Iterations: []TicketIteration{firstIteration},
 	}
 	content := `# Previously
 
@@ -1605,13 +1867,24 @@ func ListTickets(year, month, day *int) ([]Ticket, error) {
 	return tickets, nil
 }
 
-func StartIteration(ticket *Ticket, prompt, model string) error {
+func StartIteration(ticket *Ticket, prompt, model string, files []string) error {
+	if len(files) == 0 {
+		return fmt.Errorf("at least one file is required to start an iteration")
+	}
 	gitAuthor := GetGitAuthor()
+	var iterationFiles *TicketIterationFiles
+	if len(files) > 0 {
+		iterationFiles = &TicketIterationFiles{}
+		for _, f := range files {
+			iterationFiles.Updated = append(iterationFiles.Updated, FileLineStats{Path: f})
+		}
+	}
 	iteration := TicketIteration{
 		Prompt: prompt,
 		Model:  model,
 		Date:   TicketDate{Started: ISOTimestamp()},
 		Author: gitAuthor,
+		Files:  iterationFiles,
 	}
 	ticket.Frontmatter.Iterations = append(ticket.Frontmatter.Iterations, iteration)
 	return SaveTicket(ticket)
@@ -1640,6 +1913,21 @@ func FinishTicket(ticket *Ticket) error {
 	}
 	ticket.Frontmatter.Status = TicketClosed
 	ticket.Frontmatter.Date.Finished = ISOTimestamp()
+	return SaveTicket(ticket)
+}
+
+func ReopenTicket(ticket *Ticket) error {
+	if ticket.Frontmatter.Status == TicketOpen {
+		return fmt.Errorf("ticket is already open")
+	}
+	if len(ticket.Frontmatter.Iterations) > 0 {
+		last := ticket.Frontmatter.Iterations[len(ticket.Frontmatter.Iterations)-1]
+		if last.Date.Ended == "" {
+			return fmt.Errorf("cannot reopen ticket with unfinished iteration")
+		}
+	}
+	ticket.Frontmatter.Status = TicketOpen
+	ticket.Frontmatter.Date.Finished = ""
 	return SaveTicket(ticket)
 }
 
@@ -1799,11 +2087,11 @@ func AddContributorProject(github string, project string) error {
 
 var (
 	cachedProjectNames   []string
-	cachedProjectDetails = make(map[string]NxProject)
+	cachedProjectDetails = make(map[string]Project)
 	nxMutex              sync.Mutex
 )
 
-func GetNxProjectNames() []string {
+func GetProjectNames() []string {
 	nxMutex.Lock()
 	defer nxMutex.Unlock()
 	if cachedProjectNames != nil {
@@ -1823,7 +2111,7 @@ func GetNxProjectNames() []string {
 	return cachedProjectNames
 }
 
-func GetNxProjectDetails(name string) NxProject {
+func GetProjectDetails(name string) Project {
 	nxMutex.Lock()
 	defer nxMutex.Unlock()
 	if proj, ok := cachedProjectDetails[name]; ok {
@@ -1831,17 +2119,17 @@ func GetNxProjectDetails(name string) NxProject {
 	}
 	stdout, _, exitCode := ExecCommand("npx", []string{"nx", "show", "project", name, "--json"}, "")
 	if exitCode != 0 {
-		proj := NxProject{Name: name}
+		proj := Project{Name: name}
 		cachedProjectDetails[name] = proj
 		return proj
 	}
 	var config map[string]interface{}
 	if err := json.Unmarshal([]byte(stdout), &config); err != nil {
-		proj := NxProject{Name: name}
+		proj := Project{Name: name}
 		cachedProjectDetails[name] = proj
 		return proj
 	}
-	proj := NxProject{Name: name}
+	proj := Project{Name: name}
 	if root, ok := config["root"].(string); ok {
 		proj.Root = root
 	}
@@ -1862,11 +2150,11 @@ func GetNxProjectDetails(name string) NxProject {
 	return proj
 }
 
-func GetNxProjects() []NxProject {
-	names := GetNxProjectNames()
-	projects := make([]NxProject, len(names))
+func GetProjects() []Project {
+	names := GetProjectNames()
+	projects := make([]Project, len(names))
 	for i, name := range names {
-		projects[i] = GetNxProjectDetails(name)
+		projects[i] = GetProjectDetails(name)
 	}
 	return projects
 }
@@ -1899,7 +2187,7 @@ func filterGitIgnored(files []string) []string {
 	return filtered
 }
 
-func ScopeToFiles(scope Scope, projects []NxProject) ([]string, error) {
+func ScopeToFiles(scope Scope, projects []Project) ([]string, error) {
 	ignorePatterns := []string{"**/node_modules/**", "**/.venv/**"}
 	var files []string
 	var err error
@@ -1924,6 +2212,9 @@ func ScopeToFiles(scope Scope, projects []NxProject) ([]string, error) {
 	}
 	if err != nil {
 		return nil, err
+	}
+	if len(files) <= 10 {
+		return files, nil
 	}
 	return filterGitIgnored(files), nil
 }
@@ -2044,7 +2335,8 @@ var ticketCreateCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		prompt, _ := cmd.Flags().GetString("prompt")
 		model, _ := cmd.Flags().GetString("model")
-		result := ToolTicketCreate(args[0], prompt, model)
+		files, _ := cmd.Flags().GetStringSlice("file")
+		result := ToolTicketCreate(args[0], prompt, model, files)
 		return outputResult(result)
 	},
 }
@@ -2096,10 +2388,11 @@ var ticketIterateStartCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		prompt, _ := cmd.Flags().GetString("prompt")
 		model, _ := cmd.Flags().GetString("model")
+		files, _ := cmd.Flags().GetStringSlice("file")
 		year, _ := strconv.Atoi(args[0])
 		month, _ := strconv.Atoi(args[1])
 		day, _ := strconv.Atoi(args[2])
-		result := ToolTicketIterateStart(year, month, day, args[3], prompt, model)
+		result := ToolTicketIterateStart(year, month, day, args[3], prompt, model, files)
 		return outputResult(result)
 	},
 }
@@ -2130,11 +2423,26 @@ var ticketFinishCmd = &cobra.Command{
 	},
 }
 
+var ticketReopenCmd = &cobra.Command{
+	Use:   "reopen <year> <month> <day> <slug>",
+	Short: "Reopen a ticket",
+	Args:  cobra.ExactArgs(4),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		year, _ := strconv.Atoi(args[0])
+		month, _ := strconv.Atoi(args[1])
+		day, _ := strconv.Atoi(args[2])
+		result := ToolTicketReopen(year, month, day, args[3])
+		return outputResult(result)
+	},
+}
+
 func init() {
 	ticketCreateCmd.Flags().String("prompt", "", "Ticket prompt")
 	ticketCreateCmd.Flags().String("model", "", "Model used")
+	ticketCreateCmd.Flags().StringSlice("file", nil, "Files to include (can be specified multiple times)")
 	ticketIterateStartCmd.Flags().String("prompt", "", "Iteration prompt")
 	ticketIterateStartCmd.Flags().String("model", "", "Model used")
+	ticketIterateStartCmd.Flags().StringSlice("file", nil, "Files to include (can be specified multiple times)")
 	ticketIterateCmd.AddCommand(ticketIterateStartCmd)
 	ticketIterateCmd.AddCommand(ticketIterateEndCmd)
 	ticketCmd.AddCommand(ticketCreateCmd)
@@ -2142,6 +2450,7 @@ func init() {
 	ticketCmd.AddCommand(ticketReadCmd)
 	ticketCmd.AddCommand(ticketIterateCmd)
 	ticketCmd.AddCommand(ticketFinishCmd)
+	ticketCmd.AddCommand(ticketReopenCmd)
 }
 
 var contributorCmd = &cobra.Command{
@@ -2465,25 +2774,21 @@ func outputResult(result ToolResult) error {
 	return enc.Encode(result)
 }
 
-func AnalyzeFileAndCache(filePath string, projects []NxProject) ([]Violation, error) {
-	absPath := filepath.Join(rootDir, filePath)
-	content, err := ReadTextFile(absPath)
-	if err != nil {
-		return nil, err
+func AnalyzeFile(filePath string, projects []Project) ([]Violation, error) {
+	absPath := filePath
+	if !filepath.IsAbs(absPath) {
+		absPath = filepath.Join(rootDir, filePath)
 	}
-	contentHash := hashFileContent(content)
-	if IsCacheValid(filePath, contentHash) {
-		cache, _ := ReadFileCache(filePath)
-		if cache != nil {
-			return cache.Violations, nil
-		}
+	
+	if isGitIgnored(absPath) {
+		return []Violation{}, nil
 	}
+	
 	scope := ParseScope(filePath)
-	violations, err := RunPolicies(scope, projects, nil)
+	violations, err := CheckPolicies(scope, projects, nil)
 	if err != nil {
 		return nil, err
 	}
-	WriteFileCache(filePath, violations, contentHash)
 	return violations, nil
 }
 
@@ -2498,24 +2803,32 @@ func ToolAnalyze(scope string, scopes []string) ToolResult {
 		scopeRaws = []string{"@semio"}
 	}
 	var allViolations []Violation
-	projects := GetNxProjects()
+	var projects []Project
+	var projectsLoaded bool
+	getProjectsLazy := func() []Project {
+		if !projectsLoaded {
+			projects = GetProjects()
+			projectsLoaded = true
+		}
+		return projects
+	}
 	for _, scopeRaw := range scopeRaws {
 		s := ParseScope(scopeRaw)
-		files, err := ScopeToFiles(s, projects)
-		if err != nil {
-			output.Error(fmt.Sprintf("Error getting files: %v", err))
-			return ToolResult{Output: *output, Error: err.Error()}
-		}
-		if s.Kind == ScopeFile {
-			violations, err := AnalyzeFileAndCache(s.FilePath, projects)
+		if s.Kind == ScopeFile || s.Kind == ScopeSection || s.Kind == ScopeDefinition {
+			violations, err := AnalyzeFile(s.FilePath, nil)
 			if err != nil {
 				output.Error(fmt.Sprintf("Error analyzing file: %v", err))
 				return ToolResult{Output: *output, Error: err.Error()}
 			}
 			allViolations = append(allViolations, violations...)
 		} else {
+			files, err := ScopeToFiles(s, getProjectsLazy())
+			if err != nil {
+				output.Error(fmt.Sprintf("Error getting files: %v", err))
+				return ToolResult{Output: *output, Error: err.Error()}
+			}
 			for _, file := range files {
-				violations, err := AnalyzeFileAndCache(file, projects)
+				violations, err := AnalyzeFile(file, nil)
 				if err != nil {
 					continue
 				}
@@ -2538,11 +2851,20 @@ func ToolAnalyze(scope string, scopes []string) ToolResult {
 		report.Status = "error"
 	}
 	for _, v := range allViolations {
-		report.Summary.ByPriority[string(v.Priority)]++
-		report.Summary.ByKind[v.Kind]++
+		meta := GetViolationKindMeta(v.Kind)
+		report.Summary.ByPriority[string(meta.Priority)]++
+		report.Summary.ByKind[string(v.Kind)]++
 	}
+
+	if len(scopeRaws) == 1 && (scopeRaws[0] == "@semio" || scopeRaws[0] == "") {
+		reportsDir := filepath.Join(rootDir, "reports")
+		if err := EnsureDir(reportsDir); err == nil {
+			outputPath := filepath.Join(reportsDir, "violations.json")
+			WriteJSONFile(outputPath, report)
+		}
+	}
+
 	output.Success(fmt.Sprintf("\n📊 Analysis complete: %d violations found", len(allViolations)))
-	output.Info(fmt.Sprintf("   Cache: %s", GetCacheDir()))
 	if report.Status == "error" {
 		output.ExitCode = 1
 	}
@@ -2555,11 +2877,11 @@ func ToolFix(scopeRaw string) ToolResult {
 		scopeRaw = "@semio"
 	}
 	scope := ParseScope(scopeRaw)
-	projects := GetNxProjects()
+	projects := GetProjects()
 	files, _ := ScopeToFiles(scope, projects)
 	var allViolations []Violation
 	for _, file := range files {
-		violations, err := AnalyzeFileAndCache(file, projects)
+		violations, err := AnalyzeFile(file, projects)
 		if err != nil {
 			continue
 		}
@@ -2567,7 +2889,8 @@ func ToolFix(scopeRaw string) ToolResult {
 	}
 	var fixable []Violation
 	for _, v := range allViolations {
-		if v.Autofixable && v.Autofix != nil {
+		meta := GetViolationKindMeta(v.Kind)
+		if meta.Autofixable && v.Autofix != nil {
 			fixable = append(fixable, v)
 		}
 	}
@@ -2591,17 +2914,8 @@ func ToolFix(scopeRaw string) ToolResult {
 			fixed++
 		}
 	}
-	for filePath := range fixedFiles {
-		InvalidateFileCache(filePath)
-		AnalyzeFileAndCache(filePath, projects)
-	}
 	output.Success(fmt.Sprintf("\n✅ Fixed %d violations", fixed))
 	return ToolResult{Output: *output}
-}
-
-func InvalidateFileCache(filePath string) {
-	cachePath := GetFileCachePath(filePath)
-	os.Remove(cachePath)
 }
 
 func ToolPolicyList() ToolResult {
@@ -2623,8 +2937,8 @@ func ToolPolicyCheck(policyID, scopeRaw string) ToolResult {
 		scopeRaw = "@semio"
 	}
 	scope := ParseScope(scopeRaw)
-	projects := GetNxProjects()
-	violations, err := RunPolicies(scope, projects, []string{policyID})
+	projects := GetProjects()
+	violations, err := CheckPolicies(scope, projects, []string{policyID})
 	if err != nil {
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
@@ -2656,18 +2970,19 @@ func ToolPolicyViolationList(policyID string) ToolResult {
 	return ToolResult{Output: *output, Data: foundPolicy.ViolationKinds}
 }
 
-func ToolTicketCreate(slug, prompt, model string) ToolResult {
+func ToolTicketCreate(slug, prompt, model string, files []string) ToolResult {
 	output := NewOutput()
 	if prompt == "" {
 		prompt = slug
 	}
-	ticket, err := CreateTicket(slug, prompt, model)
+	ticket, err := CreateTicket(slug, prompt, model, files)
 	if err != nil {
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
 	output.Success(fmt.Sprintf("\n🎫 Created ticket: %s", ticket.Slug))
 	output.Info(fmt.Sprintf("   Path: %s", ticket.FilePath))
+	output.Info(fmt.Sprintf("   First iteration started with %d file(s)", len(files)))
 	return ToolResult{Output: *output, Data: ticket}
 }
 
@@ -2710,18 +3025,19 @@ func ToolTicketRead(year, month, day int, slug string) ToolResult {
 	return ToolResult{Output: *output, Data: ticket}
 }
 
-func ToolTicketIterateStart(year, month, day int, slug, prompt, model string) ToolResult {
+func ToolTicketIterateStart(year, month, day int, slug, prompt, model string, files []string) ToolResult {
 	output := NewOutput()
 	ticket, err := ReadTicket(year, month, day, slug)
 	if err != nil {
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
-	if err := StartIteration(ticket, prompt, model); err != nil {
+	if err := StartIteration(ticket, prompt, model, files); err != nil {
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
 	output.Success(fmt.Sprintf("\n🔄 Started iteration on ticket: %s", ticket.Slug))
+	output.Info(fmt.Sprintf("   Iteration started with %d file(s)", len(files)))
 	return ToolResult{Output: *output, Data: ticket}
 }
 
@@ -2752,6 +3068,21 @@ func ToolTicketFinish(year, month, day int, slug string) ToolResult {
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
 	output.Success(fmt.Sprintf("\n✅ Ticket finished: %s", ticket.Slug))
+	return ToolResult{Output: *output, Data: ticket}
+}
+
+func ToolTicketReopen(year, month, day int, slug string) ToolResult {
+	output := NewOutput()
+	ticket, err := ReadTicket(year, month, day, slug)
+	if err != nil {
+		output.Error(fmt.Sprintf("Error: %v", err))
+		return ToolResult{Output: *output, Error: err.Error()}
+	}
+	if err := ReopenTicket(ticket); err != nil {
+		output.Error(fmt.Sprintf("Error: %v", err))
+		return ToolResult{Output: *output, Error: err.Error()}
+	}
+	output.Success(fmt.Sprintf("\n🔓 Ticket reopened: %s", ticket.Slug))
 	return ToolResult{Output: *output, Data: ticket}
 }
 
@@ -2801,7 +3132,7 @@ func ToolContributorRemove(github string) ToolResult {
 
 func ToolProjectList() ToolResult {
 	output := NewOutput()
-	projects := GetNxProjects()
+	projects := GetProjects()
 	output.Info(fmt.Sprintf("\n📦 Found %d projects:\n", len(projects)))
 	for _, p := range projects {
 		output.Plain(fmt.Sprintf("   %s", p.Name))
@@ -2815,7 +3146,7 @@ func ToolProjectList() ToolResult {
 
 func ToolProjectTree() ToolResult {
 	output := NewOutput()
-	projects := GetNxProjects()
+	projects := GetProjects()
 	output.Info("\n📦 Project tree:\n")
 	for _, p := range projects {
 		output.Plain(fmt.Sprintf("   └── %s (%s)", p.Name, p.Root))
@@ -3101,7 +3432,7 @@ func ToolFileDelete(path string) ToolResult {
 func ToolFileList(scopeRaw string) ToolResult {
 	output := NewOutput()
 	scope := ParseScope(scopeRaw)
-	projects := GetNxProjects()
+	projects := GetProjects()
 	files, err := ScopeToFiles(scope, projects)
 	if err != nil {
 		output.Error(fmt.Sprintf("Error: %v", err))

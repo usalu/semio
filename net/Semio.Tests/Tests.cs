@@ -106,7 +106,7 @@ public class KitTests
         var expected = ValidationResult.Parse(expectedJson);
 
         Assert.True(ValidationResult.AreEqual(result, expected),
-            $"Validation mismatch. Got {result.Problems.Count} problems, expected {expected.Problems.Count}. " +
+            $"Validation mismatch. Got {result.Issues.Count} issues, expected {expected.Issues.Count}. " +
             $"Result: {result.Serialize()}");
     }
 }

@@ -7024,10 +7024,10 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
 
 // #region Validation core types
 
-export type SemioEntityKind = "Kit" | "Type" | "Design" | "Piece" | "Connection" | "Connector" | "Attribute" | "File" | "Folder" | "Quality" | "Interface" | "Prop" | "Model" | "Layer" | "Group" | "Stat";
+export type EntityKind = "Kit" | "Type" | "Design" | "Piece" | "Connection" | "Connector" | "Attribute" | "File" | "Folder" | "Quality" | "Interface" | "Prop" | "Model" | "Layer" | "Group" | "Stat";
 
-export interface SemioDomainLocation {
-  entityKind: SemioEntityKind;
+export interface DomainLocation {
+  entityKind: EntityKind;
   entityGuid?: Guid;
   field?: string;
 }
@@ -7040,7 +7040,7 @@ export interface Fix {
 export interface Problem {
   constraintId: string;
   message: string;
-  location: SemioDomainLocation;
+  location: DomainLocation;
   relatedGuids?: Guid[];
   fixes: Fix[];
 }
@@ -7049,7 +7049,7 @@ export interface ValidationResult {
   problems: Problem[];
 }
 
-export const hasSemioErrors = (res: ValidationResult) => res.problems.length > 0;
+export const hasErrors = (res: ValidationResult) => res.problems.length > 0;
 
 // #endregion Validation core types
 
@@ -7084,13 +7084,13 @@ export const buildValidationContext = (kit: Kit): ValidationContext => {
 
 export type Constraint = (ctx: ValidationContext) => Problem[];
 
-export interface SemioValidationConfig {
+export interface ValidationConfig {
   constraints?: Constraint[];
 }
 
 export let defaultConstraints: Constraint[] = [];
 
-export const validateSemioKit = (kit: Kit, cfg: SemioValidationConfig = {}): ValidationResult => {
+export const validateKit = (kit: Kit, cfg: ValidationConfig = {}): ValidationResult => {
   const ctx = buildValidationContext(kit);
   const constraints = cfg.constraints ?? defaultConstraints;
   return { problems: constraints.flatMap((constraint) => constraint(ctx)) };
@@ -7146,8 +7146,8 @@ const updateGuidEverywhere = (kit: Kit, oldGuid: Guid, newGuid: Guid): void => {
 
 export const semioGuidUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
-  const seen = new Map<Guid, SemioEntityKind>();
-  const check = (entityKind: SemioEntityKind, entityGuid: Guid) => {
+  const seen = new Map<Guid, EntityKind>();
+  const check = (entityKind: EntityKind, entityGuid: Guid) => {
     const existing = seen.get(entityGuid);
     if (!existing) {
       seen.set(entityGuid, entityKind);

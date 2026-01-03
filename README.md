@@ -52,6 +52,7 @@ Let me walk you through 🚶
    - [👥 studio](#-studio-)
    - [☁️ cloud](#%EF%B8%8F-cloud-)
    - [🤖 assistant](#-assistant-)
+   - [VS Code Extension](#vs-code-extension-)
    - [🦗 semio.gh](#-semiogh-)
    - [🦏 semio.3dm](#-semio3dm-)
    - [🐝 semio.wasp](#-semiowasp-)
@@ -198,6 +199,10 @@ Use any file-hosting platform as an asynchronous Common-Data-Environment 📁
 The assistant helps you on every step in the design process with semio ✍️
 
 ![semio assistant Demo](/assets/images/assistant-demo.png)
+
+## VS Code Extension [↑](#%EF%B8%8F-products-)
+
+The VS Code extension keeps tickets close to daily work with inline close or reopen actions, commit visibility, and concise hover descriptions for quick scanning.
 
 ## 🦗 [semio.gh](https://docs.semio-tech.com/manuals/grasshopper) [↑](#%EF%B8%8F-products-)
 
@@ -1207,7 +1212,7 @@ semio includes a **domain-pure validation system** built entirely in `semio.ts` 
 
 **Platform Integrations:**
 
-- **VS Code Extension** - JSON linter with Quick Fixes
+- **VS Code Extension** - Kit validation with Quick Fixes, violation diagnostics with auto-refresh on save
 - **Sketchpad UI** - In-app validation panel (planned)
 - **CLI** - Command-line validation tool (planned)
 - **Backend** - API validation endpoint (planned)
@@ -1474,6 +1479,30 @@ Currently not implemented in this repo (planned component) 🧩
 ## 🎛️ [@semio/play](https://github.com/usalu/semio/tree/main/js/play) [↑](#-components-)
 
 A playground for [sketchpad](#%EF%B8%8F-sketchpad-) 🎮
+
+## 💻 [@semio/vscode](https://github.com/usalu/semio/tree/main/js/vscode) [↑](#-components-)
+
+VS Code extension providing real-time violation diagnostics for semio development.
+
+### Violation Diagnostics
+
+Shows policy violations as diagnostics for all supported file types (TypeScript, JavaScript, JSON, Python, C#, Go):
+
+- Loads cached violations on file open for immediate feedback
+- Re-runs `repo analyze` on file save and updates diagnostics
+- Quick Fix actions to apply automated fixes via `repo fix`
+
+### Kit Validation
+
+Real-time validation for kit JSON files with Quick Fix code actions that apply `KitDiff`-based fixes.
+
+### Sidebar
+
+Tree views for tickets, policies, contributors, and commands with search and filter support.
+
+### Tickets
+
+Ticket tree items expose inline close or reopen actions based on status, list commit entries derived from ticket and iteration commits, and keep hover tooltips limited to the ticket description.
 
 ## 🟪 [@semio/net](https://github.com/usalu/semio/tree/main/net) [↑](#-components-)
 

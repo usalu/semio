@@ -1,5 +1,41 @@
 # Prompt history
 
+The analyze violation diagnostics are not shown in vscode under problems
+
+Creating a new ticket should always start the first iteration. At least one file needs to be provided per iteration (and when opening a ticket). The vscode extension should add a file dialog to select files from the repo. The current opened active file should be preselected.
+
+vscode extension:
+Remove Open Ticket button from tickets. Instead add reopen and close icons and execute the command once pressed
+Remove status emoji from ticket
+Add commit tree item
+Just show description on ticket tree item hover
+
+.\bin\repo.exe analyze net/Semio.Grasshopper/Semio.Grasshopper.cs
+
+.\bin\repo.exe analyze net/Semio.Tests/Tests.cs
+should not take more than 100ms. Analyze why it takes so long and refactor to make it performant. In general only policies where the scope includes the target scope should run.
+
+Remove all caching mechanism with .semio-repo folder. The analyze command should be called for every open file and rerunwhen saving a file. Make sure that the go binary is ignoring files that are gitignored. Make sure the analyze command is only running policies that have scopes which include the file. Make sure the analysis is performant and less than 100ms per file. When running analyze without a scope it should produce: reports/violations.json with all violations.
+
+Add new skip flag for file create, file move and file delete and section create, section move and section delete to the repo binary to skip the actual action .
+
+- It doesnt look the same as the default vscode search (such as ctrl+f or ctrl+shift+h)
+- It should also filter commands tree items.
+- violation kind tree are not filtered properly. e.g. when the name of the violation kind is typed, it is wrongly not shown
+
+The search should be the first section in the sideview. Add the same search input as in vscode with Match Case, Match Whole Word and Use Regular Expressions toggles. The search should filter simultaneusly tree items in all sections (Tickets, Policies, Contributors). Remove the search buttons from the existing sections.
+
+Add a new policy: dev-docs
+
+Keep on. All properties still have attributes. Dont use Metadata registry, just remove it and only add it the information directly on the components.
+
+TODO
+- Extend violations to proper type. Priority, Reason and Autofix are defined per ViolationKind not per Violation.
+- Remove all tool functionality
+- The .semio-repo cache for analyze should store the caches in a way that only from the file name it is clear what is being cached.
+- Make sure that ticket list command has a flag for no content (and vscode is using it because otherwise the result is large)
+- The vscode extension should do any file and disk operation and always use the repo binary for interaction
+
 ViolationKinds should be first-class citizens with priority, etc
 
 When loading header violation kinds under policies it takes very long to load them. Dont dynamically discover them with analyze but use `policy violation list` for it.
@@ -114,38 +150,9 @@ vscode extension:
       "@semio/docs",
       "@semio/assets"
     ],
-    "folders": [
-      "js/js/sketchpad",
-      "js/js/semio",
-      "js/js/semio/engine",
-      "js/js/semio/assistant",
-      "js/js/semio/play",
-      "js/js/semio/docs",
-      "js/js/semio/assets"
-    ],
     "files": [
       "js/js/sketchpad/Sketchpad.tsx",
-      "js/js/semio/engine/Engine.tsx",
-      "js/js/semio/assistant/Assistant.tsx",
-      "js/js/semio/play/Play.tsx",
-      "js/js/semio/docs/Docs.tsx",
-      "js/js/semio/assets/Assets.tsx"
-    ],
-    "regions": [
-      "js/js/sketchpad/Sketchpad.tsx#Header",
-      "js/js/semio/engine/Engine.tsx#Header",
-      "js/js/semio/assistant/Assistant.tsx#Header",
-      "js/js/semio/play/Play.tsx#Header",
-      "js/js/semio/docs/Docs.tsx#Header",
-      "js/js/semio/assets/Assets.tsx#Header"
-    ],
-    "definitions": [
-      "js/js/sketchpad/Sketchpad.tsx§Sketchpad",
-      "js/js/semio/engine/Engine.tsx§Engine",
-      "js/js/semio/assistant/Assistant.tsx§Assistant",
-      "js/js/semio/play/Play.tsx§Play",
-      "js/js/semio/docs/Docs.tsx§Docs",
-      "js/js/semio/assets/Assets.tsx§Assets"
+      "js/js/semio/engine/engine.py",
     ]
   }
 }
@@ -220,10 +227,9 @@ The repo should have a dev command that automatically executes all hooks when th
 
 Add a new policy: dev-docs
 The dev-docs (README.md and AGENTS.md) should be checked for violations.
-AGENTs.md:
-- All sections inside the Codebase section should be files and folders. Every file section name is `## 📄 PATH` and every folder section name is `## 📁 PATH`. The order of the sections should be alphabetical (same as the file system). Violation kinds: missing-file, missing-folder, wrong-file-path, wrong-folder-path, wrong-file-name, wrong-folder-name, wrong-file-order, wrong-folder-order. All are autofixable.
-README.md:
-- All package.json workspaces correspond to a component. Violation kinds: missing-component, wrong-component-name, wrong-component-order. All are autofixable.
+Violation kinds:
+- All sections inside the Codebase section in AGENTS.mdshould be files and folders. Every file section name is `## 📄 PATH` and every folder section name is `## 📁 PATH`. The order of the sections should be alphabetical (same as the file system). Violation kinds: missing-file, missing-folder, wrong-file-path, wrong-folder-path, wrong-file-name, wrong-folder-name, wrong-file-order, wrong-folder-order. All are autofixable.
+- All package.json workspaces correspond to a component in README.md. Violation kinds: missing-component, wrong-component-name, wrong-component-order. All are autofixable.
 
 - The code should be the id of the policy.
 - The message the name of the violation kind.
