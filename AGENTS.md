@@ -27,6 +27,8 @@ Source files MUST NOT include inline comments except for license headers and reg
 
 Block and JSDoc comments are treated as inline comments.
 
+Comment detection MUST ignore comment markers inside string literals and template literal text.
+
 Temporary diagnostic logs MUST include the `[DEBUG]` prefix and are considered removable.
 
 Region blocks MUST be properly nested and MUST be closed with a matching named end marker.
@@ -61,13 +63,27 @@ A `ticket` stores an ordered list of `iterations` where each iteration records a
 
 Tickets can be reopened to return to **open** status.
 
+Ticket close and reopen actions invoked from the ticket list MUST apply to the selected ticket without additional selection.
+
 A ticket MUST NOT start a new iteration while the latest iteration is unfinished.
 
 A ticket MUST NOT be finished while the latest iteration is unfinished.
 
 Iteration start and iteration finish MUST declare at least one file across `updated`, `created`, or `removed`.
 
+Iteration finish MUST derive per-file `updated`, `created`, and `removed` lists with line stats via git diff between the previous iteration commit (or ticket base commit) and the current commit.
+
 Ticket finish MUST aggregate all iteration files as ticket-level `files` and MUST compute ticket-level `lines` via git diff against the ticket `base` commit.
+
+Iteration finish and ticket finish MUST scope git diff file and line stats to the files declared on the ticket iterations.
+
+### Contributor
+
+Contributor contributions MUST be derived from ticket frontmatter and source file headers.
+
+Contributor ordering MUST be based on ticket contribution count.
+
+Contributor contributions MUST expose tickets, commits, projects, files, and line totals.
 
 ### Kit
 
@@ -317,9 +333,14 @@ Toolbar panel visibility defaults to `true` for all apps via `panelVisibility: {
 
 ### VS Code Extension
 
-- Ticket tree items expose inline close and reopen actions based on status.
+- Ticket tree items expose inline close and reopen actions that apply to the selected ticket based on status.
 - Ticket tree hovers show only the ticket description.
 - Ticket tree items list commit entries as child nodes.
+- Ticket detail views consume git-derived per-file and total line stats stored on iterations and ticket finish.
+- Command trees mirror the CLI command and subcommand hierarchy; matching a command group keeps its subtree visible.
+- Problem list diagnostics open in pinned editor tabs for immediate saves.
+- Contributor tree items list emails with mailto actions, links with external navigation, and contribution nodes with line summary descriptions.
+- Contributor contributions are grouped into commits, projects, tickets (year/month/day), and files (folder/file) with navigation actions and inline ticket close/reopen actions.
 
 # Monorepo
 
@@ -556,9 +577,23 @@ All commands output JSON with structure:
 
 **Built-in Policies:**
 
-- `header` - Validates header region (violations: `header:missing-region`, `header:missing-filename`, `header:missing-contributors`, `header:missing-license`, `header:wrong-license`)
-- `section` - Validates section blocks (violations: `section:empty`, `section:missing-start-name`, `section:missing-end-name`, `section:name-mismatch`)
-- `comment` - Detects forbidden comments (violations: `comment:inline`, `comment:block`, `comment:jsdoc`)
+- `code` - Validates source file headers, sections, and comments
+  - `code:header:*` - Header region validation
+    - `code:header:missing-region` - Missing header section
+    - `code:header:missing-filename` - Missing filename in header
+    - `code:header:missing-contributors` - Missing contributors in header
+    - `code:header:missing-license` - Missing SPDX license
+    - `code:header:wrong-license` - Incorrect license type
+  - `code:section:*` - Section block validation
+    - `code:section:empty` - Empty section
+    - `code:section:missing-start-name` - Missing section start name
+    - `code:section:missing-end-name` - Missing section end name
+    - `code:section:name-mismatch` - Section name mismatch
+  - `code:comment:*` - Forbidden comments detection
+    - `code:comment:inline` - Inline comment detected
+    - `code:comment:block` - Block comment detected
+    - `code:comment:jsdoc` - JSDoc comment detected
+- `dev-docs` - Validates README.md and AGENTS.md documentation structure
 
 **Examples:**
 
@@ -803,9 +838,11 @@ files: # Aggregated from all iterations (set on ticket finish)
     - path: path/to/modified.ts
       lines: { added: 50, removed: 10 }
   created:
-    - path/to/new.ts
+    - path: path/to/new.ts
+      lines: { added: 100, removed: 0 }
   removed:
-    - path/to/deleted.ts
+    - path: path/to/deleted.ts
+      lines: { added: 0, removed: 50 }
 lines: # Ticket-level totals from git diff against commit (set on ticket finish)
   added: 150
   removed: 60
@@ -3835,6 +3872,7 @@ The extension shows violation diagnostics for every open file using the repo ana
 - **On file open**: Loads cached violations from `.semio-repo/cache/analyze/<hash>.json` for immediate display
 - **On file save**: Re-runs `repo analyze <relativePath>` and updates diagnostics from the refreshed cache
 - **On file close**: Clears diagnostics and aborts any running analysis process
+- Active preview tabs with semio diagnostics are pinned to regular editor tabs
 
 Supported file types: TypeScript, JavaScript, JSON, Python, C#, Go.
 
@@ -3849,10 +3887,16 @@ For kit documents (JSON files with `kit_` prefix, `_kit` suffix, or named `kit.j
 ### Sidebar Views
 
 Tree data providers for tickets, policies, contributors, and commands with search/filter capabilities.
+Contributor tree nodes group contributions into commits, projects, tickets by date, and files by folder with navigation commands for tickets, commits, projects, and files.
+
+### Commands
+
+Command tree nodes are derived from command ids by segmenting the action name into group paths, with leaf commands attached to the last group node.
+Command search includes command ids, titles, and segment names while group matches expand full subtrees.
 
 ### Tickets
 
-Ticket tree items use `ticketOpen` and `ticketClosed` context values for inline close or reopen actions, surface commit nodes from ticket and iteration commits, and limit hover tooltips to the summary or prompt text.
+Ticket tree items use `ticketOpen` and `ticketClosed` context values for inline close or reopen actions that apply to the clicked ticket, surface commit nodes from ticket and iteration commits, and limit hover tooltips to the summary or prompt text.
 
 ### Code Actions
 
@@ -3861,7 +3905,12 @@ Ticket tree items use `ticketOpen` and `ticketClosed` context values for inline 
 
 ## ?? go/repo/main.go
 
-Ticket commands include `ticket reopen`, and `ReopenTicket` resets the ticket status to open and clears the finished timestamp.
+Ticket iteration end derives per-file lists and line stats from git diffs between the last iteration commit (or ticket base commit) and HEAD, scoped to the iteration file list, storing `files` and `lines` on the iteration.
+Ticket finish aggregates per-iteration file stats into ticket-level `files` and computes ticket-level `lines` from git diffs scoped to the ticket file list.
+Ticket file aggregates store `updated`, `created`, and `removed` as `FileLineStats` with line totals.
+Comment policy scanning tracks string and template literal context so comment markers inside literals do not trigger violations.
+Contributor listing derives tickets, commits, projects, files, and line totals from ticket frontmatter and header contributor entries, resolves contributors by email/name mappings, and sorts by ticket count.
+Contributor commit entries resolve titles from git metadata and project memberships from file path overlap with Nx project roots.
 
 ## 📁net/
 

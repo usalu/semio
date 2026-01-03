@@ -1,5 +1,85 @@
 # Prompt history
 
+Still, it adds all files and lines to iteration but it shouldnt. It should filter only the files that the ticket is working on. Clean teh tickets from today.
+
+Add a new policy: sketchpad
+- All third party imports be inside elements.tsx. This file reexport reusable ui elements. All other files should not import anything from third party libraries and be dependency free.
+- state management: sketchpad only uses one state machine. createMachine can only be used once. createActor can never be used. Yjs should never be used for app state. It is only used for kit data synchronization. Stores outside of State Managment sections are forbidden. UI elements only use triadic hooks [state, setState, canSetState]=useSELECTOR().
+
+The fixes in vscode are not showing the description of the fix as label.
+
+Add iteration status (started, ended). Compute lines for the files that were part of the iteration using git.
+
+As soon as the vscode github copilot starts ticket create mcp the chat stops and I get:
+Failed to validate tool mcp_semio_ticket_create: Error: tool parameters array type must have items.
+
+When clicking on violations under problems in vscode it only opens the file preview and not the tab of the file. Pressing ctrl+s then doesnt work. Fix it.
+
+contributions should be derived from the tickets (frontmatter) and files (headers) instead of being hardcoded. Sort contributors by amount of tickets contributed. Extend the contributions list command.
+Adjust also the vscode extension:
+(LABEL - DESCRIPTION # OnClick [ACTIONS])
+├─ Contributors
+│ └─ NAME - GITHUBUSERNAME
+│ │ ├─ emails
+│ │ │ └─ EMAIL # MailTo
+│ │ ├─ links
+│ │ │ └─ KIND # OpenLink
+│ └─ contributions - LINESADDEDANDREMOVEDSUMMARY
+│ │ ├─ commits - COMMITCOUNT
+│ │ │ └─ COMMITTITLE - COMMITSHA # OpenCommit [CopyCommitSha][OpenInGitHub]
+│ │ ├─ projects - PROJECTCOUNT
+│ │ │ └─ PROJECTSLUG # NavigateToProject
+│ │ ├─ tickets - TICKETCOUNT
+│ │ │ └─ YEAR
+│ │ │ │ └─ MONTH
+│ │ │ │ │ └─ DAY
+│ │ │ │ │ │ └─ SLUG # NavigateToTicket [Reopen/Close]
+│ │ ├─ files - FILECOUNT
+│ │ │ └─ FOLDER(S)
+│ │ │ │ └─ FILESLUG # NavigateToFile
+
+When lines are recomputed it uses all of the files that have diffs in git. It should only use the files that are part of the ticket.
+
+The vscode tree items have double root. Once the policy and then again the policy folder tree item. Remove the policy folder tree item.
+
+The commands in vscode extension should be shown as the same tree of commands and subcommands.
+
+Any dev tool should never read or modify a file directly. All interaction must be exclusively over the repo binary.
+Add a new policy for: DevTools
+This includes repo, mcp and vscode extension.
+E.g. WorkspaceEdit shouldnt 
+
+Fixing files should be less than 100ms. Currently in vscode:
+- Individual violations are not fixable alone
+- When executing a complete file fix it show: Failed to fix violation: Error: Command failed: c:\git\semio.tech\semio\bin\repo.exe fix js/js/playwright.config.ts
+
+When pressing close or reopen on ticket tree item in vscode it opens a command instead of just reopening or closing the ticket was clicked onto.
+
+The violation kinds should be extended to have an arbitrary tree structure. E.g. Header, Section and Comment policies should be consolidated into a single policy called Code.
+The tree structure should be:
+├─ code
+│ └─ header
+│ │ └─ missing-region
+│ │ └─ missing-filename
+│ │ └─ missing-contributors
+│ │ └─ missing-license
+│ │ └─ wrong-license
+│ └─ section
+│ │ └─ empty
+│ │ └─ missing-start-name
+│ │ └─ missing-end-name
+│ │ └─ name-mismatch
+│ └─ comment
+│ │ └─ inline
+│ │ └─ block
+│ │ └─ jsdoc
+
+The tree structure should be used to display the violations in the vscode extension.
+
+When ending an iteration the line stats should be computed with git and added to the iteration. Currently it always shows null.
+
+Autofixing comments (inline or block) should just remove them. Update description and make the fix work. Further not all inline comments are detected.
+
 The analyze violation diagnostics are not shown in vscode under problems
 
 Creating a new ticket should always start the first iteration. At least one file needs to be provided per iteration (and when opening a ticket). The vscode extension should add a file dialog to select files from the repo. The current opened active file should be preselected.
@@ -98,7 +178,6 @@ vscode extension:
 │ │ │ └─ EMAIL
 │ │ ├─ links
 │ │ │ └─ KIND
-│ │ ├─ avatar-round-90x90.png
 │ └─ Contributions
 │ │ ├─ projects
 │ │ │ └─ PROJECTSLUG

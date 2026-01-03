@@ -26,6 +26,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -167,8 +168,8 @@ type TicketIteration struct {
 
 type TicketFiles struct {
 	Updated []FileLineStats `json:"updated,omitempty"`
-	Created []string        `json:"created,omitempty"`
-	Removed []string        `json:"removed,omitempty"`
+	Created []FileLineStats `json:"created,omitempty"`
+	Removed []FileLineStats `json:"removed,omitempty"`
 }
 
 type TicketFrontmatter struct {
@@ -203,29 +204,29 @@ type Ticket struct {
 type ViolationKind string
 
 const (
-	ViolationHeaderMissingRegion       ViolationKind = "header:missing-region"
-	ViolationHeaderMissingFilename     ViolationKind = "header:missing-filename"
-	ViolationHeaderMissingContributors ViolationKind = "header:missing-contributors"
-	ViolationHeaderMissingLicense      ViolationKind = "header:missing-license"
-	ViolationHeaderWrongLicense        ViolationKind = "header:wrong-license"
-	ViolationSectionEmpty              ViolationKind = "section:empty"
-	ViolationSectionMissingStartName   ViolationKind = "section:missing-start-name"
-	ViolationSectionMissingEndName     ViolationKind = "section:missing-end-name"
-	ViolationSectionNameMismatch       ViolationKind = "section:name-mismatch"
-	ViolationCommentInline             ViolationKind = "comment:inline"
-	ViolationCommentBlock              ViolationKind = "comment:block"
-	ViolationCommentJSDoc              ViolationKind = "comment:jsdoc"
-	ViolationDevDocsMissingFile        ViolationKind = "dev-docs:missing-file"
-	ViolationDevDocsMissingFolder      ViolationKind = "dev-docs:missing-folder"
-	ViolationDevDocsWrongFilePath      ViolationKind = "dev-docs:wrong-file-path"
-	ViolationDevDocsWrongFolderPath    ViolationKind = "dev-docs:wrong-folder-path"
-	ViolationDevDocsWrongFileName      ViolationKind = "dev-docs:wrong-file-name"
-	ViolationDevDocsWrongFolderName    ViolationKind = "dev-docs:wrong-folder-name"
-	ViolationDevDocsWrongFileOrder     ViolationKind = "dev-docs:wrong-file-order"
-	ViolationDevDocsWrongFolderOrder   ViolationKind = "dev-docs:wrong-folder-order"
-	ViolationDevDocsMissingComponent   ViolationKind = "dev-docs:missing-component"
-	ViolationDevDocsWrongComponentName ViolationKind = "dev-docs:wrong-component-name"
-	ViolationDevDocsWrongComponentOrder ViolationKind = "dev-docs:wrong-component-order"
+	ViolationCodeHeaderMissingRegion       ViolationKind = "code:header:missing-region"
+	ViolationCodeHeaderMissingFilename     ViolationKind = "code:header:missing-filename"
+	ViolationCodeHeaderMissingContributors ViolationKind = "code:header:missing-contributors"
+	ViolationCodeHeaderMissingLicense      ViolationKind = "code:header:missing-license"
+	ViolationCodeHeaderWrongLicense        ViolationKind = "code:header:wrong-license"
+	ViolationCodeSectionEmpty              ViolationKind = "code:section:empty"
+	ViolationCodeSectionMissingStartName   ViolationKind = "code:section:missing-start-name"
+	ViolationCodeSectionMissingEndName     ViolationKind = "code:section:missing-end-name"
+	ViolationCodeSectionNameMismatch       ViolationKind = "code:section:name-mismatch"
+	ViolationCodeCommentInline             ViolationKind = "code:comment:inline"
+	ViolationCodeCommentBlock              ViolationKind = "code:comment:block"
+	ViolationCodeCommentJSDoc              ViolationKind = "code:comment:jsdoc"
+	ViolationDevDocsMissingFile            ViolationKind = "dev-docs:missing-file"
+	ViolationDevDocsMissingFolder          ViolationKind = "dev-docs:missing-folder"
+	ViolationDevDocsWrongFilePath          ViolationKind = "dev-docs:wrong-file-path"
+	ViolationDevDocsWrongFolderPath        ViolationKind = "dev-docs:wrong-folder-path"
+	ViolationDevDocsWrongFileName          ViolationKind = "dev-docs:wrong-file-name"
+	ViolationDevDocsWrongFolderName        ViolationKind = "dev-docs:wrong-folder-name"
+	ViolationDevDocsWrongFileOrder         ViolationKind = "dev-docs:wrong-file-order"
+	ViolationDevDocsWrongFolderOrder       ViolationKind = "dev-docs:wrong-folder-order"
+	ViolationDevDocsMissingComponent       ViolationKind = "dev-docs:missing-component"
+	ViolationDevDocsWrongComponentName     ViolationKind = "dev-docs:wrong-component-name"
+	ViolationDevDocsWrongComponentOrder    ViolationKind = "dev-docs:wrong-component-order"
 )
 
 type ViolationKindMeta struct {
@@ -237,89 +238,89 @@ type ViolationKindMeta struct {
 }
 
 var violationKindMetas = map[ViolationKind]ViolationKindMeta{
-	ViolationHeaderMissingRegion: {
-		Kind:        ViolationHeaderMissingRegion,
+	ViolationCodeHeaderMissingRegion: {
+		Kind:        ViolationCodeHeaderMissingRegion,
 		Priority:    PriorityLow,
 		Reason:      "Header region with license, filename, and contributors is required",
 		Solution:    "Add header region with SPDX license, filename, and contributors",
 		Autofixable: false,
 	},
-	ViolationHeaderMissingFilename: {
-		Kind:        ViolationHeaderMissingFilename,
+	ViolationCodeHeaderMissingFilename: {
+		Kind:        ViolationCodeHeaderMissingFilename,
 		Priority:    PriorityLow,
 		Reason:      "Filename must be documented in header",
 		Solution:    "Add filename comment in header region",
 		Autofixable: false,
 	},
-	ViolationHeaderMissingContributors: {
-		Kind:        ViolationHeaderMissingContributors,
+	ViolationCodeHeaderMissingContributors: {
+		Kind:        ViolationCodeHeaderMissingContributors,
 		Priority:    PriorityLow,
 		Reason:      "Contributors must be documented in header",
 		Solution:    "Add contributor line in header region",
 		Autofixable: false,
 	},
-	ViolationHeaderMissingLicense: {
-		Kind:        ViolationHeaderMissingLicense,
+	ViolationCodeHeaderMissingLicense: {
+		Kind:        ViolationCodeHeaderMissingLicense,
 		Priority:    PriorityLow,
 		Reason:      "SPDX license identifier is required",
 		Solution:    "Add SPDX license header comment",
 		Autofixable: false,
 	},
-	ViolationHeaderWrongLicense: {
-		Kind:        ViolationHeaderWrongLicense,
+	ViolationCodeHeaderWrongLicense: {
+		Kind:        ViolationCodeHeaderWrongLicense,
 		Priority:    PriorityLow,
 		Reason:      "License must be AGPL-3.0-or-later",
 		Solution:    "Update license to AGPL-3.0-or-later",
 		Autofixable: false,
 	},
-	ViolationSectionEmpty: {
-		Kind:        ViolationSectionEmpty,
+	ViolationCodeSectionEmpty: {
+		Kind:        ViolationCodeSectionEmpty,
 		Priority:    PriorityLow,
 		Reason:      "Empty sections should be removed",
 		Solution:    "Remove empty section or add content",
 		Autofixable: true,
 	},
-	ViolationSectionMissingStartName: {
-		Kind:        ViolationSectionMissingStartName,
+	ViolationCodeSectionMissingStartName: {
+		Kind:        ViolationCodeSectionMissingStartName,
 		Priority:    PriorityLow,
 		Reason:      "Section start marker must have a name",
 		Solution:    "Add name to section start marker",
 		Autofixable: false,
 	},
-	ViolationSectionMissingEndName: {
-		Kind:        ViolationSectionMissingEndName,
+	ViolationCodeSectionMissingEndName: {
+		Kind:        ViolationCodeSectionMissingEndName,
 		Priority:    PriorityLow,
 		Reason:      "Section end marker should have matching name",
 		Solution:    "Add matching name to section end marker",
 		Autofixable: true,
 	},
-	ViolationSectionNameMismatch: {
-		Kind:        ViolationSectionNameMismatch,
+	ViolationCodeSectionNameMismatch: {
+		Kind:        ViolationCodeSectionNameMismatch,
 		Priority:    PriorityLow,
 		Reason:      "Section start and end names must match",
 		Solution:    "Fix section end name to match start name",
 		Autofixable: true,
 	},
-	ViolationCommentInline: {
-		Kind:        ViolationCommentInline,
+	ViolationCodeCommentInline: {
+		Kind:        ViolationCodeCommentInline,
 		Priority:    PriorityLow,
-		Reason:      "Inline comments are forbidden - documentation belongs in README.md and AGENTS.md",
-		Solution:    "Remove inline comment and document in README.md or AGENTS.md",
-		Autofixable: false,
+		Reason:      "Inline comments are forbidden",
+		Solution:    "Remove inline comment",
+		Autofixable: true,
 	},
-	ViolationCommentBlock: {
-		Kind:        ViolationCommentBlock,
+	ViolationCodeCommentBlock: {
+		Kind:        ViolationCodeCommentBlock,
 		Priority:    PriorityLow,
-		Reason:      "Block comments are forbidden - documentation belongs in README.md and AGENTS.md",
-		Solution:    "Remove block comment and document in README.md or AGENTS.md",
-		Autofixable: false,
+		Reason:      "Block comments are forbidden",
+		Solution:    "Remove block comment",
+		Autofixable: true,
 	},
-	ViolationCommentJSDoc: {
-		Kind:        ViolationCommentJSDoc,
+	ViolationCodeCommentJSDoc: {
+		Kind:        ViolationCodeCommentJSDoc,
 		Priority:    PriorityLow,
-		Reason:      "JSDoc comments are forbidden - documentation belongs in README.md and AGENTS.md",
-		Solution:    "Remove JSDoc comment and document in README.md or AGENTS.md",
-		Autofixable: false,
+		Reason:      "JSDoc comments are forbidden",
+		Solution:    "Remove JSDoc comment",
+		Autofixable: true,
 	},
 	ViolationDevDocsMissingFile: {
 		Kind:        ViolationDevDocsMissingFile,
@@ -477,12 +478,29 @@ type Contributor struct {
 	Contributions ContributorContributions `json:"contributions,omitempty"`
 }
 
+type ContributorTicket struct {
+	Year     int         `json:"year"`
+	Month    int         `json:"month"`
+	Day      int         `json:"day"`
+	Slug     string      `json:"slug"`
+	Status   TicketStatus `json:"status"`
+	FilePath string      `json:"filePath,omitempty"`
+}
+
+type ContributorCommit struct {
+	Title string `json:"title"`
+	Sha   string `json:"sha"`
+}
+
 type ContributorContributions struct {
 	Projects    []string `json:"projects,omitempty"`
 	Folders     []string `json:"folders,omitempty"`
 	Files       []string `json:"files,omitempty"`
 	Regions     []string `json:"regions,omitempty"`
 	Definitions []string `json:"definitions,omitempty"`
+	Tickets     []ContributorTicket `json:"tickets,omitempty"`
+	Commits     []ContributorCommit `json:"commits,omitempty"`
+	Lines       *LineStats           `json:"lines,omitempty"`
 }
 
 // #endregion
@@ -563,11 +581,7 @@ func isGitIgnored(filePath string) bool {
 
 func policyAppliesToScope(policyID string, scope Scope) bool {
 	switch policyID {
-	case "header":
-		return scope.Kind == ScopeFile && isSourceFile(scope.FilePath)
-	case "section":
-		return scope.Kind == ScopeFile && isSourceFile(scope.FilePath)
-	case "comment":
+	case "code":
 		return scope.Kind == ScopeFile && isSourceFile(scope.FilePath)
 	case "dev-docs":
 		return scope.Kind == ScopeRepo || scope.Kind == ScopeFolder || scope.Kind == ScopeFile
@@ -1066,42 +1080,24 @@ type RegisteredPolicy struct {
 
 var policyMetas = []PolicyMeta{
 	{
-		ID:          "header",
-		Name:        "Header",
-		Description: "Validates source file header section with filename, contributors, and license",
+		ID:          "code",
+		Name:        "Code",
+		Description: "Validates source file headers, sections, and comments",
 		Scopes:      []string{"**/*.{ts,tsx,py,cs,go}"},
 		Priority:    PriorityLow,
 		ViolationKinds: []string{
-			string(ViolationHeaderMissingRegion),
-			string(ViolationHeaderMissingFilename),
-			string(ViolationHeaderMissingContributors),
-			string(ViolationHeaderMissingLicense),
-			string(ViolationHeaderWrongLicense),
-		},
-	},
-	{
-		ID:          "section",
-		Name:        "Section",
-		Description: "Validates section blocks for proper naming and content",
-		Scopes:      []string{"**/*.{ts,tsx,py,cs,go}"},
-		Priority:    PriorityLow,
-		ViolationKinds: []string{
-			string(ViolationSectionEmpty),
-			string(ViolationSectionMissingStartName),
-			string(ViolationSectionMissingEndName),
-			string(ViolationSectionNameMismatch),
-		},
-	},
-	{
-		ID:          "comment",
-		Name:        "Comment",
-		Description: "Detects forbidden comments (inline, block, JSDoc) - documentation belongs in README.md and AGENTS.md",
-		Scopes:      []string{"**/*.{ts,tsx}"},
-		Priority:    PriorityLow,
-		ViolationKinds: []string{
-			string(ViolationCommentInline),
-			string(ViolationCommentBlock),
-			string(ViolationCommentJSDoc),
+			string(ViolationCodeHeaderMissingRegion),
+			string(ViolationCodeHeaderMissingFilename),
+			string(ViolationCodeHeaderMissingContributors),
+			string(ViolationCodeHeaderMissingLicense),
+			string(ViolationCodeHeaderWrongLicense),
+			string(ViolationCodeSectionEmpty),
+			string(ViolationCodeSectionMissingStartName),
+			string(ViolationCodeSectionMissingEndName),
+			string(ViolationCodeSectionNameMismatch),
+			string(ViolationCodeCommentInline),
+			string(ViolationCodeCommentBlock),
+			string(ViolationCodeCommentJSDoc),
 		},
 	},
 	{
@@ -1127,9 +1123,7 @@ var policyMetas = []PolicyMeta{
 }
 
 var policyFuncs = map[string]PolicyFunc{
-	"header":   headerPolicy,
-	"section":  sectionPolicy,
-	"comment":  commentPolicy,
+	"code":     codePolicy,
 	"dev-docs": devDocsPolicy,
 }
 
@@ -1301,12 +1295,12 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 				}
 				violations = append(violations, ctx.CreateViolation(
 					fmt.Sprintf("Missing header section in %s", file),
-					ViolationHeaderMissingRegion,
+					ViolationCodeHeaderMissingRegion,
 file, 0, "", autofix))
 			} else {
 				violations = append(violations, ctx.CreateViolation(
 					fmt.Sprintf("Missing header section in %s", file),
-					ViolationHeaderMissingRegion,
+					ViolationCodeHeaderMissingRegion,
 file, 0, "", nil))
 			}
 			continue
@@ -1324,7 +1318,7 @@ file, 0, "", nil))
 		if !hasFilename {
 			violations = append(violations, ctx.CreateViolation(
 				fmt.Sprintf("Missing filename in header of %s", file),
-				ViolationHeaderMissingFilename,
+				ViolationCodeHeaderMissingFilename,
 			fmt.Sprintf("%s#Header", file), headerSection.StartLine, "", nil))
 		}
 		contributorPattern := regexp.MustCompile(`\d{4}\s+[\w\s]+<[\w.@-]+>`)
@@ -1338,7 +1332,7 @@ file, 0, "", nil))
 		if !hasContributors {
 			violations = append(violations, ctx.CreateViolation(
 				fmt.Sprintf("Missing contributors in header of %s", file),
-				ViolationHeaderMissingContributors,
+				ViolationCodeHeaderMissingContributors,
 fmt.Sprintf("%s#Header", file), headerSection.StartLine, "", nil))
 		}
 		hasLicense := false
@@ -1351,7 +1345,7 @@ fmt.Sprintf("%s#Header", file), headerSection.StartLine, "", nil))
 		if !hasLicense {
 			violations = append(violations, ctx.CreateViolation(
 				fmt.Sprintf("Missing license in header of %s", file),
-				ViolationHeaderMissingLicense,
+				ViolationCodeHeaderMissingLicense,
 fmt.Sprintf("%s#Header", file), headerSection.StartLine, "", nil))
 		} else {
 			wrongLicenses := []string{"MIT", "Apache", "BSD"}
@@ -1368,7 +1362,7 @@ fmt.Sprintf("%s#Header", file), headerSection.StartLine, "", nil))
 			if hasWrongLicense {
 				violations = append(violations, ctx.CreateViolation(
 					fmt.Sprintf("Wrong license in header of %s", file),
-					ViolationHeaderWrongLicense,
+					ViolationCodeHeaderWrongLicense,
 fmt.Sprintf("%s#Header", file), headerSection.StartLine, "", nil))
 			}
 		}
@@ -1430,7 +1424,7 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 				if name == "" {
 					violations = append(violations, ctx.CreateViolation(
 						fmt.Sprintf("Missing section name at %s:%d", file, lineNum),
-						ViolationSectionMissingStartName,
+						ViolationCodeSectionMissingStartName,
 file, lineNum, strings.TrimSpace(line), nil))
 				}
 				stack = append(stack, stackItem{name: name, line: lineNum})
@@ -1448,12 +1442,12 @@ file, lineNum, strings.TrimSpace(line), nil))
 						if endName == "" {
 							violations = append(violations, ctx.CreateViolation(
 								fmt.Sprintf("Missing end section name at %s:%d", file, lineNum),
-								ViolationSectionMissingEndName,
+								ViolationCodeSectionMissingEndName,
 					file, lineNum, strings.TrimSpace(line), nil))
 						} else if endName != open.name {
 							violations = append(violations, ctx.CreateViolation(
 								fmt.Sprintf("Section name mismatch at %s:%d", file, lineNum),
-								ViolationSectionNameMismatch,
+								ViolationCodeSectionNameMismatch,
 					file, lineNum, fmt.Sprintf("Start: \"%s\" at line %d, End: \"%s\"", open.name, open.line, endName), nil))
 						}
 					}
@@ -1475,7 +1469,7 @@ file, lineNum, strings.TrimSpace(line), nil))
 			if nonEmpty == 0 && len(s.Children) == 0 {
 				violations = append(violations, ctx.CreateViolation(
 					fmt.Sprintf("Empty section \"%s\" in %s", s.Name, file),
-					ViolationSectionEmpty,
+					ViolationCodeSectionEmpty,
 fmt.Sprintf("%s#%s", file, s.Name), s.StartLine, "", nil))
 			}
 			for _, child := range s.Children {
@@ -1487,6 +1481,28 @@ fmt.Sprintf("%s#%s", file, s.Name), s.StartLine, "", nil))
 		}
 	}
 	return violations
+}
+
+type CommentTemplateState struct {
+	ExprDepth int
+}
+
+type CommentScanState struct {
+	InBlockComment        bool
+	BlockCommentStartLine int
+	BlockCommentStartIndex int
+	BlockCommentIsJsDoc   bool
+	InSingleQuote         bool
+	InDoubleQuote         bool
+	Templates             []CommentTemplateState
+	Escaped               bool
+}
+
+func (state *CommentScanState) InTemplateRaw() bool {
+	if len(state.Templates) == 0 {
+		return false
+	}
+	return state.Templates[len(state.Templates)-1].ExprDepth == 0
 }
 
 func commentPolicy(ctx *PolicyContext) []Violation {
@@ -1506,88 +1522,197 @@ func commentPolicy(ctx *PolicyContext) []Violation {
 		}
 		lines := strings.Split(content, "\n")
 		charIndex := 0
-		inBlockComment := false
-		blockCommentStartLine := 0
-		blockCommentStartIndex := 0
-		inJsDoc := false
-		jsDocStartLine := 0
-		jsDocStartIndex := 0
+		scanState := CommentScanState{}
 		for i, line := range lines {
 			lineNum := i + 1
 			lineStart := charIndex
 			lineEnd := lineStart + len(line) + 1
-			trimmed := strings.TrimSpace(line)
-			if strings.HasPrefix(trimmed, "/**") && !strings.HasSuffix(trimmed, "*/") {
-				inJsDoc = true
-				jsDocStartLine = lineNum
-				jsDocStartIndex = lineStart
-				charIndex = lineEnd
-				continue
-			}
-			if inJsDoc {
-				if strings.HasSuffix(trimmed, "*/") {
-					violations = append(violations, ctx.CreateViolation(
-						fmt.Sprintf("JSDoc comment in %s:%d", file, jsDocStartLine),
-						ViolationCommentJSDoc,
-file, jsDocStartLine, "", nil))
-					inJsDoc = false
+			j := 0
+			for j < len(line) {
+				if scanState.InBlockComment {
+					if j+1 < len(line) && line[j] == '*' && line[j+1] == '/' {
+						if scanState.BlockCommentIsJsDoc {
+							violations = append(violations, ctx.CreateViolation(
+								fmt.Sprintf("JSDoc comment in %s:%d", file, scanState.BlockCommentStartLine),
+								ViolationCodeCommentJSDoc,
+								file, scanState.BlockCommentStartLine, "", &Fix{
+									Description: "Remove JSDoc comment",
+									Edits: map[string][]TextEdit{
+										file: {{Start: scanState.BlockCommentStartIndex, End: lineStart + j + 2, NewText: ""}},
+									},
+								}))
+						} else {
+							violations = append(violations, ctx.CreateViolation(
+								fmt.Sprintf("Block comment in %s:%d", file, scanState.BlockCommentStartLine),
+								ViolationCodeCommentBlock,
+								file, scanState.BlockCommentStartLine, "", &Fix{
+									Description: "Remove block comment",
+									Edits: map[string][]TextEdit{
+										file: {{Start: scanState.BlockCommentStartIndex, End: lineStart + j + 2, NewText: ""}},
+									},
+								}))
+						}
+						scanState.InBlockComment = false
+						j += 2
+						continue
+					}
+					j++
+					continue
 				}
-				charIndex = lineEnd
-				continue
-			}
-			if strings.HasPrefix(trimmed, "/*") && !strings.HasPrefix(trimmed, "/**") && !strings.HasSuffix(trimmed, "*/") {
-				inBlockComment = true
-				blockCommentStartLine = lineNum
-				blockCommentStartIndex = lineStart
-				charIndex = lineEnd
-				continue
-			}
-			if inBlockComment {
-				if strings.HasSuffix(trimmed, "*/") {
-					violations = append(violations, ctx.CreateViolation(
-						fmt.Sprintf("Block comment in %s:%d", file, blockCommentStartLine),
-						ViolationCommentBlock,
-file, blockCommentStartLine, "", nil))
-					inBlockComment = false
+				if scanState.InTemplateRaw() {
+					if scanState.Escaped {
+						scanState.Escaped = false
+						j++
+						continue
+					}
+					if line[j] == '\\' {
+						scanState.Escaped = true
+						j++
+						continue
+					}
+					if line[j] == '`' {
+						scanState.Templates = scanState.Templates[:len(scanState.Templates)-1]
+						j++
+						continue
+					}
+					if line[j] == '$' && j+1 < len(line) && line[j+1] == '{' {
+						scanState.Templates[len(scanState.Templates)-1].ExprDepth = 1
+						j += 2
+						continue
+					}
+					j++
+					continue
 				}
-				charIndex = lineEnd
-				continue
-			}
-			if strings.HasPrefix(trimmed, "/*") && strings.HasSuffix(trimmed, "*/") {
-				if strings.HasPrefix(trimmed, "/**") {
-					violations = append(violations, ctx.CreateViolation(
-						fmt.Sprintf("JSDoc comment in %s:%d", file, lineNum),
-						ViolationCommentJSDoc,
-file, lineNum, truncate(trimmed, 80), nil))
-				} else {
-					violations = append(violations, ctx.CreateViolation(
-						fmt.Sprintf("Block comment in %s:%d", file, lineNum),
-						ViolationCommentBlock,
-file, lineNum, truncate(trimmed, 80), nil))
+				if scanState.InSingleQuote || scanState.InDoubleQuote {
+					if scanState.Escaped {
+						scanState.Escaped = false
+						j++
+						continue
+					}
+					if line[j] == '\\' {
+						scanState.Escaped = true
+						j++
+						continue
+					}
+					if scanState.InSingleQuote && line[j] == '\'' {
+						scanState.InSingleQuote = false
+						j++
+						continue
+					}
+					if scanState.InDoubleQuote && line[j] == '"' {
+						scanState.InDoubleQuote = false
+						j++
+						continue
+					}
+					j++
+					continue
 				}
-				charIndex = lineEnd
-				continue
-			}
-			if strings.HasPrefix(trimmed, "// #region") || strings.HasPrefix(trimmed, "// #endregion") {
-				charIndex = lineEnd
-				continue
-			}
-			if strings.Contains(trimmed, "[DEBUG]") {
-				charIndex = lineEnd
-				continue
-			}
-			isHeaderLine := strings.Contains(trimmed, "Copyright") ||
-				strings.Contains(trimmed, "License") ||
-				strings.Contains(trimmed, "SPDX") ||
-				strings.Contains(trimmed, "GNU") ||
-				strings.Contains(trimmed, "AGPL")
-			if isHeaderLine {
-				charIndex = lineEnd
-				continue
+				if line[j] == '/' && j+1 < len(line) && line[j+1] == '/' {
+					commentText := strings.TrimSpace(line[j+2:])
+					if commentText != "" {
+						trimmedLine := strings.TrimSpace(line)
+						codeBefore := strings.TrimRight(line[:j], " \t")
+						if codeBefore == "" {
+							if strings.HasPrefix(trimmedLine, "// #region") || strings.HasPrefix(trimmedLine, "// #endregion") {
+								break
+							}
+							if strings.Contains(commentText, "[DEBUG]") {
+								break
+							}
+							if strings.Contains(commentText, "Copyright") ||
+								strings.Contains(commentText, "License") ||
+								strings.Contains(commentText, "SPDX") ||
+								strings.Contains(commentText, "GNU") ||
+								strings.Contains(commentText, "AGPL") {
+								break
+							}
+						}
+						if codeBefore == "" {
+							violations = append(violations, ctx.CreateViolation(
+								fmt.Sprintf("Inline comment in %s:%d", file, lineNum),
+								ViolationCodeCommentInline,
+								file, lineNum, truncate(strings.TrimSpace(line[j:]), 80), &Fix{
+									Description: "Remove inline comment",
+									Edits: map[string][]TextEdit{
+										file: {{Start: lineStart, End: lineEnd, NewText: ""}},
+									},
+								}))
+						} else {
+							violations = append(violations, ctx.CreateViolation(
+								fmt.Sprintf("Inline comment in %s:%d", file, lineNum),
+								ViolationCodeCommentInline,
+								file, lineNum, truncate(strings.TrimSpace(line[j:]), 80), &Fix{
+									Description: "Remove inline comment",
+									Edits: map[string][]TextEdit{
+										file: {{Start: lineStart, End: lineEnd - 1, NewText: codeBefore}},
+									},
+								}))
+						}
+					}
+					break
+				}
+				if line[j] == '/' && j+1 < len(line) && line[j+1] == '*' {
+					isJsDoc := j+2 < len(line) && line[j+2] == '*'
+					endIndex := strings.Index(line[j+2:], "*/")
+					if endIndex != -1 {
+						endIndex = j + 2 + endIndex + 2
+						autofix := &Fix{
+							Description: "Remove block comment",
+							Edits: map[string][]TextEdit{
+								file: {{Start: lineStart + j, End: lineStart + endIndex, NewText: ""}},
+							},
+						}
+						if isJsDoc {
+							violations = append(violations, ctx.CreateViolation(
+								fmt.Sprintf("JSDoc comment in %s:%d", file, lineNum),
+								ViolationCodeCommentJSDoc,
+								file, lineNum, truncate(strings.TrimSpace(line[j:endIndex]), 80), autofix))
+						} else {
+							violations = append(violations, ctx.CreateViolation(
+								fmt.Sprintf("Block comment in %s:%d", file, lineNum),
+								ViolationCodeCommentBlock,
+								file, lineNum, truncate(strings.TrimSpace(line[j:endIndex]), 80), autofix))
+						}
+						j = endIndex
+						continue
+					}
+					scanState.InBlockComment = true
+					scanState.BlockCommentStartLine = lineNum
+					scanState.BlockCommentStartIndex = lineStart + j
+					scanState.BlockCommentIsJsDoc = isJsDoc
+					j += 2
+					continue
+				}
+				if len(scanState.Templates) > 0 && scanState.Templates[len(scanState.Templates)-1].ExprDepth > 0 {
+					if line[j] == '{' {
+						scanState.Templates[len(scanState.Templates)-1].ExprDepth++
+						j++
+						continue
+					}
+					if line[j] == '}' {
+						scanState.Templates[len(scanState.Templates)-1].ExprDepth--
+						j++
+						continue
+					}
+				}
+				if line[j] == '`' {
+					scanState.Templates = append(scanState.Templates, CommentTemplateState{})
+					j++
+					continue
+				}
+				if line[j] == '\'' {
+					scanState.InSingleQuote = true
+					j++
+					continue
+				}
+				if line[j] == '"' {
+					scanState.InDoubleQuote = true
+					j++
+					continue
+				}
+				j++
 			}
 			charIndex = lineEnd
-			_ = blockCommentStartIndex
-			_ = jsDocStartIndex
 		}
 	}
 	return violations
@@ -1598,6 +1723,14 @@ func truncate(s string, maxLen int) string {
 		return s
 	}
 	return s[:maxLen]
+}
+
+func codePolicy(ctx *PolicyContext) []Violation {
+	var violations []Violation
+	violations = append(violations, headerPolicy(ctx)...)
+	violations = append(violations, sectionPolicy(ctx)...)
+	violations = append(violations, commentPolicy(ctx)...)
+	return violations
 }
 
 func devDocsPolicy(ctx *PolicyContext) []Violation {
@@ -1890,6 +2023,138 @@ func StartIteration(ticket *Ticket, prompt, model string, files []string) error 
 	return SaveTicket(ticket)
 }
 
+func CollectTicketFilePaths(files *TicketIterationFiles) []string {
+	if files == nil {
+		return nil
+	}
+	pathsByName := map[string]bool{}
+	paths := []string{}
+	for _, file := range files.Updated {
+		path := NormalizePath(file.Path)
+		if path == "" {
+			continue
+		}
+		if !pathsByName[path] {
+			pathsByName[path] = true
+			paths = append(paths, path)
+		}
+	}
+	for _, file := range files.Created {
+		path := NormalizePath(file.Path)
+		if path == "" {
+			continue
+		}
+		if !pathsByName[path] {
+			pathsByName[path] = true
+			paths = append(paths, path)
+		}
+	}
+	for _, file := range files.Removed {
+		path := NormalizePath(file.Path)
+		if path == "" {
+			continue
+		}
+		if !pathsByName[path] {
+			pathsByName[path] = true
+			paths = append(paths, path)
+		}
+	}
+	return paths
+}
+
+func BuildGitDiffArgs(flag, baseCommit, headCommit string, paths []string) []string {
+	if headCommit == "" {
+		if len(paths) == 0 {
+			return []string{"diff", flag, "--no-renames", baseCommit}
+		}
+		return append([]string{"diff", flag, "--no-renames", baseCommit, "--"}, paths...)
+	}
+	if len(paths) == 0 {
+		return []string{"diff", flag, "--no-renames", baseCommit, headCommit}
+	}
+	return append([]string{"diff", flag, "--no-renames", baseCommit, headCommit, "--"}, paths...)
+}
+
+func GetGitDiffFileLineStats(baseCommit, headCommit string, paths []string) (TicketIterationFiles, LineStats, error) {
+	if baseCommit == "" {
+		return TicketIterationFiles{}, LineStats{}, fmt.Errorf("base commit is required")
+	}
+	stdout, stderr, exitCode := ExecCommand("git", BuildGitDiffArgs("--numstat", baseCommit, headCommit, paths), "")
+	if exitCode != 0 {
+		return TicketIterationFiles{}, LineStats{}, fmt.Errorf("git diff numstat failed: %s", strings.TrimSpace(stderr))
+	}
+	lineStatsByPath := map[string]LineStats{}
+	for _, line := range strings.Split(strings.TrimSpace(stdout), "\n") {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+		parts := strings.Split(line, "\t")
+		if len(parts) < 3 {
+			continue
+		}
+		added := 0
+		if parts[0] != "-" {
+			if parsed, err := strconv.Atoi(parts[0]); err == nil {
+				added = parsed
+			}
+		}
+		removed := 0
+		if parts[1] != "-" {
+			if parsed, err := strconv.Atoi(parts[1]); err == nil {
+				removed = parsed
+			}
+		}
+		lineStatsByPath[NormalizePath(parts[2])] = LineStats{Added: added, Removed: removed}
+	}
+	stdout, stderr, exitCode = ExecCommand("git", BuildGitDiffArgs("--name-status", baseCommit, headCommit, paths), "")
+	if exitCode != 0 {
+		return TicketIterationFiles{}, LineStats{}, fmt.Errorf("git diff name-status failed: %s", strings.TrimSpace(stderr))
+	}
+	statusByPath := map[string]string{}
+	for _, line := range strings.Split(strings.TrimSpace(stdout), "\n") {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+		parts := strings.Split(line, "\t")
+		if len(parts) < 2 {
+			continue
+		}
+		statusByPath[NormalizePath(parts[len(parts)-1])] = strings.TrimSpace(parts[0])
+	}
+	for path := range lineStatsByPath {
+		if _, ok := statusByPath[path]; !ok {
+			statusByPath[path] = "M"
+		}
+	}
+	if len(statusByPath) == 0 && len(lineStatsByPath) == 0 {
+		return TicketIterationFiles{}, LineStats{}, nil
+	}
+	paths := make([]string, 0, len(statusByPath))
+	for path := range statusByPath {
+		paths = append(paths, path)
+	}
+	sort.Strings(paths)
+	files := TicketIterationFiles{}
+	total := LineStats{}
+	for i := 0; i < len(paths); i++ {
+		path := paths[i]
+		status := statusByPath[path]
+		lineStats := lineStatsByPath[path]
+		total.Added += lineStats.Added
+		total.Removed += lineStats.Removed
+		if strings.HasPrefix(status, "A") {
+			files.Created = append(files.Created, FileLineStats{Path: path, Lines: &lineStats})
+			continue
+		}
+		if strings.HasPrefix(status, "D") {
+			files.Removed = append(files.Removed, FileLineStats{Path: path, Lines: &lineStats})
+			continue
+		}
+		files.Updated = append(files.Updated, FileLineStats{Path: path, Lines: &lineStats})
+	}
+	return files, total, nil
+}
+
 func EndIteration(ticket *Ticket) error {
 	if len(ticket.Frontmatter.Iterations) == 0 {
 		return fmt.Errorf("no active iteration to end")
@@ -1899,8 +2164,24 @@ func EndIteration(ticket *Ticket) error {
 	if last.Date.Ended != "" {
 		return fmt.Errorf("last iteration already ended")
 	}
+	baseCommit := ticket.Frontmatter.Commit
+	for i := lastIdx - 1; i >= 0; i-- {
+		if ticket.Frontmatter.Iterations[i].Commit != "" {
+			baseCommit = ticket.Frontmatter.Iterations[i].Commit
+			break
+		}
+	}
+	iterationFiles, iterationLines, err := GetGitDiffFileLineStats(baseCommit, "", CollectTicketFilePaths(last.Files))
+	if err != nil {
+		return err
+	}
+	if len(iterationFiles.Updated) == 0 && len(iterationFiles.Created) == 0 && len(iterationFiles.Removed) == 0 {
+		return fmt.Errorf("iteration requires at least one file")
+	}
 	last.Date.Ended = ISOTimestamp()
 	last.Commit = GetGitCommit()
+	last.Files = &iterationFiles
+	last.Lines = &iterationLines
 	return SaveTicket(ticket)
 }
 
@@ -1911,6 +2192,90 @@ func FinishTicket(ticket *Ticket) error {
 			return fmt.Errorf("cannot finish ticket with unfinished iteration")
 		}
 	}
+	ticketPathsByName := map[string]bool{}
+	ticketPaths := []string{}
+	for i := 0; i < len(ticket.Frontmatter.Iterations); i++ {
+		for _, path := range CollectTicketFilePaths(ticket.Frontmatter.Iterations[i].Files) {
+			if !ticketPathsByName[path] {
+				ticketPathsByName[path] = true
+				ticketPaths = append(ticketPaths, path)
+			}
+		}
+	}
+	gitFiles, gitLines, err := GetGitDiffFileLineStats(ticket.Frontmatter.Commit, "", ticketPaths)
+	if err != nil {
+		return err
+	}
+	updatedByPath := map[string]LineStats{}
+	createdByPath := map[string]LineStats{}
+	removedByPath := map[string]LineStats{}
+	for _, iteration := range ticket.Frontmatter.Iterations {
+		if iteration.Files == nil {
+			continue
+		}
+		for _, file := range iteration.Files.Updated {
+			lineStats := LineStats{}
+			if file.Lines != nil {
+				lineStats = *file.Lines
+			}
+			existing := updatedByPath[file.Path]
+			updatedByPath[file.Path] = LineStats{Added: existing.Added + lineStats.Added, Removed: existing.Removed + lineStats.Removed}
+		}
+		for _, file := range iteration.Files.Created {
+			lineStats := LineStats{}
+			if file.Lines != nil {
+				lineStats = *file.Lines
+			}
+			existing := createdByPath[file.Path]
+			createdByPath[file.Path] = LineStats{Added: existing.Added + lineStats.Added, Removed: existing.Removed + lineStats.Removed}
+		}
+		for _, file := range iteration.Files.Removed {
+			lineStats := LineStats{}
+			if file.Lines != nil {
+				lineStats = *file.Lines
+			}
+			existing := removedByPath[file.Path]
+			removedByPath[file.Path] = LineStats{Added: existing.Added + lineStats.Added, Removed: existing.Removed + lineStats.Removed}
+		}
+	}
+	updatedPaths := make([]string, 0, len(updatedByPath))
+	for path := range updatedByPath {
+		updatedPaths = append(updatedPaths, path)
+	}
+	sort.Strings(updatedPaths)
+	updatedStats := make([]FileLineStats, 0, len(updatedPaths))
+	for i := 0; i < len(updatedPaths); i++ {
+		path := updatedPaths[i]
+		lineStats := updatedByPath[path]
+		updatedStats = append(updatedStats, FileLineStats{Path: path, Lines: &lineStats})
+	}
+	createdPaths := make([]string, 0, len(createdByPath))
+	for path := range createdByPath {
+		createdPaths = append(createdPaths, path)
+	}
+	sort.Strings(createdPaths)
+	createdStats := make([]FileLineStats, 0, len(createdPaths))
+	for i := 0; i < len(createdPaths); i++ {
+		path := createdPaths[i]
+		lineStats := createdByPath[path]
+		createdStats = append(createdStats, FileLineStats{Path: path, Lines: &lineStats})
+	}
+	removedPaths := make([]string, 0, len(removedByPath))
+	for path := range removedByPath {
+		removedPaths = append(removedPaths, path)
+	}
+	sort.Strings(removedPaths)
+	removedStats := make([]FileLineStats, 0, len(removedPaths))
+	for i := 0; i < len(removedPaths); i++ {
+		path := removedPaths[i]
+		lineStats := removedByPath[path]
+		removedStats = append(removedStats, FileLineStats{Path: path, Lines: &lineStats})
+	}
+	ticket.Frontmatter.Files = &TicketFiles{Updated: updatedStats, Created: createdStats, Removed: removedStats}
+	if len(updatedStats) == 0 && len(createdStats) == 0 && len(removedStats) == 0 {
+		ticket.Frontmatter.Files = &TicketFiles{Updated: gitFiles.Updated, Created: gitFiles.Created, Removed: gitFiles.Removed}
+	}
+	ticket.Frontmatter.Lines = &gitLines
 	ticket.Frontmatter.Status = TicketClosed
 	ticket.Frontmatter.Date.Finished = ISOTimestamp()
 	return SaveTicket(ticket)
@@ -2025,6 +2390,69 @@ func SaveContributor(contributor *Contributor) error {
 	return WriteTextFile(jsonPath, string(jsonBytes))
 }
 
+type ContributorContributionState struct {
+	Tickets  map[string]ContributorTicket
+	Files    map[string]struct{}
+	Folders  map[string]struct{}
+	Projects map[string]struct{}
+	Commits  map[string]ContributorCommit
+	Lines    LineStats
+}
+
+func ParseContributorIdentity(value string) (string, string, bool) {
+	trimmed := strings.TrimSpace(value)
+	if strings.HasPrefix(trimmed, "//") {
+		trimmed = strings.TrimSpace(strings.TrimPrefix(trimmed, "//"))
+	}
+	if strings.HasPrefix(trimmed, "#") {
+		trimmed = strings.TrimSpace(strings.TrimPrefix(trimmed, "#"))
+	}
+	if strings.HasPrefix(trimmed, "/*") {
+		trimmed = strings.TrimSpace(strings.TrimPrefix(trimmed, "/*"))
+	}
+	if strings.HasPrefix(trimmed, "*") {
+		trimmed = strings.TrimSpace(strings.TrimPrefix(trimmed, "*"))
+	}
+	if trimmed == "" {
+		return "", "", false
+	}
+	match := regexp.MustCompile(`^\s*(?:\d{4}\s+)?(.+?)\s*<([^>]+)>\s*$`).FindStringSubmatch(trimmed)
+	if match == nil {
+		return "", "", false
+	}
+	name := strings.TrimSpace(match[1])
+	email := strings.TrimSpace(match[2])
+	if name == "" || email == "" {
+		return "", "", false
+	}
+	return name, email, true
+}
+
+func ResolveContributorGithub(name, email string, emailToGithub map[string]string, nameToGithub map[string]string) string {
+	if email != "" {
+		if github, ok := emailToGithub[strings.ToLower(email)]; ok {
+			return github
+		}
+	}
+	if name != "" {
+		if github, ok := nameToGithub[strings.ToLower(name)]; ok {
+			return github
+		}
+	}
+	return ""
+}
+
+func GetGitCommitTitle(sha string) string {
+	if sha == "" {
+		return ""
+	}
+	stdout, _, exitCode := ExecCommand("git", []string{"show", "-s", "--format=%s", sha}, "")
+	if exitCode != 0 {
+		return ""
+	}
+	return strings.TrimSpace(stdout)
+}
+
 func ListContributors() ([]Contributor, error) {
 	dir := GetContributorsDir()
 	if !FileExists(dir) {
@@ -2043,6 +2471,209 @@ func ListContributors() ([]Contributor, error) {
 			}
 		}
 	}
+	if len(contributors) == 0 {
+		return contributors, nil
+	}
+	emailToGithub := map[string]string{}
+	nameToGithub := map[string]string{}
+	stateByGithub := map[string]*ContributorContributionState{}
+	for i := range contributors {
+		contributors[i].Contributions = ContributorContributions{}
+		stateByGithub[contributors[i].Github] = &ContributorContributionState{
+			Tickets:  map[string]ContributorTicket{},
+			Files:    map[string]struct{}{},
+			Folders:  map[string]struct{}{},
+			Projects: map[string]struct{}{},
+			Commits:  map[string]ContributorCommit{},
+		}
+		for _, email := range contributors[i].Emails {
+			emailToGithub[strings.ToLower(email)] = contributors[i].Github
+		}
+		if contributors[i].Name != "" {
+			nameToGithub[strings.ToLower(contributors[i].Name)] = contributors[i].Github
+		}
+	}
+	tickets, err := ListTickets(nil, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	commitTitleCache := map[string]string{}
+	for _, ticket := range tickets {
+		ticketKey := fmt.Sprintf("%04d-%02d-%02d-%s", ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
+		ticketContributors := map[string]struct{}{}
+		if name, email, ok := ParseContributorIdentity(ticket.Frontmatter.Author); ok {
+			if github := ResolveContributorGithub(name, email, emailToGithub, nameToGithub); github != "" {
+				ticketContributors[github] = struct{}{}
+			}
+		}
+		ticketHasIterationLines := false
+		for _, iteration := range ticket.Frontmatter.Iterations {
+			if name, email, ok := ParseContributorIdentity(iteration.Author); ok {
+				if github := ResolveContributorGithub(name, email, emailToGithub, nameToGithub); github != "" {
+					ticketContributors[github] = struct{}{}
+					if iteration.Lines != nil {
+						ticketHasIterationLines = true
+						stateByGithub[github].Lines.Added += iteration.Lines.Added
+						stateByGithub[github].Lines.Removed += iteration.Lines.Removed
+					}
+					if iteration.Commit != "" {
+						commitTitle := commitTitleCache[iteration.Commit]
+						if commitTitle == "" {
+							commitTitle = GetGitCommitTitle(iteration.Commit)
+							if commitTitle == "" {
+								commitTitle = iteration.Commit
+							}
+							commitTitleCache[iteration.Commit] = commitTitle
+						}
+						stateByGithub[github].Commits[iteration.Commit] = ContributorCommit{Title: commitTitle, Sha: iteration.Commit}
+					}
+				}
+			}
+		}
+		if ticket.Frontmatter.Lines != nil && !ticketHasIterationLines {
+			if name, email, ok := ParseContributorIdentity(ticket.Frontmatter.Author); ok {
+				if github := ResolveContributorGithub(name, email, emailToGithub, nameToGithub); github != "" {
+					stateByGithub[github].Lines.Added += ticket.Frontmatter.Lines.Added
+					stateByGithub[github].Lines.Removed += ticket.Frontmatter.Lines.Removed
+				}
+			}
+		}
+		if ticket.Frontmatter.Commit != "" {
+			if name, email, ok := ParseContributorIdentity(ticket.Frontmatter.Author); ok {
+				if github := ResolveContributorGithub(name, email, emailToGithub, nameToGithub); github != "" {
+					commitTitle := commitTitleCache[ticket.Frontmatter.Commit]
+					if commitTitle == "" {
+						commitTitle = GetGitCommitTitle(ticket.Frontmatter.Commit)
+						if commitTitle == "" {
+							commitTitle = ticket.Frontmatter.Commit
+						}
+						commitTitleCache[ticket.Frontmatter.Commit] = commitTitle
+					}
+					stateByGithub[github].Commits[ticket.Frontmatter.Commit] = ContributorCommit{Title: commitTitle, Sha: ticket.Frontmatter.Commit}
+				}
+			}
+		}
+		for github := range ticketContributors {
+			stateByGithub[github].Tickets[ticketKey] = ContributorTicket{
+				Year:     ticket.Year,
+				Month:    ticket.Month,
+				Day:      ticket.Day,
+				Slug:     ticket.Slug,
+				Status:   ticket.Frontmatter.Status,
+				FilePath: ticket.FilePath,
+			}
+		}
+	}
+	files, err := ScopeToFiles(Scope{Kind: ScopeRepo}, nil)
+	if err != nil {
+		return nil, err
+	}
+	for _, filePath := range files {
+		absPath := filepath.Join(rootDir, filePath)
+		content, err := ReadTextFile(absPath)
+		if err != nil {
+			continue
+		}
+		sections := ParseSections(content, filePath)
+		headerSection := FindSection(sections, "Header")
+		if headerSection == nil {
+			continue
+		}
+		headerContent := content[headerSection.StartIndex:headerSection.EndIndex]
+		for _, line := range strings.Split(headerContent, "\n") {
+			if name, email, ok := ParseContributorIdentity(line); ok {
+				if github := ResolveContributorGithub(name, email, emailToGithub, nameToGithub); github != "" {
+					stateByGithub[github].Files[filePath] = struct{}{}
+					folder := NormalizePath(filepath.Dir(filePath))
+					if folder != "." {
+						stateByGithub[github].Folders[folder] = struct{}{}
+					}
+				}
+			}
+		}
+	}
+	projects := GetProjects()
+	var projectRoots []struct {
+		name string
+		root string
+	}
+	for _, project := range projects {
+		if project.Root != "" {
+			projectRoots = append(projectRoots, struct {
+				name string
+				root string
+			}{name: project.Name, root: NormalizePath(project.Root)})
+		}
+	}
+	sort.SliceStable(projectRoots, func(i, j int) bool {
+		return len(projectRoots[i].root) > len(projectRoots[j].root)
+	})
+	for _, contributor := range contributors {
+		state := stateByGithub[contributor.Github]
+		for filePath := range state.Files {
+			for _, project := range projectRoots {
+				if strings.HasPrefix(filePath, project.root+"/") || filePath == project.root {
+					state.Projects[project.name] = struct{}{}
+					break
+				}
+			}
+		}
+	}
+	for i := range contributors {
+		state := stateByGithub[contributors[i].Github]
+		for ticketKey := range state.Tickets {
+			contributors[i].Contributions.Tickets = append(contributors[i].Contributions.Tickets, state.Tickets[ticketKey])
+		}
+		sort.SliceStable(contributors[i].Contributions.Tickets, func(a, b int) bool {
+			left := contributors[i].Contributions.Tickets[a]
+			right := contributors[i].Contributions.Tickets[b]
+			if left.Year != right.Year {
+				return left.Year > right.Year
+			}
+			if left.Month != right.Month {
+				return left.Month > right.Month
+			}
+			if left.Day != right.Day {
+				return left.Day > right.Day
+			}
+			return left.Slug < right.Slug
+		})
+		for filePath := range state.Files {
+			contributors[i].Contributions.Files = append(contributors[i].Contributions.Files, filePath)
+		}
+		sort.Strings(contributors[i].Contributions.Files)
+		for folder := range state.Folders {
+			contributors[i].Contributions.Folders = append(contributors[i].Contributions.Folders, folder)
+		}
+		sort.Strings(contributors[i].Contributions.Folders)
+		for project := range state.Projects {
+			contributors[i].Contributions.Projects = append(contributors[i].Contributions.Projects, project)
+		}
+		sort.Strings(contributors[i].Contributions.Projects)
+		for _, commit := range state.Commits {
+			contributors[i].Contributions.Commits = append(contributors[i].Contributions.Commits, commit)
+		}
+		sort.SliceStable(contributors[i].Contributions.Commits, func(a, b int) bool {
+			left := contributors[i].Contributions.Commits[a]
+			right := contributors[i].Contributions.Commits[b]
+			if left.Title != right.Title {
+				return left.Title < right.Title
+			}
+			return left.Sha < right.Sha
+		})
+		if state.Lines.Added != 0 || state.Lines.Removed != 0 {
+			lines := state.Lines
+			contributors[i].Contributions.Lines = &lines
+		}
+	}
+	sort.SliceStable(contributors, func(i, j int) bool {
+		leftTickets := len(contributors[i].Contributions.Tickets)
+		rightTickets := len(contributors[j].Contributions.Tickets)
+		if leftTickets != rightTickets {
+			return leftTickets > rightTickets
+		}
+		return contributors[i].Github < contributors[j].Github
+	})
 	return contributors, nil
 }
 
@@ -2877,15 +3508,25 @@ func ToolFix(scopeRaw string) ToolResult {
 		scopeRaw = "@semio"
 	}
 	scope := ParseScope(scopeRaw)
-	projects := GetProjects()
-	files, _ := ScopeToFiles(scope, projects)
 	var allViolations []Violation
-	for _, file := range files {
-		violations, err := AnalyzeFile(file, projects)
+	// For file/section/definition scopes, skip project loading for speed
+	if scope.Kind == ScopeFile || scope.Kind == ScopeSection || scope.Kind == ScopeDefinition {
+		violations, err := AnalyzeFile(scope.FilePath, nil)
 		if err != nil {
-			continue
+			output.Error(fmt.Sprintf("Error analyzing file: %v", err))
+			return ToolResult{Output: *output, Error: err.Error()}
 		}
 		allViolations = append(allViolations, violations...)
+	} else {
+		projects := GetProjects()
+		files, _ := ScopeToFiles(scope, projects)
+		for _, file := range files {
+			violations, err := AnalyzeFile(file, nil)
+			if err != nil {
+				continue
+			}
+			allViolations = append(allViolations, violations...)
+		}
 	}
 	var fixable []Violation
 	for _, v := range allViolations {
@@ -3112,9 +3753,24 @@ func ToolContributorList() ToolResult {
 			name = c.Github
 		}
 		output.Plain(fmt.Sprintf("   %s (@%s)", name, c.Github))
+		ticketCount := len(c.Contributions.Tickets)
+		if ticketCount > 0 {
+			output.Plain(fmt.Sprintf("      Tickets: %d", ticketCount))
+		}
 		projectCount := len(c.Contributions.Projects)
 		if projectCount > 0 {
 			output.Plain(fmt.Sprintf("      Projects: %d", projectCount))
+		}
+		fileCount := len(c.Contributions.Files)
+		if fileCount > 0 {
+			output.Plain(fmt.Sprintf("      Files: %d", fileCount))
+		}
+		commitCount := len(c.Contributions.Commits)
+		if commitCount > 0 {
+			output.Plain(fmt.Sprintf("      Commits: %d", commitCount))
+		}
+		if c.Contributions.Lines != nil {
+			output.Plain(fmt.Sprintf("      Lines: +%d -%d", c.Contributions.Lines.Added, c.Contributions.Lines.Removed))
 		}
 	}
 	return ToolResult{Output: *output, Data: contributors}
@@ -3662,4 +4318,3 @@ func main() {
 		os.Exit(1)
 	}
 }
-

@@ -40,6 +40,9 @@ const runningProcesses = new Map<string, AbortController>();
 const SEMIO_KIT_LANGUAGE = "json";
 const DIAGNOSTIC_SOURCE = "semio";
 
+let cachedProjects: ProjectData[] | null = null;
+let cachedRepoBaseUrl: string | undefined = undefined;
+
 // #endregion Constants
 
 // #region Types
@@ -152,6 +155,65 @@ async function runRepoCommandJson<T>(args: string): Promise<T | null> {
   }
 }
 
+async function getProjectList(): Promise<ProjectData[]> {
+  if (cachedProjects) return cachedProjects;
+  if (!hasRepoAccess()) return [];
+  const result = await runRepoCommandJson<ToolResult<ProjectData[]>>("project list");
+  cachedProjects = result?.data ?? [];
+  return cachedProjects;
+}
+
+function getGitHubRepoBaseUrl(): string | undefined {
+  if (cachedRepoBaseUrl !== undefined) return cachedRepoBaseUrl;
+  const root = getWorkspaceRoot();
+  if (!root) {
+    cachedRepoBaseUrl = undefined;
+    return cachedRepoBaseUrl;
+  }
+  const packagePath = path.join(root, "package.json");
+  if (!fs.existsSync(packagePath)) {
+    cachedRepoBaseUrl = undefined;
+    return cachedRepoBaseUrl;
+  }
+  const raw = fs.readFileSync(packagePath, "utf8");
+  const parsed = JSON.parse(raw) as { repository?: { url?: string } | string };
+  const repoUrl = typeof parsed.repository === "string" ? parsed.repository : parsed.repository?.url;
+  if (!repoUrl) {
+    cachedRepoBaseUrl = undefined;
+    return cachedRepoBaseUrl;
+  }
+  let cleaned = repoUrl.replace(/^git\+/, "").replace(/\.git$/, "");
+  if (cleaned.startsWith("git@")) {
+    const match = cleaned.match(/^git@([^:]+):(.+)$/);
+    if (match) {
+      cleaned = `https://${match[1]}/${match[2]}`;
+    }
+  }
+  cachedRepoBaseUrl = cleaned.startsWith("http://") || cleaned.startsWith("https://") ? cleaned : undefined;
+  return cachedRepoBaseUrl;
+}
+
+function resolveTicketData(
+  ticket?: TicketData | ContributorTicketData | { ticket: TicketData | ContributorTicketData } | undefined,
+): TicketData | ContributorTicketData | undefined {
+  if (!ticket) return undefined;
+  if ("ticket" in ticket) return ticket.ticket;
+  return ticket;
+}
+
+function resolveTicketPath(ticket: TicketData | ContributorTicketData): string | undefined {
+  if (ticket.filePath) return ticket.filePath;
+  const root = getWorkspaceRoot();
+  if (!root) return undefined;
+  return path.join(root, "tickets", String(ticket.year), String(ticket.month).padStart(2, "0"), String(ticket.day).padStart(2, "0"), `${ticket.slug}.md`);
+}
+
+function resolveCommitSha(commit: string | { sha?: string } | undefined): string | undefined {
+  if (!commit) return undefined;
+  if (typeof commit === "string") return commit;
+  return commit.sha;
+}
+
 interface ToolResult<T = unknown> {
   output: { lines: { type: string; text: string }[]; exitCode: number };
   data?: T;
@@ -184,6 +246,14 @@ interface PolicyData {
   id: string;
   name: string;
   description: string;
+}
+
+interface ProjectData {
+  name: string;
+  root: string;
+  sourceRoot?: string;
+  projectType?: string;
+  tags?: string[];
 }
 
 async function pickTicket(statusFilter?: "open" | "closed"): Promise<TicketData | undefined> {
@@ -253,6 +323,14 @@ function getActiveFileRelativePath(): string | undefined {
   const editor = vscode.window.activeTextEditor;
   if (!editor) return undefined;
   return vscode.workspace.asRelativePath(editor.document.uri);
+}
+
+function pinDiagnosticPreview(editor?: vscode.TextEditor): void {
+  if (!editor) return;
+  const activeTab = vscode.window.tabGroups?.activeTabGroup?.activeTab;
+  if (!activeTab || !activeTab.isPreview) return;
+  if (!vscode.languages.getDiagnostics(editor.document.uri).some((d) => d.source === DIAGNOSTIC_SOURCE)) return;
+  vscode.commands.executeCommand("workbench.action.keepEditor");
 }
 
 // #endregion Utilities
@@ -357,16 +435,29 @@ class RepoCodeActionProvider implements vscode.CodeActionProvider {
 }
 
 function createRepoCodeAction(document: vscode.TextDocument, diagnostic: vscode.Diagnostic, violation: Violation): vscode.CodeAction | undefined {
-  const relativePath = vscode.workspace.asRelativePath(document.uri);
   const [, violationName] = violation.kind.split(":");
   const action = new vscode.CodeAction(`Fix: ${violationName || violation.kind}`, vscode.CodeActionKind.QuickFix);
   action.diagnostics = [diagnostic];
   action.isPreferred = true;
-  action.command = {
-    command: "semio.fixViolation",
-    title: "Fix violation",
-    arguments: [relativePath],
-  };
+  if (violation.autofix) {
+    // Apply autofix directly via workspace edit for fast, individual fixes
+    const edit = new vscode.WorkspaceEdit();
+    const root = getWorkspaceRoot();
+    if (root) {
+      for (const [filePath, textEdits] of Object.entries(violation.autofix.edits)) {
+        const absPath = path.join(root, filePath);
+        const uri = vscode.Uri.file(absPath);
+        // Sort edits in reverse order to apply from end to start
+        const sortedEdits = [...textEdits].sort((a, b) => b.start - a.start);
+        for (const textEdit of sortedEdits) {
+          const startPos = document.positionAt(textEdit.start);
+          const endPos = document.positionAt(textEdit.end);
+          edit.replace(uri, new vscode.Range(startPos, endPos), textEdit.newText);
+        }
+      }
+      action.edit = edit;
+    }
+  }
   return action;
 }
 
@@ -380,7 +471,7 @@ async function fixViolation(relativePath: string): Promise<void> {
   const command = getRepoCommand();
   try {
     await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: "Fixing violation..." }, async () => {
-      const { stderr } = await execAsync(`${command} fix ${relativePath}`, { cwd: root, timeout: 30000 });
+      const { stderr } = await execAsync(`"${command}" fix "${relativePath}"`, { cwd: root, timeout: 30000 });
       if (stderr) log("Fix stderr:", stderr);
       const absPath = path.join(root, relativePath);
       const uri = vscode.Uri.file(absPath);
@@ -930,7 +1021,7 @@ class TicketsProvider implements vscode.TreeDataProvider<TicketTreeItem> {
   }
 }
 
-type PolicyTreeItem = PolicyItem | ViolationKindItem;
+type PolicyTreeItem = PolicyItem | ViolationKindGroupItem | ViolationKindItem;
 
 class PolicyItem extends vscode.TreeItem {
   constructor(
@@ -945,13 +1036,29 @@ class PolicyItem extends vscode.TreeItem {
   }
 }
 
+class ViolationKindGroupItem extends vscode.TreeItem {
+  constructor(
+    public readonly groupPath: string,
+    public readonly policyId: string,
+    public readonly children: string[],
+  ) {
+    const segments = groupPath.split(":");
+    const name = segments[segments.length - 1];
+    super(name, vscode.TreeItemCollapsibleState.Collapsed);
+    this.tooltip = `Violation group: ${groupPath}`;
+    this.iconPath = new vscode.ThemeIcon("folder");
+    this.contextValue = "violationKindGroup";
+  }
+}
+
 class ViolationKindItem extends vscode.TreeItem {
   constructor(
     public readonly kind: string,
     public readonly policyId: string,
   ) {
-    const [_, kindName] = kind.split(":");
-    super(kindName || kind, vscode.TreeItemCollapsibleState.None);
+    const segments = kind.split(":");
+    const name = segments[segments.length - 1];
+    super(name, vscode.TreeItemCollapsibleState.None);
     this.description = kind;
     this.tooltip = `Violation kind: ${kind}`;
     this.iconPath = new vscode.ThemeIcon("warning");
@@ -988,6 +1095,32 @@ class PoliciesProvider implements vscode.TreeDataProvider<PolicyTreeItem> {
     return this.cachedViolationKinds.get(policyId) ?? [];
   }
 
+  private buildViolationTree(kinds: string[], policyId: string, prefix: string): PolicyTreeItem[] {
+    const groups = new Map<string, string[]>();
+    const leafKinds: string[] = [];
+    for (const kind of kinds) {
+      if (!kind.startsWith(prefix)) continue;
+      const rest = prefix ? kind.slice(prefix.length + 1) : kind;
+      const colonIndex = rest.indexOf(":");
+      if (colonIndex === -1) {
+        leafKinds.push(kind);
+      } else {
+        const groupName = rest.slice(0, colonIndex);
+        const groupPath = prefix ? `${prefix}:${groupName}` : groupName;
+        if (!groups.has(groupPath)) groups.set(groupPath, []);
+        groups.get(groupPath)!.push(kind);
+      }
+    }
+    const items: PolicyTreeItem[] = [];
+    for (const [groupPath, children] of groups) {
+      items.push(new ViolationKindGroupItem(groupPath, policyId, children));
+    }
+    for (const kind of leafKinds) {
+      items.push(new ViolationKindItem(kind, policyId));
+    }
+    return items;
+  }
+
   getTreeItem(element: PolicyTreeItem): vscode.TreeItem {
     return element;
   }
@@ -1016,10 +1149,11 @@ class PoliciesProvider implements vscode.TreeDataProvider<PolicyTreeItem> {
     }
     if (element instanceof PolicyItem) {
       const kinds = await this.getViolationKinds(element.policy.id);
-      if (!globalSearchQuery) {
-        return kinds.map((kind) => new ViolationKindItem(kind, element.policy.id));
-      }
-      return kinds.filter((k) => this.matchesViolationKindSearch(k) || this.matchesPolicySearch(element.policy)).map((kind) => new ViolationKindItem(kind, element.policy.id));
+      const filtered = globalSearchQuery ? kinds.filter((k) => this.matchesViolationKindSearch(k) || this.matchesPolicySearch(element.policy)) : kinds;
+      return this.buildViolationTree(filtered, element.policy.id, "");
+    }
+    if (element instanceof ViolationKindGroupItem) {
+      return this.buildViolationTree(element.children, element.policyId, element.groupPath);
     }
     return [];
   }
@@ -1030,19 +1164,65 @@ interface ContributorData {
   name?: string;
   emails?: string[];
   links?: Record<string, string>;
-  contributions?: { projects?: string[]; folders?: string[]; files?: string[]; regions?: string[]; definitions?: string[]; commits?: { title: string; sha: string }[] };
+  contributions?: {
+    projects?: string[];
+    folders?: string[];
+    files?: string[];
+    regions?: string[];
+    definitions?: string[];
+    commits?: ContributorCommitData[];
+    tickets?: ContributorTicketData[];
+    lines?: ContributorLineStats;
+  };
 }
 
-type ContributorTreeItem = ContributorItem | ContributorEmailsItem | ContributorEmailItem | ContributorLinksItem | ContributorLinkItem | ContributorContributionsItem | ContributorProjectsItem | ContributorProjectItem | ContributorFilesItem | ContributorFileItem | ContributorCommitsItem | ContributorCommitItem;
+interface ContributorTicketData {
+  year: number;
+  month: number;
+  day: number;
+  slug: string;
+  status: string;
+  filePath?: string;
+}
+
+interface ContributorCommitData {
+  title: string;
+  sha: string;
+}
+
+interface ContributorLineStats {
+  added: number;
+  removed: number;
+}
+
+type ContributorTreeItem =
+  | ContributorItem
+  | ContributorEmailsItem
+  | ContributorEmailItem
+  | ContributorLinksItem
+  | ContributorLinkItem
+  | ContributorContributionsItem
+  | ContributorProjectsItem
+  | ContributorProjectItem
+  | ContributorTicketsItem
+  | ContributorTicketYearItem
+  | ContributorTicketMonthItem
+  | ContributorTicketDayItem
+  | ContributorTicketItem
+  | ContributorFilesItem
+  | ContributorFileFolderItem
+  | ContributorFileItem
+  | ContributorCommitsItem
+  | ContributorCommitItem;
 
 class ContributorItem extends vscode.TreeItem {
   constructor(
     public readonly contributor: ContributorData,
     avatarPath?: string,
   ) {
-    const displayName = contributor.name ? `${contributor.name} - @${contributor.github}` : `@${contributor.github}`;
+    const displayName = contributor.name ? `${contributor.name} - ${contributor.github}` : contributor.github;
     super(displayName, vscode.TreeItemCollapsibleState.Collapsed);
-    this.tooltip = `@${contributor.github}${contributor.contributions?.projects ? `\nProjects: ${contributor.contributions.projects.join(", ")}` : ""}`;
+    this.tooltip = `${contributor.github}${contributor.contributions?.tickets ? `\nTickets: ${contributor.contributions.tickets.length}` : ""}${contributor.contributions?.projects ? `\nProjects: ${contributor.contributions.projects.join(", ")}` : ""}`;
     if (avatarPath && fs.existsSync(avatarPath)) {
       this.iconPath = vscode.Uri.file(avatarPath);
     } else {
@@ -1066,6 +1246,7 @@ class ContributorEmailItem extends vscode.TreeItem {
     super(email, vscode.TreeItemCollapsibleState.None);
     this.iconPath = new vscode.ThemeIcon("mail");
     this.contextValue = "contributorEmail";
+    this.command = { command: "vscode.open", title: "MailTo", arguments: [vscode.Uri.parse(`mailto:${email}`)] };
   }
 }
 
@@ -1095,14 +1276,18 @@ class ContributorContributionsItem extends vscode.TreeItem {
     super("contributions", vscode.TreeItemCollapsibleState.Collapsed);
     this.iconPath = new vscode.ThemeIcon("git-commit");
     this.contextValue = "contributorContributions";
+    if (contributor.contributions?.lines) {
+      this.description = `+${contributor.contributions.lines.added} -${contributor.contributions.lines.removed}`;
+    }
   }
 }
 
 class ContributorProjectsItem extends vscode.TreeItem {
-  constructor(public readonly contributor: ContributorData) {
+  constructor(public readonly contributor: ContributorData, count: number) {
     super("projects", vscode.TreeItemCollapsibleState.Collapsed);
     this.iconPath = new vscode.ThemeIcon("package");
     this.contextValue = "contributorProjects";
+    this.description = String(count);
   }
 }
 
@@ -1111,31 +1296,90 @@ class ContributorProjectItem extends vscode.TreeItem {
     super(project, vscode.TreeItemCollapsibleState.None);
     this.iconPath = new vscode.ThemeIcon("package");
     this.contextValue = "contributorProject";
+    this.command = { command: "semio.openProject", title: "Open Project", arguments: [project] };
+  }
+}
+
+class ContributorTicketsItem extends vscode.TreeItem {
+  constructor(public readonly contributor: ContributorData, count: number) {
+    super("tickets", vscode.TreeItemCollapsibleState.Collapsed);
+    this.iconPath = new vscode.ThemeIcon("issue-opened");
+    this.contextValue = "contributorTickets";
+    this.description = String(count);
+  }
+}
+
+class ContributorTicketYearItem extends vscode.TreeItem {
+  constructor(public readonly year: number, public readonly tickets: ContributorTicketData[]) {
+    super(String(year), vscode.TreeItemCollapsibleState.Collapsed);
+    this.iconPath = new vscode.ThemeIcon("calendar");
+    this.contextValue = "contributorTicketYear";
+  }
+}
+
+class ContributorTicketMonthItem extends vscode.TreeItem {
+  constructor(public readonly year: number, public readonly month: number, public readonly tickets: ContributorTicketData[]) {
+    super(String(month).padStart(2, "0"), vscode.TreeItemCollapsibleState.Collapsed);
+    this.iconPath = new vscode.ThemeIcon("calendar");
+    this.contextValue = "contributorTicketMonth";
+  }
+}
+
+class ContributorTicketDayItem extends vscode.TreeItem {
+  constructor(
+    public readonly year: number,
+    public readonly month: number,
+    public readonly day: number,
+    public readonly tickets: ContributorTicketData[],
+  ) {
+    super(String(day).padStart(2, "0"), vscode.TreeItemCollapsibleState.Collapsed);
+    this.iconPath = new vscode.ThemeIcon("calendar");
+    this.contextValue = "contributorTicketDay";
+  }
+}
+
+class ContributorTicketItem extends vscode.TreeItem {
+  constructor(public readonly ticket: ContributorTicketData) {
+    super(ticket.slug, vscode.TreeItemCollapsibleState.None);
+    this.iconPath = new vscode.ThemeIcon(ticket.status === "open" ? "issue-opened" : "issue-closed");
+    this.contextValue = ticket.status === "open" ? "ticketOpen" : "ticketClosed";
+    this.command = { command: "semio.openTicket", title: "Open Ticket", arguments: [ticket] };
   }
 }
 
 class ContributorFilesItem extends vscode.TreeItem {
-  constructor(public readonly contributor: ContributorData) {
+  constructor(public readonly contributor: ContributorData, count: number) {
     super("files", vscode.TreeItemCollapsibleState.Collapsed);
     this.iconPath = new vscode.ThemeIcon("file");
     this.contextValue = "contributorFiles";
+    this.description = String(count);
+  }
+}
+
+class ContributorFileFolderItem extends vscode.TreeItem {
+  constructor(public readonly folder: string, public readonly files: string[]) {
+    super(folder, vscode.TreeItemCollapsibleState.Collapsed);
+    this.iconPath = new vscode.ThemeIcon("folder");
+    this.contextValue = "contributorFileFolder";
   }
 }
 
 class ContributorFileItem extends vscode.TreeItem {
-  constructor(public readonly filePath: string) {
+  constructor(public readonly filePath: string, public readonly uri: vscode.Uri) {
     super(filePath.split("/").pop() || filePath, vscode.TreeItemCollapsibleState.None);
     this.description = filePath;
     this.iconPath = new vscode.ThemeIcon("file-code");
     this.contextValue = "contributorFile";
+    this.command = { command: "vscode.open", title: "Open File", arguments: [uri] };
   }
 }
 
 class ContributorCommitsItem extends vscode.TreeItem {
-  constructor(public readonly contributor: ContributorData) {
+  constructor(public readonly contributor: ContributorData, count: number) {
     super("commits", vscode.TreeItemCollapsibleState.Collapsed);
     this.iconPath = new vscode.ThemeIcon("git-commit");
     this.contextValue = "contributorCommits";
+    this.description = String(count);
   }
 }
 
@@ -1146,8 +1390,10 @@ class ContributorCommitItem extends vscode.TreeItem {
   ) {
     super(`${title} - ${sha.substring(0, 7)}`, vscode.TreeItemCollapsibleState.None);
     this.tooltip = `${title}\n${sha}`;
+    this.description = sha;
     this.iconPath = new vscode.ThemeIcon("git-commit");
     this.contextValue = "contributorCommit";
+    this.command = { command: "git.showCommit", title: "Open Commit", arguments: [sha] };
   }
 }
 
@@ -1158,6 +1404,7 @@ class ContributorsProvider implements vscode.TreeDataProvider<ContributorTreeIte
 
   refresh(): void {
     this.cachedContributors = [];
+    cachedProjects = null;
     this._onDidChangeTreeData.fire();
   }
 
@@ -1188,7 +1435,16 @@ class ContributorsProvider implements vscode.TreeDataProvider<ContributorTreeIte
       const c = element.contributor;
       if (c.emails && c.emails.length > 0) children.push(new ContributorEmailsItem(c));
       if (c.links && Object.keys(c.links).length > 0) children.push(new ContributorLinksItem(c));
-      if (c.contributions && (c.contributions.projects?.length || c.contributions.files?.length || c.contributions.commits?.length)) {
+      if (
+        c.contributions
+        && (
+          c.contributions.projects?.length
+          || c.contributions.files?.length
+          || c.contributions.commits?.length
+          || c.contributions.tickets?.length
+          || c.contributions.lines
+        )
+      ) {
         children.push(new ContributorContributionsItem(c));
       }
       return children;
@@ -1202,16 +1458,50 @@ class ContributorsProvider implements vscode.TreeDataProvider<ContributorTreeIte
     if (element instanceof ContributorContributionsItem) {
       const children: ContributorTreeItem[] = [];
       const c = element.contributor.contributions;
-      if (c?.projects?.length) children.push(new ContributorProjectsItem(element.contributor));
-      if (c?.files?.length) children.push(new ContributorFilesItem(element.contributor));
-      if (c?.commits?.length) children.push(new ContributorCommitsItem(element.contributor));
+      if (c?.commits?.length) children.push(new ContributorCommitsItem(element.contributor, c.commits.length));
+      if (c?.projects?.length) children.push(new ContributorProjectsItem(element.contributor, c.projects.length));
+      if (c?.tickets?.length) children.push(new ContributorTicketsItem(element.contributor, c.tickets.length));
+      if (c?.files?.length) children.push(new ContributorFilesItem(element.contributor, c.files.length));
       return children;
     }
     if (element instanceof ContributorProjectsItem) {
       return (element.contributor.contributions?.projects || []).map((p) => new ContributorProjectItem(p));
     }
+    if (element instanceof ContributorTicketsItem) {
+      const tickets = element.contributor.contributions?.tickets || [];
+      const years = [...new Set(tickets.map((t) => t.year))].sort((a, b) => b - a);
+      return years.map((year) => new ContributorTicketYearItem(year, tickets.filter((t) => t.year === year)));
+    }
+    if (element instanceof ContributorTicketYearItem) {
+      const months = [...new Set((element.tickets || []).map((t) => t.month))].sort((a, b) => b - a);
+      return months.map((month) => new ContributorTicketMonthItem(element.year, month, (element.tickets || []).filter((t) => t.month === month)));
+    }
+    if (element instanceof ContributorTicketMonthItem) {
+      const days = [...new Set((element.tickets || []).map((t) => t.day))].sort((a, b) => b - a);
+      return days.map((day) => new ContributorTicketDayItem(element.year, element.month, day, (element.tickets || []).filter((t) => t.day === day)));
+    }
+    if (element instanceof ContributorTicketDayItem) {
+      return (element.tickets || [])
+        .filter((t) => t.year === element.year && t.month === element.month && t.day === element.day)
+        .sort((a, b) => a.slug.localeCompare(b.slug))
+        .map((t) => new ContributorTicketItem(t));
+    }
     if (element instanceof ContributorFilesItem) {
-      return (element.contributor.contributions?.files || []).map((f) => new ContributorFileItem(f));
+      const files = element.contributor.contributions?.files || [];
+      const folderMap = new Map<string, string[]>();
+      for (const file of files) {
+        const folder = file.includes("/") ? file.slice(0, Math.max(0, file.lastIndexOf("/"))) : ".";
+        if (!folderMap.has(folder)) folderMap.set(folder, []);
+        folderMap.get(folder)!.push(file);
+      }
+      return [...folderMap.entries()]
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([folder, folderFiles]) => new ContributorFileFolderItem(folder, folderFiles.sort((a, b) => a.localeCompare(b))));
+    }
+    if (element instanceof ContributorFileFolderItem) {
+      const root = getWorkspaceRoot();
+      if (!root) return [];
+      return element.files.map((f) => new ContributorFileItem(f, vscode.Uri.file(path.join(root, f))));
     }
     if (element instanceof ContributorCommitsItem) {
       return (element.contributor.contributions?.commits || []).map((c) => new ContributorCommitItem(c.title, c.sha));
@@ -1223,6 +1513,22 @@ class ContributorsProvider implements vscode.TreeDataProvider<ContributorTreeIte
 interface CommandInfo {
   id: string;
   title: string;
+}
+
+interface CommandNode {
+  name: string;
+  children: Map<string, CommandNode>;
+  commands: CommandInfo[];
+}
+
+type CommandTreeItem = CommandGroupItem | CommandItem;
+
+class CommandGroupItem extends vscode.TreeItem {
+  constructor(public readonly node: CommandNode) {
+    super(node.name, node.children.size > 0 || node.commands.length > 0 ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
+    this.iconPath = new vscode.ThemeIcon("folder");
+    this.contextValue = "commandGroup";
+  }
 }
 
 class CommandItem extends vscode.TreeItem {
@@ -1253,26 +1559,75 @@ const SIDEBAR_COMMANDS: CommandInfo[] = [
   { id: "semio.refreshDiagnostics", title: "Refresh Diagnostics" },
 ];
 
-class CommandsProvider implements vscode.TreeDataProvider<CommandItem> {
-  private _onDidChangeTreeData = new vscode.EventEmitter<CommandItem | undefined | null | void>();
+class CommandsProvider implements vscode.TreeDataProvider<CommandTreeItem> {
+  private _onDidChangeTreeData = new vscode.EventEmitter<CommandTreeItem | undefined | null | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
+  private treeRoot = this.buildCommandTree(SIDEBAR_COMMANDS);
 
   refresh(): void {
     this._onDidChangeTreeData.fire();
   }
 
+  private getCommandSegments(commandId: string): string[] {
+    const segments: string[] = [];
+    for (const part of (commandId.startsWith("semio.") ? commandId.slice(6) : commandId).split(".")) {
+      for (const piece of part.split(/(?=[A-Z])/)) {
+        const lower = piece.toLowerCase();
+        if (lower) segments.push(lower);
+      }
+    }
+    return segments;
+  }
+
+  private buildCommandTree(commands: CommandInfo[]): CommandNode {
+    const root: CommandNode = { name: "", children: new Map(), commands: [] };
+    for (const command of commands) {
+      const segments = this.getCommandSegments(command.id);
+      let node = root;
+      for (const segment of segments.length > 1 ? segments.slice(0, -1) : segments) {
+        if (!node.children.has(segment)) {
+          node.children.set(segment, { name: segment, children: new Map(), commands: [] });
+        }
+        node = node.children.get(segment)!;
+      }
+      node.commands.push(command);
+    }
+    return root;
+  }
+
   private matchesSearch(cmd: CommandInfo): boolean {
     if (!globalSearchQuery) return true;
-    const searchable = [cmd.id, cmd.title].join(" ");
+    const segments = this.getCommandSegments(cmd.id);
+    const searchable = [cmd.id, cmd.title, ...segments].join(" ");
     return matchesSearchText(searchable);
   }
 
-  getTreeItem(element: CommandItem): vscode.TreeItem {
+  private matchesGroupSearch(name: string): boolean {
+    if (!globalSearchQuery) return true;
+    return matchesSearchText(name);
+  }
+
+  private buildTreeItems(node: CommandNode, includeAll: boolean): CommandTreeItem[] {
+    const items: CommandTreeItem[] = [];
+    for (const child of [...node.children.values()].sort((a, b) => a.name.localeCompare(b.name))) {
+      const groupMatches = includeAll || this.matchesGroupSearch(child.name);
+      if (groupMatches || this.buildTreeItems(child, groupMatches).length > 0) {
+        items.push(new CommandGroupItem(child));
+      }
+    }
+    for (const command of includeAll || !globalSearchQuery ? node.commands : node.commands.filter((cmd) => this.matchesSearch(cmd))) {
+      items.push(new CommandItem(command));
+    }
+    return items;
+  }
+
+  getTreeItem(element: CommandTreeItem): vscode.TreeItem {
     return element;
   }
 
-  getChildren(): CommandItem[] {
-    return SIDEBAR_COMMANDS.filter((cmd) => this.matchesSearch(cmd)).map((cmd) => new CommandItem(cmd));
+  getChildren(element?: CommandTreeItem): CommandTreeItem[] {
+    const node = element instanceof CommandGroupItem ? element.node : this.treeRoot;
+    return this.buildTreeItems(node, element instanceof CommandGroupItem ? this.matchesGroupSearch(node.name) : false);
   }
 }
 
@@ -1299,12 +1654,14 @@ function registerSidebarViews(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand("semio.refreshContributors", () => contributorsProvider.refresh()),
     vscode.commands.registerCommand("semio.refreshPolicies", () => policiesProvider.refresh()),
     vscode.commands.registerCommand("semio.toggleTicketFilter", () => ticketsProvider.toggleFilter()),
-    vscode.commands.registerCommand("semio.openTicket", async (ticket: TicketData) => {
-      if (!ticket?.filePath) return;
+    vscode.commands.registerCommand("semio.openTicket", async (ticket: TicketData | ContributorTicketData | { ticket: TicketData | ContributorTicketData }) => {
+      const resolvedTicket = resolveTicketData(ticket);
+      if (!resolvedTicket) return;
+      const filePath = resolveTicketPath(resolvedTicket);
+      if (!filePath) return;
       const root = getWorkspaceRoot();
-      if (!root) return;
-      const filePath = path.isAbsolute(ticket.filePath) ? ticket.filePath : path.join(root, ticket.filePath);
-      const uri = vscode.Uri.file(filePath);
+      const resolvedPath = path.isAbsolute(filePath) ? filePath : root ? path.join(root, filePath) : filePath;
+      const uri = vscode.Uri.file(resolvedPath);
       await vscode.window.showTextDocument(uri);
     }),
     vscode.commands.registerCommand("semio.openPolicy", async (policy: PolicyData, lineNumber?: number) => {
@@ -1375,6 +1732,42 @@ function registerSidebarViews(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.createContributor", async () => {
       await vscode.commands.executeCommand("semio.contributorAdd");
+    }),
+    vscode.commands.registerCommand("semio.openProject", async (projectName: string) => {
+      if (!projectName) return;
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary not found in bin/");
+        return;
+      }
+      const root = getWorkspaceRoot();
+      if (!root) return;
+      const projects = await getProjectList();
+      const project = projects.find((p) => p.name === projectName);
+      if (!project) return;
+      const projectRoot = path.join(root, project.root);
+      const projectJson = path.join(projectRoot, "project.json");
+      const packageJson = path.join(projectRoot, "package.json");
+      if (fs.existsSync(projectJson)) {
+        await vscode.window.showTextDocument(vscode.Uri.file(projectJson));
+        return;
+      }
+      if (fs.existsSync(packageJson)) {
+        await vscode.window.showTextDocument(vscode.Uri.file(packageJson));
+        return;
+      }
+      await vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(projectRoot));
+    }),
+    vscode.commands.registerCommand("semio.copyCommitSha", async (commit: string | { sha?: string }) => {
+      const sha = resolveCommitSha(commit);
+      if (!sha) return;
+      await vscode.env.clipboard.writeText(sha);
+    }),
+    vscode.commands.registerCommand("semio.openCommitInGitHub", async (commit: string | { sha?: string }) => {
+      const sha = resolveCommitSha(commit);
+      if (!sha) return;
+      const baseUrl = getGitHubRepoBaseUrl();
+      if (!baseUrl) return;
+      await vscode.env.openExternal(vscode.Uri.parse(`${baseUrl}/commit/${sha}`));
     }),
     vscode.commands.registerCommand("semio.checkPolicy", async (policy: PolicyItem) => {
       if (!policy?.policy?.id) return;
@@ -1505,23 +1898,23 @@ function registerCommands(context: vscode.ExtensionContext): void {
       if (!ticket) return;
       runRepoCommand(`ticket iterate end ${ticket.year} ${ticket.month} ${ticket.day} ${ticket.slug}`);
     }),
-    vscode.commands.registerCommand("semio.ticketFinish", async () => {
+    vscode.commands.registerCommand("semio.ticketFinish", async (ticketItem?: TicketItem | TicketData | ContributorTicketItem | ContributorTicketData) => {
       if (!hasRepoAccess()) {
         vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
-      const ticket = await pickTicket("open");
-      if (!ticket) return;
-      runRepoCommand(`ticket finish ${ticket.year} ${ticket.month} ${ticket.day} ${ticket.slug}`);
+      const resolvedTicket = resolveTicketData(ticketItem) ?? (await pickTicket("open"));
+      if (!resolvedTicket) return;
+      runRepoCommand(`ticket finish ${resolvedTicket.year} ${resolvedTicket.month} ${resolvedTicket.day} ${resolvedTicket.slug}`);
     }),
-    vscode.commands.registerCommand("semio.ticketReopen", async () => {
+    vscode.commands.registerCommand("semio.ticketReopen", async (ticketItem?: TicketItem | TicketData | ContributorTicketItem | ContributorTicketData) => {
       if (!hasRepoAccess()) {
         vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
-      const ticket = await pickTicket("closed");
-      if (!ticket) return;
-      runRepoCommand(`ticket reopen ${ticket.year} ${ticket.month} ${ticket.day} ${ticket.slug}`);
+      const resolvedTicket = resolveTicketData(ticketItem) ?? (await pickTicket("closed"));
+      if (!resolvedTicket) return;
+      runRepoCommand(`ticket reopen ${resolvedTicket.year} ${resolvedTicket.month} ${resolvedTicket.day} ${resolvedTicket.slug}`);
     }),
     vscode.commands.registerCommand("semio.ticketRead", async () => {
       if (!hasRepoAccess()) {
@@ -1873,6 +2266,8 @@ export function activate(context: vscode.ExtensionContext) {
   kitDiagnosticCollection = vscode.languages.createDiagnosticCollection(DIAGNOSTIC_SOURCE);
   repoDiagnosticCollection = vscode.languages.createDiagnosticCollection(DIAGNOSTIC_SOURCE);
   context.subscriptions.push(kitDiagnosticCollection, repoDiagnosticCollection);
+  context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor((editor) => pinDiagnosticPreview(editor)));
+  pinDiagnosticPreview(vscode.window.activeTextEditor);
   context.subscriptions.push(
     vscode.workspace.onDidOpenTextDocument(validateKitDocument),
     vscode.workspace.onDidChangeTextDocument((e) => validateKitDocument(e.document)),

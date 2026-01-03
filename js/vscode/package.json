@@ -257,6 +257,18 @@
       {
         "command": "semio.openContributor",
         "title": "Open Contributor"
+      },
+      {
+        "command": "semio.openProject",
+        "title": "Open Project"
+      },
+      {
+        "command": "semio.copyCommitSha",
+        "title": "Copy Commit SHA"
+      },
+      {
+        "command": "semio.openCommitInGitHub",
+        "title": "Open Commit in GitHub"
       }
     ],
     "menus": {
@@ -306,6 +318,26 @@
         {
           "command": "semio.ticketReopen",
           "when": "view == semio.tickets && viewItem == ticketClosed",
+          "group": "inline"
+        },
+        {
+          "command": "semio.ticketFinish",
+          "when": "view == semio.contributors && viewItem == ticketOpen",
+          "group": "inline"
+        },
+        {
+          "command": "semio.ticketReopen",
+          "when": "view == semio.contributors && viewItem == ticketClosed",
+          "group": "inline"
+        },
+        {
+          "command": "semio.copyCommitSha",
+          "when": "view == semio.contributors && viewItem == contributorCommit",
+          "group": "inline"
+        },
+        {
+          "command": "semio.openCommitInGitHub",
+          "when": "view == semio.contributors && viewItem == contributorCommit",
           "group": "inline"
         },
         {
