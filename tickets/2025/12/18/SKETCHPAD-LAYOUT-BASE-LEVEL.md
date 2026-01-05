@@ -1,73 +1,52 @@
 ---
 slug: SKETCHPAD-LAYOUT-BASE-LEVEL
-prompt: >-
-  Make sure the global sketchpad has layout base context provider. Currently
-  e.g. navbar and footer are transparent.
+prompt: Make sure the global sketchpad has layout base context provider. Currently e.g. navbar and footer are transparent.
+summary: Wrap global Sketchpad layout in base LevelProvider
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-18T16:15:40.759Z"
-  finished: "2025-12-18T16:18:19.098Z"
-summary: Wrap global Sketchpad layout in base LevelProvider
+    created: "2025-12-18T16:15:40.759Z"
+    finished: "2025-12-18T16:18:19.098Z"
 commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
 model: gpt-5.2-codex
 iterations:
-  - prompt: >-
-      Wrap global Sketchpad Layout in LevelProvider(base) so Navbar/Footer use
-      bg-base instead of inheriting overlay/window level.
-    date:
-      started: "2025-12-18T16:16:25.304Z"
-      ended: "2025-12-18T16:18:09.794Z"
-    model: gpt-5.2-codex
-    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-    commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
-    files:
-      updated:
-        - js/js/sketchpad/Sketchpad.tsx:
-            lines:
-              added: 254
-              removed: 460
-        - README.md:
-            lines:
-              added: 23
-              removed: 12
-        - AGENTS.md:
-            lines:
-              added: 30
-              removed: 18
-        - log/tickets/2025/12/18/SKETCHPAD-LAYOUT-BASE-LEVEL.md:
-            lines:
-              added: 56
-              removed: 0
-      created: []
-      removed: []
-    lines:
-      added: 363
-      removed: 490
+    - prompt: Wrap global Sketchpad Layout in LevelProvider(base) so Navbar/Footer use bg-base instead of inheriting overlay/window level.
+      model: gpt-5.2-codex
+      date:
+        started: "2025-12-18T16:16:25.304Z"
+        ended: "2025-12-18T16:18:09.794Z"
+      author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+      commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
+      bundles:
+        '@semio':
+            files:
+                "":
+                    sections: {}
+      files:
+        updated:
+            - path: ""
+            - path: ""
+            - path: ""
+            - path: ""
+      lines:
+        added: 363
+        removed: 490
+bundles:
+    '@semio':
+        files:
+            "":
+                sections: {}
 files:
-  updated:
-    - AGENTS.md:
-        lines:
-          added: 30
-          removed: 18
-    - README.md:
-        lines:
-          added: 23
-          removed: 12
-    - js/js/sketchpad/Sketchpad.tsx:
-        lines:
-          added: 254
-          removed: 460
-    - log/tickets/2025/12/18/SKETCHPAD-LAYOUT-BASE-LEVEL.md:
-        lines:
-          added: 58
-          removed: 0
-  created: []
-  removed: []
+    updated:
+        - path: ""
+        - path: ""
+        - path: ""
+        - path: ""
 lines:
-  added: 365
-  removed: 490
+    added: 365
+    removed: 490
 ---
+
 
 # Previously
 

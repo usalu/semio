@@ -1,47 +1,69 @@
 ---
 slug: TABLE-ROW-HEIGHT
+prompt: 'Finish (currently table rows are still heigher than toggles): Table rows have a fixed height...'
 summary: Normalize Sketchpad table row heights
-prompt: >-
-  Finish (currently table rows are still heigher than toggles): Table rows have
-  a fixed height...
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.962Z"
+    created: "2025-12-16T17:06:07.962Z"
 commit: "0000000000000000000000000000000000000000"
 iterations:
-  - prompt: >-
-      Finish (currently table rows are still heigher than toggles): Table rows
-      have a fixed height...
-    date:
-      started: "2025-12-15T12:26:26.622Z"
-    model: gpt-5-2
-    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-    commit: 76900221ecf5cfb30a37d69fbb66abb3e0a0e45a
-    files:
-      updated:
-        - path: AGENTS.md
-          lines:
-            added: 11
-            removed: 2
-        - path: README.md
-          lines:
-            added: 11
-            removed: 2
-        - path: js/js/sketchpad/elements.tsx
-          lines:
-            added: 11
-            removed: 2
-        - path: log/tickets/2025/12/15/TABLE-ROW-HEIGHT.md
-          lines:
-            added: 11
-            removed: 2
-      created: []
-      removed: []
-    lines:
-      added: 44
-      removed: 8
+    - prompt: 'Finish (currently table rows are still heigher than toggles): Table rows have a fixed height...'
+      model: gpt-5-2
+      date:
+        started: "2025-12-15T12:26:26.622Z"
+      author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+      commit: 76900221ecf5cfb30a37d69fbb66abb3e0a0e45a
+      bundles:
+        '@semio':
+            files:
+                AGENTS.md:
+                    sections:
+                        _root:
+                            lines:
+                                added: 11
+                                removed: 2
+                README.md:
+                    sections:
+                        _root:
+                            lines:
+                                added: 11
+                                removed: 2
+                js/js/sketchpad/elements.tsx:
+                    sections:
+                        _root:
+                            lines:
+                                added: 11
+                                removed: 2
+                log/tickets/2025/12/15/TABLE-ROW-HEIGHT.md:
+                    sections:
+                        _root:
+                            lines:
+                                added: 11
+                                removed: 2
+      files:
+        updated:
+            - path: AGENTS.md
+              lines:
+                added: 11
+                removed: 2
+            - path: README.md
+              lines:
+                added: 11
+                removed: 2
+            - path: js/js/sketchpad/elements.tsx
+              lines:
+                added: 11
+                removed: 2
+            - path: log/tickets/2025/12/15/TABLE-ROW-HEIGHT.md
+              lines:
+                added: 11
+                removed: 2
+      lines:
+        added: 44
+        removed: 8
 ---
+
 
 # Previously
 

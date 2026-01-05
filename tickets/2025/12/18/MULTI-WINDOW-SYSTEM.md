@@ -1,69 +1,39 @@
 ---
 slug: MULTI-WINDOW-SYSTEM
+prompt: 'Implement unified multi-window system: canonical window contracts + JSON layout persistence + migrate apps to LayoutCanvas'
 summary: Refactor all apps to a unified multi-window system
-prompt: >-
-  Implement unified multi-window system: canonical window contracts + JSON
-  layout persistence + migrate apps to LayoutCanvas
 status: open
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-18T15:18:04.589Z"
+    created: "2025-12-18T15:18:04.589Z"
 iterations:
-  - prompt: >-
-      Implement unified multi-window system: canonical window contracts + JSON
-      layout persistence + migrate apps to LayoutCanvas
-    date:
-      started: "2025-12-18T15:24:35.574Z"
-    model: gpt-5.2-codex
-    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-    files:
-      updated:
-        - js/js/sketchpad/shared.ts:
-            lines:
-              added: 0
-              removed: 1
-        - js/js/sketchpad/Sketchpad.tsx:
-            lines:
-              added: 50
-              removed: 3
-        - js/js/sketchpad/Kit.tsx:
-            lines:
-              added: 2
-              removed: 6
-        - js/js/sketchpad/Design.tsx:
-            lines:
-              added: 10
-              removed: 5
-        - js/js/sketchpad/Quality.tsx:
-            lines:
-              added: 0
-              removed: 0
-        - js/js/sketchpad/Home.tsx:
-            lines:
-              added: 0
-              removed: 4
-        - js/js/sketchpad/Docs.tsx:
-            lines:
-              added: 0
-              removed: 0
-        - js/js/sketchpad/Feedback.tsx:
-            lines:
-              added: 177
-              removed: 66
-        - README.md:
-            lines:
-              added: 0
-              removed: 0
-        - AGENTS.md:
-            lines:
-              added: 10
-              removed: 2
-      created: []
-      removed: []
-    lines:
-      added: 249
-      removed: 87
+    - prompt: 'Implement unified multi-window system: canonical window contracts + JSON layout persistence + migrate apps to LayoutCanvas'
+      model: gpt-5.2-codex
+      date:
+        started: "2025-12-18T15:24:35.574Z"
+      author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+      bundles:
+        '@semio':
+            files:
+                "":
+                    sections: {}
+      files:
+        updated:
+            - path: ""
+            - path: ""
+            - path: ""
+            - path: ""
+            - path: ""
+            - path: ""
+            - path: ""
+            - path: ""
+            - path: ""
+            - path: ""
+      lines:
+        added: 249
+        removed: 87
 ---
+
 
 # Previously
 

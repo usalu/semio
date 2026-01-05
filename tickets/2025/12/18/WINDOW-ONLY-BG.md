@@ -1,120 +1,64 @@
 ---
 slug: WINDOW-ONLY-BG
 prompt: Remove per-element backgrounds so only Window surfaces have a background.
+summary: Make UI elements transparent; only windows paint background
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-18T15:34:29.349Z"
-  finished: "2025-12-18T15:55:58.196Z"
-summary: Make UI elements transparent; only windows paint background
+    created: "2025-12-18T15:34:29.349Z"
+    finished: "2025-12-18T15:55:58.196Z"
 commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
 model: gpt-5.2-codex
 iterations:
-  - prompt: >-
-      Remove per-element level backgrounds so only Window surfaces have a
-      background; make panels and layout chrome transparent; keep temporary
-      surfaces readable.
-    date:
-      started: "2025-12-18T15:39:08.907Z"
-      ended: "2025-12-18T15:55:14.385Z"
-    model: gpt-5.2-codex
-    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-    commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
-    files:
-      updated:
-        - js/js/sketchpad/elements.tsx:
-            lines:
-              added: 127
-              removed: 146
-        - js/js/sketchpad/Sketchpad.tsx:
-            lines:
-              added: 145
-              removed: 233
-        - js/js/sketchpad/Tutorials.tsx:
-            lines:
-              added: 1
-              removed: 19
-        - js/js/sketchpad/Home.tsx:
-            lines:
-              added: 269
-              removed: 265
-        - js/js/sketchpad/Kit.tsx:
-            lines:
-              added: 24
-              removed: 18
-        - js/js/sketchpad/Quality.tsx:
-            lines:
-              added: 9
-              removed: 11
-        - js/js/globals.css:
-            lines:
-              added: 24
-              removed: 12
-        - README.md:
-            lines:
-              added: 19
-              removed: 13
-        - AGENTS.md:
-            lines:
-              added: 28
-              removed: 18
-        - log/tickets/2025/12/18/WINDOW-ONLY-BG.md:
-            lines:
-              added: 51
-              removed: 0
-      created: []
-      removed: []
-    lines:
-      added: 697
-      removed: 735
+    - prompt: Remove per-element level backgrounds so only Window surfaces have a background; make panels and layout chrome transparent; keep temporary surfaces readable.
+      model: gpt-5.2-codex
+      date:
+        started: "2025-12-18T15:39:08.907Z"
+        ended: "2025-12-18T15:55:14.385Z"
+      author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+      commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
+      bundles:
+        '@semio':
+            files:
+                "":
+                    sections: {}
+      files:
+        updated:
+            - path: ""
+            - path: ""
+            - path: ""
+            - path: ""
+            - path: ""
+            - path: ""
+            - path: ""
+            - path: ""
+            - path: ""
+            - path: ""
+      lines:
+        added: 697
+        removed: 735
+bundles:
+    '@semio':
+        files:
+            "":
+                sections: {}
 files:
-  updated:
-    - AGENTS.md:
-        lines:
-          added: 28
-          removed: 18
-    - README.md:
-        lines:
-          added: 19
-          removed: 13
-    - js/js/globals.css:
-        lines:
-          added: 24
-          removed: 12
-    - js/js/sketchpad/Home.tsx:
-        lines:
-          added: 269
-          removed: 265
-    - js/js/sketchpad/Kit.tsx:
-        lines:
-          added: 24
-          removed: 18
-    - js/js/sketchpad/Quality.tsx:
-        lines:
-          added: 9
-          removed: 11
-    - js/js/sketchpad/Sketchpad.tsx:
-        lines:
-          added: 145
-          removed: 233
-    - js/js/sketchpad/Tutorials.tsx:
-        lines:
-          added: 1
-          removed: 19
-    - js/js/sketchpad/elements.tsx:
-        lines:
-          added: 127
-          removed: 146
-    - log/tickets/2025/12/18/WINDOW-ONLY-BG.md:
-        lines:
-          added: 85
-          removed: 0
-  created: []
-  removed: []
+    updated:
+        - path: ""
+        - path: ""
+        - path: ""
+        - path: ""
+        - path: ""
+        - path: ""
+        - path: ""
+        - path: ""
+        - path: ""
+        - path: ""
 lines:
-  added: 731
-  removed: 735
+    added: 731
+    removed: 735
 ---
+
 
 # Previously
 

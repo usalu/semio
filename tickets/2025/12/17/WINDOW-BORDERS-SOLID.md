@@ -1,77 +1,54 @@
 ---
 slug: WINDOW-BORDERS-SOLID
-summary: Fix window borders and revert to solid style
 prompt: Still no bottom and right border. Remove the dashed border.
+summary: Fix window borders and revert to solid style
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-17T18:34:02.257Z"
-  finished: "2025-12-17T18:36:14.754Z"
+    created: "2025-12-17T18:34:02.257Z"
+    finished: "2025-12-17T18:36:14.754Z"
 commit: 7c4820638369104ae259b238d9240f08e429e67e
 model: gpt-5.2-codex
 iterations:
-  - prompt: Still no bottom and right border. Remove the dashed border.
-    date:
-      started: "2025-12-17T18:34:07.737Z"
-      ended: "2025-12-17T18:36:06.323Z"
-    model: gpt-5.2-codex
-    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-    commit: 7c4820638369104ae259b238d9240f08e429e67e
-    files:
-      updated:
-        - js/js/globals.css:
-            lines:
-              added: 26
-              removed: 7
-        - js/js/sketchpad/elements.tsx:
-            lines:
-              added: 38
-              removed: 39
-        - README.md:
-            lines:
-              added: 17
-              removed: 0
-        - AGENTS.md:
-            lines:
-              added: 16
-              removed: 8
-        - log/tickets/2025/12/17/WINDOW-BORDERS-SOLID.md:
-            lines:
-              added: 49
-              removed: 0
-      created: []
-      removed: []
-    lines:
-      added: 146
-      removed: 54
+    - prompt: Still no bottom and right border. Remove the dashed border.
+      model: gpt-5.2-codex
+      date:
+        started: "2025-12-17T18:34:07.737Z"
+        ended: "2025-12-17T18:36:06.323Z"
+      author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+      commit: 7c4820638369104ae259b238d9240f08e429e67e
+      bundles:
+        '@semio':
+            files:
+                "":
+                    sections: {}
+      files:
+        updated:
+            - path: ""
+            - path: ""
+            - path: ""
+            - path: ""
+            - path: ""
+      lines:
+        added: 146
+        removed: 54
+bundles:
+    '@semio':
+        files:
+            "":
+                sections: {}
 files:
-  updated:
-    - AGENTS.md:
-        lines:
-          added: 16
-          removed: 8
-    - README.md:
-        lines:
-          added: 17
-          removed: 0
-    - js/js/globals.css:
-        lines:
-          added: 26
-          removed: 7
-    - js/js/sketchpad/elements.tsx:
-        lines:
-          added: 38
-          removed: 39
-    - log/tickets/2025/12/17/WINDOW-BORDERS-SOLID.md:
-        lines:
-          added: 51
-          removed: 0
-  created: []
-  removed: []
+    updated:
+        - path: ""
+        - path: ""
+        - path: ""
+        - path: ""
+        - path: ""
 lines:
-  added: 148
-  removed: 54
+    added: 148
+    removed: 54
 ---
+
 
 # Previously
 

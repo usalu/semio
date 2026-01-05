@@ -35,6 +35,8 @@ Region blocks MUST be properly nested and MUST be closed with a matching named e
 
 Region blocks MUST NOT be empty.
 
+All code MUST be within sections.
+
 Developer documentation MUST be centralized in the root `README.md` and `AGENTS.md`; non-root `AGENTS.md` files and non-package `README.md` files are forbidden.
 
 Shared UI element libraries MUST remain domain-neutral and MUST NOT use domain-specific terminology (kit, design, type, connector, connection, docs, feedback).
@@ -788,7 +790,27 @@ dnd-kit's `PointerSensor` requires native browser `PointerEvent` objects. Playwr
 
 ### Ticket System
 
-All development tasks are tracked via markdown tickets with YAML frontmatter stored in a nested date-based structure. Each ticket can track multiple **iterations** (agent work sessions), where each iteration captures the prompt, model, commit, and per-file line changes.
+All development tasks are tracked via markdown tickets with YAML frontmatter stored in a nested date-based structure. Each ticket can track multiple **iterations** (agent work sessions), where each iteration captures the prompt, model, commit, and hierarchical contribution data organized by bundles.
+
+#### Scope Hierarchy
+
+The scope system uses a hierarchical format that mirrors the monorepo structure:
+
+```
+@REPO/BUNDLE/FOLDER/FILE/SECTION/DEFINITION
+```
+
+- **@REPO**: Always `@semio` for this repository
+- **BUNDLE**: Nx bundle name (e.g., `@semio/js`, `@semio/net`, `@semio/engine`)
+- **FOLDER**: Relative folder path within bundle (e.g., `js/js/sketchpad`)
+- **FILE**: File name (e.g., `Sketchpad.tsx`)
+- **SECTION**: Region/section name (e.g., `State Management`)
+- **DEFINITION**: Function/class/variable name (e.g., `createMachine`)
+
+Only the right parts can be omitted, not parts on the left. Examples:
+- `@semio/js/js/js/sketchpad/Sketchpad.tsx` - file in bundle
+- `@semio/net` - entire net bundle
+- `@semio` - entire repository
 
 #### Directory Structure
 
@@ -811,13 +833,14 @@ Every ticket file MUST have YAML frontmatter with a slug and prompt; summary is 
 slug: SLUG # Upper kebab-case identifier (e.g., VALIDATION-SYSTEM)
 prompt: "User prompt..." # Prompt used to create the ticket
 summary: SUMMARY # One-line description for commit messages (set on ticket finish)
-status: open # open | finished
+status: open # open | closed
 author: NAME <EMAIL> # From git config
 date:
   created: TIMESTAMP # ISO 8601 timestamp
   finished: TIMESTAMP # ISO 8601 timestamp (set on ticket finish)
 commit: GIT_SHA # Git commit at ticket creation for line stats
 model: MODEL # Optional ticket-level default model
+ignore: false # Set to true for formatting/cleanup tickets that should not count as contributions
 iterations:
   - prompt: "First user prompt..." # The user's request
     date:
@@ -826,18 +849,39 @@ iterations:
     model: MODEL # LLM model used
     author: NAME <EMAIL> # Optional iteration author
     commit: GIT_SHA # Set when iteration is finished
-    files:
-      updated: # Files modified (with per-file line stats)
+    ignore: false # Set to true for iterations that should not count as contributions
+    bundles: # Hierarchical contribution structure (set on iteration finish)
+      "@semio/js":
+        files:
+          "js/js/sketchpad/Sketchpad.tsx":
+            sections:
+              "State Management":
+                definitions:
+                  "createMachine":
+                    lines:
+                      added: 122
+                      removed: 3
+                lines:
+                  added: 150
+                  removed: 10
+            lines:
+              added: 200
+              removed: 20
+        lines:
+          added: 500
+          removed: 50
+    files: # Legacy flat file list (deprecated, kept for backwards compatibility)
+      updated:
         - path: path/to/modified.ts
           lines:
             added: 50
             removed: 10
-      created: # New files (with line stats)
+      created:
         - path: path/to/new.ts
           lines:
             added: 100
             removed: 0
-      removed: # Deleted files
+      removed:
         - path: path/to/deleted.ts
           lines:
             added: 0
@@ -845,7 +889,17 @@ iterations:
     lines: # Iteration-level totals (sum of file lines)
       added: 150
       removed: 60
-files: # Aggregated from all iterations (set on ticket finish)
+bundles: # Aggregated from all iterations (set on ticket finish)
+  "@semio/js":
+    files:
+      "js/js/sketchpad/Sketchpad.tsx":
+        lines:
+          added: 200
+          removed: 20
+    lines:
+      added: 500
+      removed: 50
+files: # Legacy flat file list (deprecated, kept for backwards compatibility)
   updated:
     - path: path/to/modified.ts
       lines: { added: 50, removed: 10 }
@@ -861,12 +915,20 @@ lines: # Ticket-level totals from git diff against commit (set on ticket finish)
 ---
 ```
 
+#### Ignore Flag
+
+The `ignore` flag can be set on tickets or individual iterations to exclude them from contribution calculations. Use this for:
+- Formatting-only changes
+- Cleanup/refactoring that doesn't add functionality
+- Reverted changes
+- Automated/scripted changes
+
 #### Workflow
 
 1. **Create** a ticket when starting work on a task
 2. **Start** an iteration for each prompt (requires files)
-3. **Finish** the iteration when the agent stops working (computes git lines per file)
-4. **Finish** the ticket when the task is done (aggregates files and computes ticket-level lines)
+3. **Finish** the iteration when the agent stops working (computes git lines per file, builds bundles hierarchy)
+4. **Finish** the ticket when the task is done (aggregates files and computes ticket-level lines and bundles)
 
 #### Script Usage
 
@@ -3923,6 +3985,7 @@ Ticket iteration end derives per-file lists and line stats from git diffs betwee
 Ticket finish aggregates per-iteration file stats into ticket-level `files` and computes ticket-level `lines` from git diffs scoped to the ticket file list.
 Ticket file aggregates store `updated`, `created`, and `removed` as `FileLineStats` with line totals.
 Comment policy scanning tracks string and template literal context so comment markers inside literals do not trigger violations.
+Section policy flags orphan code lines that sit outside any named region.
 Contributor listing derives tickets, commits, bundles, files, and line totals from ticket frontmatter and header contributor entries, resolves contributors by email/name mappings, and sorts by ticket count.
 Contributor commit entries resolve titles from git metadata and bundle memberships from file path overlap with Nx bundle roots.
 

@@ -1,91 +1,56 @@
 ---
 slug: WINDOW-MARGINS
+prompt: Every window should have a single unit margin between the window and the border of the canvas or between windows. Every window has a continuous border around it.
 summary: Sketchpad windows have 1-unit margins and continuous borders
-prompt: >-
-  Every window should have a single unit margin between the window and the
-  border of the canvas or between windows. Every window has a continuous border
-  around it.
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-17T18:00:50.599Z"
-  finished: "2025-12-17T18:12:12.439Z"
+    created: "2025-12-17T18:00:50.599Z"
+    finished: "2025-12-17T18:12:12.439Z"
 commit: 7c4820638369104ae259b238d9240f08e429e67e
 model: gpt-5.2-codex
 iterations:
-  - prompt: >-
-      Every window should have a single unit margin between the window and the
-      border of the canvas or between windows. Every window has a continuous
-      border around it.
-    date:
-      started: "2025-12-17T18:01:09.910Z"
-      ended: "2025-12-17T18:12:04.382Z"
-    model: gpt-5.2-codex
-    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-    commit: 7c4820638369104ae259b238d9240f08e429e67e
-    files:
-      updated:
-        - js/js/globals.css:
-            lines:
-              added: 21
-              removed: 6
-        - js/js/sketchpad/Sketchpad.tsx:
-            lines:
-              added: 13
-              removed: 13
-        - js/js/sketchpad/elements.tsx:
-            lines:
-              added: 38
-              removed: 39
-        - README.md:
-            lines:
-              added: 17
-              removed: 0
-        - AGENTS.md:
-            lines:
-              added: 16
-              removed: 8
-        - log/tickets/2025/12/17/WINDOW-MARGINS.md:
-            lines:
-              added: 58
-              removed: 0
-      created: []
-      removed: []
-    lines:
-      added: 163
-      removed: 66
+    - prompt: Every window should have a single unit margin between the window and the border of the canvas or between windows. Every window has a continuous border around it.
+      model: gpt-5.2-codex
+      date:
+        started: "2025-12-17T18:01:09.910Z"
+        ended: "2025-12-17T18:12:04.382Z"
+      author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+      commit: 7c4820638369104ae259b238d9240f08e429e67e
+      bundles:
+        '@semio':
+            files:
+                "":
+                    sections: {}
+      files:
+        updated:
+            - path: ""
+            - path: ""
+            - path: ""
+            - path: ""
+            - path: ""
+            - path: ""
+      lines:
+        added: 163
+        removed: 66
+bundles:
+    '@semio':
+        files:
+            "":
+                sections: {}
 files:
-  updated:
-    - AGENTS.md:
-        lines:
-          added: 16
-          removed: 8
-    - README.md:
-        lines:
-          added: 17
-          removed: 0
-    - js/js/globals.css:
-        lines:
-          added: 21
-          removed: 6
-    - js/js/sketchpad/Sketchpad.tsx:
-        lines:
-          added: 13
-          removed: 13
-    - js/js/sketchpad/elements.tsx:
-        lines:
-          added: 38
-          removed: 39
-    - log/tickets/2025/12/17/WINDOW-MARGINS.md:
-        lines:
-          added: 64
-          removed: 0
-  created: []
-  removed: []
+    updated:
+        - path: ""
+        - path: ""
+        - path: ""
+        - path: ""
+        - path: ""
+        - path: ""
 lines:
-  added: 169
-  removed: 66
+    added: 169
+    removed: 66
 ---
+
 
 # Previously
 

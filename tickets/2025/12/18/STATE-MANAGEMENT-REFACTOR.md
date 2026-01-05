@@ -1,81 +1,55 @@
 ---
 slug: STATE-MANAGEMENT-REFACTOR
-prompt: >-
-  Analyze js/js codebase for state management inconsistencies and refactor to
-  triadic hooks pattern
+prompt: Analyze js/js codebase for state management inconsistencies and refactor to triadic hooks pattern
+summary: Refactor js/js state management to triadic hooks pattern
 status: open
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-18T07:25:30.399Z"
-summary: Refactor js/js state management to triadic hooks pattern
+    created: "2025-12-18T07:25:30.399Z"
 iterations:
-  - prompt: >-
-      Analyze js/js codebase for state management inconsistencies and refactor
-      to triadic hooks pattern
-    date:
-      started: "2025-12-18T07:25:30.399Z"
-      ended: "2025-12-18T16:05:57.155Z"
-    model: claude-sonnet-4-20250514
-    author: Unknown
-    commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
-    files:
-      updated:
-        - js/js/sketchpad/Sketchpad.tsx:
-            lines:
-              added: 169
-              removed: 377
-        - js/js/sketchpad/shared.ts:
-            lines:
-              added: 47
-              removed: 16
-        - js/js/sketchpad/apps/index.ts:
-            lines:
-              added: 1
-              removed: 11
-        - js/js/sketchpad/Feedback.tsx:
-            lines:
-              added: 216
-              removed: 70
-        - AGENTS.md:
-            lines:
-              added: 28
-              removed: 18
-        - log/tickets/2025/12/18/STATE-MANAGEMENT-REFACTOR.md:
-            lines:
-              added: 113
-              removed: 0
-      created: []
-      removed: []
-    lines:
-      added: 574
-      removed: 492
-  - prompt: >-
-      Refactor Sketchpad.tsx to obey open/closed: remove all app-specific logic
-      from core; apps must be addable/removable by adding/removing their module.
-    date:
-      started: "2025-12-18T16:06:08.806Z"
-    model: gpt-5.2-codex
-    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-    files:
-      updated:
-        - js/js/sketchpad/Sketchpad.tsx:
-            lines:
-              added: 169
-              removed: 377
-        - js/js/sketchpad/shared.ts:
-            lines:
-              added: 47
-              removed: 16
-        - js/js/sketchpad/apps/index.ts:
-            lines:
-              added: 1
-              removed: 11
-      created: []
-      removed: []
-    lines:
-      added: 217
-      removed: 404
+    - prompt: Analyze js/js codebase for state management inconsistencies and refactor to triadic hooks pattern
+      model: claude-sonnet-4-20250514
+      date:
+        started: "2025-12-18T07:25:30.399Z"
+        ended: "2025-12-18T16:05:57.155Z"
+      author: Unknown
+      commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
+      bundles:
+        '@semio':
+            files:
+                "":
+                    sections: {}
+      files:
+        updated:
+            - path: ""
+            - path: ""
+            - path: ""
+            - path: ""
+            - path: ""
+            - path: ""
+      lines:
+        added: 574
+        removed: 492
+    - prompt: 'Refactor Sketchpad.tsx to obey open/closed: remove all app-specific logic from core; apps must be addable/removable by adding/removing their module.'
+      model: gpt-5.2-codex
+      date:
+        started: "2025-12-18T16:06:08.806Z"
+      author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+      bundles:
+        '@semio':
+            files:
+                "":
+                    sections: {}
+      files:
+        updated:
+            - path: ""
+            - path: ""
+            - path: ""
+      lines:
+        added: 217
+        removed: 404
 ---
+
 
 # Previously
 

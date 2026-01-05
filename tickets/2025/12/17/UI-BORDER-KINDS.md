@@ -1,109 +1,60 @@
 ---
 slug: UI-BORDER-KINDS
+prompt: 'The border mechanism of all UI elements should be more flexible: add semantic border kinds with different styles. Introduce Tailwind classes border-element (element borders use hover color) and border-window (window borders use current normal border).'
 summary: Semantic border kinds (element/window)
-prompt: >-
-  The border mechanism of all UI elements should be more flexible: add semantic
-  border kinds with different styles. Introduce Tailwind classes border-element
-  (element borders use hover color) and border-window (window borders use
-  current normal border).
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-17T15:50:11.288Z"
-  finished: "2025-12-17T16:10:02.845Z"
+    created: "2025-12-17T15:50:11.288Z"
+    finished: "2025-12-17T16:10:02.845Z"
 commit: 7c4820638369104ae259b238d9240f08e429e67e
 model: gpt-5.2-codex
 iterations:
-  - prompt: >-
-      The border mechanism of all UI elements should be more flexible: add
-      semantic border kinds with different styles. Introduce Tailwind classes
-      border-element (element borders use hover color) and border-window (window
-      borders use current normal border).
-    date:
-      started: "2025-12-17T15:51:12.049Z"
-      ended: "2025-12-17T16:09:50.461Z"
-    model: gpt-5.2-codex
-    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-    commit: 7c4820638369104ae259b238d9240f08e429e67e
-    files:
-      updated:
-        - js/js/globals.css:
-            lines:
-              added: 6
-              removed: 2
-        - js/js/sketchpad/elements.tsx:
-            lines:
-              added: 34
-              removed: 33
-        - js/js/sketchpad/Sketchpad.tsx:
-            lines:
-              added: 8
-              removed: 5
-        - js/js/sketchpad/Design.tsx:
-            lines:
-              added: 4
-              removed: 4
-        - js/js/sketchpad/Docs.tsx:
-            lines:
-              added: 1
-              removed: 1
-        - README.md:
-            lines:
-              added: 11
-              removed: 0
-        - AGENTS.md:
-            lines:
-              added: 12
-              removed: 5
-        - log/tickets/2025/12/17/UI-BORDER-KINDS.md:
-            lines:
-              added: 0
-              removed: 0
-      created: []
-      removed: []
-    lines:
-      added: 76
-      removed: 50
+    - prompt: 'The border mechanism of all UI elements should be more flexible: add semantic border kinds with different styles. Introduce Tailwind classes border-element (element borders use hover color) and border-window (window borders use current normal border).'
+      model: gpt-5.2-codex
+      date:
+        started: "2025-12-17T15:51:12.049Z"
+        ended: "2025-12-17T16:09:50.461Z"
+      author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+      commit: 7c4820638369104ae259b238d9240f08e429e67e
+      bundles:
+        '@semio':
+            files:
+                "":
+                    sections: {}
+      files:
+        updated:
+            - path: ""
+            - path: ""
+            - path: ""
+            - path: ""
+            - path: ""
+            - path: ""
+            - path: ""
+            - path: ""
+      lines:
+        added: 76
+        removed: 50
+bundles:
+    '@semio':
+        files:
+            "":
+                sections: {}
 files:
-  updated:
-    - AGENTS.md:
-        lines:
-          added: 12
-          removed: 5
-    - README.md:
-        lines:
-          added: 11
-          removed: 0
-    - js/js/globals.css:
-        lines:
-          added: 6
-          removed: 2
-    - js/js/sketchpad/Design.tsx:
-        lines:
-          added: 4
-          removed: 4
-    - js/js/sketchpad/Docs.tsx:
-        lines:
-          added: 1
-          removed: 1
-    - js/js/sketchpad/Sketchpad.tsx:
-        lines:
-          added: 8
-          removed: 5
-    - js/js/sketchpad/elements.tsx:
-        lines:
-          added: 34
-          removed: 33
-    - log/tickets/2025/12/17/UI-BORDER-KINDS.md:
-        lines:
-          added: 0
-          removed: 0
-  created: []
-  removed: []
+    updated:
+        - path: ""
+        - path: ""
+        - path: ""
+        - path: ""
+        - path: ""
+        - path: ""
+        - path: ""
+        - path: ""
 lines:
-  added: 76
-  removed: 50
+    added: 76
+    removed: 50
 ---
+
 
 # Previously
 

@@ -1,5 +1,64 @@
 # Prompt history
 
+Add a new section violation kind: orphan
+All code must be within sections.
+
+The vscode extionsion problem diagnostic currently show
+POLICYNAME - semio(PATHTOVIOLATION)
+such as
+and instead they should show
+VIOLATIONMESSAGE - VIOLATIONKIND(PATHTOVIOLATIONDEFINITION)
+
+{
+	"resource": "/c:/git/semio.tech/semio/go/repo/main.go",
+	"owner": "semio1",
+	"code": {
+		"value": "code",
+		"target": {
+			"$mid": 1,
+			"path": "/c:/git/semio.tech/semio/go/repo/main.go",
+			"scheme": "file",
+			"fragment": "L580"
+		}
+	},
+	"severity": 4,
+	"message": "section",
+	"source": "semio",
+	"startLineNumber": 580,
+	"startColumn": 1,
+	"endLineNumber": 580,
+	"endColumn": 14,
+	"origin": "extHost1"
+}
+
+should become
+
+{
+	"resource": "/c:/git/semio.tech/semio/go/repo/main.go",
+	"owner": "semio1",
+	"code": {
+		"value": "missing-end-name",
+		"target": {
+			"$mid": 1,
+			"path": "/c:/git/semio.tech/semio/go/repo/main.go",
+			"scheme": "file",
+			"fragment": "L580"
+		}
+	},
+	"severity": 4,
+	"message": "Missing end name for section \"Types\"",
+	"source": "semio",
+	"startLineNumber": 580,
+	"startColumn": 1,
+	"endLineNumber": 580,
+	"endColumn": 14,
+	"origin": "extHost1"
+}
+
+Dont allow lines to be stored at repo, bundle, folder or file level. Every line need to be at section level. Definitions are the names of the functions, classes, variables, etc. that were affected by the changes inside the section.
+Refactor the current hardcoded switch statements to use a new approach where languages define how to identify sections, definitions, etc.
+
+
 The general scope mechanism should now always be @REPO[semio]/BUNDLE[js|go|net|desktop|engine|assistant|play|docs|assets|…]/FOLDER[js/js|net/Semio|…]/FILE[Semio.cs|main.go|…]/SECTION[State Management|…]/DEFINITION[createMachine|…] and only right part cans be omitted but not parts on the left.
 E.g. "js/js/sketchpad/Sketchpad.tsx" becomes "@semio/js/js/sketchpad/Sketchpad.tsx"
 
@@ -20,12 +79,11 @@ iterations:
           "js/js/sketchpad/Sketchpad.tsx":
             sections:
               "State Management":
-                definitions:
-                  "createMachine":
-                    lines:
-                      added: 122
-                      removed: 3
-Migrate all tickets to new format.
+                definitions: ["createMachine"]
+                lines:
+                  added: 122
+                  removed: 3
+Migrate all tickets to new format. When you dont know the exact section and definitions then guess them. The migration needs to happen only once. Dont leave any migration logic in the code.
 
 
 When clicking on the section it should navigate to it. There should be rename, create child, remove icons for every item. Make sure to only use the repo binary for everything.

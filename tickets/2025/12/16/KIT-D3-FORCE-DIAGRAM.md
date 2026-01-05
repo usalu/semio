@@ -1,80 +1,94 @@
 ---
 slug: KIT-D3-FORCE-DIAGRAM
-summary: >-
-  Implement d3-force layout for kit diagram with configurable simulation
-  parameters
-prompt: >-
-  PLAN: The diagram in kit app should be a d3-force layout. The nodes should be
-  a circle with the icons. Add the parameters for the simulation to the settings
-  of the kit app.
+prompt: 'PLAN: The diagram in kit app should be a d3-force layout. The nodes should be a circle with the icons. Add the parameters for the simulation to the settings of the kit app.'
+summary: Implement d3-force layout for kit diagram with configurable simulation parameters
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.969Z"
+    created: "2025-12-16T17:06:07.969Z"
 commit: "0000000000000000000000000000000000000000"
 iterations:
-  - prompt: >-
-      PLAN: The diagram in kit app should be a d3-force layout. The nodes should
-      be a circle with the icons. Add the parameters for the simulation to the
-      settings of the kit app.
-    date:
-      started: "2025-12-16T12:33:44.245Z"
-    model: claude-opus-4-5
-    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-    commit: c44e5e38193be007ca56cc649aa2f58238c1ec40
-    files:
-      updated:
-        - path: js/js/package.json
-          lines:
-            added: 2
-            removed: 0
-        - path: js/js/sketchpad/Kit.tsx
-          lines:
-            added: 234
-            removed: 34
-        - path: js/js/sketchpad/Sketchpad.tsx
-          lines:
-            added: 70
-            removed: 28
-        - path: js/js/sketchpad/locales/en.json
-          lines:
-            added: 30
-            removed: 0
-        - path: js/js/sketchpad/locales/de.json
-          lines:
-            added: 30
-            removed: 0
-      created: []
-      removed: []
-    lines:
-      added: 366
-      removed: 62
-  - prompt: >-
-      Fix flickering and nodes disappearing: exclusively use force layout with
-      random initial positions, remove fitView prop, call fitView after
-      simulation settles, add test for node presence
-    date:
-      started: "2025-12-16T13:13:53.032Z"
-    model: claude-opus-4-5
-    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-  - prompt: >-
-      Implement floating edges: add useInternalNode import, update FloatingEdge
-      to use useInternalNode with positionAbsolute, change all edges to use
-      floating type
-    date:
-      started: "2025-12-16T13:27:05.937Z"
-    model: claude-opus-4-5
-    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-  - prompt: >-
-      Fix diagram issues: 1) Clusters too far apart - reduce spread, increase
-      centerStrength, reduce chargeStrength; 2) Dragging makes diagram disappear
-      - remove sim.alphaTarget(0.3).restart() on drag start; 3) Hovering not
-      shown - add hover state visual feedback with ring styling
-    date:
-      started: "2025-12-16T13:47:12.353Z"
-    model: claude-opus-4-5
-    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+    - prompt: 'PLAN: The diagram in kit app should be a d3-force layout. The nodes should be a circle with the icons. Add the parameters for the simulation to the settings of the kit app.'
+      model: claude-opus-4-5
+      date:
+        started: "2025-12-16T12:33:44.245Z"
+      author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+      commit: c44e5e38193be007ca56cc649aa2f58238c1ec40
+      bundles:
+        '@semio':
+            files:
+                js/js/package.json:
+                    sections:
+                        _root:
+                            lines:
+                                added: 2
+                                removed: 0
+                js/js/sketchpad/Kit.tsx:
+                    sections:
+                        _root:
+                            lines:
+                                added: 234
+                                removed: 34
+                js/js/sketchpad/Sketchpad.tsx:
+                    sections:
+                        _root:
+                            lines:
+                                added: 70
+                                removed: 28
+                js/js/sketchpad/locales/de.json:
+                    sections:
+                        _root:
+                            lines:
+                                added: 30
+                                removed: 0
+                js/js/sketchpad/locales/en.json:
+                    sections:
+                        _root:
+                            lines:
+                                added: 30
+                                removed: 0
+      files:
+        updated:
+            - path: js/js/package.json
+              lines:
+                added: 2
+                removed: 0
+            - path: js/js/sketchpad/Kit.tsx
+              lines:
+                added: 234
+                removed: 34
+            - path: js/js/sketchpad/Sketchpad.tsx
+              lines:
+                added: 70
+                removed: 28
+            - path: js/js/sketchpad/locales/en.json
+              lines:
+                added: 30
+                removed: 0
+            - path: js/js/sketchpad/locales/de.json
+              lines:
+                added: 30
+                removed: 0
+      lines:
+        added: 366
+        removed: 62
+    - prompt: 'Fix flickering and nodes disappearing: exclusively use force layout with random initial positions, remove fitView prop, call fitView after simulation settles, add test for node presence'
+      model: claude-opus-4-5
+      date:
+        started: "2025-12-16T13:13:53.032Z"
+      author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+    - prompt: 'Implement floating edges: add useInternalNode import, update FloatingEdge to use useInternalNode with positionAbsolute, change all edges to use floating type'
+      model: claude-opus-4-5
+      date:
+        started: "2025-12-16T13:27:05.937Z"
+      author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+    - prompt: 'Fix diagram issues: 1) Clusters too far apart - reduce spread, increase centerStrength, reduce chargeStrength; 2) Dragging makes diagram disappear - remove sim.alphaTarget(0.3).restart() on drag start; 3) Hovering not shown - add hover state visual feedback with ring styling'
+      model: claude-opus-4-5
+      date:
+        started: "2025-12-16T13:47:12.353Z"
+      author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 ---
+
 
 # Previously
 

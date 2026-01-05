@@ -251,8 +251,30 @@ interface ToolResult<T = unknown> {
   error?: string;
 }
 
+interface LineStats {
+  added: number;
+  removed: number;
+}
+
+interface SectionStats {
+  definitions?: string[];
+  lines?: LineStats;
+}
+
+interface FileStats {
+  sections?: Record<string, SectionStats>;
+}
+
+interface BundleStats {
+  files?: Record<string, FileStats>;
+}
+
+type TicketBundles = Record<string, BundleStats>;
+
 interface TicketIteration {
   commit?: string;
+  ignore?: boolean;
+  bundles?: TicketBundles;
 }
 
 interface TicketFrontmatter {
@@ -261,7 +283,9 @@ interface TicketFrontmatter {
   summary?: string;
   author?: string;
   commit?: string;
+  ignore?: boolean;
   iterations?: TicketIteration[];
+  bundles?: TicketBundles;
 }
 
 interface TicketData {

@@ -1,83 +1,54 @@
 ---
 slug: DECOUPLE-YJS-FROM-APP-STORES
-prompt: >-
-  Decouple yjs from all app stores except Kit. All app stores are still
-  entangled with yjs. Only the kit store should use yjs. All other stores should
-  use the state machine for state management.
+prompt: Decouple yjs from all app stores except Kit. All app stores are still entangled with yjs. Only the kit store should use yjs. All other stores should use the state machine for state management.
+summary: Decoupled yjs from all app stores except Kit. Only KitStore uses yjs for state persistence. Design, Type, Quality, Docs, Home, and Feedback apps use PlainAppStore/PlainKitDiffAppStore.
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-20T11:52:27.669Z"
-  finished: "2025-12-20T11:54:12.570Z"
-summary: >-
-  Decoupled yjs from all app stores except Kit. Only KitStore uses yjs for state
-  persistence. Design, Type, Quality, Docs, Home, and Feedback apps use
-  PlainAppStore/PlainKitDiffAppStore.
+    created: "2025-12-20T11:52:27.669Z"
+    finished: "2025-12-20T11:54:12.570Z"
 commit: 4ff6fd77dee713af972c27bd3761939be4302c80
 model: claude-sonnet-4-5
 iterations:
-  - prompt: "Removed yjs (yMap, yArray) from all app stores except Kit"
-    date:
-      started: "2025-12-20T11:52:36.998Z"
-      ended: "2025-12-20T11:52:47.415Z"
-    model: claude-sonnet-4-5
-    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-    commit: 4ff6fd77dee713af972c27bd3761939be4302c80
-    files:
-      updated:
-        - js/js/sketchpad/shared.ts:
-            lines:
-              added: 3
-              removed: 3
-        - js/js/sketchpad/Sketchpad.tsx:
-            lines:
-              added: 34
-              removed: 86
-        - js/js/sketchpad/Design.tsx:
-            lines:
-              added: 69
-              removed: 88
-        - js/js/sketchpad/Quality.tsx:
-            lines:
-              added: 3
-              removed: 3
-        - js/js/sketchpad/Docs.tsx:
-            lines:
-              added: 3
-              removed: 3
-      created: []
-      removed: []
-    lines:
-      added: 112
-      removed: 183
+    - prompt: Removed yjs (yMap, yArray) from all app stores except Kit
+      model: claude-sonnet-4-5
+      date:
+        started: "2025-12-20T11:52:36.998Z"
+        ended: "2025-12-20T11:52:47.415Z"
+      author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+      commit: 4ff6fd77dee713af972c27bd3761939be4302c80
+      bundles:
+        '@semio':
+            files:
+                "":
+                    sections: {}
+      files:
+        updated:
+            - path: ""
+            - path: ""
+            - path: ""
+            - path: ""
+            - path: ""
+      lines:
+        added: 112
+        removed: 183
+bundles:
+    '@semio':
+        files:
+            "":
+                sections: {}
 files:
-  updated:
-    - js/js/sketchpad/Design.tsx:
-        lines:
-          added: 69
-          removed: 88
-    - js/js/sketchpad/Docs.tsx:
-        lines:
-          added: 3
-          removed: 3
-    - js/js/sketchpad/Quality.tsx:
-        lines:
-          added: 3
-          removed: 3
-    - js/js/sketchpad/Sketchpad.tsx:
-        lines:
-          added: 34
-          removed: 86
-    - js/js/sketchpad/shared.ts:
-        lines:
-          added: 3
-          removed: 3
-  created: []
-  removed: []
+    updated:
+        - path: ""
+        - path: ""
+        - path: ""
+        - path: ""
+        - path: ""
 lines:
-  added: 112
-  removed: 183
+    added: 112
+    removed: 183
 ---
+
 
 # Previously
 

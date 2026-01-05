@@ -1,69 +1,52 @@
 ---
 slug: TSX-DIRECT-REFACTOR
 prompt: Refactor all the scripts to be able to use tsx directly.
+summary: Refactored all scripts to use npx tsx directly instead of node --import tsx
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-23T13:28:13.198Z"
-  finished: "2025-12-23T13:28:53.505Z"
-summary: Refactored all scripts to use npx tsx directly instead of node --import tsx
+    created: "2025-12-23T13:28:13.198Z"
+    finished: "2025-12-23T13:28:53.505Z"
 commit: b41e500849192cc526ed0ce105fff7e2a478e3f0
 model: composer-1
 iterations:
-  - prompt: Refactor all the scripts to be able to use tsx directly.
-    date:
-      started: "2025-12-23T13:28:19.725Z"
-      ended: "2025-12-23T13:28:30.700Z"
-    model: composer-1
-    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-    commit: b41e500849192cc526ed0ce105fff7e2a478e3f0
-    files:
-      updated:
-        - preflight.ts:
-            lines:
-              added: 14
-              removed: 8
-        - scripts/log.tsx:
-            lines:
-              added: 1143
-              removed: 0
-        - scripts/generate-validation.tsx:
-            lines:
-              added: 63
-              removed: 0
-        - scripts/rename-files.tsx:
-            lines:
-              added: 367
-              removed: 0
-      created: []
-      removed: []
-    lines:
-      added: 1587
-      removed: 8
+    - prompt: Refactor all the scripts to be able to use tsx directly.
+      model: composer-1
+      date:
+        started: "2025-12-23T13:28:19.725Z"
+        ended: "2025-12-23T13:28:30.700Z"
+      author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+      commit: b41e500849192cc526ed0ce105fff7e2a478e3f0
+      bundles:
+        '@semio':
+            files:
+                "":
+                    sections: {}
+      files:
+        updated:
+            - path: ""
+            - path: ""
+            - path: ""
+            - path: ""
+      lines:
+        added: 1587
+        removed: 8
+bundles:
+    '@semio':
+        files:
+            "":
+                sections: {}
 files:
-  updated:
-    - preflight.ts:
-        lines:
-          added: 14
-          removed: 8
-    - scripts/generate-validation.tsx:
-        lines:
-          added: 63
-          removed: 0
-    - scripts/log.tsx:
-        lines:
-          added: 1143
-          removed: 0
-    - scripts/rename-files.tsx:
-        lines:
-          added: 367
-          removed: 0
-  created: []
-  removed: []
+    updated:
+        - path: ""
+        - path: ""
+        - path: ""
+        - path: ""
 lines:
-  added: 1587
-  removed: 8
+    added: 1587
+    removed: 8
 ---
+
 
 # Previously
 

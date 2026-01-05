@@ -1,62 +1,37 @@
 ---
 slug: DIAGRAM-GENERALIZATION
+prompt: Implement generalized diagram component and migrate Design/Kit/Quality; ensure only elements.tsx imports @xyflow/react; ensure sketchpad tests pass.
 summary: Generalize diagram component across apps
-prompt: >-
-  Implement generalized diagram component and migrate Design/Kit/Quality; ensure
-  only elements.tsx imports @xyflow/react; ensure sketchpad tests pass.
 status: open
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-18T15:09:08.033Z"
+    created: "2025-12-18T15:09:08.033Z"
 iterations:
-  - prompt: >-
-      Implement generalized diagram component and migrate Design/Kit/Quality;
-      ensure only elements.tsx imports @xyflow/react; ensure sketchpad tests
-      pass.
-    date:
-      started: "2025-12-18T15:32:19.612Z"
-    model: claude-opus-4-5
-    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-    files:
-      updated:
-        - js/js/sketchpad/elements.tsx:
-            lines:
-              added: 111
-              removed: 121
-        - js/js/sketchpad/Design.tsx:
-            lines:
-              added: 10
-              removed: 5
-        - js/js/sketchpad/Kit.tsx:
-            lines:
-              added: 2
-              removed: 6
-        - js/js/sketchpad/Quality.tsx:
-            lines:
-              added: 0
-              removed: 0
-        - js/js/sketchpad/Sketchpad.tsx:
-            lines:
-              added: 50
-              removed: 3
-        - README.md:
-            lines:
-              added: 11
-              removed: 8
-        - AGENTS.md:
-            lines:
-              added: 14
-              removed: 4
-        - log/tickets/2025/12/18/DIAGRAM-GENERALIZATION.md:
-            lines:
-              added: 124
-              removed: 0
-      created: []
-      removed: []
-    lines:
-      added: 322
-      removed: 147
+    - prompt: Implement generalized diagram component and migrate Design/Kit/Quality; ensure only elements.tsx imports @xyflow/react; ensure sketchpad tests pass.
+      model: claude-opus-4-5
+      date:
+        started: "2025-12-18T15:32:19.612Z"
+      author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+      bundles:
+        '@semio':
+            files:
+                "":
+                    sections: {}
+      files:
+        updated:
+            - path: ""
+            - path: ""
+            - path: ""
+            - path: ""
+            - path: ""
+            - path: ""
+            - path: ""
+            - path: ""
+      lines:
+        added: 322
+        removed: 147
 ---
+
 
 # Previously
 

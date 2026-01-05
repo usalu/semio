@@ -1,35 +1,39 @@
 ---
 slug: DOC-SKETCHPAD-APPS
+prompt: The dev docs are significantly incomplete with the implementation. All apps in sketchpad are missing. The core mechanisms are not explained etc.
 summary: Document Sketchpad apps and core mechanisms
-prompt: >-
-  The dev docs are significantly incomplete with the implementation. All apps in
-  sketchpad are missing. The core mechanisms are not explained etc.
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-16T17:06:07.956Z"
+    created: "2025-12-16T17:06:07.956Z"
 commit: "0000000000000000000000000000000000000000"
 iterations:
-  - prompt: >-
-      The dev docs are significantly incomplete with the implementation. All
-      apps in sketchpad are missing. The core mechanisms are not explained etc.
-    date:
-      started: "2025-12-15T17:24:42.224Z"
-    model: claude-opus-4-5
-    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-    commit: 2fb81ef29354981c1b9625769dba4a06360a4aef
-    files:
-      updated:
-        - path: AGENTS.md
-          lines:
-            added: 2279
-            removed: 340
-      created: []
-      removed: []
-    lines:
-      added: 2279
-      removed: 340
+    - prompt: The dev docs are significantly incomplete with the implementation. All apps in sketchpad are missing. The core mechanisms are not explained etc.
+      model: claude-opus-4-5
+      date:
+        started: "2025-12-15T17:24:42.224Z"
+      author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+      commit: 2fb81ef29354981c1b9625769dba4a06360a4aef
+      bundles:
+        '@semio':
+            files:
+                AGENTS.md:
+                    sections:
+                        _root:
+                            lines:
+                                added: 2279
+                                removed: 340
+      files:
+        updated:
+            - path: AGENTS.md
+              lines:
+                added: 2279
+                removed: 340
+      lines:
+        added: 2279
+        removed: 340
 ---
+
 
 # Previously
 
