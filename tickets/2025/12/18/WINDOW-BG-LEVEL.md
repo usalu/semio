@@ -1,52 +1,28 @@
 ---
 slug: WINDOW-BG-LEVEL
-prompt: 'Fix window background colors: Window component now provides LevelProvider level=window and uses bg-window; GoldenLayout chrome uses var(--window) instead of var(--base).'
+prompt: "Fix window background colors: Window component now provides LevelProvider level=window and uses bg-window; GoldenLayout chrome uses var(--window) instead of var(--base)."
 summary: Fix window background colors via useLevel
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-    created: "2025-12-18T15:11:24.199Z"
-    finished: "2025-12-18T15:29:35.275Z"
+  created: 2025-12-18T15:11:24.199Z
+  finished: 2025-12-18T15:29:35.275Z
 commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
 model: gpt-5.2-codex
 iterations:
-    - prompt: 'Fix window background colors: Window component now provides LevelProvider level=window and uses bg-window; GoldenLayout chrome uses var(--window) instead of var(--base).'
-      model: gpt-5.2-codex
-      date:
-        started: "2025-12-18T15:22:03.609Z"
-        ended: "2025-12-18T15:29:19.399Z"
-      author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-      commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
-      bundles:
-        '@semio':
-            files:
-                "":
-                    sections: {}
-      files:
-        updated:
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-      lines:
-        added: 192
-        removed: 141
-bundles:
-    '@semio':
+  - prompt: "Fix window background colors: Window component now provides LevelProvider level=window and uses bg-window; GoldenLayout chrome uses var(--window) instead of var(--base)."
+    model: gpt-5.2-codex
+    date:
+      started: 2025-12-18T15:22:03.609Z
+      ended: 2025-12-18T15:29:19.399Z
+    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+    commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
+    bundles:
+      "@semio":
         files:
-            "":
-                sections: {}
-files:
-    updated:
-        - path: ""
-        - path: ""
-        - path: ""
-        - path: ""
-        - path: ""
-lines:
-    added: 206
-    removed: 141
+          "":
+            sections:
+              "": {}
 ---
 
 

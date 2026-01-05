@@ -135,67 +135,119 @@ const (
 	TicketClosed TicketStatus = "closed"
 )
 
-type LineStats struct {
+type LineMetrics struct {
 	Added   int `yaml:"added" json:"added"`
 	Removed int `yaml:"removed" json:"removed"`
 }
 
-type SectionStats struct {
+type SectionMetrics struct {
 	Definitions []string   `yaml:"definitions,omitempty" json:"definitions,omitempty"`
-	Lines       *LineStats `yaml:"lines" json:"lines"`
+	Lines       *LineMetrics `yaml:"lines" json:"lines"`
 }
 
-type FileStats struct {
-	Sections map[string]SectionStats `yaml:"sections" json:"sections"`
+type FileMetrics struct {
+	Sections map[string]SectionMetrics `yaml:"sections" json:"sections"`
 }
 
-type BundleStats struct {
-	Files map[string]FileStats `yaml:"files" json:"files"`
+type BundleMetrics struct {
+	Files map[string]FileMetrics `yaml:"files" json:"files"`
 }
 
-type TicketBundles map[string]BundleStats
+type TicketBundles map[string]BundleMetrics
 
 type Language struct {
-	Name             string
-	Extensions       []string
-	SectionStart     *regexp.Regexp
-	SectionEnd       *regexp.Regexp
-	DefinitionRegexp *regexp.Regexp
+	Name                 string
+	Extensions           []string
+	SectionStart         *regexp.Regexp
+	SectionEnd           *regexp.Regexp
+	DefinitionRegexp     *regexp.Regexp
+	CommentPrefix        string
+	SectionStartFmt      string
+	SectionEndFmt        string
+	SectionBothFmt       string
+	HeaderFmt            string
+	UsesIndentScoping    bool
+	PolicySectionStart   *regexp.Regexp
+	PolicySectionEnd     *regexp.Regexp
 }
 
 var languages = []Language{
 	{
-		Name:             "typescript",
-		Extensions:       []string{".ts", ".tsx", ".js", ".jsx"},
-		SectionStart:     regexp.MustCompile(`(?i)^\s*//\s*#region\s+(.+?)\s*$`),
-		SectionEnd:       regexp.MustCompile(`(?i)^\s*//\s*#endregion(?:\s+(.+?))?\s*$`),
-		DefinitionRegexp: regexp.MustCompile(`(?:^|\s)(?:export\s+)?(?:const|let|var|function|class|interface|type|enum)\s+([A-Za-z_][A-Za-z0-9_]*)`),
+		Name:               "typescript",
+		Extensions:         []string{".ts", ".tsx", ".js", ".jsx"},
+		SectionStart:       regexp.MustCompile(`(?i)^\s*//\s*#region\s+(.+?)\s*$`),
+		SectionEnd:         regexp.MustCompile(`(?i)^\s*//\s*#endregion(?:\s+(.+?))?\s*$`),
+		DefinitionRegexp:   regexp.MustCompile(`(?:^|\s)(?:export\s+)?(?:const|let|var|function|class|interface|type|enum)\s+([A-Za-z_][A-Za-z0-9_]*)`),
+		CommentPrefix:      "//",
+		SectionStartFmt:    "// #region %s",
+		SectionEndFmt:      "// #endregion %s",
+		SectionBothFmt:     "\n// #region %s\n\n// #endregion %s\n",
+		HeaderFmt:          "// #region Header\n\n// %s\n\n// %s %s\n\n%s\n\n// #endregion Header\n",
+		UsesIndentScoping:  false,
+		PolicySectionStart: regexp.MustCompile(`(?i)^\s*//\s*#region(?:\s+(\S.*?))?\s*$`),
+		PolicySectionEnd:   regexp.MustCompile(`(?i)^\s*//\s*#endregion(?:\s+(\S.*?))?\s*$`),
 	},
 	{
-		Name:             "go",
-		Extensions:       []string{".go"},
-		SectionStart:     regexp.MustCompile(`(?i)^\s*//\s*#region\s+(.+?)\s*$`),
-		SectionEnd:       regexp.MustCompile(`(?i)^\s*//\s*#endregion(?:\s+(.+?))?\s*$`),
-		DefinitionRegexp: regexp.MustCompile(`(?:^|\s)(?:func|type|var|const)\s+(?:\([^)]+\)\s+)?([A-Za-z_][A-Za-z0-9_]*)`),
+		Name:               "go",
+		Extensions:         []string{".go"},
+		SectionStart:       regexp.MustCompile(`(?i)^\s*//\s*#region\s+(.+?)\s*$`),
+		SectionEnd:         regexp.MustCompile(`(?i)^\s*//\s*#endregion(?:\s+(.+?))?\s*$`),
+		DefinitionRegexp:   regexp.MustCompile(`(?:^|\s)(?:func|type|var|const)\s+(?:\([^)]+\)\s+)?([A-Za-z_][A-Za-z0-9_]*)`),
+		CommentPrefix:      "//",
+		SectionStartFmt:    "// #region %s",
+		SectionEndFmt:      "// #endregion %s",
+		SectionBothFmt:     "\n// #region %s\n\n// #endregion %s\n",
+		HeaderFmt:          "// #region Header\n\n// %s\n\n// %s %s\n\n%s\n\n// #endregion Header\n",
+		UsesIndentScoping:  false,
+		PolicySectionStart: regexp.MustCompile(`(?i)^\s*//\s*#region(?:\s+(\S.*?))?\s*$`),
+		PolicySectionEnd:   regexp.MustCompile(`(?i)^\s*//\s*#endregion(?:\s+(\S.*?))?\s*$`),
 	},
 	{
-		Name:             "python",
-		Extensions:       []string{".py"},
-		SectionStart:     regexp.MustCompile(`(?i)^\s*#\s*region\s+(.+?)\s*$`),
-		SectionEnd:       regexp.MustCompile(`(?i)^\s*#\s*endregion(?:\s+(.+?))?\s*$`),
-		DefinitionRegexp: regexp.MustCompile(`(?:^|\s)(?:def|class|async\s+def)\s+([A-Za-z_][A-Za-z0-9_]*)`),
+		Name:               "python",
+		Extensions:         []string{".py"},
+		SectionStart:       regexp.MustCompile(`(?i)^\s*#\s*region\s+(.+?)\s*$`),
+		SectionEnd:         regexp.MustCompile(`(?i)^\s*#\s*endregion(?:\s+(.+?))?\s*$`),
+		DefinitionRegexp:   regexp.MustCompile(`(?:^|\s)(?:def|class|async\s+def)\s+([A-Za-z_][A-Za-z0-9_]*)`),
+		CommentPrefix:      "#",
+		SectionStartFmt:    "# region %s",
+		SectionEndFmt:      "# endregion %s",
+		SectionBothFmt:     "\n# region %s\n\n# endregion %s\n",
+		HeaderFmt:          "# region Header\n\n# %s\n\n# %s %s\n\n%s\n\n# endregion Header\n",
+		UsesIndentScoping:  true,
+		PolicySectionStart: regexp.MustCompile(`(?i)^\s*#\s*region(?:\s+(\S.*?))?\s*$`),
+		PolicySectionEnd:   regexp.MustCompile(`(?i)^\s*#\s*endregion(?:\s+(\S.*?))?\s*$`),
 	},
 	{
-		Name:             "csharp",
-		Extensions:       []string{".cs"},
-		SectionStart:     regexp.MustCompile(`(?i)^\s*#region\s+(.+?)\s*$`),
-		SectionEnd:       regexp.MustCompile(`(?i)^\s*#endregion(?:\s+(.+?))?\s*$`),
-		DefinitionRegexp: regexp.MustCompile(`(?:public|private|protected|internal|static|partial|abstract|sealed|virtual|override|async)*\s*(?:class|struct|interface|enum|delegate|record|void|string|int|bool|[A-Z][A-Za-z0-9_<>]*)\s+([A-Z][A-Za-z0-9_]*)\s*[<({]`),
+		Name:               "csharp",
+		Extensions:         []string{".cs"},
+		SectionStart:       regexp.MustCompile(`(?i)^\s*#region\s+(.+?)\s*$`),
+		SectionEnd:         regexp.MustCompile(`(?i)^\s*#endregion(?:\s+(.+?))?\s*$`),
+		DefinitionRegexp:   regexp.MustCompile(`(?:public|private|protected|internal|static|partial|abstract|sealed|virtual|override|async)*\s*(?:class|struct|interface|enum|delegate|record|void|string|int|bool|[A-Z][A-Za-z0-9_<>]*)\s+([A-Z][A-Za-z0-9_]*)\s*[<({]`),
+		CommentPrefix:      "//",
+		SectionStartFmt:    "#region %s",
+		SectionEndFmt:      "#endregion %s",
+		SectionBothFmt:     "\n#region %s\n\n#endregion %s\n",
+		HeaderFmt:          "#region Header\n\n// %s\n\n// %s %s\n\n%s\n\n#endregion Header\n",
+		UsesIndentScoping:  false,
+		PolicySectionStart: regexp.MustCompile(`(?i)^\s*#region(?:\s+(\S.*?))?\s*$`),
+		PolicySectionEnd:   regexp.MustCompile(`(?i)^\s*#endregion(?:\s+(\S.*?))?\s*$`),
 	},
 	{
-		Name:         "markdown",
-		Extensions:   []string{".md", ".mdx"},
-		SectionStart: regexp.MustCompile(`^(#{1,6})\s+(.+?)\s*$`),
+		Name:              "json",
+		Extensions:        []string{".json"},
+		CommentPrefix:     "",
+		UsesIndentScoping: false,
+	},
+	{
+		Name:              "markdown",
+		Extensions:        []string{".md", ".mdx"},
+		SectionStart:      regexp.MustCompile(`^(#{1,6})\s+(.+?)\s*$`),
+		CommentPrefix:     "",
+		SectionStartFmt:   "## %s",
+		SectionEndFmt:     "",
+		SectionBothFmt:    "\n## %s\n\n",
+		HeaderFmt:         "",
+		UsesIndentScoping: false,
 	},
 }
 
@@ -212,14 +264,14 @@ func GetLanguage(filePath string) *Language {
 }
 
 type TicketIterationFiles struct {
-	Updated []FileLineStats `yaml:"updated,omitempty" json:"updated,omitempty"`
-	Created []FileLineStats `yaml:"created,omitempty" json:"created,omitempty"`
-	Removed []FileLineStats `yaml:"removed,omitempty" json:"removed,omitempty"`
+	Updated []FileLineMetrics `yaml:"updated,omitempty" json:"updated,omitempty"`
+	Created []FileLineMetrics `yaml:"created,omitempty" json:"created,omitempty"`
+	Removed []FileLineMetrics `yaml:"removed,omitempty" json:"removed,omitempty"`
 }
 
-type FileLineStats struct {
+type FileLineMetrics struct {
 	Path  string     `yaml:"path" json:"path"`
-	Lines *LineStats `yaml:"lines,omitempty" json:"lines,omitempty"`
+	Lines *LineMetrics `yaml:"lines,omitempty" json:"lines,omitempty"`
 }
 
 type TicketDate struct {
@@ -236,30 +288,25 @@ type TicketIteration struct {
 	Ignore   bool                  `yaml:"ignore,omitempty" json:"ignore,omitempty"`
 	Declared *TicketIterationFiles `yaml:"declared,omitempty" json:"declared,omitempty"`
 	Bundles  TicketBundles         `yaml:"bundles,omitempty" json:"bundles,omitempty"`
-	Files    *TicketIterationFiles `yaml:"files,omitempty" json:"files,omitempty"`
-	Lines    *LineStats            `yaml:"lines,omitempty" json:"lines,omitempty"`
 }
 
 type TicketFiles struct {
-	Updated []FileLineStats `yaml:"updated,omitempty" json:"updated,omitempty"`
-	Created []FileLineStats `yaml:"created,omitempty" json:"created,omitempty"`
-	Removed []FileLineStats `yaml:"removed,omitempty" json:"removed,omitempty"`
+	Updated []FileLineMetrics `yaml:"updated,omitempty" json:"updated,omitempty"`
+	Created []FileLineMetrics `yaml:"created,omitempty" json:"created,omitempty"`
+	Removed []FileLineMetrics `yaml:"removed,omitempty" json:"removed,omitempty"`
 }
 
 type TicketFrontmatter struct {
-	Slug       string             `yaml:"slug" json:"slug"`
-	Prompt     string             `yaml:"prompt" json:"prompt"`
-	Summary    string             `yaml:"summary,omitempty" json:"summary,omitempty"`
-	Status     TicketStatus       `yaml:"status" json:"status"`
-	Author     string             `yaml:"author,omitempty" json:"author,omitempty"`
-	Date       TicketDateCreated  `yaml:"date" json:"date"`
-	Commit     string             `yaml:"commit,omitempty" json:"commit,omitempty"`
-	Model      string             `yaml:"model,omitempty" json:"model,omitempty"`
-	Ignore     bool               `yaml:"ignore,omitempty" json:"ignore,omitempty"`
-	Iterations []TicketIteration  `yaml:"iterations,omitempty" json:"iterations,omitempty"`
-	Bundles    TicketBundles      `yaml:"bundles,omitempty" json:"bundles,omitempty"`
-	Files      *TicketFiles       `yaml:"files,omitempty" json:"files,omitempty"`
-	Lines      *LineStats         `yaml:"lines,omitempty" json:"lines,omitempty"`
+	Slug       string            `yaml:"slug" json:"slug"`
+	Prompt     string            `yaml:"prompt" json:"prompt"`
+	Summary    string            `yaml:"summary,omitempty" json:"summary,omitempty"`
+	Status     TicketStatus      `yaml:"status" json:"status"`
+	Author     string            `yaml:"author,omitempty" json:"author,omitempty"`
+	Date       TicketDateCreated `yaml:"date" json:"date"`
+	Commit     string            `yaml:"commit,omitempty" json:"commit,omitempty"`
+	Model      string            `yaml:"model,omitempty" json:"model,omitempty"`
+	Ignore     bool              `yaml:"ignore,omitempty" json:"ignore,omitempty"`
+	Iterations []TicketIteration `yaml:"iterations,omitempty" json:"iterations,omitempty"`
 }
 
 type TicketDateCreated struct {
@@ -286,7 +333,7 @@ const (
 	ViolationCodeHeaderMissingLicense      ViolationKind = "code:header:missing-license"
 	ViolationCodeHeaderWrongLicense        ViolationKind = "code:header:wrong-license"
 	ViolationCodeSectionEmpty              ViolationKind = "code:section:empty"
-	ViolationCodeSectionOrphan             ViolationKind = "code:section:orphan"
+	ViolationCodeSectionOrphanDefinition   ViolationKind = "code:section:orphan-definition"
 	ViolationCodeSectionMissingStartName   ViolationKind = "code:section:missing-start-name"
 	ViolationCodeSectionMissingEndName     ViolationKind = "code:section:missing-end-name"
 	ViolationCodeSectionNameMismatch       ViolationKind = "code:section:name-mismatch"
@@ -363,8 +410,8 @@ var violationKindMetas = map[ViolationKind]ViolationKindMeta{
 		Solution:    "Remove empty section or add content",
 		Autofixable: true,
 	},
-	ViolationCodeSectionOrphan: {
-		Kind:        ViolationCodeSectionOrphan,
+	ViolationCodeSectionOrphanDefinition: {
+		Kind:        ViolationCodeSectionOrphanDefinition,
 		Priority:    PriorityLow,
 		Reason:      "All code must be inside named sections",
 		Solution:    "Move code into an existing section or add a new section",
@@ -632,7 +679,7 @@ type ContributorContributions struct {
 	Definitions []string `json:"definitions,omitempty"`
 	Tickets     []ContributorTicket `json:"tickets,omitempty"`
 	Commits     []ContributorCommit `json:"commits,omitempty"`
-	Lines       *LineStats           `json:"lines,omitempty"`
+	Lines       *LineMetrics           `json:"lines,omitempty"`
 }
 
 // #endregion
@@ -925,14 +972,6 @@ func GetGitIgnoredSet(paths []string) map[string]bool {
 	return ignored
 }
 
-func GetLanguageFromPath(filePath string) string {
-	lang := GetLanguage(filePath)
-	if lang != nil {
-		return lang.Name
-	}
-	return ""
-}
-
 func NewOutput() *CommandOutput {
 	return &CommandOutput{Lines: []OutputLine{}, ExitCode: 0}
 }
@@ -1152,15 +1191,478 @@ func ParseMarkdownSections(content string) []SectionInfo {
 	return sections
 }
 
+type JsonSectionLocation struct {
+	Path       string
+	KeyStart   int
+	KeyEnd     int
+	ValueStart int
+	ValueEnd   int
+	Section    *SectionInfo
+}
+
+type jsonContext struct {
+	kind      byte
+	section   *SectionInfo
+	path      string
+	expectKey bool
+	location  *JsonSectionLocation
+}
+
+func ParseJSONSectionsDetailed(content string) ([]SectionInfo, map[string]*JsonSectionLocation, error) {
+	var sections []SectionInfo
+	locations := make(map[string]*JsonSectionLocation)
+	var stack []jsonContext
+	line := 1
+	inString := false
+	escape := false
+	stringStart := 0
+	stringBuf := strings.Builder{}
+	pendingKey := ""
+	pendingKeyStart := 0
+	pendingKeyEnd := 0
+	pendingKeyLine := 0
+	var awaitingValue *JsonSectionLocation
+	for i := 0; i < len(content); i++ {
+		ch := content[i]
+		if ch == '\n' {
+			line++
+		}
+		if inString {
+			if escape {
+				escape = false
+				stringBuf.WriteByte(ch)
+				continue
+			}
+			if ch == '\\' {
+				escape = true
+				stringBuf.WriteByte(ch)
+				continue
+			}
+			if ch == '"' {
+				inString = false
+				value := stringBuf.String()
+				stringBuf.Reset()
+				if len(stack) > 0 && stack[len(stack)-1].kind == '{' && stack[len(stack)-1].expectKey && awaitingValue == nil {
+					pendingKey = value
+					pendingKeyStart = stringStart
+					pendingKeyEnd = i
+					pendingKeyLine = line
+					stack[len(stack)-1].expectKey = false
+				} else if awaitingValue != nil && awaitingValue.ValueStart == stringStart {
+					awaitingValue.ValueEnd = i
+					awaitingValue.Section.EndLine = line
+					awaitingValue.Section.EndIndex = i + 1
+					awaitingValue = nil
+				}
+				continue
+			}
+			stringBuf.WriteByte(ch)
+			continue
+		}
+		if ch == '"' {
+			if awaitingValue != nil {
+				awaitingValue.ValueStart = i
+			}
+			inString = true
+			stringStart = i
+			continue
+		}
+		if len(stack) > 0 && stack[len(stack)-1].kind == '{' && pendingKey != "" && ch == ':' {
+			parent := stack[len(stack)-1].section
+			path := pendingKey
+			if stack[len(stack)-1].path != "" {
+				path = stack[len(stack)-1].path + "/" + pendingKey
+			}
+			section := SectionInfo{
+				Name:       pendingKey,
+				StartLine:  pendingKeyLine,
+				EndLine:    -1,
+				StartIndex: pendingKeyStart,
+				EndIndex:   -1,
+				Children:   []SectionInfo{},
+			}
+			var sectionRef *SectionInfo
+			if parent != nil {
+				parent.Children = append(parent.Children, section)
+				sectionRef = &parent.Children[len(parent.Children)-1]
+			} else {
+				sections = append(sections, section)
+				sectionRef = &sections[len(sections)-1]
+			}
+			location := &JsonSectionLocation{
+				Path:     path,
+				KeyStart: pendingKeyStart,
+				KeyEnd:   pendingKeyEnd,
+				Section:  sectionRef,
+			}
+			locations[path] = location
+			awaitingValue = location
+			pendingKey = ""
+			continue
+		}
+		if awaitingValue != nil {
+			if ch == '{' || ch == '[' {
+				awaitingValue.ValueStart = i
+				stack = append(stack, jsonContext{
+					kind:      ch,
+					section:   awaitingValue.Section,
+					path:      awaitingValue.Path,
+					expectKey: ch == '{',
+					location:  awaitingValue,
+				})
+				awaitingValue = nil
+				continue
+			}
+			if ch == '-' || (ch >= '0' && ch <= '9') || ch == 't' || ch == 'f' || ch == 'n' {
+				awaitingValue.ValueStart = i
+				end := i
+				for end < len(content) {
+					c := content[end]
+					if c == '\n' {
+						line++
+					}
+					if c == ',' || c == '}' || c == ']' || c == ' ' || c == '\t' || c == '\r' || c == '\n' {
+						break
+					}
+					end++
+				}
+				awaitingValue.ValueEnd = end - 1
+				awaitingValue.Section.EndLine = line
+				awaitingValue.Section.EndIndex = end
+				awaitingValue = nil
+				i = end - 1
+				continue
+			}
+		}
+		if ch == '{' || ch == '[' {
+			if awaitingValue == nil {
+				stack = append(stack, jsonContext{
+					kind:      ch,
+					section:   nil,
+					path:      "",
+					expectKey: ch == '{',
+					location:  nil,
+				})
+			}
+			continue
+		}
+		if ch == '}' || ch == ']' {
+			if len(stack) > 0 {
+				top := stack[len(stack)-1]
+				stack = stack[:len(stack)-1]
+				if top.location != nil {
+					top.location.ValueEnd = i
+					top.location.Section.EndLine = line
+					top.location.Section.EndIndex = i + 1
+				}
+				if len(stack) > 0 && stack[len(stack)-1].kind == '{' {
+					stack[len(stack)-1].expectKey = true
+				}
+			}
+			continue
+		}
+		if ch == ',' {
+			if len(stack) > 0 && stack[len(stack)-1].kind == '{' {
+				stack[len(stack)-1].expectKey = true
+			}
+			continue
+		}
+	}
+	for _, location := range locations {
+		if location.Section.EndIndex == -1 {
+			location.Section.EndLine = line
+			location.Section.EndIndex = len(content)
+		}
+	}
+	return sections, locations, nil
+}
+
+func ParseJSONSections(content string) []SectionInfo {
+	sections, _, _ := ParseJSONSectionsDetailed(content)
+	return sections
+}
+
 func ParseSections(content string, filePath string) []SectionInfo {
-	lang := GetLanguageFromPath(filePath)
-	if lang == "markdown" {
+	language := GetLanguage(filePath)
+	if language == nil {
+		return nil
+	}
+	if language.Name == "markdown" {
 		return ParseMarkdownSections(content)
 	}
-	if lang != "" {
-		return ParseCodeSections(content, lang)
+	if language.Name == "json" {
+		return ParseJSONSections(content)
 	}
-	return nil
+	return ParseCodeSections(content, language.Name)
+}
+
+func NormalizeSectionPath(sectionPath string) []string {
+	cleaned := strings.ReplaceAll(sectionPath, "#", "/")
+	raw := strings.FieldsFunc(cleaned, func(r rune) bool { return r == '/' })
+	var parts []string
+	for _, part := range raw {
+		if part != "" {
+			parts = append(parts, part)
+		}
+	}
+	return parts
+}
+
+func jsonLineStart(content string, index int) int {
+	if index <= 0 {
+		return 0
+	}
+	pos := strings.LastIndex(content[:index], "\n")
+	if pos == -1 {
+		return 0
+	}
+	return pos + 1
+}
+
+func jsonLineIndent(content string, index int) string {
+	start := jsonLineStart(content, index)
+	end := start
+	for end < len(content) && (content[end] == ' ' || content[end] == '\t') {
+		end++
+	}
+	return content[start:end]
+}
+
+func jsonIsWhitespace(ch byte) bool {
+	return ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r'
+}
+
+func jsonFindMatching(content string, start int, open byte, close byte) (int, bool) {
+	if start < 0 || start >= len(content) || content[start] != open {
+		return -1, false
+	}
+	inString := false
+	escape := false
+	depth := 0
+	for i := start; i < len(content); i++ {
+		ch := content[i]
+		if inString {
+			if escape {
+				escape = false
+				continue
+			}
+			if ch == '\\' {
+				escape = true
+				continue
+			}
+			if ch == '"' {
+				inString = false
+			}
+			continue
+		}
+		if ch == '"' {
+			inString = true
+			continue
+		}
+		if ch == open {
+			depth++
+			continue
+		}
+		if ch == close {
+			depth--
+			if depth == 0 {
+				return i, true
+			}
+		}
+	}
+	return -1, false
+}
+
+func jsonFindRootObjectRange(content string) (int, int, bool) {
+	for i := 0; i < len(content); i++ {
+		if jsonIsWhitespace(content[i]) {
+			continue
+		}
+		if content[i] != '{' {
+			return -1, -1, false
+		}
+		end, ok := jsonFindMatching(content, i, '{', '}')
+		return i, end, ok
+	}
+	return -1, -1, false
+}
+
+func jsonFindObjectRange(content string, locations map[string]*JsonSectionLocation, path string) (int, int, bool) {
+	if path == "" {
+		return jsonFindRootObjectRange(content)
+	}
+	location, ok := locations[path]
+	if !ok || location.ValueStart < 0 || location.ValueStart >= len(content) {
+		return -1, -1, false
+	}
+	if content[location.ValueStart] != '{' {
+		return -1, -1, false
+	}
+	return location.ValueStart, location.ValueEnd, true
+}
+
+func jsonObjectHasEntries(content string, start, end int) bool {
+	for i := start + 1; i < end; i++ {
+		if !jsonIsWhitespace(content[i]) {
+			return true
+		}
+	}
+	return false
+}
+
+func jsonFindFirstKeyIndent(content string, start, end int) string {
+	depth := 0
+	inString := false
+	escape := false
+	expectKey := true
+	for i := start + 1; i < end; i++ {
+		ch := content[i]
+		if inString {
+			if escape {
+				escape = false
+				continue
+			}
+			if ch == '\\' {
+				escape = true
+				continue
+			}
+			if ch == '"' {
+				inString = false
+			}
+			continue
+		}
+		if ch == '"' {
+			if depth == 0 && expectKey {
+				return jsonLineIndent(content, i)
+			}
+			inString = true
+			continue
+		}
+		if ch == '{' || ch == '[' {
+			depth++
+			expectKey = ch == '{'
+			continue
+		}
+		if ch == '}' || ch == ']' {
+			if depth > 0 {
+				depth--
+			}
+			if depth == 0 {
+				expectKey = true
+			}
+			continue
+		}
+		if ch == ',' && depth == 0 {
+			expectKey = true
+		}
+	}
+	return ""
+}
+
+func jsonInsertEntry(content string, objectStart, objectEnd int, entry string) (string, bool) {
+	if objectStart < 0 || objectEnd <= objectStart {
+		return content, false
+	}
+	hasEntries := jsonObjectHasEntries(content, objectStart, objectEnd)
+	parentIndent := jsonLineIndent(content, objectEnd)
+	childIndent := jsonFindFirstKeyIndent(content, objectStart, objectEnd)
+	if childIndent == "" {
+		childIndent = parentIndent + "  "
+	}
+	insert := ""
+	if hasEntries {
+		insert = ",\n" + childIndent + entry + "\n" + parentIndent
+	} else {
+		insert = "\n" + childIndent + entry + "\n" + parentIndent
+	}
+	return content[:objectEnd] + insert + content[objectEnd:], true
+}
+
+func jsonReplaceKey(content string, keyStart, keyEnd int, newName string) string {
+	quoted := strconv.Quote(newName)
+	return content[:keyStart] + quoted + content[keyEnd+1:]
+}
+
+func jsonExtractEntry(content string, keyStart int, valueEnd int) (string, int, int) {
+	start := jsonLineStart(content, keyStart)
+	end := valueEnd + 1
+	for end < len(content) && jsonIsWhitespace(content[end]) {
+		end++
+	}
+	if end < len(content) && content[end] == ',' {
+		end++
+	} else {
+		left := start
+		for left > 0 && jsonIsWhitespace(content[left-1]) {
+			left--
+		}
+		if left > 0 && content[left-1] == ',' {
+			start = left - 1
+		}
+	}
+	entry := strings.TrimSpace(content[start:end])
+	entry = strings.TrimSuffix(entry, ",")
+	return entry, start, end
+}
+
+func jsonRenameEntryKey(entry string, newName string) string {
+	inString := false
+	escape := false
+	stringStart := -1
+	for i := 0; i < len(entry); i++ {
+		ch := entry[i]
+		if inString {
+			if escape {
+				escape = false
+				continue
+			}
+			if ch == '\\' {
+				escape = true
+				continue
+			}
+			if ch == '"' && stringStart >= 0 {
+				quoted := strconv.Quote(newName)
+				return entry[:stringStart] + quoted + entry[i+1:]
+			}
+			continue
+		}
+		if ch == '"' {
+			inString = true
+			stringStart = i
+		}
+	}
+	return entry
+}
+
+func jsonReindentEntry(entry string, indent string) string {
+	lines := strings.Split(entry, "\n")
+	minIndent := -1
+	for _, line := range lines {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+		leading := 0
+		for leading < len(line) && (line[leading] == ' ' || line[leading] == '\t') {
+			leading++
+		}
+		if minIndent == -1 || leading < minIndent {
+			minIndent = leading
+		}
+	}
+	if minIndent < 0 {
+		return indent + strings.TrimSpace(entry)
+	}
+	for i, line := range lines {
+		if strings.TrimSpace(line) == "" {
+			lines[i] = ""
+			continue
+		}
+		if minIndent > 0 && len(line) >= minIndent {
+			line = line[minIndent:]
+		}
+		lines[i] = indent + line
+	}
+	return strings.Join(lines, "\n")
 }
 
 func FindSection(sections []SectionInfo, name string) *SectionInfo {
@@ -1200,7 +1702,7 @@ var policyMetas = []PolicyMeta{
 			string(ViolationCodeHeaderMissingLicense),
 			string(ViolationCodeHeaderWrongLicense),
 			string(ViolationCodeSectionEmpty),
-			string(ViolationCodeSectionOrphan),
+			string(ViolationCodeSectionOrphanDefinition),
 			string(ViolationCodeSectionMissingStartName),
 			string(ViolationCodeSectionMissingEndName),
 			string(ViolationCodeSectionNameMismatch),
@@ -1397,8 +1899,8 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 		if content == "" {
 			continue
 		}
-		lang := GetLanguageFromPath(file)
-		if lang == "" || lang == "markdown" {
+		language := GetLanguage(file)
+		if language == nil || language.Name == "markdown" {
 			continue
 		}
 		sections := ctx.Sections(file)
@@ -1410,7 +1912,7 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 			}
 		}
 		if headerSection == nil {
-			headerContent := generateFileHeader(file, lang)
+			headerContent := generateFileHeader(file, language.Name)
 			if headerContent != "" {
 				autofix := &Fix{
 					Description: "Add header section",
@@ -1501,35 +2003,16 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 	if err != nil {
 		return violations
 	}
-	sectionPatterns := map[string]struct{ start, end *regexp.Regexp }{
-		"typescript": {
-			start: regexp.MustCompile(`(?i)^\s*//\s*#region(?:\s+(\S.*?))?\s*$`),
-			end:   regexp.MustCompile(`(?i)^\s*//\s*#endregion(?:\s+(\S.*?))?\s*$`),
-		},
-		"go": {
-			start: regexp.MustCompile(`(?i)^\s*//\s*#region(?:\s+(\S.*?))?\s*$`),
-			end:   regexp.MustCompile(`(?i)^\s*//\s*#endregion(?:\s+(\S.*?))?\s*$`),
-		},
-		"python": {
-			start: regexp.MustCompile(`(?i)^\s*#\s*region(?:\s+(\S.*?))?\s*$`),
-			end:   regexp.MustCompile(`(?i)^\s*#\s*endregion(?:\s+(\S.*?))?\s*$`),
-		},
-		"csharp": {
-			start: regexp.MustCompile(`(?i)^\s*#region(?:\s+(\S.*?))?\s*$`),
-			end:   regexp.MustCompile(`(?i)^\s*#endregion(?:\s+(\S.*?))?\s*$`),
-		},
-	}
 	for _, file := range files {
 		content := ctx.ReadText(file)
 		if content == "" {
 			continue
 		}
-		lang := GetLanguageFromPath(file)
-		if lang == "" || lang == "markdown" {
+		language := GetLanguage(file)
+		if language == nil || language.Name == "markdown" {
 			continue
 		}
-		pat, ok := sectionPatterns[lang]
-		if !ok {
+		if language.PolicySectionStart == nil || language.PolicySectionEnd == nil {
 			continue
 		}
 		lines := strings.Split(content, "\n")
@@ -1541,7 +2024,7 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 		for i, line := range lines {
 			lineNum := i + 1
 			line = strings.TrimSuffix(line, "\r")
-			if match := pat.start.FindStringSubmatch(line); match != nil {
+			if match := language.PolicySectionStart.FindStringSubmatch(line); match != nil {
 				name := ""
 				if len(match) > 1 {
 					name = strings.TrimSpace(match[1])
@@ -1555,7 +2038,7 @@ file, lineNum, strings.TrimSpace(line), nil))
 				stack = append(stack, stackItem{name: name, line: lineNum})
 				continue
 			}
-			if match := pat.end.FindStringSubmatch(line); match != nil {
+			if match := language.PolicySectionEnd.FindStringSubmatch(line); match != nil {
 				endName := ""
 				if len(match) > 1 {
 					endName = strings.TrimSpace(match[1])
@@ -1628,8 +2111,23 @@ fmt.Sprintf("%s#%s", file, s.Name), s.StartLine, "", nil))
 		for _, s := range sections {
 			markCovered(s)
 		}
+		type lineRange struct {
+			start int
+			end   int
+		}
+		type defRange struct {
+			name  string
+			start int
+			end   int
+		}
+		type orphanRangeInfo struct {
+			start          int
+			end            int
+			firstLine      string
+			isCommentBlock bool
+		}
+		orphanLines := make([]bool, len(lines))
 		for i, line := range lines {
-			lineNum := i + 1
 			if covered[i] {
 				continue
 			}
@@ -1637,13 +2135,190 @@ fmt.Sprintf("%s#%s", file, s.Name), s.StartLine, "", nil))
 			if strings.TrimSpace(line) == "" {
 				continue
 			}
-			if pat.start.MatchString(line) || pat.end.MatchString(line) {
+			if language.PolicySectionStart.MatchString(line) || language.PolicySectionEnd.MatchString(line) {
 				continue
 			}
+			orphanLines[i] = true
+		}
+		var orphanRanges []lineRange
+		inOrphan := false
+		startLine := 0
+		for i := 0; i < len(orphanLines); i++ {
+			if orphanLines[i] {
+				if !inOrphan {
+					inOrphan = true
+					startLine = i + 1
+				}
+			} else if inOrphan {
+				orphanRanges = append(orphanRanges, lineRange{start: startLine, end: i})
+				inOrphan = false
+			}
+		}
+		if inOrphan {
+			orphanRanges = append(orphanRanges, lineRange{start: startLine, end: len(lines)})
+		}
+		commentPrefix := language.CommentPrefix
+		var defRanges []defRange
+		defExcerpts := make(map[string]string)
+		if language.DefinitionRegexp != nil {
+			type defStart struct {
+				name string
+				line int
+			}
+			var defStarts []defStart
+			for i, line := range lines {
+				matches := language.DefinitionRegexp.FindAllStringSubmatch(line, -1)
+				for _, match := range matches {
+					if len(match) > 1 && match[1] != "" {
+						defStarts = append(defStarts, defStart{name: match[1], line: i + 1})
+					}
+				}
+			}
+			for i := 0; i < len(defStarts); i++ {
+				start := defStarts[i].line
+				end := start
+				if language.UsesIndentScoping {
+					startIndent := len(lines[start-1]) - len(strings.TrimLeft(lines[start-1], " \t"))
+					for lineIndex := start; lineIndex < len(lines); lineIndex++ {
+						line := strings.TrimSuffix(lines[lineIndex], "\r")
+						if strings.TrimSpace(line) == "" {
+							continue
+						}
+						currentIndent := len(line) - len(strings.TrimLeft(line, " \t"))
+						if currentIndent <= startIndent {
+							end = lineIndex
+							break
+						}
+						end = lineIndex + 1
+					}
+				} else {
+					braceDepth := 0
+					sawOpen := false
+					for lineIndex := start - 1; lineIndex < len(lines); lineIndex++ {
+						line := lines[lineIndex]
+						for _, ch := range line {
+							if ch == '{' {
+								braceDepth++
+								sawOpen = true
+							} else if ch == '}' {
+								if braceDepth > 0 {
+									braceDepth--
+								}
+								if sawOpen && braceDepth == 0 {
+									end = lineIndex + 1
+									lineIndex = len(lines)
+									break
+								}
+							}
+						}
+						if sawOpen && braceDepth == 0 && end > start {
+							break
+						}
+					}
+					if !sawOpen {
+						if i+1 < len(defStarts) {
+							end = defStarts[i+1].line - 1
+						}
+					}
+				}
+				if end < start {
+					end = start
+				}
+				defRanges = append(defRanges, defRange{name: defStarts[i].name, start: start, end: end})
+				defExcerpts[defStarts[i].name] = defStarts[i].name
+			}
+		}
+		if lang == "go" {
+			for i, line := range lines {
+				trimmed := strings.TrimSpace(line)
+				if strings.HasPrefix(trimmed, "package ") {
+					name := fmt.Sprintf("package-%d", i+1)
+					defRanges = append(defRanges, defRange{name: name, start: i + 1, end: i + 1})
+					defExcerpts[name] = trimmed
+					break
+				}
+			}
+			for i := 0; i < len(lines); i++ {
+				trimmed := strings.TrimSpace(lines[i])
+				if strings.HasPrefix(trimmed, "import ") {
+					start := i + 1
+					end := start
+					if strings.HasPrefix(trimmed, "import (") {
+						for j := i + 1; j < len(lines); j++ {
+							if strings.TrimSpace(lines[j]) == ")" {
+								end = j + 1
+								i = j
+								break
+							}
+						}
+					}
+					name := fmt.Sprintf("import-%d", start)
+					defRanges = append(defRanges, defRange{name: name, start: start, end: end})
+					defExcerpts[name] = strings.TrimSpace(lines[start-1])
+				}
+			}
+		}
+		var orphanInfos []orphanRangeInfo
+		for _, orphanRange := range orphanRanges {
+			firstLine := ""
+			isCommentBlock := true
+			for lineIndex := orphanRange.start; lineIndex <= orphanRange.end; lineIndex++ {
+				line := strings.TrimSuffix(lines[lineIndex-1], "\r")
+				if strings.TrimSpace(line) == "" {
+					continue
+				}
+				if firstLine == "" {
+					firstLine = strings.TrimSpace(line)
+				}
+				if !strings.HasPrefix(strings.TrimSpace(line), commentPrefix) {
+					isCommentBlock = false
+				}
+			}
+			orphanInfos = append(orphanInfos, orphanRangeInfo{
+				start:          orphanRange.start,
+				end:            orphanRange.end,
+				firstLine:      firstLine,
+				isCommentBlock: isCommentBlock,
+			})
+			if isCommentBlock {
+				name := fmt.Sprintf("comment-block-%d", orphanRange.start)
+				defRanges = append(defRanges, defRange{name: name, start: orphanRange.start, end: orphanRange.end})
+				defExcerpts[name] = firstLine
+			}
+		}
+		reportedDefs := make(map[string]bool)
+		for _, orphanRange := range orphanInfos {
+			matched := false
+			for _, defRange := range defRanges {
+				if orphanRange.start <= defRange.end && orphanRange.end >= defRange.start {
+					if !reportedDefs[defRange.name] {
+						reportedDefs[defRange.name] = true
+						excerpt := defRange.name
+						if value, ok := defExcerpts[defRange.name]; ok && value != "" {
+							excerpt = value
+						}
+						violations = append(violations, ctx.CreateViolation(
+							fmt.Sprintf("Orphan definition outside sections at %s:%d", file, defRange.start),
+							ViolationCodeSectionOrphanDefinition,
+							fmt.Sprintf("%s::%s", file, defRange.name),
+							defRange.start,
+							excerpt,
+							nil))
+					}
+					matched = true
+				}
+			}
+			if matched {
+				continue
+			}
+			name := fmt.Sprintf("orphan-block-%d", orphanRange.start)
 			violations = append(violations, ctx.CreateViolation(
-				fmt.Sprintf("Orphan code outside sections at %s:%d", file, lineNum),
-				ViolationCodeSectionOrphan,
-				file, lineNum, strings.TrimSpace(line), nil))
+				fmt.Sprintf("Orphan definition outside sections at %s:%d", file, orphanRange.start),
+				ViolationCodeSectionOrphanDefinition,
+				fmt.Sprintf("%s::%s", file, name),
+				orphanRange.start,
+				orphanRange.firstLine,
+				nil))
 		}
 	}
 	return violations
@@ -1682,8 +2357,8 @@ func commentPolicy(ctx *PolicyContext) []Violation {
 		if content == "" {
 			continue
 		}
-		lang := GetLanguageFromPath(file)
-		if lang != "typescript" {
+		language := GetLanguage(file)
+		if language == nil || language.Name != "typescript" {
 			continue
 		}
 		lines := strings.Split(content, "\n")
@@ -2088,7 +2763,7 @@ func CreateTicket(slug, prompt, model string, files []string) (*Ticket, error) {
 	if len(files) > 0 {
 		declaredFiles = &TicketIterationFiles{}
 		for _, f := range files {
-			declaredFiles.Updated = append(declaredFiles.Updated, FileLineStats{Path: f})
+			declaredFiles.Updated = append(declaredFiles.Updated, FileLineMetrics{Path: f})
 		}
 	}
 	firstIteration := TicketIteration{
@@ -2263,24 +2938,33 @@ func ListTickets(year, month, day *int) ([]Ticket, error) {
 	return tickets, nil
 }
 
-func StartIteration(ticket *Ticket, prompt, model string, files []string) error {
-	if len(files) == 0 {
-		return fmt.Errorf("at least one file is required to start an iteration")
-	}
-	gitAuthor := GetGitAuthor()
-	var declaredFiles *TicketIterationFiles
-	if len(files) > 0 {
-		declaredFiles = &TicketIterationFiles{}
-		for _, f := range files {
-			declaredFiles.Updated = append(declaredFiles.Updated, FileLineStats{Path: f})
+func ProgressIteration(ticket *Ticket, prompt, model string) error {
+	baseCommit := ticket.Frontmatter.Commit
+	for i := len(ticket.Frontmatter.Iterations) - 1; i >= 0; i-- {
+		if ticket.Frontmatter.Iterations[i].Commit != "" {
+			baseCommit = ticket.Frontmatter.Iterations[i].Commit
+			break
 		}
 	}
+	if baseCommit == "" {
+		return fmt.Errorf("no base commit found for iteration")
+	}
+	iterationFiles, _, err := GetGitDiffFileLineMetrics(baseCommit, "", nil)
+	if err != nil {
+		return err
+	}
+	if len(iterationFiles.Updated) == 0 && len(iterationFiles.Created) == 0 && len(iterationFiles.Removed) == 0 {
+		return fmt.Errorf("no git changes found since last commit")
+	}
+	bundles := GetProjects()
+	now := ISOTimestamp()
 	iteration := TicketIteration{
-		Prompt: prompt,
-		Model:  model,
-		Date:   TicketDate{Started: ISOTimestamp()},
-		Author: gitAuthor,
-		Declared: declaredFiles,
+		Prompt:  prompt,
+		Model:   model,
+		Date:    TicketDate{Started: now, Ended: now},
+		Author:  GetGitAuthor(),
+		Commit:  GetGitCommit(),
+		Bundles: BuildTicketBundlesWithChangedDefs(&iterationFiles, bundles, baseCommit),
 	}
 	ticket.Frontmatter.Iterations = append(ticket.Frontmatter.Iterations, iteration)
 	return SaveTicket(ticket)
@@ -2325,6 +3009,27 @@ func CollectTicketFilePaths(files *TicketIterationFiles) []string {
 	return paths
 }
 
+func CollectBundleFilePaths(bundles TicketBundles) []string {
+	if bundles == nil {
+		return nil
+	}
+	pathsByName := map[string]bool{}
+	paths := []string{}
+	for _, bundleMetrics := range bundles {
+		for path := range bundleMetrics.Files {
+			normalizedPath := NormalizePath(path)
+			if normalizedPath == "" {
+				continue
+			}
+			if !pathsByName[normalizedPath] {
+				pathsByName[normalizedPath] = true
+				paths = append(paths, normalizedPath)
+			}
+		}
+	}
+	return paths
+}
+
 func BuildGitDiffArgs(flag, baseCommit, headCommit string, paths []string) []string {
 	if headCommit == "" {
 		if len(paths) == 0 {
@@ -2338,15 +3043,15 @@ func BuildGitDiffArgs(flag, baseCommit, headCommit string, paths []string) []str
 	return append([]string{"diff", flag, "--no-renames", baseCommit, headCommit, "--"}, paths...)
 }
 
-func GetGitDiffFileLineStats(baseCommit, headCommit string, paths []string) (TicketIterationFiles, LineStats, error) {
+func GetGitDiffFileLineMetrics(baseCommit, headCommit string, paths []string) (TicketIterationFiles, LineMetrics, error) {
 	if baseCommit == "" {
-		return TicketIterationFiles{}, LineStats{}, fmt.Errorf("base commit is required")
+		return TicketIterationFiles{}, LineMetrics{}, fmt.Errorf("base commit is required")
 	}
 	stdout, stderr, exitCode := ExecCommand("git", BuildGitDiffArgs("--numstat", baseCommit, headCommit, paths), "")
 	if exitCode != 0 {
-		return TicketIterationFiles{}, LineStats{}, fmt.Errorf("git diff numstat failed: %s", strings.TrimSpace(stderr))
+		return TicketIterationFiles{}, LineMetrics{}, fmt.Errorf("git diff numstat failed: %s", strings.TrimSpace(stderr))
 	}
-	lineStatsByPath := map[string]LineStats{}
+	lineMetricsByPath := map[string]LineMetrics{}
 	for _, line := range strings.Split(strings.TrimSpace(stdout), "\n") {
 		if strings.TrimSpace(line) == "" {
 			continue
@@ -2367,11 +3072,11 @@ func GetGitDiffFileLineStats(baseCommit, headCommit string, paths []string) (Tic
 				removed = parsed
 			}
 		}
-		lineStatsByPath[NormalizePath(parts[2])] = LineStats{Added: added, Removed: removed}
+		lineMetricsByPath[NormalizePath(parts[2])] = LineMetrics{Added: added, Removed: removed}
 	}
 	stdout, stderr, exitCode = ExecCommand("git", BuildGitDiffArgs("--name-status", baseCommit, headCommit, paths), "")
 	if exitCode != 0 {
-		return TicketIterationFiles{}, LineStats{}, fmt.Errorf("git diff name-status failed: %s", strings.TrimSpace(stderr))
+		return TicketIterationFiles{}, LineMetrics{}, fmt.Errorf("git diff name-status failed: %s", strings.TrimSpace(stderr))
 	}
 	statusByPath := map[string]string{}
 	for _, line := range strings.Split(strings.TrimSpace(stdout), "\n") {
@@ -2384,13 +3089,13 @@ func GetGitDiffFileLineStats(baseCommit, headCommit string, paths []string) (Tic
 		}
 		statusByPath[NormalizePath(parts[len(parts)-1])] = strings.TrimSpace(parts[0])
 	}
-	for path := range lineStatsByPath {
+	for path := range lineMetricsByPath {
 		if _, ok := statusByPath[path]; !ok {
 			statusByPath[path] = "M"
 		}
 	}
-	if len(statusByPath) == 0 && len(lineStatsByPath) == 0 {
-		return TicketIterationFiles{}, LineStats{}, nil
+	if len(statusByPath) == 0 && len(lineMetricsByPath) == 0 {
+		return TicketIterationFiles{}, LineMetrics{}, nil
 	}
 	resultPaths := make([]string, 0, len(statusByPath))
 	for path := range statusByPath {
@@ -2398,22 +3103,22 @@ func GetGitDiffFileLineStats(baseCommit, headCommit string, paths []string) (Tic
 	}
 	sort.Strings(resultPaths)
 	files := TicketIterationFiles{}
-	total := LineStats{}
+	total := LineMetrics{}
 	for i := 0; i < len(resultPaths); i++ {
 		path := resultPaths[i]
 		status := statusByPath[path]
-		lineStats := lineStatsByPath[path]
-		total.Added += lineStats.Added
-		total.Removed += lineStats.Removed
+		lineMetrics := lineMetricsByPath[path]
+		total.Added += lineMetrics.Added
+		total.Removed += lineMetrics.Removed
 		if strings.HasPrefix(status, "A") {
-			files.Created = append(files.Created, FileLineStats{Path: path, Lines: &lineStats})
+			files.Created = append(files.Created, FileLineMetrics{Path: path, Lines: &lineMetrics})
 			continue
 		}
 		if strings.HasPrefix(status, "D") {
-			files.Removed = append(files.Removed, FileLineStats{Path: path, Lines: &lineStats})
+			files.Removed = append(files.Removed, FileLineMetrics{Path: path, Lines: &lineMetrics})
 			continue
 		}
-		files.Updated = append(files.Updated, FileLineStats{Path: path, Lines: &lineStats})
+		files.Updated = append(files.Updated, FileLineMetrics{Path: path, Lines: &lineMetrics})
 	}
 	return files, total, nil
 }
@@ -2437,41 +3142,58 @@ func ResolveBundleForPath(filePath string, bundles []Bundle) string {
 	return bundleName
 }
 
+func GuessSectionName(filePath string) string {
+	base := filepath.Base(filePath)
+	ext := filepath.Ext(base)
+	name := strings.TrimSuffix(base, ext)
+	name = strings.ReplaceAll(name, "-", " ")
+	name = strings.ReplaceAll(name, "_", " ")
+	name = strings.ReplaceAll(name, ".", " ")
+	words := strings.Fields(name)
+	for i, w := range words {
+		if len(w) > 0 {
+			words[i] = strings.ToUpper(w[:1]) + w[1:]
+		}
+	}
+	return strings.Join(words, " ")
+}
+
 func BuildTicketBundles(files *TicketIterationFiles, bundles []Bundle, baseCommit string) TicketBundles {
 	if files == nil {
 		return nil
 	}
 	result := make(TicketBundles)
-	processFile := func(f FileLineStats) {
+	processFile := func(f FileLineMetrics) {
 		bundleName := ResolveBundleForPath(f.Path, bundles)
 		if bundleName == "" {
 			bundleName = "@semio"
 		}
 		if _, ok := result[bundleName]; !ok {
-			result[bundleName] = BundleStats{Files: make(map[string]FileStats)}
+			result[bundleName] = BundleMetrics{Files: make(map[string]FileMetrics)}
 		}
 		bundle := result[bundleName]
 		if bundle.Files == nil {
-			bundle.Files = make(map[string]FileStats)
+			bundle.Files = make(map[string]FileMetrics)
 		}
-		fileStats := FileStats{Sections: make(map[string]SectionStats)}
+		fileMetrics := FileMetrics{Sections: make(map[string]SectionMetrics)}
 		absPath := filepath.Join(rootDir, f.Path)
 		if FileExists(absPath) {
-			sectionLines := GetGitDiffSectionLineStats(baseCommit, "", f.Path)
+			sectionLines := GetGitDiffSectionLineMetrics(baseCommit, "", f.Path)
 			for sectionName, lines := range sectionLines {
 				defs := ExtractDefinitionsFromSection(f.Path, sectionName)
-				fileStats.Sections[sectionName] = SectionStats{
+				fileMetrics.Sections[sectionName] = SectionMetrics{
 					Definitions: defs,
-					Lines:       &LineStats{Added: lines.Added, Removed: lines.Removed},
+					Lines:       &LineMetrics{Added: lines.Added, Removed: lines.Removed},
 				}
 			}
 		}
-		if len(fileStats.Sections) == 0 && f.Lines != nil {
-			fileStats.Sections["_root"] = SectionStats{
+		if len(fileMetrics.Sections) == 0 && f.Lines != nil {
+			guessedSection := GuessSectionName(f.Path)
+			fileMetrics.Sections[guessedSection] = SectionMetrics{
 				Lines: f.Lines,
 			}
 		}
-		bundle.Files[f.Path] = fileStats
+		bundle.Files[f.Path] = fileMetrics
 		result[bundleName] = bundle
 	}
 	for _, f := range files.Updated {
@@ -2486,7 +3208,73 @@ func BuildTicketBundles(files *TicketIterationFiles, bundles []Bundle, baseCommi
 	return result
 }
 
-func GetGitDiffSectionLineStats(baseCommit, endCommit, filePath string) map[string]LineStats {
+func BuildTicketBundlesWithChangedDefs(files *TicketIterationFiles, bundles []Bundle, baseCommit string) TicketBundles {
+	if files == nil {
+		return nil
+	}
+	result := make(TicketBundles)
+	processFile := func(f FileLineMetrics) {
+		bundleName := ResolveBundleForPath(f.Path, bundles)
+		if bundleName == "" {
+			bundleName = "@semio"
+		}
+		if _, ok := result[bundleName]; !ok {
+			result[bundleName] = BundleMetrics{Files: make(map[string]FileMetrics)}
+		}
+		bundle := result[bundleName]
+		if bundle.Files == nil {
+			bundle.Files = make(map[string]FileMetrics)
+		}
+		fileMetrics := FileMetrics{Sections: make(map[string]SectionMetrics)}
+		absPath := filepath.Join(rootDir, f.Path)
+		if FileExists(absPath) {
+			changedLines := GetGitDiffChangedLines(baseCommit, "", f.Path)
+			sectionLines := GetGitDiffSectionLineMetrics(baseCommit, "", f.Path)
+			for sectionName, lines := range sectionLines {
+				defs := ExtractChangedDefinitionsFromSection(f.Path, sectionName, changedLines)
+				fileMetrics.Sections[sectionName] = SectionMetrics{
+					Definitions: defs,
+					Lines:       &LineMetrics{Added: lines.Added, Removed: lines.Removed},
+				}
+			}
+		}
+		if len(fileMetrics.Sections) == 0 && f.Lines != nil {
+			guessedSection := GuessSectionName(f.Path)
+			fileMetrics.Sections[guessedSection] = SectionMetrics{
+				Lines: f.Lines,
+			}
+		}
+		bundle.Files[f.Path] = fileMetrics
+		result[bundleName] = bundle
+	}
+	for _, f := range files.Updated {
+		processFile(f)
+	}
+	for _, f := range files.Created {
+		processFile(f)
+	}
+	for _, f := range files.Removed {
+		processFile(f)
+	}
+	return result
+}
+
+func AggregateBundleLines(bundles TicketBundles) LineMetrics {
+	var total LineMetrics
+	for _, bundleMetrics := range bundles {
+		for _, fileMetrics := range bundleMetrics.Files {
+			for _, sectionMetrics := range fileMetrics.Sections {
+				if sectionMetrics.Lines != nil {
+					total.Added += sectionMetrics.Lines.Added
+					total.Removed += sectionMetrics.Lines.Removed
+				}
+			}
+		}
+	}
+	return total
+}
+
+func GetGitDiffSectionLineMetrics(baseCommit, endCommit, filePath string) map[string]LineMetrics {
 	absPath := filepath.Join(rootDir, filePath)
 	content, err := ReadTextFile(absPath)
 	if err != nil {
@@ -2536,22 +3324,23 @@ func GetGitDiffSectionLineStats(baseCommit, endCommit, filePath string) map[stri
 		return nil
 	}
 	lineChanges := parseGitDiffHunks(string(diffOut))
-	result := make(map[string]LineStats)
+	result := make(map[string]LineMetrics)
 	flatSections := flattenSections(sections)
+	guessedSection := GuessSectionName(filePath)
 	for _, change := range lineChanges {
-		sectionName := "_root"
+		sectionName := guessedSection
 		for _, sec := range flatSections {
 			if change.lineNum >= sec.StartLine && (sec.EndLine == -1 || change.lineNum <= sec.EndLine) {
 				sectionName = sec.Name
 			}
 		}
-		stats := result[sectionName]
+		metrics := result[sectionName]
 		if change.isAdd {
-			stats.Added++
+			metrics.Added++
 		} else {
-			stats.Removed++
+			metrics.Removed++
 		}
-		result[sectionName] = stats
+		result[sectionName] = metrics
 	}
 	_ = out
 	return result
@@ -2598,6 +3387,80 @@ func flattenSections(sections []SectionInfo) []SectionInfo {
 	}
 	flatten(sections)
 	return result
+}
+
+func GetGitDiffChangedLines(baseCommit, endCommit, filePath string) map[int]bool {
+	diffArgs := []string{"diff", "-U0"}
+	if baseCommit != "" {
+		if endCommit != "" {
+			diffArgs = append(diffArgs, baseCommit, endCommit)
+		} else {
+			diffArgs = append(diffArgs, baseCommit, "HEAD")
+		}
+	}
+	diffArgs = append(diffArgs, "--", filePath)
+	diffCmd := exec.Command("git", diffArgs...)
+	diffCmd.Dir = rootDir
+	diffOut, err := diffCmd.Output()
+	if err != nil {
+		return nil
+	}
+	lineChanges := parseGitDiffHunks(string(diffOut))
+	changedLines := make(map[int]bool)
+	for _, change := range lineChanges {
+		changedLines[change.lineNum] = true
+	}
+	return changedLines
+}
+
+func ExtractChangedDefinitionsFromSection(filePath, sectionName string, changedLines map[int]bool) []string {
+	absPath := filepath.Join(rootDir, filePath)
+	content, err := ReadTextFile(absPath)
+	if err != nil {
+		return nil
+	}
+	lang := GetLanguage(filePath)
+	if lang == nil || lang.DefinitionRegexp == nil {
+		return nil
+	}
+	var sections []SectionInfo
+	if lang.Name == "markdown" {
+		sections = ParseMarkdownSections(content)
+	} else if lang.SectionStart != nil {
+		sections = ParseCodeSections(content, lang.Name)
+	}
+	var section *SectionInfo
+	flatSections := flattenSections(sections)
+	for i := range flatSections {
+		if flatSections[i].Name == sectionName {
+			section = &flatSections[i]
+			break
+		}
+	}
+	if section == nil {
+		return nil
+	}
+	lines := strings.Split(content, "\n")
+	var defs []string
+	seen := make(map[string]bool)
+	endLine := section.EndLine
+	if endLine == -1 {
+		endLine = len(lines)
+	}
+	for i := section.StartLine - 1; i < endLine && i < len(lines); i++ {
+		lineNum := i + 1
+		if !changedLines[lineNum] {
+			continue
+		}
+		matches := lang.DefinitionRegexp.FindAllStringSubmatch(lines[i], -1)
+		for _, m := range matches {
+			if len(m) > 1 && m[1] != "" && !seen[m[1]] {
+				seen[m[1]] = true
+				defs = append(defs, m[1])
+			}
+		}
+	}
+	return defs
 }
 
 func ExtractDefinitionsFromSection(filePath, sectionName string) []string {
@@ -2663,10 +3526,7 @@ func EndIteration(ticket *Ticket) error {
 		}
 	}
 	declaredPaths := CollectTicketFilePaths(last.Declared)
-	if len(declaredPaths) == 0 {
-		declaredPaths = CollectTicketFilePaths(last.Files)
-	}
-	iterationFiles, iterationLines, err := GetGitDiffFileLineStats(baseCommit, "", declaredPaths)
+	iterationFiles, _, err := GetGitDiffFileLineMetrics(baseCommit, "", declaredPaths)
 	if err != nil {
 		return err
 	}
@@ -2676,9 +3536,7 @@ func EndIteration(ticket *Ticket) error {
 	bundles := GetProjects()
 	last.Date.Ended = ISOTimestamp()
 	last.Commit = GetGitCommit()
-	last.Files = &iterationFiles
 	last.Bundles = BuildTicketBundles(&iterationFiles, bundles, baseCommit)
-	last.Lines = &iterationLines
 	return SaveTicket(ticket)
 }
 
@@ -2689,97 +3547,6 @@ func FinishTicket(ticket *Ticket) error {
 			return fmt.Errorf("cannot finish ticket with unfinished iteration")
 		}
 	}
-	ticketPathsByName := map[string]bool{}
-	ticketPaths := []string{}
-	for i := 0; i < len(ticket.Frontmatter.Iterations); i++ {
-		for _, path := range CollectTicketFilePaths(ticket.Frontmatter.Iterations[i].Files) {
-			if !ticketPathsByName[path] {
-				ticketPathsByName[path] = true
-				ticketPaths = append(ticketPaths, path)
-			}
-		}
-	}
-	gitFiles, gitLines, err := GetGitDiffFileLineStats(ticket.Frontmatter.Commit, "", ticketPaths)
-	if err != nil {
-		return err
-	}
-	updatedByPath := map[string]LineStats{}
-	createdByPath := map[string]LineStats{}
-	removedByPath := map[string]LineStats{}
-	for _, iteration := range ticket.Frontmatter.Iterations {
-		if iteration.Files == nil {
-			continue
-		}
-		for _, file := range iteration.Files.Updated {
-			lineStats := LineStats{}
-			if file.Lines != nil {
-				lineStats = *file.Lines
-			}
-			existing := updatedByPath[file.Path]
-			updatedByPath[file.Path] = LineStats{Added: existing.Added + lineStats.Added, Removed: existing.Removed + lineStats.Removed}
-		}
-		for _, file := range iteration.Files.Created {
-			lineStats := LineStats{}
-			if file.Lines != nil {
-				lineStats = *file.Lines
-			}
-			existing := createdByPath[file.Path]
-			createdByPath[file.Path] = LineStats{Added: existing.Added + lineStats.Added, Removed: existing.Removed + lineStats.Removed}
-		}
-		for _, file := range iteration.Files.Removed {
-			lineStats := LineStats{}
-			if file.Lines != nil {
-				lineStats = *file.Lines
-			}
-			existing := removedByPath[file.Path]
-			removedByPath[file.Path] = LineStats{Added: existing.Added + lineStats.Added, Removed: existing.Removed + lineStats.Removed}
-		}
-	}
-	updatedPaths := make([]string, 0, len(updatedByPath))
-	for path := range updatedByPath {
-		updatedPaths = append(updatedPaths, path)
-	}
-	sort.Strings(updatedPaths)
-	updatedStats := make([]FileLineStats, 0, len(updatedPaths))
-	for i := 0; i < len(updatedPaths); i++ {
-		path := updatedPaths[i]
-		lineStats := updatedByPath[path]
-		updatedStats = append(updatedStats, FileLineStats{Path: path, Lines: &lineStats})
-	}
-	createdPaths := make([]string, 0, len(createdByPath))
-	for path := range createdByPath {
-		createdPaths = append(createdPaths, path)
-	}
-	sort.Strings(createdPaths)
-	createdStats := make([]FileLineStats, 0, len(createdPaths))
-	for i := 0; i < len(createdPaths); i++ {
-		path := createdPaths[i]
-		lineStats := createdByPath[path]
-		createdStats = append(createdStats, FileLineStats{Path: path, Lines: &lineStats})
-	}
-	removedPaths := make([]string, 0, len(removedByPath))
-	for path := range removedByPath {
-		removedPaths = append(removedPaths, path)
-	}
-	sort.Strings(removedPaths)
-	removedStats := make([]FileLineStats, 0, len(removedPaths))
-	for i := 0; i < len(removedPaths); i++ {
-		path := removedPaths[i]
-		lineStats := removedByPath[path]
-		removedStats = append(removedStats, FileLineStats{Path: path, Lines: &lineStats})
-	}
-	ticket.Frontmatter.Files = &TicketFiles{Updated: updatedStats, Created: createdStats, Removed: removedStats}
-	if len(updatedStats) == 0 && len(createdStats) == 0 && len(removedStats) == 0 {
-		ticket.Frontmatter.Files = &TicketFiles{Updated: gitFiles.Updated, Created: gitFiles.Created, Removed: gitFiles.Removed}
-	}
-	allFiles := &TicketIterationFiles{
-		Updated: ticket.Frontmatter.Files.Updated,
-		Created: ticket.Frontmatter.Files.Created,
-		Removed: ticket.Frontmatter.Files.Removed,
-	}
-	bundles := GetProjects()
-	ticket.Frontmatter.Bundles = BuildTicketBundles(allFiles, bundles, ticket.Frontmatter.Commit)
-	ticket.Frontmatter.Lines = &gitLines
 	ticket.Frontmatter.Status = TicketClosed
 	ticket.Frontmatter.Date.Finished = ISOTimestamp()
 	return SaveTicket(ticket)
@@ -2798,6 +3565,32 @@ func ReopenTicket(ticket *Ticket) error {
 	ticket.Frontmatter.Status = TicketOpen
 	ticket.Frontmatter.Date.Finished = ""
 	return SaveTicket(ticket)
+}
+
+func MigrateTicketBundles(bundles TicketBundles) TicketBundles {
+	if bundles == nil {
+		return nil
+	}
+	result := make(TicketBundles)
+	for bundleName, bundleMetrics := range bundles {
+		newBundle := BundleMetrics{Files: make(map[string]FileMetrics)}
+		for filePath, fileMetrics := range bundleMetrics.Files {
+			newFileMetrics := FileMetrics{Sections: make(map[string]SectionMetrics)}
+			for sectionName, sectionMetrics := range fileMetrics.Sections {
+				newSectionName := sectionName
+				if sectionName == "_root" {
+					newSectionName = GuessSectionName(filePath)
+				}
+				newFileMetrics.Sections[newSectionName] = sectionMetrics
+			}
+			if len(newFileMetrics.Sections) == 0 {
+				newFileMetrics.Sections[GuessSectionName(filePath)] = SectionMetrics{}
+			}
+			newBundle.Files[filePath] = newFileMetrics
+		}
+		result[bundleName] = newBundle
+	}
+	return result
 }
 
 func CanCloseTicket(ticket *Ticket) (bool, []string) {
@@ -2900,7 +3693,7 @@ type ContributorContributionState struct {
 	Folders  map[string]struct{}
 	Bundles map[string]struct{}
 	Commits  map[string]ContributorCommit
-	Lines    LineStats
+	Lines    LineMetrics
 }
 
 func ParseContributorIdentity(value string) (string, string, bool) {
@@ -3010,15 +3803,14 @@ func ListContributors() ([]Contributor, error) {
 				ticketContributors[github] = struct{}{}
 			}
 		}
-		ticketHasIterationLines := false
 		for _, iteration := range ticket.Frontmatter.Iterations {
 			if name, email, ok := ParseContributorIdentity(iteration.Author); ok {
 				if github := ResolveContributorGithub(name, email, emailToGithub, nameToGithub); github != "" {
 					ticketContributors[github] = struct{}{}
-					if iteration.Lines != nil {
-						ticketHasIterationLines = true
-						stateByGithub[github].Lines.Added += iteration.Lines.Added
-						stateByGithub[github].Lines.Removed += iteration.Lines.Removed
+					if iteration.Bundles != nil {
+						iterationLines := AggregateBundleLines(iteration.Bundles)
+						stateByGithub[github].Lines.Added += iterationLines.Added
+						stateByGithub[github].Lines.Removed += iterationLines.Removed
 					}
 					if iteration.Commit != "" {
 						commitTitle := commitTitleCache[iteration.Commit]
@@ -3031,14 +3823,6 @@ func ListContributors() ([]Contributor, error) {
 						}
 						stateByGithub[github].Commits[iteration.Commit] = ContributorCommit{Title: commitTitle, Sha: iteration.Commit}
 					}
-				}
-			}
-		}
-		if ticket.Frontmatter.Lines != nil && !ticketHasIterationLines {
-			if name, email, ok := ParseContributorIdentity(ticket.Frontmatter.Author); ok {
-				if github := ResolveContributorGithub(name, email, emailToGithub, nameToGithub); github != "" {
-					stateByGithub[github].Lines.Added += ticket.Frontmatter.Lines.Added
-					stateByGithub[github].Lines.Removed += ticket.Frontmatter.Lines.Removed
 				}
 			}
 		}
@@ -3518,29 +4302,30 @@ var ticketIterateCmd = &cobra.Command{
 
 var ticketIterateStartCmd = &cobra.Command{
 	Use:   "start <year> <month> <day> <slug>",
-	Short: "Start a ticket iteration",
+	Short: "Start a ticket iteration (deprecated, use progress)",
 	Args:  cobra.ExactArgs(4),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		prompt, _ := cmd.Flags().GetString("prompt")
 		model, _ := cmd.Flags().GetString("model")
-		files, _ := cmd.Flags().GetStringSlice("file")
 		year, _ := strconv.Atoi(args[0])
 		month, _ := strconv.Atoi(args[1])
 		day, _ := strconv.Atoi(args[2])
-		result := ToolTicketIterateStart(year, month, day, args[3], prompt, model, files)
+		result := ToolTicketProgress(year, month, day, args[3], prompt, model)
 		return outputResult(result)
 	},
 }
 
-var ticketIterateEndCmd = &cobra.Command{
-	Use:   "end <year> <month> <day> <slug>",
-	Short: "End a ticket iteration",
+var ticketProgressCmd = &cobra.Command{
+	Use:   "progress <year> <month> <day> <slug>",
+	Short: "Record progress on a ticket (creates iteration from git changes)",
 	Args:  cobra.ExactArgs(4),
 	RunE: func(cmd *cobra.Command, args []string) error {
+		prompt, _ := cmd.Flags().GetString("prompt")
+		model, _ := cmd.Flags().GetString("model")
 		year, _ := strconv.Atoi(args[0])
 		month, _ := strconv.Atoi(args[1])
 		day, _ := strconv.Atoi(args[2])
-		result := ToolTicketIterateEnd(year, month, day, args[3])
+		result := ToolTicketProgress(year, month, day, args[3], prompt, model)
 		return outputResult(result)
 	},
 }
@@ -3577,13 +4362,14 @@ func init() {
 	ticketCreateCmd.Flags().StringSlice("file", nil, "Files to include (can be specified multiple times)")
 	ticketIterateStartCmd.Flags().String("prompt", "", "Iteration prompt")
 	ticketIterateStartCmd.Flags().String("model", "", "Model used")
-	ticketIterateStartCmd.Flags().StringSlice("file", nil, "Files to include (can be specified multiple times)")
+	ticketProgressCmd.Flags().String("prompt", "", "Iteration prompt")
+	ticketProgressCmd.Flags().String("model", "", "Model used")
 	ticketIterateCmd.AddCommand(ticketIterateStartCmd)
-	ticketIterateCmd.AddCommand(ticketIterateEndCmd)
 	ticketCmd.AddCommand(ticketCreateCmd)
 	ticketCmd.AddCommand(ticketListCmd)
 	ticketCmd.AddCommand(ticketReadCmd)
 	ticketCmd.AddCommand(ticketIterateCmd)
+	ticketCmd.AddCommand(ticketProgressCmd)
 	ticketCmd.AddCommand(ticketFinishCmd)
 	ticketCmd.AddCommand(ticketReopenCmd)
 }
@@ -4177,27 +4963,40 @@ func ToolTicketIterateStart(year, month, day int, slug, prompt, model string, fi
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
-	if err := StartIteration(ticket, prompt, model, files); err != nil {
+	if err := ProgressIteration(ticket, prompt, model); err != nil {
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
-	output.Success(fmt.Sprintf("\n🔄 Started iteration on ticket: %s", ticket.Slug))
-	output.Info(fmt.Sprintf("   Iteration started with %d file(s)", len(files)))
+	lastIter := ticket.Frontmatter.Iterations[len(ticket.Frontmatter.Iterations)-1]
+	fileCount := 0
+	for _, b := range lastIter.Bundles {
+		fileCount += len(b.Files)
+	}
+	output.Success(fmt.Sprintf("\n✅ Progress recorded on ticket: %s", ticket.Slug))
+	output.Info(fmt.Sprintf("   Files changed: %d", fileCount))
+	output.Info(fmt.Sprintf("   Commit: %s", lastIter.Commit))
 	return ToolResult{Output: *output, Data: ticket}
 }
 
-func ToolTicketIterateEnd(year, month, day int, slug string) ToolResult {
+func ToolTicketProgress(year, month, day int, slug, prompt, model string) ToolResult {
 	output := NewOutput()
 	ticket, err := ReadTicket(year, month, day, slug)
 	if err != nil {
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
-	if err := EndIteration(ticket); err != nil {
+	if err := ProgressIteration(ticket, prompt, model); err != nil {
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
-	output.Success(fmt.Sprintf("\n✅ Ended iteration on ticket: %s", ticket.Slug))
+	lastIter := ticket.Frontmatter.Iterations[len(ticket.Frontmatter.Iterations)-1]
+	fileCount := 0
+	for _, b := range lastIter.Bundles {
+		fileCount += len(b.Files)
+	}
+	output.Success(fmt.Sprintf("\n✅ Progress recorded on ticket: %s", ticket.Slug))
+	output.Info(fmt.Sprintf("   Files changed: %d", fileCount))
+	output.Info(fmt.Sprintf("   Commit: %s", lastIter.Commit))
 	return ToolResult{Output: *output, Data: ticket}
 }
 
@@ -4462,8 +5261,12 @@ func ToolFileCreate(path string) ToolResult {
 		output.Error(fmt.Sprintf("Error: File already exists: %s", path))
 		return ToolResult{Output: *output, Error: "file already exists"}
 	}
-	lang := GetLanguageFromPath(path)
-	content := generateFileHeader(path, lang)
+	language := GetLanguage(path)
+	langName := ""
+	if language != nil {
+		langName = language.Name
+	}
+	content := generateFileHeader(path, langName)
 	if err := WriteTextFile(absPath, content); err != nil {
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
@@ -4472,7 +5275,17 @@ func ToolFileCreate(path string) ToolResult {
 	return ToolResult{Output: *output}
 }
 
-func generateFileHeader(path, lang string) string {
+func generateFileHeader(path, langName string) string {
+	var language *Language
+	for i := range languages {
+		if languages[i].Name == langName {
+			language = &languages[i]
+			break
+		}
+	}
+	if language == nil || language.HeaderFmt == "" {
+		return ""
+	}
 	gitAuthor := GetGitAuthor()
 	year := strconv.Itoa(time.Now().Year())
 	license := `This program is free software: you can redistribute it and/or modify
@@ -4487,54 +5300,7 @@ GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.`
-	switch lang {
-	case "typescript":
-		return fmt.Sprintf(`// #region Header
-
-// %s
-
-// %s %s
-
-%s
-
-// #endregion Header
-`, path, year, gitAuthor, formatLicenseLines(license, "//"))
-	case "python":
-		return fmt.Sprintf(`# region Header
-
-# %s
-
-# %s %s
-
-%s
-
-# endregion Header
-`, path, year, gitAuthor, formatLicenseLines(license, "#"))
-	case "csharp":
-		return fmt.Sprintf(`#region Header
-
-// %s
-
-// %s %s
-
-%s
-
-#endregion Header
-`, path, year, gitAuthor, formatLicenseLines(license, "//"))
-	case "go":
-		return fmt.Sprintf(`// region Header
-
-// %s
-
-// %s %s
-
-%s
-
-// endregion Header
-`, path, year, gitAuthor, formatLicenseLines(license, "//"))
-	default:
-		return ""
-	}
+	return fmt.Sprintf(language.HeaderFmt, path, year, gitAuthor, formatLicenseLines(license, language.CommentPrefix))
 }
 
 func formatLicenseLines(license, prefix string) string {
@@ -4622,10 +5388,10 @@ func ToolFileTree(path string) ToolResult {
 }
 
 func ToolSectionCreate(filePath, sectionPath string) ToolResult {
-	output := NewOutput()
-	absPath := filepath.Join(rootDir, filePath)
-	if !FileExists(absPath) {
-		output.Error(fmt.Sprintf("Error: File not found: %s", filePath))
+  output := NewOutput()
+  absPath := filepath.Join(rootDir, filePath)
+  if !FileExists(absPath) {
+    output.Error(fmt.Sprintf("Error: File not found: %s", filePath))
 		return ToolResult{Output: *output, Error: "file not found"}
 	}
 	content, err := ReadTextFile(absPath)
@@ -4633,22 +5399,54 @@ func ToolSectionCreate(filePath, sectionPath string) ToolResult {
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
-	parts := strings.Split(sectionPath, "#")
-	sectionName := parts[len(parts)-1]
-	lang := GetLanguageFromPath(filePath)
+  parts := strings.Split(sectionPath, "#")
+  sectionName := parts[len(parts)-1]
+  language := GetLanguage(filePath)
+  if language != nil && language.Name == "json" {
+   	pathParts := NormalizeSectionPath(sectionPath)
+    if len(pathParts) == 0 {
+      output.Error("Error: Section path required")
+      return ToolResult{Output: *output, Error: "section path required"}
+    }
+    sectionName = pathParts[len(pathParts)-1]
+    parentPath := strings.Join(pathParts[:len(pathParts)-1], "/")
+    _, locations, err := ParseJSONSectionsDetailed(content)
+    if err != nil {
+      output.Error(fmt.Sprintf("Error: %v", err))
+      return ToolResult{Output: *output, Error: err.Error()}
+    }
+    targetPath := strings.Join(pathParts, "/")
+    if _, exists := locations[targetPath]; exists {
+      output.Error(fmt.Sprintf("Error: Section already exists: %s", targetPath))
+      return ToolResult{Output: *output, Error: "section exists"}
+    }
+    objectStart, objectEnd, ok := jsonFindObjectRange(content, locations, parentPath)
+    if !ok {
+      output.Error("Error: Parent section is not a JSON object")
+      return ToolResult{Output: *output, Error: "parent not object"}
+    }
+    entry := fmt.Sprintf("%s: {}", strconv.Quote(sectionName))
+    updated, inserted := jsonInsertEntry(content, objectStart, objectEnd, entry)
+    if !inserted {
+      output.Error("Error: Failed to insert section")
+      return ToolResult{Output: *output, Error: "insert failed"}
+    }
+    if err := WriteTextFile(absPath, updated); err != nil {
+      output.Error(fmt.Sprintf("Error: %v", err))
+      return ToolResult{Output: *output, Error: err.Error()}
+    }
+    output.Success(fmt.Sprintf("\n🏷️ Created section \"%s\" in %s", sectionName, filePath))
+    return ToolResult{Output: *output}
+  }
+  if language == nil || language.SectionBothFmt == "" {
+    output.Error("Error: Unsupported file type")
+    return ToolResult{Output: *output, Error: "unsupported file type"}
+  }
 	var newSection string
-	switch lang {
-	case "markdown":
-		newSection = fmt.Sprintf("\n## %s\n\n", sectionName)
-	case "typescript":
-		newSection = fmt.Sprintf("\n// #region %s\n\n// #endregion %s\n", sectionName, sectionName)
-	case "python":
-		newSection = fmt.Sprintf("\n# region %s\n\n# endregion %s\n", sectionName, sectionName)
-	case "csharp":
-		newSection = fmt.Sprintf("\n#region %s\n\n#endregion %s\n", sectionName, sectionName)
-	default:
-		output.Error("Error: Unsupported file type")
-		return ToolResult{Output: *output, Error: "unsupported file type"}
+	if language.SectionEndFmt == "" {
+		newSection = fmt.Sprintf(language.SectionBothFmt, sectionName)
+	} else {
+		newSection = fmt.Sprintf(language.SectionBothFmt, sectionName, sectionName)
 	}
 	if err := WriteTextFile(absPath, content+newSection); err != nil {
 		output.Error(fmt.Sprintf("Error: %v", err))
@@ -4659,9 +5457,9 @@ func ToolSectionCreate(filePath, sectionPath string) ToolResult {
 }
 
 func ToolSectionMove(filePath, oldPath, newPath string) ToolResult {
-	output := NewOutput()
-	absPath := filepath.Join(rootDir, filePath)
-	if !FileExists(absPath) {
+  output := NewOutput()
+  absPath := filepath.Join(rootDir, filePath)
+  if !FileExists(absPath) {
 		output.Error(fmt.Sprintf("Error: File not found: %s", filePath))
 		return ToolResult{Output: *output, Error: "file not found"}
 	}
@@ -4670,24 +5468,70 @@ func ToolSectionMove(filePath, oldPath, newPath string) ToolResult {
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
-	oldParts := strings.Split(oldPath, "#")
-	oldName := oldParts[len(oldParts)-1]
-	newParts := strings.Split(newPath, "#")
-	newName := newParts[len(newParts)-1]
-	lang := GetLanguageFromPath(filePath)
-	switch lang {
-	case "markdown":
-		content = strings.ReplaceAll(content, "# "+oldName, "# "+newName)
-		content = strings.ReplaceAll(content, "## "+oldName, "## "+newName)
-	case "typescript":
-		content = strings.ReplaceAll(content, "// #region "+oldName, "// #region "+newName)
-		content = strings.ReplaceAll(content, "// #endregion "+oldName, "// #endregion "+newName)
-	case "python":
-		content = strings.ReplaceAll(content, "# region "+oldName, "# region "+newName)
-		content = strings.ReplaceAll(content, "# endregion "+oldName, "# endregion "+newName)
-	case "csharp":
-		content = strings.ReplaceAll(content, "#region "+oldName, "#region "+newName)
-		content = strings.ReplaceAll(content, "#endregion "+oldName, "#endregion "+newName)
+  oldParts := strings.Split(oldPath, "#")
+  oldName := oldParts[len(oldParts)-1]
+  newParts := strings.Split(newPath, "#")
+  newName := newParts[len(newParts)-1]
+  language := GetLanguage(filePath)
+  if language != nil && language.Name == "json" {
+    oldParts = NormalizeSectionPath(oldPath)
+    newParts = NormalizeSectionPath(newPath)
+    if len(oldParts) == 0 || len(newParts) == 0 {
+      output.Error("Error: Section path required")
+      return ToolResult{Output: *output, Error: "section path required"}
+    }
+    oldPathNormalized := strings.Join(oldParts, "/")
+    newPathNormalized := strings.Join(newParts, "/")
+    _, locations, err := ParseJSONSectionsDetailed(content)
+    if err != nil {
+      output.Error(fmt.Sprintf("Error: %v", err))
+      return ToolResult{Output: *output, Error: err.Error()}
+    }
+    source, ok := locations[oldPathNormalized]
+    if !ok {
+      output.Error(fmt.Sprintf("Error: Section not found: %s", oldPathNormalized))
+      return ToolResult{Output: *output, Error: "section not found"}
+    }
+    entry, start, end := jsonExtractEntry(content, source.KeyStart, source.ValueEnd)
+    updated := content[:start] + content[end:]
+    _, updatedLocations, err := ParseJSONSectionsDetailed(updated)
+    if err != nil {
+      output.Error(fmt.Sprintf("Error: %v", err))
+      return ToolResult{Output: *output, Error: err.Error()}
+    }
+    newName = newParts[len(newParts)-1]
+    entry = jsonRenameEntryKey(entry, newName)
+    parentPath := strings.Join(newParts[:len(newParts)-1], "/")
+    objectStart, objectEnd, ok := jsonFindObjectRange(updated, updatedLocations, parentPath)
+    if !ok {
+      output.Error("Error: Target section is not a JSON object")
+      return ToolResult{Output: *output, Error: "target not object"}
+    }
+    entry = jsonReindentEntry(entry, "")
+    finalContent, inserted := jsonInsertEntry(updated, objectStart, objectEnd, entry)
+    if !inserted {
+      output.Error("Error: Failed to move section")
+      return ToolResult{Output: *output, Error: "move failed"}
+    }
+    if err := WriteTextFile(absPath, finalContent); err != nil {
+      output.Error(fmt.Sprintf("Error: %v", err))
+      return ToolResult{Output: *output, Error: err.Error()}
+    }
+    output.Success(fmt.Sprintf("\n🏷️ Renamed section \"%s\" to \"%s\" in %s", oldPathNormalized, newPathNormalized, filePath))
+    return ToolResult{Output: *output}
+  }
+  if language != nil && language.SectionStartFmt != "" {
+    oldStart := fmt.Sprintf(language.SectionStartFmt, oldName)
+    newStart := fmt.Sprintf(language.SectionStartFmt, newName)
+    content = strings.ReplaceAll(content, oldStart, newStart)
+		if language.SectionEndFmt != "" {
+			oldEnd := fmt.Sprintf(language.SectionEndFmt, oldName)
+			newEnd := fmt.Sprintf(language.SectionEndFmt, newName)
+			content = strings.ReplaceAll(content, oldEnd, newEnd)
+		}
+		if language.Name == "markdown" {
+			content = strings.ReplaceAll(content, "# "+oldName, "# "+newName)
+		}
 	}
 	if err := WriteTextFile(absPath, content); err != nil {
 		output.Error(fmt.Sprintf("Error: %v", err))
@@ -4698,9 +5542,9 @@ func ToolSectionMove(filePath, oldPath, newPath string) ToolResult {
 }
 
 func ToolSectionDelete(filePath, sectionPath string) ToolResult {
-	output := NewOutput()
-	absPath := filepath.Join(rootDir, filePath)
-	if !FileExists(absPath) {
+  output := NewOutput()
+  absPath := filepath.Join(rootDir, filePath)
+  if !FileExists(absPath) {
 		output.Error(fmt.Sprintf("Error: File not found: %s", filePath))
 		return ToolResult{Output: *output, Error: "file not found"}
 	}
@@ -4709,14 +5553,40 @@ func ToolSectionDelete(filePath, sectionPath string) ToolResult {
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
-	sections := ParseSections(content, filePath)
-	parts := strings.Split(sectionPath, "#")
-	sectionName := parts[len(parts)-1]
-	section := FindSection(sections, sectionName)
-	if section == nil {
-		output.Error(fmt.Sprintf("Error: Section not found: %s", sectionName))
-		return ToolResult{Output: *output, Error: "section not found"}
-	}
+  sections := ParseSections(content, filePath)
+  parts := strings.Split(sectionPath, "#")
+  sectionName := parts[len(parts)-1]
+  section := FindSection(sections, sectionName)
+  language := GetLanguage(filePath)
+  if language != nil && language.Name == "json" {
+    pathParts := NormalizeSectionPath(sectionPath)
+    if len(pathParts) == 0 {
+      output.Error("Error: Section path required")
+      return ToolResult{Output: *output, Error: "section path required"}
+    }
+    _, locations, err := ParseJSONSectionsDetailed(content)
+    if err != nil {
+      output.Error(fmt.Sprintf("Error: %v", err))
+      return ToolResult{Output: *output, Error: err.Error()}
+    }
+    location, ok := locations[strings.Join(pathParts, "/")]
+    if !ok {
+      output.Error(fmt.Sprintf("Error: Section not found: %s", strings.Join(pathParts, "/")))
+      return ToolResult{Output: *output, Error: "section not found"}
+    }
+    _, start, end := jsonExtractEntry(content, location.KeyStart, location.ValueEnd)
+    updated := content[:start] + content[end:]
+    if err := WriteTextFile(absPath, updated); err != nil {
+      output.Error(fmt.Sprintf("Error: %v", err))
+      return ToolResult{Output: *output, Error: err.Error()}
+    }
+    output.Success(fmt.Sprintf("\n🗑️ Deleted section \"%s\" from %s", strings.Join(pathParts, "/"), filePath))
+    return ToolResult{Output: *output}
+  }
+  if section == nil {
+    output.Error(fmt.Sprintf("Error: Section not found: %s", sectionName))
+    return ToolResult{Output: *output, Error: "section not found"}
+  }
 	lines := strings.Split(content, "\n")
 	var newLines []string
 	for i, line := range lines {

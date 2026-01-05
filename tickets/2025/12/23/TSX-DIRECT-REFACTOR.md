@@ -5,46 +5,24 @@ summary: Refactored all scripts to use npx tsx directly instead of node --import
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-    created: "2025-12-23T13:28:13.198Z"
-    finished: "2025-12-23T13:28:53.505Z"
+  created: 2025-12-23T13:28:13.198Z
+  finished: 2025-12-23T13:28:53.505Z
 commit: b41e500849192cc526ed0ce105fff7e2a478e3f0
 model: composer-1
 iterations:
-    - prompt: Refactor all the scripts to be able to use tsx directly.
-      model: composer-1
-      date:
-        started: "2025-12-23T13:28:19.725Z"
-        ended: "2025-12-23T13:28:30.700Z"
-      author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-      commit: b41e500849192cc526ed0ce105fff7e2a478e3f0
-      bundles:
-        '@semio':
-            files:
-                "":
-                    sections: {}
-      files:
-        updated:
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-      lines:
-        added: 1587
-        removed: 8
-bundles:
-    '@semio':
+  - prompt: Refactor all the scripts to be able to use tsx directly.
+    model: composer-1
+    date:
+      started: 2025-12-23T13:28:19.725Z
+      ended: 2025-12-23T13:28:30.700Z
+    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+    commit: b41e500849192cc526ed0ce105fff7e2a478e3f0
+    bundles:
+      "@semio":
         files:
-            "":
-                sections: {}
-files:
-    updated:
-        - path: ""
-        - path: ""
-        - path: ""
-        - path: ""
-lines:
-    added: 1587
-    removed: 8
+          "":
+            sections:
+              "": {}
 ---
 
 

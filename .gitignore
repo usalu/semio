@@ -10,6 +10,8 @@ log
 old
 *.old
 *.exe
+go/repo/repo
+go/mcp/mcp
 .semio-repo
 #--------------------------------------MACOS--------------------------------------
 .DS_Store

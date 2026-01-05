@@ -1,13 +1,23 @@
 # Prompt history
 
+The repo binary is not following the open/closed principle. Adding a new language is not possible without modifying the code. Make sure that Languages perform all language specific operations and just a an array of languages is passed [currently typescript, go, c#, json]. Bundle, section, definition are general concepts in semio-repo which in every language have a different meaning. First analyze how to refactor and then implement it.
+
+Currently the policies switch over languages. Refactor this cleanly, so that languages perform language specific operations and no switch statements are used inside the policies.
+
+Change the iteration mechanism should to progress. Instead of starting and ending an iteration, progress should just be called once for an iteration. Once a Todo is complete call progress (inputs: prompt and sections). The metrics, commit, author, date are competed by the binary.
+Further only add the definitions to the section metrics that were affected by the git changes. All other definitions are ignored.
+
 Add a new section violation kind: orphan
 All code must be within sections.
 
-The vscode extionsion problem diagnostic currently show
+The vscode extionsion problem diagnostic show
+MESSAGE - SOURCE([VALUE](TARGET))
+currently:
 POLICYNAME - semio(PATHTOVIOLATION)
 such as
-and instead they should show
-VIOLATIONMESSAGE - VIOLATIONKIND(PATHTOVIOLATIONDEFINITION)
+section - semio([code](/c:/git/semio.tech/semio/go/repo/main.go#L630))
+instead should show more detailed information:
+VIOLATIONMESSAGE - POLICYNAME(VIOLATIONKINDNAME[PATHTOVIOLATIONDEFINITION])
 
 {
 	"resource": "/c:/git/semio.tech/semio/go/repo/main.go",
@@ -54,6 +64,31 @@ should become
 	"endColumn": 14,
 	"origin": "extHost1"
 }
+
+[{
+	"resource": "/c:/git/semio.tech/semio/go/repo/main.go",
+	"owner": "_generated_diagnostic_collection_name_#4",
+	"code": {
+		"value": "default",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/gopls/internal/analysis/unusedfunc",
+			"scheme": "https",
+			"authority": "pkg.go.dev"
+		}
+	},
+	"severity": 2,
+	"message": "function \"policyAppliesToScope\" is unused",
+	"source": "unusedfunc",
+	"startLineNumber": 709,
+	"startColumn": 6,
+	"endLineNumber": 709,
+	"endColumn": 26,
+	"tags": [
+		1
+	],
+	"origin": "extHost1"
+}]
 
 Dont allow lines to be stored at repo, bundle, folder or file level. Every line need to be at section level. Definitions are the names of the functions, classes, variables, etc. that were affected by the changes inside the section.
 Refactor the current hardcoded switch statements to use a new approach where languages define how to identify sections, definitions, etc.

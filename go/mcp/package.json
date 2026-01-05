@@ -4,7 +4,7 @@
   "sourceRoot": "go/mcp",
   "projectType": "application",
   "scripts": {
-    "build": "go build -o ../../bin/mcp.exe .",
+    "build": "go build",
     "preflight": "go vet ./..."
   },
   "author": {

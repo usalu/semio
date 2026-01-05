@@ -5,31 +5,21 @@ summary: Use Action UI elements for all window buttons
 status: open
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-    created: "2025-12-18T15:27:45.865Z"
+  created: 2025-12-18T15:27:45.865Z
 iterations:
-    - prompt: The buttons for every window should be action ui elements.
-      model: gpt-5.2-codex
-      date:
-        started: "2025-12-18T15:42:02.388Z"
-        ended: "2025-12-18T16:12:16.838Z"
-      author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-      commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
-      bundles:
-        '@semio':
-            files:
-                "":
-                    sections: {}
-      files:
-        updated:
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-      lines:
-        added: 424
-        removed: 568
+  - prompt: The buttons for every window should be action ui elements.
+    model: gpt-5.2-codex
+    date:
+      started: 2025-12-18T15:42:02.388Z
+      ended: 2025-12-18T16:12:16.838Z
+    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+    commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
+    bundles:
+      "@semio":
+        files:
+          "":
+            sections:
+              "": {}
 ---
 
 

@@ -4,31 +4,19 @@ prompt: All hooks for app state are massively overfetching. E.g. useDesignApp is
 status: open
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-    created: "2025-12-20T15:27:20.159Z"
+  created: 2025-12-20T15:27:20.159Z
 iterations:
-    - prompt: Refactor all app hooks to use granular XState selectors instead of fetching entire app state
-      model: claude-opus-4-5
-      date:
-        started: "2025-12-20T15:27:39.808Z"
-      author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-      bundles:
-        '@semio':
-            files:
-                "":
-                    sections: {}
-      files:
-        updated:
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-      lines:
-        added: 0
-        removed: 0
+  - prompt: Refactor all app hooks to use granular XState selectors instead of fetching entire app state
+    model: claude-opus-4-5
+    date:
+      started: 2025-12-20T15:27:39.808Z
+    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+    bundles:
+      "@semio":
+        files:
+          "":
+            sections:
+              "": {}
 ---
 
 

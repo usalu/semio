@@ -5,65 +5,44 @@ summary: Rename log workflow to ticket+iterations
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-    created: "2025-12-16T15:26:35.793Z"
-    finished: "2025-12-16T15:59:31.839Z"
+  created: 2025-12-16T15:26:35.793Z
+  finished: 2025-12-16T15:59:31.839Z
 commit: "0000000000000000000000000000000000000000"
 iterations:
-    - prompt: Improve log script semantics. Rename logs to tickets. create log becomes ticket create. Then a new command is ticket iteration start Then there should be ticket iteration finish finish becomes ticket finish Throw an error if an iteration is unifinished for a ticket (e.g. when another iteration start or ticket finish is called) Force files to be a necessary parameter to call for iteration start and iteration finish. Update the file list on finish for the iteration and compute stats (lines).
-      model: gpt-5-2
-      date:
-        started: "2025-12-16T15:26:35.793Z"
-        ended: "2025-12-16T15:59:24.768Z"
-      author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-      commit: c44e5e38193be007ca56cc649aa2f58238c1ec40
-      bundles:
-        '@semio':
-            files:
-                AGENTS.md:
-                    sections:
-                        _root:
-                            lines:
-                                added: 107
-                                removed: 59
-                README.md:
-                    sections:
-                        _root:
-                            lines:
-                                added: 16
-                                removed: 7
-                log/tickets/2025/12/16/TICKET-SCRIPT-SEMANTICS.md:
-                    sections:
-                        _root:
-                            lines:
-                                added: 35
-                                removed: 0
-                scripts/log.ts:
-                    sections:
-                        _root:
-                            lines:
-                                added: 693
-                                removed: 249
-      files:
-        updated:
-            - path: scripts/log.ts
-              lines:
-                added: 693
-                removed: 249
-            - path: README.md
-              lines:
-                added: 16
-                removed: 7
-            - path: AGENTS.md
-              lines:
-                added: 107
-                removed: 59
-            - path: log/tickets/2025/12/16/TICKET-SCRIPT-SEMANTICS.md
-              lines:
-                added: 35
-                removed: 0
-      lines:
-        added: 851
-        removed: 315
+  - prompt: Improve log script semantics. Rename logs to tickets. create log becomes ticket create. Then a new command is ticket iteration start Then there should be ticket iteration finish finish becomes ticket finish Throw an error if an iteration is unifinished for a ticket (e.g. when another iteration start or ticket finish is called) Force files to be a necessary parameter to call for iteration start and iteration finish. Update the file list on finish for the iteration and compute stats (lines).
+    model: gpt-5-2
+    date:
+      started: 2025-12-16T15:26:35.793Z
+      ended: 2025-12-16T15:59:24.768Z
+    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+    commit: c44e5e38193be007ca56cc649aa2f58238c1ec40
+    bundles:
+      "@semio":
+        files:
+          AGENTS.md:
+            sections:
+              AGENTS:
+                lines:
+                  added: 107
+                  removed: 59
+          README.md:
+            sections:
+              README:
+                lines:
+                  added: 16
+                  removed: 7
+          log/tickets/2025/12/16/TICKET-SCRIPT-SEMANTICS.md:
+            sections:
+              TICKET SCRIPT SEMANTICS:
+                lines:
+                  added: 35
+                  removed: 0
+          scripts/log.ts:
+            sections:
+              Log:
+                lines:
+                  added: 693
+                  removed: 249
 ---
 
 

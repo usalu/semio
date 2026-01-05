@@ -21,24 +21,18 @@
 // #endregion Header
 
 import { execSync } from "child_process";
-import { existsSync, mkdirSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const binDir = join(__dirname, "..", "bin");
 const goDir = __dirname;
-
-if (!existsSync(binDir)) {
-  mkdirSync(binDir, { recursive: true });
-}
 
 const modules = ["mcp", "repo"];
 
 for (const mod of modules) {
-  console.log(`🔨 Building ${mod}...`);
-  execSync(`go build -o ${join(binDir, `${mod}.exe`)} .`, {
+  console.log(`🔨 Building ${mod} (default go build output)...`);
+  execSync("go build", {
     cwd: join(goDir, mod),
     stdio: "inherit",
   });

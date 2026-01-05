@@ -5,46 +5,24 @@ summary: Ensure all panels paint panel background
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-    created: "2025-12-18T18:16:24.765Z"
-    finished: "2025-12-18T18:18:43.801Z"
+  created: 2025-12-18T18:16:24.765Z
+  finished: 2025-12-18T18:18:43.801Z
 commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
 model: gpt-5.2-codex
 iterations:
-    - prompt: Ensure all panels paint bg-panel, including toolbar; enforce panel level context globally for Panel and toolbar surfaces.
-      model: gpt-5.2-codex
-      date:
-        started: "2025-12-18T18:16:49.866Z"
-        ended: "2025-12-18T18:18:33.484Z"
-      author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-      commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
-      bundles:
-        '@semio':
-            files:
-                "":
-                    sections: {}
-      files:
-        updated:
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-      lines:
-        added: 520
-        removed: 663
-bundles:
-    '@semio':
+  - prompt: Ensure all panels paint bg-panel, including toolbar; enforce panel level context globally for Panel and toolbar surfaces.
+    model: gpt-5.2-codex
+    date:
+      started: 2025-12-18T18:16:49.866Z
+      ended: 2025-12-18T18:18:33.484Z
+    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+    commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
+    bundles:
+      "@semio":
         files:
-            "":
-                sections: {}
-files:
-    updated:
-        - path: ""
-        - path: ""
-        - path: ""
-        - path: ""
-lines:
-    added: 518
-    removed: 663
+          "":
+            sections:
+              "": {}
 ---
 
 

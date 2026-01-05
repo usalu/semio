@@ -1,67 +1,46 @@
 ---
 slug: YJS-KIT-ONLY
-prompt: 'Yjs should only be used to synchronize the kit data. All app state should be stored in the state machine. E.g. when updating sketchpad settings I get: [Machine] Y_UPDATE → {\navigation\:\design\}'
+prompt: "Yjs should only be used to synchronize the kit data. All app state should be stored in the state machine. E.g. when updating sketchpad settings I get: [Machine] Y_UPDATE → {\\navigation\\:\\design\\}"
 summary: XState owns Sketchpad UI state
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-    created: "2025-12-16T17:06:07.948Z"
+  created: 2025-12-16T17:06:07.948Z
 commit: "0000000000000000000000000000000000000000"
 iterations:
-    - prompt: 'Yjs should only be used to synchronize the kit data. All app state should be stored in the state machine. E.g. when updating sketchpad settings I get: [Machine] Y_UPDATE → {\navigation\:\design\}'
-      model: gpt-5-2
-      date:
-        started: "2025-12-14T22:53:36.715Z"
-      author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-      commit: 7765b633fe739bc29cd811ac7ec884e782e2e945
-      bundles:
-        '@semio':
-            files:
-                AGENTS.md:
-                    sections:
-                        _root:
-                            lines:
-                                added: 88
-                                removed: 81
-                README.md:
-                    sections:
-                        _root:
-                            lines:
-                                added: 88
-                                removed: 81
-                js/js/sketchpad/Sketchpad.tsx:
-                    sections:
-                        _root:
-                            lines:
-                                added: 88
-                                removed: 81
-                log/tickets/2025/12/14/YJS-KIT-ONLY.md:
-                    sections:
-                        _root:
-                            lines:
-                                added: 88
-                                removed: 81
-      files:
-        updated:
-            - path: AGENTS.md
-              lines:
-                added: 88
-                removed: 81
-            - path: README.md
-              lines:
-                added: 88
-                removed: 81
-            - path: js/js/sketchpad/Sketchpad.tsx
-              lines:
-                added: 88
-                removed: 81
-            - path: log/tickets/2025/12/14/YJS-KIT-ONLY.md
-              lines:
-                added: 88
-                removed: 81
-      lines:
-        added: 352
-        removed: 324
+  - prompt: "Yjs should only be used to synchronize the kit data. All app state should be stored in the state machine. E.g. when updating sketchpad settings I get: [Machine] Y_UPDATE → {\\navigation\\:\\design\\}"
+    model: gpt-5-2
+    date:
+      started: 2025-12-14T22:53:36.715Z
+    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+    commit: 7765b633fe739bc29cd811ac7ec884e782e2e945
+    bundles:
+      "@semio":
+        files:
+          AGENTS.md:
+            sections:
+              AGENTS:
+                lines:
+                  added: 88
+                  removed: 81
+          README.md:
+            sections:
+              README:
+                lines:
+                  added: 88
+                  removed: 81
+          js/js/sketchpad/Sketchpad.tsx:
+            sections:
+              Sketchpad:
+                lines:
+                  added: 88
+                  removed: 81
+          log/tickets/2025/12/14/YJS-KIT-ONLY.md:
+            sections:
+              YJS KIT ONLY:
+                lines:
+                  added: 88
+                  removed: 81
 ---
 
 

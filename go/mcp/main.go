@@ -134,27 +134,16 @@ func main() {
 		ticketRead,
 	)
 	s.AddTool(
-	mcp.NewTool("ticket_iterate_start",
-		mcp.WithDescription("Start a ticket iteration"),
+	mcp.NewTool("ticket_progress",
+		mcp.WithDescription("Record progress on a ticket (creates iteration from git changes)"),
 		mcp.WithNumber("year", mcp.Required(), mcp.Description("Ticket year")),
 		mcp.WithNumber("month", mcp.Required(), mcp.Description("Ticket month")),
 		mcp.WithNumber("day", mcp.Required(), mcp.Description("Ticket day")),
 		mcp.WithString("slug", mcp.Required(), mcp.Description("Ticket slug")),
 		mcp.WithString("prompt", mcp.Required(), mcp.Description("Iteration prompt")),
 		mcp.WithString("model", mcp.Required(), mcp.Description("Large-Language-Model (LLM) used")),
-		mcp.WithArray("files", mcp.Description("Files to include (at least one required)")),
 	),
-		ticketIterateStart,
-	)
-	s.AddTool(
-		mcp.NewTool("ticket_iterate_end",
-			mcp.WithDescription("End a ticket iteration"),
-			mcp.WithNumber("year", mcp.Required(), mcp.Description("Ticket year")),
-			mcp.WithNumber("month", mcp.Required(), mcp.Description("Ticket month")),
-			mcp.WithNumber("day", mcp.Required(), mcp.Description("Ticket day")),
-			mcp.WithString("slug", mcp.Required(), mcp.Description("Ticket slug")),
-		),
-		ticketIterateEnd,
+		ticketProgress,
 	)
 	s.AddTool(
 		mcp.NewTool("ticket_finish",
@@ -614,7 +603,7 @@ func ticketRead(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	return textResult(result), nil
 }
 
-func ticketIterateStart(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func ticketProgress(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	year, err := requireIntArg(args, "year")
 	if err != nil {
@@ -640,47 +629,10 @@ func ticketIterateStart(ctx context.Context, request mcp.CallToolRequest) (*mcp.
 	if err != nil {
 		return nil, err
 	}
-	cmdArgs := []string{"ticket", "iterate", "start", strconv.Itoa(year), strconv.Itoa(month), strconv.Itoa(day), slug}
+	cmdArgs := []string{"ticket", "progress", strconv.Itoa(year), strconv.Itoa(month), strconv.Itoa(day), slug}
 	cmdArgs = append(cmdArgs, "--prompt="+prompt)
 	cmdArgs = append(cmdArgs, "--model="+model)
-	files, ok, err := getStringSliceArg(args, "files")
-	if err != nil {
-		return nil, err
-	}
-	if ok {
-		for _, file := range files {
-			if err := requireFilePath(file); err != nil {
-				return nil, err
-			}
-			cmdArgs = append(cmdArgs, "--file="+file)
-		}
-	}
 	result, err := runRepo(cmdArgs...)
-	if err != nil {
-		return nil, err
-	}
-	return textResult(result), nil
-}
-
-func ticketIterateEnd(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	args := getArgs(request)
-	year, err := requireIntArg(args, "year")
-	if err != nil {
-		return nil, err
-	}
-	month, err := requireIntArg(args, "month")
-	if err != nil {
-		return nil, err
-	}
-	day, err := requireIntArg(args, "day")
-	if err != nil {
-		return nil, err
-	}
-	slug, err := requireStringArg(args, "slug")
-	if err != nil {
-		return nil, err
-	}
-	result, err := runRepo("ticket", "iterate", "end", strconv.Itoa(year), strconv.Itoa(month), strconv.Itoa(day), slug)
 	if err != nil {
 		return nil, err
 	}

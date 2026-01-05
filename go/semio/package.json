@@ -4,7 +4,6 @@
   "sourceRoot": "go/semio",
   "projectType": "library",
   "scripts": {
-    "build": "go build ./...",
     "test": "go test -v ./...",
     "preflight": "go vet ./..."
   },

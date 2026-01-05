@@ -5,46 +5,24 @@ summary: Restore base background for Sketchpad canvas
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-    created: "2025-12-18T16:07:06.312Z"
-    finished: "2025-12-18T16:13:28.263Z"
+  created: 2025-12-18T16:07:06.312Z
+  finished: 2025-12-18T16:13:28.263Z
 commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
 model: gpt-5.2-codex
 iterations:
-    - prompt: Restore base background on the Sketchpad canvas and align docs with background levels.
-      model: gpt-5.2-codex
-      date:
-        started: "2025-12-18T16:11:07.823Z"
-        ended: "2025-12-18T16:13:13.878Z"
-      author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-      commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
-      bundles:
-        '@semio':
-            files:
-                "":
-                    sections: {}
-      files:
-        updated:
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-      lines:
-        added: 270
-        removed: 406
-bundles:
-    '@semio':
+  - prompt: Restore base background on the Sketchpad canvas and align docs with background levels.
+    model: gpt-5.2-codex
+    date:
+      started: 2025-12-18T16:11:07.823Z
+      ended: 2025-12-18T16:13:13.878Z
+    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+    commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
+    bundles:
+      "@semio":
         files:
-            "":
-                sections: {}
-files:
-    updated:
-        - path: ""
-        - path: ""
-        - path: ""
-        - path: ""
-lines:
-    added: 274
-    removed: 406
+          "":
+            sections:
+              "": {}
 ---
 
 

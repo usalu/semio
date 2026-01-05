@@ -4,7 +4,7 @@
   "sourceRoot": "go/repo",
   "projectType": "application",
   "scripts": {
-    "build": "go build -o ../../bin/repo.exe .",
+    "build": "go build",
     "test": "go test -v ./...",
     "preflight": "go vet ./..."
   },

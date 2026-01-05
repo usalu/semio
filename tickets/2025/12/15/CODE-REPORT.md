@@ -1,143 +1,98 @@
 ---
 slug: CODE-REPORT
-prompt: 'The analyze script should be extended to create a report for the codebase producing code.json (for typescript, python, c#). It should check for: Comments in the code. Missing License headers. Regions that dont close (every #region REGIONNAME needs to have a corresponding #endregion REGIONNAME).'
+prompt: "The analyze script should be extended to create a report for the codebase producing code.json (for typescript, python, c#). It should check for: Comments in the code. Missing License headers. Regions that dont close (every #region REGIONNAME needs to have a corresponding #endregion REGIONNAME)."
 summary: Generate code.json code-quality report
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-    created: "2025-12-16T17:06:07.953Z"
+  created: 2025-12-16T17:06:07.953Z
 commit: "0000000000000000000000000000000000000000"
 iterations:
-    - prompt: 'The analyze script should be extended to create a report for the codebase producing code.json (for typescript, python, c#). It should check for: Comments in the code. Missing License headers. Regions that dont close (every #region REGIONNAME needs to have a corresponding #endregion REGIONNAME).'
-      model: gpt-5-2
-      date:
-        started: "2025-12-15T22:44:34.206Z"
-      author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-    - prompt: The code analysis should be a different hook. typescript is only tsc, etc. Make sure to that the fix script removes the comments automatically. Analyze should not mark regions as comments. Make sure analyze, fix and preflight run properly from vscode launch.
-      model: gpt-5-2
-      date:
-        started: "2025-12-15T23:18:32.363Z"
-    - prompt: Add the detection of temporary console logs to the code analysis.
-      model: gpt-5-2
-      date:
-        started: "2025-12-16T10:27:46.789Z"
-    - prompt: Add detection of additional README.md and AGENTS.md files outside of the main in root. Make sure that the fix script deletes them.
-      model: gpt-5-2
-      date:
-        started: "2025-12-16T10:32:22.681Z"
-    - prompt: Make sure that comments in config files and comments between header region are ignored in comment analysis and removal. TODOs should also be ignored. <reference types... in typescript files should also be ignored. In python regions are classified as comments but they shouldnt. Extend the fix script to automatically add license headers when they are missing. They all follow the same structure. Use Ueli Saluz as default. Ignore all package READMEs such as net/Semio/README.md
-      model: gpt-5-2
-      date:
-        started: "2025-12-16T11:11:15.289Z"
-      commit: 2fb81ef29354981c1b9625769dba4a06360a4aef
-      bundles:
-        '@semio':
-            files:
-                AGENTS.md:
-                    sections:
-                        _root:
-                            lines:
-                                added: 206
-                                removed: 35
-                README.md:
-                    sections:
-                        _root:
-                            lines:
-                                added: 206
-                                removed: 35
-                hooks/code.ts:
-                    sections:
-                        _root:
-                            lines:
-                                added: 206
-                                removed: 35
-                hooks/eslint.ts:
-                    sections:
-                        _root:
-                            lines:
-                                added: 206
-                                removed: 35
-                hooks/i18n.ts:
-                    sections:
-                        _root:
-                            lines:
-                                added: 206
-                                removed: 35
-                hooks/prettier.ts:
-                    sections:
-                        _root:
-                            lines:
-                                added: 206
-                                removed: 35
-                hooks/ruff.ts:
-                    sections:
-                        _root:
-                            lines:
-                                added: 206
-                                removed: 35
-                hooks/typescript.ts:
-                    sections:
-                        _root:
-                            lines:
-                                added: 206
-                                removed: 35
-                log/tickets/2025/12/15/CODE-REPORT.md:
-                    sections:
-                        _root:
-                            lines:
-                                added: 206
-                                removed: 35
-                preflight.ts:
-                    sections:
-                        _root:
-                            lines:
-                                added: 206
-                                removed: 35
-      files:
-        updated:
-            - path: AGENTS.md
-              lines:
-                added: 206
-                removed: 35
-            - path: README.md
-              lines:
-                added: 206
-                removed: 35
-            - path: hooks/code.ts
-              lines:
-                added: 206
-                removed: 35
-            - path: hooks/eslint.ts
-              lines:
-                added: 206
-                removed: 35
-            - path: hooks/i18n.ts
-              lines:
-                added: 206
-                removed: 35
-            - path: hooks/prettier.ts
-              lines:
-                added: 206
-                removed: 35
-            - path: hooks/ruff.ts
-              lines:
-                added: 206
-                removed: 35
-            - path: hooks/typescript.ts
-              lines:
-                added: 206
-                removed: 35
-            - path: log/tickets/2025/12/15/CODE-REPORT.md
-              lines:
-                added: 206
-                removed: 35
-            - path: preflight.ts
-              lines:
-                added: 206
-                removed: 35
-      lines:
-        added: 2060
-        removed: 350
+  - prompt: "The analyze script should be extended to create a report for the codebase producing code.json (for typescript, python, c#). It should check for: Comments in the code. Missing License headers. Regions that dont close (every #region REGIONNAME needs to have a corresponding #endregion REGIONNAME)."
+    model: gpt-5-2
+    date:
+      started: 2025-12-15T22:44:34.206Z
+    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+  - prompt: The code analysis should be a different hook. typescript is only tsc, etc. Make sure to that the fix script removes the comments automatically. Analyze should not mark regions as comments. Make sure analyze, fix and preflight run properly from vscode launch.
+    model: gpt-5-2
+    date:
+      started: 2025-12-15T23:18:32.363Z
+  - prompt: Add the detection of temporary console logs to the code analysis.
+    model: gpt-5-2
+    date:
+      started: 2025-12-16T10:27:46.789Z
+  - prompt: Add detection of additional README.md and AGENTS.md files outside of the main in root. Make sure that the fix script deletes them.
+    model: gpt-5-2
+    date:
+      started: 2025-12-16T10:32:22.681Z
+  - prompt: Make sure that comments in config files and comments between header region are ignored in comment analysis and removal. TODOs should also be ignored. <reference types... in typescript files should also be ignored. In python regions are classified as comments but they shouldnt. Extend the fix script to automatically add license headers when they are missing. They all follow the same structure. Use Ueli Saluz as default. Ignore all package READMEs such as net/Semio/README.md
+    model: gpt-5-2
+    date:
+      started: 2025-12-16T11:11:15.289Z
+    commit: 2fb81ef29354981c1b9625769dba4a06360a4aef
+    bundles:
+      "@semio":
+        files:
+          AGENTS.md:
+            sections:
+              AGENTS:
+                lines:
+                  added: 206
+                  removed: 35
+          README.md:
+            sections:
+              README:
+                lines:
+                  added: 206
+                  removed: 35
+          hooks/code.ts:
+            sections:
+              Code:
+                lines:
+                  added: 206
+                  removed: 35
+          hooks/eslint.ts:
+            sections:
+              Eslint:
+                lines:
+                  added: 206
+                  removed: 35
+          hooks/i18n.ts:
+            sections:
+              I18n:
+                lines:
+                  added: 206
+                  removed: 35
+          hooks/prettier.ts:
+            sections:
+              Prettier:
+                lines:
+                  added: 206
+                  removed: 35
+          hooks/ruff.ts:
+            sections:
+              Ruff:
+                lines:
+                  added: 206
+                  removed: 35
+          hooks/typescript.ts:
+            sections:
+              Typescript:
+                lines:
+                  added: 206
+                  removed: 35
+          log/tickets/2025/12/15/CODE-REPORT.md:
+            sections:
+              CODE REPORT:
+                lines:
+                  added: 206
+                  removed: 35
+          preflight.ts:
+            sections:
+              Preflight:
+                lines:
+                  added: 206
+                  removed: 35
 ---
 
 

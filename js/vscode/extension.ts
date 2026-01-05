@@ -113,7 +113,7 @@ function getRepoBinaryPath(): string | undefined {
   if (!root) return undefined;
   const isWindows = process.platform === "win32";
   const binaryName = isWindows ? "repo.exe" : "repo";
-  const binaryPath = path.join(root, "bin", binaryName);
+  const binaryPath = path.join(root, "go", "repo", binaryName);
   log("getRepoBinaryPath:", binaryPath, "exists:", fs.existsSync(binaryPath));
   if (fs.existsSync(binaryPath)) return binaryPath;
   return undefined;
@@ -251,14 +251,14 @@ interface ToolResult<T = unknown> {
   error?: string;
 }
 
-interface LineStats {
+interface LineMetrics {
   added: number;
   removed: number;
 }
 
 interface SectionStats {
   definitions?: string[];
-  lines?: LineStats;
+  lines?: LineMetrics;
 }
 
 interface FileStats {
@@ -285,7 +285,6 @@ interface TicketFrontmatter {
   commit?: string;
   ignore?: boolean;
   iterations?: TicketIteration[];
-  bundles?: TicketBundles;
 }
 
 interface TicketData {
@@ -473,10 +472,12 @@ function updateFileDiagnostics(document: vscode.TextDocument, violations: Violat
     const endColumn = violation.excerpt ? column + violation.excerpt.length : column + 1;
     const range = new vscode.Range(line, column, line, endColumn);
     const severity = vscode.DiagnosticSeverity.Warning;
-    const [policyId, violationName] = violation.kind.split(":");
-    const diagnostic = new vscode.Diagnostic(range, violationName || violation.kind, severity);
-    diagnostic.source = DIAGNOSTIC_SOURCE;
-    diagnostic.code = { value: policyId, target: fileUri.with({ fragment: `L${line + 1}` }) };
+    const colonIndex = violation.kind.indexOf(":");
+    const policyName = colonIndex > 0 ? violation.kind.substring(0, colonIndex) : violation.kind;
+    const violationKindName = colonIndex > 0 ? violation.kind.substring(colonIndex + 1) : violation.kind;
+    const diagnostic = new vscode.Diagnostic(range, violation.summary, severity);
+    diagnostic.source = policyName;
+    diagnostic.code = { value: violationKindName, target: fileUri.with({ fragment: `L${line + 1}` }) };
     diagnosticsByUri.get(uriKey)!.diagnostics.push(diagnostic);
   }
   for (const { uri, diagnostics } of diagnosticsByUri.values()) {
@@ -539,7 +540,7 @@ async function fixViolation(relativePath: string): Promise<void> {
   const root = getWorkspaceRoot();
   if (!root) return;
   if (!hasRepoAccess()) {
-    vscode.window.showErrorMessage("repo binary not found in bin/");
+    vscode.window.showErrorMessage("repo binary not found in go/repo/");
     return;
   }
   const command = getRepoCommand();
@@ -1249,7 +1250,7 @@ interface ContributorData {
     definitions?: string[];
     commits?: ContributorCommitData[];
     tickets?: ContributorTicketData[];
-    lines?: ContributorLineStats;
+    lines?: ContributorLineMetrics;
   };
 }
 
@@ -1267,7 +1268,7 @@ interface ContributorCommitData {
   sha: string;
 }
 
-interface ContributorLineStats {
+interface ContributorLineMetrics {
   added: number;
   removed: number;
 }
@@ -1711,8 +1712,7 @@ const SIDEBAR_COMMANDS: CommandInfo[] = [
   { id: "semio.fix", title: "Fix Codebase Problems" },
   { id: "semio.fixFile", title: "Fix Current File Problems" },
   { id: "semio.ticketCreate", title: "Create Ticket" },
-  { id: "semio.ticketIterateStart", title: "Start Ticket Iteration" },
-  { id: "semio.ticketIterateEnd", title: "End Ticket Iteration" },
+  { id: "semio.ticketProgress", title: "Progress Ticket" },
   { id: "semio.ticketFinish", title: "Finish Ticket" },
   { id: "semio.folderTree", title: "Show Folder Tree" },
   { id: "semio.folderCreate", title: "Create Folder" },
@@ -1902,7 +1902,7 @@ function registerSidebarViews(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand("semio.openProject", async (projectName: string) => {
       if (!projectName) return;
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       const root = getWorkspaceRoot();
@@ -1938,7 +1938,7 @@ function registerSidebarViews(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand("semio.checkPolicy", async (policy: PolicyItem) => {
       if (!policy?.policy?.id) return;
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       runRepoCommand(`policy check ${policy.policy.id}`);
@@ -1959,7 +1959,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand("semio.fixViolation", fixViolation),
     vscode.commands.registerCommand("semio.analyze", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       runRepoCommand("analyze @semio");
@@ -1972,7 +1972,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
         return;
       }
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
@@ -1980,7 +1980,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.fix", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       runRepoCommand("fix @semio");
@@ -1993,7 +1993,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
         return;
       }
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
@@ -2001,14 +2001,14 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.policyList", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       runRepoCommand("policy list");
     }),
     vscode.commands.registerCommand("semio.ticketCreate", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       const title = await vscode.window.showInputBox({
@@ -2032,41 +2032,29 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.ticketList", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       runRepoCommand("ticket list");
     }),
-    vscode.commands.registerCommand("semio.ticketIterateStart", async () => {
+    vscode.commands.registerCommand("semio.ticketProgress", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       const ticket = await pickTicket();
       if (!ticket) return;
-      const prompt = await vscode.window.showInputBox({ prompt: "Enter iteration prompt (optional)", placeHolder: "What will be done in this iteration?" });
-      const activeFile = getActiveFileRelativePath();
-      const files = await pickFiles(activeFile ? [activeFile] : undefined);
-      if (!files || files.length === 0) {
-        vscode.window.showWarningMessage("At least one file is required to start an iteration");
+      const prompt = await vscode.window.showInputBox({ prompt: "Enter iteration prompt", placeHolder: "What was done in this iteration?" });
+      if (!prompt) {
+        vscode.window.showWarningMessage("Prompt is required for progress");
         return;
       }
-      const promptArg = prompt ? ` --prompt="${prompt.replace(/"/g, '\\"')}"` : "";
-      const fileArgs = files.map((f) => `--file="${f}"`).join(" ");
-      runRepoCommand(`ticket iterate start ${ticket.year} ${ticket.month} ${ticket.day} ${ticket.slug}${promptArg} ${fileArgs}`);
-    }),
-    vscode.commands.registerCommand("semio.ticketIterateEnd", async () => {
-      if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
-        return;
-      }
-      const ticket = await pickTicket();
-      if (!ticket) return;
-      runRepoCommand(`ticket iterate end ${ticket.year} ${ticket.month} ${ticket.day} ${ticket.slug}`);
+      const promptArg = ` --prompt="${prompt.replace(/"/g, '\\"')}"`;
+      runRepoCommand(`ticket progress ${ticket.year} ${ticket.month} ${ticket.day} ${ticket.slug}${promptArg}`);
     }),
     vscode.commands.registerCommand("semio.ticketFinish", async (ticketItem?: TicketItem | TicketData | ContributorTicketItem | ContributorTicketData) => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       const resolvedTicket = resolveTicketData(ticketItem) ?? (await pickTicket("open"));
@@ -2075,7 +2063,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.ticketReopen", async (ticketItem?: TicketItem | TicketData | ContributorTicketItem | ContributorTicketData) => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       const resolvedTicket = resolveTicketData(ticketItem) ?? (await pickTicket("closed"));
@@ -2084,7 +2072,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.ticketRead", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       const ticket = await pickTicket();
@@ -2093,7 +2081,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.ticketOpen", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       const ticket = await pickTicket();
@@ -2106,7 +2094,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.projectList", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       runRepoCommand("bundle list");
@@ -2115,14 +2103,14 @@ function registerCommands(context: vscode.ExtensionContext): void {
       const github = await vscode.window.showInputBox({ prompt: "GitHub username" });
       if (!github) return;
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       runRepoCommand(`contributor add ${github}`);
     }),
     vscode.commands.registerCommand("semio.contributorList", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       runRepoCommand("contributor list");
@@ -2131,7 +2119,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
       const github = await vscode.window.showInputBox({ prompt: "GitHub username to remove" });
       if (!github) return;
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       runRepoCommand(`contributor remove ${github}`);
@@ -2143,7 +2131,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
         return;
       }
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
@@ -2165,7 +2153,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
         return;
       }
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       const newName = await vscode.window.showInputBox({
@@ -2186,7 +2174,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
         return;
       }
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       const childName = await vscode.window.showInputBox({
@@ -2204,7 +2192,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
         return;
       }
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       const confirmPath = await vscode.window.showInputBox({
@@ -2223,7 +2211,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
         return;
       }
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
@@ -2231,7 +2219,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.folderTree", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       const folderPath = await vscode.window.showInputBox({
@@ -2244,7 +2232,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.folderCreate", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       const folderPath = await vscode.window.showInputBox({
@@ -2256,7 +2244,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.folderMove", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       const sourcePath = await vscode.window.showInputBox({
@@ -2273,7 +2261,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.folderDelete", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       const folderPath = await vscode.window.showInputBox({
@@ -2285,7 +2273,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.folderList", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       const folderPath = await vscode.window.showInputBox({
@@ -2298,7 +2286,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.fileCreate", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       const filePath = await vscode.window.showInputBox({
@@ -2310,7 +2298,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.fileMove", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       const sourcePath = await vscode.window.showInputBox({
@@ -2327,7 +2315,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.fileDelete", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       const filePath = await vscode.window.showInputBox({
@@ -2339,7 +2327,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.fileList", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       const folderPath = await vscode.window.showInputBox({
@@ -2352,7 +2340,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.fileTree", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       const folderPath = await vscode.window.showInputBox({
@@ -2370,7 +2358,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
         return;
       }
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
@@ -2388,7 +2376,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
         return;
       }
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
@@ -2411,7 +2399,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
         return;
       }
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
@@ -2429,7 +2417,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
         return;
       }
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
@@ -2442,7 +2430,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
         return;
       }
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
@@ -2450,14 +2438,14 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("semio.projectTree", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       runRepoCommand("bundle tree");
     }),
     vscode.commands.registerCommand("semio.policyCheck", async () => {
       if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in bin/");
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       const policy = await pickPolicy();

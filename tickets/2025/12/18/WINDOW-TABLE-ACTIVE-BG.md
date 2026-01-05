@@ -5,50 +5,24 @@ summary: Use active window background for table
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-    created: "2025-12-18T15:34:11.986Z"
-    finished: "2025-12-18T16:32:26.549Z"
+  created: 2025-12-18T15:34:11.986Z
+  finished: 2025-12-18T16:32:26.549Z
 commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
 model: gpt-5.2-codex
 iterations:
-    - prompt: Every app has windows and there is always one active window. Make sure that the background of the table is set to active background color.
-      model: gpt-5.2-codex
-      date:
-        started: "2025-12-18T16:02:05.033Z"
-        ended: "2025-12-18T16:32:16.412Z"
-      author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-      commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
-      bundles:
-        '@semio':
-            files:
-                "":
-                    sections: {}
-      files:
-        updated:
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-      lines:
-        added: 644
-        removed: 885
-bundles:
-    '@semio':
+  - prompt: Every app has windows and there is always one active window. Make sure that the background of the table is set to active background color.
+    model: gpt-5.2-codex
+    date:
+      started: 2025-12-18T16:02:05.033Z
+      ended: 2025-12-18T16:32:16.412Z
+    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+    commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
+    bundles:
+      "@semio":
         files:
-            "":
-                sections: {}
-files:
-    updated:
-        - path: ""
-        - path: ""
-        - path: ""
-        - path: ""
-        - path: ""
-        - path: ""
-lines:
-    added: 650
-    removed: 885
+          "":
+            sections:
+              "": {}
 ---
 
 

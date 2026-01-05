@@ -5,49 +5,32 @@ summary: Refactor js/js state management to triadic hooks pattern
 status: open
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-    created: "2025-12-18T07:25:30.399Z"
+  created: 2025-12-18T07:25:30.399Z
 iterations:
-    - prompt: Analyze js/js codebase for state management inconsistencies and refactor to triadic hooks pattern
-      model: claude-sonnet-4-20250514
-      date:
-        started: "2025-12-18T07:25:30.399Z"
-        ended: "2025-12-18T16:05:57.155Z"
-      author: Unknown
-      commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
-      bundles:
-        '@semio':
-            files:
-                "":
-                    sections: {}
-      files:
-        updated:
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-      lines:
-        added: 574
-        removed: 492
-    - prompt: 'Refactor Sketchpad.tsx to obey open/closed: remove all app-specific logic from core; apps must be addable/removable by adding/removing their module.'
-      model: gpt-5.2-codex
-      date:
-        started: "2025-12-18T16:06:08.806Z"
-      author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-      bundles:
-        '@semio':
-            files:
-                "":
-                    sections: {}
-      files:
-        updated:
-            - path: ""
-            - path: ""
-            - path: ""
-      lines:
-        added: 217
-        removed: 404
+  - prompt: Analyze js/js codebase for state management inconsistencies and refactor to triadic hooks pattern
+    model: claude-sonnet-4-20250514
+    date:
+      started: 2025-12-18T07:25:30.399Z
+      ended: 2025-12-18T16:05:57.155Z
+    author: Unknown
+    commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
+    bundles:
+      "@semio":
+        files:
+          "":
+            sections:
+              "": {}
+  - prompt: "Refactor Sketchpad.tsx to obey open/closed: remove all app-specific logic from core; apps must be addable/removable by adding/removing their module."
+    model: gpt-5.2-codex
+    date:
+      started: 2025-12-18T16:06:08.806Z
+    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+    bundles:
+      "@semio":
+        files:
+          "":
+            sections:
+              "": {}
 ---
 
 

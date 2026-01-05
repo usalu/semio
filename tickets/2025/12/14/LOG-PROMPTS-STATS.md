@@ -1,67 +1,46 @@
 ---
 slug: LOG-PROMPTS-STATS
-prompt: 'Extend the log.ts functionality. Enhance the script and documentation. Include in the frontmatter: prompts an array of all the prompts provided by the user. Whenever the user sends a new prompt append it to the array. log.ts must take model name (of the llm) as forced input (enum). Include stats in the frontmatter and add a command to update stats (affected files, total added/removed lines) recomputed across multiple prompts.'
+prompt: "Extend the log.ts functionality. Enhance the script and documentation. Include in the frontmatter: prompts an array of all the prompts provided by the user. Whenever the user sends a new prompt append it to the array. log.ts must take model name (of the llm) as forced input (enum). Include stats in the frontmatter and add a command to update stats (affected files, total added/removed lines) recomputed across multiple prompts."
 summary: Extend log.ts prompts/model/stats
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-    created: "2025-12-16T17:06:07.942Z"
+  created: 2025-12-16T17:06:07.942Z
 commit: "0000000000000000000000000000000000000000"
 iterations:
-    - prompt: 'Extend the log.ts functionality. Enhance the script and documentation. Include in the frontmatter: prompts an array of all the prompts provided by the user. Whenever the user sends a new prompt append it to the array. log.ts must take model name (of the llm) as forced input (enum). Include stats in the frontmatter and add a command to update stats (affected files, total added/removed lines) recomputed across multiple prompts.'
-      model: gpt-5-2
-      date:
-        started: "2025-12-14T21:46:55.100Z"
-      author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-      commit: 687798cd73468e4a7e60722f49f21a32c9a0a44f
-      bundles:
-        '@semio':
-            files:
-                AGENTS.md:
-                    sections:
-                        _root:
-                            lines:
-                                added: 105
-                                removed: 5
-                README.md:
-                    sections:
-                        _root:
-                            lines:
-                                added: 105
-                                removed: 5
-                log/tickets/2025/12/14/LOG-PROMPTS-STATS.md:
-                    sections:
-                        _root:
-                            lines:
-                                added: 105
-                                removed: 5
-                scripts/log.ts:
-                    sections:
-                        _root:
-                            lines:
-                                added: 105
-                                removed: 5
-      files:
-        updated:
-            - path: AGENTS.md
-              lines:
-                added: 105
-                removed: 5
-            - path: README.md
-              lines:
-                added: 105
-                removed: 5
-            - path: log/tickets/2025/12/14/LOG-PROMPTS-STATS.md
-              lines:
-                added: 105
-                removed: 5
-            - path: scripts/log.ts
-              lines:
-                added: 105
-                removed: 5
-      lines:
-        added: 420
-        removed: 20
+  - prompt: "Extend the log.ts functionality. Enhance the script and documentation. Include in the frontmatter: prompts an array of all the prompts provided by the user. Whenever the user sends a new prompt append it to the array. log.ts must take model name (of the llm) as forced input (enum). Include stats in the frontmatter and add a command to update stats (affected files, total added/removed lines) recomputed across multiple prompts."
+    model: gpt-5-2
+    date:
+      started: 2025-12-14T21:46:55.100Z
+    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+    commit: 687798cd73468e4a7e60722f49f21a32c9a0a44f
+    bundles:
+      "@semio":
+        files:
+          AGENTS.md:
+            sections:
+              AGENTS:
+                lines:
+                  added: 105
+                  removed: 5
+          README.md:
+            sections:
+              README:
+                lines:
+                  added: 105
+                  removed: 5
+          log/tickets/2025/12/14/LOG-PROMPTS-STATS.md:
+            sections:
+              LOG PROMPTS STATS:
+                lines:
+                  added: 105
+                  removed: 5
+          scripts/log.ts:
+            sections:
+              Log:
+                lines:
+                  added: 105
+                  removed: 5
 ---
 
 

@@ -5,50 +5,24 @@ summary: Sketchpad windows have 1-unit margins and continuous borders
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-    created: "2025-12-17T18:00:50.599Z"
-    finished: "2025-12-17T18:12:12.439Z"
+  created: 2025-12-17T18:00:50.599Z
+  finished: 2025-12-17T18:12:12.439Z
 commit: 7c4820638369104ae259b238d9240f08e429e67e
 model: gpt-5.2-codex
 iterations:
-    - prompt: Every window should have a single unit margin between the window and the border of the canvas or between windows. Every window has a continuous border around it.
-      model: gpt-5.2-codex
-      date:
-        started: "2025-12-17T18:01:09.910Z"
-        ended: "2025-12-17T18:12:04.382Z"
-      author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-      commit: 7c4820638369104ae259b238d9240f08e429e67e
-      bundles:
-        '@semio':
-            files:
-                "":
-                    sections: {}
-      files:
-        updated:
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-      lines:
-        added: 163
-        removed: 66
-bundles:
-    '@semio':
+  - prompt: Every window should have a single unit margin between the window and the border of the canvas or between windows. Every window has a continuous border around it.
+    model: gpt-5.2-codex
+    date:
+      started: 2025-12-17T18:01:09.910Z
+      ended: 2025-12-17T18:12:04.382Z
+    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+    commit: 7c4820638369104ae259b238d9240f08e429e67e
+    bundles:
+      "@semio":
         files:
-            "":
-                sections: {}
-files:
-    updated:
-        - path: ""
-        - path: ""
-        - path: ""
-        - path: ""
-        - path: ""
-        - path: ""
-lines:
-    added: 169
-    removed: 66
+          "":
+            sections:
+              "": {}
 ---
 
 

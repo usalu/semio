@@ -353,7 +353,7 @@ Toolbar panel visibility defaults to `true` for all apps via `panelVisibility: {
 - Problem list diagnostics open in pinned editor tabs for immediate saves.
 - Contributor tree items list emails with mailto actions, links with external navigation, and contribution nodes with line summary descriptions.
 - Contributor contributions are grouped into commits, bundles, tickets (year/month/day), and files (folder/file) with navigation actions and inline ticket close/reopen actions.
-- The built-in Explorer hosts the Sections view; selecting a section navigates to it, F2 renames, drag-and-drop moves sections, and inline actions create child sections, rename sections, and delete sections via repo commands.
+- The built-in Explorer hosts the Sections view; selecting a section navigates to it, F2 renames, drag-and-drop moves sections, JSON keys surface as sections, and inline actions create child sections, rename sections, and delete sections via repo commands.
 
 # Monorepo
 
@@ -543,8 +543,7 @@ npx tsx repo.tsx <command> [subcommand] [options]
 | `ticket create <slug>`                    | Create a new ticket                 |
 | `ticket list [year] [month] [day]`        | List tickets                        |
 | `ticket read <year> <month> <day> <slug>` | Read a ticket                       |
-| `ticket iterate start`                    | Start iteration on a ticket         |
-| `ticket iterate end`                      | End iteration on a ticket           |
+| `ticket progress`                         | Progress iteration on a ticket      |
 | `ticket finish`                           | Finish a ticket                     |
 | `ticket reopen`                           | Reopen a ticket                     |
 | `bundle list`                             | List Nx bundles                     |
@@ -630,7 +629,7 @@ MCP tool calls validate argument types and path kinds before invoking the CLI an
 **Building:**
 
 ```bash
-cd go/mcp && go build -o mcp .
+cd go/mcp && go build
 ```
 
 **Usage:**
@@ -656,8 +655,7 @@ The MCP server communicates via stdio and exposes all repo tools as MCP tools. C
 - `ticket_create` - Create a new ticket
 - `ticket_list` - List tickets
 - `ticket_read` - Read a ticket
-- `ticket_iterate_start` - Start iteration
-- `ticket_iterate_end` - End iteration
+- `ticket_progress` - Progress iteration on a ticket
 - `ticket_finish` - Finish a ticket
 - `project_list` - List Nx bundles
 - `project_tree` - Show bundle tree
@@ -826,7 +824,7 @@ Example: `tickets/2025/11/24/VALIDATION-SYSTEM.md`
 
 #### Frontmatter Format
 
-Every ticket file MUST have YAML frontmatter with a slug and prompt; summary is set when finishing a ticket; iterations are optional:
+Every ticket file MUST have YAML frontmatter with a slug and prompt; summary is set when finishing a ticket; iterations are the single source of truth for contribution data:
 
 ```yaml
 ---
@@ -850,6 +848,13 @@ iterations:
     author: NAME <EMAIL> # Optional iteration author
     commit: GIT_SHA # Set when iteration is finished
     ignore: false # Set to true for iterations that should not count as contributions
+    declared: # Files declared for this iteration (tracking purposes)
+      updated:
+        - path: path/to/modified.ts
+      created:
+        - path: path/to/new.ts
+      removed:
+        - path: path/to/deleted.ts
     bundles: # Hierarchical contribution structure (set on iteration finish)
       "@semio/js":
         files:
@@ -857,63 +862,15 @@ iterations:
             sections:
               "State Management":
                 definitions:
-                  "createMachine":
-                    lines:
-                      added: 122
-                      removed: 3
+                  - createMachine
+                  - useSketchpadActor
                 lines:
                   added: 150
                   removed: 10
-            lines:
-              added: 200
-              removed: 20
-        lines:
-          added: 500
-          removed: 50
-    files: # Legacy flat file list (deprecated, kept for backwards compatibility)
-      updated:
-        - path: path/to/modified.ts
-          lines:
-            added: 50
-            removed: 10
-      created:
-        - path: path/to/new.ts
-          lines:
-            added: 100
-            removed: 0
-      removed:
-        - path: path/to/deleted.ts
-          lines:
-            added: 0
-            removed: 50
-    lines: # Iteration-level totals (sum of file lines)
-      added: 150
-      removed: 60
-bundles: # Aggregated from all iterations (set on ticket finish)
-  "@semio/js":
-    files:
-      "js/js/sketchpad/Sketchpad.tsx":
-        lines:
-          added: 200
-          removed: 20
-    lines:
-      added: 500
-      removed: 50
-files: # Legacy flat file list (deprecated, kept for backwards compatibility)
-  updated:
-    - path: path/to/modified.ts
-      lines: { added: 50, removed: 10 }
-  created:
-    - path: path/to/new.ts
-      lines: { added: 100, removed: 0 }
-  removed:
-    - path: path/to/deleted.ts
-      lines: { added: 0, removed: 50 }
-lines: # Ticket-level totals from git diff against commit (set on ticket finish)
-  added: 150
-  removed: 60
 ---
 ```
+
+Section names are automatically derived from file paths when the actual section cannot be determined (e.g., `main.go` becomes `Main`, `my-component.tsx` becomes `My Component Tsx`).
 
 #### Ignore Flag
 
@@ -926,9 +883,8 @@ The `ignore` flag can be set on tickets or individual iterations to exclude them
 #### Workflow
 
 1. **Create** a ticket when starting work on a task
-2. **Start** an iteration for each prompt (requires files)
-3. **Finish** the iteration when the agent stops working (computes git lines per file, builds bundles hierarchy)
-4. **Finish** the ticket when the task is done (aggregates files and computes ticket-level lines and bundles)
+2. **Progress** after completing a todo (computes git lines per file, builds bundles hierarchy from changed definitions)
+3. **Finish** the ticket when the task is done (sets status to closed and finish date)
 
 #### Script Usage
 
@@ -938,20 +894,13 @@ The `ignore` flag can be set on tickets or individual iterations to exclude them
 npx tsx scripts/log.ts ticket create SLUG --prompt="User prompt..."
 ```
 
-**Start a new iteration (requires files):**
+**Progress an iteration (computes metrics, commit, author, date automatically):**
 
 ```bash
-npx tsx scripts/log.ts ticket iteration start SLUG --model=claude-opus-4.5 --prompt="User prompt..." --file=path.ts
+npx tsx scripts/log.ts ticket progress SLUG --model=claude-opus-4.5 --prompt="What was done..."
 ```
 
-**Finish the latest iteration (requires files, computes git lines per file):**
-
-```bash
-npx tsx scripts/log.ts ticket iteration finish SLUG --file=path1.ts --file=path2.ts
-npx tsx scripts/log.ts ticket iteration finish SLUG --file=updated.ts --file-created=new.ts --file-removed=deleted.ts
-```
-
-**Finish a ticket (requires latest iteration finished):**
+**Finish a ticket:**
 
 ```bash
 npx tsx scripts/log.ts ticket finish SLUG --summary="Summary description"
@@ -1043,7 +992,7 @@ deleteTicket(2025, 11, 24, "MY-TASK");
 
 #### Environment Variables
 
-- `scripts/log.ts` requires an explicit `model` value for `ticket iteration start`; there is no default model environment variable.
+- `scripts/log.ts` requires an explicit `model` value for `ticket progress`; there is no default model environment variable.
 
 #### Git Configuration
 
@@ -1759,7 +1708,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 ├── rdf
 ├── scripts
 │ ├── i18n.ts # Checks that all i18n keys are up to date and produces report under `reports/i18n.json`
-│ ├── log.ts # Ticket CLI and frontmatter utilities for `tickets/{year}/{month}/{day}/{slug}.md` (ticket create, ticket iteration start/finish, ticket finish)
+│ ├── log.ts # Ticket CLI and frontmatter utilities for `tickets/{year}/{month}/{day}/{slug}.md` (ticket create, ticket progress, ticket finish)
 │ ├── utils.ts # General TypeScript utilities for scripts
 │ └── schema.ts # Checks that all schemas are up to date and produces report under `reports/schema.json`
 ├── sql
@@ -3963,7 +3912,7 @@ For kit documents (JSON files with `kit_` prefix, `_kit` suffix, or named `kit.j
 Tree data providers for tickets, policies, contributors, and commands with search/filter capabilities.
 Contributor tree nodes group contributions into commits, bundles, tickets by date, and files by folder with navigation commands for tickets, commits, bundles, and files.
 Contributor commit items expose inline copy SHA and open in GitHub actions.
-Sections view provider resolves the active editor path, calls `repo section list`, renders the nested section tree, opens section locations on selection, binds F2 rename, supports drag-and-drop section moves, and routes rename/create-child/delete actions through repo section commands with refresh on active editor and document changes.
+Sections view provider resolves the active editor path, calls `repo section list`, renders the nested section tree, opens section locations on selection, binds F2 rename, supports drag-and-drop section moves, maps JSON object keys into the section tree, and routes rename/create-child/delete actions through repo section commands with refresh on active editor and document changes.
 
 ### Commands
 
@@ -3985,7 +3934,8 @@ Ticket iteration end derives per-file lists and line stats from git diffs betwee
 Ticket finish aggregates per-iteration file stats into ticket-level `files` and computes ticket-level `lines` from git diffs scoped to the ticket file list.
 Ticket file aggregates store `updated`, `created`, and `removed` as `FileLineStats` with line totals.
 Comment policy scanning tracks string and template literal context so comment markers inside literals do not trigger violations.
-Section policy flags orphan code lines that sit outside any named region.
+Section policy flags orphan definitions that sit outside any named region, including comment blocks and Go package/import blocks.
+JSON section parsing maps object keys into section trees and powers JSON section create/move/delete operations by path.
 Contributor listing derives tickets, commits, bundles, files, and line totals from ticket frontmatter and header contributor entries, resolves contributors by email/name mappings, and sorts by ticket count.
 Contributor commit entries resolve titles from git metadata and bundle memberships from file path overlap with Nx bundle roots.
 

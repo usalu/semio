@@ -5,31 +5,19 @@ summary: Generalize diagram component across apps
 status: open
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-    created: "2025-12-18T15:09:08.033Z"
+  created: 2025-12-18T15:09:08.033Z
 iterations:
-    - prompt: Implement generalized diagram component and migrate Design/Kit/Quality; ensure only elements.tsx imports @xyflow/react; ensure sketchpad tests pass.
-      model: claude-opus-4-5
-      date:
-        started: "2025-12-18T15:32:19.612Z"
-      author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-      bundles:
-        '@semio':
-            files:
-                "":
-                    sections: {}
-      files:
-        updated:
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-      lines:
-        added: 322
-        removed: 147
+  - prompt: Implement generalized diagram component and migrate Design/Kit/Quality; ensure only elements.tsx imports @xyflow/react; ensure sketchpad tests pass.
+    model: claude-opus-4-5
+    date:
+      started: 2025-12-18T15:32:19.612Z
+    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+    bundles:
+      "@semio":
+        files:
+          "":
+            sections:
+              "": {}
 ---
 
 

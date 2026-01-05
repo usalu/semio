@@ -1,37 +1,23 @@
 ---
 slug: MULTI-WINDOW-SYSTEM
-prompt: 'Implement unified multi-window system: canonical window contracts + JSON layout persistence + migrate apps to LayoutCanvas'
+prompt: "Implement unified multi-window system: canonical window contracts + JSON layout persistence + migrate apps to LayoutCanvas"
 summary: Refactor all apps to a unified multi-window system
 status: open
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-    created: "2025-12-18T15:18:04.589Z"
+  created: 2025-12-18T15:18:04.589Z
 iterations:
-    - prompt: 'Implement unified multi-window system: canonical window contracts + JSON layout persistence + migrate apps to LayoutCanvas'
-      model: gpt-5.2-codex
-      date:
-        started: "2025-12-18T15:24:35.574Z"
-      author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-      bundles:
-        '@semio':
-            files:
-                "":
-                    sections: {}
-      files:
-        updated:
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-      lines:
-        added: 249
-        removed: 87
+  - prompt: "Implement unified multi-window system: canonical window contracts + JSON layout persistence + migrate apps to LayoutCanvas"
+    model: gpt-5.2-codex
+    date:
+      started: 2025-12-18T15:24:35.574Z
+    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+    bundles:
+      "@semio":
+        files:
+          "":
+            sections:
+              "": {}
 ---
 
 

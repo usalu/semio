@@ -30,7 +30,7 @@ import * as vscode from "vscode";
 
 // #region Constants
 
-const EXPECTED_COMMANDS = ["semio.analyze", "semio.analyzeFile", "semio.fix", "semio.fixFile", "semio.policyList", "semio.ticketCreate", "semio.ticketList", "semio.ticketIterateStart", "semio.ticketIterateEnd", "semio.ticketFinish", "semio.ticketRead", "semio.ticketOpen", "semio.projectList", "semio.contributorAdd", "semio.contributorList", "semio.contributorRemove", "semio.sectionTree", "semio.definitionList", "semio.folderTree", "semio.folderCreate", "semio.folderMove", "semio.folderDelete", "semio.folderList", "semio.fileCreate", "semio.fileMove", "semio.fileDelete", "semio.fileList", "semio.fileTree", "semio.sectionCreate", "semio.sectionMove", "semio.sectionDelete", "semio.sectionList", "semio.definitionTree", "semio.projectTree", "semio.policyCheck", "semio.refreshDiagnostics", "semio.fixViolation", "semio.refreshTickets", "semio.refreshContributors", "semio.refreshPolicies", "semio.toggleTicketFilter", "semio.openTicket", "semio.checkPolicy", "semio.runCommand"];
+const EXPECTED_COMMANDS = ["semio.analyze", "semio.analyzeFile", "semio.fix", "semio.fixFile", "semio.policyList", "semio.ticketCreate", "semio.ticketList", "semio.ticketProgress", "semio.ticketFinish", "semio.ticketRead", "semio.ticketOpen", "semio.projectList", "semio.contributorAdd", "semio.contributorList", "semio.contributorRemove", "semio.sectionTree", "semio.definitionList", "semio.folderTree", "semio.folderCreate", "semio.folderMove", "semio.folderDelete", "semio.folderList", "semio.fileCreate", "semio.fileMove", "semio.fileDelete", "semio.fileList", "semio.fileTree", "semio.sectionCreate", "semio.sectionMove", "semio.sectionDelete", "semio.sectionList", "semio.definitionTree", "semio.projectTree", "semio.policyCheck", "semio.refreshDiagnostics", "semio.fixViolation", "semio.refreshTickets", "semio.refreshContributors", "semio.refreshPolicies", "semio.toggleTicketFilter", "semio.openTicket", "semio.checkPolicy", "semio.runCommand"];
 const EXPECTED_CONSTRAINTS = ["guid-unique", "type-name-unique", "design-name-unique", "piece-name-unique", "quality-name-unique", "port-name-unique", "file-name-unique", "folder-name-unique", "connector-name-unique", "model-name-unique", "layer-path-unique"];
 const EXPECTED_VIEWS = ["semio.tickets", "semio.contributors", "semio.policies", "semio.commands"];
 
@@ -186,7 +186,7 @@ suite("Cache Mechanism Test Suite", function () {
 
   test("Analyzing a file creates cache entry", async function () {
     const root = getWorkspaceRoot();
-    const repoBinPath = path.join(root, "bin", "repo.exe");
+    const repoBinPath = path.join(root, "go", "repo", "repo.exe");
     if (!fs.existsSync(repoBinPath)) {
       console.log("Skipping: repo.exe not found - cache requires repo analyze");
       return;

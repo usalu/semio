@@ -96,12 +96,8 @@
         "title": "semio: List Tickets"
       },
       {
-        "command": "semio.ticketIterateStart",
-        "title": "semio: Start Ticket Iteration"
-      },
-      {
-        "command": "semio.ticketIterateEnd",
-        "title": "semio: End Ticket Iteration"
+        "command": "semio.ticketProgress",
+        "title": "semio: Progress Ticket"
       },
       {
         "command": "semio.ticketFinish",

@@ -5,40 +5,24 @@ summary: Regenerate metabolism.zip assets with connector schema and copy to all 
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-    created: "2025-12-23T13:31:57.083Z"
-    finished: "2025-12-23T13:33:04.225Z"
+  created: 2025-12-23T13:31:57.083Z
+  finished: 2025-12-23T13:33:04.225Z
 commit: b41e500849192cc526ed0ce105fff7e2a478e3f0
 model: composer-1
 iterations:
-    - prompt: Port was recently renamed to connector. The assets such as metabolism.zip still have sql tables. Regenerate the assets with the scripts. Make sure all metabolism.zip are updated after regenerating such as in public folders on every run.
-      model: composer-1
-      date:
-        started: "2025-12-23T13:32:43.828Z"
-        ended: "2025-12-23T13:32:51.464Z"
-      author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-      commit: b41e500849192cc526ed0ce105fff7e2a478e3f0
-      bundles:
-        '@semio':
-            files:
-                "":
-                    sections: {}
-      files:
-        updated:
-            - path: ""
-      lines:
-        added: 141
-        removed: 0
-bundles:
-    '@semio':
+  - prompt: Port was recently renamed to connector. The assets such as metabolism.zip still have sql tables. Regenerate the assets with the scripts. Make sure all metabolism.zip are updated after regenerating such as in public folders on every run.
+    model: composer-1
+    date:
+      started: 2025-12-23T13:32:43.828Z
+      ended: 2025-12-23T13:32:51.464Z
+    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+    commit: b41e500849192cc526ed0ce105fff7e2a478e3f0
+    bundles:
+      "@semio":
         files:
-            "":
-                sections: {}
-files:
-    updated:
-        - path: ""
-lines:
-    added: 141
-    removed: 0
+          "":
+            sections:
+              "": {}
 ---
 
 

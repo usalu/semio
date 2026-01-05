@@ -5,48 +5,24 @@ summary: Sketchpad windows have continuous dashed borders
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-    created: "2025-12-17T18:15:25.407Z"
-    finished: "2025-12-17T18:20:11.814Z"
+  created: 2025-12-17T18:15:25.407Z
+  finished: 2025-12-17T18:20:11.814Z
 commit: 7c4820638369104ae259b238d9240f08e429e67e
 model: gpt-5.2-codex
 iterations:
-    - prompt: The windows dont have a border on the bottom and on the right. Make the window border dashed.
-      model: gpt-5.2-codex
-      date:
-        started: "2025-12-17T18:15:31.251Z"
-        ended: "2025-12-17T18:20:04.557Z"
-      author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-      commit: 7c4820638369104ae259b238d9240f08e429e67e
-      bundles:
-        '@semio':
-            files:
-                "":
-                    sections: {}
-      files:
-        updated:
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-      lines:
-        added: 146
-        removed: 54
-bundles:
-    '@semio':
+  - prompt: The windows dont have a border on the bottom and on the right. Make the window border dashed.
+    model: gpt-5.2-codex
+    date:
+      started: 2025-12-17T18:15:31.251Z
+      ended: 2025-12-17T18:20:04.557Z
+    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+    commit: 7c4820638369104ae259b238d9240f08e429e67e
+    bundles:
+      "@semio":
         files:
-            "":
-                sections: {}
-files:
-    updated:
-        - path: ""
-        - path: ""
-        - path: ""
-        - path: ""
-        - path: ""
-lines:
-    added: 148
-    removed: 54
+          "":
+            sections:
+              "": {}
 ---
 
 

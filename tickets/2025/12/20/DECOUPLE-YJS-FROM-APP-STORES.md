@@ -5,48 +5,24 @@ summary: Decoupled yjs from all app stores except Kit. Only KitStore uses yjs fo
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-    created: "2025-12-20T11:52:27.669Z"
-    finished: "2025-12-20T11:54:12.570Z"
+  created: 2025-12-20T11:52:27.669Z
+  finished: 2025-12-20T11:54:12.570Z
 commit: 4ff6fd77dee713af972c27bd3761939be4302c80
 model: claude-sonnet-4-5
 iterations:
-    - prompt: Removed yjs (yMap, yArray) from all app stores except Kit
-      model: claude-sonnet-4-5
-      date:
-        started: "2025-12-20T11:52:36.998Z"
-        ended: "2025-12-20T11:52:47.415Z"
-      author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-      commit: 4ff6fd77dee713af972c27bd3761939be4302c80
-      bundles:
-        '@semio':
-            files:
-                "":
-                    sections: {}
-      files:
-        updated:
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-      lines:
-        added: 112
-        removed: 183
-bundles:
-    '@semio':
+  - prompt: Removed yjs (yMap, yArray) from all app stores except Kit
+    model: claude-sonnet-4-5
+    date:
+      started: 2025-12-20T11:52:36.998Z
+      ended: 2025-12-20T11:52:47.415Z
+    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+    commit: 4ff6fd77dee713af972c27bd3761939be4302c80
+    bundles:
+      "@semio":
         files:
-            "":
-                sections: {}
-files:
-    updated:
-        - path: ""
-        - path: ""
-        - path: ""
-        - path: ""
-        - path: ""
-lines:
-    added: 112
-    removed: 183
+          "":
+            sections:
+              "": {}
 ---
 
 

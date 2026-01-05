@@ -4,12 +4,8 @@ prompt: Synchronize Go Library with TypeScript - extend Go tests to match TS/C# 
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-  created: "2025-12-30T21:43:58Z"
+  created: 2025-12-30T21:43:58Z
 commit: 512a1ece5364b86aa6b68a77e4dff3b0a7740c6a
-files:
-  updated:
-    - go/semio/semio.go
-    - go/semio/semio_test.go
 ---
 
 # Previously

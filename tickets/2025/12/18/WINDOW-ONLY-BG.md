@@ -5,58 +5,24 @@ summary: Make UI elements transparent; only windows paint background
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-    created: "2025-12-18T15:34:29.349Z"
-    finished: "2025-12-18T15:55:58.196Z"
+  created: 2025-12-18T15:34:29.349Z
+  finished: 2025-12-18T15:55:58.196Z
 commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
 model: gpt-5.2-codex
 iterations:
-    - prompt: Remove per-element level backgrounds so only Window surfaces have a background; make panels and layout chrome transparent; keep temporary surfaces readable.
-      model: gpt-5.2-codex
-      date:
-        started: "2025-12-18T15:39:08.907Z"
-        ended: "2025-12-18T15:55:14.385Z"
-      author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-      commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
-      bundles:
-        '@semio':
-            files:
-                "":
-                    sections: {}
-      files:
-        updated:
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-      lines:
-        added: 697
-        removed: 735
-bundles:
-    '@semio':
+  - prompt: Remove per-element level backgrounds so only Window surfaces have a background; make panels and layout chrome transparent; keep temporary surfaces readable.
+    model: gpt-5.2-codex
+    date:
+      started: 2025-12-18T15:39:08.907Z
+      ended: 2025-12-18T15:55:14.385Z
+    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+    commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
+    bundles:
+      "@semio":
         files:
-            "":
-                sections: {}
-files:
-    updated:
-        - path: ""
-        - path: ""
-        - path: ""
-        - path: ""
-        - path: ""
-        - path: ""
-        - path: ""
-        - path: ""
-        - path: ""
-        - path: ""
-lines:
-    added: 731
-    removed: 735
+          "":
+            sections:
+              "": {}
 ---
 
 

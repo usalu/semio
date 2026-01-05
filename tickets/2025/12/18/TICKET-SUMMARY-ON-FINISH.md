@@ -5,46 +5,24 @@ summary: Require summary only when finishing tickets
 status: finished
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-    created: "2025-12-18T15:51:06.030Z"
-    finished: "2025-12-18T15:52:32.230Z"
+  created: 2025-12-18T15:51:06.030Z
+  finished: 2025-12-18T15:52:32.230Z
 commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
 model: claude-opus-4-5
 iterations:
-    - prompt: Move ticket summary capture to ticket finish and require --summary only when closing.
-      model: claude-opus-4-5
-      date:
-        started: "2025-12-18T15:52:10.403Z"
-        ended: "2025-12-18T15:52:21.179Z"
-      author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
-      commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
-      bundles:
-        '@semio':
-            files:
-                "":
-                    sections: {}
-      files:
-        updated:
-            - path: ""
-            - path: ""
-            - path: ""
-            - path: ""
-      lines:
-        added: 232
-        removed: 90
-bundles:
-    '@semio':
+  - prompt: Move ticket summary capture to ticket finish and require --summary only when closing.
+    model: claude-opus-4-5
+    date:
+      started: 2025-12-18T15:52:10.403Z
+      ended: 2025-12-18T15:52:21.179Z
+    author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
+    commit: 20a57039fec48f8c991d98769aa31e15cbd6859c
+    bundles:
+      "@semio":
         files:
-            "":
-                sections: {}
-files:
-    updated:
-        - path: ""
-        - path: ""
-        - path: ""
-        - path: ""
-lines:
-    added: 234
-    removed: 90
+          "":
+            sections:
+              "": {}
 ---
 
 

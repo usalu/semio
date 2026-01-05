@@ -10,7 +10,7 @@
 		},
 		"semio": {
 			"type": "stdio",
-			"command": "bin/mcp.exe",
+			"command": "go/mcp/mcp.exe",
 			"args": []
 		}
 	},
