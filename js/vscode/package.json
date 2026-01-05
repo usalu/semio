@@ -51,6 +51,10 @@
           "name": "Commands"
         },
         {
+          "id": "semio.sections",
+          "name": "Sections"
+        },
+        {
           "id": "semio.contributors",
           "name": "Contributors"
         }

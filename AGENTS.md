@@ -69,6 +69,10 @@ A ticket MUST NOT start a new iteration while the latest iteration is unfinished
 
 A ticket MUST NOT be finished while the latest iteration is unfinished.
 
+Ticket creation and iteration start MUST require a prompt.
+
+Ticket creation and iteration start MAY omit file lists at the interface boundary, but iteration validity still requires file declarations.
+
 Iteration start and iteration finish MUST declare at least one file across `updated`, `created`, or `removed`.
 
 Iteration finish MUST derive per-file `updated`, `created`, and `removed` lists with line stats via git diff between the previous iteration commit (or ticket base commit) and the current commit.
@@ -76,6 +80,12 @@ Iteration finish MUST derive per-file `updated`, `created`, and `removed` lists 
 Ticket finish MUST aggregate all iteration files as ticket-level `files` and MUST compute ticket-level `lines` via git diff against the ticket `base` commit.
 
 Iteration finish and ticket finish MUST scope git diff file and line stats to the files declared on the ticket iterations.
+
+### MCP Tools
+
+MCP tool calls MUST validate argument presence and types.
+File and folder parameters MUST reference correct path kinds (file vs folder).
+Invalid MCP tool arguments MUST return errors at the tool boundary.
 
 ### Contributor
 
@@ -341,6 +351,7 @@ Toolbar panel visibility defaults to `true` for all apps via `panelVisibility: {
 - Problem list diagnostics open in pinned editor tabs for immediate saves.
 - Contributor tree items list emails with mailto actions, links with external navigation, and contribution nodes with line summary descriptions.
 - Contributor contributions are grouped into commits, projects, tickets (year/month/day), and files (folder/file) with navigation actions and inline ticket close/reopen actions.
+- The solution explorer sections view lists all sections for the active file.
 
 # Monorepo
 
@@ -612,6 +623,7 @@ repo tool build                       # Run Nx build target
 ### MCP Server
 
 The MCP server (`go/mcp`) exposes the repo CLI tools via the Model Context Protocol for LLM integration.
+MCP tool calls validate argument types and path kinds before invoking the CLI and return errors on invalid input.
 
 **Building:**
 
@@ -1708,7 +1720,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ ├── go.work # Go workspace file
 │ ├── mcp # MCP server exposing repo tools to LLMs
 │ │ ├── go.mod
-│ │ └── main.go
+│ │ └── main.go # MCP tool schema, argument validation, path validation, repo command handlers
 │ └── repo # Go CLI binary
 │ ├── go.mod
 │ ├── main.go
@@ -3888,6 +3900,7 @@ For kit documents (JSON files with `kit_` prefix, `_kit` suffix, or named `kit.j
 
 Tree data providers for tickets, policies, contributors, and commands with search/filter capabilities.
 Contributor tree nodes group contributions into commits, projects, tickets by date, and files by folder with navigation commands for tickets, commits, projects, and files.
+Sections view provider resolves the active editor path, calls `repo section list`, and renders the nested section tree with refresh on active editor and document changes.
 
 ### Commands
 

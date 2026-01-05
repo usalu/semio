@@ -203,11 +203,14 @@ The assistant helps you on every step in the design process with semio ✍️
 ## VS Code Extension [↑](#%EF%B8%8F-products-)
 
 The VS Code extension keeps tickets close to daily work with inline close or reopen actions that act on the selected ticket, commit visibility, and concise hover descriptions for quick scanning.
+Automation tooling rejects invalid arguments and non-file paths so MCP-driven workflows surface mistakes immediately.
+Ticket creation and iteration starts always request a description, while file lists can be added later when needed.
 Ticket iteration and finish actions attach git-derived file lists and line totals scoped to the ticket files so progress and impact are visible from the ticket view.
 Code hygiene diagnostics ignore comment markers inside string literals so snippets and URLs stay clean of false comment warnings.
 The command browser mirrors the repo command and subcommand hierarchy so discovery follows the same structure as the CLI.
 Problem list entries open in dedicated editor tabs so edits are immediately saveable.
 Contributor views merge ticket activity and file header credits into a per-person breakdown with line totals, grouped tickets, commits, projects, and file navigation for quick context.
+The solution explorer includes a Sections panel that lists the current file structure so you can scan its regions at a glance.
 
 ## 🦗 [semio.gh](https://docs.semio-tech.com/manuals/grasshopper) [↑](#%EF%B8%8F-products-)
 
@@ -1244,7 +1247,13 @@ Comment detection skips comment markers inside string literals and template lite
 ## 🎫 Ticket System [↑](#-components-)
 
 Development work is tracked as tickets composed of iterations. Ticket creation does not create an iteration; iterations are explicitly started and finished, require file lists (`updated`, `created`, `removed`), and iteration finish derives the per-file lists and line stats from git diffs between the last iteration commit (or ticket base) and the current commit. Ticket finish aggregates all iteration files and recomputes total line stats from git against the ticket base commit.
+Ticket entry points require prompt text for ticket creation and iteration start, while file arrays can be omitted at entry and still enforced by iteration rules.
 Line totals only include the files declared in the ticket iterations so unrelated diffs stay out of ticket reports.
+
+## ?? MCP Tool Gateway [↑](#-components-)
+
+The MCP server validates tool argument types and required fields before invoking the CLI so errors are surfaced at the tool boundary instead of silently proceeding.
+File and folder arguments are checked for path correctness so directory paths cannot be passed where files are required.
 
 ## 👥 Contributors [↑](#-components-)
 
@@ -1255,6 +1264,11 @@ Each contributor aggregates tickets, commits, projects, files, and line totals, 
 
 The command browser groups actions by command families and subcommands, using the same command breakdown as the CLI so users learn one structure across tools.
 Search matches either command labels or group names, and matching a group keeps its full subtree visible for quick discovery.
+
+## 🧩 Sections Explorer [↑](#-components-)
+
+The VS Code extension solution explorer adds a Sections view that queries the repo section list for the active file and renders the nested region tree.
+It refreshes on editor focus and text changes so the list stays aligned with the current file structure.
 
 ## 🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/js) [↑](#-components-)
 

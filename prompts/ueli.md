@@ -1,9 +1,66 @@
 # Prompt history
 
+All mcp tools should throw when having wrong arguments.
+[main.go](go/mcp/main.go) 
+e.g. the files are not correct file paths.
+{
+  "callId": "call_yDcFTIpklZh43jXGFtO58DYV",
+  "invocation": {
+    "server": "semio-repo",
+    "tool": "ticket_create",
+    "arguments": {
+      "files": [
+        "README.md",
+        "AGENTS.md",
+        "go/mcp",
+        "go/repo",
+        "js",
+        "ts",
+        "vscode"
+      ],
+      "model": "gpt-5",
+      "prompt": "Add a Sections entry to the VS Code extension solution explorer that lists all sections for the currently active file.",
+      "slug": "vscode-solution-explorer-sections"
+    }
+  },
+  "durationMs": 13,
+  "result": {
+    "type": "success",
+    "content": [
+      {
+        "text": "",
+        "type": "text"
+      }
+    ],
+    "structuredContent": null,
+    "raw": {
+      "content": [
+        {
+          "text": "",
+          "type": "text"
+        }
+      ]
+    }
+  }
+}
+
+Clicking buttons such as finish ticket, reopen ticket, run command is currently calling a terminal command instead of just silently executing the command and showing a notification once done.
+
+Still opens read-only editor. It also shows issues that dont exist: e.g. semio.go and semio_test.go dont exist but go/semio/main.go does exist.
+
+Add an extra section to solution explorer in the vscode extension: Sections
+It should show all sections for the current active file.
+
+Turn required mcp array files parameters on create ticket and iteration start into optional parameters but add the description to be required. They are actually required but there is currently a bug in vscode aborts requests on required array parameters.
+
+On ticket creation or iteration start all files that are part of the ticket need to be associated to the ticket. When an iteration is finished then the lines are automatically calculated for those files from git. Currently it adds all the files from git which is wrong. Only the ones that are part of the iteration should be considered. See example: @/c:/git/semio.tech/semio/tickets/2026/01/05/VSCODE-DIAGNOSTIC-READONLY.md 
+
+When clicking on the semio violation diagnostics in vscode then it opens only read-only preview of the file instead of opening the file where it can be edited.
+
 Still, it adds all files and lines to iteration but it shouldnt. It should filter only the files that the ticket is working on. Clean teh tickets from today.
 
 Add a new policy: sketchpad
-- All third party imports be inside elements.tsx. This file reexport reusable ui elements. All other files should not import anything from third party libraries and be dependency free.
+- All third party imports must be inside elements.tsx. This file reexports reusable ui elements. All other files should not import anything from third party libraries and be dependency free.
 - state management: sketchpad only uses one state machine. createMachine can only be used once. createActor can never be used. Yjs should never be used for app state. It is only used for kit data synchronization. Stores outside of State Managment sections are forbidden. UI elements only use triadic hooks [state, setState, canSetState]=useSELECTOR().
 
 The fixes in vscode are not showing the description of the fix as label.
@@ -37,6 +94,7 @@ Adjust also the vscode extension:
 │ │ ├─ files - FILECOUNT
 │ │ │ └─ FOLDER(S)
 │ │ │ │ └─ FILESLUG # NavigateToFile
+Currently commits, tickets, files are missing in the sideview.
 
 When lines are recomputed it uses all of the files that have diffs in git. It should only use the files that are part of the ticket.
 

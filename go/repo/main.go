@@ -136,40 +136,41 @@ const (
 )
 
 type TicketIterationFiles struct {
-	Updated []FileLineStats `json:"updated,omitempty"`
-	Created []FileLineStats `json:"created,omitempty"`
-	Removed []FileLineStats `json:"removed,omitempty"`
+	Updated []FileLineStats `yaml:"updated,omitempty" json:"updated,omitempty"`
+	Created []FileLineStats `yaml:"created,omitempty" json:"created,omitempty"`
+	Removed []FileLineStats `yaml:"removed,omitempty" json:"removed,omitempty"`
 }
 
 type FileLineStats struct {
-	Path  string     `json:"path"`
-	Lines *LineStats `json:"lines,omitempty"`
+	Path  string     `yaml:"path" json:"path"`
+	Lines *LineStats `yaml:"lines,omitempty" json:"lines,omitempty"`
 }
 
 type LineStats struct {
-	Added   int `json:"added"`
-	Removed int `json:"removed"`
+	Added   int `yaml:"added" json:"added"`
+	Removed int `yaml:"removed" json:"removed"`
 }
 
 type TicketDate struct {
-	Started string `json:"started,omitempty"`
-	Ended   string `json:"ended,omitempty"`
+	Started string `yaml:"started,omitempty" json:"started,omitempty"`
+	Ended   string `yaml:"ended,omitempty" json:"ended,omitempty"`
 }
 
 type TicketIteration struct {
-	Prompt string               `json:"prompt"`
-	Model  string               `json:"model,omitempty"`
-	Date   TicketDate           `json:"date"`
-	Author string               `json:"author,omitempty"`
-	Commit string               `json:"commit,omitempty"`
-	Files  *TicketIterationFiles `json:"files,omitempty"`
-	Lines  *LineStats           `json:"lines,omitempty"`
+	Prompt   string                `yaml:"prompt" json:"prompt"`
+	Model    string                `yaml:"model,omitempty" json:"model,omitempty"`
+	Date     TicketDate            `yaml:"date" json:"date"`
+	Author   string                `yaml:"author,omitempty" json:"author,omitempty"`
+	Commit   string                `yaml:"commit,omitempty" json:"commit,omitempty"`
+	Declared *TicketIterationFiles `yaml:"declared,omitempty" json:"declared,omitempty"`
+	Files    *TicketIterationFiles `yaml:"files,omitempty" json:"files,omitempty"`
+	Lines    *LineStats            `yaml:"lines,omitempty" json:"lines,omitempty"`
 }
 
 type TicketFiles struct {
-	Updated []FileLineStats `json:"updated,omitempty"`
-	Created []FileLineStats `json:"created,omitempty"`
-	Removed []FileLineStats `json:"removed,omitempty"`
+	Updated []FileLineStats `yaml:"updated,omitempty" json:"updated,omitempty"`
+	Created []FileLineStats `yaml:"created,omitempty" json:"created,omitempty"`
+	Removed []FileLineStats `yaml:"removed,omitempty" json:"removed,omitempty"`
 }
 
 type TicketFrontmatter struct {
@@ -227,6 +228,12 @@ const (
 	ViolationDevDocsMissingComponent       ViolationKind = "dev-docs:missing-component"
 	ViolationDevDocsWrongComponentName     ViolationKind = "dev-docs:wrong-component-name"
 	ViolationDevDocsWrongComponentOrder    ViolationKind = "dev-docs:wrong-component-order"
+	ViolationSketchpadImportThirdParty     ViolationKind = "sketchpad:import:third-party-outside-elements"
+	ViolationSketchpadStateMultipleMachines ViolationKind = "sketchpad:state:multiple-machines"
+	ViolationSketchpadStateCreateActor     ViolationKind = "sketchpad:state:create-actor-usage"
+	ViolationSketchpadStateYjsAppState     ViolationKind = "sketchpad:state:yjs-app-state"
+	ViolationSketchpadStateForbiddenStore  ViolationKind = "sketchpad:state:forbidden-store"
+	ViolationSketchpadHooksNonTriadic      ViolationKind = "sketchpad:hooks:non-triadic"
 )
 
 type ViolationKindMeta struct {
@@ -398,6 +405,48 @@ var violationKindMetas = map[ViolationKind]ViolationKindMeta{
 		Reason:      "Component sections are not in package.json workspaces order",
 		Solution:    "Reorder components to match package.json workspaces",
 		Autofixable: true,
+	},
+	ViolationSketchpadImportThirdParty: {
+		Kind:        ViolationSketchpadImportThirdParty,
+		Priority:    PriorityHigh,
+		Reason:      "Third party imports must only be in elements.tsx",
+		Solution:    "Move third party import to elements.tsx and re-export from there",
+		Autofixable: false,
+	},
+	ViolationSketchpadStateMultipleMachines: {
+		Kind:        ViolationSketchpadStateMultipleMachines,
+		Priority:    PriorityHigh,
+		Reason:      "Only one state machine is allowed (createMachine can only be used once)",
+		Solution:    "Consolidate state management into a single state machine",
+		Autofixable: false,
+	},
+	ViolationSketchpadStateCreateActor: {
+		Kind:        ViolationSketchpadStateCreateActor,
+		Priority:    PriorityHigh,
+		Reason:      "createActor is forbidden in sketchpad",
+		Solution:    "Remove createActor usage and use the single state machine instead",
+		Autofixable: false,
+	},
+	ViolationSketchpadStateYjsAppState: {
+		Kind:        ViolationSketchpadStateYjsAppState,
+		Priority:    PriorityHigh,
+		Reason:      "Yjs should only be used for kit data synchronization, not app state",
+		Solution:    "Move app state to the state machine and use Yjs only for kit data sync",
+		Autofixable: false,
+	},
+	ViolationSketchpadStateForbiddenStore: {
+		Kind:        ViolationSketchpadStateForbiddenStore,
+		Priority:    PriorityHigh,
+		Reason:      "Stores outside of State Management sections are forbidden",
+		Solution:    "Move store to a State Management section or remove it",
+		Autofixable: false,
+	},
+	ViolationSketchpadHooksNonTriadic: {
+		Kind:        ViolationSketchpadHooksNonTriadic,
+		Priority:    PriorityHigh,
+		Reason:      "UI elements must use triadic hooks pattern [state, setState, canSetState]=useSELECTOR()",
+		Solution:    "Refactor to use triadic hook pattern with useSELECTOR",
+		Autofixable: false,
 	},
 }
 
@@ -1120,11 +1169,27 @@ var policyMetas = []PolicyMeta{
 			string(ViolationDevDocsWrongComponentOrder),
 		},
 	},
+	{
+		ID:          "sketchpad",
+		Name:        "Sketchpad",
+		Description: "Validates sketchpad imports, state management, and hook patterns",
+		Scopes:      []string{"js/sketchpad/**/*.{ts,tsx}"},
+		Priority:    PriorityHigh,
+		ViolationKinds: []string{
+			string(ViolationSketchpadImportThirdParty),
+			string(ViolationSketchpadStateMultipleMachines),
+			string(ViolationSketchpadStateCreateActor),
+			string(ViolationSketchpadStateYjsAppState),
+			string(ViolationSketchpadStateForbiddenStore),
+			string(ViolationSketchpadHooksNonTriadic),
+		},
+	},
 }
 
 var policyFuncs = map[string]PolicyFunc{
-	"code":     codePolicy,
-	"dev-docs": devDocsPolicy,
+	"code":      codePolicy,
+	"dev-docs":  devDocsPolicy,
+	"sketchpad": sketchpadPolicy,
 }
 
 func getRegisteredPolicies() []RegisteredPolicy {
@@ -1799,6 +1864,103 @@ func devDocsPolicy(ctx *PolicyContext) []Violation {
 	return violations
 }
 
+func sketchpadPolicy(ctx *PolicyContext) []Violation {
+	var violations []Violation
+	files, err := ctx.Files()
+	if err != nil {
+		return violations
+	}
+	elementsFile := ""
+	for _, file := range files {
+		if strings.HasSuffix(file, "elements.tsx") {
+			elementsFile = file
+			break
+		}
+	}
+	thirdPartyPackages := []string{
+		"react", "xstate", "yjs", "@radix-ui", "@dnd-kit", "zustand", "immer",
+		"framer-motion", "lucide-react", "clsx", "tailwind", "three", "@react-three",
+	}
+	createMachineCount := 0
+	for _, file := range files {
+		if !strings.HasSuffix(file, ".ts") && !strings.HasSuffix(file, ".tsx") {
+			continue
+		}
+		content := ctx.ReadText(file)
+		if content == "" {
+			continue
+		}
+		lines := strings.Split(content, "\n")
+		isElementsFile := file == elementsFile
+		sections := ctx.Sections(file)
+		isStateManagementSection := func(lineNum int) bool {
+			for _, section := range sections {
+				if strings.Contains(strings.ToLower(section.Name), "state management") ||
+					strings.Contains(strings.ToLower(section.Name), "state-management") {
+					if lineNum >= section.StartLine && lineNum <= section.EndLine {
+						return true
+					}
+				}
+			}
+			return false
+		}
+		for lineNum, line := range lines {
+			lineNumber := lineNum + 1
+			if !isElementsFile && strings.Contains(line, "import ") {
+				for _, pkg := range thirdPartyPackages {
+					importPattern := fmt.Sprintf(`from\s+['"]%s`, regexp.QuoteMeta(pkg))
+					if matched, _ := regexp.MatchString(importPattern, line); matched {
+						violations = append(violations, ctx.CreateViolation(
+							fmt.Sprintf("Third party import '%s' must only be in elements.tsx", pkg),
+							ViolationSketchpadImportThirdParty,
+							file, lineNumber, strings.TrimSpace(line), nil))
+						break
+					}
+				}
+			}
+			if strings.Contains(line, "createMachine(") || strings.Contains(line, "createMachine<") {
+				createMachineCount++
+				if createMachineCount > 1 {
+					violations = append(violations, ctx.CreateViolation(
+						"createMachine can only be used once in sketchpad",
+						ViolationSketchpadStateMultipleMachines,
+						file, lineNumber, strings.TrimSpace(line), nil))
+				}
+			}
+			if strings.Contains(line, "createActor(") || strings.Contains(line, "createActor<") {
+				violations = append(violations, ctx.CreateViolation(
+					"createActor is forbidden in sketchpad",
+					ViolationSketchpadStateCreateActor,
+					file, lineNumber, strings.TrimSpace(line), nil))
+			}
+			yjsAppStatePatterns := []string{"Y.Doc(", "new Doc(", "Y.Map(", "Y.Array(", "Y.Text("}
+			for _, pattern := range yjsAppStatePatterns {
+				if strings.Contains(line, pattern) && !isStateManagementSection(lineNumber) {
+					if !strings.Contains(strings.ToLower(file), "kit") &&
+						!strings.Contains(strings.ToLower(file), "sync") {
+						violations = append(violations, ctx.CreateViolation(
+							"Yjs should only be used for kit data synchronization, not app state",
+							ViolationSketchpadStateYjsAppState,
+							file, lineNumber, strings.TrimSpace(line), nil))
+					}
+				}
+			}
+			storePatterns := []string{"create(", "createStore(", "useStore("}
+			for _, pattern := range storePatterns {
+				if strings.Contains(line, pattern) && !isStateManagementSection(lineNumber) {
+					if strings.Contains(line, "zustand") || strings.Contains(line, "store") {
+						violations = append(violations, ctx.CreateViolation(
+							"Stores outside of State Management sections are forbidden",
+							ViolationSketchpadStateForbiddenStore,
+							file, lineNumber, strings.TrimSpace(line), nil))
+					}
+				}
+			}
+		}
+	}
+	return violations
+}
+
 // #endregion Policies
 
 // #region Tickets
@@ -1821,11 +1983,11 @@ func CreateTicket(slug, prompt, model string, files []string) (*Ticket, error) {
 	filePath := GetTicketPath(year, month, day, normalizedSlug)
 	gitAuthor := GetGitAuthor()
 	gitCommit := GetGitCommit()
-	var iterationFiles *TicketIterationFiles
+	var declaredFiles *TicketIterationFiles
 	if len(files) > 0 {
-		iterationFiles = &TicketIterationFiles{}
+		declaredFiles = &TicketIterationFiles{}
 		for _, f := range files {
-			iterationFiles.Updated = append(iterationFiles.Updated, FileLineStats{Path: f})
+			declaredFiles.Updated = append(declaredFiles.Updated, FileLineStats{Path: f})
 		}
 	}
 	firstIteration := TicketIteration{
@@ -1833,7 +1995,7 @@ func CreateTicket(slug, prompt, model string, files []string) (*Ticket, error) {
 		Model:  model,
 		Date:   TicketDate{Started: ISOTimestamp()},
 		Author: gitAuthor,
-		Files:  iterationFiles,
+		Declared: declaredFiles,
 	}
 	frontmatter := TicketFrontmatter{
 		Slug:       normalizedSlug,
@@ -2005,11 +2167,11 @@ func StartIteration(ticket *Ticket, prompt, model string, files []string) error 
 		return fmt.Errorf("at least one file is required to start an iteration")
 	}
 	gitAuthor := GetGitAuthor()
-	var iterationFiles *TicketIterationFiles
+	var declaredFiles *TicketIterationFiles
 	if len(files) > 0 {
-		iterationFiles = &TicketIterationFiles{}
+		declaredFiles = &TicketIterationFiles{}
 		for _, f := range files {
-			iterationFiles.Updated = append(iterationFiles.Updated, FileLineStats{Path: f})
+			declaredFiles.Updated = append(declaredFiles.Updated, FileLineStats{Path: f})
 		}
 	}
 	iteration := TicketIteration{
@@ -2017,7 +2179,7 @@ func StartIteration(ticket *Ticket, prompt, model string, files []string) error 
 		Model:  model,
 		Date:   TicketDate{Started: ISOTimestamp()},
 		Author: gitAuthor,
-		Files:  iterationFiles,
+		Declared: declaredFiles,
 	}
 	ticket.Frontmatter.Iterations = append(ticket.Frontmatter.Iterations, iteration)
 	return SaveTicket(ticket)
@@ -2129,15 +2291,15 @@ func GetGitDiffFileLineStats(baseCommit, headCommit string, paths []string) (Tic
 	if len(statusByPath) == 0 && len(lineStatsByPath) == 0 {
 		return TicketIterationFiles{}, LineStats{}, nil
 	}
-	paths := make([]string, 0, len(statusByPath))
+	resultPaths := make([]string, 0, len(statusByPath))
 	for path := range statusByPath {
-		paths = append(paths, path)
+		resultPaths = append(resultPaths, path)
 	}
-	sort.Strings(paths)
+	sort.Strings(resultPaths)
 	files := TicketIterationFiles{}
 	total := LineStats{}
-	for i := 0; i < len(paths); i++ {
-		path := paths[i]
+	for i := 0; i < len(resultPaths); i++ {
+		path := resultPaths[i]
 		status := statusByPath[path]
 		lineStats := lineStatsByPath[path]
 		total.Added += lineStats.Added
@@ -2171,7 +2333,11 @@ func EndIteration(ticket *Ticket) error {
 			break
 		}
 	}
-	iterationFiles, iterationLines, err := GetGitDiffFileLineStats(baseCommit, "", CollectTicketFilePaths(last.Files))
+	declaredPaths := CollectTicketFilePaths(last.Declared)
+	if len(declaredPaths) == 0 {
+		declaredPaths = CollectTicketFilePaths(last.Files)
+	}
+	iterationFiles, iterationLines, err := GetGitDiffFileLineStats(baseCommit, "", declaredPaths)
 	if err != nil {
 		return err
 	}

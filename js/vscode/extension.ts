@@ -42,6 +42,16 @@ const DIAGNOSTIC_SOURCE = "semio";
 
 let cachedProjects: ProjectData[] | null = null;
 let cachedRepoBaseUrl: string | undefined = undefined;
+const UI_STRINGS = {
+  en: {
+    sectionsEmpty: "No sections found",
+    sectionsNoActiveFile: "No active file",
+  },
+  de: {
+    sectionsEmpty: "Keine Abschnitte gefunden",
+    sectionsNoActiveFile: "Keine aktive Datei",
+  },
+};
 
 // #endregion Constants
 
@@ -73,6 +83,15 @@ interface AnalyzeReport {
   timestamp: string;
   scope: string;
   violations: Violation[];
+}
+
+interface SectionInfo {
+  name: string;
+  startLine: number;
+  endLine: number;
+  startIndex: number;
+  endIndex: number;
+  children: SectionInfo[];
 }
 
 // #endregion Types
@@ -214,6 +233,12 @@ function resolveCommitSha(commit: string | { sha?: string } | undefined): string
   return commit.sha;
 }
 
+function getUiString(key: keyof typeof UI_STRINGS.en): string {
+  const language = vscode.env.language.split("-")[0];
+  const bundle = UI_STRINGS[language as keyof typeof UI_STRINGS] ?? UI_STRINGS.en;
+  return bundle[key];
+}
+
 interface ToolResult<T = unknown> {
   output: { lines: { type: string; text: string }[]; exitCode: number };
   data?: T;
@@ -327,10 +352,16 @@ function getActiveFileRelativePath(): string | undefined {
 
 function pinDiagnosticPreview(editor?: vscode.TextEditor): void {
   if (!editor) return;
-  const activeTab = vscode.window.tabGroups?.activeTabGroup?.activeTab;
-  if (!activeTab || !activeTab.isPreview) return;
-  if (!vscode.languages.getDiagnostics(editor.document.uri).some((d) => d.source === DIAGNOSTIC_SOURCE)) return;
-  vscode.commands.executeCommand("workbench.action.keepEditor");
+  // Use setTimeout to allow VSCode to settle after opening the file from Problems panel
+  // This ensures the tab state and diagnostics are properly updated before checking
+  setTimeout(() => {
+    const currentEditor = vscode.window.activeTextEditor;
+    if (!currentEditor) return;
+    const activeTab = vscode.window.tabGroups?.activeTabGroup?.activeTab;
+    if (!activeTab || !activeTab.isPreview) return;
+    if (!vscode.languages.getDiagnostics(currentEditor.document.uri).some((d) => d.source === DIAGNOSTIC_SOURCE)) return;
+    vscode.commands.executeCommand("workbench.action.keepEditor");
+  }, 50);
 }
 
 // #endregion Utilities
@@ -410,7 +441,8 @@ function updateFileDiagnostics(document: vscode.TextDocument, violations: Violat
     const [policyId, violationName] = violation.kind.split(":");
     const diagnostic = new vscode.Diagnostic(range, violationName || violation.kind, severity);
     diagnostic.source = DIAGNOSTIC_SOURCE;
-    diagnostic.code = policyId;
+    // Use object form with target to ensure clicking opens the file at the correct location
+    diagnostic.code = { value: policyId, target: document.uri.with({ fragment: `L${line + 1}` }) };
     diagnostics.push(diagnostic);
   }
   repoDiagnosticCollection.set(document.uri, diagnostics);
@@ -508,7 +540,9 @@ function problemToDiagnostic(document: vscode.TextDocument, problem: Problem): v
   const range = locationToRange(document, problem.location);
   const diagnostic = new vscode.Diagnostic(range, problem.message, vscode.DiagnosticSeverity.Error);
   diagnostic.source = DIAGNOSTIC_SOURCE;
-  diagnostic.code = problem.constraintId;
+  // Use object form with target to ensure clicking opens the file at the correct location
+  const line = range.start.line + 1;
+  diagnostic.code = { value: problem.constraintId, target: document.uri.with({ fragment: `L${line}` }) };
   if (problem.relatedGuids && problem.relatedGuids.length > 1) {
     diagnostic.relatedInformation = problem.relatedGuids.slice(1).map((guid) => {
       const relatedRange = findGuidRange(document, guid);
@@ -651,7 +685,8 @@ class KitCodeActionProvider implements vscode.CodeActionProvider {
         const text = document.getText();
         const kit = deserializeKit(text);
         const result = validateKit(kit);
-        const problem = result.problems.find((i) => i.message === diagnostic.message && i.constraintId === diagnostic.code);
+        const diagnosticCode = typeof diagnostic.code === "object" && diagnostic.code !== null ? (diagnostic.code as { value: string }).value : diagnostic.code;
+        const problem = result.problems.find((i) => i.message === diagnostic.message && i.constraintId === diagnosticCode);
         if (!problem) continue;
         for (const fix of problem.fixes) {
           const action = createKitCodeAction(document, diagnostic, fix, kit);
@@ -1510,6 +1545,55 @@ class ContributorsProvider implements vscode.TreeDataProvider<ContributorTreeIte
   }
 }
 
+type SectionTreeItem = SectionItem | SectionStatusItem;
+
+class SectionStatusItem extends vscode.TreeItem {
+  constructor(label: string) {
+    super(label, vscode.TreeItemCollapsibleState.None);
+    this.contextValue = "sectionStatus";
+  }
+}
+
+class SectionItem extends vscode.TreeItem {
+  constructor(public readonly section: SectionInfo) {
+    super(section.name, section.children.length > 0 ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
+    this.description = `${section.startLine}-${section.endLine}`;
+    this.contextValue = "section";
+  }
+}
+
+class SectionsProvider implements vscode.TreeDataProvider<SectionTreeItem> {
+  private _onDidChangeTreeData = new vscode.EventEmitter<SectionTreeItem | undefined | null | void>();
+  readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
+
+  refresh(): void {
+    this._onDidChangeTreeData.fire();
+  }
+
+  getTreeItem(element: SectionTreeItem): vscode.TreeItem {
+    return element;
+  }
+
+  async getChildren(element?: SectionTreeItem): Promise<SectionTreeItem[]> {
+    if (element instanceof SectionItem) {
+      return element.section.children.map((child) => new SectionItem(child));
+    }
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+      return [new SectionStatusItem(getUiString("sectionsNoActiveFile"))];
+    }
+    if (!hasRepoAccess()) {
+      return [];
+    }
+    const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
+    const result = await runRepoCommandJson<ToolResult<SectionInfo[]>>(`section list "${relativePath}"`);
+    if (!result?.data || result.data.length === 0) {
+      return [new SectionStatusItem(getUiString("sectionsEmpty"))];
+    }
+    return result.data.map((section) => new SectionItem(section));
+  }
+}
+
 interface CommandInfo {
   id: string;
   title: string;
@@ -1635,6 +1719,7 @@ let ticketsProvider: TicketsProvider;
 let contributorsProvider: ContributorsProvider;
 let policiesProvider: PoliciesProvider;
 let commandsProvider: CommandsProvider;
+let sectionsProvider: SectionsProvider;
 
 function registerSidebarViews(context: vscode.ExtensionContext): void {
   const searchProvider = new SearchViewProvider(context.extensionUri);
@@ -1642,12 +1727,14 @@ function registerSidebarViews(context: vscode.ExtensionContext): void {
   contributorsProvider = new ContributorsProvider();
   policiesProvider = new PoliciesProvider();
   commandsProvider = new CommandsProvider();
+  sectionsProvider = new SectionsProvider();
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(SearchViewProvider.viewType, searchProvider),
     vscode.window.registerTreeDataProvider("semio.tickets", ticketsProvider),
     vscode.window.registerTreeDataProvider("semio.contributors", contributorsProvider),
     vscode.window.registerTreeDataProvider("semio.policies", policiesProvider),
     vscode.window.registerTreeDataProvider("semio.commands", commandsProvider),
+    vscode.window.registerTreeDataProvider("semio.sections", sectionsProvider),
   );
   context.subscriptions.push(
     vscode.commands.registerCommand("semio.refreshTickets", () => ticketsProvider.refresh()),
@@ -2315,6 +2402,14 @@ export function activate(context: vscode.ExtensionContext) {
   });
   context.subscriptions.push(vscode.languages.registerCodeActionsProvider("*", new RepoCodeActionProvider(), { providedCodeActionKinds: [vscode.CodeActionKind.QuickFix] }));
   registerSidebarViews(context);
+  context.subscriptions.push(
+    vscode.window.onDidChangeActiveTextEditor(() => sectionsProvider.refresh()),
+    vscode.workspace.onDidChangeTextDocument((event) => {
+      if (vscode.window.activeTextEditor?.document.uri.toString() === event.document.uri.toString()) {
+        sectionsProvider.refresh();
+      }
+    }),
+  );
   registerCommands(context);
 }
 

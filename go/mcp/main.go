@@ -20,6 +20,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"math"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -56,10 +57,17 @@ func findRepoBinary(start string) string {
 	}
 }
 
-func runRepo(args ...string) string {
+func runRepo(args ...string) (string, error) {
 	cmd := exec.Command(repoPath, args...)
-	out, _ := cmd.Output()
-	return string(out)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		output := strings.TrimSpace(string(out))
+		if output == "" {
+			return "", fmt.Errorf("repo %s: %w", strings.Join(args, " "), err)
+		}
+		return "", fmt.Errorf("repo %s: %w: %s", strings.Join(args, " "), err, output)
+	}
+	return string(out), nil
 }
 
 func main() {
@@ -97,13 +105,13 @@ func main() {
 		policyCheck,
 	)
 	s.AddTool(
-		mcp.NewTool("ticket_create",
-			mcp.WithDescription("Create a new development ticket"),
-			mcp.WithString("slug", mcp.Required(), mcp.Description("Ticket slug (will be uppercased and kebab-cased)")),
-			mcp.WithString("prompt", mcp.Description("Ticket prompt/description")),
-			mcp.WithString("model", mcp.Required(), mcp.Description("Large-Language-Model (LLM) used for this ticket")),
-			mcp.WithArray("files", mcp.Required(), mcp.Description("Files to include (at least one required)")),
-		),
+	mcp.NewTool("ticket_create",
+		mcp.WithDescription("Create a new development ticket"),
+		mcp.WithString("slug", mcp.Required(), mcp.Description("Ticket slug (will be uppercased and kebab-cased)")),
+		mcp.WithString("prompt", mcp.Required(), mcp.Description("Ticket prompt/description")),
+		mcp.WithString("model", mcp.Required(), mcp.Description("Large-Language-Model (LLM) used for this ticket")),
+		mcp.WithArray("files", mcp.Description("Files to include (at least one required)")),
+	),
 		ticketCreate,
 	)
 	s.AddTool(
@@ -126,16 +134,16 @@ func main() {
 		ticketRead,
 	)
 	s.AddTool(
-		mcp.NewTool("ticket_iterate_start",
-			mcp.WithDescription("Start a ticket iteration"),
-			mcp.WithNumber("year", mcp.Required(), mcp.Description("Ticket year")),
-			mcp.WithNumber("month", mcp.Required(), mcp.Description("Ticket month")),
-			mcp.WithNumber("day", mcp.Required(), mcp.Description("Ticket day")),
-			mcp.WithString("slug", mcp.Required(), mcp.Description("Ticket slug")),
-			mcp.WithString("prompt", mcp.Description("Iteration prompt")),
-			mcp.WithString("model", mcp.Required(), mcp.Description("Large-Language-Model (LLM) used")),
-			mcp.WithArray("files", mcp.Required(), mcp.Description("Files to include (at least one required)")),
-		),
+	mcp.NewTool("ticket_iterate_start",
+		mcp.WithDescription("Start a ticket iteration"),
+		mcp.WithNumber("year", mcp.Required(), mcp.Description("Ticket year")),
+		mcp.WithNumber("month", mcp.Required(), mcp.Description("Ticket month")),
+		mcp.WithNumber("day", mcp.Required(), mcp.Description("Ticket day")),
+		mcp.WithString("slug", mcp.Required(), mcp.Description("Ticket slug")),
+		mcp.WithString("prompt", mcp.Required(), mcp.Description("Iteration prompt")),
+		mcp.WithString("model", mcp.Required(), mcp.Description("Large-Language-Model (LLM) used")),
+		mcp.WithArray("files", mcp.Description("Files to include (at least one required)")),
+	),
 		ticketIterateStart,
 	)
 	s.AddTool(
@@ -317,6 +325,7 @@ func textResult(text string) *mcp.CallToolResult {
 	return mcp.NewToolResultText(text)
 }
 
+// #region Args
 func getArgs(request mcp.CallToolRequest) map[string]interface{} {
 	if args, ok := request.Params.Arguments.(map[string]interface{}); ok {
 		return args
@@ -324,261 +333,728 @@ func getArgs(request mcp.CallToolRequest) map[string]interface{} {
 	return make(map[string]interface{})
 }
 
+func getStringArg(args map[string]interface{}, key string) (string, bool, error) {
+	value, ok := args[key]
+	if !ok {
+		return "", false, nil
+	}
+	str, ok := value.(string)
+	if !ok || str == "" {
+		return "", true, fmt.Errorf("invalid %s", key)
+	}
+	return str, true, nil
+}
+
+func requireStringArg(args map[string]interface{}, key string) (string, error) {
+	value, ok, err := getStringArg(args, key)
+	if err != nil {
+		return "", err
+	}
+	if !ok {
+		return "", fmt.Errorf("missing %s", key)
+	}
+	return value, nil
+}
+
+func getIntArg(args map[string]interface{}, key string) (int, bool, error) {
+	value, ok := args[key]
+	if !ok {
+		return 0, false, nil
+	}
+	number, ok := value.(float64)
+	if !ok || number != math.Trunc(number) {
+		return 0, true, fmt.Errorf("invalid %s", key)
+	}
+	return int(number), true, nil
+}
+
+func requireIntArg(args map[string]interface{}, key string) (int, error) {
+	value, ok, err := getIntArg(args, key)
+	if err != nil {
+		return 0, err
+	}
+	if !ok {
+		return 0, fmt.Errorf("missing %s", key)
+	}
+	return value, nil
+}
+
+func getStringSliceArg(args map[string]interface{}, key string) ([]string, bool, error) {
+	value, ok := args[key]
+	if !ok {
+		return nil, false, nil
+	}
+	list, ok := value.([]interface{})
+	if !ok || len(list) == 0 {
+		return nil, true, fmt.Errorf("invalid %s", key)
+	}
+	result := make([]string, 0, len(list))
+	for _, item := range list {
+		str, ok := item.(string)
+		if !ok || str == "" {
+			return nil, true, fmt.Errorf("invalid %s", key)
+		}
+		result = append(result, str)
+	}
+	return result, true, nil
+}
+// #endregion Args
+
+// #region Paths
+func requireFilePath(path string) error {
+	info, err := os.Stat(path)
+	if err != nil {
+		return fmt.Errorf("invalid file path: %s", path)
+	}
+	if info.IsDir() {
+		return fmt.Errorf("invalid file path: %s", path)
+	}
+	return nil
+}
+
+func requireFolderPath(path string) error {
+	info, err := os.Stat(path)
+	if err != nil {
+		return fmt.Errorf("invalid folder path: %s", path)
+	}
+	if !info.IsDir() {
+		return fmt.Errorf("invalid folder path: %s", path)
+	}
+	return nil
+}
+
+func requireFileTargetPath(path string) error {
+	info, err := os.Stat(path)
+	if err == nil {
+		if info.IsDir() {
+			return fmt.Errorf("invalid file path: %s", path)
+		}
+		return nil
+	}
+	if !os.IsNotExist(err) {
+		return fmt.Errorf("invalid file path: %s", path)
+	}
+	return nil
+}
+
+func requireFolderTargetPath(path string) error {
+	info, err := os.Stat(path)
+	if err == nil {
+		if !info.IsDir() {
+			return fmt.Errorf("invalid folder path: %s", path)
+		}
+		return nil
+	}
+	if !os.IsNotExist(err) {
+		return fmt.Errorf("invalid folder path: %s", path)
+	}
+	return nil
+}
+// #endregion Paths
+
 func analyze(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	scope, _ := args["scope"].(string)
-	if scope == "" {
+	scope, ok, err := getStringArg(args, "scope")
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
 		scope = "@semio"
 	}
-	return textResult(runRepo("analyze", scope)), nil
+	result, err := runRepo("analyze", scope)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func fix(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	scope, _ := args["scope"].(string)
-	if scope == "" {
+	scope, ok, err := getStringArg(args, "scope")
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
 		scope = "@semio"
 	}
-	return textResult(runRepo("fix", scope)), nil
+	result, err := runRepo("fix", scope)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func policyList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	return textResult(runRepo("policy", "list")), nil
+	result, err := runRepo("policy", "list")
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func policyCheck(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	id, _ := args["id"].(string)
-	scope, _ := args["scope"].(string)
-	if scope == "" {
-		return textResult(runRepo("policy", "check", id)), nil
+	id, err := requireStringArg(args, "id")
+	if err != nil {
+		return nil, err
 	}
-	return textResult(runRepo("policy", "check", id, scope)), nil
+	scope, ok, err := getStringArg(args, "scope")
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		result, err := runRepo("policy", "check", id)
+		if err != nil {
+			return nil, err
+		}
+		return textResult(result), nil
+	}
+	result, err := runRepo("policy", "check", id, scope)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func ticketCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	slug, _ := args["slug"].(string)
-	prompt, _ := args["prompt"].(string)
-	model, _ := args["model"].(string)
-	filesRaw, _ := args["files"].([]interface{})
+	slug, err := requireStringArg(args, "slug")
+	if err != nil {
+		return nil, err
+	}
+	prompt, err := requireStringArg(args, "prompt")
+	if err != nil {
+		return nil, err
+	}
+	model, err := requireStringArg(args, "model")
+	if err != nil {
+		return nil, err
+	}
 	cmdArgs := []string{"ticket", "create", slug}
-	if prompt != "" {
-		cmdArgs = append(cmdArgs, "--prompt="+prompt)
+	cmdArgs = append(cmdArgs, "--prompt="+prompt)
+	cmdArgs = append(cmdArgs, "--model="+model)
+	files, ok, err := getStringSliceArg(args, "files")
+	if err != nil {
+		return nil, err
 	}
-	if model != "" {
-		cmdArgs = append(cmdArgs, "--model="+model)
-	}
-	for _, f := range filesRaw {
-		if file, ok := f.(string); ok {
+	if ok {
+		for _, file := range files {
+			if err := requireFilePath(file); err != nil {
+				return nil, err
+			}
 			cmdArgs = append(cmdArgs, "--file="+file)
 		}
 	}
-	return textResult(runRepo(cmdArgs...)), nil
+	result, err := runRepo(cmdArgs...)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func ticketList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	cmdArgs := []string{"ticket", "list"}
-	if y, ok := args["year"].(float64); ok {
-		cmdArgs = append(cmdArgs, strconv.Itoa(int(y)))
-		if m, ok := args["month"].(float64); ok {
-			cmdArgs = append(cmdArgs, strconv.Itoa(int(m)))
-			if d, ok := args["day"].(float64); ok {
-				cmdArgs = append(cmdArgs, strconv.Itoa(int(d)))
+	year, yearOk, err := getIntArg(args, "year")
+	if err != nil {
+		return nil, err
+	}
+	month, monthOk, err := getIntArg(args, "month")
+	if err != nil {
+		return nil, err
+	}
+	day, dayOk, err := getIntArg(args, "day")
+	if err != nil {
+		return nil, err
+	}
+	if monthOk && !yearOk {
+		return nil, fmt.Errorf("missing year")
+	}
+	if dayOk && !monthOk {
+		return nil, fmt.Errorf("missing month")
+	}
+	if yearOk {
+		cmdArgs = append(cmdArgs, strconv.Itoa(year))
+		if monthOk {
+			cmdArgs = append(cmdArgs, strconv.Itoa(month))
+			if dayOk {
+				cmdArgs = append(cmdArgs, strconv.Itoa(day))
 			}
 		}
 	}
-	return textResult(runRepo(cmdArgs...)), nil
+	result, err := runRepo(cmdArgs...)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func ticketRead(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	year := strconv.Itoa(int(args["year"].(float64)))
-	month := strconv.Itoa(int(args["month"].(float64)))
-	day := strconv.Itoa(int(args["day"].(float64)))
-	slug, _ := args["slug"].(string)
-	return textResult(runRepo("ticket", "read", year, month, day, slug)), nil
+	year, err := requireIntArg(args, "year")
+	if err != nil {
+		return nil, err
+	}
+	month, err := requireIntArg(args, "month")
+	if err != nil {
+		return nil, err
+	}
+	day, err := requireIntArg(args, "day")
+	if err != nil {
+		return nil, err
+	}
+	slug, err := requireStringArg(args, "slug")
+	if err != nil {
+		return nil, err
+	}
+	result, err := runRepo("ticket", "read", strconv.Itoa(year), strconv.Itoa(month), strconv.Itoa(day), slug)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func ticketIterateStart(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	year := strconv.Itoa(int(args["year"].(float64)))
-	month := strconv.Itoa(int(args["month"].(float64)))
-	day := strconv.Itoa(int(args["day"].(float64)))
-	slug, _ := args["slug"].(string)
-	prompt, _ := args["prompt"].(string)
-	model, _ := args["model"].(string)
-	filesRaw, _ := args["files"].([]interface{})
-	cmdArgs := []string{"ticket", "iterate", "start", year, month, day, slug}
-	if prompt != "" {
-		cmdArgs = append(cmdArgs, "--prompt="+prompt)
+	year, err := requireIntArg(args, "year")
+	if err != nil {
+		return nil, err
 	}
-	if model != "" {
-		cmdArgs = append(cmdArgs, "--model="+model)
+	month, err := requireIntArg(args, "month")
+	if err != nil {
+		return nil, err
 	}
-	for _, f := range filesRaw {
-		if file, ok := f.(string); ok {
+	day, err := requireIntArg(args, "day")
+	if err != nil {
+		return nil, err
+	}
+	slug, err := requireStringArg(args, "slug")
+	if err != nil {
+		return nil, err
+	}
+	prompt, err := requireStringArg(args, "prompt")
+	if err != nil {
+		return nil, err
+	}
+	model, err := requireStringArg(args, "model")
+	if err != nil {
+		return nil, err
+	}
+	cmdArgs := []string{"ticket", "iterate", "start", strconv.Itoa(year), strconv.Itoa(month), strconv.Itoa(day), slug}
+	cmdArgs = append(cmdArgs, "--prompt="+prompt)
+	cmdArgs = append(cmdArgs, "--model="+model)
+	files, ok, err := getStringSliceArg(args, "files")
+	if err != nil {
+		return nil, err
+	}
+	if ok {
+		for _, file := range files {
+			if err := requireFilePath(file); err != nil {
+				return nil, err
+			}
 			cmdArgs = append(cmdArgs, "--file="+file)
 		}
 	}
-	return textResult(runRepo(cmdArgs...)), nil
+	result, err := runRepo(cmdArgs...)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func ticketIterateEnd(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	year := strconv.Itoa(int(args["year"].(float64)))
-	month := strconv.Itoa(int(args["month"].(float64)))
-	day := strconv.Itoa(int(args["day"].(float64)))
-	slug, _ := args["slug"].(string)
-	return textResult(runRepo("ticket", "iterate", "end", year, month, day, slug)), nil
+	year, err := requireIntArg(args, "year")
+	if err != nil {
+		return nil, err
+	}
+	month, err := requireIntArg(args, "month")
+	if err != nil {
+		return nil, err
+	}
+	day, err := requireIntArg(args, "day")
+	if err != nil {
+		return nil, err
+	}
+	slug, err := requireStringArg(args, "slug")
+	if err != nil {
+		return nil, err
+	}
+	result, err := runRepo("ticket", "iterate", "end", strconv.Itoa(year), strconv.Itoa(month), strconv.Itoa(day), slug)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func ticketFinish(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	year := strconv.Itoa(int(args["year"].(float64)))
-	month := strconv.Itoa(int(args["month"].(float64)))
-	day := strconv.Itoa(int(args["day"].(float64)))
-	slug, _ := args["slug"].(string)
-	return textResult(runRepo("ticket", "finish", year, month, day, slug)), nil
+	year, err := requireIntArg(args, "year")
+	if err != nil {
+		return nil, err
+	}
+	month, err := requireIntArg(args, "month")
+	if err != nil {
+		return nil, err
+	}
+	day, err := requireIntArg(args, "day")
+	if err != nil {
+		return nil, err
+	}
+	slug, err := requireStringArg(args, "slug")
+	if err != nil {
+		return nil, err
+	}
+	result, err := runRepo("ticket", "finish", strconv.Itoa(year), strconv.Itoa(month), strconv.Itoa(day), slug)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func contributorAdd(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	github, _ := args["github"].(string)
-	return textResult(runRepo("contributor", "add", github)), nil
+	github, err := requireStringArg(args, "github")
+	if err != nil {
+		return nil, err
+	}
+	result, err := runRepo("contributor", "add", github)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func contributorList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	return textResult(runRepo("contributor", "list")), nil
+	result, err := runRepo("contributor", "list")
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func contributorRemove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	github, _ := args["github"].(string)
-	return textResult(runRepo("contributor", "remove", github)), nil
+	github, err := requireStringArg(args, "github")
+	if err != nil {
+		return nil, err
+	}
+	result, err := runRepo("contributor", "remove", github)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func projectList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	return textResult(runRepo("project", "list")), nil
+	result, err := runRepo("project", "list")
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func projectTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	return textResult(runRepo("project", "tree")), nil
+	result, err := runRepo("project", "tree")
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func folderCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	path, _ := args["path"].(string)
-	return textResult(runRepo("folder", "create", path)), nil
+	path, err := requireStringArg(args, "path")
+	if err != nil {
+		return nil, err
+	}
+	if err := requireFolderTargetPath(path); err != nil {
+		return nil, err
+	}
+	result, err := runRepo("folder", "create", path)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func folderMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	source, _ := args["source"].(string)
-	target, _ := args["target"].(string)
-	return textResult(runRepo("folder", "move", source, target)), nil
+	source, err := requireStringArg(args, "source")
+	if err != nil {
+		return nil, err
+	}
+	target, err := requireStringArg(args, "target")
+	if err != nil {
+		return nil, err
+	}
+	if err := requireFolderPath(source); err != nil {
+		return nil, err
+	}
+	if err := requireFolderTargetPath(target); err != nil {
+		return nil, err
+	}
+	result, err := runRepo("folder", "move", source, target)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func folderDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	path, _ := args["path"].(string)
-	return textResult(runRepo("folder", "delete", path)), nil
+	path, err := requireStringArg(args, "path")
+	if err != nil {
+		return nil, err
+	}
+	if err := requireFolderPath(path); err != nil {
+		return nil, err
+	}
+	result, err := runRepo("folder", "delete", path)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func folderList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	path, _ := args["path"].(string)
-	if path == "" {
+	path, ok, err := getStringArg(args, "path")
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
 		path = "."
 	}
-	return textResult(runRepo("folder", "list", path)), nil
+	if err := requireFolderPath(path); err != nil {
+		return nil, err
+	}
+	result, err := runRepo("folder", "list", path)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func folderTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	path, _ := args["path"].(string)
-	if path == "" {
+	path, ok, err := getStringArg(args, "path")
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
 		path = "."
 	}
-	return textResult(runRepo("folder", "tree", path)), nil
+	if err := requireFolderPath(path); err != nil {
+		return nil, err
+	}
+	result, err := runRepo("folder", "tree", path)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func fileCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	path, _ := args["path"].(string)
-	return textResult(runRepo("file", "create", path)), nil
+	path, err := requireStringArg(args, "path")
+	if err != nil {
+		return nil, err
+	}
+	if err := requireFileTargetPath(path); err != nil {
+		return nil, err
+	}
+	result, err := runRepo("file", "create", path)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func fileMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	source, _ := args["source"].(string)
-	target, _ := args["target"].(string)
-	return textResult(runRepo("file", "move", source, target)), nil
+	source, err := requireStringArg(args, "source")
+	if err != nil {
+		return nil, err
+	}
+	target, err := requireStringArg(args, "target")
+	if err != nil {
+		return nil, err
+	}
+	if err := requireFilePath(source); err != nil {
+		return nil, err
+	}
+	if err := requireFileTargetPath(target); err != nil {
+		return nil, err
+	}
+	result, err := runRepo("file", "move", source, target)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func fileDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	path, _ := args["path"].(string)
-	return textResult(runRepo("file", "delete", path)), nil
+	path, err := requireStringArg(args, "path")
+	if err != nil {
+		return nil, err
+	}
+	if err := requireFilePath(path); err != nil {
+		return nil, err
+	}
+	result, err := runRepo("file", "delete", path)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func fileList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	scope, _ := args["scope"].(string)
-	if scope == "" {
+	scope, ok, err := getStringArg(args, "scope")
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
 		scope = "@semio"
 	}
-	return textResult(runRepo("file", "list", scope)), nil
+	result, err := runRepo("file", "list", scope)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func fileTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	path, _ := args["path"].(string)
-	if path == "" {
+	path, ok, err := getStringArg(args, "path")
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
 		path = "."
 	}
-	return textResult(runRepo("file", "tree", path)), nil
+	if err := requireFolderPath(path); err != nil {
+		return nil, err
+	}
+	result, err := runRepo("file", "tree", path)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func sectionCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	file, _ := args["file"].(string)
-	section, _ := args["section"].(string)
-	return textResult(runRepo("section", "create", file, section)), nil
+	file, err := requireStringArg(args, "file")
+	if err != nil {
+		return nil, err
+	}
+	section, err := requireStringArg(args, "section")
+	if err != nil {
+		return nil, err
+	}
+	if err := requireFilePath(file); err != nil {
+		return nil, err
+	}
+	result, err := runRepo("section", "create", file, section)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func sectionMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	file, _ := args["file"].(string)
-	oldName, _ := args["old_name"].(string)
-	newName, _ := args["new_name"].(string)
-	return textResult(runRepo("section", "move", file, oldName, newName)), nil
+	file, err := requireStringArg(args, "file")
+	if err != nil {
+		return nil, err
+	}
+	oldName, err := requireStringArg(args, "old_name")
+	if err != nil {
+		return nil, err
+	}
+	newName, err := requireStringArg(args, "new_name")
+	if err != nil {
+		return nil, err
+	}
+	if err := requireFilePath(file); err != nil {
+		return nil, err
+	}
+	result, err := runRepo("section", "move", file, oldName, newName)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func sectionDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	file, _ := args["file"].(string)
-	section, _ := args["section"].(string)
-	return textResult(runRepo("section", "delete", file, section)), nil
+	file, err := requireStringArg(args, "file")
+	if err != nil {
+		return nil, err
+	}
+	section, err := requireStringArg(args, "section")
+	if err != nil {
+		return nil, err
+	}
+	if err := requireFilePath(file); err != nil {
+		return nil, err
+	}
+	result, err := runRepo("section", "delete", file, section)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func sectionList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	file, _ := args["file"].(string)
-	return textResult(runRepo("section", "list", file)), nil
+	file, err := requireStringArg(args, "file")
+	if err != nil {
+		return nil, err
+	}
+	if err := requireFilePath(file); err != nil {
+		return nil, err
+	}
+	result, err := runRepo("section", "list", file)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func sectionTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	file, _ := args["file"].(string)
-	return textResult(runRepo("section", "tree", file)), nil
+	file, err := requireStringArg(args, "file")
+	if err != nil {
+		return nil, err
+	}
+	if err := requireFilePath(file); err != nil {
+		return nil, err
+	}
+	result, err := runRepo("section", "tree", file)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func definitionList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	file, _ := args["file"].(string)
-	return textResult(runRepo("definition", "list", file)), nil
+	file, err := requireStringArg(args, "file")
+	if err != nil {
+		return nil, err
+	}
+	if err := requireFilePath(file); err != nil {
+		return nil, err
+	}
+	result, err := runRepo("definition", "list", file)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 var _ = strings.TrimSpace
