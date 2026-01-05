@@ -93,7 +93,7 @@ Contributor contributions MUST be derived from ticket frontmatter and source fil
 
 Contributor ordering MUST be based on ticket contribution count.
 
-Contributor contributions MUST expose tickets, commits, projects, files, and line totals.
+Contributor contributions MUST expose tickets, commits, bundles, files, and line totals.
 
 ### Kit
 
@@ -350,8 +350,8 @@ Toolbar panel visibility defaults to `true` for all apps via `panelVisibility: {
 - Command trees mirror the CLI command and subcommand hierarchy; matching a command group keeps its subtree visible.
 - Problem list diagnostics open in pinned editor tabs for immediate saves.
 - Contributor tree items list emails with mailto actions, links with external navigation, and contribution nodes with line summary descriptions.
-- Contributor contributions are grouped into commits, projects, tickets (year/month/day), and files (folder/file) with navigation actions and inline ticket close/reopen actions.
-- The solution explorer sections view lists all sections for the active file.
+- Contributor contributions are grouped into commits, bundles, tickets (year/month/day), and files (folder/file) with navigation actions and inline ticket close/reopen actions.
+- The built-in Explorer hosts the Sections view; selecting a section navigates to it, F2 renames, drag-and-drop moves sections, and inline actions create child sections, rename sections, and delete sections via repo commands.
 
 # Monorepo
 
@@ -545,8 +545,8 @@ npx tsx repo.tsx <command> [subcommand] [options]
 | `ticket iterate end`                      | End iteration on a ticket           |
 | `ticket finish`                           | Finish a ticket                     |
 | `ticket reopen`                           | Reopen a ticket                     |
-| `project list`                            | List Nx projects                    |
-| `project tree`                            | Show project dependency tree        |
+| `bundle list`                             | List Nx bundles                     |
+| `bundle tree`                             | Show bundle dependency tree         |
 | `folder tree [path]`                      | Show folder structure               |
 | `folder create <path>`                    | Create a folder                     |
 | `folder move <src> <dst>`                 | Move/rename a folder                |
@@ -568,7 +568,7 @@ npx tsx repo.tsx <command> [subcommand] [options]
 **Scope Syntax:**
 
 - `@semio` - Repo scope (all files)
-- `@semio/js` - Project scope (Nx project)
+- `@semio/js` - Bundle scope (Nx bundle)
 - `js/js/sketchpad/` - Folder scope
 - `js/js/sketchpad/App.tsx` - File scope
 - `file.tsx#Region` - Section scope
@@ -612,7 +612,7 @@ All commands output JSON with structure:
 repo analyze js/js/semio.ts           # Analyze single file
 repo section tree repo.tsx            # Show section structure
 repo definition list js/js/semio.ts   # List all definitions
-repo project list                     # List all Nx projects
+repo bundle list                     # List all Nx bundles
 repo folder tree js/js                # Show folder tree
 repo ticket create MY-TASK --prompt="..." # Create ticket
 repo ticket list 2025                 # List tickets from 2025
@@ -657,8 +657,8 @@ The MCP server communicates via stdio and exposes all repo tools as MCP tools. C
 - `ticket_iterate_start` - Start iteration
 - `ticket_iterate_end` - End iteration
 - `ticket_finish` - Finish a ticket
-- `project_list` - List Nx projects
-- `project_tree` - Show project tree
+- `project_list` - List Nx bundles
+- `project_tree` - Show bundle tree
 - `folder_create`, `folder_move`, `folder_delete`, `folder_list`, `folder_tree` - Folder operations
 - `file_create`, `file_move`, `file_delete`, `file_list`, `file_tree` - File operations
 - `section_create`, `section_move`, `section_delete`, `section_list`, `section_tree` - Section operations
@@ -1690,7 +1690,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ ├── engine.py # @semio/engine
 │ │ ├── test_engine.py # pytest
 │ │ ├── package.json # monorepo integration
-│ │ ├── pyproject.toml # uv project file
+│ │ ├── pyproject.toml # uv bundle file
 │ │ ├── test.ts # wrapper
 │ │ ├── uv.lock
 ├── rb
@@ -3899,8 +3899,9 @@ For kit documents (JSON files with `kit_` prefix, `_kit` suffix, or named `kit.j
 ### Sidebar Views
 
 Tree data providers for tickets, policies, contributors, and commands with search/filter capabilities.
-Contributor tree nodes group contributions into commits, projects, tickets by date, and files by folder with navigation commands for tickets, commits, projects, and files.
-Sections view provider resolves the active editor path, calls `repo section list`, and renders the nested section tree with refresh on active editor and document changes.
+Contributor tree nodes group contributions into commits, bundles, tickets by date, and files by folder with navigation commands for tickets, commits, bundles, and files.
+Contributor commit items expose inline copy SHA and open in GitHub actions.
+Sections view provider resolves the active editor path, calls `repo section list`, renders the nested section tree, opens section locations on selection, binds F2 rename, supports drag-and-drop section moves, and routes rename/create-child/delete actions through repo section commands with refresh on active editor and document changes.
 
 ### Commands
 
@@ -3922,8 +3923,8 @@ Ticket iteration end derives per-file lists and line stats from git diffs betwee
 Ticket finish aggregates per-iteration file stats into ticket-level `files` and computes ticket-level `lines` from git diffs scoped to the ticket file list.
 Ticket file aggregates store `updated`, `created`, and `removed` as `FileLineStats` with line totals.
 Comment policy scanning tracks string and template literal context so comment markers inside literals do not trigger violations.
-Contributor listing derives tickets, commits, projects, files, and line totals from ticket frontmatter and header contributor entries, resolves contributors by email/name mappings, and sorts by ticket count.
-Contributor commit entries resolve titles from git metadata and project memberships from file path overlap with Nx project roots.
+Contributor listing derives tickets, commits, bundles, files, and line totals from ticket frontmatter and header contributor entries, resolves contributors by email/name mappings, and sorts by ticket count.
+Contributor commit entries resolve titles from git metadata and bundle memberships from file path overlap with Nx bundle roots.
 
 ## 📁net/
 

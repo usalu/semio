@@ -3,10 +3,5 @@
   "name": "pizzadizza",
   "links": {
     "github": "https://github.com/pizzadizza"
-  },
-  "contributions": {
-    "projects": [
-      "@semio/assistant"
-    ]
   }
 }

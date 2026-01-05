@@ -51,12 +51,14 @@
           "name": "Commands"
         },
         {
-          "id": "semio.sections",
-          "name": "Sections"
-        },
-        {
           "id": "semio.contributors",
           "name": "Contributors"
+        }
+      ],
+      "explorer": [
+        {
+          "id": "semio.sections",
+          "name": "Sections"
         }
       ]
     },
@@ -117,11 +119,11 @@
       },
       {
         "command": "semio.projectList",
-        "title": "semio: List Projects"
+        "title": "semio: List Bundles"
       },
       {
         "command": "semio.projectTree",
-        "title": "semio: Show Project Tree"
+        "title": "semio: Show Bundle Tree"
       },
       {
         "command": "semio.contributorAdd",
@@ -196,6 +198,25 @@
         "title": "semio: List Sections"
       },
       {
+        "command": "semio.sectionOpen",
+        "title": "semio: Open Section"
+      },
+      {
+        "command": "semio.sectionRename",
+        "title": "semio: Rename Section",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "semio.sectionCreateChild",
+        "title": "semio: Create Section Child",
+        "icon": "$(add)"
+      },
+      {
+        "command": "semio.sectionRemove",
+        "title": "semio: Delete Section",
+        "icon": "$(trash)"
+      },
+      {
         "command": "semio.definitionList",
         "title": "semio: List Definitions"
       },
@@ -264,15 +285,24 @@
       },
       {
         "command": "semio.openProject",
-        "title": "Open Project"
+        "title": "Open Bundle"
       },
       {
         "command": "semio.copyCommitSha",
-        "title": "Copy Commit SHA"
+        "title": "Copy Commit SHA",
+        "icon": "$(copy)"
       },
       {
         "command": "semio.openCommitInGitHub",
-        "title": "Open Commit in GitHub"
+        "title": "Open Commit in GitHub",
+        "icon": "$(github)"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "semio.sectionRename",
+        "key": "f2",
+        "when": "view == semio.sections && viewItem == section"
       }
     ],
     "menus": {
@@ -352,6 +382,21 @@
         {
           "command": "semio.runCommand",
           "when": "view == semio.commands && viewItem == command",
+          "group": "inline"
+        },
+        {
+          "command": "semio.sectionRename",
+          "when": "view == semio.sections && viewItem == section",
+          "group": "inline"
+        },
+        {
+          "command": "semio.sectionCreateChild",
+          "when": "view == semio.sections && viewItem == section",
+          "group": "inline"
+        },
+        {
+          "command": "semio.sectionRemove",
+          "when": "view == semio.sections && viewItem == section",
           "group": "inline"
         }
       ]

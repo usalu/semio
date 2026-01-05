@@ -17,7 +17,7 @@ iterations: []
 
 # Plan
 
-- Define a real root `tsconfig.json` as the canonical project for `hooks/typescript.ts`.
+- Define a real root `tsconfig.json` as the canonical bundle for `hooks/typescript.ts`.
 - Ensure `.storybook` TypeScript files are part of the repo-wide check.
 - Fix all remaining TypeScript errors until `reports/typescript.json` is clean.
 - Update dev docs to reflect the canonical TypeScript configuration.

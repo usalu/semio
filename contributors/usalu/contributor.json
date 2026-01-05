@@ -7,17 +7,5 @@
   ],
   "links": {
     "github": "https://github.com/usalu"
-  },
-  "contributions": {
-    "projects": [
-      "@semio/js",
-      "@semio/net",
-      "@semio/desktop",
-      "@semio/engine",
-      "@semio/assistant",
-      "@semio/play",
-      "@semio/docs",
-      "@semio/assets"
-    ]
   }
 }

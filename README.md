@@ -209,8 +209,8 @@ Ticket iteration and finish actions attach git-derived file lists and line total
 Code hygiene diagnostics ignore comment markers inside string literals so snippets and URLs stay clean of false comment warnings.
 The command browser mirrors the repo command and subcommand hierarchy so discovery follows the same structure as the CLI.
 Problem list entries open in dedicated editor tabs so edits are immediately saveable.
-Contributor views merge ticket activity and file header credits into a per-person breakdown with line totals, grouped tickets, commits, projects, and file navigation for quick context.
-The solution explorer includes a Sections panel that lists the current file structure so you can scan its regions at a glance.
+Contributor views merge ticket activity and file header credits into a per-person breakdown with line totals, grouped tickets, commits, bundles, and file navigation for quick context.
+The built-in Explorer adds a Sections panel that lists the current file structure, lets you jump to a section on click, supports F2 rename, and provides inline create-child, rename, delete, and drag-move actions.
 
 ## 🦗 [semio.gh](https://docs.semio-tech.com/manuals/grasshopper) [↑](#%EF%B8%8F-products-)
 
@@ -516,9 +516,9 @@ In general, our files follow this structure:
 
 We all know this `./src/**` folder that has made it into a lot of starters 🚀
 
-Other than feeling cool about using hacky abbreviations, does it really help you to understand the project faster and work more efficient on it?
+Other than feeling cool about using hacky abbreviations, does it really help you to understand the bundle faster and work more efficient on it?
 
-If your project contains hundreds of config file and other project folders at the root, maybe 🤔
+If your bundle contains hundreds of config file and other bundle folders at the root, maybe 🤔
 
 But most likely not ❌
 
@@ -609,7 +609,7 @@ Even if 95% of the codebase follows those principles, there are good reasons for
 ### 🦑 GitKraken [↑](#-git-)
 
 > [!NOTE]  
-> It is free for open-source projects like this one ❤️
+> It is free for open-source bundles like this one ❤️
 
 We use [GitKraken Desktop](https://www.gitkraken.com/git-client) as our git client 🖱️
 
@@ -816,7 +816,7 @@ All pipeline commands support skipping earlier steps:
 - Skip `test` when running a build: `npm run build -- --skip=test`
 - Skip `build` when running `publish:test`/`publish`: `npm run publish -- --skip=build`
 
-To scope Nx-powered steps (e.g. `test`, `build`, ESLint) to specific projects, pass Nx args after `--nx`:
+To scope Nx-powered steps (e.g. `test`, `build`, ESLint) to specific bundles, pass Nx args after `--nx`:
 
 ```bash
 npm run test -- --nx --projects=@semio/js
@@ -1062,14 +1062,14 @@ The default model for agent work is **Claude Opus 4.5**, with **GPT-5.2 Codex** 
 </details>
 
 All automation, CI runs, and agent workflows are controlled through the canonical root commands `dev`, `fix`, `analyze`, `preflight`, `test`, `build`, `update`, `publish:test`, and `publish`. Only `dev` is allowed to stay live for watch mode, while the remaining commands must exit so CI and agents can finish reliably. `publish:test` and `publish` always run a full `build` first.
-The root `package.json` uses `preflight.ts` to orchestrate the command pipeline, and delegates project builds/tests/publishing to Nx (`npx nx run-many -t <target>`).
+The root `package.json` uses `preflight.ts` to orchestrate the command pipeline, and delegates bundle builds/tests/publishing to Nx (`npx nx run-many -t <target>`).
 
 # ♻️ Ecosystems [↑](#-overview)
 
 <details>
 <summary><strong>📺 Channels:</strong></summary>
 
-- [FreeCodeCamp](https://www.youtube.com/@FreeCodeCamp) - `full-projects`
+- [FreeCodeCamp](https://www.youtube.com/@FreeCodeCamp) - `full-bundles`
 - [Programming with Mosh](https://www.youtube.com/@programmingwithmosh) - `beginner`
 - [Fireship](https://www.youtube.com/@Fireship) - `quaffable`
   - [… in 100 Seconds](https://www.youtube.com/watch?v=DC471a9qrU4&list=PL0vfts4VzfNiI1BsIK5u7LpPaIDKMJIDN) - `high-level`
@@ -1258,7 +1258,7 @@ File and folder arguments are checked for path correctness so directory paths ca
 ## 👥 Contributors [↑](#-components-)
 
 Contributor activity is derived from ticket frontmatter and source file headers, so authorship and ownership stay aligned with the artifacts people actually touch.
-Each contributor aggregates tickets, commits, projects, files, and line totals, and the list is ordered by ticket volume so the most active contributors surface first.
+Each contributor aggregates tickets, commits, bundles, files, and line totals, and the list is ordered by ticket volume so the most active contributors surface first.
 
 ## 🧭 Command Tree [↑](#-components-)
 
@@ -1267,8 +1267,9 @@ Search matches either command labels or group names, and matching a group keeps 
 
 ## 🧩 Sections Explorer [↑](#-components-)
 
-The VS Code extension solution explorer adds a Sections view that queries the repo section list for the active file and renders the nested region tree.
-It refreshes on editor focus and text changes so the list stays aligned with the current file structure.
+The VS Code extension adds a Sections view to the built-in Explorer that lists nested regions for the active file via the repo section list.
+Selecting a section navigates to its start, F2 triggers rename, drag-and-drop moves sections, and inline actions use repo commands to create child sections, rename sections, or delete them.
+The view refreshes on editor focus and text changes so the tree stays aligned with the current file structure.
 
 ## 🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/js) [↑](#-components-)
 
@@ -1900,7 +1901,7 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
 
 # ⚖️ License
 
-The files in this repository are licensed under the [GNU Affero General Public License](https://www.gnu.org/licenses/#AGPL) unless otherwise described. Most libraries, modules, extensions, objects or code herein are explicitly licensed. This is indicated in the root of the containing folder under a different license file, or in the configuration files of a project or in the respective file's header.
+The files in this repository are licensed under the [GNU Affero General Public License](https://www.gnu.org/licenses/#AGPL) unless otherwise described. Most libraries, modules, extensions, objects or code herein are explicitly licensed. This is indicated in the root of the containing folder under a different license file, or in the configuration files of a bundle or in the respective file's header.
 
 As a reference, different type of components have usually different licenses:
 

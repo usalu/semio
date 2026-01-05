@@ -21,7 +21,7 @@
 - definition
 - file
 - folder
-- project
+- bundle
 - violation
 - policy
 - hook

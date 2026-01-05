@@ -3,11 +3,5 @@
   "name": "KinanSarak",
   "links": {
     "github": "https://github.com/kinansarak"
-  },
-  "contributions": {
-    "projects": [
-      "@semio/docs",
-      "@semio/grasshopper"
-    ]
   }
 }

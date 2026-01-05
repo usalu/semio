@@ -188,13 +188,13 @@ func main() {
 	)
 	s.AddTool(
 		mcp.NewTool("project_list",
-			mcp.WithDescription("List Nx projects in the monorepo"),
+			mcp.WithDescription("List Nx bundles in the monorepo"),
 		),
 		projectList,
 	)
 	s.AddTool(
 		mcp.NewTool("project_tree",
-			mcp.WithDescription("Show project dependency tree"),
+			mcp.WithDescription("Show bundle dependency tree"),
 		),
 		projectTree,
 	)
@@ -747,7 +747,7 @@ func contributorRemove(ctx context.Context, request mcp.CallToolRequest) (*mcp.C
 }
 
 func projectList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	result, err := runRepo("project", "list")
+	result, err := runRepo("bundle", "list")
 	if err != nil {
 		return nil, err
 	}
@@ -755,7 +755,7 @@ func projectList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 }
 
 func projectTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	result, err := runRepo("project", "tree")
+	result, err := runRepo("bundle", "tree")
 	if err != nil {
 		return nil, err
 	}

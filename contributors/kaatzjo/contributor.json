@@ -3,10 +3,5 @@
   "name": "kaatzjo",
   "links": {
     "github": "https://github.com/kaatzjo"
-  },
-  "contributions": {
-    "projects": [
-      "@semio/engine"
-    ]
   }
 }

@@ -3,11 +3,5 @@
   "name": "Elduane Lumpine",
   "links": {
     "github": "https://github.com/ellumpine"
-  },
-  "contributions": {
-    "projects": [
-      "@semio/grasshopper",
-      "@semio/ladybug"
-    ]
   }
 }

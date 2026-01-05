@@ -43,7 +43,7 @@ type ScopeKind string
 
 const (
 	ScopeRepo       ScopeKind = "repo"
-	ScopeProject    ScopeKind = "project"
+	ScopeProject    ScopeKind = "bundle"
 	ScopeFolder     ScopeKind = "folder"
 	ScopeFile       ScopeKind = "file"
 	ScopeSection    ScopeKind = "section"
@@ -89,7 +89,7 @@ type Violation struct {
 	Autofix *Fix          `json:"autofix,omitempty"`
 }
 
-type Project struct {
+type Bundle struct {
 	Name        string   `json:"name"`
 	Root        string   `json:"root"`
 	SourceRoot  string   `json:"sourceRoot,omitempty"`
@@ -542,7 +542,7 @@ type ContributorCommit struct {
 }
 
 type ContributorContributions struct {
-	Projects    []string `json:"projects,omitempty"`
+	Bundles    []string `json:"bundles,omitempty"`
 	Folders     []string `json:"folders,omitempty"`
 	Files       []string `json:"files,omitempty"`
 	Regions     []string `json:"regions,omitempty"`
@@ -1209,23 +1209,23 @@ func GetRegisteredPolicies() []PolicyMeta {
 type PolicyContext struct {
 	Scope    Scope
 	RootDir  string
-	Projects []Project
+	Bundles []Bundle
 	fileCache     map[string]string
 	sectionCache  map[string][]SectionInfo
 }
 
-func NewPolicyContext(scope Scope, projects []Project) *PolicyContext {
+func NewPolicyContext(scope Scope, bundles []Bundle) *PolicyContext {
 	return &PolicyContext{
 		Scope:        scope,
 		RootDir:      rootDir,
-		Projects:     projects,
+		Bundles:     bundles,
 		fileCache:    make(map[string]string),
 		sectionCache: make(map[string][]SectionInfo),
 	}
 }
 
 func (ctx *PolicyContext) Files() ([]string, error) {
-	return ScopeToFiles(ctx.Scope, ctx.Projects)
+	return ScopeToFiles(ctx.Scope, ctx.Bundles)
 }
 
 func (ctx *PolicyContext) ReadText(filePath string) string {
@@ -1273,8 +1273,8 @@ func randomString(n int) string {
 	return string(b)
 }
 
-func CheckPolicies(scope Scope, projects []Project, policyIDs []string) ([]Violation, error) {
-	ctx := NewPolicyContext(scope, projects)
+func CheckPolicies(scope Scope, bundles []Bundle, policyIDs []string) ([]Violation, error) {
+	ctx := NewPolicyContext(scope, bundles)
 	var violations []Violation
 	var policiesToRun []RegisteredPolicy
 	allPolicies := getRegisteredPolicies()
@@ -2560,7 +2560,7 @@ type ContributorContributionState struct {
 	Tickets  map[string]ContributorTicket
 	Files    map[string]struct{}
 	Folders  map[string]struct{}
-	Projects map[string]struct{}
+	Bundles map[string]struct{}
 	Commits  map[string]ContributorCommit
 	Lines    LineStats
 }
@@ -2649,7 +2649,7 @@ func ListContributors() ([]Contributor, error) {
 			Tickets:  map[string]ContributorTicket{},
 			Files:    map[string]struct{}{},
 			Folders:  map[string]struct{}{},
-			Projects: map[string]struct{}{},
+			Bundles: map[string]struct{}{},
 			Commits:  map[string]ContributorCommit{},
 		}
 		for _, email := range contributors[i].Emails {
@@ -2758,17 +2758,17 @@ func ListContributors() ([]Contributor, error) {
 			}
 		}
 	}
-	projects := GetProjects()
+	bundles := GetProjects()
 	var projectRoots []struct {
 		name string
 		root string
 	}
-	for _, project := range projects {
-		if project.Root != "" {
+	for _, bundle := range bundles {
+		if bundle.Root != "" {
 			projectRoots = append(projectRoots, struct {
 				name string
 				root string
-			}{name: project.Name, root: NormalizePath(project.Root)})
+			}{name: bundle.Name, root: NormalizePath(bundle.Root)})
 		}
 	}
 	sort.SliceStable(projectRoots, func(i, j int) bool {
@@ -2777,9 +2777,9 @@ func ListContributors() ([]Contributor, error) {
 	for _, contributor := range contributors {
 		state := stateByGithub[contributor.Github]
 		for filePath := range state.Files {
-			for _, project := range projectRoots {
-				if strings.HasPrefix(filePath, project.root+"/") || filePath == project.root {
-					state.Projects[project.name] = struct{}{}
+			for _, bundle := range projectRoots {
+				if strings.HasPrefix(filePath, bundle.root+"/") || filePath == bundle.root {
+					state.Bundles[bundle.name] = struct{}{}
 					break
 				}
 			}
@@ -2812,10 +2812,10 @@ func ListContributors() ([]Contributor, error) {
 			contributors[i].Contributions.Folders = append(contributors[i].Contributions.Folders, folder)
 		}
 		sort.Strings(contributors[i].Contributions.Folders)
-		for project := range state.Projects {
-			contributors[i].Contributions.Projects = append(contributors[i].Contributions.Projects, project)
+		for bundle := range state.Bundles {
+			contributors[i].Contributions.Bundles = append(contributors[i].Contributions.Bundles, bundle)
 		}
-		sort.Strings(contributors[i].Contributions.Projects)
+		sort.Strings(contributors[i].Contributions.Bundles)
 		for _, commit := range state.Commits {
 			contributors[i].Contributions.Commits = append(contributors[i].Contributions.Commits, commit)
 		}
@@ -2861,7 +2861,7 @@ func DownloadGitHubAvatar(github, targetDir string) error {
 	return nil
 }
 
-func AddContributorProject(github string, project string) error {
+func AddContributorProject(github string, bundle string) error {
 	contributor, err := ReadContributor(github)
 	if err != nil {
 		contributor, err = CreateContributor(github)
@@ -2869,12 +2869,12 @@ func AddContributorProject(github string, project string) error {
 			return err
 		}
 	}
-	for _, p := range contributor.Contributions.Projects {
-		if p == project {
+	for _, p := range contributor.Contributions.Bundles {
+		if p == bundle {
 			return nil
 		}
 	}
-	contributor.Contributions.Projects = append(contributor.Contributions.Projects, project)
+	contributor.Contributions.Bundles = append(contributor.Contributions.Bundles, bundle)
 	return SaveContributor(contributor)
 }
 
@@ -2884,7 +2884,7 @@ func AddContributorProject(github string, project string) error {
 
 var (
 	cachedProjectNames   []string
-	cachedProjectDetails = make(map[string]Project)
+	cachedProjectDetails = make(map[string]Bundle)
 	nxMutex              sync.Mutex
 )
 
@@ -2894,7 +2894,7 @@ func GetProjectNames() []string {
 	if cachedProjectNames != nil {
 		return cachedProjectNames
 	}
-	stdout, _, exitCode := ExecCommand("npx", []string{"nx", "show", "projects", "--json"}, "")
+	stdout, _, exitCode := ExecCommand("npx", []string{"nx", "show", "bundles", "--json"}, "")
 	if exitCode != 0 {
 		cachedProjectNames = []string{}
 		return cachedProjectNames
@@ -2908,25 +2908,25 @@ func GetProjectNames() []string {
 	return cachedProjectNames
 }
 
-func GetProjectDetails(name string) Project {
+func GetProjectDetails(name string) Bundle {
 	nxMutex.Lock()
 	defer nxMutex.Unlock()
 	if proj, ok := cachedProjectDetails[name]; ok {
 		return proj
 	}
-	stdout, _, exitCode := ExecCommand("npx", []string{"nx", "show", "project", name, "--json"}, "")
+	stdout, _, exitCode := ExecCommand("npx", []string{"nx", "show", "bundle", name, "--json"}, "")
 	if exitCode != 0 {
-		proj := Project{Name: name}
+		proj := Bundle{Name: name}
 		cachedProjectDetails[name] = proj
 		return proj
 	}
 	var config map[string]interface{}
 	if err := json.Unmarshal([]byte(stdout), &config); err != nil {
-		proj := Project{Name: name}
+		proj := Bundle{Name: name}
 		cachedProjectDetails[name] = proj
 		return proj
 	}
-	proj := Project{Name: name}
+	proj := Bundle{Name: name}
 	if root, ok := config["root"].(string); ok {
 		proj.Root = root
 	}
@@ -2947,21 +2947,21 @@ func GetProjectDetails(name string) Project {
 	return proj
 }
 
-func GetProjects() []Project {
+func GetProjects() []Bundle {
 	names := GetProjectNames()
-	projects := make([]Project, len(names))
+	bundles := make([]Bundle, len(names))
 	for i, name := range names {
-		projects[i] = GetProjectDetails(name)
+		bundles[i] = GetProjectDetails(name)
 	}
-	return projects
+	return bundles
 }
 
-func RunNxTarget(target string, projects []string, extraArgs []string) (success bool, output string) {
+func RunNxTarget(target string, bundles []string, extraArgs []string) (success bool, output string) {
 	args := []string{"nx"}
-	if len(projects) == 1 {
-		args = append(args, "run", projects[0]+":"+target)
-	} else if len(projects) > 1 {
-		args = append(args, "run-many", "-t", target, "-p", strings.Join(projects, ","))
+	if len(bundles) == 1 {
+		args = append(args, "run", bundles[0]+":"+target)
+	} else if len(bundles) > 1 {
+		args = append(args, "run-many", "-t", target, "-p", strings.Join(bundles, ","))
 	} else {
 		args = append(args, "run-many", "-t", target)
 	}
@@ -2984,7 +2984,7 @@ func filterGitIgnored(files []string) []string {
 	return filtered
 }
 
-func ScopeToFiles(scope Scope, projects []Project) ([]string, error) {
+func ScopeToFiles(scope Scope, bundles []Bundle) ([]string, error) {
 	ignorePatterns := []string{"**/node_modules/**", "**/.venv/**"}
 	var files []string
 	var err error
@@ -2992,7 +2992,7 @@ func ScopeToFiles(scope Scope, projects []Project) ([]string, error) {
 	case ScopeRepo:
 		files, err = SimpleGlob("**/*.{ts,tsx,py,cs,go}", rootDir, ignorePatterns, true)
 	case ScopeProject:
-		for _, proj := range projects {
+		for _, proj := range bundles {
 			if proj.Name == scope.ProjectName {
 				files, err = SimpleGlob(proj.Root+"/**/*.{ts,tsx,py,cs,go}", rootDir, ignorePatterns, true)
 				break
@@ -3291,13 +3291,13 @@ func init() {
 }
 
 var projectCmd = &cobra.Command{
-	Use:   "project",
-	Short: "Project management commands",
+	Use:   "bundle",
+	Short: "Bundle management commands",
 }
 
 var projectListCmd = &cobra.Command{
 	Use:   "list",
-	Short: "List Nx projects",
+	Short: "List Nx bundles",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		result := ToolProjectList()
 		return outputResult(result)
@@ -3306,7 +3306,7 @@ var projectListCmd = &cobra.Command{
 
 var projectTreeCmd = &cobra.Command{
 	Use:   "tree",
-	Short: "Show project dependency tree",
+	Short: "Show bundle dependency tree",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		result := ToolProjectTree()
 		return outputResult(result)
@@ -3571,7 +3571,7 @@ func outputResult(result ToolResult) error {
 	return enc.Encode(result)
 }
 
-func AnalyzeFile(filePath string, projects []Project) ([]Violation, error) {
+func AnalyzeFile(filePath string, bundles []Bundle) ([]Violation, error) {
 	absPath := filePath
 	if !filepath.IsAbs(absPath) {
 		absPath = filepath.Join(rootDir, filePath)
@@ -3582,7 +3582,7 @@ func AnalyzeFile(filePath string, projects []Project) ([]Violation, error) {
 	}
 	
 	scope := ParseScope(filePath)
-	violations, err := CheckPolicies(scope, projects, nil)
+	violations, err := CheckPolicies(scope, bundles, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -3600,14 +3600,14 @@ func ToolAnalyze(scope string, scopes []string) ToolResult {
 		scopeRaws = []string{"@semio"}
 	}
 	var allViolations []Violation
-	var projects []Project
+	var bundles []Bundle
 	var projectsLoaded bool
-	getProjectsLazy := func() []Project {
+	getProjectsLazy := func() []Bundle {
 		if !projectsLoaded {
-			projects = GetProjects()
+			bundles = GetProjects()
 			projectsLoaded = true
 		}
-		return projects
+		return bundles
 	}
 	for _, scopeRaw := range scopeRaws {
 		s := ParseScope(scopeRaw)
@@ -3675,7 +3675,7 @@ func ToolFix(scopeRaw string) ToolResult {
 	}
 	scope := ParseScope(scopeRaw)
 	var allViolations []Violation
-	// For file/section/definition scopes, skip project loading for speed
+	// For file/section/definition scopes, skip bundle loading for speed
 	if scope.Kind == ScopeFile || scope.Kind == ScopeSection || scope.Kind == ScopeDefinition {
 		violations, err := AnalyzeFile(scope.FilePath, nil)
 		if err != nil {
@@ -3684,8 +3684,8 @@ func ToolFix(scopeRaw string) ToolResult {
 		}
 		allViolations = append(allViolations, violations...)
 	} else {
-		projects := GetProjects()
-		files, _ := ScopeToFiles(scope, projects)
+		bundles := GetProjects()
+		files, _ := ScopeToFiles(scope, bundles)
 		for _, file := range files {
 			violations, err := AnalyzeFile(file, nil)
 			if err != nil {
@@ -3744,8 +3744,8 @@ func ToolPolicyCheck(policyID, scopeRaw string) ToolResult {
 		scopeRaw = "@semio"
 	}
 	scope := ParseScope(scopeRaw)
-	projects := GetProjects()
-	violations, err := CheckPolicies(scope, projects, []string{policyID})
+	bundles := GetProjects()
+	violations, err := CheckPolicies(scope, bundles, []string{policyID})
 	if err != nil {
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
@@ -3923,9 +3923,9 @@ func ToolContributorList() ToolResult {
 		if ticketCount > 0 {
 			output.Plain(fmt.Sprintf("      Tickets: %d", ticketCount))
 		}
-		projectCount := len(c.Contributions.Projects)
+		projectCount := len(c.Contributions.Bundles)
 		if projectCount > 0 {
-			output.Plain(fmt.Sprintf("      Projects: %d", projectCount))
+			output.Plain(fmt.Sprintf("      Bundles: %d", projectCount))
 		}
 		fileCount := len(c.Contributions.Files)
 		if fileCount > 0 {
@@ -3954,26 +3954,26 @@ func ToolContributorRemove(github string) ToolResult {
 
 func ToolProjectList() ToolResult {
 	output := NewOutput()
-	projects := GetProjects()
-	output.Info(fmt.Sprintf("\n📦 Found %d projects:\n", len(projects)))
-	for _, p := range projects {
+	bundles := GetProjects()
+	output.Info(fmt.Sprintf("\n📦 Found %d bundles:\n", len(bundles)))
+	for _, p := range bundles {
 		output.Plain(fmt.Sprintf("   %s", p.Name))
 		output.Plain(fmt.Sprintf("      Root: %s", p.Root))
 		if len(p.Tags) > 0 {
 			output.Plain(fmt.Sprintf("      Tags: %s", strings.Join(p.Tags, ", ")))
 		}
 	}
-	return ToolResult{Output: *output, Data: projects}
+	return ToolResult{Output: *output, Data: bundles}
 }
 
 func ToolProjectTree() ToolResult {
 	output := NewOutput()
-	projects := GetProjects()
-	output.Info("\n📦 Project tree:\n")
-	for _, p := range projects {
+	bundles := GetProjects()
+	output.Info("\n📦 Bundle tree:\n")
+	for _, p := range bundles {
 		output.Plain(fmt.Sprintf("   └── %s (%s)", p.Name, p.Root))
 	}
-	return ToolResult{Output: *output, Data: projects}
+	return ToolResult{Output: *output, Data: bundles}
 }
 
 func ToolFolderCreate(path string) ToolResult {
@@ -4254,8 +4254,8 @@ func ToolFileDelete(path string) ToolResult {
 func ToolFileList(scopeRaw string) ToolResult {
 	output := NewOutput()
 	scope := ParseScope(scopeRaw)
-	projects := GetProjects()
-	files, err := ScopeToFiles(scope, projects)
+	bundles := GetProjects()
+	files, err := ScopeToFiles(scope, bundles)
 	if err != nil {
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}

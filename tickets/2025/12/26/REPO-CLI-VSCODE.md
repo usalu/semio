@@ -12,7 +12,7 @@ commit: d20b7f8143fbee8696b534c8a6465753544ce37d
 
 # Previously
 
-repo.tsx CLI was fully implemented in a previous session with analyze, fix, ticket, project, region, definition, and tool commands.
+repo.tsx CLI was fully implemented in a previous session with analyze, fix, ticket, bundle, region, definition, and tool commands.
 
 # Plan
 
@@ -33,7 +33,7 @@ Added 12 commands to contributes.commands:
 - semio.policyList - List Policies
 - semio.ticketNew - Create New Ticket
 - semio.ticketList - List Tickets
-- semio.projectList - List Projects
+- semio.projectList - List Bundles
 - semio.regionTree - Show Region Tree
 - semio.definitionList - List Definitions
 - semio.folderTree - Show Folder Tree

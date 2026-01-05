@@ -1,5 +1,39 @@
 # Prompt history
 
+The general scope mechanism should now always be @REPO[semio]/BUNDLE[js|go|net|desktop|engine|assistant|play|docs|assets|…]/FOLDER[js/js|net/Semio|…]/FILE[Semio.cs|main.go|…]/SECTION[State Management|…]/DEFINITION[createMachine|…] and only right part cans be omitted but not parts on the left.
+E.g. "js/js/sketchpad/Sketchpad.tsx" becomes "@semio/js/js/sketchpad/Sketchpad.tsx"
+
+The contribution of every iteration should be stored with full scope hierarchy. Add an ignore flag to ticket and interations (e.g. formatting tickets or itations should be ignored)
+ignore: false
+iterations:
+  - prompt: "Fix ticket iteration end to only calculate lines for files that were declared when the iteration started, not all files from git."
+    model: "gpt-5"
+    date:
+      started: "2026-01-05T11:41:39Z"
+      ended: "2026-01-05T11:50:30Z"
+    author: "Ueli Saluz <ueli.saluz@iek.uni-hannover.de>"
+    commit: "393dfeadd9c012eb01d37dad9cd10065832c6c1c"
+    ignore: false
+    bundles:
+      "@semio/js":
+        files:
+          "js/js/sketchpad/Sketchpad.tsx":
+            sections:
+              "State Management":
+                definitions:
+                  "createMachine":
+                    lines:
+                      added: 122
+                      removed: 3
+Migrate all tickets to new format.
+
+
+When clicking on the section it should navigate to it. There should be rename, create child, remove icons for every item. Make sure to only use the repo binary for everything.
+
+The section should not be part of semio-repo sideview but part of the vscode built-in solution explorer.
+
+Make sure when violations are reported as problems that the uri pointing to the actual file and not some virtual/diff/outside-workspace file is used. Currently all diagnostics are pointing to read-only editors with the correct content. Make sure semio scopes are properly translated to vscode uris.
+
 All mcp tools should throw when having wrong arguments.
 [main.go](go/mcp/main.go) 
 e.g. the files are not correct file paths.
@@ -84,7 +118,7 @@ Adjust also the vscode extension:
 │ └─ contributions - LINESADDEDANDREMOVEDSUMMARY
 │ │ ├─ commits - COMMITCOUNT
 │ │ │ └─ COMMITTITLE - COMMITSHA # OpenCommit [CopyCommitSha][OpenInGitHub]
-│ │ ├─ projects - PROJECTCOUNT
+│ │ ├─ bundles - PROJECTCOUNT
 │ │ │ └─ PROJECTSLUG # NavigateToProject
 │ │ ├─ tickets - TICKETCOUNT
 │ │ │ └─ YEAR
@@ -237,7 +271,7 @@ vscode extension:
 │ │ ├─ links
 │ │ │ └─ KIND
 │ └─ Contributions
-│ │ ├─ projects
+│ │ ├─ bundles
 │ │ │ └─ PROJECTSLUG
 │ │ ├─ files
 │ │ │ └─ FILESLUG
@@ -277,7 +311,7 @@ vscode extension:
     "github": "https://github.com/usalu"
   },
   "contributions": {
-    "projects": [
+    "bundles": [
       "@semio/js",
       "@semio/net",
       "@semio/desktop",
@@ -293,7 +327,7 @@ vscode extension:
     ]
   }
 }
--Remove Projects from sideview
+-Remove Bundles from sideview
 
 add the go modules to the nx workspace and migrate makefile to build.tsx. add all vscode launch and tasks.
 
@@ -328,7 +362,7 @@ The new architecture should be:
 The repo binary should expose tools. Those tools are rexposed in mcp and vscode.
 
 The repo script should be extended/refactored by: tools, actions and hooks
-Tools are the new way to interact with the repo. Every tool is a go function. Tools receive a context(codebase[collection of callbacks to read/create/update/delete projects, folders, files [string or ast], sections [string or ast], definitions [string or ast]], tools[other tools], ui[collection of callbacks to update tui], options[interactive, dry-run], args[tool specific arguments]). Tools have no scope and are imperative. They produce side-effects. They can call other tools.
+Tools are the new way to interact with the repo. Every tool is a go function. Tools receive a context(codebase[collection of callbacks to read/create/update/delete bundles, folders, files [string or ast], sections [string or ast], definitions [string or ast]], tools[other tools], ui[collection of callbacks to update tui], options[interactive, dry-run], args[tool specific arguments]). Tools have no scope and are imperative. They produce side-effects. They can call other tools.
 An action has the information to execute a tool with args.
 Hooks are go functions that produce actions. They receive a codebase context and return actions. Hooks are side-effect free and pure functions. Hooks can be registered to run automatically when a scope changes.
 {
@@ -408,7 +442,7 @@ The vscode extension previouly used reports/policies.json for linting. Instead w
 @/c:/git/semio.tech/semio/assets/semio/kit_invalid.json 
 arent producing any problems with fixing suggestions in vscode
 
-The current repo script has as terms: repo, project, folder, file, region, definition. Region should be renamed to section. In code files sections use regions but e.g. in markdown files section use headers. All section commands should support aswell markdown files (mdx with frontmatter, etc)
+The current repo script has as terms: repo, bundle, folder, file, region, definition. Region should be renamed to section. In code files sections use regions but e.g. in markdown files section use headers. All section commands should support aswell markdown files (mdx with frontmatter, etc)
 
 The vscode extension should run when opening a file or when saving a file the repo analyze command with json output and display them as linter with suggest fix when autofixable
 
@@ -420,7 +454,7 @@ Make sure all tests pass.
 
 - Every command has two modes: 1. non-interactive (default) where every information that is needed is passed before execution; 2. interactive (-i) where the user has more options along the process using inks/ui (e.g. when rename files is called the list of renamed files can be all selected/deselected) - Every command has absolute pure minimal tui output. The process is not kept, only showed while execution and the final output is either the output or a summary.
 
-The repo.tsx scipt should be extended/refactored and the api streamlined. Plenty of existing commands should me refactored and a lot of commands are missing. repo.tsx is the main interaction script for agents and devs (projects, files, folders, regions should only be created by the tool and not manually). The script takes care to also update the dev-docs etc.
+The repo.tsx scipt should be extended/refactored and the api streamlined. Plenty of existing commands should me refactored and a lot of commands are missing. repo.tsx is the main interaction script for agents and devs (bundles, files, folders, regions should only be created by the tool and not manually). The script takes care to also update the dev-docs etc.
 Here is a draft for the new api:
 Commands:
   help                     Show this help message
@@ -434,8 +468,8 @@ Commands:
   ticket finish <year> <month> <day> <slug>      Finish a ticket
   ticket list [--year=<year-pattern>] [--month=<month-pattern>] [--day=<day-pattern>] List tickets (multiple years, months, days are supported)
   ticket read <year> <month> <day> <slug>       Read a ticket
-  project list [--scope=<scope>]            List Nx projects
-  project tree [--scope=<scope>]            Show project dependency tree
+  bundle list [--scope=<scope>]            List Nx bundles
+  bundle tree [--scope=<scope>]            Show bundle dependency tree
   folder create <folder-path>       Create a folder
   folder move <folder-path> <new-folder-path>       Move a folder
   folder delete <folder-path-pattern>       Delete a folder
@@ -457,7 +491,7 @@ Commands:
 Scope syntax:
 ((@semio)|(@semio/PROJECTPATTERN))?(FOLDERPATTERN)?(FILEPATTERN)?(REGIONPATTERN)?(DEFINITIONPATTERN)?
   @semio                   Repo scope
-  @semio/js                Project scope
+  @semio/js                Bundle scope
   js/js/sketchpad/         Folder scope
   js/js/sketchpad/App.tsx  File scope
   file.tsx#Region          Region scope
@@ -509,7 +543,7 @@ The policy mechanism and the ticket mechanism should be integrated. E.g. Once an
 Features:
 - `repo policy …` all policy commands.
 - `repo ticket …` all ticket commands.
-- `repo project …` all project commands (e.g. create, delete, move, tree)
+- `repo bundle …` all bundle commands (e.g. create, delete, move, tree)
 - `repo folder …` all folder commands (e.g. create, delete, move, tree)
 - `repo file …` all file commands (e.g. create, delete, move, tree)
 - `repo region …` all region commands (e.g. create, delete, move, tree)
@@ -536,7 +570,7 @@ Write a plan for
 
 The code analysis and fixing system should be extended.
 A general policy/violation system should be introduced to the codebase. The system should run on any file/folder change but not on keystrokes. The main purpose is to provide details for agents and developers when repo-specific implementation contracts are broken (forbidden imports, forbidden hooks, etc). Mostly those are contracts between different parts of the codebase and they can rarely be autofixed. The result is a report with violations. A vscode extension should show the report when e.g. a file has an violation
-Every policy has a name, a reason and scopes (repo-wide, project-wide, folder-wide, file-wide, region-wide, definition-wide).
+Every policy has a name, a reason and scopes (repo-wide, bundle-wide, folder-wide, file-wide, region-wide, definition-wide).
 A definition can be a class, a function, a variable, an enum, etc.
 A policy is checked whenever the scope changes.
 Scopes have native glob support.
@@ -544,7 +578,7 @@ Examples:
 
 - "@semio" is repo scope.
 - "js" is a folder scope.
-- "@semio/js" is a project scope.
+- "@semio/js" is a bundle scope.
 - "js/js/sketchpad/Sketchpad.tsx" is a file scope.
 - "js/js/sketchpad/Sketchpad.tsx#Header" is a region scope.
 - "js/js/sketchpad/Sketchpad.tsx#State Managment#Store" is a sub-region scope.
@@ -1666,7 +1700,7 @@ CI/CD: There should be only this five commands: dev, build, prepublish, publish,
 Depending on what level they are executed they always start their child packages to do the same.
 dev is the only watching command which doesnt return.
 All other commands must always return (e.g. no watching tests that need to be terminated manually) because they are used in ci/cd or agents etc.
-Make sure that all projects in the monorepo follow this and document it.
+Make sure that all bundles in the monorepo follow this and document it.
 
 Make sure the designs have the following parent child relationship in the end:
 

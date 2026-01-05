@@ -46,10 +46,16 @@ const UI_STRINGS = {
   en: {
     sectionsEmpty: "No sections found",
     sectionsNoActiveFile: "No active file",
+    sectionsRenamePrompt: "Enter new section name",
+    sectionsCreateChildPrompt: "Enter child section name",
+    sectionsDeleteConfirm: "Enter section path to delete",
   },
   de: {
     sectionsEmpty: "Keine Abschnitte gefunden",
     sectionsNoActiveFile: "Keine aktive Datei",
+    sectionsRenamePrompt: "Neuen Abschnittsnamen eingeben",
+    sectionsCreateChildPrompt: "Name des Unterabschnitts eingeben",
+    sectionsDeleteConfirm: "Abschnittspfad zum Löschen eingeben",
   },
 };
 
@@ -177,7 +183,7 @@ async function runRepoCommandJson<T>(args: string): Promise<T | null> {
 async function getProjectList(): Promise<ProjectData[]> {
   if (cachedProjects) return cachedProjects;
   if (!hasRepoAccess()) return [];
-  const result = await runRepoCommandJson<ToolResult<ProjectData[]>>("project list");
+  const result = await runRepoCommandJson<ToolResult<ProjectData[]>>("bundle list");
   cachedProjects = result?.data ?? [];
   return cachedProjects;
 }
@@ -385,10 +391,13 @@ function shouldAnalyzeFile(document: vscode.TextDocument): boolean {
 
 async function analyzeFile(document: vscode.TextDocument): Promise<void> {
   if (!shouldAnalyzeFile(document)) return;
+  if (document.uri.scheme !== "file") return;
   const root = getWorkspaceRoot();
   if (!root) return;
 
   const relativePath = path.relative(root, document.uri.fsPath).replace(/\\/g, "/");
+  if (relativePath.startsWith("..")) return;
+  const fileUri = vscode.Uri.file(path.join(root, relativePath));
   const processKey = `analyze:${relativePath}`;
 
   if (runningProcesses.has(processKey)) {
@@ -407,12 +416,11 @@ async function analyzeFile(document: vscode.TextDocument): Promise<void> {
 
     if (result?.data?.violations) {
       log("[analyzeFile] found", result.data.violations.length, "violations");
-      fileViolationsMap.set(document.uri.toString(), result.data.violations);
+      fileViolationsMap.set(fileUri.toString(), result.data.violations);
       updateFileDiagnostics(document, result.data.violations);
     } else {
       log("[analyzeFile] no violations found or result format unexpected");
-      // Clear any existing diagnostics if no violations
-      repoDiagnosticCollection.delete(document.uri);
+      repoDiagnosticCollection.delete(fileUri);
     }
   } catch (error) {
     if (!controller.signal.aborted) {
@@ -426,33 +434,43 @@ async function analyzeFile(document: vscode.TextDocument): Promise<void> {
 function updateFileDiagnostics(document: vscode.TextDocument, violations: Violation[]): void {
   const root = getWorkspaceRoot();
   if (!root) return;
-  const diagnostics: vscode.Diagnostic[] = [];
+  const diagnosticsByUri = new Map<string, { uri: vscode.Uri; diagnostics: vscode.Diagnostic[] }>();
   for (const violation of violations) {
     const filePath = extractFilePathFromScope(violation.scope);
     if (!filePath) continue;
     const absPath = path.join(root, filePath);
-    if (absPath !== document.uri.fsPath) continue;
+    const fileUri = vscode.Uri.file(absPath);
+    const uriKey = fileUri.toString();
+    if (!diagnosticsByUri.has(uriKey)) {
+      diagnosticsByUri.set(uriKey, { uri: fileUri, diagnostics: [] });
+    }
     const line = Math.max(0, (violation.line ?? 1) - 1);
     const column = Math.max(0, (violation.column ?? 1) - 1);
     const endColumn = violation.excerpt ? column + violation.excerpt.length : column + 1;
     const range = new vscode.Range(line, column, line, endColumn);
-    // Default to Warning severity for all violations (priority info not included in JSON output)
     const severity = vscode.DiagnosticSeverity.Warning;
     const [policyId, violationName] = violation.kind.split(":");
     const diagnostic = new vscode.Diagnostic(range, violationName || violation.kind, severity);
     diagnostic.source = DIAGNOSTIC_SOURCE;
-    // Use object form with target to ensure clicking opens the file at the correct location
-    diagnostic.code = { value: policyId, target: document.uri.with({ fragment: `L${line + 1}` }) };
-    diagnostics.push(diagnostic);
+    diagnostic.code = { value: policyId, target: fileUri.with({ fragment: `L${line + 1}` }) };
+    diagnosticsByUri.get(uriKey)!.diagnostics.push(diagnostic);
   }
-  repoDiagnosticCollection.set(document.uri, diagnostics);
+  for (const { uri, diagnostics } of diagnosticsByUri.values()) {
+    repoDiagnosticCollection.set(uri, diagnostics);
+  }
 }
 
 class RepoCodeActionProvider implements vscode.CodeActionProvider {
   provideCodeActions(document: vscode.TextDocument, range: vscode.Range | vscode.Selection, context: vscode.CodeActionContext): vscode.CodeAction[] | undefined {
     const repoDiagnostics = context.diagnostics.filter((d) => d.source === DIAGNOSTIC_SOURCE);
     if (repoDiagnostics.length === 0) return undefined;
-    const violations = fileViolationsMap.get(document.uri.toString()) || [];
+    const root = getWorkspaceRoot();
+    if (!root) return undefined;
+    if (document.uri.scheme !== "file") return undefined;
+    const relativePath = path.relative(root, document.uri.fsPath).replace(/\\/g, "/");
+    if (relativePath.startsWith("..")) return undefined;
+    const fileUri = vscode.Uri.file(path.join(root, relativePath));
+    const violations = fileViolationsMap.get(fileUri.toString()) || [];
     const actions: vscode.CodeAction[] = [];
     for (const diagnostic of repoDiagnostics) {
       const diagnosticLine = diagnostic.range.start.line + 1;
@@ -753,7 +771,7 @@ class SearchViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "semio.search";
   private _view?: vscode.WebviewView;
 
-  constructor(private readonly _extensionUri: vscode.Uri) {}
+  constructor(private readonly _extensionUri: vscode.Uri) { }
 
   public resolveWebviewView(webviewView: vscode.WebviewView): void {
     this._view = webviewView;
@@ -1200,7 +1218,7 @@ interface ContributorData {
   emails?: string[];
   links?: Record<string, string>;
   contributions?: {
-    projects?: string[];
+    bundles?: string[];
     folders?: string[];
     files?: string[];
     regions?: string[];
@@ -1257,7 +1275,7 @@ class ContributorItem extends vscode.TreeItem {
   ) {
     const displayName = contributor.name ? `${contributor.name} - ${contributor.github}` : contributor.github;
     super(displayName, vscode.TreeItemCollapsibleState.Collapsed);
-    this.tooltip = `${contributor.github}${contributor.contributions?.tickets ? `\nTickets: ${contributor.contributions.tickets.length}` : ""}${contributor.contributions?.projects ? `\nProjects: ${contributor.contributions.projects.join(", ")}` : ""}`;
+    this.tooltip = `${contributor.github}${contributor.contributions?.tickets ? `\nTickets: ${contributor.contributions.tickets.length}` : ""}${contributor.contributions?.bundles ? `\nProjects: ${contributor.contributions.bundles.join(", ")}` : ""}`;
     if (avatarPath && fs.existsSync(avatarPath)) {
       this.iconPath = vscode.Uri.file(avatarPath);
     } else {
@@ -1319,7 +1337,7 @@ class ContributorContributionsItem extends vscode.TreeItem {
 
 class ContributorProjectsItem extends vscode.TreeItem {
   constructor(public readonly contributor: ContributorData, count: number) {
-    super("projects", vscode.TreeItemCollapsibleState.Collapsed);
+    super("bundles", vscode.TreeItemCollapsibleState.Collapsed);
     this.iconPath = new vscode.ThemeIcon("package");
     this.contextValue = "contributorProjects";
     this.description = String(count);
@@ -1327,11 +1345,11 @@ class ContributorProjectsItem extends vscode.TreeItem {
 }
 
 class ContributorProjectItem extends vscode.TreeItem {
-  constructor(public readonly project: string) {
-    super(project, vscode.TreeItemCollapsibleState.None);
+  constructor(public readonly bundle: string) {
+    super(bundle, vscode.TreeItemCollapsibleState.None);
     this.iconPath = new vscode.ThemeIcon("package");
     this.contextValue = "contributorProject";
-    this.command = { command: "semio.openProject", title: "Open Project", arguments: [project] };
+    this.command = { command: "semio.openProject", title: "Open Bundle", arguments: [bundle] };
   }
 }
 
@@ -1473,7 +1491,7 @@ class ContributorsProvider implements vscode.TreeDataProvider<ContributorTreeIte
       if (
         c.contributions
         && (
-          c.contributions.projects?.length
+          c.contributions.bundles?.length
           || c.contributions.files?.length
           || c.contributions.commits?.length
           || c.contributions.tickets?.length
@@ -1494,13 +1512,13 @@ class ContributorsProvider implements vscode.TreeDataProvider<ContributorTreeIte
       const children: ContributorTreeItem[] = [];
       const c = element.contributor.contributions;
       if (c?.commits?.length) children.push(new ContributorCommitsItem(element.contributor, c.commits.length));
-      if (c?.projects?.length) children.push(new ContributorProjectsItem(element.contributor, c.projects.length));
+      if (c?.bundles?.length) children.push(new ContributorProjectsItem(element.contributor, c.bundles.length));
       if (c?.tickets?.length) children.push(new ContributorTicketsItem(element.contributor, c.tickets.length));
       if (c?.files?.length) children.push(new ContributorFilesItem(element.contributor, c.files.length));
       return children;
     }
     if (element instanceof ContributorProjectsItem) {
-      return (element.contributor.contributions?.projects || []).map((p) => new ContributorProjectItem(p));
+      return (element.contributor.contributions?.bundles || []).map((p) => new ContributorProjectItem(p));
     }
     if (element instanceof ContributorTicketsItem) {
       const tickets = element.contributor.contributions?.tickets || [];
@@ -1555,10 +1573,15 @@ class SectionStatusItem extends vscode.TreeItem {
 }
 
 class SectionItem extends vscode.TreeItem {
-  constructor(public readonly section: SectionInfo) {
+  constructor(
+    public readonly section: SectionInfo,
+    public readonly sectionPath: string,
+  ) {
     super(section.name, section.children.length > 0 ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
     this.description = `${section.startLine}-${section.endLine}`;
     this.contextValue = "section";
+    this.iconPath = new vscode.ThemeIcon("symbol-namespace");
+    this.command = { command: "semio.sectionOpen", title: "Open Section", arguments: [this] };
   }
 }
 
@@ -1574,9 +1597,13 @@ class SectionsProvider implements vscode.TreeDataProvider<SectionTreeItem> {
     return element;
   }
 
+  private buildSectionItems(sections: SectionInfo[], parentPath: string | null): SectionItem[] {
+    return sections.map((section) => new SectionItem(section, parentPath ? `${parentPath}/${section.name}` : section.name));
+  }
+
   async getChildren(element?: SectionTreeItem): Promise<SectionTreeItem[]> {
     if (element instanceof SectionItem) {
-      return element.section.children.map((child) => new SectionItem(child));
+      return element.section.children.map((child) => new SectionItem(child, `${element.sectionPath}/${child.name}`));
     }
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
@@ -1590,7 +1617,35 @@ class SectionsProvider implements vscode.TreeDataProvider<SectionTreeItem> {
     if (!result?.data || result.data.length === 0) {
       return [new SectionStatusItem(getUiString("sectionsEmpty"))];
     }
-    return result.data.map((section) => new SectionItem(section));
+    return this.buildSectionItems(result.data, null);
+  }
+}
+
+class SectionsDragAndDropController implements vscode.TreeDragAndDropController<SectionItem> {
+  readonly dragMimeTypes = ["application/vnd.semio.section"];
+  readonly dropMimeTypes = ["application/vnd.semio.section"];
+
+  handleDrag(source: readonly SectionItem[], dataTransfer: vscode.DataTransfer): void {
+    if (source.length === 0) return;
+    dataTransfer.set("application/vnd.semio.section", new vscode.DataTransferItem(JSON.stringify(source.map((item) => ({ path: item.sectionPath, name: item.section.name })))));
+  }
+
+  async handleDrop(target: SectionItem | undefined, dataTransfer: vscode.DataTransfer): Promise<void> {
+    if (!target) return;
+    if (!hasRepoAccess()) return;
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) return;
+    const item = dataTransfer.get("application/vnd.semio.section");
+    if (!item) return;
+    const raw = await item.asString();
+    const parsed = JSON.parse(raw) as { path: string; name: string }[];
+    if (!Array.isArray(parsed) || parsed.length === 0) return;
+    const sourcePath = parsed[0].path;
+    const targetPath = `${target.sectionPath}/${parsed[0].name}`;
+    if (sourcePath === targetPath) return;
+    const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
+    runRepoCommand(`section move ${relativePath} ${sourcePath} ${targetPath}`);
+    sectionsProvider.refresh();
   }
 }
 
@@ -1734,7 +1789,7 @@ function registerSidebarViews(context: vscode.ExtensionContext): void {
     vscode.window.registerTreeDataProvider("semio.contributors", contributorsProvider),
     vscode.window.registerTreeDataProvider("semio.policies", policiesProvider),
     vscode.window.registerTreeDataProvider("semio.commands", commandsProvider),
-    vscode.window.registerTreeDataProvider("semio.sections", sectionsProvider),
+    vscode.window.createTreeView("semio.sections", { treeDataProvider: sectionsProvider, dragAndDropController: new SectionsDragAndDropController() }),
   );
   context.subscriptions.push(
     vscode.commands.registerCommand("semio.refreshTickets", () => ticketsProvider.refresh()),
@@ -1828,11 +1883,11 @@ function registerSidebarViews(context: vscode.ExtensionContext): void {
       }
       const root = getWorkspaceRoot();
       if (!root) return;
-      const projects = await getProjectList();
-      const project = projects.find((p) => p.name === projectName);
-      if (!project) return;
-      const projectRoot = path.join(root, project.root);
-      const projectJson = path.join(projectRoot, "project.json");
+      const bundles = await getProjectList();
+      const bundle = bundles.find((p) => p.name === projectName);
+      if (!bundle) return;
+      const projectRoot = path.join(root, bundle.root);
+      const projectJson = path.join(projectRoot, "bundle.json");
       const packageJson = path.join(projectRoot, "package.json");
       if (fs.existsSync(projectJson)) {
         await vscode.window.showTextDocument(vscode.Uri.file(projectJson));
@@ -2030,7 +2085,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
         vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
-      runRepoCommand("project list");
+      runRepoCommand("bundle list");
     }),
     vscode.commands.registerCommand("semio.contributorAdd", async () => {
       const github = await vscode.window.showInputBox({ prompt: "GitHub username" });
@@ -2069,6 +2124,73 @@ function registerCommands(context: vscode.ExtensionContext): void {
       }
       const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
       runRepoCommand(`section tree ${relativePath}`);
+    }),
+    vscode.commands.registerCommand("semio.sectionOpen", async (item?: SectionItem) => {
+      const editor = vscode.window.activeTextEditor;
+      if (!editor || !item) {
+        vscode.window.showErrorMessage("No active file");
+        return;
+      }
+      const position = new vscode.Position(Math.max(0, item.section.startLine - 1), 0);
+      await vscode.window.showTextDocument(editor.document, { selection: new vscode.Range(position, position) });
+    }),
+    vscode.commands.registerCommand("semio.sectionRename", async (item?: SectionItem) => {
+      const editor = vscode.window.activeTextEditor;
+      if (!editor || !item) {
+        vscode.window.showErrorMessage("No active file");
+        return;
+      }
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary not found in bin/");
+        return;
+      }
+      const newName = await vscode.window.showInputBox({
+        prompt: getUiString("sectionsRenamePrompt"),
+        value: item.section.name,
+      });
+      if (!newName) return;
+      const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
+      const parts = item.sectionPath.split("/").filter(Boolean);
+      parts[parts.length - 1] = newName;
+      runRepoCommand(`section move ${relativePath} ${item.sectionPath} ${parts.join("/")}`);
+      sectionsProvider.refresh();
+    }),
+    vscode.commands.registerCommand("semio.sectionCreateChild", async (item?: SectionItem) => {
+      const editor = vscode.window.activeTextEditor;
+      if (!editor || !item) {
+        vscode.window.showErrorMessage("No active file");
+        return;
+      }
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary not found in bin/");
+        return;
+      }
+      const childName = await vscode.window.showInputBox({
+        prompt: getUiString("sectionsCreateChildPrompt"),
+      });
+      if (!childName) return;
+      const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
+      runRepoCommand(`section create ${relativePath} ${item.sectionPath}/${childName}`);
+      sectionsProvider.refresh();
+    }),
+    vscode.commands.registerCommand("semio.sectionRemove", async (item?: SectionItem) => {
+      const editor = vscode.window.activeTextEditor;
+      if (!editor || !item) {
+        vscode.window.showErrorMessage("No active file");
+        return;
+      }
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary not found in bin/");
+        return;
+      }
+      const confirmPath = await vscode.window.showInputBox({
+        prompt: getUiString("sectionsDeleteConfirm"),
+        value: item.sectionPath,
+      });
+      if (!confirmPath) return;
+      const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
+      runRepoCommand(`section delete ${relativePath} ${confirmPath}`);
+      sectionsProvider.refresh();
     }),
     vscode.commands.registerCommand("semio.definitionList", async () => {
       const editor = vscode.window.activeTextEditor;
@@ -2307,7 +2429,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
         vscode.window.showErrorMessage("repo binary not found in bin/");
         return;
       }
-      runRepoCommand("project tree");
+      runRepoCommand("bundle tree");
     }),
     vscode.commands.registerCommand("semio.policyCheck", async () => {
       if (!hasRepoAccess()) {
@@ -2380,15 +2502,20 @@ export function activate(context: vscode.ExtensionContext) {
       }
     }),
     vscode.workspace.onDidCloseTextDocument((doc) => {
-      const relativePath = getWorkspaceRoot() ? path.relative(getWorkspaceRoot()!, doc.uri.fsPath).replace(/\\/g, "/") : "";
+      const root = getWorkspaceRoot();
+      if (!root) return;
+      if (doc.uri.scheme !== "file") return;
+      const relativePath = path.relative(root, doc.uri.fsPath).replace(/\\/g, "/");
+      if (relativePath.startsWith("..")) return;
+      const fileUri = vscode.Uri.file(path.join(root, relativePath));
       const processKey = `analyze:${relativePath}`;
       const controller = runningProcesses.get(processKey);
       if (controller) {
         controller.abort();
         runningProcesses.delete(processKey);
       }
-      fileViolationsMap.delete(doc.uri.toString());
-      repoDiagnosticCollection.delete(doc.uri);
+      fileViolationsMap.delete(fileUri.toString());
+      repoDiagnosticCollection.delete(fileUri);
       kitDiagnosticCollection.delete(doc.uri);
     }),
   );
