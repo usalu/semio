@@ -1,4 +1,6 @@
-// repo/main.go
+// #region Header
+
+// go/repo/repo.go
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -15,10 +17,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package main
+// #endregion Header
+package repo
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -33,7 +37,7 @@ import (
 	"time"
 
 	"github.com/bmatcuk/doublestar/v4"
-	"github.com/spf13/cobra"
+	"github.com/usalu/semio/go/repo/graph"
 	"gopkg.in/yaml.v3"
 )
 
@@ -1488,6 +1492,10 @@ func init() {
 	}
 }
 
+func GetRootDir() string {
+	return rootDir
+}
+
 func findRepoRoot(start string) string {
 	dir := start
 	for {
@@ -1564,10 +1572,6 @@ func isSourceFile(filePath string) bool {
 	ext := filepath.Ext(filePath)
 	return ext == ".ts" || ext == ".tsx" || ext == ".js" || ext == ".jsx" ||
 		ext == ".py" || ext == ".go" || ext == ".cs"
-}
-
-func GetRootDir() string {
-	return rootDir
 }
 
 func SetRootDir(dir string) {
@@ -5361,570 +5365,33 @@ func ScopeToFiles(scope Scope, bundles []Bundle) ([]string, error) {
 
 // #endregion Nx
 
+
 // #region Commands
 
-func Execute() error {
-	return rootCmd.Execute()
+func ExecuteGraphQL(query string, variables map[string]interface{}) (string, error) {
+	executor, err := graph.NewExecutor(rootDir)
+	if err != nil {
+		return "", fmt.Errorf("failed to create executor: %w", err)
+	}
+	result, err := executor.ExecuteJSON(context.Background(), query, variables)
+	if err != nil {
+		return "", fmt.Errorf("graphql error: %w", err)
+	}
+	return result, nil
 }
 
-var rootCmd = &cobra.Command{
-	Use:   "repo",
-	Short: "Monorepo CLI for Semio",
-	Long:  `repo - Monorepo CLI for Semio. All commands output JSON for programmatic use.`,
-}
-
-func init() {
-	rootCmd.AddCommand(codebaseCmd)
-	rootCmd.AddCommand(analyzeCmd)
-	rootCmd.AddCommand(fixCmd)
-	rootCmd.AddCommand(policyCmd)
-	rootCmd.AddCommand(ticketCmd)
-	rootCmd.AddCommand(contributorCmd)
-	rootCmd.AddCommand(projectCmd)
-	rootCmd.AddCommand(folderCmd)
-	rootCmd.AddCommand(fileCmd)
-	rootCmd.AddCommand(sectionCmd)
-	rootCmd.AddCommand(definitionCmd)
-	rootCmd.AddCommand(updateMetabolismCmd)
-}
-
-var codebaseCmd = &cobra.Command{
-	Use:   "codebase",
-	Short: "Get comprehensive codebase structure",
-	Long:  `Returns a complete JSON structure with bundles, folders, files, sections, definitions, contributors, tickets, policies, violations, and tree.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		result := ToolCodebase()
-		return outputResult(result)
-	},
-}
-
-var analyzeCmd = &cobra.Command{
-	Use:   "analyze [scope...]",
-	Short: "Analyze codebase for violations",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		scope := "@semio"
-		if len(args) > 0 {
-			scope = args[0]
-		}
-		result := ToolAnalyze(scope, args)
-		return outputResult(result)
-	},
-}
-
-var fixCmd = &cobra.Command{
-	Use:   "fix [scope]",
-	Short: "Apply autofixes for violations",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		scope := "@semio"
-		if len(args) > 0 {
-			scope = args[0]
-		}
-		result := ToolFix(scope)
-		return outputResult(result)
-	},
-}
-
-var policyCmd = &cobra.Command{
-	Use:   "policy",
-	Short: "Policy management commands",
-}
-
-var policyListCmd = &cobra.Command{
-	Use:   "list",
-	Short: "List all registered policies",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		result := ToolPolicyList()
-		return outputResult(result)
-	},
-}
-
-var policyCheckCmd = &cobra.Command{
-	Use:   "check <id> [scope]",
-	Short: "Check a specific policy",
-	Args:  cobra.RangeArgs(1, 2),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		scope := "@semio"
-		if len(args) > 1 {
-			scope = args[1]
-		}
-		result := ToolPolicyCheck(args[0], scope)
-		return outputResult(result)
-	},
-}
-
-var policyViolationCmd = &cobra.Command{
-	Use:   "violation",
-	Short: "Policy violation commands",
-}
-
-var policyViolationListCmd = &cobra.Command{
-	Use:   "list <policyId>",
-	Short: "List violation kinds for a policy",
-	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		result := ToolPolicyViolationList(args[0])
-		return outputResult(result)
-	},
-}
-
-func init() {
-	policyCmd.AddCommand(policyListCmd)
-	policyCmd.AddCommand(policyCheckCmd)
-	policyCmd.AddCommand(policyViolationCmd)
-	policyViolationCmd.AddCommand(policyViolationListCmd)
-}
-
-var ticketCmd = &cobra.Command{
-	Use:   "ticket",
-	Short: "Ticket management commands",
-}
-
-var ticketCreateCmd = &cobra.Command{
-	Use:   "create <slug>",
-	Short: "Create a new ticket",
-	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		prompt, _ := cmd.Flags().GetString("prompt")
-		model, _ := cmd.Flags().GetString("model")
-		files, _ := cmd.Flags().GetStringSlice("file")
-		result := ToolTicketCreate(args[0], prompt, model, files)
-		return outputResult(result)
-	},
-}
-
-var ticketListCmd = &cobra.Command{
-	Use:   "list [year] [month] [day]",
-	Short: "List tickets",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		var year, month, day *int
-		if len(args) > 0 {
-			y, _ := strconv.Atoi(args[0])
-			year = &y
-		}
-		if len(args) > 1 {
-			m, _ := strconv.Atoi(args[1])
-			month = &m
-		}
-		if len(args) > 2 {
-			d, _ := strconv.Atoi(args[2])
-			day = &d
-		}
-		result := ToolTicketList(year, month, day)
-		return outputResult(result)
-	},
-}
-
-var ticketReadCmd = &cobra.Command{
-	Use:   "read <year> <month> <day> <slug>",
-	Short: "Read a ticket",
-	Args:  cobra.ExactArgs(4),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		year, _ := strconv.Atoi(args[0])
-		month, _ := strconv.Atoi(args[1])
-		day, _ := strconv.Atoi(args[2])
-		result := ToolTicketRead(year, month, day, args[3])
-		return outputResult(result)
-	},
-}
-
-var ticketIterateCmd = &cobra.Command{
-	Use:   "iterate",
-	Short: "Ticket iteration commands",
-}
-
-var ticketIterateStartCmd = &cobra.Command{
-	Use:   "start <year> <month> <day> <slug>",
-	Short: "Start a ticket iteration (deprecated, use progress)",
-	Args:  cobra.ExactArgs(4),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		prompt, _ := cmd.Flags().GetString("prompt")
-		model, _ := cmd.Flags().GetString("model")
-		year, _ := strconv.Atoi(args[0])
-		month, _ := strconv.Atoi(args[1])
-		day, _ := strconv.Atoi(args[2])
-		result := ToolTicketProgress(year, month, day, args[3], prompt, model)
-		return outputResult(result)
-	},
-}
-
-var ticketProgressCmd = &cobra.Command{
-	Use:   "progress <year> <month> <day> <slug>",
-	Short: "Record progress on a ticket (creates iteration from git changes)",
-	Args:  cobra.ExactArgs(4),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		prompt, _ := cmd.Flags().GetString("prompt")
-		model, _ := cmd.Flags().GetString("model")
-		year, _ := strconv.Atoi(args[0])
-		month, _ := strconv.Atoi(args[1])
-		day, _ := strconv.Atoi(args[2])
-		result := ToolTicketProgress(year, month, day, args[3], prompt, model)
-		return outputResult(result)
-	},
-}
-
-var ticketFinishCmd = &cobra.Command{
-	Use:   "finish <year> <month> <day> <slug>",
-	Short: "Finish a ticket",
-	Args:  cobra.ExactArgs(4),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		year, _ := strconv.Atoi(args[0])
-		month, _ := strconv.Atoi(args[1])
-		day, _ := strconv.Atoi(args[2])
-		result := ToolTicketFinish(year, month, day, args[3])
-		return outputResult(result)
-	},
-}
-
-var ticketReopenCmd = &cobra.Command{
-	Use:   "reopen <year> <month> <day> <slug>",
-	Short: "Reopen a ticket",
-	Args:  cobra.ExactArgs(4),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		year, _ := strconv.Atoi(args[0])
-		month, _ := strconv.Atoi(args[1])
-		day, _ := strconv.Atoi(args[2])
-		result := ToolTicketReopen(year, month, day, args[3])
-		return outputResult(result)
-	},
-}
-
-func init() {
-	ticketCreateCmd.Flags().String("prompt", "", "Ticket prompt")
-	ticketCreateCmd.Flags().String("model", "", "Model used")
-	ticketCreateCmd.Flags().StringSlice("file", nil, "Files to include (can be specified multiple times)")
-	ticketIterateStartCmd.Flags().String("prompt", "", "Iteration prompt")
-	ticketIterateStartCmd.Flags().String("model", "", "Model used")
-	ticketProgressCmd.Flags().String("prompt", "", "Iteration prompt")
-	ticketProgressCmd.Flags().String("model", "", "Model used")
-	ticketIterateCmd.AddCommand(ticketIterateStartCmd)
-	ticketCmd.AddCommand(ticketCreateCmd)
-	ticketCmd.AddCommand(ticketListCmd)
-	ticketCmd.AddCommand(ticketReadCmd)
-	ticketCmd.AddCommand(ticketIterateCmd)
-	ticketCmd.AddCommand(ticketProgressCmd)
-	ticketCmd.AddCommand(ticketFinishCmd)
-	ticketCmd.AddCommand(ticketReopenCmd)
-}
-
-var contributorCmd = &cobra.Command{
-	Use:   "contributor",
-	Short: "Contributor management commands",
-}
-
-var contributorAddCmd = &cobra.Command{
-	Use:   "add <github>",
-	Short: "Add a contributor",
-	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		result := ToolContributorAdd(args[0])
-		return outputResult(result)
-	},
-}
-
-var contributorListCmd = &cobra.Command{
-	Use:   "list",
-	Short: "List contributors",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		result := ToolContributorList()
-		return outputResult(result)
-	},
-}
-
-var contributorRemoveCmd = &cobra.Command{
-	Use:   "remove <github>",
-	Short: "Remove a contributor",
-	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		result := ToolContributorRemove(args[0])
-		return outputResult(result)
-	},
-}
-
-func init() {
-	contributorCmd.AddCommand(contributorAddCmd)
-	contributorCmd.AddCommand(contributorListCmd)
-	contributorCmd.AddCommand(contributorRemoveCmd)
-}
-
-var projectCmd = &cobra.Command{
-	Use:   "bundle",
-	Short: "Bundle management commands",
-}
-
-var projectListCmd = &cobra.Command{
-	Use:   "list",
-	Short: "List Nx bundles",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		result := ToolProjectList()
-		return outputResult(result)
-	},
-}
-
-var projectTreeCmd = &cobra.Command{
-	Use:   "tree",
-	Short: "Show bundle dependency tree",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		result := ToolProjectTree()
-		return outputResult(result)
-	},
-}
-
-func init() {
-	projectCmd.AddCommand(projectListCmd)
-	projectCmd.AddCommand(projectTreeCmd)
-}
-
-var folderCmd = &cobra.Command{
-	Use:   "folder",
-	Short: "Folder management commands",
-}
-
-var folderCreateCmd = &cobra.Command{
-	Use:   "create <path>",
-	Short: "Create a folder",
-	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		result := ToolFolderCreate(args[0])
-		return outputResult(result)
-	},
-}
-
-var folderMoveCmd = &cobra.Command{
-	Use:   "move <source> <target>",
-	Short: "Move a folder",
-	Args:  cobra.ExactArgs(2),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		result := ToolFolderMove(args[0], args[1])
-		return outputResult(result)
-	},
-}
-
-var folderDeleteCmd = &cobra.Command{
-	Use:   "delete <path>",
-	Short: "Delete a folder",
-	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		result := ToolFolderDelete(args[0])
-		return outputResult(result)
-	},
-}
-
-var folderListCmd = &cobra.Command{
-	Use:   "list [path]",
-	Short: "List folders",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		path := "."
-		if len(args) > 0 {
-			path = args[0]
-		}
-		result := ToolFolderList(path)
-		return outputResult(result)
-	},
-}
-
-var folderTreeCmd = &cobra.Command{
-	Use:   "tree [path]",
-	Short: "Show folder tree",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		path := "."
-		if len(args) > 0 {
-			path = args[0]
-		}
-		result := ToolFolderTree(path)
-		return outputResult(result)
-	},
-}
-
-func init() {
-	folderCmd.AddCommand(folderCreateCmd)
-	folderCmd.AddCommand(folderMoveCmd)
-	folderCmd.AddCommand(folderDeleteCmd)
-	folderCmd.AddCommand(folderListCmd)
-	folderCmd.AddCommand(folderTreeCmd)
-}
-
-var fileCmd = &cobra.Command{
-	Use:   "file",
-	Short: "File management commands",
-}
-
-var fileCreateCmd = &cobra.Command{
-	Use:   "create <path>",
-	Short: "Create a file",
-	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		result := ToolFileCreate(args[0])
-		return outputResult(result)
-	},
-}
-
-var fileMoveCmd = &cobra.Command{
-	Use:   "move <source> <target>",
-	Short: "Move a file",
-	Args:  cobra.ExactArgs(2),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		result := ToolFileMove(args[0], args[1])
-		return outputResult(result)
-	},
-}
-
-var fileDeleteCmd = &cobra.Command{
-	Use:   "delete <path>",
-	Short: "Delete a file",
-	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		result := ToolFileDelete(args[0])
-		return outputResult(result)
-	},
-}
-
-var fileListCmd = &cobra.Command{
-	Use:   "list [scope]",
-	Short: "List files in scope",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		scope := "@semio"
-		if len(args) > 0 {
-			scope = args[0]
-		}
-		result := ToolFileList(scope)
-		return outputResult(result)
-	},
-}
-
-var fileTreeCmd = &cobra.Command{
-	Use:   "tree [path]",
-	Short: "Show file tree",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		path := "."
-		if len(args) > 0 {
-			path = args[0]
-		}
-		result := ToolFileTree(path)
-		return outputResult(result)
-	},
-}
-
-func init() {
-	fileCmd.AddCommand(fileCreateCmd)
-	fileCmd.AddCommand(fileMoveCmd)
-	fileCmd.AddCommand(fileDeleteCmd)
-	fileCmd.AddCommand(fileListCmd)
-	fileCmd.AddCommand(fileTreeCmd)
-}
-
-var sectionCmd = &cobra.Command{
-	Use:   "section",
-	Short: "Section management commands",
-}
-
-var sectionCreateCmd = &cobra.Command{
-	Use:   "create <file> <section-path>",
-	Short: "Create a section in a file",
-	Args:  cobra.ExactArgs(2),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		result := ToolSectionCreate(args[0], args[1])
-		return outputResult(result)
-	},
-}
-
-var sectionMoveCmd = &cobra.Command{
-	Use:   "move <file> <old-section> <new-section>",
-	Short: "Move/rename a section",
-	Args:  cobra.ExactArgs(3),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		result := ToolSectionMove(args[0], args[1], args[2])
-		return outputResult(result)
-	},
-}
-
-var sectionDeleteCmd = &cobra.Command{
-	Use:   "delete <file> <section-path>",
-	Short: "Delete a section from a file",
-	Args:  cobra.ExactArgs(2),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		result := ToolSectionDelete(args[0], args[1])
-		return outputResult(result)
-	},
-}
-
-var sectionListCmd = &cobra.Command{
-	Use:   "list <file>",
-	Short: "List sections in a file",
-	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		result := ToolSectionList(args[0])
-		return outputResult(result)
-	},
-}
-
-var sectionTreeCmd = &cobra.Command{
-	Use:   "tree <file>",
-	Short: "Show section tree",
-	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		result := ToolSectionTree(args[0])
-		return outputResult(result)
-	},
-}
-
-func init() {
-	sectionCmd.AddCommand(sectionCreateCmd)
-	sectionCmd.AddCommand(sectionMoveCmd)
-	sectionCmd.AddCommand(sectionDeleteCmd)
-	sectionCmd.AddCommand(sectionListCmd)
-	sectionCmd.AddCommand(sectionTreeCmd)
-}
-
-var definitionCmd = &cobra.Command{
-	Use:   "definition",
-	Short: "Definition management commands",
-}
-
-var definitionListCmd = &cobra.Command{
-	Use:   "list <file>",
-	Short: "List definitions in a file",
-	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		result := ToolDefinitionList(args[0])
-		return outputResult(result)
-	},
-}
-
-var definitionTreeCmd = &cobra.Command{
-	Use:   "tree <file>",
-	Short: "Show definition tree",
-	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		result := ToolDefinitionTree(args[0])
-		return outputResult(result)
-	},
-}
-
-func init() {
-	definitionCmd.AddCommand(definitionListCmd)
-	definitionCmd.AddCommand(definitionTreeCmd)
-}
-
-var updateMetabolismCmd = &cobra.Command{
-	Use:   "update-metabolism",
-	Short: "Update metabolism assets (exports kit to zip and copies to public folders)",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		output := NewOutput()
-		output.Info("\n🔄 Running update-metabolism via npx tsx...")
-		stdout, stderr, exitCode := ExecCommand("npx", []string{"tsx", "scripts/update-metabolism.tsx"}, "")
-		if exitCode != 0 {
-			output.Error(fmt.Sprintf("Error: %s%s", stdout, stderr))
-			return outputResult(ToolResult{Output: *output, Error: "update-metabolism failed"})
-		}
-		output.Success(stdout)
-		return outputResult(ToolResult{Output: *output})
-	},
-}
-
-func outputResult(result ToolResult) error {
+func OutputResult(result ToolResult) error {
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetIndent("", "  ")
 	return enc.Encode(result)
+}
+
+func FormatResult(result ToolResult) string {
+	data, err := json.MarshalIndent(result, "", "  ")
+	if err != nil {
+		return fmt.Sprintf(`{"error": %q}`, err.Error())
+	}
+	return string(data)
 }
 
 func AnalyzeFile(filePath string, bundles []Bundle) ([]Violation, error) {
@@ -6900,11 +6367,16 @@ func ToolDefinitionTree(filePath string) ToolResult {
 	return ToolDefinitionList(filePath)
 }
 
-// #endregion Commands
-
-func main() {
-	if err := Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+func ToolUpdateMetabolism() ToolResult {
+	output := NewOutput()
+	output.Info("\n🔄 Running update-metabolism via npx tsx...")
+	stdout, stderr, exitCode := ExecCommand("npx", []string{"tsx", "scripts/update-metabolism.tsx"}, "")
+	if exitCode != 0 {
+		output.Error(fmt.Sprintf("Error: %s%s", stdout, stderr))
+		return ToolResult{Output: *output, Error: "update-metabolism failed"}
 	}
+	output.Success(stdout)
+	return ToolResult{Output: *output}
 }
+
+// #endregion Commands

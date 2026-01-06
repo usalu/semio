@@ -1,0 +1,519 @@
+# #region Header
+
+# go/repo/schema.graphql
+
+# 2025 Ueli Saluz <ueli@semio-tech.com>
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# #endregion Header
+
+# #region Scalars
+
+scalar DateTime
+
+# #endregion Scalars
+
+# #region Interfaces
+
+interface Node {
+  id: ID!
+}
+
+# #endregion Interfaces
+
+# #region Query
+
+type Query {
+  node(id: ID!): Node
+  repo: Repo!
+  bundle(name: String!): Bundle
+  folder(path: String!): Folder
+  file(path: String!): File
+  section(path: String!, sectionPath: [String!]!): Section
+  definition(path: String!, name: String!): Definition
+  contributor(id: String!): Contributor
+  ticket(year: Int!, month: Int!, day: Int!, slug: String!): Ticket
+  policy(id: String!): Policy
+  violationKind(id: String!): ViolationKind
+  analyze(scope: String): AnalyzeResult!
+}
+
+# #endregion Query
+
+# #region Mutation
+
+type Mutation {
+  fix(scope: String): FixResult!
+  ticketCreate(input: TicketCreateInput!): Ticket
+  ticketProgress(input: TicketProgressInput!): Ticket
+  ticketFinish(input: TicketFinishInput!): Ticket
+  ticketReopen(input: TicketReopenInput!): Ticket
+  contributorAdd(input: ContributorAddInput!): Contributor
+  contributorRemove(github: String!): Boolean!
+  folderCreate(path: String!): Folder
+  folderMove(src: String!, dst: String!): Folder
+  folderDelete(path: String!): Boolean!
+  fileCreate(path: String!): File
+  fileMove(src: String!, dst: String!): File
+  fileDelete(path: String!): Boolean!
+  sectionCreate(file: String!, name: String!, parent: String): Section
+  sectionMove(file: String!, oldName: String!, newName: String!): Section
+  sectionDelete(file: String!, name: String!): Boolean!
+}
+
+# #endregion Mutation
+
+# #region Inputs
+
+input TicketCreateInput {
+  slug: String!
+  prompt: String!
+  model: String
+  files: FileListInput
+}
+
+input TicketProgressInput {
+  year: Int!
+  month: Int!
+  day: Int!
+  slug: String!
+  prompt: String!
+  model: String
+  files: FileListInput
+}
+
+input TicketFinishInput {
+  year: Int!
+  month: Int!
+  day: Int!
+  slug: String!
+  summary: String
+}
+
+input TicketReopenInput {
+  year: Int!
+  month: Int!
+  day: Int!
+  slug: String!
+}
+
+input FileListInput {
+  updated: [String!]
+  created: [String!]
+  removed: [String!]
+}
+
+input ContributorAddInput {
+  github: String!
+  name: String
+  emails: [String!]
+}
+
+# #endregion Inputs
+
+# #region Types
+
+type Repo implements Node {
+  id: ID!
+  name: String!
+  path: String!
+  bundles: [Bundle!]!
+  folders: [Folder!]!
+  files: [File!]!
+  contributors: [Contributor!]!
+  tickets(year: Int, month: Int, day: Int, status: TicketStatus): [Ticket!]!
+  policies: [Policy!]!
+  violationKinds: [ViolationKind!]!
+  violations(scope: String): [Violation!]!
+  metrics: RepoMetrics!
+}
+
+type RepoMetrics {
+  bundles: Int!
+  folders: Int!
+  files: Int!
+  sections: Int!
+  definitions: Int!
+  lines: Int!
+  contributors: Int!
+  tickets: Int!
+  violations: Int!
+}
+
+type Bundle implements Node {
+  id: ID!
+  name: String!
+  root: String!
+  sourceRoot: String
+  projectType: String
+  tags: [String!]!
+  uri: String!
+  folders: [Folder!]!
+  files: [File!]!
+  contributors: [Contributor!]!
+  tickets: [Ticket!]!
+  violations: [Violation!]!
+  metrics: BundleMetrics!
+}
+
+type BundleMetrics {
+  folders: Int!
+  files: Int!
+  sections: Int!
+  definitions: Int!
+  lines: Int!
+  violations: Int!
+}
+
+type Folder implements Node {
+  id: ID!
+  path: String!
+  uri: String!
+  name: String!
+  parent: Folder
+  children: [Folder!]!
+  files: [File!]!
+  bundle: Bundle
+  violations: [Violation!]!
+  metrics: FolderMetrics!
+}
+
+type FolderMetrics {
+  files: Int!
+  lines: Int!
+  violations: Int!
+}
+
+type File implements Node {
+  id: ID!
+  path: String!
+  uri: String!
+  name: String!
+  extension: String!
+  folder: Folder
+  bundle: Bundle
+  sections: [Section!]!
+  definitions: [Definition!]!
+  violations: [Violation!]!
+  contributors: [Contributor!]!
+  metrics: FileMetrics!
+  content: String
+}
+
+type FileMetrics {
+  sections: Int!
+  definitions: Int!
+  lines: Int!
+}
+
+type Section implements Node {
+  id: ID!
+  name: String!
+  path: String!
+  file: File!
+  parent: Section
+  children: [Section!]!
+  definitions: [Definition!]!
+  violations: [Violation!]!
+  range: Range!
+  metrics: SectionMetrics!
+}
+
+type SectionMetrics {
+  definitions: Int!
+  lines: Int!
+  violations: Int!
+}
+
+type Definition implements Node {
+  id: ID!
+  name: String!
+  kind: DefinitionKind!
+  file: File!
+  section: Section
+  violations: [Violation!]!
+  range: Range!
+  metrics: DefinitionMetrics!
+}
+
+enum DefinitionKind {
+  FUNCTION
+  CLASS
+  VARIABLE
+  INTERFACE
+  TYPE
+  ENUM
+  METHOD
+  PROPERTY
+}
+
+type DefinitionMetrics {
+  definitions: Int!
+  lines: Int!
+  violations: Int!
+}
+
+type Range {
+  start: Position!
+  end: Position!
+}
+
+type Position {
+  line: Int!
+  column: Int!
+}
+
+type Contributor implements Node {
+  id: ID!
+  github: String!
+  name: String
+  emails: [String!]!
+  links: [ContributorLink!]!
+  icons: ContributorIcons
+  bundles: [Bundle!]!
+  files: [File!]!
+  tickets: [Ticket!]!
+  commits: [Commit!]!
+  contributions: ContributorContributions!
+  metrics: ContributorMetrics!
+}
+
+type ContributorLink {
+  name: String!
+  url: String!
+}
+
+type ContributorIcons {
+  avatar: String
+  avatarRound: String
+  github: String
+}
+
+type ContributorContributions {
+  bundles: [ContributionBundle!]!
+  folders: [ContributionFolder!]!
+  files: [ContributionFile!]!
+  sections: [ContributionSection!]!
+  definitions: [ContributionDefinition!]!
+}
+
+type ContributionBundle {
+  bundle: Bundle!
+  metrics: CountMetrics!
+}
+
+type ContributionFolder {
+  folder: Folder!
+  metrics: CountMetrics!
+}
+
+type ContributionFile {
+  file: File!
+  metrics: LineMetrics!
+}
+
+type ContributionSection {
+  section: Section!
+  metrics: LineMetrics!
+}
+
+type ContributionDefinition {
+  definition: Definition!
+  metrics: LineMetrics!
+}
+
+type CountMetrics {
+  added: Int!
+  updated: Int!
+  removed: Int!
+}
+
+type LineMetrics {
+  added: Int!
+  removed: Int!
+}
+
+type ContributorMetrics {
+  commits: Int!
+  tickets: Int!
+  bundles: Int!
+  folders: Int!
+  files: Int!
+  sections: Int!
+  definitions: Int!
+  lines: Int!
+}
+
+type Commit implements Node {
+  id: ID!
+  sha: String!
+  title: String!
+  author: Contributor
+  date: DateTime!
+  bundles: [Bundle!]!
+  files: [File!]!
+}
+
+type Ticket implements Node {
+  id: ID!
+  year: Int!
+  month: Int!
+  day: Int!
+  slug: String!
+  path: String!
+  uri: String!
+  prompt: String!
+  summary: String
+  status: TicketStatus!
+  author: Contributor
+  model: String
+  commit: String
+  date: TicketDate!
+  iterations: [TicketIteration!]!
+  bundles: [Bundle!]!
+  files: [File!]!
+  metrics: TicketMetrics!
+}
+
+enum TicketStatus {
+  OPEN
+  CLOSED
+}
+
+type TicketDate {
+  created: DateTime!
+  finished: DateTime
+}
+
+type TicketIteration {
+  prompt: String!
+  model: String
+  author: Contributor
+  commit: String
+  date: IterationDate!
+  files: IterationFiles
+  bundles: [TicketBundleContrib!]!
+}
+
+type IterationDate {
+  started: DateTime!
+  ended: DateTime
+}
+
+type IterationFiles {
+  updated: [String!]!
+  created: [String!]!
+  removed: [String!]!
+}
+
+type TicketBundleContrib {
+  bundle: Bundle!
+  files: [TicketFileContrib!]!
+}
+
+type TicketFileContrib {
+  file: File!
+  sections: [TicketSectionContrib!]!
+}
+
+type TicketSectionContrib {
+  section: Section!
+  definitions: [String!]!
+  metrics: LineMetrics!
+}
+
+type TicketMetrics {
+  iterations: Int!
+  bundles: Int!
+  files: Int!
+  lines: LineMetrics!
+}
+
+type Policy implements Node {
+  id: ID!
+  name: String!
+  description: String
+  scopes: [String!]!
+  violationKinds: [ViolationKind!]!
+}
+
+type ViolationKind implements Node {
+  id: ID!
+  policy: Policy!
+  priority: ViolationPriority!
+  autofixable: Boolean!
+  reason: String!
+  solution: String!
+  violations(scope: String): [Violation!]!
+}
+
+enum ViolationPriority {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+type Violation implements Node {
+  id: ID!
+  kind: ViolationKind!
+  scope: String!
+  file: File
+  folder: Folder
+  line: Int
+  column: Int
+  excerpt: String
+  autofix: Autofix
+}
+
+type Autofix {
+  description: String!
+  edits: [FileEdit!]!
+}
+
+type FileEdit {
+  path: String!
+  edits: [TextEdit!]!
+}
+
+type TextEdit {
+  start: Int!
+  end: Int!
+  newText: String!
+}
+
+type AnalyzeResult {
+  violations: [Violation!]!
+  metrics: AnalyzeMetrics!
+}
+
+type AnalyzeMetrics {
+  total: Int!
+  byPriority: PriorityCount!
+  autofixable: Int!
+}
+
+type PriorityCount {
+  high: Int!
+  medium: Int!
+  low: Int!
+}
+
+type FixResult {
+  fixed: Int!
+  remaining: Int!
+  violations: [Violation!]!
+}
+
+# #endregion Types

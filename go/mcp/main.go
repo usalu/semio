@@ -1,4 +1,6 @@
-// mcp/main.go
+// #region Header
+
+// go/mcp/main.go
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -15,59 +17,42 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+// #endregion Header
+
 package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"math"
 	"os"
-	"os/exec"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
+	"github.com/usalu/semio/go/repo"
 )
-
-var repoPath string
 
 func init() {
 	wd, _ := os.Getwd()
-	repoPath = findRepoBinary(wd)
+	rootDir := findRepoRoot(wd)
+	repo.SetRootDir(rootDir)
 }
 
-func findRepoBinary(start string) string {
+func findRepoRoot(start string) string {
 	dir := start
 	for {
-		binPath := filepath.Join(dir, "go", "repo", "repo")
-		if _, err := os.Stat(binPath); err == nil {
-			return binPath
-		}
-		binPath = filepath.Join(dir, "go", "repo", "repo.exe")
-		if _, err := os.Stat(binPath); err == nil {
-			return binPath
+		if _, err := os.Stat(filepath.Join(dir, "AGENTS.md")); err == nil {
+			return dir
 		}
 		parent := filepath.Dir(dir)
 		if parent == dir {
-			return "repo"
+			return start
 		}
 		dir = parent
 	}
-}
-
-func runRepo(args ...string) (string, error) {
-	cmd := exec.Command(repoPath, args...)
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		output := strings.TrimSpace(string(out))
-		if output == "" {
-			return "", fmt.Errorf("repo %s: %w", strings.Join(args, " "), err)
-		}
-		return "", fmt.Errorf("repo %s: %w: %s", strings.Join(args, " "), err, output)
-	}
-	return string(out), nil
 }
 
 func main() {
@@ -105,13 +90,13 @@ func main() {
 		policyCheck,
 	)
 	s.AddTool(
-	mcp.NewTool("ticket_create",
-		mcp.WithDescription("Create a new development ticket"),
-		mcp.WithString("slug", mcp.Required(), mcp.Description("Ticket slug (will be uppercased and kebab-cased)")),
-		mcp.WithString("prompt", mcp.Required(), mcp.Description("Ticket prompt/description")),
-		mcp.WithString("model", mcp.Required(), mcp.Description("Large-Language-Model (LLM) used for this ticket")),
-		mcp.WithArray("files", mcp.Description("Files to include (at least one required)")),
-	),
+		mcp.NewTool("ticket_create",
+			mcp.WithDescription("Create a new development ticket"),
+			mcp.WithString("slug", mcp.Required(), mcp.Description("Ticket slug (will be uppercased and kebab-cased)")),
+			mcp.WithString("prompt", mcp.Required(), mcp.Description("Ticket prompt/description")),
+			mcp.WithString("model", mcp.Required(), mcp.Description("Large-Language-Model (LLM) used for this ticket")),
+			mcp.WithArray("files", mcp.Description("Files to include (at least one required)")),
+		),
 		ticketCreate,
 	)
 	s.AddTool(
@@ -134,15 +119,15 @@ func main() {
 		ticketRead,
 	)
 	s.AddTool(
-	mcp.NewTool("ticket_progress",
-		mcp.WithDescription("Record progress on a ticket (creates iteration from git changes)"),
-		mcp.WithNumber("year", mcp.Required(), mcp.Description("Ticket year")),
-		mcp.WithNumber("month", mcp.Required(), mcp.Description("Ticket month")),
-		mcp.WithNumber("day", mcp.Required(), mcp.Description("Ticket day")),
-		mcp.WithString("slug", mcp.Required(), mcp.Description("Ticket slug")),
-		mcp.WithString("prompt", mcp.Required(), mcp.Description("Iteration prompt")),
-		mcp.WithString("model", mcp.Required(), mcp.Description("Large-Language-Model (LLM) used")),
-	),
+		mcp.NewTool("ticket_progress",
+			mcp.WithDescription("Record progress on a ticket (creates iteration from git changes)"),
+			mcp.WithNumber("year", mcp.Required(), mcp.Description("Ticket year")),
+			mcp.WithNumber("month", mcp.Required(), mcp.Description("Ticket month")),
+			mcp.WithNumber("day", mcp.Required(), mcp.Description("Ticket day")),
+			mcp.WithString("slug", mcp.Required(), mcp.Description("Ticket slug")),
+			mcp.WithString("prompt", mcp.Required(), mcp.Description("Iteration prompt")),
+			mcp.WithString("model", mcp.Required(), mcp.Description("Large-Language-Model (LLM) used")),
+		),
 		ticketProgress,
 	)
 	s.AddTool(
@@ -305,6 +290,14 @@ func main() {
 		),
 		definitionList,
 	)
+	s.AddTool(
+		mcp.NewTool("graphql",
+			mcp.WithDescription("Execute a GraphQL query against the repo schema"),
+			mcp.WithString("query", mcp.Required(), mcp.Description("GraphQL query string")),
+			mcp.WithString("variables", mcp.Description("JSON object with query variables")),
+		),
+		graphqlQuery,
+	)
 	if err := server.ServeStdio(s); err != nil {
 		fmt.Printf("Server error: %v\n", err)
 	}
@@ -387,6 +380,7 @@ func getStringSliceArg(args map[string]interface{}, key string) ([]string, bool,
 	}
 	return result, true, nil
 }
+
 // #endregion Args
 
 // #region Paths
@@ -439,8 +433,10 @@ func requireFolderTargetPath(path string) error {
 	}
 	return nil
 }
+
 // #endregion Paths
 
+// #region Handlers
 func analyze(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	scope, ok, err := getStringArg(args, "scope")
@@ -450,11 +446,8 @@ func analyze(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolRes
 	if !ok {
 		scope = "@semio"
 	}
-	result, err := runRepo("analyze", scope)
-	if err != nil {
-		return nil, err
-	}
-	return textResult(result), nil
+	result := repo.ToolAnalyze(scope, nil)
+	return textResult(repo.FormatResult(result)), nil
 }
 
 func fix(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -466,19 +459,13 @@ func fix(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult,
 	if !ok {
 		scope = "@semio"
 	}
-	result, err := runRepo("fix", scope)
-	if err != nil {
-		return nil, err
-	}
-	return textResult(result), nil
+	result := repo.ToolFix(scope)
+	return textResult(repo.FormatResult(result)), nil
 }
 
 func policyList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	result, err := runRepo("policy", "list")
-	if err != nil {
-		return nil, err
-	}
-	return textResult(result), nil
+	result := repo.ToolPolicyList()
+	return textResult(repo.FormatResult(result)), nil
 }
 
 func policyCheck(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -492,17 +479,10 @@ func policyCheck(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 		return nil, err
 	}
 	if !ok {
-		result, err := runRepo("policy", "check", id)
-		if err != nil {
-			return nil, err
-		}
-		return textResult(result), nil
+		scope = "@semio"
 	}
-	result, err := runRepo("policy", "check", id, scope)
-	if err != nil {
-		return nil, err
-	}
-	return textResult(result), nil
+	result := repo.ToolPolicyCheck(id, scope)
+	return textResult(repo.FormatResult(result)), nil
 }
 
 func ticketCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -519,31 +499,21 @@ func ticketCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 	if err != nil {
 		return nil, err
 	}
-	cmdArgs := []string{"ticket", "create", slug}
-	cmdArgs = append(cmdArgs, "--prompt="+prompt)
-	cmdArgs = append(cmdArgs, "--model="+model)
-	files, ok, err := getStringSliceArg(args, "files")
+	files, _, err := getStringSliceArg(args, "files")
 	if err != nil {
 		return nil, err
 	}
-	if ok {
-		for _, file := range files {
-			if err := requireFilePath(file); err != nil {
-				return nil, err
-			}
-			cmdArgs = append(cmdArgs, "--file="+file)
+	for _, file := range files {
+		if err := requireFilePath(file); err != nil {
+			return nil, err
 		}
 	}
-	result, err := runRepo(cmdArgs...)
-	if err != nil {
-		return nil, err
-	}
-	return textResult(result), nil
+	result := repo.ToolTicketCreate(slug, prompt, model, files)
+	return textResult(repo.FormatResult(result)), nil
 }
 
 func ticketList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	cmdArgs := []string{"ticket", "list"}
 	year, yearOk, err := getIntArg(args, "year")
 	if err != nil {
 		return nil, err
@@ -562,20 +532,18 @@ func ticketList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	if dayOk && !monthOk {
 		return nil, fmt.Errorf("missing month")
 	}
+	var yp, mp, dp *int
 	if yearOk {
-		cmdArgs = append(cmdArgs, strconv.Itoa(year))
-		if monthOk {
-			cmdArgs = append(cmdArgs, strconv.Itoa(month))
-			if dayOk {
-				cmdArgs = append(cmdArgs, strconv.Itoa(day))
-			}
-		}
+		yp = &year
 	}
-	result, err := runRepo(cmdArgs...)
-	if err != nil {
-		return nil, err
+	if monthOk {
+		mp = &month
 	}
-	return textResult(result), nil
+	if dayOk {
+		dp = &day
+	}
+	result := repo.ToolTicketList(yp, mp, dp)
+	return textResult(repo.FormatResult(result)), nil
 }
 
 func ticketRead(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -596,11 +564,8 @@ func ticketRead(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	if err != nil {
 		return nil, err
 	}
-	result, err := runRepo("ticket", "read", strconv.Itoa(year), strconv.Itoa(month), strconv.Itoa(day), slug)
-	if err != nil {
-		return nil, err
-	}
-	return textResult(result), nil
+	result := repo.ToolTicketRead(year, month, day, slug)
+	return textResult(repo.FormatResult(result)), nil
 }
 
 func ticketProgress(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -629,14 +594,8 @@ func ticketProgress(ctx context.Context, request mcp.CallToolRequest) (*mcp.Call
 	if err != nil {
 		return nil, err
 	}
-	cmdArgs := []string{"ticket", "progress", strconv.Itoa(year), strconv.Itoa(month), strconv.Itoa(day), slug}
-	cmdArgs = append(cmdArgs, "--prompt="+prompt)
-	cmdArgs = append(cmdArgs, "--model="+model)
-	result, err := runRepo(cmdArgs...)
-	if err != nil {
-		return nil, err
-	}
-	return textResult(result), nil
+	result := repo.ToolTicketProgress(year, month, day, slug, prompt, model)
+	return textResult(repo.FormatResult(result)), nil
 }
 
 func ticketFinish(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -657,11 +616,8 @@ func ticketFinish(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 	if err != nil {
 		return nil, err
 	}
-	result, err := runRepo("ticket", "finish", strconv.Itoa(year), strconv.Itoa(month), strconv.Itoa(day), slug)
-	if err != nil {
-		return nil, err
-	}
-	return textResult(result), nil
+	result := repo.ToolTicketFinish(year, month, day, slug)
+	return textResult(repo.FormatResult(result)), nil
 }
 
 func contributorAdd(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -670,19 +626,13 @@ func contributorAdd(ctx context.Context, request mcp.CallToolRequest) (*mcp.Call
 	if err != nil {
 		return nil, err
 	}
-	result, err := runRepo("contributor", "add", github)
-	if err != nil {
-		return nil, err
-	}
-	return textResult(result), nil
+	result := repo.ToolContributorAdd(github)
+	return textResult(repo.FormatResult(result)), nil
 }
 
 func contributorList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	result, err := runRepo("contributor", "list")
-	if err != nil {
-		return nil, err
-	}
-	return textResult(result), nil
+	result := repo.ToolContributorList()
+	return textResult(repo.FormatResult(result)), nil
 }
 
 func contributorRemove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -691,27 +641,18 @@ func contributorRemove(ctx context.Context, request mcp.CallToolRequest) (*mcp.C
 	if err != nil {
 		return nil, err
 	}
-	result, err := runRepo("contributor", "remove", github)
-	if err != nil {
-		return nil, err
-	}
-	return textResult(result), nil
+	result := repo.ToolContributorRemove(github)
+	return textResult(repo.FormatResult(result)), nil
 }
 
 func projectList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	result, err := runRepo("bundle", "list")
-	if err != nil {
-		return nil, err
-	}
-	return textResult(result), nil
+	result := repo.ToolProjectList()
+	return textResult(repo.FormatResult(result)), nil
 }
 
 func projectTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	result, err := runRepo("bundle", "tree")
-	if err != nil {
-		return nil, err
-	}
-	return textResult(result), nil
+	result := repo.ToolProjectTree()
+	return textResult(repo.FormatResult(result)), nil
 }
 
 func folderCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -723,11 +664,8 @@ func folderCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 	if err := requireFolderTargetPath(path); err != nil {
 		return nil, err
 	}
-	result, err := runRepo("folder", "create", path)
-	if err != nil {
-		return nil, err
-	}
-	return textResult(result), nil
+	result := repo.ToolFolderCreate(path)
+	return textResult(repo.FormatResult(result)), nil
 }
 
 func folderMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -746,11 +684,8 @@ func folderMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	if err := requireFolderTargetPath(target); err != nil {
 		return nil, err
 	}
-	result, err := runRepo("folder", "move", source, target)
-	if err != nil {
-		return nil, err
-	}
-	return textResult(result), nil
+	result := repo.ToolFolderMove(source, target)
+	return textResult(repo.FormatResult(result)), nil
 }
 
 func folderDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -762,11 +697,8 @@ func folderDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 	if err := requireFolderPath(path); err != nil {
 		return nil, err
 	}
-	result, err := runRepo("folder", "delete", path)
-	if err != nil {
-		return nil, err
-	}
-	return textResult(result), nil
+	result := repo.ToolFolderDelete(path)
+	return textResult(repo.FormatResult(result)), nil
 }
 
 func folderList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -781,11 +713,8 @@ func folderList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	if err := requireFolderPath(path); err != nil {
 		return nil, err
 	}
-	result, err := runRepo("folder", "list", path)
-	if err != nil {
-		return nil, err
-	}
-	return textResult(result), nil
+	result := repo.ToolFolderList(path)
+	return textResult(repo.FormatResult(result)), nil
 }
 
 func folderTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -800,11 +729,8 @@ func folderTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	if err := requireFolderPath(path); err != nil {
 		return nil, err
 	}
-	result, err := runRepo("folder", "tree", path)
-	if err != nil {
-		return nil, err
-	}
-	return textResult(result), nil
+	result := repo.ToolFolderTree(path)
+	return textResult(repo.FormatResult(result)), nil
 }
 
 func fileCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -816,11 +742,8 @@ func fileCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	if err := requireFileTargetPath(path); err != nil {
 		return nil, err
 	}
-	result, err := runRepo("file", "create", path)
-	if err != nil {
-		return nil, err
-	}
-	return textResult(result), nil
+	result := repo.ToolFileCreate(path)
+	return textResult(repo.FormatResult(result)), nil
 }
 
 func fileMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -839,11 +762,8 @@ func fileMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolRe
 	if err := requireFileTargetPath(target); err != nil {
 		return nil, err
 	}
-	result, err := runRepo("file", "move", source, target)
-	if err != nil {
-		return nil, err
-	}
-	return textResult(result), nil
+	result := repo.ToolFileMove(source, target)
+	return textResult(repo.FormatResult(result)), nil
 }
 
 func fileDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -855,11 +775,8 @@ func fileDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	if err := requireFilePath(path); err != nil {
 		return nil, err
 	}
-	result, err := runRepo("file", "delete", path)
-	if err != nil {
-		return nil, err
-	}
-	return textResult(result), nil
+	result := repo.ToolFileDelete(path)
+	return textResult(repo.FormatResult(result)), nil
 }
 
 func fileList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -871,11 +788,8 @@ func fileList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolRe
 	if !ok {
 		scope = "@semio"
 	}
-	result, err := runRepo("file", "list", scope)
-	if err != nil {
-		return nil, err
-	}
-	return textResult(result), nil
+	result := repo.ToolFileList(scope)
+	return textResult(repo.FormatResult(result)), nil
 }
 
 func fileTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -890,11 +804,8 @@ func fileTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolRe
 	if err := requireFolderPath(path); err != nil {
 		return nil, err
 	}
-	result, err := runRepo("file", "tree", path)
-	if err != nil {
-		return nil, err
-	}
-	return textResult(result), nil
+	result := repo.ToolFileTree(path)
+	return textResult(repo.FormatResult(result)), nil
 }
 
 func sectionCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -910,11 +821,8 @@ func sectionCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallT
 	if err := requireFilePath(file); err != nil {
 		return nil, err
 	}
-	result, err := runRepo("section", "create", file, section)
-	if err != nil {
-		return nil, err
-	}
-	return textResult(result), nil
+	result := repo.ToolSectionCreate(file, section)
+	return textResult(repo.FormatResult(result)), nil
 }
 
 func sectionMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -934,11 +842,8 @@ func sectionMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 	if err := requireFilePath(file); err != nil {
 		return nil, err
 	}
-	result, err := runRepo("section", "move", file, oldName, newName)
-	if err != nil {
-		return nil, err
-	}
-	return textResult(result), nil
+	result := repo.ToolSectionMove(file, oldName, newName)
+	return textResult(repo.FormatResult(result)), nil
 }
 
 func sectionDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -954,11 +859,8 @@ func sectionDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallT
 	if err := requireFilePath(file); err != nil {
 		return nil, err
 	}
-	result, err := runRepo("section", "delete", file, section)
-	if err != nil {
-		return nil, err
-	}
-	return textResult(result), nil
+	result := repo.ToolSectionDelete(file, section)
+	return textResult(repo.FormatResult(result)), nil
 }
 
 func sectionList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -970,11 +872,8 @@ func sectionList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 	if err := requireFilePath(file); err != nil {
 		return nil, err
 	}
-	result, err := runRepo("section", "list", file)
-	if err != nil {
-		return nil, err
-	}
-	return textResult(result), nil
+	result := repo.ToolSectionList(file)
+	return textResult(repo.FormatResult(result)), nil
 }
 
 func sectionTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -986,11 +885,8 @@ func sectionTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 	if err := requireFilePath(file); err != nil {
 		return nil, err
 	}
-	result, err := runRepo("section", "tree", file)
-	if err != nil {
-		return nil, err
-	}
-	return textResult(result), nil
+	result := repo.ToolSectionTree(file)
+	return textResult(repo.FormatResult(result)), nil
 }
 
 func definitionList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -1002,12 +898,33 @@ func definitionList(ctx context.Context, request mcp.CallToolRequest) (*mcp.Call
 	if err := requireFilePath(file); err != nil {
 		return nil, err
 	}
-	result, err := runRepo("definition", "list", file)
+	result := repo.ToolDefinitionList(file)
+	return textResult(repo.FormatResult(result)), nil
+}
+
+func graphqlQuery(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
+	query, err := requireStringArg(args, "query")
 	if err != nil {
 		return nil, err
+	}
+	variablesStr, _, err := getStringArg(args, "variables")
+	if err != nil {
+		return nil, err
+	}
+	var variables map[string]interface{}
+	if variablesStr != "" {
+		if err := json.Unmarshal([]byte(variablesStr), &variables); err != nil {
+			return nil, fmt.Errorf("invalid variables JSON: %w", err)
+		}
+	}
+	result, gqlErr := repo.ExecuteGraphQL(query, variables)
+	if gqlErr != nil {
+		return textResult(fmt.Sprintf(`{"error": %q}`, gqlErr.Error())), nil
 	}
 	return textResult(result), nil
 }
 
-var _ = strings.TrimSpace
+// #endregion Handlers
 
+var _ = strings.TrimSpace

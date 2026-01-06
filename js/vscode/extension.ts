@@ -33,6 +33,307 @@ const execAsync = promisify(exec);
 
 // #endregion Imports
 
+// #region GraphQL Client
+
+interface GraphQLResult<TData = unknown> {
+  data?: TData;
+  error?: Error;
+}
+
+async function executeGraphQL<TData = unknown, TVariables extends object = Record<string, unknown>>(
+  query: string,
+  variables?: TVariables
+): Promise<GraphQLResult<TData>> {
+  const root = getWorkspaceRoot();
+  if (!root) {
+    return { error: new Error("No workspace root") };
+  }
+  const command = getRepoCommand();
+  if (!command) {
+    return { error: new Error("No repo command found") };
+  }
+  const variablesJson = variables && Object.keys(variables).length > 0 ? JSON.stringify(variables) : "";
+  const escapedQuery = query.replace(/"/g, '\\"').replace(/\n/g, " ");
+  const escapedVariables = variablesJson ? variablesJson.replace(/"/g, '\\"') : "";
+  const fullCommand = escapedVariables
+    ? `"${command}" graphql "${escapedQuery}" -v "${escapedVariables}"`
+    : `"${command}" graphql "${escapedQuery}"`;
+  log("[GraphQL] executing:", fullCommand);
+  try {
+    const { stdout, stderr } = await execAsync(fullCommand, { cwd: root, timeout: 60000, maxBuffer: 10 * 1024 * 1024 });
+    if (stderr) {
+      log("[GraphQL] stderr:", stderr.substring(0, 500));
+    }
+    if (stdout.length === 0) {
+      return { error: new Error("Empty response") };
+    }
+    const data = JSON.parse(stdout) as TData;
+    return { data };
+  } catch (error) {
+    logError("[GraphQL] error:", error);
+    return { error: error instanceof Error ? error : new Error(String(error)) };
+  }
+}
+
+async function gql<TData = unknown>(
+  strings: TemplateStringsArray,
+  ...values: unknown[]
+): Promise<GraphQLResult<TData>> {
+  const query = strings.reduce((acc, str, i) => acc + str + (values[i] ?? ""), "");
+  return executeGraphQL<TData>(query);
+}
+
+// #endregion GraphQL Client
+
+// #region GraphQL Queries
+
+const REPO_QUERY = `
+  query Repo {
+    repo {
+      id
+      name
+      path
+      bundles { id name root sourceRoot projectType tags uri }
+      tickets { id year month day slug path uri prompt summary status commit }
+      policies { id name description scopes }
+      contributors { id github name emails }
+    }
+  }
+`;
+
+const BUNDLES_QUERY = `
+  query Bundles {
+    repo {
+      bundles { id name root sourceRoot projectType tags uri }
+    }
+  }
+`;
+
+const TICKETS_QUERY = `
+  query Tickets($year: Int, $month: Int, $day: Int, $status: TicketStatus) {
+    repo {
+      tickets(year: $year, month: $month, day: $day, status: $status) {
+        id year month day slug path uri prompt summary status author { github name } model commit
+        date { created finished }
+        iterations { prompt model author { github name } commit date { started ended } }
+        metrics { iterations bundles files lines { added removed } }
+      }
+    }
+  }
+`;
+
+const POLICIES_QUERY = `
+  query Policies {
+    repo {
+      policies { id name description scopes violationKinds { id priority autofixable reason solution } }
+    }
+  }
+`;
+
+const CONTRIBUTORS_QUERY = `
+  query Contributors {
+    repo {
+      contributors {
+        id github name emails
+        links { name url }
+        icons { avatar avatarRound github }
+        metrics { commits tickets bundles folders files sections definitions lines }
+      }
+    }
+  }
+`;
+
+const ANALYZE_QUERY = `
+  query Analyze($scope: String) {
+    analyze(scope: $scope) {
+      violations {
+        id summary priority autofixable scope line column excerpt
+        kind { id policy { id name } reason solution }
+        autofix { description }
+      }
+      metrics { total byPriority { high medium low } autofixable }
+    }
+  }
+`;
+
+const FIX_MUTATION = `
+  mutation Fix($scope: String) {
+    fix(scope: $scope) {
+      fixed
+      metrics { total byPriority { high medium low } autofixable }
+    }
+  }
+`;
+
+// #endregion GraphQL Queries
+
+// #region GraphQL Types
+
+interface GqlRepo {
+  id: string;
+  name: string;
+  path: string;
+  bundles: GqlBundle[];
+  tickets: GqlTicket[];
+  policies: GqlPolicy[];
+  contributors: GqlContributor[];
+}
+
+interface GqlBundle {
+  id: string;
+  name: string;
+  root: string;
+  sourceRoot?: string;
+  projectType?: string;
+  tags: string[];
+  uri: string;
+}
+
+interface GqlTicket {
+  id: string;
+  year: number;
+  month: number;
+  day: number;
+  slug: string;
+  path: string;
+  uri: string;
+  prompt: string;
+  summary?: string;
+  status: "OPEN" | "CLOSED";
+  author?: GqlContributor;
+  model?: string;
+  commit?: string;
+  date: { created: string; finished?: string };
+  iterations: GqlIteration[];
+  metrics: { iterations: number; bundles: number; files: number; lines?: { added: number; removed: number } };
+}
+
+interface GqlIteration {
+  prompt: string;
+  model?: string;
+  author?: GqlContributor;
+  commit?: string;
+  date: { started: string; ended?: string };
+}
+
+interface GqlPolicy {
+  id: string;
+  name: string;
+  description?: string;
+  scopes: string[];
+  violationKinds: GqlViolationKind[];
+}
+
+interface GqlViolationKind {
+  id: string;
+  priority: "HIGH" | "MEDIUM" | "LOW";
+  autofixable: boolean;
+  reason: string;
+  solution: string;
+}
+
+interface GqlContributor {
+  id: string;
+  github: string;
+  name?: string;
+  emails: string[];
+  links?: { name: string; url: string }[];
+  icons?: { avatar?: string; avatarRound?: string; github?: string };
+  metrics?: { commits: number; tickets: number; bundles: number; folders: number; files: number; sections: number; definitions: number; lines: number };
+}
+
+interface GqlViolation {
+  id: string;
+  summary: string;
+  priority: "HIGH" | "MEDIUM" | "LOW";
+  autofixable: boolean;
+  scope: string;
+  line?: number;
+  column?: number;
+  excerpt?: string;
+  kind: { id: string; policy: { id: string; name: string }; reason: string; solution: string };
+  autofix?: { description: string };
+}
+
+interface GqlAnalyzeResult {
+  violations: GqlViolation[];
+  metrics: { total: number; byPriority: { high: number; medium: number; low: number }; autofixable: number };
+}
+
+interface GqlFixResult {
+  fixed: number;
+  metrics: { total: number; byPriority: { high: number; medium: number; low: number }; autofixable: number };
+}
+
+// #endregion GraphQL Types
+
+// #region GraphQL Helpers
+
+async function fetchRepoViaGraphQL(): Promise<GqlRepo | null> {
+  const result = await executeGraphQL<{ repo: GqlRepo }>(REPO_QUERY);
+  if (result.error) {
+    logError("[GraphQL] fetchRepoViaGraphQL error:", result.error);
+    return null;
+  }
+  return result.data?.repo ?? null;
+}
+
+async function fetchBundlesViaGraphQL(): Promise<GqlBundle[]> {
+  const result = await executeGraphQL<{ repo: { bundles: GqlBundle[] } }>(BUNDLES_QUERY);
+  if (result.error) {
+    logError("[GraphQL] fetchBundlesViaGraphQL error:", result.error);
+    return [];
+  }
+  return result.data?.repo?.bundles ?? [];
+}
+
+async function fetchTicketsViaGraphQL(year?: number, month?: number, day?: number, status?: "OPEN" | "CLOSED"): Promise<GqlTicket[]> {
+  const result = await executeGraphQL<{ repo: { tickets: GqlTicket[] } }, { year?: number; month?: number; day?: number; status?: string }>(TICKETS_QUERY, { year, month, day, status });
+  if (result.error) {
+    logError("[GraphQL] fetchTicketsViaGraphQL error:", result.error);
+    return [];
+  }
+  return result.data?.repo?.tickets ?? [];
+}
+
+async function fetchPoliciesViaGraphQL(): Promise<GqlPolicy[]> {
+  const result = await executeGraphQL<{ repo: { policies: GqlPolicy[] } }>(POLICIES_QUERY);
+  if (result.error) {
+    logError("[GraphQL] fetchPoliciesViaGraphQL error:", result.error);
+    return [];
+  }
+  return result.data?.repo?.policies ?? [];
+}
+
+async function fetchContributorsViaGraphQL(): Promise<GqlContributor[]> {
+  const result = await executeGraphQL<{ repo: { contributors: GqlContributor[] } }>(CONTRIBUTORS_QUERY);
+  if (result.error) {
+    logError("[GraphQL] fetchContributorsViaGraphQL error:", result.error);
+    return [];
+  }
+  return result.data?.repo?.contributors ?? [];
+}
+
+async function analyzeViaGraphQL(scope?: string): Promise<GqlAnalyzeResult | null> {
+  const result = await executeGraphQL<{ analyze: GqlAnalyzeResult }, { scope?: string }>(ANALYZE_QUERY, { scope });
+  if (result.error) {
+    logError("[GraphQL] analyzeViaGraphQL error:", result.error);
+    return null;
+  }
+  return result.data?.analyze ?? null;
+}
+
+async function fixViaGraphQL(scope?: string): Promise<GqlFixResult | null> {
+  const result = await executeGraphQL<{ fix: GqlFixResult }, { scope?: string }>(FIX_MUTATION, { scope });
+  if (result.error) {
+    logError("[GraphQL] fixViaGraphQL error:", result.error);
+    return null;
+  }
+  return result.data?.fix ?? null;
+}
+
+// #endregion GraphQL Helpers
+
 // #region Constants
 
 const runningProcesses = new Map<string, AbortController>();
@@ -147,84 +448,82 @@ interface CodebaseViolation {
 }
 
 interface BundleMetricsInfo {
-  folders: CountMetrics;
-  files: CountMetrics;
-  sections: CountMetrics;
-  definitions: CountMetrics;
-  violations: CountMetrics;
-  lines: LineMetricsInfo;
+  folders: number;
+  files: number;
+  sections: number;
+  definitions: number;
+  violations: number;
+  lines: number;
 }
 
 interface CodebaseBundle {
-  name: string;
-  root: string;
+  id: string;
+  folder: string;
+  uri?: string;
   projectType?: string;
   tags?: string[];
+  contributors?: string[];
   metrics: BundleMetricsInfo;
-  folders: string[];
-  files: string[];
 }
 
 interface FolderMetricsInfo {
-  files: CountMetrics;
-  sections: CountMetrics;
-  definitions: CountMetrics;
-  violations: CountMetrics;
-  lines: LineMetricsInfo;
+  files: number;
+  lines: number;
+  violations: number;
 }
 
 interface CodebaseFolder {
+  id: string;
   path: string;
-  bundle: string;
+  uri?: string;
   metrics: FolderMetricsInfo;
-  files: string[];
 }
 
 interface FileMetricsInfo {
-  sections: CountMetrics;
-  definitions: CountMetrics;
-  violations: CountMetrics;
-  lines: LineMetricsInfo;
+  sections: number;
+  definitions: number;
+  lines: number;
+}
+
+interface CodebaseFileViolation {
+  kind: string;
+  priority: string;
+  autofixable?: boolean;
+  solution?: string;
 }
 
 interface CodebaseFile {
+  id: string;
   path: string;
-  bundle: string;
-  folder: string;
-  language: string;
-  contributors: string[];
+  uri?: string;
   metrics: FileMetricsInfo;
-  sections: string[];
-  definitions: string[];
-  violations: string[];
+  violations?: CodebaseFileViolation[];
 }
 
 interface SectionMetricsInfo {
-  definitions: CountMetrics;
-  lines: LineMetricsInfo;
+  definitions: number;
+  lines: number;
+  violations: number;
 }
 
 interface CodebaseSection {
+  id: string;
   path: string;
-  file: string;
-  parent?: string;
+  uri: string;
   metrics: SectionMetricsInfo;
-  range: FileRange;
-  definitions: string[];
 }
 
 interface DefinitionMetricsInfo {
-  lines: LineMetricsInfo;
+  definitions: number;
+  lines: number;
+  violations: number;
 }
 
 interface CodebaseDefinition {
+  id: string;
   path: string;
-  file: string;
-  section?: string;
-  name: string;
-  kind: string;
+  uri: string;
   metrics: DefinitionMetricsInfo;
-  range: FileRange;
 }
 
 interface ContributorIcons {
@@ -289,13 +588,15 @@ interface CodebasePolicy {
   kinds: string[];
 }
 
-type TreeNodeKind = "root" | "bundle" | "folder" | "file" | "section" | "definition";
+type TreeNodeKind = "root" | "repo" | "bundle" | "folder" | "file" | "section" | "definition";
 
-interface TreeNode {
+interface TreeNodeMap {
+  [key: string]: TreeNodeEntry;
+}
+
+interface TreeNodeEntry {
   kind: TreeNodeKind;
-  name: string;
-  path?: string;
-  children?: TreeNode[];
+  children?: TreeNodeMap;
 }
 
 interface Codebase {
@@ -308,7 +609,7 @@ interface Codebase {
   tickets: CodebaseTicket[];
   policies: CodebasePolicy[];
   violations: CodebaseViolation[];
-  tree: TreeNode;
+  tree: TreeNodeMap;
 }
 
 // #endregion Codebase
@@ -402,8 +703,8 @@ async function loadCodebase(): Promise<Codebase | null> {
     codebaseLoadPromise = null;
     if (cachedCodebase) {
       cachedProjects = cachedCodebase.bundles.map((b) => ({
-        name: b.name,
-        root: b.root,
+        name: b.id,
+        root: b.folder,
         projectType: b.projectType,
         tags: b.tags,
       }));
@@ -2135,6 +2436,227 @@ class SectionsDragAndDropController implements vscode.TreeDragAndDropController<
   }
 }
 
+type CodebaseTreeItem =
+  | CodebaseRepoItem
+  | CodebaseBundleItem
+  | CodebaseFolderItem
+  | CodebaseFileItem
+  | CodebaseSectionItem
+  | CodebaseDefinitionItem;
+
+class CodebaseRepoItem extends vscode.TreeItem {
+  constructor(public readonly treeChildren: TreeNodeMap) {
+    super("@semio", vscode.TreeItemCollapsibleState.Expanded);
+    this.iconPath = new vscode.ThemeIcon("repo");
+    this.contextValue = "codebaseRepo";
+    this.command = { command: "semio.navigateToRepo", title: "Navigate to Repo", arguments: [] };
+  }
+}
+
+class CodebaseBundleItem extends vscode.TreeItem {
+  constructor(
+    public readonly bundle: CodebaseBundle,
+    public readonly childNodes: TreeNodeMap,
+  ) {
+    super(bundle.id, vscode.TreeItemCollapsibleState.Collapsed);
+    this.iconPath = new vscode.ThemeIcon("package");
+    this.contextValue = "codebaseBundle";
+    this.description = bundle.projectType || "";
+    this.tooltip = `${bundle.id}\nFiles: ${bundle.metrics.files}\nDefinitions: ${bundle.metrics.definitions}`;
+    this.command = { command: "semio.navigateToBundle", title: "Navigate to Bundle", arguments: [bundle.folder] };
+  }
+}
+
+class CodebaseFolderItem extends vscode.TreeItem {
+  constructor(
+    public readonly folderPath: string,
+    public readonly displayName: string,
+    public readonly childNodes: TreeNodeMap,
+  ) {
+    super(displayName, vscode.TreeItemCollapsibleState.Collapsed);
+    this.iconPath = new vscode.ThemeIcon("folder");
+    this.contextValue = "codebaseFolder";
+    this.command = { command: "semio.navigateToFolder", title: "Navigate to Folder", arguments: [folderPath] };
+  }
+}
+
+class CodebaseFileItem extends vscode.TreeItem {
+  constructor(
+    public readonly file: CodebaseFile,
+    public readonly displayName: string,
+    public readonly hasSectionsOrDefs: boolean,
+  ) {
+    super(displayName, hasSectionsOrDefs ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
+    this.iconPath = new vscode.ThemeIcon("file-code");
+    this.contextValue = "codebaseFile";
+    this.tooltip = `${file.path}\nSections: ${file.metrics.sections}\nDefinitions: ${file.metrics.definitions}`;
+    this.command = { command: "semio.navigateToFile", title: "Navigate to File", arguments: [file.path] };
+  }
+}
+
+class CodebaseSectionItem extends vscode.TreeItem {
+  constructor(
+    public readonly section: CodebaseSection,
+    public readonly displayName: string,
+    public readonly hasChildren: boolean,
+  ) {
+    super(displayName, hasChildren ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
+    this.iconPath = new vscode.ThemeIcon("symbol-namespace");
+    this.contextValue = "codebaseSection";
+    this.tooltip = `Lines: ${section.metrics.lines}`;
+    this.command = { command: "semio.navigateToSection", title: "Navigate to Section", arguments: [section.uri] };
+  }
+}
+
+class CodebaseDefinitionItem extends vscode.TreeItem {
+  constructor(public readonly definition: CodebaseDefinition) {
+    const name = definition.id.split("§").pop() || definition.id;
+    super(name, vscode.TreeItemCollapsibleState.None);
+    this.iconPath = new vscode.ThemeIcon("symbol-function");
+    this.contextValue = "codebaseDefinition";
+    this.tooltip = `Lines: ${definition.metrics.lines}`;
+    this.command = { command: "semio.navigateToDefinition", title: "Navigate to Definition", arguments: [definition.uri] };
+  }
+}
+
+class CodebaseProvider implements vscode.TreeDataProvider<CodebaseTreeItem> {
+  private _onDidChangeTreeData = new vscode.EventEmitter<CodebaseTreeItem | undefined | null | void>();
+  readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
+
+  refresh(): void {
+    refreshCodebase();
+    this._onDidChangeTreeData.fire();
+  }
+
+  getTreeItem(element: CodebaseTreeItem): vscode.TreeItem {
+    return element;
+  }
+
+  async getChildren(element?: CodebaseTreeItem): Promise<CodebaseTreeItem[]> {
+    const codebase = await getCodebase();
+    if (!codebase) return [];
+
+    if (!element) {
+      const repoEntry = codebase.tree["@semio"];
+      if (!repoEntry) return [];
+      return [new CodebaseRepoItem(repoEntry.children || {})];
+    }
+
+    if (element instanceof CodebaseRepoItem) {
+      return this.buildChildrenFromTree(codebase, element.treeChildren);
+    }
+
+    if (element instanceof CodebaseBundleItem) {
+      return this.buildChildrenFromTree(codebase, element.childNodes);
+    }
+
+    if (element instanceof CodebaseFolderItem) {
+      return this.buildChildrenFromTree(codebase, element.childNodes);
+    }
+
+    if (element instanceof CodebaseFileItem) {
+      return this.buildFileChildren(codebase, element.file);
+    }
+
+    if (element instanceof CodebaseSectionItem) {
+      return this.buildSectionChildren(codebase, element.section);
+    }
+
+    return [];
+  }
+
+  private buildChildrenFromTree(codebase: Codebase, nodes: TreeNodeMap): CodebaseTreeItem[] {
+    const items: CodebaseTreeItem[] = [];
+
+    for (const [name, entry] of Object.entries(nodes)) {
+      switch (entry.kind) {
+        case "bundle": {
+          const bundle = codebase.bundles.find((b) => b.id === name);
+          if (bundle) {
+            items.push(new CodebaseBundleItem(bundle, entry.children || {}));
+          }
+          break;
+        }
+        case "folder": {
+          items.push(new CodebaseFolderItem(name, name.split("/").pop() || name, entry.children || {}));
+          break;
+        }
+        case "file": {
+          const file = codebase.files.find((f) => f.path === name || f.id === name);
+          if (file) {
+            const hasSectionsOrDefs = file.metrics.sections > 0 || file.metrics.definitions > 0;
+            items.push(new CodebaseFileItem(file, file.path.split("/").pop() || file.path, hasSectionsOrDefs));
+          }
+          break;
+        }
+      }
+    }
+
+    return items;
+  }
+
+  private buildFileChildren(codebase: Codebase, file: CodebaseFile): CodebaseTreeItem[] {
+    const items: CodebaseTreeItem[] = [];
+    const filePath = file.path;
+    const fileSections = codebase.sections.filter((s) => {
+      const sectionFilePath = s.path.split("#")[0];
+      return sectionFilePath === filePath;
+    });
+    const rootSections = fileSections.filter((s) => {
+      const parts = s.path.split("#");
+      return parts.length === 2;
+    });
+
+    for (const section of rootSections) {
+      const sectionName = section.path.split("#").pop() || section.path;
+      const hasChildren = fileSections.some((s) => s.path.startsWith(section.path + "#") && s.path !== section.path);
+      items.push(new CodebaseSectionItem(section, sectionName, hasChildren || section.metrics.definitions > 0));
+    }
+
+    const fileDefinitions = codebase.definitions.filter((d) => {
+      const defFilePath = d.path.split("§")[0];
+      const hasNoSection = !d.path.includes("#");
+      return defFilePath === filePath && hasNoSection;
+    });
+    for (const def of fileDefinitions) {
+      items.push(new CodebaseDefinitionItem(def));
+    }
+
+    return items;
+  }
+
+  private buildSectionChildren(codebase: Codebase, section: CodebaseSection): CodebaseTreeItem[] {
+    const items: CodebaseTreeItem[] = [];
+    const sectionPath = section.path;
+    const sectionPathWithHash = sectionPath + "#";
+
+    const childSections = codebase.sections.filter((s) => {
+      if (!s.path.startsWith(sectionPathWithHash)) return false;
+      const remainder = s.path.substring(sectionPathWithHash.length);
+      return !remainder.includes("#");
+    });
+
+    for (const child of childSections) {
+      const childName = child.path.split("#").pop() || child.path;
+      const hasGrandChildren = codebase.sections.some((s) => s.path.startsWith(child.path + "#") && s.path !== child.path);
+      items.push(new CodebaseSectionItem(child, childName, hasGrandChildren || child.metrics.definitions > 0));
+    }
+
+    const sectionDefs = codebase.definitions.filter((d) => {
+      const hashIndex = d.path.indexOf("#");
+      const dollarIndex = d.path.indexOf("§");
+      if (hashIndex === -1 || dollarIndex === -1) return false;
+      const sectionPart = d.path.substring(0, dollarIndex);
+      return sectionPart === sectionPath;
+    });
+    for (const def of sectionDefs) {
+      items.push(new CodebaseDefinitionItem(def));
+    }
+
+    return items;
+  }
+}
+
 interface CommandInfo {
   id: string;
   title: string;
@@ -2260,6 +2782,7 @@ let contributorsProvider: ContributorsProvider;
 let policiesProvider: PoliciesProvider;
 let commandsProvider: CommandsProvider;
 let sectionsProvider: SectionsProvider;
+let codebaseProvider: CodebaseProvider;
 
 function registerSidebarViews(context: vscode.ExtensionContext): void {
   const searchProvider = new SearchViewProvider(context.extensionUri);
@@ -2268,8 +2791,10 @@ function registerSidebarViews(context: vscode.ExtensionContext): void {
   policiesProvider = new PoliciesProvider();
   commandsProvider = new CommandsProvider();
   sectionsProvider = new SectionsProvider();
+  codebaseProvider = new CodebaseProvider();
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(SearchViewProvider.viewType, searchProvider),
+    vscode.window.registerTreeDataProvider("semio.codebase", codebaseProvider),
     vscode.window.registerTreeDataProvider("semio.tickets", ticketsProvider),
     vscode.window.registerTreeDataProvider("semio.contributors", contributorsProvider),
     vscode.window.registerTreeDataProvider("semio.policies", policiesProvider),
@@ -2277,6 +2802,7 @@ function registerSidebarViews(context: vscode.ExtensionContext): void {
     vscode.window.createTreeView("semio.sections", { treeDataProvider: sectionsProvider, dragAndDropController: new SectionsDragAndDropController() }),
   );
   context.subscriptions.push(
+    vscode.commands.registerCommand("semio.refreshCodebase", () => codebaseProvider.refresh()),
     vscode.commands.registerCommand("semio.refreshTickets", () => ticketsProvider.refresh()),
     vscode.commands.registerCommand("semio.refreshContributors", () => contributorsProvider.refresh()),
     vscode.commands.registerCommand("semio.refreshPolicies", () => policiesProvider.refresh()),
@@ -2465,6 +2991,46 @@ function registerSidebarViews(context: vscode.ExtensionContext): void {
 
 function registerCommands(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
+    vscode.commands.registerCommand("semio.navigateToRepo", async () => {
+      const root = getWorkspaceRoot();
+      if (!root) return;
+      const uri = vscode.Uri.file(root);
+      await vscode.commands.executeCommand("revealInExplorer", uri);
+    }),
+    vscode.commands.registerCommand("semio.navigateToBundle", async (bundleRoot: string) => {
+      const root = getWorkspaceRoot();
+      if (!root || !bundleRoot) return;
+      const uri = vscode.Uri.file(path.join(root, bundleRoot));
+      await vscode.commands.executeCommand("revealInExplorer", uri);
+    }),
+    vscode.commands.registerCommand("semio.navigateToFolder", async (folderPath: string) => {
+      const root = getWorkspaceRoot();
+      if (!root || !folderPath) return;
+      const uri = vscode.Uri.file(path.join(root, folderPath));
+      await vscode.commands.executeCommand("revealInExplorer", uri);
+    }),
+    vscode.commands.registerCommand("semio.navigateToFile", async (filePath: string) => {
+      const root = getWorkspaceRoot();
+      if (!root || !filePath) return;
+      const uri = vscode.Uri.file(path.join(root, filePath));
+      await vscode.window.showTextDocument(uri);
+    }),
+    vscode.commands.registerCommand("semio.navigateToSection", async (sectionUri: string) => {
+      if (!sectionUri) return;
+      const uriMatch = sectionUri.match(/^file:\/\/(.+?)#(.+)$/);
+      if (!uriMatch) return;
+      const filePath = uriMatch[1];
+      const uri = vscode.Uri.file(filePath);
+      await vscode.window.showTextDocument(uri);
+    }),
+    vscode.commands.registerCommand("semio.navigateToDefinition", async (definitionUri: string) => {
+      if (!definitionUri) return;
+      const uriMatch = definitionUri.match(/^file:\/\/(.+?)§(.+)$/);
+      if (!uriMatch) return;
+      const filePath = uriMatch[1];
+      const uri = vscode.Uri.file(filePath);
+      await vscode.window.showTextDocument(uri);
+    }),
     vscode.commands.registerCommand("semio.fixViolation", fixViolation),
     vscode.commands.registerCommand("semio.analyze", async () => {
       if (!hasRepoAccess()) {
@@ -3008,6 +3574,7 @@ export function activate(context: vscode.ExtensionContext) {
   loadCodebase().then((codebase) => {
     if (codebase) {
       log("[ACTIVATION] Codebase loaded with", codebase.bundles.length, "bundles,", codebase.files.length, "files,", codebase.tickets.length, "tickets,", codebase.contributors.length, "contributors");
+      if (codebaseProvider) codebaseProvider.refresh();
       ticketsProvider.refresh();
       contributorsProvider.refresh();
       policiesProvider.refresh();

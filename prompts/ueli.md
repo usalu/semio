@@ -1,5 +1,12 @@
 # Prompt history
 
+The repo (library only), cli, mcp server and vscode extension should be refactored to use graphql.
+The cli uses no server but is only command wise invoked. Depending on the query it resolves more nodes (repo, bundle, folder, file, section, definition, contributor, ticket, policy, violationKind, violation).
+The repo should use gqlgen. The vscode extension should use urql.
+
+The mcp server is using the repo as cli but it should use directly Commands over go. Refactor the two apps into three modules: repo (library only), cli (use repo) and mcp (use repo).
+Use graphl 
+
 Refactor the ticket mechanism instead of creating a new TICKETSLUG.md, create a new folder.
 Inside that folder all temporary files or files that were used in the prompt are added.
 ├─ tickets

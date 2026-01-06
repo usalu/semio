@@ -39,6 +39,10 @@
           "type": "webview"
         },
         {
+          "id": "semio.codebase",
+          "name": "Codebase"
+        },
+        {
           "id": "semio.tickets",
           "name": "Tickets"
         },
@@ -225,6 +229,35 @@
         "title": "semio: Refresh Diagnostics"
       },
       {
+        "command": "semio.navigateToRepo",
+        "title": "Navigate to Repo"
+      },
+      {
+        "command": "semio.navigateToBundle",
+        "title": "Navigate to Bundle"
+      },
+      {
+        "command": "semio.navigateToFolder",
+        "title": "Navigate to Folder"
+      },
+      {
+        "command": "semio.navigateToFile",
+        "title": "Navigate to File"
+      },
+      {
+        "command": "semio.navigateToSection",
+        "title": "Navigate to Section"
+      },
+      {
+        "command": "semio.navigateToDefinition",
+        "title": "Navigate to Definition"
+      },
+      {
+        "command": "semio.refreshCodebase",
+        "title": "Refresh Codebase",
+        "icon": "$(refresh)"
+      },
+      {
         "command": "semio.refreshTickets",
         "title": "Refresh Tickets",
         "icon": "$(refresh)"
@@ -303,6 +336,11 @@
     ],
     "menus": {
       "view/title": [
+        {
+          "command": "semio.refreshCodebase",
+          "when": "view == semio.codebase",
+          "group": "navigation@1"
+        },
         {
           "command": "semio.createTicket",
           "when": "view == semio.tickets",

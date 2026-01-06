@@ -1,0 +1,77 @@
+# gqlgen configuration for repo GraphQL
+# See https://gqlgen.com/config/ for details
+
+schema:
+  - schema.graphql
+
+exec:
+  filename: graph/generated.go
+  package: graph
+
+model:
+  filename: graph/models_gen.go
+  package: graph
+
+resolver:
+  layout: follow-schema
+  dir: graph
+  package: graph
+  filename_template: "{name}.resolvers.go"
+
+autobind:
+  - github.com/usalu/semio/go/repo
+
+models:
+  ID:
+    model:
+      - github.com/99designs/gqlgen/graphql.ID
+  DateTime:
+    model:
+      - github.com/99designs/gqlgen/graphql.Time
+  Node:
+    model:
+      - github.com/usalu/semio/go/repo/graph.Node
+  Repo:
+    model:
+      - github.com/usalu/semio/go/repo/graph.Repo
+  Bundle:
+    model:
+      - github.com/usalu/semio/go/repo/graph.Bundle
+  Folder:
+    model:
+      - github.com/usalu/semio/go/repo/graph.Folder
+  File:
+    model:
+      - github.com/usalu/semio/go/repo/graph.File
+  Section:
+    model:
+      - github.com/usalu/semio/go/repo/graph.Section
+  Definition:
+    model:
+      - github.com/usalu/semio/go/repo/graph.Definition
+  Contributor:
+    model:
+      - github.com/usalu/semio/go/repo/graph.Contributor
+  Ticket:
+    model:
+      - github.com/usalu/semio/go/repo/graph.Ticket
+  Policy:
+    model:
+      - github.com/usalu/semio/go/repo/graph.Policy
+  ViolationKind:
+    model:
+      - github.com/usalu/semio/go/repo/graph.ViolationKind
+  Violation:
+    model:
+      - github.com/usalu/semio/go/repo/graph.Violation
+  DefinitionKind:
+    model:
+      - github.com/usalu/semio/go/repo/graph.DefinitionKind
+  TicketStatus:
+    model:
+      - github.com/usalu/semio/go/repo/graph.TicketStatus
+  ViolationPriority:
+    model:
+      - github.com/usalu/semio/go/repo/graph.ViolationPriority
+
+omit_slice_element_pointers: true

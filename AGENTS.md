@@ -664,6 +664,65 @@ The MCP server communicates via stdio and exposes all repo tools as MCP tools. C
 - `section_create`, `section_move`, `section_delete`, `section_list`, `section_tree` - Section operations
 - `definition_list` - List definitions
 - `tool_run` - Run Nx tool
+- `graphql` - Execute GraphQL queries against the repo schema
+
+### GraphQL API
+
+The repo CLI exposes a GraphQL API for querying and mutating repository data. The GraphQL schema is defined in `go/repo/schema.graphql` and executed in-process without an HTTP server.
+
+**CLI Usage:**
+
+```bash
+repo graphql "{ repo { id name } }"
+repo graphql "{ repo { bundles { name root } } }"
+repo graphql "query Tickets { repo { tickets { id slug status } } }"
+repo graphql "{ analyze(scope: \"js/js/\") { violations { id summary } } }" -v "{}"
+```
+
+**Schema Location:** `go/repo/schema.graphql`
+
+**Executor:** `go/repo/graph/executor.go` uses graphql-go for runtime schema building and execution.
+
+**Available Queries:**
+
+- `repo` - Repository root with bundles, tickets, policies, contributors
+- `bundle(name: String!)` - Single bundle by name
+- `folder(path: String!)` - Single folder by path
+- `file(path: String!)` - Single file by path
+- `section(path: String!, sectionPath: [String!]!)` - Single section
+- `definition(path: String!, name: String!)` - Single definition
+- `contributor(id: String!)` - Single contributor
+- `ticket(year: Int!, month: Int!, day: Int!, slug: String!)` - Single ticket
+- `policy(id: String!)` - Single policy
+- `violationKind(id: String!)` - Single violation kind
+- `analyze(scope: String)` - Analyze codebase for violations
+
+**Available Mutations:**
+
+- `fix(scope: String)` - Apply autofixes for violations
+- `ticketCreate(input: TicketCreateInput!)` - Create a new ticket
+- `ticketProgress(input: TicketProgressInput!)` - Progress ticket iteration
+- `ticketFinish(input: TicketFinishInput!)` - Finish a ticket
+- `ticketReopen(input: TicketReopenInput!)` - Reopen a ticket
+
+**VS Code Extension Integration:**
+
+The VS Code extension (`js/vscode/extension.ts`) includes a GraphQL client that pipes queries through the CLI:
+
+```typescript
+const result = await executeGraphQL<{ repo: { bundles: GqlBundle[] } }>(BUNDLES_QUERY);
+const bundles = result.data?.repo?.bundles ?? [];
+```
+
+Helper functions provided:
+- `executeGraphQL<TData, TVariables>(query, variables?)` - Execute any GraphQL query
+- `fetchRepoViaGraphQL()` - Fetch complete repo data
+- `fetchBundlesViaGraphQL()` - Fetch all bundles
+- `fetchTicketsViaGraphQL(year?, month?, day?, status?)` - Fetch tickets with filters
+- `fetchPoliciesViaGraphQL()` - Fetch all policies
+- `fetchContributorsViaGraphQL()` - Fetch all contributors
+- `analyzeViaGraphQL(scope?)` - Analyze codebase
+- `fixViaGraphQL(scope?)` - Apply fixes
 
 ## Testing
 
@@ -3932,7 +3991,23 @@ Ticket tree items use `ticketOpen` and `ticketClosed` context values for inline 
 - `RepoCodeActionProvider`: Quick fixes for violation diagnostics that run `repo fix <path>`
 - `KitCodeActionProvider`: Quick fixes for kit validation problems that apply diff-based fixes
 
-## ?? go/repo/main.go
+## 📁 go/repo/graph/
+
+GraphQL schema and in-process executor for the repo CLI.
+
+**Files:**
+
+- `schema.graphql` - GraphQL schema definition with Query, Mutation, and all entity types
+- `executor.go` - In-process GraphQL executor using graphql-go; builds schema at runtime, executes queries without HTTP server
+- `models.go` - Go type definitions for GraphQL schema (Node interface, enums, entity structs)
+- `resolver.go` - Base Resolver struct with RootDir
+- `schema.resolvers.go` - Query and Mutation resolver implementations
+
+**Architecture:**
+
+The graph package uses graphql-go for runtime schema building instead of code generation (gqlgen). This allows the CLI to execute GraphQL queries in-process without starting an HTTP server. The executor is created via `graph.NewExecutor(rootDir)` and queries are executed via `executor.ExecuteJSON(ctx, query, variables)`.
+
+## 📄 go/repo/main.go
 
 Ticket iteration end derives per-file lists and line stats from git diffs between the last iteration commit (or ticket base commit) and HEAD, scoped to the iteration file list, storing `files` and `lines` on the iteration.
 Ticket finish aggregates per-iteration file stats into ticket-level `files` and computes ticket-level `lines` from git diffs scoped to the ticket file list.
