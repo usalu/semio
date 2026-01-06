@@ -2,9 +2,8 @@
   "name": "@semio/repo",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "go/repo",
-  "projectType": "application",
+  "projectType": "library",
   "scripts": {
-    "build": "go build",
     "test": "go test -v ./...",
     "preflight": "go vet ./..."
   },

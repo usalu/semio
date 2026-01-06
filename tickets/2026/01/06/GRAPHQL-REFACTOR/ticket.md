@@ -1,22 +1,23 @@
 ---
 slug: GRAPHQL-REFACTOR
-prompt: Refactor repo (library only), cli, mcp server and vscode extension to use GraphQL. The cli uses no server but is only command wise invoked. Depending on the query it resolves more nodes (repo, bundle, folder, file, section, definition, contributor, ticket, policy, violationKind, violation). The repo should use gqlgen. The vscode extension should use urql.
+prompt: Consolidate types and refactor to use GraphQL as the primary API layer
 status: open
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 date:
-    created: "2026-01-06T01:23:14Z"
-commit: be4368f95cbb7a23415abb8ab800502ce774c667
+    created: "2026-01-06T10:16:32Z"
+commit: d02bd230eadd0eee9725309c0bb7d6abae6607f9
+model: claude-opus-4
 iterations:
-    - prompt: Refactor repo (library only), cli, mcp server and vscode extension to use GraphQL. The cli uses no server but is only command wise invoked. Depending on the query it resolves more nodes (repo, bundle, folder, file, section, definition, contributor, ticket, policy, violationKind, violation). The repo should use gqlgen. The vscode extension should use urql.
+    - prompt: Consolidate types and refactor to use GraphQL as the primary API layer
+      model: claude-opus-4
       date:
-        started: "2026-01-06T01:23:14Z"
+        started: "2026-01-06T10:16:32Z"
       author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
       declared:
         updated:
-            - path: go/repo/main.go
-            - path: go/cli/main.go
-            - path: go/mcp/main.go
-            - path: js/vscode/extension.ts
+            - path: go/repo/repo.go
+            - path: go/repo/graph/executor.go
+            - path: go/repo/graph/models.go
 ---
 # Previously
 

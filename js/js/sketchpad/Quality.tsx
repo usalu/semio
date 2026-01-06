@@ -774,7 +774,7 @@ const qualityAppPlugin: AppPlugin = {
     }),
   },
   registerStores: () => {
-    // Store factory already registered above
+    
   },
 };
 

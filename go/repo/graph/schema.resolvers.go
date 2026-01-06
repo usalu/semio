@@ -71,6 +71,14 @@ func (r *queryResolver) Repo(ctx context.Context) (*Repo, error) {
 }
 
 func (r *queryResolver) Bundle(ctx context.Context, name string) (*Bundle, error) {
+	if r.Ctx != nil {
+		bundles := r.Ctx.GetBundles()
+		for _, b := range bundles {
+			if b.Name == name {
+				return b, nil
+			}
+		}
+	}
 	return &Bundle{
 		ID:   fmt.Sprintf("bundle:%s", name),
 		Name: name,
@@ -134,6 +142,16 @@ func (r *queryResolver) Definition(ctx context.Context, path string, name string
 }
 
 func (r *queryResolver) Contributor(ctx context.Context, id string) (*Contributor, error) {
+	if r.Ctx != nil {
+		contributors, err := r.Ctx.GetContributors()
+		if err == nil {
+			for _, c := range contributors {
+				if c.Github == id {
+					return c, nil
+				}
+			}
+		}
+	}
 	return &Contributor{
 		ID:     fmt.Sprintf("contributor:%s", id),
 		Github: id,
@@ -143,6 +161,17 @@ func (r *queryResolver) Contributor(ctx context.Context, id string) (*Contributo
 }
 
 func (r *queryResolver) Ticket(ctx context.Context, year int, month int, day int, slug string) (*Ticket, error) {
+	if r.Ctx != nil {
+		y, m, d := year, month, day
+		tickets, err := r.Ctx.GetTickets(&y, &m, &d, nil)
+		if err == nil {
+			for _, t := range tickets {
+				if t.Slug == slug {
+					return t, nil
+				}
+			}
+		}
+	}
 	ticketID := fmt.Sprintf("ticket:%d/%02d/%02d/%s", year, month, day, slug)
 	return &Ticket{
 		ID:     ticketID,
@@ -158,6 +187,14 @@ func (r *queryResolver) Ticket(ctx context.Context, year int, month int, day int
 }
 
 func (r *queryResolver) Policy(ctx context.Context, id string) (*Policy, error) {
+	if r.Ctx != nil {
+		policies := r.Ctx.GetPolicies()
+		for _, p := range policies {
+			if p.Name == id {
+				return p, nil
+			}
+		}
+	}
 	return &Policy{
 		ID:     fmt.Sprintf("policy:%s", id),
 		Name:   id,
@@ -166,6 +203,14 @@ func (r *queryResolver) Policy(ctx context.Context, id string) (*Policy, error) 
 }
 
 func (r *queryResolver) ViolationKind(ctx context.Context, id string) (*ViolationKind, error) {
+	if r.Ctx != nil {
+		kinds := r.Ctx.GetViolationKinds()
+		for _, k := range kinds {
+			if strings.HasSuffix(k.ID, id) {
+				return k, nil
+			}
+		}
+	}
 	parts := strings.SplitN(id, ":", 2)
 	policyID := "unknown"
 	if len(parts) > 0 {
@@ -182,6 +227,9 @@ func (r *queryResolver) ViolationKind(ctx context.Context, id string) (*Violatio
 }
 
 func (r *queryResolver) Analyze(ctx context.Context, scope *string) (*AnalyzeResult, error) {
+	if r.Ctx != nil {
+		return r.Ctx.Analyze(scope)
+	}
 	return &AnalyzeResult{
 		Violations: []*Violation{},
 		Metrics: &AnalyzeMetrics{
@@ -203,6 +251,9 @@ func (r *Resolver) Mutation() MutationResolver {
 type mutationResolver struct{ *Resolver }
 
 func (r *mutationResolver) Fix(ctx context.Context, scope *string) (*FixResult, error) {
+	if r.Ctx != nil {
+		return r.Ctx.Fix(scope)
+	}
 	return &FixResult{
 		Fixed:      0,
 		Remaining:  0,
@@ -211,62 +262,111 @@ func (r *mutationResolver) Fix(ctx context.Context, scope *string) (*FixResult, 
 }
 
 func (r *mutationResolver) TicketCreate(ctx context.Context, input TicketCreateInput) (*Ticket, error) {
+	if r.Ctx != nil {
+		return r.Ctx.TicketCreate(input)
+	}
 	return nil, fmt.Errorf("not implemented")
 }
 
 func (r *mutationResolver) TicketProgress(ctx context.Context, input TicketProgressInput) (*Ticket, error) {
+	if r.Ctx != nil {
+		return r.Ctx.TicketProgress(input)
+	}
 	return nil, fmt.Errorf("not implemented")
 }
 
 func (r *mutationResolver) TicketFinish(ctx context.Context, input TicketFinishInput) (*Ticket, error) {
+	if r.Ctx != nil {
+		return r.Ctx.TicketFinish(input)
+	}
 	return nil, fmt.Errorf("not implemented")
 }
 
 func (r *mutationResolver) TicketReopen(ctx context.Context, input TicketReopenInput) (*Ticket, error) {
+	if r.Ctx != nil {
+		return r.Ctx.TicketReopen(input)
+	}
 	return nil, fmt.Errorf("not implemented")
 }
 
 func (r *mutationResolver) ContributorAdd(ctx context.Context, input ContributorAddInput) (*Contributor, error) {
+	if r.Ctx != nil {
+		return r.Ctx.ContributorAdd(input)
+	}
 	return nil, fmt.Errorf("not implemented")
 }
 
 func (r *mutationResolver) ContributorRemove(ctx context.Context, github string) (bool, error) {
+	if r.Ctx != nil {
+		err := r.Ctx.ContributorRemove(github)
+		return err == nil, err
+	}
 	return false, fmt.Errorf("not implemented")
 }
 
 func (r *mutationResolver) FolderCreate(ctx context.Context, path string) (*Folder, error) {
+	if r.Ctx != nil {
+		return r.Ctx.FolderCreate(path)
+	}
 	return nil, fmt.Errorf("not implemented")
 }
 
 func (r *mutationResolver) FolderMove(ctx context.Context, src string, dst string) (*Folder, error) {
+	if r.Ctx != nil {
+		return r.Ctx.FolderMove(src, dst)
+	}
 	return nil, fmt.Errorf("not implemented")
 }
 
 func (r *mutationResolver) FolderDelete(ctx context.Context, path string) (bool, error) {
+	if r.Ctx != nil {
+		err := r.Ctx.FolderDelete(path)
+		return err == nil, err
+	}
 	return false, fmt.Errorf("not implemented")
 }
 
 func (r *mutationResolver) FileCreate(ctx context.Context, path string) (*File, error) {
+	if r.Ctx != nil {
+		return r.Ctx.FileCreate(path)
+	}
 	return nil, fmt.Errorf("not implemented")
 }
 
 func (r *mutationResolver) FileMove(ctx context.Context, src string, dst string) (*File, error) {
+	if r.Ctx != nil {
+		return r.Ctx.FileMove(src, dst)
+	}
 	return nil, fmt.Errorf("not implemented")
 }
 
 func (r *mutationResolver) FileDelete(ctx context.Context, path string) (bool, error) {
+	if r.Ctx != nil {
+		err := r.Ctx.FileDelete(path)
+		return err == nil, err
+	}
 	return false, fmt.Errorf("not implemented")
 }
 
 func (r *mutationResolver) SectionCreate(ctx context.Context, file string, name string, parent *string) (*Section, error) {
+	if r.Ctx != nil {
+		return r.Ctx.SectionCreate(file, name, parent)
+	}
 	return nil, fmt.Errorf("not implemented")
 }
 
 func (r *mutationResolver) SectionMove(ctx context.Context, file string, oldName string, newName string) (*Section, error) {
+	if r.Ctx != nil {
+		return r.Ctx.SectionMove(file, oldName, newName)
+	}
 	return nil, fmt.Errorf("not implemented")
 }
 
 func (r *mutationResolver) SectionDelete(ctx context.Context, file string, name string) (bool, error) {
+	if r.Ctx != nil {
+		err := r.Ctx.SectionDelete(file, name)
+		return err == nil, err
+	}
 	return false, fmt.Errorf("not implemented")
 }
 
@@ -281,6 +381,9 @@ func (r *Resolver) Repo_() RepoResolver {
 }
 
 func (r *repoResolver) Bundles(ctx context.Context, obj *Repo) ([]*Bundle, error) {
+	if r.Ctx != nil {
+		return r.Ctx.GetBundles(), nil
+	}
 	return []*Bundle{}, nil
 }
 
@@ -293,22 +396,41 @@ func (r *repoResolver) Files(ctx context.Context, obj *Repo) ([]*File, error) {
 }
 
 func (r *repoResolver) Contributors(ctx context.Context, obj *Repo) ([]*Contributor, error) {
+	if r.Ctx != nil {
+		return r.Ctx.GetContributors()
+	}
 	return []*Contributor{}, nil
 }
 
 func (r *repoResolver) Tickets(ctx context.Context, obj *Repo, year *int, month *int, day *int, status *TicketStatus) ([]*Ticket, error) {
+	if r.Ctx != nil {
+		return r.Ctx.GetTickets(year, month, day, status)
+	}
 	return []*Ticket{}, nil
 }
 
 func (r *repoResolver) Policies(ctx context.Context, obj *Repo) ([]*Policy, error) {
+	if r.Ctx != nil {
+		return r.Ctx.GetPolicies(), nil
+	}
 	return []*Policy{}, nil
 }
 
 func (r *repoResolver) ViolationKinds(ctx context.Context, obj *Repo) ([]*ViolationKind, error) {
+	if r.Ctx != nil {
+		return r.Ctx.GetViolationKinds(), nil
+	}
 	return []*ViolationKind{}, nil
 }
 
 func (r *repoResolver) Violations(ctx context.Context, obj *Repo, scope *string) ([]*Violation, error) {
+	if r.Ctx != nil {
+		result, err := r.Ctx.Analyze(scope)
+		if err != nil {
+			return nil, err
+		}
+		return result.Violations, nil
+	}
 	return []*Violation{}, nil
 }
 

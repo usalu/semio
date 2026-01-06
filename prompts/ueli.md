@@ -1,5 +1,46 @@
 # Prompt history
 
+The ticket mechanism is changing. Instead of iterations with the progress command there should be a new consolidated mechanism called: checkpoints.
+A ticket no longer needs tic
+
+Refactor everything to be proper graphql.
+E.g. remove the custom wrapping. All json returned is spec-compliant standard graphql.
+"output": {
+    "lines": [
+      {
+        "type": "success",
+        "text": …
+      }
+    ],
+    "exitCode": 0
+  },
+  "data": …
+"
+- The graph must always be fully navigatable. Whenever a node is returned it should not have the id but always return the node.
+E.g.
+"bundles": [
+  {
+    …
+    "contributors": [
+      "ueli@semio-tech.com"
+    ],
+    …
+  }
+]
+should return a contributor node:
+"bundles": [
+  {
+    …
+    "contributors": [{
+      "id": "ueli@semio-tech.com",
+    }
+    ],
+    …
+  }
+]
+
+The comment policy wrongly identifies links that have :// as comments
+
 The repo (library only), cli, mcp server and vscode extension should be refactored to use graphql.
 The cli uses no server but is only command wise invoked. Depending on the query it resolves more nodes (repo, bundle, folder, file, section, definition, contributor, ticket, policy, violationKind, violation).
 The repo should use gqlgen. The vscode extension should use urql.

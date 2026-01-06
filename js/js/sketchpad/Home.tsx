@@ -546,7 +546,7 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
 
         await storeKitFileBlobs(kit.guid, importedFiles);
         completeKitImport(operationId);
-        // Don't auto-navigate - let user click the now-enabled row
+        
       } catch (error) {
         console.error("[Home] Failed to import kit:", error);
         failKitImport(operationId, error instanceof Error ? error.message : String(error));

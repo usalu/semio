@@ -3329,7 +3329,7 @@ export class TypeStore {
         }
       }
 
-      // TODO: Handle location, props diffs
+      
 
       this.cache = undefined;
       this.cacheHash = undefined;

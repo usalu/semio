@@ -33,6 +33,32 @@ import (
 
 // #region Executor
 
+func parseFileListInput(f map[string]interface{}) *FileListInput {
+	files := &FileListInput{}
+	if updated, ok := f["updated"].([]interface{}); ok {
+		for _, u := range updated {
+			if s, ok := u.(string); ok {
+				files.Updated = append(files.Updated, s)
+			}
+		}
+	}
+	if created, ok := f["created"].([]interface{}); ok {
+		for _, c := range created {
+			if s, ok := c.(string); ok {
+				files.Created = append(files.Created, s)
+			}
+		}
+	}
+	if removed, ok := f["removed"].([]interface{}); ok {
+		for _, r := range removed {
+			if s, ok := r.(string); ok {
+				files.Removed = append(files.Removed, s)
+			}
+		}
+	}
+	return files
+}
+
 type Executor struct {
 	resolver *Resolver
 	schema   graphql.Schema
@@ -40,6 +66,18 @@ type Executor struct {
 
 func NewExecutor(rootDir string) (*Executor, error) {
 	resolver := NewResolver(rootDir)
+	schema, err := buildSchema(resolver)
+	if err != nil {
+		return nil, err
+	}
+	return &Executor{
+		resolver: resolver,
+		schema:   schema,
+	}, nil
+}
+
+func NewExecutorWithContext(rootDir string, ctx RepoContext) (*Executor, error) {
+	resolver := NewResolverWithContext(rootDir, ctx)
 	schema, err := buildSchema(resolver)
 	if err != nil {
 		return nil, err
@@ -313,10 +351,10 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 				"extension":   &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
 				"folder":      &graphql.Field{Type: folderType},
 				"bundle":      &graphql.Field{Type: bundleType},
-				"sections":    &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(sectionType)))},
-				"definitions": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(definitionType)))},
-				"violations":  &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationType)))},
-				"metrics":     &graphql.Field{Type: graphql.NewNonNull(fileMetricsType)},
+				"sections":    &graphql.Field{Type: graphql.NewList(sectionType)},
+				"definitions": &graphql.Field{Type: graphql.NewList(definitionType)},
+				"violations":  &graphql.Field{Type: graphql.NewList(violationType)},
+				"metrics":     &graphql.Field{Type: fileMetricsType},
 				"content":     &graphql.Field{Type: graphql.String},
 			}
 		}),
@@ -329,13 +367,13 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 				"id":          &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
 				"name":        &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
 				"path":        &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-				"file":        &graphql.Field{Type: graphql.NewNonNull(fileType)},
+				"file":        &graphql.Field{Type: fileType},
 				"parent":      &graphql.Field{Type: sectionType},
-				"children":    &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(sectionType)))},
-				"definitions": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(definitionType)))},
-				"violations":  &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationType)))},
-				"range":       &graphql.Field{Type: graphql.NewNonNull(rangeType)},
-				"metrics":     &graphql.Field{Type: graphql.NewNonNull(sectionMetricsType)},
+				"children":    &graphql.Field{Type: graphql.NewList(sectionType)},
+				"definitions": &graphql.Field{Type: graphql.NewList(definitionType)},
+				"violations":  &graphql.Field{Type: graphql.NewList(violationType)},
+				"range":       &graphql.Field{Type: rangeType},
+				"metrics":     &graphql.Field{Type: sectionMetricsType},
 			}
 		}),
 	})
@@ -523,17 +561,43 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		}),
 	})
 
+	repoResolver := &repoResolver{resolver}
+
 	repoType = graphql.NewObject(graphql.ObjectConfig{
 		Name: "Repo",
 		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
 			return graphql.Fields{
-				"id":           &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
-				"name":         &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-				"path":         &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-				"bundles":      &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(bundleType)))},
-				"folders":      &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(folderType)))},
-				"files":        &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(fileType)))},
-				"contributors": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(contributorType)))},
+				"id":   &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
+				"name": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"path": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"bundles": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(bundleType))),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						repo := p.Source.(*Repo)
+						return repoResolver.Bundles(p.Context, repo)
+					},
+				},
+				"folders": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(folderType))),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						repo := p.Source.(*Repo)
+						return repoResolver.Folders(p.Context, repo)
+					},
+				},
+				"files": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(fileType))),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						repo := p.Source.(*Repo)
+						return repoResolver.Files(p.Context, repo)
+					},
+				},
+				"contributors": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(contributorType))),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						repo := p.Source.(*Repo)
+						return repoResolver.Contributors(p.Context, repo)
+					},
+				},
 				"tickets": &graphql.Field{
 					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(ticketType))),
 					Args: graphql.FieldConfigArgument{
@@ -542,16 +606,60 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						"day":    &graphql.ArgumentConfig{Type: graphql.Int},
 						"status": &graphql.ArgumentConfig{Type: ticketStatusEnum},
 					},
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						repo := p.Source.(*Repo)
+						var year, month, day *int
+						var status *TicketStatus
+						if v, ok := p.Args["year"].(int); ok {
+							year = &v
+						}
+						if v, ok := p.Args["month"].(int); ok {
+							month = &v
+						}
+						if v, ok := p.Args["day"].(int); ok {
+							day = &v
+						}
+						if v, ok := p.Args["status"].(TicketStatus); ok {
+							status = &v
+						}
+						return repoResolver.Tickets(p.Context, repo, year, month, day, status)
+					},
 				},
-				"policies":       &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(policyType)))},
-				"violationKinds": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationKindType)))},
+				"policies": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(policyType))),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						repo := p.Source.(*Repo)
+						return repoResolver.Policies(p.Context, repo)
+					},
+				},
+				"violationKinds": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationKindType))),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						repo := p.Source.(*Repo)
+						return repoResolver.ViolationKinds(p.Context, repo)
+					},
+				},
 				"violations": &graphql.Field{
 					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationType))),
 					Args: graphql.FieldConfigArgument{
 						"scope": &graphql.ArgumentConfig{Type: graphql.String},
 					},
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						repo := p.Source.(*Repo)
+						var scope *string
+						if v, ok := p.Args["scope"].(string); ok {
+							scope = &v
+						}
+						return repoResolver.Violations(p.Context, repo, scope)
+					},
 				},
-				"metrics": &graphql.Field{Type: graphql.NewNonNull(repoMetricsType)},
+				"metrics": &graphql.Field{
+					Type: graphql.NewNonNull(repoMetricsType),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						repo := p.Source.(*Repo)
+						return repoResolver.Metrics(p.Context, repo)
+					},
+				},
 			}
 		}),
 	})
@@ -747,6 +855,68 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 
 	mutationResolver := &mutationResolver{resolver}
 
+	fileListInputType := graphql.NewInputObject(graphql.InputObjectConfig{
+		Name: "FileListInput",
+		Fields: graphql.InputObjectConfigFieldMap{
+			"updated": &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(graphql.String))},
+			"created": &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(graphql.String))},
+			"removed": &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(graphql.String))},
+		},
+	})
+
+	ticketCreateInputType := graphql.NewInputObject(graphql.InputObjectConfig{
+		Name: "TicketCreateInput",
+		Fields: graphql.InputObjectConfigFieldMap{
+			"slug":   &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"prompt": &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"model":  &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"files":  &graphql.InputObjectFieldConfig{Type: fileListInputType},
+		},
+	})
+
+	ticketProgressInputType := graphql.NewInputObject(graphql.InputObjectConfig{
+		Name: "TicketProgressInput",
+		Fields: graphql.InputObjectConfigFieldMap{
+			"year":   &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
+			"month":  &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
+			"day":    &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
+			"slug":   &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"prompt": &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"model":  &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"files":  &graphql.InputObjectFieldConfig{Type: fileListInputType},
+		},
+	})
+
+	ticketFinishInputType := graphql.NewInputObject(graphql.InputObjectConfig{
+		Name: "TicketFinishInput",
+		Fields: graphql.InputObjectConfigFieldMap{
+			"year":    &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
+			"month":   &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
+			"day":     &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
+			"slug":    &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"summary": &graphql.InputObjectFieldConfig{Type: graphql.String},
+		},
+	})
+
+	ticketReopenInputType := graphql.NewInputObject(graphql.InputObjectConfig{
+		Name: "TicketReopenInput",
+		Fields: graphql.InputObjectConfigFieldMap{
+			"year":  &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
+			"month": &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
+			"day":   &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
+			"slug":  &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+		},
+	})
+
+	contributorAddInputType := graphql.NewInputObject(graphql.InputObjectConfig{
+		Name: "ContributorAddInput",
+		Fields: graphql.InputObjectConfigFieldMap{
+			"github": &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"name":   &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"emails": &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(graphql.String))},
+		},
+	})
+
 	mutationType := graphql.NewObject(graphql.ObjectConfig{
 		Name: "Mutation",
 		Fields: graphql.Fields{
@@ -761,6 +931,224 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						scope = &s
 					}
 					return mutationResolver.Fix(p.Context, scope)
+				},
+			},
+			"ticketCreate": &graphql.Field{
+				Type: ticketType,
+				Args: graphql.FieldConfigArgument{
+					"input": &graphql.ArgumentConfig{Type: graphql.NewNonNull(ticketCreateInputType)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					inputMap := p.Args["input"].(map[string]interface{})
+					input := TicketCreateInput{
+						Slug:   inputMap["slug"].(string),
+						Prompt: inputMap["prompt"].(string),
+					}
+					if m, ok := inputMap["model"].(string); ok {
+						input.Model = &m
+					}
+					if f, ok := inputMap["files"].(map[string]interface{}); ok {
+						input.Files = parseFileListInput(f)
+					}
+					return mutationResolver.TicketCreate(p.Context, input)
+				},
+			},
+			"ticketProgress": &graphql.Field{
+				Type: ticketType,
+				Args: graphql.FieldConfigArgument{
+					"input": &graphql.ArgumentConfig{Type: graphql.NewNonNull(ticketProgressInputType)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					inputMap := p.Args["input"].(map[string]interface{})
+					input := TicketProgressInput{
+						Year:   inputMap["year"].(int),
+						Month:  inputMap["month"].(int),
+						Day:    inputMap["day"].(int),
+						Slug:   inputMap["slug"].(string),
+						Prompt: inputMap["prompt"].(string),
+					}
+					if m, ok := inputMap["model"].(string); ok {
+						input.Model = &m
+					}
+					if f, ok := inputMap["files"].(map[string]interface{}); ok {
+						input.Files = parseFileListInput(f)
+					}
+					return mutationResolver.TicketProgress(p.Context, input)
+				},
+			},
+			"ticketFinish": &graphql.Field{
+				Type: ticketType,
+				Args: graphql.FieldConfigArgument{
+					"input": &graphql.ArgumentConfig{Type: graphql.NewNonNull(ticketFinishInputType)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					inputMap := p.Args["input"].(map[string]interface{})
+					input := TicketFinishInput{
+						Year:  inputMap["year"].(int),
+						Month: inputMap["month"].(int),
+						Day:   inputMap["day"].(int),
+						Slug:  inputMap["slug"].(string),
+					}
+					if s, ok := inputMap["summary"].(string); ok {
+						input.Summary = &s
+					}
+					return mutationResolver.TicketFinish(p.Context, input)
+				},
+			},
+			"ticketReopen": &graphql.Field{
+				Type: ticketType,
+				Args: graphql.FieldConfigArgument{
+					"input": &graphql.ArgumentConfig{Type: graphql.NewNonNull(ticketReopenInputType)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					inputMap := p.Args["input"].(map[string]interface{})
+					input := TicketReopenInput{
+						Year:  inputMap["year"].(int),
+						Month: inputMap["month"].(int),
+						Day:   inputMap["day"].(int),
+						Slug:  inputMap["slug"].(string),
+					}
+					return mutationResolver.TicketReopen(p.Context, input)
+				},
+			},
+			"contributorAdd": &graphql.Field{
+				Type: contributorType,
+				Args: graphql.FieldConfigArgument{
+					"input": &graphql.ArgumentConfig{Type: graphql.NewNonNull(contributorAddInputType)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					inputMap := p.Args["input"].(map[string]interface{})
+					input := ContributorAddInput{
+						Github: inputMap["github"].(string),
+					}
+					if n, ok := inputMap["name"].(string); ok {
+						input.Name = &n
+					}
+					if emails, ok := inputMap["emails"].([]interface{}); ok {
+						for _, e := range emails {
+							if s, ok := e.(string); ok {
+								input.Emails = append(input.Emails, s)
+							}
+						}
+					}
+					return mutationResolver.ContributorAdd(p.Context, input)
+				},
+			},
+			"contributorRemove": &graphql.Field{
+				Type: graphql.NewNonNull(graphql.Boolean),
+				Args: graphql.FieldConfigArgument{
+					"github": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					github := p.Args["github"].(string)
+					return mutationResolver.ContributorRemove(p.Context, github)
+				},
+			},
+			"folderCreate": &graphql.Field{
+				Type: folderType,
+				Args: graphql.FieldConfigArgument{
+					"path": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					path := p.Args["path"].(string)
+					return mutationResolver.FolderCreate(p.Context, path)
+				},
+			},
+			"folderMove": &graphql.Field{
+				Type: folderType,
+				Args: graphql.FieldConfigArgument{
+					"src": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+					"dst": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					src := p.Args["src"].(string)
+					dst := p.Args["dst"].(string)
+					return mutationResolver.FolderMove(p.Context, src, dst)
+				},
+			},
+			"folderDelete": &graphql.Field{
+				Type: graphql.NewNonNull(graphql.Boolean),
+				Args: graphql.FieldConfigArgument{
+					"path": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					path := p.Args["path"].(string)
+					return mutationResolver.FolderDelete(p.Context, path)
+				},
+			},
+			"fileCreate": &graphql.Field{
+				Type: fileType,
+				Args: graphql.FieldConfigArgument{
+					"path": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					path := p.Args["path"].(string)
+					return mutationResolver.FileCreate(p.Context, path)
+				},
+			},
+			"fileMove": &graphql.Field{
+				Type: fileType,
+				Args: graphql.FieldConfigArgument{
+					"src": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+					"dst": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					src := p.Args["src"].(string)
+					dst := p.Args["dst"].(string)
+					return mutationResolver.FileMove(p.Context, src, dst)
+				},
+			},
+			"fileDelete": &graphql.Field{
+				Type: graphql.NewNonNull(graphql.Boolean),
+				Args: graphql.FieldConfigArgument{
+					"path": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					path := p.Args["path"].(string)
+					return mutationResolver.FileDelete(p.Context, path)
+				},
+			},
+			"sectionCreate": &graphql.Field{
+				Type: sectionType,
+				Args: graphql.FieldConfigArgument{
+					"file":   &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+					"name":   &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+					"parent": &graphql.ArgumentConfig{Type: graphql.String},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					file := p.Args["file"].(string)
+					name := p.Args["name"].(string)
+					var parent *string
+					if par, ok := p.Args["parent"].(string); ok {
+						parent = &par
+					}
+					return mutationResolver.SectionCreate(p.Context, file, name, parent)
+				},
+			},
+			"sectionMove": &graphql.Field{
+				Type: sectionType,
+				Args: graphql.FieldConfigArgument{
+					"file":    &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+					"oldName": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+					"newName": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					file := p.Args["file"].(string)
+					oldName := p.Args["oldName"].(string)
+					newName := p.Args["newName"].(string)
+					return mutationResolver.SectionMove(p.Context, file, oldName, newName)
+				},
+			},
+			"sectionDelete": &graphql.Field{
+				Type: graphql.NewNonNull(graphql.Boolean),
+				Args: graphql.FieldConfigArgument{
+					"file": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+					"name": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					file := p.Args["file"].(string)
+					name := p.Args["name"].(string)
+					return mutationResolver.SectionDelete(p.Context, file, name)
 				},
 			},
 		},

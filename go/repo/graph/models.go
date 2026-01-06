@@ -39,14 +39,14 @@ type Node interface {
 type DefinitionKind string
 
 const (
-	DefinitionKindFunction  DefinitionKind = "FUNCTION"
-	DefinitionKindClass     DefinitionKind = "CLASS"
-	DefinitionKindVariable  DefinitionKind = "VARIABLE"
-	DefinitionKindInterface DefinitionKind = "INTERFACE"
-	DefinitionKindType      DefinitionKind = "TYPE"
-	DefinitionKindEnum      DefinitionKind = "ENUM"
-	DefinitionKindMethod    DefinitionKind = "METHOD"
-	DefinitionKindProperty  DefinitionKind = "PROPERTY"
+	DefinitionKindFunction  DefinitionKind = "function"
+	DefinitionKindClass     DefinitionKind = "class"
+	DefinitionKindVariable  DefinitionKind = "variable"
+	DefinitionKindInterface DefinitionKind = "interface"
+	DefinitionKindType      DefinitionKind = "type"
+	DefinitionKindEnum      DefinitionKind = "enum"
+	DefinitionKindMethod    DefinitionKind = "method"
+	DefinitionKindProperty  DefinitionKind = "property"
 )
 
 func (e DefinitionKind) IsValid() bool {
@@ -66,8 +66,8 @@ func (e DefinitionKind) String() string {
 type TicketStatus string
 
 const (
-	TicketStatusOpen   TicketStatus = "OPEN"
-	TicketStatusClosed TicketStatus = "CLOSED"
+	TicketStatusOpen   TicketStatus = "open"
+	TicketStatusClosed TicketStatus = "closed"
 )
 
 func (e TicketStatus) IsValid() bool {
@@ -85,9 +85,9 @@ func (e TicketStatus) String() string {
 type ViolationPriority string
 
 const (
-	ViolationPriorityHigh   ViolationPriority = "HIGH"
-	ViolationPriorityMedium ViolationPriority = "MEDIUM"
-	ViolationPriorityLow    ViolationPriority = "LOW"
+	ViolationPriorityHigh   ViolationPriority = "high"
+	ViolationPriorityMedium ViolationPriority = "medium"
+	ViolationPriorityLow    ViolationPriority = "low"
 )
 
 func (e ViolationPriority) IsValid() bool {
@@ -168,8 +168,8 @@ type CountMetrics struct {
 }
 
 type LineMetrics struct {
-	Added   int `json:"added"`
-	Removed int `json:"removed"`
+	Added   int `yaml:"added" json:"added"`
+	Removed int `yaml:"removed" json:"removed"`
 }
 
 type ContributorMetrics struct {
@@ -321,12 +321,16 @@ func (d *Definition) IsNode()       {}
 func (d *Definition) GetID() string { return d.ID }
 
 type Contributor struct {
-	ID     string            `json:"id"`
-	Github string            `json:"github"`
-	Name   *string           `json:"name,omitempty"`
-	Emails []string          `json:"emails"`
-	Links  []ContributorLink `json:"links"`
-	Icons  *ContributorIcons `json:"icons,omitempty"`
+	ID      string              `json:"id"`
+	Github  string              `json:"github"`
+	Name    *string             `json:"name,omitempty"`
+	Emails  []string            `json:"emails"`
+	Links   []ContributorLink   `json:"links"`
+	Icons   *ContributorIcons   `json:"icons,omitempty"`
+	Bundles []*Bundle           `json:"bundles"`
+	Files   []*File             `json:"files"`
+	Tickets []*Ticket           `json:"tickets"`
+	Metrics *ContributorMetrics `json:"metrics"`
 }
 
 func (c *Contributor) IsNode()       {}
@@ -344,20 +348,23 @@ func (c *Commit) IsNode()       {}
 func (c *Commit) GetID() string { return c.ID }
 
 type Ticket struct {
-	ID       string       `json:"id"`
-	Year     int          `json:"year"`
-	Month    int          `json:"month"`
-	Day      int          `json:"day"`
-	Slug     string       `json:"slug"`
-	Path     string       `json:"path"`
-	URI      string       `json:"uri"`
-	Prompt   string       `json:"prompt"`
-	Summary  *string      `json:"summary,omitempty"`
-	Status   TicketStatus `json:"status"`
-	AuthorID *string      `json:"authorId,omitempty"`
-	Model    *string      `json:"model,omitempty"`
-	Commit   *string      `json:"commit,omitempty"`
-	Date     *TicketDate  `json:"date"`
+	ID       string         `json:"id"`
+	Year     int            `json:"year"`
+	Month    int            `json:"month"`
+	Day      int            `json:"day"`
+	Slug     string         `json:"slug"`
+	Path     string         `json:"path"`
+	URI      string         `json:"uri"`
+	Prompt   string         `json:"prompt"`
+	Summary  *string        `json:"summary,omitempty"`
+	Status   TicketStatus   `json:"status"`
+	AuthorID *string        `json:"authorId,omitempty"`
+	Model    *string        `json:"model,omitempty"`
+	Commit   *string        `json:"commit,omitempty"`
+	Date     *TicketDate    `json:"date"`
+	Bundles  []*Bundle      `json:"bundles"`
+	Files    []*File        `json:"files"`
+	Metrics  *TicketMetrics `json:"metrics"`
 }
 
 func (t *Ticket) IsNode()       {}
@@ -389,10 +396,11 @@ type TicketSectionContrib struct {
 }
 
 type Policy struct {
-	ID          string  `json:"id"`
-	Name        string  `json:"name"`
-	Description *string `json:"description,omitempty"`
-	Scopes      []string `json:"scopes"`
+	ID             string           `json:"id"`
+	Name           string           `json:"name"`
+	Description    *string          `json:"description,omitempty"`
+	Scopes         []string         `json:"scopes"`
+	ViolationKinds []*ViolationKind `json:"violationKinds"`
 }
 
 func (p *Policy) IsNode()       {}
@@ -411,15 +419,16 @@ func (v *ViolationKind) IsNode()       {}
 func (v *ViolationKind) GetID() string { return v.ID }
 
 type Violation struct {
-	ID       string   `json:"id"`
-	KindID   string   `json:"kindId"`
-	Scope    string   `json:"scope"`
-	FileID   *string  `json:"fileId,omitempty"`
-	FolderID *string  `json:"folderId,omitempty"`
-	Line     *int     `json:"line,omitempty"`
-	Column   *int     `json:"column,omitempty"`
-	Excerpt  *string  `json:"excerpt,omitempty"`
-	Autofix  *Autofix `json:"autofix,omitempty"`
+	ID       string         `json:"id"`
+	KindID   string         `json:"kindId"`
+	Kind     *ViolationKind `json:"kind,omitempty"`
+	Scope    string         `json:"scope"`
+	FileID   *string        `json:"fileId,omitempty"`
+	FolderID *string        `json:"folderId,omitempty"`
+	Line     *int           `json:"line,omitempty"`
+	Column   *int           `json:"column,omitempty"`
+	Excerpt  *string        `json:"excerpt,omitempty"`
+	Autofix  *Autofix       `json:"autofix,omitempty"`
 }
 
 func (v *Violation) IsNode()       {}

@@ -28,17 +28,24 @@ import (
 	"math"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 	"github.com/usalu/semio/go/repo"
+	"github.com/usalu/semio/go/repo/graph"
 )
+
+var executor *graph.Executor
 
 func init() {
 	wd, _ := os.Getwd()
 	rootDir := findRepoRoot(wd)
 	repo.SetRootDir(rootDir)
+	var err error
+	executor, err = graph.NewExecutorWithContext(rootDir, repo.NewRepoContext(rootDir))
+	if err != nil {
+		panic(err)
+	}
 }
 
 func findRepoRoot(start string) string {
@@ -436,6 +443,14 @@ func requireFolderTargetPath(path string) error {
 
 // #endregion Paths
 
+// #region GraphQL
+
+func gql(query string, variables map[string]interface{}) (string, error) {
+	return executor.ExecuteJSON(context.Background(), query, variables)
+}
+
+// #endregion GraphQL
+
 // #region Handlers
 func analyze(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
@@ -446,8 +461,40 @@ func analyze(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolRes
 	if !ok {
 		scope = "@semio"
 	}
-	result := repo.ToolAnalyze(scope, nil)
-	return textResult(repo.FormatResult(result)), nil
+	query := `query Analyze($scope: String) {
+		analyze(scope: $scope) {
+			violations {
+				id
+				kindId
+				kind {
+					id
+					priority
+					autofixable
+					reason
+					solution
+				}
+				scope
+				excerpt
+				autofix {
+					description
+				}
+			}
+			metrics {
+				total
+				byPriority {
+					high
+					medium
+					low
+				}
+				autofixable
+			}
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"scope": scope})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func fix(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -459,13 +506,42 @@ func fix(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult,
 	if !ok {
 		scope = "@semio"
 	}
-	result := repo.ToolFix(scope)
-	return textResult(repo.FormatResult(result)), nil
+	query := `mutation Fix($scope: String) {
+		fix(scope: $scope) {
+			fixed
+			remaining
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"scope": scope})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func policyList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	result := repo.ToolPolicyList()
-	return textResult(repo.FormatResult(result)), nil
+	query := `query Policies {
+		repo {
+			policies {
+				id
+				name
+				description
+				scopes
+				violationKinds {
+					id
+					priority
+					autofixable
+					reason
+					solution
+				}
+			}
+		}
+	}`
+	result, err := gql(query, nil)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func policyCheck(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -481,8 +557,37 @@ func policyCheck(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 	if !ok {
 		scope = "@semio"
 	}
-	result := repo.ToolPolicyCheck(id, scope)
-	return textResult(repo.FormatResult(result)), nil
+	query := `query PolicyCheck($id: String!, $scope: String) {
+		policy(id: $id) {
+			id
+			name
+			description
+			scopes
+			violationKinds {
+				id
+				priority
+				autofixable
+				reason
+				solution
+			}
+		}
+		analyze(scope: $scope) {
+			violations {
+				id
+				kindId
+				scope
+				excerpt
+			}
+			metrics {
+				total
+			}
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"id": id, "scope": scope})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func ticketCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -508,8 +613,29 @@ func ticketCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 			return nil, err
 		}
 	}
-	result := repo.ToolTicketCreate(slug, prompt, model, files)
-	return textResult(repo.FormatResult(result)), nil
+	input := map[string]interface{}{
+		"slug":   slug,
+		"prompt": prompt,
+	}
+	if model != "" {
+		input["model"] = model
+	}
+	if len(files) > 0 {
+		input["files"] = files
+	}
+	query := `mutation TicketCreate($input: TicketCreateInput!) {
+		ticketCreate(input: $input) {
+			id
+			slug
+			prompt
+			status
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"input": input})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func ticketList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -532,18 +658,36 @@ func ticketList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	if dayOk && !monthOk {
 		return nil, fmt.Errorf("missing month")
 	}
-	var yp, mp, dp *int
+	variables := make(map[string]interface{})
 	if yearOk {
-		yp = &year
+		variables["year"] = year
 	}
 	if monthOk {
-		mp = &month
+		variables["month"] = month
 	}
 	if dayOk {
-		dp = &day
+		variables["day"] = day
 	}
-	result := repo.ToolTicketList(yp, mp, dp)
-	return textResult(repo.FormatResult(result)), nil
+	query := `query Tickets($year: Int, $month: Int, $day: Int) {
+		repo {
+			tickets(year: $year, month: $month, day: $day) {
+				id
+				year
+				month
+				day
+				slug
+				prompt
+				summary
+				status
+				model
+			}
+		}
+	}`
+	result, err := gql(query, variables)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func ticketRead(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -564,8 +708,31 @@ func ticketRead(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	if err != nil {
 		return nil, err
 	}
-	result := repo.ToolTicketRead(year, month, day, slug)
-	return textResult(repo.FormatResult(result)), nil
+	query := `query Ticket($year: Int!, $month: Int!, $day: Int!, $slug: String!) {
+		ticket(year: $year, month: $month, day: $day, slug: $slug) {
+			id
+			year
+			month
+			day
+			slug
+			prompt
+			summary
+			status
+			model
+			commit
+			date {
+				created
+				finished
+			}
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"year": year, "month": month, "day": day, "slug": slug,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func ticketProgress(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -594,8 +761,29 @@ func ticketProgress(ctx context.Context, request mcp.CallToolRequest) (*mcp.Call
 	if err != nil {
 		return nil, err
 	}
-	result := repo.ToolTicketProgress(year, month, day, slug, prompt, model)
-	return textResult(repo.FormatResult(result)), nil
+	input := map[string]interface{}{
+		"year":   year,
+		"month":  month,
+		"day":    day,
+		"slug":   slug,
+		"prompt": prompt,
+	}
+	if model != "" {
+		input["model"] = model
+	}
+	query := `mutation TicketProgress($input: TicketProgressInput!) {
+		ticketProgress(input: $input) {
+			id
+			slug
+			prompt
+			status
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"input": input})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func ticketFinish(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -616,8 +804,22 @@ func ticketFinish(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 	if err != nil {
 		return nil, err
 	}
-	result := repo.ToolTicketFinish(year, month, day, slug)
-	return textResult(repo.FormatResult(result)), nil
+	query := `mutation TicketFinish($input: TicketFinishInput!) {
+		ticketFinish(input: $input) {
+			id
+			slug
+			status
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"input": map[string]interface{}{
+			"year": year, "month": month, "day": day, "slug": slug,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func contributorAdd(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -626,13 +828,39 @@ func contributorAdd(ctx context.Context, request mcp.CallToolRequest) (*mcp.Call
 	if err != nil {
 		return nil, err
 	}
-	result := repo.ToolContributorAdd(github)
-	return textResult(repo.FormatResult(result)), nil
+	query := `mutation ContributorAdd($input: ContributorAddInput!) {
+		contributorAdd(input: $input) {
+			id
+			github
+			name
+			emails
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"input": map[string]interface{}{"github": github},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func contributorList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	result := repo.ToolContributorList()
-	return textResult(repo.FormatResult(result)), nil
+	query := `query Contributors {
+		repo {
+			contributors {
+				id
+				github
+				name
+				emails
+			}
+		}
+	}`
+	result, err := gql(query, nil)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func contributorRemove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -641,18 +869,55 @@ func contributorRemove(ctx context.Context, request mcp.CallToolRequest) (*mcp.C
 	if err != nil {
 		return nil, err
 	}
-	result := repo.ToolContributorRemove(github)
-	return textResult(repo.FormatResult(result)), nil
+	query := `mutation ContributorRemove($input: ContributorRemoveInput!) {
+		contributorRemove(input: $input) {
+			success
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"input": map[string]interface{}{"github": github},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func projectList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	result := repo.ToolProjectList()
-	return textResult(repo.FormatResult(result)), nil
+	query := `query Bundles {
+		repo {
+			bundles {
+				id
+				name
+				root
+				projectType
+				tags
+				uri
+			}
+		}
+	}`
+	result, err := gql(query, nil)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func projectTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	result := repo.ToolProjectTree()
-	return textResult(repo.FormatResult(result)), nil
+	query := `query Bundles {
+		repo {
+			bundles {
+				id
+				name
+				root
+			}
+		}
+	}`
+	result, err := gql(query, nil)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func folderCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -664,8 +929,19 @@ func folderCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 	if err := requireFolderTargetPath(path); err != nil {
 		return nil, err
 	}
-	result := repo.ToolFolderCreate(path)
-	return textResult(repo.FormatResult(result)), nil
+	query := `mutation FolderCreate($input: FolderCreateInput!) {
+		folderCreate(input: $input) {
+			id
+			path
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"input": map[string]interface{}{"path": path},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func folderMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -684,8 +960,19 @@ func folderMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	if err := requireFolderTargetPath(target); err != nil {
 		return nil, err
 	}
-	result := repo.ToolFolderMove(source, target)
-	return textResult(repo.FormatResult(result)), nil
+	query := `mutation FolderMove($input: FolderMoveInput!) {
+		folderMove(input: $input) {
+			id
+			path
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"input": map[string]interface{}{"source": source, "target": target},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func folderDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -697,8 +984,18 @@ func folderDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 	if err := requireFolderPath(path); err != nil {
 		return nil, err
 	}
-	result := repo.ToolFolderDelete(path)
-	return textResult(repo.FormatResult(result)), nil
+	query := `mutation FolderDelete($input: FolderDeleteInput!) {
+		folderDelete(input: $input) {
+			success
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"input": map[string]interface{}{"path": path},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func folderList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -713,8 +1010,18 @@ func folderList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	if err := requireFolderPath(path); err != nil {
 		return nil, err
 	}
-	result := repo.ToolFolderList(path)
-	return textResult(repo.FormatResult(result)), nil
+	query := `query Folder($path: String!) {
+		folder(path: $path) {
+			id
+			path
+			name
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"path": path})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func folderTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -729,8 +1036,18 @@ func folderTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	if err := requireFolderPath(path); err != nil {
 		return nil, err
 	}
-	result := repo.ToolFolderTree(path)
-	return textResult(repo.FormatResult(result)), nil
+	query := `query Folder($path: String!) {
+		folder(path: $path) {
+			id
+			path
+			name
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"path": path})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func fileCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -742,8 +1059,19 @@ func fileCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	if err := requireFileTargetPath(path); err != nil {
 		return nil, err
 	}
-	result := repo.ToolFileCreate(path)
-	return textResult(repo.FormatResult(result)), nil
+	query := `mutation FileCreate($input: FileCreateInput!) {
+		fileCreate(input: $input) {
+			id
+			path
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"input": map[string]interface{}{"path": path},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func fileMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -762,8 +1090,19 @@ func fileMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolRe
 	if err := requireFileTargetPath(target); err != nil {
 		return nil, err
 	}
-	result := repo.ToolFileMove(source, target)
-	return textResult(repo.FormatResult(result)), nil
+	query := `mutation FileMove($input: FileMoveInput!) {
+		fileMove(input: $input) {
+			id
+			path
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"input": map[string]interface{}{"source": source, "target": target},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func fileDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -775,8 +1114,18 @@ func fileDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	if err := requireFilePath(path); err != nil {
 		return nil, err
 	}
-	result := repo.ToolFileDelete(path)
-	return textResult(repo.FormatResult(result)), nil
+	query := `mutation FileDelete($input: FileDeleteInput!) {
+		fileDelete(input: $input) {
+			success
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"input": map[string]interface{}{"path": path},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func fileList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -788,8 +1137,18 @@ func fileList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolRe
 	if !ok {
 		scope = "@semio"
 	}
-	result := repo.ToolFileList(scope)
-	return textResult(repo.FormatResult(result)), nil
+	query := `query Bundle($name: String!) {
+		bundle(name: $name) {
+			id
+			name
+			root
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"name": scope})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func fileTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -804,8 +1163,18 @@ func fileTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolRe
 	if err := requireFolderPath(path); err != nil {
 		return nil, err
 	}
-	result := repo.ToolFileTree(path)
-	return textResult(repo.FormatResult(result)), nil
+	query := `query Folder($path: String!) {
+		folder(path: $path) {
+			id
+			path
+			name
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"path": path})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func sectionCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -821,8 +1190,19 @@ func sectionCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallT
 	if err := requireFilePath(file); err != nil {
 		return nil, err
 	}
-	result := repo.ToolSectionCreate(file, section)
-	return textResult(repo.FormatResult(result)), nil
+	query := `mutation SectionCreate($input: SectionCreateInput!) {
+		sectionCreate(input: $input) {
+			id
+			name
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"input": map[string]interface{}{"file": file, "name": section},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func sectionMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -842,8 +1222,19 @@ func sectionMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 	if err := requireFilePath(file); err != nil {
 		return nil, err
 	}
-	result := repo.ToolSectionMove(file, oldName, newName)
-	return textResult(repo.FormatResult(result)), nil
+	query := `mutation SectionMove($input: SectionMoveInput!) {
+		sectionMove(input: $input) {
+			id
+			name
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"input": map[string]interface{}{"file": file, "oldName": oldName, "newName": newName},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func sectionDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -859,8 +1250,18 @@ func sectionDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallT
 	if err := requireFilePath(file); err != nil {
 		return nil, err
 	}
-	result := repo.ToolSectionDelete(file, section)
-	return textResult(repo.FormatResult(result)), nil
+	query := `mutation SectionDelete($input: SectionDeleteInput!) {
+		sectionDelete(input: $input) {
+			success
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"input": map[string]interface{}{"file": file, "name": section},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func sectionList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -872,8 +1273,21 @@ func sectionList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 	if err := requireFilePath(file); err != nil {
 		return nil, err
 	}
-	result := repo.ToolSectionList(file)
-	return textResult(repo.FormatResult(result)), nil
+	query := `query File($path: String!) {
+		file(path: $path) {
+			id
+			path
+			sections {
+				id
+				name
+			}
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"path": file})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func sectionTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -885,8 +1299,21 @@ func sectionTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 	if err := requireFilePath(file); err != nil {
 		return nil, err
 	}
-	result := repo.ToolSectionTree(file)
-	return textResult(repo.FormatResult(result)), nil
+	query := `query File($path: String!) {
+		file(path: $path) {
+			id
+			path
+			sections {
+				id
+				name
+			}
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"path": file})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func definitionList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -898,8 +1325,22 @@ func definitionList(ctx context.Context, request mcp.CallToolRequest) (*mcp.Call
 	if err := requireFilePath(file); err != nil {
 		return nil, err
 	}
-	result := repo.ToolDefinitionList(file)
-	return textResult(repo.FormatResult(result)), nil
+	query := `query File($path: String!) {
+		file(path: $path) {
+			id
+			path
+			definitions {
+				id
+				name
+				kind
+			}
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"path": file})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func graphqlQuery(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -918,7 +1359,7 @@ func graphqlQuery(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 			return nil, fmt.Errorf("invalid variables JSON: %w", err)
 		}
 	}
-	result, gqlErr := repo.ExecuteGraphQL(query, variables)
+	result, gqlErr := gql(query, variables)
 	if gqlErr != nil {
 		return textResult(fmt.Sprintf(`{"error": %q}`, gqlErr.Error())), nil
 	}
@@ -926,5 +1367,3 @@ func graphqlQuery(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 }
 
 // #endregion Handlers
-
-var _ = strings.TrimSpace

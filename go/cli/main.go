@@ -22,14 +22,67 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/spf13/cobra"
 	"github.com/usalu/semio/go/repo"
+	"github.com/usalu/semio/go/repo/graph"
 )
+
+// #region Init
+
+var executor *graph.Executor
+
+func init() {
+	wd, _ := os.Getwd()
+	rootDir := findRepoRoot(wd)
+	repo.SetRootDir(rootDir)
+	ctx := repo.NewRepoContext(rootDir)
+	var err error
+	executor, err = graph.NewExecutorWithContext(rootDir, ctx)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to initialize GraphQL executor: %v\n", err)
+		os.Exit(1)
+	}
+}
+
+func findRepoRoot(start string) string {
+	dir := start
+	for {
+		if _, err := os.Stat(filepath.Join(dir, "AGENTS.md")); err == nil {
+			return dir
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			return start
+		}
+		dir = parent
+	}
+}
+
+// #endregion Init
+
+// #region GraphQL Helpers
+
+func gql(query string, variables map[string]interface{}) (string, error) {
+	return executor.ExecuteJSON(context.Background(), query, variables)
+}
+
+func printGQL(query string, variables map[string]interface{}) error {
+	result, err := gql(query, variables)
+	if err != nil {
+		return err
+	}
+	fmt.Println(result)
+	return nil
+}
+
+// #endregion GraphQL Helpers
 
 // #region Commands
 
@@ -47,24 +100,23 @@ func Execute() error {
 var rootCmd = &cobra.Command{
 	Use:   "repo",
 	Short: "Monorepo CLI for Semio",
-	Long:  `repo - Monorepo CLI for Semio. All commands output JSON for programmatic use.`,
+	Long:  `repo - Monorepo CLI for Semio. All commands output JSON via GraphQL.`,
 }
 
 func init() {
-	rootCmd.AddCommand(codebaseCmd)
+	rootCmd.AddCommand(graphqlCmd)
 	rootCmd.AddCommand(analyzeCmd)
 	rootCmd.AddCommand(fixCmd)
 	rootCmd.AddCommand(policyCmd)
 	rootCmd.AddCommand(ticketCmd)
 	rootCmd.AddCommand(contributorCmd)
-	rootCmd.AddCommand(projectCmd)
+	rootCmd.AddCommand(bundleCmd)
 	rootCmd.AddCommand(folderCmd)
 	rootCmd.AddCommand(fileCmd)
 	rootCmd.AddCommand(sectionCmd)
-	rootCmd.AddCommand(definitionCmd)
-	rootCmd.AddCommand(updateMetabolismCmd)
-	rootCmd.AddCommand(graphqlCmd)
 }
+
+// #region GraphQL Command
 
 var graphqlCmd = &cobra.Command{
 	Use:   "graphql <query>",
@@ -80,12 +132,7 @@ var graphqlCmd = &cobra.Command{
 				return fmt.Errorf("invalid variables JSON: %w", err)
 			}
 		}
-		result, err := repo.ExecuteGraphQL(query, variables)
-		if err != nil {
-			return err
-		}
-		fmt.Println(result)
-		return nil
+		return printGQL(query, variables)
 	},
 }
 
@@ -93,41 +140,77 @@ func init() {
 	graphqlCmd.Flags().StringP("variables", "v", "", "JSON object with query variables")
 }
 
-var codebaseCmd = &cobra.Command{
-	Use:   "codebase",
-	Short: "Get comprehensive codebase structure",
-	Long:  `Returns a complete JSON structure with bundles, folders, files, sections, definitions, contributors, tickets, policies, violations, and tree.`,
+// #endregion GraphQL Command
+
+// #region Analyze Command
+
+var analyzeCmd = &cobra.Command{
+	Use:   "analyze [scope]",
+	Short: "Analyze codebase for violations",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		result := repo.ToolCodebase()
-		return repo.OutputResult(result)
+		var scope *string
+		if len(args) > 0 {
+			scope = &args[0]
+		}
+		variables := map[string]interface{}{}
+		if scope != nil {
+			variables["scope"] = *scope
+		}
+		return printGQL(`
+			query Analyze($scope: String) {
+				analyze(scope: $scope) {
+					violations {
+						id
+						scope
+						line
+						column
+						excerpt
+						kind { id priority autofixable reason solution }
+						autofix { description edits { path edits { start end newText } } }
+					}
+					metrics { total autofixable byPriority { high medium low } }
+				}
+			}
+		`, variables)
 	},
 }
 
-var analyzeCmd = &cobra.Command{
-	Use:   "analyze [scope...]",
-	Short: "Analyze codebase for violations",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		scope := "@semio"
-		if len(args) > 0 {
-			scope = args[0]
-		}
-		result := repo.ToolAnalyze(scope, args)
-		return repo.OutputResult(result)
-	},
-}
+// #endregion Analyze Command
+
+// #region Fix Command
 
 var fixCmd = &cobra.Command{
 	Use:   "fix [scope]",
 	Short: "Apply autofixes for violations",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		scope := "@semio"
+		var scope *string
 		if len(args) > 0 {
-			scope = args[0]
+			scope = &args[0]
 		}
-		result := repo.ToolFix(scope)
-		return repo.OutputResult(result)
+		variables := map[string]interface{}{}
+		if scope != nil {
+			variables["scope"] = *scope
+		}
+		return printGQL(`
+			mutation Fix($scope: String) {
+				fix(scope: $scope) {
+					fixed
+					remaining
+					violations {
+						id
+						scope
+						excerpt
+						line
+					}
+				}
+			}
+		`, variables)
 	},
 }
+
+// #endregion Fix Command
+
+// #region Policy Commands
 
 var policyCmd = &cobra.Command{
 	Use:   "policy",
@@ -138,46 +221,29 @@ var policyListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List all registered policies",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		result := repo.ToolPolicyList()
-		return repo.OutputResult(result)
-	},
-}
-
-var policyCheckCmd = &cobra.Command{
-	Use:   "check <id> [scope]",
-	Short: "Check a specific policy",
-	Args:  cobra.RangeArgs(1, 2),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		scope := "@semio"
-		if len(args) > 1 {
-			scope = args[1]
-		}
-		result := repo.ToolPolicyCheck(args[0], scope)
-		return repo.OutputResult(result)
-	},
-}
-
-var policyViolationCmd = &cobra.Command{
-	Use:   "violation",
-	Short: "Policy violation commands",
-}
-
-var policyViolationListCmd = &cobra.Command{
-	Use:   "list <policyId>",
-	Short: "List violation kinds for a policy",
-	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		result := repo.ToolPolicyViolationList(args[0])
-		return repo.OutputResult(result)
+		return printGQL(`
+			query Policies {
+				repo {
+					policies {
+						id
+						name
+						description
+						scopes
+						violationKinds { id priority autofixable reason solution }
+					}
+				}
+			}
+		`, nil)
 	},
 }
 
 func init() {
 	policyCmd.AddCommand(policyListCmd)
-	policyCmd.AddCommand(policyCheckCmd)
-	policyCmd.AddCommand(policyViolationCmd)
-	policyViolationCmd.AddCommand(policyViolationListCmd)
 }
+
+// #endregion Policy Commands
+
+// #region Ticket Commands
 
 var ticketCmd = &cobra.Command{
 	Use:   "ticket",
@@ -192,8 +258,32 @@ var ticketCreateCmd = &cobra.Command{
 		prompt, _ := cmd.Flags().GetString("prompt")
 		model, _ := cmd.Flags().GetString("model")
 		files, _ := cmd.Flags().GetStringSlice("file")
-		result := repo.ToolTicketCreate(args[0], prompt, model, files)
-		return repo.OutputResult(result)
+		input := map[string]interface{}{
+			"slug":   args[0],
+			"prompt": prompt,
+		}
+		if model != "" {
+			input["model"] = model
+		}
+		if len(files) > 0 {
+			input["files"] = map[string]interface{}{
+				"updated": files,
+			}
+		}
+		variables := map[string]interface{}{
+			"input": input,
+		}
+		return printGQL(`
+			mutation TicketCreate($input: TicketCreateInput!) {
+				ticketCreate(input: $input) {
+					id
+					slug
+					status
+					path
+					uri
+				}
+			}
+		`, variables)
 	},
 }
 
@@ -201,69 +291,83 @@ var ticketListCmd = &cobra.Command{
 	Use:   "list [year] [month] [day]",
 	Short: "List tickets",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		var year, month, day *int
+		variables := map[string]interface{}{}
 		if len(args) > 0 {
 			y, _ := strconv.Atoi(args[0])
-			year = &y
+			variables["year"] = y
 		}
 		if len(args) > 1 {
 			m, _ := strconv.Atoi(args[1])
-			month = &m
+			variables["month"] = m
 		}
 		if len(args) > 2 {
 			d, _ := strconv.Atoi(args[2])
-			day = &d
+			variables["day"] = d
 		}
-		result := repo.ToolTicketList(year, month, day)
-		return repo.OutputResult(result)
-	},
-}
-
-var ticketReadCmd = &cobra.Command{
-	Use:   "read <year> <month> <day> <slug>",
-	Short: "Read a ticket",
-	Args:  cobra.ExactArgs(4),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		year, _ := strconv.Atoi(args[0])
-		month, _ := strconv.Atoi(args[1])
-		day, _ := strconv.Atoi(args[2])
-		result := repo.ToolTicketRead(year, month, day, args[3])
-		return repo.OutputResult(result)
-	},
-}
-
-var ticketIterateCmd = &cobra.Command{
-	Use:   "iterate",
-	Short: "Ticket iteration commands",
-}
-
-var ticketIterateStartCmd = &cobra.Command{
-	Use:   "start <year> <month> <day> <slug>",
-	Short: "Start a ticket iteration (deprecated, use progress)",
-	Args:  cobra.ExactArgs(4),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		prompt, _ := cmd.Flags().GetString("prompt")
-		model, _ := cmd.Flags().GetString("model")
-		year, _ := strconv.Atoi(args[0])
-		month, _ := strconv.Atoi(args[1])
-		day, _ := strconv.Atoi(args[2])
-		result := repo.ToolTicketProgress(year, month, day, args[3], prompt, model)
-		return repo.OutputResult(result)
+		return printGQL(`
+			query Tickets($year: Int, $month: Int, $day: Int) {
+				repo {
+					tickets(year: $year, month: $month, day: $day) {
+						id
+						year
+						month
+						day
+						slug
+						status
+						prompt
+						summary
+						path
+						uri
+						date { created finished }
+						metrics { iterations bundles files lines { added removed } }
+					}
+				}
+			}
+		`, variables)
 	},
 }
 
 var ticketProgressCmd = &cobra.Command{
 	Use:   "progress <year> <month> <day> <slug>",
-	Short: "Record progress on a ticket (creates iteration from git changes)",
+	Short: "Record progress on a ticket",
 	Args:  cobra.ExactArgs(4),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		prompt, _ := cmd.Flags().GetString("prompt")
 		model, _ := cmd.Flags().GetString("model")
+		files, _ := cmd.Flags().GetStringSlice("file")
 		year, _ := strconv.Atoi(args[0])
 		month, _ := strconv.Atoi(args[1])
 		day, _ := strconv.Atoi(args[2])
-		result := repo.ToolTicketProgress(year, month, day, args[3], prompt, model)
-		return repo.OutputResult(result)
+		input := map[string]interface{}{
+			"year":   year,
+			"month":  month,
+			"day":    day,
+			"slug":   args[3],
+			"prompt": prompt,
+		}
+		if model != "" {
+			input["model"] = model
+		}
+		if len(files) > 0 {
+			input["files"] = map[string]interface{}{
+				"updated": files,
+			}
+		}
+		variables := map[string]interface{}{
+			"input": input,
+		}
+		return printGQL(`
+			mutation TicketProgress($input: TicketProgressInput!) {
+				ticketProgress(input: $input) {
+					id
+					slug
+					status
+					prompt
+					model
+					date { created finished }
+				}
+			}
+		`, variables)
 	},
 }
 
@@ -272,11 +376,32 @@ var ticketFinishCmd = &cobra.Command{
 	Short: "Finish a ticket",
 	Args:  cobra.ExactArgs(4),
 	RunE: func(cmd *cobra.Command, args []string) error {
+		summary, _ := cmd.Flags().GetString("summary")
 		year, _ := strconv.Atoi(args[0])
 		month, _ := strconv.Atoi(args[1])
 		day, _ := strconv.Atoi(args[2])
-		result := repo.ToolTicketFinish(year, month, day, args[3])
-		return repo.OutputResult(result)
+		input := map[string]interface{}{
+			"year":  year,
+			"month": month,
+			"day":   day,
+			"slug":  args[3],
+		}
+		if summary != "" {
+			input["summary"] = summary
+		}
+		variables := map[string]interface{}{
+			"input": input,
+		}
+		return printGQL(`
+			mutation TicketFinish($input: TicketFinishInput!) {
+				ticketFinish(input: $input) {
+					id
+					slug
+					status
+					date { created finished }
+				}
+			}
+		`, variables)
 	},
 }
 
@@ -288,32 +413,70 @@ var ticketReopenCmd = &cobra.Command{
 		year, _ := strconv.Atoi(args[0])
 		month, _ := strconv.Atoi(args[1])
 		day, _ := strconv.Atoi(args[2])
-		result := repo.ToolTicketReopen(year, month, day, args[3])
-		return repo.OutputResult(result)
+		variables := map[string]interface{}{
+			"input": map[string]interface{}{
+				"year": year,
+				"month": month,
+				"day": day,
+				"slug": args[3],
+			},
+		}
+		return printGQL(`
+			mutation TicketReopen($input: TicketReopenInput!) {
+				ticketReopen(input: $input) {
+					id
+					slug
+					status
+				}
+			}
+		`, variables)
 	},
 }
 
 func init() {
 	ticketCreateCmd.Flags().String("prompt", "", "Ticket prompt")
 	ticketCreateCmd.Flags().String("model", "", "Model used")
-	ticketCreateCmd.Flags().StringSlice("file", nil, "Files to include (can be specified multiple times)")
-	ticketIterateStartCmd.Flags().String("prompt", "", "Iteration prompt")
-	ticketIterateStartCmd.Flags().String("model", "", "Model used")
+	ticketCreateCmd.Flags().StringSlice("file", nil, "Files to include")
 	ticketProgressCmd.Flags().String("prompt", "", "Iteration prompt")
 	ticketProgressCmd.Flags().String("model", "", "Model used")
-	ticketIterateCmd.AddCommand(ticketIterateStartCmd)
+	ticketProgressCmd.Flags().StringSlice("file", nil, "Files to include")
+	ticketFinishCmd.Flags().String("summary", "", "Ticket summary")
 	ticketCmd.AddCommand(ticketCreateCmd)
 	ticketCmd.AddCommand(ticketListCmd)
-	ticketCmd.AddCommand(ticketReadCmd)
-	ticketCmd.AddCommand(ticketIterateCmd)
 	ticketCmd.AddCommand(ticketProgressCmd)
 	ticketCmd.AddCommand(ticketFinishCmd)
 	ticketCmd.AddCommand(ticketReopenCmd)
 }
 
+// #endregion Ticket Commands
+
+// #region Contributor Commands
+
 var contributorCmd = &cobra.Command{
 	Use:   "contributor",
 	Short: "Contributor management commands",
+}
+
+var contributorListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List contributors",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return printGQL(`
+			query Contributors {
+				repo {
+					contributors {
+						id
+						github
+						name
+						emails
+						icons { avatar avatarRound github }
+						links { name url }
+						metrics { commits tickets bundles folders files sections definitions lines }
+					}
+				}
+			}
+		`, nil)
+	},
 }
 
 var contributorAddCmd = &cobra.Command{
@@ -321,17 +484,30 @@ var contributorAddCmd = &cobra.Command{
 	Short: "Add a contributor",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		result := repo.ToolContributorAdd(args[0])
-		return repo.OutputResult(result)
-	},
-}
-
-var contributorListCmd = &cobra.Command{
-	Use:   "list",
-	Short: "List contributors",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		result := repo.ToolContributorList()
-		return repo.OutputResult(result)
+		name, _ := cmd.Flags().GetString("name")
+		emails, _ := cmd.Flags().GetStringSlice("email")
+		input := map[string]interface{}{
+			"github": args[0],
+		}
+		if name != "" {
+			input["name"] = name
+		}
+		if len(emails) > 0 {
+			input["emails"] = emails
+		}
+		variables := map[string]interface{}{
+			"input": input,
+		}
+		return printGQL(`
+			mutation ContributorAdd($input: ContributorAddInput!) {
+				contributorAdd(input: $input) {
+					id
+					github
+					name
+					emails
+				}
+			}
+		`, variables)
 	},
 }
 
@@ -340,44 +516,63 @@ var contributorRemoveCmd = &cobra.Command{
 	Short: "Remove a contributor",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		result := repo.ToolContributorRemove(args[0])
-		return repo.OutputResult(result)
+		variables := map[string]interface{}{
+			"github": args[0],
+		}
+		return printGQL(`
+			mutation ContributorRemove($github: String!) {
+				contributorRemove(github: $github)
+			}
+		`, variables)
 	},
 }
 
 func init() {
-	contributorCmd.AddCommand(contributorAddCmd)
+	contributorAddCmd.Flags().String("name", "", "Contributor name")
+	contributorAddCmd.Flags().StringSlice("email", nil, "Contributor emails")
 	contributorCmd.AddCommand(contributorListCmd)
+	contributorCmd.AddCommand(contributorAddCmd)
 	contributorCmd.AddCommand(contributorRemoveCmd)
 }
 
-var projectCmd = &cobra.Command{
+// #endregion Contributor Commands
+
+// #region Bundle Commands
+
+var bundleCmd = &cobra.Command{
 	Use:   "bundle",
 	Short: "Bundle management commands",
 }
 
-var projectListCmd = &cobra.Command{
+var bundleListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List Nx bundles",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		result := repo.ToolProjectList()
-		return repo.OutputResult(result)
-	},
-}
-
-var projectTreeCmd = &cobra.Command{
-	Use:   "tree",
-	Short: "Show bundle dependency tree",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		result := repo.ToolProjectTree()
-		return repo.OutputResult(result)
+		return printGQL(`
+			query Bundles {
+				repo {
+					bundles {
+						id
+						name
+						root
+						sourceRoot
+						projectType
+						tags
+						uri
+					}
+				}
+			}
+		`, nil)
 	},
 }
 
 func init() {
-	projectCmd.AddCommand(projectListCmd)
-	projectCmd.AddCommand(projectTreeCmd)
+	bundleCmd.AddCommand(bundleListCmd)
 }
+
+// #endregion Bundle Commands
+
+// #region Folder Commands
 
 var folderCmd = &cobra.Command{
 	Use:   "folder",
@@ -389,8 +584,19 @@ var folderCreateCmd = &cobra.Command{
 	Short: "Create a folder",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		result := repo.ToolFolderCreate(args[0])
-		return repo.OutputResult(result)
+		variables := map[string]interface{}{
+			"path": args[0],
+		}
+		return printGQL(`
+			mutation FolderCreate($path: String!) {
+				folderCreate(path: $path) {
+					id
+					path
+					name
+					uri
+				}
+			}
+		`, variables)
 	},
 }
 
@@ -399,8 +605,20 @@ var folderMoveCmd = &cobra.Command{
 	Short: "Move a folder",
 	Args:  cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		result := repo.ToolFolderMove(args[0], args[1])
-		return repo.OutputResult(result)
+		variables := map[string]interface{}{
+			"src": args[0],
+			"dst": args[1],
+		}
+		return printGQL(`
+			mutation FolderMove($src: String!, $dst: String!) {
+				folderMove(src: $src, dst: $dst) {
+					id
+					path
+					name
+					uri
+				}
+			}
+		`, variables)
 	},
 }
 
@@ -409,34 +627,14 @@ var folderDeleteCmd = &cobra.Command{
 	Short: "Delete a folder",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		result := repo.ToolFolderDelete(args[0])
-		return repo.OutputResult(result)
-	},
-}
-
-var folderListCmd = &cobra.Command{
-	Use:   "list [path]",
-	Short: "List folders",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		path := "."
-		if len(args) > 0 {
-			path = args[0]
+		variables := map[string]interface{}{
+			"path": args[0],
 		}
-		result := repo.ToolFolderList(path)
-		return repo.OutputResult(result)
-	},
-}
-
-var folderTreeCmd = &cobra.Command{
-	Use:   "tree [path]",
-	Short: "Show folder tree",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		path := "."
-		if len(args) > 0 {
-			path = args[0]
-		}
-		result := repo.ToolFolderTree(path)
-		return repo.OutputResult(result)
+		return printGQL(`
+			mutation FolderDelete($path: String!) {
+				folderDelete(path: $path)
+			}
+		`, variables)
 	},
 }
 
@@ -444,9 +642,11 @@ func init() {
 	folderCmd.AddCommand(folderCreateCmd)
 	folderCmd.AddCommand(folderMoveCmd)
 	folderCmd.AddCommand(folderDeleteCmd)
-	folderCmd.AddCommand(folderListCmd)
-	folderCmd.AddCommand(folderTreeCmd)
 }
+
+// #endregion Folder Commands
+
+// #region File Commands
 
 var fileCmd = &cobra.Command{
 	Use:   "file",
@@ -458,8 +658,19 @@ var fileCreateCmd = &cobra.Command{
 	Short: "Create a file",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		result := repo.ToolFileCreate(args[0])
-		return repo.OutputResult(result)
+		variables := map[string]interface{}{
+			"path": args[0],
+		}
+		return printGQL(`
+			mutation FileCreate($path: String!) {
+				fileCreate(path: $path) {
+					id
+					path
+					name
+					uri
+				}
+			}
+		`, variables)
 	},
 }
 
@@ -468,8 +679,20 @@ var fileMoveCmd = &cobra.Command{
 	Short: "Move a file",
 	Args:  cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		result := repo.ToolFileMove(args[0], args[1])
-		return repo.OutputResult(result)
+		variables := map[string]interface{}{
+			"src": args[0],
+			"dst": args[1],
+		}
+		return printGQL(`
+			mutation FileMove($src: String!, $dst: String!) {
+				fileMove(src: $src, dst: $dst) {
+					id
+					path
+					name
+					uri
+				}
+			}
+		`, variables)
 	},
 }
 
@@ -478,34 +701,14 @@ var fileDeleteCmd = &cobra.Command{
 	Short: "Delete a file",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		result := repo.ToolFileDelete(args[0])
-		return repo.OutputResult(result)
-	},
-}
-
-var fileListCmd = &cobra.Command{
-	Use:   "list [scope]",
-	Short: "List files in scope",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		scope := "@semio"
-		if len(args) > 0 {
-			scope = args[0]
+		variables := map[string]interface{}{
+			"path": args[0],
 		}
-		result := repo.ToolFileList(scope)
-		return repo.OutputResult(result)
-	},
-}
-
-var fileTreeCmd = &cobra.Command{
-	Use:   "tree [path]",
-	Short: "Show file tree",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		path := "."
-		if len(args) > 0 {
-			path = args[0]
-		}
-		result := repo.ToolFileTree(path)
-		return repo.OutputResult(result)
+		return printGQL(`
+			mutation FileDelete($path: String!) {
+				fileDelete(path: $path)
+			}
+		`, variables)
 	},
 }
 
@@ -513,9 +716,11 @@ func init() {
 	fileCmd.AddCommand(fileCreateCmd)
 	fileCmd.AddCommand(fileMoveCmd)
 	fileCmd.AddCommand(fileDeleteCmd)
-	fileCmd.AddCommand(fileListCmd)
-	fileCmd.AddCommand(fileTreeCmd)
 }
+
+// #endregion File Commands
+
+// #region Section Commands
 
 var sectionCmd = &cobra.Command{
 	Use:   "section",
@@ -523,32 +728,66 @@ var sectionCmd = &cobra.Command{
 }
 
 var sectionCreateCmd = &cobra.Command{
-	Use:   "create <file> <section-path>",
+	Use:   "create <file> <name>",
 	Short: "Create a section in a file",
 	Args:  cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		result := repo.ToolSectionCreate(args[0], args[1])
-		return repo.OutputResult(result)
+		parent, _ := cmd.Flags().GetString("parent")
+		variables := map[string]interface{}{
+			"file": args[0],
+			"name": args[1],
+		}
+		if parent != "" {
+			variables["parent"] = parent
+		}
+		return printGQL(`
+			mutation SectionCreate($file: String!, $name: String!, $parent: String) {
+				sectionCreate(file: $file, name: $name, parent: $parent) {
+					id
+					name
+					range { start { line column } end { line column } }
+				}
+			}
+		`, variables)
 	},
 }
 
 var sectionMoveCmd = &cobra.Command{
-	Use:   "move <file> <old-section> <new-section>",
+	Use:   "move <file> <old-name> <new-name>",
 	Short: "Move/rename a section",
 	Args:  cobra.ExactArgs(3),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		result := repo.ToolSectionMove(args[0], args[1], args[2])
-		return repo.OutputResult(result)
+		variables := map[string]interface{}{
+			"file":    args[0],
+			"oldName": args[1],
+			"newName": args[2],
+		}
+		return printGQL(`
+			mutation SectionMove($file: String!, $oldName: String!, $newName: String!) {
+				sectionMove(file: $file, oldName: $oldName, newName: $newName) {
+					id
+					name
+					range { start { line column } end { line column } }
+				}
+			}
+		`, variables)
 	},
 }
 
 var sectionDeleteCmd = &cobra.Command{
-	Use:   "delete <file> <section-path>",
+	Use:   "delete <file> <name>",
 	Short: "Delete a section from a file",
 	Args:  cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		result := repo.ToolSectionDelete(args[0], args[1])
-		return repo.OutputResult(result)
+		variables := map[string]interface{}{
+			"file": args[0],
+			"name": args[1],
+		}
+		return printGQL(`
+			mutation SectionDelete($file: String!, $name: String!) {
+				sectionDelete(file: $file, name: $name)
+			}
+		`, variables)
 	},
 }
 
@@ -557,28 +796,35 @@ var sectionListCmd = &cobra.Command{
 	Short: "List sections in a file",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		result := repo.ToolSectionList(args[0])
-		return repo.OutputResult(result)
-	},
-}
-
-var sectionTreeCmd = &cobra.Command{
-	Use:   "tree <file>",
-	Short: "Show section tree",
-	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		result := repo.ToolSectionTree(args[0])
-		return repo.OutputResult(result)
+		variables := map[string]interface{}{
+			"path": args[0],
+		}
+		return printGQL(`
+			query SectionList($path: String!) {
+				file(path: $path) {
+					sections {
+						id
+						name
+						range { start { line column } end { line column } }
+						children { id name }
+					}
+				}
+			}
+		`, variables)
 	},
 }
 
 func init() {
+	sectionCreateCmd.Flags().String("parent", "", "Parent section name")
+	sectionCmd.AddCommand(sectionListCmd)
 	sectionCmd.AddCommand(sectionCreateCmd)
 	sectionCmd.AddCommand(sectionMoveCmd)
 	sectionCmd.AddCommand(sectionDeleteCmd)
-	sectionCmd.AddCommand(sectionListCmd)
-	sectionCmd.AddCommand(sectionTreeCmd)
 }
+
+// #endregion Section Commands
+
+// #region Definition Commands
 
 var definitionCmd = &cobra.Command{
 	Use:   "definition",
@@ -590,33 +836,29 @@ var definitionListCmd = &cobra.Command{
 	Short: "List definitions in a file",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		result := repo.ToolDefinitionList(args[0])
-		return repo.OutputResult(result)
-	},
-}
-
-var definitionTreeCmd = &cobra.Command{
-	Use:   "tree <file>",
-	Short: "Show definition tree",
-	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		result := repo.ToolDefinitionTree(args[0])
-		return repo.OutputResult(result)
+		variables := map[string]interface{}{
+			"path": args[0],
+		}
+		return printGQL(`
+			query DefinitionList($path: String!) {
+				file(path: $path) {
+					definitions {
+						id
+						name
+						kind
+						range { start { line column } end { line column } }
+					}
+				}
+			}
+		`, variables)
 	},
 }
 
 func init() {
 	definitionCmd.AddCommand(definitionListCmd)
-	definitionCmd.AddCommand(definitionTreeCmd)
+	rootCmd.AddCommand(definitionCmd)
 }
 
-var updateMetabolismCmd = &cobra.Command{
-	Use:   "update-metabolism",
-	Short: "Update metabolism assets (exports kit to zip and copies to public folders)",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		result := repo.ToolUpdateMetabolism()
-		return repo.OutputResult(result)
-	},
-}
+// #endregion Definition Commands
 
 // #endregion Commands

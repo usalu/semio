@@ -199,7 +199,7 @@ interface GqlTicket {
   uri: string;
   prompt: string;
   summary?: string;
-  status: "OPEN" | "CLOSED";
+  status: "open" | "closed";
   author?: GqlContributor;
   model?: string;
   commit?: string;
@@ -226,7 +226,7 @@ interface GqlPolicy {
 
 interface GqlViolationKind {
   id: string;
-  priority: "HIGH" | "MEDIUM" | "LOW";
+  priority: "high" | "medium" | "low";
   autofixable: boolean;
   reason: string;
   solution: string;
@@ -245,7 +245,7 @@ interface GqlContributor {
 interface GqlViolation {
   id: string;
   summary: string;
-  priority: "HIGH" | "MEDIUM" | "LOW";
+  priority: "high" | "medium" | "low";
   autofixable: boolean;
   scope: string;
   line?: number;
@@ -287,7 +287,7 @@ async function fetchBundlesViaGraphQL(): Promise<GqlBundle[]> {
   return result.data?.repo?.bundles ?? [];
 }
 
-async function fetchTicketsViaGraphQL(year?: number, month?: number, day?: number, status?: "OPEN" | "CLOSED"): Promise<GqlTicket[]> {
+async function fetchTicketsViaGraphQL(year?: number, month?: number, day?: number, status?: "open" | "closed"): Promise<GqlTicket[]> {
   const result = await executeGraphQL<{ repo: { tickets: GqlTicket[] } }, { year?: number; month?: number; day?: number; status?: string }>(TICKETS_QUERY, { year, month, day, status });
   if (result.error) {
     logError("[GraphQL] fetchTicketsViaGraphQL error:", result.error);

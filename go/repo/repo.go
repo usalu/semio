@@ -63,23 +63,9 @@ type Scope struct {
 	DefinitionName string    `json:"definitionName,omitempty"`
 }
 
-type ViolationPriority string
-
-const (
-	PriorityHigh   ViolationPriority = "high"
-	PriorityMedium ViolationPriority = "medium"
-	PriorityLow    ViolationPriority = "low"
-)
-
-type TextEdit struct {
-	Start   int    `json:"start"`
-	End     int    `json:"end"`
-	NewText string `json:"newText"`
-}
-
 type Fix struct {
-	Description string               `json:"description"`
-	Edits       map[string][]TextEdit `json:"edits"`
+	Description string                     `json:"description"`
+	Edits       map[string][]graph.TextEdit `json:"edits"`
 }
 
 type Violation struct {
@@ -110,54 +96,29 @@ type SectionInfo struct {
 	Children   []SectionInfo `json:"children"`
 }
 
-type DefinitionKind string
-
-const (
-	DefFunction  DefinitionKind = "function"
-	DefClass     DefinitionKind = "class"
-	DefVariable  DefinitionKind = "variable"
-	DefInterface DefinitionKind = "interface"
-	DefType      DefinitionKind = "type"
-	DefEnum      DefinitionKind = "enum"
-	DefMethod    DefinitionKind = "method"
-	DefProperty  DefinitionKind = "property"
-)
-
 type DefinitionInfo struct {
-	Name       string         `json:"name"`
-	Kind       DefinitionKind `json:"kind"`
-	StartLine  int            `json:"startLine"`
-	EndLine    int            `json:"endLine"`
-	StartIndex int            `json:"startIndex"`
-	EndIndex   int            `json:"endIndex"`
+	Name       string              `json:"name"`
+	Kind       graph.DefinitionKind `json:"kind"`
+	StartLine  int                 `json:"startLine"`
+	EndLine    int                 `json:"endLine"`
+	StartIndex int                 `json:"startIndex"`
+	EndIndex   int                 `json:"endIndex"`
 }
 
-type TicketStatus string
-
-const (
-	TicketOpen   TicketStatus = "open"
-	TicketClosed TicketStatus = "closed"
-)
-
-type LineMetrics struct {
-	Added   int `yaml:"added" json:"added"`
-	Removed int `yaml:"removed" json:"removed"`
+type TicketSectionMetrics struct {
+	Definitions []string           `yaml:"definitions,omitempty" json:"definitions,omitempty"`
+	Lines       *graph.LineMetrics `yaml:"lines" json:"lines"`
 }
 
-type SectionMetrics struct {
-	Definitions []string   `yaml:"definitions,omitempty" json:"definitions,omitempty"`
-	Lines       *LineMetrics `yaml:"lines" json:"lines"`
+type TicketFileMetrics struct {
+	Sections map[string]TicketSectionMetrics `yaml:"sections" json:"sections"`
 }
 
-type FileMetrics struct {
-	Sections map[string]SectionMetrics `yaml:"sections" json:"sections"`
+type TicketBundleMetrics struct {
+	Files map[string]TicketFileMetrics `yaml:"files" json:"files"`
 }
 
-type BundleMetrics struct {
-	Files map[string]FileMetrics `yaml:"files" json:"files"`
-}
-
-type TicketBundles map[string]BundleMetrics
+type TicketBundles map[string]TicketBundleMetrics
 
 type LanguagePlugin interface {
 	Name() string
@@ -468,7 +429,7 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 							ViolationCodeCommentJSDoc,
 							file, scanState.BlockCommentStartLine, "", &Fix{
 								Description: "Remove JSDoc comment",
-								Edits: map[string][]TextEdit{
+								Edits: map[string][]graph.TextEdit{
 									file: {{Start: scanState.BlockCommentStartIndex, End: lineStart + j + 2, NewText: ""}},
 								},
 							}))
@@ -478,7 +439,7 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 							ViolationCodeCommentBlock,
 							file, scanState.BlockCommentStartLine, "", &Fix{
 								Description: "Remove block comment",
-								Edits: map[string][]TextEdit{
+								Edits: map[string][]graph.TextEdit{
 									file: {{Start: scanState.BlockCommentStartIndex, End: lineStart + j + 2, NewText: ""}},
 								},
 							}))
@@ -565,11 +526,21 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 				continue
 			}
 			if j+1 < len(line) && line[j] == '/' && line[j+1] == '/' {
+				// Skip URL schemes like http://, https://, ftp://, etc.
+				if j > 0 && line[j-1] == ':' {
+					j += 2
+					continue
+				}
+				// Skip escaped slashes in regex like /pattern\//
+				if j > 0 && line[j-1] == '\\' {
+					j += 2
+					continue
+				}
 				trimmed := strings.TrimSpace(line)
 				if strings.HasPrefix(trimmed, "// #region") || strings.HasPrefix(trimmed, "// #endregion") {
 					break
 				}
-				if strings.HasPrefix(trimmed, "// eslint-") || strings.HasPrefix(trimmed, "// @ts-") || strings.HasPrefix(trimmed, "// noinspection") {
+				if strings.HasPrefix(trimmed, "// eslint-") || strings.HasPrefix(trimmed, "// @ts-") || strings.HasPrefix(trimmed, "// noinspection") || strings.HasPrefix(trimmed, "// TODO") || strings.HasPrefix(trimmed, "// semio-ignore-") {
 					break
 				}
 				debugMarker := strings.Contains(line, "[DEBUG]")
@@ -579,7 +550,7 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 						ViolationCodeCommentInline,
 						file, lineNum, strings.TrimSpace(line[j:]), &Fix{
 							Description: "Remove inline comment",
-							Edits: map[string][]TextEdit{
+							Edits: map[string][]graph.TextEdit{
 								file: {{Start: lineStart + j, End: lineStart + len(line), NewText: ""}},
 							},
 						}))
@@ -786,7 +757,7 @@ type TicketIterationFiles struct {
 
 type FileLineMetrics struct {
 	Path  string     `yaml:"path" json:"path"`
-	Lines *LineMetrics `yaml:"lines,omitempty" json:"lines,omitempty"`
+	Lines *graph.LineMetrics `yaml:"lines,omitempty" json:"lines,omitempty"`
 }
 
 type TicketDate struct {
@@ -812,16 +783,16 @@ type TicketFiles struct {
 }
 
 type TicketFrontmatter struct {
-	Slug       string            `yaml:"slug" json:"slug"`
-	Prompt     string            `yaml:"prompt" json:"prompt"`
-	Summary    string            `yaml:"summary,omitempty" json:"summary,omitempty"`
-	Status     TicketStatus      `yaml:"status" json:"status"`
-	Author     string            `yaml:"author,omitempty" json:"author,omitempty"`
-	Date       TicketDateCreated `yaml:"date" json:"date"`
-	Commit     string            `yaml:"commit,omitempty" json:"commit,omitempty"`
-	Model      string            `yaml:"model,omitempty" json:"model,omitempty"`
-	Ignore     bool              `yaml:"ignore,omitempty" json:"ignore,omitempty"`
-	Iterations []TicketIteration `yaml:"iterations,omitempty" json:"iterations,omitempty"`
+	Slug       string             `yaml:"slug" json:"slug"`
+	Prompt     string             `yaml:"prompt" json:"prompt"`
+	Summary    string             `yaml:"summary,omitempty" json:"summary,omitempty"`
+	Status     graph.TicketStatus `yaml:"status" json:"status"`
+	Author     string             `yaml:"author,omitempty" json:"author,omitempty"`
+	Date       TicketDateCreated  `yaml:"date" json:"date"`
+	Commit     string             `yaml:"commit,omitempty" json:"commit,omitempty"`
+	Model      string             `yaml:"model,omitempty" json:"model,omitempty"`
+	Ignore     bool               `yaml:"ignore,omitempty" json:"ignore,omitempty"`
+	Iterations []TicketIteration  `yaml:"iterations,omitempty" json:"iterations,omitempty"`
 }
 
 type TicketDateCreated struct {
@@ -876,220 +847,220 @@ const (
 )
 
 type ViolationKindInfo struct {
-	Kind        ViolationKind     `json:"kind"`
-	Priority    ViolationPriority `json:"priority"`
-	Reason      string            `json:"reason"`
-	Solution    string            `json:"solution"`
-	Autofixable bool              `json:"autofixable"`
+	Kind        ViolationKind            `json:"kind"`
+	Priority    graph.ViolationPriority  `json:"priority"`
+	Reason      string                   `json:"reason"`
+	Solution    string                   `json:"solution"`
+	Autofixable bool                     `json:"autofixable"`
 }
 
 var violationKindInfoTable = map[ViolationKind]ViolationKindInfo{
 	ViolationCodeHeaderMissingRegion: {
 		Kind:        ViolationCodeHeaderMissingRegion,
-		Priority:    PriorityLow,
+		Priority:    graph.ViolationPriorityLow,
 		Reason:      "Header region with license, filename, and contributors is required",
 		Solution:    "Add header region with SPDX license, filename, and contributors",
 		Autofixable: false,
 	},
 	ViolationCodeHeaderMissingFilename: {
 		Kind:        ViolationCodeHeaderMissingFilename,
-		Priority:    PriorityLow,
+		Priority:    graph.ViolationPriorityLow,
 		Reason:      "Filename must be documented in header",
 		Solution:    "Add filename comment in header region",
 		Autofixable: false,
 	},
 	ViolationCodeHeaderMissingContributors: {
 		Kind:        ViolationCodeHeaderMissingContributors,
-		Priority:    PriorityLow,
+		Priority:    graph.ViolationPriorityLow,
 		Reason:      "Contributors must be documented in header",
 		Solution:    "Add contributor line in header region",
 		Autofixable: false,
 	},
 	ViolationCodeHeaderMissingLicense: {
 		Kind:        ViolationCodeHeaderMissingLicense,
-		Priority:    PriorityLow,
+		Priority:    graph.ViolationPriorityLow,
 		Reason:      "SPDX license identifier is required",
 		Solution:    "Add SPDX license header comment",
 		Autofixable: false,
 	},
 	ViolationCodeHeaderWrongLicense: {
 		Kind:        ViolationCodeHeaderWrongLicense,
-		Priority:    PriorityLow,
+		Priority:    graph.ViolationPriorityLow,
 		Reason:      "License must be AGPL-3.0-or-later",
 		Solution:    "Update license to AGPL-3.0-or-later",
 		Autofixable: false,
 	},
 	ViolationCodeSectionEmpty: {
 		Kind:        ViolationCodeSectionEmpty,
-		Priority:    PriorityLow,
+		Priority:    graph.ViolationPriorityLow,
 		Reason:      "Empty sections should be removed",
 		Solution:    "Remove empty section or add content",
 		Autofixable: true,
 	},
 	ViolationCodeSectionOrphanDefinition: {
 		Kind:        ViolationCodeSectionOrphanDefinition,
-		Priority:    PriorityLow,
+		Priority:    graph.ViolationPriorityLow,
 		Reason:      "All code must be inside named sections",
 		Solution:    "Move code into an existing section or add a new section",
 		Autofixable: false,
 	},
 	ViolationCodeSectionMissingStartName: {
 		Kind:        ViolationCodeSectionMissingStartName,
-		Priority:    PriorityLow,
+		Priority:    graph.ViolationPriorityLow,
 		Reason:      "Section start marker must have a name",
 		Solution:    "Add name to section start marker",
 		Autofixable: false,
 	},
 	ViolationCodeSectionMissingEndName: {
 		Kind:        ViolationCodeSectionMissingEndName,
-		Priority:    PriorityLow,
+		Priority:    graph.ViolationPriorityLow,
 		Reason:      "Section end marker should have matching name",
 		Solution:    "Add matching name to section end marker",
 		Autofixable: true,
 	},
 	ViolationCodeSectionNameMismatch: {
 		Kind:        ViolationCodeSectionNameMismatch,
-		Priority:    PriorityLow,
+		Priority:    graph.ViolationPriorityLow,
 		Reason:      "Section start and end names must match",
 		Solution:    "Fix section end name to match start name",
 		Autofixable: true,
 	},
 	ViolationCodeCommentInline: {
 		Kind:        ViolationCodeCommentInline,
-		Priority:    PriorityLow,
+		Priority:    graph.ViolationPriorityLow,
 		Reason:      "Inline comments are forbidden",
 		Solution:    "Remove inline comment",
 		Autofixable: true,
 	},
 	ViolationCodeCommentBlock: {
 		Kind:        ViolationCodeCommentBlock,
-		Priority:    PriorityLow,
+		Priority:    graph.ViolationPriorityLow,
 		Reason:      "Block comments are forbidden",
 		Solution:    "Remove block comment",
 		Autofixable: true,
 	},
 	ViolationCodeCommentJSDoc: {
 		Kind:        ViolationCodeCommentJSDoc,
-		Priority:    PriorityLow,
+		Priority:    graph.ViolationPriorityLow,
 		Reason:      "JSDoc comments are forbidden",
 		Solution:    "Remove JSDoc comment",
 		Autofixable: true,
 	},
 	ViolationDevDocsMissingFile: {
 		Kind:        ViolationDevDocsMissingFile,
-		Priority:    PriorityLow,
+		Priority:    graph.ViolationPriorityLow,
 		Reason:      "File exists but has no section in AGENTS.md Codebase",
 		Solution:    "Add ## 📄 PATH section in AGENTS.md",
 		Autofixable: true,
 	},
 	ViolationDevDocsMissingFolder: {
 		Kind:        ViolationDevDocsMissingFolder,
-		Priority:    PriorityLow,
+		Priority:    graph.ViolationPriorityLow,
 		Reason:      "Folder exists but has no section in AGENTS.md Codebase",
 		Solution:    "Add ## 📁 PATH section in AGENTS.md",
 		Autofixable: true,
 	},
 	ViolationDevDocsWrongFilePath: {
 		Kind:        ViolationDevDocsWrongFilePath,
-		Priority:    PriorityLow,
+		Priority:    graph.ViolationPriorityLow,
 		Reason:      "File section path does not match actual file path",
 		Solution:    "Update file section path to match actual path",
 		Autofixable: true,
 	},
 	ViolationDevDocsWrongFolderPath: {
 		Kind:        ViolationDevDocsWrongFolderPath,
-		Priority:    PriorityLow,
+		Priority:    graph.ViolationPriorityLow,
 		Reason:      "Folder section path does not match actual folder path",
 		Solution:    "Update folder section path to match actual path",
 		Autofixable: true,
 	},
 	ViolationDevDocsWrongFileName: {
 		Kind:        ViolationDevDocsWrongFileName,
-		Priority:    PriorityLow,
+		Priority:    graph.ViolationPriorityLow,
 		Reason:      "File section name format is incorrect (should be ## 📄 PATH)",
 		Solution:    "Rename section to ## 📄 PATH",
 		Autofixable: true,
 	},
 	ViolationDevDocsWrongFolderName: {
 		Kind:        ViolationDevDocsWrongFolderName,
-		Priority:    PriorityLow,
+		Priority:    graph.ViolationPriorityLow,
 		Reason:      "Folder section name format is incorrect (should be ## 📁 PATH/)",
 		Solution:    "Rename section to ## 📁 PATH/",
 		Autofixable: true,
 	},
 	ViolationDevDocsWrongFileOrder: {
 		Kind:        ViolationDevDocsWrongFileOrder,
-		Priority:    PriorityLow,
+		Priority:    graph.ViolationPriorityLow,
 		Reason:      "File sections are not in alphabetical order",
 		Solution:    "Reorder file sections alphabetically",
 		Autofixable: true,
 	},
 	ViolationDevDocsWrongFolderOrder: {
 		Kind:        ViolationDevDocsWrongFolderOrder,
-		Priority:    PriorityLow,
+		Priority:    graph.ViolationPriorityLow,
 		Reason:      "Folder sections are not in alphabetical order",
 		Solution:    "Reorder folder sections alphabetically",
 		Autofixable: true,
 	},
 	ViolationDevDocsMissingComponent: {
 		Kind:        ViolationDevDocsMissingComponent,
-		Priority:    PriorityLow,
+		Priority:    graph.ViolationPriorityLow,
 		Reason:      "Package.json workspace has no corresponding component in README.md",
 		Solution:    "Add component section in README.md Components",
 		Autofixable: true,
 	},
 	ViolationDevDocsWrongComponentName: {
 		Kind:        ViolationDevDocsWrongComponentName,
-		Priority:    PriorityLow,
+		Priority:    graph.ViolationPriorityLow,
 		Reason:      "Component section name does not match workspace name",
 		Solution:    "Rename component section to match workspace",
 		Autofixable: true,
 	},
 	ViolationDevDocsWrongComponentOrder: {
 		Kind:        ViolationDevDocsWrongComponentOrder,
-		Priority:    PriorityLow,
+		Priority:    graph.ViolationPriorityLow,
 		Reason:      "Component sections are not in package.json workspaces order",
 		Solution:    "Reorder components to match package.json workspaces",
 		Autofixable: true,
 	},
 	ViolationSketchpadImportThirdParty: {
 		Kind:        ViolationSketchpadImportThirdParty,
-		Priority:    PriorityHigh,
+		Priority:    graph.ViolationPriorityHigh,
 		Reason:      "Third party imports must only be in elements.tsx",
 		Solution:    "Move third party import to elements.tsx and re-export from there",
 		Autofixable: false,
 	},
 	ViolationSketchpadStateMultipleMachines: {
 		Kind:        ViolationSketchpadStateMultipleMachines,
-		Priority:    PriorityHigh,
+		Priority:    graph.ViolationPriorityHigh,
 		Reason:      "Only one state machine is allowed (createMachine can only be used once)",
 		Solution:    "Consolidate state management into a single state machine",
 		Autofixable: false,
 	},
 	ViolationSketchpadStateCreateActor: {
 		Kind:        ViolationSketchpadStateCreateActor,
-		Priority:    PriorityHigh,
+		Priority:    graph.ViolationPriorityHigh,
 		Reason:      "createActor is forbidden in sketchpad",
 		Solution:    "Remove createActor usage and use the single state machine instead",
 		Autofixable: false,
 	},
 	ViolationSketchpadStateYjsAppState: {
 		Kind:        ViolationSketchpadStateYjsAppState,
-		Priority:    PriorityHigh,
+		Priority:    graph.ViolationPriorityHigh,
 		Reason:      "Yjs should only be used for kit data synchronization, not app state",
 		Solution:    "Move app state to the state machine and use Yjs only for kit data sync",
 		Autofixable: false,
 	},
 	ViolationSketchpadStateForbiddenStore: {
 		Kind:        ViolationSketchpadStateForbiddenStore,
-		Priority:    PriorityHigh,
+		Priority:    graph.ViolationPriorityHigh,
 		Reason:      "Stores outside of State Management sections are forbidden",
 		Solution:    "Move store to a State Management section or remove it",
 		Autofixable: false,
 	},
 	ViolationSketchpadHooksNonTriadic: {
 		Kind:        ViolationSketchpadHooksNonTriadic,
-		Priority:    PriorityHigh,
+		Priority:    graph.ViolationPriorityHigh,
 		Reason:      "UI elements must use triadic hooks pattern [state, setState, canSetState]=useSELECTOR()",
 		Solution:    "Refactor to use triadic hook pattern with useSELECTOR",
 		Autofixable: false,
@@ -1102,7 +1073,7 @@ func (k ViolationKind) Info() ViolationKindInfo {
 	}
 	return ViolationKindInfo{
 		Kind:        k,
-		Priority:    PriorityLow,
+		Priority:    graph.ViolationPriorityLow,
 		Reason:      "Unknown violation",
 		Solution:    "Fix the violation",
 		Autofixable: false,
@@ -1114,7 +1085,7 @@ type Policy struct {
 	Name        string            `json:"name"`
 	Description string            `json:"description"`
 	Scopes      []string          `json:"scopes"`
-	Priority    ViolationPriority `json:"priority"`
+	Priority    graph.ViolationPriority `json:"priority"`
 	Kinds       []ViolationKind   `json:"kinds"`
 	Run         PolicyFunc        `json:"-"`
 }
@@ -1175,12 +1146,12 @@ type Contributor struct {
 }
 
 type ContributorTicket struct {
-	Year     int         `json:"year"`
-	Month    int         `json:"month"`
-	Day      int         `json:"day"`
-	Slug     string      `json:"slug"`
-	Status   TicketStatus `json:"status"`
-	FilePath string      `json:"filePath,omitempty"`
+	Year     int                `json:"year"`
+	Month    int                `json:"month"`
+	Day      int                `json:"day"`
+	Slug     string             `json:"slug"`
+	Status   graph.TicketStatus `json:"status"`
+	FilePath string             `json:"filePath,omitempty"`
 }
 
 type ContributorCommit struct {
@@ -1196,7 +1167,7 @@ type ContributorContributions struct {
 	Definitions []string `json:"definitions,omitempty"`
 	Tickets     []ContributorTicket `json:"tickets,omitempty"`
 	Commits     []ContributorCommit `json:"commits,omitempty"`
-	Lines       *LineMetrics           `json:"lines,omitempty"`
+	Lines       *graph.LineMetrics           `json:"lines,omitempty"`
 }
 
 // #region Codebase Types
@@ -1268,7 +1239,7 @@ type CodebaseViolation struct {
 	Folders     []ViolationFolder `json:"folders,omitempty"`
 	Files       []ViolationFile   `json:"files,omitempty"`
 	Kind        ViolationKind     `json:"kind"`
-	Priority    ViolationPriority `json:"priority"`
+	Priority    graph.ViolationPriority `json:"priority"`
 	Autofixable bool              `json:"autofixable"`
 	Reason      string            `json:"reason"`
 	Solution    string            `json:"solution"`
@@ -1292,7 +1263,7 @@ type CodebaseFolder struct {
 
 type FileViolationRef struct {
 	Kind        ViolationKind     `json:"kind"`
-	Priority    ViolationPriority `json:"priority"`
+	Priority    graph.ViolationPriority `json:"priority"`
 	Autofixable bool              `json:"autofixable"`
 	Solution    string            `json:"solution"`
 }
@@ -1337,17 +1308,17 @@ type ContributorFolderContrib struct {
 
 type ContributorFileContrib struct {
 	ID      string       `json:"id"`
-	Metrics *LineMetrics `json:"metrics,omitempty"`
+	Metrics *graph.LineMetrics `json:"metrics,omitempty"`
 }
 
 type ContributorSectionContrib struct {
 	ID      string       `json:"id"`
-	Metrics *LineMetrics `json:"metrics,omitempty"`
+	Metrics *graph.LineMetrics `json:"metrics,omitempty"`
 }
 
 type ContributorDefinitionContrib struct {
 	ID      string       `json:"id"`
-	Metrics *LineMetrics `json:"metrics,omitempty"`
+	Metrics *graph.LineMetrics `json:"metrics,omitempty"`
 }
 
 type ContributorContributionsInfo struct {
@@ -1408,7 +1379,7 @@ type TicketSectionContrib struct {
 
 type TicketDefinitionContrib struct {
 	ID      string       `json:"id"`
-	Metrics *LineMetrics `json:"metrics,omitempty"`
+	Metrics *graph.LineMetrics `json:"metrics,omitempty"`
 }
 
 type CodebaseTicket struct {
@@ -1424,7 +1395,7 @@ type CodebaseTicket struct {
 	Prompt      string                    `json:"prompt,omitempty"`
 	Model       string                    `json:"model,omitempty"`
 	Author      string                    `json:"author,omitempty"`
-	Status      TicketStatus              `json:"status"`
+	Status      graph.TicketStatus        `json:"status"`
 	Bundles     []TicketBundleContrib     `json:"bundles,omitempty"`
 	Folders     []TicketFolderContrib     `json:"folders,omitempty"`
 	Files       []TicketFileContrib       `json:"files,omitempty"`
@@ -1434,7 +1405,7 @@ type CodebaseTicket struct {
 
 type PolicyViolationRef struct {
 	Kind        ViolationKind     `json:"kind"`
-	Priority    ViolationPriority `json:"priority"`
+	Priority    graph.ViolationPriority `json:"priority"`
 	Autofixable bool              `json:"autofixable"`
 	Solution    string            `json:"solution"`
 }
@@ -2436,7 +2407,7 @@ var policies = []Policy{
 		Name:        "Code",
 		Description: "Validates source file headers, sections, and comments",
 		Scopes:      []string{"**/*.{ts,tsx,py,cs,go}"},
-		Priority:    PriorityLow,
+		Priority:    graph.ViolationPriorityLow,
 		Kinds: []ViolationKind{
 			ViolationCodeHeaderMissingRegion,
 			ViolationCodeHeaderMissingFilename,
@@ -2459,7 +2430,7 @@ var policies = []Policy{
 		Name:        "DevDocs",
 		Description: "Validates README.md and AGENTS.md documentation structure",
 		Scopes:      []string{"README.md", "AGENTS.md"},
-		Priority:    PriorityLow,
+		Priority:    graph.ViolationPriorityLow,
 		Kinds: []ViolationKind{
 			ViolationDevDocsMissingFile,
 			ViolationDevDocsMissingFolder,
@@ -2480,7 +2451,7 @@ var policies = []Policy{
 		Name:        "Sketchpad",
 		Description: "Validates sketchpad imports, state management, and hook patterns",
 		Scopes:      []string{"js/sketchpad/**/*.{ts,tsx}"},
-		Priority:    PriorityHigh,
+		Priority:    graph.ViolationPriorityHigh,
 		Kinds: []ViolationKind{
 			ViolationSketchpadImportThirdParty,
 			ViolationSketchpadStateMultipleMachines,
@@ -2512,6 +2483,7 @@ type PolicyContext struct {
 	Bundles []Bundle
 	fileCache     map[string]string
 	sectionCache  map[string][]SectionInfo
+	ignoreCache   map[string]map[int][]string // file -> line -> ignore patterns
 }
 
 func NewPolicyContext(scope Scope, bundles []Bundle) *PolicyContext {
@@ -2521,6 +2493,7 @@ func NewPolicyContext(scope Scope, bundles []Bundle) *PolicyContext {
 		Bundles:     bundles,
 		fileCache:    make(map[string]string),
 		sectionCache: make(map[string][]SectionInfo),
+		ignoreCache:  make(map[string]map[int][]string),
 	}
 }
 
@@ -2552,6 +2525,61 @@ func (ctx *PolicyContext) Sections(filePath string) []SectionInfo {
 	return sections
 }
 
+// ParseIgnoreDirectives parses // semio-ignore-* comments from file content
+// Returns a map of line number -> list of ignore patterns
+func ParseIgnoreDirectives(content string) map[int][]string {
+	result := make(map[int][]string)
+	lines := strings.Split(content, "\n")
+	ignorePrefix := "// semio-ignore-"
+	for i, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, ignorePrefix) {
+			pattern := strings.TrimPrefix(trimmed, ignorePrefix)
+			// Handle multiple patterns on same line separated by comma
+			patterns := strings.Split(pattern, ",")
+			for _, p := range patterns {
+				p = strings.TrimSpace(p)
+				if p != "" {
+					result[i+1] = append(result[i+1], p)
+				}
+			}
+		}
+	}
+	return result
+}
+
+// IgnoreDirectives returns parsed ignore directives for a file (cached)
+func (ctx *PolicyContext) IgnoreDirectives(filePath string) map[int][]string {
+	if ignores, ok := ctx.ignoreCache[filePath]; ok {
+		return ignores
+	}
+	content := ctx.ReadText(filePath)
+	ignores := ParseIgnoreDirectives(content)
+	ctx.ignoreCache[filePath] = ignores
+	return ignores
+}
+
+// IsIgnored checks if a violation should be ignored based on semio-ignore directives
+// The ignore directive on line N affects violations on lines N+1 through the end of
+// the next definition (approximated as next 100 lines or until next ignore directive)
+func (ctx *PolicyContext) IsIgnored(filePath string, violationLine int, kind ViolationKind) bool {
+	ignores := ctx.IgnoreDirectives(filePath)
+	kindStr := string(kind)
+	// Check if any ignore directive applies to this line
+	for ignoreLine, patterns := range ignores {
+		// Ignore directive applies to lines after it (up to ~100 lines or next directive)
+		if violationLine > ignoreLine && violationLine <= ignoreLine+100 {
+			for _, pattern := range patterns {
+				// Pattern matches if the kind starts with the pattern
+				if strings.HasPrefix(kindStr, pattern) {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
 func (ctx *PolicyContext) CreateViolation(summary string, kind ViolationKind, scope string, line int, excerpt string, autofix *Fix) Violation {
 	return Violation{
 		ID:      fmt.Sprintf("%s-%d-%s", kind, time.Now().UnixNano(), randomString(6)),
@@ -2562,6 +2590,32 @@ func (ctx *PolicyContext) CreateViolation(summary string, kind ViolationKind, sc
 		Excerpt: excerpt,
 		Autofix: autofix,
 	}
+}
+
+// extractFileFromScope extracts the file path from a scope string
+// Scope formats: "file.ts", "file.ts#Section", "file.ts::definition"
+func extractFileFromScope(scope string) string {
+	// Remove section suffix (after #)
+	if idx := strings.Index(scope, "#"); idx != -1 {
+		scope = scope[:idx]
+	}
+	// Remove definition suffix (after ::)
+	if idx := strings.Index(scope, "::"); idx != -1 {
+		scope = scope[:idx]
+	}
+	return scope
+}
+
+// FilterIgnored removes violations that are ignored via semio-ignore directives
+func (ctx *PolicyContext) FilterIgnored(violations []Violation) []Violation {
+	var result []Violation
+	for _, v := range violations {
+		file := extractFileFromScope(v.Scope)
+		if !ctx.IsIgnored(file, v.Line, v.Kind) {
+			result = append(result, v)
+		}
+	}
+	return result
 }
 
 func randomString(n int) string {
@@ -2653,7 +2707,7 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 			if headerContent != "" {
 				autofix := &Fix{
 					Description: "Add header section",
-					Edits: map[string][]TextEdit{
+					Edits: map[string][]graph.TextEdit{
 						file: {{Start: 0, End: 0, NewText: headerContent + "\n"}},
 					},
 				}
@@ -2731,7 +2785,7 @@ fmt.Sprintf("%s#Header", file), headerSection.StartLine, "", nil))
 			}
 		}
 	}
-	return violations
+	return ctx.FilterIgnored(violations)
 }
 
 func sectionPolicy(ctx *PolicyContext) []Violation {
@@ -2964,7 +3018,7 @@ fmt.Sprintf("%s#%s", file, s.Name), s.StartLine, "", nil))
 				nil))
 		}
 	}
-	return violations
+	return ctx.FilterIgnored(violations)
 }
 
 type CommentTemplateState struct {
@@ -3008,7 +3062,7 @@ func commentPolicy(ctx *PolicyContext) []Violation {
 		langViolations := language.ScanComments(ctx, file, content, lines)
 		violations = append(violations, langViolations...)
 	}
-	return violations
+	return ctx.FilterIgnored(violations)
 }
 
 func truncate(s string, maxLen int) string {
@@ -3089,7 +3143,7 @@ func devDocsPolicy(ctx *PolicyContext) []Violation {
 				"AGENTS.md", folderSections[i+1].line, "", nil))
 		}
 	}
-	return violations
+	return ctx.FilterIgnored(violations)
 }
 
 func sketchpadPolicy(ctx *PolicyContext) []Violation {
@@ -3186,7 +3240,7 @@ func sketchpadPolicy(ctx *PolicyContext) []Violation {
 			}
 		}
 	}
-	return violations
+	return ctx.FilterIgnored(violations)
 }
 
 // #endregion Policies
@@ -3679,8 +3733,8 @@ func BuildCodebaseTickets(ctx *CodebaseContext) []CodebaseTicket {
 
 		var bundleContribs []TicketBundleContrib
 		for _, iteration := range ticket.Frontmatter.Iterations {
-			for bundleName, bundleMetrics := range iteration.Bundles {
-				lines := AggregateBundleLines(TicketBundles{bundleName: bundleMetrics})
+			for bundleName, TicketBundleMetrics := range iteration.Bundles {
+				lines := AggregateBundleLines(TicketBundles{bundleName: TicketBundleMetrics})
 				bundleContribs = append(bundleContribs, TicketBundleContrib{
 					ID: bundleName,
 					Metrics: &CountMetrics{
@@ -3955,7 +4009,7 @@ func CreateTicket(slug, prompt, model string, files []string) (*Ticket, error) {
 	frontmatter := TicketFrontmatter{
 		Slug:       normalizedSlug,
 		Prompt:     prompt,
-		Status:     TicketOpen,
+		Status:     graph.TicketStatusOpen,
 		Author:     gitAuthor,
 		Date:       TicketDateCreated{Created: ISOTimestamp()},
 		Commit:     gitCommit,
@@ -4227,15 +4281,15 @@ func BuildGitDiffArgs(flag, baseCommit, headCommit string, paths []string) []str
 	return append([]string{"diff", flag, "--no-renames", baseCommit, headCommit, "--"}, paths...)
 }
 
-func GetGitDiffFileLineMetrics(baseCommit, headCommit string, paths []string) (TicketIterationFiles, LineMetrics, error) {
+func GetGitDiffFileLineMetrics(baseCommit, headCommit string, paths []string) (TicketIterationFiles, graph.LineMetrics, error) {
 	if baseCommit == "" {
-		return TicketIterationFiles{}, LineMetrics{}, fmt.Errorf("base commit is required")
+		return TicketIterationFiles{}, graph.LineMetrics{}, fmt.Errorf("base commit is required")
 	}
 	stdout, stderr, exitCode := ExecCommand("git", BuildGitDiffArgs("--numstat", baseCommit, headCommit, paths), "")
 	if exitCode != 0 {
-		return TicketIterationFiles{}, LineMetrics{}, fmt.Errorf("git diff numstat failed: %s", strings.TrimSpace(stderr))
+		return TicketIterationFiles{}, graph.LineMetrics{}, fmt.Errorf("git diff numstat failed: %s", strings.TrimSpace(stderr))
 	}
-	lineMetricsByPath := map[string]LineMetrics{}
+	lineMetricsByPath := map[string]graph.LineMetrics{}
 	for _, line := range strings.Split(strings.TrimSpace(stdout), "\n") {
 		if strings.TrimSpace(line) == "" {
 			continue
@@ -4256,11 +4310,11 @@ func GetGitDiffFileLineMetrics(baseCommit, headCommit string, paths []string) (T
 				removed = parsed
 			}
 		}
-		lineMetricsByPath[NormalizePath(parts[2])] = LineMetrics{Added: added, Removed: removed}
+		lineMetricsByPath[NormalizePath(parts[2])] = graph.LineMetrics{Added: added, Removed: removed}
 	}
 	stdout, stderr, exitCode = ExecCommand("git", BuildGitDiffArgs("--name-status", baseCommit, headCommit, paths), "")
 	if exitCode != 0 {
-		return TicketIterationFiles{}, LineMetrics{}, fmt.Errorf("git diff name-status failed: %s", strings.TrimSpace(stderr))
+		return TicketIterationFiles{}, graph.LineMetrics{}, fmt.Errorf("git diff name-status failed: %s", strings.TrimSpace(stderr))
 	}
 	statusByPath := map[string]string{}
 	for _, line := range strings.Split(strings.TrimSpace(stdout), "\n") {
@@ -4279,7 +4333,7 @@ func GetGitDiffFileLineMetrics(baseCommit, headCommit string, paths []string) (T
 		}
 	}
 	if len(statusByPath) == 0 && len(lineMetricsByPath) == 0 {
-		return TicketIterationFiles{}, LineMetrics{}, nil
+		return TicketIterationFiles{}, graph.LineMetrics{}, nil
 	}
 	resultPaths := make([]string, 0, len(statusByPath))
 	for path := range statusByPath {
@@ -4287,7 +4341,7 @@ func GetGitDiffFileLineMetrics(baseCommit, headCommit string, paths []string) (T
 	}
 	sort.Strings(resultPaths)
 	files := TicketIterationFiles{}
-	total := LineMetrics{}
+	total := graph.LineMetrics{}
 	for i := 0; i < len(resultPaths); i++ {
 		path := resultPaths[i]
 		status := statusByPath[path]
@@ -4353,31 +4407,31 @@ func BuildTicketBundles(files *TicketIterationFiles, bundles []Bundle, baseCommi
 			bundleName = "@semio"
 		}
 		if _, ok := result[bundleName]; !ok {
-			result[bundleName] = BundleMetrics{Files: make(map[string]FileMetrics)}
+			result[bundleName] = TicketBundleMetrics{Files: make(map[string]TicketFileMetrics)}
 		}
 		bundle := result[bundleName]
 		if bundle.Files == nil {
-			bundle.Files = make(map[string]FileMetrics)
+			bundle.Files = make(map[string]TicketFileMetrics)
 		}
-		fileMetrics := FileMetrics{Sections: make(map[string]SectionMetrics)}
+		TicketFileMetrics := TicketFileMetrics{Sections: make(map[string]TicketSectionMetrics)}
 		absPath := filepath.Join(rootDir, f.Path)
 		if FileExists(absPath) {
 			sectionLines := GetGitDiffSectionLineMetrics(baseCommit, "", f.Path)
 			for sectionName, lines := range sectionLines {
 				defs := ExtractDefinitionsFromSection(f.Path, sectionName)
-				fileMetrics.Sections[sectionName] = SectionMetrics{
+				TicketFileMetrics.Sections[sectionName] = TicketSectionMetrics{
 					Definitions: defs,
-					Lines:       &LineMetrics{Added: lines.Added, Removed: lines.Removed},
+					Lines:       &graph.LineMetrics{Added: lines.Added, Removed: lines.Removed},
 				}
 			}
 		}
-		if len(fileMetrics.Sections) == 0 && f.Lines != nil {
+		if len(TicketFileMetrics.Sections) == 0 && f.Lines != nil {
 			guessedSection := GuessSectionName(f.Path)
-			fileMetrics.Sections[guessedSection] = SectionMetrics{
+			TicketFileMetrics.Sections[guessedSection] = TicketSectionMetrics{
 				Lines: f.Lines,
 			}
 		}
-		bundle.Files[f.Path] = fileMetrics
+		bundle.Files[f.Path] = TicketFileMetrics
 		result[bundleName] = bundle
 	}
 	for _, f := range files.Updated {
@@ -4403,32 +4457,32 @@ func BuildTicketBundlesWithChangedDefs(files *TicketIterationFiles, bundles []Bu
 			bundleName = "@semio"
 		}
 		if _, ok := result[bundleName]; !ok {
-			result[bundleName] = BundleMetrics{Files: make(map[string]FileMetrics)}
+			result[bundleName] = TicketBundleMetrics{Files: make(map[string]TicketFileMetrics)}
 		}
 		bundle := result[bundleName]
 		if bundle.Files == nil {
-			bundle.Files = make(map[string]FileMetrics)
+			bundle.Files = make(map[string]TicketFileMetrics)
 		}
-		fileMetrics := FileMetrics{Sections: make(map[string]SectionMetrics)}
+		TicketFileMetrics := TicketFileMetrics{Sections: make(map[string]TicketSectionMetrics)}
 		absPath := filepath.Join(rootDir, f.Path)
 		if FileExists(absPath) {
 			changedLines := GetGitDiffChangedLines(baseCommit, "", f.Path)
 			sectionLines := GetGitDiffSectionLineMetrics(baseCommit, "", f.Path)
 			for sectionName, lines := range sectionLines {
 				defs := ExtractChangedDefinitionsFromSection(f.Path, sectionName, changedLines)
-				fileMetrics.Sections[sectionName] = SectionMetrics{
+				TicketFileMetrics.Sections[sectionName] = TicketSectionMetrics{
 					Definitions: defs,
-					Lines:       &LineMetrics{Added: lines.Added, Removed: lines.Removed},
+					Lines:       &graph.LineMetrics{Added: lines.Added, Removed: lines.Removed},
 				}
 			}
 		}
-		if len(fileMetrics.Sections) == 0 && f.Lines != nil {
+		if len(TicketFileMetrics.Sections) == 0 && f.Lines != nil {
 			guessedSection := GuessSectionName(f.Path)
-			fileMetrics.Sections[guessedSection] = SectionMetrics{
+			TicketFileMetrics.Sections[guessedSection] = TicketSectionMetrics{
 				Lines: f.Lines,
 			}
 		}
-		bundle.Files[f.Path] = fileMetrics
+		bundle.Files[f.Path] = TicketFileMetrics
 		result[bundleName] = bundle
 	}
 	for _, f := range files.Updated {
@@ -4443,8 +4497,8 @@ func BuildTicketBundlesWithChangedDefs(files *TicketIterationFiles, bundles []Bu
 	return result
 }
 
-func AggregateBundleLines(bundles TicketBundles) LineMetrics {
-	var total LineMetrics
+func AggregateBundleLines(bundles TicketBundles) graph.LineMetrics {
+	var total graph.LineMetrics
 	for _, bundleMetrics := range bundles {
 		for _, fileMetrics := range bundleMetrics.Files {
 			for _, sectionMetrics := range fileMetrics.Sections {
@@ -4458,7 +4512,7 @@ func AggregateBundleLines(bundles TicketBundles) LineMetrics {
 	return total
 }
 
-func GetGitDiffSectionLineMetrics(baseCommit, endCommit, filePath string) map[string]LineMetrics {
+func GetGitDiffSectionLineMetrics(baseCommit, endCommit, filePath string) map[string]graph.LineMetrics {
 	absPath := filepath.Join(rootDir, filePath)
 	content, err := ReadTextFile(absPath)
 	if err != nil {
@@ -4503,7 +4557,7 @@ func GetGitDiffSectionLineMetrics(baseCommit, endCommit, filePath string) map[st
 		return nil
 	}
 	lineChanges := parseGitDiffHunks(string(diffOut))
-	result := make(map[string]LineMetrics)
+	result := make(map[string]graph.LineMetrics)
 	flatSections := flattenSections(sections)
 	guessedSection := GuessSectionName(filePath)
 	for _, change := range lineChanges {
@@ -4715,13 +4769,13 @@ func FinishTicket(ticket *Ticket) error {
 			return fmt.Errorf("cannot finish ticket with unfinished iteration")
 		}
 	}
-	ticket.Frontmatter.Status = TicketClosed
+	ticket.Frontmatter.Status = graph.TicketStatusClosed
 	ticket.Frontmatter.Date.Finished = ISOTimestamp()
 	return SaveTicket(ticket)
 }
 
 func ReopenTicket(ticket *Ticket) error {
-	if ticket.Frontmatter.Status == TicketOpen {
+	if ticket.Frontmatter.Status == graph.TicketStatusOpen {
 		return fmt.Errorf("ticket is already open")
 	}
 	if len(ticket.Frontmatter.Iterations) > 0 {
@@ -4730,7 +4784,7 @@ func ReopenTicket(ticket *Ticket) error {
 			return fmt.Errorf("cannot reopen ticket with unfinished iteration")
 		}
 	}
-	ticket.Frontmatter.Status = TicketOpen
+	ticket.Frontmatter.Status = graph.TicketStatusOpen
 	ticket.Frontmatter.Date.Finished = ""
 	return SaveTicket(ticket)
 }
@@ -4741,9 +4795,9 @@ func MigrateTicketBundles(bundles TicketBundles) TicketBundles {
 	}
 	result := make(TicketBundles)
 	for bundleName, bundleMetrics := range bundles {
-		newBundle := BundleMetrics{Files: make(map[string]FileMetrics)}
+		newBundle := TicketBundleMetrics{Files: make(map[string]TicketFileMetrics)}
 		for filePath, fileMetrics := range bundleMetrics.Files {
-			newFileMetrics := FileMetrics{Sections: make(map[string]SectionMetrics)}
+			newFileMetrics := TicketFileMetrics{Sections: make(map[string]TicketSectionMetrics)}
 			for sectionName, sectionMetrics := range fileMetrics.Sections {
 				newSectionName := sectionName
 				if sectionName == "_root" {
@@ -4752,7 +4806,7 @@ func MigrateTicketBundles(bundles TicketBundles) TicketBundles {
 				newFileMetrics.Sections[newSectionName] = sectionMetrics
 			}
 			if len(newFileMetrics.Sections) == 0 {
-				newFileMetrics.Sections[GuessSectionName(filePath)] = SectionMetrics{}
+				newFileMetrics.Sections[GuessSectionName(filePath)] = TicketSectionMetrics{}
 			}
 			newBundle.Files[filePath] = newFileMetrics
 		}
@@ -4863,7 +4917,7 @@ type ContributorContributionState struct {
 	Regions     map[string]struct{}
 	Definitions map[string]struct{}
 	Commits     map[string]ContributorCommit
-	Lines       LineMetrics
+	Lines       graph.LineMetrics
 }
 
 func ParseContributorIdentity(value string) (string, string, bool) {
@@ -5368,8 +5422,570 @@ func ScopeToFiles(scope Scope, bundles []Bundle) ([]string, error) {
 
 // #region Commands
 
+type repoContext struct {
+	rootDir string
+}
+
+var _ graph.RepoContext = (*repoContext)(nil)
+
+func NewRepoContext(dir string) graph.RepoContext {
+	return &repoContext{rootDir: dir}
+}
+
+func (c *repoContext) GetRootDir() string {
+	return c.rootDir
+}
+
+func (c *repoContext) GetBundles() []*graph.Bundle {
+	bundles := GetProjects()
+	result := make([]*graph.Bundle, len(bundles))
+	for i, b := range bundles {
+		result[i] = &graph.Bundle{
+			ID:   fmt.Sprintf("bundle:%s", b.Name),
+			Name: b.Name,
+			Root: b.Root,
+			URI:  fmt.Sprintf("file://%s/%s", c.rootDir, b.Root),
+			Tags: b.Tags,
+		}
+	}
+	return result
+}
+
+func (c *repoContext) GetContributors() ([]*graph.Contributor, error) {
+	contributors, err := ListContributors()
+	if err != nil {
+		return nil, err
+	}
+	result := make([]*graph.Contributor, len(contributors))
+	for i, contrib := range contributors {
+		var links []graph.ContributorLink
+		for name, url := range contrib.Links {
+			links = append(links, graph.ContributorLink{Name: name, URL: url})
+		}
+		var namePtr *string
+		if contrib.Name != "" {
+			namePtr = &contrib.Name
+		}
+		result[i] = &graph.Contributor{
+			ID:      fmt.Sprintf("contributor:%s", contrib.Github),
+			Github:  contrib.Github,
+			Name:    namePtr,
+			Emails:  contrib.Emails,
+			Links:   links,
+			Bundles: []*graph.Bundle{},
+			Files:   []*graph.File{},
+			Tickets: []*graph.Ticket{},
+			Metrics: &graph.ContributorMetrics{
+				Commits:     0,
+				Tickets:     0,
+				Bundles:     0,
+				Folders:     0,
+				Files:       0,
+				Sections:    0,
+				Definitions: 0,
+				Lines:       0,
+			},
+		}
+	}
+	return result, nil
+}
+
+func (c *repoContext) GetTickets(year, month, day *int, status *graph.TicketStatus) ([]*graph.Ticket, error) {
+	tickets, err := ListTickets(year, month, day)
+	if err != nil {
+		return nil, err
+	}
+	var result []*graph.Ticket
+	for _, t := range tickets {
+		ticketStatus := graph.TicketStatusOpen
+		if t.Frontmatter.Status == graph.TicketStatusClosed {
+			ticketStatus = graph.TicketStatusClosed
+		}
+		if status != nil && ticketStatus != *status {
+			continue
+		}
+		var summaryPtr *string
+		if t.Frontmatter.Summary != "" {
+			summaryPtr = &t.Frontmatter.Summary
+		}
+		createdTime, _ := time.Parse(time.RFC3339, t.Frontmatter.Date.Created)
+		var finishedPtr *time.Time
+		if t.Frontmatter.Date.Finished != "" {
+			finishedTime, err := time.Parse(time.RFC3339, t.Frontmatter.Date.Finished)
+			if err == nil {
+				finishedPtr = &finishedTime
+			}
+		}
+		result = append(result, &graph.Ticket{
+			ID:      fmt.Sprintf("ticket:%d/%02d/%02d/%s", t.Year, t.Month, t.Day, t.Slug),
+			Year:    t.Year,
+			Month:   t.Month,
+			Day:     t.Day,
+			Slug:    t.Slug,
+			Path:    fmt.Sprintf("tickets/%d/%02d/%02d/%s/ticket.md", t.Year, t.Month, t.Day, t.Slug),
+			URI:     fmt.Sprintf("file://%s/tickets/%d/%02d/%02d/%s/ticket.md", c.rootDir, t.Year, t.Month, t.Day, t.Slug),
+			Prompt:  t.Frontmatter.Prompt,
+			Summary: summaryPtr,
+			Status:  ticketStatus,
+			Date: &graph.TicketDate{
+				Created:  createdTime,
+				Finished: finishedPtr,
+			},
+			Bundles: []*graph.Bundle{},
+			Files:   []*graph.File{},
+			Metrics: &graph.TicketMetrics{
+				Iterations: len(t.Frontmatter.Iterations),
+				Bundles:    0,
+				Files:      0,
+				Lines:      nil,
+			},
+		})
+	}
+	return result, nil
+}
+
+func (c *repoContext) GetPolicies() []*graph.Policy {
+	policies := GetPolicies()
+	result := make([]*graph.Policy, len(policies))
+	for i, p := range policies {
+		var scopes []string
+		scopes = append(scopes, p.Scopes...)
+		var descPtr *string
+		if p.Description != "" {
+			descPtr = &p.Description
+		}
+		var violationKinds []*graph.ViolationKind
+		for _, kind := range p.Kinds {
+			info := kind.Info()
+			priority := graph.ViolationPriorityMedium
+			switch info.Priority {
+			case graph.ViolationPriorityHigh:
+				priority = graph.ViolationPriorityHigh
+			case graph.ViolationPriorityLow:
+				priority = graph.ViolationPriorityLow
+			}
+			violationKinds = append(violationKinds, &graph.ViolationKind{
+				ID:          fmt.Sprintf("violationKind:%s", kind),
+				PolicyID:    fmt.Sprintf("policy:%s", p.ID),
+				Priority:    priority,
+				Autofixable: info.Autofixable,
+				Reason:      info.Reason,
+				Solution:    info.Solution,
+			})
+		}
+		result[i] = &graph.Policy{
+			ID:             fmt.Sprintf("policy:%s", p.ID),
+			Name:           p.ID,
+			Description:    descPtr,
+			Scopes:         scopes,
+			ViolationKinds: violationKinds,
+		}
+	}
+	return result
+}
+
+func (c *repoContext) GetViolationKinds() []*graph.ViolationKind {
+	var result []*graph.ViolationKind
+	for _, p := range GetPolicies() {
+		for _, kind := range p.Kinds {
+			info := kind.Info()
+			priority := graph.ViolationPriorityMedium
+			switch info.Priority {
+			case graph.ViolationPriorityHigh:
+				priority = graph.ViolationPriorityHigh
+			case graph.ViolationPriorityLow:
+				priority = graph.ViolationPriorityLow
+			}
+			result = append(result, &graph.ViolationKind{
+				ID:          fmt.Sprintf("violationKind:%s", kind),
+				PolicyID:    fmt.Sprintf("policy:%s", p.ID),
+				Priority:    priority,
+				Autofixable: info.Autofixable,
+				Reason:      info.Reason,
+				Solution:    info.Solution,
+			})
+		}
+	}
+	return result
+}
+
+func (c *repoContext) Analyze(scope *string) (*graph.AnalyzeResult, error) {
+	scopeRaw := "@semio"
+	if scope != nil {
+		scopeRaw = *scope
+	}
+	toolResult := ToolAnalyze(scopeRaw, nil)
+	report, ok := toolResult.Data.(AnalyzeReport)
+	if !ok {
+		return &graph.AnalyzeResult{
+			Violations: []*graph.Violation{},
+			Metrics:    &graph.AnalyzeMetrics{Total: 0, ByPriority: &graph.PriorityCount{}, Autofixable: 0},
+		}, nil
+	}
+	kindInfoMap := make(map[ViolationKind]ViolationKindInfo)
+	for _, p := range GetPolicies() {
+		for _, kind := range p.Kinds {
+			kindInfoMap[kind] = kind.Info()
+		}
+	}
+	violations := make([]*graph.Violation, len(report.Violations))
+	for i, v := range report.Violations {
+		var excerptPtr *string
+		if v.Summary != "" {
+			excerptPtr = &v.Summary
+		}
+		info := kindInfoMap[v.Kind]
+		priority := graph.ViolationPriorityMedium
+		switch info.Priority {
+		case graph.ViolationPriorityHigh:
+			priority = graph.ViolationPriorityHigh
+		case graph.ViolationPriorityLow:
+			priority = graph.ViolationPriorityLow
+		}
+		kindID := fmt.Sprintf("violationKind:%s", v.Kind)
+		parts := strings.SplitN(string(v.Kind), ":", 2)
+		policyID := "unknown"
+		if len(parts) > 0 {
+			policyID = parts[0]
+		}
+		violations[i] = &graph.Violation{
+			ID:      v.ID,
+			KindID:  kindID,
+			Kind: &graph.ViolationKind{
+				ID:          kindID,
+				PolicyID:    fmt.Sprintf("policy:%s", policyID),
+				Priority:    priority,
+				Autofixable: info.Autofixable,
+				Reason:      info.Reason,
+				Solution:    info.Solution,
+			},
+			Scope:   v.Scope,
+			Excerpt: excerptPtr,
+		}
+	}
+	return &graph.AnalyzeResult{
+		Violations: violations,
+		Metrics: &graph.AnalyzeMetrics{
+			Total: report.Summary.Total,
+			ByPriority: &graph.PriorityCount{
+				High:   report.Summary.ByPriority["high"],
+				Medium: report.Summary.ByPriority["medium"],
+				Low:    report.Summary.ByPriority["low"],
+			},
+			Autofixable: 0,
+		},
+	}, nil
+}
+
+func (c *repoContext) Fix(scope *string) (*graph.FixResult, error) {
+	scopeRaw := "@semio"
+	if scope != nil {
+		scopeRaw = *scope
+	}
+	ToolFix(scopeRaw)
+	return &graph.FixResult{Fixed: 0, Remaining: 0, Violations: []*graph.Violation{}}, nil
+}
+
+func (c *repoContext) TicketCreate(input graph.TicketCreateInput) (*graph.Ticket, error) {
+	var files []string
+	if input.Files != nil {
+		files = append(files, input.Files.Updated...)
+		files = append(files, input.Files.Created...)
+		files = append(files, input.Files.Removed...)
+	}
+	model := ""
+	if input.Model != nil {
+		model = *input.Model
+	}
+	ticket, err := CreateTicket(input.Slug, input.Prompt, model, files)
+	if err != nil {
+		return nil, err
+	}
+	return &graph.Ticket{
+		ID:     fmt.Sprintf("ticket:%d/%02d/%02d/%s", ticket.Year, ticket.Month, ticket.Day, ticket.Slug),
+		Year:   ticket.Year,
+		Month:  ticket.Month,
+		Day:    ticket.Day,
+		Slug:   ticket.Slug,
+		Path:   fmt.Sprintf("tickets/%d/%02d/%02d/%s/ticket.md", ticket.Year, ticket.Month, ticket.Day, ticket.Slug),
+		URI:    fmt.Sprintf("file://%s/tickets/%d/%02d/%02d/%s/ticket.md", c.rootDir, ticket.Year, ticket.Month, ticket.Day, ticket.Slug),
+		Prompt: input.Prompt,
+		Status: graph.TicketStatusOpen,
+	}, nil
+}
+
+func (c *repoContext) TicketProgress(input graph.TicketProgressInput) (*graph.Ticket, error) {
+	ticket, err := ReadTicket(input.Year, input.Month, input.Day, input.Slug)
+	if err != nil {
+		return nil, err
+	}
+	model := ""
+	if input.Model != nil {
+		model = *input.Model
+	}
+	if err := ProgressIteration(ticket, input.Prompt, model); err != nil {
+		return nil, err
+	}
+	status := graph.TicketStatusOpen
+	if ticket.Frontmatter.Status == graph.TicketStatusClosed {
+		status = graph.TicketStatusClosed
+	}
+	var finished *time.Time
+	if ticket.Frontmatter.Date.Finished != "" {
+		if parsed, err := time.Parse(time.RFC3339, ticket.Frontmatter.Date.Finished); err == nil {
+			finished = &parsed
+		}
+	}
+	created := time.Now()
+	if ticket.Frontmatter.Date.Created != "" {
+		if parsed, err := time.Parse(time.RFC3339, ticket.Frontmatter.Date.Created); err == nil {
+			created = parsed
+		}
+	}
+	return &graph.Ticket{
+		ID:     fmt.Sprintf("ticket:%d/%02d/%02d/%s", input.Year, input.Month, input.Day, input.Slug),
+		Year:   input.Year,
+		Month:  input.Month,
+		Day:    input.Day,
+		Slug:   input.Slug,
+		Path:   fmt.Sprintf("tickets/%d/%02d/%02d/%s/ticket.md", input.Year, input.Month, input.Day, input.Slug),
+		URI:    fmt.Sprintf("file://%s/tickets/%d/%02d/%02d/%s/ticket.md", c.rootDir, input.Year, input.Month, input.Day, input.Slug),
+		Prompt: ticket.Frontmatter.Prompt,
+		Status: status,
+		Date:   &graph.TicketDate{Created: created, Finished: finished},
+	}, nil
+}
+
+func (c *repoContext) TicketFinish(input graph.TicketFinishInput) (*graph.Ticket, error) {
+	ticket, err := ReadTicket(input.Year, input.Month, input.Day, input.Slug)
+	if err != nil {
+		return nil, err
+	}
+	if err := FinishTicket(ticket); err != nil {
+		return nil, err
+	}
+	created := time.Now()
+	if ticket.Frontmatter.Date.Created != "" {
+		if parsed, err := time.Parse(time.RFC3339, ticket.Frontmatter.Date.Created); err == nil {
+			created = parsed
+		}
+	}
+	now := time.Now()
+	return &graph.Ticket{
+		ID:     fmt.Sprintf("ticket:%d/%02d/%02d/%s", input.Year, input.Month, input.Day, input.Slug),
+		Year:   input.Year,
+		Month:  input.Month,
+		Day:    input.Day,
+		Slug:   input.Slug,
+		Path:   fmt.Sprintf("tickets/%d/%02d/%02d/%s/ticket.md", input.Year, input.Month, input.Day, input.Slug),
+		URI:    fmt.Sprintf("file://%s/tickets/%d/%02d/%02d/%s/ticket.md", c.rootDir, input.Year, input.Month, input.Day, input.Slug),
+		Prompt: ticket.Frontmatter.Prompt,
+		Status: graph.TicketStatusClosed,
+		Date:   &graph.TicketDate{Created: created, Finished: &now},
+	}, nil
+}
+
+func (c *repoContext) TicketReopen(input graph.TicketReopenInput) (*graph.Ticket, error) {
+	ticket, err := ReadTicket(input.Year, input.Month, input.Day, input.Slug)
+	if err != nil {
+		return nil, err
+	}
+	if err := ReopenTicket(ticket); err != nil {
+		return nil, err
+	}
+	created := time.Now()
+	if ticket.Frontmatter.Date.Created != "" {
+		if parsed, err := time.Parse(time.RFC3339, ticket.Frontmatter.Date.Created); err == nil {
+			created = parsed
+		}
+	}
+	return &graph.Ticket{
+		ID:     fmt.Sprintf("ticket:%d/%02d/%02d/%s", input.Year, input.Month, input.Day, input.Slug),
+		Year:   input.Year,
+		Month:  input.Month,
+		Day:    input.Day,
+		Slug:   input.Slug,
+		Path:   fmt.Sprintf("tickets/%d/%02d/%02d/%s/ticket.md", input.Year, input.Month, input.Day, input.Slug),
+		URI:    fmt.Sprintf("file://%s/tickets/%d/%02d/%02d/%s/ticket.md", c.rootDir, input.Year, input.Month, input.Day, input.Slug),
+		Prompt: ticket.Frontmatter.Prompt,
+		Status: graph.TicketStatusOpen,
+		Date:   &graph.TicketDate{Created: created},
+	}, nil
+}
+
+func (c *repoContext) FolderCreate(path string) (*graph.Folder, error) {
+	result := ToolFolderCreate(path)
+	if result.Error != "" {
+		return nil, fmt.Errorf("%s", result.Error)
+	}
+	normalizedPath := strings.ReplaceAll(path, "\\", "/")
+	name := filepath.Base(normalizedPath)
+	return &graph.Folder{
+		ID:   fmt.Sprintf("folder:%s", normalizedPath),
+		Path: normalizedPath,
+		URI:  fmt.Sprintf("file://%s/%s", c.rootDir, normalizedPath),
+		Name: name,
+	}, nil
+}
+
+func (c *repoContext) FolderMove(src, dst string) (*graph.Folder, error) {
+	result := ToolFolderMove(src, dst)
+	if result.Error != "" {
+		return nil, fmt.Errorf("%s", result.Error)
+	}
+	normalizedPath := strings.ReplaceAll(dst, "\\", "/")
+	name := filepath.Base(normalizedPath)
+	return &graph.Folder{
+		ID:   fmt.Sprintf("folder:%s", normalizedPath),
+		Path: normalizedPath,
+		URI:  fmt.Sprintf("file://%s/%s", c.rootDir, normalizedPath),
+		Name: name,
+	}, nil
+}
+
+func (c *repoContext) FolderDelete(path string) error {
+	result := ToolFolderDelete(path)
+	if result.Error != "" {
+		return fmt.Errorf("%s", result.Error)
+	}
+	return nil
+}
+
+func (c *repoContext) FileCreate(path string) (*graph.File, error) {
+	result := ToolFileCreate(path)
+	if result.Error != "" {
+		return nil, fmt.Errorf("%s", result.Error)
+	}
+	normalizedPath := strings.ReplaceAll(path, "\\", "/")
+	name := filepath.Base(normalizedPath)
+	ext := filepath.Ext(name)
+	folderPath := filepath.Dir(normalizedPath)
+	var folderID *string
+	if folderPath != "." {
+		id := fmt.Sprintf("folder:%s", folderPath)
+		folderID = &id
+	}
+	return &graph.File{
+		ID:        fmt.Sprintf("file:%s", normalizedPath),
+		Path:      normalizedPath,
+		URI:       fmt.Sprintf("file://%s/%s", c.rootDir, normalizedPath),
+		Name:      name,
+		Extension: ext,
+		FolderID:  folderID,
+	}, nil
+}
+
+func (c *repoContext) FileMove(src, dst string) (*graph.File, error) {
+	result := ToolFileMove(src, dst)
+	if result.Error != "" {
+		return nil, fmt.Errorf("%s", result.Error)
+	}
+	normalizedPath := strings.ReplaceAll(dst, "\\", "/")
+	name := filepath.Base(normalizedPath)
+	ext := filepath.Ext(name)
+	folderPath := filepath.Dir(normalizedPath)
+	var folderID *string
+	if folderPath != "." {
+		id := fmt.Sprintf("folder:%s", folderPath)
+		folderID = &id
+	}
+	return &graph.File{
+		ID:        fmt.Sprintf("file:%s", normalizedPath),
+		Path:      normalizedPath,
+		URI:       fmt.Sprintf("file://%s/%s", c.rootDir, normalizedPath),
+		Name:      name,
+		Extension: ext,
+		FolderID:  folderID,
+	}, nil
+}
+
+func (c *repoContext) FileDelete(path string) error {
+	result := ToolFileDelete(path)
+	if result.Error != "" {
+		return fmt.Errorf("%s", result.Error)
+	}
+	return nil
+}
+
+func (c *repoContext) SectionCreate(file, name string, parent *string) (*graph.Section, error) {
+	sectionPath := name
+	if parent != nil && *parent != "" {
+		sectionPath = *parent + "/" + name
+	}
+	result := ToolSectionCreate(file, sectionPath)
+	if result.Error != "" {
+		return nil, fmt.Errorf("%s", result.Error)
+	}
+	normalizedPath := strings.ReplaceAll(file, "\\", "/")
+	fileID := fmt.Sprintf("file:%s", normalizedPath)
+	return &graph.Section{
+		ID:     fmt.Sprintf("section:%s#%s", normalizedPath, name),
+		Name:   name,
+		Path:   fmt.Sprintf("%s#%s", normalizedPath, name),
+		FileID: fileID,
+	}, nil
+}
+
+func (c *repoContext) SectionMove(file, oldName, newName string) (*graph.Section, error) {
+	result := ToolSectionMove(file, oldName, newName)
+	if result.Error != "" {
+		return nil, fmt.Errorf("%s", result.Error)
+	}
+	normalizedPath := strings.ReplaceAll(file, "\\", "/")
+	fileID := fmt.Sprintf("file:%s", normalizedPath)
+	return &graph.Section{
+		ID:     fmt.Sprintf("section:%s#%s", normalizedPath, newName),
+		Name:   newName,
+		Path:   fmt.Sprintf("%s#%s", normalizedPath, newName),
+		FileID: fileID,
+	}, nil
+}
+
+func (c *repoContext) SectionDelete(file, name string) error {
+	result := ToolSectionDelete(file, name)
+	if result.Error != "" {
+		return fmt.Errorf("%s", result.Error)
+	}
+	return nil
+}
+
+func (c *repoContext) ContributorAdd(input graph.ContributorAddInput) (*graph.Contributor, error) {
+	result := ToolContributorAdd(input.Github)
+	if result.Error != "" {
+		return nil, fmt.Errorf("%s", result.Error)
+	}
+	contrib, ok := result.Data.(*Contributor)
+	if !ok {
+		return nil, fmt.Errorf("unexpected result type")
+	}
+	var links []graph.ContributorLink
+	for name, url := range contrib.Links {
+		links = append(links, graph.ContributorLink{Name: name, URL: url})
+	}
+	var namePtr *string
+	if contrib.Name != "" {
+		namePtr = &contrib.Name
+	}
+	return &graph.Contributor{
+		ID:     fmt.Sprintf("contributor:%s", contrib.Github),
+		Github: contrib.Github,
+		Name:   namePtr,
+		Emails: contrib.Emails,
+		Links:  links,
+	}, nil
+}
+
+func (c *repoContext) ContributorRemove(github string) error {
+	result := ToolContributorRemove(github)
+	if result.Error != "" {
+		return fmt.Errorf("%s", result.Error)
+	}
+	return nil
+}
+
 func ExecuteGraphQL(query string, variables map[string]interface{}) (string, error) {
-	executor, err := graph.NewExecutor(rootDir)
+	ctx := NewRepoContext(rootDir)
+	executor, err := graph.NewExecutorWithContext(rootDir, ctx)
 	if err != nil {
 		return "", fmt.Errorf("failed to create executor: %w", err)
 	}
@@ -5536,6 +6152,9 @@ func ToolFix(scopeRaw string) ToolResult {
 				}
 				for i := len(edits) - 1; i >= 0; i-- {
 					edit := edits[i]
+					if edit.Start < 0 || edit.End < 0 || edit.Start > len(content) || edit.End > len(content) || edit.Start > edit.End {
+						continue
+					}
 					content = content[:edit.Start] + edit.NewText + content[edit.End:]
 				}
 				WriteTextFile(absPath, content)
@@ -5620,7 +6239,7 @@ func ToolTicketList(year, month, day *int) ToolResult {
 	output.Info(fmt.Sprintf("\n🎫 Found %d tickets:\n", len(tickets)))
 	for _, t := range tickets {
 		status := "🟢"
-		if t.Frontmatter.Status == TicketClosed {
+		if t.Frontmatter.Status == graph.TicketStatusClosed {
 			status = "✅"
 		}
 		output.Plain(fmt.Sprintf("   %s %d/%s/%s/%s", status, t.Year, PadNumber(t.Month, 2), PadNumber(t.Day, 2), t.Slug))
