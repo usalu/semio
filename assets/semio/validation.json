@@ -227,7 +227,7 @@
       "constraintId": "port-name-unique",
       "severity": "error",
       "message": "Duplicate port name \"Duplicate Interface Name\".",
-      "entityKind": "Interface",
+      "entityKind": "Port",
       "entityGuid": "019ab664-AAAA-AAAA-AAAA-AAAAAAAA0000",
       "fixes": [
         {
@@ -270,7 +270,7 @@
                       "updated": [
                         {
                           "layer": {
-                            "guid": "019ab664-3333-3333-3333-333333330001"
+                            "guid": "019ab664-3333-3333-3333-333333330002"
                           },
                           "diff": {
                             "path": "Duplicate.Layer.Path 2"

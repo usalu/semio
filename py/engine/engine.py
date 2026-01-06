@@ -626,7 +626,7 @@ class Attribute(AttributeDefinitionField, AttributeValueField, AttributeKeyField
     folderPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("folder_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("folders.id")), default=None, exclude=True)
     folder: "Folder" = sqlmodel.Relationship(back_populates="attributes")
     portPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("port_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("ports.id")), default=None, exclude=True)
-    port_: "Interface" = sqlmodel.Relationship(back_populates="attributes")
+    port_: "Port" = sqlmodel.Relationship(back_populates="attributes")
 
     __table_args__ = (
         sqlalchemy.CheckConstraint(
@@ -1864,42 +1864,42 @@ class ModelInputNode(InputNode):
 
 # endregion Model
 
-# region Interface
+# region Port
 
 
-class InterfaceNameField(RealField, abc.ABC):
+class PortNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
 
-class InterfaceDescriptionField(RealField, abc.ABC):
+class PortDescriptionField(RealField, abc.ABC):
     description: typing.Optional[str] = sqlmodel.Field(default=None, max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
-class InterfaceIconField(RealField, abc.ABC):
+class PortIconField(RealField, abc.ABC):
     icon: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
 
 
-class InterfaceCompatibleInterfacesField(MaskedField, abc.ABC):
-    compatibleInterfaces: list[str] = sqlmodel.Field(default_factory=list)
+class PortCompatiblePortsField(MaskedField, abc.ABC):
+    compatiblePorts: list[str] = sqlmodel.Field(default_factory=list)
 
 
-class InterfaceId(InterfaceNameField, Id):
+class PortId(PortNameField, Id):
     pass
 
 
-class InterfaceProps(InterfaceCompatibleInterfacesField, InterfaceIconField, InterfaceDescriptionField, InterfaceNameField, Props):
+class PortProps(PortCompatiblePortsField, PortIconField, PortDescriptionField, PortNameField, Props):
     pass
 
 
-class InterfaceInput(InterfaceCompatibleInterfacesField, InterfaceIconField, InterfaceDescriptionField, InterfaceNameField, Input):
+class PortInput(PortCompatiblePortsField, PortIconField, PortDescriptionField, PortNameField, Input):
     attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
 
 
-class InterfaceOutput(InterfaceCompatibleInterfacesField, InterfaceIconField, InterfaceDescriptionField, InterfaceNameField, Output):
+class PortOutput(PortCompatiblePortsField, PortIconField, PortDescriptionField, PortNameField, Output):
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
 
 
-class Interface(InterfaceIconField, InterfaceDescriptionField, InterfaceNameField, TableEntity, table=True):
+class Port(PortIconField, PortDescriptionField, PortNameField, TableEntity, table=True):
     PLURAL = "ports"
     __tablename__ = "ports"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
@@ -1908,38 +1908,38 @@ class Interface(InterfaceIconField, InterfaceDescriptionField, InterfaceNameFiel
     kit: Kit = sqlmodel.Relationship(back_populates="ports")
 
 
-# TODO: Fix InterfaceNode - was incorrectly changed to TableEntityNode in latest commit
+# TODO: Fix PortNode - was incorrectly changed to TableEntityNode in latest commit
 
 
-class InterfaceInputNode(InputNode):
+class PortInputNode(InputNode):
     class Meta:
-        model = InterfaceInput
+        model = PortInput
 
 
-# endregion Interface
+# endregion Port
 
 # region Connector
 
 
-# region CompatibleInterface
+# region CompatiblePort
 
 
-class CompatibleInterfaceNameField(RealField, abc.ABC):
+class CompatiblePortNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
 
-class CompatibleInterfaceOrderField(RealField, abc.ABC):
+class CompatiblePortOrderField(RealField, abc.ABC):
     order: int = sqlmodel.Field()
 
 
-class CompatibleInterface(CompatibleInterfaceOrderField, CompatibleInterfaceNameField, Table, table=True):
+class CompatiblePort(CompatiblePortOrderField, CompatiblePortNameField, Table, table=True):
     __tablename__ = "compatible_ports"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
     connectorPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("connector_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("connectors.id")), default=None, exclude=True)
-    connector: Connector = sqlmodel.Relationship(back_populates="compatibleInterfaces_")
+    connector: Connector = sqlmodel.Relationship(back_populates="compatiblePorts_")
 
 
-# endregion CompatibleInterface
+# endregion CompatiblePort
 
 
 class ConnectorIdField(MaskedField, abc.ABC):
@@ -1954,12 +1954,12 @@ class ConnectorMandatoryField(RealField, abc.ABC):
     is_mandatory: bool = sqlmodel.Field(default=False)
 
 
-class ConnectorInterfaceField(RealField, abc.ABC):
+class ConnectorPortField(RealField, abc.ABC):
     port: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
-class ConnectorCompatibleInterfacesField(MaskedField, abc.ABC):
-    compatibleInterfaces: list[str] = sqlmodel.Field(default_factory=list)
+class ConnectorCompatiblePortsField(MaskedField, abc.ABC):
+    compatiblePorts: list[str] = sqlmodel.Field(default_factory=list)
 
 
 class ConnectorPointField(MaskedField, abc.ABC):
@@ -1978,25 +1978,25 @@ class ConnectorId(ConnectorIdField, Id):
     pass
 
 
-class ConnectorProps(ConnectorTField, ConnectorCompatibleInterfacesField, ConnectorInterfaceField, ConnectorMandatoryField, ConnectorDescriptionField, ConnectorIdField, Props):
+class ConnectorProps(ConnectorTField, ConnectorCompatiblePortsField, ConnectorPortField, ConnectorMandatoryField, ConnectorDescriptionField, ConnectorIdField, Props):
     pass
 
 
-class ConnectorInput(ConnectorTField, ConnectorCompatibleInterfacesField, ConnectorInterfaceField, ConnectorMandatoryField, ConnectorDescriptionField, ConnectorIdField, Input):
+class ConnectorInput(ConnectorTField, ConnectorCompatiblePortsField, ConnectorPortField, ConnectorMandatoryField, ConnectorDescriptionField, ConnectorIdField, Input):
     point: PointInput = sqlmodel.Field()
     direction: VectorInput = sqlmodel.Field()
     attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
 
 
-class ConnectorContext(ConnectorTField, ConnectorDirectionField, ConnectorPointField, ConnectorCompatibleInterfacesField, ConnectorInterfaceField, ConnectorMandatoryField, ConnectorDescriptionField, ConnectorIdField, Context):
+class ConnectorContext(ConnectorTField, ConnectorDirectionField, ConnectorPointField, ConnectorCompatiblePortsField, ConnectorPortField, ConnectorMandatoryField, ConnectorDescriptionField, ConnectorIdField, Context):
     attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
 
 
-class ConnectorOutput(ConnectorTField, ConnectorDirectionField, ConnectorPointField, ConnectorCompatibleInterfacesField, ConnectorInterfaceField, ConnectorMandatoryField, ConnectorDescriptionField, ConnectorIdField, Output):
+class ConnectorOutput(ConnectorTField, ConnectorDirectionField, ConnectorPointField, ConnectorCompatiblePortsField, ConnectorPortField, ConnectorMandatoryField, ConnectorDescriptionField, ConnectorIdField, Output):
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
 
 
-class Connector(ConnectorTField, ConnectorInterfaceField, ConnectorMandatoryField, ConnectorDescriptionField, TableEntity, table=True):
+class Connector(ConnectorTField, ConnectorPortField, ConnectorMandatoryField, ConnectorDescriptionField, TableEntity, table=True):
     PLURAL = "connectors"
     __tablename__ = "connectors"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
@@ -2006,7 +2006,7 @@ class Connector(ConnectorTField, ConnectorInterfaceField, ConnectorMandatoryFiel
         sa_column=sqlmodel.Column("local_id", sqlalchemy.String(ID_LENGTH_LIMIT)),
         default="",
     )
-    compatibleInterfaces_: list[CompatibleInterface] = sqlmodel.Relationship(back_populates="connector", cascade_delete=True)
+    compatiblePorts_: list[CompatiblePort] = sqlmodel.Relationship(back_populates="connector", cascade_delete=True)
     pointX: float = sqlmodel.Field(sa_column=sqlmodel.Column("point_x", sqlalchemy.String(ID_LENGTH_LIMIT)), exclude=True)
     pointY: float = sqlmodel.Field(sa_column=sqlmodel.Column("point_y", sqlalchemy.Float()), exclude=True)
     pointZ: float = sqlmodel.Field(sa_column=sqlmodel.Column("point_z", sqlalchemy.Float()), exclude=True)
@@ -2023,12 +2023,12 @@ class Connector(ConnectorTField, ConnectorInterfaceField, ConnectorMandatoryFiel
     __table_args__ = (sqlalchemy.UniqueConstraint("local_id", "type_id", name="uq_connectors_local_id_type_id"),)
 
     @property
-    def compatibleInterfaces(self) -> list[str]:
-        return sorted([cf.name for cf in self.compatibleInterfaces_], key=lambda cf: cf.order)
+    def compatiblePorts(self) -> list[str]:
+        return sorted([cf.name for cf in self.compatiblePorts_], key=lambda cf: cf.order)
 
-    @compatibleInterfaces.setter
-    def compatibleInterfaces(self, compatibleInterfaces: list[str]):
-        self.compatibleInterfaces_ = [CompatibleInterface(name=cf, order=i) for i, cf in enumerate(compatibleInterfaces)]
+    @compatiblePorts.setter
+    def compatiblePorts(self, compatiblePorts: list[str]):
+        self.compatiblePorts_ = [CompatiblePort(name=cf, order=i) for i, cf in enumerate(compatiblePorts)]
 
     @property
     def point(self) -> Point:
@@ -2079,7 +2079,7 @@ class Connector(ConnectorTField, ConnectorInterfaceField, ConnectorMandatoryFiel
         entity.point = point
         entity.direction = direction
         try:
-            entity.compatibleInterfaces = obj["compatibleInterfaces"]
+            entity.compatiblePorts = obj["compatiblePorts"]
         except KeyError:
             pass
         try:
@@ -2094,7 +2094,7 @@ class Connector(ConnectorTField, ConnectorInterfaceField, ConnectorMandatoryFiel
         entity = {**ConnectorProps.model_validate(self).model_dump()}
         entity["point"] = self.point.dump()
         entity["direction"] = self.direction.dump()
-        entity["compatibleInterfaces"] = self.compatibleInterfaces
+        entity["compatiblePorts"] = self.compatiblePorts
         entity["attributes"] = [q.dump() for q in self.attributes]
         return ConnectorOutput(**entity)
 
@@ -3556,7 +3556,7 @@ class Kit(KitNameField, KitVersionField, KitDescriptionField, KitIconField, KitI
     authors_: list[Author] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
     files_: list[File] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
     folders_: list[Folder] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
-    ports: list[Interface] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
+    ports: list[Port] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
     types: list[Type] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
     designs: list[Design] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
     qualities: list[Quality] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
@@ -4322,7 +4322,7 @@ def validateKitDict(kit: dict) -> ValidationResult:
                 "Connector": "connectors",
                 "Model": "models",
                 "Quality": "qualities",
-                "Interface": "ports",
+                "Port": "ports",
                 "File": "files",
                 "Folder": "folders",
                 "Stat": "stats",
@@ -4356,7 +4356,7 @@ def validateKitDict(kit: dict) -> ValidationResult:
     for q in kit.get("qualities", []):
         checkGuid("Quality", q.get("guid", ""), q)
     for i in kit.get("ports", []):
-        checkGuid("Interface", i.get("guid", ""), i)
+        checkGuid("Port", i.get("guid", ""), i)
     for f in kit.get("files", []):
         checkGuid("File", f.get("guid", ""), f)
     for fo in kit.get("folders", []):
@@ -4463,7 +4463,7 @@ def validateKitDict(kit: dict) -> ValidationResult:
         if len(group) > 1:
             for iface in group[1:]:
                 fix = _makeFix(f'Rename port "{name}"', {"ports": {"updated": [{"port": {"guid": iface.get("guid", "")}, "diff": {"name": f"{name} 2"}}]}})
-                problems.append(Problem(constraintId="port-name-unique", message=f'Duplicate port name "{name}".', entityKind="Interface", entityGuid=iface.get("guid", ""), fixes=[fix]))
+                problems.append(Problem(constraintId="port-name-unique", message=f'Duplicate port name "{name}".', entityKind="Port", entityGuid=iface.get("guid", ""), fixes=[fix]))
     names = {}
     for f in kit.get("files", []):
         name = f.get("name", "")
@@ -5132,7 +5132,7 @@ def areDesignsEqualDict(a: list | None, b: list | None, strict: bool = False) ->
     return True
 
 
-def areInterfacesEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
+def arePortsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
     if len(arrA) != len(arrB):
@@ -5326,7 +5326,7 @@ def areKitsDictEqual(a: dict, b: dict, strict: bool = False) -> bool:
         return False
     if not areDesignsEqualDict(a.get("designs"), b.get("designs"), strict):
         return False
-    if not areInterfacesEqualDict(a.get("ports"), b.get("ports"), strict):
+    if not arePortsEqualDict(a.get("ports"), b.get("ports"), strict):
         return False
     if not areQualitiesEqualDict(a.get("qualities"), b.get("qualities"), strict):
         return False
@@ -5590,7 +5590,7 @@ def _applyConceptDiff(base: dict, diff: dict) -> dict:
     return result
 
 
-def _getInterfaceDiff(before: dict, after: dict) -> dict:
+def _getPortDiff(before: dict, after: dict) -> dict:
     """Get diff between two port dicts."""
     diff: dict = {}
     if before.get("name") != after.get("name"):
@@ -5600,7 +5600,7 @@ def _getInterfaceDiff(before: dict, after: dict) -> dict:
     return diff
 
 
-def _applyInterfaceDiff(base: dict, diff: dict) -> dict:
+def _applyPortDiff(base: dict, diff: dict) -> dict:
     """Apply diff to an port dict."""
     result = dict(base)
     for key in ["name", "description"]:
@@ -5843,7 +5843,7 @@ def getKitDiffDict(before: dict, after: dict) -> dict:
     conceptsDiff = _getCollectionDiff(before.get("concepts", []), after.get("concepts", []), _getConceptDiff, "concept")
     if conceptsDiff:
         diff["concepts"] = conceptsDiff
-    portsDiff = _getCollectionDiff(before.get("ports", []), after.get("ports", []), _getInterfaceDiff, "port")
+    portsDiff = _getCollectionDiff(before.get("ports", []), after.get("ports", []), _getPortDiff, "port")
     if portsDiff:
         diff["ports"] = portsDiff
     filesDiff = _getCollectionDiff(before.get("files", []), after.get("files", []), _getFileDiff, "file")
@@ -5886,7 +5886,7 @@ def applyKitDiffDict(base: dict, diff: dict) -> dict:
     if diff.get("concepts") or base.get("concepts"):
         result["concepts"] = _applyCollectionDiff(base.get("concepts", []), diff.get("concepts"), _applyConceptDiff, "concept")
     if diff.get("ports") or base.get("ports"):
-        result["ports"] = _applyCollectionDiff(base.get("ports", []), diff.get("ports"), _applyInterfaceDiff, "port")
+        result["ports"] = _applyCollectionDiff(base.get("ports", []), diff.get("ports"), _applyPortDiff, "port")
     if diff.get("files") or base.get("files"):
         result["files"] = _applyCollectionDiff(base.get("files", []), diff.get("files"), _applyFileDiff, "file")
     if diff.get("folders") or base.get("folders"):
@@ -5986,7 +5986,7 @@ def _inverseConceptDiff(original: dict, appliedDiff: dict) -> dict:
     return inverse
 
 
-def _inverseInterfaceDiff(original: dict, appliedDiff: dict) -> dict:
+def _inversePortDiff(original: dict, appliedDiff: dict) -> dict:
     """Compute inverse of an port diff."""
     inverse: dict = {}
     for key in ["name", "description"]:
@@ -6044,7 +6044,7 @@ def inverseKitDiffDict(original: dict, appliedDiff: dict) -> dict:
     if appliedDiff.get("concepts"):
         inverse["concepts"] = _inverseCollectionDiff(original.get("concepts", []), appliedDiff["concepts"], _inverseConceptDiff, "concept")
     if appliedDiff.get("ports"):
-        inverse["ports"] = _inverseCollectionDiff(original.get("ports", []), appliedDiff["ports"], _inverseInterfaceDiff, "port")
+        inverse["ports"] = _inverseCollectionDiff(original.get("ports", []), appliedDiff["ports"], _inversePortDiff, "port")
     if appliedDiff.get("files"):
         inverse["files"] = _inverseCollectionDiff(original.get("files", []), appliedDiff["files"], _inverseFileDiff, "file")
     if appliedDiff.get("folders"):
@@ -6876,9 +6876,9 @@ Available types:
 {{ type.name }};{{ type.variant }};{{ type.description }};
 {%- for connector in type.connectors %}
 {%- raw %}{{% endraw -%}{{ connector.id_ }};{{ connector.description }};{{ connector.port }}
-{%- for compatibleInterface in connector.compatibleInterfaces %}
+{%- for compatiblePort in connector.compatiblePorts %}
 {%- raw %}{{% endraw -%}
-{{ compatibleInterface }}
+{{ compatiblePort }}
 {%- endfor -%}
 {%- raw %}}{% endraw -%}
 {%- endfor -%}
@@ -7649,7 +7649,7 @@ def generateSchemas():
 def start_engine():
     # TODO: Make loguru work on extra uvicorn engine process.
     logging.basicConfig(level=logging.INFO)
-    uvicorn.run(engine, host=HOST, connector=PORT, log_level="info", access_log=False, log_config=None)
+    uvicorn.run(engine, host=HOST, port=PORT, log_level="info", access_log=False, log_config=None)
 
 
 def restart_engine():

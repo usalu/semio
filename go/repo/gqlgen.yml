@@ -30,48 +30,255 @@ models:
       - github.com/99designs/gqlgen/graphql.Time
   Node:
     model:
-      - github.com/usalu/semio/go/repo/graph.Node
+      - github.com/usalu/semio/go/repo.Node
   Repo:
     model:
-      - github.com/usalu/semio/go/repo/graph.Repo
+      - github.com/usalu/semio/go/repo.Repo
   Bundle:
     model:
-      - github.com/usalu/semio/go/repo/graph.Bundle
+      - github.com/usalu/semio/go/repo.Bundle
+    fields:
+      id:
+        resolver: true
+      uri:
+        resolver: true
+      folders:
+        resolver: true
+      files:
+        resolver: true
+      sections:
+        resolver: true
+      definitions:
+        resolver: true
+      metrics:
+        resolver: true
   Folder:
     model:
-      - github.com/usalu/semio/go/repo/graph.Folder
+      - github.com/usalu/semio/go/repo.Folder
   File:
     model:
-      - github.com/usalu/semio/go/repo/graph.File
+      - github.com/usalu/semio/go/repo.File
   Section:
     model:
-      - github.com/usalu/semio/go/repo/graph.Section
+      - github.com/usalu/semio/go/repo.Section
+    fields:
+      id:
+        resolver: true
+      path:
+        resolver: true
+      file:
+        resolver: true
+      parent:
+        resolver: true
+      range:
+        resolver: true
+      definitions:
+        resolver: true
+      metrics:
+        resolver: true
   Definition:
     model:
-      - github.com/usalu/semio/go/repo/graph.Definition
+      - github.com/usalu/semio/go/repo.Definition
+    fields:
+      id:
+        resolver: true
+      file:
+        resolver: true
+      section:
+        resolver: true
+      range:
+        resolver: true
+      metrics:
+        resolver: true
   Contributor:
     model:
-      - github.com/usalu/semio/go/repo/graph.Contributor
+      - github.com/usalu/semio/go/repo.Contributor
+    fields:
+      id:
+        resolver: true
+      links:
+        resolver: true
+      icons:
+        resolver: true
+      bundles:
+        resolver: true
+      files:
+        resolver: true
+      tickets:
+        resolver: true
+      commits:
+        resolver: true
+      contributions:
+        resolver: true
+      metrics:
+        resolver: true
   Ticket:
     model:
-      - github.com/usalu/semio/go/repo/graph.Ticket
+      - github.com/usalu/semio/go/repo.Ticket
+    fields:
+      id:
+        resolver: true
+      path:
+        resolver: true
+      uri:
+        resolver: true
+      prompt:
+        resolver: true
+      summary:
+        resolver: true
+      status:
+        resolver: true
+      author:
+        resolver: true
+      model:
+        resolver: true
+      commit:
+        resolver: true
+      date:
+        resolver: true
+      checkpoints:
+        resolver: true
+      bundles:
+        resolver: true
+      files:
+        resolver: true
+      metrics:
+        resolver: true
   Policy:
     model:
-      - github.com/usalu/semio/go/repo/graph.Policy
+      - github.com/usalu/semio/go/repo.Policy
   ViolationKind:
     model:
-      - github.com/usalu/semio/go/repo/graph.ViolationKind
+      - github.com/usalu/semio/go/repo.ViolationKindMeta
   Violation:
     model:
-      - github.com/usalu/semio/go/repo/graph.Violation
+      - github.com/usalu/semio/go/repo.Violation
+    fields:
+      kindInfo:
+        resolver: true
+      file:
+        resolver: true
+      folder:
+        resolver: true
   DefinitionKind:
     model:
-      - github.com/usalu/semio/go/repo/graph.DefinitionKind
+      - github.com/usalu/semio/go/repo.DefinitionKind
   TicketStatus:
     model:
-      - github.com/usalu/semio/go/repo/graph.TicketStatus
+      - github.com/usalu/semio/go/repo.TicketStatus
   ViolationPriority:
     model:
-      - github.com/usalu/semio/go/repo/graph.ViolationPriority
+      - github.com/usalu/semio/go/repo.ViolationPriority
+  RepoMetrics:
+    model:
+      - github.com/usalu/semio/go/repo.RepoMetrics
+  BundleMetrics:
+    model:
+      - github.com/usalu/semio/go/repo.BundleMetrics
+  FolderMetrics:
+    model:
+      - github.com/usalu/semio/go/repo.FolderMetrics
+  FileMetrics:
+    model:
+      - github.com/usalu/semio/go/repo.FileMetrics
+  SectionMetrics:
+    model:
+      - github.com/usalu/semio/go/repo.SectionMetrics
+  DefinitionMetrics:
+    model:
+      - github.com/usalu/semio/go/repo.DefinitionMetrics
+  ContributorMetrics:
+    model:
+      - github.com/usalu/semio/go/repo.ContributorMetrics
+  ContributorIcons:
+    model:
+      - github.com/usalu/semio/go/repo.ContributorIcons
+  ContributorLink:
+    model:
+      - github.com/usalu/semio/go/repo.ContributorLink
+  TicketDate:
+    model:
+      - github.com/usalu/semio/go/repo.TicketDate
+  CheckpointDate:
+    model:
+      - github.com/usalu/semio/go/repo.CheckpointDate
+  CheckpointSectionContrib:
+    model:
+      - github.com/usalu/semio/go/repo.CheckpointSectionContrib
+  CheckpointDefinitionContrib:
+    model:
+      - github.com/usalu/semio/go/repo.CheckpointDefinitionContrib
+  CheckpointMetrics:
+    model:
+      - github.com/usalu/semio/go/repo.CheckpointMetrics
+  TicketMetrics:
+    model:
+      - github.com/usalu/semio/go/repo.TicketMetrics
+  TicketCheckpoint:
+    model:
+      - github.com/usalu/semio/go/repo.TicketCheckpoint
+  TicketBundleContrib:
+    model:
+      - github.com/usalu/semio/go/repo.TicketBundleContrib
+  TicketFileContrib:
+    model:
+      - github.com/usalu/semio/go/repo.TicketFileContrib
+  TicketSectionContrib:
+    model:
+      - github.com/usalu/semio/go/repo.TicketSectionContrib
+  Autofix:
+    model:
+      - github.com/usalu/semio/go/repo.Autofix
+  FileEdit:
+    model:
+      - github.com/usalu/semio/go/repo.FileEdit
+  TextEdit:
+    model:
+      - github.com/usalu/semio/go/repo.TextEdit
+  AnalyzeResult:
+    model:
+      - github.com/usalu/semio/go/repo.AnalyzeResult
+  AnalyzeMetrics:
+    model:
+      - github.com/usalu/semio/go/repo.AnalyzeMetrics
+  PriorityCount:
+    model:
+      - github.com/usalu/semio/go/repo.PriorityCount
+  FixResult:
+    model:
+      - github.com/usalu/semio/go/repo.FixResult
+  ContributorContributions:
+    model:
+      - github.com/usalu/semio/go/repo.ContributorContributions
+  ContributionBundle:
+    model:
+      - github.com/usalu/semio/go/repo.ContributionBundle
+  ContributionFolder:
+    model:
+      - github.com/usalu/semio/go/repo.ContributionFolder
+  ContributionFile:
+    model:
+      - github.com/usalu/semio/go/repo.ContributionFile
+  ContributionSection:
+    model:
+      - github.com/usalu/semio/go/repo.ContributionSection
+  ContributionDefinition:
+    model:
+      - github.com/usalu/semio/go/repo.ContributionDefinition
+  CountMetrics:
+    model:
+      - github.com/usalu/semio/go/repo.CountMetrics
+  LineMetrics:
+    model:
+      - github.com/usalu/semio/go/repo.LineMetrics
+  Range:
+    model:
+      - github.com/usalu/semio/go/repo.Range
+  Position:
+    model:
+      - github.com/usalu/semio/go/repo.Position
+  Commit:
+    model:
+      - github.com/usalu/semio/go/repo.Commit
 
 omit_slice_element_pointers: true

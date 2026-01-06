@@ -31,12 +31,11 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/usalu/semio/go/repo"
-	"github.com/usalu/semio/go/repo/graph"
 )
 
 // #region Init
 
-var executor *graph.Executor
+var executor *repo.Executor
 
 func init() {
 	wd, _ := os.Getwd()
@@ -44,7 +43,7 @@ func init() {
 	repo.SetRootDir(rootDir)
 	ctx := repo.NewRepoContext(rootDir)
 	var err error
-	executor, err = graph.NewExecutorWithContext(rootDir, ctx)
+	executor, err = repo.NewExecutorWithContext(rootDir, ctx)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to initialize GraphQL executor: %v\n", err)
 		os.Exit(1)

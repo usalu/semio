@@ -1,22 +1,24 @@
 # Prompt history
 
-The ticket mechanism is changing. Instead of iterations with the progress command there should be a new consolidated mechanism called: checkpoints.
-A ticket no longer needs tic
+The repo.go was recently refactored to use exclusively graphql and consolidated into a single source of truth.
 
-Refactor everything to be proper graphql.
-E.g. remove the custom wrapping. All json returned is spec-compliant standard graphql.
-"output": {
-    "lines": [
-      {
-        "type": "success",
-        "text": …
-      }
-    ],
-    "exitCode": 0
-  },
-  "data": …
-"
-- The graph must always be fully navigatable. Whenever a node is returned it should not have the id but always return the node.
+Consolidate the graph package with all the files into the repo.go file.
+@executor.go@resolver.go@schema.resolvers.go@repo.go@gqlgen.yml@graph 
+
+Stop renaming type structs. Start to merge them and refactor them into a clean single source of truth. E.g. type Contributor struct and type ContributorYaml struct should be merged into type Contributor. There should be no mismatch between yaml and graphql. Yaml is just a subset and graphql has derived field and linked nodes over resolvers.
+
+The repo (library only), cli, mcp server and vscode extension should be refactored to use graphql.
+The cli uses no server but is only command wise invoked. Depending on the query it resolves more nodes (repo, bundle, folder, file, section, definition, contributor, ticket, policy, violationKind, violation).
+The repo should use gqlgen. The vscode extension should use urql.
+Dont keep anything separate. Consolidate and refactor all of them to have a single source of truth. Only use graphql in the repo. Adjust all api, the vscode extension etc. No backwards compatiblity.
+
+The ticket mechanism is changing. Instead of iterations there should be a new consolidated mechanism called: checkpoints.
+A ticket no longer accepts files on create. Instead whenever a todo is completed a ticket checkpoint is created. The checkpoints needs to have at least one file. Then it checks the git diff on those files. It computes metrics for all sections that are affected by the diff. A section and a definition both have a range (start line, end line). When a diff line is part of the section or definition range then it is considered affected. Definitions are by policy always part of a section. Extend and refactor everything needed to cleanly implement this new mechanism.
+@main.go@main.go@repo.go@gqlgen.yml@schema.graphql@extension.ts@extension.test.ts 
+
+Refactor everything to be proper graphql and make repo only use graphql. Get rid of the legacy api. Adjust all api, the vscode extension etc. No backwards compatiblity.
+The graph must always be fully navigatable. Whenever a node is returned it should not have the id but always return the node. Consolidate all type struct from models.go into repo.go.
+@executor.go@models.go@resolver.go@schema.resolvers.go@repo.go@main.go@gqlgen.yml@schema.graphql@extension.ts@extension.test.ts@graph 
 E.g.
 "bundles": [
   {
@@ -38,6 +40,18 @@ should return a contributor node:
     …
   }
 ]
+E.g. remove the custom wrapping. All json returned is spec-compliant standard graphql.
+"output": {
+    "lines": [
+      {
+        "type": "success",
+        "text": …
+      }
+    ],
+    "exitCode": 0
+  },
+  "data": …
+"
 
 The comment policy wrongly identifies links that have :// as comments
 

@@ -37,9 +37,487 @@ import (
 	"time"
 
 	"github.com/bmatcuk/doublestar/v4"
-	"github.com/usalu/semio/go/repo/graph"
+	"github.com/graphql-go/graphql"
+	"github.com/graphql-go/graphql/language/ast"
+	"github.com/graphql-go/graphql/language/parser"
 	"gopkg.in/yaml.v3"
 )
+
+// #region GraphQL Types
+
+type Node interface {
+	IsNode()
+	GetID() string
+}
+
+type DefinitionKind string
+
+const (
+	DefinitionKindFunction  DefinitionKind = "function"
+	DefinitionKindClass     DefinitionKind = "class"
+	DefinitionKindVariable  DefinitionKind = "variable"
+	DefinitionKindInterface DefinitionKind = "interface"
+	DefinitionKindType      DefinitionKind = "type"
+	DefinitionKindEnum      DefinitionKind = "enum"
+	DefinitionKindMethod    DefinitionKind = "method"
+	DefinitionKindProperty  DefinitionKind = "property"
+)
+
+func (e DefinitionKind) IsValid() bool {
+	switch e {
+	case DefinitionKindFunction, DefinitionKindClass, DefinitionKindVariable,
+		DefinitionKindInterface, DefinitionKindType, DefinitionKindEnum,
+		DefinitionKindMethod, DefinitionKindProperty:
+		return true
+	}
+	return false
+}
+
+func (e DefinitionKind) String() string {
+	return string(e)
+}
+
+type TicketStatus string
+
+const (
+	TicketStatusOpen   TicketStatus = "open"
+	TicketStatusClosed TicketStatus = "closed"
+)
+
+func (e TicketStatus) IsValid() bool {
+	switch e {
+	case TicketStatusOpen, TicketStatusClosed:
+		return true
+	}
+	return false
+}
+
+func (e TicketStatus) String() string {
+	return string(e)
+}
+
+type ViolationPriority string
+
+const (
+	ViolationPriorityHigh   ViolationPriority = "high"
+	ViolationPriorityMedium ViolationPriority = "medium"
+	ViolationPriorityLow    ViolationPriority = "low"
+)
+
+func (e ViolationPriority) IsValid() bool {
+	switch e {
+	case ViolationPriorityHigh, ViolationPriorityMedium, ViolationPriorityLow:
+		return true
+	}
+	return false
+}
+
+func (e ViolationPriority) String() string {
+	return string(e)
+}
+
+type Position struct {
+	Line   int `json:"line"`
+	Column int `json:"column"`
+}
+
+type Range struct {
+	Start Position `json:"start"`
+	End   Position `json:"end"`
+}
+
+type LineMetrics struct {
+	Added   int `yaml:"added" json:"added"`
+	Removed int `yaml:"removed" json:"removed"`
+}
+
+type TextEdit struct {
+	Start   int    `json:"start"`
+	End     int    `json:"end"`
+	NewText string `json:"newText"`
+}
+
+type RepoMetrics struct {
+	Bundles      int `json:"bundles"`
+	Folders      int `json:"folders"`
+	Files        int `json:"files"`
+	Sections     int `json:"sections"`
+	Definitions  int `json:"definitions"`
+	Lines        int `json:"lines"`
+	Contributors int `json:"contributors"`
+	Tickets      int `json:"tickets"`
+	Violations   int `json:"violations"`
+}
+
+type BundleMetrics struct {
+	Folders     int `json:"folders"`
+	Files       int `json:"files"`
+	Sections    int `json:"sections"`
+	Definitions int `json:"definitions"`
+	Lines       int `json:"lines"`
+	Violations  int `json:"violations"`
+}
+
+type FolderMetrics struct {
+	Files      int `json:"files"`
+	Lines      int `json:"lines"`
+	Violations int `json:"violations"`
+}
+
+type FileMetrics struct {
+	Sections    int `json:"sections"`
+	Definitions int `json:"definitions"`
+	Lines       int `json:"lines"`
+}
+
+type SectionMetrics struct {
+	Definitions int `json:"definitions"`
+	Lines       int `json:"lines"`
+	Violations  int `json:"violations"`
+}
+
+type DefinitionMetrics struct {
+	Definitions int `json:"definitions"`
+	Lines       int `json:"lines"`
+	Violations  int `json:"violations"`
+}
+
+type CountMetrics struct {
+	Added   int `json:"added"`
+	Updated int `json:"updated"`
+	Removed int `json:"removed"`
+}
+
+type ContributorMetrics struct {
+	Commits     int `json:"commits"`
+	Tickets     int `json:"tickets"`
+	Bundles     int `json:"bundles"`
+	Folders     int `json:"folders"`
+	Files       int `json:"files"`
+	Sections    int `json:"sections"`
+	Definitions int `json:"definitions"`
+	Lines       int `json:"lines"`
+}
+
+type ContributorIcons struct {
+	Avatar      *string `json:"avatar,omitempty"`
+	AvatarRound *string `json:"avatarRound,omitempty"`
+	Github      *string `json:"github,omitempty"`
+}
+
+type ContributorLink struct {
+	Name string `json:"name"`
+	URL  string `json:"url"`
+}
+
+type TicketDate struct {
+	Created  time.Time  `json:"created"`
+	Finished *time.Time `json:"finished,omitempty"`
+}
+
+type CheckpointDate struct {
+	Created time.Time `json:"created"`
+}
+
+type CheckpointSectionContrib struct {
+	File    string       `json:"file"`
+	Section string       `json:"section"`
+	Range   *Range       `json:"range"`
+	Metrics *LineMetrics `json:"metrics"`
+}
+
+type CheckpointDefinitionContrib struct {
+	File       string       `json:"file"`
+	Section    string       `json:"section"`
+	Definition string       `json:"definition"`
+	Range      *Range       `json:"range"`
+	Metrics    *LineMetrics `json:"metrics"`
+}
+
+type CheckpointMetrics struct {
+	Files       int          `json:"files"`
+	Sections    int          `json:"sections"`
+	Definitions int          `json:"definitions"`
+	Lines       *LineMetrics `json:"lines"`
+}
+
+type TicketMetrics struct {
+	Checkpoints int          `json:"checkpoints"`
+	Files       int          `json:"files"`
+	Sections    int          `json:"sections"`
+	Definitions int          `json:"definitions"`
+	Lines       *LineMetrics `json:"lines"`
+}
+
+type Autofix struct {
+	Description string       `json:"description"`
+	Edits       []FileEdit `json:"edits"`
+}
+
+type FileEdit struct {
+	Path  string     `json:"path"`
+	Edits []TextEdit `json:"edits"`
+}
+
+type AnalyzeMetrics struct {
+	Total       int             `json:"total"`
+	ByPriority  *PriorityCount `json:"byPriority"`
+	Autofixable int             `json:"autofixable"`
+}
+
+type PriorityCount struct {
+	High   int `json:"high"`
+	Medium int `json:"medium"`
+	Low    int `json:"low"`
+}
+
+type Repo struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	Path string `json:"path"`
+}
+
+func (r *Repo) IsNode()       {}
+func (r *Repo) GetID() string { return r.ID }
+
+type Bundle struct {
+	Name        string   `json:"name"`
+	Root        string   `json:"root"`
+	SourceRoot  string   `json:"sourceRoot,omitempty"`
+	ProjectType string   `json:"projectType,omitempty"`
+	Tags        []string `json:"tags,omitempty"`
+}
+
+func (b *Bundle) IsNode()       {}
+func (b *Bundle) GetID() string { return "bundle:" + b.Name }
+
+type Folder struct {
+	ID       string  `json:"id"`
+	Path     string  `json:"path"`
+	URI      string  `json:"uri"`
+	Name     string  `json:"name"`
+	ParentID *string `json:"parentId,omitempty"`
+	BundleID *string `json:"bundleId,omitempty"`
+}
+
+func (f *Folder) IsNode()       {}
+func (f *Folder) GetID() string { return f.ID }
+
+type File struct {
+	ID        string  `json:"id"`
+	Path      string  `json:"path"`
+	URI       string  `json:"uri"`
+	Name      string  `json:"name"`
+	Extension string  `json:"extension"`
+	FolderID  *string `json:"folderId,omitempty"`
+	BundleID  *string `json:"bundleId,omitempty"`
+}
+
+func (f *File) IsNode()       {}
+func (f *File) GetID() string { return f.ID }
+
+type Section struct {
+	Name       string    `json:"name"`
+	StartLine  int       `json:"startLine"`
+	EndLine    int       `json:"endLine"`
+	StartIndex int       `json:"startIndex"`
+	EndIndex   int       `json:"endIndex"`
+	Children   []Section `json:"children,omitempty"`
+}
+
+func (s *Section) IsNode()       {}
+func (s *Section) GetID() string { return "section:" + s.Name }
+
+type Definition struct {
+	Name       string         `json:"name"`
+	Kind       DefinitionKind `json:"kind"`
+	StartLine  int            `json:"startLine"`
+	EndLine    int            `json:"endLine"`
+	StartIndex int            `json:"startIndex"`
+	EndIndex   int            `json:"endIndex"`
+}
+
+func (d *Definition) IsNode()       {}
+func (d *Definition) GetID() string { return "definition:" + d.Name }
+
+type Contributor struct {
+	Github        string                      `yaml:"github" json:"github"`
+	Name          string                      `yaml:"name,omitempty" json:"name,omitempty"`
+	Emails        []string                    `yaml:"emails,omitempty" json:"emails,omitempty"`
+	Links         map[string]string           `yaml:"links,omitempty" json:"links,omitempty"`
+	Contributions ContributorContributionsStorage `yaml:"contributions,omitempty" json:"contributions,omitempty"`
+}
+
+func (c *Contributor) IsNode()       {}
+func (c *Contributor) GetID() string { return "contributor:" + c.Github }
+
+type Commit struct {
+	ID       string    `json:"id"`
+	SHA      string    `json:"sha"`
+	Title    string    `json:"title"`
+	AuthorID *string   `json:"authorId,omitempty"`
+	Date     time.Time `json:"date"`
+}
+
+func (c *Commit) IsNode()       {}
+func (c *Commit) GetID() string { return c.ID }
+
+type Ticket struct {
+	Year        int               `json:"year"`
+	Month       int               `json:"month"`
+	Day         int               `json:"day"`
+	Slug        string            `json:"slug"`
+	Frontmatter TicketFrontmatter `json:"frontmatter"`
+	Content     string            `json:"content"`
+	FolderPath  string            `json:"folderPath"`
+	FilePath    string            `json:"filePath"`
+}
+
+func (t *Ticket) IsNode()       {}
+func (t *Ticket) GetID() string { return fmt.Sprintf("ticket:%d/%02d/%02d/%s", t.Year, t.Month, t.Day, t.Slug) }
+
+type TicketCheckpoint struct {
+	Prompt      string                        `yaml:"prompt" json:"prompt"`
+	Model       string                        `yaml:"model,omitempty" json:"model,omitempty"`
+	Date        CheckpointDateYaml            `yaml:"date" json:"date"`
+	Author      string                        `yaml:"author,omitempty" json:"author,omitempty"`
+	Commit      string                        `yaml:"commit,omitempty" json:"commit,omitempty"`
+	Files       []string                      `yaml:"files" json:"files"`
+	Sections    []CheckpointSectionContrib    `yaml:"sections,omitempty" json:"sections,omitempty"`
+	Definitions []CheckpointDefinitionContrib `yaml:"definitions,omitempty" json:"definitions,omitempty"`
+	Metrics     *CheckpointMetrics            `yaml:"metrics,omitempty" json:"metrics,omitempty"`
+}
+
+type TicketBundleContrib struct {
+	BundleID string                `json:"bundleId"`
+	Files    []TicketFileContrib `json:"files"`
+}
+
+type TicketFileContrib struct {
+	FileID   string                    `json:"fileId"`
+	Sections []TicketSectionContrib `json:"sections"`
+}
+
+type TicketSectionContrib struct {
+	SectionID   string       `json:"sectionId"`
+	Definitions []string     `json:"definitions"`
+	Metrics     *LineMetrics `json:"metrics"`
+}
+
+type Policy struct {
+	ID             string              `json:"id"`
+	Name           string              `json:"name"`
+	Description    *string             `json:"description,omitempty"`
+	Scopes         []string            `json:"scopes"`
+	ViolationKinds []*ViolationKindMeta `json:"violationKinds"`
+}
+
+func (p *Policy) IsNode()       {}
+func (p *Policy) GetID() string { return p.ID }
+
+type ViolationKindMeta struct {
+	Kind        ViolationKind     `json:"kind"`
+	Priority    ViolationPriority `json:"priority"`
+	Reason      string            `json:"reason"`
+	Solution    string            `json:"solution"`
+	Autofixable bool              `json:"autofixable"`
+}
+
+func (v *ViolationKindMeta) IsNode()       {}
+func (v *ViolationKindMeta) GetID() string { return "violationKind:" + string(v.Kind) }
+
+type AnalyzeResult struct {
+	Violations []*Violation    `json:"violations"`
+	Metrics    *AnalyzeMetrics `json:"metrics"`
+}
+
+type FixResult struct {
+	Fixed      int          `json:"fixed"`
+	Remaining  int          `json:"remaining"`
+	Violations []*Violation `json:"violations"`
+}
+
+type ContributorContributions struct {
+	Bundles     []ContributionBundle     `json:"bundles"`
+	Folders     []ContributionFolder     `json:"folders"`
+	Files       []ContributionFile       `json:"files"`
+	Sections    []ContributionSection    `json:"sections"`
+	Definitions []ContributionDefinition `json:"definitions"`
+}
+
+type ContributionBundle struct {
+	BundleID string        `json:"bundleId"`
+	Metrics  *CountMetrics `json:"metrics"`
+}
+
+type ContributionFolder struct {
+	FolderID string        `json:"folderId"`
+	Metrics  *CountMetrics `json:"metrics"`
+}
+
+type ContributionFile struct {
+	FileID  string       `json:"fileId"`
+	Metrics *LineMetrics `json:"metrics"`
+}
+
+type ContributionSection struct {
+	SectionID string       `json:"sectionId"`
+	Metrics   *LineMetrics `json:"metrics"`
+}
+
+type ContributionDefinition struct {
+	DefinitionID string       `json:"definitionId"`
+	Metrics      *LineMetrics `json:"metrics"`
+}
+
+// #region GraphQL Input Types
+
+type FileListInput struct {
+	Updated []string `json:"updated,omitempty"`
+	Created []string `json:"created,omitempty"`
+	Removed []string `json:"removed,omitempty"`
+}
+
+type TicketCreateInput struct {
+	Slug   string  `json:"slug"`
+	Prompt string  `json:"prompt"`
+	Model  *string `json:"model,omitempty"`
+}
+
+type TicketCheckpointInput struct {
+	Year   int      `json:"year"`
+	Month  int      `json:"month"`
+	Day    int      `json:"day"`
+	Slug   string   `json:"slug"`
+	Prompt string   `json:"prompt"`
+	Model  *string  `json:"model,omitempty"`
+	Files  []string `json:"files"`
+}
+
+type TicketFinishInput struct {
+	Year    int     `json:"year"`
+	Month   int     `json:"month"`
+	Day     int     `json:"day"`
+	Slug    string  `json:"slug"`
+	Summary *string `json:"summary,omitempty"`
+}
+
+type TicketReopenInput struct {
+	Year  int    `json:"year"`
+	Month int    `json:"month"`
+	Day   int    `json:"day"`
+	Slug  string `json:"slug"`
+}
+
+type ContributorAddInput struct {
+	Github string   `json:"github"`
+	Name   *string  `json:"name,omitempty"`
+	Emails []string `json:"emails,omitempty"`
+}
+
+// #endregion GraphQL Input Types
+
+// #endregion GraphQL Types
 
 // #region Types
 
@@ -65,7 +543,7 @@ type Scope struct {
 
 type Fix struct {
 	Description string                     `json:"description"`
-	Edits       map[string][]graph.TextEdit `json:"edits"`
+	Edits       map[string][]TextEdit `json:"edits"`
 }
 
 type Violation struct {
@@ -79,35 +557,13 @@ type Violation struct {
 	Autofix *Fix          `json:"autofix,omitempty"`
 }
 
-type Bundle struct {
-	Name        string   `json:"name"`
-	Root        string   `json:"root"`
-	SourceRoot  string   `json:"sourceRoot,omitempty"`
-	ProjectType string   `json:"projectType,omitempty"`
-	Tags        []string `json:"tags,omitempty"`
-}
+func (v *Violation) IsNode()       {}
+func (v *Violation) GetID() string { return v.ID }
 
-type SectionInfo struct {
-	Name       string        `json:"name"`
-	StartLine  int           `json:"startLine"`
-	EndLine    int           `json:"endLine"`
-	StartIndex int           `json:"startIndex"`
-	EndIndex   int           `json:"endIndex"`
-	Children   []SectionInfo `json:"children"`
-}
-
-type DefinitionInfo struct {
-	Name       string              `json:"name"`
-	Kind       graph.DefinitionKind `json:"kind"`
-	StartLine  int                 `json:"startLine"`
-	EndLine    int                 `json:"endLine"`
-	StartIndex int                 `json:"startIndex"`
-	EndIndex   int                 `json:"endIndex"`
-}
 
 type TicketSectionMetrics struct {
 	Definitions []string           `yaml:"definitions,omitempty" json:"definitions,omitempty"`
-	Lines       *graph.LineMetrics `yaml:"lines" json:"lines"`
+	Lines       *LineMetrics `yaml:"lines" json:"lines"`
 }
 
 type TicketFileMetrics struct {
@@ -120,6 +576,8 @@ type TicketBundleMetrics struct {
 
 type TicketBundles map[string]TicketBundleMetrics
 
+// #region Languages
+
 type LanguagePlugin interface {
 	Name() string
 	Extensions() []string
@@ -130,7 +588,7 @@ type LanguagePlugin interface {
 	SupportsHeaders() bool
 	UsesIndentScoping() bool
 	CommentPrefix() string
-	ParseSections(content string) []SectionInfo
+	ParseSections(content string) []Section
 	ParseDefinitions(content string, lines []string) []DefinitionRange
 	FormatSectionStart(name string) string
 	FormatSectionEnd(name string) string
@@ -245,26 +703,26 @@ func (l *BaseLanguage) PolicySectionEndMatch(line string) (bool, string) {
 	return true, name
 }
 
-func (l *BaseLanguage) ParseSections(content string) []SectionInfo {
+func (l *BaseLanguage) ParseSections(content string) []Section {
 	if l.sectionStart == nil {
 		return nil
 	}
 	lines := strings.Split(content, "\n")
-	var stack []*SectionInfo
-	var roots []SectionInfo
+	var stack []*Section
+	var roots []Section
 	charIndex := 0
 	for i, line := range lines {
 		lineStart := charIndex
 		lineNum := i + 1
 		if match := l.sectionStart.FindStringSubmatch(line); match != nil {
 			name := strings.TrimSpace(match[1])
-			section := &SectionInfo{
+			section := &Section{
 				Name:       name,
 				StartLine:  lineNum,
 				EndLine:    -1,
 				StartIndex: lineStart,
 				EndIndex:   -1,
-				Children:   []SectionInfo{},
+				Children:   []Section{},
 			}
 			if len(stack) > 0 {
 				parent := stack[len(stack)-1]
@@ -374,6 +832,9 @@ func (l *BaseLanguage) ScanComments(ctx *PolicyContext, file, content string, li
 	return nil
 }
 
+
+// #region TypeScript
+
 type TypeScriptLanguage struct {
 	BaseLanguage
 }
@@ -402,7 +863,7 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 	var violations []Violation
 	// Find header section to exclude comments within it
 	sections := l.ParseSections(content)
-	var headerSection *SectionInfo
+	var headerSection *Section
 	for i := range sections {
 		if strings.ToLower(sections[i].Name) == "header" {
 			headerSection = &sections[i]
@@ -429,7 +890,7 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 							ViolationCodeCommentJSDoc,
 							file, scanState.BlockCommentStartLine, "", &Fix{
 								Description: "Remove JSDoc comment",
-								Edits: map[string][]graph.TextEdit{
+								Edits: map[string][]TextEdit{
 									file: {{Start: scanState.BlockCommentStartIndex, End: lineStart + j + 2, NewText: ""}},
 								},
 							}))
@@ -439,7 +900,7 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 							ViolationCodeCommentBlock,
 							file, scanState.BlockCommentStartLine, "", &Fix{
 								Description: "Remove block comment",
-								Edits: map[string][]graph.TextEdit{
+								Edits: map[string][]TextEdit{
 									file: {{Start: scanState.BlockCommentStartIndex, End: lineStart + j + 2, NewText: ""}},
 								},
 							}))
@@ -550,7 +1011,7 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 						ViolationCodeCommentInline,
 						file, lineNum, strings.TrimSpace(line[j:]), &Fix{
 							Description: "Remove inline comment",
-							Edits: map[string][]graph.TextEdit{
+							Edits: map[string][]TextEdit{
 								file: {{Start: lineStart + j, End: lineStart + len(line), NewText: ""}},
 							},
 						}))
@@ -563,6 +1024,10 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 	}
 	return violations
 }
+
+// #endregion TypeScript
+
+// #region Go
 
 type GoLanguage struct {
 	BaseLanguage
@@ -643,6 +1108,10 @@ func NewPythonLanguage() *PythonLanguage {
 	}
 }
 
+// #endregion Python
+
+// #region C#
+
 type CSharpLanguage struct {
 	BaseLanguage
 }
@@ -667,6 +1136,10 @@ func NewCSharpLanguage() *CSharpLanguage {
 	}
 }
 
+// #endregion C#
+
+// #region JSON
+
 type JSONLanguage struct {
 	BaseLanguage
 }
@@ -687,10 +1160,14 @@ func (l *JSONLanguage) SupportsDefinitions() bool { return false }
 func (l *JSONLanguage) SupportsComments() bool    { return false }
 func (l *JSONLanguage) SupportsHeaders() bool     { return false }
 
-func (l *JSONLanguage) ParseSections(content string) []SectionInfo {
+func (l *JSONLanguage) ParseSections(content string) []Section {
 	sections, _, _ := ParseJSONSectionsDetailed(content)
 	return sections
 }
+
+// #endregion JSON
+
+// #region Markdown
 
 type MarkdownLanguage struct {
 	BaseLanguage
@@ -717,9 +1194,11 @@ func (l *MarkdownLanguage) SupportsDefinitions() bool { return false }
 func (l *MarkdownLanguage) SupportsComments() bool    { return false }
 func (l *MarkdownLanguage) SupportsHeaders() bool     { return false }
 
-func (l *MarkdownLanguage) ParseSections(content string) []SectionInfo {
+func (l *MarkdownLanguage) ParseSections(content string) []Section {
 	return ParseMarkdownSectionsInternal(content)
 }
+
+// #endregion Markdown
 
 var languageRegistry = []LanguagePlugin{
 	NewTypeScriptLanguage(),
@@ -749,6 +1228,8 @@ func GetLanguageByName(name string) LanguagePlugin {
 	return nil
 }
 
+// #endregion Languages
+
 type TicketIterationFiles struct {
 	Updated []FileLineMetrics `yaml:"updated,omitempty" json:"updated,omitempty"`
 	Created []FileLineMetrics `yaml:"created,omitempty" json:"created,omitempty"`
@@ -757,24 +1238,13 @@ type TicketIterationFiles struct {
 
 type FileLineMetrics struct {
 	Path  string     `yaml:"path" json:"path"`
-	Lines *graph.LineMetrics `yaml:"lines,omitempty" json:"lines,omitempty"`
+	Lines *LineMetrics `yaml:"lines,omitempty" json:"lines,omitempty"`
 }
 
-type TicketDate struct {
-	Started string `yaml:"started,omitempty" json:"started,omitempty"`
-	Ended   string `yaml:"ended,omitempty" json:"ended,omitempty"`
+type CheckpointDateYaml struct {
+	Created string `yaml:"created,omitempty" json:"created,omitempty"`
 }
 
-type TicketIteration struct {
-	Prompt   string                `yaml:"prompt" json:"prompt"`
-	Model    string                `yaml:"model,omitempty" json:"model,omitempty"`
-	Date     TicketDate            `yaml:"date" json:"date"`
-	Author   string                `yaml:"author,omitempty" json:"author,omitempty"`
-	Commit   string                `yaml:"commit,omitempty" json:"commit,omitempty"`
-	Ignore   bool                  `yaml:"ignore,omitempty" json:"ignore,omitempty"`
-	Declared *TicketIterationFiles `yaml:"declared,omitempty" json:"declared,omitempty"`
-	Bundles  TicketBundles         `yaml:"bundles,omitempty" json:"bundles,omitempty"`
-}
 
 type TicketFiles struct {
 	Updated []FileLineMetrics `yaml:"updated,omitempty" json:"updated,omitempty"`
@@ -783,16 +1253,16 @@ type TicketFiles struct {
 }
 
 type TicketFrontmatter struct {
-	Slug       string             `yaml:"slug" json:"slug"`
-	Prompt     string             `yaml:"prompt" json:"prompt"`
-	Summary    string             `yaml:"summary,omitempty" json:"summary,omitempty"`
-	Status     graph.TicketStatus `yaml:"status" json:"status"`
-	Author     string             `yaml:"author,omitempty" json:"author,omitempty"`
-	Date       TicketDateCreated  `yaml:"date" json:"date"`
-	Commit     string             `yaml:"commit,omitempty" json:"commit,omitempty"`
-	Model      string             `yaml:"model,omitempty" json:"model,omitempty"`
-	Ignore     bool               `yaml:"ignore,omitempty" json:"ignore,omitempty"`
-	Iterations []TicketIteration  `yaml:"iterations,omitempty" json:"iterations,omitempty"`
+	Slug        string             `yaml:"slug" json:"slug"`
+	Prompt      string             `yaml:"prompt" json:"prompt"`
+	Summary     string             `yaml:"summary,omitempty" json:"summary,omitempty"`
+	Status      TicketStatus       `yaml:"status" json:"status"`
+	Author      string             `yaml:"author,omitempty" json:"author,omitempty"`
+	Date        TicketDateCreated  `yaml:"date" json:"date"`
+	Commit      string             `yaml:"commit,omitempty" json:"commit,omitempty"`
+	Model       string             `yaml:"model,omitempty" json:"model,omitempty"`
+	Ignore      bool               `yaml:"ignore,omitempty" json:"ignore,omitempty"`
+	Checkpoints []TicketCheckpoint `yaml:"checkpoints,omitempty" json:"checkpoints,omitempty"`
 }
 
 type TicketDateCreated struct {
@@ -800,16 +1270,6 @@ type TicketDateCreated struct {
 	Finished string `yaml:"finished,omitempty" json:"finished,omitempty"`
 }
 
-type Ticket struct {
-	Year        int               `json:"year"`
-	Month       int               `json:"month"`
-	Day         int               `json:"day"`
-	Slug        string            `json:"slug"`
-	Frontmatter TicketFrontmatter `json:"frontmatter"`
-	Content     string            `json:"content"`
-	FolderPath  string            `json:"folderPath"`
-	FilePath    string            `json:"filePath"`
-}
 
 type ViolationKind string
 
@@ -846,246 +1306,238 @@ const (
 	ViolationSketchpadHooksNonTriadic      ViolationKind = "sketchpad:hooks:non-triadic"
 )
 
-type ViolationKindInfo struct {
-	Kind        ViolationKind            `json:"kind"`
-	Priority    graph.ViolationPriority  `json:"priority"`
-	Reason      string                   `json:"reason"`
-	Solution    string                   `json:"solution"`
-	Autofixable bool                     `json:"autofixable"`
-}
-
-var violationKindInfoTable = map[ViolationKind]ViolationKindInfo{
+var violationKindInfoTable = map[ViolationKind]ViolationKindMeta{
 	ViolationCodeHeaderMissingRegion: {
 		Kind:        ViolationCodeHeaderMissingRegion,
-		Priority:    graph.ViolationPriorityLow,
+		Priority:    ViolationPriorityLow,
 		Reason:      "Header region with license, filename, and contributors is required",
 		Solution:    "Add header region with SPDX license, filename, and contributors",
 		Autofixable: false,
 	},
 	ViolationCodeHeaderMissingFilename: {
 		Kind:        ViolationCodeHeaderMissingFilename,
-		Priority:    graph.ViolationPriorityLow,
+		Priority:    ViolationPriorityLow,
 		Reason:      "Filename must be documented in header",
 		Solution:    "Add filename comment in header region",
 		Autofixable: false,
 	},
 	ViolationCodeHeaderMissingContributors: {
 		Kind:        ViolationCodeHeaderMissingContributors,
-		Priority:    graph.ViolationPriorityLow,
+		Priority:    ViolationPriorityLow,
 		Reason:      "Contributors must be documented in header",
 		Solution:    "Add contributor line in header region",
 		Autofixable: false,
 	},
 	ViolationCodeHeaderMissingLicense: {
 		Kind:        ViolationCodeHeaderMissingLicense,
-		Priority:    graph.ViolationPriorityLow,
+		Priority:    ViolationPriorityLow,
 		Reason:      "SPDX license identifier is required",
 		Solution:    "Add SPDX license header comment",
 		Autofixable: false,
 	},
 	ViolationCodeHeaderWrongLicense: {
 		Kind:        ViolationCodeHeaderWrongLicense,
-		Priority:    graph.ViolationPriorityLow,
+		Priority:    ViolationPriorityLow,
 		Reason:      "License must be AGPL-3.0-or-later",
 		Solution:    "Update license to AGPL-3.0-or-later",
 		Autofixable: false,
 	},
 	ViolationCodeSectionEmpty: {
 		Kind:        ViolationCodeSectionEmpty,
-		Priority:    graph.ViolationPriorityLow,
+		Priority:    ViolationPriorityLow,
 		Reason:      "Empty sections should be removed",
 		Solution:    "Remove empty section or add content",
 		Autofixable: true,
 	},
 	ViolationCodeSectionOrphanDefinition: {
 		Kind:        ViolationCodeSectionOrphanDefinition,
-		Priority:    graph.ViolationPriorityLow,
+		Priority:    ViolationPriorityLow,
 		Reason:      "All code must be inside named sections",
 		Solution:    "Move code into an existing section or add a new section",
 		Autofixable: false,
 	},
 	ViolationCodeSectionMissingStartName: {
 		Kind:        ViolationCodeSectionMissingStartName,
-		Priority:    graph.ViolationPriorityLow,
+		Priority:    ViolationPriorityLow,
 		Reason:      "Section start marker must have a name",
 		Solution:    "Add name to section start marker",
 		Autofixable: false,
 	},
 	ViolationCodeSectionMissingEndName: {
 		Kind:        ViolationCodeSectionMissingEndName,
-		Priority:    graph.ViolationPriorityLow,
+		Priority:    ViolationPriorityLow,
 		Reason:      "Section end marker should have matching name",
 		Solution:    "Add matching name to section end marker",
 		Autofixable: true,
 	},
 	ViolationCodeSectionNameMismatch: {
 		Kind:        ViolationCodeSectionNameMismatch,
-		Priority:    graph.ViolationPriorityLow,
+		Priority:    ViolationPriorityLow,
 		Reason:      "Section start and end names must match",
 		Solution:    "Fix section end name to match start name",
 		Autofixable: true,
 	},
 	ViolationCodeCommentInline: {
 		Kind:        ViolationCodeCommentInline,
-		Priority:    graph.ViolationPriorityLow,
+		Priority:    ViolationPriorityLow,
 		Reason:      "Inline comments are forbidden",
 		Solution:    "Remove inline comment",
 		Autofixable: true,
 	},
 	ViolationCodeCommentBlock: {
 		Kind:        ViolationCodeCommentBlock,
-		Priority:    graph.ViolationPriorityLow,
+		Priority:    ViolationPriorityLow,
 		Reason:      "Block comments are forbidden",
 		Solution:    "Remove block comment",
 		Autofixable: true,
 	},
 	ViolationCodeCommentJSDoc: {
 		Kind:        ViolationCodeCommentJSDoc,
-		Priority:    graph.ViolationPriorityLow,
+		Priority:    ViolationPriorityLow,
 		Reason:      "JSDoc comments are forbidden",
 		Solution:    "Remove JSDoc comment",
 		Autofixable: true,
 	},
 	ViolationDevDocsMissingFile: {
 		Kind:        ViolationDevDocsMissingFile,
-		Priority:    graph.ViolationPriorityLow,
+		Priority:    ViolationPriorityLow,
 		Reason:      "File exists but has no section in AGENTS.md Codebase",
 		Solution:    "Add ## 📄 PATH section in AGENTS.md",
 		Autofixable: true,
 	},
 	ViolationDevDocsMissingFolder: {
 		Kind:        ViolationDevDocsMissingFolder,
-		Priority:    graph.ViolationPriorityLow,
+		Priority:    ViolationPriorityLow,
 		Reason:      "Folder exists but has no section in AGENTS.md Codebase",
 		Solution:    "Add ## 📁 PATH section in AGENTS.md",
 		Autofixable: true,
 	},
 	ViolationDevDocsWrongFilePath: {
 		Kind:        ViolationDevDocsWrongFilePath,
-		Priority:    graph.ViolationPriorityLow,
+		Priority:    ViolationPriorityLow,
 		Reason:      "File section path does not match actual file path",
 		Solution:    "Update file section path to match actual path",
 		Autofixable: true,
 	},
 	ViolationDevDocsWrongFolderPath: {
 		Kind:        ViolationDevDocsWrongFolderPath,
-		Priority:    graph.ViolationPriorityLow,
+		Priority:    ViolationPriorityLow,
 		Reason:      "Folder section path does not match actual folder path",
 		Solution:    "Update folder section path to match actual path",
 		Autofixable: true,
 	},
 	ViolationDevDocsWrongFileName: {
 		Kind:        ViolationDevDocsWrongFileName,
-		Priority:    graph.ViolationPriorityLow,
+		Priority:    ViolationPriorityLow,
 		Reason:      "File section name format is incorrect (should be ## 📄 PATH)",
 		Solution:    "Rename section to ## 📄 PATH",
 		Autofixable: true,
 	},
 	ViolationDevDocsWrongFolderName: {
 		Kind:        ViolationDevDocsWrongFolderName,
-		Priority:    graph.ViolationPriorityLow,
+		Priority:    ViolationPriorityLow,
 		Reason:      "Folder section name format is incorrect (should be ## 📁 PATH/)",
 		Solution:    "Rename section to ## 📁 PATH/",
 		Autofixable: true,
 	},
 	ViolationDevDocsWrongFileOrder: {
 		Kind:        ViolationDevDocsWrongFileOrder,
-		Priority:    graph.ViolationPriorityLow,
+		Priority:    ViolationPriorityLow,
 		Reason:      "File sections are not in alphabetical order",
 		Solution:    "Reorder file sections alphabetically",
 		Autofixable: true,
 	},
 	ViolationDevDocsWrongFolderOrder: {
 		Kind:        ViolationDevDocsWrongFolderOrder,
-		Priority:    graph.ViolationPriorityLow,
+		Priority:    ViolationPriorityLow,
 		Reason:      "Folder sections are not in alphabetical order",
 		Solution:    "Reorder folder sections alphabetically",
 		Autofixable: true,
 	},
 	ViolationDevDocsMissingComponent: {
 		Kind:        ViolationDevDocsMissingComponent,
-		Priority:    graph.ViolationPriorityLow,
+		Priority:    ViolationPriorityLow,
 		Reason:      "Package.json workspace has no corresponding component in README.md",
 		Solution:    "Add component section in README.md Components",
 		Autofixable: true,
 	},
 	ViolationDevDocsWrongComponentName: {
 		Kind:        ViolationDevDocsWrongComponentName,
-		Priority:    graph.ViolationPriorityLow,
+		Priority:    ViolationPriorityLow,
 		Reason:      "Component section name does not match workspace name",
 		Solution:    "Rename component section to match workspace",
 		Autofixable: true,
 	},
 	ViolationDevDocsWrongComponentOrder: {
 		Kind:        ViolationDevDocsWrongComponentOrder,
-		Priority:    graph.ViolationPriorityLow,
+		Priority:    ViolationPriorityLow,
 		Reason:      "Component sections are not in package.json workspaces order",
 		Solution:    "Reorder components to match package.json workspaces",
 		Autofixable: true,
 	},
 	ViolationSketchpadImportThirdParty: {
 		Kind:        ViolationSketchpadImportThirdParty,
-		Priority:    graph.ViolationPriorityHigh,
+		Priority:    ViolationPriorityHigh,
 		Reason:      "Third party imports must only be in elements.tsx",
 		Solution:    "Move third party import to elements.tsx and re-export from there",
 		Autofixable: false,
 	},
 	ViolationSketchpadStateMultipleMachines: {
 		Kind:        ViolationSketchpadStateMultipleMachines,
-		Priority:    graph.ViolationPriorityHigh,
+		Priority:    ViolationPriorityHigh,
 		Reason:      "Only one state machine is allowed (createMachine can only be used once)",
 		Solution:    "Consolidate state management into a single state machine",
 		Autofixable: false,
 	},
 	ViolationSketchpadStateCreateActor: {
 		Kind:        ViolationSketchpadStateCreateActor,
-		Priority:    graph.ViolationPriorityHigh,
+		Priority:    ViolationPriorityHigh,
 		Reason:      "createActor is forbidden in sketchpad",
 		Solution:    "Remove createActor usage and use the single state machine instead",
 		Autofixable: false,
 	},
 	ViolationSketchpadStateYjsAppState: {
 		Kind:        ViolationSketchpadStateYjsAppState,
-		Priority:    graph.ViolationPriorityHigh,
+		Priority:    ViolationPriorityHigh,
 		Reason:      "Yjs should only be used for kit data synchronization, not app state",
 		Solution:    "Move app state to the state machine and use Yjs only for kit data sync",
 		Autofixable: false,
 	},
 	ViolationSketchpadStateForbiddenStore: {
 		Kind:        ViolationSketchpadStateForbiddenStore,
-		Priority:    graph.ViolationPriorityHigh,
+		Priority:    ViolationPriorityHigh,
 		Reason:      "Stores outside of State Management sections are forbidden",
 		Solution:    "Move store to a State Management section or remove it",
 		Autofixable: false,
 	},
 	ViolationSketchpadHooksNonTriadic: {
 		Kind:        ViolationSketchpadHooksNonTriadic,
-		Priority:    graph.ViolationPriorityHigh,
+		Priority:    ViolationPriorityHigh,
 		Reason:      "UI elements must use triadic hooks pattern [state, setState, canSetState]=useSELECTOR()",
 		Solution:    "Refactor to use triadic hook pattern with useSELECTOR",
 		Autofixable: false,
 	},
 }
 
-func (k ViolationKind) Info() ViolationKindInfo {
+func (k ViolationKind) Info() ViolationKindMeta {
 	if info, ok := violationKindInfoTable[k]; ok {
 		return info
 	}
-	return ViolationKindInfo{
+	return ViolationKindMeta{
 		Kind:        k,
-		Priority:    graph.ViolationPriorityLow,
+		Priority:    ViolationPriorityLow,
 		Reason:      "Unknown violation",
 		Solution:    "Fix the violation",
 		Autofixable: false,
 	}
 }
 
-type Policy struct {
+type PolicyDef struct {
 	ID          string            `json:"id"`
 	Name        string            `json:"name"`
 	Description string            `json:"description"`
 	Scopes      []string          `json:"scopes"`
-	Priority    graph.ViolationPriority `json:"priority"`
+	Priority    ViolationPriority `json:"priority"`
 	Kinds       []ViolationKind   `json:"kinds"`
 	Run         PolicyFunc        `json:"-"`
 }
@@ -1137,20 +1589,13 @@ type ToolResult struct {
 	Error    string        `json:"error,omitempty"`
 }
 
-type Contributor struct {
-	Github        string                   `json:"github"`
-	Name          string                   `json:"name,omitempty"`
-	Emails        []string                 `json:"emails,omitempty"`
-	Links         map[string]string        `json:"links,omitempty"`
-	Contributions ContributorContributions `json:"contributions,omitempty"`
-}
 
 type ContributorTicket struct {
 	Year     int                `json:"year"`
 	Month    int                `json:"month"`
 	Day      int                `json:"day"`
 	Slug     string             `json:"slug"`
-	Status   graph.TicketStatus `json:"status"`
+	Status   TicketStatus `json:"status"`
 	FilePath string             `json:"filePath,omitempty"`
 }
 
@@ -1159,7 +1604,7 @@ type ContributorCommit struct {
 	Sha   string `json:"sha"`
 }
 
-type ContributorContributions struct {
+type ContributorContributionsStorage struct {
 	Bundles    []string `json:"bundles,omitempty"`
 	Folders     []string `json:"folders,omitempty"`
 	Files       []string `json:"files,omitempty"`
@@ -1167,18 +1612,12 @@ type ContributorContributions struct {
 	Definitions []string `json:"definitions,omitempty"`
 	Tickets     []ContributorTicket `json:"tickets,omitempty"`
 	Commits     []ContributorCommit `json:"commits,omitempty"`
-	Lines       *graph.LineMetrics           `json:"lines,omitempty"`
+	Lines       *LineMetrics           `json:"lines,omitempty"`
 }
 
 // #region Codebase Types
 
-type CountMetrics struct {
-	Added   int `json:"added,omitempty"`
-	Updated int `json:"updated,omitempty"`
-	Removed int `json:"removed,omitempty"`
-}
-
-type BundleMetricsInfo struct {
+type BundleMetricsInternal struct {
 	Folders    int `json:"folders"`
 	Files      int `json:"files"`
 	Sections   int `json:"sections"`
@@ -1187,25 +1626,25 @@ type BundleMetricsInfo struct {
 	Violations int `json:"violations"`
 }
 
-type FolderMetricsInfo struct {
+type FolderMetricsInternal struct {
 	Files      int `json:"files"`
 	Lines      int `json:"lines"`
 	Violations int `json:"violations"`
 }
 
-type FileMetricsInfo struct {
+type FileMetricsInternal struct {
 	Sections   int `json:"sections"`
 	Definitions int `json:"definitions"`
 	Lines      int `json:"lines"`
 }
 
-type SectionMetricsInfo struct {
+type SectionMetricsInternal struct {
 	Definitions int `json:"definitions"`
 	Lines       int `json:"lines"`
 	Violations  int `json:"violations"`
 }
 
-type DefinitionMetricsInfo struct {
+type DefinitionMetricsInternal struct {
 	Definitions int `json:"definitions"`
 	Lines       int `json:"lines"`
 	Violations  int `json:"violations"`
@@ -1239,7 +1678,7 @@ type CodebaseViolation struct {
 	Folders     []ViolationFolder `json:"folders,omitempty"`
 	Files       []ViolationFile   `json:"files,omitempty"`
 	Kind        ViolationKind     `json:"kind"`
-	Priority    graph.ViolationPriority `json:"priority"`
+	Priority    ViolationPriority `json:"priority"`
 	Autofixable bool              `json:"autofixable"`
 	Reason      string            `json:"reason"`
 	Solution    string            `json:"solution"`
@@ -1251,19 +1690,19 @@ type CodebaseBundle struct {
 	URI          string             `json:"uri"`
 	Contributors []string           `json:"contributors,omitempty"`
 	Tickets      []string           `json:"tickets,omitempty"`
-	Metrics      *BundleMetricsInfo `json:"metrics,omitempty"`
+	Metrics      *BundleMetricsInternal `json:"metrics,omitempty"`
 }
 
 type CodebaseFolder struct {
 	ID      string             `json:"id"`
 	Path    string             `json:"path"`
 	URI     string             `json:"uri"`
-	Metrics *FolderMetricsInfo `json:"metrics,omitempty"`
+	Metrics *FolderMetricsInternal `json:"metrics,omitempty"`
 }
 
 type FileViolationRef struct {
 	Kind        ViolationKind     `json:"kind"`
-	Priority    graph.ViolationPriority `json:"priority"`
+	Priority    ViolationPriority `json:"priority"`
 	Autofixable bool              `json:"autofixable"`
 	Solution    string            `json:"solution"`
 }
@@ -1272,7 +1711,7 @@ type CodebaseFile struct {
 	ID         string             `json:"id"`
 	Path       string             `json:"path"`
 	URI        string             `json:"uri"`
-	Metrics    *FileMetricsInfo   `json:"metrics,omitempty"`
+	Metrics    *FileMetricsInternal   `json:"metrics,omitempty"`
 	Violations []FileViolationRef `json:"violations,omitempty"`
 }
 
@@ -1280,20 +1719,14 @@ type CodebaseSection struct {
 	ID      string              `json:"id"`
 	Path    string              `json:"path"`
 	URI     string              `json:"uri"`
-	Metrics *SectionMetricsInfo `json:"metrics,omitempty"`
+	Metrics *SectionMetricsInternal `json:"metrics,omitempty"`
 }
 
 type CodebaseDefinition struct {
 	ID      string                 `json:"id"`
 	Path    string                 `json:"path"`
 	URI     string                 `json:"uri"`
-	Metrics *DefinitionMetricsInfo `json:"metrics,omitempty"`
-}
-
-type ContributorIcons struct {
-	Avatar         string `json:"avatar,omitempty"`
-	AvatarRound    string `json:"avatar-round-90x90,omitempty"`
-	Github         string `json:"github,omitempty"`
+	Metrics *DefinitionMetricsInternal `json:"metrics,omitempty"`
 }
 
 type ContributorBundleContrib struct {
@@ -1308,20 +1741,20 @@ type ContributorFolderContrib struct {
 
 type ContributorFileContrib struct {
 	ID      string       `json:"id"`
-	Metrics *graph.LineMetrics `json:"metrics,omitempty"`
+	Metrics *LineMetrics `json:"metrics,omitempty"`
 }
 
 type ContributorSectionContrib struct {
 	ID      string       `json:"id"`
-	Metrics *graph.LineMetrics `json:"metrics,omitempty"`
+	Metrics *LineMetrics `json:"metrics,omitempty"`
 }
 
 type ContributorDefinitionContrib struct {
 	ID      string       `json:"id"`
-	Metrics *graph.LineMetrics `json:"metrics,omitempty"`
+	Metrics *LineMetrics `json:"metrics,omitempty"`
 }
 
-type ContributorContributionsInfo struct {
+type ContributorContributionsInternal struct {
 	Bundles     []ContributorBundleContrib     `json:"bundles,omitempty"`
 	Folders     []ContributorFolderContrib     `json:"folders,omitempty"`
 	Files       []ContributorFileContrib       `json:"files,omitempty"`
@@ -1329,7 +1762,7 @@ type ContributorContributionsInfo struct {
 	Definitions []ContributorDefinitionContrib `json:"definitions,omitempty"`
 }
 
-type ContributorMetricsInfo struct {
+type ContributorMetricsInternal struct {
 	Commits     int `json:"commits"`
 	Tickets     int `json:"tickets"`
 	Bundles     int `json:"bundles"`
@@ -1348,8 +1781,8 @@ type CodebaseContributor struct {
 	Icons         *ContributorIcons             `json:"icons,omitempty"`
 	Emails        []string                      `json:"emails,omitempty"`
 	Links         map[string]string             `json:"links,omitempty"`
-	Contributions *ContributorContributionsInfo `json:"contributions,omitempty"`
-	Metrics       *ContributorMetricsInfo       `json:"metrics,omitempty"`
+	Contributions *ContributorContributionsInternal `json:"contributions,omitempty"`
+	Metrics       *ContributorMetricsInternal       `json:"metrics,omitempty"`
 }
 
 type TicketDateInfo struct {
@@ -1357,29 +1790,29 @@ type TicketDateInfo struct {
 	Finished string `json:"finished,omitempty"`
 }
 
-type TicketBundleContrib struct {
+type TicketBundleContribInfo struct {
 	ID      string        `json:"id"`
 	Metrics *CountMetrics `json:"metrics,omitempty"`
 }
 
-type TicketFolderContrib struct {
+type TicketFolderContribInfo struct {
 	ID      string        `json:"id"`
 	Metrics *CountMetrics `json:"metrics,omitempty"`
 }
 
-type TicketFileContrib struct {
+type TicketFileContribInfo struct {
 	ID      string        `json:"id"`
 	Metrics *CountMetrics `json:"metrics,omitempty"`
 }
 
-type TicketSectionContrib struct {
+type TicketSectionContribInfo struct {
 	ID      string        `json:"id"`
 	Metrics *CountMetrics `json:"metrics,omitempty"`
 }
 
 type TicketDefinitionContrib struct {
 	ID      string       `json:"id"`
-	Metrics *graph.LineMetrics `json:"metrics,omitempty"`
+	Metrics *LineMetrics `json:"metrics,omitempty"`
 }
 
 type CodebaseTicket struct {
@@ -1395,17 +1828,17 @@ type CodebaseTicket struct {
 	Prompt      string                    `json:"prompt,omitempty"`
 	Model       string                    `json:"model,omitempty"`
 	Author      string                    `json:"author,omitempty"`
-	Status      graph.TicketStatus        `json:"status"`
-	Bundles     []TicketBundleContrib     `json:"bundles,omitempty"`
-	Folders     []TicketFolderContrib     `json:"folders,omitempty"`
-	Files       []TicketFileContrib       `json:"files,omitempty"`
-	Sections    []TicketSectionContrib    `json:"sections,omitempty"`
+	Status      TicketStatus        `json:"status"`
+	Bundles     []TicketBundleContribInfo     `json:"bundles,omitempty"`
+	Folders     []TicketFolderContribInfo     `json:"folders,omitempty"`
+	Files       []TicketFileContribInfo       `json:"files,omitempty"`
+	Sections    []TicketSectionContribInfo    `json:"sections,omitempty"`
 	Definitions []TicketDefinitionContrib `json:"definitions,omitempty"`
 }
 
 type PolicyViolationRef struct {
 	Kind        ViolationKind     `json:"kind"`
-	Priority    graph.ViolationPriority `json:"priority"`
+	Priority    ViolationPriority `json:"priority"`
 	Autofixable bool              `json:"autofixable"`
 	Solution    string            `json:"solution"`
 }
@@ -1849,7 +2282,7 @@ func ReadLines(filePath string) ([]string, error) {
 
 // #region Sections
 
-func ParseCodeSections(content string, languageName string) []SectionInfo {
+func ParseCodeSections(content string, languageName string) []Section {
 	lang := GetLanguageByName(languageName)
 	if lang == nil || !lang.SupportsSections() {
 		return nil
@@ -1857,12 +2290,12 @@ func ParseCodeSections(content string, languageName string) []SectionInfo {
 	return lang.ParseSections(content)
 }
 
-func ParseMarkdownSectionsInternal(content string) []SectionInfo {
+func ParseMarkdownSectionsInternal(content string) []Section {
 	lines := strings.Split(content, "\n")
-	var sections []SectionInfo
+	var sections []Section
 	type stackItem struct {
 		level   int
-		section *SectionInfo
+		section *Section
 	}
 	var stack []stackItem
 	headerRe := regexp.MustCompile(`^(#{1,6})\s+(.+?)\s*$`)
@@ -1886,13 +2319,13 @@ func ParseMarkdownSectionsInternal(content string) []SectionInfo {
 				popped.section.EndIndex = lineStart - 1
 				stack = stack[:len(stack)-1]
 			}
-			section := &SectionInfo{
+			section := &Section{
 				Name:       name,
 				StartLine:  frontmatterLines + i + 1,
 				EndLine:    -1,
 				StartIndex: lineStart,
 				EndIndex:   -1,
-				Children:   []SectionInfo{},
+				Children:   []Section{},
 			}
 			if len(stack) > 0 {
 				parent := stack[len(stack)-1]
@@ -1921,19 +2354,19 @@ type JsonSectionLocation struct {
 	KeyEnd     int
 	ValueStart int
 	ValueEnd   int
-	Section    *SectionInfo
+	Section    *Section
 }
 
 type jsonContext struct {
 	kind      byte
-	section   *SectionInfo
+	section   *Section
 	path      string
 	expectKey bool
 	location  *JsonSectionLocation
 }
 
-func ParseJSONSectionsDetailed(content string) ([]SectionInfo, map[string]*JsonSectionLocation, error) {
-	var sections []SectionInfo
+func ParseJSONSectionsDetailed(content string) ([]Section, map[string]*JsonSectionLocation, error) {
+	var sections []Section
 	locations := make(map[string]*JsonSectionLocation)
 	var stack []jsonContext
 	line := 1
@@ -1997,15 +2430,15 @@ func ParseJSONSectionsDetailed(content string) ([]SectionInfo, map[string]*JsonS
 			if stack[len(stack)-1].path != "" {
 				path = stack[len(stack)-1].path + "/" + pendingKey
 			}
-			section := SectionInfo{
+			section := Section{
 				Name:       pendingKey,
 				StartLine:  pendingKeyLine,
 				EndLine:    -1,
 				StartIndex: pendingKeyStart,
 				EndIndex:   -1,
-				Children:   []SectionInfo{},
+				Children:   []Section{},
 			}
-			var sectionRef *SectionInfo
+			var sectionRef *Section
 			if parent != nil {
 				parent.Children = append(parent.Children, section)
 				sectionRef = &parent.Children[len(parent.Children)-1]
@@ -2101,12 +2534,12 @@ func ParseJSONSectionsDetailed(content string) ([]SectionInfo, map[string]*JsonS
 	return sections, locations, nil
 }
 
-func ParseJSONSections(content string) []SectionInfo {
+func ParseJSONSections(content string) []Section {
 	sections, _, _ := ParseJSONSectionsDetailed(content)
 	return sections
 }
 
-func ParseSections(content string, filePath string) []SectionInfo {
+func ParseSections(content string, filePath string) []Section {
 	language := GetLanguage(filePath)
 	if language == nil {
 		return nil
@@ -2383,7 +2816,7 @@ func jsonReindentEntry(entry string, indent string) string {
 	return strings.Join(lines, "\n")
 }
 
-func FindSection(sections []SectionInfo, name string) *SectionInfo {
+func FindSection(sections []Section, name string) *Section {
 	for i := range sections {
 		if sections[i].Name == name {
 			return &sections[i]
@@ -2401,13 +2834,13 @@ func FindSection(sections []SectionInfo, name string) *SectionInfo {
 
 type PolicyFunc func(ctx *PolicyContext) []Violation
 
-var policies = []Policy{
+var policies = []PolicyDef{
 	{
 		ID:          "code",
 		Name:        "Code",
 		Description: "Validates source file headers, sections, and comments",
 		Scopes:      []string{"**/*.{ts,tsx,py,cs,go}"},
-		Priority:    graph.ViolationPriorityLow,
+		Priority:    ViolationPriorityLow,
 		Kinds: []ViolationKind{
 			ViolationCodeHeaderMissingRegion,
 			ViolationCodeHeaderMissingFilename,
@@ -2430,7 +2863,7 @@ var policies = []Policy{
 		Name:        "DevDocs",
 		Description: "Validates README.md and AGENTS.md documentation structure",
 		Scopes:      []string{"README.md", "AGENTS.md"},
-		Priority:    graph.ViolationPriorityLow,
+		Priority:    ViolationPriorityLow,
 		Kinds: []ViolationKind{
 			ViolationDevDocsMissingFile,
 			ViolationDevDocsMissingFolder,
@@ -2451,7 +2884,7 @@ var policies = []Policy{
 		Name:        "Sketchpad",
 		Description: "Validates sketchpad imports, state management, and hook patterns",
 		Scopes:      []string{"js/sketchpad/**/*.{ts,tsx}"},
-		Priority:    graph.ViolationPriorityHigh,
+		Priority:    ViolationPriorityHigh,
 		Kinds: []ViolationKind{
 			ViolationSketchpadImportThirdParty,
 			ViolationSketchpadStateMultipleMachines,
@@ -2464,16 +2897,16 @@ var policies = []Policy{
 	},
 }
 
-func FindPolicy(id string) (Policy, bool) {
+func FindPolicy(id string) (PolicyDef, bool) {
 	for _, p := range policies {
 		if p.ID == id {
 			return p, true
 		}
 	}
-	return Policy{}, false
+	return PolicyDef{}, false
 }
 
-func GetPolicies() []Policy {
+func GetPolicies() []PolicyDef {
 	return policies
 }
 
@@ -2482,7 +2915,7 @@ type PolicyContext struct {
 	RootDir  string
 	Bundles []Bundle
 	fileCache     map[string]string
-	sectionCache  map[string][]SectionInfo
+	sectionCache  map[string][]Section
 	ignoreCache   map[string]map[int][]string // file -> line -> ignore patterns
 }
 
@@ -2492,7 +2925,7 @@ func NewPolicyContext(scope Scope, bundles []Bundle) *PolicyContext {
 		RootDir:      rootDir,
 		Bundles:     bundles,
 		fileCache:    make(map[string]string),
-		sectionCache: make(map[string][]SectionInfo),
+		sectionCache: make(map[string][]Section),
 		ignoreCache:  make(map[string]map[int][]string),
 	}
 }
@@ -2515,7 +2948,7 @@ func (ctx *PolicyContext) ReadText(filePath string) string {
 	return content
 }
 
-func (ctx *PolicyContext) Sections(filePath string) []SectionInfo {
+func (ctx *PolicyContext) Sections(filePath string) []Section {
 	if sections, ok := ctx.sectionCache[filePath]; ok {
 		return sections
 	}
@@ -2630,7 +3063,7 @@ func randomString(n int) string {
 func CheckPolicies(scope Scope, bundles []Bundle, policyIDs []string) ([]Violation, error) {
 	ctx := NewPolicyContext(scope, bundles)
 	var violations []Violation
-	var policiesToRun []Policy
+	var policiesToRun []PolicyDef
 	if len(policyIDs) > 0 {
 		for _, p := range policies {
 			for _, id := range policyIDs {
@@ -2695,7 +3128,7 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 			continue
 		}
 		sections := ctx.Sections(file)
-		var headerSection *SectionInfo
+		var headerSection *Section
 		for i := range sections {
 			if strings.ToLower(sections[i].Name) == "header" {
 				headerSection = &sections[i]
@@ -2707,7 +3140,7 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 			if headerContent != "" {
 				autofix := &Fix{
 					Description: "Add header section",
-					Edits: map[string][]graph.TextEdit{
+					Edits: map[string][]TextEdit{
 						file: {{Start: 0, End: 0, NewText: headerContent + "\n"}},
 					},
 				}
@@ -2843,8 +3276,8 @@ file, lineNum, strings.TrimSpace(line), nil))
 			}
 		}
 		sections := ctx.Sections(file)
-		var checkSection func(s SectionInfo)
-		checkSection = func(s SectionInfo) {
+		var checkSection func(s Section)
+		checkSection = func(s Section) {
 			sectionContent := content[s.StartIndex:s.EndIndex]
 			sectionLines := strings.Split(sectionContent, "\n")
 			nonEmpty := 0
@@ -2868,8 +3301,8 @@ fmt.Sprintf("%s#%s", file, s.Name), s.StartLine, "", nil))
 			checkSection(s)
 		}
 		covered := make([]bool, len(lines))
-		var markCovered func(s SectionInfo)
-		markCovered = func(s SectionInfo) {
+		var markCovered func(s Section)
+		markCovered = func(s Section) {
 			start := s.StartLine
 			if start < 1 {
 				start = 1
@@ -3254,7 +3687,7 @@ type CodebaseContext struct {
 	Files      []string
 	Violations []Violation
 	Tickets    []Ticket
-	Policies   []Policy
+	Policies   []PolicyDef
 }
 
 func NewCodebaseContext() *CodebaseContext {
@@ -3385,11 +3818,14 @@ func BuildCodebaseBundles(ctx *CodebaseContext) []CodebaseBundle {
 	}
 
 	for _, ticket := range ctx.Tickets {
-		for _, iteration := range ticket.Frontmatter.Iterations {
-			for bundleName := range iteration.Bundles {
-				if _, ok := ticketSets[bundleName]; ok {
-					ticketID := fmt.Sprintf("%04d/%02d/%02d/%s", ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
-					ticketSets[bundleName][ticketID] = struct{}{}
+		ticketID := fmt.Sprintf("%04d/%02d/%02d/%s", ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
+		for _, checkpoint := range ticket.Frontmatter.Checkpoints {
+			for _, filePath := range checkpoint.Files {
+				bundleName := ctx.GetBundleForFile(filePath)
+				if bundleName != "" {
+					if _, ok := ticketSets[bundleName]; ok {
+						ticketSets[bundleName][ticketID] = struct{}{}
+					}
 				}
 			}
 		}
@@ -3414,7 +3850,7 @@ func BuildCodebaseBundles(ctx *CodebaseContext) []CodebaseBundle {
 			URI:          ctx.FileURI(bundle.Root),
 			Contributors: contributors,
 			Tickets:      tickets,
-			Metrics: &BundleMetricsInfo{
+			Metrics: &BundleMetricsInternal{
 				Folders:     len(folderSets[bundle.Name]),
 				Files:       fileCounts[bundle.Name],
 				Sections:    sectionCounts[bundle.Name],
@@ -3427,7 +3863,7 @@ func BuildCodebaseBundles(ctx *CodebaseContext) []CodebaseBundle {
 	return result
 }
 
-func countSections(sections []SectionInfo) int {
+func countSections(sections []Section) int {
 	count := len(sections)
 	for _, s := range sections {
 		count += countSections(s.Children)
@@ -3475,7 +3911,7 @@ func BuildCodebaseFolders(ctx *CodebaseContext) []CodebaseFolder {
 			ID:   id,
 			Path: folder,
 			URI:  ctx.FileURI(folder),
-			Metrics: &FolderMetricsInfo{
+			Metrics: &FolderMetricsInternal{
 				Files:      fileCounts[folder],
 				Lines:      lineCounts[folder],
 				Violations: violationCounts[folder],
@@ -3510,7 +3946,7 @@ func BuildCodebaseFiles(ctx *CodebaseContext) []CodebaseFile {
 			id = bundleName + "/" + filepath.Base(file)
 		}
 
-		var metrics *FileMetricsInfo
+		var metrics *FileMetricsInternal
 		absPath := filepath.Join(rootDir, file)
 		if content, err := ReadTextFile(absPath); err == nil {
 			sections := ParseSections(content, file)
@@ -3522,7 +3958,7 @@ func BuildCodebaseFiles(ctx *CodebaseContext) []CodebaseFile {
 				defs := lang.ParseDefinitions(content, lines)
 				defCount = len(defs)
 			}
-			metrics = &FileMetricsInfo{
+			metrics = &FileMetricsInternal{
 				Sections:    sectionCount,
 				Definitions: defCount,
 				Lines:       len(lines),
@@ -3569,7 +4005,7 @@ func BuildCodebaseSections(ctx *CodebaseContext) []CodebaseSection {
 	return result
 }
 
-func addSections(ctx *CodebaseContext, result *[]CodebaseSection, file, bundleName, content string, sections []SectionInfo, parentPath string) {
+func addSections(ctx *CodebaseContext, result *[]CodebaseSection, file, bundleName, content string, sections []Section, parentPath string) {
 	for _, section := range sections {
 		sectionPath := section.Name
 		if parentPath != "" {
@@ -3594,7 +4030,7 @@ func addSections(ctx *CodebaseContext, result *[]CodebaseSection, file, bundleNa
 			ID:   id,
 			Path: file + "#" + sectionPath,
 			URI:  ctx.FileURI(file) + "#" + sectionPath,
-			Metrics: &SectionMetricsInfo{
+			Metrics: &SectionMetricsInternal{
 				Definitions: defCount,
 				Lines:       section.EndLine - section.StartLine + 1,
 				Violations:  0,
@@ -3638,7 +4074,7 @@ func BuildCodebaseDefinitions(ctx *CodebaseContext) []CodebaseDefinition {
 				ID:   id,
 				Path: defPath,
 				URI:  ctx.FileURI(file) + "§" + def.Name,
-				Metrics: &DefinitionMetricsInfo{
+				Metrics: &DefinitionMetricsInternal{
 					Definitions: 0,
 					Lines:       def.End - def.Start + 1,
 					Violations:  0,
@@ -3665,19 +4101,22 @@ func BuildCodebaseContributors(ctx *CodebaseContext) []CodebaseContributor {
 		if FileExists(avatarPath) || FileExists(avatarRoundPath) {
 			icons = &ContributorIcons{}
 			if FileExists(avatarPath) {
-				icons.Avatar = ctx.FileURI(GetRelativePath(avatarPath))
+				avatar := ctx.FileURI(GetRelativePath(avatarPath))
+				icons.Avatar = &avatar
 			}
 			if FileExists(avatarRoundPath) {
-				icons.AvatarRound = ctx.FileURI(GetRelativePath(avatarRoundPath))
+				avatarRound := ctx.FileURI(GetRelativePath(avatarRoundPath))
+				icons.AvatarRound = &avatarRound
 			}
 			if githubLink, ok := c.Links["github"]; ok {
-				icons.Github = githubLink + ".png"
+				github := githubLink + ".png"
+				icons.Github = &github
 			}
 		}
 
-		var contributions *ContributorContributionsInfo
+		var contributions *ContributorContributionsInternal
 		if len(c.Contributions.Bundles) > 0 || len(c.Contributions.Files) > 0 {
-			contributions = &ContributorContributionsInfo{}
+			contributions = &ContributorContributionsInternal{}
 			for _, b := range c.Contributions.Bundles {
 				contributions.Bundles = append(contributions.Bundles, ContributorBundleContrib{ID: b})
 			}
@@ -3709,7 +4148,7 @@ func BuildCodebaseContributors(ctx *CodebaseContext) []CodebaseContributor {
 			Emails:        c.Emails,
 			Links:         c.Links,
 			Contributions: contributions,
-			Metrics: &ContributorMetricsInfo{
+			Metrics: &ContributorMetricsInternal{
 				Commits:     len(c.Contributions.Commits),
 				Tickets:     len(c.Contributions.Tickets),
 				Bundles:     len(c.Contributions.Bundles),
@@ -3731,23 +4170,29 @@ func BuildCodebaseTickets(ctx *CodebaseContext) []CodebaseTicket {
 		ticketID := fmt.Sprintf("%04d/%02d/%02d/%s", ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
 		ticketPath := fmt.Sprintf("tickets/%04d/%02d/%02d/%s/ticket.md", ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
 
-		var bundleContribs []TicketBundleContrib
-		for _, iteration := range ticket.Frontmatter.Iterations {
-			for bundleName, TicketBundleMetrics := range iteration.Bundles {
-				lines := AggregateBundleLines(TicketBundles{bundleName: TicketBundleMetrics})
-				bundleContribs = append(bundleContribs, TicketBundleContrib{
-					ID: bundleName,
-					Metrics: &CountMetrics{
-						Added: lines.Added,
-					},
-				})
+		bundleFiles := make(map[string]int)
+		for _, checkpoint := range ticket.Frontmatter.Checkpoints {
+			for _, filePath := range checkpoint.Files {
+				bundleName := ctx.GetBundleForFile(filePath)
+				if bundleName != "" {
+					bundleFiles[bundleName]++
+				}
 			}
+		}
+		var bundleContribs []TicketBundleContribInfo
+		for bundleName, fileCount := range bundleFiles {
+			bundleContribs = append(bundleContribs, TicketBundleContribInfo{
+				ID: bundleName,
+				Metrics: &CountMetrics{
+					Added: fileCount,
+				},
+			})
 		}
 
 		model := ticket.Frontmatter.Model
-		for _, iteration := range ticket.Frontmatter.Iterations {
-			if iteration.Model != "" {
-				model = iteration.Model
+		for _, checkpoint := range ticket.Frontmatter.Checkpoints {
+			if checkpoint.Model != "" {
+				model = checkpoint.Model
 			}
 		}
 
@@ -3978,10 +4423,7 @@ func GetTicketFilePath(year, month, day int, slug string) string {
 	return filepath.Join(GetTicketPath(year, month, day, slug), "ticket.md")
 }
 
-func CreateTicket(slug, prompt, model string, files []string) (*Ticket, error) {
-	if len(files) == 0 {
-		return nil, fmt.Errorf("at least one file is required to create a ticket")
-	}
+func CreateTicket(slug, prompt, model string) (*Ticket, error) {
 	now := time.Now()
 	year, month, day := FormatDate(now)
 	normalizedSlug := Slugify(slug)
@@ -3992,29 +4434,15 @@ func CreateTicket(slug, prompt, model string, files []string) (*Ticket, error) {
 	filePath := GetTicketFilePath(year, month, day, normalizedSlug)
 	gitAuthor := GetGitAuthor()
 	gitCommit := GetGitCommit()
-	var declaredFiles *TicketIterationFiles
-	if len(files) > 0 {
-		declaredFiles = &TicketIterationFiles{}
-		for _, f := range files {
-			declaredFiles.Updated = append(declaredFiles.Updated, FileLineMetrics{Path: f})
-		}
-	}
-	firstIteration := TicketIteration{
-		Prompt: prompt,
-		Model:  model,
-		Date:   TicketDate{Started: ISOTimestamp()},
-		Author: gitAuthor,
-		Declared: declaredFiles,
-	}
 	frontmatter := TicketFrontmatter{
-		Slug:       normalizedSlug,
-		Prompt:     prompt,
-		Status:     graph.TicketStatusOpen,
-		Author:     gitAuthor,
-		Date:       TicketDateCreated{Created: ISOTimestamp()},
-		Commit:     gitCommit,
-		Model:      model,
-		Iterations: []TicketIteration{firstIteration},
+		Slug:        normalizedSlug,
+		Prompt:      prompt,
+		Status:      TicketStatusOpen,
+		Author:      gitAuthor,
+		Date:        TicketDateCreated{Created: ISOTimestamp()},
+		Commit:      gitCommit,
+		Model:       model,
+		Checkpoints: []TicketCheckpoint{},
 	}
 	content := `# Previously
 
@@ -4176,36 +4604,176 @@ func ListTickets(year, month, day *int) ([]Ticket, error) {
 	return tickets, nil
 }
 
-func ProgressIteration(ticket *Ticket, prompt, model string) error {
+func CreateCheckpoint(ticket *Ticket, prompt, model string, files []string) error {
+	if len(files) == 0 {
+		return fmt.Errorf("at least one file is required to create a checkpoint")
+	}
 	baseCommit := ticket.Frontmatter.Commit
-	for i := len(ticket.Frontmatter.Iterations) - 1; i >= 0; i-- {
-		if ticket.Frontmatter.Iterations[i].Commit != "" {
-			baseCommit = ticket.Frontmatter.Iterations[i].Commit
+	for i := len(ticket.Frontmatter.Checkpoints) - 1; i >= 0; i-- {
+		if ticket.Frontmatter.Checkpoints[i].Commit != "" {
+			baseCommit = ticket.Frontmatter.Checkpoints[i].Commit
 			break
 		}
 	}
 	if baseCommit == "" {
-		return fmt.Errorf("no base commit found for iteration")
+		return fmt.Errorf("no base commit found for checkpoint")
 	}
-	iterationFiles, _, err := GetGitDiffFileLineMetrics(baseCommit, "", nil)
+	diffLines, err := GetGitDiffLines(baseCommit, "", files)
 	if err != nil {
 		return err
 	}
-	if len(iterationFiles.Updated) == 0 && len(iterationFiles.Created) == 0 && len(iterationFiles.Removed) == 0 {
-		return fmt.Errorf("no git changes found since last commit")
+	if len(diffLines) == 0 {
+		return fmt.Errorf("no git changes found in specified files since last commit")
 	}
-	bundles := GetProjects()
+	sections, definitions := ComputeAffectedRanges(files, diffLines)
+	totalLines := LineMetrics{}
+	for _, s := range sections {
+		if s.Metrics != nil {
+			totalLines.Added += s.Metrics.Added
+			totalLines.Removed += s.Metrics.Removed
+		}
+	}
 	now := ISOTimestamp()
-	iteration := TicketIteration{
-		Prompt:  prompt,
-		Model:   model,
-		Date:    TicketDate{Started: now, Ended: now},
-		Author:  GetGitAuthor(),
-		Commit:  GetGitCommit(),
-		Bundles: BuildTicketBundlesWithChangedDefs(&iterationFiles, bundles, baseCommit),
+	checkpoint := TicketCheckpoint{
+		Prompt:      prompt,
+		Model:       model,
+		Date:        CheckpointDateYaml{Created: now},
+		Author:      GetGitAuthor(),
+		Commit:      GetGitCommit(),
+		Files:       files,
+		Sections:    sections,
+		Definitions: definitions,
+		Metrics: &CheckpointMetrics{
+			Files:       len(files),
+			Sections:    len(sections),
+			Definitions: len(definitions),
+			Lines:       &totalLines,
+		},
 	}
-	ticket.Frontmatter.Iterations = append(ticket.Frontmatter.Iterations, iteration)
+	ticket.Frontmatter.Checkpoints = append(ticket.Frontmatter.Checkpoints, checkpoint)
 	return SaveTicket(ticket)
+}
+
+func GetGitDiffLines(baseCommit, headCommit string, paths []string) (map[string][]int, error) {
+	if baseCommit == "" {
+		return nil, fmt.Errorf("base commit is required")
+	}
+	args := BuildGitDiffArgs("-U0", baseCommit, headCommit, paths)
+	stdout, stderr, exitCode := ExecCommand("git", args, "")
+	if exitCode != 0 {
+		return nil, fmt.Errorf("git diff failed: %s", strings.TrimSpace(stderr))
+	}
+	result := make(map[string][]int)
+	var currentFile string
+	lineRegex := regexp.MustCompile(`^@@\s+-\d+(?:,\d+)?\s+\+(\d+)(?:,(\d+))?\s+@@`)
+	for _, line := range strings.Split(stdout, "\n") {
+		if strings.HasPrefix(line, "+++ b/") {
+			currentFile = strings.TrimPrefix(line, "+++ b/")
+			if result[currentFile] == nil {
+				result[currentFile] = []int{}
+			}
+		} else if strings.HasPrefix(line, "@@") && currentFile != "" {
+			match := lineRegex.FindStringSubmatch(line)
+			if match != nil {
+				startLine, _ := strconv.Atoi(match[1])
+				count := 1
+				if match[2] != "" {
+					count, _ = strconv.Atoi(match[2])
+				}
+				for i := 0; i < count; i++ {
+					result[currentFile] = append(result[currentFile], startLine+i)
+				}
+			}
+		}
+	}
+	return result, nil
+}
+
+func ComputeAffectedRanges(files []string, diffLines map[string][]int) ([]CheckpointSectionContrib, []CheckpointDefinitionContrib) {
+	var sections []CheckpointSectionContrib
+	var definitions []CheckpointDefinitionContrib
+	for _, filePath := range files {
+		changedLines, ok := diffLines[filePath]
+		if !ok || len(changedLines) == 0 {
+			continue
+		}
+		content, err := ReadTextFile(filepath.Join(GetRootDir(), filePath))
+		if err != nil {
+			continue
+		}
+		lines := strings.Split(content, "\n")
+		lang := GetLanguage(filePath)
+		if lang == nil {
+			continue
+		}
+		fileSections := lang.ParseSections(content)
+		fileDefs := lang.ParseDefinitions(content, lines)
+		affectedSections := findAffectedSections(filePath, fileSections, changedLines, "")
+		sections = append(sections, affectedSections...)
+		for _, def := range fileDefs {
+			defLines := computeLinesInRange(changedLines, def.Start, def.End)
+			if len(defLines) > 0 {
+				sectionName := findSectionForLine(fileSections, def.Start)
+				definitions = append(definitions, CheckpointDefinitionContrib{
+					File:       filePath,
+					Section:    sectionName,
+					Definition: def.Name,
+					Range:      &Range{Start: Position{Line: def.Start}, End: Position{Line: def.End}},
+					Metrics:    &LineMetrics{Added: len(defLines)},
+				})
+			}
+		}
+	}
+	return sections, definitions
+}
+
+func findAffectedSections(filePath string, sections []Section, changedLines []int, parentPath string) []CheckpointSectionContrib {
+	var result []CheckpointSectionContrib
+	for _, section := range sections {
+		sectionPath := section.Name
+		if parentPath != "" {
+			sectionPath = parentPath + "/" + section.Name
+		}
+		linesInSection := computeLinesInRange(changedLines, section.StartLine, section.EndLine)
+		if len(linesInSection) > 0 {
+			result = append(result, CheckpointSectionContrib{
+				File:    filePath,
+				Section: sectionPath,
+				Range:   &Range{Start: Position{Line: section.StartLine}, End: Position{Line: section.EndLine}},
+				Metrics: &LineMetrics{Added: len(linesInSection)},
+			})
+		}
+		if len(section.Children) > 0 {
+			childResults := findAffectedSections(filePath, section.Children, changedLines, sectionPath)
+			result = append(result, childResults...)
+		}
+	}
+	return result
+}
+
+func computeLinesInRange(changedLines []int, startLine, endLine int) []int {
+	var result []int
+	for _, line := range changedLines {
+		if line >= startLine && line <= endLine {
+			result = append(result, line)
+		}
+	}
+	return result
+}
+
+func findSectionForLine(sections []Section, line int) string {
+	for _, section := range sections {
+		if line >= section.StartLine && line <= section.EndLine {
+			if len(section.Children) > 0 {
+				childSection := findSectionForLine(section.Children, line)
+				if childSection != "" {
+					return section.Name + "/" + childSection
+				}
+			}
+			return section.Name
+		}
+	}
+	return ""
 }
 
 func CollectTicketFilePaths(files *TicketIterationFiles) []string {
@@ -4281,15 +4849,15 @@ func BuildGitDiffArgs(flag, baseCommit, headCommit string, paths []string) []str
 	return append([]string{"diff", flag, "--no-renames", baseCommit, headCommit, "--"}, paths...)
 }
 
-func GetGitDiffFileLineMetrics(baseCommit, headCommit string, paths []string) (TicketIterationFiles, graph.LineMetrics, error) {
+func GetGitDiffFileLineMetrics(baseCommit, headCommit string, paths []string) (TicketIterationFiles, LineMetrics, error) {
 	if baseCommit == "" {
-		return TicketIterationFiles{}, graph.LineMetrics{}, fmt.Errorf("base commit is required")
+		return TicketIterationFiles{}, LineMetrics{}, fmt.Errorf("base commit is required")
 	}
 	stdout, stderr, exitCode := ExecCommand("git", BuildGitDiffArgs("--numstat", baseCommit, headCommit, paths), "")
 	if exitCode != 0 {
-		return TicketIterationFiles{}, graph.LineMetrics{}, fmt.Errorf("git diff numstat failed: %s", strings.TrimSpace(stderr))
+		return TicketIterationFiles{}, LineMetrics{}, fmt.Errorf("git diff numstat failed: %s", strings.TrimSpace(stderr))
 	}
-	lineMetricsByPath := map[string]graph.LineMetrics{}
+	lineMetricsByPath := map[string]LineMetrics{}
 	for _, line := range strings.Split(strings.TrimSpace(stdout), "\n") {
 		if strings.TrimSpace(line) == "" {
 			continue
@@ -4310,11 +4878,11 @@ func GetGitDiffFileLineMetrics(baseCommit, headCommit string, paths []string) (T
 				removed = parsed
 			}
 		}
-		lineMetricsByPath[NormalizePath(parts[2])] = graph.LineMetrics{Added: added, Removed: removed}
+		lineMetricsByPath[NormalizePath(parts[2])] = LineMetrics{Added: added, Removed: removed}
 	}
 	stdout, stderr, exitCode = ExecCommand("git", BuildGitDiffArgs("--name-status", baseCommit, headCommit, paths), "")
 	if exitCode != 0 {
-		return TicketIterationFiles{}, graph.LineMetrics{}, fmt.Errorf("git diff name-status failed: %s", strings.TrimSpace(stderr))
+		return TicketIterationFiles{}, LineMetrics{}, fmt.Errorf("git diff name-status failed: %s", strings.TrimSpace(stderr))
 	}
 	statusByPath := map[string]string{}
 	for _, line := range strings.Split(strings.TrimSpace(stdout), "\n") {
@@ -4333,7 +4901,7 @@ func GetGitDiffFileLineMetrics(baseCommit, headCommit string, paths []string) (T
 		}
 	}
 	if len(statusByPath) == 0 && len(lineMetricsByPath) == 0 {
-		return TicketIterationFiles{}, graph.LineMetrics{}, nil
+		return TicketIterationFiles{}, LineMetrics{}, nil
 	}
 	resultPaths := make([]string, 0, len(statusByPath))
 	for path := range statusByPath {
@@ -4341,7 +4909,7 @@ func GetGitDiffFileLineMetrics(baseCommit, headCommit string, paths []string) (T
 	}
 	sort.Strings(resultPaths)
 	files := TicketIterationFiles{}
-	total := graph.LineMetrics{}
+	total := LineMetrics{}
 	for i := 0; i < len(resultPaths); i++ {
 		path := resultPaths[i]
 		status := statusByPath[path]
@@ -4421,7 +4989,7 @@ func BuildTicketBundles(files *TicketIterationFiles, bundles []Bundle, baseCommi
 				defs := ExtractDefinitionsFromSection(f.Path, sectionName)
 				TicketFileMetrics.Sections[sectionName] = TicketSectionMetrics{
 					Definitions: defs,
-					Lines:       &graph.LineMetrics{Added: lines.Added, Removed: lines.Removed},
+					Lines:       &LineMetrics{Added: lines.Added, Removed: lines.Removed},
 				}
 			}
 		}
@@ -4472,7 +5040,7 @@ func BuildTicketBundlesWithChangedDefs(files *TicketIterationFiles, bundles []Bu
 				defs := ExtractChangedDefinitionsFromSection(f.Path, sectionName, changedLines)
 				TicketFileMetrics.Sections[sectionName] = TicketSectionMetrics{
 					Definitions: defs,
-					Lines:       &graph.LineMetrics{Added: lines.Added, Removed: lines.Removed},
+					Lines:       &LineMetrics{Added: lines.Added, Removed: lines.Removed},
 				}
 			}
 		}
@@ -4497,8 +5065,8 @@ func BuildTicketBundlesWithChangedDefs(files *TicketIterationFiles, bundles []Bu
 	return result
 }
 
-func AggregateBundleLines(bundles TicketBundles) graph.LineMetrics {
-	var total graph.LineMetrics
+func AggregateBundleLines(bundles TicketBundles) LineMetrics {
+	var total LineMetrics
 	for _, bundleMetrics := range bundles {
 		for _, fileMetrics := range bundleMetrics.Files {
 			for _, sectionMetrics := range fileMetrics.Sections {
@@ -4512,7 +5080,7 @@ func AggregateBundleLines(bundles TicketBundles) graph.LineMetrics {
 	return total
 }
 
-func GetGitDiffSectionLineMetrics(baseCommit, endCommit, filePath string) map[string]graph.LineMetrics {
+func GetGitDiffSectionLineMetrics(baseCommit, endCommit, filePath string) map[string]LineMetrics {
 	absPath := filepath.Join(rootDir, filePath)
 	content, err := ReadTextFile(absPath)
 	if err != nil {
@@ -4557,7 +5125,7 @@ func GetGitDiffSectionLineMetrics(baseCommit, endCommit, filePath string) map[st
 		return nil
 	}
 	lineChanges := parseGitDiffHunks(string(diffOut))
-	result := make(map[string]graph.LineMetrics)
+	result := make(map[string]LineMetrics)
 	flatSections := flattenSections(sections)
 	guessedSection := GuessSectionName(filePath)
 	for _, change := range lineChanges {
@@ -4609,10 +5177,10 @@ func parseGitDiffHunks(diff string) []lineChange {
 	return changes
 }
 
-func flattenSections(sections []SectionInfo) []SectionInfo {
-	var result []SectionInfo
-	var flatten func(secs []SectionInfo)
-	flatten = func(secs []SectionInfo) {
+func flattenSections(sections []Section) []Section {
+	var result []Section
+	var flatten func(secs []Section)
+	flatten = func(secs []Section) {
 		for _, s := range secs {
 			result = append(result, s)
 			flatten(s.Children)
@@ -4657,7 +5225,7 @@ func ExtractChangedDefinitionsFromSection(filePath, sectionName string, changedL
 		return nil
 	}
 	sections := lang.ParseSections(content)
-	var section *SectionInfo
+	var section *Section
 	flatSections := flattenSections(sections)
 	for i := range flatSections {
 		if flatSections[i].Name == sectionName {
@@ -4701,7 +5269,7 @@ func ExtractDefinitionsFromSection(filePath, sectionName string) []string {
 		return nil
 	}
 	sections := lang.ParseSections(content)
-	var section *SectionInfo
+	var section *Section
 	flatSections := flattenSections(sections)
 	for i := range flatSections {
 		if flatSections[i].Name == sectionName {
@@ -4731,60 +5299,20 @@ func ExtractDefinitionsFromSection(filePath, sectionName string) []string {
 	return defs
 }
 
-func EndIteration(ticket *Ticket) error {
-	if len(ticket.Frontmatter.Iterations) == 0 {
-		return fmt.Errorf("no active iteration to end")
-	}
-	lastIdx := len(ticket.Frontmatter.Iterations) - 1
-	last := &ticket.Frontmatter.Iterations[lastIdx]
-	if last.Date.Ended != "" {
-		return fmt.Errorf("last iteration already ended")
-	}
-	baseCommit := ticket.Frontmatter.Commit
-	for i := lastIdx - 1; i >= 0; i-- {
-		if ticket.Frontmatter.Iterations[i].Commit != "" {
-			baseCommit = ticket.Frontmatter.Iterations[i].Commit
-			break
-		}
-	}
-	declaredPaths := CollectTicketFilePaths(last.Declared)
-	iterationFiles, _, err := GetGitDiffFileLineMetrics(baseCommit, "", declaredPaths)
-	if err != nil {
-		return err
-	}
-	if len(iterationFiles.Updated) == 0 && len(iterationFiles.Created) == 0 && len(iterationFiles.Removed) == 0 {
-		return fmt.Errorf("iteration requires at least one file")
-	}
-	bundles := GetProjects()
-	last.Date.Ended = ISOTimestamp()
-	last.Commit = GetGitCommit()
-	last.Bundles = BuildTicketBundles(&iterationFiles, bundles, baseCommit)
-	return SaveTicket(ticket)
-}
-
 func FinishTicket(ticket *Ticket) error {
-	if len(ticket.Frontmatter.Iterations) > 0 {
-		last := ticket.Frontmatter.Iterations[len(ticket.Frontmatter.Iterations)-1]
-		if last.Date.Ended == "" {
-			return fmt.Errorf("cannot finish ticket with unfinished iteration")
-		}
+	if len(ticket.Frontmatter.Checkpoints) == 0 {
+		return fmt.Errorf("cannot finish ticket without any checkpoints")
 	}
-	ticket.Frontmatter.Status = graph.TicketStatusClosed
+	ticket.Frontmatter.Status = TicketStatusClosed
 	ticket.Frontmatter.Date.Finished = ISOTimestamp()
 	return SaveTicket(ticket)
 }
 
 func ReopenTicket(ticket *Ticket) error {
-	if ticket.Frontmatter.Status == graph.TicketStatusOpen {
+	if ticket.Frontmatter.Status == TicketStatusOpen {
 		return fmt.Errorf("ticket is already open")
 	}
-	if len(ticket.Frontmatter.Iterations) > 0 {
-		last := ticket.Frontmatter.Iterations[len(ticket.Frontmatter.Iterations)-1]
-		if last.Date.Ended == "" {
-			return fmt.Errorf("cannot reopen ticket with unfinished iteration")
-		}
-	}
-	ticket.Frontmatter.Status = graph.TicketStatusOpen
+	ticket.Frontmatter.Status = TicketStatusOpen
 	ticket.Frontmatter.Date.Finished = ""
 	return SaveTicket(ticket)
 }
@@ -4876,7 +5404,7 @@ func CreateContributor(github string) (*Contributor, error) {
 	contributor := &Contributor{
 		Github:        github,
 		Links:         map[string]string{"github": fmt.Sprintf("https://github.com/%s", github)},
-		Contributions: ContributorContributions{},
+		Contributions: ContributorContributionsStorage{},
 	}
 	if err := SaveContributor(contributor); err != nil {
 		return nil, err
@@ -4917,7 +5445,7 @@ type ContributorContributionState struct {
 	Regions     map[string]struct{}
 	Definitions map[string]struct{}
 	Commits     map[string]ContributorCommit
-	Lines       graph.LineMetrics
+	Lines       LineMetrics
 }
 
 func ParseContributorIdentity(value string) (string, string, bool) {
@@ -4974,7 +5502,7 @@ func GetGitCommitTitle(sha string) string {
 	return strings.TrimSpace(stdout)
 }
 
-func addSectionsToContributor(state *ContributorContributionState, filePath string, section SectionInfo) {
+func addSectionsToContributor(state *ContributorContributionState, filePath string, section Section) {
 	regionKey := filePath + "#" + section.Name
 	state.Regions[regionKey] = struct{}{}
 	for _, child := range section.Children {
@@ -4982,7 +5510,7 @@ func addSectionsToContributor(state *ContributorContributionState, filePath stri
 	}
 }
 
-func findSectionForDefinition(sections []SectionInfo, defStart, defEnd int, parentPath string) string {
+func findSectionForDefinition(sections []Section, defStart, defEnd int, parentPath string) string {
 	for _, section := range sections {
 		if defStart >= section.StartLine && defEnd <= section.EndLine {
 			sectionPath := section.Name
@@ -5025,7 +5553,7 @@ func ListContributors() ([]Contributor, error) {
 	nameToGithub := map[string]string{}
 	stateByGithub := map[string]*ContributorContributionState{}
 	for i := range contributors {
-		contributors[i].Contributions = ContributorContributions{}
+		contributors[i].Contributions = ContributorContributionsStorage{}
 		stateByGithub[contributors[i].Github] = &ContributorContributionState{
 			Tickets:     map[string]ContributorTicket{},
 			Files:       map[string]struct{}{},
@@ -5055,25 +5583,24 @@ func ListContributors() ([]Contributor, error) {
 				ticketContributors[github] = struct{}{}
 			}
 		}
-		for _, iteration := range ticket.Frontmatter.Iterations {
-			if name, email, ok := ParseContributorIdentity(iteration.Author); ok {
+		for _, checkpoint := range ticket.Frontmatter.Checkpoints {
+			if name, email, ok := ParseContributorIdentity(checkpoint.Author); ok {
 				if github := ResolveContributorGithub(name, email, emailToGithub, nameToGithub); github != "" {
 					ticketContributors[github] = struct{}{}
-					if iteration.Bundles != nil {
-						iterationLines := AggregateBundleLines(iteration.Bundles)
-						stateByGithub[github].Lines.Added += iterationLines.Added
-						stateByGithub[github].Lines.Removed += iterationLines.Removed
+					if checkpoint.Metrics != nil && checkpoint.Metrics.Lines != nil {
+						stateByGithub[github].Lines.Added += checkpoint.Metrics.Lines.Added
+						stateByGithub[github].Lines.Removed += checkpoint.Metrics.Lines.Removed
 					}
-					if iteration.Commit != "" {
-						commitTitle := commitTitleCache[iteration.Commit]
+					if checkpoint.Commit != "" {
+						commitTitle := commitTitleCache[checkpoint.Commit]
 						if commitTitle == "" {
-							commitTitle = GetGitCommitTitle(iteration.Commit)
+							commitTitle = GetGitCommitTitle(checkpoint.Commit)
 							if commitTitle == "" {
-								commitTitle = iteration.Commit
+								commitTitle = checkpoint.Commit
 							}
-							commitTitleCache[iteration.Commit] = commitTitle
+							commitTitleCache[checkpoint.Commit] = commitTitle
 						}
-						stateByGithub[github].Commits[iteration.Commit] = ContributorCommit{Title: commitTitle, Sha: iteration.Commit}
+						stateByGithub[github].Commits[checkpoint.Commit] = ContributorCommit{Title: commitTitle, Sha: checkpoint.Commit}
 					}
 				}
 			}
@@ -5426,9 +5953,8 @@ type repoContext struct {
 	rootDir string
 }
 
-var _ graph.RepoContext = (*repoContext)(nil)
 
-func NewRepoContext(dir string) graph.RepoContext {
+func NewRepoContext(dir string) *repoContext {
 	return &repoContext{rootDir: dir}
 }
 
@@ -5436,117 +5962,46 @@ func (c *repoContext) GetRootDir() string {
 	return c.rootDir
 }
 
-func (c *repoContext) GetBundles() []*graph.Bundle {
+func (c *repoContext) GetBundles() []*Bundle {
 	bundles := GetProjects()
-	result := make([]*graph.Bundle, len(bundles))
-	for i, b := range bundles {
-		result[i] = &graph.Bundle{
-			ID:   fmt.Sprintf("bundle:%s", b.Name),
-			Name: b.Name,
-			Root: b.Root,
-			URI:  fmt.Sprintf("file://%s/%s", c.rootDir, b.Root),
-			Tags: b.Tags,
-		}
+	result := make([]*Bundle, len(bundles))
+	for i := range bundles {
+		result[i] = &bundles[i]
 	}
 	return result
 }
 
-func (c *repoContext) GetContributors() ([]*graph.Contributor, error) {
+func (c *repoContext) GetContributors() ([]*Contributor, error) {
 	contributors, err := ListContributors()
 	if err != nil {
 		return nil, err
 	}
-	result := make([]*graph.Contributor, len(contributors))
-	for i, contrib := range contributors {
-		var links []graph.ContributorLink
-		for name, url := range contrib.Links {
-			links = append(links, graph.ContributorLink{Name: name, URL: url})
-		}
-		var namePtr *string
-		if contrib.Name != "" {
-			namePtr = &contrib.Name
-		}
-		result[i] = &graph.Contributor{
-			ID:      fmt.Sprintf("contributor:%s", contrib.Github),
-			Github:  contrib.Github,
-			Name:    namePtr,
-			Emails:  contrib.Emails,
-			Links:   links,
-			Bundles: []*graph.Bundle{},
-			Files:   []*graph.File{},
-			Tickets: []*graph.Ticket{},
-			Metrics: &graph.ContributorMetrics{
-				Commits:     0,
-				Tickets:     0,
-				Bundles:     0,
-				Folders:     0,
-				Files:       0,
-				Sections:    0,
-				Definitions: 0,
-				Lines:       0,
-			},
-		}
+	result := make([]*Contributor, len(contributors))
+	for i := range contributors {
+		result[i] = &contributors[i]
 	}
 	return result, nil
 }
 
-func (c *repoContext) GetTickets(year, month, day *int, status *graph.TicketStatus) ([]*graph.Ticket, error) {
+func (c *repoContext) GetTickets(year, month, day *int, status *TicketStatus) ([]*Ticket, error) {
 	tickets, err := ListTickets(year, month, day)
 	if err != nil {
 		return nil, err
 	}
-	var result []*graph.Ticket
-	for _, t := range tickets {
-		ticketStatus := graph.TicketStatusOpen
-		if t.Frontmatter.Status == graph.TicketStatusClosed {
-			ticketStatus = graph.TicketStatusClosed
-		}
-		if status != nil && ticketStatus != *status {
+	var result []*Ticket
+	for i := range tickets {
+		t := &tickets[i]
+		if status != nil && t.Frontmatter.Status != *status {
 			continue
 		}
-		var summaryPtr *string
-		if t.Frontmatter.Summary != "" {
-			summaryPtr = &t.Frontmatter.Summary
-		}
-		createdTime, _ := time.Parse(time.RFC3339, t.Frontmatter.Date.Created)
-		var finishedPtr *time.Time
-		if t.Frontmatter.Date.Finished != "" {
-			finishedTime, err := time.Parse(time.RFC3339, t.Frontmatter.Date.Finished)
-			if err == nil {
-				finishedPtr = &finishedTime
-			}
-		}
-		result = append(result, &graph.Ticket{
-			ID:      fmt.Sprintf("ticket:%d/%02d/%02d/%s", t.Year, t.Month, t.Day, t.Slug),
-			Year:    t.Year,
-			Month:   t.Month,
-			Day:     t.Day,
-			Slug:    t.Slug,
-			Path:    fmt.Sprintf("tickets/%d/%02d/%02d/%s/ticket.md", t.Year, t.Month, t.Day, t.Slug),
-			URI:     fmt.Sprintf("file://%s/tickets/%d/%02d/%02d/%s/ticket.md", c.rootDir, t.Year, t.Month, t.Day, t.Slug),
-			Prompt:  t.Frontmatter.Prompt,
-			Summary: summaryPtr,
-			Status:  ticketStatus,
-			Date: &graph.TicketDate{
-				Created:  createdTime,
-				Finished: finishedPtr,
-			},
-			Bundles: []*graph.Bundle{},
-			Files:   []*graph.File{},
-			Metrics: &graph.TicketMetrics{
-				Iterations: len(t.Frontmatter.Iterations),
-				Bundles:    0,
-				Files:      0,
-				Lines:      nil,
-			},
-		})
+		result = append(result, t)
 	}
 	return result, nil
 }
 
-func (c *repoContext) GetPolicies() []*graph.Policy {
+func (c *repoContext) GetPolicies() []*Policy {
 	policies := GetPolicies()
-	result := make([]*graph.Policy, len(policies))
+	result := make([]*Policy, len(policies))
 	for i, p := range policies {
 		var scopes []string
 		scopes = append(scopes, p.Scopes...)
@@ -5554,26 +6009,25 @@ func (c *repoContext) GetPolicies() []*graph.Policy {
 		if p.Description != "" {
 			descPtr = &p.Description
 		}
-		var violationKinds []*graph.ViolationKind
+		var violationKinds []*ViolationKindMeta
 		for _, kind := range p.Kinds {
 			info := kind.Info()
-			priority := graph.ViolationPriorityMedium
+			priority := ViolationPriorityMedium
 			switch info.Priority {
-			case graph.ViolationPriorityHigh:
-				priority = graph.ViolationPriorityHigh
-			case graph.ViolationPriorityLow:
-				priority = graph.ViolationPriorityLow
+			case ViolationPriorityHigh:
+				priority = ViolationPriorityHigh
+			case ViolationPriorityLow:
+				priority = ViolationPriorityLow
 			}
-			violationKinds = append(violationKinds, &graph.ViolationKind{
-				ID:          fmt.Sprintf("violationKind:%s", kind),
-				PolicyID:    fmt.Sprintf("policy:%s", p.ID),
+				violationKinds = append(violationKinds, &ViolationKindMeta{
+				Kind:        kind,
 				Priority:    priority,
 				Autofixable: info.Autofixable,
 				Reason:      info.Reason,
 				Solution:    info.Solution,
 			})
 		}
-		result[i] = &graph.Policy{
+		result[i] = &Policy{
 			ID:             fmt.Sprintf("policy:%s", p.ID),
 			Name:           p.ID,
 			Description:    descPtr,
@@ -5584,21 +6038,20 @@ func (c *repoContext) GetPolicies() []*graph.Policy {
 	return result
 }
 
-func (c *repoContext) GetViolationKinds() []*graph.ViolationKind {
-	var result []*graph.ViolationKind
+func (c *repoContext) GetViolationKinds() []*ViolationKindMeta {
+	var result []*ViolationKindMeta
 	for _, p := range GetPolicies() {
 		for _, kind := range p.Kinds {
 			info := kind.Info()
-			priority := graph.ViolationPriorityMedium
+			priority := ViolationPriorityMedium
 			switch info.Priority {
-			case graph.ViolationPriorityHigh:
-				priority = graph.ViolationPriorityHigh
-			case graph.ViolationPriorityLow:
-				priority = graph.ViolationPriorityLow
+			case ViolationPriorityHigh:
+				priority = ViolationPriorityHigh
+			case ViolationPriorityLow:
+				priority = ViolationPriorityLow
 			}
-			result = append(result, &graph.ViolationKind{
-				ID:          fmt.Sprintf("violationKind:%s", kind),
-				PolicyID:    fmt.Sprintf("policy:%s", p.ID),
+			result = append(result, &ViolationKindMeta{
+				Kind:        kind,
 				Priority:    priority,
 				Autofixable: info.Autofixable,
 				Reason:      info.Reason,
@@ -5609,7 +6062,7 @@ func (c *repoContext) GetViolationKinds() []*graph.ViolationKind {
 	return result
 }
 
-func (c *repoContext) Analyze(scope *string) (*graph.AnalyzeResult, error) {
+func (c *repoContext) Analyze(scope *string) (*AnalyzeResult, error) {
 	scopeRaw := "@semio"
 	if scope != nil {
 		scopeRaw = *scope
@@ -5617,57 +6070,43 @@ func (c *repoContext) Analyze(scope *string) (*graph.AnalyzeResult, error) {
 	toolResult := ToolAnalyze(scopeRaw, nil)
 	report, ok := toolResult.Data.(AnalyzeReport)
 	if !ok {
-		return &graph.AnalyzeResult{
-			Violations: []*graph.Violation{},
-			Metrics:    &graph.AnalyzeMetrics{Total: 0, ByPriority: &graph.PriorityCount{}, Autofixable: 0},
+		return &AnalyzeResult{
+			Violations: []*Violation{},
+			Metrics:    &AnalyzeMetrics{Total: 0, ByPriority: &PriorityCount{}, Autofixable: 0},
 		}, nil
 	}
-	kindInfoMap := make(map[ViolationKind]ViolationKindInfo)
+	kindInfoMap := make(map[ViolationKind]ViolationKindMeta)
 	for _, p := range GetPolicies() {
 		for _, kind := range p.Kinds {
 			kindInfoMap[kind] = kind.Info()
 		}
 	}
-	violations := make([]*graph.Violation, len(report.Violations))
+	violations := make([]*Violation, len(report.Violations))
 	for i, v := range report.Violations {
 		var excerptPtr *string
 		if v.Summary != "" {
 			excerptPtr = &v.Summary
 		}
-		info := kindInfoMap[v.Kind]
-		priority := graph.ViolationPriorityMedium
-		switch info.Priority {
-		case graph.ViolationPriorityHigh:
-			priority = graph.ViolationPriorityHigh
-		case graph.ViolationPriorityLow:
-			priority = graph.ViolationPriorityLow
+		excerpt := ""
+		if excerptPtr != nil {
+			excerpt = *excerptPtr
 		}
-		kindID := fmt.Sprintf("violationKind:%s", v.Kind)
-		parts := strings.SplitN(string(v.Kind), ":", 2)
-		policyID := "unknown"
-		if len(parts) > 0 {
-			policyID = parts[0]
-		}
-		violations[i] = &graph.Violation{
+		violations[i] = &Violation{
 			ID:      v.ID,
-			KindID:  kindID,
-			Kind: &graph.ViolationKind{
-				ID:          kindID,
-				PolicyID:    fmt.Sprintf("policy:%s", policyID),
-				Priority:    priority,
-				Autofixable: info.Autofixable,
-				Reason:      info.Reason,
-				Solution:    info.Solution,
-			},
+			Summary: v.Summary,
+			Kind:    v.Kind,
 			Scope:   v.Scope,
-			Excerpt: excerptPtr,
+			Line:    v.Line,
+			Column:  v.Column,
+			Excerpt: excerpt,
+			Autofix: v.Autofix,
 		}
 	}
-	return &graph.AnalyzeResult{
+	return &AnalyzeResult{
 		Violations: violations,
-		Metrics: &graph.AnalyzeMetrics{
+		Metrics: &AnalyzeMetrics{
 			Total: report.Summary.Total,
-			ByPriority: &graph.PriorityCount{
+			ByPriority: &PriorityCount{
 				High:   report.Summary.ByPriority["high"],
 				Medium: report.Summary.ByPriority["medium"],
 				Low:    report.Summary.ByPriority["low"],
@@ -5677,44 +6116,24 @@ func (c *repoContext) Analyze(scope *string) (*graph.AnalyzeResult, error) {
 	}, nil
 }
 
-func (c *repoContext) Fix(scope *string) (*graph.FixResult, error) {
+func (c *repoContext) Fix(scope *string) (*FixResult, error) {
 	scopeRaw := "@semio"
 	if scope != nil {
 		scopeRaw = *scope
 	}
 	ToolFix(scopeRaw)
-	return &graph.FixResult{Fixed: 0, Remaining: 0, Violations: []*graph.Violation{}}, nil
+	return &FixResult{Fixed: 0, Remaining: 0, Violations: []*Violation{}}, nil
 }
 
-func (c *repoContext) TicketCreate(input graph.TicketCreateInput) (*graph.Ticket, error) {
-	var files []string
-	if input.Files != nil {
-		files = append(files, input.Files.Updated...)
-		files = append(files, input.Files.Created...)
-		files = append(files, input.Files.Removed...)
-	}
+func (c *repoContext) TicketCreate(input TicketCreateInput) (*Ticket, error) {
 	model := ""
 	if input.Model != nil {
 		model = *input.Model
 	}
-	ticket, err := CreateTicket(input.Slug, input.Prompt, model, files)
-	if err != nil {
-		return nil, err
-	}
-	return &graph.Ticket{
-		ID:     fmt.Sprintf("ticket:%d/%02d/%02d/%s", ticket.Year, ticket.Month, ticket.Day, ticket.Slug),
-		Year:   ticket.Year,
-		Month:  ticket.Month,
-		Day:    ticket.Day,
-		Slug:   ticket.Slug,
-		Path:   fmt.Sprintf("tickets/%d/%02d/%02d/%s/ticket.md", ticket.Year, ticket.Month, ticket.Day, ticket.Slug),
-		URI:    fmt.Sprintf("file://%s/tickets/%d/%02d/%02d/%s/ticket.md", c.rootDir, ticket.Year, ticket.Month, ticket.Day, ticket.Slug),
-		Prompt: input.Prompt,
-		Status: graph.TicketStatusOpen,
-	}, nil
+	return CreateTicket(input.Slug, input.Prompt, model)
 }
 
-func (c *repoContext) TicketProgress(input graph.TicketProgressInput) (*graph.Ticket, error) {
+func (c *repoContext) TicketCheckpoint(input TicketCheckpointInput) (*Ticket, error) {
 	ticket, err := ReadTicket(input.Year, input.Month, input.Day, input.Slug)
 	if err != nil {
 		return nil, err
@@ -5723,40 +6142,13 @@ func (c *repoContext) TicketProgress(input graph.TicketProgressInput) (*graph.Ti
 	if input.Model != nil {
 		model = *input.Model
 	}
-	if err := ProgressIteration(ticket, input.Prompt, model); err != nil {
+	if err := CreateCheckpoint(ticket, input.Prompt, model, input.Files); err != nil {
 		return nil, err
 	}
-	status := graph.TicketStatusOpen
-	if ticket.Frontmatter.Status == graph.TicketStatusClosed {
-		status = graph.TicketStatusClosed
-	}
-	var finished *time.Time
-	if ticket.Frontmatter.Date.Finished != "" {
-		if parsed, err := time.Parse(time.RFC3339, ticket.Frontmatter.Date.Finished); err == nil {
-			finished = &parsed
-		}
-	}
-	created := time.Now()
-	if ticket.Frontmatter.Date.Created != "" {
-		if parsed, err := time.Parse(time.RFC3339, ticket.Frontmatter.Date.Created); err == nil {
-			created = parsed
-		}
-	}
-	return &graph.Ticket{
-		ID:     fmt.Sprintf("ticket:%d/%02d/%02d/%s", input.Year, input.Month, input.Day, input.Slug),
-		Year:   input.Year,
-		Month:  input.Month,
-		Day:    input.Day,
-		Slug:   input.Slug,
-		Path:   fmt.Sprintf("tickets/%d/%02d/%02d/%s/ticket.md", input.Year, input.Month, input.Day, input.Slug),
-		URI:    fmt.Sprintf("file://%s/tickets/%d/%02d/%02d/%s/ticket.md", c.rootDir, input.Year, input.Month, input.Day, input.Slug),
-		Prompt: ticket.Frontmatter.Prompt,
-		Status: status,
-		Date:   &graph.TicketDate{Created: created, Finished: finished},
-	}, nil
+	return ticket, nil
 }
 
-func (c *repoContext) TicketFinish(input graph.TicketFinishInput) (*graph.Ticket, error) {
+func (c *repoContext) TicketFinish(input TicketFinishInput) (*Ticket, error) {
 	ticket, err := ReadTicket(input.Year, input.Month, input.Day, input.Slug)
 	if err != nil {
 		return nil, err
@@ -5764,28 +6156,10 @@ func (c *repoContext) TicketFinish(input graph.TicketFinishInput) (*graph.Ticket
 	if err := FinishTicket(ticket); err != nil {
 		return nil, err
 	}
-	created := time.Now()
-	if ticket.Frontmatter.Date.Created != "" {
-		if parsed, err := time.Parse(time.RFC3339, ticket.Frontmatter.Date.Created); err == nil {
-			created = parsed
-		}
-	}
-	now := time.Now()
-	return &graph.Ticket{
-		ID:     fmt.Sprintf("ticket:%d/%02d/%02d/%s", input.Year, input.Month, input.Day, input.Slug),
-		Year:   input.Year,
-		Month:  input.Month,
-		Day:    input.Day,
-		Slug:   input.Slug,
-		Path:   fmt.Sprintf("tickets/%d/%02d/%02d/%s/ticket.md", input.Year, input.Month, input.Day, input.Slug),
-		URI:    fmt.Sprintf("file://%s/tickets/%d/%02d/%02d/%s/ticket.md", c.rootDir, input.Year, input.Month, input.Day, input.Slug),
-		Prompt: ticket.Frontmatter.Prompt,
-		Status: graph.TicketStatusClosed,
-		Date:   &graph.TicketDate{Created: created, Finished: &now},
-	}, nil
+	return ticket, nil
 }
 
-func (c *repoContext) TicketReopen(input graph.TicketReopenInput) (*graph.Ticket, error) {
+func (c *repoContext) TicketReopen(input TicketReopenInput) (*Ticket, error) {
 	ticket, err := ReadTicket(input.Year, input.Month, input.Day, input.Slug)
 	if err != nil {
 		return nil, err
@@ -5793,34 +6167,17 @@ func (c *repoContext) TicketReopen(input graph.TicketReopenInput) (*graph.Ticket
 	if err := ReopenTicket(ticket); err != nil {
 		return nil, err
 	}
-	created := time.Now()
-	if ticket.Frontmatter.Date.Created != "" {
-		if parsed, err := time.Parse(time.RFC3339, ticket.Frontmatter.Date.Created); err == nil {
-			created = parsed
-		}
-	}
-	return &graph.Ticket{
-		ID:     fmt.Sprintf("ticket:%d/%02d/%02d/%s", input.Year, input.Month, input.Day, input.Slug),
-		Year:   input.Year,
-		Month:  input.Month,
-		Day:    input.Day,
-		Slug:   input.Slug,
-		Path:   fmt.Sprintf("tickets/%d/%02d/%02d/%s/ticket.md", input.Year, input.Month, input.Day, input.Slug),
-		URI:    fmt.Sprintf("file://%s/tickets/%d/%02d/%02d/%s/ticket.md", c.rootDir, input.Year, input.Month, input.Day, input.Slug),
-		Prompt: ticket.Frontmatter.Prompt,
-		Status: graph.TicketStatusOpen,
-		Date:   &graph.TicketDate{Created: created},
-	}, nil
+	return ticket, nil
 }
 
-func (c *repoContext) FolderCreate(path string) (*graph.Folder, error) {
+func (c *repoContext) FolderCreate(path string) (*Folder, error) {
 	result := ToolFolderCreate(path)
 	if result.Error != "" {
 		return nil, fmt.Errorf("%s", result.Error)
 	}
 	normalizedPath := strings.ReplaceAll(path, "\\", "/")
 	name := filepath.Base(normalizedPath)
-	return &graph.Folder{
+	return &Folder{
 		ID:   fmt.Sprintf("folder:%s", normalizedPath),
 		Path: normalizedPath,
 		URI:  fmt.Sprintf("file://%s/%s", c.rootDir, normalizedPath),
@@ -5828,14 +6185,14 @@ func (c *repoContext) FolderCreate(path string) (*graph.Folder, error) {
 	}, nil
 }
 
-func (c *repoContext) FolderMove(src, dst string) (*graph.Folder, error) {
+func (c *repoContext) FolderMove(src, dst string) (*Folder, error) {
 	result := ToolFolderMove(src, dst)
 	if result.Error != "" {
 		return nil, fmt.Errorf("%s", result.Error)
 	}
 	normalizedPath := strings.ReplaceAll(dst, "\\", "/")
 	name := filepath.Base(normalizedPath)
-	return &graph.Folder{
+	return &Folder{
 		ID:   fmt.Sprintf("folder:%s", normalizedPath),
 		Path: normalizedPath,
 		URI:  fmt.Sprintf("file://%s/%s", c.rootDir, normalizedPath),
@@ -5851,7 +6208,7 @@ func (c *repoContext) FolderDelete(path string) error {
 	return nil
 }
 
-func (c *repoContext) FileCreate(path string) (*graph.File, error) {
+func (c *repoContext) FileCreate(path string) (*File, error) {
 	result := ToolFileCreate(path)
 	if result.Error != "" {
 		return nil, fmt.Errorf("%s", result.Error)
@@ -5865,7 +6222,7 @@ func (c *repoContext) FileCreate(path string) (*graph.File, error) {
 		id := fmt.Sprintf("folder:%s", folderPath)
 		folderID = &id
 	}
-	return &graph.File{
+	return &File{
 		ID:        fmt.Sprintf("file:%s", normalizedPath),
 		Path:      normalizedPath,
 		URI:       fmt.Sprintf("file://%s/%s", c.rootDir, normalizedPath),
@@ -5875,7 +6232,7 @@ func (c *repoContext) FileCreate(path string) (*graph.File, error) {
 	}, nil
 }
 
-func (c *repoContext) FileMove(src, dst string) (*graph.File, error) {
+func (c *repoContext) FileMove(src, dst string) (*File, error) {
 	result := ToolFileMove(src, dst)
 	if result.Error != "" {
 		return nil, fmt.Errorf("%s", result.Error)
@@ -5889,7 +6246,7 @@ func (c *repoContext) FileMove(src, dst string) (*graph.File, error) {
 		id := fmt.Sprintf("folder:%s", folderPath)
 		folderID = &id
 	}
-	return &graph.File{
+	return &File{
 		ID:        fmt.Sprintf("file:%s", normalizedPath),
 		Path:      normalizedPath,
 		URI:       fmt.Sprintf("file://%s/%s", c.rootDir, normalizedPath),
@@ -5907,7 +6264,7 @@ func (c *repoContext) FileDelete(path string) error {
 	return nil
 }
 
-func (c *repoContext) SectionCreate(file, name string, parent *string) (*graph.Section, error) {
+func (c *repoContext) SectionCreate(file, name string, parent *string) (*Section, error) {
 	sectionPath := name
 	if parent != nil && *parent != "" {
 		sectionPath = *parent + "/" + name
@@ -5916,28 +6273,18 @@ func (c *repoContext) SectionCreate(file, name string, parent *string) (*graph.S
 	if result.Error != "" {
 		return nil, fmt.Errorf("%s", result.Error)
 	}
-	normalizedPath := strings.ReplaceAll(file, "\\", "/")
-	fileID := fmt.Sprintf("file:%s", normalizedPath)
-	return &graph.Section{
-		ID:     fmt.Sprintf("section:%s#%s", normalizedPath, name),
-		Name:   name,
-		Path:   fmt.Sprintf("%s#%s", normalizedPath, name),
-		FileID: fileID,
+	return &Section{
+		Name: name,
 	}, nil
 }
 
-func (c *repoContext) SectionMove(file, oldName, newName string) (*graph.Section, error) {
+func (c *repoContext) SectionMove(file, oldName, newName string) (*Section, error) {
 	result := ToolSectionMove(file, oldName, newName)
 	if result.Error != "" {
 		return nil, fmt.Errorf("%s", result.Error)
 	}
-	normalizedPath := strings.ReplaceAll(file, "\\", "/")
-	fileID := fmt.Sprintf("file:%s", normalizedPath)
-	return &graph.Section{
-		ID:     fmt.Sprintf("section:%s#%s", normalizedPath, newName),
-		Name:   newName,
-		Path:   fmt.Sprintf("%s#%s", normalizedPath, newName),
-		FileID: fileID,
+	return &Section{
+		Name: newName,
 	}, nil
 }
 
@@ -5949,7 +6296,7 @@ func (c *repoContext) SectionDelete(file, name string) error {
 	return nil
 }
 
-func (c *repoContext) ContributorAdd(input graph.ContributorAddInput) (*graph.Contributor, error) {
+func (c *repoContext) ContributorAdd(input ContributorAddInput) (*Contributor, error) {
 	result := ToolContributorAdd(input.Github)
 	if result.Error != "" {
 		return nil, fmt.Errorf("%s", result.Error)
@@ -5958,21 +6305,7 @@ func (c *repoContext) ContributorAdd(input graph.ContributorAddInput) (*graph.Co
 	if !ok {
 		return nil, fmt.Errorf("unexpected result type")
 	}
-	var links []graph.ContributorLink
-	for name, url := range contrib.Links {
-		links = append(links, graph.ContributorLink{Name: name, URL: url})
-	}
-	var namePtr *string
-	if contrib.Name != "" {
-		namePtr = &contrib.Name
-	}
-	return &graph.Contributor{
-		ID:     fmt.Sprintf("contributor:%s", contrib.Github),
-		Github: contrib.Github,
-		Name:   namePtr,
-		Emails: contrib.Emails,
-		Links:  links,
-	}, nil
+	return contrib, nil
 }
 
 func (c *repoContext) ContributorRemove(github string) error {
@@ -5983,9 +6316,22 @@ func (c *repoContext) ContributorRemove(github string) error {
 	return nil
 }
 
+type GraphQLExecutor interface {
+	ExecuteJSON(ctx context.Context, query string, variables map[string]interface{}) (string, error)
+}
+
+var graphQLExecutorFactory func(rootDir string, ctx *repoContext) (GraphQLExecutor, error)
+
+func SetGraphQLExecutorFactory(factory func(rootDir string, ctx *repoContext) (GraphQLExecutor, error)) {
+	graphQLExecutorFactory = factory
+}
+
 func ExecuteGraphQL(query string, variables map[string]interface{}) (string, error) {
+	if graphQLExecutorFactory == nil {
+		return "", fmt.Errorf("GraphQL executor factory not set")
+	}
 	ctx := NewRepoContext(rootDir)
-	executor, err := graph.NewExecutorWithContext(rootDir, ctx)
+	executor, err := graphQLExecutorFactory(rootDir, ctx)
 	if err != nil {
 		return "", fmt.Errorf("failed to create executor: %w", err)
 	}
@@ -6213,19 +6559,18 @@ func ToolPolicyViolationList(policyID string) ToolResult {
 	return ToolResult{Output: *output, Data: foundPolicy.Kinds}
 }
 
-func ToolTicketCreate(slug, prompt, model string, files []string) ToolResult {
+func ToolTicketCreate(slug, prompt, model string) ToolResult {
 	output := NewOutput()
 	if prompt == "" {
 		prompt = slug
 	}
-	ticket, err := CreateTicket(slug, prompt, model, files)
+	ticket, err := CreateTicket(slug, prompt, model)
 	if err != nil {
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
 	output.Success(fmt.Sprintf("\n🎫 Created ticket: %s", ticket.Slug))
 	output.Info(fmt.Sprintf("   Folder: %s", ticket.FolderPath))
-	output.Info(fmt.Sprintf("   First iteration started with %d file(s)", len(files)))
 	return ToolResult{Output: *output, Data: ticket}
 }
 
@@ -6239,7 +6584,7 @@ func ToolTicketList(year, month, day *int) ToolResult {
 	output.Info(fmt.Sprintf("\n🎫 Found %d tickets:\n", len(tickets)))
 	for _, t := range tickets {
 		status := "🟢"
-		if t.Frontmatter.Status == graph.TicketStatusClosed {
+		if t.Frontmatter.Status == TicketStatusClosed {
 			status = "✅"
 		}
 		output.Plain(fmt.Sprintf("   %s %d/%s/%s/%s", status, t.Year, PadNumber(t.Month, 2), PadNumber(t.Day, 2), t.Slug))
@@ -6268,47 +6613,23 @@ func ToolTicketRead(year, month, day int, slug string) ToolResult {
 	return ToolResult{Output: *output, Data: ticket}
 }
 
-func ToolTicketIterateStart(year, month, day int, slug, prompt, model string, files []string) ToolResult {
+func ToolTicketCheckpoint(year, month, day int, slug, prompt, model string, files []string) ToolResult {
 	output := NewOutput()
 	ticket, err := ReadTicket(year, month, day, slug)
 	if err != nil {
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
-	if err := ProgressIteration(ticket, prompt, model); err != nil {
+	if err := CreateCheckpoint(ticket, prompt, model, files); err != nil {
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
-	lastIter := ticket.Frontmatter.Iterations[len(ticket.Frontmatter.Iterations)-1]
-	fileCount := 0
-	for _, b := range lastIter.Bundles {
-		fileCount += len(b.Files)
-	}
-	output.Success(fmt.Sprintf("\n✅ Progress recorded on ticket: %s", ticket.Slug))
-	output.Info(fmt.Sprintf("   Files changed: %d", fileCount))
-	output.Info(fmt.Sprintf("   Commit: %s", lastIter.Commit))
-	return ToolResult{Output: *output, Data: ticket}
-}
-
-func ToolTicketProgress(year, month, day int, slug, prompt, model string) ToolResult {
-	output := NewOutput()
-	ticket, err := ReadTicket(year, month, day, slug)
-	if err != nil {
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
-	}
-	if err := ProgressIteration(ticket, prompt, model); err != nil {
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
-	}
-	lastIter := ticket.Frontmatter.Iterations[len(ticket.Frontmatter.Iterations)-1]
-	fileCount := 0
-	for _, b := range lastIter.Bundles {
-		fileCount += len(b.Files)
-	}
-	output.Success(fmt.Sprintf("\n✅ Progress recorded on ticket: %s", ticket.Slug))
-	output.Info(fmt.Sprintf("   Files changed: %d", fileCount))
-	output.Info(fmt.Sprintf("   Commit: %s", lastIter.Commit))
+	lastCheckpoint := ticket.Frontmatter.Checkpoints[len(ticket.Frontmatter.Checkpoints)-1]
+	output.Success(fmt.Sprintf("\n✅ Checkpoint created on ticket: %s", ticket.Slug))
+	output.Info(fmt.Sprintf("   Files: %d", len(lastCheckpoint.Files)))
+	output.Info(fmt.Sprintf("   Sections affected: %d", len(lastCheckpoint.Sections)))
+	output.Info(fmt.Sprintf("   Definitions affected: %d", len(lastCheckpoint.Definitions)))
+	output.Info(fmt.Sprintf("   Commit: %s", lastCheckpoint.Commit))
 	return ToolResult{Output: *output, Data: ticket}
 }
 
@@ -6924,8 +7245,8 @@ func ToolSectionList(filePath string) ToolResult {
 	}
 	sections := ParseSections(content, scope.FilePath)
 	output.Info(fmt.Sprintf("\n🏷️ Sections in %s:\n", scope.FilePath))
-	var printSection func(s SectionInfo, indent string)
-	printSection = func(s SectionInfo, indent string) {
+	var printSection func(s Section, indent string)
+	printSection = func(s Section, indent string) {
 		output.Plain(fmt.Sprintf("%s%s (lines %d-%d)", indent, s.Name, s.StartLine, s.EndLine))
 		for _, child := range s.Children {
 			printSection(child, indent+"  ")
@@ -6954,8 +7275,8 @@ func ToolSectionTree(filePath string) ToolResult {
 	}
 	sections := ParseSections(content, filePath)
 	output.Info(fmt.Sprintf("\n🏷️ Sections in %s:\n", filePath))
-	var printSection func(s SectionInfo, prefix string)
-	printSection = func(s SectionInfo, prefix string) {
+	var printSection func(s Section, prefix string)
+	printSection = func(s Section, prefix string) {
 		output.Plain(fmt.Sprintf("%s└── %s (lines %d-%d)", prefix, s.Name, s.StartLine, s.EndLine))
 		for _, child := range s.Children {
 			printSection(child, prefix+"    ")
@@ -6979,7 +7300,7 @@ func ToolDefinitionList(filePath string) ToolResult {
 	}
 	output.Info(fmt.Sprintf("\n📋 Definitions in %s:\n", filePath))
 	output.Plain("   (definition parsing not implemented in Go - use TypeScript API)")
-	return ToolResult{Output: *output, Data: []DefinitionInfo{}}
+	return ToolResult{Output: *output, Data: []Definition{}}
 }
 
 func ToolDefinitionTree(filePath string) ToolResult {
@@ -6999,3 +7320,1697 @@ func ToolUpdateMetabolism() ToolResult {
 }
 
 // #endregion Commands
+
+// #region GraphQL Context Interface
+
+type RepoContext interface {
+	GetRootDir() string
+	GetBundles() []*Bundle
+	GetContributors() ([]*Contributor, error)
+	GetTickets(year, month, day *int, status *TicketStatus) ([]*Ticket, error)
+	GetPolicies() []*Policy
+	GetViolationKinds() []*ViolationKindMeta
+	Analyze(scope *string) (*AnalyzeResult, error)
+	Fix(scope *string) (*FixResult, error)
+	TicketCreate(input TicketCreateInput) (*Ticket, error)
+	TicketCheckpoint(input TicketCheckpointInput) (*Ticket, error)
+	TicketFinish(input TicketFinishInput) (*Ticket, error)
+	TicketReopen(input TicketReopenInput) (*Ticket, error)
+	FolderCreate(path string) (*Folder, error)
+	FolderMove(src, dst string) (*Folder, error)
+	FolderDelete(path string) error
+	FileCreate(path string) (*File, error)
+	FileMove(src, dst string) (*File, error)
+	FileDelete(path string) error
+	SectionCreate(file, name string, parent *string) (*Section, error)
+	SectionMove(file, oldName, newName string) (*Section, error)
+	SectionDelete(file, name string) error
+	ContributorAdd(input ContributorAddInput) (*Contributor, error)
+	ContributorRemove(github string) error
+}
+
+// #endregion GraphQL Context Interface
+
+// #region GraphQL Resolver
+
+type Resolver struct {
+	RootDir string
+	Ctx     RepoContext
+}
+
+func NewResolver(rootDir string) *Resolver {
+	return &Resolver{RootDir: rootDir}
+}
+
+func NewResolverWithContext(rootDir string, ctx RepoContext) *Resolver {
+	return &Resolver{RootDir: rootDir, Ctx: ctx}
+}
+
+func (r *Resolver) context() RepoContext {
+	return r.Ctx
+}
+
+// #endregion GraphQL Resolver
+
+// #region Default Context
+
+type defaultContext struct {
+	rootDir string
+}
+
+func NewDefaultContext(rootDir string) RepoContext {
+	return &defaultContext{rootDir: rootDir}
+}
+
+func (c *defaultContext) GetRootDir() string { return c.rootDir }
+
+func (c *defaultContext) GetBundles() []*Bundle { return []*Bundle{} }
+
+func (c *defaultContext) GetContributors() ([]*Contributor, error) { return []*Contributor{}, nil }
+
+func (c *defaultContext) GetTickets(year, month, day *int, status *TicketStatus) ([]*Ticket, error) {
+	return []*Ticket{}, nil
+}
+
+func (c *defaultContext) GetPolicies() []*Policy { return []*Policy{} }
+
+func (c *defaultContext) GetViolationKinds() []*ViolationKindMeta { return []*ViolationKindMeta{} }
+
+func (c *defaultContext) Analyze(scope *string) (*AnalyzeResult, error) {
+	return &AnalyzeResult{Violations: []*Violation{}, Metrics: &AnalyzeMetrics{}}, nil
+}
+
+func (c *defaultContext) Fix(scope *string) (*FixResult, error) {
+	return &FixResult{Violations: []*Violation{}}, nil
+}
+
+func (c *defaultContext) TicketCreate(input TicketCreateInput) (*Ticket, error) {
+	return nil, nil
+}
+
+func (c *defaultContext) TicketCheckpoint(input TicketCheckpointInput) (*Ticket, error) {
+	return nil, nil
+}
+
+func (c *defaultContext) TicketFinish(input TicketFinishInput) (*Ticket, error) {
+	return nil, nil
+}
+
+func (c *defaultContext) TicketReopen(input TicketReopenInput) (*Ticket, error) {
+	return nil, nil
+}
+
+func (c *defaultContext) FolderCreate(path string) (*Folder, error) { return nil, nil }
+
+func (c *defaultContext) FolderMove(src, dst string) (*Folder, error) { return nil, nil }
+
+func (c *defaultContext) FolderDelete(path string) error { return nil }
+
+func (c *defaultContext) FileCreate(path string) (*File, error) { return nil, nil }
+
+func (c *defaultContext) FileMove(src, dst string) (*File, error) { return nil, nil }
+
+func (c *defaultContext) FileDelete(path string) error { return nil }
+
+func (c *defaultContext) SectionCreate(file, name string, parent *string) (*Section, error) {
+	return nil, nil
+}
+
+func (c *defaultContext) SectionMove(file, oldName, newName string) (*Section, error) {
+	return nil, nil
+}
+
+func (c *defaultContext) SectionDelete(file, name string) error { return nil }
+
+func (c *defaultContext) ContributorAdd(input ContributorAddInput) (*Contributor, error) {
+	return nil, nil
+}
+
+func (c *defaultContext) ContributorRemove(github string) error { return nil }
+
+var _ RepoContext = (*defaultContext)(nil)
+
+// #endregion Default Context
+
+// #region GraphQL Executor
+
+func parseFileListInput(f map[string]interface{}) *FileListInput {
+	files := &FileListInput{}
+	if updated, ok := f["updated"].([]interface{}); ok {
+		for _, u := range updated {
+			if s, ok := u.(string); ok {
+				files.Updated = append(files.Updated, s)
+			}
+		}
+	}
+	if created, ok := f["created"].([]interface{}); ok {
+		for _, c := range created {
+			if s, ok := c.(string); ok {
+				files.Created = append(files.Created, s)
+			}
+		}
+	}
+	if removed, ok := f["removed"].([]interface{}); ok {
+		for _, r := range removed {
+			if s, ok := r.(string); ok {
+				files.Removed = append(files.Removed, s)
+			}
+		}
+	}
+	return files
+}
+
+type Executor struct {
+	resolver *Resolver
+	schema   graphql.Schema
+}
+
+func NewExecutor(rootDir string) (*Executor, error) {
+	resolver := NewResolver(rootDir)
+	schema, err := buildSchema(resolver)
+	if err != nil {
+		return nil, err
+	}
+	return &Executor{
+		resolver: resolver,
+		schema:   schema,
+	}, nil
+}
+
+func NewExecutorWithContext(rootDir string, ctx RepoContext) (*Executor, error) {
+	resolver := NewResolverWithContext(rootDir, ctx)
+	schema, err := buildSchema(resolver)
+	if err != nil {
+		return nil, err
+	}
+	return &Executor{
+		resolver: resolver,
+		schema:   schema,
+	}, nil
+}
+
+func (e *Executor) Execute(ctx context.Context, query string, variables map[string]interface{}) (interface{}, error) {
+	result := graphql.Do(graphql.Params{
+		Context:        ctx,
+		Schema:         e.schema,
+		RequestString:  query,
+		VariableValues: variables,
+	})
+	if len(result.Errors) > 0 {
+		return nil, fmt.Errorf("graphql errors: %v", result.Errors)
+	}
+	return result.Data, nil
+}
+
+func (e *Executor) ExecuteJSON(ctx context.Context, query string, variables map[string]interface{}) (string, error) {
+	data, err := e.Execute(ctx, query, variables)
+	if err != nil {
+		return "", err
+	}
+	jsonBytes, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	return string(jsonBytes), nil
+}
+
+func (e *Executor) ValidateQuery(query string) error {
+	_, err := parser.Parse(parser.ParseParams{
+		Source: query,
+		Options: parser.ParseOptions{
+			NoLocation: true,
+		},
+	})
+	return err
+}
+
+func (e *Executor) GetOperationType(query string) (string, error) {
+	doc, err := parser.Parse(parser.ParseParams{
+		Source: query,
+		Options: parser.ParseOptions{
+			NoLocation: true,
+		},
+	})
+	if err != nil {
+		return "", err
+	}
+	for _, def := range doc.Definitions {
+		if opDef, ok := def.(*ast.OperationDefinition); ok {
+			return string(opDef.Operation), nil
+		}
+	}
+	return "query", nil
+}
+
+// #endregion GraphQL Executor
+
+// #region Schema Builder
+
+func buildSchema(resolver *Resolver) (graphql.Schema, error) {
+	positionType := graphql.NewObject(graphql.ObjectConfig{
+		Name: "Position",
+		Fields: graphql.Fields{
+			"line":   &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"column": &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+		},
+	})
+
+	rangeType := graphql.NewObject(graphql.ObjectConfig{
+		Name: "Range",
+		Fields: graphql.Fields{
+			"start": &graphql.Field{Type: graphql.NewNonNull(positionType)},
+			"end":   &graphql.Field{Type: graphql.NewNonNull(positionType)},
+		},
+	})
+
+	lineMetricsType := graphql.NewObject(graphql.ObjectConfig{
+		Name: "LineMetrics",
+		Fields: graphql.Fields{
+			"added":   &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"removed": &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+		},
+	})
+
+	countMetricsType := graphql.NewObject(graphql.ObjectConfig{
+		Name: "CountMetrics",
+		Fields: graphql.Fields{
+			"added":   &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"updated": &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"removed": &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+		},
+	})
+
+	repoMetricsType := graphql.NewObject(graphql.ObjectConfig{
+		Name: "RepoMetrics",
+		Fields: graphql.Fields{
+			"bundles":      &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"folders":      &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"files":        &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"sections":     &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"definitions":  &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"lines":        &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"contributors": &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"tickets":      &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"violations":   &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+		},
+	})
+
+	bundleMetricsType := graphql.NewObject(graphql.ObjectConfig{
+		Name: "BundleMetrics",
+		Fields: graphql.Fields{
+			"folders":     &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"files":       &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"sections":    &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"definitions": &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"lines":       &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"violations":  &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+		},
+	})
+
+	folderMetricsType := graphql.NewObject(graphql.ObjectConfig{
+		Name: "FolderMetrics",
+		Fields: graphql.Fields{
+			"files":      &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"lines":      &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"violations": &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+		},
+	})
+
+	fileMetricsType := graphql.NewObject(graphql.ObjectConfig{
+		Name: "FileMetrics",
+		Fields: graphql.Fields{
+			"sections":    &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"definitions": &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"lines":       &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+		},
+	})
+
+	sectionMetricsType := graphql.NewObject(graphql.ObjectConfig{
+		Name: "SectionMetrics",
+		Fields: graphql.Fields{
+			"definitions": &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"lines":       &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"violations":  &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+		},
+	})
+
+	definitionMetricsType := graphql.NewObject(graphql.ObjectConfig{
+		Name: "DefinitionMetrics",
+		Fields: graphql.Fields{
+			"definitions": &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"lines":       &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"violations":  &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+		},
+	})
+
+	priorityCountType := graphql.NewObject(graphql.ObjectConfig{
+		Name: "PriorityCount",
+		Fields: graphql.Fields{
+			"high":   &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"medium": &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"low":    &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+		},
+	})
+
+	analyzeMetricsType := graphql.NewObject(graphql.ObjectConfig{
+		Name: "AnalyzeMetrics",
+		Fields: graphql.Fields{
+			"total":       &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"byPriority":  &graphql.Field{Type: priorityCountType},
+			"autofixable": &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+		},
+	})
+
+	definitionKindEnum := graphql.NewEnum(graphql.EnumConfig{
+		Name: "DefinitionKind",
+		Values: graphql.EnumValueConfigMap{
+			"FUNCTION":  &graphql.EnumValueConfig{Value: DefinitionKindFunction},
+			"CLASS":     &graphql.EnumValueConfig{Value: DefinitionKindClass},
+			"VARIABLE":  &graphql.EnumValueConfig{Value: DefinitionKindVariable},
+			"INTERFACE": &graphql.EnumValueConfig{Value: DefinitionKindInterface},
+			"TYPE":      &graphql.EnumValueConfig{Value: DefinitionKindType},
+			"ENUM":      &graphql.EnumValueConfig{Value: DefinitionKindEnum},
+			"METHOD":    &graphql.EnumValueConfig{Value: DefinitionKindMethod},
+			"PROPERTY":  &graphql.EnumValueConfig{Value: DefinitionKindProperty},
+		},
+	})
+
+	ticketStatusEnum := graphql.NewEnum(graphql.EnumConfig{
+		Name: "TicketStatus",
+		Values: graphql.EnumValueConfigMap{
+			"OPEN":   &graphql.EnumValueConfig{Value: TicketStatusOpen},
+			"CLOSED": &graphql.EnumValueConfig{Value: TicketStatusClosed},
+		},
+	})
+
+	violationPriorityEnum := graphql.NewEnum(graphql.EnumConfig{
+		Name: "ViolationPriority",
+		Values: graphql.EnumValueConfigMap{
+			"HIGH":   &graphql.EnumValueConfig{Value: ViolationPriorityHigh},
+			"MEDIUM": &graphql.EnumValueConfig{Value: ViolationPriorityMedium},
+			"LOW":    &graphql.EnumValueConfig{Value: ViolationPriorityLow},
+		},
+	})
+
+	var bundleType *graphql.Object
+	var folderType *graphql.Object
+	var fileType *graphql.Object
+	var sectionType *graphql.Object
+	var definitionType *graphql.Object
+	var violationType *graphql.Object
+	var violationKindType *graphql.Object
+	var policyType *graphql.Object
+	var ticketType *graphql.Object
+	var contributorType *graphql.Object
+	var repoType *graphql.Object
+
+	bundleType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "Bundle",
+		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
+			return graphql.Fields{
+				"id":          &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
+				"name":        &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"root":        &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"sourceRoot":  &graphql.Field{Type: graphql.String},
+				"projectType": &graphql.Field{Type: graphql.String},
+				"tags":        &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(graphql.String)))},
+				"uri":         &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"folders":     &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(folderType)))},
+				"files":       &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(fileType)))},
+				"violations":  &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationType)))},
+				"metrics":     &graphql.Field{Type: graphql.NewNonNull(bundleMetricsType)},
+			}
+		}),
+	})
+
+	folderType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "Folder",
+		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
+			return graphql.Fields{
+				"id":         &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
+				"path":       &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"uri":        &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"name":       &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"parent":     &graphql.Field{Type: folderType},
+				"children":   &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(folderType)))},
+				"files":      &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(fileType)))},
+				"bundle":     &graphql.Field{Type: bundleType},
+				"violations": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationType)))},
+				"metrics":    &graphql.Field{Type: graphql.NewNonNull(folderMetricsType)},
+			}
+		}),
+	})
+
+	fileType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "File",
+		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
+			return graphql.Fields{
+				"id":          &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
+				"path":        &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"uri":         &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"name":        &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"extension":   &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"folder":      &graphql.Field{Type: folderType},
+				"bundle":      &graphql.Field{Type: bundleType},
+				"sections":    &graphql.Field{Type: graphql.NewList(sectionType)},
+				"definitions": &graphql.Field{Type: graphql.NewList(definitionType)},
+				"violations":  &graphql.Field{Type: graphql.NewList(violationType)},
+				"metrics":     &graphql.Field{Type: fileMetricsType},
+				"content":     &graphql.Field{Type: graphql.String},
+			}
+		}),
+	})
+
+	sectionType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "Section",
+		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
+			return graphql.Fields{
+				"id":          &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
+				"name":        &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"path":        &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"file":        &graphql.Field{Type: fileType},
+				"parent":      &graphql.Field{Type: sectionType},
+				"children":    &graphql.Field{Type: graphql.NewList(sectionType)},
+				"definitions": &graphql.Field{Type: graphql.NewList(definitionType)},
+				"violations":  &graphql.Field{Type: graphql.NewList(violationType)},
+				"range":       &graphql.Field{Type: rangeType},
+				"metrics":     &graphql.Field{Type: sectionMetricsType},
+			}
+		}),
+	})
+
+	definitionType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "Definition",
+		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
+			return graphql.Fields{
+				"id":         &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
+				"name":       &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"kind":       &graphql.Field{Type: graphql.NewNonNull(definitionKindEnum)},
+				"file":       &graphql.Field{Type: graphql.NewNonNull(fileType)},
+				"section":    &graphql.Field{Type: sectionType},
+				"violations": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationType)))},
+				"range":      &graphql.Field{Type: graphql.NewNonNull(rangeType)},
+				"metrics":    &graphql.Field{Type: graphql.NewNonNull(definitionMetricsType)},
+			}
+		}),
+	})
+
+	textEditType := graphql.NewObject(graphql.ObjectConfig{
+		Name: "TextEdit",
+		Fields: graphql.Fields{
+			"start":   &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"end":     &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"newText": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+		},
+	})
+
+	fileEditType := graphql.NewObject(graphql.ObjectConfig{
+		Name: "FileEdit",
+		Fields: graphql.Fields{
+			"path":  &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+			"edits": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(textEditType)))},
+		},
+	})
+
+	autofixType := graphql.NewObject(graphql.ObjectConfig{
+		Name: "Autofix",
+		Fields: graphql.Fields{
+			"description": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+			"edits":       &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(fileEditType)))},
+		},
+	})
+
+	violationType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "Violation",
+		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
+			return graphql.Fields{
+				"id":      &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
+				"kind":    &graphql.Field{Type: graphql.NewNonNull(violationKindType)},
+				"scope":   &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"file":    &graphql.Field{Type: fileType},
+				"folder":  &graphql.Field{Type: folderType},
+				"line":    &graphql.Field{Type: graphql.Int},
+				"column":  &graphql.Field{Type: graphql.Int},
+				"excerpt": &graphql.Field{Type: graphql.String},
+				"autofix": &graphql.Field{Type: autofixType},
+			}
+		}),
+	})
+
+	violationKindType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "ViolationKind",
+		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
+			return graphql.Fields{
+				"id":          &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
+				"policy":      &graphql.Field{Type: graphql.NewNonNull(policyType)},
+				"priority":    &graphql.Field{Type: graphql.NewNonNull(violationPriorityEnum)},
+				"autofixable": &graphql.Field{Type: graphql.NewNonNull(graphql.Boolean)},
+				"reason":      &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"solution":    &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"violations": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationType))),
+					Args: graphql.FieldConfigArgument{
+						"scope": &graphql.ArgumentConfig{Type: graphql.String},
+					},
+				},
+			}
+		}),
+	})
+
+	policyType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "Policy",
+		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
+			return graphql.Fields{
+				"id":             &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
+				"name":           &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"description":    &graphql.Field{Type: graphql.String},
+				"scopes":         &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(graphql.String)))},
+				"violationKinds": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationKindType)))},
+			}
+		}),
+	})
+
+	ticketDateType := graphql.NewObject(graphql.ObjectConfig{
+		Name: "TicketDate",
+		Fields: graphql.Fields{
+			"created":  &graphql.Field{Type: graphql.NewNonNull(graphql.DateTime)},
+			"finished": &graphql.Field{Type: graphql.DateTime},
+		},
+	})
+
+	ticketMetricsType := graphql.NewObject(graphql.ObjectConfig{
+		Name: "TicketMetrics",
+		Fields: graphql.Fields{
+			"iterations": &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"bundles":    &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"files":      &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"lines":      &graphql.Field{Type: lineMetricsType},
+		},
+	})
+
+	ticketType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "Ticket",
+		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
+			return graphql.Fields{
+				"id":      &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
+				"year":    &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+				"month":   &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+				"day":     &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+				"slug":    &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"path":    &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"uri":     &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"prompt":  &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"summary": &graphql.Field{Type: graphql.String},
+				"status":  &graphql.Field{Type: graphql.NewNonNull(ticketStatusEnum)},
+				"author":  &graphql.Field{Type: contributorType},
+				"model":   &graphql.Field{Type: graphql.String},
+				"commit":  &graphql.Field{Type: graphql.String},
+				"date":    &graphql.Field{Type: graphql.NewNonNull(ticketDateType)},
+				"bundles": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(bundleType)))},
+				"files":   &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(fileType)))},
+				"metrics": &graphql.Field{Type: graphql.NewNonNull(ticketMetricsType)},
+			}
+		}),
+	})
+
+	contributorIconsType := graphql.NewObject(graphql.ObjectConfig{
+		Name: "ContributorIcons",
+		Fields: graphql.Fields{
+			"avatar":      &graphql.Field{Type: graphql.String},
+			"avatarRound": &graphql.Field{Type: graphql.String},
+			"github":      &graphql.Field{Type: graphql.String},
+		},
+	})
+
+	contributorLinkType := graphql.NewObject(graphql.ObjectConfig{
+		Name: "ContributorLink",
+		Fields: graphql.Fields{
+			"name": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+			"url":  &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+		},
+	})
+
+	contributorMetricsType := graphql.NewObject(graphql.ObjectConfig{
+		Name: "ContributorMetrics",
+		Fields: graphql.Fields{
+			"commits":     &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"tickets":     &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"bundles":     &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"folders":     &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"files":       &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"sections":    &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"definitions": &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"lines":       &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+		},
+	})
+
+	contributorType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "Contributor",
+		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
+			return graphql.Fields{
+				"id":      &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
+				"github":  &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"name":    &graphql.Field{Type: graphql.String},
+				"emails":  &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(graphql.String)))},
+				"links":   &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(contributorLinkType)))},
+				"icons":   &graphql.Field{Type: contributorIconsType},
+				"bundles": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(bundleType)))},
+				"files":   &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(fileType)))},
+				"tickets": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(ticketType)))},
+				"metrics": &graphql.Field{Type: graphql.NewNonNull(contributorMetricsType)},
+			}
+		}),
+	})
+
+	repoResolverInstance := &repoResolver{resolver}
+
+	repoType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "Repo",
+		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
+			return graphql.Fields{
+				"id":   &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
+				"name": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"path": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"bundles": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(bundleType))),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						repo := p.Source.(*Repo)
+						return repoResolverInstance.Bundles(p.Context, repo)
+					},
+				},
+				"folders": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(folderType))),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						repo := p.Source.(*Repo)
+						return repoResolverInstance.Folders(p.Context, repo)
+					},
+				},
+				"files": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(fileType))),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						repo := p.Source.(*Repo)
+						return repoResolverInstance.Files(p.Context, repo)
+					},
+				},
+				"contributors": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(contributorType))),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						repo := p.Source.(*Repo)
+						return repoResolverInstance.Contributors(p.Context, repo)
+					},
+				},
+				"tickets": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(ticketType))),
+					Args: graphql.FieldConfigArgument{
+						"year":   &graphql.ArgumentConfig{Type: graphql.Int},
+						"month":  &graphql.ArgumentConfig{Type: graphql.Int},
+						"day":    &graphql.ArgumentConfig{Type: graphql.Int},
+						"status": &graphql.ArgumentConfig{Type: ticketStatusEnum},
+					},
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						repo := p.Source.(*Repo)
+						var year, month, day *int
+						var status *TicketStatus
+						if v, ok := p.Args["year"].(int); ok {
+							year = &v
+						}
+						if v, ok := p.Args["month"].(int); ok {
+							month = &v
+						}
+						if v, ok := p.Args["day"].(int); ok {
+							day = &v
+						}
+						if v, ok := p.Args["status"].(TicketStatus); ok {
+							status = &v
+						}
+						return repoResolverInstance.Tickets(p.Context, repo, year, month, day, status)
+					},
+				},
+				"policies": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(policyType))),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						repo := p.Source.(*Repo)
+						return repoResolverInstance.Policies(p.Context, repo)
+					},
+				},
+				"violationKinds": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationKindType))),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						repo := p.Source.(*Repo)
+						return repoResolverInstance.ViolationKinds(p.Context, repo)
+					},
+				},
+				"violations": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationType))),
+					Args: graphql.FieldConfigArgument{
+						"scope": &graphql.ArgumentConfig{Type: graphql.String},
+					},
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						repo := p.Source.(*Repo)
+						var scope *string
+						if v, ok := p.Args["scope"].(string); ok {
+							scope = &v
+						}
+						return repoResolverInstance.Violations(p.Context, repo, scope)
+					},
+				},
+				"metrics": &graphql.Field{
+					Type: graphql.NewNonNull(repoMetricsType),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						repo := p.Source.(*Repo)
+						return repoResolverInstance.Metrics(p.Context, repo)
+					},
+				},
+			}
+		}),
+	})
+
+	analyzeResultType := graphql.NewObject(graphql.ObjectConfig{
+		Name: "AnalyzeResult",
+		Fields: graphql.Fields{
+			"violations": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationType)))},
+			"metrics":    &graphql.Field{Type: graphql.NewNonNull(analyzeMetricsType)},
+		},
+	})
+
+	fixResultType := graphql.NewObject(graphql.ObjectConfig{
+		Name: "FixResult",
+		Fields: graphql.Fields{
+			"fixed":      &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"remaining":  &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"violations": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationType)))},
+		},
+	})
+
+	queryResolverInstance := &queryResolver{resolver}
+
+	queryType := graphql.NewObject(graphql.ObjectConfig{
+		Name: "Query",
+		Fields: graphql.Fields{
+			"node": &graphql.Field{
+				Type: graphql.NewNonNull(graphql.NewUnion(graphql.UnionConfig{
+					Name:  "Node",
+					Types: []*graphql.Object{repoType, bundleType, folderType, fileType, sectionType, definitionType, contributorType, ticketType, policyType, violationKindType, violationType},
+					ResolveType: func(p graphql.ResolveTypeParams) *graphql.Object {
+						switch p.Value.(type) {
+						case *Repo:
+							return repoType
+						case *Bundle:
+							return bundleType
+						case *Folder:
+							return folderType
+						case *File:
+							return fileType
+						case *Section:
+							return sectionType
+						case *Definition:
+							return definitionType
+						case *Contributor:
+							return contributorType
+						case *Ticket:
+							return ticketType
+						case *Policy:
+							return policyType
+						case *ViolationKindMeta:
+							return violationKindType
+						case *Violation:
+							return violationType
+						default:
+							return nil
+						}
+					},
+				})),
+				Args: graphql.FieldConfigArgument{
+					"id": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.ID)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					id := p.Args["id"].(string)
+					return queryResolverInstance.Node(p.Context, id)
+				},
+			},
+			"repo": &graphql.Field{
+				Type: graphql.NewNonNull(repoType),
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					return queryResolverInstance.Repo(p.Context)
+				},
+			},
+			"bundle": &graphql.Field{
+				Type: bundleType,
+				Args: graphql.FieldConfigArgument{
+					"name": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					name := p.Args["name"].(string)
+					return queryResolverInstance.Bundle(p.Context, name)
+				},
+			},
+			"folder": &graphql.Field{
+				Type: folderType,
+				Args: graphql.FieldConfigArgument{
+					"path": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					path := p.Args["path"].(string)
+					return queryResolverInstance.Folder(p.Context, path)
+				},
+			},
+			"file": &graphql.Field{
+				Type: fileType,
+				Args: graphql.FieldConfigArgument{
+					"path": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					path := p.Args["path"].(string)
+					return queryResolverInstance.File(p.Context, path)
+				},
+			},
+			"section": &graphql.Field{
+				Type: sectionType,
+				Args: graphql.FieldConfigArgument{
+					"path":        &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+					"sectionPath": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(graphql.String)))},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					path := p.Args["path"].(string)
+					sectionPathRaw := p.Args["sectionPath"].([]interface{})
+					sectionPath := make([]string, len(sectionPathRaw))
+					for i, v := range sectionPathRaw {
+						sectionPath[i] = v.(string)
+					}
+					return queryResolverInstance.Section(p.Context, path, sectionPath)
+				},
+			},
+			"definition": &graphql.Field{
+				Type: definitionType,
+				Args: graphql.FieldConfigArgument{
+					"path": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+					"name": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					path := p.Args["path"].(string)
+					name := p.Args["name"].(string)
+					return queryResolverInstance.Definition(p.Context, path, name)
+				},
+			},
+			"contributor": &graphql.Field{
+				Type: contributorType,
+				Args: graphql.FieldConfigArgument{
+					"id": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					id := p.Args["id"].(string)
+					return queryResolverInstance.Contributor(p.Context, id)
+				},
+			},
+			"ticket": &graphql.Field{
+				Type: ticketType,
+				Args: graphql.FieldConfigArgument{
+					"year":  &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.Int)},
+					"month": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.Int)},
+					"day":   &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.Int)},
+					"slug":  &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					year := p.Args["year"].(int)
+					month := p.Args["month"].(int)
+					day := p.Args["day"].(int)
+					slug := p.Args["slug"].(string)
+					return queryResolverInstance.Ticket(p.Context, year, month, day, slug)
+				},
+			},
+			"policy": &graphql.Field{
+				Type: policyType,
+				Args: graphql.FieldConfigArgument{
+					"id": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					id := p.Args["id"].(string)
+					return queryResolverInstance.Policy(p.Context, id)
+				},
+			},
+			"violationKind": &graphql.Field{
+				Type: violationKindType,
+				Args: graphql.FieldConfigArgument{
+					"id": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					id := p.Args["id"].(string)
+					return queryResolverInstance.ViolationKind(p.Context, id)
+				},
+			},
+			"analyze": &graphql.Field{
+				Type: graphql.NewNonNull(analyzeResultType),
+				Args: graphql.FieldConfigArgument{
+					"scope": &graphql.ArgumentConfig{Type: graphql.String},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					var scope *string
+					if s, ok := p.Args["scope"].(string); ok {
+						scope = &s
+					}
+					return queryResolverInstance.Analyze(p.Context, scope)
+				},
+			},
+		},
+	})
+
+	mutationResolverInstance := &mutationResolver{resolver}
+
+	ticketCreateInputType := graphql.NewInputObject(graphql.InputObjectConfig{
+		Name: "TicketCreateInput",
+		Fields: graphql.InputObjectConfigFieldMap{
+			"slug":   &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"prompt": &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"model":  &graphql.InputObjectFieldConfig{Type: graphql.String},
+		},
+	})
+
+	ticketCheckpointInputType := graphql.NewInputObject(graphql.InputObjectConfig{
+		Name: "TicketCheckpointInput",
+		Fields: graphql.InputObjectConfigFieldMap{
+			"year":   &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
+			"month":  &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
+			"day":    &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
+			"slug":   &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"prompt": &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"model":  &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"files":  &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(graphql.String)))},
+		},
+	})
+
+	ticketFinishInputType := graphql.NewInputObject(graphql.InputObjectConfig{
+		Name: "TicketFinishInput",
+		Fields: graphql.InputObjectConfigFieldMap{
+			"year":    &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
+			"month":   &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
+			"day":     &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
+			"slug":    &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"summary": &graphql.InputObjectFieldConfig{Type: graphql.String},
+		},
+	})
+
+	ticketReopenInputType := graphql.NewInputObject(graphql.InputObjectConfig{
+		Name: "TicketReopenInput",
+		Fields: graphql.InputObjectConfigFieldMap{
+			"year":  &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
+			"month": &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
+			"day":   &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
+			"slug":  &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+		},
+	})
+
+	contributorAddInputType := graphql.NewInputObject(graphql.InputObjectConfig{
+		Name: "ContributorAddInput",
+		Fields: graphql.InputObjectConfigFieldMap{
+			"github": &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"name":   &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"emails": &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(graphql.String))},
+		},
+	})
+
+	mutationType := graphql.NewObject(graphql.ObjectConfig{
+		Name: "Mutation",
+		Fields: graphql.Fields{
+			"fix": &graphql.Field{
+				Type: graphql.NewNonNull(fixResultType),
+				Args: graphql.FieldConfigArgument{
+					"scope": &graphql.ArgumentConfig{Type: graphql.String},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					var scope *string
+					if s, ok := p.Args["scope"].(string); ok {
+						scope = &s
+					}
+					return mutationResolverInstance.Fix(p.Context, scope)
+				},
+			},
+			"ticketCreate": &graphql.Field{
+				Type: ticketType,
+				Args: graphql.FieldConfigArgument{
+					"input": &graphql.ArgumentConfig{Type: graphql.NewNonNull(ticketCreateInputType)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					inputMap := p.Args["input"].(map[string]interface{})
+					input := TicketCreateInput{
+						Slug:   inputMap["slug"].(string),
+						Prompt: inputMap["prompt"].(string),
+					}
+					if m, ok := inputMap["model"].(string); ok {
+						input.Model = &m
+					}
+					return mutationResolverInstance.TicketCreate(p.Context, input)
+				},
+			},
+			"ticketCheckpoint": &graphql.Field{
+				Type: ticketType,
+				Args: graphql.FieldConfigArgument{
+					"input": &graphql.ArgumentConfig{Type: graphql.NewNonNull(ticketCheckpointInputType)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					inputMap := p.Args["input"].(map[string]interface{})
+					input := TicketCheckpointInput{
+						Year:   inputMap["year"].(int),
+						Month:  inputMap["month"].(int),
+						Day:    inputMap["day"].(int),
+						Slug:   inputMap["slug"].(string),
+						Prompt: inputMap["prompt"].(string),
+					}
+					if m, ok := inputMap["model"].(string); ok {
+						input.Model = &m
+					}
+					if filesRaw, ok := inputMap["files"].([]interface{}); ok {
+						for _, f := range filesRaw {
+							if s, ok := f.(string); ok {
+								input.Files = append(input.Files, s)
+							}
+						}
+					}
+					return mutationResolverInstance.TicketCheckpoint(p.Context, input)
+				},
+			},
+			"ticketFinish": &graphql.Field{
+				Type: ticketType,
+				Args: graphql.FieldConfigArgument{
+					"input": &graphql.ArgumentConfig{Type: graphql.NewNonNull(ticketFinishInputType)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					inputMap := p.Args["input"].(map[string]interface{})
+					input := TicketFinishInput{
+						Year:  inputMap["year"].(int),
+						Month: inputMap["month"].(int),
+						Day:   inputMap["day"].(int),
+						Slug:  inputMap["slug"].(string),
+					}
+					if s, ok := inputMap["summary"].(string); ok {
+						input.Summary = &s
+					}
+					return mutationResolverInstance.TicketFinish(p.Context, input)
+				},
+			},
+			"ticketReopen": &graphql.Field{
+				Type: ticketType,
+				Args: graphql.FieldConfigArgument{
+					"input": &graphql.ArgumentConfig{Type: graphql.NewNonNull(ticketReopenInputType)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					inputMap := p.Args["input"].(map[string]interface{})
+					input := TicketReopenInput{
+						Year:  inputMap["year"].(int),
+						Month: inputMap["month"].(int),
+						Day:   inputMap["day"].(int),
+						Slug:  inputMap["slug"].(string),
+					}
+					return mutationResolverInstance.TicketReopen(p.Context, input)
+				},
+			},
+			"contributorAdd": &graphql.Field{
+				Type: contributorType,
+				Args: graphql.FieldConfigArgument{
+					"input": &graphql.ArgumentConfig{Type: graphql.NewNonNull(contributorAddInputType)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					inputMap := p.Args["input"].(map[string]interface{})
+					input := ContributorAddInput{
+						Github: inputMap["github"].(string),
+					}
+					if n, ok := inputMap["name"].(string); ok {
+						input.Name = &n
+					}
+					if emails, ok := inputMap["emails"].([]interface{}); ok {
+						for _, e := range emails {
+							if s, ok := e.(string); ok {
+								input.Emails = append(input.Emails, s)
+							}
+						}
+					}
+					return mutationResolverInstance.ContributorAdd(p.Context, input)
+				},
+			},
+			"contributorRemove": &graphql.Field{
+				Type: graphql.NewNonNull(graphql.Boolean),
+				Args: graphql.FieldConfigArgument{
+					"github": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					github := p.Args["github"].(string)
+					return mutationResolverInstance.ContributorRemove(p.Context, github)
+				},
+			},
+			"folderCreate": &graphql.Field{
+				Type: folderType,
+				Args: graphql.FieldConfigArgument{
+					"path": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					path := p.Args["path"].(string)
+					return mutationResolverInstance.FolderCreate(p.Context, path)
+				},
+			},
+			"folderMove": &graphql.Field{
+				Type: folderType,
+				Args: graphql.FieldConfigArgument{
+					"src": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+					"dst": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					src := p.Args["src"].(string)
+					dst := p.Args["dst"].(string)
+					return mutationResolverInstance.FolderMove(p.Context, src, dst)
+				},
+			},
+			"folderDelete": &graphql.Field{
+				Type: graphql.NewNonNull(graphql.Boolean),
+				Args: graphql.FieldConfigArgument{
+					"path": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					path := p.Args["path"].(string)
+					return mutationResolverInstance.FolderDelete(p.Context, path)
+				},
+			},
+			"fileCreate": &graphql.Field{
+				Type: fileType,
+				Args: graphql.FieldConfigArgument{
+					"path": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					path := p.Args["path"].(string)
+					return mutationResolverInstance.FileCreate(p.Context, path)
+				},
+			},
+			"fileMove": &graphql.Field{
+				Type: fileType,
+				Args: graphql.FieldConfigArgument{
+					"src": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+					"dst": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					src := p.Args["src"].(string)
+					dst := p.Args["dst"].(string)
+					return mutationResolverInstance.FileMove(p.Context, src, dst)
+				},
+			},
+			"fileDelete": &graphql.Field{
+				Type: graphql.NewNonNull(graphql.Boolean),
+				Args: graphql.FieldConfigArgument{
+					"path": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					path := p.Args["path"].(string)
+					return mutationResolverInstance.FileDelete(p.Context, path)
+				},
+			},
+			"sectionCreate": &graphql.Field{
+				Type: sectionType,
+				Args: graphql.FieldConfigArgument{
+					"file":   &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+					"name":   &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+					"parent": &graphql.ArgumentConfig{Type: graphql.String},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					file := p.Args["file"].(string)
+					name := p.Args["name"].(string)
+					var parent *string
+					if par, ok := p.Args["parent"].(string); ok {
+						parent = &par
+					}
+					return mutationResolverInstance.SectionCreate(p.Context, file, name, parent)
+				},
+			},
+			"sectionMove": &graphql.Field{
+				Type: sectionType,
+				Args: graphql.FieldConfigArgument{
+					"file":    &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+					"oldName": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+					"newName": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					file := p.Args["file"].(string)
+					oldName := p.Args["oldName"].(string)
+					newName := p.Args["newName"].(string)
+					return mutationResolverInstance.SectionMove(p.Context, file, oldName, newName)
+				},
+			},
+			"sectionDelete": &graphql.Field{
+				Type: graphql.NewNonNull(graphql.Boolean),
+				Args: graphql.FieldConfigArgument{
+					"file": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+					"name": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					file := p.Args["file"].(string)
+					name := p.Args["name"].(string)
+					return mutationResolverInstance.SectionDelete(p.Context, file, name)
+				},
+			},
+		},
+	})
+
+	_ = rangeType
+	_ = countMetricsType
+
+	return graphql.NewSchema(graphql.SchemaConfig{
+		Query:    queryType,
+		Mutation: mutationType,
+	})
+}
+
+// #endregion Schema Builder
+
+// #region Query Resolvers
+
+func (r *Resolver) Query() QueryResolver {
+	return &queryResolver{r}
+}
+
+type queryResolver struct{ *Resolver }
+
+func (r *queryResolver) Node(ctx context.Context, id string) (Node, error) {
+	parts := strings.SplitN(id, ":", 2)
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("invalid node id format: %s", id)
+	}
+	kind, nodeID := parts[0], parts[1]
+	switch kind {
+	case "repo":
+		return r.Repo(ctx)
+	case "bundle":
+		return r.Bundle(ctx, nodeID)
+	case "folder":
+		return r.Folder(ctx, nodeID)
+	case "file":
+		return r.File(ctx, nodeID)
+	case "contributor":
+		return r.Contributor(ctx, nodeID)
+	case "policy":
+		return r.Policy(ctx, nodeID)
+	case "violationKind":
+		return r.ViolationKind(ctx, nodeID)
+	default:
+		return nil, fmt.Errorf("unknown node kind: %s", kind)
+	}
+}
+
+func (r *queryResolver) Repo(ctx context.Context) (*Repo, error) {
+	return &Repo{
+		ID:   "repo:semio",
+		Name: "semio",
+		Path: r.RootDir,
+	}, nil
+}
+
+func (r *queryResolver) Bundle(ctx context.Context, name string) (*Bundle, error) {
+	if r.Ctx != nil {
+		bundles := r.Ctx.GetBundles()
+		for _, b := range bundles {
+			if b.Name == name {
+				return b, nil
+			}
+		}
+	}
+	return &Bundle{
+		Name: name,
+		Tags: []string{},
+	}, nil
+}
+
+func (r *queryResolver) Folder(ctx context.Context, path string) (*Folder, error) {
+	normalizedPath := strings.ReplaceAll(path, "\\", "/")
+	name := filepath.Base(normalizedPath)
+	return &Folder{
+		ID:   fmt.Sprintf("folder:%s", normalizedPath),
+		Path: normalizedPath,
+		URI:  fmt.Sprintf("file://%s/%s", r.RootDir, normalizedPath),
+		Name: name,
+	}, nil
+}
+
+func (r *queryResolver) File(ctx context.Context, path string) (*File, error) {
+	normalizedPath := strings.ReplaceAll(path, "\\", "/")
+	name := filepath.Base(normalizedPath)
+	ext := filepath.Ext(name)
+	folderPath := filepath.Dir(normalizedPath)
+	var folderID *string
+	if folderPath != "." {
+		id := fmt.Sprintf("folder:%s", folderPath)
+		folderID = &id
+	}
+	return &File{
+		ID:        fmt.Sprintf("file:%s", normalizedPath),
+		Path:      normalizedPath,
+		URI:       fmt.Sprintf("file://%s/%s", r.RootDir, normalizedPath),
+		Name:      name,
+		Extension: ext,
+		FolderID:  folderID,
+	}, nil
+}
+
+func (r *queryResolver) Section(ctx context.Context, path string, sectionPath []string) (*Section, error) {
+	sectionName := strings.Join(sectionPath, "#")
+	return &Section{
+		Name: sectionName,
+	}, nil
+}
+
+func (r *queryResolver) Definition(ctx context.Context, path string, name string) (*Definition, error) {
+	return &Definition{
+		Name: name,
+		Kind: DefinitionKindFunction,
+	}, nil
+}
+
+func (r *queryResolver) Contributor(ctx context.Context, id string) (*Contributor, error) {
+	if r.Ctx != nil {
+		contributors, err := r.Ctx.GetContributors()
+		if err == nil {
+			for _, c := range contributors {
+				if c.Github == id {
+					return c, nil
+				}
+			}
+		}
+	}
+	return &Contributor{
+		Github: id,
+		Emails: []string{},
+		Links:  map[string]string{},
+	}, nil
+}
+
+func (r *queryResolver) Ticket(ctx context.Context, year int, month int, day int, slug string) (*Ticket, error) {
+	if r.Ctx != nil {
+		y, m, d := year, month, day
+		tickets, err := r.Ctx.GetTickets(&y, &m, &d, nil)
+		if err == nil {
+			for _, t := range tickets {
+				if t.Slug == slug {
+					return t, nil
+				}
+			}
+		}
+	}
+	return &Ticket{
+		Year:  year,
+		Month: month,
+		Day:   day,
+		Slug:  slug,
+	}, nil
+}
+
+func (r *queryResolver) Policy(ctx context.Context, id string) (*Policy, error) {
+	if r.Ctx != nil {
+		policies := r.Ctx.GetPolicies()
+		for _, p := range policies {
+			if p.Name == id {
+				return p, nil
+			}
+		}
+	}
+	return &Policy{
+		ID:     fmt.Sprintf("policy:%s", id),
+		Name:   id,
+		Scopes: []string{},
+	}, nil
+}
+
+func (r *queryResolver) ViolationKind(ctx context.Context, id string) (*ViolationKindMeta, error) {
+	if r.Ctx != nil {
+		kinds := r.Ctx.GetViolationKinds()
+		for _, k := range kinds {
+			if string(k.Kind) == id {
+				return k, nil
+			}
+		}
+	}
+	return &ViolationKindMeta{
+		Kind:        ViolationKind(id),
+		Priority:    ViolationPriorityMedium,
+		Autofixable: false,
+		Reason:      "",
+		Solution:    "",
+	}, nil
+}
+
+func (r *queryResolver) Analyze(ctx context.Context, scope *string) (*AnalyzeResult, error) {
+	if r.Ctx != nil {
+		return r.Ctx.Analyze(scope)
+	}
+	return &AnalyzeResult{
+		Violations: []*Violation{},
+		Metrics: &AnalyzeMetrics{
+			Total:       0,
+			ByPriority:  &PriorityCount{High: 0, Medium: 0, Low: 0},
+			Autofixable: 0,
+		},
+	}, nil
+}
+
+// #endregion Query Resolvers
+
+// #region Mutation Resolvers
+
+func (r *Resolver) Mutation() MutationResolver {
+	return &mutationResolver{r}
+}
+
+type mutationResolver struct{ *Resolver }
+
+func (r *mutationResolver) Fix(ctx context.Context, scope *string) (*FixResult, error) {
+	if r.Ctx != nil {
+		return r.Ctx.Fix(scope)
+	}
+	return &FixResult{
+		Fixed:      0,
+		Remaining:  0,
+		Violations: []*Violation{},
+	}, nil
+}
+
+func (r *mutationResolver) TicketCreate(ctx context.Context, input TicketCreateInput) (*Ticket, error) {
+	if r.Ctx != nil {
+		return r.Ctx.TicketCreate(input)
+	}
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (r *mutationResolver) TicketCheckpoint(ctx context.Context, input TicketCheckpointInput) (*Ticket, error) {
+	if r.Ctx != nil {
+		return r.Ctx.TicketCheckpoint(input)
+	}
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (r *mutationResolver) TicketFinish(ctx context.Context, input TicketFinishInput) (*Ticket, error) {
+	if r.Ctx != nil {
+		return r.Ctx.TicketFinish(input)
+	}
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (r *mutationResolver) TicketReopen(ctx context.Context, input TicketReopenInput) (*Ticket, error) {
+	if r.Ctx != nil {
+		return r.Ctx.TicketReopen(input)
+	}
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (r *mutationResolver) ContributorAdd(ctx context.Context, input ContributorAddInput) (*Contributor, error) {
+	if r.Ctx != nil {
+		return r.Ctx.ContributorAdd(input)
+	}
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (r *mutationResolver) ContributorRemove(ctx context.Context, github string) (bool, error) {
+	if r.Ctx != nil {
+		err := r.Ctx.ContributorRemove(github)
+		return err == nil, err
+	}
+	return false, fmt.Errorf("not implemented")
+}
+
+func (r *mutationResolver) FolderCreate(ctx context.Context, path string) (*Folder, error) {
+	if r.Ctx != nil {
+		return r.Ctx.FolderCreate(path)
+	}
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (r *mutationResolver) FolderMove(ctx context.Context, src string, dst string) (*Folder, error) {
+	if r.Ctx != nil {
+		return r.Ctx.FolderMove(src, dst)
+	}
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (r *mutationResolver) FolderDelete(ctx context.Context, path string) (bool, error) {
+	if r.Ctx != nil {
+		err := r.Ctx.FolderDelete(path)
+		return err == nil, err
+	}
+	return false, fmt.Errorf("not implemented")
+}
+
+func (r *mutationResolver) FileCreate(ctx context.Context, path string) (*File, error) {
+	if r.Ctx != nil {
+		return r.Ctx.FileCreate(path)
+	}
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (r *mutationResolver) FileMove(ctx context.Context, src string, dst string) (*File, error) {
+	if r.Ctx != nil {
+		return r.Ctx.FileMove(src, dst)
+	}
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (r *mutationResolver) FileDelete(ctx context.Context, path string) (bool, error) {
+	if r.Ctx != nil {
+		err := r.Ctx.FileDelete(path)
+		return err == nil, err
+	}
+	return false, fmt.Errorf("not implemented")
+}
+
+func (r *mutationResolver) SectionCreate(ctx context.Context, file string, name string, parent *string) (*Section, error) {
+	if r.Ctx != nil {
+		return r.Ctx.SectionCreate(file, name, parent)
+	}
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (r *mutationResolver) SectionMove(ctx context.Context, file string, oldName string, newName string) (*Section, error) {
+	if r.Ctx != nil {
+		return r.Ctx.SectionMove(file, oldName, newName)
+	}
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (r *mutationResolver) SectionDelete(ctx context.Context, file string, name string) (bool, error) {
+	if r.Ctx != nil {
+		err := r.Ctx.SectionDelete(file, name)
+		return err == nil, err
+	}
+	return false, fmt.Errorf("not implemented")
+}
+
+// #endregion Mutation Resolvers
+
+// #region Entity Resolvers
+
+type repoResolver struct{ *Resolver }
+
+func (r *Resolver) Repo_() RepoResolver {
+	return &repoResolver{r}
+}
+
+func (r *repoResolver) Bundles(ctx context.Context, obj *Repo) ([]*Bundle, error) {
+	if r.Ctx != nil {
+		return r.Ctx.GetBundles(), nil
+	}
+	return []*Bundle{}, nil
+}
+
+func (r *repoResolver) Folders(ctx context.Context, obj *Repo) ([]*Folder, error) {
+	return []*Folder{}, nil
+}
+
+func (r *repoResolver) Files(ctx context.Context, obj *Repo) ([]*File, error) {
+	return []*File{}, nil
+}
+
+func (r *repoResolver) Contributors(ctx context.Context, obj *Repo) ([]*Contributor, error) {
+	if r.Ctx != nil {
+		return r.Ctx.GetContributors()
+	}
+	return []*Contributor{}, nil
+}
+
+func (r *repoResolver) Tickets(ctx context.Context, obj *Repo, year *int, month *int, day *int, status *TicketStatus) ([]*Ticket, error) {
+	if r.Ctx != nil {
+		return r.Ctx.GetTickets(year, month, day, status)
+	}
+	return []*Ticket{}, nil
+}
+
+func (r *repoResolver) Policies(ctx context.Context, obj *Repo) ([]*Policy, error) {
+	if r.Ctx != nil {
+		return r.Ctx.GetPolicies(), nil
+	}
+	return []*Policy{}, nil
+}
+
+func (r *repoResolver) ViolationKinds(ctx context.Context, obj *Repo) ([]*ViolationKindMeta, error) {
+	if r.Ctx != nil {
+		return r.Ctx.GetViolationKinds(), nil
+	}
+	return []*ViolationKindMeta{}, nil
+}
+
+func (r *repoResolver) Violations(ctx context.Context, obj *Repo, scope *string) ([]*Violation, error) {
+	if r.Ctx != nil {
+		result, err := r.Ctx.Analyze(scope)
+		if err != nil {
+			return nil, err
+		}
+		return result.Violations, nil
+	}
+	return []*Violation{}, nil
+}
+
+func (r *repoResolver) Metrics(ctx context.Context, obj *Repo) (*RepoMetrics, error) {
+	return &RepoMetrics{}, nil
+}
+
+// #endregion Entity Resolvers
+
+// #region Resolver Interfaces
+
+type QueryResolver interface {
+	Node(ctx context.Context, id string) (Node, error)
+	Repo(ctx context.Context) (*Repo, error)
+	Bundle(ctx context.Context, name string) (*Bundle, error)
+	Folder(ctx context.Context, path string) (*Folder, error)
+	File(ctx context.Context, path string) (*File, error)
+	Section(ctx context.Context, path string, sectionPath []string) (*Section, error)
+	Definition(ctx context.Context, path string, name string) (*Definition, error)
+	Contributor(ctx context.Context, id string) (*Contributor, error)
+	Ticket(ctx context.Context, year int, month int, day int, slug string) (*Ticket, error)
+	Policy(ctx context.Context, id string) (*Policy, error)
+	ViolationKind(ctx context.Context, id string) (*ViolationKindMeta, error)
+	Analyze(ctx context.Context, scope *string) (*AnalyzeResult, error)
+}
+
+type MutationResolver interface {
+	Fix(ctx context.Context, scope *string) (*FixResult, error)
+	TicketCreate(ctx context.Context, input TicketCreateInput) (*Ticket, error)
+	TicketCheckpoint(ctx context.Context, input TicketCheckpointInput) (*Ticket, error)
+	TicketFinish(ctx context.Context, input TicketFinishInput) (*Ticket, error)
+	TicketReopen(ctx context.Context, input TicketReopenInput) (*Ticket, error)
+	ContributorAdd(ctx context.Context, input ContributorAddInput) (*Contributor, error)
+	ContributorRemove(ctx context.Context, github string) (bool, error)
+	FolderCreate(ctx context.Context, path string) (*Folder, error)
+	FolderMove(ctx context.Context, src string, dst string) (*Folder, error)
+	FolderDelete(ctx context.Context, path string) (bool, error)
+	FileCreate(ctx context.Context, path string) (*File, error)
+	FileMove(ctx context.Context, src string, dst string) (*File, error)
+	FileDelete(ctx context.Context, path string) (bool, error)
+	SectionCreate(ctx context.Context, file string, name string, parent *string) (*Section, error)
+	SectionMove(ctx context.Context, file string, oldName string, newName string) (*Section, error)
+	SectionDelete(ctx context.Context, file string, name string) (bool, error)
+}
+
+type RepoResolver interface {
+	Bundles(ctx context.Context, obj *Repo) ([]*Bundle, error)
+	Folders(ctx context.Context, obj *Repo) ([]*Folder, error)
+	Files(ctx context.Context, obj *Repo) ([]*File, error)
+	Contributors(ctx context.Context, obj *Repo) ([]*Contributor, error)
+	Tickets(ctx context.Context, obj *Repo, year *int, month *int, day *int, status *TicketStatus) ([]*Ticket, error)
+	Policies(ctx context.Context, obj *Repo) ([]*Policy, error)
+	ViolationKinds(ctx context.Context, obj *Repo) ([]*ViolationKindMeta, error)
+	Violations(ctx context.Context, obj *Repo, scope *string) ([]*Violation, error)
+	Metrics(ctx context.Context, obj *Repo) (*RepoMetrics, error)
+}
+
+// #endregion Resolver Interfaces

@@ -715,6 +715,7 @@ const bundles = result.data?.repo?.bundles ?? [];
 ```
 
 Helper functions provided:
+
 - `executeGraphQL<TData, TVariables>(query, variables?)` - Execute any GraphQL query
 - `fetchRepoViaGraphQL()` - Fetch complete repo data
 - `fetchBundlesViaGraphQL()` - Fetch all bundles
@@ -865,6 +866,7 @@ The scope system uses a hierarchical format that mirrors the monorepo structure:
 - **DEFINITION**: Function/class/variable name (e.g., `createMachine`)
 
 Only the right parts can be omitted, not parts on the left. Examples:
+
 - `@semio/js/js/js/sketchpad/Sketchpad.tsx` - file in bundle
 - `@semio/net` - entire net bundle
 - `@semio` - entire repository
@@ -936,6 +938,7 @@ Section names are automatically derived from file paths when the actual section 
 #### Ignore Flag
 
 The `ignore` flag can be set on tickets or individual iterations to exclude them from contribution calculations. Use this for:
+
 - Formatting-only changes
 - Cleanup/refactoring that doesn't add functionality
 - Reverted changes

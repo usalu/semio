@@ -57,7 +57,7 @@ type Query {
 type Mutation {
   fix(scope: String): FixResult!
   ticketCreate(input: TicketCreateInput!): Ticket
-  ticketProgress(input: TicketProgressInput!): Ticket
+  ticketCheckpoint(input: TicketCheckpointInput!): Ticket
   ticketFinish(input: TicketFinishInput!): Ticket
   ticketReopen(input: TicketReopenInput!): Ticket
   contributorAdd(input: ContributorAddInput!): Contributor
@@ -81,17 +81,16 @@ input TicketCreateInput {
   slug: String!
   prompt: String!
   model: String
-  files: FileListInput
 }
 
-input TicketProgressInput {
+input TicketCheckpointInput {
   year: Int!
   month: Int!
   day: Int!
   slug: String!
   prompt: String!
   model: String
-  files: FileListInput
+  files: [String!]!
 }
 
 input TicketFinishInput {
@@ -381,7 +380,7 @@ type Ticket implements Node {
   model: String
   commit: String
   date: TicketDate!
-  iterations: [TicketIteration!]!
+  checkpoints: [TicketCheckpoint!]!
   bundles: [Bundle!]!
   files: [File!]!
   metrics: TicketMetrics!
@@ -397,25 +396,42 @@ type TicketDate {
   finished: DateTime
 }
 
-type TicketIteration {
+type TicketCheckpoint {
   prompt: String!
   model: String
   author: Contributor
   commit: String
-  date: IterationDate!
-  files: IterationFiles
-  bundles: [TicketBundleContrib!]!
+  date: CheckpointDate!
+  files: [String!]!
+  sections: [CheckpointSectionContrib!]!
+  definitions: [CheckpointDefinitionContrib!]!
+  metrics: CheckpointMetrics!
 }
 
-type IterationDate {
-  started: DateTime!
-  ended: DateTime
+type CheckpointDate {
+  created: DateTime!
 }
 
-type IterationFiles {
-  updated: [String!]!
-  created: [String!]!
-  removed: [String!]!
+type CheckpointSectionContrib {
+  file: String!
+  section: String!
+  range: Range!
+  metrics: LineMetrics!
+}
+
+type CheckpointDefinitionContrib {
+  file: String!
+  section: String!
+  definition: String!
+  range: Range!
+  metrics: LineMetrics!
+}
+
+type CheckpointMetrics {
+  files: Int!
+  sections: Int!
+  definitions: Int!
+  lines: LineMetrics!
 }
 
 type TicketBundleContrib {
@@ -435,9 +451,10 @@ type TicketSectionContrib {
 }
 
 type TicketMetrics {
-  iterations: Int!
-  bundles: Int!
+  checkpoints: Int!
   files: Int!
+  sections: Int!
+  definitions: Int!
   lines: LineMetrics!
 }
 

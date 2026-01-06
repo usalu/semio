@@ -32,17 +32,16 @@ import (
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 	"github.com/usalu/semio/go/repo"
-	"github.com/usalu/semio/go/repo/graph"
 )
 
-var executor *graph.Executor
+var executor *repo.Executor
 
 func init() {
 	wd, _ := os.Getwd()
 	rootDir := findRepoRoot(wd)
 	repo.SetRootDir(rootDir)
 	var err error
-	executor, err = graph.NewExecutorWithContext(rootDir, repo.NewRepoContext(rootDir))
+	executor, err = repo.NewExecutorWithContext(rootDir, repo.NewRepoContext(rootDir))
 	if err != nil {
 		panic(err)
 	}

@@ -299,7 +299,7 @@ func TestSectionListCommand(t *testing.T) {
 	if result.Data == nil {
 		t.Error("ToolSectionList returned nil data")
 	}
-	sections, ok := result.Data.([]repo.SectionInfo)
+	sections, ok := result.Data.([]repo.Section)
 	if !ok {
 		t.Error("ToolSectionList data is not []SectionInfo")
 		return
