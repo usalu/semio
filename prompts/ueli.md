@@ -1,5 +1,482 @@
 # Prompt history
 
+Refactor the ticket mechanism instead of creating a new TICKETSLUG.md, create a new folder.
+Inside that folder all temporary files or files that were used in the prompt are added.
+├─ tickets
+│ └─ YEAR
+│ │ └─ MONTH
+│ │ │ └─ DAY
+│ │ │ │ └─ SLUG
+│ │ │ │ │ │─ ticket.md
+│ │ │ │ │ └─ FILES
+Write a temporary script to migrate all existing tickets to the new folder structure. This migration should only be done once. Don't keep any legacy api.
+
+Extend the vscode extension to show the codebase tree in the sideview under the search section.
+├─ Codebase
+│ └─ @semio # NAVIGATETOREPO
+│ │ └─ FOLDEROUTSIDEBUNDLE # NAVIGATETOFOLDER
+│ │ │ └─ FILEOUTSIDEBUNDLE # NAVIGATETOFILE
+│ └─ BUNDLE # NAVIGATETOBUNDLE
+│ │ └─ FOLDERINSIDEBUNDLE # NAVIGATETOFOLDER
+│ │ │ └─ ANOTHERFOLDERINSIDEBUNDLE # NAVIGATETOFOLDER
+│ │ │ │ └─ FILE # NAVIGATETOFILE
+│ │ │ │ │ └─ SECTION # NAVIGATETOSECTION
+│ │ │ │ │ │ └─ DEFINITION # NAVIGATETODEFINITION
+
+When calling repo.exe then return everything in a json object. Make sure everything is properly derived. Make sure to implement everything composable. The subcommands should just call parts of it. Refactor the vscode extension to use the new command on startup.
+{
+  "codebase": {
+    "bundles":[{
+      "id": "@semio/js",
+      "folder": "js",
+      "uri": "file://c:/git/semio.tech/semio/js",
+      "contributors": ["https://github.com/usalu"],
+      "tickets": ["2026/01/05/CONTRIBUTOR-DERIVED"],
+      "metrics": {
+        "folders": 3,
+        "files": 10,
+        "sections": 100,
+        "definitions": 1000
+        "lines": 10000,
+        "violations": 10,
+      }
+    }],
+    "folders": [{
+      "path": "js/js",
+      "uri": "file://c:/git/semio.tech/semio/js/js",
+      "metrics": {
+        "files": 5,
+        "lines": 5000,
+        "violations": 10,
+      }}]
+    "files:[{
+      "id": "@semio/js/semio.ts",
+      "path": "js/js/semio.ts",
+      "uri": "file://c:/git/semio.tech/semio/js/js/semio.ts",
+      "metrics": {
+        "sections": 10,
+        "definitions": 100,
+        "lines": 1000,
+      },
+      "violations": [{
+        "kind": "code:header:missing-filepath",
+        "priority": "low",
+        "autofixable": true,
+        "solution": "Add the filepath to the header region.",
+
+      }]
+    }],
+    "sections": [{
+      "id": "@semio/js/semio.ts#Kit",
+      "path": "js/js/semio.ts#Kit",
+      "uri": "file://c:/git/semio.tech/semio/js/js/semio.ts#Kit",
+      "metrics": {
+        "definitions": 10,
+        "lines": 500,
+        "violations": 10,
+      }
+    }],
+    "definitions": [{
+      "id": "@semio/js/semio.ts#KitDiff",
+      "path": "js/js/semio.ts#KitDiff",
+      "uri": "file://c:/git/semio.tech/semio/js/js/semio.ts#KitDiff",
+      "metrics": {
+        "definitions": 3,
+        "lines": 100,
+        "violations": 10,
+      }
+    }],
+    "contributors": [{
+      "id": "usalu",
+      "uri": "file://c:/git/semio.tech/semio/contributors/usalu",
+      "path": "contributors/usalu/contributor.json",
+      "name": "Ueli Saluz",
+      "icons": {
+        "avatar": "file://c:/git/semio.tech/semio/contributors/usalu/avatar.png",
+        "avatar-round-90x90": "file://c:/git/semio.tech/semio/contributors/usalu/avatar-round-90x90.png",
+        "github": "https://github.com/usalu.png",
+      }
+      "emails": ["ueli@semio-tech.com"],
+      "links": {
+        "github": "https://github.com/usalu"
+      },
+      "contributions": {
+        "bundles": [{
+          "id": "@semio/js",
+          "metrics": {
+            "folders": {
+              "added": 1,
+              "changed": 1,
+              "removed": 1,
+            },
+            "files": {
+              "added": 10,
+              "changed": 1,
+              "removed": 1,
+            },
+            "lines": {
+              "added": 100,
+              "removed": 10,
+            },
+          }
+        }],
+        "folders": [{
+          "id": "@semio/js",
+          "metrics": {
+            "files": {
+              "added": 10,
+              "changed": 1,
+              "removed": 1,
+            },
+            "lines": {
+              "added": 100,
+              "removed": 10,
+            },
+          }
+        }],
+        "files": [{
+          "id": "@semio/js/semio.ts",
+          "metrics": {
+            "lines": {
+              "added": 100,
+              "removed": 10,
+            },
+          }
+        }],
+        "sections": [{
+          "id": "@semio/js/semio.ts#Kit",
+          "metrics": {
+            "lines": {
+              "added": 100,
+              "removed": 10,
+            },
+          }
+        }],
+        "definitions": [{
+          "id": "@semio/js/semio.ts#Kit§KitDiff",
+          "metrics": {
+            "lines": {
+              "added": 100,
+              "removed": 10,
+            },
+          }
+        }],
+      },
+      "metrics": {
+        "commits": 10,
+        "tickets": 10,
+        "bundles": 1,
+        "folders": 1,
+        "files": 10,
+        "lines": 1000,
+        "sections": 100,
+        "definitions": 1000,
+      }
+    }],
+    "tickets": [{
+      "id": "2026/01/05/CONTRIBUTOR-DERIVED",
+      "path": "tickets/2026/01/05/CONTRIBUTOR-DERIVED.md",
+      "uri": "file://c:/git/semio.tech/semio/tickets/2026/01/05/CONTRIBUTOR-DERIVED.md",
+      "date: {
+        "created": "2026-01-05T14:05:02Z",
+        "finished": "2026-01-05T14:10:21Z",
+      },
+      "commit": "612efdddc47caf10aac48cf7c57eab357e6695cd",
+      "year": "2026",
+      "month": "01",
+      "day": "05",
+      "slug": "CONTRIBUTOR-DERIVED",
+      "prompt": "Derive contributions from tickets and file headers",
+      "model": "gpt-5-2",
+      "author": "usalu",
+      "bundles": [{
+        "id": "@semio/js",
+        "metrics": {
+          "folders": {
+            "added": 1,
+            "updated": 1,
+            "removed": 1,
+          },
+          "files": {
+            "added": 1,
+            "updated": 1,
+            "removed": 1,
+          },
+          "sections": {
+            "added": 1,
+            "updated": 1,
+            "removed": 1,
+          },
+          "definitions": {
+            "added": 1,
+            "updated": 1,
+            "removed": 1,
+          },
+          "lines": {
+            "added": 100,
+            "removed": 10,
+          },
+        }
+      }],
+      "folders": [{
+        "id": "js",
+        "metrics": {
+           "files": {
+            "added": 1,
+            "updated": 1,
+            "removed": 1,
+          },
+          "sections": {
+            "added": 1,
+            "updated": 1,
+            "removed": 1,
+          },
+          "definitions": {
+            "added": 1,
+            "updated": 1,
+            "removed": 1,
+          },
+          "lines": {
+            "added": 100,
+            "removed": 10,
+          },
+        }
+      }],
+      "files": [{
+        "id": "@semio/js/semio.ts",
+        "metrics": {
+         "sections": {
+            "added": 1,
+            "updated": 1,
+            "removed": 1,
+          },
+          "definitions": {
+            "added": 1,
+            "updated": 1,
+            "removed": 1,
+          },
+          "lines": {
+            "added": 100,
+            "removed": 10,
+          },
+        }
+      }],
+      "sections": [{
+        "id": "@semio/js/semio.ts#Kit",
+        "metrics": {
+          "definitions": {
+            "added": 1,
+            "updated": 1,
+            "removed": 1,
+          },
+          "lines": {
+            "added": 100,
+            "removed": 10,
+          },
+        }
+      }],
+      "definitions": [{
+        "id": "@semio/js/semio.ts#KitDiff",
+        "metrics": {
+          "lines":{
+            "added": 100,
+            "removed": 10,
+          },
+        }
+      }],
+    }],
+    "policies": [{
+      "id": "code:header:missing-filepath",
+      "name": "Missing Filepath",
+      "scopes": ["@semio/js/sketchpad/**/*.[ts|tsx]"],
+      "violations":[{
+        "kind": "code:header:missing-filepath",
+        "priority": "low",
+        "autofixable": true,
+        "solution": "Add the filepath to the header region.",
+      }]
+    }],
+    "violations": [{
+      "id": "code:header:missing-filepath#|js|@semio/js/semio.ts#1",
+      "folders": [{
+        "id": "js",
+        "path": "js",
+        "uri": "folder://c:/git/semio.tech/semio/js"
+      }],
+      "files": [{
+        "id": "@semio/js/semio.ts",
+        "path": "js/js/semio.ts",
+        "uri": "file://c:/git/semio.tech/semio/js/js/semio.ts",
+        "range":{
+          "start":{
+            "line":100,
+            "column":10,
+          },
+          "end":{
+            "line":100,
+            "column":10,
+          }
+        }
+      }],
+      "kind": "code:header:missing-filepath",
+      "priority": "low",
+      "autofixable": true,
+      "solution": "Add the filepath to the header region.",
+    }],
+    "tree":{
+      "@semio":{
+        "kind": "repo",
+        "js":{
+          "kind": "folder",
+          ".npmrc":{
+            "kind": "file",
+          }
+        }
+        "@semio/js":{
+          "kind": "bundle",
+          "@semio/js/semio.ts":{
+            "kind": "file",
+            "@semio/js/semio.ts#Entities": {
+              "kind": "section",
+              "@semio/js/semio.ts#Entities#Kit":{
+                "kind": "section",
+                "@semio/js/semio.ts#Entities#Kit§KitDiff": {
+                  "kind": "definition",
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+vs
+~~{
+  "codebase": {
+    "@semio": {
+      "kind": "repo",
+      "js": {
+        "kind": "bundle",
+        "js": {
+          "kind": "folder",
+          "metrics": {
+            "files": 12
+            "lines": 4520
+          },
+          "js": {
+            "kind": "folder",
+            "semio.ts": {
+              "kind": "file",
+              "Kit": {
+                "kind": "section",
+                "KitDiff": {
+                  "kind": "definition",
+                }
+              }
+            }
+          }
+        }
+      }
+      "FOLDEROUTSIDEBUNDLE": {
+        "kind": "folder",
+        "FILEOUTSIDEBUNDLE": {
+          "kind": "file",
+          "SECTION": {
+            "kind": "section",
+            "DEFINITION": {
+              "kind": "definition",
+            }
+          }
+        }
+      }
+    }
+
+  }
+}~~
+
+section, definition, file, folder, bundle specific but to be general for all scopes and with flags individual 
+Make sure to support drag for tree items.
+E.g. moving a definition to another section of another file of another folder of another bundle should work.
+Generalize the move command to accept source scope and target scope. Some operations are not permitted such as moving a bundle to another bundle. 
+
+Again the bundles are missing. Make sure that all bundles (nx projects) are correctly identified and the the folders are properly computed (removed the parent folders of the projects):
+Currently it shows:
+├─ codebase
+│ └─ @semio
+│ │ ├─ FOLDER
+│ │ │ │ └─ FILE
+│ │ │ │ │ └─ SECTION
+│ │ │ │ │ │ └─ DEFINITION
+But it should show:
+├─ codebase
+│ └─ @semio
+│ │ └─ FOLDEROUTSIDEBUNDLE
+│ │ │ └─ FILEOUTSIDEBUNDLE
+│ └─ BUNDLE
+│ │ └─ FOLDERINSIDEBUNDLE
+│ │ │ └─ ANOTHERFOLDERINSIDEBUNDLE
+│ │ │ │ └─ FILE
+│ │ │ │ │ └─ SECTION
+│ │ │ │ │ │ └─ DEFINITION
+
+There are some issues:
+- All bundles are missing (e.g. @semio/js, @semio/net, @semio/desktop, @semio/engine, @semio/play, @semio/docs, @semio/assets, …)
+- The folders inside the bundles are missing
+Currently it shows:
+├─ codebase
+│ └─ @semio
+│ │ ├─ FILE
+│ │ │ │ └─ SECTION
+│ │ │ │ │ └─ DEFINITION
+but instead it should show:
+├─ codebase
+│ └─ @semio
+│ │ └─ FOLDEROUTSIDEBUNDLE
+│ │ │ └─ FILEOUTSIDEBUNDLE
+│ └─ BUNDLE
+│ │ └─ FOLDERINSIDEBUNDLE
+│ │ │ └─ ANOTHERFOLDERINSIDEBUNDLE
+│ │ │ │ └─ FILE
+│ │ │ │ │ └─ SECTION
+│ │ │ │ │ │ └─ DEFINITION
+
+There are some issues:
+- There should be all the bundles after codebase (@semio, @semio/js, @semio/net, @semio/desktop, @semio/engine, @semio/play, @semio/docs, @semio/assets, …)
+- The folders should only be shown when part of the bundles
+- The definitions should be children of the sections.
+Currently it shows:
+├─ codebase
+│ └─ @semio
+│ │ ├─ preflight.ts
+│ │ ├─ js
+│ │ │ └─ js
+│ │ │ │ └─ semio.ts
+│ │ │ │ │ ├─ Attribute
+│ │ │ │ │ └─ Attribute
+but instead it should show:
+├─ codebase
+│ └─ @semio
+│ │ └─ FILEATROOT
+│ └─ @semio/js
+│ │ └─ semio.ts
+│ │ │ └─ Attribute
+│ │ │ │ └─ AttributeDiff
+
+
+The file tree items in contribution section should be changed to from files to codebase:
+├─ codebase
+│ └─ BUNDLE # NAVIGATETOBUNDLE
+│ │ ├─ SOMELOCALFOLDER # NAVIGATETOBUNDLE
+│ │ │ └─ ANOTHERLOCALFOLDER # NAVIGATETOFOLDER
+│ │ │ │ └─ FILE # NAVIGATETOFILE
+│ │ │ │ │ └─ SECTION # NAVIGATETOSECTION
+│ │ │ │ │ │ └─ DEFINITION # NAVIGATETODEFINITION
+
+The comment violation should not target comments inside the header section.
+
+The repo binary is not following the open/closed principle. Adding a new policy is not possible without modifying the code. Make sure that Languages perform all language specific operations and just a an array of languages is passed [currently typescript, go, c#, json]. Bundle, section, definition are general concepts in semio-repo which in every language have a different meaning. First analyze how to refactor and then implement it.
+
 The repo binary is not following the open/closed principle. Adding a new language is not possible without modifying the code. Make sure that Languages perform all language specific operations and just a an array of languages is passed [currently typescript, go, c#, json]. Bundle, section, definition are general concepts in semio-repo which in every language have a different meaning. First analyze how to refactor and then implement it.
 
 Currently the policies switch over languages. Refactor this cleanly, so that languages perform language specific operations and no switch statements are used inside the policies.

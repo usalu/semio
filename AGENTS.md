@@ -817,10 +817,12 @@ tickets/
   YEAR/
     MONTH/
       DAY/
-        SLUG.md
+        SLUG/
+          ticket.md
+          FILES...
 ```
 
-Example: `tickets/2025/11/24/VALIDATION-SYSTEM.md`
+Example: `tickets/2025/11/24/VALIDATION-SYSTEM/ticket.md`
 
 #### Frontmatter Format
 
@@ -1718,7 +1720,9 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ ├── YEAR
 │ │ ├── MONTH
 │ │ │ ├── DAY
-│ │ │ │ └── SLUG.md # Ticket file with YAML frontmatter
+│ │ │ │ └── SLUG
+│ │ │ │ │ │─ ticket.md # Ticket file with YAML frontmatter
+│ │ │ │ │ └─ FILES... # Additional files for the ticket
 ├── yak
 ├── .gitignore
 ├── .gitmodules
