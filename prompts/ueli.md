@@ -1,6 +1,27 @@
 # Prompt history
 
-The repo.go was recently refactored to use exclusively graphql and consolidated into a single source of truth.
+The vscode extension is outdated. It uses duplicate interfaces with GqlXxx and Xxx interfaces. Refactor it to exclusively use urql for data fetching. Extend repo.go and cli/main.go or the graphql schema if necessary.
+
+Remove the slug from the ticket files
+
+Every node should have The ids must be globally unique. Currently they are inconsistent. Refactor them like this:
+@semio is the repo
+@semio/repo/FOLDER/ANOTHERFOLDER is a folder outside of a bundle
+@semio/repo/BUNDLE/FOLDER/FILE is a file outside of a bundle
+@semio/BUNDLE is a bundle
+@semio/BUNDLE/OPTIONALFOLDER/FILE is a file
+@semio/BUNDLE/OPTIONALFOLDER/FILE#SECTION#SUBSECTION is a section
+@semio/BUNDLE/OPTIONALFOLDER/FILE#SECTION#SUBSECTION§DEFINITION is a definition
+@semio/contributors/usalu is a contributor
+@semio/tickets/YYYY/MM/DD/TICKETSLUG is a ticket
+@semio/policies/POLICYNAME is a policy
+@semio/policies/POLICYNAME/violations/VIOLATIONKIND is a violationKind
+@semio/violations/OPTIONALFOLDER/FILE#SECTION/DEFINITION is a violation
+
+The ticket mechanism changed. The docs are outdated. Analyze the implementation and adjust the docs.
+
+The repo.go refactor to use exclusively graphql and consolidated into a single source of truth was recently started. Get mcp, cli, vscode running again and test everything.
+Add a serve command to the cli that spinns up a graphql server with introspection and graphiql interface.
 
 Consolidate the graph package with all the files into the repo.go file.
 @executor.go@resolver.go@schema.resolvers.go@repo.go@gqlgen.yml@graph 

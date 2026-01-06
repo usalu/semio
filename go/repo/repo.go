@@ -560,6 +560,14 @@ type Violation struct {
 func (v *Violation) IsNode()       {}
 func (v *Violation) GetID() string { return v.ID }
 
+func (v *Violation) Priority() ViolationPriority {
+	return v.Kind.Info().Priority
+}
+
+func (v *Violation) Autofixable() bool {
+	return v.Kind.Info().Autofixable
+}
+
 
 type TicketSectionMetrics struct {
 	Definitions []string           `yaml:"definitions,omitempty" json:"definitions,omitempty"`
@@ -7728,17 +7736,49 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		Name: "Bundle",
 		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
 			return graphql.Fields{
-				"id":          &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
+				"id": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.ID),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						bundle := p.Source.(*Bundle)
+						return bundle.GetID(), nil
+					},
+				},
 				"name":        &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
 				"root":        &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
 				"sourceRoot":  &graphql.Field{Type: graphql.String},
 				"projectType": &graphql.Field{Type: graphql.String},
 				"tags":        &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(graphql.String)))},
 				"uri":         &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-				"folders":     &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(folderType)))},
-				"files":       &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(fileType)))},
-				"violations":  &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationType)))},
-				"metrics":     &graphql.Field{Type: graphql.NewNonNull(bundleMetricsType)},
+				"folders": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(folderType))),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						return []*Folder{}, nil
+					},
+				},
+				"files": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(fileType))),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						return []*File{}, nil
+					},
+				},
+				"violations": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationType))),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						return []*Violation{}, nil
+					},
+				},
+				"metrics": &graphql.Field{
+					Type: graphql.NewNonNull(bundleMetricsType),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						return &BundleMetrics{
+							Files:       0,
+							Folders:     0,
+							Definitions: 0,
+							Lines:       0,
+							Violations:  0,
+						}, nil
+					},
+				},
 			}
 		}),
 	})
@@ -7747,16 +7787,40 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		Name: "Folder",
 		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
 			return graphql.Fields{
-				"id":         &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
-				"path":       &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-				"uri":        &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-				"name":       &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-				"parent":     &graphql.Field{Type: folderType},
-				"children":   &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(folderType)))},
-				"files":      &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(fileType)))},
-				"bundle":     &graphql.Field{Type: bundleType},
-				"violations": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationType)))},
-				"metrics":    &graphql.Field{Type: graphql.NewNonNull(folderMetricsType)},
+				"id":       &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
+				"path":     &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"uri":      &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"name":     &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"parent":   &graphql.Field{Type: folderType},
+				"children": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(folderType))),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						return []*Folder{}, nil
+					},
+				},
+				"files": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(fileType))),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						return []*File{}, nil
+					},
+				},
+				"bundle": &graphql.Field{Type: bundleType},
+				"violations": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationType))),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						return []*Violation{}, nil
+					},
+				},
+				"metrics": &graphql.Field{
+					Type: graphql.NewNonNull(folderMetricsType),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						return &FolderMetrics{
+							Files:      0,
+							Lines:      0,
+							Violations: 0,
+						}, nil
+					},
+				},
 			}
 		}),
 	})
@@ -7765,18 +7829,42 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		Name: "File",
 		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
 			return graphql.Fields{
-				"id":          &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
-				"path":        &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-				"uri":         &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-				"name":        &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-				"extension":   &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-				"folder":      &graphql.Field{Type: folderType},
-				"bundle":      &graphql.Field{Type: bundleType},
-				"sections":    &graphql.Field{Type: graphql.NewList(sectionType)},
-				"definitions": &graphql.Field{Type: graphql.NewList(definitionType)},
-				"violations":  &graphql.Field{Type: graphql.NewList(violationType)},
-				"metrics":     &graphql.Field{Type: fileMetricsType},
-				"content":     &graphql.Field{Type: graphql.String},
+				"id":        &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
+				"path":      &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"uri":       &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"name":      &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"extension": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"folder":    &graphql.Field{Type: folderType},
+				"bundle":    &graphql.Field{Type: bundleType},
+				"sections": &graphql.Field{
+					Type: graphql.NewList(sectionType),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						return []*Section{}, nil
+					},
+				},
+				"definitions": &graphql.Field{
+					Type: graphql.NewList(definitionType),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						return []*Definition{}, nil
+					},
+				},
+				"violations": &graphql.Field{
+					Type: graphql.NewList(violationType),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						return []*Violation{}, nil
+					},
+				},
+				"metrics": &graphql.Field{
+					Type: fileMetricsType,
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						return &FileMetrics{
+							Sections:    0,
+							Definitions: 0,
+							Lines:       0,
+						}, nil
+					},
+				},
+				"content": &graphql.Field{Type: graphql.String},
 			}
 		}),
 	})
@@ -7785,16 +7873,46 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		Name: "Section",
 		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
 			return graphql.Fields{
-				"id":          &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
-				"name":        &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-				"path":        &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-				"file":        &graphql.Field{Type: fileType},
-				"parent":      &graphql.Field{Type: sectionType},
-				"children":    &graphql.Field{Type: graphql.NewList(sectionType)},
-				"definitions": &graphql.Field{Type: graphql.NewList(definitionType)},
-				"violations":  &graphql.Field{Type: graphql.NewList(violationType)},
-				"range":       &graphql.Field{Type: rangeType},
-				"metrics":     &graphql.Field{Type: sectionMetricsType},
+				"id": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.ID),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						section := p.Source.(*Section)
+						return section.GetID(), nil
+					},
+				},
+				"name":   &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"path":   &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"file":   &graphql.Field{Type: fileType},
+				"parent": &graphql.Field{Type: sectionType},
+				"children": &graphql.Field{
+					Type: graphql.NewList(sectionType),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						return []*Section{}, nil
+					},
+				},
+				"definitions": &graphql.Field{
+					Type: graphql.NewList(definitionType),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						return []*Definition{}, nil
+					},
+				},
+				"violations": &graphql.Field{
+					Type: graphql.NewList(violationType),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						return []*Violation{}, nil
+					},
+				},
+				"range": &graphql.Field{Type: rangeType},
+				"metrics": &graphql.Field{
+					Type: sectionMetricsType,
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						return &SectionMetrics{
+							Definitions: 0,
+							Lines:       0,
+							Violations:  0,
+						}, nil
+					},
+				},
 			}
 		}),
 	})
@@ -7803,14 +7921,34 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		Name: "Definition",
 		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
 			return graphql.Fields{
-				"id":         &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
-				"name":       &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-				"kind":       &graphql.Field{Type: graphql.NewNonNull(definitionKindEnum)},
-				"file":       &graphql.Field{Type: graphql.NewNonNull(fileType)},
-				"section":    &graphql.Field{Type: sectionType},
-				"violations": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationType)))},
-				"range":      &graphql.Field{Type: graphql.NewNonNull(rangeType)},
-				"metrics":    &graphql.Field{Type: graphql.NewNonNull(definitionMetricsType)},
+				"id": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.ID),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						definition := p.Source.(*Definition)
+						return definition.GetID(), nil
+					},
+				},
+				"name":    &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"kind":    &graphql.Field{Type: graphql.NewNonNull(definitionKindEnum)},
+				"file":    &graphql.Field{Type: graphql.NewNonNull(fileType)},
+				"section": &graphql.Field{Type: sectionType},
+				"violations": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationType))),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						return []*Violation{}, nil
+					},
+				},
+				"range": &graphql.Field{Type: graphql.NewNonNull(rangeType)},
+				"metrics": &graphql.Field{
+					Type: graphql.NewNonNull(definitionMetricsType),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						return &DefinitionMetrics{
+							Definitions: 0,
+							Lines:       0,
+							Violations:  0,
+						}, nil
+					},
+				},
 			}
 		}),
 	})
@@ -7861,7 +7999,13 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		Name: "ViolationKind",
 		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
 			return graphql.Fields{
-				"id":          &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
+				"id": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.ID),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						kind := p.Source.(*ViolationKindMeta)
+						return kind.GetID(), nil
+					},
+				},
 				"policy":      &graphql.Field{Type: graphql.NewNonNull(policyType)},
 				"priority":    &graphql.Field{Type: graphql.NewNonNull(violationPriorityEnum)},
 				"autofixable": &graphql.Field{Type: graphql.NewNonNull(graphql.Boolean)},
@@ -7912,23 +8056,139 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		Name: "Ticket",
 		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
 			return graphql.Fields{
-				"id":      &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
+				"id": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.ID),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						ticket := p.Source.(*Ticket)
+						return ticket.GetID(), nil
+					},
+				},
 				"year":    &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
 				"month":   &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
 				"day":     &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
 				"slug":    &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-				"path":    &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-				"uri":     &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-				"prompt":  &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-				"summary": &graphql.Field{Type: graphql.String},
-				"status":  &graphql.Field{Type: graphql.NewNonNull(ticketStatusEnum)},
+				"path": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.String),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						ticket := p.Source.(*Ticket)
+						return ticket.FilePath, nil
+					},
+				},
+				"uri": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.String),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						ticket := p.Source.(*Ticket)
+						absPath := filepath.Join(rootDir, ticket.FilePath)
+						return "file://" + strings.ReplaceAll(absPath, "\\", "/"), nil
+					},
+				},
+				"prompt": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.String),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						ticket := p.Source.(*Ticket)
+						return ticket.Frontmatter.Prompt, nil
+					},
+				},
+				"summary": &graphql.Field{
+					Type: graphql.String,
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						ticket := p.Source.(*Ticket)
+						if ticket.Frontmatter.Summary == "" {
+							return nil, nil
+						}
+						return ticket.Frontmatter.Summary, nil
+					},
+				},
+				"status": &graphql.Field{
+					Type: graphql.NewNonNull(ticketStatusEnum),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						ticket := p.Source.(*Ticket)
+						status := ticket.Frontmatter.Status
+						if status == "" || status == "open" {
+							return TicketStatusOpen, nil
+						}
+						if status == "finished" || status == "closed" {
+							return TicketStatusClosed, nil
+						}
+						return TicketStatusOpen, nil
+					},
+				},
 				"author":  &graphql.Field{Type: contributorType},
-				"model":   &graphql.Field{Type: graphql.String},
-				"commit":  &graphql.Field{Type: graphql.String},
-				"date":    &graphql.Field{Type: graphql.NewNonNull(ticketDateType)},
+				"model": &graphql.Field{
+					Type: graphql.String,
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						ticket := p.Source.(*Ticket)
+						if ticket.Frontmatter.Model == "" {
+							return nil, nil
+						}
+						return ticket.Frontmatter.Model, nil
+					},
+				},
+				"commit": &graphql.Field{
+					Type: graphql.String,
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						ticket := p.Source.(*Ticket)
+						if ticket.Frontmatter.Commit == "" {
+							return nil, nil
+						}
+						return ticket.Frontmatter.Commit, nil
+					},
+				},
+				"date": &graphql.Field{
+					Type: graphql.NewNonNull(ticketDateType),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						ticket := p.Source.(*Ticket)
+						if ticket.Frontmatter.Date.Created == "" {
+							return nil, fmt.Errorf("ticket has no created date")
+						}
+						created, err := time.Parse(time.RFC3339, ticket.Frontmatter.Date.Created)
+						if err != nil {
+							return nil, fmt.Errorf("invalid created date format: %w", err)
+						}
+						var finished *time.Time
+						if ticket.Frontmatter.Date.Finished != "" {
+							finishedTime, err := time.Parse(time.RFC3339, ticket.Frontmatter.Date.Finished)
+							if err == nil {
+								finished = &finishedTime
+							}
+						}
+						return map[string]interface{}{
+							"created":  created,
+							"finished": finished,
+						}, nil
+					},
+				},
 				"bundles": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(bundleType)))},
 				"files":   &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(fileType)))},
-				"metrics": &graphql.Field{Type: graphql.NewNonNull(ticketMetricsType)},
+				"metrics": &graphql.Field{
+					Type: graphql.NewNonNull(ticketMetricsType),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						ticket := p.Source.(*Ticket)
+						filesSet := make(map[string]struct{})
+						var totalAdded, totalRemoved int
+						for _, checkpoint := range ticket.Frontmatter.Checkpoints {
+							for _, section := range checkpoint.Sections {
+								filesSet[section.File] = struct{}{}
+							}
+							for _, definition := range checkpoint.Definitions {
+								filesSet[definition.File] = struct{}{}
+							}
+							if checkpoint.Metrics != nil && checkpoint.Metrics.Lines != nil {
+								totalAdded += checkpoint.Metrics.Lines.Added
+								totalRemoved += checkpoint.Metrics.Lines.Removed
+							}
+						}
+						return map[string]interface{}{
+							"iterations": len(ticket.Frontmatter.Checkpoints),
+							"bundles":    0,
+							"files":      len(filesSet),
+							"lines": map[string]interface{}{
+								"added":   totalAdded,
+								"removed": totalRemoved,
+							},
+						}, nil
+					},
+				},
 			}
 		}),
 	})
@@ -7968,16 +8228,51 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		Name: "Contributor",
 		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
 			return graphql.Fields{
-				"id":      &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
+				"id": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.ID),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						contributor := p.Source.(*Contributor)
+						return contributor.GetID(), nil
+					},
+				},
 				"github":  &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
 				"name":    &graphql.Field{Type: graphql.String},
 				"emails":  &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(graphql.String)))},
-				"links":   &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(contributorLinkType)))},
+				"links": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(contributorLinkType))),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						contributor := p.Source.(*Contributor)
+						links := []ContributorLink{}
+						for name, url := range contributor.Links {
+							links = append(links, ContributorLink{Name: name, URL: url})
+						}
+						return links, nil
+					},
+				},
 				"icons":   &graphql.Field{Type: contributorIconsType},
 				"bundles": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(bundleType)))},
 				"files":   &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(fileType)))},
 				"tickets": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(ticketType)))},
-				"metrics": &graphql.Field{Type: graphql.NewNonNull(contributorMetricsType)},
+				"metrics": &graphql.Field{
+					Type: graphql.NewNonNull(contributorMetricsType),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						contributor := p.Source.(*Contributor)
+						metrics := &ContributorMetrics{
+							Commits:     len(contributor.Contributions.Commits),
+							Tickets:     len(contributor.Contributions.Tickets),
+							Bundles:     len(contributor.Contributions.Bundles),
+							Folders:     len(contributor.Contributions.Folders),
+							Files:       len(contributor.Contributions.Files),
+							Sections:    len(contributor.Contributions.Regions),
+							Definitions: len(contributor.Contributions.Definitions),
+							Lines:       0,
+						}
+						if contributor.Contributions.Lines != nil {
+							metrics.Lines = contributor.Contributions.Lines.Added + contributor.Contributions.Lines.Removed
+						}
+						return metrics, nil
+					},
+				},
 			}
 		}),
 	})

@@ -25,6 +25,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -140,6 +141,103 @@ func init() {
 }
 
 // #endregion GraphQL Command
+
+// #region Serve Command
+
+var serveCmd = &cobra.Command{
+	Use:   "serve",
+	Short: "Start GraphQL server with GraphiQL interface",
+	Long:  `Start an HTTP server exposing the GraphQL API with introspection and GraphiQL interface.`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		port, _ := cmd.Flags().GetInt("port")
+		addr := fmt.Sprintf(":%d", port)
+
+		http.HandleFunc("/graphql", graphqlHandler)
+		http.HandleFunc("/", graphiqlHandler)
+
+		fmt.Printf("GraphQL server running at http://localhost%s/graphql\n", addr)
+		fmt.Printf("GraphiQL interface at http://localhost%s/\n", addr)
+		return http.ListenAndServe(addr, nil)
+	},
+}
+
+func graphqlHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	var request struct {
+		Query         string                 `json:"query"`
+		Variables     map[string]interface{} `json:"variables"`
+		OperationName string                 `json:"operationName"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, `{"errors":[{"message":"Invalid JSON"}]}`, http.StatusBadRequest)
+		return
+	}
+
+	result, err := executor.Execute(r.Context(), request.Query, request.Variables)
+	response := map[string]interface{}{}
+	if err != nil {
+		response["errors"] = []map[string]string{{"message": err.Error()}}
+	} else {
+		response["data"] = result
+	}
+
+	json.NewEncoder(w).Encode(response)
+}
+
+func graphiqlHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html")
+	w.Write([]byte(graphiqlHTML))
+}
+
+const graphiqlHTML = `<!DOCTYPE html>
+<html>
+<head>
+  <title>GraphiQL - Semio Repo</title>
+  <style>
+    body { height: 100%; margin: 0; width: 100%; overflow: hidden; }
+    #graphiql { height: 100vh; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js" crossorigin></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js" crossorigin></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/graphiql@3.0.10/graphiql.min.css" />
+</head>
+<body>
+  <div id="graphiql">Loading...</div>
+  <script src="https://cdn.jsdelivr.net/npm/graphiql@3.0.10/graphiql.min.js" crossorigin></script>
+  <script>
+    const root = ReactDOM.createRoot(document.getElementById('graphiql'));
+    root.render(
+      React.createElement(GraphiQL, {
+        fetcher: async (graphQLParams) => {
+          const response = await fetch('/graphql', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(graphQLParams),
+          });
+          return response.json();
+        },
+      }),
+    );
+  </script>
+</body>
+</html>`
+
+func init() {
+	serveCmd.Flags().IntP("port", "p", 8080, "Port to listen on")
+	rootCmd.AddCommand(serveCmd)
+}
+
+// #endregion Serve Command
 
 // #region Analyze Command
 

@@ -492,6 +492,9 @@ type Violation implements Node {
   column: Int
   excerpt: String
   autofix: Autofix
+  summary: String!
+  priority: ViolationPriority!
+  autofixable: Boolean!
 }
 
 type Autofix {
