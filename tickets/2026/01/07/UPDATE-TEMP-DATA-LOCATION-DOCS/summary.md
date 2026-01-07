@@ -1,0 +1,2 @@
+- Documented ticket-scoped temporary data in README Products/Components and AGENTS SRS/UI-UX/Codebase sections.
+- Updated AGENTS policies to place temporary artifacts in the active ticket folder.

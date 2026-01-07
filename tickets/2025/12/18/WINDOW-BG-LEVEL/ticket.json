@@ -1,0 +1,12 @@
+{
+  "title": "Fix window background colors via useLevel",
+  "prompt": "\"Fix window background colors: Window component now provides LevelProvider level=window and uses bg-window; GoldenLayout chrome uses var(--window) instead of var(--base).\"",
+  "llm": "gpt-5.2-codex",
+  "status": "finished",
+  "author": "uelisaluz",
+  "dates": {
+    "created": "2025-12-18T15:11:24.199Z",
+    "finished": "2025-12-18T15:29:35.275Z"
+  },
+  "commit": "20a57039fec48f8c991d98769aa31e15cbd6859c"
+}

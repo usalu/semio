@@ -1,0 +1,11 @@
+{
+  "title": "Optimize state management with granular Y.js subscriptions",
+  "prompt": "Optimize state management with granular Y.js subscriptions",
+  "llm": "claude-sonnet-4-5",
+  "status": "finished",
+  "author": "uelisaluz",
+  "dates": {
+    "created": "2025-12-16T17:06:07.833Z"
+  },
+  "commit": "0000000000000000000000000000000000000000"
+}

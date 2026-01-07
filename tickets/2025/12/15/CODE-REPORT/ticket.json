@@ -1,0 +1,11 @@
+{
+  "title": "Generate code.json code-quality report",
+  "prompt": "\"The analyze script should be extended to create a report for the codebase producing code.json (for typescript, python, c#). It should check for: Comments in the code. Missing License headers. Regions that dont close (every #region REGIONNAME needs to have a corresponding #endregion REGIONNAME).\"",
+  "llm": "gpt-5-2",
+  "status": "finished",
+  "author": "uelisaluz",
+  "dates": {
+    "created": "2025-12-16T17:06:07.953Z"
+  },
+  "commit": "2fb81ef29354981c1b9625769dba4a06360a4aef"
+}

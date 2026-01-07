@@ -1,0 +1,11 @@
+{
+  "title": "Document reports folder in AGENTS",
+  "prompt": "Document reports folder in AGENTS",
+  "llm": "claude-sonnet-4",
+  "status": "finished",
+  "author": "uelisaluz",
+  "dates": {
+    "created": "2025-12-16T17:06:07.765Z"
+  },
+  "commit": "0000000000000000000000000000000000000000"
+}

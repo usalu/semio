@@ -1,0 +1,11 @@
+{
+  "title": "Simplified panel tests to verify toggle existence",
+  "prompt": "Simplified panel tests to verify toggle existence",
+  "llm": "claude-sonnet-4-5",
+  "status": "finished",
+  "author": "uelisaluz",
+  "dates": {
+    "created": "2025-12-16T17:06:07.868Z"
+  },
+  "commit": "0000000000000000000000000000000000000000"
+}

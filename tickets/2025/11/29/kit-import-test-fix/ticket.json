@@ -1,0 +1,11 @@
+{
+  "title": "Fix Kit Import Playwright Test",
+  "prompt": "Fix Kit Import Playwright Test",
+  "llm": "claude-sonnet-4",
+  "status": "finished",
+  "author": "uelisaluz",
+  "dates": {
+    "created": "2025-12-16T17:06:07.768Z"
+  },
+  "commit": "0000000000000000000000000000000000000000"
+}

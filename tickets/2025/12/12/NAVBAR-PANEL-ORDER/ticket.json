@@ -1,0 +1,11 @@
+{
+  "title": "Enforce navbar panel order Details Chat Settings",
+  "prompt": "Enforce navbar panel order Details Chat Settings",
+  "llm": "claude-sonnet-4-5",
+  "status": "finished",
+  "author": "uelisaluz",
+  "dates": {
+    "created": "2025-12-16T17:06:07.909Z"
+  },
+  "commit": "0000000000000000000000000000000000000000"
+}

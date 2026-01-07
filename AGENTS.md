@@ -78,6 +78,8 @@ Ticket creation and iteration start MAY omit file lists at the interface boundar
 
 Iteration start and iteration finish MUST declare at least one file across `updated`, `created`, or `removed`.
 
+Temporary task artifacts MUST be stored inside the active ticket workspace.
+
 Iteration finish MUST derive per-file `updated`, `created`, and `removed` lists with line stats via git diff between the previous iteration commit (or ticket base commit) and the current commit.
 
 Ticket finish MUST aggregate all iteration files as ticket-level `files` and MUST compute ticket-level `lines` via git diff against the ticket `base` commit.
@@ -355,6 +357,7 @@ Toolbar panel visibility defaults to `true` for all apps via `panelVisibility: {
 - Contributor tree items list emails with mailto actions, links with external navigation, and contribution nodes with line summary descriptions.
 - Contributor contributions are grouped into commits, bundles, tickets (year/month/day), and files (folder/file) with navigation actions and inline ticket close/reopen actions.
 - The built-in Explorer hosts the Sections view; selecting a section navigates to it, F2 renames, drag-and-drop moves sections, JSON keys surface as sections, and inline actions create child sections, rename sections, and delete sections via repo commands.
+- Ticket tooling treats temporary artifacts as part of the active ticket workspace.
 
 # Monorepo
 
@@ -382,7 +385,7 @@ Toolbar panel visibility defaults to `true` for all apps via `panelVisibility: {
 - When multiple long-running dev processes exist for a single workspace, use hierarchical naming for VS Code tasks/launch configs (e.g. `dev js js storybook`, `dev js js sketchpad`) and use `dev:<...>` for root `package.json` scripts when spaces are not possible.
 - NEVER create new files when not explicitly asked. ALWAYS add code to existing files using regions and subregions for structuring. Regions organize code into collapsible sections (e.g., `#region RegionName` / `#endregion` in C#, or `//#region RegionName` / `//#endregion` in JavaScript/TypeScript). Use subregions within regions for hierarchical organization. This keeps related code together and maintains a single source of truth per logical unit.
 - NEVER create new `README.md` files. Documentation is centralized in the dev-docs (`README.md` and `AGENTS.md`).
-- NEVER create new folders unless for temporary purposes.
+- NEVER create new folders unless required by the ticket workflow; temporary data belongs in the active ticket folder.
 - NEVER create additional example files and implement it directly in the dependent parts.
 - NEVER remove code that is commented out.
 - NEVER add comments to the code. Especially not to communicate to the user.
@@ -404,7 +407,7 @@ Toolbar panel visibility defaults to `true` for all apps via `panelVisibility: {
 - NEVER change (e.g. simplify/remove functionality) or skip any test to pass. ALWAYS adjust implementation to pass the tests.
 - NEVER create additional scripts, tests, fixtures, assets, …
 - NEVER create scripts outside the `scripts` folder. Not even when debugging or diagnosing a library problem.
-- ALWAYS create temporary scripts, tests, fixtures, assets, … in the `temp` folder.
+- ALWAYS create temporary scripts, tests, fixtures, assets, … inside the active ticket folder.
 - ALWAYS run specific tests and NEVER use default interactive test mode that creates a never ending process.
 - NEVER say that a test is passing when you didn't run it. ALWAYS run the test and check the report.
 
@@ -885,6 +888,8 @@ tickets/
 ```
 
 Example: `tickets/2025/11/24/VALIDATION-SYSTEM/ticket.md`
+
+Temporary task artifacts live under the active ticket folder.
 
 #### Frontmatter Format
 

@@ -1,0 +1,11 @@
+{
+  "title": "Integrate analyze/fix CI pipeline",
+  "prompt": "\"The ci/cd system should be improved. The individual commands should work more closely together and be more integrated. Currently preflights runs all analysis and formatters. There should be two new commands: analyze and fix. Preflight runs both of them. Test should run preflight and then test. build should run test. prepublish and publish should run build. All scripts should have a skip mechnaism to skip preceeding individual steps. Adding a command always means updating all hooks, nx configs, .vscode tasks, launch.json, etc.\"",
+  "llm": "gpt-5-2",
+  "status": "finished",
+  "author": "uelisaluz",
+  "dates": {
+    "created": "2025-12-16T17:06:07.950Z"
+  },
+  "commit": "67126961d64c89450f396abedd5d477670f1ad4d"
+}

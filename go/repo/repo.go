@@ -40,7 +40,6 @@ import (
 	"github.com/graphql-go/graphql"
 	"github.com/graphql-go/graphql/language/ast"
 	"github.com/graphql-go/graphql/language/parser"
-	"gopkg.in/yaml.v3"
 )
 
 // #region GraphQL Types
@@ -215,9 +214,18 @@ type TicketDate struct {
 	Finished *time.Time `json:"finished,omitempty"`
 }
 
-type CheckpointDate struct {
-	Created time.Time `json:"created"`
+type CheckpointSectionMetrics struct {
+	Range       SectionRange `json:"range"`
+	Definitions []string     `json:"definitions,omitempty"`
+	Lines       LineMetrics  `json:"lines"`
 }
+
+type SectionRange struct {
+	Start int `json:"start"`
+	End   int `json:"end"`
+}
+
+type CheckpointFiles map[string]map[string]CheckpointSectionMetrics
 
 type CheckpointSectionContrib struct {
 	File        string       `json:"file"`
@@ -358,17 +366,14 @@ func (c *Commit) GetID() string { return c.ID }
 type Ticket struct {
 	Year         int               `json:"year"`
 	Month        int               `json:"month"`
-	Day          int               `json:"day"`
-	Slug         string            `json:"slug"`
-	Data         *TicketData       `json:"data,omitempty"`
-	Frontmatter  TicketFrontmatter `json:"frontmatter,omitempty"`
-	Content      string            `json:"content,omitempty"`
-	FolderPath   string            `json:"folderPath"`
-	JsonPath     string            `json:"jsonPath,omitempty"`
-	PlanPath     string            `json:"planPath,omitempty"`
-	LogPath      string            `json:"logPath,omitempty"`
-	SummaryPath  string            `json:"summaryPath,omitempty"`
-	FilePath     string            `json:"filePath,omitempty"`
+	Day         int         `json:"day"`
+	Slug        string      `json:"slug"`
+	Data        *TicketData `json:"data,omitempty"`
+	FolderPath  string      `json:"folderPath"`
+	JsonPath    string      `json:"jsonPath,omitempty"`
+	PlanPath    string      `json:"planPath,omitempty"`
+	LogPath     string      `json:"logPath,omitempty"`
+	SummaryPath string      `json:"summaryPath,omitempty"`
 }
 
 func (t *Ticket) IsNode()       {}
@@ -385,78 +390,73 @@ func (t *Ticket) GetPrompt() string {
 	if t.Data != nil {
 		return t.Data.Prompt
 	}
-	return t.Frontmatter.Prompt
+	return ""
 }
 
 func (t *Ticket) GetLLM() string {
 	if t.Data != nil {
 		return t.Data.LLM
 	}
-	return t.Frontmatter.Model
+	return ""
 }
 
-func (t *Ticket) GetSummary() string {
+func (t *Ticket) GetIgnored() bool {
 	if t.Data != nil {
-		return t.Data.Summary
+		return t.Data.Ignored
 	}
-	return t.Frontmatter.Summary
+	return false
 }
 
 func (t *Ticket) GetStatus() TicketStatus {
 	if t.Data != nil {
 		return t.Data.Status
 	}
-	return t.Frontmatter.Status
+	return ""
 }
 
 func (t *Ticket) GetAuthor() string {
 	if t.Data != nil {
 		return t.Data.Author
 	}
-	return t.Frontmatter.Author
+	return ""
 }
 
 func (t *Ticket) GetCommit() string {
 	if t.Data != nil {
 		return t.Data.Commit
 	}
-	return t.Frontmatter.Commit
+	return ""
 }
 
 func (t *Ticket) GetCheckpoints() []TicketCheckpoint {
 	if t.Data != nil {
 		return t.Data.Checkpoints
 	}
-	return t.Frontmatter.Checkpoints
+	return nil
 }
 
 func (t *Ticket) GetDateCreated() string {
 	if t.Data != nil {
-		return t.Data.Date.Created
+		return t.Data.Dates.Created
 	}
-	return t.Frontmatter.Date.Created
+	return ""
 }
 
 func (t *Ticket) GetDateFinished() string {
 	if t.Data != nil {
-		return t.Data.Date.Finished
+		return t.Data.Dates.Finished
 	}
-	return t.Frontmatter.Date.Finished
-}
-
-func (t *Ticket) IsNewFormat() bool {
-	return t.Data != nil
+	return ""
 }
 
 type TicketCheckpoint struct {
-	Prompt   string                     `json:"prompt"`
-	Model    string                     `json:"model,omitempty"`
-	Date     CheckpointDateYaml         `json:"date"`
-	Author   string                     `json:"author,omitempty"`
-	Commit   string                     `json:"commit,omitempty"`
-	Files    []string                   `json:"files"`
-	Sections []CheckpointSectionContrib `json:"sections,omitempty"`
-	Metrics  *CheckpointMetrics         `json:"metrics,omitempty"`
+	Prompt  string          `json:"prompt"`
+	LLM     string          `json:"llm,omitempty"`
+	Date    string          `json:"date"`
+	Author  string          `json:"author,omitempty"`
+	Commit  string          `json:"commit,omitempty"`
+	Ignored bool            `json:"ignored,omitempty"`
+	Files   CheckpointFiles `json:"files"`
 }
 
 type TicketBundleContrib struct {
@@ -1321,11 +1321,6 @@ type FileLineMetrics struct {
 	Lines *LineMetrics `yaml:"lines,omitempty" json:"lines,omitempty"`
 }
 
-type CheckpointDateYaml struct {
-	Created string `yaml:"created,omitempty" json:"created,omitempty"`
-}
-
-
 type TicketFiles struct {
 	Updated []FileLineMetrics `yaml:"updated,omitempty" json:"updated,omitempty"`
 	Created []FileLineMetrics `yaml:"created,omitempty" json:"created,omitempty"`
@@ -1336,29 +1331,15 @@ type TicketData struct {
 	Title       string             `json:"title"`
 	Prompt      string             `json:"prompt"`
 	LLM         string             `json:"llm,omitempty"`
-	Summary     string             `json:"summary,omitempty"`
 	Status      TicketStatus       `json:"status"`
 	Author      string             `json:"author,omitempty"`
-	Date        TicketDateCreated  `json:"date"`
+	Dates       TicketDates        `json:"dates"`
 	Commit      string             `json:"commit,omitempty"`
-	Ignore      bool               `json:"ignore,omitempty"`
+	Ignored     bool               `json:"ignored,omitempty"`
 	Checkpoints []TicketCheckpoint `json:"checkpoints,omitempty"`
 }
 
-type TicketFrontmatter struct {
-	Slug        string             `yaml:"slug" json:"slug"`
-	Prompt      string             `yaml:"prompt" json:"prompt"`
-	Summary     string             `yaml:"summary,omitempty" json:"summary,omitempty"`
-	Status      TicketStatus       `yaml:"status" json:"status"`
-	Author      string             `yaml:"author,omitempty" json:"author,omitempty"`
-	Date        TicketDateCreated  `yaml:"date" json:"date"`
-	Commit      string             `yaml:"commit,omitempty" json:"commit,omitempty"`
-	Model       string             `yaml:"model,omitempty" json:"model,omitempty"`
-	Ignore      bool               `yaml:"ignore,omitempty" json:"ignore,omitempty"`
-	Checkpoints []TicketCheckpoint `yaml:"checkpoints,omitempty" json:"checkpoints,omitempty"`
-}
-
-type TicketDateCreated struct {
+type TicketDates struct {
 	Created  string `json:"created"`
 	Finished string `json:"finished,omitempty"`
 }
@@ -2239,6 +2220,51 @@ func GetGitAuthor() string {
 	email = strings.TrimSpace(email)
 	if email != "" {
 		return fmt.Sprintf("%s <%s>", name, email)
+	}
+	return name
+}
+
+func GetGitAuthorGithub() string {
+	contributorsDir := filepath.Join(GetRootDir(), "contributors")
+	entries, err := os.ReadDir(contributorsDir)
+	if err != nil {
+		name, _, _ := ExecCommand("git", []string{"config", "--get", "user.name"}, "")
+		return strings.TrimSpace(name)
+	}
+	email, _, _ := ExecCommand("git", []string{"config", "--get", "user.email"}, "")
+	email = strings.TrimSpace(email)
+	name, _, _ := ExecCommand("git", []string{"config", "--get", "user.name"}, "")
+	name = strings.TrimSpace(name)
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		github := entry.Name()
+		configPath := filepath.Join(contributorsDir, github, "config.json")
+		if !FileExists(configPath) {
+			continue
+		}
+		raw, err := ReadTextFile(configPath)
+		if err != nil {
+			continue
+		}
+		var config struct {
+			Name   string   `json:"name"`
+			Emails []string `json:"emails"`
+		}
+		if err := json.Unmarshal([]byte(raw), &config); err != nil {
+			continue
+		}
+		if email != "" {
+			for _, e := range config.Emails {
+				if strings.EqualFold(e, email) {
+					return github
+				}
+			}
+		}
+		if strings.EqualFold(config.Name, name) {
+			return github
+		}
 	}
 	return name
 }
@@ -3913,7 +3939,7 @@ func BuildCodebaseBundles(ctx *CodebaseContext) []CodebaseBundle {
 	for _, ticket := range ctx.Tickets {
 		ticketID := fmt.Sprintf("%04d/%02d/%02d/%s", ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
 		for _, checkpoint := range ticket.GetCheckpoints() {
-			for _, filePath := range checkpoint.Files {
+			for filePath := range checkpoint.Files {
 				bundleName := ctx.GetBundleForFile(filePath)
 				if bundleName != "" {
 					if _, ok := ticketSets[bundleName]; ok {
@@ -4268,7 +4294,7 @@ func BuildCodebaseTickets(ctx *CodebaseContext) []CodebaseTicket {
 
 		bundleFiles := make(map[string]int)
 		for _, checkpoint := range ticket.GetCheckpoints() {
-			for _, filePath := range checkpoint.Files {
+			for filePath := range checkpoint.Files {
 				bundleName := ctx.GetBundleForFile(filePath)
 				if bundleName != "" {
 					bundleFiles[bundleName]++
@@ -4287,8 +4313,8 @@ func BuildCodebaseTickets(ctx *CodebaseContext) []CodebaseTicket {
 
 		model := ticket.GetLLM()
 		for _, checkpoint := range ticket.GetCheckpoints() {
-			if checkpoint.Model != "" {
-				model = checkpoint.Model
+			if checkpoint.LLM != "" {
+				model = checkpoint.LLM
 			}
 		}
 
@@ -4539,7 +4565,7 @@ func CreateTicket(title, prompt, llm, planPath string) (*Ticket, error) {
 	now := time.Now()
 	year, month, day := FormatDate(now)
 	slug := Slugify(title)
-	llmSlug := Slugify(llm)
+	llmSlug := strings.ToLower(strings.ReplaceAll(llm, " ", "-"))
 	ticketDir := GetTicketPath(year, month, day, slug)
 	if err := EnsureDir(ticketDir); err != nil {
 		return nil, err
@@ -4548,7 +4574,7 @@ func CreateTicket(title, prompt, llm, planPath string) (*Ticket, error) {
 	planFilePath := GetTicketPlanPath(year, month, day, slug)
 	logFilePath := GetTicketLogPath(year, month, day, slug)
 	summaryFilePath := GetTicketSummaryPath(year, month, day, slug)
-	gitAuthor := GetGitAuthor()
+	gitAuthor := GetGitAuthorGithub()
 	gitCommit := GetGitCommit()
 	ticketData := &TicketData{
 		Title:       title,
@@ -4556,7 +4582,7 @@ func CreateTicket(title, prompt, llm, planPath string) (*Ticket, error) {
 		LLM:         llmSlug,
 		Status:      TicketStatusOpen,
 		Author:      gitAuthor,
-		Date:        TicketDateCreated{Created: ISOTimestamp()},
+		Dates:       TicketDates{Created: ISOTimestamp()},
 		Commit:      gitCommit,
 		Checkpoints: []TicketCheckpoint{},
 	}
@@ -4572,7 +4598,7 @@ func CreateTicket(title, prompt, llm, planPath string) (*Ticket, error) {
 		LogPath:     logFilePath,
 		SummaryPath: summaryFilePath,
 	}
-	if err := SaveTicketNew(ticket); err != nil {
+	if err := SaveTicket(ticket); err != nil {
 		return nil, err
 	}
 	if planPath != "" && FileExists(planPath) {
@@ -4597,86 +4623,21 @@ func CreateTicket(title, prompt, llm, planPath string) (*Ticket, error) {
 	return ticket, nil
 }
 
-func CreateTicketLegacy(slug, prompt, model string) (*Ticket, error) {
-	now := time.Now()
-	year, month, day := FormatDate(now)
-	normalizedSlug := Slugify(slug)
-	ticketDir := GetTicketPath(year, month, day, normalizedSlug)
-	if err := EnsureDir(ticketDir); err != nil {
-		return nil, err
-	}
-	filePath := GetTicketFilePath(year, month, day, normalizedSlug)
-	gitAuthor := GetGitAuthor()
-	gitCommit := GetGitCommit()
-	frontmatter := TicketFrontmatter{
-		Slug:        normalizedSlug,
-		Prompt:      prompt,
-		Status:      TicketStatusOpen,
-		Author:      gitAuthor,
-		Date:        TicketDateCreated{Created: ISOTimestamp()},
-		Commit:      gitCommit,
-		Model:       model,
-		Checkpoints: []TicketCheckpoint{},
-	}
-	content := `# Previously
-
-# Plan
-
-# Changes`
-	ticket := &Ticket{
-		Year:        year,
-		Month:       month,
-		Day:         day,
-		Slug:        normalizedSlug,
-		Frontmatter: frontmatter,
-		Content:     content,
-		FolderPath:  ticketDir,
-		FilePath:    filePath,
-	}
-	if err := SaveTicket(ticket); err != nil {
-		return nil, err
-	}
-	return ticket, nil
-}
-
 func ReadTicket(year, month, day int, slug string) (*Ticket, error) {
 	folderPath := GetTicketPath(year, month, day, slug)
 	jsonPath := GetTicketJsonPath(year, month, day, slug)
 	planPath := GetTicketPlanPath(year, month, day, slug)
 	logPath := GetTicketLogPath(year, month, day, slug)
 	summaryPath := GetTicketSummaryPath(year, month, day, slug)
-	if FileExists(jsonPath) {
-		raw, err := ReadTextFile(jsonPath)
-		if err != nil {
-			return nil, err
-		}
-		var data TicketData
-		if err := json.Unmarshal([]byte(raw), &data); err != nil {
-			return nil, err
-		}
-		return &Ticket{
-			Year:        year,
-			Month:       month,
-			Day:         day,
-			Slug:        slug,
-			Data:        &data,
-			FolderPath:  folderPath,
-			JsonPath:    jsonPath,
-			PlanPath:    planPath,
-			LogPath:     logPath,
-			SummaryPath: summaryPath,
-		}, nil
+	if !FileExists(jsonPath) {
+		return nil, fmt.Errorf("ticket not found: %s", jsonPath)
 	}
-	filePath := GetTicketFilePath(year, month, day, slug)
-	if !FileExists(filePath) {
-		return nil, fmt.Errorf("ticket not found: %s", filePath)
-	}
-	raw, err := ReadTextFile(filePath)
+	raw, err := ReadTextFile(jsonPath)
 	if err != nil {
 		return nil, err
 	}
-	frontmatter, content, err := parseFrontmatter(raw)
-	if err != nil {
+	var data TicketData
+	if err := json.Unmarshal([]byte(raw), &data); err != nil {
 		return nil, err
 	}
 	return &Ticket{
@@ -4684,40 +4645,16 @@ func ReadTicket(year, month, day int, slug string) (*Ticket, error) {
 		Month:       month,
 		Day:         day,
 		Slug:        slug,
-		Frontmatter: frontmatter,
-		Content:     content,
+		Data:        &data,
 		FolderPath:  folderPath,
-		FilePath:    filePath,
+		JsonPath:    jsonPath,
+		PlanPath:    planPath,
+		LogPath:     logPath,
+		SummaryPath: summaryPath,
 	}, nil
 }
 
-func parseFrontmatter(raw string) (TicketFrontmatter, string, error) {
-	var frontmatter TicketFrontmatter
-	if !strings.HasPrefix(raw, "---") {
-		return frontmatter, raw, nil
-	}
-	endIndex := strings.Index(raw[3:], "---")
-	if endIndex == -1 {
-		return frontmatter, raw, nil
-	}
-	yamlContent := raw[3 : endIndex+3]
-	content := strings.TrimPrefix(raw[endIndex+6:], "\n")
-	if err := yaml.Unmarshal([]byte(yamlContent), &frontmatter); err != nil {
-		return frontmatter, content, err
-	}
-	return frontmatter, content, nil
-}
-
 func SaveTicket(ticket *Ticket) error {
-	yamlBytes, err := yaml.Marshal(ticket.Frontmatter)
-	if err != nil {
-		return err
-	}
-	content := fmt.Sprintf("---\n%s---\n%s", string(yamlBytes), ticket.Content)
-	return WriteTextFile(ticket.FilePath, content)
-}
-
-func SaveTicketNew(ticket *Ticket) error {
 	if ticket.Data == nil {
 		return fmt.Errorf("ticket data is nil")
 	}
@@ -4730,6 +4667,7 @@ func SaveTicketNew(ticket *Ticket) error {
 
 func ListTickets(year, month, day *int) ([]Ticket, error) {
 	ticketsDir := GetTicketsDir()
+
 	if !FileExists(ticketsDir) {
 		return nil, nil
 	}
@@ -4817,19 +4755,15 @@ func ListTickets(year, month, day *int) ([]Ticket, error) {
 	return tickets, nil
 }
 
-func CreateCheckpoint(ticket *Ticket, prompt, model string, files []string) error {
+func CreateCheckpoint(ticket *Ticket, prompt, llm string, files []string) error {
 	if len(files) == 0 {
 		return fmt.Errorf("at least one file is required to create a checkpoint")
 	}
-	var baseCommit string
-	var checkpoints []TicketCheckpoint
-	if ticket.Data != nil {
-		baseCommit = ticket.Data.Commit
-		checkpoints = ticket.Data.Checkpoints
-	} else {
-		baseCommit = ticket.Frontmatter.Commit
-		checkpoints = ticket.Frontmatter.Checkpoints
+	if ticket.Data == nil {
+		return fmt.Errorf("ticket data is nil")
 	}
+	baseCommit := ticket.Data.Commit
+	checkpoints := ticket.Data.Checkpoints
 	for i := len(checkpoints) - 1; i >= 0; i-- {
 		if checkpoints[i].Commit != "" {
 			baseCommit = checkpoints[i].Commit
@@ -4847,37 +4781,61 @@ func CreateCheckpoint(ticket *Ticket, prompt, model string, files []string) erro
 		return fmt.Errorf("no git changes found in specified files since last commit")
 	}
 	sections := ComputeAffectedRanges(files, diffLines)
-	totalLines := LineMetrics{}
-	totalDefs := 0
-	for _, s := range sections {
-		if s.Metrics != nil {
-			totalLines.Added += s.Metrics.Added
-			totalLines.Removed += s.Metrics.Removed
-		}
-		totalDefs += len(s.Definitions)
-	}
+	checkpointFiles := ConvertSectionsToCheckpointFiles(sections)
+	llmSlug := strings.ToLower(strings.ReplaceAll(llm, " ", "-"))
 	now := ISOTimestamp()
 	checkpoint := TicketCheckpoint{
-		Prompt:   prompt,
-		Model:    model,
-		Date:     CheckpointDateYaml{Created: now},
-		Author:   GetGitAuthor(),
-		Commit:   GetGitCommit(),
-		Files:    files,
-		Sections: sections,
-		Metrics: &CheckpointMetrics{
-			Files:       len(files),
-			Sections:    len(sections),
-			Definitions: totalDefs,
-			Lines:       &totalLines,
-		},
+		Prompt: prompt,
+		LLM:    llmSlug,
+		Date:   now,
+		Author: GetGitAuthorGithub(),
+		Commit: GetGitCommit(),
+		Files:  checkpointFiles,
 	}
-	if ticket.Data != nil {
-		ticket.Data.Checkpoints = append(ticket.Data.Checkpoints, checkpoint)
-		return SaveTicketNew(ticket)
-	}
-	ticket.Frontmatter.Checkpoints = append(ticket.Frontmatter.Checkpoints, checkpoint)
+	ticket.Data.Checkpoints = append(ticket.Data.Checkpoints, checkpoint)
 	return SaveTicket(ticket)
+}
+
+func ConvertSectionsToCheckpointFiles(sections []CheckpointSectionContrib) CheckpointFiles {
+	result := make(CheckpointFiles)
+	for _, s := range sections {
+		if result[s.File] == nil {
+			result[s.File] = make(map[string]CheckpointSectionMetrics)
+		}
+		defs := s.Definitions
+		if defs == nil {
+			defs = []string{}
+		}
+		uniqueDefs := uniqueStrings(defs)
+		lines := LineMetrics{}
+		if s.Metrics != nil {
+			lines = *s.Metrics
+		}
+		rangeStart := 0
+		rangeEnd := 0
+		if s.Range != nil {
+			rangeStart = s.Range.Start.Line
+			rangeEnd = s.Range.End.Line
+		}
+		result[s.File][s.Section] = CheckpointSectionMetrics{
+			Range:       SectionRange{Start: rangeStart, End: rangeEnd},
+			Definitions: uniqueDefs,
+			Lines:       lines,
+		}
+	}
+	return result
+}
+
+func uniqueStrings(strs []string) []string {
+	seen := make(map[string]bool)
+	result := []string{}
+	for _, s := range strs {
+		if !seen[s] {
+			seen[s] = true
+			result = append(result, s)
+		}
+	}
+	return result
 }
 
 func GetGitDiffLines(baseCommit, headCommit string, paths []string) (map[string][]int, error) {
@@ -5522,35 +5480,32 @@ func ExtractDefinitionsFromSection(filePath, sectionName string) []string {
 }
 
 func FinishTicket(ticket *Ticket) error {
-	checkpoints := ticket.GetCheckpoints()
+	if ticket.Data == nil {
+		return fmt.Errorf("ticket data is nil")
+	}
+	checkpoints := ticket.Data.Checkpoints
 	if len(checkpoints) == 0 {
 		return fmt.Errorf("cannot finish ticket without any checkpoints")
 	}
-	if ticket.Data != nil {
-		ticket.Data.Status = TicketStatusClosed
-		ticket.Data.Date.Finished = ISOTimestamp()
-		return SaveTicketNew(ticket)
-	}
-	ticket.Frontmatter.Status = TicketStatusClosed
-	ticket.Frontmatter.Date.Finished = ISOTimestamp()
+	ticket.Data.Status = TicketStatusClosed
+	ticket.Data.Dates.Finished = ISOTimestamp()
 	return SaveTicket(ticket)
 }
 
 func ReopenTicket(ticket *Ticket) error {
-	if ticket.GetStatus() == TicketStatusOpen {
+	if ticket.Data == nil {
+		return fmt.Errorf("ticket data is nil")
+	}
+	if ticket.Data.Status == TicketStatusOpen {
 		return fmt.Errorf("ticket is already open")
 	}
-	if ticket.Data != nil {
-		ticket.Data.Status = TicketStatusOpen
-		ticket.Data.Date.Finished = ""
-		return SaveTicketNew(ticket)
-	}
-	ticket.Frontmatter.Status = TicketStatusOpen
-	ticket.Frontmatter.Date.Finished = ""
+	ticket.Data.Status = TicketStatusOpen
+	ticket.Data.Dates.Finished = ""
 	return SaveTicket(ticket)
 }
 
 func MigrateTicketBundles(bundles TicketBundles) TicketBundles {
+
 	if bundles == nil {
 		return nil
 	}
@@ -5578,19 +5533,13 @@ func MigrateTicketBundles(bundles TicketBundles) TicketBundles {
 
 func CanCloseTicket(ticket *Ticket) (bool, []string) {
 	var reasons []string
-	violationsRe := regexp.MustCompile(`(?s)## Violations.*?(?:\n## |$)`)
-	if match := violationsRe.FindString(ticket.Content); match != "" {
-		if !strings.Contains(match, "(No violations)") && strings.Contains(match, "- [") {
-			reasons = append(reasons, "Violations section is not empty")
-		}
+	if ticket.Data == nil {
+		reasons = append(reasons, "Ticket data is nil")
+		return false, reasons
 	}
-	planRe := regexp.MustCompile(`(?s)# Plan.*?(?:\n# |$)`)
-	if match := planRe.FindString(ticket.Content); match == "" || strings.TrimSpace(match) == "# Plan" {
+	planContent, _ := ReadTextFile(ticket.PlanPath)
+	if planContent == "" || strings.TrimSpace(planContent) == "# Plan" {
 		reasons = append(reasons, "Plan section is empty")
-	}
-	changesRe := regexp.MustCompile(`(?s)# Changes.*?(?:\n# |$)`)
-	if match := changesRe.FindString(ticket.Content); match == "" || strings.TrimSpace(match) == "# Changes" {
-		reasons = append(reasons, "Changes section is empty")
 	}
 	return len(reasons) == 0, reasons
 }
@@ -5809,61 +5758,74 @@ func ListContributors() ([]Contributor, error) {
 	}
 	commitTitleCache := map[string]string{}
 	for _, ticket := range tickets {
+		if ticket.Data == nil {
+			continue
+		}
 		ticketKey := fmt.Sprintf("%04d-%02d-%02d-%s", ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
 		ticketContributors := map[string]struct{}{}
-		if name, email, ok := ParseContributorIdentity(ticket.Frontmatter.Author); ok {
+		if name, email, ok := ParseContributorIdentity(ticket.Data.Author); ok {
 			if github := ResolveContributorGithub(name, email, emailToGithub, nameToGithub); github != "" {
 				ticketContributors[github] = struct{}{}
 			}
 		}
-		for _, checkpoint := range ticket.Frontmatter.Checkpoints {
-			if name, email, ok := ParseContributorIdentity(checkpoint.Author); ok {
-				if github := ResolveContributorGithub(name, email, emailToGithub, nameToGithub); github != "" {
-					ticketContributors[github] = struct{}{}
-					if checkpoint.Metrics != nil && checkpoint.Metrics.Lines != nil {
-						stateByGithub[github].Lines.Added += checkpoint.Metrics.Lines.Added
-						stateByGithub[github].Lines.Removed += checkpoint.Metrics.Lines.Removed
+		for _, checkpoint := range ticket.Data.Checkpoints {
+			github := checkpoint.Author
+			if github == "" {
+				if name, email, ok := ParseContributorIdentity(checkpoint.Author); ok {
+					github = ResolveContributorGithub(name, email, emailToGithub, nameToGithub)
+				}
+			}
+			if github != "" && stateByGithub[github] != nil {
+				ticketContributors[github] = struct{}{}
+				for _, sections := range checkpoint.Files {
+					for _, section := range sections {
+						stateByGithub[github].Lines.Added += section.Lines.Added
+						stateByGithub[github].Lines.Removed += section.Lines.Removed
 					}
-					if checkpoint.Commit != "" {
-						commitTitle := commitTitleCache[checkpoint.Commit]
+				}
+				if checkpoint.Commit != "" {
+					commitTitle := commitTitleCache[checkpoint.Commit]
+					if commitTitle == "" {
+						commitTitle = GetGitCommitTitle(checkpoint.Commit)
 						if commitTitle == "" {
-							commitTitle = GetGitCommitTitle(checkpoint.Commit)
-							if commitTitle == "" {
-								commitTitle = checkpoint.Commit
-							}
-							commitTitleCache[checkpoint.Commit] = commitTitle
+							commitTitle = checkpoint.Commit
 						}
-						stateByGithub[github].Commits[checkpoint.Commit] = ContributorCommit{Title: commitTitle, Sha: checkpoint.Commit}
+						commitTitleCache[checkpoint.Commit] = commitTitle
 					}
+					stateByGithub[github].Commits[checkpoint.Commit] = ContributorCommit{Title: commitTitle, Sha: checkpoint.Commit}
 				}
 			}
 		}
-		if ticket.Frontmatter.Commit != "" {
-			if name, email, ok := ParseContributorIdentity(ticket.Frontmatter.Author); ok {
-				if github := ResolveContributorGithub(name, email, emailToGithub, nameToGithub); github != "" {
-					commitTitle := commitTitleCache[ticket.Frontmatter.Commit]
+		if ticket.Data.Commit != "" {
+			if name, email, ok := ParseContributorIdentity(ticket.Data.Author); ok {
+				if github := ResolveContributorGithub(name, email, emailToGithub, nameToGithub); github != "" && stateByGithub[github] != nil {
+					commitTitle := commitTitleCache[ticket.Data.Commit]
 					if commitTitle == "" {
-						commitTitle = GetGitCommitTitle(ticket.Frontmatter.Commit)
+						commitTitle = GetGitCommitTitle(ticket.Data.Commit)
 						if commitTitle == "" {
-							commitTitle = ticket.Frontmatter.Commit
+							commitTitle = ticket.Data.Commit
 						}
-						commitTitleCache[ticket.Frontmatter.Commit] = commitTitle
+						commitTitleCache[ticket.Data.Commit] = commitTitle
 					}
-					stateByGithub[github].Commits[ticket.Frontmatter.Commit] = ContributorCommit{Title: commitTitle, Sha: ticket.Frontmatter.Commit}
+					stateByGithub[github].Commits[ticket.Data.Commit] = ContributorCommit{Title: commitTitle, Sha: ticket.Data.Commit}
 				}
 			}
 		}
 		for github := range ticketContributors {
+			if stateByGithub[github] == nil {
+				continue
+			}
 			stateByGithub[github].Tickets[ticketKey] = ContributorTicket{
 				Year:     ticket.Year,
 				Month:    ticket.Month,
 				Day:      ticket.Day,
 				Slug:     ticket.Slug,
-				Status:   ticket.Frontmatter.Status,
-				FilePath: ticket.FilePath,
+				Status:   ticket.Data.Status,
+				FilePath: ticket.JsonPath,
 			}
 		}
 	}
+
 	files, err := ScopeToFiles(Scope{Kind: ScopeRepo}, nil)
 	if err != nil {
 		return nil, err
@@ -6204,6 +6166,64 @@ func (c *repoContext) GetBundles() []*Bundle {
 	return result
 }
 
+func (c *repoContext) GetFolders() []*Folder {
+	bundles := GetProjects()
+	files, _ := ScopeToFiles(Scope{Kind: ScopeRepo}, bundles)
+	folderSet := make(map[string]bool)
+	for _, f := range files {
+		dir := filepath.Dir(f)
+		for dir != "." && dir != "" {
+			folderSet[dir] = true
+			dir = filepath.Dir(dir)
+		}
+	}
+	result := make([]*Folder, 0, len(folderSet))
+	for path := range folderSet {
+		name := filepath.Base(path)
+		parent := filepath.Dir(path)
+		var parentID *string
+		if parent != "." && parent != "" {
+			pid := "folder:" + parent
+			parentID = &pid
+		}
+		uri := "file://" + NormalizePath(filepath.Join(c.rootDir, path))
+		result = append(result, &Folder{
+			ID:       "folder:" + path,
+			Path:     path,
+			URI:      uri,
+			Name:     name,
+			ParentID: parentID,
+		})
+	}
+	return result
+}
+
+func (c *repoContext) GetFiles() []*File {
+	bundles := GetProjects()
+	files, _ := ScopeToFiles(Scope{Kind: ScopeRepo}, bundles)
+	result := make([]*File, 0, len(files))
+	for _, path := range files {
+		name := filepath.Base(path)
+		ext := filepath.Ext(name)
+		dir := filepath.Dir(path)
+		var folderID *string
+		if dir != "." && dir != "" {
+			fid := "folder:" + dir
+			folderID = &fid
+		}
+		uri := "file://" + NormalizePath(filepath.Join(c.rootDir, path))
+		result = append(result, &File{
+			ID:        "file:" + path,
+			Path:      path,
+			URI:       uri,
+			Name:      name,
+			Extension: ext,
+			FolderID:  folderID,
+		})
+	}
+	return result
+}
+
 func (c *repoContext) GetContributors() ([]*Contributor, error) {
 	contributors, err := ListContributors()
 	if err != nil {
@@ -6224,7 +6244,7 @@ func (c *repoContext) GetTickets(year, month, day *int, status *TicketStatus) ([
 	var result []*Ticket
 	for i := range tickets {
 		t := &tickets[i]
-		if status != nil && t.Frontmatter.Status != *status {
+		if status != nil && t.GetStatus() != *status {
 			continue
 		}
 		result = append(result, t)
@@ -6833,9 +6853,7 @@ func ToolTicketList(year, month, day *int) ToolResult {
 			status = "✅"
 		}
 		output.Plain(fmt.Sprintf("   %s %d/%s/%s/%s", status, t.Year, PadNumber(t.Month, 2), PadNumber(t.Day, 2), t.Slug))
-		if t.GetSummary() != "" {
-			output.Plain(fmt.Sprintf("      %s", t.GetSummary()))
-		}
+		output.Plain(fmt.Sprintf("      %s", t.GetTitle()))
 	}
 	return ToolResult{Output: *output, Data: tickets}
 }
@@ -6854,32 +6872,38 @@ func ToolTicketRead(year, month, day int, slug string) ToolResult {
 	if ticket.GetLLM() != "" {
 		output.Plain(fmt.Sprintf("   LLM: %s", ticket.GetLLM()))
 	}
-	if ticket.Content != "" {
-		output.Plain(fmt.Sprintf("\n%s", ticket.Content))
+	planContent, _ := ReadTextFile(ticket.PlanPath)
+	if planContent != "" {
+		output.Plain(fmt.Sprintf("\n%s", planContent))
 	}
 	return ToolResult{Output: *output, Data: ticket}
 }
 
-func ToolTicketCheckpoint(year, month, day int, slug, prompt, model string, files []string) ToolResult {
+func ToolTicketCheckpoint(year, month, day int, slug, prompt, llm string, files []string) ToolResult {
 	output := NewOutput()
 	ticket, err := ReadTicket(year, month, day, slug)
 	if err != nil {
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
-	if err := CreateCheckpoint(ticket, prompt, model, files); err != nil {
+	if err := CreateCheckpoint(ticket, prompt, llm, files); err != nil {
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
 	checkpoints := ticket.GetCheckpoints()
 	lastCheckpoint := checkpoints[len(checkpoints)-1]
+	filesCount := len(lastCheckpoint.Files)
+	sectionsCount := 0
 	defsCount := 0
-	for _, s := range lastCheckpoint.Sections {
-		defsCount += len(s.Definitions)
+	for _, sections := range lastCheckpoint.Files {
+		sectionsCount += len(sections)
+		for _, section := range sections {
+			defsCount += len(section.Definitions)
+		}
 	}
 	output.Success(fmt.Sprintf("\n✅ Checkpoint created on ticket: %s", ticket.Slug))
-	output.Info(fmt.Sprintf("   Files: %d", len(lastCheckpoint.Files)))
-	output.Info(fmt.Sprintf("   Sections affected: %d", len(lastCheckpoint.Sections)))
+	output.Info(fmt.Sprintf("   Files: %d", filesCount))
+	output.Info(fmt.Sprintf("   Sections affected: %d", sectionsCount))
 	output.Info(fmt.Sprintf("   Definitions affected: %d", defsCount))
 	output.Info(fmt.Sprintf("   Commit: %s", lastCheckpoint.Commit))
 	return ToolResult{Output: *output, Data: ticket}
@@ -7578,6 +7602,8 @@ func ToolUpdateMetabolism() ToolResult {
 type RepoContext interface {
 	GetRootDir() string
 	GetBundles() []*Bundle
+	GetFolders() []*Folder
+	GetFiles() []*File
 	GetContributors() ([]*Contributor, error)
 	GetTickets(year, month, day *int, status *TicketStatus) ([]*Ticket, error)
 	GetPolicies() []*Policy
@@ -7637,6 +7663,10 @@ func NewDefaultContext(rootDir string) RepoContext {
 func (c *defaultContext) GetRootDir() string { return c.rootDir }
 
 func (c *defaultContext) GetBundles() []*Bundle { return []*Bundle{} }
+
+func (c *defaultContext) GetFolders() []*Folder { return []*Folder{} }
+
+func (c *defaultContext) GetFiles() []*File { return []*File{} }
 
 func (c *defaultContext) GetContributors() ([]*Contributor, error) { return []*Contributor{}, nil }
 
@@ -8316,14 +8346,14 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					Type: graphql.NewNonNull(graphql.String),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 						ticket := p.Source.(*Ticket)
-						return ticket.FilePath, nil
+						return ticket.JsonPath, nil
 					},
 				},
 				"uri": &graphql.Field{
 					Type: graphql.NewNonNull(graphql.String),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 						ticket := p.Source.(*Ticket)
-						absPath := filepath.Join(rootDir, ticket.FilePath)
+						absPath := filepath.Join(rootDir, ticket.JsonPath)
 						return "file://" + strings.ReplaceAll(absPath, "\\", "/"), nil
 					},
 				},
@@ -8331,24 +8361,20 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					Type: graphql.NewNonNull(graphql.String),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 						ticket := p.Source.(*Ticket)
-						return ticket.Frontmatter.Prompt, nil
+						return ticket.GetPrompt(), nil
 					},
 				},
 				"summary": &graphql.Field{
 					Type: graphql.String,
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						ticket := p.Source.(*Ticket)
-						if ticket.Frontmatter.Summary == "" {
-							return nil, nil
-						}
-						return ticket.Frontmatter.Summary, nil
+						return nil, nil
 					},
 				},
 				"status": &graphql.Field{
 					Type: graphql.NewNonNull(ticketStatusEnum),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 						ticket := p.Source.(*Ticket)
-						status := ticket.Frontmatter.Status
+						status := ticket.GetStatus()
 						if status == "" || status == "open" {
 							return TicketStatusOpen, nil
 						}
@@ -8363,36 +8389,40 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					Type: graphql.String,
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 						ticket := p.Source.(*Ticket)
-						if ticket.Frontmatter.Model == "" {
+						llm := ticket.GetLLM()
+						if llm == "" {
 							return nil, nil
 						}
-						return ticket.Frontmatter.Model, nil
+						return llm, nil
 					},
 				},
 				"commit": &graphql.Field{
 					Type: graphql.String,
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 						ticket := p.Source.(*Ticket)
-						if ticket.Frontmatter.Commit == "" {
+						commit := ticket.GetCommit()
+						if commit == "" {
 							return nil, nil
 						}
-						return ticket.Frontmatter.Commit, nil
+						return commit, nil
 					},
 				},
 				"date": &graphql.Field{
 					Type: graphql.NewNonNull(ticketDateType),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 						ticket := p.Source.(*Ticket)
-						if ticket.Frontmatter.Date.Created == "" {
+						createdStr := ticket.GetDateCreated()
+						if createdStr == "" {
 							return nil, fmt.Errorf("ticket has no created date")
 						}
-						created, err := time.Parse(time.RFC3339, ticket.Frontmatter.Date.Created)
+						created, err := time.Parse(time.RFC3339, createdStr)
 						if err != nil {
 							return nil, fmt.Errorf("invalid created date format: %w", err)
 						}
 						var finished *time.Time
-						if ticket.Frontmatter.Date.Finished != "" {
-							finishedTime, err := time.Parse(time.RFC3339, ticket.Frontmatter.Date.Finished)
+						finishedStr := ticket.GetDateFinished()
+						if finishedStr != "" {
+							finishedTime, err := time.Parse(time.RFC3339, finishedStr)
 							if err == nil {
 								finished = &finishedTime
 							}
@@ -8413,19 +8443,19 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						sectionsCount := 0
 						definitionsCount := 0
 						var totalAdded, totalRemoved int
-						for _, checkpoint := range ticket.Frontmatter.Checkpoints {
-							for _, section := range checkpoint.Sections {
-								filesSet[section.File] = struct{}{}
-								definitionsCount += len(section.Definitions)
-							}
-							sectionsCount += len(checkpoint.Sections)
-							if checkpoint.Metrics != nil && checkpoint.Metrics.Lines != nil {
-								totalAdded += checkpoint.Metrics.Lines.Added
-								totalRemoved += checkpoint.Metrics.Lines.Removed
+						for _, checkpoint := range ticket.GetCheckpoints() {
+							for filePath, sections := range checkpoint.Files {
+								filesSet[filePath] = struct{}{}
+								for _, sectionMetrics := range sections {
+									sectionsCount++
+									definitionsCount += len(sectionMetrics.Definitions)
+									totalAdded += sectionMetrics.Lines.Added
+									totalRemoved += sectionMetrics.Lines.Removed
+								}
 							}
 						}
 						return map[string]interface{}{
-							"checkpoints": len(ticket.Frontmatter.Checkpoints),
+							"checkpoints": len(ticket.GetCheckpoints()),
 							"files":       len(filesSet),
 							"sections":    sectionsCount,
 							"definitions": definitionsCount,
@@ -9247,10 +9277,16 @@ func (r *queryResolver) Bundles(ctx context.Context) ([]*Bundle, error) {
 }
 
 func (r *queryResolver) Folders(ctx context.Context) ([]*Folder, error) {
+	if r.Ctx != nil {
+		return r.Ctx.GetFolders(), nil
+	}
 	return []*Folder{}, nil
 }
 
 func (r *queryResolver) Files(ctx context.Context) ([]*File, error) {
+	if r.Ctx != nil {
+		return r.Ctx.GetFiles(), nil
+	}
 	return []*File{}, nil
 }
 
@@ -9587,10 +9623,16 @@ func (r *repoResolver) Bundles(ctx context.Context, obj *Repo) ([]*Bundle, error
 }
 
 func (r *repoResolver) Folders(ctx context.Context, obj *Repo) ([]*Folder, error) {
+	if r.Ctx != nil {
+		return r.Ctx.GetFolders(), nil
+	}
 	return []*Folder{}, nil
 }
 
 func (r *repoResolver) Files(ctx context.Context, obj *Repo) ([]*File, error) {
+	if r.Ctx != nil {
+		return r.Ctx.GetFiles(), nil
+	}
 	return []*File{}, nil
 }
 

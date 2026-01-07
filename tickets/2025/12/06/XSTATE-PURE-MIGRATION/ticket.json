@@ -1,0 +1,11 @@
+{
+  "title": "Complete pure XState migration by removing all legacy controller code",
+  "prompt": "Complete pure XState migration by removing all legacy controller code",
+  "llm": "claude-sonnet-4-5",
+  "status": "finished",
+  "author": "uelisaluz",
+  "dates": {
+    "created": "2025-12-16T17:06:07.880Z"
+  },
+  "commit": "0000000000000000000000000000000000000000"
+}

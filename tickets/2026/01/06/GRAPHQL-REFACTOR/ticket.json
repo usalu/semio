@@ -1,0 +1,11 @@
+{
+  "title": "GRAPHQL-REFACTOR",
+  "prompt": "Consolidate types and refactor to use GraphQL as the primary API layer",
+  "llm": "claude-opus-4",
+  "status": "finished",
+  "author": "uelisaluz",
+  "dates": {
+    "created": "2026-01-06T10:16:32Z"
+  },
+  "commit": "d02bd230eadd0eee9725309c0bb7d6abae6607f9"
+}

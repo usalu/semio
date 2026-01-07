@@ -1,0 +1,11 @@
+{
+  "title": "Implement settings panel hierarchy",
+  "prompt": "Implement settings panel hierarchy",
+  "llm": "claude-sonnet-4",
+  "status": "finished",
+  "author": "uelisaluz",
+  "dates": {
+    "created": "2025-12-16T17:06:07.778Z"
+  },
+  "commit": "0000000000000000000000000000000000000000"
+}

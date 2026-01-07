@@ -1,0 +1,11 @@
+{
+  "title": "Implement toolbar in apps and extend Type app E2E test for connector tool",
+  "prompt": "Implement toolbar in apps and extend Type app E2E test for connector tool",
+  "llm": "claude-sonnet-4-5",
+  "status": "finished",
+  "author": "uelisaluz",
+  "dates": {
+    "created": "2025-12-16T17:06:07.946Z"
+  },
+  "commit": "0000000000000000000000000000000000000000"
+}

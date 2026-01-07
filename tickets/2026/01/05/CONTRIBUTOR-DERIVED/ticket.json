@@ -1,0 +1,11 @@
+{
+  "title": "CONTRIBUTOR-DERIVED",
+  "prompt": "Derive contributions from tickets and file headers instead of hardcoding. Sort by ticket count. Add commits/tickets/files to VS Code extension tree.",
+  "llm": "claude-sonnet-4-5",
+  "status": "finished",
+  "author": "uelisaluz",
+  "dates": {
+    "created": "2026-01-05T14:05:02Z"
+  },
+  "commit": "612efdddc47caf10aac48cf7c57eab357e6695cd"
+}

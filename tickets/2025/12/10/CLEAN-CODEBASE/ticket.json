@@ -1,0 +1,11 @@
+{
+  "title": "Cleanup diagnostic artifacts",
+  "prompt": "Cleanup diagnostic artifacts",
+  "llm": "claude-sonnet-4-5",
+  "status": "finished",
+  "author": "uelisaluz",
+  "dates": {
+    "created": "2025-12-16T17:06:07.903Z"
+  },
+  "commit": "0000000000000000000000000000000000000000"
+}

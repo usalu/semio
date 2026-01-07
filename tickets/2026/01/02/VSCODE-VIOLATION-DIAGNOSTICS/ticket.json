@@ -1,0 +1,12 @@
+{
+  "title": "VSCODE-VIOLATION-DIAGNOSTICS",
+  "prompt": "The vscode extension should show the violation diagnostics of every open file and rerun the targeted analyze command when saved again.",
+  "llm": "claude-opus-4-5-20251101",
+  "status": "closed",
+  "author": "uelisaluz",
+  "dates": {
+    "created": "2026-01-02T19:59:01Z",
+    "finished": "2026-01-02T20:03:29Z"
+  },
+  "commit": "97d1f2878938222b14d1919804fc3a4918a8f8eb"
+}

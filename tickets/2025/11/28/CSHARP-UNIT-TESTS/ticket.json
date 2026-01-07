@@ -1,0 +1,11 @@
+{
+  "title": "Sync C# unit tests with JS semio.ts tests using same fixtures",
+  "prompt": "Sync C# unit tests with JS semio.ts tests using same fixtures",
+  "llm": "claude-sonnet-4",
+  "status": "finished",
+  "author": "uelisaluz",
+  "dates": {
+    "created": "2025-12-16T17:06:07.751Z"
+  },
+  "commit": "0000000000000000000000000000000000000000"
+}

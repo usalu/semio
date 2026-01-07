@@ -1,0 +1,12 @@
+{
+  "title": "Sketchpad windows have 1-unit margins and continuous borders",
+  "prompt": "Every window should have a single unit margin between the window and the border of the canvas or between windows. Every window has a continuous border around it.",
+  "llm": "gpt-5.2-codex",
+  "status": "finished",
+  "author": "uelisaluz",
+  "dates": {
+    "created": "2025-12-17T18:00:50.599Z",
+    "finished": "2025-12-17T18:12:12.439Z"
+  },
+  "commit": "7c4820638369104ae259b238d9240f08e429e67e"
+}

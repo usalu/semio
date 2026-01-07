@@ -1,0 +1,203 @@
+{
+  "title": "node-tests-fix",
+  "prompt": "Fix/Refactor/Extend repo_test.go to ensure every node is tested for non-empty collection",
+  "llm": "OPUS",
+  "status": "finished",
+  "author": "uelisaluz",
+  "dates": {
+    "created": "2026-01-07T11:23:05Z"
+  },
+  "commit": "864921b472c3d45c3c0d70e8940686a9678caad0",
+  "checkpoints": [
+    {
+      "prompt": "Added non-empty tests for folders, files, and violations; implemented GetFolders and GetFiles in RepoContext",
+      "date": "2026-01-07T11:38:32Z",
+      "author": "uelisaluz",
+      "commit": "864921b472c3d45c3c0d70e8940686a9678caad0",
+      "files": {
+        "go/repo/repo.go": {
+          "Commands": {
+            "range": {
+              "start": 6062,
+              "end": 7512
+            },
+            "definitions": [
+              "GetFolders",
+              "parentID",
+              "GetFiles",
+              "folderID",
+              "GetTickets",
+              "result",
+              "ToolTicketRead"
+            ],
+            "lines": {
+              "added": 62,
+              "removed": 0
+            }
+          },
+          "Contributors": {
+            "range": {
+              "start": 5475,
+              "end": 5921
+            },
+            "definitions": [
+              "ListContributors"
+            ],
+            "lines": {
+              "added": 15,
+              "removed": 0
+            }
+          },
+          "Default Context": {
+            "range": {
+              "start": 7567,
+              "end": 7649
+            },
+            "definitions": [
+              "GetFolders",
+              "GetFiles"
+            ],
+            "lines": {
+              "added": 4,
+              "removed": 0
+            }
+          },
+          "Entity Resolvers": {
+            "range": {
+              "start": 9529,
+              "end": 9601
+            },
+            "definitions": [
+              "Folders",
+              "Files"
+            ],
+            "lines": {
+              "added": 6,
+              "removed": 0
+            }
+          },
+          "GraphQL Context Interface": {
+            "range": {
+              "start": 7514,
+              "end": 7544
+            },
+            "definitions": [
+              "RepoContext"
+            ],
+            "lines": {
+              "added": 2,
+              "removed": 0
+            }
+          },
+          "GraphQL Types": {
+            "range": {
+              "start": 45,
+              "end": 585
+            },
+            "definitions": [
+              "Ticket",
+              "GetPrompt",
+              "GetLLM",
+              "GetSummary",
+              "GetStatus",
+              "GetAuthor",
+              "GetCommit",
+              "GetCheckpoints",
+              "GetDateCreated",
+              "GetDateFinished",
+              "TicketCheckpoint"
+            ],
+            "lines": {
+              "added": 18,
+              "removed": 0
+            }
+          },
+          "Query Resolvers": {
+            "range": {
+              "start": 9149,
+              "end": 9397
+            },
+            "definitions": [
+              "Folders",
+              "Files"
+            ],
+            "lines": {
+              "added": 6,
+              "removed": 0
+            }
+          },
+          "Resolver Interfaces": {
+            "range": {
+              "start": 9603,
+              "end": 9659
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          },
+          "Schema Builder": {
+            "range": {
+              "start": 7763,
+              "end": 9147
+            },
+            "definitions": [
+              "buildSchema",
+              "finished",
+              "totalAdded"
+            ],
+            "lines": {
+              "added": 21,
+              "removed": 0
+            }
+          },
+          "Tickets": {
+            "range": {
+              "start": 4488,
+              "end": 5473
+            },
+            "definitions": [
+              "CreateTicket",
+              "ReadTicket",
+              "data",
+              "ListTickets",
+              "CreateCheckpoint",
+              "FinishTicket",
+              "ReopenTicket",
+              "MigrateTicketBundles",
+              "CanCloseTicket",
+              "reasons"
+            ],
+            "lines": {
+              "added": 35,
+              "removed": 0
+            }
+          }
+        },
+        "go/repo/repo_test.go": {
+          "Collection Tests": {
+            "range": {
+              "start": 63,
+              "end": 225
+            },
+            "definitions": [
+              "TestBundlesNonEmpty",
+              "resp",
+              "TestContributorsNonEmpty",
+              "TestTicketsNonEmpty",
+              "TestPoliciesNonEmpty",
+              "TestViolationKindsNonEmpty",
+              "TestFoldersNonEmpty",
+              "TestFilesNonEmpty",
+              "TestViolationsNonEmpty"
+            ],
+            "lines": {
+              "added": 80,
+              "removed": 0
+            }
+          }
+        }
+      }
+    }
+  ]
+}

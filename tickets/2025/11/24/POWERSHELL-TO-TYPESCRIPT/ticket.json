@@ -1,0 +1,11 @@
+{
+  "title": "Migration from 2025-11-24_POWERSHELL-TO-TYPESCRIPT.md",
+  "prompt": "Migration from 2025-11-24_POWERSHELL-TO-TYPESCRIPT.md",
+  "llm": "claude-sonnet-4",
+  "status": "finished",
+  "author": "uelisaluz",
+  "dates": {
+    "created": "2025-12-16T17:06:07.712Z"
+  },
+  "commit": "0000000000000000000000000000000000000000"
+}

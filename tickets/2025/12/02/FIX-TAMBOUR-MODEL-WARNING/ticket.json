@@ -1,0 +1,11 @@
+{
+  "title": "Fix Tambour model warning by regenerating metabolism.zip with models",
+  "prompt": "Fix Tambour model warning by regenerating metabolism.zip with models",
+  "llm": "claude-sonnet-4-5",
+  "status": "finished",
+  "author": "uelisaluz",
+  "dates": {
+    "created": "2025-12-16T17:06:07.815Z"
+  },
+  "commit": "0000000000000000000000000000000000000000"
+}

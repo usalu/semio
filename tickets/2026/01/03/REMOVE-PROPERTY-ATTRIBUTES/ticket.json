@@ -1,0 +1,12 @@
+{
+  "title": "REMOVE-PROPERTY-ATTRIBUTES",
+  "prompt": "All properties still have attributes. Stop only once all attributes are removed and no functionality such as validation is missing. Refactor/extend whatever is necessary.",
+  "llm": "claude-sonnet-4-20250514",
+  "status": "closed",
+  "author": "uelisaluz",
+  "dates": {
+    "created": "2026-01-02T23:44:41Z",
+    "finished": "2026-01-02T23:54:19Z"
+  },
+  "commit": "97d1f2878938222b14d1919804fc3a4918a8f8eb"
+}

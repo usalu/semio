@@ -1,0 +1,293 @@
+{
+  "title": "UPDATE-TEMP-DATA-LOCATION-DOCS",
+  "prompt": "Update docs to state temporary data should live in active ticket folder (not temp/).",
+  "llm": "GPT-5",
+  "status": "open",
+  "author": "Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e",
+  "date": {
+    "created": "2026-01-07T13:42:06Z"
+  },
+  "commit": "864921b472c3d45c3c0d70e8940686a9678caad0",
+  "checkpoints": [
+    {
+      "prompt": "Update docs to state temporary data belongs in the active ticket folder.",
+      "model": "GPT-5",
+      "date": {
+        "created": "2026-01-07T13:43:29Z"
+      },
+      "author": "Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e",
+      "commit": "864921b472c3d45c3c0d70e8940686a9678caad0",
+      "files": [
+        "README.md",
+        "AGENTS.md",
+        "tickets/2026/01/07/UPDATE-TEMP-DATA-LOCATION-DOCS/plan.md",
+        "tickets/2026/01/07/UPDATE-TEMP-DATA-LOCATION-DOCS/log.md",
+        "tickets/2026/01/07/UPDATE-TEMP-DATA-LOCATION-DOCS/summary.md",
+        "tickets/2026/01/07/UPDATE-TEMP-DATA-LOCATION-DOCS/ticket.json"
+      ],
+      "sections": [
+        {
+          "file": "README.md",
+          "section": "🛍️ Products [↑](#-overview)",
+          "range": {
+            "start": {
+              "line": 161,
+              "column": 0
+            },
+            "end": {
+              "line": 243,
+              "column": 0
+            }
+          },
+          "metrics": {
+            "added": 2,
+            "removed": 0
+          }
+        },
+        {
+          "file": "README.md",
+          "section": "📦 Components [↑](#-overview)",
+          "range": {
+            "start": {
+              "line": 1197,
+              "column": 0
+            },
+            "end": {
+              "line": 1782,
+              "column": 0
+            }
+          },
+          "metrics": {
+            "added": 1,
+            "removed": 0
+          }
+        },
+        {
+          "file": "README.md",
+          "section": "📦 Components [↑](#-overview)/🎫 Ticket System [↑](#-components-)",
+          "range": {
+            "start": {
+              "line": 1251,
+              "column": 0
+            },
+            "end": {
+              "line": 1257,
+              "column": 0
+            }
+          },
+          "metrics": {
+            "added": 1,
+            "removed": 0
+          }
+        },
+        {
+          "file": "AGENTS.md",
+          "section": "Software Requirements Specification",
+          "range": {
+            "start": {
+              "line": 19,
+              "column": 0
+            },
+            "end": {
+              "line": 361,
+              "column": 0
+            }
+          },
+          "metrics": {
+            "added": 3,
+            "removed": 0
+          }
+        },
+        {
+          "file": "AGENTS.md",
+          "section": "Software Requirements Specification/Business Logic",
+          "range": {
+            "start": {
+              "line": 21,
+              "column": 0
+            },
+            "end": {
+              "line": 306,
+              "column": 0
+            }
+          },
+          "metrics": {
+            "added": 2,
+            "removed": 0
+          }
+        },
+        {
+          "file": "AGENTS.md",
+          "section": "Software Requirements Specification/Business Logic/Ticket",
+          "range": {
+            "start": {
+              "line": 57,
+              "column": 0
+            },
+            "end": {
+              "line": 88,
+              "column": 0
+            }
+          },
+          "metrics": {
+            "added": 2,
+            "removed": 0
+          }
+        },
+        {
+          "file": "AGENTS.md",
+          "section": "Software Requirements Specification/UI/UX",
+          "range": {
+            "start": {
+              "line": 307,
+              "column": 0
+            },
+            "end": {
+              "line": 361,
+              "column": 0
+            }
+          },
+          "metrics": {
+            "added": 1,
+            "removed": 0
+          }
+        },
+        {
+          "file": "AGENTS.md",
+          "section": "Software Requirements Specification/UI/UX/VS Code Extension",
+          "range": {
+            "start": {
+              "line": 349,
+              "column": 0
+            },
+            "end": {
+              "line": 361,
+              "column": 0
+            }
+          },
+          "metrics": {
+            "added": 1,
+            "removed": 0
+          }
+        },
+        {
+          "file": "AGENTS.md",
+          "section": "Monorepo",
+          "range": {
+            "start": {
+              "line": 362,
+              "column": 0
+            },
+            "end": {
+              "line": 530,
+              "column": 0
+            }
+          },
+          "metrics": {
+            "added": 2,
+            "removed": 0
+          }
+        },
+        {
+          "file": "AGENTS.md",
+          "section": "Monorepo/Git",
+          "range": {
+            "start": {
+              "line": 364,
+              "column": 0
+            },
+            "end": {
+              "line": 413,
+              "column": 0
+            }
+          },
+          "metrics": {
+            "added": 2,
+            "removed": 0
+          }
+        },
+        {
+          "file": "AGENTS.md",
+          "section": "Using TypeScript fallback",
+          "range": {
+            "start": {
+              "line": 534,
+              "column": 0
+            },
+            "end": {
+              "line": 1447,
+              "column": 0
+            }
+          },
+          "metrics": {
+            "added": 2,
+            "removed": 0
+          }
+        },
+        {
+          "file": "AGENTS.md",
+          "section": "Using TypeScript fallback/Testing",
+          "range": {
+            "start": {
+              "line": 732,
+              "column": 0
+            },
+            "end": {
+              "line": 1447,
+              "column": 0
+            }
+          },
+          "metrics": {
+            "added": 2,
+            "removed": 0
+          }
+        },
+        {
+          "file": "AGENTS.md",
+          "section": "Using TypeScript fallback/Testing/Ticket System",
+          "range": {
+            "start": {
+              "line": 853,
+              "column": 0
+            },
+            "end": {
+              "line": 1075,
+              "column": 0
+            }
+          },
+          "metrics": {
+            "added": 2,
+            "removed": 0
+          }
+        },
+        {
+          "file": "AGENTS.md",
+          "section": "Using TypeScript fallback/Testing/Ticket System/Directory Structure",
+          "range": {
+            "start": {
+              "line": 878,
+              "column": 0
+            },
+            "end": {
+              "line": 893,
+              "column": 0
+            }
+          },
+          "metrics": {
+            "added": 2,
+            "removed": 0
+          }
+        }
+      ],
+      "metrics": {
+        "files": 6,
+        "sections": 14,
+        "definitions": 0,
+        "lines": {
+          "added": 25,
+          "removed": 0
+        }
+      }
+    }
+  ]
+}

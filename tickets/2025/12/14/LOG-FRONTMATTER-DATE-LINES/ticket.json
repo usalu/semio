@@ -1,0 +1,11 @@
+{
+  "title": "Reshape log frontmatter and migrate logs",
+  "prompt": "Remove stats nesting, add nesting to lines {added;removed}, add nesting to date {created,updated}, rename base to commit, and migrate all existing logs to the new format.",
+  "llm": "gpt-5-2",
+  "status": "finished",
+  "author": "uelisaluz",
+  "dates": {
+    "created": "2025-12-16T17:06:07.935Z"
+  },
+  "commit": "7765b633fe739bc29cd811ac7ec884e782e2e945"
+}

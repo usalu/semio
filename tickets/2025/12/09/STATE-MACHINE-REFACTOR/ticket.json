@@ -1,0 +1,11 @@
+{
+  "title": "Refactor state management to triadic hooks and proper state machine",
+  "prompt": "Refactor state management to triadic hooks and proper state machine",
+  "llm": "claude-sonnet-4-5",
+  "status": "finished",
+  "author": "uelisaluz",
+  "dates": {
+    "created": "2025-12-16T17:06:07.902Z"
+  },
+  "commit": "0000000000000000000000000000000000000000"
+}

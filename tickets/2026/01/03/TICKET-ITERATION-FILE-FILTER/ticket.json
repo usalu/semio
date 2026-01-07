@@ -1,0 +1,11 @@
+{
+  "title": "TICKET-ITERATION-FILE-FILTER",
+  "prompt": "Scope iteration and ticket line diffs to declared ticket files",
+  "llm": "gpt-5",
+  "status": "finished",
+  "author": "uelisaluz",
+  "dates": {
+    "created": "2026-01-03T03:33:11Z"
+  },
+  "commit": "757a4d5aa0cf14f288561eed3253d5195a96e75e"
+}

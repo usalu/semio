@@ -1,0 +1,10 @@
+{
+  "title": "ANALYZE-EMPTY-REGIONS",
+  "prompt": "Extend the analyze and fix code hook to check and remove empty regions.",
+  "llm": "claude-sonnet-4-5",
+  "status": "finished",
+  "author": "uelisaluz",
+  "dates": {
+    "created": "2025-12-22T22:16:35.062Z"
+  }
+}

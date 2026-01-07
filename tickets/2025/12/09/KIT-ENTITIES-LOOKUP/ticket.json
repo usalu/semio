@@ -1,0 +1,11 @@
+{
+  "title": "Export individual kit entities",
+  "prompt": "Export individual kit entities",
+  "llm": "claude-sonnet-4-5",
+  "status": "finished",
+  "author": "uelisaluz",
+  "dates": {
+    "created": "2025-12-16T17:06:07.897Z"
+  },
+  "commit": "0000000000000000000000000000000000000000"
+}

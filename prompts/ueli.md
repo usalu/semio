@@ -1,5 +1,56 @@
 # Prompt history
 
+All temporary scripts used to created in temp/ but now all temporary data should be part of the ticket folder of the active ticket. Update  C:\git\semio.tech\semio\AGENTS.md C:\git\semio.tech\semio\README.md
+
+Add a vscode 
+
+- Ticket create should just create empty log.md, summary.md and plan.md files.
+The schema for the ticket.json file should be updated. A new schema file is provided.
+- The ticket.json files are the single source of truth for a lot of derived information. They should not contain any derived information such as metrics.
+- Tickets and checkpoints can be ignored. When a checkpoint is ignored the metrics are not considered. When a ticket is ignored the metrics of all checkpoints are not considered. Add ignore to every ticket.json.
+- Tickets should not have summary and prompt. Just prompt.
+- The llm input string from ticket create or ticket checkpoint should be the slug (not uppercase) of the string.
+- The checkpoint state
+- Definitions in semio are only top level. A section can contain different definitions. A definition cant contain sections. Currently definitions are not identified by the languages. A definition can only be affected once in a section (not appear multiple times in the secion metrics).
+- Compare the files for more differences and refactor/extend/change everything necessary to get the desired ticket.json schema without changing the graphql schema.
+
+
+Every node should be tested for non-empty collection. Fix/Refactor/Extend everything that is not working.
+@/c:/git/semio.tech/semio/go/repo/repo_test.go 
+@/c:/git/semio.tech/semio/graphql/repo/queries/Nodes.graphql
+
+The current packages that
+
+COMMANDS
+BUNDLE
+
+dev
+preflight
+test
+build
+
+@semio/engine:dev
+@semio/engine:preflight
+@semio/engine:test
+@semio/engine:build
+@semio/engine:publish
+
+@semio/js:dev
+@semio/js:dev:storybook
+@semio/js:dev:sketchpad
+@semio/js:preflight
+@semio/js:test
+@semio/js:build
+@semio/js:publish
+
+preflight:analyze
+preflight:fix
+preflight:lint
+preflight:i18n
+preflight:format
+
+
+
 All nodes should be available on the root query. Add a repo test to check that every collection is non-empty on return.
 
 The ticket mechanism changed. The ticket create command should take title, prompt, llm, plan (optional). Then it creates `ticket.json`, `plan.md` (if a plan path to a markdown file is provided then file is moved to plan.md), `log.md`, `summary.md`.

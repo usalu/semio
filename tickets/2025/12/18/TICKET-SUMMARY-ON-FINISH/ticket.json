@@ -1,0 +1,12 @@
+{
+  "title": "Require summary only when finishing tickets",
+  "prompt": "The summary flag should be only available and forced when closing a ticket.",
+  "llm": "claude-opus-4-5",
+  "status": "finished",
+  "author": "uelisaluz",
+  "dates": {
+    "created": "2025-12-18T15:51:06.030Z",
+    "finished": "2025-12-18T15:52:32.230Z"
+  },
+  "commit": "20a57039fec48f8c991d98769aa31e15cbd6859c"
+}

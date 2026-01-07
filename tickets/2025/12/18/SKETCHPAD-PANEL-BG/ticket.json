@@ -1,0 +1,12 @@
+{
+  "title": "Ensure panels use panel background and panel level context",
+  "prompt": "The panel base needs to have panel background color",
+  "llm": "gpt-5.2-codex",
+  "status": "finished",
+  "author": "uelisaluz",
+  "dates": {
+    "created": "2025-12-18T16:20:06.035Z",
+    "finished": "2025-12-18T16:22:19.556Z"
+  },
+  "commit": "20a57039fec48f8c991d98769aa31e15cbd6859c"
+}

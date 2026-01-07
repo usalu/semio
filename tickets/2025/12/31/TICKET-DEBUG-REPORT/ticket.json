@@ -1,0 +1,12 @@
+{
+  "title": "Ticket Debug Report",
+  "prompt": "Debug report for VS Code extension tickets section appearing empty",
+  "llm": "claude-sonnet-4-5",
+  "status": "finished",
+  "author": "unknown",
+  "dates": {
+    "created": "2025-12-31T00:00:00.000Z",
+    "finished": "2025-12-31T00:00:00.000Z"
+  },
+  "commit": "0000000000000000000000000000000000000000"
+}

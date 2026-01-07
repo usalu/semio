@@ -162,6 +162,8 @@ Let me walk you through 🚶
 
 > Do you wonder how semio is interopable? The reason are shared [specification](#-specs-), [ecosystems](#%EF%B8%8F-ecosystems-) and [components](#-components-) 🪢
 
+Work-in-progress artifacts stay bundled with the active ticket workspace so teams can trace temporary data without hunting global temp locations.
+
 ## ✏️ sketchpad [↑](#%EF%B8%8F-products-)
 
 [sketchpad](#%EF%B8%8F-sketchpad-) is a simple-to-use, accessible and browser-based user interface for semio🖱️
@@ -1251,6 +1253,7 @@ Comment detection skips comment markers inside string literals and template lite
 Development work is tracked as tickets composed of iterations. Ticket creation does not create an iteration; iterations are explicitly started and finished, require file lists (`updated`, `created`, `removed`), and iteration finish derives the per-file lists and line stats from git diffs between the last iteration commit (or ticket base) and the current commit. Ticket finish aggregates all iteration files and recomputes total line stats from git against the ticket base commit.
 Ticket entry points require prompt text for ticket creation and iteration start, while file arrays can be omitted at entry and still enforced by iteration rules.
 Line totals only include the files declared in the ticket iterations so unrelated diffs stay out of ticket reports.
+Temporary scripts, fixtures, and data stay inside the active ticket folder so work-in-progress artifacts remain scoped to the task.
 
 ## ?? MCP Tool Gateway [↑](#-components-)
 

@@ -1,0 +1,12 @@
+{
+  "title": "Replaced module-level mutable state with HoverIntentContext using refs",
+  "prompt": "\"Fix Smell 4: Module-level mutable state (globalHoverClearTimeout, currentHoveredPieceGuid, isPanning, isDraggingNode) replaced with HoverIntentContext using refs\"",
+  "llm": "claude-opus-4-5",
+  "status": "finished",
+  "author": "uelisaluz",
+  "dates": {
+    "created": "2025-12-20T13:17:39.445Z",
+    "finished": "2025-12-20T13:18:04.010Z"
+  },
+  "commit": "4ff6fd77dee713af972c27bd3761939be4302c80"
+}
