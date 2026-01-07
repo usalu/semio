@@ -23,9 +23,8 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
-	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
@@ -33,26 +32,6 @@ import (
 )
 
 // #region Helpers
-
-func init() {
-	wd, _ := os.Getwd()
-	rootDir := findRepoRoot(wd)
-	repo.SetRootDir(rootDir)
-}
-
-func findRepoRoot(start string) string {
-	dir := start
-	for {
-		if _, err := os.Stat(filepath.Join(dir, "AGENTS.md")); err == nil {
-			return dir
-		}
-		parent := filepath.Dir(dir)
-		if parent == dir {
-			return start
-		}
-		dir = parent
-	}
-}
 
 func executeCommand(args ...string) (string, error) {
 	buf := new(bytes.Buffer)
@@ -140,9 +119,9 @@ func TestPolicyListCommand(t *testing.T) {
 	if result.Data == nil {
 		t.Error("ToolPolicyList returned nil data")
 	}
-	policies, ok := result.Data.([]repo.Policy)
+	policies, ok := result.Data.([]repo.PolicyDef)
 	if !ok {
-		t.Error("ToolPolicyList data is not []Policy")
+		t.Error("ToolPolicyList data is not []PolicyDef")
 		return
 	}
 	if len(policies) == 0 {
@@ -368,7 +347,7 @@ func TestContributorListCommand(t *testing.T) {
 // #region GraphQL Tests
 
 func TestGraphQLRepoQuery(t *testing.T) {
-	result, err := repo.ExecuteGraphQL(`{ repo { id name } }`, nil)
+	result, err := executor.ExecuteJSON(context.Background(), `{ repo { id name } }`, nil)
 	if err != nil {
 		t.Errorf("ExecuteGraphQL returned error: %v", err)
 	}
@@ -378,7 +357,7 @@ func TestGraphQLRepoQuery(t *testing.T) {
 }
 
 func TestGraphQLBundlesQuery(t *testing.T) {
-	result, err := repo.ExecuteGraphQL(`{ repo { bundles { id name root } } }`, nil)
+	result, err := executor.ExecuteJSON(context.Background(), `{ repo { bundles { id name root } } }`, nil)
 	if err != nil {
 		t.Errorf("ExecuteGraphQL bundles returned error: %v", err)
 	}
@@ -388,7 +367,7 @@ func TestGraphQLBundlesQuery(t *testing.T) {
 }
 
 func TestGraphQLPoliciesQuery(t *testing.T) {
-	result, err := repo.ExecuteGraphQL(`{ repo { policies { id name } } }`, nil)
+	result, err := executor.ExecuteJSON(context.Background(), `{ repo { policies { id name } } }`, nil)
 	if err != nil {
 		t.Errorf("ExecuteGraphQL policies returned error: %v", err)
 	}
@@ -398,7 +377,7 @@ func TestGraphQLPoliciesQuery(t *testing.T) {
 }
 
 func TestGraphQLTicketsQuery(t *testing.T) {
-	result, err := repo.ExecuteGraphQL(`{ repo { tickets(year: 2025) { id slug status } } }`, nil)
+	result, err := executor.ExecuteJSON(context.Background(), `{ repo { tickets(year: 2025) { id slug status } } }`, nil)
 	if err != nil {
 		t.Errorf("ExecuteGraphQL tickets returned error: %v", err)
 	}
@@ -408,7 +387,7 @@ func TestGraphQLTicketsQuery(t *testing.T) {
 }
 
 func TestGraphQLAnalyzeQuery(t *testing.T) {
-	result, err := repo.ExecuteGraphQL(`{ analyze { metrics { total } } }`, nil)
+	result, err := executor.ExecuteJSON(context.Background(), `{ analyze { metrics { total } } }`, nil)
 	if err != nil {
 		t.Errorf("ExecuteGraphQL analyze returned error: %v", err)
 	}
@@ -418,7 +397,7 @@ func TestGraphQLAnalyzeQuery(t *testing.T) {
 }
 
 func TestGraphQLContributorsQuery(t *testing.T) {
-	result, err := repo.ExecuteGraphQL(`{ repo { contributors { id github } } }`, nil)
+	result, err := executor.ExecuteJSON(context.Background(), `{ repo { contributors { id github } } }`, nil)
 	if err != nil {
 		t.Errorf("ExecuteGraphQL contributors returned error: %v", err)
 	}
@@ -428,7 +407,7 @@ func TestGraphQLContributorsQuery(t *testing.T) {
 }
 
 func TestGraphQLFixMutation(t *testing.T) {
-	result, err := repo.ExecuteGraphQL(`mutation { fix { fixed remaining } }`, nil)
+	result, err := executor.ExecuteJSON(context.Background(), `mutation { fix { fixed remaining } }`, nil)
 	if err != nil {
 		t.Errorf("ExecuteGraphQL fix mutation returned error: %v", err)
 	}

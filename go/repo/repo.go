@@ -1282,6 +1282,272 @@ func (l *MarkdownLanguage) ParseSections(content string) []Section {
 
 // #endregion Markdown
 
+// #region Rust
+
+type RustLanguage struct {
+	BaseLanguage
+}
+
+func NewRustLanguage() *RustLanguage {
+	return &RustLanguage{
+		BaseLanguage: BaseLanguage{
+			name:               "rust",
+			extensions:         []string{".rs"},
+			sectionStart:       regexp.MustCompile(`(?i)^\s*//\s*#region\s+(.+?)\s*$`),
+			sectionEnd:         regexp.MustCompile(`(?i)^\s*//\s*#endregion(?:\s+(.+?))?\s*$`),
+			definitionRegexp:   regexp.MustCompile(`(?:^|\s)(?:pub\s+)?(?:fn|struct|enum|trait|impl|type|const|static|mod)\s+([A-Za-z_][A-Za-z0-9_]*)`),
+			commentPrefix:      "//",
+			sectionStartFmt:    "// #region %s",
+			sectionEndFmt:      "// #endregion %s",
+			sectionBothFmt:     "\n// #region %s\n\n// #endregion %s\n",
+			headerFmt:          "// #region Header\n\n// %s\n\n// %s %s\n\n%s\n\n// #endregion Header\n",
+			usesIndentScoping:  false,
+			policySectionStart: regexp.MustCompile(`(?i)^\s*//\s*#region(?:\s+(\S.*?))?\s*$`),
+			policySectionEnd:   regexp.MustCompile(`(?i)^\s*//\s*#endregion(?:\s+(\S.*?))?\s*$`),
+		},
+	}
+}
+
+func (l *RustLanguage) ExtraOrphanDefinitions(lines []string) []DefinitionRange {
+	var defs []DefinitionRange
+	modRegexp := regexp.MustCompile(`^\s*(?:pub\s+)?mod\s+([A-Za-z_][A-Za-z0-9_]*)\s*;`)
+	for i, line := range lines {
+		if match := modRegexp.FindStringSubmatch(line); match != nil {
+			name := fmt.Sprintf("mod-%s-%d", match[1], i+1)
+			defs = append(defs, DefinitionRange{Name: name, Start: i + 1, End: i + 1, Excerpt: strings.TrimSpace(line)})
+		}
+	}
+	return defs
+}
+
+// #endregion Rust
+
+// #region Ruby
+
+type RubyLanguage struct {
+	BaseLanguage
+}
+
+func NewRubyLanguage() *RubyLanguage {
+	return &RubyLanguage{
+		BaseLanguage: BaseLanguage{
+			name:               "ruby",
+			extensions:         []string{".rb", ".rake", ".gemspec"},
+			sectionStart:       regexp.MustCompile(`(?i)^\s*#\s*region\s+(.+?)\s*$`),
+			sectionEnd:         regexp.MustCompile(`(?i)^\s*#\s*endregion(?:\s+(.+?))?\s*$`),
+			definitionRegexp:   regexp.MustCompile(`(?:^|\s)(?:def|class|module)\s+([A-Za-z_][A-Za-z0-9_]*(?:::[A-Za-z_][A-Za-z0-9_]*)*)`),
+			commentPrefix:      "#",
+			sectionStartFmt:    "# region %s",
+			sectionEndFmt:      "# endregion %s",
+			sectionBothFmt:     "\n# region %s\n\n# endregion %s\n",
+			headerFmt:          "# region Header\n\n# %s\n\n# %s %s\n\n%s\n\n# endregion Header\n",
+			usesIndentScoping:  false,
+			policySectionStart: regexp.MustCompile(`(?i)^\s*#\s*region(?:\s+(\S.*?))?\s*$`),
+			policySectionEnd:   regexp.MustCompile(`(?i)^\s*#\s*endregion(?:\s+(\S.*?))?\s*$`),
+		},
+	}
+}
+
+func (l *RubyLanguage) ParseDefinitions(content string, lines []string) []DefinitionRange {
+	if l.definitionRegexp == nil {
+		return nil
+	}
+	type defStart struct {
+		name  string
+		line  int
+		depth int
+	}
+	var defStack []defStart
+	var defRanges []DefinitionRange
+	endRegexp := regexp.MustCompile(`^\s*end\s*$`)
+	blockStartRegexp := regexp.MustCompile(`(?:^|\s)(?:if|unless|case|while|until|for|begin|do)\b`)
+	depth := 0
+	for i, line := range lines {
+		lineNum := i + 1
+		trimmed := strings.TrimSpace(line)
+		if matches := l.definitionRegexp.FindAllStringSubmatch(line, -1); matches != nil {
+			for _, match := range matches {
+				if len(match) > 1 && match[1] != "" {
+					defStack = append(defStack, defStart{name: match[1], line: lineNum, depth: depth})
+					depth++
+				}
+			}
+		} else if blockStartRegexp.MatchString(line) && !strings.Contains(line, " do ") {
+			depth++
+		}
+		if endRegexp.MatchString(trimmed) {
+			if depth > 0 {
+				depth--
+			}
+			for len(defStack) > 0 && defStack[len(defStack)-1].depth == depth {
+				def := defStack[len(defStack)-1]
+				defStack = defStack[:len(defStack)-1]
+				defRanges = append(defRanges, DefinitionRange{
+					Name:    def.name,
+					Start:   def.line,
+					End:     lineNum,
+					Excerpt: def.name,
+				})
+			}
+		}
+	}
+	for _, def := range defStack {
+		defRanges = append(defRanges, DefinitionRange{
+			Name:    def.name,
+			Start:   def.line,
+			End:     len(lines),
+			Excerpt: def.name,
+		})
+	}
+	sort.Slice(defRanges, func(i, j int) bool {
+		return defRanges[i].Start < defRanges[j].Start
+	})
+	return defRanges
+}
+
+func (l *RubyLanguage) ExtraOrphanDefinitions(lines []string) []DefinitionRange {
+	var defs []DefinitionRange
+	moduleRegexp := regexp.MustCompile(`^\s*module\s+([A-Za-z_][A-Za-z0-9_]*(?:::[A-Za-z_][A-Za-z0-9_]*)*)`)
+	for i, line := range lines {
+		if match := moduleRegexp.FindStringSubmatch(line); match != nil {
+			name := fmt.Sprintf("module-%s-%d", match[1], i+1)
+			defs = append(defs, DefinitionRange{Name: name, Start: i + 1, End: i + 1, Excerpt: strings.TrimSpace(line)})
+		}
+	}
+	return defs
+}
+
+// #endregion Ruby
+
+// #region TOML
+
+type TomlLanguage struct {
+	BaseLanguage
+}
+
+func NewTomlLanguage() *TomlLanguage {
+	return &TomlLanguage{
+		BaseLanguage: BaseLanguage{
+			name:              "toml",
+			extensions:        []string{".toml"},
+			sectionStart:      regexp.MustCompile(`^\s*\[{1,2}([^\]]+)\]{1,2}\s*$`),
+			commentPrefix:     "#",
+			usesIndentScoping: false,
+		},
+	}
+}
+
+func (l *TomlLanguage) SupportsSections() bool    { return true }
+func (l *TomlLanguage) SupportsDefinitions() bool { return false }
+func (l *TomlLanguage) SupportsComments() bool    { return true }
+func (l *TomlLanguage) SupportsHeaders() bool     { return false }
+
+func (l *TomlLanguage) ParseSections(content string) []Section {
+	lines := strings.Split(content, "\n")
+	var sections []Section
+	var currentSection *Section
+	for i, line := range lines {
+		lineNum := i + 1
+		if match := l.sectionStart.FindStringSubmatch(line); match != nil {
+			if currentSection != nil {
+				currentSection.EndLine = lineNum - 1
+				sections = append(sections, *currentSection)
+			}
+			currentSection = &Section{
+				Name:      match[1],
+				StartLine: lineNum,
+				EndLine:   len(lines),
+			}
+		}
+	}
+	if currentSection != nil {
+		sections = append(sections, *currentSection)
+	}
+	return sections
+}
+
+// #endregion TOML
+
+// #region YAML
+
+type YamlLanguage struct {
+	BaseLanguage
+}
+
+func NewYamlLanguage() *YamlLanguage {
+	return &YamlLanguage{
+		BaseLanguage: BaseLanguage{
+			name:              "yaml",
+			extensions:        []string{".yaml", ".yml"},
+			commentPrefix:     "#",
+			usesIndentScoping: true,
+		},
+	}
+}
+
+func (l *YamlLanguage) SupportsSections() bool    { return false }
+func (l *YamlLanguage) SupportsDefinitions() bool { return false }
+func (l *YamlLanguage) SupportsComments() bool    { return true }
+func (l *YamlLanguage) SupportsHeaders() bool     { return false }
+
+// #endregion YAML
+
+// #region SQL
+
+type SqlLanguage struct {
+	BaseLanguage
+}
+
+func NewSqlLanguage() *SqlLanguage {
+	return &SqlLanguage{
+		BaseLanguage: BaseLanguage{
+			name:               "sql",
+			extensions:         []string{".sql"},
+			sectionStart:       regexp.MustCompile(`(?i)^\s*--\s*#region\s+(.+?)\s*$`),
+			sectionEnd:         regexp.MustCompile(`(?i)^\s*--\s*#endregion(?:\s+(.+?))?\s*$`),
+			definitionRegexp:   regexp.MustCompile(`(?i)(?:CREATE\s+(?:OR\s+REPLACE\s+)?(?:TABLE|VIEW|PROCEDURE|FUNCTION|TRIGGER|INDEX|TYPE|SCHEMA|DATABASE|SEQUENCE|MATERIALIZED\s+VIEW))\s+(?:IF\s+NOT\s+EXISTS\s+)?([A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*)`),
+			commentPrefix:      "--",
+			sectionStartFmt:    "-- #region %s",
+			sectionEndFmt:      "-- #endregion %s",
+			sectionBothFmt:     "\n-- #region %s\n\n-- #endregion %s\n",
+			headerFmt:          "-- #region Header\n\n-- %s\n\n-- %s %s\n\n%s\n\n-- #endregion Header\n",
+			usesIndentScoping:  false,
+			policySectionStart: regexp.MustCompile(`(?i)^\s*--\s*#region(?:\s+(\S.*?))?\s*$`),
+			policySectionEnd:   regexp.MustCompile(`(?i)^\s*--\s*#endregion(?:\s+(\S.*?))?\s*$`),
+		},
+	}
+}
+
+// #endregion SQL
+
+// #region GraphQL
+
+type GraphqlLanguage struct {
+	BaseLanguage
+}
+
+func NewGraphqlLanguage() *GraphqlLanguage {
+	return &GraphqlLanguage{
+		BaseLanguage: BaseLanguage{
+			name:               "graphql",
+			extensions:         []string{".graphql", ".gql"},
+			sectionStart:       regexp.MustCompile(`(?i)^\s*#\s*#region\s+(.+?)\s*$`),
+			sectionEnd:         regexp.MustCompile(`(?i)^\s*#\s*#endregion(?:\s+(.+?))?\s*$`),
+			definitionRegexp:   regexp.MustCompile(`(?:^|\s)(?:type|interface|enum|input|union|scalar|query|mutation|subscription|fragment|extend\s+type|extend\s+interface|extend\s+enum|extend\s+union|extend\s+input)\s+([A-Za-z_][A-Za-z0-9_]*)`),
+			commentPrefix:      "#",
+			sectionStartFmt:    "# #region %s",
+			sectionEndFmt:      "# #endregion %s",
+			sectionBothFmt:     "\n# #region %s\n\n# #endregion %s\n",
+			headerFmt:          "# #region Header\n\n# %s\n\n# %s %s\n\n%s\n\n# #endregion Header\n",
+			usesIndentScoping:  false,
+			policySectionStart: regexp.MustCompile(`(?i)^\s*#\s*#region(?:\s+(\S.*?))?\s*$`),
+			policySectionEnd:   regexp.MustCompile(`(?i)^\s*#\s*#endregion(?:\s+(\S.*?))?\s*$`),
+		},
+	}
+}
+
+// #endregion GraphQL
+
 var languageRegistry = []LanguagePlugin{
 	NewTypeScriptLanguage(),
 	NewGoLanguage(),
@@ -1289,6 +1555,12 @@ var languageRegistry = []LanguagePlugin{
 	NewCSharpLanguage(),
 	NewJSONLanguage(),
 	NewMarkdownLanguage(),
+	NewRustLanguage(),
+	NewRubyLanguage(),
+	NewTomlLanguage(),
+	NewYamlLanguage(),
+	NewSqlLanguage(),
+	NewGraphqlLanguage(),
 }
 
 func GetLanguage(filePath string) LanguagePlugin {
@@ -8487,7 +8759,13 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 				"sourceRoot":  &graphql.Field{Type: graphql.String},
 				"projectType": &graphql.Field{Type: graphql.String},
 				"tags":        &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(graphql.String)))},
-				"uri":         &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"uri": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.String),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						bundle := p.Source.(*Bundle)
+						return "file://" + filepath.ToSlash(filepath.Join(rootDir, bundle.Root)), nil
+					},
+				},
 				"folders": &graphql.Field{
 					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(folderType))),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
@@ -8781,6 +9059,63 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		},
 	})
 
+	checkpointDateType := graphql.NewObject(graphql.ObjectConfig{
+		Name: "CheckpointDate",
+		Fields: graphql.Fields{
+			"created": &graphql.Field{Type: graphql.NewNonNull(graphql.DateTime)},
+		},
+	})
+
+	ticketCheckpointType := graphql.NewObject(graphql.ObjectConfig{
+		Name: "TicketCheckpoint",
+		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
+			return graphql.Fields{
+				"prompt": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"model":  &graphql.Field{Type: graphql.String},
+				"author": &graphql.Field{
+					Type: contributorType,
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						checkpoint := p.Source.(TicketCheckpoint)
+						if checkpoint.Author == "" {
+							return nil, nil
+						}
+						contributors, err := ListContributors()
+						if err != nil {
+							return &Contributor{Github: checkpoint.Author, Name: checkpoint.Author}, nil
+						}
+						for i := range contributors {
+							if contributors[i].Github == checkpoint.Author || contributors[i].Name == checkpoint.Author {
+								return &contributors[i], nil
+							}
+							for _, email := range contributors[i].Emails {
+								if email == checkpoint.Author || strings.Contains(checkpoint.Author, email) {
+									return &contributors[i], nil
+								}
+							}
+						}
+						return &Contributor{Github: checkpoint.Author, Name: checkpoint.Author}, nil
+					},
+				},
+				"commit": &graphql.Field{Type: graphql.String},
+				"date": &graphql.Field{
+					Type: graphql.NewNonNull(checkpointDateType),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						checkpoint := p.Source.(TicketCheckpoint)
+						dateStr := checkpoint.Date
+						if dateStr == "" {
+							return map[string]interface{}{"created": time.Now()}, nil
+						}
+						created, err := time.Parse(time.RFC3339, dateStr)
+						if err != nil {
+							return map[string]interface{}{"created": time.Now()}, nil
+						}
+						return map[string]interface{}{"created": created}, nil
+					},
+				},
+			}
+		}),
+	})
+
 	ticketMetricsType := graphql.NewObject(graphql.ObjectConfig{
 		Name: "TicketMetrics",
 		Fields: graphql.Fields{
@@ -8849,7 +9184,31 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						return TicketStatusOpen, nil
 					},
 				},
-				"author":  &graphql.Field{Type: contributorType},
+				"author": &graphql.Field{
+					Type: contributorType,
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						ticket := p.Source.(*Ticket)
+						author := ticket.GetAuthor()
+						if author == "" {
+							return nil, nil
+						}
+						contributors, err := ListContributors()
+						if err != nil {
+							return &Contributor{Github: author, Name: author}, nil
+						}
+						for i := range contributors {
+							if contributors[i].Github == author || contributors[i].Name == author {
+								return &contributors[i], nil
+							}
+							for _, email := range contributors[i].Emails {
+								if email == author || strings.Contains(author, email) {
+									return &contributors[i], nil
+								}
+							}
+						}
+						return &Contributor{Github: author, Name: author}, nil
+					},
+				},
 				"model": &graphql.Field{
 					Type: graphql.String,
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
@@ -8877,12 +9236,15 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 						ticket := p.Source.(*Ticket)
 						createdStr := ticket.GetDateCreated()
+						var created time.Time
 						if createdStr == "" {
-							return nil, fmt.Errorf("ticket has no created date")
-						}
-						created, err := time.Parse(time.RFC3339, createdStr)
-						if err != nil {
-							return nil, fmt.Errorf("invalid created date format: %w", err)
+							created = time.Date(ticket.Year, time.Month(ticket.Month), ticket.Day, 0, 0, 0, 0, time.UTC)
+						} else {
+							var err error
+							created, err = time.Parse(time.RFC3339, createdStr)
+							if err != nil {
+								created = time.Date(ticket.Year, time.Month(ticket.Month), ticket.Day, 0, 0, 0, 0, time.UTC)
+							}
 						}
 						var finished *time.Time
 						finishedStr := ticket.GetDateFinished()
@@ -8900,6 +9262,13 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 				},
 				"bundles": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(bundleType)))},
 				"files":   &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(fileType)))},
+				"checkpoints": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(ticketCheckpointType))),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						ticket := p.Source.(*Ticket)
+						return ticket.GetCheckpoints(), nil
+					},
+				},
 				"metrics": &graphql.Field{
 					Type: graphql.NewNonNull(ticketMetricsType),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {

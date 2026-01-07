@@ -1,0 +1,202 @@
+{
+  "title": "ADD-TOML-YAML-SQL-GRAPHQL-LANGUAGES",
+  "prompt": "Add Toml, Yaml, Sql, and Graphql language plugins to the repo CLI language registry",
+  "llm": "claude",
+  "status": "open",
+  "author": "Ueli Saluz",
+  "dates": {
+    "created": "2026-01-07T20:52:32Z"
+  },
+  "commit": "2579ff5adb2f415787c4b6c83230b8c3bbed6508",
+  "checkpoints": [
+    {
+      "prompt": "",
+      "date": "2026-01-07T20:59:22Z",
+      "author": "Ueli Saluz",
+      "commit": "2579ff5adb2f415787c4b6c83230b8c3bbed6508",
+      "files": {
+        "go/repo/repo.go": {
+          "Types": {
+            "range": {
+              "start": 596,
+              "end": 2232
+            },
+            "definitions": [
+              "RustLanguage",
+              "NewRustLanguage",
+              "ExtraOrphanDefinitions",
+              "defs",
+              "RubyLanguage",
+              "NewRubyLanguage",
+              "ParseDefinitions",
+              "defStart",
+              "defStack",
+              "defRanges",
+              "TomlLanguage",
+              "NewTomlLanguage",
+              "SupportsSections",
+              "SupportsDefinitions",
+              "SupportsComments",
+              "SupportsHeaders",
+              "ParseSections",
+              "sections",
+              "currentSection",
+              "YamlLanguage",
+              "NewYamlLanguage",
+              "SqlLanguage",
+              "NewSqlLanguage",
+              "GraphqlLanguage",
+              "NewGraphqlLanguage",
+              "languageRegistry"
+            ],
+            "lines": {
+              "added": 272,
+              "removed": 0
+            }
+          },
+          "Types/Languages": {
+            "range": {
+              "start": 661,
+              "end": 1585
+            },
+            "definitions": [
+              "RustLanguage",
+              "NewRustLanguage",
+              "ExtraOrphanDefinitions",
+              "defs",
+              "RubyLanguage",
+              "NewRubyLanguage",
+              "ParseDefinitions",
+              "defStart",
+              "defStack",
+              "defRanges",
+              "TomlLanguage",
+              "NewTomlLanguage",
+              "SupportsSections",
+              "SupportsDefinitions",
+              "SupportsComments",
+              "SupportsHeaders",
+              "ParseSections",
+              "sections",
+              "currentSection",
+              "YamlLanguage",
+              "NewYamlLanguage",
+              "SqlLanguage",
+              "NewSqlLanguage",
+              "GraphqlLanguage",
+              "NewGraphqlLanguage",
+              "languageRegistry"
+            ],
+            "lines": {
+              "added": 272,
+              "removed": 0
+            }
+          },
+          "Types/Languages/GraphQL": {
+            "range": {
+              "start": 1523,
+              "end": 1549
+            },
+            "definitions": [
+              "GraphqlLanguage",
+              "NewGraphqlLanguage"
+            ],
+            "lines": {
+              "added": 27,
+              "removed": 0
+            }
+          },
+          "Types/Languages/Ruby": {
+            "range": {
+              "start": 1325,
+              "end": 1420
+            },
+            "definitions": [
+              "RubyLanguage",
+              "NewRubyLanguage",
+              "ParseDefinitions",
+              "defStart",
+              "defStack",
+              "defRanges",
+              "ExtraOrphanDefinitions",
+              "defs"
+            ],
+            "lines": {
+              "added": 96,
+              "removed": 0
+            }
+          },
+          "Types/Languages/Rust": {
+            "range": {
+              "start": 1285,
+              "end": 1323
+            },
+            "definitions": [
+              "RustLanguage",
+              "NewRustLanguage",
+              "ExtraOrphanDefinitions",
+              "defs"
+            ],
+            "lines": {
+              "added": 39,
+              "removed": 0
+            }
+          },
+          "Types/Languages/SQL": {
+            "range": {
+              "start": 1495,
+              "end": 1521
+            },
+            "definitions": [
+              "SqlLanguage",
+              "NewSqlLanguage"
+            ],
+            "lines": {
+              "added": 27,
+              "removed": 0
+            }
+          },
+          "Types/Languages/TOML": {
+            "range": {
+              "start": 1422,
+              "end": 1469
+            },
+            "definitions": [
+              "TomlLanguage",
+              "NewTomlLanguage",
+              "SupportsSections",
+              "SupportsDefinitions",
+              "SupportsComments",
+              "SupportsHeaders",
+              "ParseSections",
+              "sections",
+              "currentSection"
+            ],
+            "lines": {
+              "added": 48,
+              "removed": 0
+            }
+          },
+          "Types/Languages/YAML": {
+            "range": {
+              "start": 1471,
+              "end": 1493
+            },
+            "definitions": [
+              "YamlLanguage",
+              "NewYamlLanguage",
+              "SupportsSections",
+              "SupportsDefinitions",
+              "SupportsComments",
+              "SupportsHeaders"
+            ],
+            "lines": {
+              "added": 23,
+              "removed": 0
+            }
+          }
+        }
+      }
+    }
+  ]
+}

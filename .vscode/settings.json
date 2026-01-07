@@ -19,7 +19,9 @@
   "python.analysis.typeCheckingMode": "off",
   "python.testing.pytestEnabled": true,
   "python.testing.unittestEnabled": false,
-  "python.testing.pytestArgs": ["."],
+  "python.testing.pytestArgs": [
+    "."
+  ],
   "python.testing.cwd": "${workspaceFolder}/py/engine",
   "python.analysis.languageServerMode": "full",
   // "python.testing.pytestArgs": [
@@ -48,5 +50,9 @@
   "editor.minimap.enabled": true,
   "[svg]": {
     "editor.defaultFormatter": "jock.svg"
-  }
+  },
+  "rust-analyzer.linkedProjects": [
+    "rs/semio/Cargo.toml"
+  ],
+  "rust-analyzer.cargo.target": "wasm32-unknown-unknown",
 }

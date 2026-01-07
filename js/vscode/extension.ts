@@ -29,8 +29,8 @@ import * as jsonc from "jsonc-parser";
 import * as path from "path";
 import { promisify } from "util";
 import * as vscode from "vscode";
-import { DocumentType, graphql } from "./generated/gql";
-import { TicketStatus } from "./generated/graphql";
+import { DocumentType, graphql } from "./codegen/gql";
+import { TicketStatus } from "./codegen/graphql";
 
 const execAsync = promisify(exec);
 

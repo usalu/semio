@@ -437,8 +437,8 @@
     }
   },
   "scripts": {
-    "codegen": "graphql-codegen --config codegen.ts",
-    "build": "npm run codegen && vite build && vite build --config vite.test.config.ts",
+    "build": "npm run build:codegen && vite build && vite build --config vite.test.config.ts",
+    "build:codegen": "graphql-codegen --config codegen.ts",
     "dev": "vite build --watch",
     "test": "vscode-test",
     "vscode:prepublish": "npm run build",

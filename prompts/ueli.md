@@ -1,5 +1,10 @@
 # Prompt history
 
+Rust, ruby are missing as language.
+Use regions and modules for sections.
+
+Remove metrics
+
 Port 100% of the semio.ts file and semio.test.ts into semio.rs. Follow the plan for the single file layout.
 
 Adjust the refactor plan to the following file layout. Make sure the tests are identical to the semio.test.ts.
