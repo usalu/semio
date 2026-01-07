@@ -1,5 +1,5 @@
 {
-  "name": "@semio/repo",
+  "name": "@semio-repo/go",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "go/repo",
   "projectType": "library",

@@ -1,6 +1,6 @@
 # #region Header
 
-# go/repo/schema.graphql
+# graphql/repo/schema.graphql
 
 # 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -38,6 +38,14 @@ interface Node {
 type Query {
   node(id: ID!): Node
   repo: Repo!
+  bundles: [Bundle!]!
+  folders: [Folder!]!
+  files: [File!]!
+  contributors: [Contributor!]!
+  tickets(year: Int, month: Int, day: Int, status: TicketStatus): [Ticket!]!
+  policies: [Policy!]!
+  violationKinds: [ViolationKind!]!
+  violations(scope: String): [Violation!]!
   bundle(name: String!): Bundle
   folder(path: String!): Folder
   file(path: String!): File
@@ -78,9 +86,10 @@ type Mutation {
 # #region Inputs
 
 input TicketCreateInput {
-  slug: String!
+  title: String!
   prompt: String!
-  model: String
+  llm: String!
+  planPath: String
 }
 
 input TicketCheckpointInput {
@@ -108,10 +117,10 @@ input TicketReopenInput {
   slug: String!
 }
 
-input FileListInput {
-  updated: [String!]
-  created: [String!]
-  removed: [String!]
+input ContributorAddInput {
+  github: String!
+  name: String
+  emails: [String!]
 }
 
 input ContributorAddInput {
@@ -371,6 +380,7 @@ type Ticket implements Node {
   month: Int!
   day: Int!
   slug: String!
+  title: String
   path: String!
   uri: String!
   prompt: String!
@@ -378,6 +388,7 @@ type Ticket implements Node {
   status: TicketStatus!
   author: Contributor
   model: String
+  llm: String
   commit: String
   date: TicketDate!
   checkpoints: [TicketCheckpoint!]!

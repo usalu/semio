@@ -1,10 +1,7 @@
-ALWAYS create a ticket with semio-repo mcp tool for every task you are working on. The purpose of the ticket is to understand the context, problem and decision making process. It is only about the process.
+<!-- IMPORTANT -->
 
-This document MUST ALWAYS BE followed unless explicitly asked to do otherwise.
+ALWAYS create a ticket with semio-repo mcp tool `ticket_create` (or use `.\go\cli\cli.exe ticket create <slug> --prompt=<prompt> --model=<model>` when no mcp tool is available) for every task you are working on. This creates a `tickets/YYYY/MM/DD/TICKETSLUG` folder along with `plan.md`, `log.md`, `summary.md`. NEVER answer directly in the chat and ALWAYS just add the message to `log.md`. ALWAYS start by writing the plan into `plan.md` and NEVER send it as message. ALWAYS end by writing the summary into `summary.md` and NEVER send it as message. ALWAYS use the semio-repo mcp tool `ticket_checkpoint` (or use `.\go\cli\cli.exe ticket checkpoint YYYY/MM/DD/TICKETSLUG <files...>` when no mcp tool is available) to create a checkpoint for all files you are working on.
 
-IMPORTANT:
-
-- AlWAYS create a new iteration for every TODO you are working on.
 - Multiple agents and a developer ALWAYS work on the same codebase at the same time. NEVER use `git stash`, `git stash pop`, `git checkout`, … because it will mess up others work and worst-case delete their work.
 - The codebase in under design and development and not used in production yet. There are many inconsistencies that need to be refactored. ALWAYS use clean mechanisms that might require large refactorings and NEVER care about backwards compatibility.
 - For every task you are working on, you MUST update the dev docs (`README.md` and `AGENTS.md`). Every key decision and mechanism ALWAYS needs to be documemented. Every feature, decision MUST be undocumented/uncommented in the code and MUST be documented in the dev docs (AGENTS.md and README.md). The documentation ALWAYS happens four times:
@@ -14,6 +11,10 @@ IMPORTANT:
 3. Under `# Software Requirements Specification` in AGENTS.md where it is described from human-interface-designer perspective (concise technical terms without explanation, framework-agnostic, no implementation references). There are two sections: `# Business Logic` and `# UI/UX`.
 4. Under `# Codebase` in AGENTS.md where it is described from senior-developer perspective (framework-mechanisms, consice technical terms without explanation, implementation details, etc). The section has the same header structure as the files and folders. All files and folders are flat with `## PATH` e.g. `## js/js/sketchpad/` or `## net/Semio.cs`
    The purpose of the dev docs is to understand the codebase. NEVER add reasoning or process related (such as what changed, why, how, … - this is part of the log) to the dev docs.
+
+This document MUST ALWAYS BE followed unless explicitly asked to do otherwise.
+
+<!-- IMPORTANT -->
 
 # Software Requirements Specification
 

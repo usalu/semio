@@ -98,10 +98,10 @@ func main() {
 	s.AddTool(
 		mcp.NewTool("ticket_create",
 			mcp.WithDescription("Create a new development ticket"),
-			mcp.WithString("slug", mcp.Required(), mcp.Description("Ticket slug (will be uppercased and kebab-cased)")),
+			mcp.WithString("title", mcp.Required(), mcp.Description("Ticket title (will be uppercased and kebab-cased for folder name)")),
 			mcp.WithString("prompt", mcp.Required(), mcp.Description("Ticket prompt/description")),
-			mcp.WithString("model", mcp.Required(), mcp.Description("Large-Language-Model (LLM) used for this ticket")),
-			mcp.WithArray("files", mcp.Description("Files to include (at least one required)")),
+			mcp.WithString("llm", mcp.Required(), mcp.Description("Large-Language-Model (LLM) used for this ticket")),
+			mcp.WithString("planPath", mcp.Description("Path to existing plan markdown file (optional)")),
 		),
 		ticketCreate,
 	)
@@ -125,16 +125,17 @@ func main() {
 		ticketRead,
 	)
 	s.AddTool(
-		mcp.NewTool("ticket_progress",
-			mcp.WithDescription("Record progress on a ticket (creates iteration from git changes)"),
+		mcp.NewTool("ticket_checkpoint",
+			mcp.WithDescription("Create a checkpoint on a ticket with affected file changes"),
 			mcp.WithNumber("year", mcp.Required(), mcp.Description("Ticket year")),
 			mcp.WithNumber("month", mcp.Required(), mcp.Description("Ticket month")),
 			mcp.WithNumber("day", mcp.Required(), mcp.Description("Ticket day")),
 			mcp.WithString("slug", mcp.Required(), mcp.Description("Ticket slug")),
-			mcp.WithString("prompt", mcp.Required(), mcp.Description("Iteration prompt")),
+			mcp.WithString("prompt", mcp.Required(), mcp.Description("Checkpoint prompt")),
 			mcp.WithString("model", mcp.Required(), mcp.Description("Large-Language-Model (LLM) used")),
+			mcp.WithArray("files", mcp.Description("Files to include (at least one required)")),
 		),
-		ticketProgress,
+		ticketCheckpoint,
 	)
 	s.AddTool(
 		mcp.NewTool("ticket_finish",
@@ -591,7 +592,7 @@ func policyCheck(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 
 func ticketCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	slug, err := requireStringArg(args, "slug")
+	title, err := requireStringArg(args, "title")
 	if err != nil {
 		return nil, err
 	}
@@ -599,28 +600,21 @@ func ticketCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 	if err != nil {
 		return nil, err
 	}
-	model, err := requireStringArg(args, "model")
+	llm, err := requireStringArg(args, "llm")
 	if err != nil {
 		return nil, err
 	}
-	files, _, err := getStringSliceArg(args, "files")
+	planPath, _, err := getStringArg(args, "planPath")
 	if err != nil {
 		return nil, err
-	}
-	for _, file := range files {
-		if err := requireFilePath(file); err != nil {
-			return nil, err
-		}
 	}
 	input := map[string]interface{}{
-		"slug":   slug,
+		"title":  title,
 		"prompt": prompt,
+		"llm":    llm,
 	}
-	if model != "" {
-		input["model"] = model
-	}
-	if len(files) > 0 {
-		input["files"] = files
+	if planPath != "" {
+		input["planPath"] = planPath
 	}
 	query := `mutation TicketCreate($input: TicketCreateInput!) {
 		ticketCreate(input: $input) {
@@ -734,7 +728,7 @@ func ticketRead(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	return textResult(result), nil
 }
 
-func ticketProgress(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func ticketCheckpoint(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	year, err := requireIntArg(args, "year")
 	if err != nil {
@@ -756,9 +750,21 @@ func ticketProgress(ctx context.Context, request mcp.CallToolRequest) (*mcp.Call
 	if err != nil {
 		return nil, err
 	}
-	model, err := requireStringArg(args, "model")
+	model, _, err := getStringArg(args, "model")
 	if err != nil {
 		return nil, err
+	}
+	files, _, err := getStringSliceArg(args, "files")
+	if err != nil {
+		return nil, err
+	}
+	if len(files) == 0 {
+		return nil, fmt.Errorf("at least one file is required")
+	}
+	for _, file := range files {
+		if err := requireFilePath(file); err != nil {
+			return nil, err
+		}
 	}
 	input := map[string]interface{}{
 		"year":   year,
@@ -766,12 +772,13 @@ func ticketProgress(ctx context.Context, request mcp.CallToolRequest) (*mcp.Call
 		"day":    day,
 		"slug":   slug,
 		"prompt": prompt,
+		"files":  files,
 	}
 	if model != "" {
 		input["model"] = model
 	}
-	query := `mutation TicketProgress($input: TicketProgressInput!) {
-		ticketProgress(input: $input) {
+	query := `mutation TicketCheckpoint($input: TicketCheckpointInput!) {
+		ticketCheckpoint(input: $input) {
 			id
 			slug
 			prompt

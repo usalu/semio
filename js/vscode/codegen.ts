@@ -23,7 +23,7 @@ import type { CodegenConfig } from "@graphql-codegen/cli";
 
 const config: CodegenConfig = {
   schema: "../../go/repo/schema.graphql",
-  documents: ["queries.ts"],
+  documents: ["extension.ts"],
   generates: {
     "./generated/": {
       preset: "client",

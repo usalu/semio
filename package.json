@@ -37,7 +37,8 @@
     "update": "npx nx run-many -t update",
     "publish:test": "npx tsx preflight.ts publish:test",
     "publish": "npx tsx preflight.ts publish",
-    "prepare": "husky"
+    "prepare": "husky",
+    "mcp:inspector": "npx @modelcontextprotocol/inspector"
   },
   "devDependencies": {
     "@esbuild-kit/esm-loader": "^2.6.5",

@@ -1,10 +1,16 @@
 # Prompt history
 
+All nodes should be available on the root query. Add a repo test to check that every collection is non-empty on return.
+
+The ticket mechanism changed. The ticket create command should take title, prompt, llm, plan (optional). Then it creates `ticket.json`, `plan.md` (if a plan path to a markdown file is provided then file is moved to plan.md), `log.md`, `summary.md`.
+The json previously was the frontmatter. The llm is no longer an enum but just a string that is turned into a slug. The id (folder name) is the capitalized title slug.
+Whenever a todo is completed a ticket checkpoint is created. The checkpoints needs to have at least one file. Then it checks the git diff on those files. It computes metrics for all sections that are affected by the diff. A section and a definition both have a range (start line, end line). When a diff line is part of the section or definition range then it is considered affected. Definitions are by policy always part of a section. The sections line metrics are computed. The definitions are just added to the section when they are affected and they line metrics are not calculated for the definitions. Extend and refactor everything needed to cleanly implement this new mechanism.
+
 The vscode extension is outdated. It uses duplicate interfaces with GqlXxx and Xxx interfaces. Refactor it to exclusively use urql for data fetching. Extend repo.go and cli/main.go or the graphql schema if necessary.
 
 Remove the slug from the ticket files
 
-Every node should have The ids must be globally unique. Currently they are inconsistent. Refactor them like this:
+Every node must have a globally unique id. Currently they are inconsistent. Refactor them like this:
 @semio is the repo
 @semio/repo/FOLDER/ANOTHERFOLDER is a folder outside of a bundle
 @semio/repo/BUNDLE/FOLDER/FILE is a file outside of a bundle
@@ -33,8 +39,8 @@ The cli uses no server but is only command wise invoked. Depending on the query 
 The repo should use gqlgen. The vscode extension should use urql.
 Dont keep anything separate. Consolidate and refactor all of them to have a single source of truth. Only use graphql in the repo. Adjust all api, the vscode extension etc. No backwards compatiblity.
 
-The ticket mechanism is changing. Instead of iterations there should be a new consolidated mechanism called: checkpoints.
-A ticket no longer accepts files on create. Instead whenever a todo is completed a ticket checkpoint is created. The checkpoints needs to have at least one file. Then it checks the git diff on those files. It computes metrics for all sections that are affected by the diff. A section and a definition both have a range (start line, end line). When a diff line is part of the section or definition range then it is considered affected. Definitions are by policy always part of a section. Extend and refactor everything needed to cleanly implement this new mechanism.
+The ticket mechanism is changing. Instead of iterations along with progress there should be a new consolidated mechanism called: checkpoints.
+A ticket no longer accepts files on create. Instead whenever a todo is completed a ticket checkpoint is created. The checkpoints needs to have at least one file. Then it checks the git diff on those files. It computes metrics for all sections and definitions that are affected by the diff. A section and a definition both have a range (start line, end line). When a diff line is part of the section or definition range then it is considered affected. Definitions are by policy always part of a section. Extend and refactor everything needed to cleanly implement this new mechanism.
 @main.go@main.go@repo.go@gqlgen.yml@schema.graphql@extension.ts@extension.test.ts 
 
 Refactor everything to be proper graphql and make repo only use graphql. Get rid of the legacy api. Adjust all api, the vscode extension etc. No backwards compatiblity.

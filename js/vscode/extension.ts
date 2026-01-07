@@ -22,72 +22,66 @@
 // #region Imports
 
 import { applyKitDiff, deserializeKit, DomainLocation, Fix, Kit, Problem, serializeKit, validateKit } from "@semio/js/semio";
+import { cacheExchange, Client, fetchExchange } from "@urql/core";
 import { exec } from "child_process";
 import * as fs from "fs";
 import * as jsonc from "jsonc-parser";
 import * as path from "path";
 import { promisify } from "util";
 import * as vscode from "vscode";
+import { DocumentType, graphql } from "./generated/gql";
+import { TicketStatus } from "./generated/graphql";
 
 const execAsync = promisify(exec);
 
 // #endregion Imports
 
-// #region GraphQL Client
+// #region urql Client
 
-interface GraphQLResult<TData = unknown> {
-  data?: TData;
-  error?: Error;
-}
+let urqlClient: Client | null = null;
 
-async function executeGraphQL<TData = unknown, TVariables extends object = Record<string, unknown>>(
-  query: string,
-  variables?: TVariables
-): Promise<GraphQLResult<TData>> {
+function getUrqlClient(): Client | null {
+  if (urqlClient) return urqlClient;
   const root = getWorkspaceRoot();
-  if (!root) {
-    return { error: new Error("No workspace root") };
-  }
   const command = getRepoCommand();
-  if (!command) {
-    return { error: new Error("No repo command found") };
-  }
-  const variablesJson = variables && Object.keys(variables).length > 0 ? JSON.stringify(variables) : "";
-  const escapedQuery = query.replace(/"/g, '\\"').replace(/\n/g, " ");
-  const escapedVariables = variablesJson ? variablesJson.replace(/"/g, '\\"') : "";
-  const fullCommand = escapedVariables
-    ? `"${command}" graphql "${escapedQuery}" -v "${escapedVariables}"`
-    : `"${command}" graphql "${escapedQuery}"`;
-  log("[GraphQL] executing:", fullCommand);
-  try {
-    const { stdout, stderr } = await execAsync(fullCommand, { cwd: root, timeout: 60000, maxBuffer: 10 * 1024 * 1024 });
-    if (stderr) {
-      log("[GraphQL] stderr:", stderr.substring(0, 500));
-    }
-    if (stdout.length === 0) {
-      return { error: new Error("Empty response") };
-    }
-    const data = JSON.parse(stdout) as TData;
-    return { data };
-  } catch (error) {
-    logError("[GraphQL] error:", error);
-    return { error: error instanceof Error ? error : new Error(String(error)) };
-  }
+  if (!root || !command) return null;
+  urqlClient = new Client({
+    url: "local://graphql",
+    exchanges: [cacheExchange, fetchExchange],
+    fetch: async (_input: RequestInfo | URL, init?: RequestInit) => {
+      const body = init?.body ? JSON.parse(init.body as string) : {};
+      const query = body.query as string;
+      const variables = body.variables || {};
+      const variablesJson = Object.keys(variables).length > 0 ? JSON.stringify(variables) : "";
+      const escapedQuery = query.replace(/"/g, '\\"').replace(/\n/g, " ");
+      const escapedVariables = variablesJson ? variablesJson.replace(/"/g, '\\"') : "";
+      const fullCommand = escapedVariables
+        ? `"${command}" graphql "${escapedQuery}" -v "${escapedVariables}"`
+        : `"${command}" graphql "${escapedQuery}"`;
+      log("[urql] executing:", fullCommand.substring(0, 200) + "...");
+      try {
+        const { stdout, stderr } = await execAsync(fullCommand, { cwd: root, timeout: 60000, maxBuffer: 10 * 1024 * 1024 });
+        if (stderr) log("[urql] stderr:", stderr.substring(0, 500));
+        const data = JSON.parse(stdout);
+        return new Response(JSON.stringify({ data }), { status: 200, headers: { "Content-Type": "application/json" } });
+      } catch (error) {
+        logError("[urql] error:", error);
+        return new Response(JSON.stringify({ errors: [{ message: String(error) }] }), { status: 500, headers: { "Content-Type": "application/json" } });
+      }
+    },
+  });
+  return urqlClient;
 }
 
-async function gql<TData = unknown>(
-  strings: TemplateStringsArray,
-  ...values: unknown[]
-): Promise<GraphQLResult<TData>> {
-  const query = strings.reduce((acc, str, i) => acc + str + (values[i] ?? ""), "");
-  return executeGraphQL<TData>(query);
+function resetUrqlClient(): void {
+  urqlClient = null;
 }
 
-// #endregion GraphQL Client
+// #endregion urql Client
 
-// #region GraphQL Queries
+// #region GraphQL Documents
 
-const REPO_QUERY = `
+const RepoDocument = graphql(`
   query Repo {
     repo {
       id
@@ -99,38 +93,40 @@ const REPO_QUERY = `
       contributors { id github name emails }
     }
   }
-`;
+`);
 
-const BUNDLES_QUERY = `
+const BundlesDocument = graphql(`
   query Bundles {
     repo {
       bundles { id name root sourceRoot projectType tags uri }
     }
   }
-`;
+`);
 
-const TICKETS_QUERY = `
+const TicketsDocument = graphql(`
   query Tickets($year: Int, $month: Int, $day: Int, $status: TicketStatus) {
     repo {
       tickets(year: $year, month: $month, day: $day, status: $status) {
-        id year month day slug path uri prompt summary status author { github name } model commit
+        id year month day slug path uri prompt summary status
+        author { github name }
+        model commit
         date { created finished }
-        iterations { prompt model author { github name } commit date { started ended } }
-        metrics { iterations bundles files lines { added removed } }
+        checkpoints { prompt model author { github name } commit date { created } }
+        metrics { checkpoints files lines { added removed } }
       }
     }
   }
-`;
+`);
 
-const POLICIES_QUERY = `
+const PoliciesDocument = graphql(`
   query Policies {
     repo {
       policies { id name description scopes violationKinds { id priority autofixable reason solution } }
     }
   }
-`;
+`);
 
-const CONTRIBUTORS_QUERY = `
+const ContributorsDocument = graphql(`
   query Contributors {
     repo {
       contributors {
@@ -141,9 +137,9 @@ const CONTRIBUTORS_QUERY = `
       }
     }
   }
-`;
+`);
 
-const ANALYZE_QUERY = `
+const AnalyzeDocument = graphql(`
   query Analyze($scope: String) {
     analyze(scope: $scope) {
       violations {
@@ -154,123 +150,115 @@ const ANALYZE_QUERY = `
       metrics { total byPriority { high medium low } autofixable }
     }
   }
-`;
+`);
 
-const FIX_MUTATION = `
+const FixDocument = graphql(`
   mutation Fix($scope: String) {
     fix(scope: $scope) {
-      fixed
-      metrics { total byPriority { high medium low } autofixable }
+      fixed remaining
+      violations { id summary priority scope }
     }
   }
-`;
+`);
 
-// #endregion GraphQL Queries
+const CodebaseDocument = graphql(`
+  query Codebase {
+    repo {
+      id name path
+      bundles {
+        id name root sourceRoot projectType tags uri
+        metrics { folders files sections definitions lines violations }
+      }
+      folders {
+        id path uri
+        metrics { files lines violations }
+      }
+      files {
+        id path uri
+        metrics { sections definitions lines }
+        sections {
+          id name path
+          range { start { line } end { line } }
+          metrics { definitions lines violations }
+        }
+        definitions {
+          id name kind
+          range { start { line } end { line } }
+          metrics { definitions lines violations }
+        }
+      }
+      contributors {
+        id github name emails
+        links { name url }
+        metrics { commits tickets bundles folders files sections definitions lines }
+      }
+      tickets {
+        id year month day slug path uri prompt summary status commit
+        author { github name }
+        checkpoints { commit }
+        metrics { checkpoints files lines { added removed } }
+      }
+      policies {
+        id name description scopes
+        violationKinds { id priority autofixable reason solution }
+      }
+    }
+  }
+`);
+
+// #endregion GraphQL Documents
 
 // #region GraphQL Types
 
-interface GqlRepo {
-  id: string;
-  name: string;
-  path: string;
-  bundles: GqlBundle[];
-  tickets: GqlTicket[];
-  policies: GqlPolicy[];
-  contributors: GqlContributor[];
+type Repo = DocumentType<typeof RepoDocument>["repo"];
+type Bundle = Repo["bundles"][number];
+
+type Ticket = DocumentType<typeof TicketsDocument>["repo"]["tickets"][number];
+type Checkpoint = NonNullable<Ticket["checkpoints"]>[number];
+
+type Policy = DocumentType<typeof PoliciesDocument>["repo"]["policies"][number];
+type ViolationKind = Policy["violationKinds"][number];
+
+type Contributor = DocumentType<typeof ContributorsDocument>["repo"]["contributors"][number];
+
+type AnalyzeResult = DocumentType<typeof AnalyzeDocument>["analyze"];
+type GqlViolation = AnalyzeResult["violations"][number];
+
+type FixResult = DocumentType<typeof FixDocument>["fix"];
+
+type GqlCodebase = DocumentType<typeof CodebaseDocument>["repo"];
+type CodebaseBundle = GqlCodebase["bundles"][number];
+type CodebaseFolder = GqlCodebase["folders"][number];
+type CodebaseFile = GqlCodebase["files"][number];
+type CodebaseSection = CodebaseFile["sections"][number];
+type CodebaseDefinition = CodebaseFile["definitions"][number];
+type CodebaseContributor = GqlCodebase["contributors"][number];
+type CodebaseTicket = GqlCodebase["tickets"][number];
+type CodebasePolicy = GqlCodebase["policies"][number];
+
+type TreeNodeKind = "root" | "repo" | "bundle" | "folder" | "file" | "section" | "definition";
+
+interface TreeNodeMap {
+  [key: string]: TreeNodeEntry;
 }
 
-interface GqlBundle {
-  id: string;
-  name: string;
-  root: string;
-  sourceRoot?: string;
-  projectType?: string;
-  tags: string[];
-  uri: string;
+interface TreeNodeEntry {
+  kind: TreeNodeKind;
+  children?: TreeNodeMap;
 }
 
-interface GqlTicket {
-  id: string;
-  year: number;
-  month: number;
-  day: number;
-  slug: string;
-  path: string;
-  uri: string;
-  prompt: string;
-  summary?: string;
-  status: "open" | "closed";
-  author?: GqlContributor;
-  model?: string;
-  commit?: string;
-  date: { created: string; finished?: string };
-  iterations: GqlIteration[];
-  metrics: { iterations: number; bundles: number; files: number; lines?: { added: number; removed: number } };
-}
-
-interface GqlIteration {
-  prompt: string;
-  model?: string;
-  author?: GqlContributor;
-  commit?: string;
-  date: { started: string; ended?: string };
-}
-
-interface GqlPolicy {
-  id: string;
-  name: string;
-  description?: string;
-  scopes: string[];
-  violationKinds: GqlViolationKind[];
-}
-
-interface GqlViolationKind {
-  id: string;
-  priority: "high" | "medium" | "low";
-  autofixable: boolean;
-  reason: string;
-  solution: string;
-}
-
-interface GqlContributor {
-  id: string;
-  github: string;
-  name?: string;
-  emails: string[];
-  links?: { name: string; url: string }[];
-  icons?: { avatar?: string; avatarRound?: string; github?: string };
-  metrics?: { commits: number; tickets: number; bundles: number; folders: number; files: number; sections: number; definitions: number; lines: number };
-}
-
-interface GqlViolation {
-  id: string;
-  summary: string;
-  priority: "high" | "medium" | "low";
-  autofixable: boolean;
-  scope: string;
-  line?: number;
-  column?: number;
-  excerpt?: string;
-  kind: { id: string; policy: { id: string; name: string }; reason: string; solution: string };
-  autofix?: { description: string };
-}
-
-interface GqlAnalyzeResult {
-  violations: GqlViolation[];
-  metrics: { total: number; byPriority: { high: number; medium: number; low: number }; autofixable: number };
-}
-
-interface GqlFixResult {
-  fixed: number;
-  metrics: { total: number; byPriority: { high: number; medium: number; low: number }; autofixable: number };
+interface Codebase extends GqlCodebase {
+  tree: TreeNodeMap;
 }
 
 // #endregion GraphQL Types
 
 // #region GraphQL Helpers
 
-async function fetchRepoViaGraphQL(): Promise<GqlRepo | null> {
-  const result = await executeGraphQL<{ repo: GqlRepo }>(REPO_QUERY);
+async function fetchRepoViaGraphQL(): Promise<Repo | null> {
+  const client = getUrqlClient();
+  if (!client) return null;
+  const result = await client.query(RepoDocument, {});
   if (result.error) {
     logError("[GraphQL] fetchRepoViaGraphQL error:", result.error);
     return null;
@@ -278,8 +266,10 @@ async function fetchRepoViaGraphQL(): Promise<GqlRepo | null> {
   return result.data?.repo ?? null;
 }
 
-async function fetchBundlesViaGraphQL(): Promise<GqlBundle[]> {
-  const result = await executeGraphQL<{ repo: { bundles: GqlBundle[] } }>(BUNDLES_QUERY);
+async function fetchBundlesViaGraphQL(): Promise<Bundle[]> {
+  const client = getUrqlClient();
+  if (!client) return [];
+  const result = await client.query(BundlesDocument, {});
   if (result.error) {
     logError("[GraphQL] fetchBundlesViaGraphQL error:", result.error);
     return [];
@@ -287,8 +277,10 @@ async function fetchBundlesViaGraphQL(): Promise<GqlBundle[]> {
   return result.data?.repo?.bundles ?? [];
 }
 
-async function fetchTicketsViaGraphQL(year?: number, month?: number, day?: number, status?: "open" | "closed"): Promise<GqlTicket[]> {
-  const result = await executeGraphQL<{ repo: { tickets: GqlTicket[] } }, { year?: number; month?: number; day?: number; status?: string }>(TICKETS_QUERY, { year, month, day, status });
+async function fetchTicketsViaGraphQL(year?: number, month?: number, day?: number, status?: TicketStatus): Promise<Ticket[]> {
+  const client = getUrqlClient();
+  if (!client) return [];
+  const result = await client.query(TicketsDocument, { year, month, day, status });
   if (result.error) {
     logError("[GraphQL] fetchTicketsViaGraphQL error:", result.error);
     return [];
@@ -296,8 +288,10 @@ async function fetchTicketsViaGraphQL(year?: number, month?: number, day?: numbe
   return result.data?.repo?.tickets ?? [];
 }
 
-async function fetchPoliciesViaGraphQL(): Promise<GqlPolicy[]> {
-  const result = await executeGraphQL<{ repo: { policies: GqlPolicy[] } }>(POLICIES_QUERY);
+async function fetchPoliciesViaGraphQL(): Promise<Policy[]> {
+  const client = getUrqlClient();
+  if (!client) return [];
+  const result = await client.query(PoliciesDocument, {});
   if (result.error) {
     logError("[GraphQL] fetchPoliciesViaGraphQL error:", result.error);
     return [];
@@ -305,8 +299,10 @@ async function fetchPoliciesViaGraphQL(): Promise<GqlPolicy[]> {
   return result.data?.repo?.policies ?? [];
 }
 
-async function fetchContributorsViaGraphQL(): Promise<GqlContributor[]> {
-  const result = await executeGraphQL<{ repo: { contributors: GqlContributor[] } }>(CONTRIBUTORS_QUERY);
+async function fetchContributorsViaGraphQL(): Promise<Contributor[]> {
+  const client = getUrqlClient();
+  if (!client) return [];
+  const result = await client.query(ContributorsDocument, {});
   if (result.error) {
     logError("[GraphQL] fetchContributorsViaGraphQL error:", result.error);
     return [];
@@ -314,8 +310,10 @@ async function fetchContributorsViaGraphQL(): Promise<GqlContributor[]> {
   return result.data?.repo?.contributors ?? [];
 }
 
-async function analyzeViaGraphQL(scope?: string): Promise<GqlAnalyzeResult | null> {
-  const result = await executeGraphQL<{ analyze: GqlAnalyzeResult }, { scope?: string }>(ANALYZE_QUERY, { scope });
+async function analyzeViaGraphQL(scope?: string): Promise<AnalyzeResult | null> {
+  const client = getUrqlClient();
+  if (!client) return null;
+  const result = await client.query(AnalyzeDocument, { scope });
   if (result.error) {
     logError("[GraphQL] analyzeViaGraphQL error:", result.error);
     return null;
@@ -323,8 +321,10 @@ async function analyzeViaGraphQL(scope?: string): Promise<GqlAnalyzeResult | nul
   return result.data?.analyze ?? null;
 }
 
-async function fixViaGraphQL(scope?: string): Promise<GqlFixResult | null> {
-  const result = await executeGraphQL<{ fix: GqlFixResult }, { scope?: string }>(FIX_MUTATION, { scope });
+async function fixViaGraphQL(scope?: string): Promise<FixResult | null> {
+  const client = getUrqlClient();
+  if (!client) return null;
+  const result = await client.mutation(FixDocument, { scope });
   if (result.error) {
     logError("[GraphQL] fixViaGraphQL error:", result.error);
     return null;
@@ -412,208 +412,6 @@ interface DefinitionInfo {
   endIndex: number;
 }
 
-// #region Codebase
-
-interface CountMetrics {
-  count: number;
-}
-
-interface LineMetricsInfo {
-  added: number;
-  removed: number;
-}
-
-interface RangePosition {
-  line: number;
-  column: number;
-  index: number;
-}
-
-interface FileRange {
-  start: RangePosition;
-  end: RangePosition;
-}
-
-interface CodebaseViolation {
-  id: string;
-  summary: string;
-  kind: string;
-  scope: string;
-  line?: number;
-  column?: number;
-  excerpt?: string;
-  reason?: string;
-  solution?: string;
-  range?: FileRange;
-}
-
-interface BundleMetricsInfo {
-  folders: number;
-  files: number;
-  sections: number;
-  definitions: number;
-  violations: number;
-  lines: number;
-}
-
-interface CodebaseBundle {
-  id: string;
-  folder: string;
-  uri?: string;
-  projectType?: string;
-  tags?: string[];
-  contributors?: string[];
-  metrics: BundleMetricsInfo;
-}
-
-interface FolderMetricsInfo {
-  files: number;
-  lines: number;
-  violations: number;
-}
-
-interface CodebaseFolder {
-  id: string;
-  path: string;
-  uri?: string;
-  metrics: FolderMetricsInfo;
-}
-
-interface FileMetricsInfo {
-  sections: number;
-  definitions: number;
-  lines: number;
-}
-
-interface CodebaseFileViolation {
-  kind: string;
-  priority: string;
-  autofixable?: boolean;
-  solution?: string;
-}
-
-interface CodebaseFile {
-  id: string;
-  path: string;
-  uri?: string;
-  metrics: FileMetricsInfo;
-  violations?: CodebaseFileViolation[];
-}
-
-interface SectionMetricsInfo {
-  definitions: number;
-  lines: number;
-  violations: number;
-}
-
-interface CodebaseSection {
-  id: string;
-  path: string;
-  uri: string;
-  metrics: SectionMetricsInfo;
-}
-
-interface DefinitionMetricsInfo {
-  definitions: number;
-  lines: number;
-  violations: number;
-}
-
-interface CodebaseDefinition {
-  id: string;
-  path: string;
-  uri: string;
-  metrics: DefinitionMetricsInfo;
-}
-
-interface ContributorIcons {
-  avatar?: string;
-  avatarRound?: string;
-}
-
-interface ContributorContributionsInfo {
-  tickets: CountMetrics;
-  commits: CountMetrics;
-  bundles: CountMetrics;
-  files: CountMetrics;
-  lines: LineMetricsInfo;
-}
-
-interface ContributorMetricsInfo {
-  contributions: ContributorContributionsInfo;
-}
-
-interface CodebaseContributor {
-  github: string;
-  name?: string;
-  emails: string[];
-  links: Record<string, string>;
-  icons: ContributorIcons;
-  metrics: ContributorMetricsInfo;
-  tickets: string[];
-  commits: string[];
-  bundles: string[];
-  files: string[];
-}
-
-interface TicketDateInfo {
-  created: string;
-  finished?: string;
-}
-
-interface TicketBundleContrib {
-  files: Record<string, { lines: LineMetricsInfo }>;
-}
-
-interface CodebaseTicket {
-  path: string;
-  year: number;
-  month: number;
-  day: number;
-  slug: string;
-  status: string;
-  prompt: string;
-  summary?: string;
-  author?: string;
-  date: TicketDateInfo;
-  bundles: Record<string, TicketBundleContrib>;
-  commits: string[];
-  contributors: string[];
-}
-
-interface CodebasePolicy {
-  id: string;
-  name: string;
-  description: string;
-  kinds: string[];
-}
-
-type TreeNodeKind = "root" | "repo" | "bundle" | "folder" | "file" | "section" | "definition";
-
-interface TreeNodeMap {
-  [key: string]: TreeNodeEntry;
-}
-
-interface TreeNodeEntry {
-  kind: TreeNodeKind;
-  children?: TreeNodeMap;
-}
-
-interface Codebase {
-  bundles: CodebaseBundle[];
-  folders: CodebaseFolder[];
-  files: CodebaseFile[];
-  sections: CodebaseSection[];
-  definitions: CodebaseDefinition[];
-  contributors: CodebaseContributor[];
-  tickets: CodebaseTicket[];
-  policies: CodebasePolicy[];
-  violations: CodebaseViolation[];
-  tree: TreeNodeMap;
-}
-
-// #endregion Codebase
-
 // #endregion Types
 
 // #region Utilities
@@ -626,7 +424,7 @@ function getRepoBinaryPath(): string | undefined {
   const root = getWorkspaceRoot();
   if (!root) return undefined;
   const isWindows = process.platform === "win32";
-  const binaryName = isWindows ? "repo.exe" : "repo";
+  const binaryName = isWindows ? "cli.exe" : "cli";
   const binaryPath = path.join(root, "go", "repo", binaryName);
   log("getRepoBinaryPath:", binaryPath, "exists:", fs.existsSync(binaryPath));
   if (fs.existsSync(binaryPath)) return binaryPath;
@@ -698,19 +496,76 @@ async function loadCodebase(): Promise<Codebase | null> {
   if (cachedCodebase) return cachedCodebase;
   if (codebaseLoadPromise) return codebaseLoadPromise;
   if (!hasRepoAccess()) return null;
-  codebaseLoadPromise = runRepoCommandJson<ToolResult<Codebase>>("codebase").then((result) => {
-    cachedCodebase = result?.data ?? null;
+
+  codebaseLoadPromise = (async () => {
+    const root = getWorkspaceRoot();
+    const command = getRepoCommand();
+    if (!root || !command) {
+      codebaseLoadPromise = null;
+      return null;
+    }
+
+    const query = `query { repo { id name path bundles { id name root sourceRoot projectType tags uri metrics { folders files sections definitions lines violations } } folders { id path uri metrics { files lines violations } } files { id path uri metrics { sections definitions lines } sections { id name path range { start { line } end { line } } metrics { definitions lines violations } } definitions { id name kind range { start { line } end { line } } metrics { definitions lines violations } } } contributors { id github name emails links { name url } metrics { commits tickets bundles folders files sections definitions lines } } tickets { id year month day slug path uri prompt summary status commit author { github name } checkpoints { commit } metrics { checkpoints files lines { added removed } } } policies { id name description scopes violationKinds { id priority autofixable reason solution } } } }`;
+    const escapedQuery = query.replace(/"/g, '\\"');
+    const fullCommand = `"${command}" graphql "${escapedQuery}"`;
+
+    let repo: GqlCodebase;
+    log("[loadCodebase] executing GraphQL query");
+    try {
+      const { stdout, stderr } = await execAsync(fullCommand, { cwd: root, timeout: 120000, maxBuffer: 50 * 1024 * 1024 });
+      if (stderr) log("[loadCodebase] stderr:", stderr.substring(0, 500));
+
+      const data = JSON.parse(stdout) as { repo: GqlCodebase };
+      repo = data.repo;
+      if (!repo) {
+        logError("[loadCodebase] no repo in response");
+        codebaseLoadPromise = null;
+        return null;
+      }
+    } catch (error) {
+      logError("[GraphQL] loadCodebase error:", error);
+      codebaseLoadPromise = null;
+      return null;
+    }
+
+    const tree: TreeNodeMap = {};
+    const repoNode: TreeNodeEntry = { kind: "repo", children: {} };
+    tree["@semio"] = repoNode;
+
+    for (const bundle of repo.bundles) {
+      repoNode.children![bundle.id] = { kind: "bundle", children: {} };
+    }
+
+    for (const file of repo.files) {
+      const filePath = file.path;
+      let targetBundle: TreeNodeEntry | null = null;
+      for (const bundle of repo.bundles) {
+        if (filePath.startsWith(bundle.root + "/") || filePath.startsWith(bundle.root + "\\")) {
+          targetBundle = repoNode.children![bundle.id];
+          break;
+        }
+      }
+      if (targetBundle) {
+        targetBundle.children![filePath] = { kind: "file" };
+      }
+    }
+
+    const codebase: Codebase = { ...repo, tree };
+    cachedCodebase = codebase;
     codebaseLoadPromise = null;
+
     if (cachedCodebase) {
       cachedProjects = cachedCodebase.bundles.map((b) => ({
         name: b.id,
-        root: b.folder,
-        projectType: b.projectType,
+        root: b.root,
+        projectType: b.projectType ?? undefined,
         tags: b.tags,
       }));
     }
+
     return cachedCodebase;
-  });
+  })();
+
   return codebaseLoadPromise;
 }
 
@@ -817,7 +672,7 @@ interface BundleStats {
 
 type TicketBundles = Record<string, BundleStats>;
 
-interface TicketIteration {
+interface TicketCheckpointData {
   commit?: string;
   ignore?: boolean;
   bundles?: TicketBundles;
@@ -830,7 +685,7 @@ interface TicketFrontmatter {
   author?: string;
   commit?: string;
   ignore?: boolean;
-  iterations?: TicketIteration[];
+  checkpoints?: TicketCheckpointData[];
 }
 
 interface TicketData {
@@ -1584,21 +1439,37 @@ class TicketsProvider implements vscode.TreeDataProvider<TicketTreeItem> {
           folderPath: t.path.replace(/[/\\]ticket\.md$/, ""),
           filePath: t.path,
           frontmatter: {
-            status: t.status,
+            status: t.status.toLowerCase() as TicketStatus,
             prompt: t.prompt,
-            summary: t.summary,
-            author: t.author,
-            commit: t.commits.length > 0 ? t.commits[0] : undefined,
-            iterations: [],
+            summary: t.summary ?? undefined,
+            author: t.author?.github,
+            commit: t.commit ?? undefined,
+            checkpoints: t.checkpoints?.map((cp) => ({
+              commit: cp.commit ?? undefined,
+            })) ?? [],
           },
         }));
       } else {
-        const result = await runRepoCommandJson<ToolResult<TicketData[]>>("ticket list");
-        log("[TicketsProvider.getChildren] result:", result ? "not null" : "null");
-        if (result) {
-          log("[TicketsProvider.getChildren] result.data:", result.data ? `array of ${result.data.length}` : "undefined");
-        }
-        this.cachedTickets = result?.data ?? [];
+        const tickets = await fetchTicketsViaGraphQL();
+        log("[TicketsProvider.getChildren] GraphQL tickets:", tickets.length);
+        this.cachedTickets = tickets.map((t) => ({
+          year: t.year,
+          month: t.month,
+          day: t.day,
+          slug: t.slug,
+          folderPath: t.path.replace(/[/\\]ticket\.md$/, ""),
+          filePath: t.path,
+          frontmatter: {
+            status: t.status.toLowerCase(),
+            prompt: t.prompt,
+            summary: t.summary ?? undefined,
+            author: t.author?.github,
+            commit: t.commit ?? undefined,
+            checkpoints: t.checkpoints?.map((cp) => ({
+              commit: cp.commit ?? undefined,
+            })) ?? [],
+          },
+        }));
       }
       log("[TicketsProvider.getChildren] cachedTickets.length after fetch:", this.cachedTickets.length);
     }
@@ -1644,10 +1515,10 @@ class TicketsProvider implements vscode.TreeDataProvider<TicketTreeItem> {
       if (element.ticket.frontmatter.commit) {
         commits.push(element.ticket.frontmatter.commit);
       }
-      if (element.ticket.frontmatter.iterations) {
-        for (const iteration of element.ticket.frontmatter.iterations) {
-          if (iteration.commit && !commits.includes(iteration.commit)) {
-            commits.push(iteration.commit);
+      if (element.ticket.frontmatter.checkpoints) {
+        for (const checkpoint of element.ticket.frontmatter.checkpoints) {
+          if (checkpoint.commit && !commits.includes(checkpoint.commit)) {
+            commits.push(checkpoint.commit);
           }
         }
       }
@@ -1778,14 +1649,22 @@ class PoliciesProvider implements vscode.TreeDataProvider<PolicyTreeItem> {
           this.cachedPolicies = codebase.policies.map((p) => ({
             id: p.id,
             name: p.name,
-            description: p.description,
+            description: p.description ?? "",
           }));
           for (const policy of codebase.policies) {
-            this.cachedViolationKinds.set(policy.id, policy.kinds);
+            this.cachedViolationKinds.set(policy.id, policy.violationKinds.map((vk) => vk.id));
           }
         } else {
-          const result = await runRepoCommandJson<ToolResult<PolicyData[]>>("policy list");
-          this.cachedPolicies = result?.data ?? [];
+          const policies = await fetchPoliciesViaGraphQL();
+          log("[PoliciesProvider.getChildren] GraphQL policies:", policies.length);
+          this.cachedPolicies = policies.map((p) => ({
+            id: p.id,
+            name: p.name,
+            description: p.description ?? "",
+          }));
+          for (const policy of policies) {
+            this.cachedViolationKinds.set(policy.id, policy.violationKinds.map((vk) => vk.id));
+          }
         }
       }
       if (!globalSearchQuery) {
@@ -2140,26 +2019,33 @@ class ContributorsProvider implements vscode.TreeDataProvider<ContributorTreeIte
         if (codebase?.contributors) {
           this.cachedContributors = codebase.contributors.map((c) => ({
             github: c.github,
-            name: c.name,
+            name: c.name ?? undefined,
             emails: c.emails,
-            links: c.links,
+            links: c.links?.reduce((acc: Record<string, string>, l) => ({ ...acc, [l.name]: l.url }), {}),
             contributions: {
-              bundles: c.bundles,
-              files: c.files,
-              tickets: c.tickets.map((ticketPath) => {
-                const match = ticketPath.match(/tickets[/\\](\d+)[/\\](\d+)[/\\](\d+)[/\\](.+)\.md$/);
-                if (match) {
-                  return { year: parseInt(match[1]), month: parseInt(match[2]), day: parseInt(match[3]), slug: match[4], status: "unknown", filePath: ticketPath };
-                }
-                return { year: 0, month: 0, day: 0, slug: ticketPath, status: "unknown", filePath: ticketPath };
-              }),
-              commits: c.commits.map((sha) => ({ title: "", sha })),
-              lines: c.metrics.contributions.lines,
+              bundles: [],
+              files: [],
+              tickets: [],
+              commits: [],
+              lines: { added: c.metrics.lines, removed: 0 },
             },
           }));
         } else {
-          const result = await runRepoCommandJson<ToolResult<ContributorData[]>>("contributor list");
-          this.cachedContributors = result?.data ?? [];
+          const contributors = await fetchContributorsViaGraphQL();
+          log("[ContributorsProvider.getChildren] GraphQL contributors:", contributors.length);
+          this.cachedContributors = contributors.map((c) => ({
+            github: c.github,
+            name: c.name ?? undefined,
+            emails: c.emails,
+            links: c.links?.reduce((acc: Record<string, string>, l) => ({ ...acc, [l.name]: l.url }), {}),
+            contributions: {
+              bundles: [],
+              files: [],
+              tickets: [],
+              commits: [],
+              lines: { added: 0, removed: 0 },
+            },
+          }));
         }
       }
       const root = getWorkspaceRoot();
@@ -2463,7 +2349,7 @@ class CodebaseBundleItem extends vscode.TreeItem {
     this.contextValue = "codebaseBundle";
     this.description = bundle.projectType || "";
     this.tooltip = `${bundle.id}\nFiles: ${bundle.metrics.files}\nDefinitions: ${bundle.metrics.definitions}`;
-    this.command = { command: "semio.navigateToBundle", title: "Navigate to Bundle", arguments: [bundle.folder] };
+    this.command = { command: "semio.navigateToBundle", title: "Navigate to Bundle", arguments: [bundle.root] };
   }
 }
 
@@ -2497,6 +2383,7 @@ class CodebaseFileItem extends vscode.TreeItem {
 class CodebaseSectionItem extends vscode.TreeItem {
   constructor(
     public readonly section: CodebaseSection,
+    public readonly file: CodebaseFile,
     public readonly displayName: string,
     public readonly hasChildren: boolean,
   ) {
@@ -2504,18 +2391,21 @@ class CodebaseSectionItem extends vscode.TreeItem {
     this.iconPath = new vscode.ThemeIcon("symbol-namespace");
     this.contextValue = "codebaseSection";
     this.tooltip = `Lines: ${section.metrics.lines}`;
-    this.command = { command: "semio.navigateToSection", title: "Navigate to Section", arguments: [section.uri] };
+    this.command = { command: "semio.navigateToSection", title: "Navigate to Section", arguments: [file.uri + "#" + section.name] };
   }
 }
 
 class CodebaseDefinitionItem extends vscode.TreeItem {
-  constructor(public readonly definition: CodebaseDefinition) {
-    const name = definition.id.split("§").pop() || definition.id;
+  constructor(
+    public readonly definition: CodebaseDefinition,
+    public readonly fileUri: string,
+  ) {
+    const name = definition.name || definition.id.split("§").pop() || definition.id;
     super(name, vscode.TreeItemCollapsibleState.None);
     this.iconPath = new vscode.ThemeIcon("symbol-function");
     this.contextValue = "codebaseDefinition";
     this.tooltip = `Lines: ${definition.metrics.lines}`;
-    this.command = { command: "semio.navigateToDefinition", title: "Navigate to Definition", arguments: [definition.uri] };
+    this.command = { command: "semio.navigateToDefinition", title: "Navigate to Definition", arguments: [fileUri + "#" + definition.name] };
   }
 }
 
@@ -2559,7 +2449,7 @@ class CodebaseProvider implements vscode.TreeDataProvider<CodebaseTreeItem> {
     }
 
     if (element instanceof CodebaseSectionItem) {
-      return this.buildSectionChildren(codebase, element.section);
+      return this.buildSectionChildren(codebase, element.section, element.file);
     }
 
     return [];
@@ -2595,62 +2485,53 @@ class CodebaseProvider implements vscode.TreeDataProvider<CodebaseTreeItem> {
     return items;
   }
 
-  private buildFileChildren(codebase: Codebase, file: CodebaseFile): CodebaseTreeItem[] {
+  private buildFileChildren(_codebase: Codebase, file: CodebaseFile): CodebaseTreeItem[] {
     const items: CodebaseTreeItem[] = [];
-    const filePath = file.path;
-    const fileSections = codebase.sections.filter((s) => {
-      const sectionFilePath = s.path.split("#")[0];
-      return sectionFilePath === filePath;
-    });
-    const rootSections = fileSections.filter((s) => {
+
+    const rootSections = file.sections.filter((s) => {
       const parts = s.path.split("#");
       return parts.length === 2;
     });
 
     for (const section of rootSections) {
-      const sectionName = section.path.split("#").pop() || section.path;
-      const hasChildren = fileSections.some((s) => s.path.startsWith(section.path + "#") && s.path !== section.path);
-      items.push(new CodebaseSectionItem(section, sectionName, hasChildren || section.metrics.definitions > 0));
+      const sectionName = section.name || section.path.split("#").pop() || section.path;
+      const hasChildren = file.sections.some((s) => s.path.startsWith(section.path + "#") && s.path !== section.path);
+      items.push(new CodebaseSectionItem(section, file, sectionName, hasChildren || section.metrics.definitions > 0));
     }
 
-    const fileDefinitions = codebase.definitions.filter((d) => {
-      const defFilePath = d.path.split("§")[0];
-      const hasNoSection = !d.path.includes("#");
-      return defFilePath === filePath && hasNoSection;
+    const fileDefinitions = file.definitions.filter((d) => {
+      const hasNoSection = !d.id.includes("#");
+      return hasNoSection;
     });
     for (const def of fileDefinitions) {
-      items.push(new CodebaseDefinitionItem(def));
+      items.push(new CodebaseDefinitionItem(def, file.uri));
     }
 
     return items;
   }
 
-  private buildSectionChildren(codebase: Codebase, section: CodebaseSection): CodebaseTreeItem[] {
+  private buildSectionChildren(_codebase: Codebase, section: CodebaseSection, file: CodebaseFile): CodebaseTreeItem[] {
     const items: CodebaseTreeItem[] = [];
     const sectionPath = section.path;
     const sectionPathWithHash = sectionPath + "#";
 
-    const childSections = codebase.sections.filter((s) => {
+    const childSections = file.sections.filter((s) => {
       if (!s.path.startsWith(sectionPathWithHash)) return false;
       const remainder = s.path.substring(sectionPathWithHash.length);
       return !remainder.includes("#");
     });
 
     for (const child of childSections) {
-      const childName = child.path.split("#").pop() || child.path;
-      const hasGrandChildren = codebase.sections.some((s) => s.path.startsWith(child.path + "#") && s.path !== child.path);
-      items.push(new CodebaseSectionItem(child, childName, hasGrandChildren || child.metrics.definitions > 0));
+      const childName = child.name || child.path.split("#").pop() || child.path;
+      const hasGrandChildren = file.sections.some((s) => s.path.startsWith(child.path + "#") && s.path !== child.path);
+      items.push(new CodebaseSectionItem(child, file, childName, hasGrandChildren || child.metrics.definitions > 0));
     }
 
-    const sectionDefs = codebase.definitions.filter((d) => {
-      const hashIndex = d.path.indexOf("#");
-      const dollarIndex = d.path.indexOf("§");
-      if (hashIndex === -1 || dollarIndex === -1) return false;
-      const sectionPart = d.path.substring(0, dollarIndex);
-      return sectionPart === sectionPath;
+    const sectionDefs = file.definitions.filter((d) => {
+      return d.id.includes("#" + section.name + "§") || d.id.endsWith("#" + section.name);
     });
     for (const def of sectionDefs) {
-      items.push(new CodebaseDefinitionItem(def));
+      items.push(new CodebaseDefinitionItem(def, file.uri));
     }
 
     return items;
@@ -2695,7 +2576,7 @@ const SIDEBAR_COMMANDS: CommandInfo[] = [
   { id: "semio.fix", title: "Fix Codebase Problems" },
   { id: "semio.fixFile", title: "Fix Current File Problems" },
   { id: "semio.ticketCreate", title: "Create Ticket" },
-  { id: "semio.ticketProgress", title: "Progress Ticket" },
+  { id: "semio.ticketCheckpoint", title: "Create Checkpoint" },
   { id: "semio.ticketFinish", title: "Finish Ticket" },
   { id: "semio.folderTree", title: "Show Folder Tree" },
   { id: "semio.folderCreate", title: "Create Folder" },
@@ -3112,20 +2993,28 @@ function registerCommands(context: vscode.ExtensionContext): void {
       }
       runRepoCommand("ticket list");
     }),
-    vscode.commands.registerCommand("semio.ticketProgress", async () => {
+    vscode.commands.registerCommand("semio.ticketCheckpoint", async () => {
       if (!hasRepoAccess()) {
         vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
-      const ticket = await pickTicket();
+      const ticket = await pickTicket("open");
       if (!ticket) return;
-      const prompt = await vscode.window.showInputBox({ prompt: "Enter iteration prompt", placeHolder: "What was done in this iteration?" });
-      if (!prompt) {
-        vscode.window.showWarningMessage("Prompt is required for progress");
+      const fileUris = await vscode.window.showOpenDialog({
+        canSelectMany: true,
+        canSelectFolders: false,
+        openLabel: "Select files for checkpoint",
+        title: "Select files affected by this checkpoint",
+      });
+      if (!fileUris || fileUris.length === 0) {
+        vscode.window.showWarningMessage("At least one file is required for checkpoint");
         return;
       }
-      const promptArg = ` --prompt="${prompt.replace(/"/g, '\\"')}"`;
-      runRepoCommand(`ticket progress ${ticket.year} ${ticket.month} ${ticket.day} ${ticket.slug}${promptArg}`);
+      const root = getWorkspaceRoot();
+      if (!root) return;
+      const files = fileUris.map((uri) => path.relative(root, uri.fsPath).replace(/\\/g, "/"));
+      const fileArgs = files.map((f) => `--file="${f}"`).join(" ");
+      runRepoCommand(`ticket checkpoint ${ticket.year} ${ticket.month} ${ticket.day} ${ticket.slug} ${fileArgs}`);
     }),
     vscode.commands.registerCommand("semio.ticketFinish", async (ticketItem?: TicketItem | TicketData | ContributorTicketItem | ContributorTicketData) => {
       if (!hasRepoAccess()) {

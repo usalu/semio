@@ -1142,6 +1142,32 @@
         "close": true
       },
       "problemMatcher": []
+    },
+    {
+      "label": "mcp inspector",
+      "type": "shell",
+      "isBackground": true,
+      "command": "npm run mcp:inspector",
+      "problemMatcher": {
+        "owner": "custom",
+        "pattern": [
+          {
+            "regexp": ".",
+            "file": 1,
+            "location": 2,
+            "message": 3
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Starting MCP Inspector",
+          "endsPattern": "http://localhost:6274"
+        }
+      },
+      "group": "none",
+      "options": {
+        "killOnPort": 6274
+      }
     }
   ]
 }

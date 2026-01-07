@@ -1,9 +1,10 @@
 {
-  "name": "@semio-repo/mcp",
+  "name": "@semio-repo/cli",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "go/mcp",
+  "sourceRoot": "go/cli",
   "projectType": "application",
   "scripts": {
+    "dev": "go run main.go dev",
     "build": "go build",
     "preflight": "go vet ./..."
   },

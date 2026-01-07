@@ -352,6 +352,14 @@
       "mode": "debug",
       "program": "${file}",
       "cwd": "${fileDirname}"
+    },
+    {
+      "name": "mcp inspector",
+      "preLaunchTask": "mcp inspector",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:6274",
+      "webRoot": "${workspaceRoot}"
     }
   ]
 }

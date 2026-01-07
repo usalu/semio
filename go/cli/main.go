@@ -144,8 +144,8 @@ func init() {
 
 // #region Serve Command
 
-var serveCmd = &cobra.Command{
-	Use:   "serve",
+var devCmd = &cobra.Command{
+	Use:   "dev",
 	Short: "Start GraphQL server with GraphiQL interface",
 	Long:  `Start an HTTP server exposing the GraphQL API with introspection and GraphiQL interface.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -233,8 +233,8 @@ const graphiqlHTML = `<!DOCTYPE html>
 </html>`
 
 func init() {
-	serveCmd.Flags().IntP("port", "p", 8080, "Port to listen on")
-	rootCmd.AddCommand(serveCmd)
+	devCmd.Flags().IntP("port", "p", 8080, "Port to listen on")
+	rootCmd.AddCommand(devCmd)
 }
 
 // #endregion Serve Command
@@ -348,24 +348,20 @@ var ticketCmd = &cobra.Command{
 }
 
 var ticketCreateCmd = &cobra.Command{
-	Use:   "create <slug>",
+	Use:   "create <title>",
 	Short: "Create a new ticket",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		prompt, _ := cmd.Flags().GetString("prompt")
-		model, _ := cmd.Flags().GetString("model")
-		files, _ := cmd.Flags().GetStringSlice("file")
+		llm, _ := cmd.Flags().GetString("llm")
+		planPath, _ := cmd.Flags().GetString("plan")
 		input := map[string]interface{}{
-			"slug":   args[0],
+			"title":  args[0],
 			"prompt": prompt,
+			"llm":    llm,
 		}
-		if model != "" {
-			input["model"] = model
-		}
-		if len(files) > 0 {
-			input["files"] = map[string]interface{}{
-				"updated": files,
-			}
+		if planPath != "" {
+			input["planPath"] = planPath
 		}
 		variables := map[string]interface{}{
 			"input": input,
@@ -416,7 +412,7 @@ var ticketListCmd = &cobra.Command{
 						path
 						uri
 						date { created finished }
-						metrics { iterations bundles files lines { added removed } }
+						metrics { checkpoints files sections definitions lines { added removed } }
 					}
 				}
 			}
@@ -424,14 +420,17 @@ var ticketListCmd = &cobra.Command{
 	},
 }
 
-var ticketProgressCmd = &cobra.Command{
-	Use:   "progress <year> <month> <day> <slug>",
-	Short: "Record progress on a ticket",
+var ticketCheckpointCmd = &cobra.Command{
+	Use:   "checkpoint <year> <month> <day> <slug>",
+	Short: "Create a checkpoint on a ticket with file changes",
 	Args:  cobra.ExactArgs(4),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		prompt, _ := cmd.Flags().GetString("prompt")
 		model, _ := cmd.Flags().GetString("model")
 		files, _ := cmd.Flags().GetStringSlice("file")
+		if len(files) == 0 {
+			return fmt.Errorf("at least one file is required (--file)")
+		}
 		year, _ := strconv.Atoi(args[0])
 		month, _ := strconv.Atoi(args[1])
 		day, _ := strconv.Atoi(args[2])
@@ -441,21 +440,17 @@ var ticketProgressCmd = &cobra.Command{
 			"day":    day,
 			"slug":   args[3],
 			"prompt": prompt,
+			"files":  files,
 		}
 		if model != "" {
 			input["model"] = model
-		}
-		if len(files) > 0 {
-			input["files"] = map[string]interface{}{
-				"updated": files,
-			}
 		}
 		variables := map[string]interface{}{
 			"input": input,
 		}
 		return printGQL(`
-			mutation TicketProgress($input: TicketProgressInput!) {
-				ticketProgress(input: $input) {
+			mutation TicketCheckpoint($input: TicketCheckpointInput!) {
+				ticketCheckpoint(input: $input) {
 					id
 					slug
 					status
@@ -532,15 +527,15 @@ var ticketReopenCmd = &cobra.Command{
 
 func init() {
 	ticketCreateCmd.Flags().String("prompt", "", "Ticket prompt")
-	ticketCreateCmd.Flags().String("model", "", "Model used")
-	ticketCreateCmd.Flags().StringSlice("file", nil, "Files to include")
-	ticketProgressCmd.Flags().String("prompt", "", "Iteration prompt")
-	ticketProgressCmd.Flags().String("model", "", "Model used")
-	ticketProgressCmd.Flags().StringSlice("file", nil, "Files to include")
+	ticketCreateCmd.Flags().String("llm", "", "LLM used")
+	ticketCreateCmd.Flags().String("plan", "", "Path to plan markdown file (optional)")
+	ticketCheckpointCmd.Flags().String("prompt", "", "Checkpoint prompt")
+	ticketCheckpointCmd.Flags().String("model", "", "Model used")
+	ticketCheckpointCmd.Flags().StringSlice("file", nil, "Files to include (required)")
 	ticketFinishCmd.Flags().String("summary", "", "Ticket summary")
 	ticketCmd.AddCommand(ticketCreateCmd)
 	ticketCmd.AddCommand(ticketListCmd)
-	ticketCmd.AddCommand(ticketProgressCmd)
+	ticketCmd.AddCommand(ticketCheckpointCmd)
 	ticketCmd.AddCommand(ticketFinishCmd)
 	ticketCmd.AddCommand(ticketReopenCmd)
 }
