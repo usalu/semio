@@ -1,5 +1,19 @@
 # Prompt history
 
+Port 100% of the semio.ts file and semio.test.ts into semio.rs. Follow the plan for the single file layout.
+
+Adjust the refactor plan to the following file layout. Make sure the tests are identical to the semio.test.ts.
+├─ rs
+│ └─ semio
+│ │ ├─ semio.rs
+│ │ └─ Cargo.toml
+
+The backend should be migrated to 
+
+Currently repo offers a graphql api and the metrics are computed on the fly. Instead add an export command to a sqlite file (create a schema) that has all the information (repo, bundles, folders, files, sections, definitions, contributors, tickets, policies, violationKinds, violations).
+
+All metrics should be 
+
 All temporary scripts used to created in temp/ but now all temporary data should be part of the ticket folder of the active ticket. Update  C:\git\semio.tech\semio\AGENTS.md C:\git\semio.tech\semio\README.md
 
 Add a vscode 

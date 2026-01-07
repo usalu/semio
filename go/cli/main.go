@@ -307,6 +307,38 @@ var fixCmd = &cobra.Command{
 
 // #endregion Fix Command
 
+// #region Export Command
+
+var exportCmd = &cobra.Command{
+	Use:   "export [output]",
+	Short: "Export repo data to SQLite database",
+	Long:  `Export all repo data (bundles, folders, files, sections, contributors, tickets, policies, violations) to a SQLite database file.`,
+	Args:  cobra.MaximumNArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		outputPath := ""
+		if len(args) > 0 {
+			outputPath = args[0]
+		}
+		ctx := repo.NewRepoContext(findRepoRoot("."))
+		result, err := repo.ExportToSQLite(outputPath, ctx)
+		if err != nil {
+			return err
+		}
+		jsonBytes, err := json.MarshalIndent(result, "", "  ")
+		if err != nil {
+			return err
+		}
+		fmt.Println(string(jsonBytes))
+		return nil
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(exportCmd)
+}
+
+// #endregion Export Command
+
 // #region Policy Commands
 
 var policyCmd = &cobra.Command{

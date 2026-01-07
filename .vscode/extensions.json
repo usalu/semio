@@ -18,7 +18,6 @@
     "dbaeumer.vscode-eslint",
     "bradlc.vscode-tailwindcss",
     "unifiedjs.vscode-mdx",
-    "astro-build.astro-vscode",
     "statelyai.stately-vscode",
     "vitest.explorer",
     "stripe.markdoc-language-support",
@@ -34,7 +33,9 @@
     "ms-python.python",
     "ms-python.vscode-pylance",
     "charliermarsh.ruff",
-    "ms-toolsai.jupyter"
+    "ms-toolsai.jupyter",
+    // rust
+    "rust-lang.rust-analyzer"
   ],
   "unwantedRecommendations": []
 }

@@ -23,6 +23,7 @@ package repo
 import (
 	"bufio"
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -40,6 +41,7 @@ import (
 	"github.com/graphql-go/graphql"
 	"github.com/graphql-go/graphql/language/ast"
 	"github.com/graphql-go/graphql/language/parser"
+	_ "modernc.org/sqlite"
 )
 
 // #region GraphQL Types
@@ -7594,6 +7596,469 @@ func ToolUpdateMetabolism() ToolResult {
 	output.Success(stdout)
 	return ToolResult{Output: *output}
 }
+
+// #region SQLite Export
+
+type ExportResult struct {
+	Path       string `json:"path"`
+	Bundles    int    `json:"bundles"`
+	Folders    int    `json:"folders"`
+	Files      int    `json:"files"`
+	Sections   int    `json:"sections"`
+	Definitions int   `json:"definitions"`
+	Contributors int  `json:"contributors"`
+	Tickets    int    `json:"tickets"`
+	Policies   int    `json:"policies"`
+	ViolationKinds int `json:"violationKinds"`
+	Violations int    `json:"violations"`
+}
+
+func ExportToSQLite(outputPath string, ctx RepoContext) (*ExportResult, error) {
+	if outputPath == "" {
+		outputPath = filepath.Join(ctx.GetRootDir(), "repo.db")
+	}
+	if err := os.Remove(outputPath); err != nil && !os.IsNotExist(err) {
+		return nil, fmt.Errorf("failed to remove existing database: %w", err)
+	}
+	db, err := sql.Open("sqlite", outputPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open database: %w", err)
+	}
+	defer db.Close()
+	schemaPath := filepath.Join(ctx.GetRootDir(), "sql", "sqlite", "repo", "schema.sql")
+	schemaBytes, err := os.ReadFile(schemaPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read schema file: %w", err)
+	}
+	if _, err := db.Exec(string(schemaBytes)); err != nil {
+		return nil, fmt.Errorf("failed to execute schema: %w", err)
+	}
+	tx, err := db.Begin()
+	if err != nil {
+		return nil, fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback()
+	result := &ExportResult{Path: outputPath}
+	if err := exportRepo(tx, ctx); err != nil {
+		return nil, fmt.Errorf("failed to export repo: %w", err)
+	}
+	if result.Bundles, err = exportBundles(tx, ctx); err != nil {
+		return nil, fmt.Errorf("failed to export bundles: %w", err)
+	}
+	if result.Folders, err = exportFolders(tx, ctx); err != nil {
+		return nil, fmt.Errorf("failed to export folders: %w", err)
+	}
+	if result.Files, result.Sections, result.Definitions, err = exportFiles(tx, ctx); err != nil {
+		return nil, fmt.Errorf("failed to export files: %w", err)
+	}
+	if result.Contributors, err = exportContributors(tx, ctx); err != nil {
+		return nil, fmt.Errorf("failed to export contributors: %w", err)
+	}
+	if result.Tickets, err = exportTickets(tx, ctx); err != nil {
+		return nil, fmt.Errorf("failed to export tickets: %w", err)
+	}
+	if result.Policies, result.ViolationKinds, err = exportPolicies(tx, ctx); err != nil {
+		return nil, fmt.Errorf("failed to export policies: %w", err)
+	}
+	analyzeResult, err := ctx.Analyze(nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to analyze: %w", err)
+	}
+	if result.Violations, err = exportViolations(tx, analyzeResult.Violations); err != nil {
+		return nil, fmt.Errorf("failed to export violations: %w", err)
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("failed to commit transaction: %w", err)
+	}
+	return result, nil
+}
+
+func exportRepo(tx *sql.Tx, ctx RepoContext) error {
+	_, err := tx.Exec(`INSERT INTO repo (id, name, path, exported_at) VALUES (?, ?, ?, ?)`,
+		"repo:semio",
+		"semio",
+		ctx.GetRootDir(),
+		time.Now().UTC().Format(time.RFC3339))
+	return err
+}
+
+func exportBundles(tx *sql.Tx, ctx RepoContext) (int, error) {
+	bundles := ctx.GetBundles()
+	stmt, err := tx.Prepare(`INSERT INTO bundle (id, name, root, source_root, project_type, uri) VALUES (?, ?, ?, ?, ?, ?)`)
+	if err != nil {
+		return 0, err
+	}
+	defer stmt.Close()
+	tagStmt, err := tx.Prepare(`INSERT INTO bundle_tag (bundle_id, tag) VALUES (?, ?)`)
+	if err != nil {
+		return 0, err
+	}
+	defer tagStmt.Close()
+	for _, b := range bundles {
+		id := "bundle:" + b.Name
+		uri := "file://" + NormalizePath(filepath.Join(ctx.GetRootDir(), b.Root))
+		var sourceRoot, projectType interface{}
+		if b.SourceRoot != "" {
+			sourceRoot = b.SourceRoot
+		}
+		if b.ProjectType != "" {
+			projectType = b.ProjectType
+		}
+		if _, err := stmt.Exec(id, b.Name, b.Root, sourceRoot, projectType, uri); err != nil {
+			return 0, err
+		}
+		for _, tag := range b.Tags {
+			if _, err := tagStmt.Exec(id, tag); err != nil {
+				return 0, err
+			}
+		}
+	}
+	return len(bundles), nil
+}
+
+func exportFolders(tx *sql.Tx, ctx RepoContext) (int, error) {
+	folders := ctx.GetFolders()
+	stmt, err := tx.Prepare(`INSERT INTO folder (id, path, uri, name, parent_id, bundle_id) VALUES (?, ?, ?, ?, ?, ?)`)
+	if err != nil {
+		return 0, err
+	}
+	defer stmt.Close()
+	bundles := ctx.GetBundles()
+	bundleMap := make(map[string]string)
+	for _, b := range bundles {
+		bundleMap[b.Root] = "bundle:" + b.Name
+	}
+	for _, f := range folders {
+		var bundleID interface{}
+		for root, bid := range bundleMap {
+			if strings.HasPrefix(f.Path, root) {
+				bundleID = bid
+				break
+			}
+		}
+		if _, err := stmt.Exec(f.ID, f.Path, f.URI, f.Name, f.ParentID, bundleID); err != nil {
+			return 0, err
+		}
+	}
+	return len(folders), nil
+}
+
+func exportFiles(tx *sql.Tx, ctx RepoContext) (int, int, int, error) {
+	files := ctx.GetFiles()
+	fileStmt, err := tx.Prepare(`INSERT INTO file (id, path, uri, name, extension, folder_id, bundle_id, lines) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	defer fileStmt.Close()
+	sectionStmt, err := tx.Prepare(`INSERT INTO section (id, name, path, file_id, parent_id, start_line, end_line, start_column, end_column) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	defer sectionStmt.Close()
+	defStmt, err := tx.Prepare(`INSERT INTO definition (id, name, kind, file_id, section_id, start_line, end_line, start_column, end_column) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	defer defStmt.Close()
+	bundles := ctx.GetBundles()
+	bundleMap := make(map[string]string)
+	for _, b := range bundles {
+		bundleMap[b.Root] = "bundle:" + b.Name
+	}
+	totalSections := 0
+	totalDefs := 0
+	for _, f := range files {
+		var bundleID interface{}
+		for root, bid := range bundleMap {
+			if strings.HasPrefix(f.Path, root) {
+				bundleID = bid
+				break
+			}
+		}
+		absPath := filepath.Join(ctx.GetRootDir(), f.Path)
+		lines := 0
+		if content, err := ReadTextFile(absPath); err == nil {
+			lines = strings.Count(content, "\n") + 1
+		}
+		if _, err := fileStmt.Exec(f.ID, f.Path, f.URI, f.Name, f.Extension, f.FolderID, bundleID, lines); err != nil {
+			return 0, 0, 0, err
+		}
+		if content, err := ReadTextFile(absPath); err == nil {
+			sections := ParseSections(content, f.Path)
+			sectionCount, err := exportSectionsRecursive(sectionStmt, sections, f.ID, f.Path, nil)
+			if err != nil {
+				return 0, 0, 0, err
+			}
+			totalSections += sectionCount
+		}
+	}
+	return len(files), totalSections, totalDefs, nil
+}
+
+func exportSectionsRecursive(sectionStmt *sql.Stmt, sections []Section, fileID, filePath string, parentID *string) (int, error) {
+	count := 0
+	for _, s := range sections {
+		sectionID := fmt.Sprintf("section:%s#%s", filePath, s.Name)
+		sectionPath := s.Name
+		if parentID != nil {
+			sectionPath = strings.TrimPrefix(*parentID, "section:"+filePath+"#") + "/" + s.Name
+			sectionID = fmt.Sprintf("section:%s#%s", filePath, sectionPath)
+		}
+		if _, err := sectionStmt.Exec(sectionID, s.Name, sectionPath, fileID, parentID, s.StartLine, s.EndLine, 0, 0); err != nil {
+			return 0, err
+		}
+		count++
+		if len(s.Children) > 0 {
+			childCount, err := exportSectionsRecursive(sectionStmt, s.Children, fileID, filePath, &sectionID)
+			if err != nil {
+				return 0, err
+			}
+			count += childCount
+		}
+	}
+	return count, nil
+}
+
+func exportContributors(tx *sql.Tx, ctx RepoContext) (int, error) {
+	contributors, err := ctx.GetContributors()
+	if err != nil {
+		return 0, err
+	}
+	stmt, err := tx.Prepare(`INSERT INTO contributor (id, github, name, avatar_url, avatar_round_url, github_icon_url) VALUES (?, ?, ?, ?, ?, ?)`)
+	if err != nil {
+		return 0, err
+	}
+	defer stmt.Close()
+	emailStmt, err := tx.Prepare(`INSERT INTO contributor_email (contributor_id, email) VALUES (?, ?)`)
+	if err != nil {
+		return 0, err
+	}
+	defer emailStmt.Close()
+	linkStmt, err := tx.Prepare(`INSERT INTO contributor_link (contributor_id, name, url) VALUES (?, ?, ?)`)
+	if err != nil {
+		return 0, err
+	}
+	defer linkStmt.Close()
+	for _, c := range contributors {
+		id := "contributor:" + c.Github
+		var name interface{}
+		if c.Name != "" {
+			name = c.Name
+		}
+		if _, err := stmt.Exec(id, c.Github, name, nil, nil, nil); err != nil {
+			return 0, err
+		}
+		for _, email := range c.Emails {
+			if _, err := emailStmt.Exec(id, email); err != nil {
+				return 0, err
+			}
+		}
+		for linkName, url := range c.Links {
+			if _, err := linkStmt.Exec(id, linkName, url); err != nil {
+				return 0, err
+			}
+		}
+	}
+	return len(contributors), nil
+}
+
+func exportTickets(tx *sql.Tx, ctx RepoContext) (int, error) {
+	tickets, err := ctx.GetTickets(nil, nil, nil, nil)
+	if err != nil {
+		return 0, err
+	}
+	ticketStmt, err := tx.Prepare(`INSERT INTO ticket (id, year, month, day, slug, title, path, uri, prompt, summary, status, author_id, model, llm, commit_sha, created_at, finished_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+	if err != nil {
+		return 0, err
+	}
+	defer ticketStmt.Close()
+	checkpointStmt, err := tx.Prepare(`INSERT INTO ticket_checkpoint (id, ticket_id, sequence, prompt, model, author_id, commit_sha, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
+	if err != nil {
+		return 0, err
+	}
+	defer checkpointStmt.Close()
+	checkpointFileStmt, err := tx.Prepare(`INSERT INTO checkpoint_file (checkpoint_id, file_path) VALUES (?, ?)`)
+	if err != nil {
+		return 0, err
+	}
+	defer checkpointFileStmt.Close()
+	for _, t := range tickets {
+		ticketID := t.GetID()
+		uri := "file://" + NormalizePath(t.FolderPath)
+		status := string(t.GetStatus())
+		if status == "" {
+			status = "open"
+		}
+		var authorID, model, llm, summary, commit, finishedAt interface{}
+		if author := t.GetAuthor(); author != "" {
+			authorID = "contributor:" + author
+		}
+		if t.Data != nil {
+			if t.Data.LLM != "" {
+				llm = t.Data.LLM
+			}
+			if t.Data.Commit != "" {
+				commit = t.Data.Commit
+			}
+		}
+		if t.SummaryPath != "" {
+			if content, err := ReadTextFile(t.SummaryPath); err == nil {
+				content = strings.TrimPrefix(content, "# Summary\n")
+				content = strings.TrimSpace(content)
+				if content != "" {
+					summary = content
+				}
+			}
+		}
+		createdAt := t.GetDateCreated()
+		if createdAt == "" {
+			createdAt = time.Now().UTC().Format(time.RFC3339)
+		}
+		if finished := t.GetDateFinished(); finished != "" {
+			finishedAt = finished
+		}
+		if _, err := ticketStmt.Exec(ticketID, t.Year, t.Month, t.Day, t.Slug, t.GetTitle(), t.FolderPath, uri, t.GetPrompt(), summary, status, authorID, model, llm, commit, createdAt, finishedAt); err != nil {
+			return 0, err
+		}
+		for i, cp := range t.GetCheckpoints() {
+			checkpointID := fmt.Sprintf("%s:checkpoint:%d", ticketID, i)
+			var cpAuthorID, cpModel, cpCommit interface{}
+			if cp.Author != "" {
+				cpAuthorID = "contributor:" + cp.Author
+			}
+			if cp.LLM != "" {
+				cpModel = cp.LLM
+			}
+			if cp.Commit != "" {
+				cpCommit = cp.Commit
+			}
+			cpDate := cp.Date
+			if cpDate == "" {
+				cpDate = time.Now().UTC().Format(time.RFC3339)
+			}
+			if _, err := checkpointStmt.Exec(checkpointID, ticketID, i, cp.Prompt, cpModel, cpAuthorID, cpCommit, cpDate); err != nil {
+				return 0, err
+			}
+			for filePath := range cp.Files {
+				if _, err := checkpointFileStmt.Exec(checkpointID, filePath); err != nil {
+					return 0, err
+				}
+			}
+		}
+	}
+	return len(tickets), nil
+}
+
+func exportPolicies(tx *sql.Tx, ctx RepoContext) (int, int, error) {
+	policies := ctx.GetPolicies()
+	policyStmt, err := tx.Prepare(`INSERT INTO policy (id, name, description) VALUES (?, ?, ?)`)
+	if err != nil {
+		return 0, 0, err
+	}
+	defer policyStmt.Close()
+	scopeStmt, err := tx.Prepare(`INSERT INTO policy_scope (policy_id, scope) VALUES (?, ?)`)
+	if err != nil {
+		return 0, 0, err
+	}
+	defer scopeStmt.Close()
+	kindStmt, err := tx.Prepare(`INSERT INTO violation_kind (id, policy_id, priority, autofixable, reason, solution) VALUES (?, ?, ?, ?, ?, ?)`)
+	if err != nil {
+		return 0, 0, err
+	}
+	defer kindStmt.Close()
+	totalKinds := 0
+	for _, p := range policies {
+		policyID := "policy:" + p.ID
+		var desc interface{}
+		if p.Description != nil {
+			desc = *p.Description
+		}
+		if _, err := policyStmt.Exec(policyID, p.Name, desc); err != nil {
+			return 0, 0, err
+		}
+		for _, scope := range p.Scopes {
+			if _, err := scopeStmt.Exec(policyID, scope); err != nil {
+				return 0, 0, err
+			}
+		}
+		for _, vk := range p.ViolationKinds {
+			kindID := "violationKind:" + string(vk.Kind)
+			autofixable := 0
+			if vk.Autofixable {
+				autofixable = 1
+			}
+			if _, err := kindStmt.Exec(kindID, policyID, string(vk.Priority), autofixable, vk.Reason, vk.Solution); err != nil {
+				return 0, 0, err
+			}
+			totalKinds++
+		}
+	}
+	return len(policies), totalKinds, nil
+}
+
+func exportViolations(tx *sql.Tx, violations []*Violation) (int, error) {
+	stmt, err := tx.Prepare(`INSERT INTO violation (id, kind_id, scope, file_id, folder_id, line, column_num, excerpt, summary, autofix_description, autofix_edits) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+	if err != nil {
+		return 0, err
+	}
+	defer stmt.Close()
+	for _, v := range violations {
+		kindID := "violationKind:" + string(v.Kind)
+		var fileID, folderID, line, column, excerpt, autofixDesc, autofixEdits interface{}
+		if v.Line > 0 {
+			line = v.Line
+		}
+		if v.Column > 0 {
+			column = v.Column
+		}
+		if v.Excerpt != "" {
+			excerpt = v.Excerpt
+		}
+		filePath := extractFileFromScope(v.Scope)
+		if filePath != "" {
+			fileID = "file:" + filePath
+			dir := filepath.Dir(filePath)
+			if dir != "." && dir != "" {
+				folderID = "folder:" + dir
+			}
+		}
+		if v.Autofix != nil {
+			autofixDesc = v.Autofix.Description
+			if editsJSON, err := json.Marshal(v.Autofix.Edits); err == nil {
+				autofixEdits = string(editsJSON)
+			}
+		}
+		if _, err := stmt.Exec(v.ID, kindID, v.Scope, fileID, folderID, line, column, excerpt, v.Summary, autofixDesc, autofixEdits); err != nil {
+			return 0, err
+		}
+	}
+	return len(violations), nil
+}
+
+func ToolExport(outputPath string) ToolResult {
+	output := NewOutput()
+	output.Info("\n📦 Exporting repo to SQLite...")
+	ctx := NewRepoContext(rootDir)
+	result, err := ExportToSQLite(outputPath, ctx)
+	if err != nil {
+		output.Error(fmt.Sprintf("Export failed: %v", err))
+		return ToolResult{Output: *output, Error: err.Error()}
+	}
+	output.Success(fmt.Sprintf("Exported to: %s", result.Path))
+	output.Plain(fmt.Sprintf("  Bundles: %d", result.Bundles))
+	output.Plain(fmt.Sprintf("  Folders: %d", result.Folders))
+	output.Plain(fmt.Sprintf("  Files: %d", result.Files))
+	output.Plain(fmt.Sprintf("  Sections: %d", result.Sections))
+	output.Plain(fmt.Sprintf("  Definitions: %d", result.Definitions))
+	output.Plain(fmt.Sprintf("  Contributors: %d", result.Contributors))
+	output.Plain(fmt.Sprintf("  Tickets: %d", result.Tickets))
+	output.Plain(fmt.Sprintf("  Policies: %d", result.Policies))
+	output.Plain(fmt.Sprintf("  Violation Kinds: %d", result.ViolationKinds))
+	output.Plain(fmt.Sprintf("  Violations: %d", result.Violations))
+	return ToolResult{Output: *output, Data: result}
+}
+
+// #endregion SQLite Export
 
 // #endregion Commands
 
