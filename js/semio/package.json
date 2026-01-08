@@ -52,7 +52,7 @@
     "@storybook/addon-docs": "^10.1.10",
     "@types/dagre": "^0.7.53",
     "@types/d3-force": "^3.0.10",
-    "@xterm/addon-fit": "^0.10.0",
+    "@xterm/addon-fit": "^0.11.0",
     "@xterm/xterm": "^5.5.0",
     "@xyflow/react": "^12.9.3",
     "class-variance-authority": "^0.7.1",
