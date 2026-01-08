@@ -507,7 +507,7 @@ nul
 !.vscode/extensions.json
 !.vscode/*.code-workspace
 !js/**/public
-!js/js/lib
+!js/semio/lib
 !.axoCover/settings.json
 !**/[Pp]ackages/build/
 !rb/lib

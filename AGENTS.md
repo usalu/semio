@@ -9,7 +9,7 @@ ALWAYS create a ticket with semio-repo mcp tool `ticket_create` (or use `.\go\cl
 1. Under `# 🛍️ Products` in README.md where it is described from user perspective [architects, designers, engineers, …] (framework-agnostic, no implementation references, etc)
 2. Under `# 📦 Components` in README.md where it is described from junior-developer perspective (mechanism explanation and reasoning behind the decision, how theory links to implementation, etc).
 3. Under `# Software Requirements Specification` in AGENTS.md where it is described from human-interface-designer perspective (concise technical terms without explanation, framework-agnostic, no implementation references). There are two sections: `# Business Logic` and `# UI/UX`.
-4. Under `# Codebase` in AGENTS.md where it is described from senior-developer perspective (framework-mechanisms, consice technical terms without explanation, implementation details, etc). The section has the same header structure as the files and folders. All files and folders are flat with `## PATH` e.g. `## js/js/sketchpad/` or `## net/Semio.cs`
+4. Under `# Codebase` in AGENTS.md where it is described from senior-developer perspective (framework-mechanisms, consice technical terms without explanation, implementation details, etc). The section has the same header structure as the files and folders. All files and folders are flat with `## PATH` e.g. `## js/semio/sketchpad/` or `## net/Semio.cs`
    The purpose of the dev docs is to understand the codebase. NEVER add reasoning or process related (such as what changed, why, how, … - this is part of the log) to the dev docs.
 
 This document MUST ALWAYS BE followed unless explicitly asked to do otherwise.
@@ -504,7 +504,7 @@ npx tsx hooks/eslint.ts      # ESLint check
 ### TypeScript Check Configuration
 
 - The canonical repo-wide TypeScript check is `hooks/typescript.ts` which runs `tsc --noEmit --project tsconfig.json`.
-- The root `tsconfig.json` is configured for `moduleResolution: "bundler"`, `strict: true`, `skipLibCheck: true`, explicitly includes `js/js/.storybook/**/*.ts(x)`, and excludes `temp/`, `js/temp/`, `reports/`, and `log/`.
+- The root `tsconfig.json` is configured for `moduleResolution: "bundler"`, `strict: true`, `skipLibCheck: true`, explicitly includes `js/semio/.storybook/**/*.ts(x)`, and excludes `temp/`, `js/temp/`, `reports/`, and `log/`.
 
 ### Hook Configuration
 
@@ -574,8 +574,8 @@ npx tsx repo.tsx <command> [subcommand] [options]
 
 - `@semio` - Repo scope (all files)
 - `@semio/js` - Bundle scope (Nx bundle)
-- `js/js/sketchpad/` - Folder scope
-- `js/js/sketchpad/App.tsx` - File scope
+- `js/semio/sketchpad/` - Folder scope
+- `js/semio/sketchpad/App.tsx` - File scope
 - `file.tsx#Region` - Section scope
 - `file.tsx§Function` - Definition scope
 
@@ -614,11 +614,11 @@ All commands output JSON with structure:
 **Examples:**
 
 ```bash
-repo analyze js/js/semio.ts           # Analyze single file
+repo analyze js/semio/semio.ts           # Analyze single file
 repo section tree repo.tsx            # Show section structure
-repo definition list js/js/semio.ts   # List all definitions
+repo definition list js/semio/semio.ts   # List all definitions
 repo bundle list                     # List all Nx bundles
-repo folder tree js/js                # Show folder tree
+repo folder tree js/semio                # Show folder tree
 repo ticket create MY-TASK --prompt="..." # Create ticket
 repo ticket list 2025                 # List tickets from 2025
 repo ticket read 2025 12 30 MY-TASK   # Read specific ticket
@@ -680,7 +680,7 @@ The repo CLI exposes a GraphQL API for querying and mutating repository data. Th
 repo graphql "{ repo { id name } }"
 repo graphql "{ repo { bundles { name root } } }"
 repo graphql "query Tickets { repo { tickets { id slug status } } }"
-repo graphql "{ analyze(scope: \"js/js/\") { violations { id summary } } }" -v "{}"
+repo graphql "{ analyze(scope: \"js/semio/\") { violations { id summary } } }" -v "{}"
 ```
 
 **Schema Location:** `go/repo/schema.graphql`
@@ -754,7 +754,7 @@ semio uses a multi-layered testing approach:
 
 ### E2E Tests (Playwright)
 
-**Location:** `js/js/playwright/`
+**Location:** `js/semio/playwright/`
 
 **Structure:** Hierarchical seeding matching app structure
 
@@ -864,14 +864,14 @@ The scope system uses a hierarchical format that mirrors the monorepo structure:
 
 - **@REPO**: Always `@semio` for this repository
 - **BUNDLE**: Nx bundle name (e.g., `@semio/js`, `@semio/net`, `@semio/engine`)
-- **FOLDER**: Relative folder path within bundle (e.g., `js/js/sketchpad`)
+- **FOLDER**: Relative folder path within bundle (e.g., `js/semio/sketchpad`)
 - **FILE**: File name (e.g., `Sketchpad.tsx`)
 - **SECTION**: Region/section name (e.g., `State Management`)
 - **DEFINITION**: Function/class/variable name (e.g., `createMachine`)
 
 Only the right parts can be omitted, not parts on the left. Examples:
 
-- `@semio/js/js/js/sketchpad/Sketchpad.tsx` - file in bundle
+- `@semio/js/js/sketchpad/Sketchpad.tsx` - file in bundle
 - `@semio/net` - entire net bundle
 - `@semio` - entire repository
 
@@ -927,7 +927,7 @@ iterations:
     bundles: # Hierarchical contribution structure (set on iteration finish)
       "@semio/js":
         files:
-          "js/js/sketchpad/Sketchpad.tsx":
+          "js/semio/sketchpad/Sketchpad.tsx":
             sections:
               "State Management":
                 definitions:
@@ -1109,7 +1109,7 @@ id = "semio.sketchpad.app.quality.panel.details.name";
 
 ##### 1. Internationalization (i18n)
 
-**Location:** `js/js/sketchpad/locales/{lang}.json`
+**Location:** `js/semio/sketchpad/locales/{lang}.json`
 
 Every ID automatically maps to translation keys with standard suffixes:
 
@@ -1198,7 +1198,7 @@ function DescriptionTooltipContent({ id }) {
 
 ##### 3. Hotkeys
 
-**Location:** `js/js/sketchpad/App.tsx` (SketchpadStore)
+**Location:** `js/semio/sketchpad/App.tsx` (SketchpadStore)
 
 IDs serve as paths for hotkey configuration:
 
@@ -1276,7 +1276,7 @@ async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
 
 ##### 5. Tutorial Recording
 
-**Location:** `js/js/sketchpad/Tutorials.tsx`
+**Location:** `js/semio/sketchpad/Tutorials.tsx`
 
 Command origins enable tutorial recording and playback:
 
@@ -1303,7 +1303,7 @@ interface TutorialRecordingEvent {
 
 ##### 6. E2E Testing
 
-**Location:** `js/js/e2e/**/*.spec.ts`
+**Location:** `js/semio/e2e/**/*.spec.ts`
 
 IDs provide stable selectors for Playwright tests:
 
@@ -1408,7 +1408,7 @@ const execute = useCommandExecutor("semio.sketchpad.app.kit.createType");
 **File structure:**
 
 ```
-js/js/sketchpad/locales/
+js/semio/sketchpad/locales/
   en.json
   de.json
 ```
@@ -1481,7 +1481,7 @@ NEVER use `useTranslation` directly or hardcode strings. Instead:
 
 #### Translation Files
 
-Translations live in `js/js/locales/{lang}.json`. Keys follow dot-notation paths matching UI element IDs.
+Translations live in `js/semio/locales/{lang}.json`. Keys follow dot-notation paths matching UI element IDs.
 
 #### Tooltip Integration
 
@@ -1831,7 +1831,7 @@ Javascript code with shared core (@semio/js) that uses storybook and exports a h
 ### Policies
 
 - NEVER use inline styling. Use tailwindcss (v4). v4 uses a `theme.css` (`@semio/js/theme.css`) for theming and not `{theme:{…}}` in `tailwindconfig`.
-- ALWAYS use colors defined in `@theme inline {…}` from `js/js/globals.css`. NEVER use direct colors such as light, gray, …, dark, primary, secondary, tertiary outside of `js/js/globals.css` and ALWAYS use semantic colors instead such as active, disabled, hover, …
+- ALWAYS use colors defined in `@theme inline {…}` from `js/semio/globals.css`. NEVER use direct colors such as light, gray, …, dark, primary, secondary, tertiary outside of `js/semio/globals.css` and ALWAYS use semantic colors instead such as active, disabled, hover, …
 - Borders use semantic kinds via Tailwind color tokens: `border-element` (hover color) and `border-window` (normal border color).
 - GoldenLayout window chrome uses the window background token to match window content surfaces.
 - GoldenLayout stack frames use inset strokes so window borders remain continuous on all four sides.
@@ -1843,7 +1843,7 @@ Javascript code with shared core (@semio/js) that uses storybook and exports a h
 - The ui consists of a three horizontal strips: navbar, canvas and footer. A canvas consists of windows. On top of the canvas are panels which can toggled on and off.
 - Navbar panel toggles always order panels as Details, Chat, then Settings for every app.
 
-## 📁 js/js/
+## 📁 js/semio/
 
 Shared react components. The main component is Sketchpad. Sketchpad is used in three different szenarios:
 
@@ -1964,7 +1964,7 @@ Shared react components. The main component is Sketchpad. Sketchpad is used in t
 - Model tag selection is implemented via `TypeAppFooter` and `DesignAppFooter` components showing clickable tag names, the `selectBestModel(models, selectedTagGuids)` function to find the best matching model, and `selectedModelTags` state tracked per type (in Design app: `Record<Guid, string[]>` mapping type guids to selected tag guids).
 - `SUPPORTED_3D_EXTENSIONS` constant in `semio.ts` lists all supported 3D formats. Use `validateModelFile(filename)` to check if a file extension is supported.
 
-The former `Canvas`, `Navbar`, `Footer`, `Panel`, and `store` modules now live inside `js/js/sketchpad/Sketchpad.tsx`. Keep the region order intact when modifying this file so downstream imports continue to work.
+The former `Canvas`, `Navbar`, `Footer`, `Panel`, and `store` modules now live inside `js/semio/sketchpad/Sketchpad.tsx`. Keep the region order intact when modifying this file so downstream imports continue to work.
 
 ### Architecture - Open-Closed Principle
 
@@ -1987,7 +1987,7 @@ Each app plugin provides:
 ##### File Layout
 
 ```
-js/js/sketchpad/
+js/semio/sketchpad/
   shared.ts          # AppPlugin port, registry functions
   apps/
     index.ts         # Single import point for all app plugins
@@ -2146,7 +2146,7 @@ export function useMyAppSelection(): HookResult<MySelection> {
 
 ####### App Structure Standards
 
-All apps in `js/js/sketchpad/*App.tsx` (Design.tsx, Home.tsx, Kit.tsx, Quality.tsx, Type.tsx, Docs.tsx) MUST follow this structure:
+All apps in `js/semio/sketchpad/*App.tsx` (Design.tsx, Home.tsx, Kit.tsx, Quality.tsx, Type.tsx, Docs.tsx) MUST follow this structure:
 
 1. **Region Order:** Header → Imports → Types → Store → Commands → Components → App → Config
 2. **Store Base Class:** MUST extend either `AppStore` or `KitDiffAppStore` (no custom base classes)
@@ -2162,7 +2162,7 @@ See `REFACTOR.md` for detailed rationale and migration guide.
 
 To add a new app:
 
-1. Create a file in `js/js/sketchpad/{AppName}.tsx`.
+1. Create a file in `js/semio/sketchpad/{AppName}.tsx`.
 2. Add a single file that:
    - exports the default React component,
    - declares and exports `config: AppConfig`,
@@ -2460,7 +2460,7 @@ The feedback icon appears in every app's footer via `GlobalFooterItems` componen
 
 To add a new tool to an app:
 
-1. Create a `*Tool.tsx` file directly inside `js/js/sketchpad/`.
+1. Create a `*Tool.tsx` file directly inside `js/semio/sketchpad/`.
 2. Export a `Tool<AppState>` object with a unique `id` and `render` implementation.
 
 Each app loads sibling `*Tool.tsx` modules via `import.meta.glob('./*Tool.tsx', { eager: true })`, so simply dropping the file in place registers it.
@@ -2501,7 +2501,7 @@ Policies:
 
 ####### Tutorials
 
-The tutorial system is consolidated in `js/js/sketchpad/Tutorials.tsx` and is split into regions for types, store, commands, built-in tutorials, and UI components. `TutorialStore` wraps a Y.js map and keeps playback, milestone ordering, and recording state (`TutorialPlaybackState`, `TutorialRecordingState`). Always create the store with the app transaction handler so tutorial mutations participate in undo/redo.
+The tutorial system is consolidated in `js/semio/sketchpad/Tutorials.tsx` and is split into regions for types, store, commands, built-in tutorials, and UI components. `TutorialStore` wraps a Y.js map and keeps playback, milestone ordering, and recording state (`TutorialPlaybackState`, `TutorialRecordingState`). Always create the store with the app transaction handler so tutorial mutations participate in undo/redo.
 
 Wrap consumers in `TutorialProvider` and use the helper hooks (`useTutorialStore`, `useActiveTutorial`, `useTutorialProgress`, `useTutorialCommandInterceptor`, etc.) instead of accessing the store directly. `TutorialControls`, `RecordingControls`, `RecordButton`, and `TutorialOverlay` are the canonical UI integrations for playback, recording, highlighting, and capture.
 
@@ -2615,15 +2615,15 @@ Every app supports transactions:
 
 Sketchpad UI elements resolve transactions via React context (not props):
 
-- `js/js/sketchpad/elements.tsx` defines `TransactionProvider` and `useTransaction()`.
-- `js/js/sketchpad/elements.tsx` `Geometry` treats `color` as the base (non-interactive) color and uses selection/hover theme colors for the rendered material/edges when `selected`/`hovered` are true.
-- `js/js/sketchpad/Design.tsx` diagram piece nodes use non-inset rings (`ring-*`, not `ring-inset`) so rings remain visible on `Avatar` nodes with full-size `AvatarFallback` backgrounds.
+- `js/semio/sketchpad/elements.tsx` defines `TransactionProvider` and `useTransaction()`.
+- `js/semio/sketchpad/elements.tsx` `Geometry` treats `color` as the base (non-interactive) color and uses selection/hover theme colors for the rendered material/edges when `selected`/`hovered` are true.
+- `js/semio/sketchpad/Design.tsx` diagram piece nodes use non-inset rings (`ring-*`, not `ring-inset`) so rings remain visible on `Avatar` nodes with full-size `AvatarFallback` backgrounds.
 - Elements such as `Input`, `Textarea`, `Select`, `Slider`, `Stepper`, `Combobox`, and `ActionDropdown` call `useTransaction()` internally and do not accept a `transaction` prop.
 - Apps are responsible for scoping transactions by wrapping their UI subtree with `TransactionProvider` using the appropriate transaction hook (per-app or kit-level), so all descendant elements participate consistently.
 
 ##### Hooks and Helpers
 
-- **`useSync` / `useSyncDeep`** (from `js/js/sketchpad/Sketchpad.tsx`) wrap `useSyncExternalStore` against a store's `onChanged` / `onChangedDeep` events. Pass a selector (defaults to `identitySelector`) to scope renders to the slice you need.
+- **`useSync` / `useSyncDeep`** (from `js/semio/sketchpad/Sketchpad.tsx`) wrap `useSyncExternalStore` against a store's `onChanged` / `onChangedDeep` events. Pass a selector (defaults to `identitySelector`) to scope renders to the slice you need.
 - **`useSyncField` / `useSyncFields`** subscribe to Y.js-backed store fields with optional `comparator?: (a: TSelected, b: TSelected) => boolean` parameter for custom equality checks instead of JSON.stringify. Use for Set/Map values or other complex types.
 - **`createObserver`** bridges a Y.js map or array into the store by registering either shallow or deep observers; always dispose the returned cleanup in `useEffect` finalizers.
 - **`RemoteProviders`** bundles the `yProvider` and `fileProvider` factories needed when constructing `SketchpadStore` so persistence and external file access stay aligned.
@@ -2789,19 +2789,19 @@ executeCommand<T>(command: string, ...args): Promise<T>
 
 #### Files
 
-- `js/js/sketchpad/Sketchpad.tsx` - Base Store, AppStore, KitDiffAppStore, SketchpadStore, KitStore
-- `js/js/sketchpad/Design.tsx` - DesignAppStore and design app state
-- `js/js/sketchpad/Type.tsx` - TypeAppStore and type toolchain
-- `js/js/sketchpad/Quality.tsx` - QualityAppStore and quality workflows
-- `js/js/sketchpad/Kit.tsx` - KitAppStore and kit command wiring
-- `js/js/sketchpad/Home.tsx` - HomeStore and home experience
-- `js/js/sketchpad/Docs.tsx` - DocsAppStore and documentation app
-- `js/js/sketchpad/Tutorials.tsx` - Tutorial system (consolidated)
-- `js/js/sketchpad/shared.ts` - Shared types and utilities
+- `js/semio/sketchpad/Sketchpad.tsx` - Base Store, AppStore, KitDiffAppStore, SketchpadStore, KitStore
+- `js/semio/sketchpad/Design.tsx` - DesignAppStore and design app state
+- `js/semio/sketchpad/Type.tsx` - TypeAppStore and type toolchain
+- `js/semio/sketchpad/Quality.tsx` - QualityAppStore and quality workflows
+- `js/semio/sketchpad/Kit.tsx` - KitAppStore and kit command wiring
+- `js/semio/sketchpad/Home.tsx` - HomeStore and home experience
+- `js/semio/sketchpad/Docs.tsx` - DocsAppStore and documentation app
+- `js/semio/sketchpad/Tutorials.tsx` - Tutorial system (consolidated)
+- `js/semio/sketchpad/shared.ts` - Shared types and utilities
 
 #### Kit app artifact creation
 
-- `js/js/sketchpad/Kit.tsx` create actions for `ports`, `tags`, `concepts`, and `folders` set the active `kind` filter and selection to the newly created entity.
+- `js/semio/sketchpad/Kit.tsx` create actions for `ports`, `tags`, `concepts`, and `folders` set the active `kind` filter and selection to the newly created entity.
 - Default names are resolved via i18n labels: `semio.sketchpad.app.port.defaultName`, `semio.sketchpad.app.tag.defaultName`, `semio.sketchpad.app.concept.defaultName`.
 
 #### XState State Machines
@@ -3107,7 +3107,7 @@ Users can override default hotkeys via `hotkeyOverrides` in SketchpadStore. Over
 
 #### Hotkey Hooks
 
-- `useHotkey(path, callback, deps)` - Register hotkey handler (from `js/js/sketchpad/Sketchpad.tsx`)
+- `useHotkey(path, callback, deps)` - Register hotkey handler (from `js/semio/sketchpad/Sketchpad.tsx`)
 - `useSetHotkey()` - Set hotkey override
 - `useResetHotkey()` - Reset hotkey to default
 - `useResetAllHotkeys()` - Reset all overrides
@@ -3936,23 +3936,23 @@ This script consolidates all Metabolism asset generation:
 - Fix diffs are normalized (GUIDs replaced with `<GUID>`) before comparison
 - C# fix generation is pending; comparison skips fix diff for now
 
-## 📁 js/js/sketchpad/
+## 📁 js/semio/sketchpad/
 
 Sketchpad app modules, state machine wiring, and shared app surfaces for Home, Kit, Design, Type, Quality, Docs, and Feedback.
 
-## 📄 js/js/sketchpad/elements.tsx
+## 📄 js/semio/sketchpad/elements.tsx
 
 `Table` supports row-level hover callbacks for app hover state dispatch.
 
-## 📄 js/js/sketchpad/Home.tsx
+## 📄 js/semio/sketchpad/Home.tsx
 
 Home app hover state is stored in the Sketchpad state machine and updated via hover commands for table rows.
 
-## 📄 js/js/sketchpad/Kit.tsx
+## 📄 js/semio/sketchpad/Kit.tsx
 
 Kit app hover state covers all artifact kinds and is updated via table and diagram hover dispatch.
 
-## 📄 js/js/sketchpad/Sketchpad.tsx
+## 📄 js/semio/sketchpad/Sketchpad.tsx
 
 Home command hooks forward hover events, including clear, into the Sketchpad state machine.
 
@@ -3975,7 +3975,7 @@ Supported file types: TypeScript, JavaScript, JSON, Python, C#, Go.
 
 For kit documents (JSON files with `kit_` prefix, `_kit` suffix, or named `kit.json`):
 
-- Real-time validation using `validateKit()` from `@semio/js/semio`
+- Real-time validation using `validateKit()` from `@semio/js`
 - Problem-to-diagnostic mapping with entity location highlighting
 - Quick Fix code actions applying `KitDiff` fixes
 

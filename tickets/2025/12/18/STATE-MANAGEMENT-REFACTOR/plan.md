@@ -1,6 +1,6 @@
 # Previously
 
-Analysis of js/js/sketchpad state management revealed:
+Analysis of js/semio/sketchpad state management revealed:
 
 ## Correct Pattern (Type.tsx, Design.tsx, Kit.tsx, Quality.tsx)
 

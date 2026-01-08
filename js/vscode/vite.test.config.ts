@@ -29,7 +29,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@semio/js": path.resolve(__dirname, "../js"),
+      "@semio/js": path.resolve(__dirname, "../semio"),
     },
   },
 });

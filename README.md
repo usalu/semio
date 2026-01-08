@@ -1106,7 +1106,7 @@ This is less intuitive but more tool-friendly and everything that is easier for 
 
 ### Workspaces
 
-- `js/js` - Shared TypeScript/React codebase (Sketchpad UI, components, libs).
+- `js/semio` - Shared TypeScript/React codebase (Sketchpad UI, components, libs).
 - `js/desktop` - Electron desktop shell.
 - `js/sketchpad` - Standalone Sketchpad web app shell.
 - `js/docs` - Documentation site.
@@ -1116,7 +1116,7 @@ This is less intuitive but more tool-friendly and everything that is easier for 
 ### Preflight
 
 ```bash
-cd js/js && npm run preflight
+cd js/semio && npm run preflight
 ```
 
 <details>
@@ -1232,7 +1232,7 @@ semio includes a **domain-pure validation system** built entirely in `semio.ts` 
 **Usage:**
 
 ```typescript
-import { validateSemioKit, applyKitDiff } from "@semio/js/semio";
+import { validateSemioKit, applyKitDiff } from "@semio/js";
 
 const result = validateSemioKit(kit);
 if (result.problems.length > 0) {
@@ -1245,7 +1245,7 @@ See [`AGENTS.md`](AGENTS.md#validation) for complete technical documentation.
 
 ## 🧾 Code Report [↑](#-components-)
 
-The repository emits a machine-readable report (`reports/code.json`) that enforces a comment-free codebase (including multi-line and JSDoc blocks, with explicit exemptions), flags temporary `[DEBUG]` logs, auto-adds missing SPDX license headers in `npm run fix`, validates properly nested named regions, checks that `js/js` files do not import outside the workspace unless they are the shared `elements.tsx`, flags domain-specific terminology inside those shared elements, and includes reason/solution text for each problem to make remediation explicit.
+The repository emits a machine-readable report (`reports/code.json`) that enforces a comment-free codebase (including multi-line and JSDoc blocks, with explicit exemptions), flags temporary `[DEBUG]` logs, auto-adds missing SPDX license headers in `npm run fix`, validates properly nested named regions, checks that `js/semio` files do not import outside the workspace unless they are the shared `elements.tsx`, flags domain-specific terminology inside those shared elements, and includes reason/solution text for each problem to make remediation explicit.
 Comment detection skips comment markers inside string literals and template literal text so valid content does not raise false violations.
 
 ## 🎫 Ticket System [↑](#-components-)
@@ -1277,7 +1277,7 @@ Selecting a section navigates to its start, F2 triggers rename, drag-and-drop mo
 The view refreshes on editor focus and text changes so the tree stays aligned with the current file structure.
 JSON files surface object keys as section entries so structured config files are navigable in the same tree.
 
-## 🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/js) [↑](#-components-)
+## 🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-components-)
 
 ### Borders
 
@@ -1369,21 +1369,21 @@ The core which is shared in the [semio JavaScript ecosystem](#-javascript-) 🥜
 
 #### Sketchpad transactions
 
-- `js/js/sketchpad/elements.tsx` provides `TransactionProvider` and `useTransaction()` for UI-scoped transactions.
+- `js/semio/sketchpad/elements.tsx` provides `TransactionProvider` and `useTransaction()` for UI-scoped transactions.
 - Sketchpad elements (`Input`, `Textarea`, `Select`, `Slider`, `Stepper`, `Combobox`, ...) use `useTransaction()` internally and do not accept a `transaction` prop.
 - Apps wrap their UI subtree with `TransactionProvider` using the appropriate transaction hook so all descendant elements participate in undo/redo consistently.
 
 #### Sketchpad selection + hover visuals
 
-- `js/js/sketchpad/elements.tsx` `Geometry` renders selection/hover colors even when a base `color` is provided (it is treated as the non-interactive default).
+- `js/semio/sketchpad/elements.tsx` `Geometry` renders selection/hover colors even when a base `color` is provided (it is treated as the non-interactive default).
 - Hover and selection state for Home/Kit/Design/Type/Quality/Docs/Feedback is stored in the Sketchpad state machine; UI rows and diagram nodes dispatch hover events and visuals read from machine state.
-- `js/js/sketchpad/elements.tsx` `Table` exposes row hover callbacks so apps can forward row enter/leave events into their state machine commands.
-- `js/js/sketchpad/Design.tsx` diagram nodes use `ring-*` (not `ring-inset`) so hover/selection rings remain visible with `AvatarFallback` backgrounds.
+- `js/semio/sketchpad/elements.tsx` `Table` exposes row hover callbacks so apps can forward row enter/leave events into their state machine commands.
+- `js/semio/sketchpad/Design.tsx` diagram nodes use `ring-*` (not `ring-inset`) so hover/selection rings remain visible with `AvatarFallback` backgrounds.
 
 #### Sketchpad windows
 
 - Window spacing uses the shared unit sizing system: a single unit gap between windows and a single unit margin between windows and the canvas edge.
-- `js/js/sketchpad/Sketchpad.tsx` `Canvas` applies `p-single` (1 unit) and window containers (`HorizontalWindows` / `VerticalWindows`) apply `gap-single` (1 unit).
+- `js/semio/sketchpad/Sketchpad.tsx` `Canvas` applies `p-single` (1 unit) and window containers (`HorizontalWindows` / `VerticalWindows`) apply `gap-single` (1 unit).
 - GoldenLayout window gaps use splitters sized to 1 unit and window borders are applied to the stack container via an inset 1px stroke; `Window` uses `kind="layout"` inside GoldenLayout to avoid nested borders.
 - Window chrome controls are rendered as Action UI elements and forwarded to the underlying layout system when needed.
 - Window surfaces paint the only filled background surface; surrounding UI and overlays remain transparent and rely on borders/blur.
@@ -1391,19 +1391,19 @@ The core which is shared in the [semio JavaScript ecosystem](#-javascript-) 🥜
 
 #### Kit app artifact creation
 
-- `js/js/sketchpad/Kit.tsx` create actions for `ports`, `tags`, `concepts`, and `folders` set the `kind` filter and selection to the newly created entity so the details panel opens immediately.
+- `js/semio/sketchpad/Kit.tsx` create actions for `ports`, `tags`, `concepts`, and `folders` set the `kind` filter and selection to the newly created entity so the details panel opens immediately.
 - Default names are resolved via i18n labels: `semio.sketchpad.app.port.defaultName`, `semio.sketchpad.app.tag.defaultName`, `semio.sketchpad.app.concept.defaultName`.
-- `js/js/sketchpad/Kit.tsx` details panel sections are registered dynamically; remove all possible section ids (including conditional variants) before adding the active one and mirror removals in the effect cleanup.
-- `js/js/sketchpad/Kit.tsx` details panel section content that uses `useKit()` is wrapped in `KitScopeProvider` so read-only detail sections can resolve kit data consistently.
-- `js/js/sketchpad/Kit.tsx` read-only artifact detail fields reuse the same `id` values as the corresponding app details (Type/Design) so i18n/tooltips stay centralized.
+- `js/semio/sketchpad/Kit.tsx` details panel sections are registered dynamically; remove all possible section ids (including conditional variants) before adding the active one and mirror removals in the effect cleanup.
+- `js/semio/sketchpad/Kit.tsx` details panel section content that uses `useKit()` is wrapped in `KitScopeProvider` so read-only detail sections can resolve kit data consistently.
+- `js/semio/sketchpad/Kit.tsx` read-only artifact detail fields reuse the same `id` values as the corresponding app details (Type/Design) so i18n/tooltips stay centralized.
 
 #### Sketchpad state
 
-- `js/js/sketchpad/Sketchpad.tsx` exposes a single `sketchpadMachine` actor that owns all Sketchpad UI state (`SketchpadState` + app slices like Home/Kit/Design/Type/Quality/Tutorial).
+- `js/semio/sketchpad/Sketchpad.tsx` exposes a single `sketchpadMachine` actor that owns all Sketchpad UI state (`SketchpadState` + app slices like Home/Kit/Design/Type/Quality/Tutorial).
 - Y.js is reserved for Kit data synchronization (per-kit `KitStore` documents).
 - Sketchpad UI state is persisted locally via `localStorage` key `semio.sketchpad.state.<id>` (no Y.js dependency for settings/navigation/panel sizes).
 - Global interaction mode is stored as `SketchpadState.device` and controlled via `useDevice()` / `SET_DEVICE` with i18n IDs `semio.sketchpad.settings.device.*`.
-- `layout` naming is reserved for window layout configs (GoldenLayout) and the `Layout` component in `js/js/sketchpad/elements.tsx`.
+- `layout` naming is reserved for window layout configs (GoldenLayout) and the `Layout` component in `js/semio/sketchpad/elements.tsx`.
 
 KitStore keeps kit concepts in the `yConcepts` array as `ConceptStore` entries so snapshots expose full concept data (name, description, icon, attributes) and persistence rehydrates from that array instead of guid placeholders.
 
@@ -1434,7 +1434,7 @@ Panels are rendered under `LevelProvider level="panel"` so panel chrome and cont
 
 #### Size Constants
 
-All size constants are defined in `js/js/globals.css` and derived from `--spacing`:
+All size constants are defined in `js/semio/globals.css` and derived from `--spacing`:
 
 - **Single**: 1 unit (e.g. `gap-1`) - spacing between elements and between icon and element
 - **Tiny**: 3 units (e.g. `h-tiny`, `w-tiny`, `text-tiny`) - icon size in actions, action text size

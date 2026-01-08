@@ -145,19 +145,6 @@ type Repo implements Node {
   policies: [Policy!]!
   violationKinds: [ViolationKind!]!
   violations(scope: String): [Violation!]!
-  metrics: RepoMetrics!
-}
-
-type RepoMetrics {
-  bundles: Int!
-  folders: Int!
-  files: Int!
-  sections: Int!
-  definitions: Int!
-  lines: Int!
-  contributors: Int!
-  tickets: Int!
-  violations: Int!
 }
 
 type Bundle implements Node {
@@ -173,16 +160,6 @@ type Bundle implements Node {
   contributors: [Contributor!]!
   tickets: [Ticket!]!
   violations: [Violation!]!
-  metrics: BundleMetrics!
-}
-
-type BundleMetrics {
-  folders: Int!
-  files: Int!
-  sections: Int!
-  definitions: Int!
-  lines: Int!
-  violations: Int!
 }
 
 type Folder implements Node {
@@ -195,13 +172,6 @@ type Folder implements Node {
   files: [File!]!
   bundle: Bundle
   violations: [Violation!]!
-  metrics: FolderMetrics!
-}
-
-type FolderMetrics {
-  files: Int!
-  lines: Int!
-  violations: Int!
 }
 
 type File implements Node {
@@ -216,14 +186,7 @@ type File implements Node {
   definitions: [Definition!]!
   violations: [Violation!]!
   contributors: [Contributor!]!
-  metrics: FileMetrics!
   content: String
-}
-
-type FileMetrics {
-  sections: Int!
-  definitions: Int!
-  lines: Int!
 }
 
 type Section implements Node {
@@ -236,13 +199,6 @@ type Section implements Node {
   definitions: [Definition!]!
   violations: [Violation!]!
   range: Range!
-  metrics: SectionMetrics!
-}
-
-type SectionMetrics {
-  definitions: Int!
-  lines: Int!
-  violations: Int!
 }
 
 type Definition implements Node {
@@ -253,7 +209,6 @@ type Definition implements Node {
   section: Section
   violations: [Violation!]!
   range: Range!
-  metrics: DefinitionMetrics!
 }
 
 enum DefinitionKind {
@@ -265,12 +220,6 @@ enum DefinitionKind {
   ENUM
   METHOD
   PROPERTY
-}
-
-type DefinitionMetrics {
-  definitions: Int!
-  lines: Int!
-  violations: Int!
 }
 
 type Range {
@@ -295,7 +244,6 @@ type Contributor implements Node {
   tickets: [Ticket!]!
   commits: [Commit!]!
   contributions: ContributorContributions!
-  metrics: ContributorMetrics!
 }
 
 type ContributorLink {
@@ -353,17 +301,6 @@ type LineMetrics {
   removed: Int!
 }
 
-type ContributorMetrics {
-  commits: Int!
-  tickets: Int!
-  bundles: Int!
-  folders: Int!
-  files: Int!
-  sections: Int!
-  definitions: Int!
-  lines: Int!
-}
-
 type Commit implements Node {
   id: ID!
   sha: String!
@@ -394,7 +331,6 @@ type Ticket implements Node {
   checkpoints: [TicketCheckpoint!]!
   bundles: [Bundle!]!
   files: [File!]!
-  metrics: TicketMetrics!
 }
 
 enum TicketStatus {
@@ -416,7 +352,6 @@ type TicketCheckpoint {
   files: [String!]!
   sections: [CheckpointSectionContrib!]!
   definitions: [CheckpointDefinitionContrib!]!
-  metrics: CheckpointMetrics!
 }
 
 type CheckpointDate {
@@ -438,13 +373,6 @@ type CheckpointDefinitionContrib {
   metrics: LineMetrics!
 }
 
-type CheckpointMetrics {
-  files: Int!
-  sections: Int!
-  definitions: Int!
-  lines: LineMetrics!
-}
-
 type TicketBundleContrib {
   bundle: Bundle!
   files: [TicketFileContrib!]!
@@ -459,14 +387,6 @@ type TicketSectionContrib {
   section: Section!
   definitions: [String!]!
   metrics: LineMetrics!
-}
-
-type TicketMetrics {
-  checkpoints: Int!
-  files: Int!
-  sections: Int!
-  definitions: Int!
-  lines: LineMetrics!
 }
 
 type Policy implements Node {

@@ -18,7 +18,7 @@ Root cause analysis revealed:
 
 # Changes
 
-## `js/js/sketchpad/Sketchpad.tsx`
+## `js/semio/sketchpad/Sketchpad.tsx`
 
 ### KitStore class
 
@@ -49,7 +49,7 @@ this.cache = undefined;
 this.cacheHash = undefined;
 ```
 
-## `js/js/sketchpad/Kit.tsx`
+## `js/semio/sketchpad/Kit.tsx`
 
 ### Split rows calculation
 

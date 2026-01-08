@@ -1,9 +1,13 @@
 # Prompt history
 
+The repo mechanism is not yet finished:
+- Remove all metrics from the graphql layer and purely move it into the sqlite database over views.
+- Extend the graphql test by nodes and edges query and check that every id collection is non-empty. Extend the query to cover every edge (only degree one)
+- Refactor the repo, cli, mcp, vscode extension and all the tests cleanly
+
+Toml, Yaml, Sql, Graphql
 Rust, ruby are missing as language.
 Use regions and modules for sections.
-
-Remove metrics
 
 Port 100% of the semio.ts file and semio.test.ts into semio.rs. Follow the plan for the single file layout.
 
@@ -201,17 +205,17 @@ When calling repo.exe then return everything in a json object. Make sure everyth
       }
     }],
     "folders": [{
-      "path": "js/js",
-      "uri": "file://c:/git/semio.tech/semio/js/js",
+      "path": "js/semio",
+      "uri": "file://c:/git/semio.tech/semio/js/semio",
       "metrics": {
         "files": 5,
         "lines": 5000,
         "violations": 10,
       }}]
     "files:[{
-      "id": "@semio/js/semio.ts",
-      "path": "js/js/semio.ts",
-      "uri": "file://c:/git/semio.tech/semio/js/js/semio.ts",
+      "id": "@semio/js.ts",
+      "path": "js/semio/semio.ts",
+      "uri": "file://c:/git/semio.tech/semio/js/semio/semio.ts",
       "metrics": {
         "sections": 10,
         "definitions": 100,
@@ -226,9 +230,9 @@ When calling repo.exe then return everything in a json object. Make sure everyth
       }]
     }],
     "sections": [{
-      "id": "@semio/js/semio.ts#Kit",
-      "path": "js/js/semio.ts#Kit",
-      "uri": "file://c:/git/semio.tech/semio/js/js/semio.ts#Kit",
+      "id": "@semio/js.ts#Kit",
+      "path": "js/semio/semio.ts#Kit",
+      "uri": "file://c:/git/semio.tech/semio/js/semio/semio.ts#Kit",
       "metrics": {
         "definitions": 10,
         "lines": 500,
@@ -236,9 +240,9 @@ When calling repo.exe then return everything in a json object. Make sure everyth
       }
     }],
     "definitions": [{
-      "id": "@semio/js/semio.ts#KitDiff",
-      "path": "js/js/semio.ts#KitDiff",
-      "uri": "file://c:/git/semio.tech/semio/js/js/semio.ts#KitDiff",
+      "id": "@semio/js.ts#KitDiff",
+      "path": "js/semio/semio.ts#KitDiff",
+      "uri": "file://c:/git/semio.tech/semio/js/semio/semio.ts#KitDiff",
       "metrics": {
         "definitions": 3,
         "lines": 100,
@@ -294,7 +298,7 @@ When calling repo.exe then return everything in a json object. Make sure everyth
           }
         }],
         "files": [{
-          "id": "@semio/js/semio.ts",
+          "id": "@semio/js.ts",
           "metrics": {
             "lines": {
               "added": 100,
@@ -303,7 +307,7 @@ When calling repo.exe then return everything in a json object. Make sure everyth
           }
         }],
         "sections": [{
-          "id": "@semio/js/semio.ts#Kit",
+          "id": "@semio/js.ts#Kit",
           "metrics": {
             "lines": {
               "added": 100,
@@ -312,7 +316,7 @@ When calling repo.exe then return everything in a json object. Make sure everyth
           }
         }],
         "definitions": [{
-          "id": "@semio/js/semio.ts#Kit§KitDiff",
+          "id": "@semio/js.ts#Kit§KitDiff",
           "metrics": {
             "lines": {
               "added": 100,
@@ -402,7 +406,7 @@ When calling repo.exe then return everything in a json object. Make sure everyth
         }
       }],
       "files": [{
-        "id": "@semio/js/semio.ts",
+        "id": "@semio/js.ts",
         "metrics": {
          "sections": {
             "added": 1,
@@ -421,7 +425,7 @@ When calling repo.exe then return everything in a json object. Make sure everyth
         }
       }],
       "sections": [{
-        "id": "@semio/js/semio.ts#Kit",
+        "id": "@semio/js.ts#Kit",
         "metrics": {
           "definitions": {
             "added": 1,
@@ -435,7 +439,7 @@ When calling repo.exe then return everything in a json object. Make sure everyth
         }
       }],
       "definitions": [{
-        "id": "@semio/js/semio.ts#KitDiff",
+        "id": "@semio/js.ts#KitDiff",
         "metrics": {
           "lines":{
             "added": 100,
@@ -456,16 +460,16 @@ When calling repo.exe then return everything in a json object. Make sure everyth
       }]
     }],
     "violations": [{
-      "id": "code:header:missing-filepath#|js|@semio/js/semio.ts#1",
+      "id": "code:header:missing-filepath#|js|@semio/js.ts#1",
       "folders": [{
         "id": "js",
         "path": "js",
         "uri": "folder://c:/git/semio.tech/semio/js"
       }],
       "files": [{
-        "id": "@semio/js/semio.ts",
-        "path": "js/js/semio.ts",
-        "uri": "file://c:/git/semio.tech/semio/js/js/semio.ts",
+        "id": "@semio/js.ts",
+        "path": "js/semio/semio.ts",
+        "uri": "file://c:/git/semio.tech/semio/js/semio/semio.ts",
         "range":{
           "start":{
             "line":100,
@@ -493,13 +497,13 @@ When calling repo.exe then return everything in a json object. Make sure everyth
         }
         "@semio/js":{
           "kind": "bundle",
-          "@semio/js/semio.ts":{
+          "@semio/js.ts":{
             "kind": "file",
-            "@semio/js/semio.ts#Entities": {
+            "@semio/js.ts#Entities": {
               "kind": "section",
-              "@semio/js/semio.ts#Entities#Kit":{
+              "@semio/js.ts#Entities#Kit":{
                 "kind": "section",
-                "@semio/js/semio.ts#Entities#Kit§KitDiff": {
+                "@semio/js.ts#Entities#Kit§KitDiff": {
                   "kind": "definition",
                 }
               }
@@ -730,8 +734,8 @@ Dont allow lines to be stored at repo, bundle, folder or file level. Every line 
 Refactor the current hardcoded switch statements to use a new approach where languages define how to identify sections, definitions, etc.
 
 
-The general scope mechanism should now always be @REPO[semio]/BUNDLE[js|go|net|desktop|engine|assistant|play|docs|assets|…]/FOLDER[js/js|net/Semio|…]/FILE[Semio.cs|main.go|…]/SECTION[State Management|…]/DEFINITION[createMachine|…] and only right part cans be omitted but not parts on the left.
-E.g. "js/js/sketchpad/Sketchpad.tsx" becomes "@semio/js/js/sketchpad/Sketchpad.tsx"
+The general scope mechanism should now always be @REPO[semio]/BUNDLE[js|go|net|desktop|engine|assistant|play|docs|assets|…]/FOLDER[js/semio|net/Semio|…]/FILE[Semio.cs|main.go|…]/SECTION[State Management|…]/DEFINITION[createMachine|…] and only right part cans be omitted but not parts on the left.
+E.g. "js/semio/sketchpad/Sketchpad.tsx" becomes "@semio/js/sketchpad/Sketchpad.tsx"
 
 The contribution of every iteration should be stored with full scope hierarchy. Add an ignore flag to ticket and interations (e.g. formatting tickets or itations should be ignored)
 ignore: false
@@ -747,7 +751,7 @@ iterations:
     bundles:
       "@semio/js":
         files:
-          "js/js/sketchpad/Sketchpad.tsx":
+          "js/semio/sketchpad/Sketchpad.tsx":
             sections:
               "State Management":
                 definitions: ["createMachine"]
@@ -872,7 +876,7 @@ E.g. WorkspaceEdit shouldnt
 
 Fixing files should be less than 100ms. Currently in vscode:
 - Individual violations are not fixable alone
-- When executing a complete file fix it show: Failed to fix violation: Error: Command failed: c:\git\semio.tech\semio\bin\repo.exe fix js/js/playwright.config.ts
+- When executing a complete file fix it show: Failed to fix violation: Error: Command failed: c:\git\semio.tech\semio\bin\repo.exe fix js/semio/playwright.config.ts
 
 When pressing close or reopen on ticket tree item in vscode it opens a command instead of just reopening or closing the ticket was clicked onto.
 
@@ -1051,8 +1055,8 @@ vscode extension:
       "@semio/assets"
     ],
     "files": [
-      "js/js/sketchpad/Sketchpad.tsx",
-      "js/js/semio/engine/engine.py",
+      "js/semio/sketchpad/Sketchpad.tsx",
+      "js/semio/semio/engine/engine.py",
     ]
   }
 }
@@ -1099,14 +1103,14 @@ Hooks are go functions that produce actions. They receive a codebase context and
     {
       "tool": "file.create",
       "args": {
-        "scope":"js/js/sketchpad/Quality.tsx",
+        "scope":"js/semio/sketchpad/Quality.tsx",
         "content":"import { Quality } from './Quality';"
       }
     },
     {
       "tool": "text.replace",
       "args": {
-        "scope": "js/js/sketchpad/Sketchpad.tsx#State Managment",
+        "scope": "js/semio/sketchpad/Sketchpad.tsx#State Managment",
         "regex": "(?<![xXpPeEmMsSoOwW])port(?!ion)(?!al)",
         "replace": "connector"
       }
@@ -1221,14 +1225,14 @@ Scope syntax:
 ((@semio)|(@semio/PROJECTPATTERN))?(FOLDERPATTERN)?(FILEPATTERN)?(REGIONPATTERN)?(DEFINITIONPATTERN)?
   @semio                   Repo scope
   @semio/js                Bundle scope
-  js/js/sketchpad/         Folder scope
-  js/js/sketchpad/App.tsx  File scope
+  js/semio/sketchpad/         Folder scope
+  js/semio/sketchpad/App.tsx  File scope
   file.tsx#Region          Region scope
   file.tsx§Function        Definition scope
 ---
 Adjust all implementation and get all tests running.
 
-Change the repo analyze api not not accept a scope flag but after the command name all arguments are interpreted as scope array. e.g. `repo analyze js/js/semio.ts @semio/desktop net/*.* py`
+Change the repo analyze api not not accept a scope flag but after the command name all arguments are interpreted as scope array. e.g. `repo analyze js/semio/semio.ts @semio/desktop net/*.* py`
 
 Remove severity from all policies and violations.
 
@@ -1308,10 +1312,10 @@ Examples:
 - "@semio" is repo scope.
 - "js" is a folder scope.
 - "@semio/js" is a bundle scope.
-- "js/js/sketchpad/Sketchpad.tsx" is a file scope.
-- "js/js/sketchpad/Sketchpad.tsx#Header" is a region scope.
-- "js/js/sketchpad/Sketchpad.tsx#State Managment#Store" is a sub-region scope.
-- "js/js/sketchpad/Sketchpad.tsx§Sketchpad" is a definition scope.
+- "js/semio/sketchpad/Sketchpad.tsx" is a file scope.
+- "js/semio/sketchpad/Sketchpad.tsx#Header" is a region scope.
+- "js/semio/sketchpad/Sketchpad.tsx#State Managment#Store" is a sub-region scope.
+- "js/semio/sketchpad/Sketchpad.tsx§Sketchpad" is a definition scope.
   Policies are typescript functions that produce different kind of violations. Policies can provide an autofix for every kind of violation. The fix script autofixes all autofixable violations.
   Violation have a summary, kind, priority (high, medium, low), autofixable flag and a solution text.
   E.g. Policy
@@ -1328,25 +1332,25 @@ Examples:
   ]
   Here some example violations that could be produced by the policy:
   Violations: Header Region policy can produce the following violations:
-- Summary: "Missing filepath in the header region of `js/js/sketchpad/Sketchpad.tsx`."
+- Summary: "Missing filepath in the header region of `js/semio/sketchpad/Sketchpad.tsx`."
   Kind: "semio.violation.header-region.missing-filepath"
-  Scopes: ["js/js/sketchpad/Sketchpad.tsx"]
+  Scopes: ["js/semio/sketchpad/Sketchpad.tsx"]
   Priority: "low"
   Autofixable: true
   Solution: "Add the filepath to the header region."
-- Summary: "Wrong filepath in the header region in `js/js/sketchpad/Sketchpad.tsx`."
+- Summary: "Wrong filepath in the header region in `js/semio/sketchpad/Sketchpad.tsx`."
   Kind: "semio.violation.header-region.wrong-filepath"
-  Scopes: ["js/js/sketchpad/Sketchpad.tsx"]
+  Scopes: ["js/semio/sketchpad/Sketchpad.tsx"]
   Priority: "low"
   Autofixable: true
   Solution: "Update the filepath in the header region to the actual filepath of the file."
-- Summary: "js/js/sketchpad/Sketchpad.tsx is missing a contributor in the header region."
+- Summary: "js/semio/sketchpad/Sketchpad.tsx is missing a contributor in the header region."
   Kind: "semio.violation.header-region.missing-contributor"
-  Scopes: ["js/js/sketchpad/Sketchpad.tsx"]
+  Scopes: ["js/semio/sketchpad/Sketchpad.tsx"]
   Priority: "low"
   Autofixable: true
   Solution: "Add the contributor to the header region."
-- Summary: "js/js/sketchpad/Sketchpad.tsx is missing a license in the header region."
+- Summary: "js/semio/sketchpad/Sketchpad.tsx is missing a license in the header region."
   Kind: "semio.violation.header-region.missing-license"
   Priority: "low"
   Autofixable: true
@@ -1367,12 +1371,12 @@ Policies are always documented in the dev-docs (README.md and AGENTS.md). They a
 Extend the code.ts hook to that all AGENTS.md headers under # Codebase meaning ## PATH are actual files and folders, all have the proper prefix (📁 or 📄), are sorted alphabetically and none appear twice. Create violations for all individual violations.
 
 Make the reasons and solutions specific to the codebase and the files. Read the devs docs to understand the reasons.
-E.g. when explaining why comments are removed, explain that code is never documented and instead everything is documented multiple times in the devdocs. 1. Under `# 🛍️ Products` in README.md where it is described from user perspective [architects, designers, engineers, …] (framework-agnostic, no implementation references, etc) 2. Under `# 📦 Components` in README.md where it is described from junior-developer perspective (mechanism explanation and reasoning behind the decision, how theory links to implementation, etc). 3. Under `# Software Requirements Specification` in AGENTS.md where it is described from human-interface-designer perspective (concise technical terms without explanation, framework-agnostic, no implementation references). There are two sections: `# Business Logic` and `# UI/UX`. 4. Under `# Codebase` in AGENTS.md where it is described from senior-developer perspective (framework-mechanisms, consice technical terms without explanation, implementation details, etc). The section has the same header structure as the files and folders. All files and folders are flat with `## PATH` e.g. `## js/js/sketchpad/` or `## net/Semio.cs`
+E.g. when explaining why comments are removed, explain that code is never documented and instead everything is documented multiple times in the devdocs. 1. Under `# 🛍️ Products` in README.md where it is described from user perspective [architects, designers, engineers, …] (framework-agnostic, no implementation references, etc) 2. Under `# 📦 Components` in README.md where it is described from junior-developer perspective (mechanism explanation and reasoning behind the decision, how theory links to implementation, etc). 3. Under `# Software Requirements Specification` in AGENTS.md where it is described from human-interface-designer perspective (concise technical terms without explanation, framework-agnostic, no implementation references). There are two sections: `# Business Logic` and `# UI/UX`. 4. Under `# Codebase` in AGENTS.md where it is described from senior-developer perspective (framework-mechanisms, consice technical terms without explanation, implementation details, etc). The section has the same header structure as the files and folders. All files and folders are flat with `## PATH` e.g. `## js/semio/sketchpad/` or `## net/Semio.cs`
 The purpose of the dev docs is to understand the codebase. NEVER add reasoning or process related (such as what changed, why, how, … - this is part of the log) to the dev docs.
 
 Extend the code analysis hook. Make sure that every violation has a reason text field and a solution text field. E.g. A solution for duplicate paths is to merge them or remove one if one is clearly outdated.
 More examples for a reason for forbidden imports:
-elements.tsx is a general-purpose ui library and should not import anything from sketchpad or any app. It is the only file that can import third party libraries and reexpose them as components. All other files in the js/js folder should be self-contained and dependency free from any other library outside of the js/js folder.
+elements.tsx is a general-purpose ui library and should not import anything from sketchpad or any app. It is the only file that can import third party libraries and reexpose them as components. All other files in the js/semio folder should be self-contained and dependency free from any other library outside of the js/semio folder.
 Sketchpad.tsx offers scaffolding to apps but is independent of app internals. Importing from app files violates the open/closed principle. Adding an app should not require modifying Sketchpad.tsx and just mean to add a file. Removing an app should not require modifying Sketchpad.tsx and just mean to remove a file.
 Provide reasons and solutions to all code violations.
 
@@ -1425,7 +1429,7 @@ Make sure that the headers of all files follow a specific scheme. Adjust analyze
   e.g.
   // #region Header
 
-// FILEPATH/FILENAME.EXTENSION e.g. js/js/sketchpad/Sketchpad.tsx
+// FILEPATH/FILENAME.EXTENSION e.g. js/semio/sketchpad/Sketchpad.tsx
 
 // CONTRIBUTIONYEARS CONTRIBUTOR e.g. 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -1447,9 +1451,9 @@ Make sure that the headers of all files follow a specific scheme. Adjust analyze
 The log.ts script should be extended with an flag plan that takes a markdown file path and adds it directly to the plan section of the ticket.
 
 Extend the code.ts hook to find more violations. Add two more violation kinds: forbidden imports and forbidden terminology. Forbidden imports checks if imports are structurally forbidden. Forbidden terminology checks if specific terminology is used somewhere where it shouldnt be allowed e.g. when domain-specific terminology is used in general-purpose files.
-Here some policies for js/js:
+Here some policies for js/semio:
 
-- elements.tsx are pure reusable ui elements library that are indepedent of semio. They should not import anything from sketchpad or any app or contain any semio domain-specific terminology (kit, design, type, connector, connection, docs, feedback). elements.tsx is the only file that can import third party libraries and reexpose them as components. All other files in the js/js folder should be self-contained and dependency free from any other library outside of the js/js folder.
+- elements.tsx are pure reusable ui elements library that are indepedent of semio. They should not import anything from sketchpad or any app or contain any semio domain-specific terminology (kit, design, type, connector, connection, docs, feedback). elements.tsx is the only file that can import third party libraries and reexpose them as components. All other files in the js/semio folder should be self-contained and dependency free from any other library outside of the js/semio folder.
 - Sketchpad.tsx and the other app files (Home.tsx, Kit.tsx, Design.tsx, Type.tsx, Quality.tsx, Docs.tsx, Feedback.tsx) should follow the open/closed principle. Sketchpad.tsx should only import from elements.tsx, semio.ts, shared.ts. The apps should only import from Sketchpad.tsx, elements.tsx, semio.ts, shared.ts.
   If the file is deleted then sketchpad should work, if a new file is added, the new app should work. The hook should scan for all static and dynamic imports that violate the above policies.
 
@@ -1503,7 +1507,7 @@ elements.tsx should be the only file to import "@xyflow/react";
 Make a refactor plan for Design.tsx, Kit.tsx and Quality.tsx to move to the new diagram component.
 @Design.tsx@elements.tsx@Quality.tsx@Kit.tsx
 
-Analyze the js/js codebase for state managment inconsistencies (hooks, context providers, state machine, commands, etc).
+Analyze the js/semio codebase for state managment inconsistencies (hooks, context providers, state machine, commands, etc).
 Remember that every component should have a triadic hook: [STATE,SETSTATE,CANSETSTATE]=useSELECTOR()
 Every component should only use the state write state and never use the commands directly. Only the machine is allowed to use the commands.
 Use fine grained subscriptions for all kit states.
@@ -1705,7 +1709,7 @@ Every feature, decision should be undocumented/uncommented in the code and docum
 2. Under components in README.md where it is described from junior-developer perspective (mechanism explanation and reasoning behind the decision, how theory links to implementation, etc).
 3. Under Software Requirements Specification in AGENTS.md where it is described from human-interface-designer perspective (concise technical terms without explanation, framework-agnostic, no implementation references).
 4. Under Codebase in AGENTS.md where it is described from senior-developer perspective (framework-mechanisms, consice technical terms without explanation, implementation details, etc).
-   The AGENTS.md `# Codebase` section has the same header structure as the files and folders. All files and folders are flat with `## PATH` e.g. `## js/js/sketchpad/` or `## net/Semio.cs`
+   The AGENTS.md `# Codebase` section has the same header structure as the files and folders. All files and folders are flat with `## PATH` e.g. `## js/semio/sketchpad/` or `## net/Semio.cs`
    The README.md structure is more human friendly according ecosystem and components.
    Migrate all existing docs and code to the new structure. Update outdated docs.
    Example
@@ -1726,7 +1730,7 @@ It is the digital pencil for sketching plans and digital scalpel for building mo
 ```markdown
 # 🛍️ Products [↑](#-overview)
 
-## 🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/js) [↑](#-components-)
+## 🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-components-)
 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
@@ -1827,11 +1831,11 @@ The core which is shared in the [semio JavaScript ecosystem](#-javascript-) 🥜
 
 ## js
 
-## js/js
+## js/semio
 
-## js/js/sketchpad
+## js/semio/sketchpad
 
-## js/js/sketchpad/Sketchpad.tsx
+## js/semio/sketchpad/Sketchpad.tsx
 
 ### State managment
 
@@ -2003,9 +2007,9 @@ Here is a draft for a machine with more states:
 useSyncDeep, useSyncField, useSyncNestedArrayItemMembership, useSyncSelectionItemMembership,
 
 All imported geometry (such as imported models) are displayed with their original materials. All meshes should instead have plaster material and anything 2d like lines or points should have plaster-edge material.
-@js/js/globals.css
-@js/js/sketchpad/elements.tsx
-@js/js/sketchpad/Design.tsx
+@js/semio/globals.css
+@js/semio/sketchpad/elements.tsx
+@js/semio/sketchpad/Design.tsx
 
 Previously all SETSTATE used to have origin as first argument. The new sketchpad works with OriginProvider/Context and useOrigin(). The implementation of the triadic hook then fetches the origina and adds it to the command as first argument.
 Make sure that every component that has an id is also providing it to all the children and children to their children, etc.
@@ -3129,7 +3133,7 @@ tooltip formatting violation: Manual, Tutorial and Hotkey are all optional. It s
 
 - Generalize the
 
-- Refactor the js/js code base to be closed for modification and open for extension. This means that adding new features should just be adding files and folders and not having to edit existing ones.
+- Refactor the js/semio code base to be closed for modification and open for extension. This means that adding new features should just be adding files and folders and not having to edit existing ones.
   E.g. Adding a new editor should just be adding a new folder under editors; Adding a new tool should just be adding a new file under tools; Adding a new panel should just be adding a new file to the panels folder.
 
 - The toggle group should receive a new variant: tree

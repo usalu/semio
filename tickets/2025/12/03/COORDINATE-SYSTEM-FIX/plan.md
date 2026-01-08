@@ -23,14 +23,14 @@ The coordinate transformation between the two systems is:
 - **semio (x, y, z) → Three.js (x, -z, y)**
 - **Three.js (x, y, z) → semio (x, z, -y)**
 
-This transformation is implemented in [semio.ts](../../js/js/semio.ts#L139-L151):
+This transformation is implemented in [semio.ts](../../semio/semio/semio.ts#L139-L151):
 
 - `toThreeRotation()` - matrix for semio → Three.js
 - `toSemioRotation()` - matrix for Three.js → Semio
 
 ## Changes Made
 
-### 1. Connector Rendering ([Type.tsx](../../js/js/sketchpad/Type.tsx))
+### 1. Connector Rendering ([Type.tsx](../../semio/semio/sketchpad/Type.tsx))
 
 **Import coordinate transformation functions:**
 
@@ -72,7 +72,7 @@ const semioNormal = normal.clone().applyMatrix4(toSemioRotation()).normalize();
 
 ### 2. Pieces (Already Correct)
 
-Pieces in the Design app were already correctly using `toThreeRotation()` at [Design.tsx:6966](../../js/js/sketchpad/Design.tsx#L6966) and [Design.tsx:6973](../../js/js/sketchpad/Design.tsx#L6973):
+Pieces in the Design app were already correctly using `toThreeRotation()` at [Design.tsx:6966](../../semio/semio/sketchpad/Design.tsx#L6966) and [Design.tsx:6973](../../semio/semio/sketchpad/Design.tsx#L6973):
 
 ```typescript
 const threeMatrix = new THREE.Matrix4().multiplyMatrices(toThreeRotation(), planeMatrix);
@@ -80,7 +80,7 @@ const threeMatrix = new THREE.Matrix4().multiplyMatrices(toThreeRotation(), plan
 
 ### 3. Gizmo Labels (Already Correct)
 
-The coordinate gizmo labels at [elements.tsx:4854](../../js/js/sketchpad/elements.tsx#L4854) correctly display the semio coordinate system axes:
+The coordinate gizmo labels at [elements.tsx:4854](../../semio/semio/sketchpad/elements.tsx#L4854) correctly display the semio coordinate system axes:
 
 ```typescript
 const labels = ["X", "Z", "-Y"];
@@ -106,7 +106,7 @@ The changes ensure that:
 
 ## Related Files
 
-- [js/js/semio.ts](../../js/js/semio.ts) - Coordinate transformation definitions
-- [js/js/sketchpad/Type.tsx](../../js/js/sketchpad/Type.tsx) - Connector rendering and creation (MODIFIED)
-- [js/js/sketchpad/Design.tsx](../../js/js/sketchpad/Design.tsx) - Piece rendering (already correct)
-- [js/js/sketchpad/elements.tsx](../../js/js/sketchpad/elements.tsx) - Gizmo configuration
+- [js/semio/semio.ts](../../semio/semio/semio.ts) - Coordinate transformation definitions
+- [js/semio/sketchpad/Type.tsx](../../semio/semio/sketchpad/Type.tsx) - Connector rendering and creation (MODIFIED)
+- [js/semio/sketchpad/Design.tsx](../../semio/semio/sketchpad/Design.tsx) - Piece rendering (already correct)
+- [js/semio/sketchpad/elements.tsx](../../semio/semio/sketchpad/elements.tsx) - Gizmo configuration

@@ -12,7 +12,7 @@ The Kit app became completely unresponsive after importing large kits like metab
 
 ## Root Cause
 
-The performance issues were caused by three main problems in `js/js/sketchpad/Kit.tsx`:
+The performance issues were caused by three main problems in `js/semio/sketchpad/Kit.tsx`:
 
 1. **`expandedRows` Set recreated on every render**: `new Set(expandedRowsArray)` was called on every render, breaking useMemo dependency checks since Set reference always changed.
 

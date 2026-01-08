@@ -16,7 +16,7 @@ Task: Extend/fix tests for Type app and Design app to verify:
 
 # Changes
 
-## `js/js/sketchpad.test.ts`
+## `js/semio/sketchpad.test.ts`
 
 ### Fixed `initType` function
 

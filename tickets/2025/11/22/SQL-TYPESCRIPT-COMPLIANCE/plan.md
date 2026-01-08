@@ -401,8 +401,8 @@ Roundtrip test passed:
 ### Files Modified
 
 1. `sql/sqlite/schema.sql` - Added columns and tables
-2. `js/js/semio.ts` - Updated embedded schema, kitToSqlite, and sqliteToKit
-3. `js/js/test-roundtrip.mjs` - Removed workarounds, enabled full equality check
+2. `js/semio/semio.ts` - Updated embedded schema, kitToSqlite, and sqliteToKit
+3. `js/semio/test-roundtrip.mjs` - Removed workarounds, enabled full equality check
 
 ### Verification
 

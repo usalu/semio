@@ -3,7 +3,10 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
-    "lib": ["DOM", "ESNext"],
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "strict": true,
@@ -15,6 +18,17 @@
     "incremental": false,
     "noEmit": true
   },
-  "include": ["**/*.ts", "**/*.tsx", "js/js/.storybook/**/*.ts", "js/js/.storybook/**/*.tsx"],
-  "exclude": ["**/node_modules/**", "js/temp", "temp", "reports", "log"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "js/semio/.storybook/**/*.ts",
+    "js/semio/.storybook/**/*.tsx"
+  ],
+  "exclude": [
+    "**/node_modules/**",
+    "js/temp",
+    "temp",
+    "reports",
+    "log"
+  ]
 }

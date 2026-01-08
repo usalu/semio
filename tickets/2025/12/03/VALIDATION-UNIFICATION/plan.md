@@ -19,7 +19,7 @@
 
 # Changes
 
-## TypeScript (js/js/semio.ts)
+## TypeScript (js/semio/semio.ts)
 
 - Added `ValidationFix`, `Problem`, `ValidationResult` interfaces
 - Added `toValidationResult()` to convert full result to serializable format (includes fixes)
@@ -28,7 +28,7 @@
 - Added `areKitDiffsEqualIgnoringNewGuids()` for GUID-normalized diff comparison
 - Fixed layer-path-unique constraint to include `entityGuid`
 
-## TypeScript Test (js/js/semio.test.ts)
+## TypeScript Test (js/semio/semio.test.ts)
 
 - Consolidated to single test: `Validation matches expected output`
 - Test checks valid kit has no errors AND invalid kit matches validation.json

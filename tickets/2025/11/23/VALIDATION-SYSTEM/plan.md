@@ -154,7 +154,7 @@ const codeActions = result.issues.flatMap(issueToCodeActions);
 
 ## Implementation Details
 
-### Domain Logic (`js/js/semio.ts`)
+### Domain Logic (`js/semio/semio.ts`)
 
 Added ~550 lines of pure validation logic:
 
@@ -184,7 +184,7 @@ Added ~280 lines of JSON-aware linting:
 
 ### Files Modified
 
-1. `js/js/semio.ts` - Added validation system after Kit Import/Export section (~550 lines)
+1. `js/semio/semio.ts` - Added validation system after Kit Import/Export section (~550 lines)
 2. `js/vscode/src/extension.ts` - Complete rewrite with validation logic (~280 lines)
 3. `js/vscode/package.json` - Updated metadata and added dependencies
 4. `js/vscode/README.md` - Updated with references to central documentation

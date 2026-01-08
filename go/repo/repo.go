@@ -138,50 +138,7 @@ type TextEdit struct {
 	NewText string `json:"newText"`
 }
 
-type RepoMetrics struct {
-	Bundles      int `json:"bundles"`
-	Folders      int `json:"folders"`
-	Files        int `json:"files"`
-	Sections     int `json:"sections"`
-	Definitions  int `json:"definitions"`
-	Lines        int `json:"lines"`
-	Contributors int `json:"contributors"`
-	Tickets      int `json:"tickets"`
-	Violations   int `json:"violations"`
-}
 
-type BundleMetrics struct {
-	Folders     int `json:"folders"`
-	Files       int `json:"files"`
-	Sections    int `json:"sections"`
-	Definitions int `json:"definitions"`
-	Lines       int `json:"lines"`
-	Violations  int `json:"violations"`
-}
-
-type FolderMetrics struct {
-	Files      int `json:"files"`
-	Lines      int `json:"lines"`
-	Violations int `json:"violations"`
-}
-
-type FileMetrics struct {
-	Sections    int `json:"sections"`
-	Definitions int `json:"definitions"`
-	Lines       int `json:"lines"`
-}
-
-type SectionMetrics struct {
-	Definitions int `json:"definitions"`
-	Lines       int `json:"lines"`
-	Violations  int `json:"violations"`
-}
-
-type DefinitionMetrics struct {
-	Definitions int `json:"definitions"`
-	Lines       int `json:"lines"`
-	Violations  int `json:"violations"`
-}
 
 type CountMetrics struct {
 	Added   int `json:"added"`
@@ -189,16 +146,7 @@ type CountMetrics struct {
 	Removed int `json:"removed"`
 }
 
-type ContributorMetrics struct {
-	Commits     int `json:"commits"`
-	Tickets     int `json:"tickets"`
-	Bundles     int `json:"bundles"`
-	Folders     int `json:"folders"`
-	Files       int `json:"files"`
-	Sections    int `json:"sections"`
-	Definitions int `json:"definitions"`
-	Lines       int `json:"lines"`
-}
+
 
 type ContributorIcons struct {
 	Avatar      *string `json:"avatar,omitempty"`
@@ -237,20 +185,7 @@ type CheckpointSectionContrib struct {
 	Metrics     *LineMetrics `json:"metrics"`
 }
 
-type CheckpointMetrics struct {
-	Files       int          `json:"files"`
-	Sections    int          `json:"sections"`
-	Definitions int          `json:"definitions"`
-	Lines       *LineMetrics `json:"lines"`
-}
 
-type TicketMetrics struct {
-	Checkpoints int          `json:"checkpoints"`
-	Files       int          `json:"files"`
-	Sections    int          `json:"sections"`
-	Definitions int          `json:"definitions"`
-	Lines       *LineMetrics `json:"lines"`
-}
 
 type Autofix struct {
 	Description string       `json:"description"`
@@ -8602,83 +8537,12 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		},
 	})
 
-	lineMetricsType := graphql.NewObject(graphql.ObjectConfig{
-		Name: "LineMetrics",
-		Fields: graphql.Fields{
-			"added":   &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"removed": &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-		},
-	})
-
 	countMetricsType := graphql.NewObject(graphql.ObjectConfig{
 		Name: "CountMetrics",
 		Fields: graphql.Fields{
 			"added":   &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
 			"updated": &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
 			"removed": &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-		},
-	})
-
-	repoMetricsType := graphql.NewObject(graphql.ObjectConfig{
-		Name: "RepoMetrics",
-		Fields: graphql.Fields{
-			"bundles":      &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"folders":      &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"files":        &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"sections":     &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"definitions":  &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"lines":        &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"contributors": &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"tickets":      &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"violations":   &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-		},
-	})
-
-	bundleMetricsType := graphql.NewObject(graphql.ObjectConfig{
-		Name: "BundleMetrics",
-		Fields: graphql.Fields{
-			"folders":     &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"files":       &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"sections":    &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"definitions": &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"lines":       &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"violations":  &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-		},
-	})
-
-	folderMetricsType := graphql.NewObject(graphql.ObjectConfig{
-		Name: "FolderMetrics",
-		Fields: graphql.Fields{
-			"files":      &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"lines":      &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"violations": &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-		},
-	})
-
-	fileMetricsType := graphql.NewObject(graphql.ObjectConfig{
-		Name: "FileMetrics",
-		Fields: graphql.Fields{
-			"sections":    &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"definitions": &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"lines":       &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-		},
-	})
-
-	sectionMetricsType := graphql.NewObject(graphql.ObjectConfig{
-		Name: "SectionMetrics",
-		Fields: graphql.Fields{
-			"definitions": &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"lines":       &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"violations":  &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-		},
-	})
-
-	definitionMetricsType := graphql.NewObject(graphql.ObjectConfig{
-		Name: "DefinitionMetrics",
-		Fields: graphql.Fields{
-			"definitions": &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"lines":       &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"violations":  &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
 		},
 	})
 
@@ -8784,18 +8648,6 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						return []*Violation{}, nil
 					},
 				},
-				"metrics": &graphql.Field{
-					Type: graphql.NewNonNull(bundleMetricsType),
-					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						return &BundleMetrics{
-							Files:       0,
-							Folders:     0,
-							Definitions: 0,
-							Lines:       0,
-							Violations:  0,
-						}, nil
-					},
-				},
 			}
 		}),
 	})
@@ -8826,16 +8678,6 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationType))),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 						return []*Violation{}, nil
-					},
-				},
-				"metrics": &graphql.Field{
-					Type: graphql.NewNonNull(folderMetricsType),
-					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						return &FolderMetrics{
-							Files:      0,
-							Lines:      0,
-							Violations: 0,
-						}, nil
 					},
 				},
 			}
@@ -8871,17 +8713,13 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						return []*Violation{}, nil
 					},
 				},
-				"metrics": &graphql.Field{
-					Type: fileMetricsType,
+				"content": &graphql.Field{Type: graphql.String},
+				"contributors": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(contributorType))),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						return &FileMetrics{
-							Sections:    0,
-							Definitions: 0,
-							Lines:       0,
-						}, nil
+						return []*Contributor{}, nil
 					},
 				},
-				"content": &graphql.Field{Type: graphql.String},
 			}
 		}),
 	})
@@ -8920,16 +8758,6 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					},
 				},
 				"range": &graphql.Field{Type: rangeType},
-				"metrics": &graphql.Field{
-					Type: sectionMetricsType,
-					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						return &SectionMetrics{
-							Definitions: 0,
-							Lines:       0,
-							Violations:  0,
-						}, nil
-					},
-				},
 			}
 		}),
 	})
@@ -8956,16 +8784,6 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					},
 				},
 				"range": &graphql.Field{Type: graphql.NewNonNull(rangeType)},
-				"metrics": &graphql.Field{
-					Type: graphql.NewNonNull(definitionMetricsType),
-					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						return &DefinitionMetrics{
-							Definitions: 0,
-							Lines:       0,
-							Violations:  0,
-						}, nil
-					},
-				},
 			}
 		}),
 	})
@@ -8999,8 +8817,15 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		Name: "Violation",
 		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
 			return graphql.Fields{
-				"id":      &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
-				"kind":    &graphql.Field{Type: graphql.NewNonNull(violationKindType)},
+				"id": &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
+				"kind": &graphql.Field{
+					Type: graphql.NewNonNull(violationKindType),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						violation := p.Source.(*Violation)
+						info := violation.Kind.Info()
+						return &info, nil
+					},
+				},
 				"scope":   &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
 				"file":    &graphql.Field{Type: fileType},
 				"folder":  &graphql.Field{Type: folderType},
@@ -9114,17 +8939,6 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 				},
 			}
 		}),
-	})
-
-	ticketMetricsType := graphql.NewObject(graphql.ObjectConfig{
-		Name: "TicketMetrics",
-		Fields: graphql.Fields{
-			"checkpoints": &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"files":       &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"sections":    &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"definitions": &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"lines":       &graphql.Field{Type: lineMetricsType},
-		},
 	})
 
 	ticketType = graphql.NewObject(graphql.ObjectConfig{
@@ -9269,37 +9083,6 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						return ticket.GetCheckpoints(), nil
 					},
 				},
-				"metrics": &graphql.Field{
-					Type: graphql.NewNonNull(ticketMetricsType),
-					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						ticket := p.Source.(*Ticket)
-						filesSet := make(map[string]struct{})
-						sectionsCount := 0
-						definitionsCount := 0
-						var totalAdded, totalRemoved int
-						for _, checkpoint := range ticket.GetCheckpoints() {
-							for filePath, sections := range checkpoint.Files {
-								filesSet[filePath] = struct{}{}
-								for _, sectionMetrics := range sections {
-									sectionsCount++
-									definitionsCount += len(sectionMetrics.Definitions)
-									totalAdded += sectionMetrics.Lines.Added
-									totalRemoved += sectionMetrics.Lines.Removed
-								}
-							}
-						}
-						return map[string]interface{}{
-							"checkpoints": len(ticket.GetCheckpoints()),
-							"files":       len(filesSet),
-							"sections":    sectionsCount,
-							"definitions": definitionsCount,
-							"lines": map[string]interface{}{
-								"added":   totalAdded,
-								"removed": totalRemoved,
-							},
-						}, nil
-					},
-				},
 			}
 		}),
 	})
@@ -9318,20 +9101,6 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		Fields: graphql.Fields{
 			"name": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
 			"url":  &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-		},
-	})
-
-	contributorMetricsType := graphql.NewObject(graphql.ObjectConfig{
-		Name: "ContributorMetrics",
-		Fields: graphql.Fields{
-			"commits":     &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"tickets":     &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"bundles":     &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"folders":     &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"files":       &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"sections":    &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"definitions": &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"lines":       &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
 		},
 	})
 
@@ -9364,26 +9133,6 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 				"bundles": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(bundleType)))},
 				"files":   &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(fileType)))},
 				"tickets": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(ticketType)))},
-				"metrics": &graphql.Field{
-					Type: graphql.NewNonNull(contributorMetricsType),
-					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						contributor := p.Source.(*Contributor)
-						metrics := &ContributorMetrics{
-							Commits:     len(contributor.Contributions.Commits),
-							Tickets:     len(contributor.Contributions.Tickets),
-							Bundles:     len(contributor.Contributions.Bundles),
-							Folders:     len(contributor.Contributions.Folders),
-							Files:       len(contributor.Contributions.Files),
-							Sections:    len(contributor.Contributions.Regions),
-							Definitions: len(contributor.Contributions.Definitions),
-							Lines:       0,
-						}
-						if contributor.Contributions.Lines != nil {
-							metrics.Lines = contributor.Contributions.Lines.Added + contributor.Contributions.Lines.Removed
-						}
-						return metrics, nil
-					},
-				},
 			}
 		}),
 	})
@@ -9478,13 +9227,6 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 							scope = &v
 						}
 						return repoResolverInstance.Violations(p.Context, repo, scope)
-					},
-				},
-				"metrics": &graphql.Field{
-					Type: graphql.NewNonNull(repoMetricsType),
-					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						repo := p.Source.(*Repo)
-						return repoResolverInstance.Metrics(p.Context, repo)
 					},
 				},
 			}
@@ -10509,10 +10251,6 @@ func (r *repoResolver) Violations(ctx context.Context, obj *Repo, scope *string)
 	return []*Violation{}, nil
 }
 
-func (r *repoResolver) Metrics(ctx context.Context, obj *Repo) (*RepoMetrics, error) {
-	return &RepoMetrics{}, nil
-}
-
 // #endregion Entity Resolvers
 
 // #region Resolver Interfaces
@@ -10568,7 +10306,6 @@ type RepoResolver interface {
 	Policies(ctx context.Context, obj *Repo) ([]*Policy, error)
 	ViolationKinds(ctx context.Context, obj *Repo) ([]*ViolationKindMeta, error)
 	Violations(ctx context.Context, obj *Repo, scope *string) ([]*Violation, error)
-	Metrics(ctx context.Context, obj *Repo) (*RepoMetrics, error)
 }
 
 // #endregion Resolver Interfaces

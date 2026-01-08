@@ -12,7 +12,7 @@ However, clicking panel toggles in the UI did not trigger state changes - the to
 
 # Changes
 
-## `js/js/sketchpad.test.ts`
+## `js/semio/sketchpad.test.ts`
 
 ### Test Simplification
 

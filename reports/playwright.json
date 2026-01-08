@@ -1,7 +1,7 @@
 {
   "config": {
     "configFile": "C:\\git\\semio.tech\\semio\\js\\js\\playwright.config.ts",
-    "rootDir": "C:/git/semio.tech/semio/js/js",
+    "rootDir": "C:/git/semio.tech/semio/js/semio",
     "forbidOnly": false,
     "fullyParallel": true,
     "globalSetup": null,
@@ -33,7 +33,7 @@
     "quiet": false,
     "projects": [
       {
-        "outputDir": "C:/git/semio.tech/semio/js/js/test-results",
+        "outputDir": "C:/git/semio.tech/semio/js/semio/test-results",
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
@@ -41,7 +41,7 @@
         },
         "id": "chromium",
         "name": "chromium",
-        "testDir": "C:/git/semio.tech/semio/js/js",
+        "testDir": "C:/git/semio.tech/semio/js/semio",
         "testIgnore": [],
         "testMatch": [
           "**/sketchpad.test.ts"

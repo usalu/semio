@@ -24,7 +24,7 @@ Key characteristics:
 
 ## 1. Dependencies
 
-Add d3-force to `js/js/package.json`:
+Add d3-force to `js/semio/package.json`:
 
 ```json
 "d3-force": "^3.0.0",
@@ -95,7 +95,7 @@ interface ForceLink extends SimulationLinkDatum<ForceNode> {
 
 ### 3.1 KitAppState Extension
 
-In `js/js/sketchpad/Kit.tsx` (line ~259):
+In `js/semio/sketchpad/Kit.tsx` (line ~259):
 
 ```typescript
 export interface DiagramForceSettings {
@@ -122,7 +122,7 @@ export interface KitAppDiff {
 
 ### 3.3 Default State
 
-In `js/js/sketchpad/Sketchpad.tsx` (createDefaultKitAppState ~8119):
+In `js/semio/sketchpad/Sketchpad.tsx` (createDefaultKitAppState ~8119):
 
 ```typescript
 export function createDefaultKitAppState(): KitAppState {
@@ -140,7 +140,7 @@ export function createDefaultKitAppState(): KitAppState {
 
 ## 4. XState Actions
 
-Add to `js/js/sketchpad/Kit.tsx` (after line ~1030):
+Add to `js/semio/sketchpad/Kit.tsx` (after line ~1030):
 
 ```typescript
 registerRuntimeAction("kitSetDiagramForce", (context: any, event: any) => {
@@ -421,7 +421,7 @@ const KitSettingsContent: FC = () => {
 
 ## 9. i18n Labels
 
-Add to `js/js/sketchpad/locales/en.json`:
+Add to `js/semio/sketchpad/locales/en.json`:
 
 ```json
 "semio.kitApp.settings.diagram.chargeStrength": "Charge Strength",
@@ -438,14 +438,14 @@ Add corresponding entries to `de.json`.
 
 ## 10. File Changes Summary
 
-| File                              | Changes                                                                                                                                                                                        |
-| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `js/js/package.json`              | Add d3-force, @types/d3-force                                                                                                                                                                  |
-| `js/js/sketchpad/Kit.tsx`         | KitAppState, DiagramForceSettings interface, registerRuntimeAction, useKitAppDiagramForce hook, KitArtifactNode circular redesign, KitDiagram d3-force integration, KitSettingsContent sliders |
-| `js/js/sketchpad/Sketchpad.tsx`   | createDefaultKitAppState add diagramForce defaults                                                                                                                                             |
-| `js/js/sketchpad/locales/en.json` | Add diagram force labels                                                                                                                                                                       |
-| `js/js/sketchpad/locales/de.json` | Add diagram force labels                                                                                                                                                                       |
-| `AGENTS.md`                       | Document diagram force settings                                                                                                                                                                |
+| File                                 | Changes                                                                                                                                                                                        |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `js/semio/package.json`              | Add d3-force, @types/d3-force                                                                                                                                                                  |
+| `js/semio/sketchpad/Kit.tsx`         | KitAppState, DiagramForceSettings interface, registerRuntimeAction, useKitAppDiagramForce hook, KitArtifactNode circular redesign, KitDiagram d3-force integration, KitSettingsContent sliders |
+| `js/semio/sketchpad/Sketchpad.tsx`   | createDefaultKitAppState add diagramForce defaults                                                                                                                                             |
+| `js/semio/sketchpad/locales/en.json` | Add diagram force labels                                                                                                                                                                       |
+| `js/semio/sketchpad/locales/de.json` | Add diagram force labels                                                                                                                                                                       |
+| `AGENTS.md`                          | Document diagram force settings                                                                                                                                                                |
 
 ## 11. Implementation Order
 

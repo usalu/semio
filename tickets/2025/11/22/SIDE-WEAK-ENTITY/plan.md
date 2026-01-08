@@ -51,7 +51,7 @@ All changes have been successfully implemented across TypeScript, C#, and suppor
 
 ## Implementation Plan
 
-### 1. TypeScript (js/js/semio.ts)
+### 1. TypeScript (js/semio/semio.ts)
 
 #### Remove SideId Type and Functions
 
@@ -176,7 +176,7 @@ After implementation:
 
 ### Completed Changes
 
-#### 1. TypeScript (js/js/semio.ts) ✅
+#### 1. TypeScript (js/semio/semio.ts) ✅
 
 - ✅ Removed `SideId` type definition
 - ✅ Removed `SideIdSchema`
@@ -193,7 +193,7 @@ After implementation:
 - ✅ Added `GetHashCode` override for proper dictionary/set usage
 - ✅ Side methods (ApplyDiff, CreateDiff, InverseDiff) remain unchanged (already guid-agnostic)
 
-#### 3. Migration Code (js/js/test-roundtrip.mjs) ✅
+#### 3. Migration Code (js/semio/test-roundtrip.mjs) ✅
 
 - ✅ Removed old schema migration code that handled `side.guid` → `connector.guid` fallback
 - ✅ Connections now use sides directly without transformation
@@ -212,7 +212,7 @@ After implementation:
 
 ### Files Modified
 
-1. `js/js/semio.ts` - Removed SideId type and functions, updated Side schema
+1. `js/semio/semio.ts` - Removed SideId type and functions, updated Side schema
 2. `net/Semio/Semio.cs` - Added value equality (Equals/GetHashCode)
-3. `js/js/test-roundtrip.mjs` - Removed legacy migration code
+3. `js/semio/test-roundtrip.mjs` - Removed legacy migration code
 4. `agents/2025-11-22_side-weak-entity.md` - This plan document

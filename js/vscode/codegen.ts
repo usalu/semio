@@ -25,7 +25,7 @@ const config: CodegenConfig = {
   schema: "../../graphql/repo/schema.graphql",
   documents: ["extension.ts"],
   generates: {
-    "./codegen/": {
+    "./generated/": {
       preset: "client",
       plugins: [],
       presetConfig: {

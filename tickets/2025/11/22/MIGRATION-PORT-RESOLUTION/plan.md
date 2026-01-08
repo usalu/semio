@@ -52,7 +52,7 @@ git show HEAD~30:assets/semio/kit_metabolism.json
 ### Key Files
 
 - `scripts/migrate-semio-json.ps1`: Migration script
-- `js/js/semio.test.ts`: Flatten tests
+- `js/semio/semio.test.ts`: Flatten tests
 - `assets/semio/kit_metabolism.json`: Main kit file
 
 ### User Requirements

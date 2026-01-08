@@ -221,12 +221,12 @@ But scope providers are defined inconsistently:
 **Changes:**
 
 ```typescript
-// OLD: js/js/sketchpad/apps/home/App.tsx
+// OLD: js/semio/sketchpad/apps/home/App.tsx
 export class HomeStore {
   // Custom implementation
 }
 
-// NEW: js/js/sketchpad/apps/home/App.tsx
+// NEW: js/semio/sketchpad/apps/home/App.tsx
 export class HomeStore extends AppStore<HomeState, HomeDiff, HomeSelectionDiff, HomeEdit, HomeCommandContext, HomeCommandResult> {
   // Inherit transaction, undo/redo, selection from AppStore
 }
@@ -477,7 +477,7 @@ if (typeof window !== "undefined" && (window as any).__KIT_APP_MODULE_CACHE__) {
 **Solution:** Centralize in App.tsx:
 
 ```typescript
-// js/js/sketchpad/App.tsx
+// js/semio/sketchpad/App.tsx
 
 // #region Module Cache
 const MODULE_CACHE = {
@@ -707,7 +707,7 @@ Add new section to AGENTS.md:
 ```markdown
 ### App Structure Standards
 
-All apps in `js/js/sketchpad/apps/*/App.tsx` MUST follow this structure:
+All apps in `js/semio/sketchpad/apps/*/App.tsx` MUST follow this structure:
 
 1. **Region Order:** Header → Imports → Types → Store → Commands → Components → App → Config
 2. **Store Base Class:** MUST extend either `AppStore` or `KitDiffAppStore` (no custom base classes)

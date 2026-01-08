@@ -23,8 +23,8 @@
         ],
         "folders": [
             {
-                "path": "js/js",
-                "uri": "file://c:/git/semio.tech/semio/js/js",
+                "path": "js/semio",
+                "uri": "file://c:/git/semio.tech/semio/js/semio",
                 "metrics": {
                     "files": 5,
                     "lines": 5000,
@@ -34,9 +34,9 @@
         ],
         "files": [
             {
-                "id": "@semio/js/semio.ts",
-                "path": "js/js/semio.ts",
-                "uri": "file://c:/git/semio.tech/semio/js/js/semio.ts",
+                "id": "@semio/js.ts",
+                "path": "js/semio/semio.ts",
+                "uri": "file://c:/git/semio.tech/semio/js/semio/semio.ts",
                 "metrics": {
                     "sections": 10,
                     "definitions": 100,
@@ -54,9 +54,9 @@
         ],
         "sections": [
             {
-                "id": "@semio/js/semio.ts#Kit",
-                "path": "js/js/semio.ts#Kit",
-                "uri": "file://c:/git/semio.tech/semio/js/js/semio.ts#Kit",
+                "id": "@semio/js.ts#Kit",
+                "path": "js/semio/semio.ts#Kit",
+                "uri": "file://c:/git/semio.tech/semio/js/semio/semio.ts#Kit",
                 "metrics": {
                     "definitions": 10,
                     "lines": 500,
@@ -66,9 +66,9 @@
         ],
         "definitions": [
             {
-                "id": "@semio/js/semio.ts#KitDiff",
-                "path": "js/js/semio.ts#KitDiff",
-                "uri": "file://c:/git/semio.tech/semio/js/js/semio.ts#KitDiff",
+                "id": "@semio/js.ts#KitDiff",
+                "path": "js/semio/semio.ts#KitDiff",
+                "uri": "file://c:/git/semio.tech/semio/js/semio/semio.ts#KitDiff",
                 "metrics": {
                     "definitions": 3,
                     "lines": 100,
@@ -157,7 +157,7 @@
                     ],
                     "files": [
                         {
-                            "id": "@semio/js/semio.ts",
+                            "id": "@semio/js.ts",
                             "metrics": {
                                 "lines": {
                                     "added": 100,
@@ -168,7 +168,7 @@
                     ],
                     "sections": [
                         {
-                            "id": "@semio/js/semio.ts#Kit",
+                            "id": "@semio/js.ts#Kit",
                             "metrics": {
                                 "lines": {
                                     "added": 100,
@@ -179,7 +179,7 @@
                     ],
                     "definitions": [
                         {
-                            "id": "@semio/js/semio.ts#Kit§KitDiff",
+                            "id": "@semio/js.ts#Kit§KitDiff",
                             "metrics": {
                                 "lines": {
                                     "added": 100,
@@ -277,7 +277,7 @@
                 ],
                 "files": [
                     {
-                        "id": "@semio/js/semio.ts",
+                        "id": "@semio/js.ts",
                         "metrics": {
                             "sections": {
                                 "added": 1,
@@ -298,7 +298,7 @@
                 ],
                 "sections": [
                     {
-                        "id": "@semio/js/semio.ts#Kit",
+                        "id": "@semio/js.ts#Kit",
                         "metrics": {
                             "definitions": {
                                 "added": 1,
@@ -314,7 +314,7 @@
                 ],
                 "definitions": [
                     {
-                        "id": "@semio/js/semio.ts#KitDiff",
+                        "id": "@semio/js.ts#KitDiff",
                         "metrics": {
                             "lines": {
                                 "added": 100,
@@ -344,7 +344,7 @@
         ],
         "violations": [
             {
-                "id": "code:header:missing-filepath#|js|@semio/js/semio.ts#1",
+                "id": "code:header:missing-filepath#|js|@semio/js.ts#1",
                 "folders": [
                     {
                         "id": "js",
@@ -354,9 +354,9 @@
                 ],
                 "files": [
                     {
-                        "id": "@semio/js/semio.ts",
-                        "path": "js/js/semio.ts",
-                        "uri": "file://c:/git/semio.tech/semio/js/js/semio.ts",
+                        "id": "@semio/js.ts",
+                        "path": "js/semio/semio.ts",
+                        "uri": "file://c:/git/semio.tech/semio/js/semio/semio.ts",
                         "range": {
                             "start": {
                                 "line": 100,
@@ -386,13 +386,13 @@
                 }
         "@semio/js": {
                     "kind": "bundle",
-                    "@semio/js/semio.ts": {
+                    "@semio/js.ts": {
                         "kind": "file",
-                        "@semio/js/semio.ts#Entities": {
+                        "@semio/js.ts#Entities": {
                             "kind": "section",
-                            "@semio/js/semio.ts#Entities#Kit": {
+                            "@semio/js.ts#Entities#Kit": {
                                 "kind": "section",
-                                "@semio/js/semio.ts#Entities#Kit§KitDiff": {
+                                "@semio/js.ts#Entities#Kit§KitDiff": {
                                     "kind": "definition",
                                 }
                             }

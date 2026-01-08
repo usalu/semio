@@ -23,8 +23,8 @@ Schema validation reported 21 errors for missing C# entities. TypeScript compila
 ## TypeScript Fixes
 
 - `hooks/code.tsx`: Replaced deprecated `jsDoc` property access with `ts.getJSDocCommentsAndTags(node)`
-- `js/js/sketchpad/Sketchpad.tsx`: Changed return type from `React.ReactElement` to `JSX.Element`
-- `js/js/sketchpad/Design.tsx`:
+- `js/semio/sketchpad/Sketchpad.tsx`: Changed return type from `React.ReactElement` to `JSX.Element`
+- `js/semio/sketchpad/Design.tsx`:
   - Fixed function signatures to match DesignAppHooks interface (made pieceId/connectionId optional, added guards)
   - Fixed GranularSelectorFactory to allow undefined return type
   - Added `connector` property back to DesignAppSelection for backwards compatibility
@@ -34,7 +34,7 @@ Schema validation reported 21 errors for missing C# entities. TypeScript compila
 
 ## Remaining Problems (Require External Actions)
 
-### Requires `npm install` in js/js directory:
+### Requires `npm install` in js/semio directory:
 
 - Three.js JSX elements missing from JSX.IntrinsicElements (`group`, `mesh`, `primitive`, `ambientLight`, etc.)
 

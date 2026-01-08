@@ -93,6 +93,6 @@ After fixes:
 
 ## Files Modified
 
-- `js/js/sketchpad/Type.tsx` - TypeAppStore getter caching, targeted selectors, layout validation
-- `js/js/sketchpad/Sketchpad.tsx` - KitStore field-specific snapshots and caching
+- `js/semio/sketchpad/Type.tsx` - TypeAppStore getter caching, targeted selectors, layout validation
+- `js/semio/sketchpad/Sketchpad.tsx` - KitStore field-specific snapshots and caching
 - `js/play/index.tsx` - Disabled React.StrictMode

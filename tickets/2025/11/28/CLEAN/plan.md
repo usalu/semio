@@ -11,8 +11,8 @@
 
 # Changes
 
-- Stripped all diagnostic storage, command, layout, and language-sync logging from `js/js/sketchpad/Sketchpad.tsx` to keep the store output silent.
-- Cleaned up `js/js/sketchpad/Design.tsx` by removing viewport centering traces, layout validation logs, and other temporary console output that served no user-facing purpose.
-- Removed the focus helper logs in `js/js/sketchpad/elements.tsx` and the special-command origin prints from `js/js/sketchpad/Kit.tsx`, `js/js/sketchpad/Type.tsx`, and `js/js/sketchpad/Quality.tsx`, keeping the UI command paths lean.
+- Stripped all diagnostic storage, command, layout, and language-sync logging from `js/semio/sketchpad/Sketchpad.tsx` to keep the store output silent.
+- Cleaned up `js/semio/sketchpad/Design.tsx` by removing viewport centering traces, layout validation logs, and other temporary console output that served no user-facing purpose.
+- Removed the focus helper logs in `js/semio/sketchpad/elements.tsx` and the special-command origin prints from `js/semio/sketchpad/Kit.tsx`, `js/semio/sketchpad/Type.tsx`, and `js/semio/sketchpad/Quality.tsx`, keeping the UI command paths lean.
 
 # Changes

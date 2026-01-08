@@ -8,28 +8,28 @@ Successfully implemented the complete diff system for the semio kit architecture
 
 ### 1. Core Diff Functions Implemented
 
-**Type Diff** (`js/js/semio.ts` lines ~1859-1920)
+**Type Diff** (`js/semio/semio.ts` lines ~1859-1920)
 
 - `getTypeDiff`: Computes diff between two Type objects
 - `applyTypeDiff`: Applies diff with conditional collection inclusion
 - `inverseTypeDiff`: Computes inverse diff for undo
 - `mergeTypeDiff`: Merges two Type diffs
 
-**Design Diff** (`js/js/semio.ts` lines ~2544-2605)
+**Design Diff** (`js/semio/semio.ts` lines ~2544-2605)
 
 - `getDesignDiff`: Computes diff for designs with all collections
 - `applyDesignDiff`: Applies diff with conditional collection inclusion
 - `inverseDesignDiff`: Computes inverse diff
 - `mergeDesignDiff`: Merges design diffs using collection merge helpers
 
-**Group Diff** (`js/js/semio.ts` lines ~2211-2248)
+**Group Diff** (`js/semio/semio.ts` lines ~2211-2248)
 
 - `getGroupDiff`: Computes diff for group pieces and attributes
 - `applyGroupDiff`: Applies group changes
 - `inverseGroupDiff`: Reverses group changes
 - `mergeGroupDiff`: Merges group diffs (newly created)
 
-**Stat Diff** (`js/js/semio.ts` lines ~2424-2473)
+**Stat Diff** (`js/semio/semio.ts` lines ~2424-2473)
 
 - `getStatDiff`: Computes diff for stat fields
 - `applyStatDiff`: Applies stat changes
@@ -60,14 +60,14 @@ Replaced all reference equality checks (`!==`) with `deepEqual()` for complex ob
 
 ### 3. Fixed Empty Diff Filtering
 
-**AttributesDiff** (`js/js/semio.ts` line ~311)
+**AttributesDiff** (`js/semio/semio.ts` line ~311)
 Added filter to remove empty attribute diffs:
 
 ```typescript
 .filter((u) => Object.keys(u.diff).length > 0)
 ```
 
-**Attribute Diff Computation** (`js/js/semio.ts` line ~274)
+**Attribute Diff Computation** (`js/semio/semio.ts` line ~274)
 Changed from returning entire `after` object to only changed fields:
 
 ```typescript
@@ -80,11 +80,11 @@ return diff;
 
 ### 4. Schema Fixes
 
-**ConnectionsDiffSchema** (`js/js/semio.ts` lines ~2377-2381)
+**ConnectionsDiffSchema** (`js/semio/semio.ts` lines ~2377-2381)
 
 - Changed `removed` from complex `{ connected: { piece: string }, connecting: { piece: string } }` objects to simple `string[]` (connection guids)
 
-**GroupsDiffSchema** (`js/js/semio.ts` lines ~2242-2246)
+**GroupsDiffSchema** (`js/semio/semio.ts` lines ~2242-2246)
 
 - Changed `removed` from `z.array(z.array(z.string()))` to `z.array(z.string())` (group guids)
 
@@ -118,17 +118,17 @@ connection.guid;
 
 ### 7. Created Generic Helper Functions
 
-**mergeCollectionDiff** (`js/js/semio.ts` lines ~3595-3619)
+**mergeCollectionDiff** (`js/semio/semio.ts` lines ~3595-3619)
 
 - Generic function to merge two collection diffs
 - Handles removed, added, and updated arrays
 - Merges individual item diffs using provided merge function
 
-**mergeStatDiff** (`js/js/semio.ts`)
+**mergeStatDiff** (`js/semio/semio.ts`)
 
 - Simple spread merge for stat diffs
 
-**mergeGroupDiff** (`js/js/semio.ts`)
+**mergeGroupDiff** (`js/semio/semio.ts`)
 
 - Merges group diffs with attribute merging
 
@@ -170,13 +170,13 @@ The diff system now properly supports:
 
 ## Files Modified
 
-- `js/js/semio.ts` (~5932 lines)
+- `js/semio/semio.ts` (~5932 lines)
   - All diff functions implemented and fixed
   - Reference equality replaced with deepEqual
   - Schema fixes applied
   - Helper functions created
 
-- `js/js/semio.test.ts` (~281 lines)
+- `js/semio/semio.test.ts` (~281 lines)
   - Updated to use JSON comparison (deepEqual has Date handling issues)
 
 - `temp/fix-equality.ps1`

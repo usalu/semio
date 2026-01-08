@@ -12,7 +12,7 @@ The sketchpad currently uses multiple diagram implementations across apps.
   - All interaction callbacks export semio coordinates (u/v) and semio identifiers.
   - Nodes support circle+icon and square+label.
   - Handles are edge dots positioned by t in [0..1) where t=0/1 is 12 o'clock and increases clockwise.
-- Implement the generalized diagram renderer in `js/js/sketchpad/elements.tsx`.
+- Implement the generalized diagram renderer in `js/semio/sketchpad/elements.tsx`.
   - Keep `@xyflow/react` imports in this file only.
   - Add unit conversion helpers (diagram units <-> internal flow coords).
   - Add an imperative API ref (screen->diagram position, get nodes, fit view) without exposing `ReactFlowInstance`.
@@ -43,7 +43,7 @@ The sketchpad currently uses multiple diagram implementations across apps.
     - SRS UI/UX: diagram coordinate system + interaction requirements.
     - Codebase: sketchpad diagram architecture and file boundaries (`elements.tsx` sole reactflow importer).
 - Acceptance criteria.
-  - No file except `js/js/sketchpad/elements.tsx` imports `@xyflow/react`.
+  - No file except `js/semio/sketchpad/elements.tsx` imports `@xyflow/react`.
   - All diagram callbacks emit semio coords (u/v) and semio identifiers.
   - Circle and square nodes render correctly with `t`-based handles.
   - Design/Kit/Quality diagrams retain existing interaction features (drag, select, hover, connect, overlays).

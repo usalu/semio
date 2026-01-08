@@ -107,8 +107,8 @@ Layout is stored per app scope (e.g. per kit/design/type/quality id) as part of 
 
 **Touchpoints**
 
-- `js/js/sketchpad/shared.ts`
-- `js/js/sketchpad/Sketchpad.tsx`
+- `js/semio/sketchpad/shared.ts`
+- `js/semio/sketchpad/Sketchpad.tsx`
 
 **Acceptance criteria**
 
@@ -130,11 +130,11 @@ Layout is stored per app scope (e.g. per kit/design/type/quality id) as part of 
 
 **Touchpoints**
 
-- `js/js/sketchpad/shared.ts` (or a dedicated shared module)
-- `js/js/sketchpad/Kit.tsx`
-- `js/js/sketchpad/Design.tsx`
-- `js/js/sketchpad/Quality.tsx`
-- `js/js/sketchpad/Home.tsx` (once it participates)
+- `js/semio/sketchpad/shared.ts` (or a dedicated shared module)
+- `js/semio/sketchpad/Kit.tsx`
+- `js/semio/sketchpad/Design.tsx`
+- `js/semio/sketchpad/Quality.tsx`
+- `js/semio/sketchpad/Home.tsx` (once it participates)
 
 **Acceptance criteria**
 
@@ -153,15 +153,15 @@ Extend `AppConfig` to allow apps to register their window kinds and defaults.
 
 **Touchpoints**
 
-- `js/js/sketchpad/shared.ts` (`AppConfig`)
+- `js/semio/sketchpad/shared.ts` (`AppConfig`)
 - App configs:
-  - `js/js/sketchpad/Home.tsx`
-  - `js/js/sketchpad/Kit.tsx`
-  - `js/js/sketchpad/Design.tsx`
-  - `js/js/sketchpad/Type.tsx`
-  - `js/js/sketchpad/Quality.tsx`
-  - `js/js/sketchpad/Docs.tsx`
-  - `js/js/sketchpad/Feedback.tsx`
+  - `js/semio/sketchpad/Home.tsx`
+  - `js/semio/sketchpad/Kit.tsx`
+  - `js/semio/sketchpad/Design.tsx`
+  - `js/semio/sketchpad/Type.tsx`
+  - `js/semio/sketchpad/Quality.tsx`
+  - `js/semio/sketchpad/Docs.tsx`
+  - `js/semio/sketchpad/Feedback.tsx`
 
 **Acceptance criteria**
 
@@ -182,12 +182,12 @@ Remove repeated code patterns from apps.
 
 **Touchpoints**
 
-- `js/js/sketchpad/Sketchpad.tsx` (best place for shared UI hooks currently)
-- `js/js/sketchpad/Design.tsx`
-- `js/js/sketchpad/Kit.tsx`
-- `js/js/sketchpad/Quality.tsx`
-- `js/js/sketchpad/Type.tsx`
-- `js/js/sketchpad/Home.tsx`
+- `js/semio/sketchpad/Sketchpad.tsx` (best place for shared UI hooks currently)
+- `js/semio/sketchpad/Design.tsx`
+- `js/semio/sketchpad/Kit.tsx`
+- `js/semio/sketchpad/Quality.tsx`
+- `js/semio/sketchpad/Type.tsx`
+- `js/semio/sketchpad/Home.tsx`
 
 **Acceptance criteria**
 
@@ -208,9 +208,9 @@ Ensure every app renders via `LayoutCanvas` even when there is only one window.
 
 **Touchpoints**
 
-- `js/js/sketchpad/Feedback.tsx`
-- `js/js/sketchpad/Docs.tsx`
-- `js/js/sketchpad/Home.tsx`
+- `js/semio/sketchpad/Feedback.tsx`
+- `js/semio/sketchpad/Docs.tsx`
+- `js/semio/sketchpad/Home.tsx`
 
 **Acceptance criteria**
 
@@ -263,7 +263,7 @@ Once all apps are on the unified system:
 
 # Changes
 
-- Canonicalized window contract types and helpers in `js/js/sketchpad/shared.ts`.
+- Canonicalized window contract types and helpers in `js/semio/sketchpad/shared.ts`.
 - Normalized `windowLayout` persistence to JSON strings using `parseWindowLayout` / `stringifyWindowLayout`.
 - Updated `LayoutCanvas` to parse persisted layout state and default layouts consistently.
 - Migrated `Home`, `Docs`, and `Feedback` to persist `windowLayout` as JSON strings.

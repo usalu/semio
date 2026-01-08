@@ -28,7 +28,7 @@ Created `scripts/regen-metabolism.ts` to regenerate the metabolism.zip file with
 
 ```typescript
 import { MetabolismKit } from "../assets/index";
-import { exportKit, importKit } from "../js/js/semio";
+import { exportKit, importKit } from "../semio/semio/semio";
 import { writeFileSync } from "fs";
 import { join } from "path";
 

@@ -1,7 +1,7 @@
 version: 2
 updates:
   - package-ecosystem: "npm"
-    directory: "/js/js"
+    directory: "/js/semio"
     schedule:
       interval: "weekly"
   - package-ecosystem: "npm"

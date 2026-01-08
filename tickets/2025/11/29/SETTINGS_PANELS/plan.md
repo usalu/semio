@@ -173,8 +173,8 @@ test("Home app shows correct settings sections in order", async ({ page }) => {
 
 ## Files Modified
 
-- `js/js/sketchpad/Home.tsx`: Added Home and Sketchpad settings sections
-- `js/js/sketchpad/Kit.tsx`: Added Kit and Sketchpad settings sections
-- `js/js/sketchpad/Design.tsx`: Added Design, Kit, and Sketchpad settings sections
-- `js/js/sketchpad/Type.tsx`: Added Type, Kit, and Sketchpad settings sections
-- `js/js/sketchpad.test.ts`: Added comprehensive tests for settings panel hierarchy
+- `js/semio/sketchpad/Home.tsx`: Added Home and Sketchpad settings sections
+- `js/semio/sketchpad/Kit.tsx`: Added Kit and Sketchpad settings sections
+- `js/semio/sketchpad/Design.tsx`: Added Design, Kit, and Sketchpad settings sections
+- `js/semio/sketchpad/Type.tsx`: Added Type, Kit, and Sketchpad settings sections
+- `js/semio/sketchpad.test.ts`: Added comprehensive tests for settings panel hierarchy

@@ -39,7 +39,7 @@ Created script to regenerate all expected flat designs with current flattening l
 
 ## Files Modified
 
-- `c:\git\semio.tech\semio\js\js\semio.ts` - Enhanced `getConnector()` with fallback logic
+- `c:\git\semio.tech\semio\js\semio\semio.ts` - Enhanced `getConnector()` with fallback logic
 - `c:\git\semio.tech\semio\scripts\fix-ports-in-kit.ps1` - New script to fix connector arrays
 - `c:\git\semio.tech\semio\scripts\assemble-kit.ps1` - Added connector array conversion
 - `c:\git\semio.tech\semio\assets\semio\kit_metabolism.json` - Fixed connectors, restored from git

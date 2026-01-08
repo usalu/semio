@@ -11,5 +11,5 @@
 
 # Changes
 
-- Updated `js/js/sketchpad/elements.tsx` `Window` to scope its subtree via `LevelProvider level="window"` and apply the window background level.
-- Updated `js/js/globals.css` GoldenLayout overrides so header/tabs/window buttons/stack surfaces use the window background token.
+- Updated `js/semio/sketchpad/elements.tsx` `Window` to scope its subtree via `LevelProvider level="window"` and apply the window background level.
+- Updated `js/semio/globals.css` GoldenLayout overrides so header/tabs/window buttons/stack surfaces use the window background token.

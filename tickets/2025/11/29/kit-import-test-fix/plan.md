@@ -14,7 +14,7 @@ The Kit Import Playwright test was failing due to multiple issues:
 
 # Changes
 
-## `js/js/sketchpad/Sketchpad.tsx`
+## `js/semio/sketchpad/Sketchpad.tsx`
 
 - **Fixed critical Y.Map.set() bug**: `Y.Map.set()` returns the Y.Map itself, not the value. Fixed all occurrences where class properties were incorrectly set:
   - `ModelStore`: Fixed `yTags` and `yAttributes`
@@ -29,13 +29,13 @@ The Kit Import Playwright test was failing due to multiple issues:
 
 - **Added batch `semio.kit.addFiles` command**: Accepts both folders and files arrays, creates all in single transaction
 
-## `js/js/sketchpad/Home.tsx`
+## `js/semio/sketchpad/Home.tsx`
 
 - Updated `handleFileInputChange` and `handleDrop` to properly create folder hierarchy from file paths
 - Added `Folder` import from semio
 - Files now correctly reference their parent folder via `folder: { guid }` property
 
-## `js/js/sketchpad.test.ts`
+## `js/semio/sketchpad.test.ts`
 
 - Created "Kit Import Drag and Drop" test that:
   - Imports `metabolism.zip` via file input

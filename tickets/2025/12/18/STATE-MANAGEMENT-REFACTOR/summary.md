@@ -1,4 +1,3 @@
 # Summary
 
-Refactor js/js state management to triadic hooks pattern
-
+Refactor js/semio state management to triadic hooks pattern

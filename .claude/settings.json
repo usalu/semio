@@ -13,16 +13,24 @@
       "Edit(py/engine.py)",
       "Read(py\\engine.py)",
       "Edit(py\\engine.py)",
-      "Read(js/js/semio.ts)",
-      "Edit(js/js/semio.ts)",
+      "Read(js/semio/semio.ts)",
+      "Edit(js/semio/semio.ts)",
       "Read(js\\js\\semio.ts)",
       "Edit(js\\js\\semio.ts)",
-      "Read(js/js/components/**)",
-      "Edit(js/js/components/**)",
+      "Read(js/semio/components/**)",
+      "Edit(js/semio/components/**)",
       "Read(js\\js\\components/**)",
       "Edit(js\\js\\components/**)"
     ],
-    "deny": ["Read(./.env)", "Read(./.env.*)", "Read(./secrets/**)", "Bash(git checkout)", "Bash(npm run dev)", "Bash(npm run build)", "Bash(npx nx)"],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./secrets/**)",
+      "Bash(git checkout)",
+      "Bash(npm run dev)",
+      "Bash(npm run build)",
+      "Bash(npx nx)"
+    ],
     "ask": []
   }
 }

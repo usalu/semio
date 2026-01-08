@@ -16,7 +16,7 @@ The drag and drop feature for placing pieces in the diagram was not working corr
 
 # Changes
 
-## js/js/sketchpad/Design.tsx
+## js/semio/sketchpad/Design.tsx
 
 ### handleDragEnd (diagram drops)
 
@@ -37,7 +37,7 @@ Fixed scene drop placement:
 - Scaling ensures pieces dropped at any scene corner appear in visible diagram area
 - Offset ensures pieces avoid workbench panel overlap
 
-## js/js/sketchpad.test.ts
+## js/semio/sketchpad.test.ts
 
 Extended drag and drop test:
 

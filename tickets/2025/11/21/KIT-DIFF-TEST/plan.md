@@ -18,7 +18,7 @@ All kit diff functions are fully implemented in `semio.ts`:
 Test in `semio.test.ts` with single test containing 4 expects for deep equality validation.
 
 **TypeScript:** 0 errors ✅  
-**Vitest:** Configuration issue prevents test execution ⚠️ (affects ALL tests in js/js/)
+**Vitest:** Configuration issue prevents test execution ⚠️ (affects ALL tests in js/semio/)
 
 ## Accomplished
 
@@ -28,7 +28,7 @@ Test in `semio.test.ts` with single test containing 4 expects for deep equality 
    - Generates comprehensive KitDiff exercising all features
    - Saves three JSON files in `assets/semio/`
 
-2. **Implemented Kit Diff Functions in `js/js/semio.ts`**
+2. **Implemented Kit Diff Functions in `js/semio/semio.ts`**
    - `getKitDiff(before, after)` - Computes diff between two kits
    - `inverseKitDiff(original, appliedDiff)` - Computes inverse diff
    - `applyKitDiff(base, diff)` - Applies diff to kit
@@ -36,7 +36,7 @@ Test in `semio.test.ts` with single test containing 4 expects for deep equality 
    - Generic collection diff helpers for reuse
    - Updated `KitDiffSchema` to include `attributes: AttributesDiffSchema`
 
-3. **Added tests to `js/js/semio.test.ts`**
+3. **Added tests to `js/semio/semio.test.ts`**
    - Single comprehensive test with 4 expectations
    - Uses `deepEqual` for 100% recursive deep equality checking
    - Tests:
@@ -64,7 +64,7 @@ Created reusable helper functions:
 
 ## Known Problem
 
-Vitest configuration issue in `js/js/` prevents test execution. All test files fail with "No test suite found". This is a separate infrastructure issue unrelated to the implementation.
+Vitest configuration issue in `js/semio/` prevents test execution. All test files fail with "No test suite found". This is a separate infrastructure issue unrelated to the implementation.
 
 ## Verification
 
@@ -82,5 +82,5 @@ The implementation is complete and type-safe:
 - ✅ `assets/semio/diff_kit_metabolism.json`
 - ✅ `assets/semio/diff_kit_metabolism_inverted.json`
 - ✅ `assets/semio/kit_metabolism_diffed.json`
-- ✅ `js/js/kit-diff.test.ts`
-- ✅ `js/js/semio.ts` - Implemented getKitDiff, inverseKitDiff, applyKitDiff, mergeKitDiff
+- ✅ `js/semio/kit-diff.test.ts`
+- ✅ `js/semio/semio.ts` - Implemented getKitDiff, inverseKitDiff, applyKitDiff, mergeKitDiff

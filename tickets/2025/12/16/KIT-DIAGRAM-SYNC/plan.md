@@ -19,7 +19,7 @@ Kit diagram had several issues:
 
 # Changes
 
-## js/js/sketchpad/Kit.tsx
+## js/semio/sketchpad/Kit.tsx
 
 - **KitArtifactNode**: Replaced custom icon rendering with TableAvatar component for consistent appearance with table rows
 - **KitArtifactNode**: Changed Handle components from `!w-2 !h-2 !opacity-0` to `!w-0 !h-0 !bg-transparent !border-none` to completely hide edge connection points
@@ -32,7 +32,7 @@ Kit diagram had several issues:
 - **FloatingEdge**: Fixed edge endpoint calculation by offsetting `positionAbsolute` to node center (add NODE_RADIUS to top-left corner position)
 - **ReactFlow**: Added `nodesDraggable={true}` prop to enable node dragging
 
-## js/js/sketchpad.test.ts
+## js/semio/sketchpad.test.ts
 
 - Added "Kit Diagram - Node Icons Match Table Avatars" test: verifies nodes contain TableAvatar elements
 - Added "Kit Diagram - Node Dragging" test: verifies nodes can be dragged and position changes

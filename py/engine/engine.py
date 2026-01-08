@@ -7586,42 +7586,42 @@ def generateSchemas():
     with open("../../openapi/schema.json", "w", encoding="utf-8") as f:
         json.dump(rest.openapi(), f, indent=4)
 
-    with open("../../jsonschema/kit.json", "w", encoding="utf-8") as f:
+    with open("../../semioonschema/kit.json", "w", encoding="utf-8") as f:
         json.dump(
             KitOutput.model_json_schema(schema_generator=OutputGenerateJsonSchema),
             f,
             indent=4,
         )
 
-    with open("../../jsonschema/design-context.json", "w", encoding="utf-8") as f:
+    with open("../../semioonschema/design-context.json", "w", encoding="utf-8") as f:
         json.dump(
             DesignContext.model_json_schema(schema_generator=ContextGenerateJsonSchema),
             f,
             indent=4,
         )
 
-    with open("../../jsonschema/design.json", "w", encoding="utf-8") as f:
+    with open("../../semioonschema/design.json", "w", encoding="utf-8") as f:
         json.dump(
             DesignOutput.model_json_schema(schema_generator=OutputGenerateJsonSchema),
             f,
             indent=4,
         )
 
-    with open("../../jsonschema/design-prediction.json", "w", encoding="utf-8") as f:
+    with open("../../semioonschema/design-prediction.json", "w", encoding="utf-8") as f:
         json.dump(
             DesignPrediction.model_json_schema(schema_generator=PredictionGenerateJsonSchema),
             f,
             indent=4,
         )
 
-    with open("../../jsonschema/type.json", "w", encoding="utf-8") as f:
+    with open("../../semioonschema/type.json", "w", encoding="utf-8") as f:
         json.dump(
             TypeOutput.model_json_schema(schema_generator=OutputGenerateJsonSchema),
             f,
             indent=4,
         )
 
-    with open("../../jsonschema/type-context.json", "w", encoding="utf-8") as f:
+    with open("../../semioonschema/type-context.json", "w", encoding="utf-8") as f:
         json.dump(
             TypeContext.model_json_schema(schema_generator=ContextGenerateJsonSchema),
             f,

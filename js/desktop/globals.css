@@ -1,4 +1,4 @@
-@import "tailwindcss" source("../js");
+@import "tailwindcss" source("../semio");
 @import "@semio/js/globals.css";
 @import "@xyflow/react/dist/style.css";
 

@@ -13,7 +13,7 @@ Additionally, the MDX heading components were registering headings using `childr
 
 # Changes
 
-- `js/js/sketchpad/Docs.tsx`:
+- `js/semio/sketchpad/Docs.tsx`:
   - Added global `headingsState` object with subscribe/notify pattern for event-based updates
   - Updated `useHeadings` hook to use global state with proper subscription
   - Simplified `HeadingsProvider` to use `useHeadings` (global state) instead of local state

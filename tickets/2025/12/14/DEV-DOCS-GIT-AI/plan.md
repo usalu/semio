@@ -14,5 +14,5 @@
 
 - Updated `README.md` Git docs: compressed `main`, parallel `release/rYY.MM-V`, commit message symbol format and work-scale symbols.
 - Updated `README.md` AI docs: current tool choices (Copilot/Windsurf/Claude Code/Cursor/Codex) and model defaults (Claude Opus 4.5, GPT-5.2 Codex).
-- Refactored `README.md` monorepo docs: moved Sketchpad implementation details into `@semio/js`, expanded Ecosystems with workspace + preflight examples, fixed repo path links (`net/`, `py/`, `js/js`, `js/desktop`, `js/play`).
+- Refactored `README.md` monorepo docs: moved Sketchpad implementation details into `@semio/js`, expanded Ecosystems with workspace + preflight examples, fixed repo path links (`net/`, `py/`, `js/semio`, `js/desktop`, `js/play`).
 - Updated `AGENTS.md` with repo-wide Git and AI guidance aligned with README.

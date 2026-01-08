@@ -41,7 +41,7 @@ Tags were simple strings on models, and concepts were simple strings on types/de
 - Added Tag/Concept to SemioEntityKind enum
 - Added relationships: Kit defines Tags/Concepts, Model references Tags/File, Type/Design categorized by Concepts
 
-## js/js/semio.ts
+## js/semio/semio.ts
 
 - Added TagId, ConceptId types and schemas
 - Added TagSchema, TagDiff, TagsDiff with full diffing functions

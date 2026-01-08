@@ -126,10 +126,10 @@ Ensures `null`, `""`, and `undefined` are treated as equivalent during compariso
 
 ### Modified
 
-- `js/js/semio.ts`:
+- `js/semio/semio.ts`:
   - Enhanced `exportKit()` with example file handling
   - Complete rewrite of `areKitsEqual()` with deep comparison
-- `js/js/semio.test.ts`:
+- `js/semio/semio.test.ts`:
   - Updated test to validate structure (guid, name, counts)
   - Deep equality ready for full validation when persistence is complete
 

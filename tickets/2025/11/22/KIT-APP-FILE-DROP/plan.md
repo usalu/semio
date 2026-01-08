@@ -12,7 +12,7 @@ When a zip file is dropped onto the kit app, we need to:
 
 ### 2.1. Current State
 
-- Kit app exists in `js/js/sketchpad/apps/kit/App.tsx`
+- Kit app exists in `js/semio/sketchpad/apps/kit/App.tsx`
 - Kit import functionality exists via `semio.kit.import` command
 - File import functionality exists via file operations
 - Need to add drop zone handling to kit app canvas
@@ -36,20 +36,20 @@ When a zip file is dropped onto the kit app, we need to:
 
 ### 3.1. Changes Made
 
-1. **Added JSZip import** (`js/js/sketchpad/apps/kit/App.tsx`)
+1. **Added JSZip import** (`js/semio/sketchpad/apps/kit/App.tsx`)
    - Imported JSZip library for zip file handling
 
-2. **Created KitDropZone component** (`js/js/sketchpad/apps/kit/App.tsx`)
+2. **Created KitDropZone component** (`js/semio/sketchpad/apps/kit/App.tsx`)
    - Handles drag over, drag leave, and drop events
    - Detects when zip files are being dragged
    - Shows visual feedback during drag
    - Inspects dropped zip files for `.semio/kit.db`
    - Routes to appropriate import logic based on contents
 
-3. **Wrapped App canvas with KitDropZone** (`js/js/sketchpad/apps/kit/App.tsx`)
+3. **Wrapped App canvas with KitDropZone** (`js/semio/sketchpad/apps/kit/App.tsx`)
    - All kit app content is now wrapped in the drop zone
 
-4. **Added i18n translations** (`js/js/sketchpad/locales/en.json`, `js/js/sketchpad/locales/de.json`)
+4. **Added i18n translations** (`js/semio/sketchpad/locales/en.json`, `js/semio/sketchpad/locales/de.json`)
    - `semio.sketchpad.app.kit.dropzone.label`
    - `semio.sketchpad.app.kit.dropzone.description`
 
@@ -78,15 +78,15 @@ When dragging a zip file over the kit app:
 
 ## 4. Files Modified
 
-1. ✅ `js/js/sketchpad/apps/kit/App.tsx`
+1. ✅ `js/semio/sketchpad/apps/kit/App.tsx`
    - Added JSZip import
    - Added KitDropZone component
    - Wrapped canvas with drop zone
 
-2. ✅ `js/js/sketchpad/locales/en.json`
+2. ✅ `js/semio/sketchpad/locales/en.json`
    - Added dropzone labels and descriptions
 
-3. ✅ `js/js/sketchpad/locales/de.json`
+3. ✅ `js/semio/sketchpad/locales/de.json`
    - Added German translations for dropzone
 
 ## 5. Testing Notes

@@ -19,7 +19,7 @@ No previous context.
 
 # Changes
 
-## `js/js/sketchpad.test.ts`
+## `js/semio/sketchpad.test.ts`
 
 Added comprehensive UI-based test `Kit Import Drag and Drop` that:
 

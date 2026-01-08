@@ -13,9 +13,9 @@ Rename `connection.x` and `connection.y` to `connection.u` and `connection.v` to
 
 ### 2.1 TypeScript (@semio/js)
 
-- [x] `js/js/semio.ts` - Schema, types, and domain logic
-- [x] `js/js/sketchpad/App.tsx` - ConnectionStore CRDT layer
-- [x] `js/js/sketchpad/apps/design/App.tsx` - Design app components
+- [x] `js/semio/semio.ts` - Schema, types, and domain logic
+- [x] `js/semio/sketchpad/App.tsx` - ConnectionStore CRDT layer
+- [x] `js/semio/sketchpad/apps/design/App.tsx` - Design app components
 
 ### 2.2 .NET (Semio.cs, Semio.Grasshopper.cs)
 
@@ -154,9 +154,9 @@ Since we don't care about backwards compatibility (per AGENTS.md), we proceed wi
 
 ### Files Modified (13 total):
 
-1. `js/js/semio.ts` - Core domain logic
-2. `js/js/sketchpad/App.tsx` - ConnectionStore implementation
-3. `js/js/sketchpad/apps/design/App.tsx` - Design app UI and logic
+1. `js/semio/semio.ts` - Core domain logic
+2. `js/semio/sketchpad/App.tsx` - ConnectionStore implementation
+3. `js/semio/sketchpad/apps/design/App.tsx` - Design app UI and logic
 4. `sql/sqlite/schema.sql` - Database schema
 5. `sql/sqlite/insert.sql` - Insert statements
 6. `net/Semio/Semio.cs` - .NET implementation

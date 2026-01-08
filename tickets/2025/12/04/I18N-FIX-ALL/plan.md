@@ -35,11 +35,11 @@ The i18n validation script (`scripts/i18n.ts`) was reporting 290 errors and 237 
   - Skip warnings for keys outside semio.sketchpad namespace
   - Accept either `.label` or `.label.normal` for UI element validation
 
-## `js/js/sketchpad/locales/en.json`
+## `js/semio/sketchpad/locales/en.json`
 
 - Added 360+ missing translation entries generated from UI element IDs
 
-## `js/js/sketchpad/locales/de.json`
+## `js/semio/sketchpad/locales/de.json`
 
 - Added 430+ German translations synchronized from English
 - Properly translated common terms using the German dictionary

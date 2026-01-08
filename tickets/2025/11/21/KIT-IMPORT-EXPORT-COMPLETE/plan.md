@@ -69,9 +69,9 @@ Comprehensive roundtrip test:
 
 ## Files Modified
 
-- `js/js/semio.ts` - Core implementation (~900 lines added/modified)
-- `js/js/semio.test.ts` - Roundtrip test
-- `js/js/index.ts` - Export public API
+- `js/semio/semio.ts` - Core implementation (~900 lines added/modified)
+- `js/semio/semio.test.ts` - Roundtrip test
+- `js/semio/index.ts` - Export public API
 
 ## Technical Notes
 

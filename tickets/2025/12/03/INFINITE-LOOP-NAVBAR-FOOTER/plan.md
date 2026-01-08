@@ -58,6 +58,6 @@ useEffect(() => {
 
 ## Files Modified
 
-- `js/js/sketchpad/Type.tsx` - Fixed `TypeAppFooter`
-- `js/js/sketchpad/Design.tsx` - Fixed `DesignAppFooter`
-- `js/js/sketchpad.test.ts` - Added navbar/footer/console error checks to Type and Design tests
+- `js/semio/sketchpad/Type.tsx` - Fixed `TypeAppFooter`
+- `js/semio/sketchpad/Design.tsx` - Fixed `DesignAppFooter`
+- `js/semio/sketchpad.test.ts` - Added navbar/footer/console error checks to Type and Design tests

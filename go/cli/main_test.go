@@ -90,7 +90,7 @@ func TestAnalyzeCommand(t *testing.T) {
 }
 
 func TestAnalyzeFile(t *testing.T) {
-	result := repo.ToolAnalyze("js/js/semio.ts", nil)
+	result := repo.ToolAnalyze("js/semio/semio.ts", nil)
 	if result.Error != "" {
 		t.Errorf("ToolAnalyze file returned error: %s", result.Error)
 	}
@@ -271,7 +271,7 @@ func TestFileCreateMoveDelete(t *testing.T) {
 // #region Section Tests
 
 func TestSectionListCommand(t *testing.T) {
-	result := repo.ToolSectionList("js/js/semio.ts")
+	result := repo.ToolSectionList("js/semio/semio.ts")
 	if result.Error != "" {
 		t.Errorf("ToolSectionList returned error: %s", result.Error)
 	}
@@ -294,12 +294,12 @@ func TestSectionListCommand(t *testing.T) {
 		}
 	}
 	if !foundHeader {
-		t.Error("Expected to find 'Header' section in js/js/semio.ts")
+		t.Error("Expected to find 'Header' section in js/semio/semio.ts")
 	}
 }
 
 func TestSectionTreeCommand(t *testing.T) {
-	result := repo.ToolSectionTree("js/js/semio.ts")
+	result := repo.ToolSectionTree("js/semio/semio.ts")
 	if result.Error != "" {
 		t.Errorf("ToolSectionTree returned error: %s", result.Error)
 	}
@@ -310,7 +310,7 @@ func TestSectionTreeCommand(t *testing.T) {
 // #region Definition Tests
 
 func TestDefinitionListCommand(t *testing.T) {
-	result := repo.ToolDefinitionList("js/js/semio.ts")
+	result := repo.ToolDefinitionList("js/semio/semio.ts")
 	if result.Error != "" {
 		t.Errorf("ToolDefinitionList returned error: %s", result.Error)
 	}

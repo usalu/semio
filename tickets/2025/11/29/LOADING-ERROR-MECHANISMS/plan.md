@@ -16,13 +16,13 @@ Initial implementation of loading and error mechanisms for the Sketchpad app.
 - Added `LoaderIcon` (Loader2) for loading spinners
 - Added `ArrowLeftIcon` for back navigation
 
-## js/js/sketchpad/elements.tsx
+## js/semio/sketchpad/elements.tsx
 
 - Added `Spinner` component with size variants (small, medium, large)
 - Added `NotFound` component for displaying not-found pages with parent navigation
 - Added `LoadingRow` component for displaying loading items in tables/lists
 
-## js/js/sketchpad/Home.tsx
+## js/semio/sketchpad/Home.tsx
 
 - Added `LoadingKit` port for tracking kits being imported
 - Added `loadingKits` to `HomeState` to track importing kits
@@ -31,7 +31,7 @@ Initial implementation of loading and error mechanisms for the Sketchpad app.
 - Updated table rows to include loading kits with spinner and disabled state
 - Loading kits display a spinner and are disabled until import completes
 
-## js/js/sketchpad/Kit.tsx
+## js/semio/sketchpad/Kit.tsx
 
 - Imported `NotFound` component
 - Updated kit not-found handling to use `NotFound` component with link to home

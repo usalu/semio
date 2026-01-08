@@ -153,11 +153,11 @@ export type KitId = { guid: Guid };
 
 #### App Stores
 
-- `js/js/sketchpad/apps/design/App.tsx` - DesignAppStore
-- `js/js/sketchpad/apps/type/App.tsx` - TypeAppStore
-- `js/js/sketchpad/apps/quality/App.tsx` - QualityAppStore
-- `js/js/sketchpad/apps/kit/App.tsx` - KitAppStore
-- `js/js/sketchpad/apps/home/App.tsx` - HomeStore
+- `js/semio/sketchpad/apps/design/App.tsx` - DesignAppStore
+- `js/semio/sketchpad/apps/type/App.tsx` - TypeAppStore
+- `js/semio/sketchpad/apps/quality/App.tsx` - QualityAppStore
+- `js/semio/sketchpad/apps/kit/App.tsx` - KitAppStore
+- `js/semio/sketchpad/apps/home/App.tsx` - HomeStore
 
 #### Commands
 
@@ -283,26 +283,26 @@ export type KitId = { guid: Guid };
 
 #### Steps:
 
-1. **DesignAppStore** (`js/js/sketchpad/apps/design/App.tsx`)
+1. **DesignAppStore** (`js/semio/sketchpad/apps/design/App.tsx`)
    - Update selection types (pieces, connections, connectors now use IDs)
    - Update command contexts
    - Update all commands
 
-2. **TypeAppStore** (`js/js/sketchpad/apps/type/App.tsx`)
+2. **TypeAppStore** (`js/semio/sketchpad/apps/type/App.tsx`)
    - Update connector references
    - Update model handling
    - Update commands
 
-3. **KitAppStore** (`js/js/sketchpad/apps/kit/App.tsx`)
+3. **KitAppStore** (`js/semio/sketchpad/apps/kit/App.tsx`)
    - Update file/folder operations
    - Update author management
    - Update quality references
 
-4. **QualityAppStore** (`js/js/sketchpad/apps/quality/App.tsx`)
+4. **QualityAppStore** (`js/semio/sketchpad/apps/quality/App.tsx`)
    - Update benchmark references
    - Update quality usage tracking
 
-5. **HomeStore** (`js/js/sketchpad/apps/home/App.tsx`)
+5. **HomeStore** (`js/semio/sketchpad/apps/home/App.tsx`)
    - Update kit references
 
 ### 2.4. Phase 4: Commands

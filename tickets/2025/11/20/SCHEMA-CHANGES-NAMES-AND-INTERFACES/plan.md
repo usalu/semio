@@ -41,9 +41,9 @@ This plan covers two major schema changes:
 
 ### TypeScript/JavaScript
 
-- `js/js/semio.ts` - Core domain logic and types
-- `js/js/sketchpad/apps/*/App.tsx` - All app stores that work with these models
-- `js/js/elements/**/*.tsx` - UI components that display/edit these properties
+- `js/semio/semio.ts` - Core domain logic and types
+- `js/semio/sketchpad/apps/*/App.tsx` - All app stores that work with these models
+- `js/semio/elements/**/*.tsx` - UI components that display/edit these properties
 
 ### .NET
 
@@ -82,7 +82,7 @@ This plan covers two major schema changes:
 
 ### Phase 2: TypeScript Implementation
 
-1. Update `js/js/semio.ts`
+1. Update `js/semio/semio.ts`
    - Add `InterfaceId` type
    - Add `Interface` model with properties
    - Add `InterfaceInput`, `InterfaceDiff`, etc.
@@ -93,7 +93,7 @@ This plan covers two major schema changes:
    - Update all getDiff, applyDiff, inverseDiff functions
    - Add getters for port compatibility resolution
 
-2. Update stores in `js/js/sketchpad/App.tsx` and app files
+2. Update stores in `js/semio/sketchpad/App.tsx` and app files
    - Update KitStore to manage ports
    - Add port-related commands
    - Update DesignAppStore, TypeAppStore to handle new properties

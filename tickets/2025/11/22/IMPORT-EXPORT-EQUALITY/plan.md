@@ -123,8 +123,8 @@ Imported kit:
 
 ## Files Modified
 
-- `js/js/semio.ts` - Lines 4369, 4643, 4695, 4710, plus 13 attribute locations
-- `js/js/test-roundtrip.mjs` - Added normalization and detailed logging
+- `js/semio/semio.ts` - Lines 4369, 4643, 4695, 4710, plus 13 attribute locations
+- `js/semio/test-roundtrip.mjs` - Added normalization and detailed logging
 
 ## Technical Debt
 

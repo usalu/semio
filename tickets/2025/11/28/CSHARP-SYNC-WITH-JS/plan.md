@@ -9,7 +9,7 @@ C# codebase was out of date with JS schema. Key issues:
 
 # Plan
 
-1. ✅ Analyze JS test structure in `js/js/semio.test.ts`
+1. ✅ Analyze JS test structure in `js/semio/semio.test.ts`
 2. ✅ Identify JSON fixtures in `assets/semio/`
 3. ✅ Fix C# schema: Parent fields → TypeId?/DesignId?
 4. ✅ Fix Connection/ConnectionDiff: X/Y → U/V (float?)

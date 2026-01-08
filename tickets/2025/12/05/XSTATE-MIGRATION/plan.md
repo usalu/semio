@@ -30,7 +30,7 @@ XState will replace:
 
 ## **1.1 Install XState Dependencies**
 
-Add to `js/js/package.json`:
+Add to `js/semio/package.json`:
 
 ```json
 "xstate": "^5.19.0",
@@ -654,10 +654,10 @@ Performance features built into machines:
 
 ### Files Created/Modified
 
-- `js/js/package.json` - Added xstate@^5.20.0, @xstate/react@^6.0.0
-- `js/js/sketchpad/machines.ts` - ~1900 lines of XState machines
-- `js/js/sketchpad/shared.ts` - XState types and Y.js bridge utilities
-- `js/js/sketchpad/Sketchpad.tsx` - XState actor integration and hooks
+- `js/semio/package.json` - Added xstate@^5.20.0, @xstate/react@^6.0.0
+- `js/semio/sketchpad/machines.ts` - ~1900 lines of XState machines
+- `js/semio/sketchpad/shared.ts` - XState types and Y.js bridge utilities
+- `js/semio/sketchpad/Sketchpad.tsx` - XState actor integration and hooks
 
 ### Machine Summary
 
@@ -741,8 +741,8 @@ Enabling XState actors with `useSelector` caused significant performance regress
 
 ### Files Modified
 
-- `js/js/sketchpad/machines.ts` - All app machines refactored
-- `js/js/sketchpad/Design.tsx` - Hooks use stores, actor disabled
+- `js/semio/sketchpad/machines.ts` - All app machines refactored
+- `js/semio/sketchpad/Design.tsx` - Hooks use stores, actor disabled
 
 ### Tests
 

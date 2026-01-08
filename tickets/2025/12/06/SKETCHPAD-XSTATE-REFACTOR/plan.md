@@ -123,7 +123,7 @@ Added manual registration of all app configs since they're not in the auto-disco
 
 ### Fixed Build Errors
 
-1. **docs/tsconfig.json**: Changed extends from `@semio/js/tsconfig.json` to `../js/tsconfig.json`
+1. **docs/tsconfig.json**: Changed extends from `@semio/js/tsconfig.json` to `../semio/tsconfig.json`
 2. **js/package.json**: Added `"./globals.css": "./globals.css"` to exports
 
 ## Test Status

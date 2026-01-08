@@ -30,7 +30,7 @@ Problems identified:
 - Changed `piece` and `connector` in connections to objects with `guid`
 - Moved `connections` inside the design (where they belong)
 
-## 2. Added validation tests to `js/js/semio.test.ts`
+## 2. Added validation tests to `js/semio/semio.test.ts`
 
 - Added import for `InvalidKit`, `validateSemioKit`, `hasSemioErrors`
 - Added "Validation" test suite with 3 tests:

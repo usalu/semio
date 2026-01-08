@@ -4,7 +4,7 @@ No prior work on docs app E2E tests.
 
 # Plan
 
-1. Create E2E tests for the docs app in `js/js/sketchpad.test.ts`
+1. Create E2E tests for the docs app in `js/semio/sketchpad.test.ts`
 2. Test content loading (page title, description, cards)
 3. Test workbench panel shows all documentation sections
 4. Test workbench panel shows pages within sections
@@ -13,7 +13,7 @@ No prior work on docs app E2E tests.
 
 # Changes
 
-## `js/js/sketchpad.test.ts`
+## `js/semio/sketchpad.test.ts`
 
 Added `test.describe("Docs")` block with 5 new tests:
 

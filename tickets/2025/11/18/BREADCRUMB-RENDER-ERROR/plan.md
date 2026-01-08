@@ -39,9 +39,9 @@ The breadcrumb component is likely trying to render a translation object `{label
 
 **Investigation:**
 
-1. Added diagnostic logs to `useLabel` function in `js/js/i18n.ts` ✓
+1. Added diagnostic logs to `useLabel` function in `js/semio/i18n.ts` ✓
    - Result: `useLabel` correctly returns strings, not objects
-2. Added diagnostic logs to breadcrumb dropdown rendering in `js/js/sketchpad/elements.tsx` ✓
+2. Added diagnostic logs to breadcrumb dropdown rendering in `js/semio/sketchpad/elements.tsx` ✓
    - Result: Found that some dropdown items have `label` as an object with 6 keys instead of React elements
    - Items affected: First few items in dropdowns (likely `kitKindItems` and `artifactKinds`)
    - String labels work fine (e.g., "New Kit", "+ Create Kit")

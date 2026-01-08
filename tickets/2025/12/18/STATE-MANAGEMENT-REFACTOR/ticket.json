@@ -1,6 +1,6 @@
 {
-  "title": "Refactor js/js state management to triadic hooks pattern",
-  "prompt": "Analyze js/js codebase for state management inconsistencies and refactor to triadic hooks pattern",
+  "title": "Refactor js/semio state management to triadic hooks pattern",
+  "prompt": "Analyze js/semio codebase for state management inconsistencies and refactor to triadic hooks pattern",
   "llm": "gpt-5.2-codex",
   "status": "finished",
   "author": "uelisaluz",

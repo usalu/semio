@@ -1,6 +1,6 @@
 {
   "title": "VSCODE-FIX-COMMAND",
-  "prompt": "\"Fix the VSCode fix command that fails with: Failed to fix violation: Error: Command failed: c:\\\\git\\\\semio.tech\\\\semio\\\\bin\\\\repo.exe fix js/js/playwright.config.ts. Also enable individual violation fixing.\"",
+  "prompt": "\"Fix the VSCode fix command that fails with: Failed to fix violation: Error: Command failed: c:\\\\git\\\\semio.tech\\\\semio\\\\bin\\\\repo.exe fix js/semio/playwright.config.ts. Also enable individual violation fixing.\"",
   "llm": "claude-opus-4-5",
   "status": "closed",
   "author": "uelisaluz",

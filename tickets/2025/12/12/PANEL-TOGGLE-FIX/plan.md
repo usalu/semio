@@ -17,9 +17,9 @@ User reported that pressing the panel toggle (left and right panel group) in the
 
 Fixed `togglePanel` signature mismatch in three locations where the function was being called with `(origin, panelKey)` but defined to only accept `(panelKey)`:
 
-- `@/js/js/sketchpad/Sketchpad.tsx:13568` - `useHomeCommands().togglePanel`
-- `@/js/js/sketchpad/Type.tsx:455` - `useTypeAppCommands().togglePanel`
-- `@/js/js/sketchpad/Kit.tsx:1057` - `useKitAppCommands().togglePanel`
+- `@/js/semio/sketchpad/Sketchpad.tsx:13568` - `useHomeCommands().togglePanel`
+- `@/js/semio/sketchpad/Type.tsx:455` - `useTypeAppCommands().togglePanel`
+- `@/js/semio/sketchpad/Kit.tsx:1057` - `useKitAppCommands().togglePanel`
 
 All three now correctly accept `(_origin: string, panelKey: keyof PanelVisibility)`.
 
@@ -40,7 +40,7 @@ This causes `togglePanel` to silently return without doing anything.
 
 ## Test Addition
 
-Added `"Panel Group Toggle"` test to `@/js/js/sketchpad.test.ts` that verifies:
+Added `"Panel Group Toggle"` test to `@/js/semio/sketchpad.test.ts` that verifies:
 
 - Right panel group toggle (`semio.sketchpad.navbar.panelToggle.right`) exists and is clickable
 - Left panel group toggle (`semio.sketchpad.navbar.panelToggle.workbench`) exists and is clickable

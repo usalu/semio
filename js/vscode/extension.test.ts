@@ -191,7 +191,7 @@ suite("Cache Mechanism Test Suite", function () {
       console.log("Skipping: repo.exe not found - cache requires repo analyze");
       return;
     }
-    const relativePath = "js/js/semio.ts";
+    const relativePath = "js/semio/semio.ts";
     const cachePath = getCachePath(root, relativePath);
     if (fs.existsSync(cachePath)) {
       fs.unlinkSync(cachePath);

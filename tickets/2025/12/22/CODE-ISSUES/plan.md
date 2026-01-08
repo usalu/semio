@@ -26,7 +26,7 @@ The code.json report showed 497 issues including:
 - Updated `scanTypescriptForbiddenTerminology()` with allowed patterns for package names, URLs, and TypeScript keywords
 - Skip template expressions in dynamic imports (can't be statically analyzed)
 
-## js/js/sketchpad/elements.tsx
+## js/semio/sketchpad/elements.tsx
 
 - Fixed duplicate Footer region
 - Fixed ActionGroupup typo to ActionGroup

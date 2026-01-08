@@ -62,7 +62,7 @@ Changed approach to validate existing infrastructure:
 
 ## Files Modified
 
-- `js/js/sketchpad.test.ts`: Added "Design Drag and Drop" test at line 999
+- `js/semio/sketchpad.test.ts`: Added "Design Drag and Drop" test at line 999
   - Validates workbench panel shows 118 draggable type avatars
   - Verifies avatars have `aria-roledescription="draggable"` attribute
   - Validates existing piece plane properties (origin.z=0, xAxis=1,0,0, yAxis=0,1,0)

@@ -50,8 +50,6 @@ models:
         resolver: true
       definitions:
         resolver: true
-      metrics:
-        resolver: true
   Folder:
     model:
       - github.com/usalu/semio/go/repo.Folder
@@ -74,8 +72,6 @@ models:
         resolver: true
       definitions:
         resolver: true
-      metrics:
-        resolver: true
   Definition:
     model:
       - github.com/usalu/semio/go/repo.Definition
@@ -87,8 +83,6 @@ models:
       section:
         resolver: true
       range:
-        resolver: true
-      metrics:
         resolver: true
   Contributor:
     model:
@@ -109,8 +103,6 @@ models:
       commits:
         resolver: true
       contributions:
-        resolver: true
-      metrics:
         resolver: true
   Ticket:
     model:
@@ -142,8 +134,6 @@ models:
         resolver: true
       files:
         resolver: true
-      metrics:
-        resolver: true
   Policy:
     model:
       - github.com/usalu/semio/go/repo.Policy
@@ -169,27 +159,6 @@ models:
   ViolationPriority:
     model:
       - github.com/usalu/semio/go/repo.ViolationPriority
-  RepoMetrics:
-    model:
-      - github.com/usalu/semio/go/repo.RepoMetrics
-  BundleMetrics:
-    model:
-      - github.com/usalu/semio/go/repo.BundleMetrics
-  FolderMetrics:
-    model:
-      - github.com/usalu/semio/go/repo.FolderMetrics
-  FileMetrics:
-    model:
-      - github.com/usalu/semio/go/repo.FileMetrics
-  SectionMetrics:
-    model:
-      - github.com/usalu/semio/go/repo.SectionMetrics
-  DefinitionMetrics:
-    model:
-      - github.com/usalu/semio/go/repo.DefinitionMetrics
-  ContributorMetrics:
-    model:
-      - github.com/usalu/semio/go/repo.ContributorMetrics
   ContributorIcons:
     model:
       - github.com/usalu/semio/go/repo.ContributorIcons
@@ -208,12 +177,6 @@ models:
   CheckpointDefinitionContrib:
     model:
       - github.com/usalu/semio/go/repo.CheckpointDefinitionContrib
-  CheckpointMetrics:
-    model:
-      - github.com/usalu/semio/go/repo.CheckpointMetrics
-  TicketMetrics:
-    model:
-      - github.com/usalu/semio/go/repo.TicketMetrics
   TicketCheckpoint:
     model:
       - github.com/usalu/semio/go/repo.TicketCheckpoint

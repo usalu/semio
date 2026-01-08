@@ -21,7 +21,7 @@ export default defineConfig(async () => {
   return {
     resolve: {
       alias: {
-        "@semio/js": path.resolve(__dirname, "../js"),
+        "@semio/js": path.resolve(__dirname, "../semio"),
       },
     },
     plugins: [
@@ -41,7 +41,7 @@ export default defineConfig(async () => {
         name: "serve-wasm-and-assets",
         enforce: "pre" as const,
         configureServer(server: any) {
-          const jsPublicPath = path.resolve(__dirname, "../js/public");
+          const jsPublicPath = path.resolve(__dirname, "../semio/public");
           const assetsPath = path.resolve(__dirname, "../../assets");
           server.middlewares.use((req: any, res: any, next: any) => {
             if (req.url?.endsWith(".wasm")) {

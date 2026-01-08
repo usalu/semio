@@ -35,7 +35,7 @@ The ID system integrates with **7 major subsystems**:
 
 ### 1. Internationalization (i18n)
 
-**Location:** `js/js/sketchpad/locales/{lang}.json`
+**Location:** `js/semio/sketchpad/locales/{lang}.json`
 
 **Mechanism:**
 
@@ -75,7 +75,7 @@ The ID system integrates with **7 major subsystems**:
 
 ### 2. Tooltips
 
-**Location:** `js/js/sketchpad/elements.tsx`
+**Location:** `js/semio/sketchpad/elements.tsx`
 
 **Components:**
 
@@ -121,7 +121,7 @@ function DescriptionTooltipContent({ id }: { id: string }) {
 
 ### 3. Hotkeys
 
-**Location:** `js/js/sketchpad/App.tsx` (SketchpadStore)
+**Location:** `js/semio/sketchpad/App.tsx` (SketchpadStore)
 
 **Mechanism:**
 
@@ -161,7 +161,7 @@ const handleHotkeyClick = () => {
 
 ### 4. Command System (Origin Tracking)
 
-**Location:** `js/js/sketchpad/App.tsx` (AppStore, KitDiffAppStore)
+**Location:** `js/semio/sketchpad/App.tsx` (AppStore, KitDiffAppStore)
 
 **Mechanism:**
 
@@ -220,7 +220,7 @@ async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
 
 ### 5. Tutorial Recording
 
-**Location:** `js/js/sketchpad/tutorials/`
+**Location:** `js/semio/sketchpad/tutorials/`
 
 **Mechanism:**
 
@@ -269,7 +269,7 @@ const useTutorialCommandInterceptor = () => {
 
 ### 6. Testing (E2E)
 
-**Location:** `js/js/e2e/**/*.spec.ts`
+**Location:** `js/semio/e2e/**/*.spec.ts`
 
 **Mechanism:**
 
@@ -391,7 +391,7 @@ interface BaseInputProps {
 ### ✅ Fully Implemented
 
 1. **i18n System**
-   - Translation files: `js/js/sketchpad/locales/{en,de}.json`
+   - Translation files: `js/semio/sketchpad/locales/{en,de}.json`
    - Validation script: `scripts/i18n.ts`
    - Hook: `useLabel(id)`
    - Auto-resolution in components
@@ -410,12 +410,12 @@ interface BaseInputProps {
 4. **E2E Testing**
    - ID-based selectors
    - Stable test suite
-   - Example: `js/js/e2e/kit/design/drag-and-drop.spec.ts`
+   - Example: `js/semio/e2e/kit/design/drag-and-drop.spec.ts`
 
 ### ⚠️ Partially Implemented
 
 1. **Tutorial Recording**
-   - Infrastructure exists: `js/js/sketchpad/tutorials/`
+   - Infrastructure exists: `js/semio/sketchpad/tutorials/`
    - Recording events with origins
    - Playback mechanism
    - ⚠️ Not all apps integrate recording yet

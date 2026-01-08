@@ -11,7 +11,7 @@ The GoldenLayout v2 configuration was using the deprecated `width` property (num
 
 ## Fix
 
-Changed the defaultLayout configuration in `js/js/sketchpad/apps/design/App.tsx`:
+Changed the defaultLayout configuration in `js/semio/sketchpad/apps/design/App.tsx`:
 
 ```typescript
 // Before

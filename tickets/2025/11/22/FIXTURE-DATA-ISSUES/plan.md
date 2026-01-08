@@ -161,10 +161,10 @@ Failing tests:
 
 ## Files Modified
 
-- `js/js/semio.ts`:
+- `js/semio/semio.ts`:
   - Made `SideSchema.connector` optional
   - Updated `sqliteToKit` to read more Type fields
   - Changed Type import to use conditional property assignment
-- `js/js/semio.test.ts`:
+- `js/semio/semio.test.ts`:
   - Added connection filtering in test setup
   - Imported `KitSchema` for validation

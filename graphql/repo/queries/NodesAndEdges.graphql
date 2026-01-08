@@ -1,0 +1,41 @@
+query NodesAndEdges {
+  repo {
+    id
+    bundles {
+      id
+    }
+    folders {
+      id
+    }
+    files {
+      id
+    }
+    tickets {
+      id
+    }
+    contributors {
+      id
+    }
+    violations {
+      id
+    }
+  }
+  bundles {
+    id
+  }
+  folders {
+    id
+  }
+  files {
+    id
+  }
+  tickets {
+    id
+  }
+  contributors {
+    id
+  }
+  violations {
+    id
+  }
+}

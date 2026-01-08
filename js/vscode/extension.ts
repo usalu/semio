@@ -29,8 +29,8 @@ import * as jsonc from "jsonc-parser";
 import * as path from "path";
 import { promisify } from "util";
 import * as vscode from "vscode";
-import { DocumentType, graphql } from "./codegen/gql";
-import { TicketStatus } from "./codegen/graphql";
+import { DocumentType, graphql } from "./generated/gql";
+import { TicketStatus } from "./generated/graphql";
 
 const execAsync = promisify(exec);
 
@@ -112,7 +112,6 @@ const TicketsDocument = graphql(`
         model commit
         date { created finished }
         checkpoints { prompt model author { github name } commit date { created } }
-        metrics { checkpoints files lines { added removed } }
       }
     }
   }
@@ -133,7 +132,6 @@ const ContributorsDocument = graphql(`
         id github name emails
         links { name url }
         icons { avatar avatarRound github }
-        metrics { commits tickets bundles folders files sections definitions lines }
       }
     }
   }
@@ -167,36 +165,29 @@ const CodebaseDocument = graphql(`
       id name path
       bundles {
         id name root sourceRoot projectType tags uri
-        metrics { folders files sections definitions lines violations }
       }
       folders {
         id path uri
-        metrics { files lines violations }
       }
       files {
         id path uri
-        metrics { sections definitions lines }
         sections {
           id name path
           range { start { line } end { line } }
-          metrics { definitions lines violations }
         }
         definitions {
           id name kind
           range { start { line } end { line } }
-          metrics { definitions lines violations }
         }
       }
       contributors {
         id github name emails
         links { name url }
-        metrics { commits tickets bundles folders files sections definitions lines }
       }
       tickets {
         id year month day slug path uri prompt summary status commit
         author { github name }
         checkpoints { commit }
-        metrics { checkpoints files lines { added removed } }
       }
       policies {
         id name description scopes
@@ -505,7 +496,7 @@ async function loadCodebase(): Promise<Codebase | null> {
       return null;
     }
 
-    const query = `query { repo { id name path bundles { id name root sourceRoot projectType tags uri metrics { folders files sections definitions lines violations } } folders { id path uri metrics { files lines violations } } files { id path uri metrics { sections definitions lines } sections { id name path range { start { line } end { line } } metrics { definitions lines violations } } definitions { id name kind range { start { line } end { line } } metrics { definitions lines violations } } } contributors { id github name emails links { name url } metrics { commits tickets bundles folders files sections definitions lines } } tickets { id year month day slug path uri prompt summary status commit author { github name } checkpoints { commit } metrics { checkpoints files lines { added removed } } } policies { id name description scopes violationKinds { id priority autofixable reason solution } } } }`;
+    const query = `query { repo { id name path bundles { id name root sourceRoot projectType tags uri } folders { id path uri } files { id path uri sections { id name path range { start { line } end { line } } } definitions { id name kind range { start { line } end { line } } } } contributors { id github name emails links { name url } } tickets { id year month day slug path uri prompt summary status commit author { github name } checkpoints { commit } } policies { id name description scopes violationKinds { id priority autofixable reason solution } } } }`;
     const escapedQuery = query.replace(/"/g, '\\"');
     const fullCommand = `"${command}" graphql "${escapedQuery}"`;
 
@@ -2027,7 +2018,7 @@ class ContributorsProvider implements vscode.TreeDataProvider<ContributorTreeIte
               files: [],
               tickets: [],
               commits: [],
-              lines: { added: c.metrics.lines, removed: 0 },
+              lines: { added: 0, removed: 0 },
             },
           }));
         } else {
@@ -2348,7 +2339,7 @@ class CodebaseBundleItem extends vscode.TreeItem {
     this.iconPath = new vscode.ThemeIcon("package");
     this.contextValue = "codebaseBundle";
     this.description = bundle.projectType || "";
-    this.tooltip = `${bundle.id}\nFiles: ${bundle.metrics.files}\nDefinitions: ${bundle.metrics.definitions}`;
+    this.tooltip = bundle.id;
     this.command = { command: "semio.navigateToBundle", title: "Navigate to Bundle", arguments: [bundle.root] };
   }
 }
@@ -2375,7 +2366,7 @@ class CodebaseFileItem extends vscode.TreeItem {
     super(displayName, hasSectionsOrDefs ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
     this.iconPath = new vscode.ThemeIcon("file-code");
     this.contextValue = "codebaseFile";
-    this.tooltip = `${file.path}\nSections: ${file.metrics.sections}\nDefinitions: ${file.metrics.definitions}`;
+    this.tooltip = file.path;
     this.command = { command: "semio.navigateToFile", title: "Navigate to File", arguments: [file.path] };
   }
 }
@@ -2390,7 +2381,7 @@ class CodebaseSectionItem extends vscode.TreeItem {
     super(displayName, hasChildren ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
     this.iconPath = new vscode.ThemeIcon("symbol-namespace");
     this.contextValue = "codebaseSection";
-    this.tooltip = `Lines: ${section.metrics.lines}`;
+    this.tooltip = section.name;
     this.command = { command: "semio.navigateToSection", title: "Navigate to Section", arguments: [file.uri + "#" + section.name] };
   }
 }
@@ -2404,7 +2395,7 @@ class CodebaseDefinitionItem extends vscode.TreeItem {
     super(name, vscode.TreeItemCollapsibleState.None);
     this.iconPath = new vscode.ThemeIcon("symbol-function");
     this.contextValue = "codebaseDefinition";
-    this.tooltip = `Lines: ${definition.metrics.lines}`;
+    this.tooltip = definition.name;
     this.command = { command: "semio.navigateToDefinition", title: "Navigate to Definition", arguments: [fileUri + "#" + definition.name] };
   }
 }
@@ -2474,7 +2465,7 @@ class CodebaseProvider implements vscode.TreeDataProvider<CodebaseTreeItem> {
         case "file": {
           const file = codebase.files.find((f) => f.path === name || f.id === name);
           if (file) {
-            const hasSectionsOrDefs = file.metrics.sections > 0 || file.metrics.definitions > 0;
+            const hasSectionsOrDefs = (file.sections?.length ?? 0) > 0 || (file.definitions?.length ?? 0) > 0;
             items.push(new CodebaseFileItem(file, file.path.split("/").pop() || file.path, hasSectionsOrDefs));
           }
           break;
@@ -2496,7 +2487,8 @@ class CodebaseProvider implements vscode.TreeDataProvider<CodebaseTreeItem> {
     for (const section of rootSections) {
       const sectionName = section.name || section.path.split("#").pop() || section.path;
       const hasChildren = file.sections.some((s) => s.path.startsWith(section.path + "#") && s.path !== section.path);
-      items.push(new CodebaseSectionItem(section, file, sectionName, hasChildren || section.metrics.definitions > 0));
+      const hasDefinitions = file.definitions.some((d) => d.id.startsWith(section.path + "§"));
+      items.push(new CodebaseSectionItem(section, file, sectionName, hasChildren || hasDefinitions));
     }
 
     const fileDefinitions = file.definitions.filter((d) => {
@@ -2524,7 +2516,8 @@ class CodebaseProvider implements vscode.TreeDataProvider<CodebaseTreeItem> {
     for (const child of childSections) {
       const childName = child.name || child.path.split("#").pop() || child.path;
       const hasGrandChildren = file.sections.some((s) => s.path.startsWith(child.path + "#") && s.path !== child.path);
-      items.push(new CodebaseSectionItem(child, file, childName, hasGrandChildren || child.metrics.definitions > 0));
+      const hasDefinitions = file.definitions.some((d) => d.id.startsWith(child.path + "§"));
+      items.push(new CodebaseSectionItem(child, file, childName, hasGrandChildren || hasDefinitions));
     }
 
     const sectionDefs = file.definitions.filter((d) => {
