@@ -1,0 +1,627 @@
+{
+  "title": "SIMPLIFY-TICKETS",
+  "prompt": "Simplify the ticket mechanism to remove checkpoints and iterations. All computation that was performed on a checkpoint (affected sections with line metrics and the list of affected definitions.) should be performed when finishing a ticket. Add a summary field and files as necessary arguments for the ticket close command.",
+  "llm": "claude-opus-4",
+  "status": "closed",
+  "author": "Ueli Saluz",
+  "dates": {
+    "created": "2026-01-08T22:46:58Z",
+    "finished": "2026-01-08T23:16:25Z"
+  },
+  "commit": "79da2464ffc4c4a0a0a4f490e3f140b38a57ffe3",
+  "summary": "Simplify ticket mechanism by removing checkpoints and iterations, and requiring summary/files on finish",
+  "files": {
+    "updated": [
+      {
+        "path": "go/repo/repo.go",
+        "lines": {
+          "added": 215,
+          "removed": 413
+        },
+        "sections": {
+          "Codebase": {
+            "range": {
+              "start": {
+                "line": 3990,
+                "column": 0
+              },
+              "end": {
+                "line": 4731,
+                "column": 0
+              }
+            },
+            "definitions": [
+              "BuildCodebaseBundles",
+              "BuildCodebaseTickets",
+              "result"
+            ],
+            "lines": {
+              "added": 20,
+              "removed": 0
+            }
+          },
+          "Commands": {
+            "range": {
+              "start": {
+                "line": 6314,
+                "column": 0
+              },
+              "end": {
+                "line": 8181,
+                "column": 0
+              }
+            },
+            "definitions": [
+              "TicketClose",
+              "ToolTicketClose",
+              "exportTickets"
+            ],
+            "lines": {
+              "added": 28,
+              "removed": 0
+            }
+          },
+          "Commands/SQLite Export": {
+            "range": {
+              "start": {
+                "line": 7739,
+                "column": 0
+              },
+              "end": {
+                "line": 8179,
+                "column": 0
+              }
+            },
+            "definitions": [
+              "exportTickets"
+            ],
+            "lines": {
+              "added": 14,
+              "removed": 0
+            }
+          },
+          "Contributors": {
+            "range": {
+              "start": {
+                "line": 5733,
+                "column": 0
+              },
+              "end": {
+                "line": 6173,
+                "column": 0
+              }
+            },
+            "definitions": [
+              "ListContributors"
+            ],
+            "lines": {
+              "added": 9,
+              "removed": 0
+            }
+          },
+          "GraphQL Types": {
+            "range": {
+              "start": {
+                "line": 47,
+                "column": 0
+              },
+              "end": {
+                "line": 514,
+                "column": 0
+              }
+            },
+            "definitions": [
+              "TicketSectionMetrics",
+              "TicketFileMetricsEntry",
+              "TicketFilesResult",
+              "GetSummary",
+              "GetFiles",
+              "TicketCloseInput"
+            ],
+            "lines": {
+              "added": 26,
+              "removed": 0
+            }
+          },
+          "GraphQL Types/GraphQL Input Types": {
+            "range": {
+              "start": {
+                "line": 475,
+                "column": 0
+              },
+              "end": {
+                "line": 512,
+                "column": 0
+              }
+            },
+            "definitions": [
+              "TicketCloseInput"
+            ],
+            "lines": {
+              "added": 6,
+              "removed": 0
+            }
+          },
+          "Schema Builder": {
+            "range": {
+              "start": {
+                "line": 8427,
+                "column": 0
+              },
+              "end": {
+                "line": 9614,
+                "column": 0
+              }
+            },
+            "definitions": [
+              "buildSchema",
+              "files"
+            ],
+            "lines": {
+              "added": 12,
+              "removed": 0
+            }
+          },
+          "Tickets": {
+            "range": {
+              "start": {
+                "line": 4733,
+                "column": 0
+              },
+              "end": {
+                "line": 5731,
+                "column": 0
+              }
+            },
+            "definitions": [
+              "CreateTicket",
+              "ComputeTicketFiles",
+              "computeAffectedSections",
+              "affectedDefs",
+              "FinishTicket"
+            ],
+            "lines": {
+              "added": 110,
+              "removed": 0
+            }
+          },
+          "Types": {
+            "range": {
+              "start": {
+                "line": 516,
+                "column": 0
+              },
+              "end": {
+                "line": 2148,
+                "column": 0
+              }
+            },
+            "definitions": [
+              "TicketData"
+            ],
+            "lines": {
+              "added": 10,
+              "removed": 0
+            }
+          }
+        }
+      },
+      {
+        "path": "graphql/repo/schema.graphql",
+        "lines": {
+          "added": 2,
+          "removed": 43
+        },
+        "sections": {
+          "Inputs": {
+            "range": {
+              "start": {
+                "line": 85,
+                "column": 0
+              },
+              "end": {
+                "line": 122,
+                "column": 0
+              }
+            },
+            "definitions": [
+              "TicketCloseInput"
+            ],
+            "lines": {
+              "added": 2,
+              "removed": 0
+            }
+          }
+        }
+      },
+      {
+        "path": "go/cli/main.go",
+        "lines": {
+          "added": 16,
+          "removed": 56
+        },
+        "sections": {
+          "Commands": {
+            "range": {
+              "start": {
+                "line": 87,
+                "column": 0
+              },
+              "end": {
+                "line": 948,
+                "column": 0
+              }
+            },
+            "definitions": [
+              "ticketListCmd",
+              "ticketCloseCmd",
+              "init"
+            ],
+            "lines": {
+              "added": 16,
+              "removed": 0
+            }
+          },
+          "Commands/Ticket Commands": {
+            "range": {
+              "start": {
+                "line": 375,
+                "column": 0
+              },
+              "end": {
+                "line": 535,
+                "column": 0
+              }
+            },
+            "definitions": [
+              "ticketListCmd",
+              "ticketCloseCmd",
+              "init"
+            ],
+            "lines": {
+              "added": 16,
+              "removed": 0
+            }
+          }
+        }
+      },
+      {
+        "path": "go/mcp/main.go",
+        "lines": {
+          "added": 12,
+          "removed": 67
+        },
+        "sections": {
+          "Handlers": {
+            "range": {
+              "start": {
+                "line": 443,
+                "column": 0
+              },
+              "end": {
+                "line": 1320,
+                "column": 0
+              }
+            },
+            "definitions": [
+              "ticketClose"
+            ],
+            "lines": {
+              "added": 9,
+              "removed": 0
+            }
+          }
+        }
+      },
+      {
+        "path": "js/vscode/extension.ts",
+        "lines": {
+          "added": 16,
+          "removed": 41
+        },
+        "sections": {
+          "Commands": {
+            "range": {
+              "start": {
+                "line": 2840,
+                "column": 0
+              },
+              "end": {
+                "line": 3395,
+                "column": 0
+              }
+            },
+            "definitions": [
+              "registerCommands",
+              "resolvedTicket",
+              "summary",
+              "fileUris"
+            ],
+            "lines": {
+              "added": 15,
+              "removed": 0
+            }
+          },
+          "Utilities": {
+            "range": {
+              "start": {
+                "line": 405,
+                "column": 0
+              },
+              "end": {
+                "line": 779,
+                "column": 0
+              }
+            },
+            "definitions": [
+              "loadCodebase",
+              "query"
+            ],
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          }
+        }
+      },
+      {
+        "path": "AGENTS.md",
+        "lines": {
+          "added": 30,
+          "removed": 60
+        },
+        "sections": {
+          "Codebase": {
+            "range": {
+              "start": {
+                "line": 1494,
+                "column": 0
+              },
+              "end": {
+                "line": 4094,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 3,
+              "removed": 0
+            }
+          },
+          "Codebase/📁 js/vscode/": {
+            "range": {
+              "start": {
+                "line": 3930,
+                "column": 0
+              },
+              "end": {
+                "line": 3973,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          },
+          "Codebase/📁 js/vscode//Tickets": {
+            "range": {
+              "start": {
+                "line": 3965,
+                "column": 0
+              },
+              "end": {
+                "line": 3968,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          },
+          "Codebase/📄 go/repo/repo.go": {
+            "range": {
+              "start": {
+                "line": 3990,
+                "column": 0
+              },
+              "end": {
+                "line": 3999,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 2,
+              "removed": 0
+            }
+          },
+          "Software Requirements Specification": {
+            "range": {
+              "start": {
+                "line": 19,
+                "column": 0
+              },
+              "end": {
+                "line": 355,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 9,
+              "removed": 0
+            }
+          },
+          "Software Requirements Specification/Business Logic": {
+            "range": {
+              "start": {
+                "line": 21,
+                "column": 0
+              },
+              "end": {
+                "line": 300,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 9,
+              "removed": 0
+            }
+          },
+          "Software Requirements Specification/Business Logic/Ticket": {
+            "range": {
+              "start": {
+                "line": 57,
+                "column": 0
+              },
+              "end": {
+                "line": 82,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 9,
+              "removed": 0
+            }
+          },
+          "Using TypeScript fallback": {
+            "range": {
+              "start": {
+                "line": 528,
+                "column": 0
+              },
+              "end": {
+                "line": 1418,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 18,
+              "removed": 0
+            }
+          },
+          "Using TypeScript fallback/Testing": {
+            "range": {
+              "start": {
+                "line": 726,
+                "column": 0
+              },
+              "end": {
+                "line": 1418,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 18,
+              "removed": 0
+            }
+          },
+          "Using TypeScript fallback/Testing/Ticket System": {
+            "range": {
+              "start": {
+                "line": 847,
+                "column": 0
+              },
+              "end": {
+                "line": 1046,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 18,
+              "removed": 0
+            }
+          },
+          "Using TypeScript fallback/Testing/Ticket System/Frontmatter Format": {
+            "range": {
+              "start": {
+                "line": 888,
+                "column": 0
+              },
+              "end": {
+                "line": 921,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 14,
+              "removed": 0
+            }
+          },
+          "Using TypeScript fallback/Testing/Ticket System/Ignore Flag": {
+            "range": {
+              "start": {
+                "line": 922,
+                "column": 0
+              },
+              "end": {
+                "line": 930,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          },
+          "Using TypeScript fallback/Testing/Ticket System/Script Usage": {
+            "range": {
+              "start": {
+                "line": 936,
+                "column": 0
+              },
+              "end": {
+                "line": 988,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          },
+          "Using TypeScript fallback/Testing/Ticket System/Workflow": {
+            "range": {
+              "start": {
+                "line": 931,
+                "column": 0
+              },
+              "end": {
+                "line": 935,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          }
+        }
+      },
+      {
+        "path": "README.md",
+        "lines": {
+          "added": 5,
+          "removed": 6
+        },
+        "sections": {
+          "📒 Tickets and reports": {
+            "range": {
+              "start": {
+                "line": 763,
+                "column": 0
+              },
+              "end": {
+                "line": 905,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 5,
+              "removed": 0
+            }
+          }
+        }
+      }
+    ]
+  }
+}

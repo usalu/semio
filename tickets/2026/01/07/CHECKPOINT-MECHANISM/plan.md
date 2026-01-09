@@ -14,28 +14,33 @@
 # Changes
 
 ## GraphQL Schema (graphql/repo/schema.graphql)
-- Removed FileListInput type (was used by old TicketCreateInput)
+
+- Removed FileListInput type (was used by old TicketOpenInput)
 - TicketCheckpointInput retained with required `files` parameter
-- TicketCreateInput no longer has files field
+- TicketOpenInput no longer has files field
 
 ## Go Repo (go/repo/repo.go)
+
 - ticketMetricsType: changed "iterations" field to "checkpoints"
 - Added "sections" and "definitions" fields to ticketMetricsType
 - Updated metrics resolver to compute checkpoints/sections/definitions counts from ticket data
 
 ## Go CLI (go/cli/main.go)
+
 - Renamed ticketProgressCmd to ticketCheckpointCmd
-- Removed --file flag from ticketCreateCmd (files no longer accepted on create)
+- Removed --file flag from ticketOpenCmd (files no longer accepted on create)
 - ticketCheckpointCmd now requires --file flag (can be repeated)
 - Updated init() to register ticketCheckpointCmd instead of ticketProgressCmd
 
 ## Go MCP (go/mcp/main.go)
-- ticket_create tool no longer has files parameter
+
+- ticket_open tool no longer has files parameter
 - Renamed ticket_progress tool to ticket_checkpoint
 - ticket_checkpoint requires files array
 - Updated handler function names and implementation
 
 ## VSCode Extension (js/vscode/extension.ts)
+
 - Renamed TicketIteration type to TicketCheckpointData
 - Updated TicketFrontmatter.iterations to checkpoints
 - Updated GraphQL query mappings (2 locations)
@@ -45,7 +50,9 @@
 - Command now prompts for files instead of prompt text
 
 ## VSCode Extension Tests (js/vscode/extension.test.ts)
+
 - Updated EXPECTED_COMMANDS: ticketProgress -> ticketCheckpoint
 
 ## Build Fixes
+
 - Fixed empty go/repo/repo_test.go (added package declaration)

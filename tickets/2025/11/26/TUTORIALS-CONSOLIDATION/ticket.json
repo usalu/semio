@@ -1,12 +1,12 @@
 {
   "llm": "claude-sonnet-4",
   "author": "usalu",
-  "checkpoints": [],
   "title": "tutorials-consolidation",
   "dates": {
     "created": "2025-11-26T00:00:00Z"
   },
   "commit": "0000000000000000000000000000000000000000",
   "prompt": "Migration from old format",
-  "status": "finished"
+  "status": "finished",
+  "summary": "Migrated ticket"
 }

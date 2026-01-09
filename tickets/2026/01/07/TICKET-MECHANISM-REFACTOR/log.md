@@ -31,16 +31,16 @@ Starting implementation...
 
 #### CLI Changes
 
-- Updated `ticketCreateCmd` to use `<title>` instead of `<slug>`
+- Updated `ticketOpenCmd` to use `<title>` instead of `<slug>`
 - Changed `--model` flag to `--llm`
 - Added `--plan` flag for optional plan file path
 
 #### MCP Changes
 
-- Updated `ticket_create` tool with `title`, `llm`, `planPath` parameters
+- Updated `ticket_open` tool with `title`, `llm`, `planPath` parameters
 
 #### GraphQL Changes
 
-- Updated `TicketCreateInput` with title, prompt, llm, planPath fields
+- Updated `TicketOpenInput` with title, prompt, llm, planPath fields
 - Added `title` and `llm` fields to Ticket type
-- Updated resolver for ticketCreate mutation
+- Updated resolver for ticketOpen mutation

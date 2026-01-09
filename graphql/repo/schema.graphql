@@ -64,9 +64,8 @@ type Query {
 
 type Mutation {
   fix(scope: String): FixResult!
-  ticketCreate(input: TicketCreateInput!): Ticket
-  ticketCheckpoint(input: TicketCheckpointInput!): Ticket
-  ticketFinish(input: TicketFinishInput!): Ticket
+  ticketOpen(input: TicketOpenInput!): Ticket
+  ticketClose(input: TicketCloseInput!): Ticket
   ticketReopen(input: TicketReopenInput!): Ticket
   contributorAdd(input: ContributorAddInput!): Contributor
   contributorRemove(github: String!): Boolean!
@@ -85,29 +84,19 @@ type Mutation {
 
 # #region Inputs
 
-input TicketCreateInput {
+input TicketOpenInput {
   title: String!
   prompt: String!
   llm: String!
-  planPath: String
 }
 
-input TicketCheckpointInput {
+input TicketCloseInput {
   year: Int!
   month: Int!
   day: Int!
   slug: String!
-  prompt: String!
-  model: String
+  summary: String!
   files: [String!]!
-}
-
-input TicketFinishInput {
-  year: Int!
-  month: Int!
-  day: Int!
-  slug: String!
-  summary: String
 }
 
 input TicketReopenInput {
@@ -115,6 +104,8 @@ input TicketReopenInput {
   month: Int!
   day: Int!
   slug: String!
+  prompt: String!
+  llm: String!
 }
 
 input ContributorAddInput {
@@ -328,7 +319,6 @@ type Ticket implements Node {
   llm: String
   commit: String
   date: TicketDate!
-  checkpoints: [TicketCheckpoint!]!
   bundles: [Bundle!]!
   files: [File!]!
 }
@@ -341,36 +331,6 @@ enum TicketStatus {
 type TicketDate {
   created: DateTime!
   finished: DateTime
-}
-
-type TicketCheckpoint {
-  prompt: String!
-  model: String
-  author: Contributor
-  commit: String
-  date: CheckpointDate!
-  files: [String!]!
-  sections: [CheckpointSectionContrib!]!
-  definitions: [CheckpointDefinitionContrib!]!
-}
-
-type CheckpointDate {
-  created: DateTime!
-}
-
-type CheckpointSectionContrib {
-  file: String!
-  section: String!
-  range: Range!
-  metrics: LineMetrics!
-}
-
-type CheckpointDefinitionContrib {
-  file: String!
-  section: String!
-  definition: String!
-  range: Range!
-  metrics: LineMetrics!
 }
 
 type TicketBundleContrib {

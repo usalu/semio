@@ -92,7 +92,7 @@
         "title": "semio: Check Policy"
       },
       {
-        "command": "semio.ticketCreate",
+        "command": "semio.ticketOpen",
         "title": "semio: Create Ticket"
       },
       {
@@ -104,7 +104,7 @@
         "title": "semio: Progress Ticket"
       },
       {
-        "command": "semio.ticketFinish",
+        "command": "semio.ticketClose",
         "title": "semio: Finish Ticket",
         "icon": "$(issue-closed)"
       },
@@ -379,7 +379,7 @@
       ],
       "view/item/context": [
         {
-          "command": "semio.ticketFinish",
+          "command": "semio.ticketClose",
           "when": "view == semio.tickets && viewItem == ticketOpen",
           "group": "inline"
         },
@@ -389,7 +389,7 @@
           "group": "inline"
         },
         {
-          "command": "semio.ticketFinish",
+          "command": "semio.ticketClose",
           "when": "view == semio.contributors && viewItem == ticketOpen",
           "group": "inline"
         },

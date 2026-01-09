@@ -96,14 +96,13 @@ func main() {
 		policyCheck,
 	)
 	s.AddTool(
-		mcp.NewTool("ticket_create",
-			mcp.WithDescription("Create a new development ticket"),
+		mcp.NewTool("ticket_open",
+			mcp.WithDescription("Open a new development ticket"),
 			mcp.WithString("title", mcp.Required(), mcp.Description("Ticket title (will be uppercased and kebab-cased for folder name)")),
 			mcp.WithString("prompt", mcp.Required(), mcp.Description("Ticket prompt/description")),
 			mcp.WithString("llm", mcp.Required(), mcp.Description("Large-Language-Model (LLM) used for this ticket")),
-			mcp.WithString("planPath", mcp.Description("Path to existing plan markdown file (optional)")),
 		),
-		ticketCreate,
+		ticketOpen,
 	)
 	s.AddTool(
 		mcp.NewTool("ticket_list",
@@ -125,27 +124,16 @@ func main() {
 		ticketRead,
 	)
 	s.AddTool(
-		mcp.NewTool("ticket_checkpoint",
-			mcp.WithDescription("Create a checkpoint on a ticket with affected file changes"),
+		mcp.NewTool("ticket_close",
+			mcp.WithDescription("Close a ticket with summary and affected file changes"),
 			mcp.WithNumber("year", mcp.Required(), mcp.Description("Ticket year")),
 			mcp.WithNumber("month", mcp.Required(), mcp.Description("Ticket month")),
 			mcp.WithNumber("day", mcp.Required(), mcp.Description("Ticket day")),
 			mcp.WithString("slug", mcp.Required(), mcp.Description("Ticket slug")),
-			mcp.WithString("prompt", mcp.Required(), mcp.Description("Checkpoint prompt")),
-			mcp.WithString("model", mcp.Required(), mcp.Description("Large-Language-Model (LLM) used")),
+			mcp.WithString("summary", mcp.Required(), mcp.Description("Summary of the ticket work")),
 			mcp.WithArray("files", mcp.Description("Files to include (at least one required)")),
 		),
-		ticketCheckpoint,
-	)
-	s.AddTool(
-		mcp.NewTool("ticket_finish",
-			mcp.WithDescription("Finish a ticket"),
-			mcp.WithNumber("year", mcp.Required(), mcp.Description("Ticket year")),
-			mcp.WithNumber("month", mcp.Required(), mcp.Description("Ticket month")),
-			mcp.WithNumber("day", mcp.Required(), mcp.Description("Ticket day")),
-			mcp.WithString("slug", mcp.Required(), mcp.Description("Ticket slug")),
-		),
-		ticketFinish,
+		ticketClose,
 	)
 	s.AddTool(
 		mcp.NewTool("contributor_add",
@@ -590,7 +578,7 @@ func policyCheck(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 	return textResult(result), nil
 }
 
-func ticketCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func ticketOpen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	title, err := requireStringArg(args, "title")
 	if err != nil {
@@ -604,20 +592,13 @@ func ticketCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 	if err != nil {
 		return nil, err
 	}
-	planPath, _, err := getStringArg(args, "planPath")
-	if err != nil {
-		return nil, err
-	}
 	input := map[string]interface{}{
 		"title":  title,
 		"prompt": prompt,
 		"llm":    llm,
 	}
-	if planPath != "" {
-		input["planPath"] = planPath
-	}
-	query := `mutation TicketCreate($input: TicketCreateInput!) {
-		ticketCreate(input: $input) {
+	query := `mutation TicketOpen($input: TicketOpenInput!) {
+		ticketOpen(input: $input) {
 			id
 			slug
 			prompt
@@ -728,7 +709,7 @@ func ticketRead(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	return textResult(result), nil
 }
 
-func ticketCheckpoint(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func ticketClose(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	year, err := requireIntArg(args, "year")
 	if err != nil {
@@ -746,11 +727,7 @@ func ticketCheckpoint(ctx context.Context, request mcp.CallToolRequest) (*mcp.Ca
 	if err != nil {
 		return nil, err
 	}
-	prompt, err := requireStringArg(args, "prompt")
-	if err != nil {
-		return nil, err
-	}
-	model, _, err := getStringArg(args, "model")
+	summary, err := requireStringArg(args, "summary")
 	if err != nil {
 		return nil, err
 	}
@@ -767,61 +744,21 @@ func ticketCheckpoint(ctx context.Context, request mcp.CallToolRequest) (*mcp.Ca
 		}
 	}
 	input := map[string]interface{}{
-		"year":   year,
-		"month":  month,
-		"day":    day,
-		"slug":   slug,
-		"prompt": prompt,
-		"files":  files,
+		"year":    year,
+		"month":   month,
+		"day":     day,
+		"slug":    slug,
+		"summary": summary,
+		"files":   files,
 	}
-	if model != "" {
-		input["model"] = model
-	}
-	query := `mutation TicketCheckpoint($input: TicketCheckpointInput!) {
-		ticketCheckpoint(input: $input) {
+	query := `mutation TicketClose($input: TicketCloseInput!) {
+		ticketClose(input: $input) {
 			id
 			slug
-			prompt
 			status
 		}
 	}`
 	result, err := gql(query, map[string]interface{}{"input": input})
-	if err != nil {
-		return nil, err
-	}
-	return textResult(result), nil
-}
-
-func ticketFinish(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	args := getArgs(request)
-	year, err := requireIntArg(args, "year")
-	if err != nil {
-		return nil, err
-	}
-	month, err := requireIntArg(args, "month")
-	if err != nil {
-		return nil, err
-	}
-	day, err := requireIntArg(args, "day")
-	if err != nil {
-		return nil, err
-	}
-	slug, err := requireStringArg(args, "slug")
-	if err != nil {
-		return nil, err
-	}
-	query := `mutation TicketFinish($input: TicketFinishInput!) {
-		ticketFinish(input: $input) {
-			id
-			slug
-			status
-		}
-	}`
-	result, err := gql(query, map[string]interface{}{
-		"input": map[string]interface{}{
-			"year": year, "month": month, "day": day, "slug": slug,
-		},
-	})
 	if err != nil {
 		return nil, err
 	}

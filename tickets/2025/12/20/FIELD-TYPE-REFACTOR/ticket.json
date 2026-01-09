@@ -1,6 +1,6 @@
 {
-  "title": "Introduce Field\u003cT\u003e type and useDesignAppField helper to reduce hook boilerplate (Smell 1/2)",
-  "prompt": "Introduce Field\u003cT\u003e type and useDesignAppField helper to reduce hook boilerplate",
+  "title": "Introduce Field<T> type and useDesignAppField helper to reduce hook boilerplate (Smell 1/2)",
+  "prompt": "Introduce Field<T> type and useDesignAppField helper to reduce hook boilerplate",
   "llm": "claude-opus-4-5",
   "status": "finished",
   "author": "uelisaluz",
@@ -8,5 +8,6 @@
     "created": "2025-12-20T13:03:02.551Z",
     "finished": "2025-12-20T13:38:37.874Z"
   },
-  "commit": "4ff6fd77dee713af972c27bd3761939be4302c80"
+  "commit": "4ff6fd77dee713af972c27bd3761939be4302c80",
+  "summary": "Migrated ticket"
 }

@@ -7,5 +7,6 @@
   "dates": {
     "created": "2026-01-05T15:54:12Z"
   },
-  "commit": "6e9b79f94f6dfd840100fa1a245e71b8d3c192f2"
+  "commit": "6e9b79f94f6dfd840100fa1a245e71b8d3c192f2",
+  "summary": "Migrated ticket"
 }

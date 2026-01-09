@@ -8,5 +8,6 @@
     "created": "2025-12-16T16:58:02.879Z",
     "finished": "2025-12-16T17:08:05.259Z"
   },
-  "commit": "ffdd590ecaed3c4afbe8387585b6a36bc873408c"
+  "commit": "ffdd590ecaed3c4afbe8387585b6a36bc873408c",
+  "summary": "Migrated ticket"
 }

@@ -82,7 +82,7 @@ Add missing documentation entries for:
 ## Validation Checklist
 
 - `npm run preflight` runs without errors (or docs updated to reflect `preflight.ts` expectations).
-- All documented commands work: `repo analyze`, `repo fix`, `repo ticket create`, etc.
+- All documented commands work: `repo analyze`, `repo fix`, `repo ticket open`, etc.
 - No references to `scripts/log.ts` remain.
 - No references to non-existent files remain in docs.
 - Ticket status uses consistent `finished` terminology.

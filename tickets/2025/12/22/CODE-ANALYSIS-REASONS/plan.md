@@ -1,6 +1,6 @@
 # Previously
 
-- New ticket created for extending code analysis issue metadata.
+- New ticket opend for extending code analysis issue metadata.
 
 # Plan
 

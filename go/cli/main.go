@@ -379,28 +379,22 @@ var ticketCmd = &cobra.Command{
 	Short: "Ticket management commands",
 }
 
-var ticketCreateCmd = &cobra.Command{
-	Use:   "create <title>",
-	Short: "Create a new ticket",
-	Args:  cobra.ExactArgs(1),
+var ticketOpenCmd = &cobra.Command{
+	Use:   "open <title> <prompt> <llm>",
+	Short: "Open a new ticket",
+	Args:  cobra.ExactArgs(3),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		prompt, _ := cmd.Flags().GetString("prompt")
-		llm, _ := cmd.Flags().GetString("llm")
-		planPath, _ := cmd.Flags().GetString("plan")
 		input := map[string]interface{}{
 			"title":  args[0],
-			"prompt": prompt,
-			"llm":    llm,
-		}
-		if planPath != "" {
-			input["planPath"] = planPath
+			"prompt": args[1],
+			"llm":    args[2],
 		}
 		variables := map[string]interface{}{
 			"input": input,
 		}
 		return printGQL(`
-			mutation TicketCreate($input: TicketCreateInput!) {
-				ticketCreate(input: $input) {
+			mutation TicketOpen($input: TicketOpenInput!) {
+				ticketOpen(input: $input) {
 					id
 					slug
 					status
@@ -444,7 +438,7 @@ var ticketListCmd = &cobra.Command{
 						path
 						uri
 						date { created finished }
-						metrics { checkpoints files sections definitions lines { added removed } }
+						metrics { files sections definitions lines { added removed } }
 					}
 				}
 			}
@@ -452,73 +446,33 @@ var ticketListCmd = &cobra.Command{
 	},
 }
 
-var ticketCheckpointCmd = &cobra.Command{
-	Use:   "checkpoint <year> <month> <day> <slug>",
-	Short: "Create a checkpoint on a ticket with file changes",
-	Args:  cobra.ExactArgs(4),
+var ticketCloseCmd = &cobra.Command{
+	Use:   "close <YYYY/MM/DD/SLUG> <summary> <files...>",
+	Short: "Close a ticket with summary and files",
+	Args:  cobra.MinimumNArgs(3),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		prompt, _ := cmd.Flags().GetString("prompt")
-		model, _ := cmd.Flags().GetString("model")
-		files, _ := cmd.Flags().GetStringSlice("file")
-		if len(files) == 0 {
-			return fmt.Errorf("at least one file is required (--file)")
+		// Parse YYYY/MM/DD/SLUG path format
+		path := args[0]
+		summary := args[1]
+		files := args[2:]
+		year, month, day, slug, err := parseTicketPath(path)
+		if err != nil {
+			return err
 		}
-		year, _ := strconv.Atoi(args[0])
-		month, _ := strconv.Atoi(args[1])
-		day, _ := strconv.Atoi(args[2])
 		input := map[string]interface{}{
-			"year":   year,
-			"month":  month,
-			"day":    day,
-			"slug":   args[3],
-			"prompt": prompt,
-			"files":  files,
-		}
-		if model != "" {
-			input["model"] = model
+			"year":    year,
+			"month":   month,
+			"day":     day,
+			"slug":    slug,
+			"summary": summary,
+			"files":   files,
 		}
 		variables := map[string]interface{}{
 			"input": input,
 		}
 		return printGQL(`
-			mutation TicketCheckpoint($input: TicketCheckpointInput!) {
-				ticketCheckpoint(input: $input) {
-					id
-					slug
-					status
-					prompt
-					model
-					date { created finished }
-				}
-			}
-		`, variables)
-	},
-}
-
-var ticketFinishCmd = &cobra.Command{
-	Use:   "finish <year> <month> <day> <slug>",
-	Short: "Finish a ticket",
-	Args:  cobra.ExactArgs(4),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		summary, _ := cmd.Flags().GetString("summary")
-		year, _ := strconv.Atoi(args[0])
-		month, _ := strconv.Atoi(args[1])
-		day, _ := strconv.Atoi(args[2])
-		input := map[string]interface{}{
-			"year":  year,
-			"month": month,
-			"day":   day,
-			"slug":  args[3],
-		}
-		if summary != "" {
-			input["summary"] = summary
-		}
-		variables := map[string]interface{}{
-			"input": input,
-		}
-		return printGQL(`
-			mutation TicketFinish($input: TicketFinishInput!) {
-				ticketFinish(input: $input) {
+			mutation TicketClose($input: TicketCloseInput!) {
+				ticketClose(input: $input) {
 					id
 					slug
 					status
@@ -530,19 +484,24 @@ var ticketFinishCmd = &cobra.Command{
 }
 
 var ticketReopenCmd = &cobra.Command{
-	Use:   "reopen <year> <month> <day> <slug>",
+	Use:   "reopen <YYYY/MM/DD/SLUG> <prompt> <llm>",
 	Short: "Reopen a ticket",
-	Args:  cobra.ExactArgs(4),
+	Args:  cobra.ExactArgs(3),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		year, _ := strconv.Atoi(args[0])
-		month, _ := strconv.Atoi(args[1])
-		day, _ := strconv.Atoi(args[2])
+		// Parse YYYY/MM/DD/SLUG path format
+		path := args[0]
+		year, month, day, slug, err := parseTicketPath(path)
+		if err != nil {
+			return err
+		}
 		variables := map[string]interface{}{
 			"input": map[string]interface{}{
-				"year": year,
-				"month": month,
-				"day": day,
-				"slug": args[3],
+				"year":   year,
+				"month":  month,
+				"day":    day,
+				"slug":   slug,
+				"prompt": args[1],
+				"llm":    args[2],
 			},
 		}
 		return printGQL(`
@@ -557,18 +516,61 @@ var ticketReopenCmd = &cobra.Command{
 	},
 }
 
+// parseTicketPath parses a ticket path in YYYY/MM/DD/SLUG format
+func parseTicketPath(path string) (year, month, day int, slug string, err error) {
+	parts := filepath.SplitList(path)
+	if len(parts) == 1 {
+		// Try splitting by forward slash
+		parts = nil
+		for _, p := range filepath.SplitList(path) {
+			parts = append(parts, p)
+		}
+		// Manual split by /
+		parts = splitPath(path)
+	}
+	if len(parts) != 4 {
+		return 0, 0, 0, "", fmt.Errorf("invalid ticket path format, expected YYYY/MM/DD/SLUG, got: %s", path)
+	}
+	year, err = strconv.Atoi(parts[0])
+	if err != nil {
+		return 0, 0, 0, "", fmt.Errorf("invalid year in path: %s", parts[0])
+	}
+	month, err = strconv.Atoi(parts[1])
+	if err != nil {
+		return 0, 0, 0, "", fmt.Errorf("invalid month in path: %s", parts[1])
+	}
+	day, err = strconv.Atoi(parts[2])
+	if err != nil {
+		return 0, 0, 0, "", fmt.Errorf("invalid day in path: %s", parts[2])
+	}
+	slug = parts[3]
+	return
+}
+
+// splitPath splits a path by / or \
+func splitPath(path string) []string {
+	var parts []string
+	current := ""
+	for _, c := range path {
+		if c == '/' || c == '\\' {
+			if current != "" {
+				parts = append(parts, current)
+				current = ""
+			}
+		} else {
+			current += string(c)
+		}
+	}
+	if current != "" {
+		parts = append(parts, current)
+	}
+	return parts
+}
+
 func init() {
-	ticketCreateCmd.Flags().String("prompt", "", "Ticket prompt")
-	ticketCreateCmd.Flags().String("llm", "", "LLM used")
-	ticketCreateCmd.Flags().String("plan", "", "Path to plan markdown file (optional)")
-	ticketCheckpointCmd.Flags().String("prompt", "", "Checkpoint prompt")
-	ticketCheckpointCmd.Flags().String("model", "", "Model used")
-	ticketCheckpointCmd.Flags().StringSlice("file", nil, "Files to include (required)")
-	ticketFinishCmd.Flags().String("summary", "", "Ticket summary")
-	ticketCmd.AddCommand(ticketCreateCmd)
+	ticketCmd.AddCommand(ticketOpenCmd)
 	ticketCmd.AddCommand(ticketListCmd)
-	ticketCmd.AddCommand(ticketCheckpointCmd)
-	ticketCmd.AddCommand(ticketFinishCmd)
+	ticketCmd.AddCommand(ticketCloseCmd)
 	ticketCmd.AddCommand(ticketReopenCmd)
 }
 

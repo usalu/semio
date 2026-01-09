@@ -34,6 +34,18 @@ import { TicketStatus } from "./generated/graphql";
 
 const execAsync = promisify(exec);
 
+const LLM_OPTIONS = [
+  "claude-opus-4-5",
+  "claude-opus-4",
+  "claude-sonnet-4-5",
+  "claude-sonnet-4",
+  "claude-haiku-4-5",
+  "gemini-3-pro",
+  "gemini-3-flash",
+  "gpt-5-2",
+  "gpt-5-mini",
+];
+
 // #endregion Imports
 
 // #region urql Client
@@ -111,7 +123,6 @@ const TicketsDocument = graphql(`
         author { github name }
         model commit
         date { created finished }
-        checkpoints { prompt model author { github name } commit date { created } }
       }
     }
   }
@@ -187,7 +198,6 @@ const CodebaseDocument = graphql(`
       tickets {
         id year month day slug path uri prompt summary status commit
         author { github name }
-        checkpoints { commit }
       }
       policies {
         id name description scopes
@@ -205,7 +215,6 @@ type Repo = DocumentType<typeof RepoDocument>["repo"];
 type Bundle = Repo["bundles"][number];
 
 type Ticket = DocumentType<typeof TicketsDocument>["repo"]["tickets"][number];
-type Checkpoint = NonNullable<Ticket["checkpoints"]>[number];
 
 type Policy = DocumentType<typeof PoliciesDocument>["repo"]["policies"][number];
 type ViolationKind = Policy["violationKinds"][number];
@@ -496,7 +505,7 @@ async function loadCodebase(): Promise<Codebase | null> {
       return null;
     }
 
-    const query = `query { repo { id name path bundles { id name root sourceRoot projectType tags uri } folders { id path uri } files { id path uri sections { id name path range { start { line } end { line } } } definitions { id name kind range { start { line } end { line } } } } contributors { id github name emails links { name url } } tickets { id year month day slug path uri prompt summary status commit author { github name } checkpoints { commit } } policies { id name description scopes violationKinds { id priority autofixable reason solution } } } }`;
+    const query = `query { repo { id name path bundles { id name root sourceRoot projectType tags uri } folders { id path uri } files { id path uri sections { id name path range { start { line } end { line } } } definitions { id name kind range { start { line } end { line } } } } contributors { id github name emails links { name url } } tickets { id year month day slug path uri prompt summary status commit author { github name } } policies { id name description scopes violationKinds { id priority autofixable reason solution } } } }`;
     const escapedQuery = query.replace(/"/g, '\\"');
     const fullCommand = `"${command}" graphql "${escapedQuery}"`;
 
@@ -663,12 +672,6 @@ interface BundleStats {
 
 type TicketBundles = Record<string, BundleStats>;
 
-interface TicketCheckpointData {
-  commit?: string;
-  ignore?: boolean;
-  bundles?: TicketBundles;
-}
-
 interface TicketFrontmatter {
   status: string;
   prompt: string;
@@ -676,7 +679,6 @@ interface TicketFrontmatter {
   author?: string;
   commit?: string;
   ignore?: boolean;
-  checkpoints?: TicketCheckpointData[];
 }
 
 interface TicketData {
@@ -1435,9 +1437,6 @@ class TicketsProvider implements vscode.TreeDataProvider<TicketTreeItem> {
             summary: t.summary ?? undefined,
             author: t.author?.github,
             commit: t.commit ?? undefined,
-            checkpoints: t.checkpoints?.map((cp) => ({
-              commit: cp.commit ?? undefined,
-            })) ?? [],
           },
         }));
       } else {
@@ -1456,9 +1455,6 @@ class TicketsProvider implements vscode.TreeDataProvider<TicketTreeItem> {
             summary: t.summary ?? undefined,
             author: t.author?.github,
             commit: t.commit ?? undefined,
-            checkpoints: t.checkpoints?.map((cp) => ({
-              commit: cp.commit ?? undefined,
-            })) ?? [],
           },
         }));
       }
@@ -1505,13 +1501,6 @@ class TicketsProvider implements vscode.TreeDataProvider<TicketTreeItem> {
       const commits: string[] = [];
       if (element.ticket.frontmatter.commit) {
         commits.push(element.ticket.frontmatter.commit);
-      }
-      if (element.ticket.frontmatter.checkpoints) {
-        for (const checkpoint of element.ticket.frontmatter.checkpoints) {
-          if (checkpoint.commit && !commits.includes(checkpoint.commit)) {
-            commits.push(checkpoint.commit);
-          }
-        }
       }
       if (element.ticket.frontmatter.author) {
         children.push(new TicketAuthorItem(element.ticket.frontmatter.author, element.ticket));
@@ -2568,9 +2557,8 @@ const SIDEBAR_COMMANDS: CommandInfo[] = [
   { id: "semio.analyzeFile", title: "Analyze Current File" },
   { id: "semio.fix", title: "Fix Codebase Problems" },
   { id: "semio.fixFile", title: "Fix Current File Problems" },
-  { id: "semio.ticketCreate", title: "Create Ticket" },
-  { id: "semio.ticketCheckpoint", title: "Create Checkpoint" },
-  { id: "semio.ticketFinish", title: "Finish Ticket" },
+  { id: "semio.ticketOpen", title: "Create Ticket" },
+  { id: "semio.ticketClose", title: "Finish Ticket" },
   { id: "semio.folderTree", title: "Show Folder Tree" },
   { id: "semio.folderCreate", title: "Create Folder" },
   { id: "semio.fileCreate", title: "Create File" },
@@ -2737,7 +2725,7 @@ function registerSidebarViews(context: vscode.ExtensionContext): void {
       }
     }),
     vscode.commands.registerCommand("semio.createTicket", async () => {
-      await vscode.commands.executeCommand("semio.ticketCreate");
+      await vscode.commands.executeCommand("semio.ticketOpen");
     }),
     vscode.commands.registerCommand("semio.createPolicy", async () => {
       vscode.window.showInformationMessage("Policies are defined in go/repo/main.go - open the file to add a new policy");
@@ -2955,7 +2943,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
       }
       runRepoCommand("policy list");
     }),
-    vscode.commands.registerCommand("semio.ticketCreate", async () => {
+    vscode.commands.registerCommand("semio.ticketOpen", async () => {
       if (!hasRepoAccess()) {
         vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
@@ -2965,19 +2953,26 @@ function registerCommands(context: vscode.ExtensionContext): void {
         placeHolder: "Fix login bug",
       });
       if (!title) return;
-      const activeFile = getActiveFileRelativePath();
-      const files = await pickFiles(activeFile ? [activeFile] : undefined);
-      if (!files || files.length === 0) {
-        vscode.window.showWarningMessage("At least one file is required to create a ticket");
-        return;
-      }
+
+      const prompt = await vscode.window.showInputBox({
+        prompt: "Enter ticket prompt",
+        placeHolder: "Describe the task...",
+        value: title,
+      });
+      if (!prompt) return;
+
+      const llm = await vscode.window.showQuickPick(LLM_OPTIONS, {
+        placeHolder: "Select LLM model",
+      });
+      if (!llm) return;
+
       const slug = title
         .toUpperCase()
         .replace(/[^A-Z0-9]+/g, "-")
         .replace(/^-+|-+$/g, "")
         .substring(0, 50);
-      const fileArgs = files.map((f) => `--file="${f}"`).join(" ");
-      runRepoCommand(`ticket create ${slug} --prompt="${title.replace(/"/g, '\\"')}" ${fileArgs}`);
+
+      runRepoCommand(`ticket open ${slug} --prompt="${prompt.replace(/"/g, '\\"')}" --llm="${llm}"`);
     }),
     vscode.commands.registerCommand("semio.ticketList", async () => {
       if (!hasRepoAccess()) {
@@ -2986,37 +2981,31 @@ function registerCommands(context: vscode.ExtensionContext): void {
       }
       runRepoCommand("ticket list");
     }),
-    vscode.commands.registerCommand("semio.ticketCheckpoint", async () => {
-      if (!hasRepoAccess()) {
-        vscode.window.showErrorMessage("repo binary not found in go/repo/");
-        return;
-      }
-      const ticket = await pickTicket("open");
-      if (!ticket) return;
-      const fileUris = await vscode.window.showOpenDialog({
-        canSelectMany: true,
-        canSelectFolders: false,
-        openLabel: "Select files for checkpoint",
-        title: "Select files affected by this checkpoint",
-      });
-      if (!fileUris || fileUris.length === 0) {
-        vscode.window.showWarningMessage("At least one file is required for checkpoint");
-        return;
-      }
-      const root = getWorkspaceRoot();
-      if (!root) return;
-      const files = fileUris.map((uri) => path.relative(root, uri.fsPath).replace(/\\/g, "/"));
-      const fileArgs = files.map((f) => `--file="${f}"`).join(" ");
-      runRepoCommand(`ticket checkpoint ${ticket.year} ${ticket.month} ${ticket.day} ${ticket.slug} ${fileArgs}`);
-    }),
-    vscode.commands.registerCommand("semio.ticketFinish", async (ticketItem?: TicketItem | TicketData | ContributorTicketItem | ContributorTicketData) => {
+    vscode.commands.registerCommand("semio.ticketClose", async (ticketItem?: TicketItem | TicketData | ContributorTicketItem | ContributorTicketData) => {
       if (!hasRepoAccess()) {
         vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
       const resolvedTicket = resolveTicketData(ticketItem) ?? (await pickTicket("open"));
       if (!resolvedTicket) return;
-      runRepoCommand(`ticket finish ${resolvedTicket.year} ${resolvedTicket.month} ${resolvedTicket.day} ${resolvedTicket.slug}`);
+      const summary = await vscode.window.showInputBox({
+        prompt: "Enter a summary for this ticket",
+        placeHolder: "Summary of the work completed",
+      });
+      if (!summary) {
+        vscode.window.showWarningMessage("Summary is required to finish a ticket");
+        return;
+      }
+
+      const activeFile = getActiveFileRelativePath();
+      const files = await pickFiles(activeFile ? [activeFile] : undefined);
+
+      if (!files || files.length === 0) {
+        vscode.window.showWarningMessage("At least one file is required to finish a ticket");
+        return;
+      }
+      const fileArgs = files.map((f) => `--file="${f}"`).join(" ");
+      runRepoCommand(`ticket close ${resolvedTicket.year} ${resolvedTicket.month} ${resolvedTicket.day} ${resolvedTicket.slug} --summary="${summary.replace(/"/g, '\\"')}" ${fileArgs}`);
     }),
     vscode.commands.registerCommand("semio.ticketReopen", async (ticketItem?: TicketItem | TicketData | ContributorTicketItem | ContributorTicketData) => {
       if (!hasRepoAccess()) {
@@ -3073,13 +3062,25 @@ function registerCommands(context: vscode.ExtensionContext): void {
       runRepoCommand("contributor list");
     }),
     vscode.commands.registerCommand("semio.contributorRemove", async () => {
-      const github = await vscode.window.showInputBox({ prompt: "GitHub username to remove" });
-      if (!github) return;
       if (!hasRepoAccess()) {
         vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
-      runRepoCommand(`contributor remove ${github}`);
+      const contributors = await fetchContributorsViaGraphQL();
+      const items = contributors
+        .filter((c: any) => c.github)
+        .map((c: any) => ({
+          label: c.github,
+          description: c.email,
+          detail: c.name
+        }));
+
+      const selected = await vscode.window.showQuickPick(items, {
+        placeHolder: "Select contributor to remove"
+      });
+      if (!selected) return;
+
+      runRepoCommand(`contributor remove ${selected.label}`);
     }),
     vscode.commands.registerCommand("semio.sectionTree", async () => {
       const editor = vscode.window.activeTextEditor;
@@ -3179,12 +3180,17 @@ function registerCommands(context: vscode.ExtensionContext): void {
         vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
-      const folderPath = await vscode.window.showInputBox({
-        prompt: "Enter folder path (relative to workspace root)",
-        placeHolder: "js/js/sketchpad",
-        value: ".",
+      const folderUri = await vscode.window.showOpenDialog({
+        canSelectFiles: false,
+        canSelectFolders: true,
+        canSelectMany: false,
+        openLabel: "Select Folder",
+        title: "Select folder to show tree",
       });
-      if (!folderPath) return;
+      if (!folderUri || folderUri.length === 0) return;
+      const root = getWorkspaceRoot();
+      if (!root) return;
+      const folderPath = path.relative(root, folderUri[0].fsPath).replace(/\\/g, "/");
       runRepoCommand(`folder tree ${folderPath}`);
     }),
     vscode.commands.registerCommand("semio.folderCreate", async () => {
@@ -3204,14 +3210,22 @@ function registerCommands(context: vscode.ExtensionContext): void {
         vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
-      const sourcePath = await vscode.window.showInputBox({
-        prompt: "Enter source folder path",
-        placeHolder: "js/js/old-folder",
+      const sourceUri = await vscode.window.showOpenDialog({
+        canSelectFiles: false,
+        canSelectFolders: true,
+        canSelectMany: false,
+        openLabel: "Select Source Folder",
+        title: "Select source folder to move/rename",
       });
-      if (!sourcePath) return;
+      if (!sourceUri || sourceUri.length === 0) return;
+      const root = getWorkspaceRoot();
+      if (!root) return;
+      const sourcePath = path.relative(root, sourceUri[0].fsPath).replace(/\\/g, "/");
+
       const targetPath = await vscode.window.showInputBox({
         prompt: "Enter target folder path",
         placeHolder: "js/js/new-folder",
+        value: sourcePath,
       });
       if (!targetPath) return;
       runRepoCommand(`folder move ${sourcePath} ${targetPath}`);
@@ -3221,11 +3235,17 @@ function registerCommands(context: vscode.ExtensionContext): void {
         vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
-      const folderPath = await vscode.window.showInputBox({
-        prompt: "Enter folder path to delete",
-        placeHolder: "js/js/folder-to-delete",
+      const folderUri = await vscode.window.showOpenDialog({
+        canSelectFiles: false,
+        canSelectFolders: true,
+        canSelectMany: false,
+        openLabel: "Select Folder",
+        title: "Select folder to delete",
       });
-      if (!folderPath) return;
+      if (!folderUri || folderUri.length === 0) return;
+      const root = getWorkspaceRoot();
+      if (!root) return;
+      const folderPath = path.relative(root, folderUri[0].fsPath).replace(/\\/g, "/");
       runRepoCommand(`folder delete ${folderPath}`);
     }),
     vscode.commands.registerCommand("semio.folderList", async () => {
@@ -3233,12 +3253,17 @@ function registerCommands(context: vscode.ExtensionContext): void {
         vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
-      const folderPath = await vscode.window.showInputBox({
-        prompt: "Enter folder path (relative to workspace root)",
-        placeHolder: "js/js/sketchpad",
-        value: ".",
+      const folderUri = await vscode.window.showOpenDialog({
+        canSelectFiles: false,
+        canSelectFolders: true,
+        canSelectMany: false,
+        openLabel: "Select Folder",
+        title: "Select folder to list",
       });
-      if (!folderPath) return;
+      if (!folderUri || folderUri.length === 0) return;
+      const root = getWorkspaceRoot();
+      if (!root) return;
+      const folderPath = path.relative(root, folderUri[0].fsPath).replace(/\\/g, "/");
       runRepoCommand(`folder list ${folderPath}`);
     }),
     vscode.commands.registerCommand("semio.fileCreate", async () => {
@@ -3258,14 +3283,22 @@ function registerCommands(context: vscode.ExtensionContext): void {
         vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
-      const sourcePath = await vscode.window.showInputBox({
-        prompt: "Enter source file path",
-        placeHolder: "js/js/old-file.ts",
+      const sourceUri = await vscode.window.showOpenDialog({
+        canSelectFiles: true,
+        canSelectFolders: false,
+        canSelectMany: false,
+        openLabel: "Select Source File",
+        title: "Select source file to move/rename",
       });
-      if (!sourcePath) return;
+      if (!sourceUri || sourceUri.length === 0) return;
+      const root = getWorkspaceRoot();
+      if (!root) return;
+      const sourcePath = path.relative(root, sourceUri[0].fsPath).replace(/\\/g, "/");
+
       const targetPath = await vscode.window.showInputBox({
         prompt: "Enter target file path",
         placeHolder: "js/js/new-file.ts",
+        value: sourcePath,
       });
       if (!targetPath) return;
       runRepoCommand(`file move ${sourcePath} ${targetPath}`);
@@ -3275,11 +3308,17 @@ function registerCommands(context: vscode.ExtensionContext): void {
         vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
-      const filePath = await vscode.window.showInputBox({
-        prompt: "Enter file path to delete",
-        placeHolder: "js/js/file-to-delete.ts",
+      const fileUri = await vscode.window.showOpenDialog({
+        canSelectFiles: true,
+        canSelectFolders: false,
+        canSelectMany: false,
+        openLabel: "Select File",
+        title: "Select file to delete",
       });
-      if (!filePath) return;
+      if (!fileUri || fileUri.length === 0) return;
+      const root = getWorkspaceRoot();
+      if (!root) return;
+      const filePath = path.relative(root, fileUri[0].fsPath).replace(/\\/g, "/");
       runRepoCommand(`file delete ${filePath}`);
     }),
     vscode.commands.registerCommand("semio.fileList", async () => {
@@ -3287,12 +3326,17 @@ function registerCommands(context: vscode.ExtensionContext): void {
         vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
-      const folderPath = await vscode.window.showInputBox({
-        prompt: "Enter folder path (relative to workspace root)",
-        placeHolder: "js/js/sketchpad",
-        value: ".",
+      const folderUri = await vscode.window.showOpenDialog({
+        canSelectFiles: false,
+        canSelectFolders: true,
+        canSelectMany: false,
+        openLabel: "Select Folder",
+        title: "Select folder to list files from",
       });
-      if (!folderPath) return;
+      if (!folderUri || folderUri.length === 0) return;
+      const root = getWorkspaceRoot();
+      if (!root) return;
+      const folderPath = path.relative(root, folderUri[0].fsPath).replace(/\\/g, "/");
       runRepoCommand(`file list ${folderPath}`);
     }),
     vscode.commands.registerCommand("semio.fileTree", async () => {
@@ -3300,12 +3344,17 @@ function registerCommands(context: vscode.ExtensionContext): void {
         vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
-      const folderPath = await vscode.window.showInputBox({
-        prompt: "Enter folder path (relative to workspace root)",
-        placeHolder: "js/js/sketchpad",
-        value: ".",
+      const folderUri = await vscode.window.showOpenDialog({
+        canSelectFiles: false,
+        canSelectFolders: true,
+        canSelectMany: false,
+        openLabel: "Select Folder",
+        title: "Select folder to show file tree",
       });
-      if (!folderPath) return;
+      if (!folderUri || folderUri.length === 0) return;
+      const root = getWorkspaceRoot();
+      if (!root) return;
+      const folderPath = path.relative(root, folderUri[0].fsPath).replace(/\\/g, "/");
       runRepoCommand(`file tree ${folderPath}`);
     }),
     vscode.commands.registerCommand("semio.sectionCreate", async () => {

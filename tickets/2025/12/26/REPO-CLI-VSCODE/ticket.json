@@ -1,11 +1,12 @@
 {
   "title": "REPO-CLI-VSCODE",
-  "prompt": "\u003e-",
+  "prompt": ">-",
   "llm": "claude-sonnet-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {
     "created": "2025-12-26T02:41:46.068Z"
   },
-  "commit": "d20b7f8143fbee8696b534c8a6465753544ce37d"
+  "commit": "d20b7f8143fbee8696b534c8a6465753544ce37d",
+  "summary": "Migrated ticket"
 }

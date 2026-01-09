@@ -1,6 +1,6 @@
 {
   "title": "Rename log workflow to ticket+iterations",
-  "prompt": "Improve log script semantics. Rename logs to tickets. create log becomes ticket create. Then a new command is ticket iteration start Then there should be ticket iteration finish finish becomes ticket finish Throw an error if an iteration is unifinished for a ticket (e.g. when another iteration start or ticket finish is called) Force files to be a necessary parameter to call for iteration start and iteration finish. Update the file list on finish for the iteration and compute stats (lines).",
+  "prompt": "Improve log script semantics. Rename logs to tickets. create log becomes ticket open. Then a new command is ticket iteration start Then there should be ticket iteration finish finish becomes ticket close Throw an error if an iteration is unifinished for a ticket (e.g. when another iteration start or ticket close is called) Force files to be a necessary parameter to call for iteration start and iteration finish. Update the file list on finish for the iteration and compute stats (lines).",
   "llm": "gpt-5-2",
   "status": "finished",
   "author": "uelisaluz",
@@ -8,5 +8,6 @@
     "created": "2025-12-16T15:26:35.793Z",
     "finished": "2025-12-16T15:59:31.839Z"
   },
-  "commit": "c44e5e38193be007ca56cc649aa2f58238c1ec40"
+  "commit": "c44e5e38193be007ca56cc649aa2f58238c1ec40",
+  "summary": "Migrated ticket"
 }

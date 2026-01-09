@@ -1,11 +1,12 @@
 {
   "title": "COPILOT-MCP-VALIDATE-ERROR",
-  "prompt": "Copilot MCP ticket create fails with tool parameters array type must have items",
+  "prompt": "Copilot MCP ticket open fails with tool parameters array type must have items",
   "llm": "claude-sonnet-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {
     "created": "2026-01-03T03:07:08Z"
   },
-  "commit": "757a4d5aa0cf14f288561eed3253d5195a96e75e"
+  "commit": "757a4d5aa0cf14f288561eed3253d5195a96e75e",
+  "summary": "Migrated ticket"
 }

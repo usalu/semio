@@ -1,11 +1,12 @@
 {
   "title": "Refactor sketchpad state machine for proper state transitions",
-  "prompt": "\u003e-",
+  "prompt": ">-",
   "llm": "claude-opus-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {
     "created": "2025-12-16T17:06:07.889Z"
   },
-  "commit": "unknown"
+  "commit": "unknown",
+  "summary": "Migrated ticket"
 }

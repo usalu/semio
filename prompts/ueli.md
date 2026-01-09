@@ -1,5 +1,17 @@
 # Prompt history
 
+The vscode extension commands are not matching the cli command arguments.
+E.g. ticket open requires to select at least one file although ticket open does not require any files.
+Ticket finish should show a list of open tickets and let the user select one and then ask for the summary and at least one file. The llm should be an enum from a fixed list of llms (claude-opus-4-5, claude-opus-4, claude-sonnet-4-5, claude-sonnet-4, claude-haiku-4-5, gemini-3-pro, gemini-3-flash, gpt-5-2, gpt-5-mini).
+Scan for all commands and make sure that whenever something is referenced then vscode should show the list of options to choose from (bundles, folders, files, sections, definitions, contributors, tickets, policies, violationKinds, violations).
+
+Make sure the commands have this api:
+`.\go\cli\cli.exe ticket open <title> <prompt> <llm>`
+`.\go\cli\cli.exe ticket close YYYY/MM/DD/TICKETSLUG <summary> <files...>`
+`.\go\cli\cli.exe ticket reopen YYYY/MM/DD/TICKETSLUG <prompt> llm>`
+
+Simplify the ticket mechanism to remove checkpoints and iterations. All computation that was performed on a checkpoint (affected sections with line metrics and the list of affected definitions.) should be performed when finishing a ticket. Add a summary field and files as necessary arguments for the ticket close command.
+
 The repo mechanism is not yet finished:
 - Remove all metrics from the graphql layer and purely move it into the sqlite database over views.
 - Extend the graphql test by nodes and edges query and check that every id collection is non-empty. Extend the query to cover every edge (only degree one)
@@ -32,7 +44,7 @@ The schema for the ticket.json file should be updated. A new schema file is prov
 - The ticket.json files are the single source of truth for a lot of derived information. They should not contain any derived information such as metrics.
 - Tickets and checkpoints can be ignored. When a checkpoint is ignored the metrics are not considered. When a ticket is ignored the metrics of all checkpoints are not considered. Add ignore to every ticket.json.
 - Tickets should not have summary and prompt. Just prompt.
-- The llm input string from ticket create or ticket checkpoint should be the slug (not uppercase) of the string.
+- The llm input string from ticket open or ticket checkpoint should be the slug (not uppercase) of the string.
 - The checkpoint state
 - Definitions in semio are only top level. A section can contain different definitions. A definition cant contain sections. Currently definitions are not identified by the languages. A definition can only be affected once in a section (not appear multiple times in the secion metrics).
 - Compare the files for more differences and refactor/extend/change everything necessary to get the desired ticket.json schema without changing the graphql schema.
@@ -76,7 +88,7 @@ preflight:format
 
 All nodes should be available on the root query. Add a repo test to check that every collection is non-empty on return.
 
-The ticket mechanism changed. The ticket create command should take title, prompt, llm, plan (optional). Then it creates `ticket.json`, `plan.md` (if a plan path to a markdown file is provided then file is moved to plan.md), `log.md`, `summary.md`.
+The ticket mechanism changed. The ticket open command should take title, prompt, llm, plan (optional). Then it creates `ticket.json`, `plan.md` (if a plan path to a markdown file is provided then file is moved to plan.md), `log.md`, `summary.md`.
 The json previously was the frontmatter. The llm is no longer an enum but just a string that is turned into a slug. The id (folder name) is the capitalized title slug.
 Whenever a todo is completed a ticket checkpoint is created. The checkpoints needs to have at least one file. Then it checks the git diff on those files. It computes metrics for all sections that are affected by the diff. A section and a definition both have a range (start line, end line). When a diff line is part of the section or definition range then it is considered affected. Definitions are by policy always part of a section. The sections line metrics are computed. The definitions are just added to the section when they are affected and they line metrics are not calculated for the definitions. Extend and refactor everything needed to cleanly implement this new mechanism.
 
@@ -774,7 +786,7 @@ e.g. the files are not correct file paths.
   "callId": "call_yDcFTIpklZh43jXGFtO58DYV",
   "invocation": {
     "server": "semio-repo",
-    "tool": "ticket_create",
+    "tool": "ticket_open",
     "arguments": {
       "files": [
         "README.md",
@@ -834,8 +846,8 @@ The fixes in vscode are not showing the description of the fix as label.
 
 Add iteration status (started, ended). Compute lines for the files that were part of the iteration using git.
 
-As soon as the vscode github copilot starts ticket create mcp the chat stops and I get:
-Failed to validate tool mcp_semio_ticket_create: Error: tool parameters array type must have items.
+As soon as the vscode github copilot starts ticket open mcp the chat stops and I get:
+Failed to validate tool mcp_semio_ticket_open: Error: tool parameters array type must have items.
 
 When clicking on violations under problems in vscode it only opens the file preview and not the tab of the file. Pressing ctrl+s then doesnt work. Fix it.
 
@@ -952,7 +964,7 @@ Use the semio output for logging everything in the vscode extension.
 No, you mixed policies (and violations) with constraints (and problems). Policies only affect the repo. Constrains only affect kits. They are not the same thing.
 Refactor the complete extension to exclusively use the repo binary. The vscode extension is just a ui and not buissness or repo logic is part of it.
 
-When clicking on the commands it should not navigate to the vscode command but the go function that defined the command (e.g. func ticketCreate for ticket create command)
+When clicking on the commands it should not navigate to the vscode command but the go function that defined the command (e.g. func ticketOpen for ticket open command)
 
 There must be a foundational issue (either repo or vscode extension) because no tickets are show or created with the new ticket command.
 Add a general section search that filters simultaneusly tree items in all sections (Tickets, Policies, Contributors)
@@ -1195,10 +1207,10 @@ Commands:
   fix [--scope=<scope>]        Apply autofixes for violations (multiple scopes are supported)
   policy list [--id=<id-pattern>] [--scope=<scope>]  List all registered policies (multiple scopes are supported)
   policy check [--scope=<scope>] [--id=<id>]          Check specific policies
-  ticket create <slug> <description> <prompt> <model> [--plan=<path>]       Create a new ticket
+  ticket open <slug> <description> <prompt> <model> [--plan=<path>]       Create a new ticket
   ticket iterate start <year> <month> <day> <slug>    Run policies and sync violations to ticket
   ticket iteration end <year> <month> <day> <slug>      End a ticket iteration
-  ticket finish <year> <month> <day> <slug>      Finish a ticket
+  ticket close <year> <month> <day> <slug>      Finish a ticket
   ticket list [--year=<year-pattern>] [--month=<month-pattern>] [--day=<day-pattern>] List tickets (multiple years, months, days are supported)
   ticket read <year> <month> <day> <slug>       Read a ticket
   bundle list [--scope=<scope>]            List Nx bundles
@@ -1661,11 +1673,11 @@ The kit app is not finished.
 
 Improve log script semantics.
 Rename logs to tickets.
-create log becomes ticket create.
+create log becomes ticket open.
 Then a new command is ticket iteration start
 Then there should be ticket iteration finish
-finish becomes ticket finish
-Throw an error if an iteration is unifinished for a ticket (e.g. when another iteration start or ticket finish is called)
+finish becomes ticket close
+Throw an error if an iteration is unifinished for a ticket (e.g. when another iteration start or ticket close is called)
 Force files to be a necessary parameter to call for iteration start and iteration finish. Update the file list on finish for the iteration and compute stats (lines).
 
 The diagram in kit app should be a d3-force layout. The nodes should be a circle with the icons. Add the paramters for the simulation to the settings of the kit app.

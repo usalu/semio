@@ -1,6 +1,6 @@
 <!-- IMPORTANT -->
 
-ALWAYS create a ticket with semio-repo mcp tool `ticket_create` (or use `.\go\cli\cli.exe ticket create <slug> --prompt=<prompt> --model=<model>` when no mcp tool is available) for every task you are working on. This creates a `tickets/YYYY/MM/DD/TICKETSLUG` folder along with `plan.md`, `log.md`, `summary.md`. NEVER answer directly in the chat and ALWAYS just add the message to `log.md`. ALWAYS start by writing the plan into `plan.md` and NEVER send it as message. ALWAYS end by writing the summary into `summary.md` and NEVER send it as message. ALWAYS use the semio-repo mcp tool `ticket_checkpoint` (or use `.\go\cli\cli.exe ticket checkpoint YYYY/MM/DD/TICKETSLUG <files...>` when no mcp tool is available) to create a checkpoint for all files you are working on.
+ALWAYS open a ticket with semio-repo mcp tool `ticket_open` (or use `.\go\cli\cli.exe ticket open <title> <prompt> <llm>` when no mcp tool is available) for every task you are working on. This creates a `tickets/YYYY/MM/DD/TICKETSLUG` folder along with `plan.md`, `log.md`, `summary.md`. NEVER answer directly in the chat and ALWAYS just add the message to `log.md`. ALWAYS start by writing the plan into `plan.md` and NEVER send it as message. ALWAYS end by writing the summary into `summary.md` and NEVER send it as message. ALWAYS use the semio-repo mcp tool `ticket_close` (or use `.\go\cli\cli.exe ticket close YYYY/MM/DD/TICKETSLUG <summary> <files...>` when no mcp tool is available) to finish the ticket along with the summary and at all the files you worked on (created, updated or removed). When a dev sends a new message to the chat ALWAYS reopen the same ticket with semio-repo mcp tool `ticket_reopen` (or use `.\go\cli\cli.exe ticket reopen YYYY/MM/DD/TICKETSLUG <prompt> llm>` when no mcp tool is available).
 
 - Multiple agents and a developer ALWAYS work on the same codebase at the same time. NEVER use `git stash`, `git stash pop`, `git checkout`, … because it will mess up others work and worst-case delete their work.
 - The codebase in under design and development and not used in production yet. There are many inconsistencies that need to be refactored. ALWAYS use clean mechanisms that might require large refactorings and NEVER care about backwards compatibility.
@@ -56,35 +56,29 @@ App hover and selection state MUST be managed by the Sketchpad state machine.
 
 ### Ticket
 
-A `ticket` is a development artifact that tracks a task over multiple `iterations`.
+A `ticket` is a development artifact that tracks a task.
 
 A `ticket` has a `status` of **open** or **finished**.
 
 A ticket MUST store a `prompt` which is the prompt used to create the ticket.
 
-A `ticket` stores an ordered list of `iterations` where each iteration records a `prompt`, `model`, `date`, optional `finished` timestamp, optional `commit`, and optional `files` lists (`updated`, `created`, `removed`).
+A ticket MUST store a `commit` which is the git commit at ticket creation for line stats calculation.
+
+A ticket MUST store a `summary` when finished.
+
+A ticket MUST store a list of `files` (`updated`, `created`, `removed`) with line stats when finished.
 
 Tickets can be reopened to return to **open** status.
 
 Ticket close and reopen actions invoked from the ticket list MUST apply to the selected ticket without additional selection.
 
-A ticket MUST NOT start a new iteration while the latest iteration is unfinished.
+Ticket creation MUST require a prompt.
 
-A ticket MUST NOT be finished while the latest iteration is unfinished.
-
-Ticket creation and iteration start MUST require a prompt.
-
-Ticket creation and iteration start MAY omit file lists at the interface boundary, but iteration validity still requires file declarations.
-
-Iteration start and iteration finish MUST declare at least one file across `updated`, `created`, or `removed`.
+Ticket finish MUST require a summary and a list of files.
 
 Temporary task artifacts MUST be stored inside the active ticket workspace.
 
-Iteration finish MUST derive per-file `updated`, `created`, and `removed` lists with line stats via git diff between the previous iteration commit (or ticket base commit) and the current commit.
-
-Ticket finish MUST aggregate all iteration files as ticket-level `files` and MUST compute ticket-level `lines` via git diff against the ticket `base` commit.
-
-Iteration finish and ticket finish MUST scope git diff file and line stats to the files declared on the ticket iterations.
+Ticket finish MUST derive per-file `updated`, `created`, and `removed` lists with line stats via git diff between the ticket base commit and the current commit, scoped to the files declared on the ticket.
 
 ### MCP Tools
 
@@ -351,7 +345,7 @@ Toolbar panel visibility defaults to `true` for all apps via `panelVisibility: {
 - Ticket tree items expose inline close and reopen actions that apply to the selected ticket based on status.
 - Ticket tree hovers show only the ticket description.
 - Ticket tree items list commit entries as child nodes.
-- Ticket detail views consume git-derived per-file and total line stats stored on iterations and ticket finish.
+- Ticket detail views consume git-derived per-file and total line stats stored on iterations and ticket close.
 - Command trees mirror the CLI command and subcommand hierarchy; matching a command group keeps its subtree visible.
 - Problem list diagnostics open in pinned editor tabs for immediate saves.
 - Contributor tree items list emails with mailto actions, links with external navigation, and contribution nodes with line summary descriptions.
@@ -544,11 +538,11 @@ npx tsx repo.tsx <command> [subcommand] [options]
 | `fix [scope]`                             | Apply autofixes for problems        |
 | `policy list`                             | List all registered policies        |
 | `policy check <id>`                       | Check a specific policy             |
-| `ticket create <slug>`                    | Create a new ticket                 |
+| `ticket open <slug>`                      | Create a new ticket                 |
 | `ticket list [year] [month] [day]`        | List tickets                        |
 | `ticket read <year> <month> <day> <slug>` | Read a ticket                       |
 | `ticket progress`                         | Progress iteration on a ticket      |
-| `ticket finish`                           | Finish a ticket                     |
+| `ticket close`                            | Finish a ticket                     |
 | `ticket reopen`                           | Reopen a ticket                     |
 | `bundle list`                             | List Nx bundles                     |
 | `bundle tree`                             | Show bundle dependency tree         |
@@ -619,7 +613,7 @@ repo section tree repo.tsx            # Show section structure
 repo definition list js/semio/semio.ts   # List all definitions
 repo bundle list                     # List all Nx bundles
 repo folder tree js/semio                # Show folder tree
-repo ticket create MY-TASK --prompt="..." # Create ticket
+repo ticket open MY-TASK --prompt="..." # Create ticket
 repo ticket list 2025                 # List tickets from 2025
 repo ticket read 2025 12 30 MY-TASK   # Read specific ticket
 repo tool build                       # Run Nx build target
@@ -656,11 +650,11 @@ The MCP server communicates via stdio and exposes all repo tools as MCP tools. C
 - `fix` - Apply autofixes for violations
 - `policy_list` - List all registered policies
 - `policy_check` - Check a specific policy
-- `ticket_create` - Create a new ticket
+- `ticket_open` - Create a new ticket
 - `ticket_list` - List tickets
 - `ticket_read` - Read a ticket
 - `ticket_progress` - Progress iteration on a ticket
-- `ticket_finish` - Finish a ticket
+- `ticket_close` - Finish a ticket
 - `project_list` - List Nx bundles
 - `project_tree` - Show bundle tree
 - `folder_create`, `folder_move`, `folder_delete`, `folder_list`, `folder_tree` - Folder operations
@@ -704,9 +698,9 @@ repo graphql "{ analyze(scope: \"js/semio/\") { violations { id summary } } }" -
 **Available Mutations:**
 
 - `fix(scope: String)` - Apply autofixes for violations
-- `ticketCreate(input: TicketCreateInput!)` - Create a new ticket
+- `ticketOpen(input: TicketOpenInput!)` - Create a new ticket
 - `ticketProgress(input: TicketProgressInput!)` - Progress ticket iteration
-- `ticketFinish(input: TicketFinishInput!)` - Finish a ticket
+- `ticketClose(input: TicketCloseInput!)` - Finish a ticket
 - `ticketReopen(input: TicketReopenInput!)` - Reopen a ticket
 
 **VS Code Extension Integration:**
@@ -852,7 +846,7 @@ dnd-kit's `PointerSensor` requires native browser `PointerEvent` objects. Playwr
 
 ### Ticket System
 
-All development tasks are tracked via markdown tickets with YAML frontmatter stored in a nested date-based structure. Each ticket can track multiple **iterations** (agent work sessions), where each iteration captures the prompt, model, commit, and hierarchical contribution data organized by bundles.
+All development tasks are tracked via markdown tickets with YAML frontmatter stored in a nested date-based structure. Each ticket captures the prompt, status, and contribution data organized by bundles.
 
 #### Scope Hierarchy
 
@@ -893,49 +887,33 @@ Temporary task artifacts live under the active ticket folder.
 
 #### Frontmatter Format
 
-Every ticket file MUST have YAML frontmatter with a slug and prompt; summary is set when finishing a ticket; iterations are the single source of truth for contribution data:
+Every ticket file MUST have YAML frontmatter with a slug and prompt; summary and performance data are set when finishing a ticket:
 
 ```yaml
 ---
 slug: SLUG # Upper kebab-case identifier (e.g., VALIDATION-SYSTEM)
 prompt: "User prompt..." # Prompt used to create the ticket
-summary: SUMMARY # One-line description for commit messages (set on ticket finish)
+summary: SUMMARY # One-line description for commit messages (set on ticket close)
 status: open # open | closed
 author: NAME <EMAIL> # From git config
 date:
   created: TIMESTAMP # ISO 8601 timestamp
-  finished: TIMESTAMP # ISO 8601 timestamp (set on ticket finish)
+  finished: TIMESTAMP # ISO 8601 timestamp (set on ticket close)
 commit: GIT_SHA # Git commit at ticket creation for line stats
-model: MODEL # Optional ticket-level default model
+model: MODEL # Optional LLM model used
 ignore: false # Set to true for formatting/cleanup tickets that should not count as contributions
-iterations:
-  - prompt: "First user prompt..." # The user's request
-    date:
-      started: TIMESTAMP # ISO 8601 timestamp
-      ended: TIMESTAMP # ISO 8601 timestamp (set on iteration finish)
-    model: MODEL # LLM model used
-    author: NAME <EMAIL> # Optional iteration author
-    commit: GIT_SHA # Set when iteration is finished
-    ignore: false # Set to true for iterations that should not count as contributions
-    declared: # Files declared for this iteration (tracking purposes)
-      updated:
-        - path: path/to/modified.ts
-      created:
-        - path: path/to/new.ts
-      removed:
-        - path: path/to/deleted.ts
-    bundles: # Hierarchical contribution structure (set on iteration finish)
-      "@semio/js":
-        files:
-          "js/semio/sketchpad/Sketchpad.tsx":
-            sections:
-              "State Management":
-                definitions:
-                  - createMachine
-                  - useSketchpadActor
-                lines:
-                  added: 150
-                  removed: 10
+bundles: # Hierarchical contribution structure (set on ticket close)
+  "@semio/js":
+    files:
+      "js/semio/sketchpad/Sketchpad.tsx":
+        sections:
+          "State Management":
+            definitions:
+              - createMachine
+              - useSketchpadActor
+            lines:
+              added: 150
+              removed: 10
 ---
 ```
 
@@ -943,7 +921,7 @@ Section names are automatically derived from file paths when the actual section 
 
 #### Ignore Flag
 
-The `ignore` flag can be set on tickets or individual iterations to exclude them from contribution calculations. Use this for:
+The `ignore` flag can be set on tickets to exclude them from contribution calculations. Use this for:
 
 - Formatting-only changes
 - Cleanup/refactoring that doesn't add functionality
@@ -953,27 +931,20 @@ The `ignore` flag can be set on tickets or individual iterations to exclude them
 #### Workflow
 
 1. **Create** a ticket when starting work on a task
-2. **Progress** after completing a todo (computes git lines per file, builds bundles hierarchy from changed definitions)
-3. **Finish** the ticket when the task is done (sets status to closed and finish date)
+2. **Finish** the ticket when the task is done (computes git lines per file, builds bundles hierarchy from changed definitions, sets status to closed and finish date)
 
 #### Script Usage
 
 **Create a new ticket:**
 
 ```bash
-npx tsx scripts/log.ts ticket create SLUG --prompt="User prompt..."
-```
-
-**Progress an iteration (computes metrics, commit, author, date automatically):**
-
-```bash
-npx tsx scripts/log.ts ticket progress SLUG --model=claude-opus-4.5 --prompt="What was done..."
+npx tsx scripts/log.ts ticket open SLUG --prompt="User prompt..."
 ```
 
 **Finish a ticket:**
 
 ```bash
-npx tsx scripts/log.ts ticket finish SLUG --summary="Summary description"
+npx tsx scripts/log.ts ticket close SLUG --summary="Summary description" --files="path/to/file1.ts,path/to/file2.ts"
 ```
 
 **List available models:**
@@ -1778,7 +1749,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 ├── rdf
 ├── scripts
 │ ├── i18n.ts # Checks that all i18n keys are up to date and produces report under `reports/i18n.json`
-│ ├── log.ts # Ticket CLI and frontmatter utilities for `tickets/{year}/{month}/{day}/{slug}.md` (ticket create, ticket progress, ticket finish)
+│ ├── log.ts # Ticket CLI and frontmatter utilities for `tickets/{year}/{month}/{day}/{slug}.md` (ticket open, ticket progress, ticket close)
 │ ├── utils.ts # General TypeScript utilities for scripts
 │ └── schema.ts # Checks that all schemas are up to date and produces report under `reports/schema.json`
 ├── sql
@@ -3993,7 +3964,7 @@ Command search includes command ids, titles, and segment names while group match
 
 ### Tickets
 
-Ticket tree items use `ticketOpen` and `ticketClosed` context values for inline close or reopen actions that apply to the clicked ticket, surface commit nodes from ticket and iteration commits, and limit hover tooltips to the summary or prompt text.
+Ticket tree items use `ticketOpen` and `ticketClosed` context values for inline close or reopen actions that apply to the clicked ticket, surface commit nodes from ticket commits, and limit hover tooltips to the summary or prompt text.
 
 ### Code Actions
 
@@ -4016,10 +3987,9 @@ GraphQL schema and in-process executor for the repo CLI.
 
 The graph package uses graphql-go for runtime schema building instead of code generation (gqlgen). This allows the CLI to execute GraphQL queries in-process without starting an HTTP server. The executor is created via `graph.NewExecutor(rootDir)` and queries are executed via `executor.ExecuteJSON(ctx, query, variables)`.
 
-## 📄 go/repo/main.go
+## 📄 go/repo/repo.go
 
-Ticket iteration end derives per-file lists and line stats from git diffs between the last iteration commit (or ticket base commit) and HEAD, scoped to the iteration file list, storing `files` and `lines` on the iteration.
-Ticket finish aggregates per-iteration file stats into ticket-level `files` and computes ticket-level `lines` from git diffs scoped to the ticket file list.
+Ticket finish derives per-file lists and line stats from git diffs between the ticket base commit and HEAD, scoped to the ticket file list, storing `files` and `lines` on the ticket.
 Ticket file aggregates store `updated`, `created`, and `removed` as `FileLineStats` with line totals.
 Comment policy scanning tracks string and template literal context so comment markers inside literals do not trigger violations.
 Section policy flags orphan definitions that sit outside any named region, including comment blocks and Go package/import blocks.

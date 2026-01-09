@@ -7,12 +7,12 @@
 
 - Restrict iteration file tracking to `updated`, `created`, and `removed` only.
 - Make ticket creation create a ticket only (no iteration) and store `author`, `created`, and `base` from git.
-- On ticket finish, aggregate all iteration files into ticket-level `files` and compute ticket-level `lines` from git diff against `base`.
+- On ticket close, aggregate all iteration files into ticket-level `files` and compute ticket-level `lines` from git diff against `base`.
 - Update dev docs to reflect the new ticket workflow and schema.
 
 # Changes
 
 - `scripts/log.ts` no longer supports `read` file tracking; only `updated`, `created`, and `removed` are accepted and persisted.
-- `ticket create` now creates a ticket without an iteration and records ticket-level `author`, `created`, and `base` from git.
-- `ticket finish` now aggregates all iteration files into ticket-level `files` and recomputes ticket-level `lines` from git diff against the ticket `base` commit.
+- `ticket open` now creates a ticket without an iteration and records ticket-level `author`, `created`, and `base` from git.
+- `ticket close` now aggregates all iteration files into ticket-level `files` and recomputes ticket-level `lines` from git diff against the ticket `base` commit.
 - `README.md` and `AGENTS.md` document the updated ticket workflow and fields.
