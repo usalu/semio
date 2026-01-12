@@ -2724,9 +2724,6 @@ function registerSidebarViews(context: vscode.ExtensionContext): void {
         await vscode.window.showTextDocument(doc);
       }
     }),
-    vscode.commands.registerCommand("semio.createTicket", async () => {
-      await vscode.commands.executeCommand("semio.ticketOpen");
-    }),
     vscode.commands.registerCommand("semio.createPolicy", async () => {
       vscode.window.showInformationMessage("Policies are defined in go/repo/main.go - open the file to add a new policy");
       const root = getWorkspaceRoot();

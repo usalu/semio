@@ -1,5 +1,21 @@
 # Prompt history
 
+The ticket schema should change (see new-ticket-schema.json), the metric computation still has mistakes, the api is not yet clean, the definitions are not yet properly identified per language.
+Ticket schema:
+- Make sure open ticket only accepts title and automatically generates an uppercase slug. The ticket.json only stores the title.
+- files should not have updated, added, removed. Just array of files.
+- ranges start and end should not be positions with columns but just line numbers. All violations, etc in repo dont have columns just line numbers.
+- files should not have line metrics. Just the sections have computed line metrics.
+- Introduce iterations array. Each iteration has a prompt, llm, author, date and commit. When a ticket is opened then the first iteration is added. Ticket close doesnt create a new iteration. When the ticket is reopened then a new iteration is added. It needs to be closed first before it can be reopened.
+Metrics:
+- The region metrics should exclude the metrics from the child regions.
+- Definitions in semio are only top level. A section can contain different definitions. A definition cant contain sections. E.g. `result` in go/repo/repo.go should not be counted as a definition. A definition always starts on a new line with func, def, class, interface, type, enum, etc.
+Api:
+Make sure the commands have this api:
+`.\go\cli\cli.exe ticket open <title> <prompt> <llm>`
+`.\go\cli\cli.exe ticket close YYYY/MM/DD/TICKETSLUG <summary> <files...>`
+`.\go\cli\cli.exe ticket reopen YYYY/MM/DD/TICKETSLUG <prompt> llm>`
+
 The vscode extension commands are not matching the cli command arguments.
 E.g. ticket open requires to select at least one file although ticket open does not require any files.
 Ticket finish should show a list of open tickets and let the user select one and then ask for the summary and at least one file. The llm should be an enum from a fixed list of llms (claude-opus-4-5, claude-opus-4, claude-sonnet-4-5, claude-sonnet-4, claude-haiku-4-5, gemini-3-pro, gemini-3-flash, gpt-5-2, gpt-5-mini).

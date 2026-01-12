@@ -176,11 +176,7 @@ type TicketFileMetricsEntry struct {
 	Sections map[string]TicketSectionMetrics `json:"sections,omitempty"`
 }
 
-type TicketFilesResult struct {
-	Updated []TicketFileMetricsEntry `json:"updated,omitempty"`
-	Created []TicketFileMetricsEntry `json:"created,omitempty"`
-	Removed []TicketFileMetricsEntry `json:"removed,omitempty"`
-}
+
 
 
 
@@ -321,24 +317,17 @@ func (t *Ticket) GetTitle() string {
 }
 
 func (t *Ticket) GetPrompt() string {
-	if t.Data != nil {
-		return t.Data.Prompt
+	if t.Data != nil && len(t.Data.Iterations) > 0 {
+		return t.Data.Iterations[0].Prompt
 	}
 	return ""
 }
 
 func (t *Ticket) GetLLM() string {
-	if t.Data != nil {
-		return t.Data.LLM
+	if t.Data != nil && len(t.Data.Iterations) > 0 {
+		return t.Data.Iterations[len(t.Data.Iterations)-1].LLM
 	}
 	return ""
-}
-
-func (t *Ticket) GetIgnored() bool {
-	if t.Data != nil {
-		return t.Data.Ignored
-	}
-	return false
 }
 
 func (t *Ticket) GetStatus() TicketStatus {
@@ -349,15 +338,15 @@ func (t *Ticket) GetStatus() TicketStatus {
 }
 
 func (t *Ticket) GetAuthor() string {
-	if t.Data != nil {
-		return t.Data.Author
+	if t.Data != nil && len(t.Data.Iterations) > 0 {
+		return t.Data.Iterations[0].Author
 	}
 	return ""
 }
 
 func (t *Ticket) GetCommit() string {
-	if t.Data != nil {
-		return t.Data.Commit
+	if t.Data != nil && len(t.Data.Iterations) > 0 {
+		return t.Data.Iterations[0].Commit
 	}
 	return ""
 }
@@ -369,25 +358,47 @@ func (t *Ticket) GetSummary() string {
 	return ""
 }
 
-func (t *Ticket) GetFiles() *TicketFilesResult {
+func (t *Ticket) GetDateCreated() time.Time {
+	if t.Data != nil && len(t.Data.Iterations) > 0 {
+		return t.Data.Iterations[0].Date
+	}
+	return time.Time{}
+}
+
+func (t *Ticket) GetDateFinished() *time.Time {
 	if t.Data != nil {
-		return t.Data.Files
+		return t.Data.Dates.Closed
 	}
 	return nil
 }
 
-func (t *Ticket) GetDateCreated() string {
-	if t.Data != nil {
-		return t.Data.Dates.Created
-	}
-	return ""
+type TicketFilesResult struct {
+	Updated []TicketFile `json:"updated,omitempty"`
+	Created []TicketFile `json:"created,omitempty"`
+	Removed []TicketFile `json:"removed,omitempty"`
 }
 
-func (t *Ticket) GetDateFinished() string {
+func (t *Ticket) GetFiles() *TicketFilesResult {
+	filesMap := make(map[string]TicketFile)
 	if t.Data != nil {
-		return t.Data.Dates.Finished
+		for _, iter := range t.Data.Iterations {
+			for _, f := range iter.Files {
+				filesMap[f.Path] = f
+			}
+		}
 	}
-	return ""
+	res := &TicketFilesResult{}
+	for _, f := range filesMap {
+		switch f.Status {
+		case "created":
+			res.Created = append(res.Created, f)
+		case "removed":
+			res.Removed = append(res.Removed, f)
+		default:
+			res.Updated = append(res.Updated, f)
+		}
+	}
+	return res
 }
 
 type TicketBundleContrib struct {
@@ -1500,39 +1511,40 @@ func GetLanguageByName(name string) LanguagePlugin {
 
 // #endregion Languages
 
-type TicketIterationFiles struct {
-	Updated []FileLineMetrics `yaml:"updated,omitempty" json:"updated,omitempty"`
-	Created []FileLineMetrics `yaml:"created,omitempty" json:"created,omitempty"`
-	Removed []FileLineMetrics `yaml:"removed,omitempty" json:"removed,omitempty"`
+type TicketIteration struct {
+	Prompt string       `json:"prompt"`
+	LLM    string       `json:"llm"`
+	Author string       `json:"author"`
+	Date   time.Time    `json:"date"`
+	Commit string       `json:"commit"`
+	Files  []TicketFile `json:"files,omitempty"`
 }
 
-type FileLineMetrics struct {
-	Path  string     `yaml:"path" json:"path"`
-	Lines *LineMetrics `yaml:"lines,omitempty" json:"lines,omitempty"`
+type TicketSection struct {
+	Name        string       `json:"name"`
+	Range       *Range       `json:"range,omitempty"`
+	Definitions []string     `json:"definitions,omitempty"`
+	Lines       *LineMetrics `json:"lines,omitempty"`
 }
 
-type TicketFiles struct {
-	Updated []FileLineMetrics `yaml:"updated,omitempty" json:"updated,omitempty"`
-	Created []FileLineMetrics `yaml:"created,omitempty" json:"created,omitempty"`
-	Removed []FileLineMetrics `yaml:"removed,omitempty" json:"removed,omitempty"`
+type TicketFile struct {
+	Path     string          `json:"path"`
+	Status   string          `json:"status"`
+	Lines    *LineMetrics    `json:"lines,omitempty"`
+	Sections []TicketSection `json:"sections,omitempty"`
 }
 
 type TicketData struct {
-	Title   string             `json:"title"`
-	Prompt  string             `json:"prompt"`
-	LLM     string             `json:"llm,omitempty"`
-	Status  TicketStatus       `json:"status"`
-	Author  string             `json:"author,omitempty"`
-	Dates   TicketDates        `json:"dates"`
-	Commit  string             `json:"commit,omitempty"`
-	Ignored bool               `json:"ignored,omitempty"`
-	Summary string             `json:"summary,omitempty"`
-	Files   *TicketFilesResult `json:"files,omitempty"`
+	Title      string            `json:"title"`
+	Iterations []TicketIteration `json:"iterations"`
+	Status     TicketStatus      `json:"status"`
+	Dates      TicketDates       `json:"dates"`
+	Summary    string            `json:"summary,omitempty"`
+	Files      []TicketFile      `json:"files,omitempty"`
 }
 
 type TicketDates struct {
-	Created  string `json:"created"`
-	Finished string `json:"finished,omitempty"`
+	Closed *time.Time `json:"closed,omitempty"`
 }
 
 
@@ -4130,15 +4142,7 @@ func BuildCodebaseBundles(ctx *CodebaseContext) []CodebaseBundle {
 	for _, ticket := range ctx.Tickets {
 		ticketID := fmt.Sprintf("%04d/%02d/%02d/%s", ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
 		if ticket.Data != nil && ticket.Data.Files != nil {
-			for _, entry := range ticket.Data.Files.Updated {
-				bundleName := ctx.GetBundleForFile(entry.Path)
-				if bundleName != "" {
-					if _, ok := ticketSets[bundleName]; ok {
-						ticketSets[bundleName][ticketID] = struct{}{}
-					}
-				}
-			}
-			for _, entry := range ticket.Data.Files.Removed {
+			for _, entry := range ticket.Data.Files {
 				bundleName := ctx.GetBundleForFile(entry.Path)
 				if bundleName != "" {
 					if _, ok := ticketSets[bundleName]; ok {
@@ -4493,13 +4497,7 @@ func BuildCodebaseTickets(ctx *CodebaseContext) []CodebaseTicket {
 
 		bundleFiles := make(map[string]int)
 		if ticket.Data != nil && ticket.Data.Files != nil {
-			for _, entry := range ticket.Data.Files.Updated {
-				bundleName := ctx.GetBundleForFile(entry.Path)
-				if bundleName != "" {
-					bundleFiles[bundleName]++
-				}
-			}
-			for _, entry := range ticket.Data.Files.Removed {
+			for _, entry := range ticket.Data.Files {
 				bundleName := ctx.GetBundleForFile(entry.Path)
 				if bundleName != "" {
 					bundleFiles[bundleName]++
@@ -4518,13 +4516,18 @@ func BuildCodebaseTickets(ctx *CodebaseContext) []CodebaseTicket {
 
 		model := ticket.GetLLM()
 
+		var finishedStr string
+		if f := ticket.GetDateFinished(); f != nil {
+			finishedStr = f.Format(time.RFC3339)
+		}
+
 		result = append(result, CodebaseTicket{
 			ID:   ticketID,
 			Path: ticketPath,
 			URI:  ctx.FileURI(ticketPath),
 			Date: &TicketDateInfo{
-				Created:  ticket.GetDateCreated(),
-				Finished: ticket.GetDateFinished(),
+				Created:  ticket.GetDateCreated().Format(time.RFC3339),
+				Finished: finishedStr,
 			},
 			Commit:   ticket.GetCommit(),
 			Year:     fmt.Sprintf("%04d", ticket.Year),
@@ -4778,12 +4781,15 @@ func CreateTicket(title, prompt, llm, planPath string) (*Ticket, error) {
 	gitCommit := GetGitCommit()
 	ticketData := &TicketData{
 		Title:  title,
-		Prompt: prompt,
-		LLM:    llmSlug,
 		Status: TicketStatusOpen,
-		Author: gitAuthor,
-		Dates:  TicketDates{Created: ISOTimestamp()},
-		Commit: gitCommit,
+		Iterations: []TicketIteration{{
+			Prompt: prompt,
+			LLM:    llmSlug,
+			Author: gitAuthor,
+			Date:   now,
+			Commit: gitCommit,
+		}},
+		Dates: TicketDates{},
 	}
 	ticket := &Ticket{
 		Year:        year,
@@ -4954,55 +4960,31 @@ func ListTickets(year, month, day *int) ([]Ticket, error) {
 	return tickets, nil
 }
 
-func ComputeTicketFiles(ticket *Ticket, files []string) (*TicketFilesResult, error) {
+func ComputeTicketFiles(ticket *Ticket, files []string) ([]TicketFile, error) {
 	if ticket.Data == nil {
 		return nil, fmt.Errorf("ticket data is nil")
 	}
-	baseCommit := ticket.Data.Commit
+	if len(ticket.Data.Iterations) == 0 {
+		return nil, fmt.Errorf("no iterations found for ticket")
+	}
+	baseCommit := ticket.Data.Iterations[0].Commit
 	if baseCommit == "" {
 		return nil, fmt.Errorf("no base commit found for ticket")
 	}
 	if len(files) == 0 {
 		return nil, fmt.Errorf("at least one file is required")
 	}
-	iterFiles, _, err := GetGitDiffFileLineMetrics(baseCommit, "", files)
-	if err != nil {
-		return nil, err
-	}
+
 	diffLines, err := GetGitDiffLines(baseCommit, "", files)
 	if err != nil {
 		return nil, err
 	}
-	statsMap := make(map[string]*LineMetrics)
-	for _, f := range iterFiles.Updated {
-		if f.Lines != nil {
-			statsMap[f.Path] = f.Lines
-		}
-	}
-	for _, f := range iterFiles.Created {
-		if f.Lines != nil {
-			statsMap[f.Path] = f.Lines
-		}
-	}
-	for _, f := range iterFiles.Removed {
-		if f.Lines != nil {
-			statsMap[f.Path] = f.Lines
-		}
-	}
-	result := &TicketFilesResult{}
+
+	var result []TicketFile
 	for _, filePath := range files {
-		stats := statsMap[filePath]
 		changedLines := diffLines[filePath]
-		if stats == nil && len(changedLines) == 0 {
-			continue
-		}
-		entry := TicketFileMetricsEntry{
-			Path:     filePath,
-			Sections: make(map[string]TicketSectionMetrics),
-		}
-		if stats != nil {
-			entry.Lines = &LineMetrics{Added: stats.Added, Removed: stats.Removed}
-		}
+		sections := []TicketSection{}
+
 		if len(changedLines) > 0 {
 			content, readErr := ReadTextFile(filepath.Join(GetRootDir(), filePath))
 			if readErr == nil {
@@ -5011,54 +4993,114 @@ func ComputeTicketFiles(ticket *Ticket, files []string) (*TicketFilesResult, err
 				if lang != nil {
 					fileSections := lang.ParseSections(content)
 					fileDefs := lang.ParseDefinitions(content, lines)
+					// Filter definitions to only include top-level ones
+					// This logic usually depends on the parser implementation, 
+					// but here we can enforce it by checking if def is inside another def?
+					// Or just trust ParseDefinitions if we fix it later.
+					// For child exclusion, we update computeAffectedSections.
 					affectedSections := computeAffectedSections(filePath, fileSections, fileDefs, changedLines, "")
-					for sectionPath, sectionMetrics := range affectedSections {
-						entry.Sections[sectionPath] = sectionMetrics
+					for _, sectionMetrics := range affectedSections {
+						sections = append(sections, sectionMetrics)
 					}
 				}
 			}
 		}
-		if FileExists(filepath.Join(GetRootDir(), filePath)) {
-			result.Updated = append(result.Updated, entry)
-		} else {
-			result.Removed = append(result.Removed, entry)
-		}
+		
+		// Always include the file, even if no metrics found, if it was passed in files list?
+		// User said: "Files should not have updated, added, removed. Just array of files."
+		result = append(result, TicketFile{
+			Path:     filePath,
+			Sections: sections,
+		})
 	}
 	return result, nil
 }
 
-func computeAffectedSections(filePath string, sections []Section, defs []DefinitionRange, changedLines []int, parentPath string) map[string]TicketSectionMetrics {
-	result := make(map[string]TicketSectionMetrics)
+func computeAffectedSections(filePath string, sections []Section, defs []DefinitionRange, changedLines []int, parentPath string) []TicketSection {
+	var result []TicketSection
 	for _, section := range sections {
+		// New path logic: parent#child
 		sectionPath := section.Name
-		if parentPath != "" {
-			sectionPath = parentPath + "/" + section.Name
-		}
+		// If it's a file-level section (Language specific?), just use Name.
+		// Usually name is sufficient.
+		
 		linesInSection := computeLinesInRange(changedLines, section.StartLine, section.EndLine)
-		if len(linesInSection) > 0 {
+		
+		// Subtract child lines
+		childLines := []int{}
+		for _, child := range section.Children {
+			cLines := computeLinesInRange(changedLines, child.StartLine, child.EndLine)
+			childLines = append(childLines, cLines...)
+		}
+		
+		// Exclusive lines = linesInSection - childLines
+		exclusiveLines := setDifference(linesInSection, childLines)
+
+		if len(exclusiveLines) > 0 {
 			var affectedDefs []string
 			for _, def := range defs {
+				// Check if def is in this section
 				if def.Start >= section.StartLine && def.Start <= section.EndLine {
-					defLines := computeLinesInRange(changedLines, def.Start, def.End)
-					if len(defLines) > 0 {
-						affectedDefs = append(affectedDefs, def.Name)
+					// Check if def is NOT in any child section
+					isInChild := false
+					for _, child := range section.Children {
+						if def.Start >= child.StartLine && def.Start <= child.EndLine {
+							isInChild = true
+							break
+						}
+					}
+					
+					if !isInChild {
+						defLines := computeLinesInRange(exclusiveLines, def.Start, def.End)
+						if len(defLines) > 0 {
+							affectedDefs = append(affectedDefs, def.Name)
+						}
 					}
 				}
 			}
-			result[sectionPath] = TicketSectionMetrics{
+			
+			result = append(result, TicketSection{
+				Name:        sectionPath,
 				Range:       &Range{Start: Position{Line: section.StartLine}, End: Position{Line: section.EndLine}},
 				Definitions: uniqueStrings(affectedDefs),
-				Lines:       &LineMetrics{Added: len(linesInSection)},
-			}
+				Lines:       &LineMetrics{Added: len(exclusiveLines)},
+			})
 		}
+		
 		if len(section.Children) > 0 {
 			childResults := computeAffectedSections(filePath, section.Children, defs, changedLines, sectionPath)
-			for k, v := range childResults {
-				result[k] = v
-			}
+			result = append(result, childResults...)
 		}
 	}
 	return result
+}
+
+func setDifference(a, b []int) []int {
+	m := make(map[int]bool)
+	for _, x := range b {
+		m[x] = true
+	}
+	var diff []int
+	for _, x := range a {
+		if !m[x] {
+			diff = append(diff, x)
+		}
+	}
+	return diff
+}
+
+func setIntersection(a, b []int) []int {
+	m := make(map[int]bool)
+	for _, x := range b {
+		m[x] = true
+	}
+	var intersection []int
+	for _, x := range a {
+		if m[x] {
+			intersection = append(intersection, x)
+		}
+	}
+	return intersection
 }
 
 func uniqueStrings(strs []string) []string {
@@ -5133,66 +5175,6 @@ func findSectionForLine(sections []Section, line int) string {
 	return ""
 }
 
-func CollectTicketFilePaths(files *TicketIterationFiles) []string {
-	if files == nil {
-		return nil
-	}
-	pathsByName := map[string]bool{}
-	paths := []string{}
-	for _, file := range files.Updated {
-		path := NormalizePath(file.Path)
-		if path == "" {
-			continue
-		}
-		if !pathsByName[path] {
-			pathsByName[path] = true
-			paths = append(paths, path)
-		}
-	}
-	for _, file := range files.Created {
-		path := NormalizePath(file.Path)
-		if path == "" {
-			continue
-		}
-		if !pathsByName[path] {
-			pathsByName[path] = true
-			paths = append(paths, path)
-		}
-	}
-	for _, file := range files.Removed {
-		path := NormalizePath(file.Path)
-		if path == "" {
-			continue
-		}
-		if !pathsByName[path] {
-			pathsByName[path] = true
-			paths = append(paths, path)
-		}
-	}
-	return paths
-}
-
-func CollectBundleFilePaths(bundles TicketBundles) []string {
-	if bundles == nil {
-		return nil
-	}
-	pathsByName := map[string]bool{}
-	paths := []string{}
-	for _, bundleMetrics := range bundles {
-		for path := range bundleMetrics.Files {
-			normalizedPath := NormalizePath(path)
-			if normalizedPath == "" {
-				continue
-			}
-			if !pathsByName[normalizedPath] {
-				pathsByName[normalizedPath] = true
-				paths = append(paths, normalizedPath)
-			}
-		}
-	}
-	return paths
-}
-
 func BuildGitDiffArgs(flag, baseCommit, headCommit string, paths []string) []string {
 	if headCommit == "" {
 		if len(paths) == 0 {
@@ -5204,86 +5186,6 @@ func BuildGitDiffArgs(flag, baseCommit, headCommit string, paths []string) []str
 		return []string{"diff", flag, "--no-renames", baseCommit, headCommit}
 	}
 	return append([]string{"diff", flag, "--no-renames", baseCommit, headCommit, "--"}, paths...)
-}
-
-func GetGitDiffFileLineMetrics(baseCommit, headCommit string, paths []string) (TicketIterationFiles, LineMetrics, error) {
-	if baseCommit == "" {
-		return TicketIterationFiles{}, LineMetrics{}, fmt.Errorf("base commit is required")
-	}
-	stdout, stderr, exitCode := ExecCommand("git", BuildGitDiffArgs("--numstat", baseCommit, headCommit, paths), "")
-	if exitCode != 0 {
-		return TicketIterationFiles{}, LineMetrics{}, fmt.Errorf("git diff numstat failed: %s", strings.TrimSpace(stderr))
-	}
-	lineMetricsByPath := map[string]LineMetrics{}
-	for _, line := range strings.Split(strings.TrimSpace(stdout), "\n") {
-		if strings.TrimSpace(line) == "" {
-			continue
-		}
-		parts := strings.Split(line, "\t")
-		if len(parts) < 3 {
-			continue
-		}
-		added := 0
-		if parts[0] != "-" {
-			if parsed, err := strconv.Atoi(parts[0]); err == nil {
-				added = parsed
-			}
-		}
-		removed := 0
-		if parts[1] != "-" {
-			if parsed, err := strconv.Atoi(parts[1]); err == nil {
-				removed = parsed
-			}
-		}
-		lineMetricsByPath[NormalizePath(parts[2])] = LineMetrics{Added: added, Removed: removed}
-	}
-	stdout, stderr, exitCode = ExecCommand("git", BuildGitDiffArgs("--name-status", baseCommit, headCommit, paths), "")
-	if exitCode != 0 {
-		return TicketIterationFiles{}, LineMetrics{}, fmt.Errorf("git diff name-status failed: %s", strings.TrimSpace(stderr))
-	}
-	statusByPath := map[string]string{}
-	for _, line := range strings.Split(strings.TrimSpace(stdout), "\n") {
-		if strings.TrimSpace(line) == "" {
-			continue
-		}
-		parts := strings.Split(line, "\t")
-		if len(parts) < 2 {
-			continue
-		}
-		statusByPath[NormalizePath(parts[len(parts)-1])] = strings.TrimSpace(parts[0])
-	}
-	for path := range lineMetricsByPath {
-		if _, ok := statusByPath[path]; !ok {
-			statusByPath[path] = "M"
-		}
-	}
-	if len(statusByPath) == 0 && len(lineMetricsByPath) == 0 {
-		return TicketIterationFiles{}, LineMetrics{}, nil
-	}
-	resultPaths := make([]string, 0, len(statusByPath))
-	for path := range statusByPath {
-		resultPaths = append(resultPaths, path)
-	}
-	sort.Strings(resultPaths)
-	files := TicketIterationFiles{}
-	total := LineMetrics{}
-	for i := 0; i < len(resultPaths); i++ {
-		path := resultPaths[i]
-		status := statusByPath[path]
-		lineMetrics := lineMetricsByPath[path]
-		total.Added += lineMetrics.Added
-		total.Removed += lineMetrics.Removed
-		if strings.HasPrefix(status, "A") {
-			files.Created = append(files.Created, FileLineMetrics{Path: path, Lines: &lineMetrics})
-			continue
-		}
-		if strings.HasPrefix(status, "D") {
-			files.Removed = append(files.Removed, FileLineMetrics{Path: path, Lines: &lineMetrics})
-			continue
-		}
-		files.Updated = append(files.Updated, FileLineMetrics{Path: path, Lines: &lineMetrics})
-	}
-	return files, total, nil
 }
 
 func ResolveBundleForPath(filePath string, bundles []Bundle) string {
@@ -5321,220 +5223,14 @@ func GuessSectionName(filePath string) string {
 	return strings.Join(words, " ")
 }
 
-func BuildTicketBundles(files *TicketIterationFiles, bundles []Bundle, baseCommit string) TicketBundles {
-	if files == nil {
-		return nil
-	}
-	result := make(TicketBundles)
-	processFile := func(f FileLineMetrics) {
-		bundleName := ResolveBundleForPath(f.Path, bundles)
-		if bundleName == "" {
-			bundleName = "@semio"
-		}
-		if _, ok := result[bundleName]; !ok {
-			result[bundleName] = TicketBundleMetrics{Files: make(map[string]TicketFileMetrics)}
-		}
-		bundle := result[bundleName]
-		if bundle.Files == nil {
-			bundle.Files = make(map[string]TicketFileMetrics)
-		}
-		TicketFileMetrics := TicketFileMetrics{Sections: make(map[string]TicketSectionMetrics)}
-		absPath := filepath.Join(rootDir, f.Path)
-		if FileExists(absPath) {
-			sectionLines := GetGitDiffSectionLineMetrics(baseCommit, "", f.Path)
-			for sectionName, lines := range sectionLines {
-				defs := ExtractDefinitionsFromSection(f.Path, sectionName)
-				TicketFileMetrics.Sections[sectionName] = TicketSectionMetrics{
-					Definitions: defs,
-					Lines:       &LineMetrics{Added: lines.Added, Removed: lines.Removed},
-				}
-			}
-		}
-		if len(TicketFileMetrics.Sections) == 0 && f.Lines != nil {
-			guessedSection := GuessSectionName(f.Path)
-			TicketFileMetrics.Sections[guessedSection] = TicketSectionMetrics{
-				Lines: f.Lines,
-			}
-		}
-		bundle.Files[f.Path] = TicketFileMetrics
-		result[bundleName] = bundle
-	}
-	for _, f := range files.Updated {
-		processFile(f)
-	}
-	for _, f := range files.Created {
-		processFile(f)
-	}
-	for _, f := range files.Removed {
-		processFile(f)
-	}
-	return result
-}
-
-func BuildTicketBundlesWithChangedDefs(files *TicketIterationFiles, bundles []Bundle, baseCommit string) TicketBundles {
-	if files == nil {
-		return nil
-	}
-	result := make(TicketBundles)
-	processFile := func(f FileLineMetrics) {
-		bundleName := ResolveBundleForPath(f.Path, bundles)
-		if bundleName == "" {
-			bundleName = "@semio"
-		}
-		if _, ok := result[bundleName]; !ok {
-			result[bundleName] = TicketBundleMetrics{Files: make(map[string]TicketFileMetrics)}
-		}
-		bundle := result[bundleName]
-		if bundle.Files == nil {
-			bundle.Files = make(map[string]TicketFileMetrics)
-		}
-		TicketFileMetrics := TicketFileMetrics{Sections: make(map[string]TicketSectionMetrics)}
-		absPath := filepath.Join(rootDir, f.Path)
-		if FileExists(absPath) {
-			changedLines := GetGitDiffChangedLines(baseCommit, "", f.Path)
-			sectionLines := GetGitDiffSectionLineMetrics(baseCommit, "", f.Path)
-			for sectionName, lines := range sectionLines {
-				defs := ExtractChangedDefinitionsFromSection(f.Path, sectionName, changedLines)
-				TicketFileMetrics.Sections[sectionName] = TicketSectionMetrics{
-					Definitions: defs,
-					Lines:       &LineMetrics{Added: lines.Added, Removed: lines.Removed},
-				}
-			}
-		}
-		if len(TicketFileMetrics.Sections) == 0 && f.Lines != nil {
-			guessedSection := GuessSectionName(f.Path)
-			TicketFileMetrics.Sections[guessedSection] = TicketSectionMetrics{
-				Lines: f.Lines,
-			}
-		}
-		bundle.Files[f.Path] = TicketFileMetrics
-		result[bundleName] = bundle
-	}
-	for _, f := range files.Updated {
-		processFile(f)
-	}
-	for _, f := range files.Created {
-		processFile(f)
-	}
-	for _, f := range files.Removed {
-		processFile(f)
-	}
-	return result
-}
-
-func AggregateBundleLines(bundles TicketBundles) LineMetrics {
-	var total LineMetrics
-	for _, bundleMetrics := range bundles {
-		for _, fileMetrics := range bundleMetrics.Files {
-			for _, sectionMetrics := range fileMetrics.Sections {
-				if sectionMetrics.Lines != nil {
-					total.Added += sectionMetrics.Lines.Added
-					total.Removed += sectionMetrics.Lines.Removed
-				}
-			}
-		}
-	}
-	return total
-}
-
 func GetGitDiffSectionLineMetrics(baseCommit, endCommit, filePath string) map[string]LineMetrics {
-	absPath := filepath.Join(rootDir, filePath)
-	content, err := ReadTextFile(absPath)
-	if err != nil {
-		return nil
-	}
-	lang := GetLanguage(filePath)
-	if lang == nil {
-		return nil
-	}
-	sections := lang.ParseSections(content)
-	if len(sections) == 0 {
-		return nil
-	}
-	args := []string{"diff", "--numstat", "-U0"}
-	if baseCommit != "" {
-		if endCommit != "" {
-			args = append(args, baseCommit, endCommit)
-		} else {
-			args = append(args, baseCommit, "HEAD")
-		}
-	}
-	args = append(args, "--", filePath)
-	cmd := exec.Command("git", args...)
-	cmd.Dir = rootDir
-	out, err := cmd.Output()
-	if err != nil {
-		return nil
-	}
-	diffArgs := []string{"diff", "-U0"}
-	if baseCommit != "" {
-		if endCommit != "" {
-			diffArgs = append(diffArgs, baseCommit, endCommit)
-		} else {
-			diffArgs = append(diffArgs, baseCommit, "HEAD")
-		}
-	}
-	diffArgs = append(diffArgs, "--", filePath)
-	diffCmd := exec.Command("git", diffArgs...)
-	diffCmd.Dir = rootDir
-	diffOut, err := diffCmd.Output()
-	if err != nil {
-		return nil
-	}
-	lineChanges := parseGitDiffHunks(string(diffOut))
-	result := make(map[string]LineMetrics)
-	flatSections := flattenSections(sections)
-	guessedSection := GuessSectionName(filePath)
-	for _, change := range lineChanges {
-		sectionName := guessedSection
-		for _, sec := range flatSections {
-			if change.lineNum >= sec.StartLine && (sec.EndLine == -1 || change.lineNum <= sec.EndLine) {
-				sectionName = sec.Name
-			}
-		}
-		metrics := result[sectionName]
-		if change.isAdd {
-			metrics.Added++
-		} else {
-			metrics.Removed++
-		}
-		result[sectionName] = metrics
-	}
-	_ = out
-	return result
+	// Conserved for backward compatibility if needed, but primarily logic moved to ComputeTicketFiles
+	// Just return nil or implement basic logic if used elsewhere.
+	// It seems it was only used in BuildTicketBundles which is being removed/replaced.
+	return nil
 }
 
-type lineChange struct {
-	lineNum int
-	isAdd   bool
-}
-
-func parseGitDiffHunks(diff string) []lineChange {
-	var changes []lineChange
-	hunkRe := regexp.MustCompile(`^@@\s+-(\d+)(?:,(\d+))?\s+\+(\d+)(?:,(\d+))?\s+@@`)
-	lines := strings.Split(diff, "\n")
-	var currentAddLine, currentRemoveLine int
-	for _, line := range lines {
-		if match := hunkRe.FindStringSubmatch(line); match != nil {
-			currentRemoveLine, _ = strconv.Atoi(match[1])
-			currentAddLine, _ = strconv.Atoi(match[3])
-			continue
-		}
-		if strings.HasPrefix(line, "+") && !strings.HasPrefix(line, "+++") {
-			changes = append(changes, lineChange{lineNum: currentAddLine, isAdd: true})
-			currentAddLine++
-		} else if strings.HasPrefix(line, "-") && !strings.HasPrefix(line, "---") {
-			changes = append(changes, lineChange{lineNum: currentRemoveLine, isAdd: false})
-			currentRemoveLine++
-		} else if !strings.HasPrefix(line, "\\") && line != "" {
-			currentAddLine++
-			currentRemoveLine++
-		}
-	}
-	return changes
-}
-
-func flattenSections(sections []Section) []Section {
+func FlattenSections(sections []Section) []Section {
 	var result []Section
 	var flatten func(secs []Section)
 	flatten = func(secs []Section) {
@@ -5545,115 +5241,6 @@ func flattenSections(sections []Section) []Section {
 	}
 	flatten(sections)
 	return result
-}
-
-func GetGitDiffChangedLines(baseCommit, endCommit, filePath string) map[int]bool {
-	diffArgs := []string{"diff", "-U0"}
-	if baseCommit != "" {
-		if endCommit != "" {
-			diffArgs = append(diffArgs, baseCommit, endCommit)
-		} else {
-			diffArgs = append(diffArgs, baseCommit, "HEAD")
-		}
-	}
-	diffArgs = append(diffArgs, "--", filePath)
-	diffCmd := exec.Command("git", diffArgs...)
-	diffCmd.Dir = rootDir
-	diffOut, err := diffCmd.Output()
-	if err != nil {
-		return nil
-	}
-	lineChanges := parseGitDiffHunks(string(diffOut))
-	changedLines := make(map[int]bool)
-	for _, change := range lineChanges {
-		changedLines[change.lineNum] = true
-	}
-	return changedLines
-}
-
-func ExtractChangedDefinitionsFromSection(filePath, sectionName string, changedLines map[int]bool) []string {
-	absPath := filepath.Join(rootDir, filePath)
-	content, err := ReadTextFile(absPath)
-	if err != nil {
-		return nil
-	}
-	lang := GetLanguage(filePath)
-	if lang == nil || !lang.SupportsDefinitions() {
-		return nil
-	}
-	sections := lang.ParseSections(content)
-	var section *Section
-	flatSections := flattenSections(sections)
-	for i := range flatSections {
-		if flatSections[i].Name == sectionName {
-			section = &flatSections[i]
-			break
-		}
-	}
-	if section == nil {
-		return nil
-	}
-	lines := strings.Split(content, "\n")
-	parsedDefs := lang.ParseDefinitions(content, lines)
-	var defs []string
-	seen := make(map[string]bool)
-	endLine := section.EndLine
-	if endLine == -1 {
-		endLine = len(lines)
-	}
-	for _, def := range parsedDefs {
-		if def.Start >= section.StartLine && def.Start <= endLine {
-			for lineNum := def.Start; lineNum <= def.End && lineNum <= endLine; lineNum++ {
-				if changedLines[lineNum] && !seen[def.Name] {
-					seen[def.Name] = true
-					defs = append(defs, def.Name)
-					break
-				}
-			}
-		}
-	}
-	return defs
-}
-
-func ExtractDefinitionsFromSection(filePath, sectionName string) []string {
-	absPath := filepath.Join(rootDir, filePath)
-	content, err := ReadTextFile(absPath)
-	if err != nil {
-		return nil
-	}
-	lang := GetLanguage(filePath)
-	if lang == nil || !lang.SupportsDefinitions() {
-		return nil
-	}
-	sections := lang.ParseSections(content)
-	var section *Section
-	flatSections := flattenSections(sections)
-	for i := range flatSections {
-		if flatSections[i].Name == sectionName {
-			section = &flatSections[i]
-			break
-		}
-	}
-	if section == nil {
-		return nil
-	}
-	lines := strings.Split(content, "\n")
-	parsedDefs := lang.ParseDefinitions(content, lines)
-	var defs []string
-	seen := make(map[string]bool)
-	endLine := section.EndLine
-	if endLine == -1 {
-		endLine = len(lines)
-	}
-	for _, def := range parsedDefs {
-		if def.Start >= section.StartLine && def.Start <= endLine {
-			if !seen[def.Name] {
-				seen[def.Name] = true
-				defs = append(defs, def.Name)
-			}
-		}
-	}
-	return defs
 }
 
 func FinishTicket(ticket *Ticket, summary string, files []string) error {
@@ -5673,47 +5260,34 @@ func FinishTicket(ticket *Ticket, summary string, files []string) error {
 	ticket.Data.Summary = summary
 	ticket.Data.Files = tickFilesResult
 	ticket.Data.Status = TicketStatusClosed
-	ticket.Data.Dates.Finished = ISOTimestamp()
+	now := time.Now()
+	ticket.Data.Dates.Closed = &now
 	return SaveTicket(ticket)
 }
 
-func ReopenTicket(ticket *Ticket) error {
+func ReopenTicket(ticket *Ticket, prompt, llm string) error {
 	if ticket.Data == nil {
 		return fmt.Errorf("ticket data is nil")
 	}
 	if ticket.Data.Status == TicketStatusOpen {
 		return fmt.Errorf("ticket is already open")
 	}
+	gitAuthor := GetGitAuthorGithub()
+	gitCommit := GetGitCommit()
+	llmSlug := strings.ToLower(strings.ReplaceAll(llm, " ", "-"))
+	
+	iteration := TicketIteration{
+		Prompt: prompt,
+		LLM:    llmSlug,
+		Author: gitAuthor,
+		Date:   time.Now(),
+		Commit: gitCommit,
+	}
+	
+	ticket.Data.Iterations = append(ticket.Data.Iterations, iteration)
 	ticket.Data.Status = TicketStatusOpen
-	ticket.Data.Dates.Finished = ""
+	ticket.Data.Dates.Closed = nil
 	return SaveTicket(ticket)
-}
-
-func MigrateTicketBundles(bundles TicketBundles) TicketBundles {
-
-	if bundles == nil {
-		return nil
-	}
-	result := make(TicketBundles)
-	for bundleName, bundleMetrics := range bundles {
-		newBundle := TicketBundleMetrics{Files: make(map[string]TicketFileMetrics)}
-		for filePath, fileMetrics := range bundleMetrics.Files {
-			newFileMetrics := TicketFileMetrics{Sections: make(map[string]TicketSectionMetrics)}
-			for sectionName, sectionMetrics := range fileMetrics.Sections {
-				newSectionName := sectionName
-				if sectionName == "_root" {
-					newSectionName = GuessSectionName(filePath)
-				}
-				newFileMetrics.Sections[newSectionName] = sectionMetrics
-			}
-			if len(newFileMetrics.Sections) == 0 {
-				newFileMetrics.Sections[GuessSectionName(filePath)] = TicketSectionMetrics{}
-			}
-			newBundle.Files[filePath] = newFileMetrics
-		}
-		result[bundleName] = newBundle
-	}
-	return result
 }
 
 func CanCloseTicket(ticket *Ticket) (bool, []string) {
@@ -5943,41 +5517,43 @@ func ListContributors() ([]Contributor, error) {
 	}
 	commitTitleCache := map[string]string{}
 	for _, ticket := range tickets {
-		if ticket.Data == nil {
+		if ticket.Data == nil || len(ticket.Data.Iterations) == 0 {
 			continue
 		}
+		// Use first iteration author/commit for attribution? Or iterate all iterations?
+		// For now using first iteration as 'creator'.
+		firstIter := ticket.Data.Iterations[0]
+		
 		ticketKey := fmt.Sprintf("%04d-%02d-%02d-%s", ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
 		ticketContributors := map[string]struct{}{}
-		if name, email, ok := ParseContributorIdentity(ticket.Data.Author); ok {
+		
+		if name, email, ok := ParseContributorIdentity(firstIter.Author); ok {
 			if github := ResolveContributorGithub(name, email, emailToGithub, nameToGithub); github != "" {
 				ticketContributors[github] = struct{}{}
 				if ticket.Data.Files != nil && stateByGithub[github] != nil {
-					for _, entry := range ticket.Data.Files.Updated {
-						if entry.Lines != nil {
-							stateByGithub[github].Lines.Added += entry.Lines.Added
-							stateByGithub[github].Lines.Removed += entry.Lines.Removed
-						}
-					}
-					for _, entry := range ticket.Data.Files.Removed {
-						if entry.Lines != nil {
-							stateByGithub[github].Lines.Removed += entry.Lines.Removed
+					for _, file := range ticket.Data.Files {
+						for _, section := range file.Sections {
+							if section.Lines != nil {
+								stateByGithub[github].Lines.Added += section.Lines.Added
+								stateByGithub[github].Lines.Removed += section.Lines.Removed
+							}
 						}
 					}
 				}
 			}
 		}
-		if ticket.Data.Commit != "" {
-			if name, email, ok := ParseContributorIdentity(ticket.Data.Author); ok {
+		if firstIter.Commit != "" {
+			if name, email, ok := ParseContributorIdentity(firstIter.Author); ok {
 				if github := ResolveContributorGithub(name, email, emailToGithub, nameToGithub); github != "" && stateByGithub[github] != nil {
-					commitTitle := commitTitleCache[ticket.Data.Commit]
+					commitTitle := commitTitleCache[firstIter.Commit]
 					if commitTitle == "" {
-						commitTitle = GetGitCommitTitle(ticket.Data.Commit)
+						commitTitle = GetGitCommitTitle(firstIter.Commit)
 						if commitTitle == "" {
-							commitTitle = ticket.Data.Commit
+							commitTitle = firstIter.Commit
 						}
-						commitTitleCache[ticket.Data.Commit] = commitTitle
+						commitTitleCache[firstIter.Commit] = commitTitle
 					}
-					stateByGithub[github].Commits[ticket.Data.Commit] = ContributorCommit{Title: commitTitle, Sha: ticket.Data.Commit}
+					stateByGithub[github].Commits[firstIter.Commit] = ContributorCommit{Title: commitTitle, Sha: firstIter.Commit}
 				}
 			}
 		}
@@ -6568,7 +6144,7 @@ func (c *repoContext) TicketReopen(input TicketReopenInput) (*Ticket, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := ReopenTicket(ticket); err != nil {
+	if err := ReopenTicket(ticket, input.Prompt, input.LLM); err != nil {
 		return nil, err
 	}
 	return ticket, nil
@@ -7062,14 +6638,14 @@ func ToolTicketClose(year, month, day int, slug, summary string, files []string)
 	return ToolResult{Output: *output, Data: ticket}
 }
 
-func ToolTicketReopen(year, month, day int, slug string) ToolResult {
+func ToolTicketReopen(year, month, day int, slug, prompt, llm string) ToolResult {
 	output := NewOutput()
 	ticket, err := ReadTicket(year, month, day, slug)
 	if err != nil {
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
-	if err := ReopenTicket(ticket); err != nil {
+	if err := ReopenTicket(ticket, prompt, llm); err != nil {
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
@@ -8024,23 +7600,24 @@ func exportTickets(tx *sql.Tx, ctx RepoContext) (int, error) {
 		if author := t.GetAuthor(); author != "" {
 			authorID = "contributor:" + author
 		}
-		if t.Data != nil {
-			if t.Data.LLM != "" {
-				llm = t.Data.LLM
-			}
-			if t.Data.Commit != "" {
-				commit = t.Data.Commit
-			}
+		if val := t.GetLLM(); val != "" {
+			llm = val
+		}
+		if val := t.GetCommit(); val != "" {
+			commit = val
 		}
 		if s := t.GetSummary(); s != "" {
 			summary = s
 		}
-		createdAt := t.GetDateCreated()
-		if createdAt == "" {
+		createdAtTime := t.GetDateCreated()
+		var createdAt string
+		if createdAtTime.IsZero() {
 			createdAt = time.Now().UTC().Format(time.RFC3339)
+		} else {
+			createdAt = createdAtTime.Format(time.RFC3339)
 		}
-		if finished := t.GetDateFinished(); finished != "" {
-			finishedAt = finished
+		if f := t.GetDateFinished(); f != nil {
+			finishedAt = f.Format(time.RFC3339)
 		}
 		if _, err := ticketStmt.Exec(ticketID, t.Year, t.Month, t.Day, t.Slug, t.GetTitle(), t.FolderPath, uri, t.GetPrompt(), summary, status, authorID, model, llm, commit, createdAt, finishedAt); err != nil {
 			return 0, err
@@ -8779,6 +8356,18 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		}),
 	})
 
+	ticketIterationType := graphql.NewObject(graphql.ObjectConfig{
+		Name: "TicketIteration",
+		Fields: graphql.Fields{
+			"prompt": &graphql.Field{Type: graphql.String},
+			"llm":    &graphql.Field{Type: graphql.String},
+			"author": &graphql.Field{Type: graphql.String},
+			"date":   &graphql.Field{Type: graphql.DateTime},
+			"commit": &graphql.Field{Type: graphql.String},
+			// Files could be added here if needed, keeping it simple for now or matching struct
+		},
+	})
+
 	ticketDateType := graphql.NewObject(graphql.ObjectConfig{
 		Name: "TicketDate",
 		Fields: graphql.Fields{
@@ -8895,25 +8484,12 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					Type: graphql.NewNonNull(ticketDateType),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 						ticket := p.Source.(*Ticket)
-						createdStr := ticket.GetDateCreated()
-						var created time.Time
-						if createdStr == "" {
+						created := ticket.GetDateCreated()
+						if created.IsZero() {
 							created = time.Date(ticket.Year, time.Month(ticket.Month), ticket.Day, 0, 0, 0, 0, time.UTC)
-						} else {
-							var err error
-							created, err = time.Parse(time.RFC3339, createdStr)
-							if err != nil {
-								created = time.Date(ticket.Year, time.Month(ticket.Month), ticket.Day, 0, 0, 0, 0, time.UTC)
-							}
 						}
-						var finished *time.Time
-						finishedStr := ticket.GetDateFinished()
-						if finishedStr != "" {
-							finishedTime, err := time.Parse(time.RFC3339, finishedStr)
-							if err == nil {
-								finished = &finishedTime
-							}
-						}
+						
+						finished := ticket.GetDateFinished()
 						return map[string]interface{}{
 							"created":  created,
 							"finished": finished,
@@ -8940,6 +8516,14 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		Fields: graphql.Fields{
 			"name": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
 			"url":  &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+		},
+	})
+
+	contributorCommitType := graphql.NewObject(graphql.ObjectConfig{
+		Name: "ContributorCommit",
+		Fields: graphql.Fields{
+			"title": &graphql.Field{Type: graphql.String},
+			"sha":   &graphql.Field{Type: graphql.String},
 		},
 	})
 

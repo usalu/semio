@@ -1,0 +1,277 @@
+{
+  "title": "Simplify Tickets",
+  "iterations": [
+    {
+      "prompt": "Simplify the ticket mechanism to remove checkpoints and iterations. All computation that was performed on a checkpoint (affected sections with line metrics and the list of affected definitions.) should be performed when finishing a ticket. Add a summary field and files as necessary arguments for the ticket close command.",
+      "llm": "claude-opus-4",
+      "author": "usalu",
+      "date": "2026-01-08T22: 46: 58Z",
+      "commit": "79da2464ffc4c4a0a0a4f490e3f140b38a57ffe3"
+    }
+  ],
+  "status": "closed",
+  "dates": {
+    "closed": "2026-01-08T23:16:25Z"
+  },
+  "summary": "Simplified the ticket mechanism by removing checkpoints and iterations, and requiring summary/files on finish",
+  "files": [
+    {
+      "path": "go/repo/repo.go",
+      "sections": [
+        {
+          "path": "Codebase",
+          "range": {
+            "start": 3990,
+            "end": 4731
+          },
+          "definitions": [
+            "BuildCodebaseBundles",
+            "BuildCodebaseTickets",
+            "result"
+          ],
+          "lines": {
+            "added": 20,
+            "removed": 0
+          }
+        },
+        {
+          "path": "Commands",
+          "range": {
+            "start": {
+              "line": 6314,
+              "column": 0
+            },
+            "end": {
+              "line": 8181,
+              "column": 0
+            }
+          },
+          "definitions": [
+            "TicketClose",
+            "ToolTicketClose",
+            "exportTickets"
+          ],
+          "lines": {
+            "added": 28,
+            "removed": 0
+          }
+        },
+        {
+          "Commands/SQLite Export": {
+            "range": {
+              "start": {
+                "line": 7739,
+                "column": 0
+              },
+              "end": {
+                "line": 8179,
+                "column": 0
+              }
+            },
+            "definitions": [
+              "exportTickets"
+            ],
+            "lines": {
+              "added": 14,
+              "removed": 0
+            }
+          },
+          {
+            "path": "Contributors",
+            "range": {
+              "start": {
+                "line": 5733,
+                "column": 0
+              },
+              "end": {
+                "line": 6173,
+                "column": 0
+              }
+            },
+            "definitions": [
+              "ListContributors"
+            ],
+            "lines": {
+              "added": 9,
+              "removed": 0
+            }
+          },
+          {
+            "path": "GraphQL Types",
+            "range": {
+              "start": {
+                "line": 47,
+                "column": 0
+              },
+              "end": {
+                "line": 514,
+                "column": 0
+              }
+            },
+            "definitions": [
+              "TicketSectionMetrics",
+              "TicketFileMetricsEntry",
+              "TicketFilesResult",
+              "GetSummary",
+              "GetFiles",
+              "TicketCloseInput"
+            ],
+            "lines": {
+              "added": 26,
+              "removed": 0
+            }
+          },
+          {
+            "path": "GraphQL Types/GraphQL Input Types",
+            "range": {
+              "start": {
+                "line": 475,
+                "column": 0
+              },
+              "end": {
+                "line": 512,
+                "column": 0
+              }
+            },
+            "definitions": [
+              "TicketCloseInput"
+            ],
+            "lines": {
+              "added": 6,
+              "removed": 0
+            }
+          },
+          {
+            "path": "Schema Builder",
+            "range": {
+              "start": {
+                "line": 8427,
+                "column": 0
+              },
+              "end": {
+                "line": 9614,
+                "column": 0
+              }
+            },
+            "definitions": [
+              "buildSchema",
+              "files"
+            ],
+            "lines": {
+              "added": 12,
+              "removed": 0
+            }
+          },
+          {
+            "path": "Tickets",
+            "range": {
+              "start": {
+                "line": 4733,
+                "column": 0
+              },
+              "end": {
+                "line": 5731,
+                "column": 0
+              }
+            },
+            "definitions": [
+              "CreateTicket",
+              "ComputeTicketFiles",
+              "computeAffectedSections",
+              "affectedDefs",
+              "FinishTicket"
+            ],
+            "lines": {
+              "added": 110,
+              "removed": 0
+            }
+          },
+          {
+            "path": "Types",
+            "range": {
+              "start": {
+                "line": 516,
+                "column": 0
+              },
+              "end": {
+                "line": 2148,
+                "column": 0
+              }
+            },
+            "definitions": [
+              "TicketData"
+            ],
+            "lines": {
+              "added": 10,
+              "removed": 0
+            }
+          }
+        ]
+      },
+      {
+        "path": "graphql/repo/schema.graphql",
+        "lines": {
+          "added": 2,
+          "removed": 43
+        },
+        "sections": [
+          {
+            "path": "Inputs",
+            "range": {
+              "start": 85,
+              "end": 122
+            },
+            "definitions": [
+              "TicketCloseInput"
+            ],
+            "lines": {
+              "added": 2,
+              "removed": 0
+            }
+          }
+        ]
+      },
+      {
+        "path": "go/cli/main.go",
+        "lines": {
+          "added": 16,
+          "removed": 56
+        },
+        "sections": [
+          {
+            "path": "Commands",
+            "range": {
+              "start": 87,
+              "end": 948
+            },
+            "definitions": [
+              "ticketListCmd",
+              "ticketCloseCmd",
+              "init"
+            ],
+            "lines": {
+              "added": 16,
+              "removed": 0
+            }
+          },
+          {
+            "path": "Commands/Ticket Commands",
+            "range": {
+              "start": 375,
+              "end": 535
+            },
+            "definitions": [
+              "ticketListCmd",
+              "ticketCloseCmd",
+              "init"
+            ],
+            "lines": {
+              "added": 16,
+              "removed": 0
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

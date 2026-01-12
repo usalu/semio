@@ -21,14 +21,14 @@
 // #endregion Header
 
 import { execSync } from "child_process";
-import { join, dirname } from "path";
+import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const goDir = __dirname;
 
-const modules = ["mcp", "repo"];
+const modules = ["mcp", "cli"];
 
 for (const mod of modules) {
   console.log(`🔨 Building ${mod} (default go build output)...`);
