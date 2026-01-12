@@ -22,8 +22,16 @@
 import "./i18n";
 
 export type { TooltipConfig } from "./sketchpad/elements";
-export type { CompositeFileProviderConfig, FileProvider, FileProviderFactory, LocalFileProviderConfig, MemoryFileProviderConfig, RemoteFileProviderConfig, YProviderFactory } from "./sketchpad/shared";
-export { default as Sketchpad, createCompositeFileProvider, createLocalFileProvider, createMemoryFileProvider, createRemoteFileProvider } from "./sketchpad/Sketchpad";
+export type { AppConfig, CompositeFileProviderConfig, FileProvider, FileProviderFactory, LocalFileProviderConfig, MemoryFileProviderConfig, RemoteFileProviderConfig, YProviderFactory } from "./sketchpad/shared";
+export { default as Sketchpad, appRegistry, createCompositeFileProvider, createLocalFileProvider, createMemoryFileProvider, createRemoteFileProvider, loadAppConfigs } from "./sketchpad/Sketchpad";
+
+export { config as designConfig } from "./sketchpad/Design";
+export { config as docsConfig } from "./sketchpad/Docs";
+export { config as feedbackConfig } from "./sketchpad/Feedback";
+export { config as homeConfig } from "./sketchpad/Home";
+export { config as kitConfig } from "./sketchpad/Kit";
+export { config as qualityConfig } from "./sketchpad/Quality";
+export { config as typeConfig } from "./sketchpad/Type";
 
 export { areKitsEqual, exportKit, importKit } from "./semio";
 export type { KitImportResult } from "./semio";

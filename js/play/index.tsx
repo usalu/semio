@@ -19,19 +19,9 @@
 
 // #endregion Header
 
-import { Sketchpad } from "@semio/js";
+import { Sketchpad, appRegistry, designConfig, docsConfig, feedbackConfig, homeConfig, kitConfig, qualityConfig, typeConfig } from "@semio/js";
 import { createRoot } from "react-dom/client";
 import "./globals.css";
-
-import { appRegistry } from "../semio/sketchpad/Sketchpad";
-
-import { config as designConfig } from "../semio/sketchpad/Design";
-import { config as docsConfig } from "../semio/sketchpad/Docs";
-import { config as feedbackConfig } from "../semio/sketchpad/Feedback";
-import { config as homeConfig } from "../semio/sketchpad/Home";
-import { config as kitConfig } from "../semio/sketchpad/Kit";
-import { config as qualityConfig } from "../semio/sketchpad/Quality";
-import { config as typeConfig } from "../semio/sketchpad/Type";
 
 appRegistry.register(designConfig);
 appRegistry.register(docsConfig);
