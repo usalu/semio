@@ -35,7 +35,9 @@
     "charliermarsh.ruff",
     "ms-toolsai.jupyter",
     // rust
-    "rust-lang.rust-analyzer"
+    "rust-lang.rust-analyzer",
+    // go
+    "golang.go"
   ],
   "unwantedRecommendations": []
 }

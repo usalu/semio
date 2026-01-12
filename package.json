@@ -21,9 +21,9 @@
     "yak"
   ],
   "engines": {
-    "node": ">=18"
+    "node": ">=22.13.1"
   },
-  "packageManager": "npm@10.8.2",
+  "packageManager": "npm@11.7.0",
   "scripts": {
     "dev": "npx nx run-many -t dev",
     "dev:js:js:storybook": "npx nx dev:storybook @semio/js",

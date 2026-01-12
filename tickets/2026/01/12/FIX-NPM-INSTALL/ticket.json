@@ -1,0 +1,406 @@
+{
+  "title": "FIX-NPM-INSTALL",
+  "prompt": "Fix npm Invalid Version error on npm install",
+  "llm": "gemini-3-flash-preview",
+  "status": "closed",
+  "author": "KinanSarak",
+  "dates": {
+    "created": "2026-01-12T13:20:33Z",
+    "finished": "2026-01-12T13:21:50Z"
+  },
+  "commit": "f4899e1b56c66902ea910f895010f6490189705e",
+  "summary": "Fixed npm install failure by adding missing version fields and resolving vitest version conflicts",
+  "files": {
+    "updated": [
+      {
+        "path": "yak/package.json",
+        "lines": {
+          "added": 1,
+          "removed": 0
+        },
+        "sections": {
+          "version": {
+            "range": {
+              "start": {
+                "line": 3,
+                "column": 0
+              },
+              "end": {
+                "line": 3,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          }
+        }
+      },
+      {
+        "path": "go/semio/package.json",
+        "lines": {
+          "added": 1,
+          "removed": 0
+        },
+        "sections": {
+          "version": {
+            "range": {
+              "start": {
+                "line": 3,
+                "column": 0
+              },
+              "end": {
+                "line": 3,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          }
+        }
+      },
+      {
+        "path": "go/repo/package.json",
+        "lines": {
+          "added": 1,
+          "removed": 0
+        },
+        "sections": {
+          "version": {
+            "range": {
+              "start": {
+                "line": 3,
+                "column": 0
+              },
+              "end": {
+                "line": 3,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          }
+        }
+      },
+      {
+        "path": "go/mcp/package.json",
+        "lines": {
+          "added": 1,
+          "removed": 0
+        },
+        "sections": {
+          "version": {
+            "range": {
+              "start": {
+                "line": 3,
+                "column": 0
+              },
+              "end": {
+                "line": 3,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          }
+        }
+      },
+      {
+        "path": "net/Semio/package.json",
+        "lines": {
+          "added": 1,
+          "removed": 0
+        },
+        "sections": {
+          "version": {
+            "range": {
+              "start": {
+                "line": 3,
+                "column": 0
+              },
+              "end": {
+                "line": 3,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          }
+        }
+      },
+      {
+        "path": "net/Semio.Grasshopper/package.json",
+        "lines": {
+          "added": 1,
+          "removed": 0
+        },
+        "sections": {
+          "version": {
+            "range": {
+              "start": {
+                "line": 3,
+                "column": 0
+              },
+              "end": {
+                "line": 3,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          }
+        }
+      },
+      {
+        "path": "assets/logo/package.json",
+        "lines": {
+          "added": 1,
+          "removed": 0
+        },
+        "sections": {
+          "version": {
+            "range": {
+              "start": {
+                "line": 3,
+                "column": 0
+              },
+              "end": {
+                "line": 3,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          }
+        }
+      },
+      {
+        "path": "assets/icons/package.json",
+        "lines": {
+          "added": 1,
+          "removed": 0
+        },
+        "sections": {
+          "version": {
+            "range": {
+              "start": {
+                "line": 3,
+                "column": 0
+              },
+              "end": {
+                "line": 3,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          }
+        }
+      },
+      {
+        "path": "py/engine/package.json",
+        "lines": {
+          "added": 1,
+          "removed": 0
+        },
+        "sections": {
+          "version": {
+            "range": {
+              "start": {
+                "line": 3,
+                "column": 0
+              },
+              "end": {
+                "line": 3,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          }
+        }
+      },
+      {
+        "path": "assets/images/package.json",
+        "lines": {
+          "added": 3,
+          "removed": 2
+        },
+        "sections": {
+          "name": {
+            "range": {
+              "start": {
+                "line": 2,
+                "column": 0
+              },
+              "end": {
+                "line": 2,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          },
+          "projectType": {
+            "range": {
+              "start": {
+                "line": 5,
+                "column": 0
+              },
+              "end": {
+                "line": 5,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          },
+          "version": {
+            "range": {
+              "start": {
+                "line": 3,
+                "column": 0
+              },
+              "end": {
+                "line": 3,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          }
+        }
+      },
+      {
+        "path": "go/cli/package.json",
+        "lines": {
+          "added": 1,
+          "removed": 0
+        },
+        "sections": {
+          "version": {
+            "range": {
+              "start": {
+                "line": 3,
+                "column": 0
+              },
+              "end": {
+                "line": 3,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          }
+        }
+      },
+      {
+        "path": "js/semio/package.json",
+        "lines": {
+          "added": 1,
+          "removed": 1
+        },
+        "sections": {
+          "devDependencies": {
+            "range": {
+              "start": {
+                "line": 92,
+                "column": 0
+              },
+              "end": {
+                "line": 143,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          },
+          "devDependencies/@vitest/coverage-v8": {
+            "range": {
+              "start": {
+                "line": 114,
+                "column": 0
+              },
+              "end": {
+                "line": 114,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          }
+        }
+      },
+      {
+        "path": "js/desktop/package.json",
+        "lines": {
+          "added": 1,
+          "removed": 1
+        },
+        "sections": {
+          "dependencies": {
+            "range": {
+              "start": {
+                "line": 14,
+                "column": 0
+              },
+              "end": {
+                "line": 19,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          },
+          "dependencies/@vitest/coverage-v8": {
+            "range": {
+              "start": {
+                "line": 17,
+                "column": 0
+              },
+              "end": {
+                "line": 17,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          }
+        }
+      }
+    ]
+  }
+}
