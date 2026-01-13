@@ -12,7 +12,7 @@
     "preflight": "echo \"No preflight checks configured\""
   },
   "dependencies": {
-    "@electron/fuses": "^1.8.0",
+    "@electron/fuses": "^2.0.0",
     "@semio/js": "^0.1.0",
     "@vitest/coverage-v8": "4.0.17",
     "electron-squirrel-startup": "^1.0.1"
@@ -26,7 +26,7 @@
     "@electron-forge/plugin-auto-unpack-natives": "^7.11.1",
     "@electron-forge/plugin-fuses": "^7.11.1",
     "@electron-forge/plugin-vite": "^7.11.1",
-    "@electron/fuses": "^1.8.0",
+    "@electron/fuses": "^2.0.0",
     "@types/electron-squirrel-startup": "^1.0.2",
     "electron": "^37.10.3"
   },
