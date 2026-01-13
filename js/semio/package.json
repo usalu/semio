@@ -97,7 +97,7 @@
     "@types/eslint": "^9.6.1",
     "@types/eslint-config-prettier": "^6.11.3",
     "@types/mdx": "^2.0.13",
-    "@types/node": "^24.10.1",
+    "@types/node": "^25.0.8",
     "@types/react": "^19.2.8",
     "@types/react-dom": "^19.2.3",
     "@types/sql.js": "^1.4.9",
