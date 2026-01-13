@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Configuration for dependency updates. Defines which packages should be excluded from updates and how to preserve local package references.",
+  "exclude": {
+    "net/Semio/Semio.csproj": [
+      "FluentValidation",
+      "System.Collections.Immutable"
+    ],
+    "net/Semio.Grasshopper/Semio.Grasshopper.csproj": [
+      "Grasshopper",
+      "System.Drawing.Common",
+      "System.Resources.Extensions"
+    ]
+  },
+  "preserveLocalVersions": {
+    "npm": {
+      "pattern": "*",
+      "autoDetectWorkspaces": true
+    }
+  },
+  "paths": {
+    "npm": {
+      "root": ".",
+      "workspaces": true
+    },
+    "python": ["py/engine"],
+    "rust": ["rs/semio"],
+    "go": ["go/cli", "go/mcp", "go/repo", "go/semio"],
+    "dotnet": [
+      "net/Semio/Semio.csproj",
+      "net/Semio.Grasshopper/Semio.Grasshopper.csproj",
+      "net/Semio.Tests/Semio.Tests.csproj",
+      "net/Semio.Grasshopper.Tests/Semio.Grasshopper.Tests.csproj"
+    ]
+  }
+}

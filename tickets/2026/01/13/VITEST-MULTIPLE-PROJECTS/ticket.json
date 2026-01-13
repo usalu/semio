@@ -1,7 +1,7 @@
 {
   "title": "vitest-multiple-projects",
   "prompt": "Investigate Vitest multiple projects warning and suggest solutions",
-  "llm": "claude",
+  "llm": "claude-opus-4-5",
   "status": "closed",
   "author": "Ueli Saluz",
   "dates": {

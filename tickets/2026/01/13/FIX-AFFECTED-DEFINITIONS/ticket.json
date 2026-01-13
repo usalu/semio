@@ -1,0 +1,559 @@
+{
+  "title": "FIX-AFFECTED-DEFINITIONS",
+  "iterations": [
+    {
+      "prompt": "Fix bug where affected definitions in ticket file metrics includes non-top-level definitions like local variables. E.g. Tickets section shows definitions like 'result', 'affectedDefs', 'diff', 'intersection', 'currentFile' which are local variables, not top-level definitions. Should only include actual function definitions that were modified: CreateTicket, ComputeTicketFiles, computeAffectedSections, GetGitDiffLines.",
+      "llm": "claude-opus-4-5",
+      "author": "Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e",
+      "date": "2026-01-13T18:01:06.4665669+01:00",
+      "commit": "b97d48cc239f068dc557d07bc1f05409cef1ba12"
+    },
+    {
+      "prompt": "Still too many definitions. The Tickets section shows GetTicketPlanPath, CreateTicket, ListTickets, ComputeTicketFiles, computeAffectedSections, setDifference, setIntersection, GetGitDiffLines but only CreateTicket, ComputeTicketFiles, computeAffectedSections, GetGitDiffLines were actually modified. The logic needs to check if changed lines actually fall within each definition's range, not just within the section's range.",
+      "llm": "claude-opus-4-5",
+      "author": "Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e",
+      "date": "2026-01-13T18:07:20.7140246+01:00",
+      "commit": "b97d48cc239f068dc557d07bc1f05409cef1ba12"
+    },
+    {
+      "prompt": "Continue work on FIX-AFFECTED-DEFINITIONS per user request.",
+      "llm": "gpt-5",
+      "author": "Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e",
+      "date": "2026-01-13T18:18:31.2199668+01:00",
+      "commit": "b97d48cc239f068dc557d07bc1f05409cef1ba12"
+    },
+    {
+      "prompt": "Log user note for removed lines example.",
+      "llm": "gpt-5",
+      "author": "Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e",
+      "date": "2026-01-13T18:23:47.8075556+01:00",
+      "commit": "b97d48cc239f068dc557d07bc1f05409cef1ba12"
+    }
+  ],
+  "status": "closed",
+  "dates": {
+    "closed": "2026-01-13T18:23:52.8614517+01:00"
+  },
+  "summary": "Fix affected definition metrics and section line attribution, and document ticket line rules.",
+  "files": [
+    {
+      "path": "go/repo/repo.go",
+      "status": "",
+      "sections": [
+        {
+          "name": "GraphQL Types",
+          "range": {
+            "start": 47,
+            "end": 536
+          },
+          "definitions": [
+            "AllowedLLMs",
+            "Range",
+            "DiffLines"
+          ],
+          "lines": {
+            "added": 16,
+            "removed": 6
+          }
+        },
+        {
+          "name": "Go",
+          "range": {
+            "start": 1049,
+            "end": 1130
+          },
+          "definitions": [
+            "NewGoLanguage"
+          ],
+          "lines": {
+            "added": 1,
+            "removed": 1
+          }
+        },
+        {
+          "name": "Utils",
+          "range": {
+            "start": 2173,
+            "end": 2619
+          },
+          "definitions": [
+            "GetGitAuthorGithub"
+          ],
+          "lines": {
+            "added": 13,
+            "removed": 7
+          }
+        },
+        {
+          "name": "Tickets",
+          "range": {
+            "start": 4753,
+            "end": 5375
+          },
+          "definitions": [
+            "CreateTicket",
+            "ComputeTicketFiles",
+            "computeSectionLineMap",
+            "computeAffectedSections",
+            "GetGitDiffLines"
+          ],
+          "lines": {
+            "added": 89,
+            "removed": 36
+          }
+        },
+        {
+          "name": "GraphQL Executor",
+          "range": {
+            "start": 7958,
+            "end": 8068
+          },
+          "lines": {
+            "added": 0,
+            "removed": 10
+          }
+        },
+        {
+          "name": "Schema Builder",
+          "range": {
+            "start": 8070,
+            "end": 9260
+          },
+          "definitions": [
+            "buildSchema"
+          ],
+          "lines": {
+            "added": 6,
+            "removed": 0
+          }
+        },
+        {
+          "name": "Entity Resolvers",
+          "range": {
+            "start": 9635,
+            "end": 9703
+          },
+          "lines": {
+            "added": 0,
+            "removed": 1
+          }
+        },
+        {
+          "name": "Resolver Interfaces",
+          "range": {
+            "start": 9705,
+            "end": 9759
+          },
+          "lines": {
+            "added": 1,
+            "removed": 0
+          }
+        }
+      ]
+    },
+    {
+      "path": "README.md",
+      "status": "",
+      "sections": [
+        {
+          "name": "Running Tasks",
+          "range": {
+            "start": 765,
+            "end": 789
+          },
+          "lines": {
+            "added": 0,
+            "removed": 25
+          }
+        },
+        {
+          "name": "Launch Configurations",
+          "range": {
+            "start": 790,
+            "end": 822
+          },
+          "lines": {
+            "added": 0,
+            "removed": 33
+          }
+        },
+        {
+          "name": "🪄 [AI](AGENTS.md) [↑](#-development-)",
+          "range": {
+            "start": 823,
+            "end": 970
+          },
+          "lines": {
+            "added": 0,
+            "removed": 6
+          }
+        },
+        {
+          "name": "🛠️ Uses-Cases [↑](#-ai-)",
+          "range": {
+            "start": 829,
+            "end": 864
+          },
+          "lines": {
+            "added": 0,
+            "removed": 4
+          }
+        },
+        {
+          "name": "⚖️ Decision Making [↑](#-uses-cases-)",
+          "range": {
+            "start": 833,
+            "end": 840
+          },
+          "lines": {
+            "added": 0,
+            "removed": 8
+          }
+        },
+        {
+          "name": "🔁 Refactoring [↑](#-uses-cases-)",
+          "range": {
+            "start": 841,
+            "end": 852
+          },
+          "lines": {
+            "added": 0,
+            "removed": 4
+          }
+        },
+        {
+          "name": "🖱️ [Cursor](.cursor) [↑](#-ai-)",
+          "range": {
+            "start": 894,
+            "end": 910
+          },
+          "lines": {
+            "added": 0,
+            "removed": 8
+          }
+        },
+        {
+          "name": "🌊 Windsurf [↑](#-editor-)",
+          "range": {
+            "start": 911,
+            "end": 914
+          },
+          "lines": {
+            "added": 0,
+            "removed": 4
+          }
+        },
+        {
+          "name": "⌨️ CLI [↑](#-tools-)",
+          "range": {
+            "start": 915,
+            "end": 926
+          },
+          "lines": {
+            "added": 0,
+            "removed": 2
+          }
+        },
+        {
+          "name": "⌨️ [Claude Code](CLAUDE.md) [↑](#-ai-)",
+          "range": {
+            "start": 917,
+            "end": 922
+          },
+          "lines": {
+            "added": 0,
+            "removed": 6
+          }
+        },
+        {
+          "name": "🎫 Ticket System [↑](#-components-)",
+          "range": {
+            "start": 1152,
+            "end": 1159
+          },
+          "lines": {
+            "added": 1,
+            "removed": 0
+          }
+        }
+      ]
+    },
+    {
+      "path": "AGENTS.md",
+      "status": "",
+      "sections": [
+        {
+          "name": "Ticket",
+          "range": {
+            "start": 61,
+            "end": 87
+          },
+          "lines": {
+            "added": 1,
+            "removed": 0
+          }
+        },
+        {
+          "name": "Commands",
+          "range": {
+            "start": 433,
+            "end": 434
+          },
+          "lines": {
+            "added": 0,
+            "removed": 1
+          }
+        },
+        {
+          "name": "Reports",
+          "range": {
+            "start": 435,
+            "end": 450
+          },
+          "lines": {
+            "added": 0,
+            "removed": 12
+          }
+        },
+        {
+          "name": "Reports Directory",
+          "range": {
+            "start": 447,
+            "end": 450
+          },
+          "lines": {
+            "added": 0,
+            "removed": 4
+          }
+        },
+        {
+          "name": "Repo CLI",
+          "range": {
+            "start": 451,
+            "end": 466
+          },
+          "lines": {
+            "added": 0,
+            "removed": 16
+          }
+        },
+        {
+          "name": "Using Go binary (preferred)",
+          "range": {
+            "start": 467,
+            "end": 469
+          },
+          "lines": {
+            "added": 0,
+            "removed": 1
+          }
+        },
+        {
+          "name": "Using TypeScript fallback",
+          "range": {
+            "start": 470,
+            "end": 1360
+          },
+          "lines": {
+            "added": 0,
+            "removed": 29
+          }
+        },
+        {
+          "name": "📄 go/repo/repo.go",
+          "range": {
+            "start": 3932,
+            "end": 3942
+          },
+          "lines": {
+            "added": 1,
+            "removed": 0
+          }
+        }
+      ]
+    },
+    {
+      "path": "tickets/2026/01/13/FIX-AFFECTED-DEFINITIONS/plan.md",
+      "status": "",
+      "sections": [
+        {
+          "name": "Plan",
+          "range": {
+            "start": 1,
+            "end": 21
+          },
+          "lines": {
+            "added": 2,
+            "removed": 0
+          }
+        },
+        {
+          "name": "Problem Analysis",
+          "range": {
+            "start": 3,
+            "end": 9
+          },
+          "lines": {
+            "added": 7,
+            "removed": 0
+          }
+        },
+        {
+          "name": "Solution",
+          "range": {
+            "start": 10,
+            "end": 16
+          },
+          "lines": {
+            "added": 7,
+            "removed": 0
+          }
+        },
+        {
+          "name": "Files to Modify",
+          "range": {
+            "start": 17,
+            "end": 21
+          },
+          "lines": {
+            "added": 4,
+            "removed": 0
+          }
+        }
+      ]
+    },
+    {
+      "path": "tickets/2026/01/13/FIX-AFFECTED-DEFINITIONS/log.md",
+      "status": "",
+      "sections": [
+        {
+          "name": "Log",
+          "range": {
+            "start": 1,
+            "end": 36
+          },
+          "lines": {
+            "added": 2,
+            "removed": 0
+          }
+        },
+        {
+          "name": "Iteration 1: Fix local variable matching",
+          "range": {
+            "start": 3,
+            "end": 19
+          },
+          "lines": {
+            "added": 2,
+            "removed": 0
+          }
+        },
+        {
+          "name": "Analysis",
+          "range": {
+            "start": 5,
+            "end": 7
+          },
+          "lines": {
+            "added": 3,
+            "removed": 0
+          }
+        },
+        {
+          "name": "Implementation",
+          "range": {
+            "start": 8,
+            "end": 19
+          },
+          "lines": {
+            "added": 12,
+            "removed": 0
+          }
+        },
+        {
+          "name": "Iteration 2: Fix false positives from removed lines",
+          "range": {
+            "start": 20,
+            "end": 27
+          },
+          "lines": {
+            "added": 2,
+            "removed": 0
+          }
+        },
+        {
+          "name": "Analysis",
+          "range": {
+            "start": 22,
+            "end": 24
+          },
+          "lines": {
+            "added": 3,
+            "removed": 0
+          }
+        },
+        {
+          "name": "Implementation",
+          "range": {
+            "start": 25,
+            "end": 27
+          },
+          "lines": {
+            "added": 3,
+            "removed": 0
+          }
+        },
+        {
+          "name": "Iteration 3: Attribute removed lines to base sections",
+          "range": {
+            "start": 28,
+            "end": 36
+          },
+          "lines": {
+            "added": 2,
+            "removed": 0
+          }
+        },
+        {
+          "name": "Analysis",
+          "range": {
+            "start": 30,
+            "end": 33
+          },
+          "lines": {
+            "added": 4,
+            "removed": 0
+          }
+        },
+        {
+          "name": "Implementation",
+          "range": {
+            "start": 34,
+            "end": 36
+          },
+          "lines": {
+            "added": 2,
+            "removed": 0
+          }
+        }
+      ]
+    },
+    {
+      "path": "tickets/2026/01/13/FIX-AFFECTED-DEFINITIONS/summary.md",
+      "status": "",
+      "sections": [
+        {
+          "name": "Summary",
+          "range": {
+            "start": 1,
+            "end": 8
+          },
+          "lines": {
+            "added": 7,
+            "removed": 0
+          }
+        }
+      ]
+    }
+  ]
+}

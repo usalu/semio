@@ -931,8 +931,22 @@ var sectionListCmd = &cobra.Command{
 					sections {
 						id
 						name
-						range { start { line column } end { line column } }
-						children { id name }
+						range { start end }
+						children {
+							id
+							name
+							range { start end }
+							children {
+								id
+								name
+								range { start end }
+								children {
+									id
+									name
+									range { start end }
+								}
+							}
+						}
 					}
 				}
 			}

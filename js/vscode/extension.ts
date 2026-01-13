@@ -412,6 +412,17 @@ interface DefinitionInfo {
   endIndex: number;
 }
 
+interface GraphqlSectionRange {
+  start?: number;
+  end?: number;
+}
+
+interface GraphqlSection {
+  name: string;
+  range?: GraphqlSectionRange | null;
+  children?: GraphqlSection[] | null;
+}
+
 // #endregion Types
 
 // #region Utilities
@@ -425,7 +436,7 @@ function getRepoBinaryPath(): string | undefined {
   if (!root) return undefined;
   const isWindows = process.platform === "win32";
   const binaryName = isWindows ? "cli.exe" : "cli";
-  const binaryPath = path.join(root, "go", "repo", binaryName);
+  const binaryPath = path.join(root, "go", "cli", binaryName);
   log("getRepoBinaryPath:", binaryPath, "exists:", fs.existsSync(binaryPath));
   if (fs.existsSync(binaryPath)) return binaryPath;
   return undefined;
@@ -490,6 +501,29 @@ async function runRepoCommandJson<T>(args: string): Promise<T | null> {
     }
     return null;
   }
+}
+
+function normalizeSectionTree(sections: GraphqlSection[]): SectionInfo[] {
+  return sections.map((section) => ({
+    name: section.name,
+    startLine: section.range?.start ?? 0,
+    endLine: section.range?.end ?? 0,
+    startIndex: 0,
+    endIndex: 0,
+    children: normalizeSectionTree(section.children ?? []),
+  }));
+}
+
+function extractSections(result: ToolResult<SectionInfo[]> | { file?: { sections?: GraphqlSection[] | null } | null } | null): SectionInfo[] {
+  if (!result) return [];
+  if ("data" in result && Array.isArray(result.data)) return result.data;
+  if ("file" in result) return normalizeSectionTree(result.file?.sections ?? []);
+  return [];
+}
+
+async function getSectionListForFile(filePath: string): Promise<SectionInfo[]> {
+  const result = await runRepoCommandJson<ToolResult<SectionInfo[]> | { file?: { sections?: GraphqlSection[] | null } | null }>(`section list "${filePath}"`);
+  return extractSections(result);
 }
 
 async function loadCodebase(): Promise<Codebase | null> {
@@ -2266,11 +2300,11 @@ class SectionsProvider implements vscode.TreeDataProvider<SectionTreeItem> {
       return [];
     }
     const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
-    const result = await runRepoCommandJson<ToolResult<SectionInfo[]>>(`section list "${relativePath}"`);
-    if (!result?.data || result.data.length === 0) {
+    const sections = await getSectionListForFile(relativePath);
+    if (sections.length === 0) {
       return [new SectionStatusItem(getUiString("sectionsEmpty"))];
     }
-    return this.buildSectionItems(result.data, null);
+    return this.buildSectionItems(sections, null);
   }
 }
 
@@ -2781,8 +2815,7 @@ function registerSidebarViews(context: vscode.ExtensionContext): void {
       const root = getWorkspaceRoot();
       if (!root) return;
       const fullPath = path.join(root, filePath);
-      const result = await runRepoCommandJson<ToolResult<SectionInfo[]>>(`section list "${filePath}"`);
-      const sections = result?.data || [];
+      const sections = await getSectionListForFile(filePath);
       const sectionName = sectionPath.split("/").pop() || sectionPath;
       const findSection = (secs: SectionInfo[], name: string): SectionInfo | undefined => {
         for (const sec of secs) {

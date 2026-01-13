@@ -117,14 +117,21 @@ func (e ViolationPriority) String() string {
 	return string(e)
 }
 
-type Position struct {
-	Line   int `json:"line"`
-	Column int `json:"column"`
+var AllowedLLMs = []string{
+	"claude-opus-4-5",
+	"claude-opus-4",
+	"claude-sonnet-4-5",
+	"claude-sonnet-4",
+	"claude-haiku-4-5",
+	"gemini-3-pro",
+	"gemini-3-flash",
+	"gpt-5-2",
+	"gpt-5-mini",
 }
 
 type Range struct {
-	Start Position `json:"start"`
-	End   Position `json:"end"`
+	Start int `json:"start"`
+	End   int `json:"end"`
 }
 
 type LineMetrics struct {
@@ -138,7 +145,10 @@ type TextEdit struct {
 	NewText string `json:"newText"`
 }
 
-
+type DiffLines struct {
+	Added   []int
+	Removed []int
+}
 
 type CountMetrics struct {
 	Added   int `json:"added"`
@@ -249,6 +259,8 @@ func (f *File) GetID() string { return f.ID }
 
 type Section struct {
 	Name       string    `json:"name"`
+	Path       string    `json:"path,omitempty"`
+	FilePath   string    `json:"filePath,omitempty"`
 	StartLine  int       `json:"startLine"`
 	EndLine    int       `json:"endLine"`
 	StartIndex int       `json:"startIndex"`
@@ -1049,7 +1061,7 @@ func NewGoLanguage() *GoLanguage {
 			extensions:         []string{".go"},
 			sectionStart:       regexp.MustCompile(`(?i)^\s*//\s*#region\s+(.+?)\s*$`),
 			sectionEnd:         regexp.MustCompile(`(?i)^\s*//\s*#endregion(?:\s+(.+?))?\s*$`),
-			definitionRegexp:   regexp.MustCompile(`(?:^|\s)(?:func|type|var|const)\s+(?:\([^)]+\)\s+)?([A-Za-z_][A-Za-z0-9_]*)`),
+			definitionRegexp:   regexp.MustCompile(`^(?:func|type|var|const)\s+(?:\([^)]+\)\s+)?([A-Za-z_][A-Za-z0-9_]*)`),
 			commentPrefix:      "//",
 			sectionStartFmt:    "// #region %s",
 			sectionEndFmt:      "// #endregion %s",
@@ -2429,15 +2441,21 @@ func GetGitAuthor() string {
 
 func GetGitAuthorGithub() string {
 	contributorsDir := filepath.Join(GetRootDir(), "contributors")
-	entries, err := os.ReadDir(contributorsDir)
-	if err != nil {
-		name, _, _ := ExecCommand("git", []string{"config", "--get", "user.name"}, "")
-		return strings.TrimSpace(name)
-	}
-	email, _, _ := ExecCommand("git", []string{"config", "--get", "user.email"}, "")
-	email = strings.TrimSpace(email)
 	name, _, _ := ExecCommand("git", []string{"config", "--get", "user.name"}, "")
 	name = strings.TrimSpace(name)
+	email, _, _ := ExecCommand("git", []string{"config", "--get", "user.email"}, "")
+	email = strings.TrimSpace(email)
+
+	fallback := name
+	if email != "" {
+		fallback = fmt.Sprintf("%s <%s>", name, email)
+	}
+
+	entries, err := os.ReadDir(contributorsDir)
+	if err != nil {
+		return fallback
+	}
+
 	for _, entry := range entries {
 		if !entry.IsDir() {
 			continue
@@ -2469,7 +2487,7 @@ func GetGitAuthorGithub() string {
 			return github
 		}
 	}
-	return name
+	return fallback
 }
 
 func GetGitCommit() string {
@@ -4768,7 +4786,24 @@ func CreateTicket(title, prompt, llm, planPath string) (*Ticket, error) {
 	now := time.Now()
 	year, month, day := FormatDate(now)
 	slug := Slugify(title)
-	llmSlug := strings.ToLower(strings.ReplaceAll(llm, " ", "-"))
+	
+	// Normalize LLM string
+	llmSlug := strings.ToLower(llm)
+	llmSlug = strings.ReplaceAll(llmSlug, " ", "-")
+	llmSlug = strings.ReplaceAll(llmSlug, ".", "-")
+
+	isAllowed := false
+	for _, allowed := range AllowedLLMs {
+		if allowed == llmSlug {
+			isAllowed = true
+			break
+		}
+	}
+
+	if !isAllowed {
+		return nil, fmt.Errorf("model '%s' is not allowed. Please use one of: %s", llmSlug, strings.Join(AllowedLLMs, ", "))
+	}
+
 	ticketDir := GetTicketPath(year, month, day, slug)
 	if err := EnsureDir(ticketDir); err != nil {
 		return nil, err
@@ -4982,10 +5017,10 @@ func ComputeTicketFiles(ticket *Ticket, files []string) ([]TicketFile, error) {
 
 	var result []TicketFile
 	for _, filePath := range files {
-		changedLines := diffLines[filePath]
+		fileDiff := diffLines[filePath]
 		sections := []TicketSection{}
 
-		if len(changedLines) > 0 {
+		if fileDiff != nil && (len(fileDiff.Added) > 0 || len(fileDiff.Removed) > 0) {
 			content, readErr := ReadTextFile(filepath.Join(GetRootDir(), filePath))
 			if readErr == nil {
 				lines := strings.Split(content, "\n")
@@ -4994,11 +5029,18 @@ func ComputeTicketFiles(ticket *Ticket, files []string) ([]TicketFile, error) {
 					fileSections := lang.ParseSections(content)
 					fileDefs := lang.ParseDefinitions(content, lines)
 					// Filter definitions to only include top-level ones
-					// This logic usually depends on the parser implementation, 
+					// This logic usually depends on the parser implementation,
 					// but here we can enforce it by checking if def is inside another def?
 					// Or just trust ParseDefinitions if we fix it later.
 					// For child exclusion, we update computeAffectedSections.
-					affectedSections := computeAffectedSections(filePath, fileSections, fileDefs, changedLines, "")
+					removedLineMap := map[string][]int{}
+					if len(fileDiff.Removed) > 0 {
+						stdout, stderr, exitCode := ExecCommand("git", []string{"show", fmt.Sprintf("%s:%s", baseCommit, filePath)}, "")
+						if exitCode == 0 && stderr == "" {
+							removedLineMap = computeSectionLineMap(lang.ParseSections(stdout), fileDiff.Removed, "")
+						}
+					}
+					affectedSections := computeAffectedSections(filePath, fileSections, fileDefs, computeSectionLineMap(fileSections, fileDiff.Added, ""), removedLineMap, "")
 					for _, sectionMetrics := range affectedSections {
 						sections = append(sections, sectionMetrics)
 					}
@@ -5016,27 +5058,42 @@ func ComputeTicketFiles(ticket *Ticket, files []string) ([]TicketFile, error) {
 	return result, nil
 }
 
-func computeAffectedSections(filePath string, sections []Section, defs []DefinitionRange, changedLines []int, parentPath string) []TicketSection {
-	var result []TicketSection
+func computeSectionLineMap(sections []Section, diffLines []int, parentPath string) map[string][]int {
+	result := map[string][]int{}
 	for _, section := range sections {
-		// New path logic: parent#child
 		sectionPath := section.Name
-		// If it's a file-level section (Language specific?), just use Name.
-		// Usually name is sufficient.
-		
-		linesInSection := computeLinesInRange(changedLines, section.StartLine, section.EndLine)
-		
-		// Subtract child lines
+		if parentPath != "" {
+			sectionPath = parentPath + "#" + section.Name
+		}
+		linesInSection := computeLinesInRange(diffLines, section.StartLine, section.EndLine)
 		childLines := []int{}
 		for _, child := range section.Children {
-			cLines := computeLinesInRange(changedLines, child.StartLine, child.EndLine)
-			childLines = append(childLines, cLines...)
+			childLines = append(childLines, computeLinesInRange(diffLines, child.StartLine, child.EndLine)...)
 		}
-		
-		// Exclusive lines = linesInSection - childLines
 		exclusiveLines := setDifference(linesInSection, childLines)
-
 		if len(exclusiveLines) > 0 {
+			result[sectionPath] = append(result[sectionPath], exclusiveLines...)
+		}
+		if len(section.Children) > 0 {
+			for key, value := range computeSectionLineMap(section.Children, diffLines, sectionPath) {
+				result[key] = append(result[key], value...)
+			}
+		}
+	}
+	return result
+}
+
+func computeAffectedSections(filePath string, sections []Section, defs []DefinitionRange, addedLineMap map[string][]int, removedLineMap map[string][]int, parentPath string) []TicketSection {
+	var result []TicketSection
+	for _, section := range sections {
+		sectionPath := section.Name
+		if parentPath != "" {
+			sectionPath = parentPath + "#" + section.Name
+		}
+		exclusiveAddedLines := addedLineMap[sectionPath]
+		exclusiveRemovedLines := removedLineMap[sectionPath]
+
+		if len(exclusiveAddedLines) > 0 || len(exclusiveRemovedLines) > 0 {
 			var affectedDefs []string
 			for _, def := range defs {
 				// Check if def is in this section
@@ -5049,26 +5106,28 @@ func computeAffectedSections(filePath string, sections []Section, defs []Definit
 							break
 						}
 					}
-					
+
 					if !isInChild {
-						defLines := computeLinesInRange(exclusiveLines, def.Start, def.End)
-						if len(defLines) > 0 {
+						// Only use added lines to determine affected definitions
+						// Removed lines reference OLD file positions which don't map to NEW file definitions
+						defAddedLines := computeLinesInRange(exclusiveAddedLines, def.Start, def.End)
+						if len(defAddedLines) > 0 {
 							affectedDefs = append(affectedDefs, def.Name)
 						}
 					}
 				}
 			}
-			
+
 			result = append(result, TicketSection{
 				Name:        sectionPath,
-				Range:       &Range{Start: Position{Line: section.StartLine}, End: Position{Line: section.EndLine}},
+				Range:       &Range{Start: section.StartLine, End: section.EndLine},
 				Definitions: uniqueStrings(affectedDefs),
-				Lines:       &LineMetrics{Added: len(exclusiveLines)},
+				Lines:       &LineMetrics{Added: len(exclusiveAddedLines), Removed: len(exclusiveRemovedLines)},
 			})
 		}
-		
+
 		if len(section.Children) > 0 {
-			childResults := computeAffectedSections(filePath, section.Children, defs, changedLines, sectionPath)
+			childResults := computeAffectedSections(filePath, section.Children, defs, addedLineMap, removedLineMap, sectionPath)
 			result = append(result, childResults...)
 		}
 	}
@@ -5115,7 +5174,7 @@ func uniqueStrings(strs []string) []string {
 	return result
 }
 
-func GetGitDiffLines(baseCommit, headCommit string, paths []string) (map[string][]int, error) {
+func GetGitDiffLines(baseCommit, headCommit string, paths []string) (map[string]*DiffLines, error) {
 	if baseCommit == "" {
 		return nil, fmt.Errorf("base commit is required")
 	}
@@ -5124,25 +5183,37 @@ func GetGitDiffLines(baseCommit, headCommit string, paths []string) (map[string]
 	if exitCode != 0 {
 		return nil, fmt.Errorf("git diff failed: %s", strings.TrimSpace(stderr))
 	}
-	result := make(map[string][]int)
+	result := make(map[string]*DiffLines)
 	var currentFile string
-	lineRegex := regexp.MustCompile(`^@@\s+-\d+(?:,\d+)?\s+\+(\d+)(?:,(\d+))?\s+@@`)
+	// Capture both old (-start,count) and new (+start,count) line ranges
+	lineRegex := regexp.MustCompile(`^@@\s+-(\d+)(?:,(\d+))?\s+\+(\d+)(?:,(\d+))?\s+@@`)
 	for _, line := range strings.Split(stdout, "\n") {
 		if strings.HasPrefix(line, "+++ b/") {
 			currentFile = strings.TrimPrefix(line, "+++ b/")
 			if result[currentFile] == nil {
-				result[currentFile] = []int{}
+				result[currentFile] = &DiffLines{Added: []int{}, Removed: []int{}}
 			}
 		} else if strings.HasPrefix(line, "@@") && currentFile != "" {
 			match := lineRegex.FindStringSubmatch(line)
 			if match != nil {
-				startLine, _ := strconv.Atoi(match[1])
-				count := 1
+				// Parse removed lines (old file)
+				oldStart, _ := strconv.Atoi(match[1])
+				oldCount := 1
 				if match[2] != "" {
-					count, _ = strconv.Atoi(match[2])
+					oldCount, _ = strconv.Atoi(match[2])
 				}
-				for i := 0; i < count; i++ {
-					result[currentFile] = append(result[currentFile], startLine+i)
+				for i := 0; i < oldCount; i++ {
+					result[currentFile].Removed = append(result[currentFile].Removed, oldStart+i)
+				}
+
+				// Parse added lines (new file)
+				newStart, _ := strconv.Atoi(match[3])
+				newCount := 1
+				if match[4] != "" {
+					newCount, _ = strconv.Atoi(match[4])
+				}
+				for i := 0; i < newCount; i++ {
+					result[currentFile].Added = append(result[currentFile].Added, newStart+i)
 				}
 			}
 		}
@@ -8001,19 +8072,11 @@ func (e *Executor) GetOperationType(query string) (string, error) {
 // #region Schema Builder
 
 func buildSchema(resolver *Resolver) (graphql.Schema, error) {
-	positionType := graphql.NewObject(graphql.ObjectConfig{
-		Name: "Position",
-		Fields: graphql.Fields{
-			"line":   &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"column": &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-		},
-	})
-
 	rangeType := graphql.NewObject(graphql.ObjectConfig{
 		Name: "Range",
 		Fields: graphql.Fields{
-			"start": &graphql.Field{Type: graphql.NewNonNull(positionType)},
-			"end":   &graphql.Field{Type: graphql.NewNonNull(positionType)},
+			"start": &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"end":   &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
 		},
 	})
 
@@ -8178,7 +8241,43 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 				"sections": &graphql.Field{
 					Type: graphql.NewList(sectionType),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						return []*Section{}, nil
+						file := p.Source.(*File)
+						absPath := filepath.Join(rootDir, file.Path)
+						if !FileExists(absPath) {
+							return []*Section{}, nil
+						}
+						content, err := ReadTextFile(absPath)
+						if err != nil {
+							return nil, err
+						}
+						sections := ParseSections(content, file.Path)
+						result := make([]*Section, len(sections))
+						stack := make([]*Section, 0, len(sections))
+						for i := range sections {
+							sections[i].FilePath = file.Path
+							sections[i].Path = sections[i].Name
+							result[i] = &sections[i]
+							if len(sections[i].Children) > 0 {
+								stack = append(stack, result[i])
+							}
+						}
+						for len(stack) > 0 {
+							section := stack[len(stack)-1]
+							stack = stack[:len(stack)-1]
+							for i := range section.Children {
+								child := &section.Children[i]
+								child.FilePath = file.Path
+								if section.Path == "" {
+									child.Path = child.Name
+								} else {
+									child.Path = section.Path + "/" + child.Name
+								}
+								if len(child.Children) > 0 {
+									stack = append(stack, child)
+								}
+							}
+						}
+						return result, nil
 					},
 				},
 				"definitions": &graphql.Field{
@@ -8217,12 +8316,45 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 				},
 				"name":   &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
 				"path":   &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-				"file":   &graphql.Field{Type: fileType},
+				"file": &graphql.Field{
+					Type: fileType,
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						section := p.Source.(*Section)
+						if section.FilePath == "" {
+							return nil, nil
+						}
+						normalizedPath := strings.ReplaceAll(section.FilePath, "\\", "/")
+						name := filepath.Base(normalizedPath)
+						ext := filepath.Ext(name)
+						folderPath := filepath.Dir(normalizedPath)
+						var folderID *string
+						if folderPath != "." {
+							id := fmt.Sprintf("folder:%s", folderPath)
+							folderID = &id
+						}
+						return &File{
+							ID:        fmt.Sprintf("file:%s", normalizedPath),
+							Path:      normalizedPath,
+							URI:       fmt.Sprintf("file://%s/%s", rootDir, normalizedPath),
+							Name:      name,
+							Extension: ext,
+							FolderID:  folderID,
+						}, nil
+					},
+				},
 				"parent": &graphql.Field{Type: sectionType},
 				"children": &graphql.Field{
 					Type: graphql.NewList(sectionType),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						return []*Section{}, nil
+						section := p.Source.(*Section)
+						if len(section.Children) == 0 {
+							return []*Section{}, nil
+						}
+						children := make([]*Section, len(section.Children))
+						for i := range section.Children {
+							children[i] = &section.Children[i]
+						}
+						return children, nil
 					},
 				},
 				"definitions": &graphql.Field{
@@ -8237,7 +8369,13 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						return []*Violation{}, nil
 					},
 				},
-				"range": &graphql.Field{Type: rangeType},
+				"range": &graphql.Field{
+					Type: rangeType,
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						section := p.Source.(*Section)
+						return &Range{Start: section.StartLine, End: section.EndLine}, nil
+					},
+				},
 			}
 		}),
 	})
@@ -8356,6 +8494,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		}),
 	})
 
+	/*
 	ticketIterationType := graphql.NewObject(graphql.ObjectConfig{
 		Name: "TicketIteration",
 		Fields: graphql.Fields{
@@ -8367,6 +8506,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			// Files could be added here if needed, keeping it simple for now or matching struct
 		},
 	})
+	*/
 
 	ticketDateType := graphql.NewObject(graphql.ObjectConfig{
 		Name: "TicketDate",
@@ -8519,6 +8659,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		},
 	})
 
+	/*
 	contributorCommitType := graphql.NewObject(graphql.ObjectConfig{
 		Name: "ContributorCommit",
 		Fields: graphql.Fields{
@@ -8526,6 +8667,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"sha":   &graphql.Field{Type: graphql.String},
 		},
 	})
+	*/
 
 	contributorType = graphql.NewObject(graphql.ObjectConfig{
 		Name: "Contributor",

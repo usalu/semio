@@ -1,0 +1,3 @@
+- [x] Inspect VS Code extension section provider flow and repo section APIs.
+- [x] Identify why open file sections are not returned and update implementation/tests.
+- [x] Update dev docs (README.md, AGENTS.md) with section visibility behavior.

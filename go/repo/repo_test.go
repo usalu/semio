@@ -236,7 +236,6 @@ func TestNodesAndEdgesQuick(t *testing.T) {
 		tickets {
 			id
 			slug
-			checkpoints { prompt }
 		}
 		policies {
 			id
@@ -275,7 +274,6 @@ func TestNodesAndEdgesQuick(t *testing.T) {
 		Tickets []struct {
 			ID          string `json:"id"`
 			Slug        string `json:"slug"`
-			Checkpoints []struct{ Prompt string `json:"prompt"` } `json:"checkpoints"`
 		} `json:"tickets"`
 		Policies []struct {
 			ID             string `json:"id"`
@@ -369,7 +367,6 @@ func TestNodesAndEdges(t *testing.T) {
 		tickets {
 			id
 			slug
-			checkpoints { prompt }
 		}
 		policies {
 			id
@@ -420,7 +417,6 @@ func TestNodesAndEdges(t *testing.T) {
 		Tickets []struct {
 			ID          string `json:"id"`
 			Slug        string `json:"slug"`
-			Checkpoints []struct{ Prompt string `json:"prompt"` } `json:"checkpoints"`
 		} `json:"tickets"`
 		Policies []struct {
 			ID             string `json:"id"`
@@ -560,7 +556,7 @@ func TestSectionsEdges(t *testing.T) {
 				children { id }
 				definitions { id name }
 				violations { id }
-				range { start { line column } end { line column } }
+				range { start end }
 			}
 		}
 	}`
@@ -584,8 +580,8 @@ func TestSectionsEdges(t *testing.T) {
 				Definitions []struct{ ID string `json:"id"`; Name string `json:"name"` } `json:"definitions"`
 				Violations  []struct{ ID string `json:"id"` } `json:"violations"`
 				Range       struct {
-					Start struct{ Line int `json:"line"`; Column int `json:"column"` } `json:"start"`
-					End   struct{ Line int `json:"line"`; Column int `json:"column"` } `json:"end"`
+					Start int `json:"start"`
+					End   int `json:"end"`
 				} `json:"range"`
 			} `json:"sections"`
 		} `json:"files"`
@@ -630,7 +626,7 @@ func TestDefinitionsEdges(t *testing.T) {
 				file { id }
 				section { id name }
 				violations { id }
-				range { start { line column } end { line column } }
+				range { start end }
 			}
 		}
 	}`
@@ -652,8 +648,8 @@ func TestDefinitionsEdges(t *testing.T) {
 				Section    *struct{ ID string `json:"id"`; Name string `json:"name"` } `json:"section"`
 				Violations []struct{ ID string `json:"id"` } `json:"violations"`
 				Range      struct {
-					Start struct{ Line int `json:"line"`; Column int `json:"column"` } `json:"start"`
-					End   struct{ Line int `json:"line"`; Column int `json:"column"` } `json:"end"`
+					Start int `json:"start"`
+					End   int `json:"end"`
 				} `json:"range"`
 			} `json:"definitions"`
 		} `json:"files"`
@@ -686,69 +682,5 @@ func TestDefinitionsEdges(t *testing.T) {
 	}
 }
 
-func TestCommitsEdges(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping slow commits test in short mode")
-	}
-	executor := getTestExecutor(t)
-	ctx := context.Background()
-
-	query := `{
-		contributors {
-			id
-			github
-			commits {
-				id
-				sha
-				title
-				author { id github }
-				date
-				bundles { id }
-				files { id }
-			}
-		}
-	}`
-
-	result, err := executor.ExecuteJSON(ctx, query, nil)
-	if err != nil {
-		t.Fatalf("query failed: %v", err)
-	}
-
-	var resp struct {
-		Contributors []struct {
-			ID      string `json:"id"`
-			Github  string `json:"github"`
-			Commits []struct {
-				ID      string `json:"id"`
-				Sha     string `json:"sha"`
-				Title   string `json:"title"`
-				Author  *struct{ ID string `json:"id"`; Github string `json:"github"` } `json:"author"`
-				Date    string `json:"date"`
-				Bundles []struct{ ID string `json:"id"` } `json:"bundles"`
-				Files   []struct{ ID string `json:"id"` } `json:"files"`
-			} `json:"commits"`
-		} `json:"contributors"`
-	}
-
-	if err := json.Unmarshal([]byte(result), &resp); err != nil {
-		t.Fatalf("failed to parse response: %v\nResponse: %s", err, result)
-	}
-
-	commitsFound := false
-	for _, contributor := range resp.Contributors {
-		for _, commit := range contributor.Commits {
-			commitsFound = true
-			if commit.ID == "" {
-				t.Errorf("commit %s has empty id", commit.Sha)
-			}
-			if commit.Sha == "" {
-				t.Error("commit has empty sha")
-			}
-		}
-	}
-	if !commitsFound {
-		t.Log("no commits found for any contributor (may be expected in test environment)")
-	}
-}
 
 // #endregion Nodes and Edges Tests

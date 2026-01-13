@@ -1,5 +1,46 @@
 # Prompt history
 
+The affected definitions are not correct.
+E.g.
+{
+  "name": "Tickets",
+  "range": {
+    "start": 4753,
+    "end": 5360
+  },
+  "definitions": [
+    "GetTicketPlanPath",
+    "CreateTicket",
+    "ListTickets",
+    "ComputeTicketFiles",
+    "result",
+    "computeAffectedSections",
+    "affectedDefs",
+    "setDifference",
+    "diff",
+    "setIntersection",
+    "intersection",
+    "GetGitDiffLines",
+    "currentFile"
+  ],
+  "lines": {
+    "added": 71,
+    "removed": 33
+  }
+}
+has 7 hunks that affect only the definitions: ["CreateTicket", "ComputeTicketFiles", "computeAffectedSections", "GetGitDiffLines"]. All the other definitions are not affected (definitions are only top-level)
+
+The file metrics when a ticket is closes somehow always counts removed lines of 0 even when it removed lines. E.g. go/repo/repo.go Utils GetGitAuthorGithub has added 13 and removed 0 although it added 14 lines and removed 8 lines accross 2 hunks.
+
+- All the local @semio/BUNDLE dependencies are still affected. e.g. @semio/logo is turning "^1.0.0" instead of the original "*"
+- cargo only updates the Cargo.lock file and not the Cargo.toml
+- Semio.csproj should not update System.Collections.Immutable and FluentValidation
+- uv is only updating the lock file and not the pyproject.toml file
+
+The update script should update all dependencies from the complete monorep. All package.json (npm), pyproject.toml (uv), Cargo.toml (cargo), go.mod (go), .csproj (c#) should be updated and not just the lock files.
+There should be a mechanism to make sure to prevent individual dependencies from being updated. E.g. Semio.Grasshopper should not update Grasshopper, System.Drawing.Common, System.Resources.Extensions
+All local packages such as @semio/js should not remove the "*" from the dependency of other packages when running npm upgrade -S
+
 Add a codelens for all autofixable violations that triggers the fix for exactly this violation in this line range.
 
 Add a dev flag to engine to run in dev mode

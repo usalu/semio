@@ -1,0 +1,574 @@
+{
+  "title": "VSCODE-SECTIONS-NOT-SHOWING",
+  "iterations": [
+    {
+      "prompt": "Fix VS Code extension not showing sections for open file.",
+      "llm": "gpt-5",
+      "author": "Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e",
+      "date": "2026-01-13T18:40:57.3657441+01:00",
+      "commit": "b97d48cc239f068dc557d07bc1f05409cef1ba12"
+    }
+  ],
+  "status": "closed",
+  "dates": {
+    "closed": "2026-01-13T18:51:14.6933311+01:00"
+  },
+  "summary": "Fixed VS Code sections view by resolving file sections in the repo GraphQL layer, updating CLI section list queries, normalizing section list output in the extension, and documenting the section tree behavior.",
+  "files": [
+    {
+      "path": "go/repo/repo.go",
+      "status": "",
+      "sections": [
+        {
+          "name": "GraphQL Types",
+          "range": {
+            "start": 47,
+            "end": 538
+          },
+          "definitions": [
+            "AllowedLLMs",
+            "Range",
+            "DiffLines",
+            "Section"
+          ],
+          "lines": {
+            "added": 18,
+            "removed": 6
+          }
+        },
+        {
+          "name": "Go",
+          "range": {
+            "start": 1051,
+            "end": 1132
+          },
+          "definitions": [
+            "NewGoLanguage"
+          ],
+          "lines": {
+            "added": 1,
+            "removed": 1
+          }
+        },
+        {
+          "name": "Utils",
+          "range": {
+            "start": 2175,
+            "end": 2621
+          },
+          "definitions": [
+            "GetGitAuthorGithub"
+          ],
+          "lines": {
+            "added": 13,
+            "removed": 7
+          }
+        },
+        {
+          "name": "Tickets",
+          "range": {
+            "start": 4755,
+            "end": 5377
+          },
+          "definitions": [
+            "CreateTicket",
+            "ComputeTicketFiles",
+            "computeSectionLineMap",
+            "computeAffectedSections",
+            "GetGitDiffLines"
+          ],
+          "lines": {
+            "added": 89,
+            "removed": 36
+          }
+        },
+        {
+          "name": "GraphQL Executor",
+          "range": {
+            "start": 7960,
+            "end": 8070
+          },
+          "lines": {
+            "added": 0,
+            "removed": 10
+          }
+        },
+        {
+          "name": "Schema Builder",
+          "range": {
+            "start": 8072,
+            "end": 9337
+          },
+          "definitions": [
+            "buildSchema"
+          ],
+          "lines": {
+            "added": 85,
+            "removed": 4
+          }
+        },
+        {
+          "name": "Mutation Resolvers",
+          "range": {
+            "start": 9589,
+            "end": 9710
+          },
+          "lines": {
+            "added": 0,
+            "removed": 1
+          }
+        },
+        {
+          "name": "Resolver Interfaces",
+          "range": {
+            "start": 9782,
+            "end": 9836
+          },
+          "lines": {
+            "added": 1,
+            "removed": 0
+          }
+        }
+      ]
+    },
+    {
+      "path": "go/cli/main.go",
+      "status": "",
+      "sections": [
+        {
+          "name": "Section Commands",
+          "range": {
+            "start": 849,
+            "end": 965
+          },
+          "definitions": [
+            "sectionListCmd"
+          ],
+          "lines": {
+            "added": 16,
+            "removed": 2
+          }
+        }
+      ]
+    },
+    {
+      "path": "js/vscode/extension.ts",
+      "status": "",
+      "sections": [
+        {
+          "name": "Types",
+          "range": {
+            "start": 367,
+            "end": 426
+          },
+          "definitions": [
+            "GraphqlSectionRange",
+            "GraphqlSection"
+          ],
+          "lines": {
+            "added": 11,
+            "removed": 0
+          }
+        },
+        {
+          "name": "Utilities",
+          "range": {
+            "start": 428,
+            "end": 825
+          },
+          "definitions": [
+            "getRepoBinaryPath",
+            "root",
+            "isWindows",
+            "binaryName",
+            "binaryPath",
+            "normalizeSectionTree",
+            "extractSections",
+            "getSectionListForFile",
+            "result"
+          ],
+          "lines": {
+            "added": 24,
+            "removed": 1
+          }
+        },
+        {
+          "name": "Sidebar Views",
+          "range": {
+            "start": 1195,
+            "end": 2880
+          },
+          "definitions": [
+            "SectionsProvider",
+            "relativePath",
+            "sections",
+            "root",
+            "fullPath"
+          ],
+          "lines": {
+            "added": 4,
+            "removed": 5
+          }
+        }
+      ]
+    },
+    {
+      "path": "README.md",
+      "status": "",
+      "sections": [
+        {
+          "name": "Running Tasks",
+          "range": {
+            "start": 765,
+            "end": 789
+          },
+          "lines": {
+            "added": 0,
+            "removed": 25
+          }
+        },
+        {
+          "name": "Launch Configurations",
+          "range": {
+            "start": 790,
+            "end": 822
+          },
+          "lines": {
+            "added": 0,
+            "removed": 33
+          }
+        },
+        {
+          "name": "🪄 [AI](AGENTS.md) [↑](#-development-)",
+          "range": {
+            "start": 823,
+            "end": 970
+          },
+          "lines": {
+            "added": 0,
+            "removed": 6
+          }
+        },
+        {
+          "name": "🛠️ Uses-Cases [↑](#-ai-)",
+          "range": {
+            "start": 829,
+            "end": 864
+          },
+          "lines": {
+            "added": 0,
+            "removed": 4
+          }
+        },
+        {
+          "name": "⚖️ Decision Making [↑](#-uses-cases-)",
+          "range": {
+            "start": 833,
+            "end": 840
+          },
+          "lines": {
+            "added": 0,
+            "removed": 8
+          }
+        },
+        {
+          "name": "🔁 Refactoring [↑](#-uses-cases-)",
+          "range": {
+            "start": 841,
+            "end": 852
+          },
+          "lines": {
+            "added": 0,
+            "removed": 4
+          }
+        },
+        {
+          "name": "🖱️ [Cursor](.cursor) [↑](#-ai-)",
+          "range": {
+            "start": 894,
+            "end": 910
+          },
+          "lines": {
+            "added": 0,
+            "removed": 8
+          }
+        },
+        {
+          "name": "🌊 Windsurf [↑](#-editor-)",
+          "range": {
+            "start": 911,
+            "end": 914
+          },
+          "lines": {
+            "added": 0,
+            "removed": 4
+          }
+        },
+        {
+          "name": "⌨️ CLI [↑](#-tools-)",
+          "range": {
+            "start": 915,
+            "end": 926
+          },
+          "lines": {
+            "added": 0,
+            "removed": 2
+          }
+        },
+        {
+          "name": "⌨️ [Claude Code](CLAUDE.md) [↑](#-ai-)",
+          "range": {
+            "start": 917,
+            "end": 922
+          },
+          "lines": {
+            "added": 0,
+            "removed": 6
+          }
+        },
+        {
+          "name": "🧭 Section Tree [↑](#-components-)",
+          "range": {
+            "start": 1152,
+            "end": 1156
+          },
+          "lines": {
+            "added": 5,
+            "removed": 0
+          }
+        },
+        {
+          "name": "🎫 Ticket System [↑](#-components-)",
+          "range": {
+            "start": 1157,
+            "end": 1164
+          },
+          "lines": {
+            "added": 1,
+            "removed": 0
+          }
+        },
+        {
+          "name": "📊 [Stats](https://stats.docs.semio-tech.com)",
+          "range": {
+            "start": 1917,
+            "end": 1929
+          },
+          "lines": {
+            "added": 1,
+            "removed": 0
+          }
+        }
+      ]
+    },
+    {
+      "path": "AGENTS.md",
+      "status": "",
+      "sections": [
+        {
+          "name": "Sections",
+          "range": {
+            "start": 52,
+            "end": 56
+          },
+          "lines": {
+            "added": 5,
+            "removed": 0
+          }
+        },
+        {
+          "name": "Ticket",
+          "range": {
+            "start": 66,
+            "end": 92
+          },
+          "lines": {
+            "added": 1,
+            "removed": 0
+          }
+        },
+        {
+          "name": "VS Code Extension",
+          "range": {
+            "start": 353,
+            "end": 366
+          },
+          "lines": {
+            "added": 1,
+            "removed": 0
+          }
+        },
+        {
+          "name": "Keywords",
+          "range": {
+            "start": 419,
+            "end": 436
+          },
+          "lines": {
+            "added": 0,
+            "removed": 3
+          }
+        },
+        {
+          "name": "CI/CD",
+          "range": {
+            "start": 437,
+            "end": 472
+          },
+          "lines": {
+            "added": 0,
+            "removed": 2
+          }
+        },
+        {
+          "name": "Commands",
+          "range": {
+            "start": 439,
+            "end": 440
+          },
+          "lines": {
+            "added": 0,
+            "removed": 2
+          }
+        },
+        {
+          "name": "Reports",
+          "range": {
+            "start": 441,
+            "end": 456
+          },
+          "lines": {
+            "added": 0,
+            "removed": 12
+          }
+        },
+        {
+          "name": "Reports Directory",
+          "range": {
+            "start": 453,
+            "end": 456
+          },
+          "lines": {
+            "added": 0,
+            "removed": 4
+          }
+        },
+        {
+          "name": "Repo CLI",
+          "range": {
+            "start": 457,
+            "end": 472
+          },
+          "lines": {
+            "added": 0,
+            "removed": 11
+          }
+        },
+        {
+          "name": "Using TypeScript fallback",
+          "range": {
+            "start": 476,
+            "end": 1366
+          },
+          "lines": {
+            "added": 0,
+            "removed": 29
+          }
+        },
+        {
+          "name": "Sidebar Views",
+          "range": {
+            "start": 3901,
+            "end": 3907
+          },
+          "lines": {
+            "added": 1,
+            "removed": 0
+          }
+        },
+        {
+          "name": "📄 js/vscode/extension.ts",
+          "range": {
+            "start": 3922,
+            "end": 3925
+          },
+          "lines": {
+            "added": 4,
+            "removed": 0
+          }
+        },
+        {
+          "name": "📁 go/cli/",
+          "range": {
+            "start": 3926,
+            "end": 3929
+          },
+          "lines": {
+            "added": 4,
+            "removed": 0
+          }
+        },
+        {
+          "name": "📄 go/cli/main.go",
+          "range": {
+            "start": 3930,
+            "end": 3933
+          },
+          "lines": {
+            "added": 4,
+            "removed": 0
+          }
+        },
+        {
+          "name": "📄 go/repo/repo.go",
+          "range": {
+            "start": 3950,
+            "end": 3961
+          },
+          "lines": {
+            "added": 2,
+            "removed": 0
+          }
+        },
+        {
+          "name": "📁net/",
+          "range": {
+            "start": 3962,
+            "end": 3965
+          },
+          "lines": {
+            "added": 0,
+            "removed": 1
+          }
+        },
+        {
+          "name": "Kit",
+          "range": {
+            "start": 4335,
+            "end": 4367
+          },
+          "lines": {
+            "added": 14,
+            "removed": 0
+          }
+        }
+      ]
+    },
+    {
+      "path": "tickets/2026/01/13/VSCODE-SECTIONS-NOT-SHOWING/plan.md",
+      "status": ""
+    },
+    {
+      "path": "tickets/2026/01/13/VSCODE-SECTIONS-NOT-SHOWING/log.md",
+      "status": ""
+    },
+    {
+      "path": "tickets/2026/01/13/VSCODE-SECTIONS-NOT-SHOWING/summary.md",
+      "status": ""
+    },
+    {
+      "path": "tickets/2026/01/13/VSCODE-SECTIONS-NOT-SHOWING/ticket.json",
+      "status": ""
+    }
+  ]
+}
