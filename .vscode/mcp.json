@@ -8,10 +8,21 @@
 				"run-test-mcp-server"
 			]
 		},
-		"semio": {
+		"semio-repo": {
 			"type": "stdio",
 			"command": "go/mcp/mcp.exe",
 			"args": []
+		},
+		"semio": {
+			"type": "stdio",
+			"command": "uv",
+			"args": [
+				"--directory",
+				"py/engine",
+				"run",
+				"engine.py",
+				"--mcp-stdio",
+			]
 		}
 	},
 	"inputs": []

@@ -1,5 +1,31 @@
 # Prompt history
 
+Add a codelens for all autofixable violations that triggers the fix for exactly this violation in this line range.
+
+Add a dev flag to engine to run in dev mode
+C:\git\semio.tech\semio\py\engine\engine.py
+
+The ticket mechanism still has some issues.
+- The ticket open command should not accept an author string and take the git author from gitconfig, lookup contributors from contributors list and if a contributor matches use the github username and if no contributor is found then not leave the NAME <EMAIL> from gitconfig. Use the email for the identification of the contributor.
+- The llm should not be any string but only from the enum list. Kebaberize the provided string. e.g. claude-opus-4.5 should be equivalent to claude-opus-4-5. Throw if the model is not part of the model list and give a message to add the model first to the list if it doesnt exist.
+- Ranges should not be position with line and colum but be only ranges of lines.
+Instead of:
+"range": {
+  "start": {
+    "line": 25,
+    "column": 0
+  },
+  "end": {
+    "line": 82,
+    "column": 0
+  }
+}
+store:
+"range": {
+  "start": 25,
+  "end": 82
+}
+
 The ticket schema should change (see new-ticket-schema.json), the metric computation still has mistakes, the api is not yet clean, the definitions are not yet properly identified per language.
 Ticket schema:
 - Make sure open ticket only accepts title and automatically generates an uppercase slug. The ticket.json only stores the title.

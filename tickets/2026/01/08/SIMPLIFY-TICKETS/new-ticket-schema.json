@@ -26,8 +26,7 @@
           },
           "definitions": [
             "BuildCodebaseBundles",
-            "BuildCodebaseTickets",
-            "result"
+            "BuildCodebaseTickets"
           ],
           "lines": {
             "added": 20,

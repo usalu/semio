@@ -7661,17 +7661,31 @@ def restart_engine():
     ui_instance.engine_process.start()
 
 
-def run():
+def run(dev_mode: bool | None = None):
     logger.debug("Starting engine")
     multiprocessing.freeze_support()
 
     parser = argparse.ArgumentParser(description="semio ⋅ engine")
     parser.add_argument("-d", "--debug", help="debug mode", action="store_true")
+    parser.add_argument("--dev", help="dev mode", action="store_true")
+    parser.add_argument("--mcp-stdio", help="start mcp server over stdio", action="store_true")
 
     args = parser.parse_args()
-    if args.debug:
+    if dev_mode is None:
+        dev_mode = args.dev or args.debug
+    if dev_mode:
+        logger.debug("Starting debugpy for semio engine")
+        import debugpy
+
+        debugpy.listen(("0.0.0.0", 5678))
+        logger.debug("Waiting for debugger to attach to semio engine")
+        debugpy.wait_for_client()
+        preDev()
         logger.add(sys.stderr, level="INFO")
         logger.add(DEBUG_LOG_FILE, level="DEBUG", rotation="10 MB")
+    if args.mcp_stdio:
+        mcp.run()
+        return
 
     ui = PySide6.QtWidgets.QApplication(sys.argv)
     ui.setQuitOnLastWindowClosed(False)
@@ -7710,17 +7724,12 @@ def preDev():
 
 
 def dev():
-    logger.debug("Starting debugpy for semio engine")
-    import debugpy
-
-    debugpy.listen(("0.0.0.0", 5678))
-    logger.debug("Waiting for debugger to attach to semio engine")
-    debugpy.wait_for_client()
-    preDev()
-    run()
+    run(dev_mode=True)
 
 
 if __name__ == "__main__":
     run()
 
 # endregion Engine
+
+

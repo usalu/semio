@@ -15,7 +15,7 @@
   "devDependencies": {
     "@types/jsdom": "^21.1.7",
     "@types/node": "^20.0.0",
-    "tsx": "^4.20.6"
+    "tsx": "^4.21.0"
   },
   "author": {
     "name": "Ueli Saluz",

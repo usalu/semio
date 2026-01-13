@@ -1,0 +1,256 @@
+{
+  "title": "add-dev-flag-engine-dev-mode",
+  "prompt": "Add a dev flag to engine to run in dev mode in py/engine/engine.py.",
+  "llm": "gpt-5",
+  "status": "closed",
+  "author": "Ueli Saluz",
+  "dates": {
+    "created": "2026-01-13T10:30:42Z",
+    "finished": "2026-01-13T12:33:35Z"
+  },
+  "commit": "3dd947fa6070f83e97789aa59d612cd61e1d3902",
+  "summary": "Aligned debug and dev startup behavior, and documented the dev/debug equivalence along with stdio MCP mode.",
+  "files": {
+    "updated": [
+      {
+        "path": "py/engine/engine.py",
+        "lines": {
+          "added": 19,
+          "removed": 10
+        },
+        "sections": {
+          "Engine": {
+            "range": {
+              "start": {
+                "line": 7557,
+                "column": 0
+              },
+              "end": {
+                "line": 7733,
+                "column": 0
+              }
+            },
+            "definitions": [
+              "run",
+              "dev"
+            ],
+            "lines": {
+              "added": 17,
+              "removed": 0
+            }
+          }
+        }
+      },
+      {
+        "path": "README.md",
+        "lines": {
+          "added": 7,
+          "removed": 0
+        },
+        "sections": {
+          "📊 [Stats](https://stats.docs.semio-tech.com)": {
+            "range": {
+              "start": {
+                "line": 2011,
+                "column": 0
+              },
+              "end": {
+                "line": 2022,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 2,
+              "removed": 0
+            }
+          },
+          "📦 Components [↑](#-overview)": {
+            "range": {
+              "start": {
+                "line": 1198,
+                "column": 0
+              },
+              "end": {
+                "line": 1786,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 3,
+              "removed": 0
+            }
+          },
+          "📦 Components [↑](#-overview)/⚙️ [@semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-components-)": {
+            "range": {
+              "start": {
+                "line": 1667,
+                "column": 0
+              },
+              "end": {
+                "line": 1751,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 3,
+              "removed": 0
+            }
+          },
+          "🛍️ Products [↑](#-overview)": {
+            "range": {
+              "start": {
+                "line": 161,
+                "column": 0
+              },
+              "end": {
+                "line": 245,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 2,
+              "removed": 0
+            }
+          }
+        }
+      },
+      {
+        "path": "AGENTS.md",
+        "lines": {
+          "added": 11,
+          "removed": 6
+        },
+        "sections": {
+          "Codebase": {
+            "range": {
+              "start": {
+                "line": 1498,
+                "column": 0
+              },
+              "end": {
+                "line": 4098,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          },
+          "Codebase/📁py/engine/": {
+            "range": {
+              "start": {
+                "line": 4049,
+                "column": 0
+              },
+              "end": {
+                "line": 4057,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          },
+          "Hierarchies": {
+            "range": {
+              "start": {
+                "line": 4099,
+                "column": 0
+              },
+              "end": {
+                "line": 4395,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          },
+          "Hierarchies/3. Properties": {
+            "range": {
+              "start": {
+                "line": 4144,
+                "column": 0
+              },
+              "end": {
+                "line": 4395,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          },
+          "Hierarchies/3. Properties/Kit": {
+            "range": {
+              "start": {
+                "line": 4377,
+                "column": 0
+              },
+              "end": {
+                "line": 4395,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          },
+          "Software Requirements Specification": {
+            "range": {
+              "start": {
+                "line": 18,
+                "column": 0
+              },
+              "end": {
+                "line": 359,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 5,
+              "removed": 0
+            }
+          },
+          "Software Requirements Specification/Business Logic": {
+            "range": {
+              "start": {
+                "line": 20,
+                "column": 0
+              },
+              "end": {
+                "line": 304,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 5,
+              "removed": 0
+            }
+          },
+          "Software Requirements Specification/Business Logic/Engine": {
+            "range": {
+              "start": {
+                "line": 52,
+                "column": 0
+              },
+              "end": {
+                "line": 56,
+                "column": 0
+              }
+            },
+            "lines": {
+              "added": 5,
+              "removed": 0
+            }
+          }
+        }
+      }
+    ]
+  }
+}

@@ -4,12 +4,11 @@ ALWAYS open a ticket with semio-repo mcp tool `ticket_open` (or use `.\go\cli\cl
 
 - Multiple agents and a developer ALWAYS work on the same codebase at the same time. NEVER use `git stash`, `git stash pop`, `git checkout`, … because it will mess up others work and worst-case delete their work.
 - The codebase in under design and development and not used in production yet. There are many inconsistencies that need to be refactored. ALWAYS use clean mechanisms that might require large refactorings and NEVER care about backwards compatibility.
-- For every task you are working on, you MUST update the dev docs (`README.md` and `AGENTS.md`). Every key decision and mechanism ALWAYS needs to be documemented. Every feature, decision MUST be undocumented/uncommented in the code and MUST be documented in the dev docs (AGENTS.md and README.md). The documentation ALWAYS happens four times:
+- For every task you are working on, you MUST update the dev docs (`README.md` and `AGENTS.md`). Every key decision and mechanism ALWAYS needs to be documemented. Every feature, decision MUST be undocumented/uncommented in the code and MUST be documented in the dev docs (AGENTS.md and README.md). The documentation ALWAYS happens three times:
 
-1. Under `# 🛍️ Products` in README.md where it is described from user perspective [architects, designers, engineers, …] (framework-agnostic, no implementation references, etc)
-2. Under `# 📦 Components` in README.md where it is described from junior-developer perspective (mechanism explanation and reasoning behind the decision, how theory links to implementation, etc).
-3. Under `# Software Requirements Specification` in AGENTS.md where it is described from human-interface-designer perspective (concise technical terms without explanation, framework-agnostic, no implementation references). There are two sections: `# Business Logic` and `# UI/UX`.
-4. Under `# Codebase` in AGENTS.md where it is described from senior-developer perspective (framework-mechanisms, consice technical terms without explanation, implementation details, etc). The section has the same header structure as the files and folders. All files and folders are flat with `## PATH` e.g. `## js/semio/sketchpad/` or `## net/Semio.cs`
+1. Under `# 📦 Components` in README.md where it is described from junior-developer perspective (mechanism explanation and reasoning behind the decision, how theory links to implementation, etc).
+2. Under `# Software Requirements Specification` in AGENTS.md where it is described from human-interface-designer perspective (concise technical terms without explanation, framework-agnostic, no implementation references). There are two sections: `# Business Logic` and `# UI/UX`.
+3. Under `# Codebase` in AGENTS.md where it is described from senior-developer perspective (framework-mechanisms, consice technical terms without explanation, implementation details, etc). The section has the same header structure as the files and folders. All files and folders are flat with `## PATH` e.g. `## js/semio/sketchpad/` or `## net/Semio.cs`
    The purpose of the dev docs is to understand the codebase. NEVER add reasoning or process related (such as what changed, why, how, … - this is part of the log) to the dev docs.
 
 This document MUST ALWAYS BE followed unless explicitly asked to do otherwise.
@@ -49,6 +48,11 @@ Only shared UI element libraries may import third-party dependencies; other Java
 Sketchpad shell and app modules MUST only import shared elements, shared utilities, and core domain modules.
 
 Code analysis problems MUST include reason and solution text.
+
+### Engine
+
+Engine startup MUST support a dev/debug mode flag that waits for debugger attachment before runtime begins.
+Engine startup MUST support a pure stdio MCP server mode.
 
 ### State Management
 
@@ -4046,7 +4050,7 @@ Python code with the engine (@semio/engine) for schema generation and validation
 
 Python engine providing schema generation, validation, and backend functionality.
 
-- `engine.py` - Main engine module with Kit parsing, validation, and transformation
+- `engine.py` - Main engine module with Kit parsing, validation, transformation, dev-mode startup flag, and stdio MCP startup flag
 - `engine.test.py` - Unit tests for engine functionality
 - `generate-schemas.ts` - Generates GraphQL, JSON, and SQL schemas from TypeScript definitions
 - `sqliteschema.ts` - SQLite schema generation utilities
@@ -4387,3 +4391,4 @@ Use this hierarchy for code organization (order of appearance of regions, classe
 13. Image
 14. Description
 15. Attributes
+

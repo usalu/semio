@@ -5,7 +5,7 @@
   "sourceRoot": "py/engine",
   "projectType": "application",
   "scripts": {
-    "dev": "tsx ./dev.ts",
+    "dev": "uv run engine.py",
     "build": "tsx ./build.ts",
     "test": "tsx ./test.ts",
     "preflight": "ruff format . && ruff check --fix . || echo \"Warning: ruff not found. Install with: pip install ruff\""

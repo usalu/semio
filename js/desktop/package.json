@@ -14,21 +14,21 @@
   "dependencies": {
     "@electron/fuses": "^1.8.0",
     "@semio/js": "^0.1.0",
-    "@vitest/coverage-v8": "^3.0.8",
+    "@vitest/coverage-v8": "4.0.17",
     "electron-squirrel-startup": "^1.0.1"
   },
   "devDependencies": {
-    "@electron-forge/cli": "^7.8.3",
-    "@electron-forge/maker-deb": "^7.10.2",
-    "@electron-forge/maker-rpm": "^7.10.2",
-    "@electron-forge/maker-squirrel": "^7.10.2",
-    "@electron-forge/maker-zip": "^7.10.2",
-    "@electron-forge/plugin-auto-unpack-natives": "^7.10.2",
-    "@electron-forge/plugin-fuses": "^7.10.2",
-    "@electron-forge/plugin-vite": "^7.10.2",
+    "@electron-forge/cli": "^7.11.0",
+    "@electron-forge/maker-deb": "^7.11.0",
+    "@electron-forge/maker-rpm": "^7.11.0",
+    "@electron-forge/maker-squirrel": "^7.11.0",
+    "@electron-forge/maker-zip": "^7.11.0",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.11.0",
+    "@electron-forge/plugin-fuses": "^7.11.0",
+    "@electron-forge/plugin-vite": "^7.11.0",
     "@electron/fuses": "^1.8.0",
     "@types/electron-squirrel-startup": "^1.0.2",
-    "electron": "^37.10.0"
+    "electron": "^37.10.3"
   },
   "author": {
     "name": "Ueli Saluz",

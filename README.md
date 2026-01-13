@@ -163,6 +163,8 @@ Let me walk you through 🚶
 > Do you wonder how semio is interopable? The reason are shared [specification](#-specs-), [ecosystems](#%EF%B8%8F-ecosystems-) and [components](#-components-) 🪢
 
 Work-in-progress artifacts stay bundled with the active ticket workspace so teams can trace temporary data without hunting global temp locations.
+The engine offers a dev/debug startup mode that waits for a debugger to attach before it runs.
+The engine can also run as a pure stdio MCP server for tool integrations.
 
 ## ✏️ sketchpad [↑](#%EF%B8%8F-products-)
 
@@ -1725,6 +1727,9 @@ It takes care of:
 - CRUDs (Create-Read-Update-Delete) for local kits 💾
 - Client-Server communication ↔️
 
+The engine supports a dev/debug startup flag that waits for a debugger to attach before the runtime begins.
+The engine can start as a pure stdio MCP server for integrations that speak MCP over stdin/stdout.
+
 It offers two APIs to other clients:
 
 - A simple REST OpenAPI 🥇
@@ -2012,3 +2017,5 @@ We use [Goatcounter](https://www.goatcounter.com) for gaining insights about our
 </p>
 
 ![Pixel](https://stats.docs.semio-tech.com/count?p=https://github.com/usalu/semio)
+
+

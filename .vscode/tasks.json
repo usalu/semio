@@ -44,8 +44,8 @@
         ],
         "background": {
           "activeOnStart": true,
-          "beginsPattern": "Starting debugpy for semio engine", // When server starts
-          "endsPattern": "Waiting for debugger to attach to semio engine" // When server is ready
+          "beginsPattern": "nx run @semio/engine:dev", // When server starts
+          "endsPattern": "http://127.0.0.1:2507" // When server is ready
         }
       },
       "group": "none",
@@ -1133,7 +1133,9 @@
         "options": {
           "shell": {
             "executable": "powershell.exe",
-            "args": ["-Command"]
+            "args": [
+              "-Command"
+            ]
           }
         }
       },

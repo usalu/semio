@@ -445,21 +445,21 @@
     "preflight": "tsc --noEmit"
   },
   "devDependencies": {
-    "@types/vscode": "^1.106.1",
-    "@types/node": "^24.10.1",
+    "@graphql-codegen/cli": "^5.0.7",
+    "@graphql-codegen/client-preset": "^4.8.3",
+    "@graphql-typed-document-node/core": "^3.2.0",
     "@types/mocha": "^10.0.10",
+    "@types/node": "^24.10.1",
+    "@types/vscode": "^1.108.1",
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.5.2",
-    "@graphql-codegen/cli": "^5.0.3",
-    "@graphql-codegen/client-preset": "^4.5.1",
-    "@graphql-typed-document-node/core": "^3.2.0",
-    "graphql": "^16.10.0",
+    "graphql": "^16.12.0",
     "typescript": "^5.9.3",
-    "vite": "^7.2.2"
+    "vite": "^7.3.1"
   },
   "dependencies": {
-    "@semio/js": "*",
-    "@urql/core": "^5.0.10",
+    "@semio/js": "^0.1.0",
+    "@urql/core": "^5.2.0",
     "jsonc-parser": "^3.3.1"
   },
   "author": {
