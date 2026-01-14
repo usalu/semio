@@ -73,7 +73,7 @@
     "remark-frontmatter": "^5.0.0",
     "remark-gfm": "^4.0.1",
     "sql.js": "^1.13.0",
-    "three": "^0.179.1",
+    "three": "^0.182.0",
     "uuid": "^11.1.0",
     "xstate": "^5.25.0",
     "y-indexeddb": "^9.0.12",
