@@ -219,7 +219,7 @@ type Repo struct {
 }
 
 func (r *Repo) IsNode()       {}
-func (r *Repo) GetID() string { return r.ID }
+func (r *Repo) GetID() string { return "@semio" }
 
 type Bundle struct {
 	Name        string   `json:"name"`
@@ -230,7 +230,7 @@ type Bundle struct {
 }
 
 func (b *Bundle) IsNode()       {}
-func (b *Bundle) GetID() string { return "bundle:" + b.Name }
+func (b *Bundle) GetID() string { return "@semio/" + b.Name }
 
 type Folder struct {
 	ID       string  `json:"id"`
@@ -269,11 +269,18 @@ type Section struct {
 }
 
 func (s *Section) IsNode()       {}
-func (s *Section) GetID() string { return "section:" + s.Name }
+func (s *Section) GetID() string {
+	if s.FilePath != "" && s.Path != "" {
+		return s.FilePath + "#" + s.Path
+	}
+	return "section:" + s.Name
+}
 
 type Definition struct {
 	Name       string         `json:"name"`
 	Kind       DefinitionKind `json:"kind"`
+	FilePath   string         `json:"filePath,omitempty"`
+	SectionPath string        `json:"sectionPath,omitempty"`
 	StartLine  int            `json:"startLine"`
 	EndLine    int            `json:"endLine"`
 	StartIndex int            `json:"startIndex"`
@@ -281,7 +288,15 @@ type Definition struct {
 }
 
 func (d *Definition) IsNode()       {}
-func (d *Definition) GetID() string { return "definition:" + d.Name }
+func (d *Definition) GetID() string {
+	if d.FilePath != "" {
+		if d.SectionPath != "" {
+			return d.FilePath + "#" + d.SectionPath + "§" + d.Name
+		}
+		return d.FilePath + "§" + d.Name
+	}
+	return "definition:" + d.Name
+}
 
 type Contributor struct {
 	Github        string                      `yaml:"github" json:"github"`
@@ -292,7 +307,7 @@ type Contributor struct {
 }
 
 func (c *Contributor) IsNode()       {}
-func (c *Contributor) GetID() string { return "contributor:" + c.Github }
+func (c *Contributor) GetID() string { return "@semio/contributors/" + c.Github }
 
 type Commit struct {
 	ID       string    `json:"id"`
@@ -303,7 +318,7 @@ type Commit struct {
 }
 
 func (c *Commit) IsNode()       {}
-func (c *Commit) GetID() string { return c.ID }
+func (c *Commit) GetID() string { return "@semio/commits/" + c.SHA }
 
 type Ticket struct {
 	Year         int               `json:"year"`
@@ -319,7 +334,7 @@ type Ticket struct {
 }
 
 func (t *Ticket) IsNode()       {}
-func (t *Ticket) GetID() string { return fmt.Sprintf("ticket:%d/%02d/%02d/%s", t.Year, t.Month, t.Day, t.Slug) }
+func (t *Ticket) GetID() string { return fmt.Sprintf("@semio/tickets/%d/%02d/%02d/%s", t.Year, t.Month, t.Day, t.Slug) }
 
 func (t *Ticket) GetTitle() string {
 	if t.Data != nil {
@@ -438,10 +453,11 @@ type Policy struct {
 }
 
 func (p *Policy) IsNode()       {}
-func (p *Policy) GetID() string { return p.ID }
+func (p *Policy) GetID() string { return "@semio/policies/" + p.Name }
 
 type ViolationKindMeta struct {
 	Kind        ViolationKind     `json:"kind"`
+	PolicyID    string            `json:"policyId"`
 	Priority    ViolationPriority `json:"priority"`
 	Reason      string            `json:"reason"`
 	Solution    string            `json:"solution"`
@@ -449,7 +465,7 @@ type ViolationKindMeta struct {
 }
 
 func (v *ViolationKindMeta) IsNode()       {}
-func (v *ViolationKindMeta) GetID() string { return "violationKind:" + string(v.Kind) }
+func (v *ViolationKindMeta) GetID() string { return "@semio/policies/" + v.PolicyID + "/violations/" + string(v.Kind) }
 
 type AnalyzeResult struct {
 	Violations []*Violation    `json:"violations"`
@@ -3355,7 +3371,7 @@ func (ctx *PolicyContext) IsIgnored(filePath string, violationLine int, kind Vio
 
 func (ctx *PolicyContext) CreateViolation(summary string, kind ViolationKind, scope string, line int, excerpt string, autofix *Fix) Violation {
 	return Violation{
-		ID:      fmt.Sprintf("%s-%d-%s", kind, time.Now().UnixNano(), randomString(6)),
+		ID:      buildViolationID(scope, line, 0),
 		Summary: summary,
 		Kind:    kind,
 		Scope:   scope,
@@ -5120,7 +5136,7 @@ func computeAffectedSections(filePath string, sections []Section, defs []Definit
 
 			result = append(result, TicketSection{
 				Name:        sectionPath,
-				Range:       &Range{Start: section.StartLine, End: section.EndLine},
+				Range:       &Range{Start: section.StartIndex, End: section.EndIndex},
 				Definitions: uniqueStrings(affectedDefs),
 				Lines:       &LineMetrics{Added: len(exclusiveAddedLines), Removed: len(exclusiveRemovedLines)},
 			})
@@ -5276,6 +5292,55 @@ func ResolveBundleForPath(filePath string, bundles []Bundle) string {
 		}
 	}
 	return bundleName
+}
+
+// buildFolderID constructs a globally unique folder ID
+func buildFolderID(path string, bundleID *string) string {
+	normalizedPath := strings.ReplaceAll(path, "\\", "/")
+	if bundleID != nil && *bundleID != "" {
+		// Extract bundle name from bundle ID (@semio/BUNDLE → BUNDLE)
+		bundleName := strings.TrimPrefix(*bundleID, "@semio/")
+		return "@semio/" + bundleName + "/" + normalizedPath
+	}
+	return "@semio/repo/" + normalizedPath
+}
+
+// buildFileID constructs a globally unique file ID
+func buildFileID(path string, bundleID *string) string {
+	normalizedPath := strings.ReplaceAll(path, "\\", "/")
+	if bundleID != nil && *bundleID != "" {
+		// Extract bundle name from bundle ID (@semio/BUNDLE → BUNDLE)
+		bundleName := strings.TrimPrefix(*bundleID, "@semio/")
+		return "@semio/" + bundleName + "/" + normalizedPath
+	}
+	return "@semio/repo/" + normalizedPath
+}
+
+// buildSectionID constructs a globally unique section ID
+func buildSectionID(fileID string, sectionPath []string) string {
+	if len(sectionPath) == 0 {
+		return fileID
+	}
+	return fileID + "#" + strings.Join(sectionPath, "#")
+}
+
+// buildDefinitionID constructs a globally unique definition ID
+func buildDefinitionID(fileID string, sectionPath []string, name string) string {
+	if len(sectionPath) > 0 {
+		return fileID + "#" + strings.Join(sectionPath, "#") + "§" + name
+	}
+	return fileID + "§" + name
+}
+
+// buildViolationID constructs a globally unique violation ID
+func buildViolationID(scope string, line int, col int) string {
+	if line > 0 && col > 0 {
+		return fmt.Sprintf("@semio/violations/%s#%d:%d", scope, line, col)
+	}
+	if line > 0 {
+		return fmt.Sprintf("@semio/violations/%s#%d", scope, line)
+	}
+	return fmt.Sprintf("@semio/violations/%s", scope)
 }
 
 func GuessSectionName(filePath string) string {
@@ -6041,6 +6106,78 @@ func (c *repoContext) GetFiles() []*File {
 	return result
 }
 
+func (c *repoContext) GetSections() []*Section {
+	bundles := GetProjects()
+	files, _ := ScopeToFiles(Scope{Kind: ScopeRepo}, bundles)
+	var result []*Section
+	for _, path := range files {
+		absPath := filepath.Join(c.rootDir, path)
+		content, err := ReadTextFile(absPath)
+		if err != nil {
+			continue
+		}
+		sections := ParseSections(content, path)
+		c.collectSections(&result, sections, path, nil)
+	}
+	return result
+}
+
+func (c *repoContext) collectSections(result *[]*Section, sections []Section, filePath string, parentID *string) {
+	for i := range sections {
+		s := &sections[i]
+		id := fmt.Sprintf("section:%s#%s", filePath, s.Name)
+		if parentID != nil {
+			// section ID derived from parent path
+			// But for listing we just need an ID
+			id = fmt.Sprintf("section:%s#%s", filePath, s.Name) // simplified for now
+		}
+		s.FilePath = filePath
+		*result = append(*result, s)
+		if len(s.Children) > 0 {
+			var pidStr string = id // Simplified
+			c.collectSections(result, s.Children, filePath, &pidStr)
+		}
+	}
+}
+
+func (c *repoContext) GetDefinitions() []*Definition {
+	bundles := GetProjects()
+	files, _ := ScopeToFiles(Scope{Kind: ScopeRepo}, bundles)
+	var result []*Definition
+	for _, path := range files {
+		absPath := filepath.Join(c.rootDir, path)
+		content, err := ReadTextFile(absPath)
+		if err != nil {
+			continue
+		}
+		language := GetLanguage(path)
+		if language == nil || !language.SupportsDefinitions() {
+			continue
+		}
+		lines := strings.Split(content, "\n")
+		defs := language.ParseDefinitions(content, lines)
+		
+		bundleName := ResolveBundleForPath(path, bundles)
+		var fileID string
+		if bundleName != "" {
+			relativePath := strings.TrimPrefix(path, strings.TrimPrefix(bundles[0].Root, "")+"/")
+			fileID = "@semio/" + bundleName + "/" + relativePath
+		} else {
+			fileID = "@semio/repo/" + path
+		}
+		
+		for _, d := range defs {
+			result = append(result, &Definition{
+				Name:      d.Name,
+				FilePath:  fileID,
+				StartLine: d.Start,
+				EndLine:   d.End,
+			})
+		}
+	}
+	return result
+}
+
 func (c *repoContext) GetContributors() ([]*Contributor, error) {
 	contributors, err := ListContributors()
 	if err != nil {
@@ -6091,6 +6228,7 @@ func (c *repoContext) GetPolicies() []*Policy {
 			}
 				violationKinds = append(violationKinds, &ViolationKindMeta{
 				Kind:        kind,
+				PolicyID:    p.ID,
 				Priority:    priority,
 				Autofixable: info.Autofixable,
 				Reason:      info.Reason,
@@ -6098,7 +6236,7 @@ func (c *repoContext) GetPolicies() []*Policy {
 			})
 		}
 		result[i] = &Policy{
-			ID:             fmt.Sprintf("policy:%s", p.ID),
+			ID:             "@semio/policies/" + p.ID,
 			Name:           p.ID,
 			Description:    descPtr,
 			Scopes:         scopes,
@@ -6122,6 +6260,7 @@ func (c *repoContext) GetViolationKinds() []*ViolationKindMeta {
 			}
 			result = append(result, &ViolationKindMeta{
 				Kind:        kind,
+				PolicyID:    p.ID,
 				Priority:    priority,
 				Autofixable: info.Autofixable,
 				Reason:      info.Reason,
@@ -6228,11 +6367,21 @@ func (c *repoContext) FolderCreate(path string) (*Folder, error) {
 	}
 	normalizedPath := strings.ReplaceAll(path, "\\", "/")
 	name := filepath.Base(normalizedPath)
+	
+	bundles := GetProjects()
+	bundleName := ResolveBundleForPath(normalizedPath, bundles)
+	var bundleID *string
+	if bundleName != "" {
+		id := "@semio/" + bundleName
+		bundleID = &id
+	}
+	
 	return &Folder{
-		ID:   fmt.Sprintf("folder:%s", normalizedPath),
+		ID:   buildFolderID(normalizedPath, bundleID),
 		Path: normalizedPath,
 		URI:  fmt.Sprintf("file://%s/%s", c.rootDir, normalizedPath),
 		Name: name,
+		BundleID: bundleID,
 	}, nil
 }
 
@@ -6243,11 +6392,21 @@ func (c *repoContext) FolderMove(src, dst string) (*Folder, error) {
 	}
 	normalizedPath := strings.ReplaceAll(dst, "\\", "/")
 	name := filepath.Base(normalizedPath)
+	
+	bundles := GetProjects()
+	bundleName := ResolveBundleForPath(normalizedPath, bundles)
+	var bundleID *string
+	if bundleName != "" {
+		id := "@semio/" + bundleName
+		bundleID = &id
+	}
+	
 	return &Folder{
-		ID:   fmt.Sprintf("folder:%s", normalizedPath),
+		ID:   buildFolderID(normalizedPath, bundleID),
 		Path: normalizedPath,
 		URI:  fmt.Sprintf("file://%s/%s", c.rootDir, normalizedPath),
 		Name: name,
+		BundleID: bundleID,
 	}, nil
 }
 
@@ -6268,18 +6427,29 @@ func (c *repoContext) FileCreate(path string) (*File, error) {
 	name := filepath.Base(normalizedPath)
 	ext := filepath.Ext(name)
 	folderPath := filepath.Dir(normalizedPath)
+	
+	bundles := GetProjects()
+	bundleName := ResolveBundleForPath(normalizedPath, bundles)
+	var bundleID *string
+	if bundleName != "" {
+		id := "@semio/" + bundleName
+		bundleID = &id
+	}
+	
 	var folderID *string
 	if folderPath != "." {
-		id := fmt.Sprintf("folder:%s", folderPath)
+		id := buildFolderID(folderPath, bundleID)
 		folderID = &id
 	}
+	
 	return &File{
-		ID:        fmt.Sprintf("file:%s", normalizedPath),
+		ID:        buildFileID(normalizedPath, bundleID),
 		Path:      normalizedPath,
 		URI:       fmt.Sprintf("file://%s/%s", c.rootDir, normalizedPath),
 		Name:      name,
 		Extension: ext,
 		FolderID:  folderID,
+		BundleID:  bundleID,
 	}, nil
 }
 
@@ -6292,18 +6462,29 @@ func (c *repoContext) FileMove(src, dst string) (*File, error) {
 	name := filepath.Base(normalizedPath)
 	ext := filepath.Ext(name)
 	folderPath := filepath.Dir(normalizedPath)
+	
+	bundles := GetProjects()
+	bundleName := ResolveBundleForPath(normalizedPath, bundles)
+	var bundleID *string
+	if bundleName != "" {
+		id := "@semio/" + bundleName
+		bundleID = &id
+	}
+	
 	var folderID *string
 	if folderPath != "." {
-		id := fmt.Sprintf("folder:%s", folderPath)
+		id := buildFolderID(folderPath, bundleID)
 		folderID = &id
 	}
+	
 	return &File{
-		ID:        fmt.Sprintf("file:%s", normalizedPath),
+		ID:        buildFileID(normalizedPath, bundleID),
 		Path:      normalizedPath,
 		URI:       fmt.Sprintf("file://%s/%s", c.rootDir, normalizedPath),
 		Name:      name,
 		Extension: ext,
 		FolderID:  folderID,
+		BundleID:  bundleID,
 	}, nil
 }
 
@@ -7832,6 +8013,8 @@ type RepoContext interface {
 	GetBundles() []*Bundle
 	GetFolders() []*Folder
 	GetFiles() []*File
+	GetSections() []*Section
+	GetDefinitions() []*Definition
 	GetContributors() ([]*Contributor, error)
 	GetTickets(year, month, day *int, status *TicketStatus) ([]*Ticket, error)
 	GetPolicies() []*Policy
@@ -7894,6 +8077,10 @@ func (c *defaultContext) GetBundles() []*Bundle { return []*Bundle{} }
 func (c *defaultContext) GetFolders() []*Folder { return []*Folder{} }
 
 func (c *defaultContext) GetFiles() []*File { return []*File{} }
+
+func (c *defaultContext) GetDefinitions() []*Definition { return []*Definition{} }
+
+func (c *defaultContext) GetSections() []*Section { return []*Section{} }
 
 func (c *defaultContext) GetContributors() ([]*Contributor, error) { return []*Contributor{}, nil }
 
@@ -8072,6 +8259,14 @@ func (e *Executor) GetOperationType(query string) (string, error) {
 // #region Schema Builder
 
 func buildSchema(resolver *Resolver) (graphql.Schema, error) {
+	/* positionType := graphql.NewObject(graphql.ObjectConfig{
+		Name: "Position",
+		Fields: graphql.Fields{
+			"line":      &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"character": &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+		},
+	}) */
+
 	rangeType := graphql.NewObject(graphql.ObjectConfig{
 		Name: "Range",
 		Fields: graphql.Fields{
@@ -8373,7 +8568,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					Type: rangeType,
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 						section := p.Source.(*Section)
-						return &Range{Start: section.StartLine, End: section.EndLine}, nil
+						return &Range{Start: section.StartIndex, End: section.EndIndex}, nil
 					},
 				},
 			}
@@ -8401,7 +8596,13 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						return []*Violation{}, nil
 					},
 				},
-				"range": &graphql.Field{Type: graphql.NewNonNull(rangeType)},
+				"range": &graphql.Field{
+					Type: graphql.NewNonNull(rangeType),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						definition := p.Source.(*Definition)
+						return &Range{Start: definition.StartIndex, End: definition.EndIndex}, nil
+					},
+				},
 			}
 		}),
 	})
@@ -8732,6 +8933,20 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						return repoResolverInstance.Files(p.Context, repo)
 					},
 				},
+				"sections": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(sectionType))),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						repo := p.Source.(*Repo)
+						return repoResolverInstance.Sections(p.Context, repo)
+					},
+				},
+				"definitions": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(definitionType))),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						repo := p.Source.(*Repo)
+						return repoResolverInstance.Definitions(p.Context, repo)
+					},
+				},
 				"contributors": &graphql.Field{
 					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(contributorType))),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
@@ -8883,6 +9098,18 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 				Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(fileType))),
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 					return queryResolverInstance.Files(p.Context)
+				},
+			},
+			"sections": &graphql.Field{
+				Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(sectionType))),
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					return queryResolverInstance.Sections(p.Context)
+				},
+			},
+			"definitions": &graphql.Field{
+				Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(definitionType))),
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					return queryResolverInstance.Definitions(p.Context)
 				},
 			},
 			"contributors": &graphql.Field{
@@ -9399,6 +9626,20 @@ func (r *queryResolver) Files(ctx context.Context) ([]*File, error) {
 	return []*File{}, nil
 }
 
+func (r *queryResolver) Sections(ctx context.Context) ([]*Section, error) {
+	if r.Ctx != nil {
+		return r.Ctx.GetSections(), nil
+	}
+	return []*Section{}, nil
+}
+
+func (r *queryResolver) Definitions(ctx context.Context) ([]*Definition, error) {
+	if r.Ctx != nil {
+		return r.Ctx.GetDefinitions(), nil
+	}
+	return []*Definition{}, nil
+}
+
 func (r *queryResolver) Contributors(ctx context.Context) ([]*Contributor, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetContributors()
@@ -9456,11 +9697,21 @@ func (r *queryResolver) Bundle(ctx context.Context, name string) (*Bundle, error
 func (r *queryResolver) Folder(ctx context.Context, path string) (*Folder, error) {
 	normalizedPath := strings.ReplaceAll(path, "\\", "/")
 	name := filepath.Base(normalizedPath)
+	
+	bundles := GetProjects()
+	bundleName := ResolveBundleForPath(normalizedPath, bundles)
+	var bundleID *string
+	if bundleName != "" {
+		id := "@semio/" + bundleName
+		bundleID = &id
+	}
+	
 	return &Folder{
-		ID:   fmt.Sprintf("folder:%s", normalizedPath),
-		Path: normalizedPath,
-		URI:  fmt.Sprintf("file://%s/%s", r.RootDir, normalizedPath),
-		Name: name,
+		ID:       buildFolderID(normalizedPath, bundleID),
+		Path:     normalizedPath,
+		URI:      fmt.Sprintf("file://%s/%s", r.RootDir, normalizedPath),
+		Name:     name,
+		BundleID: bundleID,
 	}, nil
 }
 
@@ -9469,18 +9720,29 @@ func (r *queryResolver) File(ctx context.Context, path string) (*File, error) {
 	name := filepath.Base(normalizedPath)
 	ext := filepath.Ext(name)
 	folderPath := filepath.Dir(normalizedPath)
+	
+	bundles := GetProjects()
+	bundleName := ResolveBundleForPath(normalizedPath, bundles)
+	var bundleID *string
+	if bundleName != "" {
+		id := "@semio/" + bundleName
+		bundleID = &id
+	}
+	
 	var folderID *string
 	if folderPath != "." {
-		id := fmt.Sprintf("folder:%s", folderPath)
+		id := buildFolderID(folderPath, bundleID)
 		folderID = &id
 	}
+	
 	return &File{
-		ID:        fmt.Sprintf("file:%s", normalizedPath),
+		ID:        buildFileID(normalizedPath, bundleID),
 		Path:      normalizedPath,
 		URI:       fmt.Sprintf("file://%s/%s", r.RootDir, normalizedPath),
 		Name:      name,
 		Extension: ext,
 		FolderID:  folderID,
+		BundleID:  bundleID,
 	}, nil
 }
 
@@ -9546,7 +9808,7 @@ func (r *queryResolver) Policy(ctx context.Context, id string) (*Policy, error) 
 		}
 	}
 	return &Policy{
-		ID:     fmt.Sprintf("policy:%s", id),
+		ID:     "@semio/policies/" + id,
 		Name:   id,
 		Scopes: []string{},
 	}, nil
@@ -9736,6 +9998,20 @@ func (r *repoResolver) Files(ctx context.Context, obj *Repo) ([]*File, error) {
 		return r.Ctx.GetFiles(), nil
 	}
 	return []*File{}, nil
+}
+
+func (r *repoResolver) Sections(ctx context.Context, obj *Repo) ([]*Section, error) {
+	if r.Ctx != nil {
+		return r.Ctx.GetSections(), nil
+	}
+	return []*Section{}, nil
+}
+
+func (r *repoResolver) Definitions(ctx context.Context, obj *Repo) ([]*Definition, error) {
+	if r.Ctx != nil {
+		return r.Ctx.GetDefinitions(), nil
+	}
+	return []*Definition{}, nil
 }
 
 func (r *repoResolver) Contributors(ctx context.Context, obj *Repo) ([]*Contributor, error) {

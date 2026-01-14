@@ -1,0 +1,14 @@
+{
+  "title": "REPO-TREE-REFACTOR",
+  "iterations": [
+    {
+      "prompt": "Refactor Range to use Int, remove @semio root from tree, show sections/definitions hierarchy, enable lazy loading",
+      "llm": "claude-opus-4",
+      "author": "Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e",
+      "date": "2026-01-14T00:16:29.9367908+01:00",
+      "commit": "71fe6601cd68d7bf68ef3546de7481af2ad643db"
+    }
+  ],
+  "status": "open",
+  "dates": {}
+}

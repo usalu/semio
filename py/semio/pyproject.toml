@@ -1,0 +1,48 @@
+[project]
+name = "semio"
+version = "4.4.0"
+description = "🏘️ semio domain models for Python"
+authors = [{ name = "Ueli Saluz", email = "ueli@semio-tech.com" }]
+requires-python = ">=3.11"
+license = "LGPL-3.0-or-later"
+maintainers = [{ name = "Ueli Saluz", email = "ueli@semio-tech.com" }]
+dependencies = [
+    "pydantic>=2.0.0",
+    "numpy>=2.0.0",
+    "networkx>=3.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/usalu/semio"
+Repository = "https://github.com/usalu/semio"
+
+[dependency-groups]
+test = [
+    "pytest>=8.0.0",
+    "deepdiff>=8.0.0",
+    "pytest-cov>=6.0.0",
+]
+dev = [
+    "ruff>=0.12.0",
+]
+
+[tool.uv]
+default-groups = ["test", "dev"]
+
+[tool.hatch.build.targets.sdist]
+include = ["semio.py"]
+
+[tool.hatch.build.targets.wheel]
+include = ["semio.py"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+line-length = 250
+
+[tool.pytest.ini_options]
+python_files = ["test_*.py", "*_test.py", "*.test.py"]
+testpaths = ["."]
+addopts = "--import-mode=importlib"

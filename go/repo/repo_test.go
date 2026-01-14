@@ -556,7 +556,7 @@ func TestSectionsEdges(t *testing.T) {
 				children { id }
 				definitions { id name }
 				violations { id }
-				range { start end }
+				range { start { line } end { line } }
 			}
 		}
 	}`
@@ -580,8 +580,8 @@ func TestSectionsEdges(t *testing.T) {
 				Definitions []struct{ ID string `json:"id"`; Name string `json:"name"` } `json:"definitions"`
 				Violations  []struct{ ID string `json:"id"` } `json:"violations"`
 				Range       struct {
-					Start int `json:"start"`
-					End   int `json:"end"`
+					Start struct{ Line int `json:"line"` } `json:"start"`
+					End   struct{ Line int `json:"line"` } `json:"end"`
 				} `json:"range"`
 			} `json:"sections"`
 		} `json:"files"`
@@ -626,7 +626,7 @@ func TestDefinitionsEdges(t *testing.T) {
 				file { id }
 				section { id name }
 				violations { id }
-				range { start end }
+				range { start { line } end { line } }
 			}
 		}
 	}`
@@ -648,8 +648,8 @@ func TestDefinitionsEdges(t *testing.T) {
 				Section    *struct{ ID string `json:"id"`; Name string `json:"name"` } `json:"section"`
 				Violations []struct{ ID string `json:"id"` } `json:"violations"`
 				Range      struct {
-					Start int `json:"start"`
-					End   int `json:"end"`
+					Start struct{ Line int `json:"line"` } `json:"start"`
+					End   struct{ Line int `json:"line"` } `json:"end"`
 				} `json:"range"`
 			} `json:"definitions"`
 		} `json:"files"`

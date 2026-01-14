@@ -1,0 +1,29 @@
+query Nodes {
+  repos: repo {
+    id
+  }
+  bundles {
+    id
+  }
+  folders {
+    id
+  }
+  files {
+    id
+  }
+  sections {
+    id
+  }
+  definitions {
+    id
+  }
+  tickets {
+    id
+  }
+  contributors {
+    id
+  }
+  violations {
+    id
+  }
+}

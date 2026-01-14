@@ -1,6 +1,6 @@
 # region Header
 
-# py/engine/engine.test.py
+# py/semio/semio.test.py
 
 # 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -28,11 +28,10 @@ import copy
 import json
 import pathlib
 
+import engine
 import numpy
 import pytest
 from fastapi.testclient import TestClient
-
-import engine
 
 # endregion Imports
 
@@ -144,7 +143,15 @@ def outputToInput(data: dict) -> dict:
 
     guidRefFields = {"parent", "port", "file", "quality"}
 
-    keepObjectFields = {"connected", "connecting", "piece", "designPiece", "connector", "type", "design"}
+    keepObjectFields = {
+        "connected",
+        "connecting",
+        "piece",
+        "designPiece",
+        "connector",
+        "type",
+        "design",
+    }
 
     def convertValue(key: str, value, context: str = ""):
         """Convert a single value, handling refs and nested structures."""
@@ -153,9 +160,15 @@ def outputToInput(data: dict) -> dict:
 
         if isinstance(value, list):
             if key == "concepts" and context == "":
-                return [item.get("guid") if isinstance(item, dict) else item for item in value]
+                return [
+                    item.get("guid") if isinstance(item, dict) else item
+                    for item in value
+                ]
             if key == "tags" and context == "":
-                return [item.get("guid") if isinstance(item, dict) else item for item in value]
+                return [
+                    item.get("guid") if isinstance(item, dict) else item
+                    for item in value
+                ]
             return [convertValue(key, item, context) for item in value]
 
         if isinstance(value, dict):
@@ -176,7 +189,11 @@ def outputToInput(data: dict) -> dict:
         """Convert a dict from Output to Input format."""
         result = {}
         for key, value in d.items():
-            if key in outputOnlyFields and context != "folders" and "folder" not in context.lower():
+            if (
+                key in outputOnlyFields
+                and context != "folders"
+                and "folder" not in context.lower()
+            ):
                 continue
 
             newKey = fieldMappings.get(key, key)
@@ -211,15 +228,41 @@ class TestPlaneFromYAxis:
     @pytest.mark.parametrize(
         "yAxis, phi, expectedXAxis",
         [
-            pytest.param([0.0, 1.0, 0.0], 0.0, [1.0, 0.0, 0.0], id="no rotation, no rotation"),
-            pytest.param([0.0, 1.0, 0.0], 135, [-0.707107, 0, -0.707107], id="no rotation, 135° around y rotation"),
-            pytest.param([-0.707107, 0.707107, 0.0], 0.0, [0.707107, 0.707107, 0], id="45° around z, no rotation"),
-            pytest.param([0, 0.866025, -0.5], 0.0, [1, 0, 0], id="-30° around x, no rotation"),
-            pytest.param([0, 0.866025, -0.5], 45, [0.707107, -0.353553, -0.612372], id="-30° around x, 45° rotation"),
-            pytest.param([0.707107, -0.612372, 0.353553], 45, [0.251059, -0.25, -0.935131], id="135° around z then -30° around x, 45° rotation"),
+            pytest.param(
+                [0.0, 1.0, 0.0], 0.0, [1.0, 0.0, 0.0], id="no rotation, no rotation"
+            ),
+            pytest.param(
+                [0.0, 1.0, 0.0],
+                135,
+                [-0.707107, 0, -0.707107],
+                id="no rotation, 135° around y rotation",
+            ),
+            pytest.param(
+                [-0.707107, 0.707107, 0.0],
+                0.0,
+                [0.707107, 0.707107, 0],
+                id="45° around z, no rotation",
+            ),
+            pytest.param(
+                [0, 0.866025, -0.5], 0.0, [1, 0, 0], id="-30° around x, no rotation"
+            ),
+            pytest.param(
+                [0, 0.866025, -0.5],
+                45,
+                [0.707107, -0.353553, -0.612372],
+                id="-30° around x, 45° rotation",
+            ),
+            pytest.param(
+                [0.707107, -0.612372, 0.353553],
+                45,
+                [0.251059, -0.25, -0.935131],
+                id="135° around z then -30° around x, 45° rotation",
+            ),
         ],
     )
-    def test_planeFromYAxis(self, yAxis: list[float], phi: float, expectedXAxis: list[float]) -> None:
+    def test_planeFromYAxis(
+        self, yAxis: list[float], phi: float, expectedXAxis: list[float]
+    ) -> None:
         plane = engine.planeFromYAxis(numpy.array(yAxis), phi)
         assert isClose(plane.xAxis.x, expectedXAxis[0])
         assert isClose(plane.xAxis.y, expectedXAxis[1])
@@ -232,12 +275,19 @@ class TestPlaneFromYAxis:
 
 
 class TestValidation:
-    def test_validationMatchesExpectedOutput(self, kitMetabolismJson: dict, kitInvalidJson: dict, expectedValidationJson: dict) -> None:
+    def test_validationMatchesExpectedOutput(
+        self,
+        kitMetabolismJson: dict,
+        kitInvalidJson: dict,
+        expectedValidationJson: dict,
+    ) -> None:
         assert not engine.validateKitDict(kitMetabolismJson).hasErrors()
 
         result = engine.validateKitDict(kitInvalidJson)
         expected = engine.parseValidationResult(json.dumps(expectedValidationJson))
-        assert engine.areValidationResultsEqual(result, expected), f"Validation mismatch. Got {len(result.problems)} problems, expected {len(expected.problems)}"
+        assert engine.areValidationResultsEqual(result, expected), (
+            f"Validation mismatch. Got {len(result.problems)} problems, expected {len(expected.problems)}"
+        )
 
 
 # endregion Validation Tests
@@ -255,20 +305,32 @@ class TestKitSerialization:
 
         deserialized = json.loads(serialized)
 
-        assert engine.areKitsDictEqual(kitMetabolismJson, deserialized), "Kit -> JSON -> Kit should be identical"
+        assert engine.areKitsDictEqual(kitMetabolismJson, deserialized), (
+            "Kit -> JSON -> Kit should be identical"
+        )
 
     def test_kitParseAndDump(self, kitMetabolismJson: dict) -> None:
         """Kit.parse -> Kit.dump roundtrip."""
 
         kitOriginal = copy.deepcopy(kitMetabolismJson)
-        kitOriginal["designs"] = [d for d in kitOriginal.get("designs", []) if not d.get("parent")]
+        kitOriginal["designs"] = [
+            d for d in kitOriginal.get("designs", []) if not d.get("parent")
+        ]
 
         kitCopy = copy.deepcopy(kitOriginal)
-        assert engine.areKitsDictEqual(kitOriginal, kitCopy), "Deep copy should be equal"
+        assert engine.areKitsDictEqual(kitOriginal, kitCopy), (
+            "Deep copy should be equal"
+        )
 
-        assert kitOriginal.get("guid") == kitCopy.get("guid"), "GUID should be preserved"
-        assert len(kitOriginal.get("types", [])) == len(kitCopy.get("types", [])), "Types count should match"
-        assert len(kitOriginal.get("designs", [])) == len(kitCopy.get("designs", [])), "Designs count should match"
+        assert kitOriginal.get("guid") == kitCopy.get("guid"), (
+            "GUID should be preserved"
+        )
+        assert len(kitOriginal.get("types", [])) == len(kitCopy.get("types", [])), (
+            "Types count should match"
+        )
+        assert len(kitOriginal.get("designs", [])) == len(kitCopy.get("designs", [])), (
+            "Designs count should match"
+        )
 
 
 # endregion Kit Serialization Tests (Import/Export)
@@ -279,21 +341,37 @@ class TestKitSerialization:
 class TestDiffs:
     """Tests matching semio.test.ts Diffs describe block - all assertions in one test matching TypeScript structure."""
 
-    def test_kitDiffOperations(self, kitMetabolismJson: dict, kitMetabolismDiffedJson: dict, diffKitMetabolismJson: dict, diffKitMetabolismInvertedJson: dict) -> None:
+    def test_kitDiffOperations(
+        self,
+        kitMetabolismJson: dict,
+        kitMetabolismDiffedJson: dict,
+        diffKitMetabolismJson: dict,
+        diffKitMetabolismInvertedJson: dict,
+    ) -> None:
         """Kit + Diff → DiffedKit & DiffedKit + InverseDiff → Kit (matching semio.test.ts exactly)"""
         kitOriginal = copy.deepcopy(kitMetabolismJson)
-        kitOriginal["designs"] = [d for d in kitOriginal.get("designs", []) if not d.get("parent")]
+        kitOriginal["designs"] = [
+            d for d in kitOriginal.get("designs", []) if not d.get("parent")
+        ]
         kitDiff = diffKitMetabolismJson
         kitDiffInverted = diffKitMetabolismInvertedJson
         kitDiffed = kitMetabolismDiffedJson
         computedDiff = engine.getKitDiffDict(kitOriginal, kitDiffed)
-        assert engine.areKitDiffsDictEqual(computedDiff, kitDiff), "Computed diff should equal expected diff"
+        assert engine.areKitDiffsDictEqual(computedDiff, kitDiff), (
+            "Computed diff should equal expected diff"
+        )
         computedInverseDiff = engine.inverseKitDiffDict(kitOriginal, kitDiff)
-        assert engine.areKitDiffsDictEqual(computedInverseDiff, kitDiffInverted), "Computed inverse diff should equal expected inverse diff"
+        assert engine.areKitDiffsDictEqual(computedInverseDiff, kitDiffInverted), (
+            "Computed inverse diff should equal expected inverse diff"
+        )
         appliedForward = engine.applyKitDiffDict(kitOriginal, kitDiff)
-        assert engine.areKitsDictEqual(appliedForward, kitDiffed), "Original + Diff should equal DiffedKit"
+        assert engine.areKitsDictEqual(appliedForward, kitDiffed), (
+            "Original + Diff should equal DiffedKit"
+        )
         appliedInverse = engine.applyKitDiffDict(kitDiffed, kitDiffInverted)
-        assert engine.areKitsDictEqual(appliedInverse, kitOriginal), "DiffedKit + InverseDiff should equal original Kit"
+        assert engine.areKitsDictEqual(appliedInverse, kitOriginal), (
+            "DiffedKit + InverseDiff should equal original Kit"
+        )
 
 
 # endregion Diff Tests
@@ -319,13 +397,19 @@ class TestRest:
         """
 
         kitOriginal = copy.deepcopy(kitMetabolismJson)
-        kitOriginal["designs"] = [d for d in kitOriginal.get("designs", []) if not d.get("parent")]
+        kitOriginal["designs"] = [
+            d for d in kitOriginal.get("designs", []) if not d.get("parent")
+        ]
 
         appliedDiff = engine.applyKitDiffDict(kitOriginal, diffKitMetabolismJson)
-        assert engine.areKitsDictEqual(appliedDiff, kitMetabolismDiffedJson), "Applied diff should equal diffed kit"
+        assert engine.areKitsDictEqual(appliedDiff, kitMetabolismDiffedJson), (
+            "Applied diff should equal diffed kit"
+        )
 
         computedDiff = engine.getKitDiffDict(kitOriginal, kitMetabolismDiffedJson)
-        assert engine.areKitDiffsDictEqual(computedDiff, diffKitMetabolismJson), "Computed diff should match expected"
+        assert engine.areKitDiffsDictEqual(computedDiff, diffKitMetabolismJson), (
+            "Computed diff should match expected"
+        )
 
 
 # endregion REST Tests
@@ -352,13 +436,21 @@ class TestGraphQL:
         """
 
         kitOriginal = copy.deepcopy(kitMetabolismJson)
-        kitOriginal["designs"] = [d for d in kitOriginal.get("designs", []) if not d.get("parent")]
+        kitOriginal["designs"] = [
+            d for d in kitOriginal.get("designs", []) if not d.get("parent")
+        ]
 
-        appliedInverse = engine.applyKitDiffDict(kitMetabolismDiffedJson, diffKitMetabolismInvertedJson)
-        assert engine.areKitsDictEqual(appliedInverse, kitOriginal), "DiffedKit + InverseDiff should equal original kit"
+        appliedInverse = engine.applyKitDiffDict(
+            kitMetabolismDiffedJson, diffKitMetabolismInvertedJson
+        )
+        assert engine.areKitsDictEqual(appliedInverse, kitOriginal), (
+            "DiffedKit + InverseDiff should equal original kit"
+        )
 
         computedInverse = engine.inverseKitDiffDict(kitOriginal, diffKitMetabolismJson)
-        assert engine.areKitDiffsDictEqual(computedInverse, diffKitMetabolismInvertedJson), "Computed inverse diff should match expected"
+        assert engine.areKitDiffsDictEqual(
+            computedInverse, diffKitMetabolismInvertedJson
+        ), "Computed inverse diff should match expected"
 
 
 # endregion GraphQL Tests
@@ -368,9 +460,24 @@ class TestGraphQL:
 
 class TestFlattenDesign:
     def test_nakaginCapsuleTowerNormal(self, kitMetabolismJson: dict) -> None:
-        design = next((d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower"), None)
+        design = next(
+            (
+                d
+                for d in kitMetabolismJson.get("designs", [])
+                if d.get("name") == "Nakagin Capsule Tower"
+            ),
+            None,
+        )
         assert design is not None
-        expectedDesign = next((d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Flat" and d.get("parent", {}).get("guid") == design.get("guid")), None)
+        expectedDesign = next(
+            (
+                d
+                for d in kitMetabolismJson.get("designs", [])
+                if d.get("name") == "Flat"
+                and d.get("parent", {}).get("guid") == design.get("guid")
+            ),
+            None,
+        )
         if expectedDesign is None:
             pytest.skip("Expected Flat design not found")
         flatDiff = engine.flattenDesignDict(kitMetabolismJson, design["guid"])
@@ -378,15 +485,39 @@ class TestFlattenDesign:
         for update in flatDiff.get("pieces", {}).get("updated", []):
             pieceId = update["id"]
             computedPlane = update["diff"].get("plane")
-            expectedPiece = next((p for p in expectedDesign.get("pieces", []) if p.get("guid") == pieceId), None)
+            expectedPiece = next(
+                (
+                    p
+                    for p in expectedDesign.get("pieces", [])
+                    if p.get("guid") == pieceId
+                ),
+                None,
+            )
             if expectedPiece and expectedPiece.get("plane"):
-                assert planesEqualDict(computedPlane, expectedPiece["plane"]), f"Plane mismatch for piece {pieceId}"
+                assert planesEqualDict(computedPlane, expectedPiece["plane"]), (
+                    f"Plane mismatch for piece {pieceId}"
+                )
 
     def test_nakaginCapsuleTowerSlanted(self, kitMetabolismJson: dict) -> None:
-        design = next((d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Slanted"), None)
+        design = next(
+            (
+                d
+                for d in kitMetabolismJson.get("designs", [])
+                if d.get("name") == "Slanted"
+            ),
+            None,
+        )
         if design is None:
             pytest.skip("Slanted design not found")
-        expectedDesign = next((d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Flat" and d.get("parent", {}).get("guid") == design.get("guid")), None)
+        expectedDesign = next(
+            (
+                d
+                for d in kitMetabolismJson.get("designs", [])
+                if d.get("name") == "Flat"
+                and d.get("parent", {}).get("guid") == design.get("guid")
+            ),
+            None,
+        )
         if expectedDesign is None:
             pytest.skip("Expected Flat design for Slanted not found")
         flatDiff = engine.flattenDesignDict(kitMetabolismJson, design["guid"])
@@ -394,15 +525,39 @@ class TestFlattenDesign:
         for update in flatDiff.get("pieces", {}).get("updated", []):
             pieceId = update["id"]
             computedPlane = update["diff"].get("plane")
-            expectedPiece = next((p for p in expectedDesign.get("pieces", []) if p.get("guid") == pieceId), None)
+            expectedPiece = next(
+                (
+                    p
+                    for p in expectedDesign.get("pieces", [])
+                    if p.get("guid") == pieceId
+                ),
+                None,
+            )
             if expectedPiece and expectedPiece.get("plane"):
-                assert planesEqualDict(computedPlane, expectedPiece["plane"]), f"Plane mismatch for piece {pieceId}"
+                assert planesEqualDict(computedPlane, expectedPiece["plane"]), (
+                    f"Plane mismatch for piece {pieceId}"
+                )
 
     def test_nakaginCapsuleTowerTwisted(self, kitMetabolismJson: dict) -> None:
-        design = next((d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Twisted"), None)
+        design = next(
+            (
+                d
+                for d in kitMetabolismJson.get("designs", [])
+                if d.get("name") == "Twisted"
+            ),
+            None,
+        )
         if design is None:
             pytest.skip("Twisted design not found")
-        expectedDesign = next((d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Flat" and d.get("parent", {}).get("guid") == design.get("guid")), None)
+        expectedDesign = next(
+            (
+                d
+                for d in kitMetabolismJson.get("designs", [])
+                if d.get("name") == "Flat"
+                and d.get("parent", {}).get("guid") == design.get("guid")
+            ),
+            None,
+        )
         if expectedDesign is None:
             pytest.skip("Expected Flat design for Twisted not found")
         flatDiff = engine.flattenDesignDict(kitMetabolismJson, design["guid"])
@@ -410,15 +565,39 @@ class TestFlattenDesign:
         for update in flatDiff.get("pieces", {}).get("updated", []):
             pieceId = update["id"]
             computedPlane = update["diff"].get("plane")
-            expectedPiece = next((p for p in expectedDesign.get("pieces", []) if p.get("guid") == pieceId), None)
+            expectedPiece = next(
+                (
+                    p
+                    for p in expectedDesign.get("pieces", [])
+                    if p.get("guid") == pieceId
+                ),
+                None,
+            )
             if expectedPiece and expectedPiece.get("plane"):
-                assert planesEqualDict(computedPlane, expectedPiece["plane"]), f"Plane mismatch for piece {pieceId}"
+                assert planesEqualDict(computedPlane, expectedPiece["plane"]), (
+                    f"Plane mismatch for piece {pieceId}"
+                )
 
     def test_nakaginCapsuleTowerDancing(self, kitMetabolismJson: dict) -> None:
-        design = next((d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Dancing"), None)
+        design = next(
+            (
+                d
+                for d in kitMetabolismJson.get("designs", [])
+                if d.get("name") == "Dancing"
+            ),
+            None,
+        )
         if design is None:
             pytest.skip("Dancing design not found")
-        expectedDesign = next((d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Flat" and d.get("parent", {}).get("guid") == design.get("guid")), None)
+        expectedDesign = next(
+            (
+                d
+                for d in kitMetabolismJson.get("designs", [])
+                if d.get("name") == "Flat"
+                and d.get("parent", {}).get("guid") == design.get("guid")
+            ),
+            None,
+        )
         if expectedDesign is None:
             pytest.skip("Expected Flat design for Dancing not found")
         flatDiff = engine.flattenDesignDict(kitMetabolismJson, design["guid"])
@@ -426,14 +605,38 @@ class TestFlattenDesign:
         for update in flatDiff.get("pieces", {}).get("updated", []):
             pieceId = update["id"]
             computedPlane = update["diff"].get("plane")
-            expectedPiece = next((p for p in expectedDesign.get("pieces", []) if p.get("guid") == pieceId), None)
+            expectedPiece = next(
+                (
+                    p
+                    for p in expectedDesign.get("pieces", [])
+                    if p.get("guid") == pieceId
+                ),
+                None,
+            )
             if expectedPiece and expectedPiece.get("plane"):
-                assert planesEqualDict(computedPlane, expectedPiece["plane"]), f"Plane mismatch for piece {pieceId}"
+                assert planesEqualDict(computedPlane, expectedPiece["plane"]), (
+                    f"Plane mismatch for piece {pieceId}"
+                )
 
     def test_capsuleDream(self, kitMetabolismJson: dict) -> None:
-        design = next((d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Capsule Dream"), None)
+        design = next(
+            (
+                d
+                for d in kitMetabolismJson.get("designs", [])
+                if d.get("name") == "Capsule Dream"
+            ),
+            None,
+        )
         assert design is not None
-        expectedDesign = next((d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Flat" and d.get("parent", {}).get("guid") == design.get("guid")), None)
+        expectedDesign = next(
+            (
+                d
+                for d in kitMetabolismJson.get("designs", [])
+                if d.get("name") == "Flat"
+                and d.get("parent", {}).get("guid") == design.get("guid")
+            ),
+            None,
+        )
         if expectedDesign is None:
             pytest.skip("Expected Flat design not found")
         flatDiff = engine.flattenDesignDict(kitMetabolismJson, design["guid"])
@@ -441,9 +644,18 @@ class TestFlattenDesign:
         for update in flatDiff.get("pieces", {}).get("updated", []):
             pieceId = update["id"]
             computedPlane = update["diff"].get("plane")
-            expectedPiece = next((p for p in expectedDesign.get("pieces", []) if p.get("guid") == pieceId), None)
+            expectedPiece = next(
+                (
+                    p
+                    for p in expectedDesign.get("pieces", [])
+                    if p.get("guid") == pieceId
+                ),
+                None,
+            )
             if expectedPiece and expectedPiece.get("plane"):
-                assert planesEqualDict(computedPlane, expectedPiece["plane"]), f"Plane mismatch for piece {pieceId}"
+                assert planesEqualDict(computedPlane, expectedPiece["plane"]), (
+                    f"Plane mismatch for piece {pieceId}"
+                )
 
 
 # endregion FlattenDesign Tests

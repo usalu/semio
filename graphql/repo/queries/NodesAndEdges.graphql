@@ -16,6 +16,12 @@ query NodesAndEdges {
     contributors {
       id
     }
+    sections {
+      id
+    }
+    definitions {
+      id
+    }
     violations {
       id
     }
@@ -33,6 +39,12 @@ query NodesAndEdges {
     id
   }
   contributors {
+    id
+  }
+  sections {
+    id
+  }
+  definitions {
     id
   }
   violations {

@@ -438,7 +438,6 @@ var ticketListCmd = &cobra.Command{
 						path
 						uri
 						date { created finished }
-						metrics { files sections definitions lines { added removed } }
 					}
 				}
 			}

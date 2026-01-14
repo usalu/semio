@@ -715,6 +715,31 @@ To keep our inbox notifications low, we try to push not more than once an hour �
 
 Different [ecosystems](#-ecosystems-) need different tools 🧰
 
+## 🐳 Devcontainer (Recommended) [↑](#-development)
+
+The recommended way to develop is using the devcontainer which provides a consistent cross-platform environment.
+
+**Prerequisites:**
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) or compatible container runtime
+- [VS Code](https://code.visualstudio.com/) with [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+
+**Getting Started:**
+
+1. Clone the repository
+2. Open in VS Code
+3. Click "Reopen in Container" when prompted (or run "Dev Containers: Reopen in Container" from command palette)
+4. Wait for container build and setup to complete
+
+The devcontainer includes:
+
+- Node.js 22.x, Go 1.24, Python 3.13, .NET SDK 7.0/8.0, Rust
+- All required VS Code extensions
+- Pre-configured development environment
+- Port forwarding for all dev servers (3000, 4000, 4321, 5678, 6006, 2507)
+
+## 🪟 Windows Setup (Legacy) [↑](#-development)
+
 For a complete setup you need:
 
 - Windows 10 or 11
@@ -722,20 +747,16 @@ For a complete setup you need:
 - [Visual Studio 2022 Community](https://visualstudio.microsoft.com/de/thank-you-downloading-visual-studio/?sku=Community&channel=Release&version=VS2022)
 - [Rhino 8](https://www.rhino3d.com/download/rhino-for-windows/8/latest/)
 - Python 3.13
-- Poetry
+- [uv](https://docs.astral.sh/uv/)
 - [Node](https://nodejs.org/dist/v22.14.0/node-v22.14.0-x64.msi)
 
 If you do not have Python installed, I recommend to install it over the [Microsoft Store](<(https://www.microsoft.com/store/productId/9NCVDN91XZQP?ocid=pdpshare)>) 🏪
 
-Afterwards you can install poetry with this command:
+Afterwards you can install uv with this command:
 
 ```bash
-(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | python -
+irm https://astral.sh/uv/install.ps1 | iex
 ```
-
-In the console you will see a warning that the `poetry.exe` is not installed in the requested location 📁
-![Actual Location](poetry/python_ms-store_location.png)
-Then copy the actual path `...\AppData\Local\Packages\PythonSoftwareFoundation...\Roaming\pypoetry\venv\Scripts` and add it to your environmental path variable ➕
 
 Then you can run `npm run build` from the root to build all packages, or run `tsx ./build.ts` in the Grasshopper directory and add your full path `LOCAL_PATH\net\Semio.Grasshopper\Debug\net48` to your GrasshopperDeveloperSettings ⚙️
 

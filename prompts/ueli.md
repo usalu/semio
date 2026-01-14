@@ -1,5 +1,47 @@
 # Prompt history
 
+All tests should be identical accross all implementations (Typescript, Python, C#, Go, Rust). Remove all other tests and refactor/extend for all test suites to be identical.
+Additionally there should be a new script: benchmark
+It should measure the execution time of the pure function execution time.
+The benchmark should create a csv file under reports/benchmark.csv
+Test, Typescript, Python, C#, Go, Rust
+Roundtrip/Metabolism,,,,,,
+Flatten Design/Nakagin Capsule Tower,,,,,,
+Flatten Design/Nakagin Capsule Tower/Slanted,,,,,,
+Flatten Design/Nakagin Capsule Tower/Twisted,,,,,,
+Flatten Design/Nakagin Capsule Tower/Dancing,,,,,,
+Flatten Design/Capsule Dream,,,,,,
+Validation/Invalid Kit,,,,,,
+Validation/Metabolism,,,,,,
+
+Finish semio.py and engine.py. semio.py should have the same functionality as semio.ts, semio.go, semio.rs, Semio.cs.
+
+Create a standalone package for semio and extract all non engine related code from it. semio.py should have the same functionality as semio.ts, semio.go, semio.rs, Semio.cs
+
+Currently the monorepo is being developed on Windows machines. The whole repo, all scripts, the vscode extension, all compilers, linters, formatters, etc should be migrated to one devcontainer.
+
+Extend dependabot with go and rust
+
+Add new resolvers to the repo graphql schema: sections and definitions. Extend the nodes & nodes and edges query, along with all other apis.
+
+- Remove Position completly. Everything is just line based. No character, no column, etc.
+- The contributions tree should show commits, tickets, bundles as child tree items
+- The bundles show no files
+
+Add a new command to repo called `integrate <source> <target-section-name> <target-file> [<target-parent-section-name>]` that takes code files and integrates the source code into a target file by wrapping it into the target section. Optionally provide a target parent section name to place the new section under. Otherwise it will just be placed at the end of the file after the last section.
+e.g. `integrate go/cli/main.go Cli go/repo/repo.go` 
+
+- Range should not be Position but int as in the original code.
+- Sections of the current file are not being shown.
+- The codebase tree should not show @semio as root tree item but directly show all the bundles.
+- The files are not showing sections as children. The sections should show the definitions as children.
+- All tree items should be lazily loaded
+
+The ticket mechanism implementation is not consistent between repo, mcp, cli, graphql, sqlite, vscode extension.
+vscode extension:
+- The codebase tree is empty.
+- The tickets are emtpy
+
 The affected definitions are not correct.
 E.g.
 {

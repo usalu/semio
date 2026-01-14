@@ -1,0 +1,150 @@
+{
+  "name": "semio",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "22",
+      "nodeGypDependencies": true
+    },
+    "ghcr.io/devcontainers/features/go:1": {
+      "version": "1.24"
+    },
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.13"
+    },
+    "ghcr.io/devcontainers/features/dotnet:2": {
+      "version": "7.0",
+      "additionalVersions": "8.0"
+    },
+    "ghcr.io/devcontainers/features/rust:1": {
+      "version": "latest",
+      "targets": "wasm32-unknown-unknown"
+    },
+    "ghcr.io/devcontainers/features/git:1": {
+      "version": "latest",
+      "ppa": true
+    },
+    "ghcr.io/devcontainers/features/git-lfs:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode-remote.remote-containers",
+        "ms-azuretools.vscode-docker",
+        "janisdd.vscode-edit-csv",
+        "mechatroner.rainbow-csv",
+        "tamasfe.even-better-toml",
+        "zainchen.json",
+        "jebbs.plantuml",
+        "jock.svg",
+        "gruntfuggly.todo-tree",
+        "vscode-icons-team.vscode-icons",
+        "nrwl.angular-console",
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        "bradlc.vscode-tailwindcss",
+        "unifiedjs.vscode-mdx",
+        "statelyai.stately-vscode",
+        "vitest.explorer",
+        "stripe.markdoc-language-support",
+        "firefox-devtools.vscode-firefox-debug",
+        "ms-playwright.playwright",
+        "ms-dotnettools.vscode-dotnet-pack",
+        "ms-dotnettools.vscode-dotnet-runtime",
+        "ms-dotnettools.csharp",
+        "ms-dotnettools.csdevkit",
+        "ms-dotnettools.dotnet-interactive-vscode",
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "charliermarsh.ruff",
+        "ms-toolsai.jupyter",
+        "rust-lang.rust-analyzer",
+        "golang.go"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.organizeImports": "always"
+        },
+        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/py/engine/.venv/bin/python",
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "[typescriptreact]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "prettier.configPath": ".prettierrc.json",
+        "prettier.ignorePath": ".prettierignore",
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff"
+        },
+        "[csharp]": {
+          "editor.defaultFormatter": "ms-dotnettools.csharp"
+        },
+        "python.analysis.typeCheckingMode": "off",
+        "python.testing.pytestEnabled": true,
+        "python.testing.unittestEnabled": false,
+        "python.testing.pytestArgs": ["."],
+        "python.testing.cwd": "${containerWorkspaceFolder}/py/engine",
+        "python.analysis.languageServerMode": "full",
+        "sqltools.useNodeRuntime": true,
+        "sqltools.connections": [
+          {
+            "name": "metabolism",
+            "database": "./examples/metabolism/.semio/kit.db",
+            "driver": "SQLite",
+            "previewLimit": 50
+          }
+        ],
+        "dotnet.defaultSolution": "net/Semio.sln",
+        "chat.agent.maxRequests": 5000,
+        "editor.minimap.enabled": true,
+        "[svg]": {
+          "editor.defaultFormatter": "jock.svg"
+        },
+        "rust-analyzer.linkedProjects": ["rs/semio/Cargo.toml"],
+        "rust-analyzer.cargo.target": "wasm32-unknown-unknown",
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  },
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "postStartCommand": "bash .devcontainer/post-start.sh",
+  "forwardPorts": [2507, 3000, 4000, 4321, 5678, 6006],
+  "portsAttributes": {
+    "2507": {
+      "label": "Engine API",
+      "onAutoForward": "notify"
+    },
+    "3000": {
+      "label": "Sketchpad Dev",
+      "onAutoForward": "notify"
+    },
+    "4000": {
+      "label": "Play Dev",
+      "onAutoForward": "notify"
+    },
+    "4321": {
+      "label": "Docs Dev",
+      "onAutoForward": "notify"
+    },
+    "5678": {
+      "label": "Python Debugger",
+      "onAutoForward": "silent"
+    },
+    "6006": {
+      "label": "Storybook",
+      "onAutoForward": "notify"
+    }
+  },
+  "mounts": [
+    "source=${localWorkspaceFolderBasename}-node_modules,target=${containerWorkspaceFolder}/node_modules,type=volume"
+  ],
+  "remoteUser": "vscode",
+  "containerEnv": {
+    "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
+    "PLAYWRIGHT_BROWSERS_PATH": "/home/vscode/.cache/ms-playwright"
+  }
+}

@@ -366,6 +366,39 @@ Toolbar panel visibility defaults to `true` for all apps via `panelVisibility: {
 
 # Monorepo
 
+## Devcontainer
+
+The monorepo uses a devcontainer for consistent cross-platform development. The devcontainer includes:
+
+**Languages & Runtimes:**
+
+- Node.js 22.x with npm 11.x
+- Go 1.24
+- Python 3.13 with uv package manager
+- .NET SDK 7.0 and 8.0
+- Rust with wasm32-unknown-unknown target
+
+**Tools:**
+
+- Git with LFS and GitHub CLI
+- SQLite3
+- Playwright (Chromium)
+- All VS Code extensions from `.vscode/extensions.json`
+
+**Forwarded Ports:**
+
+- 2507: Engine API
+- 3000: Sketchpad Dev
+- 4000: Play Dev
+- 4321: Docs Dev
+- 5678: Python Debugger
+- 6006: Storybook
+
+**Setup Scripts:**
+
+- `post-create.sh`: Runs after container creation (npm install, uv sync, Go build, dotnet restore, Playwright install)
+- `post-start.sh`: Runs on each container start (activates Python venv)
+
 ## Git
 
 - The `main` branch is compressed (squashed history) and acts as the canonical integration branch.
@@ -791,206 +824,6 @@ dnd-kit's `PointerSensor` requires native browser `PointerEvent` objects. Playwr
 - `I18N`: Run `tsx scripts/i18n.ts` to regenerate `reports/i18n.md`; fix all reported translation problems, add missing keys, update incomplete entries, remove unused keys, and rerun until the report is clean.
 
 - `AUTOMATE`: Create a script to automate a task. `*.ts` for all automation tasks (use `scripts/utils.ts` for reusable code). `*.py` for python related tasks (use `@semio/engine` for reusable code).
-
-### Ticket System
-
-All development tasks are tracked via markdown tickets with YAML frontmatter stored in a nested date-based structure. Each ticket captures the prompt, status, and contribution data organized by bundles.
-
-#### Scope Hierarchy
-
-The scope system uses a hierarchical format that mirrors the monorepo structure:
-
-```
-@REPO/BUNDLE/FOLDER/FILE/SECTION/DEFINITION
-```
-
-- **@REPO**: Always `@semio` for this repository
-- **BUNDLE**: Nx bundle name (e.g., `@semio/js`, `@semio/net`, `@semio/engine`)
-- **FOLDER**: Relative folder path within bundle (e.g., `js/semio/sketchpad`)
-- **FILE**: File name (e.g., `Sketchpad.tsx`)
-- **SECTION**: Region/section name (e.g., `State Management`)
-- **DEFINITION**: Function/class/variable name (e.g., `createMachine`)
-
-Only the right parts can be omitted, not parts on the left. Examples:
-
-- `@semio/js/js/sketchpad/Sketchpad.tsx` - file in bundle
-- `@semio/net` - entire net bundle
-- `@semio` - entire repository
-
-#### Directory Structure
-
-```
-tickets/
-  YEAR/
-    MONTH/
-      DAY/
-        SLUG/
-          ticket.md
-          FILES...
-```
-
-Example: `tickets/2025/11/24/VALIDATION-SYSTEM/ticket.md`
-
-Temporary task artifacts live under the active ticket folder.
-
-#### Frontmatter Format
-
-Every ticket file MUST have YAML frontmatter with a slug and prompt; summary and performance data are set when finishing a ticket:
-
-```yaml
----
-slug: SLUG # Upper kebab-case identifier (e.g., VALIDATION-SYSTEM)
-prompt: "User prompt..." # Prompt used to create the ticket
-summary: SUMMARY # One-line description for commit messages (set on ticket close)
-status: open # open | closed
-author: NAME <EMAIL> # From git config
-date:
-  created: TIMESTAMP # ISO 8601 timestamp
-  finished: TIMESTAMP # ISO 8601 timestamp (set on ticket close)
-commit: GIT_SHA # Git commit at ticket creation for line stats
-model: MODEL # Optional LLM model used
-ignore: false # Set to true for formatting/cleanup tickets that should not count as contributions
-bundles: # Hierarchical contribution structure (set on ticket close)
-  "@semio/js":
-    files:
-      "js/semio/sketchpad/Sketchpad.tsx":
-        sections:
-          "State Management":
-            definitions:
-              - createMachine
-              - useSketchpadActor
-            lines:
-              added: 150
-              removed: 10
----
-```
-
-Section names are automatically derived from file paths when the actual section cannot be determined (e.g., `main.go` becomes `Main`, `my-component.tsx` becomes `My Component Tsx`).
-
-#### Ignore Flag
-
-The `ignore` flag can be set on tickets to exclude them from contribution calculations. Use this for:
-
-- Formatting-only changes
-- Cleanup/refactoring that doesn't add functionality
-- Reverted changes
-- Automated/scripted changes
-
-#### Workflow
-
-1. **Create** a ticket when starting work on a task
-2. **Finish** the ticket when the task is done (computes git lines per file, builds bundles hierarchy from changed definitions, sets status to closed and finish date)
-
-#### Script Usage
-
-**Create a new ticket:**
-
-```bash
-npx tsx scripts/log.ts ticket open SLUG --prompt="User prompt..."
-```
-
-**Finish a ticket:**
-
-```bash
-npx tsx scripts/log.ts ticket close SLUG --summary="Summary description" --files="path/to/file1.ts,path/to/file2.ts"
-```
-
-**List available models:**
-
-```bash
-npx tsx scripts/log.ts models
-```
-
-**Read a ticket:**
-
-```bash
-npx tsx scripts/log.ts ticket read YEAR MONTH DAY SLUG
-npx tsx scripts/log.ts ticket read 2025 11 24 VALIDATION-SYSTEM
-```
-
-**List tickets:**
-
-```bash
-npx tsx scripts/log.ts ticket list              # All tickets
-npx tsx scripts/log.ts ticket list 2025         # Tickets from 2025
-npx tsx scripts/log.ts ticket list 2025 11      # Tickets from November 2025
-npx tsx scripts/log.ts ticket list 2025 11 24   # Tickets from November 24, 2025
-```
-
-**Search tickets:**
-
-```bash
-npx tsx scripts/log.ts ticket search "drag drop"                    # Search for "drag drop" in all tickets
-npx tsx scripts/log.ts ticket search "test" --limit=5               # Search and show first 5 results
-npx tsx scripts/log.ts ticket search --year=2025 --month=12         # Search in December 2025
-npx tsx scripts/log.ts ticket search "validation" --limit=3         # Search for "validation" (limit 3)
-```
-
-Searches in slug, summary, content, and author fields (case-insensitive).
-
-**Delete a ticket:**
-
-```bash
-npx tsx scripts/log.ts ticket delete YEAR MONTH DAY SLUG
-```
-
-#### Programmatic Usage
-
-```typescript
-import { createTicket, readTicket, startIteration, finishIteration, finishTicket, deleteTicket, listTickets, searchTickets, Model } from "./scripts/log";
-
-// Create (no iterations)
-const createdTicket = createTicket({
-  slug: "MY-TASK",
-  summary: "Implement new feature",
-  prompt: "User prompt...",
-  content: "# Task Details\n\nImplementation notes...", // Optional
-});
-
-// Read
-const readBackTicket = readTicket(2025, 11, 24, "MY-TASK");
-
-// Start iteration (adds new iteration, requires files)
-startIteration(2025, 11, 24, "MY-TASK", {
-  prompt: "Follow-up prompt...",
-  model: Model.GPT_5_2_CODEX,
-  files: { updated: ["path/to/modified.ts"] },
-});
-
-// Finish iteration (computes git lines per file)
-finishIteration(2025, 11, 24, "MY-TASK", { files: { updated: ["path/to/modified.ts"], created: ["path/to/new.ts"] } });
-
-// List with filters
-const tickets = listTickets({ year: 2025, month: 11 });
-
-// Search with query and filters
-const results = searchTickets({
-  query: "drag drop", // Search term (optional)
-  year: 2025, // Filter by year (optional)
-  month: 12, // Filter by month (optional)
-  day: 1, // Filter by day (optional)
-  limit: 10, // Limit results (optional)
-});
-
-// Finish ticket
-finishTicket(2025, 11, 24, "MY-TASK");
-
-// Delete
-deleteTicket(2025, 11, 24, "MY-TASK");
-```
-
-#### Environment Variables
-
-- `scripts/log.ts` requires an explicit `model` value for `ticket progress`; there is no default model environment variable.
-
-#### Git Configuration
-
-Author information is automatically retrieved from:
-
-- `git config --get user.name`
-- `git config --get user.email`
-
-Format: `Name <email>` or just `Name` or `email` depending on what's configured.
 
 ### UI Component ID System
 
@@ -4349,18 +4182,3 @@ Use this hierarchy for code organization (order of appearance of regions, classe
 13. Image
 14. Description
 15. Attributes
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

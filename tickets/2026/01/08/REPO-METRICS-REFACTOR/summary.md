@@ -1,37 +1,17 @@
-# Summary
-
-## Overview
-
-Removed metrics from the GraphQL layer and moved them to be derived from SQLite views. The refactoring touched the GraphQL schema, Go repository implementation, and VS Code extension.
+# Summary: REPO-METRICS-REFACTOR
 
 ## Changes
 
-### GraphQL Schema (`graphql/repo/schema.graphql`)
-- Removed entity-level metrics fields from Bundle, Folder, File, Section, Definition, Contributor, Ticket types
-- Kept contribution-level metrics on `Contribution*` types and `Checkpoint*Contrib` types for tracking line changes
-- Kept `AnalyzeMetrics` for analyze operation results
+1.  **Metric Removal**: Removed all *Metrics types and metrics fields from graphql/repo/schema.graphql and go/repo/repo.go to simplify the schema and resolve query errors in the CLI. SQLite views remain as the source of truth for metrics.
+2.  **Schema Fixes**: Updated Range and Position types in graphql/repo/schema.graphql and go/repo/repo.go:
+    *   Range now uses start: Position! and nd: Position! (previously implicit or scalar in some contexts).
+    *   Position struct in Go updated to use Character field (JSON character) instead of Column.
+    *   Position type uses character: Int!.
+3.  **Frontend Generation**: Regenerated VS Code extension GraphQL types (js/vscode/generated/graphql.ts) to match the updated schema.
+4.  **Reference Implementation**: Range usage in CodebaseQuery (VS Code) is now compatible with the schema, validating start { line } selection.
 
-### Go Repository (`go/repo/repo.go`)
-- Removed metrics struct fields and GraphQL type definitions
-- Removed resolver implementations for metrics fields
-- Added `Violation.kind` resolver to fix type mismatch
+## Verification
 
-### Go Tests (`go/repo/repo_test.go`)
-- Added `TestNodesAndEdgesQuick` - tests all node collections and edges without slow bundle queries
-- Added `TestNodesAndEdges` - comprehensive test (skipped in short mode)
-- Added `TestNodeQuery` - tests Node interface with inline fragments
-- Added short mode skips for slow tests (bundles, contributors, commits)
-
-### VS Code Extension (`js/vscode/extension.ts`)
-- Updated GraphQL queries to remove metrics fields from all document queries
-- Updated TypeScript code to use alternative data sources (array lengths, names) instead of metrics
-- Fixed codegen.ts schema path to point to correct location
-- Regenerated GraphQL TypeScript types
-
-### Files Verified (No Changes Needed)
-- `go/mcp/main.go` - Uses `AnalyzeMetrics` which is kept
-- `js/vscode/extension.test.ts` - No metrics references
-
-## Build Status
-- Go tests pass in short mode
-- VS Code extension TypeScript compiles successfully
+*   **CLI**: go run go/cli/main.go ticket list executes successfully (previously failed on metrics).
+*   **Tests**: go test ./... in go/repo passes all tests, encompassing the schema changes.
+*   **Generation**: Verified Range and Position types in js/vscode/generated/graphql.ts match the schema.

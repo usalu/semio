@@ -49,6 +49,8 @@ type Query {
   bundle(name: String!): Bundle
   folder(path: String!): Folder
   file(path: String!): File
+  sections: [Section!]!
+  definitions: [Definition!]!
   section(path: String!, sectionPath: [String!]!): Section
   definition(path: String!, name: String!): Definition
   contributor(id: String!): Contributor
@@ -131,6 +133,8 @@ type Repo implements Node {
   bundles: [Bundle!]!
   folders: [Folder!]!
   files: [File!]!
+  sections: [Section!]!
+  definitions: [Definition!]!
   contributors: [Contributor!]!
   tickets(year: Int, month: Int, day: Int, status: TicketStatus): [Ticket!]!
   policies: [Policy!]!
@@ -214,13 +218,8 @@ enum DefinitionKind {
 }
 
 type Range {
-  start: Position!
-  end: Position!
-}
-
-type Position {
-  line: Int!
-  column: Int!
+  start: Int!
+  end: Int!
 }
 
 type Contributor implements Node {

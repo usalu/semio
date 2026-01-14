@@ -3,7 +3,9 @@
   "editor.codeActionsOnSave": {
     "source.organizeImports": "always"
   },
-  "python.defaultInterpreterPath": "${workspaceFolder}\\py\\engine\\.venv\\Scripts\\python.exe",
+  "python.defaultInterpreterPath.windows": "${workspaceFolder}\\py\\engine\\.venv\\Scripts\\python.exe",
+  "python.defaultInterpreterPath.linux": "${workspaceFolder}/py/engine/.venv/bin/python",
+  "python.defaultInterpreterPath": "${workspaceFolder}/py/engine/.venv/bin/python",
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "[typescriptreact]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"

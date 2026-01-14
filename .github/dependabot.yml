@@ -24,3 +24,23 @@ updates:
     directory: "/net/Semio.Grasshopper"
     schedule:
       interval: "weekly"
+  - package-ecosystem: "gomod"
+    directory: "/go/cli"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "gomod"
+    directory: "/go/mcp"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "gomod"
+    directory: "/go/repo"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "gomod"
+    directory: "/go/semio"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "cargo"
+    directory: "/rs/semio"
+    schedule:
+      interval: "weekly"
