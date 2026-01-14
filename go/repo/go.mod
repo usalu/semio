@@ -5,7 +5,7 @@ go 1.24.0
 require (
 	github.com/bmatcuk/doublestar/v4 v4.9.2
 	github.com/graphql-go/graphql v0.8.1
-	modernc.org/sqlite v1.43.0
+	modernc.org/sqlite v1.44.0
 )
 
 require (
