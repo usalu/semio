@@ -41,7 +41,7 @@ dev = "engine:dev"
 
 [dependency-groups]
 test = [
-    "pytest>=8.4.0,<9",
+    "pytest>=8.4.0,<10",
     "deepdiff>=8.5.0,<9",
     "pytest-cov>=6.1.1,<7",
 ]
