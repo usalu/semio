@@ -43,7 +43,7 @@ dev = "engine:dev"
 test = [
     "pytest>=8.4.0,<9",
     "deepdiff>=8.5.0,<9",
-    "pytest-cov>=6.1.1,<7",
+    "pytest-cov>=6.1.1,<8",
 ]
 dev = [
     "debugpy>=1.8.14,<2",
