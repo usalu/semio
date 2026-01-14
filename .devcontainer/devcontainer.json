@@ -70,7 +70,7 @@
         "editor.codeActionsOnSave": {
           "source.organizeImports": "always"
         },
-        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/py/engine/.venv/bin/python",
+        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python",
         "editor.defaultFormatter": "esbenp.prettier-vscode",
         "[typescriptreact]": {
           "editor.defaultFormatter": "esbenp.prettier-vscode"
@@ -87,7 +87,7 @@
         "python.testing.pytestEnabled": true,
         "python.testing.unittestEnabled": false,
         "python.testing.pytestArgs": ["."],
-        "python.testing.cwd": "${containerWorkspaceFolder}/py/engine",
+        "python.testing.cwd": "${containerWorkspaceFolder}",
         "python.analysis.languageServerMode": "full",
         "sqltools.useNodeRuntime": true,
         "sqltools.connections": [

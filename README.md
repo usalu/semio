@@ -1104,16 +1104,17 @@ A .NET core for semio 🥜
 
 </details>
 
-Currently only [engine](#️-semioengine-) but in the future it might grow and then the [`.venv`](https://docs.python.org/3/library/venv.html) will be centralized, …
+The monorepo uses a centralized Python environment managed by `uv` at the repository root. A single `.venv` is shared between `py/semio` and `py/engine`.
 
 ### Workspace
 
-- `py/engine` - Python engine (domain, serialization, APIs).
+- `py/semio` - Python library (domain models, validation).
+- `py/engine` - Python engine (serialization, APIs, MCP server).
 
 ### Preflight
 
 ```bash
-cd py/engine && npm run preflight
+uv sync # at the root
 ```
 
 # 📦 Components [↑](#-overview)
@@ -1174,6 +1175,7 @@ Comment detection skips comment markers inside string literals and template lite
 
 File sections are modeled as a nested tree derived from language-specific section markers and JSON key paths so tooling can reason about structure instead of raw line ranges.
 The repo CLI and VS Code extension request the active file's section tree and use the resolved ranges to jump to sections, rename/move nodes, and create or delete child sections with consistent paths across tools.
+The `integrate` command allows wrapping a source file's content into a section marker and inserting it into a target file, either at the end or nested within an existing parent section.
 
 ## 🎫 Ticket System [↑](#-components-)
 
@@ -1181,6 +1183,7 @@ Development work is tracked as tickets composed of iterations. Ticket creation d
 Ticket entry points require prompt text for ticket creation and iteration start, while file arrays can be omitted at entry and still enforced by iteration rules.
 Line totals only include the files declared in the ticket iterations so unrelated diffs stay out of ticket reports.
 Section line metrics map added lines using current file sections, map removed lines using base-commit section ranges, and determine affected definitions from added lines only so edits stay attributed to the right sections.
+Ticket section ranges are stored as line-only start/end integers with no column data so tooling treats them as line spans.
 Temporary scripts, fixtures, and data stay inside the active ticket folder so work-in-progress artifacts remain scoped to the task.
 
 ## ?? MCP Tool Gateway [↑](#-components-)

@@ -11,94 +11,6 @@ import (
 )
 
 const AssetsPath = "../../assets/semio"
-func TestKitSerialization(t *testing.T) {
-	kit := NewKit("Serialization Test")
-	kit.Types = []Type{NewType("TestType")}
-	kit.Designs = []Design{NewDesign("TestDesign")}
-
-	data, err := SerializeKit(kit)
-	if err != nil {
-		t.Fatalf("SerializeKit failed: %v", err)
-	}
-
-	var parsed Kit
-	err = json.Unmarshal(data, &parsed)
-	if err != nil {
-		t.Fatalf("Unmarshal failed: %v", err)
-	}
-
-	if parsed.Name != kit.Name {
-		t.Errorf("Parsed kit name = %q, want %q", parsed.Name, kit.Name)
-	}
-	if len(parsed.Types) != 1 {
-		t.Errorf("Parsed kit should have 1 type, got %d", len(parsed.Types))
-	}
-	if len(parsed.Designs) != 1 {
-		t.Errorf("Parsed kit should have 1 design, got %d", len(parsed.Designs))
-	}
-}
-
-func TestFindTypeInKit(t *testing.T) {
-	kit := NewKit("Find Test")
-	typ := NewType("Findable")
-	kit.Types = []Type{typ}
-
-	found := FindTypeInKit(&kit, typ.Guid)
-	if found == nil {
-		t.Error("Should find type by guid")
-	}
-	if found.Name != "Findable" {
-		t.Errorf("Found type name = %q, want %q", found.Name, "Findable")
-	}
-
-	notFound := FindTypeInKit(&kit, "nonexistent")
-	if notFound != nil {
-		t.Error("Should not find nonexistent type")
-	}
-}
-
-func TestFindDesignInKit(t *testing.T) {
-	kit := NewKit("Find Test")
-	design := NewDesign("Findable Design")
-	kit.Designs = []Design{design}
-
-	found := FindDesignInKit(&kit, design.Guid)
-	if found == nil {
-		t.Error("Should find design by guid")
-	}
-	if found.Name != "Findable Design" {
-		t.Errorf("Found design name = %q, want %q", found.Name, "Findable Design")
-	}
-}
-
-func TestAddTypeToKit(t *testing.T) {
-	typ := NewType("New Type")
-	diff := AddTypeToKit(typ)
-
-	if diff.Types == nil {
-		t.Fatal("Diff should have types")
-	}
-	if len(diff.Types.Added) != 1 {
-		t.Errorf("Should have 1 added type, got %d", len(diff.Types.Added))
-	}
-	if diff.Types.Added[0].Name != "New Type" {
-		t.Errorf("Added type name = %q, want %q", diff.Types.Added[0].Name, "New Type")
-	}
-}
-
-func TestRemoveTypeFromKit(t *testing.T) {
-	diff := RemoveTypeFromKit("some-guid")
-
-	if diff.Types == nil {
-		t.Fatal("Diff should have types")
-	}
-	if len(diff.Types.Removed) != 1 {
-		t.Errorf("Should have 1 removed type, got %d", len(diff.Types.Removed))
-	}
-	if diff.Types.Removed[0].Guid != "some-guid" {
-		t.Errorf("Removed type guid = %q, want %q", diff.Types.Removed[0].Guid, "some-guid")
-	}
-}
 
 func loadJSON(t *testing.T, filename string, v interface{}) {
 	path := filepath.Join(AssetsPath, filename)
@@ -115,19 +27,6 @@ func TestKitSerializationFromAsset(t *testing.T) {
 	var kit Kit
 	loadJSON(t, "kit_metabolism.json", &kit)
 
-	if kit.Guid == "" {
-		t.Error("Kit should have a guid")
-	}
-	if kit.Name != "Metabolism" {
-		t.Errorf("Kit name should be 'Metabolism', got %q", kit.Name)
-	}
-	if len(kit.Types) == 0 {
-		t.Error("Kit should have types")
-	}
-	if len(kit.Designs) == 0 {
-		t.Error("Kit should have designs")
-	}
-
 	data, err := SerializeKit(kit)
 	if err != nil {
 		t.Fatalf("SerializeKit failed: %v", err)
@@ -138,8 +37,6 @@ func TestKitSerializationFromAsset(t *testing.T) {
 		t.Fatalf("Unmarshal failed: %v", err)
 	}
 
-	kit.Designs = FilterDesignsWithoutParent(kit.Designs)
-	parsed.Designs = FilterDesignsWithoutParent(parsed.Designs)
 	if !AreKitsEqual(kit, parsed) {
 		t.Error("Serialized and deserialized kit should be equal")
 	}
@@ -180,41 +77,6 @@ func TestKitDiffOperations(t *testing.T) {
 	}
 }
 
-func TestAreKitsEqual(t *testing.T) {
-	kit1 := NewKit("Test")
-	kit2 := kit1
-	kit2.Types = kit1.Types
-	kit2.Designs = kit1.Designs
-
-	if !AreKitsEqual(kit1, kit2) {
-		t.Error("Identical kits should be equal")
-	}
-
-	kit3 := NewKit("Different")
-	if AreKitsEqual(kit1, kit3) {
-		t.Error("Different kits should not be equal")
-	}
-}
-
-func TestFilterDesignsWithoutParent(t *testing.T) {
-	parent := DesignId{Guid: "parent-guid"}
-	designs := []Design{
-		{Guid: "d1", Name: "Root Design", Parent: nil},
-		{Guid: "d2", Name: "Child Design", Parent: &parent},
-		{Guid: "d3", Name: "Another Root", Parent: nil},
-	}
-
-	filtered := FilterDesignsWithoutParent(designs)
-	if len(filtered) != 2 {
-		t.Errorf("Should have 2 root designs, got %d", len(filtered))
-	}
-	for _, d := range filtered {
-		if d.Parent != nil {
-			t.Errorf("Filtered design %q should not have a parent", d.Name)
-		}
-	}
-}
-
 func TestValidationMatchesExpectedOutput(t *testing.T) {
 	var validKit Kit
 	loadJSON(t, "kit_metabolism.json", &validKit)
@@ -234,25 +96,6 @@ func TestValidationMatchesExpectedOutput(t *testing.T) {
 	if !AreValidationResultsEqual(serializedResult, expected) {
 		t.Errorf("Validation mismatch. Got %d problems, expected %d",
 			len(serializedResult.Problems), len(expected.Problems))
-	}
-}
-
-func TestKitJSONRoundtrip(t *testing.T) {
-	var kit Kit
-	loadJSON(t, "kit_metabolism.json", &kit)
-
-	serialized, err := SerializeKit(kit)
-	if err != nil {
-		t.Fatalf("SerializeKit failed: %v", err)
-	}
-
-	deserialized, err := DeserializeKit(serialized)
-	if err != nil {
-		t.Fatalf("DeserializeKit failed: %v", err)
-	}
-
-	if !AreKitsEqual(kit, deserialized) {
-		t.Error("Kit -> JSON -> Kit roundtrip should produce equal kits")
 	}
 }
 

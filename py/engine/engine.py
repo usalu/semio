@@ -59,6 +59,111 @@ import zipfile
 import fastapi
 import fastapi.openapi
 import graphene
+import jinja2
+import lark
+import openai
+import pydantic
+import PySide6.QtCore
+import PySide6.QtGui
+import PySide6.QtWidgets
+import requests
+import sqlalchemy
+import sqlalchemy.orm
+import sqlmodel
+import starlette.applications
+import starlette_graphene3
+import uvicorn
+from mcp.server.fastmcp import FastMCP
+
+sys.path.insert(0, str(pathlib.Path(__file__).parent.parent / "semio"))
+from semio import (
+    ENCODING_REGEX,
+    KIT_LOCAL_FILENAME,
+    KIT_LOCAL_FOLDERNAME,
+    HOST,
+    PORT,
+    VERSION,
+    RELEASE,
+    MAX_REQUEST_BODY_SIZE,
+    ENCODED_PATH,
+    ENCODED_NAME_AND_VARIANT_PATH,
+    ENCODED_NAME_AND_VARIANT_AND_VIEW_PATH,
+    DEBUG_LOG_FILE,
+    encode,
+    decode,
+    normalizeAngle,
+    changeValues,
+    changeKeys,
+    logger,
+    Error,
+    ClientError,
+    ServerError,
+    CodeUnreachable,
+    FeatureNotYetSupported,
+    RemoteKitsNotYetSupported,
+    KitNotFound,
+    TypeHasNotAllUsedConnectors,
+    KitAlreadyExists,
+    OnlyRemoteKitsCanBeCached,
+    LocalKitUriIsNotAbsolute,
+    KitZipDoesNotContainSemioFolder,
+    Semio,
+    Kit,
+    KitInput,
+    KitOutput,
+    KitContext,
+    KitInputNode,
+    KitNode,
+    Type,
+    TypeInput,
+    TypeOutput,
+    TypeContext,
+    TypeNode,
+    Design,
+    DesignInput,
+    DesignOutput,
+    DesignContext,
+    DesignPrediction,
+    DesignNode,
+    Piece,
+    PieceNode,
+    Connection,
+    ConnectionNode,
+    Connector,
+    ConnectorNode,
+    Model,
+    ModelNode,
+    Author,
+    AuthorNode,
+    Attribute,
+    AttributeNode,
+    Point,
+    PointNode,
+    Vector,
+    VectorNode,
+    Plane,
+    PlaneNode,
+    Coord,
+    CoordNode,
+    Location,
+    LocationNode,
+    Side,
+    SideNode,
+    RelayNode,
+    validateKitDict,
+    flattenDesignDict,
+    areKitsDictEqual,
+    getKitDiffDict,
+    applyKitDiffDict,
+    inverseKitDiffDict,
+    areKitDiffsDictEqual,
+    ValidationResult,
+    parseValidationResult,
+    areValidationResultsEqual,
+    planeFromYAxis,
+)
+
+# endregion Imports
 
 # region Store
 
@@ -502,7 +607,7 @@ class SqliteStore(DatabaseStore):
         sqlmodel.SQLModel.metadata.create_all(self.engine)
         SessionMaker = sqlalchemy.orm.sessionmaker(bind=self.engine)
         with SessionMaker() as session:
-            existingsemio = session.query(Semio).one_or_none()
+            existingSemio = session.query(Semio).one_or_none()
             if not existingSemio:
                 session.add(Semio())
                 session.commit()
@@ -1274,7 +1379,7 @@ def put_kit(uri: str, kit: dict) -> dict:
 
 
 @mcp.tool()
-def delete_kit(uri: str) -> dict:
+def mcp_delete_kit(uri: str) -> dict:
     """Delete a kit at a URI."""
     try:
         delete(encode(uri))

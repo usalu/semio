@@ -4,8 +4,8 @@ set -e
 echo "🔄 Starting semio development environment..."
 
 echo "🐍 Activating Python virtual environment..."
-if [ -d "py/engine/.venv" ]; then
-    source py/engine/.venv/bin/activate
+if [ -d ".venv" ]; then
+    source .venv/bin/activate
 fi
 
 echo "✅ Environment ready!"

@@ -5136,7 +5136,7 @@ func computeAffectedSections(filePath string, sections []Section, defs []Definit
 
 			result = append(result, TicketSection{
 				Name:        sectionPath,
-				Range:       &Range{Start: section.StartIndex, End: section.EndIndex},
+				Range:       &Range{Start: section.StartLine, End: section.EndLine},
 				Definitions: uniqueStrings(affectedDefs),
 				Lines:       &LineMetrics{Added: len(exclusiveAddedLines), Removed: len(exclusiveRemovedLines)},
 			})
@@ -6528,6 +6528,20 @@ func (c *repoContext) SectionDelete(file, name string) error {
 	return nil
 }
 
+func (c *repoContext) Integrate(source, targetSection, targetFile, targetParent *string) (*File, error) {
+	parent := ""
+	if targetParent != nil {
+		parent = *targetParent
+	}
+	result := ToolIntegrate(*source, *targetSection, *targetFile, parent)
+	if result.Error != "" {
+		return nil, fmt.Errorf("%s", result.Error)
+	}
+	return &File{
+		Path: *targetFile,
+	}, nil
+}
+
 func (c *repoContext) ContributorAdd(input ContributorAddInput) (*Contributor, error) {
 	result := ToolContributorAdd(input.Github)
 	if result.Error != "" {
@@ -7406,6 +7420,94 @@ func ToolSectionMove(filePath, oldPath, newPath string) ToolResult {
 	return ToolResult{Output: *output}
 }
 
+func ToolIntegrate(sourcePath, targetSectionName, targetFilePath, targetParentSectionName string) ToolResult {
+	output := NewOutput()
+
+	// 1. Read source content
+	absSourcePath := filepath.Join(rootDir, sourcePath)
+	if !FileExists(absSourcePath) {
+		output.Error(fmt.Sprintf("Error: Source file not found: %s", sourcePath))
+		return ToolResult{Output: *output, Error: "source file not found"}
+	}
+	sourceContent, err := ReadTextFile(absSourcePath)
+	if err != nil {
+		output.Error(fmt.Sprintf("Error reading source file: %v", err))
+		return ToolResult{Output: *output, Error: err.Error()}
+	}
+
+	// 2. Read target file
+	absTargetFilePath := filepath.Join(rootDir, targetFilePath)
+	if !FileExists(absTargetFilePath) {
+		output.Error(fmt.Sprintf("Error: Target file not found: %s", targetFilePath))
+		return ToolResult{Output: *output, Error: "target file not found"}
+	}
+	targetContent, err := ReadTextFile(absTargetFilePath)
+	if err != nil {
+		output.Error(fmt.Sprintf("Error reading target file: %v", err))
+		return ToolResult{Output: *output, Error: err.Error()}
+	}
+
+	// 3. Get target language
+	targetLanguage := GetLanguage(targetFilePath)
+	if targetLanguage == nil || !targetLanguage.SupportsSections() {
+		output.Error("Error: Target file type does not support sections")
+		return ToolResult{Output: *output, Error: "unsupported target file type"}
+	}
+
+	// 4. Format the new section with source content
+	startMarker := targetLanguage.FormatSectionStart(targetSectionName)
+	endMarker := targetLanguage.FormatSectionEnd(targetSectionName)
+
+	// Ensure content ends with newline if it doesn't
+	if !strings.HasSuffix(sourceContent, "\n") && sourceContent != "" {
+		sourceContent += "\n"
+	}
+
+	sectionContent := "\n" + startMarker + "\n" + sourceContent + endMarker + "\n"
+
+	// 5. Handle insertion
+	var updatedContent string
+	if targetParentSectionName != "" {
+		// Find parent section
+		sections := targetLanguage.ParseSections(targetContent)
+		parentSection := FindSection(sections, targetParentSectionName)
+		if parentSection == nil {
+			output.Error(fmt.Sprintf("Error: Parent section not found: %s", targetParentSectionName))
+			return ToolResult{Output: *output, Error: "parent section not found"}
+		}
+
+		// Insert at the end of parent section (before parent's end marker)
+		if parentSection.EndLine == -1 {
+			output.Error(fmt.Sprintf("Error: Parent section %s is not properly closed", targetParentSectionName))
+			return ToolResult{Output: *output, Error: "parent section not closed"}
+		}
+
+		// Insert before the end marker line of the parent section
+		lines := strings.Split(targetContent, "\n")
+		newLines := make([]string, 0, len(lines)+strings.Count(sectionContent, "\n"))
+		newLines = append(newLines, lines[:parentSection.EndLine-1]...)
+		newLines = append(newLines, strings.Split(strings.Trim(sectionContent, "\n"), "\n")...)
+		newLines = append(newLines, lines[parentSection.EndLine-1:]...)
+		updatedContent = strings.Join(newLines, "\n")
+	} else {
+		// Append to the end of the target file
+		updatedContent = targetContent
+		if !strings.HasSuffix(updatedContent, "\n") && updatedContent != "" {
+			updatedContent += "\n"
+		}
+		updatedContent += sectionContent
+	}
+
+	// 6. Write target file
+	if err := WriteTextFile(absTargetFilePath, updatedContent); err != nil {
+		output.Error(fmt.Sprintf("Error writing target file: %v", err))
+		return ToolResult{Output: *output, Error: err.Error()}
+	}
+
+	output.Success(fmt.Sprintf("\n🧩 Integrated %s into %s section of %s", sourcePath, targetSectionName, targetFilePath))
+	return ToolResult{Output: *output}
+}
+
 func ToolSectionDelete(filePath, sectionPath string) ToolResult {
   output := NewOutput()
   absPath := filepath.Join(rootDir, filePath)
@@ -8033,6 +8135,7 @@ type RepoContext interface {
 	SectionCreate(file, name string, parent *string) (*Section, error)
 	SectionMove(file, oldName, newName string) (*Section, error)
 	SectionDelete(file, name string) error
+	Integrate(source, targetSection, targetFile, targetParent *string) (*File, error)
 	ContributorAdd(input ContributorAddInput) (*Contributor, error)
 	ContributorRemove(github string) error
 }
@@ -8133,6 +8236,10 @@ func (c *defaultContext) SectionMove(file, oldName, newName string) (*Section, e
 }
 
 func (c *defaultContext) SectionDelete(file, name string) error { return nil }
+
+func (c *defaultContext) Integrate(source, targetSection, targetFile, targetParent *string) (*File, error) {
+	return nil, nil
+}
 
 func (c *defaultContext) ContributorAdd(input ContributorAddInput) (*Contributor, error) {
 	return nil, nil
@@ -8568,7 +8675,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					Type: rangeType,
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 						section := p.Source.(*Section)
-						return &Range{Start: section.StartIndex, End: section.EndIndex}, nil
+						return &Range{Start: section.StartLine, End: section.EndLine}, nil
 					},
 				},
 			}
@@ -8600,7 +8707,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					Type: graphql.NewNonNull(rangeType),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 						definition := p.Source.(*Definition)
-						return &Range{Start: definition.StartIndex, End: definition.EndIndex}, nil
+						return &Range{Start: definition.StartLine, End: definition.EndLine}, nil
 					},
 				},
 			}
@@ -9549,6 +9656,25 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					return mutationResolverInstance.SectionDelete(p.Context, file, name)
 				},
 			},
+			"integrate": &graphql.Field{
+				Type: fileType,
+				Args: graphql.FieldConfigArgument{
+					"source":        &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+					"targetSection": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+					"targetFile":    &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+					"targetParent":  &graphql.ArgumentConfig{Type: graphql.String},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					source := p.Args["source"].(string)
+					targetSection := p.Args["targetSection"].(string)
+					targetFile := p.Args["targetFile"].(string)
+					var targetParent *string
+					if par, ok := p.Args["targetParent"].(string); ok {
+						targetParent = &par
+					}
+					return mutationResolverInstance.Integrate(p.Context, &source, &targetSection, &targetFile, targetParent)
+				},
+			},
 		},
 	})
 
@@ -9969,6 +10095,13 @@ func (r *mutationResolver) SectionDelete(ctx context.Context, file string, name 
 	return false, fmt.Errorf("not implemented")
 }
 
+func (r *mutationResolver) Integrate(ctx context.Context, source, targetSection, targetFile, targetParent *string) (*File, error) {
+	if r.Ctx != nil {
+		return r.Ctx.Integrate(source, targetSection, targetFile, targetParent)
+	}
+	return nil, fmt.Errorf("not implemented")
+}
+
 // #endregion Mutation Resolvers
 
 // #region Entity Resolvers
@@ -10096,6 +10229,7 @@ type MutationResolver interface {
 	SectionCreate(ctx context.Context, file string, name string, parent *string) (*Section, error)
 	SectionMove(ctx context.Context, file string, oldName string, newName string) (*Section, error)
 	SectionDelete(ctx context.Context, file string, name string) (bool, error)
+	Integrate(ctx context.Context, source, targetSection, targetFile, targetParent *string) (*File, error)
 }
 
 type RepoResolver interface {

@@ -2131,6 +2131,33 @@ pub mod wasm {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs;
+    use std::path::Path;
+
+    const ASSETS_DIR: &str = "../../assets/semio";
+
+    fn load_kit(filename: &str) -> Kit {
+        let path = Path::new(ASSETS_DIR).join(filename);
+        let data = fs::read_to_string(&path).expect(&format!("Failed to read {}", path.display()));
+        serde_json::from_str(&data).expect("Failed to deserialize kit")
+    }
+
+    #[test]
+    fn test_roundtrip_metabolism() {
+        let kit = load_kit("kit_metabolism.json");
+        let json = serialize_kit(&kit).unwrap();
+        let restored = deserialize_kit(&json).unwrap();
+        assert!(are_kits_equal(&kit, &restored));
+    }
+
+    #[test]
+    fn test_validation_invalid() {
+        let kit = load_kit("kit_invalid.json");
+        let result = validate_kit(&kit);
+        assert!(!result.problems.is_empty());
+        assert!(result.problems.iter().any(|p| p.constraint_id == "guid-unique"));
+        assert!(result.problems.iter().any(|p| p.constraint_id == "type-name-unique"));
+    }
 
     #[test]
     fn test_guid_generation() {

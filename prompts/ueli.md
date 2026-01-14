@@ -1,5 +1,27 @@
 # Prompt history
 
+Currently all plane operations are performed by Rhino in Semio.Grasshopper. Make Semio.cs independent of Rhino like semio.ts, semio.go, semio.rs, semio.py. It should comply with the same tests.
+
+Ticket ranges should just be ranges of lines with ints. No character, no column, etc.
+Instead of:
+"range": {
+  "start": {
+    "line": 29,
+    "character": 0
+  },
+  "end": {
+    "line": 80,
+    "character": 0
+  }
+},
+work with:
+"range": {
+  "start": 29,
+  "end": 80
+},
+
+The Diff/Metabolism test should be added (and benchmarked). See `assets/semio/`. It should use the metabolism kit and apply the diff to it, check that the result is the diffed metabolism kit and then apply the inverted diff to the diffed metabolism kit and check that the result is the original metabolism kit. All benchmarks simply do the operations without checking the results in between.
+
 All tests should be identical accross all implementations (Typescript, Python, C#, Go, Rust). Remove all other tests and refactor/extend for all test suites to be identical.
 Additionally there should be a new script: benchmark
 It should measure the execution time of the pure function execution time.
@@ -11,8 +33,11 @@ Flatten Design/Nakagin Capsule Tower/Slanted,,,,,,
 Flatten Design/Nakagin Capsule Tower/Twisted,,,,,,
 Flatten Design/Nakagin Capsule Tower/Dancing,,,,,,
 Flatten Design/Capsule Dream,,,,,,
+Diff/Metabolism,,,,,,
 Validation/Invalid Kit,,,,,,
 Validation/Metabolism,,,,,,
+
+The complete monorepo should share one .venv at the root (not in py/ but repo root). There should be additional dev-dependencies such as jupyter notebooks. Uv should be used everywhere. Vscode etc should set the default interpreter. Make sure py/semio (library) and py/engine (executable) are using the global .venv.
 
 Finish semio.py and engine.py. semio.py should have the same functionality as semio.ts, semio.go, semio.rs, Semio.cs.
 
@@ -30,6 +55,7 @@ Add new resolvers to the repo graphql schema: sections and definitions. Extend t
 
 Add a new command to repo called `integrate <source> <target-section-name> <target-file> [<target-parent-section-name>]` that takes code files and integrates the source code into a target file by wrapping it into the target section. Optionally provide a target parent section name to place the new section under. Otherwise it will just be placed at the end of the file after the last section.
 e.g. `integrate go/cli/main.go Cli go/repo/repo.go` 
+e.g. `integrate go/mcp/main.go Mcp go/repo/repo.go Cli` 
 
 - Range should not be Position but int as in the original code.
 - Sections of the current file are not being shown.

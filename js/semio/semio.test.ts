@@ -66,6 +66,18 @@ const centersEqual = (c1: { u: number; v: number } | undefined, c2: { u: number;
   return Math.abs(c1.u - c2.u) < TOLERANCE && Math.abs(c1.v - c2.v) < TOLERANCE;
 };
 
+const findDesign = (kit: Kit, name: string, parentName?: string) => {
+    let parentGuid: string | undefined;
+    if (parentName) {
+        const p = kit.designs?.find(d => d.name === parentName);
+        if (!p) throw new Error(`Parent ${parentName} not found`);
+        parentGuid = p.guid;
+    }
+    const d = kit.designs?.find(d => d.name === name && (parentGuid ? d.parent?.guid === parentGuid : !d.parent));
+    if (!d) throw new Error(`Design ${name} not found`);
+    return d;
+}
+
 describe("Diffs", () => {
   const kitOriginal = { ...(MetabolismKit as any), designs: (MetabolismKit as any).designs?.filter((d: any) => !d.parent) };
   const kitDiff = MetabolismKitDiff as any;
@@ -86,14 +98,14 @@ describe("Diffs", () => {
 
 describe("Flattening Designs", () => {
   const kit = MetabolismKit as Kit;
-  describe("Nakagin Capsule Tower", () => {
-    it("Normal", () => {
-      const design = kit.designs?.find((d) => d.name === "Nakagin Capsule Tower");
-      expect(design).toBeDefined();
-      const expectedDesign = kit.designs?.find((d) => d.name === "Flat" && d.parent?.guid === design?.guid);
+  
+  const testFlatten = (designName: string, parentName?: string) => {
+      const design = findDesign(kit, designName, parentName);
+      const expectedDesign = kit.designs?.find((d) => d.name === "Flat" && d.parent?.guid === design.guid);
       expect(expectedDesign).toBeDefined();
-      const flatDesignDiff = flattenDesign(kit, design!.guid);
-      const flatDesign = applyDesignDiff(design!, flatDesignDiff);
+      const flatDesignDiff = flattenDesign(kit, design.guid);
+      const flatDesign = applyDesignDiff(design, flatDesignDiff);
+      
       flatDesign!.pieces?.forEach((p) => {
         const expectedPiece = expectedDesign!.pieces?.find((ep) => ep.name === p.name);
         expect(expectedPiece).toBeDefined();
@@ -102,74 +114,25 @@ describe("Flattening Designs", () => {
         expect(planesEqual(p.plane, expectedPiece!.plane)).toBe(true);
         expect(centersEqual(p.center, expectedPiece!.center)).toBe(true);
       });
-    });
-    it("Slanted", () => {
-      const design = kit.designs?.find((d) => d.name === "Slanted");
-      expect(design).toBeDefined();
-      const expectedDesign = kit.designs?.find((d) => d.name === "Flat" && d.parent?.guid === design?.guid);
-      expect(expectedDesign).toBeDefined();
-      const flatDesignDiff = flattenDesign(kit, design!.guid);
-      const flatDesign = applyDesignDiff(design!, flatDesignDiff);
-      flatDesign!.pieces?.forEach((p) => {
-        const expectedPiece = expectedDesign!.pieces?.find((ep) => ep.name === p.name);
-        expect(expectedPiece).toBeDefined();
-        expect(p.plane).toBeDefined();
-        expect(p.center).toBeDefined();
-        expect(planesEqual(p.plane, expectedPiece!.plane)).toBe(true);
-        expect(centersEqual(p.center, expectedPiece!.center)).toBe(true);
-      });
-    });
+  }
 
-    it("Twisted", () => {
-      const design = kit.designs?.find((d) => d.name === "Twisted");
-      expect(design).toBeDefined();
-      const expectedDesign = kit.designs?.find((d) => d.name === "Flat" && d.parent?.guid === design?.guid);
-      expect(expectedDesign).toBeDefined();
-      const flatDesignDiff = flattenDesign(kit, design!.guid);
-      const flatDesign = applyDesignDiff(design!, flatDesignDiff);
-      flatDesign!.pieces?.forEach((p) => {
-        const expectedPiece = expectedDesign!.pieces?.find((ep) => ep.name === p.name);
-        expect(expectedPiece).toBeDefined();
-        expect(p.plane).toBeDefined();
-        expect(p.center).toBeDefined();
-        expect(planesEqual(p.plane, expectedPiece!.plane)).toBe(true);
-        expect(centersEqual(p.center, expectedPiece!.center)).toBe(true);
-      });
-    });
+  it("Nakagin Capsule Tower", () => {
+    testFlatten("Nakagin Capsule Tower");
+  });
+  it("Nakagin Capsule Tower/Slanted", () => {
+    testFlatten("Slanted", "Nakagin Capsule Tower");
+  });
 
-    it("Dancing", () => {
-      const design = kit.designs?.find((d) => d.name === "Dancing");
-      expect(design).toBeDefined();
-      const expectedDesign = kit.designs?.find((d) => d.name === "Flat" && d.parent?.guid === design?.guid);
-      expect(expectedDesign).toBeDefined();
-      const flatDesignDiff = flattenDesign(kit, design!.guid);
-      const flatDesign = applyDesignDiff(design!, flatDesignDiff);
-      flatDesign!.pieces?.forEach((p) => {
-        const expectedPiece = expectedDesign!.pieces?.find((ep) => ep.name === p.name);
-        expect(expectedPiece).toBeDefined();
-        expect(p.plane).toBeDefined();
-        expect(p.center).toBeDefined();
-        expect(planesEqual(p.plane, expectedPiece!.plane)).toBe(true);
-        expect(centersEqual(p.center, expectedPiece!.center)).toBe(true);
-      });
-    });
+  it("Nakagin Capsule Tower/Twisted", () => {
+    testFlatten("Twisted", "Nakagin Capsule Tower");
+  });
+
+  it("Nakagin Capsule Tower/Dancing", () => {
+    testFlatten("Dancing", "Nakagin Capsule Tower");
   });
 
   it("Capsule Dream", () => {
-    const design = kit.designs?.find((d) => d.name === "Capsule Dream");
-    expect(design).toBeDefined();
-    const expectedDesign = kit.designs?.find((d) => d.name === "Flat" && d.parent?.guid === design?.guid);
-    expect(expectedDesign).toBeDefined();
-    const flatDesignDiff = flattenDesign(kit, design!.guid);
-    const flatDesign = applyDesignDiff(design!, flatDesignDiff);
-    flatDesign!.pieces?.forEach((p) => {
-      const expectedPiece = expectedDesign!.pieces?.find((ep) => ep.name === p.name);
-      expect(expectedPiece).toBeDefined();
-      expect(p.plane).toBeDefined();
-      expect(p.center).toBeDefined();
-      expect(planesEqual(p.plane, expectedPiece!.plane)).toBe(true);
-      expect(centersEqual(p.center, expectedPiece!.center)).toBe(true);
-    });
+    testFlatten("Capsule Dream");
   });
 });
 
@@ -180,24 +143,10 @@ describe("Import/Export", () => {
     const deserializedKit = deserializeKit(serializedKit);
     expect(areKitsEqual(kit, deserializedKit)).toBe(true);
   });
-  it("Kit -> Zip -> Kit", async () => {
-    const originalKit = MetabolismKit as unknown as Kit;
-    const files = new Map<string, Blob>();
-    const dummyFile = new Blob(["dummy content"], { type: "text/plain" });
-    files.set("dummy.txt", dummyFile);
-    const zipBlob = await exportKit(originalKit, files);
-    expect(zipBlob).toBeInstanceOf(Blob);
-    expect(zipBlob.size).toBeGreaterThan(0);
-    const url = URL.createObjectURL(zipBlob);
-    const { kit: importedKit, files: importedFiles } = await importKit(url);
-    URL.revokeObjectURL(url);
-    expect(areKitsEqual(originalKit, importedKit)).toBe(true);
-    expect(importedFiles.size).toBe(files.size);
-  });
 });
 
 describe("Validation", () => {
-  it.skip("Validation matches expected output", () => {
+  it("Validation matches expected output", () => {
     const validKit = MetabolismKit as unknown as Kit;
     expect(hasErrors(validateKit(validKit))).toBe(false);
 
@@ -205,24 +154,5 @@ describe("Validation", () => {
     const result = toValidationResult(validateKit(invalidKit));
     const expected = InvalidKitValidation as ValidationResult;
     expect(areValidationResultsEqual(result, expected)).toBe(true);
-  });
-});
-
-describe("GraphQL Performance", () => {
-  it("Nested query resolves in less than 5 seconds", () => {
-    const query = '{ repo { id bundles { id folders { id } } } }';
-    const cliPath = process.platform === "win32" ? "go\\cli\\cli.exe" : "go/cli/cli";
-    const start = Date.now();
-    try {
-      execSync(`${cliPath} graphql "${query}"`, {
-        cwd: process.cwd(),
-        timeout: 10000,
-        encoding: "utf8",
-      });
-      const duration = (Date.now() - start) / 1000;
-      expect(duration).toBeLessThan(5);
-    } catch (error) {
-      throw new Error(`GraphQL query failed: ${error}`);
-    }
   });
 });

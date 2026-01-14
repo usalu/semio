@@ -279,6 +279,16 @@ func main() {
 		sectionTree,
 	)
 	s.AddTool(
+		mcp.NewTool("integrate",
+			mcp.WithDescription("Integrate source code into a target file section"),
+			mcp.WithString("source", mcp.Required(), mcp.Description("Source file path")),
+			mcp.WithString("target_section", mcp.Required(), mcp.Description("Target section name")),
+			mcp.WithString("target_file", mcp.Required(), mcp.Description("Target file path")),
+			mcp.WithString("target_parent_section", mcp.Description("Optional target parent section name")),
+		),
+		sectionIntegrate,
+	)
+	s.AddTool(
 		mcp.NewTool("definition_list",
 			mcp.WithDescription("List definitions in a file"),
 			mcp.WithString("file", mcp.Required(), mcp.Description("File path")),
@@ -1223,6 +1233,7 @@ func sectionList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 			sections {
 				id
 				name
+				range { start end }
 			}
 		}
 	}`
@@ -1249,10 +1260,56 @@ func sectionTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 			sections {
 				id
 				name
+				range { start end }
 			}
 		}
 	}`
 	result, err := gql(query, map[string]interface{}{"path": file})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
+}
+
+func sectionIntegrate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
+	source, err := requireStringArg(args, "source")
+	if err != nil {
+		return nil, err
+	}
+	targetSection, err := requireStringArg(args, "target_section")
+	if err != nil {
+		return nil, err
+	}
+	targetFile, err := requireStringArg(args, "target_file")
+	if err != nil {
+		return nil, err
+	}
+	targetParentSection, _, err := getStringArg(args, "target_parent_section")
+	if err != nil {
+		return nil, err
+	}
+
+	if err := requireFilePath(source); err != nil {
+		return nil, err
+	}
+	if err := requireFilePath(targetFile); err != nil {
+		return nil, err
+	}
+
+	query := `mutation Integrate($input: IntegrateInput!) {
+		integrate(input: $input) {
+			success
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"input": map[string]interface{}{
+			"sourcePath":               source,
+			"targetSectionName":        targetSection,
+			"targetFilePath":           targetFile,
+			"targetParentSectionName":  targetParentSection,
+		},
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -1276,6 +1333,7 @@ func definitionList(ctx context.Context, request mcp.CallToolRequest) (*mcp.Call
 				id
 				name
 				kind
+				range { start end }
 			}
 		}
 	}`

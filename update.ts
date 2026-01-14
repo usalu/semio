@@ -21,13 +21,37 @@
 // #endregion Header
 
 import { execFileSync } from "child_process";
-import { existsSync, readFileSync, writeFileSync } from "fs";
+import { existsSync, readFileSync, readdirSync, writeFileSync } from "fs";
 import { dirname, join, resolve } from "path";
 import { fileURLToPath } from "url";
+import yaml from "js-yaml";
 
 //#region Types
+interface DependabotConfig {
+  version: number;
+  "x-semio-config"?: {
+    preserveLocalVersions?: {
+      npm?: {
+        pattern: string;
+        autoDetectWorkspaces?: boolean;
+      };
+    };
+  };
+  updates: {
+    "package-ecosystem": string;
+    directory: string;
+    schedule: { interval: string };
+    ignore?: {
+      "dependency-name": string;
+      versions?: string[];
+      "update-types"?: string[];
+    }[];
+  }[];
+}
+
 interface UpdateConfig {
   exclude: Record<string, string[]>;
+  constraints: Record<string, { dependency: string; maxMajor: number }[]>;
   preserveLocalVersions: {
     npm: {
       pattern: string;
@@ -35,7 +59,7 @@ interface UpdateConfig {
     };
   };
   paths: {
-    npm: { root: string; workspaces: boolean };
+    npm: string[];
     python: string[];
     rust: string[];
     go: string[];
@@ -99,12 +123,79 @@ function runQuiet(command: string, args: string[] = [], cwd: string = rootDir): 
   }
 }
 
-function loadConfig(): UpdateConfig {
-  const configPath = join(rootDir, "update.config.json");
-  if (!existsSync(configPath)) {
-    throw new Error("update.config.json not found");
+function findCsprojFiles(dir: string): string[] {
+  const fullDir = join(rootDir, dir);
+  if (!existsSync(fullDir)) return [];
+  try {
+    return readdirSync(fullDir)
+      .filter((f) => f.endsWith(".csproj"))
+      .map((f) => join(dir, f));
+  } catch {
+    return [];
   }
-  return JSON.parse(readFileSync(configPath, "utf-8"));
+}
+
+function loadConfig(): UpdateConfig {
+  const dependabotPath = join(rootDir, ".github", "dependabot.yml");
+  if (!existsSync(dependabotPath)) {
+    throw new Error("dependabot.yml not found");
+  }
+
+  const dependabot = yaml.load(readFileSync(dependabotPath, "utf-8")) as DependabotConfig;
+
+  const config: UpdateConfig = {
+    exclude: {},
+    constraints: {},
+    preserveLocalVersions: {
+      npm: dependabot["x-semio-config"]?.preserveLocalVersions?.npm || {
+        pattern: "*",
+        autoDetectWorkspaces: true,
+      },
+    },
+    paths: {
+      npm: [],
+      python: [],
+      rust: [],
+      go: [],
+      dotnet: [],
+    },
+  };
+
+  for (const update of dependabot.updates) {
+    const dir = update.directory.startsWith("/") ? update.directory.slice(1) : update.directory;
+    const ecosystem = update["package-ecosystem"];
+
+    if (ecosystem === "npm") config.paths.npm.push(dir);
+    else if (ecosystem === "uv") config.paths.python.push(dir);
+    else if (ecosystem === "cargo") config.paths.rust.push(dir);
+    else if (ecosystem === "gomod") config.paths.go.push(dir);
+    else if (ecosystem === "nuget") {
+      const files = findCsprojFiles(dir);
+      for (const file of files) {
+        config.paths.dotnet.push(file);
+        if (update.ignore) {
+          for (const ignore of update.ignore) {
+            const name = ignore["dependency-name"];
+            if (ignore.versions && ignore.versions.length > 0) {
+              for (const v of ignore.versions) {
+                const match = v.match(/>=\s*(\d+)\./);
+                if (match) {
+                  const maxMajor = parseInt(match[1]) - 1;
+                  if (!config.constraints[file]) config.constraints[file] = [];
+                  config.constraints[file].push({ dependency: name, maxMajor });
+                }
+              }
+            } else {
+              if (!config.exclude[file]) config.exclude[file] = [];
+              config.exclude[file].push(ignore["dependency-name"]);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return config;
 }
 
 function loadPackageJson(path: string): PackageJson {
@@ -581,9 +672,13 @@ function updateDotNet(config: UpdateConfig, dryRun: boolean): void {
     }
 
     const excludedPackages = config.exclude[csprojPath] ?? [];
+    const constraints = config.constraints[csprojPath] ?? [];
     console.log(`  Updating ${csprojPath}...`);
     if (excludedPackages.length > 0) {
       console.log(`    Excluding: ${excludedPackages.join(", ")}`);
+    }
+    if (constraints.length > 0) {
+      console.log(`    Constraints: ${constraints.map((c) => `${c.dependency} (major <= ${c.maxMajor})`).join(", ")}`);
     }
 
     if (dryRun) {
@@ -606,6 +701,15 @@ function updateDotNet(config: UpdateConfig, dryRun: boolean): void {
       if (match) {
         const [, name, current, latest] = match;
         if (name && current && latest && !excludedPackages.includes(name)) {
+          // Check constraints
+          const constraint = constraints.find((c) => c.dependency === name);
+          if (constraint) {
+            const latestMajor = parseInt(latest.split(".")[0]);
+            if (latestMajor > constraint.maxMajor) {
+              console.log(`    Skipping ${name}: latest version ${latest} exceeds major version constraint <= ${constraint.maxMajor}`);
+              continue;
+            }
+          }
           updates.push({ name, current, latest });
         }
       }

@@ -870,7 +870,7 @@ var sectionCreateCmd = &cobra.Command{
 				sectionCreate(file: $file, name: $name, parent: $parent) {
 					id
 					name
-					range { start { line column } end { line column } }
+					range { start end }
 				}
 			}
 		`, variables)
@@ -892,7 +892,7 @@ var sectionMoveCmd = &cobra.Command{
 				sectionMove(file: $file, oldName: $oldName, newName: $newName) {
 					id
 					name
-					range { start { line column } end { line column } }
+					range { start end }
 				}
 			}
 		`, variables)
@@ -911,6 +911,30 @@ var sectionDeleteCmd = &cobra.Command{
 		return printGQL(`
 			mutation SectionDelete($file: String!, $name: String!) {
 				sectionDelete(file: $file, name: $name)
+			}
+		`, variables)
+	},
+}
+
+var integrateCmd = &cobra.Command{
+	Use:   "integrate <source> <target-section-name> <target-file> [<target-parent-section-name>]",
+	Short: "Integrate a source file into a target file's section",
+	Args:  cobra.RangeArgs(3, 4),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		variables := map[string]interface{}{
+			"source":        args[0],
+			"targetSection": args[1],
+			"targetFile":    args[2],
+		}
+		if len(args) == 4 {
+			variables["targetParent"] = args[3]
+		}
+		return printGQL(`
+			mutation Integrate($source: String!, $targetSection: String!, $targetFile: String!, $targetParent: String) {
+				integrate(source: $source, targetSection: $targetSection, targetFile: $targetFile, targetParent: $targetParent) {
+					id
+					path
+				}
 			}
 		`, variables)
 	},
@@ -959,6 +983,7 @@ func init() {
 	sectionCmd.AddCommand(sectionCreateCmd)
 	sectionCmd.AddCommand(sectionMoveCmd)
 	sectionCmd.AddCommand(sectionDeleteCmd)
+	sectionCmd.AddCommand(integrateCmd)
 }
 
 // #endregion Section Commands
@@ -985,7 +1010,7 @@ var definitionListCmd = &cobra.Command{
 						id
 						name
 						kind
-						range { start { line column } end { line column } }
+						range { start end }
 					}
 				}
 			}

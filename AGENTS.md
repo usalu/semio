@@ -89,6 +89,7 @@ Temporary task artifacts MUST be stored inside the active ticket workspace.
 
 Ticket finish MUST derive per-file `updated`, `created`, and `removed` lists with line stats via git diff between the ticket base commit and the current commit, scoped to the files declared on the ticket.
 Ticket section line metrics MUST map added lines to current file sections, removed lines to base-commit section ranges, and affected definitions to added lines only.
+Ticket section ranges MUST be stored as line-only start/end integers.
 
 ### MCP Tools
 
@@ -396,8 +397,8 @@ The monorepo uses a devcontainer for consistent cross-platform development. The 
 
 **Setup Scripts:**
 
-- `post-create.sh`: Runs after container creation (npm install, uv sync, Go build, dotnet restore, Playwright install)
-- `post-start.sh`: Runs on each container start (activates Python venv)
+- `post-create.sh`: Runs after container creation (npm install, uv sync at root, Go build, dotnet restore, Playwright install)
+- `post-start.sh`: Runs on each container start (activates root Python venv)
 
 ## Git
 
@@ -541,6 +542,7 @@ npx tsx repo.tsx <command> [subcommand] [options]
 | `section create <file>`                   | Create a section                    |
 | `section move <file>`                     | Move/rename a section               |
 | `section delete <file>`                   | Delete a section                    |
+| `section integrate <src> <sec> <dst> [p]` | Integrate code into target section  |
 | `section list <file>`                     | List sections                       |
 | `definition list <file>`                  | List definitions in a file          |
 | `tool <name> [args...]`                   | Run an Nx target (e.g., lint, test) |
@@ -640,7 +642,7 @@ The MCP server communicates via stdio and exposes all repo tools as MCP tools. C
 - `project_tree` - Show bundle tree
 - `folder_create`, `folder_move`, `folder_delete`, `folder_list`, `folder_tree` - Folder operations
 - `file_create`, `file_move`, `file_delete`, `file_list`, `file_tree` - File operations
-- `section_create`, `section_move`, `section_delete`, `section_list`, `section_tree` - Section operations
+- `section_create`, `section_move`, `section_delete`, `section_list`, `section_tree`, `integrate` - Section operations
 - `definition_list` - List definitions
 - `tool_run` - Run Nx tool
 - `graphql` - Execute GraphQL queries against the repo schema
@@ -1517,15 +1519,17 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ └── Semio.Tests
 ├── py
 │ ├── engine
-│ │ ├── .venv
 │ │ ├── build.ts # wrapper
 │ │ ├── dev.ts # wrapper
 │ │ ├── engine.py # @semio/engine
 │ │ ├── test_engine.py # pytest
 │ │ ├── package.json # monorepo integration
-│ │ ├── pyproject.toml # uv bundle file
+│ │ ├── pyproject.toml # uv member file
 │ │ ├── test.ts # wrapper
-│ │ ├── uv.lock
+│ ├── semio
+│ │ ├── pyproject.toml # uv member file
+│ │ ├── semio.py # @semio/semio
+│ │ ├── semio.test.py # pytest
 ├── rb
 ├── rdf
 ├── scripts
@@ -1568,10 +1572,14 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ ├── tickets.go
 │ ├── types.go
 │ └── utils.go
+├── .venv # Centralized Python virtual environment
 ├── nx.json # Nx targets and plugin configs
 ├── package-lock.json # All javascript dependencies
 ├── package.json # Monorepo and workspace setup
+├── pyproject.toml # Python workspace setup
 ├── repo.tsx # TypeScript fallback CLI (Ink + TypeScript)
+├── update.ts # All-in-one dependency update script (reads .github/dependabot.yml)
+├── uv.lock # Python lock file
 ├── README.md # GFM dev docs
 
 In general, if the user talks about an old file, then probably there is the same file with the suffix `*.old` that is the original state.
@@ -3754,7 +3762,7 @@ Ticket tree items use `ticketOpen` and `ticketClosed` context values for inline 
 
 ## 📄 js/vscode/extension.ts
 
-Extension activation, repo command execution helpers, and section tree normalization for the Sections view based on repo section list output.
+Extension activation, repo command execution helpers, and section tree normalization for the Sections view based on repo section list output with line-only range start/end values.
 
 ## 📁 go/cli/
 
@@ -3762,7 +3770,15 @@ Cobra command registry and GraphQL execution wrapper for the repo CLI binary.
 
 ## 📄 go/cli/main.go
 
-CLI command definitions with GraphQL query strings for repo operations, including section listing with range and nested children.
+CLI command definitions with GraphQL query strings for repo operations, including section and definition ranges as line-only start/end integers.
+
+## 📁 go/mcp/
+
+MCP tool registry and GraphQL proxying for repo CLI operations.
+
+## 📄 go/mcp/main.go
+
+MCP section and definition queries request line-only range start/end values.
 
 ## 📁 go/repo/graph/
 
@@ -3785,6 +3801,7 @@ The graph package uses graphql-go for runtime schema building instead of code ge
 Ticket finish derives per-file lists and line stats from git diffs between the ticket base commit and HEAD, scoped to the ticket file list, storing `files` and `lines` on the ticket.
 Ticket file aggregates store `updated`, `created`, and `removed` as `FileLineStats` with line totals.
 Ticket section metrics map added lines to current file sections, removed lines to base-commit section ranges, and affected definitions to added lines.
+Ticket section ranges and GraphQL section/definition ranges expose line-only start/end integers.
 Comment policy scanning tracks string and template literal context so comment markers inside literals do not trigger violations.
 Section policy flags orphan definitions that sit outside any named region, including comment blocks and Go package/import blocks.
 JSON section parsing maps object keys into section trees and powers JSON section create/move/delete operations by path.

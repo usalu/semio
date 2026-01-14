@@ -26,11 +26,11 @@ import { join } from "path";
 
 const cwd = __dirname;
 
-if (!existsSync(join(cwd, ".venv"))) {
-  execSync("ux sync", { cwd, stdio: "inherit" });
+if (!existsSync(join(cwd, "../../.venv"))) {
+  execSync("uv sync", { cwd: join(cwd, "../.."), stdio: "inherit" });
 }
 
-execSync(".venv/Scripts/activate.ps1 && tsx ./generate-schemas.ts", { cwd, stdio: "inherit", shell: "powershell.exe" });
+execSync("npx tsx ./generate-schemas.ts", { cwd, stdio: "inherit" });
 
 if (existsSync(join(cwd, "build"))) {
   rmSync(join(cwd, "build"), { recursive: true });
@@ -59,7 +59,7 @@ const args = [
   "engine.py",
 ];
 
-execSync(`pyinstaller ${args.join(" ")}`, { cwd, stdio: "inherit" });
+execSync(`uv run pyinstaller ${args.join(" ")}`, { cwd, stdio: "inherit" });
 
 if (!process.argv.includes("--skip-post-build")) {
   execSync("tsx ./post-build.ts", { cwd, stdio: "inherit" });

@@ -1,0 +1,23 @@
+[project]
+name = "semio-repo"
+version = "0.1.0"
+description = "🧩 Semio monorepo Python workspace"
+readme = "README.md"
+requires-python = ">=3.13"
+license = "AGPL-3.0-or-later"
+authors = [{ name = "Ueli Saluz", email = "ueli@semio-tech.com" }]
+dependencies = []
+
+[tool.uv.workspace]
+members = ["py/semio", "py/engine"]
+
+[dependency-groups]
+dev = [
+    "jupyter>=1.1.1",
+    "notebook>=7.3.2",
+    "ipykernel>=6.29.5",
+    "ruff>=0.14.8",
+    "black>=25.1.0",
+    "debugpy>=1.8.14",
+    "pre-commit>=4.2.0",
+]

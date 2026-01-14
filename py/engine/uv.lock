@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = "==3.13.*"
 
 [[package]]
@@ -1713,7 +1713,7 @@ dev = [
 ]
 test = [
     { name = "deepdiff", specifier = ">=8.5.0,<9" },
-    { name = "pytest", specifier = ">=8.4.0,<9" },
+    { name = "pytest", specifier = ">=8.4.0,<10" },
     { name = "pytest-cov", specifier = ">=6.1.1,<8" },
 ]
 

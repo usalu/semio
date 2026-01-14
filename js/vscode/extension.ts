@@ -184,11 +184,11 @@ const CodebaseDocument = graphql(`
         id path uri
         sections {
           id name path
-          range { start { line } end { line } }
+          range { start end }
         }
         definitions {
           id name kind
-          range { start { line } end { line } }
+          range { start end }
         }
       }
       contributors {

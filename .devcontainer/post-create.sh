@@ -7,9 +7,7 @@ echo "📦 Installing npm dependencies..."
 npm install
 
 echo "🐍 Setting up Python environment..."
-cd py/engine
 uv sync
-cd ../..
 
 echo "🔧 Building Go binaries..."
 cd go/repo

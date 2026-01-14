@@ -13,6 +13,14 @@ updates:
     schedule:
       interval: "weekly"
   - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "uv"
+    directory: "/py/semio"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "uv"
     directory: "/py/engine"
     schedule:
       interval: "weekly"
@@ -20,8 +28,26 @@ updates:
     directory: "/net/Semio"
     schedule:
       interval: "weekly"
+    ignore:
+      - dependency-name: "FluentValidation"
+      - dependency-name: "System.Collections.Immutable"
+        versions: [">= 8.0.0"]
   - package-ecosystem: "nuget"
     directory: "/net/Semio.Grasshopper"
+    schedule:
+      interval: "weekly"
+    ignore:
+      - dependency-name: "Grasshopper"
+      - dependency-name: "System.Drawing.Common"
+        versions: [">= 8.0.0"]
+      - dependency-name: "System.Resources.Extensions"
+        versions: [">= 8.0.0"]
+  - package-ecosystem: "nuget"
+    directory: "/net/Semio.Tests"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "nuget"
+    directory: "/net/Semio.Grasshopper.Tests"
     schedule:
       interval: "weekly"
   - package-ecosystem: "gomod"

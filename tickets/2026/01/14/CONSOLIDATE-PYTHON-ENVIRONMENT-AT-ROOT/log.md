@@ -1,0 +1,9 @@
+- Opened ticket and created plan.
+- Created root `pyproject.toml` with `uv` workspace members and `jupyter` dependencies.
+- Updated subproject `pyproject.toml` files to remove redundant tools and add workspace dependencies.
+- Updated VS Code and Devcontainer configuration to point to root `.venv`.
+- Refactored engine build scripts to use `uv run`.
+- Ran `uv sync` from root and removed subproject `.venv` folders.
+- Integrated root workspace into `dependabot.yml`.
+- Updated documentation in `AGENTS.md` and `README.md`.
+- Verified `jupyter` and package imports.

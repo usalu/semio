@@ -1,6 +1,6 @@
 # region Header
 
-# py/engine/engine.py
+# py/semio/semio.py
 
 # 2025 Ueli Saluz <ueli@semio-tech.com>
 
