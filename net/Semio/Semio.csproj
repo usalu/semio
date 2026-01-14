@@ -31,10 +31,10 @@
     <PackageReference Include="FluentValidation" Version="11.12.0" />
     <PackageReference Include="Humanizer" Version="3.0.1" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="QuikGraph" Version="2.5.0" />
-    <PackageReference Include="Refit" Version="8.0.0" />
-    <PackageReference Include="Refit.Newtonsoft.Json" Version="8.0.0" />
+    <PackageReference Include="Refit" Version="9.0.2" />
+    <PackageReference Include="Refit.Newtonsoft.Json" Version="9.0.2" />
     <PackageReference Include="Svg" Version="3.4.7" />
     <PackageReference Include="System.Collections.Immutable" Version="7.0.0" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
