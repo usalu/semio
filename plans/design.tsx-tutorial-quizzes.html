@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design.tsx Tutorial - Interactive Quizzes</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .toc {
+            background: #f8f9fa;
+            padding: 30px 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .toc h2 {
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+        
+        .toc ul {
+            list-style: none;
+        }
+        
+        .toc li {
+            margin: 10px 0;
+        }
+        
+        .toc a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        .toc a:hover {
+            color: #764ba2;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .quiz-section {
+            margin-bottom: 50px;
+        }
+        
+        .quiz-title {
+            font-size: 1.8em;
+            color: #667eea;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .concept-title {
+            font-size: 1.4em;
+            color: #764ba2;
+            margin-top: 30px;
+            margin-bottom: 20px;
+        }
+        
+        .question {
+            background: #f8f9fa;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+            border-radius: 6px;
+        }
+        
+        .question-number {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+        
+        .question-text {
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 12px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        
+        .options {
+            margin: 15px 0;
+        }
+        
+        .option {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin: 8px 0;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        .option:hover {
+            background-color: #e8eef5;
+        }
+        
+        .option input[type="radio"],
+        .option input[type="checkbox"] {
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        
+        .option label {
+            cursor: pointer;
+            flex-grow: 1;
+        }
+        
+        .answer-input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        .toggle-answer {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+        }
+        
+        .toggle-answer:hover {
+            background-color: #764ba2;
+        }
+        
+        .answer-box {
+            background: #e8f5e9;
+            border: 1px solid #4caf50;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .answer-box.show {
+            display: block;
+        }
+        
+        .answer-label {
+            font-weight: bold;
+            color: #2e7d32;
+            margin-bottom: 8px;
+        }
+        
+        .answer-text {
+            color: #1b5e20;
+            line-height: 1.6;
+        }
+        
+        .footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid #e0e0e0;
+            color: #666;
+        }
+        
+        .progress-bar {
+            background: #e0e0e0;
+            height: 4px;
+            width: 100%;
+        }
+        
+        .progress-fill {
+            background: #667eea;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .info-box strong {
+            color: #1565c0;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 Design.tsx Tutorial Quizzes</h1>
+            <p>Test your understanding of programming fundamentals</p>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        
+        <div class="toc">
+            <h2>📚 Quiz Sections</h2>
+            <ul>
+                <li><a href="#chapter-0">Chapter 0: Programming Fundamentals</a></li>
+            </ul>
+            <p style="margin-top: 15px; font-size: 0.9em; color: #666;">More quizzes coming soon for Stages 1-9!</p>
+        </div>
+        
+        <div class="content">
+            <div id="chapter-0" class="quiz-section">
+                <h2 class="quiz-title">📖 Chapter 0: Programming Fundamentals</h2>
+                
+                <div class="info-box">
+                    <strong>ℹ️ About This Quiz:</strong> 25 questions across 5 core concepts. Mix of multiple-choice, true/false, and short coding exercises. Click "Show Answer" to reveal explanations.
+                </div>
+                
+                <!-- CONCEPT 1: VARIABLES -->
+                <h3 class="concept-title">Concept 1: Variables <span class="badge">5 questions</span></h3>
+                
+                <div class="question">
+                    <div class="question-number">Q1.1 — Multiple Choice</div>
+                    <div class="question-text">What is a variable in programming?</div>
+                    <div class="options">
+                        <div class="option">
+                            <input type="radio" name="q1-1" id="q1-1-a" value="a">
+                            <label for="q1-1-a">A labeled box that holds information</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q1-1" id="q1-1-b" value="b">
+                            <label for="q1-1-b">A function that performs calculations</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q1-1" id="q1-1-c" value="c">
+                            <label for="q1-1-c">A type of loop that repeats code</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q1-1" id="q1-1-d" value="d">
+                            <label for="q1-1-d">A way to display text on the screen</label>
+                        </div>
+                    </div>
+                    <button class="toggle-answer" onclick="toggleAnswer('a1-1')">Show Answer</button>
+                    <div class="answer-box" id="a1-1">
+                        <div class="answer-label">✅ Correct Answer: A</div>
+                        <div class="answer-text">A variable is like a container with a label. You put data inside it and can access it later by using the variable's name. Think of it like a labeled box in a warehouse.</div>
+                    </div>
+                </div>
+                
+                <div class="question">
+                    <div class="question-number">Q1.2 — True/False</div>
+                    <div class="question-text">In JavaScript, 'let' and 'const' are used to create variables, but 'const' variables can be changed after creation.</div>
+                    <div class="options">
+                        <div class="option">
+                            <input type="radio" name="q1-2" id="q1-2-t" value="true">
+                            <label for="q1-2-t">True</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q1-2" id="q1-2-f" value="false">
+                            <label for="q1-2-f">False</label>
+                        </div>
+                    </div>
+                    <button class="toggle-answer" onclick="toggleAnswer('a1-2')">Show Answer</button>
+                    <div class="answer-box" id="a1-2">
+                        <div class="answer-label">✅ Correct Answer: False</div>
+                        <div class="answer-text">'const' stands for 'constant' — once you assign a value, it cannot be changed. 'let' variables, however, can be changed at any time.</div>
+                    </div>
+                </div>
+                
+                <div class="question">
+                    <div class="question-number">Q1.3 — Multiple Choice</div>
+                    <div class="question-text">Which of these is a valid variable name?</div>
+                    <div class="options">
+                        <div class="option">
+                            <input type="radio" name="q1-3" id="q1-3-a" value="a">
+                            <label for="q1-3-a"><code>let 123abc = 'nope';</code></label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q1-3" id="q1-3-b" value="b">
+                            <label for="q1-3-b"><code>let my-name = 'Alice';</code></label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q1-3" id="q1-3-c" value="c">
+                            <label for="q1-3-c"><code>let userName = 'Alice';</code></label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q1-3" id="q1-3-d" value="d">
+                            <label for="q1-3-d"><code>let my name = 'Alice';</code></label>
+                        </div>
+                    </div>
+                    <button class="toggle-answer" onclick="toggleAnswer('a1-3')">Show Answer</button>
+                    <div class="answer-box" id="a1-3">
+                        <div class="answer-label">✅ Correct Answer: C</div>
+                        <div class="answer-text">Variable names must start with a letter or underscore, cannot contain spaces or dashes, and cannot start with numbers. 'userName' follows all these rules.</div>
+                    </div>
+                </div>
+                
+                <div class="question">
+                    <div class="question-number">Q1.4 — Short Code</div>
+                    <div class="question-text">What does this code print?</div>
+                    <div class="code-block">let x = 5;
+let y = 10;
+let z = x + y;
+console.log(z);</div>
+                    <input type="text" class="answer-input" placeholder="Your answer here">
+                    <button class="toggle-answer" onclick="toggleAnswer('a1-4')">Show Answer</button>
+                    <div class="answer-box" id="a1-4">
+                        <div class="answer-label">✅ Expected Answer: 15</div>
+                        <div class="answer-text">The code creates three variables: x = 5, y = 10, z = 5 + 10 = 15. When it logs z, it prints 15.</div>
+                    </div>
+                </div>
+                
+                <div class="question">
+                    <div class="question-number">Q1.5 — Multiple Choice</div>
+                    <div class="question-text">What is the difference between a regular variable and a state variable in React?</div>
+                    <div class="options">
+                        <div class="option">
+                            <input type="radio" name="q1-5" id="q1-5-a" value="a">
+                            <label for="q1-5-a">State variables can hold data; regular variables cannot</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q1-5" id="q1-5-b" value="b">
+                            <label for="q1-5-b">State variables are watched by React and trigger screen updates when they change; regular variables do not</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q1-5" id="q1-5-c" value="c">
+                            <label for="q1-5-c">There is no difference; they are the same thing</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q1-5" id="q1-5-d" value="d">
+                            <label for="q1-5-d">State variables can only hold strings; regular variables can hold any type</label>
+                        </div>
+                    </div>
+                    <button class="toggle-answer" onclick="toggleAnswer('a1-5')">Show Answer</button>
+                    <div class="answer-box" id="a1-5">
+                        <div class="answer-label">✅ Correct Answer: B</div>
+                        <div class="answer-text">In React, when a state variable changes (using setState or hooks), React automatically re-renders the component to show the new data. Regular variables don't trigger updates, so the screen won't change even if the variable does.</div>
+                    </div>
+                </div>
+                
+                <!-- CONCEPT 2: FUNCTIONS -->
+                <h3 class="concept-title">Concept 2: Functions <span class="badge">5 questions</span></h3>
+                
+                <div class="question">
+                    <div class="question-number">Q2.1 — Multiple Choice</div>
+                    <div class="question-text">What is a function in programming?</div>
+                    <div class="options">
+                        <div class="option">
+                            <input type="radio" name="q2-1" id="q2-1-a" value="a">
+                            <label for="q2-1-a">A reusable set of instructions with a name</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q2-1" id="q2-1-b" value="b">
+                            <label for="q2-1-b">A variable that holds a number</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q2-1" id="q2-1-c" value="c">
+                            <label for="q2-1-c">A piece of HTML code</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q2-1" id="q2-1-d" value="d">
+                            <label for="q2-1-d">A way to store multiple pieces of data</label>
+                        </div>
+                    </div>
+                    <button class="toggle-answer" onclick="toggleAnswer('a2-1')">Show Answer</button>
+                    <div class="answer-box" id="a2-1">
+                        <div class="answer-label">✅ Correct Answer: A</div>
+                        <div class="answer-text">A function is like a recipe you can use multiple times. You write the instructions once, give it a name, and then call it whenever you need those instructions to run.</div>
+                    </div>
+                </div>
+                
+                <div class="question">
+                    <div class="question-number">Q2.2 — True/False</div>
+                    <div class="question-text">In JavaScript, arrow functions and regular functions always behave exactly the same way.</div>
+                    <div class="options">
+                        <div class="option">
+                            <input type="radio" name="q2-2" id="q2-2-t" value="true">
+                            <label for="q2-2-t">True</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q2-2" id="q2-2-f" value="false">
+                            <label for="q2-2-f">False</label>
+                        </div>
+                    </div>
+                    <button class="toggle-answer" onclick="toggleAnswer('a2-2')">Show Answer</button>
+                    <div class="answer-box" id="a2-2">
+                        <div class="answer-label">✅ Correct Answer: False</div>
+                        <div class="answer-text">While they work similarly for most cases, arrow functions and regular functions have some differences (like how 'this' is handled). For beginners, they're functionally equivalent, but there are edge cases where they differ.</div>
+                    </div>
+                </div>
+                
+                <div class="question">
+                    <div class="question-number">Q2.3 — Short Code</div>
+                    <div class="question-text">What does this function return when called with <code>greet('Alice')</code>?</div>
+                    <div class="code-block">function greet(name) {
+  return 'Hello, ' + name + '!';
+}</div>
+                    <input type="text" class="answer-input" placeholder="Your answer here">
+                    <button class="toggle-answer" onclick="toggleAnswer('a2-3')">Show Answer</button>
+                    <div class="answer-box" id="a2-3">
+                        <div class="answer-label">✅ Expected Answer: Hello, Alice!</div>
+                        <div class="answer-text">The function takes the parameter 'name' (which is 'Alice'), concatenates it between 'Hello, ' and '!', and returns the result: 'Hello, Alice!'</div>
+                    </div>
+                </div>
+                
+                <div class="question">
+                    <div class="question-number">Q2.4 — Multiple Choice</div>
+                    <div class="question-text">What is the difference between a function parameter and a function argument?</div>
+                    <div class="options">
+                        <div class="option">
+                            <input type="radio" name="q2-4" id="q2-4-a" value="a">
+                            <label for="q2-4-a">They are the same thing; the words are interchangeable</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q2-4" id="q2-4-b" value="b">
+                            <label for="q2-4-b">Parameters are the names in the function definition; arguments are the actual values passed when calling the function</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q2-4" id="q2-4-c" value="c">
+                            <label for="q2-4-c">Parameters are used in loops; arguments are used in functions</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q2-4" id="q2-4-d" value="d">
+                            <label for="q2-4-d">Arguments must be numbers; parameters must be text</label>
+                        </div>
+                    </div>
+                    <button class="toggle-answer" onclick="toggleAnswer('a2-4')">Show Answer</button>
+                    <div class="answer-box" id="a2-4">
+                        <div class="answer-label">✅ Correct Answer: B</div>
+                        <div class="answer-text">Parameters are placeholders defined in the function (like 'name' in <code>function greet(name)</code>). Arguments are the actual values you pass when calling the function (like 'Alice' in <code>greet('Alice')</code>).</div>
+                    </div>
+                </div>
+                
+                <div class="question">
+                    <div class="question-number">Q2.5 — Short Code</div>
+                    <div class="question-text">Convert this regular function to an arrow function:</div>
+                    <div class="code-block">function add(a, b) {
+  return a + b;
+}</div>
+                    <input type="text" class="answer-input" placeholder="Your answer here">
+                    <button class="toggle-answer" onclick="toggleAnswer('a2-5')">Show Answer</button>
+                    <div class="answer-box" id="a2-5">
+                        <div class="answer-label">✅ Expected Answer: const add = (a, b) => a + b;</div>
+                        <div class="answer-text">Arrow functions use the '=>' syntax. For simple one-liners, you can omit the curly braces and the return statement. Both <code>const add = (a, b) => { return a + b; };</code> and <code>const add = (a, b) => a + b;</code> are correct.</div>
+                    </div>
+                </div>
+                
+                <!-- CONCEPT 3: CONTROL FLOW -->
+                <h3 class="concept-title">Concept 3: Control Flow <span class="badge">5 questions</span></h3>
+                
+                <div class="question">
+                    <div class="question-number">Q3.1 — Multiple Choice</div>
+                    <div class="question-text">What is control flow?</div>
+                    <div class="options">
+                        <div class="option">
+                            <input type="radio" name="q3-1" id="q3-1-a" value="a">
+                            <label for="q3-1-a">The order in which code runs and the decisions it makes</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q3-1" id="q3-1-b" value="b">
+                            <label for="q3-1-b">A way to store data in variables</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q3-1" id="q3-1-c" value="c">
+                            <label for="q3-1-c">A type of function</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q3-1" id="q3-1-d" value="d">
+                            <label for="q3-1-d">The HTML structure of a page</label>
+                        </div>
+                    </div>
+                    <button class="toggle-answer" onclick="toggleAnswer('a3-1')">Show Answer</button>
+                    <div class="answer-box" id="a3-1">
+                        <div class="answer-label">✅ Correct Answer: A</div>
+                        <div class="answer-text">Control flow determines which code runs and in what order. It includes things like if/else statements (making decisions) and loops (repeating code).</div>
+                    </div>
+                </div>
+                
+                <div class="question">
+                    <div class="question-number">Q3.2 — Short Code</div>
+                    <div class="question-text">What does this code print?</div>
+                    <div class="code-block">let temperature = 25;
+if (temperature > 30) {
+  console.log('Hot');
+} else if (temperature > 20) {
+  console.log('Nice');
+} else {
+  console.log('Cold');
+}</div>
+                    <input type="text" class="answer-input" placeholder="Your answer here">
+                    <button class="toggle-answer" onclick="toggleAnswer('a3-2')">Show Answer</button>
+                    <div class="answer-box" id="a3-2">
+                        <div class="answer-label">✅ Expected Answer: Nice</div>
+                        <div class="answer-text">The temperature is 25. It's not > 30, so the first condition is false. But 25 > 20, so the second condition is true. The code prints 'Nice'.</div>
+                    </div>
+                </div>
+                
+                <div class="question">
+                    <div class="question-number">Q3.3 — True/False</div>
+                    <div class="question-text">In JavaScript, '==' and '===' do the same thing.</div>
+                    <div class="options">
+                        <div class="option">
+                            <input type="radio" name="q3-3" id="q3-3-t" value="true">
+                            <label for="q3-3-t">True</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q3-3" id="q3-3-f" value="false">
+                            <label for="q3-3-f">False</label>
+                        </div>
+                    </div>
+                    <button class="toggle-answer" onclick="toggleAnswer('a3-3')">Show Answer</button>
+                    <div class="answer-box" id="a3-3">
+                        <div class="answer-label">✅ Correct Answer: False</div>
+                        <div class="answer-text">No! '==' is loose comparison (5 == '5' is true), while '===' is strict comparison (5 === '5' is false). Always use '===' to avoid surprises.</div>
+                    </div>
+                </div>
+                
+                <div class="question">
+                    <div class="question-number">Q3.4 — Multiple Choice</div>
+                    <div class="question-text">How many times does this loop run?</div>
+                    <div class="code-block">for (let i = 0; i < 5; i++) {
+  console.log(i);
+}</div>
+                    <div class="options">
+                        <div class="option">
+                            <input type="radio" name="q3-4" id="q3-4-a" value="a">
+                            <label for="q3-4-a">4 times (0, 1, 2, 3)</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q3-4" id="q3-4-b" value="b">
+                            <label for="q3-4-b">5 times (0, 1, 2, 3, 4)</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q3-4" id="q3-4-c" value="c">
+                            <label for="q3-4-c">6 times (0, 1, 2, 3, 4, 5)</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q3-4" id="q3-4-d" value="d">
+                            <label for="q3-4-d">Infinitely (it never stops)</label>
+                        </div>
+                    </div>
+                    <button class="toggle-answer" onclick="toggleAnswer('a3-4')">Show Answer</button>
+                    <div class="answer-box" id="a3-4">
+                        <div class="answer-label">✅ Correct Answer: B</div>
+                        <div class="answer-text">The loop runs while i < 5. So it prints: 0, 1, 2, 3, 4. That's 5 times total. When i becomes 5, the condition is false and the loop stops.</div>
+                    </div>
+                </div>
+                
+                <div class="question">
+                    <div class="question-number">Q3.5 — Short Code</div>
+                    <div class="question-text">Write a while loop that counts from 1 to 3.</div>
+                    <textarea class="answer-input" style="height: 100px;" placeholder="Your code here"></textarea>
+                    <button class="toggle-answer" onclick="toggleAnswer('a3-5')">Show Answer</button>
+                    <div class="answer-box" id="a3-5">
+                        <div class="answer-label">✅ Expected Answer:</div>
+                        <div class="code-block">let i = 1;
+while (i <= 3) {
+  console.log(i);
+  i = i + 1;
+}</div>
+                        <div class="answer-text">Start with i = 1, then loop while i <= 3. Inside the loop, print i and increment it. This prints 1, 2, 3.</div>
+                    </div>
+                </div>
+                
+                <!-- CONCEPT 4: OBJECTS -->
+                <h3 class="concept-title">Concept 4: Objects <span class="badge">5 questions</span></h3>
+                
+                <div class="question">
+                    <div class="question-number">Q4.1 — Multiple Choice</div>
+                    <div class="question-text">What is an object in JavaScript?</div>
+                    <div class="options">
+                        <div class="option">
+                            <input type="radio" name="q4-1" id="q4-1-a" value="a">
+                            <label for="q4-1-a">A collection of related data grouped together</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q4-1" id="q4-1-b" value="b">
+                            <label for="q4-1-b">A function that performs an action</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q4-1" id="q4-1-c" value="c">
+                            <label for="q4-1-c">A type of loop</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q4-1" id="q4-1-d" value="d">
+                            <label for="q4-1-d">A way to style HTML</label>
+                        </div>
+                    </div>
+                    <button class="toggle-answer" onclick="toggleAnswer('a4-1')">Show Answer</button>
+                    <div class="answer-box" id="a4-1">
+                        <div class="answer-label">✅ Correct Answer: A</div>
+                        <div class="answer-text">An object is like a contact card with multiple pieces of information. Instead of having separate variables for name, age, email, you group them in one object.</div>
+                    </div>
+                </div>
+                
+                <div class="question">
+                    <div class="question-number">Q4.2 — Short Code</div>
+                    <div class="question-text">What does this code print?</div>
+                    <div class="code-block">let person = {
+  name: 'Alice',
+  age: 25
+};
+console.log(person.name);</div>
+                    <input type="text" class="answer-input" placeholder="Your answer here">
+                    <button class="toggle-answer" onclick="toggleAnswer('a4-2')">Show Answer</button>
+                    <div class="answer-box" id="a4-2">
+                        <div class="answer-label">✅ Expected Answer: Alice</div>
+                        <div class="answer-text">The code creates an object with two properties: name and age. Using dot notation (person.name), we access the 'name' property, which is 'Alice'.</div>
+                    </div>
+                </div>
+                
+                <div class="question">
+                    <div class="question-number">Q4.3 — True/False</div>
+                    <div class="question-text">You can only access object properties using dot notation (person.name), not bracket notation (person['name']).</div>
+                    <div class="options">
+                        <div class="option">
+                            <input type="radio" name="q4-3" id="q4-3-t" value="true">
+                            <label for="q4-3-t">True</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q4-3" id="q4-3-f" value="false">
+                            <label for="q4-3-f">False</label>
+                        </div>
+                    </div>
+                    <button class="toggle-answer" onclick="toggleAnswer('a4-3')">Show Answer</button>
+                    <div class="answer-box" id="a4-3">
+                        <div class="answer-label">✅ Correct Answer: False</div>
+                        <div class="answer-text">Both work! Dot notation is more common, but bracket notation is useful when the property name is in a variable or contains special characters.</div>
+                    </div>
+                </div>
+                
+                <div class="question">
+                    <div class="question-number">Q4.4 — Multiple Choice</div>
+                    <div class="question-text">What is a nested object?</div>
+                    <div class="options">
+                        <div class="option">
+                            <input type="radio" name="q4-4" id="q4-4-a" value="a">
+                            <label for="q4-4-a">An object that contains other objects</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q4-4" id="q4-4-b" value="b">
+                            <label for="q4-4-b">An object that is inside a function</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q4-4" id="q4-4-c" value="c">
+                            <label for="q4-4-c">An object that is inside an array</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q4-4" id="q4-4-d" value="d">
+                            <label for="q4-4-d">An object with more than 5 properties</label>
+                        </div>
+                    </div>
+                    <button class="toggle-answer" onclick="toggleAnswer('a4-4')">Show Answer</button>
+                    <div class="answer-box" id="a4-4">
+                        <div class="answer-label">✅ Correct Answer: A</div>
+                        <div class="answer-text">A nested object is an object that contains other objects as properties. For example: <code>{ address: { city: 'New York' } }</code> has a nested object called 'address'.</div>
+                    </div>
+                </div>
+                
+                <div class="question">
+                    <div class="question-number">Q4.5 — Short Code</div>
+                    <div class="question-text">Create an object called 'car' with properties: brand='Toyota', color='blue', year=2020.</div>
+                    <textarea class="answer-input" style="height: 100px;" placeholder="Your code here"></textarea>
+                    <button class="toggle-answer" onclick="toggleAnswer('a4-5')">Show Answer</button>
+                    <div class="answer-box" id="a4-5">
+                        <div class="answer-label">✅ Expected Answer:</div>
+                        <div class="code-block">const car = {
+  brand: 'Toyota',
+  color: 'blue',
+  year: 2020
+};</div>
+                        <div class="answer-text">Objects are created with curly braces. Inside, you list property names (keys) and their values separated by colons. Properties are separated by commas.</div>
+                    </div>
+                </div>
+                
+                <!-- CONCEPT 5: ARRAYS -->
+                <h3 class="concept-title">Concept 5: Arrays <span class="badge">6 questions</span></h3>
+                
+                <div class="question">
+                    <div class="question-number">Q5.1 — Multiple Choice</div>
+                    <div class="question-text">What is an array?</div>
+                    <div class="options">
+                        <div class="option">
+                            <input type="radio" name="q5-1" id="q5-1-a" value="a">
+                            <label for="q5-1-a">An ordered list of items</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q5-1" id="q5-1-b" value="b">
+                            <label for="q5-1-b">A function that repeats code</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q5-1" id="q5-1-c" value="c">
+                            <label for="q5-1-c">A way to store a single piece of data</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q5-1" id="q5-1-d" value="d">
+                            <label for="q5-1-d">A type of object with only text properties</label>
+                        </div>
+                    </div>
+                    <button class="toggle-answer" onclick="toggleAnswer('a5-1')">Show Answer</button>
+                    <div class="answer-box" id="a5-1">
+                        <div class="answer-label">✅ Correct Answer: A</div>
+                        <div class="answer-text">An array is an ordered list. Each item has a position (index), starting from 0. Arrays are perfect for storing multiple items of the same type.</div>
+                    </div>
+                </div>
+                
+                <div class="question">
+                    <div class="question-number">Q5.2 — Short Code</div>
+                    <div class="question-text">What does this code print?</div>
+                    <div class="code-block">let fruits = ['apple', 'banana', 'cherry'];
+console.log(fruits[1]);</div>
+                    <input type="text" class="answer-input" placeholder="Your answer here">
+                    <button class="toggle-answer" onclick="toggleAnswer('a5-2')">Show Answer</button>
+                    <div class="answer-box" id="a5-2">
+                        <div class="answer-label">✅ Expected Answer: banana</div>
+                        <div class="answer-text">Arrays start counting at 0. Index 0 is 'apple', index 1 is 'banana', index 2 is 'cherry'. So fruits[1] is 'banana'.</div>
+                    </div>
+                </div>
+                
+                <div class="question">
+                    <div class="question-number">Q5.3 — Multiple Choice</div>
+                    <div class="question-text">What does the .push() method do?</div>
+                    <div class="options">
+                        <div class="option">
+                            <input type="radio" name="q5-3" id="q5-3-a" value="a">
+                            <label for="q5-3-a">Adds an item to the end of an array</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q5-3" id="q5-3-b" value="b">
+                            <label for="q5-3-b">Removes the first item from an array</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q5-3" id="q5-3-c" value="c">
+                            <label for="q5-3-c">Changes the length of an array</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q5-3" id="q5-3-d" value="d">
+                            <label for="q5-3-d">Finds an item in an array</label>
+                        </div>
+                    </div>
+                    <button class="toggle-answer" onclick="toggleAnswer('a5-3')">Show Answer</button>
+                    <div class="answer-box" id="a5-3">
+                        <div class="answer-label">✅ Correct Answer: A</div>
+                        <div class="answer-text">push() adds a new item to the end. pop() removes from the end. unshift() adds to the beginning. shift() removes from the beginning.</div>
+                    </div>
+                </div>
+                
+                <div class="question">
+                    <div class="question-number">Q5.4 — Short Code</div>
+                    <div class="question-text">What does this code print?</div>
+                    <div class="code-block">let numbers = [1, 2, 3, 4, 5];
+let doubled = numbers.map((n) => n * 2);
+console.log(doubled);</div>
+                    <input type="text" class="answer-input" placeholder="Your answer here">
+                    <button class="toggle-answer" onclick="toggleAnswer('a5-4')">Show Answer</button>
+                    <div class="answer-box" id="a5-4">
+                        <div class="answer-label">✅ Expected Answer: [2, 4, 6, 8, 10]</div>
+                        <div class="answer-text">map() transforms each item in the array. It multiplies each number by 2, creating a new array with the transformed values.</div>
+                    </div>
+                </div>
+                
+                <div class="question">
+                    <div class="question-number">Q5.5 — Multiple Choice</div>
+                    <div class="question-text">What does filter() do?</div>
+                    <div class="options">
+                        <div class="option">
+                            <input type="radio" name="q5-5" id="q5-5-a" value="a">
+                            <label for="q5-5-a">Keeps only items that pass a test</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q5-5" id="q5-5-b" value="b">
+                            <label for="q5-5-b">Removes all items from an array</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q5-5" id="q5-5-c" value="c">
+                            <label for="q5-5-c">Transforms each item in an array</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q5-5" id="q5-5-d" value="d">
+                            <label for="q5-5-d">Adds items to the beginning of an array</label>
+                        </div>
+                    </div>
+                    <button class="toggle-answer" onclick="toggleAnswer('a5-5')">Show Answer</button>
+                    <div class="answer-box" id="a5-5">
+                        <div class="answer-label">✅ Correct Answer: A</div>
+                        <div class="answer-text">filter() returns a new array containing only the items that pass the condition. For example, filter((n) => n > 3) keeps only numbers greater than 3.</div>
+                    </div>
+                </div>
+                
+                <div class="question">
+                    <div class="question-number">Q5.6 — Short Code</div>
+                    <div class="question-text">What does this code print?</div>
+                    <div class="code-block">let numbers = [1, 2, 3, 4, 5];
+let bigOnes = numbers.filter((n) => n > 3);
+console.log(bigOnes);</div>
+                    <input type="text" class="answer-input" placeholder="Your answer here">
+                    <button class="toggle-answer" onclick="toggleAnswer('a5-6')">Show Answer</button>
+                    <div class="answer-box" id="a5-6">
+                        <div class="answer-label">✅ Expected Answer: [4, 5]</div>
+                        <div class="answer-text">filter() keeps only numbers greater than 3. So from [1, 2, 3, 4, 5], only 4 and 5 pass the test. Result: [4, 5].</div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>📚 Chapter 0 Quiz — <strong>25 Questions Total</strong></p>
+            <p style="margin-top: 10px; font-size: 0.9em;">More quizzes for Stages 1-9 coming soon!</p>
+            <p style="margin-top: 15px;"><a href="#chapter-0" style="color: #667eea; text-decoration: none;">Back to Top ↑</a></p>
+        </div>
+    </div>
+    
+    <script>
+        function toggleAnswer(id) {
+            const answerBox = document.getElementById(id);
+            answerBox.classList.toggle('show');
+        }
+        
+        // Update progress as user scrolls
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const scrolled = (scrollTop / docHeight) * 100;
+            document.getElementById('progressFill').style.width = scrolled + '%';
+        });
+        
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

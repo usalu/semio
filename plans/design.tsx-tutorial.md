@@ -608,6 +608,43 @@ These five concepts are the foundation of ALL programming. Everything else build
 
 ---
 
+## ✅ Chapter 0 Complete — Take the Quiz!
+
+Before moving to Stage 1, test your understanding of programming fundamentals:
+
+### 📝 Chapter 0 Quiz
+- **25 questions** across 5 core concepts
+- **Mixed formats**: Multiple-choice, true/false, short code exercises
+- **Instant feedback**: See explanations for every answer
+- **Interactive**: Available as HTML page or JSON data
+
+#### Quiz Options:
+
+1. **Interactive Web Quiz** (Recommended)
+   - Open [design.tsx-tutorial-quizzes.html](design.tsx-tutorial-quizzes.html) in your browser
+   - Click "Show Answer" to reveal explanations
+   - Progress bar shows your scroll completion
+
+2. **Machine-Readable Format**
+   - Use [design.tsx-tutorial-quizzes.json](design.tsx-tutorial-quizzes.json) to build your own quiz platform
+   - JSON structure with all questions, answers, and explanations
+   - Perfect for web apps, mobile apps, or learning management systems
+
+### Quiz Breakdown:
+
+| Concept | Questions | Types |
+|---------|-----------|-------|
+| **Variables** | 5 | 3 MC, 1 T/F, 1 Code |
+| **Functions** | 5 | 2 MC, 1 T/F, 2 Code |
+| **Control Flow** | 5 | 2 MC, 1 T/F, 2 Code |
+| **Objects** | 5 | 2 MC, 1 T/F, 2 Code |
+| **Arrays** | 6 | 2 MC, 1 T/F, 3 Code |
+| **Total** | **26** | **11 MC, 5 T/F, 10 Code** |
+
+---
+
+---
+
 # 🎯 STAGE 1 — Big Picture
 
 ## What Is This Program?
