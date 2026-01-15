@@ -170,18 +170,6 @@ const FixDocument = graphql(`
   }
 `);
 
-const IntegrateDocument = graphql(`
-  mutation Integrate($source: String!, $targetSection: String!, $targetFile: String!, $targetParent: String) {
-    integrate(source: $source, targetSection: $targetSection, targetFile: $targetFile, targetParent: $targetParent) {
-      id path uri
-      sections {
-        id name path
-        range { start end }
-      }
-    }
-  }
-`);
-
 const CodebaseDocument = graphql(`
   query Codebase {
     repo {
@@ -343,18 +331,6 @@ async function fixViaGraphQL(scope?: string): Promise<FixResult | null> {
     return null;
   }
   return result.data?.fix ?? null;
-}
-
-async function integrateViaGraphQL(source: string, targetSection: string, targetFile: string, targetParent?: string): Promise<CodebaseFile | null> {
-  const client = getUrqlClient();
-  if (!client) return null;
-  // @ts-ignore - DocumentNode type mismatch in generated code
-  const result = await client.mutation(IntegrateDocument, { source, targetSection, targetFile, targetParent });
-  if (result.error) {
-    logError("[GraphQL] integrateViaGraphQL error:", result.error);
-    return null;
-  }
-  return result.data?.integrate ?? null;
 }
 
 // #endregion GraphQL Helpers
@@ -582,7 +558,7 @@ async function loadCodebase(): Promise<Codebase | null> {
         return null;
       }
 
-      
+      // Initialize missing arrays that we skipped fetching
       if (!repo.files) repo.files = [];
       if (!repo.folders) repo.folders = [];
 
@@ -595,7 +571,8 @@ async function loadCodebase(): Promise<Codebase | null> {
     const tree: TreeNodeMap = {};
 
     // Initialize tree with bundles as root items
-    forbundle.id] = { kind: "bundle", children: {} };
+    for (const bundle of repo.bundles) {
+      tree[bundle.id] = { kind: "bundle", children: {} };
     }
 
     const codebase: Codebase = { ...repo, tree };
@@ -825,9 +802,11 @@ function getActiveFileRelativePath(): string | undefined {
 function pinDiagnosticPreview(editor?: vscode.TextEditor): void {
   if (!editor) return;
   // Use setTimeout to allow VSCode to settle after opening the file from Problems panel
-  // This en() => {
+  // This ensures the tab state and diagnostics are properly updated before checking
+  setTimeout(() => {
     const currentEditor = vscode.window.activeTextEditor;
-    if (!currentEditor;
+    if (!currentEditor) return;
+    const activeTab = vscode.window.tabGroups?.activeTabGroup?.activeTab;
     if (!activeTab || !activeTab.isPreview) return;
     if (!vscode.languages.getDiagnostics(currentEditor.document.uri).some((d) => d.source === DIAGNOSTIC_SOURCE)) return;
     vscode.commands.executeCommand("workbench.action.keepEditor");
@@ -961,13 +940,15 @@ function createRepoCodeAction(document: vscode.TextDocument, diagnostic: vscode.
     const root = getWorkspaceRoot();
     if (root) {
       for (const [filePath, textEdits] of Object.entries(violation.autofix.edits)) {
-        co.file(absPath);
+        const absPath = path.join(root, filePath);
+        const uri = vscode.Uri.file(absPath);
         // Sort edits in reverse order to apply from end to start
         const sortedEdits = [...textEdits].sort((a, b) => b.start - a.start);
         for (const textEdit of sortedEdits) {
           const startPos = document.positionAt(textEdit.start);
           const endPos = document.positionAt(textEdit.end);
-          edit.replace(uri, new   }
+          edit.replace(uri, new vscode.Range(startPos, endPos), textEdit.newText);
+        }
       }
       action.edit = edit;
     }
@@ -1027,7 +1008,8 @@ function problemToDiagnostic(document: vscode.TextDocument, problem: Problem): v
   diagnostic.code = { value: problem.constraintId, target: document.uri.with({ fragment: `L${line}` }) };
   if (problem.relatedGuids && problem.relatedGuids.length > 1) {
     diagnostic.relatedInformation = problem.relatedGuids.slice(1).map((guid) => {
-      const relamation(new vscode.Location(document.uri, relatedRange), `Related entity: ${guid}`);
+      const relatedRange = findGuidRange(document, guid);
+      return new vscode.DiagnosticRelatedInformation(new vscode.Location(document.uri, relatedRange), `Related entity: ${guid}`);
     });
   }
   return diagnostic;
@@ -2087,12 +2069,14 @@ class ContributorsProvider implements vscode.TreeDataProvider<ContributorTreeIte
       if (c.contributions?.commits?.length) children.push(new ContributorCommitsItem(c, c.contributions.commits.length));
       if (c.contributions?.bundles?.length) children.push(new ContributorProjectsItem(c, c.contributions.bundles.length));
       if (c.contributions?.tickets?.length) children.push(new ContributorTicketsItem(c, c.contributions.tickets.length));
-      // Files remains separate or could be flattened too? Keeping Files separate for now aested to be flattened into root
+      // Files remains separate or could be flattened too? Keeping Files separate for now as it wasn't explicitly requested to be flattened into root
       if (c.contributions?.files?.length || c.contributions?.lines) {
         children.push(new ContributorContributionsItem(c)); // Keep this for files/lines details? 
         // User asked to show commits, tickets, bundles as child tree items. 
         // "The contributions tree should show commits, tickets, bundles as child tree items"
-        // I'll assume the c.contributions.files?.length || 0));
+        // I'll assume they displace the wrapper.
+        // But I have Codebase Item inside ContributionsItem too.
+        children.push(new ContributorCodebaseItem(c, c.contributions.files?.length || 0));
       }
 
       return children;
@@ -2100,8 +2084,15 @@ class ContributorsProvider implements vscode.TreeDataProvider<ContributorTreeIte
     if (element instanceof ContributorEmailsItem) {
       return (element.contributor.emails || []).map((email) => new ContributorEmailItem(email));
     }
-    if (element instanceof Contributries(element.contributor.links || {}).map(([kindt instanceof ContributorContributionsItem) {
-      const children: Contributormits?.length) children.push(new ContributorCommitsItem(element.contributor, c.commits.length));ush(new ContributorProjectsItem(element.contributorren.push(new ContributorTicketsItem(element.contributor, c.tickets.length));
+    if (element instanceof ContributorLinksItem) {
+      return Object.entries(element.contributor.links || {}).map(([kind, url]) => new ContributorLinkItem(kind, url));
+    }
+    if (element instanceof ContributorContributionsItem) {
+      const children: ContributorTreeItem[] = [];
+      const c = element.contributor.contributions;
+      if (c?.commits?.length) children.push(new ContributorCommitsItem(element.contributor, c.commits.length));
+      if (c?.bundles?.length) children.push(new ContributorProjectsItem(element.contributor, c.bundles.length));
+      if (c?.tickets?.length) children.push(new ContributorTicketsItem(element.contributor, c.tickets.length));
       if (c?.files?.length) children.push(new ContributorCodebaseItem(element.contributor, c.files.length));
       return children;
     }
@@ -2471,7 +2462,7 @@ class CodebaseProvider implements vscode.TreeDataProvider<CodebaseTreeItem> {
     }
 
     if (element instanceof CodebaseSectionItem) {
-      return this.buildSectionChildren(codebase, element.see);
+      return this.buildSectionChildren(codebase, element.section, element.file);
     }
 
     return [];
@@ -2505,7 +2496,8 @@ class CodebaseProvider implements vscode.TreeDataProvider<CodebaseTreeItem> {
           }
 
           let relativePath = filePath;
-          if (filePatring(bundle.root.length);
+          if (filePath.startsWith(bundle.root)) {
+            relativePath = filePath.substring(bundle.root.length);
             if (relativePath.startsWith("/") || relativePath.startsWith("\\")) relativePath = relativePath.substring(1);
           }
           const parts = relativePath.split("/");
@@ -2556,7 +2548,7 @@ class CodebaseProvider implements vscode.TreeDataProvider<CodebaseTreeItem> {
       const myPath = parentPath + "#" + s.name;
       const gqlS = {
         id: myPath,
-  e,
+        name: s.name,
         path: myPath,
         // Range is strictly lines now
         range: { start: s.startLine, end: s.endLine },
@@ -2564,7 +2556,8 @@ class CodebaseProvider implements vscode.TreeDataProvider<CodebaseTreeItem> {
       };
       result.push(gqlS);
       result = result.concat(this.flattenSections(s.children, myPath));
-   t;
+    }
+    return result;
   }
 
   private buildChildrenFromTree(codebase: Codebase, nodes: TreeNodeMap): CodebaseTreeItem[] {
@@ -2574,7 +2567,8 @@ class CodebaseProvider implements vscode.TreeDataProvider<CodebaseTreeItem> {
       switch (entry.kind) {
         case "bundle": {
           const bundle = codebase.bundles.find((b) => b.id === name);
-  ush(new CodebaseBundleItem(bundle, entry.children || {}));
+          if (bundle) {
+            items.push(new CodebaseBundleItem(bundle, entry.children || {}));
           }
           break;
         }
@@ -2585,7 +2579,8 @@ class CodebaseProvider implements vscode.TreeDataProvider<CodebaseTreeItem> {
         case "file": {
           const file = codebase.files.find((f) => f.path === entry.filePath || f.path === name || f.id === name);
           if (file) {
-            items.push(new CodebaseFileItem(file, file.path.split("/").pop     }
+            items.push(new CodebaseFileItem(file, file.path.split("/").pop() || file.path, true));
+          }
           break;
         }
       }
@@ -2622,13 +2617,22 @@ class CodebaseProvider implements vscode.TreeDataProvider<CodebaseTreeItem> {
       const inSection = rootSections.some(s => this.isDefinitionInSection(d, s));
       return !inSection;
     });
-    for (const desh(new CodebaseDefinitionItem(def, file.uri)dSectionChildren(_codebase: Codebase, section: CodebaseSec
+    for (const def of fileDefinitions) {
+      items.push(new CodebaseDefinitionItem(def, file.uri));
+    }
+
+    return items;
+  }
+
+  private buildSectionChildren(_codebase: Codebase, section: CodebaseSection, file: CodebaseFile): CodebaseTreeItem[] {
     const items: CodebaseTreeItem[] = [];
     const sectionPathWithHash = section.path + "#";
 
     const childSections = file.sections.filter((s) => {
       if (!s.path.startsWith(sectionPathWithHash)) return false;
-      const remainder = s.path.substring(sectionPathWith   });
+      const remainder = s.path.substring(sectionPathWithHash.length);
+      return !remainder.includes("#");
+    });
 
     for (const child of childSections) {
       const hasGrand = file.sections.some((s) => s.path.startsWith(child.path + "#") && s.path !== child.path);
@@ -2637,15 +2641,17 @@ class CodebaseProvider implements vscode.TreeDataProvider<CodebaseTreeItem> {
     }
 
     const sectionDefs = this.getDefinitionsForSection(file, section);
-    for (const def of sectionDefs) {e.uri));
+    for (const def of sectionDefs) {
+      items.push(new CodebaseDefinitionItem(def, file.uri));
     }
 
     return items;
   }
 
-  private isDefodebaseSection): boolean {
-    if (!def.range || !section.ines (integers)
-    const dStart = def.range.mber;
+  private isDefinitionInSection(def: CodebaseDefinition, section: CodebaseSection): boolean {
+    if (!def.range || !section.range) return false;
+    // Range is lines (integers)
+    const dStart = def.range.start as unknown as number;
     const sStart = section.range.start as unknown as number;
     const sEnd = section.range.end as unknown as number;
 
@@ -2686,7 +2692,10 @@ class CommandItem extends vscode.TreeItem {
     this.iconPath = new vscode.ThemeIcon("terminal");
     this.contextValue = "command";
     this.command = { command: "semio.openCommand", title: "Open Command", arguments: [cmd.id] };
-  } CommandInfo[] = [
+  }
+}
+
+const SIDEBAR_COMMANDS: CommandInfo[] = [
   { id: "semio.analyze", title: "Analyze Codebase" },
   { id: "semio.analyzeFile", title: "Analyze Current File" },
   { id: "semio.fix", title: "Fix Codebase Problems" },
@@ -2698,6 +2707,7 @@ class CommandItem extends vscode.TreeItem {
   { id: "semio.fileCreate", title: "Create File" },
   { id: "semio.sectionTree", title: "Show Section Tree" },
   { id: "semio.definitionList", title: "List Definitions" },
+  { id: "semio.export", title: "Export Repo to SQLite" },
   { id: "semio.refreshDiagnostics", title: "Refresh Diagnostics" },
 ];
 
@@ -3534,38 +3544,38 @@ function registerCommands(context: vscode.ExtensionContext): void {
       runRepoCommand(`section delete ${relativePath} ${sectionPath}`);
     }),
     vscode.commands.registerCommand("semio.sectionIntegrate", async () => {
-      const editor = vscode.window.activeTextEditor;
-      if (!editor) {
-        vscode.window.showErrorMessage("No active file");
-        return;
-      }
       if (!hasRepoAccess()) {
         vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
-      const targetFile = vscode.workspace.asRelativePath(editor.document.uri);
-      const sourceUris = await vscode.window.showOpenDialog({
-        canSelectFiles: true,
-        canSelectMany: false,
-        openLabel: "Select source file to integrate",
+      const source = await vscode.window.showInputBox({
+        prompt: "Enter source file path",
+        placeHolder: "path/to/source/file",
       });
-      if (!sourceUris || sourceUris.length === 0) return;
-      const root = getWorkspaceRoot();
-      const sourceFile = root ? path.relative(root, sourceUris[0].fsPath).replace(/\\/g, "/") : sourceUris[0].fsPath;
-
+      if (!source) return;
+      
       const targetSection = await vscode.window.showInputBox({
         prompt: "Enter target section name",
-        placeHolder: "MyIntegratedSection",
+        placeHolder: "TargetSectionName",
       });
       if (!targetSection) return;
 
+      const targetFile = await vscode.window.showInputBox({
+        prompt: "Enter target file path",
+        placeHolder: "path/to/target/file",
+        value: getActiveFileRelativePath() || "",
+      });
+      if (!targetFile) return;
+
       const targetParent = await vscode.window.showInputBox({
         prompt: "Enter target parent section name (optional)",
-        placeHolder: "ParentSection",
+        placeHolder: "ParentSectionName",
       });
 
-      const parentArg = targetParent ? ` ${targetParent}` : "";
-      runRepoCommand(`section integrate ${sourceFile} ${targetSection} ${targetFile}${parentArg}`);
+      const cmd = targetParent 
+        ? `section integrate "${source}" "${targetSection}" "${targetFile}" "${targetParent}"`
+        : `section integrate "${source}" "${targetSection}" "${targetFile}"`;
+      runRepoCommand(cmd);
     }),
     vscode.commands.registerCommand("semio.sectionList", async () => {
       const editor = vscode.window.activeTextEditor;

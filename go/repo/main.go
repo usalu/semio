@@ -8747,7 +8747,26 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		Name: "Autofix",
 		Fields: graphql.Fields{
 			"description": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-			"edits":       &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(fileEditType)))},
+			"edits": &graphql.Field{
+				Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(fileEditType))),
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					fix, ok := p.Source.(*Fix)
+					if !ok {
+						return []FileEdit{}, nil
+					}
+					var edits []FileEdit
+					for path, textEdits := range fix.Edits {
+						edits = append(edits, FileEdit{
+							Path:  path,
+							Edits: textEdits,
+						})
+					}
+					sort.Slice(edits, func(i, j int) bool {
+						return edits[i].Path < edits[j].Path
+					})
+					return edits, nil
+				},
+			},
 		},
 	})
 

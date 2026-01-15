@@ -31,7 +31,6 @@ updates:
     ignore:
       - dependency-name: "FluentValidation"
       - dependency-name: "System.Collections.Immutable"
-        versions: [">= 8.0.0"]
   - package-ecosystem: "nuget"
     directory: "/net/Semio.Grasshopper"
     schedule:

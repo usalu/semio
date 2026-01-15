@@ -1933,6 +1933,10 @@ pub mod sqlite {
         conn.execute_batch(include_str!("../../sql/sqlite/semio/schema.sql"))
             .map_err(|e| SemioError::Database { message: format!("Schema creation failed: {}", e) })?;
         
+        // Disable foreign key checks for bulk insert
+        conn.execute_batch("PRAGMA foreign_keys = OFF;")
+            .map_err(|e| SemioError::Database { message: format!("Failed to disable foreign keys: {}", e) })?;
+        
         let now = chrono::Utc::now().to_rfc3339();
         
         conn.execute(

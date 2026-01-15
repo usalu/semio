@@ -1,13 +1,24 @@
 # Prompt history
 
+Migrate all scripts to go/repo/main.go
+Everything that is possible should run parallel. E.g. benchmark or update can be parallelized for different ecosystems. Adjust all code, config files, remove all *.ts scripts and on scripts directly invoke the repo binary.
+
+The fix mechanism is broken.
+
+The vscode extension and the graphql schema is outdated. The go/repo/main.go is the single-source-of-truth. All commands should be available in vscode extension but not directly with the function args but with nice forms when possible. 
+
 The intregrate command is not part of the cli, mcp server and vscode extension yet.
 
 Add pandas and other data science libraries to dev dependencies of the main .venv to be able to run jupyter notebooks seamlessly.
 
+Make sure all implementations, tests and benchmarks are 100% functionally equivalent. Make sure there are nol empty cells in benchmark.csv. Extend/Change/Refactor whatever is necessary.
+All benchmarks only measure function execution time.
+@main.go@semio.go@semio_test.go @semio.test.ts@semio.ts@benchmark.ts @Semio.cs@Program.cs@Tests.cs @benchmark.py@semio.py@semio.test.py @benchmark.rs@semio.rs @benchmark.ts@benchmark.csv 
+
 The Roundtrip/Metabolism test should check for Zip -> Memory -> Zip roundtrip. Use assets/semio/metabolism.zip. Complete/Refactor/Extend/Change the implementations, tests and benchmarks until all code is 100% functionally equivalent.
 @main.go@semio.go@semio_test.go @semio.ts@semio.test.ts@benchmark.ts @Semio.cs@Program.cs@Tests.cs @benchmark.rs@semio.rs @semio.test.py@semio.py@benchmark.py 
 
-Some files are currently not tidy. This is the goal:
+The benchmark files are currently not tidy. This is the goal:
 ├─ py
 │ └─ semio
 │ │ ├─ semio.py
@@ -23,12 +34,20 @@ Some files are currently not tidy. This is the goal:
 │ │ ├─ semio.ts
 │ │ ├─ semio.test.ts
 │ │ ├─ semio.benchmark.ts
+├─ rs
+│ └─ semio
+│ │ ├─ semio.rs
+│ │ ├─ semio.benchmark.rs
 ├─ net
 │ └─ Semio
-
 │ │ ├─ Semio.cs
-│ │ ├─ Semio.csproj
-│ │ ├─ Semio.test.cs
+│ │ └─ Semio.csproj
+│ └─ Semio.Tests
+│ │ ├─ Tests.cs
+│ │ └─ Semio.Tests.csproj
+│ └─ Semio.Benchmark
+│ │ ├─ Program.cs
+│ │ └─ Semio.Benchmark.csproj
 ├─ reports
 │ └─ benchmark.csv
 

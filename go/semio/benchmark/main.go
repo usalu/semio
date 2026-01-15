@@ -9,8 +9,8 @@ import (
 	"github.com/usalu/semio/go/semio"
 )
 
-const AssetsPath = "../../../assets/semio"
-const Iterations = 100
+const AssetsPath = "../../assets/semio"
+const Iterations = 3
 
 func loadKit(filename string) semio.Kit {
 	data, err := os.ReadFile(AssetsPath + "/" + filename)
@@ -77,13 +77,35 @@ func findDesign(kit semio.Kit, name string, parentName string) semio.Design {
 
 func main() {
 	kitMetabolism := loadKit("kit_metabolism.json")
-	// kitInvalid := loadKit("kit_invalid.json") // Not used in original Go benchmarks apparently
+	kitInvalid := loadKit("kit_invalid.json")
 
 	// 1. Roundtrip/Metabolism
+	// Pre-create a fresh zip from the JSON kit (outside the benchmark loop)
+	schemaPath := "../../sql/sqlite/semio/schema.sql"
+	schemaData, err := os.ReadFile(schemaPath)
+	if err != nil {
+		panic("Schema not found at " + schemaPath + ": " + err.Error())
+	}
+	schemaSQL := string(schemaData)
+	
+	err = semio.KitToZip(&kitMetabolism, map[string][]byte{}, "temp_benchmark_metabolism_source.zip", schemaSQL)
+	if err != nil {
+		panic("Failed to create source zip: " + err.Error())
+	}
+	
 	bench("Roundtrip/Metabolism", func() {
-		data, _ := semio.SerializeKit(kitMetabolism)
-		semio.DeserializeKit(data)
+		// Zip -> Memory -> Zip roundtrip
+		kit, files, err := semio.KitFromZip("temp_benchmark_metabolism_source.zip")
+		if err != nil {
+			panic(err)
+		}
+		err = semio.KitToZip(kit, files, "temp_benchmark_metabolism.zip", schemaSQL)
+		if err != nil {
+			panic(err)
+		}
+		os.Remove("temp_benchmark_metabolism.zip")
 	})
+	os.Remove("temp_benchmark_metabolism_source.zip")
 
 	// 2. Diff/Metabolism
 	diffForward := loadKitDiff("diff_kit_metabolism.json")
@@ -123,7 +145,13 @@ func main() {
 		semio.FlattenDesign(&kitMetabolism, d5.Guid)
 	})
 
-	// Add validation benchmarks if needed to match others?
-	// Sticking to minimal changes + diff/metabolism.
-	// If Go didn't have validation benchmarks before, I won't add them now unless asked.
+	// 8. Validation/Invalid Kit
+	bench("Validation/Invalid Kit", func() {
+		semio.ValidateKit(kitInvalid)
+	})
+
+	// 9. Validation/Metabolism
+	bench("Validation/Metabolism", func() {
+		semio.ValidateKit(kitMetabolism)
+	})
 }

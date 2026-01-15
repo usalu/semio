@@ -117,12 +117,6 @@ input ContributorAddInput {
   emails: [String!]
 }
 
-input ContributorAddInput {
-  github: String!
-  name: String
-  emails: [String!]
-}
-
 # #endregion Inputs
 
 # #region Types

@@ -5899,6 +5899,9 @@ public static class ZipRoundtrip
             
             result.Kit = LoadKitFromSqlite(dbPath);
             
+            // Clear connection pools to release file handles on Windows
+            SqliteConnection.ClearAllPools();
+            
             foreach (var file in Directory.GetFiles(tempDir, "*", SearchOption.AllDirectories))
             {
                 var relativePath = file.Substring(tempDir.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Replace("\\", "/");
@@ -6049,20 +6052,27 @@ public static class ZipRoundtrip
             cmd.ExecuteNonQuery();
         }
         
+        // Disable foreign key checks for bulk insert
+        using (var cmd = connection.CreateCommand())
+        {
+            cmd.CommandText = "PRAGMA foreign_keys = OFF";
+            cmd.ExecuteNonQuery();
+        }
+        
         using (var cmd = connection.CreateCommand())
         {
             cmd.CommandText = @"INSERT INTO kit (guid, name, version, description, icon, image, preview, remote, homepage, license, created, updated)
                 VALUES (@guid, @name, @version, @description, @icon, @image, @preview, @remote, @homepage, @license, datetime('now'), datetime('now'))";
             cmd.Parameters.AddWithValue("@guid", kit.Guid);
             cmd.Parameters.AddWithValue("@name", kit.Name);
-            cmd.Parameters.AddWithValue("@version", kit.Version);
-            cmd.Parameters.AddWithValue("@description", kit.Description);
-            cmd.Parameters.AddWithValue("@icon", kit.Icon);
-            cmd.Parameters.AddWithValue("@image", kit.Image);
-            cmd.Parameters.AddWithValue("@preview", kit.Preview);
-            cmd.Parameters.AddWithValue("@remote", kit.Remote);
-            cmd.Parameters.AddWithValue("@homepage", kit.Homepage);
-            cmd.Parameters.AddWithValue("@license", kit.License);
+            cmd.Parameters.AddWithValue("@version", (object?)kit.Version ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@description", (object?)kit.Description ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@icon", (object?)kit.Icon ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@image", (object?)kit.Image ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@preview", (object?)kit.Preview ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@remote", (object?)kit.Remote ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@homepage", (object?)kit.Homepage ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@license", (object?)kit.License ?? DBNull.Value);
             cmd.ExecuteNonQuery();
         }
         
@@ -6075,13 +6085,13 @@ public static class ZipRoundtrip
             cmd.Parameters.AddWithValue("@name", t.Name);
             cmd.Parameters.AddWithValue("@parent", (object?)t.Parent?.Guid ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@isAbstract", t.IsAbstract);
-            cmd.Parameters.AddWithValue("@folder", t.Folder);
+            cmd.Parameters.AddWithValue("@folder", (object?)t.Folder ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@stock", t.Stock);
             cmd.Parameters.AddWithValue("@virtual", t.Virtual);
-            cmd.Parameters.AddWithValue("@unit", t.Unit);
-            cmd.Parameters.AddWithValue("@description", t.Description);
-            cmd.Parameters.AddWithValue("@icon", t.Icon);
-            cmd.Parameters.AddWithValue("@image", t.Image);
+            cmd.Parameters.AddWithValue("@unit", (object?)t.Unit ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@description", (object?)t.Description ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@icon", (object?)t.Icon ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@image", (object?)t.Image ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@kitGuid", kit.Guid);
             cmd.ExecuteNonQuery();
         }
@@ -6094,15 +6104,22 @@ public static class ZipRoundtrip
             cmd.Parameters.AddWithValue("@guid", d.Guid);
             cmd.Parameters.AddWithValue("@name", d.Name);
             cmd.Parameters.AddWithValue("@parent", (object?)d.Parent?.Guid ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@unit", d.Unit);
-            cmd.Parameters.AddWithValue("@folder", d.Folder);
+            cmd.Parameters.AddWithValue("@unit", (object?)d.Unit ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@folder", (object?)d.Folder ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@isAbstract", d.IsAbstract);
             cmd.Parameters.AddWithValue("@canScale", d.CanScale);
             cmd.Parameters.AddWithValue("@canMirror", d.CanMirror);
-            cmd.Parameters.AddWithValue("@description", d.Description);
-            cmd.Parameters.AddWithValue("@icon", d.Icon);
-            cmd.Parameters.AddWithValue("@image", d.Image);
+            cmd.Parameters.AddWithValue("@description", (object?)d.Description ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@icon", (object?)d.Icon ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@image", (object?)d.Image ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@kitGuid", kit.Guid);
+            cmd.ExecuteNonQuery();
+        }
+        
+        // Re-enable foreign key checks
+        using (var cmd = connection.CreateCommand())
+        {
+            cmd.CommandText = "PRAGMA foreign_keys = ON";
             cmd.ExecuteNonQuery();
         }
     }

@@ -275,6 +275,11 @@ func KitToSqlite(kit *Kit, dbPath string, schemaSQL string) error {
         return fmt.Errorf("failed to create schema: %w", err)
     }
 
+    // Disable foreign key checks for bulk insert (re-enable after)
+    if _, err := db.Exec("PRAGMA foreign_keys = OFF"); err != nil {
+        return fmt.Errorf("failed to disable foreign keys: %w", err)
+    }
+
     if _, err := db.Exec(`INSERT INTO kit (guid, name, version, description, icon, image, preview, remote, homepage, license, created, updated)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
         kit.Guid, kit.Name, kit.Version, kit.Description, kit.Icon, kit.Image, kit.Preview, kit.Remote, kit.Homepage, kit.License); err != nil {
@@ -284,9 +289,14 @@ func KitToSqlite(kit *Kit, dbPath string, schemaSQL string) error {
     for _, t := range kit.Types {
         var parentGuid *string
         if t.Parent != nil { parentGuid = &t.Parent.Guid }
+        // Handle virtual field - default to false if nil
+        virtualVal := false
+        if t.Virtual != nil { virtualVal = *t.Virtual }
+        isAbstractVal := false
+        if t.IsAbstract != nil { isAbstractVal = *t.IsAbstract }
         if _, err := db.Exec(`INSERT INTO type (guid, name, parent_guid, is_abstract, folder, stock, virtual, unit, description, icon, image, created, updated, kit_guid)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'), ?)`,
-            t.Guid, t.Name, parentGuid, t.IsAbstract, t.Folder, t.Stock, t.Virtual, t.Unit, t.Description, t.Icon, t.Image, kit.Guid); err != nil {
+            t.Guid, t.Name, parentGuid, isAbstractVal, t.Folder, t.Stock, virtualVal, t.Unit, t.Description, t.Icon, t.Image, kit.Guid); err != nil {
             return fmt.Errorf("failed to insert type %s: %w", t.Guid, err)
         }
         for _, c := range t.Connectors {
@@ -336,6 +346,11 @@ func KitToSqlite(kit *Kit, dbPath string, schemaSQL string) error {
                 return fmt.Errorf("failed to insert connection %s: %w", c.Guid, err)
             }
         }
+    }
+    
+    // Re-enable foreign key checks
+    if _, err := db.Exec("PRAGMA foreign_keys = ON"); err != nil {
+        return fmt.Errorf("failed to re-enable foreign keys: %w", err)
     }
     
     return nil

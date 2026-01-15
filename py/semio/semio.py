@@ -7436,13 +7436,13 @@ def _inverseTypeDiff(original: dict, appliedDiff: dict) -> dict:
         inverse["connectors"] = _inverseCollectionDiff(
             original.get("connectors", []),
             appliedDiff["connectors"],
-            _inversePortDiff,
+            _inverseConnectorDiff,
             "connector",
         )
     return inverse
 
 
-def _inversePortDiff(original: dict, appliedDiff: dict) -> dict:
+def _inverseConnectorDiff(original: dict, appliedDiff: dict) -> dict:
     """Compute inverse of a connector diff."""
     inverse: dict = {}
     for key in ["name", "t", "mandatory"]:
@@ -7698,14 +7698,17 @@ def import_kit(path: str) -> tuple[Kit, dict[str, bytes]]:
             raise ValueError(f"Invalid kit: .semio/kit.db not found in {path}")
 
         engine = sqlalchemy.create_engine(f"sqlite:///{db_path}")
-        with sqlmodel.Session(engine) as session:
-            kit = session.exec(sqlmodel.select(Kit)).first()
-            if not kit:
-                raise ValueError("No Kit found in database")
-            
-            # Detach kit from session by dumping to pydantic model (in-memory)
-            # dump() triggers lazy loading of all children because it iterates over them
-            kit_output = kit.dump()
+        try:
+            with sqlmodel.Session(engine) as session:
+                kit = session.exec(sqlmodel.select(Kit)).first()
+                if not kit:
+                    raise ValueError("No Kit found in database")
+                
+                # Detach kit from session by dumping to pydantic model (in-memory)
+                # dump() triggers lazy loading of all children because it iterates over them
+                kit_output = kit.dump()
+        finally:
+            engine.dispose()
             
     # Reconstruct Kit object from the dumped output (now fully in memory)
     # We use Kit.parse which handles the dictionary structure from KitOutput
@@ -7722,17 +7725,20 @@ def export_kit(kit: Kit, files: dict[str, bytes], path: str) -> None:
         db_path = os.path.join(semio_dir, "kit.db")
 
         engine = sqlalchemy.create_engine(f"sqlite:///{db_path}")
-        sqlmodel.SQLModel.metadata.create_all(engine)
+        try:
+            sqlmodel.SQLModel.metadata.create_all(engine)
 
-        with sqlmodel.Session(engine) as session:
-            # We need to add the kit to the session.
-            # Since kit is a SQLModel with relationships, adding it should cascade.
-            # However, if the kit object was created from 'parse' or 'import_kit', it might be detached or have IDs set.
-            # We want to save it as is.
-            # We merge it to ensure it's attached correctly? Or just add.
-            # Since it's a new DB, add is fine.
-            session.add(kit)
-            session.commit()
+            with sqlmodel.Session(engine) as session:
+                # We need to add the kit to the session.
+                # Since kit is a SQLModel with relationships, adding it should cascade.
+                # However, if the kit object was created from 'parse' or 'import_kit', it might be detached or have IDs set.
+                # We want to save it as is.
+                # We merge it to ensure it's attached correctly? Or just add.
+                # Since it's a new DB, add is fine.
+                session.add(kit)
+                session.commit()
+        finally:
+            engine.dispose()
 
         with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as zip_ref:
             # Add DB

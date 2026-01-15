@@ -100,10 +100,6 @@
         "title": "semio: List Tickets"
       },
       {
-        "command": "semio.ticketProgress",
-        "title": "semio: Progress Ticket"
-      },
-      {
         "command": "semio.ticketClose",
         "title": "semio: Finish Ticket",
         "icon": "$(issue-closed)"

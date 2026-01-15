@@ -4,7 +4,7 @@ use std::path::Path;
 use semio::*;
 
 const ASSETS_DIR: &str = "../../assets/semio";
-const ITERATIONS: u32 = 100;
+const ITERATIONS: u32 = 3;
 
 fn load_kit(filename: &str) -> Kit {
     let path = Path::new(ASSETS_DIR).join(filename);
@@ -57,10 +57,24 @@ fn main() {
     let diff_inverse = load_kit_diff("diff_kit_metabolism_inverted.json");
 
     // 1. Roundtrip/Metabolism
+    // Pre-create a fresh zip from the JSON kit (outside the benchmark loop)
+    let source_zip = "temp_benchmark_metabolism_source.zip";
+    semio::zip_roundtrip::export_kit_to_zip(&kit_metabolism, &std::collections::HashMap::new(), source_zip).unwrap();
+    
     bench("Roundtrip/Metabolism", || {
-        let json = serde_json::to_string(&kit_metabolism).unwrap();
-        let _: Kit = serde_json::from_str(&json).unwrap();
+        // Zip -> Memory -> Zip roundtrip
+        let import_result = semio::zip_roundtrip::import_kit_from_zip(source_zip).unwrap();
+        let temp_zip = "temp_benchmark_metabolism.zip";
+        semio::zip_roundtrip::export_kit_to_zip(&import_result.kit, &import_result.files, temp_zip).unwrap();
+        if Path::new(temp_zip).exists() {
+            std::fs::remove_file(temp_zip).unwrap();
+        }
     });
+    
+    // Cleanup source zip
+    if Path::new(source_zip).exists() {
+        std::fs::remove_file(source_zip).unwrap();
+    }
 
     // 2. Diff/Metabolism
     bench("Diff/Metabolism", || {

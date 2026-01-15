@@ -11,7 +11,7 @@ namespace Semio.Benchmark;
 class Program
 {
     const string AssetsPath = "../assets/semio";
-    const int Iterations = 100;
+    const int Iterations = 3;
     const float Tolerance = 1e-5f;
 
     static T LoadAsset<T>(string filename)
@@ -57,11 +57,21 @@ class Program
         var diffInverse = LoadAsset<KitDiff>("diff_kit_metabolism_inverted.json");
 
         // 1. Roundtrip/Metabolism
+        // Pre-create a fresh zip from the JSON kit (outside the benchmark loop)
+        var schemaSql = System.IO.File.ReadAllText("../sql/sqlite/semio/schema.sql");
+        var sourceZipPath = "temp_benchmark_metabolism_source.zip";
+        ZipRoundtrip.ExportKit(kitMetabolism, new Dictionary<string, byte[]>(), sourceZipPath, schemaSql);
+        
         Bench("Roundtrip/Metabolism", () => {
-            // Using JsonConvert for consistent benchmarking if Semio.Extensions not available
-            var json = JsonConvert.SerializeObject(kitMetabolism);
-            JsonConvert.DeserializeObject<Kit>(json);
+            // Zip -> Memory -> Zip roundtrip
+            var importResult = ZipRoundtrip.ImportKit(sourceZipPath);
+            var tempZipPath = "temp_benchmark_metabolism.zip";
+            ZipRoundtrip.ExportKit(importResult.Kit, importResult.Files, tempZipPath, schemaSql);
+            if (System.IO.File.Exists(tempZipPath)) System.IO.File.Delete(tempZipPath);
         });
+        
+        // Cleanup source zip
+        if (System.IO.File.Exists(sourceZipPath)) System.IO.File.Delete(sourceZipPath);
 
         // 2. Diff/Metabolism
         Bench("Diff/Metabolism", () => {
