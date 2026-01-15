@@ -1,41 +1,10 @@
-Language,Benchmark,Time (ms)
-TypeScript,Roundtrip/Metabolism,138.608
-TypeScript,Flatten Design/Nakagin Capsule Tower,0.088
-TypeScript,Flatten Design/Nakagin Capsule Tower/Slanted,0.033
-TypeScript,Flatten Design/Nakagin Capsule Tower/Twisted,0.033
-TypeScript,Flatten Design/Nakagin Capsule Tower/Dancing,0.033
-TypeScript,Flatten Design/Capsule Dream,4.026
-TypeScript,Validation/Invalid Kit,0.147
-TypeScript,Validation/Metabolism,1.968
-Go,Roundtrip/Metabolism,0.4862
-Go,Flatten Design/Nakagin Capsule Tower,0.0094
-Go,Flatten Design/Nakagin Capsule Tower/Slanted,0.0061
-Go,Flatten Design/Nakagin Capsule Tower/Twisted,0.0060
-Go,Flatten Design/Nakagin Capsule Tower/Dancing,0.0062
-Go,Flatten Design/Capsule Dream,0.7303
-Go,Validation/Invalid Kit,0.0137
-Go,Validation/Metabolism,0.6726
-Rust,Roundtrip/Metabolism,20.735
-Rust,Flatten Design/Nakagin Capsule Tower,0.489
-Rust,Flatten Design/Nakagin Capsule Tower/Slanted,0.491
-Rust,Flatten Design/Nakagin Capsule Tower/Twisted,0.536
-Rust,Flatten Design/Nakagin Capsule Tower/Dancing,0.502
-Rust,Flatten Design/Capsule Dream,72.879
-Rust,Validation/Invalid Kit,0.003
-Rust,Validation/Metabolism,1.438
-C#,Roundtrip/Metabolism,136.511
-C#,Flatten Design/Nakagin Capsule Tower,0.259
-C#,Flatten Design/Nakagin Capsule Tower/Slanted,0.026
-C#,Flatten Design/Nakagin Capsule Tower/Twisted,0.027
-C#,Flatten Design/Nakagin Capsule Tower/Dancing,0.028
-C#,Flatten Design/Capsule Dream,3.190
-C#,Validation/Invalid Kit,0.081
-C#,Validation/Metabolism,2.438
-Python,Roundtrip/Metabolism,0
-Python,Flatten Design/Nakagin Capsule Tower,43.152
-Python,Flatten Design/Nakagin Capsule Tower/Slanted,44.177
-Python,Flatten Design/Nakagin Capsule Tower/Twisted,43.141
-Python,Flatten Design/Nakagin Capsule Tower/Dancing,49.007
-Python,Flatten Design/Capsule Dream,956.209
-Python,Validation/Invalid Kit,0
-Python,Validation/Metabolism,0
+Benchmark,C#,Go,TypeScript,Python,Rust
+Roundtrip/Metabolism,136.511,0.4862,138.608,0,20.735
+Diff/Metabolism,,,,,
+Flatten Design/Nakagin Capsule Tower,0.259,0.0094,0.088,43.152,0.489
+Flatten Design/Nakagin Capsule Tower/Slanted,0.026,0.0061,0.033,44.177,0.491
+Flatten Design/Nakagin Capsule Tower/Twisted,0.027,0.0060,0.033,43.141,0.536
+Flatten Design/Nakagin Capsule Tower/Dancing,0.028,0.0062,0.033,49.007,0.502
+Flatten Design/Capsule Dream,3.190,0.7303,4.026,956.209,72.879
+Validation/Invalid Kit,0.081,0.0137,0.147,0,0.003
+Validation/Metabolism,2.438,0.6726,1.968,0,1.438

@@ -1,11 +1,14 @@
 // js/semio/benchmark.ts
+import DiffForward from "../../assets/semio/diff_kit_metabolism.json";
+import DiffInverse from "../../assets/semio/diff_kit_metabolism_inverted.json";
 import InvalidKit from "../../assets/semio/kit_invalid.json";
 import MetabolismKit from "../../assets/semio/kit_metabolism.json";
 import {
-    applyDesignDiff,
+    applyKitDiff,
     deserializeKit,
     flattenDesign,
     Kit,
+    KitDiff,
     serializeKit,
     validateKit
 } from "./semio.js";
@@ -36,6 +39,8 @@ function findDesign(kit: Kit, name: string, parentName?: string) {
 
 const kitMetabolism = MetabolismKit as unknown as Kit;
 const kitInvalid = InvalidKit as unknown as Kit;
+const diffForward = DiffForward as unknown as KitDiff;
+const diffInverse = DiffInverse as unknown as KitDiff;
 
 // 1. Roundtrip/Metabolism
 bench("Roundtrip/Metabolism", () => {
@@ -43,48 +48,50 @@ bench("Roundtrip/Metabolism", () => {
     deserializeKit(json);
 });
 
-// 2. Flatten Design/Nakagin Capsule Tower
-const d1 = findDesign(kitMetabolism, "Nakagin Capsule Tower");
-bench("Flatten Design/Nakagin Capsule Tower", () => {
-    const diff = flattenDesign(kitMetabolism, d1.guid);
-    applyDesignDiff(d1, diff);
+// 2. Diff/Metabolism
+bench("Diff/Metabolism", () => {
+    const k2 = applyKitDiff(kitMetabolism, diffForward);
+    applyKitDiff(k2, diffInverse);
 });
 
-// 3. Flatten Design/Nakagin Capsule Tower/Slanted
+// 3. Flatten Design/Nakagin Capsule Tower
+const d1 = findDesign(kitMetabolism, "Nakagin Capsule Tower");
+bench("Flatten Design/Nakagin Capsule Tower", () => {
+    flattenDesign(kitMetabolism, d1.guid);
+});
+
+// 4. Flatten Design/Nakagin Capsule Tower/Slanted
 // Go test logic: parent is Nakagin.
 const d2 = findDesign(kitMetabolism, "Slanted", "Nakagin Capsule Tower");
 bench("Flatten Design/Nakagin Capsule Tower/Slanted", () => {
-    const diff = flattenDesign(kitMetabolism, d2.guid);
-    applyDesignDiff(d2, diff);
+    flattenDesign(kitMetabolism, d2.guid);
 });
 
-// 4. Flatten Design/Nakagin Capsule Tower/Twisted
+// 5. Flatten Design/Nakagin Capsule Tower/Twisted
 const d3 = findDesign(kitMetabolism, "Twisted", "Nakagin Capsule Tower");
 bench("Flatten Design/Nakagin Capsule Tower/Twisted", () => {
-    const diff = flattenDesign(kitMetabolism, d3.guid);
-    applyDesignDiff(d3, diff);
+    flattenDesign(kitMetabolism, d3.guid);
 });
 
-// 5. Flatten Design/Nakagin Capsule Tower/Dancing
+// 6. Flatten Design/Nakagin Capsule Tower/Dancing
 const d4 = findDesign(kitMetabolism, "Dancing", "Nakagin Capsule Tower");
 bench("Flatten Design/Nakagin Capsule Tower/Dancing", () => {
-    const diff = flattenDesign(kitMetabolism, d4.guid);
-    applyDesignDiff(d4, diff);
+    flattenDesign(kitMetabolism, d4.guid);
 });
 
-// 6. Flatten Design/Capsule Dream
+// 7. Flatten Design/Capsule Dream
 const d5 = findDesign(kitMetabolism, "Capsule Dream");
 bench("Flatten Design/Capsule Dream", () => {
-    const diff = flattenDesign(kitMetabolism, d5.guid);
-    applyDesignDiff(d5, diff);
+    flattenDesign(kitMetabolism, d5.guid);
 });
 
-// 7. Validation/Invalid Kit
+// 8. Validation/Invalid Kit
 bench("Validation/Invalid Kit", () => {
     validateKit(kitInvalid);
 });
 
-// 8. Validation/Metabolism
+// 9. Validation/Metabolism
 bench("Validation/Metabolism", () => {
     validateKit(kitMetabolism);
 });
+

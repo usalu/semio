@@ -246,3 +246,29 @@ func TestFlattenDesignCapsuleDream(t *testing.T) {
 	loadJSON(t, "kit_metabolism.json", &kit)
 	testFlattenDesign(t, kit, []string{"Capsule Dream"})
 }
+
+func TestKitZipRoundtrip(t *testing.T) {
+	zipPath := filepath.Join(AssetsPath, "metabolism.zip")
+	
+	kit, files, err := KitFromZip(zipPath)
+	if err != nil {
+		t.Fatalf("KitFromZip failed: %v", err)
+	}
+	
+	if kit.Guid == "" {
+		t.Error("Kit GUID should not be empty")
+	}
+	if kit.Name == "" {
+		t.Error("Kit name should not be empty")
+	}
+	
+	t.Logf("Loaded kit: %s (%s) with %d types, %d designs, %d files",
+		kit.Name, kit.Guid, len(kit.Types), len(kit.Designs), len(files))
+	
+	if len(kit.Types) == 0 {
+		t.Error("Kit should have types")
+	}
+	if len(kit.Designs) == 0 {
+		t.Error("Kit should have designs")
+	}
+}

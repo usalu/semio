@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "go/repo",
-  "projectType": "library",
+  "projectType": "application",
   "scripts": {
+    "build": "go build ",
     "test": "go test -v ./...",
     "preflight": "go vet ./..."
   },

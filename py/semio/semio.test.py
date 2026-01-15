@@ -83,10 +83,15 @@ def find_design(kit: dict, name: str, parent_name: str = None) -> dict:
 
 def test_kit_serialization_roundtrip():
     kit_dict = load_kit("kit_metabolism.json")
-    kit = Kit.model_validate(kit_dict)
-    s = kit.model_dump_json()
-    kit2 = Kit.model_validate_json(s)
-    assert kit.model_dump() == kit2.model_dump()
+    kit = Kit.parse(kit_dict)
+    
+    kit_output = kit.dump()
+    kit_dict2 = kit_output.model_dump()
+    
+    kit2 = Kit.parse(kit_dict2)
+    kit_output2 = kit2.dump()
+    
+    assert kit_output.model_dump() == kit_output2.model_dump()
 
 def check_flatten(design_name: str, parent_name: str = None):
     kit_dict = load_kit("kit_metabolism.json")

@@ -1,4 +1,4 @@
-/// <reference types="@electron-forge/plugin-vite/forge-vite-env" />
+
 // #region Header
 
 // js/desktop/forge.env.d.ts

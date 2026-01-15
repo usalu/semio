@@ -1,0 +1,43 @@
+{
+  "title": "ADD-DATA-SCIENCE-DEPS",
+  "iterations": [
+    {
+      "prompt": "Add pandas and other data science libraries to dev dependencies of the main .venv to be able to run jupyter notebooks seamlessly.",
+      "llm": "claude-opus-4-5",
+      "author": "Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e",
+      "date": "2026-01-14T16:43:19.939311+01:00",
+      "commit": "82726d47abeb46fb37e42f0abb86500da4f429bc"
+    },
+    {
+      "prompt": "ipykernel and jupyter packages were missing - need to sync with --group dev flag",
+      "llm": "claude-opus-4-5",
+      "author": "Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e",
+      "date": "2026-01-14T17:07:51.8147276+01:00",
+      "commit": "82726d47abeb46fb37e42f0abb86500da4f429bc"
+    }
+  ],
+  "status": "closed",
+  "dates": {
+    "closed": "2026-01-14T17:10:11.0910514+01:00"
+  },
+  "summary": "Fixed by running uv sync --group dev to include all dev dependencies (jupyter, ipykernel, notebook, pandas, numpy, matplotlib, seaborn, scipy, scikit-learn).",
+  "files": [
+    {
+      "path": "pyproject.toml",
+      "status": "",
+      "sections": [
+        {
+          "name": "dependency-groups",
+          "range": {
+            "start": 14,
+            "end": 31
+          },
+          "lines": {
+            "added": 7,
+            "removed": 0
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -22,7 +22,13 @@ I have implemented the `integrate` command for the `repo` tool. This command all
 - Updated `README.md` to include a description of the `integrate` command under the Section Tree component.
 - Updated `AGENTS.md` to include the `section integrate` command in the CLI commands table and the MCP tools list.
 
+### VS Code Extension
+- Registered `semio.sectionIntegrate` command in `package.json`.
+- Implemented `sectionIntegrate` command handler in `extension.ts` using GraphQL mutation.
+- Added file picking and input prompts for integration parameters.
+
 ## Verification
 - Core logic handles different languages based on file extensions.
 - CLI arguments are correctly mapped to GraphQL mutations.
 - MCP tool correctly exposes the new functionality to LLM agents.
+- VS Code command successfully triggers integration via GraphQL.

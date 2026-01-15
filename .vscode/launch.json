@@ -68,6 +68,18 @@
       "console": "integratedTerminal"
     },
     {
+      "name": "benchmark",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "tsx",
+        "scripts/benchmark.ts"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
       "name": "build",
       "type": "node",
       "request": "launch",

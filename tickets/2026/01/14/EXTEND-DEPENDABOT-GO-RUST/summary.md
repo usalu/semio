@@ -1,10 +1,12 @@
 # Summary: Extend Dependabot with Go and Rust
 
-Extended the dependabot configuration to include Go and Rust package ecosystems.
-
 ## Changes
-Added 5 new package ecosystem entries to `.github/dependabot.yml`:
+Extended the dependabot configuration with:
 - **Go (gomod)**: `/go/cli`, `/go/mcp`, `/go/repo`, `/go/semio`
 - **Rust (cargo)**: `/rs/semio`
 
-All new entries use the weekly schedule consistent with existing configuration.
+## Follow-up: Stale PRs
+
+The PRs for `System.Collections.Immutable`, `Grasshopper`, `System.Drawing.Common`, and `System.Resources.Extensions` are **stale** - they were created before the ignore rules were added to the config.
+
+**Action required**: Manually close these PRs on GitHub. Dependabot does not automatically close existing PRs when ignore rules are added. Future updates for these packages will be ignored.

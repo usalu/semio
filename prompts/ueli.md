@@ -1,5 +1,57 @@
 # Prompt history
 
+The intregrate command is not part of the cli, mcp server and vscode extension yet.
+
+Add pandas and other data science libraries to dev dependencies of the main .venv to be able to run jupyter notebooks seamlessly.
+
+The Roundtrip/Metabolism test should check for Zip -> Memory -> Zip roundtrip. Use assets/semio/metabolism.zip. Complete/Refactor/Extend/Change the implementations, tests and benchmarks until all code is 100% functionally equivalent.
+@main.go@semio.go@semio_test.go @semio.ts@semio.test.ts@benchmark.ts @Semio.cs@Program.cs@Tests.cs @benchmark.rs@semio.rs @semio.test.py@semio.py@benchmark.py 
+
+Some files are currently not tidy. This is the goal:
+├─ py
+│ └─ semio
+│ │ ├─ semio.py
+│ │ ├─ semio.test.py
+│ │ ├─ semio.benchmark.py
+├─ go
+│ └─ semio
+│ │ ├─ semio.go
+│ │ ├─ semio_test.go
+│ │ ├─ semio_benchmark.go
+├─ js
+│ └─ semio
+│ │ ├─ semio.ts
+│ │ ├─ semio.test.ts
+│ │ ├─ semio.benchmark.ts
+├─ net
+│ └─ Semio
+
+│ │ ├─ Semio.cs
+│ │ ├─ Semio.csproj
+│ │ ├─ Semio.test.cs
+├─ reports
+│ └─ benchmark.csv
+
+Previously the semio-repo go implementation was written in go/repo/repo.go, go/cli/main.go, go/mcp/main.go. A consolidation into go/repo/main.go with a single executable was started. Finish it, get tests, mcp server, vscode extension running again and update all config files.
+
+Investigate why the rust implementation is so slow in the benchmark for flattening. Refactor/change/extend everything necessary to get it performant (it should be faster than go). The benchmarks should only measure the exection time of the same function call. It should not apply the diff and only measure how long it takes to compute the diff for all implementations.
+
+The fix mechanism is currently serializing edits to fix the issues. This works for individual fixes but not when fixing multiple violations. Fixes should not be serialized but applied directly only by the function that fixes the violationKind. 
+Adjust repo, cli, mcp and vscode extension.
+C:\git\semio.tech\semio\go\cli\main.go
+C:\git\semio.tech\semio\go\mcp\main.go
+C:\git\semio.tech\semio\go\repo\repo.go
+C:\git\semio.tech\semio\js\vscode\extension.ts
+
+Currently we have a code-first approach where semio.py generates the graphql schema, the sqlite schema and the jsonschema.
+Change to a schema-first approach where the schemas are manually created/updated and the code is implementing the contract.
+Remove the orm from semio.py and 
+
+ should no longer
+
+A new semio-repo discord bot should be created.
+The repo cli should send a message to a discord bot when a ticket is created, closed, reopened. The summary
+
 Currently all plane operations are performed by Rhino in Semio.Grasshopper. Make Semio.cs independent of Rhino like semio.ts, semio.go, semio.rs, semio.py. It should comply with the same tests.
 
 Ticket ranges should just be ranges of lines with ints. No character, no column, etc.
@@ -20,7 +72,9 @@ work with:
   "end": 80
 },
 
-The Diff/Metabolism test should be added (and benchmarked). See `assets/semio/`. It should use the metabolism kit and apply the diff to it, check that the result is the diffed metabolism kit and then apply the inverted diff to the diffed metabolism kit and check that the result is the original metabolism kit. All benchmarks simply do the operations without checking the results in between.
+- The Diff/Metabolism test should be added (and benchmarked). See `assets/semio/`. It should use the metabolism kit and apply the diff to it, check that the result is the diffed metabolism kit and then apply the inverted diff to the diffed metabolism kit and check that the result is the original metabolism kit. All benchmarks simply do the operations without checking the results in between.
+- The Flatten Algorithm in C# should be part of Semio.cs and no longer depend on Rhino (move it out from benchmark).
+- The benchmark.csv should be this structure with test and languages as columns and benchmarks as rows:
 
 All tests should be identical accross all implementations (Typescript, Python, C#, Go, Rust). Remove all other tests and refactor/extend for all test suites to be identical.
 Additionally there should be a new script: benchmark
@@ -44,6 +98,12 @@ Finish semio.py and engine.py. semio.py should have the same functionality as se
 Create a standalone package for semio and extract all non engine related code from it. semio.py should have the same functionality as semio.ts, semio.go, semio.rs, Semio.cs
 
 Currently the monorepo is being developed on Windows machines. The whole repo, all scripts, the vscode extension, all compilers, linters, formatters, etc should be migrated to one devcontainer.
+
+I still get:
+Bump System.Collections.Immutable from 7.0.0 to 10.0.2
+Bump Grasshopper from 8.10.24226.13001 to 8.26.25349.19001
+Bump System.Drawing.Common from 7.0.0 to 10.0.2
+Bump System.Resources.Extensions from 7.0.0 to 10.0.2
 
 Extend dependabot with go and rust
 

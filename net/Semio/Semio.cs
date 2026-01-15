@@ -41,9 +41,12 @@ using System.Drawing;
 using System.Globalization;
 using System.Net;
 using System.Net.Http;
+using System.Numerics;
 using System.Reflection;
 using System.Text;
 using System.Xml;
+using System.IO.Compression;
+using Microsoft.Data.Sqlite;
 using FluentValidation;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -4406,6 +4409,148 @@ public class Design : Entity<Design>
 
         return this;
     }
+
+    public Design Flatten(IEnumerable<Type> types) => Flatten(types, DefaultComputeChildPlane);
+    
+    public static Plane DefaultComputeChildPlane(
+        Plane parentPlane, 
+        Point parentPoint, 
+        Vector parentDirection, 
+        Point childPoint, 
+        Vector childDirection, 
+        float gap, 
+        float shift, 
+        float rise, 
+        float rotation, 
+        float turn, 
+        float tilt)
+    {
+        var pMatrix = PlaneToMatrix(parentPlane); 
+        
+        var pPoint = new System.Numerics.Vector3((float)parentPoint.X, (float)parentPoint.Y, (float)parentPoint.Z); 
+        var pDir = System.Numerics.Vector3.Normalize(new System.Numerics.Vector3((float)parentDirection.X, (float)parentDirection.Y, (float)parentDirection.Z));
+        var cPoint = new System.Numerics.Vector3((float)childPoint.X, (float)childPoint.Y, (float)childPoint.Z);
+        var cDir = System.Numerics.Vector3.Normalize(new System.Numerics.Vector3((float)childDirection.X, (float)childDirection.Y, (float)childDirection.Z));
+
+        var rotationRad = DegreesToRadians(rotation);
+        var turnRad = DegreesToRadians(turn);
+        var tiltRad = DegreesToRadians(tilt);
+
+        var reverseChildDirection = -cDir;
+
+        System.Numerics.Quaternion alignQuat;
+        var cross = System.Numerics.Vector3.Cross(pDir, reverseChildDirection);
+        if (cross.LengthSquared() < 0.0001f) 
+        {
+            if (Math.Abs(pDir.Z) < 1e-5f)
+            {
+                 alignQuat = System.Numerics.Quaternion.CreateFromAxisAngle(System.Numerics.Vector3.UnitZ, (float)Math.PI);
+            }
+            else
+            {
+                 var axis = System.Numerics.Vector3.Normalize(System.Numerics.Vector3.Cross(System.Numerics.Vector3.UnitZ, pDir));
+                 alignQuat = System.Numerics.Quaternion.CreateFromAxisAngle(axis, (float)Math.PI);
+            }
+        }
+        else
+        {
+            alignQuat = CreateFromTwoVectors(reverseChildDirection, pDir);
+        }
+
+        var directionT = System.Numerics.Matrix4x4.CreateFromQuaternion(alignQuat);
+        
+        var yAxis = System.Numerics.Vector3.UnitY;
+        var parentConnectorQuat = CreateFromTwoVectors(yAxis, pDir);
+        var parentRotationT = System.Numerics.Matrix4x4.CreateFromQuaternion(parentConnectorQuat);
+
+        var gapDirection = System.Numerics.Vector3.Transform(System.Numerics.Vector3.UnitY, parentRotationT);
+        var shiftDirection = System.Numerics.Vector3.Transform(System.Numerics.Vector3.UnitX, parentRotationT);
+        var raiseDirection = System.Numerics.Vector3.Transform(System.Numerics.Vector3.UnitZ, parentRotationT);
+        var turnAxis = System.Numerics.Vector3.Transform(System.Numerics.Vector3.UnitZ, parentRotationT);
+        var tiltAxis = System.Numerics.Vector3.Transform(System.Numerics.Vector3.UnitX, parentRotationT);
+
+        var orientationT = directionT;
+        var rotateT = System.Numerics.Matrix4x4.CreateFromAxisAngle(pDir, -rotationRad);
+        orientationT = orientationT * rotateT;
+
+        turnAxis = System.Numerics.Vector3.Transform(turnAxis, rotateT);
+        tiltAxis = System.Numerics.Vector3.Transform(tiltAxis, rotateT);
+
+        var turnT = System.Numerics.Matrix4x4.CreateFromAxisAngle(turnAxis, turnRad);
+        orientationT = orientationT * turnT;
+
+        var tiltT = System.Numerics.Matrix4x4.CreateFromAxisAngle(tiltAxis, tiltRad);
+        orientationT = orientationT * tiltT;
+
+        var centerChildT = System.Numerics.Matrix4x4.CreateTranslation(-cPoint);
+        
+        var transform = centerChildT * orientationT; 
+
+        var translationVec = (gapDirection * gap) + (shiftDirection * shift) + (raiseDirection * rise);
+        var translationT = System.Numerics.Matrix4x4.CreateTranslation(translationVec);
+
+        transform = transform * translationT; 
+
+        var moveToParentT = System.Numerics.Matrix4x4.CreateTranslation(pPoint);
+        transform = transform * moveToParentT; 
+
+        var finalMatrix = transform * pMatrix; 
+
+        return MatrixToPlane(finalMatrix);
+    }
+
+    private static float DegreesToRadians(float deg) => deg * (float)Math.PI / 180f;
+
+    private static System.Numerics.Quaternion CreateFromTwoVectors(System.Numerics.Vector3 u, System.Numerics.Vector3 v)
+    {
+        float dot = System.Numerics.Vector3.Dot(u, v);
+        if (dot > 0.999999f) return System.Numerics.Quaternion.Identity;
+        if (dot < -0.999999f)
+        {
+            var axis = System.Numerics.Vector3.Cross(System.Numerics.Vector3.UnitX, u);
+            if (axis.LengthSquared() < 0.001f)
+                axis = System.Numerics.Vector3.Cross(System.Numerics.Vector3.UnitY, u);
+            axis = System.Numerics.Vector3.Normalize(axis);
+            return System.Numerics.Quaternion.CreateFromAxisAngle(axis, (float)Math.PI);
+        }
+
+        var axisNorm = System.Numerics.Vector3.Cross(u, v);
+        var q = new System.Numerics.Quaternion(axisNorm.X, axisNorm.Y, axisNorm.Z, 1 + dot);
+        return System.Numerics.Quaternion.Normalize(q);
+    }
+
+    private static System.Numerics.Matrix4x4 PlaneToMatrix(Plane p)
+    {
+        var origin = new System.Numerics.Vector3((float)p.Origin.X, (float)p.Origin.Y, (float)p.Origin.Z);
+        var x = System.Numerics.Vector3.Normalize(new System.Numerics.Vector3((float)p.XAxis.X, (float)p.XAxis.Y, (float)p.XAxis.Z));
+        var yRaw = new System.Numerics.Vector3((float)p.YAxis.X, (float)p.YAxis.Y, (float)p.YAxis.Z);
+        
+        var z = System.Numerics.Vector3.Normalize(System.Numerics.Vector3.Cross(x, yRaw));
+        var y = System.Numerics.Vector3.Normalize(System.Numerics.Vector3.Cross(z, x));
+
+        // Use strict column/row mapping based on testing. Reference was: x, y, z, origin for rows 1,2,3,4
+        return new System.Numerics.Matrix4x4(
+            x.X, x.Y, x.Z, 0,
+            y.X, y.Y, y.Z, 0,
+            z.X, z.Y, z.Z, 0,
+            origin.X, origin.Y, origin.Z, 1
+        );
+    }
+
+    private static Plane MatrixToPlane(System.Numerics.Matrix4x4 m)
+    {
+        var x = new System.Numerics.Vector3(m.M11, m.M12, m.M13);
+        var y = new System.Numerics.Vector3(m.M21, m.M22, m.M23);
+        var origin = new System.Numerics.Vector3(m.M41, m.M42, m.M43);
+
+        return new Plane
+        {
+            Origin = new Point { X = origin.X, Y = origin.Y, Z = origin.Z },
+            XAxis = new Vector { X = x.X, Y = x.Y, Z = x.Z },
+            YAxis = new Vector { X = y.X, Y = y.Y, Z = y.Z }
+        };
+    }
+
     public Design Sort()
     {
         var sortedPieces = new List<Piece>();
@@ -5727,6 +5872,243 @@ public class ServerException : Exception
 }
 
 #endregion Api
+
+#region ZipRoundtrip
+
+public class KitImportResult
+{
+    public Kit Kit { get; set; } = new();
+    public Dictionary<string, byte[]> Files { get; set; } = new();
+}
+
+public static class ZipRoundtrip
+{
+    public static KitImportResult ImportKit(string zipPath)
+    {
+        var result = new KitImportResult();
+        var tempDir = Path.Combine(Path.GetTempPath(), $"semio-kit-{Guid.NewGuid()}");
+        Directory.CreateDirectory(tempDir);
+        
+        try
+        {
+            ZipFile.ExtractToDirectory(zipPath, tempDir);
+            
+            var dbPath = Path.Combine(tempDir, ".semio", "kit.db");
+            if (!System.IO.File.Exists(dbPath))
+                throw new FileNotFoundException("kit.db not found in zip");
+            
+            result.Kit = LoadKitFromSqlite(dbPath);
+            
+            foreach (var file in Directory.GetFiles(tempDir, "*", SearchOption.AllDirectories))
+            {
+                var relativePath = file.Substring(tempDir.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Replace("\\", "/");
+                if (!relativePath.StartsWith(".semio/"))
+                    result.Files[relativePath] = System.IO.File.ReadAllBytes(file);
+            }
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+                Directory.Delete(tempDir, true);
+        }
+        
+        return result;
+    }
+
+    public static void ExportKit(Kit kit, Dictionary<string, byte[]> files, string zipPath, string schemaSQL)
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), $"semio-kit-{Guid.NewGuid()}");
+        Directory.CreateDirectory(tempDir);
+        
+        try
+        {
+            var semioDir = Path.Combine(tempDir, ".semio");
+            Directory.CreateDirectory(semioDir);
+            var dbPath = Path.Combine(semioDir, "kit.db");
+            
+            SaveKitToSqlite(kit, dbPath, schemaSQL);
+            
+            foreach (var kvp in files)
+            {
+                var fullPath = Path.Combine(tempDir, kvp.Key);
+                var dir = Path.GetDirectoryName(fullPath);
+                if (!string.IsNullOrEmpty(dir))
+                    Directory.CreateDirectory(dir);
+                System.IO.File.WriteAllBytes(fullPath, kvp.Value);
+            }
+            
+            if (System.IO.File.Exists(zipPath))
+                System.IO.File.Delete(zipPath);
+            ZipFile.CreateFromDirectory(tempDir, zipPath);
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+                Directory.Delete(tempDir, true);
+        }
+    }
+
+    private static Kit LoadKitFromSqlite(string dbPath)
+    {
+        using var connection = new SqliteConnection($"Data Source={dbPath}");
+        connection.Open();
+        
+        var kit = new Kit();
+        
+        using (var cmd = connection.CreateCommand())
+        {
+            cmd.CommandText = "SELECT guid, name, version, description, icon, image, preview, remote, homepage, license FROM kit LIMIT 1";
+            using var reader = cmd.ExecuteReader();
+            if (reader.Read())
+            {
+                kit.Guid = reader.GetString(0);
+                kit.Name = reader.GetString(1);
+                kit.Version = reader.IsDBNull(2) ? "" : reader.GetString(2);
+                kit.Description = reader.IsDBNull(3) ? "" : reader.GetString(3);
+                kit.Icon = reader.IsDBNull(4) ? "" : reader.GetString(4);
+                kit.Image = reader.IsDBNull(5) ? "" : reader.GetString(5);
+                kit.Preview = reader.IsDBNull(6) ? "" : reader.GetString(6);
+                kit.Remote = reader.IsDBNull(7) ? "" : reader.GetString(7);
+                kit.Homepage = reader.IsDBNull(8) ? "" : reader.GetString(8);
+                kit.License = reader.IsDBNull(9) ? "" : reader.GetString(9);
+            }
+        }
+        
+        kit.Types = LoadTypes(connection, kit.Guid);
+        kit.Designs = LoadDesigns(connection, kit.Guid);
+        
+        return kit;
+    }
+
+    private static List<Type> LoadTypes(SqliteConnection connection, string kitGuid)
+    {
+        var types = new List<Type>();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT guid, name, parent_guid, is_abstract, folder, stock, virtual, unit, description, icon, image FROM type WHERE kit_guid = @kitGuid";
+        cmd.Parameters.AddWithValue("@kitGuid", kitGuid);
+        
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            var t = new Type
+            {
+                Guid = reader.GetString(0),
+                Name = reader.GetString(1),
+                Parent = reader.IsDBNull(2) ? null : new TypeId { Guid = reader.GetString(2) },
+                IsAbstract = !reader.IsDBNull(3) && reader.GetBoolean(3),
+                Folder = reader.IsDBNull(4) ? "" : reader.GetString(4),
+                Stock = reader.IsDBNull(5) ? 0 : reader.GetInt32(5),
+                Virtual = !reader.IsDBNull(6) && reader.GetBoolean(6),
+                Unit = reader.IsDBNull(7) ? "" : reader.GetString(7),
+                Description = reader.IsDBNull(8) ? "" : reader.GetString(8),
+                Icon = reader.IsDBNull(9) ? "" : reader.GetString(9),
+                Image = reader.IsDBNull(10) ? "" : reader.GetString(10)
+            };
+            types.Add(t);
+        }
+        return types;
+    }
+
+    private static List<Design> LoadDesigns(SqliteConnection connection, string kitGuid)
+    {
+        var designs = new List<Design>();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT guid, name, parent_guid, unit, folder, is_abstract, can_scale, can_mirror, description, icon, image FROM design WHERE kit_guid = @kitGuid";
+        cmd.Parameters.AddWithValue("@kitGuid", kitGuid);
+        
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            var d = new Design
+            {
+                Guid = reader.GetString(0),
+                Name = reader.GetString(1),
+                Parent = reader.IsDBNull(2) ? null : new DesignId { Guid = reader.GetString(2) },
+                Unit = reader.IsDBNull(3) ? "" : reader.GetString(3),
+                Folder = reader.IsDBNull(4) ? "" : reader.GetString(4),
+                IsAbstract = !reader.IsDBNull(5) && reader.GetBoolean(5),
+                CanScale = reader.IsDBNull(6) || reader.GetBoolean(6),
+                CanMirror = reader.IsDBNull(7) || reader.GetBoolean(7),
+                Description = reader.IsDBNull(8) ? "" : reader.GetString(8),
+                Icon = reader.IsDBNull(9) ? "" : reader.GetString(9),
+                Image = reader.IsDBNull(10) ? "" : reader.GetString(10)
+            };
+            designs.Add(d);
+        }
+        return designs;
+    }
+
+    private static void SaveKitToSqlite(Kit kit, string dbPath, string schemaSQL)
+    {
+        using var connection = new SqliteConnection($"Data Source={dbPath}");
+        connection.Open();
+        
+        using (var cmd = connection.CreateCommand())
+        {
+            cmd.CommandText = schemaSQL;
+            cmd.ExecuteNonQuery();
+        }
+        
+        using (var cmd = connection.CreateCommand())
+        {
+            cmd.CommandText = @"INSERT INTO kit (guid, name, version, description, icon, image, preview, remote, homepage, license, created, updated)
+                VALUES (@guid, @name, @version, @description, @icon, @image, @preview, @remote, @homepage, @license, datetime('now'), datetime('now'))";
+            cmd.Parameters.AddWithValue("@guid", kit.Guid);
+            cmd.Parameters.AddWithValue("@name", kit.Name);
+            cmd.Parameters.AddWithValue("@version", kit.Version);
+            cmd.Parameters.AddWithValue("@description", kit.Description);
+            cmd.Parameters.AddWithValue("@icon", kit.Icon);
+            cmd.Parameters.AddWithValue("@image", kit.Image);
+            cmd.Parameters.AddWithValue("@preview", kit.Preview);
+            cmd.Parameters.AddWithValue("@remote", kit.Remote);
+            cmd.Parameters.AddWithValue("@homepage", kit.Homepage);
+            cmd.Parameters.AddWithValue("@license", kit.License);
+            cmd.ExecuteNonQuery();
+        }
+        
+        foreach (var t in kit.Types)
+        {
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = @"INSERT INTO type (guid, name, parent_guid, is_abstract, folder, stock, virtual, unit, description, icon, image, created, updated, kit_guid)
+                VALUES (@guid, @name, @parent, @isAbstract, @folder, @stock, @virtual, @unit, @description, @icon, @image, datetime('now'), datetime('now'), @kitGuid)";
+            cmd.Parameters.AddWithValue("@guid", t.Guid);
+            cmd.Parameters.AddWithValue("@name", t.Name);
+            cmd.Parameters.AddWithValue("@parent", (object?)t.Parent?.Guid ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@isAbstract", t.IsAbstract);
+            cmd.Parameters.AddWithValue("@folder", t.Folder);
+            cmd.Parameters.AddWithValue("@stock", t.Stock);
+            cmd.Parameters.AddWithValue("@virtual", t.Virtual);
+            cmd.Parameters.AddWithValue("@unit", t.Unit);
+            cmd.Parameters.AddWithValue("@description", t.Description);
+            cmd.Parameters.AddWithValue("@icon", t.Icon);
+            cmd.Parameters.AddWithValue("@image", t.Image);
+            cmd.Parameters.AddWithValue("@kitGuid", kit.Guid);
+            cmd.ExecuteNonQuery();
+        }
+        
+        foreach (var d in kit.Designs)
+        {
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = @"INSERT INTO design (guid, name, parent_guid, unit, folder, is_abstract, can_scale, can_mirror, description, icon, image, created, updated, kit_guid)
+                VALUES (@guid, @name, @parent, @unit, @folder, @isAbstract, @canScale, @canMirror, @description, @icon, @image, datetime('now'), datetime('now'), @kitGuid)";
+            cmd.Parameters.AddWithValue("@guid", d.Guid);
+            cmd.Parameters.AddWithValue("@name", d.Name);
+            cmd.Parameters.AddWithValue("@parent", (object?)d.Parent?.Guid ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@unit", d.Unit);
+            cmd.Parameters.AddWithValue("@folder", d.Folder);
+            cmd.Parameters.AddWithValue("@isAbstract", d.IsAbstract);
+            cmd.Parameters.AddWithValue("@canScale", d.CanScale);
+            cmd.Parameters.AddWithValue("@canMirror", d.CanMirror);
+            cmd.Parameters.AddWithValue("@description", d.Description);
+            cmd.Parameters.AddWithValue("@icon", d.Icon);
+            cmd.Parameters.AddWithValue("@image", d.Image);
+            cmd.Parameters.AddWithValue("@kitGuid", kit.Guid);
+            cmd.ExecuteNonQuery();
+        }
+    }
+}
+
+#endregion ZipRoundtrip
 
 #endregion Entitying
 

@@ -30,7 +30,7 @@ function parseOutput(lang: string, output: string) {
     const trimmed = line.trim();
     if (!trimmed) continue;
     const parts = trimmed.split(",");
-    if (parts.length === 2) {
+    if (parts.length === 2 && !parts[0].includes("warning") && !parts[0].includes(":") && !parts[0].includes(path.sep)) {
       RESULTS.push({
         test: parts[0],
         lang: lang,

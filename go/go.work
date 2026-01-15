@@ -1,8 +1,6 @@
 go 1.24.0
 
 use (
-	./cli
-	./mcp
 	./repo
 	./semio
 )

@@ -217,6 +217,10 @@
         "icon": "$(trash)"
       },
       {
+        "command": "semio.sectionIntegrate",
+        "title": "semio: Integrate Source Into Section"
+      },
+      {
         "command": "semio.definitionList",
         "title": "semio: List Definitions"
       },

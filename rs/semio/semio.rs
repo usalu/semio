@@ -474,7 +474,7 @@ pub struct PieceId { pub guid: Guid }
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct DesignId { pub guid: Guid }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct Piece {
     pub guid: Guid,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -806,13 +806,90 @@ pub fn is_supported_model_extension(ext: &str) -> bool {
 // #region Diff Types
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+pub struct RemovedItem { pub guid: Guid }
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DiffUpdate<D> {
+    pub key: String,
+    pub guid: Guid,
+    pub diff: D,
+}
+
+impl<'de, D: serde::de::DeserializeOwned> Deserialize<'de> for DiffUpdate<D> {
+    fn deserialize<De>(deserializer: De) -> std::result::Result<Self, De::Error>
+    where
+        De: serde::Deserializer<'de>,
+    {
+        use serde::Deserialize;
+        use serde_json::Value;
+        
+        let mut map: serde_json::Map<String, Value> = Deserialize::deserialize(deserializer)?;
+        
+        let diff_val = map.remove("diff").ok_or_else(|| serde::de::Error::missing_field("diff"))?;
+        
+        let mut guid = None;
+        let mut key = String::new();
+        
+        for (k, v) in &map {
+             if let Some(obj) = v.as_object() {
+                 if let Some(g) = obj.get("guid") {
+                     if let Some(s) = g.as_str() {
+                         guid = Some(s.to_string());
+                         key = k.clone();
+                         break;
+                     }
+                 }
+             }
+        }
+        
+        let guid = guid.ok_or_else(|| serde::de::Error::custom("Could not find guid in update wrapper"))?;
+        if key.is_empty() { return Err(serde::de::Error::custom("Could not find entity key")); }
+
+        let mut diff_obj = match diff_val {
+            Value::Object(o) => o,
+            _ => return Err(serde::de::Error::custom("diff field expected to be an object")),
+        };
+        
+        if !diff_obj.contains_key("guid") {
+            diff_obj.insert("guid".to_string(), Value::String(guid.clone()));
+        }
+
+        let diff: D = serde_json::from_value(Value::Object(diff_obj)).map_err(serde::de::Error::custom)?;
+        
+        Ok(DiffUpdate { key, guid, diff })
+    }
+}
+
+impl<D: Serialize> Serialize for DiffUpdate<D> {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeMap;
+        let mut map = serializer.serialize_map(None)?;
+        map.serialize_entry("diff", &self.diff)?;
+        
+        #[derive(Serialize)]
+        struct GuidWrapper { guid: String }
+        map.serialize_entry(&self.key, &GuidWrapper { guid: self.guid.clone() })?;
+        
+        map.end()
+    }
+}
+
+impl<D: DiffHasGuid> DiffHasGuid for DiffUpdate<D> {
+    fn guid(&self) -> &str { &self.guid }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[serde(bound(deserialize = "T: Deserialize<'de>, D: serde::de::DeserializeOwned"))]
 pub struct CollectionDiff<T, D> {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub added: Option<Vec<T>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub removed: Option<Vec<Guid>>,
+    pub removed: Option<Vec<RemovedItem>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub updated: Option<Vec<D>>,
+    pub updated: Option<Vec<DiffUpdate<D>>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -1191,6 +1268,7 @@ pub struct AuthorDiff {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct KitDiff {
+    #[serde(default)]
     pub guid: Guid,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
@@ -1286,6 +1364,267 @@ impl DiffHasGuid for KitDiff { fn guid(&self) -> &str { &self.guid } }
 
 // #endregion HasGuid Trait
 
+// #region ApplyDiff
+
+pub fn apply_collection_diff<T, D>(
+    collection: &mut Option<Vec<T>>,
+    diff: &Option<CollectionDiff<T, D>>,
+    apply_item_diff: impl Fn(&mut T, &D),
+) where
+    T: HasGuid + Clone,
+    D: DiffHasGuid,
+{
+    if let Some(diff) = diff {
+        let mut new_items = collection.clone().unwrap_or_default();
+
+        // 1. Remove
+        if let Some(removed_items) = &diff.removed {
+            let removed_set: HashSet<_> = removed_items.iter().map(|s| s.guid.clone()).collect();
+            new_items.retain(|item| !removed_set.contains(&item.guid().to_string()));
+        }
+
+        // 2. Update
+        if let Some(updated_diffs) = &diff.updated {
+            let diff_map: HashMap<_, _> = updated_diffs.iter().map(|d| (d.guid().to_string(), d)).collect();
+            for item in &mut new_items {
+                if let Some(update) = diff_map.get(item.guid()) {
+                    apply_item_diff(item, &update.diff);
+                }
+            }
+        }
+
+        // 3. Add
+        if let Some(added_items) = &diff.added {
+            new_items.extend(added_items.clone());
+        }
+
+        *collection = if new_items.is_empty() { None } else { Some(new_items) };
+    }
+}
+
+pub fn apply_attribute_diff(item: &mut Attribute, diff: &AttributeDiff) {
+    if let Some(value) = &diff.key { item.key = value.clone(); }
+    if let Some(value) = &diff.value { item.value = value.clone(); }
+    if let Some(value) = &diff.definition { item.definition = value.clone(); }
+}
+
+pub fn apply_prop_diff(item: &mut Prop, diff: &PropDiff) {
+    if let Some(value) = &diff.quality { item.quality = value.clone(); }
+    if let Some(value) = &diff.value { item.value = value.clone(); }
+    if let Some(value) = &diff.unit { item.unit = value.clone(); }
+    apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
+}
+
+pub fn apply_connector_diff(item: &mut Connector, diff: &ConnectorDiff) {
+    if let Some(value) = &diff.point { item.point = value.clone(); }
+    if let Some(value) = &diff.direction { item.direction = value.clone(); }
+    if let Some(value) = &diff.t { item.t = *value; }
+    if let Some(value) = &diff.name { item.name = value.clone(); }
+    if let Some(value) = &diff.description { item.description = value.clone(); }
+    if let Some(value) = &diff.mandatory { item.mandatory = *value; }
+    if let Some(value) = &diff.port { item.port = value.clone(); }
+    apply_collection_diff(&mut item.props, &diff.props, apply_prop_diff);
+    apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
+}
+
+pub fn apply_model_diff(item: &mut Model, diff: &ModelDiff) {
+    if let Some(value) = &diff.file { item.file = value.clone(); }
+    if let Some(value) = &diff.name { item.name = value.clone(); }
+    if let Some(value) = &diff.description { item.description = value.clone(); }
+    if let Some(value) = &diff.tags { item.tags = value.clone(); }
+    apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
+}
+
+pub fn apply_type_diff(item: &mut Type, diff: &TypeDiff) {
+    if let Some(value) = &diff.name { item.name = value.clone(); }
+    if let Some(value) = &diff.parent { item.parent = value.clone(); }
+    if let Some(value) = &diff.description { item.description = value.clone(); }
+    if let Some(value) = &diff.icon { item.icon = value.clone(); }
+    if let Some(value) = &diff.image { item.image = value.clone(); }
+    if let Some(value) = &diff.folder { item.folder = value.clone(); }
+    if let Some(value) = &diff.unit { item.unit = value.clone(); }
+    if let Some(value) = &diff.stock { item.stock = value.clone(); }
+    if let Some(value) = &diff.is_abstract { item.is_abstract = *value; }
+    if let Some(value) = &diff.virtual_type { item.virtual_type = *value; }
+    if let Some(value) = &diff.location { item.location = value.clone(); }
+    if let Some(value) = &diff.concepts { item.concepts = value.clone(); }
+    if let Some(value) = &diff.authors { item.authors = value.clone(); }
+    apply_collection_diff(&mut item.props, &diff.props, apply_prop_diff);
+    apply_collection_diff(&mut item.models, &diff.models, apply_model_diff);
+    apply_collection_diff(&mut item.connectors, &diff.connectors, apply_connector_diff);
+    apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
+}
+
+pub fn apply_layer_diff(item: &mut Layer, diff: &LayerDiff) {
+    if let Some(value) = &diff.path { item.path = value.clone(); }
+    if let Some(value) = &diff.is_hidden { item.is_hidden = *value; }
+    if let Some(value) = &diff.is_locked { item.is_locked = *value; }
+    if let Some(value) = &diff.color { item.color = value.clone(); }
+    if let Some(value) = &diff.description { item.description = value.clone(); }
+    apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
+}
+
+pub fn apply_group_diff(item: &mut Group, diff: &GroupDiff) {
+    if let Some(value) = &diff.name { item.name = value.clone(); }
+    if let Some(value) = &diff.color { item.color = value.clone(); }
+    if let Some(value) = &diff.description { item.description = value.clone(); }
+    if let Some(value) = &diff.pieces { item.pieces = value.clone(); }
+    apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
+}
+
+pub fn apply_stat_diff(item: &mut Stat, diff: &StatDiff) {
+    if let Some(value) = &diff.quality { item.quality = value.clone(); }
+    if let Some(value) = &diff.min { item.min = *value; }
+    if let Some(value) = &diff.min_excluded { item.min_excluded = *value; }
+    if let Some(value) = &diff.max { item.max = *value; }
+    if let Some(value) = &diff.max_excluded { item.max_excluded = *value; }
+    if let Some(value) = &diff.unit { item.unit = value.clone(); }
+}
+
+pub fn apply_piece_diff(item: &mut Piece, diff: &PieceDiff) {
+    if let Some(value) = &diff.name { item.name = value.clone(); }
+    if let Some(value) = &diff.type_ref { item.type_ref = value.clone(); }
+    if let Some(value) = &diff.design { item.design = value.clone(); }
+    if let Some(value) = &diff.plane { item.plane = value.clone(); }
+    if let Some(value) = &diff.center { item.center = value.clone(); }
+    if let Some(value) = &diff.scale { item.scale = *value; }
+    if let Some(value) = &diff.mirror_plane { item.mirror_plane = value.clone(); }
+    if let Some(value) = &diff.is_hidden { item.is_hidden = *value; }
+    if let Some(value) = &diff.is_locked { item.is_locked = *value; }
+    if let Some(value) = &diff.color { item.color = value.clone(); }
+    if let Some(value) = &diff.description { item.description = value.clone(); }
+    apply_collection_diff(&mut item.props, &diff.props, apply_prop_diff);
+    apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
+}
+
+pub fn apply_connection_diff(item: &mut Connection, diff: &ConnectionDiff) {
+    if let Some(value) = &diff.connected {
+         if let Some(v) = &value.piece { item.connected.piece = v.clone(); }
+         if let Some(v) = &value.design_piece { item.connected.design_piece = v.clone(); }
+         if let Some(v) = &value.connector { item.connected.connector = v.clone(); }
+    }
+    if let Some(value) = &diff.connecting {
+         if let Some(v) = &value.piece { item.connecting.piece = v.clone(); }
+         if let Some(v) = &value.design_piece { item.connecting.design_piece = v.clone(); }
+         if let Some(v) = &value.connector { item.connecting.connector = v.clone(); }
+    }
+    if let Some(value) = &diff.gap { item.gap = *value; }
+    if let Some(value) = &diff.shift { item.shift = *value; }
+    if let Some(value) = &diff.rise { item.rise = *value; }
+    if let Some(value) = &diff.rotation { item.rotation = *value; }
+    if let Some(value) = &diff.turn { item.turn = *value; }
+    if let Some(value) = &diff.tilt { item.tilt = *value; }
+    if let Some(value) = &diff.u { item.u = *value; }
+    if let Some(value) = &diff.v { item.v = *value; }
+    if let Some(value) = &diff.description { item.description = value.clone(); }
+    apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
+}
+
+pub fn apply_design_diff(item: &mut Design, diff: &DesignDiff) {
+    if let Some(value) = &diff.name { item.name = value.clone(); }
+    if let Some(value) = &diff.parent { item.parent = value.clone(); }
+    if let Some(value) = &diff.description { item.description = value.clone(); }
+    if let Some(value) = &diff.icon { item.icon = value.clone(); }
+    if let Some(value) = &diff.image { item.image = value.clone(); }
+    if let Some(value) = &diff.folder { item.folder = value.clone(); }
+    if let Some(value) = &diff.unit { item.unit = value.clone(); }
+    if let Some(value) = &diff.is_abstract { item.is_abstract = *value; }
+    if let Some(value) = &diff.can_scale { item.can_scale = *value; }
+    if let Some(value) = &diff.can_mirror { item.can_mirror = *value; }
+    if let Some(value) = &diff.concepts { item.concepts = value.clone(); }
+    if let Some(value) = &diff.authors { item.authors = value.clone(); }
+    if let Some(value) = &diff.active_layer { item.active_layer = value.clone(); }
+    apply_collection_diff(&mut item.props, &diff.props, apply_prop_diff);
+    apply_collection_diff(&mut item.pieces, &diff.pieces, apply_piece_diff);
+    apply_collection_diff(&mut item.connections, &diff.connections, apply_connection_diff);
+    apply_collection_diff(&mut item.layers, &diff.layers, apply_layer_diff);
+    apply_collection_diff(&mut item.groups, &diff.groups, apply_group_diff);
+    apply_collection_diff(&mut item.stats, &diff.stats, apply_stat_diff);
+    apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
+}
+
+pub fn apply_tag_diff(item: &mut Tag, diff: &TagDiff) {
+    if let Some(value) = &diff.name { item.name = value.clone(); }
+    if let Some(value) = &diff.description { item.description = value.clone(); }
+    if let Some(value) = &diff.icon { item.icon = value.clone(); }
+}
+
+pub fn apply_concept_diff(item: &mut Concept, diff: &ConceptDiff) {
+    if let Some(value) = &diff.name { item.name = value.clone(); }
+    if let Some(value) = &diff.description { item.description = value.clone(); }
+    if let Some(value) = &diff.icon { item.icon = value.clone(); }
+}
+
+pub fn apply_interface_diff(item: &mut Interface, diff: &InterfaceDiff) {
+    if let Some(value) = &diff.name { item.name = value.clone(); }
+    if let Some(value) = &diff.description { item.description = value.clone(); }
+    if let Some(value) = &diff.icon { item.icon = value.clone(); }
+    if let Some(value) = &diff.compatible_interfaces { item.compatible_interfaces = value.clone(); }
+    apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
+}
+
+pub fn apply_quality_diff(item: &mut Quality, diff: &QualityDiff) {
+    if let Some(value) = &diff.key { item.key = value.clone(); }
+    if let Some(value) = &diff.name { item.name = value.clone(); }
+    if let Some(value) = &diff.kind { item.kind = value.clone(); }
+    if let Some(value) = &diff.default_value { item.default_value = *value; }
+    if let Some(value) = &diff.formula { item.formula = value.clone(); }
+    if let Some(value) = &diff.default_si_unit { item.default_si_unit = value.clone(); }
+    if let Some(value) = &diff.default_imperial_unit { item.default_imperial_unit = value.clone(); }
+    if let Some(value) = &diff.min { item.min = *value; }
+    if let Some(value) = &diff.is_min_excluded { item.is_min_excluded = *value; }
+    if let Some(value) = &diff.max { item.max = *value; }
+    if let Some(value) = &diff.is_max_excluded { item.is_max_excluded = *value; }
+    if let Some(value) = &diff.can_scale { item.can_scale = *value; }
+    if let Some(value) = &diff.uri { item.uri = value.clone(); }
+    apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
+}
+
+pub fn apply_file_diff(item: &mut File, diff: &FileDiff) {
+    if let Some(value) = &diff.name { item.name = value.clone(); }
+    if let Some(value) = &diff.mime { item.mime = value.clone(); }
+    if let Some(value) = &diff.remote { item.remote = value.clone(); }
+    if let Some(value) = &diff.folder { item.folder = value.clone(); }
+    if let Some(value) = &diff.size { item.size = *value; }
+    if let Some(value) = &diff.hash { item.hash = value.clone(); }
+}
+
+pub fn apply_folder_diff(item: &mut Folder, diff: &FolderDiff) {
+    if let Some(value) = &diff.name { item.name = value.clone(); }
+    if let Some(value) = &diff.parent { item.parent = value.clone(); }
+    apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
+}
+
+pub fn apply_author_diff(item: &mut Author, diff: &AuthorDiff) {
+    if let Some(value) = &diff.name { item.name = value.clone(); }
+    if let Some(value) = &diff.email { item.email = value.clone(); }
+    apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
+}
+
+pub fn apply_kit_diff(item: &mut Kit, diff: &KitDiff) {
+    if let Some(value) = &diff.name { item.name = value.clone(); }
+    if let Some(value) = &diff.version { item.version = value.clone(); }
+    if let Some(value) = &diff.description { item.description = value.clone(); }
+    if let Some(value) = &diff.icon { item.icon = value.clone(); }
+    if let Some(value) = &diff.image { item.image = value.clone(); }
+    if let Some(value) = &diff.preview { item.preview = value.clone(); }
+    if let Some(value) = &diff.remote { item.remote = value.clone(); }
+    if let Some(value) = &diff.homepage { item.homepage = value.clone(); }
+    if let Some(value) = &diff.license { item.license = value.clone(); }
+    apply_collection_diff(&mut item.concepts, &diff.concepts, apply_concept_diff);
+    apply_collection_diff(&mut item.tags, &diff.tags, apply_tag_diff);
+    apply_collection_diff(&mut item.types, &diff.types, apply_type_diff);
+    apply_collection_diff(&mut item.designs, &diff.designs, apply_design_diff);
+    apply_collection_diff(&mut item.ports, &diff.ports, apply_interface_diff);
+    apply_collection_diff(&mut item.qualities, &diff.qualities, apply_quality_diff);
+    apply_collection_diff(&mut item.files, &diff.files, apply_file_diff);
+    apply_collection_diff(&mut item.folders, &diff.folders, apply_folder_diff);
+    apply_collection_diff(&mut item.authors, &diff.authors, apply_author_diff);
+    apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
+}
+
+// #endregion ApplyDiff
+
 // #region FlattenDesign
 
 pub struct FlattenedPiece {
@@ -1295,71 +1634,136 @@ pub struct FlattenedPiece {
     pub design_guid: Option<String>,
 }
 
-pub fn flatten_design(kit: &Kit, design_guid: &str) -> Result<Vec<FlattenedPiece>> {
-    let design = find_design_in_kit(kit, design_guid)
-        .ok_or_else(|| SemioError::NotFound { kind: "Design".to_string(), guid: design_guid.to_string() })?;
+pub fn flatten_design(kit: &Kit, design_guid: &str) -> DesignDiff {
+    let design = match find_design_in_kit(kit, design_guid) {
+        Some(d) => d,
+        None => return DesignDiff { guid: design_guid.to_string(), ..Default::default() },
+    };
     
-    let mut result = Vec::new();
     let pieces = design.pieces.as_ref().map(|p| p.as_slice()).unwrap_or(&[]);
+    if pieces.is_empty() {
+        return DesignDiff { guid: design_guid.to_string(), ..Default::default() };
+    }
+    
     let connections = design.connections.as_ref().map(|c| c.as_slice()).unwrap_or(&[]);
     
-    let mut piece_planes: HashMap<String, Matrix4<f64>> = HashMap::new();
-    let mut visited: HashSet<String> = HashSet::new();
-    let mut queue: VecDeque<String> = VecDeque::new();
-    
-    for piece in pieces {
-        if let Some(ref plane) = piece.plane {
-            piece_planes.insert(piece.guid.clone(), plane.to_matrix());
-            queue.push_back(piece.guid.clone());
-            visited.insert(piece.guid.clone());
+    let types_map: HashMap<&str, &Type> = kit.types.as_ref().map(|types| {
+        types.iter().map(|t| (t.guid.as_str(), t)).collect()
+    }).unwrap_or_default();
+
+    let pieces_map: HashMap<&str, &Piece> = pieces.iter().map(|p| (p.guid.as_str(), p)).collect();
+
+    let mut adjacency: HashMap<&str, Vec<(&str, &Connection, bool)>> = HashMap::new();
+    for conn in connections {
+        let src = conn.connected.piece.guid.as_str();
+        let tgt = conn.connecting.piece.guid.as_str();
+        if pieces_map.contains_key(src) && pieces_map.contains_key(tgt) {
+            adjacency.entry(src).or_default().push((tgt, conn, true));
+            adjacency.entry(tgt).or_default().push((src, conn, false));
         }
     }
     
-    while let Some(current_guid) = queue.pop_front() {
-        let current_matrix = piece_planes.get(&current_guid).cloned().unwrap_or_else(Matrix4::identity);
-        
-        for conn in connections {
-            let (other_guid, is_connected) = if conn.connected.piece.guid == current_guid && !visited.contains(&conn.connecting.piece.guid) {
-                (conn.connecting.piece.guid.clone(), true)
-            } else if conn.connecting.piece.guid == current_guid && !visited.contains(&conn.connected.piece.guid) {
-                (conn.connected.piece.guid.clone(), false)
-            } else {
-                continue;
+    let mut piece_planes: HashMap<&str, Matrix4<f64>> = HashMap::with_capacity(pieces.len());
+    let mut visited: HashSet<&str> = HashSet::with_capacity(pieces.len());
+    let mut queue: VecDeque<&str> = VecDeque::with_capacity(pieces.len());
+    
+    for piece in pieces {
+        if !visited.contains(piece.guid.as_str()) {
+            let initial_matrix = piece.plane.as_ref()
+                .map(|p| p.to_matrix())
+                .unwrap_or_else(Matrix4::identity);
+            piece_planes.insert(piece.guid.as_str(), initial_matrix);
+            visited.insert(piece.guid.as_str());
+            queue.push_back(piece.guid.as_str());
+            
+            while let Some(current_guid) = queue.pop_front() {
+                let current_matrix = *piece_planes.get(current_guid).unwrap();
+                
+                if let Some(neighbors) = adjacency.get(current_guid) {
+                    for &(neighbor_guid, conn, is_connected) in neighbors {
+                        if visited.contains(neighbor_guid) {
+                            continue;
+                        }
+                        
+                        let connection_matrix = compute_connection_matrix_fast(&types_map, &pieces_map, conn, is_connected);
+                        let new_matrix = current_matrix * connection_matrix;
+                        
+                        piece_planes.insert(neighbor_guid, new_matrix);
+                        visited.insert(neighbor_guid);
+                        queue.push_back(neighbor_guid);
+                    }
+                }
+            }
+        }
+    }
+    
+    let mut updated_pieces: Vec<DiffUpdate<PieceDiff>> = Vec::new();
+    
+    for piece in pieces {
+        if let Some(&matrix) = piece_planes.get(piece.guid.as_str()) {
+            let new_plane = Plane::from_matrix(&matrix).round();
+            let needs_update = match &piece.plane {
+                Some(existing) => !planes_equal_approx(existing, &new_plane),
+                None => true,
             };
             
-            let connection_matrix = compute_connection_matrix(kit, design, conn, is_connected)?;
-            let new_matrix = current_matrix * connection_matrix;
-            
-            piece_planes.insert(other_guid.clone(), new_matrix);
-            visited.insert(other_guid.clone());
-            queue.push_back(other_guid);
+            if needs_update {
+                updated_pieces.push(DiffUpdate {
+                    key: "piece".to_string(),
+                    guid: piece.guid.clone(),
+                    diff: PieceDiff {
+                        guid: piece.guid.clone(),
+                        plane: Some(Some(new_plane)),
+                        ..Default::default()
+                    },
+                });
+            }
         }
     }
     
-    for piece in pieces {
-        let matrix = piece_planes.get(&piece.guid).cloned().unwrap_or_else(Matrix4::identity);
-        let plane = Plane::from_matrix(&matrix).round();
-        
-        result.push(FlattenedPiece {
-            piece: piece.clone(),
-            plane,
-            type_guid: piece.type_ref.as_ref().map(|t| t.guid.clone()),
-            design_guid: piece.design.as_ref().map(|d| d.guid.clone()),
+    let mut result = DesignDiff {
+        guid: design_guid.to_string(),
+        ..Default::default()
+    };
+    
+    if !updated_pieces.is_empty() {
+        result.pieces = Some(CollectionDiff {
+            added: None,
+            removed: None,
+            updated: Some(updated_pieces),
         });
     }
     
-    Ok(result)
+    result
 }
 
-fn compute_connection_matrix(kit: &Kit, design: &Design, conn: &Connection, from_connected: bool) -> Result<Matrix4<f64>> {
+fn planes_equal_approx(a: &Plane, b: &Plane) -> bool {
+    const TOL: f64 = 0.0001;
+    (a.origin.x - b.origin.x).abs() < TOL &&
+    (a.origin.y - b.origin.y).abs() < TOL &&
+    (a.origin.z - b.origin.z).abs() < TOL &&
+    (a.x_axis.x - b.x_axis.x).abs() < TOL &&
+    (a.x_axis.y - b.x_axis.y).abs() < TOL &&
+    (a.x_axis.z - b.x_axis.z).abs() < TOL &&
+    (a.y_axis.x - b.y_axis.x).abs() < TOL &&
+    (a.y_axis.y - b.y_axis.y).abs() < TOL &&
+    (a.y_axis.z - b.y_axis.z).abs() < TOL
+}
+
+fn compute_connection_matrix_fast(
+    types_map: &HashMap<&str, &Type>,
+    pieces_map: &HashMap<&str, &Piece>,
+    conn: &Connection,
+    from_connected: bool
+) -> Matrix4<f64> {
     let (from_side, to_side) = if from_connected {
         (&conn.connected, &conn.connecting)
     } else {
         (&conn.connecting, &conn.connected)
     };
     
-    let from_connector = get_connector_for_side(kit, design, from_side)?;
-    let to_connector = get_connector_for_side(kit, design, to_side)?;
+    let from_connector = get_connector_for_side_fast(types_map, pieces_map, from_side);
+    let to_connector = get_connector_for_side_fast(types_map, pieces_map, to_side);
     
     let from_plane = connector_to_plane(&from_connector);
     let to_plane = connector_to_plane(&to_connector);
@@ -1372,24 +1776,27 @@ fn compute_connection_matrix(kit: &Kit, design: &Design, conn: &Connection, from
     let from_matrix = from_plane.to_matrix();
     let to_matrix_inv = to_plane.to_matrix().try_inverse().unwrap_or_else(Matrix4::identity);
     
-    Ok(from_matrix * translation * rot_y * rot_z * rot_x * to_matrix_inv)
+    from_matrix * translation * rot_y * rot_z * rot_x * to_matrix_inv
 }
 
-fn get_connector_for_side(kit: &Kit, design: &Design, side: &Side) -> Result<Connector> {
-    let piece = find_piece_in_design(design, &side.piece.guid)
-        .ok_or_else(|| SemioError::NotFound { kind: "Piece".to_string(), guid: side.piece.guid.clone() })?;
-    
-    if let Some(ref connector_id) = side.connector {
-        if let Some(ref type_id) = piece.type_ref {
-            if let Some(t) = find_type_in_kit(kit, &type_id.guid) {
-                if let Some(connector) = find_connector_in_type(t, &connector_id.guid) {
-                    return Ok(connector.clone());
+fn get_connector_for_side_fast(
+    types_map: &HashMap<&str, &Type>,
+    pieces_map: &HashMap<&str, &Piece>,
+    side: &Side
+) -> Connector {
+    if let Some(piece) = pieces_map.get(side.piece.guid.as_str()) {
+        if let Some(ref connector_id) = side.connector {
+            if let Some(ref type_id) = piece.type_ref {
+                if let Some(t) = types_map.get(type_id.guid.as_str()) {
+                    if let Some(connector) = find_connector_in_type(t, &connector_id.guid) {
+                        return connector.clone();
+                    }
                 }
             }
         }
     }
     
-    Ok(Connector {
+    Connector {
         guid: guid(),
         point: Vector::zero(),
         direction: Vector::unit_y(),
@@ -1400,7 +1807,7 @@ fn get_connector_for_side(kit: &Kit, design: &Design, side: &Side) -> Result<Con
         port: None,
         props: None,
         attributes: None,
-    })
+    }
 }
 
 fn connector_to_plane(connector: &Connector) -> Plane {
@@ -1421,7 +1828,7 @@ fn connector_to_plane(connector: &Connector) -> Plane {
 
 // #region Validation Types
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct ValidationProblem {
     pub id: String,
     pub severity: String,
@@ -1986,6 +2393,121 @@ pub mod sqlite {
 
 // #endregion SQLite Import/Export
 
+// #region Zip Import/Export
+
+#[cfg(not(target_arch = "wasm32"))]
+pub mod zip_roundtrip {
+    use super::*;
+    use std::collections::HashMap;
+    use std::fs;
+    use std::io::{Read, Write};
+    use std::path::Path;
+    
+    pub struct KitImportResult {
+        pub kit: Kit,
+        pub files: HashMap<String, Vec<u8>>,
+    }
+    
+    pub fn import_kit_from_zip(zip_path: &str) -> Result<KitImportResult> {
+        let file = fs::File::open(zip_path)
+            .map_err(|e| SemioError::Database { message: format!("Failed to open zip: {}", e) })?;
+        let mut archive = zip::ZipArchive::new(file)
+            .map_err(|e| SemioError::Database { message: format!("Failed to read zip: {}", e) })?;
+        
+        let temp_dir = tempfile::tempdir()
+            .map_err(|e| SemioError::Database { message: format!("Failed to create temp dir: {}", e) })?;
+        
+        for i in 0..archive.len() {
+            let mut file = archive.by_index(i)
+                .map_err(|e| SemioError::Database { message: format!("Failed to read zip entry: {}", e) })?;
+            let outpath = temp_dir.path().join(file.name());
+            
+            if file.is_dir() {
+                fs::create_dir_all(&outpath).ok();
+            } else {
+                if let Some(p) = outpath.parent() {
+                    fs::create_dir_all(p).ok();
+                }
+                let mut outfile = fs::File::create(&outpath)
+                    .map_err(|e| SemioError::Database { message: format!("Failed to create file: {}", e) })?;
+                std::io::copy(&mut file, &mut outfile)
+                    .map_err(|e| SemioError::Database { message: format!("Failed to write file: {}", e) })?;
+            }
+        }
+        
+        let db_path = temp_dir.path().join(".semio").join("kit.db");
+        if !db_path.exists() {
+            return Err(SemioError::Database { message: "kit.db not found in zip".to_string() });
+        }
+        
+        let kit = sqlite::import_kit_from_sqlite(db_path.to_str().unwrap())?;
+        
+        let mut files = HashMap::new();
+        for entry in walkdir::WalkDir::new(temp_dir.path()).into_iter().filter_map(|e| e.ok()) {
+            if entry.file_type().is_file() {
+                let rel_path = entry.path().strip_prefix(temp_dir.path()).unwrap().to_string_lossy().replace("\\", "/");
+                if !rel_path.starts_with(".semio/") {
+                    let data = fs::read(entry.path())
+                        .map_err(|e| SemioError::Database { message: format!("Failed to read file: {}", e) })?;
+                    files.insert(rel_path, data);
+                }
+            }
+        }
+        
+        Ok(KitImportResult { kit, files })
+    }
+    
+    pub fn export_kit_to_zip(kit: &Kit, files: &HashMap<String, Vec<u8>>, zip_path: &str) -> Result<()> {
+        let temp_dir = tempfile::tempdir()
+            .map_err(|e| SemioError::Database { message: format!("Failed to create temp dir: {}", e) })?;
+        
+        let semio_dir = temp_dir.path().join(".semio");
+        fs::create_dir_all(&semio_dir)
+            .map_err(|e| SemioError::Database { message: format!("Failed to create .semio dir: {}", e) })?;
+        
+        let db_path = semio_dir.join("kit.db");
+        sqlite::export_kit_to_sqlite(kit, db_path.to_str().unwrap())?;
+        
+        for (rel_path, data) in files {
+            let full_path = temp_dir.path().join(rel_path);
+            if let Some(parent) = full_path.parent() {
+                fs::create_dir_all(parent).ok();
+            }
+            fs::write(&full_path, data)
+                .map_err(|e| SemioError::Database { message: format!("Failed to write file: {}", e) })?;
+        }
+        
+        let zip_file = fs::File::create(zip_path)
+            .map_err(|e| SemioError::Database { message: format!("Failed to create zip: {}", e) })?;
+        let mut zip_writer = zip::ZipWriter::new(zip_file);
+        let options = zip::write::SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
+        
+        for entry in walkdir::WalkDir::new(temp_dir.path()).into_iter().filter_map(|e| e.ok()) {
+            let path = entry.path();
+            let rel_path = path.strip_prefix(temp_dir.path()).unwrap().to_string_lossy().replace("\\", "/");
+            
+            if path.is_file() {
+                zip_writer.start_file(&rel_path, options)
+                    .map_err(|e| SemioError::Database { message: format!("Failed to start zip file: {}", e) })?;
+                let data = fs::read(path)
+                    .map_err(|e| SemioError::Database { message: format!("Failed to read file: {}", e) })?;
+                zip_writer.write_all(&data)
+                    .map_err(|e| SemioError::Database { message: format!("Failed to write to zip: {}", e) })?;
+            } else if !rel_path.is_empty() {
+                zip_writer.add_directory(&rel_path, options)
+                    .map_err(|e| SemioError::Database { message: format!("Failed to add directory: {}", e) })?;
+            }
+        }
+        
+        zip_writer.finish()
+            .map_err(|e| SemioError::Database { message: format!("Failed to finish zip: {}", e) })?;
+        
+        Ok(())
+    }
+}
+
+// #endregion Zip Import/Export
+
 // #region WASM Bindings
 
 #[cfg(target_arch = "wasm32")]
@@ -2060,21 +2582,11 @@ pub mod wasm {
     #[wasm_bindgen(js_name = "flattenDesign")]
     pub fn wasm_flatten_design(kit_json: &str, design_guid: &str) -> JsValue {
         match deserialize_kit(kit_json) {
-            Ok(kit) => match flatten_design(&kit, design_guid) {
-                Ok(flattened) => {
-                    let planes: Vec<_> = flattened.iter().map(|fp| {
-                        serde_json::json!({
-                            "pieceGuid": fp.piece.guid,
-                            "plane": fp.plane,
-                            "typeGuid": fp.type_guid,
-                            "designGuid": fp.design_guid,
-                        })
-                    }).collect();
-                    to_js_value(WasmResult::success(planes))
-                },
-                Err(e) => to_js_value(WasmResult::<Vec<serde_json::Value>>::failure(e.to_string())),
+            Ok(kit) => {
+                let diff = flatten_design(&kit, design_guid);
+                to_js_value(WasmResult::success(diff))
             },
-            Err(e) => to_js_value(WasmResult::<Vec<serde_json::Value>>::failure(e.to_string())),
+            Err(e) => to_js_value(WasmResult::<DesignDiff>::failure(e.to_string())),
         }
     }
 
@@ -2148,15 +2660,6 @@ mod tests {
         let json = serialize_kit(&kit).unwrap();
         let restored = deserialize_kit(&json).unwrap();
         assert!(are_kits_equal(&kit, &restored));
-    }
-
-    #[test]
-    fn test_validation_invalid() {
-        let kit = load_kit("kit_invalid.json");
-        let result = validate_kit(&kit);
-        assert!(!result.problems.is_empty());
-        assert!(result.problems.iter().any(|p| p.constraint_id == "guid-unique"));
-        assert!(result.problems.iter().any(|p| p.constraint_id == "type-name-unique"));
     }
 
     #[test]

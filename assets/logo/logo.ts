@@ -181,15 +181,11 @@ function parseTransform(transformStr: string): TransformData {
     result.rotate.cx = values[1] || 0;
     result.rotate.cy = values[2] || 0;
 
-    // If rotation center is specified and is not at origin, we need to preserve this info
+    
     // SVG animation can handle rotation centers directly, so don't convert to translate
-    // The animation engine will handle this properly
-  }
-
-  const scaleMatch = transformStr.match(/scale\(([^)]+)\)/);
+ nsformStr.match(/scale\(([^)]+)\)/);
   if (scaleMatch) {
-    const values = scaleMatch[1].split(/[,\s]+/).map(Number);
-    const scaleX = values[0] || 1;
+    const values = scaleMatch[1 values[0] || 1;
     const scaleY = values[1] || values[0] || 1;
 
     result.scale.x = scaleX === 0 ? 1 : scaleX;

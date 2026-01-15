@@ -20,7 +20,6 @@
 // #endregion Header
 
 import { InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted } from "@semio/assets";
-import { execSync } from "node:child_process";
 import { describe, expect, it } from "vitest";
 import {
   applyDesignDiff,
@@ -67,15 +66,15 @@ const centersEqual = (c1: { u: number; v: number } | undefined, c2: { u: number;
 };
 
 const findDesign = (kit: Kit, name: string, parentName?: string) => {
-    let parentGuid: string | undefined;
-    if (parentName) {
-        const p = kit.designs?.find(d => d.name === parentName);
-        if (!p) throw new Error(`Parent ${parentName} not found`);
-        parentGuid = p.guid;
-    }
-    const d = kit.designs?.find(d => d.name === name && (parentGuid ? d.parent?.guid === parentGuid : !d.parent));
-    if (!d) throw new Error(`Design ${name} not found`);
-    return d;
+  let parentGuid: string | undefined;
+  if (parentName) {
+    const p = kit.designs?.find(d => d.name === parentName);
+    if (!p) throw new Error(`Parent ${parentName} not found`);
+    parentGuid = p.guid;
+  }
+  const d = kit.designs?.find(d => d.name === name && (parentGuid ? d.parent?.guid === parentGuid : !d.parent));
+  if (!d) throw new Error(`Design ${name} not found`);
+  return d;
 }
 
 describe("Diffs", () => {
@@ -98,22 +97,22 @@ describe("Diffs", () => {
 
 describe("Flattening Designs", () => {
   const kit = MetabolismKit as Kit;
-  
+
   const testFlatten = (designName: string, parentName?: string) => {
-      const design = findDesign(kit, designName, parentName);
-      const expectedDesign = kit.designs?.find((d) => d.name === "Flat" && d.parent?.guid === design.guid);
-      expect(expectedDesign).toBeDefined();
-      const flatDesignDiff = flattenDesign(kit, design.guid);
-      const flatDesign = applyDesignDiff(design, flatDesignDiff);
-      
-      flatDesign!.pieces?.forEach((p) => {
-        const expectedPiece = expectedDesign!.pieces?.find((ep) => ep.name === p.name);
-        expect(expectedPiece).toBeDefined();
-        expect(p.plane).toBeDefined();
-        expect(p.center).toBeDefined();
-        expect(planesEqual(p.plane, expectedPiece!.plane)).toBe(true);
-        expect(centersEqual(p.center, expectedPiece!.center)).toBe(true);
-      });
+    const design = findDesign(kit, designName, parentName);
+    const expectedDesign = kit.designs?.find((d) => d.name === "Flat" && d.parent?.guid === design.guid);
+    expect(expectedDesign).toBeDefined();
+    const flatDesignDiff = flattenDesign(kit, design.guid);
+    const flatDesign = applyDesignDiff(design, flatDesignDiff);
+
+    flatDesign!.pieces?.forEach((p) => {
+      const expectedPiece = expectedDesign!.pieces?.find((ep) => ep.name === p.name);
+      expect(expectedPiece).toBeDefined();
+      expect(p.plane).toBeDefined();
+      expect(p.center).toBeDefined();
+      expect(planesEqual(p.plane, expectedPiece!.plane)).toBe(true);
+      expect(centersEqual(p.center, expectedPiece!.center)).toBe(true);
+    });
   }
 
   it("Nakagin Capsule Tower", () => {
@@ -142,6 +141,29 @@ describe("Import/Export", () => {
     const serializedKit = serializeKit(kit);
     const deserializedKit = deserializeKit(serializedKit);
     expect(areKitsEqual(kit, deserializedKit)).toBe(true);
+  });
+
+  it("Zip -> Kit -> Zip -> Kit (roundtrip)", async () => {
+    const fs = await import("node:fs");
+    const path = await import("node:path");
+    const zipPath = path.join(__dirname, "../../assets/semio/metabolism.zip");
+    const zipBuffer = fs.readFileSync(zipPath);
+
+    const { kit, files } = await importKit(zipBuffer.buffer);
+    expect(kit.guid).toBeDefined();
+    expect(kit.name).toBe("Metabolism");
+    expect(kit.types?.length).toBeGreaterThan(0);
+    expect(kit.designs?.length).toBeGreaterThan(0);
+    expect(files.size).toBeGreaterThan(0);
+
+    const exportedZip = await exportKit(kit, files);
+    const { kit: kit2, files: files2 } = await importKit(exportedZip);
+
+    expect(kit2.guid).toBe(kit.guid);
+    expect(kit2.name).toBe(kit.name);
+    expect(kit2.types?.length).toBe(kit.types?.length);
+    expect(kit2.designs?.length).toBe(kit.designs?.length);
+    expect(files2.size).toBe(files.size);
   });
 });
 

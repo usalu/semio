@@ -2,7 +2,7 @@
 
 # py/semio/semio.py
 
-# 2025 Ueli Saluz <ueli@semio-tech.com>
+# 2026 Ueli Saluz <ueli@semio-tech.com>
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as
@@ -45,6 +45,9 @@ import pathlib
 import sys
 import typing
 import urllib
+import zipfile
+import tempfile
+import shutil
 
 import dotenv
 import fastapi
@@ -78,6 +81,7 @@ if sys.version_info >= (3, 13):
             if list_match:
                 annotation = strip_quotes(list_match.group(1))
             return annotation
+        return _original_get_relationship_to(name, rel_info, annotation)
         return _original_get_relationship_to(name=name, rel_info=rel_info, annotation=annotation)
 
     sqlmodel._compat.get_relationship_to = _patched_get_relationship_to
@@ -336,13 +340,13 @@ class Semio(sqlmodel.SQLModel, table=True):
 # region Primitives
 
 
-class Model(sqlmodel.SQLModel, abc.ABC):
+class SModel(sqlmodel.SQLModel, abc.ABC):
     """⚪ The base for models."""
 
     model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)
 
     @classmethod
-    def parse(cls, input: str | dict | typing.Any | None) -> "Model":
+    def parse(cls, input: str | dict | typing.Any | None) -> "SModel":
         """⚒️ Parse the entity from an input."""
         if input is None:
             return cls()
@@ -355,10 +359,10 @@ class Model(sqlmodel.SQLModel, abc.ABC):
         return self.model_dump()
 
 
-BaseModel = Model
+BaseModel = SModel
 
 
-class Field(Model, abc.ABC):
+class Field(SModel, abc.ABC):
     """🎫 The base for a field of a model."""
 
 
@@ -370,7 +374,7 @@ class MaskedField(Field, abc.ABC):
     """🎭 The base for a mask of a field of a model. WYSIWYG but don't expect it to be there."""
 
 
-class Base(Model, abc.ABC):
+class Base(SModel, abc.ABC):
     """👥 The base for models."""
 
 
@@ -398,7 +402,7 @@ class Prediction(Base, abc.ABC):
     """🔮 The base for predictions. All fields that are required to predict the entity by a llm."""
 
 
-class Entity(Model, abc.ABC):
+class Entity(SModel, abc.ABC):
     """▢ The base for entities. All fields and behavior of the entity."""
 
     PLURAL: typing.ClassVar[str]
@@ -441,7 +445,7 @@ class Entity(Model, abc.ABC):
         return self
 
 
-class Table(Model, abc.ABC):
+class Table(SModel, abc.ABC):
     """▦ The base for tables. All resources that are stored in the database."""
 
 
@@ -581,32 +585,32 @@ class Attribute(
     table=True,
 ):
     PLURAL = "attributes"
-    __tablename__ = "attributes"
+    __tablename__ = "attribute"
     pk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
         default=None,
         exclude=True,
     )
     modelPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("model_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("models.id")),
+        sa_column=sqlmodel.Column("model_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("model.id")),
         default=None,
         exclude=True,
     )
     model: "Model" = sqlmodel.Relationship(back_populates="attributes")
     connectorPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("connector_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("connectors.id")),
+        sa_column=sqlmodel.Column("connector_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("connector.id")),
         default=None,
         exclude=True,
     )
     connector: "Connector" = sqlmodel.Relationship(back_populates="attributes")
     typePk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("types.id")),
+        sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("type.id")),
         default=None,
         exclude=True,
     )
     type: "Type" = sqlmodel.Relationship(back_populates="attributes")
     piecePk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("piece_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("pieces.id")),
+        sa_column=sqlmodel.Column("piece_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("piece.id")),
         default=None,
         exclude=True,
     )
@@ -615,62 +619,62 @@ class Attribute(
         sa_column=sqlmodel.Column(
             "connection_id",
             sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("connections.id"),
+            sqlalchemy.ForeignKey("connection.id"),
         ),
         default=None,
         exclude=True,
     )
     connection: "Connection" = sqlmodel.Relationship(back_populates="attributes")
     designPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")),
+        sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("design.id")),
         default=None,
         exclude=True,
     )
     design: "Design" = sqlmodel.Relationship(back_populates="attributes")
     kitPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")),
+        sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kit.id")),
         default=None,
         exclude=True,
     )
     kit: "Kit" = sqlmodel.Relationship(back_populates="attributes")
     qualityPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("quality_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("qualities.id")),
+        sa_column=sqlmodel.Column("quality_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("quality.id")),
         default=None,
         exclude=True,
     )
     quality: "Quality" = sqlmodel.Relationship(back_populates="attributes")
     propPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("prop_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("props.id")),
+        sa_column=sqlmodel.Column("prop_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("prop.id")),
         default=None,
         exclude=True,
     )
     prop: "Prop" = sqlmodel.Relationship(back_populates="attributes")
     authorPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("author_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("authors.id")),
+        sa_column=sqlmodel.Column("author_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("author.id")),
         default=None,
         exclude=True,
     )
     author: "Author" = sqlmodel.Relationship(back_populates="attributes")
     locationPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("location_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("locations.id")),
+        sa_column=sqlmodel.Column("location_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("location.id")),
         default=None,
         exclude=True,
     )
     location: "Location" = sqlmodel.Relationship(back_populates="attributes")
     benchmarkPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("benchmark_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("benchmarks.id")),
+        sa_column=sqlmodel.Column("benchmark_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("benchmark.id")),
         default=None,
         exclude=True,
     )
     benchmark: "Benchmark" = sqlmodel.Relationship(back_populates="attributes")
     folderPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("folder_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("folders.id")),
+        sa_column=sqlmodel.Column("folder_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("folder.id")),
         default=None,
         exclude=True,
     )
     folder: "Folder" = sqlmodel.Relationship(back_populates="attributes")
     portPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("port_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("ports.id")),
+        sa_column=sqlmodel.Column("port_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("port.id")),
         default=None,
         exclude=True,
     )
@@ -816,14 +820,14 @@ class Tag(
     Table,
     table=True,
 ):
-    __tablename__ = "tags"
+    __tablename__ = "tag"
     pk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
         default=None,
         exclude=True,
     )
     modelPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("model_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("models.id")),
+        sa_column=sqlmodel.Column("model_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("model.id")),
         default=None,
         exclude=True,
     )
@@ -868,24 +872,24 @@ class Concept(
     Table,
     table=True,
 ):
-    __tablename__ = "concepts"
+    __tablename__ = "concept"
     pk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
         default=None,
         exclude=True,
     )
     kitPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")),
+        sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kit.id")),
         default=None,
         exclude=True,
     )
     typePk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("types.id")),
+        sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("type.id")),
         default=None,
         exclude=True,
     )
     designPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")),
+        sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("design.id")),
         default=None,
         exclude=True,
     )
@@ -899,7 +903,7 @@ class Concept(
 # region Coord
 
 
-class Coord(Model):
+class Coord(SModel):
     u: float = sqlmodel.Field()
     v: float = sqlmodel.Field()
 
@@ -941,7 +945,7 @@ class CoordInputNode(InputNode):
 # region Point
 
 
-class Point(Model):
+class Point(SModel):
     x: float = sqlmodel.Field()
     y: float = sqlmodel.Field()
     z: float = sqlmodel.Field()
@@ -984,7 +988,7 @@ class PointInputNode(InputNode):
 # region Vector
 
 
-class Vector(Model):
+class Vector(SModel):
     x: float = sqlmodel.Field()
     y: float = sqlmodel.Field()
     z: float = sqlmodel.Field()
@@ -1056,7 +1060,7 @@ class PlaneOutput(PlaneYAxisField, PlaneXAxisField, PlaneOriginField, Output):
 
 
 class Plane(Table, table=True):
-    __tablename__ = "planes"
+    __tablename__ = "plane"
     pk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
         default=None,
@@ -1117,7 +1121,7 @@ class Plane(Table, table=True):
 
     # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
     @classmethod
-    def parse(cls: "Plane", input: str | dict | PlaneInput | typing.Any | None) -> "Plane":
+    def parse(cls, input: str | dict | PlaneInput | typing.Any | None) -> "Plane":
         if input is None:
             return cls()
         obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
@@ -1177,7 +1181,7 @@ class Location(
     table=True,
 ):
     PLURAL = "locations"
-    __tablename__ = "locations"
+    __tablename__ = "location"
     pk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
         default=None,
@@ -1245,16 +1249,22 @@ class AuthorOutput(AuthorEmailField, AuthorNameField, Output):
     pass
 
 
-class Author(AuthorRankField, AuthorEmailField, AuthorNameField, TableEntity, table=True):
+class Author(
+    AuthorRankField,
+    AuthorEmailField,
+    AuthorNameField,
+    TableEntity,
+    table=True,
+):
     PLURAL = "authors"
-    __tablename__ = "authors"
+    __tablename__ = "author"
     pk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
         default=None,
         exclude=True,
     )
     kitPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")),
+        sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kit.id")),
         default=None,
         exclude=True,
     )
@@ -1288,20 +1298,20 @@ class ArtifactAuthorEmailField(RealField, abc.ABC):
 
 class ArtifactAuthor(ArtifactAuthorEmailField, TableEntity, table=True):
     PLURAL = "artifact_authors"
-    __tablename__ = "artifact_authors"
+    __tablename__ = "artifact_author"
     pk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
         default=None,
         exclude=True,
     )
     typePk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("types.id")),
+        sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("type.id")),
         default=None,
         exclude=True,
     )
     type: Type = sqlmodel.Relationship(back_populates="artifact_authors")
     designPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")),
+        sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("design.id")),
         default=None,
         exclude=True,
     )
@@ -1458,14 +1468,14 @@ class File(
     table=True,
 ):
     PLURAL = "files"
-    __tablename__ = "files"
+    __tablename__ = "file"
     pk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
         default=None,
         exclude=True,
     )
     kitPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")),
+        sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kit.id")),
         default=None,
         exclude=True,
     )
@@ -1587,14 +1597,14 @@ class Folder(
     table=True,
 ):
     PLURAL = "folders"
-    __tablename__ = "folders"
+    __tablename__ = "folder"
     pk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
         default=None,
         exclude=True,
     )
     kitPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")),
+        sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kit.id")),
         default=None,
         exclude=True,
     )
@@ -1730,14 +1740,14 @@ class Benchmark(
     table=True,
 ):
     PLURAL = "benchmarks"
-    __tablename__ = "benchmarks"
+    __tablename__ = "benchmark"
     pk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
         default=None,
         exclude=True,
     )
     qualityPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("quality_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("qualities.id")),
+        sa_column=sqlmodel.Column("quality_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("quality.id")),
         default=None,
         exclude=True,
     )
@@ -1938,14 +1948,14 @@ class Quality(
     table=True,
 ):
     PLURAL = "qualities"
-    __tablename__ = "qualities"
+    __tablename__ = "quality"
     pk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
         default=None,
         exclude=True,
     )
     kitPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")),
+        sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kit.id")),
         default=None,
         exclude=True,
     )
@@ -2025,26 +2035,26 @@ class Prop(
     table=True,
 ):
     PLURAL = "props"
-    __tablename__ = "props"
+    __tablename__ = "prop"
     pk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
         default=None,
         exclude=True,
     )
     connectorPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("connector_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("connectors.id")),
+        sa_column=sqlmodel.Column("connector_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("connector.id")),
         default=None,
         exclude=True,
     )
     connector: Connector = sqlmodel.Relationship(back_populates="props")
     typePk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("types.id")),
+        sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("type.id")),
         default=None,
         exclude=True,
     )
     type: Type = sqlmodel.Relationship(back_populates="props")
     designPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")),
+        sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("design.id")),
         default=None,
         exclude=True,
     )
@@ -2178,7 +2188,7 @@ class Model(
     table=True,
 ):
     PLURAL = "models"
-    __tablename__ = "models"
+    __tablename__ = "model"
     pk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
         default=None,
@@ -2187,7 +2197,7 @@ class Model(
     tags_: list[Tag] = sqlmodel.Relationship(back_populates="model", cascade_delete=True)
     attributes: list[Attribute] = sqlmodel.Relationship(back_populates="model", cascade_delete=True)
     typePk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("types.id")),
+        sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("type.id")),
         default=None,
         exclude=True,
     )
@@ -2216,7 +2226,7 @@ class Model(
         entity = cls(**props.model_dump())
         try:
             entity.tags = obj["tags"]
-        except KeyError:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             entity.attributes = [typing.cast(Attribute, Attribute.parse(attribute)) for attribute in obj["attributes"]]
@@ -2238,7 +2248,7 @@ class Model(
 
 class NoModelAssigned(NoParentAssigned):
     def __str__(self):
-        return "👪 The entity has no parent model assigned."
+        return " The entity has no parent model assigned."
 
 
 class ModelInputNode(InputNode):
@@ -2285,7 +2295,7 @@ class PortOutput(PortCompatiblePortsField, PortIconField, PortDescriptionField, 
 
 class Port(PortIconField, PortDescriptionField, PortNameField, TableEntity, table=True):
     PLURAL = "ports"
-    __tablename__ = "ports"
+    __tablename__ = "port"
     pk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
         default=None,
@@ -2293,7 +2303,7 @@ class Port(PortIconField, PortDescriptionField, PortNameField, TableEntity, tabl
     )
     attributes: list[Attribute] = sqlmodel.Relationship(back_populates="port_", cascade_delete=True)
     kitPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")),
+        sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kit.id")),
         default=None,
         exclude=True,
     )
@@ -2325,14 +2335,14 @@ class CompatiblePortOrderField(RealField, abc.ABC):
 
 
 class CompatiblePort(CompatiblePortOrderField, CompatiblePortNameField, Table, table=True):
-    __tablename__ = "compatible_ports"
+    __tablename__ = "compatible_port"
     pk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
         default=None,
         exclude=True,
     )
     connectorPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("connector_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("connectors.id")),
+        sa_column=sqlmodel.Column("connector_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("connector.id")),
         default=None,
         exclude=True,
     )
@@ -2441,7 +2451,7 @@ class Connector(
     table=True,
 ):
     PLURAL = "connectors"
-    __tablename__ = "connectors"
+    __tablename__ = "connector"
     pk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
         default=None,
@@ -2466,7 +2476,7 @@ class Connector(
     attributes: list["Attribute"] = sqlmodel.Relationship(back_populates="connector", cascade_delete=True)
     props: list["Prop"] = sqlmodel.Relationship(back_populates="connector", cascade_delete=True)
     typePk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("types.id")),
+        sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("type.id")),
         default=None,
         exclude=True,
     )
@@ -2521,7 +2531,7 @@ class Connector(
 
     # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
     @classmethod
-    def parse(cls: "Connector", input: str | dict | ConnectorInput | typing.Any | None) -> "Connector":
+    def parse(cls, input: str | dict | ConnectorInput | typing.Any | None) -> "Connector":
         if input is None:
             return cls()
         obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
@@ -2570,7 +2580,7 @@ class ConnectorNotFound(NotFound):
 
     def __str__(self):
         variant = f", {self.parent.variant}" if self.parent.variant else ""
-        return f"🔍 Couldn't find the connector ({self.id.id_}) inside the parent type ({self.parent.name}{variant})."
+        return f"Couldn't find the connector ({self.id.id_}) inside the parent type ({self.parent.name}{variant})."
 
 
 class ConnectorInputNode(InputNode):
@@ -2757,7 +2767,7 @@ class Type(
     table=True,
 ):
     PLURAL = "types"
-    __tablename__ = "types"
+    __tablename__ = "type"
     pk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
         default=None,
@@ -2788,7 +2798,7 @@ class Type(
 
     kitPk: typing.Optional[int] = sqlmodel.Field(
         # alias="kitId", # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
-        sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")),
+        sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kit.id")),
         default=None,
         exclude=True,
     )
@@ -2846,7 +2856,7 @@ class Type(
 
     # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
     @classmethod
-    def parse(cls: "Type", input: str | dict | TypeInput | typing.Any | None) -> "Type":
+    def parse(cls, input: str | dict | TypeInput | typing.Any | None) -> "Type":
         if input is None:
             return cls()
         obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
@@ -2876,31 +2886,31 @@ class Type(
         try:
             models = [Model.parse(r) for r in obj["models"]]
             entity.models = models
-        except KeyError:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             connectors = [Connector.parse(p) for p in obj["connectors"]]
             entity.connectors = connectors
-        except KeyError:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             props = [Prop.parse(p) for p in obj["props"]]
             entity.props = props
-        except KeyError:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             entity.attributes = [Attribute.parse(q) for q in obj["attributes"]]
-        except KeyError:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             author_emails = obj["authors"]
             entity.authors = author_emails
-        except KeyError:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             concepts = obj["concepts"]
             entity.concepts = concepts
-        except KeyError:
+        except (KeyError, AttributeError, Exception):
             pass
 
         return entity
@@ -2943,12 +2953,12 @@ class TypeNotFound(NotFound):
 
     def __str__(self):
         variant = f", {self.id.variant}" if self.id.variant else ""
-        return f"🔍 Couldn't find the type ({self.id.name}{variant})."
+        return f"Couldn't find the type ({self.id.name}{variant})."
 
 
 class NoTypeAssigned(NoParentAssigned):
     def __str__(self):
-        return "👪 The entity has no parent type assigned."
+        return " The entity has no parent type assigned."
 
 
 class TypeHasNotAllUsedConnectors(SpecificationError):
@@ -2956,7 +2966,7 @@ class TypeHasNotAllUsedConnectors(SpecificationError):
         self.missingConnectors = missingConnectors
 
     def __str__(self) -> str:
-        return f"🚫 A design is using some connectors of the type. The new type is missing the following connectors: {', '.join(self.missingConnectors)}."
+        return f" A design is using some connectors of the type. The new type is missing the following connectors: {', '.join(self.missingConnectors)}."
 
 
 class TypeInputNode(InputNode):
@@ -3041,14 +3051,14 @@ class Layer(
     table=True,
 ):
     PLURAL = "layers"
-    __tablename__ = "layers"
+    __tablename__ = "layer"
     pk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
         default=None,
         exclude=True,
     )
     designPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")),
+        sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("design.id")),
         default=None,
         exclude=True,
     )
@@ -3156,7 +3166,7 @@ class Piece(
     table=True,
 ):
     PLURAL = "pieces"
-    __tablename__ = "pieces"
+    __tablename__ = "piece"
     pk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
         default=None,
@@ -3170,7 +3180,7 @@ class Piece(
         sa_column=sqlmodel.Column(
             "type_id",
             sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("types.id"),
+            sqlalchemy.ForeignKey("type.id"),
             nullable=True,
         ),
         default=None,
@@ -3181,7 +3191,7 @@ class Piece(
         sa_column=sqlmodel.Column(
             "design_piece_id",
             sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("designs.id"),
+            sqlalchemy.ForeignKey("design.id"),
             nullable=True,
         ),
         default=None,
@@ -3189,7 +3199,7 @@ class Piece(
     )
     designPiece: Design = sqlmodel.Relationship(sa_relationship=sqlalchemy.orm.relationship("Design", foreign_keys="[Piece.designPiecePk]"))
     designPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")),
+        sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("design.id")),
         default=None,
         exclude=True,
     )
@@ -3201,7 +3211,7 @@ class Piece(
         sa_column=sqlmodel.Column(
             "plane_id",
             sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("planes.id"),
+            sqlalchemy.ForeignKey("plane.id"),
             nullable=True,
         ),
         default=None,
@@ -3370,14 +3380,14 @@ class GroupOutput(GroupColorField, GroupDescriptionField, GroupNameField, Output
 
 class Group(GroupColorField, GroupDescriptionField, GroupNameField, TableEntity, table=True):
     PLURAL = "groups"
-    __tablename__ = "groups"
+    __tablename__ = "group"
     pk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
         default=None,
         exclude=True,
     )
     designPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")),
+        sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("design.id")),
         default=None,
         exclude=True,
     )
@@ -3611,7 +3621,7 @@ class Connection(
     table=True,
 ):
     PLURAL = "connections"
-    __tablename__ = "connections"
+    __tablename__ = "connection"
 
     pk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
@@ -3623,7 +3633,7 @@ class Connection(
         sa_column=sqlmodel.Column(
             "connected_piece_id",
             sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("pieces.id"),
+            sqlalchemy.ForeignKey("piece.id"),
         ),
         default=None,
         exclude=True,
@@ -3640,7 +3650,7 @@ class Connection(
         sa_column=sqlmodel.Column(
             "connected_connector_id",
             sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("connectors.id"),
+            sqlalchemy.ForeignKey("connector.id"),
         ),
         default=None,
         exclude=True,
@@ -3657,7 +3667,7 @@ class Connection(
         sa_column=sqlmodel.Column(
             "connected_design_piece_id",
             sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("pieces.id"),
+            sqlalchemy.ForeignKey("piece.id"),
             nullable=True,
         ),
         default=None,
@@ -3669,7 +3679,7 @@ class Connection(
         sa_column=sqlmodel.Column(
             "connecting_piece_id",
             sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("pieces.id"),
+            sqlalchemy.ForeignKey("piece.id"),
         ),
         exclude=True,
         default=None,
@@ -3686,7 +3696,7 @@ class Connection(
         sa_column=sqlmodel.Column(
             "connecting_connector_id",
             sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("connectors.id"),
+            sqlalchemy.ForeignKey("connector.id"),
         ),
         default=None,
         exclude=True,
@@ -3703,7 +3713,7 @@ class Connection(
         sa_column=sqlmodel.Column(
             "connecting_design_piece_id",
             sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("pieces.id"),
+            sqlalchemy.ForeignKey("piece.id"),
             nullable=True,
         ),
         default=None,
@@ -3713,7 +3723,7 @@ class Connection(
     attributes: list[Attribute] = sqlmodel.Relationship(back_populates="connection", cascade_delete=True)
     designPk: typing.Optional[int] = sqlmodel.Field(
         alias="designId",
-        sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")),
+        sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("design.id")),
         default=None,
         exclude=True,
     )
@@ -3984,14 +3994,14 @@ class Stat(
     table=True,
 ):
     PLURAL = "stats"
-    __tablename__ = "stats"
+    __tablename__ = "stat"
     pk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
         default=None,
         exclude=True,
     )
     designPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")),
+        sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("design.id")),
         default=None,
         exclude=True,
     )
@@ -4183,7 +4193,7 @@ class Design(
     table=True,
 ):
     PLURAL = "designs"
-    __tablename__ = "designs"
+    __tablename__ = "design"
     pk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
         default=None,
@@ -4214,7 +4224,7 @@ class Design(
     attributes: list[Attribute] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
     kitPk: typing.Optional[int] = sqlmodel.Field(
         alias="kitId",
-        sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")),
+        sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kit.id")),
         default=None,
         exclude=True,
     )
@@ -4284,7 +4294,7 @@ class Design(
         entity = cls(**props.model_dump())
         try:
             entity.location = props.location
-        except KeyError:
+        except (KeyError, AttributeError, Exception):
             pass
         typesDict = {}
         for type in types:
@@ -4296,32 +4306,32 @@ class Design(
         try:
             pieces = [Piece.parse(p, typesDict, designsById) for p in obj["pieces"]]
             entity.pieces = pieces
-        except KeyError:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             connections = [Connection.parse(c, pieces, designsById) for c in obj["connections"]]
             entity.connections = connections
-        except KeyError:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             props = [Prop.parse(p) for p in obj["props"]]
             entity.props = props
-        except KeyError:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             attributes = [Attribute.parse(q) for q in obj["attributes"]]
             entity.attributes = attributes
-        except KeyError:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             author_emails = obj["authors"]
             entity.authors = author_emails
-        except KeyError:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             concepts = obj["concepts"]
             entity.concepts = concepts
-        except KeyError:
+        except (KeyError, AttributeError, Exception):
             pass
         return entity
 
@@ -4515,7 +4525,7 @@ class Kit(
     table=True,
 ):
     PLURAL = "kits"
-    __tablename__ = "kits"
+    __tablename__ = "kit"
     pk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
         default=None,
@@ -4533,6 +4543,8 @@ class Kit(
 
     @property
     def concepts(self: "Kit") -> list[str]:
+        if self.concepts_ is None:
+            return []
         return [concept.name for concept in sorted(self.concepts_, key=lambda x: x.order)]
 
     @concepts.setter
@@ -4571,33 +4583,33 @@ class Kit(
         try:
             types = [Type.parse(t) for t in obj["types"]]
             entity.types = types
-        except KeyError:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             designs = [Design.parse(d, types) for d in obj["designs"]]
             entity.designs = designs
-        except KeyError:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             folders = [Folder.parse(f) for f in obj["folders"]]
             entity.folders = folders
-        except KeyError:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             concepts = obj["concepts"]
             entity.concepts = concepts
-        except KeyError:
+        except (KeyError, AttributeError, Exception):
             pass
         return entity
 
     def dump(self) -> "KitOutput":
         entity = {**KitProps.model_validate(self).model_dump()}
-        entity["types"] = [t.dump() for t in self.types]
-        entity["designs"] = [d.dump() for d in self.designs]
-        entity["files"] = [f.dump() for f in self.files_]
-        entity["folders"] = [f.dump() for f in self.folders_]
-        entity["attributes"] = [q.dump() for q in self.attributes]
-        entity["concepts"] = self.concepts
+        entity["types"] = [t.dump() for t in (self.types or [])]
+        entity["designs"] = [d.dump() for d in (self.designs or [])]
+        entity["files"] = [f.dump() for f in (self.files_ or [])]
+        entity["folders"] = [f.dump() for f in (self.folders_ or [])]
+        entity["attributes"] = [q.dump() for q in (self.attributes or [])]
+        entity["concepts"] = self.concepts or []
         return KitOutput(**entity)
 
     # TODO: Automatic emptying.
@@ -5089,21 +5101,21 @@ def validateGuidUniqueness(kit: Kit) -> list[Problem]:
             seen[entityGuid] = entityKind
 
     check("Kit", kit.guid)
-    for t in kit.types:
+    for t in (kit.types or []):
         check("Type", t.guid)
-    for d in kit.designs:
+    for d in (kit.designs or []):
         check("Design", d.guid)
-        for p in d.pieces:
+        for p in (d.pieces or []):
             check("Piece", p.guid)
-        for c in d.connections:
+        for c in (d.connections or []):
             check("Connection", c.guid)
-        for s in d.stats:
+        for s in (d.stats or []):
             check("Stat", s.guid)
-    for q in kit.qualities:
+    for q in (kit.qualities or []):
         check("Quality", q.guid)
-    for f in kit.files_:
+    for f in (kit.files_ or []):
         check("File", f.guid)
-    for fo in kit.folders_:
+    for fo in (kit.folders_ or []):
         check("Folder", fo.guid)
     return problems
 
@@ -5111,7 +5123,7 @@ def validateGuidUniqueness(kit: Kit) -> list[Problem]:
 def validateTypeNameUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
     byParent: dict[str | None, list[Type]] = {}
-    for t in kit.types:
+    for t in (kit.types or []):
         parentGuid = t.parent.guid if t.parent else None
         if parentGuid not in byParent:
             byParent[parentGuid] = []
@@ -5139,7 +5151,7 @@ def validateTypeNameUniqueness(kit: Kit) -> list[Problem]:
 def validateDesignNameUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
     byParent: dict[str | None, list[Design]] = {}
-    for d in kit.designs:
+    for d in (kit.designs or []):
         parentGuid = d.parent.guid if d.parent else None
         if parentGuid not in byParent:
             byParent[parentGuid] = []
@@ -5166,9 +5178,9 @@ def validateDesignNameUniqueness(kit: Kit) -> list[Problem]:
 
 def validatePieceNameUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
-    for design in kit.designs:
+    for design in (kit.designs or []):
         names: dict[str, list[Piece]] = {}
-        for p in design.pieces:
+        for p in (design.pieces or []):
             if p.name_ and p.name_ not in names:
                 names[p.name_] = []
             if p.name_:
@@ -5189,9 +5201,9 @@ def validatePieceNameUniqueness(kit: Kit) -> list[Problem]:
 
 def validatePortNameUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
-    for t in kit.types:
+    for t in (kit.types or []):
         names: dict[str, list[Connector]] = {}
-        for connector in t.connectors:
+        for connector in (t.connectors or []):
             if connector.name_ and connector.name_ not in names:
                 names[connector.name_] = []
             if connector.name_:
@@ -5212,9 +5224,9 @@ def validatePortNameUniqueness(kit: Kit) -> list[Problem]:
 
 def validateModelNameUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
-    for t in kit.types:
+    for t in (kit.types or []):
         names: dict[str, list[Model]] = {}
-        for model in t.models:
+        for model in (t.models or []):
             if model.name and model.name not in names:
                 names[model.name] = []
             if model.name:
@@ -5236,7 +5248,7 @@ def validateModelNameUniqueness(kit: Kit) -> list[Problem]:
 def validateQualityNameUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
     names: dict[str, list[Quality]] = {}
-    for q in kit.qualities:
+    for q in (kit.qualities or []):
         if q.name not in names:
             names[q.name] = []
         names[q.name].append(q)
@@ -5257,7 +5269,7 @@ def validateQualityNameUniqueness(kit: Kit) -> list[Problem]:
 def validateFileNameUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
     names: dict[str, list[File]] = {}
-    for f in kit.files_:
+    for f in (kit.files_ or []):
         if f.name not in names:
             names[f.name] = []
         names[f.name].append(f)
@@ -5278,7 +5290,7 @@ def validateFileNameUniqueness(kit: Kit) -> list[Problem]:
 def validateFolderNameUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
     byParent: dict[str | None, list[Folder]] = {}
-    for fo in kit.folders_:
+    for fo in (kit.folders_ or []):
         parentGuid = fo.parent if fo.parent else None
         if parentGuid not in byParent:
             byParent[parentGuid] = []
@@ -5305,9 +5317,9 @@ def validateFolderNameUniqueness(kit: Kit) -> list[Problem]:
 
 def validateLayerPathUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
-    for design in kit.designs:
+    for design in (kit.designs or []):
         paths: dict[str, list[Layer]] = {}
-        for layer in design.layers:
+        for layer in (design.layers or []):
             if layer.path not in paths:
                 paths[layer.path] = []
             paths[layer.path].append(layer)
@@ -7663,6 +7675,75 @@ def areKitDiffsDictEqual(a: dict, b: dict) -> bool:
 
 
 # endregion Kit Diff Operations
+
+# region Kit Import/Export
+
+
+def import_kit(path: str) -> tuple[Kit, dict[str, bytes]]:
+    """📦 Import a kit from a .zip file (containing a .semio/kit.db sqlite database)."""
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"File not found: {path}")
+
+    files = {}
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        with zipfile.ZipFile(path, "r") as zip_ref:
+            zip_ref.extractall(tmpdirname)
+            for file_info in zip_ref.infolist():
+                if not file_info.is_dir() and not file_info.filename.startswith(".semio/"):
+                    with zip_ref.open(file_info) as f:
+                        files[file_info.filename] = f.read()
+
+        db_path = os.path.join(tmpdirname, ".semio", "kit.db")
+        if not os.path.exists(db_path):
+            raise ValueError(f"Invalid kit: .semio/kit.db not found in {path}")
+
+        engine = sqlalchemy.create_engine(f"sqlite:///{db_path}")
+        with sqlmodel.Session(engine) as session:
+            kit = session.exec(sqlmodel.select(Kit)).first()
+            if not kit:
+                raise ValueError("No Kit found in database")
+            
+            # Detach kit from session by dumping to pydantic model (in-memory)
+            # dump() triggers lazy loading of all children because it iterates over them
+            kit_output = kit.dump()
+            
+    # Reconstruct Kit object from the dumped output (now fully in memory)
+    # We use Kit.parse which handles the dictionary structure from KitOutput
+    kit_in_memory = Kit.parse(kit_output.model_dump())
+    
+    return kit_in_memory, files
+
+
+def export_kit(kit: Kit, files: dict[str, bytes], path: str) -> None:
+    """📦 Export a kit to a .zip file (containing a .semio/kit.db sqlite database)."""
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        semio_dir = os.path.join(tmpdirname, ".semio")
+        os.makedirs(semio_dir, exist_ok=True)
+        db_path = os.path.join(semio_dir, "kit.db")
+
+        engine = sqlalchemy.create_engine(f"sqlite:///{db_path}")
+        sqlmodel.SQLModel.metadata.create_all(engine)
+
+        with sqlmodel.Session(engine) as session:
+            # We need to add the kit to the session.
+            # Since kit is a SQLModel with relationships, adding it should cascade.
+            # However, if the kit object was created from 'parse' or 'import_kit', it might be detached or have IDs set.
+            # We want to save it as is.
+            # We merge it to ensure it's attached correctly? Or just add.
+            # Since it's a new DB, add is fine.
+            session.add(kit)
+            session.commit()
+
+        with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as zip_ref:
+            # Add DB
+            zip_ref.write(db_path, ".semio/kit.db")
+            
+            # Add files
+            for filename, content in files.items():
+                zip_ref.writestr(filename, content)
+
+
+# endregion Kit Import/Export
 
 # region Spatial Math
 

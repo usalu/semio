@@ -12,7 +12,8 @@
       "command": "go",
       "args": [
         "run",
-        "./go/mcp"
+        "./go/repo",
+        "mcp"
       ],
       "env": {}
     }

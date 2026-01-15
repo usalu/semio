@@ -18,7 +18,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion Header
-package repo
+package main
 
 import (
 	"bufio"
@@ -26,7 +26,9 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"math"
 	"math/rand"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -41,6 +43,9 @@ import (
 	"github.com/graphql-go/graphql"
 	"github.com/graphql-go/graphql/language/ast"
 	"github.com/graphql-go/graphql/language/parser"
+	"github.com/mark3labs/mcp-go/mcp"
+	"github.com/mark3labs/mcp-go/server"
+	"github.com/spf13/cobra"
 	_ "modernc.org/sqlite"
 )
 
@@ -2190,7 +2195,10 @@ type Codebase struct {
 
 // #region Utils
 
-var rootDir string
+var (
+	rootDir  string
+	executor *Executor
+)
 
 func init() {
 	wd, err := os.Getwd()
@@ -2198,6 +2206,12 @@ func init() {
 		rootDir = "."
 	} else {
 		rootDir = findRepoRoot(wd)
+	}
+	SetRootDir(rootDir)
+	var e error
+	executor, e = NewExecutorWithContext(rootDir, NewRepoContext(rootDir))
+	if e != nil {
+		fmt.Fprintf(os.Stderr, "Warning: Failed to initialize GraphQL executor: %v\n", e)
 	}
 }
 
@@ -2208,10 +2222,8 @@ func GetRootDir() string {
 func findRepoRoot(start string) string {
 	dir := start
 	for {
-		if _, err := os.Stat(filepath.Join(dir, "package.json")); err == nil {
-			if _, err := os.Stat(filepath.Join(dir, "nx.json")); err == nil {
-				return dir
-			}
+		if _, err := os.Stat(filepath.Join(dir, "AGENTS.md")); err == nil {
+			return dir
 		}
 		parent := filepath.Dir(dir)
 		if parent == dir {
@@ -10244,3 +10256,2286 @@ type RepoResolver interface {
 }
 
 // #endregion Resolver Interfaces
+
+// #region Mcp
+
+func runMcpServer(cmd *cobra.Command, args []string) error {
+	s := server.NewMCPServer(
+		"semio-repo",
+		"1.0.0",
+		server.WithToolCapabilities(true),
+	)
+	s.AddTool(
+		mcp.NewTool("analyze",
+			mcp.WithDescription("Analyze codebase for policy violations"),
+			mcp.WithString("scope", mcp.Description("Scope to analyze (e.g., @semio, @semio/js, path/to/file.ts)"), mcp.DefaultString("@semio")),
+		),
+		analyze,
+	)
+	s.AddTool(
+		mcp.NewTool("fix",
+			mcp.WithDescription("Apply autofixes for policy violations"),
+			mcp.WithString("scope", mcp.Description("Scope to fix"), mcp.DefaultString("@semio")),
+		),
+		fix,
+	)
+	s.AddTool(
+		mcp.NewTool("policy_list",
+			mcp.WithDescription("List all registered policies"),
+		),
+		policyList,
+	)
+	s.AddTool(
+		mcp.NewTool("policy_check",
+			mcp.WithDescription("Check a specific policy"),
+			mcp.WithString("id", mcp.Required(), mcp.Description("Policy ID to check")),
+			mcp.WithString("scope", mcp.Description("Scope to analyze"), mcp.DefaultString("@semio")),
+		),
+		policyCheck,
+	)
+	s.AddTool(
+		mcp.NewTool("ticket_open",
+			mcp.WithDescription("Open a new development ticket"),
+			mcp.WithString("title", mcp.Required(), mcp.Description("Ticket title (will be uppercased and kebab-cased for folder name)")),
+			mcp.WithString("prompt", mcp.Required(), mcp.Description("Ticket prompt/description")),
+			mcp.WithString("llm", mcp.Required(), mcp.Description("Large-Language-Model (LLM) used for this ticket")),
+		),
+		ticketOpen,
+	)
+	s.AddTool(
+		mcp.NewTool("ticket_list",
+			mcp.WithDescription("List development tickets"),
+			mcp.WithNumber("year", mcp.Description("Filter by year")),
+			mcp.WithNumber("month", mcp.Description("Filter by month")),
+			mcp.WithNumber("day", mcp.Description("Filter by day")),
+		),
+		ticketList,
+	)
+	s.AddTool(
+		mcp.NewTool("ticket_read",
+			mcp.WithDescription("Read a specific ticket"),
+			mcp.WithNumber("year", mcp.Required(), mcp.Description("Ticket year")),
+			mcp.WithNumber("month", mcp.Required(), mcp.Description("Ticket month")),
+			mcp.WithNumber("day", mcp.Required(), mcp.Description("Ticket day")),
+			mcp.WithString("slug", mcp.Required(), mcp.Description("Ticket slug")),
+		),
+		ticketRead,
+	)
+	s.AddTool(
+		mcp.NewTool("ticket_close",
+			mcp.WithDescription("Close a ticket with summary and affected file changes"),
+			mcp.WithNumber("year", mcp.Required(), mcp.Description("Ticket year")),
+			mcp.WithNumber("month", mcp.Required(), mcp.Description("Ticket month")),
+			mcp.WithNumber("day", mcp.Required(), mcp.Description("Ticket day")),
+			mcp.WithString("slug", mcp.Required(), mcp.Description("Ticket slug")),
+			mcp.WithString("summary", mcp.Required(), mcp.Description("Summary of the ticket work")),
+			mcp.WithArray("files", mcp.Description("Files to include (at least one required)")),
+		),
+		ticketClose,
+	)
+	s.AddTool(
+		mcp.NewTool("contributor_add",
+			mcp.WithDescription("Add a contributor by GitHub username"),
+			mcp.WithString("github", mcp.Required(), mcp.Description("GitHub username")),
+		),
+		contributorAdd,
+	)
+	s.AddTool(
+		mcp.NewTool("contributor_list",
+			mcp.WithDescription("List all contributors"),
+		),
+		contributorList,
+	)
+	s.AddTool(
+		mcp.NewTool("contributor_remove",
+			mcp.WithDescription("Remove a contributor"),
+			mcp.WithString("github", mcp.Required(), mcp.Description("GitHub username")),
+		),
+		contributorRemove,
+	)
+	s.AddTool(
+		mcp.NewTool("project_list",
+			mcp.WithDescription("List Nx bundles in the monorepo"),
+		),
+		projectList,
+	)
+	s.AddTool(
+		mcp.NewTool("project_tree",
+			mcp.WithDescription("Show bundle dependency tree"),
+		),
+		projectTree,
+	)
+	s.AddTool(
+		mcp.NewTool("folder_create",
+			mcp.WithDescription("Create a folder"),
+			mcp.WithString("path", mcp.Required(), mcp.Description("Folder path to create")),
+		),
+		folderCreate,
+	)
+	s.AddTool(
+		mcp.NewTool("folder_move",
+			mcp.WithDescription("Move a folder"),
+			mcp.WithString("source", mcp.Required(), mcp.Description("Source folder path")),
+			mcp.WithString("target", mcp.Required(), mcp.Description("Target folder path")),
+		),
+		folderMove,
+	)
+	s.AddTool(
+		mcp.NewTool("folder_delete",
+			mcp.WithDescription("Delete a folder"),
+			mcp.WithString("path", mcp.Required(), mcp.Description("Folder path to delete")),
+		),
+		folderDelete,
+	)
+	s.AddTool(
+		mcp.NewTool("folder_list",
+			mcp.WithDescription("List folders in a path"),
+			mcp.WithString("path", mcp.Description("Path to list folders from"), mcp.DefaultString(".")),
+		),
+		folderList,
+	)
+	s.AddTool(
+		mcp.NewTool("folder_tree",
+			mcp.WithDescription("Show folder tree structure"),
+			mcp.WithString("path", mcp.Description("Path to show tree from"), mcp.DefaultString(".")),
+		),
+		folderTree,
+	)
+	s.AddTool(
+		mcp.NewTool("file_create",
+			mcp.WithDescription("Create a file with appropriate header"),
+			mcp.WithString("path", mcp.Required(), mcp.Description("File path to create")),
+		),
+		fileCreate,
+	)
+	s.AddTool(
+		mcp.NewTool("file_move",
+			mcp.WithDescription("Move a file"),
+			mcp.WithString("source", mcp.Required(), mcp.Description("Source file path")),
+			mcp.WithString("target", mcp.Required(), mcp.Description("Target file path")),
+		),
+		fileMove,
+	)
+	s.AddTool(
+		mcp.NewTool("file_delete",
+			mcp.WithDescription("Delete a file"),
+			mcp.WithString("path", mcp.Required(), mcp.Description("File path to delete")),
+		),
+		fileDelete,
+	)
+	s.AddTool(
+		mcp.NewTool("file_list",
+			mcp.WithDescription("List files in scope"),
+			mcp.WithString("scope", mcp.Description("Scope to list files from"), mcp.DefaultString("@semio")),
+		),
+		fileList,
+	)
+	s.AddTool(
+		mcp.NewTool("file_tree",
+			mcp.WithDescription("Show file tree structure"),
+			mcp.WithString("path", mcp.Description("Path to show tree from"), mcp.DefaultString(".")),
+		),
+		fileTree,
+	)
+	s.AddTool(
+		mcp.NewTool("section_create",
+			mcp.WithDescription("Create a section in a file"),
+			mcp.WithString("file", mcp.Required(), mcp.Description("File path")),
+			mcp.WithString("section", mcp.Required(), mcp.Description("Section name")),
+		),
+		sectionCreate,
+	)
+	s.AddTool(
+		mcp.NewTool("section_move",
+			mcp.WithDescription("Rename a section in a file"),
+			mcp.WithString("file", mcp.Required(), mcp.Description("File path")),
+			mcp.WithString("old_name", mcp.Required(), mcp.Description("Old section name")),
+			mcp.WithString("new_name", mcp.Required(), mcp.Description("New section name")),
+		),
+		sectionMove,
+	)
+	s.AddTool(
+		mcp.NewTool("section_delete",
+			mcp.WithDescription("Delete a section from a file"),
+			mcp.WithString("file", mcp.Required(), mcp.Description("File path")),
+			mcp.WithString("section", mcp.Required(), mcp.Description("Section name")),
+		),
+		sectionDelete,
+	)
+	s.AddTool(
+		mcp.NewTool("section_list",
+			mcp.WithDescription("List sections in a file"),
+			mcp.WithString("file", mcp.Required(), mcp.Description("File path")),
+		),
+		sectionList,
+	)
+	s.AddTool(
+		mcp.NewTool("section_tree",
+			mcp.WithDescription("Show section tree in a file"),
+			mcp.WithString("file", mcp.Required(), mcp.Description("File path")),
+		),
+		sectionTree,
+	)
+	s.AddTool(
+		mcp.NewTool("integrate",
+			mcp.WithDescription("Integrate source code into a target file section"),
+			mcp.WithString("source", mcp.Required(), mcp.Description("Source file path")),
+			mcp.WithString("target_section", mcp.Required(), mcp.Description("Target section name")),
+			mcp.WithString("target_file", mcp.Required(), mcp.Description("Target file path")),
+			mcp.WithString("target_parent_section", mcp.Description("Optional target parent section name")),
+		),
+		sectionIntegrate,
+	)
+	s.AddTool(
+		mcp.NewTool("definition_list",
+			mcp.WithDescription("List definitions in a file"),
+			mcp.WithString("file", mcp.Required(), mcp.Description("File path")),
+		),
+		definitionList,
+	)
+	s.AddTool(
+		mcp.NewTool("graphql",
+			mcp.WithDescription("Execute a GraphQL query against the repo schema"),
+			mcp.WithString("query", mcp.Required(), mcp.Description("GraphQL query string")),
+			mcp.WithString("variables", mcp.Description("JSON object with query variables")),
+		),
+		graphqlQuery,
+	)
+	if err := server.ServeStdio(s); err != nil {
+		return err
+	}
+	return nil
+}
+
+func textResult(text string) *mcp.CallToolResult {
+	return mcp.NewToolResultText(text)
+}
+
+// #region Args
+func getArgs(request mcp.CallToolRequest) map[string]interface{} {
+	if args, ok := request.Params.Arguments.(map[string]interface{}); ok {
+		return args
+	}
+	return make(map[string]interface{})
+}
+
+func getStringArg(args map[string]interface{}, key string) (string, bool, error) {
+	value, ok := args[key]
+	if !ok {
+		return "", false, nil
+	}
+	str, ok := value.(string)
+	if !ok || str == "" {
+		return "", true, fmt.Errorf("invalid %s", key)
+	}
+	return str, true, nil
+}
+
+func requireStringArg(args map[string]interface{}, key string) (string, error) {
+	value, ok, err := getStringArg(args, key)
+	if err != nil {
+		return "", err
+	}
+	if !ok {
+		return "", fmt.Errorf("missing %s", key)
+	}
+	return value, nil
+}
+
+func getIntArg(args map[string]interface{}, key string) (int, bool, error) {
+	value, ok := args[key]
+	if !ok {
+		return 0, false, nil
+	}
+	number, ok := value.(float64)
+	if !ok || number != math.Trunc(number) {
+		return 0, true, fmt.Errorf("invalid %s", key)
+	}
+	return int(number), true, nil
+}
+
+func requireIntArg(args map[string]interface{}, key string) (int, error) {
+	value, ok, err := getIntArg(args, key)
+	if err != nil {
+		return 0, err
+	}
+	if !ok {
+		return 0, fmt.Errorf("missing %s", key)
+	}
+	return value, nil
+}
+
+func getStringSliceArg(args map[string]interface{}, key string) ([]string, bool, error) {
+	value, ok := args[key]
+	if !ok {
+		return nil, false, nil
+	}
+	list, ok := value.([]interface{})
+	if !ok || len(list) == 0 {
+		return nil, true, fmt.Errorf("invalid %s", key)
+	}
+	result := make([]string, 0, len(list))
+	for _, item := range list {
+		str, ok := item.(string)
+		if !ok || str == "" {
+			return nil, true, fmt.Errorf("invalid %s", key)
+		}
+		result = append(result, str)
+	}
+	return result, true, nil
+}
+
+// #endregion Args
+
+// #region Paths
+func requireFilePath(path string) error {
+	info, err := os.Stat(path)
+	if err != nil {
+		return fmt.Errorf("invalid file path: %s", path)
+	}
+	if info.IsDir() {
+		return fmt.Errorf("invalid file path: %s", path)
+	}
+	return nil
+}
+
+func requireFolderPath(path string) error {
+	info, err := os.Stat(path)
+	if err != nil {
+		return fmt.Errorf("invalid folder path: %s", path)
+	}
+	if !info.IsDir() {
+		return fmt.Errorf("invalid folder path: %s", path)
+	}
+	return nil
+}
+
+func requireFileTargetPath(path string) error {
+	info, err := os.Stat(path)
+	if err == nil {
+		if info.IsDir() {
+			return fmt.Errorf("invalid file path: %s", path)
+		}
+		return nil
+	}
+	if !os.IsNotExist(err) {
+		return fmt.Errorf("invalid file path: %s", path)
+	}
+	return nil
+}
+
+func requireFolderTargetPath(path string) error {
+	info, err := os.Stat(path)
+	if err == nil {
+		if !info.IsDir() {
+			return fmt.Errorf("invalid folder path: %s", path)
+		}
+		return nil
+	}
+	if !os.IsNotExist(err) {
+		return fmt.Errorf("invalid folder path: %s", path)
+	}
+	return nil
+}
+
+// #endregion Paths
+
+// #region GraphQL
+
+func gql(query string, variables map[string]interface{}) (string, error) {
+	return executor.ExecuteJSON(context.Background(), query, variables)
+}
+
+// #endregion GraphQL
+
+// #region Handlers
+func analyze(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
+	scope, ok, err := getStringArg(args, "scope")
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		scope = "@semio"
+	}
+	query := `query Analyze($scope: String) {
+		analyze(scope: $scope) {
+			violations {
+				id
+				kindId
+				kind {
+					id
+					priority
+					autofixable
+					reason
+					solution
+				}
+				scope
+				excerpt
+				autofix {
+					description
+				}
+			}
+			metrics {
+				total
+				byPriority {
+					high
+					medium
+					low
+				}
+				autofixable
+			}
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"scope": scope})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
+}
+
+func fix(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
+	scope, ok, err := getStringArg(args, "scope")
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		scope = "@semio"
+	}
+	query := `mutation Fix($scope: String) {
+		fix(scope: $scope) {
+			fixed
+			remaining
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"scope": scope})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
+}
+
+func policyList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	query := `query Policies {
+		repo {
+			policies {
+				id
+				name
+				description
+				scopes
+				violationKinds {
+					id
+					priority
+					autofixable
+					reason
+					solution
+				}
+			}
+		}
+	}`
+	result, err := gql(query, nil)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
+}
+
+func policyCheck(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
+	id, err := requireStringArg(args, "id")
+	if err != nil {
+		return nil, err
+	}
+	scope, ok, err := getStringArg(args, "scope")
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		scope = "@semio"
+	}
+	query := `query PolicyCheck($id: String!, $scope: String) {
+		policy(id: $id) {
+			id
+			name
+			description
+			scopes
+			violationKinds {
+				id
+				priority
+				autofixable
+				reason
+				solution
+			}
+		}
+		analyze(scope: $scope) {
+			violations {
+				id
+				kindId
+				scope
+				excerpt
+			}
+			metrics {
+				total
+			}
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"id": id, "scope": scope})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
+}
+
+func ticketOpen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
+	title, err := requireStringArg(args, "title")
+	if err != nil {
+		return nil, err
+	}
+	prompt, err := requireStringArg(args, "prompt")
+	if err != nil {
+		return nil, err
+	}
+	llm, err := requireStringArg(args, "llm")
+	if err != nil {
+		return nil, err
+	}
+	input := map[string]interface{}{
+		"title":  title,
+		"prompt": prompt,
+		"llm":    llm,
+	}
+	query := `mutation TicketOpen($input: TicketOpenInput!) {
+		ticketOpen(input: $input) {
+			id
+			slug
+			prompt
+			status
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"input": input})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
+}
+
+func ticketList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
+	year, yearOk, err := getIntArg(args, "year")
+	if err != nil {
+		return nil, err
+	}
+	month, monthOk, err := getIntArg(args, "month")
+	if err != nil {
+		return nil, err
+	}
+	day, dayOk, err := getIntArg(args, "day")
+	if err != nil {
+		return nil, err
+	}
+	if monthOk && !yearOk {
+		return nil, fmt.Errorf("missing year")
+	}
+	if dayOk && !monthOk {
+		return nil, fmt.Errorf("missing month")
+	}
+	variables := make(map[string]interface{})
+	if yearOk {
+		variables["year"] = year
+	}
+	if monthOk {
+		variables["month"] = month
+	}
+	if dayOk {
+		variables["day"] = day
+	}
+	query := `query Tickets($year: Int, $month: Int, $day: Int) {
+		repo {
+			tickets(year: $year, month: $month, day: $day) {
+				id
+				year
+				month
+				day
+				slug
+				prompt
+				summary
+				status
+				model
+			}
+		}
+	}`
+	result, err := gql(query, variables)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
+}
+
+func ticketRead(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
+	year, err := requireIntArg(args, "year")
+	if err != nil {
+		return nil, err
+	}
+	month, err := requireIntArg(args, "month")
+	if err != nil {
+		return nil, err
+	}
+	day, err := requireIntArg(args, "day")
+	if err != nil {
+		return nil, err
+	}
+	slug, err := requireStringArg(args, "slug")
+	if err != nil {
+		return nil, err
+	}
+	query := `query Ticket($year: Int!, $month: Int!, $day: Int!, $slug: String!) {
+		ticket(year: $year, month: $month, day: $day, slug: $slug) {
+			id
+			year
+			month
+			day
+			slug
+			prompt
+			summary
+			status
+			model
+			commit
+			date {
+				created
+				finished
+			}
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"year": year, "month": month, "day": day, "slug": slug,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
+}
+
+func ticketClose(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
+	year, err := requireIntArg(args, "year")
+	if err != nil {
+		return nil, err
+	}
+	month, err := requireIntArg(args, "month")
+	if err != nil {
+		return nil, err
+	}
+	day, err := requireIntArg(args, "day")
+	if err != nil {
+		return nil, err
+	}
+	slug, err := requireStringArg(args, "slug")
+	if err != nil {
+		return nil, err
+	}
+	summary, err := requireStringArg(args, "summary")
+	if err != nil {
+		return nil, err
+	}
+	files, _, err := getStringSliceArg(args, "files")
+	if err != nil {
+		return nil, err
+	}
+	if len(files) == 0 {
+		return nil, fmt.Errorf("at least one file is required")
+	}
+	for _, file := range files {
+		if err := requireFilePath(file); err != nil {
+			return nil, err
+		}
+	}
+	input := map[string]interface{}{
+		"year":    year,
+		"month":   month,
+		"day":     day,
+		"slug":    slug,
+		"summary": summary,
+		"files":   files,
+	}
+	query := `mutation TicketClose($input: TicketCloseInput!) {
+		ticketClose(input: $input) {
+			id
+			slug
+			status
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"input": input})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
+}
+
+func contributorAdd(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
+	github, err := requireStringArg(args, "github")
+	if err != nil {
+		return nil, err
+	}
+	query := `mutation ContributorAdd($input: ContributorAddInput!) {
+		contributorAdd(input: $input) {
+			id
+			github
+			name
+			emails
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"input": map[string]interface{}{"github": github},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
+}
+
+func contributorList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	query := `query Contributors {
+		repo {
+			contributors {
+				id
+				github
+				name
+				emails
+			}
+		}
+	}`
+	result, err := gql(query, nil)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
+}
+
+func contributorRemove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
+	github, err := requireStringArg(args, "github")
+	if err != nil {
+		return nil, err
+	}
+	query := `mutation ContributorRemove($input: ContributorRemoveInput!) {
+		contributorRemove(input: $input) {
+			success
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"input": map[string]interface{}{"github": github},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
+}
+
+func projectList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	query := `query Bundles {
+		repo {
+			bundles {
+				id
+				name
+				root
+				projectType
+				tags
+				uri
+			}
+		}
+	}`
+	result, err := gql(query, nil)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
+}
+
+func projectTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	query := `query Bundles {
+		repo {
+			bundles {
+				id
+				name
+				root
+			}
+		}
+	}`
+	result, err := gql(query, nil)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
+}
+
+func folderCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
+	path, err := requireStringArg(args, "path")
+	if err != nil {
+		return nil, err
+	}
+	if err := requireFolderTargetPath(path); err != nil {
+		return nil, err
+	}
+	query := `mutation FolderCreate($input: FolderCreateInput!) {
+		folderCreate(input: $input) {
+			id
+			path
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"input": map[string]interface{}{"path": path},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
+}
+
+func folderMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
+	source, err := requireStringArg(args, "source")
+	if err != nil {
+		return nil, err
+	}
+	target, err := requireStringArg(args, "target")
+	if err != nil {
+		return nil, err
+	}
+	if err := requireFolderPath(source); err != nil {
+		return nil, err
+	}
+	if err := requireFolderTargetPath(target); err != nil {
+		return nil, err
+	}
+	query := `mutation FolderMove($input: FolderMoveInput!) {
+		folderMove(input: $input) {
+			id
+			path
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"input": map[string]interface{}{"source": source, "target": target},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
+}
+
+func folderDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
+	path, err := requireStringArg(args, "path")
+	if err != nil {
+		return nil, err
+	}
+	if err := requireFolderPath(path); err != nil {
+		return nil, err
+	}
+	query := `mutation FolderDelete($input: FolderDeleteInput!) {
+		folderDelete(input: $input) {
+			success
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"input": map[string]interface{}{"path": path},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
+}
+
+func folderList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
+	path, ok, err := getStringArg(args, "path")
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		path = "."
+	}
+	if err := requireFolderPath(path); err != nil {
+		return nil, err
+	}
+	query := `query Folder($path: String!) {
+		folder(path: $path) {
+			id
+			path
+			name
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"path": path})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
+}
+
+func folderTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
+	path, ok, err := getStringArg(args, "path")
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		path = "."
+	}
+	if err := requireFolderPath(path); err != nil {
+		return nil, err
+	}
+	query := `query Folder($path: String!) {
+		folder(path: $path) {
+			id
+			path
+			name
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"path": path})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
+}
+
+func fileCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
+	path, err := requireStringArg(args, "path")
+	if err != nil {
+		return nil, err
+	}
+	if err := requireFileTargetPath(path); err != nil {
+		return nil, err
+	}
+	query := `mutation FileCreate($input: FileCreateInput!) {
+		fileCreate(input: $input) {
+			id
+			path
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"input": map[string]interface{}{"path": path},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
+}
+
+func fileMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
+	source, err := requireStringArg(args, "source")
+	if err != nil {
+		return nil, err
+	}
+	target, err := requireStringArg(args, "target")
+	if err != nil {
+		return nil, err
+	}
+	if err := requireFilePath(source); err != nil {
+		return nil, err
+	}
+	if err := requireFileTargetPath(target); err != nil {
+		return nil, err
+	}
+	query := `mutation FileMove($input: FileMoveInput!) {
+		fileMove(input: $input) {
+			id
+			path
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"input": map[string]interface{}{"source": source, "target": target},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
+}
+
+func fileDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
+	path, err := requireStringArg(args, "path")
+	if err != nil {
+		return nil, err
+	}
+	if err := requireFilePath(path); err != nil {
+		return nil, err
+	}
+	query := `mutation FileDelete($input: FileDeleteInput!) {
+		fileDelete(input: $input) {
+			success
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"input": map[string]interface{}{"path": path},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
+}
+
+func fileList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
+	scope, ok, err := getStringArg(args, "scope")
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		scope = "@semio"
+	}
+	query := `query Bundle($name: String!) {
+		bundle(name: $name) {
+			id
+			name
+			root
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"name": scope})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
+}
+
+func fileTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
+	path, ok, err := getStringArg(args, "path")
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		path = "."
+	}
+	if err := requireFolderPath(path); err != nil {
+		return nil, err
+	}
+	query := `query Folder($path: String!) {
+		folder(path: $path) {
+			id
+			path
+			name
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"path": path})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
+}
+
+func sectionCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
+	file, err := requireStringArg(args, "file")
+	if err != nil {
+		return nil, err
+	}
+	section, err := requireStringArg(args, "section")
+	if err != nil {
+		return nil, err
+	}
+	if err := requireFilePath(file); err != nil {
+		return nil, err
+	}
+	query := `mutation SectionCreate($input: SectionCreateInput!) {
+		sectionCreate(input: $input) {
+			id
+			name
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"input": map[string]interface{}{"file": file, "name": section},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
+}
+
+func sectionMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
+	file, err := requireStringArg(args, "file")
+	if err != nil {
+		return nil, err
+	}
+	oldName, err := requireStringArg(args, "old_name")
+	if err != nil {
+		return nil, err
+	}
+	newName, err := requireStringArg(args, "new_name")
+	if err != nil {
+		return nil, err
+	}
+	if err := requireFilePath(file); err != nil {
+		return nil, err
+	}
+	query := `mutation SectionMove($input: SectionMoveInput!) {
+		sectionMove(input: $input) {
+			id
+			name
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"input": map[string]interface{}{"file": file, "oldName": oldName, "newName": newName},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
+}
+
+func sectionDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
+	file, err := requireStringArg(args, "file")
+	if err != nil {
+		return nil, err
+	}
+	section, err := requireStringArg(args, "section")
+	if err != nil {
+		return nil, err
+	}
+	if err := requireFilePath(file); err != nil {
+		return nil, err
+	}
+	query := `mutation SectionDelete($input: SectionDeleteInput!) {
+		sectionDelete(input: $input) {
+			success
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"input": map[string]interface{}{"file": file, "name": section},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
+}
+
+func sectionList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
+	file, err := requireStringArg(args, "file")
+	if err != nil {
+		return nil, err
+	}
+	if err := requireFilePath(file); err != nil {
+		return nil, err
+	}
+	query := `query File($path: String!) {
+		file(path: $path) {
+			id
+			path
+			sections {
+				id
+				name
+				range { start end }
+			}
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"path": file})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
+}
+
+func sectionTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
+	file, err := requireStringArg(args, "file")
+	if err != nil {
+		return nil, err
+	}
+	if err := requireFilePath(file); err != nil {
+		return nil, err
+	}
+	query := `query File($path: String!) {
+		file(path: $path) {
+			id
+			path
+			sections {
+				id
+				name
+				range { start end }
+			}
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"path": file})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
+}
+
+func sectionIntegrate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
+	source, err := requireStringArg(args, "source")
+	if err != nil {
+		return nil, err
+	}
+	targetSection, err := requireStringArg(args, "target_section")
+	if err != nil {
+		return nil, err
+	}
+	targetFile, err := requireStringArg(args, "target_file")
+	if err != nil {
+		return nil, err
+	}
+	targetParentSection, _, err := getStringArg(args, "target_parent_section")
+	if err != nil {
+		return nil, err
+	}
+
+	if err := requireFilePath(source); err != nil {
+		return nil, err
+	}
+	if err := requireFilePath(targetFile); err != nil {
+		return nil, err
+	}
+
+	query := `mutation Integrate($input: IntegrateInput!) {
+		integrate(input: $input) {
+			success
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"input": map[string]interface{}{
+			"sourcePath":               source,
+			"targetSectionName":        targetSection,
+			"targetFilePath":           targetFile,
+			"targetParentSectionName":  targetParentSection,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
+}
+
+func definitionList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
+	file, err := requireStringArg(args, "file")
+	if err != nil {
+		return nil, err
+	}
+	if err := requireFilePath(file); err != nil {
+		return nil, err
+	}
+	query := `query File($path: String!) {
+		file(path: $path) {
+			id
+			path
+			definitions {
+				id
+				name
+				kind
+				range { start end }
+			}
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"path": file})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
+}
+
+func graphqlQuery(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
+	query, err := requireStringArg(args, "query")
+	if err != nil {
+		return nil, err
+	}
+	variablesStr, _, err := getStringArg(args, "variables")
+	if err != nil {
+		return nil, err
+	}
+	var variables map[string]interface{}
+	if variablesStr != "" {
+		if err := json.Unmarshal([]byte(variablesStr), &variables); err != nil {
+			return nil, fmt.Errorf("invalid variables JSON: %w", err)
+		}
+	}
+	result, gqlErr := gql(query, variables)
+	if gqlErr != nil {
+		return textResult(fmt.Sprintf(`{"error": %q}`, gqlErr.Error())), nil
+	}
+	return textResult(result), nil
+}
+
+// #endregion Handlers
+
+// #endregion Mcp
+
+// #region Cli
+
+// #region Init
+// #endregion Init
+
+// #region GraphQL Helpers
+
+func printGQL(query string, variables map[string]interface{}) error {
+	result, err := gql(query, variables)
+	if err != nil {
+		return err
+	}
+	fmt.Println(result)
+	return nil
+}
+
+// #endregion GraphQL Helpers
+
+// #region Commands
+
+func main() {
+	if err := Execute(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+}
+
+func Execute() error {
+	return rootCmd.Execute()
+}
+
+var rootCmd = &cobra.Command{
+	Use:   "repo",
+	Short: "Monorepo CLI for Semio",
+	Long:  `repo - Monorepo CLI for Semio. All commands output JSON via GraphQL.`,
+}
+
+var mcpCmd = &cobra.Command{
+	Use:   "mcp",
+	Short: "Run MCP server",
+	RunE:  runMcpServer,
+}
+
+func init() {
+	rootCmd.AddCommand(mcpCmd)
+	rootCmd.AddCommand(graphqlCmd)
+	rootCmd.AddCommand(analyzeCmd)
+	rootCmd.AddCommand(fixCmd)
+	rootCmd.AddCommand(policyCmd)
+	rootCmd.AddCommand(ticketCmd)
+	rootCmd.AddCommand(contributorCmd)
+	rootCmd.AddCommand(bundleCmd)
+	rootCmd.AddCommand(folderCmd)
+	rootCmd.AddCommand(fileCmd)
+	rootCmd.AddCommand(sectionCmd)
+}
+
+// #region GraphQL Command
+
+var graphqlCmd = &cobra.Command{
+	Use:   "graphql <query>",
+	Short: "Execute a GraphQL query",
+	Long:  `Execute a GraphQL query against the repo schema and return JSON result.`,
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		query := args[0]
+		variablesJSON, _ := cmd.Flags().GetString("variables")
+		var variables map[string]interface{}
+		if variablesJSON != "" {
+			if err := json.Unmarshal([]byte(variablesJSON), &variables); err != nil {
+				return fmt.Errorf("invalid variables JSON: %w", err)
+			}
+		}
+		return printGQL(query, variables)
+	},
+}
+
+func init() {
+	graphqlCmd.Flags().StringP("variables", "v", "", "JSON object with query variables")
+}
+
+// #endregion GraphQL Command
+
+// #region Serve Command
+
+var devCmd = &cobra.Command{
+	Use:   "dev",
+	Short: "Start GraphQL server with GraphiQL interface",
+	Long:  `Start an HTTP server exposing the GraphQL API with introspection and GraphiQL interface.`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		port, _ := cmd.Flags().GetInt("port")
+		addr := fmt.Sprintf(":%d", port)
+
+		http.HandleFunc("/graphql", graphqlHandler)
+		http.HandleFunc("/", graphiqlHandler)
+
+		fmt.Printf("GraphQL server running at http://localhost%s/graphql\n", addr)
+		fmt.Printf("GraphiQL interface at http://localhost%s/\n", addr)
+		return http.ListenAndServe(addr, nil)
+	},
+}
+
+func graphqlHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	var request struct {
+		Query         string                 `json:"query"`
+		Variables     map[string]interface{} `json:"variables"`
+		OperationName string                 `json:"operationName"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, `{"errors":[{"message":"Invalid JSON"}]}`, http.StatusBadRequest)
+		return
+	}
+
+	result, err := executor.Execute(r.Context(), request.Query, request.Variables)
+	response := map[string]interface{}{}
+	if err != nil {
+		response["errors"] = []map[string]string{{"message": err.Error()}}
+	} else {
+		response["data"] = result
+	}
+
+	json.NewEncoder(w).Encode(response)
+}
+
+func graphiqlHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html")
+	w.Write([]byte(graphiqlHTML))
+}
+
+const graphiqlHTML = `<!DOCTYPE html>
+<html>
+<head>
+  <title>GraphiQL - Semio Repo</title>
+  <style>
+    body { height: 100%; margin: 0; width: 100%; overflow: hidden; }
+    #graphiql { height: 100vh; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js" crossorigin></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js" crossorigin></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/graphiql@3.0.10/graphiql.min.css" />
+</head>
+<body>
+  <div id="graphiql">Loading...</div>
+  <script src="https://cdn.jsdelivr.net/npm/graphiql@3.0.10/graphiql.min.js" crossorigin></script>
+  <script>
+    const root = ReactDOM.createRoot(document.getElementById('graphiql'));
+    root.render(
+      React.createElement(GraphiQL, {
+        fetcher: async (graphQLParams) => {
+          const response = await fetch('/graphql', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(graphQLParams),
+          });
+          return response.json();
+        },
+      }),
+    );
+  </script>
+</body>
+</html>`
+
+func init() {
+	devCmd.Flags().IntP("port", "p", 8080, "Port to listen on")
+	rootCmd.AddCommand(devCmd)
+}
+
+// #endregion Serve Command
+
+// #region Analyze Command
+
+var analyzeCmd = &cobra.Command{
+	Use:   "analyze [scope]",
+	Short: "Analyze codebase for violations",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		var scope *string
+		if len(args) > 0 {
+			scope = &args[0]
+		}
+		variables := map[string]interface{}{}
+		if scope != nil {
+			variables["scope"] = *scope
+		}
+		return printGQL(`
+			query Analyze($scope: String) {
+				analyze(scope: $scope) {
+					violations {
+						id
+						scope
+						line
+						column
+						excerpt
+						kind { id priority autofixable reason solution }
+						autofix { description edits { path edits { start end newText } } }
+					}
+					metrics { total autofixable byPriority { high medium low } }
+				}
+			}
+		`, variables)
+	},
+}
+
+// #endregion Analyze Command
+
+// #region Fix Command
+
+var fixCmd = &cobra.Command{
+	Use:   "fix [scope]",
+	Short: "Apply autofixes for violations",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		var scope *string
+		if len(args) > 0 {
+			scope = &args[0]
+		}
+		variables := map[string]interface{}{}
+		if scope != nil {
+			variables["scope"] = *scope
+		}
+		return printGQL(`
+			mutation Fix($scope: String) {
+				fix(scope: $scope) {
+					fixed
+					remaining
+					violations {
+						id
+						scope
+						excerpt
+						line
+					}
+				}
+			}
+		`, variables)
+	},
+}
+
+// #endregion Fix Command
+
+// #region Export Command
+
+var exportCmd = &cobra.Command{
+	Use:   "export [output]",
+	Short: "Export repo data to SQLite database",
+	Long:  `Export all repo data (bundles, folders, files, sections, contributors, tickets, policies, violations) to a SQLite database file.`,
+	Args:  cobra.MaximumNArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		outputPath := ""
+		if len(args) > 0 {
+			outputPath = args[0]
+		}
+		ctx := NewRepoContext(findRepoRoot("."))
+		result, err := ExportToSQLite(outputPath, ctx)
+		if err != nil {
+			return err
+		}
+		jsonBytes, err := json.MarshalIndent(result, "", "  ")
+		if err != nil {
+			return err
+		}
+		fmt.Println(string(jsonBytes))
+		return nil
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(exportCmd)
+}
+
+// #endregion Export Command
+
+// #region Policy Commands
+
+var policyCmd = &cobra.Command{
+	Use:   "policy",
+	Short: "Policy management commands",
+}
+
+var policyListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List all registered policies",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return printGQL(`
+			query Policies {
+				repo {
+					policies {
+						id
+						name
+						description
+						scopes
+						violationKinds { id priority autofixable reason solution }
+					}
+				}
+			}
+		`, nil)
+	},
+}
+
+func init() {
+	policyCmd.AddCommand(policyListCmd)
+}
+
+// #endregion Policy Commands
+
+// #region Ticket Commands
+
+var ticketCmd = &cobra.Command{
+	Use:   "ticket",
+	Short: "Ticket management commands",
+}
+
+var ticketOpenCmd = &cobra.Command{
+	Use:   "open <title> <prompt> <llm>",
+	Short: "Open a new ticket",
+	Args:  cobra.ExactArgs(3),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		input := map[string]interface{}{
+			"title":  args[0],
+			"prompt": args[1],
+			"llm":    args[2],
+		}
+		variables := map[string]interface{}{
+			"input": input,
+		}
+		return printGQL(`
+			mutation TicketOpen($input: TicketOpenInput!) {
+				ticketOpen(input: $input) {
+					id
+					slug
+					status
+					path
+					uri
+				}
+			}
+		`, variables)
+	},
+}
+
+var ticketListCmd = &cobra.Command{
+	Use:   "list [year] [month] [day]",
+	Short: "List tickets",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		variables := map[string]interface{}{}
+		if len(args) > 0 {
+			y, _ := strconv.Atoi(args[0])
+			variables["year"] = y
+		}
+		if len(args) > 1 {
+			m, _ := strconv.Atoi(args[1])
+			variables["month"] = m
+		}
+		if len(args) > 2 {
+			d, _ := strconv.Atoi(args[2])
+			variables["day"] = d
+		}
+		return printGQL(`
+			query Tickets($year: Int, $month: Int, $day: Int) {
+				repo {
+					tickets(year: $year, month: $month, day: $day) {
+						id
+						year
+						month
+						day
+						slug
+						status
+						prompt
+						summary
+						path
+						uri
+						date { created finished }
+					}
+				}
+			}
+		`, variables)
+	},
+}
+
+var ticketCloseCmd = &cobra.Command{
+	Use:   "close <YYYY/MM/DD/SLUG> <summary> <files...>",
+	Short: "Close a ticket with summary and files",
+	Args:  cobra.MinimumNArgs(3),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// Parse YYYY/MM/DD/SLUG path format
+		path := args[0]
+		summary := args[1]
+		files := args[2:]
+		year, month, day, slug, err := parseTicketPath(path)
+		if err != nil {
+			return err
+		}
+		input := map[string]interface{}{
+			"year":    year,
+			"month":   month,
+			"day":     day,
+			"slug":    slug,
+			"summary": summary,
+			"files":   files,
+		}
+		variables := map[string]interface{}{
+			"input": input,
+		}
+		return printGQL(`
+			mutation TicketClose($input: TicketCloseInput!) {
+				ticketClose(input: $input) {
+					id
+					slug
+					status
+					date { created finished }
+				}
+			}
+		`, variables)
+	},
+}
+
+var ticketReopenCmd = &cobra.Command{
+	Use:   "reopen <YYYY/MM/DD/SLUG> <prompt> <llm>",
+	Short: "Reopen a ticket",
+	Args:  cobra.ExactArgs(3),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// Parse YYYY/MM/DD/SLUG path format
+		path := args[0]
+		year, month, day, slug, err := parseTicketPath(path)
+		if err != nil {
+			return err
+		}
+		variables := map[string]interface{}{
+			"input": map[string]interface{}{
+				"year":   year,
+				"month":  month,
+				"day":    day,
+				"slug":   slug,
+				"prompt": args[1],
+				"llm":    args[2],
+			},
+		}
+		return printGQL(`
+			mutation TicketReopen($input: TicketReopenInput!) {
+				ticketReopen(input: $input) {
+					id
+					slug
+					status
+				}
+			}
+		`, variables)
+	},
+}
+
+// parseTicketPath parses a ticket path in YYYY/MM/DD/SLUG format
+func parseTicketPath(path string) (year, month, day int, slug string, err error) {
+	parts := filepath.SplitList(path)
+	if len(parts) == 1 {
+		// Try splitting by forward slash
+		parts = nil
+		for _, p := range filepath.SplitList(path) {
+			parts = append(parts, p)
+		}
+		// Manual split by /
+		parts = splitPath(path)
+	}
+	if len(parts) != 4 {
+		return 0, 0, 0, "", fmt.Errorf("invalid ticket path format, expected YYYY/MM/DD/SLUG, got: %s", path)
+	}
+	year, err = strconv.Atoi(parts[0])
+	if err != nil {
+		return 0, 0, 0, "", fmt.Errorf("invalid year in path: %s", parts[0])
+	}
+	month, err = strconv.Atoi(parts[1])
+	if err != nil {
+		return 0, 0, 0, "", fmt.Errorf("invalid month in path: %s", parts[1])
+	}
+	day, err = strconv.Atoi(parts[2])
+	if err != nil {
+		return 0, 0, 0, "", fmt.Errorf("invalid day in path: %s", parts[2])
+	}
+	slug = parts[3]
+	return
+}
+
+// splitPath splits a path by / or \
+func splitPath(path string) []string {
+	var parts []string
+	current := ""
+	for _, c := range path {
+		if c == '/' || c == '\\' {
+			if current != "" {
+				parts = append(parts, current)
+				current = ""
+			}
+		} else {
+			current += string(c)
+		}
+	}
+	if current != "" {
+		parts = append(parts, current)
+	}
+	return parts
+}
+
+func init() {
+	ticketCmd.AddCommand(ticketOpenCmd)
+	ticketCmd.AddCommand(ticketListCmd)
+	ticketCmd.AddCommand(ticketCloseCmd)
+	ticketCmd.AddCommand(ticketReopenCmd)
+}
+
+// #endregion Ticket Commands
+
+// #region Contributor Commands
+
+var contributorCmd = &cobra.Command{
+	Use:   "contributor",
+	Short: "Contributor management commands",
+}
+
+var contributorListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List contributors",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return printGQL(`
+			query Contributors {
+				repo {
+					contributors {
+						id
+						github
+						name
+						emails
+						icons { avatar avatarRound github }
+						links { name url }
+						metrics { commits tickets bundles folders files sections definitions lines }
+					}
+				}
+			}
+		`, nil)
+	},
+}
+
+var contributorAddCmd = &cobra.Command{
+	Use:   "add <github>",
+	Short: "Add a contributor",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		name, _ := cmd.Flags().GetString("name")
+		emails, _ := cmd.Flags().GetStringSlice("email")
+		input := map[string]interface{}{
+			"github": args[0],
+		}
+		if name != "" {
+			input["name"] = name
+		}
+		if len(emails) > 0 {
+			input["emails"] = emails
+		}
+		variables := map[string]interface{}{
+			"input": input,
+		}
+		return printGQL(`
+			mutation ContributorAdd($input: ContributorAddInput!) {
+				contributorAdd(input: $input) {
+					id
+					github
+					name
+					emails
+				}
+			}
+		`, variables)
+	},
+}
+
+var contributorRemoveCmd = &cobra.Command{
+	Use:   "remove <github>",
+	Short: "Remove a contributor",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		variables := map[string]interface{}{
+			"github": args[0],
+		}
+		return printGQL(`
+			mutation ContributorRemove($github: String!) {
+				contributorRemove(github: $github)
+			}
+		`, variables)
+	},
+}
+
+func init() {
+	contributorAddCmd.Flags().String("name", "", "Contributor name")
+	contributorAddCmd.Flags().StringSlice("email", nil, "Contributor emails")
+	contributorCmd.AddCommand(contributorListCmd)
+	contributorCmd.AddCommand(contributorAddCmd)
+	contributorCmd.AddCommand(contributorRemoveCmd)
+}
+
+// #endregion Contributor Commands
+
+// #region Bundle Commands
+
+var bundleCmd = &cobra.Command{
+	Use:   "bundle",
+	Short: "Bundle management commands",
+}
+
+var bundleListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List Nx bundles",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return printGQL(`
+			query Bundles {
+				repo {
+					bundles {
+						id
+						name
+						root
+						sourceRoot
+						projectType
+						tags
+						uri
+					}
+				}
+			}
+		`, nil)
+	},
+}
+
+func init() {
+	bundleCmd.AddCommand(bundleListCmd)
+}
+
+// #endregion Bundle Commands
+
+// #region Folder Commands
+
+var folderCmd = &cobra.Command{
+	Use:   "folder",
+	Short: "Folder management commands",
+}
+
+var folderCreateCmd = &cobra.Command{
+	Use:   "create <path>",
+	Short: "Create a folder",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		variables := map[string]interface{}{
+			"path": args[0],
+		}
+		return printGQL(`
+			mutation FolderCreate($path: String!) {
+				folderCreate(path: $path) {
+					id
+					path
+					name
+					uri
+				}
+			}
+		`, variables)
+	},
+}
+
+var folderMoveCmd = &cobra.Command{
+	Use:   "move <source> <target>",
+	Short: "Move a folder",
+	Args:  cobra.ExactArgs(2),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		variables := map[string]interface{}{
+			"src": args[0],
+			"dst": args[1],
+		}
+		return printGQL(`
+			mutation FolderMove($src: String!, $dst: String!) {
+				folderMove(src: $src, dst: $dst) {
+					id
+					path
+					name
+					uri
+				}
+			}
+		`, variables)
+	},
+}
+
+var folderDeleteCmd = &cobra.Command{
+	Use:   "delete <path>",
+	Short: "Delete a folder",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		variables := map[string]interface{}{
+			"path": args[0],
+		}
+		return printGQL(`
+			mutation FolderDelete($path: String!) {
+				folderDelete(path: $path)
+			}
+		`, variables)
+	},
+}
+
+func init() {
+	folderCmd.AddCommand(folderCreateCmd)
+	folderCmd.AddCommand(folderMoveCmd)
+	folderCmd.AddCommand(folderDeleteCmd)
+}
+
+// #endregion Folder Commands
+
+// #region File Commands
+
+var fileCmd = &cobra.Command{
+	Use:   "file",
+	Short: "File management commands",
+}
+
+var fileCreateCmd = &cobra.Command{
+	Use:   "create <path>",
+	Short: "Create a file",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		variables := map[string]interface{}{
+			"path": args[0],
+		}
+		return printGQL(`
+			mutation FileCreate($path: String!) {
+				fileCreate(path: $path) {
+					id
+					path
+					name
+					uri
+				}
+			}
+		`, variables)
+	},
+}
+
+var fileMoveCmd = &cobra.Command{
+	Use:   "move <source> <target>",
+	Short: "Move a file",
+	Args:  cobra.ExactArgs(2),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		variables := map[string]interface{}{
+			"src": args[0],
+			"dst": args[1],
+		}
+		return printGQL(`
+			mutation FileMove($src: String!, $dst: String!) {
+				fileMove(src: $src, dst: $dst) {
+					id
+					path
+					name
+					uri
+				}
+			}
+		`, variables)
+	},
+}
+
+var fileDeleteCmd = &cobra.Command{
+	Use:   "delete <path>",
+	Short: "Delete a file",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		variables := map[string]interface{}{
+			"path": args[0],
+		}
+		return printGQL(`
+			mutation FileDelete($path: String!) {
+				fileDelete(path: $path)
+			}
+		`, variables)
+	},
+}
+
+func init() {
+	fileCmd.AddCommand(fileCreateCmd)
+	fileCmd.AddCommand(fileMoveCmd)
+	fileCmd.AddCommand(fileDeleteCmd)
+}
+
+// #endregion File Commands
+
+// #region Section Commands
+
+var sectionCmd = &cobra.Command{
+	Use:   "section",
+	Short: "Section management commands",
+}
+
+var sectionCreateCmd = &cobra.Command{
+	Use:   "create <file> <name>",
+	Short: "Create a section in a file",
+	Args:  cobra.ExactArgs(2),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		parent, _ := cmd.Flags().GetString("parent")
+		variables := map[string]interface{}{
+			"file": args[0],
+			"name": args[1],
+		}
+		if parent != "" {
+			variables["parent"] = parent
+		}
+		return printGQL(`
+			mutation SectionCreate($file: String!, $name: String!, $parent: String) {
+				sectionCreate(file: $file, name: $name, parent: $parent) {
+					id
+					name
+					range { start end }
+				}
+			}
+		`, variables)
+	},
+}
+
+var sectionMoveCmd = &cobra.Command{
+	Use:   "move <file> <old-name> <new-name>",
+	Short: "Move/rename a section",
+	Args:  cobra.ExactArgs(3),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		variables := map[string]interface{}{
+			"file":    args[0],
+			"oldName": args[1],
+			"newName": args[2],
+		}
+		return printGQL(`
+			mutation SectionMove($file: String!, $oldName: String!, $newName: String!) {
+				sectionMove(file: $file, oldName: $oldName, newName: $newName) {
+					id
+					name
+					range { start end }
+				}
+			}
+		`, variables)
+	},
+}
+
+var sectionDeleteCmd = &cobra.Command{
+	Use:   "delete <file> <name>",
+	Short: "Delete a section from a file",
+	Args:  cobra.ExactArgs(2),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		variables := map[string]interface{}{
+			"file": args[0],
+			"name": args[1],
+		}
+		return printGQL(`
+			mutation SectionDelete($file: String!, $name: String!) {
+				sectionDelete(file: $file, name: $name)
+			}
+		`, variables)
+	},
+}
+
+var integrateCmd = &cobra.Command{
+	Use:   "integrate <source> <target-section-name> <target-file> [<target-parent-section-name>]",
+	Short: "Integrate a source file into a target file's section",
+	Args:  cobra.RangeArgs(3, 4),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		variables := map[string]interface{}{
+			"source":        args[0],
+			"targetSection": args[1],
+			"targetFile":    args[2],
+		}
+		if len(args) == 4 {
+			variables["targetParent"] = args[3]
+		}
+		return printGQL(`
+			mutation Integrate($source: String!, $targetSection: String!, $targetFile: String!, $targetParent: String) {
+				integrate(source: $source, targetSection: $targetSection, targetFile: $targetFile, targetParent: $targetParent) {
+					id
+					path
+				}
+			}
+		`, variables)
+	},
+}
+
+var sectionListCmd = &cobra.Command{
+	Use:   "list <file>",
+	Short: "List sections in a file",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		variables := map[string]interface{}{
+			"path": args[0],
+		}
+		return printGQL(`
+			query SectionList($path: String!) {
+				file(path: $path) {
+					sections {
+						id
+						name
+						range { start end }
+						children {
+							id
+							name
+							range { start end }
+							children {
+								id
+								name
+								range { start end }
+								children {
+									id
+									name
+									range { start end }
+								}
+							}
+						}
+					}
+				}
+			}
+		`, variables)
+	},
+}
+
+func init() {
+	sectionCreateCmd.Flags().String("parent", "", "Parent section name")
+	sectionCmd.AddCommand(sectionListCmd)
+	sectionCmd.AddCommand(sectionCreateCmd)
+	sectionCmd.AddCommand(sectionMoveCmd)
+	sectionCmd.AddCommand(sectionDeleteCmd)
+	sectionCmd.AddCommand(integrateCmd)
+}
+
+// #endregion Section Commands
+
+// #region Definition Commands
+
+var definitionCmd = &cobra.Command{
+	Use:   "definition",
+	Short: "Definition management commands",
+}
+
+var definitionListCmd = &cobra.Command{
+	Use:   "list <file>",
+	Short: "List definitions in a file",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		variables := map[string]interface{}{
+			"path": args[0],
+		}
+		return printGQL(`
+			query DefinitionList($path: String!) {
+				file(path: $path) {
+					definitions {
+						id
+						name
+						kind
+						range { start end }
+					}
+				}
+			}
+		`, variables)
+	},
+}
+
+func init() {
+	definitionCmd.AddCommand(definitionListCmd)
+	rootCmd.AddCommand(definitionCmd)
+}
+
+// #endregion Definition Commands
+
+// #endregion Commands
+
+// #endregion Cli
