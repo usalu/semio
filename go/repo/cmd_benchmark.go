@@ -45,21 +45,21 @@ func runBenchmark(cmd *cobra.Command, args []string) error {
 		{
 			Name:    "Typescript",
 			Cmd:     "npx",
-			Args:    []string{"tsx", "benchmark.ts"},
+			Args:    []string{"tsx", "semio.benchmark.ts"},
 			Dir:     filepath.Join(rootDir, "js", "semio"),
 			Enabled: true,
 		},
 		{
 			Name:    "Python",
 			Cmd:     "uv",
-			Args:    []string{"run", "benchmark.py"},
+			Args:    []string{"run", "semio.benchmark.py"},
 			Dir:     filepath.Join(rootDir, "py", "semio"),
 			Enabled: true,
 		},
 		{
 			Name:    "Go",
 			Cmd:     "go",
-			Args:    []string{"run", "benchmark/main.go"},
+			Args:    []string{"run", "semio_benchmark.go"},
 			Dir:     filepath.Join(rootDir, "go", "semio"),
 			Enabled: true,
 		},
@@ -73,7 +73,7 @@ func runBenchmark(cmd *cobra.Command, args []string) error {
 		{
 			Name:    "Rust",
 			Cmd:     "cargo",
-			Args:    []string{"run", "--release", "--example", "benchmark"},
+			Args:    []string{"run", "--release", "--bin", "semio-benchmark"},
 			Dir:     filepath.Join(rootDir, "rs", "semio"),
 			Enabled: true,
 		},
@@ -154,7 +154,7 @@ func parseBenchmarkOutput(results *[]BenchmarkResult, lang string, output string
 }
 
 func writeBenchmarkReport(rootDir string, results []BenchmarkResult) error {
-	reportFile := filepath.Join(rootDir, "temp", "benchmark.csv")
+	reportFile := filepath.Join(rootDir, "reports", "benchmark.csv")
 	if err := os.MkdirAll(filepath.Dir(reportFile), 0755); err != nil {
 		return err
 	}

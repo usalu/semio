@@ -42,23 +42,18 @@
     "mcp:inspector": "npx @modelcontextprotocol/inspector"
   },
   "devDependencies": {
-    "@esbuild-kit/esm-loader": "^2.6.5",
     "@nx/eslint-plugin": "^21.6.10",
     "@nxlv/python": "^21.2.3",
-    "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.19.6",
     "@types/react": "^19.2.8",
     "husky": "^9.1.7",
-    "ink": "^6.6.0",
-    "js-yaml": "^4.1.1",
     "lint-staged": "^16.2.7",
     "nx": "^21.4.1",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "sharp": "^0.33.5",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "vitest": "^3.0.8"
+    "vitest": "^4.0.17"
   },
   "keywords": [
     "kit-of-parts",
@@ -93,5 +88,9 @@
   },
   "dependencies": {
     "esbuild": "^0.27.2"
+  },
+  "overrides": {
+    "diff": "^8.0.3",
+    "tmp": "^0.2.5"
   }
 }

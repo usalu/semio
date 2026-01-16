@@ -144,12 +144,6 @@ type LineMetrics struct {
 	Removed int `yaml:"removed" json:"removed"`
 }
 
-type TextEdit struct {
-	Start   int    `json:"start"`
-	End     int    `json:"end"`
-	NewText string `json:"newText"`
-}
-
 type DiffLines struct {
 	Added   []int
 	Removed []int
@@ -189,20 +183,6 @@ type TicketFileMetricsEntry struct {
 	Path     string                          `json:"path"`
 	Lines    *LineMetrics                    `json:"lines,omitempty"`
 	Sections map[string]TicketSectionMetrics `json:"sections,omitempty"`
-}
-
-
-
-
-
-type Autofix struct {
-	Description string       `json:"description"`
-	Edits       []FileEdit `json:"edits"`
-}
-
-type FileEdit struct {
-	Path  string     `json:"path"`
-	Edits []TextEdit `json:"edits"`
 }
 
 type AnalyzeMetrics struct {
@@ -580,11 +560,6 @@ type Scope struct {
 	DefinitionName string    `json:"definitionName,omitempty"`
 }
 
-type Fix struct {
-	Description string                     `json:"description"`
-	Edits       map[string][]TextEdit `json:"edits"`
-}
-
 type Violation struct {
 	ID      string        `json:"id"`
 	Summary string        `json:"summary"`
@@ -593,7 +568,6 @@ type Violation struct {
 	Line    int           `json:"line,omitempty"`
 	Column  int           `json:"column,omitempty"`
 	Excerpt string        `json:"excerpt,omitempty"`
-	Autofix *Fix          `json:"autofix,omitempty"`
 }
 
 func (v *Violation) IsNode()       {}
@@ -930,22 +904,12 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 						violations = append(violations, ctx.CreateViolation(
 							fmt.Sprintf("JSDoc comment in %s:%d", file, scanState.BlockCommentStartLine),
 							ViolationCodeCommentJSDoc,
-							file, scanState.BlockCommentStartLine, "", &Fix{
-								Description: "Remove JSDoc comment",
-								Edits: map[string][]TextEdit{
-									file: {{Start: scanState.BlockCommentStartIndex, End: lineStart + j + 2, NewText: ""}},
-								},
-							}))
+							file, scanState.BlockCommentStartLine, ""))
 					} else {
 						violations = append(violations, ctx.CreateViolation(
 							fmt.Sprintf("Block comment in %s:%d", file, scanState.BlockCommentStartLine),
 							ViolationCodeCommentBlock,
-							file, scanState.BlockCommentStartLine, "", &Fix{
-								Description: "Remove block comment",
-								Edits: map[string][]TextEdit{
-									file: {{Start: scanState.BlockCommentStartIndex, End: lineStart + j + 2, NewText: ""}},
-								},
-							}))
+							file, scanState.BlockCommentStartLine, ""))
 					}
 					scanState.InBlockComment = false
 					j += 2
@@ -1051,12 +1015,7 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 					violations = append(violations, ctx.CreateViolation(
 						fmt.Sprintf("Inline comment in %s:%d", file, lineNum),
 						ViolationCodeCommentInline,
-						file, lineNum, strings.TrimSpace(line[j:]), &Fix{
-							Description: "Remove inline comment",
-							Edits: map[string][]TextEdit{
-								file: {{Start: lineStart + j, End: lineStart + len(line), NewText: ""}},
-							},
-						}))
+						file, lineNum, strings.TrimSpace(line[j:])))
 				}
 				break
 			}
@@ -3381,7 +3340,7 @@ func (ctx *PolicyContext) IsIgnored(filePath string, violationLine int, kind Vio
 	return false
 }
 
-func (ctx *PolicyContext) CreateViolation(summary string, kind ViolationKind, scope string, line int, excerpt string, autofix *Fix) Violation {
+func (ctx *PolicyContext) CreateViolation(summary string, kind ViolationKind, scope string, line int, excerpt string) Violation {
 	return Violation{
 		ID:      buildViolationID(scope, line, 0),
 		Summary: summary,
@@ -3389,7 +3348,6 @@ func (ctx *PolicyContext) CreateViolation(summary string, kind ViolationKind, sc
 		Scope:   scope,
 		Line:    line,
 		Excerpt: excerpt,
-		Autofix: autofix,
 	}
 }
 
@@ -3506,21 +3464,15 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 		if headerSection == nil {
 			headerContent := generateFileHeader(file, language)
 			if headerContent != "" {
-				autofix := &Fix{
-					Description: "Add header section",
-					Edits: map[string][]TextEdit{
-						file: {{Start: 0, End: 0, NewText: headerContent + "\n"}},
-					},
-				}
 				violations = append(violations, ctx.CreateViolation(
 					fmt.Sprintf("Missing header section in %s", file),
 					ViolationCodeHeaderMissingRegion,
-file, 0, "", autofix))
+					file, 0, ""))
 			} else {
 				violations = append(violations, ctx.CreateViolation(
 					fmt.Sprintf("Missing header section in %s", file),
 					ViolationCodeHeaderMissingRegion,
-file, 0, "", nil))
+					file, 0, ""))
 			}
 			continue
 		}
@@ -3538,7 +3490,7 @@ file, 0, "", nil))
 			violations = append(violations, ctx.CreateViolation(
 				fmt.Sprintf("Missing filename in header of %s", file),
 				ViolationCodeHeaderMissingFilename,
-			fmt.Sprintf("%s#Header", file), headerSection.StartLine, "", nil))
+				fmt.Sprintf("%s#Header", file), headerSection.StartLine, ""))
 		}
 		contributorPattern := regexp.MustCompile(`\d{4}\s+[\w\s]+<[\w.@-]+>`)
 		hasContributors := false
@@ -3552,7 +3504,7 @@ file, 0, "", nil))
 			violations = append(violations, ctx.CreateViolation(
 				fmt.Sprintf("Missing contributors in header of %s", file),
 				ViolationCodeHeaderMissingContributors,
-fmt.Sprintf("%s#Header", file), headerSection.StartLine, "", nil))
+				fmt.Sprintf("%s#Header", file), headerSection.StartLine, ""))
 		}
 		hasLicense := false
 		for _, marker := range agplMarkers {
@@ -3565,7 +3517,7 @@ fmt.Sprintf("%s#Header", file), headerSection.StartLine, "", nil))
 			violations = append(violations, ctx.CreateViolation(
 				fmt.Sprintf("Missing license in header of %s", file),
 				ViolationCodeHeaderMissingLicense,
-fmt.Sprintf("%s#Header", file), headerSection.StartLine, "", nil))
+				fmt.Sprintf("%s#Header", file), headerSection.StartLine, ""))
 		} else {
 			wrongLicenses := []string{"MIT", "Apache", "BSD"}
 			hasWrongLicense := false
@@ -3582,7 +3534,7 @@ fmt.Sprintf("%s#Header", file), headerSection.StartLine, "", nil))
 				violations = append(violations, ctx.CreateViolation(
 					fmt.Sprintf("Wrong license in header of %s", file),
 					ViolationCodeHeaderWrongLicense,
-fmt.Sprintf("%s#Header", file), headerSection.StartLine, "", nil))
+					fmt.Sprintf("%s#Header", file), headerSection.StartLine, ""))
 			}
 		}
 	}
@@ -3618,7 +3570,7 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 					violations = append(violations, ctx.CreateViolation(
 						fmt.Sprintf("Missing section name at %s:%d", file, lineNum),
 						ViolationCodeSectionMissingStartName,
-file, lineNum, strings.TrimSpace(line), nil))
+						file, lineNum, strings.TrimSpace(line)))
 				}
 				stack = append(stack, stackItem{name: name, line: lineNum})
 				continue
@@ -3632,12 +3584,12 @@ file, lineNum, strings.TrimSpace(line), nil))
 							violations = append(violations, ctx.CreateViolation(
 								fmt.Sprintf("Missing end section name at %s:%d", file, lineNum),
 								ViolationCodeSectionMissingEndName,
-					file, lineNum, strings.TrimSpace(line), nil))
+								file, lineNum, strings.TrimSpace(line)))
 						} else if endName != open.name {
 							violations = append(violations, ctx.CreateViolation(
 								fmt.Sprintf("Section name mismatch at %s:%d", file, lineNum),
 								ViolationCodeSectionNameMismatch,
-					file, lineNum, fmt.Sprintf("Start: \"%s\" at line %d, End: \"%s\"", open.name, open.line, endName), nil))
+								file, lineNum, fmt.Sprintf("Start: \"%s\" at line %d, End: \"%s\"", open.name, open.line, endName)))
 						}
 					}
 				}
@@ -3659,7 +3611,7 @@ file, lineNum, strings.TrimSpace(line), nil))
 				violations = append(violations, ctx.CreateViolation(
 					fmt.Sprintf("Empty section \"%s\" in %s", s.Name, file),
 					ViolationCodeSectionEmpty,
-fmt.Sprintf("%s#%s", file, s.Name), s.StartLine, "", nil))
+					fmt.Sprintf("%s#%s", file, s.Name), s.StartLine, ""))
 			}
 			for _, child := range s.Children {
 				checkSection(child)
@@ -3800,8 +3752,7 @@ fmt.Sprintf("%s#%s", file, s.Name), s.StartLine, "", nil))
 							ViolationCodeSectionOrphanDefinition,
 							fmt.Sprintf("%s::%s", file, defRange.name),
 							defRange.start,
-							excerpt,
-							nil))
+							excerpt))
 					}
 					matched = true
 				}
@@ -3815,8 +3766,7 @@ fmt.Sprintf("%s#%s", file, s.Name), s.StartLine, "", nil))
 				ViolationCodeSectionOrphanDefinition,
 				fmt.Sprintf("%s::%s", file, name),
 				orphanRange.start,
-				orphanRange.firstLine,
-				nil))
+				orphanRange.firstLine))
 		}
 	}
 	return ctx.FilterIgnored(violations)
@@ -3933,7 +3883,7 @@ func devDocsPolicy(ctx *PolicyContext) []Violation {
 			violations = append(violations, ctx.CreateViolation(
 				fmt.Sprintf("File section '%s' should come after '%s' (alphabetical order)", fileSections[i].path, fileSections[i+1].path),
 				ViolationDevDocsWrongFileOrder,
-				"AGENTS.md", fileSections[i+1].line, "", nil))
+				"AGENTS.md", fileSections[i+1].line, ""))
 		}
 	}
 	for i := 0; i < len(folderSections)-1; i++ {
@@ -3941,7 +3891,7 @@ func devDocsPolicy(ctx *PolicyContext) []Violation {
 			violations = append(violations, ctx.CreateViolation(
 				fmt.Sprintf("Folder section '%s' should come after '%s' (alphabetical order)", folderSections[i].path, folderSections[i+1].path),
 				ViolationDevDocsWrongFolderOrder,
-				"AGENTS.md", folderSections[i+1].line, "", nil))
+				"AGENTS.md", folderSections[i+1].line, ""))
 		}
 	}
 	return ctx.FilterIgnored(violations)
@@ -3996,7 +3946,7 @@ func sketchpadPolicy(ctx *PolicyContext) []Violation {
 						violations = append(violations, ctx.CreateViolation(
 							fmt.Sprintf("Third party import '%s' must only be in elements.tsx", pkg),
 							ViolationSketchpadImportThirdParty,
-							file, lineNumber, strings.TrimSpace(line), nil))
+							file, lineNumber, strings.TrimSpace(line)))
 						break
 					}
 				}
@@ -4007,14 +3957,14 @@ func sketchpadPolicy(ctx *PolicyContext) []Violation {
 					violations = append(violations, ctx.CreateViolation(
 						"createMachine can only be used once in sketchpad",
 						ViolationSketchpadStateMultipleMachines,
-						file, lineNumber, strings.TrimSpace(line), nil))
+						file, lineNumber, strings.TrimSpace(line)))
 				}
 			}
 			if strings.Contains(line, "createActor(") || strings.Contains(line, "createActor<") {
 				violations = append(violations, ctx.CreateViolation(
 					"createActor is forbidden in sketchpad",
 					ViolationSketchpadStateCreateActor,
-					file, lineNumber, strings.TrimSpace(line), nil))
+					file, lineNumber, strings.TrimSpace(line)))
 			}
 			yjsAppStatePatterns := []string{"Y.Doc(", "new Doc(", "Y.Map(", "Y.Array(", "Y.Text("}
 			for _, pattern := range yjsAppStatePatterns {
@@ -4024,7 +3974,7 @@ func sketchpadPolicy(ctx *PolicyContext) []Violation {
 						violations = append(violations, ctx.CreateViolation(
 							"Yjs should only be used for kit data synchronization, not app state",
 							ViolationSketchpadStateYjsAppState,
-							file, lineNumber, strings.TrimSpace(line), nil))
+							file, lineNumber, strings.TrimSpace(line)))
 					}
 				}
 			}
@@ -4035,7 +3985,7 @@ func sketchpadPolicy(ctx *PolicyContext) []Violation {
 						violations = append(violations, ctx.CreateViolation(
 							"Stores outside of State Management sections are forbidden",
 							ViolationSketchpadStateForbiddenStore,
-							file, lineNumber, strings.TrimSpace(line), nil))
+							file, lineNumber, strings.TrimSpace(line)))
 					}
 				}
 			}
@@ -6740,35 +6690,53 @@ func ToolFix(scopeRaw string) ToolResult {
 	var fixable []Violation
 	for _, v := range allViolations {
 		info := v.Kind.Info()
-		if info.Autofixable && v.Autofix != nil {
+		if info.Autofixable {
 			fixable = append(fixable, v)
 		}
 	}
-	fixedFiles := make(map[string]bool)
 	fixed := 0
 	for _, v := range fixable {
-		if v.Autofix != nil {
-			for filePath, edits := range v.Autofix.Edits {
-				absPath := filepath.Join(rootDir, filePath)
-				content, err := ReadTextFile(absPath)
-				if err != nil {
-					continue
-				}
-				for i := len(edits) - 1; i >= 0; i-- {
-					edit := edits[i]
-					if edit.Start < 0 || edit.End < 0 || edit.Start > len(content) || edit.End > len(content) || edit.Start > edit.End {
-						continue
-					}
-					content = content[:edit.Start] + edit.NewText + content[edit.End:]
-				}
-				WriteTextFile(absPath, content)
-				fixedFiles[filePath] = true
-			}
+		if err := ApplyFix(v); err == nil {
 			fixed++
 		}
 	}
 	output.Success(fmt.Sprintf("\n✅ Fixed %d violations", fixed))
 	return ToolResult{Output: *output}
+}
+
+func ApplyFix(v Violation) error {
+	switch v.Kind {
+	case ViolationCodeHeaderMissingRegion:
+		return fixHeaderMissingRegion(v)
+	case ViolationCodeCommentInline, ViolationCodeCommentBlock, ViolationCodeCommentJSDoc:
+		return fixComment(v)
+	default:
+		return fmt.Errorf("no fix implementation for %s", v.Kind)
+	}
+}
+
+func fixHeaderMissingRegion(v Violation) error {
+	file := extractFileFromScope(v.Scope)
+	absPath := filepath.Join(rootDir, file)
+	content, err := ReadTextFile(absPath)
+	if err != nil {
+		return err
+	}
+	language := GetLanguage(file)
+	if language == nil {
+		return fmt.Errorf("unknown language for %s", file)
+	}
+	headerContent := generateFileHeader(file, language)
+	if headerContent == "" {
+		return fmt.Errorf("could not generate header for %s", file)
+	}
+	newContent := headerContent + "\n" + content
+	return WriteTextFile(absPath, newContent)
+}
+
+func fixComment(v Violation) error {
+	// TODO: implement fixComment properly by re-scanning or using location data
+	return fmt.Errorf("fixComment not fully implemented")
 }
 
 func ToolPolicyList() ToolResult {

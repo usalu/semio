@@ -6,17 +6,21 @@
   },
   "features": {
     "ghcr.io/devcontainers/features/node:1": {
-      "version": "24",
-      "nodeGypDependencies": true
+      "version": "24"
     },
+    "ghcr.io/balazs23/devcontainers-features/nx:1": {},
     "ghcr.io/devcontainers/features/go:1": {
       "version": "1.25"
     },
+    "ghcr.io/devcontainers-community/npm-features/prettier:1": {},
     "ghcr.io/devcontainers/features/python:1": {
       "version": "3.14"
     },
     "ghcr.io/jsburckhardt/devcontainer-features/uv:1": {
-      "version": "0.9"
+      "version": "0.9.26"
+    },
+    "ghcr.io/jsburckhardt/devcontainer-features/ruff:1": {
+      "version:": "0.14.13"
     },
     "ghcr.io/devcontainers/features/dotnet:2": {
       "version": "7.0"
@@ -26,11 +30,11 @@
       "targets": "wasm32-unknown-unknown"
     },
     "ghcr.io/devcontainers/features/git:1": {
-      "version": "",
-      "ppa": true
+      "version": "2.52"
     },
     "ghcr.io/devcontainers/features/git-lfs:1": {},
-    "ghcr.io/devcontainers/features/github-cli:1": {}
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/warrenbuckley/codespace-features/sqlite:1": {}
   },
   "customizations": {
     "vscode": {

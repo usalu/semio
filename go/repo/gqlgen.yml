@@ -189,15 +189,6 @@ models:
   TicketSectionContrib:
     model:
       - github.com/usalu/semio/go/repo.TicketSectionContrib
-  Autofix:
-    model:
-      - github.com/usalu/semio/go/repo.Autofix
-  FileEdit:
-    model:
-      - github.com/usalu/semio/go/repo.FileEdit
-  TextEdit:
-    model:
-      - github.com/usalu/semio/go/repo.TextEdit
   AnalyzeResult:
     model:
       - github.com/usalu/semio/go/repo.AnalyzeResult

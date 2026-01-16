@@ -1,12 +1,19 @@
-# Prompt history
+# Prompt history 
 
+The sketchpad navbar should show panel toggles for left, middle and right panels. Make sure all app tests are checking the panels (toggeling and check for tree sections and tree items).
 
+The python and rust tests are not appearing in the test explorer in vscode.
+
+The vscode extension is not showing the violations of the open files. Whenever a file is saved it should be reanalyzed.
+
+Add wasm to go, rust and c#. Extend the benchmark with three more scenarios, Typescript + Rust, Typescript + Go, Typescript + C#.
+Get all tests, benchmarks and implementations running. Extend/Refactor/Change/Complete/Improve whatever is necessary.
 
 Migrate all scripts to go/repo/main.go
 
 Everything that is possible should run parallel. E.g. benchmark or update can be parallelized for different ecosystems. Adjust all code, config files, remove all *.ts scripts and on scripts directly invoke the repo binary.
 
-The fix mechanism is broken.
+The fix mechanism is broken. Remove TextEdits from the serialization. Fixes should be applied directly by the function that fixes the violationKind. Adjust repo, graphql and vscode extension.
 
 The vscode extension and the graphql schema are outdated. The go/repo/main.go is the single-source-of-truth. All commands should be available in vscode extension but not directly with the function args but with nice forms when possible. 
 
@@ -72,7 +79,7 @@ Remove the orm from semio.py and
  should no longer
 
 A new semio-repo discord bot should be created.
-The repo cli should send a message to a discord bot when a ticket is created, closed, reopened. The summary
+The repo cli should send a message to a discord bot when a ticket is closed.
 
 Currently all plane operations are performed by Rhino in Semio.Grasshopper. Make Semio.cs independent of Rhino like semio.ts, semio.go, semio.rs, semio.py. It should comply with the same tests.
 

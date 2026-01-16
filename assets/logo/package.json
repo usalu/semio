@@ -5,7 +5,7 @@
   "sourceRoot": "logo",
   "projectType": "library",
   "scripts": {
-    "build": "powershell -ExecutionPolicy Bypass -File ./build.ps1",
+    "build": "tsx logo.ts",
     "animate": "tsx logo.ts",
     "dev": "tsx watch logo.ts"
   },

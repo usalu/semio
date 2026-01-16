@@ -31,6 +31,7 @@ updates:
     ignore:
       - dependency-name: "FluentValidation"
       - dependency-name: "System.Collections.Immutable"
+      - dependency-name: "Microsoft.Data.Sqlite"
   - package-ecosystem: "nuget"
     directory: "/net/Semio.Grasshopper"
     schedule:

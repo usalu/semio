@@ -312,13 +312,6 @@
       "console": "integratedTerminal"
     },
     {
-      "name": "build icons",
-      "type": "PowerShell",
-      "request": "launch",
-      "script": "${workspaceFolder}/assets/icons/build.ps1",
-      "cwd": "${workspaceFolder}/assets/icons/"
-    },
-    {
       "name": "update metabolism",
       "type": "node",
       "request": "launch",
@@ -331,13 +324,6 @@
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
-    },
-    {
-      "name": "PowerShell",
-      "type": "PowerShell",
-      "request": "launch",
-      "script": "${file}",
-      "cwd": "${fileDirname}"
     },
     {
       "name": "Python",

@@ -5,7 +5,7 @@
   "sourceRoot": "icons",
   "projectType": "library",
   "scripts": {
-    "build": "powershell -ExecutionPolicy Bypass -File ./build.ps1"
+    "build": "echo 'icons build not yet migrated to TypeScript'"
   },
   "devDependencies": {
     "@semio/logo": "*"

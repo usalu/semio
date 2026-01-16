@@ -1125,27 +1125,6 @@
       "problemMatcher": []
     },
     {
-      "label": "kill dev",
-      "type": "shell",
-      "windows": {
-        // TODO: Find a reliable way to kill all dev tasks
-        "command": "",
-        "options": {
-          "shell": {
-            "executable": "powershell.exe",
-            "args": [
-              "-Command"
-            ]
-          }
-        }
-      },
-      "presentation": {
-        "panel": "new",
-        "close": true
-      },
-      "problemMatcher": []
-    },
-    {
       "label": "mcp inspector",
       "type": "shell",
       "isBackground": true,

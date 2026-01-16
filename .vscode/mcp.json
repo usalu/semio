@@ -10,7 +10,7 @@
 		},
 		"semio-repo": {
 			"type": "stdio",
-			"command": "go/mcp/mcp.exe",
+			"command": "go/mcp/mcp",
 			"args": []
 		},
 		"semio": {

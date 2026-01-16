@@ -1,7 +1,7 @@
 [project]
 name = "semio-repo"
 version = "0.1.0"
-description = "🧩 Semio monorepo Python workspace"
+description = "🧩 semio monorepo Python workspace"
 readme = "README.md"
 requires-python = ">=3.13"
 license = "AGPL-3.0-or-later"
@@ -19,8 +19,6 @@ dev = [
     "ruff>=0.14.8",
     "black>=25.1.0",
     "debugpy>=1.8.14",
-    "pre-commit>=4.2.0",
-    # Data science libraries for Jupyter notebooks
     "pandas>=2.2.0",
     "numpy>=2.0.0",
     "matplotlib>=3.9.0",

@@ -376,26 +376,9 @@ type Violation implements Node {
   line: Int
   column: Int
   excerpt: String
-  autofix: Autofix
   summary: String!
   priority: ViolationPriority!
   autofixable: Boolean!
-}
-
-type Autofix {
-  description: String!
-  edits: [FileEdit!]!
-}
-
-type FileEdit {
-  path: String!
-  edits: [TextEdit!]!
-}
-
-type TextEdit {
-  start: Int!
-  end: Int!
-  newText: String!
 }
 
 type AnalyzeResult {

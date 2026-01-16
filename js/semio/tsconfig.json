@@ -31,9 +31,5 @@
     // "sourceMap": true,
     "types": ["react", "react-dom"]
   },
-  "exclude": ["node_modules"],
-  "ts-node": {
-    "esm": true,
-    "experimentalSpecifierResolution": "node"
-  }
+  "exclude": ["node_modules"]
 }
