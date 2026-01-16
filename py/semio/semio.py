@@ -5449,7 +5449,8 @@ def validateKitDict(kit: dict) -> ValidationResult:
         checkGuid("Folder", fo.get("guid", ""), fo)
     byParent: dict[str | None, list[dict]] = {}
     for t in kit.get("types", []):
-        parentGuid = t.get("parent", {}).get("guid") if t.get("parent") else None
+        parent = t.get("parent")
+        parentGuid = parent.get("guid") if isinstance(parent, dict) else parent if parent else None
         if parentGuid not in byParent:
             byParent[parentGuid] = []
         byParent[parentGuid].append(t)
@@ -5487,7 +5488,8 @@ def validateKitDict(kit: dict) -> ValidationResult:
                     )
     byParent = {}
     for d in kit.get("designs", []):
-        parentGuid = d.get("parent", {}).get("guid") if d.get("parent") else None
+        parent = d.get("parent")
+        parentGuid = parent.get("guid") if isinstance(parent, dict) else parent if parent else None
         if parentGuid not in byParent:
             byParent[parentGuid] = []
         byParent[parentGuid].append(d)

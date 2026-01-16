@@ -1,7 +1,7 @@
 import time
 import json
 import os
-from semio import Kit, validateKit, flattenDesignDict, _applyDesignDiff, applyKitDiffDict, Type, Design
+from semio import Kit, validateKit, validateKitDict, flattenDesignDict, _applyDesignDiff, applyKitDiffDict, Type, Design
 
 ASSETS_DIR = "../../assets/semio"
 ITERATIONS = 3
@@ -97,24 +97,17 @@ def main():
     
     kit_invalid_obj = Kit.parse(kit_invalid)
     
-    # 1. Roundtrip/Metabolism (Zip roundtrip)
-    from semio import export_kit, import_kit
-    
-    # Pre-create zip from the parsed kit (outside benchmark loop)
-    export_kit(kit_obj, {}, "temp_benchmark_metabolism_source.zip")
-    
+    # 1. Roundtrip/Metabolism
     def test_roundtrip():
-        # Zip -> Memory -> Zip roundtrip
-        kit, files = import_kit("temp_benchmark_metabolism_source.zip")
+        from semio import import_kit, export_kit
+        # Zip -> Memory
+        kit, files = import_kit(os.path.join(ASSETS_DIR, "metabolism.zip"))
+        # Memory -> Zip (to temp file)
         export_kit(kit, files, "temp_benchmark_metabolism.zip")
         if os.path.exists("temp_benchmark_metabolism.zip"):
             os.remove("temp_benchmark_metabolism.zip")
         
     bench("Roundtrip/Metabolism", test_roundtrip)
-    
-    # Cleanup source zip
-    if os.path.exists("temp_benchmark_metabolism_source.zip"):
-        os.remove("temp_benchmark_metabolism_source.zip")
 
 
     # 2. Diff/Metabolism

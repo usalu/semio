@@ -1,24 +1,26 @@
 {
   "recommendations": [
-    // general
+    // repo
     "ms-vscode-remote.remote-containers",
     "ms-azuretools.vscode-docker",
+    "nrwl.angular-console",
+    // github
+    "github.vscode-github-actions",
+    "github.vscode-pull-request-github",
+    // toml
+    "tamasfe.even-better-toml",
+    // yaml
+    "redhat.vscode-yaml",
+    // data
+    "ms-toolsai.datawrangler",
     "janisdd.vscode-edit-csv",
     "mechatroner.rainbow-csv",
-    "tamasfe.even-better-toml",
-    "zainchen.json",
-    "jebbs.plantuml",
-    "ms-vscode.powershell",
-    "jock.svg",
-    "gruntfuggly.todo-tree",
-    "vscode-icons-team.vscode-icons",
-    "nrwl.angular-console",
-    "redhat.vscode-yaml",
     // graphql
     "graphql.vscode-graphql",
     "graphql.vscode-graphql-syntax",
-    // javascript
+    // formatter
     "esbenp.prettier-vscode",
+    // javascript
     "dbaeumer.vscode-eslint",
     "bradlc.vscode-tailwindcss",
     "unifiedjs.vscode-mdx",
@@ -43,12 +45,16 @@
     // go
     "golang.go",
     // ai
+    "github.copilot",
+    "github.copilot-chat",
     "anthropic.claude-code",
     "openai.chatgpt",
-    "",
-    // github
-    "github.vscode-github-actions",
-    "github.vscode-pull-request-github"
+    // utility
+    "gruntfuggly.todo-tree",
+    "jebbs.plantuml",
+    "jock.svg",
+    // visuals
+    "vscode-icons-team.vscode-icons"
   ],
   "unwantedRecommendations": []
 }

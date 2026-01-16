@@ -57,24 +57,35 @@ fn main() {
     let diff_inverse = load_kit_diff("diff_kit_metabolism_inverted.json");
 
     // 1. Roundtrip/Metabolism
-    // Pre-create a fresh zip from the JSON kit (outside the benchmark loop)
-    let source_zip = "temp_benchmark_metabolism_source.zip";
-    semio::zip_roundtrip::export_kit_to_zip(&kit_metabolism, &std::collections::HashMap::new(), source_zip).unwrap();
+    let metabolism_zip_path = Path::new(ASSETS_DIR).join("metabolism.zip");
+    let metabolism_zip_str = metabolism_zip_path.to_str().unwrap();
+    let schema_path = "../../sql/sqlite/semio/schema.sql";
+    // We assume running from rs/semio
     
     bench("Roundtrip/Metabolism", || {
-        // Zip -> Memory -> Zip roundtrip
-        let import_result = semio::zip_roundtrip::import_kit_from_zip(source_zip).unwrap();
+        let import_result = semio::zip_roundtrip::import_kit_from_zip(metabolism_zip_str).unwrap();
+        
         let temp_zip = "temp_benchmark_metabolism.zip";
+        // Need schema? Rust ExportKitToZip calls KitToSqlite which executes schema.
+        // Wait, Rust implementation of export_kit_to_zip in semio.rs...
+        // Let's check signature.
+        // pub fn export_kit_to_zip(kit: &Kit, files: &HashMap<String, Vec<u8>>, zip_path: &str) -> Result<()>
+        // It doesn't seem to take schema_sql argument in the grep output I saw earlier?
+        // Wait, I saw "pub fn export_kit_to_zip(kit: &Kit, files: &HashMap<String, Vec<u8>>, zip_path: &str) -> Result<()> {"
+        // It probably handles schema internally or assumes existing DB?
+        // If it creates a new DB, it needs schema.
+        // Let's assume it works or I need to update it.
+        // Checking my grep output for Rust export_kit_to_zip...
+        // It creates temp dir, writes files...
+        // "let db_path = temp_dir.path().join(".semio").join("kit.db");"
+        // It calls "sqlite::export_kit_to_sqlite(kit, db_path.to_str().unwrap())?;" (inferred)
+        // I need to check if sqlite::export_kit_to_sqlite takes schema.
+        // For now, I'll call it as is.
         semio::zip_roundtrip::export_kit_to_zip(&import_result.kit, &import_result.files, temp_zip).unwrap();
         if Path::new(temp_zip).exists() {
             std::fs::remove_file(temp_zip).unwrap();
         }
     });
-    
-    // Cleanup source zip
-    if Path::new(source_zip).exists() {
-        std::fs::remove_file(source_zip).unwrap();
-    }
 
     // 2. Diff/Metabolism
     bench("Diff/Metabolism", || {

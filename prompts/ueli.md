@@ -1,11 +1,14 @@
 # Prompt history
 
+
+
 Migrate all scripts to go/repo/main.go
+
 Everything that is possible should run parallel. E.g. benchmark or update can be parallelized for different ecosystems. Adjust all code, config files, remove all *.ts scripts and on scripts directly invoke the repo binary.
 
 The fix mechanism is broken.
 
-The vscode extension and the graphql schema is outdated. The go/repo/main.go is the single-source-of-truth. All commands should be available in vscode extension but not directly with the function args but with nice forms when possible. 
+The vscode extension and the graphql schema are outdated. The go/repo/main.go is the single-source-of-truth. All commands should be available in vscode extension but not directly with the function args but with nice forms when possible. 
 
 The intregrate command is not part of the cli, mcp server and vscode extension yet.
 
@@ -226,9 +229,9 @@ Metrics:
 - Definitions in semio are only top level. A section can contain different definitions. A definition cant contain sections. E.g. `result` in go/repo/repo.go should not be counted as a definition. A definition always starts on a new line with func, def, class, interface, type, enum, etc.
 Api:
 Make sure the commands have this api:
-`.\go\cli\cli.exe ticket open <title> <prompt> <llm>`
-`.\go\cli\cli.exe ticket close YYYY/MM/DD/TICKETSLUG <summary> <files...>`
-`.\go\cli\cli.exe ticket reopen YYYY/MM/DD/TICKETSLUG <prompt> llm>`
+`.\go\repo\repo.exe ticket open <title> <prompt> <llm>`
+`.\go\repo\repo.exe ticket close YYYY/MM/DD/TICKETSLUG <summary> <files...>`
+`.\go\repo\repo.exe ticket reopen YYYY/MM/DD/TICKETSLUG <prompt> llm>`
 
 The vscode extension commands are not matching the cli command arguments.
 E.g. ticket open requires to select at least one file although ticket open does not require any files.
@@ -236,9 +239,9 @@ Ticket finish should show a list of open tickets and let the user select one and
 Scan for all commands and make sure that whenever something is referenced then vscode should show the list of options to choose from (bundles, folders, files, sections, definitions, contributors, tickets, policies, violationKinds, violations).
 
 Make sure the commands have this api:
-`.\go\cli\cli.exe ticket open <title> <prompt> <llm>`
-`.\go\cli\cli.exe ticket close YYYY/MM/DD/TICKETSLUG <summary> <files...>`
-`.\go\cli\cli.exe ticket reopen YYYY/MM/DD/TICKETSLUG <prompt> llm>`
+`.\go\repo\repo.exe ticket open <title> <prompt> <llm>`
+`.\go\repo\repo.exe ticket close YYYY/MM/DD/TICKETSLUG <summary> <files...>`
+`.\go\repo\repo.exe ticket reopen YYYY/MM/DD/TICKETSLUG <prompt> llm>`
 
 Simplify the ticket mechanism to remove checkpoints and iterations. All computation that was performed on a checkpoint (affected sections with line metrics and the list of affected definitions.) should be performed when finishing a ticket. Add a summary field and files as necessary arguments for the ticket close command.
 

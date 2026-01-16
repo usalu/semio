@@ -39,9 +39,9 @@ class Program
         string? parentGuid = null;
         if (parentName != null)
         {
-             var p = kit.Designs.FirstOrDefault(d => d.Name == parentName);
-             if (p == null) throw new Exception($"Parent {parentName} not found");
-             parentGuid = p.Guid;
+            var p = kit.Designs.FirstOrDefault(d => d.Name == parentName);
+            if (p == null) throw new Exception($"Parent {parentName} not found");
+            parentGuid = p.Guid;
         }
 
         var d = kit.Designs.FirstOrDefault(d => d.Name == name && (parentGuid != null ? d.Parent?.Guid == parentGuid : d.Parent == null));
@@ -57,65 +57,79 @@ class Program
         var diffInverse = LoadAsset<KitDiff>("diff_kit_metabolism_inverted.json");
 
         // 1. Roundtrip/Metabolism
-        // Pre-create a fresh zip from the JSON kit (outside the benchmark loop)
-        var schemaSql = System.IO.File.ReadAllText("../sql/sqlite/semio/schema.sql");
-        var sourceZipPath = "temp_benchmark_metabolism_source.zip";
-        ZipRoundtrip.ExportKit(kitMetabolism, new Dictionary<string, byte[]>(), sourceZipPath, schemaSql);
-        
-        Bench("Roundtrip/Metabolism", () => {
-            // Zip -> Memory -> Zip roundtrip
-            var importResult = ZipRoundtrip.ImportKit(sourceZipPath);
+        Bench("Roundtrip/Metabolism", () =>
+        {
+            var zipPath = Path.Combine(AssetsPath, "metabolism.zip");
+            var importResult = ZipRoundtrip.ImportKit(zipPath);
+
             var tempZipPath = "temp_benchmark_metabolism.zip";
+            // We need schema SQL. Let's assume we can get it or pass empty if not strictly checked by implementation (it executes it).
+            // The C# implementation might need the schema to create tables.
+            // Let's try to read it.
+            var schemaPath = Path.Combine("../../sql/sqlite/schema.sql"); // Relative to bin output?
+            // AssetsPath is "../assets/semio" which is relative to execution dir?
+            // "dotnet run" runs from project dir? No, usually bin/Debug/net...
+            // Go benchmark used "../../sql/sqlite/schema.sql" relative to "go/semio/benchmark"
+            // If running from "net" folder: "dotnet run --project Semio.Benchmark..."
+            // The CWD is "net".
+            // So schema is at "../sql/sqlite/semio/schema.sql".
+            var schemaSql = System.IO.File.ReadAllText("../sql/sqlite/semio/schema.sql");
+
             ZipRoundtrip.ExportKit(importResult.Kit, importResult.Files, tempZipPath, schemaSql);
             if (System.IO.File.Exists(tempZipPath)) System.IO.File.Delete(tempZipPath);
         });
-        
-        // Cleanup source zip
-        if (System.IO.File.Exists(sourceZipPath)) System.IO.File.Delete(sourceZipPath);
 
         // 2. Diff/Metabolism
-        Bench("Diff/Metabolism", () => {
-             var k2 = kitMetabolism.ApplyDiff(diffForward);
-             k2.ApplyDiff(diffInverse);
+        Bench("Diff/Metabolism", () =>
+        {
+            var k2 = kitMetabolism.ApplyDiff(diffForward);
+            k2.ApplyDiff(diffInverse);
         });
 
         // 3. Flatten Design/Nakagin Capsule Tower
         var d1 = FindDesign(kitMetabolism, "Nakagin Capsule Tower");
-        Bench("Flatten Design/Nakagin Capsule Tower", () => {
-             d1.Flatten(kitMetabolism.Types);
+        Bench("Flatten Design/Nakagin Capsule Tower", () =>
+        {
+            d1.Flatten(kitMetabolism.Types);
         });
 
         // 4. Flatten Design/Nakagin Capsule Tower/Slanted
         var d2 = FindDesign(kitMetabolism, "Slanted", "Nakagin Capsule Tower");
-        Bench("Flatten Design/Nakagin Capsule Tower/Slanted", () => {
-             d2.Flatten(kitMetabolism.Types);
+        Bench("Flatten Design/Nakagin Capsule Tower/Slanted", () =>
+        {
+            d2.Flatten(kitMetabolism.Types);
         });
 
         // 5. Flatten Design/Nakagin Capsule Tower/Twisted
         var d3 = FindDesign(kitMetabolism, "Twisted", "Nakagin Capsule Tower");
-        Bench("Flatten Design/Nakagin Capsule Tower/Twisted", () => {
-             d3.Flatten(kitMetabolism.Types);
+        Bench("Flatten Design/Nakagin Capsule Tower/Twisted", () =>
+        {
+            d3.Flatten(kitMetabolism.Types);
         });
 
         // 6. Flatten Design/Nakagin Capsule Tower/Dancing
         var d4 = FindDesign(kitMetabolism, "Dancing", "Nakagin Capsule Tower");
-        Bench("Flatten Design/Nakagin Capsule Tower/Dancing", () => {
-             d4.Flatten(kitMetabolism.Types);
+        Bench("Flatten Design/Nakagin Capsule Tower/Dancing", () =>
+        {
+            d4.Flatten(kitMetabolism.Types);
         });
 
-         // 7. Flatten Design/Capsule Dream
+        // 7. Flatten Design/Capsule Dream
         var d5 = FindDesign(kitMetabolism, "Capsule Dream");
-        Bench("Flatten Design/Capsule Dream", () => {
-             d5.Flatten(kitMetabolism.Types);
+        Bench("Flatten Design/Capsule Dream", () =>
+        {
+            d5.Flatten(kitMetabolism.Types);
         });
 
         // 8. Validation/Invalid Kit
-        Bench("Validation/Invalid Kit", () => {
+        Bench("Validation/Invalid Kit", () =>
+        {
             SemioValidator.ValidateKit(kitInvalid);
         });
 
         // 9. Validation/Metabolism
-        Bench("Validation/Metabolism", () => {
+        Bench("Validation/Metabolism", () =>
+        {
             SemioValidator.ValidateKit(kitMetabolism);
         });
     }

@@ -1,0 +1,27 @@
+{
+  "title": "EXTENSION-SCHEMA-SYNC",
+  "iterations": [
+    {
+      "prompt": "Synchronize the VS Code extension and the GraphQL schema with the Go backend and fix the 'expected iterable' runtime error.",
+      "llm": "gemini-3-flash",
+      "author": "Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e",
+      "date": "2026-01-15T14:05:01.1053451+01:00",
+      "commit": "cdf182fd45d68575d7cd636b17b2dda9f0be67a3"
+    }
+  ],
+  "status": "closed",
+  "dates": {
+    "closed": "2026-01-15T14:05:04.0931919+01:00"
+  },
+  "summary": "Synchronized the VS Code extension and the GraphQL schema with the Go backend (main.go). Fixed the 'expected iterable' runtime error by adding a custom resolver in Go to convert the Edits map to a slice. Updated the extension query to fetch the full codebase graph and increased buffer/timeout limits for large repository handling.",
+  "files": [
+    {
+      "path": "js/vscode/extension.ts",
+      "status": ""
+    },
+    {
+      "path": "go/repo/main.go",
+      "status": ""
+    }
+  ]
+}

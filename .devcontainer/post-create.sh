@@ -1,15 +1,15 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Setting up semio development environment..."
+echo "Setting up semio development environment..."
 
-echo "📦 Installing npm dependencies..."
+echo "Installing npm dependencies..."
 npm install
 
-echo "🐍 Setting up Python environment..."
+echo "Setting up Python environment..."
 uv sync
 
-echo "🔧 Building Go binaries..."
+echo "Building Go binaries..."
 cd go/repo
 go build -o repo
 cd ../mcp
@@ -18,16 +18,16 @@ cd ../cli
 go build -o cli
 cd ../..
 
-echo "🔨 Restoring .NET packages..."
+echo "Restoring .NET packages..."
 dotnet restore net/Semio.sln
 
-echo "🦀 Adding Rust wasm target..."
+echo "Adding Rust wasm target..."
 rustup target add wasm32-unknown-unknown || true
 
-echo "🎭 Installing Playwright browsers..."
+echo "Installing Playwright browsers..."
 npx playwright install --with-deps chromium
 
-echo "📋 Setting up git hooks..."
+echo "Setting up git hooks..."
 npm run prepare || true
 
-echo "✅ Development environment ready!"
+echo "Development environment ready!"

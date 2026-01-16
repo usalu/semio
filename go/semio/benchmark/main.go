@@ -80,32 +80,44 @@ func main() {
 	kitInvalid := loadKit("kit_invalid.json")
 
 	// 1. Roundtrip/Metabolism
-	// Pre-create a fresh zip from the JSON kit (outside the benchmark loop)
-	schemaPath := "../../sql/sqlite/semio/schema.sql"
-	schemaData, err := os.ReadFile(schemaPath)
-	if err != nil {
-		panic("Schema not found at " + schemaPath + ": " + err.Error())
-	}
-	schemaSQL := string(schemaData)
-	
-	err = semio.KitToZip(&kitMetabolism, map[string][]byte{}, "temp_benchmark_metabolism_source.zip", schemaSQL)
-	if err != nil {
-		panic("Failed to create source zip: " + err.Error())
-	}
-	
 	bench("Roundtrip/Metabolism", func() {
-		// Zip -> Memory -> Zip roundtrip
-		kit, files, err := semio.KitFromZip("temp_benchmark_metabolism_source.zip")
+		// Zip -> Memory
+		kit, files, err := semio.KitFromZip(AssetsPath + "/metabolism.zip")
 		if err != nil {
 			panic(err)
 		}
-		err = semio.KitToZip(kit, files, "temp_benchmark_metabolism.zip", schemaSQL)
+		// Memory -> Zip
+		// We need a dummy schemaSQL since KitToZip requires it? 
+		// Actually KitToZip uses KitToSqlite which needs schemaSQL.
+		// Let's assume we can get it or it's embedded? 
+		// Wait, the Go implementation of KitToSqlite takes schemaSQL as argument.
+		// Where is the schema defined? It's typically in a file.
+		// For benchmarking purposes, maybe we can skip schema creation if it's already there?
+		// No, KitToSqlite calls db.Exec(schemaSQL).
+		// We need to provide the schema.
+		// Let's load it from file or use a hardcoded minimal schema?
+		// The python implementation creates schema using SQLModel metadata.
+		// The Go implementation needs the schema SQL.
+		// Let's read it from ../../../sql/sqlite/schema.sql?
+		// Adjust path for schema.
+		schemaPath := "../../sql/sqlite/semio/schema.sql"
+		schemaData, err := os.ReadFile(schemaPath)
+		if err != nil {
+			// fallback if path wrong?
+			// panic(err)
+			// Try to proceed without schema? No, it will fail.
+			// Let's just use empty string and hope KitToSqlite handles it?
+			// KitToSqlite executes it. If empty, maybe no error but tables won't exist.
+			// We MUST provide schema.
+			panic("Schema not found at " + schemaPath + ": " + err.Error())
+		}
+		
+		err = semio.KitToZip(kit, files, "temp_benchmark_metabolism.zip", string(schemaData))
 		if err != nil {
 			panic(err)
 		}
 		os.Remove("temp_benchmark_metabolism.zip")
 	})
-	os.Remove("temp_benchmark_metabolism_source.zip")
 
 	// 2. Diff/Metabolism
 	diffForward := loadKitDiff("diff_kit_metabolism.json")

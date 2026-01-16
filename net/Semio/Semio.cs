@@ -4411,23 +4411,23 @@ public class Design : Entity<Design>
     }
 
     public Design Flatten(IEnumerable<Type> types) => Flatten(types, DefaultComputeChildPlane);
-    
+
     public static Plane DefaultComputeChildPlane(
-        Plane parentPlane, 
-        Point parentPoint, 
-        Vector parentDirection, 
-        Point childPoint, 
-        Vector childDirection, 
-        float gap, 
-        float shift, 
-        float rise, 
-        float rotation, 
-        float turn, 
+        Plane parentPlane,
+        Point parentPoint,
+        Vector parentDirection,
+        Point childPoint,
+        Vector childDirection,
+        float gap,
+        float shift,
+        float rise,
+        float rotation,
+        float turn,
         float tilt)
     {
-        var pMatrix = PlaneToMatrix(parentPlane); 
-        
-        var pPoint = new System.Numerics.Vector3((float)parentPoint.X, (float)parentPoint.Y, (float)parentPoint.Z); 
+        var pMatrix = PlaneToMatrix(parentPlane);
+
+        var pPoint = new System.Numerics.Vector3((float)parentPoint.X, (float)parentPoint.Y, (float)parentPoint.Z);
         var pDir = System.Numerics.Vector3.Normalize(new System.Numerics.Vector3((float)parentDirection.X, (float)parentDirection.Y, (float)parentDirection.Z));
         var cPoint = new System.Numerics.Vector3((float)childPoint.X, (float)childPoint.Y, (float)childPoint.Z);
         var cDir = System.Numerics.Vector3.Normalize(new System.Numerics.Vector3((float)childDirection.X, (float)childDirection.Y, (float)childDirection.Z));
@@ -4440,16 +4440,16 @@ public class Design : Entity<Design>
 
         System.Numerics.Quaternion alignQuat;
         var cross = System.Numerics.Vector3.Cross(pDir, reverseChildDirection);
-        if (cross.LengthSquared() < 0.0001f) 
+        if (cross.LengthSquared() < 0.0001f)
         {
             if (Math.Abs(pDir.Z) < 1e-5f)
             {
-                 alignQuat = System.Numerics.Quaternion.CreateFromAxisAngle(System.Numerics.Vector3.UnitZ, (float)Math.PI);
+                alignQuat = System.Numerics.Quaternion.CreateFromAxisAngle(System.Numerics.Vector3.UnitZ, (float)Math.PI);
             }
             else
             {
-                 var axis = System.Numerics.Vector3.Normalize(System.Numerics.Vector3.Cross(System.Numerics.Vector3.UnitZ, pDir));
-                 alignQuat = System.Numerics.Quaternion.CreateFromAxisAngle(axis, (float)Math.PI);
+                var axis = System.Numerics.Vector3.Normalize(System.Numerics.Vector3.Cross(System.Numerics.Vector3.UnitZ, pDir));
+                alignQuat = System.Numerics.Quaternion.CreateFromAxisAngle(axis, (float)Math.PI);
             }
         }
         else
@@ -4458,7 +4458,7 @@ public class Design : Entity<Design>
         }
 
         var directionT = System.Numerics.Matrix4x4.CreateFromQuaternion(alignQuat);
-        
+
         var yAxis = System.Numerics.Vector3.UnitY;
         var parentConnectorQuat = CreateFromTwoVectors(yAxis, pDir);
         var parentRotationT = System.Numerics.Matrix4x4.CreateFromQuaternion(parentConnectorQuat);
@@ -4483,18 +4483,18 @@ public class Design : Entity<Design>
         orientationT = orientationT * tiltT;
 
         var centerChildT = System.Numerics.Matrix4x4.CreateTranslation(-cPoint);
-        
-        var transform = centerChildT * orientationT; 
+
+        var transform = centerChildT * orientationT;
 
         var translationVec = (gapDirection * gap) + (shiftDirection * shift) + (raiseDirection * rise);
         var translationT = System.Numerics.Matrix4x4.CreateTranslation(translationVec);
 
-        transform = transform * translationT; 
+        transform = transform * translationT;
 
         var moveToParentT = System.Numerics.Matrix4x4.CreateTranslation(pPoint);
-        transform = transform * moveToParentT; 
+        transform = transform * moveToParentT;
 
-        var finalMatrix = transform * pMatrix; 
+        var finalMatrix = transform * pMatrix;
 
         return MatrixToPlane(finalMatrix);
     }
@@ -4524,7 +4524,7 @@ public class Design : Entity<Design>
         var origin = new System.Numerics.Vector3((float)p.Origin.X, (float)p.Origin.Y, (float)p.Origin.Z);
         var x = System.Numerics.Vector3.Normalize(new System.Numerics.Vector3((float)p.XAxis.X, (float)p.XAxis.Y, (float)p.XAxis.Z));
         var yRaw = new System.Numerics.Vector3((float)p.YAxis.X, (float)p.YAxis.Y, (float)p.YAxis.Z);
-        
+
         var z = System.Numerics.Vector3.Normalize(System.Numerics.Vector3.Cross(x, yRaw));
         var y = System.Numerics.Vector3.Normalize(System.Numerics.Vector3.Cross(z, x));
 
@@ -5755,37 +5755,37 @@ public class PredictDesignBody
 }
 
 public interface IApi
-    {
-        [Get("/api/kits/{encodedKitUri}")]
-        Task<ApiResponse<Kit>> GetKit(string encodedKitUri);
+{
+    [Get("/api/kits/{encodedKitUri}")]
+    Task<ApiResponse<Kit>> GetKit(string encodedKitUri);
 
-        [Put("/api/kits/{encodedKitUri}")]
-        Task<ApiResponse<bool>> CreateKit(string encodedKitUri, [Body]
+    [Put("/api/kits/{encodedKitUri}")]
+    Task<ApiResponse<bool>> CreateKit(string encodedKitUri, [Body]
         Kit input);
 
-        [Delete("/api/kits/{encodedKitUri}")]
-        Task<ApiResponse<bool>> DeleteKit(string encodedKitUri);
+    [Delete("/api/kits/{encodedKitUri}")]
+    Task<ApiResponse<bool>> DeleteKit(string encodedKitUri);
 
 
-        [Put("/api/kits/{encodedKitUri}/types/{encodedTypeName}")]
-        Task<ApiResponse<bool>> PutType(string encodedKitUri, string encodedTypeName, [Body]
+    [Put("/api/kits/{encodedKitUri}/types/{encodedTypeName}")]
+    Task<ApiResponse<bool>> PutType(string encodedKitUri, string encodedTypeName, [Body]
         Type input);
 
-        [Delete("/api/kits/{encodedKitUri}/types/{encodedTypeName}")]
-        Task<ApiResponse<bool>> RemoveType(string encodedKitUri, string encodedTypeName);
+    [Delete("/api/kits/{encodedKitUri}/types/{encodedTypeName}")]
+    Task<ApiResponse<bool>> RemoveType(string encodedKitUri, string encodedTypeName);
 
-        [Put("/api/kits/{encodedKitUri}/designs/{encodedDesignName}")]
-        Task<ApiResponse<bool>> PutDesign(string encodedKitUri, string encodedDesignName,
-        [Body]
+    [Put("/api/kits/{encodedKitUri}/designs/{encodedDesignName}")]
+    Task<ApiResponse<bool>> PutDesign(string encodedKitUri, string encodedDesignName,
+    [Body]
         Design input);
 
-        [Delete("/api/kits/{encodedKitUri}/designs/{encodedDesignName}")]
-        Task<ApiResponse<bool>> RemoveDesign(string encodedKitUri, string encodedDesignName);
+    [Delete("/api/kits/{encodedKitUri}/designs/{encodedDesignName}")]
+    Task<ApiResponse<bool>> RemoveDesign(string encodedKitUri, string encodedDesignName);
 
-        [Get("/api/assistant/predictDesign")]
-        Task<ApiResponse<Design>> PredictDesign([Body]
+    [Get("/api/assistant/predictDesign")]
+    Task<ApiResponse<Design>> PredictDesign([Body]
         PredictDesignBody body);
-    }
+}
 
 public static class Api
 {
@@ -5888,20 +5888,17 @@ public static class ZipRoundtrip
         var result = new KitImportResult();
         var tempDir = Path.Combine(Path.GetTempPath(), $"semio-kit-{Guid.NewGuid()}");
         Directory.CreateDirectory(tempDir);
-        
+
         try
         {
             ZipFile.ExtractToDirectory(zipPath, tempDir);
-            
+
             var dbPath = Path.Combine(tempDir, ".semio", "kit.db");
             if (!System.IO.File.Exists(dbPath))
                 throw new FileNotFoundException("kit.db not found in zip");
-            
+
             result.Kit = LoadKitFromSqlite(dbPath);
-            
-            // Clear connection pools to release file handles on Windows
-            SqliteConnection.ClearAllPools();
-            
+
             foreach (var file in Directory.GetFiles(tempDir, "*", SearchOption.AllDirectories))
             {
                 var relativePath = file.Substring(tempDir.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Replace("\\", "/");
@@ -5914,7 +5911,7 @@ public static class ZipRoundtrip
             if (Directory.Exists(tempDir))
                 Directory.Delete(tempDir, true);
         }
-        
+
         return result;
     }
 
@@ -5922,15 +5919,15 @@ public static class ZipRoundtrip
     {
         var tempDir = Path.Combine(Path.GetTempPath(), $"semio-kit-{Guid.NewGuid()}");
         Directory.CreateDirectory(tempDir);
-        
+
         try
         {
             var semioDir = Path.Combine(tempDir, ".semio");
             Directory.CreateDirectory(semioDir);
             var dbPath = Path.Combine(semioDir, "kit.db");
-            
+
             SaveKitToSqlite(kit, dbPath, schemaSQL);
-            
+
             foreach (var kvp in files)
             {
                 var fullPath = Path.Combine(tempDir, kvp.Key);
@@ -5939,7 +5936,7 @@ public static class ZipRoundtrip
                     Directory.CreateDirectory(dir);
                 System.IO.File.WriteAllBytes(fullPath, kvp.Value);
             }
-            
+
             if (System.IO.File.Exists(zipPath))
                 System.IO.File.Delete(zipPath);
             ZipFile.CreateFromDirectory(tempDir, zipPath);
@@ -5955,9 +5952,9 @@ public static class ZipRoundtrip
     {
         using var connection = new SqliteConnection($"Data Source={dbPath}");
         connection.Open();
-        
+
         var kit = new Kit();
-        
+
         using (var cmd = connection.CreateCommand())
         {
             cmd.CommandText = "SELECT guid, name, version, description, icon, image, preview, remote, homepage, license FROM kit LIMIT 1";
@@ -5976,10 +5973,10 @@ public static class ZipRoundtrip
                 kit.License = reader.IsDBNull(9) ? "" : reader.GetString(9);
             }
         }
-        
+
         kit.Types = LoadTypes(connection, kit.Guid);
         kit.Designs = LoadDesigns(connection, kit.Guid);
-        
+
         return kit;
     }
 
@@ -5989,7 +5986,7 @@ public static class ZipRoundtrip
         using var cmd = connection.CreateCommand();
         cmd.CommandText = "SELECT guid, name, parent_guid, is_abstract, folder, stock, virtual, unit, description, icon, image FROM type WHERE kit_guid = @kitGuid";
         cmd.Parameters.AddWithValue("@kitGuid", kitGuid);
-        
+
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
         {
@@ -6018,7 +6015,7 @@ public static class ZipRoundtrip
         using var cmd = connection.CreateCommand();
         cmd.CommandText = "SELECT guid, name, parent_guid, unit, folder, is_abstract, can_scale, can_mirror, description, icon, image FROM design WHERE kit_guid = @kitGuid";
         cmd.Parameters.AddWithValue("@kitGuid", kitGuid);
-        
+
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
         {
@@ -6045,37 +6042,30 @@ public static class ZipRoundtrip
     {
         using var connection = new SqliteConnection($"Data Source={dbPath}");
         connection.Open();
-        
+
         using (var cmd = connection.CreateCommand())
         {
             cmd.CommandText = schemaSQL;
             cmd.ExecuteNonQuery();
         }
-        
-        // Disable foreign key checks for bulk insert
-        using (var cmd = connection.CreateCommand())
-        {
-            cmd.CommandText = "PRAGMA foreign_keys = OFF";
-            cmd.ExecuteNonQuery();
-        }
-        
+
         using (var cmd = connection.CreateCommand())
         {
             cmd.CommandText = @"INSERT INTO kit (guid, name, version, description, icon, image, preview, remote, homepage, license, created, updated)
                 VALUES (@guid, @name, @version, @description, @icon, @image, @preview, @remote, @homepage, @license, datetime('now'), datetime('now'))";
             cmd.Parameters.AddWithValue("@guid", kit.Guid);
             cmd.Parameters.AddWithValue("@name", kit.Name);
-            cmd.Parameters.AddWithValue("@version", (object?)kit.Version ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@description", (object?)kit.Description ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@icon", (object?)kit.Icon ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@image", (object?)kit.Image ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@preview", (object?)kit.Preview ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@remote", (object?)kit.Remote ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@homepage", (object?)kit.Homepage ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@license", (object?)kit.License ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@version", kit.Version);
+            cmd.Parameters.AddWithValue("@description", kit.Description);
+            cmd.Parameters.AddWithValue("@icon", kit.Icon);
+            cmd.Parameters.AddWithValue("@image", kit.Image);
+            cmd.Parameters.AddWithValue("@preview", kit.Preview);
+            cmd.Parameters.AddWithValue("@remote", kit.Remote);
+            cmd.Parameters.AddWithValue("@homepage", kit.Homepage);
+            cmd.Parameters.AddWithValue("@license", kit.License);
             cmd.ExecuteNonQuery();
         }
-        
+
         foreach (var t in kit.Types)
         {
             using var cmd = connection.CreateCommand();
@@ -6085,17 +6075,17 @@ public static class ZipRoundtrip
             cmd.Parameters.AddWithValue("@name", t.Name);
             cmd.Parameters.AddWithValue("@parent", (object?)t.Parent?.Guid ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@isAbstract", t.IsAbstract);
-            cmd.Parameters.AddWithValue("@folder", (object?)t.Folder ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@folder", t.Folder);
             cmd.Parameters.AddWithValue("@stock", t.Stock);
             cmd.Parameters.AddWithValue("@virtual", t.Virtual);
-            cmd.Parameters.AddWithValue("@unit", (object?)t.Unit ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@description", (object?)t.Description ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@icon", (object?)t.Icon ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@image", (object?)t.Image ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@unit", t.Unit);
+            cmd.Parameters.AddWithValue("@description", t.Description);
+            cmd.Parameters.AddWithValue("@icon", t.Icon);
+            cmd.Parameters.AddWithValue("@image", t.Image);
             cmd.Parameters.AddWithValue("@kitGuid", kit.Guid);
             cmd.ExecuteNonQuery();
         }
-        
+
         foreach (var d in kit.Designs)
         {
             using var cmd = connection.CreateCommand();
@@ -6104,22 +6094,15 @@ public static class ZipRoundtrip
             cmd.Parameters.AddWithValue("@guid", d.Guid);
             cmd.Parameters.AddWithValue("@name", d.Name);
             cmd.Parameters.AddWithValue("@parent", (object?)d.Parent?.Guid ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@unit", (object?)d.Unit ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@folder", (object?)d.Folder ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@unit", d.Unit);
+            cmd.Parameters.AddWithValue("@folder", d.Folder);
             cmd.Parameters.AddWithValue("@isAbstract", d.IsAbstract);
             cmd.Parameters.AddWithValue("@canScale", d.CanScale);
             cmd.Parameters.AddWithValue("@canMirror", d.CanMirror);
-            cmd.Parameters.AddWithValue("@description", (object?)d.Description ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@icon", (object?)d.Icon ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@image", (object?)d.Image ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@description", d.Description);
+            cmd.Parameters.AddWithValue("@icon", d.Icon);
+            cmd.Parameters.AddWithValue("@image", d.Image);
             cmd.Parameters.AddWithValue("@kitGuid", kit.Guid);
-            cmd.ExecuteNonQuery();
-        }
-        
-        // Re-enable foreign key checks
-        using (var cmd = connection.CreateCommand())
-        {
-            cmd.CommandText = "PRAGMA foreign_keys = ON";
             cmd.ExecuteNonQuery();
         }
     }

@@ -6,25 +6,27 @@
   },
   "features": {
     "ghcr.io/devcontainers/features/node:1": {
-      "version": "22",
+      "version": "24",
       "nodeGypDependencies": true
     },
     "ghcr.io/devcontainers/features/go:1": {
-      "version": "1.24"
+      "version": "1.25"
     },
     "ghcr.io/devcontainers/features/python:1": {
-      "version": "3.13"
+      "version": "3.14"
+    },
+    "ghcr.io/jsburckhardt/devcontainer-features/uv:1": {
+      "version": "0.9"
     },
     "ghcr.io/devcontainers/features/dotnet:2": {
-      "version": "7.0",
-      "additionalVersions": "8.0"
+      "version": "7.0"
     },
     "ghcr.io/devcontainers/features/rust:1": {
-      "version": "latest",
+      "version": "1.92",
       "targets": "wasm32-unknown-unknown"
     },
     "ghcr.io/devcontainers/features/git:1": {
-      "version": "latest",
+      "version": "",
       "ppa": true
     },
     "ghcr.io/devcontainers/features/git-lfs:1": {},
@@ -33,18 +35,27 @@
   "customizations": {
     "vscode": {
       "extensions": [
+        // repo
         "ms-vscode-remote.remote-containers",
         "ms-azuretools.vscode-docker",
+        "nrwl.angular-console",
+        // github
+        "github.vscode-github-actions",
+        "github.vscode-pull-request-github",
+        // toml
+        "tamasfe.even-better-toml",
+        // yaml
+        "redhat.vscode-yaml",
+        // data
+        "ms-toolsai.datawrangler",
         "janisdd.vscode-edit-csv",
         "mechatroner.rainbow-csv",
-        "tamasfe.even-better-toml",
-        "zainchen.json",
-        "jebbs.plantuml",
-        "jock.svg",
-        "gruntfuggly.todo-tree",
-        "vscode-icons-team.vscode-icons",
-        "nrwl.angular-console",
+        // graphql
+        "graphql.vscode-graphql",
+        "graphql.vscode-graphql-syntax",
+        // formatter
         "esbenp.prettier-vscode",
+        // javascript
         "dbaeumer.vscode-eslint",
         "bradlc.vscode-tailwindcss",
         "unifiedjs.vscode-mdx",
@@ -53,17 +64,32 @@
         "stripe.markdoc-language-support",
         "firefox-devtools.vscode-firefox-debug",
         "ms-playwright.playwright",
+        // dotnet
         "ms-dotnettools.vscode-dotnet-pack",
         "ms-dotnettools.vscode-dotnet-runtime",
         "ms-dotnettools.csharp",
         "ms-dotnettools.csdevkit",
         "ms-dotnettools.dotnet-interactive-vscode",
+        // python
         "ms-python.python",
         "ms-python.vscode-pylance",
         "charliermarsh.ruff",
         "ms-toolsai.jupyter",
+        // rust
         "rust-lang.rust-analyzer",
-        "golang.go"
+        // go
+        "golang.go",
+        // ai
+        "github.copilot",
+        "github.copilot-chat",
+        "anthropic.claude-code",
+        "openai.chatgpt",
+        // utility
+        "gruntfuggly.todo-tree",
+        "jebbs.plantuml",
+        "jock.svg",
+        // visuals
+        "vscode-icons-team.vscode-icons"
       ],
       "settings": {
         "editor.formatOnSave": true,
@@ -86,7 +112,9 @@
         "python.analysis.typeCheckingMode": "off",
         "python.testing.pytestEnabled": true,
         "python.testing.unittestEnabled": false,
-        "python.testing.pytestArgs": ["."],
+        "python.testing.pytestArgs": [
+          "."
+        ],
         "python.testing.cwd": "${containerWorkspaceFolder}",
         "python.analysis.languageServerMode": "full",
         "sqltools.useNodeRuntime": true,
@@ -104,7 +132,9 @@
         "[svg]": {
           "editor.defaultFormatter": "jock.svg"
         },
-        "rust-analyzer.linkedProjects": ["rs/semio/Cargo.toml"],
+        "rust-analyzer.linkedProjects": [
+          "rs/semio/Cargo.toml"
+        ],
         "rust-analyzer.cargo.target": "wasm32-unknown-unknown",
         "terminal.integrated.defaultProfile.linux": "bash"
       }
@@ -112,7 +142,14 @@
   },
   "postCreateCommand": "bash .devcontainer/post-create.sh",
   "postStartCommand": "bash .devcontainer/post-start.sh",
-  "forwardPorts": [2507, 3000, 4000, 4321, 5678, 6006],
+  "forwardPorts": [
+    2507,
+    3000,
+    4000,
+    4321,
+    5678,
+    6006
+  ],
   "portsAttributes": {
     "2507": {
       "label": "Engine API",
