@@ -1,6 +1,6 @@
 <!-- IMPORTANT -->
 
-ALWAYS open a ticket with semio-repo mcp tool `ticket_open` (or use `.\go\repo\repo.exe ticket open <title> <prompt> <llm>` when no mcp tool is available) for every task you are working on. This creates a `tickets/YYYY/MM/DD/TICKETSLUG` folder along with `plan.md`, `log.md`, `summary.md`. NEVER answer directly in the chat and ALWAYS just add the message to `log.md`. ALWAYS start by writing the plan into `plan.md` and NEVER send it as message. ALWAYS end by writing the summary into `summary.md` and NEVER send it as message. ALWAYS use the semio-repo mcp tool `ticket_close` (or use `.\go\repo\repo.exe ticket close YYYY/MM/DD/TICKETSLUG <summary> <files...>` when no mcp tool is available) to finish the ticket along with the summary and at all the files you worked on (created, updated or removed). When a dev sends a new message to the chat ALWAYS reopen the same ticket with semio-repo mcp tool `ticket_reopen` (or use `.\go\repo\repo.exe ticket reopen YYYY/MM/DD/TICKETSLUG <prompt> llm>` when no mcp tool is available).
+ALWAYS open a ticket with semio-repo mcp tool `ticket_open` (or use `./go/repo/repo ticket open <title> <prompt> <llm>` when no mcp tool is available) for every task you are working on. This creates a `tickets/YYYY/MM/DD/TICKETSLUG` folder along with `plan.md`, `log.md`, `summary.md`. NEVER answer directly in the chat and ALWAYS just add the message to `log.md`. ALWAYS start by writing the plan into `plan.md` and NEVER send it as message. ALWAYS end by writing the summary into `summary.md` and NEVER send it as message. ALWAYS use the semio-repo mcp tool `ticket_close` (or use `./go/repo/repo ticket close YYYY/MM/DD/TICKETSLUG <summary> <files...>` when no mcp tool is available) to finish the ticket along with the summary and at all the files you worked on (created, updated or removed). When a dev sends a new message to the chat ALWAYS reopen the same ticket with semio-repo mcp tool `ticket_reopen` (or use `./go/repo/repo ticket reopen YYYY/MM/DD/TICKETSLUG <prompt> llm>` when no mcp tool is available).
 
 - Multiple agents and a developer ALWAYS work on the same codebase at the same time. NEVER use `git stash`, `git stash pop`, `git checkout`, … because it will mess up others work and worst-case delete their work.
 - The codebase in under design and development and not used in production yet. There are many inconsistencies that need to be refactored. ALWAYS use clean mechanisms that might require large refactorings and NEVER care about backwards compatibility.
@@ -375,7 +375,7 @@ The monorepo uses a devcontainer for consistent cross-platform development. The 
 
 - Node.js 22.x with npm 11.x
 - Go 1.24
-- Python 3.13 with uv package manager
+- Python 3.14 with uv package manager
 - .NET SDK 7.0 and 8.0
 - Rust with wasm32-unknown-unknown target
 
@@ -621,8 +621,11 @@ The MCP server communicates via stdio and exposes all repo tools as MCP tools. C
 {
   "mcpServers": {
     "semio-repo": {
-      "command": "go/mcp/mcp"
-    }
+        "type": "stdio",
+        "command": "go/repo/repo",
+        "args": [
+          "--mcp-stdio"
+        ]
   }
 }
 ```

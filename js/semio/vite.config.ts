@@ -97,6 +97,7 @@ export default defineConfig({
     noExternal: ["golden-layout"],
   },
   test: {
+    name: "semio",
     environment: "node",
     testTimeout: 30000,
     include: ["semio.test.ts"],

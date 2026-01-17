@@ -143,7 +143,7 @@ describe("Import/Export", () => {
     expect(areKitsEqual(kit, deserializedKit)).toBe(true);
   });
 
-  it("Zip -> Kit -> Zip -> Kit (roundtrip)", async () => {
+  it("Zip -> Kit -> Zip -> Kit", async () => {
     const fs = await import("node:fs");
     const path = await import("node:path");
     const zipPath = path.join(__dirname, "../../assets/semio/metabolism.zip");

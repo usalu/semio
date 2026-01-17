@@ -1,5 +1,7 @@
 # Prompt history 
 
+No active workspace is needed. Just keep on. Dont ask in between, just finish the task. Edit files in workspaces/semio workspace.
+
 The sketchpad navbar should show panel toggles for left, middle and right panels. Make sure all app tests are checking the panels (toggeling and check for tree sections and tree items).
 
 The python and rust tests are not appearing in the test explorer in vscode.
@@ -67,10 +69,10 @@ Investigate why the rust implementation is so slow in the benchmark for flatteni
 
 The fix mechanism is currently serializing edits to fix the issues. This works for individual fixes but not when fixing multiple violations. Fixes should not be serialized but applied directly only by the function that fixes the violationKind. 
 Adjust repo, cli, mcp and vscode extension.
-C:\git\semio.tech\semio\go\cli\main.go
-C:\git\semio.tech\semio\go\mcp\main.go
-C:\git\semio.tech\semio\go\repo\repo.go
-C:\git\semio.tech\semio\js\vscode\extension.ts
+go/cli/main.go
+go/mcp/main.go
+go/repo/repo.go
+js/vscode/extension.ts
 
 Currently we have a code-first approach where semio.py generates the graphql schema, the sqlite schema and the jsonschema.
 Change to a schema-first approach where the schemas are manually created/updated and the code is implementing the contract.
@@ -236,9 +238,9 @@ Metrics:
 - Definitions in semio are only top level. A section can contain different definitions. A definition cant contain sections. E.g. `result` in go/repo/repo.go should not be counted as a definition. A definition always starts on a new line with func, def, class, interface, type, enum, etc.
 Api:
 Make sure the commands have this api:
-`.\go\repo\repo.exe ticket open <title> <prompt> <llm>`
-`.\go\repo\repo.exe ticket close YYYY/MM/DD/TICKETSLUG <summary> <files...>`
-`.\go\repo\repo.exe ticket reopen YYYY/MM/DD/TICKETSLUG <prompt> llm>`
+`./go/repo/repo ticket open <title> <prompt> <llm>`
+`./go/repo/repo ticket close YYYY/MM/DD/TICKETSLUG <summary> <files...>`
+`./go/repo/repo ticket reopen YYYY/MM/DD/TICKETSLUG <prompt> llm>`
 
 The vscode extension commands are not matching the cli command arguments.
 E.g. ticket open requires to select at least one file although ticket open does not require any files.
@@ -246,9 +248,9 @@ Ticket finish should show a list of open tickets and let the user select one and
 Scan for all commands and make sure that whenever something is referenced then vscode should show the list of options to choose from (bundles, folders, files, sections, definitions, contributors, tickets, policies, violationKinds, violations).
 
 Make sure the commands have this api:
-`.\go\repo\repo.exe ticket open <title> <prompt> <llm>`
-`.\go\repo\repo.exe ticket close YYYY/MM/DD/TICKETSLUG <summary> <files...>`
-`.\go\repo\repo.exe ticket reopen YYYY/MM/DD/TICKETSLUG <prompt> llm>`
+`./go/repo/repo ticket open <title> <prompt> <llm>`
+`./go/repo/repo ticket close YYYY/MM/DD/TICKETSLUG <summary> <files...>`
+`./go/repo/repo ticket reopen YYYY/MM/DD/TICKETSLUG <prompt> llm>`
 
 Simplify the ticket mechanism to remove checkpoints and iterations. All computation that was performed on a checkpoint (affected sections with line metrics and the list of affected definitions.) should be performed when finishing a ticket. Add a summary field and files as necessary arguments for the ticket close command.
 
@@ -438,7 +440,7 @@ Extend the vscode extension to show the codebase tree in the sideview under the 
 │ │ │ │ │ └─ SECTION # NAVIGATETOSECTION
 │ │ │ │ │ │ └─ DEFINITION # NAVIGATETODEFINITION
 
-When calling repo.exe then return everything in a json object. Make sure everything is properly derived. Make sure to implement everything composable. The subcommands should just call parts of it. Refactor the vscode extension to use the new command on startup.
+When calling repo then return everything in a json object. Make sure everything is properly derived. Make sure to implement everything composable. The subcommands should just call parts of it. Refactor the vscode extension to use the new command on startup.
 {
   "codebase": {
     "bundles":[{
@@ -1128,7 +1130,7 @@ E.g. WorkspaceEdit shouldnt
 
 Fixing files should be less than 100ms. Currently in vscode:
 - Individual violations are not fixable alone
-- When executing a complete file fix it show: Failed to fix violation: Error: Command failed: c:\git\semio.tech\semio\bin\repo.exe fix js/semio/playwright.config.ts
+- When executing a complete file fix it show: Failed to fix violation: Error: Command failed: ./bin/repo fix js/semio/playwright.config.ts
 
 When pressing close or reopen on ticket tree item in vscode it opens a command instead of just reopening or closing the ticket was clicked onto.
 
@@ -1167,9 +1169,9 @@ Remove status emoji from ticket
 Add commit tree item
 Just show description on ticket tree item hover
 
-.\bin\repo.exe analyze net/Semio.Grasshopper/Semio.Grasshopper.cs
+./bin/repo analyze net/Semio.Grasshopper/Semio.Grasshopper.cs
 
-.\bin\repo.exe analyze net/Semio.Tests/Tests.cs
+./bin/repo analyze net/Semio.Tests/Tests.cs
 should not take more than 100ms. Analyze why it takes so long and refactor to make it performant. In general only policies where the scope includes the target scope should run.
 
 Remove all caching mechanism with .semio-repo folder. The analyze command should be called for every open file and rerunwhen saving a file. Make sure that the go binary is ignoring files that are gitignored. Make sure the analyze command is only running policies that have scopes which include the file. Make sure the analysis is performant and less than 100ms per file. When running analyze without a scope it should produce: reports/violations.json with all violations.
@@ -2679,7 +2681,7 @@ model: CURRENTLLMMODELIDENTIFIER
 
 ---
 
-Currently powershell is the main scripting language for ci/cd. Change this to be typescript. Migrate the whole codebase.
+[DONE] PowerShell was migrated to TypeScript for CI/CD scripting.
 
 CI/CD: There should be only this five commands: dev, build, prepublish, publish, test
 Depending on what level they are executed they always start their child packages to do the same.

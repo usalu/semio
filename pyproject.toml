@@ -1,9 +1,9 @@
 [project]
 name = "semio-repo"
 version = "0.1.0"
-description = "🧩 semio monorepo Python workspace"
+description = "🐍 semio monorepo Python workspace"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.14"
 license = "AGPL-3.0-or-later"
 authors = [{ name = "Ueli Saluz", email = "ueli@semio-tech.com" }]
 dependencies = []
@@ -26,3 +26,13 @@ dev = [
     "scipy>=1.14.0",
     "scikit-learn>=1.5.0",
 ]
+test = [
+    "pytest>=8.0.0",
+    "pytest-cov>=6.0.0",
+    "deepdiff>=8.0.0",
+]
+
+[tool.pytest.ini_options]
+python_files = ["test_*.py", "*_test.py", "*.test.py"]
+testpaths = ["py/semio", "py/engine"]
+addopts = "--import-mode=importlib"

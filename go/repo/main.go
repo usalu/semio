@@ -560,6 +560,22 @@ type Scope struct {
 	DefinitionName string    `json:"definitionName,omitempty"`
 }
 
+type TextEdit struct {
+	Start   int    `json:"start"`
+	End     int    `json:"end"`
+	NewText string `json:"newText"`
+}
+
+type AutoFix struct {
+	Description string                `json:"description"`
+	Edits       map[string][]TextEdit `json:"edits"`
+}
+
+type AutofixEdit struct {
+	Path  string     `json:"path"`
+	Edits []TextEdit `json:"edits"`
+}
+
 type Violation struct {
 	ID      string        `json:"id"`
 	Summary string        `json:"summary"`
@@ -568,6 +584,7 @@ type Violation struct {
 	Line    int           `json:"line,omitempty"`
 	Column  int           `json:"column,omitempty"`
 	Excerpt string        `json:"excerpt,omitempty"`
+	Autofix *AutoFix      `json:"autofix,omitempty"`
 }
 
 func (v *Violation) IsNode()       {}
@@ -2178,15 +2195,25 @@ func GetRootDir() string {
 	return rootDir
 }
 
-func findRepoRoot(start string) string {
-	dir := start
+func SetRootDir(dir string) {
+	rootDir = dir
+}
+
+func findRepoRoot(startDir string) string {
+	dir, err := filepath.Abs(startDir)
+	if err != nil {
+		return startDir
+	}
 	for {
-		if _, err := os.Stat(filepath.Join(dir, "AGENTS.md")); err == nil {
+		if _, err := os.Stat(filepath.Join(dir, ".git")); err == nil {
+			return dir
+		}
+		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
 			return dir
 		}
 		parent := filepath.Dir(dir)
 		if parent == dir {
-			return start
+			return startDir
 		}
 		dir = parent
 	}
@@ -2252,10 +2279,6 @@ func isSourceFile(filePath string) bool {
 	ext := filepath.Ext(filePath)
 	return ext == ".ts" || ext == ".tsx" || ext == ".js" || ext == ".jsx" ||
 		ext == ".py" || ext == ".go" || ext == ".cs"
-}
-
-func SetRootDir(dir string) {
-	rootDir = dir
 }
 
 func NormalizePath(p string) string {
@@ -6252,15 +6275,15 @@ func (c *repoContext) Analyze(scope *string) (*AnalyzeResult, error) {
 			kindInfoMap[kind] = kind.Info()
 		}
 	}
+	autofixableCount := 0
 	violations := make([]*Violation, len(report.Violations))
 	for i, v := range report.Violations {
-		var excerptPtr *string
-		if v.Summary != "" {
-			excerptPtr = &v.Summary
+		excerpt := v.Excerpt
+		if excerpt == "" {
+			excerpt = v.Summary
 		}
-		excerpt := ""
-		if excerptPtr != nil {
-			excerpt = *excerptPtr
+		if info, ok := kindInfoMap[v.Kind]; ok && info.Autofixable {
+			autofixableCount++
 		}
 		violations[i] = &Violation{
 			ID:      v.ID,
@@ -6282,7 +6305,7 @@ func (c *repoContext) Analyze(scope *string) (*AnalyzeResult, error) {
 				Medium: report.Summary.ByPriority["medium"],
 				Low:    report.Summary.ByPriority["low"],
 			},
-			Autofixable: 0,
+			Autofixable: autofixableCount,
 		},
 	}, nil
 }
@@ -8040,18 +8063,18 @@ func exportViolations(tx *sql.Tx, violations []*Violation) (int, error) {
 		if v.Excerpt != "" {
 			excerpt = v.Excerpt
 		}
+		if v.Autofix != nil {
+			autofixDesc = v.Autofix.Description
+			if editsJSON, err := json.Marshal(v.Autofix.Edits); err == nil {
+				autofixEdits = string(editsJSON)
+			}
+		}
 		filePath := extractFileFromScope(v.Scope)
 		if filePath != "" {
 			fileID = "file:" + filePath
 			dir := filepath.Dir(filePath)
 			if dir != "." && dir != "" {
 				folderID = "folder:" + dir
-			}
-		}
-		if v.Autofix != nil {
-			autofixDesc = v.Autofix.Description
-			if editsJSON, err := json.Marshal(v.Autofix.Edits); err == nil {
-				autofixEdits = string(editsJSON)
 			}
 		}
 		if _, err := stmt.Exec(v.ID, kindID, v.Scope, fileID, folderID, line, column, excerpt, v.Summary, autofixDesc, autofixEdits); err != nil {
@@ -8359,6 +8382,49 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		Fields: graphql.Fields{
 			"start": &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
 			"end":   &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+		},
+	})
+
+	textEditType := graphql.NewObject(graphql.ObjectConfig{
+		Name: "TextEdit",
+		Fields: graphql.Fields{
+			"start":   &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"end":     &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"newText": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+		},
+	})
+
+	autofixEditType := graphql.NewObject(graphql.ObjectConfig{
+		Name: "AutofixEdit",
+		Fields: graphql.Fields{
+			"path":  &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+			"edits": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(textEditType)))},
+		},
+	})
+
+	autofixType := graphql.NewObject(graphql.ObjectConfig{
+		Name: "Autofix",
+		Fields: graphql.Fields{
+			"description": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+			"edits": &graphql.Field{
+				Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(autofixEditType))),
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					autofix, ok := p.Source.(*AutoFix)
+					if !ok || autofix == nil || len(autofix.Edits) == 0 {
+						return []AutofixEdit{}, nil
+					}
+					paths := make([]string, 0, len(autofix.Edits))
+					for filePath := range autofix.Edits {
+						paths = append(paths, filePath)
+					}
+					sort.Strings(paths)
+					edits := make([]AutofixEdit, 0, len(paths))
+					for _, filePath := range paths {
+						edits = append(edits, AutofixEdit{Path: filePath, Edits: autofix.Edits[filePath]})
+					}
+					return edits, nil
+				},
+			},
 		},
 	})
 
@@ -8694,55 +8760,18 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		}),
 	})
 
-	textEditType := graphql.NewObject(graphql.ObjectConfig{
-		Name: "TextEdit",
-		Fields: graphql.Fields{
-			"start":   &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"end":     &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"newText": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-		},
-	})
-
-	fileEditType := graphql.NewObject(graphql.ObjectConfig{
-		Name: "FileEdit",
-		Fields: graphql.Fields{
-			"path":  &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-			"edits": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(textEditType)))},
-		},
-	})
-
-	autofixType := graphql.NewObject(graphql.ObjectConfig{
-		Name: "Autofix",
-		Fields: graphql.Fields{
-			"description": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-			"edits": &graphql.Field{
-				Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(fileEditType))),
-				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-					fix, ok := p.Source.(*Fix)
-					if !ok {
-						return []FileEdit{}, nil
-					}
-					var edits []FileEdit
-					for path, textEdits := range fix.Edits {
-						edits = append(edits, FileEdit{
-							Path:  path,
-							Edits: textEdits,
-						})
-					}
-					sort.Slice(edits, func(i, j int) bool {
-						return edits[i].Path < edits[j].Path
-					})
-					return edits, nil
-				},
-			},
-		},
-	})
-
 	violationType = graphql.NewObject(graphql.ObjectConfig{
 		Name: "Violation",
 		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
 			return graphql.Fields{
 				"id": &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
+				"kindId": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.ID),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						violation := p.Source.(*Violation)
+						return string(violation.Kind), nil
+					},
+				},
 				"kind": &graphql.Field{
 					Type: graphql.NewNonNull(violationKindType),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
@@ -8757,7 +8786,37 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 				"line":    &graphql.Field{Type: graphql.Int},
 				"column":  &graphql.Field{Type: graphql.Int},
 				"excerpt": &graphql.Field{Type: graphql.String},
-				"autofix": &graphql.Field{Type: autofixType},
+				"summary": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.String),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						violation := p.Source.(*Violation)
+						return violation.Summary, nil
+					},
+				},
+				"priority": &graphql.Field{
+					Type: graphql.NewNonNull(violationPriorityEnum),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						violation := p.Source.(*Violation)
+						return violation.Priority(), nil
+					},
+				},
+				"autofixable": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.Boolean),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						violation := p.Source.(*Violation)
+						return violation.Autofixable(), nil
+					},
+				},
+				"autofix": &graphql.Field{
+					Type: autofixType,
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						violation := p.Source.(*Violation)
+						if violation.Autofix == nil {
+							return nil, nil
+						}
+						return violation.Autofix, nil
+					},
+				},
 			}
 		}),
 	})
@@ -10659,9 +10718,6 @@ func analyze(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolRes
 				}
 				scope
 				excerpt
-				autofix {
-					description
-				}
 			}
 			metrics {
 				total
@@ -11761,7 +11817,6 @@ var analyzeCmd = &cobra.Command{
 						column
 						excerpt
 						kind { id priority autofixable reason solution }
-						autofix { description edits { path edits { start end newText } } }
 					}
 					metrics { total autofixable byPriority { high medium low } }
 				}

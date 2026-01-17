@@ -14,6 +14,12 @@ Removed all Windows legacy configurations since the only Windows dev environment
 - `.vscode/launch.json` - Removed PowerShell launch configurations
 - `assets/logo/package.json` - Changed build script from PowerShell to TypeScript
 - `assets/icons/package.json` - Replaced broken PowerShell build script with placeholder
+- `package.json` - Changed all `repo.exe` to `repo`
+- `CLAUDE.md` - Changed Windows paths to Linux paths
+- `AGENTS.md` - Changed Windows paths to Linux paths
+- `.claude/settings.local.json` - Removed Windows-specific permissions
+- `prompts/ueli.md` - Updated Windows paths to Linux paths
+- `js/vscode/extension.test.ts` - Made repo binary path detection cross-platform
 
 ## Not Modified (Legitimate Windows-only for Semio.Grasshopper)
 - `net/Semio.Grasshopper/` - Rhino/Grasshopper paths

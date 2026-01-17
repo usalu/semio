@@ -1,0 +1,14 @@
+{
+  "title": "configure-vitest-monorepo",
+  "iterations": [
+    {
+      "prompt": "Configure vitest properly across the monorepo. User is getting: Vitest found multiple projects. The extension will use only the first 5 due to performance concerns. Consider using a projects configuration to group your configs",
+      "llm": "claude-opus-4-5",
+      "author": "",
+      "date": "2026-01-17T13:17:41.544404725Z",
+      "commit": ""
+    }
+  ],
+  "status": "open",
+  "dates": {}
+}

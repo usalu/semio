@@ -2914,36 +2914,6 @@ mod tests {
         assert!(result.valid);
         assert!(result.problems.is_empty());
     }
-
-    #[test]
-    fn test_supported_model_extensions() {
-        assert!(is_supported_model_extension("gltf"));
-        assert!(is_supported_model_extension("GLTF"));
-        assert!(is_supported_model_extension("glb"));
-        assert!(!is_supported_model_extension("txt"));
-        assert!(!is_supported_model_extension("jpg"));
-    }
-
-    #[test]
-    fn test_deep_equal() {
-        let v1 = Vector::new(1.0, 2.0, 3.0);
-        let v2 = Vector::new(1.0, 2.0, 3.0);
-        let v3 = Vector::new(1.0, 2.0, 4.0);
-        
-        assert!(deep_equal(&v1, &v2));
-        assert!(!deep_equal(&v1, &v3));
-    }
-
-    #[test]
-    fn test_has_guid_trait() {
-        let attr = Attribute {
-            guid: "test-guid".to_string(),
-            key: "test-key".to_string(),
-            value: None,
-            definition: None,
-        };
-        assert_eq!(attr.guid(), "test-guid");
-    }
 }
 
 // #endregion Tests

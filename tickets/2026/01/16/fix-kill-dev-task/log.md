@@ -42,8 +42,15 @@ Found Windows legacy configs:
 - `.exec()`, `.execute()`, `.executeCommand()` - These are method calls, not Windows configs
 
 ### Changes Made
-1. `.vscode/settings.json` - Removed `python.defaultInterpreterPath.windows` and `python.defaultInterpreterPath.linux` (keeping only the default)
-2. `.vscode/mcp.json` - Changed `go/mcp/mcp.exe` to `go/mcp/mcp`
-3. `.vscode/launch.json` - Removed "build icons" PowerShell configuration and generic "PowerShell" configuration
-4. `assets/logo/package.json` - Changed build script from PowerShell to `tsx logo.ts`
-5. `assets/icons/package.json` - Replaced broken PowerShell build script with placeholder echo
+1. `.vscode/tasks.json` - Removed "kill dev" task
+2. `.vscode/settings.json` - Removed `python.defaultInterpreterPath.windows` and `python.defaultInterpreterPath.linux` (keeping only the default)
+3. `.vscode/mcp.json` - Changed `go/mcp/mcp.exe` to `go/mcp/mcp`
+4. `.vscode/launch.json` - Removed "build icons" PowerShell configuration and generic "PowerShell" configuration
+5. `assets/logo/package.json` - Changed build script from PowerShell to `tsx logo.ts`
+6. `assets/icons/package.json` - Replaced broken PowerShell build script with placeholder echo
+7. `package.json` - Changed all `repo.exe` references to `repo`
+8. `CLAUDE.md` - Changed Windows paths (`.\go\repo\repo.exe`) to Linux paths (`./go/repo/repo`)
+9. `AGENTS.md` - Changed Windows paths (`.\go\repo\repo.exe`) to Linux paths (`./go/repo/repo`)
+10. `.claude/settings.local.json` - Removed Windows-specific permission entries
+11. `prompts/ueli.md` - Updated Windows paths to Linux paths, marked PowerShell migration as done
+12. `js/vscode/extension.test.ts` - Made repo binary path detection cross-platform

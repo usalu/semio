@@ -286,6 +286,22 @@ type LineMetrics {
   removed: Int!
 }
 
+type TextEdit {
+  start: Int!
+  end: Int!
+  newText: String!
+}
+
+type AutofixEdit {
+  path: String!
+  edits: [TextEdit!]!
+}
+
+type Autofix {
+  description: String!
+  edits: [AutofixEdit!]!
+}
+
 type Commit implements Node {
   id: ID!
   sha: String!
@@ -379,6 +395,7 @@ type Violation implements Node {
   summary: String!
   priority: ViolationPriority!
   autofixable: Boolean!
+  autofix: Autofix
 }
 
 type AnalyzeResult {

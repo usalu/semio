@@ -23,7 +23,15 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    include: ["repo.tests.ts"],
-    testTimeout: 60000,
+    projects: [
+      {
+        test: {
+          name: "repo",
+          include: ["repo.tests.ts"],
+          testTimeout: 60000,
+        },
+      },
+      "./js/semio/vite.config.ts",
+    ],
   },
 });

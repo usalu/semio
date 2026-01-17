@@ -24,6 +24,13 @@ dotnet restore net/Semio.sln
 echo "Adding Rust wasm target..."
 rustup target add wasm32-unknown-unknown || true
 
+echo "Configuring Rust wasm settings..."
+mkdir -p "$HOME/.cargo"
+cat <<'EOF' > "$HOME/.cargo/config.toml"
+[target.wasm32-unknown-unknown]
+rustflags = ["--cfg", "getrandom_backend=wasm_js"]
+EOF
+
 echo "Installing Playwright browsers..."
 npx playwright install --with-deps chromium
 

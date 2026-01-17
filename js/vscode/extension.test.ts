@@ -186,9 +186,11 @@ suite("Cache Mechanism Test Suite", function () {
 
   test("Analyzing a file creates cache entry", async function () {
     const root = getWorkspaceRoot();
-    const repoBinPath = path.join(root, "go", "repo", "repo.exe");
+    const isWindows = process.platform === "win32";
+    const binaryName = isWindows ? "repo.exe" : "repo";
+    const repoBinPath = path.join(root, "go", "repo", binaryName);
     if (!fs.existsSync(repoBinPath)) {
-      console.log("Skipping: repo.exe not found - cache requires repo analyze");
+      console.log(`Skipping: ${binaryName} not found - cache requires repo analyze`);
       return;
     }
     const relativePath = "js/semio/semio.ts";

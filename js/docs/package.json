@@ -5,7 +5,7 @@
   "version": "0.1.0",
   "description": "semio ⋅ docs",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --port 4321 --host 0.0.0.0",
     "build": "vite build",
     "publish": "vite build && npm publish",
     "preflight": "echo \"No preflight checks configured\""

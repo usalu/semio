@@ -289,9 +289,7 @@ CREATE TABLE IF NOT EXISTS violation (
     line INTEGER,
     column_num INTEGER,
     excerpt TEXT,
-    summary TEXT NOT NULL,
-    autofix_description TEXT,
-    autofix_edits TEXT
+    summary TEXT NOT NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_violation_kind ON violation(kind_id);

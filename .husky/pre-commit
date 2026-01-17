@@ -1,7 +1,2 @@
 #!/usr/bin/env sh
-
-echo "🚀 Running preflight checks..."
 npm run preflight
-
-echo "✅ All preflight checks passed!"
-

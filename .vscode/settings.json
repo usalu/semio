@@ -54,5 +54,5 @@
   "rust-analyzer.linkedProjects": [
     "rs/semio/Cargo.toml"
   ],
-  "rust-analyzer.cargo.target": "wasm32-unknown-unknown",
+  "rust-analyzer.testExplorer": true
 }

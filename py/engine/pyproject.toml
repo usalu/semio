@@ -3,7 +3,7 @@ name = "semio-engine"
 version = "4.4.0"
 description = "⚙️ Shared fat client for all desktop apps in semio 🏘️"
 authors = [{ name = "Ueli Saluz", email = "ueli@semio-tech.com" }]
-requires-python = ">=3.13,<3.14"
+requires-python = ">=3.14"
 license = "AGPL-3.0-or-later"
 maintainers = [{ name = "Ueli Saluz", email = "ueli@semio-tech.com" }]
 dependencies = [

@@ -1,0 +1,14 @@
+{
+  "title": "fix-play-infinite-loading",
+  "iterations": [
+    {
+      "prompt": "The window of http://localhost:4000/ is infinitely loading. Get dev play working. The vite dev server starts but the page doesn't load.",
+      "llm": "claude-opus-4",
+      "author": "",
+      "date": "2026-01-17T15:00:59.937455103Z",
+      "commit": ""
+    }
+  ],
+  "status": "closed",
+  "dates": {}
+}

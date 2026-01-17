@@ -10,8 +10,10 @@
 		},
 		"semio-repo": {
 			"type": "stdio",
-			"command": "go/mcp/mcp",
-			"args": []
+			"command": "go/repo/repo",
+			"args": [
+				"--mcp-stdio"
+			]
 		},
 		"semio": {
 			"type": "stdio",
