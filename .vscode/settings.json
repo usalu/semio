@@ -16,7 +16,7 @@
   "[csharp]": {
     "editor.defaultFormatter": "ms-dotnettools.csharp"
   },
-  "python.analysis.typeCheckingMode": "off",
+  "python.analysis.typeCheckingMode": "strict",
   "python.testing.pytestEnabled": true,
   "python.testing.unittestEnabled": false,
   "python.testing.pytestArgs": [

@@ -84,9 +84,9 @@ func loadTypes(db *sql.DB, kitGuid string) ([]Type, error) {
         if err != nil { return nil, err }
         t.Connectors = connectors
 
-        models, err := loadModels(db, t.Guid)
+        llms, err := loadLlms(db, t.Guid)
         if err != nil { return nil, err }
-        t.Models = models
+        t.Llms = llms
         
         types = append(types, t)
     }
@@ -245,25 +245,25 @@ func loadConnectors(db *sql.DB, typeGuid string) ([]Connector, error) {
     return connectors, nil
 }
 
-func loadModels(db *sql.DB, typeGuid string) ([]Model, error) {
-    rows, err := db.Query(`SELECT guid, file_guid, name, description FROM model WHERE type_guid = ?`, typeGuid)
+func loadLlms(db *sql.DB, typeGuid string) ([]Llm, error) {
+    rows, err := db.Query(`SELECT guid, file_guid, name, description FROM llm WHERE type_guid = ?`, typeGuid)
     if err != nil { return nil, err }
     defer rows.Close()
 
-    var models []Model
+    var llms []Llm
     for rows.Next() {
-        var m Model
+        var l Llm
         var name, description sql.NullString
         var fileGuid string
-        if err := rows.Scan(&m.Guid, &fileGuid, &name, &description); err != nil {
+        if err := rows.Scan(&l.Guid, &fileGuid, &name, &description); err != nil {
             return nil, err
         }
-        m.File = FileId{Guid: fileGuid}
-        if name.Valid { m.Name = &name.String }
-        if description.Valid { m.Description = &description.String }
-        models = append(models, m)
+        l.File = FileId{Guid: fileGuid}
+        if name.Valid { l.Name = &name.String }
+        if description.Valid { l.Description = &description.String }
+        llms = append(llms, l)
     }
-    return models, nil
+    return llms, nil
 }
 
 func KitToSqlite(kit *Kit, dbPath string, schemaSQL string) error {

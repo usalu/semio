@@ -1,0 +1,16 @@
+{
+  "title": "fix-go-build-autofix-field",
+  "iterations": [
+    {
+      "prompt": "Remove incomplete autofix GraphQL field that references undefined autofixType and non-existent Violation.Autofix field",
+      "llm": "claude-opus-4-5",
+      "author": "",
+      "date": "2026-01-17T16:33:56.789244459Z",
+      "commit": ""
+    }
+  ],
+  "status": "finished",
+  "summary": "Removed incomplete autofix GraphQL field from violationType in go/repo/main.go. The field referenced an undefined autofixType and non-existent Violation.Autofix struct field. Build now succeeds.",
+  "files": ["go/repo/main.go"],
+  "dates": {}
+}

@@ -1,0 +1,14 @@
+{
+  "title": "automate-local-vscode-extension-devcontainer",
+  "iterations": [
+    {
+      "prompt": "Automate the step to add the local vscode extension from folder in devcontainers",
+      "llm": "claude-opus-4-5",
+      "author": "",
+      "date": "2026-01-17T15:50:07.51805767Z",
+      "commit": ""
+    }
+  ],
+  "status": "open",
+  "dates": {}
+}

@@ -134,6 +134,26 @@ var AllowedLLMs = []string{
 	"gpt-5-mini",
 }
 
+func NormalizeLLMSlug(llm string) string {
+	return strings.ToLower(Slugify(llm))
+}
+
+func ResolveAllowedLLM(llm string) (string, error) {
+	llmSlug := NormalizeLLMSlug(llm)
+	bestMatch := ""
+	for _, allowed := range AllowedLLMs {
+		if strings.HasPrefix(llmSlug, allowed) {
+			if len(allowed) > len(bestMatch) {
+				bestMatch = allowed
+			}
+		}
+	}
+	if bestMatch == "" {
+		return "", fmt.Errorf("llm '%s' is not allowed. Please use one of: %s", llmSlug, strings.Join(AllowedLLMs, ", "))
+	}
+	return bestMatch, nil
+}
+
 type Range struct {
 	Start int `json:"start"`
 	End   int `json:"end"`
@@ -560,22 +580,6 @@ type Scope struct {
 	DefinitionName string    `json:"definitionName,omitempty"`
 }
 
-type TextEdit struct {
-	Start   int    `json:"start"`
-	End     int    `json:"end"`
-	NewText string `json:"newText"`
-}
-
-type AutoFix struct {
-	Description string                `json:"description"`
-	Edits       map[string][]TextEdit `json:"edits"`
-}
-
-type AutofixEdit struct {
-	Path  string     `json:"path"`
-	Edits []TextEdit `json:"edits"`
-}
-
 type Violation struct {
 	ID      string        `json:"id"`
 	Summary string        `json:"summary"`
@@ -584,7 +588,6 @@ type Violation struct {
 	Line    int           `json:"line,omitempty"`
 	Column  int           `json:"column,omitempty"`
 	Excerpt string        `json:"excerpt,omitempty"`
-	Autofix *AutoFix      `json:"autofix,omitempty"`
 }
 
 func (v *Violation) IsNode()       {}
@@ -2112,7 +2115,7 @@ type CodebaseTicket struct {
 	Day         string                    `json:"day"`
 	Slug        string                    `json:"slug"`
 	Prompt      string                    `json:"prompt,omitempty"`
-	Model       string                    `json:"model,omitempty"`
+	LLM         string                    `json:"llm,omitempty"`
 	Author      string                    `json:"author,omitempty"`
 	Status      TicketStatus        `json:"status"`
 	Bundles     []TicketBundleContribInfo     `json:"bundles,omitempty"`
@@ -4533,7 +4536,7 @@ func BuildCodebaseTickets(ctx *CodebaseContext) []CodebaseTicket {
 			})
 		}
 
-		model := ticket.GetLLM()
+		llm := ticket.GetLLM()
 
 		var finishedStr string
 		if f := ticket.GetDateFinished(); f != nil {
@@ -4554,7 +4557,7 @@ func BuildCodebaseTickets(ctx *CodebaseContext) []CodebaseTicket {
 			Day:      fmt.Sprintf("%02d", ticket.Day),
 			Slug:     ticket.Slug,
 			Prompt:   ticket.GetPrompt(),
-			Model:    model,
+			LLM:      llm,
 			Author:   ticket.GetAuthor(),
 			Status:   ticket.GetStatus(),
 			Bundles:  bundleContribs,
@@ -4787,22 +4790,10 @@ func CreateTicket(title, prompt, llm, planPath string) (*Ticket, error) {
 	now := time.Now()
 	year, month, day := FormatDate(now)
 	slug := Slugify(title)
-	
-	// Normalize LLM string
-	llmSlug := strings.ToLower(llm)
-	llmSlug = strings.ReplaceAll(llmSlug, " ", "-")
-	llmSlug = strings.ReplaceAll(llmSlug, ".", "-")
 
-	isAllowed := false
-	for _, allowed := range AllowedLLMs {
-		if allowed == llmSlug {
-			isAllowed = true
-			break
-		}
-	}
-
-	if !isAllowed {
-		return nil, fmt.Errorf("model '%s' is not allowed. Please use one of: %s", llmSlug, strings.Join(AllowedLLMs, ", "))
+	llmSlug, err := ResolveAllowedLLM(llm)
+	if err != nil {
+		return nil, err
 	}
 
 	ticketDir := GetTicketPath(year, month, day, slug)
@@ -5395,7 +5386,10 @@ func ReopenTicket(ticket *Ticket, prompt, llm string) error {
 	}
 	gitAuthor := GetGitAuthorGithub()
 	gitCommit := GetGitCommit()
-	llmSlug := strings.ToLower(strings.ReplaceAll(llm, " ", "-"))
+	llmSlug, err := ResolveAllowedLLM(llm)
+	if err != nil {
+		return err
+	}
 	
 	iteration := TicketIteration{
 		Prompt: prompt,
@@ -6293,7 +6287,6 @@ func (c *repoContext) Analyze(scope *string) (*AnalyzeResult, error) {
 			Line:    v.Line,
 			Column:  v.Column,
 			Excerpt: excerpt,
-			Autofix: v.Autofix,
 		}
 	}
 	return &AnalyzeResult{
@@ -7936,7 +7929,7 @@ func exportTickets(tx *sql.Tx, ctx RepoContext) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	ticketStmt, err := tx.Prepare(`INSERT INTO ticket (id, year, month, day, slug, title, path, uri, prompt, summary, status, author_id, model, llm, commit_sha, created_at, finished_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+	ticketStmt, err := tx.Prepare(`INSERT INTO ticket (id, year, month, day, slug, title, path, uri, prompt, summary, status, author_id, llm, commit_sha, created_at, finished_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 	if err != nil {
 		return 0, err
 	}
@@ -7953,7 +7946,7 @@ func exportTickets(tx *sql.Tx, ctx RepoContext) (int, error) {
 		if status == "" {
 			status = "open"
 		}
-		var authorID, model, llm, summary, commit, finishedAt interface{}
+		var authorID, llm, summary, commit, finishedAt interface{}
 		if author := t.GetAuthor(); author != "" {
 			authorID = "contributor:" + author
 		}
@@ -7976,7 +7969,7 @@ func exportTickets(tx *sql.Tx, ctx RepoContext) (int, error) {
 		if f := t.GetDateFinished(); f != nil {
 			finishedAt = f.Format(time.RFC3339)
 		}
-		if _, err := ticketStmt.Exec(ticketID, t.Year, t.Month, t.Day, t.Slug, t.GetTitle(), t.FolderPath, uri, t.GetPrompt(), summary, status, authorID, model, llm, commit, createdAt, finishedAt); err != nil {
+		if _, err := ticketStmt.Exec(ticketID, t.Year, t.Month, t.Day, t.Slug, t.GetTitle(), t.FolderPath, uri, t.GetPrompt(), summary, status, authorID, llm, commit, createdAt, finishedAt); err != nil {
 			return 0, err
 		}
 		for _, entry := range t.GetFiles().Updated {
@@ -8046,14 +8039,14 @@ func exportPolicies(tx *sql.Tx, ctx RepoContext) (int, int, error) {
 }
 
 func exportViolations(tx *sql.Tx, violations []*Violation) (int, error) {
-	stmt, err := tx.Prepare(`INSERT INTO violation (id, kind_id, scope, file_id, folder_id, line, column_num, excerpt, summary, autofix_description, autofix_edits) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+	stmt, err := tx.Prepare(`INSERT INTO violation (id, kind_id, scope, file_id, folder_id, line, column_num, excerpt, summary) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 	if err != nil {
 		return 0, err
 	}
 	defer stmt.Close()
 	for _, v := range violations {
 		kindID := "violationKind:" + string(v.Kind)
-		var fileID, folderID, line, column, excerpt, autofixDesc, autofixEdits interface{}
+		var fileID, folderID, line, column, excerpt interface{}
 		if v.Line > 0 {
 			line = v.Line
 		}
@@ -8063,12 +8056,6 @@ func exportViolations(tx *sql.Tx, violations []*Violation) (int, error) {
 		if v.Excerpt != "" {
 			excerpt = v.Excerpt
 		}
-		if v.Autofix != nil {
-			autofixDesc = v.Autofix.Description
-			if editsJSON, err := json.Marshal(v.Autofix.Edits); err == nil {
-				autofixEdits = string(editsJSON)
-			}
-		}
 		filePath := extractFileFromScope(v.Scope)
 		if filePath != "" {
 			fileID = "file:" + filePath
@@ -8077,7 +8064,7 @@ func exportViolations(tx *sql.Tx, violations []*Violation) (int, error) {
 				folderID = "folder:" + dir
 			}
 		}
-		if _, err := stmt.Exec(v.ID, kindID, v.Scope, fileID, folderID, line, column, excerpt, v.Summary, autofixDesc, autofixEdits); err != nil {
+		if _, err := stmt.Exec(v.ID, kindID, v.Scope, fileID, folderID, line, column, excerpt, v.Summary); err != nil {
 			return 0, err
 		}
 	}
@@ -8382,49 +8369,6 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		Fields: graphql.Fields{
 			"start": &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
 			"end":   &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-		},
-	})
-
-	textEditType := graphql.NewObject(graphql.ObjectConfig{
-		Name: "TextEdit",
-		Fields: graphql.Fields{
-			"start":   &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"end":     &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"newText": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-		},
-	})
-
-	autofixEditType := graphql.NewObject(graphql.ObjectConfig{
-		Name: "AutofixEdit",
-		Fields: graphql.Fields{
-			"path":  &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-			"edits": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(textEditType)))},
-		},
-	})
-
-	autofixType := graphql.NewObject(graphql.ObjectConfig{
-		Name: "Autofix",
-		Fields: graphql.Fields{
-			"description": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-			"edits": &graphql.Field{
-				Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(autofixEditType))),
-				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-					autofix, ok := p.Source.(*AutoFix)
-					if !ok || autofix == nil || len(autofix.Edits) == 0 {
-						return []AutofixEdit{}, nil
-					}
-					paths := make([]string, 0, len(autofix.Edits))
-					for filePath := range autofix.Edits {
-						paths = append(paths, filePath)
-					}
-					sort.Strings(paths)
-					edits := make([]AutofixEdit, 0, len(paths))
-					for _, filePath := range paths {
-						edits = append(edits, AutofixEdit{Path: filePath, Edits: autofix.Edits[filePath]})
-					}
-					return edits, nil
-				},
-			},
 		},
 	})
 
@@ -8807,16 +8751,6 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						return violation.Autofixable(), nil
 					},
 				},
-				"autofix": &graphql.Field{
-					Type: autofixType,
-					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						violation := p.Source.(*Violation)
-						if violation.Autofix == nil {
-							return nil, nil
-						}
-						return violation.Autofix, nil
-					},
-				},
 			}
 		}),
 	})
@@ -8859,20 +8793,6 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			}
 		}),
 	})
-
-	/*
-	ticketIterationType := graphql.NewObject(graphql.ObjectConfig{
-		Name: "TicketIteration",
-		Fields: graphql.Fields{
-			"prompt": &graphql.Field{Type: graphql.String},
-			"llm":    &graphql.Field{Type: graphql.String},
-			"author": &graphql.Field{Type: graphql.String},
-			"date":   &graphql.Field{Type: graphql.DateTime},
-			"commit": &graphql.Field{Type: graphql.String},
-			// Files could be added here if needed, keeping it simple for now or matching struct
-		},
-	})
-	*/
 
 	ticketDateType := graphql.NewObject(graphql.ObjectConfig{
 		Name: "TicketDate",
@@ -8964,7 +8884,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						return &Contributor{Github: author, Name: author}, nil
 					},
 				},
-				"model": &graphql.Field{
+				"llm": &graphql.Field{
 					Type: graphql.String,
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 						ticket := p.Source.(*Ticket)
@@ -8994,7 +8914,6 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						if created.IsZero() {
 							created = time.Date(ticket.Year, time.Month(ticket.Month), ticket.Day, 0, 0, 0, 0, time.UTC)
 						}
-						
 						finished := ticket.GetDateFinished()
 						return map[string]interface{}{
 							"created":  created,
@@ -9024,16 +8943,6 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"url":  &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
 		},
 	})
-
-	/*
-	contributorCommitType := graphql.NewObject(graphql.ObjectConfig{
-		Name: "ContributorCommit",
-		Fields: graphql.Fields{
-			"title": &graphql.Field{Type: graphql.String},
-			"sha":   &graphql.Field{Type: graphql.String},
-		},
-	})
-	*/
 
 	contributorType = graphql.NewObject(graphql.ObjectConfig{
 		Name: "Contributor",
@@ -9067,8 +8976,6 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			}
 		}),
 	})
-
-	repoResolverInstance := &repoResolver{resolver}
 
 	repoType = graphql.NewObject(graphql.ObjectConfig{
 		Name: "Repo",
@@ -9303,9 +9210,8 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					if d, ok := p.Args["day"].(int); ok {
 						day = &d
 					}
-					if s, ok := p.Args["status"].(string); ok {
-						st := TicketStatus(s)
-						status = &st
+					if s, ok := p.Args["status"].(TicketStatus); ok {
+						status = &s
 					}
 					return queryResolverInstance.Tickets(p.Context, year, month, day, status)
 				},
@@ -9881,7 +9787,6 @@ func (r *queryResolver) Bundle(ctx context.Context, name string) (*Bundle, error
 func (r *queryResolver) Folder(ctx context.Context, path string) (*Folder, error) {
 	normalizedPath := strings.ReplaceAll(path, "\\", "/")
 	name := filepath.Base(normalizedPath)
-	
 	bundles := GetProjects()
 	bundleName := ResolveBundleForPath(normalizedPath, bundles)
 	var bundleID *string
@@ -9889,7 +9794,6 @@ func (r *queryResolver) Folder(ctx context.Context, path string) (*Folder, error
 		id := "@semio/" + bundleName
 		bundleID = &id
 	}
-	
 	return &Folder{
 		ID:       buildFolderID(normalizedPath, bundleID),
 		Path:     normalizedPath,
@@ -9904,7 +9808,6 @@ func (r *queryResolver) File(ctx context.Context, path string) (*File, error) {
 	name := filepath.Base(normalizedPath)
 	ext := filepath.Ext(name)
 	folderPath := filepath.Dir(normalizedPath)
-	
 	bundles := GetProjects()
 	bundleName := ResolveBundleForPath(normalizedPath, bundles)
 	var bundleID *string
@@ -9912,13 +9815,11 @@ func (r *queryResolver) File(ctx context.Context, path string) (*File, error) {
 		id := "@semio/" + bundleName
 		bundleID = &id
 	}
-	
 	var folderID *string
 	if folderPath != "." {
 		id := buildFolderID(folderPath, bundleID)
 		folderID = &id
 	}
-	
 	return &File{
 		ID:        buildFileID(normalizedPath, bundleID),
 		Path:      normalizedPath,
@@ -10344,7 +10245,7 @@ func runMcpServer(cmd *cobra.Command, args []string) error {
 			mcp.WithDescription("Open a new development ticket"),
 			mcp.WithString("title", mcp.Required(), mcp.Description("Ticket title (will be uppercased and kebab-cased for folder name)")),
 			mcp.WithString("prompt", mcp.Required(), mcp.Description("Ticket prompt/description")),
-			mcp.WithString("llm", mcp.Required(), mcp.Description("Large-Language-Model (LLM) used for this ticket")),
+			mcp.WithString("llm", mcp.Required(), mcp.Description("LLM used for this ticket")),
 		),
 		ticketOpen,
 	)
@@ -10905,7 +10806,7 @@ func ticketList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 				prompt
 				summary
 				status
-				model
+				llm
 			}
 		}
 	}`
@@ -10944,7 +10845,7 @@ func ticketRead(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 			prompt
 			summary
 			status
-			model
+			llm
 			commit
 			date {
 				created

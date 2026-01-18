@@ -21,44 +21,64 @@
 
 import json
 import os
-import math
+import tempfile
+
 import pytest
-from semio import Kit, validateKit, flattenDesignDict, _applyDesignDiff, ValidationResult
+
+from semio import (
+    _applyDesignDiff,
+    applyKitDiffDict,
+    areKitDiffsDictEqual,
+    areKitsDictEqual,
+    areValidationResultsEqual,
+    export_kit,
+    flattenDesignDict,
+    getKitDiffDict,
+    import_kit,
+    inverseKitDiffDict,
+    parseValidationResult,
+    validateKitDict,
+)
 
 TOLERANCE = 0.001
 ASSETS_DIR = "../../assets/semio"
 
-def load_kit(filename: str) -> dict:
+
+def load_json(filename: str) -> dict:
     path = os.path.join(ASSETS_DIR, filename)
     if not os.path.exists(path):
         raise FileNotFoundError(f"Asset not found: {path}")
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
-def load_validation(filename: str) -> dict:
-    path = os.path.join(ASSETS_DIR, filename)
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
 
 def is_close(a, b):
     return abs(a - b) < TOLERANCE
 
+
 def vectors_equal(v1, v2):
-    if v1 is None or v2 is None: return v1 == v2
-    return is_close(v1.get("x",0), v2.get("x",0)) and \
-           is_close(v1.get("y",0), v2.get("y",0)) and \
-           is_close(v1.get("z",0), v2.get("z",0))
+    if v1 is None or v2 is None:
+        return False
+    return is_close(v1.get("x", 0), v2.get("x", 0)) and is_close(v1.get("y", 0), v2.get("y", 0)) and is_close(v1.get("z", 0), v2.get("z", 0))
+
 
 def planes_equal(p1, p2):
-    if p1 is None or p2 is None: return p1 == p2
-    return vectors_equal(p1.get("origin"), p2.get("origin")) and \
-           vectors_equal(p1.get("xAxis"), p2.get("xAxis")) and \
-           vectors_equal(p1.get("yAxis"), p2.get("yAxis"))
+    if p1 is None or p2 is None:
+        return False
+    if not p1.get("origin") or not p2.get("origin"):
+        return False
+    if not p1.get("xAxis") or not p2.get("xAxis"):
+        return False
+    if not p1.get("yAxis") or not p2.get("yAxis"):
+        return False
+    return vectors_equal(p1.get("origin"), p2.get("origin")) and vectors_equal(p1.get("xAxis"), p2.get("xAxis")) and vectors_equal(p1.get("yAxis"), p2.get("yAxis"))
+
 
 def centers_equal(c1, c2):
-    if c1 is None or c2 is None: return c1 == c2
-    return is_close(c1.get("u",0), c2.get("u",0)) and \
-           is_close(c1.get("v",0), c2.get("v",0))
+    if c1 is None or c2 is None:
+        return c1 == c2
+    return is_close(c1.get("u", 0), c2.get("u", 0)) and is_close(c1.get("v", 0), c2.get("v", 0))
+
 
 def find_design(kit: dict, name: str, parent_name: str = None) -> dict:
     parent_guid = None
@@ -69,7 +89,7 @@ def find_design(kit: dict, name: str, parent_name: str = None) -> dict:
                 break
         if not parent_guid:
             raise ValueError(f"Parent {parent_name} not found")
-            
+
     for d in kit.get("designs", []):
         if d.get("name") == name:
             p = d.get("parent")
@@ -81,71 +101,105 @@ def find_design(kit: dict, name: str, parent_name: str = None) -> dict:
                     return d
     raise ValueError(f"Design {name} not found")
 
-def test_kit_serialization_roundtrip():
-    kit_dict = load_kit("kit_metabolism.json")
-    kit = Kit.parse(kit_dict)
-    
-    kit_output = kit.dump()
-    kit_dict2 = kit_output.model_dump()
-    
-    kit2 = Kit.parse(kit_dict2)
-    kit_output2 = kit2.dump()
-    
-    assert kit_output.model_dump() == kit_output2.model_dump()
 
-def check_flatten(design_name: str, parent_name: str = None):
-    kit_dict = load_kit("kit_metabolism.json")
+def test_diffs_metabolism():
+    """Kit + Diff → DiffedKit & DiffedKit + InverseDiff → Kit"""
+    kit_original = load_json("kit_metabolism.json")
+    kit_original["designs"] = [d for d in kit_original.get("designs", []) if not d.get("parent")]
+    kit_diff = load_json("diff_kit_metabolism.json")
+    kit_diff_inverted = load_json("diff_kit_metabolism_inverted.json")
+    kit_diffed = load_json("kit_metabolism_diffed.json")
+
+    computed_diff = getKitDiffDict(kit_original, kit_diffed)
+    assert areKitDiffsDictEqual(computed_diff, kit_diff)
+    computed_inverse_diff = inverseKitDiffDict(kit_original, kit_diff)
+    assert areKitDiffsDictEqual(computed_inverse_diff, kit_diff_inverted)
+    applied_forward = applyKitDiffDict(kit_original, kit_diff)
+    assert areKitsDictEqual(applied_forward, kit_diffed)
+    applied_inverse = applyKitDiffDict(kit_diffed, kit_diff_inverted)
+    assert areKitsDictEqual(applied_inverse, kit_original)
+
+
+@pytest.mark.parametrize(
+    ("design_name", "parent_name"),
+    [
+        ("Nakagin Capsule Tower", None),
+        ("Slanted", "Nakagin Capsule Tower"),
+        ("Twisted", "Nakagin Capsule Tower"),
+        ("Dancing", "Nakagin Capsule Tower"),
+        ("Capsule Dream", None),
+    ],
+    ids=[
+        "Nakagin Capsule Tower",
+        "Nakagin Capsule Tower/Slanted",
+        "Nakagin Capsule Tower/Twisted",
+        "Nakagin Capsule Tower/Dancing",
+        "Capsule Dream",
+    ],
+)
+def test_flattening_designs(design_name, parent_name):
+    kit_dict = load_json("kit_metabolism.json")
     design = find_design(kit_dict, design_name, parent_name)
-    
-    expected_design = None
-    design_guid = design.get("guid")
-    for d in kit_dict.get("designs", []):
-         if d.get("name") == "Flat":
-             pg = d.get("parent", {}).get("guid")
-             if pg == design_guid:
-                 expected_design = d
-                 break
+
+    expected_design = next(
+        (d for d in kit_dict.get("designs", []) if d.get("name") == "Flat" and d.get("parent", {}).get("guid") == design.get("guid")),
+        None,
+    )
     assert expected_design is not None, f"Expected Flat design for {design_name} not found"
-    
-    diff = flattenDesignDict(kit_dict, design_guid)
-    _applyDesignDiff(design, diff)
-    
-    pieces = design.get("pieces", [])
-    expected_pieces = expected_design.get("pieces", [])
-    
-    for p in pieces:
-        ep = next((x for x in expected_pieces if x.get("name") == p.get("name")), None)
-        assert ep is not None, f"Piece {p.get('name')} not found in expected design"
-        
-        assert planes_equal(p.get("plane"), ep.get("plane")), f"Plane mismatch for {p.get('name')}"
-        if p.get("center") or ep.get("center"):
-             assert centers_equal(p.get("center"), ep.get("center")), f"Center mismatch for {p.get('name')}"
 
-def test_flatten_nakagin_capsule_tower():
-    check_flatten("Nakagin Capsule Tower")
+    flat_design_diff = flattenDesignDict(kit_dict, design.get("guid"))
+    flat_design = _applyDesignDiff(design, flat_design_diff)
 
-def test_flatten_nakagin_capsule_tower_slanted():
-    check_flatten("Slanted", "Nakagin Capsule Tower")
+    for piece in flat_design.get("pieces", []):
+        expected_piece = next(
+            (x for x in expected_design.get("pieces", []) if x.get("name") == piece.get("name")),
+            None,
+        )
+        assert expected_piece is not None, f"Piece {piece.get('name')} not found in expected design"
+        assert piece.get("plane") is not None
+        assert piece.get("center") is not None
+        assert planes_equal(piece.get("plane"), expected_piece.get("plane"))
+        assert centers_equal(piece.get("center"), expected_piece.get("center"))
 
-def test_flatten_nakagin_capsule_tower_twisted():
-    check_flatten("Twisted", "Nakagin Capsule Tower")
 
-def test_flatten_nakagin_capsule_tower_dancing():
-    check_flatten("Dancing", "Nakagin Capsule Tower")
+def test_import_export_kit_json_roundtrip():
+    """Kit -> JSON -> Kit"""
+    kit_dict = load_json("kit_metabolism.json")
+    serialized = json.dumps(kit_dict)
+    deserialized = json.loads(serialized)
+    assert areKitsDictEqual(kit_dict, deserialized)
 
-def test_flatten_capsule_dream():
-    check_flatten("Capsule Dream")
 
-def test_validation_metabolism():
-    kit_dict = load_kit("kit_metabolism.json")
-    kit = Kit.model_validate(kit_dict)
-    res = validateKit(kit)
-    assert len(res.problems) == 0
+def test_import_export_zip_roundtrip():
+    """Zip -> Kit -> Zip -> Kit"""
+    zip_path = os.path.join(ASSETS_DIR, "metabolism.zip")
+    kit, files = import_kit(zip_path)
 
-def test_validation_invalid_kit():
-    kit_dict = load_kit("kit_invalid.json")
-    kit = Kit.model_validate(kit_dict)
-    res = validateKit(kit)
-    
-    expected_dict = load_validation("validation.json")
-    assert len(res.problems) == len(expected_dict.get("problems", []))
+    assert kit.uri
+    assert kit.name == "Metabolism"
+    assert len(kit.types or []) > 0
+    assert len(kit.designs or []) > 0
+    assert len(files) > 0
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        roundtrip_path = os.path.join(tmpdir, "metabolism_roundtrip.zip")
+        export_kit(kit, files, roundtrip_path)
+        kit2, files2 = import_kit(roundtrip_path)
+
+    assert kit2.uri == kit.uri
+    assert kit2.name == kit.name
+    assert len(kit2.types or []) == len(kit.types or [])
+    assert len(kit2.designs or []) == len(kit.designs or [])
+    assert len(files2) == len(files)
+
+
+def test_validation_matches_expected_output():
+    """Validation matches expected output"""
+    valid_kit = load_json("kit_metabolism.json")
+    valid_result = validateKitDict(valid_kit)
+    assert not valid_result.hasErrors()
+
+    invalid_kit = load_json("kit_invalid.json")
+    result = validateKitDict(invalid_kit)
+    expected = parseValidationResult(json.dumps(load_json("validation.json")))
+    assert areValidationResultsEqual(result, expected)

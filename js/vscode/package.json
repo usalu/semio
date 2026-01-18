@@ -1,13 +1,13 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
-  "name": "@semio/vscode",
-  "displayName": "semio",
+  "name": "@semio-repo/vscode",
+  "displayName": "semio-repo",
   "description": "semio devtools for VS Code 🧑‍💻",
   "version": "0.0.1",
   "publisher": "usalu",
   "engines": {
-    "vscode": "^1.106.1"
+    "vscode": "^1.106.0"
   },
   "repository": {
     "type": "git",
@@ -442,9 +442,11 @@
     "dev": "vite build --watch",
     "test": "vscode-test",
     "vscode:prepublish": "npm run build",
-    "preflight": "tsc --noEmit"
+    "preflight": "tsc --noEmit",
+    "package": "vsce package --out semio.vsix"
   },
   "devDependencies": {
+    "@vscode/vsce": "^3.5.0",
     "@graphql-codegen/cli": "^5.0.7",
     "@graphql-codegen/client-preset": "^4.8.3",
     "@graphql-typed-document-node/core": "^3.2.0",

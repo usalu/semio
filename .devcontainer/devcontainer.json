@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 {
   "name": "semio",
   "build": {
@@ -41,8 +42,6 @@
     "vscode": {
       "extensions": [
         // repo
-        "ms-vscode-remote.remote-containers",
-        "ms-azuretools.vscode-docker",
         "nrwl.angular-console",
         // github
         "github.vscode-github-actions",
@@ -53,7 +52,6 @@
         "redhat.vscode-yaml",
         // data
         "ms-toolsai.datawrangler",
-        "janisdd.vscode-edit-csv",
         "mechatroner.rainbow-csv",
         // graphql
         "graphql.vscode-graphql",
@@ -66,7 +64,6 @@
         "unifiedjs.vscode-mdx",
         "statelyai.stately-vscode",
         "vitest.explorer",
-        "stripe.markdoc-language-support",
         "firefox-devtools.vscode-firefox-debug",
         "ms-playwright.playwright",
         // dotnet
@@ -147,6 +144,7 @@
   },
   "postCreateCommand": "bash .devcontainer/post-create.sh",
   "postStartCommand": "bash .devcontainer/post-start.sh",
+  "postAttachCommand": "bash -lc \"cd js/vscode\ncode --install-extension semio.vsix --force\"",
   "forwardPorts": [
     2507,
     3000,

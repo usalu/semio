@@ -13,7 +13,6 @@
     "redhat.vscode-yaml",
     // data
     "ms-toolsai.datawrangler",
-    "janisdd.vscode-edit-csv",
     "mechatroner.rainbow-csv",
     // graphql
     "graphql.vscode-graphql",
@@ -26,7 +25,6 @@
     "unifiedjs.vscode-mdx",
     "statelyai.stately-vscode",
     "vitest.explorer",
-    "stripe.markdoc-language-support",
     "firefox-devtools.vscode-firefox-debug",
     "ms-playwright.playwright",
     // dotnet

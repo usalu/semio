@@ -6,7 +6,7 @@ ALWAYS open a ticket with semio-repo mcp tool `ticket_open` (or use `./go/repo/r
 - The codebase in under design and development and not used in production yet. There are many inconsistencies that need to be refactored. ALWAYS use clean mechanisms that might require large refactorings and NEVER care about backwards compatibility.
 - For every task you are working on, you MUST update the dev docs (`README.md` and `AGENTS.md`). Every key decision and mechanism ALWAYS needs to be documemented. Every feature, decision MUST be undocumented/uncommented in the code and MUST be documented in the dev docs (AGENTS.md and README.md). The documentation ALWAYS happens three times:
 
-1. Under `# 📦 Components` in README.md where it is described from junior-developer perspective (mechanism explanation and reasoning behind the decision, how theory links to implementation, etc).
+1. Under `# 📦 Bundles` in README.md where it is described from junior-developer perspective (mechanism explanation and reasoning behind the decision, how theory links to implementation, etc).
 2. Under `# Software Requirements Specification` in AGENTS.md where it is described from human-interface-designer perspective (concise technical terms without explanation, framework-agnostic, no implementation references). There are two sections: `# Business Logic` and `# UI/UX`.
 3. Under `# Codebase` in AGENTS.md where it is described from senior-developer perspective (framework-mechanisms, consice technical terms without explanation, implementation details, etc). The section has the same header structure as the files and folders. All files and folders are flat with `## PATH` e.g. `## js/semio/sketchpad/` or `## net/Semio.cs`
    The purpose of the dev docs is to understand the codebase. NEVER add reasoning or process related (such as what changed, why, how, … - this is part of the log) to the dev docs.
@@ -48,6 +48,10 @@ Only shared UI element libraries may import third-party dependencies; other Java
 Sketchpad shell and app modules MUST only import shared elements, shared utilities, and core domain modules.
 
 Code analysis problems MUST include reason and solution text.
+
+### Devcontainer
+
+Devcontainer provisioning MUST install the workspace VS Code extension automatically after editor attach without manual installation steps.
 
 ### Sections
 
@@ -364,6 +368,7 @@ Toolbar panel visibility defaults to `true` for all apps via `panelVisibility: {
 - The built-in Explorer hosts the Sections view; selecting a section navigates to it, F2 renames, drag-and-drop moves sections, JSON keys surface as sections, and inline actions create child sections, rename sections, and delete sections via repo commands.
 - The Sections view resolves the active file's section tree with line ranges so navigation and section actions match the current editor content.
 - Ticket tooling treats temporary artifacts as part of the active ticket workspace.
+- Devcontainer setup installs the workspace VS Code extension automatically on attach without manual installation actions.
 
 # Monorepo
 
@@ -1586,6 +1591,22 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 ├── README.md # GFM dev docs
 
 In general, if the user talks about an old file, then probably there is the same file with the suffix `*.old` that is the original state.
+
+## 📁 .devcontainer/
+
+Devcontainer configuration and lifecycle scripts.
+
+## 📄 .devcontainer/devcontainer.json
+
+Devcontainer configuration with VS Code customizations and post-create/start/attach commands.
+
+## 📄 .devcontainer/post-create.sh
+
+Devcontainer provisioning steps for dependency installs and extension packaging.
+
+## 📄 .devcontainer/post-start.sh
+
+Devcontainer start script for activating the Python virtual environment.
 
 ## 📁 js/
 
@@ -3721,7 +3742,7 @@ Home command hooks forward hover events, including clear, into the Sketchpad sta
 
 ## 📁 js/vscode/
 
-VSCode extension providing violation diagnostics for open files and kit validation.
+VSCode extension providing violation diagnostics for open files and kit validation. Compatible with VS Code and Windsurf (engine: `^1.106.0`).
 
 ### Violation Diagnostics
 

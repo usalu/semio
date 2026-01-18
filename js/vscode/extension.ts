@@ -121,7 +121,7 @@ const TicketsDocument = graphql(`
       tickets(year: $year, month: $month, day: $day, status: $status) {
         id year month day slug path uri prompt summary status
         author { github name }
-        model commit
+        llm commit
         date { created finished }
       }
     }
@@ -154,7 +154,13 @@ const AnalyzeDocument = graphql(`
       violations {
         id summary priority autofixable scope line column excerpt
         kind { id policy { id name } reason solution }
-        autofix { description }
+        autofix {
+          description
+          edits {
+            path
+            edits { start end newText }
+          }
+        }
       }
       metrics { total byPriority { high medium low } autofixable }
     }
@@ -1038,7 +1044,7 @@ function findEntityNode(tree: jsonc.Node, location: DomainLocation): jsonc.Node 
     Piece: "pieces",
     Connection: "connections",
     Stat: "stats",
-    Model: "models",
+    Llm: "llms",
     Connector: "connectors",
     Layer: "layers",
   };
@@ -1076,7 +1082,7 @@ function findEntityNode(tree: jsonc.Node, location: DomainLocation): jsonc.Node 
       }
     }
   }
-  if (location.entityKind === "Model" || location.entityKind === "Connector") {
+  if (location.entityKind === "Llm" || location.entityKind === "Connector") {
     const typesNode = jsonc.findNodeAtLocation(tree, ["types"]);
     if (typesNode && typesNode.type === "array") {
       for (const typeNode of typesNode.children || []) {
@@ -3102,7 +3108,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
       if (!prompt) return;
 
       const llm = await vscode.window.showQuickPick(LLM_OPTIONS, {
-        placeHolder: "Select LLM model",
+        placeHolder: "Select LLM",
       });
       if (!llm) return;
 
@@ -3553,7 +3559,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
         placeHolder: "path/to/source/file",
       });
       if (!source) return;
-      
+
       const targetSection = await vscode.window.showInputBox({
         prompt: "Enter target section name",
         placeHolder: "TargetSectionName",
@@ -3572,7 +3578,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
         placeHolder: "ParentSectionName",
       });
 
-      const cmd = targetParent 
+      const cmd = targetParent
         ? `section integrate "${source}" "${targetSection}" "${targetFile}" "${targetParent}"`
         : `section integrate "${source}" "${targetSection}" "${targetFile}"`;
       runRepoCommand(cmd);

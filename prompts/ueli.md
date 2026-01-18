@@ -1,12 +1,185 @@
 # Prompt history 
 
-No active workspace is needed. Just keep on. Dont ask in between, just finish the task. Edit files in workspaces/semio workspace.
+Every app has a landing page (when no windows are open/all windows are closed). Every app defines a default window layout.
+
+Extend the ticket mechanism. The repo binary should automatically create a github issue on ticket open, close on ticket close and reopen on ticket reopen. Automatically link the issue with the project `https://github.com/users/usalu/projects/2`. Add a --no-issue flag to ticket open that prevents creating an issue. If the prompt has NOISSUE then issue should not be created. On ticket open add the `ticket` label to the issue.
+Add to ticket json:
+{
+  "github":{
+    "issue": "https://github.com/usalu/semio/issues/26"
+  }
+}
+
+Ticket open with no plan creates a github issue with the prompt as the description.
+Ticket open with a plan creates a a github issue with the content of plan.md as the description.
+Ticket close should:
+1. Creates a comment in the issue with the content summary.md
+2. Add labels
+  - Every involved bundle is added as a label. If a file inside a bundle, the bundle is added. If a file outside a the repo label `@semio-repo` is added.
+3. Close with comment with metrics which is a flat sorted list of files with + or - for line metrics and started with ➖ for deleted files and ✏️ for updated files and ➕ for added files.
+```md
+➖js/js/.storybook/config.ts -482
+✏️js/semio/sketchpad/Design.tsx +250 -12
+➕js/semio/sketchpad/Prop.tsx +4125
+```
+Dont ask in between, just finish the task. Edit files in workspaces/semio workspace. No active workspace is needed. Just keep on.
+
+```md
+📁~~js/js/.storybook~~ -13483
+📁js/~~js~~semio
+📂js/semio/sketchpad
+📄~~js/semio/sketchpad/Attribute.tsx~~ -2312
+📝js/semio/sketchpad/Design.tsx +250 -12
+📄js/semio/sketchpad/Prop.tsx +4125
+
+```
+
+Labels in github
+
+# issue kinds (multiple possible)
+bug
+dependencies
+ducumentation
+enhancement
+
+# programming languages
+
+javascript
+go
+.NET
+rust
+
+
+Change the ticket.json schema from
+- Change files array into deleted, renamed, modified, added dict of arrays. The current array is the modified array.
+- Remove status from file.
+- 
+e.g.
+```json
+"files": [
+    {
+      "path": "rs/semio/Cargo.toml",
+      "status": "",
+      "sections": [
+        {
+          "name": "bin",
+          "range": {
+            "start": 33,
+            "end": 36
+          },
+          "lines": {
+            "added": 4,
+            "removed": 0
+          }
+        }
+      ]
+    }
+]
+```
+to
+```json 
+"files": {
+  "deleted": [
+    {
+      "path": "some/file/that/was.deleted",
+      "sections": [
+        {
+            "path": "Apparently/The/Only/Region",
+            "range": {
+              "start": 33,
+              "end": 36
+            },
+            "definitions": ["someDefinition","untilLastDefinition"]
+        }
+      ]
+    }
+  ],
+  "renamed": [
+    {
+      "from": "some/file/that/was.deleted",
+      "to": "some/file/that/was.deleted",
+      "sections": [
+          {
+            "path": "Apparently/The/Only/Region",
+            "range": {
+              "start": 33,
+              "end": 36
+            },
+            "definitions": ["someDefinition","untilLastDefinition"]
+        }
+      ]
+    }
+  ],
+  "modified": [
+      {
+        "path": "rs/semio/Cargo.toml",
+        "sections": [
+          {
+            "path": "bin",
+            "range": {
+              "start": 33,
+              "end": 36
+            },
+            "lines": {
+              "added": 4,
+              "removed": 0
+            }
+          }
+        ]
+      },
+  ],
+  "added": [
+    {
+      "path": "some/file/that/was.deleted",
+      "sections": [
+        {
+            "path": "Apparently/The/Only/Region",
+            "range": {
+              "start": 33,
+              "end": 36
+            },
+            "definitions": ["someDefinition","untilLastDefinition"]
+        }
+      ]
+    }
+  ]
+}
+```
+@main.go@main_test.go @Nodes.graphql@NodesAndEdges.graphql@schema.graphql@queries @extension.test.ts@extension.ts @schema.sql 
+
+The vscode extension should be automatically installed by the devcontainer. Currently I have to call `Developer: Install Extension From Location..."
+
+The general monorepo runs in devcontainer. There is one exception which is Semio.Grasshopper which runs native in Windows.
+
+All semio tests should be identical accross all implementations (Typescript, Python, C#, Go, Rust). Remove all other tests and refactor/extend for all test suites to be identical in functionality and naming. Use the semio.ts tests as blueprint.
+Those are the tests and no other tests should exist for semio files:
+Roundtrip/Json/Metabolism # Kit -> Json -> Kit
+Roundtrip/Zip/Metabolism # Zip -> Kit -> Zip -> Kit
+Flatten/Nakagin Capsule Tower # Kit -> Flatten -> Diff -> Apply = Flat
+Flatten/Nakagin Capsule Tower/Slanted # Kit -> Flatten -> Diff -> Apply = Flat
+Flatten/Nakagin Capsule Tower/Twisted # Kit -> Flatten -> Diff -> Apply = Flat
+Flatten/Nakagin Capsule Tower/Dancing # Kit -> Flatten -> Diff -> Apply = Flat
+Flatten/Capsule Dream # Kit -> Flatten -> Diff -> Apply = Flat
+Diff/Metabolism # Kit + Diff = DiffedKit & DiffedKit + InvertedDiff = Kit
+Validation/Invalid # Invalid Kit -> Validate = Invalid Report
+Validation/Metabolism # Metabolism Kit -> Validate = Empty report
+Ignore that no active workspace is loaded. Searching files and editing works. Dont ask in between, just finish the task. Edit files in workspaces/semio 
+@semio_test.go@semio.go @semio.py@semio.test.py @semio.rs @semio.test.ts@semio.ts @Semio.cs@Tests.cs 
+
+When opening a ticket the llm should be more forgiving. e.g. claude-opus-4-5-20251101 or Claude Opus 4.5 should also automatically work. Slugify and check for prefixes. Some legacy code still uses model as concept. Replace model with llm everywhere.
+
+Dont ask in between, just finish the task. Edit files in workspaces/semio workspace. No active workspace is needed. Just keep on.
 
 The sketchpad navbar should show panel toggles for left, middle and right panels. Make sure all app tests are checking the panels (toggeling and check for tree sections and tree items).
 
 The python and rust tests are not appearing in the test explorer in vscode.
 
-The vscode extension is not showing the violations of the open files. Whenever a file is saved it should be reanalyzed.
+The vscode extension is not working properly.
+- It is not showing the violations of the open files. Whenever a file is saved it should be reanalyzed. (Fixes previously were serialized but now are applied directly, ranges are just line numbers, etc)
+- It is not showing codebase tree items
+- it is not showing ticket tree items
+- It is not showing contributors
+Ignore that no active workspace is loaded. Searching files and editing works. Dont ask in between, just finish the task. Edit files in workspaces/semio 
 
 Add wasm to go, rust and c#. Extend the benchmark with three more scenarios, Typescript + Rust, Typescript + Go, Typescript + C#.
 Get all tests, benchmarks and implementations running. Extend/Refactor/Change/Complete/Improve whatever is necessary.

@@ -120,7 +120,7 @@ Let me walk you through 🚶
    - [🟨 JavaScript](#-javascript-)
    - [🟪 .NET](#-net-)
    - [🐍 Python](#-python-)
-1. [📦 Components](#-components-)
+1. [📦 Bundles](#-bundles-)
    - [🟨 @semio/js](#-semiojs-)
    - [✏️ @semio/desktop](#️-semiodesktop-)
    - [📚 @semio/docs](#-semiodocs-)
@@ -160,7 +160,7 @@ Let me walk you through 🚶
 
 # 🛍️ Products [↑](#-overview)
 
-> Do you wonder how semio is interopable? The reason are shared [specification](#-specs-), [ecosystems](#%EF%B8%8F-ecosystems-) and [components](#-components-) 🪢
+> Do you wonder how semio is interopable? The reason are shared [specification](#-specs-), [ecosystems](#%EF%B8%8F-ecosystems-) and [bundles](#-bundles-) 🪢
 
 Work-in-progress artifacts stay bundled with the active ticket workspace so teams can trace temporary data without hunting global temp locations.
 The engine offers a dev/debug startup mode that waits for a debugger to attach before it runs.
@@ -628,7 +628,7 @@ It is perfect to find the latest activities and the history 🔍
 
 ### 📢 Release [↑](#-gitstyle-)
 
-Every release contains a set of matching [specs](#-specs-), [components](#-components-), [examples](#-examples-) and [docs](#-docs-) 📦
+Every release contains a set of matching [specs](#-specs-), [bundles](#-bundles-), [examples](#-examples-) and [docs](#-docs-) 📦
 
 The release notes follow this format:
 
@@ -663,7 +663,7 @@ Before every [release](#-release-) the [repo](#-repo-) is archived 📦
 We have two different types of tags:
 
 - `rYY.MM-V` for [releases](#-release-) (e.g `r21.06-1`,`r23.07-2`,`r24.12-1`, `r25.07-1`, …)
-- `COMPONENT-vMAJOR.MINOR.PATCH` for [components](#-components-) which follow the [semver](https://semver.org/) versioning scheme (e.g [`engine-v4.0.2`](#️-semioengine-), [`sketchpad-v1.0.0`](#-semiodesktop-), [`grasshopper-v5.4.0-beta`](#-semiograsshopper-), …)
+- `COMPONENT-vMAJOR.MINOR.PATCH` for [bundles](#-bundles-) which follow the [semver](https://semver.org/) versioning scheme (e.g [`engine-v4.0.2`](#️-semioengine-), [`sketchpad-v1.0.0`](#-semiodesktop-), [`grasshopper-v5.4.0-beta`](#-semiograsshopper-), …)
 
 ### 🌿 Branch [↑](#-gitstyle-)
 
@@ -675,7 +675,7 @@ Every [contributor](#-contributor-) has their own `FIRSTNAME` general-purpose de
 
 In [GitKraken](#-gitkraken-) you will quickly find the latest development branch 👀
 
-Other branches are created for [components](#-components-), [specific features](https://github.com/usalu/semio/labels/enhancement) or [bug fixes](https://github.com/usalu/semio/labels/bug) 🐛
+Other branches are created for [bundles](#-bundles-), [specific features](https://github.com/usalu/semio/labels/enhancement) or [bug fixes](https://github.com/usalu/semio/labels/bug) 🐛
 
 Usually one person works on one feature at a time and hence the `-NAME` suffix 📛
 
@@ -1117,17 +1117,17 @@ The monorepo uses a centralized Python environment managed by `uv` at the reposi
 uv sync # at the root
 ```
 
-# 📦 Components [↑](#-overview)
+# 📦 Bundles [↑](#-overview)
 
 A component is a piece of software which is packaged independently 🏝️
 
-## 🧼 Code Hygiene Hooks [↑](#-components-)
+## 🧼 Code Hygiene Hooks [↑](#-bundles-)
 
 The code hygiene hook enforces comment, license, and region policies before changes are shared.
 It treats empty regions as invalid structure and removes them automatically in fix mode so region blocks stay meaningful and concise.
 All code must sit inside named regions; orphan definitions outside any section are reported as code:section:orphan-definition so you can relocate them as full definition blocks.
 
-## ✅ Validation System [↑](#-components-)
+## ✅ Validation System [↑](#-bundles-)
 
 semio includes a **domain-pure validation system** built entirely in `semio.ts` with zero JSON dependencies. All validation logic works with `Kit` objects and produces `KitDiff`-based fixes.
 
@@ -1166,18 +1166,23 @@ if (result.problems.length > 0) {
 
 See [`AGENTS.md`](AGENTS.md#validation) for complete technical documentation.
 
-## 🧾 Code Report [↑](#-components-)
+## 🧾 Code Report [↑](#-bundles-)
 
 The repository emits a machine-readable report (`reports/code.json`) that enforces a comment-free codebase (including multi-line and JSDoc blocks, with explicit exemptions), flags temporary `[DEBUG]` logs, auto-adds missing SPDX license headers in `npm run fix`, validates properly nested named regions, checks that `js/semio` files do not import outside the workspace unless they are the shared `elements.tsx`, flags domain-specific terminology inside those shared elements, and includes reason/solution text for each problem to make remediation explicit.
 Comment detection skips comment markers inside string literals and template literal text so valid content does not raise false violations.
 
-## 🧭 Section Tree [↑](#-components-)
+## 🧩 Devcontainer Extension Install [↑](#-bundles-)
+
+The devcontainer packages the workspace VS Code extension during setup, then installs the generated `.vsix` once the editor attaches so the extension is ready without manual "Install Extension From Location..." steps.
+This aligns installation with a running VS Code server, avoiding failures during container creation while keeping extension delivery automatic.
+
+## 🧭 Section Tree [↑](#-bundles-)
 
 File sections are modeled as a nested tree derived from language-specific section markers and JSON key paths so tooling can reason about structure instead of raw line ranges.
 The repo CLI and VS Code extension request the active file's section tree and use the resolved ranges to jump to sections, rename/move nodes, and create or delete child sections with consistent paths across tools.
 The `integrate` command allows wrapping a source file's content into a section marker and inserting it into a target file, either at the end or nested within an existing parent section.
 
-## 🎫 Ticket System [↑](#-components-)
+## 🎫 Ticket System [↑](#-bundles-)
 
 Development work is tracked as tickets composed of iterations. Ticket creation does not create an iteration; iterations are explicitly started and finished, require file lists (`updated`, `created`, `removed`), and iteration finish derives the per-file lists and line stats from git diffs between the last iteration commit (or ticket base) and the current commit. Ticket finish aggregates all iteration files and recomputes total line stats from git against the ticket base commit.
 Ticket entry points require prompt text for ticket creation and iteration start, while file arrays can be omitted at entry and still enforced by iteration rules.
@@ -1186,29 +1191,29 @@ Section line metrics map added lines using current file sections, map removed li
 Ticket section ranges are stored as line-only start/end integers with no column data so tooling treats them as line spans.
 Temporary scripts, fixtures, and data stay inside the active ticket folder so work-in-progress artifacts remain scoped to the task.
 
-## ?? MCP Tool Gateway [↑](#-components-)
+## ?? MCP Tool Gateway [↑](#-bundles-)
 
 The MCP server validates tool argument types and required fields before invoking the CLI so errors are surfaced at the tool boundary instead of silently proceeding.
 File and folder arguments are checked for path correctness so directory paths cannot be passed where files are required.
 
-## 👥 Contributors [↑](#-components-)
+## 👥 Contributors [↑](#-bundles-)
 
 Contributor activity is derived from ticket frontmatter and source file headers, so authorship and ownership stay aligned with the artifacts people actually touch.
 Each contributor aggregates tickets, commits, bundles, files, and line totals, and the list is ordered by ticket volume so the most active contributors surface first.
 
-## 🧭 Command Tree [↑](#-components-)
+## 🧭 Command Tree [↑](#-bundles-)
 
 The command browser groups actions by command families and subcommands, using the same command breakdown as the CLI so users learn one structure across tools.
 Search matches either command labels or group names, and matching a group keeps its full subtree visible for quick discovery.
 
-## 🧩 Sections Explorer [↑](#-components-)
+## 🧩 Sections Explorer [↑](#-bundles-)
 
 The VS Code extension adds a Sections view to the built-in Explorer that lists nested regions for the active file via the repo section list.
 Selecting a section navigates to its start, F2 triggers rename, drag-and-drop moves sections, and inline actions use repo commands to create child sections, rename sections, or delete them.
 The view refreshes on editor focus and text changes so the tree stays aligned with the current file structure.
 JSON files surface object keys as section entries so structured config files are navigable in the same tree.
 
-## 🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-components-)
+## 🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)
 
 ### Borders
 
@@ -1393,9 +1398,9 @@ The unit system automatically adapts based on the `--spacing` mode (compact vs t
 
 ### Platform Compatibility
 
-The code runs in different environments (different browsers, electron, mobile/desktop/tablet). Platform-specific functionality MUST be generalized and provided as props to Sketchpad. NEVER hardcode platform-specific behavior or APIs directly in components.
+The code runs in different environments (different browsers, electron, mobile/desktop/tablet). Platform-specific functionality MUST be generalized and provided as props to Sketchpad. NEVER hardcode platform-specific behavior or APIs directly in bundles.
 
-## ✏️ [@semio/desktop](https://github.com/usalu/semio/tree/main/js/desktop) [↑](#-components-)
+## ✏️ [@semio/desktop](https://github.com/usalu/semio/tree/main/js/desktop) [↑](#-bundles-)
 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
@@ -1411,7 +1416,7 @@ The code runs in different environments (different browsers, electron, mobile/de
 </details>
 An electron-based desktop app primarly working for with local kits 💾
 
-## 🤖 @semio/assistant [↑](#-components-)
+## 🤖 @semio/assistant [↑](#-bundles-)
 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
@@ -1426,7 +1431,7 @@ An electron-based desktop app primarly working for with local kits 💾
 
 Currently not implemented in this repo (planned component) 🧩
 
-## 📚 [@semio/docs](https://github.com/usalu/semio/tree/main/js/docs) [↑](#-components-)
+## 📚 [@semio/docs](https://github.com/usalu/semio/tree/main/js/docs) [↑](#-bundles-)
 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
@@ -1445,13 +1450,13 @@ Currently not implemented in this repo (planned component) 🧩
 
 </details>
 
-## 🎛️ [@semio/play](https://github.com/usalu/semio/tree/main/js/play) [↑](#-components-)
+## 🎛️ [@semio/play](https://github.com/usalu/semio/tree/main/js/play) [↑](#-bundles-)
 
 A playground for [sketchpad](#%EF%B8%8F-sketchpad-) 🎮
 
-## 💻 [@semio/vscode](https://github.com/usalu/semio/tree/main/js/vscode) [↑](#-components-)
+## 💻 [@semio/vscode](https://github.com/usalu/semio/tree/main/js/vscode) [↑](#-bundles-)
 
-VS Code extension providing real-time violation diagnostics for semio development.
+VS Code extension providing real-time violation diagnostics for semio development. Compatible with VS Code and Windsurf (VSCode OSS 1.106.0+).
 
 ### Violation Diagnostics
 
@@ -1474,7 +1479,7 @@ Tree views for tickets, policies, contributors, and commands with search and fil
 
 Ticket tree items expose inline close or reopen actions that apply to the clicked ticket, list commit entries derived from ticket and iteration commits, and keep hover tooltips limited to the ticket description.
 
-## 🟪 [@semio/net](https://github.com/usalu/semio/tree/main/net) [↑](#-components-)
+## 🟪 [@semio/net](https://github.com/usalu/semio/tree/main/net) [↑](#-bundles-)
 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
@@ -1510,7 +1515,7 @@ Ticket tree items expose inline close or reopen actions that apply to the clicke
 
 The core which is shared in the [semio .NET ecosystem](#-net-) 🥜
 
-## 🦗 [@semio/grasshopper](https://github.com/usalu/semio/tree/main/net/Semio.Grasshopper) [↑](#-components-)
+## 🦗 [@semio/grasshopper](https://github.com/usalu/semio/tree/main/net/Semio.Grasshopper) [↑](#-bundles-)
 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
@@ -1594,7 +1599,7 @@ Grasshopper is an amazing tool if you know the system that you want to create bu
 
 </details>
 
-## ⚙️ [@semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-components-)
+## ⚙️ [@semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-bundles-)
 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
@@ -1679,7 +1684,7 @@ If you go to `http://127.0.0.1:2412/graphql/` you find the GraphiQL UI:
 
 ![GraphQL Query](assets/images/graphiql.png)
 
-## 🛍️ [@semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-components-)
+## 🛍️ [@semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)
 
 ### 🏷️ [Badges](https://github.com/usalu/semio/tree/main/assets/badges) [↑](#-semio-assets-)
 
