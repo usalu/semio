@@ -13,10 +13,6 @@ uv sync
 echo "Building Go binaries..."
 cd go/repo
 go build -o repo
-cd ../mcp
-go build -o mcp
-cd ../cli
-go build -o cli
 cd ../..
 
 echo "Restoring .NET packages..."

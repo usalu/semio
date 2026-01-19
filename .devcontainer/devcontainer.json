@@ -38,6 +38,57 @@
     "ghcr.io/devcontainers/features/github-cli:1": {},
     "ghcr.io/warrenbuckley/codespace-features/sqlite:1": {}
   },
+  "workspaceFolder": "/workspaces/semio",
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "postStartCommand": "bash .devcontainer/post-start.sh",
+  "postAttachCommand": "bash -lc \"cd js/vscode\ncode --install-extension semio.vsix --force\"",
+  "forwardPorts": [
+    2507,
+    3000,
+    4000,
+    4321,
+    5678,
+    6006
+  ],
+  "portsAttributes": {
+    "2507": {
+      "label": "Engine API",
+      "onAutoForward": "notify"
+    },
+    "3000": {
+      "label": "Sketchpad Dev",
+      "onAutoForward": "notify"
+    },
+    "4000": {
+      "label": "Play Dev",
+      "onAutoForward": "notify"
+    },
+    "4321": {
+      "label": "Docs Dev",
+      "onAutoForward": "notify"
+    },
+    "5678": {
+      "label": "Python Debugger",
+      "onAutoForward": "silent"
+    },
+    "6006": {
+      "label": "Storybook",
+      "onAutoForward": "notify"
+    }
+  },
+  "mounts": [
+    "source=${localWorkspaceFolderBasename}-node_modules,target=${containerWorkspaceFolder}/node_modules,type=volume",
+    "source=${localWorkspaceFolderBasename}-config-claude,target=/home/vscode/.config/claude,type=volume",
+    "source=${localWorkspaceFolderBasename}-config-codex,target=/home/vscode/.config/codex,type=volume",
+    "source=${localWorkspaceFolderBasename}-config-gh,target=/home/vscode/.config/gh,type=volume",
+    "source=${localWorkspaceFolderBasename}-config-cursor,target=/home/vscode/.config/cursor,type=volume",
+    "source=${localWorkspaceFolderBasename}-config-antigravity,target=/home/vscode/.config/antigravity,type=volume"
+  ],
+  "remoteUser": "vscode",
+  "containerEnv": {
+    "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
+    "PLAYWRIGHT_BROWSERS_PATH": "/home/vscode/.cache/ms-playwright"
+  },
   "customizations": {
     "vscode": {
       "extensions": [
@@ -141,50 +192,5 @@
         "terminal.integrated.defaultProfile.linux": "bash"
       }
     }
-  },
-  "postCreateCommand": "bash .devcontainer/post-create.sh",
-  "postStartCommand": "bash .devcontainer/post-start.sh",
-  "postAttachCommand": "bash -lc \"cd js/vscode\ncode --install-extension semio.vsix --force\"",
-  "forwardPorts": [
-    2507,
-    3000,
-    4000,
-    4321,
-    5678,
-    6006
-  ],
-  "portsAttributes": {
-    "2507": {
-      "label": "Engine API",
-      "onAutoForward": "notify"
-    },
-    "3000": {
-      "label": "Sketchpad Dev",
-      "onAutoForward": "notify"
-    },
-    "4000": {
-      "label": "Play Dev",
-      "onAutoForward": "notify"
-    },
-    "4321": {
-      "label": "Docs Dev",
-      "onAutoForward": "notify"
-    },
-    "5678": {
-      "label": "Python Debugger",
-      "onAutoForward": "silent"
-    },
-    "6006": {
-      "label": "Storybook",
-      "onAutoForward": "notify"
-    }
-  },
-  "mounts": [
-    "source=${localWorkspaceFolderBasename}-node_modules,target=${containerWorkspaceFolder}/node_modules,type=volume"
-  ],
-  "remoteUser": "vscode",
-  "containerEnv": {
-    "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
-    "PLAYWRIGHT_BROWSERS_PATH": "/home/vscode/.cache/ms-playwright"
   }
 }

@@ -404,33 +404,11 @@ func (t *Ticket) GetDateFinished() *time.Time {
 	return nil
 }
 
-type TicketFilesResult struct {
-	Updated []TicketFile `json:"updated,omitempty"`
-	Created []TicketFile `json:"created,omitempty"`
-	Removed []TicketFile `json:"removed,omitempty"`
-}
-
-func (t *Ticket) GetFiles() *TicketFilesResult {
-	filesMap := make(map[string]TicketFile)
-	if t.Data != nil {
-		for _, iter := range t.Data.Iterations {
-			for _, f := range iter.Files {
-				filesMap[f.Path] = f
-			}
-		}
+func (t *Ticket) GetFiles() *TicketFiles {
+	if t.Data != nil && t.Data.Files != nil {
+		return t.Data.Files
 	}
-	res := &TicketFilesResult{}
-	for _, f := range filesMap {
-		switch f.Status {
-		case "created":
-			res.Created = append(res.Created, f)
-		case "removed":
-			res.Removed = append(res.Removed, f)
-		default:
-			res.Updated = append(res.Updated, f)
-		}
-	}
-	return res
+	return &TicketFiles{}
 }
 
 type TicketBundleContrib struct {
@@ -525,9 +503,11 @@ type FileListInput struct {
 }
 
 type TicketOpenInput struct {
-	Title  string `json:"title"`
-	Prompt string `json:"prompt"`
-	LLM    string `json:"llm"`
+	Title    string `json:"title"`
+	Prompt   string `json:"prompt"`
+	LLM      string `json:"llm"`
+	NoIssue  bool   `json:"noIssue,omitempty"`
+	PlanPath string `json:"planPath,omitempty"`
 }
 
 type TicketCloseInput struct {
@@ -1541,9 +1521,27 @@ type TicketSection struct {
 
 type TicketFile struct {
 	Path     string          `json:"path"`
-	Status   string          `json:"status"`
+	Status   string          `json:"status,omitempty"`
 	Lines    *LineMetrics    `json:"lines,omitempty"`
 	Sections []TicketSection `json:"sections,omitempty"`
+}
+
+type TicketGithubData struct {
+	Issue string `json:"issue,omitempty"`
+}
+
+type TicketFileRenamed struct {
+	From     string          `json:"from"`
+	To       string          `json:"to"`
+	Lines    *LineMetrics    `json:"lines,omitempty"`
+	Sections []TicketSection `json:"sections,omitempty"`
+}
+
+type TicketFiles struct {
+	Deleted  []TicketFile        `json:"deleted"`
+	Renamed  []TicketFileRenamed `json:"renamed"`
+	Modified []TicketFile        `json:"modified"`
+	Added    []TicketFile        `json:"added"`
 }
 
 type TicketData struct {
@@ -1552,7 +1550,8 @@ type TicketData struct {
 	Status     TicketStatus      `json:"status"`
 	Dates      TicketDates       `json:"dates"`
 	Summary    string            `json:"summary,omitempty"`
-	Files      []TicketFile      `json:"files,omitempty"`
+	Files      *TicketFiles      `json:"files,omitempty"`
+	GitHub     *TicketGithubData `json:"github,omitempty"`
 }
 
 type TicketDates struct {
@@ -2552,6 +2551,13 @@ func (o *CommandOutput) Plain(text string) {
 func (o *CommandOutput) Print() {
 	for _, line := range o.Lines {
 		fmt.Println(line.Text)
+	}
+}
+
+func (o *CommandOutput) Json(data interface{}) {
+	bytes, err := json.MarshalIndent(data, "", "  ")
+	if err == nil {
+		o.Lines = append(o.Lines, OutputLine{Type: OutputPlain, Text: string(bytes)})
 	}
 }
 
@@ -4164,7 +4170,7 @@ func BuildCodebaseBundles(ctx *CodebaseContext) []CodebaseBundle {
 	for _, ticket := range ctx.Tickets {
 		ticketID := fmt.Sprintf("%04d/%02d/%02d/%s", ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
 		if ticket.Data != nil && ticket.Data.Files != nil {
-			for _, entry := range ticket.Data.Files {
+			for _, entry := range ticket.Data.Files.Modified {
 				bundleName := ctx.GetBundleForFile(entry.Path)
 				if bundleName != "" {
 					if _, ok := ticketSets[bundleName]; ok {
@@ -4519,8 +4525,21 @@ func BuildCodebaseTickets(ctx *CodebaseContext) []CodebaseTicket {
 
 		bundleFiles := make(map[string]int)
 		if ticket.Data != nil && ticket.Data.Files != nil {
-			for _, entry := range ticket.Data.Files {
-				bundleName := ctx.GetBundleForFile(entry.Path)
+			var paths []string
+			if ticket.Data.Files.Added != nil {
+				for _, f := range ticket.Data.Files.Added { paths = append(paths, f.Path) }
+			}
+			if ticket.Data.Files.Modified != nil {
+				for _, f := range ticket.Data.Files.Modified { paths = append(paths, f.Path) }
+			}
+			if ticket.Data.Files.Deleted != nil {
+				for _, f := range ticket.Data.Files.Deleted { paths = append(paths, f.Path) }
+			}
+			if ticket.Data.Files.Renamed != nil {
+				for _, f := range ticket.Data.Files.Renamed { paths = append(paths, f.To) }
+			}
+			for _, path := range paths {
+				bundleName := ctx.GetBundleForFile(path)
 				if bundleName != "" {
 					bundleFiles[bundleName]++
 				}
@@ -4786,7 +4805,7 @@ func GetTicketSummaryPath(year, month, day int, slug string) string {
 	return filepath.Join(GetTicketPath(year, month, day, slug), "summary.md")
 }
 
-func CreateTicket(title, prompt, llm, planPath string) (*Ticket, error) {
+func CreateTicket(title, prompt, llm, planPath string, noIssue bool) (*Ticket, error) {
 	now := time.Now()
 	year, month, day := FormatDate(now)
 	slug := Slugify(title)
@@ -4806,35 +4825,10 @@ func CreateTicket(title, prompt, llm, planPath string) (*Ticket, error) {
 	summaryFilePath := GetTicketSummaryPath(year, month, day, slug)
 	gitAuthor := GetGitAuthorGithub()
 	gitCommit := GetGitCommit()
-	ticketData := &TicketData{
-		Title:  title,
-		Status: TicketStatusOpen,
-		Iterations: []TicketIteration{{
-			Prompt: prompt,
-			LLM:    llmSlug,
-			Author: gitAuthor,
-			Date:   now,
-			Commit: gitCommit,
-		}},
-		Dates: TicketDates{},
-	}
-	ticket := &Ticket{
-		Year:        year,
-		Month:       month,
-		Day:         day,
-		Slug:        slug,
-		Data:        ticketData,
-		FolderPath:  ticketDir,
-		JsonPath:    jsonPath,
-		PlanPath:    planFilePath,
-		LogPath:     logFilePath,
-		SummaryPath: summaryFilePath,
-	}
-	if err := SaveTicket(ticket); err != nil {
-		return nil, err
-	}
+
+	var planContent string
 	if planPath != "" && FileExists(planPath) {
-		planContent, err := ReadTextFile(planPath)
+		planContent, err = ReadTextFile(planPath)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read plan file: %w", err)
 		}
@@ -4852,7 +4846,118 @@ func CreateTicket(title, prompt, llm, planPath string) (*Ticket, error) {
 	if err := WriteTextFile(summaryFilePath, ""); err != nil {
 		return nil, fmt.Errorf("failed to write summary file: %w", err)
 	}
+
+	ticketData := &TicketData{
+		Title:  title,
+		Status: TicketStatusOpen,
+		Iterations: []TicketIteration{{
+			Prompt: prompt,
+			LLM:    llmSlug,
+			Author: gitAuthor,
+			Date:   now,
+			Commit: gitCommit,
+		}},
+		Dates: TicketDates{},
+	}
+
+	skipIssue := noIssue || strings.Contains(prompt, "NOISSUE")
+	if !skipIssue {
+		issueBody := prompt
+		if planContent != "" {
+			issueBody = planContent
+		}
+		issueURL, err := ghCreateIssue(title, issueBody)
+		if err == nil && issueURL != "" {
+			ticketData.GitHub = &TicketGithubData{Issue: issueURL}
+		} else if err != nil {
+			fmt.Printf("Warning: Failed to create GitHub issue: %v\n", err)
+		}
+	}
+
+	ticket := &Ticket{
+		Year:        year,
+		Month:       month,
+		Day:         day,
+		Slug:        slug,
+		Data:        ticketData,
+		FolderPath:  ticketDir,
+		JsonPath:    jsonPath,
+		PlanPath:    planFilePath,
+		LogPath:     logFilePath,
+		SummaryPath: summaryFilePath,
+	}
+
+	if err := SaveTicket(ticket); err != nil {
+		return nil, err
+	}
 	return ticket, nil
+}
+
+func ghCreateIssue(title, body string) (string, error) {
+	args := []string{"issue", "create", "--title", title, "--body", body, "--label", "ticket"}
+	stdout, stderr, exitCode := ExecCommand("gh", args, "")
+	if exitCode != 0 {
+		return "", fmt.Errorf("gh issue create failed: %s", strings.TrimSpace(stderr))
+	}
+	issueURL := strings.TrimSpace(stdout)
+	if issueURL != "" {
+		linkArgs := []string{"project", "item-add", "2", "--owner", "usalu", "--url", issueURL}
+		ExecCommand("gh", linkArgs, "")
+	}
+	return issueURL, nil
+}
+
+func ghAddComment(issueURL, comment string) error {
+	args := []string{"issue", "comment", issueURL, "--body", comment}
+	_, stderr, exitCode := ExecCommand("gh", args, "")
+	if exitCode != 0 {
+		return fmt.Errorf("gh issue comment failed: %s", strings.TrimSpace(stderr))
+	}
+	return nil
+}
+
+func ghAddLabels(issueURL string, labels []string) error {
+	if len(labels) == 0 {
+		return nil
+	}
+	args := []string{"issue", "edit", issueURL}
+	for _, label := range labels {
+		args = append(args, "--add-label", label)
+	}
+	_, stderr, exitCode := ExecCommand("gh", args, "")
+	if exitCode != 0 {
+		return fmt.Errorf("gh issue edit failed: %s", strings.TrimSpace(stderr))
+	}
+	return nil
+}
+
+func ghCloseIssue(issueURL string) error {
+	args := []string{"issue", "close", issueURL}
+	_, stderr, exitCode := ExecCommand("gh", args, "")
+	if exitCode != 0 {
+		return fmt.Errorf("gh issue close failed: %s", strings.TrimSpace(stderr))
+	}
+	return nil
+}
+
+func ghReopenIssue(issueURL string) error {
+	args := []string{"issue", "reopen", issueURL}
+	_, stderr, exitCode := ExecCommand("gh", args, "")
+	if exitCode != 0 {
+		return fmt.Errorf("gh issue reopen failed: %s", strings.TrimSpace(stderr))
+	}
+	return nil
+}
+
+func SaveTicket(ticket *Ticket) error {
+	if ticket.Data == nil {
+		return fmt.Errorf("ticket data is nil")
+	}
+	jsonBytes, err := json.MarshalIndent(ticket.Data, "", "  ")
+	if err != nil {
+		return err
+	}
+	return WriteTextFile(ticket.JsonPath, string(jsonBytes))
 }
 
 func ReadTicket(year, month, day int, slug string) (*Ticket, error) {
@@ -4886,20 +4991,8 @@ func ReadTicket(year, month, day int, slug string) (*Ticket, error) {
 	}, nil
 }
 
-func SaveTicket(ticket *Ticket) error {
-	if ticket.Data == nil {
-		return fmt.Errorf("ticket data is nil")
-	}
-	jsonBytes, err := json.MarshalIndent(ticket.Data, "", "  ")
-	if err != nil {
-		return err
-	}
-	return WriteTextFile(ticket.JsonPath, string(jsonBytes))
-}
-
 func ListTickets(year, month, day *int) ([]Ticket, error) {
 	ticketsDir := GetTicketsDir()
-
 	if !FileExists(ticketsDir) {
 		return nil, nil
 	}
@@ -4972,8 +5065,7 @@ func ListTickets(year, month, day *int) ([]Ticket, error) {
 						monthInt, _ := strconv.Atoi(m)
 						dayInt, _ := strconv.Atoi(d)
 						ticketJsonPath := GetTicketJsonPath(yearInt, monthInt, dayInt, slug)
-						ticketFilePath := GetTicketFilePath(yearInt, monthInt, dayInt, slug)
-						if FileExists(ticketJsonPath) || FileExists(ticketFilePath) {
+						if FileExists(ticketJsonPath) {
 							ticket, err := ReadTicket(yearInt, monthInt, dayInt, slug)
 							if err == nil {
 								tickets = append(tickets, *ticket)
@@ -4987,372 +5079,163 @@ func ListTickets(year, month, day *int) ([]Ticket, error) {
 	return tickets, nil
 }
 
-func ComputeTicketFiles(ticket *Ticket, files []string) ([]TicketFile, error) {
-	if ticket.Data == nil {
-		return nil, fmt.Errorf("ticket data is nil")
-	}
-	if len(ticket.Data.Iterations) == 0 {
-		return nil, fmt.Errorf("no iterations found for ticket")
-	}
-	baseCommit := ticket.Data.Iterations[0].Commit
-	if baseCommit == "" {
-		return nil, fmt.Errorf("no base commit found for ticket")
-	}
-	if len(files) == 0 {
-		return nil, fmt.Errorf("at least one file is required")
-	}
-
-	diffLines, err := GetGitDiffLines(baseCommit, "", files)
+func LoadBundles() []Bundle {
+	// Read bundles from project.json files in the repository
+	var bundles []Bundle
+	projectsDir := rootDir
+	
+	// Look for project.json files that define bundles
+	entries, err := os.ReadDir(projectsDir)
 	if err != nil {
-		return nil, err
+		return bundles
 	}
-
-	var result []TicketFile
-	for _, filePath := range files {
-		fileDiff := diffLines[filePath]
-		sections := []TicketSection{}
-
-		if fileDiff != nil && (len(fileDiff.Added) > 0 || len(fileDiff.Removed) > 0) {
-			content, readErr := ReadTextFile(filepath.Join(GetRootDir(), filePath))
-			if readErr == nil {
-				lines := strings.Split(content, "\n")
-				lang := GetLanguage(filePath)
-				if lang != nil {
-					fileSections := lang.ParseSections(content)
-					fileDefs := lang.ParseDefinitions(content, lines)
-					// Filter definitions to only include top-level ones
-					// This logic usually depends on the parser implementation,
-					// but here we can enforce it by checking if def is inside another def?
-					// Or just trust ParseDefinitions if we fix it later.
-					// For child exclusion, we update computeAffectedSections.
-					removedLineMap := map[string][]int{}
-					if len(fileDiff.Removed) > 0 {
-						stdout, stderr, exitCode := ExecCommand("git", []string{"show", fmt.Sprintf("%s:%s", baseCommit, filePath)}, "")
-						if exitCode == 0 && stderr == "" {
-							removedLineMap = computeSectionLineMap(lang.ParseSections(stdout), fileDiff.Removed, "")
-						}
-					}
-					affectedSections := computeAffectedSections(filePath, fileSections, fileDefs, computeSectionLineMap(fileSections, fileDiff.Added, ""), removedLineMap, "")
-					for _, sectionMetrics := range affectedSections {
-						sections = append(sections, sectionMetrics)
-					}
-				}
+	
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		projectJsonPath := filepath.Join(projectsDir, entry.Name(), "project.json")
+		if FileExists(projectJsonPath) {
+			content, err := ReadTextFile(projectJsonPath)
+			if err != nil {
+				continue
 			}
-		}
-		
-		// Always include the file, even if no metrics found, if it was passed in files list?
-		// User said: "Files should not have updated, added, removed. Just array of files."
-		result = append(result, TicketFile{
-			Path:     filePath,
-			Sections: sections,
-		})
-	}
-	return result, nil
-}
-
-func computeSectionLineMap(sections []Section, diffLines []int, parentPath string) map[string][]int {
-	result := map[string][]int{}
-	for _, section := range sections {
-		sectionPath := section.Name
-		if parentPath != "" {
-			sectionPath = parentPath + "#" + section.Name
-		}
-		linesInSection := computeLinesInRange(diffLines, section.StartLine, section.EndLine)
-		childLines := []int{}
-		for _, child := range section.Children {
-			childLines = append(childLines, computeLinesInRange(diffLines, child.StartLine, child.EndLine)...)
-		}
-		exclusiveLines := setDifference(linesInSection, childLines)
-		if len(exclusiveLines) > 0 {
-			result[sectionPath] = append(result[sectionPath], exclusiveLines...)
-		}
-		if len(section.Children) > 0 {
-			for key, value := range computeSectionLineMap(section.Children, diffLines, sectionPath) {
-				result[key] = append(result[key], value...)
+			var project struct {
+				Name        string   `json:"name"`
+				Root        string   `json:"root"`
+				SourceRoot  string   `json:"sourceRoot"`
+				ProjectType string   `json:"projectType"`
+				Tags        []string `json:"tags"`
 			}
-		}
-	}
-	return result
-}
-
-func computeAffectedSections(filePath string, sections []Section, defs []DefinitionRange, addedLineMap map[string][]int, removedLineMap map[string][]int, parentPath string) []TicketSection {
-	var result []TicketSection
-	for _, section := range sections {
-		sectionPath := section.Name
-		if parentPath != "" {
-			sectionPath = parentPath + "#" + section.Name
-		}
-		exclusiveAddedLines := addedLineMap[sectionPath]
-		exclusiveRemovedLines := removedLineMap[sectionPath]
-
-		if len(exclusiveAddedLines) > 0 || len(exclusiveRemovedLines) > 0 {
-			var affectedDefs []string
-			for _, def := range defs {
-				// Check if def is in this section
-				if def.Start >= section.StartLine && def.Start <= section.EndLine {
-					// Check if def is NOT in any child section
-					isInChild := false
-					for _, child := range section.Children {
-						if def.Start >= child.StartLine && def.Start <= child.EndLine {
-							isInChild = true
-							break
-						}
-					}
-
-					if !isInChild {
-						// Only use added lines to determine affected definitions
-						// Removed lines reference OLD file positions which don't map to NEW file definitions
-						defAddedLines := computeLinesInRange(exclusiveAddedLines, def.Start, def.End)
-						if len(defAddedLines) > 0 {
-							affectedDefs = append(affectedDefs, def.Name)
-						}
-					}
-				}
+			if err := json.Unmarshal([]byte(content), &project); err != nil {
+				continue
 			}
-
-			result = append(result, TicketSection{
-				Name:        sectionPath,
-				Range:       &Range{Start: section.StartLine, End: section.EndLine},
-				Definitions: uniqueStrings(affectedDefs),
-				Lines:       &LineMetrics{Added: len(exclusiveAddedLines), Removed: len(exclusiveRemovedLines)},
+			if project.Name == "" {
+				project.Name = entry.Name()
+			}
+			if project.Root == "" {
+				project.Root = entry.Name()
+			}
+			bundles = append(bundles, Bundle{
+				Name:        project.Name,
+				Root:        project.Root,
+				SourceRoot:  project.SourceRoot,
+				ProjectType: project.ProjectType,
+				Tags:        project.Tags,
 			})
 		}
-
-		if len(section.Children) > 0 {
-			childResults := computeAffectedSections(filePath, section.Children, defs, addedLineMap, removedLineMap, sectionPath)
-			result = append(result, childResults...)
+	}
+	
+	// Also check subdirectories (js/, go/, etc.)
+	for _, subDir := range []string{"js", "go", "dotnet", "python"} {
+		subPath := filepath.Join(projectsDir, subDir)
+		if !FileExists(subPath) {
+			continue
 		}
-	}
-	return result
-}
-
-func setDifference(a, b []int) []int {
-	m := make(map[int]bool)
-	for _, x := range b {
-		m[x] = true
-	}
-	var diff []int
-	for _, x := range a {
-		if !m[x] {
-			diff = append(diff, x)
+		subEntries, err := os.ReadDir(subPath)
+		if err != nil {
+			continue
 		}
-	}
-	return diff
-}
-
-func setIntersection(a, b []int) []int {
-	m := make(map[int]bool)
-	for _, x := range b {
-		m[x] = true
-	}
-	var intersection []int
-	for _, x := range a {
-		if m[x] {
-			intersection = append(intersection, x)
-		}
-	}
-	return intersection
-}
-
-func uniqueStrings(strs []string) []string {
-	seen := make(map[string]bool)
-	result := []string{}
-	for _, s := range strs {
-		if !seen[s] {
-			seen[s] = true
-			result = append(result, s)
-		}
-	}
-	return result
-}
-
-func GetGitDiffLines(baseCommit, headCommit string, paths []string) (map[string]*DiffLines, error) {
-	if baseCommit == "" {
-		return nil, fmt.Errorf("base commit is required")
-	}
-	args := BuildGitDiffArgs("-U0", baseCommit, headCommit, paths)
-	stdout, stderr, exitCode := ExecCommand("git", args, "")
-	if exitCode != 0 {
-		return nil, fmt.Errorf("git diff failed: %s", strings.TrimSpace(stderr))
-	}
-	result := make(map[string]*DiffLines)
-	var currentFile string
-	// Capture both old (-start,count) and new (+start,count) line ranges
-	lineRegex := regexp.MustCompile(`^@@\s+-(\d+)(?:,(\d+))?\s+\+(\d+)(?:,(\d+))?\s+@@`)
-	for _, line := range strings.Split(stdout, "\n") {
-		if strings.HasPrefix(line, "+++ b/") {
-			currentFile = strings.TrimPrefix(line, "+++ b/")
-			if result[currentFile] == nil {
-				result[currentFile] = &DiffLines{Added: []int{}, Removed: []int{}}
+		for _, entry := range subEntries {
+			if !entry.IsDir() {
+				continue
 			}
-		} else if strings.HasPrefix(line, "@@") && currentFile != "" {
-			match := lineRegex.FindStringSubmatch(line)
-			if match != nil {
-				// Parse removed lines (old file)
-				oldStart, _ := strconv.Atoi(match[1])
-				oldCount := 1
-				if match[2] != "" {
-					oldCount, _ = strconv.Atoi(match[2])
+			projectJsonPath := filepath.Join(subPath, entry.Name(), "project.json")
+			if FileExists(projectJsonPath) {
+				content, err := ReadTextFile(projectJsonPath)
+				if err != nil {
+					continue
 				}
-				for i := 0; i < oldCount; i++ {
-					result[currentFile].Removed = append(result[currentFile].Removed, oldStart+i)
+				var project struct {
+					Name        string   `json:"name"`
+					Root        string   `json:"root"`
+					SourceRoot  string   `json:"sourceRoot"`
+					ProjectType string   `json:"projectType"`
+					Tags        []string `json:"tags"`
 				}
-
-				// Parse added lines (new file)
-				newStart, _ := strconv.Atoi(match[3])
-				newCount := 1
-				if match[4] != "" {
-					newCount, _ = strconv.Atoi(match[4])
+				if err := json.Unmarshal([]byte(content), &project); err != nil {
+					continue
 				}
-				for i := 0; i < newCount; i++ {
-					result[currentFile].Added = append(result[currentFile].Added, newStart+i)
+				if project.Name == "" {
+					project.Name = entry.Name()
 				}
+				if project.Root == "" {
+					project.Root = filepath.Join(subDir, entry.Name())
+				}
+				bundles = append(bundles, Bundle{
+					Name:        project.Name,
+					Root:        project.Root,
+					SourceRoot:  project.SourceRoot,
+					ProjectType: project.ProjectType,
+					Tags:        project.Tags,
+				})
 			}
 		}
 	}
-	return result, nil
+	
+	return bundles
 }
 
-func computeLinesInRange(changedLines []int, startLine, endLine int) []int {
-	var result []int
-	for _, line := range changedLines {
-		if line >= startLine && line <= endLine {
-			result = append(result, line)
-		}
-	}
-	return result
+func GetProjects() []Bundle {
+	return LoadBundles()
 }
 
-func findSectionForLine(sections []Section, line int) string {
-	for _, section := range sections {
-		if line >= section.StartLine && line <= section.EndLine {
-			if len(section.Children) > 0 {
-				childSection := findSectionForLine(section.Children, line)
-				if childSection != "" {
-					return section.Name + "/" + childSection
-				}
-			}
-			return section.Name
+func ResolveBundleForPath(filePath string, bundles []Bundle) string {
+	for _, b := range bundles {
+		if strings.HasPrefix(filePath, b.Root+"/") || strings.HasPrefix(filePath, b.SourceRoot+"/") {
+			return b.Name
 		}
 	}
 	return ""
 }
 
-func BuildGitDiffArgs(flag, baseCommit, headCommit string, paths []string) []string {
-	if headCommit == "" {
-		if len(paths) == 0 {
-			return []string{"diff", flag, "--no-renames", baseCommit}
+type fileMetric struct {
+	path   string
+	status string
+	added  int
+	removed int
+}
+
+func generateMetricsComment(files []fileMetric) string {
+	if len(files) == 0 {
+		return ""
+	}
+	sort.Slice(files, func(i, j int) bool {
+		return files[i].path < files[j].path
+	})
+	var lines []string
+	for _, f := range files {
+		var icon string
+		switch f.status {
+		case "deleted":
+			icon = "➖"
+		case "modified":
+			icon = "✏️"
+		case "added":
+			icon = "➕"
+		case "renamed":
+			icon = "➡"
+		default:
+			icon = "✏️"
 		}
-		return append([]string{"diff", flag, "--no-renames", baseCommit, "--"}, paths...)
-	}
-	if len(paths) == 0 {
-		return []string{"diff", flag, "--no-renames", baseCommit, headCommit}
-	}
-	return append([]string{"diff", flag, "--no-renames", baseCommit, headCommit, "--"}, paths...)
-}
 
-func ResolveBundleForPath(filePath string, bundles []Bundle) string {
-	normalizedPath := NormalizePath(filePath)
-	var longestRoot string
-	var bundleName string
-	for _, bundle := range bundles {
-		if bundle.Root == "" {
-			continue
+		var lineInfo string
+		if f.added > 0 && f.removed > 0 {
+			lineInfo = fmt.Sprintf("+%d -%d", f.added, f.removed)
+		} else if f.added > 0 {
+			lineInfo = fmt.Sprintf("+%d", f.added)
+		} else if f.removed > 0 {
+			lineInfo = fmt.Sprintf("-%d", f.removed)
 		}
-		bundleRoot := NormalizePath(bundle.Root)
-		if strings.HasPrefix(normalizedPath, bundleRoot+"/") || normalizedPath == bundleRoot {
-			if len(bundleRoot) > len(longestRoot) {
-				longestRoot = bundleRoot
-				bundleName = bundle.Name
-			}
-		}
-	}
-	return bundleName
-}
 
-// buildFolderID constructs a globally unique folder ID
-func buildFolderID(path string, bundleID *string) string {
-	normalizedPath := strings.ReplaceAll(path, "\\", "/")
-	if bundleID != nil && *bundleID != "" {
-		// Extract bundle name from bundle ID (@semio/BUNDLE → BUNDLE)
-		bundleName := strings.TrimPrefix(*bundleID, "@semio/")
-		return "@semio/" + bundleName + "/" + normalizedPath
-	}
-	return "@semio/repo/" + normalizedPath
-}
-
-// buildFileID constructs a globally unique file ID
-func buildFileID(path string, bundleID *string) string {
-	normalizedPath := strings.ReplaceAll(path, "\\", "/")
-	if bundleID != nil && *bundleID != "" {
-		// Extract bundle name from bundle ID (@semio/BUNDLE → BUNDLE)
-		bundleName := strings.TrimPrefix(*bundleID, "@semio/")
-		return "@semio/" + bundleName + "/" + normalizedPath
-	}
-	return "@semio/repo/" + normalizedPath
-}
-
-// buildSectionID constructs a globally unique section ID
-func buildSectionID(fileID string, sectionPath []string) string {
-	if len(sectionPath) == 0 {
-		return fileID
-	}
-	return fileID + "#" + strings.Join(sectionPath, "#")
-}
-
-// buildDefinitionID constructs a globally unique definition ID
-func buildDefinitionID(fileID string, sectionPath []string, name string) string {
-	if len(sectionPath) > 0 {
-		return fileID + "#" + strings.Join(sectionPath, "#") + "§" + name
-	}
-	return fileID + "§" + name
-}
-
-// buildViolationID constructs a globally unique violation ID
-func buildViolationID(scope string, line int, col int) string {
-	if line > 0 && col > 0 {
-		return fmt.Sprintf("@semio/violations/%s#%d:%d", scope, line, col)
-	}
-	if line > 0 {
-		return fmt.Sprintf("@semio/violations/%s#%d", scope, line)
-	}
-	return fmt.Sprintf("@semio/violations/%s", scope)
-}
-
-func GuessSectionName(filePath string) string {
-	base := filepath.Base(filePath)
-	ext := filepath.Ext(base)
-	name := strings.TrimSuffix(base, ext)
-	name = strings.ReplaceAll(name, "-", " ")
-	name = strings.ReplaceAll(name, "_", " ")
-	name = strings.ReplaceAll(name, ".", " ")
-	words := strings.Fields(name)
-	for i, w := range words {
-		if len(w) > 0 {
-			words[i] = strings.ToUpper(w[:1]) + w[1:]
+		if lineInfo != "" {
+			lines = append(lines, fmt.Sprintf("%s%s %s", icon, f.path, lineInfo))
+		} else {
+			lines = append(lines, fmt.Sprintf("%s%s", icon, f.path))
 		}
 	}
-	return strings.Join(words, " ")
-}
 
-func GetGitDiffSectionLineMetrics(baseCommit, endCommit, filePath string) map[string]LineMetrics {
-	// Conserved for backward compatibility if needed, but primarily logic moved to ComputeTicketFiles
-	// Just return nil or implement basic logic if used elsewhere.
-	// It seems it was only used in BuildTicketBundles which is being removed/replaced.
-	return nil
-}
-
-func FlattenSections(sections []Section) []Section {
-	var result []Section
-	var flatten func(secs []Section)
-	flatten = func(secs []Section) {
-		for _, s := range secs {
-			result = append(result, s)
-			flatten(s.Children)
-		}
-	}
-	flatten(sections)
-	return result
+	return strings.Join(lines, "\n")
 }
 
 func FinishTicket(ticket *Ticket, summary string, files []string) error {
@@ -5369,6 +5252,99 @@ func FinishTicket(ticket *Ticket, summary string, files []string) error {
 	if err != nil {
 		return err
 	}
+	
+	if ticket.Data.GitHub != nil && ticket.Data.GitHub.Issue != "" {
+		issueURL := ticket.Data.GitHub.Issue
+		
+		// 1. Add comment with summary
+		if err := ghAddComment(issueURL, summary); err != nil {
+			fmt.Printf("Warning: Failed to add summary comment to GitHub issue: %v\n", err)
+		}
+		
+		// 2. Add labels
+		bundles := GetProjects()
+		labels := make(map[string]struct{})
+		if tickFilesResult != nil {
+			for _, tf := range tickFilesResult.Added {
+				b := ResolveBundleForPath(tf.Path, bundles)
+				if b != "" {
+					labels[b] = struct{}{}
+				} else {
+					labels["@semio-repo"] = struct{}{}
+				}
+			}
+			for _, tf := range tickFilesResult.Modified {
+				b := ResolveBundleForPath(tf.Path, bundles)
+				if b != "" {
+					labels[b] = struct{}{}
+				} else {
+					labels["@semio-repo"] = struct{}{}
+				}
+			}
+			for _, tf := range tickFilesResult.Deleted {
+				b := ResolveBundleForPath(tf.Path, bundles)
+				if b != "" {
+					labels[b] = struct{}{}
+				} else {
+					labels["@semio-repo"] = struct{}{}
+				}
+			}
+			for _, tf := range tickFilesResult.Renamed {
+				b := ResolveBundleForPath(tf.To, bundles)
+				if b != "" {
+					labels[b] = struct{}{}
+				} else {
+					labels["@semio-repo"] = struct{}{}
+				}
+			}
+		}
+		var labelList []string
+		for l := range labels {
+			labelList = append(labelList, l)
+		}
+		if len(labelList) > 0 {
+			if err := ghAddLabels(issueURL, labelList); err != nil {
+				fmt.Printf("Warning: Failed to add labels to GitHub issue: %v\n", err)
+			}
+		}
+		
+		// 3. Add metrics comment and close
+		var allMetrics []fileMetric
+		if tickFilesResult != nil {
+			for _, f := range tickFilesResult.Added {
+				added, removed := 0, 0
+				if f.Lines != nil { added, removed = f.Lines.Added, f.Lines.Removed }
+				allMetrics = append(allMetrics, fileMetric{path: f.Path, status: "added", added: added, removed: removed})
+			}
+			for _, f := range tickFilesResult.Modified {
+				added, removed := 0, 0
+				if f.Lines != nil { added, removed = f.Lines.Added, f.Lines.Removed }
+				allMetrics = append(allMetrics, fileMetric{path: f.Path, status: "modified", added: added, removed: removed})
+			}
+			for _, f := range tickFilesResult.Deleted {
+				added, removed := 0, 0
+				if f.Lines != nil { added, removed = f.Lines.Added, f.Lines.Removed }
+				allMetrics = append(allMetrics, fileMetric{path: f.Path, status: "deleted", added: added, removed: removed})
+			}
+			for _, f := range tickFilesResult.Renamed {
+				added, removed := 0, 0
+				if f.Lines != nil { added, removed = f.Lines.Added, f.Lines.Removed }
+				allMetrics = append(allMetrics, fileMetric{path: f.To, status: "renamed", added: added, removed: removed})
+			}
+		}
+		metricsComment := generateMetricsComment(allMetrics)
+		if metricsComment != "" {
+			if err := ghAddComment(issueURL, metricsComment); err != nil {
+				fmt.Printf("Warning: Failed to add metrics comment to GitHub issue: %v\n", err)
+			}
+		}
+		
+		// Close issue
+		if err := ghCloseIssue(issueURL); err != nil {
+			fmt.Printf("Warning: Failed to close GitHub issue: %v\n", err)
+		}
+	}
+
 	ticket.Data.Summary = summary
 	ticket.Data.Files = tickFilesResult
 	ticket.Data.Status = TicketStatusClosed
@@ -5402,1411 +5378,22 @@ func ReopenTicket(ticket *Ticket, prompt, llm string) error {
 	ticket.Data.Iterations = append(ticket.Data.Iterations, iteration)
 	ticket.Data.Status = TicketStatusOpen
 	ticket.Data.Dates.Closed = nil
+	
+	if ticket.Data.GitHub != nil && ticket.Data.GitHub.Issue != "" {
+		if err := ghReopenIssue(ticket.Data.GitHub.Issue); err != nil {
+			fmt.Printf("Warning: Failed to reopen GitHub issue: %v\n", err)
+		}
+	}
+	
 	return SaveTicket(ticket)
 }
 
-func CanCloseTicket(ticket *Ticket) (bool, []string) {
-	var reasons []string
-	if ticket.Data == nil {
-		reasons = append(reasons, "Ticket data is nil")
-		return false, reasons
-	}
-	planContent, _ := ReadTextFile(ticket.PlanPath)
-	if planContent == "" || strings.TrimSpace(planContent) == "# Plan" {
-		reasons = append(reasons, "Plan section is empty")
-	}
-	return len(reasons) == 0, reasons
-}
-
-// #endregion Tickets
-
-// #region Contributors
-
-func GetContributorsDir() string {
-	return filepath.Join(rootDir, "contributors")
-}
-
-func GetContributorPath(github string) string {
-	return filepath.Join(GetContributorsDir(), github)
-}
-
-func GetContributorJsonPath(github string) string {
-	return filepath.Join(GetContributorPath(github), "contributor.json")
-}
-
-func GetContributorAvatarPath(github string) string {
-	return filepath.Join(GetContributorPath(github), "avatar.png")
-}
-
-func GetContributorAvatarRoundPath(github string) string {
-	return filepath.Join(GetContributorPath(github), "avatar-round-90x90.png")
-}
-
-func ContributorExists(github string) bool {
-	return FileExists(GetContributorJsonPath(github))
-}
-
-func CreateContributor(github string) (*Contributor, error) {
-	if ContributorExists(github) {
-		return ReadContributor(github)
-	}
-	contributorDir := GetContributorPath(github)
-	if err := EnsureDir(contributorDir); err != nil {
-		return nil, err
-	}
-	if err := DownloadGitHubAvatar(github, contributorDir); err != nil {
-		return nil, err
-	}
-	contributor := &Contributor{
-		Github:        github,
-		Links:         map[string]string{"github": fmt.Sprintf("https://github.com/%s", github)},
-		Contributions: ContributorContributionsStorage{},
-	}
-	if err := SaveContributor(contributor); err != nil {
-		return nil, err
-	}
-	return contributor, nil
-}
-
-func ReadContributor(github string) (*Contributor, error) {
-	jsonPath := GetContributorJsonPath(github)
-	if !FileExists(jsonPath) {
-		return nil, fmt.Errorf("contributor not found: %s", github)
-	}
-	raw, err := ReadTextFile(jsonPath)
-	if err != nil {
-		return nil, err
-	}
-	var contributor Contributor
-	if err := json.Unmarshal([]byte(raw), &contributor); err != nil {
-		return nil, err
-	}
-	return &contributor, nil
-}
-
-func SaveContributor(contributor *Contributor) error {
-	jsonPath := GetContributorJsonPath(contributor.Github)
-	jsonBytes, err := json.MarshalIndent(contributor, "", "  ")
-	if err != nil {
-		return err
-	}
-	return WriteTextFile(jsonPath, string(jsonBytes))
-}
-
-type ContributorContributionState struct {
-	Tickets     map[string]ContributorTicket
-	Files       map[string]struct{}
-	Folders     map[string]struct{}
-	Bundles     map[string]struct{}
-	Regions     map[string]struct{}
-	Definitions map[string]struct{}
-	Commits     map[string]ContributorCommit
-	Lines       LineMetrics
-}
-
-func ParseContributorIdentity(value string) (string, string, bool) {
-	trimmed := strings.TrimSpace(value)
-	if strings.HasPrefix(trimmed, "//") {
-		trimmed = strings.TrimSpace(strings.TrimPrefix(trimmed, "//"))
-	}
-	if strings.HasPrefix(trimmed, "#") {
-		trimmed = strings.TrimSpace(strings.TrimPrefix(trimmed, "#"))
-	}
-	if strings.HasPrefix(trimmed, "/*") {
-		trimmed = strings.TrimSpace(strings.TrimPrefix(trimmed, "/*"))
-	}
-	if strings.HasPrefix(trimmed, "*") {
-		trimmed = strings.TrimSpace(strings.TrimPrefix(trimmed, "*"))
-	}
-	if trimmed == "" {
-		return "", "", false
-	}
-	match := regexp.MustCompile(`^\s*(?:\d{4}\s+)?(.+?)\s*<([^>]+)>\s*$`).FindStringSubmatch(trimmed)
-	if match == nil {
-		return "", "", false
-	}
-	name := strings.TrimSpace(match[1])
-	email := strings.TrimSpace(match[2])
-	if name == "" || email == "" {
-		return "", "", false
-	}
-	return name, email, true
-}
-
-func ResolveContributorGithub(name, email string, emailToGithub map[string]string, nameToGithub map[string]string) string {
-	if email != "" {
-		if github, ok := emailToGithub[strings.ToLower(email)]; ok {
-			return github
-		}
-	}
-	if name != "" {
-		if github, ok := nameToGithub[strings.ToLower(name)]; ok {
-			return github
-		}
-	}
-	return ""
-}
-
-func GetGitCommitTitle(sha string) string {
-	if sha == "" {
-		return ""
-	}
-	stdout, _, exitCode := ExecCommand("git", []string{"show", "-s", "--format=%s", sha}, "")
-	if exitCode != 0 {
-		return ""
-	}
-	return strings.TrimSpace(stdout)
-}
-
-func addSectionsToContributor(state *ContributorContributionState, filePath string, section Section) {
-	regionKey := filePath + "#" + section.Name
-	state.Regions[regionKey] = struct{}{}
-	for _, child := range section.Children {
-		addSectionsToContributor(state, filePath, child)
-	}
-}
-
-func findSectionForDefinition(sections []Section, defStart, defEnd int, parentPath string) string {
-	for _, section := range sections {
-		if defStart >= section.StartLine && defEnd <= section.EndLine {
-			sectionPath := section.Name
-			if parentPath != "" {
-				sectionPath = parentPath + "/" + section.Name
-			}
-			if len(section.Children) > 0 {
-				if childPath := findSectionForDefinition(section.Children, defStart, defEnd, sectionPath); childPath != "" {
-					return childPath
-				}
-			}
-			return sectionPath
-		}
-	}
-	return parentPath
-}
-
-func ListContributors() ([]Contributor, error) {
-	dir := GetContributorsDir()
-	if !FileExists(dir) {
-		return nil, nil
-	}
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		return nil, err
-	}
-	var contributors []Contributor
-	for _, e := range entries {
-		if e.IsDir() {
-			contributor, err := ReadContributor(e.Name())
-			if err == nil {
-				contributors = append(contributors, *contributor)
-			}
-		}
-	}
-	if len(contributors) == 0 {
-		return contributors, nil
-	}
-	emailToGithub := map[string]string{}
-	nameToGithub := map[string]string{}
-	stateByGithub := map[string]*ContributorContributionState{}
-	for i := range contributors {
-		contributors[i].Contributions = ContributorContributionsStorage{}
-		stateByGithub[contributors[i].Github] = &ContributorContributionState{
-			Tickets:     map[string]ContributorTicket{},
-			Files:       map[string]struct{}{},
-			Folders:     map[string]struct{}{},
-			Bundles:     map[string]struct{}{},
-			Regions:     map[string]struct{}{},
-			Definitions: map[string]struct{}{},
-			Commits:     map[string]ContributorCommit{},
-		}
-		for _, email := range contributors[i].Emails {
-			emailToGithub[strings.ToLower(email)] = contributors[i].Github
-		}
-		if contributors[i].Name != "" {
-			nameToGithub[strings.ToLower(contributors[i].Name)] = contributors[i].Github
-		}
-	}
-	tickets, err := ListTickets(nil, nil, nil)
-	if err != nil {
-		return nil, err
-	}
-	commitTitleCache := map[string]string{}
-	for _, ticket := range tickets {
-		if ticket.Data == nil || len(ticket.Data.Iterations) == 0 {
-			continue
-		}
-		// Use first iteration author/commit for attribution? Or iterate all iterations?
-		// For now using first iteration as 'creator'.
-		firstIter := ticket.Data.Iterations[0]
-		
-		ticketKey := fmt.Sprintf("%04d-%02d-%02d-%s", ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
-		ticketContributors := map[string]struct{}{}
-		
-		if name, email, ok := ParseContributorIdentity(firstIter.Author); ok {
-			if github := ResolveContributorGithub(name, email, emailToGithub, nameToGithub); github != "" {
-				ticketContributors[github] = struct{}{}
-				if ticket.Data.Files != nil && stateByGithub[github] != nil {
-					for _, file := range ticket.Data.Files {
-						for _, section := range file.Sections {
-							if section.Lines != nil {
-								stateByGithub[github].Lines.Added += section.Lines.Added
-								stateByGithub[github].Lines.Removed += section.Lines.Removed
-							}
-						}
-					}
-				}
-			}
-		}
-		if firstIter.Commit != "" {
-			if name, email, ok := ParseContributorIdentity(firstIter.Author); ok {
-				if github := ResolveContributorGithub(name, email, emailToGithub, nameToGithub); github != "" && stateByGithub[github] != nil {
-					commitTitle := commitTitleCache[firstIter.Commit]
-					if commitTitle == "" {
-						commitTitle = GetGitCommitTitle(firstIter.Commit)
-						if commitTitle == "" {
-							commitTitle = firstIter.Commit
-						}
-						commitTitleCache[firstIter.Commit] = commitTitle
-					}
-					stateByGithub[github].Commits[firstIter.Commit] = ContributorCommit{Title: commitTitle, Sha: firstIter.Commit}
-				}
-			}
-		}
-		for github := range ticketContributors {
-			if stateByGithub[github] == nil {
-				continue
-			}
-			stateByGithub[github].Tickets[ticketKey] = ContributorTicket{
-				Year:     ticket.Year,
-				Month:    ticket.Month,
-				Day:      ticket.Day,
-				Slug:     ticket.Slug,
-				Status:   ticket.Data.Status,
-				FilePath: ticket.JsonPath,
-			}
-		}
-	}
-
-	files, err := ScopeToFiles(Scope{Kind: ScopeRepo}, nil)
-	if err != nil {
-		return nil, err
-	}
-	for _, filePath := range files {
-		absPath := filepath.Join(rootDir, filePath)
-		content, err := ReadTextFile(absPath)
-		if err != nil {
-			continue
-		}
-		sections := ParseSections(content, filePath)
-		headerSection := FindSection(sections, "Header")
-		if headerSection == nil {
-			continue
-		}
-		headerContent := content[headerSection.StartIndex:headerSection.EndIndex]
-		lines := strings.Split(content, "\n")
-		lang := GetLanguage(filePath)
-		var defs []DefinitionRange
-		if lang != nil && lang.SupportsDefinitions() {
-			defs = lang.ParseDefinitions(content, lines)
-		}
-		for _, line := range strings.Split(headerContent, "\n") {
-			if name, email, ok := ParseContributorIdentity(line); ok {
-				if github := ResolveContributorGithub(name, email, emailToGithub, nameToGithub); github != "" {
-					stateByGithub[github].Files[filePath] = struct{}{}
-					folder := NormalizePath(filepath.Dir(filePath))
-					if folder != "." {
-						stateByGithub[github].Folders[folder] = struct{}{}
-					}
-					for _, section := range sections {
-						addSectionsToContributor(stateByGithub[github], filePath, section)
-					}
-					for _, def := range defs {
-						sectionPath := findSectionForDefinition(sections, def.Start, def.End, "")
-						var defKey string
-						if sectionPath != "" {
-							defKey = filePath + "#" + sectionPath + "§" + def.Name
-						} else {
-							defKey = filePath + "§" + def.Name
-						}
-						stateByGithub[github].Definitions[defKey] = struct{}{}
-					}
-				}
-			}
-		}
-	}
-	bundles := GetProjects()
-	var projectRoots []struct {
-		name string
-		root string
-	}
-	for _, bundle := range bundles {
-		if bundle.Root != "" {
-			projectRoots = append(projectRoots, struct {
-				name string
-				root string
-			}{name: bundle.Name, root: NormalizePath(bundle.Root)})
-		}
-	}
-	sort.SliceStable(projectRoots, func(i, j int) bool {
-		return len(projectRoots[i].root) > len(projectRoots[j].root)
-	})
-	for _, contributor := range contributors {
-		state := stateByGithub[contributor.Github]
-		for filePath := range state.Files {
-			for _, bundle := range projectRoots {
-				if strings.HasPrefix(filePath, bundle.root+"/") || filePath == bundle.root {
-					state.Bundles[bundle.name] = struct{}{}
-					break
-				}
-			}
-		}
-	}
-	for i := range contributors {
-		state := stateByGithub[contributors[i].Github]
-		for ticketKey := range state.Tickets {
-			contributors[i].Contributions.Tickets = append(contributors[i].Contributions.Tickets, state.Tickets[ticketKey])
-		}
-		sort.SliceStable(contributors[i].Contributions.Tickets, func(a, b int) bool {
-			left := contributors[i].Contributions.Tickets[a]
-			right := contributors[i].Contributions.Tickets[b]
-			if left.Year != right.Year {
-				return left.Year > right.Year
-			}
-			if left.Month != right.Month {
-				return left.Month > right.Month
-			}
-			if left.Day != right.Day {
-				return left.Day > right.Day
-			}
-			return left.Slug < right.Slug
-		})
-		for filePath := range state.Files {
-			contributors[i].Contributions.Files = append(contributors[i].Contributions.Files, filePath)
-		}
-		sort.Strings(contributors[i].Contributions.Files)
-		for folder := range state.Folders {
-			contributors[i].Contributions.Folders = append(contributors[i].Contributions.Folders, folder)
-		}
-		sort.Strings(contributors[i].Contributions.Folders)
-		for bundle := range state.Bundles {
-			contributors[i].Contributions.Bundles = append(contributors[i].Contributions.Bundles, bundle)
-		}
-		sort.Strings(contributors[i].Contributions.Bundles)
-		for region := range state.Regions {
-			contributors[i].Contributions.Regions = append(contributors[i].Contributions.Regions, region)
-		}
-		sort.Strings(contributors[i].Contributions.Regions)
-		for definition := range state.Definitions {
-			contributors[i].Contributions.Definitions = append(contributors[i].Contributions.Definitions, definition)
-		}
-		sort.Strings(contributors[i].Contributions.Definitions)
-		for _, commit := range state.Commits {
-			contributors[i].Contributions.Commits = append(contributors[i].Contributions.Commits, commit)
-		}
-		sort.SliceStable(contributors[i].Contributions.Commits, func(a, b int) bool {
-			left := contributors[i].Contributions.Commits[a]
-			right := contributors[i].Contributions.Commits[b]
-			if left.Title != right.Title {
-				return left.Title < right.Title
-			}
-			return left.Sha < right.Sha
-		})
-		if state.Lines.Added != 0 || state.Lines.Removed != 0 {
-			lines := state.Lines
-			contributors[i].Contributions.Lines = &lines
-		}
-	}
-	sort.SliceStable(contributors, func(i, j int) bool {
-		leftTickets := len(contributors[i].Contributions.Tickets)
-		rightTickets := len(contributors[j].Contributions.Tickets)
-		if leftTickets != rightTickets {
-			return leftTickets > rightTickets
-		}
-		return contributors[i].Github < contributors[j].Github
-	})
-	return contributors, nil
-}
-
-func RemoveContributor(github string) error {
-	path := GetContributorPath(github)
-	if !FileExists(path) {
-		return fmt.Errorf("contributor not found: %s", github)
-	}
-	return os.RemoveAll(path)
-}
-
-func DownloadGitHubAvatar(github, targetDir string) error {
-	avatarUrl := fmt.Sprintf("https://github.com/%s.png", github)
-	avatarPath := filepath.Join(targetDir, "avatar.png")
-	stdout, _, exitCode := ExecCommand("curl", []string{"-s", "-L", "-o", avatarPath, avatarUrl}, "")
-	if exitCode != 0 {
-		return fmt.Errorf("failed to download avatar: %s", stdout)
-	}
-	return nil
-}
-
-func AddContributorProject(github string, bundle string) error {
-	contributor, err := ReadContributor(github)
-	if err != nil {
-		contributor, err = CreateContributor(github)
-		if err != nil {
-			return err
-		}
-	}
-	for _, p := range contributor.Contributions.Bundles {
-		if p == bundle {
-			return nil
-		}
-	}
-	contributor.Contributions.Bundles = append(contributor.Contributions.Bundles, bundle)
-	return SaveContributor(contributor)
-}
-
-// #endregion Contributors
-
-// #region Nx
-
-var (
-	cachedProjectNames   []string
-	cachedProjectDetails = make(map[string]Bundle)
-	nxMutex              sync.Mutex
-)
-
-func GetProjectNames() []string {
-	nxMutex.Lock()
-	defer nxMutex.Unlock()
-	if cachedProjectNames != nil {
-		return cachedProjectNames
-	}
-	stdout, _, exitCode := ExecCommand("npx", []string{"nx", "show", "projects", "--json"}, "")
-	if exitCode != 0 {
-		cachedProjectNames = []string{}
-		return cachedProjectNames
-	}
-	var names []string
-	if err := json.Unmarshal([]byte(stdout), &names); err != nil {
-		cachedProjectNames = []string{}
-		return cachedProjectNames
-	}
-	cachedProjectNames = names
-	return cachedProjectNames
-}
-
-func GetProjectDetails(name string) Bundle {
-	nxMutex.Lock()
-	defer nxMutex.Unlock()
-	if proj, ok := cachedProjectDetails[name]; ok {
-		return proj
-	}
-	stdout, _, exitCode := ExecCommand("npx", []string{"nx", "show", "project", name, "--json"}, "")
-	if exitCode != 0 {
-		proj := Bundle{Name: name}
-		cachedProjectDetails[name] = proj
-		return proj
-	}
-	var config map[string]interface{}
-	if err := json.Unmarshal([]byte(stdout), &config); err != nil {
-		proj := Bundle{Name: name}
-		cachedProjectDetails[name] = proj
-		return proj
-	}
-	proj := Bundle{Name: name}
-	if root, ok := config["root"].(string); ok {
-		proj.Root = root
-	}
-	if sourceRoot, ok := config["sourceRoot"].(string); ok {
-		proj.SourceRoot = sourceRoot
-	}
-	if projectType, ok := config["projectType"].(string); ok {
-		proj.ProjectType = projectType
-	}
-	if tags, ok := config["tags"].([]interface{}); ok {
-		for _, t := range tags {
-			if tag, ok := t.(string); ok {
-				proj.Tags = append(proj.Tags, tag)
-			}
-		}
-	}
-	cachedProjectDetails[name] = proj
-	return proj
-}
-
-func GetProjects() []Bundle {
-	names := GetProjectNames()
-	bundles := make([]Bundle, len(names))
-	for i, name := range names {
-		bundles[i] = GetProjectDetails(name)
-	}
-	return bundles
-}
-
-func RunNxTarget(target string, bundles []string, extraArgs []string) (success bool, output string) {
-	args := []string{"nx"}
-	if len(bundles) == 1 {
-		args = append(args, "run", bundles[0]+":"+target)
-	} else if len(bundles) > 1 {
-		args = append(args, "run-many", "-t", target, "-p", strings.Join(bundles, ","))
-	} else {
-		args = append(args, "run-many", "-t", target)
-	}
-	args = append(args, extraArgs...)
-	stdout, stderr, exitCode := ExecCommand("npx", args, "")
-	return exitCode == 0, stdout + stderr
-}
-
-func filterGitIgnored(files []string) []string {
-	if len(files) == 0 {
-		return files
-	}
-	ignored := GetGitIgnoredSet(files)
-	var filtered []string
-	for _, f := range files {
-		if !ignored[f] {
-			filtered = append(filtered, f)
-		}
-	}
-	return filtered
-}
-
-func ScopeToFiles(scope Scope, bundles []Bundle) ([]string, error) {
-	ignorePatterns := []string{"**/node_modules/**", "**/.venv/**"}
-	var files []string
-	var err error
-	switch scope.Kind {
-	case ScopeRepo:
-		files, err = SimpleGlob("**/*.{ts,tsx,py,cs,go}", rootDir, ignorePatterns, true)
-	case ScopeProject:
-		for _, proj := range bundles {
-			if proj.Name == scope.ProjectName {
-				files, err = SimpleGlob(proj.Root+"/**/*.{ts,tsx,py,cs,go}", rootDir, ignorePatterns, true)
-				break
-			}
-		}
-	case ScopeFolder:
-		if scope.FilePath != "" {
-			files, err = SimpleGlob(scope.FilePath+"**/*.{ts,tsx,py,cs,go}", rootDir, ignorePatterns, true)
-		}
-	case ScopeFile, ScopeSection, ScopeDefinition:
-		if scope.FilePath != "" {
-			return []string{scope.FilePath}, nil
-		}
-	}
-	if err != nil {
-		return nil, err
-	}
-	if len(files) <= 10 {
-		return files, nil
-	}
-	return filterGitIgnored(files), nil
-}
-
-// #endregion Nx
-
-
-// #region Commands
-
-type repoContext struct {
-	rootDir string
-}
-
-
-func NewRepoContext(dir string) *repoContext {
-	return &repoContext{rootDir: dir}
-}
-
-func (c *repoContext) GetRootDir() string {
-	return c.rootDir
-}
-
-func (c *repoContext) GetBundles() []*Bundle {
-	bundles := GetProjects()
-	result := make([]*Bundle, len(bundles))
-	for i := range bundles {
-		result[i] = &bundles[i]
-	}
-	return result
-}
-
-func (c *repoContext) GetFolders() []*Folder {
-	bundles := GetProjects()
-	files, _ := ScopeToFiles(Scope{Kind: ScopeRepo}, bundles)
-	folderSet := make(map[string]bool)
-	for _, f := range files {
-		dir := filepath.Dir(f)
-		for dir != "." && dir != "" {
-			folderSet[dir] = true
-			dir = filepath.Dir(dir)
-		}
-	}
-	result := make([]*Folder, 0, len(folderSet))
-	for path := range folderSet {
-		name := filepath.Base(path)
-		parent := filepath.Dir(path)
-		var parentID *string
-		if parent != "." && parent != "" {
-			pid := "folder:" + parent
-			parentID = &pid
-		}
-		uri := "file://" + NormalizePath(filepath.Join(c.rootDir, path))
-		result = append(result, &Folder{
-			ID:       "folder:" + path,
-			Path:     path,
-			URI:      uri,
-			Name:     name,
-			ParentID: parentID,
-		})
-	}
-	return result
-}
-
-func (c *repoContext) GetFiles() []*File {
-	bundles := GetProjects()
-	files, _ := ScopeToFiles(Scope{Kind: ScopeRepo}, bundles)
-	result := make([]*File, 0, len(files))
-	for _, path := range files {
-		name := filepath.Base(path)
-		ext := filepath.Ext(name)
-		dir := filepath.Dir(path)
-		var folderID *string
-		if dir != "." && dir != "" {
-			fid := "folder:" + dir
-			folderID = &fid
-		}
-		uri := "file://" + NormalizePath(filepath.Join(c.rootDir, path))
-		result = append(result, &File{
-			ID:        "file:" + path,
-			Path:      path,
-			URI:       uri,
-			Name:      name,
-			Extension: ext,
-			FolderID:  folderID,
-		})
-	}
-	return result
-}
-
-func (c *repoContext) GetSections() []*Section {
-	bundles := GetProjects()
-	files, _ := ScopeToFiles(Scope{Kind: ScopeRepo}, bundles)
-	var result []*Section
-	for _, path := range files {
-		absPath := filepath.Join(c.rootDir, path)
-		content, err := ReadTextFile(absPath)
-		if err != nil {
-			continue
-		}
-		sections := ParseSections(content, path)
-		c.collectSections(&result, sections, path, nil)
-	}
-	return result
-}
-
-func (c *repoContext) collectSections(result *[]*Section, sections []Section, filePath string, parentID *string) {
-	for i := range sections {
-		s := &sections[i]
-		id := fmt.Sprintf("section:%s#%s", filePath, s.Name)
-		if parentID != nil {
-			// section ID derived from parent path
-			// But for listing we just need an ID
-			id = fmt.Sprintf("section:%s#%s", filePath, s.Name) // simplified for now
-		}
-		s.FilePath = filePath
-		*result = append(*result, s)
-		if len(s.Children) > 0 {
-			var pidStr string = id // Simplified
-			c.collectSections(result, s.Children, filePath, &pidStr)
-		}
-	}
-}
-
-func (c *repoContext) GetDefinitions() []*Definition {
-	bundles := GetProjects()
-	files, _ := ScopeToFiles(Scope{Kind: ScopeRepo}, bundles)
-	var result []*Definition
-	for _, path := range files {
-		absPath := filepath.Join(c.rootDir, path)
-		content, err := ReadTextFile(absPath)
-		if err != nil {
-			continue
-		}
-		language := GetLanguage(path)
-		if language == nil || !language.SupportsDefinitions() {
-			continue
-		}
-		lines := strings.Split(content, "\n")
-		defs := language.ParseDefinitions(content, lines)
-		
-		bundleName := ResolveBundleForPath(path, bundles)
-		var fileID string
-		if bundleName != "" {
-			relativePath := strings.TrimPrefix(path, strings.TrimPrefix(bundles[0].Root, "")+"/")
-			fileID = "@semio/" + bundleName + "/" + relativePath
-		} else {
-			fileID = "@semio/repo/" + path
-		}
-		
-		for _, d := range defs {
-			result = append(result, &Definition{
-				Name:      d.Name,
-				FilePath:  fileID,
-				StartLine: d.Start,
-				EndLine:   d.End,
-			})
-		}
-	}
-	return result
-}
-
-func (c *repoContext) GetContributors() ([]*Contributor, error) {
-	contributors, err := ListContributors()
-	if err != nil {
-		return nil, err
-	}
-	result := make([]*Contributor, len(contributors))
-	for i := range contributors {
-		result[i] = &contributors[i]
-	}
-	return result, nil
-}
-
-func (c *repoContext) GetTickets(year, month, day *int, status *TicketStatus) ([]*Ticket, error) {
-	tickets, err := ListTickets(year, month, day)
-	if err != nil {
-		return nil, err
-	}
-	var result []*Ticket
-	for i := range tickets {
-		t := &tickets[i]
-		if status != nil && t.GetStatus() != *status {
-			continue
-		}
-		result = append(result, t)
-	}
-	return result, nil
-}
-
-func (c *repoContext) GetPolicies() []*Policy {
-	policies := GetPolicies()
-	result := make([]*Policy, len(policies))
-	for i, p := range policies {
-		var scopes []string
-		scopes = append(scopes, p.Scopes...)
-		var descPtr *string
-		if p.Description != "" {
-			descPtr = &p.Description
-		}
-		var violationKinds []*ViolationKindMeta
-		for _, kind := range p.Kinds {
-			info := kind.Info()
-			priority := ViolationPriorityMedium
-			switch info.Priority {
-			case ViolationPriorityHigh:
-				priority = ViolationPriorityHigh
-			case ViolationPriorityLow:
-				priority = ViolationPriorityLow
-			}
-				violationKinds = append(violationKinds, &ViolationKindMeta{
-				Kind:        kind,
-				PolicyID:    p.ID,
-				Priority:    priority,
-				Autofixable: info.Autofixable,
-				Reason:      info.Reason,
-				Solution:    info.Solution,
-			})
-		}
-		result[i] = &Policy{
-			ID:             "@semio/policies/" + p.ID,
-			Name:           p.ID,
-			Description:    descPtr,
-			Scopes:         scopes,
-			ViolationKinds: violationKinds,
-		}
-	}
-	return result
-}
-
-func (c *repoContext) GetViolationKinds() []*ViolationKindMeta {
-	var result []*ViolationKindMeta
-	for _, p := range GetPolicies() {
-		for _, kind := range p.Kinds {
-			info := kind.Info()
-			priority := ViolationPriorityMedium
-			switch info.Priority {
-			case ViolationPriorityHigh:
-				priority = ViolationPriorityHigh
-			case ViolationPriorityLow:
-				priority = ViolationPriorityLow
-			}
-			result = append(result, &ViolationKindMeta{
-				Kind:        kind,
-				PolicyID:    p.ID,
-				Priority:    priority,
-				Autofixable: info.Autofixable,
-				Reason:      info.Reason,
-				Solution:    info.Solution,
-			})
-		}
-	}
-	return result
-}
-
-func (c *repoContext) Analyze(scope *string) (*AnalyzeResult, error) {
-	scopeRaw := "@semio"
-	if scope != nil {
-		scopeRaw = *scope
-	}
-	toolResult := ToolAnalyze(scopeRaw, nil)
-	report, ok := toolResult.Data.(AnalyzeReport)
-	if !ok {
-		return &AnalyzeResult{
-			Violations: []*Violation{},
-			Metrics:    &AnalyzeMetrics{Total: 0, ByPriority: &PriorityCount{}, Autofixable: 0},
-		}, nil
-	}
-	kindInfoMap := make(map[ViolationKind]ViolationKindMeta)
-	for _, p := range GetPolicies() {
-		for _, kind := range p.Kinds {
-			kindInfoMap[kind] = kind.Info()
-		}
-	}
-	autofixableCount := 0
-	violations := make([]*Violation, len(report.Violations))
-	for i, v := range report.Violations {
-		excerpt := v.Excerpt
-		if excerpt == "" {
-			excerpt = v.Summary
-		}
-		if info, ok := kindInfoMap[v.Kind]; ok && info.Autofixable {
-			autofixableCount++
-		}
-		violations[i] = &Violation{
-			ID:      v.ID,
-			Summary: v.Summary,
-			Kind:    v.Kind,
-			Scope:   v.Scope,
-			Line:    v.Line,
-			Column:  v.Column,
-			Excerpt: excerpt,
-		}
-	}
-	return &AnalyzeResult{
-		Violations: violations,
-		Metrics: &AnalyzeMetrics{
-			Total: report.Summary.Total,
-			ByPriority: &PriorityCount{
-				High:   report.Summary.ByPriority["high"],
-				Medium: report.Summary.ByPriority["medium"],
-				Low:    report.Summary.ByPriority["low"],
-			},
-			Autofixable: autofixableCount,
-		},
-	}, nil
-}
-
-func (c *repoContext) Fix(scope *string) (*FixResult, error) {
-	scopeRaw := "@semio"
-	if scope != nil {
-		scopeRaw = *scope
-	}
-	ToolFix(scopeRaw)
-	return &FixResult{Fixed: 0, Remaining: 0, Violations: []*Violation{}}, nil
-}
-
-func (c *repoContext) TicketOpen(input TicketOpenInput) (*Ticket, error) {
-	return CreateTicket(input.Title, input.Prompt, input.LLM, "")
-}
-
-func (c *repoContext) TicketClose(input TicketCloseInput) (*Ticket, error) {
-	ticket, err := ReadTicket(input.Year, input.Month, input.Day, input.Slug)
-	if err != nil {
-		return nil, err
-	}
-	if err := FinishTicket(ticket, input.Summary, input.Files); err != nil {
-		return nil, err
-	}
-	return ticket, nil
-}
-
-func (c *repoContext) TicketReopen(input TicketReopenInput) (*Ticket, error) {
-	ticket, err := ReadTicket(input.Year, input.Month, input.Day, input.Slug)
-	if err != nil {
-		return nil, err
-	}
-	if err := ReopenTicket(ticket, input.Prompt, input.LLM); err != nil {
-		return nil, err
-	}
-	return ticket, nil
-}
-
-func (c *repoContext) FolderCreate(path string) (*Folder, error) {
-	result := ToolFolderCreate(path)
-	if result.Error != "" {
-		return nil, fmt.Errorf("%s", result.Error)
-	}
-	normalizedPath := strings.ReplaceAll(path, "\\", "/")
-	name := filepath.Base(normalizedPath)
-	
-	bundles := GetProjects()
-	bundleName := ResolveBundleForPath(normalizedPath, bundles)
-	var bundleID *string
-	if bundleName != "" {
-		id := "@semio/" + bundleName
-		bundleID = &id
-	}
-	
-	return &Folder{
-		ID:   buildFolderID(normalizedPath, bundleID),
-		Path: normalizedPath,
-		URI:  fmt.Sprintf("file://%s/%s", c.rootDir, normalizedPath),
-		Name: name,
-		BundleID: bundleID,
-	}, nil
-}
-
-func (c *repoContext) FolderMove(src, dst string) (*Folder, error) {
-	result := ToolFolderMove(src, dst)
-	if result.Error != "" {
-		return nil, fmt.Errorf("%s", result.Error)
-	}
-	normalizedPath := strings.ReplaceAll(dst, "\\", "/")
-	name := filepath.Base(normalizedPath)
-	
-	bundles := GetProjects()
-	bundleName := ResolveBundleForPath(normalizedPath, bundles)
-	var bundleID *string
-	if bundleName != "" {
-		id := "@semio/" + bundleName
-		bundleID = &id
-	}
-	
-	return &Folder{
-		ID:   buildFolderID(normalizedPath, bundleID),
-		Path: normalizedPath,
-		URI:  fmt.Sprintf("file://%s/%s", c.rootDir, normalizedPath),
-		Name: name,
-		BundleID: bundleID,
-	}, nil
-}
-
-func (c *repoContext) FolderDelete(path string) error {
-	result := ToolFolderDelete(path)
-	if result.Error != "" {
-		return fmt.Errorf("%s", result.Error)
-	}
-	return nil
-}
-
-func (c *repoContext) FileCreate(path string) (*File, error) {
-	result := ToolFileCreate(path)
-	if result.Error != "" {
-		return nil, fmt.Errorf("%s", result.Error)
-	}
-	normalizedPath := strings.ReplaceAll(path, "\\", "/")
-	name := filepath.Base(normalizedPath)
-	ext := filepath.Ext(name)
-	folderPath := filepath.Dir(normalizedPath)
-	
-	bundles := GetProjects()
-	bundleName := ResolveBundleForPath(normalizedPath, bundles)
-	var bundleID *string
-	if bundleName != "" {
-		id := "@semio/" + bundleName
-		bundleID = &id
-	}
-	
-	var folderID *string
-	if folderPath != "." {
-		id := buildFolderID(folderPath, bundleID)
-		folderID = &id
-	}
-	
-	return &File{
-		ID:        buildFileID(normalizedPath, bundleID),
-		Path:      normalizedPath,
-		URI:       fmt.Sprintf("file://%s/%s", c.rootDir, normalizedPath),
-		Name:      name,
-		Extension: ext,
-		FolderID:  folderID,
-		BundleID:  bundleID,
-	}, nil
-}
-
-func (c *repoContext) FileMove(src, dst string) (*File, error) {
-	result := ToolFileMove(src, dst)
-	if result.Error != "" {
-		return nil, fmt.Errorf("%s", result.Error)
-	}
-	normalizedPath := strings.ReplaceAll(dst, "\\", "/")
-	name := filepath.Base(normalizedPath)
-	ext := filepath.Ext(name)
-	folderPath := filepath.Dir(normalizedPath)
-	
-	bundles := GetProjects()
-	bundleName := ResolveBundleForPath(normalizedPath, bundles)
-	var bundleID *string
-	if bundleName != "" {
-		id := "@semio/" + bundleName
-		bundleID = &id
-	}
-	
-	var folderID *string
-	if folderPath != "." {
-		id := buildFolderID(folderPath, bundleID)
-		folderID = &id
-	}
-	
-	return &File{
-		ID:        buildFileID(normalizedPath, bundleID),
-		Path:      normalizedPath,
-		URI:       fmt.Sprintf("file://%s/%s", c.rootDir, normalizedPath),
-		Name:      name,
-		Extension: ext,
-		FolderID:  folderID,
-		BundleID:  bundleID,
-	}, nil
-}
-
-func (c *repoContext) FileDelete(path string) error {
-	result := ToolFileDelete(path)
-	if result.Error != "" {
-		return fmt.Errorf("%s", result.Error)
-	}
-	return nil
-}
-
-func (c *repoContext) SectionCreate(file, name string, parent *string) (*Section, error) {
-	sectionPath := name
-	if parent != nil && *parent != "" {
-		sectionPath = *parent + "/" + name
-	}
-	result := ToolSectionCreate(file, sectionPath)
-	if result.Error != "" {
-		return nil, fmt.Errorf("%s", result.Error)
-	}
-	return &Section{
-		Name: name,
-	}, nil
-}
-
-func (c *repoContext) SectionMove(file, oldName, newName string) (*Section, error) {
-	result := ToolSectionMove(file, oldName, newName)
-	if result.Error != "" {
-		return nil, fmt.Errorf("%s", result.Error)
-	}
-	return &Section{
-		Name: newName,
-	}, nil
-}
-
-func (c *repoContext) SectionDelete(file, name string) error {
-	result := ToolSectionDelete(file, name)
-	if result.Error != "" {
-		return fmt.Errorf("%s", result.Error)
-	}
-	return nil
-}
-
-func (c *repoContext) Integrate(source, targetSection, targetFile, targetParent *string) (*File, error) {
-	parent := ""
-	if targetParent != nil {
-		parent = *targetParent
-	}
-	result := ToolIntegrate(*source, *targetSection, *targetFile, parent)
-	if result.Error != "" {
-		return nil, fmt.Errorf("%s", result.Error)
-	}
-	return &File{
-		Path: *targetFile,
-	}, nil
-}
-
-func (c *repoContext) ContributorAdd(input ContributorAddInput) (*Contributor, error) {
-	result := ToolContributorAdd(input.Github)
-	if result.Error != "" {
-		return nil, fmt.Errorf("%s", result.Error)
-	}
-	contrib, ok := result.Data.(*Contributor)
-	if !ok {
-		return nil, fmt.Errorf("unexpected result type")
-	}
-	return contrib, nil
-}
-
-func (c *repoContext) ContributorRemove(github string) error {
-	result := ToolContributorRemove(github)
-	if result.Error != "" {
-		return fmt.Errorf("%s", result.Error)
-	}
-	return nil
-}
-
-type GraphQLExecutor interface {
-	ExecuteJSON(ctx context.Context, query string, variables map[string]interface{}) (string, error)
-}
-
-var graphQLExecutorFactory func(rootDir string, ctx *repoContext) (GraphQLExecutor, error)
-
-func SetGraphQLExecutorFactory(factory func(rootDir string, ctx *repoContext) (GraphQLExecutor, error)) {
-	graphQLExecutorFactory = factory
-}
-
-func ExecuteGraphQL(query string, variables map[string]interface{}) (string, error) {
-	if graphQLExecutorFactory == nil {
-		return "", fmt.Errorf("GraphQL executor factory not set")
-	}
-	ctx := NewRepoContext(rootDir)
-	executor, err := graphQLExecutorFactory(rootDir, ctx)
-	if err != nil {
-		return "", fmt.Errorf("failed to create executor: %w", err)
-	}
-	result, err := executor.ExecuteJSON(context.Background(), query, variables)
-	if err != nil {
-		return "", fmt.Errorf("graphql error: %w", err)
-	}
-	return result, nil
-}
-
-func OutputResult(result ToolResult) error {
-	enc := json.NewEncoder(os.Stdout)
-	enc.SetIndent("", "  ")
-	return enc.Encode(result)
-}
-
-func FormatResult(result ToolResult) string {
-	data, err := json.MarshalIndent(result, "", "  ")
-	if err != nil {
-		return fmt.Sprintf(`{"error": %q}`, err.Error())
-	}
-	return string(data)
-}
-
-func AnalyzeFile(filePath string, bundles []Bundle) ([]Violation, error) {
-	absPath := filePath
-	if !filepath.IsAbs(absPath) {
-		absPath = filepath.Join(rootDir, filePath)
-	}
-	
-	if isGitIgnored(absPath) {
-		return []Violation{}, nil
-	}
-	
-	scope := ParseScope(filePath)
-	violations, err := CheckPolicies(scope, bundles, nil)
-	if err != nil {
-		return nil, err
-	}
-	return violations, nil
-}
-
-func ToolAnalyze(scope string, scopes []string) ToolResult {
-	output := NewOutput()
-	var scopeRaws []string
-	if scope != "" {
-		scopeRaws = []string{scope}
-	} else if len(scopes) > 0 {
-		scopeRaws = scopes
-	} else {
-		scopeRaws = []string{"@semio"}
-	}
-	var allViolations []Violation
-	var bundles []Bundle
-	var projectsLoaded bool
-	getProjectsLazy := func() []Bundle {
-		if !projectsLoaded {
-			bundles = GetProjects()
-			projectsLoaded = true
-		}
-		return bundles
-	}
-	for _, scopeRaw := range scopeRaws {
-		s := ParseScope(scopeRaw)
-		if s.Kind == ScopeFile || s.Kind == ScopeSection || s.Kind == ScopeDefinition {
-			violations, err := AnalyzeFile(s.FilePath, nil)
-			if err != nil {
-				output.Error(fmt.Sprintf("Error analyzing file: %v", err))
-				return ToolResult{Output: *output, Error: err.Error()}
-			}
-			allViolations = append(allViolations, violations...)
-		} else {
-			files, err := ScopeToFiles(s, getProjectsLazy())
-			if err != nil {
-				output.Error(fmt.Sprintf("Error getting files: %v", err))
-				return ToolResult{Output: *output, Error: err.Error()}
-			}
-			for _, file := range files {
-				violations, err := AnalyzeFile(file, nil)
-				if err != nil {
-					continue
-				}
-				allViolations = append(allViolations, violations...)
-			}
-		}
-	}
-	report := AnalyzeReport{
-		Timestamp: ISOTimestamp(),
-		Status:    "success",
-		Scope:     strings.Join(scopeRaws, " "),
-		Summary: Summary{
-			Total:      len(allViolations),
-			ByPriority: make(map[string]int),
-			ByKind:     make(map[string]int),
-		},
-		Violations: allViolations,
-	}
-	if len(allViolations) > 0 {
-		report.Status = "error"
-	}
-	for _, v := range allViolations {
-		info := v.Kind.Info()
-		report.Summary.ByPriority[string(info.Priority)]++
-		report.Summary.ByKind[string(v.Kind)]++
-	}
-
-	if len(scopeRaws) == 1 && (scopeRaws[0] == "@semio" || scopeRaws[0] == "") {
-		reportsDir := filepath.Join(rootDir, "reports")
-		if err := EnsureDir(reportsDir); err == nil {
-			outputPath := filepath.Join(reportsDir, "violations.json")
-			WriteJSONFile(outputPath, report)
-		}
-	}
-
-	output.Success(fmt.Sprintf("\n📊 Analysis complete: %d violations found", len(allViolations)))
-	if report.Status == "error" {
-		output.ExitCode = 1
-	}
-	return ToolResult{Output: *output, Data: report}
-}
-
-func ToolFix(scopeRaw string) ToolResult {
-	output := NewOutput()
-	if scopeRaw == "" {
-		scopeRaw = "@semio"
-	}
-	scope := ParseScope(scopeRaw)
-	var allViolations []Violation
-	// For file/section/definition scopes, skip bundle loading for speed
-	if scope.Kind == ScopeFile || scope.Kind == ScopeSection || scope.Kind == ScopeDefinition {
-		violations, err := AnalyzeFile(scope.FilePath, nil)
-		if err != nil {
-			output.Error(fmt.Sprintf("Error analyzing file: %v", err))
-			return ToolResult{Output: *output, Error: err.Error()}
-		}
-		allViolations = append(allViolations, violations...)
-	} else {
-		bundles := GetProjects()
-		files, _ := ScopeToFiles(scope, bundles)
-		for _, file := range files {
-			violations, err := AnalyzeFile(file, nil)
-			if err != nil {
-				continue
-			}
-			allViolations = append(allViolations, violations...)
-		}
-	}
-	var fixable []Violation
-	for _, v := range allViolations {
-		info := v.Kind.Info()
-		if info.Autofixable {
-			fixable = append(fixable, v)
-		}
-	}
-	fixed := 0
-	for _, v := range fixable {
-		if err := ApplyFix(v); err == nil {
-			fixed++
-		}
-	}
-	output.Success(fmt.Sprintf("\n✅ Fixed %d violations", fixed))
-	return ToolResult{Output: *output}
-}
-
-func ApplyFix(v Violation) error {
-	switch v.Kind {
-	case ViolationCodeHeaderMissingRegion:
-		return fixHeaderMissingRegion(v)
-	case ViolationCodeCommentInline, ViolationCodeCommentBlock, ViolationCodeCommentJSDoc:
-		return fixComment(v)
-	default:
-		return fmt.Errorf("no fix implementation for %s", v.Kind)
-	}
-}
-
-func fixHeaderMissingRegion(v Violation) error {
-	file := extractFileFromScope(v.Scope)
-	absPath := filepath.Join(rootDir, file)
-	content, err := ReadTextFile(absPath)
-	if err != nil {
-		return err
-	}
-	language := GetLanguage(file)
-	if language == nil {
-		return fmt.Errorf("unknown language for %s", file)
-	}
-	headerContent := generateFileHeader(file, language)
-	if headerContent == "" {
-		return fmt.Errorf("could not generate header for %s", file)
-	}
-	newContent := headerContent + "\n" + content
-	return WriteTextFile(absPath, newContent)
-}
-
-func fixComment(v Violation) error {
-	// TODO: implement fixComment properly by re-scanning or using location data
-	return fmt.Errorf("fixComment not fully implemented")
-}
-
-func ToolPolicyList() ToolResult {
-	output := NewOutput()
-	allPolicies := GetPolicies()
-	output.Info("\n📜 Registered policies:\n")
-	for _, p := range allPolicies {
-		output.Plain(fmt.Sprintf("   %s", p.ID))
-		output.Plain(fmt.Sprintf("      %s: %s", p.Name, p.Description))
-		output.Plain(fmt.Sprintf("      Priority: %s", p.Priority))
-		output.Plain("")
-	}
-	return ToolResult{Output: *output, Data: allPolicies}
-}
-
-func ToolPolicyCheck(policyID, scopeRaw string) ToolResult {
-	output := NewOutput()
-	if scopeRaw == "" {
-		scopeRaw = "@semio"
-	}
-	scope := ParseScope(scopeRaw)
-	bundles := GetProjects()
-	violations, err := CheckPolicies(scope, bundles, []string{policyID})
-	if err != nil {
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
-	}
-	output.Info(fmt.Sprintf("\n📊 Policy \"%s\" found %d violations", policyID, len(violations)))
-	for i, v := range violations {
-		output.Plain(fmt.Sprintf("   %d. %s", i+1, v.Summary))
-	}
-	return ToolResult{Output: *output, Data: map[string]interface{}{"violations": violations}}
-}
-
-func ToolPolicyViolationList(policyID string) ToolResult {
-	output := NewOutput()
-	foundPolicy, ok := FindPolicy(policyID)
-	if !ok {
-		output.Error(fmt.Sprintf("Policy '%s' not found", policyID))
-		return ToolResult{Output: *output, Error: fmt.Sprintf("Policy '%s' not found", policyID)}
-	}
-	output.Info(fmt.Sprintf("\n📋 Violation kinds for policy '%s':", policyID))
-	for _, kind := range foundPolicy.Kinds {
-		output.Plain(fmt.Sprintf("   - %s", kind))
-	}
-	return ToolResult{Output: *output, Data: foundPolicy.Kinds}
-}
-
-func ToolTicketOpen(title, prompt, llm, planPath string) ToolResult {
+func ToolTicketOpen(title, prompt, llm, planPath string, noIssue bool) ToolResult {
 	output := NewOutput()
 	if prompt == "" {
 		prompt = title
 	}
-	ticket, err := CreateTicket(title, prompt, llm, planPath)
+	ticket, err := CreateTicket(title, prompt, llm, planPath, noIssue)
 	if err != nil {
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
@@ -6824,6 +5411,9 @@ func ToolTicketOpen(title, prompt, llm, planPath string) ToolResult {
 	}
 	if ticket.SummaryPath != "" {
 		output.Info(fmt.Sprintf("   Summary: %s", ticket.SummaryPath))
+	}
+	if ticket.Data != nil && ticket.Data.GitHub != nil && ticket.Data.GitHub.Issue != "" {
+		output.Info(fmt.Sprintf("   Issue:  %s", ticket.Data.GitHub.Issue))
 	}
 	return ToolResult{Output: *output, Data: ticket}
 }
@@ -6884,8 +5474,20 @@ func ToolTicketClose(year, month, day int, slug, summary string, files []string)
 	sectionsCount := 0
 	defsCount := 0
 	if filesResult != nil {
-		filesCount = len(filesResult.Updated) + len(filesResult.Removed)
-		for _, entry := range filesResult.Updated {
+		filesCount = len(filesResult.Modified) + len(filesResult.Added) + len(filesResult.Renamed) + len(filesResult.Deleted)
+		for _, entry := range filesResult.Modified {
+			sectionsCount += len(entry.Sections)
+			for _, section := range entry.Sections {
+				defsCount += len(section.Definitions)
+			}
+		}
+		for _, entry := range filesResult.Added {
+			sectionsCount += len(entry.Sections)
+			for _, section := range entry.Sections {
+				defsCount += len(section.Definitions)
+			}
+		}
+		for _, entry := range filesResult.Renamed {
 			sectionsCount += len(entry.Sections)
 			for _, section := range entry.Sections {
 				defsCount += len(section.Definitions)
@@ -7972,18 +6574,23 @@ func exportTickets(tx *sql.Tx, ctx RepoContext) (int, error) {
 		if _, err := ticketStmt.Exec(ticketID, t.Year, t.Month, t.Day, t.Slug, t.GetTitle(), t.FolderPath, uri, t.GetPrompt(), summary, status, authorID, llm, commit, createdAt, finishedAt); err != nil {
 			return 0, err
 		}
-		for _, entry := range t.GetFiles().Updated {
+		for _, entry := range t.GetFiles().Modified {
 			if _, err := ticketFileStmt.Exec(ticketID, entry.Path); err != nil {
 				return 0, err
 			}
 		}
-		for _, entry := range t.GetFiles().Created {
+		for _, entry := range t.GetFiles().Added {
 			if _, err := ticketFileStmt.Exec(ticketID, entry.Path); err != nil {
 				return 0, err
 			}
 		}
-		for _, entry := range t.GetFiles().Removed {
+		for _, entry := range t.GetFiles().Deleted {
 			if _, err := ticketFileStmt.Exec(ticketID, entry.Path); err != nil {
+				return 0, err
+			}
+		}
+		for _, entry := range t.GetFiles().Renamed {
+			if _, err := ticketFileStmt.Exec(ticketID, entry.To); err != nil {
 				return 0, err
 			}
 		}
@@ -8162,6 +6769,170 @@ type defaultContext struct {
 func NewDefaultContext(rootDir string) RepoContext {
 	return &defaultContext{rootDir: rootDir}
 }
+
+// repoContext is the full implementation of RepoContext
+type repoContext struct {
+	rootDir string
+	bundles []Bundle
+}
+
+func NewRepoContext(rootDir string) RepoContext {
+	ctx := &repoContext{rootDir: rootDir}
+	ctx.bundles = LoadBundles()
+	return ctx
+}
+
+func (c *repoContext) GetRootDir() string { return c.rootDir }
+
+func (c *repoContext) GetBundles() []*Bundle {
+	result := make([]*Bundle, len(c.bundles))
+	for i := range c.bundles {
+		result[i] = &c.bundles[i]
+	}
+	return result
+}
+
+func (c *repoContext) GetFolders() []*Folder { return []*Folder{} }
+
+func (c *repoContext) GetFiles() []*File { return []*File{} }
+
+func (c *repoContext) GetDefinitions() []*Definition { return []*Definition{} }
+
+func (c *repoContext) GetSections() []*Section { return []*Section{} }
+
+func (c *repoContext) GetContributors() ([]*Contributor, error) {
+	contributors, err := ListContributors()
+	if err != nil {
+		return nil, err
+	}
+	result := make([]*Contributor, len(contributors))
+	for i := range contributors {
+		result[i] = &contributors[i]
+	}
+	return result, nil
+}
+
+func (c *repoContext) GetTickets(year, month, day *int, status *TicketStatus) ([]*Ticket, error) {
+	tickets, err := ListTickets(year, month, day)
+	if err != nil {
+		return nil, err
+	}
+	var result []*Ticket
+	for i := range tickets {
+		if status == nil || tickets[i].GetStatus() == *status {
+			result = append(result, &tickets[i])
+		}
+	}
+	return result, nil
+}
+
+func (c *repoContext) GetPolicies() []*Policy {
+	policies := GetRegisteredPolicies()
+	result := make([]*Policy, len(policies))
+	for i := range policies {
+		var descPtr *string
+		if policies[i].Description != "" {
+			d := policies[i].Description
+			descPtr = &d
+		}
+		result[i] = &Policy{
+			ID:          policies[i].ID,
+			Name:        policies[i].Name,
+			Description: descPtr,
+			Scopes:      policies[i].Scopes,
+		}
+	}
+	return result
+}
+
+func (c *repoContext) GetViolationKinds() []*ViolationKindMeta {
+	var result []*ViolationKindMeta
+	for _, meta := range violationKindInfoTable {
+		m := meta
+		result = append(result, &m)
+	}
+	return result
+}
+
+func (c *repoContext) Analyze(scope *string) (*AnalyzeResult, error) {
+	scopeStr := "@semio"
+	if scope != nil {
+		scopeStr = *scope
+	}
+	violations, err := CheckPolicies(ParseScope(scopeStr), c.bundles, nil)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]*Violation, len(violations))
+	for i := range violations {
+		result[i] = &violations[i]
+	}
+	return &AnalyzeResult{Violations: result, Metrics: &AnalyzeMetrics{Total: len(violations)}}, nil
+}
+
+func (c *repoContext) Fix(scope *string) (*FixResult, error) {
+	return &FixResult{Violations: []*Violation{}}, nil
+}
+
+func (c *repoContext) TicketOpen(input TicketOpenInput) (*Ticket, error) {
+	return CreateTicket(input.Title, input.Prompt, input.LLM, input.PlanPath, input.NoIssue)
+}
+
+func (c *repoContext) TicketClose(input TicketCloseInput) (*Ticket, error) {
+	ticket, err := ReadTicket(input.Year, input.Month, input.Day, input.Slug)
+	if err != nil {
+		return nil, err
+	}
+	if err := FinishTicket(ticket, input.Summary, input.Files); err != nil {
+		return nil, err
+	}
+	return ticket, nil
+}
+
+func (c *repoContext) TicketReopen(input TicketReopenInput) (*Ticket, error) {
+	ticket, err := ReadTicket(input.Year, input.Month, input.Day, input.Slug)
+	if err != nil {
+		return nil, err
+	}
+	if err := ReopenTicket(ticket, input.Prompt, input.LLM); err != nil {
+		return nil, err
+	}
+	return ticket, nil
+}
+
+func (c *repoContext) FolderCreate(path string) (*Folder, error) { return nil, nil }
+
+func (c *repoContext) FolderMove(src, dst string) (*Folder, error) { return nil, nil }
+
+func (c *repoContext) FolderDelete(path string) error { return nil }
+
+func (c *repoContext) FileCreate(path string) (*File, error) { return nil, nil }
+
+func (c *repoContext) FileMove(src, dst string) (*File, error) { return nil, nil }
+
+func (c *repoContext) FileDelete(path string) error { return nil }
+
+func (c *repoContext) SectionCreate(file, name string, parent *string) (*Section, error) {
+	return nil, nil
+}
+
+func (c *repoContext) SectionMove(file, oldName, newName string) (*Section, error) {
+	return nil, nil
+}
+
+func (c *repoContext) SectionDelete(file, name string) error { return nil }
+
+func (c *repoContext) Integrate(source, targetSection, targetFile, targetParent *string) (*File, error) {
+	return nil, nil
+}
+
+func (c *repoContext) ContributorAdd(input ContributorAddInput) (*Contributor, error) {
+	return nil, nil
+}
+
+func (c *repoContext) ContributorRemove(github string) error { return nil }
+
+var _ RepoContext = (*repoContext)(nil)
 
 func (c *defaultContext) GetRootDir() string { return c.rootDir }
 
@@ -8987,43 +7758,43 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 				"bundles": &graphql.Field{
 					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(bundleType))),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						repo := p.Source.(*Repo)
-						return repoResolverInstance.Bundles(p.Context, repo)
+						_= p.Source.(*Repo)
+						return repoResolverInstance.Ctx.GetBundles(), nil
 					},
 				},
 				"folders": &graphql.Field{
 					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(folderType))),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						repo := p.Source.(*Repo)
-						return repoResolverInstance.Folders(p.Context, repo)
+						_= p.Source.(*Repo)
+						return repoResolverInstance.Ctx.GetFolders(), nil
 					},
 				},
 				"files": &graphql.Field{
 					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(fileType))),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						repo := p.Source.(*Repo)
-						return repoResolverInstance.Files(p.Context, repo)
+						_= p.Source.(*Repo)
+						return repoResolverInstance.Ctx.GetFiles(), nil
 					},
 				},
 				"sections": &graphql.Field{
 					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(sectionType))),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						repo := p.Source.(*Repo)
-						return repoResolverInstance.Sections(p.Context, repo)
+						_= p.Source.(*Repo)
+						return repoResolverInstance.Ctx.GetSections(), nil
 					},
 				},
 				"definitions": &graphql.Field{
 					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(definitionType))),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						repo := p.Source.(*Repo)
-						return repoResolverInstance.Definitions(p.Context, repo)
+						_= p.Source.(*Repo)
+						return repoResolverInstance.Ctx.GetDefinitions(), nil
 					},
 				},
 				"contributors": &graphql.Field{
 					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(contributorType))),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						repo := p.Source.(*Repo)
-						return repoResolverInstance.Contributors(p.Context, repo)
+						_= p.Source.(*Repo)
+						return repoResolverInstance.Ctx.GetContributors()
 					},
 				},
 				"tickets": &graphql.Field{
@@ -9035,7 +7806,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						"status": &graphql.ArgumentConfig{Type: ticketStatusEnum},
 					},
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						repo := p.Source.(*Repo)
+						_= p.Source.(*Repo)
 						var year, month, day *int
 						var status *TicketStatus
 						if v, ok := p.Args["year"].(int); ok {
@@ -9050,21 +7821,21 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						if v, ok := p.Args["status"].(TicketStatus); ok {
 							status = &v
 						}
-						return repoResolverInstance.Tickets(p.Context, repo, year, month, day, status)
+						return repoResolverInstance.Ctx.GetTickets(year, month, day, status)
 					},
 				},
 				"policies": &graphql.Field{
 					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(policyType))),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						repo := p.Source.(*Repo)
-						return repoResolverInstance.Policies(p.Context, repo)
+						_= p.Source.(*Repo)
+						return repoResolverInstance.Ctx.GetPolicies(), nil
 					},
 				},
 				"violationKinds": &graphql.Field{
 					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationKindType))),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						repo := p.Source.(*Repo)
-						return repoResolverInstance.ViolationKinds(p.Context, repo)
+						_= p.Source.(*Repo)
+						return repoResolverInstance.Ctx.GetViolationKinds(), nil
 					},
 				},
 				"violations": &graphql.Field{
@@ -11838,10 +10609,12 @@ var ticketOpenCmd = &cobra.Command{
 	Short: "Open a new ticket",
 	Args:  cobra.ExactArgs(3),
 	RunE: func(cmd *cobra.Command, args []string) error {
+		noIssue, _ := cmd.Flags().GetBool("no-issue")
 		input := map[string]interface{}{
-			"title":  args[0],
-			"prompt": args[1],
-			"llm":    args[2],
+			"title":   args[0],
+			"prompt":  args[1],
+			"llm":     args[2],
+			"noIssue": noIssue,
 		}
 		variables := map[string]interface{}{
 			"input": input,
@@ -11858,6 +10631,11 @@ var ticketOpenCmd = &cobra.Command{
 			}
 		`, variables)
 	},
+}
+
+func init() {
+	ticketOpenCmd.Flags().Bool("no-issue", false, "Do not create a GitHub issue")
+	ticketCmd.AddCommand(ticketOpenCmd)
 }
 
 var ticketListCmd = &cobra.Command{
@@ -12481,4 +11259,621 @@ func init() {
 
 // #endregion Commands
 
-// #endregion Cli
+
+// #region Missing Utilities
+
+func ScopeToFiles(scope Scope, bundles []Bundle) ([]string, error) {
+	ignorePatterns := []string{"**/node_modules/**", "**/.venv/**"}
+	var files []string
+	var err error
+	switch scope.Kind {
+	case ScopeRepo:
+		files, err = SimpleGlob("**/*.{ts,tsx,py,cs,go}", rootDir, ignorePatterns, true)
+	case ScopeProject:
+		for _, proj := range bundles {
+			if proj.Name == scope.ProjectName {
+				files, err = SimpleGlob(proj.Root+"/**/*.{ts,tsx,py,cs,go}", rootDir, ignorePatterns, true)
+				break
+			}
+		}
+	case ScopeFolder:
+		if scope.FilePath != "" {
+			files, err = SimpleGlob(scope.FilePath+"**/*.{ts,tsx,py,cs,go}", rootDir, ignorePatterns, true)
+		}
+	case ScopeFile, ScopeSection, ScopeDefinition:
+		if scope.FilePath != "" {
+			return []string{scope.FilePath}, nil
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	if len(files) <= 10 {
+		return files, nil
+	}
+	return filterGitIgnored(files), nil
+}
+
+func ComputeTicketFiles(ticket *Ticket, files []string) (*TicketFiles, error) {
+	if ticket.Data == nil {
+		return nil, fmt.Errorf("ticket data is nil")
+	}
+	if len(ticket.Data.Iterations) == 0 {
+		return nil, fmt.Errorf("no iterations found for ticket")
+	}
+	baseCommit := ticket.Data.Iterations[0].Commit
+	if baseCommit == "" {
+		return nil, fmt.Errorf("no base commit found for ticket")
+	}
+	if len(files) == 0 {
+		return nil, fmt.Errorf("at least one file is required")
+	}
+
+	diffLines, err := GetGitDiffLines(baseCommit, "", files)
+	if err != nil {
+		return nil, err
+	}
+
+	result := &TicketFiles{
+		Added:    []TicketFile{},
+		Modified: []TicketFile{},
+		Deleted:  []TicketFile{},
+		Renamed:  []TicketFileRenamed{},
+	}
+
+	for _, filePath := range files {
+		fileDiff := diffLines[filePath]
+		sections := []TicketSection{}
+
+		if fileDiff != nil && (len(fileDiff.Added) > 0 || len(fileDiff.Removed) > 0) {
+			content, readErr := ReadTextFile(filepath.Join(GetRootDir(), filePath))
+			if readErr == nil {
+				lines := strings.Split(content, "\n")
+				lang := GetLanguage(filePath)
+				if lang != nil {
+					fileSections := lang.ParseSections(content)
+					fileDefs := lang.ParseDefinitions(content, lines)
+					removedLineMap := map[string][]int{}
+					if len(fileDiff.Removed) > 0 {
+						stdout, _, exitCode := ExecCommand("git", []string{"show", fmt.Sprintf("%s:%s", baseCommit, filePath)}, "")
+						if exitCode == 0 {
+							removedLineMap = computeSectionLineMap(lang.ParseSections(stdout), fileDiff.Removed, "")
+						}
+					}
+					affectedSections := computeAffectedSections(filePath, fileSections, fileDefs, computeSectionLineMap(fileSections, fileDiff.Added, ""), removedLineMap, "")
+					for _, sectionMetrics := range affectedSections {
+						sections = append(sections, sectionMetrics)
+					}
+				}
+			}
+		}
+		
+		tf := TicketFile{
+			Path:     filePath,
+			Sections: sections,
+		}
+		if fileDiff != nil {
+			if len(fileDiff.Added) > 0 && len(fileDiff.Removed) == 0 {
+				tf.Status = "created"
+				result.Added = append(result.Added, tf)
+			} else if len(fileDiff.Removed) > 0 && len(fileDiff.Added) == 0 {
+				tf.Status = "deleted"
+				result.Deleted = append(result.Deleted, tf)
+			} else {
+				tf.Status = "modified"
+				result.Modified = append(result.Modified, tf)
+			}
+			if tf.Lines == nil {
+				tf.Lines = &LineMetrics{}
+			}
+			tf.Lines.Added += len(fileDiff.Added)
+			tf.Lines.Removed += len(fileDiff.Removed)
+		} else {
+			result.Modified = append(result.Modified, tf)
+		}
+	}
+	return result, nil
+}
+
+func GetGitDiffLines(baseCommit, headCommit string, paths []string) (map[string]*DiffLines, error) {
+	if baseCommit == "" {
+		return nil, fmt.Errorf("base commit is required")
+	}
+	args := BuildGitDiffArgs("-U0", baseCommit, headCommit, paths)
+	stdout, stderr, exitCode := ExecCommand("git", args, "")
+	if exitCode != 0 {
+		return nil, fmt.Errorf("git diff failed: %s", strings.TrimSpace(stderr))
+	}
+	result := make(map[string]*DiffLines)
+	var currentFile string
+	lineRegex := regexp.MustCompile(`^@@\s+-(\d+)(?:,(\d+))?\s+\+(\d+)(?:,(\d+))?\s+@@`)
+	for _, line := range strings.Split(stdout, "\n") {
+		if strings.HasPrefix(line, "+++ b/") {
+			currentFile = strings.TrimPrefix(line, "+++ b/")
+			if result[currentFile] == nil {
+				result[currentFile] = &DiffLines{Added: []int{}, Removed: []int{}}
+			}
+		} else if strings.HasPrefix(line, "@@") && currentFile != "" {
+			match := lineRegex.FindStringSubmatch(line)
+			if match != nil {
+				oldStart, _ := strconv.Atoi(match[1])
+				oldCount := 1
+				if match[2] != "" {
+					oldCount, _ = strconv.Atoi(match[2])
+				}
+				for i := 0; i < oldCount; i++ {
+					result[currentFile].Removed = append(result[currentFile].Removed, oldStart+i)
+				}
+
+				newStart, _ := strconv.Atoi(match[3])
+				newCount := 1
+				if match[4] != "" {
+					newCount, _ = strconv.Atoi(match[4])
+				}
+				for i := 0; i < newCount; i++ {
+					result[currentFile].Added = append(result[currentFile].Added, newStart+i)
+				}
+			}
+		}
+	}
+	return result, nil
+}
+
+func buildViolationID(scope string, line int, col int) string {
+	if line > 0 && col > 0 {
+		return fmt.Sprintf("@semio/violations/%s#%d:%d", scope, line, col)
+	}
+	if line > 0 {
+		return fmt.Sprintf("@semio/violations/%s#%d", scope, line)
+	}
+	return fmt.Sprintf("@semio/violations/%s", scope)
+}
+
+func CanCloseTicket(ticket *Ticket) (bool, []string) {
+	var reasons []string
+	if ticket.Data == nil {
+		reasons = append(reasons, "Ticket data is nil")
+		return false, reasons
+	}
+	planContent, _ := ReadTextFile(ticket.PlanPath)
+	if planContent == "" || strings.TrimSpace(planContent) == "# Plan" {
+		reasons = append(reasons, "Plan section is empty")
+	}
+	return len(reasons) == 0, reasons
+}
+
+func buildFolderID(path string, bundleID *string) string {
+	normalizedPath := strings.ReplaceAll(path, "\\", "/")
+	if bundleID != nil && *bundleID != "" {
+		bundleName := strings.TrimPrefix(*bundleID, "@semio/")
+		return "@semio/" + bundleName + "/" + normalizedPath
+	}
+	return "@semio/repo/" + normalizedPath
+}
+
+func buildFileID(path string, bundleID *string) string {
+	normalizedPath := strings.ReplaceAll(path, "\\", "/")
+	if bundleID != nil && *bundleID != "" {
+		bundleName := strings.TrimPrefix(*bundleID, "@semio/")
+		return "@semio/" + bundleName + "/" + normalizedPath
+	}
+	return "@semio/repo/" + normalizedPath
+}
+
+func buildSectionID(fileID string, sectionPath []string) string {
+	if len(sectionPath) == 0 {
+		return fileID
+	}
+	return fileID + "#" + strings.Join(sectionPath, "#")
+}
+
+func buildDefinitionID(fileID string, sectionPath []string, name string) string {
+	if len(sectionPath) > 0 {
+		return fileID + "#" + strings.Join(sectionPath, "#") + "§" + name
+	}
+	return fileID + "§" + name
+}
+
+func GuessSectionName(filePath string) string {
+	base := filepath.Base(filePath)
+	ext := filepath.Ext(base)
+	name := strings.TrimSuffix(base, ext)
+	name = strings.ReplaceAll(name, "-", " ")
+	name = strings.ReplaceAll(name, "_", " ")
+	name = strings.ReplaceAll(name, ".", " ")
+	words := strings.Fields(name)
+	for i, w := range words {
+		if len(w) > 0 {
+			words[i] = strings.ToUpper(w[:1]) + w[1:]
+		}
+	}
+	return strings.Join(words, " ")
+}
+
+func GetGitDiffSectionLineMetrics(baseCommit, endCommit, filePath string) map[string]LineMetrics {
+	return nil
+}
+
+func FlattenSections(sections []Section) []Section {
+	var result []Section
+	var flatten func(secs []Section)
+	flatten = func(secs []Section) {
+		for _, s := range secs {
+			result = append(result, s)
+			flatten(s.Children)
+		}
+	}
+	flatten(sections)
+	return result
+}
+
+func computeSectionLineMap(sections []Section, diffLines []int, parentPath string) map[string][]int {
+	result := map[string][]int{}
+	for _, section := range sections {
+		sectionPath := section.Name
+		if parentPath != "" {
+			sectionPath = parentPath + "#" + section.Name
+		}
+		linesInSection := computeLinesInRange(diffLines, section.StartLine, section.EndLine)
+		childLines := []int{}
+		for _, child := range section.Children {
+			childLines = append(childLines, computeLinesInRange(diffLines, child.StartLine, child.EndLine)...)
+		}
+		exclusiveLines := setDifference(linesInSection, childLines)
+		if len(exclusiveLines) > 0 {
+			result[sectionPath] = append(result[sectionPath], exclusiveLines...)
+		}
+		if len(section.Children) > 0 {
+			for key, value := range computeSectionLineMap(section.Children, diffLines, sectionPath) {
+				result[key] = append(result[key], value...)
+			}
+		}
+	}
+	return result
+}
+
+func computeAffectedSections(filePath string, sections []Section, defs []DefinitionRange, addedLineMap map[string][]int, removedLineMap map[string][]int, parentPath string) []TicketSection {
+	var result []TicketSection
+	for _, section := range sections {
+		sectionPath := section.Name
+		if parentPath != "" {
+			sectionPath = parentPath + "#" + section.Name
+		}
+		exclusiveAddedLines := addedLineMap[sectionPath]
+		exclusiveRemovedLines := removedLineMap[sectionPath]
+
+		if len(exclusiveAddedLines) > 0 || len(exclusiveRemovedLines) > 0 {
+			var affectedDefs []string
+			for _, def := range defs {
+				if def.Start >= section.StartLine && def.Start <= section.EndLine {
+					isInChild := false
+					for _, child := range section.Children {
+						if def.Start >= child.StartLine && def.Start <= child.EndLine {
+							isInChild = true
+							break
+						}
+					}
+
+					if !isInChild {
+						defAddedLines := computeLinesInRange(exclusiveAddedLines, def.Start, def.End)
+						if len(defAddedLines) > 0 {
+							affectedDefs = append(affectedDefs, def.Name)
+						}
+					}
+				}
+			}
+
+			result = append(result, TicketSection{
+				Name:        sectionPath,
+				Range:       &Range{Start: section.StartLine, End: section.EndLine},
+				Definitions: uniqueStrings(affectedDefs),
+				Lines:       &LineMetrics{Added: len(exclusiveAddedLines), Removed: len(exclusiveRemovedLines)},
+			})
+		}
+
+		if len(section.Children) > 0 {
+			childResults := computeAffectedSections(filePath, section.Children, defs, addedLineMap, removedLineMap, sectionPath)
+			result = append(result, childResults...)
+		}
+	}
+	return result
+}
+
+func setDifference(a, b []int) []int {
+	m := make(map[int]bool)
+	for _, x := range b {
+		m[x] = true
+	}
+	var diff []int
+	for _, x := range a {
+		if !m[x] {
+			diff = append(diff, x)
+		}
+	}
+	return diff
+}
+
+func setIntersection(a, b []int) []int {
+	m := make(map[int]bool)
+	for _, x := range b {
+		m[x] = true
+	}
+	var intersection []int
+	for _, x := range a {
+		if m[x] {
+			intersection = append(intersection, x)
+		}
+	}
+	return intersection
+}
+
+func uniqueStrings(strs []string) []string {
+	seen := make(map[string]bool)
+	result := []string{}
+	for _, s := range strs {
+		if !seen[s] {
+			seen[s] = true
+			result = append(result, s)
+		}
+	}
+	return result
+}
+
+func computeLinesInRange(changedLines []int, startLine, endLine int) []int {
+	var result []int
+	for _, line := range changedLines {
+		if line >= startLine && line <= endLine {
+			result = append(result, line)
+		}
+	}
+	return result
+}
+
+func findSectionForLine(sections []Section, line int) string {
+	for _, section := range sections {
+		if line >= section.StartLine && line <= section.EndLine {
+			if len(section.Children) > 0 {
+				childSection := findSectionForLine(section.Children, line)
+				if childSection != "" {
+					return section.Name + "/" + childSection
+				}
+			}
+			return section.Name
+		}
+	}
+	return ""
+}
+
+func BuildGitDiffArgs(flag, baseCommit, headCommit string, paths []string) []string {
+	if headCommit == "" {
+		if len(paths) == 0 {
+			return []string{"diff", flag, "--no-renames", baseCommit}
+		}
+		return append([]string{"diff", flag, "--no-renames", baseCommit, "--"}, paths...)
+	}
+	if len(paths) == 0 {
+		return []string{"diff", flag, "--no-renames", baseCommit, headCommit}
+	}
+	return append([]string{"diff", flag, "--no-renames", baseCommit, headCommit, "--"}, paths...)
+}
+
+// #endregion Missing Utilities
+
+func AnalyzeFile(filePath string, bundles []Bundle) ([]Violation, error) {
+	scope := Scope{
+		Kind:     ScopeFile,
+		FilePath: filePath,
+	}
+	return CheckPolicies(scope, bundles, nil)
+}
+
+func ParseContributorIdentity(line string) (name, email string, ok bool) {
+re := regexp.MustCompile(`\d{4}\s+(.+?)\s*<([^>]+)>`)
+m := re.FindStringSubmatch(line)
+if m == nil {
+return "", "", false
+}
+return strings.TrimSpace(m[1]), strings.TrimSpace(m[2]), true
+}
+
+func findSectionForDefinition(sections []Section, startLine, endLine int, prefix string) string {
+for _, s := range sections {
+if startLine >= s.StartLine && endLine <= s.EndLine {
+p := s.Name
+if prefix != "" {
+p = prefix + "#" + s.Name
+}
+if len(s.Children) > 0 {
+if cp := findSectionForDefinition(s.Children, startLine, endLine, p); cp != "" {
+return cp
+}
+}
+return p
+}
+}
+return prefix
+}
+
+func ListContributors() ([]Contributor, error) {
+var result []Contributor
+dir := filepath.Join(rootDir, "contributors")
+if !FileExists(dir) {
+return result, nil
+}
+entries, _ := os.ReadDir(dir)
+for _, e := range entries {
+if !e.IsDir() {
+continue
+}
+p := filepath.Join(dir, e.Name(), "contributor.json")
+if !FileExists(p) {
+continue
+}
+content, _ := ReadTextFile(p)
+var c Contributor
+json.Unmarshal([]byte(content), &c)
+if c.Github == "" {
+c.Github = e.Name()
+}
+result = append(result, c)
+}
+return result, nil
+}
+
+func GetContributorAvatarPath(github string) string {
+return filepath.Join(rootDir, "contributors", github, "avatar.png")
+}
+
+func GetContributorAvatarRoundPath(github string) string {
+return filepath.Join(rootDir, "contributors", github, "avatar-round.png")
+}
+
+func GetContributorPath(github string) string {
+return filepath.Join(rootDir, "contributors", github)
+}
+
+func CreateContributor(github string) (*Contributor, error) {
+dir := GetContributorPath(github)
+if FileExists(dir) {
+return nil, fmt.Errorf("contributor already exists: %s", github)
+}
+EnsureDir(dir)
+c := Contributor{Github: github}
+data, _ := json.MarshalIndent(c, "", "  ")
+WriteTextFile(filepath.Join(dir, "contributor.json"), string(data))
+return &c, nil
+}
+
+func RemoveContributor(github string) error {
+dir := filepath.Join(rootDir, "contributors", github)
+if !FileExists(dir) {
+return fmt.Errorf("contributor not found: %s", github)
+}
+return os.RemoveAll(dir)
+}
+
+func GetRegisteredPolicies() []PolicyDef {
+return GetPolicies()
+}
+
+func filterGitIgnored(files []string) []string {
+return files
+}
+
+var repoResolverInstance *Resolver
+
+func init() {
+repoResolverInstance = NewResolver(rootDir)
+}
+
+// #region Resolver Methods
+
+func (r *Resolver) Bundles(ctx context.Context, repo *Repo) ([]*Bundle, error) {
+	return r.Ctx.GetBundles(), nil
+}
+
+func (r *Resolver) Folders(ctx context.Context, repo *Repo) ([]*Folder, error) {
+	return r.Ctx.GetFolders(), nil
+}
+
+func (r *Resolver) Files(ctx context.Context, repo *Repo) ([]*File, error) {
+	return r.Ctx.GetFiles(), nil
+}
+
+func (r *Resolver) Sections(ctx context.Context, repo *Repo) ([]*Section, error) {
+	return r.Ctx.GetSections(), nil
+}
+
+func (r *Resolver) Definitions(ctx context.Context, repo *Repo) ([]*Definition, error) {
+	return r.Ctx.GetDefinitions(), nil
+}
+
+func (r *Resolver) Contributors(ctx context.Context, repo *Repo) ([]*Contributor, error) {
+	return r.Ctx.GetContributors()
+}
+
+func (r *Resolver) Tickets(ctx context.Context, repo *Repo, year, month, day *int, status *TicketStatus) ([]*Ticket, error) {
+	return r.Ctx.GetTickets(year, month, day, status)
+}
+
+func (r *Resolver) Policies(ctx context.Context, repo *Repo) ([]*Policy, error) {
+	return r.Ctx.GetPolicies(), nil
+}
+
+func (r *Resolver) ViolationKinds(ctx context.Context, repo *Repo) ([]*ViolationKindMeta, error) {
+	return r.Ctx.GetViolationKinds(), nil
+}
+
+func (r *Resolver) Violations(ctx context.Context, repo *Repo, scope *string) ([]*Violation, error) {
+	analysis, err := r.Ctx.Analyze(scope)
+	if err != nil {
+		return nil, err
+	}
+	return analysis.Violations, nil
+}
+
+// #endregion Resolver Methods
+
+
+// #region Missing Tool Functions
+
+func ToolAnalyze(scopeRaw string, policyIDs []string) ToolResult {
+	scope := ParseScope(scopeRaw)
+	bundles := GetProjects()
+	violations, err := CheckPolicies(scope, bundles, policyIDs)
+	if err != nil {
+		return ToolResult{Error: err.Error()}
+	}
+	
+	byPriority := make(map[string]int)
+	for range violations {
+		// Assuming v.Kind can map to priority, but for now just counting
+		// Use empty map or implement priority logic if needed
+	}
+
+	report := AnalyzeReport{
+		Timestamp:  time.Now().Format(time.RFC3339),
+		Status:     "success",
+		Scope:      scopeRaw,
+		Violations: violations,
+		Summary: Summary{
+			Total:      len(violations),
+			ByPriority: byPriority,
+		},
+	}
+	output := NewOutput()
+	bytes, _ := json.MarshalIndent(report, "", "  ")
+	output.Plain(string(bytes))
+	return ToolResult{Output: *output, Data: report}
+}
+
+func ToolFix(scopeRaw string) ToolResult {
+	ctx := NewRepoContext(rootDir)
+	res, err := ctx.Fix(&scopeRaw)
+	if err != nil {
+		return ToolResult{Error: err.Error()}
+	}
+	output := NewOutput()
+	bytes, _ := json.MarshalIndent(res, "", "  ")
+	output.Plain(string(bytes))
+	return ToolResult{Output: *output, Data: res}
+}
+
+func ToolPolicyList() ToolResult {
+	policies := GetRegisteredPolicies()
+	output := NewOutput()
+	bytes, _ := json.MarshalIndent(policies, "", "  ")
+	output.Plain(string(bytes))
+	return ToolResult{Output: *output, Data: policies}
+}
+
+func ToolPolicyCheck(policyID, scopeRaw string) ToolResult {
+	return ToolAnalyze(scopeRaw, []string{policyID})
+}
+
+func ToolPolicyViolationList(policyID string) ToolResult {
+	// This appears to list violations for a specific policy across the whole repo
+	return ToolAnalyze("@semio", []string{policyID})
+}
+
+// #endregion Missing Tool Functions

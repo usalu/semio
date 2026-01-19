@@ -52,7 +52,8 @@ func getTestExecutor(t *testing.T) *Executor {
 	if err != nil {
 		t.Fatalf("failed to get cwd: %v", err)
 	}
-	rootDir := findTestRepoRoot(cwd)
+	// Update global rootDir for Tool functions
+	rootDir = findTestRepoRoot(cwd)
 	executor, err := NewExecutor(rootDir)
 	if err != nil {
 		t.Fatalf("failed to create executor: %v", err)

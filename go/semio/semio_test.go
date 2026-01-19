@@ -23,80 +23,163 @@ func loadJSON(t *testing.T, filename string, v interface{}) {
 	}
 }
 
-func TestKitSerializationFromAsset(t *testing.T) {
-	var kit Kit
-	loadJSON(t, "kit_metabolism.json", &kit)
+func TestSemio(t *testing.T) {
+	t.Run("Diffs", func(t *testing.T) {
+		t.Run("Metabolism", func(t *testing.T) {
+			var kitOriginal Kit
+			loadJSON(t, "kit_metabolism.json", &kitOriginal)
+			kitOriginal.Designs = FilterDesignsWithoutParent(kitOriginal.Designs)
 
-	data, err := SerializeKit(kit)
-	if err != nil {
-		t.Fatalf("SerializeKit failed: %v", err)
-	}
+			var kitDiff KitDiff
+			loadJSON(t, "diff_kit_metabolism.json", &kitDiff)
 
-	var parsed Kit
-	if err := json.Unmarshal(data, &parsed); err != nil {
-		t.Fatalf("Unmarshal failed: %v", err)
-	}
+			var kitDiffInverted KitDiff
+			loadJSON(t, "diff_kit_metabolism_inverted.json", &kitDiffInverted)
 
-	if !AreKitsEqual(kit, parsed) {
-		t.Error("Serialized and deserialized kit should be equal")
-	}
-}
+			var kitDiffed Kit
+			loadJSON(t, "kit_metabolism_diffed.json", &kitDiffed)
 
-func TestKitDiffOperations(t *testing.T) {
-	var kitOriginal Kit
-	loadJSON(t, "kit_metabolism.json", &kitOriginal)
-	kitOriginal.Designs = FilterDesignsWithoutParent(kitOriginal.Designs)
+			computedDiff := GetKitDiff(kitOriginal, kitDiffed)
+			if !AreKitDiffsEqual(computedDiff, kitDiff) {
+				t.Error("Computed diff should equal expected diff")
+			}
 
-	var kitDiff KitDiff
-	loadJSON(t, "diff_kit_metabolism.json", &kitDiff)
+			computedInverseDiff := InverseKitDiff(kitOriginal, kitDiff)
+			if !AreKitDiffsEqual(computedInverseDiff, kitDiffInverted) {
+				t.Error("Computed inverse diff should equal expected inverse diff")
+			}
 
-	var kitDiffInverted KitDiff
-	loadJSON(t, "diff_kit_metabolism_inverted.json", &kitDiffInverted)
+			appliedForward := ApplyKitDiff(kitOriginal, kitDiff)
+			if !AreKitsEqual(appliedForward, kitDiffed) {
+				t.Error("Original + Diff should equal DiffedKit")
+			}
 
-	var kitDiffed Kit
-	loadJSON(t, "kit_metabolism_diffed.json", &kitDiffed)
+			appliedInverse := ApplyKitDiff(kitDiffed, kitDiffInverted)
+			if !AreKitsEqual(appliedInverse, kitOriginal) {
+				t.Error("DiffedKit + InverseDiff should equal original Kit")
+			}
+		})
+	})
 
-	computedDiff := GetKitDiff(kitOriginal, kitDiffed)
-	if !AreKitDiffsEqual(computedDiff, kitDiff) {
-		t.Error("Computed diff should equal expected diff")
-	}
+	t.Run("Flattening Designs", func(t *testing.T) {
+		var kit Kit
+		loadJSON(t, "kit_metabolism.json", &kit)
 
-	computedInverseDiff := InverseKitDiff(kitOriginal, kitDiff)
-	if !AreKitDiffsEqual(computedInverseDiff, kitDiffInverted) {
-		t.Error("Computed inverse diff should equal expected inverse diff")
-	}
+		t.Run("Nakagin Capsule Tower", func(t *testing.T) {
+			testFlattenDesign(t, kit, []string{"Nakagin Capsule Tower"})
+		})
+		t.Run("Nakagin Capsule Tower/Slanted", func(t *testing.T) {
+			testFlattenDesign(t, kit, []string{"Nakagin Capsule Tower", "Slanted"})
+		})
+		t.Run("Nakagin Capsule Tower/Twisted", func(t *testing.T) {
+			testFlattenDesign(t, kit, []string{"Nakagin Capsule Tower", "Twisted"})
+		})
+		t.Run("Nakagin Capsule Tower/Dancing", func(t *testing.T) {
+			testFlattenDesign(t, kit, []string{"Nakagin Capsule Tower", "Dancing"})
+		})
+		t.Run("Capsule Dream", func(t *testing.T) {
+			testFlattenDesign(t, kit, []string{"Capsule Dream"})
+		})
+	})
 
-	appliedForward := ApplyKitDiff(kitOriginal, kitDiff)
-	if !AreKitsEqual(appliedForward, kitDiffed) {
-		t.Error("Original + Diff should equal DiffedKit")
-	}
+	t.Run("Import/Export", func(t *testing.T) {
+		t.Run("Kit -> JSON -> Kit", func(t *testing.T) {
+			var kit Kit
+			loadJSON(t, "kit_metabolism.json", &kit)
 
-	appliedInverse := ApplyKitDiff(kitDiffed, kitDiffInverted)
-	if !AreKitsEqual(appliedInverse, kitOriginal) {
-		t.Error("DiffedKit + InverseDiff should equal original Kit")
-	}
-}
+			data, err := SerializeKit(kit)
+			if err != nil {
+				t.Fatalf("SerializeKit failed: %v", err)
+			}
 
-func TestValidationMatchesExpectedOutput(t *testing.T) {
-	var validKit Kit
-	loadJSON(t, "kit_metabolism.json", &validKit)
-	validResult := ValidateKit(validKit)
-	if HasErrors(validResult) {
-		t.Errorf("Valid kit should not have errors, got %d problems", len(validResult.Problems))
-	}
+			parsed, err := DeserializeKit(data)
+			if err != nil {
+				t.Fatalf("DeserializeKit failed: %v", err)
+			}
 
-	var invalidKit Kit
-	loadJSON(t, "kit_invalid.json", &invalidKit)
-	result := ValidateKit(invalidKit)
-	serializedResult := ToValidationResult(result)
+			if !AreKitsEqual(kit, parsed) {
+				t.Error("Serialized and deserialized kit should be equal")
+			}
+		})
 
-	var expected ValidationResultSerialized
-	loadJSON(t, "validation.json", &expected)
+		t.Run("Zip -> Kit -> Zip -> Kit", func(t *testing.T) {
+			zipPath := filepath.Join(AssetsPath, "metabolism.zip")
+			kit, files, err := KitFromZip(zipPath)
+			if err != nil {
+				t.Fatalf("KitFromZip failed: %v", err)
+			}
+			if kit.Guid == "" {
+				t.Error("Kit GUID should not be empty")
+			}
+			if kit.Name != "Metabolism" {
+				t.Errorf("Expected kit name Metabolism, got %s", kit.Name)
+			}
+			if len(kit.Types) == 0 {
+				t.Error("Kit should have types")
+			}
+			if len(kit.Designs) == 0 {
+				t.Error("Kit should have designs")
+			}
+			if len(files) == 0 {
+				t.Error("Kit should have files")
+			}
 
-	if !AreValidationResultsEqual(serializedResult, expected) {
-		t.Errorf("Validation mismatch. Got %d problems, expected %d",
-			len(serializedResult.Problems), len(expected.Problems))
-	}
+			schemaPath := filepath.Join(AssetsPath, "..", "..", "sql", "sqlite", "semio", "schema.sql")
+			schemaData, err := os.ReadFile(schemaPath)
+			if err != nil {
+				t.Fatalf("Failed to read schema.sql: %v", err)
+			}
+
+			roundtripPath := filepath.Join(t.TempDir(), "metabolism_roundtrip.zip")
+			if err := KitToZip(kit, files, roundtripPath, string(schemaData)); err != nil {
+				t.Fatalf("KitToZip failed: %v", err)
+			}
+
+			kit2, files2, err := KitFromZip(roundtripPath)
+			if err != nil {
+				t.Fatalf("KitFromZip (roundtrip) failed: %v", err)
+			}
+			if kit2.Guid != kit.Guid {
+				t.Errorf("Expected kit GUID %s, got %s", kit.Guid, kit2.Guid)
+			}
+			if kit2.Name != kit.Name {
+				t.Errorf("Expected kit name %s, got %s", kit.Name, kit2.Name)
+			}
+			if len(kit2.Types) != len(kit.Types) {
+				t.Errorf("Expected %d types, got %d", len(kit.Types), len(kit2.Types))
+			}
+			if len(kit2.Designs) != len(kit.Designs) {
+				t.Errorf("Expected %d designs, got %d", len(kit.Designs), len(kit2.Designs))
+			}
+			if len(files2) != len(files) {
+				t.Errorf("Expected %d files, got %d", len(files), len(files2))
+			}
+		})
+	})
+
+	t.Run("Validation", func(t *testing.T) {
+		t.Run("Validation matches expected output", func(t *testing.T) {
+			var validKit Kit
+			loadJSON(t, "kit_metabolism.json", &validKit)
+			validResult := ValidateKit(validKit)
+			if HasErrors(validResult) {
+				t.Errorf("Valid kit should not have errors, got %d problems", len(validResult.Problems))
+			}
+
+			var invalidKit Kit
+			loadJSON(t, "kit_invalid.json", &invalidKit)
+			result := ValidateKit(invalidKit)
+			serializedResult := ToValidationResult(result)
+
+			var expected ValidationResultSerialized
+			loadJSON(t, "validation.json", &expected)
+
+			if !AreValidationResultsEqual(serializedResult, expected) {
+				t.Errorf("Validation mismatch. Got %d problems, expected %d",
+					len(serializedResult.Problems), len(expected.Problems))
+			}
+		})
+	})
 }
 
 func planesEqual(p1, p2 *Plane, tolerance float64) bool {
@@ -214,61 +297,5 @@ func testFlattenDesign(t *testing.T, kit Kit, designPath []string) {
 		if !centersEqual(piece.Center, expectedPiece.Center, tolerance) {
 			t.Errorf("Piece %q center mismatch", *piece.Name)
 		}
-	}
-}
-
-func TestFlattenDesignNakaginCapsuleTower(t *testing.T) {
-	var kit Kit
-	loadJSON(t, "kit_metabolism.json", &kit)
-	testFlattenDesign(t, kit, []string{"Nakagin Capsule Tower"})
-}
-
-func TestFlattenDesignSlanted(t *testing.T) {
-	var kit Kit
-	loadJSON(t, "kit_metabolism.json", &kit)
-	testFlattenDesign(t, kit, []string{"Nakagin Capsule Tower", "Slanted"})
-}
-
-func TestFlattenDesignTwisted(t *testing.T) {
-	var kit Kit
-	loadJSON(t, "kit_metabolism.json", &kit)
-	testFlattenDesign(t, kit, []string{"Nakagin Capsule Tower", "Twisted"})
-}
-
-func TestFlattenDesignDancing(t *testing.T) {
-	var kit Kit
-	loadJSON(t, "kit_metabolism.json", &kit)
-	testFlattenDesign(t, kit, []string{"Nakagin Capsule Tower", "Dancing"})
-}
-
-func TestFlattenDesignCapsuleDream(t *testing.T) {
-	var kit Kit
-	loadJSON(t, "kit_metabolism.json", &kit)
-	testFlattenDesign(t, kit, []string{"Capsule Dream"})
-}
-
-func TestKitZipRoundtrip(t *testing.T) {
-	zipPath := filepath.Join(AssetsPath, "metabolism.zip")
-	
-	kit, files, err := KitFromZip(zipPath)
-	if err != nil {
-		t.Fatalf("KitFromZip failed: %v", err)
-	}
-	
-	if kit.Guid == "" {
-		t.Error("Kit GUID should not be empty")
-	}
-	if kit.Name == "" {
-		t.Error("Kit name should not be empty")
-	}
-	
-	t.Logf("Loaded kit: %s (%s) with %d types, %d designs, %d files",
-		kit.Name, kit.Guid, len(kit.Types), len(kit.Designs), len(files))
-	
-	if len(kit.Types) == 0 {
-		t.Error("Kit should have types")
-	}
-	if len(kit.Designs) == 0 {
-		t.Error("Kit should have designs")
 	}
 }
