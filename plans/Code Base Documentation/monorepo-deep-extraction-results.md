@@ -11,7 +11,9 @@
 **semio** is a sophisticated multi-language monorepo for parametric/generative architectural design using a "Kit-of-Parts" paradigm. It provides tools for architects and designers to create, manage, and collaborate on modular design systems.
 
 ### Core Business Concept
+
 A **Kit** contains reusable **Types** (building blocks with 3D models and connectors) and **Designs** (compositions of **Pieces** linked by **Connections**). The system enables:
+
 - Hierarchical design composition (designs can contain design-pieces)
 - Graph-based design representation
 - Multi-platform design authoring (web, desktop, Grasshopper/Rhino)
@@ -70,17 +72,17 @@ A **Kit** contains reusable **Types** (building blocks with 3D models and connec
 
 ### Container Diagram
 
-| Container | Technology | Responsibility |
-|-----------|------------|----------------|
-| **@semio/js** | TypeScript/React | Core domain models, UI components, Sketchpad app |
-| **@semio/desktop** | Electron/Forge | Native desktop wrapper for Sketchpad |
-| **@semio/docs** | Astro/Starlight | User documentation site |
-| **@semio/vscode** | VS Code Extension | Developer tooling, kit validation, repo management |
-| **@semio/engine** | Python/FastAPI | Backend services, GraphQL API, AI integration |
-| **@semio/net** | C#/.NET | Core library for Rhino/Grasshopper |
-| **@semio/grasshopper** | C#/Grasshopper | Visual programming plugin for Rhino |
-| **@semio/repo** | Go | CLI for monorepo management |
-| **@semio/mcp** | Go/MCP | Model Context Protocol server for AI agents |
+| Container              | Technology        | Responsibility                                     |
+| ---------------------- | ----------------- | -------------------------------------------------- |
+| **@semio/js**          | TypeScript/React  | Core domain models, UI components, Sketchpad app   |
+| **@semio/desktop**     | Electron/Forge    | Native desktop wrapper for Sketchpad               |
+| **@semio/docs**        | Astro/Starlight   | User documentation site                            |
+| **@semio-repo/vscode** | VS Code Extension | Developer tooling, kit validation, repo management |
+| **@semio/engine**      | Python/FastAPI    | Backend services, GraphQL API, AI integration      |
+| **@semio/net**         | C#/.NET           | Core library for Rhino/Grasshopper                 |
+| **@semio/grasshopper** | C#/Grasshopper    | Visual programming plugin for Rhino                |
+| **@semio/repo**        | Go                | CLI for monorepo management                        |
+| **@semio/mcp**         | Go/MCP            | Model Context Protocol server for AI agents        |
 
 ---
 
@@ -143,22 +145,22 @@ TYPE ENTITY                          DESIGN ENTITY
 
 ### Domain Bounded Contexts
 
-| Context | Responsibility | Key Entities |
-|---------|----------------|--------------|
-| **Kit Management** | Kit CRUD, versioning, import/export | Kit, Author, File, Folder |
-| **Type Definition** | Reusable component definition | Type, Connector, Model, Prop |
-| **Design Composition** | Assembling pieces into designs | Design, Piece, Connection, Layer, Group |
-| **Quality System** | Measurement and benchmarking | Quality, Benchmark, Stat, Prop |
-| **Interface System** | Connector compatibility rules | Interface, compatible ports |
-| **Validation** | Constraint checking and fixes | Constraints, Problems, Fixes |
+| Context                | Responsibility                      | Key Entities                            |
+| ---------------------- | ----------------------------------- | --------------------------------------- |
+| **Kit Management**     | Kit CRUD, versioning, import/export | Kit, Author, File, Folder               |
+| **Type Definition**    | Reusable component definition       | Type, Connector, Model, Prop            |
+| **Design Composition** | Assembling pieces into designs      | Design, Piece, Connection, Layer, Group |
+| **Quality System**     | Measurement and benchmarking        | Quality, Benchmark, Stat, Prop          |
+| **Interface System**   | Connector compatibility rules       | Interface, compatible ports             |
+| **Validation**         | Constraint checking and fixes       | Constraints, Problems, Fixes            |
 
 ### Supporting Domains
 
-| Domain | Purpose | Implementation |
-|--------|---------|----------------|
-| **Repo Tooling** | Monorepo management, tickets, policies | Go CLI, VS Code Extension |
-| **Documentation** | User guides, tutorials | Astro + MDX |
-| **AI Integration** | LLM-assisted design | MCP Server, OpenAI |
+| Domain             | Purpose                                | Implementation            |
+| ------------------ | -------------------------------------- | ------------------------- |
+| **Repo Tooling**   | Monorepo management, tickets, policies | Go CLI, VS Code Extension |
+| **Documentation**  | User guides, tutorials                 | Astro + MDX               |
+| **AI Integration** | LLM-assisted design                    | MCP Server, OpenAI        |
 
 ---
 
@@ -166,48 +168,48 @@ TYPE ENTITY                          DESIGN ENTITY
 
 ### @semio/js (Core Domain Library)
 
-| Module | Purpose | APIs | Data | Dependencies |
-|--------|---------|------|------|--------------|
-| `semio.ts` | Domain models, diff system, validation | All entity types, schemas | Kit, Type, Design, Piece, etc. | Three.js, Zod, Cytoscape |
-| `sketchpad/Sketchpad.tsx` | Main app shell, state machine | useSketchpadActor, stores | SketchpadState, KitStore | XState, Y.js, React |
-| `sketchpad/Design.tsx` | Design editor app | DesignAppStore, hooks | DesignAppState | React Three Fiber |
-| `sketchpad/Type.tsx` | Type editor app | TypeAppStore, hooks | TypeAppState | React Three Fiber |
-| `sketchpad/Kit.tsx` | Kit management app | KitAppStore, hooks | KitAppState | Golden Layout |
-| `sketchpad/Home.tsx` | Kit browser | HomeStore, hooks | HomeState | - |
-| `sketchpad/Quality.tsx` | Quality editor | QualityAppStore | QualityAppState | - |
-| `sketchpad/Docs.tsx` | In-app documentation | MDX loading | Headings, sections | MDX |
-| `sketchpad/elements.tsx` | UI primitives | Navbar, Footer, Window, etc. | Level, Transaction | Radix UI, React Flow |
-| `sketchpad/shared.ts` | Shared types, registries | AppPlugin, event handlers | Enums, interfaces | - |
+| Module                    | Purpose                                | APIs                         | Data                           | Dependencies             |
+| ------------------------- | -------------------------------------- | ---------------------------- | ------------------------------ | ------------------------ |
+| `semio.ts`                | Domain models, diff system, validation | All entity types, schemas    | Kit, Type, Design, Piece, etc. | Three.js, Zod, Cytoscape |
+| `sketchpad/Sketchpad.tsx` | Main app shell, state machine          | useSketchpadActor, stores    | SketchpadState, KitStore       | XState, Y.js, React      |
+| `sketchpad/Design.tsx`    | Design editor app                      | DesignAppStore, hooks        | DesignAppState                 | React Three Fiber        |
+| `sketchpad/Type.tsx`      | Type editor app                        | TypeAppStore, hooks          | TypeAppState                   | React Three Fiber        |
+| `sketchpad/Kit.tsx`       | Kit management app                     | KitAppStore, hooks           | KitAppState                    | Golden Layout            |
+| `sketchpad/Home.tsx`      | Kit browser                            | HomeStore, hooks             | HomeState                      | -                        |
+| `sketchpad/Quality.tsx`   | Quality editor                         | QualityAppStore              | QualityAppState                | -                        |
+| `sketchpad/Docs.tsx`      | In-app documentation                   | MDX loading                  | Headings, sections             | MDX                      |
+| `sketchpad/elements.tsx`  | UI primitives                          | Navbar, Footer, Window, etc. | Level, Transaction             | Radix UI, React Flow     |
+| `sketchpad/shared.ts`     | Shared types, registries               | AppPlugin, event handlers    | Enums, interfaces              | -                        |
 
 ### @semio/engine (Python Backend)
 
-| Module | Purpose | APIs | Data | Dependencies |
-|--------|---------|------|------|--------------|
+| Module      | Purpose              | APIs               | Data                    | Dependencies                |
+| ----------- | -------------------- | ------------------ | ----------------------- | --------------------------- |
 | `engine.py` | Full backend service | REST, GraphQL, MCP | Kit entities via SQLite | FastAPI, SQLModel, Graphene |
 
 ### @semio/net (C# Core)
 
-| Module | Purpose | APIs | Data | Dependencies |
-|--------|---------|------|------|--------------|
+| Module     | Purpose                   | APIs             | Data             | Dependencies                |
+| ---------- | ------------------------- | ---------------- | ---------------- | --------------------------- |
 | `Semio.cs` | Domain models, validation | All entity types | Same as semio.ts | FluentValidation, QuikGraph |
 
 ### @semio/grasshopper (Rhino Plugin)
 
-| Module | Purpose | APIs | Data | Dependencies |
-|--------|---------|------|------|--------------|
+| Module                 | Purpose                | APIs                 | Data         | Dependencies   |
+| ---------------------- | ---------------------- | -------------------- | ------------ | -------------- |
 | `Semio.Grasshopper.cs` | Grasshopper components | Component parameters | Kit entities | Rhino.Geometry |
 
 ### @semio/repo (Go CLI)
 
-| Module | Purpose | APIs | Data | Dependencies |
-|--------|---------|------|------|--------------|
+| Module    | Purpose             | APIs                  | Data                            | Dependencies       |
+| --------- | ------------------- | --------------------- | ------------------------------- | ------------------ |
 | `repo.go` | Monorepo management | CLI commands, GraphQL | Tickets, policies, contributors | graphql-go, SQLite |
 
 ### @semio/mcp (MCP Server)
 
-| Module | Purpose | APIs | Data | Dependencies |
-|--------|---------|------|------|--------------|
-| `main.go` | AI agent tools | MCP tool definitions | Proxies to repo | mcp-go |
+| Module    | Purpose        | APIs                 | Data            | Dependencies |
+| --------- | -------------- | -------------------- | --------------- | ------------ |
+| `main.go` | AI agent tools | MCP tool definitions | Proxies to repo | mcp-go       |
 
 ---
 
@@ -251,16 +253,16 @@ Level 0 (Foundation):
 
 Level 1 (Core):
   @semio/js/semio ← domain models, validation, diff system
-  
+
 Level 2 (UI):
   @semio/js/sketchpad ← depends on semio
   @semio/js/elements ← depends on semio
-  
+
 Level 3 (Apps):
   @semio/desktop ← depends on @semio/js
-  @semio/docs ← depends on @semio/js  
+  @semio/docs ← depends on @semio/js
   @semio/play ← depends on @semio/js
-  @semio/vscode ← depends on @semio/js
+  @semio-repo/vscode ← depends on @semio/js
 
 Level 4 (Backend):
   @semio/engine ← independent Python implementation
@@ -278,13 +280,13 @@ Level 5 (Tooling):
 
 ### Data Stores
 
-| Store | Technology | Contents | Read By | Written By |
-|-------|------------|----------|---------|------------|
-| **Kit SQLite** | SQLite in .zip | Kit entities, files | Engine, .NET, JS | Engine, .NET |
-| **Kit Y.js Doc** | Y.js CRDT | Live kit state | Sketchpad | Sketchpad |
-| **IndexedDB** | Browser DB | Persisted Y.js docs | Sketchpad | Sketchpad |
-| **Repo SQLite** | SQLite | Ticket cache | Go CLI | Go CLI |
-| **File System** | Disk | .semio folders, tickets | All | All |
+| Store            | Technology     | Contents                | Read By          | Written By   |
+| ---------------- | -------------- | ----------------------- | ---------------- | ------------ |
+| **Kit SQLite**   | SQLite in .zip | Kit entities, files     | Engine, .NET, JS | Engine, .NET |
+| **Kit Y.js Doc** | Y.js CRDT      | Live kit state          | Sketchpad        | Sketchpad    |
+| **IndexedDB**    | Browser DB     | Persisted Y.js docs     | Sketchpad        | Sketchpad    |
+| **Repo SQLite**  | SQLite         | Ticket cache            | Go CLI           | Go CLI       |
+| **File System**  | Disk           | .semio folders, tickets | All              | All          |
 
 ### Data Flow
 
@@ -421,13 +423,13 @@ Developer starts task
 
 ### God Modules
 
-| File | LOC | Risk Assessment |
-|------|-----|-----------------|
+| File                               | LOC    | Risk Assessment                                                                                                |
+| ---------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------- |
 | `js/semio/sketchpad/Sketchpad.tsx` | 15,835 | **HIGH** - Contains Store base classes, state machine, all app stores, kit management. Single-file complexity. |
-| `go/repo/repo.go` | 10,110 | **HIGH** - Entire repo CLI in one file. GraphQL, policies, tickets, sections all together. |
-| `py/engine/engine.py` | 7,727 | **MEDIUM** - Full backend in one file, but Python handles this better. |
-| `js/semio/semio.ts` | 7,741 | **MEDIUM** - Core domain, but well-organized with regions. |
-| `net/Semio/Semio.cs` | 5,734 | **MEDIUM** - C# core, mirrors semio.ts closely. |
+| `go/repo/repo.go`                  | 10,110 | **HIGH** - Entire repo CLI in one file. GraphQL, policies, tickets, sections all together.                     |
+| `py/engine/engine.py`              | 7,727  | **MEDIUM** - Full backend in one file, but Python handles this better.                                         |
+| `js/semio/semio.ts`                | 7,741  | **MEDIUM** - Core domain, but well-organized with regions.                                                     |
+| `net/Semio/Semio.cs`               | 5,734  | **MEDIUM** - C# core, mirrors semio.ts closely.                                                                |
 
 ### Tight Coupling Points
 
@@ -453,15 +455,15 @@ Developer starts task
 
 ### "What breaks if X changes?"
 
-| Change | Impact Scope | Risk |
-|--------|--------------|------|
-| **Kit schema change** | semio.ts, engine.py, Semio.cs, SQL schema, JSON schema, all tests | **CRITICAL** |
-| **Y.js document structure** | KitStore, all app stores, persistence | **HIGH** |
-| **XState machine events** | All app hooks, event handlers | **HIGH** |
-| **Element component props** | All Sketchpad apps using elements | **MEDIUM** |
-| **Repo GraphQL schema** | VS Code extension, MCP server | **MEDIUM** |
-| **Diff function signature** | All applyDiff call sites | **MEDIUM** |
-| **i18n key structure** | All translated UI, validation scripts | **LOW** |
+| Change                      | Impact Scope                                                      | Risk         |
+| --------------------------- | ----------------------------------------------------------------- | ------------ |
+| **Kit schema change**       | semio.ts, engine.py, Semio.cs, SQL schema, JSON schema, all tests | **CRITICAL** |
+| **Y.js document structure** | KitStore, all app stores, persistence                             | **HIGH**     |
+| **XState machine events**   | All app hooks, event handlers                                     | **HIGH**     |
+| **Element component props** | All Sketchpad apps using elements                                 | **MEDIUM**   |
+| **Repo GraphQL schema**     | VS Code extension, MCP server                                     | **MEDIUM**   |
+| **Diff function signature** | All applyDiff call sites                                          | **MEDIUM**   |
+| **i18n key structure**      | All translated UI, validation scripts                             | **LOW**      |
 
 ---
 
@@ -543,33 +545,33 @@ Kit
 
 ## Appendix B: Technology Stack
 
-| Layer | Technologies |
-|-------|--------------|
-| **Frontend** | React 19, TypeScript, Tailwind CSS v4, Radix UI, React Three Fiber, React Flow, Golden Layout, XState v5, Y.js |
-| **Desktop** | Electron Forge |
-| **Documentation** | Astro, Starlight, MDX |
-| **Python Backend** | FastAPI, SQLModel, Graphene, MCP, Uvicorn |
-| **C# Core** | .NET 8, FluentValidation, QuikGraph, Newtonsoft.JSON |
-| **Grasshopper** | Rhino 8, Grasshopper SDK |
-| **Go Tooling** | graphql-go, mcp-go, SQLite |
-| **Build** | Nx, Vite, Storybook, TypeScript, ESLint, Prettier, Ruff, Husky |
-| **Testing** | Vitest, Playwright, pytest |
-| **Storage** | SQLite, IndexedDB, Y.js/CRDT |
+| Layer              | Technologies                                                                                                   |
+| ------------------ | -------------------------------------------------------------------------------------------------------------- |
+| **Frontend**       | React 19, TypeScript, Tailwind CSS v4, Radix UI, React Three Fiber, React Flow, Golden Layout, XState v5, Y.js |
+| **Desktop**        | Electron Forge                                                                                                 |
+| **Documentation**  | Astro, Starlight, MDX                                                                                          |
+| **Python Backend** | FastAPI, SQLModel, Graphene, MCP, Uvicorn                                                                      |
+| **C# Core**        | .NET 8, FluentValidation, QuikGraph, Newtonsoft.JSON                                                           |
+| **Grasshopper**    | Rhino 8, Grasshopper SDK                                                                                       |
+| **Go Tooling**     | graphql-go, mcp-go, SQLite                                                                                     |
+| **Build**          | Nx, Vite, Storybook, TypeScript, ESLint, Prettier, Ruff, Husky                                                 |
+| **Testing**        | Vitest, Playwright, pytest                                                                                     |
+| **Storage**        | SQLite, IndexedDB, Y.js/CRDT                                                                                   |
 
 ---
 
 ## Appendix C: File Counts by Language
 
-| Language | Files | ~LOC |
-|----------|-------|------|
-| TypeScript | 50+ | 35,000 |
-| Python | 5+ | 10,000 |
-| C# | 10+ | 15,000 |
-| Go | 5+ | 12,000 |
-| GraphQL | 3 | 1,500 |
-| SQL | 2 | 500 |
-| JSON Schema | 8 | 2,000 |
-| **Total** | **~85** | **~75,000** |
+| Language    | Files   | ~LOC        |
+| ----------- | ------- | ----------- |
+| TypeScript  | 50+     | 35,000      |
+| Python      | 5+      | 10,000      |
+| C#          | 10+     | 15,000      |
+| Go          | 5+      | 12,000      |
+| GraphQL     | 3       | 1,500       |
+| SQL         | 2       | 500         |
+| JSON Schema | 8       | 2,000       |
+| **Total**   | **~85** | **~75,000** |
 
 ---
 
@@ -585,19 +587,19 @@ This section provides an in-depth analysis of the 7 main source files that form 
 
 #### Structure
 
-| Region | Lines | Purpose |
-|--------|-------|---------|
-| Header | 1-20 | LGPL-3.0 license header |
-| Constants | 40-45 | `ICON_WIDTH`, `TOLERANCE` from config |
-| Utilities | 47-130 | `cn()`, `guid()`, `normalize()`, `round()`, `jaccard()`, `deepEqual()`, `generateUniqueName()` |
-| Entity IDs | 150-250 | 21 ID types with Zod schemas and factory functions |
-| Weak Entities | ~250-400 | `Coord`, `Vec`, `Point`, `Vector`, `Plane`, `Camera` |
-| Domain Entities | ~400-3000 | Full entity definitions with schemas |
-| Diff System | ~3000-5500 | Per-entity diff types, `getDiff`, `inverseDiff`, `mergeDiff`, `applyDiff` |
-| Validation | ~5500-6500 | Constraint functions, `validateKit()`, problem/fix generation |
-| Cytoscape | ~6500-7000 | Graph visualization integration |
-| THREE.js | ~7000-7400 | Geometry helpers, coordinate transforms |
-| Exports | ~7400-7741 | Public API surface |
+| Region          | Lines      | Purpose                                                                                        |
+| --------------- | ---------- | ---------------------------------------------------------------------------------------------- |
+| Header          | 1-20       | LGPL-3.0 license header                                                                        |
+| Constants       | 40-45      | `ICON_WIDTH`, `TOLERANCE` from config                                                          |
+| Utilities       | 47-130     | `cn()`, `guid()`, `normalize()`, `round()`, `jaccard()`, `deepEqual()`, `generateUniqueName()` |
+| Entity IDs      | 150-250    | 21 ID types with Zod schemas and factory functions                                             |
+| Weak Entities   | ~250-400   | `Coord`, `Vec`, `Point`, `Vector`, `Plane`, `Camera`                                           |
+| Domain Entities | ~400-3000  | Full entity definitions with schemas                                                           |
+| Diff System     | ~3000-5500 | Per-entity diff types, `getDiff`, `inverseDiff`, `mergeDiff`, `applyDiff`                      |
+| Validation      | ~5500-6500 | Constraint functions, `validateKit()`, problem/fix generation                                  |
+| Cytoscape       | ~6500-7000 | Graph visualization integration                                                                |
+| THREE.js        | ~7000-7400 | Geometry helpers, coordinate transforms                                                        |
+| Exports         | ~7400-7741 | Public API surface                                                                             |
 
 #### Key Patterns
 
@@ -622,17 +624,17 @@ export const mergeAttributeDiff = (a: AttributeDiff, b: AttributeDiff): Attribut
 export const applyAttributeDiff = (base: Attribute, diff: AttributeDiff): Attribute => {...};
 
 // 4. Coordinate Transform - Left-handed to Three.js right-handed
-export const toThreeRotation = (): THREE.Matrix4 => 
+export const toThreeRotation = (): THREE.Matrix4 =>
   new THREE.Matrix4(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1);
 ```
 
 #### Risk Assessment
 
-| Issue | Severity | Recommendation |
-|-------|----------|----------------|
-| Manual diff functions for 20+ entities | HIGH | Code-generate from schema |
-| 7,741 LOC in single file | MEDIUM | Consider splitting by entity group |
-| Tight coupling to THREE.js | LOW | Acceptable for 3D domain |
+| Issue                                  | Severity | Recommendation                     |
+| -------------------------------------- | -------- | ---------------------------------- |
+| Manual diff functions for 20+ entities | HIGH     | Code-generate from schema          |
+| 7,741 LOC in single file               | MEDIUM   | Consider splitting by entity group |
+| Tight coupling to THREE.js             | LOW      | Acceptable for 3D domain           |
 
 ---
 
@@ -642,19 +644,19 @@ export const toThreeRotation = (): THREE.Matrix4 =>
 
 #### Structure
 
-| Region | Lines | Purpose |
-|--------|-------|---------|
-| Header | 1-20 | LGPL-3.0 license |
-| Imports | 23-247 | 200+ imports from React, XState, Y.js, Three.js, etc. |
-| Store Base Classes | 250-820 | `Store<TState>`, `AppStore`, `KitDiffAppStore` |
-| Plain App Store | 822-1106 | Non-Y.js store variants |
-| File Providers | 1110-1380 | Memory, Local (IndexedDB), Remote, Composite |
-| Y.js Entity Stores | 1380-8000 | Per-entity Y.js wrappers (Attribute, Point, Plane, etc.) |
-| KitStore | ~8000-10000 | Main kit data store with Y.js backing |
-| SketchpadStore | ~10000-12000 | Root store aggregating kits and settings |
-| XState Machine | ~12000-14000 | `sketchpadMachine` with navigation states |
-| Hooks | ~14000-15500 | React hooks for state access |
-| UI Components | ~15500-15835 | Navbar, Footer, Canvas, Panels |
+| Region             | Lines        | Purpose                                                  |
+| ------------------ | ------------ | -------------------------------------------------------- |
+| Header             | 1-20         | LGPL-3.0 license                                         |
+| Imports            | 23-247       | 200+ imports from React, XState, Y.js, Three.js, etc.    |
+| Store Base Classes | 250-820      | `Store<TState>`, `AppStore`, `KitDiffAppStore`           |
+| Plain App Store    | 822-1106     | Non-Y.js store variants                                  |
+| File Providers     | 1110-1380    | Memory, Local (IndexedDB), Remote, Composite             |
+| Y.js Entity Stores | 1380-8000    | Per-entity Y.js wrappers (Attribute, Point, Plane, etc.) |
+| KitStore           | ~8000-10000  | Main kit data store with Y.js backing                    |
+| SketchpadStore     | ~10000-12000 | Root store aggregating kits and settings                 |
+| XState Machine     | ~12000-14000 | `sketchpadMachine` with navigation states                |
+| Hooks              | ~14000-15500 | React hooks for state access                             |
+| UI Components      | ~15500-15835 | Navbar, Footer, Canvas, Panels                           |
 
 #### Store Hierarchy
 
@@ -674,7 +676,7 @@ Store<TState>                    # Base: snapshot caching, Y.js observation
 export abstract class Store<TState> {
   protected dirty: boolean = true;
   protected cache?: TState;
-  
+
   snapshot(): TState {
     if (!this.dirty && this.cache) return this.cache;
     this.cache = this.buildSnapshot();
@@ -702,11 +704,11 @@ onFieldChanged(key: string, subscribe: Subscribe, deep: boolean = false): Unsubs
 
 #### Risk Assessment
 
-| Issue | Severity | Recommendation |
-|-------|----------|----------------|
-| 15,835 LOC in single file | CRITICAL | Split into Store/, Hooks/, Providers/ |
-| Y.js ↔ XState bidirectional sync | HIGH | Document invariants, add tests |
-| 200+ imports | MEDIUM | Bundle analysis, tree shaking |
+| Issue                            | Severity | Recommendation                        |
+| -------------------------------- | -------- | ------------------------------------- |
+| 15,835 LOC in single file        | CRITICAL | Split into Store/, Hooks/, Providers/ |
+| Y.js ↔ XState bidirectional sync | HIGH     | Document invariants, add tests        |
+| 200+ imports                     | MEDIUM   | Bundle analysis, tree shaking         |
 
 ---
 
@@ -716,17 +718,17 @@ onFieldChanged(key: string, subscribe: Subscribe, deep: boolean = false): Unsubs
 
 #### Structure
 
-| Region | Lines | Purpose |
-|--------|-------|---------|
-| Header | 1-20 | License |
-| Internal State | 23-200 | Interfaces for selection, hover, presence, diff |
-| Imports | 73-215 | Lazy loading of KitSection |
-| State Types | 219-310 | `DesignAppSelection`, `DesignAppState`, `DesignAppEdit` |
-| Commands | 310-500 | `semio.designApp.*` command implementations |
-| Plugin Registration | 500-800 | XState event handlers |
-| XState Hooks | 800-2500 | `useDesignApp*` hooks (selection, hover, camera, etc.) |
-| UI Components | 2500-8000 | Scene, Diagram, Panels, Tools |
-| Providers | 8000-8187 | Context providers for piece/connection scope |
+| Region              | Lines     | Purpose                                                 |
+| ------------------- | --------- | ------------------------------------------------------- |
+| Header              | 1-20      | License                                                 |
+| Internal State      | 23-200    | Interfaces for selection, hover, presence, diff         |
+| Imports             | 73-215    | Lazy loading of KitSection                              |
+| State Types         | 219-310   | `DesignAppSelection`, `DesignAppState`, `DesignAppEdit` |
+| Commands            | 310-500   | `semio.designApp.*` command implementations             |
+| Plugin Registration | 500-800   | XState event handlers                                   |
+| XState Hooks        | 800-2500  | `useDesignApp*` hooks (selection, hover, camera, etc.)  |
+| UI Components       | 2500-8000 | Scene, Diagram, Panels, Tools                           |
+| Providers           | 8000-8187 | Context providers for piece/connection scope            |
 
 #### Commands
 
@@ -753,10 +755,10 @@ interface DesignAppState {
   fullscreenWindow: DesignAppFullscreenWindow;
   panelVisibility: PanelVisibility;
   activeTool?: ToolKind;
-  selection?: DesignAppSelection;    // pieces[], connections[], connector
-  hover?: DesignAppHover;            // pieces[], types[], designs[]
-  presence?: DesignAppPresence;      // cursor, camera
-  others: DesignAppPresenceOther[];  // multiplayer cursors
+  selection?: DesignAppSelection; // pieces[], connections[], connector
+  hover?: DesignAppHover; // pieces[], types[], designs[]
+  presence?: DesignAppPresence; // cursor, camera
+  others: DesignAppPresenceOther[]; // multiplayer cursors
   camera?: Camera;
   diagramCenter?: Coord;
   diagramScale?: number;
@@ -768,10 +770,10 @@ interface DesignAppState {
 
 #### Risk Assessment
 
-| Issue | Severity | Recommendation |
-|-------|----------|----------------|
-| 8,187 LOC | HIGH | Split into Commands/, Hooks/, UI/ |
-| Tightly coupled to Sketchpad.tsx | MEDIUM | Extract shared types to shared.ts |
+| Issue                            | Severity | Recommendation                    |
+| -------------------------------- | -------- | --------------------------------- |
+| 8,187 LOC                        | HIGH     | Split into Commands/, Hooks/, UI/ |
+| Tightly coupled to Sketchpad.tsx | MEDIUM   | Extract shared types to shared.ts |
 
 ---
 
@@ -781,23 +783,23 @@ interface DesignAppState {
 
 #### Structure
 
-| Region | Lines | Purpose |
-|--------|-------|---------|
-| Header/Imports | 1-100 | Standard imports |
-| State Types | 100-190 | `TypeAppSelection`, `TypeAppState`, `TypeAppHover` |
-| Plugin Registration | 190-400 | XState event handlers for TYPE.* events |
-| XState Hooks | 400-750 | `useTypeApp*` hooks |
-| Commands | 750-1500 | Connector/model CRUD operations |
-| UI Components | 1500-3399 | Scene, connector visualization, model selector |
+| Region              | Lines     | Purpose                                            |
+| ------------------- | --------- | -------------------------------------------------- |
+| Header/Imports      | 1-100     | Standard imports                                   |
+| State Types         | 100-190   | `TypeAppSelection`, `TypeAppState`, `TypeAppHover` |
+| Plugin Registration | 190-400   | XState event handlers for TYPE.\* events           |
+| XState Hooks        | 400-750   | `useTypeApp*` hooks                                |
+| Commands            | 750-1500  | Connector/model CRUD operations                    |
+| UI Components       | 1500-3399 | Scene, connector visualization, model selector     |
 
 #### Key Differences from Design.tsx
 
-| Aspect | Design.tsx | Type.tsx |
-|--------|------------|----------|
-| Primary Entities | Pieces, Connections | Connectors, Models |
-| Selection | Multi-select pieces/connections | Single connector, multi-select models |
-| 3D Focus | Design composition | Connector placement on model |
-| Tools | Lasso, connection tool | Connector creation tool |
+| Aspect           | Design.tsx                      | Type.tsx                              |
+| ---------------- | ------------------------------- | ------------------------------------- |
+| Primary Entities | Pieces, Connections             | Connectors, Models                    |
+| Selection        | Multi-select pieces/connections | Single connector, multi-select models |
+| 3D Focus         | Design composition              | Connector placement on model          |
+| Tools            | Lasso, connection tool          | Connector creation tool               |
 
 ---
 
@@ -807,19 +809,19 @@ interface DesignAppState {
 
 #### Structure
 
-| Region | Lines | Purpose |
-|--------|-------|---------|
-| Header | 1-35 | License, TODOs |
-| Imports | 39-120 | SQLModel, FastAPI, Graphene, MCP |
-| Constants | 140-200 | Limits, paths, MIME types |
-| Utility | 200-280 | Encoding, normalization, logging |
-| Exceptions | 280-350 | Custom error hierarchy |
-| Modeling Base | 350-500 | `Model`, `Entity`, `Table`, `Id`, `Props` |
-| GraphQL Base | 500-600 | `Node`, `TableNode`, `RelayNode` |
-| Domain Entities | 600-5000 | All entities as SQLModel tables |
-| API Routes | 5000-6500 | FastAPI endpoints |
-| GraphQL Schema | 6500-7200 | Graphene queries/mutations |
-| MCP Server | 7200-7727 | FastMCP tool definitions |
+| Region          | Lines     | Purpose                                   |
+| --------------- | --------- | ----------------------------------------- |
+| Header          | 1-35      | License, TODOs                            |
+| Imports         | 39-120    | SQLModel, FastAPI, Graphene, MCP          |
+| Constants       | 140-200   | Limits, paths, MIME types                 |
+| Utility         | 200-280   | Encoding, normalization, logging          |
+| Exceptions      | 280-350   | Custom error hierarchy                    |
+| Modeling Base   | 350-500   | `Model`, `Entity`, `Table`, `Id`, `Props` |
+| GraphQL Base    | 500-600   | `Node`, `TableNode`, `RelayNode`          |
+| Domain Entities | 600-5000  | All entities as SQLModel tables           |
+| API Routes      | 5000-6500 | FastAPI endpoints                         |
+| GraphQL Schema  | 6500-7200 | Graphene queries/mutations                |
+| MCP Server      | 7200-7727 | FastMCP tool definitions                  |
 
 #### Key Patterns
 
@@ -828,10 +830,10 @@ interface DesignAppState {
 class Attribute(TableEntity, table=True):
     PLURAL = "attributes"
     __tablename__ = "attributes"
-    
+
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
     value: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
-    
+
     def idMembers(self) -> RecursiveAnyList:
         return [self.name]
 
@@ -840,7 +842,7 @@ class TableEntityNode(TableNode):
     class Meta:
         abstract = True
         interfaces = (RelayNode,)
-    
+
     def resolve_id(self, info):
         return self.guid()
 
@@ -855,11 +857,11 @@ def get_kit(path: str) -> Kit:
 
 #### Risk Assessment
 
-| Issue | Severity | Recommendation |
-|-------|----------|----------------|
-| 7,727 LOC single file | HIGH | Split into models/, api/, graphql/ |
-| Manual schema sync with TS | CRITICAL | Shared schema definition |
-| Python 3.13+ type hints | LOW | Compatible with modern Python |
+| Issue                      | Severity | Recommendation                     |
+| -------------------------- | -------- | ---------------------------------- |
+| 7,727 LOC single file      | HIGH     | Split into models/, api/, graphql/ |
+| Manual schema sync with TS | CRITICAL | Shared schema definition           |
+| Python 3.13+ type hints    | LOW      | Compatible with modern Python      |
 
 ---
 
@@ -869,18 +871,18 @@ def get_kit(path: str) -> Kit:
 
 #### Structure
 
-| Region | Lines | Purpose |
-|--------|-------|---------|
-| Header | 1-35 | License, TODOs |
-| Using | 36-60 | External dependencies |
-| Constants | 63-120 | Matching Python/TS constants |
-| Utility | 123-400 | Serialization, encoding, unit conversion |
-| Expressions | 400-800 | AST for formula evaluation (Sum, Multiply, etc.) |
-| Validation | 800-1000 | FluentValidation base classes |
-| Domain Entities | 1000-4500 | Entity definitions with validators |
-| Graph Algorithms | 4500-5200 | QuikGraph for design topology |
-| SVG Generation | 5200-5600 | Diagram export |
-| API Client | 5600-5734 | Refit-based engine client |
+| Region           | Lines     | Purpose                                          |
+| ---------------- | --------- | ------------------------------------------------ |
+| Header           | 1-35      | License, TODOs                                   |
+| Using            | 36-60     | External dependencies                            |
+| Constants        | 63-120    | Matching Python/TS constants                     |
+| Utility          | 123-400   | Serialization, encoding, unit conversion         |
+| Expressions      | 400-800   | AST for formula evaluation (Sum, Multiply, etc.) |
+| Validation       | 800-1000  | FluentValidation base classes                    |
+| Domain Entities  | 1000-4500 | Entity definitions with validators               |
+| Graph Algorithms | 4500-5200 | QuikGraph for design topology                    |
+| SVG Generation   | 5200-5600 | Diagram export                                   |
+| API Client       | 5600-5734 | Refit-based engine client                        |
 
 #### Key Patterns
 
@@ -917,14 +919,14 @@ public class AttributeValidator : AbstractValidator<Attribute> {
 
 #### Dependencies
 
-| Package | Purpose |
-|---------|---------|
-| Newtonsoft.Json | Serialization (camelCase) |
-| FluentValidation | Entity validation |
-| QuikGraph | Graph algorithms |
-| Svg | SVG generation |
-| UnitsNet | Physical unit conversion |
-| Refit | Type-safe HTTP client |
+| Package          | Purpose                   |
+| ---------------- | ------------------------- |
+| Newtonsoft.Json  | Serialization (camelCase) |
+| FluentValidation | Entity validation         |
+| QuikGraph        | Graph algorithms          |
+| Svg              | SVG generation            |
+| UnitsNet         | Physical unit conversion  |
+| Refit            | Type-safe HTTP client     |
 
 ---
 
@@ -934,16 +936,16 @@ public class AttributeValidator : AbstractValidator<Attribute> {
 
 #### Structure
 
-| Region | Lines | Purpose |
-|--------|-------|---------|
-| Header/TODOs | 1-60 | Notes on future improvements |
-| Constants | 68-90 | Category, version |
-| Utility | 99-230 | Plane computation, connection placement |
-| Converters | 234-255 | Rhino ↔ semio type conversion |
-| Base Classes | 260-690 | `Goo<T>`, `Param<T>`, `Component`, `PassthroughComponent` |
-| Entity Regions | 690-5800 | Per-entity Goo, Param, Component classes |
-| Scripting | 5800-5890 | Custom script component base |
-| Engine | 5890-5978 | Persistence and engine communication |
+| Region         | Lines     | Purpose                                                   |
+| -------------- | --------- | --------------------------------------------------------- |
+| Header/TODOs   | 1-60      | Notes on future improvements                              |
+| Constants      | 68-90     | Category, version                                         |
+| Utility        | 99-230    | Plane computation, connection placement                   |
+| Converters     | 234-255   | Rhino ↔ semio type conversion                             |
+| Base Classes   | 260-690   | `Goo<T>`, `Param<T>`, `Component`, `PassthroughComponent` |
+| Entity Regions | 690-5800  | Per-entity Goo, Param, Component classes                  |
+| Scripting      | 5800-5890 | Custom script component base                              |
+| Engine         | 5890-5978 | Persistence and engine communication                      |
 
 #### Component Pattern
 
@@ -978,13 +980,13 @@ public class DeserializeAttributeComponent : DeserializeComponent<AttributeParam
 
 ```csharp
 public static class RhinoConverter {
-    public static Point3d Convert(this Point point) => 
+    public static Point3d Convert(this Point point) =>
         new Point3d(point.X, point.Y, point.Z);
-    
-    public static Point Convert(this Point3d point) => 
+
+    public static Point Convert(this Point3d point) =>
         new Point { X = (float)point.X, Y = (float)point.Y, Z = (float)point.Z };
-    
-    public static Rhino.Geometry.Plane Convert(this Plane plane) => 
+
+    public static Rhino.Geometry.Plane Convert(this Plane plane) =>
         new(plane.Origin.Convert(), plane.XAxis.Convert(), plane.YAxis.Convert());
 }
 ```
@@ -997,23 +999,23 @@ public static class RhinoConverter {
 
 #### Structure
 
-| Region | Lines | Purpose |
-|--------|-------|---------|
-| Header | 1-5 | License |
-| Imports | 7-17 | crypto/rand, encoding, gonum/mat |
-| Constants | 20-24 | IconWidth, Tolerance |
-| Utils | 27-52 | Guid, Normalize, Round, DeepEqual |
-| Entity IDs | 55-130 | ID structs with JSON tags |
-| Weak Entities | 135-185 | Coord, Vec, Point, Vector, Plane, Camera |
-| Attribute | 190-210 | Attribute + AttributeDiff + AttributesDiff |
-| ... (all entities) | 210-1120 | Full domain model |
-| Serialization | 1128-1148 | JSON marshal/unmarshal |
-| Helpers | 1152-1260 | Entity lookup, traversal |
-| Factories | 1264-1389 | Entity constructors |
-| Kit Operations | 1393-3489 | CRUD operations, cloning |
-| Kit Diff Helpers | 3493-3589 | Diff computation |
-| Validation | 3593-4495 | Constraint checking |
-| Flatten Design | 4501-4960 | Piece plane computation |
+| Region             | Lines     | Purpose                                    |
+| ------------------ | --------- | ------------------------------------------ |
+| Header             | 1-5       | License                                    |
+| Imports            | 7-17      | crypto/rand, encoding, gonum/mat           |
+| Constants          | 20-24     | IconWidth, Tolerance                       |
+| Utils              | 27-52     | Guid, Normalize, Round, DeepEqual          |
+| Entity IDs         | 55-130    | ID structs with JSON tags                  |
+| Weak Entities      | 135-185   | Coord, Vec, Point, Vector, Plane, Camera   |
+| Attribute          | 190-210   | Attribute + AttributeDiff + AttributesDiff |
+| ... (all entities) | 210-1120  | Full domain model                          |
+| Serialization      | 1128-1148 | JSON marshal/unmarshal                     |
+| Helpers            | 1152-1260 | Entity lookup, traversal                   |
+| Factories          | 1264-1389 | Entity constructors                        |
+| Kit Operations     | 1393-3489 | CRUD operations, cloning                   |
+| Kit Diff Helpers   | 3493-3589 | Diff computation                           |
+| Validation         | 3593-4495 | Constraint checking                        |
+| Flatten Design     | 4501-4960 | Piece plane computation                    |
 
 #### Key Patterns
 
@@ -1052,11 +1054,11 @@ func FlattenDesign(design *Design, kit *Kit) map[string]*Plane {
 
 #### Risk Assessment
 
-| Issue | Severity | Recommendation |
-|-------|----------|----------------|
-| 4,960 LOC single file | MEDIUM | Acceptable for Go library |
-| Manual JSON tags | LOW | Standard Go pattern |
-| gonum dependency | LOW | Well-maintained library |
+| Issue                 | Severity | Recommendation            |
+| --------------------- | -------- | ------------------------- |
+| 4,960 LOC single file | MEDIUM   | Acceptable for Go library |
+| Manual JSON tags      | LOW      | Standard Go pattern       |
+| gonum dependency      | LOW      | Well-maintained library   |
 
 ---
 
@@ -1064,35 +1066,35 @@ func FlattenDesign(design *Design, kit *Kit) map[string]*Plane {
 
 ### Entity Alignment Matrix
 
-| Entity | TypeScript | Python | C# | Go |
-|--------|------------|--------|----|----|
-| Attribute | ✓ Zod | ✓ SQLModel | ✓ FluentValidation | ✓ JSON |
-| Point | ✓ | ✓ | ✓ | ✓ |
-| Plane | ✓ THREE.js | ✓ | ✓ Rhino.Geometry | ✓ gonum |
-| Type | ✓ | ✓ | ✓ | ✓ |
-| Design | ✓ | ✓ | ✓ | ✓ |
-| Piece | ✓ | ✓ | ✓ | ✓ |
-| Connection | ✓ | ✓ | ✓ | ✓ |
-| Kit | ✓ | ✓ | ✓ | ✓ |
-| KitDiff | ✓ | ✓ | ✓ | ✓ |
-| Validation | ✓ Problems/Fixes | ✓ | ✓ | ✓ |
+| Entity     | TypeScript       | Python     | C#                 | Go      |
+| ---------- | ---------------- | ---------- | ------------------ | ------- |
+| Attribute  | ✓ Zod            | ✓ SQLModel | ✓ FluentValidation | ✓ JSON  |
+| Point      | ✓                | ✓          | ✓                  | ✓       |
+| Plane      | ✓ THREE.js       | ✓          | ✓ Rhino.Geometry   | ✓ gonum |
+| Type       | ✓                | ✓          | ✓                  | ✓       |
+| Design     | ✓                | ✓          | ✓                  | ✓       |
+| Piece      | ✓                | ✓          | ✓                  | ✓       |
+| Connection | ✓                | ✓          | ✓                  | ✓       |
+| Kit        | ✓                | ✓          | ✓                  | ✓       |
+| KitDiff    | ✓                | ✓          | ✓                  | ✓       |
+| Validation | ✓ Problems/Fixes | ✓          | ✓                  | ✓       |
 
 ### Feature Parity
 
-| Feature | TS | Py | C# | Go |
-|---------|----|----|----|----|
-| JSON Serialization | ✓ | ✓ | ✓ | ✓ |
-| Zod/Pydantic Schemas | ✓ | ✓ | - | - |
-| FluentValidation | - | - | ✓ | - |
-| SQLite Persistence | - | ✓ | - | - |
-| Y.js CRDT | ✓ | - | - | - |
-| GraphQL Server | - | ✓ | - | - |
-| REST API | - | ✓ | - | - |
-| Unit Conversion | - | - | ✓ | - |
-| Expression Eval | - | - | ✓ | - |
-| Plane Flattening | ✓ | ✓ | ✓ | ✓ |
-| Diagram Generation | ✓ | - | ✓ | - |
+| Feature              | TS  | Py  | C#  | Go  |
+| -------------------- | --- | --- | --- | --- |
+| JSON Serialization   | ✓   | ✓   | ✓   | ✓   |
+| Zod/Pydantic Schemas | ✓   | ✓   | -   | -   |
+| FluentValidation     | -   | -   | ✓   | -   |
+| SQLite Persistence   | -   | ✓   | -   | -   |
+| Y.js CRDT            | ✓   | -   | -   | -   |
+| GraphQL Server       | -   | ✓   | -   | -   |
+| REST API             | -   | ✓   | -   | -   |
+| Unit Conversion      | -   | -   | ✓   | -   |
+| Expression Eval      | -   | -   | ✓   | -   |
+| Plane Flattening     | ✓   | ✓   | ✓   | ✓   |
+| Diagram Generation   | ✓   | -   | ✓   | -   |
 
 ---
 
-*Report generated by deep codebase analysis. Last updated: January 12, 2026*
+_Report generated by deep codebase analysis. Last updated: January 12, 2026_

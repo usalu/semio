@@ -10,9 +10,9 @@
 		},
 		"semio-repo": {
 			"type": "stdio",
-			"command": "go/repo/repo",
+			"command": "./go/repo/repo",
 			"args": [
-				"--mcp-stdio"
+				"mcp"
 			]
 		},
 		"semio": {

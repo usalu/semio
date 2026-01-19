@@ -366,7 +366,7 @@ suite("Sidebar View Test Suite", function () {
   this.timeout(15000);
 
   test("All expected views are registered", async function () {
-    const extension = vscode.extensions.getExtension("usalu.@semio/vscode");
+    const extension = vscode.extensions.getExtension("usalu.@semio-repo/vscode");
     assert.ok(extension, "Extension should be found");
     assert.ok(extension.isActive, "Extension should be active");
   });

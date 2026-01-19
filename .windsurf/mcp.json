@@ -5,14 +5,15 @@
       "args": [
         "playwright",
         "run-test-mcp-server"
-      ]
+      ],
+      "disabled": false
     },
     "semio-repo": {
-      "type": "stdio",
       "command": "./go/repo/repo",
       "args": [
         "mcp"
-      ]
+      ],
+      "disabled": false
     }
   }
 }

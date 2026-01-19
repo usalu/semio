@@ -1127,6 +1127,13 @@ The code hygiene hook enforces comment, license, and region policies before chan
 It treats empty regions as invalid structure and removes them automatically in fix mode so region blocks stay meaningful and concise.
 All code must sit inside named regions; orphan definitions outside any section are reported as code:section:orphan-definition so you can relocate them as full definition blocks.
 
+## 🧩 Repo Tooling Sync [↑](#-bundles-)
+
+The repo CLI is the single source of truth for ticket workflows and the GraphQL schema that powers tooling.
+The VS Code extension uses the schema mirror to generate typed documents and forwards queries through the CLI so the UI and CLI stay in lockstep.
+Devcontainer attach builds and installs the local extension automatically, keeping the workspace ready without manual steps.
+VS Code extension packaging requires an unscoped extension name in `js/vscode/package.json` so `vsce package` can build the local `.vsix`.
+
 ## ✅ Validation System [↑](#-bundles-)
 
 semio includes a **domain-pure validation system** built entirely in `semio.ts` with zero JSON dependencies. All validation logic works with `Kit` objects and produces `KitDiff`-based fixes.
@@ -1454,7 +1461,7 @@ Currently not implemented in this repo (planned component) 🧩
 
 A playground for [sketchpad](#%EF%B8%8F-sketchpad-) 🎮
 
-## 💻 [@semio/vscode](https://github.com/usalu/semio/tree/main/js/vscode) [↑](#-bundles-)
+## 💻 [@semio-repo/vscode](https://github.com/usalu/semio/tree/main/js/vscode) [↑](#-bundles-)
 
 VS Code extension providing real-time violation diagnostics for semio development. Compatible with VS Code and Windsurf (VSCode OSS 1.106.0+).
 

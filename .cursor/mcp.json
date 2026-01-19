@@ -8,7 +8,6 @@
       ]
     },
     "semio-repo": {
-      "type": "stdio",
       "command": "./go/repo/repo",
       "args": [
         "mcp"

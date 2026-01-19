@@ -1,57 +1,6 @@
 {
   "recommendations": [
-    // repo
     "ms-vscode-remote.remote-containers",
-    "ms-azuretools.vscode-docker",
-    "nrwl.angular-console",
-    // github
-    "github.vscode-github-actions",
-    "github.vscode-pull-request-github",
-    // toml
-    "tamasfe.even-better-toml",
-    // yaml
-    "redhat.vscode-yaml",
-    // data
-    "ms-toolsai.datawrangler",
-    "mechatroner.rainbow-csv",
-    // graphql
-    "graphql.vscode-graphql",
-    "graphql.vscode-graphql-syntax",
-    // formatter
-    "esbenp.prettier-vscode",
-    // javascript
-    "dbaeumer.vscode-eslint",
-    "bradlc.vscode-tailwindcss",
-    "unifiedjs.vscode-mdx",
-    "statelyai.stately-vscode",
-    "vitest.explorer",
-    "firefox-devtools.vscode-firefox-debug",
-    "ms-playwright.playwright",
-    // dotnet
-    "ms-dotnettools.vscode-dotnet-pack",
-    "ms-dotnettools.vscode-dotnet-runtime",
-    "ms-dotnettools.csharp",
-    "ms-dotnettools.csdevkit",
-    "ms-dotnettools.dotnet-interactive-vscode",
-    // python
-    "ms-python.python",
-    "ms-python.vscode-pylance",
-    "charliermarsh.ruff",
-    "ms-toolsai.jupyter",
-    // rust
-    "rust-lang.rust-analyzer",
-    // go
-    "golang.go",
-    // ai
-    "github.copilot",
-    "github.copilot-chat",
-    "anthropic.claude-code",
-    "openai.chatgpt",
-    // utility
-    "gruntfuggly.todo-tree",
-    "jebbs.plantuml",
-    "jock.svg",
-    // visuals
     "vscode-icons-team.vscode-icons"
   ],
   "unwantedRecommendations": []

@@ -24,7 +24,7 @@ Created initial version with basic support for all package managers.
 
 ### Issues Found After Testing v1
 
-1. **Local @semio/* packages affected**: Hardcoded package list missed packages like `@semio/logo`
+1. **Local @semio/\* packages affected**: Hardcoded package list missed packages like `@semio/logo`
 2. **Cargo only updates lock file**: `cargo update` doesn't update Cargo.toml versions
 3. **Semio.csproj exclusions missing**: FluentValidation and System.Collections.Immutable needed exclusion
 4. **uv only updates lock file**: `uv lock --upgrade` doesn't update pyproject.toml
@@ -53,8 +53,9 @@ Created initial version with basic support for all package managers.
 ### Final Test Results
 
 **NPM** - All 15 workspace packages detected:
+
 ```
-  Detected 15 workspace packages: @semio/logo, @semio/icons, @semio/assets, @semio/engine, @semio/js, @semio/docs, @semio/play, @semio/desktop, @semio/vscode, @semio/net, @semio/grasshopper, @semio/go, @semio-repo/go, @semio-repo/mcp, @semio/yak
+  Detected 15 workspace packages: @semio/logo, @semio/icons, @semio/assets, @semio/engine, @semio/js, @semio/docs, @semio/play, @semio/desktop, @semio-repo/vscode, @semio/net, @semio/grasshopper, @semio/go, @semio-repo/go, @semio-repo/mcp, @semio/yak
   Will preserve local package versions:
     assets/icons/package.json: devDependencies.@semio/logo = "*"
     net/Semio.Grasshopper/package.json: devDependencies.@semio/net = "*"
@@ -62,6 +63,7 @@ Created initial version with basic support for all package managers.
 ```
 
 **Cargo.toml** - Successfully updated:
+
 ```diff
 -serde = { version = "1.0", features = ["derive"] }
 +serde = { version = "1.0.228", features = ["derive"] }
@@ -70,6 +72,7 @@ Created initial version with basic support for all package managers.
 ```
 
 **pyproject.toml** - Updates attempted but rolled back due to conflicts:
+
 ```
     Lock failed! Rolling back pyproject.toml...
     Rolled back to original versions.

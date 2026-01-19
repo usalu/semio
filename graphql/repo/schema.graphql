@@ -91,6 +91,8 @@ input TicketOpenInput {
   title: String!
   prompt: String!
   llm: String!
+  noIssue: Boolean
+  planPath: String
 }
 
 input TicketCloseInput {

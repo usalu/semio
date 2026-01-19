@@ -1,5 +1,44 @@
 # Prompt history 
 
+## Templates
+
+Change/refactor/extend whatever is necessary to get it working. 
+
+Dont ask in between, no matter the issue. Figure it out. Be sure that it works everywhere before stopping.
+
+## Log
+
+Make sure that semio-repo mcp tool is working in vscode, windsurf, claude code, codex and cursor.
+
+Change/refactor/extend the ticket mechanism, update repo binary and vscode extension:
+- Currently the ticket close creates two comments. Merge them into one comment and separating them with `# ✍️ Changes`
+```md
+<SUMMARY>
+
+# ✍️ Changes
+
+➖js/js/.storybook/config.ts -482
+✏️js/semio/sketchpad/Design.tsx +250 -12
+➕js/semio/sketchpad/Prop.tsx +4125
+```
+Make sure the line metrics are added to deleted (lines of the file), modified (added and removed lines of the file), added (lines of the file).
+
+
+Change/refactor/extend the ticket mechanism, update repo binary and vscode extension:
+- Extend ticket open with a manadary enum: ui (copliot-chat, antigravity, cursor, claude-code, codex, droid)
+- Extend AGENTS.md ticket instruction to 1. include all enums (llms, ui)
+- The derived github labels are not working properly. Every involved bundle (`@semio/js`,`@semio/py`,`@semio/net`,`@semio/go`,`@semio/play`,`@semio/grasshopper`,`@semio/yak`,`@semio/assets`,`@semio-repo/vscode`, …) is added as a label. If a file inside a bundle, the bundle is added. If a file outside a the repo label `@semio-repo` is added.
+- The final comment should have line metrics such as:
+```md
+➖js/js/.storybook/config.ts -482
+✏️js/semio/sketchpad/Design.tsx +250 -12
+➕js/semio/sketchpad/Prop.tsx +4125
+```
+- Make sure the vscode extension complies and is properly attatched on the devcontainer.
+@main.go@main_test.go @Nodes.graphql@NodesAndEdges.graphql@schema.graphql@queries @extension.test.ts@extension.ts @schema.sql 
+
+Get the vscode extension compiling and running (it is partially outdated) and make sure it is added to the devcontainer. Use go/repo/main.go as single-source of truth. Refactor/change/extend whatever is necessary.
+
 Every app has a landing page (when no windows are open/all windows are closed). Every app defines a default window layout.
 
 Extend the ticket mechanism. The repo binary should automatically create a github issue on ticket open, close on ticket close and reopen on ticket reopen. Automatically link the issue with the project `https://github.com/users/usalu/projects/2`. Add a --no-issue flag to ticket open that prevents creating an issue. If the prompt has NOISSUE then issue should not be created. On ticket open add the `ticket` label to the issue.

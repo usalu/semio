@@ -1,13 +1,13 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
-  "name": "@semio-repo/vscode",
+  "name": "semio-repo",
   "displayName": "semio-repo",
   "description": "semio devtools for VS Code 🧑‍💻",
   "version": "0.0.1",
   "publisher": "usalu",
   "engines": {
-    "vscode": "^1.106.0"
+    "vscode": "^1.108.0"
   },
   "repository": {
     "type": "git",

@@ -1,0 +1,276 @@
+{
+  "title": "Refine Ticket System and Labels",
+  "iterations": [
+    {
+      "prompt": "1. Re-extend instructions for the ticket system in AGENTS.md. 2. Derive github labels from bundles with @semio/ prefix. 3. MD code block for comment metrics with status icons. 4. Updated LLM list in AGENTS.md and VS Code extension. 5. Strict mixed-case title validation. 6. Verified with unit tests.",
+      "llm": "claude-sonnet-4-5",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "date": "2026-01-19T15:31:18.0615274Z",
+      "commit": "bb54f0b1c5737689a9306dc94bf6e81e985cab21"
+    }
+  ],
+  "status": "closed",
+  "dates": {
+    "closed": "2026-01-19T15:31:21.596253819Z"
+  },
+  "summary": "Refined the ticket system with strict titleized title validation, expanded the LLM list, and updated GitHub label derivation to use @semio/ prefix. Improved metrics reporting in GitHub comments with Markdown code blocks and icons. Updated VS Code extension to align with new rules and verified with unit tests.",
+  "files": {
+    "deleted": [],
+    "renamed": [],
+    "modified": [
+      {
+        "path": "AGENTS.md",
+        "status": "modified",
+        "sections": [
+          {
+            "name": "Software Requirements Specification#Business Logic#Ticket",
+            "range": {
+              "start": 70,
+              "end": 97
+            },
+            "lines": {
+              "added": 1,
+              "removed": 1
+            }
+          },
+          {
+            "name": "Software Requirements Specification#Business Logic#Repo Tooling",
+            "range": {
+              "start": 98,
+              "end": 104
+            },
+            "lines": {
+              "added": 7,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Software Requirements Specification#UI/UX#VS Code Extension",
+            "range": {
+              "start": 365,
+              "end": 380
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Monorepo#Devcontainer",
+            "range": {
+              "start": 383,
+              "end": 416
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Using TypeScript fallback#GraphQL API",
+            "range": {
+              "start": 667,
+              "end": 725
+            },
+            "lines": {
+              "added": 3,
+              "removed": 3
+            }
+          },
+          {
+            "name": "Codebase#📄 .devcontainer/post-create.sh",
+            "range": {
+              "start": 1612,
+              "end": 1615
+            },
+            "lines": {
+              "added": 1,
+              "removed": 1
+            }
+          },
+          {
+            "name": "Codebase#📄 .devcontainer/post-attach.sh",
+            "range": {
+              "start": 1620,
+              "end": 1623
+            },
+            "lines": {
+              "added": 4,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Codebase#📄 js/vscode/extension.ts",
+            "range": {
+              "start": 3800,
+              "end": 3803
+            },
+            "lines": {
+              "added": 1,
+              "removed": 2
+            }
+          },
+          {
+            "name": "Codebase#📄 js/vscode/package.json",
+            "range": {
+              "start": 3804,
+              "end": 3807
+            },
+            "lines": {
+              "added": 2,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Codebase#📁 graphql/repo/",
+            "range": {
+              "start": 3808,
+              "end": 3811
+            },
+            "lines": {
+              "added": 2,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Codebase#📄 graphql/repo/schema.graphql",
+            "range": {
+              "start": 3812,
+              "end": 3815
+            },
+            "lines": {
+              "added": 2,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Codebase#📁 go/repo/",
+            "range": {
+              "start": 3816,
+              "end": 3819
+            },
+            "lines": {
+              "added": 2,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Codebase#📄 go/repo/main.go",
+            "range": {
+              "start": 3820,
+              "end": 3823
+            },
+            "lines": {
+              "added": 2,
+              "removed": 0
+            }
+          }
+        ]
+      },
+      {
+        "path": "go/repo/main.go",
+        "status": "modified",
+        "sections": [
+          {
+            "name": "Tickets",
+            "range": {
+              "start": 4778,
+              "end": 6741
+            },
+            "definitions": [
+              "CreateTicket",
+              "GetProjects",
+              "ResolveBundleForPath",
+              "generateMetricsComment",
+              "FinishTicket"
+            ],
+            "lines": {
+              "added": 43,
+              "removed": 8
+            }
+          },
+          {
+            "name": "Schema Builder",
+            "range": {
+              "start": 7162,
+              "end": 8468
+            },
+            "definitions": [
+              "buildSchema"
+            ],
+            "lines": {
+              "added": 8,
+              "removed": 0
+            }
+          }
+        ]
+      },
+      {
+        "path": "go/repo/github.go"
+      },
+      {
+        "path": "js/vscode/extension.ts",
+        "status": "modified",
+        "sections": [
+          {
+            "name": "Commands",
+            "range": {
+              "start": 2998,
+              "end": 3642
+            },
+            "definitions": [
+              "registerCommands",
+              "title",
+              "prompt",
+              "resolvedTicket",
+              "llm"
+            ],
+            "lines": {
+              "added": 20,
+              "removed": 14
+            }
+          }
+        ]
+      }
+    ],
+    "added": [
+      {
+        "path": "go/repo/main_test.go",
+        "status": "created",
+        "sections": [
+          {
+            "name": "Collection Tests",
+            "range": {
+              "start": 66,
+              "end": 360
+            },
+            "definitions": [
+              "TestTicketTitleValidation"
+            ],
+            "lines": {
+              "added": 27,
+              "removed": 0
+            }
+          }
+        ]
+      },
+      {
+        "path": "README.md",
+        "status": "created",
+        "sections": [
+          {
+            "name": "📦 Bundles [↑](#-overview)#🧩 Repo Tooling Sync [↑](#-bundles-)",
+            "range": {
+              "start": 1130,
+              "end": 1136
+            },
+            "lines": {
+              "added": 7,
+              "removed": 0
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

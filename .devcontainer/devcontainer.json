@@ -41,7 +41,7 @@
   "workspaceFolder": "/workspaces/semio",
   "postCreateCommand": "bash .devcontainer/post-create.sh",
   "postStartCommand": "bash .devcontainer/post-start.sh",
-  "postAttachCommand": "bash -lc \"cd js/vscode\ncode --install-extension semio.vsix --force\"",
+  "postAttachCommand": "bash .devcontainer/post-attach.sh",
   "forwardPorts": [
     2507,
     3000,
@@ -78,11 +78,12 @@
   },
   "mounts": [
     "source=${localWorkspaceFolderBasename}-node_modules,target=${containerWorkspaceFolder}/node_modules,type=volume",
-    "source=${localWorkspaceFolderBasename}-config-claude,target=/home/vscode/.config/claude,type=volume",
-    "source=${localWorkspaceFolderBasename}-config-codex,target=/home/vscode/.config/codex,type=volume",
+    "source=${localWorkspaceFolderBasename}-claude,target=/home/vscode/.claude,type=volume",
+    "source=${localWorkspaceFolderBasename}-codex,target=/home/vscode/.codex,type=volume",
     "source=${localWorkspaceFolderBasename}-config-gh,target=/home/vscode/.config/gh,type=volume",
     "source=${localWorkspaceFolderBasename}-config-cursor,target=/home/vscode/.config/cursor,type=volume",
-    "source=${localWorkspaceFolderBasename}-config-antigravity,target=/home/vscode/.config/antigravity,type=volume"
+    "source=${localWorkspaceFolderBasename}-config-antigravity,target=/home/vscode/.config/antigravity,type=volume",
+    "source=${localWorkspaceFolderBasename}-codeium,target=/home/vscode/.codeium,type=volume"
   ],
   "remoteUser": "vscode",
   "containerEnv": {
@@ -95,8 +96,8 @@
         // repo
         "nrwl.angular-console",
         // github
-        "github.vscode-github-actions",
         "github.vscode-pull-request-github",
+        "github.vscode-github-actions",
         // toml
         "tamasfe.even-better-toml",
         // yaml
@@ -115,7 +116,6 @@
         "unifiedjs.vscode-mdx",
         "statelyai.stately-vscode",
         "vitest.explorer",
-        "firefox-devtools.vscode-firefox-debug",
         "ms-playwright.playwright",
         // dotnet
         "ms-dotnettools.vscode-dotnet-pack",
@@ -140,9 +140,7 @@
         // utility
         "gruntfuggly.todo-tree",
         "jebbs.plantuml",
-        "jock.svg",
-        // visuals
-        "vscode-icons-team.vscode-icons"
+        "jock.svg"
       ],
       "settings": {
         "editor.formatOnSave": true,

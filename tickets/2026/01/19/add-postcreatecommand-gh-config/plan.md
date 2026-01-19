@@ -1,0 +1,21 @@
+# Plan: Add gh config ownership fix to post-create.sh
+
+## Task
+Add command to fix ownership of `/home/vscode/.config/gh` directory in the postCreateCommand.
+
+## Analysis
+- The devcontainer.json already has `"postCreateCommand": "bash .devcontainer/post-create.sh"` on line 42
+- The `/home/vscode/.config/gh` directory is a mounted volume (line 83 in devcontainer.json)
+- When volumes are created, they may have root ownership, causing permission issues for the vscode user
+
+## Approach
+Add the ownership fix command to the existing `post-create.sh` script rather than modifying the devcontainer.json postCreateCommand, since:
+1. The script already runs as postCreateCommand
+2. Keeping commands in the script is cleaner and more maintainable
+
+## Implementation
+Add at the beginning of post-create.sh (after the set -e):
+```bash
+echo "Fixing ownership of mounted config directories..."
+sudo chown -R vscode:vscode /home/vscode/.config/gh || true
+```

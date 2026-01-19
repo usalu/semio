@@ -1,0 +1,6 @@
+{
+  "title": "add-postcreatecommand-gh-config",
+  "prompt": "Add postCreateCommand to devcontainer.json to fix gh config ownership",
+  "llm": "claude",
+  "status": "closed"
+}

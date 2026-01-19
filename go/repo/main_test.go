@@ -232,6 +232,33 @@ func TestViolationsNonEmpty(t *testing.T) {
 	}
 }
 
+func TestTicketTitleValidation(t *testing.T) {
+	executor := getTestExecutor(t)
+	ctx := context.Background()
+
+	tests := []struct {
+		name    string
+		title   string
+		wantErr bool
+	}{
+		{"Titleized Valid", "Some Title on Something", false},
+		{"Single Word Valid", "Cleanup", false},
+		{"Slug Invalid", "some-slug-title", true},
+		{"Lowercase Invalid", "some title", true},
+		{"Allcaps Invalid", "FIX EVERYTHING", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			query := `mutation { ticketOpen(input: { title: "` + tt.title + `", prompt: "Test prompt", llm: "claude-opus-4", noIssue: true }) { id } }`
+			_, err := executor.ExecuteJSON(ctx, query, nil)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ticketOpen() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
 func TestNodesAndEdgesQuick(t *testing.T) {
 	executor := getTestExecutor(t)
 	ctx := context.Background()

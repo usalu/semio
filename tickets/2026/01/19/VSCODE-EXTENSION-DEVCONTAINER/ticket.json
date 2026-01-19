@@ -1,0 +1,2763 @@
+{
+  "title": "vscode-extension-devcontainer",
+  "iterations": [
+    {
+      "prompt": "Get the vscode extension running (it is partially outdated) and make sure it is added to the devcontainer. Use go/repo/main.go as single-source of truth.",
+      "llm": "gpt-5-2",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "date": "2026-01-19T13:52:36.589950707Z",
+      "commit": "bb54f0b1c5737689a9306dc94bf6e81e985cab21"
+    },
+    {
+      "prompt": "Fix vsce packaging failure from invalid extension name; align extension manifest with VS Code requirements and update docs.",
+      "llm": "gpt-5-2",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "date": "2026-01-19T14:08:10.996322137Z",
+      "commit": "bb54f0b1c5737689a9306dc94bf6e81e985cab21"
+    }
+  ],
+  "status": "closed",
+  "dates": {
+    "closed": "2026-01-19T14:09:03.057949266Z"
+  },
+  "summary": "Fixed VS Code extension packaging by switching the extension manifest name to an unscoped value, and documented the vsce naming requirement in README/AGENTS alongside the codebase entry for js/vscode/package.json.",
+  "files": {
+    "deleted": [],
+    "renamed": [],
+    "modified": [
+      {
+        "path": "js/vscode/package.json",
+        "status": "modified",
+        "sections": [
+          {
+            "name": "name",
+            "range": {
+              "start": 4,
+              "end": 4
+            },
+            "lines": {
+              "added": 1,
+              "removed": 1
+            }
+          },
+          {
+            "name": "name",
+            "range": {
+              "start": 38,
+              "end": 38
+            },
+            "lines": {
+              "added": 1,
+              "removed": 1
+            }
+          },
+          {
+            "name": "name",
+            "range": {
+              "start": 43,
+              "end": 43
+            },
+            "lines": {
+              "added": 1,
+              "removed": 1
+            }
+          },
+          {
+            "name": "name",
+            "range": {
+              "start": 47,
+              "end": 47
+            },
+            "lines": {
+              "added": 1,
+              "removed": 1
+            }
+          },
+          {
+            "name": "name",
+            "range": {
+              "start": 51,
+              "end": 51
+            },
+            "lines": {
+              "added": 1,
+              "removed": 1
+            }
+          },
+          {
+            "name": "name",
+            "range": {
+              "start": 55,
+              "end": 55
+            },
+            "lines": {
+              "added": 1,
+              "removed": 1
+            }
+          },
+          {
+            "name": "name",
+            "range": {
+              "start": 59,
+              "end": 59
+            },
+            "lines": {
+              "added": 1,
+              "removed": 1
+            }
+          },
+          {
+            "name": "name",
+            "range": {
+              "start": 65,
+              "end": 65
+            },
+            "lines": {
+              "added": 1,
+              "removed": 1
+            }
+          }
+        ]
+      },
+      {
+        "path": "README.md",
+        "status": "modified",
+        "sections": [
+          {
+            "name": "📦 Bundles [↑](#-overview)#🧩 Repo Tooling Sync [↑](#-bundles-)",
+            "range": {
+              "start": 1130,
+              "end": 1136
+            },
+            "lines": {
+              "added": 7,
+              "removed": 0
+            }
+          },
+          {
+            "name": "📦 Bundles [↑](#-overview)#💻 [@semio-repo/vscode](https://github.com/usalu/semio/tree/main/js/vscode) [↑](#-bundles-)",
+            "range": {
+              "start": 1464,
+              "end": 1488
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          }
+        ]
+      },
+      {
+        "path": "AGENTS.md",
+        "status": "modified",
+        "sections": [
+          {
+            "name": "Software Requirements Specification#Business Logic#Repo Tooling",
+            "range": {
+              "start": 98,
+              "end": 104
+            },
+            "lines": {
+              "added": 7,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Software Requirements Specification#UI/UX#VS Code Extension",
+            "range": {
+              "start": 365,
+              "end": 380
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Monorepo#Devcontainer",
+            "range": {
+              "start": 383,
+              "end": 416
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Using TypeScript fallback#GraphQL API",
+            "range": {
+              "start": 667,
+              "end": 725
+            },
+            "lines": {
+              "added": 3,
+              "removed": 3
+            }
+          },
+          {
+            "name": "Codebase",
+            "range": {
+              "start": 1294,
+              "end": 3918
+            },
+            "lines": {
+              "added": 1,
+              "removed": 1
+            }
+          },
+          {
+            "name": "Codebase#📄 .devcontainer/post-create.sh",
+            "range": {
+              "start": 1612,
+              "end": 1615
+            },
+            "lines": {
+              "added": 1,
+              "removed": 1
+            }
+          },
+          {
+            "name": "Codebase#📄 .devcontainer/post-attach.sh",
+            "range": {
+              "start": 1620,
+              "end": 1623
+            },
+            "lines": {
+              "added": 4,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Codebase#📄 js/vscode/extension.ts",
+            "range": {
+              "start": 3800,
+              "end": 3803
+            },
+            "lines": {
+              "added": 1,
+              "removed": 2
+            }
+          },
+          {
+            "name": "Codebase#📄 js/vscode/package.json",
+            "range": {
+              "start": 3804,
+              "end": 3807
+            },
+            "lines": {
+              "added": 2,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Codebase#📁 graphql/repo/",
+            "range": {
+              "start": 3808,
+              "end": 3811
+            },
+            "lines": {
+              "added": 2,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Codebase#📄 graphql/repo/schema.graphql",
+            "range": {
+              "start": 3812,
+              "end": 3815
+            },
+            "lines": {
+              "added": 2,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Codebase#📁 go/repo/",
+            "range": {
+              "start": 3816,
+              "end": 3819
+            },
+            "lines": {
+              "added": 2,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Codebase#📄 go/repo/main.go",
+            "range": {
+              "start": 3820,
+              "end": 3823
+            },
+            "lines": {
+              "added": 2,
+              "removed": 0
+            }
+          }
+        ]
+      }
+    ],
+    "added": [
+      {
+        "path": "tickets/2026/01/19/VSCODE-EXTENSION-DEVCONTAINER/plan.md",
+        "status": "created"
+      },
+      {
+        "path": "tickets/2026/01/19/VSCODE-EXTENSION-DEVCONTAINER/log.md",
+        "status": "created"
+      },
+      {
+        "path": "tickets/2026/01/19/VSCODE-EXTENSION-DEVCONTAINER/summary.md",
+        "status": "created"
+      },
+      {
+        "path": "tickets/2026/01/19/VSCODE-EXTENSION-DEVCONTAINER/ticket.json",
+        "status": "created",
+        "sections": [
+          {
+            "name": "title",
+            "range": {
+              "start": 2,
+              "end": 2
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          },
+          {
+            "name": "prompt",
+            "range": {
+              "start": 5,
+              "end": 5
+            },
+            "lines": {
+              "added": 2,
+              "removed": 0
+            }
+          },
+          {
+            "name": "llm",
+            "range": {
+              "start": 6,
+              "end": 6
+            },
+            "lines": {
+              "added": 2,
+              "removed": 0
+            }
+          },
+          {
+            "name": "author",
+            "range": {
+              "start": 7,
+              "end": 7
+            },
+            "lines": {
+              "added": 2,
+              "removed": 0
+            }
+          },
+          {
+            "name": "date",
+            "range": {
+              "start": 8,
+              "end": 8
+            },
+            "lines": {
+              "added": 2,
+              "removed": 0
+            }
+          },
+          {
+            "name": "commit",
+            "range": {
+              "start": 9,
+              "end": 9
+            },
+            "lines": {
+              "added": 2,
+              "removed": 0
+            }
+          },
+          {
+            "name": "prompt",
+            "range": {
+              "start": 12,
+              "end": 12
+            },
+            "lines": {
+              "added": 2,
+              "removed": 0
+            }
+          },
+          {
+            "name": "llm",
+            "range": {
+              "start": 13,
+              "end": 13
+            },
+            "lines": {
+              "added": 2,
+              "removed": 0
+            }
+          },
+          {
+            "name": "author",
+            "range": {
+              "start": 14,
+              "end": 14
+            },
+            "lines": {
+              "added": 2,
+              "removed": 0
+            }
+          },
+          {
+            "name": "date",
+            "range": {
+              "start": 15,
+              "end": 15
+            },
+            "lines": {
+              "added": 2,
+              "removed": 0
+            }
+          },
+          {
+            "name": "commit",
+            "range": {
+              "start": 16,
+              "end": 16
+            },
+            "lines": {
+              "added": 2,
+              "removed": 0
+            }
+          },
+          {
+            "name": "status",
+            "range": {
+              "start": 19,
+              "end": 19
+            },
+            "lines": {
+              "added": 11,
+              "removed": 0
+            }
+          },
+          {
+            "name": "dates",
+            "range": {
+              "start": 20,
+              "end": 20
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          },
+          {
+            "name": "summary",
+            "range": {
+              "start": 21,
+              "end": 21
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          },
+          {
+            "name": "files#deleted",
+            "range": {
+              "start": 23,
+              "end": 23
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          },
+          {
+            "name": "files#renamed",
+            "range": {
+              "start": 24,
+              "end": 24
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          },
+          {
+            "name": "files#modified",
+            "range": {
+              "start": 25,
+              "end": 248
+            },
+            "lines": {
+              "added": 224,
+              "removed": 0
+            }
+          },
+          {
+            "name": "path",
+            "range": {
+              "start": 27,
+              "end": 27
+            },
+            "lines": {
+              "added": 11,
+              "removed": 0
+            }
+          },
+          {
+            "name": "status",
+            "range": {
+              "start": 28,
+              "end": 28
+            },
+            "lines": {
+              "added": 11,
+              "removed": 0
+            }
+          },
+          {
+            "name": "sections",
+            "range": {
+              "start": 29,
+              "end": 49
+            },
+            "lines": {
+              "added": 127,
+              "removed": 0
+            }
+          },
+          {
+            "name": "name",
+            "range": {
+              "start": 31,
+              "end": 31
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range",
+            "range": {
+              "start": 32,
+              "end": 36
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#start",
+            "range": {
+              "start": 33,
+              "end": 33
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#end",
+            "range": {
+              "start": 34,
+              "end": 35
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "definitions",
+            "range": {
+              "start": 37,
+              "end": 42
+            },
+            "lines": {
+              "added": 12,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines",
+            "range": {
+              "start": 43,
+              "end": 47
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#added",
+            "range": {
+              "start": 44,
+              "end": 44
+            },
+            "lines": {
+              "added": 21,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#removed",
+            "range": {
+              "start": 45,
+              "end": 46
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "path",
+            "range": {
+              "start": 52,
+              "end": 52
+            },
+            "lines": {
+              "added": 11,
+              "removed": 0
+            }
+          },
+          {
+            "name": "status",
+            "range": {
+              "start": 53,
+              "end": 53
+            },
+            "lines": {
+              "added": 11,
+              "removed": 0
+            }
+          },
+          {
+            "name": "sections",
+            "range": {
+              "start": 54,
+              "end": 81
+            },
+            "lines": {
+              "added": 127,
+              "removed": 0
+            }
+          },
+          {
+            "name": "name",
+            "range": {
+              "start": 56,
+              "end": 56
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range",
+            "range": {
+              "start": 57,
+              "end": 61
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#start",
+            "range": {
+              "start": 58,
+              "end": 58
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#end",
+            "range": {
+              "start": 59,
+              "end": 60
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines",
+            "range": {
+              "start": 62,
+              "end": 66
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#added",
+            "range": {
+              "start": 63,
+              "end": 63
+            },
+            "lines": {
+              "added": 21,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#removed",
+            "range": {
+              "start": 64,
+              "end": 65
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "name",
+            "range": {
+              "start": 69,
+              "end": 69
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range",
+            "range": {
+              "start": 70,
+              "end": 74
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#start",
+            "range": {
+              "start": 71,
+              "end": 71
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#end",
+            "range": {
+              "start": 72,
+              "end": 73
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines",
+            "range": {
+              "start": 75,
+              "end": 79
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#added",
+            "range": {
+              "start": 76,
+              "end": 76
+            },
+            "lines": {
+              "added": 21,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#removed",
+            "range": {
+              "start": 77,
+              "end": 78
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "path",
+            "range": {
+              "start": 84,
+              "end": 84
+            },
+            "lines": {
+              "added": 11,
+              "removed": 0
+            }
+          },
+          {
+            "name": "status",
+            "range": {
+              "start": 85,
+              "end": 85
+            },
+            "lines": {
+              "added": 11,
+              "removed": 0
+            }
+          },
+          {
+            "name": "sections",
+            "range": {
+              "start": 86,
+              "end": -1
+            },
+            "lines": {
+              "added": 127,
+              "removed": 0
+            }
+          },
+          {
+            "name": "name",
+            "range": {
+              "start": 88,
+              "end": 88
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range",
+            "range": {
+              "start": 89,
+              "end": 93
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#start",
+            "range": {
+              "start": 90,
+              "end": 90
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#end",
+            "range": {
+              "start": 91,
+              "end": 92
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines",
+            "range": {
+              "start": 94,
+              "end": 98
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#added",
+            "range": {
+              "start": 95,
+              "end": 95
+            },
+            "lines": {
+              "added": 21,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#removed",
+            "range": {
+              "start": 96,
+              "end": 97
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "name",
+            "range": {
+              "start": 101,
+              "end": 101
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range",
+            "range": {
+              "start": 102,
+              "end": 106
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#start",
+            "range": {
+              "start": 103,
+              "end": 103
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#end",
+            "range": {
+              "start": 104,
+              "end": 105
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines",
+            "range": {
+              "start": 107,
+              "end": 111
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#added",
+            "range": {
+              "start": 108,
+              "end": 108
+            },
+            "lines": {
+              "added": 21,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#removed",
+            "range": {
+              "start": 109,
+              "end": 110
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "name",
+            "range": {
+              "start": 114,
+              "end": 114
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range",
+            "range": {
+              "start": 115,
+              "end": 119
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#start",
+            "range": {
+              "start": 116,
+              "end": 116
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#end",
+            "range": {
+              "start": 117,
+              "end": 118
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines",
+            "range": {
+              "start": 120,
+              "end": 124
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#added",
+            "range": {
+              "start": 121,
+              "end": 121
+            },
+            "lines": {
+              "added": 21,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#removed",
+            "range": {
+              "start": 122,
+              "end": 123
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "name",
+            "range": {
+              "start": 127,
+              "end": 127
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range",
+            "range": {
+              "start": 128,
+              "end": 132
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#start",
+            "range": {
+              "start": 129,
+              "end": 129
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#end",
+            "range": {
+              "start": 130,
+              "end": 131
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines",
+            "range": {
+              "start": 133,
+              "end": 137
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#added",
+            "range": {
+              "start": 134,
+              "end": 134
+            },
+            "lines": {
+              "added": 21,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#removed",
+            "range": {
+              "start": 135,
+              "end": 136
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "name",
+            "range": {
+              "start": 140,
+              "end": 140
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range",
+            "range": {
+              "start": 141,
+              "end": 145
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#start",
+            "range": {
+              "start": 142,
+              "end": 142
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#end",
+            "range": {
+              "start": 143,
+              "end": 144
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines",
+            "range": {
+              "start": 146,
+              "end": 150
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#added",
+            "range": {
+              "start": 147,
+              "end": 147
+            },
+            "lines": {
+              "added": 21,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#removed",
+            "range": {
+              "start": 148,
+              "end": 149
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "name",
+            "range": {
+              "start": 153,
+              "end": 153
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range",
+            "range": {
+              "start": 154,
+              "end": 158
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#start",
+            "range": {
+              "start": 155,
+              "end": 155
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#end",
+            "range": {
+              "start": 156,
+              "end": 157
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines",
+            "range": {
+              "start": 159,
+              "end": 163
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#added",
+            "range": {
+              "start": 160,
+              "end": 160
+            },
+            "lines": {
+              "added": 21,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#removed",
+            "range": {
+              "start": 161,
+              "end": 162
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "name",
+            "range": {
+              "start": 166,
+              "end": 166
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range",
+            "range": {
+              "start": 167,
+              "end": 171
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#start",
+            "range": {
+              "start": 168,
+              "end": 168
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#end",
+            "range": {
+              "start": 169,
+              "end": 170
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines",
+            "range": {
+              "start": 172,
+              "end": 176
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#added",
+            "range": {
+              "start": 173,
+              "end": 173
+            },
+            "lines": {
+              "added": 21,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#removed",
+            "range": {
+              "start": 174,
+              "end": 175
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "name",
+            "range": {
+              "start": 179,
+              "end": 179
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range",
+            "range": {
+              "start": 180,
+              "end": 184
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#start",
+            "range": {
+              "start": 181,
+              "end": 181
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#end",
+            "range": {
+              "start": 182,
+              "end": 183
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines",
+            "range": {
+              "start": 185,
+              "end": 189
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#added",
+            "range": {
+              "start": 186,
+              "end": 186
+            },
+            "lines": {
+              "added": 21,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#removed",
+            "range": {
+              "start": 187,
+              "end": 188
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "name",
+            "range": {
+              "start": 192,
+              "end": 192
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range",
+            "range": {
+              "start": 193,
+              "end": 197
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#start",
+            "range": {
+              "start": 194,
+              "end": 194
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#end",
+            "range": {
+              "start": 195,
+              "end": 196
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines",
+            "range": {
+              "start": 198,
+              "end": 202
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#added",
+            "range": {
+              "start": 199,
+              "end": 199
+            },
+            "lines": {
+              "added": 21,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#removed",
+            "range": {
+              "start": 200,
+              "end": 201
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "name",
+            "range": {
+              "start": 205,
+              "end": 205
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range",
+            "range": {
+              "start": 206,
+              "end": 210
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#start",
+            "range": {
+              "start": 207,
+              "end": 207
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#end",
+            "range": {
+              "start": 208,
+              "end": 209
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines",
+            "range": {
+              "start": 211,
+              "end": 215
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#added",
+            "range": {
+              "start": 212,
+              "end": 212
+            },
+            "lines": {
+              "added": 21,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#removed",
+            "range": {
+              "start": 213,
+              "end": 214
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "name",
+            "range": {
+              "start": 218,
+              "end": 218
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range",
+            "range": {
+              "start": 219,
+              "end": 223
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#start",
+            "range": {
+              "start": 220,
+              "end": 220
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#end",
+            "range": {
+              "start": 221,
+              "end": 222
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines",
+            "range": {
+              "start": 224,
+              "end": 228
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#added",
+            "range": {
+              "start": 225,
+              "end": 225
+            },
+            "lines": {
+              "added": 21,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#removed",
+            "range": {
+              "start": 226,
+              "end": 227
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "name",
+            "range": {
+              "start": 231,
+              "end": 231
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range",
+            "range": {
+              "start": 232,
+              "end": 236
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#start",
+            "range": {
+              "start": 233,
+              "end": 233
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#end",
+            "range": {
+              "start": 234,
+              "end": 235
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines",
+            "range": {
+              "start": 237,
+              "end": 241
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#added",
+            "range": {
+              "start": 238,
+              "end": 238
+            },
+            "lines": {
+              "added": 21,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#removed",
+            "range": {
+              "start": 239,
+              "end": 240
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "path",
+            "range": {
+              "start": 246,
+              "end": 246
+            },
+            "lines": {
+              "added": 11,
+              "removed": 0
+            }
+          },
+          {
+            "name": "path",
+            "range": {
+              "start": 251,
+              "end": 251
+            },
+            "lines": {
+              "added": 11,
+              "removed": 0
+            }
+          },
+          {
+            "name": "status",
+            "range": {
+              "start": 252,
+              "end": 252
+            },
+            "lines": {
+              "added": 11,
+              "removed": 0
+            }
+          },
+          {
+            "name": "sections",
+            "range": {
+              "start": 253,
+              "end": -1
+            },
+            "lines": {
+              "added": 127,
+              "removed": 0
+            }
+          },
+          {
+            "name": "name",
+            "range": {
+              "start": 255,
+              "end": 255
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range",
+            "range": {
+              "start": 256,
+              "end": 260
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#start",
+            "range": {
+              "start": 257,
+              "end": 257
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#end",
+            "range": {
+              "start": 258,
+              "end": 259
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "definitions",
+            "range": {
+              "start": 261,
+              "end": 263
+            },
+            "lines": {
+              "added": 12,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines",
+            "range": {
+              "start": 264,
+              "end": 268
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#added",
+            "range": {
+              "start": 265,
+              "end": 265
+            },
+            "lines": {
+              "added": 21,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#removed",
+            "range": {
+              "start": 266,
+              "end": 267
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "path",
+            "range": {
+              "start": 273,
+              "end": 273
+            },
+            "lines": {
+              "added": 11,
+              "removed": 0
+            }
+          },
+          {
+            "name": "status",
+            "range": {
+              "start": 274,
+              "end": 274
+            },
+            "lines": {
+              "added": 11,
+              "removed": 0
+            }
+          },
+          {
+            "name": "sections",
+            "range": {
+              "start": 275,
+              "end": 292
+            },
+            "lines": {
+              "added": 127,
+              "removed": 0
+            }
+          },
+          {
+            "name": "name",
+            "range": {
+              "start": 277,
+              "end": 277
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range",
+            "range": {
+              "start": 278,
+              "end": 282
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#start",
+            "range": {
+              "start": 279,
+              "end": 279
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#end",
+            "range": {
+              "start": 280,
+              "end": 281
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "definitions",
+            "range": {
+              "start": 283,
+              "end": 285
+            },
+            "lines": {
+              "added": 12,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines",
+            "range": {
+              "start": 286,
+              "end": 290
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#added",
+            "range": {
+              "start": 287,
+              "end": 287
+            },
+            "lines": {
+              "added": 21,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#removed",
+            "range": {
+              "start": 288,
+              "end": 289
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "path",
+            "range": {
+              "start": 295,
+              "end": 295
+            },
+            "lines": {
+              "added": 11,
+              "removed": 0
+            }
+          },
+          {
+            "name": "status",
+            "range": {
+              "start": 296,
+              "end": 296
+            },
+            "lines": {
+              "added": 11,
+              "removed": 0
+            }
+          },
+          {
+            "name": "path",
+            "range": {
+              "start": 299,
+              "end": 299
+            },
+            "lines": {
+              "added": 11,
+              "removed": 0
+            }
+          },
+          {
+            "name": "status",
+            "range": {
+              "start": 300,
+              "end": 300
+            },
+            "lines": {
+              "added": 11,
+              "removed": 0
+            }
+          },
+          {
+            "name": "path",
+            "range": {
+              "start": 303,
+              "end": 303
+            },
+            "lines": {
+              "added": 11,
+              "removed": 0
+            }
+          },
+          {
+            "name": "status",
+            "range": {
+              "start": 304,
+              "end": 304
+            },
+            "lines": {
+              "added": 11,
+              "removed": 0
+            }
+          },
+          {
+            "name": "path",
+            "range": {
+              "start": 307,
+              "end": 307
+            },
+            "lines": {
+              "added": 11,
+              "removed": 0
+            }
+          },
+          {
+            "name": "status",
+            "range": {
+              "start": 308,
+              "end": 308
+            },
+            "lines": {
+              "added": 11,
+              "removed": 0
+            }
+          },
+          {
+            "name": "path",
+            "range": {
+              "start": 311,
+              "end": 311
+            },
+            "lines": {
+              "added": 11,
+              "removed": 0
+            }
+          },
+          {
+            "name": "status",
+            "range": {
+              "start": 312,
+              "end": 312
+            },
+            "lines": {
+              "added": 11,
+              "removed": 0
+            }
+          },
+          {
+            "name": "sections",
+            "range": {
+              "start": 313,
+              "end": 418
+            },
+            "lines": {
+              "added": 127,
+              "removed": 0
+            }
+          },
+          {
+            "name": "name",
+            "range": {
+              "start": 315,
+              "end": 315
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range",
+            "range": {
+              "start": 316,
+              "end": 320
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#start",
+            "range": {
+              "start": 317,
+              "end": 317
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#end",
+            "range": {
+              "start": 318,
+              "end": 319
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines",
+            "range": {
+              "start": 321,
+              "end": 325
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#added",
+            "range": {
+              "start": 322,
+              "end": 322
+            },
+            "lines": {
+              "added": 21,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#removed",
+            "range": {
+              "start": 323,
+              "end": 324
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "name",
+            "range": {
+              "start": 328,
+              "end": 328
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range",
+            "range": {
+              "start": 329,
+              "end": 333
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#start",
+            "range": {
+              "start": 330,
+              "end": 330
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#end",
+            "range": {
+              "start": 331,
+              "end": 332
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines",
+            "range": {
+              "start": 334,
+              "end": 338
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#added",
+            "range": {
+              "start": 335,
+              "end": 335
+            },
+            "lines": {
+              "added": 21,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#removed",
+            "range": {
+              "start": 336,
+              "end": 337
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "name",
+            "range": {
+              "start": 341,
+              "end": 341
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range",
+            "range": {
+              "start": 342,
+              "end": 346
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#start",
+            "range": {
+              "start": 343,
+              "end": 343
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#end",
+            "range": {
+              "start": 344,
+              "end": 345
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines",
+            "range": {
+              "start": 347,
+              "end": 351
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#added",
+            "range": {
+              "start": 348,
+              "end": 348
+            },
+            "lines": {
+              "added": 21,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#removed",
+            "range": {
+              "start": 349,
+              "end": 350
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "name",
+            "range": {
+              "start": 354,
+              "end": 354
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range",
+            "range": {
+              "start": 355,
+              "end": 359
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#start",
+            "range": {
+              "start": 356,
+              "end": 356
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#end",
+            "range": {
+              "start": 357,
+              "end": 358
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines",
+            "range": {
+              "start": 360,
+              "end": 364
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#added",
+            "range": {
+              "start": 361,
+              "end": 361
+            },
+            "lines": {
+              "added": 21,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#removed",
+            "range": {
+              "start": 362,
+              "end": 363
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "name",
+            "range": {
+              "start": 367,
+              "end": 367
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range",
+            "range": {
+              "start": 368,
+              "end": 372
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#start",
+            "range": {
+              "start": 369,
+              "end": 369
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#end",
+            "range": {
+              "start": 370,
+              "end": 371
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines",
+            "range": {
+              "start": 373,
+              "end": 377
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#added",
+            "range": {
+              "start": 374,
+              "end": 374
+            },
+            "lines": {
+              "added": 21,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#removed",
+            "range": {
+              "start": 375,
+              "end": 376
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "name",
+            "range": {
+              "start": 380,
+              "end": 380
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range",
+            "range": {
+              "start": 381,
+              "end": 385
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#start",
+            "range": {
+              "start": 382,
+              "end": 382
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#end",
+            "range": {
+              "start": 383,
+              "end": 384
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines",
+            "range": {
+              "start": 386,
+              "end": 390
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#added",
+            "range": {
+              "start": 387,
+              "end": 387
+            },
+            "lines": {
+              "added": 21,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#removed",
+            "range": {
+              "start": 388,
+              "end": 389
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "name",
+            "range": {
+              "start": 393,
+              "end": 393
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range",
+            "range": {
+              "start": 394,
+              "end": 398
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#start",
+            "range": {
+              "start": 395,
+              "end": 395
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#end",
+            "range": {
+              "start": 396,
+              "end": 397
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines",
+            "range": {
+              "start": 399,
+              "end": 403
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#added",
+            "range": {
+              "start": 400,
+              "end": 400
+            },
+            "lines": {
+              "added": 21,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#removed",
+            "range": {
+              "start": 401,
+              "end": 402
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "name",
+            "range": {
+              "start": 406,
+              "end": 406
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range",
+            "range": {
+              "start": 407,
+              "end": 411
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#start",
+            "range": {
+              "start": 408,
+              "end": 408
+            },
+            "lines": {
+              "added": 22,
+              "removed": 0
+            }
+          },
+          {
+            "name": "range#end",
+            "range": {
+              "start": 409,
+              "end": 410
+            },
+            "lines": {
+              "added": 44,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines",
+            "range": {
+              "start": 412,
+              "end": 416
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#added",
+            "range": {
+              "start": 413,
+              "end": 413
+            },
+            "lines": {
+              "added": 21,
+              "removed": 0
+            }
+          },
+          {
+            "name": "lines#removed",
+            "range": {
+              "start": 414,
+              "end": 415
+            },
+            "lines": {
+              "added": 42,
+              "removed": 0
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -4806,6 +4806,14 @@ func GetTicketSummaryPath(year, month, day int, slug string) string {
 }
 
 func CreateTicket(title, prompt, llm, planPath string, noIssue bool) (*Ticket, error) {
+	title = strings.TrimSpace(title)
+	if title == strings.ToLower(title) {
+		return nil, fmt.Errorf("ticket title must be titleized (e.g. \"Some Title on Something\") and NOT a slug or all lowercase")
+	}
+	if title == strings.ToUpper(title) {
+		return nil, fmt.Errorf("ticket title must be titleized (e.g. \"Some Title on Something\") and NOT only in caps")
+	}
+
 	now := time.Now()
 	year, month, day := FormatDate(now)
 	slug := Slugify(title)
@@ -5177,16 +5185,40 @@ func LoadBundles() []Bundle {
 }
 
 func GetProjects() []Bundle {
-	return LoadBundles()
+	return []Bundle{
+		{Name: "js", Root: "js"},
+		{Name: "js", Root: "javascript"},
+		{Name: "py", Root: "py"},
+		{Name: "net", Root: "net"},
+		{Name: "net", Root: "dotnet"},
+		{Name: "play", Root: "js/play"},
+		{Name: "play", Root: "javascript/play"},
+		{Name: "vscode", Root: "js/vscode"},
+		{Name: "vscode", Root: "javascript/vscode"},
+		{Name: "docs", Root: "js/docs"},
+		{Name: "docs", Root: "javascript/docs"},
+		{Name: "assets", Root: "assets"},
+		{Name: "grasshopper", Root: "net/Semio.Grasshopper"},
+		{Name: "grasshopper", Root: "dotnet/Semio.Grasshopper"},
+		{Name: "yak", Root: "yak"},
+		{Name: "repo", Root: "go/repo"},
+		{Name: "", Root: "js/semio"},
+		{Name: "", Root: "javascript/semio"},
+	}
 }
 
 func ResolveBundleForPath(filePath string, bundles []Bundle) string {
+	var bestMatch string
+	var maxLen int
 	for _, b := range bundles {
-		if strings.HasPrefix(filePath, b.Root+"/") || strings.HasPrefix(filePath, b.SourceRoot+"/") {
-			return b.Name
+		if strings.HasPrefix(filePath, b.Root+"/") || filePath == b.Root {
+			if len(b.Root) > maxLen {
+				maxLen = len(b.Root)
+				bestMatch = "@semio/" + b.Name
+			}
 		}
 	}
-	return ""
+	return bestMatch
 }
 
 type fileMetric struct {
@@ -5204,6 +5236,7 @@ func generateMetricsComment(files []fileMetric) string {
 		return files[i].path < files[j].path
 	})
 	var lines []string
+	lines = append(lines, "```md")
 	for _, f := range files {
 		var icon string
 		switch f.status {
@@ -5234,6 +5267,7 @@ func generateMetricsComment(files []fileMetric) string {
 			lines = append(lines, fmt.Sprintf("%s%s", icon, f.path))
 		}
 	}
+	lines = append(lines, "```")
 
 	return strings.Join(lines, "\n")
 }
@@ -8140,6 +8174,8 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"title":  &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"prompt": &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"llm":    &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"noIssue":  &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
+			"planPath": &graphql.InputObjectFieldConfig{Type: graphql.String},
 		},
 	})
 
@@ -8203,6 +8239,12 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						Title:  inputMap["title"].(string),
 						Prompt: inputMap["prompt"].(string),
 						LLM:    inputMap["llm"].(string),
+					}
+					if inputMap["noIssue"] != nil {
+						input.NoIssue = inputMap["noIssue"].(bool)
+					}
+					if inputMap["planPath"] != nil {
+						input.PlanPath = inputMap["planPath"].(string)
 					}
 					return mutationResolverInstance.TicketOpen(p.Context, input)
 				},

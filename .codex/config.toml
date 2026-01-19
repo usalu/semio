@@ -1,0 +1,12 @@
+# Codex MCP Server Configuration
+# See: https://github.com/openai/codex/blob/main/docs/config.md
+
+[mcp_servers.playwright-test]
+command = "npx"
+args = ["playwright", "run-test-mcp-server"]
+enabled = true
+
+[mcp_servers.semio-repo]
+command = "./go/repo/repo"
+args = ["mcp"]
+enabled = true

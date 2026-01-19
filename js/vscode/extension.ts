@@ -3095,13 +3095,13 @@ function registerCommands(context: vscode.ExtensionContext): void {
         return;
       }
       const title = await vscode.window.showInputBox({
-        prompt: "Enter ticket title",
-        placeHolder: "Fix login bug",
+        prompt: "Enter a titleized title for the ticket (e.g. \"Some Title on Something\"): ",
+        placeHolder: "Some Title on Something",
       });
       if (!title) return;
 
       const prompt = await vscode.window.showInputBox({
-        prompt: "Enter ticket prompt",
+        prompt: "Enter ticket prompt: ",
         placeHolder: "Describe the task...",
         value: title,
       });
@@ -3111,14 +3111,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
         placeHolder: "Select LLM",
       });
       if (!llm) return;
-
-      const slug = title
-        .toUpperCase()
-        .replace(/[^A-Z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "")
-        .substring(0, 50);
-
-      runRepoCommand(`ticket open ${slug} --prompt="${prompt.replace(/"/g, '\\"')}" --llm="${llm}"`);
+      runRepoCommand(`ticket open "${title.replace(/"/g, '\\"')}" "${prompt.replace(/"/g, '\\"')}" "${llm}"`);
     }),
     vscode.commands.registerCommand("semio.ticketList", async () => {
       if (!hasRepoAccess()) {
@@ -3150,8 +3143,11 @@ function registerCommands(context: vscode.ExtensionContext): void {
         vscode.window.showWarningMessage("At least one file is required to finish a ticket");
         return;
       }
-      const fileArgs = files.map((f) => `--file="${f}"`).join(" ");
-      runRepoCommand(`ticket close ${resolvedTicket.year} ${resolvedTicket.month} ${resolvedTicket.day} ${resolvedTicket.slug} --summary="${summary.replace(/"/g, '\\"')}" ${fileArgs}`);
+      runRepoCommand(
+        `ticket close ${resolvedTicket.year}/${resolvedTicket.month}/${resolvedTicket.day}/${resolvedTicket.slug} "${summary.replace(/"/g, '\\"')}" ${files
+          .map((f) => `"${f.replace(/"/g, '\\"')}"`)
+          .join(" ")}`
+      );
     }),
     vscode.commands.registerCommand("semio.ticketReopen", async (ticketItem?: TicketItem | TicketData | ContributorTicketItem | ContributorTicketData) => {
       if (!hasRepoAccess()) {
@@ -3160,7 +3156,17 @@ function registerCommands(context: vscode.ExtensionContext): void {
       }
       const resolvedTicket = resolveTicketData(ticketItem) ?? (await pickTicket("closed"));
       if (!resolvedTicket) return;
-      runRepoCommand(`ticket reopen ${resolvedTicket.year} ${resolvedTicket.month} ${resolvedTicket.day} ${resolvedTicket.slug}`);
+      const prompt = await vscode.window.showInputBox({
+        prompt: "Enter ticket prompt: ",
+        placeHolder: "Describe the task...",
+        value: resolvedTicket.prompt ?? resolvedTicket.slug,
+      });
+      if (!prompt) return;
+      const llm = await vscode.window.showQuickPick(LLM_OPTIONS, {
+        placeHolder: "Select LLM",
+      });
+      if (!llm) return;
+      runRepoCommand(`ticket reopen ${resolvedTicket.year}/${resolvedTicket.month}/${resolvedTicket.day}/${resolvedTicket.slug} "${prompt.replace(/"/g, '\\"')}" "${llm}"`);
     }),
     vscode.commands.registerCommand("semio.ticketRead", async () => {
       if (!hasRepoAccess()) {

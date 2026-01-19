@@ -1,6 +1,6 @@
 <!-- IMPORTANT -->
 
-ALWAYS open a ticket with semio-repo mcp tool `ticket_open` (or use `./go/repo/repo ticket open <title> <prompt> <llm>` when no mcp tool is available) for every task you are working on. This creates a `tickets/YYYY/MM/DD/TICKETSLUG` folder along with `plan.md`, `log.md`, `summary.md`. NEVER answer directly in the chat and ALWAYS just add the message to `log.md`. ALWAYS start by writing the plan into `plan.md` and NEVER send it as message. ALWAYS end by writing the summary into `summary.md` and NEVER send it as message. ALWAYS use the semio-repo mcp tool `ticket_close` (or use `./go/repo/repo ticket close YYYY/MM/DD/TICKETSLUG <summary> <files...>` when no mcp tool is available) to finish the ticket along with the summary and at all the files you worked on (created, updated or removed). When a dev sends a new message to the chat ALWAYS reopen the same ticket with semio-repo mcp tool `ticket_reopen` (or use `./go/repo/repo ticket reopen YYYY/MM/DD/TICKETSLUG <prompt> llm>` when no mcp tool is available).
+ALWAYS open a ticket with semio-repo mcp tool `ticket_open` (or use `./go/repo/repo ticket open "<title>" "<prompt>" <llm>` when no mcp tool is available) for every task you are working on. The title MUST be titleized (e.g. "Some Title on Something") and NOT a slug or all caps. Available LLMs are: `claude-opus-4-5`, `claude-opus-4`, `claude-sonnet-4-5`, `claude-sonnet-4`, `claude-haiku-4-5`, `gemini-3-pro`, `gemini-3-flash`, `gpt-5-2`, `gpt-5-mini`. This creates a `tickets/YYYY/MM/DD/TICKETSLUG` folder along with `plan.md`, `log.md`, `summary.md`. NEVER answer directly in the chat and ALWAYS just add the message to `log.md`. ALWAYS start by writing the plan into `plan.md` and NEVER send it as message. ALWAYS end by writing the summary into `summary.md` and NEVER send it as message. ALWAYS use the semio-repo mcp tool `ticket_close` (or use `./go/repo/repo ticket close YYYY/MM/DD/TICKETSLUG <summary> <files...>` when no mcp tool is available) to finish the ticket along with the summary and at all the files you worked on (created, updated or removed). When a dev sends a new message to the chat ALWAYS reopen the same ticket with semio-repo mcp tool `ticket_reopen` (or use `./go/repo/repo ticket reopen YYYY/MM/DD/TICKETSLUG <prompt> <llm>` when no mcp tool is available).
 
 - Multiple agents and a developer ALWAYS work on the same codebase at the same time. NEVER use `git stash`, `git stash pop`, `git checkout`, … because it will mess up others work and worst-case delete their work.
 - The codebase in under design and development and not used in production yet. There are many inconsistencies that need to be refactored. ALWAYS use clean mechanisms that might require large refactorings and NEVER care about backwards compatibility.
@@ -85,7 +85,7 @@ Tickets can be reopened to return to **open** status.
 
 Ticket close and reopen actions invoked from the ticket list MUST apply to the selected ticket without additional selection.
 
-Ticket creation MUST require a prompt.
+Ticket creation MUST require a prompt and a titleized title (e.g. "Some Title on Something"). Slugs or all-caps titles are forbidden.
 
 Ticket finish MUST require a summary and a list of files.
 
@@ -94,6 +94,13 @@ Temporary task artifacts MUST be stored inside the active ticket workspace.
 Ticket finish MUST derive per-file `updated`, `created`, and `removed` lists with line stats via git diff between the ticket base commit and the current commit, scoped to the files declared on the ticket.
 Ticket section line metrics MUST map added lines to current file sections, removed lines to base-commit section ranges, and affected definitions to added lines only.
 Ticket section ranges MUST be stored as line-only start/end integers.
+
+### Repo Tooling
+
+Ticket open inputs MUST allow optional `noIssue` and `planPath` fields.
+Ticket close and reopen MUST address tickets via `YYYY/MM/DD/SLUG` path identifiers.
+Ticket reopen MUST require `prompt` and `llm` values.
+VS Code extension manifests MUST use an unscoped `name` value for vsce packaging.
 
 ### MCP Tools
 
@@ -360,6 +367,7 @@ Toolbar panel visibility defaults to `true` for all apps via `panelVisibility: {
 - Ticket tree items expose inline close and reopen actions that apply to the selected ticket based on status.
 - Ticket tree hovers show only the ticket description.
 - Ticket tree items list commit entries as child nodes.
+- Ticket commands collect title/prompt/LLM for open, prompt/LLM for reopen, and operate on `YYYY/MM/DD/SLUG` ticket identifiers.
 - Ticket detail views consume git-derived per-file and total line stats stored on iterations and ticket close.
 - Command trees mirror the CLI command and subcommand hierarchy; matching a command group keeps its subtree visible.
 - Problem list diagnostics open in pinned editor tabs for immediate saves.
@@ -404,6 +412,7 @@ The monorepo uses a devcontainer for consistent cross-platform development. The 
 
 - `post-create.sh`: Runs after container creation (npm install, uv sync at root, Go build, dotnet restore, Playwright install)
 - `post-start.sh`: Runs on each container start (activates root Python venv)
+- `post-attach.sh`: Runs after editor attach to build and install the local semio VS Code extension
 
 ## Git
 
@@ -657,7 +666,7 @@ The MCP server communicates via stdio and exposes all repo tools as MCP tools. C
 
 ### GraphQL API
 
-The repo CLI exposes a GraphQL API for querying and mutating repository data. The GraphQL schema is defined in `go/repo/schema.graphql` and executed in-process without an HTTP server.
+The repo CLI exposes a GraphQL API for querying and mutating repository data. The GraphQL schema is defined in `go/repo/main.go` and mirrored in `graphql/repo/schema.graphql` for tooling.
 
 **CLI Usage:**
 
@@ -668,9 +677,9 @@ repo graphql "query Tickets { repo { tickets { id slug status } } }"
 repo graphql "{ analyze(scope: \"js/semio/\") { violations { id summary } } }" -v "{}"
 ```
 
-**Schema Location:** `go/repo/schema.graphql`
+**Schema Location:** `go/repo/main.go` (source), `graphql/repo/schema.graphql` (mirror)
 
-**Executor:** `go/repo/graph/executor.go` uses graphql-go for runtime schema building and execution.
+**Executor:** `go/repo/main.go` builds the schema with graphql-go and executes queries in-process.
 
 **Available Queries:**
 
@@ -1508,7 +1517,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ └── vitest.workspace.ts
 │ ├── play
 │ └── vscode
-│ └── extension.ts # @semio/vscode: VSCode extension with violation diagnostics
+│ └── extension.ts # @semio-repo/vscode: VSCode extension with violation diagnostics
 ├── jsonschema # autogenerated from `py/engine/generate-schemas.ts`
 ├── liveblocks
 ├── meta
@@ -1602,11 +1611,15 @@ Devcontainer configuration with VS Code customizations and post-create/start/att
 
 ## 📄 .devcontainer/post-create.sh
 
-Devcontainer provisioning steps for dependency installs and extension packaging.
+Devcontainer provisioning steps for dependency installs.
 
 ## 📄 .devcontainer/post-start.sh
 
 Devcontainer start script for activating the Python virtual environment.
+
+## 📄 .devcontainer/post-attach.sh
+
+Devcontainer post-attach script that builds and installs the local semio VS Code extension.
 
 ## 📁 js/
 
@@ -3786,52 +3799,27 @@ Ticket tree items use `ticketOpen` and `ticketClosed` context values for inline 
 
 ## 📄 js/vscode/extension.ts
 
-Extension activation, repo command execution helpers, and section tree normalization for the Sections view based on repo section list output with line-only range start/end values.
+Extension activation, repo CLI command execution helpers, GraphQL client piping through the repo CLI, ticket command prompts aligned to repo ticket inputs, and section tree normalization for the Sections view based on repo section list output with line-only range start/end values.
 
-## 📁 go/cli/
+## 📄 js/vscode/package.json
 
-Cobra command registry and GraphQL execution wrapper for the repo CLI binary.
+VS Code extension manifest with unscoped name for vsce packaging, command contributions, scripts, and engine compatibility.
 
-## 📄 go/cli/main.go
+## 📁 graphql/repo/
 
-CLI command definitions with GraphQL query strings for repo operations, including section and definition ranges as line-only start/end integers.
+Repo CLI GraphQL schema mirror for tooling.
 
-## 📁 go/mcp/
+## 📄 graphql/repo/schema.graphql
 
-MCP tool registry and GraphQL proxying for repo CLI operations.
+GraphQL schema mirror of the repo CLI schema for VS Code codegen and typed documents.
 
-## 📄 go/mcp/main.go
+## 📁 go/repo/
 
-MCP section and definition queries request line-only range start/end values.
+Repo CLI source with GraphQL schema build/execution, ticket workflows, and MCP server mode.
 
-## 📁 go/repo/graph/
+## 📄 go/repo/main.go
 
-GraphQL schema and in-process executor for the repo CLI.
-
-**Files:**
-
-- `schema.graphql` - GraphQL schema definition with Query, Mutation, and all entity types
-- `executor.go` - In-process GraphQL executor using graphql-go; builds schema at runtime, executes queries without HTTP server
-- `models.go` - Go type definitions for GraphQL schema (Node interface, enums, entity structs)
-- `resolver.go` - Base Resolver struct with RootDir
-- `schema.resolvers.go` - Query and Mutation resolver implementations
-
-**Architecture:**
-
-The graph package uses graphql-go for runtime schema building instead of code generation (gqlgen). This allows the CLI to execute GraphQL queries in-process without starting an HTTP server. The executor is created via `graph.NewExecutor(rootDir)` and queries are executed via `executor.ExecuteJSON(ctx, query, variables)`.
-
-## 📄 go/repo/repo.go
-
-Ticket finish derives per-file lists and line stats from git diffs between the ticket base commit and HEAD, scoped to the ticket file list, storing `files` and `lines` on the ticket.
-Ticket file aggregates store `updated`, `created`, and `removed` as `FileLineStats` with line totals.
-Ticket section metrics map added lines to current file sections, removed lines to base-commit section ranges, and affected definitions to added lines.
-Ticket section ranges and GraphQL section/definition ranges expose line-only start/end integers.
-Comment policy scanning tracks string and template literal context so comment markers inside literals do not trigger violations.
-Section policy flags orphan definitions that sit outside any named region, including comment blocks and Go package/import blocks.
-JSON section parsing maps object keys into section trees and powers JSON section create/move/delete operations by path.
-GraphQL file section resolution parses file content into section trees, assigns section paths and file references, and exposes range and child relationships on Section fields.
-Contributor listing derives tickets, commits, bundles, files, and line totals from ticket frontmatter and header contributor entries, resolves contributors by email/name mappings, and sorts by ticket count.
-Contributor commit entries resolve titles from git metadata and bundle memberships from file path overlap with Nx bundle roots.
+CLI command definitions with GraphQL query strings for repo operations, ticket workflows with optional noIssue/planPath inputs and `YYYY/MM/DD/SLUG` identifiers, MCP tool handlers, ticket finish line stats and section metrics, section/definition range handling with line-only start/end values, comment policy scanning with string/template literal awareness, JSON section parsing, GraphQL file section resolution, and contributor aggregation from tickets and source headers.
 
 ## 📁net/
 

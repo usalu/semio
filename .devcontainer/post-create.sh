@@ -1,8 +1,22 @@
 #!/bin/bash
 # SPDX-License-Identifier: AGPL-3.0-only
 set -e
+WORKSPACE="${containerWorkspaceFolder:-/workspaces/semio}"
 
 echo "Setting up semio development environment..."
+
+echo "Fixing ownership of mounted config directories..."
+sudo chown -R vscode:vscode /home/vscode/.config/gh || true
+
+echo "Marking workspace as safe for git (devcontainer bind-mount / submodules)..."
+git config --global --add safe.directory "$WORKSPACE"
+if [ -f "$WORKSPACE/.gitmodules" ]; then
+  while IFS= read -r path; do
+    [ -n "$path" ] || continue
+    git config --global --add safe.directory "$WORKSPACE/$path"
+  done < <(git config -f "$WORKSPACE/.gitmodules" --get-regexp '^submodule\..*\.path$' \
+        | awk '{print $2}')
+fi
 
 echo "Installing npm dependencies..."
 npm install
