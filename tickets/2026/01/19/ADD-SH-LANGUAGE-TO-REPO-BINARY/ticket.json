@@ -1,0 +1,45 @@
+{
+  "title": "Add Sh Language to Repo Binary",
+  "iterations": [
+    {
+      "prompt": "Add .sh Language to repo binary.",
+      "llm": "gpt-5-mini",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "date": "2026-01-19T22:51:46.672445359Z",
+      "commit": "be1df4ab0cd1ec53cbceb8dabeca66cc6a01a1a5"
+    }
+  ],
+  "status": "closed",
+  "dates": {
+    "closed": "2026-01-19T23:01:44.05628613Z"
+  },
+  "summary": "Added shell (.sh) language support in repo CLI and documented it in dev docs.",
+  "files": {
+    "deleted": [],
+    "renamed": [],
+    "modified": [
+      {
+        "path": "/workspaces/semio/go/repo/main.go"
+      },
+      {
+        "path": "/workspaces/semio/README.md"
+      },
+      {
+        "path": "/workspaces/semio/AGENTS.md"
+      },
+      {
+        "path": "/workspaces/semio/tickets/2026/01/19/ADD-SH-LANGUAGE-TO-REPO-BINARY/plan.md"
+      },
+      {
+        "path": "/workspaces/semio/tickets/2026/01/19/ADD-SH-LANGUAGE-TO-REPO-BINARY/log.md"
+      },
+      {
+        "path": "/workspaces/semio/tickets/2026/01/19/ADD-SH-LANGUAGE-TO-REPO-BINARY/summary.md"
+      }
+    ],
+    "added": []
+  },
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/167"
+  }
+}

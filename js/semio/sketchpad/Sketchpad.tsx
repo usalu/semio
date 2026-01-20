@@ -11452,11 +11452,16 @@ export function useNavigation(): string {
 
 export function useAppType(): AppKind {
   const navigation = useNavigation();
+  const apps = useSyncExternalStore(
+    useCallback((cb) => appRegistry.subscribe(cb), []),
+    () => appRegistry.getAllApps(),
+  );
+
   return useMemo(() => {
     const pathParts = navigation.split("/").filter((p: string) => p);
     const app = appRegistry.getAppForPath(pathParts);
     return app?.id ?? "home";
-  }, [navigation]);
+  }, [navigation, apps]);
 }
 
 export function getAppTypeFromPath(path: string): AppKind {
@@ -12443,9 +12448,19 @@ class AppRegistry {
   private apps: Map<string, AppRegistration> = new Map();
   private autoDiscovered = false;
   private _initialized = false;
+  private listeners = new Set<() => void>();
 
   get isInitialized(): boolean {
     return this._initialized || this.apps.size > 0;
+  }
+
+  subscribe(listener: () => void): () => void {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
+
+  private notify() {
+    this.listeners.forEach((listener) => listener());
   }
 
   private async autoDiscover(): Promise<void> {
@@ -12465,18 +12480,27 @@ class AppRegistry {
   register(registration: AppRegistration): void {
     if (this.apps.has(registration.id)) return;
     this.apps.set(registration.id, registration);
+    this.cachedApps = null;
+    this.notify();
   }
 
   unregister(id: string): void {
     this.apps.delete(id);
+    this.cachedApps = null;
+    this.notify();
   }
 
   getApp(id: string): AppRegistration | undefined {
     return this.apps.get(id);
   }
 
+  private cachedApps: AppRegistration[] | null = null;
+
   getAllApps(): AppRegistration[] {
-    return Array.from(this.apps.values()).sort((a, b) => (a.order || 0) - (b.order || 0));
+    if (!this.cachedApps) {
+      this.cachedApps = Array.from(this.apps.values()).sort((a, b) => (a.order || 0) - (b.order || 0));
+    }
+    return this.cachedApps;
   }
 
   getAppForPath(pathParts: string[]): AppRegistration | undefined {
@@ -13105,7 +13129,11 @@ export function usePanelConfigs(): Record<string, EnrichedPanelDefinition[]> {
     [t],
   );
 
-  const apps = appRegistry.getAllApps();
+  const apps = useSyncExternalStore(
+    useCallback((cb) => appRegistry.subscribe(cb), []),
+    () => appRegistry.getAllApps(),
+  );
+  
   const panelConfigsByApp = useMemo(() => {
     const emptyLabelFn = () => "";
     const configs: Record<string, PanelDefinition[]> = {};
@@ -15241,6 +15269,53 @@ const LayoutWrapper: FC = () => {
   const [activeRightTabId, setActiveRightTabId] = useActiveRightTabId();
   const [activeHudTabId, setActiveHudTabId] = useActiveHudTabId();
 
+  const addSidePanelTab = useAddSidePanelTab();
+  const removeSidePanelTab = useRemoveSidePanelTab();
+  const addHudPanelTab = useAddHudPanelTab();
+  const removeHudPanelTab = useRemoveHudPanelTab();
+  const panelConfigs = usePanelConfigs();
+
+  useEffect(() => {
+    const panels = panelConfigs[appType] || [];
+    const registeredIds: string[] = [];
+
+    panels.forEach((panel) => {
+      const config = panelKindConfigs[panel.kind];
+      if (!config) return;
+
+      const tab = {
+        id: panel.id,
+        icon: config.icon,
+        order: 0,
+        content: <></>,
+      };
+
+      if (config.position === PanelPosition.LEFT) {
+        addSidePanelTab("left", tab);
+        registeredIds.push(panel.id);
+      } else if (config.position === PanelPosition.RIGHT) {
+        addSidePanelTab("right", tab);
+        registeredIds.push(panel.id);
+      } else if (config.position === PanelPosition.MIDDLE) {
+        addHudPanelTab(tab);
+        registeredIds.push(panel.id);
+      }
+    });
+
+    return () => {
+      registeredIds.forEach((id) => {
+        const panel = panels.find((p) => p.id === id);
+        if (!panel) return;
+        const config = panelKindConfigs[panel.kind];
+        if (!config) return;
+
+        if (config.position === PanelPosition.LEFT) removeSidePanelTab("left", id);
+        else if (config.position === PanelPosition.RIGHT) removeSidePanelTab("right", id);
+        else if (config.position === PanelPosition.MIDDLE) removeHudPanelTab(id);
+      });
+    };
+  }, [appType, panelConfigs, addSidePanelTab, removeSidePanelTab, addHudPanelTab, removeHudPanelTab]);
+
   const sketchpadCommands = useSketchpadCommands();
 
   useEffect(() => {
@@ -15611,36 +15686,36 @@ const LayoutWrapper: FC = () => {
               ) : undefined
             }
             leftPanel={
-              panelVisibility.workbench || panelVisibility.tools
+              panelVisibility.leftSidePanel || panelVisibility.workbench || panelVisibility.tools
                 ? {
-                    visible: panelVisibility.workbench || panelVisibility.tools,
-                    size: panelVisibility.workbench ? panelSizes.workbenchWidth : panelSizes.toolsWidth,
-                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", panelVisibility.workbench ? "workbenchWidth" : "toolsWidth", size),
-                    sections: panelVisibility.workbench ? workbenchSections : toolsSections,
+                    visible: true,
+                    size: panelVisibility.tools ? panelSizes.toolsWidth : panelSizes.workbenchWidth,
+                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", panelVisibility.tools ? "toolsWidth" : "workbenchWidth", size),
+                    sections: panelVisibility.tools ? toolsSections : workbenchSections,
                     opacity: panelOpacity,
-                    panelKey: panelVisibility.workbench ? "workbench" : "tools",
+                    panelKey: panelVisibility.tools ? "tools" : "workbench",
                   }
                 : undefined
             }
             middlePanel={
-              panelVisibility.hud || panelVisibility.stats
+              panelVisibility.hudPanel || panelVisibility.hud || panelVisibility.stats
                 ? {
-                    visible: panelVisibility.hud || panelVisibility.stats,
-                    size: panelVisibility.hud ? panelSizes.hudWidth : panelSizes.statsWidth,
-                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", panelVisibility.hud ? "hudWidth" : "statsWidth", size),
-                    sections: panelVisibility.hud ? hudSections : statsSections,
-                    panelKey: panelVisibility.hud ? "hud" : "stats",
+                    visible: true,
+                    size: panelVisibility.stats ? panelSizes.statsWidth : panelSizes.hudWidth,
+                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", panelVisibility.stats ? "statsWidth" : "hudWidth", size),
+                    sections: panelVisibility.stats ? statsSections : hudSections,
+                    panelKey: panelVisibility.stats ? "stats" : "hud",
                   }
                 : undefined
             }
             rightPanel={
-              panelVisibility.details || panelVisibility.chat || panelVisibility.settings
+              panelVisibility.rightSidePanel || panelVisibility.details || panelVisibility.chat || panelVisibility.settings
                 ? {
-                    visible: panelVisibility.details || panelVisibility.chat || panelVisibility.settings,
-                    size: panelVisibility.details ? panelSizes.detailsWidth : panelVisibility.chat ? panelSizes.chatWidth : panelSizes.settingsWidth,
-                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", panelVisibility.details ? "detailsWidth" : panelVisibility.chat ? "chatWidth" : "settingsWidth", size),
-                    sections: panelVisibility.details ? detailsSections : panelVisibility.chat ? chatSections : settingsSections,
-                    panelKey: panelVisibility.details ? "details" : panelVisibility.chat ? "chat" : "settings",
+                    visible: true,
+                    size: panelVisibility.chat ? panelSizes.chatWidth : panelVisibility.settings ? panelSizes.settingsWidth : panelSizes.detailsWidth,
+                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", panelVisibility.chat ? "chatWidth" : panelVisibility.settings ? "settingsWidth" : "detailsWidth", size),
+                    sections: panelVisibility.chat ? chatSections : panelVisibility.settings ? settingsSections : detailsSections,
+                    panelKey: panelVisibility.chat ? "chat" : panelVisibility.settings ? "settings" : "details",
                   }
                 : undefined
             }

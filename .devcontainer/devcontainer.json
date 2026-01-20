@@ -83,7 +83,8 @@
     "source=${localWorkspaceFolderBasename}-config-gh,target=/home/vscode/.config/gh,type=volume",
     "source=${localWorkspaceFolderBasename}-config-cursor,target=/home/vscode/.config/cursor,type=volume",
     "source=${localWorkspaceFolderBasename}-config-antigravity,target=/home/vscode/.config/antigravity,type=volume",
-    "source=${localWorkspaceFolderBasename}-codeium,target=/home/vscode/.codeium,type=volume"
+    "source=${localWorkspaceFolderBasename}-codeium,target=/home/vscode/.codeium,type=volume",
+    "source=${localWorkspaceFolderBasename}-ms-playwright,target=/home/vscode/.cache/ms-playwright,type=volume"
   ],
   "remoteUser": "vscode",
   "containerEnv": {

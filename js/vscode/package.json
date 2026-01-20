@@ -4,6 +4,7 @@
   "name": "semio-repo",
   "displayName": "semio-repo",
   "description": "semio devtools for VS Code 🧑‍💻",
+  "icon": "../../assets/icons/semio.png",
   "version": "0.0.1",
   "publisher": "usalu",
   "engines": {
@@ -443,7 +444,7 @@
     "test": "vscode-test",
     "vscode:prepublish": "npm run build",
     "preflight": "tsc --noEmit",
-    "package": "vsce package --out semio.vsix"
+    "package": "vsce package --no-dependencies --out semio.vsix"
   },
   "devDependencies": {
     "@vscode/vsce": "^3.5.0",
@@ -457,13 +458,12 @@
     "@vscode/test-electron": "^2.5.2",
     "graphql": "^16.12.0",
     "typescript": "^5.9.3",
-    "vite": "^7.3.1"
-  },
-  "dependencies": {
+    "vite": "^7.3.1",
     "@semio/js": "^0.1.0",
     "@urql/core": "^5.2.0",
     "jsonc-parser": "^3.3.1"
   },
+  "dependencies": {},
   "author": {
     "name": "Ueli Saluz",
     "email": "ueli@semio-tech.com",

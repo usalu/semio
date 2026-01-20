@@ -1,0 +1,81 @@
+{
+  "title": "Navbar Panel Toggles",
+  "iterations": [
+    {
+      "prompt": "The navbar in sketchpad is not showing the three toggles: left panel, middle panel, and right panel.",
+      "llm": "gemini-3-pro",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "date": "2026-01-19T22:39:38.330513856Z",
+      "commit": "be1df4ab0cd1ec53cbceb8dabeca66cc6a01a1a5"
+    }
+  ],
+  "status": "closed",
+  "dates": {
+    "closed": "2026-01-19T22:40:11.811078855Z"
+  },
+  "summary": "Restored missing Navbar panel toggles by automatically populating SidePanelTabContext from app configuration and updating layout logic to respect panel container visibility.",
+  "files": {
+    "deleted": [],
+    "renamed": [],
+    "modified": [
+      {
+        "path": "js/semio/sketchpad/Sketchpad.tsx",
+        "status": "modified",
+        "sections": [
+          {
+            "name": "Apps#Sketchpad Components",
+            "range": {
+              "start": 15177,
+              "end": 15874
+            },
+            "definitions": [
+              "LayoutWrapper",
+              "location",
+              "navigate",
+              "reactNavigate",
+              "store",
+              "tutorialStore",
+              "navigation",
+              "isNavbarExpanded",
+              "isFooterExpanded",
+              "panelVisibility",
+              "appType",
+              "panelSizes",
+              "footerItems",
+              "workbenchSections",
+              "toolsSections",
+              "toolbarSections",
+              "hudSections",
+              "statsSections",
+              "detailsSections",
+              "chatSections",
+              "settingsSections",
+              "consoleSections",
+              "leftSidePanelTabs",
+              "rightSidePanelTabs",
+              "hudPanelTabs",
+              "addSidePanelTab",
+              "removeSidePanelTab",
+              "addHudPanelTab",
+              "removeHudPanelTab",
+              "panelConfigs",
+              "panels",
+              "registeredIds",
+              "config",
+              "tab",
+              "panel"
+            ],
+            "lines": {
+              "added": 65,
+              "removed": 18
+            }
+          }
+        ]
+      }
+    ],
+    "added": []
+  },
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/166"
+  }
+}

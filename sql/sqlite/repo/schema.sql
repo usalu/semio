@@ -192,6 +192,7 @@ CREATE TABLE IF NOT EXISTS ticket (
     author_id TEXT REFERENCES contributor(id) ON DELETE SET NULL,
     model TEXT,
     llm TEXT,
+    ui TEXT,
     commit_sha TEXT,
     created_at TEXT NOT NULL,
     finished_at TEXT,

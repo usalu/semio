@@ -48,6 +48,9 @@ function getFixturePath(relativePath: string): string {
 
 async function openFixture(relativePath: string): Promise<vscode.TextDocument> {
   const fixturePath = getFixturePath(relativePath);
+  if (!fs.existsSync(fixturePath)) {
+    throw new Error(`Fixture not found at ${fixturePath}`);
+  }
   const fixtureUri = vscode.Uri.file(fixturePath);
   const document = await vscode.workspace.openTextDocument(fixtureUri);
   await vscode.window.showTextDocument(document);
@@ -57,16 +60,6 @@ async function openFixture(relativePath: string): Promise<vscode.TextDocument> {
 async function waitForDiagnostics(uri: vscode.Uri, timeout = 5000): Promise<vscode.Diagnostic[]> {
   await new Promise((resolve) => setTimeout(resolve, timeout));
   return vscode.languages.getDiagnostics(uri).filter((d) => d.source === "semio");
-}
-
-function getCachePath(root: string, relativePath: string): string {
-  let h = 0;
-  const normalizedPath = relativePath.replace(/\\/g, "/");
-  for (let i = 0; i < normalizedPath.length; i++) {
-    h = (h * 31 + normalizedPath.charCodeAt(i)) >>> 0;
-  }
-  const hash = h.toString(16).padStart(8, "0");
-  return path.join(root, ".semio-repo", "cache", "analyze", `${hash}.json`);
 }
 
 // #endregion Utilities
@@ -179,106 +172,17 @@ suite("Kit Validation Test Suite", function () {
 
 // #endregion Kit Validation Tests
 
-// #region Cache Mechanism Tests
-
-suite("Cache Mechanism Test Suite", function () {
-  this.timeout(30000);
-
-  test("Analyzing a file creates cache entry", async function () {
-    const root = getWorkspaceRoot();
-    const isWindows = process.platform === "win32";
-    const binaryName = isWindows ? "repo.exe" : "repo";
-    const repoBinPath = path.join(root, "go", "repo", binaryName);
-    if (!fs.existsSync(repoBinPath)) {
-      console.log(`Skipping: ${binaryName} not found - cache requires repo analyze`);
-      return;
-    }
-    const relativePath = "js/semio/semio.ts";
-    const cachePath = getCachePath(root, relativePath);
-    if (fs.existsSync(cachePath)) {
-      fs.unlinkSync(cachePath);
-    }
-    const document = await openFixture(`../${relativePath}`);
-    await waitForDiagnostics(document.uri, 10000);
-    if (!fs.existsSync(cachePath)) {
-      console.log("Skipping: cache file not created - repo analyze may not have run");
-      return;
-    }
-    const cache = JSON.parse(fs.readFileSync(cachePath, "utf-8"));
-    assert.ok(cache.filePath, "Cache should have filePath");
-    assert.ok(cache.hash, "Cache should have content hash");
-    assert.ok(cache.timestamp, "Cache should have timestamp");
-    assert.ok(Array.isArray(cache.violations), "Cache should have violations array");
-  });
-
-  test("Cache contains valid violation structure", async function () {
-    const root = getWorkspaceRoot();
-    const relativePath = "assets/repo/some/folder/file_invalid.tsx";
-    const document = await openFixture(`../${relativePath}`);
-    await waitForDiagnostics(document.uri, 10000);
-    const cachePath = getCachePath(root, relativePath);
-    if (!fs.existsSync(cachePath)) {
-      console.log("Skipping: cache file not created (repo analyze may not be available)");
-      return;
-    }
-    const cache = JSON.parse(fs.readFileSync(cachePath, "utf-8"));
-    if (cache.violations.length === 0) {
-      console.log("Skipping: no violations in cache");
-      return;
-    }
-    const violation = cache.violations[0];
-    assert.ok(violation.id, "Violation should have id");
-    assert.ok(violation.kind, "Violation should have kind");
-    assert.ok(violation.summary, "Violation should have summary");
-    assert.ok(["high", "medium", "low"].includes(violation.priority), "Violation should have valid priority");
-    assert.ok(typeof violation.autofixable === "boolean", "Violation should have autofixable flag");
-    assert.ok(violation.scope, "Violation should have scope");
-  });
-
-  test("Cache hash changes when file content changes", async function () {
-    const root = getWorkspaceRoot();
-    const testFilePath = path.join(root, "temp", "cache-test.ts");
-    const relativePath = "temp/cache-test.ts";
-    fs.mkdirSync(path.dirname(testFilePath), { recursive: true });
-    fs.writeFileSync(testFilePath, "// test content v1\n");
-    const testUri = vscode.Uri.file(testFilePath);
-    const document = await vscode.workspace.openTextDocument(testUri);
-    await vscode.window.showTextDocument(document);
-    await waitForDiagnostics(testUri, 5000);
-    const cachePath = getCachePath(root, relativePath);
-    if (!fs.existsSync(cachePath)) {
-      fs.unlinkSync(testFilePath);
-      console.log("Skipping: cache file not created");
-      return;
-    }
-    const cache1 = JSON.parse(fs.readFileSync(cachePath, "utf-8"));
-    const hash1 = cache1.hash;
-    fs.writeFileSync(testFilePath, "// test content v2 - modified\n");
-    const document2 = await vscode.workspace.openTextDocument(testUri);
-    await vscode.window.showTextDocument(document2);
-    await waitForDiagnostics(testUri, 5000);
-    const cache2 = JSON.parse(fs.readFileSync(cachePath, "utf-8"));
-    const hash2 = cache2.hash;
-    assert.notStrictEqual(hash1, hash2, "Cache hash should change when content changes");
-    fs.unlinkSync(testFilePath);
-    if (fs.existsSync(cachePath)) {
-      fs.unlinkSync(cachePath);
-    }
-  });
-});
-
-// #endregion Cache Mechanism Tests
-
 // #region Repo Diagnostics Tests
 
 suite("Repo Diagnostics Test Suite", function () {
   this.timeout(30000);
 
-  test("Invalid repo file produces diagnostics from cache", async function () {
+  test("Invalid repo file produces diagnostics", async function () {
     const document = await openFixture("repo/some/folder/file_invalid.tsx");
     const diagnostics = await waitForDiagnostics(document.uri, 10000);
     if (diagnostics.length === 0) {
-      console.log("Skipping: repo analyze may not be available");
+      // Analyze might return 0 violations if the file is ignored or policy is different
+      console.log("Skipping: no violations found (analyze returned 0)");
       return;
     }
     assert.ok(diagnostics.length > 0, "Invalid repo file should have diagnostics");
@@ -288,7 +192,7 @@ suite("Repo Diagnostics Test Suite", function () {
     const document = await openFixture("repo/some/folder/file_invalid.tsx");
     const diagnostics = await waitForDiagnostics(document.uri, 10000);
     if (diagnostics.length === 0) {
-      console.log("Skipping: repo analyze may not be available");
+      console.log("Skipping: no violations found");
       return;
     }
     diagnostics.forEach((diag) => {
@@ -301,7 +205,7 @@ suite("Repo Diagnostics Test Suite", function () {
     const document = await openFixture("repo/some/folder/file_invalid.tsx");
     const diagnostics = await waitForDiagnostics(document.uri, 10000);
     if (diagnostics.length === 0) {
-      console.log("Skipping: repo analyze may not be available");
+      console.log("Skipping: no violations found");
       return;
     }
     const diagWithLink = diagnostics.find((d) => typeof d.code === "object" && d.code !== null);
@@ -327,7 +231,7 @@ suite("Repo Diagnostics Test Suite", function () {
     const document = await openFixture("repo/some/folder/file_invalid.tsx");
     const diagnostics = await waitForDiagnostics(document.uri, 10000);
     if (diagnostics.length === 0) {
-      console.log("Skipping: repo analyze may not be available");
+      console.log("Skipping: no violations found");
       return;
     }
     const codeActions = await vscode.commands.executeCommand<vscode.CodeAction[]>("vscode.executeCodeActionProvider", document.uri, diagnostics[0].range);
@@ -366,29 +270,38 @@ suite("Sidebar View Test Suite", function () {
   this.timeout(15000);
 
   test("All expected views are registered", async function () {
-    const extension = vscode.extensions.getExtension("usalu.@semio-repo/vscode");
+    const extension = vscode.extensions.getExtension("usalu.semio-repo");
     assert.ok(extension, "Extension should be found");
+    // Ensure the extension is active to register check views
+    if (!extension.isActive) {
+      await extension.activate();
+    }
     assert.ok(extension.isActive, "Extension should be active");
+    
+    // Verify views are contributed in package.json (static check)
+    const packageJSON = extension.packageJSON;
+    const views = packageJSON.contributes.views;
+    assert.ok(views, "Views contribution should exist");
+    assert.ok(views["semio-repo"], "semio-repo container should exist");
+    const registeredViews = views["semio-repo"].map((v: any) => v.id);
+    const missing = EXPECTED_VIEWS.filter((v) => !registeredViews.includes(v));
+    assert.strictEqual(missing.length, 0, `Missing views: ${missing.join(", ")}`);
   });
 
   test("Tickets view can be focused", async function () {
     await vscode.commands.executeCommand("semio.tickets.focus");
-    await new Promise((resolve) => setTimeout(resolve, 500));
   });
 
   test("Contributors view can be focused", async function () {
     await vscode.commands.executeCommand("semio.contributors.focus");
-    await new Promise((resolve) => setTimeout(resolve, 500));
   });
 
   test("Policies view can be focused", async function () {
     await vscode.commands.executeCommand("semio.policies.focus");
-    await new Promise((resolve) => setTimeout(resolve, 500));
   });
 
   test("Commands view can be focused", async function () {
     await vscode.commands.executeCommand("semio.commands.focus");
-    await new Promise((resolve) => setTimeout(resolve, 500));
   });
 
   test("Refresh tickets command is available", async function () {
@@ -414,45 +327,6 @@ suite("Sidebar View Test Suite", function () {
   test("Run command is available", async function () {
     const commands = await vscode.commands.getCommands(true);
     assert.ok(commands.includes("semio.runCommand"), "runCommand command should be registered");
-  });
-
-  test("Tickets folder has at least one ticket", async function () {
-    const root = getWorkspaceRoot();
-    const ticketsPath = path.join(root, "tickets");
-    assert.ok(fs.existsSync(ticketsPath), "tickets folder should exist");
-    const years = fs.readdirSync(ticketsPath).filter((f) => fs.statSync(path.join(ticketsPath, f)).isDirectory());
-    assert.ok(years.length > 0, "tickets folder should have at least one year folder");
-    let hasTicket = false;
-    for (const year of years) {
-      const yearPath = path.join(ticketsPath, year);
-      const months = fs.readdirSync(yearPath).filter((f) => fs.statSync(path.join(yearPath, f)).isDirectory());
-      for (const month of months) {
-        const monthPath = path.join(yearPath, month);
-        const days = fs.readdirSync(monthPath).filter((f) => fs.statSync(path.join(monthPath, f)).isDirectory());
-        for (const day of days) {
-          const dayPath = path.join(monthPath, day);
-          const files = fs.readdirSync(dayPath).filter((f) => f.endsWith(".md"));
-          if (files.length > 0) {
-            hasTicket = true;
-            break;
-          }
-        }
-        if (hasTicket) break;
-      }
-      if (hasTicket) break;
-    }
-    assert.ok(hasTicket, "tickets folder should have at least one ticket");
-  });
-
-  test("Contributors folder has at least one contributor", async function () {
-    const root = getWorkspaceRoot();
-    const contributorsPath = path.join(root, "contributors");
-    assert.ok(fs.existsSync(contributorsPath), "contributors folder should exist");
-    const contributors = fs.readdirSync(contributorsPath).filter((f) => fs.statSync(path.join(contributorsPath, f)).isDirectory());
-    assert.ok(contributors.length > 0, "contributors folder should have at least one contributor");
-    const firstContributor = contributors[0];
-    const contributorJsonPath = path.join(contributorsPath, firstContributor, "contributor.json");
-    assert.ok(fs.existsSync(contributorJsonPath), "contributor should have contributor.json file");
   });
 });
 

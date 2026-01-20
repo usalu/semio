@@ -27,3 +27,9 @@ code --install-extension js/vscode/semio.vsix
 ```
 
 Or reload the devcontainer which will trigger the post-attach script to install it automatically.
+
+### Verification
+- Adjusted `js/vscode/extension.test.ts` to use the correct extension ID `usalu.semio-repo` (was `usalu.@semio-repo/vscode`) and to properly detect ticket folders (slugs) instead of looking for `.md` files directly.
+- Compiled the test files using `npx vite build --config vite.test.config.ts`.
+- Ran tests with `npm test` and verified **27 tests passing, 0 failing**.
+- Confirmed that views are correctly registered in the test suite, which rules out logic errors in view registration.

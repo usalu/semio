@@ -9,7 +9,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: [["list"], ["json", { outputFile: "../../reports/playwright.json" }]],
   use: {
-    baseURL: "http://localhost:5173",
+    baseURL: "http://localhost:3000",
     trace: "on-first-retry",
   },
   projects: [

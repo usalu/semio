@@ -9,3 +9,9 @@ vsc-extension-quickstart.md
 **/*.map
 **/*.ts
 **/.vscode-test.*
+node_modules/**
+codegen.ts
+vite.config.ts
+vite.test.config.ts
+codegen/
+generated/

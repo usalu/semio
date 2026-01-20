@@ -171,7 +171,6 @@ func TestViolationKindsNonEmpty(t *testing.T) {
 	}
 }
 
-
 func TestFoldersNonEmpty(t *testing.T) {
 	executor := getTestExecutor(t)
 	ctx := context.Background()
@@ -250,7 +249,7 @@ func TestTicketTitleValidation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			query := `mutation { ticketOpen(input: { title: "` + tt.title + `", prompt: "Test prompt", llm: "claude-opus-4", noIssue: true }) { id } }`
+			query := `mutation { ticketOpen(input: { title: "` + tt.title + `", prompt: "Test prompt", llm: "claude-opus-4", ui: COPILOT_CHAT, noIssue: true }) { id } }`
 			_, err := executor.ExecuteJSON(ctx, query, nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ticketOpen() error = %v, wantErr %v", err, tt.wantErr)
@@ -302,37 +301,51 @@ func TestNodesAndEdgesQuick(t *testing.T) {
 
 	var resp struct {
 		Tickets []struct {
-			ID          string `json:"id"`
-			Slug        string `json:"slug"`
+			ID   string `json:"id"`
+			Slug string `json:"slug"`
 		} `json:"tickets"`
 		Policies []struct {
 			ID             string `json:"id"`
 			Name           string `json:"name"`
-			ViolationKinds []struct{ ID string `json:"id"` } `json:"violationKinds"`
+			ViolationKinds []struct {
+				ID string `json:"id"`
+			} `json:"violationKinds"`
 		} `json:"policies"`
 		ViolationKinds []struct {
 			ID string `json:"id"`
 		} `json:"violationKinds"`
 		Folders []struct {
-			ID       string                            `json:"id"`
-			Path     string                            `json:"path"`
-			Parent   *struct{ ID string `json:"id"` } `json:"parent"`
-			Children []struct{ ID string `json:"id"` } `json:"children"`
+			ID     string `json:"id"`
+			Path   string `json:"path"`
+			Parent *struct {
+				ID string `json:"id"`
+			} `json:"parent"`
+			Children []struct {
+				ID string `json:"id"`
+			} `json:"children"`
 		} `json:"folders"`
 		Files []struct {
-			ID          string                            `json:"id"`
-			Path        string                            `json:"path"`
-			Folder      *struct{ ID string `json:"id"` } `json:"folder"`
-			Sections    []struct{ ID string `json:"id"` } `json:"sections"`
+			ID     string `json:"id"`
+			Path   string `json:"path"`
+			Folder *struct {
+				ID string `json:"id"`
+			} `json:"folder"`
+			Sections []struct {
+				ID string `json:"id"`
+			} `json:"sections"`
 			Definitions []struct {
 				ID   string `json:"id"`
 				Kind string `json:"kind"`
 			} `json:"definitions"`
 		} `json:"files"`
 		Violations []struct {
-			ID     string                            `json:"id"`
-			File   *struct{ ID string `json:"id"` } `json:"file"`
-			Folder *struct{ ID string `json:"id"` } `json:"folder"`
+			ID   string `json:"id"`
+			File *struct {
+				ID string `json:"id"`
+			} `json:"file"`
+			Folder *struct {
+				ID string `json:"id"`
+			} `json:"folder"`
 		} `json:"violations"`
 	}
 
@@ -420,46 +433,79 @@ func TestNodesAndEdges(t *testing.T) {
 
 	var resp struct {
 		Bundles []struct {
-			ID           string `json:"id"`
-			Name         string `json:"name"`
-			Folders      []struct{ ID string `json:"id"` } `json:"folders"`
-			Files        []struct{ ID string `json:"id"` } `json:"files"`
-			Violations   []struct{ ID string `json:"id"` } `json:"violations"`
+			ID      string `json:"id"`
+			Name    string `json:"name"`
+			Folders []struct {
+				ID string `json:"id"`
+			} `json:"folders"`
+			Files []struct {
+				ID string `json:"id"`
+			} `json:"files"`
+			Violations []struct {
+				ID string `json:"id"`
+			} `json:"violations"`
 		} `json:"bundles"`
 		Folders []struct {
-			ID         string `json:"id"`
-			Path       string `json:"path"`
-			Parent     *struct{ ID string `json:"id"` } `json:"parent"`
-			Children   []struct{ ID string `json:"id"` } `json:"children"`
-			Files      []struct{ ID string `json:"id"` } `json:"files"`
-			Bundle     *struct{ ID string `json:"id"` } `json:"bundle"`
-			Violations []struct{ ID string `json:"id"` } `json:"violations"`
+			ID     string `json:"id"`
+			Path   string `json:"path"`
+			Parent *struct {
+				ID string `json:"id"`
+			} `json:"parent"`
+			Children []struct {
+				ID string `json:"id"`
+			} `json:"children"`
+			Files []struct {
+				ID string `json:"id"`
+			} `json:"files"`
+			Bundle *struct {
+				ID string `json:"id"`
+			} `json:"bundle"`
+			Violations []struct {
+				ID string `json:"id"`
+			} `json:"violations"`
 		} `json:"folders"`
 		Files []struct {
-			ID           string `json:"id"`
-			Path         string `json:"path"`
-			Folder       *struct{ ID string `json:"id"` } `json:"folder"`
-			Bundle       *struct{ ID string `json:"id"` } `json:"bundle"`
-			Sections     []struct{ ID string `json:"id"` } `json:"sections"`
-			Definitions  []struct{ ID string `json:"id"`; Kind string `json:"kind"` } `json:"definitions"`
-			Violations   []struct{ ID string `json:"id"` } `json:"violations"`
+			ID     string `json:"id"`
+			Path   string `json:"path"`
+			Folder *struct {
+				ID string `json:"id"`
+			} `json:"folder"`
+			Bundle *struct {
+				ID string `json:"id"`
+			} `json:"bundle"`
+			Sections []struct {
+				ID string `json:"id"`
+			} `json:"sections"`
+			Definitions []struct {
+				ID   string `json:"id"`
+				Kind string `json:"kind"`
+			} `json:"definitions"`
+			Violations []struct {
+				ID string `json:"id"`
+			} `json:"violations"`
 		} `json:"files"`
 		Tickets []struct {
-			ID          string `json:"id"`
-			Slug        string `json:"slug"`
+			ID   string `json:"id"`
+			Slug string `json:"slug"`
 		} `json:"tickets"`
 		Policies []struct {
 			ID             string `json:"id"`
 			Name           string `json:"name"`
-			ViolationKinds []struct{ ID string `json:"id"` } `json:"violationKinds"`
+			ViolationKinds []struct {
+				ID string `json:"id"`
+			} `json:"violationKinds"`
 		} `json:"policies"`
 		ViolationKinds []struct {
-			ID         string `json:"id"`
+			ID string `json:"id"`
 		} `json:"violationKinds"`
 		Violations []struct {
-			ID     string `json:"id"`
-			File   *struct{ ID string `json:"id"` } `json:"file"`
-			Folder *struct{ ID string `json:"id"` } `json:"folder"`
+			ID   string `json:"id"`
+			File *struct {
+				ID string `json:"id"`
+			} `json:"file"`
+			Folder *struct {
+				ID string `json:"id"`
+			} `json:"folder"`
 		} `json:"violations"`
 	}
 
@@ -601,17 +647,32 @@ func TestSectionsEdges(t *testing.T) {
 			ID       string `json:"id"`
 			Path     string `json:"path"`
 			Sections []struct {
-				ID          string `json:"id"`
-				Name        string `json:"name"`
-				Path        string `json:"path"`
-				File        struct{ ID string `json:"id"` } `json:"file"`
-				Parent      *struct{ ID string `json:"id"` } `json:"parent"`
-				Children    []struct{ ID string `json:"id"` } `json:"children"`
-				Definitions []struct{ ID string `json:"id"`; Name string `json:"name"` } `json:"definitions"`
-				Violations  []struct{ ID string `json:"id"` } `json:"violations"`
-				Range       struct {
-					Start struct{ Line int `json:"line"` } `json:"start"`
-					End   struct{ Line int `json:"line"` } `json:"end"`
+				ID   string `json:"id"`
+				Name string `json:"name"`
+				Path string `json:"path"`
+				File struct {
+					ID string `json:"id"`
+				} `json:"file"`
+				Parent *struct {
+					ID string `json:"id"`
+				} `json:"parent"`
+				Children []struct {
+					ID string `json:"id"`
+				} `json:"children"`
+				Definitions []struct {
+					ID   string `json:"id"`
+					Name string `json:"name"`
+				} `json:"definitions"`
+				Violations []struct {
+					ID string `json:"id"`
+				} `json:"violations"`
+				Range struct {
+					Start struct {
+						Line int `json:"line"`
+					} `json:"start"`
+					End struct {
+						Line int `json:"line"`
+					} `json:"end"`
 				} `json:"range"`
 			} `json:"sections"`
 		} `json:"files"`
@@ -671,15 +732,26 @@ func TestDefinitionsEdges(t *testing.T) {
 			ID          string `json:"id"`
 			Path        string `json:"path"`
 			Definitions []struct {
-				ID         string `json:"id"`
-				Name       string `json:"name"`
-				Kind       string `json:"kind"`
-				File       struct{ ID string `json:"id"` } `json:"file"`
-				Section    *struct{ ID string `json:"id"`; Name string `json:"name"` } `json:"section"`
-				Violations []struct{ ID string `json:"id"` } `json:"violations"`
-				Range      struct {
-					Start struct{ Line int `json:"line"` } `json:"start"`
-					End   struct{ Line int `json:"line"` } `json:"end"`
+				ID   string `json:"id"`
+				Name string `json:"name"`
+				Kind string `json:"kind"`
+				File struct {
+					ID string `json:"id"`
+				} `json:"file"`
+				Section *struct {
+					ID   string `json:"id"`
+					Name string `json:"name"`
+				} `json:"section"`
+				Violations []struct {
+					ID string `json:"id"`
+				} `json:"violations"`
+				Range struct {
+					Start struct {
+						Line int `json:"line"`
+					} `json:"start"`
+					End struct {
+						Line int `json:"line"`
+					} `json:"end"`
 				} `json:"range"`
 			} `json:"definitions"`
 		} `json:"files"`
@@ -711,7 +783,6 @@ func TestDefinitionsEdges(t *testing.T) {
 		t.Skip("no definitions found in any file - may be expected for test repository")
 	}
 }
-
 
 // #endregion Nodes and Edges Tests
 

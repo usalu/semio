@@ -1,0 +1,6 @@
+- Attempted `repo ticket reopen` for EXTEND-TICKET-UI-ENUM-AND-LABELS; command reported ticket already open.
+- Refreshed plan steps for UI enum, labels, metrics, devcontainer, docs, and tests.
+- Added TicketUI enum wiring across GraphQL schema, Go repo GraphQL types, VS Code extension prompts, and generated types; corrected copilot-chat slug and enum names.
+- Updated SQLite schema with ticket ui column, repo label derivation to include @semio-repo fallback, and metrics comment formatting to use icon + path + spaced line deltas.
+- Updated Go and VS Code test fixtures for TicketUI enum; regenerated VS Code GraphQL types.
+- Documented ticket UI enum, label requirements, and metrics comment format in README.md and AGENTS.md (SRS/UI/Codebase sections).

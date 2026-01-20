@@ -2,15 +2,86 @@
 
 ## Templates
 
+Continue.
 Change/refactor/extend whatever is necessary to get it working. 
-
-Dont ask in between, no matter the issue. Figure it out. Be sure that it works everywhere before stopping.
+Dont ask in between, no matter the issue. Figure it out.
+Be sure that it works everywhere before stopping.
 
 ## Log
 
+The definitions are not correctly identified in the languages. Definitions are only toplevel definitions. They always start on a new line. A variable, function, class inside another function, class, etc doesnt count as definition. Currently way too many definitions are idenitified. 
+e.g.
+"modified": [
+  {
+    "path": "js/semio/sketchpad/Sketchpad.tsx",
+    "status": "modified",
+    "sections": [
+      {
+        "name": "Apps#Sketchpad Components",
+        "range": {
+          "start": 15177,
+          "end": 15874
+        },
+        "definitions": [
+          "LayoutWrapper",
+          "location",
+          "navigate",
+          "reactNavigate",
+          "store",
+          "tutorialStore",
+          "navigation",
+          "isNavbarExpanded",
+          "isFooterExpanded",
+          "panelVisibility",
+          "appType",
+          "panelSizes",
+          "footerItems",
+          "workbenchSections",
+          "toolsSections",
+          "toolbarSections",
+          "hudSections",
+          "statsSections",
+          "detailsSections",
+          "chatSections",
+          "settingsSections",
+          "consoleSections",
+          "leftSidePanelTabs",
+          "rightSidePanelTabs",
+          "hudPanelTabs",
+          "addSidePanelTab",
+          "removeSidePanelTab",
+          "addHudPanelTab",
+          "removeHudPanelTab",
+          "panelConfigs",
+          "panels",
+          "registeredIds",
+          "config",
+          "tab",
+          "panel"
+        ],
+        "lines": {
+          "added": 65,
+          "removed": 18
+        }
+      }
+    ]
+  }
+],
+just modiefied LayoutWrapper.
+
+Add .sh Language to repo binary.
+
+The vscode extension tests are outdated. The extension should not touch the file system but only use the repo binary. Check the binary. E.g. something like analysis cache doesnt exist.
+
+The navbar in sketchpad is not showing the three toggles: left panel, middle panel, and right panel.
+
 Make sure that semio-repo mcp tool is working in vscode, windsurf, claude code, codex and cursor.
 
+Change/refactor/extend the vscode extension. It is not packaging because it still has some outdated code. Check go/repo/main.go for single-source-of-truth.
+
 Change/refactor/extend the ticket mechanism, update repo binary and vscode extension:
+- The vscode extension is not packacking because it still has some outdated code. Check go/repo/main.go for single-source-of-truth.
+- The title of the ticket should be a title (if it is a slug or caps then throw an error). Extend the test. e.g. fix-vscode-types-version-mismatch or ENSURE-SEMIO-REPO-MCP-WORKS-ALLIDES should throw an error.
 - Currently the ticket close creates two comments. Merge them into one comment and separating them with `# ✍️ Changes`
 ```md
 <SUMMARY>
@@ -25,7 +96,7 @@ Make sure the line metrics are added to deleted (lines of the file), modified (a
 
 
 Change/refactor/extend the ticket mechanism, update repo binary and vscode extension:
-- Extend ticket open with a manadary enum: ui (copliot-chat, antigravity, cursor, claude-code, codex, droid)
+- Extend ticket open with a manadary enum: ui (copilot-chat, antigravity, cursor, claude-code, codex, droid)
 - Extend AGENTS.md ticket instruction to 1. include all enums (llms, ui)
 - The derived github labels are not working properly. Every involved bundle (`@semio/js`,`@semio/py`,`@semio/net`,`@semio/go`,`@semio/play`,`@semio/grasshopper`,`@semio/yak`,`@semio/assets`,`@semio-repo/vscode`, …) is added as a label. If a file inside a bundle, the bundle is added. If a file outside a the repo label `@semio-repo` is added.
 - The final comment should have line metrics such as:

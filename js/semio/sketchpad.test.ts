@@ -328,7 +328,8 @@ async function initHome(page: Page) {
   const { errors, warnings, messages } = await initConsole(page);
 
   await page.goto("/");
-  await page.waitForLoadState("networkidle");
+  // await page.waitForLoadState("networkidle");
+  await page.waitForLoadState("domcontentloaded");
   await page.waitForTimeout(2000);
 
   const zipPath = path.resolve(__dirname, "../../assets/semio/metabolism.zip");
@@ -1382,6 +1383,22 @@ test.describe("sketchpad", () => {
     const navbar = page.locator('[id="semio.sketchpad.navbar"]');
     await expect(navbar).toBeVisible({ timeout: 10000 });
     console.log("[Design Test] Navbar is visible");
+
+    // #region Panel Toggles Check
+    {
+      const leftToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.leftSidePanel"]');
+      await expect(leftToggle).toBeVisible({ timeout: 5000 });
+      console.log("[Design Test] Left toggle is visible");
+
+      const hudToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.hudPanel"]');
+      await expect(hudToggle).toBeVisible({ timeout: 5000 });
+      console.log("[Design Test] HUD toggle is visible");
+
+      const rightToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.rightSidePanel"]');
+      await expect(rightToggle).toBeVisible({ timeout: 5000 });
+      console.log("[Design Test] Right toggle is visible");
+    }
+    // #endregion
 
     const footer = page.locator("footer").first();
     await expect(footer).toBeVisible({ timeout: 10000 });

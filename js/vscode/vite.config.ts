@@ -13,7 +13,7 @@ export default defineConfig({
       fileName: () => "extension",
     },
     rollupOptions: {
-      external: ["vscode", "jsonc-parser"],
+      external: ["vscode"],
       output: {
         entryFileNames: "extension.js",
         format: "cjs",

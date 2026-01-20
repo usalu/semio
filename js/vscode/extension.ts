@@ -46,6 +46,15 @@ const LLM_OPTIONS = [
   "gpt-5-mini",
 ];
 
+const UI_OPTIONS = [
+  "copilot-chat",
+  "antigravity",
+  "cursor",
+  "claude-code",
+  "codex",
+  "droid",
+];
+
 // #endregion Imports
 
 // #region urql Client
@@ -154,13 +163,6 @@ const AnalyzeDocument = graphql(`
       violations {
         id summary priority autofixable scope line column excerpt
         kind { id policy { id name } reason solution }
-        autofix {
-          description
-          edits {
-            path
-            edits { start end newText }
-          }
-        }
       }
       metrics { total byPriority { high medium low } autofixable }
     }
@@ -940,23 +942,15 @@ function createRepoCodeAction(document: vscode.TextDocument, diagnostic: vscode.
   const action = new vscode.CodeAction(`Fix: ${violationName || violation.kind}`, vscode.CodeActionKind.QuickFix);
   action.diagnostics = [diagnostic];
   action.isPreferred = true;
-  if (violation.autofix) {
-    // Apply autofix directly via workspace edit for fast, individual fixes
-    const edit = new vscode.WorkspaceEdit();
+  if (violation.autofixable) {
     const root = getWorkspaceRoot();
     if (root) {
-      for (const [filePath, textEdits] of Object.entries(violation.autofix.edits)) {
-        const absPath = path.join(root, filePath);
-        const uri = vscode.Uri.file(absPath);
-        // Sort edits in reverse order to apply from end to start
-        const sortedEdits = [...textEdits].sort((a, b) => b.start - a.start);
-        for (const textEdit of sortedEdits) {
-          const startPos = document.positionAt(textEdit.start);
-          const endPos = document.positionAt(textEdit.end);
-          edit.replace(uri, new vscode.Range(startPos, endPos), textEdit.newText);
-        }
-      }
-      action.edit = edit;
+      const relativePath = path.relative(root, document.uri.fsPath).replace(/\\/g, "/");
+      action.command = {
+        command: "semio.fixViolation",
+        title: "Fix Violation",
+        arguments: [relativePath],
+      };
     }
   }
   return action;
@@ -3111,7 +3105,11 @@ function registerCommands(context: vscode.ExtensionContext): void {
         placeHolder: "Select LLM",
       });
       if (!llm) return;
-      runRepoCommand(`ticket open "${title.replace(/"/g, '\\"')}" "${prompt.replace(/"/g, '\\"')}" "${llm}"`);
+      const ui = await vscode.window.showQuickPick(UI_OPTIONS, {
+        placeHolder: "Select UI",
+      });
+      if (!ui) return;
+      runRepoCommand(`ticket open "${title.replace(/"/g, '\\"')}" "${prompt.replace(/"/g, '\\"')}" "${llm}" "${ui}"`);
     }),
     vscode.commands.registerCommand("semio.ticketList", async () => {
       if (!hasRepoAccess()) {
@@ -3166,7 +3164,9 @@ function registerCommands(context: vscode.ExtensionContext): void {
         placeHolder: "Select LLM",
       });
       if (!llm) return;
-      runRepoCommand(`ticket reopen ${resolvedTicket.year}/${resolvedTicket.month}/${resolvedTicket.day}/${resolvedTicket.slug} "${prompt.replace(/"/g, '\\"')}" "${llm}"`);
+      runRepoCommand(
+        `ticket reopen ${resolvedTicket.year}/${resolvedTicket.month}/${resolvedTicket.day}/${resolvedTicket.slug} "${prompt.replace(/"/g, '\\"')}" "${llm}"`
+      );
     }),
     vscode.commands.registerCommand("semio.ticketRead", async () => {
       if (!hasRepoAccess()) {

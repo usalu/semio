@@ -1134,6 +1134,12 @@ The VS Code extension uses the schema mirror to generate typed documents and for
 Devcontainer attach builds and installs the local extension automatically, keeping the workspace ready without manual steps.
 VS Code extension packaging requires an unscoped extension name in `js/vscode/package.json` so `vsce package` can build the local `.vsix`.
 
+## 🎟️ Ticket Workflow Signals [↑](#-bundles-)
+
+Ticket creation always captures both the LLM and the UI surface (copilot-chat, antigravity, cursor, claude-code, codex, droid) so every iteration records the toolchain context.
+Ticket closing derives bundle labels from every touched path, adds `@semio-repo` when a file falls outside bundles, and posts a metrics comment that lists each file with a status icon plus `+added`/`-removed` counts in a fenced `md` block.
+These signals keep GitHub issues, metrics, and bundle ownership consistent across CLI, GraphQL, and the VS Code extension.
+
 ## ✅ Validation System [↑](#-bundles-)
 
 semio includes a **domain-pure validation system** built entirely in `semio.ts` with zero JSON dependencies. All validation logic works with `Kit` objects and produces `KitDiff`-based fixes.
@@ -1188,6 +1194,11 @@ This aligns installation with a running VS Code server, avoiding failures during
 File sections are modeled as a nested tree derived from language-specific section markers and JSON key paths so tooling can reason about structure instead of raw line ranges.
 The repo CLI and VS Code extension request the active file's section tree and use the resolved ranges to jump to sections, rename/move nodes, and create or delete child sections with consistent paths across tools.
 The `integrate` command allows wrapping a source file's content into a section marker and inserting it into a target file, either at the end or nested within an existing parent section.
+
+## 🐚 Shell Language Support [↑](#-bundles-)
+
+The repo CLI treats `.sh` files as shell language sources so section trees, headers, and comment policies apply to scripts alongside other languages.
+Shell files follow the same `# region` and `# endregion` markers as other hash-comment languages, allowing consistent section navigation and ticket line attribution.
 
 ## 🎫 Ticket System [↑](#-bundles-)
 
@@ -1461,7 +1472,7 @@ Currently not implemented in this repo (planned component) 🧩
 
 A playground for [sketchpad](#%EF%B8%8F-sketchpad-) 🎮
 
-## 💻 [@semio-repo/vscode](https://github.com/usalu/semio/tree/main/js/vscode) [↑](#-bundles-)
+## 💻 [@semio/vscode](https://github.com/usalu/semio/tree/main/js/vscode) [↑](#-bundles-)
 
 VS Code extension providing real-time violation diagnostics for semio development. Compatible with VS Code and Windsurf (VSCode OSS 1.106.0+).
 

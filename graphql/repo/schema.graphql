@@ -91,6 +91,7 @@ input TicketOpenInput {
   title: String!
   prompt: String!
   llm: String!
+  ui: TicketUI!
   noIssue: Boolean
   planPath: String
 }
@@ -312,6 +313,7 @@ type Ticket implements Node {
   status: TicketStatus!
   author: Contributor
   llm: String
+  ui: TicketUI
   commit: String
   date: TicketDate!
   bundles: [Bundle!]!
@@ -321,6 +323,15 @@ type Ticket implements Node {
 enum TicketStatus {
   OPEN
   CLOSED
+}
+
+enum TicketUI {
+  COPILOT_CHAT
+  ANTIGRAVITY
+  CURSOR
+  CLAUDE_CODE
+  CODEX
+  DROID
 }
 
 type TicketDate {
