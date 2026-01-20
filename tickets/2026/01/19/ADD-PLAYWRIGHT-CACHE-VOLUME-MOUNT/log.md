@@ -15,3 +15,16 @@ Added volume mount for Playwright cache:
 ```
 
 This ensures Playwright browsers are persisted across container rebuilds, matching the pattern used for node_modules.
+
+## Update
+- Reopened ticket with latest prompt about Playwright cache reinstall after reload.
+- Reviewed devcontainer config and Playwright install steps.
+- Planning to adjust Playwright cache path and startup handling to persist across reloads.
+
+## Work
+- Moved Playwright cache path to the workspace node_modules cache directory in devcontainer env.
+- Ensured Playwright install targets the shared cache path during devcontainer provisioning.
+- Updated README and AGENTS docs to document the cache mechanism.
+
+## Close
+- Ticket closed with updated devcontainer Playwright cache handling and documentation updates.

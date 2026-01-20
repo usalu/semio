@@ -1,11 +1,4 @@
-# Summary: Add Playwright Cache Volume Mount
+# Summary
 
-Added a volume mount for Playwright browser cache to persist browsers across container rebuilds.
-
-## Change
-Added to `.devcontainer/devcontainer.json` mounts array:
-```json
-"source=${localWorkspaceFolderBasename}-ms-playwright,target=/home/vscode/.cache/ms-playwright,type=volume"
-```
-
-This matches the existing pattern used for node_modules caching and uses the already-configured `PLAYWRIGHT_BROWSERS_PATH` environment variable.
+- Updated devcontainer Playwright cache path to the workspace node_modules cache and aligned provisioning to install into it.
+- Documented Playwright cache behavior in README and AGENTS dev docs.

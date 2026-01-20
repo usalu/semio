@@ -25,6 +25,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"math/rand"
@@ -131,6 +132,7 @@ var AllowedLLMs = []string{
 	"gemini-3-pro",
 	"gemini-3-flash",
 	"gpt-5-2",
+	"gpt-5-2-codex",
 	"gpt-5-mini",
 }
 
@@ -404,6 +406,13 @@ func (t *Ticket) GetPrompt() string {
 	return ""
 }
 
+func (t *Ticket) GetLatestPrompt() string {
+	if t.Data != nil && len(t.Data.Iterations) > 0 {
+		return t.Data.Iterations[len(t.Data.Iterations)-1].Prompt
+	}
+	return ""
+}
+
 func (t *Ticket) GetLLM() string {
 	if t.Data != nil && len(t.Data.Iterations) > 0 {
 		return t.Data.Iterations[len(t.Data.Iterations)-1].LLM
@@ -576,15 +585,17 @@ type TicketCloseInput struct {
 	Slug    string   `json:"slug"`
 	Summary string   `json:"summary"`
 	Files   []string `json:"files"`
+	Title   *string  `json:"title,omitempty"`
 }
 
 type TicketReopenInput struct {
-	Year   int    `json:"year"`
-	Month  int    `json:"month"`
-	Day    int    `json:"day"`
-	Slug   string `json:"slug"`
-	Prompt string `json:"prompt"`
-	LLM    string `json:"llm"`
+	Year   int     `json:"year"`
+	Month  int     `json:"month"`
+	Day    int     `json:"day"`
+	Slug   string  `json:"slug"`
+	Prompt string  `json:"prompt"`
+	LLM    string  `json:"llm"`
+	Title  *string `json:"title,omitempty"`
 }
 
 type ContributorAddInput struct {
@@ -672,6 +683,9 @@ type LanguagePlugin interface {
 	PolicySectionEndMatch(line string) (matched bool, name string)
 	ExtraOrphanDefinitions(lines []string) []DefinitionRange
 	ScanComments(ctx *PolicyContext, file, content string, lines []string) []Violation
+	ExtractImports(content string) ([]string, string)
+	FormatImports(imports []string) string
+	ExtractPackage(content string) (string, string)
 }
 
 type DefinitionRange struct {
@@ -906,6 +920,18 @@ func (l *BaseLanguage) ScanComments(ctx *PolicyContext, file, content string, li
 	return nil
 }
 
+func (l *BaseLanguage) ExtractImports(content string) ([]string, string) {
+	return []string{}, content
+}
+
+func (l *BaseLanguage) FormatImports(imports []string) string {
+	return ""
+}
+
+func (l *BaseLanguage) ExtractPackage(content string) (string, string) {
+	return "", content
+}
+
 // #region TypeScript
 
 type TypeScriptLanguage struct {
@@ -1085,6 +1111,47 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 
 // #endregion TypeScript
 
+func (l *TypeScriptLanguage) ExtractImports(content string) ([]string, string) {
+	lines := strings.Split(content, "\n")
+	var imports []string
+	var bodyLines []string
+	for i := 0; i < len(lines); i++ {
+		line := lines[i]
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "import ") {
+			currentImport := line
+			if !strings.Contains(line, ";") {
+				for j := i + 1; j < len(lines); j++ {
+					currentImport += "\n" + lines[j]
+					if strings.Contains(lines[j], ";") {
+						i = j
+						break
+					}
+				}
+			}
+			imports = append(imports, currentImport)
+		} else {
+			bodyLines = append(bodyLines, line)
+		}
+	}
+	return imports, strings.Join(bodyLines, "\n")
+}
+
+func (l *TypeScriptLanguage) FormatImports(imports []string) string {
+	if len(imports) == 0 {
+		return ""
+	}
+	seen := make(map[string]bool)
+	var uniqueImports []string
+	for _, imp := range imports {
+		if !seen[imp] {
+			seen[imp] = true
+			uniqueImports = append(uniqueImports, imp)
+		}
+	}
+	return strings.Join(uniqueImports, "\n")
+}
+
 // #region Go
 
 type GoLanguage struct {
@@ -1142,6 +1209,82 @@ func (l *GoLanguage) ExtraOrphanDefinitions(lines []string) []DefinitionRange {
 	return defs
 }
 
+func (l *GoLanguage) ExtractImports(content string) ([]string, string) {
+	lines := strings.Split(content, "\n")
+	var imports []string
+	var bodyLines []string
+	inImportBlock := false
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+
+		if inImportBlock {
+			if trimmed == ")" {
+				inImportBlock = false
+			} else if trimmed != "" {
+				// Inside import block, keep it raw or trim?
+				// existing logic was just trimmed, but we might want to keep quotes logic?
+				// But FormatImports adds quotes if we provide strings.
+				// Wait, ExtractImports implementation I wrote earlier just appended lines.
+				// Go imports inside () don't have "import" prefix.
+				// e.g. "fmt"
+				imports = append(imports, strings.Trim(trimmed, ",")) // handle comma if present (Go doesn't use commas usually in imports)
+			}
+			continue
+		}
+
+		if strings.HasPrefix(trimmed, "import (") {
+			inImportBlock = true
+			continue
+		}
+
+		if strings.HasPrefix(trimmed, "import ") {
+			// Single line import: import "fmt" or import alias "pkg"
+			imports = append(imports, strings.TrimPrefix(trimmed, "import "))
+			continue
+		}
+
+		bodyLines = append(bodyLines, line)
+	}
+	return imports, strings.Join(bodyLines, "\n")
+}
+
+func (l *GoLanguage) FormatImports(imports []string) string {
+	if len(imports) == 0 {
+		return ""
+	}
+	importBlock := "import (\n"
+	seen := make(map[string]bool)
+	var uniqueImports []string
+	for _, imp := range imports {
+		if !seen[imp] {
+			seen[imp] = true
+			uniqueImports = append(uniqueImports, imp)
+		}
+	}
+	sort.Strings(uniqueImports)
+	for _, imp := range uniqueImports {
+		importBlock += "\t" + imp + "\n"
+	}
+	importBlock += ")"
+	return importBlock
+}
+
+func (l *GoLanguage) ExtractPackage(content string) (string, string) {
+	lines := strings.Split(content, "\n")
+	pkg := ""
+	var bodyLines []string
+	foundPkg := false
+	for _, line := range lines {
+		if !foundPkg && strings.HasPrefix(strings.TrimSpace(line), "package ") {
+			pkg = line
+			foundPkg = true
+			continue
+		}
+		bodyLines = append(bodyLines, line)
+	}
+	return pkg, strings.Join(bodyLines, "\n")
+}
+
 type PythonLanguage struct {
 	BaseLanguage
 }
@@ -1164,6 +1307,37 @@ func NewPythonLanguage() *PythonLanguage {
 			policySectionEnd:   regexp.MustCompile(`(?i)^\s*#\s*endregion(?:\s+(\S.*?))?\s*$`),
 		},
 	}
+}
+
+func (l *PythonLanguage) ExtractImports(content string) ([]string, string) {
+	lines := strings.Split(content, "\n")
+	var imports []string
+	var bodyLines []string
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "import ") || strings.HasPrefix(trimmed, "from ") {
+			imports = append(imports, line)
+		} else {
+			bodyLines = append(bodyLines, line)
+		}
+	}
+	return imports, strings.Join(bodyLines, "\n")
+}
+
+func (l *PythonLanguage) FormatImports(imports []string) string {
+	if len(imports) == 0 {
+		return ""
+	}
+	seen := make(map[string]bool)
+	var uniqueImports []string
+	for _, imp := range imports {
+		if !seen[imp] {
+			seen[imp] = true
+			uniqueImports = append(uniqueImports, imp)
+		}
+	}
+	sort.Strings(uniqueImports)
+	return strings.Join(uniqueImports, "\n")
 }
 
 // #endregion Python
@@ -1192,6 +1366,37 @@ func NewCSharpLanguage() *CSharpLanguage {
 			policySectionEnd:   regexp.MustCompile(`(?i)^\s*#endregion(?:\s+(\S.*?))?\s*$`),
 		},
 	}
+}
+
+func (l *CSharpLanguage) ExtractImports(content string) ([]string, string) {
+	lines := strings.Split(content, "\n")
+	var imports []string
+	var bodyLines []string
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "using ") && strings.HasSuffix(trimmed, ";") {
+			imports = append(imports, line)
+		} else {
+			bodyLines = append(bodyLines, line)
+		}
+	}
+	return imports, strings.Join(bodyLines, "\n")
+}
+
+func (l *CSharpLanguage) FormatImports(imports []string) string {
+	if len(imports) == 0 {
+		return ""
+	}
+	seen := make(map[string]bool)
+	var uniqueImports []string
+	for _, imp := range imports {
+		if !seen[imp] {
+			seen[imp] = true
+			uniqueImports = append(uniqueImports, imp)
+		}
+	}
+	sort.Strings(uniqueImports)
+	return strings.Join(uniqueImports, "\n")
 }
 
 // #endregion C#
@@ -2291,18 +2496,29 @@ func findRepoRoot(startDir string) string {
 	if err != nil {
 		return startDir
 	}
+	// First, walk up looking for .git (prioritize git root over go.mod)
+	searchDir := dir
 	for {
-		if _, err := os.Stat(filepath.Join(dir, ".git")); err == nil {
-			return dir
+		if _, err := os.Stat(filepath.Join(searchDir, ".git")); err == nil {
+			return searchDir
 		}
-		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
-			return dir
+		parent := filepath.Dir(searchDir)
+		if parent == searchDir {
+			break
 		}
-		parent := filepath.Dir(dir)
-		if parent == dir {
+		searchDir = parent
+	}
+	// If no .git found, fall back to looking for go.mod
+	searchDir = dir
+	for {
+		if _, err := os.Stat(filepath.Join(searchDir, "go.mod")); err == nil {
+			return searchDir
+		}
+		parent := filepath.Dir(searchDir)
+		if parent == searchDir {
 			return startDir
 		}
-		dir = parent
+		searchDir = parent
 	}
 }
 
@@ -4898,6 +5114,108 @@ func GetTicketSummaryPath(year, month, day int, slug string) string {
 	return filepath.Join(GetTicketPath(year, month, day, slug), "summary.md")
 }
 
+func normalizeTicketKeyword(value string) string {
+	return strings.ToUpper(strings.TrimSpace(value))
+}
+
+func hasTicketKeyword(text, keyword string) bool {
+	return strings.Contains(strings.ToUpper(text), keyword)
+}
+
+func LatestTicket() (*Ticket, error) {
+	tickets, err := ListTickets(nil, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	if len(tickets) == 0 {
+		return nil, fmt.Errorf("no tickets found")
+	}
+	sort.Slice(tickets, func(i, j int) bool {
+		if tickets[i].Year != tickets[j].Year {
+			return tickets[i].Year > tickets[j].Year
+		}
+		if tickets[i].Month != tickets[j].Month {
+			return tickets[i].Month > tickets[j].Month
+		}
+		if tickets[i].Day != tickets[j].Day {
+			return tickets[i].Day > tickets[j].Day
+		}
+		return tickets[i].GetDateCreated().After(tickets[j].GetDateCreated())
+	})
+	return &tickets[0], nil
+}
+
+func shouldContinueTicket(prompt string) bool {
+	return hasTicketKeyword(prompt, "CONTINUE")
+}
+
+func shouldSkipTicket(prompt string) bool {
+	return hasTicketKeyword(prompt, "NOTICKET")
+}
+
+func OpenTicket(title, prompt, llm, ui, planPath string, noIssue bool) (*Ticket, error) {
+	if prompt == "" {
+		prompt = title
+	}
+	if shouldSkipTicket(prompt) {
+		return nil, nil
+	}
+	if shouldContinueTicket(prompt) {
+		latest, err := LatestTicket()
+		if err != nil {
+			return nil, err
+		}
+		if latest.GetStatus() == TicketStatusClosed {
+			return latest, ReopenTicket(latest, prompt, llm)
+		}
+		return latest, nil
+	}
+	return CreateTicket(title, prompt, llm, ui, planPath, noIssue)
+}
+
+func UpdateTicketTitle(ticket *Ticket, title string) error {
+	if ticket == nil {
+		return fmt.Errorf("ticket is nil")
+	}
+	if ticket.Data == nil {
+		return fmt.Errorf("ticket data is nil")
+	}
+	title = strings.TrimSpace(title)
+	if title == "" {
+		return fmt.Errorf("ticket title is required")
+	}
+	if title == strings.ToLower(title) {
+		return fmt.Errorf("ticket title must be titleized (e.g. \"Some Title on Something\") and NOT a slug or all lowercase")
+	}
+	if title == strings.ToUpper(title) {
+		return fmt.Errorf("ticket title must be titleized (e.g. \"Some Title on Something\") and NOT only in caps")
+	}
+	if strings.Contains(title, "-") || strings.Contains(title, "_") {
+		return fmt.Errorf("ticket title must be titleized (e.g. \"Some Title on Something\") and NOT contain dashes or underscores")
+	}
+	slug := Slugify(title)
+	newFolderPath := GetTicketPath(ticket.Year, ticket.Month, ticket.Day, slug)
+	if slug != ticket.Slug {
+		if FileExists(newFolderPath) {
+			return fmt.Errorf("ticket folder already exists: %s", newFolderPath)
+		}
+		if err := EnsureDir(filepath.Dir(newFolderPath)); err != nil {
+			return err
+		}
+		if err := os.Rename(ticket.FolderPath, newFolderPath); err != nil {
+			return err
+		}
+	}
+	ticket.Data.Title = title
+	ticket.Slug = slug
+	ticket.FolderPath = newFolderPath
+	ticket.JsonPath = GetTicketJsonPath(ticket.Year, ticket.Month, ticket.Day, slug)
+	ticket.PlanPath = GetTicketPlanPath(ticket.Year, ticket.Month, ticket.Day, slug)
+	ticket.LogPath = GetTicketLogPath(ticket.Year, ticket.Month, ticket.Day, slug)
+	ticket.SummaryPath = GetTicketSummaryPath(ticket.Year, ticket.Month, ticket.Day, slug)
+	return nil
+}
+
 func CreateTicket(title, prompt, llm, ui, planPath string, noIssue bool) (*Ticket, error) {
 	title = strings.TrimSpace(title)
 	if title == strings.ToLower(title) {
@@ -4905,6 +5223,9 @@ func CreateTicket(title, prompt, llm, ui, planPath string, noIssue bool) (*Ticke
 	}
 	if title == strings.ToUpper(title) {
 		return nil, fmt.Errorf("ticket title must be titleized (e.g. \"Some Title on Something\") and NOT only in caps")
+	}
+	if strings.Contains(title, "-") || strings.Contains(title, "_") {
+		return nil, fmt.Errorf("ticket title must be titleized (e.g. \"Some Title on Something\") and NOT contain dashes or underscores")
 	}
 
 	now := time.Now()
@@ -4972,6 +5293,7 @@ func CreateTicket(title, prompt, llm, ui, planPath string, noIssue bool) (*Ticke
 		if planContent != "" {
 			issueBody = planContent
 		}
+		issueBody = formatPromptHeading(issueBody)
 		issueURL, err := ghCreateIssue(title, issueBody)
 		if err == nil && issueURL != "" {
 			ticketData.GitHub = &TicketGithubData{Issue: issueURL}
@@ -5013,6 +5335,60 @@ func ghCreateIssue(title, body string) (string, error) {
 	return issueURL, nil
 }
 
+func CountLines(content string) int {
+	if content == "" {
+		return 0
+	}
+	return strings.Count(content, "\n") + 1
+}
+
+func formatPromptHeading(body string) string {
+	if body == "" {
+		return "# 🤖 Prompt"
+	}
+	return "# 🤖 Prompt\n\n" + body
+}
+
+func formatSummaryHeading(body string) string {
+	if body == "" {
+		return "# 🔍 Summary"
+	}
+	return "# 🔍 Summary\n\n" + body
+}
+
+func FilterTicketWorkspaceFiles(ticket *Ticket, files []string) []string {
+	if ticket == nil {
+		return files
+	}
+	if len(files) == 0 {
+		return files
+	}
+	if ticket.FolderPath == "" {
+		return files
+	}
+	relative := NormalizePath(ticket.FolderPath)
+	if filepath.IsAbs(ticket.FolderPath) {
+		relative = GetRelativePath(ticket.FolderPath)
+	}
+	relative = strings.TrimPrefix(relative, "./")
+	if relative == "" {
+		return files
+	}
+	filtered := make([]string, 0, len(files))
+	for _, filePath := range files {
+		normalized := NormalizePath(filePath)
+		if filepath.IsAbs(filePath) {
+			normalized = GetRelativePath(filePath)
+		}
+		normalized = strings.TrimPrefix(normalized, "./")
+		if normalized == relative || strings.HasPrefix(normalized, relative+"/") {
+			continue
+		}
+		filtered = append(filtered, filePath)
+	}
+	return filtered
+}
+
 func ghAddComment(issueURL, comment string) error {
 	args := []string{"issue", "comment", issueURL, "--body", comment}
 	_, stderr, exitCode := ExecCommand("gh", args, "")
@@ -5051,6 +5427,15 @@ func ghReopenIssue(issueURL string) error {
 	_, stderr, exitCode := ExecCommand("gh", args, "")
 	if exitCode != 0 {
 		return fmt.Errorf("gh issue reopen failed: %s", strings.TrimSpace(stderr))
+	}
+	return nil
+}
+
+func ghUpdateIssueTitle(issueURL, title string) error {
+	args := []string{"issue", "edit", issueURL, "--title", title}
+	_, stderr, exitCode := ExecCommand("gh", args, "")
+	if exitCode != 0 {
+		return fmt.Errorf("gh issue edit failed: %s", strings.TrimSpace(stderr))
 	}
 	return nil
 }
@@ -5391,7 +5776,6 @@ func generateMetricsComment(files []fileMetric) string {
 		return files[i].path < files[j].path
 	})
 	var lines []string
-	lines = append(lines, "```md")
 	for _, f := range files {
 		var icon string
 		switch f.status {
@@ -5417,8 +5801,10 @@ func generateMetricsComment(files []fileMetric) string {
 
 		lines = append(lines, fmt.Sprintf("%s%s%s", icon, f.path, lineInfo))
 	}
-	lines = append(lines, "```")
 
+	if len(lines) == 0 {
+		return ""
+	}
 	return strings.Join(lines, "\n")
 }
 
@@ -5440,10 +5826,7 @@ func FinishTicket(ticket *Ticket, summary string, files []string) error {
 	if ticket.Data.GitHub != nil && ticket.Data.GitHub.Issue != "" {
 		issueURL := ticket.Data.GitHub.Issue
 
-		// 1. Add comment with summary
-		if err := ghAddComment(issueURL, summary); err != nil {
-			fmt.Printf("Warning: Failed to add summary comment to GitHub issue: %v\n", err)
-		}
+		// 1. Add comment with summary and metrics
 
 		// 2. Add labels
 		bundles := GetProjects()
@@ -5513,11 +5896,15 @@ func FinishTicket(ticket *Ticket, summary string, files []string) error {
 				allMetrics = append(allMetrics, fileMetric{path: f.To, status: "renamed", added: added, removed: removed})
 			}
 		}
+
+		comment := formatSummaryHeading(summary)
 		metricsComment := generateMetricsComment(allMetrics)
 		if metricsComment != "" {
-			if err := ghAddComment(issueURL, metricsComment); err != nil {
-				fmt.Printf("Warning: Failed to add metrics comment to GitHub issue: %v\n", err)
-			}
+			comment += "\n\n# ✍️ Changes\n\n" + metricsComment
+		}
+
+		if err := ghAddComment(issueURL, comment); err != nil {
+			fmt.Printf("Warning: Failed to add summary and metrics comment to GitHub issue: %v\n", err)
 		}
 
 		// Close issue
@@ -5566,8 +5953,13 @@ func ReopenTicket(ticket *Ticket, prompt, llm string) error {
 	ticket.Data.Dates.Closed = nil
 
 	if ticket.Data.GitHub != nil && ticket.Data.GitHub.Issue != "" {
-		if err := ghReopenIssue(ticket.Data.GitHub.Issue); err != nil {
+		issueURL := ticket.Data.GitHub.Issue
+		if err := ghReopenIssue(issueURL); err != nil {
 			fmt.Printf("Warning: Failed to reopen GitHub issue: %v\n", err)
+		}
+		comment := formatPromptHeading(prompt)
+		if err := ghAddComment(issueURL, comment); err != nil {
+			fmt.Printf("Warning: Failed to add prompt comment to GitHub issue: %v\n", err)
 		}
 	}
 
@@ -5576,13 +5968,22 @@ func ReopenTicket(ticket *Ticket, prompt, llm string) error {
 
 func ToolTicketOpen(title, prompt, llm, ui, planPath string, noIssue bool) ToolResult {
 	output := NewOutput()
-	if prompt == "" {
-		prompt = title
+	resolvedPrompt := prompt
+	if resolvedPrompt == "" {
+		resolvedPrompt = title
 	}
-	ticket, err := CreateTicket(title, prompt, llm, ui, planPath, noIssue)
+	ticket, err := OpenTicket(title, prompt, llm, ui, planPath, noIssue)
 	if err != nil {
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
+	}
+	if ticket == nil {
+		output.Info("\n🚫 Ticket creation skipped (NOTICKET)")
+		return ToolResult{Output: *output}
+	}
+	if shouldContinueTicket(resolvedPrompt) {
+		output.Success(fmt.Sprintf("\n↩️ Continued ticket: %s", ticket.Slug))
+		return ToolResult{Output: *output, Data: ticket}
 	}
 	output.Success(fmt.Sprintf("\n🎫 Created ticket: %s", ticket.Slug))
 	output.Info(fmt.Sprintf("   Folder: %s", ticket.FolderPath))
@@ -6238,22 +6639,43 @@ func ToolIntegrate(sourcePath, targetSectionName, targetFilePath, targetParentSe
 		return ToolResult{Output: *output, Error: "unsupported target file type"}
 	}
 
-	// 4. Format the new section with source content
+	output.Info(fmt.Sprintf("Splitting headers..."))
+
+	// 4. Split Headers
+	sourceHeader, sourceBody := SplitHeader(sourceContent, targetLanguage)
+	targetHeader, targetBody := SplitHeader(targetContent, targetLanguage)
+
+	output.Info(fmt.Sprintf("Source Header len: %d, Source Body len: %d", len(sourceHeader), len(sourceBody)))
+
+	// 5. Extract Imports
+	_, sourceBodyNoPkg := targetLanguage.ExtractPackage(sourceBody)
+	targetPkg, targetBodyNoPkg := targetLanguage.ExtractPackage(targetBody)
+
+	sourceImports, sourceCode := targetLanguage.ExtractImports(sourceBodyNoPkg)
+	targetImports, targetCode := targetLanguage.ExtractImports(targetBodyNoPkg)
+
+	// 6. Merge Headers
+	mergedHeader := MergeHeaders(targetHeader, sourceHeader, targetLanguage)
+
+	// 7. Merge Imports
+	mergedImports := UniqueStrings(append(targetImports, sourceImports...))
+
+	// 8. Format the new section with source content
 	startMarker := targetLanguage.FormatSectionStart(targetSectionName)
 	endMarker := targetLanguage.FormatSectionEnd(targetSectionName)
 
 	// Ensure content ends with newline if it doesn't
-	if !strings.HasSuffix(sourceContent, "\n") && sourceContent != "" {
-		sourceContent += "\n"
+	if !strings.HasSuffix(sourceCode, "\n") && sourceCode != "" {
+		sourceCode += "\n"
 	}
 
-	sectionContent := "\n" + startMarker + "\n" + sourceContent + endMarker + "\n"
+	sectionContent := "\n" + startMarker + "\n" + sourceCode + endMarker + "\n"
 
-	// 5. Handle insertion
-	var updatedContent string
+	// 9. Handle insertion
+	var updatedBody string
 	if targetParentSectionName != "" {
 		// Find parent section
-		sections := targetLanguage.ParseSections(targetContent)
+		sections := targetLanguage.ParseSections(targetCode)
 		parentSection := FindSection(sections, targetParentSectionName)
 		if parentSection == nil {
 			output.Error(fmt.Sprintf("Error: Parent section not found: %s", targetParentSectionName))
@@ -6267,29 +6689,124 @@ func ToolIntegrate(sourcePath, targetSectionName, targetFilePath, targetParentSe
 		}
 
 		// Insert before the end marker line of the parent section
-		lines := strings.Split(targetContent, "\n")
+		lines := strings.Split(targetCode, "\n")
 		newLines := make([]string, 0, len(lines)+strings.Count(sectionContent, "\n"))
 		newLines = append(newLines, lines[:parentSection.EndLine-1]...)
 		newLines = append(newLines, strings.Split(strings.Trim(sectionContent, "\n"), "\n")...)
 		newLines = append(newLines, lines[parentSection.EndLine-1:]...)
-		updatedContent = strings.Join(newLines, "\n")
+		updatedBody = strings.Join(newLines, "\n")
 	} else {
 		// Append to the end of the target file
-		updatedContent = targetContent
-		if !strings.HasSuffix(updatedContent, "\n") && updatedContent != "" {
-			updatedContent += "\n"
+		updatedBody = targetCode
+		if !strings.HasSuffix(updatedBody, "\n") && updatedBody != "" {
+			updatedBody += "\n"
 		}
-		updatedContent += sectionContent
+		updatedBody += sectionContent
 	}
 
-	// 6. Write target file
-	if err := WriteTextFile(absTargetFilePath, updatedContent); err != nil {
+	// 10. Reassemble
+	finalContent := mergedHeader
+	if finalContent != "" {
+		if !strings.HasSuffix(finalContent, "\n") {
+			finalContent += "\n"
+		}
+		finalContent += "\n"
+	}
+
+	if targetPkg != "" {
+		finalContent += targetPkg + "\n\n"
+	}
+
+	formattedImports := targetLanguage.FormatImports(mergedImports)
+	if formattedImports != "" {
+		finalContent += formattedImports + "\n\n"
+	}
+
+	finalContent += updatedBody
+
+	// 12. Write target file
+	if err := WriteTextFile(absTargetFilePath, finalContent); err != nil {
 		output.Error(fmt.Sprintf("Error writing target file: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
 
 	output.Success(fmt.Sprintf("\n🧩 Integrated %s into %s section of %s", sourcePath, targetSectionName, targetFilePath))
 	return ToolResult{Output: *output}
+}
+
+func SplitHeader(content string, lang LanguagePlugin) (string, string) {
+	sections := lang.ParseSections(content)
+	for _, s := range sections {
+		if strings.EqualFold(s.Name, "Header") {
+			header := content[:s.EndIndex]
+			body := content[s.EndIndex:]
+			return header, body
+		}
+	}
+	return "", content
+}
+
+func MergeHeaders(targetHeader, sourceHeader string, lang LanguagePlugin) string {
+	if targetHeader == "" {
+		return sourceHeader
+	}
+	if sourceHeader == "" {
+		return targetHeader
+	}
+	targetLines := strings.Split(targetHeader, "\n")
+	sourceLines := strings.Split(sourceHeader, "\n")
+	seen := make(map[string]bool)
+	for _, line := range targetLines {
+		seen[strings.TrimSpace(line)] = true
+	}
+	var insertIdx = -1
+	for i, line := range targetLines {
+		if matched, _ := lang.PolicySectionEndMatch(line); matched {
+			insertIdx = i
+		}
+	}
+	if insertIdx == -1 {
+		return targetHeader
+	}
+
+	var newLines []string
+	for _, line := range sourceLines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" {
+			continue
+		}
+		if matched, _ := lang.PolicySectionStartMatch(line); matched {
+			continue
+		}
+		if matched, _ := lang.PolicySectionEndMatch(line); matched {
+			continue
+		}
+		if !seen[trimmed] {
+			newLines = append(newLines, line)
+		}
+	}
+
+	if len(newLines) == 0 {
+		return targetHeader
+	}
+
+	res := make([]string, 0, len(targetLines)+len(newLines)+1)
+	res = append(res, targetLines[:insertIdx]...)
+	res = append(res, newLines...)
+	res = append(res, targetLines[insertIdx:]...)
+	return strings.Join(res, "\n")
+}
+
+func UniqueStrings(input []string) []string {
+	keys := make(map[string]bool)
+	list := []string{}
+	for _, entry := range input {
+		if _, value := keys[entry]; !value {
+			keys[entry] = true
+			list = append(list, entry)
+		}
+	}
+	return list
 }
 
 func ToolSectionDelete(filePath, sectionPath string) ToolResult {
@@ -7064,13 +7581,25 @@ func (c *repoContext) Fix(scope *string) (*FixResult, error) {
 }
 
 func (c *repoContext) TicketOpen(input TicketOpenInput) (*Ticket, error) {
-	return CreateTicket(input.Title, input.Prompt, input.LLM, input.UI, input.PlanPath, input.NoIssue)
+	return OpenTicket(input.Title, input.Prompt, input.LLM, input.UI, input.PlanPath, input.NoIssue)
 }
 
 func (c *repoContext) TicketClose(input TicketCloseInput) (*Ticket, error) {
 	ticket, err := ReadTicket(input.Year, input.Month, input.Day, input.Slug)
 	if err != nil {
 		return nil, err
+	}
+	// Handle title update if provided
+	if input.Title != nil && *input.Title != "" {
+		if err := UpdateTicketTitle(ticket, *input.Title); err != nil {
+			return nil, err
+		}
+		// Update GitHub issue title if exists
+		if ticket.Data.GitHub != nil && ticket.Data.GitHub.Issue != "" {
+			if err := ghUpdateIssueTitle(ticket.Data.GitHub.Issue, *input.Title); err != nil {
+				fmt.Printf("Warning: Failed to update GitHub issue title: %v\n", err)
+			}
+		}
 	}
 	if err := FinishTicket(ticket, input.Summary, input.Files); err != nil {
 		return nil, err
@@ -7082,6 +7611,18 @@ func (c *repoContext) TicketReopen(input TicketReopenInput) (*Ticket, error) {
 	ticket, err := ReadTicket(input.Year, input.Month, input.Day, input.Slug)
 	if err != nil {
 		return nil, err
+	}
+	// Handle title update if provided
+	if input.Title != nil && *input.Title != "" {
+		if err := UpdateTicketTitle(ticket, *input.Title); err != nil {
+			return nil, err
+		}
+		// Update GitHub issue title if exists
+		if ticket.Data.GitHub != nil && ticket.Data.GitHub.Issue != "" {
+			if err := ghUpdateIssueTitle(ticket.Data.GitHub.Issue, *input.Title); err != nil {
+				fmt.Printf("Warning: Failed to update GitHub issue title: %v\n", err)
+			}
+		}
 	}
 	if err := ReopenTicket(ticket, input.Prompt, input.LLM); err != nil {
 		return nil, err
@@ -7112,7 +7653,27 @@ func (c *repoContext) SectionMove(file, oldName, newName string) (*Section, erro
 func (c *repoContext) SectionDelete(file, name string) error { return nil }
 
 func (c *repoContext) Integrate(source, targetSection, targetFile, targetParent *string) (*File, error) {
-	return nil, nil
+	s := ""
+	if source != nil {
+		s = *source
+	}
+	ts := ""
+	if targetSection != nil {
+		ts = *targetSection
+	}
+	tf := ""
+	if targetFile != nil {
+		tf = *targetFile
+	}
+	tp := ""
+	if targetParent != nil {
+		tp = *targetParent
+	}
+	result := ToolIntegrate(s, ts, tf, tp)
+	if result.Error != "" {
+		return nil, errors.New(result.Error)
+	}
+	return &File{ID: "file:" + tf, Path: tf, Name: filepath.Base(tf)}, nil
 }
 
 func (c *repoContext) ContributorAdd(input ContributorAddInput) (*Contributor, error) {
@@ -8367,6 +8928,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"slug":    &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"summary": &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"files":   &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(graphql.String)))},
+			"title":   &graphql.InputObjectFieldConfig{Type: graphql.String},
 		},
 	})
 
@@ -8379,6 +8941,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"slug":   &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"prompt": &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"llm":    &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"title":  &graphql.InputObjectFieldConfig{Type: graphql.String},
 		},
 	})
 
@@ -8452,6 +9015,9 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						Summary: inputMap["summary"].(string),
 						Files:   files,
 					}
+					if t, ok := inputMap["title"].(string); ok {
+						input.Title = &t
+					}
 					return mutationResolverInstance.TicketClose(p.Context, input)
 				},
 			},
@@ -8469,6 +9035,9 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						Slug:   inputMap["slug"].(string),
 						Prompt: inputMap["prompt"].(string),
 						LLM:    inputMap["llm"].(string),
+					}
+					if t, ok := inputMap["title"].(string); ok {
+						input.Title = &t
 					}
 					return mutationResolverInstance.TicketReopen(p.Context, input)
 				},
@@ -9240,6 +9809,8 @@ func runMcpServer(cmd *cobra.Command, args []string) error {
 			mcp.WithString("prompt", mcp.Required(), mcp.Description("Ticket prompt/description")),
 			mcp.WithString("llm", mcp.Required(), mcp.Description("LLM used for this ticket")),
 			mcp.WithString("ui", mcp.Required(), mcp.Description("UI used for this ticket")),
+			mcp.WithBoolean("noIssue", mcp.Description("Skip GitHub issue creation")),
+			mcp.WithString("planPath", mcp.Description("Optional plan file path to seed ticket plan.md")),
 		),
 		ticketOpen,
 	)
@@ -9271,8 +9842,22 @@ func runMcpServer(cmd *cobra.Command, args []string) error {
 			mcp.WithString("slug", mcp.Required(), mcp.Description("Ticket slug")),
 			mcp.WithString("summary", mcp.Required(), mcp.Description("Summary of the ticket work")),
 			mcp.WithArray("files", mcp.Description("Files to include (at least one required)")),
+			mcp.WithString("title", mcp.Description("New title for the ticket (also updates GitHub issue)")),
 		),
 		ticketClose,
+	)
+	s.AddTool(
+		mcp.NewTool("ticket_reopen",
+			mcp.WithDescription("Reopen a closed ticket"),
+			mcp.WithNumber("year", mcp.Required(), mcp.Description("Ticket year")),
+			mcp.WithNumber("month", mcp.Required(), mcp.Description("Ticket month")),
+			mcp.WithNumber("day", mcp.Required(), mcp.Description("Ticket day")),
+			mcp.WithString("slug", mcp.Required(), mcp.Description("Ticket slug")),
+			mcp.WithString("prompt", mcp.Required(), mcp.Description("New prompt/description for the ticket")),
+			mcp.WithString("llm", mcp.Required(), mcp.Description("LLM used for this ticket")),
+			mcp.WithString("title", mcp.Description("New title for the ticket (also updates GitHub issue)")),
+		),
+		ticketReopen,
 	)
 	s.AddTool(
 		mcp.NewTool("contributor_add",
@@ -9526,6 +10111,18 @@ func getStringSliceArg(args map[string]interface{}, key string) ([]string, bool,
 	return result, true, nil
 }
 
+func getBoolArg(args map[string]interface{}, key string) (bool, bool, error) {
+	value, ok := args[key]
+	if !ok {
+		return false, false, nil
+	}
+	boolVal, ok := value.(bool)
+	if !ok {
+		return false, true, fmt.Errorf("invalid %s", key)
+	}
+	return boolVal, true, nil
+}
+
 // #endregion Args
 
 // #region Paths
@@ -9749,6 +10346,12 @@ func ticketOpen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 		"llm":    llm,
 		"ui":     ui,
 	}
+	if planPath, ok, _ := getStringArg(args, "planPath"); ok && planPath != "" {
+		input["planPath"] = planPath
+	}
+	if noIssue, ok, _ := getBoolArg(args, "noIssue"); ok {
+		input["noIssue"] = noIssue
+	}
 	query := `mutation TicketOpen($input: TicketOpenInput!) {
 		ticketOpen(input: $input) {
 			id
@@ -9903,8 +10506,64 @@ func ticketClose(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 		"summary": summary,
 		"files":   files,
 	}
+	// Add optional title if provided
+	if title, ok, _ := getStringArg(args, "title"); ok && title != "" {
+		input["title"] = title
+	}
 	query := `mutation TicketClose($input: TicketCloseInput!) {
 		ticketClose(input: $input) {
+			id
+			slug
+			status
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"input": input})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
+}
+
+func ticketReopen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
+	year, err := requireIntArg(args, "year")
+	if err != nil {
+		return nil, err
+	}
+	month, err := requireIntArg(args, "month")
+	if err != nil {
+		return nil, err
+	}
+	day, err := requireIntArg(args, "day")
+	if err != nil {
+		return nil, err
+	}
+	slug, err := requireStringArg(args, "slug")
+	if err != nil {
+		return nil, err
+	}
+	prompt, err := requireStringArg(args, "prompt")
+	if err != nil {
+		return nil, err
+	}
+	llm, err := requireStringArg(args, "llm")
+	if err != nil {
+		return nil, err
+	}
+	input := map[string]interface{}{
+		"year":   year,
+		"month":  month,
+		"day":    day,
+		"slug":   slug,
+		"prompt": prompt,
+		"llm":    llm,
+	}
+	// Add optional title if provided
+	if title, ok, _ := getStringArg(args, "title"); ok && title != "" {
+		input["title"] = title
+	}
+	query := `mutation TicketReopen($input: TicketReopenInput!) {
+		ticketReopen(input: $input) {
 			id
 			slug
 			status
@@ -10586,6 +11245,24 @@ var graphqlCmd = &cobra.Command{
 				return fmt.Errorf("invalid variables JSON: %w", err)
 			}
 		}
+
+		// Support JSON encoded query/variables (urql style)
+		var payload struct {
+			Query     string                 `json:"query"`
+			Variables map[string]interface{} `json:"variables"`
+		}
+		if err := json.Unmarshal([]byte(query), &payload); err == nil && payload.Query != "" {
+			query = payload.Query
+			if variables == nil {
+				variables = make(map[string]interface{})
+			}
+			for k, v := range payload.Variables {
+				if _, exists := variables[k]; !exists {
+					variables[k] = v
+				}
+			}
+		}
+
 		return printGQL(query, variables)
 	},
 }
@@ -10712,6 +11389,7 @@ var analyzeCmd = &cobra.Command{
 				analyze(scope: $scope) {
 					violations {
 						id
+						summary
 						scope
 						line
 						column
@@ -10748,6 +11426,7 @@ var fixCmd = &cobra.Command{
 					remaining
 					violations {
 						id
+						summary
 						scope
 						excerpt
 						line
@@ -10833,16 +11512,77 @@ var ticketCmd = &cobra.Command{
 }
 
 var ticketOpenCmd = &cobra.Command{
-	Use:   "open <title> <prompt> <llm> <ui>",
+	Use:   "open [title] [prompt] [llm] [ui]",
 	Short: "Open a new ticket",
-	Args:  cobra.ExactArgs(4),
+	Long: `Open a new ticket. Supports two syntaxes:
+
+Positional: repo ticket open <title> <prompt> <llm> <ui>
+Explicit:   repo ticket open --title <title> --prompt <prompt> --llm <llm> --ui <ui>
+
+LLM values: claude-opus-4-5, claude-sonnet-4, claude-haiku-4-5, gemini-3-pro, gpt-5-2, gpt-5-2-codex
+UI values:  claude-code, cursor, copilot-chat, antigravity, codex, droid`,
+	Args: cobra.MaximumNArgs(4),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		noIssue, _ := cmd.Flags().GetBool("no-issue")
+
+		// Get title from positional arg or flag
+		title, _ := cmd.Flags().GetString("title")
+		if title == "" && len(args) > 0 {
+			title = args[0]
+		}
+		if title == "" {
+			return fmt.Errorf("title is required (positional arg or --title flag)")
+		}
+
+		// Get prompt from positional arg or flag
+		prompt, _ := cmd.Flags().GetString("prompt")
+		if prompt == "" && len(args) > 1 {
+			prompt = args[1]
+		}
+		if prompt == "" {
+			prompt = title
+		}
+		if prompt == "" {
+			return fmt.Errorf("prompt is required (positional arg or --prompt flag)")
+		}
+
+		// Get LLM from positional arg or flag
+		llm, _ := cmd.Flags().GetString("llm")
+		if llm == "" && len(args) > 2 {
+			llm = args[2]
+		}
+		if llm == "" {
+			return fmt.Errorf("llm is required (positional arg or --llm flag): claude-opus-4-5, claude-sonnet-4, claude-haiku-4-5, gemini-3-pro, gpt-5-2, gpt-5-2-codex")
+		}
+
+		// Get UI from positional arg or flag
+		ui, _ := cmd.Flags().GetString("ui")
+		if ui == "" && len(args) > 3 {
+			ui = args[3]
+		}
+		if ui == "" {
+			return fmt.Errorf("ui is required (positional arg or --ui flag): claude-code, cursor, copilot-chat, antigravity, codex, droid")
+		}
+
+		// Map lowercase UI values to GraphQL enum names
+		uiMap := map[string]string{
+			"claude-code":  "CLAUDE_CODE",
+			"cursor":       "CURSOR",
+			"copilot-chat": "COPILOT_CHAT",
+			"antigravity":  "ANTIGRAVITY",
+			"codex":        "CODEX",
+			"droid":        "DROID",
+		}
+		uiEnum, ok := uiMap[ui]
+		if !ok {
+			return fmt.Errorf("invalid ui value: %s (valid: claude-code, cursor, copilot-chat, antigravity, codex, droid)", ui)
+		}
+
 		input := map[string]interface{}{
-			"title":   args[0],
-			"prompt":  args[1],
-			"llm":     args[2],
-			"ui":      args[3],
+			"title":   title,
+			"prompt":  prompt,
+			"llm":     llm,
+			"ui":      uiEnum,
 			"noIssue": noIssue,
 		}
 		variables := map[string]interface{}{
@@ -10864,6 +11604,10 @@ var ticketOpenCmd = &cobra.Command{
 
 func init() {
 	ticketOpenCmd.Flags().Bool("no-issue", false, "Do not create a GitHub issue")
+	ticketOpenCmd.Flags().String("title", "", "Ticket title")
+	ticketOpenCmd.Flags().String("prompt", "", "Ticket prompt/description")
+	ticketOpenCmd.Flags().String("llm", "", "LLM (claude-opus-4-5, claude-sonnet-4, claude-haiku-4-5, gemini-3-pro, gpt-5-2, gpt-5-2-codex)")
+	ticketOpenCmd.Flags().String("ui", "", "UI (claude-code, cursor, copilot-chat, antigravity, codex, droid)")
 	ticketCmd.AddCommand(ticketOpenCmd)
 }
 
@@ -10927,6 +11671,10 @@ var ticketCloseCmd = &cobra.Command{
 			"summary": summary,
 			"files":   files,
 		}
+		// Add optional title if provided
+		if title, _ := cmd.Flags().GetString("title"); title != "" {
+			input["title"] = title
+		}
 		variables := map[string]interface{}{
 			"input": input,
 		}
@@ -10943,6 +11691,10 @@ var ticketCloseCmd = &cobra.Command{
 	},
 }
 
+func init() {
+	ticketCloseCmd.Flags().String("title", "", "New title for the ticket (also updates GitHub issue)")
+}
+
 var ticketReopenCmd = &cobra.Command{
 	Use:   "reopen <YYYY/MM/DD/SLUG> <prompt> <llm>",
 	Short: "Reopen a ticket",
@@ -10954,15 +11706,20 @@ var ticketReopenCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+		input := map[string]interface{}{
+			"year":   year,
+			"month":  month,
+			"day":    day,
+			"slug":   slug,
+			"prompt": args[1],
+			"llm":    args[2],
+		}
+		// Add optional title if provided
+		if title, _ := cmd.Flags().GetString("title"); title != "" {
+			input["title"] = title
+		}
 		variables := map[string]interface{}{
-			"input": map[string]interface{}{
-				"year":   year,
-				"month":  month,
-				"day":    day,
-				"slug":   slug,
-				"prompt": args[1],
-				"llm":    args[2],
-			},
+			"input": input,
 		}
 		return printGQL(`
 			mutation TicketReopen($input: TicketReopenInput!) {
@@ -10974,6 +11731,10 @@ var ticketReopenCmd = &cobra.Command{
 			}
 		`, variables)
 	},
+}
+
+func init() {
+	ticketReopenCmd.Flags().String("title", "", "New title for the ticket (also updates GitHub issue)")
 }
 
 // parseTicketPath parses a ticket path in YYYY/MM/DD/SLUG format
@@ -11533,6 +12294,7 @@ func ComputeTicketFiles(ticket *Ticket, files []string) (*TicketFiles, error) {
 	if baseCommit == "" {
 		return nil, fmt.Errorf("no base commit found for ticket")
 	}
+	files = FilterTicketWorkspaceFiles(ticket, files)
 	if len(files) == 0 {
 		return nil, fmt.Errorf("at least one file is required")
 	}
@@ -11552,10 +12314,16 @@ func ComputeTicketFiles(ticket *Ticket, files []string) (*TicketFiles, error) {
 	for _, filePath := range files {
 		fileDiff := diffLines[filePath]
 		sections := []TicketSection{}
+		currentContent := ""
+		currentContentLoaded := false
+		baseContent := ""
+		baseContentLoaded := false
 
 		if fileDiff != nil && (len(fileDiff.Added) > 0 || len(fileDiff.Removed) > 0) {
 			content, readErr := ReadTextFile(filepath.Join(GetRootDir(), filePath))
 			if readErr == nil {
+				currentContent = content
+				currentContentLoaded = true
 				lines := strings.Split(content, "\n")
 				lang := GetLanguage(filePath)
 				if lang != nil {
@@ -11565,6 +12333,8 @@ func ComputeTicketFiles(ticket *Ticket, files []string) (*TicketFiles, error) {
 					if len(fileDiff.Removed) > 0 {
 						stdout, _, exitCode := ExecCommand("git", []string{"show", fmt.Sprintf("%s:%s", baseCommit, filePath)}, "")
 						if exitCode == 0 {
+							baseContent = stdout
+							baseContentLoaded = true
 							removedLineMap = computeSectionLineMap(lang.ParseSections(stdout), fileDiff.Removed, "")
 						}
 					}
@@ -11583,19 +12353,43 @@ func ComputeTicketFiles(ticket *Ticket, files []string) (*TicketFiles, error) {
 		if fileDiff != nil {
 			if len(fileDiff.Added) > 0 && len(fileDiff.Removed) == 0 {
 				tf.Status = "created"
-				result.Added = append(result.Added, tf)
 			} else if len(fileDiff.Removed) > 0 && len(fileDiff.Added) == 0 {
 				tf.Status = "deleted"
-				result.Deleted = append(result.Deleted, tf)
 			} else {
 				tf.Status = "modified"
+			}
+			tf.Lines = &LineMetrics{}
+			if tf.Status == "created" {
+				if !currentContentLoaded {
+					content, readErr := ReadTextFile(filepath.Join(GetRootDir(), filePath))
+					if readErr == nil {
+						currentContent = content
+						currentContentLoaded = true
+					}
+				}
+				tf.Lines.Added = CountLines(currentContent)
+				tf.Lines.Removed = 0
+			} else if tf.Status == "deleted" {
+				if !baseContentLoaded {
+					stdout, _, exitCode := ExecCommand("git", []string{"show", fmt.Sprintf("%s:%s", baseCommit, filePath)}, "")
+					if exitCode == 0 {
+						baseContent = stdout
+						baseContentLoaded = true
+					}
+				}
+				tf.Lines.Added = 0
+				tf.Lines.Removed = CountLines(baseContent)
+			} else {
+				tf.Lines.Added += len(fileDiff.Added)
+				tf.Lines.Removed += len(fileDiff.Removed)
+			}
+			if tf.Status == "created" {
+				result.Added = append(result.Added, tf)
+			} else if tf.Status == "deleted" {
+				result.Deleted = append(result.Deleted, tf)
+			} else {
 				result.Modified = append(result.Modified, tf)
 			}
-			if tf.Lines == nil {
-				tf.Lines = &LineMetrics{}
-			}
-			tf.Lines.Added += len(fileDiff.Added)
-			tf.Lines.Removed += len(fileDiff.Removed)
 		} else {
 			result.Modified = append(result.Modified, tf)
 		}

@@ -1,0 +1,232 @@
+{
+  "title": "Fix VS Code Extension Issues",
+  "iterations": [
+    {
+      "prompt": "Fix diagnostics, autofixes, and tree views in VS Code extension, aligning with repo binary as source of truth.",
+      "llm": "gemini-3-pro",
+      "ui": "copilot-chat",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "date": "2026-01-20T10:27:08.108949344Z",
+      "commit": "faaeb3f919b96cb76d170b8fa215e17f66eeb5ae"
+    }
+  ],
+  "status": "closed",
+  "dates": {
+    "closed": "2026-01-20T10:48:43.369513485Z"
+  },
+  "summary": "Fixed diagnostics, autofixes, and tree views in backend (JSON payload support) and frontend (Violation interface alignment)",
+  "files": {
+    "deleted": [],
+    "renamed": [],
+    "modified": [
+      {
+        "path": "js/vscode/extension.ts",
+        "status": "modified",
+        "sections": [
+          {
+            "name": "Types",
+            "range": {
+              "start": 376,
+              "end": 437
+            },
+            "definitions": [
+              "Violation"
+            ],
+            "lines": {
+              "added": 3,
+              "removed": 1
+            }
+          },
+          {
+            "name": "File Analysis",
+            "range": {
+              "start": 828,
+              "end": 1003
+            },
+            "definitions": [
+              "updateFileDiagnostics",
+              "line",
+              "column",
+              "endColumn",
+              "range",
+              "severity",
+              "kindId",
+              "diagnostic",
+              "RepoCodeActionProvider",
+              "repoDiagnostics",
+              "root",
+              "relativePath",
+              "fileUri",
+              "violations",
+              "actions",
+              "violation",
+              "vId",
+              "action",
+              "createRepoCodeAction"
+            ],
+            "lines": {
+              "added": 20,
+              "removed": 9
+            }
+          },
+          {
+            "name": "Kit Validation",
+            "range": {
+              "start": 1005,
+              "end": 1197
+            },
+            "definitions": [
+              "text",
+              "tree",
+              "entityNode",
+              "startPos",
+              "endPos",
+              "findEntityNode",
+              "fieldNode"
+            ],
+            "lines": {
+              "added": 1,
+              "removed": 1
+            }
+          },
+          {
+            "name": "Commands",
+            "range": {
+              "start": 3005,
+              "end": 3655
+            },
+            "definitions": [
+              "registerCommands",
+              "resolvedTicket",
+              "prompt"
+            ],
+            "lines": {
+              "added": 1,
+              "removed": 1
+            }
+          }
+        ]
+      },
+      {
+        "path": "go/repo/main.go",
+        "status": "modified",
+        "sections": [
+          {
+            "name": "Types#Languages",
+            "range": {
+              "start": 653,
+              "end": 1785
+            },
+            "definitions": [
+              "LanguagePlugin",
+              "ExtractImports",
+              "FormatImports",
+              "ExtractPackage"
+            ],
+            "lines": {
+              "added": 56,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Types#Languages#Go",
+            "range": {
+              "start": 1144,
+              "end": 1333
+            },
+            "definitions": [
+              "ExtractImports",
+              "FormatImports",
+              "ExtractPackage"
+            ],
+            "lines": {
+              "added": 108,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Types#Languages#C#",
+            "range": {
+              "start": 1335,
+              "end": 1392
+            },
+            "definitions": [
+              "ExtractImports",
+              "FormatImports"
+            ],
+            "lines": {
+              "added": 31,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Utils",
+            "range": {
+              "start": 2454,
+              "end": 2931
+            },
+            "definitions": [
+              "findRepoRoot"
+            ],
+            "lines": {
+              "added": 18,
+              "removed": 7
+            }
+          },
+          {
+            "name": "Tickets",
+            "range": {
+              "start": 5077,
+              "end": 7222
+            },
+            "definitions": [
+              "CreateTicket",
+              "generateMetricsComment",
+              "FinishTicket",
+              "ToolIntegrate",
+              "SplitHeader",
+              "MergeHeaders",
+              "UniqueStrings"
+            ],
+            "lines": {
+              "added": 147,
+              "removed": 26
+            }
+          },
+          {
+            "name": "Default Context",
+            "range": {
+              "start": 7279,
+              "end": 7549
+            },
+            "definitions": [
+              "Integrate"
+            ],
+            "lines": {
+              "added": 21,
+              "removed": 1
+            }
+          },
+          {
+            "name": "Mcp#Handlers",
+            "range": {
+              "start": 9939,
+              "end": 10872
+            },
+            "definitions": [
+              "ticketOpen"
+            ],
+            "lines": {
+              "added": 14,
+              "removed": 1
+            }
+          }
+        ]
+      }
+    ],
+    "added": []
+  },
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/171"
+  }
+}

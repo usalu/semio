@@ -245,16 +245,44 @@ func TestTicketTitleValidation(t *testing.T) {
 		{"Slug Invalid", "some-slug-title", true},
 		{"Lowercase Invalid", "some title", true},
 		{"Allcaps Invalid", "FIX EVERYTHING", true},
+		{"Slug with Dashes Invalid", "fix-vscode-types-version-mismatch", true},
+		{"Uppercase Slug Invalid", "ENSURE-SEMIO-REPO-MCP-WORKS-ALLIDES", true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			query := `mutation { ticketOpen(input: { title: "` + tt.title + `", prompt: "Test prompt", llm: "claude-opus-4", ui: COPILOT_CHAT, noIssue: true }) { id } }`
+			query := `mutation { ticketOpen(input: { title: "` + tt.title + `", prompt: "Test prompt", llm: "claude-opus-4", ui: copilot-chat, noIssue: true }) { id } }`
 			_, err := executor.ExecuteJSON(ctx, query, nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ticketOpen() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
+	}
+}
+
+func TestFilterTicketWorkspaceFiles(t *testing.T) {
+	executor := getTestExecutor(t)
+	if executor == nil {
+		t.Fatal("executor is nil")
+	}
+	absMain := filepath.Join(rootDir, "go", "repo", "main.go")
+	ticket := &Ticket{
+		Year:       2026,
+		Month:      1,
+		Day:        20,
+		Slug:       "SAMPLE",
+		FolderPath: filepath.Join(rootDir, "tickets", "2026", "01", "20", "SAMPLE"),
+	}
+	files := []string{
+		"tickets/2026/01/20/SAMPLE/plan.md",
+		"./tickets/2026/01/20/SAMPLE/log.md",
+		"tickets/2026/01/20/SAMPLE/summary.md",
+		filepath.Join(rootDir, "tickets", "2026", "01", "20", "SAMPLE", "extra.txt"),
+		absMain,
+	}
+	filtered := FilterTicketWorkspaceFiles(ticket, files)
+	if len(filtered) != 1 || filtered[0] != absMain {
+		t.Fatalf("expected [%s], got %v", absMain, filtered)
 	}
 }
 
@@ -1082,6 +1110,38 @@ func TestTicketListCommand(t *testing.T) {
 	result := ToolTicketList(&year, nil, nil)
 	if result.Error != "" {
 		t.Errorf("ToolTicketList returned error: %s", result.Error)
+	}
+}
+
+func TestTicketOpenNoticketKeyword(t *testing.T) {
+	result := ToolTicketOpen("Skip Ticket", "NOTICKET skip ticket creation", "gpt-5-mini", "codex", "", true)
+	if result.Error != "" {
+		t.Fatalf("ToolTicketOpen returned error: %s", result.Error)
+	}
+	if result.Data != nil {
+		t.Fatalf("expected no ticket data for NOTICKET keyword")
+	}
+}
+
+func TestTicketOpenContinueKeyword(t *testing.T) {
+	first := ToolTicketOpen("Seed Ticket", "Seed prompt", "gpt-5-mini", "codex", "", true)
+	if first.Error != "" {
+		t.Fatalf("failed to seed ticket: %s", first.Error)
+	}
+	seed, ok := first.Data.(*Ticket)
+	if !ok || seed == nil {
+		t.Fatalf("expected seeded ticket data")
+	}
+	second := ToolTicketOpen("Continue Ticket", "CONTINUE follow-up", "gpt-5-mini", "codex", "", true)
+	if second.Error != "" {
+		t.Fatalf("ToolTicketOpen returned error: %s", second.Error)
+	}
+	continued, ok := second.Data.(*Ticket)
+	if !ok || continued == nil {
+		t.Fatalf("expected continued ticket data")
+	}
+	if continued.Slug != seed.Slug {
+		t.Fatalf("expected continued ticket %s, got %s", seed.Slug, continued.Slug)
 	}
 }
 

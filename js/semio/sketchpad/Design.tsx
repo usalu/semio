@@ -7128,7 +7128,7 @@ const ModelDesign: FC = () => {
     <>
       <Select box multiple onChange={onChange}>
         <group>
-          {flatDesign.pieces?.map((piece: Piece) => (
+          {flatDesign?.pieces?.map((piece: Piece) => (
             <PieceScopeProvider key={piece.guid} guid={piece.guid}>
               <ModelPiece />
             </PieceScopeProvider>

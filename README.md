@@ -1137,7 +1137,14 @@ VS Code extension packaging requires an unscoped extension name in `js/vscode/pa
 ## 🎟️ Ticket Workflow Signals [↑](#-bundles-)
 
 Ticket creation always captures both the LLM and the UI surface (copilot-chat, antigravity, cursor, claude-code, codex, droid) so every iteration records the toolchain context.
+Ticket issue bodies always start with a `# 🤖 Prompt` heading, and reopen actions add a prompt comment with the same heading so each iteration is surfaced in GitHub.
 Ticket closing derives bundle labels from every touched path, adds `@semio-repo` when a file falls outside bundles, and posts a metrics comment that lists each file with a status icon plus `+added`/`-removed` counts in a fenced `md` block.
+Ticket summary comments prepend a `# 🔍 Summary` heading so the close summary is visually consistent in GitHub issues.
+Ticket line metrics report full line counts for added and deleted files, and diff-based added/removed counts for modified files.
+Ticket close ignores files inside the active ticket workspace (plan/log/summary) so ticket artifacts never appear in change lists.
+Prompt and summary headings are formatted through shared ticket helpers to keep create, reopen, and close flows consistent.
+Ticket title updates rename the ticket folder to the new slug so ticket paths stay aligned with their titles.
+Ticket open respects the `CONTINUE` keyword to resume the latest ticket and the `NOTICKET` keyword to skip ticket creation while still running the task.
 These signals keep GitHub issues, metrics, and bundle ownership consistent across CLI, GraphQL, and the VS Code extension.
 
 ## ✅ Validation System [↑](#-bundles-)
@@ -1188,6 +1195,11 @@ Comment detection skips comment markers inside string literals and template lite
 
 The devcontainer packages the workspace VS Code extension during setup, then installs the generated `.vsix` once the editor attaches so the extension is ready without manual "Install Extension From Location..." steps.
 This aligns installation with a running VS Code server, avoiding failures during container creation while keeping extension delivery automatic.
+
+## 🎭 Playwright Browser Cache [↑](#-bundles-)
+
+Playwright browser downloads live under the workspace `node_modules` volume so the binaries persist across container restarts and editor reloads.
+The devcontainer sets `PLAYWRIGHT_BROWSERS_PATH` to the shared cache location, and the provisioning script installs Chromium into that path so `npx playwright install` is a no-op once cached.
 
 ## 🧭 Section Tree [↑](#-bundles-)
 

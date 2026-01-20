@@ -43,6 +43,7 @@ const LLM_OPTIONS = [
   "gemini-3-pro",
   "gemini-3-flash",
   "gpt-5-2",
+  "gpt-5-2-codex",
   "gpt-5-mini",
 ];
 
@@ -386,10 +387,12 @@ interface AutoFix {
   edits: Record<string, TextEdit[]>;
 }
 
+// Removed duplicate ViolationKind interface
+
 interface Violation {
   id: string;
   summary: string;
-  kind: string;
+  kind: ViolationKind;
   scope: string;
   line?: number;
   column?: number;
@@ -900,12 +903,13 @@ function updateFileDiagnostics(document: vscode.TextDocument, violations: Violat
     const endColumn = violation.excerpt ? column + violation.excerpt.length : column + 1;
     const range = new vscode.Range(line, column, line, endColumn);
     const severity = vscode.DiagnosticSeverity.Warning;
-    const colonIndex = violation.kind.indexOf(":");
-    const policyName = colonIndex > 0 ? violation.kind.substring(0, colonIndex) : violation.kind;
-    const violationKindName = colonIndex > 0 ? violation.kind.substring(colonIndex + 1) : violation.kind;
+    let kindId = violation.kind.id;
+    if (kindId.startsWith("@semio/policies//violations/")) {
+      kindId = kindId.replace("@semio/policies//violations/", "");
+    }
     const diagnostic = new vscode.Diagnostic(range, violation.summary, severity);
-    diagnostic.source = policyName;
-    diagnostic.code = { value: violationKindName, target: fileUri.with({ fragment: `L${line + 1}` }) };
+    diagnostic.source = DIAGNOSTIC_SOURCE;
+    diagnostic.code = { value: kindId, target: fileUri.with({ fragment: `L${line + 1}` }) };
     diagnosticsByUri.get(uriKey)!.diagnostics.push(diagnostic);
   }
   for (const { uri, diagnostics } of diagnosticsByUri.values()) {
@@ -928,7 +932,13 @@ class RepoCodeActionProvider implements vscode.CodeActionProvider {
     for (const diagnostic of repoDiagnostics) {
       const diagnosticLine = diagnostic.range.start.line + 1;
       const policyId = typeof diagnostic.code === "object" && diagnostic.code !== null ? (diagnostic.code as { value: string }).value : diagnostic.code;
-      const violation = violations.find((v) => v.kind.startsWith(`${policyId}:`) && (v.line ?? 1) === diagnosticLine);
+      const violation = violations.find((v) => {
+        let vId = v.kind.id;
+        if (vId.startsWith("@semio/policies//violations/")) {
+          vId = vId.replace("@semio/policies//violations/", "");
+        }
+        return vId === policyId && (v.line ?? 1) === diagnosticLine;
+      });
       if (!violation) continue;
       const action = createRepoCodeAction(document, diagnostic, violation);
       if (action) actions.push(action);
@@ -938,11 +948,15 @@ class RepoCodeActionProvider implements vscode.CodeActionProvider {
 }
 
 function createRepoCodeAction(document: vscode.TextDocument, diagnostic: vscode.Diagnostic, violation: Violation): vscode.CodeAction | undefined {
-  const [, violationName] = violation.kind.split(":");
-  const action = new vscode.CodeAction(`Fix: ${violationName || violation.kind}`, vscode.CodeActionKind.QuickFix);
+  let kindId = violation.kind.id;
+  if (kindId.startsWith("@semio/policies//violations/")) {
+    kindId = kindId.replace("@semio/policies//violations/", "");
+  }
+  const [, violationName] = kindId.split(":");
+  const action = new vscode.CodeAction(`Fix: ${violationName || kindId}`, vscode.CodeActionKind.QuickFix);
   action.diagnostics = [diagnostic];
   action.isPreferred = true;
-  if (violation.autofixable) {
+  if (violation.kind.autofixable) {
     const root = getWorkspaceRoot();
     if (root) {
       const relativePath = path.relative(root, document.uri.fsPath).replace(/\\/g, "/");
@@ -1076,7 +1090,7 @@ function findEntityNode(tree: jsonc.Node, location: DomainLocation): jsonc.Node 
       }
     }
   }
-  if (location.entityKind === "Llm" || location.entityKind === "Connector") {
+  if ((location.entityKind as string) === "Llm" || location.entityKind === "Connector") {
     const typesNode = jsonc.findNodeAtLocation(tree, ["types"]);
     if (typesNode && typesNode.type === "array") {
       for (const typeNode of typesNode.children || []) {
@@ -3157,7 +3171,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
       const prompt = await vscode.window.showInputBox({
         prompt: "Enter ticket prompt: ",
         placeHolder: "Describe the task...",
-        value: resolvedTicket.prompt ?? resolvedTicket.slug,
+        value: ("frontmatter" in resolvedTicket ? resolvedTicket.frontmatter.prompt : undefined) ?? resolvedTicket.slug,
       });
       if (!prompt) return;
       const llm = await vscode.window.showQuickPick(LLM_OPTIONS, {

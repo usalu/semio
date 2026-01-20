@@ -43,7 +43,8 @@ rustflags = ["--cfg", "getrandom_backend=wasm_js"]
 EOF
 
 echo "Installing Playwright browsers..."
-npx playwright install --with-deps chromium
+mkdir -p "$WORKSPACE/node_modules/.cache/ms-playwright"
+PLAYWRIGHT_BROWSERS_PATH="$WORKSPACE/node_modules/.cache/ms-playwright" npx playwright install --with-deps chromium
 
 echo "Setting up git hooks..."
 npm run prepare || true

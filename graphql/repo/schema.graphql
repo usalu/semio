@@ -103,6 +103,7 @@ input TicketCloseInput {
   slug: String!
   summary: String!
   files: [String!]!
+  title: String
 }
 
 input TicketReopenInput {
@@ -112,6 +113,7 @@ input TicketReopenInput {
   slug: String!
   prompt: String!
   llm: String!
+  title: String
 }
 
 input ContributorAddInput {

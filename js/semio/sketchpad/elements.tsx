@@ -370,11 +370,12 @@ export interface FooterProps {
 }
 
 const Footer: React.FC<FooterProps> = ({ items = [], className = "", isVisible = true }) => {
+  console.log('[DEBUG] Footer Rendering New', { itemsCount: items.length, isVisible });
   const level = useLevel();
   const sortedItems = [...items].sort((a, b) => (a.order || 0) - (b.order || 0));
   const bgClass = getLevelBgClass(level);
   return (
-    <footer id="footer" data-slot="footer" className={cn("border-t flex items-center h-medium transition-transform duration-200", bgClass, isVisible ? "translate-y-0" : "translate-y-full", className)}>
+    <footer id="semio.sketchpad.footer" data-slot="footer" className={cn("border-t flex items-center h-medium transition-transform duration-200", bgClass, isVisible ? "translate-y-0" : "translate-y-full", className)}>
       <div className="flex items-center h-full px-single min-w-0">
         <ActionGroup className="border">
           {sortedItems.map((item) => (
@@ -2676,10 +2677,11 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
   }
 
   const { id, showLabel, className, icon, text, pressed, defaultPressed, onPressedChange } = props as ToggleStandardProps;
+  console.log('[DEBUG] Toggle Standard Rendering', { id, showLabel, kind: props.kind });
   const value = pressed !== undefined ? (pressed ? "on" : "") : undefined;
   return (
     <ToggleGroup
-      id={id}
+      id={showLabel === true ? id : undefined}
       showLabel={showLabel}
       kind="single"
       value={value}
@@ -2691,6 +2693,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
           value: "on",
           icon: addIconSize(icon),
           text: text,
+          id: !showLabel ? id : undefined,
         },
       ]}
     />

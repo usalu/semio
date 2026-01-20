@@ -52,6 +52,7 @@ Code analysis problems MUST include reason and solution text.
 ### Devcontainer
 
 Devcontainer provisioning MUST install the workspace VS Code extension automatically after editor attach without manual installation steps.
+Playwright browser caches MUST use the workspace `node_modules` volume path so `npx playwright install` stays cached across reloads.
 
 ### Sections
 
@@ -87,6 +88,8 @@ Tickets can be reopened to return to **open** status.
 Ticket close and reopen actions invoked from the ticket list MUST apply to the selected ticket without additional selection.
 
 Ticket creation MUST require a prompt and a titleized title (e.g. "Some Title on Something"). Slugs or all-caps titles are forbidden.
+Ticket title updates MUST rename the ticket folder and slug path.
+Ticket open MUST interpret a `CONTINUE` keyword to continue the latest ticket and a `NOTICKET` keyword to skip ticket creation.
 
 Ticket finish MUST require a summary and a list of files.
 
@@ -104,6 +107,12 @@ Ticket reopen MUST require `prompt` and `llm` values.
 Ticket open MUST require a ticket UI enum value.
 Ticket close MUST apply all affected bundle labels and the `@semio-repo` label for out-of-bundle paths.
 Ticket close MUST post a metrics comment listing each file with status icons and `+added`/`-removed` counts in a fenced `md` block.
+Ticket issue bodies MUST prepend a `# 🤖 Prompt` heading.
+Ticket reopen MUST add a `# 🤖 Prompt` comment with the latest prompt.
+Ticket close MUST prepend a `# 🔍 Summary` heading to the summary comment.
+Ticket GitHub heading formatting MUST be consistent across create, reopen, and close flows.
+Ticket line metrics MUST use full line counts for added and deleted files, and diff-based counts for modified files.
+Ticket close MUST ignore files inside the active ticket workspace (plan/log/summary).
 VS Code extension manifests MUST use an unscoped `name` value for vsce packaging.
 
 ### MCP Tools
@@ -610,15 +619,17 @@ All commands output JSON with structure:
 **Examples:**
 
 ```bash
-repo analyze js/semio/semio.ts           # Analyze single file
-repo section tree repo.tsx            # Show section structure
-repo definition list js/semio/semio.ts   # List all definitions
-repo bundle list                     # List all Nx bundles
-repo folder tree js/semio                # Show folder tree
-repo ticket open MY-TASK --prompt="..." # Create ticket
-repo ticket list 2025                 # List tickets from 2025
-repo ticket read 2025 12 30 MY-TASK   # Read specific ticket
-repo tool build                       # Run Nx build target
+repo analyze js/semio/semio.ts                              # Analyze single file
+repo section tree repo.tsx                                  # Show section structure
+repo definition list js/semio/semio.ts                      # List all definitions
+repo bundle list                                            # List all Nx bundles
+repo folder tree js/semio                                   # Show folder tree
+repo ticket open <title> <prompt> <llm> <ui> [--no-issue]    # Create ticket (positional syntax)
+repo ticket open --title <t> --prompt <p> --llm <l> --ui <u>  # Create ticket (explicit syntax) - llm: claude-opus-4-5, claude-sonnet-4, claude-haiku-4-5, gemini-3-pro, gpt-5-2, gpt-5-2-codex; ui: claude-code, cursor, copilot-chat, antigravity, codex, droid
+repo ticket list [year] [month] [day]                       # List tickets (optionally filtered by date)
+repo ticket close <YYYY/MM/DD/SLUG> <summary> <files...> [--title <new-title>]  # Close ticket (--title updates GitHub issue)
+repo ticket reopen <YYYY/MM/DD/SLUG> <prompt> <llm> [--title <new-title>]      # Reopen ticket (--title updates GitHub issue)
+repo tool build                                             # Run Nx build target
 ```
 
 ### MCP Server
@@ -1612,11 +1623,11 @@ Devcontainer configuration and lifecycle scripts.
 
 ## 📄 .devcontainer/devcontainer.json
 
-Devcontainer configuration with VS Code customizations and post-create/start/attach commands.
+Devcontainer configuration with VS Code customizations, container/remote env, and post-create/start/attach commands, including Playwright cache path under `node_modules`.
 
 ## 📄 .devcontainer/post-create.sh
 
-Devcontainer provisioning steps for dependency installs.
+Devcontainer provisioning steps for dependency installs, including Playwright browser install into the shared cache path.
 
 ## 📄 .devcontainer/post-start.sh
 
@@ -3840,7 +3851,7 @@ Repo CLI source with GraphQL schema build/execution, ticket workflows, and MCP s
 
 ## 📄 go/repo/main.go
 
-CLI command definitions with GraphQL query strings for repo operations, ticket workflows with optional noIssue/planPath inputs and `YYYY/MM/DD/SLUG` identifiers, ticket UI enum validation, MCP tool handlers, ticket finish line stats and section metrics, bundle label derivation with `@semio-repo` fallback, metrics comments with status icons and `+added`/`-removed` counts, section/definition range handling with line-only start/end values, comment policy scanning with string/template literal awareness, JSON section parsing, shell script language registration, GraphQL file section resolution, and contributor aggregation from tickets and source headers.
+CLI command definitions with GraphQL query strings for repo operations, ticket workflows with optional noIssue/planPath inputs, `CONTINUE`/`NOTICKET` keyword handling, and `YYYY/MM/DD/SLUG` identifiers, ticket UI enum validation, MCP tool handlers, ticket title updates that rename folder paths, ticket finish line stats with full-line counts for added/deleted files and diff counts for modified files, ticket workspace file exclusion on close, section metrics, GitHub issue/comment prompt and `# 🔍 Summary` heading formatters, bundle label derivation with `@semio-repo` fallback, metrics comments with status icons and `+added`/`-removed` counts, section/definition range handling with line-only start/end values, comment policy scanning with string/template literal awareness, JSON section parsing, shell script language registration, GraphQL file section resolution, and contributor aggregation from tickets and source headers.
 
 ## 📁net/
 

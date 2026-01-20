@@ -1,4 +1,4 @@
-# Prompt history 
+# Prompting 
 
 ## Templates
 
@@ -6,8 +6,78 @@ Continue.
 Change/refactor/extend whatever is necessary to get it working. 
 Dont ask in between, no matter the issue. Figure it out.
 Be sure that it works everywhere before stopping.
+Make sure to open and close a ticket. Dont forget to add the plan.md, to log in log.md and create a summary.md in the end.
 
-## Log
+## History
+
+Update dev docs and add keywords: CONTINUE, NOTICKET
+CONTINUE should continue the last existing ticket regarding the task
+NOTICKET should work on the task without creating a ticket
+
+- In GitHub I still get no
+```md
+# 🤖 Prompt
+
+<PROMPT>
+```
+when the ticket is reopened.
+- The comment on GitHub I got is missing Summary header and line metrics and still has the files
+```md
+Excluded ticket workspace files from ticket close file lists and metrics. Added a repo test for ticket workspace file filtering and updated README.md/AGENTS.md documentation.
+
+✍️ Changes
+✏️AGENTS.md
+➕README.md
+✏️go/repo/main.go
+✏️go/repo/main_test.go
+➕tickets/2026/01/20/FIX-REPO-BINARY-TICKET-PATH-AND-UPDATE-AGENTS-MD-DOCUMENTATION/log.md
+➕tickets/2026/01/20/FIX-REPO-BINARY-TICKET-PATH-AND-UPDATE-AGENTS-MD-DOCUMENTATION/plan.md
+➕tickets/2026/01/20/FIX-REPO-BINARY-TICKET-PATH-AND-UPDATE-AGENTS-MD-DOCUMENTATION/summary.md 
+```
+
+Simplify the ticket system. Instead of having summary.md and log.md, just create ticket.md where everything is tracked (todos, changes, summary, etc).
+
+When closing a ticket, the files of the ticket should be ignored (skip them, dont add them to tickets.json, etc)
+➕tickets/2026/01/20/FIX-REPO-BINARY-TICKET-PATH-AND-UPDATE-AGENTS-MD-DOCUMENTATION/log.md
+➕tickets/2026/01/20/FIX-REPO-BINARY-TICKET-PATH-AND-UPDATE-AGENTS-MD-DOCUMENTATION/plan.md
+➕tickets/2026/01/20/FIX-REPO-BINARY-TICKET-PATH-AND-UPDATE-AGENTS-MD-DOCUMENTATION/summary.md
+should never be not be part of the ticket changes.
+Extend the test.
+
+When a new title is provided make sure to change the folder of the ticket.
+
+The github integration of tickets should be changed/refactored/extended:
+- Prepend `# 🤖 Prompt` to the ticket description on ticket create
+- When it is reopened, create a comment with `# 🤖 Prompt` same as on create
+- Prepend `#🔍 Summary` to the summary of the ticket on ticket close
+
+The derived labels are not working properly. E.g. go/repo/main.go was edited but the `@semio-repo/go` was not correctly derived. There are general file such as `AGENTS.md` or `README.md` where every task must work on. Dont derive `@semio-repo` from them.
+
+The ui values should not be in caps. The llm and the and the ui should also be accepted like this --opus-4-5 --claude-code.
+The explicit syntax should also work: 
+repo ticket open --title "My Task" --prompt "Prompt for the task" --llm opus-4-5 --ui claude-code
+
+Tickets:
+Automatically link the github issue with the project `https://github.com/users/usalu/projects/2`.
+Derive the right labels (every bundle has a label.). 
+
+- The repo binary creates the tickets in the wrong place. It should be under tickets, not go/repo/tickets.
+- The documentation how to use repo binary is outdated (AGENTS.md). Make sure to include every flag with the right syntax, so that no --help needs to be called first.
+
+The vscode extension and test is not working and partially outdated (the repo binary is the single source of truth). Here some issues:
+- The diagnostics from the analyze command are not showing up for the violations.
+- The autofixes are not working properly. Test it on a sample file (adding missing header, remove )
+- The tree items are not loading in the sideview
+
+The `integrate` repo command should be handeled by every language differently.
+The api is: `integrate <source> <target-section-name> <target-file> [<target-parent-section-name>]` that takes code files and integrates the source code into a target file by wrapping it into the target section. Optionally provide a target parent section name to place the new section under. Otherwise it will just be placed at the end of the file after the last section.
+e.g. `integrate go/repo/cmd_benchmark.go Benchmark go/repo/repo.go` 
+e.g. `integrate go/repo/cmd_preflight.go Preflight go/repo/repo.go Benchmark` 
+The headers of the source file should be integrated (contributors and imports merged). Then the body is wrapped in the section (different syntax for every language).
+
+The ui should exclusively use triadic hooks. Add a policy that commands outside hooks are forbidden.
+
+Consolidate go/repo/github.go into go/repo/main.go.
 
 The definitions are not correctly identified in the languages. Definitions are only toplevel definitions. They always start on a new line. A variable, function, class inside another function, class, etc doesnt count as definition. Currently way too many definitions are idenitified. 
 e.g.
@@ -84,6 +154,8 @@ Change/refactor/extend the ticket mechanism, update repo binary and vscode exten
 - The title of the ticket should be a title (if it is a slug or caps then throw an error). Extend the test. e.g. fix-vscode-types-version-mismatch or ENSURE-SEMIO-REPO-MCP-WORKS-ALLIDES should throw an error.
 - Currently the ticket close creates two comments. Merge them into one comment and separating them with `# ✍️ Changes`
 ```md
+# 🔍 Summary
+
 <SUMMARY>
 
 # ✍️ Changes
@@ -112,7 +184,7 @@ Get the vscode extension compiling and running (it is partially outdated) and ma
 
 Every app has a landing page (when no windows are open/all windows are closed). Every app defines a default window layout.
 
-Extend the ticket mechanism. The repo binary should automatically create a github issue on ticket open, close on ticket close and reopen on ticket reopen. Automatically link the issue with the project `https://github.com/users/usalu/projects/2`. Add a --no-issue flag to ticket open that prevents creating an issue. If the prompt has NOISSUE then issue should not be created. On ticket open add the `ticket` label to the issue.
+Extend the ticket mechanism. The repo binary should automatically create a github issue on ticket open, close on ticket close and reopen on ticket reopen. Automatically link the github issue with the project `https://github.com/users/usalu/projects/2`. Add a --no-issue flag to ticket open that prevents creating an issue. If the prompt has NOISSUE then issue should not be created. On ticket open add the `ticket` label to the issue.
 Add to ticket json:
 {
   "github":{

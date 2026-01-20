@@ -1,0 +1,2 @@
+- Fixed GitHub summary heading formatting and ensured ticket line metrics persist.
+- Hardened ticket workspace file filtering for absolute/relative paths and extended tests/documentation.

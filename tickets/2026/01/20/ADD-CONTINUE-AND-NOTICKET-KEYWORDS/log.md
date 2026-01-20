@@ -1,0 +1,4 @@
+- Added CONTINUE/NOTICKET keyword handling via OpenTicket in go/repo/main.go and wired it through CLI, GraphQL, MCP handlers.
+- Added MCP ticket_open noIssue/planPath args and bool parsing helper.
+- Added tests covering CONTINUE and NOTICKET behaviors.
+- Updated README.md and AGENTS.md ticket documentation for keywords.

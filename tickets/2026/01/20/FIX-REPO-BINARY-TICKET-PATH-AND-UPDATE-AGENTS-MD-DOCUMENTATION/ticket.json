@@ -1,0 +1,388 @@
+{
+  "title": "Repo Binary Fixes: Ticket Path, CLI Flags, Title Updates, and GitHub Integration",
+  "iterations": [
+    {
+      "prompt": "The repo binary creates tickets in the wrong place (go/repo/tickets instead of tickets/). Also, the documentation in AGENTS.md for using the repo binary is outdated and needs to include every flag with the right syntax.",
+      "llm": "claude-opus-4-5",
+      "ui": "claude-code",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "date": "2026-01-20T10:34:57.633312917Z",
+      "commit": "faaeb3f919b96cb76d170b8fa215e17f66eeb5ae"
+    },
+    {
+      "prompt": "UI values should not be in caps. The llm and ui should be accepted as flags like --opus-4-5 --claude-code instead of positional arguments.",
+      "llm": "claude-opus-4-5",
+      "ui": "claude-code",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "date": "2026-01-20T10:40:20.236253703Z",
+      "commit": "faaeb3f919b96cb76d170b8fa215e17f66eeb5ae"
+    },
+    {
+      "prompt": "Add explicit flag syntax: --title, --prompt, --llm, --ui with string values. Ensure MCP server works.",
+      "llm": "claude-opus-4-5",
+      "ui": "claude-code",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "date": "2026-01-20T10:46:14.366521215Z",
+      "commit": "faaeb3f919b96cb76d170b8fa215e17f66eeb5ae"
+    },
+    {
+      "prompt": "Support both positional args and explicit flags for ticket open command",
+      "llm": "claude-opus-4-5",
+      "ui": "claude-code",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "date": "2026-01-20T10:57:29.383044028Z",
+      "commit": "faaeb3f919b96cb76d170b8fa215e17f66eeb5ae"
+    },
+    {
+      "prompt": "Add gpt-5-2-codex to list of valid LLMs",
+      "llm": "claude-opus-4-5",
+      "ui": "claude-code",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "date": "2026-01-20T10:59:27.521727608Z",
+      "commit": "faaeb3f919b96cb76d170b8fa215e17f66eeb5ae"
+    },
+    {
+      "prompt": "Add gpt-5-2-codex everywhere - GraphQL, VSCode, etc.",
+      "llm": "claude-opus-4-5",
+      "ui": "claude-code",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "date": "2026-01-20T11:02:36.150449954Z",
+      "commit": "faaeb3f919b96cb76d170b8fa215e17f66eeb5ae"
+    },
+    {
+      "prompt": "Add optional --title flag to ticket reopen and close commands to allow renaming tickets and updating GitHub issue titles",
+      "llm": "claude-opus-4-5",
+      "ui": "claude-code",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "date": "2026-01-20T11:04:34.761102025Z",
+      "commit": "faaeb3f919b96cb76d170b8fa215e17f66eeb5ae"
+    },
+    {
+      "prompt": "Refactor GitHub integration: prepend '# 🤖 Prompt' to ticket descriptions and reopen comments, prepend '# 🔍 Summary' to summaries",
+      "llm": "claude-opus-4-5",
+      "ui": "claude-code",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "date": "2026-01-20T11:12:21.27121224Z",
+      "commit": "faaeb3f919b96cb76d170b8fa215e17f66eeb5ae"
+    },
+    {
+      "prompt": "The github integration of tickets should be changed/refactored/extended:\n- Prepend # 🤖 Prompt to the ticket description on ticket create\n- When it is reopened, create a comment with # 🤖 Prompt same as on create\n- Prepend #🔍 Summary to the summary of the ticket on ticket close",
+      "llm": "gpt-5-2",
+      "ui": "claude-code",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "date": "2026-01-20T11:43:05.355379853Z",
+      "commit": "faaeb3f919b96cb76d170b8fa215e17f66eeb5ae"
+    },
+    {
+      "prompt": "Make sure ticket metrics use full file line counts for added/deleted files and diff added/removed for modified files, per summary format example.",
+      "llm": "gpt-5-2",
+      "ui": "claude-code",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "date": "2026-01-20T11:47:11.142023717Z",
+      "commit": "faaeb3f919b96cb76d170b8fa215e17f66eeb5ae"
+    },
+    {
+      "prompt": "Exclude ticket workspace files (plan/log/summary) from ticket close file lists and extend tests.",
+      "llm": "gpt-5-2",
+      "ui": "claude-code",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "date": "2026-01-20T11:55:34.016216142Z",
+      "commit": "faaeb3f919b96cb76d170b8fa215e17f66eeb5ae"
+    },
+    {
+      "prompt": "Investigate missing prompt header on reopen and missing summary/metrics header plus ticket files still included in GitHub close comment; fix and update docs/tests.",
+      "llm": "gpt-5-2",
+      "ui": "claude-code",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "date": "2026-01-20T12:01:19.691136541Z",
+      "commit": "faaeb3f919b96cb76d170b8fa215e17f66eeb5ae"
+    }
+  ],
+  "status": "closed",
+  "dates": {
+    "closed": "2026-01-20T12:06:10.413354628Z"
+  },
+  "summary": "Fixed GitHub summary heading formatting and ensured ticket line metrics persist. Hardened ticket workspace file filtering for absolute/relative paths and extended tests/documentation.",
+  "files": {
+    "deleted": [],
+    "renamed": [],
+    "modified": [
+      {
+        "path": "go/repo/main.go",
+        "status": "modified",
+        "sections": [
+          {
+            "name": "GraphQL Types",
+            "range": {
+              "start": 52,
+              "end": 601
+            },
+            "definitions": [
+              "AllowedLLMs"
+            ],
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          },
+          {
+            "name": "GraphQL Types#GraphQL Input Types",
+            "range": {
+              "start": 556,
+              "end": 599
+            },
+            "definitions": [
+              "TicketCloseInput",
+              "TicketReopenInput"
+            ],
+            "lines": {
+              "added": 8,
+              "removed": 6
+            }
+          },
+          {
+            "name": "Types#Languages",
+            "range": {
+              "start": 656,
+              "end": 1788
+            },
+            "definitions": [
+              "LanguagePlugin",
+              "ExtractImports",
+              "FormatImports",
+              "ExtractPackage"
+            ],
+            "lines": {
+              "added": 56,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Types#Languages#Go",
+            "range": {
+              "start": 1147,
+              "end": 1336
+            },
+            "definitions": [
+              "ExtractImports",
+              "FormatImports",
+              "ExtractPackage"
+            ],
+            "lines": {
+              "added": 108,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Types#Languages#C#",
+            "range": {
+              "start": 1338,
+              "end": 1395
+            },
+            "definitions": [
+              "ExtractImports",
+              "FormatImports"
+            ],
+            "lines": {
+              "added": 31,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Utils",
+            "range": {
+              "start": 2457,
+              "end": 2934
+            },
+            "definitions": [
+              "findRepoRoot"
+            ],
+            "lines": {
+              "added": 18,
+              "removed": 7
+            }
+          },
+          {
+            "name": "Tickets",
+            "range": {
+              "start": 5080,
+              "end": 7337
+            },
+            "definitions": [
+              "UpdateTicketTitle",
+              "CreateTicket",
+              "CountLines",
+              "formatPromptHeading",
+              "formatSummaryHeading",
+              "FilterTicketWorkspaceFiles",
+              "ghUpdateIssueTitle",
+              "generateMetricsComment",
+              "FinishTicket",
+              "ReopenTicket",
+              "ToolIntegrate",
+              "SplitHeader",
+              "MergeHeaders",
+              "UniqueStrings"
+            ],
+            "lines": {
+              "added": 260,
+              "removed": 27
+            }
+          },
+          {
+            "name": "Default Context",
+            "range": {
+              "start": 7394,
+              "end": 7688
+            },
+            "definitions": [
+              "TicketClose",
+              "TicketReopen",
+              "Integrate"
+            ],
+            "lines": {
+              "added": 45,
+              "removed": 1
+            }
+          },
+          {
+            "name": "Schema Builder",
+            "range": {
+              "start": 7802,
+              "end": 9141
+            },
+            "definitions": [
+              "buildSchema"
+            ],
+            "lines": {
+              "added": 8,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Mcp",
+            "range": {
+              "start": 9694,
+              "end": 11078
+            },
+            "definitions": [
+              "runMcpServer"
+            ],
+            "lines": {
+              "added": 14,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Mcp#Handlers",
+            "range": {
+              "start": 10100,
+              "end": 11076
+            },
+            "definitions": [
+              "ticketClose",
+              "ticketReopen"
+            ],
+            "lines": {
+              "added": 56,
+              "removed": 0
+            }
+          }
+        ]
+      },
+      {
+        "path": "go/repo/main_test.go",
+        "status": "modified",
+        "sections": [
+          {
+            "name": "Collection Tests",
+            "range": {
+              "start": 66,
+              "end": 401
+            },
+            "definitions": [
+              "TestTicketTitleValidation",
+              "TestFilterTicketWorkspaceFiles"
+            ],
+            "lines": {
+              "added": 29,
+              "removed": 1
+            }
+          }
+        ]
+      },
+      {
+        "path": "AGENTS.md",
+        "status": "modified",
+        "sections": [
+          {
+            "name": "Software Requirements Specification#Business Logic#Ticket",
+            "range": {
+              "start": 71,
+              "end": 99
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Software Requirements Specification#Business Logic#Repo Tooling",
+            "range": {
+              "start": 100,
+              "end": 115
+            },
+            "lines": {
+              "added": 6,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Using TypeScript fallback",
+            "range": {
+              "start": 536,
+              "end": 1232
+            },
+            "lines": {
+              "added": 11,
+              "removed": 9
+            }
+          },
+          {
+            "name": "Codebase#📄 go/repo/main.go",
+            "range": {
+              "start": 3850,
+              "end": 3853
+            },
+            "lines": {
+              "added": 1,
+              "removed": 1
+            }
+          }
+        ]
+      }
+    ],
+    "added": [
+      {
+        "path": "README.md",
+        "status": "created",
+        "sections": [
+          {
+            "name": "📦 Bundles [↑](#-overview)#🎟️ Ticket Workflow Signals [↑](#-bundles-)",
+            "range": {
+              "start": 1137,
+              "end": 1148
+            },
+            "lines": {
+              "added": 6,
+              "removed": 0
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/172"
+  }
+}

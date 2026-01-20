@@ -4,7 +4,7 @@
   "name": "semio-repo",
   "displayName": "semio-repo",
   "description": "semio devtools for VS Code 🧑‍💻",
-  "icon": "../../assets/icons/semio.png",
+  "icon": "assets/semio.png",
   "version": "0.0.1",
   "publisher": "usalu",
   "engines": {
