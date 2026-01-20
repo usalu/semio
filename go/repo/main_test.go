@@ -260,6 +260,19 @@ func TestTicketTitleValidation(t *testing.T) {
 	}
 }
 
+func TestBuildProjectLinkArgs(t *testing.T) {
+	args := buildProjectLinkArgs("https://github.com/usalu/semio/issues/1")
+	expected := []string{"project", "item-add", "2", "--owner", "usalu", "--url", "https://github.com/usalu/semio/issues/1"}
+	if len(args) != len(expected) {
+		t.Fatalf("expected %d args, got %d", len(expected), len(args))
+	}
+	for i := range expected {
+		if args[i] != expected[i] {
+			t.Fatalf("args[%d] expected %s, got %s", i, expected[i], args[i])
+		}
+	}
+}
+
 func TestFilterTicketWorkspaceFiles(t *testing.T) {
 	executor := getTestExecutor(t)
 	if executor == nil {

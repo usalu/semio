@@ -66,29 +66,77 @@ function getUrqlClient(): Client | null {
   if (urqlClient) return urqlClient;
   const root = getWorkspaceRoot();
   const command = getRepoCommand();
-  if (!root || !command) return null;
+  if (!root || !command) {
+    if (!root) logError("[getUrqlClient] No workspace root found");
+    if (!command) logError("[getUrqlClient] No repo command found");
+    return null;
+  }
+
+  log(`[getUrqlClient] Initializing URQL client with command: ${command}`);
   urqlClient = new Client({
     url: "local://graphql",
-    exchanges: [cacheExchange, fetchExchange],
+    exchanges: [fetchExchange], // Skip cacheExchange for now to ensure we see every request
     fetch: async (_input: RequestInfo | URL, init?: RequestInit) => {
-      const body = init?.body ? JSON.parse(init.body as string) : {};
-      const query = body.query as string;
-      const variables = body.variables || {};
-      const variablesJson = Object.keys(variables).length > 0 ? JSON.stringify(variables) : "";
-      const escapedQuery = query.replace(/"/g, '\\"').replace(/\n/g, " ");
-      const escapedVariables = variablesJson ? variablesJson.replace(/"/g, '\\"') : "";
-      const fullCommand = escapedVariables
-        ? `"${command}" graphql "${escapedQuery}" -v "${escapedVariables}"`
-        : `"${command}" graphql "${escapedQuery}"`;
-      log("[urql] executing:", fullCommand.substring(0, 200) + "...");
+      log("[urql] fetch triggered");
       try {
-        const { stdout, stderr } = await execAsync(fullCommand, { cwd: root, timeout: 60000, maxBuffer: 10 * 1024 * 1024 });
-        if (stderr) log("[urql] stderr:", stderr.substring(0, 500));
+        const body = init?.body ? JSON.parse(init.body as string) : {};
+        const query = (body.query as string) || "";
+        const variables = body.variables || {};
+        const variablesJson = Object.keys(variables).length > 0 ? JSON.stringify(variables) : "";
+
+        // Even more robust escaping for Linux
+        const escapedQuery = query.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\$/g, "\\$").replace(/\n/g, " ");
+        const escapedVariables = variablesJson ? variablesJson.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\$/g, "\\$") : "";
+
+        const fullCommand = escapedVariables ? `"${command}" graphql "${escapedQuery}" -v "${escapedVariables}"` : `"${command}" graphql "${escapedQuery}"`;
+
+        log("[urql] executing CLI command (shortened):", fullCommand.substring(0, 300) + "...");
+
+        const start = Date.now();
+        const { stdout, stderr } = await execAsync(fullCommand, {
+          cwd: root,
+          timeout: 45000, // Slightly longer timeout
+          maxBuffer: 50 * 1024 * 1024,
+        });
+        const duration = Date.now() - start;
+        log(`[urql] CLI execution successful in ${duration}ms, stdout size: ${stdout.length}`);
+
+        if (stderr) {
+          log("[urql] CLI stderr (first 100):", stderr.substring(0, 100));
+        }
+
+        if (!stdout.trim()) {
+          logError("[urql] CLI returned empty stdout");
+          throw new Error("Empty output from repo command");
+        }
+
         const data = JSON.parse(stdout);
-        return new Response(JSON.stringify({ data }), { status: 200, headers: { "Content-Type": "application/json" } });
+        log("[urql] JSON parse successful");
+
+        // URQL's fetchExchange expects a Response-like object
+        return {
+          status: 200,
+          ok: true,
+          headers: {
+            get: (name: string) => (name.toLowerCase() === "content-type" ? "application/json" : null),
+            forEach: () => {},
+          },
+          json: async () => ({ data }),
+          text: async () => JSON.stringify({ data }),
+        } as any;
       } catch (error) {
-        logError("[urql] error:", error);
-        return new Response(JSON.stringify({ errors: [{ message: String(error) }] }), { status: 500, headers: { "Content-Type": "application/json" } });
+        logError("[urql] fetch execution error:", error);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        return {
+          status: 500,
+          ok: false,
+          headers: {
+            get: (name: string) => (name.toLowerCase() === "content-type" ? "application/json" : null),
+            forEach: () => {},
+          },
+          json: async () => ({ errors: [{ message: errorMessage }] }),
+          text: async () => JSON.stringify({ errors: [{ message: errorMessage }] }),
+        } as any;
       }
     },
   });
@@ -109,10 +157,55 @@ const RepoDocument = graphql(`
       id
       name
       path
-      bundles { id name root sourceRoot projectType tags uri }
-      tickets { id year month day slug path uri prompt summary status commit }
-      policies { id name description scopes }
-      contributors { id github name emails }
+      bundles {
+        id
+        name
+        root
+        sourceRoot
+        projectType
+        tags
+        uri
+      }
+      tickets {
+        id
+        year
+        month
+        day
+        slug
+        path
+        uri
+        prompt
+        summary
+        status
+        commit
+        author {
+          name
+          github
+        }
+      }
+      policies {
+        id
+        name
+        description
+        scopes
+        violationKinds {
+          id
+          priority
+          autofixable
+          reason
+          solution
+        }
+      }
+      contributors {
+        id
+        github
+        name
+        emails
+        links {
+          name
+          url
+        }
+      }
     }
   }
 `);
@@ -544,40 +637,18 @@ async function loadCodebase(): Promise<Codebase | null> {
   if (!hasRepoAccess()) return null;
 
   codebaseLoadPromise = (async () => {
-    const root = getWorkspaceRoot();
-    const command = getRepoCommand();
-    if (!root || !command) {
+    log("[loadCodebase] Loading codebase via GraphQL...");
+    const repo = await fetchRepoViaGraphQL();
+    if (!repo) {
+      logError("[loadCodebase] Failed to fetch repo via GraphQL");
       codebaseLoadPromise = null;
       return null;
     }
 
-    const query = `query { repo { id name path bundles { id name root sourceRoot projectType tags uri } contributors { id github name emails links { name url } } tickets { id year month day slug path uri prompt summary status commit author { github name } } policies { id name description scopes violationKinds { id priority autofixable reason solution } } } }`;
-    const escapedQuery = query.replace(/"/g, '\\"');
-    const fullCommand = `"${command}" graphql "${escapedQuery}"`;
-
-    let repo: GqlCodebase;
-    log("[loadCodebase] executing GraphQL query");
-    try {
-      const { stdout, stderr } = await execAsync(fullCommand, { cwd: root, timeout: 120000, maxBuffer: 50 * 1024 * 1024 });
-      if (stderr) log("[loadCodebase] stderr:", stderr.substring(0, 500));
-
-      const data = JSON.parse(stdout) as { repo: GqlCodebase };
-      repo = data.repo;
-      if (!repo) {
-        logError("[loadCodebase] no repo in response");
-        codebaseLoadPromise = null;
-        return null;
-      }
-
-      // Initialize missing arrays that we skipped fetching
-      if (!repo.files) repo.files = [];
-      if (!repo.folders) repo.folders = [];
-
-    } catch (error) {
-      logError("[GraphQL] loadCodebase error:", error);
-      codebaseLoadPromise = null;
-      return null;
-    }
+    // Initialize missing arrays if any
+    const gqlRepo = repo as any;
+    if (!gqlRepo.files) gqlRepo.files = [];
+    if (!gqlRepo.folders) gqlRepo.folders = [];
 
     const tree: TreeNodeMap = {};
 
@@ -586,11 +657,12 @@ async function loadCodebase(): Promise<Codebase | null> {
       tree[bundle.id] = { kind: "bundle", children: {} };
     }
 
-    const codebase: Codebase = { ...repo, tree };
+    const codebase: Codebase = { ...gqlRepo, tree };
     cachedCodebase = codebase;
     codebaseLoadPromise = null;
 
     if (cachedCodebase) {
+      log(`[loadCodebase] Loaded ${cachedCodebase.bundles.length} bundles, ${cachedCodebase.tickets.length} tickets, ${cachedCodebase.contributors.length} contributors`);
       cachedProjects = cachedCodebase.bundles.map((b) => ({
         name: b.id,
         root: b.root,
@@ -2805,27 +2877,58 @@ let sectionsProvider: SectionsProvider;
 let codebaseProvider: CodebaseProvider;
 
 function registerSidebarViews(context: vscode.ExtensionContext): void {
-  const searchProvider = new SearchViewProvider(context.extensionUri);
-  ticketsProvider = new TicketsProvider();
-  contributorsProvider = new ContributorsProvider();
-  policiesProvider = new PoliciesProvider();
-  commandsProvider = new CommandsProvider();
-  sectionsProvider = new SectionsProvider();
-  codebaseProvider = new CodebaseProvider();
+  try {
+    log("[registerSidebarViews] Initializing providers...");
+    const searchProvider = new SearchViewProvider(context.extensionUri);
+    ticketsProvider = new TicketsProvider();
+    contributorsProvider = new ContributorsProvider();
+    policiesProvider = new PoliciesProvider();
+    commandsProvider = new CommandsProvider();
+    sectionsProvider = new SectionsProvider();
+    codebaseProvider = new CodebaseProvider();
+
+    log("[registerSidebarViews] Registering semio.search (Webview)...");
+    context.subscriptions.push(vscode.window.registerWebviewViewProvider(SearchViewProvider.viewType, searchProvider));
+
+    log("[registerSidebarViews] Creating semio.codebase tree view...");
+    context.subscriptions.push(vscode.window.createTreeView("semio.codebase", { treeDataProvider: codebaseProvider, showCollapseAll: true }));
+
+    log("[registerSidebarViews] Creating semio.tickets tree view...");
+    context.subscriptions.push(vscode.window.createTreeView("semio.tickets", { treeDataProvider: ticketsProvider, showCollapseAll: true }));
+
+    log("[registerSidebarViews] Creating semio.contributors tree view...");
+    context.subscriptions.push(vscode.window.createTreeView("semio.contributors", { treeDataProvider: contributorsProvider, showCollapseAll: true }));
+
+    log("[registerSidebarViews] Creating semio.policies tree view...");
+    context.subscriptions.push(vscode.window.createTreeView("semio.policies", { treeDataProvider: policiesProvider, showCollapseAll: true }));
+
+    log("[registerSidebarViews] Creating semio.commands tree view...");
+    context.subscriptions.push(vscode.window.createTreeView("semio.commands", { treeDataProvider: commandsProvider }));
+
+    log("[registerSidebarViews] Creating semio.sections tree view...");
+    context.subscriptions.push(vscode.window.createTreeView("semio.sections", { treeDataProvider: sectionsProvider, dragAndDropController: new SectionsDragAndDropController() }));
+
+    log("[registerSidebarViews] Registering refresh commands...");
+    context.subscriptions.push(
+      vscode.commands.registerCommand("semio.refreshCodebase", () => codebaseProvider.refresh()),
+      vscode.commands.registerCommand("semio.refreshTickets", () => ticketsProvider.refresh()),
+      vscode.commands.registerCommand("semio.refreshContributors", () => contributorsProvider.refresh()),
+      vscode.commands.registerCommand("semio.refreshPolicies", () => policiesProvider.refresh()),
+    );
+
+    log("[registerSidebarViews] Sidebar views registration complete.");
+  } catch (error) {
+    logError("[registerSidebarViews] CRASH during registration:", error);
+    throw error;
+  }
+}
+
+// #endregion Sidebar Views
+
+// #region Commands
+
+function registerCommands(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider(SearchViewProvider.viewType, searchProvider),
-    vscode.window.registerTreeDataProvider("semio.codebase", codebaseProvider),
-    vscode.window.registerTreeDataProvider("semio.tickets", ticketsProvider),
-    vscode.window.registerTreeDataProvider("semio.contributors", contributorsProvider),
-    vscode.window.registerTreeDataProvider("semio.policies", policiesProvider),
-    vscode.window.registerTreeDataProvider("semio.commands", commandsProvider),
-    vscode.window.createTreeView("semio.sections", { treeDataProvider: sectionsProvider, dragAndDropController: new SectionsDragAndDropController() }),
-  );
-  context.subscriptions.push(
-    vscode.commands.registerCommand("semio.refreshCodebase", () => codebaseProvider.refresh()),
-    vscode.commands.registerCommand("semio.refreshTickets", () => ticketsProvider.refresh()),
-    vscode.commands.registerCommand("semio.refreshContributors", () => contributorsProvider.refresh()),
-    vscode.commands.registerCommand("semio.refreshPolicies", () => policiesProvider.refresh()),
     vscode.commands.registerCommand("semio.toggleTicketFilter", () => ticketsProvider.toggleFilter()),
     vscode.commands.registerCommand("semio.openTicket", async (ticket: TicketData | ContributorTicketData | { ticket: TicketData | ContributorTicketData }) => {
       const resolvedTicket = resolveTicketData(ticket);
@@ -2998,15 +3101,6 @@ function registerSidebarViews(context: vscode.ExtensionContext): void {
       if (!commandId) return;
       await vscode.commands.executeCommand(commandId);
     }),
-  );
-}
-
-// #endregion Sidebar Views
-
-// #region Commands
-
-function registerCommands(context: vscode.ExtensionContext): void {
-  context.subscriptions.push(
     vscode.commands.registerCommand("semio.navigateToRepo", async () => {
       const root = getWorkspaceRoot();
       if (!root) return;
@@ -3672,88 +3766,116 @@ function logError(...args: any[]): void {
 }
 
 export function activate(context: vscode.ExtensionContext) {
+  fs.writeFileSync("/workspaces/semio/js/vscode/activation.log", "ACTIVATION STARTED at " + new Date().toISOString() + "\n");
   outputChannel = vscode.window.createOutputChannel("semio");
   context.subscriptions.push(outputChannel);
 
   log("[ACTIVATION] semio extension activated");
   outputChannel.show(true);
-  kitDiagnosticCollection = vscode.languages.createDiagnosticCollection(DIAGNOSTIC_SOURCE);
-  repoDiagnosticCollection = vscode.languages.createDiagnosticCollection(DIAGNOSTIC_SOURCE);
-  context.subscriptions.push(kitDiagnosticCollection, repoDiagnosticCollection);
-  context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor((editor) => pinDiagnosticPreview(editor)));
-  pinDiagnosticPreview(vscode.window.activeTextEditor);
-  context.subscriptions.push(
-    vscode.workspace.onDidOpenTextDocument(validateKitDocument),
-    vscode.workspace.onDidChangeTextDocument((e) => validateKitDocument(e.document)),
-    vscode.workspace.onDidCloseTextDocument((doc) => kitDiagnosticCollection.delete(doc.uri)),
-  );
-  vscode.workspace.textDocuments.forEach(validateKitDocument);
-  context.subscriptions.push(vscode.languages.registerCodeActionsProvider({ language: SEMIO_KIT_LANGUAGE }, new KitCodeActionProvider(), { providedCodeActionKinds: [vscode.CodeActionKind.QuickFix] }));
-  loadCodebase().then((codebase) => {
-    if (codebase) {
-      log("[ACTIVATION] Codebase loaded with", codebase.bundles.length, "bundles,", codebase.files.length, "files,", codebase.tickets.length, "tickets,", codebase.contributors.length, "contributors");
-      if (codebaseProvider) codebaseProvider.refresh();
-      ticketsProvider.refresh();
-      contributorsProvider.refresh();
-      policiesProvider.refresh();
-    } else {
-      log("[ACTIVATION] Failed to load codebase");
+
+  try {
+    log("[ACTIVATION] Registering sidebar views...");
+    try {
+      registerSidebarViews(context);
+    } catch (e) {
+      logError("[ACTIVATION] registerSidebarViews failed", e);
     }
-  });
-  context.subscriptions.push(
-    vscode.workspace.onDidOpenTextDocument((document) => {
-      if (shouldAnalyzeFile(document)) {
-        analyzeFile(document);
-      }
-      if (isKitDocument(document)) {
-        validateKitDocument(document);
-      }
-    }),
-    vscode.workspace.onDidSaveTextDocument((document) => {
-      if (shouldAnalyzeFile(document)) {
-        analyzeFile(document);
-      }
-      if (isKitDocument(document)) {
-        validateKitDocument(document);
-      }
-    }),
-    vscode.workspace.onDidCloseTextDocument((doc) => {
-      const root = getWorkspaceRoot();
-      if (!root) return;
-      if (doc.uri.scheme !== "file") return;
-      const relativePath = path.relative(root, doc.uri.fsPath).replace(/\\/g, "/");
-      if (relativePath.startsWith("..")) return;
-      const fileUri = vscode.Uri.file(path.join(root, relativePath));
-      const processKey = `analyze:${relativePath}`;
-      const controller = runningProcesses.get(processKey);
-      if (controller) {
-        controller.abort();
-        runningProcesses.delete(processKey);
-      }
-      fileViolationsMap.delete(fileUri.toString());
-      repoDiagnosticCollection.delete(fileUri);
-      kitDiagnosticCollection.delete(doc.uri);
-    }),
-  );
-  vscode.workspace.textDocuments.forEach((document) => {
-    if (shouldAnalyzeFile(document)) {
-      analyzeFile(document);
+
+    log("[ACTIVATION] Registering commands...");
+    try {
+      registerCommands(context);
+    } catch (e) {
+      logError("[ACTIVATION] registerCommands failed", e);
     }
-    if (isKitDocument(document)) {
-      validateKitDocument(document);
-    }
-  });
-  context.subscriptions.push(vscode.languages.registerCodeActionsProvider("*", new RepoCodeActionProvider(), { providedCodeActionKinds: [vscode.CodeActionKind.QuickFix] }));
-  registerSidebarViews(context);
-  context.subscriptions.push(
-    vscode.window.onDidChangeActiveTextEditor(() => sectionsProvider.refresh()),
-    vscode.workspace.onDidChangeTextDocument((event) => {
-      if (vscode.window.activeTextEditor?.document.uri.toString() === event.document.uri.toString()) {
-        sectionsProvider.refresh();
+
+    kitDiagnosticCollection = vscode.languages.createDiagnosticCollection(DIAGNOSTIC_SOURCE);
+    repoDiagnosticCollection = vscode.languages.createDiagnosticCollection(DIAGNOSTIC_SOURCE);
+    context.subscriptions.push(kitDiagnosticCollection, repoDiagnosticCollection);
+
+    context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor((editor) => pinDiagnosticPreview(editor)));
+    pinDiagnosticPreview(vscode.window.activeTextEditor);
+
+    context.subscriptions.push(
+      vscode.workspace.onDidOpenTextDocument((document) => {
+        if (shouldAnalyzeFile(document)) {
+          analyzeFile(document);
+        }
+        if (isKitDocument(document)) {
+          validateKitDocument(document);
+        }
+      }),
+      vscode.workspace.onDidChangeTextDocument((e) => {
+        if (isKitDocument(e.document)) {
+          validateKitDocument(e.document);
+        }
+      }),
+      vscode.workspace.onDidSaveTextDocument((document) => {
+        if (shouldAnalyzeFile(document)) {
+          analyzeFile(document);
+        }
+        if (isKitDocument(document)) {
+          validateKitDocument(document);
+        }
+      }),
+      vscode.workspace.onDidCloseTextDocument((doc) => {
+        kitDiagnosticCollection.delete(doc.uri);
+        const root = getWorkspaceRoot();
+        if (!root) return;
+        if (doc.uri.scheme !== "file") return;
+        const relativePath = path.relative(root, doc.uri.fsPath).replace(/\\/g, "/");
+        if (relativePath.startsWith("..")) return;
+        const fileUri = vscode.Uri.file(path.join(root, relativePath));
+        const processKey = `analyze:${relativePath}`;
+        const controller = runningProcesses.get(processKey);
+        if (controller) {
+          controller.abort();
+          runningProcesses.delete(processKey);
+        }
+        fileViolationsMap.delete(fileUri.toString());
+        repoDiagnosticCollection.delete(fileUri);
+      }),
+    );
+
+    // Initial diagnostics run - DON'T block activation
+    setTimeout(() => {
+      log("[ACTIVATION] Starting initial diagnostics background task...");
+      vscode.workspace.textDocuments.forEach((document) => {
+        if (shouldAnalyzeFile(document)) {
+          analyzeFile(document);
+        }
+        if (isKitDocument(document)) {
+          validateKitDocument(document);
+        }
+      });
+    }, 100);
+
+    context.subscriptions.push(
+      vscode.languages.registerCodeActionsProvider({ language: SEMIO_KIT_LANGUAGE }, new KitCodeActionProvider(), { providedCodeActionKinds: [vscode.CodeActionKind.QuickFix] }),
+      vscode.languages.registerCodeActionsProvider("*", new RepoCodeActionProvider(), { providedCodeActionKinds: [vscode.CodeActionKind.QuickFix] }),
+    );
+
+    log("[ACTIVATION] Triggering codebase load in background...");
+    loadCodebase().then((codebase) => {
+      if (codebase) {
+        log("[ACTIVATION] Codebase load finished successfully");
       }
-    }),
-  );
-  registerCommands(context);
+    }).catch(err => {
+      logError("[ACTIVATION] codebaseLoadPromise REJECTED:", err);
+    });
+
+    context.subscriptions.push(
+      vscode.window.onDidChangeActiveTextEditor(() => sectionsProvider?.refresh()),
+      vscode.workspace.onDidChangeTextDocument((event) => {
+        if (vscode.window.activeTextEditor?.document.uri.toString() === event.document.uri.toString()) {
+          sectionsProvider?.refresh();
+        }
+      }),
+    );
+
+    log("[ACTIVATION] Activation sequence COMPLETED.");
+  } catch (error) {
+    logError("[ACTIVATION] FATAL CRASH during activation:", error);
+  }
 }
 
 export function deactivate() {

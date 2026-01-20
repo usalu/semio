@@ -1,13 +1,7 @@
-# Plan
+# Plan - Fix VS Code Extension Infinite Loading
 
-- [x] Review the existing codebase and identify the issues.
-- [x] Fix Diagnostics: Ensure `repo analyze` works correctly in the extension.
-    - [x] Fix `Violation` interface mismatch (object vs string).
-    - [x] Ensure `repo analyze` is called correctly.
-- [x] Fix Autofixes: Ensure `repo fix` works correctly in the extension.
-    - [x] Fix `RepoCodeActionProvider`.
-- [x] Fix Tree Views: Investigate why tree items are not loading.
-    - [x] Verify `repo` binary provides data.
-    - [x] Fix data parsing/handling in `extension.ts` and `repo` binary.
-- [x] Align with `repo` binary: Ensure the extension strictly uses the `repo` binary as the single source of truth for all data and operations.
-- [x] Document changes.
+1. [DIAGNOSE] Investigate why tree data providers are not registered.
+2. Check extension activation status and logs.
+3. Verify GraphQL/CLI calls from extension.
+4. Fix registration or activation logic.
+5. Verify with tests or manual check if possible.

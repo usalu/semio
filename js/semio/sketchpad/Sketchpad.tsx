@@ -12456,31 +12456,25 @@ class AppRegistry {
   }
 
   subscribe(listener: () => void): () => void {
-    console.log("[AppRegistry] subscribe called");
     this.listeners.add(listener);
     return () => {
-      console.log("[AppRegistry] unsubscribe called");
       this.listeners.delete(listener);
     }
   }
 
   private notify() {
-    console.log("[AppRegistry] notify called, listeners:", this.listeners.size);
     this.listeners.forEach((listener) => listener());
   }
 
   private async autoDiscover(): Promise<void> {
-    console.log("[AppRegistry] autoDiscover starting");
     if (this.autoDiscovered) return;
     this.autoDiscovered = true;
 
     const appModules = import.meta.glob<{ config: AppConfig }>("./apps/*/App.tsx");
-    console.log("[AppRegistry] found modules:", Object.keys(appModules).length);
 
     for (const [path, importFn] of Object.entries(appModules)) {
       const module = await importFn();
       if (module.config) {
-        console.log("[AppRegistry] registering module:", module.config.id, "order:", module.config.order, "segments:", module.config.routeSegments?.length);
         this.register(module.config);
       }
     }
@@ -12488,7 +12482,6 @@ class AppRegistry {
 
   register(registration: AppRegistration): void {
     if (this.apps.has(registration.id)) return;
-    console.log("[AppRegistry] registered:", registration.id);
     this.apps.set(registration.id, registration);
     this.cachedApps = null;
     this.notify();
@@ -15157,7 +15150,6 @@ const AppRouter: FC = () => {
   const apps = useMemo(() => {
     if (!appsInitialized) return [];
     const sortedApps = appRegistry.getAllApps();
-    console.log("[AppRouter] Sorted apps:", sortedApps.map(a => `${a.id}(${a.order})`));
     return sortedApps;
   }, [appsInitialized]);
 
@@ -15247,7 +15239,6 @@ const ToolbarScopeWrapper: FC<{ children: ReactNode }> = ({ children }) => {
 };
 
 const LayoutWrapper: FC = () => {
-  console.log("[LayoutWrapper] Rendering");
   const location = useLocation();
   const navigate = useNavigate();
   const reactNavigate = useReactNavigate();
@@ -15261,7 +15252,6 @@ const LayoutWrapper: FC = () => {
   const [isFullscreen] = useFullscreen();
   const isNavbarExpanded = useIsNavbarExpanded();
   const isFooterExpanded = useIsFooterExpanded();
-  console.log("[LayoutWrapper] Rendering", { isFullscreen, isFooterExpanded });
   const panelVisibility = useAppPanelVisibility();
   const appType = useAppType();
   const panelSizes = usePanelSizes();

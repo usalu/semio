@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+// #region Devcontainer
 {
   "name": "semio",
   "build": {
@@ -83,7 +84,10 @@
     "source=${localWorkspaceFolderBasename}-config-gh,target=/home/vscode/.config/gh,type=volume",
     "source=${localWorkspaceFolderBasename}-config-cursor,target=/home/vscode/.config/cursor,type=volume",
     "source=${localWorkspaceFolderBasename}-config-antigravity,target=/home/vscode/.config/antigravity,type=volume",
+    "source=${localWorkspaceFolderBasename}-config-openai,target=/home/vscode/.config/openai,type=volume",
     "source=${localWorkspaceFolderBasename}-codeium,target=/home/vscode/.codeium,type=volume",
+    "source=${localWorkspaceFolderBasename}-vscode-server,target=/home/vscode/.vscode-server,type=volume",
+    "source=${localWorkspaceFolderBasename}-windsurf-server,target=/home/vscode/.windsurf-server,type=volume",
     "source=${localWorkspaceFolderBasename}-ms-playwright,target=/home/vscode/.cache/ms-playwright,type=volume"
   ],
   "remoteUser": "vscode",
@@ -97,54 +101,67 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        // repo
+        // #region Extensions Repo
         "nrwl.angular-console",
-        // github
+        // #endregion Extensions Repo
+        // #region Extensions GitHub
         "github.vscode-pull-request-github",
         "github.vscode-github-actions",
-        // toml
+        // #endregion Extensions GitHub
+        // #region Extensions Toml
         "tamasfe.even-better-toml",
-        // yaml
+        // #endregion Extensions Toml
+        // #region Extensions Yaml
         "redhat.vscode-yaml",
-        // data
+        // #endregion Extensions Yaml
+        // #region Extensions Data
         "ms-toolsai.datawrangler",
         "mechatroner.rainbow-csv",
-        // graphql
+        // #endregion Extensions Data
+        // #region Extensions Graphql
         "graphql.vscode-graphql",
         "graphql.vscode-graphql-syntax",
-        // formatter
+        // #endregion Extensions Graphql
+        // #region Extensions Formatter
         "esbenp.prettier-vscode",
-        // javascript
+        // #endregion Extensions Formatter
+        // #region Extensions JavaScript
         "dbaeumer.vscode-eslint",
         "bradlc.vscode-tailwindcss",
         "unifiedjs.vscode-mdx",
         "statelyai.stately-vscode",
         "vitest.explorer",
         "ms-playwright.playwright",
-        // dotnet
+        // #endregion Extensions JavaScript
+        // #region Extensions Dotnet
         "ms-dotnettools.vscode-dotnet-pack",
         "ms-dotnettools.vscode-dotnet-runtime",
         "ms-dotnettools.csharp",
         "ms-dotnettools.csdevkit",
         "ms-dotnettools.dotnet-interactive-vscode",
-        // python
+        // #endregion Extensions Dotnet
+        // #region Extensions Python
         "ms-python.python",
         "ms-python.vscode-pylance",
         "charliermarsh.ruff",
         "ms-toolsai.jupyter",
-        // rust
+        // #endregion Extensions Python
+        // #region Extensions Rust
         "rust-lang.rust-analyzer",
-        // go
+        // #endregion Extensions Rust
+        // #region Extensions Go
         "golang.go",
-        // ai
-        "github.copilot",
+        // #endregion Extensions Go
+        // #region Extensions Ai
         "github.copilot-chat",
         "anthropic.claude-code",
         "openai.chatgpt",
-        // utility
+        // #endregion Extensions Ai
+        // #region Extensions Utility
         "gruntfuggly.todo-tree",
         "jebbs.plantuml",
         "jock.svg"
+        // #endregion Extensions Utility
       ],
       "settings": {
         "editor.formatOnSave": true,
@@ -196,3 +213,4 @@
     }
   }
 }
+// #endregion Devcontainer

@@ -2,6 +2,8 @@
 
 ## Templates
 
+CONTINUE. After rebuilding the 
+
 Continue.
 Change/refactor/extend whatever is necessary to get it working. 
 Dont ask in between, no matter the issue. Figure it out.
@@ -9,6 +11,56 @@ Be sure that it works everywhere before stopping.
 Make sure to open and close a ticket. Dont forget to add the plan.md, to log in log.md and create a summary.md in the end.
 
 ## History
+
+The ticket close currently adds file information. It should turn fully semantic and not only document file changes but also track bundles, folders, files, sections and definitions. Every single one of them has deleted, renamed, modified, added. The repo binary must be smart to derive all this only from git diffs (e.g. check if the the section name changed, definition name changed, a folder was moved, etc). Aggregate the line metrics for all of them (some have only + and some only - and some both with different meaning). Use this for
+
+
+Deleted `.storybook` folder inside `@semio/js` bundle with total lines removed: 📁<del>@semio/js/.storybook</del> -13483
+
+Renamed `js` folder to `semio` inside `@semio/js` bundle with total lines from old `js` folder and total lines in `semio` new folder: 📁@semio/js/<del>js</del>semio -1455 +1455 
+
+Added `sketchpad` folder inside `@semio/js` bundle  with total lines: 📂@semio/js/sketchpad +1673
+
+Deleted file with the lines from the previous file: 📄<del>js/semio/sketchpad/Quality.tsx</del> -2312
+
+Renamed file with the lines from the previous file and the lines from the new file 📄@semio/js/sketchpad/<del>Attribute.tsx</del>Property.tsx +2565 -2312
+
+Modified file with lines added and removed: 📝@semio/js/sketchpad/Design.tsx -12 +250
+
+Added file with the lines: 📄@semio/js/sketchpad/Prop.tsx +4125
+
+Added section with the lines: 📑@semio/js/sketchpad/Design.tsx#State Managment#Hooks +478
+
+Modified section with the lines added and removed: 🔖@semio/js/sketchpad/Design.tsx#State Managment#Hooks -192 +478
+
+Renamed section with lines from previous section and lines in the new section: 🔖@semio/js/sketchpad/Design.tsx#State Managment#<del>React Hooks</del>Hooks -64 +494 
+
+Deleted section with lines deleted: 🔖@semio/js/sketchpad/Design.tsx<del>#State Managment#React Hooks</del> -793
+
+Added definition with lines: 🏷️@semio/js/semio.ts#Diffs§KitDiff +42
+
+Renamed definition with lines: 🏷️@semio/js/semio.ts#KitDiff<del>erence</del> -53 +69
+
+Modified definition with lines: 🏷️@semio/js/semio.ts#KitDiff<del>erence</del> -53 +69
+
+📁~~@semio/js/.storybook~~ -13483
+📁@semio/js/~~js~~semio -1455 +1455
+📂@semio/js/sketchpad +1673
+📄~~@semio/js/sketchpad/Quality.tsx~~ -2312
+📝@semio/js/sketchpad/Design.tsx -12 +250
+📄@semio/js/sketchpad/Prop.tsx +4125
+📑@semio/js/sketchpad/Design.tsx#State Managment#Hooks +478
+🔖@semio/js/sketchpad/Design.tsx#State Managment#Hooks -192 +478
+🔖@semio/js/sketchpad/Design.tsx#State Managment#All ~~React Hooks~~Hooks -64 +494 
+🔖@semio/js/sketchpad/Design.tsx~~#State Managment#React Hooks~~ -793
+
+The repo binary should
+
+The semio-repo vscode extension is not showing in vscode despite:
+
+Continue the ticket regarding persisting accross dev container rebuilds. Codex and claude code is not persisted accross a rebuild.
+
+Continue the ticket regarding keywords: The keywords (such as continue and noticket) should not be part of the repo binary but only of the dev docs (AGENTS.md and README.md).
 
 Update dev docs and add keywords: CONTINUE, NOTICKET
 CONTINUE should continue the last existing ticket regarding the task
@@ -35,7 +87,7 @@ Excluded ticket workspace files from ticket close file lists and metrics. Added 
 ➕tickets/2026/01/20/FIX-REPO-BINARY-TICKET-PATH-AND-UPDATE-AGENTS-MD-DOCUMENTATION/summary.md 
 ```
 
-Simplify the ticket system. Instead of having summary.md and log.md, just create ticket.md where everything is tracked (todos, changes, summary, etc).
+Simplify the ticket system. Instead of having summary.md and log.md, just create ticket.md where everything is tracked (todos, changes, summary, etc). Update all related code and dev docs.
 
 When closing a ticket, the files of the ticket should be ignored (skip them, dont add them to tickets.json, etc)
 ➕tickets/2026/01/20/FIX-REPO-BINARY-TICKET-PATH-AND-UPDATE-AGENTS-MD-DOCUMENTATION/log.md
@@ -57,8 +109,7 @@ The ui values should not be in caps. The llm and the and the ui should also be a
 The explicit syntax should also work: 
 repo ticket open --title "My Task" --prompt "Prompt for the task" --llm opus-4-5 --ui claude-code
 
-Tickets:
-Automatically link the github issue with the project `https://github.com/users/usalu/projects/2`.
+Automatically link every ticket github issue with the project `https://github.com/users/usalu/projects/2`.
 Derive the right labels (every bundle has a label.). 
 
 - The repo binary creates the tickets in the wrong place. It should be under tickets, not go/repo/tickets.

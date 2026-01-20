@@ -53,6 +53,8 @@ Code analysis problems MUST include reason and solution text.
 
 Devcontainer provisioning MUST install the workspace VS Code extension automatically after editor attach without manual installation steps.
 Playwright browser caches MUST use the workspace `node_modules` volume path so `npx playwright install` stays cached across reloads.
+Claude Code and Codex auth plus chat history MUST persist across devcontainer rebuilds via named volumes for CLI config and editor server state.
+Claude Code auth files MUST live in the persisted Claude volume and be linked into `$HOME`.
 
 ### Sections
 
@@ -99,6 +101,17 @@ Ticket finish MUST derive per-file `updated`, `created`, and `removed` lists wit
 Ticket section line metrics MUST map added lines to current file sections, removed lines to base-commit section ranges, and affected definitions to added lines only.
 Ticket section ranges MUST be stored as line-only start/end integers.
 
+### Repo Dev Server
+
+The repo dev server MUST persist ticket state, scopes, claims, warnings, violations, and event history in a local database.
+The repo dev server MUST accept diff ingestion payloads that include unified patches or file snapshots.
+The repo dev server MUST recompute scope indexes and claims for files referenced by ingested diffs.
+The repo dev server MUST emit conflict warnings when the same scope is claimed by multiple open tickets.
+The repo dev server MUST expose HTTP endpoints for ticket lifecycle commands, diff ingestion, precommit checks, indexing, and read-only queries.
+The repo dev server MUST support bearer token authentication for non-health endpoints.
+The repo dev server MUST verify GitHub webhook signatures when configured.
+The repo dev server MUST send outbound notifications formatted with prompt and summary headings.
+
 ### Repo Tooling
 
 Ticket open inputs MUST allow optional `noIssue` and `planPath` fields.
@@ -113,6 +126,7 @@ Ticket close MUST prepend a `# 🔍 Summary` heading to the summary comment.
 Ticket GitHub heading formatting MUST be consistent across create, reopen, and close flows.
 Ticket line metrics MUST use full line counts for added and deleted files, and diff-based counts for modified files.
 Ticket close MUST ignore files inside the active ticket workspace (plan/log/summary).
+Ticket GitHub issues MUST be linked to the usalu project 2 on create and reopen.
 VS Code extension manifests MUST use an unscoped `name` value for vsce packaging.
 
 ### MCP Tools
@@ -1593,6 +1607,10 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ ├── mcp # MCP server exposing repo tools to LLMs
 │ │ ├── go.mod
 │ │ └── main.go # MCP tool schema, argument validation, path validation, repo command handlers
+│ ├── server # Repo dev server
+│ │ ├── go.mod
+│ │ ├── go.sum
+│ │ └── main.go # Repo dev server (config, SQLite schema, event bus, diff ingestion, indexing, claims, warnings, HTTP API)
 │ └── repo # Go CLI binary
 │ ├── go.mod
 │ ├── main.go
@@ -1623,7 +1641,7 @@ Devcontainer configuration and lifecycle scripts.
 
 ## 📄 .devcontainer/devcontainer.json
 
-Devcontainer configuration with VS Code customizations, container/remote env, and post-create/start/attach commands, including Playwright cache path under `node_modules`.
+Devcontainer configuration with VS Code customizations, container/remote env, post-create/start/attach commands, and persisted volumes for AI auth, editor server state, and Playwright cache under `node_modules`.
 
 ## 📄 .devcontainer/post-create.sh
 
@@ -1631,7 +1649,7 @@ Devcontainer provisioning steps for dependency installs, including Playwright br
 
 ## 📄 .devcontainer/post-start.sh
 
-Devcontainer start script for activating the Python virtual environment.
+Devcontainer start script that fixes ownership for persisted volumes, normalizes Claude Code auth storage, sets git safe directories, and activates the Python virtual environment.
 
 ## 📄 .devcontainer/post-attach.sh
 
@@ -3851,7 +3869,7 @@ Repo CLI source with GraphQL schema build/execution, ticket workflows, and MCP s
 
 ## 📄 go/repo/main.go
 
-CLI command definitions with GraphQL query strings for repo operations, ticket workflows with optional noIssue/planPath inputs, `CONTINUE`/`NOTICKET` keyword handling, and `YYYY/MM/DD/SLUG` identifiers, ticket UI enum validation, MCP tool handlers, ticket title updates that rename folder paths, ticket finish line stats with full-line counts for added/deleted files and diff counts for modified files, ticket workspace file exclusion on close, section metrics, GitHub issue/comment prompt and `# 🔍 Summary` heading formatters, bundle label derivation with `@semio-repo` fallback, metrics comments with status icons and `+added`/`-removed` counts, section/definition range handling with line-only start/end values, comment policy scanning with string/template literal awareness, JSON section parsing, shell script language registration, GraphQL file section resolution, and contributor aggregation from tickets and source headers.
+CLI command definitions with GraphQL query strings for repo operations, ticket workflows with optional noIssue/planPath inputs, `CONTINUE`/`NOTICKET` keyword handling, and `YYYY/MM/DD/SLUG` identifiers, ticket UI enum validation, MCP tool handlers, ticket title updates that rename folder paths, ticket finish line stats with full-line counts for added/deleted files and diff counts for modified files, ticket workspace file exclusion on close, ticket GitHub project linking on create/reopen, section metrics, GitHub issue/comment prompt and `# 🔍 Summary` heading formatters, bundle label derivation with `@semio-repo` fallback, metrics comments with status icons and `+added`/`-removed` counts, section/definition range handling with line-only start/end values, comment policy scanning with string/template literal awareness, JSON section parsing, shell script language registration, GraphQL file section resolution, and contributor aggregation from tickets and source headers.
 
 ## 📁net/
 

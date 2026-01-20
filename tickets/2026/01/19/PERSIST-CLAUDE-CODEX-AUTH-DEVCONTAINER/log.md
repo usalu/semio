@@ -62,3 +62,14 @@ sudo chown -R vscode:vscode /home/vscode/.codeium 2>/dev/null || true
 ## Note
 
 After rebuilding the devcontainer, you will need to sign in **once** to Claude Code, Codex, and Windsurf. The volumes will then persist authentication across future rebuilds.
+
+## 2026-01-20
+
+- Continued ticket: persist Codex and Claude Code auth across devcontainer rebuilds.
+- Observed ticket reopen blocked by missing UI metadata; updated ticket.json iterations with ui to proceed.
+- Reopened ticket and updated plan.
+- Added devcontainer mounts for Codex/Claude-related config and editor server persistence; normalized Claude auth file storage in post-start.
+- Updated README.md and AGENTS.md to document devcontainer persistence requirements and implementation.
+- Normalized devcontainer shell scripts to use region markers and removed inline comments to match code hygiene rules.
+- Ensured Claude auth files are moved into the persisted Claude volume before linking to avoid loss on rebuilds.
+- Closed ticket via repo CLI; GitHub issue 150 could not be updated by CLI in this environment.

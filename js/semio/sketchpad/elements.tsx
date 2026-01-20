@@ -370,7 +370,6 @@ export interface FooterProps {
 }
 
 const Footer: React.FC<FooterProps> = ({ items = [], className = "", isVisible = true }) => {
-  console.log('[DEBUG] Footer Rendering New', { itemsCount: items.length, isVisible });
   const level = useLevel();
   const sortedItems = [...items].sort((a, b) => (a.order || 0) - (b.order || 0));
   const bgClass = getLevelBgClass(level);
@@ -2677,7 +2676,6 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
   }
 
   const { id, showLabel, className, icon, text, pressed, defaultPressed, onPressedChange } = props as ToggleStandardProps;
-  console.log('[DEBUG] Toggle Standard Rendering', { id, showLabel, kind: props.kind });
   const value = pressed !== undefined ? (pressed ? "on" : "") : undefined;
   return (
     <ToggleGroup

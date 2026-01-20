@@ -1134,6 +1134,19 @@ The VS Code extension uses the schema mirror to generate typed documents and for
 Devcontainer attach builds and installs the local extension automatically, keeping the workspace ready without manual steps.
 VS Code extension packaging requires an unscoped extension name in `js/vscode/package.json` so `vsce package` can build the local `.vsix`.
 
+## 🧱 Devcontainer Persistence [↑](#-bundles-)
+
+Devcontainer rebuilds keep AI tooling state by mounting named volumes for CLI auth folders (`~/.claude`, `~/.codex`, `~/.config/openai`) and editor servers (`~/.vscode-server`, `~/.windsurf-server`).
+Claude Code persists its auth files by storing `~/.claude.json` inside the mounted Claude volume and linking it back into `$HOME` on start.
+Post-start ownership fixes keep the mounted volumes writable so chat history and tokens survive container replacement.
+
+## 🛰️ Repo Dev Server [↑](#-bundles-)
+
+The repo dev server is a stateful Go service that persists ticket state, semantic scopes, claims, and warnings so collaboration stays consistent even when the CLI is stateless.
+The CLI sends unified diffs or file snapshots; the server parses them, reindexes affected files, updates claims, and emits conflict warnings and precommit blockers.
+HTTP endpoints cover ticket lifecycle commands, diff ingestion, precommit checks, indexing, and read-only queries for warnings, violations, and scopes.
+Webhook receivers enrich GitHub issue events, and Discord notifications format prompt/summary headings to match ticket workflow conventions.
+
 ## 🎟️ Ticket Workflow Signals [↑](#-bundles-)
 
 Ticket creation always captures both the LLM and the UI surface (copilot-chat, antigravity, cursor, claude-code, codex, droid) so every iteration records the toolchain context.
@@ -1144,6 +1157,7 @@ Ticket line metrics report full line counts for added and deleted files, and dif
 Ticket close ignores files inside the active ticket workspace (plan/log/summary) so ticket artifacts never appear in change lists.
 Prompt and summary headings are formatted through shared ticket helpers to keep create, reopen, and close flows consistent.
 Ticket title updates rename the ticket folder to the new slug so ticket paths stay aligned with their titles.
+Ticket GitHub issues are automatically linked to the usalu project 2 during create and reopen flows.
 Ticket open respects the `CONTINUE` keyword to resume the latest ticket and the `NOTICKET` keyword to skip ticket creation while still running the task.
 These signals keep GitHub issues, metrics, and bundle ownership consistent across CLI, GraphQL, and the VS Code extension.
 

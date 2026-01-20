@@ -5329,10 +5329,20 @@ func ghCreateIssue(title, body string) (string, error) {
 	}
 	issueURL := strings.TrimSpace(stdout)
 	if issueURL != "" {
-		linkArgs := []string{"project", "item-add", "2", "--owner", "usalu", "--url", issueURL}
-		ExecCommand("gh", linkArgs, "")
+		ghAddIssueToProject(issueURL)
 	}
 	return issueURL, nil
+}
+
+func buildProjectLinkArgs(issueURL string) []string {
+	return []string{"project", "item-add", "2", "--owner", "usalu", "--url", issueURL}
+}
+
+func ghAddIssueToProject(issueURL string) {
+	if issueURL == "" {
+		return
+	}
+	ExecCommand("gh", buildProjectLinkArgs(issueURL), "")
 }
 
 func CountLines(content string) int {
@@ -5957,6 +5967,7 @@ func ReopenTicket(ticket *Ticket, prompt, llm string) error {
 		if err := ghReopenIssue(issueURL); err != nil {
 			fmt.Printf("Warning: Failed to reopen GitHub issue: %v\n", err)
 		}
+		ghAddIssueToProject(issueURL)
 		comment := formatPromptHeading(prompt)
 		if err := ghAddComment(issueURL, comment); err != nil {
 			fmt.Printf("Warning: Failed to add prompt comment to GitHub issue: %v\n", err)

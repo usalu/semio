@@ -37,11 +37,11 @@ test.describe("Navbar Panel Toggles", () => {
     // Checking for aria-pressed or visual indication if possible, or side panel visibility.
     // The test description asks to check for functionality.
     
-    // Check if aria-pressed is now true (if implemented) or check side panel visibility
-    await expect(leftToggle).toHaveAttribute("aria-pressed", "true");
+    // Check if aria-checked is now true (since it uses ToggleGroup single which renders as radio) or check side panel visibility
+    await expect(leftToggle).toHaveAttribute("aria-checked", "true");
     
     await leftToggle.click();
-    await expect(leftToggle).toHaveAttribute("aria-pressed", "false");
+    await expect(leftToggle).toHaveAttribute("aria-checked", "false");
 
   });
 });

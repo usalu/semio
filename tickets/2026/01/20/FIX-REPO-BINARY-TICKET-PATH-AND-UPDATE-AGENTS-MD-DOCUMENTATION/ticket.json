@@ -96,13 +96,21 @@
       "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
       "date": "2026-01-20T12:01:19.691136541Z",
       "commit": "faaeb3f919b96cb76d170b8fa215e17f66eeb5ae"
+    },
+    {
+      "prompt": "Automatically link every ticket GitHub issue with the project https://github.com/users/usalu/projects/2.",
+      "llm": "gpt-5-2",
+      "ui": "claude-code",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "date": "2026-01-20T13:05:23.692793339Z",
+      "commit": "faaeb3f919b96cb76d170b8fa215e17f66eeb5ae"
     }
   ],
   "status": "closed",
   "dates": {
-    "closed": "2026-01-20T12:06:10.413354628Z"
+    "closed": "2026-01-20T13:08:03.454701645Z"
   },
-  "summary": "Fixed GitHub summary heading formatting and ensured ticket line metrics persist. Hardened ticket workspace file filtering for absolute/relative paths and extended tests/documentation.",
+  "summary": "Added GitHub project linking for ticket create/reopen and covered the args builder in tests. Documented project linking in README.md and AGENTS.md.",
   "files": {
     "deleted": [],
     "renamed": [],
@@ -110,26 +118,31 @@
       {
         "path": "go/repo/main.go",
         "status": "modified",
+        "lines": {
+          "added": 871,
+          "removed": 66
+        },
         "sections": [
           {
             "name": "GraphQL Types",
             "range": {
-              "start": 52,
-              "end": 601
+              "start": 53,
+              "end": 609
             },
             "definitions": [
-              "AllowedLLMs"
+              "AllowedLLMs",
+              "GetLatestPrompt"
             ],
             "lines": {
-              "added": 1,
+              "added": 8,
               "removed": 0
             }
           },
           {
             "name": "GraphQL Types#GraphQL Input Types",
             "range": {
-              "start": 556,
-              "end": 599
+              "start": 564,
+              "end": 607
             },
             "definitions": [
               "TicketCloseInput",
@@ -143,8 +156,8 @@
           {
             "name": "Types#Languages",
             "range": {
-              "start": 656,
-              "end": 1788
+              "start": 664,
+              "end": 1795
             },
             "definitions": [
               "LanguagePlugin",
@@ -160,8 +173,8 @@
           {
             "name": "Types#Languages#Go",
             "range": {
-              "start": 1147,
-              "end": 1336
+              "start": 1155,
+              "end": 1343
             },
             "definitions": [
               "ExtractImports",
@@ -169,15 +182,15 @@
               "ExtractPackage"
             ],
             "lines": {
-              "added": 108,
+              "added": 107,
               "removed": 0
             }
           },
           {
             "name": "Types#Languages#C#",
             "range": {
-              "start": 1338,
-              "end": 1395
+              "start": 1345,
+              "end": 1402
             },
             "definitions": [
               "ExtractImports",
@@ -191,8 +204,8 @@
           {
             "name": "Utils",
             "range": {
-              "start": 2457,
-              "end": 2934
+              "start": 2464,
+              "end": 2941
             },
             "definitions": [
               "findRepoRoot"
@@ -205,12 +218,21 @@
           {
             "name": "Tickets",
             "range": {
-              "start": 5080,
-              "end": 7337
+              "start": 5087,
+              "end": 7423
             },
             "definitions": [
+              "normalizeTicketKeyword",
+              "hasTicketKeyword",
+              "LatestTicket",
+              "shouldContinueTicket",
+              "shouldSkipTicket",
+              "OpenTicket",
               "UpdateTicketTitle",
               "CreateTicket",
+              "ghCreateIssue",
+              "buildProjectLinkArgs",
+              "ghAddIssueToProject",
               "CountLines",
               "formatPromptHeading",
               "formatSummaryHeading",
@@ -219,37 +241,39 @@
               "generateMetricsComment",
               "FinishTicket",
               "ReopenTicket",
+              "ToolTicketOpen",
               "ToolIntegrate",
               "SplitHeader",
               "MergeHeaders",
               "UniqueStrings"
             ],
             "lines": {
-              "added": 260,
-              "removed": 27
+              "added": 342,
+              "removed": 30
             }
           },
           {
             "name": "Default Context",
             "range": {
-              "start": 7394,
-              "end": 7688
+              "start": 7480,
+              "end": 7774
             },
             "definitions": [
+              "TicketOpen",
               "TicketClose",
               "TicketReopen",
               "Integrate"
             ],
             "lines": {
-              "added": 45,
-              "removed": 1
+              "added": 46,
+              "removed": 2
             }
           },
           {
             "name": "Schema Builder",
             "range": {
-              "start": 7802,
-              "end": 9141
+              "start": 7888,
+              "end": 9227
             },
             "definitions": [
               "buildSchema"
@@ -262,29 +286,44 @@
           {
             "name": "Mcp",
             "range": {
-              "start": 9694,
-              "end": 11078
+              "start": 9780,
+              "end": 11184
             },
             "definitions": [
               "runMcpServer"
             ],
             "lines": {
-              "added": 14,
+              "added": 16,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Mcp#Args",
+            "range": {
+              "start": 10051,
+              "end": 10137
+            },
+            "definitions": [
+              "getBoolArg"
+            ],
+            "lines": {
+              "added": 12,
               "removed": 0
             }
           },
           {
             "name": "Mcp#Handlers",
             "range": {
-              "start": 10100,
-              "end": 11076
+              "start": 10200,
+              "end": 11182
             },
             "definitions": [
+              "ticketOpen",
               "ticketClose",
               "ticketReopen"
             ],
             "lines": {
-              "added": 56,
+              "added": 62,
               "removed": 0
             }
           }
@@ -293,20 +332,40 @@
       {
         "path": "go/repo/main_test.go",
         "status": "modified",
+        "lines": {
+          "added": 74,
+          "removed": 1
+        },
         "sections": [
           {
             "name": "Collection Tests",
             "range": {
               "start": 66,
-              "end": 401
+              "end": 414
             },
             "definitions": [
               "TestTicketTitleValidation",
+              "TestBuildProjectLinkArgs",
               "TestFilterTicketWorkspaceFiles"
             ],
             "lines": {
-              "added": 29,
+              "added": 42,
               "removed": 1
+            }
+          },
+          {
+            "name": "Cli#Ticket Tests",
+            "range": {
+              "start": 1119,
+              "end": 1161
+            },
+            "definitions": [
+              "TestTicketOpenNoticketKeyword",
+              "TestTicketOpenContinueKeyword"
+            ],
+            "lines": {
+              "added": 32,
+              "removed": 0
             }
           }
         ]
@@ -314,12 +373,16 @@
       {
         "path": "AGENTS.md",
         "status": "modified",
+        "lines": {
+          "added": 24,
+          "removed": 12
+        },
         "sections": [
           {
-            "name": "Software Requirements Specification#Business Logic#Ticket",
+            "name": "Software Requirements Specification#Business Logic#Devcontainer",
             "range": {
-              "start": 71,
-              "end": 99
+              "start": 52,
+              "end": 56
             },
             "lines": {
               "added": 1,
@@ -327,21 +390,32 @@
             }
           },
           {
-            "name": "Software Requirements Specification#Business Logic#Repo Tooling",
+            "name": "Software Requirements Specification#Business Logic#Ticket",
             "range": {
-              "start": 100,
-              "end": 115
+              "start": 72,
+              "end": 101
             },
             "lines": {
-              "added": 6,
+              "added": 2,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Software Requirements Specification#Business Logic#Repo Tooling",
+            "range": {
+              "start": 102,
+              "end": 118
+            },
+            "lines": {
+              "added": 7,
               "removed": 0
             }
           },
           {
             "name": "Using TypeScript fallback",
             "range": {
-              "start": 536,
-              "end": 1232
+              "start": 539,
+              "end": 1235
             },
             "lines": {
               "added": 11,
@@ -349,10 +423,32 @@
             }
           },
           {
+            "name": "Codebase#📄 .devcontainer/devcontainer.json",
+            "range": {
+              "start": 1625,
+              "end": 1628
+            },
+            "lines": {
+              "added": 1,
+              "removed": 1
+            }
+          },
+          {
+            "name": "Codebase#📄 .devcontainer/post-create.sh",
+            "range": {
+              "start": 1629,
+              "end": 1632
+            },
+            "lines": {
+              "added": 1,
+              "removed": 1
+            }
+          },
+          {
             "name": "Codebase#📄 go/repo/main.go",
             "range": {
-              "start": 3850,
-              "end": 3853
+              "start": 3853,
+              "end": 3856
             },
             "lines": {
               "added": 1,
@@ -366,15 +462,30 @@
       {
         "path": "README.md",
         "status": "created",
+        "lines": {
+          "added": 1986,
+          "removed": 0
+        },
         "sections": [
           {
             "name": "📦 Bundles [↑](#-overview)#🎟️ Ticket Workflow Signals [↑](#-bundles-)",
             "range": {
               "start": 1137,
-              "end": 1148
+              "end": 1150
             },
             "lines": {
-              "added": 6,
+              "added": 8,
+              "removed": 0
+            }
+          },
+          {
+            "name": "📦 Bundles [↑](#-overview)#🎭 Playwright Browser Cache [↑](#-bundles-)",
+            "range": {
+              "start": 1200,
+              "end": 1204
+            },
+            "lines": {
+              "added": 5,
               "removed": 0
             }
           }

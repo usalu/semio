@@ -27,6 +27,9 @@ export default defineConfig({
     target: "node18",
     ssr: true,
   },
+  ssr: {
+    noExternal: true,
+  },
   resolve: {
     alias: {
       "@semio/js": path.resolve(__dirname, "../semio"),

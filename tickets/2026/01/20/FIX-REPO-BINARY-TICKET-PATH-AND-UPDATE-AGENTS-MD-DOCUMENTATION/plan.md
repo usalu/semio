@@ -1,16 +1,14 @@
-# Plan: Fix Ticket GitHub Comments and File Exclusions
+# Plan: Auto-Link Ticket Issues to GitHub Project
 
 ## Goals
 
-1. Ensure GitHub reopen comments always include `# 🤖 Prompt` heading.
-2. Ensure GitHub close comments include `#🔍 Summary` and `# ✍️ Changes` headings with line metrics.
-3. Ensure ticket workspace files never appear in close metrics or GitHub comments.
-4. Update tests and documentation to lock in behavior.
+1. Ensure every ticket GitHub issue is linked to the usalu project 2.
+2. Add a test for the project linking argument builder.
+3. Document the project link behavior in README.md and AGENTS.md.
 
 ## Steps
 
-1. Inspect ticket reopen/close GitHub comment generation and identify why headings are missing.
-2. Fix GitHub comment formatting and ensure metrics are included.
-3. Filter ticket workspace files before metrics/comment generation.
-4. Extend repo tests for reopen and close comment formatting and exclusions.
-5. Update README.md and AGENTS.md, then close ticket.
+1. Add a project-link helper and reuse it in ticket create and reopen flows.
+2. Add a test that validates the project link command arguments.
+3. Update README.md and AGENTS.md to describe the project linking behavior.
+4. Update ticket log and summary, then close the ticket.

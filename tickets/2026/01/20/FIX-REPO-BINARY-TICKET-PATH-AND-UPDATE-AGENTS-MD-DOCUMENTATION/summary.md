@@ -1,2 +1,2 @@
-- Fixed GitHub summary heading formatting and ensured ticket line metrics persist.
-- Hardened ticket workspace file filtering for absolute/relative paths and extended tests/documentation.
+- Added GitHub project linking for ticket create/reopen and covered the args builder in tests.
+- Documented project linking in README.md and AGENTS.md.

@@ -1,34 +1,20 @@
 {
-  "title": "Fix VS Code Extension Issues",
+  "title": "Fix VS Code Extension Activation and Tree Providers",
   "iterations": [
     {
-      "prompt": "Fix diagnostics, autofixes, and tree views in VS Code extension, aligning with repo binary as source of truth.",
-      "llm": "gemini-3-pro",
-      "ui": "copilot-chat",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
-      "date": "2026-01-20T10:27:08.108949344Z",
-      "commit": "faaeb3f919b96cb76d170b8fa215e17f66eeb5ae"
-    },
-    {
-      "prompt": "Continue fixing VS Code extension issues: extension not showing up despite post-attach command success logs.",
+      "prompt": "Fix infinite loading and unregistered provider errors in VS Code extension by ensuring early registration, robust GraphQL fetching, and correct binary path resolution.",
       "llm": "gemini-3-flash",
       "ui": "copilot-chat",
       "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
-      "date": "2026-01-20T14:42:25.847902888Z",
-      "commit": "65c71dfafa028a2d86c6999d3ac4426a3924e4df"
-    },
-    {
-      "prompt": "Infinite loading in VS Code tree views. Error: 'There is no data provider registered that can provide view data.'",
-      "llm": "gemini-3-flash",
-      "ui": "copilot-chat",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
-      "date": "2026-01-20T15:05:12.658184643Z",
+      "date": "2026-01-20T15:29:49.303494897Z",
       "commit": "65c71dfafa028a2d86c6999d3ac4426a3924e4df"
     }
   ],
-  "status": "open",
-  "dates": {},
-  "summary": "Fixed VS Code extension installation in devcontainer by lowering engine version to ^1.106.0 for Windsurf compatibility and refactoring post-attach.sh to robustly detect and use working IDE CLIs (windsurf, cursor, code) and verify installation success. Verified with manual run and automated extension tests.",
+  "status": "closed",
+  "dates": {
+    "closed": "2026-01-20T15:30:15.687329909Z"
+  },
+  "summary": "Successfully fixed VS Code extension activation, view registration, and robust GraphQL communication with the repo CLI.",
   "files": {
     "deleted": [],
     "renamed": [],
@@ -37,8 +23,8 @@
         "path": "js/vscode/package.json",
         "status": "modified",
         "lines": {
-          "added": 3,
-          "removed": 3
+          "added": 10,
+          "removed": 4
         },
         "sections": [
           {
@@ -64,10 +50,21 @@
             }
           },
           {
+            "name": "activationEvents",
+            "range": {
+              "start": 21,
+              "end": 29
+            },
+            "lines": {
+              "added": 7,
+              "removed": 1
+            }
+          },
+          {
             "name": "icon",
             "range": {
-              "start": 31,
-              "end": 31
+              "start": 37,
+              "end": 37
             },
             "lines": {
               "added": 1,
@@ -77,8 +74,8 @@
           {
             "name": "icon",
             "range": {
-              "start": 106,
-              "end": 106
+              "start": 112,
+              "end": 112
             },
             "lines": {
               "added": 1,
@@ -88,8 +85,8 @@
           {
             "name": "icon",
             "range": {
-              "start": 111,
-              "end": 111
+              "start": 117,
+              "end": 117
             },
             "lines": {
               "added": 1,
@@ -99,8 +96,8 @@
           {
             "name": "icon",
             "range": {
-              "start": 204,
-              "end": 204
+              "start": 210,
+              "end": 210
             },
             "lines": {
               "added": 1,
@@ -110,8 +107,8 @@
           {
             "name": "icon",
             "range": {
-              "start": 209,
-              "end": 209
+              "start": 215,
+              "end": 215
             },
             "lines": {
               "added": 1,
@@ -121,8 +118,8 @@
           {
             "name": "icon",
             "range": {
-              "start": 214,
-              "end": 214
+              "start": 220,
+              "end": 220
             },
             "lines": {
               "added": 1,
@@ -132,8 +129,8 @@
           {
             "name": "icon",
             "range": {
-              "start": 259,
-              "end": 259
+              "start": 265,
+              "end": 265
             },
             "lines": {
               "added": 1,
@@ -143,8 +140,8 @@
           {
             "name": "icon",
             "range": {
-              "start": 264,
-              "end": 264
+              "start": 270,
+              "end": 270
             },
             "lines": {
               "added": 1,
@@ -154,8 +151,8 @@
           {
             "name": "icon",
             "range": {
-              "start": 269,
-              "end": 269
+              "start": 275,
+              "end": 275
             },
             "lines": {
               "added": 1,
@@ -165,8 +162,8 @@
           {
             "name": "icon",
             "range": {
-              "start": 274,
-              "end": 274
+              "start": 280,
+              "end": 280
             },
             "lines": {
               "added": 1,
@@ -176,8 +173,8 @@
           {
             "name": "icon",
             "range": {
-              "start": 279,
-              "end": 279
+              "start": 285,
+              "end": 285
             },
             "lines": {
               "added": 1,
@@ -187,8 +184,8 @@
           {
             "name": "icon",
             "range": {
-              "start": 296,
-              "end": 296
+              "start": 302,
+              "end": 302
             },
             "lines": {
               "added": 1,
@@ -198,8 +195,8 @@
           {
             "name": "icon",
             "range": {
-              "start": 301,
-              "end": 301
+              "start": 307,
+              "end": 307
             },
             "lines": {
               "added": 1,
@@ -209,8 +206,8 @@
           {
             "name": "icon",
             "range": {
-              "start": 306,
-              "end": 306
+              "start": 312,
+              "end": 312
             },
             "lines": {
               "added": 1,
@@ -220,8 +217,8 @@
           {
             "name": "icon",
             "range": {
-              "start": 323,
-              "end": 323
+              "start": 329,
+              "end": 329
             },
             "lines": {
               "added": 1,
@@ -231,8 +228,8 @@
           {
             "name": "icon",
             "range": {
-              "start": 328,
-              "end": 328
+              "start": 334,
+              "end": 334
             },
             "lines": {
               "added": 1,
@@ -242,8 +239,8 @@
           {
             "name": "devDependencies#@types/vscode",
             "range": {
-              "start": 456,
-              "end": 456
+              "start": 462,
+              "end": 462
             },
             "lines": {
               "added": 1,
@@ -251,6 +248,112 @@
             }
           }
         ]
+      },
+      {
+        "path": "js/vscode/extension.ts",
+        "status": "modified",
+        "lines": {
+          "added": 199,
+          "removed": 121
+        },
+        "sections": [
+          {
+            "name": "urql Client",
+            "range": {
+              "start": 61,
+              "end": 141
+            },
+            "definitions": [
+              "urqlClient",
+              "getUrqlClient",
+              "root",
+              "command",
+              "body",
+              "query",
+              "variables",
+              "variablesJson",
+              "escapedQuery",
+              "escapedVariables",
+              "fullCommand",
+              "start",
+              "duration",
+              "data",
+              "errorMessage"
+            ],
+            "lines": {
+              "added": 55,
+              "removed": 16
+            }
+          },
+          {
+            "name": "GraphQL Documents",
+            "range": {
+              "start": 143,
+              "end": 303
+            },
+            "definitions": [
+              "RepoDocument"
+            ],
+            "lines": {
+              "added": 49,
+              "removed": 4
+            }
+          },
+          {
+            "name": "Utilities",
+            "range": {
+              "start": 524,
+              "end": 890
+            },
+            "definitions": [
+              "loadCodebase",
+              "repo",
+              "gqlRepo",
+              "codebase"
+            ],
+            "lines": {
+              "added": 10,
+              "removed": 31
+            }
+          },
+          {
+            "name": "Sidebar Views",
+            "range": {
+              "start": 1263,
+              "end": 3068
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Activation",
+            "range": {
+              "start": 3722,
+              "end": 3844
+            },
+            "definitions": [
+              "message",
+              "activate",
+              "root",
+              "relativePath",
+              "fileUri",
+              "processKey",
+              "controller"
+            ],
+            "lines": {
+              "added": 84,
+              "removed": 70
+            }
+          }
+        ]
+      },
+      {
+        "path": "js/vscode/semio.png"
+      },
+      {
+        "path": "js/vscode/LICENSE.md"
       },
       {
         "path": ".devcontainer/post-attach.sh",
@@ -299,9 +402,15 @@
         ]
       }
     ],
-    "added": []
-  },
-  "github": {
-    "issue": "https://github.com/usalu/semio/issues/171"
+    "added": [
+      {
+        "path": "js/vscode/.vscodeignore",
+        "status": "created",
+        "lines": {
+          "added": 32,
+          "removed": 0
+        }
+      }
+    ]
   }
 }

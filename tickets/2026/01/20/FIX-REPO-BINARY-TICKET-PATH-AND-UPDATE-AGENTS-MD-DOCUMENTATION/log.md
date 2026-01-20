@@ -108,3 +108,10 @@ User requested explicit flag syntax: `--title "My Task" --prompt "Prompt" --llm 
 - Corrected ticket file metrics by setting line counts before appending to results.
 - Hardened ticket workspace file filtering for absolute and relative paths; updated tests.
 - Closed ticket with updated summary and file list.
+
+2026-01-20
+- Reopened ticket to ensure every ticket GitHub issue links to the usalu project 2.
+- Updating repo GitHub integration, tests, and documentation.
+- Added GitHub project linking helper and applied it to ticket create and reopen flows.
+- Added tests for project link args and documented project linking behavior.
+- Closed ticket with updated summary and file list.
