@@ -8,9 +8,28 @@ Continue.
 Change/refactor/extend whatever is necessary to get it working. Even if it seems unrelated to you. The goal is clear. 
 Dont ask in between, no matter the issue. Figure it out.
 Be sure that it works everywhere before stopping.
-Make sure to open and close a ticket. Dont forget to add the plan.md, to log in log.md and create a summary.md in the end.
+Make sure to open and close a ticket. Dont forget to add the plan.md, to track everything (todos, changes, summary, etc) in ticket.md
+
+Dont keep any legacy api or backwards compatiblity.
 
 ## History
+
+Create a new ticket for completing repo binary and vsccode extension.
+- When a plan is provided
+
+The vscode launch configs are oudated. All package commands should be availble there.
+Make sure that all configs have test, test:unit, test:e2e, test:coverage
+Reorder from specific first to general last. Consider the development lifecycle in the order (e.g. dev->test->build->publish:test->publish) 
+Use a new style:
+@semio-repo/go build
+@semio-repo/vscode build
+@semio/js dev
+@semio/js build:storybook
+…
+dev
+…
+publish:test
+publish
 
 Currently every ticket tracks one codebase diff. Make sure that every iteration has its own `"diff":{…}` and remove it from the ticket level.
 

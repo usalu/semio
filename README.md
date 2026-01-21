@@ -1132,6 +1132,8 @@ All code must sit inside named regions; orphan definitions outside any section a
 
 The repo CLI is the single source of truth for ticket workflows and the GraphQL schema that powers tooling.
 The VS Code extension uses the schema mirror to generate typed documents and forwards queries through the CLI so the UI and CLI stay in lockstep.
+The repo CLI streams command execution as JSONL events and adapters decide whether to render compact human output or machine-readable event lines.
+VS Code consumes the JSONL stream, extracts the final `result` payload, and returns the GraphQL response to keep extension data aligned with the CLI engine.
 Devcontainer attach builds and installs the local extension automatically, keeping the workspace ready without manual steps.
 VS Code extension packaging requires an unscoped extension name in `js/vscode/package.json` so `vsce package` can build the local `.vsix`.
 Repo operational artifacts (tickets, contributors, reports) live in `.semio-repo/` so workflow state stays centralized and out of product bundles.

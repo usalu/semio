@@ -8,6 +8,7 @@ echo "Setting up semio development environment..."
 #endregion Startup
 #region Ownership
 echo "Fixing ownership of mounted config directories..."
+sudo chown -R vscode:vscode /home/vscode/.cache || true
 sudo chown -R vscode:vscode /home/vscode/.config/gh || true
 #endregion Ownership
 #region GitSafe

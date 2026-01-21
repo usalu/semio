@@ -133,6 +133,8 @@ Ticket close MUST ignore files inside the active ticket workspace (plan.md, tick
 Repo analyze without a scope MUST emit a codebase snapshot to `.semio-repo/reports/codebase.json` for semantic diffing.
 Ticket GitHub issues MUST be linked to the usalu project 2 on create and reopen.
 VS Code extension manifests MUST use an unscoped `name` value for vsce packaging.
+Repo CLI commands MUST emit a JSONL event stream with a terminal done payload for machine consumption.
+VS Code tooling MUST parse JSONL event streams, surface fatal errors, and use the final result payload as the GraphQL response body.
 
 Repo operational artifacts (tickets, contributors, reports) MUST be stored under `.semio-repo/`.
 Repo analyze MUST exclude gitignored files, `.semio-repo/`, and `assets/repo/` from analysis.
@@ -1348,6 +1350,10 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 ├── .cursor
 │ ├── constraints
 │ │ └── repo.mdc # \*_/_.\*
+├── .vscode
+│ ├── launch.json # Lifecycle-ordered per-package launch configs with dev/test/build/publish variants
+│ ├── tasks.json # Per-package task catalog for dev, test variants, build, publish flows
+│ └── extensions.json
 ├── .github
 │ ├── chatmodes
 │ │ ├── Reformatter.chatmode.md # Exclusively to reformat text (code, lists, …)
@@ -1634,16 +1640,19 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ └── main.go # Repo dev server (config, SQLite schema, event bus, diff ingestion, indexing, claims, warnings, HTTP API)
 │ └── repo # Go CLI binary
 │ ├── go.mod
-│ ├── main.go
-│ └── tools # Tool implementations
-│ ├── commands.go
-│ ├── definitions.go
-│ ├── nx.go
-│ ├── policies.go
-│ ├── sections.go
-│ ├── tickets.go
-│ ├── types.go
-│ └── utils.go
+│ ├── cmd
+│ │ └── repo
+│ │ │ └── main.go # Repo CLI entrypoint
+│ ├── internal
+│ │ ├── adapters
+│ │ │ ├── cli # Cobra CLI adapter + renderers
+│ │ │ └── mcp # MCP adapter
+│ │ ├── core # Streaming engine + requests
+│ │ └── events # Streaming event schema
+│ ├── cmd_benchmark.go
+│ ├── cmd_preflight.go
+│ ├── cmd_update.go
+│ └── main.go # Repo domain and GraphQL schema
 ├── .venv # Centralized Python virtual environment
 ├── nx.json # Nx targets and plugin configs
 ├── package-lock.json # All javascript dependencies

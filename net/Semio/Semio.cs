@@ -2035,7 +2035,7 @@ public class Vector : Entity<Vector>
 public class Plane : Entity<Plane>
 {
     public Point Origin { get; set; } = new();
-    public Vector XAxis { get; set; } = new();
+    public Vector XAxis { get; set; } = new() { X = 1 };
     public Vector YAxis { get; set; } = new() { Y = 1 };
 
 
@@ -4444,14 +4444,31 @@ public class Design : Entity<Design>
         var cross = System.Numerics.Vector3.Cross(pDir, reverseChildDirection);
         if (cross.LengthSquared() < 0.0001f)
         {
-            if (Math.Abs(pDir.Z) < 1e-5f)
+            var dotProduct = System.Numerics.Vector3.Dot(pDir, reverseChildDirection);
+            if (dotProduct > 0)
             {
-                alignQuat = System.Numerics.Quaternion.CreateFromAxisAngle(System.Numerics.Vector3.UnitZ, (float)Math.PI);
+                alignQuat = System.Numerics.Quaternion.Identity;
             }
             else
             {
-                var axis = System.Numerics.Vector3.Normalize(System.Numerics.Vector3.Cross(System.Numerics.Vector3.UnitZ, pDir));
-                alignQuat = System.Numerics.Quaternion.CreateFromAxisAngle(axis, (float)Math.PI);
+                if (Math.Abs(pDir.Z) < 1e-5f)
+                {
+                    alignQuat = System.Numerics.Quaternion.CreateFromAxisAngle(System.Numerics.Vector3.UnitZ, (float)Math.PI);
+                }
+                else
+                {
+                    var crossAxis = System.Numerics.Vector3.Cross(System.Numerics.Vector3.UnitZ, pDir);
+                    System.Numerics.Vector3 axis;
+                    if (crossAxis.LengthSquared() < 0.0001f)
+                    {
+                        axis = System.Numerics.Vector3.UnitX;
+                    }
+                    else
+                    {
+                        axis = System.Numerics.Vector3.Normalize(crossAxis);
+                    }
+                    alignQuat = System.Numerics.Quaternion.CreateFromAxisAngle(axis, (float)Math.PI);
+                }
             }
         }
         else

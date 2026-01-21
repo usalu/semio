@@ -35,6 +35,13 @@ import { TicketStatus } from "./generated/graphql";
 const execAsync = promisify(exec);
 const execFileAsync = promisify(execFile);
 
+type RepoEvent = {
+  kind: string;
+  data?: unknown;
+  error?: { message?: string; fatal?: boolean };
+  done?: { exit_code?: number };
+};
+
 const LLM_OPTIONS = [
   "opus-4-5",
   "claude-opus-4",
@@ -63,6 +70,29 @@ const UI_OPTIONS = [
 
 let urqlClient: Client | null = null;
 
+function parseRepoEvents(output: string): RepoEvent[] {
+  const lines = output.split("\n").map((line) => line.trim()).filter((line) => line.length > 0);
+  return lines.map((line) => JSON.parse(line) as RepoEvent);
+}
+
+function extractRepoResult(events: RepoEvent[]): Record<string, unknown> {
+  let lastResult: unknown = null;
+  for (const event of events) {
+    if (event.kind === "error" && event.error?.fatal) {
+      throw new Error(event.error.message ?? "Repo command failed");
+    }
+    if (event.kind === "result") {
+      lastResult = event.data ?? null;
+    }
+  }
+  if (lastResult && typeof lastResult === "object" && !Array.isArray(lastResult)) {
+    if ("data" in (lastResult as Record<string, unknown>)) {
+      return lastResult as Record<string, unknown>;
+    }
+  }
+  return { data: lastResult };
+}
+
 function getUrqlClient(): Client | null {
   if (urqlClient) return urqlClient;
   const root = getWorkspaceRoot();
@@ -87,7 +117,7 @@ function getUrqlClient(): Client | null {
         log(`[urql] executing graphql via execFile. Variables: ${variablesJson.length > 100 ? variablesJson.substring(0, 100) + '...' : variablesJson}`);
         const repoPath = getRepoCommand();
         if (!repoPath) throw new Error("Repo command not found");
-        const repoArgs = ["graphql", query];
+        const repoArgs = ["--format", "jsonl", "graphql", query];
         if (Object.keys(variables).length > 0) {
           repoArgs.push("-v", variablesJson);
         }
@@ -106,8 +136,9 @@ function getUrqlClient(): Client | null {
           logError("[urql] CLI returned empty stdout");
           throw new Error("Empty output from repo command");
         }
-        const data = JSON.parse(stdout);
-        const responseBody = JSON.stringify({ data });
+        const events = parseRepoEvents(stdout);
+        const payload = extractRepoResult(events);
+        const responseBody = JSON.stringify(payload);
         if (typeof Response !== "undefined") {
           return new Response(responseBody, {
             status: 200,
@@ -122,7 +153,7 @@ function getUrqlClient(): Client | null {
             has: (name: string) => name.toLowerCase() === "content-type",
             forEach: (cb: any) => cb("application/json", "content-type"),
           },
-          json: async () => ({ data }),
+          json: async () => payload,
           text: async () => responseBody,
         } as any;
       } catch (error) {
@@ -153,8 +184,6 @@ function getUrqlClient(): Client | null {
   });
   return urqlClient;
 }
-
-// #endregion urql Client
 
 function resetUrqlClient(): void {
   urqlClient = null;

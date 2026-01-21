@@ -1,4 +1,4 @@
-package main
+package repo
 
 import (
 	"encoding/csv"
@@ -95,7 +95,7 @@ func runBenchmark(cmd *cobra.Command, args []string) error {
 		}) {
 			defer wg.Done()
 			fmt.Printf("Running %s...\n", t.Name)
-			
+
 			// Check if directory exists
 			if _, err := os.Stat(t.Dir); os.IsNotExist(err) {
 				fmt.Printf("Skipping %s: directory %s not found\n", t.Name, t.Dir)
@@ -126,7 +126,7 @@ func runBenchmark(cmd *cobra.Command, args []string) error {
 	if len(results) > 0 {
 		return writeBenchmarkReport(rootDir, results)
 	}
-	
+
 	return nil
 }
 
@@ -140,9 +140,9 @@ func parseBenchmarkOutput(results *[]BenchmarkResult, lang string, output string
 		parts := strings.Split(trimmed, ",")
 		// Expected format: "TestName,TimeInSeconds"
 		// Simple validation to avoid capturing logging output
-		if len(parts) == 2 && 
-			!strings.Contains(parts[0], "warning") && 
-			!strings.Contains(parts[0], ":") && 
+		if len(parts) == 2 &&
+			!strings.Contains(parts[0], "warning") &&
+			!strings.Contains(parts[0], ":") &&
 			!strings.Contains(parts[0], string(os.PathSeparator)) {
 			*results = append(*results, BenchmarkResult{
 				Test: parts[0],

@@ -1,4 +1,4 @@
-package main
+package repo
 
 import (
 	"fmt"
@@ -80,7 +80,7 @@ func GitHubAddLabels(issueUrl string, labels []string) error {
 func GenerateMetricsComment(files []TicketFile) string {
 	var lines []string
 	lines = append(lines, "```md")
-	
+
 	// Sort files by path
 	sortedFiles := make([]TicketFile, len(files))
 	copy(sortedFiles, files)
@@ -97,7 +97,7 @@ func GenerateMetricsComment(files []TicketFile) string {
 				removed += s.Lines.Removed
 			}
 		}
-		
+
 		icon := "✏️"
 		if f.Status == "created" {
 			icon = "➕"
@@ -112,11 +112,11 @@ func GenerateMetricsComment(files []TicketFile) string {
 		if removed > 0 {
 			lineStr += fmt.Sprintf(" -%d", removed)
 		}
-		
-		// For deleted files, we might show total lines as removed if we knew them, 
-		// but here we rely on what's in Sections. 
+
+		// For deleted files, we might show total lines as removed if we knew them,
+		// but here we rely on what's in Sections.
 		// If sections are empty for removed file, lineStr might be empty.
-		
+
 		lines = append(lines, fmt.Sprintf("%s%s%s", icon, f.Path, lineStr))
 	}
 	lines = append(lines, "```")

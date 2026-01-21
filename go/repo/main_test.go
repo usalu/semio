@@ -19,7 +19,7 @@
 
 // #endregion Header
 
-package main
+package repo
 
 import (
 	"bytes"
@@ -29,6 +29,10 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/usalu/semio/go/repo/internal/adapters/cli"
+	"github.com/usalu/semio/go/repo/internal/core"
+	"github.com/usalu/semio/go/repo/internal/events"
 )
 
 // #region Helpers
@@ -45,6 +49,31 @@ func findTestRepoRoot(start string) string {
 		}
 		dir = parent
 	}
+}
+
+type testGraphQLAdapter struct {
+	exec *Executor
+}
+
+func (t testGraphQLAdapter) Execute(ctx context.Context, query string, variables map[string]interface{}) (interface{}, error) {
+	return t.exec.Execute(ctx, query, variables)
+}
+
+func testEngineFactory(config cli.Config) (*core.Engine, error) {
+	repoRoot := config.Repo
+	if repoRoot == "" {
+		cwd, err := os.Getwd()
+		if err != nil {
+			return nil, err
+		}
+		repoRoot = findTestRepoRoot(cwd)
+	}
+	SetRootDir(repoRoot)
+	executor, err := NewExecutorWithContext(repoRoot, NewRepoContext(repoRoot))
+	if err != nil {
+		return nil, err
+	}
+	return core.NewEngine(testGraphQLAdapter{exec: executor}), nil
 }
 
 func getTestExecutor(t *testing.T) *Executor {
@@ -832,15 +861,17 @@ func TestDefinitionsEdges(t *testing.T) {
 
 func executeCommand(args ...string) (string, error) {
 	buf := new(bytes.Buffer)
-	rootCmd.SetOut(buf)
-	rootCmd.SetErr(buf)
-	rootCmd.SetArgs(args)
-	err := rootCmd.Execute()
+	root, config := cli.NewRootWithConfig(testEngineFactory)
+	root.SetOut(buf)
+	root.SetErr(buf)
+	root.SetArgs(args)
+	config.Format = "json"
+	err := root.Execute()
 	return buf.String(), err
 }
 
-func parseJSONOutput(output string) (map[string]interface{}, error) {
-	var result map[string]interface{}
+func parseJSONOutput(output string) ([]events.Event, error) {
+	var result []events.Event
 	err := json.Unmarshal([]byte(output), &result)
 	return result, err
 }
@@ -850,15 +881,12 @@ func hasExitCode(output string, code int) bool {
 	if err != nil {
 		return false
 	}
-	outputMap, ok := parsed["output"].(map[string]interface{})
-	if !ok {
-		return false
+	for _, event := range parsed {
+		if event.Kind == events.KindDone && event.Done != nil {
+			return event.Done.ExitCode == code
+		}
 	}
-	exitCode, ok := outputMap["exitCode"].(float64)
-	if !ok {
-		return false
-	}
-	return int(exitCode) == code
+	return false
 }
 
 // #endregion Helpers

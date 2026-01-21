@@ -8,6 +8,7 @@ echo "🔄 Starting semio development environment..."
 #endregion Startup
 #region Ownership
 echo "🔐 Fixing ownership for persisted volume mounts..."
+sudo chown -R vscode:vscode /home/vscode/.cache 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.claude 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.codex 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.config/gh 2>/dev/null || true

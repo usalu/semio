@@ -153,7 +153,19 @@ public class Tests
                 Assert.NotNull(expectedPiece);
                 Assert.NotNull(p.Plane);
                 
-                Assert.True(Tests.PlanesEqual(p.Plane, expectedPiece.Plane), $"Plane mismatch for piece {p.Name}");
+                if (!Tests.PlanesEqual(p.Plane, expectedPiece.Plane))
+                {
+                    var actual = p.Plane!;
+                    var expected = expectedPiece.Plane!;
+                    Console.WriteLine($"[DEBUG] Plane mismatch for piece {p.Name}");
+                    Console.WriteLine($"  Expected Origin: ({expected.Origin.X:F6}, {expected.Origin.Y:F6}, {expected.Origin.Z:F6})");
+                    Console.WriteLine($"  Actual   Origin: ({actual.Origin.X:F6}, {actual.Origin.Y:F6}, {actual.Origin.Z:F6})");
+                    Console.WriteLine($"  Expected XAxis: ({expected.XAxis.X:F6}, {expected.XAxis.Y:F6}, {expected.XAxis.Z:F6})");
+                    Console.WriteLine($"  Actual   XAxis: ({actual.XAxis.X:F6}, {actual.XAxis.Y:F6}, {actual.XAxis.Z:F6})");
+                    Console.WriteLine($"  Expected YAxis: ({expected.YAxis.X:F6}, {expected.YAxis.Y:F6}, {expected.YAxis.Z:F6})");
+                    Console.WriteLine($"  Actual   YAxis: ({actual.YAxis.X:F6}, {actual.YAxis.Y:F6}, {actual.YAxis.Z:F6})");
+                    Assert.Fail($"Plane mismatch for piece {p.Name}");
+                }
                 if (p.Center != null && expectedPiece.Center != null)
                 {
                      Assert.True(Tests.CentersEqual(p.Center, expectedPiece.Center), $"Center mismatch for piece {p.Name}");
@@ -226,9 +238,11 @@ public class Tests
         {
             var kit = Tests.LoadAsset<Kit>("kit_invalid.json");
             var result = SemioValidator.ValidateKit(kit);
-            var expected = Tests.LoadAsset<ValidationResult>("validation.json");
+            var filePath = Path.Combine(Tests.AssetsPath, "validation.json");
+            var expectedJson = System.IO.File.ReadAllText(filePath);
+            var expected = ValidationResult.Parse(expectedJson);
             
-            Assert.Equal(expected.Serialize(), result.Serialize());
+            Assert.True(ValidationResult.AreEqual(expected, result), $"Expected {expected.Issues.Count} issues, got {result.Issues.Count}. Expected:\n{expected.Serialize()}\nActual:\n{result.Serialize()}");
         }
     }
 

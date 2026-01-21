@@ -5,8 +5,8 @@
   "sourceRoot": "go/repo",
   "projectType": "application",
   "scripts": {
-    "dev": "go run main.go",
-    "build": "go build -o repo main.go",
+    "dev": "go run ./cmd/repo",
+    "build": "go build -o repo ./cmd/repo",
     "test": "go test -v ./...",
     "preflight": "go vet ./..."
   },

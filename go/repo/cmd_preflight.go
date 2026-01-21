@@ -1,4 +1,4 @@
-package main
+package repo
 
 import (
 	"fmt"
@@ -29,7 +29,7 @@ func runPreflight(cmd *cobra.Command, args []string) error {
 	// (Implementation simplification: relying on cobra flags would be better but keeping it simple)
 
 	// TODO: Add flag parsing for --skip and --nx
-	
+
 	// For now, mapping directly to functionality
 	switch command {
 	case "fix":
@@ -76,21 +76,21 @@ func runPreflightFix() error {
 	// We can execute the same logic here or call the command.
 	// Since we are in the same package, we can just call the handler or share logic.
 	// But the handler expects cobra command/args.
-	
+
 	// For now, we will just print what we are doing, but strictly we should invoke the internal fix.
 	// The existing preflight.ts called "hooks/code.tsx --fix" etc.
 	// The new design seems to center around `repo fix`.
 	// So we will invoke `repo fix`.
-	
+
 	fmt.Println("Running fix...")
 	// We can reuse the fixCmd RunE if we construct a dummy command, or better, refactor main.go to expose the logic.
 	// For now, let's assume we want to run the global fix.
 	// We'll call the function that fixCmd calls.
-	
+
 	// But fixCmd uses graphql. Let's just run the fix command logic directly.
 	// Ideally we would refactor `main.go` to separate logic from CLI.
 	// Given I can't easily refactor main.go massively right now without risk, I will use the `fixCmd` variable.
-	
+
 	return fixCmd.RunE(fixCmd, []string{})
 }
 
@@ -103,11 +103,11 @@ func runNx(target string, args ...string) error {
 	fmt.Printf("Running nx %s...\n", target)
 	cmdArgs := []string{"nx", "run-many", "-t", target}
 	cmdArgs = append(cmdArgs, args...)
-	
+
 	cmd := exec.Command("npx", cmdArgs...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	
+
 	return cmd.Run()
 }

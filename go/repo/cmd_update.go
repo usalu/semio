@@ -1,4 +1,4 @@
-package main
+package repo
 
 import (
 	"fmt"
@@ -245,18 +245,18 @@ func runCommandQuiet(dir, name string, args ...string) (string, error) {
 
 func updateNpm(rootDir string, config *UpdateConfig, dryRun bool) {
 	fmt.Println("\n[NPM] Updating npm packages...")
-	
+
 	// Simply run npm update -S in root as workspaces are handled by npm
 	// But first we need to preserve local versions if needed.
 	// In the Go version, I'll simplify:
 	// 1. Check if we need to preserve.
 	// 2. Run update.
 	// 3. Restore.
-	
+
 	// For simplicity in this migration, I will assume `npm update` handles workspaces correctly
 	// and I'll skip the complex "preserve local versions" logic for now unless critical.
 	// The original script did it to avoid updating internal workspace deps to versions from npm registry if they use "*".
-	
+
 	if dryRun {
 		fmt.Println("  [DRY RUN] Would run: npm update -S")
 		return
@@ -274,16 +274,16 @@ func updateNpm(rootDir string, config *UpdateConfig, dryRun bool) {
 
 func updatePython(rootDir string, config *UpdateConfig, dryRun bool) {
 	fmt.Println("\n[Python] Updating Python packages...")
-	
+
 	for _, pyPath := range config.Paths.Python {
 		fullPath := filepath.Join(rootDir, pyPath)
 		tomlPath := filepath.Join(fullPath, "pyproject.toml")
 		if _, err := os.Stat(tomlPath); os.IsNotExist(err) {
 			continue
 		}
-		
+
 		fmt.Printf("  Updating %s...\n", pyPath)
-		
+
 		// In a real implementation, we would parse TOML and fetch from PyPI.
 		// For this migration, I will use `uv lock --upgrade` if available or `uv sync -U`.
 		// The original script manually updated versions in pyproject.toml.
@@ -295,12 +295,12 @@ func updatePython(rootDir string, config *UpdateConfig, dryRun bool) {
 		// If we need to update `pyproject.toml` constraints, that requires parsing.
 		// Given the complexity, I'll leave a TODO or try to run a command that does it.
 		// `uv` doesn't strictly update `pyproject.toml` constraints automatically like `npm update -S`.
-		
+
 		if dryRun {
 			fmt.Println("  [DRY RUN] Would update pyproject.toml and run uv lock")
 			continue
 		}
-		
+
 		// Attempt to use `uv lock --upgrade`
 		if err := runCommand(fullPath, "uv", "lock", "--upgrade"); err != nil {
 			fmt.Printf("Error updating python in %s: %v\n", pyPath, err)
@@ -315,20 +315,20 @@ func updatePython(rootDir string, config *UpdateConfig, dryRun bool) {
 
 func updateRust(rootDir string, config *UpdateConfig, dryRun bool) {
 	fmt.Println("\n[Rust] Updating Rust packages...")
-	
+
 	for _, rsPath := range config.Paths.Rust {
 		fullPath := filepath.Join(rootDir, rsPath)
 		if _, err := os.Stat(filepath.Join(fullPath, "Cargo.toml")); os.IsNotExist(err) {
 			continue
 		}
-		
+
 		fmt.Printf("  Updating %s...\n", rsPath)
-		
+
 		if dryRun {
 			fmt.Println("  [DRY RUN] Would run cargo update")
 			continue
 		}
-		
+
 		if err := runCommand(fullPath, "cargo", "update"); err != nil {
 			fmt.Printf("Error updating rust in %s: %v\n", rsPath, err)
 		}
@@ -342,20 +342,20 @@ func updateRust(rootDir string, config *UpdateConfig, dryRun bool) {
 
 func updateGo(rootDir string, config *UpdateConfig, dryRun bool) {
 	fmt.Println("\n[Go] Updating Go modules...")
-	
+
 	for _, goPath := range config.Paths.Go {
 		fullPath := filepath.Join(rootDir, goPath)
 		if _, err := os.Stat(filepath.Join(fullPath, "go.mod")); os.IsNotExist(err) {
 			continue
 		}
-		
+
 		fmt.Printf("  Updating %s...\n", goPath)
-		
+
 		if dryRun {
 			fmt.Println("  [DRY RUN] Would run: go get -u ./... && go mod tidy")
 			continue
 		}
-		
+
 		runCommand(fullPath, "go", "get", "-u", "./...")
 		runCommand(fullPath, "go", "mod", "tidy")
 	}
@@ -368,29 +368,29 @@ func updateGo(rootDir string, config *UpdateConfig, dryRun bool) {
 
 func updateDotNet(rootDir string, config *UpdateConfig, dryRun bool) {
 	fmt.Println("\n[.NET] Updating .NET packages...")
-	
+
 	for _, csprojPath := range config.Paths.Dotnet {
 		fullPath := filepath.Join(rootDir, csprojPath)
 		if _, err := os.Stat(fullPath); os.IsNotExist(err) {
 			continue
 		}
-		
+
 		fmt.Printf("  Updating %s...\n", csprojPath)
-		
+
 		// Use dotnet-outdated tool logic or simply `dotnet list package --outdated`
 		// To actually update, `dotnet add package` is needed for each.
 		// Parsing `dotnet list package --outdated` output is feasible.
-		
+
 		if dryRun {
 			fmt.Println("  [DRY RUN] Would check for package updates")
 			continue
 		}
-		
+
 		output, err := runCommandQuiet(filepath.Dir(fullPath), "dotnet", "list", fullPath, "package", "--outdated")
 		if err != nil {
 			continue
 		}
-		
+
 		lines := strings.Split(output, "\n")
 		for _, line := range lines {
 			if strings.Contains(line, ">") {
@@ -399,7 +399,7 @@ func updateDotNet(rootDir string, config *UpdateConfig, dryRun bool) {
 				if len(parts) >= 5 {
 					name := parts[1]
 					latest := parts[4]
-					
+
 					// Check exclusions
 					excluded := false
 					if ex, ok := config.Exclude[csprojPath]; ok {
@@ -413,7 +413,7 @@ func updateDotNet(rootDir string, config *UpdateConfig, dryRun bool) {
 					if excluded {
 						continue
 					}
-					
+
 					fmt.Printf("    Updating %s to %s\n", name, latest)
 					runCommand(filepath.Dir(fullPath), "dotnet", "add", fullPath, "package", name, "--version", latest)
 				}
